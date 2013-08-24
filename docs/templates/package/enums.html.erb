@@ -1,0 +1,20 @@
+<% if @doc.enums.any? %>
+  <!-- Enums section. -->
+  <section id="enums" name="Enums" class="content-section">
+
+      <h2>Enums</h2>
+
+      <ul class="items-list">
+          <% @doc.enums.each do |enum| %>
+          <li class="item">
+              <div class="item-name">
+                  <a href='<%= enum.url( @relative_base_path ) %>'><strong><%= enum.data[:name] %></strong></a>
+              </div>
+              <div class="item-description">
+                  <%= first_sentence enum.data[:docString] %>
+              </div>
+          <% end %>
+      </ul>
+  
+  </section><!-- End enums section. -->
+<% end %>

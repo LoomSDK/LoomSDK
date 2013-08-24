@@ -1,0 +1,35 @@
+<!-- Metadata. -->
+<div class="content-header__metadata">
+
+    <!-- Inheritance chain. -->
+    <p>
+        <span class="is-light">Inheritance</span>
+        <br>
+        <% @superclasses.each do |superclass| %>
+            <a href="<%= superclass.url(@relative_base_path) %>"><%= superclass.data[:name] %></a><%= ' >' unless superclass == @superclasses.last %>
+        <% end %>
+    </p>
+
+    <!-- Implemented interfaces. -->
+    <% if @doc.data[:interfaces].any? %>
+    <p>
+        <span class="is-light">Implements</span>
+        <br>
+        <% @doc.data[:interfaces].each do |interface| %>
+            <a href="<%= url( interface ) %>"><%= abbr_path( interface ) %></a><%= ', ' unless interface == @doc.data[:interfaces].last %>
+        <% end %>
+    </p>
+    <% end %>
+
+    <!-- Subclasses. -->
+    <% if @subclasses.any? %>
+    <p>
+        <span class="is-light">Subclasses</span>
+        <br>
+        <% @subclasses.each do |subclass| %>
+            <a href="<%= url( subclass.package_path ) %>"><%= subclass %></a><%= ', ' unless subclass == @subclasses.last %>
+        <% end %>
+    </p>
+    <% end %>
+
+</div><!-- End metadata. -->

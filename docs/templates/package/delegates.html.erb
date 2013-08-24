@@ -1,0 +1,20 @@
+<% if @doc.delegates.any? %>
+  <!-- Delegates section. -->
+  <section id="delegates" name="Delegates" class="content-section">
+
+      <h2>Delegates</h2>
+
+      <ul class="items-list">
+          <% @doc.delegates.each do |d| %>
+          <li class="item">
+              <div class="item-name">
+                  <a href='<%= d.url( @relative_base_path ) %>'><strong><%= d.data[:name] %></strong></a>
+              </div>
+              <div class="item-description">
+                  <%= first_sentence d.data[:docString] %>
+              </div>
+          <% end %>
+      </ul>
+  
+  </section><!-- End delegates section. -->
+<% end %>

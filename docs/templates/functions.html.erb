@@ -1,0 +1,39 @@
+<!-- Functions section. -->
+<% if @public_methods.any? || @protected_methods.any? %>
+<section id="functions" name="Functions" class="content-section">
+
+    <!-- Title. -->
+    <h2>Functions</h2>
+
+    <% if @public_methods.any? %>
+    <div class="content-section__inner">
+
+        <!-- Public list. -->
+        <% @public_methods.each do |method| %>
+            <%= render 'templates/method_description', {:method => method} %>
+        <% end %>
+
+    </div>
+    <% end %>
+
+    <% if @protected_methods.any? %>
+    <!-- Protected. -->
+
+    <!-- Title. -->
+    <div class="content-section__subheader" data-twirl="#protected-functions">
+        <div class="content-section__subheader__twirl twirl-down"></div><h3 class="content-section__subheader__title">Protected functions</h3>
+    </div>
+
+    <div class="content-section__inner">
+        <!-- List. -->
+        <div id="protected-functions" class="protected-subsection__body" style="display:none;">
+            <% @protected_methods.each do |method| %>
+                <%= render 'templates/method_description', {:method => method} %>
+            <% end %>
+        </div>
+
+    </div><!-- End protected. -->
+    <% end %>
+
+</section><!-- End functions section. -->
+<% end %>

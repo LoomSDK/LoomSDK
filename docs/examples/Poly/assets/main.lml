@@ -1,0 +1,16 @@
+<poly.views.MainMenuView>
+
+    <loom.css.StyleSheet source="assets/main.css"/>
+
+    <loom2d.ui.TextureAtlasSprite id="logo" styleName="logo" atlasName="PolyUI" textureName="logo.png"/>
+
+    <loom2d.ui.SimpleButton id="playButton" styleName="playButton"
+        atlasName="PolyUI" upImage="play_button.png" downImage="play_button.png"/>
+
+    <loom2d.ui.TextureAtlasSprite id="helpButton" styleName="helpButton" 
+        atlasName="PolyUI" textureName="help_button.png"/>
+
+    <loom2d.ui.TextureAtlasSprite id="aboutButton" styleName="aboutButton" 
+        atlasName="PolyUI" textureName="about_button.png"/>
+ 
+</poly.views.MainMenuView>

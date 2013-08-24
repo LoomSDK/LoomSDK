@@ -1,0 +1,12 @@
+<poly.views.ScoreView>
+    <loom.css.StyleSheet source="assets/main.css"/>
+
+    <loom2d.ui.TextureAtlasSprite id="bg" atlasName="PolyUI" textureName="black.png"/>
+
+    <loom2d.ui.SimpleLabel id="scoreLabel" fontFile="assets/Curse-hd.fnt" />
+
+    <loom2d.ui.SimpleButton id="restartButton" styleName="restartButtonScore" atlasName="PolyUI" upImage="restart_button.png" downImage="restart_button.png"/>
+
+    <loom2d.ui.SimpleButton id="backToMenu" styleName="backToMenu" atlasName="PolyUI" upImage="back_to_menu.png" downImage="back_to_menu.png"/>
+
+</poly.views.ScoreView>

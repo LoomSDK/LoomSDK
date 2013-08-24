@@ -1,0 +1,98 @@
+////////////////////////////////
+//         TYPE HIERARCHY
+////////////////////////////////
+
+/*-----------------------------
+/*---------- BASICS -----------
+-----------------------------*/
+
+h1,
+h2,
+h3, 
+h4,
+p {
+  font-family: $base-font;
+  word-wrap: break-word;
+
+  &.is-reverse {
+    color: white;
+  }
+}
+
+.is-light {
+  font-weight: 200;
+  color: $off-gray;
+}
+
+.is-reverse {
+  h1, h2, h3, h4, p {
+    color: white;
+  }
+}
+
+h1 {
+  font-size: 30px;
+  line-height: 45px;
+  font-weight: 600;
+  color: black;
+}
+
+h2 {
+  font-size: 24px;
+  line-height: 36px;
+  font-weight: 100;
+  color: black;
+}
+
+h3 {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 600;
+  color: black;
+}
+
+h4 {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 400;
+  color: black;
+}
+
+p {
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 400;
+  color: $gray;
+  
+  &.is-small {
+    font-size: 12px;
+  }
+}
+
+a {
+  color: $blue;
+  text-decoration: none;
+
+  &:visited {
+    color: $purple;
+  }
+
+  &:active {
+    color: $red;
+  }
+
+  &:hover {
+    color: $blue;
+    text-decoration: underline;
+  }
+
+  &.is-perm {
+    color: $blue;
+  }
+}
+
+h1, h2, h3, h4, p {
+  &.is-inline {
+    display: inline-block;
+  }
+}

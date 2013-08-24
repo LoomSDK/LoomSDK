@@ -1,0 +1,43 @@
+/*
+ * ===========================================================================
+ * Loom SDK
+ * Copyright 2011, 2012, 2013
+ * The Game Engine Company, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ===========================================================================
+ */
+
+#ifndef _CORE_STRINGTABLE_H_
+#define _CORE_STRINGTABLE_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Typedef to identify inserted strings.
+typedef const char * StringTableEntry;
+
+// Called to initialize the string table! Call before using insert.
+void stringtable_initialize();
+
+// Takes strings and returns a single copy, so we can save on memory/string
+// overhead and simplify compares - one global copy means we can do pointer
+// compares rather than strcmp. This is thread-safe. This action is also
+// known as interning the string in some realms.
+StringTableEntry stringtable_insert(const char *str);
+
+#ifdef __cplusplus
+};
+#endif
+#endif

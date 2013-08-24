@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link rel="stylesheet" href="<%= relative_base_path %>/css/package-page.css">
+        <link rel="stylesheet" href="<%= relative_base_path %>/css/pygments.css">
+        <link type="text/css" rel="stylesheet" href="<%= relative_base_path %>/css/jquery.dropdown.css" />
+    </head>
+    <body>
+      
+      <div id="top">&nbsp;</div>
+
+      <!-- Header. -->   
+      <header class="site-header">
+          <div class="site-header__logo">
+              <div class="site-header__logo__version"><%= version_number %></div>
+          </div>
+          <ul class="site-header__nav">
+              <li><a href="<%= relative_base_path %>/index.html" class="is-perm">Home</a>
+              <li>Examples
+          </ul>
+          <div id="site-header__search" class="site-header__search" data-dropdown="#results-dropdown">
+              <input type="text"><button><span class="down-arrow"></span><span class="text">Search all</span></button>
+              <div class="options" style="display:none">
+                  <div class="options__option options__option--selected" name="search-all">Search all</div>
+                  <div class="options__option" name="classes">Classes</div>
+                  <div class="options__option" name="examples">Examples</div>
+                  <div class="options__option" name="guides">Guides</div>
+              </div>
+          </div>
+          <div id="results-dropdown" class="dropdown dropdown-tip dropdown-relative">
+              <ul class="dropdown-menu">
+              </ul>
+          </div>
+      </header><!-- End header. -->
+
+      <!-- Sidebar. -->
+      <div id="sidebar" class="sidebar sidebar--hidden">
+          <div class="sidebar__inner">
+              <div class="sidebar__button">
+                  <img src="<%= relative_base_path %>/images/sidebar__button__icon.png" class="sidebar__button__icon" />
+              </div>
+              <div class="sidebar__title">
+                  <img src="<%= relative_base_path %>/images/sidebar__title.png" />
+              </div>
+              <div class="sidebar__body">
+              </div>
+          </div>
+      </div><!-- End sidebar. -->
+      
+      <!-- Page. -->
+      <div class="page">
+        
+        <!-- Page nav. -->
+        <nav class="page-nav">
+            <h4 class="page-nav__title"><%= @package_path %></h4>
+            <ul id="page-nav__list" class="page-nav__list">
+            </ul>
+        </nav><!-- End page nav. -->
+        
+        <div class="content">
+          <!-- Content header. -->
+          <header class="content-header">
+            <h1>Examples</h1>
+          </header>
+          
+          <p>
+            <span class="is-light">Examples</span><br/>
+            <% examples.sort.each do |key, example_doc| %>
+              <a href="<%= File.join(example_doc.name, "index.html") %>"><%= example_doc.data[:title] %></a><br/>
+            <% end %>
+          </p>
+        </div>
+      </div>
+      
+      <script type="text/javascript" src="<%= relative_base_path %>/js/vendor/fuse.min.js"></script>
+      <script type="text/javascript" src="<%= relative_base_path %>/js/vendor/jquery-1.9.0.min.js"></script>
+      <script type="text/javascript" src="<%= relative_base_path %>/js/vendor/jquery.easing.min.js"></script>
+      <script type="text/javascript" src="<%= relative_base_path %>/js/vendor/underscore-min.js"></script>
+      <script type="text/javascript" src="<%= relative_base_path %>/js/authored/onscroll.js"></script>
+      <script type="text/javascript" src="<%= relative_base_path %>/js/authored/table-of-contents.js"></script>
+      <script type="text/javascript" src="<%= relative_base_path %>/js/authored/inherited-properties.js"></script>
+      <script type="text/javascript" src="<%= relative_base_path %>/js/authored/twirldowns.js"></script>
+      <script type="text/javascript" src="<%= relative_base_path %>/js/authored/id-link-intercept.js"></script>
+
+      <script type="text/javascript">
+
+        var relative_base = "<%= relative_base_path %>";
+        var search_objects = $.parseJSON('<%= search_object_string %>');
+
+      	var sidebarData = [
+      	    { "name" : "API reference", "link" : "<%= relative_base_path %>/api/index.html" },
+      	    { "name" : "Guides", "link" : [] },
+      	    { "name" : "Examples", "link" : [] }
+      	];
+
+        // populate examples links
+      	for(var index in search_objects.examples)
+      	{
+      	  example = search_objects.examples[index]
+      	  sidebarData[2].link.push({"name": example.name, "link": relative_base + "/" + example.path.split(".").join("/") + ".html"});
+      	}
+
+      	// populate guides links
+      	sidebarData[1].link = $.parseJSON('<%= $guides.sidebar_links_json(relative_base_path) %>');
+
+      </script>
+
+      <script type="text/javascript" src="<%= relative_base_path %>/js/authored/sidebar.js"></script>
+      <script type="text/javascript" src="<%= relative_base_path %>/js/vendor/jquery.dropdown.js"></script>
+      <script type="text/javascript" src="<%= relative_base_path %>/js/authored/search.js"></script>
+    </body>
+</html>

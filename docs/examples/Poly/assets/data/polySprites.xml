@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://texturepacker.com-->
+<!-- $TexturePacker:SmartUpdate:3ea5e2b06110c44ea205246aaf92e2e2$ -->
+<!--Format:
+n  => name of the sprite
+x  => sprite x pos in texture
+y  => sprite y pos in texture
+w  => sprite width (may be trimmed)
+h  => sprite height (may be trimmed)
+oX => sprite's x-corner offset (only available if trimmed)
+oY => sprite's y-corner offset (only available if trimmed)
+oW => sprite's original width (only available if trimmed)
+oH => sprite's original height (only available if trimmed)
+r => 'y' only set if sprite is rotated
+-->
+<TextureAtlas imagePath="polySprites.png" width="512" height="512">
+    <SubTexture name="circle_blue_down.png" x="2" y="2" width="100" height="100"/>
+    <SubTexture name="circle_blue_puff.png" x="104" y="2" width="100" height="100"/>
+    <SubTexture name="circle_blue_up.png" x="206" y="2" width="100" height="100"/>
+    <SubTexture name="circle_purple_down.png" x="308" y="2" width="100" height="100"/>
+    <SubTexture name="circle_purple_puff.png" x="410" y="2" width="100" height="100"/>
+    <SubTexture name="circle_purple_up.png" x="2" y="104" width="100" height="100"/>
+    <SubTexture name="circle_red_down.png" x="104" y="104" width="100" height="100"/>
+    <SubTexture name="circle_red_puff.png" x="206" y="104" width="100" height="100"/>
+    <SubTexture name="circle_red_up.png" x="308" y="104" width="100" height="100"/>
+    <SubTexture name="circle_yellow_down.png" x="410" y="104" width="100" height="100"/>
+    <SubTexture name="circle_yellow_puff.png" x="2" y="206" width="100" height="100"/>
+    <SubTexture name="circle_yellow_up.png" x="104" y="206" width="100" height="100"/>
+    <SubTexture name="eyes_1.png" x="206" y="206" width="100" height="100"/>
+    <SubTexture name="eyes_2.png" x="308" y="206" width="100" height="100"/>
+    <SubTexture name="eyes_3.png" x="410" y="206" width="100" height="100"/>
+    <SubTexture name="eyes_4.png" x="2" y="308" width="100" height="100"/>
+    <SubTexture name="mouths_1.png" x="104" y="308" width="100" height="100"/>
+    <SubTexture name="mouths_2.png" x="206" y="308" width="100" height="100"/>
+    <SubTexture name="mouths_3.png" x="308" y="308" width="100" height="100"/>
+    <SubTexture name="mouths_4.png" x="410" y="308" width="100" height="100"/>
+    <SubTexture name="mouths_5.png" x="2" y="410" width="100" height="100"/>
+</TextureAtlas>

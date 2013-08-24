@@ -1,0 +1,5 @@
+<UI.PolyUI>
+
+    <UI.Label id="scoreText" fontFile="assets/Score.fnt.txt" horizontalCenter="0" verticalCenter="0" />
+
+</UI.PolyUI>

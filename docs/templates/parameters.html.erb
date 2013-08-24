@@ -1,0 +1,9 @@
+<p class="is-light"><em>Parameters:</em></p>
+<table>
+<% @params.each do |param| %>
+    <tr>
+        <td><p><%= param[:name] %>:</p> <%= @doc.object_type(param, @relative_base_path) %></td>
+        <td><%= param %></td>
+    </tr>
+<% end %>
+</table>

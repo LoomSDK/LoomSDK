@@ -1,0 +1,11 @@
+{
+ "name" : "Feathers",   
+ "version" : "1.0",
+ "references" : [ "System", "Loom"],
+ "outputDir" : "./libs/",
+ "modules" : [ {
+    "name" : "Feathers",     
+    "version": "1.0",
+    "sourcePath": ["feathers"]
+    } ]
+}

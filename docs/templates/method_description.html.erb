@@ -1,0 +1,62 @@
+<div class="content-subsection" id="function-<%= @method[:name] %>">
+    <p><% if @doc.package_path != @method[:defined_by].package_path %><span class="inherited-icon"></span><% end %><strong><%= @method[:name] %></strong><%= render "templates/signature_parameters", {:parameters => @method[:parameters]} %>: <%= @doc.object_type(@method, @relative_base_path) %>
+      <% if @doc.package_path != @method[:defined_by].package_path %>
+      <br>
+      <span class="is-light">Inherited from <a href="<%= url( @method[:defined_by].package_path ) %>"><%= abbr_path( @method[:defined_by].package_path ) %></a></span>
+      <% end %>
+      <% unless @doc.comment_for_throws(@method[:docString]).empty? %>
+        <br>
+        <span class="is-light">Throws <%= @doc.comment_for_throws @method[:docString] %></span>
+      <% end %>
+    </p>
+    <p><%= @doc.deprecated(@method[:docString]) %><% if is_static( @method[:methodattributes] ) %><span class="special-property">static </span><% end %><% if is_native( @method[:methodattributes] ) %><span class="special-property">native </span><% end %><%= @doc.comment(@method, @relative_base_path) %></p>
+    
+    <% if not @method[:parameters].empty? %>
+      <!-- Title. -->
+      <div class="overview-box__header">
+          <h4 class="overview-box__title">Parameters</h4>
+      </div>
+      <!-- List. -->
+      <table class="overview-box__table" id="overview-returns">
+          <tbody>
+            <% @method[:parameters].each do |param| %>
+              <tr>
+                <td class="overview-box__name-col">
+                    <%= param[:name] %>: <%= @doc.object_type(param, @relative_base_path) %>
+                    <% if param[:hasdefault] %>
+                      <span class="is-light">= <%= param[:defaultvalue] %></span>
+                    <% end %>
+                </td>
+                <td class="overview-box__description-col">
+                  <%= @doc.comment_for_param(param[:name], @method[:docString]) %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+      </table>
+    <% end %>
+    
+    <br/>
+    
+    <% if not @doc.comment_for_return(@method[:docString]).empty? %>
+      <!-- Title. -->
+      <div class="overview-box__header">
+          <h4 class="overview-box__title">Returns</h4>
+      </div>
+      <!-- List. -->
+      <table class="overview-box__table" id="overview-returns">
+          <tbody>
+            <tr>
+              <td class="overview-box__name-col">
+                  <a href='<%= url( @method[:returntype] ) %>'><strong><%= abbr_path(@method[:returntype])%></strong></a>
+              </td>
+              <td class="overview-box__description-col">
+                <%= @doc.comment_for_return(@method[:docString])%>
+              </td>
+            </tr>
+          </tbody>
+      </table>
+    <% end %>
+    
+    <br/>
+</div>

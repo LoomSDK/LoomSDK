@@ -1,0 +1,20 @@
+<% if @doc.classes.any? %>
+  <!-- Classes section. -->
+  <section id="classes" name="Classes" class="content-section">
+
+      <h2>Classes</h2>
+
+      <ul class="items-list">
+          <% @doc.classes.each do |klass| %>
+          <li class="item">
+              <div class="item-name">
+                  <a href='<%= klass.url( @relative_base_path ) %>'><strong><%= klass.data[:name] %></strong></a>
+              </div>
+              <div class="item-description">
+                  <%= first_sentence klass.data[:docString] %>
+              </div>
+          <% end %>
+      </ul>
+  
+  </section><!-- End classes section. -->
+<% end %>

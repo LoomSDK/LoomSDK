@@ -1,0 +1,39 @@
+/* A Simple Example to showcase some CSS in loom */
+#background {
+    x: 480;
+    y: 0;
+    rotation: 1.57;
+}
+
+#button2 {
+    x: 120;
+    y: 120;
+}
+
+#button3 {
+    x: 120;
+    y: 220;
+}
+
+#button[large] {
+    x: 120;
+    y: 220;
+    scale: 0.6;
+}
+
+#button2[large] {
+    x: 120;
+    y: 160;
+    scale: 0.6;
+}
+
+#button3[large] {
+    x: 120;
+    y: 100;
+    scale: 0.6;
+}
+
+.myButton {
+    x: 120;
+    y: 20;
+}

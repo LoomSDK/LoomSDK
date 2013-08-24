@@ -1,0 +1,28 @@
+<?xml versioname="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://texturepacker.com-->
+<!-- $TexturePacker:SmartUpdate:c2ed0cd053b78a6bb8a311c6106cbfb0$ -->
+<!--Format:
+n  => name of the sprite
+x  => sprite x pos in texture
+y  => sprite y pos in texture
+w  => sprite width (may be trimmed)
+h  => sprite height (may be trimmed)
+oX => sprite's x-corner offset (only available if trimmed)
+oY => sprite's y-corner offset (only available if trimmed)
+oW => sprite's original width (only available if trimmed)
+oH => sprite's original height (only available if trimmed)
+r => 'y' only set if sprite is rotated
+-->
+<TextureAtlas imagePath="PolyUI.png" width="2048" height="1024">
+    <SubTexture name="about_button.png" x="514" y="764" width="510" height="187"/>
+    <SubTexture name="back_to_menu.png" x="2" y="958" width="334" height="47"/>
+    <SubTexture name="bg.png" x="2" y="2" width="1297" height="760"/>
+    <SubTexture name="black.png" x="2" y="1007" width="8" height="8"/>
+    <SubTexture name="gear_icon.png" x="1877" y="98" width="86" height="86"/>
+    <SubTexture name="help_button.png" x="1197" y="764" width="510" height="184"/>
+    <SubTexture name="logo.png" x="1301" y="266" width="510" height="333"/>
+    <SubTexture name="paused_text.png" x="1709" y="2" width="281" height="94"/>
+    <SubTexture name="play_button.png" x="2" y="764" width="510" height="192"/>
+    <SubTexture name="restart_button.png" x="1026" y="764" width="169" height="187"/>
+    <SubTexture name="resume_button.png" x="1709" y="98" width="166" height="166"/>
+</TextureAtlas>

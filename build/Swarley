@@ -1,0 +1,306 @@
+require 'json'
+
+namespace :package do
+
+  desc "Creates a universal sdk from the artifacts folder in the root"
+  task :universal_sdk do
+
+    require 'zip/zip'
+    require 'zip/zipfilesystem'
+
+    FileUtils.mkdir_p("pkg/sdk")
+
+    # Assets and libs
+    FileUtils.mkdir_p("artifacts/osx/assets")
+    FileUtils.cp_r("artifacts/osx/assets", "pkg/sdk")
+    FileUtils.cp_r("artifacts/osx/libs", "pkg/sdk")
+
+    # tools
+    FileUtils.mkdir_p("pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/osx/ldb", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/osx/lsc", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/osx/loomexec", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/osx/libassetAgent.so", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/ios/fruitstrap", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/android/apktool.jar", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/windows/ldb.exe", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/windows/lsc.exe", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/windows/loomexec.exe", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/windows/assetAgent.dll", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/ubuntu/ldb", "pkg/sdk/tools/ldb.ubuntu")
+    FileUtils.cp_r("artifacts/ubuntu/lsc", "pkg/sdk/tools/lsc.ubuntu")
+    FileUtils.cp_r("artifacts/ubuntu/loomexec", "pkg/sdk/tools/loomexec.ubuntu")
+    FileUtils.cp_r("artifacts/ubuntu/libassetAgent.so", "pkg/sdk/tools/libassetAgent.ubuntu.so")
+
+    # min cli version
+    FileUtils.cp_r("artifacts/osx/MIN_CLI_VERSION", "pkg/sdk")
+
+    # docs
+    FileUtils.cp_r("artifacts/docs/docs", "pkg/sdk")
+
+    # bin
+    FileUtils.mkdir_p("pkg/sdk/bin")
+    FileUtils.mkdir_p("pkg/sdk/bin/ios")
+    FileUtils.cp_r("artifacts/osx/LDB.loom", "pkg/sdk/bin")
+    FileUtils.cp_r("artifacts/osx/osx/LoomDemo.app", "pkg/sdk/bin")
+    FileUtils.cp_r("artifacts/windows/windows/LoomDemo.exe", "pkg/sdk/bin")
+    FileUtils.cp_r("artifacts/ubuntu/ubuntu/LoomDemo", "pkg/sdk/bin/LoomDemo.ubuntu")
+
+    # ios
+    FileUtils.cp_r("artifacts/ios/ios/LoomDemo.app", "pkg/sdk/bin/ios")
+    FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/assets"
+    FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/bin"
+    FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/libs"
+
+    #android
+    decompile_apk("artifacts/android/android/LoomDemo.apk","pkg/sdk/bin/android")
+    # Strip out the bundled assets and binaries
+    FileUtils.rm_rf "pkg/sdk/bin/android/assets/assets"
+    FileUtils.rm_rf "pkg/sdk/bin/android/assets/bin"
+    FileUtils.rm_rf "pkg/sdk/bin/android/assets/libs"
+    FileUtils.rm_rf "pkg/sdk/bin/android/META-INF"
+
+    #ouya
+    decompile_apk("artifacts/ouya/ouya/LoomDemo.apk","pkg/sdk/bin/ouya")
+    # Strip out the bundled assets and binaries
+    FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/assets"
+    FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/bin"
+    FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/libs"
+    FileUtils.rm_rf "pkg/sdk/bin/ouya/META-INF"
+
+    Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|
+      Dir["pkg/sdk/**/**"].each do |file|
+        zipfile.add(file.sub("pkg/sdk/", ''),file)
+      end
+    end
+
+    FileUtils.rm_rf("pkg/sdk")
+
+  end
+
+  task :free_sdk do
+
+    require 'zip/zip'
+    require 'zip/zipfilesystem'
+
+    FileUtils.rm_rf("pkg") if File.exists?("pkg")
+    FileUtils.mkdir_p("pkg/sdk")
+
+    # Assets and libs
+    FileUtils.mkdir_p("artifacts/osx/assets")
+    FileUtils.cp_r("artifacts/osx/assets", "pkg/sdk")
+    FileUtils.cp_r("artifacts/osx/libs", "pkg/sdk")
+
+    # tools
+    FileUtils.mkdir_p("pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/osx/ldb", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/osx/lsc", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/osx/libassetAgent.so", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/windows/ldb.exe", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/windows/lsc.exe", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/windows/assetAgent.dll", "pkg/sdk/tools")
+    FileUtils.cp_r("artifacts/ubuntu/ldb", "pkg/sdk/tools/ldb.ubuntu")
+    FileUtils.cp_r("artifacts/ubuntu/lsc", "pkg/sdk/tools/lsc.ubuntu")
+    FileUtils.cp_r("artifacts/ubuntu/libassetAgent.so", "pkg/sdk/tools/libassetAgent.ubuntu.so")
+
+    # min cli version
+    FileUtils.cp_r("artifacts/osx/MIN_CLI_VERSION", "pkg/sdk")
+
+    # docs
+    FileUtils.cp_r("artifacts/docs/docs", "pkg/sdk")
+
+    # bin
+    FileUtils.mkdir_p("pkg/sdk/bin")
+    FileUtils.mkdir_p("pkg/sdk/bin/ios")
+    FileUtils.cp_r("artifacts/osx/LDB.loom", "pkg/sdk/bin")
+    FileUtils.cp_r("artifacts/osx/osx/LoomDemo.app", "pkg/sdk/bin")
+    FileUtils.cp_r("artifacts/windows/windows/LoomDemo.exe", "pkg/sdk/bin")
+    FileUtils.cp_r("artifacts/ubuntu/ubuntu/LoomDemo", "pkg/sdk/bin/LoomDemo.ubuntu")
+
+    Zip::ZipFile.open("pkg/freesdk.zip", 'w') do |zipfile|
+      Dir["pkg/sdk/**/**"].each do |file|
+        zipfile.add(file.sub("pkg/sdk/", ''),file)
+      end
+    end
+
+    FileUtils.rm_rf("pkg/sdk")
+
+  end
+
+end
+
+namespace :post do
+
+  desc "Posts the sdk to S3 and sumbit it to TEC"
+  task :sdk, [:branch, :commit_sha, :build_number, :download_type, :root_url, :user, :pass, :s3_id, :s3_secret, :bucket] do |t, args|
+
+    puts "-- Running in #{Dir.pwd} --"
+
+    if(!File.exists? "loomsdk.zip")
+      abort "Unable to find loomsdk.zip"
+    end
+
+    root_url = args[:root_url]
+    
+    email = args[:user]
+    pass = args[:pass]
+
+    s3_id = args[:s3_id]
+    s3_secret = args[:s3_secret]
+    bucket = args[:bucket]
+
+    if(!s3_id || !s3_secret)
+      abort "No s3 credentials."
+    end
+
+    require "aws/s3"
+    AWS::S3::Base.establish_connection!(
+      :access_key_id     => s3_id,
+      :secret_access_key => s3_secret
+    )
+
+    branch = args[:branch].split("/")[-1]
+    sha = args[:commit_sha]
+    build_number = args[:build_number]
+    short_sha = args[:commit_sha][0..9]
+    sdk_url = "downloads/sdks/loom-1_1_#{build_number}-#{short_sha}-pro.zip"
+    free_sdk_url = "downloads/sdks/loom-1_1_#{build_number}-#{short_sha}-free.zip"
+    native_url = "downloads/native/loom-1_1_#{build_number}-#{short_sha}-native.zip"
+    examples_url = "downloads/examples/loom-1_1_#{build_number}-#{short_sha}-examples.zip"
+    platform = "universal"
+
+    puts "Uploading sdk version #{sha} to s3..."
+    AWS::S3::S3Object.store(sdk_url, open("loomsdk.zip"), bucket)
+    puts "Done"
+
+    puts "Uploading free sdk version #{sha} to s3..."
+    AWS::S3::S3Object.store(free_sdk_url, open("freesdk.zip"), bucket)
+    puts "Done"
+
+    puts "Uploading native sdk version #{sha} to s3..."
+    AWS::S3::S3Object.store(native_url, open("nativesdk.zip"), bucket)
+    puts "Done"
+
+    puts "Uploading examples to s3..."
+    AWS::S3::S3Object.store(examples_url, open("examples.zip"), bucket, :access => :public_read)
+    puts "Done"
+
+    if(branch == "master")
+      puts "Branch is MASTER publishing to #{root_url}"
+      puts "Logging in to #{root_url}..."
+      # send along the credentials
+      login_endpoint = URI.parse("http://#{root_url}/api/v1/session")
+      login_response = Net::HTTP.post_form(login_endpoint, {"email" => email, "password" => pass})
+
+      if login_response.code == "201"
+        puts "Login successful!"
+
+        login_details = JSON.parse(login_response.body)
+        token = login_details['response']
+
+        puts "Token is: #{token}"
+
+      else
+        abort "Login failed! #{login_response.body}"
+      end
+
+      ###########################################################################
+      # Post Pro SDK
+      ###########################################################################
+      puts "Posting Pro SDK"
+      post_endpoint = URI.parse("http://#{root_url}/api/v1/sdk")
+      post_response = Net::HTTP.post_form(post_endpoint, {"auth_token" => token, "commit_sha" => sha, "s3_path" => sdk_url, "sdk_version" => "1.1.#{build_number}", "download_type" => "pro_sdk", "branch" => branch, "platform" => platform})
+
+      if post_response.code == "201"
+        puts "Pro SDK Posted successfully!"
+      else
+        abort "Pro SDK Post failed! #{post_response.body}"
+      end
+
+      ###########################################################################
+      # Post Free SDK
+      ###########################################################################
+      puts "Posting Free SDK"
+      post_endpoint = URI.parse("http://#{root_url}/api/v1/sdk")
+      post_response = Net::HTTP.post_form(post_endpoint, {"auth_token" => token, "commit_sha" => sha, "s3_path" => free_sdk_url, "sdk_version" => "free_1.1.#{build_number}", "download_type" => "free_sdk", "branch" => branch, "platform" => platform})
+
+      if post_response.code == "201"
+        puts "Free SDK Posted successfully!"
+      else
+        abort "Free SDK Post failed! #{post_response.body}"
+      end
+
+      ###########################################################################
+      # Post Native SDK
+      ###########################################################################
+      puts "Posting Native SDK"
+      post_endpoint = URI.parse("http://#{root_url}/api/v1/sdk")
+      post_response = Net::HTTP.post_form(post_endpoint, {"auth_token" => token, "commit_sha" => sha, "s3_path" => native_url, "sdk_version" => "native_1.1.#{build_number}", "download_type" => "native_sdk", "branch" => branch, "platform" => platform})
+
+      ###########################################################################
+      # Post Examples
+      ###########################################################################
+      puts "Posting Examples"
+      post_endpoint = URI.parse("http://#{root_url}/api/v1/sdk")
+      post_response = Net::HTTP.post_form(post_endpoint, {"auth_token" => token, "commit_sha" => sha, "s3_path" => examples_url, "sdk_version" => "examples_1.1.#{build_number}", "download_type" => "examples", "branch" => branch, "platform" => platform})
+
+      if post_response.code == "201"
+        puts "Native SDK Posted successfully!"
+      else
+        abort "Native Post failed! #{post_response.body}"
+      end
+    else
+      puts "Branch is not MASTER, so we're not publishing to #{root_url}"
+    end
+  end 
+
+  desc "Deploys the documentation folder to S3"
+  task :docs, [:branch, :commit_sha, :version_number, :s3_id, :s3_secret, :bucket] do |t, args|
+    if(!File.exists?("s3_docs") || !File.directory?("s3_docs"))
+      abort "Unable to find s3_docs directory"
+    end
+
+    s3_id = args[:s3_id]
+    s3_secret = args[:s3_secret]
+    bucket = args[:bucket]
+
+    if(!s3_id || !s3_secret)
+      abort "No s3 credentials."
+    end
+
+    require 'aws-sdk'
+    AWS.config(
+      :access_key_id => s3_id, 
+      :secret_access_key => s3_secret
+    )
+
+    s3 = AWS::S3.new
+    bucket_name = 'docs.theengine.co'
+
+    branch = args[:branch].split("/")[-1]
+    sha = args[:commit_sha]
+    version_number = args[:version_number]
+    short_sha = args[:commit_sha][0..9]
+    destination = "loom/#{version_number}"
+
+    puts "== Uploading s3_docs to #{bucket_name}::#{destination}"
+
+    Dir.chdir "s3_docs" do 
+      Dir["**/**"].each do |f|
+        if File.directory? f
+          next
+        else
+          key = "#{destination}/#{f}"
+          print "[#{destination}] Uploading file #{f}... "
+          s3.buckets[bucket_name].objects[key].write(:file => f, :acl => "public_read")
+          puts "Done"
+        end
+      end      
+    end
+
+  end
+end
+
+def decompile_apk (file, destination)
+  sh "java -jar artifacts/android/apktool.jar d -f #{file} #{destination}"
+end

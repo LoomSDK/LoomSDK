@@ -1,0 +1,12 @@
+{
+ "name" : "LDB",   
+ "version" : "1.0",
+ "executable" : true,
+ "references" : [ "System" ],
+ "outputDir" : "./bin/",
+ "modules" : [ {
+    "name" : "LDB",     
+    "version": "1.0",
+    "sourcePath": ["ldb"]
+    } ]
+}

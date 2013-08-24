@@ -1,0 +1,36 @@
+////////////////////////////////
+//           PAGE NAV
+////////////////////////////////
+
+.page-nav {
+  position: fixed;
+  top: 40px;
+  left: 55px;
+  width: 180px;
+  border-right: 1px solid $barely-gray;
+  padding: 55px 0 50px 0;
+}
+
+.page-nav__title {
+	margin: 0;
+  padding: 0 14px 10px 20px;
+}
+
+ul.page-nav__list {
+	margin: 0;
+	padding: 0;
+
+	li {
+		margin: 0 0;
+  	padding: 5px 20px;
+		p {
+			margin: 0;
+		}
+		&.current-nav-section {
+		  background-color: $blue;
+		  a {
+		  	color: white;
+		  }
+		}
+	}
+}

@@ -1,0 +1,7 @@
+<poly.views.GameOverlayView>
+
+    <loom.css.StyleSheet source="assets/main.css"/>
+
+    <loom2d.ui.SimpleButton id="pauseButton" styleName="pauseButton" atlasName="PolyUI" upImage="gear_icon.png" downImage="gear_icon.png" />
+
+</poly.views.GameOverlayView>

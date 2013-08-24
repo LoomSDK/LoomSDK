@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>Loom SDK: <%= @package_path %> Package Reference</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link rel="stylesheet" href="<%= @relative_base_path %>/css/package-page.css">
+        <link rel="stylesheet" href="<%= @relative_base_path %>/css/pygments.css">
+        <link rel="stylesheet" href="<%= @relative_base_path %>/css/all-pages.css">
+        <link type="text/css" rel="stylesheet" href="<%= @relative_base_path %>/css/jquery.dropdown.css" />
+    </head>
+    <body>
+
+        <div id="top">&nbsp;</div>
+
+        <%= render 'templates/header' %>
+
+        <%= render 'templates/sidebar' %>
+
+        <!-- Page. -->
+        <div class="page">
+
+            <!-- Page nav. -->
+            <nav class="page-nav">
+                <h4 class="page-nav__title"><%= @package_path %></h4>
+                <ul id="page-nav__list" class="page-nav__list">
+                </ul>
+            </nav><!-- End page nav. -->
+
+            <!-- Content. -->
+            <div class="content">
+
+                <!-- Content header. -->
+                <header class="content-header">
+                    
+                    <% if @doc.path == "" %>
+                      <h1>API Reference</h1>
+                    <% else %>
+                    
+                      <h1><%= package_links @doc %></h1>
+                      
+                    <% end %>
+                    <p>  
+                        <% if @doc.sub_packages.any? %>
+                          <span class="is-light">subpackages</span>
+                          <% sorted_packages = @doc.sub_packages.values.sort { |a, b| a.path.downcase <=> b.path.downcase } %>
+                          <% sorted_packages.each do |package_doc| %>
+                            <br><a href='<%= url(package_doc.path) %>'><%= package_doc.path %></a>
+                          <% end %>
+                        <% end %>
+                    </p>
+
+                </header><!-- End content header. -->
+
+                <%= render "templates/package/interfaces" %>
+                
+                <%= render "templates/package/structs" %>
+                
+                <%= render "templates/package/delegates" %>
+                
+                <%= render "templates/package/enums" %>
+                
+                <%= render "templates/package/classes" %>
+
+            </div><!-- End content. -->
+
+        </div><!-- End page. -->
+
+        <%= render "templates/javascript_includes" %>
+    </body>
+</html>

@@ -1,0 +1,2 @@
+certs/* export-ignore
+loom/vendor/telemetry-* export-ignore

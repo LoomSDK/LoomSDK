@@ -1,0 +1,20 @@
+<% if @doc.interfaces.any? %>
+  <!-- Interfaces section. -->
+  <section id="interfaces" name="Interfaces" class="content-section">
+
+      <h2>Interfaces</h2>
+
+      <ul class="items-list">
+          <% @doc.interfaces.each do |interface| %>
+          <li class="item">
+              <div class="item-name">
+                  <a href='<%= interface.url( @relative_base_path ) %>'><em><%= interface.data[:name] %></em></a>
+              </div>
+              <div class="item-description">
+                  <%= first_sentence interface.data[:docString] %>
+              </div>
+          <% end %>
+      </ul>
+  
+  </section><!-- End interfaces section. -->
+<% end %>

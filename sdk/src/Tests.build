@@ -1,0 +1,12 @@
+{
+ "name" : "Tests",   
+ "version" : "1.0",
+  "executable" : true,
+  "outputDir" : "./bin",
+  "references" : [ "System", "UnitTest" ],
+  "modules" : [ {
+    "name" : "Tests",     
+    "version": "1.0",
+    "sourcePath": ["test"]
+    } ]
+}

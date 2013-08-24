@@ -1,0 +1,22 @@
+<!-- Functions section. -->
+<% if @events.any? %>
+<section id="events" name="Events" class="content-section">
+
+    <!-- Title. -->
+    <h2>Events</h2>
+
+    <% if @events.any? %>
+    <div class="content-section__inner">
+      
+      <% @events.each do |event| %>
+        <div class="content-subsection" id="event-<%= event[:name] %>">
+          <p><strong><%= event[:name] %></strong> <a href='<%= Module::ClassDoc.full_classpath_to_url(event[:type], @relative_base_path) %>'><%= abbr_path(event[:type])%></a></p>
+          <p><%= event[:desc] %></p>
+        </div>
+      <% end %>
+
+    </div>
+    <% end %>
+
+</section><!-- End functions section. -->
+<% end %>

@@ -1,0 +1,18 @@
+<!-- Attributes section. -->
+<% if @constants.any?  %>
+<section id="constants" name="Constants" class="content-section">
+
+    <!-- Title. -->
+    <h2>Constants</h2>
+    
+    <div class="content-section__inner">
+    
+        <!-- Public list. -->
+        <% @constants.each do |constant| %>
+            <%= render "templates/constant_description", {:constant => constant} %>
+        <% end %>
+
+    </div>
+
+</section><!-- End attributes section. -->
+<% end %>

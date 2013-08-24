@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link rel="stylesheet" href="<%= @relative_base_path %>/css/class-page.css">
+    </head>
+    <body>
+
+        <div id="top">&nbsp;</div>
+
+        <header class="site-header">
+            <div class="site-header__logo">
+                <div class="site-header__logo__version">1.0.1</div>
+            </div>
+            <ul class="site-header__nav">
+                <li><a href="index.html" class="is-perm">Home</a>
+            </ul>
+            <div class="site-header__search">
+                <!-- TODO: Input, button, dropdown. -->
+                <input type="text">
+            </div>
+        </header>
+
+        <!-- Sidebar. -->
+        <div id="sidebar" class="sidebar">
+            <div class="sidebar__inner">
+                <div class="sidebar__button">
+                    <img src="<%= @relative_base_path %>/images/sidebar__button.png" />
+                </div>
+                <div class="sidebar__title">
+                    <img src="<%= @relative_base_path %>/images/sidebar__title.png" />
+                </div>
+                <div class="sidebar__body">
+                </div>
+            </div>
+        </div><!-- End sidebar. -->
+
+        <!-- Page. -->
+        <div class="page">
+
+            <!-- Page nav. -->
+            <nav class="page-nav">
+                <h4 class="page-nav__title"><%= @type.data[:name] %></h4>
+                <ul class="page-nav__list">
+                    <li><p><a href="#top" class="is-perm">Description</a></p>
+                    <li><p><a href="#api-overview" class="is-perm">API overview</a></p>
+                    <li><p><a href="#attributes" class="is-perm">Attributes</a></p>
+                    <li><p><a href="#functions" class="is-perm">Functions</a></p>
+            </nav><!-- End page nav. -->
+
+            <!-- Content. -->
+            <div class="content">
+
+                <!-- Content header. -->
+                <header class="content-header">
+
+                    <h1><%= @type.data[:name] %></h1>
+
+                    <p>
+                        <% package_parts = @type.data[:package].split('.') %>
+                        <% package_parts.each do |p| %><a href="#"><%= p %></a><%= '.' unless p == package_parts.last %><% end %>
+                    </p>
+
+                    <!-- Metadata. -->
+                    <table class="content-header__metadata">
+                        <tr>
+                            <td class="key">
+                                <h4>Inheritance</h4>
+                            </td>
+                            <td class="value">
+                                <p>
+                                    <% @inherits.each do |s| %>
+                                        <a href="<%= s.url(@relative_base_path) %>"><%= s.data[:name] %></a><%= ' >' unless s == @inherits.last %>
+                                    <% end %>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="key">
+                                <h4>Implements</h4>
+                            </td>
+                            <td class="value">
+                                <p>
+                                    <% @type.data[:interfaces].each do |i| %>
+                                        <a href="<%= Module::ClassType.full_classpath_to_url(i, @relative_base_path) %>"><%= i.split(".").last %></a><%= ', ' unless i == @type.data[:interfaces].last %>
+                                    <% end %>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="key">
+                                <h4>Subclasses</h4>
+                            </td>
+                            <td class="value">
+                                <p>
+                                    <% @subclasses.each do |c| %>
+                                        <a href="<%= Module::ClassType.full_classpath_to_url(c.package_path, @relative_base_path) %>"><%= c %></a><%= ', ' unless c == @subclasses.last %>
+                                    <% end %>
+                                </p>
+                            </td>
+                        </tr>
+                    </table><!-- End metadata. -->
+
+                </header><!-- End content header. -->
+                
+                <hr>
+
+                <!-- Description section. -->
+                <section id="description" class="content-section">
+
+                    <h2>Description</h2>
+                    <%= @type.data[:docString] %>
+
+                </section><!-- End description section. -->
+
+                <hr>
+
+                <!-- API overview section. -->
+                <section id="api-overview" class="content-section">
+
+                    <h2>API overview</h2>
+
+                    <!-- Public attributes. -->
+                    <div class="overview__section">
+
+                        <div class="overview__section__title">
+                            <h4 class="is-inline">Public attributes</h4>
+                            <div class="show-inherited-toggle" data-target="#overview-public-attributes">
+                                <div class="checkbox"></div>
+                            </div>
+                        </div>
+                        <ul id="overview-public-attributes" class="overview__section__list">
+                            <% if @type.field_hash["public"] %>
+                                <% @type.field_hash["public"].each do |field| %>
+                                    <li>
+                                        <p><a href="#attribute-<%= field[:name] %>"><strong><%= field[:name] %></strong></a>:
+                                            <a href="<%= Module::ClassType.full_classpath_to_url(field[:type], @relative_base_path) %>"><%= field[:type].split('.').last %></a>
+                                        <br>
+                                        <span class="is-light"><%= field[:docString] %></span></p>
+                                    </li>
+                                <% end %>
+                            <% end %>
+                        </ul>
+                    </div><!-- End public attributes. -->
+
+                    <!-- Protected attributes. -->
+                    <div class="overview__section">
+                        <div data-twirl="#overview-protected-attributes" class="overview__section__title overview-protected__header twirlable">
+                            <div class="twirl-down"></div><h4 class="is-inline">Protected attributes</h4>
+                            
+                            <div class="show-inherited-toggle" data-target="#overview-protected-attributes">
+                                <div class="checkbox"></div>
+                            </div>
+                        </div>
+                        <ul id="overview-protected-attributes" class="overview__section__list" style="display:none;">
+                            <% if @type.field_hash["protected"] %>
+                                <% @type.field_hash["protected"].each do |field| %>
+                                    <li>
+                                        <p><a href="#attribute-<%= field[:name] %>"><strong><%= field[:name] %></strong></a>: 
+                                            <a href="<%= Module::ClassType.full_classpath_to_url(field[:type], @relative_base_path) %>"><%= field[:type].split('.').last %></a>
+                                        <br>
+                                        <span class="is-light"><%= field[:docString] %></span></p>
+                                    </li>
+                                <% end %>
+                            <% end %>
+                        </ul>
+                    </div><!-- End protected attributes. -->
+
+                    <!-- Public functions. -->
+                    <div class="overview__section">
+
+                        <div class="overview__section__title">
+                            <h4 class="is-inline">Public functions</h4>
+                            <div class="show-inherited-toggle" data-target="#overview-public-functions">
+                                <div class="checkbox"></div>
+                            </div>
+                        </div>
+                        <ul id="overview-public-functions" class="overview__section__list">
+                            <% if @type.method_hash["public"] %>
+                                <% @type.method_hash["public"].each do |public_method| %>
+                                  <%= render 'templates/method_overview.html.erb', public_method %>
+                                <% end %>
+                            <% end %>
+                        </ul>
+                    </div><!-- End public functions. -->
+
+                    <!-- Protected functions. -->
+                    <div class="overview__section">
+                        <div data-twirl="#overview-protected-functions" class="overview__section__title overview-protected__header twirlable">
+                            <div class="twirl-down"></div><h4 class="is-inline">Protected functions</h4>
+                            
+                            <div class="show-inherited-toggle" data-target="#overview-protected-attributes">
+                                <div class="checkbox"></div>
+                            </div>
+                        </div>
+                        <ul id="overview-protected-functions" class="overview__section__list" style="display:none;">
+                            <% if @type.method_hash["protected"] %>
+                                <% @type.method_hash["protected"].each do |protected_method| %>
+                                  <%= render 'templates/method_overview.html.erb', protected_method %>
+                                <% end %>
+                            <% end %>
+                        </ul>
+                    </div><!-- End protected functions. -->
+
+                </section><!-- End API overview section. -->
+
+                <hr>
+
+                <!-- Attributes section. -->
+                <section id="attributes" class="content-section">
+
+                    <h2>Attributes</h2>
+
+                    <ul class="attributes-list">
+                        <!-- <li class="attribute" id="attribute-numChildren">
+                            <div class="attribute__title">
+                                <p><strong>numChildren</strong>: <a href='#'>int</a></p>
+                            </div>
+                            <div class="attribute__description">
+                                <p>The number of children of this container.</p>
+                                <code>
+                                    <pre>
+        class Foo {
+        function Foo() { Console.print("Foo created."); }
+        }
+
+        class Bar {
+        function Bar(x:int) { Console.print("Bar created with "+x); }
+        }
+
+        var f=new Foo();
+        var b=new Bar(3);
+                                    </pre>
+                                </code>
+                                <p>Aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla. Aute irure dolor in reprehenderit in volupo tate velit esse cillum dolore eu fugiat nulla.</p>
+                            </div>
+                        <li class="attribute" id="attribute-width">
+                            <div class="attribute__title">
+                                <p><strong>width</strong>: <a href='#'>Number</a>
+                                <br>
+                                <span class="is-light">Inherited from <a href="#">DisplayObject</a></span></p>
+                            </div>
+                            <div class="attribute__description">
+                                <p>The width of the object in pixels. </p>
+                            </div>
+                        <li class="attribute" id="attribute-stage">
+                            <div class="attribute__title">
+                                <p><strong>stage</strong>: <a href='#'>Stage</a></p>
+                            </div>
+                            <div class="attribute__description">
+                                <p>The stage the display object is connected to, or null if it is not connected to the stage.</p>
+                            </div> -->
+                    </ul>
+
+                    <div class="protected-subsection">
+                        <div data-twirl="#protected-attributes" class="protected-subsection__header twirlable">
+                            <div class="twirl-down"></div><h3 class="protected-subsection__title is-inline">Protected attributes</h3>
+                        </div>
+
+                        <div id="protected-attributes" class="protected-subsection__body" style="display:none;">
+                            <ul class="attributes-list">
+                                <!-- <li class="attribute" id="attribute-_canvas">
+                                    <div class="attribute__title">
+                                        <p><strong>_canvas</strong>: <a href='#'>BaseCanvas</a></p>
+                                    </div>
+                                    <div class="attribute__description">
+                                        <p>Reprehenderit in volupo tate velit esse cillum dolore eu fugiat nulla.</p>
+                                    </div> -->
+                        </div>
+                    </div>
+
+                </section><!-- End attributes section. -->
+
+                <hr>
+
+                <!-- Functions section. -->
+                <section id="functions" class="content-section">
+
+                    <h2>Functions</h2>
+
+                    <ul class="functions-list">
+                        <% if @type.method_hash["public"] %>
+                            <% @type.method_hash["public"].each do |public_method| %>
+                              <%= render 'templates/method_description.html.erb', public_method %>
+                            <% end %>
+                        <% end %>
+                    </ul>
+
+                    <div class="protected-subsection">
+
+                        <div data-twirl="#protected-functions" class="protected-subsection__header twirlable">
+                            <div class="twirl-down"></div><h3 class="protected-subsection__title is-inline">Protected functions</h3>
+                        </div>
+
+                        <div id="protected-functions" class="protected-subsection__body" style="display:none;">
+                            <ul class="functions-list">
+                              <% if @type.method_hash["protected"] %>
+                                  <% @type.method_hash["protected"].each do |protected_method| %>
+                                    <%= render 'templates/method_description.html.erb', protected_method %>
+                                  <% end %>
+                              <% end %>
+                            </ul>
+                        </div>
+
+                    </div>
+
+                </section><!-- End functions section. -->
+
+            </div><!-- End content. -->
+
+        </div><!-- End page. -->
+
+        <script type="text/javascript" src="<%= @relative_base_path %>/js/vendor/jquery-1.9.0.min.js"></script>
+        <script type="text/javascript" src="<%= @relative_base_path %>/js/vendor/underscore-min.js"></script>
+        <script type="text/javascript">
+
+            $( document ).ready( function() {
+
+                /*-----------------------------
+                ------ BUILD SIDEBAR NAV ------
+                -----------------------------*/
+
+                var sidebarData = [
+                    { "name" : "Welcome", "link" : "#" },
+                    { "name" : "Intro to Loom", "link" : "#" },
+                    { "name" : "Loom basics", "link" : "#" },
+                    { "name" : "Toolbelt reference", "link" : [
+                        { "name" : "LoomScript", "link" : "#" },
+                        { "name" : "Loom Store API", "link" : "#" },
+                        { "name" : "Loom Console", "link" : [
+                                { "name" : "Introduction", "link" : "#" },
+                                { "name" : "Commands", "link" : "#" }
+                            ] }
+                        ] },
+                    { "name" : "Class reference", "link" : "#" }
+                ];
+
+                // Recursively construct sidebar DOM.
+                var sidebarId = 0;
+                var sidebarDom = makeList( sidebarData, 0, '' );
+                $( '.sidebar__body' ).append( sidebarDom );
+
+                function makeList( obj, depth, id ) {
+                    var list = $( '<ul id="' + id + '"></ul>' );
+                    _.each( obj, function( itemData ) {
+                        var listItemDom = makeListItem( itemData[ "name" ], depth );
+                        var link = itemData[ "link" ];
+                        if ( _.isString( link ) ) {
+                            listItemDom.append( makeLink( link ) );
+                        } else {
+                            var linkDom = makeLink( '#' );
+                            listItemDom.append( linkDom );
+                            var listDom = makeList( link, depth + 1, id );
+                            listItemDom.append( listDom );
+                            listDom.hide();
+                            linkDom.click( function() {
+                                listDom.toggle();
+                                return false;
+                            } );
+                        }
+                        list.append( listItemDom );
+                    } );
+                    return list;
+                }
+
+                function makeListItem( name, depth ) {
+                    var listItem = $( '<li class="sidebar__body__item">' );
+                    listItem.append( '<p class="push-' + depth + '"">' + name + '</p>' );
+                    return listItem;
+                }
+
+                function makeLink( link ) {
+                    return $( '<a href="' + link + '"><span class="block-link"></span></a>' );
+                }
+                
+                /*-----------------------------
+                --- WINDOW CALLBACK HELPERS ---
+                -----------------------------*/
+
+                 // Execute an array of functions.
+                function executeArray( arr ) {
+                    _.each( arr, function( fn ) {
+                        fn();
+                    } );
+                }
+
+                // Make it easy to aggregate scroll callbacks.
+                var scrollCallbacks = [];
+
+                function onScroll( fn ) {
+                    scrollCallbacks.push( fn );
+                    return fn;
+                }
+                
+                $( window ).scroll( function() {
+                    executeArray( scrollCallbacks );
+                } );
+
+
+                /*-----------------------------
+                ----------- SIDEBAR -----------
+                -----------------------------*/
+
+                var sidebar = $( '#sidebar' );
+
+                // Hide sidebar after a slight delay.
+                setTimeout( function() {
+                    sidebar.addClass( 'sidebar--hidden' );
+                }, 1000 );
+
+                var hideSidebarDelay;
+
+                // Show sidebar on mouseover.
+                sidebar.mouseover( function() {
+                    clearTimeout( hideSidebarDelay );
+                    sidebar.removeClass( 'sidebar--hidden' );
+                } );
+
+                // Hide sidebar on mouseout, after a brief delay.
+                sidebar.mouseout( function() {
+                    hideSidebarDelay = setTimeout( function() {
+                        sidebar.addClass( 'sidebar--hidden' );
+                    }, 250 );
+                } );
+
+                /*-----------------------------
+                -- TWIRL OPEN PROTECTED PROPS -
+                -----------------------------*/
+
+                $.each( $( '[data-twirl]' ), function( index, el ) {
+
+                    var $el = $( el );
+                    $el.click( function() {
+
+                        // Open and shut hidden content.
+                        toggleTwirl( $( $el.attr( 'data-twirl' ) ) );
+                        return false;
+
+                    } );
+
+                } );
+
+                function toggleTwirl( subsection ) {
+
+                    // Open subsection.
+                    var $subsection = $( subsection );
+                    $subsection.toggle();
+
+                    // Toggle arrow.
+                    var header = $subsection.prev( '.twirlable' );
+                    header.children( '.twirl-down' ).toggleClass( 'twirl-down--open' );
+
+                }
+
+                function twirlOpen( subsection ) {
+
+                    // Open subsection if it's closed.
+                    var $subsection = $( subsection );
+                    if ( $subsection.css( 'display' ) == 'none' ) {
+                        toggleTwirl( subsection );
+                    }
+
+                }
+
+                /*-----------------------------
+                ---- TOGGLE INHERITED PROPS ---
+                -----------------------------*/
+
+                $.each( $( '.show-inherited-toggle' ), function( index, el ) {
+
+                    var $el = $( el );
+                    $el.click( function() {
+
+                        // Toggle checkbox on and off.
+                        $el.toggleClass( 'show-inherited-toggle--on' );
+
+                        // Turn all inherited items on and off.
+                        var $target = $( $el.attr( 'data-target' ) );
+                        var inherited = $target.find( '.inherited' );
+                        $.each( inherited, function( index, el ) {
+                            $( el ).toggle();
+                        } );
+
+                        return false;
+
+                    } );
+
+                } );
+
+                /*-----------------------------
+                ------ INTERCEPT ID LINKS -----
+                -----------------------------*/
+
+                var links = $( "a[href^='#']" );
+                $.each( links, function( index, link ) {
+
+                    var href = $( link ).attr( 'href');
+                    var $el = $( href );
+                    
+                    // If this links to somewhere deeper on the page,
+                    // listen to click event.
+                    if ( $el.length > 0 ) {
+
+                        $( link ).click( function() {
+                            // Twirl open the enclosing protected section, if applicable.
+                            var subsection = $el.closest( '.protected-subsection__body' );
+                            twirlOpen( subsection );
+                            // Jump to the section.
+                            $('html, body').animate( {
+                                scrollTop: $el.offset().top - 100
+                            }, 0 );
+                            return false;
+                        } );
+                    }
+
+                } );
+
+                /*-----------------------------
+                ---- UPDATE CURRENT SECTION ---
+                -----------------------------*/
+
+                var navButtonsAndSections = [];
+                function addNavButtonAndSection( button, section ) {
+                    navButtonsAndSections.push( {
+                        button: button,
+                        stylableButton: button.closest( 'li' ),
+                        section: section
+                    } );
+                }
+
+                _.each( $( ".page-nav__list a[href^='#']" ), function( button ) {
+                    addNavButtonAndSection( $( button ), $( $( button ).attr( 'href' ) ) );
+                } );
+
+                navButtonsAndSections = _.sortBy( navButtonsAndSections, function( item ) {
+                    return item.section.offset().top * -1;
+                } );
+
+                var currSection;
+                
+                onScroll( function() {
+
+                    var $window = $( window ),
+                        scrollTop = $( window ).scrollTop(),
+                        newSection;
+
+                    // If we're at the button of the page, use the last section.
+                    if ( scrollTop >= $( 'body' ).height() - $window.height() ) {
+
+                        newSection = _.first( navButtonsAndSections );
+
+                    } else {
+
+                        // Else, use whichever section we're looking at.
+                        newSection = _.find( navButtonsAndSections, function( item ) {
+                            return ( scrollTop >= item.section.offset().top - 200 );//- $( '#header' ).outerHeight() );
+                        } );
+
+                    }
+
+                    if ( newSection != currSection ) {
+
+                        if ( currSection ) {
+                            currSection.stylableButton.removeClass( 'current-nav-section' );
+                        }
+
+                        currSection = newSection;
+
+                        if ( currSection ) {
+                            currSection.stylableButton.addClass( 'current-nav-section' );
+                        }
+
+                    }
+                    
+                } )();
+
+            } );
+    
+        </script>
+
+    </body>
+</html>

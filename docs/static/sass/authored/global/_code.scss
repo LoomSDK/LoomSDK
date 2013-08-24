@@ -1,0 +1,25 @@
+////////////////////////////////
+//         CODE
+////////////////////////////////
+
+code {
+  background-color: white;// #272822;//$light-emerald;
+  //border-bottom: 1px solid $light-gray;
+  padding: 4px;
+  font-size: 14px;
+  color: #272822;//$green;
+}
+
+
+pre {
+  display: block;
+  padding: 30px;
+  background-color: #272822;//$light-emerald;
+  //border-bottom: 3px solid $light-gray;
+  margin: 30px 0;
+  overflow: scroll;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  font-size: 14px;
+  color: white;//$green;
+}

@@ -1,0 +1,75 @@
+////////////////////////////////
+//         CONTENT
+////////////////////////////////
+
+@import "compass/css3/user-interface";
+
+.page {
+  padding-bottom: 80px;
+}
+
+/*-----------------------------
+/*---------- CONTENT ----------
+-----------------------------*/
+
+.content {
+  width: 980px;//870px;
+  padding: 21px 0 60px 280px;
+}
+
+.content-header,
+.content-section {
+  padding-bottom: 30px;
+  h2 {
+    border-bottom: 4px solid $light-gray;
+  }
+  h3 {
+    border-bottom: 1px solid $faint-gray;
+  }
+}
+.content-header {
+  margin: 30px 0 0;
+}
+
+.content-section {
+  margin: 20px 0 0;
+}
+
+.content-section__inner {
+  padding: 0 0 0 36px;
+}
+
+.content-section__subheader {
+  @include clearfix;
+  @include user-select( none );
+  cursor: pointer;
+  background-color: $barely-gray;
+  border-top: 1px solid $faint-gray;
+  padding: 4px 8px;
+  &:hover {
+    background-color: $faint-gray;
+  border-top: 1px solid $light-gray;
+  }
+}
+
+.content-section__subheader__twirl {
+  float: left;
+  margin-top: 12px;
+}
+
+.content-section__subheader__title {
+  float: left;
+  font-weight: 100;
+  margin: 0;
+}
+
+.content-section:last-child {
+  border-bottom: none;
+}
+
+.content-subsection {
+  border-bottom: 1px solid $faint-gray;
+  &:last-child {
+    border-bottom: none;
+  }
+}

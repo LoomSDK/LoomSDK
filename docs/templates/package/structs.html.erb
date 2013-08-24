@@ -1,0 +1,20 @@
+<% if @doc.structs.any? %>
+  <!-- Structs section. -->
+  <section id="structs" name="Structs" class="content-section">
+
+      <h2>Structs</h2>
+
+      <ul class="items-list">
+          <% @doc.structs.each do |struct| %>
+          <li class="item">
+              <div class="item-name">
+                  <a href='<%= struct.url( @relative_base_path ) %>'><strong><%= struct.data[:name] %></strong></a>
+              </div>
+              <div class="item-description">
+                  <%= first_sentence struct.data[:docString] %>
+              </div>
+          <% end %>
+      </ul>
+  
+  </section><!-- End structs section. -->
+<% end %>

@@ -1,0 +1,27 @@
+## Instructions for building on Visual Studio 10 and 11:
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!IMPORTANT PLEASE MAKE SURE YOU ARE NOT RUNNING CMAKE UNDER CYGWIN!!!!
+!!!!!If you try to run cmake under cygwin, you may need to reboot!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+1. Launch build/generateVSSolution.bat from the build directory.
+
+2. The solution file is now available in the cmake_msvc directory.
+
+3. Ensure your working folder is set to sdk/ in your debug settings.
+
+4. Run the demo.
+
+
+
+SECURITY ALERTS
+
+LuaJIT or other components in the Loom Native SDK may trigger your antivirus 
+package. You can inspect the source code to confirm that there are no viruses
+present in the SDK. You may want to configure your AV software to ignore the
+Loom Native SDK folder while you are working with it.
+
+Antivirus software activity may cause compilation of Loom to fail.

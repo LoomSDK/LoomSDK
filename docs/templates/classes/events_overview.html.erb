@@ -1,0 +1,8 @@
+<tr>
+    <td class="overview-box__name-col">
+        <a href="#event-<%= @event[:name] %>"><strong><%= @event[:name] %></strong></a>: <a href='<%= Module::ClassDoc.full_classpath_to_url(@event[:type], @relative_base_path) %>'><%= abbr_path(@event[:type])%></a>
+    </td>
+    <td class="overview-box__description-col">
+        <%= @event[:desc] %>
+    </td>
+</tr>

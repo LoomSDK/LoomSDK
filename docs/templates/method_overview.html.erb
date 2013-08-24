@@ -1,0 +1,21 @@
+<% if @doc.package_path == @method[:defined_by].package_path %>
+    <tr>
+        <td class="overview-box__name-col">
+            <%= render "templates/method_overview_signature", {:method => @method} %>
+        </td>
+        <td class="overview-box__description-col">
+            <%= @doc.deprecated(@method[:docString]) %><% if is_static( @method[:methodattributes] ) %><span class="special-property">static </span><% end %><% if is_native( @method[:methodattributes] ) %><span class="special-property">native </span><% end %><%= first_sentence @doc.comment(@method, @relative_base_path) %>
+        </td>
+    </tr>
+<% else %>
+    <tr class="inherited" style="display:none;">
+        <td class="overview-box__name-col">
+            <span class="inherited-icon"></span><%= render "templates/method_overview_signature", {:method => @method} %>
+            <br>
+            <span class="is-light">Inherited from <a href="<%= url( @method[:defined_by].package_path ) %>"><%= abbr_path( @method[:defined_by].package_path ) %></a></span>
+        </td>
+        <td class="overview-box__description-col">
+            <%= @doc.deprecated(@method[:docString]) %><% if is_static( @method[:methodattributes] ) %><span class="special-property">static </span><% end %><% if is_native( @method[:methodattributes] ) %><span class="special-property">native </span><% end %><%= first_sentence @doc.comment(@method, @relative_base_path) %>
+        </td>
+    </tr>
+<% end %>

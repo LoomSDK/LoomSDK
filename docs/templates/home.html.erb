@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>Loom SDK</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link rel="stylesheet" href="css/home.css">
+        <link rel="stylesheet" href="css/pygments.css">
+        <link rel="stylesheet" href="css/all-pages.css">
+        <link type="text/css" rel="stylesheet" href="css/jquery.dropdown.css" />
+
+        <title>Loom Docs</title>
+    </head>
+    <body>
+
+        <div id="top">&nbsp;</div>
+
+        <!-- Header. -->   
+        <header class="site-header">
+            <div class="site-header__logo">
+                <div class="site-header__logo__version"><%= version_number %></div>
+            </div>
+            <ul class="site-header__nav">
+                <li><a href="index.html" class="is-perm" style="font-size:14px;">Home</a>
+            </ul>
+            <div id="site-header__search" class="site-header__search" data-dropdown="#results-dropdown">
+                <input type="text"><button><span class="down-arrow"></span><span class="text">Search all</span></button>
+                <div class="options" style="display:none">
+                    <div class="options__option options__option--selected" name="search-all">Search all</div>
+                    <div class="options__option" name="classes">Classes</div>
+                    <div class="options__option" name="examples">Examples</div>
+                    <div class="options__option" name="guides">Guides</div>
+                </div>
+            </div>
+            <div id="results-dropdown" class="dropdown dropdown-tip dropdown-relative">
+                <ul class="dropdown-menu">
+                </ul>
+            </div>
+        </header><!-- End header. -->
+
+        <!-- Sidebar. -->
+        <div id="sidebar" class="sidebar sidebar--hidden">
+            <div class="sidebar__inner">
+                <div class="sidebar__button">
+                    <img src="images/sidebar__button__icon.png" class="sidebar__button__icon" />
+                </div>
+                <div class="sidebar__title">
+                    <img src="images/sidebar__title.png" />
+                </div>
+                <div class="sidebar__body">
+                </div>
+            </div>
+        </div><!-- End sidebar. -->
+
+        <!-- Page. -->
+        <div class="page">
+
+            <!-- Help. -->
+            <div class="help">
+
+                <!-- Sidebar help. -->
+                <div class="help__box help__box--sidebar">
+                    <img src="images/help__sidebar__copy.jpg" />
+                    <img class="help__sidebar__arrow" src="images/help__sidebar__arrow.png" />
+                </div><!-- End sidebar help. -->
+
+                <!-- Search help. -->
+                <div class="help__box help__box--search">
+                    <img src="images/help__search__copy.jpg" />
+                    <img class="help__search__arrow" src="images/help__search__arrow.png" />
+                </div><!-- End search help. -->
+
+            </div><!-- Help. -->
+
+            <!-- Inner page. -->
+            <div class="page__inner">
+
+                <!-- Title. -->
+                <div class="title">
+
+                    <img src="images/home-logo.jpg" />
+                    <p>Version <%= version_number %></p>
+
+                </div><!-- End title. -->
+
+                <!-- Content boxes. -->
+                <div class="content__boxes">
+
+                    <!-- CTA box. -->
+                    <div class="content__box--cta">
+
+                        <h2 class="content__box__title">Get Loom</h2>
+
+                        <div class="content__banner">
+                            <div class="content__banner__tagline">
+                                <h2 class="is-reverse">Make awesome mobile games for Android and iOS!</h2>
+                            </div>
+                        </div>
+
+                        <button class="content__box--cta-button" onclick="location.href='http://theengine.co/downloads'">
+                            <span class="download-icon"></span>Download Loom
+                        </button>
+
+                    </div><!-- End CTA box. -->
+
+
+                    <!-- Support box. -->
+                    <div class="content__box--support">
+
+                        <h2 class="content__box__title">Support</h2>
+                        <div class="content__box">
+
+                            <!-- Loomcasts. -->
+                            <div class="content__box--support-item">
+
+                                <div class="content__box--image">
+                                    <div class="vertical-centerer"></div>
+                                    <div class="loomcasts-icon"></div>
+                                </div>
+                                <p><strong>LoomCasts</strong>
+                                <br>Get your questions answered live by the team! <a href="http://loomcasts.com/" target="_blank">Check out out LoomCasts now!</a></p>
+
+                            </div><!-- End Loomcasts. -->
+
+                            <!-- Forums. -->
+                            <div class="content__box--support-item">
+
+                                <div class="content__box--image">
+                                    <div class="vertical-centerer"></div>
+                                    <div class="forums-icon"></div>
+                                </div>
+                                <p><strong>Forums</strong>
+                                <br>Share knowledge and get help from our awesome community in <a href="https://theengine.co/forums" target="_blank">the forums.</a></p>
+
+                            </div><!-- End forums. -->
+
+                            <!-- IRC. -->
+                            <div class="content__box--support-item">
+
+                                <div class="content__box--image">
+                                    <div class="vertical-centerer"></div>
+                                    <div class="irc-icon"></div>
+                                </div>
+                                <p><strong>Chat in IRC</strong>
+                                <br>Chat with members of the team and community. <a href="http://irc.theengine.co/" target="_blank">View logs and chat live in IRC.</a></p>
+
+                            </div><!-- End IRC. -->
+
+                        </div>
+
+                    </div><!-- End support box. -->
+
+                </div><!-- End content boxes. -->
+
+            </div><!-- End inner page. -->
+            
+        </div><!-- End page. -->
+
+        <script type="text/javascript" src="js/vendor/fuse.min.js"></script>
+        <script type="text/javascript" src="js/vendor/jquery-1.9.0.min.js"></script>
+        <script type="text/javascript" src="js/vendor/underscore-min.js"></script>
+        <script type="text/javascript" src="js/authored/onscroll.js"></script>
+        
+        <script type="text/javascript">
+
+          var relative_base = "";
+          var search_objects = $.parseJSON('<%= search_object_string %>');
+
+        	var sidebarData = [
+        	    { "name" : "Guides", "link" : [] },
+        	    { "name" : "Examples", "link" : [] },
+                { "name" : "API reference", "link" : "api/index.html" }
+        	];
+
+          // populate examples links
+        	for(var index in search_objects.examples)
+        	{
+        	  example = search_objects.examples[index]
+        	  sidebarData[1].link.push({"name": example.name, "link": example.path.split(".").join("/") + ".html"});
+        	}
+
+        	// populate guides links
+        	sidebarData[0].link = $.parseJSON('<%= $guides.sidebar_links_json("") %>');
+
+        </script>
+
+        <script type="text/javascript" src="js/authored/sidebar.js"></script>
+        <script type="text/javascript" src="js/vendor/jquery.dropdown.js"></script>
+        <script type="text/javascript" src="js/authored/search.js"></script>
+    </body>
+</html>

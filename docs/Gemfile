@@ -1,0 +1,6 @@
+source 'http://rubygems.org'
+
+gem 'redcarpet', '~> 2.3.0'
+gem 'nokogiri', '~> 1.5.10'
+gem 'pygments.rb'
+gem 'json'

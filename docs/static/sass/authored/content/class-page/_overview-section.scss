@@ -1,0 +1,95 @@
+////////////////////////////////
+//    API OVERVIEW SECTION
+////////////////////////////////
+
+@import "compass/css3/user-interface";
+
+.overview-box__header {
+  @include clearfix();
+  position: relative;
+  padding: 4px 12px;
+  background-color: $faint-gray;
+}
+
+.overview-box__header--twirlable {
+  @extend .overview-box__header;
+  @include user-select( none );
+  cursor: pointer;
+  &:hover {
+    background-color: $light-gray;
+  }
+}
+
+.overview-box__twirl {
+  float: left;
+  margin-top: 9px;
+}
+
+.overview-box__title {
+  @extend p;
+  float: left;
+  font-weight: 700;
+  margin: 0;
+}
+
+table.overview-box__table {
+  table-layout: fixed;
+  border: 1px solid $faint-gray;
+  width: 100%;
+
+  td {
+    padding: 4px 12px 4px 34px;
+    border-top: 1px solid $faint-gray;
+    border-bottom: 1px solid $faint-gray;
+  }
+}
+
+td.overview-box__name-col {
+  @extend p;
+  @extend p.is-small;
+  vertical-align: top;
+  margin: 0;
+  width: 40%;
+  padding-right: 0;
+  border-right: 1px solid $faint-gray;
+}
+
+td.overview-box__description-col {
+  @extend p;
+  @extend p.is-small;
+  vertical-align: top;
+  margin: 0;
+  width: 60%;
+}
+
+.show-inherited-toggle {
+  float: right;
+  cursor: pointer;
+  padding: 2px 4px 0;
+
+  .checkbox {
+    width: 106px;
+    &:after {
+      @extend p;
+      @extend p.is-small;
+      position: relative;
+      top: -3px;
+      margin-left: 24px;
+      content: "Show inherited";
+      @include opacity( .6 );
+    }
+  }
+
+  &:hover {
+    outline: 1px dotted $blue;
+  }
+
+  &.show-inherited-toggle--on {
+    .checkbox {
+      @extend .checkbox-on;
+      &:after {
+        @include opacity( 1 );
+      }
+    }
+  }
+}

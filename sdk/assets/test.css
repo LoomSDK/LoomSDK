@@ -1,0 +1,12 @@
+#test
+{
+    x: 200;
+    y: 400;
+    texture: assets/asteroids_player_ship.png;
+}
+
+#test2{
+    x: 100;
+    y: 100;
+    texture: assets/asteroids_player_ship.png;
+}

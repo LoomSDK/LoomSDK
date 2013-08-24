@@ -1,0 +1,7 @@
+<!-- Note: this will all end up on one line, but it is much easier to read this way -->
+(<% @parameters.each_with_index do |parameter, index| %>
+  <%= ' ' if index == 0 %>
+  <%= "#{parameter[:name]}: #{@doc.object_type(parameter, @relative_base_path)}" %>
+  <%= "<span class='is-light'>= #{parameter[:defaultvalue]}</span>" if parameter[:hasdefault] %>
+  <%= if index != @parameters.size - 1 then ', ' else ' ' end %>
+<% end %>)

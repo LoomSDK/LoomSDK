@@ -1,0 +1,4 @@
+<div class="content-subsection" id="constant-<%= @constant[:name] %>">
+  <p><strong><%= @constant[:name] %></strong>: <a href="<%= url( @constant[:type] ) %>"><%= abbr_path( @constant[:type] ) %></a></p>
+  <p><% if is_static( @constant[:fieldattributes] ) %><span class="special-property">static </span><% end %><% if is_native( @constant[:fieldattributes] ) %><span class="special-property">native </span><% end %><%= @doc.comment(@constant, @relative_base_path) %></p>
+</div>

@@ -1,0 +1,40 @@
+<!-- Attributes section. -->
+<% if @public_fields.any? || @protected_fields.any?  %>
+<section id="attributes" name="Attributes" class="content-section">
+
+    <!-- Title. -->
+    <h2>Attributes</h2>
+    
+    <% if @public_fields.any? %>
+    <div class="content-section__inner">
+    
+        <!-- Public list. -->
+        <% @public_fields.each do |field| %>
+            <%= render "templates/field_description", {:field => field} %>
+        <% end %>
+
+    </div>
+    <% end %>
+
+    <% if @protected_fields.any? %>
+    <!-- Protected. -->
+
+    <!-- Title. -->
+    <div class="content-section__subheader" data-twirl="#protected-attributes">
+        <div class="content-section__subheader__twirl twirl-down"></div><h3 class="content-section__subheader__title">Protected attributes</h3>
+    </div>
+
+
+    <div class="content-section__inner">
+        <!-- List. -->
+        <div id="protected-attributes" class="protected-subsection__body" style="display:none;">
+            <% @protected_fields.each do |field| %>
+               <%= render "templates/field_description", {:field => field}%>
+            <% end %>
+        </div>
+
+    </div><!-- End protected. -->
+    <% end %>
+
+</section><!-- End attributes section. -->
+<% end %>

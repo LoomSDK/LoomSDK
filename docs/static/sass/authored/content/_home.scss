@@ -1,0 +1,151 @@
+////////////////////////////////
+//         HOME PAGE
+////////////////////////////////
+
+/*-----------------------------
+/*--------- INNER PAGE --------
+-----------------------------*/
+
+//.page__inner {
+ // width: 980px;
+ // padding: 0 0 60px 114px;
+//}
+.page__inner {
+  position: relative;
+  width: 980px;
+  padding: 21px 0 60px 280px;
+}
+
+/*-----------------------------
+/*----------- TITLE -----------
+-----------------------------*/
+
+.title {
+  margin-top: 50px;
+}
+
+/*-----------------------------
+/*---------- CONTENT ----------
+-----------------------------*/
+
+.content__boxes {
+  margin-top: 50px;
+}
+
+.content__box {
+  float: left;
+
+  & + & {
+    margin-left: 20px;
+  }
+}
+
+.content__box__title {
+  border-bottom: 1px solid $light-gray;
+}
+
+/*-----------------------------
+/*------------ CTA ------------
+-----------------------------*/
+
+.content__banner {
+  background: black url( 'images/home__cta--devices.png' ) no-repeat;
+  background-position: 330px 0;
+  padding: 20px 40px;
+  height: 200px;
+}
+
+.content__banner__tagline {
+  width: 250px;
+}
+
+.content__box--cta {
+  width: 100%;
+}
+
+.content__box--cta-button {
+  width: 100%;
+  padding: 18px 0;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 600;
+  font-style: italic;
+  color: white;
+}
+
+/*-----------------------------
+/*---------- SUPPORT ----------
+-----------------------------*/
+
+.content__box--support {
+  width: 100%;
+  @include clearfix;
+}
+
+.content__box--support-item {
+  float: left;
+  width: 220px;
+  
+  & + & {
+    margin-left: 20px;
+  }
+}
+
+.content__box--image {
+  background-color: black;
+  height: 125px;
+}
+
+.loomcasts-icon {
+  @extend .vertical-center;
+  width: 74px;
+  height: 74px;
+  background: url( 'images/loomcasts-icon.png' ) no-repeat;
+  margin-left: 50%;
+  position: relative;
+  left: -35px;
+}
+
+.forums-icon {
+  @extend .vertical-center;
+  width: 126px;
+  height: 91px;
+  background: url( 'images/forums-icon.png' ) no-repeat;
+  margin-left: 38px;
+}
+
+/*-----------------------------
+/*---------- HELP ----------
+-----------------------------*/
+
+.help {
+  position: absolute;
+  z-index: 100;
+  width: 100%;
+}
+
+.help__box {
+  position: absolute;
+}
+
+.help__box--sidebar {
+  left: 60px;
+  top: 100px;
+}
+
+.help__box--search {
+  top: 138px;
+  right: 167px;
+}
+
+.help__sidebar__arrow {
+  position: absolute;
+  left: -20px;
+  top: -70px;
+}
+
+.help__search__arrow {
+  position: absolute;
+  right: -100px;
+  top: -100px;
+}

@@ -1,0 +1,165 @@
+<!-- API overview section. -->
+<section id="api-overview" name="API overview" class="content-section">
+
+    <h2>API overview</h2>
+
+    <!-- Constructor. -->
+    <h3><a href="#constructor">Constructor</a></h3>
+    <p><a href="#constructor"><strong><%= @doc.data[:constructor][:name] %></strong></a><%= render "templates/signature_parameters", {:parameters => @doc.data[:constructor][:parameters]} %>
+    <br>
+    <span class="is-light"><%= first_sentence @doc.data[:constructor][:docString] %></span></p>
+
+    <% if @public_fields.any? or @protected_fields.any? %>
+    <!-- Attributes. -->
+    <div>
+
+        <h3><a href="#attributes">Attributes</a></h3>
+
+        <% if @public_fields.any? %>
+        <!-- Public attributes. -->
+        <!-- Title. -->
+        <div class="overview-box__header">
+            <h4 class="overview-box__title">Public attributes</h4>
+            <% if @doc.has_inherited_fields( @public_fields ) %>
+            <div class="show-inherited-toggle" data-target="#overview-public-attributes">
+                <div class="checkbox"></div>
+            </div>
+            <% end %>
+        </div>
+        <!-- Table. -->
+        <table class="overview-box__table" id="overview-public-attributes">
+            <tbody>
+            <% @public_fields.each do |field| %>
+                <%= render "templates/field_overview", {:field => field} %>
+            <% end %>
+            </tbody>
+        </table>
+        <!-- End public attributes. -->
+        <% end %>
+
+        <% if @protected_fields.any? %>
+        <!-- Protected attributes. -->
+        <!-- Title. -->
+        <div class="overview-box__header--twirlable" data-twirl="#overview-protected-attributes">
+            <div class="overview-box__twirl twirl-down"></div><h4 class="overview-box__title is-inline">Protected attributes</h4>
+            <% if @doc.has_inherited_fields( @protected_fields ) %>
+            <div class="show-inherited-toggle" data-target="#overview-protected-attributes">
+                <div class="checkbox"></div>
+            </div>
+            <% end %>
+        </div>
+        <!-- Table. -->
+        <table class="overview-box__table" id="overview-protected-attributes" style="display:none;">
+            <tbody>
+            <% @protected_fields.each do |field| %>
+                <%= render "templates/field_overview", {:field => field} %>
+            <% end %>
+            </tbody>
+        </table>
+        <!-- End protected attributes. -->
+        <% end %>
+
+    </div><!-- End attributes. -->
+    <% end %>
+
+    <% if @constants.any? %>
+    <!-- Constants. -->
+    <div>
+    
+        <h3><a href="#constants">Constants</a></h3>
+
+        <!-- Title. -->
+        <div class="overview-box__header">
+            <h4 class="overview-box__title">Constants</h4>
+            <% if @doc.has_inherited_fields( @constants ) %>
+            <div class="show-inherited-toggle" data-target="#overview-constants">
+                <div class="checkbox"></div>
+            </div>
+            <% end %>
+        </div>
+        <!-- List. -->
+        <table class="overview-box__table" id="overview-constants">
+            <tbody>
+            <% @constants.each do |field| %>
+                <%= render "templates/field_overview", {:field => field} %>
+            <% end %>
+            </tbody>
+        </table>
+
+    </div><!-- End constants. -->
+    <% end %>
+
+    <% if @public_methods.any? or @protected_methods.any? %>
+    <!-- Functions. -->
+    <div>
+
+        <h3><a href="#functions">Functions</a></h3>
+
+        <% if @public_methods.any? %>
+        <!-- Public functions. -->
+        <!-- Title. -->
+        <div class="overview-box__header">
+            <h4 class="overview-box__title">Public functions</h4>
+            <% if @doc.has_inherited_methods( @public_methods ) %>
+            <div class="show-inherited-toggle" data-target="#overview-public-functions">
+                <div class="checkbox"></div>
+            </div>
+            <% end %>
+        </div>
+        <!-- Table. -->
+        <table class="overview-box__table" id="overview-public-functions">
+            <tbody>
+            <% @public_methods.each do |method| %>
+                <%= render "templates/method_overview", {:method => method} %>
+            <% end %>
+            </tbody>
+        </table>
+        <!-- End public functions. -->
+        <% end %>
+
+        <% if @protected_methods.any? %>
+        <!-- Protected functions. -->
+        <!-- Title. -->
+        <div class="overview-box__header--twirlable" data-twirl="#overview-protected-functions">
+            <div class="overview-box__twirl twirl-down"></div><h4 class="overview-box__title is-inline">Protected functions</h4>
+            <% if @doc.has_inherited_methods( @protected_methods ) %>
+            <div class="show-inherited-toggle" data-target="#overview-protected-functions">
+                <div class="checkbox"></div>
+            </div>
+            <% end %>
+        </div>
+        <!-- Table. -->
+        <table class="overview-box__table" id="overview-protected-functions" style="display:none;">
+            <tbody>
+            <% @protected_methods.each do |method| %>
+                <%= render "templates/method_overview", {:method => method} %>
+            <% end %>
+            </tbody>
+        </table>
+        <!-- End protected functions. -->
+        <% end %>
+
+    </div><!-- End functions. -->
+    <% end %>
+    
+    <% if @events.any? %>
+    <!-- Events -->
+    <div>
+      <h3><a href="#events">Events</a></h3>
+      
+      <!-- Title. -->
+      <div class="overview-box__header">
+          <h4 class="overview-box__title">Events</h4>
+      </div>
+      <!-- Table. -->
+      <table class="overview-box__table" id="overview-events">
+          <tbody>
+          <% @events.each do |event| %>
+              <%= render "templates/classes/events_overview", {:event => event} %>
+          <% end %>
+          </tbody>
+      </table>
+    </div>
+    <% end %>
+
+</section><!-- End API overview section. -->

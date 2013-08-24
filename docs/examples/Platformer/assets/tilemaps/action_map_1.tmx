@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="100" height="30" tilewidth="32" tileheight="32">
+ <properties>
+  <property name="bg_far" value="assets/backgrounds/PlainsBG01_far_looped.png"/>
+  <property name="bg_mid" value="assets/backgrounds/PlainsBG01_mid.png"/>
+  <property name="bg_near" value="assets/backgrounds/PlainsBG01_near.png"/>
+ </properties>
+ <tileset firstgid="1" name="pbe_psk_outdoor_tiles" tilewidth="32" tileheight="32">
+  <image source="pbe_psk_outdoor_tiles.png" width="320" height="608"/>
+ </tileset>
+ <layer name="bg" width="100" height="30">
+  <data encoding="base64" compression="zlib">
+   eJztmMtqwzAQRfU7TegD0tKuSukv1Gtvu+4HdN1F8tGVqZWY6bwkD3YM98BFSFb0mOvxQFICAAAAAAAAAADAWtxk7dY+BDhzyHpc+xDgDPy4LuDHdQE/2jkZ/RbgRzv92J5Ifw7ww+aY/mJ+JOP9ON6NLfVD+p0G/LAZ4tyl//Eu453xvCZv4IeN5ce38Rx+xNIrGuL9kS5xl+Rly36U/xao9sH70DyY5gP9XknzvGzZj3J2qqfgfWgeTPOB84eb50Xy4zbrru34i6H5EZkvNA9oPtCWm1d7J8pz1kvb8Vk+A9cqaH5E5ovlh9Sf48c7Gb/Pekh1OULXmPI1tpG+LO2HVD+k/pz6wdVFK+e99ZSb5/2GSHvsUqwf2rtk1Y8f0vfWD25P6U6eGumtp9w87zurnW+OH5rPa8rjRbnTK5EWD2setx6nKD9q1t2Chju9EWnxsOZx63GK8qNm3S0IfiyrX1zMotk=
+  </data>
+ </layer>
+ <layer name="fg" width="100" height="30">
+  <data encoding="base64" compression="zlib">
+   eJzt10EKgzAQBVDv6EZdehHXubV1UWyF0EJHk9T3YBBBklH4huk6AACAeg2PGk+s6bpXgSY9Mygr8NnrmSUz3NmWBRmA3Vy6AajAt3NFC3lJpRuACqTD9dfnWlfrLPjv3701fekGCjAbvlsyFb1e5B7RcudC7v7M/1jKVPR6kXsAwN2sjvIndg==
+  </data>
+ </layer>
+ <objectgroup name="objects" width="100" height="30">
+  <object name="hero" type="player" x="64" y="704" width="28" height="50"/>
+  <object name="cloud_crate" type="crate_lg" x="736" y="128" width="64" height="64"/>
+  <object name="hill_crate" type="crate_sm" x="1504" y="512" width="32" height="32"/>
+  <object name="castle_crate" type="crate_sm" x="2656" y="576" width="32" height="32"/>
+  <object name="castle_crate_lg" type="crate_lg" x="2880" y="736" width="64" height="64"/>
+ </objectgroup>
+</map>

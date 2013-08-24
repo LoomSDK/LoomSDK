@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TextureAtlas imagePath="pongSprites.png" width="128" height="128">
+    <SubTexture name="redpaddle.png" x="0" y="0" width="128" height="32"/>
+    <SubTexture name="bluepaddle.png" x="0" y="34" width="128" height="32"/>
+    <SubTexture name="ball.png" x="0" y="68" width="32" height="32"/>
+</TextureAtlas>

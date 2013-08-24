@@ -1,0 +1,11 @@
+{
+ "name" : "UnitTest",   
+ "version" : "1.0",
+  "outputDir" : "./libs",
+  "references" : [ "System" ],
+  "modules" : [ {
+    "name" : "UnitTest",     
+    "version": "1.0",
+    "sourcePath": ["unittest"]
+    } ]
+}

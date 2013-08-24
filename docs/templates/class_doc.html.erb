@@ -1,0 +1,100 @@
+<%
+
+    access_modifier = @doc.get_access_modifier()
+    is_native = @doc.get_is_native()
+    class_type = @doc.get_type()
+
+%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>Loom SDK: <%= @doc.data[:name] %> Class Reference</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link rel="stylesheet" href="<%= @relative_base_path %>/css/class-page.css">
+        <link rel="stylesheet" href="<%= @relative_base_path %>/css/pygments.css">
+        <link rel="stylesheet" href="<%= @relative_base_path %>/css/all-pages.css">
+        <link rel="stylesheet" href="<%= @relative_base_path %>/css/jquery-ui-1.10.3.custom.css" />
+        <link type="text/css" rel="stylesheet" href="<%= @relative_base_path %>/css/jquery.dropdown.css" />
+    </head>
+    <body>
+
+        <div id="top">&nbsp;</div>
+        <%= render "templates/header" %>
+          
+        <%= render "templates/sidebar"%>  
+
+        <!-- Page. -->
+        <div class="page">
+
+            <%= render "templates/page_nav" %>
+
+            <!-- Content. -->
+            <div class="content">
+
+                <!-- Content header. -->
+                <header class="content-header">
+
+                    <!-- Class name. -->
+                    <h1><%= @doc.data[:name] %></h1>
+                    
+                    <% unless @doc.deprecated_message.nil? %>
+                      <div class="panel panel-danger">
+                        <div class="panel-heading">Deprecation Warning</div>
+                        <p><%= @doc.deprecated_message %></p>
+                      </div>
+                    <% end %>
+
+                    <!-- Class categorization and path. -->
+                    <p>
+                        <strong><%= access_modifier %> <%= 'native ' unless !is_native %><%= class_type %></strong>
+                        <br>
+                        <%= path_links %>
+                    </p>
+                    
+                    <%= render "templates/metadata" %>
+
+                </header><!-- End content header. -->
+
+                <% if @doc.data[:docString] != "" %>
+                    <!-- Description section. -->
+                    <section id="description" name="Description" class="content-section">
+
+                        <h2>Description</h2>
+                        <p><%= @doc.comment(@doc.data[:docString], @relative_base_path) %></p>
+
+                    </section><!-- End description section. -->
+                <% end %>
+
+                <%= render "templates/api_overview" %>
+
+                <!-- Constructor section. -->
+                <section id="constructor" name="Constructor" class="content-section">
+
+                    <h2>Constructor</h2>
+
+                    <div class="content-section__inner">
+                        <p class="content-subsection"><strong><%= @doc.data[:constructor][:name] %></strong><%= render "templates/signature_parameters", {:parameters => @doc.data[:constructor][:parameters]} %></p>
+                        <p><%= @doc.data[:constructor][:docString] %></p>
+                    </div>
+
+                </section><!-- End constructor section. -->
+
+                <%= render "templates/attributes" %>
+
+                <%= render "templates/constants" %>
+
+                <%= render "templates/functions" %>
+                
+                <%= render "templates/classes/events" %>
+
+            </div><!-- End content. -->
+
+        </div><!-- End page. -->
+
+        <%= render "templates/javascript_includes" %>    
+    </body>
+</html>

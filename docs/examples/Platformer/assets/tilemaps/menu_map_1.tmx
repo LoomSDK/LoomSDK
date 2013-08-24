@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="20" height="17" tilewidth="32" tileheight="32">
+ <properties>
+  <property name="bg_far" value="assets/backgrounds/PlainsBG01_far.png"/>
+  <property name="bg_mid" value="assets/backgrounds/PlainsBG01_mid.png"/>
+  <property name="bg_near" value="assets/backgrounds/PlainsBG01_near.png"/>
+ </properties>
+ <tileset firstgid="1" name="pbe_psk_outdoor_tiles" tilewidth="32" tileheight="32">
+  <image source="pbe_psk_outdoor_tiles.png" width="320" height="608"/>
+  <tile id="0">
+   <properties>
+    <property name="shape" value="full"/>
+   </properties>
+  </tile>
+  <tile id="1">
+   <properties>
+    <property name="shape" value="full"/>
+   </properties>
+  </tile>
+  <tile id="2">
+   <properties>
+    <property name="shape" value="full"/>
+   </properties>
+  </tile>
+  <tile id="3">
+   <properties>
+    <property name="shape" value="full"/>
+   </properties>
+  </tile>
+  <tile id="47">
+   <properties>
+    <property name="oneway" value="true"/>
+    <property name="shape" value="full"/>
+   </properties>
+  </tile>
+  <tile id="48">
+   <properties>
+    <property name="oneway" value="true"/>
+    <property name="shape" value="full"/>
+   </properties>
+  </tile>
+  <tile id="49">
+   <properties>
+    <property name="oneway" value="true"/>
+    <property name="shape" value="full"/>
+   </properties>
+  </tile>
+  <tile id="57">
+   <properties>
+    <property name="oneway" value="true"/>
+    <property name="shape" value="full"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer name="bg" width="20" height="17">
+  <properties>
+   <property name="layerIndex" value="10"/>
+  </properties>
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAA2NgGAXUAHVAXE1F8zqAuJVKZkUAcSQUR1FgTikO8SQ0mhAoBuISIM4hUj02c0FhXQdl5wJxHgnmYTMXFNYdaOaVQfk1SHZhcwM61gRiLSjWRjJPB6qvDckuZABzAzo2BmITKDYF4nIgrgBiMyR7SMXI5mliEScVmyLRxmToJ9Xd+DA59lPLPADvBGIjUAUAAA==
+  </data>
+ </layer>
+ <layer name="fg" width="20" height="17">
+  <properties>
+   <property name="layerIndex" value="20"/>
+  </properties>
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAA2NgGAWjYBTQC+QDcQEW8Sw6u0ObzvbhA5oDaLcWiZhQuAEAloC1ZlAFAAA=
+  </data>
+ </layer>
+ <layer name="collision" width="20" height="17">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAA2NgGAXDHTChYVqYj0zTyvyhZC628KZV2JOLsZkxEIAcNw+E3cS4AQAgbx28UAUAAA==
+  </data>
+ </layer>
+ <objectgroup name="objects" width="20" height="17">
+  <object name="hero" x="160" y="288" width="28" height="50"/>
+  <object name="Action_Area_1" type="door_to_named_level" x="256" y="320" width="32" height="64">
+   <properties>
+    <property name="door_is_closed.active" value="0"/>
+   </properties>
+  </object>
+  <object name="Puzzle_Area_2" type="door_to_named_level" x="480" y="256" width="32" height="64"/>
+  <object name="Puzzle_Area_1" type="door_to_named_level" x="64" y="128" width="32" height="64"/>
+  <object name="Starter_Area_1" type="door_to_named_level" x="64" y="320" width="32" height="64"/>
+  <object name="sign_starter" x="32" y="320" width="32" height="64"/>
+  <object name="sign_1" x="224" y="320" width="32" height="64"/>
+  <object name="sign_2" x="448" y="256" width="32" height="64"/>
+  <object name="sign_3" x="96" y="128" width="32" height="64"/>
+  <object name="Action_Area_2" type="door_to_named_level" x="288" y="320" width="32" height="64"/>
+  <object name="Action_Area_3" type="door_to_named_level" x="320" y="320" width="32" height="64"/>
+  <object name="Action_Area_4" type="door_to_named_level" x="352" y="320" width="32" height="64"/>
+  <object name="Action_Area_5" type="door_to_named_level" x="384" y="320" width="32" height="64"/>
+ </objectgroup>
+</map>

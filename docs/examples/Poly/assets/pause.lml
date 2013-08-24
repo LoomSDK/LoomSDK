@@ -1,0 +1,15 @@
+<poly.views.PauseView>
+
+    <loom.css.StyleSheet source="assets/main.css"/>
+
+    <loom2d.ui.TextureAtlasSprite id="bg" atlasName="PolyUI" textureName="black.png"/>
+
+    <loom2d.ui.TextureAtlasSprite id="pausedText" styleName="pausedText" atlasName="PolyUI" textureName="paused_text.png"/>
+
+    <loom2d.ui.SimpleButton id="backToMenu" styleName="backToMenu" atlasName="PolyUI" upImage="back_to_menu.png" downImage="back_to_menu.png"/>
+
+    <loom2d.ui.SimpleButton id="restartButton" styleName="restartButton" atlasName="PolyUI" upImage="restart_button.png" downImage="restart_button.png"/>
+
+    <loom2d.ui.SimpleButton id="resumeButton" styleName="resumeButton" atlasName="PolyUI" upImage="resume_button.png" downImage="resume_button.png"/>
+
+</poly.views.PauseView>

@@ -1,0 +1,57 @@
+////////////////////////////////
+//         TWIRL-DOWN
+////////////////////////////////
+
+$arrowSize: 5px;
+
+.twirl-down {
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  left: 4px;
+  top: -3px;
+  margin-right: 10px;
+  width: $arrowSize * 2;
+  height: $arrowSize * 2;
+  border-top: $arrowSize solid transparent;
+  border-bottom: $arrowSize solid transparent; 
+  border-left: $arrowSize solid $gray; 
+}
+
+.is-open {
+  .twirl-down {
+    left: 0;
+    top: 1px;
+    border-left: $arrowSize solid transparent;
+    border-right: $arrowSize solid transparent;
+    border-top: $arrowSize solid $gray;
+  }
+}
+
+
+.twirlable {
+  $arrowSize: 5px;
+  &:before {
+    content: ' ';
+    display: inline-block;
+    vertical-align: middle;
+    position: absolute;
+    margin-left: -11px;
+    margin-top: 5px;
+    width: 0;
+    height: 0;
+    border-top: $arrowSize solid transparent;
+    border-bottom: $arrowSize solid transparent; 
+    border-left: $arrowSize solid #747d85;
+  }
+
+  &.twirlable--open {
+    &:before {
+      margin-left: -15px;
+      margin-top: 8px;
+      border-left: $arrowSize solid transparent;
+      border-right: $arrowSize solid transparent;
+      border-top: $arrowSize solid #747d85;
+    }
+  }
+}

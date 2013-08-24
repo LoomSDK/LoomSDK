@@ -1,0 +1,9 @@
+////////////////////////////////
+//          MIXINS
+////////////////////////////////
+
+@mixin circle( $diameter ) {
+  @include border-radius( $diameter * .5 );
+  width: $diameter;
+  height: $diameter;
+}

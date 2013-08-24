@@ -1,0 +1,10 @@
+{
+ "name" : "System",	  
+ "version" : "1.0",
+ "outputDir" : "./libs",
+ "modules" : [ {
+	"name" : "System",	   
+	"version": "1.0",
+	"sourcePath": ["system"]
+	} ]
+}

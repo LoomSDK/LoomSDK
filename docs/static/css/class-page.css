@@ -1,0 +1,1606 @@
+@charset "UTF-8";
+/**
+ * Uses BEM syntax.
+ * http://csswizardry.com/2013/01/mindbemding-getting-your-head-round-bem-syntax/
+ *
+ * @author CJ Cenizal
+ */
+/*-----------------------------
+/*---- VENDOR DEPENDENCIES ----
+-----------------------------*/
+/* Vendor dependencies */
+/* normalize.css v2.1.0 | MIT License | git.io/normalize */
+/* normalize.scss v2.1.0 | MIT/GPLv2 License | bit.ly/normalize-with-compass */
+/* ==========================================================================
+   HTML5 display definitions
+   ========================================================================== */
+/**
+ * Correct `block` display not defined in IE 8/9.
+ */
+/* line 63, ../sass/vendor/_normalize.scss */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+main,
+nav,
+section,
+summary {
+  display: block;
+}
+
+/**
+ * Correct `inline-block` display not defined in IE 8/9.
+ */
+/* line 73, ../sass/vendor/_normalize.scss */
+audio,
+canvas,
+video {
+  display: inline-block;
+  *display: inline;
+  *zoom: 1;
+}
+
+/**
+ * Prevent modern browsers from displaying `audio` without controls.
+ * Remove excess height in iOS 5 devices.
+ */
+/* line 86, ../sass/vendor/_normalize.scss */
+audio:not([controls]) {
+  display: none;
+  height: 0;
+}
+
+/**
+ * Address styling not present in IE 7/8/9.
+ * Known issue: no IE 6 support.
+ */
+/* line 96, ../sass/vendor/_normalize.scss */
+[hidden] {
+  display: none;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+/**
+ * 1. Set default font family to sans-serif.
+ * 2. Prevent iOS text size adjust after orientation change, without disabling
+ *    user zoom.
+ * 3. Correct text resizing oddly in IE 6/7 when body `font-size` is set using
+ *    `em` units.
+ */
+/* line 112, ../sass/vendor/_normalize.scss */
+html {
+  font-family: sans-serif;
+  /* 1 */
+  font-size: 100%;
+  /* 3 */
+  -webkit-text-size-adjust: 100%;
+  /* 2 */
+  -ms-text-size-adjust: 100%;
+  /* 2 */
+  /* Establish a vertical rhythm unit using $base-line-height. */
+  line-height: 1.5em;
+}
+
+/**
+ * Address `font-family` inconsistency between `textarea` and other form
+ * elements in IE 6/7.
+ */
+/* line 130, ../sass/vendor/_normalize.scss */
+button,
+input,
+select,
+textarea {
+  font-family: sans-serif;
+}
+
+/**
+ * Remove default margin.
+ */
+/* line 139, ../sass/vendor/_normalize.scss */
+body {
+  margin: 0;
+}
+
+/* ==========================================================================
+   Links
+   ========================================================================== */
+/**
+ * Address `outline` inconsistency between Chrome and other browsers.
+ */
+/* line 151, ../sass/vendor/_normalize.scss */
+a:focus {
+  outline: thin dotted;
+}
+
+/**
+ * Improve readability when focused and also mouse hovered in all browsers.
+ */
+/* line 160, ../sass/vendor/_normalize.scss */
+a:active,
+a:hover {
+  outline: 0;
+}
+
+/* ==========================================================================
+   Typography
+   ========================================================================== */
+/**
+ * Set 1 unit of vertical rhythm on the top and bottom margin.
+ */
+/* line 173, ../sass/vendor/_normalize.scss */
+p, .site-header__logo__version, .site-header__search .options__option, .sidebar__body__item, .overview-box__title, td.overview-box__name-col, td.overview-box__description-col, .show-inherited-toggle .checkbox:after,
+pre {
+  margin: 1.5em 0;
+}
+
+/* line 177, ../sass/vendor/_normalize.scss */
+blockquote {
+  /* Set 1 unit of vertical rhythm on the top and bottom margin. */
+  margin: 1.5em 40px;
+}
+
+/**
+ * Address variable `h1` font-size and margin within `section` and `article`
+ * contexts in Firefox 4+, Safari 5, and Chrome.
+ */
+/* line 187, ../sass/vendor/_normalize.scss */
+h1 {
+  /* Set the font-size and line-height while keeping a proper vertical rhythm. */
+  font-size: 2em;
+  line-height: 1.5em;
+  /* Set 1 unit of vertical rhythm on the top and bottom margins. */
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+}
+
+/* line 196, ../sass/vendor/_normalize.scss */
+h2 {
+  font-size: 1.5em;
+  line-height: 2em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+/* line 202, ../sass/vendor/_normalize.scss */
+h3 {
+  font-size: 1.17em;
+  line-height: 1.28205em;
+  margin-top: 1.28205em;
+  margin-bottom: 1.28205em;
+}
+
+/* line 208, ../sass/vendor/_normalize.scss */
+h4 {
+  font-size: 1em;
+  line-height: 1.5em;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+
+/* line 214, ../sass/vendor/_normalize.scss */
+h5 {
+  font-size: 0.83em;
+  line-height: 1.80723em;
+  margin-top: 1.80723em;
+  margin-bottom: 1.80723em;
+}
+
+/* line 220, ../sass/vendor/_normalize.scss */
+h6 {
+  font-size: 0.67em;
+  line-height: 2.23881em;
+  margin-top: 2.23881em;
+  margin-bottom: 2.23881em;
+}
+
+/**
+ * Address styling not present in IE 8/9, Safari 5, and Chrome.
+ */
+/* line 230, ../sass/vendor/_normalize.scss */
+abbr[title] {
+  border-bottom: 1px dotted;
+}
+
+/**
+ * Address style set to `bolder` in Firefox 4+, Safari 5, and Chrome.
+ */
+/* line 239, ../sass/vendor/_normalize.scss */
+b,
+strong {
+  font-weight: bold;
+}
+
+/**
+ * Address styling not present in Safari 5 and Chrome.
+ */
+/* line 247, ../sass/vendor/_normalize.scss */
+dfn {
+  font-style: italic;
+}
+
+/**
+ * Address differences between Firefox and other browsers.
+ * Known issue: no IE 6/7 normalization.
+ */
+/* line 256, ../sass/vendor/_normalize.scss */
+hr {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  height: 0;
+}
+
+/**
+ * Address styling not present in IE 8/9.
+ */
+/* line 265, ../sass/vendor/_normalize.scss */
+mark {
+  background: #ff0;
+  color: #000;
+}
+
+/**
+ * Correct font family set oddly in Safari 5 and Chrome.
+ */
+/* line 277, ../sass/vendor/_normalize.scss */
+code,
+kbd,
+pre,
+samp {
+  font-family: monospace, serif;
+  _font-family: 'courier new', monospace;
+  font-size: 1em;
+  line-height: 1.5em;
+}
+
+/**
+ * Improve readability of pre-formatted text in all browsers.
+ */
+/* line 289, ../sass/vendor/_normalize.scss */
+pre {
+  white-space: pre-wrap;
+}
+
+/**
+ * Set consistent quote types.
+ */
+/* line 297, ../sass/vendor/_normalize.scss */
+q {
+  quotes: "\201C" "\201D" "\2018" "\2019";
+}
+
+/**
+ * Address inconsistent and variable font size in all browsers.
+ */
+/* line 305, ../sass/vendor/_normalize.scss */
+small {
+  font-size: 80%;
+}
+
+/**
+ * Prevent `sub` and `sup` affecting `line-height` in all browsers.
+ */
+/* line 314, ../sass/vendor/_normalize.scss */
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+/* line 321, ../sass/vendor/_normalize.scss */
+sup {
+  top: -0.5em;
+}
+
+/* line 325, ../sass/vendor/_normalize.scss */
+sub {
+  bottom: -0.25em;
+}
+
+/* ==========================================================================
+   Lists
+   ========================================================================== */
+/**
+ * Set 1 unit of vertical rhythm and a consistent indentation.
+ */
+/* line 340, ../sass/vendor/_normalize.scss */
+dl,
+menu,
+ol,
+ul {
+  margin: 1.5em 0;
+  padding: 0 0 0 40px;
+  font-size: 14px;
+}
+
+/* line 345, ../sass/vendor/_normalize.scss */
+dl {
+  padding: 0;
+}
+
+/* line 349, ../sass/vendor/_normalize.scss */
+dd {
+  margin: 0 0 0 40px;
+}
+
+/**
+ * Correct list images handled incorrectly in IE 7.
+ */
+/* line 359, ../sass/vendor/_normalize.scss */
+nav ul,
+nav ol {
+  list-style: none;
+  list-style-image: none;
+}
+
+/* ==========================================================================
+   Embedded content
+   ========================================================================== */
+/**
+ * Remove border when inside `a` element in IE 8/9.
+ */
+/* line 373, ../sass/vendor/_normalize.scss */
+img {
+  border: 0;
+  /* Improve image quality when scaled in IE 7. */
+  -ms-interpolation-mode: bicubic;
+}
+
+/**
+ * Correct overflow displayed oddly in IE 9.
+ */
+/* line 385, ../sass/vendor/_normalize.scss */
+svg:not(:root) {
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   Figures
+   ========================================================================== */
+/**
+ * Address margin not present in IE 8/9 and Safari 5.
+ */
+/* line 397, ../sass/vendor/_normalize.scss */
+figure {
+  margin: 0;
+}
+
+/* ==========================================================================
+   Forms
+   ========================================================================== */
+/**
+ * Correct margin displayed oddly in IE 6/7.
+ */
+/* line 410, ../sass/vendor/_normalize.scss */
+form {
+  margin: 0;
+}
+
+/**
+ * Define consistent border, margin, and padding.
+ */
+/* line 419, ../sass/vendor/_normalize.scss */
+fieldset {
+  border-color: #c0c0c0;
+  margin: 0 2px;
+  /* Apply borders and padding that keep the vertical rhythm. */
+  border-top-style: solid;
+  border-top-width: 0.0625em;
+  padding-top: 0.4625em;
+  border-bottom-style: solid;
+  border-bottom-width: 0.0625em;
+  padding-bottom: 0.9125em;
+  border-left-style: solid;
+  border-left-width: 0.0625em;
+  padding-left: 0.875em;
+  border-right-style: solid;
+  border-right-width: 0.0625em;
+  padding-right: 0.875em;
+}
+
+/**
+ * 1. Correct `color` not being inherited in IE 8/9.
+ * 2. Remove padding so people aren't caught out if they zero out fieldsets.
+ * 3. Correct alignment displayed oddly in IE 6/7.
+ */
+/* line 435, ../sass/vendor/_normalize.scss */
+legend {
+  border: 0;
+  /* 1 */
+  padding: 0;
+  /* 2 */
+  *margin-left: -7px;
+  /* 3 */
+}
+
+/**
+ * 1. Correct font family not being inherited in all browsers.
+ * 2. Correct font size not being inherited in all browsers.
+ * 3. Address margins set differently in Firefox 4+, Safari 5, and Chrome.
+ * 4. Improve appearance and consistency with IE 6/7.
+ */
+/* line 453, ../sass/vendor/_normalize.scss */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  /* 1 */
+  font-size: 100%;
+  /* 2 */
+  margin: 0;
+  /* 3 */
+  vertical-align: baseline;
+  /* 4 */
+  *vertical-align: middle;
+  /* 4 */
+}
+
+/**
+ * Address Firefox 4+ setting `line-height` on `input` using `!important` in
+ * the UA stylesheet.
+ */
+/* line 469, ../sass/vendor/_normalize.scss */
+button,
+input {
+  line-height: normal;
+}
+
+/**
+ * Address inconsistent `text-transform` inheritance for `button` and `select`.
+ * All other form control elements do not inherit `text-transform` values.
+ * Correct `button` style inheritance in Chrome, Safari 5+, and IE 8+.
+ * Correct `select` style inheritance in Firefox 4+ and Opera.
+ */
+/* line 481, ../sass/vendor/_normalize.scss */
+button,
+select {
+  text-transform: none;
+}
+
+/**
+ * 1. Avoid the WebKit bug in Android 4.0.* where (2) destroys native `audio`
+ *    and `video` controls.
+ * 2. Correct inability to style clickable `input` types in iOS.
+ * 3. Improve usability and consistency of cursor style between image-type
+ *    `input` and others.
+ * 4. Remove inner spacing in IE 7 without affecting normal text inputs.
+ *    Known issue: inner spacing remains in IE 6.
+ */
+/* line 498, ../sass/vendor/_normalize.scss */
+button,
+html input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+  -webkit-appearance: button;
+  /* 2 */
+  cursor: pointer;
+  /* 3 */
+  *overflow: visible;
+  /* 4 */
+}
+
+/**
+ * Re-set default cursor for disabled elements.
+ */
+/* line 511, ../sass/vendor/_normalize.scss */
+button[disabled],
+html input[disabled] {
+  cursor: default;
+}
+
+/**
+ * 1. Address box sizing set to `content-box` in IE 8/9.
+ * 2. Remove excess padding in IE 8/9.
+ * 3. Remove excess padding in IE 7.
+ *    Known issue: excess padding remains in IE 6.
+ */
+/* line 523, ../sass/vendor/_normalize.scss */
+input[type="checkbox"],
+input[type="radio"] {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  /* 1 */
+  padding: 0;
+  /* 2 */
+  *height: 13px;
+  /* 3 */
+  *width: 13px;
+  /* 3 */
+}
+
+/**
+ * 1. Address `appearance` set to `searchfield` in Safari 5 and Chrome.
+ * 2. Address `box-sizing` set to `border-box` in Safari 5 and Chrome
+ *    (include `-moz` to future-proof).
+ */
+/* line 538, ../sass/vendor/_normalize.scss */
+input[type="search"] {
+  -webkit-appearance: textfield;
+  /* 1 */
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  /* 2 */
+}
+
+/**
+ * Remove inner padding and search cancel button in Safari 5 and Chrome
+ * on OS X.
+ */
+/* line 549, ../sass/vendor/_normalize.scss */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+/**
+ * Remove inner padding and border in Firefox 4+.
+ */
+/* line 558, ../sass/vendor/_normalize.scss */
+button::-moz-focus-inner,
+input::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+/**
+ * 1. Remove default vertical scrollbar in IE 8/9.
+ * 2. Improve readability and alignment in all browsers.
+ */
+/* line 568, ../sass/vendor/_normalize.scss */
+textarea {
+  overflow: auto;
+  /* 1 */
+  vertical-align: top;
+  /* 2 */
+}
+
+/* ==========================================================================
+   Tables
+   ========================================================================== */
+/**
+ * Remove most spacing between table cells.
+ */
+/* line 581, ../sass/vendor/_normalize.scss */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/*-----------------------------
+/*--- CUSTOM DEPENDENCIES -----
+-----------------------------*/
+/* Global */
+/* line 7, ../sass/authored/global/_normalize.scss */
+* {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* line 13, ../sass/authored/global/_normalize.scss */
+html {
+  -webkit-font-smoothing: subpixel-antialiased;
+  /* Solves flickering bugs, and makes fonts render more smoothly in webkit browsers. */
+}
+
+/* line 18, ../sass/authored/global/_normalize.scss */
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* line 58, ../sass/authored/global/_responsive.scss */
+body:after {
+  display: none;
+}
+@media only screen and (max-width: 660px) {
+  /* line 58, ../sass/authored/global/_responsive.scss */
+  body:after {
+    content: "phone";
+  }
+}
+@media only screen and (min-width: 661px) and (max-width: 939px) {
+  /* line 58, ../sass/authored/global/_responsive.scss */
+  body:after {
+    content: "tablet";
+  }
+}
+@media only screen and (min-width: 941px) and (max-width: 1399px) {
+  /* line 58, ../sass/authored/global/_responsive.scss */
+  body:after {
+    content: "normal";
+  }
+}
+@media only screen and (min-width: 1400px) {
+  /* line 58, ../sass/authored/global/_responsive.scss */
+  body:after {
+    content: "wide";
+  }
+}
+
+@-ms-viewport {
+  width: device-width;
+}
+
+@viewport {
+  width: device-width;
+}
+
+/*-----------------------------
+/*---------- BASICS -----------
+-----------------------------*/
+/* line 13, ../sass/authored/global/_type-hierarchy.scss */
+h1,
+h2,
+h3,
+h4,
+p,
+.site-header__logo__version,
+.site-header__search .options__option,
+.sidebar__body__item,
+.overview-box__title,
+td.overview-box__name-col,
+td.overview-box__description-col,
+.show-inherited-toggle .checkbox:after {
+  font-family: "Helvetica", "Arial", sans-serif;
+  word-wrap: break-word;
+}
+/* line 17, ../sass/authored/global/_type-hierarchy.scss */
+h1.is-reverse,
+h2.is-reverse,
+h3.is-reverse,
+h4.is-reverse,
+p.is-reverse,
+.is-reverse.site-header__logo__version,
+.site-header__search .is-reverse.options__option,
+.is-reverse.sidebar__body__item,
+.is-reverse.overview-box__title,
+td.is-reverse.overview-box__name-col,
+td.is-reverse.overview-box__description-col,
+.show-inherited-toggle .is-reverse.checkbox:after {
+  color: white;
+}
+
+/* line 22, ../sass/authored/global/_type-hierarchy.scss */
+.is-light {
+  font-weight: 200;
+  color: #8b8b8b;
+}
+
+/* line 28, ../sass/authored/global/_type-hierarchy.scss */
+.is-reverse h1, .is-reverse h2, .is-reverse h3, .is-reverse h4, .is-reverse p, .is-reverse .site-header__logo__version, .is-reverse .site-header__search .options__option, .site-header__search .is-reverse .options__option, .is-reverse .sidebar__body__item, .is-reverse .overview-box__title, .is-reverse td.overview-box__name-col, .is-reverse td.overview-box__description-col, .is-reverse .show-inherited-toggle .checkbox:after, .show-inherited-toggle .is-reverse .checkbox:after {
+  color: white;
+}
+
+/* line 33, ../sass/authored/global/_type-hierarchy.scss */
+h1 {
+  font-size: 30px;
+  line-height: 45px;
+  font-weight: 600;
+  color: black;
+}
+
+/* line 40, ../sass/authored/global/_type-hierarchy.scss */
+h2 {
+  font-size: 24px;
+  line-height: 36px;
+  font-weight: 100;
+  color: black;
+}
+
+/* line 47, ../sass/authored/global/_type-hierarchy.scss */
+h3 {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 600;
+  color: black;
+}
+
+/* line 54, ../sass/authored/global/_type-hierarchy.scss */
+h4 {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 400;
+  color: black;
+}
+
+/* line 61, ../sass/authored/global/_type-hierarchy.scss */
+p, .site-header__logo__version, .site-header__search .options__option, .sidebar__body__item, .overview-box__title, td.overview-box__name-col, td.overview-box__description-col, .show-inherited-toggle .checkbox:after {
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 400;
+  color: #474747;
+}
+/* line 67, ../sass/authored/global/_type-hierarchy.scss */
+p.is-small, .is-small.site-header__logo__version, .site-header__search .is-small.options__option, .is-small.sidebar__body__item, .is-small.overview-box__title, td.overview-box__name-col, td.overview-box__description-col, .show-inherited-toggle .checkbox:after {
+  font-size: 12px;
+}
+
+/* line 72, ../sass/authored/global/_type-hierarchy.scss */
+a {
+  color: #1a75da;
+  text-decoration: none;
+}
+/* line 76, ../sass/authored/global/_type-hierarchy.scss */
+a:visited {
+  color: #871bda;
+}
+/* line 80, ../sass/authored/global/_type-hierarchy.scss */
+a:active {
+  color: #da1b1b;
+}
+/* line 84, ../sass/authored/global/_type-hierarchy.scss */
+a:hover {
+  color: #1a75da;
+  text-decoration: underline;
+}
+/* line 89, ../sass/authored/global/_type-hierarchy.scss */
+a.is-perm {
+  color: #1a75da;
+}
+
+/* line 95, ../sass/authored/global/_type-hierarchy.scss */
+h1.is-inline, h2.is-inline, h3.is-inline, h4.is-inline, p.is-inline, .is-inline.site-header__logo__version, .site-header__search .is-inline.options__option, .is-inline.sidebar__body__item, .is-inline.overview-box__title, td.is-inline.overview-box__name-col, td.is-inline.overview-box__description-col, .show-inherited-toggle .is-inline.checkbox:after {
+  display: inline-block;
+}
+
+/* line 6, ../sass/authored/global/_lists.scss */
+ul.list h1, ul.list h2, ul.list h3, ul.list h4, ul.list p, ul.list .site-header__logo__version, ul.list .site-header__search .options__option, .site-header__search ul.list .options__option, ul.list .sidebar__body__item, ul.list .overview-box__title, ul.list td.overview-box__name-col, ul.list td.overview-box__description-col, ul.list .show-inherited-toggle .checkbox:after, .show-inherited-toggle ul.list .checkbox:after {
+  margin: 0;
+}
+
+/* line 5, ../sass/authored/global/_code.scss */
+code {
+  background-color: white;
+  padding: 4px;
+  font-size: 14px;
+  color: #272822;
+}
+
+/* line 14, ../sass/authored/global/_code.scss */
+pre {
+  display: block;
+  padding: 30px;
+  background-color: #eee;
+  margin: 30px 0;
+  overflow: scroll;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  font-size: 14px;
+  color: black;
+}
+
+/* line 5, ../sass/authored/global/_rules.scss */
+hr {
+  width: 100%;
+  height: 1px;
+  border: none;
+  background-color: #d6d6d6;
+}
+
+/* Site-wide UI */
+/* line 7, ../sass/authored/ui/_content.scss */
+.page {
+  padding-bottom: 80px;
+}
+
+/*-----------------------------
+/*---------- CONTENT ----------
+-----------------------------*/
+/* line 15, ../sass/authored/ui/_content.scss */
+.content {
+  width: 980px;
+  padding: 21px 0 60px 280px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #474747;
+}
+
+/* line 21, ../sass/authored/ui/_content.scss */
+.content-header,
+.content-section {
+  padding-bottom: 30px;
+}
+/* line 23, ../sass/authored/ui/_content.scss */
+.content-header h2,
+.content-section h2 {
+  border-bottom: 4px solid #d6d6d6;
+}
+/* line 26, ../sass/authored/ui/_content.scss */
+.content-header h3,
+.content-section h3 {
+  border-bottom: 1px solid #e7e7e7;
+}
+
+/* line 30, ../sass/authored/ui/_content.scss */
+.content-header {
+  margin: 30px 0 0;
+}
+
+/* line 34, ../sass/authored/ui/_content.scss */
+.content-section {
+  margin: 20px 0 0;
+}
+
+/* line 38, ../sass/authored/ui/_content.scss */
+.content-section__inner {
+  padding: 0 0 0 36px;
+}
+
+/* line 42, ../sass/authored/ui/_content.scss */
+.content-section__subheader {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  background-color: whitesmoke;
+  border-top: 1px solid #e7e7e7;
+  padding: 4px 8px;
+}
+/* line 18, ../sass/authored/global/_grid.scss */
+.content-section__subheader:after {
+  content: ".";
+  display: block;
+  clear: both;
+  visibility: hidden;
+  line-height: 0;
+  height: 0;
+}
+/* line 49, ../sass/authored/ui/_content.scss */
+.content-section__subheader:hover {
+  background-color: #e7e7e7;
+  border-top: 1px solid #d6d6d6;
+}
+
+/* line 55, ../sass/authored/ui/_content.scss */
+.content-section__subheader__twirl {
+  float: left;
+  margin-top: 12px;
+}
+
+/* line 60, ../sass/authored/ui/_content.scss */
+.content-section__subheader__title {
+  float: left;
+  font-weight: 100;
+  margin: 0;
+}
+
+/* line 66, ../sass/authored/ui/_content.scss */
+.content-section:last-child {
+  border-bottom: none;
+}
+
+/* line 70, ../sass/authored/ui/_content.scss */
+.content-subsection {
+  border-bottom: 1px solid #e7e7e7;
+}
+/* line 72, ../sass/authored/ui/_content.scss */
+.content-subsection:last-child {
+  border-bottom: none;
+}
+
+/* line 7, ../sass/authored/ui/_twirl-down.scss */
+.twirl-down {
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  left: 4px;
+  top: -3px;
+  margin-right: 10px;
+  width: 10px;
+  height: 10px;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 5px solid #474747;
+}
+
+/* line 22, ../sass/authored/ui/_twirl-down.scss */
+.is-open .twirl-down {
+  left: 0;
+  top: 1px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #474747;
+}
+
+/* line 34, ../sass/authored/ui/_twirl-down.scss */
+.twirlable:before {
+  content: ' ';
+  display: inline-block;
+  vertical-align: middle;
+  position: absolute;
+  margin-left: -11px;
+  margin-top: 5px;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 5px solid #747d85;
+}
+/* line 49, ../sass/authored/ui/_twirl-down.scss */
+.twirlable.twirlable--open:before {
+  margin-left: -15px;
+  margin-top: 8px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #747d85;
+}
+
+/* line 50, checkbox/*.png */
+.checkbox-sprite, .checkbox-off, .checkbox, .checkbox-on {
+  background: url('../images/checkbox-s73880f2617.png') no-repeat;
+}
+
+/* line 60, ../../../../../../../../.rvm/gems/ruby-1.9.3-p392/gems/compass-0.12.2/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
+.checkbox-off, .checkbox {
+  background-position: 0 -17px;
+}
+
+/* line 60, ../../../../../../../../.rvm/gems/ruby-1.9.3-p392/gems/compass-0.12.2/frameworks/compass/stylesheets/compass/utilities/sprites/_base.scss */
+.checkbox-on, .checkbox.checkbox--checked, .show-inherited-toggle.show-inherited-toggle--on .checkbox {
+  background-position: 0 0;
+}
+
+/* line 10, ../sass/authored/ui/_checkbox.scss */
+.checkbox {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+}
+
+/* line 5, ../sass/authored/ui/_site-header.scss */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid whitesmoke;
+  z-index: 900;
+}
+
+/* line 18, ../sass/authored/ui/_site-header.scss */
+.site-header__logo {
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  left: 26px;
+  top: 0;
+  background-color: white;
+  background: white url("images/site-header__logo.jpg") no-repeat;
+  background-position: 50px 12px;
+  width: 209px;
+  height: 100%;
+}
+
+/* line 33, ../sass/authored/ui/_site-header.scss */
+.site-header__logo__version {
+  margin: 0;
+  color: white;
+  font-size: 12px;
+  position: absolute;
+  right: 14px;
+  top: 15px;
+}
+
+/* line 43, ../sass/authored/ui/_site-header.scss */
+ul.site-header__nav {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 0 0 27px;
+  list-style-type: none;
+}
+
+ul.site-header__nav li {
+  display: inline;
+  list-style-type: none;
+}
+
+ul.site-header__nav li + li::before {
+    content: "    >    ";
+}
+
+/* line 52, ../sass/authored/ui/_site-header.scss */
+.site-header__search {
+  position: absolute;
+  right: 20px;
+  top: 8px;
+}
+/* line 59, ../sass/authored/ui/_site-header.scss */
+.site-header__search input {
+  background: url("images/search-icon.jpg") no-repeat;
+  background-position: 10px;
+  border: 1px solid #d6d6d6;
+  height: 32px;
+  padding: 0 20px 0 34px;
+  width: 200px;
+  font-size: 14px;
+  -moz-border-radius-topleft: 14px;
+  -webkit-border-top-left-radius: 14px;
+  border-top-left-radius: 14px;
+  -moz-border-radius-bottomleft: 14px;
+  -webkit-border-bottom-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+}
+/* line 68, ../sass/authored/ui/_site-header.scss */
+.site-header__search input:focus {
+  outline: none;
+}
+/* line 77, ../sass/authored/ui/_site-header.scss */
+.site-header__search button {
+  height: 32px;
+  width: 140px;
+  vertical-align: top;
+  font-size: 14px;
+  padding: 0 20px;
+  text-align: left;
+}
+/* line 86, ../sass/authored/ui/_site-header.scss */
+.site-header__search .options {
+  display: none;
+  position: absolute;
+  right: 0;
+  padding: 10px 0;
+  background-color: white;
+  width: 140px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.15) 0 0 8px 0;
+  -moz-box-shadow: rgba(0, 0, 0, 0.15) 0 0 8px 0;
+  box-shadow: rgba(0, 0, 0, 0.15) 0 0 8px 0;
+}
+/* line 96, ../sass/authored/ui/_site-header.scss */
+.site-header__search .options__option {
+  margin: 0;
+  font-size: 14px;
+  padding: 4px 20px;
+  cursor: pointer;
+}
+/* line 103, ../sass/authored/ui/_site-header.scss */
+.site-header__search .options__option:hover {
+  background-color: whitesmoke;
+}
+/* line 108, ../sass/authored/ui/_site-header.scss */
+.site-header__search .options__option--selected {
+  background-color: #1a75da;
+  color: white;
+}
+/* line 112, ../sass/authored/ui/_site-header.scss */
+.site-header__search .options__option--selected:hover {
+  background-color: #1a75da;
+}
+
+/* line 5, ../sass/authored/ui/_sidebar.scss */
+.sidebar {
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  width: 270px;
+  height: 100%;
+  background-color: transparent;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+/* line 16, ../sass/authored/ui/_sidebar.scss */
+.sidebar--hidden {
+  left: -225px;
+}
+/* line 18, ../sass/authored/ui/_sidebar.scss */
+.sidebar--hidden .sidebar__inner {
+  -webkit-box-shadow: rgba(0, 0, 0, 0.2) 20px 0 40px;
+  -moz-box-shadow: rgba(0, 0, 0, 0.2) 20px 0 40px;
+  box-shadow: rgba(0, 0, 0, 0.2) 20px 0 40px;
+}
+/* line 21, ../sass/authored/ui/_sidebar.scss */
+.sidebar--hidden .sidebar__button {
+  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+  opacity: 1;
+}
+
+/* line 26, ../sass/authored/ui/_sidebar.scss */
+.sidebar__inner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 250px;
+  height: 100%;
+  background-color: #2a2d30;
+  transition: all 0.5s ease;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.4) 5px 0 10px;
+  -moz-box-shadow: rgba(0, 0, 0, 0.4) 5px 0 10px;
+  box-shadow: rgba(0, 0, 0, 0.4) 5px 0 10px;
+}
+
+/* line 37, ../sass/authored/ui/_sidebar.scss */
+.sidebar__button {
+  position: absolute;
+  z-index: 10;
+  top: 2px;
+  right: -23px;
+  width: 38px;
+  height: 38px;
+  background-color: #1a75da;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.3) 0 2px 5px;
+  -moz-box-shadow: rgba(0, 0, 0, 0.3) 0 2px 5px;
+  box-shadow: rgba(0, 0, 0, 0.3) 0 2px 5px;
+  -webkit-box-shadow: rgba(255, 255, 255, 0.3) 0 1px 1px 0 inset;
+  -moz-box-shadow: rgba(255, 255, 255, 0.3) 0 1px 1px 0 inset;
+  box-shadow: rgba(255, 255, 255, 0.3) 0 1px 1px 0 inset;
+  -webkit-border-radius: 19px;
+  -moz-border-radius: 19px;
+  -ms-border-radius: 19px;
+  -o-border-radius: 19px;
+  border-radius: 19px;
+  -webkit-transition: all 0.2s ease;
+  -moz-transition: all 0.2s ease;
+  -o-transition: all 0.2s ease;
+  transition: all 0.2s ease;
+  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
+  opacity: 0;
+}
+
+/* line 52, ../sass/authored/ui/_sidebar.scss */
+.sidebar__button__icon {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  -webkit-animation: blink-animation 5s infinite;
+  -moz-animation: blink-animation 5s infinite;
+  -ms-animation: blink-animation 5s infinite;
+  -o-animation: blink-animation 5s infinite;
+  animation: blink-animation 5s infinite;
+}
+
+@-moz-keyframes blink-animation {
+  /* line 60, ../sass/authored/ui/_sidebar.scss */
+  0%, 100% {
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+    opacity: 1;
+  }
+
+  /* line 63, ../sass/authored/ui/_sidebar.scss */
+  50% {
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=30);
+    opacity: 0.3;
+  }
+}
+
+@-webkit-keyframes blink-animation {
+  /* line 60, ../sass/authored/ui/_sidebar.scss */
+  0%, 100% {
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+    opacity: 1;
+  }
+
+  /* line 63, ../sass/authored/ui/_sidebar.scss */
+  50% {
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=30);
+    opacity: 0.3;
+  }
+}
+
+@-o-keyframes blink-animation {
+  /* line 60, ../sass/authored/ui/_sidebar.scss */
+  0%, 100% {
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+    opacity: 1;
+  }
+
+  /* line 63, ../sass/authored/ui/_sidebar.scss */
+  50% {
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=30);
+    opacity: 0.3;
+  }
+}
+
+@-ms-keyframes blink-animation {
+  /* line 60, ../sass/authored/ui/_sidebar.scss */
+  0%, 100% {
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+    opacity: 1;
+  }
+
+  /* line 63, ../sass/authored/ui/_sidebar.scss */
+  50% {
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=30);
+    opacity: 0.3;
+  }
+}
+
+@keyframes blink-animation {
+  /* line 60, ../sass/authored/ui/_sidebar.scss */
+  0%, 100% {
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+    opacity: 1;
+  }
+
+  /* line 63, ../sass/authored/ui/_sidebar.scss */
+  50% {
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=30);
+    opacity: 0.3;
+  }
+}
+
+/* line 68, ../sass/authored/ui/_sidebar.scss */
+.sidebar__title {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 85px;
+  padding: 20px;
+  background-color: black;
+}
+
+/* line 79, ../sass/authored/ui/_sidebar.scss */
+.sidebar__body {
+  position: absolute;
+  z-index: 1;
+  top: 85px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20px 20px 100px 0;
+  overflow: scroll;
+  overflow-x: hidden;
+}
+/* line 90, ../sass/authored/ui/_sidebar.scss */
+.sidebar__body::-webkit-scrollbar {
+  width: 10px;
+}
+/* line 94, ../sass/authored/ui/_sidebar.scss */
+.sidebar__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* line 98, ../sass/authored/ui/_sidebar.scss */
+.sidebar__body::-webkit-scrollbar-button {
+  display: none;
+}
+/* line 102, ../sass/authored/ui/_sidebar.scss */
+.sidebar__body::-webkit-scrollbar-thumb {
+  background: #1a75da;
+  background-clip: padding-box;
+  border: 3px solid #1a75da;
+  border-radius: 5px;
+}
+/* line 109, ../sass/authored/ui/_sidebar.scss */
+.sidebar__body ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+/* line 113, ../sass/authored/ui/_sidebar.scss */
+.sidebar__body ul li {
+  position: relative;
+  padding: 4px 0 4px 20px;
+}
+
+/* line 120, ../sass/authored/ui/_sidebar.scss */
+.sidebar__body__item {
+  background-color: rgba(0, 0, 0, 0);
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  font-weight: 100;
+  text-shadow: rgba(0, 0, 0, 0.5) 0 2px 0;
+}
+/* line 127, ../sass/authored/ui/_sidebar.scss */
+.sidebar__body__item:hover {
+  background-color: rgba(26, 117, 218, 0.25);
+  -webkit-box-shadow: rgba(0, 0, 0, 0.1) 0 2px 5px 0 inset;
+  -moz-box-shadow: rgba(0, 0, 0, 0.1) 0 2px 5px 0 inset;
+  box-shadow: rgba(0, 0, 0, 0.1) 0 2px 5px 0 inset;
+}
+
+/* line 134, ../sass/authored/ui/_sidebar.scss */
+.sidebar__body__item--selected li {
+  color: white;
+  font-weight: 800;
+}
+
+/* line 140, ../sass/authored/ui/_sidebar.scss */
+.block-link {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+/* line 5, ../sass/authored/ui/_inherited-icon.scss */
+.inherited-icon {
+  display: inline-block;
+  vertical-align: top;
+  margin-right: 9px;
+  margin-left: -20px;
+  width: 11px;
+  height: 17px;
+  background: url("images/inherited-icon.jpg") no-repeat;
+}
+
+/* line 5, ../sass/authored/ui/_page-nav.scss */
+.page-nav {
+  position: fixed;
+  top: 40px;
+  left: 55px;
+  width: 180px;
+  border-right: 1px solid whitesmoke;
+  padding: 55px 0 50px 0;
+}
+
+/* line 14, ../sass/authored/ui/_page-nav.scss */
+.page-nav__title {
+  margin: 0;
+  padding: 0 14px 10px 20px;
+}
+
+/* line 19, ../sass/authored/ui/_page-nav.scss */
+ul.page-nav__list {
+  margin: 0;
+  padding: 0;
+}
+/* line 23, ../sass/authored/ui/_page-nav.scss */
+ul.page-nav__list li {
+  margin: 0 0;
+  padding: 5px 20px;
+}
+/* line 26, ../sass/authored/ui/_page-nav.scss */
+ul.page-nav__list li p, ul.page-nav__list li .site-header__logo__version, ul.page-nav__list li .site-header__search .options__option, .site-header__search ul.page-nav__list li .options__option, ul.page-nav__list li .sidebar__body__item, ul.page-nav__list li .overview-box__title, ul.page-nav__list li td.overview-box__name-col, ul.page-nav__list li td.overview-box__description-col, ul.page-nav__list li .show-inherited-toggle .checkbox:after, .show-inherited-toggle ul.page-nav__list li .checkbox:after {
+  margin: 0;
+}
+/* line 29, ../sass/authored/ui/_page-nav.scss */
+ul.page-nav__list li.current-nav-section {
+  background-color: #1a75da;
+}
+/* line 31, ../sass/authored/ui/_page-nav.scss */
+ul.page-nav__list li.current-nav-section a {
+  color: white;
+}
+
+/* line 6, ../sass/authored/ui/_down-arrow.scss */
+.down-arrow:after {
+  position: relative;
+  top: -2px;
+  content: '∨';
+  font-size: 10px;
+  margin-right: 8px;
+}
+
+/* line 6, ../sass/authored/ui/_buttons.scss */
+button,
+.button {
+  -webkit-backface-visibility: hidden;
+  /* Fixes flickering during transitions in Safari. */
+  display: inline-block;
+  vertical-align: middle;
+  border: none;
+  background-color: #1a75da;
+  color: white;
+  text-shadow: rgba(0, 0, 0, 0.2) 0 1px 0;
+  -webkit-transition: all 0.1s linear;
+  -moz-transition: all 0.1s linear;
+  -o-transition: all 0.1s linear;
+  transition: all 0.1s linear;
+}
+/* line 16, ../sass/authored/ui/_buttons.scss */
+button:hover,
+.button:hover {
+  background-color: #1a75da;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.6) 0 0 16px 0;
+  -moz-box-shadow: rgba(0, 0, 0, 0.6) 0 0 16px 0;
+  box-shadow: rgba(0, 0, 0, 0.6) 0 0 16px 0;
+}
+/* line 22, ../sass/authored/ui/_buttons.scss */
+button:active, button.is-pressed,
+.button:active,
+.button.is-pressed {
+  background-color: #1a75da;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.25) 0 0 12px 0 inset;
+  -moz-box-shadow: rgba(0, 0, 0, 0.25) 0 0 12px 0 inset;
+  box-shadow: rgba(0, 0, 0, 0.25) 0 0 12px 0 inset;
+  -webkit-transition: none;
+  -moz-transition: none;
+  -o-transition: none;
+  transition: none;
+}
+/* line 29, ../sass/authored/ui/_buttons.scss */
+button.button--disabled,
+.button.button--disabled {
+  cursor: auto;
+  pointer-events: none;
+}
+/* line 34, ../sass/authored/ui/_buttons.scss */
+button.button--text,
+.button.button--text {
+  padding: 14px 28px;
+}
+/* line 38, ../sass/authored/ui/_buttons.scss */
+button.button--full-width,
+.button.button--full-width {
+  width: 100%;
+  text-align: center;
+}
+
+/*
+@import "authored/ui/input";
+@import "authored/ui/vertical-centerer";
+*/
+/* Page content */
+/*-----------------------------
+/*----------- TYPE ------------
+-----------------------------*/
+/* line 9, ../sass/authored/content/_class-page.scss */
+.special-property {
+  vertical-align: top;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 10px;
+  color: black;
+}
+
+.deprecated-property {
+  vertical-align: top;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 10px;
+  color: #771F1F;
+}
+
+/* line 7, ../sass/authored/content/class-page/_overview-section.scss */
+.overview-box__header, .overview-box__header--twirlable {
+  position: relative;
+  padding: 4px 12px;
+  background-color: #e7e7e7;
+}
+/* line 18, ../sass/authored/global/_grid.scss */
+.overview-box__header:after, .overview-box__header--twirlable:after {
+  content: ".";
+  display: block;
+  clear: both;
+  visibility: hidden;
+  line-height: 0;
+  height: 0;
+}
+
+/* line 14, ../sass/authored/content/class-page/_overview-section.scss */
+.overview-box__header--twirlable {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  cursor: pointer;
+}
+/* line 18, ../sass/authored/content/class-page/_overview-section.scss */
+.overview-box__header--twirlable:hover {
+  background-color: #d6d6d6;
+}
+
+/* line 23, ../sass/authored/content/class-page/_overview-section.scss */
+.overview-box__twirl {
+  float: left;
+  margin-top: 9px;
+}
+
+/* line 28, ../sass/authored/content/class-page/_overview-section.scss */
+.overview-box__title {
+  float: left;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* line 35, ../sass/authored/content/class-page/_overview-section.scss */
+table.overview-box__table {
+  table-layout: fixed;
+  border: 1px solid #e7e7e7;
+  width: 100%;
+}
+/* line 40, ../sass/authored/content/class-page/_overview-section.scss */
+table.overview-box__table td {
+  padding: 4px 12px 4px 34px;
+  border-top: 1px solid #e7e7e7;
+  border-bottom: 1px solid #e7e7e7;
+}
+
+/* line 47, ../sass/authored/content/class-page/_overview-section.scss */
+td.overview-box__name-col {
+  vertical-align: top;
+  margin: 0;
+  width: 40%;
+  padding-right: 0;
+  border-right: 1px solid #e7e7e7;
+}
+
+/* line 57, ../sass/authored/content/class-page/_overview-section.scss */
+td.overview-box__description-col {
+  vertical-align: top;
+  margin: 0;
+  width: 60%;
+}
+
+/* line 65, ../sass/authored/content/class-page/_overview-section.scss */
+.show-inherited-toggle {
+  float: right;
+  cursor: pointer;
+  padding: 2px 4px 0;
+}
+/* line 70, ../sass/authored/content/class-page/_overview-section.scss */
+.show-inherited-toggle .checkbox {
+  width: 106px;
+}
+/* line 72, ../sass/authored/content/class-page/_overview-section.scss */
+.show-inherited-toggle .checkbox:after {
+  position: relative;
+  top: -3px;
+  margin-left: 24px;
+  content: "Show inherited";
+  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=60);
+  opacity: 0.6;
+}
+/* line 83, ../sass/authored/content/class-page/_overview-section.scss */
+.show-inherited-toggle:hover {
+  outline: 1px dotted #1a75da;
+}
+/* line 90, ../sass/authored/content/class-page/_overview-section.scss */
+.show-inherited-toggle.show-inherited-toggle--on .checkbox:after {
+  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+  opacity: 1;
+}
+
+.panel-danger .panel-heading {
+  color: #b94a48;
+  background-color: #f2dede;
+  border-color: #eed3d7;
+}
+
+.panel-heading {
+  padding: 10px 15px;
+  margin: -15px -15px 15px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #dddddd;
+  border-top-right-radius: 3px;
+  border-top-left-radius: 3px;
+}
+
+.panel {
+  padding: 15px;
+  margin-bottom: 20px;
+  background-color: #ffffff;
+  border: 1px solid #dddddd;
+  border-radius: 4px;
+  -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+.panel p {
+  margin-bottom: 0em;
+}
+
+.ui-tooltip {
+  -webkit-box-shadow: 0 0 5px #b94a48 !important;
+  box-shadow: 0 0 5px #b94a48 !important;
+  border: 1px solid #b94a48 !important;
+}
+
+.ui-tooltip-content {
+  font-family: "Helvetica", "Arial", sans-serif;
+  font-size: 12px;
+}

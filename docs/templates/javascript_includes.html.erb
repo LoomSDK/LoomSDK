@@ -1,0 +1,43 @@
+<script type="text/javascript" src="<%= @relative_base_path %>/js/vendor/fuse.min.js"></script>
+<script type="text/javascript" src="<%= @relative_base_path %>/js/vendor/jquery-1.9.0.min.js"></script>
+<script type="text/javascript" src="<%= @relative_base_path %>/js/vendor/jquery.easing.min.js"></script>
+<script type="text/javascript" src="<%= @relative_base_path %>/js/vendor/jquery-ui-1.10.3.custom.min.js"></script>
+<script type="text/javascript" src="<%= @relative_base_path %>/js/vendor/underscore-min.js"></script>
+<script type="text/javascript" src="<%= @relative_base_path %>/js/authored/onscroll.js"></script>
+<script type="text/javascript" src="<%= @relative_base_path %>/js/authored/table-of-contents.js"></script>
+<script type="text/javascript" src="<%= @relative_base_path %>/js/authored/inherited-properties.js"></script>
+<script type="text/javascript" src="<%= @relative_base_path %>/js/authored/twirldowns.js"></script>
+<script type="text/javascript" src="<%= @relative_base_path %>/js/authored/id-link-intercept.js"></script>
+
+<script type="text/javascript">
+  $(function() {
+    $( document ).tooltip();
+  });
+  </script>
+  
+<script type="text/javascript">
+
+  var relative_base = "<%= @relative_base_path %>";
+  var search_objects = $.parseJSON('<%= search_object_string %>');
+
+	var sidebarData = [
+	    { "name" : "Guides", "link" : [] },
+	    { "name" : "Examples", "link" : [] },
+	    { "name" : "API reference", "link" : "<%= @relative_base_path %>/api/index.html" }
+	];
+
+  // populate examples links
+	for(var index in search_objects.examples)
+	{
+	  example = search_objects.examples[index]
+	  sidebarData[1].link.push({"name": example.name, "link": relative_base + "/" + example.path.split(".").join("/") + ".html"});
+	}
+	
+	// populate guides links
+	sidebarData[0].link = $.parseJSON('<%= $guides.sidebar_links_json(@relative_base_path) %>');
+	
+</script>
+
+<script type="text/javascript" src="<%= @relative_base_path %>/js/authored/sidebar.js"></script>
+<script type="text/javascript" src="<%= @relative_base_path %>/js/vendor/jquery.dropdown.js"></script>
+<script type="text/javascript" src="<%= @relative_base_path %>/js/authored/search.js"></script>

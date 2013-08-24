@@ -1,0 +1,19 @@
+<div class="content-subsection" id="attribute-<%= @field[:name] %>">
+  <p><% if @doc.package_path != @field[:defined_by].package_path %><span class="inherited-icon"></span><% end %><strong><%= @field[:name] %></strong>: <%= @doc.object_type(@field, @relative_base_path) %>
+    <% if @doc.package_path != @field[:defined_by].package_path %>
+    <br>
+    <span class="is-light">Inherited from <a href="<%= url( @field[:defined_by].package_path ) %>"><%= abbr_path( @field[:defined_by].package_path ) %></a></span>
+    <% end %>
+    <% unless @doc.default_for_property(@field).empty? %>
+      <br>
+      <span class="is-light">The default value is <%= @doc.default_for_property(@field) %></span>
+    <% end %>
+  </p>
+  <p>
+    <%= @doc.deprecated(@field[:docString]) %>
+    <% if is_static( @field[:fieldattributes] ) %><span class="special-property">static </span><% end %>
+    <% if is_native( @field[:fieldattributes] ) %><span class="special-property">native </span><% end %>
+    <% if is_getter( @field ) && !is_setter( @field ) %><span class="special-property">read-only </span><% end %>
+    <% if !is_getter( @field ) && is_setter( @field ) %><span class="special-property">write-only </span><% end %>
+    <%= @doc.comment(@field, @relative_base_path) %></p>
+</div>

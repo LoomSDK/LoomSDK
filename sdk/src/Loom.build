@@ -1,0 +1,11 @@
+{
+ "name" : "Loom",   
+ "version" : "1.0",
+ "references" : [ "System"],
+ "outputDir" : "./libs/",
+ "modules" : [ {
+    "name" : "Loom",     
+    "version": "1.0",
+    "sourcePath": ["loom", "cocos2d", "loom2d"]
+    } ]
+}

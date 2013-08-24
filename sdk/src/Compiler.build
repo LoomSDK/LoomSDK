@@ -1,0 +1,11 @@
+{
+ "name" : "Compiler",   
+ "version" : "1.0",
+ "references" : [ "System" ],
+ "outputDir" : "./libs/",
+ "modules" : [ {
+    "name" : "Compiler",     
+    "version": "1.0",
+    "sourcePath": ["compiler"]
+    } ]
+}

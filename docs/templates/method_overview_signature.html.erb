@@ -1,0 +1,1 @@
+<a href="#function-<%= @method[:name] %>"><strong><%= @method[:name] %></strong></a><%= render "templates/signature_parameters", {:parameters => @method[:parameters]} %>: <%= @doc.object_type(@method, @relative_base_path) %>

@@ -1,0 +1,147 @@
+////////////////////////////////
+//         SIDEBAR
+////////////////////////////////
+
+.sidebar {
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  width: 270px;
+  height: 100%;
+  background-color: transparent;
+  @include transition( all .3s ease );
+}
+
+.sidebar--hidden {
+  left: -225px;
+  .sidebar__inner {
+    @include box-shadow( rgba( black, .2 ) 20px 0 40px );
+  }
+  .sidebar__button {
+    @include opacity( 1 );
+  }
+}
+
+.sidebar__inner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 250px;
+  height: 100%;
+  background-color: #2a2d30;
+  transition: all 0.5s ease;
+  @include box-shadow( rgba( black, .4 ) 5px 0 10px );
+}
+
+.sidebar__button {
+  position: absolute;
+  z-index: 10;
+  top: 2px;
+  right: -23px;
+  width: 38px;
+  height: 38px;
+  background-color: $blue;
+  @include box-shadow( rgba( black, .3 ) 0 2px 5px );
+  @include box-shadow( rgba( white, .3 ) 0 1px 1px 0 inset );
+  @include border-radius( 38px * .5 );
+  @include transition( all 0.2s ease );
+  @include opacity( 0 );
+}
+
+.sidebar__button__icon {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  @include animation( blink-animation 5s infinite );
+}
+
+@include keyframes( blink-animation ) {
+  0%, 100% {
+    @include opacity( 1 );
+  }
+  50% {
+    @include opacity( .3 );
+  }
+}
+
+.sidebar__title {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 85px;
+  padding: 20px;
+  background-color: black;
+  img {
+  }
+}
+
+.sidebar__body {
+  position: absolute;
+  z-index: 1;
+  top: 85px;;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20px 20px 100px 0;
+  overflow: scroll;
+  overflow-x: hidden;
+
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-button {
+    display: none;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $blue;
+    background-clip: padding-box;
+    border: 3px solid $blue;
+    border-radius: 5px;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    li {
+      position: relative;
+      padding: 4px 0 4px 20px;
+    }
+  }
+}
+
+.sidebar__body__item {
+  @extend p;
+  background-color: rgba( black, 0 );
+  color: rgba( white, .8 );
+  margin: 0;
+  font-weight: 100;
+  @include text-shadow( rgba( black, .5 ) 0 2px 0 );
+  &:hover {
+    background-color: rgba( $blue, .25 );
+    @include box-shadow( rgba( 0, 0, 0, .1 ) 0 2px 5px 0 inset );
+  }
+}
+
+.sidebar__body__item--selected {
+  li {
+    color: white;
+    font-weight: 800;
+  }
+}
+
+.block-link {
+  position: absolute; 
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}

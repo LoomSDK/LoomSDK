@@ -1,0 +1,21 @@
+////////////////////////////////
+//         NORMALIZE
+////////////////////////////////
+
+// Apply a natural box layout model to all elements.
+// Thank you, Paul Irish: http://www.paulirish.com/2012/box-sizing-border-box-ftw/
+* {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: subpixel-antialiased; /* Solves flickering bugs, and makes fonts render more smoothly in webkit browsers. */
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}

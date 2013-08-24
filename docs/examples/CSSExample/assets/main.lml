@@ -1,0 +1,13 @@
+<loom2d.display.Sprite>
+
+    <loom.css.StyleSheet source="assets/main.css"/>
+
+    <loom2d.display.Image id="background" styleName="background" source="assets/Background.png"/>
+
+    <loom2d.ui.SimpleButton id="myButton" upImage="assets/Button.png" downImage="assets/ButtonDown.png"/>
+    
+    <loom2d.ui.SimpleButton styleName="button2" upImage="assets/Button.png" downImage="assets/ButtonDown.png"/>
+    
+    <loom2d.ui.SimpleButton styleName="button3" upImage="assets/Button.png" downImage="assets/ButtonDown.png"/>
+
+</loom2d.display.Sprite>

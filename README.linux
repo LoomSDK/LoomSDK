@@ -1,0 +1,9 @@
+## Instructions for building on Ubuntu:
+
+1.  Install g++, rake, cmake, zlib1g-dev, libglew-dev, libglfw-dev:
+
+sudo apt-get install g++ rake cmake zlib1g-dev libglew-dev libglfw-dev libcurl4-openssl-dev
+
+2.  From the root SDK folder run: rake build:ubuntu
+
+3.  Enjoy!

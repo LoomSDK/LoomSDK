@@ -1,0 +1,18 @@
+<% if(@doc.guides.any?) %>
+  <section id="guides" name="Guides" class="content-section">
+    <h2>Guides</h2>
+
+    <ul class="items-list">
+        <% sorted_guides = @doc.guides.sort { |a, b| a.name <=> b.name}%>
+        <% sorted_guides.each do |guide_doc| %>
+        <li class="item">
+            <div class="item-name">
+                <a href='<%= guide_doc.url( @relative_base_path ) %>'><%= guide_doc.data[:title] %></a>
+            </div>
+            <div class="item-description">
+                <%= first_sentence guide_doc.data[:description] if guide_doc.data[:description] %>
+            </div>
+        <% end %>
+    </ul>
+  </section>
+<% end %>
