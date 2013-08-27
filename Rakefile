@@ -13,6 +13,7 @@ $buildTarget="Release" # "Debug"
 # What version of the android SDK are going to target? Note you also need to
 # update the Android project and manifest to match.
 $targetAndroidSDK="android-13"
+$targetAndroidSDK="android-8"
 
 # What Android target are we going to build? debug and release are the main
 # options but there are more. (see http://developer.android.com/tools/building/building-cmdline.html)
