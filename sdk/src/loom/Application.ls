@@ -113,69 +113,91 @@ package loom
             // Used to adjust delay for starting the splash screen animation.
             var startDelay = 1.0;
 
-            // Start the splash after first frame is renderered. This is in a 
-            // big block here because otherwise it is in a single function in 
-            // the loomlib that is easily rewritten/modified. It's not a lot 
-            // of DRM but it's a little bit. ;)
-            Loom2D.juggler.delayCall(function():void {
+            // LOOM-1752: Disabling splash screen until this issue is resolved
 
-                // Show the splash screen using the embedded texture.
-                var splashTexture = Texture.fromAsset("$splashAssets.png");
-                var splashUpperTexture = Texture.fromTexture(splashTexture, new Rectangle(0, 0, 264, 125));
-                var splashLowerTexture = Texture.fromTexture(splashTexture, new Rectangle(0, 125, 264, 52));
+            if (false)
+            {
 
-                // Position everything on the  stage in its own container.
-                var realStageHeight = Cocos2D.getDisplayHeight();
-                var realStageWidth = Cocos2D.getDisplayWidth();
+                // Start the splash after first frame is renderered. This is in a 
+                // big block here because otherwise it is in a single function in 
+                // the loomlib that is easily rewritten/modified. It's not a lot 
+                // of DRM but it's a little bit. ;)
+                Loom2D.juggler.delayCall(function():void {
 
-                splashContainer = new Sprite();
+                    // Show the splash screen using the embedded texture.
+                    var splashTexture = Texture.fromAsset("$splashAssets.png");
+                    var splashUpperTexture = Texture.fromTexture(splashTexture, new Rectangle(0, 0, 264, 125));
+                    var splashLowerTexture = Texture.fromTexture(splashTexture, new Rectangle(0, 125, 264, 52));
 
-                var splashQuad = new Quad(realStageWidth, realStageHeight, 0x00000);
-                splashContainer.addChild(splashQuad);
+                    // Position everything on the  stage in its own container.
+                    var realStageHeight = Cocos2D.getDisplayHeight();
+                    var realStageWidth = Cocos2D.getDisplayWidth();
+
+                    splashContainer = new Sprite();
+
+                    var splashQuad = new Quad(realStageWidth, realStageHeight, 0x00000);
+                    splashContainer.addChild(splashQuad);
+                    
+                    var splashUpper = new Image(splashUpperTexture);
+                    splashUpper.x = (realStageWidth - splashUpper.width) / 2;
+                    splashUpper.y = (realStageHeight - splashTexture.height) / 2;
+                    splashContainer.addChild(splashUpper);
+                    
+                    var splashLower = new Image(splashLowerTexture);
+                    splashLower.x = (realStageWidth - splashLower.width) / 2;
+                    splashLower.y = ((realStageHeight - splashTexture.height) / 2) + splashUpperTexture.height;
+                    splashContainer.addChild(splashLower);
+
+                    stage.addChild(splashContainer);
+
+                    // Initialize the tweens.
+                    var upperTween = Tween.fromPool(splashUpper, 0.7, Transitions.EASE_IN);
+                    upperTween.delay = startDelay + 0.3;
+                    upperTween.animate("y", -2*splashUpperTexture.height);
+                    Loom2D.juggler.add(upperTween);
+
+                    var lowerTween = Tween.fromPool(splashLower, 0.7, Transitions.EASE_IN);
+                    lowerTween.delay = startDelay + 0.3;
+                    lowerTween.animate("y", realStageHeight + splashLowerTexture.height + 5);
+                    Loom2D.juggler.add(lowerTween);
+
+                    // And call user's run code once splash is done.
+                    Loom2D.juggler.delayCall(function():void 
+                    {
+                        // Clean up the splash!
+                        stage.removeChild(splashContainer, true);
+
+                        // Initialize managers.
+                        installManagers();
+
+                        // Name the default group after the game's type.
+                        group.initialize(this.getType().getFullName() + "Group");
+
+                        // Apply root group injection to the game for convenience.
+                        group.injectInto(this);
+
+                        // Fire off user code!
+                        run();
+                    }, startDelay + 1.0);
+
+                }, 0.0);
+            }
+            else
+            {
+                // Initialize managers.
+                installManagers();
+
+                // Name the default group after the game's type.
+                group.initialize(this.getType().getFullName() + "Group");
+
+                // Apply root group injection to the game for convenience.
+                group.injectInto(this);
+
+                // Fire off user code!
+                run();
                 
-                var splashUpper = new Image(splashUpperTexture);
-                splashUpper.x = (realStageWidth - splashUpper.width) / 2;
-                splashUpper.y = (realStageHeight - splashTexture.height) / 2;
-                splashContainer.addChild(splashUpper);
-                
-                var splashLower = new Image(splashLowerTexture);
-                splashLower.x = (realStageWidth - splashLower.width) / 2;
-                splashLower.y = ((realStageHeight - splashTexture.height) / 2) + splashUpperTexture.height;
-                splashContainer.addChild(splashLower);
-
-                stage.addChild(splashContainer);
-
-                // Initialize the tweens.
-                var upperTween = Tween.fromPool(splashUpper, 0.7, Transitions.EASE_IN);
-                upperTween.delay = startDelay + 0.3;
-                upperTween.animate("y", -2*splashUpperTexture.height);
-                Loom2D.juggler.add(upperTween);
-
-                var lowerTween = Tween.fromPool(splashLower, 0.7, Transitions.EASE_IN);
-                lowerTween.delay = startDelay + 0.3;
-                lowerTween.animate("y", realStageHeight + splashLowerTexture.height + 5);
-                Loom2D.juggler.add(lowerTween);
-
-                // And call user's run code once splash is done.
-                Loom2D.juggler.delayCall(function():void 
-                {
-                    // Clean up the splash!
-                    stage.removeChild(splashContainer, true);
-
-                    // Initialize managers.
-                    installManagers();
-
-                    // Name the default group after the game's type.
-                    group.initialize(this.getType().getFullName() + "Group");
-
-                    // Apply root group injection to the game for convenience.
-                    group.injectInto(this);
-
-                    // Fire off user code!
-                    run();
-                }, startDelay + 1.0);
-
-            }, 0.0);
+            }
+    
         }
 
         protected function onTerminate():void
