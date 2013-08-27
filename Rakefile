@@ -443,6 +443,19 @@ namespace :build do
 
       check_ios_sdk_version! $targetIOSSDK
 
+      if(ENV['IOS_MOBILE_PROVISION'])
+        $iosProvision = ENV['IOS_MOBILE_PROVISION']
+      else
+        puts "!!!! PLEASE SET 'IOS_MOBILE_PROVISION' IN YOUR ENVIRONMENT"
+        exit 1
+      end
+
+      unless File.exists? $iosProvision
+        puts "!!!! iOS Mobile Provision doesn't exist at #{$iosProvision}, please fix your IOS_MOBILE_PROVISION env variable."
+        exit 1
+      end
+      puts "*** Mobile Provision = #{$iosProvision}"
+
       if(ENV['IOS_SIGNING_IDENTITY'])
         puts "Using IOS Signing Identity from ENV"
         args.with_defaults(:sign_as => ENV['IOS_SIGNING_IDENTITY'])
@@ -475,7 +488,7 @@ namespace :build do
       package_command += " -v '#{appPath}'"
       package_command += " -o '#{full_output_path}/#{appName}.ipa'"
       package_command += " --sign '#{args.sign_as}'"
-      package_command += " --embed 'certs/LoomDemoBuild.mobileprovision'"
+      package_command += " --embed '#{$iosProvision}'"
       sh package_command
     end
   end
