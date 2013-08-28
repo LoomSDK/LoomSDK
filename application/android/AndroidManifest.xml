@@ -37,7 +37,7 @@
             </intent-filter>
         </activity>
 
-        <!--
+        <!-- This errors on SDK 8 and 10, if you need AdActivity need to bump the sdk version
         <activity android:name="com.google.ads.AdActivity"
                   android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"/>
         -->  

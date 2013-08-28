@@ -48,6 +48,7 @@ static bgfx::IndexBufferHandle sIndexBufferHandle;
 bgfx::DynamicVertexBufferHandle QuadRenderer::vertexBuffers[MAXVERTEXBUFFERS];
 
 VertexPosColorTex* QuadRenderer::vertexData[MAXVERTEXBUFFERS];
+
 void* QuadRenderer::vertexDataMemory = NULL;
 
 int QuadRenderer::maxVertexIdx[MAXVERTEXBUFFERS];
@@ -64,6 +65,8 @@ TextureID QuadRenderer::currentTexture;
 int       QuadRenderer::quadCount;
 
 int QuadRenderer::numFrameSubmit;
+
+static loom_allocator_t *gQuadMemoryAllocator = NULL;
 
 void QuadRenderer::submit()
 {
@@ -243,7 +246,7 @@ void QuadRenderer::destroyGraphicsResources()
 
     if (vertexDataMemory)
     {
-        lmFree(NULL, vertexDataMemory);
+        lmFree(gQuadMemoryAllocator, vertexDataMemory);
         vertexDataMemory = NULL;
     }
 }
@@ -313,7 +316,7 @@ void QuadRenderer::initializeGraphicsResources()
 
     size_t bufferSize = MAXVERTEXBUFFERS * sizeof(VertexPosColorTex) * MAXBATCHQUADS * 4;
 
-    vertexDataMemory = lmAlloc(NULL, bufferSize);
+    vertexDataMemory = lmAlloc(gQuadMemoryAllocator, bufferSize);
 
     lmAssert(vertexDataMemory, "Unable to allocate buffer for quad vertex data");
 
