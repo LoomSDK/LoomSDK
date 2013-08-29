@@ -2623,7 +2623,7 @@ bool JitTypeCompiler::castBool(Expression *expr, ExpDesc *e)
 
 BCPos JitTypeCompiler::encodeCondition(Expression *expr)
 {
-    lmAssert(expr->type, "Untyped Condition");
+    lmAssert(expr->type, "Untyped Condition source: %s line:%i", cunit->filename.c_str(), lineNumber);
 
     expr->visitExpression(this);
 
