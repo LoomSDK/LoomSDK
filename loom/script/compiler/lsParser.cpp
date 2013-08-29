@@ -129,10 +129,8 @@ VariableDeclaration *Parser::parseVarArgDeclaration(bool inFlag)
     VariableDeclaration *vd = new VariableDeclaration(identifier, NULL, false,
                                                       false, false, false);
 
-    ASTTemplateTypeInfo *templateInfo = new ASTTemplateTypeInfo;
-    templateInfo->typeString = "Vector";
-    templateInfo->templateTypes.push_back(new ASTTemplateTypeInfo);
-    templateInfo->templateTypes[0]->typeString = "system.Object";
+    
+    ASTTemplateTypeInfo *templateInfo = ASTTemplateTypeInfo::createVectorInfo("system.Object");        
 
     vd->isVarArg        = true;
     vd->typeString      = "Vector";
@@ -412,6 +410,19 @@ Statement *Parser::parsePropertyDeclaration()
         {
             error("property get missing return type");
         }
+
+        if ( function->retType->string == "Dictionary" || function->retType->string == "system.Dictionary" )
+        {
+            if (!function->retType->astTemplateInfo)
+                function->retType->astTemplateInfo = ASTTemplateTypeInfo::createDictionaryInfo("system.Object", "system.Object");
+        }
+
+        if ( function->retType->string == "Vector" || function->retType->string == "system.Vector" )
+        {
+            if (!function->retType->astTemplateInfo)
+                function->retType->astTemplateInfo = ASTTemplateTypeInfo::createVectorInfo("system.Object");
+        }
+
     }
     else
     {
@@ -694,16 +705,7 @@ Expression *Parser::parseDictionaryLiteral(const utString& typeKey, const utStri
 
     readToken(LSTOKEN(OPERATOR_CLOSEBRACE));
 
-    ASTTemplateTypeInfo *templateInfo = new ASTTemplateTypeInfo;
-    templateInfo->typeString = "Dictionary";
-    templateInfo->templateTypes.push_back(new ASTTemplateTypeInfo);
-    templateInfo->templateTypes[0]->typeString = typeKey;
-    templateInfo->templateTypes.push_back(new ASTTemplateTypeInfo);
-    templateInfo->templateTypes[1]->typeString = typeValue;
-
-
-    v->astTemplateInfo = templateInfo;
-
+    v->astTemplateInfo = ASTTemplateTypeInfo::createDictionaryInfo(typeKey, typeValue);   
 
     if (wrapInNew)
     {
@@ -742,13 +744,8 @@ Expression *Parser::parseVectorLiteral(const utString& type, bool wrapInNew)
     }
 
     readToken(LSTOKEN(OPERATOR_CLOSESQUARE));
-
-    ASTTemplateTypeInfo *templateInfo = new ASTTemplateTypeInfo;
-    templateInfo->typeString = "Vector";
-    templateInfo->templateTypes.push_back(new ASTTemplateTypeInfo);
-    templateInfo->templateTypes[0]->typeString = type;
-    v->astTemplateInfo = templateInfo;
-
+    
+    v->astTemplateInfo = ASTTemplateTypeInfo::createVectorInfo(type);
 
     if (wrapInNew)
     {
@@ -984,21 +981,15 @@ Expression *Parser::parseMemberExpression(bool newFlag)
             // new Vector() and new Dictionary() syntax
             if (nextToken == LSTOKEN(OPERATOR_OPENPAREN))
             {
-                ASTTemplateTypeInfo *templateInfo = new ASTTemplateTypeInfo;
+                ASTTemplateTypeInfo *templateInfo = NULL;
 
                 if (iname->string == "Dictionary")
                 {
-                    templateInfo->typeString = "Dictionary";
-                    templateInfo->templateTypes.push_back(new ASTTemplateTypeInfo);
-                    templateInfo->templateTypes[0]->typeString = "Object";
-                    templateInfo->templateTypes.push_back(new ASTTemplateTypeInfo);
-                    templateInfo->templateTypes[1]->typeString = "Object";
+                    templateInfo = ASTTemplateTypeInfo::createDictionaryInfo("system.Object", "system.Object");
                 }
                 else
                 {
-                    templateInfo->typeString = "Vector";
-                    templateInfo->templateTypes.push_back(new ASTTemplateTypeInfo);
-                    templateInfo->templateTypes[0]->typeString = "Object";
+                    templateInfo = ASTTemplateTypeInfo::createVectorInfo("system.Object");
                 }
 
                 iname->astTemplateInfo = templateInfo;
@@ -1817,12 +1808,7 @@ VariableDeclaration *Parser::parseVariableDeclaration(bool inFlag,
             typeString = "Vector";
 
             // Array is secretly a Vector.<Object>
-            ASTTemplateTypeInfo *ti = new ASTTemplateTypeInfo;
-            ti->typeString = "Vector";
-            ti->templateTypes.push_back(new ASTTemplateTypeInfo());
-            ti->templateTypes[0]->typeString = "system.Object";
-
-            templateInfo = ti;
+            templateInfo = ASTTemplateTypeInfo::createVectorInfo("system.Object");
         }
 
         readToken();
@@ -1859,20 +1845,12 @@ VariableDeclaration *Parser::parseVariableDeclaration(bool inFlag,
     if ((typeString == "Vector") && !templateInfo)
     {
         // create default Vector.<Object> from "Vector"
-        ASTTemplateTypeInfo *ti = templateInfo = new ASTTemplateTypeInfo;
-        ti->typeString = "Vector";
-        ti->templateTypes.push_back(new ASTTemplateTypeInfo());
-        ti->templateTypes[0]->typeString = "system.Object";
+        templateInfo = ASTTemplateTypeInfo::createVectorInfo("system.Object");        
     }
     else if ((typeString == "Dictionary") && !templateInfo)
     {
         // create default Dictionary.<Object, Object> from "Dictionary"
-        ASTTemplateTypeInfo *ti = templateInfo = new ASTTemplateTypeInfo;
-        ti->typeString = "Dictionary";
-        ti->templateTypes.push_back(new ASTTemplateTypeInfo());
-        ti->templateTypes[0]->typeString = "system.Object";
-        ti->templateTypes.push_back(new ASTTemplateTypeInfo());
-        ti->templateTypes[1]->typeString = "system.Object";
+        templateInfo = ASTTemplateTypeInfo::createDictionaryInfo("system.Object", "system.Object");        
     }
 
     bool defaultInitializer = false;
@@ -2852,10 +2830,7 @@ ASTTemplateTypeInfo *Parser::parseTemplateType(const utString& templateType, AST
             warn("Rewriting Array to be Vector.<Object> for convenience when porting. Note that Array and Vector.<Object> aren't identical types.");
 
             // Array is secretly a Vector.<Object>
-            ASTTemplateTypeInfo *ti = new ASTTemplateTypeInfo;
-            ti->typeString = "Vector";
-            ti->templateTypes.push_back(new ASTTemplateTypeInfo());
-            ti->templateTypes[0]->typeString = "system.Object";
+            ASTTemplateTypeInfo *ti = ASTTemplateTypeInfo::createVectorInfo("system.Object");        
             templateInfo->templateTypes.push_back(ti);
         }
         else
