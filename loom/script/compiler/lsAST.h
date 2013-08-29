@@ -227,6 +227,29 @@ public:
 
     ASTTemplateTypeInfo() : parent(NULL)
     {
+
+    }
+
+    static ASTTemplateTypeInfo* createDictionaryInfo(const utString& typeKey, const utString& typeValue)
+    {
+
+        ASTTemplateTypeInfo *templateInfo = new ASTTemplateTypeInfo;
+        templateInfo->typeString = "Dictionary";
+        templateInfo->templateTypes.push_back(new ASTTemplateTypeInfo);
+        templateInfo->templateTypes[0]->typeString = typeKey;
+        templateInfo->templateTypes.push_back(new ASTTemplateTypeInfo);
+        templateInfo->templateTypes[1]->typeString = typeValue;
+
+        return templateInfo;
+    }
+
+    static ASTTemplateTypeInfo* createVectorInfo(const utString& type)
+    {
+        ASTTemplateTypeInfo *templateInfo = new ASTTemplateTypeInfo;
+        templateInfo->typeString = "Vector";
+        templateInfo->templateTypes.push_back(new ASTTemplateTypeInfo);
+        templateInfo->templateTypes[0]->typeString = type;
+        return templateInfo;        
     }
 };
 
