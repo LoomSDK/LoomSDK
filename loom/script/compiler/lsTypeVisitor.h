@@ -2593,7 +2593,7 @@ public:
 
         if (!tinfo->hasIndexedType() && !tinfo->hasIndexerType())
         {
-            // error, message will have been generated elsewhere
+            error("for..in iterating over a template type without indexed or indexer types");
             return forInStatement;
         }
 
