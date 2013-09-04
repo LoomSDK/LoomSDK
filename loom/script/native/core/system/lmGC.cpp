@@ -61,10 +61,9 @@ public:
         // run a gc step
         if (delta > 8 && gcBackOff <= 0)
         {        
-            // run a gc step at size "4", which is roughly 4k
-            // this is a pretty small incrememnt and it can take 
-            // many frames for the gc to catch things
-            // use a full collection if you want to immediate flush the gc
+            // run a gc step at size "64", which is roughly 64k
+            // this is a relatively aggressive incrememnt though
+            // use a full collection if you want to immediately flush the gc
             lua_gc(L, LUA_GCSTEP, 64);
 
             gcLastTime = platform_getMilliseconds();
