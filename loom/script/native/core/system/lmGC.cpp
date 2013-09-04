@@ -76,7 +76,7 @@ public:
         // run a gc step
         if (delta > 8 && gcBackOff <= 0)
         {        
-            // run a gc step at size "32", which is roughly 64k
+            // run a gc step at size "16", which is roughly 64k
             // this is a relatively aggressive incrememnt though
             // use a full collection if you want to immediately flush the gc
             lua_gc(L, LUA_GCSTEP, 16);
@@ -85,7 +85,7 @@ public:
 
             int gcTime =  gcLastTime - startTime;
 
-            // if the collection took longer than 3 milliseconds
+            // if the collection took longer than 1 milliseconds
             // we could be in some incremental GC churn and will backoff 
             // running it again for 250ms
             if (gcTime > 1)
