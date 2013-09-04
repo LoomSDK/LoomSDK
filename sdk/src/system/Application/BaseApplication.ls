@@ -28,7 +28,21 @@ package system.application
         protected function run()
         {
 
-        }		
+        }
+
+        /**
+         * Sets a warning level in megabytes for the Application's VM
+         * If the Application VM exceeds this level a warning will be displayed in 
+         * the console.  Please note that this warning level is purely for the scripting
+         * VM and not other assets that may be loaded
+         * @param   megabytes The amount of ram in megabytes that causes a warning when exceeded
+         */
+        public function setMemoryWarningLevel(megabytes:int)
+        {
+            GC.setMemoryWarningLevel(megabytes);
+        }
+
+
 
 	}
 

@@ -18,14 +18,18 @@
  * ===========================================================================
  */
 
-
+#include "loom/common/core/log.h"
 #include "loom/script/native/lsLuaBridge.h"
 #include "loom/common/platform/platformTime.h"
 
 namespace LS {
 
+static loom_logGroup_t  gGCGroup = { "GC", 1 };
+
 class GC 
 {
+    static int memoryWarningLevel;
+    static int lastMemoryWarningTime;
 
 public:
 
@@ -49,6 +53,17 @@ public:
 
         // start of GC calculations
         int startTime = platform_getMilliseconds();    
+
+        if (memoryWarningLevel && (startTime - lastMemoryWarningTime) > 5000)
+        {
+            lastMemoryWarningTime = startTime;
+
+            int ram = lua_gc(L, LUA_GCCOUNT, 0) / 1024;
+
+            if (ram > memoryWarningLevel)
+                lmLogError(gGCGroup, "VM Memory Warning: Usage is at %iMB (Threshold: %iMB)", ram, memoryWarningLevel);
+
+        }
 
         // the delta
         int delta = startTime - gcLastTime;
@@ -82,7 +97,17 @@ public:
 
     }
 
+    static int setMemoryWarningLevel(lua_State *L)
+    {
+        memoryWarningLevel = (int) lua_tonumber(L, 1);
+        return 0;
+    }    
+
 };
+
+int GC::memoryWarningLevel = 0;
+int GC::lastMemoryWarningTime = 0;
+
 
 void lualoom_gc_update(lua_State *L)
 {
@@ -109,7 +134,7 @@ int registerSystemGC(lua_State *L)
        .addStaticLuaFunction("collect", &GC::collect)
        .addStaticLuaFunction("getAllocatedMemory", &GC::getAllocatedMemory)
        .addStaticLuaFunction("update", &GC::update)
-
+       .addStaticLuaFunction("setMemoryWarningLevel", &GC::setMemoryWarningLevel)
 
        .endClass()
 

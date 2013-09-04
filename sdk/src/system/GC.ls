@@ -55,11 +55,21 @@ class GC {
     public static native function getAllocatedMemory():int;    
 
     /**
+     * Sets a warning level in megabytes for the VM
+     * If the VM exceeds this level a warning will be displayed in 
+     * the console.  Please note that this warning level is purely for the scripting
+     * VM and not other assets that may be loaded
+     * @param   megabytes The amount of ram in megabytes that causes a warning when exceeded
+     */
+    public static native function setMemoryWarningLevel(megabytes:int);    
+
+    /**
      *  Runs a frame of GC collection (incremental), there is internal logic
      *  which will back off the GC if it is spiking, also note that the Loom Application class
      *  calls this internally.  If you want to do a full collection, use GC.collect(GC.COLLECT);
      */
     public static native function update();    
+
 
     /**
      * Does a full Garbage collection cycle.
