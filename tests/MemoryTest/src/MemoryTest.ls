@@ -34,10 +34,30 @@ package
 
         var memory:Vector.<Memory> = [];
 
+        var sprite:Image;
+        var dir = false;
+
+        override public function onTick():void
+        {
+            if (sprite)
+            {
+                if (!dir && sprite.x < 0)
+                {
+                    dir = true;                    
+                }
+                else if (dir && sprite.x > stage.stageWidth)
+                {
+                    dir = false;
+                }
+
+                sprite.x = dir ? sprite.x + 1 : sprite.x - 1;
+            }
+        }
+
         override public function run():void
         {
 
-            //GC.collect(GC.STOP);
+            setMemoryWarningLevel(128);
 
             // Comment out this line to turn off automatic scaling.
             stage.scaleMode = StageScaleMode.LETTERBOX;
@@ -48,7 +68,7 @@ package
             bg.height = stage.stageHeight;
             stage.addChild(bg);
             
-            var sprite = new Image(Texture.fromAsset("assets/logo.png"));
+            sprite = new Image(Texture.fromAsset("assets/logo.png"));
             sprite.center();
             sprite.x = stage.stageWidth / 2;
             sprite.y = stage.stageHeight / 2 + 50;

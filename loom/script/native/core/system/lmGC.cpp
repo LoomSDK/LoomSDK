@@ -76,19 +76,20 @@ public:
         // run a gc step
         if (delta > 8 && gcBackOff <= 0)
         {        
-            // run a gc step at size "64", which is roughly 64k
+            // run a gc step at size "32", which is roughly 64k
             // this is a relatively aggressive incrememnt though
             // use a full collection if you want to immediately flush the gc
-            lua_gc(L, LUA_GCSTEP, 64);
+            lua_gc(L, LUA_GCSTEP, 16);
 
             gcLastTime = platform_getMilliseconds();
 
             int gcTime =  gcLastTime - startTime;
 
-            // if the collection took longer than 8 milliseconds
-            // we will backoff running it again for 80ms
-            if (gcTime > 8)
-                gcBackOff = gcTime * 10;
+            // if the collection took longer than 3 milliseconds
+            // we could be in some incremental GC churn and will backoff 
+            // running it again for 250ms
+            if (gcTime > 1)
+                gcBackOff = 250;
 
             //printf("GC Time: %i %i\n", gcTime, lua_gc(L, LUA_GCCOUNT, 0)/1024);
         }
