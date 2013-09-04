@@ -50,6 +50,18 @@ class GC {
     public static native function collect(cmd:Number = STEP, data:Number = 0);
 
     /**
+     *  Gets the ammount of RAM allocated by the VM in megabytes
+     */
+    public static native function getAllocatedMemory():int;    
+
+    /**
+     *  Runs a frame of GC collection (incremental), there is internal logic
+     *  which will back off the GC if it is spiking, also note that the Loom Application class
+     *  calls this internally.  If you want to do a full collection, use GC.collect(GC.COLLECT);
+     */
+    public static native function update();    
+
+    /**
      * Does a full Garbage collection cycle.
      */     
     public static function fullCollect() {

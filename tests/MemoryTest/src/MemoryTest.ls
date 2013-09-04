@@ -36,6 +36,9 @@ package
 
         override public function run():void
         {
+
+            //GC.collect(GC.STOP);
+
             // Comment out this line to turn off automatic scaling.
             stage.scaleMode = StageScaleMode.LETTERBOX;
 
@@ -73,7 +76,7 @@ package
                     for (i = 0; i < 100000;i++)
                     {
                         memory[i] = null;
-                    }                    
+                    }
                 }
             } );            
 

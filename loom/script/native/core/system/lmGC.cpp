@@ -20,18 +20,75 @@
 
 
 #include "loom/script/native/lsLuaBridge.h"
+#include "loom/common/platform/platformTime.h"
 
-using namespace LS;
+namespace LS {
 
-class GC {
+class GC 
+{
+
 public:
+
     static int collect(lua_State *L)
     {
         lua_gc(L, (int)lua_tonumber(L, 1), (int)lua_tonumber(L, 2));
 
         return 0;
     }
+
+    static int getAllocatedMemory(lua_State *L)
+    {        
+        lua_pushnumber(L, lua_gc(L, LUA_GCCOUNT, 0) / 1024);
+        return 1;
+    }    
+
+    static int update(lua_State *L)
+    {
+        static int gcBackOff = 0;
+        static int gcLastTime = 0;
+
+        // start of GC calculations
+        int startTime = platform_getMilliseconds();    
+
+        // the delta
+        int delta = startTime - gcLastTime;
+
+        // calculate the backoff delta if any
+        if (gcBackOff > 0 && (gcBackOff - delta) < 0 )
+            gcBackOff = 0;
+
+        // if it has been at least 8ms, and we're not backing off
+        // run a gc step
+        if (delta > 8 && gcBackOff <= 0)
+        {        
+            // run a gc step at size "4", which is roughly 4k
+            // this is a pretty small incrememnt and it can take 
+            // many frames for the gc to catch things
+            // use a full collection if you want to immediate flush the gc
+            lua_gc(L, LUA_GCSTEP, 64);
+
+            gcLastTime = platform_getMilliseconds();
+
+            int gcTime =  gcLastTime - startTime;
+
+            // if the collection took longer than 8 milliseconds
+            // we will backoff running it again for 80ms
+            if (gcTime > 8)
+                gcBackOff = gcTime * 10;
+
+            //printf("GC Time: %i %i\n", gcTime, lua_gc(L, LUA_GCCOUNT, 0)/1024);
+        }
+
+        return 0;
+
+    }
+
 };
+
+void lualoom_gc_update(lua_State *L)
+{
+    GC::update(L);
+}
 
 int registerSystemGC(lua_State *L)
 {
@@ -51,6 +108,8 @@ int registerSystemGC(lua_State *L)
        .beginClass<GC> ("GC")
 
        .addStaticLuaFunction("collect", &GC::collect)
+       .addStaticLuaFunction("getAllocatedMemory", &GC::getAllocatedMemory)
+       .addStaticLuaFunction("update", &GC::update)
 
 
        .endClass()
@@ -60,8 +119,10 @@ int registerSystemGC(lua_State *L)
     return 0;
 }
 
+}
+
 
 void installSystemGC()
 {
-    NativeInterface::registerNativeType<GC>(registerSystemGC);
+    LS::NativeInterface::registerNativeType<LS::GC>(LS::registerSystemGC);
 }

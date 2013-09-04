@@ -31,6 +31,7 @@ static int gLastTickTime;
 
 extern "C"
 {
+
 void loom_tick()
 {
     // Mark the main thread for NativeDelegates. On some platforms this
@@ -63,17 +64,7 @@ void loom_tick()
     loom_asset_pump();
     platform_HTTPUpdate();
 
-    // Run GC for up to 8ms.
-    int startTime = platform_getMilliseconds();
-    while (platform_getMilliseconds() - startTime > 8)
-    {
-        // GC till we finish a cycle, then abort.
-        if (lua_gc(LoomApplication::getRootVM()->VM(), LUA_GCSTEP, 0) == 1)
-        {
-            break;
-        }
-    }
-
+    lualoom_gc_update(LoomApplication::getRootVM()->VM());
 
     finishProfilerBlock(&p);
 }
