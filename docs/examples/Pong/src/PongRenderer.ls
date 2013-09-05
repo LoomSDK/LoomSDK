@@ -54,6 +54,17 @@ package
         }
 
         /**
+         * Built in setter to propagate alpha value changes for data binding as a component.
+         *
+         * @param   value:Number    The value to set.
+         */
+        public function set alpha(value:Number):void
+        {
+            if(image)
+                image.alpha = value;
+        }
+
+        /**
          * Built in setter to propagate scale value changes for data binding as a component.
          *
          * @param   value:Number    The value to set.
