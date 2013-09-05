@@ -60,18 +60,16 @@ package
          */
         public function checkMovementConstraints(dt:Number, game:Pong):void
         {
-            var playScale = game.config_PLAY_SCALE;
-
             // this is called by the control method of a derived class
             // it has generic movement constraint checks
 
-            if (x < (WIDTH / 2) * scale * playScale) {
+            if (x < 0) {
                 speedX = 0;
-                x = (WIDTH / 2) * scale * playScale;
+                x = 0;
             }
-            if (x > Loom2D.stage.stageWidth - ((WIDTH / 2) * scale * playScale)) {
+            if (x > Loom2D.stage.nativeStageWidth - (WIDTH * game.assetScale)) {
                 speedX = 0;
-                x = Loom2D.stage.stageWidth - ((WIDTH / 2) * scale * playScale);
+                x = Loom2D.stage.nativeStageWidth - (WIDTH * game.assetScale);
             }
         }
 
@@ -83,8 +81,6 @@ package
          */
         public function checkHit(dt:Number, game:Pong):Boolean
         {
-            var playScale = game.config_PLAY_SCALE;
-
             if (!playing || game.ballObjs.length==0)
                 return false;
 
@@ -114,15 +110,15 @@ package
             {
                 var ballMover:PongBallMover = game.getBallMover(b);
 
-                var r:Number = ballMover.RADIUS;
+                var r:Number = ballMover.RADIUS * game.assetScale;
                 var bx:Number = ballMover.x;
                 var by:Number = ballMover.y;
 
-                // set up constraints for the paddle also including the radius of the ball and a little extra
-                var xMin:int = x - ((WIDTH / 1.9) * scale * playScale) - r;
-                var xMax:int = x + ((WIDTH / 1.9) * scale * playScale) + r;
-                var yMin:int = y - ((HEIGHT / 1.9) * scale * playScale) - r;
-                var yMax:int = y + ((HEIGHT / 1.9) * scale * playScale) + r;
+                // set up constraints for the paddle also including the radius of the ball
+                var xMin:int = x - 2*r;
+                var xMax:int = x + (WIDTH * game.assetScale);
+                var yMin:int = y - 2*r;
+                var yMax:int = y + (HEIGHT * game.assetScale);
 
                 // if the ball is on the playfield, bail early
                 if ((by > yMax && goalBelow) || (by < yMin && !goalBelow)) {
@@ -131,17 +127,17 @@ package
                 }
 
                 // if the ball center is in the paddle area, return the ball
-                if (bx > xMin && bx < xMax && by > yMin && by < yMax) {
+                if (bx >= xMin && bx <= xMax && by >= yMin && by <= yMax) {
 
                     // make sure the ball doesn't trigger this once again the next frame (not quite ideal, but simple)
                     // by aligning it with the edge of the paddle
-                    ballMover.y = goalBelow ? yMax : yMin;
+                    ballMover.y = goalBelow ? yMax - (by - yMax) : yMin + (yMin - by);
                     // bounce the ball off the paddle
                     ballMover.speedY *= -1;
 
                     // we should also change the angle of the ball based on where the paddle is hit ("drag")
                     // dist is the relative distance from the center of the paddle
-                    var dist = Math.clamp((bx - x) / (WIDTH / 2 * scale * playScale), -1, 1);
+                    var dist = Math.clamp((bx - x) / (WIDTH * game.assetScale / 2), -1, 1);
                     if (ballMover.speedY < 0) dist *= -1;
                     // calculate the final escape angle of the ball with drag
                     var degrees = 180 - ballMover.getCurrentAngle() + (dist * DRAG);
