@@ -24,6 +24,7 @@ package
 
         public var x:Number = 0;
         public var y:Number = 0;
+        public var alpha:Number = 0;
         public var scale:Number = 1;
 
         public var speedX:Number = 0;           ///< The amount of units the paddle moves over the screen per frame.

@@ -14,7 +14,8 @@ package
 
         public var x:Number = Math.round(Loom2D.stage.stageWidth / 2);
         public var y:Number = Math.round(Loom2D.stage.stageHeight / 2);
-        public var scale:Number = 0;
+        public var alpha:Number = 0;
+        public var scale:Number = 1;
         public var rotation:Number = 0;
 
         public var speedX:Number = 0;           ///< Movement of the ball on the x axis during the actual frame.
