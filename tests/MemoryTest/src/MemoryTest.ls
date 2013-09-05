@@ -29,16 +29,48 @@ package
         }
     }
 
+    /*
+     * Tests GC performance 
+     */
     public class TestMemory extends Application
     {
 
         var memory:Vector.<Memory> = [];
 
         var sprite:Image;
+        var label:SimpleLabel;
         var dir = false;
+
+        var allocationCount = 0;
+        var allocating = false;
+        var reportTimer = 120;
 
         override public function onTick():void
         {
+
+            var i = 0;
+
+            if (allocating && allocationCount < 100000)
+            {
+
+                for (i = 0; i < 512; i++)
+                {
+                    memory[allocationCount] = new Memory;
+                    memory[allocationCount].myfunction();
+
+                    allocationCount++;
+
+                    if (allocationCount == 100000)
+                    {
+                        break;
+                    }
+
+                }
+
+                trace("Allocated: " + allocationCount);
+
+            }
+
             if (sprite)
             {
                 if (!dir && sprite.x < 0)
@@ -51,6 +83,13 @@ package
                 }
 
                 sprite.x = dir ? sprite.x + 1 : sprite.x - 1;
+            }
+
+            reportTimer--;
+            if (reportTimer < 0)
+            {
+                reportTimer = 120;
+                trace("VM usage: " + GC.getAllocatedMemory() + "MB");
             }
         }
 
@@ -74,7 +113,7 @@ package
             sprite.y = stage.stageHeight / 2 + 50;
             stage.addChild(sprite);
 
-            var label = new SimpleLabel("assets/Curse-hd.fnt");
+            label = new SimpleLabel("assets/Curse-hd.fnt");
             label.text = "Hello Loom!";
             label.center();
             label.x = stage.stageWidth / 2;
@@ -85,18 +124,25 @@ package
                 var touch = e.getTouch(stage, TouchPhase.BEGAN);
                 if (touch)
                 {
-                    trace("Allocating");
-                    for (var i = 0; i < 100000;i++)
+                    if (!allocating && allocationCount <= 0)
                     {
-                        memory[i] = new Memory;
-                        memory[i].myfunction();
+                        allocating = true;
+                        allocationCount = 0;
+                        label.text = "Allocating";
                     }
+                    else if (allocationCount > 0)
+                    {
+                        allocating = false;
+                        
+                        for (var i = 0; i < allocationCount; i++)
+                            memory[i] = null;
 
-                    trace("Deallocating");
-                    for (i = 0; i < 100000;i++)
-                    {
-                        memory[i] = null;
+                        allocationCount = 0;
+
+                        label.text = "Deallocated";   
+
                     }
+                    
                 }
             } );            
 
