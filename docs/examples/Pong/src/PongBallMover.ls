@@ -71,8 +71,8 @@ package
                 return;
 
             // move the ball
-            x += speedX * (dt / 1000);
-            y += speedY * (dt / 1000);
+            x += speedX * (dt / 1000) * game.assetScale;
+            y += speedY * (dt / 1000) * game.assetScale;
 
             // set the constraints for the area where the ball may move freely
             var xMin:int = 0;
@@ -87,22 +87,22 @@ package
             //   - play a wall hit sound effect
             var wallHit = false;
             if (x < xMin) {
-                speedX = Math.abs(speedX);
+                speedX = Math.abs(speedX) * game.assetScale;
                 angleDegrees = -angleDegrees;
                 wallHit = true;
                 x = xMin - x;
             } else if (x > xMax) {
-                speedX = -Math.abs(speedX);
+                speedX = -Math.abs(speedX) * game.assetScale;
                 angleDegrees = -angleDegrees;
                 wallHit = true;
                 x = xMax - (x - xMax);
             } else if (y < yMin) {
-                speedY = Math.abs(speedY);
+                speedY = Math.abs(speedY) * game.assetScale;
                 angleDegrees = 180 - angleDegrees;
                 wallHit = true;
                 y = yMin - y;
             } else if (y > yMax) {
-                speedY = -Math.abs(speedY);
+                speedY = -Math.abs(speedY) * game.assetScale;
                 angleDegrees = 180 - angleDegrees;
                 wallHit = true;
                 y = yMax - (y - yMax);

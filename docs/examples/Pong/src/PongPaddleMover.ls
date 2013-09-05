@@ -95,7 +95,7 @@ package
             ctrl.resume(dt, game);
 
             // move the paddle
-            x += speedX * (dt / 1000);
+            x += speedX * (dt / 1000) * game.assetScale;
 
             // check for movement constraints
             checkMovementConstraints(dt, game);
