@@ -224,6 +224,7 @@ class Module::ClassDoc
     return {} if data[:metainfo].nil?
     serialized_metainfo = {}
     data[:metainfo].each do |key, entries|
+      next if !key.is_a? String
       serialized_metainfo[key.downcase.to_sym] = []
       entries.each do |raw_entry|
         serialized_entry = {}
