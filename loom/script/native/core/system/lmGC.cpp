@@ -30,6 +30,9 @@ class GC
 {
     static int memoryWarningLevel;
     static int lastMemoryWarningTime;
+    static int gcBackOffTime;
+    static int gcIncrementSize;
+    static int gcBackOffThreshold;
 
 public:
 
@@ -79,7 +82,7 @@ public:
             // run a gc step at size "16", which is roughly 64k
             // this is a relatively aggressive incrememnt though
             // use a full collection if you want to immediately flush the gc
-            lua_gc(L, LUA_GCSTEP, 16);
+            lua_gc(L, LUA_GCSTEP, gcIncrementSize);
 
             gcLastTime = platform_getMilliseconds();
 
@@ -87,9 +90,9 @@ public:
 
             // if the collection took longer than 1 milliseconds
             // we could be in some incremental GC churn and will backoff 
-            // running it again for 250ms
-            if (gcTime > 1)
-                gcBackOff = 250;
+            // running it again for a (default) 250ms
+            if (gcTime > gcBackOffThreshold)
+                gcBackOff = gcBackOffTime;
 
             //printf("GC Time: %i %i\n", gcTime, lua_gc(L, LUA_GCCOUNT, 0)/1024);
         }
@@ -104,11 +107,36 @@ public:
         return 0;
     }    
 
+    static int setBackOffTime(lua_State *L)
+    {
+        gcBackOffTime = (int) lua_tonumber(L, 1);
+        return 0;
+    }    
+
+    static int setIncrementSize(lua_State *L)
+    {
+        gcIncrementSize = (int) lua_tonumber(L, 1);
+        return 0;
+    }    
+
+    static int setBackOffThreshold(lua_State *L)
+    {
+        gcBackOffThreshold = (int) lua_tonumber(L, 1);
+        return 0;
+    }    
+
 };
 
+// no VM warning default
 int GC::memoryWarningLevel = 0;
-int GC::lastMemoryWarningTime = 0;
 
+int GC::lastMemoryWarningTime = 0;
+// 250ms
+int GC::gcBackOffTime = 250;
+// 16k 
+int GC::gcIncrementSize = 16;
+// 1ms
+int GC::gcBackOffThreshold = 1;
 
 void lualoom_gc_update(lua_State *L)
 {
@@ -136,6 +164,9 @@ int registerSystemGC(lua_State *L)
        .addStaticLuaFunction("getAllocatedMemory", &GC::getAllocatedMemory)
        .addStaticLuaFunction("update", &GC::update)
        .addStaticLuaFunction("setMemoryWarningLevel", &GC::setMemoryWarningLevel)
+       .addStaticLuaFunction("setBackOffTime", &GC::setBackOffTime)
+       .addStaticLuaFunction("setIncrementSize", &GC::setIncrementSize)
+       .addStaticLuaFunction("setBackOffThreshold", &GC::setBackOffThreshold)
 
        .endClass()
 

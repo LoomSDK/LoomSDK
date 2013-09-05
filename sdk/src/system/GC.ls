@@ -64,9 +64,34 @@ class GC {
     public static native function setMemoryWarningLevel(megabytes:int);    
 
     /**
+     * Sets a backoff time to avoid running the incremental GC once a single step has
+     * exceeded the backoff threshold
+     *
+     * @param milliseconds The amount of time to back off from running incremental GC
+     * once a single step has exceeded the backoff threshhold, default is 250ms               
+     */
+    public static native function setBackOffTime(milliseconds:int = 250);    
+
+    /**
+     * Sets the amount of time necessary to trigger a GC backoff in milliseconds
+     *
+     * @param milliseconds The amount of time necessary to exceed to trigger a gc backoff interval
+     * the default is 1 so a GC step taking 2 milliseconds would trigger the backoff
+     */
+    public static native function setBackOffThreshold(milliseconds:int = 1);    
+
+    /**
+     * Sets the GC increment size for a single step of a GC collection
+     *
+     * @param size The size of a single GC increment, larger numbers are more aggressive
+     */
+    public static native function setIncrementSize(size:int = 16);    
+
+
+    /**
      *  Runs a frame of GC collection (incremental), there is internal logic
      *  which will back off the GC if it is spiking, also note that the Loom Application class
-     *  calls this internally.  If you want to do a full collection, use GC.collect(GC.COLLECT);
+     *  calls this internally.  If you want to do a full collection, use GC.fullCollect();
      */
     public static native function update();    
 
