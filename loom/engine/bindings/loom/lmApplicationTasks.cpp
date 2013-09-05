@@ -63,7 +63,6 @@ void loom_tick()
 
     loom_asset_pump();
     platform_HTTPUpdate();
-
     lualoom_gc_update(LoomApplication::getRootVM()->VM());
 
     finishProfilerBlock(&p);

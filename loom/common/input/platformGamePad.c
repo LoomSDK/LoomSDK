@@ -7,12 +7,15 @@
 #include <stdio.h>
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
+#include "loom/common/core/allocator.h"
 #include "platformSysGamePad.h"
 #include "platformGamePad_c.h"
 
 int _numgamepads = 0;
 static InputGamepad    **_gamepads     = NULL;
 static loom_logGroup_t gamepadLogGroup = { "gamepad", 1 };
+
+loom_allocator_t *gGamePadAllocator = NULL;
 
 int
 input_gamepadInit(void)
@@ -21,13 +24,11 @@ input_gamepadInit(void)
     int status;
 
     _numgamepads = 0;
-    status       = input_sysGamepadInit();
-    if (status >= 0)
-    {
-        arraylen  = (status + 1) * sizeof(*_gamepads);
-        _gamepads = (InputGamepad **)malloc(arraylen);
-        if (_gamepads == NULL)
-        {
+    status = input_sysGamepadInit();
+    if (status >= 0) {
+        arraylen = (status + 1) * sizeof(*_gamepads);
+        _gamepads = (InputGamepad **) lmAlloc(gGamePadAllocator, arraylen);
+        if (_gamepads == NULL) {
             _numgamepads = 0;
         }
         else
@@ -97,36 +98,29 @@ input_gamepadOpen(int device_index)
     }
 
     /* Create and initialize the gamepad */
-    gamepad = (InputGamepad *)malloc((sizeof *gamepad));
-    if (gamepad == NULL)
-    {
+    gamepad = (InputGamepad *) lmAlloc(gGamePadAllocator, (sizeof *gamepad));
+    if (gamepad == NULL) {
         lmAssert(0, "Out of Memory");
         return NULL;
     }
 
     memset(gamepad, 0, (sizeof *gamepad));
     gamepad->index = device_index;
-    if (input_sysGamepadOpen(gamepad) < 0)
-    {
-        free(gamepad);
+
+    if (input_sysGamepadOpen(gamepad) < 0) {
+        lmFree(gGamePadAllocator, gamepad);
         return NULL;
     }
-    if (gamepad->naxes > 0)
-    {
-        gamepad->axes = (int *)malloc
-                            (gamepad->naxes * sizeof(int));
+    if (gamepad->naxes > 0) {
+        gamepad->axes = (int *) lmAlloc(gGamePadAllocator, gamepad->naxes * sizeof(int));
     }
 
-    if (gamepad->nhats > 0)
-    {
-        gamepad->hats = (int *)malloc
-                            (gamepad->nhats * sizeof(int));
+    if (gamepad->nhats > 0) {
+        gamepad->hats = (int *) lmAlloc(gGamePadAllocator, gamepad->nhats * sizeof(int));
     }
-
-    if (gamepad->nbuttons > 0)
-    {
-        gamepad->buttons = (int *)malloc
-                               (gamepad->nbuttons * sizeof(int));
+ 
+    if (gamepad->nbuttons > 0) {
+        gamepad->buttons = (int *) lmAlloc(gGamePadAllocator, gamepad->nbuttons * sizeof(int));
     }
     if (((gamepad->naxes > 0) && !gamepad->axes) ||
         ((gamepad->nbuttons > 0) && !gamepad->buttons) ||
@@ -368,22 +362,19 @@ input_gamepadClose(InputGamepad *gamepad)
     }
 
     /* Free the data associated with this gamepad */
-    if (gamepad->axes)
-    {
-        free(gamepad->axes);
+    if (gamepad->axes) {
+        lmFree(gGamePadAllocator, gamepad->axes);
     }
 
-    if (gamepad->buttons)
-    {
-        free(gamepad->buttons);
+    if (gamepad->buttons) {
+        lmFree(gGamePadAllocator, gamepad->buttons);
     }
 
-    if (gamepad->hats)
-    {
-        free(gamepad->hats);
+    if (gamepad->hats) {
+        lmFree(gGamePadAllocator, gamepad->hats);
     }
 
-    free(gamepad);
+    lmFree(gGamePadAllocator, gamepad);
 }
 
 
@@ -408,9 +399,8 @@ input_gamepadQuit(void)
 
     /* Quit the gamepad setup */
     input_sysGamepadQuit();
-    if (_gamepads)
-    {
-        free(_gamepads);
+    if (_gamepads) {
+        lmFree(gGamePadAllocator, _gamepads);
         _gamepads = NULL;
     }
 }

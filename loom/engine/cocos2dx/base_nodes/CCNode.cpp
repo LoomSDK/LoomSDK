@@ -498,7 +498,7 @@ void CCNode::cleanup()
 
 const char *CCNode::description()
 {
-    return CCString::createWithFormat("<CCNode | Tag = %d>", m_nTag)->getCString();
+    return "<CCNode>"; //CCString::createWithFormat("<CCNode | Tag = %d>", m_nTag)->getCString();
 }
 
 

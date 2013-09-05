@@ -23,6 +23,7 @@
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
 #include "loom/common/core/assert.h"
+#include "loom/common/core/allocator.h"
 #include "loom/common/core/log.h"
 
 #include "loom/graphics/gfxTexture.h"
@@ -30,6 +31,7 @@
 #include "loom/common/platform/platformTime.h"
 
 lmDefineLogGroup(gGFXTextureLogGroup, "GFXTexture", 1, LoomLogInfo);
+loom_allocator_t *gGFXTextureAllocator = NULL;
 
 namespace GFX
 {
@@ -261,7 +263,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
 
         lmLogError(gGFXTextureLogGroup, "Missing image asset '%s', using %dx%d px debug checkerboard.", name, checkerboardSize, checkerboardSize);
 
-        int *checkerboard = (int *)malloc(checkerboardSize * checkerboardSize * 4);
+        int *checkerboard = (int*)lmAlloc(gGFXTextureAllocator, checkerboardSize*checkerboardSize*4);
 
         for (int i = 0; i < checkerboardSize; i++)
         {
@@ -273,7 +275,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
 
         load((uint8_t *)checkerboard, checkerboardSize, checkerboardSize, id);
 
-        free(checkerboard);
+        lmFree(gGFXTextureAllocator, checkerboard);
 
         return;
     }

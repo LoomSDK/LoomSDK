@@ -56,8 +56,6 @@
 #error Unable to detect platform for Loom
 #endif
 
-
-
 // Detect the current compiler
 #if defined(_MSC_VER)
 #define LOOM_COMPILER    LOOM_COMPILER_MSVC

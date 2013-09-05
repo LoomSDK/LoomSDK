@@ -43,6 +43,11 @@ public:
         return base64.getData();
     }
 
+    void clear()
+    {
+        base64.clear();
+    }
+
     bool load(LSLuaState *ls, bool execute = false);
 
     static ByteCode *decode64(const char *code64);

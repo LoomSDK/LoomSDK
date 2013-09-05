@@ -27,13 +27,13 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/geldreich
     ${CMAKE_SOURCE_DIR}/loom/vendor/jansson
     ${CMAKE_SOURCE_DIR}/loom/vendor/admob/include
+    ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-3.4.0/include
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/cocoa
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/include
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/kazmath/include
     ${CMAKE_SOURCE_DIR}/loom/engine/CocosDenshion/include
-
     )
 
 if (LOOM_BUILD_JIT EQUAL 1)

@@ -407,9 +407,8 @@ input_sysGamepadOpen(InputGamepad *gamepad)
 
     /* allocate memory for system specific hardware data */
     gamepad->hwdata =
-        (struct gamepad_hwdata *)malloc(sizeof(struct gamepad_hwdata));
-    if (gamepad->hwdata == NULL)
-    {
+        (struct gamepad_hwdata *) lmAlloc(sizeof(struct gamepad_hwdata));
+    if (gamepad->hwdata == NULL) {
         lmAssert(0, "Out of memory");
         return(-1);
     }
@@ -956,7 +955,7 @@ input_sysGamepadClose(InputGamepad *gamepad)
     if (gamepad->hwdata != NULL)
     {
         /* free system specific hardware data */
-        free(gamepad->hwdata);
+        lmFree(gamepad->hwdata);
     }
 }
 
@@ -967,11 +966,9 @@ input_sysGamepadQuit(void)
 {
     int i;
 
-    for (i = 0; i < _arraysize(SYS_JoystickNames); ++i)
-    {
-        if (SYS_JoystickNames[i])
-        {
-            free(SYS_JoystickNames[i]);
+    for (i = 0; i < _arraysize(SYS_JoystickNames); ++i) {
+        if (SYS_JoystickNames[i]) {
+            lmFree(SYS_JoystickNames[i]);
             SYS_JoystickNames[i] = NULL;
         }
     }

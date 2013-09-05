@@ -23,6 +23,8 @@
 #include "loom/common/core/assert.h"
 #include "loom/common/core/allocator.h"
 
+loom_allocator_t *gThreadAllocator = NULL;
+
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 
 #define WIN32_LEAN_AND_MEAN
@@ -414,10 +416,9 @@ int platform_getCurrentThreadId()
 
 MutexHandle loom_mutex_create_real(const char *file, int line)
 {
-    pthread_mutexattr_t mta;
-    pthread_mutex_t     *m = malloc(sizeof(pthread_mutex_t));
-
-    assert(m);
+   pthread_mutexattr_t   mta;
+   pthread_mutex_t *m = lmAlloc(gThreadAllocator, sizeof(pthread_mutex_t));
+   assert(m);
 
     // TODO: We can cache this.
     pthread_mutexattr_init(&mta);
@@ -498,14 +499,13 @@ void loom_thread_join(ThreadHandle th)
 
 SemaphoreHandle loom_semaphore_create_real(const char *file, int line)
 {
-    semaphore_t   *sem = malloc(sizeof(semaphore_t));
-    kern_return_t err;
-
-    lmAssert(sem, "Failed to allocate memory for semaphore.");
-    lmAssert(sizeof(SemaphoreHandle) >= sizeof(semaphore_t), "Size of native semaphore type too large for our semaphore handle on this platform.");
-    err = semaphore_create(mach_task_self(), sem, SYNC_POLICY_FIFO, 0);
-    lmAssert(err == KERN_SUCCESS, "Semaphore did not create properly. Expected %d, got %d", KERN_SUCCESS, err);
-    return (SemaphoreHandle)sem;
+   semaphore_t *sem = lmAlloc(gThreadAllocator, sizeof(semaphore_t));
+   kern_return_t err;
+   lmAssert(sem, "Failed to allocate memory for semaphore.");
+   lmAssert(sizeof(SemaphoreHandle) >= sizeof(semaphore_t), "Size of native semaphore type too large for our semaphore handle on this platform.");
+   err = semaphore_create(mach_task_self(), sem, SYNC_POLICY_FIFO, 0);
+   lmAssert(err == KERN_SUCCESS, "Semaphore did not create properly. Expected %d, got %d", KERN_SUCCESS, err);
+   return (SemaphoreHandle)sem;
 }
 
 
@@ -666,10 +666,9 @@ int platform_getCurrentThreadId()
 
 MutexHandle loom_mutex_create_real(const char *file, int line)
 {
-    pthread_mutexattr_t mta;
-    pthread_mutex_t     *m = malloc(sizeof(pthread_mutex_t));
-
-    assert(m);
+   pthread_mutexattr_t   mta;
+   pthread_mutex_t *m = lmAlloc(gThreadAllocator, sizeof(pthread_mutex_t));
+   assert(m);
 
     // TODO: We can cache this.
     pthread_mutexattr_init(&mta);
@@ -737,10 +736,10 @@ typedef void *(*pthread_thread_func)(void *);
 
 ThreadHandle loom_thread_start(ThreadFunction func, void *param)
 {
-    assert(sizeof(ThreadHandle) >= sizeof(pthread_t *));
-    pthread_t *t = malloc(sizeof(pthread_t));
-    pthread_create(t, NULL, (pthread_thread_func)func, param);
-    return t;
+   assert(sizeof(ThreadHandle) >= sizeof(pthread_t*));
+   pthread_t *t = lmAlloc(gThreadAllocator, sizeof(pthread_t));
+   pthread_create(t, NULL, (pthread_thread_func)func, param);
+   return t;
 }
 
 
@@ -759,10 +758,10 @@ void loom_thread_join(ThreadHandle th)
 
 SemaphoreHandle loom_semaphore_create_real(const char *file, int line)
 {
-    sem_t *sem = malloc(sizeof(sem_t));
-    int   err;
+   sem_t *sem = lmAlloc(gThreadAllocator, sizeof(sem_t));
+   int err;
+   lmAssert(sem, "Failed to allocate memory for semaphore.");
 
-    lmAssert(sem, "Failed to allocate memory for semaphore.");
 
     // Note, on Linux a sem_t is 16 bytes.  This is ok as we don't ever store
     // the semaphore data itself only a pointer

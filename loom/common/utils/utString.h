@@ -28,6 +28,7 @@
 #include "utCommon.h"
 #include "utTypes.h"
 #include <stdlib.h> // malloc, realloc, size_t - NOTE: Moved to .h from .cpp for Android compilation
+//#include <string>
 
 #define utStrlen    strlen
 #define utStrcpy    strncpy
@@ -45,7 +46,6 @@
 //* utString based on "mystring"
 //* Copyright (C) Christian Stigen Larsen, 2007
 //* Placed in the Public Domain by the author.
-
 class utString {
     char *p;
 public:

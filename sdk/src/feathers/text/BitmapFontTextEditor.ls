@@ -150,6 +150,12 @@ package feathers.text
 
 		}
 
+		public function dispose():void
+		{
+			imeDelegate.onInsertText -= handleInsert;
+			imeDelegate.onDeleteBackward -= handleDeleteBackward;			
+		}
+
 		protected function handleInsert(inText:String, length:int):void
 		{
 			if(!_isEditable)

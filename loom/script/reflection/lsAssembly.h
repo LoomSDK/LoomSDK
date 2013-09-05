@@ -117,6 +117,14 @@ public:
     int getTypeCount();
     Type *getTypeAtIndex(int index);
 
+    void freeByteCode()
+    {
+        utArray<Type*> types;
+        getTypes(types);
+        for(int i=0; i<types.size(); i++)
+            types[i]->freeByteCode();
+    }
+
     void getPackageTypes(const utString& packageName, utArray<Type *>& types);
 
     // types visible outside of assembly

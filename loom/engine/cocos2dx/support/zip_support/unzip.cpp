@@ -108,13 +108,13 @@ namespace cocos2d {
 #define UNZ_MAXFILENAMEINZIP    (256)
 #endif
 
+#include "jemalloc/jemalloc.h"
+
 #ifndef ALLOC
-# define ALLOC(size)    (malloc(size))
+# define ALLOC(size) (je_malloc(size))
 #endif
 #ifndef TRYFREE
-# define TRYFREE(p)       \
-    { if (p) { free(p); } \
-    }
+# define TRYFREE(p) {if (p) je_free(p);}
 #endif
 
 #define SIZECENTRALDIRITEM    (0x2e)

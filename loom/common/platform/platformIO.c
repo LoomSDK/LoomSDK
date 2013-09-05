@@ -570,6 +570,19 @@ char *platform_realpath(const char *name, char *resolved)
     if (name == NULL)
     {
         errno = EINVAL;
+
+      /* Caller didn't give us a buffer, so we'll exercise the
+       * option granted by SUSv3, and allocate one.
+       *
+       * `_fullpath' would do this for us, but it uses `malloc', and
+       * Microsoft's implementation doesn't set `errno' on failure.
+       * If we don't do this explicitly ourselves, then we will not
+       * know if `_fullpath' fails on `malloc' failure, or for some
+       * other reason, and we want to set `errno = ENOMEM' for the
+       * `malloc' failure case.
+       */
+
+      retname = lmAlloc( _MAX_PATH );
     }
 
     /* Otherwise, `name' must refer to a readable filesystem object,

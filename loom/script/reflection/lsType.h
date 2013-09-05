@@ -148,6 +148,7 @@ public:
         {
             delete members.at(i);
         }
+        
         if (bcStaticInitializer)
         {
             delete bcStaticInitializer;
@@ -163,6 +164,8 @@ public:
             lmFree(NULL, memberInfoOrdinalLookup);
         }
     }
+
+    void freeByteCode();
 
     void findMembers(const MemberTypes& memberTypes, utArray<MemberInfo *>& membersOut,
                      bool includeBases = false, bool includePropertyGetterSetters = false);

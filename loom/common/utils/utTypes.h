@@ -945,85 +945,89 @@ public:
 
 public:
 
-    utStack() : m_size(0), m_capacity(0), m_top(0), m_stack(0) {}
-    utStack(UTsize rsp) : m_size(0), m_capacity(0), m_top(0), m_stack(0) { reserve(rsp); }
+	utStack() : m_size(0), m_capacity(0), m_top(0), m_stack(0) {}
+	utStack(UTsize rsp) : m_size(0), m_capacity(0), m_top(0), m_stack(0) { reserve(rsp); }
 
 
-    utStack(const utStack& o) : m_size(o.m_size), m_capacity(0), m_top(o.m_top), m_stack(0)
-    {
-        reserve(o.m_size);
-        UT_ASSERT(m_stack && o.m_stack);
-        copy(m_stack, o.m_stack, o.m_size);
-    }
+	utStack(const utStack &o) : m_size(o.m_size), m_capacity(0), m_top(o.m_top), m_stack(0)
+	{
+		reserve(o.m_size);
+		UT_ASSERT(m_stack && o.m_stack);
+		copy(m_stack, o.m_stack, o.m_size);
+	}
 
-    ~utStack() { clear(); }
+	~utStack() { clear(); }
 
-    void clear(void)
-    {
-        if (m_stack != 0)
-        {
-            delete []m_stack;
-            m_stack = 0;
-        }
+	void clear(void)
+	{
+		if (m_stack != 0)
+		{
+			delete []m_stack;
+			m_stack = 0;
+		}
 
-        m_size     = 0;
-        m_capacity = 0;
-        m_top      = 0;
-    }
+		m_size = 0;
+		m_capacity = 0;
+		m_top = 0;
+	}
 
-    void push(const T& v)
-    {
-        UT_ASSERT(m_top != UT_NPOS);
-        if (m_size == m_capacity)
-        {
-            reserve(m_size == 0 ? 8 : m_size * 2);
-        }
-        m_stack[m_top] = v;
-        ++m_top;
-        ++m_size;
-    }
+	void popTillEmpty()
+	{
+		m_size = 0;
+		m_top = 0;
+	}
 
-    UT_INLINE ReferenceType pop(void)               { UT_ASSERT(m_top != 0); --m_size; return m_stack[--m_top]; }
-    UT_INLINE ReferenceType top(void)               { UT_ASSERT(m_top != 0); return m_stack[(m_top - 1)]; }
-    UT_INLINE ConstReferenceType top(void) const { UT_ASSERT(m_top != 0); return m_stack[(m_top - 1)]; }
 
-    UT_INLINE ReferenceType peek(UTsize offs)
-    {
-        UT_ASSERT(m_top != 0 && ((m_top - 1) - offs) != UT_NPOS);
-        return m_stack[(m_top - 1) - offs];
-    }
+	void push(const T &v)
+	{
+		UT_ASSERT(m_top != UT_NPOS);
+		if (m_size == m_capacity)
+			reserve(m_size == 0 ? 8 : m_size * 2);
+		m_stack[m_top] = v;
+		++m_top;
+		++m_size;
+	}
 
-    UT_INLINE ConstReferenceType peek(UTsize offs) const
-    {
-        UT_ASSERT(m_top != 0 && ((m_top - 1) - offs) != UT_NPOS);
-        return m_stack[(m_top - 1) - offs];
-    }
+	UT_INLINE ReferenceType pop(void)               { UT_ASSERT(m_top != 0); --m_size; return m_stack[--m_top]; }
+	UT_INLINE ReferenceType top(void)               { UT_ASSERT(m_top != 0); return m_stack[(m_top - 1)]; }
+	UT_INLINE ConstReferenceType top(void) const    { UT_ASSERT(m_top != 0); return m_stack[(m_top - 1)]; }
 
-    void reserve(UTsize nr)
-    {
-        if (m_capacity < nr)
-        {
-            T *temp = new T[nr];
-            if (m_stack)
-            {
-                copy(temp, m_stack, m_size);
-                delete []m_stack;
-            }
-            m_stack    = temp;
-            m_capacity = nr;
-        }
-    }
+	UT_INLINE ReferenceType peek(UTsize offs)
+	{
+		UT_ASSERT(m_top != 0 && ((m_top - 1) - offs) != UT_NPOS);
+		return m_stack[(m_top - 1)-offs];
+	}
 
-    UT_INLINE UTsize capacity(void) const { return m_capacity; }
-    UT_INLINE UTsize size(void) const { return m_size; }
-    UT_INLINE UTsize itop(void) const { return m_top; }
-    UT_INLINE bool empty(void) const { return m_size == 0; }
-    UT_INLINE ConstPointer ptr(void) const { return m_stack; }
-    UT_INLINE Pointer ptr(void)                     { return m_stack; }
+	UT_INLINE ConstReferenceType peek(UTsize offs) const
+	{
+		UT_ASSERT(m_top != 0 && ((m_top - 1) - offs) != UT_NPOS);
+		return m_stack[(m_top - 1)-offs];
+	}
 
-    UT_INLINE Iterator iterator(void)       { return m_stack && m_size > 0 ? Iterator(m_stack, m_size) : Iterator(); }
-    UT_INLINE ConstIterator iterator(void) const { return m_stack && m_size > 0 ? ConstIterator(m_stack, m_size) : ConstIterator(); }
+	void reserve(UTsize nr)
+	{
+		if (m_capacity < nr)
+		{
+			T *temp = new T[nr];
+			if (m_stack)
+			{
+				copy(temp, m_stack, m_size);
+				delete []m_stack;
+			}
+			m_stack = temp;
+			m_capacity = nr;
+		}
+	}
 
+	UT_INLINE UTsize capacity(void) const           { return m_capacity; }
+	UT_INLINE UTsize size(void) const               { return m_size; }
+	UT_INLINE UTsize itop(void) const               { return m_top; }
+	UT_INLINE bool empty(void) const                { return m_size == 0; }
+	UT_INLINE ConstPointer ptr(void) const          { return m_stack; }
+	UT_INLINE Pointer ptr(void)                     { return m_stack; }
+
+	UT_INLINE Iterator      iterator(void)       { return m_stack && m_size > 0 ? Iterator(m_stack, m_size) : Iterator(); }
+	UT_INLINE ConstIterator iterator(void) const { return m_stack && m_size > 0 ? ConstIterator(m_stack, m_size) : ConstIterator(); }
 
 protected:
 
