@@ -472,7 +472,7 @@ public native class Type extends MemberInfo {
             if(!method)
                 return false;
 
-            method.invoke(object, value);
+            method.invokeSingle(object, value);
             return true;
         }
 
