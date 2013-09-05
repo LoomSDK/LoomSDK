@@ -57,8 +57,11 @@ package
 
         var scores:Vector.<Number>          = [0,0];    ///< Player scores.
 
-        var score:SimpleLabel;                                ///< A Label that is meant to display score information
+        var score:SimpleLabel;                          ///< A Label that is meant to display score information
                                                         ///< and who the winner is once the game is over.
+
+        var scale                           = 1;        ///< The overall scale of the screen compared to the designed stage
+        public var assetScale:Number        = 1;        ///< The scale applied to all assets
 
         /**
          * Grants access to the PongBallMover object under the given index.
@@ -206,10 +209,10 @@ package
             // hack - we have two paddles.. for now >:)
             var p0PaddleMover = getPaddleMover(0);
             var p1PaddleMover = getPaddleMover(1);
-            p0PaddleMover.x = stage.stageWidth / 2;
-            p0PaddleMover.y = p0PaddleMover.HEIGHT;
+            p0PaddleMover.x = stage.stageWidth / 2 - (p0PaddleMover.WIDTH * assetScale) / 2;
+            p0PaddleMover.y = p0PaddleMover.HEIGHT * assetScale * 1.5;
             p1PaddleMover.x = stage.stageWidth / 2;
-            p1PaddleMover.y = stage.stageHeight - p1PaddleMover.HEIGHT;
+            p1PaddleMover.y = stage.stageHeight - (p1PaddleMover.HEIGHT * assetScale * 2.5);
             p1PaddleMover.goalBelow = false;
 
             // show all paddles
@@ -234,10 +237,10 @@ package
 
             for (var b=0;b<ballObjs.length-1;b++)
             {
-                LoomTween.to(getBallMover(b), 0.3, {"scale": 0, "ease": LoomEaseType.EASE_OUT_BOUNCE});
+                LoomTween.to(getBallMover(b), 0.3, {"alpha": 0, "ease": LoomEaseType.EASE_OUT_BOUNCE});
             }
             // the last one triggers the callback
-            LoomTween.to(getBallMover(ballObjs.length-1), 0.3, {"scale": 0, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += _callback;
+            LoomTween.to(getBallMover(ballObjs.length-1), 0.3, {"alpha": 0, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += _callback;
         }
 
         /**
@@ -252,10 +255,10 @@ package
 
             for (var p=0;p<paddleObjs.length-1;p++)
             {
-                LoomTween.to(getPaddleMover(p), 0.3, {"scale": 0, "ease" : LoomEaseType.EASE_OUT_BOUNCE});
+                LoomTween.to(getPaddleMover(p), 0.3, {"alpha": 0, "ease": LoomEaseType.EASE_OUT_BOUNCE});
             }
             // the last one triggers the callback
-            LoomTween.to(getPaddleMover(paddleObjs.length-1), 0.3, {"scale": 0, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += _callback;
+            LoomTween.to(getPaddleMover(paddleObjs.length-1), 0.3, {"alpha": 0, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += _callback;
         }
 
         /**
@@ -270,10 +273,10 @@ package
 
             for (var b=0;b<ballObjs.length-1;b++)
             {
-                LoomTween.to(getBallMover(b), 0.3, {"scale": config_PLAY_SCALE, "ease": LoomEaseType.EASE_OUT_BOUNCE});
+                LoomTween.to(getPaddleMover(b), 0.3, {"alpha": 1, "ease": LoomEaseType.EASE_OUT_BOUNCE});
             }
             // the last one triggers the callback
-            LoomTween.to(getBallMover(ballObjs.length-1), 0.3, {"scale": config_PLAY_SCALE, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += _callback;
+            LoomTween.to(getBallMover(ballObjs.length-1), 0.3, {"alpha": 1, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += _callback;
         }
 
         /**
@@ -288,10 +291,10 @@ package
 
             for (var p=0;p<paddleObjs.length-1;p++)
             {
-                LoomTween.to(getPaddleMover(p), 0.3, {"scale": config_PLAY_SCALE, "ease": LoomEaseType.EASE_OUT_BOUNCE});
+                LoomTween.to(getPaddleMover(p), 0.3, {"alpha": 1, "ease": LoomEaseType.EASE_OUT_BOUNCE});
             }
             // the last one triggers the callback
-            LoomTween.to(getPaddleMover(paddleObjs.length-1), 0.3, {"scale": config_PLAY_SCALE, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += _callback;
+            LoomTween.to(getPaddleMover(paddleObjs.length-1), 0.3, {"alpha": 1, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += _callback;
         }
 
         /**
@@ -303,14 +306,14 @@ package
         function showScore(_msg:String, _callback:Function)
         {
             score.text = _msg;
-            score.x = stage.stageWidth/2 - score.size.x/2;
-            score.y = stage.stageHeight/2 - score.size.y/2;
+            score.x = stage.stageWidth/2 - (score.width/2);
+            score.y = stage.stageHeight/2 - (score.height);
 
             // and show the score
-            LoomTween.to(score, 2, {"scale":config_PLAY_SCALE, "ease":LoomEaseType.EASE_OUT}).onComplete += function ()
+            LoomTween.to(score, 2, {"alpha":1, "ease":LoomEaseType.EASE_OUT}).onComplete += function ()
             {
                 // then hide the score and trigger the callback
-                LoomTween.to(score, 0.5, {"scale":0, "ease":LoomEaseType.EASE_IN}).onComplete += _callback;
+                LoomTween.to(score, 0.5, {"alpha":0, "ease":LoomEaseType.EASE_IN}).onComplete += _callback;
             };
         }
 
@@ -328,10 +331,10 @@ package
             score.y = stage.stageHeight/2 - score.size.y/2;
             
             // show the message slowly by scaling it up
-            LoomTween.to(score, 5, {"scale":config_PLAY_SCALE, "ease":LoomEaseType.EASE_OUT}).onComplete += function ()
+            LoomTween.to(score, 5, {"alpha":1, "ease":LoomEaseType.EASE_OUT}).onComplete += function ()
             {
                 // hide the message again via scaling it back to 0
-                LoomTween.to(score, 0.5, {"scale":0, "ease":LoomEaseType.EASE_IN}).onComplete += function ()
+                LoomTween.to(score, 0.5, {"alpha":0, "ease":LoomEaseType.EASE_IN}).onComplete += function ()
                 {
                     // Game Over
                     // TODO: Add option to restart
@@ -400,7 +403,8 @@ package
             mover.speed = mover.config_SPEED;
             mover.x = stage.stageWidth / 2;
             mover.y = stage.stageHeight / 2;
-            mover.scale = 0;
+            mover.scale = assetScale;
+            mover.alpha = 0;
             mover.rotation = 0;
             mover.setAngle(getRandomAngle());
             lgo.addComponent(mover, "mover");
@@ -409,6 +413,7 @@ package
             renderer.addBinding("x", "@mover.x");
             renderer.addBinding("y", "@mover.y");
             renderer.addBinding("scale", "@mover.scale");
+            renderer.addBinding("alpha", "@mover.alpha");
             lgo.addComponent(renderer, "renderer");
             lgo.initialize();
 
@@ -418,7 +423,7 @@ package
         }
 
         /**
-         * Spawns a LoomGameObject paddle. This object registers mover and a renderer components with data binding to automatically propagate
+         * Spawns a LoomGameObject paddle. This object registers mover and renderer components with data binding to automatically propagate
          * position and scale value changes from the mover to the renderer.
          *
          * @param   _texture:Number The sprite texture for this paddle. the default top and bottom paddles use different textures - a red and a blue paddle.
@@ -437,14 +442,16 @@ package
                 var aiMover:PongAIPaddleMover = new PongAIPaddleMover();
                 aiMover.config_REFLEX = _reflex;
                 aiMover.config_SPEED = _speed * 2;
-                aiMover.scale = 0;
+                aiMover.alpha = 0;
+                aiMover.scale = assetScale;
                 lgo.addComponent(aiMover, "mover");
             }
             else
             {
                 var playerMover:PongPlayerPaddleMover = new PongPlayerPaddleMover();
                 playerMover.config_SPEED = _speed * 2;
-                playerMover.scale = 0;
+                playerMover.alpha = 0;
+                playerMover.scale = assetScale;
                 lgo.addComponent(playerMover, "mover");
             }
 
@@ -452,6 +459,7 @@ package
             renderer.addBinding("x", "@mover.x");
             renderer.addBinding("y", "@mover.y");
             renderer.addBinding("scale", "@mover.scale");
+            renderer.addBinding("alpha", "@mover.alpha");
             lgo.addComponent(renderer, "renderer");
             lgo.initialize();
 
@@ -502,11 +510,25 @@ package
             // Music
             SimpleAudioEngine.sharedEngine().playBackgroundMusic("assets/sound/mindblazer.mp3");
 
+            var scale_w = stage.nativeStageWidth / stage.stageWidth;
+            var scale_h = stage.nativeStageHeight / stage.stageHeight;
+            scale = (scale_w > scale_h) ? scale_w : scale_h;
+
+            stage.stageWidth = stage.nativeStageWidth;
+            stage.stageHeight = stage.nativeStageHeight;
+
             // Background
             var bg = new Image(Texture.fromAsset("assets/gfx/background.png"));
+
+            var ascale_w = stage.stageWidth / bg.width;
+            var ascale_h = stage.stageHeight / bg.height;
+            assetScale = (ascale_w > ascale_h) ? ascale_w : ascale_h;
+
+            config_PLAY_SCALE *= assetScale;
+
             bg.x = 0;
             bg.y = 0;
-            bg.scale = 1; // assumed to be of the same dimensions as the screen
+            bg.scale = assetScale;
             stage.addChild(bg);
 
             TextureAtlasManager.register("pongSprites", "assets/gfx/pongSprites.xml");
@@ -544,8 +566,8 @@ package
 
             // Create a Label to display the score and position it at the center of the screen
             score = new SimpleLabel("assets/Curse-hd.fnt");
-            score.text = "";
-            score.scale = 0;
+            score.scale = assetScale;
+            score.alpha = 0;
             stage.addChild(score);            
         }
     }

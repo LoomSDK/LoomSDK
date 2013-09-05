@@ -6,7 +6,7 @@ package
 
     public class PongBallMover extends LoomComponent
     {
-        static public var RADIUS:Number = 12;   ///< The radius of the ball.
+        static public var RADIUS:Number = 15;   ///< The radius of the ball.
         public var config_SPEED:Number = 300;   ///< The speed of the ball - not comparable with paddle speeds.
 
         public var speed:Number = 300;          ///< The ball's actual speed.
@@ -14,7 +14,8 @@ package
 
         public var x:Number = Math.round(Loom2D.stage.stageWidth / 2);
         public var y:Number = Math.round(Loom2D.stage.stageHeight / 2);
-        public var scale:Number = 0;
+        public var alpha:Number = 0;
+        public var scale:Number = 1;
         public var rotation:Number = 0;
 
         public var speedX:Number = 0;           ///< Movement of the ball on the x axis during the actual frame.
@@ -70,17 +71,15 @@ package
             if (!playing)
                 return;
 
-            var playScale = game.config_PLAY_SCALE;
-
             // move the ball
-            x += speedX * (dt / 1000);
-            y += speedY * (dt / 1000);
+            x += speedX * (dt / 1000) * game.assetScale;
+            y += speedY * (dt / 1000) * game.assetScale;
 
             // set the constraints for the area where the ball may move freely
-            var xMin:int = RADIUS * scale * playScale;
-            var yMin:int = RADIUS * scale * playScale;
-            var xMax:int = Loom2D.stage.stageWidth - (RADIUS * scale * playScale);
-            var yMax:int = Loom2D.stage.stageHeight - (RADIUS * scale * playScale);
+            var xMin:int = 0;
+            var yMin:int = 0;
+            var xMax:int = Loom2D.stage.nativeStageWidth - (RADIUS * game.assetScale * 2);
+            var yMax:int = Loom2D.stage.nativeStageHeight - (RADIUS * game.assetScale * 2);
 
             // check if the ball is outside of the previously set bounds
             // if yes, it means that we hit a wall:
@@ -89,21 +88,25 @@ package
             //   - play a wall hit sound effect
             var wallHit = false;
             if (x < xMin) {
-                speedX = Math.abs(speedX);
+                speedX = Math.abs(speedX) * game.assetScale;
                 angleDegrees = -angleDegrees;
                 wallHit = true;
+                x = xMin - x;
             } else if (x > xMax) {
-                speedX = -Math.abs(speedX);
+                speedX = -Math.abs(speedX) * game.assetScale;
                 angleDegrees = -angleDegrees;
                 wallHit = true;
+                x = xMax - (x - xMax);
             } else if (y < yMin) {
-                speedY = Math.abs(speedY);
+                speedY = Math.abs(speedY) * game.assetScale;
                 angleDegrees = 180 - angleDegrees;
                 wallHit = true;
+                y = yMin - y;
             } else if (y > yMax) {
-                speedY = -Math.abs(speedY);
+                speedY = -Math.abs(speedY) * game.assetScale;
                 angleDegrees = 180 - angleDegrees;
                 wallHit = true;
+                y = yMax - (y - yMax);
             }
 
             if (wallHit) {
