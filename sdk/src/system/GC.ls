@@ -50,6 +50,53 @@ class GC {
     public static native function collect(cmd:Number = STEP, data:Number = 0);
 
     /**
+     *  Gets the ammount of RAM allocated by the VM in megabytes
+     */
+    public static native function getAllocatedMemory():int;    
+
+    /**
+     * Sets a warning level in megabytes for the VM
+     * If the VM exceeds this level a warning will be displayed in 
+     * the console.  Please note that this warning level is purely for the scripting
+     * VM and not other assets that may be loaded
+     * @param   megabytes The amount of ram in megabytes that causes a warning when exceeded
+     */
+    public static native function setMemoryWarningLevel(megabytes:int);    
+
+    /**
+     * Sets a backoff time to avoid running the incremental GC once a single step has
+     * exceeded the backoff threshold
+     *
+     * @param milliseconds The amount of time to back off from running incremental GC
+     * once a single step has exceeded the backoff threshhold, default is 250ms               
+     */
+    public static native function setBackOffTime(milliseconds:int = 250);    
+
+    /**
+     * Sets the amount of time necessary to trigger a GC backoff in milliseconds
+     *
+     * @param milliseconds The amount of time necessary to exceed to trigger a gc backoff interval
+     * the default is 1 so a GC step taking 2 milliseconds would trigger the backoff
+     */
+    public static native function setBackOffThreshold(milliseconds:int = 1);    
+
+    /**
+     * Sets the GC increment size for a single step of a GC collection
+     *
+     * @param size The size of a single GC increment, larger numbers are more aggressive
+     */
+    public static native function setIncrementSize(size:int = 16);    
+
+
+    /**
+     *  Runs a frame of GC collection (incremental), there is internal logic
+     *  which will back off the GC if it is spiking, also note that the Loom Application class
+     *  calls this internally.  If you want to do a full collection, use GC.fullCollect();
+     */
+    public static native function update();    
+
+
+    /**
      * Does a full Garbage collection cycle.
      */     
     public static function fullCollect() {

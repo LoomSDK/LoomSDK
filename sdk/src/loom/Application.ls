@@ -21,6 +21,7 @@ limitations under the License.
 package loom 
 {
     import system.reflection.Assembly;
+    import system.application.BaseApplication;
     
     import loom.gameframework.LoomGroup;
     import loom.gameframework.TimeManager;
@@ -56,7 +57,7 @@ package loom
      *
      * Corresponds to lmApplication.cpp; makes most basic stuff in Loom happen!
      */
-    public class Application implements ITicked, IAnimated
+    public class Application extends BaseApplication implements ITicked, IAnimated
     {
         private var splashContainer:Sprite;
 

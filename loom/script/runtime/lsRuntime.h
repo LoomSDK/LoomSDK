@@ -443,6 +443,9 @@ const char *LSGetTypeName()
 }
 #endif
 
+// run a frame of GC (implemented in lmGC.cpp)
+void lualoom_gc_update(lua_State *L);
+
 struct GCTracker
 {
     Type       *type;
