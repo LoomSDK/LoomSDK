@@ -47,7 +47,6 @@ package
 
         override public function onTick():void
         {
-
             var i = 0;
 
             if (allocating && allocationCount < 100000)
@@ -64,11 +63,22 @@ package
                     {
                         break;
                     }
-
                 }
 
-                trace("Allocated: " + allocationCount);
+                trace("Allocated: " + allocationCount + " persistent.");
+            }
 
+            if (allocating)
+            {
+
+                var churnCount = 512;
+                for(i=0; i<churnCount; i++)
+                {
+                    var m = new Memory();
+                    m.myfunction();
+                }
+
+                trace("Allocated: " + churnCount + " churn");
             }
 
             if (sprite)
@@ -114,7 +124,7 @@ package
             stage.addChild(sprite);
 
             label = new SimpleLabel("assets/Curse-hd.fnt");
-            label.text = "Hello Loom!";
+            label.text = "Hello GC!";
             label.center();
             label.x = stage.stageWidth / 2;
             label.y = stage.stageHeight / 2 - 100;
