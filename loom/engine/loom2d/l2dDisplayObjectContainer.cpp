@@ -114,9 +114,15 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
         {
             stage = stage->parent;
         }
-        getTargetTransformationMatrix(stage, &res);
 
-        renderState.cachedClipRect = GFX::Graphics::setClipRect((int)res.tx + clipX, (int)res.ty + clipY, clipWidth, clipHeight);
+        getTargetTransformationMatrix(NULL, &res);
+
+        int x1 = (int) ((float)clipX * res.a + res.tx) ;
+        int y1 = (int) ((float)clipY * res.d + res.ty);
+        int x2 = (int) ((float)clipWidth * res.a);
+        int y2 = (int) ((float)clipHeight * res.d);
+
+        renderState.cachedClipRect = GFX::Graphics::setClipRect(x1, y1, x2, y2);
     }
     else
     {
