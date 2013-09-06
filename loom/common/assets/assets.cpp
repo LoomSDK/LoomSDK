@@ -778,6 +778,24 @@ void loom_asset_preload(const char *name)
     loom_mutex_unlock(gAssetLock);
 }
 
+int loom_asset_pending(const char *name)
+{
+    loom_mutex_lock(gAssetLock);
+    
+    // Look 'er up.
+    loom_asset_t *asset = loom_asset_getAssetByName(name, 0);
+    
+    // If it's not pending load, then stick it in the queue.
+    int result;
+    if(asset && loom_asset_isOnTrackToLoad(asset))
+        result = 1;
+    else
+        result = 0;
+    
+    loom_mutex_unlock(gAssetLock);
+    
+    return result;
+}
 
 void loom_asset_flush(const char *name)
 {
@@ -874,7 +892,7 @@ void loom_asset_unlock( const char *name )
       // Dec count.
       if(asset->blob->decRef())
       {
-         asset->state == loom_asset_t::Unloaded;
+         asset->state = loom_asset_t::Unloaded;
          asset->blob = NULL;
       }
    }

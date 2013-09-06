@@ -253,12 +253,15 @@ void Texture::handleAssetNotification(void *payload, const char *name)
 {
     TextureID id = (TextureID)payload;
 
-    // Get the image via the asset manager.
-    loom_asset_image_t *lat = (loom_asset_image_t *)loom_asset_lock(name, LATImage, 1);
-
-    // If we couldn't load it, generate a checkerboard placeholder texture.
+    // Get the image via the asset manager.    
+    loom_asset_image_t *lat = (loom_asset_image_t *)loom_asset_lock(name, LATImage, 0);
+    
+    // If we couldn't load it, and we have never loaded it, generate a checkerboard placeholder texture.
     if (!lat)
     {
+        if(sTextureInfos[id].reload == true)
+            return;
+        
         const int checkerboardSize = 128, checkSize = 8;
 
         lmLogError(gGFXTextureLogGroup, "Missing image asset '%s', using %dx%d px debug checkerboard.", name, checkerboardSize, checkerboardSize);
@@ -312,6 +315,9 @@ void Texture::handleAssetNotification(void *payload, const char *name)
 
     // Release lock on the asset.
     loom_asset_unlock(name);
+    
+    // Once we load it we don't need it any more.
+    loom_asset_flush(name);
 }
 
 
