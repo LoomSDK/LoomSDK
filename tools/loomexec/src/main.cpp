@@ -102,9 +102,16 @@ static void handleAssert()
 
 static void initialize(int argc, const char **argv)
 {
-    if (argc > 1)
+
+    // look for passing a .loom file
+    for (int i = 1; i < argc; i++ )
     {
-        assemblyPath = argv[1];
+        if (strstr(argv[i], ".loom"))
+        {
+            assemblyPath = argv[i];
+            break;    
+        }
+        
     }
 
 #ifdef LOOM_ENABLE_JIT
