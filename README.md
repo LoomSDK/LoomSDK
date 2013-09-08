@@ -26,7 +26,7 @@ http://www.loomsdk.com/community
 
 ### Build Instructions
 
-The build system is setup to generate a "dev" sdk for use with the Loom command line interface (cli).
+The build system is setup to generate a "dev" sdk for use with the Loom command line interface (Loom CLI) available from [LoomSDK.com](http://www.loomsdk.com)
 
 Firstly, building Loom from the native source code requires having [Rake](http://rake.rubyforge.org) & [CMake](http://www.cmake.org) installed and on your path.
 
