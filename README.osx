@@ -1,0 +1,15 @@
+## Instructions for building for OSX:
+
+Note: You may need to select XCode with: sudo /usr/bin/xcode-select -switch /Applications/Xcode.app/Contents/Developer
+
+1. Make sure you have XCode and command line tools installed
+
+2. In a terminal, change directory to the Loom Native SDK folder and run: rake deploy:free_sdk
+
+3. Change directory to your Loom project and run: 
+
+loom use dev (enter)
+loom run
+
+4. Your project should compile and run
+
