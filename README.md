@@ -40,7 +40,7 @@ This will build and deploy a **OSX** or **Windows** dev sdk based on your host O
 
 This will build and deploy a full dev sdk with support for **Windows/Android** or **OSX/iOS/Android** depending on your host OS.
 
-Once successfuly compiled and deployed, change directory to yourproject and issue this Loom CLI command:
+Once successfuly compiled and deployed, change directory to your project and issue this Loom CLI command:
 
 **loom use dev**
 

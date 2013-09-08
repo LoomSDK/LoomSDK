@@ -1,16 +1,15 @@
 ## Instructions for building on Android:
 
-Requirements: NDK r8b, Android SDK for API 10
+Requirements: NDK r8b+, Android SDK for API 10+
 
-1. In a terminal, export the location of your NDK installation in the ANDROID_NDK environment variable, for example: export ANDROID_NDK=~/Android/android-ndk-r8
+1. In a terminal, export the location of your NDK installation in the ANDROID_NDK environment variable, for example: export ANDROID_NDK=~/Android/android-ndk-r8b
 
-2. run: rake build:android
+2. Change directory to the Loom Native SDK and run: rake deploy:sdk
 
-3. run: rake deploy:android
+3. Change directory to your Loom project and run: 
 
-4. You should have a LoomDemo app on your android device
+loom use dev (enter)
+loom run --android
 
-### Important note regarding release/optimized builds:
+4. Your project should compile and run on the connected Android device
 
-Please see lines 816-817 in loom.android.toolchain.cmake, we are current forcing arm/O3 for release builds, 
-review this if updating loom.android.toolchain.cmake

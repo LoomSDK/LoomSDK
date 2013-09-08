@@ -1,0 +1,22 @@
+## Instructions for building for iOS:
+
+Note: You may need to select XCode with: sudo /usr/bin/xcode-select -switch /Applications/Xcode.app/Contents/Developer
+
+1. Make sure you have XCode and command line tools installed as well as the iOS SDK.  You'll also need a valid mobile provision to build against.
+
+2. In a terminal, set these 2 environment variables, IOS_SDK and IOS_MOBILE_PROVISION 
+
+For example:
+
+export IOS_SDK="6.1"
+export IOS_MOBILE_PROVISION="/Users/josh/Desktop/LoomDemo.mobileprovision"
+
+3. Change directory to the Loom Native SDK folder and run: rake deploy:sdk
+
+4. Change directory to your Loom project and run: 
+
+loom use dev (enter)
+loom ios provision /Path/to/your/valid/provision/MyProvision.mobileprovision
+loom run --ios
+
+5. Your project should deploy to the connected iOS device
