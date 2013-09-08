@@ -26,4 +26,24 @@ http://www.loomsdk.com/community
 
 ### Build Instructions
 
-Please see the individual Readme files for platform specific build instructions
+The build system is setup to generate a "dev" sdk for use with the Loom command line interface (cli).
+
+Firstly, building Loom from the native source code requires having [Rake](http://rake.rubyforge.org) & [CMake](http://www.cmake.org) installed and on your path.
+
+There are 2 important rake commands
+
+**rake deploy:free_sdk** 
+
+This will build and deploy a **OSX** or **Windows** dev sdk based on your host OS.
+
+**rake deploy:sdk** 
+
+This will build and deploy a full dev sdk with support for **Windows/Android** or **OSX/iOS/Android** depending on your host OS.
+
+Once successfuly compiled and deployed, change directory to yourproject and issue this Loom CLI command:
+
+**loom use dev**
+
+You'll now be developing with your custom Loom build!
+
+For more information, please see the individual Readme files for platform specific setup instructions
