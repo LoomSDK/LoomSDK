@@ -741,7 +741,7 @@ file 'build/luajit_android/lib/libluajit-5.1.a' do
     else
     puts "building LuaJIT Android on OSX / Linux"
       # OSX / LINUX
-      NDK = `which ndk-build`.split("/ndk-build")[0]
+      NDK = ENV['ANDROID_NDK']
       if (!NDK)
           raise "\n\nPlease ensure ndk-build from NDK rev 8b is on your path"
       end
