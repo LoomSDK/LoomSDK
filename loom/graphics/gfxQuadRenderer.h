@@ -24,8 +24,10 @@
 
 namespace GFX
 {
+
+// 256,000 quad max on a frame (around 8 megs of vertex data)
 #define MAXBATCHQUADS       10000
-#define MAXVERTEXBUFFERS    256  // 2,560,000 quads on a frame
+#define MAXVERTEXBUFFERS    256  
 
 struct VertexPosColorTex
 {
@@ -42,8 +44,9 @@ private:
 
     static bgfx::DynamicVertexBufferHandle vertexBuffers[MAXVERTEXBUFFERS];
 
-    // TODO: dynamically allocate this?
-    static VertexPosColorTex vertexData[MAXVERTEXBUFFERS][MAXBATCHQUADS * 4];
+    static VertexPosColorTex* vertexData[MAXVERTEXBUFFERS];
+    static void* vertexDataMemory;
+
     static int               maxVertexIdx[MAXVERTEXBUFFERS];
 
     static int numVertexBuffers;

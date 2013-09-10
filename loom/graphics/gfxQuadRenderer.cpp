@@ -22,6 +22,7 @@
 #include "bgfx.h"
 
 #include "loom/common/core/log.h"
+#include "loom/common/core/allocator.h"
 
 #include "loom/common/core/assert.h"
 #include "loom/graphics/gfxGraphics.h"
@@ -46,7 +47,9 @@ static bgfx::IndexBufferHandle sIndexBufferHandle;
 
 bgfx::DynamicVertexBufferHandle QuadRenderer::vertexBuffers[MAXVERTEXBUFFERS];
 
-VertexPosColorTex QuadRenderer::vertexData[MAXVERTEXBUFFERS][MAXBATCHQUADS * 4];
+VertexPosColorTex* QuadRenderer::vertexData[MAXVERTEXBUFFERS];
+
+void* QuadRenderer::vertexDataMemory = NULL;
 
 int QuadRenderer::maxVertexIdx[MAXVERTEXBUFFERS];
 
@@ -62,6 +65,8 @@ TextureID QuadRenderer::currentTexture;
 int       QuadRenderer::quadCount;
 
 int QuadRenderer::numFrameSubmit;
+
+static loom_allocator_t *gQuadMemoryAllocator = NULL;
 
 void QuadRenderer::submit()
 {
@@ -133,7 +138,7 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
         currentIndexBufferIdx = 0;
 
         maxVertexIdx[currentVertexBufferIdx] = 0;
-        currentVertexPtr = (VertexPosColorTex *)vertexData[currentVertexBufferIdx];
+        currentVertexPtr = vertexData[currentVertexBufferIdx];
         vertexCount      = 0;
         quadCount        = 0;
     }
@@ -238,6 +243,12 @@ void QuadRenderer::destroyGraphicsResources()
     sUniformTexColor.idx           = bgfx::invalidHandle;
     sUniformNodeMatrixRemoveMe.idx = bgfx::invalidHandle;
     sProgramPosColorTex.idx        = bgfx::invalidHandle;
+
+    if (vertexDataMemory)
+    {
+        lmFree(gQuadMemoryAllocator, vertexDataMemory);
+        vertexDataMemory = NULL;
+    }
 }
 
 
@@ -302,6 +313,24 @@ void QuadRenderer::initializeGraphicsResources()
     }
 
     sIndexBufferHandle = bgfx::createIndexBuffer(mem);
+
+    size_t bufferSize = MAXVERTEXBUFFERS * sizeof(VertexPosColorTex) * MAXBATCHQUADS * 4;
+
+    vertexDataMemory = lmAlloc(gQuadMemoryAllocator, bufferSize);
+
+    lmAssert(vertexDataMemory, "Unable to allocate buffer for quad vertex data");
+
+    VertexPosColorTex* p = (VertexPosColorTex*) vertexDataMemory; 
+
+    for (int i = 0; i < MAXVERTEXBUFFERS; i++)
+    {
+        // setup buffer pointer
+        vertexData[i] = p;
+
+        p += MAXBATCHQUADS * 4;
+        
+    }
+
 }
 
 
