@@ -1025,9 +1025,11 @@ def require_zip_dependencies
     	puts "This Rakefile requires a rubyzip gem of version 0.9.9 or earlier. Install it using: gem install rubyzip -v 0.9.9"
     	exit(1)
 	end
+	
     require 'rubygems'
     require 'zip/zip'
     require 'zip/zipfilesystem'
+  end
 end
 
 def unzip_file (file, destination)
