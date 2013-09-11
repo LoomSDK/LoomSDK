@@ -877,7 +877,7 @@ namespace :package do
     omit_files = %w[ examples.zip loomsdk.zip certs/LoomDemoBuild.mobileprovision loom/vendor/telemetry-01052012 pkg/ artifacts/ docs/output cmake_osx/ cmake_msvc/ cmake_ios/ cmake_android/]
 
     require_zip_dependencies
-    Zip::ZipFile.open("nativesdk.zip", 'w') do |zipfile|
+    Zip::File.open("nativesdk.zip", 'w') do |zipfile|
       Dir["**/**"].each do |file|
         
         do_omit = false
@@ -907,7 +907,7 @@ namespace :package do
 
     require_zip_dependencies
 
-    Zip::ZipFile.open("pkg/examples.zip", 'w') do |zipfile|
+    Zip::File.open("pkg/examples.zip", 'w') do |zipfile|
       Dir["docs/examples/**/**"].each do |file|
         zipfile.add(file.sub("docs/examples/", ''),file)
       end
@@ -975,7 +975,7 @@ namespace :package do
     require_zip_dependencies
 
     puts "Compressing Loom SDK..."
-    Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|
+    Zip::File.open("pkg/loomsdk.zip", 'w') do |zipfile|
       Dir["pkg/sdk/**/**"].each do |file|
         zipfile.add(file.sub("pkg/sdk/", ''),file)
       end
@@ -995,7 +995,7 @@ namespace :package do
 
     FileUtils.mkdir_p "pkg"
 
-    Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|
+    Zip::File.open("pkg/loomsdk.zip", 'w') do |zipfile|
       Dir["pkg/sdk/**/**"].each do |file|
         zipfile.add(file.sub("pkg/sdk/", ''),file)
       end
@@ -1015,23 +1015,18 @@ end
 
 def require_zip_dependencies
   begin
-	begin
-		gem 'rubyzip', '< 1.0.0'
-	rescue LoadError
-    	puts "This Rakefile requires a rubyzip gem of version 0.9.9 or earlier. Install it using: gem install rubyzip -v 0.9.9"
-    	exit(1)
-	end
-	
     require 'rubygems'
-    require 'zip/zip'
-    require 'zip/zipfilesystem'
+    require 'zip'
+  rescue
+    puts "!!! Unable to require the RubyZip gem.  Please run 'bundle install'"
+    exit(1)
   end
 end
 
 def unzip_file (file, destination)
   require_zip_dependencies
 
-  Zip::ZipFile.open(file) do |zip_file|
+  Zip::File.open(file) do |zip_file|
     zip_file.each do |f|
       f_path=File.join(destination, f.name)
       FileUtils.mkdir_p(File.dirname(f_path))
