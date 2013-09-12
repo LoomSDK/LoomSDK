@@ -1017,9 +1017,8 @@ def require_zip_dependencies!
   begin
     require 'rubygems'
     require 'zip'
-    # require 'zipfilesystem'
 	rescue LoadError
-    	puts "This Rakefile requires the latest rubyzip gem. Install it using: gem install rubyzip"
+    	puts "!!! Unable to require the RubyZip gem.  Please run 'bundle install'"
     	exit(1)
   end
 end
