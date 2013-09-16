@@ -38,12 +38,16 @@ if (APPLE)
         set (APPLICATION_SRC
           ${APPLICATION_SRC}
           ios/Default.png
+          ios/Default@2x.png
+          ios/Default-568h@2x.png
           ios/main.m
           ios/AppController.mm
           ios/RootViewController.mm
         )
         
         SET_SOURCE_FILES_PROPERTIES(ios/Default.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
+        SET_SOURCE_FILES_PROPERTIES(ios/Default@2x.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
+        SET_SOURCE_FILES_PROPERTIES(ios/Default-568h@2x.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
 
     else()
         
