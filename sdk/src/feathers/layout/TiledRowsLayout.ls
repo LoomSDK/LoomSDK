@@ -672,7 +672,7 @@ package feathers.layout
 				var singleTileHeight = Math.max(1, (tileHeight + this._verticalGap));
 				verticalTileCount = Math.floor(Math.max(1, (availableHeight - this._paddingTop - this._paddingBottom + this._verticalGap) / singleTileHeight));
 			}
-	
+
 			const totalPageWidth:Number = horizontalTileCount * (tileWidth + this._horizontalGap) - this._horizontalGap + this._paddingLeft + this._paddingRight;
 			const totalPageHeight:Number = verticalTileCount * (tileHeight + this._verticalGap) - this._verticalGap + this._paddingTop + this._paddingBottom;
 			const availablePageWidth:Number = isNaN(availableWidth) ? totalPageWidth : availableWidth;
