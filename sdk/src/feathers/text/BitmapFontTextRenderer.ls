@@ -10,7 +10,7 @@ package feathers.text
 	import loom2d.textures.Texture;
 	import loom2d.display.DisplayObjectContainer;
 	import loom2d.display.QuadBatch;
-    import loom2d.utils.VAlign;
+	import loom2d.utils.VAlign;
 
 
 	public class BitmapFontTextRenderer extends FeathersControl implements ITextRenderer
