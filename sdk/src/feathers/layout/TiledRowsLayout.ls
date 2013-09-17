@@ -648,34 +648,31 @@ package feathers.layout
 					tileHeight = this._useSquareTiles ? Math.max(tileWidth, tileHeight) : Math.max(tileHeight, item.height);
 				}
 			}
-			var availableWidth:Number = NaN;
-			var availableHeight:Number = NaN;
 
 			var horizontalTileCount:int = Math.max(1, itemCount);
-			var singleTileWidth = Math.max(1, (tileWidth + this._horizontalGap));
-			if(!isNaN(explicitWidth))
-			{
-				availableWidth = explicitWidth;
-				horizontalTileCount = Math.max(1, (explicitWidth - this._paddingLeft - this._paddingRight + this._horizontalGap) / singleTileWidth);
-			}
-			else if(!isNaN(maxWidth))
+			var availableWidth:Number = explicitWidth;
+			if(isNaN(availableWidth))
 			{
 				availableWidth = maxWidth;
-				horizontalTileCount = Math.max(1, (maxWidth - this._paddingLeft - this._paddingRight + this._horizontalGap) / singleTileWidth);
 			}
-			var verticalTileCount:int = 1;
-			var singleTileHeight = Math.max(1, (tileHeight + this._verticalGap));
-			if(!isNaN(explicitHeight))
+			if(!isNaN(availableWidth))
 			{
-				availableHeight = explicitHeight;
-				verticalTileCount = Math.max(1, (explicitHeight - this._paddingTop - this._paddingBottom + this._verticalGap) / singleTileHeight);
-			}
-			else if(!isNaN(maxHeight))
-			{
-				availableHeight = maxHeight;
-				verticalTileCount = Math.max(1, (maxHeight - this._paddingTop - this._paddingBottom + this._verticalGap) / singleTileHeight);
+				var singleTileWidth = Math.max(1, (tileWidth + this._horizontalGap));
+				horizontalTileCount = Math.floor(Math.max(1, (availableWidth - this._paddingLeft - this._paddingRight + this._horizontalGap) / singleTileWidth));
 			}
 
+			var verticalTileCount:int = 1;
+			var availableHeight:Number = explicitHeight;
+			if(isNaN(availableHeight))
+			{
+				availableHeight = maxHeight;
+			}
+			if(!isNaN(availableHeight))
+			{
+				var singleTileHeight = Math.max(1, (tileHeight + this._verticalGap));
+				verticalTileCount = Math.floor(Math.max(1, (availableHeight - this._paddingTop - this._paddingBottom + this._verticalGap) / singleTileHeight));
+			}
+	
 			const totalPageWidth:Number = horizontalTileCount * (tileWidth + this._horizontalGap) - this._horizontalGap + this._paddingLeft + this._paddingRight;
 			const totalPageHeight:Number = verticalTileCount * (tileHeight + this._verticalGap) - this._verticalGap + this._paddingTop + this._paddingBottom;
 			const availablePageWidth:Number = isNaN(availableWidth) ? totalPageWidth : availableWidth;
