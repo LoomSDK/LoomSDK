@@ -652,26 +652,28 @@ package feathers.layout
 			var availableHeight:Number = NaN;
 
 			var horizontalTileCount:int = Math.max(1, itemCount);
+			var singleTileWidth = Math.max(1, (tileWidth + this._horizontalGap));
 			if(!isNaN(explicitWidth))
 			{
 				availableWidth = explicitWidth;
-				horizontalTileCount = Math.max(1, (explicitWidth - this._paddingLeft - this._paddingRight + this._horizontalGap) / (tileWidth + this._horizontalGap));
+				horizontalTileCount = Math.max(1, (explicitWidth - this._paddingLeft - this._paddingRight + this._horizontalGap) / singleTileWidth);
 			}
 			else if(!isNaN(maxWidth))
 			{
 				availableWidth = maxWidth;
-				horizontalTileCount = Math.max(1, (maxWidth - this._paddingLeft - this._paddingRight + this._horizontalGap) / (tileWidth + this._horizontalGap));
+				horizontalTileCount = Math.max(1, (maxWidth - this._paddingLeft - this._paddingRight + this._horizontalGap) / singleTileWidth);
 			}
 			var verticalTileCount:int = 1;
+			var singleTileHeight = Math.max(1, (tileHeight + this._verticalGap));
 			if(!isNaN(explicitHeight))
 			{
 				availableHeight = explicitHeight;
-				verticalTileCount = Math.max(1, (explicitHeight - this._paddingTop - this._paddingBottom + this._verticalGap) / (tileHeight + this._verticalGap));
+				verticalTileCount = Math.max(1, (explicitHeight - this._paddingTop - this._paddingBottom + this._verticalGap) / singleTileHeight);
 			}
 			else if(!isNaN(maxHeight))
 			{
 				availableHeight = maxHeight;
-				verticalTileCount = Math.max(1, (maxHeight - this._paddingTop - this._paddingBottom + this._verticalGap) / (tileHeight + this._verticalGap));
+				verticalTileCount = Math.max(1, (maxHeight - this._paddingTop - this._paddingBottom + this._verticalGap) / singleTileHeight);
 			}
 
 			const totalPageWidth:Number = horizontalTileCount * (tileWidth + this._horizontalGap) - this._horizontalGap + this._paddingLeft + this._paddingRight;
