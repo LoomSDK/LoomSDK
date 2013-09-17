@@ -10,6 +10,8 @@ package feathers.text
 	import loom2d.textures.Texture;
 	import loom2d.display.DisplayObjectContainer;
 	import loom2d.display.QuadBatch;
+    import loom2d.utils.VAlign;
+
 
 	public class BitmapFontTextRenderer extends FeathersControl implements ITextRenderer
 	{
@@ -28,10 +30,11 @@ package feathers.text
 		}
 		
 		protected var _explicitAlign:String = null;
+		protected var _vAlign:String = VAlign.CENTER;
 		protected var _quadBatch:QuadBatch = new QuadBatch();
 
 		/**
-		 * Set to a value from TextFormatAlign to override the centering in
+		 * Set to a value from TextFormatAlign to override the horizontal centering in
 		 * the BitmapFontTextFormat.
 		 */
 		public function set align(value:String):void
@@ -47,6 +50,19 @@ package feathers.text
 			return _textFormat.align;
 		}
 
+		/**
+		 * Set to a value from VAlign to use for the vertical centering of the text
+		 */
+		public function set vAlign(value:String):void
+		{
+			_vAlign = value;
+			invalidate();
+		}
+
+		public function get vAlign():String
+		{
+			return _vAlign;
+		}
 		public var autoSize:Boolean = false;
 
 		protected function processDisplayText(input:String):String
@@ -93,7 +109,7 @@ package feathers.text
 
 			// Add text.
 			_quadBatch.reset();
-			_textFormat.font.fillQuadBatch(_quadBatch, width, height, tmp, _textFormat.size, _textFormat.color, align, "center", autoSize);
+			_textFormat.font.fillQuadBatch(_quadBatch, width, height, tmp, _textFormat.size, _textFormat.color, align, vAlign, autoSize);
 		}
 
 		public function get baseline():Number
