@@ -753,7 +753,7 @@ package feathers.layout
 				result = new <int>[];
 			}
 			result.length = 0;
-            const singleItemHeight:int = this._typicalItemHeight + this._gap;
+			const singleItemHeight:int = this._typicalItemHeight + this._gap;
 			const visibleTypicalItemCount:int = Math.ceil(height / singleItemHeight);
 			if(!this._hasVariableItemDimensions)
 			{

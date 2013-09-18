@@ -754,7 +754,7 @@ package feathers.layout
 				result = new <int>[];
 			}
 			result.length = 0;
-            const singleItemWidth:int = Math.max(1, (this._typicalItemWidth + this._gap));
+			const singleItemWidth:int = Math.max(1, (this._typicalItemWidth + this._gap));
 			const visibleTypicalItemCount:int = Math.ceil(width / singleItemWidth);
 			if(!this._hasVariableItemDimensions)
 			{
