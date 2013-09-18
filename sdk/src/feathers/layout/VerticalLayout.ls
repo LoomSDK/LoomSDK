@@ -549,7 +549,8 @@ package feathers.layout
 								this.dispatchEventWith(Event.CHANGE);
 							}
 						}
-						else if(this._typicalItemHeight >= 0)
+						///LOOM-1786: This was >= 0 back when _typicalItemHeight defaulted to -1. This change should be OK, but it is untested throroughly...
+						else if(this._typicalItemHeight > 0)
 						{
 							item.height = this._typicalItemHeight;
 						}
@@ -883,7 +884,8 @@ package feathers.layout
 							this.dispatchEventWith(Event.CHANGE);
 						}
 					}
-					else if(this._typicalItemHeight >= 0)
+					///LOOM-1786: This was >= 0 back when _typicalItemWidth defaulted to -1. This change should be OK, but it is untested throroughly...
+					else if(this._typicalItemHeight > 0)
 					{
 						item.height = this._typicalItemHeight;
 					}

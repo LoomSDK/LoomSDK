@@ -550,7 +550,8 @@ package feathers.layout
 								this.dispatchEventWith(Event.CHANGE);
 							}
 						}
-						else if(this._typicalItemWidth >= 0)
+						///LOOM-1786: This was >= 0 back when _typicalItemWidth defaulted to -1. This change should be OK, but it is untested throroughly...
+						else if(this._typicalItemWidth > 0)
 						{
 							item.width = this._typicalItemWidth;
 						}
@@ -884,7 +885,8 @@ package feathers.layout
 							this.dispatchEventWith(Event.CHANGE);
 						}
 					}
-					else if(this._typicalItemWidth >= 0)
+					///LOOM-1786: This was >= 0 back when _typicalItemWidth defaulted to -1. This change should be OK, but it is untested throroughly...
+					else if(this._typicalItemWidth > 0)
 					{
 						item.width = this._typicalItemWidth;
 					}
