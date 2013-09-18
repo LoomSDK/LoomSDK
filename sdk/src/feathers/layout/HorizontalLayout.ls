@@ -414,7 +414,7 @@ package feathers.layout
 		/**
 		 * @private
 		 */
-		protected var _typicalItemWidth:Number = -1;
+		protected var _typicalItemWidth:Number = 0;
 
 		/**
 		 * @inheritDoc
@@ -439,7 +439,7 @@ package feathers.layout
 		/**
 		 * @private
 		 */
-		protected var _typicalItemHeight:Number = -1;
+		protected var _typicalItemHeight:Number = 0;
 
 		/**
 		 * @inheritDoc
