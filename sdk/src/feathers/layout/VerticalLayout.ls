@@ -753,7 +753,8 @@ package feathers.layout
 				result = new <int>[];
 			}
 			result.length = 0;
-			const visibleTypicalItemCount:int = Math.ceil(height / (this._typicalItemHeight + this._gap));
+            const singleItemHeight:int = this._typicalItemHeight + this._gap;
+			const visibleTypicalItemCount:int = Math.ceil(height / singleItemHeight);
 			if(!this._hasVariableItemDimensions)
 			{
 				//this case can be optimized because we know that every item has
@@ -764,14 +765,14 @@ package feathers.layout
 				{
 					if(this._verticalAlign == VERTICAL_ALIGN_BOTTOM)
 					{
-						indexOffset = Math.ceil((height - totalItemHeight) / (this._typicalItemHeight + this._gap));
+						indexOffset = Math.ceil((height - totalItemHeight) / singleItemHeight);
 					}
 					else if(this._verticalAlign == VERTICAL_ALIGN_MIDDLE)
 					{
-						indexOffset = Math.ceil(((height - totalItemHeight) / (this._typicalItemHeight + this._gap)) / 2);
+						indexOffset = Math.ceil(((height - totalItemHeight) / singleItemHeight) / 2);
 					}
 				}
-				var minimum:int = -indexOffset + Math.max(0, (scrollY - this._paddingTop) / (this._typicalItemHeight + this._gap));
+				var minimum:int = -indexOffset + Math.max(0, int((scrollY - this._paddingTop) / singleItemHeight));
 				//if we're scrolling beyond the final item, we should keep the
 				//indices consistent so that items aren't destroyed and
 				//recreated unnecessarily
