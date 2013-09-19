@@ -38,7 +38,7 @@ static loom_logGroup_t gScriptAssetGroup = { "scriptAsset", 1 };
 
 void loom_asset_registerScriptAsset()
 {
-   loom_asset_registerType(LATScript, loom_asset_scriptDeserializer, loom_asset_identifyScript);
+    loom_asset_registerType(LATScript, loom_asset_scriptDeserializer, loom_asset_identifyScript);
 }
 
 
@@ -53,9 +53,9 @@ int loom_asset_identifyScript(const char *extension)
 
 void *loom_asset_scriptDeserializer( void *buffer, size_t bufferLen, LoomAssetCleanupCallback *dtor )
 {
-   loom_asset_script_t *script = (loom_asset_script_t *) lmAlloc(gAssetAllocator, sizeof(loom_asset_script_t));
-   script->bits = (void*) lmAlloc(gAssetAllocator, bufferLen);
-   memcpy(script->bits, buffer, bufferLen);
-   script->length = bufferLen;
-   return script;
+    loom_asset_script_t *script = (loom_asset_script_t *) lmAlloc(gAssetAllocator, sizeof(loom_asset_script_t));
+    script->bits = (void*) lmAlloc(gAssetAllocator, bufferLen);
+    memcpy(script->bits, buffer, bufferLen);
+    script->length = bufferLen;
+    return script;
 }
