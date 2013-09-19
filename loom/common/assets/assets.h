@@ -108,7 +108,8 @@ void loom_asset_pump();
 void loom_asset_waitForConnection(int msToWait);
 void loom_asset_shutdown();
 
-typedef void *(*LoomAssetDeserializeCallback)(void *buffer, size_t bufferLen);
+typedef void (*LoomAssetCleanupCallback)(void*);
+typedef void *(*LoomAssetDeserializeCallback)(void *buffer, size_t bufferLen, LoomAssetCleanupCallback *dtor);
 typedef int (*LoomAssetRecognizerCallback)(const char *extension);
 void loom_asset_registerType(unsigned int type, LoomAssetDeserializeCallback deserializer, LoomAssetRecognizerCallback recognizer);
 
