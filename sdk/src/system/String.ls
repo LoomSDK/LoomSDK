@@ -20,10 +20,10 @@ limitations under the License.
 
 package system {
 
-  /**
-   *  The String class is a data type that represents a string of characters. The String class provides methods and properties that let you manipulate primitive string value types.
-   */
-  final class String extends Object {
+    /**
+     *  The String class is a data type that represents a string of characters. The String class provides methods and properties that let you manipulate primitive string value types.
+     */
+    final class String extends Object {
 
     /**
      *  Gets the number of characters in the String.
@@ -117,7 +117,7 @@ package system {
      *  @param len The number of characters in the substring being created. The default value is the maximum value allowed. If len is not specified, the substring includes all the characters from startIndex to the end of the string.
      *  @return A substring based on the specified indices.
      */    
-     public native function substr(startIndex:int = 0, len:int = -1):String;
+    public native function substr(startIndex:int = 0, len:int = -1):String;
 
 
     /**
@@ -169,35 +169,52 @@ package system {
     // TODO: this should be native
     private static function _trim(value:String):String
     {
-      var i = 0;
+        var i = 0;
 
-      var c:String = value.charAt(i);
-      while(isWhitespace(c))
-      {
-        i++;
+        var c:String = value.charAt(i);
+        while(isWhitespace(c))
+        {
+            i++;
+            c = value.charAt(i);
+        }
+
+        value = value.slice(i);
+
+        // now trim the backend
+        i = value.length-1;
         c = value.charAt(i);
-      }
+        while(isWhitespace(c))
+        {
+            i--;
+            c = value.charAt(i);
+        }
 
-      value = value.slice(i);
+        if(i > 0 && i < value.length-1)
+            value = value.slice(0,i+1);
 
-      // now trim the backend
-      i = value.length-1;
-      c = value.charAt(i);
-      while(isWhitespace(c))
-      {
-        i--;
-        c = value.charAt(i);
-      }
-
-      if(i > 0 && i < value.length-1)
-        value = value.slice(0,i+1);
-
-      return value;
+        return value;
     }
 
+    /**
+     *  Determines if a string is a whitespace
+     *
+     *  @param c The string to check
+     *  @return a Boolean value indicating the result of the test.
+     */
     public static function isWhitespace(c:String):Boolean
     {
-      return c==" " || c=="\n" || c=="\t" || c=="\r";
+        return c==" " || c=="\n" || c=="\t" || c=="\r";
+    }
+
+    /**
+     *  Determines if a string is either null or empty
+     *
+     *  @param c The string to check
+     *  @return a Boolean value indicating the result of the test.
+     */
+    public static function isNullOrEmpty(c:String):Boolean
+    {
+        return c==null || c=="";
     }
 
     /**
@@ -254,7 +271,7 @@ package system {
     private static native function _toNumber(value:String):Number;
     private static native function _toBoolean(value:String):Boolean;
     private static native function _find(value:String, pattern:String):Vector.<String>;
-
-  }
+    
+    }
 
 }
