@@ -874,7 +874,7 @@ void loom_asset_unlock( const char *name )
         // Dec count.
         if(asset->blob->decRef())
         {
-            asset->state == loom_asset_t::Unloaded;
+            asset->state = loom_asset_t::Unloaded;
             asset->blob = NULL;
         }
     }
