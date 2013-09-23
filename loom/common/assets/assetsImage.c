@@ -38,7 +38,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern loom_allocator_t *gAssetAllocator;
+    extern loom_allocator_t *gAssetAllocator;
 #ifdef __cplusplus
 }
 #endif

@@ -33,7 +33,10 @@
 #define stricmp    strcasecmp //I feel dirty.
 #endif
 
-extern loom_allocator_t *gAssetAllocator;
+extern "C"
+{
+    extern loom_allocator_t *gAssetAllocator;
+}
 static loom_logGroup_t gScriptAssetGroup = { "scriptAsset", 1 };
 
 void loom_asset_registerScriptAsset()
