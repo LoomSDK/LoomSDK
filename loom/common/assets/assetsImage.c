@@ -35,7 +35,14 @@
 #define stricmp    strcasecmp //I feel dirty.
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern loom_allocator_t *gAssetAllocator;
+#ifdef __cplusplus
+}
+#endif
+
 static loom_logGroup_t gImageAssetGroup = { "imageAsset", 1 };
 
 void loom_asset_registerImageAsset()

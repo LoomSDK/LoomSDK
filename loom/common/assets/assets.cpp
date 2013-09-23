@@ -56,13 +56,9 @@
 // This actually lives in lsAsset.cpp, but is useful to call from in the asset manager implementation.
 void loom_asset_notifyPendingCountChange();
 
-#ifdef __cplusplus
 extern "C" {
-#endif
 loom_allocator_t *gAssetAllocator = NULL;
-#ifdef __cplusplus
 }
-#endif
 
 // Small helper class to track a change callback for an asset.
 struct loom_asset_subscription_t
