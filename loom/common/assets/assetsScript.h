@@ -31,5 +31,6 @@ typedef struct loom_asset_script
 
 void loom_asset_registerScriptAsset();
 int loom_asset_identifyScript(const char *path);
-void *loom_asset_scriptDeserializer(void *buffer, size_t bufferLen);
+void *loom_asset_scriptDeserializer(void *buffer, size_t bufferLen, LoomAssetCleanupCallback *dtor);
+
 #endif

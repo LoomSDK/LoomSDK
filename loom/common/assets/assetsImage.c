@@ -35,12 +35,18 @@
 #define stricmp    strcasecmp //I feel dirty.
 #endif
 
-static loom_allocator_t *gImageAssetAllocator = NULL;
-static loom_logGroup_t  gImageAssetGroup      = { "imageAsset", 1 };
+#ifdef __cplusplus
+extern "C" {
+#endif
+    extern loom_allocator_t *gAssetAllocator;
+#ifdef __cplusplus
+}
+#endif
+
+static loom_logGroup_t gImageAssetGroup = { "imageAsset", 1 };
 
 void loom_asset_registerImageAsset()
 {
-    gImageAssetAllocator = loom_allocator_getGlobalHeap();
     loom_asset_registerType(LATImage, loom_asset_imageDeserializer, loom_asset_identifyImage);
 }
 
@@ -82,17 +88,24 @@ int loom_asset_identifyImage(const char *extension)
     return 0;
 }
 
-
-void *loom_asset_imageDeserializer(void *buffer, size_t bufferLen)
+void loom_asset_imageDtor(void *bits)
 {
-    loom_asset_image_t *img = lmAlloc(gImageAssetAllocator, sizeof(loom_asset_image_t));
+    loom_asset_image_t *img = (loom_asset_image_t*)bits;
+    stbi_image_free(img->bits);
+    lmFree(gAssetAllocator, bits);
+}
 
+void *loom_asset_imageDeserializer( void *buffer, size_t bufferLen, LoomAssetCleanupCallback *dtor )
+{
+    loom_asset_image_t *img = lmAlloc(gAssetAllocator, sizeof(loom_asset_image_t));
     img->bits = stbi_load_from_memory((const stbi_uc *)buffer, (int)bufferLen, &img->width, &img->height, &img->bpp, 4);
-    if (!img->bits)
+    *dtor = loom_asset_imageDtor;
+    if(!img->bits)
     {
         lmLogError(gImageAssetGroup, "Image load failed due to this cryptic reason: %s", stbi_failure_reason());
-        lmFree(gImageAssetAllocator, img);
+        lmFree(gAssetAllocator, img);
         return 0;
     }
+    lmLogError(gImageAssetGroup, "Allocated %d bytes for an image!", img->width * img->height * 4);
     return img;
 }
