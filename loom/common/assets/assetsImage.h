@@ -36,7 +36,7 @@ typedef struct loom_asset_image
 
 void loom_asset_registerImageAsset();
 int loom_asset_identifyImage(const char *path);
-void *loom_asset_imageDeserializer(void *buffer, size_t bufferLen);
+void *loom_asset_imageDeserializer(void *buffer, size_t bufferLen, LoomAssetCleanupCallback *dtor);
 
 #ifdef __cplusplus
 };
