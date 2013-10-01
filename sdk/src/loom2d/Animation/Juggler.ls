@@ -168,7 +168,7 @@ package loom2d.animation
             {
                 var value:Object = properties[property];
                 
-                if (_tween.hasOwnProperty(property) != null)
+                if (_tween.hasOwnProperty(property))
                     _tween.getType().setFieldOrPropertyValueByName(_tween, property, value);
                 else if (target.hasOwnProperty(property))
                     _tween.animate(property, value as Number);
