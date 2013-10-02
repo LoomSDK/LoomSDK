@@ -147,7 +147,7 @@ package loom2d.animation
             // If we are tweening a native C++ class, it may get deleted
             // before tweens finish - this check lets us safely abort rather
             // than erroring with a "touched managed native" error.
-            if(mTarget.nativeDeleted())
+            if(mTarget == null || mTarget.nativeDeleted())
                 return;
                 
             if (time == 0 || (mRepeatCount == 1 && mCurrentTime == mTotalTime)) return;
