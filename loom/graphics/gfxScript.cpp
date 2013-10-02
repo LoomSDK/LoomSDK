@@ -262,6 +262,7 @@ static void scaleImageOnDisk(const char *outPath, const char *inPath, int outWid
     rn->inPath    = inPath;
     rn->outWidth  = outWidth;
     rn->outHeight = outHeight;
+    rn->preserveAspect = preserveAspect;
 
     loom_thread_start(scaleImageOnDisk_body, rn);
 }
