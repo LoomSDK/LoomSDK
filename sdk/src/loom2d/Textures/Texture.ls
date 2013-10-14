@@ -106,6 +106,11 @@ package loom2d.textures
             }
             
             textureInfo = null;
+
+            // Remove from the cache.
+            if(this is ConcreteTexture)
+                assetPathCache[(this as ConcreteTexture).assetPath] = null;
+            
         }
 
         public function get nativeID():int
@@ -116,9 +121,14 @@ package loom2d.textures
             return textureInfo.id;
         }
         
+        protected static var assetPathCache = new Dictionary.<String, Texture>();
+
         /** Creates a texture object from a bitmap. */
         public static function fromAsset(path:String):Texture
         {
+            if(assetPathCache[path])
+                return assetPathCache[path];
+
             var textureInfo = Texture2D.initFromAsset(path);
             Debug.assert(textureInfo, "Unable to load texture from asset: " + path);
    
@@ -126,6 +136,7 @@ package loom2d.textures
             var tex:ConcreteTexture = new ConcreteTexture(path, textureInfo.width, textureInfo.height);
             tex.mFrame = new Rectangle(0, 0, textureInfo.width, textureInfo.height);
             tex.setTextureInfo(textureInfo);
+            assetPathCache[path] = tex;
             return tex;
         }
         

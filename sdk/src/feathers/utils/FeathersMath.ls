@@ -18,7 +18,12 @@ package feathers.utils
 			{
 				throw new ArgumentError("minimum should be smaller than maximum.");
 			}
-			return Math.min(maximum, Math.max(minimum, value));
+
+			if(value > maximum)
+				return maximum;
+			if(value < minimum)
+				return minimum;
+			return value;
 		}
 
 		/**

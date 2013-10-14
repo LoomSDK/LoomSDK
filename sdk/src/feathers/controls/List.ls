@@ -658,8 +658,14 @@ package feathers.controls
 		 */
 		override public function dispose():void
 		{
+			if(this._layout)
+			{
+				var l = this._layout;
+				this._layout = null;
+			}
 			this.dataProvider = null;
 			super.dispose();
+			if(l) (l as Object).deleteNative();
 		}
 		
 		/**

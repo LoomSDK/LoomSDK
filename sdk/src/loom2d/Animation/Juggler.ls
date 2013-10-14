@@ -202,6 +202,12 @@ package loom2d.animation
             for (i=0; i<numObjects; ++i)
             {
                 var object:IAnimatable = mObjects[i];
+                if(object && object.nativeDeleted())
+                {
+                    mObjects[i] = null;
+                    continue;
+                }
+
                 if (object)
                 {
                     // shift objects into empty slots along the way

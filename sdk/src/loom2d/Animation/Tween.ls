@@ -157,7 +157,7 @@ package loom2d.animation
             var restTime:Number = mTotalTime - mCurrentTime;
             var carryOverTime:Number = time > restTime ? time - restTime : 0.0;
             
-            mCurrentTime = Math.min(mTotalTime, mCurrentTime + time);
+            mCurrentTime = Math.min2(mTotalTime, mCurrentTime + time);
             
             if (mCurrentTime <= 0) return; // the delay is not over yet
 
@@ -170,7 +170,7 @@ package loom2d.animation
             var ratio:Number = mCurrentTime / mTotalTime;
             var reversed:Boolean = mReverse && (mCurrentCycle % 2 == 1);
             var numProperties:int = mStartValues.length;
-            mProgress = reversed ? mTransitionFunc.call(null, 1.0 - ratio) as Number : mTransitionFunc.call(null, ratio) as Number;
+            mProgress = reversed ? mTransitionFunc(1.0 - ratio) as Number : mTransitionFunc(ratio) as Number;
 
             var t = mTarget.getType();
             for (i=0; i<numProperties; ++i)
@@ -213,7 +213,7 @@ package loom2d.animation
                 }
             }
             
-            if (carryOverTime) 
+            if (carryOverTime)
                 advanceTime(carryOverTime);
         }
         
