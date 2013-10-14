@@ -90,6 +90,11 @@ package loom2d.math
             y += dy;
         }
 
+        public function subtract(other:Point):Point
+        {
+            return this - other;
+        }
+
         /**
          * Adds Point p2 to Point p1 and returns p1.
          */

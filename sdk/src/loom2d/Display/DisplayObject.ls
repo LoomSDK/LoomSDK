@@ -240,7 +240,7 @@ package loom2d.display
         {
             //if (mFilter) mFilter.dispose();
             removeEventListeners();
-            Loom2D.juggler.delayCall( deleteNative, 0.1 );
+            Loom2D.juggler.delayCall( deleteNative, 0.01 );
         }
         
         /** Removes the object from its parent, if it has one. */

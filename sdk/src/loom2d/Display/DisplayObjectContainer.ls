@@ -65,7 +65,7 @@ package loom2d.display
         /**
          * Native implementation for clip rect functionality; this passes the 
          * clip rect to the native rendering code. Render of this container's
-         * children will be clipped to the passed local coordinates.
+         * children will be clipped to the passed screen pixel coordinates.
          */
         protected native function setClipRect(x:int, y:int, width:int, height:int):void;
 
@@ -90,7 +90,8 @@ package loom2d.display
         {
             for (var i:int=mChildren.length-1; i>=0; --i)
                 mChildren[i].dispose();
-            
+            mChildren.length = 0;
+             
             super.dispose();
         }
         

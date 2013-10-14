@@ -411,7 +411,7 @@ package feathers.layout
 		/**
 		 * @private
 		 */
-		protected var _typicalItemWidth:Number = 0;
+		protected var _typicalItemWidth:Number = -1;
 
 		/**
 		 * @inheritDoc
@@ -436,7 +436,7 @@ package feathers.layout
 		/**
 		 * @private
 		 */
-		protected var _typicalItemHeight:Number = 0;
+		protected var _typicalItemHeight:Number = -1;
 
 		/**
 		 * @inheritDoc
@@ -549,8 +549,7 @@ package feathers.layout
 								this.dispatchEventWith(Event.CHANGE);
 							}
 						}
-						///LOOM-1786: This was >= 0 back when _typicalItemHeight defaulted to -1. This change should be OK, but it is untested throroughly...
-						else if(this._typicalItemHeight > 0)
+						else if(this._typicalItemHeight >= 0)
 						{
 							item.height = this._typicalItemHeight;
 						}
@@ -754,8 +753,7 @@ package feathers.layout
 				result = new <int>[];
 			}
 			result.length = 0;
-			const singleItemHeight:int = this._typicalItemHeight + this._gap;
-			const visibleTypicalItemCount:int = Math.ceil(height / singleItemHeight);
+			const visibleTypicalItemCount:int = Math.ceil(height / (this._typicalItemHeight + this._gap));
 			if(!this._hasVariableItemDimensions)
 			{
 				//this case can be optimized because we know that every item has
@@ -766,14 +764,14 @@ package feathers.layout
 				{
 					if(this._verticalAlign == VERTICAL_ALIGN_BOTTOM)
 					{
-						indexOffset = Math.ceil((height - totalItemHeight) / singleItemHeight);
+						indexOffset = Math.ceil((height - totalItemHeight) / (this._typicalItemHeight + this._gap));
 					}
 					else if(this._verticalAlign == VERTICAL_ALIGN_MIDDLE)
 					{
-						indexOffset = Math.ceil(((height - totalItemHeight) / singleItemHeight) / 2);
+						indexOffset = Math.ceil(((height - totalItemHeight) / (this._typicalItemHeight + this._gap)) / 2);
 					}
 				}
-				var minimum:int = -indexOffset + Math.max(0, int((scrollY - this._paddingTop) / singleItemHeight));
+				var minimum:int = -indexOffset + Math.max(0, (scrollY - this._paddingTop) / (this._typicalItemHeight + this._gap));
 				//if we're scrolling beyond the final item, we should keep the
 				//indices consistent so that items aren't destroyed and
 				//recreated unnecessarily
@@ -884,8 +882,7 @@ package feathers.layout
 							this.dispatchEventWith(Event.CHANGE);
 						}
 					}
-					///LOOM-1786: This was >= 0 back when _typicalItemWidth defaulted to -1. This change should be OK, but it is untested throroughly...
-					else if(this._typicalItemHeight > 0)
+					else if(this._typicalItemHeight >= 0)
 					{
 						item.height = this._typicalItemHeight;
 					}
