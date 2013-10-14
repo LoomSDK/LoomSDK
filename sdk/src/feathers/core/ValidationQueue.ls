@@ -46,6 +46,9 @@ package feathers.core
 			const containerControl:DisplayObjectContainer = control as DisplayObjectContainer;
 			for(var i:int = 0; i < queueLength; i++)
 			{
+				if(currentQueue[i].nativeDeleted())
+					continue;
+
 				var item:DisplayObject = DisplayObject(currentQueue[i]);
 				if((control as DisplayObject) == item && currentQueue == this._queue)
 				{

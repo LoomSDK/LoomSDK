@@ -167,6 +167,17 @@ package feathers.controls
 			this.invalidate(INVALIDATION_FLAG_LAYOUT);
 		}
 
+		public override function dispose():void
+		{
+			if(this._layout)
+			{
+				var l = this._layout;
+				this._layout = null;
+			}
+			super.dispose();
+			if(l) (l as Object).deleteNative();
+		}
+
 		/**
 		 * @private
 		 */

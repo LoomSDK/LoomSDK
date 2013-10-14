@@ -36,6 +36,12 @@ package feathers.text
             _cursorDelayedCall.repeatCount = 0;
 		}
 
+		public function dispose():void
+		{
+			imeDelegate.onInsertText -= handleInsert;
+			imeDelegate.onDeleteBackward -= handleDeleteBackward;			
+		}
+
 		protected function handleInsert(inText:String, length:int):void
 		{
 			if(!_isEditable)
