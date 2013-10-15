@@ -550,8 +550,7 @@ package feathers.layout
 								this.dispatchEventWith(Event.CHANGE);
 							}
 						}
-						///LOOM-1786: This was >= 0 back when _typicalItemWidth defaulted to -1. This change should be OK, but it is untested throroughly...
-						else if(this._typicalItemWidth > 0)
+						else if(this._typicalItemWidth >= 0)
 						{
 							item.width = this._typicalItemWidth;
 						}
@@ -755,7 +754,7 @@ package feathers.layout
 				result = new <int>[];
 			}
 			result.length = 0;
-			const singleItemWidth:int = Math.max(1, (this._typicalItemWidth + this._gap));
+            const singleItemWidth:int = Math.max(1, (this._typicalItemWidth + this._gap));
 			const visibleTypicalItemCount:int = Math.ceil(width / singleItemWidth);
 			if(!this._hasVariableItemDimensions)
 			{
@@ -885,8 +884,7 @@ package feathers.layout
 							this.dispatchEventWith(Event.CHANGE);
 						}
 					}
-					///LOOM-1786: This was >= 0 back when _typicalItemWidth defaulted to -1. This change should be OK, but it is untested throroughly...
-					else if(this._typicalItemWidth > 0)
+					else if(this._typicalItemWidth >= 0)
 					{
 						item.width = this._typicalItemWidth;
 					}

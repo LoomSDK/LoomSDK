@@ -658,7 +658,7 @@ package feathers.layout
 			}
 			if(!isNaN(availableWidth))
 			{
-				const singleTileWidth:int = Math.max(1, tileWidth + this._horizontalGap);
+                const singleTileWidth:int = Math.max(1, tileWidth + this._horizontalGap);
 				horizontalTileCount = Math.max(1, int((availableWidth - this._paddingLeft - this._paddingRight + this._horizontalGap) / singleTileWidth));
 			}
 			var verticalTileCount:int = 1;
@@ -668,7 +668,7 @@ package feathers.layout
 			}
 			if(!isNaN(availableHeight))
 			{
-				const singleTileHeight:int = Math.max(1, tileHeight + this._verticalGap);
+                const singleTileHeight:int = Math.max(1, tileHeight + this._verticalGap);
 				verticalTileCount = Math.max(1, int((availableHeight - this._paddingTop - this._paddingBottom + this._verticalGap) / singleTileHeight));
 			}
 
@@ -893,7 +893,7 @@ package feathers.layout
 			}
 			if(!isNaN(availableWidth))
 			{
-				const singleTileWidth:int = Math.max(1, tileWidth + this._horizontalGap);
+                const singleTileWidth:int = Math.max(1, tileWidth + this._horizontalGap);
 				horizontalTileCount = Math.max(1, int((availableWidth - this._paddingLeft - this._paddingRight + this._horizontalGap) / singleTileWidth));
 			}
 			var verticalTileCount:int = 1;
@@ -903,7 +903,7 @@ package feathers.layout
 			}
 			if(!isNaN(availableHeight))
 			{
-				const singleTileHeight:int = Math.max(1, tileHeight + this._verticalGap);
+                const singleTileHeight:int = Math.max(1, tileHeight + this._verticalGap);
 				verticalTileCount = Math.max(1, int((availableHeight - this._paddingTop - this._paddingBottom + this._verticalGap) / singleTileHeight));
 			}
 
@@ -1022,11 +1022,11 @@ package feathers.layout
 					tileHeight = this._useSquareTiles ? Math.max(tileWidth, tileHeight) : Math.max(tileHeight, item.height);
 				}
 			}
-			const singleTileWidth:int = Math.max(1, tileWidth + this._horizontalGap);
+            const singleTileWidth:int = Math.max(1, tileWidth + this._horizontalGap);
 			const horizontalTileCount:int = Math.max(1, int((width - this._paddingLeft - this._paddingRight + this._horizontalGap) / singleTileWidth));
 			if(this._paging != PAGING_NONE)
 			{
-				const singleTileHeight:int = Math.max(1, tileHeight + this._verticalGap);
+                const singleTileHeight:int = Math.max(1, tileHeight + this._verticalGap);
 				const verticalTileCount:int = Math.max(1, int((height - this._paddingTop - this._paddingBottom + this._verticalGap) / singleTileHeight));
 				const perPage:Number = horizontalTileCount * verticalTileCount;
 				const pageIndex:int = int(index / perPage);
@@ -1130,8 +1130,8 @@ package feathers.layout
 		{
 			const tileWidth:Number = this._useSquareTiles ? Math.max(0, this._typicalItemWidth, this._typicalItemHeight) : this._typicalItemWidth;
 			const tileHeight:Number = this._useSquareTiles ? tileWidth : this._typicalItemHeight;
-			const singleTileWidth:int = Math.max(1, tileWidth + this._horizontalGap);
-			const singleTileHeight:int = Math.max(1, tileHeight + this._verticalGap);
+            const singleTileWidth:int = Math.max(1, tileWidth + this._horizontalGap);
+            const singleTileHeight:int = Math.max(1, tileHeight + this._verticalGap);
 			const horizontalTileCount:int = Math.max(1, int((width - this._paddingLeft - this._paddingRight + this._horizontalGap) / singleTileWidth));
 			const verticalTileCount:int = Math.max(1, int((height - this._paddingTop - this._paddingBottom + this._verticalGap) / singleTileHeight));
 			const perPage:int = horizontalTileCount * verticalTileCount;
@@ -1227,8 +1227,8 @@ package feathers.layout
 		{
 			const tileWidth:Number = this._useSquareTiles ? Math.max(0, this._typicalItemWidth, this._typicalItemHeight) : this._typicalItemWidth;
 			const tileHeight:Number = this._useSquareTiles ? tileWidth : this._typicalItemHeight;
-			const singleTileWidth:int = Math.max(1, tileWidth + this._horizontalGap);
-			const singleTileHeight:int = Math.max(1, tileHeight + this._verticalGap);
+            const singleTileWidth:int = Math.max(1, tileWidth + this._horizontalGap);
+            const singleTileHeight:int = Math.max(1, tileHeight + this._verticalGap);
 			const horizontalTileCount:int = Math.max(1, int((width - this._paddingLeft - this._paddingRight + this._horizontalGap) / singleTileWidth));
 			const verticalTileCount:int = Math.max(1, int((height - this._paddingTop - this._paddingBottom + this._verticalGap) / singleTileHeight));
 			const perPage:int = horizontalTileCount * verticalTileCount;
@@ -1292,8 +1292,8 @@ package feathers.layout
 		{
 			const tileWidth:Number = this._useSquareTiles ? Math.max(0, this._typicalItemWidth, this._typicalItemHeight) : this._typicalItemWidth;
 			const tileHeight:Number = this._useSquareTiles ? tileWidth : this._typicalItemHeight;
-			const singleTileWidth:int = Math.max(1, tileWidth + this._horizontalGap);
-			const singleTileHeight:int = Math.max(1, tileHeight + this._verticalGap);
+            const singleTileWidth:int = Math.max(1, tileWidth + this._horizontalGap);
+            const singleTileHeight:int = Math.max(1, tileHeight + this._verticalGap);
 			const horizontalTileCount:int = Math.max(1, int((width - this._paddingLeft - this._paddingRight + this._horizontalGap) / singleTileWidth));
 			const verticalTileCount:int = Math.ceil((height - this._paddingTop + this._verticalGap) / singleTileHeight) + 1;
 			const minimumItemCount:int = Math.min(itemCount, verticalTileCount * horizontalTileCount);
