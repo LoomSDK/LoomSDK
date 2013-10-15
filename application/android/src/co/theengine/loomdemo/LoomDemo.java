@@ -53,8 +53,11 @@ public class LoomDemo extends Cocos2dxActivity {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) 
 	{
-		// Process camera results.
-		LoomCamera.onActivityResult(this, requestCode, resultCode, data);
+        // Process camera results.
+        LoomCamera.onActivityResult(this, requestCode, resultCode, data);
+
+        // Process video results.
+        LoomVideo.onActivityResult(this, requestCode, resultCode, data);
 
 	    // Check which request we're responding to
 	    if (requestCode == LoomStore.INTENT_CODE) 
@@ -86,10 +89,14 @@ public class LoomDemo extends Cocos2dxActivity {
 	public static void handleGenericEvent(String type, String payload)
 	{
 		Log.d("Loom", "Saw generic event " + type + " " + payload);
-		if(type.equals("cameraRequest"))
-		{
-			LoomCamera.triggerCameraIntent(instance);
-		}
+        if(type.equals("cameraRequest"))
+        {
+            LoomCamera.triggerCameraIntent(instance);
+        }
+        else if(type.equals("videoRequest"))
+        {
+            LoomVideo.triggerVideoIntent(instance, payload);
+        }
 		else if(type.equals("showStatusBar"))
 		{
 			instance.runOnUiThread(new Runnable() {
