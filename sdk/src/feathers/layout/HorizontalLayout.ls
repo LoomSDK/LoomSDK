@@ -414,7 +414,7 @@ package feathers.layout
 		/**
 		 * @private
 		 */
-		protected var _typicalItemWidth:Number = -1;
+		protected var _typicalItemWidth:Number = 0;
 
 		/**
 		 * @inheritDoc
@@ -439,7 +439,7 @@ package feathers.layout
 		/**
 		 * @private
 		 */
-		protected var _typicalItemHeight:Number = -1;
+		protected var _typicalItemHeight:Number = 0;
 
 		/**
 		 * @inheritDoc
@@ -754,7 +754,8 @@ package feathers.layout
 				result = new <int>[];
 			}
 			result.length = 0;
-			const visibleTypicalItemCount:int = Math.ceil(width / (this._typicalItemWidth + this._gap));
+            const singleItemWidth:int = Math.max(1, (this._typicalItemWidth + this._gap));
+			const visibleTypicalItemCount:int = Math.ceil(width / singleItemWidth);
 			if(!this._hasVariableItemDimensions)
 			{
 				//this case can be optimized because we know that every item has
@@ -765,14 +766,14 @@ package feathers.layout
 				{
 					if(this._horizontalAlign == HORIZONTAL_ALIGN_RIGHT)
 					{
-						indexOffset = Math.ceil((width - totalItemWidth) / (this._typicalItemWidth + this._gap));
+						indexOffset = Math.ceil((width - totalItemWidth) / singleItemWidth);
 					}
 					else if(this._horizontalAlign == HORIZONTAL_ALIGN_CENTER)
 					{
-						indexOffset = Math.ceil(((width - totalItemWidth) / (this._typicalItemWidth + this._gap)) / 2);
+						indexOffset = Math.ceil(((width - totalItemWidth) / singleItemWidth) / 2);
 					}
 				}
-				var minimum:int = -indexOffset + Math.max(0, (scrollX - this._paddingLeft) / (this._typicalItemWidth + this._gap));
+				var minimum:int = -indexOffset + Math.max(0, int((scrollX - this._paddingLeft) / singleItemWidth));
 				//if we're scrolling beyond the final item, we should keep the
 				//indices consistent so that items aren't destroyed and
 				//recreated unnecessarily
