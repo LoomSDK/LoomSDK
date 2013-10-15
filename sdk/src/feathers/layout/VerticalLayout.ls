@@ -549,7 +549,8 @@ package feathers.layout
 								this.dispatchEventWith(Event.CHANGE);
 							}
 						}
-						else if(this._typicalItemHeight >= 0)
+						///LOOM-1786: This was >= 0 back when _typicalItemHeight defaulted to -1. This change should be OK, but it is untested throroughly...
+						else if(this._typicalItemHeight > 0)
 						{
 							item.height = this._typicalItemHeight;
 						}
@@ -753,7 +754,7 @@ package feathers.layout
 				result = new <int>[];
 			}
 			result.length = 0;
-            const singleItemHeight:int = this._typicalItemHeight + this._gap;
+			const singleItemHeight:int = this._typicalItemHeight + this._gap;
 			const visibleTypicalItemCount:int = Math.ceil(height / singleItemHeight);
 			if(!this._hasVariableItemDimensions)
 			{
@@ -883,7 +884,8 @@ package feathers.layout
 							this.dispatchEventWith(Event.CHANGE);
 						}
 					}
-					else if(this._typicalItemHeight >= 0)
+					///LOOM-1786: This was >= 0 back when _typicalItemWidth defaulted to -1. This change should be OK, but it is untested throroughly...
+					else if(this._typicalItemHeight > 0)
 					{
 						item.height = this._typicalItemHeight;
 					}
