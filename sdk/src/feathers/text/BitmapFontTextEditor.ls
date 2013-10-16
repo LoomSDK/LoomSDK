@@ -1,5 +1,7 @@
 package feathers.text
 {
+    import loom.Application;
+    import loom.ApplicationEvents;	
 	import loom.platform.IMEDelegate;
 	import loom.platform.LoomKeyboardType;
 	import loom2d.Loom2D;
@@ -34,12 +36,26 @@ package feathers.text
             _caretQuad.addEventListener( Event.REMOVED_FROM_STAGE, onCursorRemovedFromStage );
             _cursorDelayedCall = new DelayedCall( toggleCursorVisibility, 0.7 );
             _cursorDelayedCall.repeatCount = 0;
+
+            // Listen in on application events as we're interested in keyboard size changes
+            // to clear focus if user closes the OS keyboard (this works on iOS and Android)
+            Application.event += onAppEvent;
 		}
 
 		public function dispose():void
 		{
 			imeDelegate.onInsertText -= handleInsert;
-			imeDelegate.onDeleteBackward -= handleDeleteBackward;			
+			imeDelegate.onDeleteBackward -= handleDeleteBackward;		
+			Application.event -= onAppEvent;	
+		}
+
+		protected function onAppEvent(type:String, payload:String)		
+		{
+			// if we're resizing keyboard to 0 (hiding it), clear focus
+			if (type == ApplicationEvents.KEYBOARD_HIDE && _hasIMEFocus)
+			{				
+				clearFocus();
+			}			
 		}
 
 		protected function handleInsert(inText:String, length:int):void

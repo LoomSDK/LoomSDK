@@ -56,6 +56,18 @@ package loom
          * visible and 1024px when the keyboard goes away.)
          */
         public static var KEYBOARD_RESIZE:String = "keyboardResize";
+
+        /**
+         * Fired when the soft keyboard (IME) becomes visible.
+         */
+        public static var KEYBOARD_SHOW:String = "keyboardShow";
+
+        /**
+         * Fired when the soft keyboard (IME) is hidden by the user or the system
+         */
+        public static var KEYBOARD_HIDE:String = "keyboardHide";
+
+
     }
 
 }
