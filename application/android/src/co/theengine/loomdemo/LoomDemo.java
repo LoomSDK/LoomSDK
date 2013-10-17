@@ -56,9 +56,6 @@ public class LoomDemo extends Cocos2dxActivity {
         // Process camera results.
         LoomCamera.onActivityResult(this, requestCode, resultCode, data);
 
-        // Process video results.
-        LoomVideo.onActivityResult(this, requestCode, resultCode, data);
-
 	    // Check which request we're responding to
 	    if (requestCode == LoomStore.INTENT_CODE) 
 	    {
@@ -69,6 +66,7 @@ public class LoomDemo extends Cocos2dxActivity {
 	    	super.onActivityResult(requestCode, resultCode, data);
 	    }
 	}
+
 
 	public static void triggerGenericEvent(String type, String payload)
 	{
@@ -92,10 +90,6 @@ public class LoomDemo extends Cocos2dxActivity {
         if(type.equals("cameraRequest"))
         {
             LoomCamera.triggerCameraIntent(instance);
-        }
-        else if(type.equals("videoRequest"))
-        {
-            LoomVideo.triggerVideoIntent(instance, payload);
         }
 		else if(type.equals("showStatusBar"))
 		{
@@ -136,14 +130,14 @@ public class LoomDemo extends Cocos2dxActivity {
 
 		// FrameLayout
 		ViewGroup.LayoutParams framelayout_params = new ViewGroup.LayoutParams(
-				ViewGroup.LayoutParams.FILL_PARENT,
-				ViewGroup.LayoutParams.FILL_PARENT);
+				ViewGroup.LayoutParams.MATCH_PARENT,
+				ViewGroup.LayoutParams.MATCH_PARENT);
 		FrameLayout framelayout = new FrameLayout(this);
 		framelayout.setLayoutParams(framelayout_params);
 
 		// Cocos2dxEditText layout
 		ViewGroup.LayoutParams edittext_layout_params = new ViewGroup.LayoutParams(
-				ViewGroup.LayoutParams.FILL_PARENT,
+				ViewGroup.LayoutParams.MATCH_PARENT,
 				ViewGroup.LayoutParams.WRAP_CONTENT);
 		Cocos2dxEditText edittext = new Cocos2dxEditText(this);
 		edittext.setLayoutParams(edittext_layout_params);
@@ -174,6 +168,9 @@ public class LoomDemo extends Cocos2dxActivity {
 
 		// Hook up the store.
 		LoomStore.bind(this);
+
+        ///Create Video View for our layout
+        LoomVideo.init(webViewGroup);
 
         // Listen for IME-initiated resizes.
         // Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android

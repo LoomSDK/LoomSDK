@@ -50,21 +50,6 @@ package loom
         public static var CAMERA_FAIL:String = "cameraFail";
 
         /**
-         * Fire to show native Video UI. Payload is the path/filename of the video.
-         */
-        public static var VIDEO_REQUEST:String = "videoRequest";
-
-        /**
-         * Fired when native Video UI finished; No payload.
-         */
-        public static var VIDEO_SUCCESS:String = "videoSuccess";
-
-        /**
-         * Fired when native Video UI has failed; payload is an error message.
-         */
-        public static var VIDEO_FAIL:String = "videoFail";
-
-        /**
          * Fired when the soft keyboard (IME) becomes visible. Payload is the new 
          * visible height of the screen. (ie, if the screen is 1024px high and the
          * keyboard takes up 200px, you are passed 824px when the keyboard becomes
