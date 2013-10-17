@@ -42,7 +42,6 @@ void Java_co_theengine_loomdemo_LoomVideo_nativeCallback(JNIEnv *env, jobject th
     lmLogError(gAndroidVideoLogGroup, "LoomVideo Android Callback fired! %d", callbackType);
 
     const char *dataString = env->GetStringUTFChars(data, 0);
-
     if (gEventCallback)
     {
         const char *typeString = NULL;
@@ -54,7 +53,7 @@ void Java_co_theengine_loomdemo_LoomVideo_nativeCallback(JNIEnv *env, jobject th
 
             case 1:
                 lmLogError(gAndroidVideoLogGroup, "Video playback complete");
-                gEventCallback("complete", NULL);
+                gEventCallback("complete", dataString);
                 break;
 
             default:
@@ -66,7 +65,6 @@ void Java_co_theengine_loomdemo_LoomVideo_nativeCallback(JNIEnv *env, jobject th
     {
         lmLogError(gAndroidVideoLogGroup, "Got Android Video event of type %d but don't know how to handle it, ignoring...", callbackType);
     }
-
     env->ReleaseStringUTFChars(data, dataString);
 }
 }
@@ -92,12 +90,12 @@ void platform_videoInitialize(VideoEventCallback eventCallback)
     // Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gPlayVideoFullscreen,
                                  "co/theengine/loomdemo/LoomVideo",
-                                 "playVideo",
-                                 "(Ljava/lang/String;Ljava/lang/int;Ljava/lang/int;Ljava/lang/int;)V");
+                                 "playFullscreen",
+                                 "(Ljava/lang/String;III)V");
 }
 
 
-void platform_videoPlay(const char *video, int scaleMode, int controlMode, int bgColor)
+void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlMode, unsigned int bgColor)
 {
     ///call java method to play the video
     jstring jVideo    = gPlayVideoFullscreen.env->NewStringUTF(video);

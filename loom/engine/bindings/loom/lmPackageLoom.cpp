@@ -27,6 +27,7 @@ void installLoomWebView();
 void installLoomAdMobAd();
 void installLoomHTTPRequest();
 void installLoomNativeStore();
+void installLoomVideo();
 void installLoomGraphics();
 void installLoom2D();
 
@@ -40,6 +41,7 @@ void installPackageLoom()
     installPackageLoomPhysics();
     installLoomPropertyManager();
     installLoomNativeStore();
+    installLoomVideo();
 
     // Should be its own package for maximum correctness.
     installPackageCocos2DX();

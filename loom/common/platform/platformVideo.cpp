@@ -33,7 +33,7 @@ void platform_videoInitialize(VideoEventCallback eventCallback)
 { 
 }
 
-void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlMode, int bgColor)
+void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlMode, unsigned int bgColor)
 {
 }
 

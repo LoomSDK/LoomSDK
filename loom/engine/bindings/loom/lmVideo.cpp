@@ -25,7 +25,7 @@
 
 using namespace LS;
 
-lmDefineLogGroup(gNativeVideoLogGroup, "Loom.NativeVideo", 1, 0);
+lmDefineLogGroup(gVideoLogGroup, "Loom.Video", 1, 0);
 
 /// Script bindings to the native Video API.
 ///
@@ -37,10 +37,8 @@ private:
     /// Event handler; this is called by the C video API when the Video registers an event
     static void eventCallback(const char *type, const char *payload)
     {
-        json_error_t jerr;
-
         // Convert to delegate calls.
-        lmLogDebug(gNativeVideoLogGroup, "Event type='%s' payload='%s'", type, payload);
+        lmLogDebug(gVideoLogGroup, "Event type='%s' payload='%s'", type, payload);
 
         if (!strcmp(type, "complete"))
         {
@@ -56,7 +54,7 @@ private:
         }
         else
         {
-            lmLogWarn(gNativeVideoLogGroup, "Encountered an unknown event type '%s'", type);
+            lmLogWarn(gVideoLogGroup, "Encountered an unknown event type '%s'", type);
         }
     }
 
@@ -66,7 +64,7 @@ public:
     LOOM_STATICDELEGATE(OnVideoFail);
 
 
-    static bool initialize()
+    static void initialize()
     {
         platform_videoInitialize(eventCallback);
     }
@@ -74,9 +72,9 @@ public:
     {
         return (platform_videoSupported() != 0) ? true : false;
     }
-    static void playFullscreen(const char *video, int scaleMode, int controlMode, int bgColor)
+    static void playFullscreen(const char *video, int scaleMode, int controlMode, unsigned int bgColor)
     {
-        return platform_videoPlayFullscreen(video, scaleMode, controlMode, bgColor);
+        platform_videoPlayFullscreen(video, scaleMode, controlMode, bgColor);
     }
 };
 
@@ -88,15 +86,15 @@ NativeDelegate Video::_OnVideoFailDelegate;
 
 static int registerLoomVideo(lua_State *L)
 {
-    beginPackage(L, "loom.video")
+    beginPackage(L, "loom.platform")
 
        .beginClass<Video>("Video")
 
+       .addStaticMethod("playFullscreen", &Video::playFullscreen)
+       
        .addStaticProperty("supported", &Video::supported)
-       .addStaticProperty("playFullscreen", &Video::playFullscreen)
-
-       .addStaticProperty("onVideoComplete", &Video::getOnVideoCompleteDelegate)
-       .addStaticProperty("onVideoFail", &Video::getOnVideoFailDelegate)
+       .addStaticProperty("onComplete", &Video::getOnVideoCompleteDelegate)
+       .addStaticProperty("onFail", &Video::getOnVideoFailDelegate)
        .endClass()
 
        .endPackage();
@@ -108,5 +106,5 @@ static int registerLoomVideo(lua_State *L)
 void installLoomVideo()
 {
     LOOM_DECLARE_NATIVETYPE(Video, registerLoomVideo);
-    Video.initialize();
+    Video::initialize();
 }

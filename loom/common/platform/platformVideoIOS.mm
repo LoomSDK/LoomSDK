@@ -44,7 +44,7 @@ void platform_videoInitialize(VideoEventCallback eventCallback)
     ////TODO: video playback support on iOS
 }
 
-void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlMode, int bgColor)
+void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlMode, unsigned int bgColor)
 {
     ////TODO: video playback support on iOS
     lmLogError(gAppleVideoLogGroup, "Fullscreen Video Playback not currently implemented on iOS!!");
