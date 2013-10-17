@@ -71,6 +71,6 @@ int platform_videoSupported();
 void platform_videoInitialize(VideoEventCallback eventCallback);
 
 ///Plays the specified video file fullscreen
-void platform_videoPlayFulscreen(const char *video, int scaleMode, int controlMode, int bgColor);
+void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlMode, unsigned int bgColor);
 
 #endif

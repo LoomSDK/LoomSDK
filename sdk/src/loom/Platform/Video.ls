@@ -27,13 +27,44 @@ package loom.platform
      * (if present) and provides a streamlined interface to play videos.
      *
      */
+
+
+    ///Types of the control widget to display over the video
+    public enum VideoControlMode
+    {
+        ///show the full system video control widget
+        Show,
+
+        ///don't show any video control widget
+        Hide,
+
+        ///don't show any video control widget AND stop the video playblack on user touch
+        StopOnTouch
+    };
+
+
+    ///Method of scaling the video to the screen
+    public enum VideoScaleMode
+    {
+        ///don't scale at all and keep the video the same resolution as its source
+        None,
+
+        ///scale the video up to fill the entire screen, ignoring its aspect ratio
+        Fill,
+
+        ///scale the video until either its width or height touches the edges of the screen, thereby preserving the aspect ratio
+        FitAspect,
+    };
+
+
+    ///Video playback class
     public class Video 
     {
 ///TODO: document        
-        public static native function supported():Boolean;
-        public static native function playFullscreen(video:String, scaleMode:int, controlMode:int, bgColor:int):void;
+        public static native function playFullscreen(video:String, scaleMode:VideoScaleMode, controlMode:VideoControlMode, bgColor:uint):void;
 
-        public static native var onVideoComplete:NativeDelegate;
-        public static native var onVideoFail:NativeDelegate;
+        public static native var supported:Boolean;
+        public static native var onComplete:NativeDelegate;
+        public static native var onFail:NativeDelegate;
     }
 }

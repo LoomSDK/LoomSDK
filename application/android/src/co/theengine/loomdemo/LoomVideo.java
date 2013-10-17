@@ -11,6 +11,8 @@ import android.widget.RelativeLayout;
 import android.widget.VideoView;
 import android.widget.MediaController;
 import android.view.ViewGroup;
+import android.view.MotionEvent;
+import android.view.View.OnTouchListener;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -26,23 +28,24 @@ import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 public class LoomVideo
 {
     ///constants
-    public static final int           Controls_Show = 0;
-    public static final int           Controls_Hide = 1;
-    public static final int           Controls_StopOnTouch = 2;
     public static final int           Scale_None = 0;
     public static final int           Scale_Fill = 1;
     public static final int           Scale_FitAspect = 2;
+    public static final int           Controls_Show = 0;
+    public static final int           Controls_Hide = 1;
+    public static final int           Controls_StopOnTouch = 2;
 
 
     ///private vars
     private static ViewGroup    _rootView = null;
     private static VideoView    _videoView = null;
     private static Activity     _context = null;
+    private static int          _controlMode = Controls_Show;
 
 
 
     ///class to implement the listerer interfaces to act upon video states
-    public static class VideoListeners implements OnCompletionListener, OnErrorListener
+    public static class VideoListeners implements OnCompletionListener, OnErrorListener, OnTouchListener
     {
         @Override
         public void onCompletion(MediaPlayer mp) 
@@ -54,7 +57,7 @@ public class LoomVideo
             _rootView.setBackgroundColor(Color.TRANSPARENT);
 
             ///fire native callback noting completion
-            deferNativeCallback(1, "complete");
+            deferNativeCallback(1, "success");
         }    
 
         @Override
@@ -85,12 +88,28 @@ public class LoomVideo
                     break;
             }
         
-            ///TODO: fire failed delegate
+            ///fire failed delegate
             deferNativeCallback(0, message);
-
-///TODO: does true/false matter?
             return true;
-        }  
+        }
+
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event)
+        {
+            ///stop playback on touch if video flags indiated that
+            if(_controlMode == Controls_StopOnTouch)
+            {
+                Log.d("Loom", "Video Skipped!");
+
+                _videoView.stopPlayback();
+                onCompletion(null);
+                return true;
+            }
+
+            ///swallow the event if controls are hidden
+            return (_controlMode == Controls_Hide) ? true : false;
+        }
     }
 
 
@@ -113,18 +132,41 @@ public class LoomVideo
         VideoListeners videoListeners = new VideoListeners();
         _videoView.setOnCompletionListener(videoListeners);
         _videoView.setOnErrorListener(videoListeners);
-///TODO: OnTouch?        
+        _videoView.setOnTouchListener(videoListeners);
+    }
+
+
+    ///start playing a video... wrapper for the main function that does this as we need to do that on the UI Thread
+    public static void playFullscreen(String file, int scaleMode, int controlMode, int bgColor)
+    {
+        final String f = file;
+        final int sm = scaleMode;
+        final int cm = controlMode;
+        final int bgc = bgColor;
+
+        ///run this code on the UI Thread
+        _context.runOnUiThread(new Runnable() 
+        {
+            @Override
+            public void run() 
+            {
+                LoomVideo.playFSInternal(f, sm, cm, bgc);
+            }
+        });
     }
 
 
 
-    ///start playing a video
-    public static void playFullscreen(String file, int scaleMode, int controlMode, int bgColor)
+
+    ///internal function for playing a video
+    private static void playFSInternal(String file, int scaleMode, int controlMode, int bgColor)
     {
-///TODO: figure out none / fit aspect
+        Log.d("Loom", "Video Play Fullscreen: " + file + " " + scaleMode + " " + controlMode + " " + bgColor);
+
+///TODO: Scale_None
         ///set layout of the video view based on the layout flags
-        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 
-                                                                                    RelativeLayout.LayoutParams.MATCH_PARENT);
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, 
+                                                                                    RelativeLayout.LayoutParams.WRAP_CONTENT);
 
         switch(scaleMode)
         {
@@ -141,14 +183,15 @@ public class LoomVideo
                 layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT);
                 break;
         }
-        _videoView.setLayoutParams(layoutParams);
+        // _videoView.setLayoutParams(layoutParams);
 
         ///add video view to the parent view with the desired layout
         _rootView.addView(_videoView, layoutParams);
         _videoView.requestFocus();
 
         ///if specified, create media controller and link it with the video view
-        switch(controlMode)
+        _controlMode = controlMode;
+        switch(_controlMode)
         {
             case Controls_Show:
                 MediaController mediaController = new MediaController(_context);
@@ -157,12 +200,10 @@ public class LoomVideo
                 _videoView.setMediaController(mediaController);
                 break;
             case Controls_Hide:
-///TODO: Can set to null?            
                 _videoView.setMediaController(null);
                 break;
             case Controls_StopOnTouch:
                 _videoView.setMediaController(null);
-///TODO: Set up touch listener                
                 break;
         }
 
@@ -190,9 +231,11 @@ public class LoomVideo
         final int fType = type;
         final String fData = data;
 
-        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
+        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+        {
             @Override
-            public void run() {
+            public void run() 
+            {
                 nativeCallback(fType, fData);
             }
         });
