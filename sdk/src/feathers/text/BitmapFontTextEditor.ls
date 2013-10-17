@@ -53,17 +53,9 @@ package feathers.text
 
 		protected function onAppEvent(type:String, payload:String)		
 		{
-			if (type == ApplicationEvents.KEYBOARD_HIDE && _hasIMEFocus)
-			{				
-				clearFocus();
-			}			
-
-			if (type == ApplicationEvents.KEYBOARD_RESIZE && _hasIMEFocus)
+			if (type == ApplicationEvents.KEYBOARD_RESIZE)
 			{			
-				var stage = _caretQuad.root ? _caretQuad.root.parent as Stage : null;
-
-				if (!stage)
-					return;
+				var stage = Loom2D.stage;
 
 				var resize = int(payload);
 
@@ -71,7 +63,7 @@ package feathers.text
 				{
 					stage.y = 0;
 				}
-				else
+				else if (_hasIMEFocus)
 				{	
 					var scale = stage.nativeStageHeight / stage.stageHeight;					
 					resize = (-resize) * scale;
