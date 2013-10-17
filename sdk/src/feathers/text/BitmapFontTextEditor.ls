@@ -6,6 +6,8 @@ package feathers.text
 	import loom.platform.LoomKeyboardType;
 	import loom2d.Loom2D;
 	import loom2d.display.Quad;
+	import loom2d.display.DisplayObject;
+	import loom2d.display.Stage;
 	import loom2d.math.Point;
 	import loom2d.math.Rectangle;
 	import loom2d.events.Event;
@@ -51,11 +53,38 @@ package feathers.text
 
 		protected function onAppEvent(type:String, payload:String)		
 		{
-			// if we're resizing keyboard to 0 (hiding it), clear focus
 			if (type == ApplicationEvents.KEYBOARD_HIDE && _hasIMEFocus)
 			{				
 				clearFocus();
 			}			
+
+			if (type == ApplicationEvents.KEYBOARD_RESIZE && _hasIMEFocus)
+			{			
+				var stage = _caretQuad.root ? _caretQuad.root.parent as Stage : null;
+
+				if (!stage)
+					return;
+
+				var resize = int(payload);
+
+				if (resize == 0)
+				{
+					stage.y = 0;
+				}
+				else
+				{	
+					var scale = stage.nativeStageHeight / stage.stageHeight;					
+					resize = (-resize) * scale;
+
+					var bounds = getBounds(stage);
+
+					stage.y = resize + (stage.height - bounds.bottom);
+					stage.y -= height; 
+
+				}
+				 
+			}			
+
 		}
 
 		protected function handleInsert(inText:String, length:int):void

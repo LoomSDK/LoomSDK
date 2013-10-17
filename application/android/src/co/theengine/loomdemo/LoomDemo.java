@@ -189,10 +189,10 @@ public class LoomDemo extends Cocos2dxActivity {
                 final float scale = activityRootView.getContext().getResources().getDisplayMetrics().density;
                 final float scaledThreshold = (int) (100 * scale + 0.5f);
 
-                if (heightDiff > 100  && keyboardHidden)
+                if (heightDiff > scaledThreshold  && keyboardHidden)
                 {
                 	keyboardHidden = false;
-                	triggerGenericEvent("keyboardResize", "" + r.bottom);
+                	triggerGenericEvent("keyboardResize", "" + heightDiff);
                 	triggerGenericEvent("keyboardShow", "");
 
                 	logError("keyboardResize: " + r.bottom);
