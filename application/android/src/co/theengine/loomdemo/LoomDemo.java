@@ -41,7 +41,6 @@ import android.view.WindowManager;
 import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.content.Intent;
-import android.graphics.Rect;
 
 import co.theengine.loomdemo.billing.LoomStore;
 
@@ -68,9 +67,10 @@ public class LoomDemo extends Cocos2dxActivity {
         }
     }
 
+
     public static void triggerGenericEvent(String type, String payload)
     {
-        // Submit callback on proper thread.
+    // Submit callback on proper thread.
         final String fType = type;
         final String fPayload = payload;
 
@@ -94,7 +94,7 @@ public class LoomDemo extends Cocos2dxActivity {
         else if(type.equals("showStatusBar"))
         {
             instance.runOnUiThread(new Runnable() {
-                 public void run() {
+                public void run() {
                     instance.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
                     instance.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
                 }
@@ -103,7 +103,7 @@ public class LoomDemo extends Cocos2dxActivity {
         else if(type.equals("hideStatusBar"))
         {
             instance.runOnUiThread(new Runnable() {
-                 public void run() {
+                public void run() {
                     instance.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
                     instance.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
                 }
@@ -111,20 +111,18 @@ public class LoomDemo extends Cocos2dxActivity {
         }
     }
 
-    private boolean keyboardHidden = true;
-
     protected void onCreate(Bundle savedInstanceState) 
     {
         instance = this;
 
         super.onCreate(savedInstanceState);
-        
+
         if (!detectOpenGLES20())
         {
             Log.d("Loom", "Could not initialize OpenGL ES 2.0 - terminating!");
             finish();
             return;
-        }
+            }
 
         // get the packageName, it's used to set the resource path
         String packageName = getApplication().getPackageName();
@@ -132,18 +130,18 @@ public class LoomDemo extends Cocos2dxActivity {
 
         // FrameLayout
         ViewGroup.LayoutParams framelayout_params = new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.FILL_PARENT,
-                ViewGroup.LayoutParams.FILL_PARENT);
+                                                            ViewGroup.LayoutParams.MATCH_PARENT,
+                                                            ViewGroup.LayoutParams.MATCH_PARENT);
         FrameLayout framelayout = new FrameLayout(this);
         framelayout.setLayoutParams(framelayout_params);
 
         // Cocos2dxEditText layout
         ViewGroup.LayoutParams edittext_layout_params = new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.FILL_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
+                                                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                                                ViewGroup.LayoutParams.WRAP_CONTENT);
         Cocos2dxEditText edittext = new Cocos2dxEditText(this);
-        edittext.setLayoutParams(edittext_layout_params);        
-        
+        edittext.setLayoutParams(edittext_layout_params);
+
         ViewGroup webViewGroup = new RelativeLayout(this);
 
         // ...add to FrameLayout
@@ -154,7 +152,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
         // ...add to FrameLayout
         framelayout.addView(mGLView);
-        
+
         framelayout.addView(webViewGroup);
 
         mGLView.setEGLContextClientVersion(2);
@@ -163,7 +161,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
         // Set framelayout as the content view
         setContentView(framelayout);
-        
+
         // give the webview class our layout
         LoomWebView.setRootLayout(webViewGroup);
         LoomAdMob.setRootLayout(webViewGroup);
@@ -171,49 +169,34 @@ public class LoomDemo extends Cocos2dxActivity {
         // Hook up the store.
         LoomStore.bind(this);
 
+        ///Create Video View for our layout
+        LoomVideo.init(webViewGroup);
+
         // Listen for IME-initiated resizes.
         // Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
         final View activityRootView = framelayout;
         Log.d("Loom", "Registering for global layout listener!");
+        logError("keyboardResize BUTTS");
         activityRootView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() 
         {
             @Override
             public void onGlobalLayout() 
             {
-
-                final Rect r = new Rect();
-                activityRootView.getWindowVisibleDisplayFrame(r);
-                final int heightDiff = activityRootView.getRootView().getHeight() - (r.bottom - r.top);
+                logError("keyboardResize " + activityRootView.getHeight());
+                Log.d("Loom", "keyboardResize " + activityRootView.getHeight());
 
                 // Convert the dps to pixels
                 final float scale = activityRootView.getContext().getResources().getDisplayMetrics().density;
                 final float scaledThreshold = (int) (100 * scale + 0.5f);
-
+                int heightDiff = activityRootView.getRootView().getHeight() - activityRootView.getHeight();
                 if (heightDiff > scaledThreshold)
                 {
-                    // ignore if not hidden as this is probably an autocomplete bar coming up
-                    if (keyboardHidden)
-                    {
-                        keyboardHidden = false;
-                        triggerGenericEvent("keyboardResize", "" + heightDiff);
-                    }
-
+                    // if more than 100 points, its probably a keyboard...
+                    logError("keyboardResize " + activityRootView.getHeight());
+                    triggerGenericEvent("keyboardResize", "" + activityRootView.getHeight());
                 }
-                else
-                {
-                    if (keyboardHidden)
-                        return;
-
-                    keyboardHidden = true;
-                    // this matches iOS behavior
-                    triggerGenericEvent("keyboardResize", "0");                 
-
-                }
-
-
              }
         }); 
-
     }
 
     @Override
