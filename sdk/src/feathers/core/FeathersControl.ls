@@ -208,6 +208,19 @@ package feathers.core
 			this.addEventListener(Event.FLATTEN, feathersControl_flattenHandler);
 		}
 
+		public override function dispose():void
+		{
+			if(this.layoutData)
+			{
+				var ld = this.layoutData;
+				this.layoutData = null;
+			}
+
+			super.dispose();
+
+			if(ld) (ld as Object).deleteNative();
+		}
+
 		/**
 		 * @private
 		 */

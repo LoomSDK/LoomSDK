@@ -68,6 +68,9 @@ package loom2d.animation
                 else
                 {
                     dispatchEventWith(Event.REMOVE_FROM_JUGGLER);
+
+                    // We inherit from ED so must clean up explicitly.
+                    deleteNative();
                 }
             }
         }

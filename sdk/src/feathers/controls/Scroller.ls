@@ -1779,11 +1779,13 @@ package feathers.controls
 			if(this._horizontalAutoScrollTween)
 			{
 				Loom2D.juggler.remove(this._horizontalAutoScrollTween);
+				Tween.toPool(this._horizontalAutoScrollTween);
 				this._horizontalAutoScrollTween = null;
 			}
 			if(this._verticalAutoScrollTween)
 			{
 				Loom2D.juggler.remove(this._verticalAutoScrollTween);
+				Tween.toPool(this._verticalAutoScrollTween);
 				this._verticalAutoScrollTween = null;
 			}
 			this._isScrollingStopped = true;
@@ -2093,6 +2095,7 @@ package feathers.controls
 				if(this._horizontalScrollBarHideTween)
 				{
 					Loom2D.juggler.remove(this._horizontalScrollBarHideTween);
+					Tween.toPool(this._horizontalScrollBarHideTween);
 					this._horizontalScrollBarHideTween = null;
 				}
 				this.horizontalScrollBar.alpha = this._scrollBarDisplayMode == SCROLL_BAR_DISPLAY_MODE_FLOAT ? 0 : 1;
@@ -2104,6 +2107,7 @@ package feathers.controls
 				if(this._verticalScrollBarHideTween)
 				{
 					Loom2D.juggler.remove(this._verticalScrollBarHideTween);
+					Tween.toPool(this._verticalScrollBarHideTween);
 					this._verticalScrollBarHideTween = null;
 				}
 				this.verticalScrollBar.alpha = this._scrollBarDisplayMode == SCROLL_BAR_DISPLAY_MODE_FLOAT ? 0 : 1;
@@ -2622,12 +2626,13 @@ package feathers.controls
 				if(this._horizontalAutoScrollTween)
 				{
 					Loom2D.juggler.remove(this._horizontalAutoScrollTween);
+					Tween.toPool(this._horizontalAutoScrollTween);
 					this._horizontalAutoScrollTween = null;
 				}
 				if(this._horizontalScrollPosition != targetHorizontalScrollPosition)
 				{
 					this._targetHorizontalScrollPosition = targetHorizontalScrollPosition;
-					this._horizontalAutoScrollTween = new Tween(this, duration, this._throwEase);
+					this._horizontalAutoScrollTween = Tween.fromPool(this, duration, this._throwEase);
 					this._horizontalAutoScrollTween.animate("horizontalScrollPosition", targetHorizontalScrollPosition);
 					this._horizontalAutoScrollTween.onComplete = horizontalAutoScrollTween_onComplete;
 					Loom2D.juggler.add(this._horizontalAutoScrollTween);
@@ -2643,12 +2648,13 @@ package feathers.controls
 				if(this._verticalAutoScrollTween)
 				{
 					Loom2D.juggler.remove(this._verticalAutoScrollTween);
+					Tween.toPool(this._verticalAutoScrollTween);
 					this._verticalAutoScrollTween = null;
 				}
 				if(this._verticalScrollPosition != targetVerticalScrollPosition)
 				{
 					this._targetVerticalScrollPosition = targetVerticalScrollPosition;
-					this._verticalAutoScrollTween = new Tween(this, duration, this._throwEase);
+					this._verticalAutoScrollTween = Tween.fromPool(this, duration, this._throwEase);
 					this._verticalAutoScrollTween.animate("verticalScrollPosition", targetVerticalScrollPosition);
 					this._verticalAutoScrollTween.onComplete = verticalAutoScrollTween_onComplete;
 					Loom2D.juggler.add(this._verticalAutoScrollTween);
@@ -2956,7 +2962,7 @@ package feathers.controls
 			{
 				return;
 			}
-			this._horizontalScrollBarHideTween = new Tween(this.horizontalScrollBar, this._hideScrollBarAnimationDuration, this._hideScrollBarAnimationEase);
+			this._horizontalScrollBarHideTween = Tween.fromPool(this.horizontalScrollBar, this._hideScrollBarAnimationDuration, this._hideScrollBarAnimationEase);
 			this._horizontalScrollBarHideTween.fadeTo(0);
 			this._horizontalScrollBarHideTween.delay = delay;
 			this._horizontalScrollBarHideTween.onComplete = horizontalScrollBarHideTween_onComplete;
@@ -2976,7 +2982,7 @@ package feathers.controls
 			{
 				return;
 			}
-			this._verticalScrollBarHideTween = new Tween(this.verticalScrollBar, this._hideScrollBarAnimationDuration, this._hideScrollBarAnimationEase);
+			this._verticalScrollBarHideTween = Tween.fromPool(this.verticalScrollBar, this._hideScrollBarAnimationDuration, this._hideScrollBarAnimationEase);
 			this._verticalScrollBarHideTween.fadeTo(0);
 			this._verticalScrollBarHideTween.delay = delay;
 			this._verticalScrollBarHideTween.onComplete = verticalScrollBarHideTween_onComplete;
@@ -3135,6 +3141,7 @@ package feathers.controls
 			if(this._horizontalAutoScrollTween)
 			{
 				Loom2D.juggler.remove(this._horizontalAutoScrollTween);
+				Tween.toPool(this._horizontalAutoScrollTween);
 				this._horizontalAutoScrollTween = null;
 			}
 			else
@@ -3145,6 +3152,8 @@ package feathers.controls
 			if(this._verticalAutoScrollTween)
 			{
 				Loom2D.juggler.remove(this._verticalAutoScrollTween);
+				Tween.toPool(this._verticalAutoScrollTween);
+
 				this._verticalAutoScrollTween = null;
 			}
 			else
@@ -3213,6 +3222,7 @@ package feathers.controls
 					if(this._horizontalScrollBarHideTween)
 					{
 						Loom2D.juggler.remove(this._horizontalScrollBarHideTween);
+						Tween.toPool(this._horizontalScrollBarHideTween);
 						this._horizontalScrollBarHideTween = null;
 					}
 					if(this._scrollBarDisplayMode == SCROLL_BAR_DISPLAY_MODE_FLOAT)
@@ -3244,6 +3254,7 @@ package feathers.controls
 					if(this._verticalScrollBarHideTween)
 					{
 						Loom2D.juggler.remove(this._verticalScrollBarHideTween);
+						Tween.toPool(this._verticalScrollBarHideTween);
 						this._verticalScrollBarHideTween = null;
 					}
 					if(this._scrollBarDisplayMode == SCROLL_BAR_DISPLAY_MODE_FLOAT)
@@ -3379,7 +3390,7 @@ package feathers.controls
 		/**
 		 * @private
 		 */
-		/*protected function nativeStage_mouseWheelHandler(event:MouseEvent):void
+/*		protected function nativeStage_mouseWheelHandler(event:MouseEvent):void
 		{
 			if(!this._isEnabled || this._maxVerticalScrollPosition == 0)
 			{
@@ -3393,6 +3404,7 @@ package feathers.controls
 				if(this._verticalScrollBarHideTween)
 				{
 					Loom2D.juggler.remove(this._verticalScrollBarHideTween);
+					Tween.toPool(this._verticalScrollBarHideTween);
 					this._verticalScrollBarHideTween = null;
 				}
 				if(this.verticalScrollBar && this._scrollBarDisplayMode == SCROLL_BAR_DISPLAY_MODE_FLOAT)
@@ -3402,7 +3414,7 @@ package feathers.controls
 				const targetVerticalScrollPosition:Number = Math.min(this._maxVerticalScrollPosition, Math.max(0, this._verticalScrollPosition - event.delta * this.actualVerticalScrollStep));
 				this.throwTo(NaN, targetVerticalScrollPosition, this._mouseWheelScrollDuration);
 			}
-		}*/
+		} */
 
 		/**
 		 * @private
@@ -3475,6 +3487,7 @@ package feathers.controls
 						if(this._horizontalScrollBarHideTween)
 						{
 							Loom2D.juggler.remove(this._horizontalScrollBarHideTween);
+							Tween.toPool(this._horizontalScrollBarHideTween);
 							this._horizontalScrollBarHideTween = null;
 						}
 						this.horizontalScrollBar.alpha = 1;
@@ -3546,6 +3559,7 @@ package feathers.controls
 						if(this._verticalScrollBarHideTween)
 						{
 							Loom2D.juggler.remove(this._verticalScrollBarHideTween);
+							Tween.toPool(this._verticalScrollBarHideTween);
 							this._verticalScrollBarHideTween = null;
 						}
 						this.verticalScrollBar.alpha = 1;
@@ -3591,11 +3605,13 @@ package feathers.controls
 			if(this._verticalAutoScrollTween)
 			{
 				Loom2D.juggler.remove(this._verticalAutoScrollTween);
+				Tween.toPool(this._verticalAutoScrollTween);
 				this._verticalAutoScrollTween = null;
 			}
 			if(this._horizontalAutoScrollTween)
 			{
 				Loom2D.juggler.remove(this._horizontalAutoScrollTween);
+				Tween.toPool(this._horizontalAutoScrollTween);
 				this._horizontalAutoScrollTween = null;
 			}
 			
