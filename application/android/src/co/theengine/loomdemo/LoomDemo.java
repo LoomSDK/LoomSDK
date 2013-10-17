@@ -142,7 +142,7 @@ public class LoomDemo extends Cocos2dxActivity {
 				ViewGroup.LayoutParams.FILL_PARENT,
 				ViewGroup.LayoutParams.WRAP_CONTENT);
 		Cocos2dxEditText edittext = new Cocos2dxEditText(this);
-		edittext.setLayoutParams(edittext_layout_params);
+		edittext.setLayoutParams(edittext_layout_params);        
 		
 		ViewGroup webViewGroup = new RelativeLayout(this);
 
@@ -189,13 +189,17 @@ public class LoomDemo extends Cocos2dxActivity {
                 final float scale = activityRootView.getContext().getResources().getDisplayMetrics().density;
                 final float scaledThreshold = (int) (100 * scale + 0.5f);
 
-                if (heightDiff > scaledThreshold  && keyboardHidden)
+                if (heightDiff > scaledThreshold)
                 {
-                	keyboardHidden = false;
-                	triggerGenericEvent("keyboardResize", "" + heightDiff);
-                	triggerGenericEvent("keyboardShow", "");
+                    // ignore if not hidden as this is probably an autocomplete bar coming up
+                    if (keyboardHidden)
+                    {
+                    	keyboardHidden = false;
+                    	triggerGenericEvent("keyboardResize", "" + heightDiff);
+                    	triggerGenericEvent("keyboardShow", "");
 
-                	logError("keyboardResize: " + r.bottom);
+                    	logError("keyboardResize: " + r.bottom);
+                    }
 
                 }
                 else

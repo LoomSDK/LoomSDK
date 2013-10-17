@@ -11,9 +11,10 @@ package feathers.text
 	import loom2d.math.Point;
 	import loom2d.math.Rectangle;
 	import loom2d.events.Event;
+	import loom2d.events.EnterFrameEvent;
 	import loom2d.animation.DelayedCall;
 	import feathers.core.ITextEditor;
-	import feathers.events.FeathersEventType;
+	import feathers.events.FeathersEventType;	
 	import feathers.text.TextFormatAlign;
 
 	public class BitmapFontTextEditor extends BitmapFontTextRenderer implements ITextEditor
@@ -29,6 +30,8 @@ package feathers.text
 		protected var _hasIMEFocus:Boolean = false;
 		protected var _cursorDelayedCall:DelayedCall;
 
+		private var _stageTargetY:Number = 0;
+
 		public function BitmapFontTextEditor()
 		{
 			imeDelegate = new IMEDelegate();
@@ -42,6 +45,7 @@ package feathers.text
             // Listen in on application events as we're interested in keyboard size changes
             // to clear focus if user closes the OS keyboard (this works on iOS and Android)
             Application.event += onAppEvent;
+            
 		}
 
 		public function dispose():void
@@ -59,23 +63,65 @@ package feathers.text
 
 				var resize = int(payload);
 
+				// if we're closing the IME text entry box, undo the stage shift
 				if (resize == 0)
 				{
 					stage.y = 0;
+					_stageTargetY = 0;
+					stage.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
+
+					if (_hasIMEFocus)
+						clearFocus();
 				}
 				else if (_hasIMEFocus)
 				{	
-					var scale = stage.nativeStageHeight / stage.stageHeight;					
-					resize = (-resize) * scale;
+					stage.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
+
+					var scale = stage.nativeStageHeight / stage.stageHeight;
+					resize = (resize) * scale;
 
 					var bounds = getBounds(stage);
 
-					stage.y = resize + (stage.height - bounds.bottom);
-					stage.y -= height; 
+					// detect whether we need to scroll
+
+					trace(stage.height, bounds.bottom, resize);
+
+					if ((stage.height - bounds.bottom) < (resize + 16))
+					{
+						_stageTargetY = (-resize) + (stage.height - bounds.bottom);
+						_stageTargetY -= height; 
+					}
 
 				}
 				 
 			}			
+
+		}
+
+		protected function enterFrameHandler(event:Event):void
+		{
+			if (!_hasIMEFocus)
+				return;
+			
+			var stage = Loom2D.stage;
+
+			if (stage.y != _stageTargetY)
+			{
+				var frameEvent = event as EnterFrameEvent;
+
+				var delta =  stage.y - _stageTargetY;
+				var delta2 = delta * frameEvent.passedTime * 10;
+
+				if (delta2 > delta || delta < 2)
+					delta2 = delta;
+
+				stage.y -= delta2;
+			}
+			else
+			{
+				// we don't need to listen anymore so save some frame bandwidth
+				stage.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
+			}
 
 		}
 
