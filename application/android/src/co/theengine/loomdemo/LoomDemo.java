@@ -196,9 +196,6 @@ public class LoomDemo extends Cocos2dxActivity {
                     {
                     	keyboardHidden = false;
                     	triggerGenericEvent("keyboardResize", "" + heightDiff);
-                    	triggerGenericEvent("keyboardShow", "");
-
-                    	logError("keyboardResize: " + r.bottom);
                     }
 
                 }
@@ -209,8 +206,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
                 	keyboardHidden = true;
                 	// this matches iOS behavior
-                	triggerGenericEvent("keyboardResize", "0");
-                	triggerGenericEvent("keyboardHide", "");
+                	triggerGenericEvent("keyboardResize", "0");                	
 
                 }
 

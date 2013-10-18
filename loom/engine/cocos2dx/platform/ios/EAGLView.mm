@@ -792,7 +792,6 @@ static EAGLView *view = 0;
         caretRect_.size.height = 0;
 
         LoomApplication::fireGenericEvent("keyboardResize", [[NSString stringWithFormat:@"%f", ((float)end.size.height) * [[UIScreen mainScreen] scale]] UTF8String]);
-        LoomApplication::fireGenericEvent("keyboardShow", "");
     }
     else if (UIKeyboardWillHideNotification == type)
     {
@@ -803,8 +802,7 @@ static EAGLView *view = 0;
         caretRect_ = CGRectZero;
         dispatcher->dispatchKeyboardDidHide(notiInfo);
 
-        LoomApplication::fireGenericEvent("keyboardResize", "0");
-        LoomApplication::fireGenericEvent("keyboardHide", "");
+        LoomApplication::fireGenericEvent("keyboardResize", "0");        
     }
 }
 @end

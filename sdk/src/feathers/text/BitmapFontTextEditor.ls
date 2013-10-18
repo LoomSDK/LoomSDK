@@ -31,6 +31,7 @@ package feathers.text
 		protected var _cursorDelayedCall:DelayedCall;
 
 		private var _stageTargetY:Number = 0;
+		private static var _currentEditor:BitmapFontTextEditor = null;
 
 		public function BitmapFontTextEditor()
 		{
@@ -53,6 +54,9 @@ package feathers.text
 			imeDelegate.onInsertText -= handleInsert;
 			imeDelegate.onDeleteBackward -= handleDeleteBackward;		
 			Application.event -= onAppEvent;	
+
+			if (_currentEditor == this)
+				_currentEditor = null;
 		}
 
 		protected function onAppEvent(type:String, payload:String)		
@@ -70,8 +74,11 @@ package feathers.text
 					_stageTargetY = 0;
 					stage.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
 
-					if (_hasIMEFocus)
+					if (_currentEditor == this && _hasIMEFocus)
+					{						
 						clearFocus();
+						_currentEditor = null;
+					}
 				}
 				else if (_hasIMEFocus)
 				{	
@@ -89,8 +96,10 @@ package feathers.text
 					if ((stage.height - bounds.bottom) < (resize + 16))
 					{
 						_stageTargetY = (-resize) + (stage.height - bounds.bottom);
-						_stageTargetY -= height; 
+						_stageTargetY -= height + 16; 
 					}
+
+					_currentEditor = this;
 
 				}
 				 
