@@ -1,7 +1,7 @@
 package feathers.text
 {
-    import loom.Application;
-    import loom.ApplicationEvents;	
+	import loom.Application;
+	import loom.ApplicationEvents;	
 	import loom.platform.IMEDelegate;
 	import loom.platform.LoomKeyboardType;
 	import loom2d.Loom2D;
@@ -30,7 +30,13 @@ package feathers.text
 		protected var _hasIMEFocus:Boolean = false;
 		protected var _cursorDelayedCall:DelayedCall;
 
+		// the stage is scrolled when bringing up IME text entry and the text editor is obscured
+		// this is the Y value of the scroll 
 		private var _stageTargetY:Number = 0;
+
+		// tracks the current bitmap font editor, this is important as there may be a number
+		// of editors on the screen and the user can switch between them by selecting them
+		// which can cause timing issues as the IME keyboard opens/closes to deal with selection
 		private static var _currentEditor:BitmapFontTextEditor = null;
 
 		public function BitmapFontTextEditor()
@@ -38,15 +44,15 @@ package feathers.text
 			imeDelegate = new IMEDelegate();
 			imeDelegate.onInsertText += handleInsert;
 			imeDelegate.onDeleteBackward += handleDeleteBackward;
-            _caretQuad.addEventListener( Event.ADDED_TO_STAGE, onCursorAddedToStage );
-            _caretQuad.addEventListener( Event.REMOVED_FROM_STAGE, onCursorRemovedFromStage );
-            _cursorDelayedCall = new DelayedCall( toggleCursorVisibility, 0.7 );
-            _cursorDelayedCall.repeatCount = 0;
+			_caretQuad.addEventListener( Event.ADDED_TO_STAGE, onCursorAddedToStage );
+			_caretQuad.addEventListener( Event.REMOVED_FROM_STAGE, onCursorRemovedFromStage );
+			_cursorDelayedCall = new DelayedCall( toggleCursorVisibility, 0.7 );
+			_cursorDelayedCall.repeatCount = 0;
 
-            // Listen in on application events as we're interested in keyboard size changes
-            // to clear focus if user closes the OS keyboard (this works on iOS and Android)
-            Application.event += onAppEvent;
-            
+			// Listen in on application events as we're interested in keyboard size changes
+			// to clear focus if user closes the OS keyboard (this works on iOS and Android)
+			Application.event += onAppEvent;
+			
 		}
 
 		public function dispose():void
@@ -55,6 +61,7 @@ package feathers.text
 			imeDelegate.onDeleteBackward -= handleDeleteBackward;		
 			Application.event -= onAppEvent;	
 
+			// if we're the current editor, make sure we clear the reference			
 			if (_currentEditor == this)
 				_currentEditor = null;
 		}
@@ -70,10 +77,12 @@ package feathers.text
 				// if we're closing the IME text entry box, undo the stage shift
 				if (resize == 0)
 				{
+					// ensure that the stage scroll is reset and clear our frame listener
 					stage.y = 0;
 					_stageTargetY = 0;
 					stage.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
 
+					// if we're the current editor AND we have focus, clear it
 					if (_currentEditor == this && _hasIMEFocus)
 					{						
 						clearFocus();
@@ -81,24 +90,29 @@ package feathers.text
 					}
 				}
 				else if (_hasIMEFocus)
-				{	
-					stage.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
+				{						
 
+					// resize is in device points, so we need to scale by stageHeight
 					var scale = stage.nativeStageHeight / stage.stageHeight;
 					resize = (resize) * scale;
 
+					// find the bounds of the text edit field, used to test if 
+					// we're obscured or not (and thus need to scroll)
 					var bounds = getBounds(stage);
 
 					// detect whether we need to scroll
-
-					trace(stage.height, bounds.bottom, resize);
-
 					if ((stage.height - bounds.bottom) < (resize + 16))
 					{
+						// we need to scroll!  We do this with some animation
+						// so the user's eye can follow what is happening
+						stage.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
 						_stageTargetY = (-resize) + (stage.height - bounds.bottom);
+
+						// 16 pixel "safe zone"
 						_stageTargetY -= height + 16; 
 					}
 
+					// and mark us as the current editor
 					_currentEditor = this;
 
 				}
@@ -114,6 +128,7 @@ package feathers.text
 			
 			var stage = Loom2D.stage;
 
+			// if we're animating a stage scroll, do so
 			if (stage.y != _stageTargetY)
 			{
 				var frameEvent = event as EnterFrameEvent;
@@ -121,6 +136,7 @@ package feathers.text
 				var delta =  stage.y - _stageTargetY;
 				var delta2 = delta * frameEvent.passedTime * 10;
 
+				// if the delta is too big or too small, clamp
 				if (delta2 > delta || delta < 2)
 					delta2 = delta;
 
@@ -252,13 +268,13 @@ package feathers.text
 
 		public function setFocus():void
 		{
-            if(!_hasIMEFocus)
+			if(!_hasIMEFocus)
 			{
 				//trace("Attaching IME");
-                imeDelegate.attachWithIME( _keyboardType );
+				imeDelegate.attachWithIME( _keyboardType );
 				addChild(_caretQuad);
 				_hasIMEFocus = true;
-                dispatchEventWith(FeathersEventType.FOCUS_IN);              
+				dispatchEventWith(FeathersEventType.FOCUS_IN);              
 			}
 		}
 
@@ -267,11 +283,11 @@ package feathers.text
 			if(_hasIMEFocus)
 			{
 				//trace("Detaching IME");
-	            imeDelegate.detachWithIME();
-    			_hasIMEFocus = false;
+				imeDelegate.detachWithIME();
+				_hasIMEFocus = false;
 				removeChild( _caretQuad, false );
-                dispatchEventWith(FeathersEventType.FOCUS_OUT);             
-    	   }
+				dispatchEventWith(FeathersEventType.FOCUS_OUT);             
+		   }
 		}
 
 		public function selectRange(startIndex:int, endIndex:int):void
@@ -307,27 +323,27 @@ package feathers.text
 				}
 			}
 
-            var caretHeight:Number = _textFormat.size != NaN ? _textFormat.size : _textFormat.font.lineHeight; 
-            _caretQuad.width = 2;
-            _caretQuad.height = caretHeight;
+			var caretHeight:Number = _textFormat.size != NaN ? _textFormat.size : _textFormat.font.lineHeight; 
+			_caretQuad.width = 2;
+			_caretQuad.height = caretHeight;
 			_caretQuad.y = (height - caretHeight) / 2;
-            _caretQuad.color = _textFormat.color;
+			_caretQuad.color = _textFormat.color;
 		}
 		
-        private function onCursorAddedToStage( e:Event ):void
-        {
-            Loom2D.juggler.add( _cursorDelayedCall );
-        }
-        
-        private function onCursorRemovedFromStage( e:Event ):void
-        {
-            Loom2D.juggler.remove( _cursorDelayedCall );
-        }
-        
-        private function toggleCursorVisibility():void
-        {
-            _caretQuad.visible = !_caretQuad.visible;
-        }
-        
+		private function onCursorAddedToStage( e:Event ):void
+		{
+			Loom2D.juggler.add( _cursorDelayedCall );
+		}
+		
+		private function onCursorRemovedFromStage( e:Event ):void
+		{
+			Loom2D.juggler.remove( _cursorDelayedCall );
+		}
+		
+		private function toggleCursorVisibility():void
+		{
+			_caretQuad.visible = !_caretQuad.visible;
+		}
+		
 	}
 }

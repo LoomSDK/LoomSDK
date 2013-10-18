@@ -57,29 +57,29 @@ public class LoomDemo extends Cocos2dxActivity {
 		// Process camera results.
 		LoomCamera.onActivityResult(this, requestCode, resultCode, data);
 
-	    // Check which request we're responding to
-	    if (requestCode == LoomStore.INTENT_CODE) 
-	    {
-	    	LoomStore.handleActivityResponse(resultCode, data);
-	    }
-	    else
-	    {
-	    	super.onActivityResult(requestCode, resultCode, data);
-	    }
+		// Check which request we're responding to
+		if (requestCode == LoomStore.INTENT_CODE) 
+		{
+			LoomStore.handleActivityResponse(resultCode, data);
+		}
+		else
+		{
+			super.onActivityResult(requestCode, resultCode, data);
+		}
 	}
 
 	public static void triggerGenericEvent(String type, String payload)
 	{
 		// Submit callback on proper thread.
-        final String fType = type;
-        final String fPayload = payload;
+		final String fType = type;
+		final String fPayload = payload;
 
-        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                internalTriggerGenericEvent(fType, fPayload);
-            }
-        });
+		Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
+			@Override
+			public void run() {
+				internalTriggerGenericEvent(fType, fPayload);
+			}
+		});
 	}
 
 	private static native void internalTriggerGenericEvent(String type, String payload);
@@ -94,19 +94,19 @@ public class LoomDemo extends Cocos2dxActivity {
 		else if(type.equals("showStatusBar"))
 		{
 			instance.runOnUiThread(new Runnable() {
-			     public void run() {
+				 public void run() {
 					instance.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 					instance.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-			    }
+				}
 			});
 		}
 		else if(type.equals("hideStatusBar"))
 		{
 			instance.runOnUiThread(new Runnable() {
-			     public void run() {
+				 public void run() {
 					instance.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 					instance.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-			    }
+				}
 			});
 		}
 	}
@@ -171,48 +171,48 @@ public class LoomDemo extends Cocos2dxActivity {
 		// Hook up the store.
 		LoomStore.bind(this);
 
-        // Listen for IME-initiated resizes.
-        // Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
-        final View activityRootView = framelayout;
-        Log.d("Loom", "Registering for global layout listener!");
-        activityRootView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() 
-        {
-            @Override
-            public void onGlobalLayout() 
-            {
+		// Listen for IME-initiated resizes.
+		// Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
+		final View activityRootView = framelayout;
+		Log.d("Loom", "Registering for global layout listener!");
+		activityRootView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() 
+		{
+			@Override
+			public void onGlobalLayout() 
+			{
 
-            	final Rect r = new Rect();
-            	activityRootView.getWindowVisibleDisplayFrame(r);
-            	final int heightDiff = activityRootView.getRootView().getHeight() - (r.bottom - r.top);
+				final Rect r = new Rect();
+				activityRootView.getWindowVisibleDisplayFrame(r);
+				final int heightDiff = activityRootView.getRootView().getHeight() - (r.bottom - r.top);
 
-                // Convert the dps to pixels
-                final float scale = activityRootView.getContext().getResources().getDisplayMetrics().density;
-                final float scaledThreshold = (int) (100 * scale + 0.5f);
+				// Convert the dps to pixels
+				final float scale = activityRootView.getContext().getResources().getDisplayMetrics().density;
+				final float scaledThreshold = (int) (100 * scale + 0.5f);
 
-                if (heightDiff > scaledThreshold)
-                {
-                    // ignore if not hidden as this is probably an autocomplete bar coming up
-                    if (keyboardHidden)
-                    {
-                    	keyboardHidden = false;
-                    	triggerGenericEvent("keyboardResize", "" + heightDiff);
-                    }
+				if (heightDiff > scaledThreshold)
+				{
+					// ignore if not hidden as this is probably an autocomplete bar coming up
+					if (keyboardHidden)
+					{
+						keyboardHidden = false;
+						triggerGenericEvent("keyboardResize", "" + heightDiff);
+					}
 
-                }
-                else
-                {
-                	if (keyboardHidden)
-                		return;
+				}
+				else
+				{
+					if (keyboardHidden)
+						return;
 
-                	keyboardHidden = true;
-                	// this matches iOS behavior
-                	triggerGenericEvent("keyboardResize", "0");                	
+					keyboardHidden = true;
+					// this matches iOS behavior
+					triggerGenericEvent("keyboardResize", "0");                	
 
-                }
+				}
 
 
-             }
-        }); 
+			 }
+		}); 
 
 	}
 
