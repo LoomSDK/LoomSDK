@@ -29,42 +29,82 @@ package loom.platform
      */
 
 
-    ///Types of the control widget to display over the video
+    /**
+     * Type of control widget to display over the video
+     */
     public enum VideoControlMode
     {
-        ///show the full system video control widget
+        /**
+         * Show the full system video control widget
+         */
         Show,
 
-        ///don't show any video control widget
+        /**
+         * Don't show any video control widget
+         */
         Hide,
 
-        ///don't show any video control widget AND stop the video playblack on user touch
+        /**
+         * Don't show any video control widget AND stop the video playblack on user touch
+         */
         StopOnTouch
     };
 
 
-    ///Method of scaling the video to the screen
+    /**
+     * Method of scaling the video to the screen
+     */
     public enum VideoScaleMode
     {
-        ///don't scale at all and keep the video the same resolution as its source
+        /**
+         * Don't scale at all and keep the video the same resolution as its source
+         */
         None,
 
-        ///scale the video up to fill the entire screen, ignoring its aspect ratio
+        /**
+         * Scale the video up to fill the entire screen, ignoring its aspect ratio
+         */
         Fill,
 
-        ///scale the video until either its width or height touches the edges of the screen, thereby preserving the aspect ratio
+        /**
+         * Center the video and scale it until either its width or height touches the edges of the screen, thereby preserving the aspect ratio
+         */
         FitAspect,
     };
 
 
-    ///Video playback class
+    /**
+     * Static control class for playing back videos
+     */
     public class Video 
     {
-///TODO: document        
+        /**
+         * Plays a video in Fullscreen mode
+         *
+         *  @param video Name of the video file to play, NOT including its extension
+         *  @param scaleMode Method of scaling the video on screen
+         *  @param controlMode Type of video controls to display over the video
+         *  @param bgColor Hex formatted color (ie. 0xFF000000) to set the area of the screen not filled with the video, in cases where it does not fill the screen
+         */
         public static native function playFullscreen(video:String, scaleMode:VideoScaleMode, controlMode:VideoControlMode, bgColor:uint):void;
 
+        /**
+         * Indicates whether or not Video is supported on the current platform
+         */
         public static native var supported:Boolean;
+
+        /**
+         * Called when the video completes normally
+         *
+         * No parameters.
+         */
         public static native var onComplete:NativeDelegate;
+
+        /**
+         * Called when the video is unable to play or complete
+         *
+         * No parameters.
+         */
         public static native var onFail:NativeDelegate;
     }
 }
