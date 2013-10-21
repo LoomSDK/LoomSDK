@@ -12,6 +12,10 @@ import java.util.Date;
 import android.os.Environment;
 import android.util.Log;
 
+
+/**
+ * Java Class that exposes Android camera functionality
+ */
 public class LoomCamera
 {
     public static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;

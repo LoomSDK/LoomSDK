@@ -27,6 +27,9 @@ import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 
 
 
+/**
+ * Java Class that exposes Android fullscreen video playback
+ */
 public class LoomVideo
 {
     ///constants
