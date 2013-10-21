@@ -139,6 +139,14 @@ if(APPLE)
 
     if(LOOM_BUILD_IOS EQUAL 1)
 
+        # Apple changed some stuff in XCode5/SDK7 which we need to account for, however we still need to build out on 
+        # XCode4/SDK6
+        if(LOOM_IOS_VERSION LESS 7)
+            set (LOOM_IOS_LEGACY 1)
+        else()        
+            set (LOOM_IOS_LEGACY 0)
+        endif()
+
         set(CMAKE_EXE_LINKER_FLAGS "-framework Foundation -lz -framework QuartzCore -lxml2")
 
         set(CMAKE_OSX_SYSROOT iphoneos$(LOOM_IOS_VERSION) )
@@ -151,7 +159,7 @@ if(APPLE)
 
     else()
 
-        set(CMAKE_EXE_LINKER_FLAGS "-framework IOKit -framework Carbon -framework Foundation -lz -framework QuartzCore -lxml2")
+        set(CMAKE_EXE_LINKER_FLAGS "-framework Carbon -framework IOKit -framework Foundation -lz -framework QuartzCore -lxml2")
 
         set(CMAKE_OSX_ARCHITECTURES "i386")
         set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
