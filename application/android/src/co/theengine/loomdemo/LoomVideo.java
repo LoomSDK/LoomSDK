@@ -20,7 +20,6 @@ import java.util.Date;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
-import android.view.Gravity;
 import android.graphics.Color;
 
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
@@ -131,7 +130,6 @@ public class LoomVideo
             _videoView.requestLayout();
 
             ///set root color for outside of the video play area to make it visible (if desired) now
-            _rootView.setVisibility(View.VISIBLE);
             _rootView.setBackgroundColor(_bgColor);
         }
     } 
@@ -218,7 +216,6 @@ public class LoomVideo
         ((RelativeLayout)_rootView).setIgnoreGravity(_videoView.getId());
 
         ///hide the root until the video is ready to play
-        _rootView.setVisibility(View.INVISIBLE);
         _rootView.setBackgroundColor(Color.TRANSPARENT);
 
         ///send the video URI to the video view
