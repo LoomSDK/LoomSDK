@@ -168,6 +168,9 @@ public class LoomDemo extends Cocos2dxActivity {
 		// Hook up the store.
 		LoomStore.bind(this);
 
+        // Initialize Loom Mobile class
+        LoomMobile.init(this);
+
         // Listen for IME-initiated resizes.
         // Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
         final View activityRootView = framelayout;
@@ -213,11 +216,17 @@ public class LoomDemo extends Cocos2dxActivity {
 		mGLView.onPause();
 	}
 
-	@Override
-	protected void onResume() {
-		super.onResume();
-		mGLView.onResume();
-	}
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mGLView.onResume();
+    }
+
+    @Override
+    protected void onDestroy() {
+        LoomMobile.kill();
+        super.onDestroy();
+    }
 
 	private boolean detectOpenGLES20() 
 	{
