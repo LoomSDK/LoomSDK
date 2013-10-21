@@ -58,6 +58,7 @@ package loom.platform
     {
         /**
          * Don't scale at all and keep the video the same resolution as its source
+         * Known Issue: This method will sometimes cause the video to "slide in" towards the middle of the screen on Android. Loom-1809.
          */
         None,
 
