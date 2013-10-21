@@ -46,31 +46,31 @@ import co.theengine.loomdemo.billing.LoomStore;
 
 public class LoomDemo extends Cocos2dxActivity {
 
-	private Cocos2dxGLSurfaceView mGLView;
+    private Cocos2dxGLSurfaceView mGLView;
 
-	public static LoomDemo instance = null;
+    public static LoomDemo instance = null;
 
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) 
-	{
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) 
+    {
         // Process camera results.
         LoomCamera.onActivityResult(this, requestCode, resultCode, data);
 
-	    // Check which request we're responding to
-	    if (requestCode == LoomStore.INTENT_CODE) 
-	    {
-	    	LoomStore.handleActivityResponse(resultCode, data);
-	    }
-	    else
-	    {
-	    	super.onActivityResult(requestCode, resultCode, data);
-	    }
-	}
+        // Check which request we're responding to
+        if (requestCode == LoomStore.INTENT_CODE) 
+        {
+            LoomStore.handleActivityResponse(resultCode, data);
+        }
+        else
+        {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
 
 
-	public static void triggerGenericEvent(String type, String payload)
-	{
-		// Submit callback on proper thread.
+    public static void triggerGenericEvent(String type, String payload)
+    {
+    // Submit callback on proper thread.
         final String fType = type;
         final String fPayload = payload;
 
@@ -80,94 +80,94 @@ public class LoomDemo extends Cocos2dxActivity {
                 internalTriggerGenericEvent(fType, fPayload);
             }
         });
-	}
+    }
 
-	private static native void internalTriggerGenericEvent(String type, String payload);
+    private static native void internalTriggerGenericEvent(String type, String payload);
 
-	public static void handleGenericEvent(String type, String payload)
-	{
-		Log.d("Loom", "Saw generic event " + type + " " + payload);
+    public static void handleGenericEvent(String type, String payload)
+    {
+        Log.d("Loom", "Saw generic event " + type + " " + payload);
         if(type.equals("cameraRequest"))
         {
             LoomCamera.triggerCameraIntent(instance);
         }
-		else if(type.equals("showStatusBar"))
-		{
-			instance.runOnUiThread(new Runnable() {
-			     public void run() {
-					instance.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-					instance.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-			    }
-			});
-		}
-		else if(type.equals("hideStatusBar"))
-		{
-			instance.runOnUiThread(new Runnable() {
-			     public void run() {
-					instance.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-					instance.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-			    }
-			});
-		}
-	}
+        else if(type.equals("showStatusBar"))
+        {
+            instance.runOnUiThread(new Runnable() {
+                public void run() {
+                    instance.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                    instance.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+                }
+            });
+        }
+        else if(type.equals("hideStatusBar"))
+        {
+            instance.runOnUiThread(new Runnable() {
+                public void run() {
+                    instance.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                    instance.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+                }
+            });
+        }
+    }
 
-	protected void onCreate(Bundle savedInstanceState) 
-	{
-		instance = this;
+    protected void onCreate(Bundle savedInstanceState) 
+    {
+        instance = this;
 
-		super.onCreate(savedInstanceState);
-		
-		if (!detectOpenGLES20())
-		{
-			Log.d("Loom", "Could not initialize OpenGL ES 2.0 - terminating!");
-			finish();
-			return;
-		}
+        super.onCreate(savedInstanceState);
 
-		// get the packageName, it's used to set the resource path
-		String packageName = getApplication().getPackageName();
-		super.setPackageName(packageName);
+        if (!detectOpenGLES20())
+        {
+            Log.d("Loom", "Could not initialize OpenGL ES 2.0 - terminating!");
+            finish();
+            return;
+            }
 
-		// FrameLayout
-		ViewGroup.LayoutParams framelayout_params = new ViewGroup.LayoutParams(
-				ViewGroup.LayoutParams.MATCH_PARENT,
-				ViewGroup.LayoutParams.MATCH_PARENT);
-		FrameLayout framelayout = new FrameLayout(this);
-		framelayout.setLayoutParams(framelayout_params);
+        // get the packageName, it's used to set the resource path
+        String packageName = getApplication().getPackageName();
+        super.setPackageName(packageName);
 
-		// Cocos2dxEditText layout
-		ViewGroup.LayoutParams edittext_layout_params = new ViewGroup.LayoutParams(
-				ViewGroup.LayoutParams.MATCH_PARENT,
-				ViewGroup.LayoutParams.WRAP_CONTENT);
-		Cocos2dxEditText edittext = new Cocos2dxEditText(this);
-		edittext.setLayoutParams(edittext_layout_params);
-		
-		ViewGroup webViewGroup = new RelativeLayout(this);
+        // FrameLayout
+        ViewGroup.LayoutParams framelayout_params = new ViewGroup.LayoutParams(
+                                                            ViewGroup.LayoutParams.MATCH_PARENT,
+                                                            ViewGroup.LayoutParams.MATCH_PARENT);
+        FrameLayout framelayout = new FrameLayout(this);
+        framelayout.setLayoutParams(framelayout_params);
 
-		// ...add to FrameLayout
-		framelayout.addView(edittext);
+        // Cocos2dxEditText layout
+        ViewGroup.LayoutParams edittext_layout_params = new ViewGroup.LayoutParams(
+                                                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                                                ViewGroup.LayoutParams.WRAP_CONTENT);
+        Cocos2dxEditText edittext = new Cocos2dxEditText(this);
+        edittext.setLayoutParams(edittext_layout_params);
 
-		// Cocos2dxGLSurfaceView
-		mGLView = new Cocos2dxGLSurfaceView(this);
+        ViewGroup webViewGroup = new RelativeLayout(this);
 
-		// ...add to FrameLayout
-		framelayout.addView(mGLView);
-		
-		framelayout.addView(webViewGroup);
+        // ...add to FrameLayout
+        framelayout.addView(edittext);
 
-		mGLView.setEGLContextClientVersion(2);
-		mGLView.setCocos2dxRenderer(new Cocos2dxRenderer());
-		mGLView.setTextField(edittext);
+        // Cocos2dxGLSurfaceView
+        mGLView = new Cocos2dxGLSurfaceView(this);
 
-		// Set framelayout as the content view
-		setContentView(framelayout);
-		
-		// give the webview class our layout
-		LoomWebView.setRootLayout(webViewGroup);
-		LoomAdMob.setRootLayout(webViewGroup);
+        // ...add to FrameLayout
+        framelayout.addView(mGLView);
 
-		// Hook up the store.
-		LoomStore.bind(this);
+        framelayout.addView(webViewGroup);
+
+        mGLView.setEGLContextClientVersion(2);
+        mGLView.setCocos2dxRenderer(new Cocos2dxRenderer());
+        mGLView.setTextField(edittext);
+
+        // Set framelayout as the content view
+        setContentView(framelayout);
+
+        // give the webview class our layout
+        LoomWebView.setRootLayout(webViewGroup);
+        LoomAdMob.setRootLayout(webViewGroup);
+
+        // Hook up the store.
+        LoomStore.bind(this);
 
         ///Create Video View for our layout
         LoomVideo.init(webViewGroup);
@@ -197,48 +197,47 @@ public class LoomDemo extends Cocos2dxActivity {
                 }
              }
         }); 
+    }
 
-	}
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) 
+    {
+        super.onConfigurationChanged(newConfig);
 
-	@Override
-	public void onConfigurationChanged(Configuration newConfig) 
-	{
-		super.onConfigurationChanged(newConfig);
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE)
+            nativeSetOrientation("landscape");
+        else
+            nativeSetOrientation("portrait");
+    }
 
-		if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE)
-			nativeSetOrientation("landscape");
-		else
-			nativeSetOrientation("portrait");
-	}
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mGLView.onPause();
+    }
 
-	@Override
-	protected void onPause() {
-		super.onPause();
-		mGLView.onPause();
-	}
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mGLView.onResume();
+    }
 
-	@Override
-	protected void onResume() {
-		super.onResume();
-		mGLView.onResume();
-	}
+    private boolean detectOpenGLES20() 
+    {
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        ConfigurationInfo info = am.getDeviceConfigurationInfo();
+        return (info.reqGlEsVersion >= 0x20000);
+    }
 
-	private boolean detectOpenGLES20() 
-	{
-		ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-		ConfigurationInfo info = am.getDeviceConfigurationInfo();
-		return (info.reqGlEsVersion >= 0x20000);
-	}
+    public static native void log(String message);
+    public static native void logWarn(String message);
+    public static native void logError(String message);
+    public static native void logDebug(String message);
+    public static void logInfo(String message) { log(message); }
 
-	public static native void log(String message);
-	public static native void logWarn(String message);
-	public static native void logError(String message);
-	public static native void logDebug(String message);
-	public static void logInfo(String message) { log(message); }
-
-	static 
-	{
-		// Initialize our native library.
-		System.loadLibrary("LoomDemo");
-	}
+    static 
+    {
+        // Initialize our native library.
+        System.loadLibrary("LoomDemo");
+    }
 }
