@@ -779,7 +779,11 @@ file 'build/luajit_ios/lib/libluajit-5.1.a' do
     luajit_ios_dir = File.join(rootFolder, "build", "luajit_ios")
     Dir.chdir("loom/vendor/luajit") do
         sh "make clean"
-        sh "make install -j#{$numCores} HOST_CC=\"gcc -m32 -arch i386\" CROSS=" + ISDKP + " TARGET_FLAGS=\"" + ISDKF + "\" TARGET=arm TARGET_SYS=iOS PREFIX=\"#{luajit_ios_dir.shellescape}\""
+        if $targetIOSSDK == "7.0"
+              sh "make install -j#{$numCores} HOST_CC=\"gcc -m32 -arch i386\" TARGET_FLAGS=\"" + ISDKF + "\" TARGET=arm TARGET_SYS=iOS PREFIX=\"#{luajit_ios_dir.shellescape}\""
+        else
+              sh "make install -j#{$numCores} HOST_CC=\"gcc -m32 -arch i386\" CROSS=" + ISDKP + " TARGET_FLAGS=\"" + ISDKF + "\" TARGET=arm TARGET_SYS=iOS PREFIX=\"#{luajit_ios_dir.shellescape}\""
+        end            
     end
   end
 end

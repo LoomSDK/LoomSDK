@@ -139,7 +139,7 @@ if(APPLE)
 
     if(LOOM_BUILD_IOS EQUAL 1)
 
-        set(CMAKE_EXE_LINKER_FLAGS "-framework IOKit -framework Foundation -lz -framework QuartzCore -lxml2")
+        set(CMAKE_EXE_LINKER_FLAGS "-framework Foundation -lz -framework QuartzCore -lxml2")
 
         set(CMAKE_OSX_SYSROOT iphoneos$(LOOM_IOS_VERSION) )
         set(CMAKE_OSX_ARCHITECTURES "armv7")

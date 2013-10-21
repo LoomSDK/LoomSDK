@@ -25,7 +25,6 @@ if(APPLE)
     if(LOOM_BUILD_IOS EQUAL 1)
         set ( GRAPHICS_SRC ${GRAPHICS_SRC} gfxGraphicsIOS.mm )
         add_definitions( -DBGFX_CONFIG_RENDERER_OPENGLES2=1 )
-        include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/internal/bx/include/compat/osx )
         set ( BGFX_SRC ${BGFX_SRC} ${LOOMBGFX_SOURCE_DIR}/glcontext_external.cpp )
         
     else()
