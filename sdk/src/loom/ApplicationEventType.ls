@@ -56,6 +56,7 @@ package loom
          * visible and 1024px when the keyboard goes away.)
          */
         public static var KEYBOARD_RESIZE:String = "keyboardResize";
+
     }
 
 }
