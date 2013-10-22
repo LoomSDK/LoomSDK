@@ -147,7 +147,7 @@ if(APPLE)
             set (LOOM_IOS_LEGACY 0)
         endif()
 
-        set(CMAKE_EXE_LINKER_FLAGS "-framework Foundation -lz -framework QuartzCore -lxml2")
+        set(CMAKE_EXE_LINKER_FLAGS "-framework Foundation -lz -framework QuartzCore -framework MediaPlayer -lxml2")
 
         set(CMAKE_OSX_SYSROOT iphoneos$(LOOM_IOS_VERSION) )
         set(CMAKE_OSX_ARCHITECTURES "armv7")
