@@ -78,20 +78,35 @@ public class LoomVideo
 
             ///create error string
             String message = "error";
-            message += (what == 1/*MediaPlayer.MEDIA_ERROR_UNKNOWN*/) ? " unknown: " : " server died: ";
+            switch(what)
+            {
+                case 1://MediaPlayer.MEDIA_ERROR_UNKNOWN:
+                    message += " unknown: possible issues";
+                    message += " :video dimesions too large";
+                    message += " :unsupported video format";
+                    message += " :unable to find video";
+                    message += " :corrupted video file";
+                    break;
+                case 100://MedaiPlayer.MEDIA_ERROR_SERVER_DIED:
+                    message += " server died ";
+                    break;
+            }
             switch(extra)
             {
                 case -1004://MediaPlayer.MEDIA_ERROR_IO:
-                    message += "io error";
+                    message += ":io error";
                     break;
                 case -1007://MediaPlayer.MEDIA_ERROR_MALFORMED:
-                    message += "malformed data error";
+                    message += ":malformed data error";
                     break;
                 case -1010://MediaPlayer.MEDIA_ERROR_UNSUPPORTED:
-                    message += "unsupported format error";
+                    message += ":unsupported format error";
                     break;
                 case -110://MediaPlayer.MEDIA_ERROR_TIMED_OUT:
-                    message += "time out error";
+                    message += ":time out error";
+                    break;
+                default:
+                    message += ":extra code-> " + extra;
                     break;
             }
         
@@ -220,8 +235,8 @@ public class LoomVideo
 
         ///send the video URI to the video view
         ///NOTE: Both of these methods, either with the raw ID or /raw/filename_noext seem to work
-        //      int videoResourceID = _context.getResources().getIdentifier(file, "raw", _context.getPackageName());
-        //      Uri videoUri = Uri.parse("android.resource://" + _context.getPackageName() + "/" + videoResourceID);        
+             // int videoResourceID = _context.getResources().getIdentifier(file, "raw", _context.getPackageName());
+             // Uri videoUri = Uri.parse("android.resource://" + _context.getPackageName() + "/" + videoResourceID);        
         Uri videoUri = Uri.parse("android.resource://" + _context.getPackageName() + "/raw/" + file);
         _videoView.setVideoURI(videoUri);
 
