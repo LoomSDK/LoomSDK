@@ -18,34 +18,23 @@
  * ===========================================================================
  */
 
-void installLoomApplication();
-void installPackageCocos2DX();
-void installLoomAssets();
-void installPackageLoomPhysics();
-void installLoomPropertyManager();
-void installLoomWebView();
-void installLoomAdMobAd();
-void installLoomHTTPRequest();
-void installLoomNativeStore();
-void installLoomVideo();
-void installLoomGraphics();
-void installLoom2D();
+#include "loom/common/platform/platform.h"
+#include "loom/common/platform/platformVideo.h"
 
-void installPackageLoom()
+#if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_IOS
+
+///The NULL video player
+int platform_videoSupported()
 {
-    installLoomApplication();
-    installLoomWebView();
-    installLoomAdMobAd();
-    installLoomHTTPRequest();
-    installLoomAssets();
-    installPackageLoomPhysics();
-    installLoomPropertyManager();
-    installLoomNativeStore();
-    installLoomVideo();
-
-    // Should be its own package for maximum correctness.
-    installPackageCocos2DX();
-
-    installLoomGraphics();
-    installLoom2D();
+    return 0;
 }
+
+void platform_videoInitialize(VideoEventCallback eventCallback)
+{ 
+}
+
+void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlMode, unsigned int bgColor)
+{
+}
+
+#endif
