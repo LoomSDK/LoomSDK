@@ -10,7 +10,6 @@ GEM
       yajl-ruby (~> 1.1.0)
     rake (10.0.3)
     redcarpet (2.3.0)
-    rubyzip (1.0.0)
     yajl-ruby (1.1.0)
 
 PLATFORMS
@@ -22,4 +21,3 @@ DEPENDENCIES
   pygments.rb
   rake
   redcarpet (~> 2.3.0)
-  rubyzip

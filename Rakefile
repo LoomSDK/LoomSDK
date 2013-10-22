@@ -743,7 +743,7 @@ file 'build/luajit_android/lib/libluajit-5.1.a' do
       # OSX / LINUX
       NDK = ENV['ANDROID_NDK']
       if (!NDK)
-          raise "\n\nPlease ensure to set your ANDROID_NDK environment variable."
+          raise "\n\nPlease ensure ndk-build from NDK rev 8b is on your path"
       end
       rootFolder = Dir.pwd
       luajit_android_dir = File.join(rootFolder, "build", "luajit_android")
@@ -880,8 +880,8 @@ namespace :package do
 
     omit_files = %w[ examples.zip loomsdk.zip certs/LoomDemoBuild.mobileprovision loom/vendor/telemetry-01052012 pkg/ artifacts/ docs/output cmake_osx/ cmake_msvc/ cmake_ios/ cmake_android/]
 
-    require_zip_dependencies!
-    Zip::File.open("nativesdk.zip", 'w') do |zipfile|
+    require 'zip/zip'
+    Zip::ZipFile.open("nativesdk.zip", 'w') do |zipfile|
       Dir["**/**"].each do |file|
         
         do_omit = false
@@ -909,9 +909,8 @@ namespace :package do
     FileUtils.rm_rf "pkg/examples.zip"
     FileUtils.mkdir_p "pkg"
 
-    require_zip_dependencies!
-
-    Zip::File.open("pkg/examples.zip", 'w') do |zipfile|
+    require 'zip/zip'
+    Zip::ZipFile.open("pkg/examples.zip", 'w') do |zipfile|
       Dir["docs/examples/**/**"].each do |file|
         zipfile.add(file.sub("docs/examples/", ''),file)
       end
@@ -976,10 +975,10 @@ namespace :package do
       sh "for /d %F in (libs\\*.*) do xcopy /Y /I /E /F %F\\*.so pkg\\sdk\\bin\\android\\lib\\%~nF"
     end
 
-    require_zip_dependencies!
+    require_dependencies
 
     puts "Compressing Loom SDK..."
-    Zip::File.open("pkg/loomsdk.zip", 'w') do |zipfile|
+    Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|
       Dir["pkg/sdk/**/**"].each do |file|
         zipfile.add(file.sub("pkg/sdk/", ''),file)
       end
@@ -995,11 +994,11 @@ namespace :package do
 
     prepare_free_sdk
 
-    require_zip_dependencies!
+    require_dependencies
 
     FileUtils.mkdir_p "pkg"
 
-    Zip::File.open("pkg/loomsdk.zip", 'w') do |zipfile|
+    Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|
       Dir["pkg/sdk/**/**"].each do |file|
         zipfile.add(file.sub("pkg/sdk/", ''),file)
       end
@@ -1017,20 +1016,21 @@ def decompile_apk (file, destination)
   sh "java -jar tools/apktool/apktool.jar d -f #{file} #{destination}"
 end
 
-def require_zip_dependencies!
+def require_dependencies
   begin
     require 'rubygems'
-    require 'zip'
-	rescue LoadError
-    	puts "!!! Unable to require the RubyZip gem.  Please run 'bundle install'"
-    	exit(1)
+    require 'zip/zip'
+    require 'zip/zipfilesystem'
+  rescue LoadError
+    puts "This Rakefile requires the rubyzip gem. Install it using: gem install rubyzip"
+    exit(1)
   end
 end
 
 def unzip_file (file, destination)
-  require_zip_dependencies!
+  require_dependencies
 
-  Zip::File.open(file) do |zip_file|
+  Zip::ZipFile.open(file) do |zip_file|
     zip_file.each do |f|
       f_path=File.join(destination, f.name)
       FileUtils.mkdir_p(File.dirname(f_path))
@@ -1115,6 +1115,8 @@ def prepare_free_sdk
 
   # copy the assets we need from cocos...
   FileUtils.cp_r("artifacts/assets", "pkg/sdk")
+
+  require_dependencies
 end
 
 def has_ios_sdk(version)
