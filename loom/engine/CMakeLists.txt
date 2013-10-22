@@ -25,6 +25,7 @@ set (ENGINE_SRC
     bindings/loom/lmAdMob.cpp
     bindings/loom/lmHTTPRequest.cpp
     bindings/loom/lmStore.cpp
+    bindings/loom/lmVideo.cpp
     bindings/loom/lmPackageLoom.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
 
