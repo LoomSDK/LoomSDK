@@ -24,7 +24,6 @@ if (APPLE)
     target_link_libraries(${PROJECT_NAME} 
        LoomVendor
        LoomCommon
-       "-framework IOKit"
        "-framework CoreFoundation"
        "-framework Cocoa"
        "-framework OpenGL"
