@@ -173,7 +173,7 @@ public class LoomDemo extends Cocos2dxActivity {
         LoomStore.bind(this);
 
         ///Create Video View for our layout
-        LoomVideo.init(webViewGroup);
+        LoomVideo.onCreate(webViewGroup);
 
         // Listen for IME-initiated resizes.
         // Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
