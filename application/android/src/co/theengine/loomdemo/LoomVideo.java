@@ -153,7 +153,7 @@ public class LoomVideo
 
 
     ///handles initialization of the Loom Video class
-    public static void init(ViewGroup parentView)
+    public static void onCreate(ViewGroup parentView)
     {
         ///store some data for later
         _rootView = parentView;
