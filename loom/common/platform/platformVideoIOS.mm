@@ -38,7 +38,6 @@ static UIViewController* getParentViewController()
     return [[[UIApplication sharedApplication] keyWindow] rootViewController];
 }
 
-
 @interface MoviePlayerViewController : UIViewController
 
 + (MoviePlayerViewController *)controller:(NSURL *)videoUrl;
@@ -69,23 +68,24 @@ static UIViewController* getParentViewController()
     self.videoUrl    = nil;
     
     [super dealloc];
+
+    //NSLog(@"Video deallocated!");
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     
-    self.title = @"MPMoviePlayerController";
-
-    NSLog(@"View Did Load");
+    self.title = @"MPMoviePlayerController";    
 
     self.videoPlayer = [[[MPMoviePlayerController alloc] initWithContentURL:self.videoUrl] autorelease];
     self.videoPlayer.controlStyle             = MPMovieControlStyleNone;
     self.videoPlayer.scalingMode              = MPMovieScalingModeAspectFit;
     self.videoPlayer.shouldAutoplay           = YES;
-    self.videoPlayer.view.autoresizingMask    = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    self.videoPlayer.view.autoresizesSubviews = YES;
+    //self.videoPlayer.view.autoresizingMask    = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    //self.videoPlayer.view.autoresizesSubviews = YES;
     self.videoPlayer.view.frame               = getParentViewController().view.bounds;
+    self.videoPlayer.fullscreen               = YES;
 
     [[NSNotificationCenter defaultCenter] addObserver:self      
                                           selector:@selector(videoFinished:)
@@ -104,6 +104,10 @@ static UIViewController* getParentViewController()
     self.videoUrl    = nil;
 
     [super viewDidUnload];
+
+    //NSLog(@"Video unloaded!");
+
+
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -111,24 +115,37 @@ static UIViewController* getParentViewController()
     [super viewWillAppear:animated];
     
     [self setWantsFullScreenLayout:YES];
-    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackTranslucent];
-    [self.navigationController.navigationBar setBarStyle:UIBarStyleBlackTranslucent];
-    [self.navigationController.navigationBar setTranslucent:YES];
-    [self.navigationController.view setNeedsLayout];
+    //[[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackTranslucent];
+    //[self.navigationController.navigationBar setBarStyle:UIBarStyleBlackTranslucent];
+    //[self.navigationController.navigationBar setTranslucent:YES];
+    //[self.navigationController.view setNeedsLayout];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
 {
-    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackOpaque];
-    [self.navigationController.navigationBar setBarStyle:UIBarStyleBlackOpaque];
-    [self.navigationController.navigationBar setTranslucent:NO];
+    //[[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackOpaque];
+    //[self.navigationController.navigationBar setBarStyle:UIBarStyleBlackOpaque];
+    //[self.navigationController.navigationBar setTranslucent:NO];
     
     [super viewWillDisappear:animated];
 }
 
-- (void)videoFinished:(NSNotification *)notification
+- (void) videoFinished:(NSNotification*)notification 
 {
-    NSLog(@"Video ended!");
+    int reason = [[[notification userInfo] valueForKey:MPMoviePlayerPlaybackDidFinishReasonUserInfoKey] intValue];
+    
+    if (reason == MPMovieFinishReasonPlaybackEnded || reason == MPMovieFinishReasonUserExited)  
+    {
+        //movie finished playin
+        gEventCallback("complete", "");
+    }
+    else 
+    {
+        //user hit the done button
+        gEventCallback("fail", "");
+    }
+
+    [self dismissViewControllerAnimated:NO completion:nil];
 }
 
 @end
@@ -141,42 +158,20 @@ int platform_videoSupported()
 
 void platform_videoInitialize(VideoEventCallback eventCallback)
 {
-    gEventCallback = eventCallback;
-
-    ////TODO: video playback support on iOS
+    gEventCallback = eventCallback;    
 }
 
 void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlMode, unsigned int bgColor)
 {
-    //TODO: Add error checking
 
-    NSString* resourcePath = [[NSBundle mainBundle] resourcePath];            
-    resourcePath = [resourcePath stringByAppendingString:@"/assets/bigbuckbunny.mp4"];
+    NSString* resourcePath = [[NSBundle mainBundle] resourcePath];
+    resourcePath = [resourcePath stringByAppendingString:@"/"];
+    resourcePath = [resourcePath stringByAppendingString:[NSString stringWithUTF8String:video]];
     
     NSLog(@"%@", resourcePath);
 
     NSURL *videoUrl = [NSURL fileURLWithPath:resourcePath];
 
-    [getParentViewController() presentViewController:[MoviePlayerViewController controller:videoUrl] animated:YES completion:nil];
-
-    /*
-
-    gVideoPlayer = [[[MPMoviePlayerController alloc] initWithContentURL:videoUrl] retain];
-
-    [[NSNotificationCenter defaultCenter] addObserver:gVideoPlayer      
-                                          selector:@selector(VideoFinished:)
-                                          name:MPMoviePlayerPlaybackDidFinishNotification
-                                          object:gVideoPlayer];
-
-    gVideoPlayer.controlStyle             = MPMovieControlStyleNone;//MPMovieControlStyleDefault;
-    gVideoPlayer.scalingMode              = MPMovieScalingModeAspectFit;
-    gVideoPlayer.shouldAutoplay           = YES;
-    gVideoPlayer.view.autoresizingMask    = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    gVideoPlayer.view.autoresizesSubviews = YES;
-    gVideoPlayer.view.frame               = getParentViewController().view.bounds;
-    
-    [gVideoPlayer prepareToPlay];
-    [getParentViewController().view addSubview:gVideoPlayer.view];
-    */
+    [getParentViewController() presentViewController:[MoviePlayerViewController controller:videoUrl] animated:NO completion:nil];
 
 }
