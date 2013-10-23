@@ -71,7 +71,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
     public static void triggerGenericEvent(String type, String payload)
     {
-    // Submit callback on proper thread.
+        // Submit callback on proper thread.
         final String fType = type;
         final String fPayload = payload;
 
@@ -231,14 +231,22 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onPause() {
+        LoomVideo.onPause();
         super.onPause();
         mGLView.onPause();
     }
 
     @Override
     protected void onResume() {
+        LoomVideo.onResume();
         super.onResume();
         mGLView.onResume();
+    }
+
+    @Override
+    protected void onDestroy() {
+        LoomVideo.onDestroy();
+        super.onDestroy();
     }
 
     private boolean detectOpenGLES20() 
