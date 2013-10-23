@@ -67,6 +67,9 @@ public class LoomVideo
             _rootView.removeView(_videoView);
             _rootView.setBackgroundColor(Color.TRANSPARENT);
 
+            ///give focus back to the main surface view after we have removed the video view 
+            Cocos2dxGLSurfaceView.mainView.requestFocus();
+
             ///fire native callback noting completion
             deferNativeCallback(1, "success");
             _isPlaying = false;
@@ -80,6 +83,9 @@ public class LoomVideo
             ///remove the video view from the root
             _rootView.removeView(_videoView);
             _rootView.setBackgroundColor(Color.TRANSPARENT);
+
+            ///give focus back to the main surface view after we have removed the video view 
+            Cocos2dxGLSurfaceView.mainView.requestFocus();
 
             ///create error string
             String message = "error";
@@ -160,7 +166,7 @@ public class LoomVideo
 
 
     ///handles initialization of the Loom Video class
-    public static void init(ViewGroup parentView)
+    public static void onCreate(ViewGroup parentView)
     {
         ///store some data for later
         _rootView = parentView;
