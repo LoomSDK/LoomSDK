@@ -31,7 +31,13 @@ limitations under the License.
 
 lmDefineLogGroup(gAppleVideoLogGroup, "loom.video.apple", 1, 0);
 
+#define UIColorFromRGB(rgbValue) [UIColor \
+       colorWithRed:((float)((rgbValue & 0xFF0000) >> 16))/255.0 \
+       green:((float)((rgbValue & 0xFF00) >> 8))/255.0 \
+       blue:((float)(rgbValue & 0xFF))/255.0 alpha:((float)((rgbValue & 0xFF000000) >> 24))/255.0]
+
 static VideoEventCallback gEventCallback = NULL;
+static unsigned int gBackgroundColor = 0xFF000000;
 
 static UIViewController* getParentViewController()
 {
@@ -85,6 +91,8 @@ static UIViewController* getParentViewController()
     self.videoPlayer.view.frame               = getParentViewController().view.bounds;
     self.videoPlayer.fullscreen               = YES;
 
+    self.videoPlayer.backgroundView.backgroundColor = UIColorFromRGB(gBackgroundColor);
+
     [[NSNotificationCenter defaultCenter] addObserver:self      
                                           selector:@selector(videoFinished:)
                                           name:MPMoviePlayerPlaybackDidFinishNotification
@@ -92,6 +100,8 @@ static UIViewController* getParentViewController()
     
     [self.videoPlayer prepareToPlay];
     [self.view addSubview:self.videoPlayer.view];
+
+
 }
 
 - (void)viewDidUnload
@@ -153,6 +163,9 @@ void platform_videoInitialize(VideoEventCallback eventCallback)
 
 void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlMode, unsigned int bgColor)
 {
+
+    // remember the background color as we can't set it here
+    gBackgroundColor = bgColor;
 
     NSString* resourcePath = [[NSBundle mainBundle] resourcePath];
     resourcePath = [resourcePath stringByAppendingString:@"/"];
