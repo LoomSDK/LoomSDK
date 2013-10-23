@@ -30,6 +30,14 @@ package loom.platform
 
 
     /**
+     * Delegate used when Video playback has completed, ie. "complete" or "fail"
+     *  @param type String indicating the state of completion
+     *  @param payload Additional supporting information regarding the return type
+     */
+    public delegate VideoCompleteDelegate(type:String, payload:String):void;
+
+
+    /**
      * Type of control widget to display over the video
      */
     public enum VideoControlMode
@@ -99,13 +107,13 @@ package loom.platform
          *
          * No parameters.
          */
-        public static native var onComplete:NativeDelegate;
+        public static native var onComplete:VideoCompleteDelegate;
 
         /**
          * Called when the video is unable to play or complete
          *
          * No parameters.
          */
-        public static native var onFail:NativeDelegate;
+        public static native var onFail:VideoCompleteDelegate;
     }
 }

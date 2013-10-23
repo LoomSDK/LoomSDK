@@ -41,6 +41,7 @@ import android.view.WindowManager;
 import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.content.Intent;
+import android.graphics.Rect;
 
 import co.theengine.loomdemo.billing.LoomStore;
 
@@ -111,6 +112,8 @@ public class LoomDemo extends Cocos2dxActivity {
         }
     }
 
+    private boolean keyboardHidden = true;
+
     protected void onCreate(Bundle savedInstanceState) 
     {
         instance = this;
@@ -176,28 +179,44 @@ public class LoomDemo extends Cocos2dxActivity {
         // Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
         final View activityRootView = framelayout;
         Log.d("Loom", "Registering for global layout listener!");
-        logError("keyboardResize BUTTS");
         activityRootView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() 
         {
             @Override
             public void onGlobalLayout() 
             {
-                logError("keyboardResize " + activityRootView.getHeight());
-                Log.d("Loom", "keyboardResize " + activityRootView.getHeight());
+
+                final Rect r = new Rect();
+                activityRootView.getWindowVisibleDisplayFrame(r);
+                final int heightDiff = activityRootView.getRootView().getHeight() - (r.bottom - r.top);
 
                 // Convert the dps to pixels
                 final float scale = activityRootView.getContext().getResources().getDisplayMetrics().density;
                 final float scaledThreshold = (int) (100 * scale + 0.5f);
-                int heightDiff = activityRootView.getRootView().getHeight() - activityRootView.getHeight();
+
                 if (heightDiff > scaledThreshold)
                 {
-                    // if more than 100 points, its probably a keyboard...
-                    logError("keyboardResize " + activityRootView.getHeight());
-                    triggerGenericEvent("keyboardResize", "" + activityRootView.getHeight());
+                    // ignore if not hidden as this is probably an autocomplete bar coming up
+                    if (keyboardHidden)
+                    {
+                        keyboardHidden = false;
+                        triggerGenericEvent("keyboardResize", "" + heightDiff);
+                    }
+
                 }
+                else
+                {
+                    if (keyboardHidden)
+                        return;
+
+                    keyboardHidden = true;
+                    // this matches iOS behavior
+                    triggerGenericEvent("keyboardResize", "0");                 
+
+                }
+
+
              }
-        }); 
-    }
+        });     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) 

@@ -84,8 +84,9 @@ endif(ANDROID)
 if (APPLE)
 
     if (LOOM_BUILD_JIT EQUAL 1)        
-          #FIXME: This is to satisfy some jit specific symbols
-          set (LOOM_IOS_LIB_GCC "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/llvm-gcc-4.2/lib/gcc/arm-apple-darwin10/4.2.1/v7/libgcc.a")
+          if (LOOM_IOS_LEGACY EQUAL 1)
+              set (LOOM_IOS_LIB_GCC "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/llvm-gcc-4.2/lib/gcc/arm-apple-darwin10/4.2.1/v7/libgcc.a")
+          endif()
     endif()
 
     if (LOOM_BUILD_IOS EQUAL 1)
@@ -103,8 +104,7 @@ if (APPLE)
           "-framework CoreFoundation"
           "-framework CoreMotion"
           "-framework Foundation"
-          "-framework UIKit"
-          "-framework IOKit"
+          "-framework UIKit"          
           "-framework GLKit"  
           "-framework OpenGLES"
           "-framework StoreKit"
@@ -121,6 +121,7 @@ if (APPLE)
           # Admob SDK
           ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a
           "-ObjC"
+          "-lc++"
           )
 
         #iPhone app bundle
@@ -143,7 +144,6 @@ if (APPLE)
            LoomScript
            LoomGraphics
            LoomCore
-           "-framework IOKit"
            "-framework CoreFoundation"
            "-framework Cocoa"
            "-framework OpenGL"
