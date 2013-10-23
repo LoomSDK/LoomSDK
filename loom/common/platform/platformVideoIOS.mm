@@ -82,8 +82,6 @@ static UIViewController* getParentViewController()
     self.videoPlayer.controlStyle             = MPMovieControlStyleNone;
     self.videoPlayer.scalingMode              = MPMovieScalingModeAspectFit;
     self.videoPlayer.shouldAutoplay           = YES;
-    //self.videoPlayer.view.autoresizingMask    = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    //self.videoPlayer.view.autoresizesSubviews = YES;
     self.videoPlayer.view.frame               = getParentViewController().view.bounds;
     self.videoPlayer.fullscreen               = YES;
 
@@ -115,18 +113,10 @@ static UIViewController* getParentViewController()
     [super viewWillAppear:animated];
     
     [self setWantsFullScreenLayout:YES];
-    //[[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackTranslucent];
-    //[self.navigationController.navigationBar setBarStyle:UIBarStyleBlackTranslucent];
-    //[self.navigationController.navigationBar setTranslucent:YES];
-    //[self.navigationController.view setNeedsLayout];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
 {
-    //[[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackOpaque];
-    //[self.navigationController.navigationBar setBarStyle:UIBarStyleBlackOpaque];
-    //[self.navigationController.navigationBar setTranslucent:NO];
-    
     [super viewWillDisappear:animated];
 }
 
