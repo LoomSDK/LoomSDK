@@ -42,7 +42,7 @@ package
                 ///start video Playback
 
                 // on Android the video must be in the raw folder, on iOS we can use standard asset layout
-                var videoAsset = Platform.getPlatform() == PlatformType.IOS ? "assets/bigbuckbunny.mp4" : "bigbuckbunny.mp4";
+                var videoAsset = Platform.getPlatform() == PlatformType.IOS ? "assets/bigbuckbunny.mp4" : "bigbuckbunny";
 
                 Video.playFullscreen(videoAsset, VideoScaleMode.FitAspect, VideoControlMode.Show, 0xff000000);
             }
