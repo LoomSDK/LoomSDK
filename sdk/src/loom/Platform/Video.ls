@@ -85,7 +85,7 @@ package loom.platform
     /**
      * Static control class for playing back videos
      */
-    public class Video 
+    public native class Video 
     {
         /**
          * Plays a video in Fullscreen mode

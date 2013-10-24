@@ -107,7 +107,7 @@ public class DolbyAudio
             _isDolbyAudioProcessingConnected = false;
 
             // The application tries to establish connection again by releasing the current handle and initializing again
-            if(_dolbyAudioProcessing != null) 
+            if(isProcessingSupported()) 
             {
                 try 
                 {
@@ -140,7 +140,7 @@ public class DolbyAudio
         _context = context;
         
         // Obtain the handle to Dolby Audio Processing 
-        // NOTE: DolbyAudioProcessing objects shall not be used until onClientConnected() is called.
+        // NOTE: DolbyAudioProcessing objects should not be used until onClientConnected() is called.
         DolbyAudioListeners dolbyListeners = new DolbyAudioListeners();
         try
         {
@@ -165,7 +165,7 @@ public class DolbyAudio
         Log.d(TAG, "onDestroy");
 
         // Release Dolby Audio Processing resource
-        if(_dolbyAudioProcessing != null)
+        if(isProcessingSupported())
         {
             try
             {
@@ -239,11 +239,20 @@ public class DolbyAudio
         }
     }
 
+
+ 
     
+    /** Returns the value of the Dolby Audio Profile Profile */
+    public static boolean isProcessingSupported()
+    {
+        return (_dolbyAudioProcessing == null) ? false : true;
+    }
+
+
     /** Call to set enable state of Dolby audio processing. */
     public static void setProcessingEnabled(boolean enable)
     {
-        if(_dolbyAudioProcessing != null) 
+        if(isProcessingSupported()) 
         {
             try
             {
@@ -265,7 +274,7 @@ public class DolbyAudio
     /** Call to set Dolby audio processing profile selection. */
     public static void setProcessingProfile(int profileIndex)
     {
-        if(_dolbyAudioProcessing != null) 
+        if(isProcessingSupported()) 
         {
             try 
             {
@@ -366,6 +375,15 @@ public class DolbyAudio
         }
         return enabled;
     }
+
+
+    /** Returns the value of the Dolby Audio Profile Profile */
+    public static int getPrivateProfileID()
+    {
+        return DolbyAudioProcessing.DOLBY_PRIVATE_PROFILE;
+    }
+    
+    
 
 
 
