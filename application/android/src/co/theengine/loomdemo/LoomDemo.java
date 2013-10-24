@@ -44,9 +44,6 @@ import android.content.Intent;
 import android.graphics.Rect;
 
 import co.theengine.loomdemo.billing.LoomStore;
-import com.dolby.DolbyAudio;
-
-
 
 public class LoomDemo extends Cocos2dxActivity {
 
@@ -74,7 +71,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
     public static void triggerGenericEvent(String type, String payload)
     {
-    // Submit callback on proper thread.
+        // Submit callback on proper thread.
         final String fType = type;
         final String fPayload = payload;
 
@@ -178,9 +175,6 @@ public class LoomDemo extends Cocos2dxActivity {
         ///Create Video View for our layout
         LoomVideo.onCreate(webViewGroup);
 
-        ///create Dolby Audio handler for devices that support Dolby Audio
-        DolbyAudio.onCreate(this);
-
         // Listen for IME-initiated resizes.
         // Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
         final View activityRootView = framelayout;
@@ -236,35 +230,24 @@ public class LoomDemo extends Cocos2dxActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        DolbyAudio.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        DolbyAudio.onStop();
-    }
-
-    @Override
     protected void onPause() {
+        LoomVideo.onPause();
         super.onPause();
         mGLView.onPause();
     }
 
     @Override
     protected void onResume() {
+        LoomVideo.onResume();
         super.onResume();
         mGLView.onResume();
     }
 
     @Override
     protected void onDestroy() {
+        LoomVideo.onDestroy();
         super.onDestroy();
-        DolbyAudio.onDestroy();
     }
-
 
     private boolean detectOpenGLES20() 
     {

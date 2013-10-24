@@ -32,12 +32,13 @@ import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 public class LoomVideo
 {
     ///constants
-    public static final int           Scale_None = 0;
-    public static final int           Scale_Fill = 1;
-    public static final int           Scale_FitAspect = 2;
-    public static final int           Controls_Show = 0;
-    public static final int           Controls_Hide = 1;
-    public static final int           Controls_StopOnTouch = 2;
+    public static final int             Scale_None = 0;
+    public static final int             Scale_Fill = 1;
+    public static final int             Scale_FitAspect = 2;
+    public static final int             Controls_Show = 0;
+    public static final int             Controls_Hide = 1;
+    public static final int             Controls_StopOnTouch = 2;
+    public static final int             Video_Resume_Offset = 500;
 
 
     ///private vars
@@ -48,6 +49,9 @@ public class LoomVideo
     private static int          _controlMode = Controls_Show;
     private static int          _scaleMode = Scale_None;
     private static int          _bgColor = Color.TRANSPARENT;
+    private static int          _suspendedVideoPos = 0;
+    private static boolean      _isPlaying = false;
+    private static boolean      _isPaused = false;
 
 
 
@@ -63,8 +67,12 @@ public class LoomVideo
             _rootView.removeView(_videoView);
             _rootView.setBackgroundColor(Color.TRANSPARENT);
 
+            ///give focus back to the main surface view after we have removed the video view 
+            Cocos2dxGLSurfaceView.mainView.requestFocus();
+
             ///fire native callback noting completion
             deferNativeCallback(1, "success");
+            _isPlaying = false;
         }    
 
         @Override
@@ -75,6 +83,9 @@ public class LoomVideo
             ///remove the video view from the root
             _rootView.removeView(_videoView);
             _rootView.setBackgroundColor(Color.TRANSPARENT);
+
+            ///give focus back to the main surface view after we have removed the video view 
+            Cocos2dxGLSurfaceView.mainView.requestFocus();
 
             ///create error string
             String message = "error";
@@ -112,6 +123,7 @@ public class LoomVideo
         
             ///fire failed delegate
             deferNativeCallback(0, message);
+            _isPlaying = false;
             return true;
         }
 
@@ -137,6 +149,7 @@ public class LoomVideo
         @Override
         public void onPrepared(MediaPlayer mp)
         {
+            Log.d("Loom", "Video Prepared");
             _videoView.requestFocus();
 
             ///set the layout of the video to the user specs
@@ -196,6 +209,49 @@ public class LoomVideo
     }
 
 
+    ///handle pausing the video if one is playing
+    public static void onPause()
+    {
+        if(_isPlaying)
+        {
+            _videoView.pause();
+            _suspendedVideoPos = _videoView.getCurrentPosition();            
+
+            ///push back position a bit to account for delay to show the view on restart, so that none of the video is missed
+            _suspendedVideoPos -= Video_Resume_Offset;
+            if(_suspendedVideoPos < 0)
+            {
+                _suspendedVideoPos = 0;
+            }
+            _isPaused = true;
+            Log.d("Loom", "Pausing Video Playback at position: " + _suspendedVideoPos);
+        }
+    }
+
+
+    ///handle resuming the video
+    public static void onResume()
+    {
+        if(_isPaused)
+        {
+            Log.d("Loom", "Resuming Video Playback at position: " + _suspendedVideoPos);
+            _videoView.seekTo(_suspendedVideoPos);
+            _videoView.start();
+            _isPaused = false;
+        }
+    }
+
+
+    ///handle destroying the video
+    public static void onDestroy()
+    {
+        if(_isPlaying)
+        {
+            Log.d("Loom", "Stopping Video Playback");
+            _videoView.stopPlayback();
+            _isPlaying = false;
+        }
+    }
 
 
     ///internal function for playing a video
@@ -208,7 +264,6 @@ public class LoomVideo
         _scaleMode = scaleMode;
         _controlMode = controlMode;
         _bgColor = bgColor;
-
 
         ///if specified, create media controller and link it with the video view
         switch(_controlMode)
@@ -243,6 +298,7 @@ public class LoomVideo
         ///add video to the root view (with dummy size to minimize the stupid sliding effect) and start it
         _rootView.addView(_videoView, getLayout(512, 512));
         _videoView.start();
+        _isPlaying = true;
     }  
 
 
