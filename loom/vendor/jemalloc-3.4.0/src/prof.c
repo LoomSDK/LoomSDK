@@ -11,6 +11,15 @@
 #include <unwind.h>
 #endif
 
+#ifdef _MSC_VER
+
+int getpid()
+{
+	return 1;
+}
+
+#endif
+
 /******************************************************************************/
 /* Data. */
 

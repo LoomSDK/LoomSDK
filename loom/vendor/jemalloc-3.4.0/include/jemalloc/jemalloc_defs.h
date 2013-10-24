@@ -108,7 +108,12 @@
 /* #undef JEMALLOC_MUTEX_INIT_CB */
 
 /* Defined if __attribute__((...)) syntax is supported. */
-#define JEMALLOC_HAVE_ATTR 
+
+// define JEMALLOC_HAVE_ATTR for everyone other than windows
+#ifndef _MSC_VER
+    #define JEMALLOC_HAVE_ATTR 
+#endif
+
 #ifdef JEMALLOC_HAVE_ATTR
 #  define JEMALLOC_ATTR(s) __attribute__((s))
 #  define JEMALLOC_EXPORT JEMALLOC_ATTR(visibility("default"))
@@ -117,11 +122,7 @@
 #  define JEMALLOC_NOINLINE JEMALLOC_ATTR(noinline)
 #elif _MSC_VER
 #  define JEMALLOC_ATTR(s)
-#  ifdef DLLEXPORT
-#    define JEMALLOC_EXPORT __declspec(dllexport)
-#  else
-#    define JEMALLOC_EXPORT __declspec(dllimport)
-#  endif
+#  define JEMALLOC_EXPORT 
 #  define JEMALLOC_ALIGNED(s) __declspec(align(s))
 #  define JEMALLOC_SECTION(s) __declspec(allocate(s))
 #  define JEMALLOC_NOINLINE __declspec(noinline)
@@ -134,7 +135,12 @@
 #endif
 
 /* Defined if sbrk() is supported. */
+
+#if LOOM_PLATFORM != LOOM_PLATFORM_WIN32
 #define JEMALLOC_HAVE_SBRK 
+#else
+#undef JEMALLOC_HAVE_SBRK 
+#endif
 
 /* Non-empty if the tls_model attribute is supported. */
 #define JEMALLOC_TLS_MODEL 
@@ -240,7 +246,7 @@
 /*
  * Darwin (OS X) uses zones to work around Mach-O symbol override shortcomings.
  */
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 #undef JEMALLOC_ZONE
 #else
 #define JEMALLOC_ZONE 

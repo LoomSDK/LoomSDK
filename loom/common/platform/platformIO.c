@@ -582,7 +582,7 @@ char *platform_realpath(const char *name, char *resolved)
        * `malloc' failure case.
        */
 
-      retname = lmAlloc( _MAX_PATH );
+      retname = lmAlloc( NULL, _MAX_PATH );
     }
 
     /* Otherwise, `name' must refer to a readable filesystem object,

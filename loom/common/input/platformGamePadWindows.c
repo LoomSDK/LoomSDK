@@ -9,6 +9,7 @@
 #include "platformGamePad.h"
 #include "platformSysGamePad.h"
 #include "platformGamePad_c.h"
+#include "loom/common/core/allocator.h"
 
 #include <stdio.h>
 #include <windows.h>
@@ -407,7 +408,7 @@ input_sysGamepadOpen(InputGamepad *gamepad)
 
     /* allocate memory for system specific hardware data */
     gamepad->hwdata =
-        (struct gamepad_hwdata *) lmAlloc(sizeof(struct gamepad_hwdata));
+        (struct gamepad_hwdata *) lmAlloc(NULL, sizeof(struct gamepad_hwdata));
     if (gamepad->hwdata == NULL) {
         lmAssert(0, "Out of memory");
         return(-1);
@@ -955,7 +956,7 @@ input_sysGamepadClose(InputGamepad *gamepad)
     if (gamepad->hwdata != NULL)
     {
         /* free system specific hardware data */
-        lmFree(gamepad->hwdata);
+        lmFree(NULL, gamepad->hwdata);
     }
 }
 
@@ -968,7 +969,7 @@ input_sysGamepadQuit(void)
 
     for (i = 0; i < _arraysize(SYS_JoystickNames); ++i) {
         if (SYS_JoystickNames[i]) {
-            lmFree(SYS_JoystickNames[i]);
+            lmFree(NULL, SYS_JoystickNames[i]);
             SYS_JoystickNames[i] = NULL;
         }
     }

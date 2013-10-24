@@ -29,9 +29,7 @@
 #  define SIZE_T_MAX	SIZE_MAX
 #endif
 #include <stdarg.h>
-#ifndef _WIN32
 #include <stdbool.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -51,6 +49,12 @@ typedef intptr_t ssize_t;
 #  define __func__ __FUNCTION__
 /* Disable warnings about deprecated system functions */
 #  pragma warning(disable: 4996)
+/* ternary - applied to unsigned */
+#  pragma warning(disable: 4146)
+/* conversion from 'uintmax_t' to 'size_t', possible loss of data */
+#  pragma warning(disable: 4244)
+/* different const qualifiers */
+#  pragma warning(disable: 4090)
 #else
 #  include <unistd.h>
 #endif
@@ -193,8 +197,10 @@ static const bool config_ivsalloc =
 #include <machine/atomic.h>
 #endif
 
+#ifndef _MSC_VER
 #if (defined(JEMALLOC_OSATOMIC) || defined(JEMALLOC_OSSPIN))
 #include <libkern/OSAtomic.h>
+#endif
 #endif
 
 #ifdef JEMALLOC_ZONE
