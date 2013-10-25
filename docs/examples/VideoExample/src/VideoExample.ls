@@ -11,6 +11,8 @@ package
     import loom.platform.VideoScaleMode;
     import loom.platform.VideoControlMode;
 
+    import system.platform.PlatformType;
+    import system.platform.Platform;
 
     /**
      * Example for full screen video playback in Loom
@@ -37,8 +39,12 @@ package
                 Video.onComplete += videoComplete;
                 Video.onFail += videoFail;
 
-                ///start video playback
-                Video.playFullscreen("bigbuckbunny", VideoScaleMode.FitAspect, VideoControlMode.Show, 0xff000000);
+                ///start video Playback
+
+                // on Android the video must be in the raw folder, on iOS we can use standard asset layout
+                var videoAsset = Platform.getPlatform() == PlatformType.IOS ? "assets/bigbuckbunny.mp4" : "bigbuckbunny";
+
+                Video.playFullscreen(videoAsset, VideoScaleMode.FitAspect, VideoControlMode.Show, 0xff000000);
             }
             else
             {
