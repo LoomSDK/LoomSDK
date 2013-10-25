@@ -184,9 +184,9 @@ public class DolbyAudio
     }
 
 
-///TODO: Can use onResume instead?
     public static void onStart()
     {
+        ///NOTE: Dolby Example code uses onStart for some reason... Should we use onResume instead? 
         Log.d(TAG, "onStart()");
 
         _isActivityInForeground = true;
@@ -213,9 +213,9 @@ public class DolbyAudio
     }
 
 
-///TODO: Can use onPause instead?
     public static void onStop()
     {
+        ///NOTE: Dolby Example code uses onStop for some reason... Should we use onPause instead? 
         Log.d(TAG, "onStop()");
 
         _isActivityInForeground = false;

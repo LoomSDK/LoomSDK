@@ -7,6 +7,7 @@ package dolby.main
     import loom2d.ui.SimpleLabel;
     import loom2d.ui.SimpleButton;
     import loom2d.ui.ButtonClickCallback;
+    import loom.sound.SimpleAudioEngine;
 
     import loom.platform.DolbyAudio;
 
@@ -51,6 +52,9 @@ package dolby.main
             }
             else
             {
+                ///start the bg music
+                SimpleAudioEngine.sharedEngine().playBackgroundMusic("assets/audio/dolbyaudio.m4a");
+
                 isSupported.text += "Supported!";
                 isSupported.x = stage.stageWidth / 2 - 160;
                 isSupported.y = stage.stageHeight / 2 - 150;
@@ -107,6 +111,7 @@ package dolby.main
 
         override function onTick():void
         {
+            super.onTick();
             if(DolbyAudio.supported)
             {
                 ///update some elements that are interactive
@@ -115,7 +120,9 @@ package dolby.main
 
                 ///cur profile label
                 var curProfile:int = DolbyAudio.getSelectedProfile();
-                _curProfileLabel.text = "Current Profile: " + DolbyAudio.getProfileName(curProfile) + "(" + curProfile.toString() + ")";
+                var curProfileString:String = DolbyAudio.getProfileName(curProfile) + "(" + curProfile.toString() + ")";
+              
+                _curProfileLabel.text = "Current Profile: " + curProfileString;
             }
         }
 

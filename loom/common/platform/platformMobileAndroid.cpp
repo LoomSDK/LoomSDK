@@ -25,7 +25,7 @@
 #include <jni.h>
 #include "platformAndroidJni.h"
 
-#include "loom/common/utils/utString.h"
+#include "loom/engine/cocos2dx/cocoa/CCString.h"
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
 #include "loom/common/platform/platformMobile.h"
@@ -137,10 +137,12 @@ const char *platform_getDolbyAudioProfileName(int profileIndex)
                                                                                     profileIndex);
 
     ///convert jstring result into const char* for us to return
-    utString profileName = LoomJni::jstring2string(result);
+    cocos2d::CCString *profileName = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
+    profileName->autorelease();
     gGetDolbyAudioProfileName.env->DeleteLocalRef(result);
-    return profileName.c_str();
+    return profileName->m_sString.c_str();
 }
+
 
 ///gets the currently in use Dolby Audio processing profile
 int platform_getSelectedDolbyAudioProfile()
