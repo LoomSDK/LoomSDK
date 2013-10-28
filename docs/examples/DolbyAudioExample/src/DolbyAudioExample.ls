@@ -76,7 +76,6 @@ package dolby.main
 
                 ///cur profile index label
                 _curProfileLabel = new SimpleLabel("assets/Curse-hd.fnt");
-                _curProfileLabel.touchable = true;
                 _curProfileLabel.scale = 0.2;
                 _curProfileLabel.x = 50;
                 _curProfileLabel.y = _enabledToggle.y + 80;
@@ -144,6 +143,7 @@ package dolby.main
         private function createButtonLabel(button:SimpleButton, text:String):SimpleLabel
         {
             var label:SimpleLabel = new SimpleLabel("assets/Curse-hd.fnt");
+            label.touchable = false;
             label.text = text;
             label.scale = 0.2;
             label.x = button.x + 8;
