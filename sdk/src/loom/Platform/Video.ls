@@ -68,17 +68,19 @@ package loom.platform
          * Don't scale at all and keep the video the same resolution as its source
          * Known Issue: This method will sometimes cause the video to "slide in" towards the middle of the screen on Android. Loom-1809.
          */
-        None,
+        ///Note: Removed for now until it is working and testing on iOS as well as Android
+        // None = 0,
 
         /**
          * Scale the video up to fill the entire screen, ignoring its aspect ratio
          */
-        Fill,
+        ///Note: Removed for now until it is working and testing on iOS as well as Android
+        // Fill = 1,
 
         /**
          * Center the video and scale it until either its width or height touches the edges of the screen, thereby preserving the aspect ratio
          */
-        FitAspect,
+        FitAspect = 2
     };
 
 
