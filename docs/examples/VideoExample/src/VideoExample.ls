@@ -23,6 +23,16 @@ package
      * This application launches and plays back a specified .mp4 video file fullscreen on device.
      * You can modify the Video.onComplete delegate, as well as the various parameters of
      * Video.playFullscreen() to test different methods of playback
+     *
+     * MP4 encoding can sometimes be tricky and some encodes will not work on all devices. A good
+     * base method that we have found is to use 'ffmpeg' (ffmpeg.org) with the following settings:
+     *
+     * ffmpeg -i inputVideoName.mp4 -c:v libx264 -strict -2 -preset slower -profile:v baseline -level 3.0 -s 640x360 ouputVideoName.mp4
+     *
+     * The '-s 640x360' is optional, but some Android devices cannot handle larger resolution video 
+     * playback.  If your video is not 16:9, adjust that value to match your aspect ratio, or remove 
+     * it completely.
+     *
      */
 
 
@@ -40,11 +50,7 @@ package
                 Video.onFail += videoFail;
 
                 ///start video Playback
-
-                // on Android the video must be in the raw folder, on iOS we can use standard asset layout
-                var videoAsset = Platform.getPlatform() == PlatformType.IOS ? "assets/bigbuckbunny.mp4" : "bigbuckbunny";
-
-                Video.playFullscreen(videoAsset, VideoScaleMode.FitAspect, VideoControlMode.Show, 0xff000000);
+                Video.playFullscreen("assets/bigbuckbunny.mp4", VideoScaleMode.FitAspect, VideoControlMode.Show, 0xff000000);
             }
             else
             {

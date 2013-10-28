@@ -97,11 +97,33 @@ void platform_videoInitialize(VideoEventCallback eventCallback)
 
 void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlMode, unsigned int bgColor)
 {
+    ///strip out the raw filename only to use on Android
+    int index = 0;
+    int firstChar = 0;
+    int lastChar = strlen(video) - 1;
+    while(video[index] != '\0')
+    {
+        ///track extention start if found
+        if(video[index] == '.')
+        {
+            lastChar = index - 1;
+        }
+        else if((video[index] == '/') || (video[index] == '\\'))
+        {
+            firstChar = index + 1;
+        }
+        index++;
+    }
+    int len = (lastChar - firstChar) + 1;
+    char *newVideoName = new char[len + 1];
+    memcpy(newVideoName, &video[firstChar], len * sizeof(char));
+    newVideoName[len] = '\0';
+
     ///call java method to play the video
-    jstring jVideo    = gPlayVideoFullscreen.env->NewStringUTF(video);
+    lmLog(gAndroidVideoLogGroup, "videoPlayFullscreen: '%s' became '%s'", video, newVideoName);
+    jstring jVideo    = gPlayVideoFullscreen.env->NewStringUTF(newVideoName);
     gPlayVideoFullscreen.env->CallStaticVoidMethod(gPlayVideoFullscreen.classID, gPlayVideoFullscreen.methodID, jVideo, scaleMode, controlMode, bgColor);
     gPlayVideoFullscreen.env->DeleteLocalRef(jVideo);
+    delete []newVideoName;
 }
-
-
 #endif
