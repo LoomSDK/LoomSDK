@@ -26,6 +26,15 @@ package loom.platform
      * Loom abstracts the native video playback functionality on your platform 
      * (if present) and provides a streamlined interface to play videos.
      *
+     * MP4 encoding can sometimes be tricky and some encodes will not work on all devices. A good
+     * base method that we have found is to use 'ffmpeg' (ffmpeg.org) with the following settings:
+     *
+     * ffmpeg -i inputVideoName.mp4 -c:v libx264 -strict -2 -preset slower -profile:v baseline -level 3.0 -s 640x360 ouputVideoName.mp4
+     *
+     * The '-s 640x360' is optional, but some Android devices cannot handle larger resolution video 
+     * playback.  If your video is not 16:9, adjust that value to match your aspect ratio, or remove 
+     * it completely.
+     *
      */
 
 
