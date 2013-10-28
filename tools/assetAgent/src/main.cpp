@@ -136,7 +136,7 @@ utList<CallbackQueueNote *> gCallbackQueue;
 
 static void enqueueLogCallback(const char *msg)
 {
-    CallbackQueueNote *cqn = lmNew(NULL) CallbackQueueNote();
+    CallbackQueueNote *cqn = lmNew(NULL) CallbackQueueNote;
 
     cqn->type = QNT_Log;
     cqn->text = strdup(msg);
@@ -149,7 +149,7 @@ static void enqueueLogCallback(const char *msg)
 
 static void enqueueFileChangeCallback(const char *path)
 {
-    CallbackQueueNote *cqn = lmNew(NULL) CallbackQueueNote();
+    CallbackQueueNote *cqn = lmNew(NULL) CallbackQueueNote;
 
     cqn->type = QNT_Change;
     cqn->text = strdup(path);

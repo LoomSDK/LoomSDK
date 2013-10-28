@@ -121,7 +121,7 @@ public:
     {
         utArray<Type*> types;
         getTypes(types);
-        for(int i=0; i<types.size(); i++)
+        for(unsigned int i=0; i<types.size(); i++)
             types[i]->freeByteCode();
     }
 
