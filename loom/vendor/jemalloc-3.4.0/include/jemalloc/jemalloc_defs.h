@@ -57,7 +57,7 @@
  * Defined if OSAtomic*() functions are available, as provided by Darwin, and
  * documented in the atomic(3) manual page.
  */
-#if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID
+#if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_LINUX
 #define JEMALLOC_OSATOMIC 
 #endif
 /*
@@ -80,7 +80,7 @@
  * Defined if OSSpin*() functions are available, as provided by Darwin, and
  * documented in the spinlock(3) manual page.
  */
-#if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID
+#if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_LINUX
 #define JEMALLOC_OSSPIN 
 #endif
 
@@ -246,7 +246,7 @@
 /*
  * Darwin (OS X) uses zones to work around Mach-O symbol override shortcomings.
  */
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_WIN32 || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
 #undef JEMALLOC_ZONE
 #else
 #define JEMALLOC_ZONE 
@@ -263,7 +263,7 @@
  *                             than swapped out.
  */
 /* #undef JEMALLOC_PURGE_MADVISE_DONTNEED */
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
 #define JEMALLOC_PURGE_MADVISE_DONTNEED
 #else
 #define JEMALLOC_PURGE_MADVISE_FREE 
