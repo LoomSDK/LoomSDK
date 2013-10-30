@@ -10,9 +10,13 @@
 #   include <bx/timer.h>
 #   include <bx/uint32_t.h>
 
+ #  include "loom/common/core/log.h"
+
 namespace bgfx
 {
     static char s_viewName[BGFX_CONFIG_MAX_VIEWS][256];
+
+    lmDefineLogGroup(gBGFXLogGroup, "BGFX", 1, LoomLogInfo);
 
     static const GLenum s_primType[] =
     {
@@ -398,6 +402,33 @@ namespace bgfx
 
         return 0;
     }
+
+    // gets the next power of 2
+   static uint32_t getNextPOT(uint32_t x)
+   {
+       x = x - 1;
+       x = x | (x >> 1);
+       x = x | (x >> 2);
+       x = x | (x >> 4);
+       x = x | (x >> 8);
+       x = x | (x >>16);
+       return x + 1;
+   }
+ 
+    
+    // Some GL hardware requires POT texture to generate mipmaps
+    // so, we enforce this
+    static bool canGenMips(uint32_t width, uint32_t height)
+    {
+      if( width == getNextPOT(width) && 
+        height == getNextPOT(height))
+      {
+        return true;
+      }
+ 
+      return false;
+    }
+
 
     void dumpExtensions(const char* _extensions)
     {
@@ -1389,6 +1420,8 @@ namespace bgfx
     {
         Dds dds;
 
+        bool genMips = false;
+
         if (parseDds(dds, _mem) )
         {
             uint8_t numMips = dds.m_numMips;
@@ -1556,8 +1589,36 @@ namespace bgfx
                 }
 #endif // BGFX_CONFIG_RENDERER_OPENGL|BGFX_CONFIG_RENDERER_OPENGLES3
                 else
-                {
-                    init(GL_TEXTURE_2D, numMips, _flags);
+                {                    
+
+                    lmLog(gBGFXLogGroup, "Num mips = %i for texture %i %i", numMips, tc.m_width, tc.m_height);
+
+                    if( numMips == 1 && !canGenMips(tc.m_width, tc.m_height))
+                    {
+                       lmLog(gBGFXLogGroup, "Unable to generate mips for non-POT texture %i %i", tc.m_width, tc.m_height);
+                    }
+                    else if (numMips == 1)
+                    {
+                       lmLog(gBGFXLogGroup, "Generate mips for POT texture %i %i", tc.m_width, tc.m_height);
+                       genMips = true;
+
+                       int mips = 1;
+                       int w = tc.m_width;
+                       int h = tc.m_height;
+ 
+                       while (w > 1 && h > 1)
+                       {    
+                            mips++;
+                            w /= 2;
+                            h /= 2;
+                       }
+
+                       m_numMips = numMips = mips;
+
+                    }                
+
+                    init(GL_TEXTURE_2D, numMips, _flags);                    
+
                 }
 
                 const TextureFormatInfo& tfi = s_textureFormat[tc.m_format];
@@ -1655,6 +1716,12 @@ namespace bgfx
                 //
             }
         }
+
+        if (genMips)
+        {
+            GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));           
+        }
+
 
         GL_CHECK(glBindTexture(m_target, 0) );
     }

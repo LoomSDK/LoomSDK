@@ -10,7 +10,7 @@ package loom2d.textures
 
         public static const MAX:int = 1;
 
-        public static var defaultSmoothing:int = NONE;
+        public static var defaultSmoothing:int = BILINEAR;
 
     }
 
