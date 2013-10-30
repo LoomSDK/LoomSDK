@@ -41,7 +41,7 @@ package loom.graphics
         public native var height:Number;
 
         /**
-         *  None/Nearest Neighbor = 0, Bilinear = 1, Trilinear = 2
+         *  None/Nearest Neighbor = 0, Bilinear = 1
          */        
         public native var smoothing:int;
 

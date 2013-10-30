@@ -1420,7 +1420,7 @@ namespace bgfx
     {
         Dds dds;
 
-        bool genMips = false;
+        int genMips = 0;
 
         if (parseDds(dds, _mem) )
         {
@@ -1598,10 +1598,7 @@ namespace bgfx
                        lmLog(gBGFXLogGroup, "Unable to generate mips for non-POT texture %i %i", tc.m_width, tc.m_height);
                     }
                     else if (numMips == 1)
-                    {
-                       lmLog(gBGFXLogGroup, "Generate mips for POT texture %i %i", tc.m_width, tc.m_height);
-                       genMips = true;
-
+                    {                       
                        int mips = 1;
                        int w = tc.m_width;
                        int h = tc.m_height;
@@ -1613,11 +1610,13 @@ namespace bgfx
                             h /= 2;
                        }
 
-                       m_numMips = numMips = mips;
+                       genMips = mips;
+
+                       lmLog(gBGFXLogGroup, "Generate mips for POT texture %i %i with %i levels", tc.m_width, tc.m_height, mips);                       
 
                     }                
 
-                    init(GL_TEXTURE_2D, numMips, _flags);                    
+                    init(GL_TEXTURE_2D, genMips ? genMips : numMips, _flags);                    
 
                 }
 
@@ -1719,7 +1718,8 @@ namespace bgfx
 
         if (genMips)
         {
-            GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));           
+            GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));    
+            m_numMips = genMips;       
         }
 
 
