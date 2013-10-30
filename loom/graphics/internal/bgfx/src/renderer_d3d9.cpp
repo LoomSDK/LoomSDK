@@ -1309,8 +1309,8 @@ namespace bgfx
 
 		DX_CHECK(s_renderCtx.m_device->CreateTexture(_width
 			, _height
-			, _numMips
 			, 0
+			, D3DUSAGE_AUTOGENMIPMAP
 			, _fmt
 			, s_renderCtx.m_pool
 			, &m_texture2d
