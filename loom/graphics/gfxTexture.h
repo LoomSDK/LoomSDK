@@ -36,7 +36,6 @@ typedef int   TextureID;
 
 #define TEXTUREINFO_SMOOTHING_NONE 0
 #define TEXTUREINFO_SMOOTHING_BILINEAR 1
-#define TEXTUREINFO_SMOOTHING_TRILINEAR 2
 
 struct TextureInfo
 {

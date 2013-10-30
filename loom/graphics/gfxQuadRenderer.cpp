@@ -85,10 +85,16 @@ void QuadRenderer::submit()
 
         uint32_t textureFlags = BGFX_TEXTURE_U_CLAMP | BGFX_TEXTURE_V_CLAMP | BGFX_TEXTURE_W_CLAMP;
 
-        textureFlags |= BGFX_TEXTURE_MIN_POINT;
-        textureFlags |= BGFX_TEXTURE_MAG_POINT;
-        textureFlags |= BGFX_TEXTURE_MIP_POINT;
 
+        switch (Texture::sTextureInfos[currentTexture].smoothing)
+        {
+            case TEXTUREINFO_SMOOTHING_NONE:
+                textureFlags |= BGFX_TEXTURE_MIN_POINT;
+                textureFlags |= BGFX_TEXTURE_MAG_POINT;
+                textureFlags |= BGFX_TEXTURE_MIP_POINT;
+                break;
+        }   
+        
         bgfx::setTexture(0, sUniformTexColor, Texture::sTextureInfos[currentTexture].handle, textureFlags);
 
         // Set render states.

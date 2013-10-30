@@ -61,9 +61,6 @@ package
                         case TextureSmoothing.BILINEAR:
                             label.text = "Texture Smoothing: Bilinear";
                             break;
-                        case TextureSmoothing.TRILINEAR:
-                            label.text = "Texture Smoothing: Trilinear";
-                            break;
                     }
 
                     checkerboard.smoothing = currentSmoothing;
