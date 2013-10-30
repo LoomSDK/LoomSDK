@@ -83,7 +83,13 @@ void QuadRenderer::submit()
         bgfx::setIndexBuffer(sIndexBufferHandle, currentIndexBufferIdx, (quadCount * 6));
         bgfx::setVertexBuffer(vertexBuffers[currentVertexBufferIdx], MAXBATCHQUADS * 4);
 
-        bgfx::setTexture(0, sUniformTexColor, Texture::sTextureInfos[currentTexture].handle);
+        uint32_t textureFlags = BGFX_TEXTURE_U_CLAMP | BGFX_TEXTURE_V_CLAMP | BGFX_TEXTURE_W_CLAMP;
+
+        textureFlags |= BGFX_TEXTURE_MIN_POINT;
+        textureFlags |= BGFX_TEXTURE_MAG_POINT;
+        textureFlags |= BGFX_TEXTURE_MIP_POINT;
+
+        bgfx::setTexture(0, sUniformTexColor, Texture::sTextureInfos[currentTexture].handle, textureFlags);
 
         // Set render states.
         bgfx::setState(0

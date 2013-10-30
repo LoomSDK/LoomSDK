@@ -41,6 +41,11 @@ package loom.graphics
         public native var height:Number;
 
         /**
+         *  None/Nearest Neighbor = 0, Bilinear = 1, Trilinear = 2
+         */        
+        public native var smoothing:int;
+
+        /**
          * ID identifying native side existence of this texture.
          */
         public native var id:int;

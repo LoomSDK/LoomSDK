@@ -34,6 +34,10 @@ typedef int   TextureID;
 // loading textures are marked
 #define MARKEDTEXTURE     65534
 
+#define TEXTUREINFO_SMOOTHING_NONE 0
+#define TEXTUREINFO_SMOOTHING_BILINEAR 1
+#define TEXTUREINFO_SMOOTHING_TRILINEAR 2
+
 struct TextureInfo
 {
     TextureID                id;
@@ -42,6 +46,7 @@ struct TextureInfo
 
     int                      width;
     int                      height;
+    int                      smoothing;
 
     bool                     reload;
 
@@ -59,6 +64,7 @@ struct TextureInfo
     void                     reset()
     {
         width       = height = 0;
+        smoothing   = TEXTUREINFO_SMOOTHING_NONE;
         reload      = false;
         handle.idx  = bgfx::invalidHandle;
         texturePath = "";
