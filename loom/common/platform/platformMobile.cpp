@@ -43,34 +43,24 @@ bool platform_isDolbyAudioProcessingEnabled()
     return false;
 }
 
+///checks if the specified Dolby Audio processing profile is supported on this hardware
+bool platform_isDolbyAudioProcessingProfileSupported(const char *profile)
+{
+    return false;
+}
+
 ///sets the Dolby Audio processing profile to use
-void platform_setDolbyAudioProcessingProfile(int profileIndex)
+bool platform_setDolbyAudioProcessingProfile(const char *profile)
 {
+    return false;
 }
 
-///gets the number of supported Dolby Audio processing profiles
-int platform_getNumDolbyAudioProfiles()
-{
-    return 0;
-}
-
-///gets the name that represents the given Dolby Audio processing profile index
-const char *platform_getDolbyAudioProfileName(int profileIndex)
+///gets the currently in use Dolby Audio processing profile
+const char *platform_getSelectedDolbyAudioProfile()
 {
     return "";
 }
 
-///gets the currently in use Dolby Audio processing profile
-int platform_getSelectedDolbyAudioProfile()
-{
-    return -1;
-}
-
-///gets the pre-defined value of the Dolby Audio Private Profile
-int platform_getDolbyAudioPrivateProfileID()
-{
-    return -1;
-}
 
 
 #if LOOM_PLATFORM != LOOM_PLATFORM_IOS

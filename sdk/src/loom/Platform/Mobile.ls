@@ -47,14 +47,29 @@ package loom.platform
     public native class DolbyAudio
     {
         /**
+         * Constant representing the 'Music' Dolby Audio Profile
+         */
+        public static var MUSIC_PROFILE:String = "Music";
+
+        /**
+         * Constant representing the 'Movie' Dolby Audio Profile
+         */
+        public static var MOVIE_PROFILE:String = "Movie";
+
+        /**
+         * Constant representing the 'Game' Dolby Audio Profile
+         */
+        public static var GAME_PROFILE:String = "Game";
+
+        /**
+         * Constant representing the 'Void' Dolby Audio Profile
+         */
+        public static var VOICE_PROFILE:String = "Voice";
+
+        /**
          * Indicates whether or not Dolby Audio is supported on the current platform
          */
         public static native var supported:Boolean;
-
-        /**
-         * Pre-defined Value of the Dolby Audio Private profile
-         */
-        public static native var privateProfileID:int;
 
         /**
          * Sets Dolby Audio processing status
@@ -73,30 +88,24 @@ package loom.platform
         /**
          * Sets Dolby Audio processing profile type
          *
-         *  @param profileIndex Index of the processing profile to set as the active one for Dolby Audio.  Valid indices are obtaind through getNumProfile()
+         *  @param profileIndex Name of the processing profile to set as the active one for Dolby Audio.  Valid indices are obtaind through getNumProfile()
+         *  @return Boolean Whether or not the profile is supported on this hardware
          */
-        public static native function setProcessingProfile(profileIndex:int):void;
+        public static native function isProfileSupported(profile:String):Boolean;
 
         /**
-         * Queries the number of supported Dolby Audio processing profiles for the current hardware
+         * Sets Dolby Audio processing profile type
          *
-         *  @return int Number of Dolby Audio profiles supported
+         *  @param profileIndex Name of the processing profile to set as the active one for Dolby Audio.  Valid indices are obtaind through getNumProfile()
+         *  @return Boolean Whether or not the profile was set properly.  Possibly false if this profile isn't supported and the hardware.
          */
-        public static native function getNumProfiles():int;
-
-        /**
-         * Gets a Dolby Audio processing profile name
-         *
-         *  @param profileIndex Index of the processing profile to query the name of
-         *  @return String Name associated with the given profile index
-         */
-        public static native function getProfileName(profileIndex:int):String;
+        public static native function setProfile(profile:String):Boolean;
 
         /**
          * Queries the currently selected Dolby Audio processing profile
          *
-         *  @return int Index representing the currently selected Dolby Audio processing profile
+         *  @return String Name of the currently selected Dolby Audio processing profile
          */
-        public static native function getSelectedProfile():int;
+        public static native function getSelectedProfile():String;
     }    
 }

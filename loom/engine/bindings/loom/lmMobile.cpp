@@ -47,10 +47,6 @@ public:
     {
         return platform_isDolbyAudioSupported();
     }
-    static int privateProfileID()
-    {
-        return platform_getDolbyAudioPrivateProfileID();
-    }
     static void setProcessingEnabled(bool enable)
     {
         platform_setDolbyAudioProcessingEnabled(enable);
@@ -59,20 +55,15 @@ public:
     {
         return platform_isDolbyAudioProcessingEnabled();
     }
-
-    static void setProcessingProfile(int profileIndex)
+    static bool isProfileSupported(const char *profile)
     {
-        platform_setDolbyAudioProcessingProfile(profileIndex);
+        return platform_isDolbyAudioProcessingProfileSupported(profile);
     }
-    static int getNumProfiles()
+    static bool setProfile(const char *profile)
     {
-        return platform_getNumDolbyAudioProfiles();
+        return platform_setDolbyAudioProcessingProfile(profile);
     }
-    static const char *getProfileName(int profileIndex)
-    {
-        return platform_getDolbyAudioProfileName(profileIndex);
-    }
-    static int getSelectedProfile()
+    static const char *getSelectedProfile()
     {
         return platform_getSelectedDolbyAudioProfile();
     }
@@ -105,13 +96,11 @@ static int registerLoomDolbyAudio(lua_State *L)
         .beginClass<DolbyAudio>("DolbyAudio")
 
             .addStaticProperty("supported", &DolbyAudio::supported)
-            .addStaticProperty("privateProfileID", &DolbyAudio::privateProfileID)
 
             .addStaticMethod("setProcessingEnabled", &DolbyAudio::setProcessingEnabled)
             .addStaticMethod("isProcessingEnabled", &DolbyAudio::isProcessingEnabled)
-            .addStaticMethod("setProcessingProfile", &DolbyAudio::setProcessingProfile)
-            .addStaticMethod("getNumProfiles", &DolbyAudio::getNumProfiles)
-            .addStaticMethod("getProfileName", &DolbyAudio::getProfileName)
+            .addStaticMethod("isProfileSupported", &DolbyAudio::isProfileSupported)
+            .addStaticMethod("setProfile", &DolbyAudio::setProfile)
             .addStaticMethod("getSelectedProfile", &DolbyAudio::getSelectedProfile)
    
         .endClass()

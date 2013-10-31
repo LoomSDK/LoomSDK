@@ -17,16 +17,16 @@ package dolby.main
         ///private vars
         private var _isProcessingLabel:SimpleLabel;
         private var _curProfileLabel:SimpleLabel;
-        private var _profileLabel0:SimpleLabel;
-        private var _profileLabel1:SimpleLabel;
-        private var _profileLabel2:SimpleLabel;
-        private var _profileLabel3:SimpleLabel;
+        private var _musicProfileLabel:SimpleLabel;
+        private var _movieProfileLabel:SimpleLabel;
+        private var _gameProfileLabel:SimpleLabel;
+        private var _voiceProfileLabel:SimpleLabel;
         
         private var _enabledToggle:SimpleButton;
-        private var _setProfile0:SimpleButton;
-        private var _setProfile1:SimpleButton;
-        private var _setProfile2:SimpleButton;
-        private var _setProfile3:SimpleButton;
+        private var _musicProfileButton:SimpleButton;
+        private var _movieProfileButton:SimpleButton;
+        private var _gameProfileButton:SimpleButton;
+        private var _voiceProfileButton:SimpleButton;
 
 
         override public function run():void
@@ -59,17 +59,8 @@ package dolby.main
                 isSupported.x = stage.stageWidth / 2 - 160;
                 isSupported.y = stage.stageHeight / 2 - 150;
 
-                ///private ID label
-                var privateID:int = DolbyAudio.privateProfileID;
-                var label:SimpleLabel = new SimpleLabel("assets/Curse-hd.fnt");
-                label.scale = 0.2;
-                label.x = 50;
-                label.y = isSupported.y + 80;
-                label.text = "Private Profile ID: " + privateID.toString();
-                stage.addChild(label);
-
                 ///enabled toggle button
-                _enabledToggle = createButton(50, label.y + 40, onEnableToggle);
+                _enabledToggle = createButton(50, isSupported.y + 90, onEnableToggle);
 
                 ///is processing enabled label
                 _isProcessingLabel = createButtonLabel(_enabledToggle, "");
@@ -78,30 +69,33 @@ package dolby.main
                 _curProfileLabel = new SimpleLabel("assets/Curse-hd.fnt");
                 _curProfileLabel.scale = 0.2;
                 _curProfileLabel.x = 50;
-                _curProfileLabel.y = _enabledToggle.y + 80;
+                _curProfileLabel.y = _enabledToggle.y + 90;
                 stage.addChild(_curProfileLabel);
 
                 ///buttons to choose current profile
-                var numProfiles:int = DolbyAudio.getNumProfiles();
-                if(numProfiles > 0)
+                var buttonLeft:int = 50;
+                if(DolbyAudio.isProfileSupported(DolbyAudio.MUSIC_PROFILE))
                 {
-                    _setProfile0 = createButton(50, _curProfileLabel.y + 30, onSetProfile0);
-                    _profileLabel0 = createButtonLabel(_setProfile0, DolbyAudio.getProfileName(0));
-                    if(numProfiles > 1)
-                    {
-                        _setProfile1 = createButton(_setProfile0.x + 80, _curProfileLabel.y + 30, onSetProfile1);
-                        _profileLabel1 = createButtonLabel(_setProfile1, DolbyAudio.getProfileName(1));
-                        if(numProfiles > 2)
-                        {
-                            _setProfile2 = createButton(_setProfile1.x + 80, _curProfileLabel.y + 30, onSetProfile2);
-                            _profileLabel2 = createButtonLabel(_setProfile2, DolbyAudio.getProfileName(2));
-                            if(numProfiles > 3)
-                            {
-                                _setProfile3 = createButton(_setProfile2.x + 80, _curProfileLabel.y + 30, onSetProfile3);
-                                _profileLabel3 = createButtonLabel(_setProfile3, DolbyAudio.getProfileName(3));
-                            }
-                        }
-                    }
+                    _musicProfileButton = createButton(buttonLeft, _curProfileLabel.y + 30, onSetMusicProfile);
+                    _musicProfileLabel = createButtonLabel(_musicProfileButton, DolbyAudio.MUSIC_PROFILE);
+                    buttonLeft += 80;
+                }
+                if(DolbyAudio.isProfileSupported(DolbyAudio.MOVIE_PROFILE))
+                {
+                    _movieProfileButton = createButton(buttonLeft, _curProfileLabel.y + 30, onSetMovieProfile);
+                    _movieProfileLabel = createButtonLabel(_movieProfileButton, DolbyAudio.MOVIE_PROFILE);
+                    buttonLeft += 80;
+                }
+                if(DolbyAudio.isProfileSupported(DolbyAudio.GAME_PROFILE))
+                {
+                    _gameProfileButton = createButton(buttonLeft, _curProfileLabel.y + 30, onSetGameProfile);
+                    _gameProfileLabel = createButtonLabel(_gameProfileButton, DolbyAudio.GAME_PROFILE);
+                    buttonLeft += 80;
+                }
+                if(DolbyAudio.isProfileSupported(DolbyAudio.VOICE_PROFILE))
+                {
+                    _voiceProfileButton = createButton(buttonLeft, _curProfileLabel.y + 30, onSetVoiceProfile);
+                    _voiceProfileLabel = createButtonLabel(_voiceProfileButton, DolbyAudio.VOICE_PROFILE);
                 }
             }
             stage.addChild(isSupported);
@@ -118,10 +112,7 @@ package dolby.main
                 _isProcessingLabel.text = (enabled) ? "Enabled" : "Disabled";
 
                 ///cur profile label
-                var curProfile:int = DolbyAudio.getSelectedProfile();
-                var curProfileString:String = DolbyAudio.getProfileName(curProfile) + "(" + curProfile.toString() + ")";
-              
-                _curProfileLabel.text = "Current Profile: " + curProfileString;
+                _curProfileLabel.text = "Current Profile: " + DolbyAudio.getSelectedProfile();
             }
         }
 
@@ -158,21 +149,21 @@ package dolby.main
         {
             DolbyAudio.setProcessingEnabled(!DolbyAudio.isProcessingEnabled());
         }
-        private function onSetProfile0()
+        private function onSetMusicProfile()
         {
-           DolbyAudio.setProcessingProfile(0);
+           DolbyAudio.setProfile(DolbyAudio.MUSIC_PROFILE);
         }
-        private function onSetProfile1()
+        private function onSetMovieProfile()
         {
-           DolbyAudio.setProcessingProfile(1);
+           DolbyAudio.setProfile(DolbyAudio.MOVIE_PROFILE);
         }
-        private function onSetProfile2()
+        private function onSetGameProfile()
         {
-           DolbyAudio.setProcessingProfile(2);
+           DolbyAudio.setProfile(DolbyAudio.GAME_PROFILE);
         }
-        private function onSetProfile3()
+        private function onSetVoiceProfile()
         {
-           DolbyAudio.setProcessingProfile(3);
+           DolbyAudio.setProfile(DolbyAudio.VOICE_PROFILE);
         }
     }
 }

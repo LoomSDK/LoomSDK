@@ -38,11 +38,9 @@ lmDefineLogGroup(gAndroidMobileLogGroup, "loom.mobile.android", 1, 0);
 static loomJniMethodInfo gIsDolbyAudioSupported;
 static loomJniMethodInfo gSetDolbyAudioProcessingEnabled;
 static loomJniMethodInfo gIsDolbyAudioProcessingEnabled;
+static loomJniMethodInfo gIsDolbyAudioProcessingProfileSupported;
 static loomJniMethodInfo gSetDolbyAudioProcessingProfile;
-static loomJniMethodInfo gGetNumDolbyAudioProfiles;
-static loomJniMethodInfo gGetDolbyAudioProfileName;
 static loomJniMethodInfo gGetSelectedDolbyAudioProfile;
-static loomJniMethodInfo gGetDolbyAudioPrivateProfileID;
 
 
 
@@ -64,26 +62,18 @@ void platform_mobileInitialize()
                                  "com/dolby/DolbyAudio",
                                  "isProcessingEnabled",
                                  "()Z");
+    LoomJni::getStaticMethodInfo(gIsDolbyAudioProcessingProfileSupported,
+                                 "com/dolby/DolbyAudio",
+                                 "isProcessingProfileSupported",
+                                 "(Ljava/lang/String;)Z");
     LoomJni::getStaticMethodInfo(gSetDolbyAudioProcessingProfile,
                                  "com/dolby/DolbyAudio",
                                  "setProcessingProfile",
-                                 "(I)V");
-    LoomJni::getStaticMethodInfo(gGetNumDolbyAudioProfiles,
-                                 "com/dolby/DolbyAudio",
-                                 "getNumProfiles",
-                                 "()I");
-    LoomJni::getStaticMethodInfo(gGetDolbyAudioProfileName,
-                                 "com/dolby/DolbyAudio",
-                                 "getProfileName",
-                                 "(I)Ljava/lang/String;");
+                                 "(Ljava/lang/String;)Z");
     LoomJni::getStaticMethodInfo(gGetSelectedDolbyAudioProfile,
                                  "com/dolby/DolbyAudio",
                                  "getSelectedProfile",
-                                 "()I");
-    LoomJni::getStaticMethodInfo(gGetDolbyAudioPrivateProfileID,
-                                 "com/dolby/DolbyAudio",
-                                 "getPrivateProfileID",
-                                 "()I");
+                                 "()Ljava/lang/String;");
 }
 
 
@@ -113,51 +103,39 @@ bool platform_isDolbyAudioProcessingEnabled()
     return (bool)result;
 }
 
+///checks if the Dolby Audio processing profile is supported
+bool platform_isDolbyAudioProcessingProfileSupported(const char *profile)
+{
+    jstring jProfile = gIsDolbyAudioProcessingProfileSupported.env->NewStringUTF(profile);
+    jboolean result = gIsDolbyAudioProcessingProfileSupported.env->CallStaticBooleanMethod(gIsDolbyAudioProcessingProfileSupported.classID, 
+                                                                                            gIsDolbyAudioProcessingProfileSupported.methodID, 
+                                                                                            jProfile);
+    gIsDolbyAudioProcessingProfileSupported.env->DeleteLocalRef(jProfile);
+    return (bool)result;
+}
+
 ///sets the Dolby Audio processing profile to use
-void platform_setDolbyAudioProcessingProfile(int profileIndex)
+bool platform_setDolbyAudioProcessingProfile(const char *profile)
 {
-    gSetDolbyAudioProcessingProfile.env->CallStaticVoidMethod(gSetDolbyAudioProcessingProfile.classID, 
-                                                                gSetDolbyAudioProcessingProfile.methodID, 
-                                                                profileIndex);
+    jstring jProfile = gSetDolbyAudioProcessingProfile.env->NewStringUTF(profile);
+    jboolean result = gSetDolbyAudioProcessingProfile.env->CallStaticBooleanMethod(gSetDolbyAudioProcessingProfile.classID, 
+                                                                                    gSetDolbyAudioProcessingProfile.methodID, 
+                                                                                    jProfile);
+    gSetDolbyAudioProcessingProfile.env->DeleteLocalRef(jProfile);
+    return (bool)result;
 }
 
-///gets the number of supported Dolby Audio processing profiles
-int platform_getNumDolbyAudioProfiles()
+///gets the currently in use Dolby Audio processing profile
+const char *platform_getSelectedDolbyAudioProfile()
 {
-    jint result = gGetNumDolbyAudioProfiles.env->CallStaticIntMethod(gGetNumDolbyAudioProfiles.classID, 
-                                                                        gGetNumDolbyAudioProfiles.methodID);
-    return (int)result;
-}
-
-///gets the name that represents the given Dolby Audio processing profile index
-const char *platform_getDolbyAudioProfileName(int profileIndex)
-{
-    jstring result = (jstring)gGetDolbyAudioProfileName.env->CallStaticObjectMethod(gGetDolbyAudioProfileName.classID, 
-                                                                                    gGetDolbyAudioProfileName.methodID,
-                                                                                    profileIndex);
+    jstring result = (jstring)gGetSelectedDolbyAudioProfile.env->CallStaticObjectMethod(gGetSelectedDolbyAudioProfile.classID, 
+                                                                                        gGetSelectedDolbyAudioProfile.methodID);
 
     ///convert jstring result into const char* for us to return
     cocos2d::CCString *profileName = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
     profileName->autorelease();
-    gGetDolbyAudioProfileName.env->DeleteLocalRef(result);
+    gGetSelectedDolbyAudioProfile.env->DeleteLocalRef(result);
     return profileName->m_sString.c_str();
-}
-
-
-///gets the currently in use Dolby Audio processing profile
-int platform_getSelectedDolbyAudioProfile()
-{
-    jint result = gGetSelectedDolbyAudioProfile.env->CallStaticIntMethod(gGetSelectedDolbyAudioProfile.classID, 
-                                                                            gGetSelectedDolbyAudioProfile.methodID);
-    return (int)result;
-}
-
-///gets the pre-defined value of the Dolby Audio Private Profile
-int platform_getDolbyAudioPrivateProfileID()
-{
-    jint result = gGetDolbyAudioPrivateProfileID.env->CallStaticIntMethod(gGetDolbyAudioPrivateProfileID.classID, 
-                                                                            gGetDolbyAudioPrivateProfileID.methodID);
-    return (int)result;
 }
 
 #endif

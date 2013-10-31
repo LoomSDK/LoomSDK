@@ -66,7 +66,7 @@ public class DolbyAudio
             if(_isActivityInForeground)
             {
                 // Need to reflect new state of the Dolby Audio Processing in the application
-///TODO?
+                ///NOTE: Do we need to do anything here?
             }
         }
 
@@ -77,7 +77,7 @@ public class DolbyAudio
 
             if(_isActivityInForeground)
             {
-///TODO?     
+                ///NOTE: Do we need to do anything here?
                 // Profile has changed
                 if(profile == DolbyAudioProcessing.DOLBY_PRIVATE_PROFILE) 
                 {
@@ -272,14 +272,25 @@ public class DolbyAudio
     
 
     /** Call to set Dolby audio processing profile selection. */
-    public static void setProcessingProfile(int profileIndex)
+    public static boolean isProcessingProfileSupported(String profile)
     {
         if(isProcessingSupported()) 
         {
             try 
             {
-                // Set Dolby Audio Processing profile
-                _dolbyAudioProcessing.setProfile(profileIndex);
+                ///attempts to find the profile string provided
+                String testProfile;
+                int profileIndex = -1;
+                for(int i=0;i<getNumProfiles();i++)
+                {
+                    if(profile.equalsIgnoreCase(getProfileName(i)))
+                    {
+                        ///found!
+                        profileIndex = i;
+                        return true;
+                    }
+                }
+
             }
             catch(IllegalStateException ex)
             {
@@ -294,66 +305,75 @@ public class DolbyAudio
                 handleRuntimeException(ex);
             }
         }
-    }
+        return false;
+    }    
 
 
-    /** Call to get the number of available Dolby audio processing profiles. */
-    public static int getNumProfiles()
+    /** Call to set Dolby audio processing profile selection. */
+    public static boolean setProcessingProfile(String profile)
     {
-        int numProfiles = 0;
-        try
+        if(isProcessingSupported()) 
         {
-            numProfiles = _dolbyAudioProcessing.getNumProfiles();
-        }
-        catch(IllegalStateException ex)
-        {
-            handleIllegalStateException(ex);
-        }
-        catch(RuntimeException ex) 
-        {
-            handleRuntimeException(ex);
-        }
-        return numProfiles;
-    } 
-  
+            try 
+            {
+                ///get the profile index to set bassed on the name provided
+                String testProfile;
+                int profileIndex = -1;
+                for(int i=0;i<getNumProfiles();i++)
+                {
+                    if(profile.equalsIgnoreCase(getProfileName(i)))
+                    {
+                        profileIndex = i;
+                        break;
+                    }
+                }
 
-    /** Call to get a string representing the name of a Dolby audio processing profile, given it's index. */
-    public static String getProfileName(int profileIndex)
-    {
-        String profileName = "";
-        try
-        {
-            profileName = _dolbyAudioProcessing.getProfileName(profileIndex);
+                // Set Dolby Audio Processing profile from the found index
+                if(profileIndex != -1)
+                {
+                    _dolbyAudioProcessing.setProfile(profileIndex);
+                    return true;
+                }
+            }
+            catch(IllegalStateException ex)
+            {
+                handleIllegalStateException(ex);
+            }
+            catch(IllegalArgumentException ex)
+            {
+                handleIllegalArgumentException(ex);
+            }
+            catch(RuntimeException ex) 
+            {
+                handleRuntimeException(ex);
+            }
         }
-        catch(IllegalStateException ex)
-        {
-            handleIllegalStateException(ex);
-        }
-        catch(IllegalArgumentException ex)
-        {
-            handleIllegalArgumentException(ex);
-        }
-        return profileName;
+        return false;
     }
 
 
     /** Call to get the index of the currently selected Dolby audio processing profile. */
-    public static int getSelectedProfile()
+    public static String getSelectedProfile()
     {
-        int profile = DolbyAudioProcessing.DOLBY_PRIVATE_PROFILE;
-        try
+        String curProfile = "";
+        if(isProcessingSupported())
         {
-            profile = _dolbyAudioProcessing.getSelectedProfile();
+            try
+            {
+                int profileIndex = _dolbyAudioProcessing.getSelectedProfile();
+                return getProfileName(profileIndex);
+            }
+            catch(IllegalStateException ex)
+            {
+                handleIllegalStateException(ex);
+            }
+            catch(RuntimeException ex) 
+            {
+                handleRuntimeException(ex);
+            }
         }
-        catch(IllegalStateException ex)
-        {
-            handleIllegalStateException(ex);
-        }
-        catch(RuntimeException ex) 
-        {
-            handleRuntimeException(ex);
-        }
-        return profile;
+        
+        return curProfile;
     }
  
 
@@ -378,9 +398,49 @@ public class DolbyAudio
 
 
     /** Returns the value of the Dolby Audio Profile Profile */
-    public static int getPrivateProfileID()
+    private static int getPrivateProfileID()
     {
         return DolbyAudioProcessing.DOLBY_PRIVATE_PROFILE;
+    }
+
+
+    /** Call to get the number of available Dolby audio processing profiles. */
+    private static int getNumProfiles()
+    {
+        int numProfiles = 0;
+        try
+        {
+            numProfiles = _dolbyAudioProcessing.getNumProfiles();
+        }
+        catch(IllegalStateException ex)
+        {
+            handleIllegalStateException(ex);
+        }
+        catch(RuntimeException ex) 
+        {
+            handleRuntimeException(ex);
+        }
+        return numProfiles;
+    } 
+  
+
+    /** Call to get a string representing the name of a Dolby audio processing profile, given it's index. */
+    private static String getProfileName(int profileIndex)
+    {
+        String profileName = "";
+        try
+        {
+            profileName = _dolbyAudioProcessing.getProfileName(profileIndex);
+        }
+        catch(IllegalStateException ex)
+        {
+            handleIllegalStateException(ex);
+        }
+        catch(IllegalArgumentException ex)
+        {
+            handleIllegalArgumentException(ex);
+        }
+        return profileName;
     }
     
     

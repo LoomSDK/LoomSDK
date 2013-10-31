@@ -41,20 +41,13 @@ void platform_setDolbyAudioProcessingEnabled(bool enabled);
 ///checks if Dolby Audio processing is currently enabled
 bool platform_isDolbyAudioProcessingEnabled();
 
+///checks if the specified Dolby Audio processing profile is supported on this hardware
+bool platform_isDolbyAudioProcessingProfileSupported(const char *profile);
+
 ///sets the Dolby Audio processing profile to use
-void platform_setDolbyAudioProcessingProfile(int profileIndex);
-
-///gets the number of supported Dolby Audio processing profiles
-int platform_getNumDolbyAudioProfiles();
-
-///gets the name that represents the given Dolby Audio processing profile index
-const char *platform_getDolbyAudioProfileName(int profileIndex);
+bool platform_setDolbyAudioProcessingProfile(const char *profile);
 
 ///gets the currently in use Dolby Audio processing profile
-int platform_getSelectedDolbyAudioProfile();
-
-///gets the pre-defined value of the Dolby Audio Private Profile
-int platform_getDolbyAudioPrivateProfileID();
-
+const char *platform_getSelectedDolbyAudioProfile();
 
 #endif
