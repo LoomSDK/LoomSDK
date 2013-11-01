@@ -666,10 +666,27 @@ malloc_conf_init(void)
 	}
 }
 
+// LOOM: Ensure proper initialization on Windows
+#ifdef _MSC_VER
+
+static bool gMutexInitialized = false;
+
+#endif
+
 static bool
 malloc_init_hard(void)
 {
 	arena_t *init_arenas[1];
+
+#ifdef _MSC_VER
+
+	if (!gMutexInitialized)
+	{
+		gMutexInitialized = true;
+		init_init_lock();
+	}
+
+#endif	
 
 	malloc_mutex_lock(&init_lock);
 	if (malloc_initialized || IS_INITIALIZER) {
@@ -867,7 +884,7 @@ je_malloc(size_t size)
 	size_t usize JEMALLOC_CC_SILENCE_INIT(0);
 	prof_thr_cnt_t *cnt JEMALLOC_CC_SILENCE_INIT(NULL);
 
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
 	return malloc(size);
 #endif
 
@@ -1126,7 +1143,7 @@ je_realloc(void *ptr, size_t size)
 	prof_thr_cnt_t *cnt JEMALLOC_CC_SILENCE_INIT(NULL);
 	prof_ctx_t *old_ctx JEMALLOC_CC_SILENCE_INIT(NULL);
 
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
 	return realloc(ptr, size);
 #endif
 
@@ -1273,7 +1290,7 @@ void
 je_free(void *ptr)
 {
 
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
 	free(ptr);
 	return;
 #endif
