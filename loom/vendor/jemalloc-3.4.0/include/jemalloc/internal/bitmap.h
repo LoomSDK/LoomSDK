@@ -141,9 +141,6 @@ static int ffsl(long x)
 	  31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
 	};
 
-	if(x == 0)
-		return 0;
-
 	return MultiplyDeBruijnBitPosition[((uint32_t)((v & -v) * 0x077CB531U)) >> 27] + 1;	
 }
 #endif
