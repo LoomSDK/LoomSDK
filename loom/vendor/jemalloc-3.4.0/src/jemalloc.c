@@ -884,10 +884,6 @@ je_malloc(size_t size)
 	size_t usize JEMALLOC_CC_SILENCE_INIT(0);
 	prof_thr_cnt_t *cnt JEMALLOC_CC_SILENCE_INIT(NULL);
 
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-	return malloc(size);
-#endif
-
 	if (malloc_init()) {
 		ret = NULL;
 		goto label_oom;
@@ -1062,10 +1058,6 @@ je_calloc(size_t num, size_t size)
 	size_t usize JEMALLOC_CC_SILENCE_INIT(0);
 	prof_thr_cnt_t *cnt JEMALLOC_CC_SILENCE_INIT(NULL);
 
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-	return calloc(num, size);
-#endif
-
 	if (malloc_init()) {
 		num_size = 0;
 		ret = NULL;
@@ -1142,10 +1134,6 @@ je_realloc(void *ptr, size_t size)
 	size_t old_rzsize JEMALLOC_CC_SILENCE_INIT(0);
 	prof_thr_cnt_t *cnt JEMALLOC_CC_SILENCE_INIT(NULL);
 	prof_ctx_t *old_ctx JEMALLOC_CC_SILENCE_INIT(NULL);
-
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-	return realloc(ptr, size);
-#endif
 
 	if (size == 0) {
 		if (ptr != NULL) {
@@ -1289,11 +1277,6 @@ label_return:
 void
 je_free(void *ptr)
 {
-
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-	free(ptr);
-	return;
-#endif
 
 	UTRACE(ptr, 0, 0);
 	if (ptr != NULL) {
