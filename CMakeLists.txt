@@ -20,6 +20,7 @@ project(LoomEngine)
 
 set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/loom/vendor
     ${CMAKE_SOURCE_DIR}/loom/vendor/seatest
     ${CMAKE_SOURCE_DIR}/loom/vendor/stb
     ${CMAKE_SOURCE_DIR}/loom/vendor/minimp3

@@ -12,6 +12,108 @@ include_directories(
     openal-soft/include
     openal-soft/OpenAL32/Include
     minimp3
+    .
+)
+
+set(BOX2D_SRC
+
+    box2d/Collision/b2BroadPhase.cpp
+    box2d/Collision/b2CollideCircle.cpp
+    box2d/Collision/b2CollideEdge.cpp
+    box2d/Collision/b2CollidePolygon.cpp
+    box2d/Collision/b2Collision.cpp
+    box2d/Collision/b2Distance.cpp
+    box2d/Collision/b2DynamicTree.cpp
+    box2d/Collision/b2TimeOfImpact.cpp
+    box2d/Collision/Shapes/b2CircleShape.cpp
+    box2d/Collision/Shapes/b2EdgeShape.cpp
+    box2d/Collision/Shapes/b2ChainShape.cpp
+    box2d/Collision/Shapes/b2PolygonShape.cpp
+    box2d/Common/b2BlockAllocator.cpp
+    box2d/Common/b2Draw.cpp
+    box2d/Common/b2Math.cpp
+    box2d/Common/b2Settings.cpp
+    box2d/Common/b2StackAllocator.cpp
+    box2d/Common/b2Timer.cpp
+    box2d/Dynamics/b2Body.cpp
+    box2d/Dynamics/b2ContactManager.cpp
+    box2d/Dynamics/b2Fixture.cpp
+    box2d/Dynamics/b2Island.cpp
+    box2d/Dynamics/b2World.cpp
+    box2d/Dynamics/b2WorldCallbacks.cpp
+    box2d/Dynamics/Contacts/b2CircleContact.cpp
+    box2d/Dynamics/Contacts/b2Contact.cpp
+    box2d/Dynamics/Contacts/b2ContactSolver.cpp
+    box2d/Dynamics/Contacts/b2PolygonAndCircleContact.cpp
+    box2d/Dynamics/Contacts/b2EdgeAndCircleContact.cpp
+    box2d/Dynamics/Contacts/b2EdgeAndPolygonContact.cpp
+    box2d/Dynamics/Contacts/b2ChainAndCircleContact.cpp
+    box2d/Dynamics/Contacts/b2ChainAndPolygonContact.cpp
+    box2d/Dynamics/Contacts/b2PolygonContact.cpp
+    box2d/Dynamics/Joints/b2DistanceJoint.cpp
+    box2d/Dynamics/Joints/b2FrictionJoint.cpp
+    box2d/Dynamics/Joints/b2GearJoint.cpp
+    box2d/Dynamics/Joints/b2Joint.cpp
+    box2d/Dynamics/Joints/b2MouseJoint.cpp
+    box2d/Dynamics/Joints/b2PrismaticJoint.cpp
+    box2d/Dynamics/Joints/b2PulleyJoint.cpp
+    box2d/Dynamics/Joints/b2RevoluteJoint.cpp
+    box2d/Dynamics/Joints/b2RopeJoint.cpp
+    box2d/Dynamics/Joints/b2WeldJoint.cpp
+    box2d/Dynamics/Joints/b2WheelJoint.cpp
+    box2d/Rope/b2Rope.cpp
+
+)
+
+set(BOX2D_HDR
+
+    box2d/Collision/b2BroadPhase.h
+    box2d/Collision/b2Collision.h
+    box2d/Collision/b2Distance.h
+    box2d/Collision/b2DynamicTree.h
+    box2d/Collision/b2TimeOfImpact.h
+    box2d/Collision/Shapes/b2CircleShape.h
+    box2d/Collision/Shapes/b2EdgeShape.h
+    box2d/Collision/Shapes/b2ChainShape.h
+    box2d/Collision/Shapes/b2PolygonShape.h
+    box2d/Collision/Shapes/b2Shape.h
+    box2d/Common/b2BlockAllocator.h
+    box2d/Common/b2Draw.h
+    box2d/Common/b2GrowableStack.h
+    box2d/Common/b2Math.h
+    box2d/Common/b2Settings.h
+    box2d/Common/b2StackAllocator.h
+    box2d/Common/b2Timer.h
+    box2d/Dynamics/b2Body.h
+    box2d/Dynamics/b2ContactManager.h
+    box2d/Dynamics/b2Fixture.h
+    box2d/Dynamics/b2Island.h
+    box2d/Dynamics/b2TimeStep.h
+    box2d/Dynamics/b2World.h
+    box2d/Dynamics/b2WorldCallbacks.h
+    box2d/Dynamics/Contacts/b2CircleContact.h
+    box2d/Dynamics/Contacts/b2Contact.h
+    box2d/Dynamics/Contacts/b2ContactSolver.h
+    box2d/Dynamics/Contacts/b2PolygonAndCircleContact.h
+    box2d/Dynamics/Contacts/b2EdgeAndCircleContact.h
+    box2d/Dynamics/Contacts/b2EdgeAndPolygonContact.h
+    box2d/Dynamics/Contacts/b2ChainAndCircleContact.h
+    box2d/Dynamics/Contacts/b2ChainAndPolygonContact.h
+    box2d/Dynamics/Contacts/b2PolygonContact.h
+    box2d/Dynamics/Joints/b2DistanceJoint.h
+    box2d/Dynamics/Joints/b2FrictionJoint.h
+    box2d/Dynamics/Joints/b2GearJoint.h
+    box2d/Dynamics/Joints/b2Joint.h
+    box2d/Dynamics/Joints/b2MouseJoint.h
+    box2d/Dynamics/Joints/b2PrismaticJoint.h
+    box2d/Dynamics/Joints/b2PulleyJoint.h
+    box2d/Dynamics/Joints/b2RevoluteJoint.h
+    box2d/Dynamics/Joints/b2RopeJoint.h
+    box2d/Dynamics/Joints/b2WeldJoint.h
+    box2d/Dynamics/Joints/b2WheelJoint.h
+    box2d/Rope/b2Rope.h
+    box2d/Box2D.h
+
 )
 
 add_definitions(-DCURL_STATICLIB)
@@ -595,6 +697,7 @@ endif()
 SET_SOURCE_FILES_PROPERTIES( ${CHIPMUNK_SRC} PROPERTIES LANGUAGE CXX)
 
 set (ALL_FILES 
+    ${BOX2D_HDR} ${BOX2D_SRC}
     ${SEATEST_HDR} ${SEATEST_SRC} 
     ${STB_HDR} ${STB_SRC} 
     ${JANSSON_HDR} ${JANSSON_SRC} 
