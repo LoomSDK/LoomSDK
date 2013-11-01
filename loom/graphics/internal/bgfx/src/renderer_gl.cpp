@@ -1591,7 +1591,9 @@ namespace bgfx
                 else
                 {                    
 
-                    lmLog(gBGFXLogGroup, "Num mips = %i for texture %i %i", numMips, tc.m_width, tc.m_height);
+                    //lmLog(gBGFXLogGroup, "Num mips = %i for texture %i %i", numMips, tc.m_width, tc.m_height);
+
+                    // We automatically generate mipmaps for POT textures
 
                     if( numMips == 1 && !canGenMips(tc.m_width, tc.m_height))
                     {
@@ -1612,7 +1614,7 @@ namespace bgfx
 
                        genMips = mips;
 
-                       lmLog(gBGFXLogGroup, "Generate mips for POT texture %i %i with %i levels", tc.m_width, tc.m_height, mips);                       
+                       //lmLog(gBGFXLogGroup, "Generate mips for POT texture %i %i with %i levels", tc.m_width, tc.m_height, mips);                       
 
                     }                
 
@@ -1716,6 +1718,8 @@ namespace bgfx
             }
         }
 
+        // if we're generating mips, do so and set the member number of mips
+        // to the number of levels (down to 1x1)
         if (genMips)
         {
             GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));    

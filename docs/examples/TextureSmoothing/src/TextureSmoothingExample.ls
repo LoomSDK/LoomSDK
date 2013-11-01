@@ -14,7 +14,12 @@ package
     import loom2d.textures.TextureSmoothing;
     import loom2d.ui.SimpleLabel;
 
-    //https://theengineco.atlassian.net/browse/LOOM-1801
+    /**
+     * Example of TextureSmoothing modes
+     *     
+     * This application allows the user to switch between nearest neighbor 
+     * and bilinear filtering modes
+     */
 
     public class TextureSmoothingExample extends Application
     {
