@@ -48,6 +48,12 @@ public:
 
     bool load(LSLuaState *ls, bool execute = false);
 
+    void clear()
+    {
+        bc64 = "";
+        bc.clear();
+    }
+
     static ByteCode *decode64(const utString& code64);
 
     static ByteCode *encode64(const utArray<unsigned char>& bc);

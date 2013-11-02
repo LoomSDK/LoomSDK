@@ -8,6 +8,7 @@ include_directories(
     ${LOOM_INCLUDE_FOLDERS}
     telemetry-01052012/include
     chipmunk-physics/include/chipmunk
+    jemalloc-3.4.0/include
 )
 
 add_definitions(-DCURL_STATICLIB)
@@ -470,6 +471,35 @@ set (GELDREICH_SRC
 
 )
 
+
+set (JEMALLOC_ROOT jemalloc-3.4.0)
+
+set (JEMALLOC_SRC
+    ${JEMALLOC_ROOT}/src/arena.c
+    ${JEMALLOC_ROOT}/src/atomic.c
+    ${JEMALLOC_ROOT}/src/base.c
+    ${JEMALLOC_ROOT}/src/bitmap.c
+    ${JEMALLOC_ROOT}/src/chunk.c
+    ${JEMALLOC_ROOT}/src/chunk_dss.c
+    ${JEMALLOC_ROOT}/src/chunk_mmap.c
+    ${JEMALLOC_ROOT}/src/ckh.c
+    ${JEMALLOC_ROOT}/src/ctl.c
+    ${JEMALLOC_ROOT}/src/extent.c
+    ${JEMALLOC_ROOT}/src/hash.c
+    ${JEMALLOC_ROOT}/src/huge.c
+    ${JEMALLOC_ROOT}/src/jemalloc.c
+    ${JEMALLOC_ROOT}/src/mb.c
+    ${JEMALLOC_ROOT}/src/mutex.c
+    ${JEMALLOC_ROOT}/src/prof.c
+    ${JEMALLOC_ROOT}/src/quarantine.c
+    ${JEMALLOC_ROOT}/src/rtree.c
+    ${JEMALLOC_ROOT}/src/stats.c
+    ${JEMALLOC_ROOT}/src/tcache.c
+    ${JEMALLOC_ROOT}/src/tsd.c
+    ${JEMALLOC_ROOT}/src/util.c
+    ${JEMALLOC_ROOT}/src/zone.c
+)
+
 if (MSVC)
 
     set (GLEW_HDR )
@@ -511,6 +541,7 @@ set (ALL_FILES
     ${LUA_HDR} ${LUA_SRC} 
     ${GLEW_HDR} ${GLEW_SRC}
     ${GELDREICH_HDR} ${GELDREICH_SRC}
+    ${JEMALLOC_SRC}
 )
 
 if (MSVC)

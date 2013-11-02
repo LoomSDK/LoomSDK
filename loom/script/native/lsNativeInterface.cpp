@@ -271,17 +271,13 @@ void NativeInterface::dumpManagedNatives(lua_State *L)
     }
 }
 
-
-void NativeInterface::managedPointerReleased(void *entry, int version)
+void NativeInterface::managedPointerReleased(void* entry, int version) 
 {
-    lua_State **_L = handleEntryToLuaState.get(entry);
-
-    if (!_L)
-    {
+    lua_State **statePtr = handleEntryToLuaState.get(entry);
+    if (!statePtr)
         return;
-    }
 
-    lua_State *L = *_L;
+    lua_State *L = *statePtr;
 
     lua_rawgeti(L, LUA_GLOBALSINDEX, LSINDEXMANAGEDVERSION);
 

@@ -10,17 +10,20 @@
 
 #include "jpge.h"
 
+#include "loom/common/core/allocator.h"
+
 #include <stdlib.h>
 #include <string.h>
-//#include <malloc.h>
 
 #define JPGE_MAX(a,b) (((a)>(b))?(a):(b))
 #define JPGE_MIN(a,b) (((a)<(b))?(a):(b))
 
 namespace jpge {
 
-static inline void *jpge_malloc(size_t nSize) { return malloc(nSize); }
-static inline void jpge_free(void *p) { free(p); }
+loom_allocator_t *gJPEGEAllocator = NULL;
+    
+static inline void *jpge_malloc(size_t nSize) { return lmAlloc(gJPEGEAllocator, nSize); }
+static inline void jpge_free(void *p) { lmFree(gJPEGEAllocator, p); }
 
 // Various JPEG enums and tables.
 enum { M_SOF0 = 0xC0, M_DHT = 0xC4, M_SOI = 0xD8, M_EOI = 0xD9, M_SOS = 0xDA, M_DQT = 0xDB, M_APP0 = 0xE0 };

@@ -3,9 +3,7 @@ project(assetAgent)
 include_directories( ${LOOM_INCLUDE_FOLDERS} )
 
 set (MAINDEMO_SRC
-
     src/main.cpp
-
 )
 
 set (MAINDEMO_HDR

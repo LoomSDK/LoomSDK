@@ -28,6 +28,9 @@
 #include <stddef.h>   /* ptrdiff_t */
 #include <stdlib.h>   /* exit() */
 
+#include "loom/common/core/allocator.h"
+extern loom_allocator_t *gUTHashAllocator;
+
 namespace   cocos2d {
 /* These macros use decltype or the earlier __typeof GNU extension.
  * As decltype is only available in newer compilers (VS2010 or gcc 4.3+
@@ -80,9 +83,9 @@ namespace   cocos2d {
 
 #define UTHASH_VERSION    1.9 .3
 
-#define uthash_fatal(msg)           exit(-1)   /* fatal error (out of memory,etc) */
-#define uthash_malloc(sz)           malloc(sz) /* malloc fcn                      */
-#define uthash_free(ptr, sz)        free(ptr)  /* free fcn                        */
+#define uthash_fatal(msg) exit(-1)        /* fatal error (out of memory,etc) */
+#define uthash_malloc(sz) lmAlloc(gUTHashAllocator, sz)      /* malloc fcn                      */
+#define uthash_free(ptr,sz) lmFree(gUTHashAllocator, ptr)        /* free fcn                        */
 
 #define uthash_noexpand_fyi(tbl)               /* can be defined to log noexpand  */
 #define uthash_expand_fyi(tbl)                 /* can be defined to log expands   */

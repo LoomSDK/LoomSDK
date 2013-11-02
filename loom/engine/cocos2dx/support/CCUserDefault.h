@@ -127,7 +127,7 @@ private:
     static bool          m_sbIsFilePathInitialized;
 
     // helper functions
-    static tinyxml2::XMLElement *getXMLNodeForKey(const char *pKey, tinyxml2::XMLElement **rootNode);
+    static tinyxml2::XMLElement *getXMLNodeForKey(const char *pKey);
     static void setValueForKey(const char *pKey, const char *pValue);
     static const char *getValueForKey(const char *pKey);
 

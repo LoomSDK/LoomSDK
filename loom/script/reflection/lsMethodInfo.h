@@ -258,6 +258,12 @@ public:
         return byteCode;
     }
 
+    void freeByteCode()
+    {
+        if(byteCode)
+            byteCode->clear();
+    }
+
     // module the method is defined in
     const Module *getModule()
     {

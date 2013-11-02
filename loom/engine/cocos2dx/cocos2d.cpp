@@ -25,6 +25,10 @@
 ****************************************************************************/
 
 #include "cocos2d.h"
+#include "loom/common/core/allocator.h"
+
+// TODO: Find a better place for this.
+loom_allocator_t *gUTHashAllocator = NULL;
 
 NS_CC_BEGIN
 

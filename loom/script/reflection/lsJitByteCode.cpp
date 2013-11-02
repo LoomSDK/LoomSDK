@@ -35,6 +35,8 @@ extern "C" {
 
 #include "loom/script/reflection/lsByteCode.h"
 #include "loom/script/runtime/lsLuaState.h"
+#include "loom/common/core/allocator.h"
+loom_allocator_t *gByteCodeAllocator = NULL;
 
 // snippets from http://base64.sourceforge.net/b64.c
 
@@ -242,24 +244,12 @@ bool ByteCode::load(LSLuaState *ls, bool execute)
 
     lua_State *L = ls->VM();
 
-    char *buffer = (char *)malloc(bc.size());
+    int status = bytecode_loadbuffer(L, (const char*)&bc[0], bc.size(), LUA_SIGNATURE);
 
-    for (UTsize i = 0; i < bc.size(); i++)
+    if (execute && status == 0)
     {
-        buffer[i] = (char)bc[i];
+        lua_call(L, 0, LUA_MULTRET);
     }
-
-    int status = bytecode_loadbuffer(L, buffer, bc.size(), LUA_SIGNATURE);
-
-    if (status == 0)
-    {
-        if (execute)
-        {
-            lua_call(L, 0, LUA_MULTRET);
-        }
-    }
-
-    free(buffer);
 
     if (status != 0)
     {

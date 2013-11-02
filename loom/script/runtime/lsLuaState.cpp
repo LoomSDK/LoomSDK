@@ -21,6 +21,7 @@
 
 #include "zlib.h"
 
+#include "loom/common/core/allocator.h"
 #include "loom/common/core/assert.h"
 #include "loom/common/utils/utByteArray.h"
 #include "loom/common/platform/platformIO.h"
@@ -63,13 +64,30 @@ struct stackinfo
 static utStack<stackinfo> _tracestack;
 static char               _tracemessage[2048];
 
+#include "jemalloc/jemalloc.h"
+static void *lsLuaAlloc(void *ud, void *ptr, size_t osize, size_t nsize)
+{
+    (void)ud;  (void)osize;  /* not used */
+    if (nsize == 0 && ptr) 
+    {
+        lmFree(NULL, ptr);
+        return NULL;
+    }
+    else
+    {
+        if(osize == 0)
+            return lmAlloc(NULL, nsize);
+        else
+            return lmRealloc(NULL, ptr, nsize);
+    }
+}
 
 void LSLuaState::open()
 {
     assert(!L);
 
-    L = lua_open();
-
+    L = lua_newstate(lsLuaAlloc, NULL);
+    //L = lua_open();
     toLuaState.insert(L, this);
 
     luaopen_base(L);

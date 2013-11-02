@@ -20,7 +20,10 @@
 
 #include "loom/common/core/performance.h"
 #include "loom/common/core/log.h"
+#include "loom/common/core/allocator.h"
 #include "loom/common/platform/platformTime.h"
+
+loom_allocator_t *gProfilerAllocator = NULL;
 
 #ifndef NPERFORMANCE
 
@@ -224,47 +227,45 @@ F64 endHighResolutionTimer(U32 timeStore[2])
 
 LoomProfiler::LoomProfiler()
 {
-    mMaxStackDepth = MaxStackDepth;
-    mCurrentHash   = 0;
+   mMaxStackDepth = MaxStackDepth;
+   mCurrentHash = 0;
 
-    mCurrentLoomProfilerEntry                         = (LoomProfilerEntry *)malloc(sizeof(LoomProfilerEntry));
-    mCurrentLoomProfilerEntry->mRoot                  = NULL;
-    mCurrentLoomProfilerEntry->mNextForRoot           = NULL;
-    mCurrentLoomProfilerEntry->mNextLoomProfilerEntry = NULL;
-    mCurrentLoomProfilerEntry->mNextHash              = NULL;
-    mCurrentLoomProfilerEntry->mParent                = NULL;
-    mCurrentLoomProfilerEntry->mNextSibling           = NULL;
-    mCurrentLoomProfilerEntry->mFirstChild            = NULL;
-    mCurrentLoomProfilerEntry->mLastSeenProfiler      = NULL;
-    mCurrentLoomProfilerEntry->mHash                  = 0;
-    mCurrentLoomProfilerEntry->mSubDepth              = 0;
-    mCurrentLoomProfilerEntry->mInvokeCount           = 0;
-    mCurrentLoomProfilerEntry->mTotalTime             = 0;
-    mCurrentLoomProfilerEntry->mSubTime               = 0;
-    mRootLoomProfilerEntry = mCurrentLoomProfilerEntry;
+   mCurrentLoomProfilerEntry = (LoomProfilerEntry *) lmAlloc(gProfilerAllocator, sizeof(LoomProfilerEntry));
+   mCurrentLoomProfilerEntry->mRoot = NULL;
+   mCurrentLoomProfilerEntry->mNextForRoot = NULL;
+   mCurrentLoomProfilerEntry->mNextLoomProfilerEntry = NULL;
+   mCurrentLoomProfilerEntry->mNextHash = NULL;
+   mCurrentLoomProfilerEntry->mParent = NULL;
+   mCurrentLoomProfilerEntry->mNextSibling = NULL;
+   mCurrentLoomProfilerEntry->mFirstChild = NULL;
+   mCurrentLoomProfilerEntry->mLastSeenProfiler = NULL;
+   mCurrentLoomProfilerEntry->mHash = 0;
+   mCurrentLoomProfilerEntry->mSubDepth = 0;
+   mCurrentLoomProfilerEntry->mInvokeCount = 0;
+   mCurrentLoomProfilerEntry->mTotalTime = 0;
+   mCurrentLoomProfilerEntry->mSubTime = 0;
+   mRootLoomProfilerEntry = mCurrentLoomProfilerEntry;
 
-    for (U32 i = 0; i < LoomProfilerEntry::HashTableSize; i++)
-    {
-        mCurrentLoomProfilerEntry->mChildHash[i] = 0;
-    }
+   for(U32 i = 0; i < LoomProfilerEntry::HashTableSize; i++)
+      mCurrentLoomProfilerEntry->mChildHash[i] = 0;
 
-    mProfileList = NULL;
+   mProfileList = NULL;
 
-    mEnabled = LOOM_PROFILE_AT_ENGINE_START;
+   mEnabled = LOOM_PROFILE_AT_ENGINE_START;   
 
-    mNextEnable = LOOM_PROFILE_AT_ENGINE_START;
+   mNextEnable = LOOM_PROFILE_AT_ENGINE_START;
 
-    mStackDepth    = 0;
-    gLoomProfiler  = this;
-    mDumpToConsole = false;
+   mStackDepth = 0;
+   gLoomProfiler = this;
+   mDumpToConsole   = false;
 }
 
 
 LoomProfiler::~LoomProfiler()
 {
-    reset();
-    free(mRootLoomProfilerEntry);
-    gLoomProfiler = NULL;
+   reset();
+   lmFree(gProfilerAllocator, mRootLoomProfilerEntry);
+   gLoomProfiler = NULL;
 }
 
 
@@ -276,37 +277,35 @@ void LoomProfiler::dumpToConsole()
 
 void LoomProfiler::reset()
 {
-    mEnabled = false; // in case we're in a profiler call.
+   mEnabled = false; // in case we're in a profiler call.
 
-    if (mDumpToConsole)
-    {
-        dump();
-    }
+   if (mDumpToConsole)
+   {
+      dump();
+   }
 
-    while (mProfileList)
-    {
-        free(mProfileList);
-        mProfileList = NULL;
-    }
-    for (LoomProfilerRoot *walk = LoomProfilerRoot::sRootList; walk; walk = walk->mNextRoot)
-    {
-        walk->mFirstLoomProfilerEntry = 0;
-        walk->mTotalTime        = 0;
-        walk->mSubTime          = 0;
-        walk->mTotalInvokeCount = 0;
-    }
-    mCurrentLoomProfilerEntry = mRootLoomProfilerEntry;
-    mCurrentLoomProfilerEntry->mNextForRoot = 0;
-    mCurrentLoomProfilerEntry->mFirstChild  = 0;
-    for (U32 i = 0; i < LoomProfilerEntry::HashTableSize; i++)
-    {
-        mCurrentLoomProfilerEntry->mChildHash[i] = 0;
-    }
-    mCurrentLoomProfilerEntry->mInvokeCount      = 0;
-    mCurrentLoomProfilerEntry->mTotalTime        = 0;
-    mCurrentLoomProfilerEntry->mSubTime          = 0;
-    mCurrentLoomProfilerEntry->mSubDepth         = 0;
-    mCurrentLoomProfilerEntry->mLastSeenProfiler = 0;
+   while(mProfileList)
+   {
+      lmFree(gProfilerAllocator, mProfileList);
+      mProfileList = NULL;
+   }
+   for(LoomProfilerRoot *walk = LoomProfilerRoot::sRootList; walk; walk = walk->mNextRoot)
+   {
+      walk->mFirstLoomProfilerEntry = 0;
+      walk->mTotalTime = 0;
+      walk->mSubTime = 0;
+      walk->mTotalInvokeCount = 0;
+   }
+   mCurrentLoomProfilerEntry = mRootLoomProfilerEntry;
+   mCurrentLoomProfilerEntry->mNextForRoot = 0;
+   mCurrentLoomProfilerEntry->mFirstChild = 0;
+   for(U32 i = 0; i < LoomProfilerEntry::HashTableSize; i++)
+      mCurrentLoomProfilerEntry->mChildHash[i] = 0;
+   mCurrentLoomProfilerEntry->mInvokeCount = 0;
+   mCurrentLoomProfilerEntry->mTotalTime = 0;
+   mCurrentLoomProfilerEntry->mSubTime = 0;
+   mCurrentLoomProfilerEntry->mSubDepth = 0;
+   mCurrentLoomProfilerEntry->mLastSeenProfiler = 0;
 }
 
 
@@ -369,80 +368,72 @@ void LoomProfiler::validate()
 
 void LoomProfiler::hashPush(LoomProfilerRoot *root)
 {
-    mStackDepth++;
-    lmAssert(mStackDepth <= (S32)mMaxStackDepth,
-             "Stack overflow in profiler.  You may have mismatched PROFILE_START and PROFILE_ENDs");
-    if (!mEnabled)
-    {
-        return;
-    }
+   mStackDepth++;
+   lmAssert(mStackDepth <= (S32) mMaxStackDepth,
+                  "Stack overflow in profiler.  You may have mismatched PROFILE_START and PROFILE_ENDs");
+   if(!mEnabled)
+      return;
 
-    LoomProfilerEntry *nextProfiler = NULL;
-    if (!root->mEnabled || (mCurrentLoomProfilerEntry->mRoot == root))
-    {
-        mCurrentLoomProfilerEntry->mSubDepth++;
-        return;
-    }
+   LoomProfilerEntry *nextProfiler = NULL;
+   if(!root->mEnabled || mCurrentLoomProfilerEntry->mRoot == root)
+   {
+      mCurrentLoomProfilerEntry->mSubDepth++;
+      return;
+   }
 
-    if (mCurrentLoomProfilerEntry->mLastSeenProfiler &&
-        (mCurrentLoomProfilerEntry->mLastSeenProfiler->mRoot == root))
-    {
-        nextProfiler = mCurrentLoomProfilerEntry->mLastSeenProfiler;
-    }
+   if(mCurrentLoomProfilerEntry->mLastSeenProfiler &&
+            mCurrentLoomProfilerEntry->mLastSeenProfiler->mRoot == root)
+      nextProfiler = mCurrentLoomProfilerEntry->mLastSeenProfiler;
 
-    if (!nextProfiler)
-    {
-        // first see if it's in the hash table...
-        U32 index = root->mNameHash & (LoomProfilerEntry::HashTableSize - 1);
+   if(!nextProfiler)
+   {
+      // first see if it's in the hash table...
+      U32 index = root->mNameHash & (LoomProfilerEntry::HashTableSize - 1);
+      
+      nextProfiler = mCurrentLoomProfilerEntry->mChildHash[index];
+      while(nextProfiler)
+      {
+         if(nextProfiler->mRoot == root)
+            break;
+         nextProfiler = nextProfiler->mNextHash;
+      }
 
-        nextProfiler = mCurrentLoomProfilerEntry->mChildHash[index];
-        while (nextProfiler)
-        {
-            if (nextProfiler->mRoot == root)
-            {
-                break;
-            }
-            nextProfiler = nextProfiler->mNextHash;
-        }
+      if(!nextProfiler)
+      {
+         nextProfiler = (LoomProfilerEntry *) lmAlloc(gProfilerAllocator, sizeof(LoomProfilerEntry));
+         for(U32 i = 0; i < LoomProfilerEntry::HashTableSize; i++)
+            nextProfiler->mChildHash[i] = 0;
 
-        if (!nextProfiler)
-        {
-            nextProfiler = (LoomProfilerEntry *)malloc(sizeof(LoomProfilerEntry));
-            for (U32 i = 0; i < LoomProfilerEntry::HashTableSize; i++)
-            {
-                nextProfiler->mChildHash[i] = 0;
-            }
+         nextProfiler->mRoot = root;
+         nextProfiler->mNextForRoot = root->mFirstLoomProfilerEntry;
+         root->mFirstLoomProfilerEntry = nextProfiler;
 
-            nextProfiler->mRoot           = root;
-            nextProfiler->mNextForRoot    = root->mFirstLoomProfilerEntry;
-            root->mFirstLoomProfilerEntry = nextProfiler;
+         nextProfiler->mNextLoomProfilerEntry = mProfileList;
+         mProfileList = nextProfiler;
 
-            nextProfiler->mNextLoomProfilerEntry = mProfileList;
-            mProfileList = nextProfiler;
+         nextProfiler->mNextHash = mCurrentLoomProfilerEntry->mChildHash[index];
+         mCurrentLoomProfilerEntry->mChildHash[index] = nextProfiler;
 
-            nextProfiler->mNextHash = mCurrentLoomProfilerEntry->mChildHash[index];
-            mCurrentLoomProfilerEntry->mChildHash[index] = nextProfiler;
+         nextProfiler->mParent = mCurrentLoomProfilerEntry;
+         nextProfiler->mNextSibling = mCurrentLoomProfilerEntry->mFirstChild;
+         mCurrentLoomProfilerEntry->mFirstChild = nextProfiler;
+         nextProfiler->mFirstChild = NULL;
+         nextProfiler->mLastSeenProfiler = NULL;
+         nextProfiler->mHash = root->mNameHash;
+         nextProfiler->mInvokeCount = 0;
+         nextProfiler->mTotalTime = 0;
+         nextProfiler->mSubTime = 0;
+         nextProfiler->mSubDepth = 0;
+      }
+   }
 
-            nextProfiler->mParent                  = mCurrentLoomProfilerEntry;
-            nextProfiler->mNextSibling             = mCurrentLoomProfilerEntry->mFirstChild;
-            mCurrentLoomProfilerEntry->mFirstChild = nextProfiler;
-            nextProfiler->mFirstChild              = NULL;
-            nextProfiler->mLastSeenProfiler        = NULL;
-            nextProfiler->mHash        = root->mNameHash;
-            nextProfiler->mInvokeCount = 0;
-            nextProfiler->mTotalTime   = 0;
-            nextProfiler->mSubTime     = 0;
-            nextProfiler->mSubDepth    = 0;
-        }
-    }
-
-    root->mTotalInvokeCount++;
-    nextProfiler->mInvokeCount++;
-
-    startHighResolutionTimer(nextProfiler->mStartTime);
-
-    mCurrentLoomProfilerEntry->mLastSeenProfiler = nextProfiler;
-    mCurrentLoomProfilerEntry = nextProfiler;
+   root->mTotalInvokeCount++;
+   nextProfiler->mInvokeCount++;
+   
+   startHighResolutionTimer(nextProfiler->mStartTime);
+   
+   mCurrentLoomProfilerEntry->mLastSeenProfiler = nextProfiler;
+   mCurrentLoomProfilerEntry = nextProfiler;
 }
 
 

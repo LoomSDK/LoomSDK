@@ -83,16 +83,19 @@ extern "C" {
 #include <stdlib.h>
 
 /************************************************************************
-* C ALLOCATION MACROS
-*
-* Implement malloc/free/realloc type functionality using Loom allocators.
-************************************************************************/
-#define lmAlloc(allocator, size)              lmAlloc_inner(allocator, size, __FILE__, __LINE__)
-#define lmFree(allocator, ptr)                lmFree_inner(allocator, ptr, __FILE__, __LINE__)
-#define lmRealloc(allocator, ptr, newSize)    lmRealloc_inner(allocator, ptr, newSize, __FILE__, __LINE__)
+ * C ALLOCATION MACROS
+ * 
+ * Implement malloc/free/realloc type functionality using Loom allocators.
+ ************************************************************************/
+#define lmAlloc(allocator, size) lmAlloc_inner(allocator, size, __FILE__, __LINE__)
+#define lmCalloc(allocator, count, size) lmCalloc_inner(allocator, count, size, __FILE__, __LINE__)
+#define lmFree(allocator, ptr) lmFree_inner(allocator, ptr, __FILE__, __LINE__)
+#define lmRealloc(allocator, ptr, newSize) lmRealloc_inner(allocator, ptr, newSize, __FILE__, __LINE__)
 
-typedef struct loom_allocator   loom_allocator_t;
+typedef struct loom_allocator loom_allocator_t;
+
 void *lmAlloc_inner(loom_allocator_t *allocator, size_t size, const char *file, int line);
+void *lmCalloc_inner(loom_allocator_t *allocator, size_t count, size_t size, const char *file, int line);
 void lmFree_inner(loom_allocator_t *allocator, void *ptr, const char *file, int line);
 void *lmRealloc_inner(loom_allocator_t *allocator, void *ptr, size_t size, const char *file, int line);
 
