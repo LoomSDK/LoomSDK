@@ -18,15 +18,7 @@ import com.dolby.dap.OnDolbyAudioProcessingEventListener;
 
 
 /**
- * This is an example of using the Dolby Audio Processing API library.
- * The application demonstrates the following aspects:
- * - properly obtaining, maintaining and releasing handle to Dolby Audio Processing
- * - enabling or disabling Dolby Audio Processing 
- * - obtaining available Dolby Audio Processing Profiles
- * - applying various Dolby Audio Processing Profiles
- *
- * @see DolbyAudioProcessing
- * @see OnDolbyAudioProcessingEventListener
+ * This is an implementation of the Dolby Audio Processing API library.
  */
 public class DolbyAudio  
 {
@@ -62,31 +54,12 @@ public class DolbyAudio
         public void onEnabled(boolean on) 
         {
             Log.i(TAG, "onEnabled(" + on + ")");
-
-            if(_isActivityInForeground)
-            {
-                // Need to reflect new state of the Dolby Audio Processing in the application
-                ///NOTE: Do we need to do anything here?
-            }
         }
 
         @Override
         public void onProfileSelected(int profile)
         {
             Log.i(TAG, "onProfileSelected(" + profile + ")");
-
-            if(_isActivityInForeground)
-            {
-                ///NOTE: Do we need to do anything here?
-                // Profile has changed
-                if(profile == DolbyAudioProcessing.DOLBY_PRIVATE_PROFILE) 
-                {
-                    // Handle DOLBY_PRIVATE_PROFILE
-                } 
-                else 
-                {
-                }
-            }
         }
 
         @Override
@@ -186,7 +159,7 @@ public class DolbyAudio
 
     public static void onStart()
     {
-        ///NOTE: Dolby Example code uses onStart for some reason... Should we use onResume instead? 
+        ///NOTE: Dolby Example code uses onStart for some reason... Could/should we use onResume instead? 
         Log.d(TAG, "onStart()");
 
         _isActivityInForeground = true;
@@ -215,7 +188,7 @@ public class DolbyAudio
 
     public static void onStop()
     {
-        ///NOTE: Dolby Example code uses onStop for some reason... Should we use onPause instead? 
+        ///NOTE: Dolby Example code uses onStop for some reason... Could/should we use onPause instead? 
         Log.d(TAG, "onStop()");
 
         _isActivityInForeground = false;
@@ -239,8 +212,6 @@ public class DolbyAudio
         }
     }
 
-
- 
     
     /** Returns the value of the Dolby Audio Profile Profile */
     public static boolean isProcessingSupported()
@@ -269,7 +240,7 @@ public class DolbyAudio
             }
         }
     }
-    
+
 
     /** Call to set Dolby audio processing profile selection. */
     public static boolean isProcessingProfileSupported(String profile)
@@ -278,19 +249,10 @@ public class DolbyAudio
         {
             try 
             {
-                ///attempts to find the profile string provided
-                String testProfile;
-                int profileIndex = -1;
-                for(int i=0;i<getNumProfiles();i++)
+                if(getProfileIndexForName(profile) != -1)
                 {
-                    if(profile.equalsIgnoreCase(getProfileName(i)))
-                    {
-                        ///found!
-                        profileIndex = i;
-                        return true;
-                    }
+                    return true;
                 }
-
             }
             catch(IllegalStateException ex)
             {
@@ -306,7 +268,7 @@ public class DolbyAudio
             }
         }
         return false;
-    }    
+    }
 
 
     /** Call to set Dolby audio processing profile selection. */
@@ -317,16 +279,7 @@ public class DolbyAudio
             try 
             {
                 ///get the profile index to set bassed on the name provided
-                String testProfile;
-                int profileIndex = -1;
-                for(int i=0;i<getNumProfiles();i++)
-                {
-                    if(profile.equalsIgnoreCase(getProfileName(i)))
-                    {
-                        profileIndex = i;
-                        break;
-                    }
-                }
+                int profileIndex = getProfileIndexForName(profile);
 
                 // Set Dolby Audio Processing profile from the found index
                 if(profileIndex != -1)
@@ -355,7 +308,6 @@ public class DolbyAudio
     /** Call to get the index of the currently selected Dolby audio processing profile. */
     public static String getSelectedProfile()
     {
-        String curProfile = "";
         if(isProcessingSupported())
         {
             try
@@ -373,17 +325,16 @@ public class DolbyAudio
             }
         }
         
-        return curProfile;
+        return "";
     }
  
 
     /** Call to check if Dolby audio processing is currently enabled. */
     public static boolean isProcessingEnabled()
     {
-        boolean enabled = false;
         try
         {
-            enabled = _dolbyAudioProcessing.isAudioProcessingEnabled();
+            return _dolbyAudioProcessing.isAudioProcessingEnabled();
         }
         catch(IllegalStateException ex)
         {
@@ -393,14 +344,7 @@ public class DolbyAudio
         {
             handleRuntimeException(ex);
         }
-        return enabled;
-    }
-
-
-    /** Returns the value of the Dolby Audio Profile Profile */
-    private static int getPrivateProfileID()
-    {
-        return DolbyAudioProcessing.DOLBY_PRIVATE_PROFILE;
+        return false;
     }
 
 
@@ -444,7 +388,20 @@ public class DolbyAudio
     }
     
     
-
+    /** finds the index of a given profile name */
+    private static int getProfileIndexForName(String profileName)
+    {
+        ///attempts to find the profile string provided
+        for(int i=0;i<getNumProfiles();i++)
+        {
+            if(profileName.equalsIgnoreCase(getProfileName(i)))
+            {
+                ///found!
+                return i;
+            }
+        }
+        return -1;
+    }   
 
 
   
