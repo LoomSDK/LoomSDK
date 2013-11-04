@@ -696,11 +696,11 @@ public:
     // representing the type
     bool typeExpression;
 
-    Identifier(const utString& value)
+    Identifier(const utString& value) 
     {
-        astType        = AST_IDENTIFIER;
-        this->string   = value;
-        localVarDecl   = NULL;
+        astType = AST_IDENTIFIER;
+        string = value;
+        localVarDecl = NULL;
         typeExpression = false;
         superAccess    = false;
     }
@@ -1427,7 +1427,9 @@ public:
     utString typeString;
 
     PropertyLiteral() :
-        classDecl(NULL), getter(NULL), setter(NULL), isStatic(false), isTemplate(false)
+            name(),
+            classDecl(NULL), getter(NULL), setter(NULL), 
+            isStatic(false), isTemplate(false) 
     {
         astType = AST_PROPERTYLITERAL;
     }

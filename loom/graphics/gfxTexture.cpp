@@ -23,6 +23,7 @@
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
 #include "loom/common/core/assert.h"
+#include "loom/common/core/allocator.h"
 #include "loom/common/core/log.h"
 
 #include "loom/graphics/gfxTexture.h"
@@ -30,6 +31,7 @@
 #include "loom/common/platform/platformTime.h"
 
 lmDefineLogGroup(gGFXTextureLogGroup, "GFXTexture", 1, LoomLogInfo);
+loom_allocator_t *gGFXTextureAllocator = NULL;
 
 namespace GFX
 {
@@ -251,17 +253,20 @@ void Texture::handleAssetNotification(void *payload, const char *name)
 {
     TextureID id = (TextureID)payload;
 
-    // Get the image via the asset manager.
-    loom_asset_image_t *lat = (loom_asset_image_t *)loom_asset_lock(name, LATImage, 1);
-
-    // If we couldn't load it, generate a checkerboard placeholder texture.
+    // Get the image via the asset manager.    
+    loom_asset_image_t *lat = (loom_asset_image_t *)loom_asset_lock(name, LATImage, 0);
+    
+    // If we couldn't load it, and we have never loaded it, generate a checkerboard placeholder texture.
     if (!lat)
     {
+        if(sTextureInfos[id].reload == true)
+            return;
+        
         const int checkerboardSize = 128, checkSize = 8;
 
         lmLogError(gGFXTextureLogGroup, "Missing image asset '%s', using %dx%d px debug checkerboard.", name, checkerboardSize, checkerboardSize);
 
-        int *checkerboard = (int *)malloc(checkerboardSize * checkerboardSize * 4);
+        int *checkerboard = (int*)lmAlloc(gGFXTextureAllocator, checkerboardSize*checkerboardSize*4);
 
         for (int i = 0; i < checkerboardSize; i++)
         {
@@ -273,7 +278,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
 
         load((uint8_t *)checkerboard, checkerboardSize, checkerboardSize, id);
 
-        free(checkerboard);
+        lmFree(gGFXTextureAllocator, checkerboard);
 
         return;
     }
@@ -310,6 +315,9 @@ void Texture::handleAssetNotification(void *payload, const char *name)
 
     // Release lock on the asset.
     loom_asset_unlock(name);
+    
+    // Once we load it we don't need it any more.
+    loom_asset_flush(name);
 }
 
 

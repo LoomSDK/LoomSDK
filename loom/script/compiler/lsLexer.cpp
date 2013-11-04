@@ -1328,7 +1328,6 @@ void Lexer::gotoBookmark(int bookmark)
     }
 }
 
-
 Token *Lexer::nextToken()
 {
     oldPosition = curPosition;

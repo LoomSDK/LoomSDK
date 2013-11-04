@@ -27,13 +27,13 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/geldreich
     ${CMAKE_SOURCE_DIR}/loom/vendor/jansson
     ${CMAKE_SOURCE_DIR}/loom/vendor/admob/include
+    ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-3.4.0/include
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/cocoa
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/include
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/kazmath/include
     ${CMAKE_SOURCE_DIR}/loom/engine/CocosDenshion/include
-
     )
 
 if (LOOM_BUILD_JIT EQUAL 1)
@@ -79,8 +79,11 @@ set (LOOM_INCLUDE_FOLDERS
     link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/Lib/x86)
 
     # move this?
-    add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
+    add_definitions(-DLOOM_DISABLE_JEMALLOC -D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
+    
+    # MSVC compatibility stuffs
     include_directories( ${CMAKE_SOURCE_DIR}/loom/graphics/internal/bx/include/compat/msvc )
+    include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-3.4.0/include/msvc_compat )
 
 
     set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_windows/lua51.lib )

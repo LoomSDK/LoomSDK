@@ -95,8 +95,9 @@ class LSLuaState {
 public:
 
     LSLuaState() :
-        compiling(false), loadingAssembly(0), L(NULL)
+        compiling(false), loadingAssembly(0), L(NULL) 
     {
+
 #ifdef LOOM_DEBUG
         debuggingEnabled = true;
 #else

@@ -18,6 +18,7 @@
  * ===========================================================================
  */
 
+#include "loom/common/core/allocator.h"
 #include "loom/script/serialize/lsBinReader.h"
 #include "loom/script/reflection/lsFieldInfo.h"
 
@@ -42,7 +43,7 @@ void BinReader::readStringPool()
     // the complete size of the string buffer
     int stringBufferSize = sBytes->readInt();
 
-    stringBuffer = new char[stringBufferSize];
+    stringBuffer = (const char*)lmAlloc(NULL, stringBufferSize);
 
     char *p = (char *)stringBuffer;
 
@@ -114,7 +115,7 @@ TemplateInfo *BinReader::readTemplateTypes()
         return NULL;
     }
 
-    TemplateInfo *templateInfo = new TemplateInfo;
+    TemplateInfo *templateInfo = lmNew(NULL) TemplateInfo;
     templateInfo->fullTypeName = readPoolString();
     templateInfo->type         = getType(templateInfo->fullTypeName.c_str());
 
@@ -124,7 +125,7 @@ TemplateInfo *BinReader::readTemplateTypes()
     {
         if (!bytes->readBoolean())
         {
-            TemplateInfo *t = new TemplateInfo;
+            TemplateInfo *t = lmNew(NULL) TemplateInfo;
             t->fullTypeName = readPoolString();
             t->type         = getType(t->fullTypeName.c_str());
             templateInfo->types.push_back(t);
@@ -194,7 +195,7 @@ void BinReader::readMethodBase(MethodBase *mbase)
 
     for (int i = 0; i < numParamaters; i++)
     {
-        ParameterInfo *param = new ParameterInfo();
+        ParameterInfo *param = lmNew(NULL) ParameterInfo();
         mbase->parameters.push_back(param);
 
         const char *name = readPoolString();
@@ -299,7 +300,7 @@ void BinReader::readMethodBase(MethodBase *mbase)
 
 MethodInfo *BinReader::readMethodInfo(Type *type)
 {
-    MethodInfo *methodInfo = new MethodInfo();
+    MethodInfo *methodInfo = lmNew(NULL) MethodInfo();
 
     methodInfo->declaringType = type;
 
@@ -325,7 +326,7 @@ MethodInfo *BinReader::readMethodInfo(Type *type)
 
 PropertyInfo *BinReader::readProperty(Type *type)
 {
-    PropertyInfo *prop = new PropertyInfo();
+    PropertyInfo *prop = lmNew(NULL) PropertyInfo();
 
     readMemberInfo(prop);
 
@@ -390,7 +391,7 @@ PropertyInfo *BinReader::readProperty(Type *type)
 
 FieldInfo *BinReader::readField(Type *type)
 {
-    FieldInfo *field = new FieldInfo();
+    FieldInfo *field = lmNew(NULL) FieldInfo();
 
     readMemberInfo(field);
 
@@ -451,7 +452,7 @@ FieldInfo *BinReader::readField(Type *type)
 
 ConstructorInfo *BinReader::readConstructor(Type *type)
 {
-    ConstructorInfo *cinfo = new ConstructorInfo();
+    ConstructorInfo *cinfo = lmNew(NULL) ConstructorInfo();
 
     cinfo->declaringType = type;
 
@@ -699,7 +700,6 @@ Assembly *BinReader::readAssembly(LSLuaState *_vm, utByteArray *_bytes)
     }
 
     // number of references
-
     utArray<Reference *> assrefs;
 
     int numrefs = bytes->readInt();
@@ -765,7 +765,7 @@ Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
 
     for (UTsize i = 0; i < (UTsize)numTypes; i++)
     {
-        TypeIndex *tindex = new TypeIndex;
+        TypeIndex *tindex = lmNew(NULL) TypeIndex;
         tindex->type     = NULL;
         tindex->refIdx   = sBytes->readInt();
         tindex->fullName = readPoolString();
@@ -782,11 +782,13 @@ Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
 
     for (int i = 0; i < numRefs; i++)
     {
-        Reference *ref = new Reference;
+        Reference *ref = lmNew(NULL) Reference;
         ref->name     = readPoolString();
         ref->length   = sBytes->readInt();
         ref->position = sBytes->readInt();
         ref->loaded   = false;
+        ref->assembly = NULL;
+        
         references.insert(utHashedString(ref->name), ref);
 
         // offset the types to global position
@@ -807,7 +809,7 @@ Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
     for (UTsize i = 0; i < types.size(); i++)
     {
         TypeIndex *tindex = types.at(i);
-        tindex->type = new Type();
+        tindex->type = lmNew(NULL) Type();
     }
 
     for (UTsize i = 0; i < references.size(); i++)
@@ -821,6 +823,7 @@ Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
         sBytes->setPosition(ref->position);
         BinReader reader;
         Assembly  *rassembly = reader.readAssembly(vm, sBytes);
+        ref->assembly = rassembly;
         if (!assembly)
         {
             assembly = rassembly;
@@ -828,10 +831,18 @@ Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
     }
 
     // cleanup
+    for (UTsize i = 0; i < references.size(); i++)
+    {
+        Reference *ref = references.at(i);
+        if (!ref->assembly)
+            continue;
+        ref->assembly->freeByteCode();
+    }
+    
     sBytes = NULL;
     if (stringBuffer)
     {
-        delete[] stringBuffer;
+        lmFree(NULL, (void*)stringBuffer);
     }
     stringBuffer = NULL;
     stringPool.clear();

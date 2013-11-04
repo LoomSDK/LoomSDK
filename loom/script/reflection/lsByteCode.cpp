@@ -187,24 +187,11 @@ bool ByteCode::load(LSLuaState *ls, bool execute)
 
     lua_State *L = ls->VM();
 
-    char *buffer = (char *)malloc(bc.size());
-
-    for (UTsize i = 0; i < bc.size(); i++)
+    int status = bytecode_loadbuffer(L, &bc[0], bc.size(), LUA_SIGNATURE);
+    if (execute && status == 0)
     {
-        buffer[i] = (char)bc[i];
+        lua_call(L, 0, LUA_MULTRET);
     }
-
-    int status = bytecode_loadbuffer(L, buffer, bc.size(), LUA_SIGNATURE);
-
-    if (status == 0)
-    {
-        if (execute)
-        {
-            lua_call(L, 0, LUA_MULTRET);
-        }
-    }
-
-    free(buffer);
 
     if (status != 0)
     {

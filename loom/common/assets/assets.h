@@ -133,6 +133,8 @@ float loom_asset_checkLoadedPercentage(const char *name);              // Is ass
 
 void *loom_asset_lock(const char *name, unsigned int type, int block); // Acquire lock to data payload of asset.
 void loom_asset_unlock(const char *name);                              // Unlock asset.
+    
+int loom_asset_pending(const char *name); // 1 if the asset is loading.
 
 // Supply an asset's raw bits. Useful for embedding assets in your binary.
 void loom_asset_supply(const char *name, void *bits, int length);
