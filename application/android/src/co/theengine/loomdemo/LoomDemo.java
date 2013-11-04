@@ -175,6 +175,9 @@ public class LoomDemo extends Cocos2dxActivity {
         ///Create Video View for our layout
         LoomVideo.onCreate(webViewGroup);
 
+        ///Create Sensor class
+        LoomSensors.onCreate(this);
+
         // Listen for IME-initiated resizes.
         // Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
         final View activityRootView = framelayout;
@@ -231,6 +234,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onPause() {
+        LoomSensors.onPause();
         LoomVideo.onPause();
         super.onPause();
         mGLView.onPause();
@@ -238,6 +242,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onResume() {
+        LoomSensors.onResume();
         LoomVideo.onResume();
         super.onResume();
         mGLView.onResume();
@@ -245,6 +250,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onDestroy() {
+        LoomSensors.onDestroy();
         LoomVideo.onDestroy();
         super.onDestroy();
     }
