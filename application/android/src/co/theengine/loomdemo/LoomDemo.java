@@ -45,6 +45,10 @@ import android.graphics.Rect;
 
 import co.theengine.loomdemo.billing.LoomStore;
 
+import com.dolby.DolbyAudio;
+
+
+
 public class LoomDemo extends Cocos2dxActivity {
 
     private Cocos2dxGLSurfaceView mGLView;
@@ -178,6 +182,9 @@ public class LoomDemo extends Cocos2dxActivity {
         ///Create Sensor class
         LoomSensors.onCreate(this);
 
+        ///attempt to initialize Dolby Audio for this device
+        DolbyAudio.onCreate(this);
+
         // Listen for IME-initiated resizes.
         // Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
         final View activityRootView = framelayout;
@@ -187,7 +194,6 @@ public class LoomDemo extends Cocos2dxActivity {
             @Override
             public void onGlobalLayout() 
             {
-
                 final Rect r = new Rect();
                 activityRootView.getWindowVisibleDisplayFrame(r);
                 final int heightDiff = activityRootView.getRootView().getHeight() - (r.bottom - r.top);
@@ -204,7 +210,6 @@ public class LoomDemo extends Cocos2dxActivity {
                         keyboardHidden = false;
                         triggerGenericEvent("keyboardResize", "" + heightDiff);
                     }
-
                 }
                 else
                 {
@@ -213,13 +218,11 @@ public class LoomDemo extends Cocos2dxActivity {
 
                     keyboardHidden = true;
                     // this matches iOS behavior
-                    triggerGenericEvent("keyboardResize", "0");                 
-
+                    triggerGenericEvent("keyboardResize", "0");
                 }
-
-
              }
-        });     }
+        });     
+    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) 
@@ -230,6 +233,18 @@ public class LoomDemo extends Cocos2dxActivity {
             nativeSetOrientation("landscape");
         else
             nativeSetOrientation("portrait");
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        DolbyAudio.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        DolbyAudio.onStop();
     }
 
     @Override
@@ -252,6 +267,7 @@ public class LoomDemo extends Cocos2dxActivity {
     protected void onDestroy() {
         LoomSensors.onDestroy();
         LoomVideo.onDestroy();
+        DolbyAudio.onDestroy();
         super.onDestroy();
     }
 
