@@ -29,13 +29,50 @@ limitations under the License.
 
 lmDefineLogGroup(gIOSMobileLogGroup, "loom.mobile.ios", 1, 0);
 
+static SensorTripleChangedCallback gTripleChangedCallback = NULL;
+
+
 
 ///initializes the data for the Mobile class for iOS
-void platform_mobileInitialize()
+void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB)
 {
+    gTripleChangedCallback = sensorTripleChangedCB;    
+}
+
+///checks if a given sensor is supported on this hardware
+bool platform_isSensorSupported(int sensor)
+{
+    ///TODO: Support sensors on iOS
+    return false;
+}
+
+///checks if a given sensor is currently enabled
+bool platform_isSensorEnabled(int sensor)
+{
+    ///TODO: Support sensors on iOS
+    return false;
+}
+
+///checks if a given sensor has received any data yet
+bool platform_hasSensorReceivedData(int sensor)
+{
+    ///TODO: Support sensors on iOS
+    return false;
+}
+
+///enables the given sensor
+bool platform_enableSensor(int sensor)
+{
+    ///TODO: Support sensors on iOS
+    return false;
+}
+
+///disables the given sensor
+void platform_disableSensor(int sensor)
+{
+    ///TODO: Support sensors on iOS
 }
 
 
-///TODO: add to once we're able to get this into master
-///     -vibration
-///     -screen timeout
+///TODO: LOOM-1810: screen timeout
+///TODO: LOOM-1811: vibration

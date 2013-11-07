@@ -14,16 +14,17 @@ import android.view.WindowManager;
 import android.graphics.Matrix;
 import android.util.Log;
 
+import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
+
+
 
 
 /**
  * 
  * This class is used for accessing the various Android Sensors
  *
- * NOTE: TYPE_ACCELEROMETER in here is not exposed to the Accelerometer class 
- * as that is all implemented in Cocos2dxAcclerometer.  This could be updated 
- * to use ours instead at some point.  We need our own listener in order to 
- * use .getOrientation().
+ * NOTE: TYPE_ACCELEROMETER is already implemented in Cocos2dxAcclerometer, so
+ * if it is ever added here, it should be removed from there to avoid 2x hardware processing!
  *
  */
 public class LoomSensors
@@ -57,15 +58,18 @@ public class LoomSensors
             switch(type)
             {
                 case SENSOR_ACCELEROMETER:
-                    _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+                    ///NOTE: Don't use Accelerometer for now...
+                    // _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
                     _type = "Accelerometer";
                     break;
                 case SENSOR_MAGNOMETER:
-                    _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+                    ///NOTE: Don't use Magnometer for now...
+                    // _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
                     _type = "Magnometer";
                     break;
                 case SENSOR_GYROSCOPE:
-                    _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+                    ///NOTE: Don't use Gyroscope for now...
+                    // _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
                     _type = "Gyroscope";
                     break;
                 case SENSOR_ROTATION_VECTOR:
@@ -92,6 +96,13 @@ public class LoomSensors
         public boolean isEnabled()
         {
             return _isEnabled;
+        }
+
+
+        ///returns whether or not the sensor has received any data
+        public boolean hasReceivedData()
+        {
+            return (_lastChangedTimestamp == 0) ? false : true;
         }
 
 
@@ -134,6 +145,8 @@ public class LoomSensors
             ///So we should swap it here.
             ///In some tablets such as Motorola Xoom, the default orientation is landscape, so should
             ///consider this.
+            ///
+            ///NOTE: My tests have shown that this may not be 100% correct... LL
             int orientation = _context.getResources().getConfiguration().orientation;
             if(_naturalOrientation != Surface.ROTATION_0)
             {
@@ -155,15 +168,11 @@ public class LoomSensors
         }
 
 
-static float _printTimer = 0.0f;
         ///override for SensorEventListener.onSensorChanged
         @Override
         public void onSensorChanged(SensorEvent event)
         { 
             final float     dt = (_lastChangedTimestamp == 0) ? 0 : ((event.timestamp - _lastChangedTimestamp) * NS2S);
-            boolean         updateRotation = false;
-            boolean         updateOrientation = false;
-            float[]         r = new float[9];
             float[]         remappedValues;
             float           x;
             float           y;
@@ -186,12 +195,8 @@ static float _printTimer = 0.0f;
                     y = remappedValues[1];
                     z = remappedValues[2];
 
-                    ///store updated values to calculate our orientation with
-                    _lastAccelerometerValues = remappedValues;
-                    updateRotation = true;
-
                     ///register the change in native code
-                    onAccelerometerChanged(x, y, z, event.timestamp);
+                    onAccelerometerChanged(x, y, z);
                     // Log.d(TAG, "Accelerometer Sensor Changed: x = " + x + " y = " + y + " z = " + z);
                     break;
                 case Sensor.TYPE_MAGNETIC_FIELD:
@@ -200,13 +205,9 @@ static float _printTimer = 0.0f;
                     x = remappedValues[0];
                     y = remappedValues[1];
                     z = remappedValues[2];
-
-                    ///store updated values to calculate our orientation with
-                    _lastMagnometerValues = remappedValues;
-                    updateRotation = true;
  
                     ///register the change in native code
-                    onMagnometerChanged(x, y, z, event.timestamp);
+                    onMagnometerChanged(x, y, z);
                     // Log.d(TAG, "Magnometer Sensor Changed: x = " + x + " y = " + y + " z = " + z);
                     break;
                 case Sensor.TYPE_GYROSCOPE:
@@ -221,56 +222,13 @@ static float _printTimer = 0.0f;
                     x = remappedValues[0];
                     y = remappedValues[1];
                     z = remappedValues[2];
-/*
-                    ///set new current orientation matrix by combining this latest delta to it
-                    if(false)//dt != 0)
-                    {
-                        ///Axis of the rotation sample, not normalized yet.
-                        float   axisX = x;//event.values[0];
-                        float   axisY = y;//event.values[1];
-                        float   axisZ = z;//event.values[2];
 
-                        ///Calculate the angular speed of the sample & normalize the rotation
-                        float   omegaMagnitude = (float)Math.sqrt((axisX * axisX) + (axisY * axisY) + (axisZ * axisZ));
-                        if (omegaMagnitude > 1e-4) 
-                        {
-                            float   invOmegaMagnitude = 1.0f / omegaMagnitude;
-                            axisX *= invOmegaMagnitude;
-                            axisY *= invOmegaMagnitude;
-                            axisZ *= invOmegaMagnitude;
-                        }
-
-                        ///Integrate around this axis with the angular speed by the timestep
-                        ///in order to get a delta rotation from this sample over the timestep
-                        ///We will convert this axis-angle representation of the delta rotation
-                        ///into a quaternion before turning it into the rotation matrix.
-                        final float[]   deltaRotationVector = new float[3];//4];
-                        float           thetaOverTwo = omegaMagnitude * dt * 0.5f;
-                        float           sinThetaOverTwo = (float)Math.sin(thetaOverTwo);
-                        float           cosThetaOverTwo = (float)Math.cos(thetaOverTwo);
-                        deltaRotationVector[0] = sinThetaOverTwo * axisX;
-                        deltaRotationVector[1] = sinThetaOverTwo * axisY;
-                        deltaRotationVector[2] = sinThetaOverTwo * axisZ;
-                        // deltaRotationVector[3] = cosThetaOverTwo;
-
-                        ///get current rotation delta to use
-                        float[]   deltaRotationMatrix = new float[9];
-                        SensorManager.getRotationMatrixFromVector(deltaRotationMatrix, deltaRotationVector);
-                         
-                        ///concactenate the delta rotation into the current rotation
-                        Matrix  updatedMatrix = new Matrix();
-                        updatedMatrix.setValues(deltaRotationMatrix);
-                        _currentRotation.preConcat(updatedMatrix);
-                        _currentRotation.getValues(r);
-                        updateOrientation = true;
-                    }
-*/
                     ///register the change in native code
-                    onGyroscopeChanged(x, y, z, event.timestamp);
+                    onGyroscopeChanged(x, y, z);
                     // Log.d(TAG, "Gyroscope Sensor Changed: x = " + x + " y = " + y + " z = " + z);
                     break;
                 case Sensor.TYPE_ROTATION_VECTOR:
-_printTimer += dt;
+                    float[] r = new float[9];
 
                     ///get a rotation matrix from the current vector
                     SensorManager.getRotationMatrixFromVector(r, event.values);
@@ -282,79 +240,38 @@ _printTimer += dt;
                         float[]     tempR = new float[9];
                         if(orientation == Configuration.ORIENTATION_LANDSCAPE)
                         {
-if(_printTimer > 2.0f)
-Log.d(TAG, "ORIENTATION REMAP LANDSCAPE: " + _naturalOrientation);
                             SensorManager.remapCoordinateSystem(r, SensorManager.AXIS_MINUS_Y, SensorManager.AXIS_X, tempR);
                             r = tempR;
                         }
                         else if(orientation == Configuration.ORIENTATION_PORTRAIT)
                         {
-if(_printTimer > 2.0f)
-Log.d(TAG, "ORIENTATION REMAP PORTRAIT: " + _naturalOrientation);
                             SensorManager.remapCoordinateSystem(r, SensorManager.AXIS_Y, SensorManager.AXIS_MINUS_X, tempR);
                             r = tempR;
                         }
                     }
 
-                    _currentRotation.setValues(r);
-                    updateOrientation = true;
+                    ///update our orientation
+                    float[] v = new float[3];
+                    SensorManager.getOrientation(r, v);
+                    // v[0]: azimuth, rotation around the Z axis. GROUND DOWN
+                    // v[1]: pitch, rotation around the X axis. ROUGHLY WEST
+                    // v[2]: roll, rotation around the Y axis. MAGNETIC NORTH
+                    x = v[1];
+                    y = v[2];
+                    z = v[0];
+
+                    ///wrap to 0 - 2*PI range
+                    if(x < 0) x += (2 * Math.PI);
+                    if(y < 0) y += (2 * Math.PI);
+                    if(z < 0) z += (2 * Math.PI);
+
+                    ///register the change in native code
+                    onRotationChanged(x, y, z);
+                    // Log.d(TAG, "Rotation Changed: x = " + x + " y = " + y + " z = " + z);
                     break;
-                default:
-                    return;
             }
 
-/*
-            ///update our rotation matrix from accelerometer & magnometer?
-            if(updateRotation && (_lastAccelerometerValues != null) && (_lastMagnometerValues != null))
-            {
-                ///if we have a gyroscope enabled, we would rather use that!
-                if(!isGyroscopeEnabled())
-                {
-                    boolean success = SensorManager.getRotationMatrix(r, null, _lastAccelerometerValues, _lastMagnometerValues);
-                    if(success)
-                    {
-                        updateOrientation = true;
-                    }
-                }
-            }
-*/
-            ///update orientation from our rotation?
-            if(updateOrientation)
-            {
-///////////
-//-Using the camera (Y axis along the camera's axis) for an augmented reality application where the rotation angles are needed:
-//  remapCoordinateSystem(inR, AXIS_X, AXIS_Z, outR);
-//-Using the device as a mechanical compass when rotation is Surface.ROTATION_90:
-//  remapCoordinateSystem(inR, AXIS_Y, AXIS_MINUS_X, outR);
-///////////
-                ///update our orientation
-                float[] v = new float[3];
-                SensorManager.getOrientation(r, v);
-                // v[0]: azimuth, rotation around the Z axis. GROUND DOWN
-                // v[1]: pitch, rotation around the X axis. ROUGHLY WEST
-                // v[2]: roll, rotation around the Y axis. MAGNETIC NORTH
-                x = v[1];
-                y = v[2];
-                z = v[0];
-
-                ///register the change in native code
-                onOrientationChanged(x, y, z, event.timestamp);
-
-if(_printTimer > 2.0f)
-{
-    _printTimer = 0.0f;                
-    x *= (float)(180.0f / Math.PI);
-    y *= (float)(180.0f / Math.PI);
-    z *= (float)(180.0f / Math.PI);
-    if(x < 0) x += 360.0f;
-    if(y < 0) y += 360.0f;
-    if(z < 0) z += 360.0f;
-    Log.d(TAG, "************************ ** ** ** ** ** Orientation Changed: x = " + x + " y = " + y + " z = " + z);
-}
-            }
-
-
-           ///store last changed time
+            ///store last changed time
             _lastChangedTimestamp = event.timestamp;
         }
 
@@ -369,20 +286,18 @@ if(_printTimer > 2.0f)
 
 
     ///private vars
+    private static final int                SENSOR_ACCELEROMETER    = 0;
+    private static final int                SENSOR_MAGNOMETER       = 1;
+    private static final int                SENSOR_GYROSCOPE        = 2;
+    private static final int                SENSOR_ROTATION_VECTOR  = 3;
+    private static final int                SENSOR_COUNT            = 4;
+
     private static final String             TAG = "Loom Sensors";
-    private static final int                SENSOR_ACCELEROMETER = 0;
-    private static final int                SENSOR_MAGNOMETER = 1;
-    private static final int                SENSOR_GYROSCOPE = 2;
-    private static final int                SENSOR_ROTATION_VECTOR = 3;
-    private static final int                SENSOR_COUNT = 4;
 
     private static Context                  _context;
     private static SensorManager            _sensorManager;
     private static int                      _naturalOrientation;
     private static AndroidSensor[]          _sensorList;
-    private static Matrix                   _currentRotation;
-    private static float[]                  _lastAccelerometerValues;
-    private static float[]                  _lastMagnometerValues;
 
 
 
@@ -404,15 +319,6 @@ if(_printTimer > 2.0f)
         ///store base orientation for internal calculations on our sensor values
         Display display = ((WindowManager)_context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
         _naturalOrientation = display.getOrientation();
-
-        ///clear orientation data
-        resetOrientation();
-
-///TEMP TEST CODE to enable all sensors by default at the start        
-for(int i=0;i<SENSOR_COUNT;i++)
-{
-    _sensorList[i].enable(false);
-}
     }
 
 
@@ -446,71 +352,101 @@ for(int i=0;i<SENSOR_COUNT;i++)
     }
 
 
-public static boolean isAccelerometerSupported()
-{
-    return _sensorList[SENSOR_ACCELEROMETER].isSupported();
-}
-public static boolean isAccelerometerEnabled()
-{
-    return _sensorList[SENSOR_ACCELEROMETER].isEnabled();
-}
-public static boolean enableAccelerometer()
-{
-    return _sensorList[SENSOR_ACCELEROMETER].enable(false);
-}
-public static void disbleAccelerometer()
-{
-    _sensorList[SENSOR_ACCELEROMETER].disable(false);
-}
-public static boolean isMagnometerSupported()
-{
-    return _sensorList[SENSOR_MAGNOMETER].isSupported();
-}
-public static boolean isMagnometerEnabled()
-{
-    return _sensorList[SENSOR_MAGNOMETER].isEnabled();
-}
-public static boolean enableMagnometer()
-{
-    return _sensorList[SENSOR_MAGNOMETER].enable(false);
-}
-public static void disbleMagnometer()
-{
-    _sensorList[SENSOR_MAGNOMETER].disable(false);
-}
-public static boolean isGyroscopeSupported()
-{
-    return _sensorList[SENSOR_GYROSCOPE].isSupported();
-}
-public static boolean isGyroscopeEnabled()
-{
-    return _sensorList[SENSOR_GYROSCOPE].isEnabled();
-}
-public static boolean enableGyroscope()
-{
-    return _sensorList[SENSOR_GYROSCOPE].enable(false);
-}
-public static void disableGyroscope()
-{
-    _sensorList[SENSOR_GYROSCOPE].disable(false);
-}
-public static void resetOrientation()
-{
-    ///create identity rotation matrix to start with
-    _currentRotation = new Matrix();
-    _lastAccelerometerValues = null;
-    _lastMagnometerValues = null;
-    _sensorList[SENSOR_GYROSCOPE]._lastChangedTimestamp = 0;
-}
+    ///checks if the specified sensor is supported
+    public static boolean isSensorSupported(int sensorID)
+    {
+        if(sensorID < SENSOR_COUNT)
+        {
+            return _sensorList[sensorID].isSupported();
+        }
+        return false;
+    }
 
- 
-    ///native function stubs
-    // private static native void onAccelerometerChanged(float x, float y, float z, long timeStamp);
-    // private static native void onMagnometerChanged(float x, float y, float z, long timeStamp);
-    // private static native void onGyroscopeChanged(float x, float y, float z, long timeStamp);
-    // private static native void onOrientationChanged(float x, float y, float z, long timeStamp);
-    private static void onAccelerometerChanged(float x, float y, float z, long timeStamp){}
-    private static void onMagnometerChanged(float x, float y, float z, long timeStamp){}
-    private static void onGyroscopeChanged(float x, float y, float z, long timeStamp){}
-    private static void onOrientationChanged(float x, float y, float z, long timeStamp){}
+
+    ///checks if the specified sensor is enabled
+    public static boolean isSensorEnabled(int sensorID)
+    {
+        if(sensorID < SENSOR_COUNT)
+        {
+            return _sensorList[sensorID].isEnabled();
+        }
+        return false;
+    }
+
+
+    ///checks if the specified sensor has received any valid data
+    public static boolean hasSensorReceivedData(int sensorID)
+    {
+        if(sensorID < SENSOR_COUNT)
+        {
+            return _sensorList[sensorID].hasReceivedData();
+        }
+        return false;
+    }
+
+
+    ///enables the specified sensor
+    public static boolean enableSensor(int sensorID)
+    {
+        if(sensorID < SENSOR_COUNT)
+        {
+            return _sensorList[sensorID].enable(false);
+        }
+        return false;
+    }
+
+
+    ///disables the specified sensor
+    public static void disableSensor(int sensorID)
+    {
+        if(sensorID < SENSOR_COUNT)
+        {
+            _sensorList[SENSOR_ACCELEROMETER].disable(false);
+        }
+    }
+
+
+    ///calls the native delegate for device accelerometer changing
+    private static void onAccelerometerChanged(float x, float y, float z)
+    {
+        ///NOTE: Don't use Accelerometer for now...
+    }
+
+
+    ///calls the native delegate for device magnometer changing
+    private static void onMagnometerChanged(float x, float y, float z)
+    {
+        ///NOTE: Don't use Magnometer for now...
+    }
+
+
+    ///calls the native delegate for device gyroscope changing
+    private static void onGyroscopeChanged(float x, float y, float z)
+    {
+        ///NOTE: Don't use Gyroscope for now...
+    }
+
+    ///calls the native delegate for device rotation changing
+    private static void onRotationChanged(float x, float y, float z)
+    {
+        final float fX = x;
+        final float fY = y;
+        final float fZ = z;
+
+        ///make sure to call the delegate in the main thread
+        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+        {
+            @Override
+            public void run() 
+            {
+                onRotationChangedNative(fX, fY, fZ);
+            }
+        });
+    }
+
+    ///native delegate stubs
+    private static native void onRotationChangedNative(float x, float y, float z);
+    // private static native void onAccelerometerChanged(float x, float y, float z);
+    // private static native void onMagnometerChanged(float x, float y, float z);
+    // private static native void onGyroscopeChanged(float x, float y, float z);
 }

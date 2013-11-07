@@ -68,14 +68,43 @@ const char *platform_getSelectedDolbyAudioProfile()
 ///Null Mobile class for all non-Mobile platforms
 
 ///initializes the data for the Mobile class for this platform
-void platform_mobileInitialize()
+void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB)
+{
+}
+
+///checks if a given sensor is supported on this hardware
+bool platform_isSensorSupported(int sensor)
+{
+    return false;
+}
+
+///checks if a given sensor is currently enabled
+bool platform_isSensorEnabled(int sensor)
+{
+    return false;
+}
+
+///checks if a given sensor has received any data yet
+bool platform_hasSensorReceivedData(int sensor)
+{
+    return false;
+}
+
+///enables the given sensor
+bool platform_enableSensor(int sensor)
+{
+    return false;
+}
+
+///disables the given sensor
+void platform_disableSensor(int sensor)
 {
 }
 
 
-///TODO:
-///     -vibration
-///     -screen timeout
+
+///TODO: LOOM-1810: screen timeout
+///TODO: LOOM-1811: vibration
 
 
 #endif  //LOOM_PLATFORM != LOOM_PLATFORM_IOS

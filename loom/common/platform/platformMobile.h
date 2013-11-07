@@ -29,8 +29,29 @@
  *
  */
 
+///Callback for video API events.
+typedef void (*SensorTripleChangedCallback)(int sensor, float x, float y, float z);
+
 ///initializes the data for the Mobile class for this platform
-void platform_mobileInitialize();
+void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB);
+
+///checks if a given sensor is supported on this hardware
+bool platform_isSensorSupported(int sensor);
+
+///checks if a given sensor is currently enabled
+bool platform_isSensorEnabled(int sensor);
+
+///checks if a given sensor has received any data yet
+bool platform_hasSensorReceivedData(int sensor);
+
+///enables the given sensor
+bool platform_enableSensor(int sensor);
+
+///disables the given sensor
+void platform_disableSensor(int sensor);
+
+///retrieves the current device rotation angles for the device based on an enabled Rotation sensor
+void platform_getDeviceRotationAngles(float *rot);
 
 ///checks if Dolby Audio is supported on this platform
 bool platform_isDolbyAudioSupported();

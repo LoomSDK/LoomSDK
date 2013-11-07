@@ -19,27 +19,66 @@
  */
 
 #include "loom/common/core/log.h"
+#include "loom/common/core/assert.h"
 #include "loom/script/loomscript.h"
+#include "loom/script/runtime/lsRuntime.h"
 #include "loom/common/platform/platformMobile.h"
 
 using namespace LS;
 
 lmDefineLogGroup(gMobileLogGroup, "Loom.Mobile", 1, 0);
 
+
+
 /// Script bindings to the native Mobile API.
 ///
 /// See Mobile.ls for documentation on this API.
 class Mobile
 {
+private:
+    /// Event handler; this is called by the C mobile API when there is a recorded sensor change
+    static void sensorTripleChanged(int sensor, float x, float y, float z)
+    {
+        ///Convert to delegate calls.
+        _OnSensorTripleChangedDelegate.pushArgument(sensor);
+        _OnSensorTripleChangedDelegate.pushArgument(x);
+        _OnSensorTripleChangedDelegate.pushArgument(y);
+        _OnSensorTripleChangedDelegate.pushArgument(z);
+        _OnSensorTripleChangedDelegate.invoke();
+    }
+
 public:
+    LOOM_STATICDELEGATE(OnSensorTripleChanged);
+
     static void initialize()
     {
-        platform_mobileInitialize();
+        platform_mobileInitialize(sensorTripleChanged);
     }
+    static bool isSensorSupported(int sensor)
+    {
+        return platform_isSensorSupported(sensor);
+    }
+    static bool isSensorEnabled(int sensor)
+    {
+        return platform_isSensorEnabled(sensor);
+    }
+    static bool hasSensorReceivedData(int sensor)
+    {
+        return platform_hasSensorReceivedData(sensor);
+    }
+    static bool enableSensor(int sensor)
+    {
+        return platform_enableSensor(sensor);
+    }
+    static void disableSensor(int sensor)
+    {
+        platform_disableSensor(sensor);
+    }   
 };
 
 
-///Dolby Audio access class... Android Only... treated as though a sub-class of Mobile (hence the reason it doesn't have it's own 'init')
+///Dolby Audio access class... Android Only... treated as though a sub-class of Mobile 
+///...hence the reason it doesn't have it's own 'initialize'
 class DolbyAudio
 {   
 public:
@@ -71,16 +110,27 @@ public:
 
 
 
+
+NativeDelegate Mobile::_OnSensorTripleChangedDelegate;
+
+
 static int registerLoomMobile(lua_State *L)
 {
+    ///set up lua bindings
     beginPackage(L, "loom.platform")
 
         .beginClass<Mobile>("Mobile")
 
-///TODO: add to once we're able to get this into master
-///     -vibration
-///     -screen timeout///TODO: add to once we're able to get this into master
-       
+///TODO: LOOM-1810: screen timeout
+///TODO: LOOM-1811: vibration
+
+            .addStaticMethod("isSensorSupported", &Mobile::isSensorSupported)
+            .addStaticMethod("isSensorEnabled", &Mobile::isSensorEnabled)
+            .addStaticMethod("hasSensorReceivedData", &Mobile::hasSensorReceivedData)
+            .addStaticMethod("enableSensor", &Mobile::enableSensor)
+            .addStaticMethod("disableSensor", &Mobile::disableSensor)
+            .addStaticProperty("onSensorTripleChanged", &Mobile::getOnSensorTripleChangedDelegate)
+
         .endClass()
 
     .endPackage();
