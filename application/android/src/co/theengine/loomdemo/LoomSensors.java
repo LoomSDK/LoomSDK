@@ -348,8 +348,6 @@ public class LoomSensors
         ///store base orientation for internal calculations on our sensor values
         Display display = ((WindowManager)_context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
         _naturalRotation = display.getOrientation();
-        _rotationVectorZAdjust = 0.0f;
-        _rotationVectorLastZ = 0.0f;       
     }
 
 
