@@ -59,23 +59,28 @@ public class LoomSensors
             {
                 case SENSOR_ACCELEROMETER:
                     ///NOTE: Don't use Accelerometer for now...
-                    // _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+                    _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
                     _type = "Accelerometer";
                     break;
                 case SENSOR_MAGNOMETER:
                     ///NOTE: Don't use Magnometer for now...
-                    // _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+                    _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
                     _type = "Magnometer";
                     break;
                 case SENSOR_GYROSCOPE:
                     ///NOTE: Don't use Gyroscope for now...
-                    // _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+                    _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
                     _type = "Gyroscope";
                     break;
                 case SENSOR_ROTATION_VECTOR:
                     ///NOTE: Only supported in Api 9+ (Gingerbread 2.3)
                     _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
                     _type = "Rotation Vector";
+                    break;
+                case SENSOR_GRAVITY:
+                    ///NOTE: Only supported in Api 9+ (Gingerbread 2.3)
+                    _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+                    _type = "Gravity";
                     break;
             }
 
@@ -128,7 +133,7 @@ public class LoomSensors
         {
             if(_isSupported && _isEnabled)
             {
-                _sensorManager.unregisterListener(this);
+                _sensorManager.unregisterListener(this, _sensor);
                 _isEnabled = false;
                 _shouldResume = fromOnPause;
             }
@@ -147,16 +152,16 @@ public class LoomSensors
             ///consider this.
             ///
             ///NOTE: My tests have shown that this may not be 100% correct... LL
-            int orientation = _context.getResources().getConfiguration().orientation;
-            if(_naturalOrientation != Surface.ROTATION_0)
+            int curOrientation = _context.getResources().getConfiguration().orientation;
+            if(_naturalRotation != Surface.ROTATION_0)
             {
-                if(orientation == Configuration.ORIENTATION_LANDSCAPE)
+                if(curOrientation == Configuration.ORIENTATION_LANDSCAPE)
                 {
                     float tmp = newValues[0];
                     newValues[0] = -newValues[1];
                     newValues[1] = tmp;
                 }
-                else if(orientation == Configuration.ORIENTATION_PORTRAIT)
+                else if(curOrientation == Configuration.ORIENTATION_PORTRAIT)
                 {
                      float tmp = newValues[0];
                      newValues[0] = newValues[1];
@@ -228,48 +233,71 @@ public class LoomSensors
                     // Log.d(TAG, "Gyroscope Sensor Changed: x = " + x + " y = " + y + " z = " + z);
                     break;
                 case Sensor.TYPE_ROTATION_VECTOR:
+                    int     curOrientation = _context.getResources().getConfiguration().orientation;
+                    float[] v = new float[3];
                     float[] r = new float[9];
+                    float[] tempR = new float[9];
 
                     ///get a rotation matrix from the current vector
                     SensorManager.getRotationMatrixFromVector(r, event.values);
 
                     ///possibly remap the rotation matrix based on our device orientation
-                    int orientation = _context.getResources().getConfiguration().orientation;
-                    if(_naturalOrientation != Surface.ROTATION_0)
+                    switch(_naturalRotation)
                     {
-                        float[]     tempR = new float[9];
-                        if(orientation == Configuration.ORIENTATION_LANDSCAPE)
-                        {
-                            SensorManager.remapCoordinateSystem(r, SensorManager.AXIS_MINUS_Y, SensorManager.AXIS_X, tempR);
-                            r = tempR;
-                        }
-                        else if(orientation == Configuration.ORIENTATION_PORTRAIT)
-                        {
+                        case Surface.ROTATION_0:
+                            ///do nothing
+                            break;
+                        case Surface.ROTATION_90:
+                            ///rotate 90 degrees clockwise around Z
                             SensorManager.remapCoordinateSystem(r, SensorManager.AXIS_Y, SensorManager.AXIS_MINUS_X, tempR);
                             r = tempR;
-                        }
+                            break;
+                        case Surface.ROTATION_180:
+                            ///rotate 180 degrees around Z
+                            SensorManager.remapCoordinateSystem(r, SensorManager.AXIS_MINUS_X, SensorManager.AXIS_MINUS_Y, tempR);
+                            r = tempR;
+                            break;
+                        case Surface.ROTATION_270:
+                            ///rotate 90 degrees counter-clockwise around Z
+                            SensorManager.remapCoordinateSystem(r, SensorManager.AXIS_MINUS_Y, SensorManager.AXIS_X, tempR);
+                            r = tempR;
+                            break;
                     }
-
-                    ///update our orientation
-                    float[] v = new float[3];
+                    
+                    ///update our device orientation
                     SensorManager.getOrientation(r, v);
-                    // v[0]: azimuth, rotation around the Z axis. GROUND DOWN
-                    // v[1]: pitch, rotation around the X axis. ROUGHLY WEST
-                    // v[2]: roll, rotation around the Y axis. MAGNETIC NORTH
-                    x = v[1];
-                    y = v[2];
-                    z = v[0];
+                    x = v[1];   // v[1]: pitch, rotation around the X axis
+                    y = v[2];   // v[2]: roll, rotation around the Y axis
+                    z = v[0];   // v[0]: azimuth, rotation around the Z axis
 
-                    ///wrap to 0 - 2*PI range
-                    if(x < 0) x += (2 * Math.PI);
-                    if(y < 0) y += (2 * Math.PI);
-                    if(z < 0) z += (2 * Math.PI);
+                    ///NOTE: Galaxy S2 appears to have the azimuth defined in -PI/2 <--> PI/2 range!!! :(
+                    ///         Don't think there is anything we can do to figure this out unfortunately :(
+
+                    ///negate the x to get the coordinate system that we want
+                    x *= -1.0f;
 
                     ///register the change in native code
                     onRotationChanged(x, y, z);
                     // Log.d(TAG, "Rotation Changed: x = " + x + " y = " + y + " z = " + z);
                     break;
-            }
+                case Sensor.TYPE_GRAVITY:
+                    ///if the sensor data is unreliable return
+                    if(event.accuracy == SensorManager.SENSOR_STATUS_UNRELIABLE)
+                    {
+                        return;
+                    }
+
+                    ///get correctly oriented values to work with
+                    remappedValues = remapXYZValues(event.values);
+                    x = remappedValues[0];
+                    y = remappedValues[1];
+                    z = remappedValues[2];
+
+                    ///register the change in native code
+                    onGravityChanged(x, y, z);
+                    // Log.d(TAG, "Gravity Sensor Changed: x = " + x + " y = " + y + " z = " + z);
+                    break;
+           }
 
             ///store last changed time
             _lastChangedTimestamp = event.timestamp;
@@ -290,13 +318,14 @@ public class LoomSensors
     private static final int                SENSOR_MAGNOMETER       = 1;
     private static final int                SENSOR_GYROSCOPE        = 2;
     private static final int                SENSOR_ROTATION_VECTOR  = 3;
-    private static final int                SENSOR_COUNT            = 4;
+    private static final int                SENSOR_GRAVITY          = 4;
+    private static final int                SENSOR_COUNT            = 5;
 
     private static final String             TAG = "Loom Sensors";
 
     private static Context                  _context;
     private static SensorManager            _sensorManager;
-    private static int                      _naturalOrientation;
+    private static int                      _naturalRotation;
     private static AndroidSensor[]          _sensorList;
 
 
@@ -318,7 +347,9 @@ public class LoomSensors
 
         ///store base orientation for internal calculations on our sensor values
         Display display = ((WindowManager)_context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-        _naturalOrientation = display.getOrientation();
+        _naturalRotation = display.getOrientation();
+        _rotationVectorZAdjust = 0.0f;
+        _rotationVectorLastZ = 0.0f;       
     }
 
 
@@ -401,7 +432,7 @@ public class LoomSensors
     {
         if(sensorID < SENSOR_COUNT)
         {
-            _sensorList[SENSOR_ACCELEROMETER].disable(false);
+            _sensorList[sensorID].disable(false);
         }
     }
 
@@ -444,8 +475,27 @@ public class LoomSensors
         });
     }
 
+    ///calls the native delegate for device gravity changing
+    private static void onGravityChanged(float x, float y, float z)
+    {
+        final float fX = x;
+        final float fY = y;
+        final float fZ = z;
+
+        ///make sure to call the delegate in the main thread
+        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+        {
+            @Override
+            public void run() 
+            {
+                onGravityChangedNative(fX, fY, fZ);
+            }
+        });
+    }
+
     ///native delegate stubs
     private static native void onRotationChangedNative(float x, float y, float z);
+    private static native void onGravityChangedNative(float x, float y, float z);
     // private static native void onAccelerometerChanged(float x, float y, float z);
     // private static native void onMagnometerChanged(float x, float y, float z);
     // private static native void onGyroscopeChanged(float x, float y, float z);

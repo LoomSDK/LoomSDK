@@ -47,6 +47,14 @@ void Java_co_theengine_loomdemo_LoomSensors_onRotationChangedNative(JNIEnv *env,
         gTripleChangedCallback(3, x, y, z);
     }
 }
+void Java_co_theengine_loomdemo_LoomSensors_onGravityChangedNative(JNIEnv *env, jobject thiz, jfloat x, jfloat y, jfloat z)
+{
+    if (gTripleChangedCallback)
+    {
+        ///4 == MobileSensorType.Gravity
+        gTripleChangedCallback(4, x, y, z);
+    }
+}
 }
 
 
