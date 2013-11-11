@@ -41,6 +41,10 @@ package loom2d.textures
         public function setTextureInfo(ti:TextureInfo):void
         {
             textureInfo = ti;
+            
+            if (textureInfo)
+                textureInfo.smoothing = mSmoothing;
+
             textureInfo.update += onUpdate;
         }
 

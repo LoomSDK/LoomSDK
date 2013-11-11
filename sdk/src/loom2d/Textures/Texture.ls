@@ -73,7 +73,13 @@ package loom2d.textures
     public class Texture
     {
         protected var mFrame:Rectangle;
+
         protected var mRepeat:Boolean;
+
+        /**
+         * See @TextureSmoothing for modes
+         */        
+        protected var mSmoothing:int = TextureSmoothing.defaultSmoothing;
         
         /** helper object */
         private static var sOrigin:Point = new Point();
@@ -113,6 +119,19 @@ package loom2d.textures
             
         }
 
+        public function get smoothing():int
+        {
+            return mSmoothing;
+        }
+
+        public function set smoothing(mode:int)
+        {
+            mSmoothing = mode;
+
+            if (textureInfo)
+                textureInfo.smoothing = mode;
+        }
+
         public function get nativeID():int
         {
             if (!textureInfo)
@@ -131,7 +150,7 @@ package loom2d.textures
 
             var textureInfo = Texture2D.initFromAsset(path);
             Debug.assert(textureInfo, "Unable to load texture from asset: " + path);
-   
+
             // And set up the concrete texture.
             var tex:ConcreteTexture = new ConcreteTexture(path, textureInfo.width, textureInfo.height);
             tex.mFrame = new Rectangle(0, 0, textureInfo.width, textureInfo.height);
