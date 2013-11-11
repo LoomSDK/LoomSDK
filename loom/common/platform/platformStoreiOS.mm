@@ -28,7 +28,11 @@ limitations under the License.
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
 #include "loom/vendor/jansson/jansson.h"
-#include "loom/vendor/jansson/src/jansson_private.h"
+
+extern "C"
+{
+  #include "loom/vendor/jansson/src/jansson_private.h"
+}
 
 lmDefineLogGroup(gAppleStoreLogGroup, "loom.store.apple", 1, 0);
 
