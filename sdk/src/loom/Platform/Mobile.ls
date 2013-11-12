@@ -31,6 +31,7 @@ package loom.platform
 
     /**
      * Delegate used to register changes in a mobile sensor that come in the form of an XYZ triple
+     *
      *  @param sensor MobileSensorType defining the sensor that the data is for
      *  @param x Value for the X of the triple
      *  @param y Value for the Y of the triple
@@ -149,7 +150,9 @@ package loom.platform
         /**
          * Called when the a sensor triple changes
          *
-         * No parameters.
+         *  @param x Value for the X of the triple
+         *  @param y Value for the Y of the triple
+         *  @param z Value for the Z of the triple
          */
         public static native var onSensorTripleChanged:MobileSensorChangedTripleDelegate;
     }

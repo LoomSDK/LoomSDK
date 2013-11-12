@@ -59,17 +59,20 @@ public class LoomSensors
             {
                 case SENSOR_ACCELEROMETER:
                     ///NOTE: Don't use Accelerometer for now...
-                    _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+                    // _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+                    Log.w(TAG, "SENSOR_ACCELEROMETER support not supported at the moment.");
                     _type = "Accelerometer";
                     break;
                 case SENSOR_MAGNOMETER:
                     ///NOTE: Don't use Magnometer for now...
-                    _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+                    // _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+                    Log.w(TAG, "SENSOR_MAGNOMETER support not supported at the moment.");
                     _type = "Magnometer";
                     break;
                 case SENSOR_GYROSCOPE:
                     ///NOTE: Don't use Gyroscope for now...
-                    _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+                    // _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+                    Log.w(TAG, "SENSOR_GYROSCOPE support not supported at the moment.");
                     _type = "Gyroscope";
                     break;
                 case SENSOR_ROTATION_VECTOR:
@@ -308,6 +311,7 @@ public class LoomSensors
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) 
         {
+            ///nothing to do here really... just need the stub for SensorEventListener to compile
         }   
     }
 
@@ -438,22 +442,23 @@ public class LoomSensors
     ///calls the native delegate for device accelerometer changing
     private static void onAccelerometerChanged(float x, float y, float z)
     {
-        ///NOTE: Don't use Accelerometer for now...
+        ///NOTE: Don't use Accelerometer for now... if implemented at some point, follow code used in 'onRotationChanged()'
     }
 
 
     ///calls the native delegate for device magnometer changing
     private static void onMagnometerChanged(float x, float y, float z)
     {
-        ///NOTE: Don't use Magnometer for now...
+        ///NOTE: Don't use Magnometer for now... if implemented at some point, follow code used in 'onRotationChanged()'
     }
 
 
     ///calls the native delegate for device gyroscope changing
     private static void onGyroscopeChanged(float x, float y, float z)
     {
-        ///NOTE: Don't use Gyroscope for now...
+        ///NOTE: Don't use Gyroscope for now... if implemented at some point, follow code used in 'onRotationChanged()'
     }
+
 
     ///calls the native delegate for device rotation changing
     private static void onRotationChanged(float x, float y, float z)
