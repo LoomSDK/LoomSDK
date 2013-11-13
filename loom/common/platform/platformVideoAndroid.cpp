@@ -39,7 +39,7 @@ extern "C"
 {
 void Java_co_theengine_loomdemo_LoomVideo_nativeCallback(JNIEnv *env, jobject thiz, jint callbackType, jstring data)
 {
-    lmLogError(gAndroidVideoLogGroup, "LoomVideo Android Callback fired! %d", callbackType);
+    lmLog(gAndroidVideoLogGroup, "LoomVideo Android Callback fired! %d", callbackType);
 
     const char *dataString = env->GetStringUTFChars(data, 0);
     if (gEventCallback)

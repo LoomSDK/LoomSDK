@@ -179,6 +179,9 @@ public class LoomDemo extends Cocos2dxActivity {
         ///Create Video View for our layout
         LoomVideo.onCreate(webViewGroup);
 
+        ///Create Sensor class
+        LoomSensors.onCreate(this);
+
         ///attempt to initialize Dolby Audio for this device
         DolbyAudio.onCreate(this);
 
@@ -191,7 +194,6 @@ public class LoomDemo extends Cocos2dxActivity {
             @Override
             public void onGlobalLayout() 
             {
-
                 final Rect r = new Rect();
                 activityRootView.getWindowVisibleDisplayFrame(r);
                 final int heightDiff = activityRootView.getRootView().getHeight() - (r.bottom - r.top);
@@ -208,7 +210,6 @@ public class LoomDemo extends Cocos2dxActivity {
                         keyboardHidden = false;
                         triggerGenericEvent("keyboardResize", "" + heightDiff);
                     }
-
                 }
                 else
                 {
@@ -217,11 +218,8 @@ public class LoomDemo extends Cocos2dxActivity {
 
                     keyboardHidden = true;
                     // this matches iOS behavior
-                    triggerGenericEvent("keyboardResize", "0");                 
-
+                    triggerGenericEvent("keyboardResize", "0");
                 }
-
-
              }
         });     
     }
@@ -251,6 +249,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onPause() {
+        LoomSensors.onPause();
         LoomVideo.onPause();
         super.onPause();
         mGLView.onPause();
@@ -258,6 +257,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onResume() {
+        LoomSensors.onResume();
         LoomVideo.onResume();
         super.onResume();
         mGLView.onResume();
@@ -265,6 +265,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onDestroy() {
+        LoomSensors.onDestroy();
         LoomVideo.onDestroy();
         DolbyAudio.onDestroy();
         super.onDestroy();

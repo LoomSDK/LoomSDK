@@ -34,6 +34,35 @@
 lmDefineLogGroup(gAndroidMobileLogGroup, "loom.mobile.android", 1, 0);
 
 
+static SensorTripleChangedCallback gTripleChangedCallback = NULL;
+
+
+extern "C"
+{
+void Java_co_theengine_loomdemo_LoomSensors_onRotationChangedNative(JNIEnv *env, jobject thiz, jfloat x, jfloat y, jfloat z)
+{
+    if (gTripleChangedCallback)
+    {
+        ///3 == MobileSensorType.Rotation
+        gTripleChangedCallback(3, x, y, z);
+    }
+}
+void Java_co_theengine_loomdemo_LoomSensors_onGravityChangedNative(JNIEnv *env, jobject thiz, jfloat x, jfloat y, jfloat z)
+{
+    if (gTripleChangedCallback)
+    {
+        ///4 == MobileSensorType.Gravity
+        gTripleChangedCallback(4, x, y, z);
+    }
+}
+}
+
+
+static loomJniMethodInfo gIsSensorSupported;
+static loomJniMethodInfo gIsSensorEnabled;
+static loomJniMethodInfo gHasSensorReceivedData;
+static loomJniMethodInfo gEnableSensor;
+static loomJniMethodInfo gDisableSensor;
 
 static loomJniMethodInfo gIsDolbyAudioSupported;
 static loomJniMethodInfo gSetDolbyAudioProcessingEnabled;
@@ -45,11 +74,37 @@ static loomJniMethodInfo gGetSelectedDolbyAudioProfile;
 
 
 ///initializes the data for the Mobile class for Android
-void platform_mobileInitialize()
+void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB)
 {
     lmLog(gAndroidMobileLogGroup, "INIT ***** MOBILE ***** ANDROID ****");
 
-    // Bind to JNI entry points.
+    gTripleChangedCallback = sensorTripleChangedCB;    
+
+
+    ///Bind to JNI entry points.
+    ///Mobile
+    LoomJni::getStaticMethodInfo(gIsSensorSupported,
+                                 "co/theengine/loomdemo/LoomSensors",
+                                 "isSensorSupported",
+                                 "(I)Z");
+    LoomJni::getStaticMethodInfo(gIsSensorEnabled,
+                                 "co/theengine/loomdemo/LoomSensors",
+                                 "isSensorEnabled",
+                                 "(I)Z");
+    LoomJni::getStaticMethodInfo(gHasSensorReceivedData,
+                                 "co/theengine/loomdemo/LoomSensors",
+                                 "hasSensorReceivedData",
+                                 "(I)Z");
+    LoomJni::getStaticMethodInfo(gEnableSensor,
+                                 "co/theengine/loomdemo/LoomSensors",
+                                 "enableSensor",
+                                 "(I)Z");
+    LoomJni::getStaticMethodInfo(gDisableSensor,
+                                 "co/theengine/loomdemo/LoomSensors",
+                                 "disableSensor",
+                                 "(I)V");
+
+    ///Dolby
     LoomJni::getStaticMethodInfo(gIsDolbyAudioSupported,
                                  "com/dolby/DolbyAudio",
                                  "isProcessingSupported",
@@ -74,6 +129,51 @@ void platform_mobileInitialize()
                                  "com/dolby/DolbyAudio",
                                  "getSelectedProfile",
                                  "()Ljava/lang/String;");
+}
+
+
+///checks if a given sensor is supported on this hardware
+bool platform_isSensorSupported(int sensor)
+{
+    jboolean result = gIsSensorSupported.env->CallStaticBooleanMethod(gIsSensorSupported.classID, 
+                                                                        gIsSensorSupported.methodID,
+                                                                        sensor);
+    return (bool)result;
+}
+
+///checks if a given sensor is currently enabled
+bool platform_isSensorEnabled(int sensor)
+{
+    jboolean result = gIsSensorEnabled.env->CallStaticBooleanMethod(gIsSensorEnabled.classID, 
+                                                                        gIsSensorEnabled.methodID,
+                                                                        sensor);
+    return (bool)result;
+}
+
+///checks if a given sensor has received any data yet
+bool platform_hasSensorReceivedData(int sensor)
+{
+    jboolean result = gHasSensorReceivedData.env->CallStaticBooleanMethod(gHasSensorReceivedData.classID, 
+                                                                            gHasSensorReceivedData.methodID,
+                                                                            sensor);
+    return (bool)result;
+}
+
+///enables the given sensor
+bool platform_enableSensor(int sensor)
+{
+    jboolean result = gEnableSensor.env->CallStaticBooleanMethod(gEnableSensor.classID, 
+                                                                    gEnableSensor.methodID,
+                                                                    sensor);
+    return (bool)result;
+}
+
+///disables the given sensor
+void platform_disableSensor(int sensor)
+{
+    gDisableSensor.env->CallStaticVoidMethod(gDisableSensor.classID, 
+                                                gDisableSensor.methodID, 
+                                                sensor);    
 }
 
 

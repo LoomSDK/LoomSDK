@@ -29,14 +29,132 @@ package loom.platform
      *
      */
 
+    /**
+     * Delegate used to register changes in a mobile sensor that come in the form of an XYZ triple
+     *
+     *  @param sensor MobileSensorType defining the sensor that the data is for
+     *  @param x Value for the X of the triple
+     *  @param y Value for the Y of the triple
+     *  @param z Value for the Z of the triple
+     */
+    public delegate MobileSensorChangedTripleDelegate(sensor:MobileSensorType, x:Number, y:Number, z:Number):void;
+
+
+    /**
+     * The different types of mobile device sensors available
+     */
+    public enum MobileSensorType
+    {
+        /**
+         * Sensor that measures the acceleration applied to the device.  
+         * Changes in the sensor are sent to onSensorTripleChanged().
+         */
+        ///NOTE: Don't use Accelerometer for now...
+        // Accelerometer = 0,
+
+        /**
+         * Sensor that measures the ambient magnetic field in the X, Y and Z axis in in micro-Tesla (uT).  
+         * Changes in the sensor are sent to onSensorTripleChanged().
+         */
+        ///NOTE: Don't use Magnometer for now...
+        // Magnometer = 1,
+
+        /**
+         * Sensor that meansures the rate of rotation around the device's local X, Y and Z axis in radians/second 
+         * Changes in the sensor are sent to onSensorTripleChanged().
+         */
+        ///NOTE: Don't use Gyroscope for now...
+        // Gyroscope = 2,
+
+        /**
+         * Sensor that measures the local rotation of the device *in it's currently set orientation* 
+         * around the X (Screen-Horizontal Right), Y (Screen-Vertical Up), and Z axis (Screen-Out Up) 
+         * in radians between -PI and PI
+         * 
+         * IMPORTANT NOTE: Some Android hardware has shown to return one or more of these values to be in 
+         * the ranage of -PI/2 and PI/2.
+         *
+         * IMPORTANT NOTE #2: This is only reliable on hardware that has an Accelerometer / Magnometer combination, 
+         * OR a Gyroscope.  However, the results can differ depending on which method the hardware uses.  
+         * For instance, if a Magnometer is present, the Z rotation will alawys be in relation to Magnetic North 
+         * in the World.  However, if there is only a Gyroscope present, Z will be in relation to the orientation 
+         * of the device at application start time.  In addition, Gryoscope-only devices will not track the 
+         * difference in Z rotation while this sensor has been disabled, so if you disable it manually and then 
+         * enable later, you may need to account for this descrepency.
+         *
+         * Changes in the sensor are sent to onSensorTripleChanged().
+         */
+         Rotation = 3,
+
+        /**
+         * Sensor that measures the direction and magnitude of gravity in m/s^2.
+         * Changes in the sensor are sent to onSensorTripleChanged().
+         */
+        Gravity = 4
+    };
 
 
     /**
      * Static control class for accessing various Mobile specific functionality.
      */
+    ///
+    /// TODO: LOOM-1810: screen timeout
+    /// TODO: LOOM-1811: vibration
+    ///
     public native class Mobile 
     {
-        /* Placeholder for now... */
+        /**
+         * Queries whether or not the specified sensor is supported on this device
+         *
+         *  @param type MobileSensorType value for the desired sensor
+         *  @return Boolean Whether or not the sensor is supported
+         */
+        public static native function isSensorSupported(type:MobileSensorType):Boolean;
+
+        /**
+         * Queries whether or not the specified sensor is currently enabled
+         *
+         *  @param type MobileSensorType value for the desired sensor
+         *  @return Boolean Whether or not the sensor is enabled
+         */
+        public static native function isSensorEnabled(type:MobileSensorType):Boolean;
+
+        /**
+         * Queries whether or not the specified sensor has received any data yet. 
+         * Sensors can be faulty on some hardward, and at time, a sensor may be 
+         * reported to be available but in fact it does not receive any data. It 
+         * is wise to check this value to see if you are able to receive reliable 
+         * data for the given sensor.
+         *
+         *  @param type MobileSensorType value for the desired sensor
+         *  @return Boolean Whether or not the sensor has received any data to use
+         */
+        public static native function hasSensorReceivedData(type:MobileSensorType):Boolean;
+
+        /**
+         * Enables the specified sensor
+         *
+         *  @param type MobileSensorType value for the desired sensor
+         *  @return Boolean Whether or not the sensor was enabled successfully
+         */
+        public static native function enableSensor(type:MobileSensorType):Boolean;
+
+        /**
+         * Disables the specified sensor
+         *
+         *  @param type MobileSensorType value for the desired sensor
+         */
+        public static native function disableSensor(type:MobileSensorType):void;
+
+
+        /**
+         * Called when the a sensor triple changes
+         *
+         *  @param x Value for the X of the triple
+         *  @param y Value for the Y of the triple
+         *  @param z Value for the Z of the triple
+         */
+        public static native var onSensorTripleChanged:MobileSensorChangedTripleDelegate;
     }
 
 
