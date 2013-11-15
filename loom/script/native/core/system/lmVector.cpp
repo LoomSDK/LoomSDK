@@ -32,6 +32,7 @@ static int lsr_vectorinternal_index(lua_State *L)
 
 static int lsr_vectorinternal_newindex(lua_State *L)
 {
+    /*
     if (lua_isnumber(L, 2))
     {
         int idx = (int) lua_tonumber(L, 2);
@@ -43,7 +44,7 @@ static int lsr_vectorinternal_newindex(lua_State *L)
             return 0;
         }
 
-
+        
         lua_rawgeti(L, 1, LSINDEXVECTORLENGTH);
         int length = (int) lua_tonumber(L, -1);
         lua_pop(L, 1);
@@ -54,8 +55,9 @@ static int lsr_vectorinternal_newindex(lua_State *L)
             lua_error(L);
             return 0;
         }
-
+    
     }
+    */
 
     lua_rawset(L, 1);
     return 0;
@@ -175,8 +177,6 @@ public:
 
         int nidx = lua_gettop(L);
 
-        lsr_vector_set_length(L, fidx, length - 1);
-
         for (int i = 1; i < length; i++)
         {
             lua_pushnumber(L, i);
@@ -192,6 +192,10 @@ public:
 
         lua_pushvalue(L, nidx);
         lua_rawseti(L, fidx, LSINDEXVECTOR);
+
+        // update length
+        lsr_vector_set_length(L, fidx, length - 1);
+
 
         lua_pushvalue(L, idx + 1);
 
@@ -854,9 +858,9 @@ public:
                 lua_rawseti(L, -2, i);
             }
 
-            Type *vectorType = LSLuaState::getLuaState(L)->getType(
-                "system.Vector");
+            Type *vectorType = LSLuaState::getLuaState(L)->getType("system.Vector");            
             lsr_createinstance(L, vectorType);
+
             lua_pushvalue(L, -2); // push the new vector table
             lua_rawseti(L, -2, LSINDEXVECTOR);
 
@@ -875,6 +879,7 @@ public:
 
         // replace vector table
         lua_rawseti(L, 1, LSINDEXVECTOR);
+        lsr_vector_set_length(L, 1, _sortVectorLength);
         delete [] indices;
 
         return 1;
@@ -904,7 +909,8 @@ void lsr_vector_set_length(lua_State *L, int index, int nlength)
 {
         index = lua_absindex(L, index);
         
-        LSVector::checkNotFixed(L, index);
+        /*
+        LSVector::checkNotFixed(L, index);        
 
         // get the current length
         int clength = lsr_vector_get_length(L, index);
@@ -923,11 +929,12 @@ void lsr_vector_set_length(lua_State *L, int index, int nlength)
 
             lua_pop(L, 1);
         }
+        */
 
         // set the new length
         lua_rawgeti(L, index, LSINDEXVECTOR);
         lua_pushnumber(L, nlength);
-        lua_rawseti(L, -1, LSINDEXVECTORLENGTH);
+        lua_rawseti(L, -2, LSINDEXVECTORLENGTH);
         lua_pop(L, 1);    
 }
 
