@@ -30,9 +30,8 @@ using namespace LS;
 int Console::print(lua_State *L)
 {
     // get the varargs vector length
-    lua_rawgeti(L, 1, LSINDEXVECTORLENGTH);
-    int length = (int)lua_tonumber(L, -1);
-    lua_pop(L, 1);
+    int length = lsr_vector_get_length(L, 1);
+
     // get the varargs table
     lua_rawgeti(L, 1, LSINDEXVECTOR);
     int vidx = lua_gettop(L);

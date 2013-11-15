@@ -432,6 +432,7 @@ Expression *TypeCompilerBase::visit(VectorLiteral *vector)
 
     BC::initExpDesc(&eidxVectorLength, VKNUM, 0);
 
+    // LSINDEXVECTORLENGTH access will get forwarded to internal vector table
 #ifdef LOOM_ENABLE_JIT
     setnumV(&eidxVectorLength.u.nval, LSINDEXVECTORLENGTH);
 #else

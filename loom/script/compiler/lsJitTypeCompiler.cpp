@@ -1881,6 +1881,8 @@ void JitTypeCompiler::createVarArg(ExpDesc *varg,
     BC::singleVar(cs, &evector, varargname);
     BC::expToNextReg(fs, &evector);
 
+
+    // LSINDEXVECTORLENGTH access will get forwarded to internal vector table
     ExpDesc elength;
     BC::initExpDesc(&elength, VKNUM, 0);
     setnumV(&elength.u.nval, LSINDEXVECTORLENGTH);

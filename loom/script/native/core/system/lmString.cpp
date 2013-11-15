@@ -30,9 +30,7 @@ public:
     static int format(lua_State *L)
     {
         // unwind the input args
-        lua_rawgeti(L, 2, LSINDEXVECTORLENGTH);
-        int nargs = (int)lua_tonumber(L, -1);
-        lua_pop(L, 1);
+        int nargs = lsr_vector_get_length(L, 2);
 
         lua_rawgeti(L, 2, LSINDEXVECTOR);
         lua_replace(L, 2);
@@ -248,10 +246,7 @@ public:
         utString value = lua_tostring(L, 1);
 
         lua_rawgeti(L, 2, LSINDEXVECTOR);
-        lua_rawgeti(L, 2, LSINDEXVECTORLENGTH);
-
-        int length = (int)lua_tonumber(L, -1);
-        lua_pop(L, 1);
+        int length = lsr_vector_get_length(L, 2);
 
         for (int i = 0; i < length; i++)
         {
@@ -488,8 +483,7 @@ public:
             lua_rawset(L, newVectorTbl);
         }
 
-        lua_pushnumber(L, scount);
-        lua_rawseti(L, newVectorIdx, LSINDEXVECTORLENGTH);
+        lsr_vector_set_length(L, newVectorIdx, scount);
 
         lua_pushvalue(L, newVectorIdx);
 
@@ -555,8 +549,7 @@ public:
             }
         }
 
-        lua_pushnumber(L, count);
-        lua_rawseti(L, newVectorIdx, LSINDEXVECTORLENGTH);
+        lsr_vector_set_length(L, newVectorIdx, count);
 
         lua_settop(L, newVectorIdx);
         return 1;

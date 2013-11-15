@@ -1506,6 +1506,7 @@ void TypeCompiler::createVarArg(ExpDesc *varg, utArray<Expression *> *arguments,
     BC::singleVar(cs, &evector, varargname);
     BC::expToNextReg(fs, &evector);
 
+    // LSINDEXVECTORLENGTH access will get forwarded to internal vector table
     ExpDesc elength;
     BC::initExpDesc(&elength, VKNUM, 0);
     elength.u.nval = LSINDEXVECTORLENGTH;

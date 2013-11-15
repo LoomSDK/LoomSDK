@@ -115,9 +115,8 @@ public:
         int nargs = 0;
         if (!lua_isnil(L, 2))
         {
-            lua_rawgeti(L, 2, LSINDEXVECTORLENGTH);
-            nargs = (int)lua_tonumber(L, -1);
-            lua_pop(L, 1);
+
+            nargs = lsr_vector_get_length(L, 2);
 
             lua_rawgeti(L, 2, LSINDEXVECTOR);
             lua_replace(L, 2);

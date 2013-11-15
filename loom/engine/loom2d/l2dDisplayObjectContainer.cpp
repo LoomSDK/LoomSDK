@@ -95,8 +95,8 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
     lua_rawgeti(L, -1, LSINDEXVECTOR);
     int childrenVectorIdx = lua_gettop(L);
 
-    lua_rawgeti(L, -2, LSINDEXVECTORLENGTH);
-    int numChildren = (int)lua_tonumber(L, -1);
+    int numChildren = lsr_vector_get_length(L, -2);
+
 
     if (_depthSort && ((int)sSortBucket.size() < numChildren))
     {
