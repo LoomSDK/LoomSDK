@@ -503,10 +503,10 @@ class TestVector extends Test
         var numeric = dim.slice(0, dim.length);
         assert(("numeric " + numeric + "X") == "numeric 100%X");     
 
-        var vassign = new Vector.<int>;   
-
-        vassign[-1] = 100;
-        vp = vassign[100];
+        // these generate indexing errors
+        //var vassign = new Vector.<int>;   
+        //vassign[-1] = 100;
+        //vp = vassign[100];
 
     }
     

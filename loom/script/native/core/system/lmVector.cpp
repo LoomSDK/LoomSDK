@@ -25,14 +25,6 @@ using namespace LS;
 
 static int lsr_vectorinternal_index(lua_State *L)
 {
-    lua_rawget(L, 1);
-    return 1;
-}
-
-
-static int lsr_vectorinternal_newindex(lua_State *L)
-{
-    /*
     if (lua_isnumber(L, 2))
     {
         int idx = (int) lua_tonumber(L, 2);
@@ -43,21 +35,69 @@ static int lsr_vectorinternal_newindex(lua_State *L)
             lua_error(L);
             return 0;
         }
-
         
         lua_rawgeti(L, 1, LSINDEXVECTORLENGTH);
-        int length = (int) lua_tonumber(L, -1);
+
+        // only check if our length has been initialized
+        // it might not be if we're raw setting up vector data
+        if (lua_isnumber(L, -1))
+        {
+            int length = (int) lua_tonumber(L, -1);
+
+            if (idx >= length)
+            {
+                lua_pushfstring(L, "Vector index out of bounds index: %f length: %f", (double) idx, (double) length);
+                lua_error(L);
+                return 0;
+            }
+        }
+
         lua_pop(L, 1);
 
-        if (idx >= length)
+    
+    }
+
+    lua_rawget(L, 1);
+    return 1;
+}
+
+
+static int lsr_vectorinternal_newindex(lua_State *L)
+{
+    
+    if (lua_isnumber(L, 2))
+    {
+        int idx = (int) lua_tonumber(L, 2);
+
+        if (idx < 0)
         {
-            lua_pushstring(L, "Vector index out of bounds");
+            lua_pushstring(L, "Vector indexed with negative number");
             lua_error(L);
             return 0;
         }
+        
+        lua_rawgeti(L, 1, LSINDEXVECTORLENGTH);
+
+        /*
+        // only check if our length has been initialized
+        // it might not be if we're raw setting up vector data
+        if (lua_isnumber(L, -1))
+        {
+            int length = (int) lua_tonumber(L, -1);
+
+            if (idx >= length)
+            {
+                lua_pushfstring(L, "Vector index out of bounds index: %f length: %f", (double) idx, (double) length);
+                lua_error(L);
+                return 0;
+            }
+        }
+        */
+
+        lua_pop(L, 1);
+
     
     }
-    */
 
     lua_rawset(L, 1);
     return 0;
