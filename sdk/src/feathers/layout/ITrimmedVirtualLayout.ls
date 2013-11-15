@@ -7,36 +7,36 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.layout
 {
-	/**
-	 * Optimizes a virtual layout by skipping a specific number of items before
-	 * and after the set that is passed to `layout()`.
-	 */
-	public interface ITrimmedVirtualLayout extends IVirtualLayout
-	{
-		/**
-		 * The number of virtualized items that appear before the items passed
-		 * to `layout()`. Allows the array of items to be smaller
-		 * than the full size. Does not work if the layout has variable item
-		 * dimensions.
-		 */
-		function get beforeVirtualizedItemCount():int;
+    /**
+     * Optimizes a virtual layout by skipping a specific number of items before
+     * and after the set that is passed to `layout()`.
+     */
+    public interface ITrimmedVirtualLayout extends IVirtualLayout
+    {
+        /**
+         * The number of virtualized items that appear before the items passed
+         * to `layout()`. Allows the array of items to be smaller
+         * than the full size. Does not work if the layout has variable item
+         * dimensions.
+         */
+        function get beforeVirtualizedItemCount():int;
 
-		/**
-		 * @private
-		 */
-		function set beforeVirtualizedItemCount(value:int):void;
+        /**
+         * @private
+         */
+        function set beforeVirtualizedItemCount(value:int):void;
 
-		/**
-		 * The number of virtualized items that appear after the items passed
-		 * to `layout()`. Allows the array of items to be smaller
-		 * than the full size. Does not work if the layout has variable item
-		 * dimensions.
-		 */
-		function get afterVirtualizedItemCount():int;
+        /**
+         * The number of virtualized items that appear after the items passed
+         * to `layout()`. Allows the array of items to be smaller
+         * than the full size. Does not work if the layout has variable item
+         * dimensions.
+         */
+        function get afterVirtualizedItemCount():int;
 
-		/**
-		 * @private
-		 */
-		function set afterVirtualizedItemCount(value:int):void;
-	}
+        /**
+         * @private
+         */
+        function set afterVirtualizedItemCount(value:int):void;
+    }
 }
