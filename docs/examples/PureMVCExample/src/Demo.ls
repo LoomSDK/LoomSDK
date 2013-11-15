@@ -3,7 +3,6 @@ package
     import loom.Application;
     
     import loom2d.Loom2D;
-    import loom2d.math.Rectangle;
     import loom2d.display.StageScaleMode;
     import loom2d.display.Quad;
     import loom2d.display.DisplayObject;
@@ -34,7 +33,12 @@ package
     import org.puremvc.loomsdk.patterns.mediator.Mediator;
     import org.puremvc.loomsdk.patterns.proxy.Proxy;
     
-    public class Demo extends Application
+    /**
+     * An example of an in-game shop. Demonstrates a use of the PureMVC framework
+     * to control views and modify data.
+     */
+
+    public class Demo extends Application 
     {
         public static var theme:MetalWorksMobileTheme;
         
@@ -52,13 +56,25 @@ package
         }
     }
     
+    
+    /** ***********************************************************
+    //  CONTROLLER
+    // ************************************************************
+
+    
+    /**
+     * PureMVC uses commands to perform logic between the views and the data model.
+     * We use our StartUpCommand to register the commands we intend to use in the 
+     * application, initialize the data model, and finally create our core views.
+     */
+
     public class StartupCommand extends SimpleCommand
     {
         public static const NAME:String = "StartupCommand";
     
         override public function execute( notification:INotification ):void
         {
-            // Unregister command since we only need to run this once
+            // Unregister this command on execution since we only need to run this once
             facade.removeCommand( StartupCommand.NAME );
             
             registerCommands();
@@ -83,25 +99,30 @@ package
         
         private function initializeView():void
         {
+            trace( "Initializing Core Views" );
+            
             // We do some Feathers boilerplate initialization here...
             DeviceCapabilities.dpi = Platform.getDPI();
             TextField.registerBitmapFont( BitmapFont.load( "assets/arialComplete.fnt" ), "SourceSansPro" );
             TextField.registerBitmapFont( BitmapFont.load( "assets/arialComplete.fnt" ), "SourceSansProSemibold" );
+            Demo.theme = new MetalWorksMobileTheme();
             FocusManager.pushFocusManager();
             
-            // Initialize our global Feathers theme
-            Demo.theme = new MetalWorksMobileTheme();
-            
-            // Then create our main view 
+            // Then create our main views
             facade.registerMediator( new MasterViewMediator() );
-            facade.registerMediator( new ShopScreenMediator() );
             facade.registerMediator( new InventoryScreenMediator() );
+            facade.registerMediator( new ShopScreenMediator() );
             facade.registerMediator( new PurchaseConfirmationScreenMediator() );
             facade.registerMediator( new NotificationScreenMediator() );
             
             sendNotification( ShowDialogCommand.NAME, ShopScreenMediator.NAME );
         }
     }
+    
+    /**
+     * The ShowDialogCommand shows the screen passed in by name through the body of the notification
+     * by accessing our MasterViewMediator and forwarding the dialog name to its showDialog() method.
+     */
     
     public class ShowDialogCommand extends SimpleCommand
     {
@@ -114,6 +135,11 @@ package
         }
     }
     
+    /**
+     * Opens up the purchase confirmation page, setting the displayed item by the id passed in
+     * the notification body.
+     */
+    
     public class RequestPurchaseCommand extends SimpleCommand
     {
         public static const NAME:String = "RequestPurchaseCommand";
@@ -125,16 +151,23 @@ package
             
             if ( itemProxy.playerCoins < item.cost )
             {
+                // If we don't have have enough coins to purchase the item, show a notification
                 sendNotification( ShowNotificationCommand.NAME, "You do not have enough coins." );
             }
             else
             {
+                // Otherwise configure our purchase confirmation screen to show the item, then open the dialog
                 var purchasePage = facade.retrieveMediator( PurchaseConfirmationScreenMediator.NAME ) as PurchaseConfirmationScreenMediator;
                 purchasePage.configure( notification.getBody() as String );
                 sendNotification( ShowDialogCommand.NAME, PurchaseConfirmationScreenMediator.NAME );
             }
         }
     }
+    
+    /**
+     * This command tells the ItemProxy to purchase the item passed in by id via notification body,
+     * then opens up the notification screen with a message confirming the purchase was successful.
+     */
     
     public class ConfirmPurchaseCommand extends SimpleCommand
     {
@@ -146,6 +179,10 @@ package
             sendNotification( ShowNotificationCommand.NAME, "Purchase successful!" );
         }
     }
+    
+    /**
+     * This command opens up the notification dialog, setting the text to the passed in notification body.
+     */
     
     public class ShowNotificationCommand extends SimpleCommand
     {
@@ -159,6 +196,100 @@ package
     }
     
     
+    // ************************************************************
+    //  MODEL
+    // ************************************************************
+
+    
+    /**
+     * PureMVC uses what is referred to as a Proxy to store and manage the data model. The
+     * ItemProxy handles item manifest data, player coins, player inventory, and purchases.
+     */
+    
+    public class ItemProxy extends Proxy
+    {
+        public static const NAME:String = "ItemProxy";
+        
+        public static const INVENTORY_UPDATED:String = "InventoryUpdated";
+        
+        // We'll initialize our item data here for this example. You could also read in
+        // data like this from a JSON file or web request
+        
+        private static const ITEM_DATA:Dictionary.<String, ItemVO> = {
+            "goodItem" : new ItemVO( "goodItem", "Good Item", "An item. Pretty good.", 25, "assets/ball-red.png" ),
+            "betterItem" : new ItemVO( "betterItem", "Better Item", "Even better than the good item.", 40, "assets/ball-blue.png" ),
+            "bestItem" : new ItemVO( "bestItem", "Best Item", "The best item in the store.", 55, "assets/ball-green.png" )
+        };
+        
+        private var _playerInventory:Dictionary.<String, int> = {};
+        private var _playerCoins:int = 300;
+        
+        public function ItemProxy()
+        {
+            super( NAME );
+        }
+        
+        public function get itemList():Dictionary.<String, ItemVO> { return ITEM_DATA; }
+        
+        public function get playerCoins():int { return _playerCoins; }
+        
+        public function getItemDataById( id:String ):ItemVO
+        {
+            return ITEM_DATA[ id ];
+        }
+        
+        public function getQuantityOwned( id:String ):int
+        {
+            return _playerInventory[ id ] ? _playerInventory[ id ] : 0; 
+        }
+        
+        public function purchaseItem( id:String ):void
+        {
+            var item = getItemDataById( id );
+            _playerCoins -= item.cost;
+            if ( _playerInventory[ id ] == null ) _playerInventory[ id ] = 1;
+            else _playerInventory[ id ]++;
+            
+            // Let the rest of the views know that something has changed
+            sendNotification( INVENTORY_UPDATED );
+        }
+    }
+    
+    /**
+     * PureMVC Proxies hold data in simple objects called Value Objects, or VOs. The ItemVO here
+     * stores all the data needed for a single item.
+     */
+    
+    public class ItemVO
+    {
+        public var id:String;
+        public var name:String; 
+        public var description:String;
+        public var cost:int;
+        public var imagePath:String;
+         
+        public function ItemVO( id:String, name:String, description:String, cost:int, imagePath:String )
+        {
+            this.id = id;
+            this.name = name;
+            this.description = description;
+            this.cost = cost;
+            this.imagePath = imagePath;
+        }
+    }
+    
+        
+    // ************************************************************
+    //  VIEW
+    // ************************************************************
+    
+    
+    /**
+     * PureMVC uses what is referred to as a Mediator to connect view components to the rest of the application.
+     * This MasterViewMediator will be used as our root view provider, showing and hiding the view components
+     * from the other individual screens.
+     */
+
     public class MasterViewMediator extends Mediator
     {
         public static const NAME:String = "MasterViewMediator";
@@ -192,6 +323,11 @@ package
             _navigator.showScreen( mediatorName );
         }
     }
+    
+    /**
+     * A base view Mediator class that contains all the functionality shared by the rest of the application views.
+     * Do not instantiate directly, but subclass this to create views.
+     */
     
     public class BaseScreenMediator extends Mediator
     {
@@ -254,34 +390,9 @@ package
         }
     }
     
-    public class ShopScreenMediator extends InventoryScreenMediator
-    {
-        public static const NAME:String = "ShopScreenMediator";
-        
-        public function ShopScreenMediator()
-        {
-            super( NAME );
-            _shopMode = true;
-        }
-        
-        override protected function initializeView():void
-        {
-            _view.headerProperties[ "title" ] = "SHOP";
-            
-            var inventoryButton = new Button();
-            inventoryButton.label = "INVENTORY";
-            inventoryButton.addEventListener( Event.TRIGGERED, onInventoryButtonHit );
-            
-            _view.headerProperties[ "leftItems" ] = [ inventoryButton ];
-            
-            updateItems();
-        }
-        
-        private function onInventoryButtonHit( e:Event ):void
-        {
-            sendNotification( ShowDialogCommand.NAME, InventoryScreenMediator.NAME );
-        }
-    }
+    /**
+     * Our inventory screen. Displays rows of item data and quantities.
+     */
     
     public class InventoryScreenMediator extends BaseScreenMediator
     {
@@ -300,6 +411,10 @@ package
         override public function handleNotification( notification:INotification ):void
         {
             super.handleNotification( notification );
+
+            // If we receieve a notification that the inventory data has changed,
+            // we update our rows to reflect the change
+
             if ( notification.getName() == ItemProxy.INVENTORY_UPDATED ) updateItems();
         }
         
@@ -347,6 +462,43 @@ package
         }
     }
     
+    /**
+     * Our shop screen. Almost identical to our inventory screen, except shows ALL item types with the option to purchase.
+     */
+    
+    public class ShopScreenMediator extends InventoryScreenMediator
+    {
+        public static const NAME:String = "ShopScreenMediator";
+        
+        public function ShopScreenMediator()
+        {
+            super( NAME );
+            _shopMode = true;
+        }
+        
+        override protected function initializeView():void
+        {
+            _view.headerProperties[ "title" ] = "SHOP";
+            
+            var inventoryButton = new Button();
+            inventoryButton.label = "INVENTORY";
+            inventoryButton.addEventListener( Event.TRIGGERED, onInventoryButtonHit );
+            
+            _view.headerProperties[ "leftItems" ] = [ inventoryButton ];
+            
+            updateItems();
+        }
+        
+        private function onInventoryButtonHit( e:Event ):void
+        {
+            sendNotification( ShowDialogCommand.NAME, InventoryScreenMediator.NAME );
+        }
+    }
+    
+    /**
+     * A basic notification screen that shows a line of text and an OK button that brings you back to the shop.
+     */
+    
     public class NotificationScreenMediator extends BaseScreenMediator
     {
         public static const NAME:String = "NotificationScreenMediator";
@@ -385,6 +537,10 @@ package
             sendNotification( ShowDialogCommand.NAME, ShopScreenMediator.NAME );
         }
     }
+    
+    /**
+     * A purchase confirmation screen. Makes sure you really want to buy an item.
+     */
     
     public class PurchaseConfirmationScreenMediator extends BaseScreenMediator
     {
@@ -437,6 +593,10 @@ package
         }
     }
     
+    /**
+     * A simple view component that shows item data and an optional purchase button
+     */
+
     public class ItemRowView extends Sprite
     {
         private var _bgQuad:Quad;
@@ -456,19 +616,19 @@ package
             _icon = addChild( new Image() ) as Image;
             _icon.x = 20;
             _icon.y = 10;
-			_nameLabel = addChild( new Label() ) as Label;
-			_nameLabel.x = 100;
-			_nameLabel.y = 30;
-			_descriptionLabel = addChild( new Label() ) as Label;
-			_descriptionLabel.x = 240;
-			_descriptionLabel.y = 30;
-			_ownedLabel = addChild( new Label() ) as Label;
-			_ownedLabel.x = 550;
-			_ownedLabel.y = 30;
-			_costIcon = addChild( new Image( Texture.fromAsset( "assets/coin.png" ) ) ) as Image;
-			_costIcon.width = _costIcon.height = 32;
-			_costIcon.x = 700;
-			_costIcon.y = 25;
+            _nameLabel = addChild( new Label() ) as Label;
+            _nameLabel.x = 100;
+            _nameLabel.y = 30;
+            _descriptionLabel = addChild( new Label() ) as Label;
+            _descriptionLabel.x = 240;
+            _descriptionLabel.y = 30;
+            _ownedLabel = addChild( new Label() ) as Label;
+            _ownedLabel.x = 550;
+            _ownedLabel.y = 30;
+            _costIcon = addChild( new Image( Texture.fromAsset( "assets/coin.png" ) ) ) as Image;
+            _costIcon.width = _costIcon.height = 32;
+            _costIcon.x = 700;
+            _costIcon.y = 25;
             _costLabel = addChild( new Label() ) as Label;
             _costLabel.x = 734;
             _costLabel.y = 30;
@@ -495,72 +655,9 @@ package
         
         private function onPurchase( e:Event ):void
         {
+            // Since this isn't a Mediator, we need to access the facade via its Singleton
+            // to send a notification
             Facade.getInstance().sendNotification( RequestPurchaseCommand.NAME, _currentItem.id );
-        }
-    }
-    
-    public class ItemProxy extends Proxy
-    {
-        public static const NAME:String = "ItemProxy";
-        
-        public static const INVENTORY_UPDATED:String = "InventoryUpdated";
-        
-        // We'll initialize our item data here for this example. You could also read in
-        // data like this from a JSON file or web request
-        
-        private static const ITEM_DATA:Dictionary.<String, ItemVO> = {
-            "goodItem" : new ItemVO( "goodItem", "Good Item", "An item. Pretty good.", 25, "assets/ball-red.png" ),
-            "betterItem" : new ItemVO( "betterItem", "Better Item", "Even better than the good item.", 40, "assets/ball-blue.png" ),
-            "bestItem" : new ItemVO( "bestItem", "Best Item", "The best item in the store.", 55, "assets/ball-green.png" )
-        };
-        
-        private var _playerInventory:Dictionary.<String, int> = {};
-        private var _playerCoins:int = 300;
-        
-        public function ItemProxy()
-        {
-            super( NAME );
-        }
-        
-        public function get itemList():Dictionary.<String, ItemVO> { return ITEM_DATA; }
-        
-        public function get playerCoins():int { return _playerCoins; }
-        
-        public function getItemDataById( id:String ):ItemVO
-        {
-            return ITEM_DATA[ id ];
-        }
-        
-        public function getQuantityOwned( id:String ):int
-        {
-            return _playerInventory[ id ] ? _playerInventory[ id ] : 0; 
-        }
-        
-        public function purchaseItem( id:String ):void
-        {
-            var item = getItemDataById( id );
-            _playerCoins -= item.cost;
-            if ( _playerInventory[ id ] == null ) _playerInventory[ id ] = 1;
-            else _playerInventory[ id ]++;
-            sendNotification( INVENTORY_UPDATED );
-        }
-    }
-    
-    public class ItemVO
-    {
-        public var id:String;
-        public var name:String; 
-        public var description:String;
-        public var cost:int;
-        public var imagePath:String;
-         
-        public function ItemVO( id:String, name:String, description:String, cost:int, imagePath:String )
-        {
-            this.id = id;
-            this.name = name;
-            this.description = description;
-            this.cost = cost;
-            this.imagePath = imagePath;
         }
     }
 }
