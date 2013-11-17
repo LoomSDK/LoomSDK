@@ -27,7 +27,6 @@
 #include "CCDirector.h"
 #include "ccTypes.h"
 #include "layers_scenes_transitions_nodes/CCLayer.h"
-#include "SimpleAudioEngine.h"
 #include "loom/script/loomscript.h"
 #include "loom/CCLoomCocos2D.h"
 
@@ -200,7 +199,7 @@ using namespace cocos2d;
 
 static int registerSimpleAudioEngine(lua_State *L)
 {
-    beginPackage(L, "loom.sound")
+/*    beginPackage(L, "loom.sound")
 
        .beginClass<CocosDenshion::SimpleAudioEngine>("SimpleAudioEngine")
 
@@ -231,7 +230,7 @@ static int registerSimpleAudioEngine(lua_State *L)
        .endClass()
 
        .endPackage();
-
+*/
     return 0;
 }
 
@@ -242,7 +241,7 @@ void installPackageCocos2DX()
 {
     // Register some bindings for Cocos.
     LOOM_DECLARE_NATIVETYPE(LoomCocos2d, registerCocos2D);
-    LOOM_DECLARE_NATIVETYPE(CocosDenshion::SimpleAudioEngine, registerSimpleAudioEngine);
+    //LOOM_DECLARE_NATIVETYPE(CocosDenshion::SimpleAudioEngine, registerSimpleAudioEngine);
 
     installPackage();
 }

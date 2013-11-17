@@ -11,8 +11,7 @@
 package loom2d.display
 {
     import system.errors.IllegalOperationError;
-    //import flash.media.Sound;
-    import loom.sound.SimpleAudioEngine;
+    //import loom.sound.SimpleAudioEngine;
     
     import loom2d.animation.IAnimatable;
     import loom2d.events.Event;
@@ -259,8 +258,8 @@ package loom2d.display
                     }
                     
                     var sound:String = mSounds[mCurrentFrame];
-                    //if (sound) sound.play();
-                    if(sound) SimpleAudioEngine.sharedEngine().playEffect(sound);
+
+                    // if(sound) SimpleAudioEngine.sharedEngine().playEffect(sound);
                     if (breakAfterFrame) break;
                 }
                 
@@ -315,7 +314,7 @@ package loom2d.display
                 mCurrentTime += getFrameDuration(i);
             
             texture = mTextures[mCurrentFrame];
-            if (mSounds[mCurrentFrame]) SimpleAudioEngine.sharedEngine().playEffect(mSounds[mCurrentFrame]);
+            //if (mSounds[mCurrentFrame]) SimpleAudioEngine.sharedEngine().playEffect(mSounds[mCurrentFrame]);
         }
         
         /** The default number of frames per second. Individual frames can have different 
