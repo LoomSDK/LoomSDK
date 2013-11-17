@@ -6,6 +6,7 @@ package
     import loom2d.textures.Texture;
     import loom2d.ui.SimpleLabel;
     import loom.sound.Sound;
+    import loom.platform.DolbyAudio;
 
     public class PositionalAudioExample extends Application
     {
@@ -36,6 +37,10 @@ package
             label.x = stage.stageWidth / 2;
             label.y = stage.stageHeight / 2 - 100;
             stage.addChild(label);
+
+            trace("Dolby Digital Plus: " + DolbyAudio.supported);
+
+            DolbyAudio.setProcessingEnabled(!DolbyAudio.isProcessingEnabled());
         }
 
         override public function onTick():void
