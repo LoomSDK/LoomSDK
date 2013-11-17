@@ -28,7 +28,11 @@
 #include "AL/al.h"
 #include "AL/alc.h"
 
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
+#include <CoreAudio/CoreAudio.h>
 #include <CoreServices/CoreServices.h>
+#endif
+
 #include <unistd.h>
 #include <AudioUnit/AudioUnit.h>
 #include <AudioToolbox/AudioToolbox.h>
@@ -137,8 +141,13 @@ static OSStatus ca_capture_callback(void *inRefCon, AudioUnitRenderActionFlags *
 
 static ALCenum ca_open_playback(ALCdevice *device, const ALCchar *deviceName)
 {
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
     ComponentDescription desc;
     Component comp;
+#else
+    AudioComponentDescription desc;
+    AudioComponent comp = NULL;
+#endif
     ca_data *data;
     OSStatus err;
 
@@ -149,12 +158,18 @@ static ALCenum ca_open_playback(ALCdevice *device, const ALCchar *deviceName)
 
     /* open the default output unit */
     desc.componentType = kAudioUnitType_Output;
-    desc.componentSubType = kAudioUnitSubType_DefaultOutput;
     desc.componentManufacturer = kAudioUnitManufacturer_Apple;
     desc.componentFlags = 0;
     desc.componentFlagsMask = 0;
 
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
+    desc.componentSubType = kAudioUnitSubType_DefaultOutput;
     comp = FindNextComponent(NULL, &desc);
+#else
+    desc.componentSubType = kAudioUnitSubType_RemoteIO;
+    comp = AudioComponentFindNext(NULL, &desc);
+#endif
+
     if(comp == NULL)
     {
         ERR("FindNextComponent failed\n");
@@ -163,6 +178,8 @@ static ALCenum ca_open_playback(ALCdevice *device, const ALCchar *deviceName)
 
     data = calloc(1, sizeof(*data));
 
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
+    // Open the component
     err = OpenAComponent(comp, &data->audioUnit);
     if(err != noErr)
     {
@@ -170,13 +187,28 @@ static ALCenum ca_open_playback(ALCdevice *device, const ALCchar *deviceName)
         free(data);
         return ALC_INVALID_VALUE;
     }
+#elif LOOM_PLATFORM == LOOM_PLATFORM_IOS
+    /*
+       AudioComponentInstanceNew only available on iPhone OS 2.0 and Mac OS X 10.6
+       We can't use OpenAComponent on iPhone because it is not present
+     */
+    err = AudioComponentInstanceNew(comp, &data->audioUnit);
+    if(err != noErr)
+    {
+        ERR("AudioComponentInstanceNew failed\n");
+        free(data);
+        return ALC_INVALID_VALUE;
+    }
+#endif
 
     /* init and start the default audio unit... */
     err = AudioUnitInitialize(data->audioUnit);
     if(err != noErr)
     {
         ERR("AudioUnitInitialize failed\n");
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
         CloseComponent(data->audioUnit);
+#endif
         free(data);
         return ALC_INVALID_VALUE;
     }
@@ -191,7 +223,9 @@ static void ca_close_playback(ALCdevice *device)
     ca_data *data = (ca_data*)device->ExtraData;
 
     AudioUnitUninitialize(data->audioUnit);
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
     CloseComponent(data->audioUnit);
+#endif
 
     free(data);
     device->ExtraData = NULL;
@@ -371,23 +405,37 @@ static ALCenum ca_open_capture(ALCdevice *device, const ALCchar *deviceName)
     AudioStreamBasicDescription hardwareFormat;   // The hardware format
     AudioStreamBasicDescription outputFormat;     // The AudioUnit output format
     AURenderCallbackStruct input;
-    ComponentDescription desc;
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
     AudioDeviceID inputDevice;
+#endif
     UInt32 outputFrameCount;
     UInt32 propertySize;
     UInt32 enableIO;
-    Component comp;
     ca_data *data;
     OSStatus err;
 
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
+    ComponentDescription desc;
+    Component comp;
+#elif LOOM_PLATFORM == LOOM_PLATFORM_IOS
+    AudioComponentDescription desc;
+    AudioComponent comp = NULL;
+#endif
+
     desc.componentType = kAudioUnitType_Output;
-    desc.componentSubType = kAudioUnitSubType_HALOutput;
     desc.componentManufacturer = kAudioUnitManufacturer_Apple;
     desc.componentFlags = 0;
     desc.componentFlagsMask = 0;
 
-    // Search for component with given description
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
+    desc.componentSubType = kAudioUnitSubType_DefaultOutput;
     comp = FindNextComponent(NULL, &desc);
+#else
+    desc.componentSubType = kAudioUnitSubType_RemoteIO;
+    comp = AudioComponentFindNext(NULL, &desc);
+#endif
+
+    // Search for component with given description
     if(comp == NULL)
     {
         ERR("FindNextComponent failed\n");
@@ -397,6 +445,7 @@ static ALCenum ca_open_capture(ALCdevice *device, const ALCchar *deviceName)
     data = calloc(1, sizeof(*data));
     device->ExtraData = data;
 
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
     // Open the component
     err = OpenAComponent(comp, &data->audioUnit);
     if(err != noErr)
@@ -404,6 +453,18 @@ static ALCenum ca_open_capture(ALCdevice *device, const ALCchar *deviceName)
         ERR("OpenAComponent failed\n");
         goto error;
     }
+#elif LOOM_PLATFORM == LOOM_PLATFORM_IOS
+    /*
+       AudioComponentInstanceNew only available on iPhone OS 2.0 and Mac OS X 10.6
+       We can't use OpenAComponent on iPhone because it is not present
+     */
+    err = AudioComponentInstanceNew(comp, &data->audioUnit);
+    if(err != noErr)
+    {
+        ERR("AudioComponentInstanceNew failed\n");
+        goto error;
+    }
+#endif
 
     // Turn off AudioUnit output
     enableIO = 0;
@@ -424,6 +485,7 @@ static ALCenum ca_open_capture(ALCdevice *device, const ALCchar *deviceName)
     }
 
     // Get the default input device
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
     propertySize = sizeof(AudioDeviceID);
     AudioObjectPropertyAddress theAddress = { kAudioHardwarePropertyDefaultInputDevice,
                                               kAudioObjectPropertyScopeGlobal,
@@ -454,6 +516,7 @@ static ALCenum ca_open_capture(ALCdevice *device, const ALCchar *deviceName)
         ERR("AudioUnitSetProperty failed\n");
         goto error;
     }
+#endif
 
     // set capture callback
     input.inputProc = ca_capture_callback;
@@ -593,8 +656,10 @@ error:
 
     if(data->audioConverter)
         AudioConverterDispose(data->audioConverter);
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
     if(data->audioUnit)
         CloseComponent(data->audioUnit);
+#endif
 
     free(data);
     device->ExtraData = NULL;
@@ -611,7 +676,9 @@ static void ca_close_capture(ALCdevice *device)
     destroy_buffer_list(data->bufferList);
 
     AudioConverterDispose(data->audioConverter);
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
     CloseComponent(data->audioUnit);
+#endif
 
     free(data);
     device->ExtraData = NULL;

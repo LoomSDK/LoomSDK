@@ -113,10 +113,9 @@ if (APPLE)
           "-framework SystemConfiguration"
           "-framework AdSupport"
 
-          # For CocosDenshion
+          # For Audio
           "-framework AVFoundation"
           "-framework AudioToolbox"
-          "-framework AudioUnit"
           "-framework CoreAudio"
 
           # Admob SDK
@@ -150,7 +149,7 @@ if (APPLE)
            "-framework OpenGL"
            "-framework WebKit"
 
-          # For CocosDenshion
+          # For Audio
           "-framework AudioToolbox"
           "-framework AudioUnit"
           "-framework CoreAudio"
