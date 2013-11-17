@@ -51,11 +51,11 @@ package
             lastTime = Platform.getTime() - 500 * Math.random();
 
             mySound = Sound.load("assets/YeeHah.mp3");
-            mySound.setPosition(100 * Math.random() - 50, 0, 0);
+            mySound.setPosition(100 * Math.random() - 50, 100 * Math.random() - 50, 100 * Math.random() - 50);
             mySound.play();
 
             mySound2 = Sound.load("assets/Crush8-Bit.ogg");
-            mySound2.setPosition(50 * Math.random() - 25, 0, 0);
+            mySound2.setPosition(50 * Math.random() - 25, 50 * Math.random() - 25, 50 * Math.random() - 25);
             mySound2.play();
 
         }
