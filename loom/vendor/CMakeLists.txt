@@ -506,10 +506,9 @@ set (JEMALLOC_SRC
 
 set(OPENALSOFT_ROOT openal-soft)
 set(OPENALSOFT_SRC
-    ${OPENALSOFT_ROOT}/Alc/backends/coreaudio.c # TODO: Multiple platform.
-    ${OPENALSOFT_ROOT}/Alc/backends/wave.c # TODO: Multiple platform.
-    ${OPENALSOFT_ROOT}/Alc/backends/null.c # TODO: Multiple platform.
-    ${OPENALSOFT_ROOT}/Alc/backends/loopback.c # TODO: Multiple platform.
+    ${OPENALSOFT_ROOT}/Alc/backends/wave.c
+    ${OPENALSOFT_ROOT}/Alc/backends/null.c
+    ${OPENALSOFT_ROOT}/Alc/backends/loopback.c
     ${OPENALSOFT_ROOT}/Alc/ALc.c
     ${OPENALSOFT_ROOT}/Alc/alcConfig.c
     ${OPENALSOFT_ROOT}/Alc/alcDedicated.c
@@ -535,6 +534,27 @@ set(OPENALSOFT_SRC
     ${OPENALSOFT_ROOT}/OpenAL32/alState.c
     ${OPENALSOFT_ROOT}/OpenAL32/alThunk.c
 )
+
+if(APPLE)
+    set(OPENALSOFT_SRC
+        ${OPENALSOFT_SRC}
+        ${OPENALSOFT_ROOT}/Alc/backends/coreaudio.c
+    )
+endif()
+
+if(ANDROID)
+    set(OPENALSOFT_SRC
+        ${OPENALSOFT_SRC}
+        ${OPENALSOFT_ROOT}/Alc/backends/android.cpp
+    )
+endif()
+
+if(MSVC)
+    set(OPENALSOFT_SRC
+        ${OPENALSOFT_SRC}
+        ${OPENALSOFT_ROOT}/Alc/backends/dsound.c
+    )
+endif()
 
 set(MINIMP3_ROOT minimp3)
 set(MINIMP3_SRC

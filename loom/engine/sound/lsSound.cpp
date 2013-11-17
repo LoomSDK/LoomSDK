@@ -47,7 +47,7 @@ extern "C"
         if(!ctx)
         {
             lmLogError(gLoomSoundLogGroup, "Could not create OpenAL context.")
-            return 1;
+            return;
         }
 
         alcMakeContextCurrent(ctx);

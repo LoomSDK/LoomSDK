@@ -1,3 +1,5 @@
+#include "loom/common/platform/platform.h"
+
 /* API declaration export attribute */
 #define AL_API  
 #define ALC_API 
@@ -35,7 +37,9 @@
 //#define HAVE_PULSEAUDIO
 
 /* Define if we have the CoreAudio backend */
+#if LOOM_PLATFORM_IS_APPLE == 1
 #define HAVE_COREAUDIO
+#endif
 
 /* Define if we have the OpenSL backend */
 //#define HAVE_OPENSL
@@ -44,7 +48,10 @@
 //#define HAVE_OPENSL_1_1
 
 /* Define if we have the Android backend */
-//#define HAVE_ANDROID
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+#define HAVE_ANDROID
+#define HAVE_ANDROID_LOW_LATENCY
+#endif
 
 /* Define if we want to use the low latency Android backend */
 //#define HAVE_ANDROID_LOW_LATENCY
@@ -101,10 +108,12 @@
 #define HAVE___INT64
 
 /* Define to the size of a long int type */
-#define SIZEOF_LONG sizeof(long)
+#define SIZEOF_LONG 4
 
 /* Define to the size of a long long int type */
-#define SIZEOF_LONG_LONG sizeof(long long)
+#define SIZEOF_LONG_LONG 8
+
+#if LOOM_COMPILER == LOOM_COMPILER_GNU
 
 /* Define if we have GCC's destructor attribute */
 #define HAVE_GCC_DESTRUCTOR
@@ -112,11 +121,22 @@
 /* Define if we have GCC's format attribute */
 #define HAVE_GCC_FORMAT
 
+#else
+
+#undef HAVE_GCC_DESTRUCTOR
+#undef HAVE_GCC_FORMAT
+
+#endif
+
 /* Define if we have pthread_np.h */
 #undef HAVE_PTHREAD_NP_H
 
 /* Define if we have arm_neon.h */
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+#define HAVE_ARM_NEON_H
+#else
 #undef HAVE_ARM_NEON_H
+#endif
 
 /* Define if we have guiddef.h */
 #undef HAVE_GUIDDEF_H
@@ -145,8 +165,17 @@
 /* Define if we have pthread_setschedparam() */
 #define HAVE_PTHREAD_SETSCHEDPARAM
 
+#if LOOM_PLATFORM_IS_APPLE == 1
+
 /* Define if we have the restrict keyword */
 #define HAVE_RESTRICT
 
 /* Define if we have the __restrict keyword */
 #define HAVE___RESTRICT
+
+#else
+
+#undef HAVE_RESTRICT
+#undef HAVE___RESTRICT
+
+#endif
