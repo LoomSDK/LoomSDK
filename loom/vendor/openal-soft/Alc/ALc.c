@@ -1052,34 +1052,33 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
     ALCuint oldFreq;
     int oldMode;
     ALuint i;
+    enum {
+        GotFreq  = 1<<0,
+        GotChans = 1<<1,
+        GotType  = 1<<2,
+        GotAll   = GotFreq|GotChans|GotType
+    };
+    ALCuint freq, numMono, numStereo, numSends;
+    enum DevFmtChannels schans;
+    enum DevFmtType stype;
+    ALCuint attrIdx = 0;
+    ALCint gotFmt = 0;
+
+    numMono = device->NumMonoSources;
+    numStereo = device->NumStereoSources;
+    numSends = device->NumAuxSends;
+    schans = device->FmtChans;
+    stype = device->FmtType;
+    freq = device->Frequency;
 
     // Check for attributes
     if(device->Type == Loopback)
     {
-        enum {
-            GotFreq  = 1<<0,
-            GotChans = 1<<1,
-            GotType  = 1<<2,
-            GotAll   = GotFreq|GotChans|GotType
-        };
-        ALCuint freq, numMono, numStereo, numSends;
-        enum DevFmtChannels schans;
-        enum DevFmtType stype;
-        ALCuint attrIdx = 0;
-        ALCint gotFmt = 0;
-
         if(!attrList)
         {
             WARN("Missing attributes for loopback device\n");
             return ALC_INVALID_VALUE;
         }
-
-        numMono = device->NumMonoSources;
-        numStereo = device->NumStereoSources;
-        numSends = device->NumAuxSends;
-        schans = device->FmtChans;
-        stype = device->FmtType;
-        freq = device->Frequency;
 
         while(attrList[attrIdx])
         {
@@ -1162,6 +1161,24 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
 
         while(attrList[attrIdx])
         {
+            if(attrList[attrIdx] == ALC_FORMAT_CHANNELS_SOFT)
+            {
+                ALCint val = attrList[attrIdx + 1];
+                if(!IsValidALCChannels(val) || !ChannelsFromDevFmt(val))
+                    return ALC_INVALID_VALUE;
+                schans = val;
+                gotFmt |= GotChans;
+            }
+
+            if(attrList[attrIdx] == ALC_FORMAT_TYPE_SOFT)
+            {
+                ALCint val = attrList[attrIdx + 1];
+                if(!IsValidALCType(val) || !BytesFromDevFmt(val))
+                    return ALC_INVALID_VALUE;
+                stype = val;
+                gotFmt |= GotType;
+            }
+
             if(attrList[attrIdx] == ALC_FREQUENCY)
             {
                 freq = attrList[attrIdx + 1];
@@ -1196,6 +1213,7 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
         device->NumMonoSources = numMono;
         device->NumStereoSources = numStereo;
         device->NumAuxSends = numSends;
+        device->FmtChans = schans;
     }
 
     if((device->Flags&DEVICE_RUNNING))

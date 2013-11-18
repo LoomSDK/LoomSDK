@@ -18,6 +18,8 @@
  * Or go to http://www.gnu.org/copyleft/lgpl.html
  */
 
+ // NOTE: Hacked by BJG, TEC to work on iOS and OS X; playback works but capture not tested.
+
 #include "config.h"
 
 #include <stdio.h>

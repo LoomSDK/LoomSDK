@@ -24,6 +24,7 @@
 #include "loom/script/loomscript.h"
 #include "loom/vendor/openal-soft/include/AL/al.h"
 #include "loom/vendor/openal-soft/include/AL/alc.h"
+#include "loom/vendor/openal-soft/include/AL/alext.h"
 
 using namespace LS;
 
@@ -43,7 +44,13 @@ extern "C"
             return;
         }
 
-        ctx = alcCreateContext(dev, NULL);
+        ALCint params[] =
+        {
+            //ALC_FORMAT_CHANNELS_SOFT, ALC_5POINT1_SOFT,
+            NULL, NULL
+        };
+
+        ctx = alcCreateContext(dev, params);
         if(!ctx)
         {
             lmLogError(gLoomSoundLogGroup, "Could not create OpenAL context.")

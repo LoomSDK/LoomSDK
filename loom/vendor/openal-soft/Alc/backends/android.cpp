@@ -20,6 +20,8 @@
 
 #include "loom/common/platform/platformAndroidJni.h"
 
+lmDefineLogGroup(gOpenALAndroid, "openal.android", 1, LoomLogInfo);
+
 #include "config.h"
 
 #include <stdlib.h>
@@ -55,6 +57,7 @@ typedef struct
 #define STREAM_MUSIC 3
 #define CHANNEL_CONFIGURATION_MONO 2
 #define CHANNEL_CONFIGURATION_STEREO 3
+#define CHANNEL_CONFIGURATION_5_1 252
 #define ENCODING_PCM_8BIT 3
 #define ENCODING_PCM_16BIT 2
 #define MODE_STREAM 1
@@ -70,7 +73,20 @@ static void* thread_function(void* arg)
     env->PushLocalFrame(2);
 
     int sampleRateInHz = device->Frequency;
-    int channelConfig = ChannelsFromDevFmt(device->FmtChans) == 1 ? CHANNEL_CONFIGURATION_MONO : CHANNEL_CONFIGURATION_STEREO;
+    int channelConfig = CHANNEL_CONFIGURATION_STEREO;
+    switch(ChannelsFromDevFmt(device->FmtChans))
+    {
+        case 1: channelConfig = CHANNEL_CONFIGURATION_MONO; break;
+        case 2: channelConfig = CHANNEL_CONFIGURATION_STEREO; break;
+        case 6: channelConfig = CHANNEL_CONFIGURATION_5_1; break;
+
+        default:
+        AL_PRINT("Failed to identify channelConfig, defaulting to stereo.");
+        break;
+    }
+
+    lmLogDebug(gOpenALAndroid, "channel config = %d", channelConfig);
+
     int audioFormat = BytesFromDevFmt(device->FmtType) == 1 ? ENCODING_PCM_8BIT : ENCODING_PCM_16BIT;
 
     int bufferSizeInBytes = env->CallStaticIntMethod(cAudioTrack, 
@@ -201,7 +217,8 @@ static ALCboolean android_reset_playback(ALCdevice *device)
 {
     AndroidData* data = (AndroidData*)device->ExtraData;
 
-    device->FmtChans = ChannelsFromDevFmt(device->FmtChans) >= 2 ? DevFmtStereo : DevFmtMono;
+    // TODO: Validate format.
+    //device->FmtChans = DevFmtX51; //ChannelsFromDevFmt(device->FmtChans) >= 2 ? DevFmtStereo : DevFmtMono;
 
     SetDefaultChannelOrder(device);
 
