@@ -38,7 +38,9 @@ package
             label.y = stage.stageHeight / 2 - 100;
             stage.addChild(label);
 
-            trace("Dolby Digital Plus: " + DolbyAudio.supported);
+            trace("Dolby Digital Plus available: " + DolbyAudio.supported);
+            if(DolbyAudio.supported)
+                label.text = "Hello Dolby Digital Plus!";
 
             DolbyAudio.setProcessingEnabled(!DolbyAudio.isProcessingEnabled());
         }
@@ -57,7 +59,6 @@ package
             mySound2 = Sound.load("assets/Crush8-Bit.ogg");
             mySound2.setPosition(50 * Math.random() - 25, 50 * Math.random() - 25, 50 * Math.random() - 25);
             mySound2.play();
-
         }
     }
 }
