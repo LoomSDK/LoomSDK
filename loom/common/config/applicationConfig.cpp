@@ -30,6 +30,7 @@ utString LoomApplicationConfig::configJSON;
 int      LoomApplicationConfig::_waitForAssetAgent = false;
 utString LoomApplicationConfig::assetHost;
 int      LoomApplicationConfig::assetPort;
+bool     LoomApplicationConfig::_wants51Audio   = false;
 utString LoomApplicationConfig::_version       = "0.0.0";
 utString LoomApplicationConfig::_applicationId = "unknown_app_id";
 
@@ -188,6 +189,11 @@ void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
 
             loom_log_addRule(key, enabledRule, filterRule);
         }
+    }
+
+    if (json_t *w51a = json_object_get(json, "_wants51Audio"))
+    {
+        _wants51Audio = _jsonParseBool("_wants51Audio", w51a);
     }
 
     if (json_t *wfd = json_object_get(json, "waitForDebugger"))

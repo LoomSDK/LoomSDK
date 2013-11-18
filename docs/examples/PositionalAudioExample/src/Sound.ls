@@ -19,6 +19,8 @@ package loom.sound
 		public native function pause():void;
 		public native function stop():void;
 		public native function rewind():void;
+
+		public native function isPlaying():Boolean;
 	}
 
 	[Native(managed)]

@@ -23,7 +23,15 @@
 
 #include "loom/common/utils/utString.h"
 
-class LoomApplicationConfig {
+/**
+ * C++ access to assorted configuration parameters from the application assembly.
+ *
+ * These are available at startup time to drive app behavior. Currently this is a
+ * snapshot of loom.config (with some content redacted by the compiler). lsc embeds
+ * it in the LoomScript assembly.
+ */
+class LoomApplicationConfig 
+{
     static utString configJSON;
     static int      _waitForAssetAgent;
     static utString assetHost;
@@ -36,55 +44,71 @@ class LoomApplicationConfig {
     static utString _debuggerHost;
     static int      _debuggerPort;
 
+    static bool     _wants51Audio;
+
 public:
 
     static void parseApplicationConfig(const utString& jsonString);
 
+    /// Access the raw loom.config JSON.
     static const utString& getApplicationConfigJSON()
     {
         return configJSON;
     }
 
-    // 0 if no wait, else # of milliseconds to wait.
+    /// 0 if no wait, else # of milliseconds to wait for assetAgent connection before
+    /// continuing execution.
     static const int waitForAssetAgent()
     {
         return _waitForAssetAgent;
     }
 
+    /// Host for the asset agent.
     static const utString& assetAgentHost()
     {
         return assetHost;
     }
 
+    /// Port for the asset agent.
     static const int assetAgentPort()
     {
         return assetPort;
     }
 
+    /// Application version.
     static const utString& version()
     {
         return _version;
     }
 
-    // 0 if no wait, else # of milliseconds to wait.
+    /// 0 if no wait, else # of milliseconds to wait for LS debugger.
     static const int waitForDebugger()
     {
         return _waitForDebugger;
     }
 
+    /// Host for the LoomScript debugger.
     static const utString& debuggerHost()
     {
         return _debuggerHost;
     }
 
+    /// Port for the LoomScript debugger.
     static const int debuggerPort()
     {
         return _debuggerPort;
     }
 
+    /// The app's ID.
     static const utString& applicationId()
     {
         return _applicationId;
+    }
+
+    /// True if we should initialize 5.1 audio.
+    static const bool wants51Audio()
+    {
+        return _wants51Audio;
     }
 };
 #endif
