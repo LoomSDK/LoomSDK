@@ -95,6 +95,13 @@ else
   $numCores = Integer(`cat /proc/cpuinfo | grep processor | wc -l`)
 end
 
+# For matz's sake just include rubyzip directly.
+path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'lib'))
+puts "Adding #{path} to $LOAD_PATH to work around rubyzip retardation."
+$LOAD_PATH << path
+require 'zip'
+require 'zip/file'
+
 puts "*** Building with #{$numCores} cores."
 
 # Windows specific checks and settings
@@ -1018,11 +1025,6 @@ end
 
 def require_dependencies
   begin
-    # For matz's sake just include rubyzip directly.
-    path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'lib'))
-    puts "Adding #{path} to $LOAD_PATH to work around rubyzip retardation."
-    $LOAD_PATH << path
-
     require 'rubygems'
     require 'zip'
     require 'zip/file'
