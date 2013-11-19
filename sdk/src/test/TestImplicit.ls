@@ -59,7 +59,7 @@ class TestImplicit extends Test
         takesANumber(x);
         
         // implicit Vector.<Object> from []
-        var iv = [100];
+        var iv = [];
 
         assert(iv.length == 0);
         

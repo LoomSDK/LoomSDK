@@ -423,8 +423,31 @@ Expression *TypeCompilerBase::visit(VectorLiteral *vector)
 
     int restore = fs->freereg;
 
+    // vtable will go into this reg
+    fs->freereg = fs->freereg + 1;
+
     // comes in from NewExpression visitor
     ExpDesc ethis = vector->e;
+
+    // initialize the internal vector table
+    ethis = vector->e;
+    ExpDesc eidxVectorIndex;
+    BC::initExpDesc(&eidxVectorIndex, VKNUM, 0);
+
+#ifdef LOOM_ENABLE_JIT
+    setnumV(&eidxVectorIndex.u.nval, LSINDEXVECTOR);
+#else
+    eidxVectorIndex.u.nval = (int)LSINDEXVECTOR;
+#endif
+
+    BC::expToNextReg(fs, &ethis);    
+
+    BC::expToNextReg(fs, &eidxVectorIndex);
+    BC::expToVal(fs, &eidxVectorIndex);
+    BC::indexed(fs, &ethis, &eidxVectorIndex);
+
+    // moves vtables into ethis
+    BC::expToNextReg(fs, &ethis);
 
     // store vector length to LSINDEXVECTORLENGTH
 
@@ -448,28 +471,12 @@ Expression *TypeCompilerBase::visit(VectorLiteral *vector)
     nelements.u.nval = (int)vector->elements.size();
 #endif
 
-    // set length
-    BC::expToNextReg(fs, &ethis);
+    // set length    
     BC::expToNextReg(fs, &eidxVectorLength);
     BC::expToVal(fs, &eidxVectorLength);
     BC::indexed(fs, &ethis, &eidxVectorLength);
     BC::storeVar(fs, &ethis, &nelements);
 
-    // initialize the internal vector table
-    ethis = vector->e;
-    ExpDesc eidxVectorIndex;
-    BC::initExpDesc(&eidxVectorIndex, VKNUM, 0);
-
-#ifdef LOOM_ENABLE_JIT
-    setnumV(&eidxVectorIndex.u.nval, LSINDEXVECTOR);
-#else
-    eidxVectorIndex.u.nval = (int)LSINDEXVECTOR;
-#endif
-
-    BC::expToNextReg(fs, &ethis);
-    BC::expToNextReg(fs, &eidxVectorIndex);
-    BC::expToVal(fs, &eidxVectorIndex);
-    BC::indexed(fs, &ethis, &eidxVectorIndex);
 
     // add any elements to vector
     for (UTsize i = 0; i < vector->elements.size(); i++)

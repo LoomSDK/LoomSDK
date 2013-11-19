@@ -75,9 +75,6 @@ static int lsr_vectorinternal_newindex(lua_State *L)
             lua_error(L);
             return 0;
         }
-
-        if (idx == 0 && lua_isnumber(L, 3) && int(lua_tonumber(L, 3)) == 100)
-            printf("Hey!\n");
         
         lua_rawgeti(L, 1, LSINDEXVECTORLENGTH);
 

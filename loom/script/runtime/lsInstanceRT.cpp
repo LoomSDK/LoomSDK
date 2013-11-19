@@ -506,21 +506,6 @@ static int lsr_dictionary_newindex(lua_State *L)
     return 0;
 }
 
-// new indexes on vector instance get forwarded to internal vector table see lmVector.cpp 
-static int lsr_vector_newindex(lua_State *L)
-{    
-
-    if (lua_isnumber(L, 2))
-    {
-        printf("%i\n", (int) lua_tonumber(L, 2));
-    }
-
-    lua_rawgeti(L, 1, LSINDEXVECTOR);
-    lua_replace(L, 1);
-    lua_settable(L, 1);
-    return 0;
-}
-
 static void lsr_deletedmanagederror(lua_State *L)
 {
     lua_Debug ar;
@@ -605,7 +590,7 @@ void lsr_instanceregister(lua_State *L)
     lua_pushcfunction(L, lsr_instanceindex);
     lua_setfield(L, -2, "__index");
 
-    lua_pushcfunction(L, lsr_vector_newindex);
+    lua_pushcfunction(L, lsr_instancenewindex);
     lua_setfield(L, -2, "__newindex");
 
     lua_pushcfunction(L, lsr_instanceequality);
