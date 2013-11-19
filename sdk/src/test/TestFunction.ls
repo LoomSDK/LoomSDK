@@ -81,6 +81,12 @@ class TestFunction extends Test
 
     var memberFunction:Function;
 
+    private function testVarArgs(...args)
+    {
+        // test for member function called from Function without args
+        assert(args == null);
+    }
+
     function test()
     {
         
@@ -221,7 +227,23 @@ class TestFunction extends Test
         memberFunction = _funkypants3;
         assert(memberFunction.length == 2);
         memberFunction("HelloMemberFunction", 101);
-        FunctionMethodTestClass.checkTestArgs("HelloMemberFunction", "101");                
+        FunctionMethodTestClass.checkTestArgs("HelloMemberFunction", "101");   
+
+        var funcTestVarArgs:Function;
+
+        // assign to member, which takes var args
+        funcTestVarArgs = testVarArgs;
+
+        // call without var args, which will be null args
+        funcTestVarArgs();    
+
+        // anonymous function
+        funcTestVarArgs = function (...args)  { 
+            assert(args == null);
+        };
+
+        // call with no args,  will be null args
+        funcTestVarArgs();          
         
 
     }

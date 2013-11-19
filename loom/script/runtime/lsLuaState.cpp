@@ -306,6 +306,10 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
         {
             functionType = type;
         }
+        else if (!strcmp(typeName, "system.Vector"))
+        {
+            vectorType = type;
+        }
 
         lua_rawgeti(L, LUA_GLOBALSINDEX, LSINDEXMEMBERINFONAME);
         lua_pushlightuserdata(L, type);
@@ -357,6 +361,7 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
     lmAssert(numberType, "LSLuaState::cacheAssemblyTypes - system.Number not found");
     lmAssert(stringType, "LSLuaState::cacheAssemblyTypes - system.String not found");
     lmAssert(functionType, "LSLuaState::cacheAssemblyTypes - system.Function not found");
+    lmAssert(vectorType, "LSLuaState::cacheAssemblyTypes - system.Vector not found");
 }
 
 

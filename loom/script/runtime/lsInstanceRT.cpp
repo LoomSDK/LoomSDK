@@ -94,7 +94,12 @@ int lsr_method(lua_State *L)
     if (dargs < method->getNumParameters())
     {
         // TODO: Report line numbers LOOM-603
-        lmAssert(fidx >= 0, "Method '%s::%s' called with too few arguments.", method->getDeclaringType()->getFullName().c_str(), method->getStringSignature().c_str());
+        // if we have var args and not enough parameters, VM will insert null for ...args value
+        // otherwise, we have a compiler error
+        if (varArgIdx < 0)
+        {
+            lmAssert(fidx >= 0, "Method '%s::%s' called with too few arguments.", method->getDeclaringType()->getFullName().c_str(), method->getStringSignature().c_str());
+        }
 
         bool inserted = false;
         for (int i = dargs; i < method->getNumParameters(); i++)
