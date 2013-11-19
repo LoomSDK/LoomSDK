@@ -110,6 +110,7 @@ public:
         numberType   = NULL;
         stringType   = NULL;
         functionType = NULL;
+        vectorType   = NULL;
     }
 
     inline lua_State *VM()
@@ -185,6 +186,7 @@ public:
     Type *booleanType;
     Type *numberType;
     Type *stringType;
+    Type *vectorType;
     Type *functionType;
 
     // get all currently loaded types
