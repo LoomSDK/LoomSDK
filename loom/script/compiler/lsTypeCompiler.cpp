@@ -1480,7 +1480,7 @@ void TypeCompiler::createVarArg(ExpDesc *varg, utArray<Expression *> *arguments,
 
     BC::expToNextReg(fs, &vtable);
 
-    // LSINDEXVECTORLENGTH access will get forwarded to internal vector table
+    // store the length of the varargs vector
     ExpDesc elength;
     BC::initExpDesc(&elength, VKNUM, 0);
     elength.u.nval = LSINDEXVECTORLENGTH;
@@ -1492,8 +1492,8 @@ void TypeCompiler::createVarArg(ExpDesc *varg, utArray<Expression *> *arguments,
     BC::initExpDesc(&elength, VKNUM, 0);
     elength.u.nval = arguments->size() - startIdx;
 
+    // and store
     BC::storeVar(fs, &vtable, &elength);
-
 
     utArray<Expression *> args;
     int length = 0;

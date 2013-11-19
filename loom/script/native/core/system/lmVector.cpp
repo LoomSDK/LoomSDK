@@ -23,12 +23,18 @@
 
 using namespace LS;
 
+/**
+ *  LoomScript Vector's have an internal table to hold their data, this table is 
+ *  read bounds protected on access using this metatable function
+ */
 static int lsr_vectorinternal_index(lua_State *L)
 {
+
     if (lua_isnumber(L, 2))
     {
         int idx = (int) lua_tonumber(L, 2);
 
+        // indexing with a negative number is an error
         if (idx < 0)
         {
             lua_pushstring(L, "Vector indexed with negative number");
@@ -62,6 +68,10 @@ static int lsr_vectorinternal_index(lua_State *L)
 }
 
 
+/**
+ *  LoomScript Vector's have an internal table to hold their data, this table is 
+ *  write bounds protected on access using this metatable function
+ */
 static int lsr_vectorinternal_newindex(lua_State *L)
 {
     
@@ -69,6 +79,7 @@ static int lsr_vectorinternal_newindex(lua_State *L)
     {
         int idx = (int) lua_tonumber(L, 2);
 
+        // indexing with a negative number is an error
         if (idx < 0)
         {
             lua_pushstring(L, "Vector indexed with negative number");
@@ -177,7 +188,6 @@ public:
 
         int length = lsr_vector_get_length(L, 1);
 
-        // todo, allow vector resize behavior in newindex metatable handle this?
         lsr_vector_set_length(L, 1, length + 1);
 
         lua_rawgeti(L, 1, LSINDEXVECTOR);

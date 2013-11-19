@@ -1853,7 +1853,7 @@ void JitTypeCompiler::createVarArg(ExpDesc *varg,
     BC::indexed(fs, &vtable, &v);
     BC::expToNextReg(fs, &vtable);
 
-    // LSINDEXVECTORLENGTH access will get forwarded to internal vector table
+    // set the length of the varargs vector
     ExpDesc elength;
     BC::initExpDesc(&elength, VKNUM, 0);
     setnumV(&elength.u.nval, LSINDEXVECTORLENGTH);
@@ -1866,8 +1866,8 @@ void JitTypeCompiler::createVarArg(ExpDesc *varg,
 
     setnumV(&elength.u.nval, arguments->size() - startIdx);
 
+    // and store
     BC::storeVar(fs, &vtable, &elength);
-
 
     utArray<Expression *> args;
     int length = 0;

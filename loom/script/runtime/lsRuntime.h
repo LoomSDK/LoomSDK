@@ -38,6 +38,8 @@ namespace LS {
 #define LSDELETEDMANAGED    "LSDELETEDMANAGED"
 #define LSDICTIONARY        "LSDICTIONARY"
 #define LSVECTOR            "LSVECTOR"
+
+// internal Vector metatable for bounds checking
 #define LSVECTORINTERNAL    "LSVECTORINTERNAL"
 #define LSGCTRACKER         "LSGCTRACKER"
 
@@ -364,8 +366,15 @@ inline void lsr_pushmethodbase(lua_State *L, MethodBase *base)
 
 // Vector Operations
 
+/** 
+ *  Gets the length of the vector at specificed index 
+ */
 int lsr_vector_get_length(lua_State *L, int index);
-void lsr_vector_set_length(lua_State *L, int index, int nlength);
+
+/** 
+ *  Sets the length of the vector at specificed index 
+ */
+ void lsr_vector_set_length(lua_State *L, int index, int nlength);
 
 
 // avoid oodles of static buffers compiler into template code
