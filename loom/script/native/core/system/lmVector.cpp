@@ -944,7 +944,7 @@ int lsr_vector_get_length(lua_State *L, int index)
     index = lua_absindex(L, index);
     lua_rawgeti(L, index, LSINDEXVECTOR);
     lua_rawgeti(L, -1, LSINDEXVECTORLENGTH);
-    int length = lua_tonumber(L, -1);
+    int length = (int) lua_tonumber(L, -1);
     lua_pop(L, 2);
     return length;
 }
