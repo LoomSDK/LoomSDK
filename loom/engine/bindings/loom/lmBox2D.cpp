@@ -27,31 +27,254 @@ using namespace LS;
 
 lmDefineLogGroup(gBox2DLogGroup, "Loom.Box2D", 1, 0);
 
-class Box2D
-{
-
-};
-
 static int registerLoomBox2D(lua_State *L)
 {
     beginPackage(L, "loom.box2d")
 
-       .beginClass<Box2D>("Box2D")
-/*
-       .addStaticMethod("initialize", &Box2D::initialize)
+        .beginClass<b2Vec2>("b2Vec2")
 
-       .addStaticProperty("available", &Box2D::available)
-       .addStaticProperty("providerName", &Box2D::providerName)
+            .addConstructor<void (*)(float32, float32)>()
 
-       .addStaticMethod("listProducts", &Box2D::listProducts)
-       .addStaticMethod("requestPurchase", &Box2D::requestPurchase)
+            .addVar("x", &b2Vec2::x)
+            .addVar("y", &b2Vec2::y)
 
-       .addStaticProperty("onProduct", &Box2D::getOnProductDelegate)
-       .addStaticProperty("onProductComplete", &Box2D::getOnProductCompleteDelegate)
-       .addStaticProperty("onPurchaseUIComplete", &Box2D::getOnPurchaseUICompleteDelegate)
-       .addStaticProperty("onTransaction", &Box2D::getOnTransactionDelegate)
-*/
-       .endClass()
+            .addMethod("setZero", &b2Vec2::SetZero)
+            .addMethod("set", &b2Vec2::Set)
+            .addMethod("length", &b2Vec2::Length)
+            .addMethod("lengthSquared", &b2Vec2::LengthSquared)
+            .addMethod("normalize", &b2Vec2::Normalize)
+            .addMethod("isValid", &b2Vec2::IsValid)
+            .addMethod("skew", &b2Vec2::Skew)
+
+        .endClass()
+
+        .beginClass<b2MassData>("b2MassData")
+
+            .addVar("mass", &b2MassData::mass)
+            .addVar("center", &b2MassData::center)
+            .addVar("i", &b2MassData::I)
+
+        .endClass()
+
+        .beginClass<b2BodyDef>("b2BodyDef")
+
+            //.addVar("type", &b2BodyDef::type)
+            //.addVar("userData", &b2BodyDef::userData)
+            .addVar("position", &b2BodyDef::position)
+            .addVar("angle", &b2BodyDef::angle)
+            .addVar("linearVelocity", &b2BodyDef::linearVelocity)
+            .addVar("angularVelocity", &b2BodyDef::angularVelocity)
+            .addVar("linearDamping", &b2BodyDef::linearDamping)
+            .addVar("angularDamping", &b2BodyDef::angularDamping)
+            .addVar("allowSleep", &b2BodyDef::allowSleep)
+            .addVar("awake", &b2BodyDef::awake)
+            .addVar("fixedRotation", &b2BodyDef::fixedRotation)
+            .addVar("bullet", &b2BodyDef::bullet)
+            .addVar("active", &b2BodyDef::active)
+            .addVar("gravityScale", &b2BodyDef::gravityScale)
+
+        .endClass()
+
+        .beginClass<b2JointDef>("b2JointDef")
+
+            //.addVar("type", &b2JointDef::type)
+            //.addVar("userData", &b2JointDef::userData)
+            .addVar("bodyA", &b2JointDef::bodyA)
+            .addVar("bodyB", &b2JointDef::bodyB)
+            .addVar("collideConnected", &b2JointDef::collideConnected)
+
+        .endClass()
+
+        .beginClass<b2JointEdge>("b2JointEdge")
+
+            .addVar("other", &b2JointEdge::other)
+            .addVar("joint", &b2JointEdge::joint)
+            .addVar("prev", &b2JointEdge::prev)
+            .addVar("next", &b2JointEdge::next)
+
+        .endClass()
+
+        .beginClass<b2FixtureDef>("b2FixtureDef")
+
+            .addVar("shape", &b2FixtureDef::shape)
+            //.addVar("userData", &b2FixtureDef::userData)
+            .addVar("friction", &b2FixtureDef::friction)
+            .addVar("restitution", &b2FixtureDef::restitution)
+            .addVar("density", &b2FixtureDef::density)
+            .addVar("isSensor", &b2FixtureDef::isSensor)
+            //.addVar("filter", &b2FixtureDef::filter)
+
+        .endClass()
+
+        .beginClass<b2Shape>("b2Shape")
+
+            //.addMethod("clone", &b2Shape::Clone)
+            //.addMethod("getType", &b2Shape::GetType)
+            .addMethod("getChildCount", &b2Shape::GetChildCount)
+            //.addMethod("testPoint", &b2Shape::TestPoint)
+            //.addMethod("rayCast", &b2Shape::RayCast)
+            //.addMethod("computeAABB", &b2Shape::ComputeAABB)
+            //.addMethod("computeMass", &b2Shape::ComputeMass)
+
+        .endClass()
+
+        .beginClass<b2Fixture>("b2Fixture")
+
+            //.addMethod("getType", &b2Fixture::GetType)
+            //  .addMethod("getShape", &b2Fixture::GetShape)
+            .addMethod("setSensor", &b2Fixture::SetSensor)
+            .addMethod("isSensor", &b2Fixture::IsSensor)
+            //.addMethod("setFilterData", &b2Fixture::SetFilterData)
+            //.addMethod("getFilterData", &b2Fixture::GetFilterData)
+            .addMethod("refilter", &b2Fixture::Refilter)
+            //  .addMethod("getBody", &b2Fixture::GetBody)
+            //  .addMethod("getNext", &b2Fixture::GetNext)
+            //.addMethod("getUserData", &b2Fixture::GetUserData)
+            //.addMethod("setUserData", &b2Fixture::SetUserData)
+            .addMethod("testPoint", &b2Fixture::TestPoint)
+            .addMethod("rayCast", &b2Fixture::RayCast)
+            .addMethod("getMassData", &b2Fixture::GetMassData)
+            .addMethod("setDensity", &b2Fixture::SetDensity)
+            .addMethod("getFriction", &b2Fixture::GetFriction)
+            .addMethod("setFriction", &b2Fixture::SetFriction)
+            .addMethod("getRestitution", &b2Fixture::GetRestitution)
+            .addMethod("setRestitution", &b2Fixture::SetRestitution)
+            //.addMethod("getAABB", &b2Fixture::GetAABB)
+            .addMethod("dump", &b2Fixture::Dump)
+
+        .endClass()
+
+        .beginClass<b2Contact>("b2Contact")
+
+            //.addMethod("getManifold", &b2Contact::GetManifold)
+            //.addMethod("getWorldManifold", &b2Contact::GetWorldManifold)
+            .addMethod("isTouching", &b2Contact::IsTouching)
+            .addMethod("setEnabled", &b2Contact::SetEnabled)
+            .addMethod("isEnabled", &b2Contact::IsEnabled)
+            //  .addMethod("getNext", &b2Contact::GetNext)
+            //  .addMethod("getFixtureA", &b2Contact::GetFixtureA)
+            .addMethod("getChildIndexA", &b2Contact::GetChildIndexA)
+            //  .addMethod("getFixtureB", &b2Contact::GetFixtureB)
+            .addMethod("getChildIndexB", &b2Contact::GetChildIndexB)
+            .addMethod("setFriction", &b2Contact::SetFriction)
+            .addMethod("getFriction", &b2Contact::GetFriction)
+            .addMethod("resetFriction", &b2Contact::ResetFriction)
+            .addMethod("setRestitution", &b2Contact::SetRestitution)
+            .addMethod("getRestitution", &b2Contact::GetRestitution)
+            .addMethod("resetRestitution", &b2Contact::ResetRestitution)
+            .addMethod("setTangentSpeed", &b2Contact::SetTangentSpeed)
+            .addMethod("getTangentSpeed", &b2Contact::GetTangentSpeed)
+            //.addMethod("evaluate", &b2Contact::Evaluate)
+
+        .endClass()
+
+        /*  .beginClass<b2ContactEdge>("b2ContactEdge")
+
+            .addVar("other", &b2ContactEdge::other)
+            .addVar("contact", &b2ContactEdge::contact)
+            .addVar("prev", &b2ContactEdge::prev)
+            .addVar("next", &b2ContactEdge::next)
+
+        .endClass() */
+
+        .beginClass<b2Body>("b2Body")
+
+            //  .addMethod("createFixture", &b2Body::CreateFixture)
+            .addMethod("destroyFixture", &b2Body::DestroyFixture)
+            .addMethod("setTransform", &b2Body::SetTransform)
+            .addMethod("getTransform", &b2Body::GetTransform)
+            .addMethod("getPosition", &b2Body::GetPosition)
+            .addMethod("getAngle", &b2Body::GetAngle)
+            .addMethod("getWorldCenter", &b2Body::GetWorldCenter)
+            .addMethod("getLocalCenter", &b2Body::GetLocalCenter)
+            .addMethod("setLinearVelocity", &b2Body::SetLinearVelocity)
+            .addMethod("getLinearVelocity", &b2Body::GetLinearVelocity)
+            .addMethod("setAngularVelocity", &b2Body::SetAngularVelocity)
+            .addMethod("getAngularVelocity", &b2Body::GetAngularVelocity)
+            .addMethod("applyForce", &b2Body::ApplyForce)
+            .addMethod("applyForceToCenter", &b2Body::ApplyForceToCenter)
+            .addMethod("applyTorque", &b2Body::ApplyTorque)
+            .addMethod("applyLinearImpulse", &b2Body::ApplyLinearImpulse)
+            .addMethod("applyAngularImpulse", &b2Body::ApplyAngularImpulse)
+            .addMethod("getMass", &b2Body::GetMass)
+            .addMethod("getInertia", &b2Body::GetInertia)
+            .addMethod("getMassData", &b2Body::GetMassData)
+            .addMethod("setMassData", &b2Body::SetMassData)
+            .addMethod("resetMassData", &b2Body::ResetMassData)
+            .addMethod("getWorldPoint", &b2Body::GetWorldPoint)
+            .addMethod("getWorldVector", &b2Body::GetWorldVector)
+            .addMethod("getLocalPoint", &b2Body::GetLocalPoint)
+            .addMethod("getLocalVector", &b2Body::GetLocalVector)
+            .addMethod("getLinearVelocityFromWorldPoint", &b2Body::GetLinearVelocityFromWorldPoint)
+            .addMethod("getLinearVelocityFromLocalPoint", &b2Body::GetLinearVelocityFromLocalPoint)
+            .addMethod("getLinearDamping", &b2Body::GetLinearDamping)
+            .addMethod("setLinearDamping", &b2Body::SetLinearDamping)
+            .addMethod("getAngularDamping", &b2Body::GetAngularDamping)
+            .addMethod("setAngularDamping", &b2Body::SetAngularDamping)
+            .addMethod("getGravityScale", &b2Body::GetGravityScale)
+            .addMethod("setGravityScale", &b2Body::SetGravityScale)
+            //.addMethod("setType", &b2Body::SetType)
+            //.addMethod("getType", &b2Body::GetType)
+            .addMethod("setBullet", &b2Body::SetBullet)
+            .addMethod("isBullet", &b2Body::IsBullet)
+            .addMethod("setSleepingAllowed", &b2Body::SetSleepingAllowed)
+            .addMethod("isSleepingAllowed", &b2Body::IsSleepingAllowed)
+            .addMethod("setAwake", &b2Body::SetAwake)
+            .addMethod("isAwake", &b2Body::IsAwake)
+            .addMethod("setActive", &b2Body::SetActive)
+            .addMethod("isActive", &b2Body::IsActive)
+            .addMethod("setFixedRotation", &b2Body::SetFixedRotation)
+            .addMethod("isFixedRotation", &b2Body::IsFixedRotation)
+            //  .addMethod("getFixtureList", &b2Body::GetFixtureList)
+            //  .addMethod("getJointList", &b2Body::GetJointList)
+            //  .addMethod("getContactList", &b2Body::GetContactList)
+            //  .addMethod("getNext", &b2Body::GetNext)
+            //.addMethod("getUserData", &b2Body::GetUserData)
+            //.addMethod("setUserData", &b2Body::SetUserData)
+            //  .addMethod("getWorld", &b2Body::GetWorld)
+            .addMethod("dump", &b2Body::Dump)
+
+        .endClass()
+
+        .beginClass<b2Joint>("b2Joint")
+
+//            .addVar("", &b2Joint::)
+
+//            .addMethod("", &b2Joint::)
+
+        .endClass()
+
+        .beginClass<b2World>("b2World")
+
+            .addConstructor<void (*)(b2Vec2&)>()
+
+            .addMethod("createBody", &b2World::CreateBody)
+            .addMethod("destroyBody", &b2World::DestroyBody)
+            .addMethod("getBodyCount", &b2World::GetBodyCount)
+            //  .addMethod("getBodyList", &b2World::GetBodyList)
+
+            .addMethod("createJoint", &b2World::CreateJoint)
+            .addMethod("destroyJoint", &b2World::DestroyJoint)
+            .addMethod("getJointCount", &b2World::GetJointCount)
+            //  .addMethod("getJointList", &b2World::GetJointList)
+
+            .addMethod("step", &b2World::Step)
+            .addMethod("isLocked", &b2World::IsLocked)
+
+            .addMethod("setAllowSleeping", &b2World::SetAllowSleeping)
+            .addMethod("getAllowSleeping", &b2World::GetAllowSleeping)
+            .addMethod("setGravity", &b2World::SetGravity)
+            .addMethod("getGravity", &b2World::GetGravity)
+
+            .addMethod("clearForces", &b2World::ClearForces)
+            .addMethod("setAutoClearForces", &b2World::SetAutoClearForces)
+            .addMethod("getAutoClearForces", &b2World::GetAutoClearForces)
+
+            .addMethod("shiftOrigin", &b2World::ShiftOrigin)
+
+            .addMethod("dump", &b2World::Dump)
+
+        .endClass()
     
     .endPackage();
 
@@ -61,5 +284,17 @@ static int registerLoomBox2D(lua_State *L)
 
 void installLoomBox2D()
 {
-    LOOM_DECLARE_NATIVETYPE(Box2D, registerLoomBox2D);
+    LOOM_DECLARE_NATIVETYPE(b2Vec2, registerLoomBox2D);
+    LOOM_DECLARE_NATIVETYPE(b2MassData, registerLoomBox2D);
+    LOOM_DECLARE_NATIVETYPE(b2BodyDef, registerLoomBox2D);
+    LOOM_DECLARE_NATIVETYPE(b2JointDef, registerLoomBox2D);
+    LOOM_DECLARE_NATIVETYPE(b2JointEdge, registerLoomBox2D);
+    LOOM_DECLARE_NATIVETYPE(b2FixtureDef, registerLoomBox2D);
+    LOOM_DECLARE_NATIVETYPE(b2Shape, registerLoomBox2D);
+    LOOM_DECLARE_NATIVETYPE(b2Fixture, registerLoomBox2D);
+    LOOM_DECLARE_NATIVETYPE(b2Contact, registerLoomBox2D);
+    LOOM_DECLARE_NATIVETYPE(b2ContactEdge, registerLoomBox2D);
+    LOOM_DECLARE_NATIVETYPE(b2Body, registerLoomBox2D);
+    LOOM_DECLARE_NATIVETYPE(b2Joint, registerLoomBox2D);
+    LOOM_DECLARE_NATIVETYPE(b2World, registerLoomBox2D);
 }
