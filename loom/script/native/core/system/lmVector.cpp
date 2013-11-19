@@ -294,7 +294,7 @@ public:
         for (int i = 0; i < length; i++)
         {
             lua_pushnumber(L, i);
-            lua_gettable(L, vidx);
+            lua_rawget(L, vidx);
 
             if (lua_equal(L, 2, -1))
             {
@@ -306,8 +306,8 @@ public:
                 {
                     lua_pushnumber(L, j);
                     lua_pushnumber(L, j + 1);
-                    lua_gettable(L, vidx);
-                    lua_settable(L, vidx);
+                    lua_rawget(L, vidx);
+                    lua_rawset(L, vidx);
                 }
 
                 lsr_vector_set_length(L, 1, length - 1);
@@ -339,16 +339,12 @@ public:
 
         int idx = lua_gettop(L);
 
-        lsr_vector_set_length(L, fidx, length - 1);
-
         // store for return
         lua_pushnumber(L, length - 1);
         lua_gettable(L, idx);
 
-        // nil it out
-        lua_pushnumber(L, length - 1);
-        lua_pushnil(L);
-        lua_settable(L, idx);
+        lsr_vector_set_length(L, fidx, length - 1);
+
 
         return 1;
     }
@@ -947,7 +943,6 @@ void lsr_vector_set_length(lua_State *L, int index, int nlength)
 {
         index = lua_absindex(L, index);
         
-        /*
         LSVector::checkNotFixed(L, index);        
 
         // get the current length
@@ -967,7 +962,6 @@ void lsr_vector_set_length(lua_State *L, int index, int nlength)
 
             lua_pop(L, 1);
         }
-        */
 
         // set the new length
         lua_rawgeti(L, index, LSINDEXVECTOR);
