@@ -509,6 +509,12 @@ static int lsr_dictionary_newindex(lua_State *L)
 // new indexes on vector instance get forwarded to internal vector table see lmVector.cpp 
 static int lsr_vector_newindex(lua_State *L)
 {    
+
+    if (lua_isnumber(L, 2))
+    {
+        printf("%i\n", (int) lua_tonumber(L, 2));
+    }
+
     lua_rawgeti(L, 1, LSINDEXVECTOR);
     lua_replace(L, 1);
     lua_settable(L, 1);

@@ -46,7 +46,7 @@ static int lsr_vectorinternal_index(lua_State *L)
 
             if (idx >= length)
             {
-                lua_pushfstring(L, "Vector index out of bounds index: %f length: %f", (double) idx, (double) length);
+                lua_pushfstring(L, "Vector read index out of bounds index: %f length: %f", (double) idx, (double) length);
                 lua_error(L);
                 return 0;
             }
@@ -75,10 +75,12 @@ static int lsr_vectorinternal_newindex(lua_State *L)
             lua_error(L);
             return 0;
         }
+
+        if (idx == 0 && lua_isnumber(L, 3) && int(lua_tonumber(L, 3)) == 100)
+            printf("Hey!\n");
         
         lua_rawgeti(L, 1, LSINDEXVECTORLENGTH);
 
-        /*
         // only check if our length has been initialized
         // it might not be if we're raw setting up vector data
         if (lua_isnumber(L, -1))
@@ -87,12 +89,11 @@ static int lsr_vectorinternal_newindex(lua_State *L)
 
             if (idx >= length)
             {
-                lua_pushfstring(L, "Vector index out of bounds index: %f length: %f", (double) idx, (double) length);
+                lua_pushfstring(L, "Vector write index out of bounds index: %f length: %f", (double) idx, (double) length);
                 lua_error(L);
                 return 0;
             }
         }
-        */
 
         lua_pop(L, 1);
 

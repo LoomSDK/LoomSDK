@@ -1851,8 +1851,23 @@ void JitTypeCompiler::createVarArg(ExpDesc *varg,
     BC::expToNextReg(fs, &v);
     BC::expToVal(fs, &v);
     BC::indexed(fs, &vtable, &v);
-
     BC::expToNextReg(fs, &vtable);
+
+    // LSINDEXVECTORLENGTH access will get forwarded to internal vector table
+    ExpDesc elength;
+    BC::initExpDesc(&elength, VKNUM, 0);
+    setnumV(&elength.u.nval, LSINDEXVECTORLENGTH);
+
+    BC::expToNextReg(fs, &elength);
+    BC::expToVal(fs, &elength);
+    BC::indexed(fs, &vtable, &elength);
+
+    BC::initExpDesc(&elength, VKNUM, 0);
+
+    setnumV(&elength.u.nval, arguments->size() - startIdx);
+
+    BC::storeVar(fs, &vtable, &elength);
+
 
     utArray<Expression *> args;
     int length = 0;
@@ -1882,20 +1897,6 @@ void JitTypeCompiler::createVarArg(ExpDesc *varg,
     BC::expToNextReg(fs, &evector);
 
 
-    // LSINDEXVECTORLENGTH access will get forwarded to internal vector table
-    ExpDesc elength;
-    BC::initExpDesc(&elength, VKNUM, 0);
-    setnumV(&elength.u.nval, LSINDEXVECTORLENGTH);
-
-    BC::expToNextReg(fs, &elength);
-    BC::expToVal(fs, &elength);
-    BC::indexed(fs, &evector, &elength);
-
-    BC::initExpDesc(&elength, VKNUM, 0);
-
-    setnumV(&elength.u.nval, length);
-
-    BC::storeVar(fs, &evector, &elength);
 
     fs->freereg = reg;
 

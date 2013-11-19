@@ -521,7 +521,7 @@ public:
         {
             lua_pushnumber(L, count++);
             lua_pushstring(L, "");
-            lua_settable(L, -3);
+            lua_rawset(L, -3);
         }
 
         char *sstr  = (char *)strdup(str);
@@ -531,7 +531,7 @@ public:
         {
             lua_pushnumber(L, count++);
             lua_pushstring(L, token);
-            lua_settable(L, -3);
+            lua_rawset(L, -3);
 
             token = strtok(NULL, delim);
         }
@@ -545,7 +545,7 @@ public:
             {
                 lua_pushnumber(L, count++);
                 lua_pushstring(L, "");
-                lua_settable(L, -3);
+                lua_rawset(L, -3);
             }
         }
 

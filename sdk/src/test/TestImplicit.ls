@@ -59,8 +59,8 @@ class TestImplicit extends Test
         takesANumber(x);
         
         // implicit Vector.<Object> from []
-        var iv = [];
-        
+        var iv = [100];
+
         assert(iv.length == 0);
         
         // implicit Vector.Object of length 3

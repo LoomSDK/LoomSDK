@@ -504,9 +504,13 @@ class TestVector extends Test
         assert(("numeric " + numeric + "X") == "numeric 100%X");     
 
         // these generate indexing errors
-        //var vassign = new Vector.<int>;   
+        var vassign = new Vector.<int>;   
         //vassign[-1] = 100;
         //vp = vassign[100];
+
+        //vassign[1000] = 1;
+
+
 
     }
     
