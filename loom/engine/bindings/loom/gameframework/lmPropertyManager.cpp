@@ -32,9 +32,7 @@ public:
         // encoded property vector at stack 2
 
         // get the encoded property length
-        lua_rawgeti(L, 2, LSINDEXVECTORLENGTH);
-        int numbindings = (int)lua_tonumber(L, -1);
-        lua_pop(L, 1);
+        int numbindings = lsr_vector_get_length(L, 2);
 
         // get the vector table
         lua_rawgeti(L, 2, LSINDEXVECTOR);

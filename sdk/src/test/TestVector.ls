@@ -501,7 +501,17 @@ class TestVector extends Test
 
         var dim = "100%";
         var numeric = dim.slice(0, dim.length);
-        assert(("numeric " + numeric + "X") == "numeric 100%X");        
+        assert(("numeric " + numeric + "X") == "numeric 100%X");     
+
+        // these generate indexing errors
+        var vassign = new Vector.<int>;   
+        //vassign[-1] = 100;
+        //vp = vassign[100];
+
+        //vassign[1000] = 1;
+
+
+
     }
     
     var memberPop:Vector.<Vector.< String> > = new Vector.<Vector.< String> >;

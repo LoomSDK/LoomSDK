@@ -1480,6 +1480,21 @@ void TypeCompiler::createVarArg(ExpDesc *varg, utArray<Expression *> *arguments,
 
     BC::expToNextReg(fs, &vtable);
 
+    // store the length of the varargs vector
+    ExpDesc elength;
+    BC::initExpDesc(&elength, VKNUM, 0);
+    elength.u.nval = LSINDEXVECTORLENGTH;
+
+    BC::expToNextReg(fs, &elength);
+    BC::expToVal(fs, &elength);
+    BC::indexed(fs, &vtable, &elength);
+
+    BC::initExpDesc(&elength, VKNUM, 0);
+    elength.u.nval = arguments->size() - startIdx;
+
+    // and store
+    BC::storeVar(fs, &vtable, &elength);
+
     utArray<Expression *> args;
     int length = 0;
     for (UTsize i = startIdx; i < arguments->size(); i++)
@@ -1505,19 +1520,6 @@ void TypeCompiler::createVarArg(ExpDesc *varg, utArray<Expression *> *arguments,
 
     BC::singleVar(cs, &evector, varargname);
     BC::expToNextReg(fs, &evector);
-
-    ExpDesc elength;
-    BC::initExpDesc(&elength, VKNUM, 0);
-    elength.u.nval = LSINDEXVECTORLENGTH;
-
-    BC::expToNextReg(fs, &elength);
-    BC::expToVal(fs, &elength);
-    BC::indexed(fs, &evector, &elength);
-
-    BC::initExpDesc(&elength, VKNUM, 0);
-    elength.u.nval = length;
-
-    BC::storeVar(fs, &evector, &elength);
 
     fs->freereg = reg;
 
