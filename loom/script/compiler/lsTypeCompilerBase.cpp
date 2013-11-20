@@ -1383,9 +1383,7 @@ void TypeCompilerBase::declareLocalVariables(FunctionLiteral *literal)
     for (UTsize i = 0; i < literal->childFunctions.size(); i++)
     {
         char funcinfo[256];
-        snprintf(funcinfo, 250, "__ls_funcinfo_numargs_%i", i);
-        BC::newLocalVar(cs, funcinfo, nlocals++);
-        snprintf(funcinfo, 250, "__ls_funcinfo_varargs_%i", i);
+        snprintf(funcinfo, 250, "__ls_funcinfo_arginfo_%i", i);
         BC::newLocalVar(cs, funcinfo, nlocals++);
     }
 

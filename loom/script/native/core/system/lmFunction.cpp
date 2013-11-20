@@ -48,10 +48,12 @@ public:
         lmAssert(upvalue, "Internal Error: funcinfo not at upvalue 1");
 
 #ifdef LOOM_DEBUG
-        lmAssert(!strncmp(upvalue, "__ls_funcinfo_numargs", 21), "Internal Error: funcinfo not __ls_funcinfo_numargs");
+        lmAssert(!strncmp(upvalue, "__ls_funcinfo_arginfo", 21), "Internal Error: funcinfo not __ls_funcinfo_arginfo");
 #endif
 
-        lmAssert(lua_isnumber(L, -1), "Internal Error: __ls_funcinfo_numargs not a number");
+        lmAssert(lua_isnumber(L, -1), "Internal Error: __ls_funcinfo_arginfo not a number");
+
+        lua_pushnumber(L, ((unsigned int) lua_tonumber(L, -1)) >> 16);
 
         return 1;
     }
@@ -79,18 +81,20 @@ public:
         else
         {            
             //  we better be a local function with an upvalue at index 1 describing the parameter index of varargs
-            const char *upvalue = lua_getupvalue(L, 1, 2);
+            const char *upvalue = lua_getupvalue(L, 1, 1);
 
 
-            lmAssert(upvalue, "Internal Error: funcinfo not at upvalue 2");
+            lmAssert(upvalue, "Internal Error: funcinfo not at upvalue 1");
 
     #ifdef LOOM_DEBUG
-            lmAssert(!strncmp(upvalue, "__ls_funcinfo_varargs", 21), "Internal Error: funcinfo not __ls_funcinfo_varargs");
+            lmAssert(!strncmp(upvalue, "__ls_funcinfo_arginfo", 21), "Internal Error: funcinfo not __ls_funcinfo_arginfo");
     #endif
 
-            lmAssert(lua_isnumber(L, -1), "Internal Error: __ls_funcinfo_varargs not a number");
+            lmAssert(lua_isnumber(L, -1), "Internal Error: __ls_funcinfo_arginfo not a number");
 
-            varArgs = (int) lua_tonumber(L, -1);
+            unsigned int mask = ((( unsigned int) lua_tonumber(L, -1)) & 0x0000FFFF);
+
+            varArgs =  mask == 0xFFFF ? -1 : mask;
 
             lua_pop(L, 3);
 

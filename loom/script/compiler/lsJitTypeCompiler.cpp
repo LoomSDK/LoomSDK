@@ -2345,11 +2345,8 @@ void JitTypeCompiler::functionBody(ExpDesc *e, FunctionLiteral *flit,
 
     // setup closure info here so it is captured as an upvalues
     char funcinfo[256];
-    snprintf(funcinfo, 250, "__ls_funcinfo_numargs_%i", flit->childIndex);
+    snprintf(funcinfo, 250, "__ls_funcinfo_arginfo_%i", flit->childIndex);
     ExpDesc finfo;
-    BC::singleVar(cs, &finfo, funcinfo);
-
-    snprintf(funcinfo, 250, "__ls_funcinfo_varargs_%i", flit->childIndex);
     BC::singleVar(cs, &finfo, funcinfo);
 
     declareLocalVariables(flit);
@@ -2406,7 +2403,7 @@ Expression *JitTypeCompiler::visit(FunctionLiteral *literal)
     // setup closure info here so it is captured as an upvalue, must be unique
     char funcinfo[256];
 
-    snprintf(funcinfo, 250, "__ls_funcinfo_numargs_%i", literal->childIndex);
+    snprintf(funcinfo, 250, "__ls_funcinfo_arginfo_%i", literal->childIndex);
 
     ExpDesc funcInfo;
     ExpDesc value;
@@ -2415,32 +2412,28 @@ Expression *JitTypeCompiler::visit(FunctionLiteral *literal)
     BC::initExpDesc(&value, VKNUM, 0);
     setnumV(&value.u.nval, 0);
 
-    if (literal->parameters)
-    {
-        setnumV(&value.u.nval, (int)literal->parameters->size());
-    }
-
-    BC::storeVar(cs->fs, &funcInfo, &value);
-
-    // var args info
-    snprintf(funcinfo, 250, "__ls_funcinfo_varargs_%i", literal->childIndex);
-    BC::singleVar(cs, &funcInfo, funcinfo);
-    BC::initExpDesc(&value, VKNUM, 0);
-    setnumV(&value.u.nval, -1);
+    unsigned int nparams = 0;
+    unsigned int varArgIdx = 0xFFFF;
 
     if (literal->parameters)
     {
+        nparams = (unsigned int) literal->parameters->size();
+
         // run through parameters looking for varargs
-        for (int i = 0; i < literal->parameters->size(); i++)
+        for (unsigned int i = 0; i < (unsigned int) literal->parameters->size(); i++)
         {
             VariableDeclaration *param = literal->parameters->at(i);
             if (param->isVarArg)
             {
-                setnumV(&value.u.nval, i);
+                varArgIdx = i;
                 break;
             }
         }
+
     }
+
+    // compress number of parameters and varargs info into 32 bits
+    setnumV(&value.u.nval, (nparams << 16) | varArgIdx);
 
     BC::storeVar(cs->fs, &funcInfo, &value);
 
