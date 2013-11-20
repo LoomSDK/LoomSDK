@@ -144,8 +144,8 @@ package loom2d.textures
             }
         }
         
-        /** Retrieves a subtexture by name. Returns `null` if it is not found. */
-        public function getTexture(name:String):Texture
+        /** Retrieves a subtexture by name, with an option to ignore the texture frame data. Returns `null` if it is not found. */
+        public function getTexture(name:String, ignoreFrame:Boolean = false):Texture
         {
             // Reuse subtexture instances.
             if(mTextureSubTextures[name])
@@ -157,20 +157,20 @@ package loom2d.textures
                 return null;
             else
             {
-                mTextureSubTextures[name] = Texture.fromTexture(mAtlasTexture, region, mTextureFrames[name]) as SubTexture;
+                mTextureSubTextures[name] = Texture.fromTexture(mAtlasTexture, region, (ignoreFrame) ? null : mTextureFrames[name]) as SubTexture;
             } 
 
             return mTextureSubTextures[name];
         }
         
-        /** Returns all textures that start with a certain string, sorted alphabetically
+        /** Returns all textures that start with a certain string, sorted alphabetically, with an option to ignore the texture frame data
          *  (especially useful for "MovieClip"). */
-        public function getTextures(prefix:String="", result:Vector.<Texture> =null):Vector.<Texture>
+        public function getTextures(prefix:String="", result:Vector.<Texture> =null, ignoreFrame:Boolean = false):Vector.<Texture>
         {
             if (result == null) result = [];
             
             for each (var name:String in getNames(prefix, sNames)) 
-                result.push(getTexture(name)); 
+                result.push(getTexture(name, ignoreFrame)); 
 
             sNames.length = 0;
             return result;
