@@ -1378,12 +1378,14 @@ void TypeCompilerBase::declareLocalVariables(FunctionLiteral *literal)
 
     // for functions that contain (direct) child functions, we need to use unqiue upvalues
     // to store function information, such as how many arguments the functions takes for the
-    // Function.length property
+    // Function.length property, note that Lua 5.2 has support for this internally'
+    // and this can be removed upon upgrading to it (once LuaJIT supports 5.2 features)
     for (UTsize i = 0; i < literal->childFunctions.size(); i++)
     {
         char funcinfo[256];
         snprintf(funcinfo, 250, "__ls_funcinfo_numargs_%i", i);
-
+        BC::newLocalVar(cs, funcinfo, nlocals++);
+        snprintf(funcinfo, 250, "__ls_funcinfo_varargs_%i", i);
         BC::newLocalVar(cs, funcinfo, nlocals++);
     }
 

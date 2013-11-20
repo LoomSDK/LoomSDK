@@ -62,37 +62,55 @@ public:
         // position 2 is the thisObject
         // position 3 is the varargs
 
+        // look in global method lookup for methodbase
+        lua_rawgeti(L, LUA_GLOBALSINDEX, LSINDEXMETHODLOOKUP);
+        lua_pushvalue(L, 1);
+        lua_rawget(L, -2);
+
+        MethodBase *methodBase = NULL;
+        int varArgs = -1;
+
+        if (!lua_isnil(L, -1))
+        {
+            methodBase = (MethodBase *)lua_topointer(L, -1);
+            varArgs = methodBase->getVarArgIndex();
+            lua_pop(L, 2);
+        }
+        else
+        {            
+            //  we better be a local function with an upvalue at index 1 describing the parameter index of varargs
+            const char *upvalue = lua_getupvalue(L, 1, 2);
+
+
+            lmAssert(upvalue, "Internal Error: funcinfo not at upvalue 2");
+
+    #ifdef LOOM_DEBUG
+            lmAssert(!strncmp(upvalue, "__ls_funcinfo_varargs", 21), "Internal Error: funcinfo not __ls_funcinfo_varargs");
+    #endif
+
+            lmAssert(lua_isnumber(L, -1), "Internal Error: __ls_funcinfo_varargs not a number");
+
+            varArgs = (int) lua_tonumber(L, -1);
+
+            lua_pop(L, 3);
+
+        }
+
         // check for static call
         if (lua_isnil(L, 2))
         {
+            // remove the this object (which should be null for static call/apply)
             lua_remove(L, 2);
         }
         else
         {
             // otherwise, we better be an instance method
 
-            lmAssert(lua_isfunction(L, 1) || lua_iscfunction(L, 2), "Non-function in Function.call");
-
             int top = lua_gettop(L);
-
-            lua_rawgeti(L, LUA_GLOBALSINDEX, LSINDEXMETHODLOOKUP);
-            lua_pushvalue(L, 1);
-            lua_rawget(L, -2);
-
-            if (lua_isnil(L, -1))
-            {
-                lua_pushstring(L, "MethodBase is missing from function table in Function.call(this, ...)");
-                lua_error(L);
-            }
-
-            lua_remove(L, -2); // and remove method lookup table
-
-
-            MethodBase *methodBase = (MethodBase *)lua_topointer(L, -1);
 
             if (!methodBase)
             {
-                lua_pushstring(L, "MethodBase is missing from Function.call(this, ...)");
+                lua_pushstring(L, "MethodBase is missing from function table in Function.call(this, ...)");
                 lua_error(L);
             }
 
@@ -116,19 +134,29 @@ public:
         if (!lua_isnil(L, 2))
         {
 
-            nargs = lsr_vector_get_length(L, 2);
-
-            lua_rawgeti(L, 2, LSINDEXVECTOR);
-            lua_replace(L, 2);
-
-            for (int i = 0; i < nargs; i++)
+            if (varArgs >= 0)
             {
-                lua_pushnumber(L, i);
-                lua_gettable(L, 2);
+                nargs = 1;
+
+            }
+            else
+            {
+                nargs = lsr_vector_get_length(L, 2);
+
+                lua_rawgeti(L, 2, LSINDEXVECTOR);
+                lua_replace(L, 2);
+
+                for (int i = 0; i < nargs; i++)
+                {
+                    lua_pushnumber(L, i);
+                    lua_gettable(L, 2);
+                }
+
+                // varargs
+                lua_remove(L, 2);
+
             }
 
-            // varargs
-            lua_remove(L, 2);
         }
         else
         {

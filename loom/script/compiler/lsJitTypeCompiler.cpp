@@ -2343,10 +2343,13 @@ void JitTypeCompiler::functionBody(ExpDesc *e, FunctionLiteral *flit,
     bcemit_AD(&fs, BC_FUNCF, 0, 0);
     /* Placeholder. */
 
-    // setup closure info here so it is captured as an upvalue
+    // setup closure info here so it is captured as an upvalues
     char funcinfo[256];
     snprintf(funcinfo, 250, "__ls_funcinfo_numargs_%i", flit->childIndex);
     ExpDesc finfo;
+    BC::singleVar(cs, &finfo, funcinfo);
+
+    snprintf(funcinfo, 250, "__ls_funcinfo_varargs_%i", flit->childIndex);
     BC::singleVar(cs, &finfo, funcinfo);
 
     declareLocalVariables(flit);
@@ -2402,6 +2405,7 @@ Expression *JitTypeCompiler::visit(FunctionLiteral *literal)
     // store funcinfo
     // setup closure info here so it is captured as an upvalue, must be unique
     char funcinfo[256];
+
     snprintf(funcinfo, 250, "__ls_funcinfo_numargs_%i", literal->childIndex);
 
     ExpDesc funcInfo;
@@ -2418,6 +2422,27 @@ Expression *JitTypeCompiler::visit(FunctionLiteral *literal)
 
     BC::storeVar(cs->fs, &funcInfo, &value);
 
+    // var args info
+    snprintf(funcinfo, 250, "__ls_funcinfo_varargs_%i", literal->childIndex);
+    BC::singleVar(cs, &funcInfo, funcinfo);
+    BC::initExpDesc(&value, VKNUM, 0);
+    setnumV(&value.u.nval, -1);
+
+    if (literal->parameters)
+    {
+        // run through parameters looking for varargs
+        for (int i = 0; i < literal->parameters->size(); i++)
+        {
+            VariableDeclaration *param = literal->parameters->at(i);
+            if (param->isVarArg)
+            {
+                setnumV(&value.u.nval, i);
+                break;
+            }
+        }
+    }
+
+    BC::storeVar(cs->fs, &funcInfo, &value);
 
     functionBody(&b, literal, cs->lineNumber);
 

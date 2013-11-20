@@ -87,6 +87,15 @@ class TestFunction extends Test
         assert(args == null);
     }
 
+    private function testVarArgsApply( ...args ):void
+    {
+        assert(args.getType().getFullName() == "system.Vector");
+        assert(args[0] == 101);
+        assert(args[1] == "hello1");
+        assert(args[2] == "hello2");
+    }
+
+
     function test()
     {
         
@@ -243,7 +252,11 @@ class TestFunction extends Test
         };
 
         // call with no args,  will be null args
-        funcTestVarArgs();          
+        funcTestVarArgs();   
+
+        var funcRef:Function = testVarArgsApply;
+        funcRef.apply( null, [101, "hello1", "hello2"] );
+
         
 
     }
