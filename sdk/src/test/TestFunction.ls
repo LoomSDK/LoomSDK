@@ -88,13 +88,20 @@ class TestFunction extends Test
     }
 
     private function testVarArgsApply( ...args ):void
-    {
+    {   
         assert(args.getType().getFullName() == "system.Vector");
         assert(args[0] == 101);
         assert(args[1] == "hello1");
         assert(args[2] == "hello2");
     }
 
+    private function addItemAt(item:Object, index:int, ...rest:Array):void
+    {
+        assert(rest.getType().getFullName() == "system.Vector");
+        assert(rest[0] == "The Rest");
+        assert(item == "Object");
+        assert(index == 0);
+    }
 
     function test()
     {
@@ -266,8 +273,20 @@ class TestFunction extends Test
 
         funcRef.apply( null, [102, "hello3", "hello4"] );
 
+        funcRef = addItemAt;
+        funcRef.apply(null, ["Object", 0, "The Rest"]);
 
-        
+        // and test local unwind + varargs        
+        funcRef = function (x:String, y:Number, ...args) {
+            assert(args.getType().getFullName() == "system.Vector");
+            assert(args[0] == "The Rest");
+            assert(args[1] == "Of The Args");
+            assert(args.length == 2);
+            assert(x == "Loom");
+            assert(y == 102);
+        };
+
+        funcRef.apply(null, ["Loom", 102, "The Rest", "Of The Args"]);
 
     }
     

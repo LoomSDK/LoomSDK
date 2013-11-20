@@ -131,35 +131,62 @@ public:
         }
 
         int nargs = 0;
+
         if (!lua_isnil(L, 2))
         {
+            // we have a varargs array of values
 
-            if (varArgs >= 0)
+            // get the length
+            int vlength = lsr_vector_get_length(L, 2);
+
+            // retrieve the interval vector store
+            lua_rawgeti(L, 2, LSINDEXVECTOR);
+            int vindex = lua_gettop(L);
+
+            // loop through the values and unwind
+            for (int i = 0; i < vlength; i++)
             {
-                nargs = 1;
-
-            }
-            else
-            {
-                nargs = lsr_vector_get_length(L, 2);
-
-                lua_rawgeti(L, 2, LSINDEXVECTOR);
-                lua_replace(L, 2);
-
-                for (int i = 0; i < nargs; i++)
+                // if we hit the varArgs index, the rest wants to be a vector
+                if (i == varArgs)
                 {
-                    lua_pushnumber(L, i);
-                    lua_gettable(L, 2);
+                    // we're at the var args argument and have some left
+                    if (i)
+                    {
+                        // shift and store new length
+                        for (int j  = 0; j < vlength - i; j++)
+                        {
+                            lua_rawgeti(L, vindex, j + varArgs);
+                            lua_rawseti(L, vindex, j);
+                        }
+
+                        lsr_vector_set_length(L, 2, vlength - varArgs);
+                    }
+                    // reuse the varargs vector in the call, as an arg
+                    lua_pushvalue(L, 2);
+                    nargs++;
+
+                    // outta here
+                    break;
+                }
+                else
+                {
+                    // unwind and keep going
+                    lua_rawgeti(L, vindex, i);
+                    nargs++;
                 }
 
-                // varargs
-                lua_remove(L, 2);
-
             }
+
+            // remove vector table
+            lua_remove(L, vindex);
+
+            // ... and varargs
+            lua_remove(L, 2);
 
         }
         else
         {
+            // no args, so remove the null
             lua_remove(L, 2);
         }
 
