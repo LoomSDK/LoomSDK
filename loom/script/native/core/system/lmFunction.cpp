@@ -53,6 +53,7 @@ public:
 
         lmAssert(lua_isnumber(L, -1), "Internal Error: __ls_funcinfo_arginfo not a number");
 
+        // number of args stored in upper 16 bits, so shift and return
         lua_pushnumber(L, ((unsigned int) lua_tonumber(L, -1)) >> 16);
 
         return 1;
@@ -92,8 +93,8 @@ public:
 
             lmAssert(lua_isnumber(L, -1), "Internal Error: __ls_funcinfo_arginfo not a number");
 
+            // vararg count is packed into lower 16 bits, with 0xFFFF stored for no-varargs
             unsigned int mask = ((( unsigned int) lua_tonumber(L, -1)) & 0x0000FFFF);
-
             varArgs =  mask == 0xFFFF ? -1 : mask;
 
             lua_pop(L, 3);
