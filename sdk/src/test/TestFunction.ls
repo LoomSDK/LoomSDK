@@ -257,6 +257,16 @@ class TestFunction extends Test
         var funcRef:Function = testVarArgsApply;
         funcRef.apply( null, [101, "hello1", "hello2"] );
 
+        funcRef = function (...args) {
+            assert(args.getType().getFullName() == "system.Vector");
+            assert(args[0] == 102);
+            assert(args[1] == "hello3");
+            assert(args[2] == "hello4");            
+        };
+
+        funcRef.apply( null, [102, "hello3", "hello4"] );
+
+
         
 
     }
