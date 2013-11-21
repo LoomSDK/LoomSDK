@@ -48,10 +48,13 @@ public:
         lmAssert(upvalue, "Internal Error: funcinfo not at upvalue 1");
 
 #ifdef LOOM_DEBUG
-        lmAssert(!strncmp(upvalue, "__ls_funcinfo_numargs", 21), "Internal Error: funcinfo not __ls_funcinfo_numargs");
+        lmAssert(!strncmp(upvalue, "__ls_funcinfo_arginfo", 21), "Internal Error: funcinfo not __ls_funcinfo_arginfo");
 #endif
 
-        lmAssert(lua_isnumber(L, -1), "Internal Error: __ls_funcinfo_numargs not a number");
+        lmAssert(lua_isnumber(L, -1), "Internal Error: __ls_funcinfo_arginfo not a number");
+
+        // number of args stored in upper 16 bits, so shift and return
+        lua_pushnumber(L, ((unsigned int) lua_tonumber(L, -1)) >> 16);
 
         return 1;
     }
@@ -62,37 +65,57 @@ public:
         // position 2 is the thisObject
         // position 3 is the varargs
 
+        // look in global method lookup for methodbase
+        lua_rawgeti(L, LUA_GLOBALSINDEX, LSINDEXMETHODLOOKUP);
+        lua_pushvalue(L, 1);
+        lua_rawget(L, -2);
+
+        MethodBase *methodBase = NULL;
+        int varArgs = -1;
+
+        if (!lua_isnil(L, -1))
+        {
+            methodBase = (MethodBase *)lua_topointer(L, -1);
+            varArgs = methodBase->getVarArgIndex();
+            lua_pop(L, 2);
+        }
+        else
+        {            
+            //  we better be a local function with an upvalue at index 1 describing the parameter index of varargs
+            const char *upvalue = lua_getupvalue(L, 1, 1);
+
+
+            lmAssert(upvalue, "Internal Error: funcinfo not at upvalue 1");
+
+    #ifdef LOOM_DEBUG
+            lmAssert(!strncmp(upvalue, "__ls_funcinfo_arginfo", 21), "Internal Error: funcinfo not __ls_funcinfo_arginfo");
+    #endif
+
+            lmAssert(lua_isnumber(L, -1), "Internal Error: __ls_funcinfo_arginfo not a number");
+
+            // vararg count is packed into lower 16 bits, with 0xFFFF stored for no-varargs
+            unsigned int mask = ((( unsigned int) lua_tonumber(L, -1)) & 0x0000FFFF);
+            varArgs =  mask == 0xFFFF ? -1 : mask;
+
+            lua_pop(L, 3);
+
+        }
+
         // check for static call
         if (lua_isnil(L, 2))
         {
+            // remove the this object (which should be null for static call/apply)
             lua_remove(L, 2);
         }
         else
         {
             // otherwise, we better be an instance method
 
-            lmAssert(lua_isfunction(L, 1) || lua_iscfunction(L, 2), "Non-function in Function.call");
-
             int top = lua_gettop(L);
-
-            lua_rawgeti(L, LUA_GLOBALSINDEX, LSINDEXMETHODLOOKUP);
-            lua_pushvalue(L, 1);
-            lua_rawget(L, -2);
-
-            if (lua_isnil(L, -1))
-            {
-                lua_pushstring(L, "MethodBase is missing from function table in Function.call(this, ...)");
-                lua_error(L);
-            }
-
-            lua_remove(L, -2); // and remove method lookup table
-
-
-            MethodBase *methodBase = (MethodBase *)lua_topointer(L, -1);
 
             if (!methodBase)
             {
-                lua_pushstring(L, "MethodBase is missing from Function.call(this, ...)");
+                lua_pushstring(L, "MethodBase is missing from function table in Function.call(this, ...)");
                 lua_error(L);
             }
 
@@ -113,25 +136,62 @@ public:
         }
 
         int nargs = 0;
+
         if (!lua_isnil(L, 2))
         {
+            // we have a varargs array of values
 
-            nargs = lsr_vector_get_length(L, 2);
+            // get the length
+            int vlength = lsr_vector_get_length(L, 2);
 
+            // retrieve the interval vector store
             lua_rawgeti(L, 2, LSINDEXVECTOR);
-            lua_replace(L, 2);
+            int vindex = lua_gettop(L);
 
-            for (int i = 0; i < nargs; i++)
+            // loop through the values and unwind
+            for (int i = 0; i < vlength; i++)
             {
-                lua_pushnumber(L, i);
-                lua_gettable(L, 2);
+                // if we hit the varArgs index, the rest wants to be a vector
+                if (i == varArgs)
+                {
+                    // we're at the var args argument and have some left
+                    if (i)
+                    {
+                        // shift and store new length
+                        for (int j  = 0; j < vlength - i; j++)
+                        {
+                            lua_rawgeti(L, vindex, j + varArgs);
+                            lua_rawseti(L, vindex, j);
+                        }
+
+                        lsr_vector_set_length(L, 2, vlength - varArgs);
+                    }
+                    // reuse the varargs vector in the call, as an arg
+                    lua_pushvalue(L, 2);
+                    nargs++;
+
+                    // outta here
+                    break;
+                }
+                else
+                {
+                    // unwind and keep going
+                    lua_rawgeti(L, vindex, i);
+                    nargs++;
+                }
+
             }
 
-            // varargs
+            // remove vector table
+            lua_remove(L, vindex);
+
+            // ... and varargs
             lua_remove(L, 2);
+
         }
         else
         {
+            // no args, so remove the null
             lua_remove(L, 2);
         }
 
