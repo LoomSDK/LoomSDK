@@ -69,7 +69,7 @@ class Timer {
 
     public function set currentCount(value:int):void
     {
-        Debug.assert(false, "NYI");
+        _currentCount = value;
     }
 
     public function get running():Boolean
