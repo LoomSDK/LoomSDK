@@ -27,6 +27,11 @@
 #include "AL/al.h"
 #include "AL/alc.h"
 
+// Windows hacks.
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+#define strdup(x) _strdup(x)
+#define isfinite(_a) _finite(_a)
+#endif
 
 typedef struct {
     FILE *f;

@@ -97,10 +97,17 @@ extern "C"
     }
 };
 
-struct OALBufferNote
+class OALBufferNote
 {
+public:
     const char *asset;
     ALuint buffer;
+
+    OALBufferNote()
+    {
+        asset = NULL;
+        buffer = 0;
+    }
 };
 
 class OALBufferManager

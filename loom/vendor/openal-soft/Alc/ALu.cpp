@@ -1064,25 +1064,25 @@ ALvoid aluMixData(ALCdevice *device, ALvoid *buffer, ALsizei size)
             switch(device->FmtType)
             {
                 case DevFmtByte:
-                    Write_ALbyte(device, buffer, SamplesToDo);
+                    Write_ALbyte(device, (ALbyte*)buffer, SamplesToDo);
                     break;
                 case DevFmtUByte:
-                    Write_ALubyte(device, buffer, SamplesToDo);
+                    Write_ALubyte(device, (ALubyte*)buffer, SamplesToDo);
                     break;
                 case DevFmtShort:
-                    Write_ALshort(device, buffer, SamplesToDo);
+                    Write_ALshort(device, (ALshort*)buffer, SamplesToDo);
                     break;
                 case DevFmtUShort:
-                    Write_ALushort(device, buffer, SamplesToDo);
+                    Write_ALushort(device, (ALushort*)buffer, SamplesToDo);
                     break;
                 case DevFmtInt:
-                    Write_ALint(device, buffer, SamplesToDo);
+                    Write_ALint(device, (ALint*)buffer, SamplesToDo);
                     break;
                 case DevFmtUInt:
-                    Write_ALuint(device, buffer, SamplesToDo);
+                    Write_ALuint(device, (ALuint*)buffer, SamplesToDo);
                     break;
                 case DevFmtFloat:
-                    Write_ALfloat(device, buffer, SamplesToDo);
+                    Write_ALfloat(device, (ALfloat*)buffer, SamplesToDo);
                     break;
             }
         }

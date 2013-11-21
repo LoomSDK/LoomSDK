@@ -28,6 +28,11 @@
 #include "alMain.h"
 #include "alSource.h"
 
+// Windows hacks.
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+#define strdup(x) _strdup(x)
+#define isfinite(_a) _finite(_a)
+#endif
 
 static const ALchar magicMarker[8] = "MinPHR00";
 

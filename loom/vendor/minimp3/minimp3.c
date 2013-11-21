@@ -2504,25 +2504,25 @@ static int mp3_decode_init(mp3_context_t *s) {
         for(i=0; i<512*16; i++){
             int exponent= (i>>4);
             double f= libc_pow(i&15, 4.0 / 3.0) * libc_pow(2, (exponent-400)*0.25 + FRAC_BITS + 5);
-            expval_table[exponent][i&15]= f;
+            expval_table[exponent][i&15] = (int)f;
             if((i&15)==1)
-                exp_table[exponent]= f;
+                exp_table[exponent]= (int)f;
         }
 
         for(i=0;i<7;i++) {
             float f;
             int v;
             if (i != 6) {
-                f = tan((double)i * M_PI / 12.0);
-                v = FIXR(f / (1.0 + f));
+                f = (float)tan((double)i * M_PI / 12.0f);
+                v = (int)FIXR(f / (1.0 + f));
             } else {
-                v = FIXR(1.0);
+                v = (int)FIXR(1.0);
             }
             is_table[0][i] = v;
             is_table[1][6 - i] = v;
         }
         for(i=7;i<16;i++)
-            is_table[0][i] = is_table[1][i] = 0.0;
+            is_table[0][i] = is_table[1][i] = 0;
 
         for(i=0;i<16;i++) {
             double f;
@@ -2540,7 +2540,7 @@ static int mp3_decode_init(mp3_context_t *s) {
         for(i=0;i<8;i++) {
             float ci, cs, ca;
             ci = ci_table[i];
-            cs = 1.0 / sqrt(1.0 + ci * ci);
+            cs = (float)(1.0 / sqrt(1.0 + ci * ci));
             ca = cs * ci;
             csa_table[i][0] = FIXHR(cs/4);
             csa_table[i][1] = FIXHR(ca/4);

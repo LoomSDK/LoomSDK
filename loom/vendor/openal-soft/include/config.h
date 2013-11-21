@@ -25,10 +25,12 @@
 //#define HAVE_MMDEVAPI
 
 /* Define if we have the DSound backend */
-//#define HAVE_DSOUND
+#if LOOM_PLATFORM == LOOM_LPATFORM_WIN32
+#define HAVE_DSOUND
 
 /* Define if we have the Windows Multimedia backend */
 //#define HAVE_WINMM
+#endif
 
 /* Define if we have the PortAudio backend */
 //#define HAVE_PORTAUDIO
@@ -98,8 +100,12 @@
 /* Define if we have the floorf function */
 #define HAVE_FLOORF
 
+#if LOOM_PLATFORM != LOOM_PLATFORM_WIN32
 /* Define if we have the strtof function */
 #define HAVE_STRTOF
+#else
+#undef HAVE_STRTOF
+#endif
 
 /* Define if we have stdint.h */
 #define HAVE_STDINT_H
@@ -154,7 +160,29 @@
 #undef HAVE_FPU_CONTROL_H
 
 /* Define if we have fenv.h */
+#if LOOM_PLATFORM != LOOM_PLATFORM_WIN32
 #define HAVE_FENV_H
+#else
+
+// Fake up the rounding behavior.
+#include <float.h>
+#pragma fenv_access (on)
+#define FE_TOWARDUP    _RC_UP
+#define FE_TOWARDDOWN  _RC_DOWN
+#define FE_TOWARDZERO  _RC_CHOP
+#define FE_TOWARDNEAR  _RC_NEAR
+static int fegetround(void) // The fegetround function gets the current rounding direction.
+{
+                  return (_control87(0, 0) & _MCW_RC);
+}
+static int fesetround(int rounding_mode)
+{
+                  _control87(rounding_mode, _MCW_RC);
+                  if( (_control87(0, 0) & _MCW_RC) != rounding_mode ){ return -1; }
+                  return 0;
+}
+
+#endif
 
 /* Define if we have fesetround() */
 #define HAVE_FESETROUND

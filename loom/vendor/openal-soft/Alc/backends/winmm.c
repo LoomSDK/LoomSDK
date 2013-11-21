@@ -35,6 +35,11 @@
 #define WAVE_FORMAT_IEEE_FLOAT  0x0003
 #endif
 
+// Windows hacks.
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+#define strdup(x) _strdup(x)
+#define isfinite(_a) _finite(_a)
+#endif
 
 typedef struct {
     // MMSYSTEM Device

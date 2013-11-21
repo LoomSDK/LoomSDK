@@ -36,7 +36,7 @@
 #define stricmp    strcasecmp //I feel dirty.
 #endif
 
-extern loom_allocator_t *gAssetAllocator;
+extern "C" loom_allocator_t *gAssetAllocator;
 static loom_logGroup_t gSoundAssetGroup = { "soundAsset", 1 };
 
 void loom_asset_registerSoundAsset()

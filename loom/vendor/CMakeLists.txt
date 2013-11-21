@@ -517,7 +517,7 @@ set(OPENALSOFT_SRC
     ${OPENALSOFT_ROOT}/Alc/alcReverb.c
     ${OPENALSOFT_ROOT}/Alc/alcRing.c
     ${OPENALSOFT_ROOT}/Alc/alcThread.c
-    ${OPENALSOFT_ROOT}/Alc/Alu.c
+    ${OPENALSOFT_ROOT}/Alc/Alu.cpp
     ${OPENALSOFT_ROOT}/Alc/bs2b.c
     ${OPENALSOFT_ROOT}/Alc/helpers.c
     ${OPENALSOFT_ROOT}/Alc/hrtf.c
