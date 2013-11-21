@@ -34,9 +34,11 @@ typedef int   TextureID;
 // loading textures are marked
 #define MARKEDTEXTURE     65534
 
+// texture smoothing modes
 #define TEXTUREINFO_SMOOTHING_NONE 0
 #define TEXTUREINFO_SMOOTHING_BILINEAR 1
 
+// texture wrapping modes
 #define TEXTUREINFO_WRAP_REPEAT     0
 #define TEXTUREINFO_WRAP_MIRROR     1
 #define TEXTUREINFO_WRAP_CLAMP      2
