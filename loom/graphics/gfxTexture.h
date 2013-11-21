@@ -37,6 +37,10 @@ typedef int   TextureID;
 #define TEXTUREINFO_SMOOTHING_NONE 0
 #define TEXTUREINFO_SMOOTHING_BILINEAR 1
 
+#define TEXTUREINFO_WRAP_REPEAT     0
+#define TEXTUREINFO_WRAP_MIRROR     1
+#define TEXTUREINFO_WRAP_CLAMP      2
+
 struct TextureInfo
 {
     TextureID                id;
@@ -46,6 +50,8 @@ struct TextureInfo
     int                      width;
     int                      height;
     int                      smoothing;
+    int                      wrapU;
+    int                      wrapV;
 
     bool                     reload;
 
@@ -64,6 +70,8 @@ struct TextureInfo
     {
         width       = height = 0;
         smoothing   = TEXTUREINFO_SMOOTHING_NONE;
+        wrapU       = TEXTUREINFO_WRAP_CLAMP;
+        wrapV       = TEXTUREINFO_WRAP_CLAMP;
         reload      = false;
         handle.idx  = bgfx::invalidHandle;
         texturePath = "";
