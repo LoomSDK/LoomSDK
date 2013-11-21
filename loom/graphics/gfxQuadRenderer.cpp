@@ -83,9 +83,34 @@ void QuadRenderer::submit()
         bgfx::setIndexBuffer(sIndexBufferHandle, currentIndexBufferIdx, (quadCount * 6));
         bgfx::setVertexBuffer(vertexBuffers[currentVertexBufferIdx], MAXBATCHQUADS * 4);
 
-        // set to clamping mode (this is where we'll add the mirror/repeat modes as well)
-        
-        uint32_t textureFlags = BGFX_TEXTURE_U_CLAMP | BGFX_TEXTURE_V_CLAMP | BGFX_TEXTURE_W_CLAMP;
+        // set U and V wrap modes (repeat / mirror / clamp)
+        uint32_t textureFlags = BGFX_TEXTURE_W_CLAMP;
+        ///U
+        switch(Texture::sTextureInfos[currentTexture].wrapU)
+        {
+            case TEXTUREINFO_WRAP_REPEAT:
+                textureFlags |= BGFX_TEXTURE_NONE;
+                break;
+            case TEXTUREINFO_WRAP_MIRROR:
+                textureFlags |= BGFX_TEXTURE_U_MIRROR;
+                break;
+            case TEXTUREINFO_WRAP_CLAMP:
+                textureFlags |= BGFX_TEXTURE_U_CLAMP;
+                break;
+        }
+        ///V
+        switch(Texture::sTextureInfos[currentTexture].wrapV)
+        {
+            case TEXTUREINFO_WRAP_REPEAT:
+                textureFlags |= BGFX_TEXTURE_NONE;
+                break;
+            case TEXTUREINFO_WRAP_MIRROR:
+                textureFlags |= BGFX_TEXTURE_V_MIRROR;
+                break;
+            case TEXTUREINFO_WRAP_CLAMP:
+                textureFlags |= BGFX_TEXTURE_V_CLAMP;
+                break;
+        }
 
         // set smoothing mode, bgfx default is bilinear
         switch (Texture::sTextureInfos[currentTexture].smoothing)

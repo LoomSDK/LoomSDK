@@ -35,6 +35,11 @@ final class Math {
     public static const PI:Number = 3.14159265358979323846;
 
     /**
+     *  PI * 2
+     */
+    public static const TWOPI:Number = 3.14159265358979323846 * 2.0;
+
+    /**
      *  A mathematical constant for the base of natural logarithms, expressed as e.
      */    
     public static const E : Number = 2.71828182845905;
@@ -184,6 +189,29 @@ final class Math {
         if(value > maximum) return maximum;
         return value;
     }
-}
 
+    /**
+     *  Checks if the value provided is equal to a Power of 2 Number (ie. 4, 8, 256, etc.)
+     */
+    public static function isPowerOf2(value:int):Boolean
+    {
+        return ((value != 0) && ((value & (value - 1)) == 0)) ? true : false;
+    }
+
+    /**
+     *  Converts the angle provided, in Degrees, to its Radian representation
+     */
+    static public function degToRad(deg:Number):Number
+    {
+        return deg * (Math.PI / 180.0);
+    }
+
+    /**
+     *  Converts the angle provided, in Radians, to its Degree representation
+     */
+    static public function radToDeg(rad:Number):Number
+    {
+        return rad * (180.0 / Math.PI);
+    }
+}
 }

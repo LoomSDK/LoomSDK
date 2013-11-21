@@ -1945,27 +1945,16 @@ namespace bgfx
 
     void Texture::setSamplerState(uint32_t _flags)
     {
-
-#if BGFX_CONFIG_RENDERER_OPENGLES2      
-        // LOOM 1750: We clamp as NPOT textures won't even show up without clamping on some hardware.           
-        // see note below too
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-#endif      
-
         const uint32_t flags = _flags&(~BGFX_TEXTURE_RESERVED_MASK);
         if ( (0 != (BGFX_SAMPLER_DEFAULT_FLAGS & _flags) && m_flags != m_currentFlags)
-        ||  m_currentFlags != flags)
+        || m_currentFlags != flags)
         {
             const GLenum target = m_target;
             const uint8_t numMips = m_numMips;
 
-#if !BGFX_CONFIG_RENDERER_OPENGLES2     
-            // LOOM 1750: We clamp as NPOT textures won't even show up without clamping on some hardware.           
-            // see note above as well
+            // WARNING! On some hardware, NPOT textures won't even show up unless they are set as GL_CLAMP_TO_EDGE!
             GL_CHECK(glTexParameteri(target, GL_TEXTURE_WRAP_S, s_textureAddress[(flags&BGFX_TEXTURE_U_MASK)>>BGFX_TEXTURE_U_SHIFT]) );
             GL_CHECK(glTexParameteri(target, GL_TEXTURE_WRAP_T, s_textureAddress[(flags&BGFX_TEXTURE_V_MASK)>>BGFX_TEXTURE_V_SHIFT]) );
-#endif          
 
 #if BGFX_CONFIG_RENDERER_OPENGL|BGFX_CONFIG_RENDERER_OPENGLES3
             GL_CHECK(glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, numMips-1) );
