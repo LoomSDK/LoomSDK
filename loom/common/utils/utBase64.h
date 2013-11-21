@@ -52,7 +52,7 @@ public:
 
     void clear()
     {
-        bc64 = NULL;
+        bc64 = "";
         bc.clear();
     }
 

@@ -40,7 +40,7 @@ import system.xml.XMLTest;
                 }
             }
         
-            trace("Running Tests");;;;
+            trace("Running Tests");
             
             new TestNativeClass().run();
             new TestManagedNativeClass().run();

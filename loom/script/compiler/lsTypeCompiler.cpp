@@ -1480,6 +1480,21 @@ void TypeCompiler::createVarArg(ExpDesc *varg, utArray<Expression *> *arguments,
 
     BC::expToNextReg(fs, &vtable);
 
+    // store the length of the varargs vector
+    ExpDesc elength;
+    BC::initExpDesc(&elength, VKNUM, 0);
+    elength.u.nval = LSINDEXVECTORLENGTH;
+
+    BC::expToNextReg(fs, &elength);
+    BC::expToVal(fs, &elength);
+    BC::indexed(fs, &vtable, &elength);
+
+    BC::initExpDesc(&elength, VKNUM, 0);
+    elength.u.nval = arguments->size() - startIdx;
+
+    // and store
+    BC::storeVar(fs, &vtable, &elength);
+
     utArray<Expression *> args;
     int length = 0;
     for (UTsize i = startIdx; i < arguments->size(); i++)
@@ -1505,19 +1520,6 @@ void TypeCompiler::createVarArg(ExpDesc *varg, utArray<Expression *> *arguments,
 
     BC::singleVar(cs, &evector, varargname);
     BC::expToNextReg(fs, &evector);
-
-    ExpDesc elength;
-    BC::initExpDesc(&elength, VKNUM, 0);
-    elength.u.nval = LSINDEXVECTORLENGTH;
-
-    BC::expToNextReg(fs, &elength);
-    BC::expToVal(fs, &elength);
-    BC::indexed(fs, &evector, &elength);
-
-    BC::initExpDesc(&elength, VKNUM, 0);
-    elength.u.nval = length;
-
-    BC::storeVar(fs, &evector, &elength);
 
     fs->freereg = reg;
 
@@ -2089,7 +2091,7 @@ void TypeCompiler::functionBody(ExpDesc *e, FunctionLiteral *flit, int line)
 
     // setup closure info here so it is captured as an upvalue
     char funcinfo[256];
-    snprintf(funcinfo, 250, "__ls_funcinfo_numargs_%i", flit->childIndex);
+    snprintf(funcinfo, 250, "__ls_funcinfo_arginfo_%i", flit->childIndex);
     ExpDesc finfo;
     BC::singleVar(cs, &finfo, funcinfo);
 
@@ -2123,19 +2125,38 @@ Expression *TypeCompiler::visit(FunctionLiteral *literal)
     BC::adjustLocalVars(cs, 1);
 
     // store funcinfo
-    // setup closure info here so it is captured as an upvalue, must be unique
+    // setup closure info here so it is captured as upvalues, must be unique
     char funcinfo[256];
-    snprintf(funcinfo, 250, "__ls_funcinfo_numargs_%i", literal->childIndex);
+    snprintf(funcinfo, 250, "__ls_funcinfo_arginfo_%i", literal->childIndex);
 
     ExpDesc funcInfo;
     ExpDesc value;
     BC::singleVar(cs, &funcInfo, funcinfo);
     BC::initExpDesc(&value, VKNUM, 0);
     value.u.nval = 0;
+
+    unsigned int nparams = 0;
+    unsigned int varArgIdx = 0xFFFF;
+
     if (literal->parameters)
     {
-        value.u.nval = (int)literal->parameters->size();
+        nparams = (unsigned int) literal->parameters->size();
+
+        // run through parameters looking for varargs
+        for (unsigned int i = 0; i < (unsigned int) literal->parameters->size(); i++)
+        {
+            VariableDeclaration *param = literal->parameters->at(i);
+            if (param->isVarArg)
+            {
+                varArgIdx = i;
+                break;
+            }
+        }
+
     }
+
+    // compress number of parameters and varargs info into 32 bits
+    value.u.nval = (nparams << 16) | varArgIdx;
 
     BC::storeVar(cs->fs, &funcInfo, &value);
 

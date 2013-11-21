@@ -553,10 +553,8 @@ static int loomscript_ipairsaux(lua_State *L)
     int i = luaL_checkint(L, 2);
 
     luaL_checktype(L, 1, LUA_TTABLE);
-
-    lua_rawgeti(L, 1, LSINDEXVECTORLENGTH);
-    int length = (int)lua_tonumber(L, -1);
-    lua_pop(L, 1);
+    
+    int length = lsr_vector_get_length(L, 1);
 
     lua_rawgeti(L, 1, LSINDEXVECTOR);
     luaL_checktype(L, -1, LUA_TTABLE);

@@ -1851,8 +1851,23 @@ void JitTypeCompiler::createVarArg(ExpDesc *varg,
     BC::expToNextReg(fs, &v);
     BC::expToVal(fs, &v);
     BC::indexed(fs, &vtable, &v);
-
     BC::expToNextReg(fs, &vtable);
+
+    // set the length of the varargs vector
+    ExpDesc elength;
+    BC::initExpDesc(&elength, VKNUM, 0);
+    setnumV(&elength.u.nval, LSINDEXVECTORLENGTH);
+
+    BC::expToNextReg(fs, &elength);
+    BC::expToVal(fs, &elength);
+    BC::indexed(fs, &vtable, &elength);
+
+    BC::initExpDesc(&elength, VKNUM, 0);
+
+    setnumV(&elength.u.nval, arguments->size() - startIdx);
+
+    // and store
+    BC::storeVar(fs, &vtable, &elength);
 
     utArray<Expression *> args;
     int length = 0;
@@ -1881,19 +1896,7 @@ void JitTypeCompiler::createVarArg(ExpDesc *varg,
     BC::singleVar(cs, &evector, varargname);
     BC::expToNextReg(fs, &evector);
 
-    ExpDesc elength;
-    BC::initExpDesc(&elength, VKNUM, 0);
-    setnumV(&elength.u.nval, LSINDEXVECTORLENGTH);
 
-    BC::expToNextReg(fs, &elength);
-    BC::expToVal(fs, &elength);
-    BC::indexed(fs, &evector, &elength);
-
-    BC::initExpDesc(&elength, VKNUM, 0);
-
-    setnumV(&elength.u.nval, length);
-
-    BC::storeVar(fs, &evector, &elength);
 
     fs->freereg = reg;
 
@@ -2340,9 +2343,9 @@ void JitTypeCompiler::functionBody(ExpDesc *e, FunctionLiteral *flit,
     bcemit_AD(&fs, BC_FUNCF, 0, 0);
     /* Placeholder. */
 
-    // setup closure info here so it is captured as an upvalue
+    // setup closure info here so it is captured as an upvalues
     char funcinfo[256];
-    snprintf(funcinfo, 250, "__ls_funcinfo_numargs_%i", flit->childIndex);
+    snprintf(funcinfo, 250, "__ls_funcinfo_arginfo_%i", flit->childIndex);
     ExpDesc finfo;
     BC::singleVar(cs, &finfo, funcinfo);
 
@@ -2399,7 +2402,8 @@ Expression *JitTypeCompiler::visit(FunctionLiteral *literal)
     // store funcinfo
     // setup closure info here so it is captured as an upvalue, must be unique
     char funcinfo[256];
-    snprintf(funcinfo, 250, "__ls_funcinfo_numargs_%i", literal->childIndex);
+
+    snprintf(funcinfo, 250, "__ls_funcinfo_arginfo_%i", literal->childIndex);
 
     ExpDesc funcInfo;
     ExpDesc value;
@@ -2408,13 +2412,30 @@ Expression *JitTypeCompiler::visit(FunctionLiteral *literal)
     BC::initExpDesc(&value, VKNUM, 0);
     setnumV(&value.u.nval, 0);
 
+    unsigned int nparams = 0;
+    unsigned int varArgIdx = 0xFFFF;
+
     if (literal->parameters)
     {
-        setnumV(&value.u.nval, (int)literal->parameters->size());
+        nparams = (unsigned int) literal->parameters->size();
+
+        // run through parameters looking for varargs
+        for (unsigned int i = 0; i < (unsigned int) literal->parameters->size(); i++)
+        {
+            VariableDeclaration *param = literal->parameters->at(i);
+            if (param->isVarArg)
+            {
+                varArgIdx = i;
+                break;
+            }
+        }
+
     }
 
-    BC::storeVar(cs->fs, &funcInfo, &value);
+    // compress number of parameters and varargs info into 32 bits
+    setnumV(&value.u.nval, (nparams << 16) | varArgIdx);
 
+    BC::storeVar(cs->fs, &funcInfo, &value);
 
     functionBody(&b, literal, cs->lineNumber);
 

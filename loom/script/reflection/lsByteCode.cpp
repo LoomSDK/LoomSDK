@@ -187,7 +187,7 @@ bool ByteCode::load(LSLuaState *ls, bool execute)
 
     lua_State *L = ls->VM();
 
-    int status = bytecode_loadbuffer(L, &bc[0], bc.size(), LUA_SIGNATURE);
+    int status = bytecode_loadbuffer(L, (const char*) &bc[0], bc.size(), LUA_SIGNATURE);
     if (execute && status == 0)
     {
         lua_call(L, 0, LUA_MULTRET);

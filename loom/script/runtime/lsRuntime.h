@@ -32,11 +32,15 @@
 #include <typeinfo>
 
 namespace LS {
+
 // metatables
 #define LSINSTANCE          "LSINSTANCE"
 #define LSDELETEDMANAGED    "LSDELETEDMANAGED"
 #define LSDICTIONARY        "LSDICTIONARY"
 #define LSVECTOR            "LSVECTOR"
+
+// internal Vector metatable for bounds checking
+#define LSVECTORINTERNAL    "LSVECTORINTERNAL"
 #define LSGCTRACKER         "LSGCTRACKER"
 
 #define lualoom_isindexer(v)    (v >= LSINDEXNATIVE && v <= LSINDEXMAX)
@@ -359,6 +363,18 @@ inline void lsr_pushmethodbase(lua_State *L, MethodBase *base)
 
     lua_settop(L, top);
 }
+
+// Vector Operations
+
+/** 
+ *  Gets the length of the vector at specificed index 
+ */
+int lsr_vector_get_length(lua_State *L, int index);
+
+/** 
+ *  Sets the length of the vector at specificed index 
+ */
+ void lsr_vector_set_length(lua_State *L, int index, int nlength);
 
 
 // avoid oodles of static buffers compiler into template code
