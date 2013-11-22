@@ -7,26 +7,26 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.core
 {
-	/**
-	 * Dispatched when the selection changes.
-	 *
-	 * @eventType loom2d.events.Event.CHANGE
-	 */
-	[Event(name="change",type="loom2d.events.Event")]
+    /**
+     * Dispatched when the selection changes.
+     *
+     * @eventType loom2d.events.Event.CHANGE
+     */
+    [Event(name="change",type="loom2d.events.Event")]
 
-	/**
-	 * An interface for something that may be selected.
-	 */
-	public interface IToggle extends IFeathersControl
-	{
-		/**
-		 * Indicates if the IToggle is selected or not.
-		 */
-		function get isSelected():Boolean;
-		
-		/**
-		 * @private
-		 */
-		function set isSelected(value:Boolean):void;
-	}
+    /**
+     * An interface for something that may be selected.
+     */
+    public interface IToggle extends IFeathersControl
+    {
+        /**
+         * Indicates if the IToggle is selected or not.
+         */
+        function get isSelected():Boolean;
+        
+        /**
+         * @private
+         */
+        function set isSelected(value:Boolean):void;
+    }
 }

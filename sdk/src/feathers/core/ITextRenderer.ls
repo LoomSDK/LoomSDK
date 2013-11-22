@@ -7,34 +7,34 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.core
 {
-	import loom2d.math.Point;
+    import loom2d.math.Point;
 
-	/**
-	 * Interface that handles common capabilities of rendering text.
-	 *
-	 * @see http://wiki.starling-framework.org/feathers/text-renderers
-	 */
-	public interface ITextRenderer extends IFeathersControl
-	{
-		/**
-		 * The text to render.
-		 */
-		function get text():String;
+    /**
+     * Interface that handles common capabilities of rendering text.
+     *
+     * @see http://wiki.starling-framework.org/feathers/text-renderers
+     */
+    public interface ITextRenderer extends IFeathersControl
+    {
+        /**
+         * The text to render.
+         */
+        function get text():String;
 
-		/**
-		 * @private
-		 */
-		function set text(value:String):void;
+        /**
+         * @private
+         */
+        function set text(value:String):void;
 
-		/**
-		 * The baseline measurement of the text.
-		 */
-		function get baseline():Number;
+        /**
+         * The baseline measurement of the text.
+         */
+        function get baseline():Number;
 
-		/**
-		 * Measures the text's bounds (without a full validation, if
-		 * possible).
-		 */
-		function measureText():Point;
-	}
+        /**
+         * Measures the text's bounds (without a full validation, if
+         * possible).
+         */
+        function measureText():Point;
+    }
 }
