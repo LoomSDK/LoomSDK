@@ -69,13 +69,12 @@ class Timer {
 
     public function set currentCount(value:int):void
     {
-        Debug.assert(false, "NYI");
+        _currentCount = value;
     }
 
     public function get running():Boolean
     {
-        Debug.assert(false, "NYI");
-        return false;
+        return _running;
     }
 
     //_________________________________________________
@@ -94,6 +93,8 @@ class Timer {
         // add the update function to the ticks
         Application.ticks += update;
         _elapsed = 0;
+
+        _running = true;
 
         onStart(this);
     }
@@ -115,6 +116,7 @@ class Timer {
         Application.ticks -= update;
         _elapsed = 0;
         _lastTickTime = -1;
+        _running = false;
 
         onStop(this);
     }
@@ -130,6 +132,7 @@ class Timer {
         Application.ticks -= update;
 
         _lastTickTime = -1;
+        _running = false;
 
         onPause(this);
     }
@@ -140,6 +143,7 @@ class Timer {
     public function play():void
     {
         Application.ticks += update;
+        _running = true;
     }
 
     //_________________________________________________
@@ -158,6 +162,7 @@ class Timer {
     protected var _lastTickTime:Number = -1;
     protected var _repeats:Boolean = false;
     protected var _currentCount:int = 0;
+    protected var _running:Boolean = false;
 
     //_________________________________________________
     //  Protected Functions

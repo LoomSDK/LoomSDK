@@ -131,7 +131,7 @@ package
         {
             trace("Sending request...");
 
-            var req = new HTTPRequest("http://www.theengine.co/api/v1/session");
+            var req = new HTTPRequest("http://www.loomsdk.com/api/v1/session");
             req.method = "POST";
             req.body = "email=" + _email.text + "&password=" + _password.text;
             req.setHeaderField("foo", "bar");
