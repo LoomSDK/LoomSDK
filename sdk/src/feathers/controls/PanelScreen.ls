@@ -212,11 +212,11 @@ package feathers.controls
          */
         protected function panelScreen_stage_keyDownHandler(event:KeyboardEvent):void
         {
-			if (event.keyCode == LoomKey.BUTTON_BACK)
-			{
-				event.stopImmediatePropagation();				
-				this.backButtonHandler.call(null);				
-			}
+            if (event.keyCode == LoomKey.BUTTON_BACK)
+            {
+                event.stopImmediatePropagation();                
+                this.backButtonHandler.call(null);                
+            }
         
             //trace("REVIVE ME!");
             //we're accessing Keyboard.BACK (and others) using a string because

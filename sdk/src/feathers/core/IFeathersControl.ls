@@ -7,97 +7,97 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.core
 {
-	/**
-	 * Dispatched after the control has been initialized, but before it has
-	 * drawn for the first time. Typically, the component's children will have
-	 * been created by this point.
-	 *
-	 * @eventType feathers.events.FeathersEventType.INITIALIZE
-	 */
-	[Event(name="initialize",type="loom2d.events.Event")]
+    /**
+     * Dispatched after the control has been initialized, but before it has
+     * drawn for the first time. Typically, the component's children will have
+     * been created by this point.
+     *
+     * @eventType feathers.events.FeathersEventType.INITIALIZE
+     */
+    [Event(name="initialize",type="loom2d.events.Event")]
 
-	/**
-	 * Dispatched when the width or height of the control changes.
-	 *
-	 * @eventType feathers.events.FeathersEventType.RESIZE
-	 */
-	[Event(name="resize",type="loom2d.events.Event")]
+    /**
+     * Dispatched when the width or height of the control changes.
+     *
+     * @eventType feathers.events.FeathersEventType.RESIZE
+     */
+    [Event(name="resize",type="loom2d.events.Event")]
 
-	/**
-	 * Basic interface for Feathers UI controls. A Feathers control must also
-	 * be a Starling display object.
-	 */
-	public interface IFeathersControl extends IFeathersDisplayObject
-	{
-		/**
-		 * @copy feathers.core.FeathersControl#minWidth
-		 */
-		function get minWidth():Number;
+    /**
+     * Basic interface for Feathers UI controls. A Feathers control must also
+     * be a Starling display object.
+     */
+    public interface IFeathersControl extends IFeathersDisplayObject
+    {
+        /**
+         * @copy feathers.core.FeathersControl#minWidth
+         */
+        function get minWidth():Number;
 
-		/**
-		 * @private
-		 */
-		function set minWidth(value:Number):void;
+        /**
+         * @private
+         */
+        function set minWidth(value:Number):void;
 
-		/**
-		 * @copy feathers.core.FeathersControl#minHeight
-		 */
-		function get minHeight():Number;
+        /**
+         * @copy feathers.core.FeathersControl#minHeight
+         */
+        function get minHeight():Number;
 
-		/**
-		 * @private
-		 */
-		function set minHeight(value:Number):void;
+        /**
+         * @private
+         */
+        function set minHeight(value:Number):void;
 
-		/**
-		 * @copy feathers.core.FeathersControl#maxWidth
-		 */
-		function get maxWidth():Number;
+        /**
+         * @copy feathers.core.FeathersControl#maxWidth
+         */
+        function get maxWidth():Number;
 
-		/**
-		 * @private
-		 */
-		function set maxWidth(value:Number):void;
+        /**
+         * @private
+         */
+        function set maxWidth(value:Number):void;
 
-		/**
-		 * @copy feathers.core.FeathersControl#maxHeight
-		 */
-		function get maxHeight():Number;
+        /**
+         * @copy feathers.core.FeathersControl#maxHeight
+         */
+        function get maxHeight():Number;
 
-		/**
-		 * @private
-		 */
-		function set maxHeight(value:Number):void;
+        /**
+         * @private
+         */
+        function set maxHeight(value:Number):void;
 
 
-		/**
-		 * @copy feathers.core.FeathersControl#isEnabled
-		 */
-		function get isEnabled():Boolean;
+        /**
+         * @copy feathers.core.FeathersControl#isEnabled
+         */
+        function get isEnabled():Boolean;
 
-		/**
-		 * @private
-		 */
-		function set isEnabled(value:Boolean):void;
+        /**
+         * @private
+         */
+        function set isEnabled(value:Boolean):void;
 
-		/**
-		 * @copy feathers.core.FeathersControl#isInitialized
-		 */
-		function get isInitialized():Boolean;
+        /**
+         * @copy feathers.core.FeathersControl#isInitialized
+         */
+        function get isInitialized():Boolean;
 
-		/**
-		 * @copy feathers.core.FeathersControl#nameList
-		 */
-		function get nameList():TokenList;
+        /**
+         * @copy feathers.core.FeathersControl#nameList
+         */
+        function get nameList():TokenList;
 
-		/**
-		 * @copy feathers.core.FeathersControl#setSize()
-		 */
-		function setSize(width:Number, height:Number):void;
+        /**
+         * @copy feathers.core.FeathersControl#setSize()
+         */
+        function setSize(width:Number, height:Number):void;
 
-		/**
-		 * @copy feathers.core.FeathersControl#validate()
-		 */
-		function validate():void;
-	}
+        /**
+         * @copy feathers.core.FeathersControl#validate()
+         */
+        function validate():void;
+    }
 }

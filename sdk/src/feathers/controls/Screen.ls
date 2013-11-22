@@ -273,7 +273,7 @@ package feathers.controls
          */
         protected function refreshPixelScale():void
         {
-/*			if(!this.stage)
+/*            if(!this.stage)
             {
                 return;
             }
@@ -343,34 +343,34 @@ package feathers.controls
         /**
          * @private
          */
-		protected function screen_stage_keyDownHandler(event:KeyboardEvent):void
-		{
-			if(this.backButtonHandler && event.keyCode == LoomKey.BUTTON_BACK)
-			{
-				event.stopImmediatePropagation();
-				this.backButtonHandler.call(null);
-				return;
-			}
+        protected function screen_stage_keyDownHandler(event:KeyboardEvent):void
+        {
+            if(this.backButtonHandler && event.keyCode == LoomKey.BUTTON_BACK)
+            {
+                event.stopImmediatePropagation();
+                this.backButtonHandler.call(null);
+                return;
+            }
 
-			trace("NYI");
+            trace("NYI");
 
-			/*
-			
-			if(this.menuButtonHandler != null &&
-				Object(Keyboard).hasOwnProperty("MENU") &&
-				event.keyCode == Keyboard["MENU"])
-			{
-				event.preventDefault();
-				this.menuButtonHandler();
-			}
-			
-			if(this.searchButtonHandler != null &&
-				Object(Keyboard).hasOwnProperty("SEARCH") &&
-				event.keyCode == Keyboard["SEARCH"])
-			{
-				event.preventDefault();
-				this.searchButtonHandler();
-			} */
-		}
+            /*
+            
+            if(this.menuButtonHandler != null &&
+                Object(Keyboard).hasOwnProperty("MENU") &&
+                event.keyCode == Keyboard["MENU"])
+            {
+                event.preventDefault();
+                this.menuButtonHandler();
+            }
+            
+            if(this.searchButtonHandler != null &&
+                Object(Keyboard).hasOwnProperty("SEARCH") &&
+                event.keyCode == Keyboard["SEARCH"])
+            {
+                event.preventDefault();
+                this.searchButtonHandler();
+            } */
+        }
     }
 }
