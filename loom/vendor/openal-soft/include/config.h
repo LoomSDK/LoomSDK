@@ -1,3 +1,4 @@
+#pragma comment(lib,"dxguid.lib")
 #include "loom/common/platform/platform.h"
 
 /* API declaration export attribute */
@@ -26,8 +27,8 @@
 /* Define if we have the MMDevApi backend */
 //#define HAVE_MMDEVAPI
 
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 /* Define if we have the DSound backend */
-#if LOOM_PLATFORM == LOOM_LPATFORM_WIN32
 #define HAVE_DSOUND
 
 /* Define if we have the Windows Multimedia backend */
