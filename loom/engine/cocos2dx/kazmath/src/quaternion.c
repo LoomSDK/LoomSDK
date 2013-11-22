@@ -435,10 +435,10 @@ kmQuaternion *kmQuaternionSlerp(kmQuaternion       *pOut,
     {
         kmScalar ct    = kmQuaternionDot(q1, q2);
         kmScalar theta = acosf(ct);
-        kmScalar st    = sqrtf(1.0 - kmSQR(ct));
+        kmScalar st    = sqrtf(1.0f - kmSQR(ct));
 
         kmScalar stt  = sinf(t * theta) / st;
-        kmScalar somt = sinf((1.0 - t) * theta) / st;
+        kmScalar somt = sinf((1.0f - t) * theta) / st;
 
         kmQuaternion temp, temp2;
         kmQuaternionScale(&temp, q1, somt);

@@ -4,6 +4,8 @@
 #define AL_API  
 #define ALC_API 
 
+#define AL_LIBTYPE_STATIC
+
 /* Define to the library version */
 #define ALSOFT_VERSION "alsoft-loom-1.0.0"
 
