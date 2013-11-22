@@ -128,7 +128,7 @@ package feathers.skins
          *
          * @see feathers.display.Scale9Image
          */
-        public function get displayObjectProperties():Object
+        public function get displayObjectProperties():Dictionary.<String, Object>
         {
             if(!this._displayObjectProperties)
             {

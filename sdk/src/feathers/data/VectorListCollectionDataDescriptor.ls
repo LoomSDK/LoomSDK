@@ -7,8 +7,6 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.data
 {
-    import System.Errors.IllegalOperationError;
-
     /**
      * An `IListCollectionDataDescriptor` implementation for Vectors.
      * 
@@ -30,7 +28,7 @@ package feathers.data
         public function getLength(data:Object):int
         {
             this.checkForCorrectDataType(data);
-            return (data as Vector.<*>).length;
+            return (data as Vector.<Object>).length;
         }
         
         /**
@@ -39,7 +37,8 @@ package feathers.data
         public function getItemAt(data:Object, index:int):Object
         {
             this.checkForCorrectDataType(data);
-            return (data as Vector.<*>)[index];
+            var dataAsVector:Vector.<Object> = data as Vector.<Object>;
+            return dataAsVector[index];
         }
         
         /**
@@ -48,7 +47,8 @@ package feathers.data
         public function setItemAt(data:Object, item:Object, index:int):void
         {
             this.checkForCorrectDataType(data);
-            (data as Vector.<*>)[index] = item;
+            var dataAsVector:Vector.<Object> = data as Vector.<Object>;
+            dataAsVector[index] = item;
         }
         
         /**
@@ -57,7 +57,8 @@ package feathers.data
         public function addItemAt(data:Object, item:Object, index:int):void
         {
             this.checkForCorrectDataType(data);
-            (data as Vector.<*>).splice(index, 0, item);
+            var dataAsVector:Vector.<Object> = data as Vector.<Object>;
+            dataAsVector.splice(index, 0, item);
         }
         
         /**
@@ -66,7 +67,9 @@ package feathers.data
         public function removeItemAt(data:Object, index:int):Object
         {
             this.checkForCorrectDataType(data);
-            return (data as Vector.<*>).splice(index, 1)[0];
+            var dataAsVector:Vector.<Object> = data as Vector.<Object>;
+            var splicedData:Vector.<Object> = dataAsVector.splice( index, 1 );
+            return splicedData[ 0 ];
         }
 
         /**
@@ -75,7 +78,8 @@ package feathers.data
         public function removeAll(data:Object):void
         {
             this.checkForCorrectDataType(data);
-            (data as Vector.<*>).length = 0;
+            var dataAsVector:Vector.<Object> = data as Vector.<Object>;
+            dataAsVector.length = 0;
         }
         
         /**
@@ -84,7 +88,8 @@ package feathers.data
         public function getItemIndex(data:Object, item:Object):int
         {
             this.checkForCorrectDataType(data);
-            return (data as Vector.<*>).indexOf(item);
+            var dataAsVector:Vector.<Object> = data as Vector.<Object>;
+            return dataAsVector.indexOf(item);
         }
         
         /**
@@ -92,10 +97,7 @@ package feathers.data
          */
         protected function checkForCorrectDataType(data:Object):void
         {
-            if(!(data is Vector.<*>))
-            {
-                throw new IllegalOperationError("Expected Vector. Received " + data.getTypeName() + " instead.");
-            }
+            Debug.assert( data.getType() == Vector, "Expected Vector. Received " + data.getTypeName() + " instead." );
         }
     }
 }

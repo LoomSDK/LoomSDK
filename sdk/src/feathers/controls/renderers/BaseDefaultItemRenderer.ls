@@ -1326,15 +1326,16 @@ package feathers.controls.renderers
             {
                 return this._labelFunction.call(null, item).toString();
             }
-            else if(this._labelField != null && item && item.hasOwnProperty(this._labelField))
+            else if(this._labelField != null && item is Dictionary)
             {
-                var labelObj:Object = item.getType().getFieldOrPropertyValueByName(item, this._labelField);
-                return labelObj.toString();
+                var itemAsDictionary:Dictionary.<String, Object> = item as Dictionary.<String, Object>;
+                return itemAsDictionary[ _labelField ] ? String( itemAsDictionary[ _labelField ] ) : "";
             }
-            else if(item is Object)
+            else if ( item is Number || item is String )
             {
-                return item.toString();
+                return String( item );
             }
+            
             return "";
         }
 
@@ -1352,27 +1353,27 @@ package feathers.controls.renderers
          */
         protected function itemToIcon(item:Object):DisplayObject
         {
+            var itemAsDictionary:Dictionary.<String, Object> = item as Dictionary.<String, Object>;
+            
             if(this._iconSourceFunction != null)
             {
-                var source:Object = this._iconSourceFunction.call(null, item);
+                var source:Object = this._iconSourceFunction(item);
                 this.refreshIconSource(source);
                 return this.iconImage;
             }
-            else if(this._iconSourceField != null && item && item.hasOwnProperty(this._iconSourceField))
+            else if(this._iconSourceField != null && itemAsDictionary && itemAsDictionary[ _iconSourceField ])
             {
-                source = item.getType().getFieldOrPropertyValueByName(item, this._iconSourceField);
-                //source = item[this._iconSourceField];
+                source = itemAsDictionary[ _iconSourceField ];
                 this.refreshIconSource(source);
                 return this.iconImage;
             }
             else if(this._iconFunction != null)
             {
-                return this._iconFunction.call(null, item) as DisplayObject;
+                return this._iconFunction(item) as DisplayObject;
             }
-            else if(this._iconField != null && item && item.hasOwnProperty(this._iconField))
+            else if(this._iconField != null && itemAsDictionary)
             {
-                //return item[this._iconField] as DisplayObject;
-                return item.getType().getFieldOrPropertyValueByName(item, this._iconField) as DisplayObject;
+                return itemAsDictionary[ _iconField ] as DisplayObject;
             }
 
             return null;
@@ -1394,39 +1395,39 @@ package feathers.controls.renderers
          */
         protected function itemToAccessory(item:Object):DisplayObject
         {
+            var itemAsDictionary:Dictionary.<String, Object> = item as Dictionary.<String, Object>;
+            
             if(this._accessorySourceFunction != null)
             {
-                var source:Object = this._accessorySourceFunction.call(null, item);
+                var source:Object = this._accessorySourceFunction(item);
                 this.refreshAccessorySource(source);
                 return this.accessoryImage;
             }
-            else if(this._accessorySourceField != null && item && item.hasOwnProperty(this._accessorySourceField))
+            else if(this._accessorySourceField != null && itemAsDictionary && itemAsDictionary[this._accessorySourceField] != null)
             {
-                //source = item[this._accessorySourceField];
-                source = item.getType().getFieldOrPropertyValueByName(item, this._accessorySourceField);
+                source = itemAsDictionary[this._accessorySourceField];
                 this.refreshAccessorySource(source);
                 return this.accessoryImage;
             }
             else if(this._accessoryLabelFunction != null)
             {
-                var label:String = this._accessoryLabelFunction.call(null, item).toString();
+                var label:String = this._accessoryLabelFunction(item).toString();
                 this.refreshAccessoryLabel(label);
                 return DisplayObject(this.accessoryLabel);
             }
-            else if(this._accessoryLabelField != null && item && item.hasOwnProperty(this._accessoryLabelField))
+            else if(this._accessoryLabelField != null && itemAsDictionary && itemAsDictionary[this._accessoryLabelField] != null)
             {
-                label = item.getType().getFieldOrPropertyValueByName(item, this._accessoryLabelField).toString();
+                label = itemAsDictionary[this._accessoryLabelField] as String;
                 this.refreshAccessoryLabel(label);
                 return DisplayObject(this.accessoryLabel);
             }
             else if(this._accessoryFunction != null)
             {
-                return this._accessoryFunction.call(null, item) as DisplayObject;
+                return this._accessoryFunction(item) as DisplayObject;
             }
-            else if(this._accessoryField != null && item && item.hasOwnProperty(this._accessoryField))
+            else if(this._accessoryField != null && itemAsDictionary && itemAsDictionary[this._accessoryField])
             {
-                //return item[this._accessoryField] as DisplayObject;
-                return item.getType().getFieldOrPropertyValueByName(item, this._accessoryField) as DisplayObject;
+                return itemAsDictionary[this._accessoryField] as DisplayObject;
             }
 
             return null;

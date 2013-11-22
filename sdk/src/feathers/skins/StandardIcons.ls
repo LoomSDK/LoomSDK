@@ -7,7 +7,7 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.skins
 {
-    import Loom2D.Textures.Texture;
+    import loom2d.textures.Texture;
 
     /**
      * A set of icon textures, expected to be populated by the current theme. If

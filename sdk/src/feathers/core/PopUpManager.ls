@@ -145,7 +145,7 @@ package feathers.core
                 calculatedRoot.stage.addEventListener(ResizeEvent.RESIZE, stage_resizeHandler);
             }
 
-            if(FocusManager.isEnabled && popUp is DisplayObjectContainer)
+            if(FocusManager.defaultIsEnabled && popUp is DisplayObjectContainer)
             {
                 POPUP_TO_FOCUS_MANAGER[popUp] = new FocusManager(DisplayObjectContainer(popUp));
             }
@@ -216,19 +216,18 @@ package feathers.core
             if(overlay)
             {
                 //this is a temporary workaround for Starling issue #131
-                Loom2D.stage.addEventListener(EnterFrameEvent.ENTER_FRAME, function(event:EnterFrameEvent):void
+                var nextFrameFunction:Function = function(event:EnterFrameEvent):void
                 {
-                    trace("WARNING - Not Yet Implemented - PopUpManager ENTER_FRAME hack.");
-                    //event.currentTarget.removeEventListener(event.type, arguments.callee);
+                    event.currentTarget.removeEventListener(event.type, nextFrameFunction);
                     overlay.removeFromParent(true);
-                    //delete POPUP_TO_OVERLAY[popUp];
                     POPUP_TO_FOCUS_MANAGER[popUp] = null;
-                });
+                };
+                
+                Loom2D.stage.addEventListener(EnterFrameEvent.ENTER_FRAME, nextFrameFunction);
             }
             const focusManager:IFocusManager = POPUP_TO_FOCUS_MANAGER[popUp] as IFocusManager;
             if(focusManager)
             {
-                //delete POPUP_TO_FOCUS_MANAGER[popUp];
                 POPUP_TO_FOCUS_MANAGER[popUp] = null;
                 FocusManager.removeFocusManager(focusManager);
             }

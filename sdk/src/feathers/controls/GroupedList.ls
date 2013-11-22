@@ -1959,15 +1959,15 @@ package feathers.controls
          */
         public function groupToHeaderData(group:Object):Object
         {
+            var groupAsDictionary:Dictionary.<String, Object> = group as Dictionary.<String, Object>;
+            
             if(this._headerFunction != null)
             {
                 return this._headerFunction.call(null, group);
             }
-            else if(this._headerField != null 
-                && group 
-                && group.getType().getFieldOrPropertyValueByName(group, this._headerField) != null)
+            else if(this._headerField != null && groupAsDictionary && groupAsDictionary[_headerField] != null)
             {
-                return group.getType().getFieldOrPropertyValueByName(group, this._headerField);
+                return groupAsDictionary[_headerField];
             }
 
             return null;

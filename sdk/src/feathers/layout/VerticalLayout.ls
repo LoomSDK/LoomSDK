@@ -519,7 +519,7 @@ package feathers.layout
                 var iNormalized:int = i + indexOffset;
                 if(this._useVirtualLayout && !item)
                 {
-                    if(!this._hasVariableItemDimensions || isNaN(this._heightCache[iNormalized]))
+                    if(!this._hasVariableItemDimensions || this._heightCache.length <= iNormalized || isNaN(this._heightCache[iNormalized]))
                     {
                         positionY += this._typicalItemHeight + this._gap;
                     }
@@ -543,6 +543,11 @@ package feathers.layout
                     {
                         if(this._hasVariableItemDimensions)
                         {
+                            // TODO: Fix this. This is an ugly hack to fix ugly code. Perhaps a better data
+                            // structure than a vector is needed for this cache? <rcook 11/20/2013>
+                            
+                            if (this._heightCache.length == iNormalized) _heightCache.push( NaN );
+                            
                             if(isNaN(this._heightCache[iNormalized]))
                             {
                                 this._heightCache[iNormalized] = item.height;
@@ -789,7 +794,7 @@ package feathers.layout
             var positionY:Number = this._paddingTop;
             for(i = 0; i < itemCount; i++)
             {
-                if(isNaN(this._heightCache[i]))
+                if(this._heightCache.length <= i || isNaN(this._heightCache[i]))
                 {
                     var itemHeight:Number = this._typicalItemHeight;
                 }

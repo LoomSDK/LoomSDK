@@ -11,20 +11,20 @@ package feathers.controls.popups
     import feathers.core.PopUpManager;
     import feathers.events.FeathersEventType;
 
-    import System.Errors.IllegalOperationError;
-    import flash.events.KeyboardEvent;
-    import Loom2D.Math.Rectangle;
-    import flash.ui.Keyboard;
+    import loom2d.events.KeyboardEvent;
+    import loom2d.math.Rectangle;
 
-    import Loom2D.Loom2D;
-    import Loom2D.Display.DisplayObject;
-    import Loom2D.Display.DisplayObjectContainer;
-    import Loom2D.Events.Event;
-    import Loom2D.Events.EventDispatcher;
-    import Loom2D.Events.ResizeEvent;
-    import Loom2D.Events.Touch;
-    import Loom2D.Events.TouchEvent;
-    import Loom2D.Events.TouchPhase;
+    import loom2d.Loom2D;
+    import loom2d.display.DisplayObject;
+    import loom2d.display.DisplayObjectContainer;
+    import loom2d.events.Event;
+    import loom2d.events.EventDispatcher;
+    import loom2d.events.ResizeEvent;
+    import loom2d.events.Touch;
+    import loom2d.events.TouchEvent;
+    import loom2d.events.TouchPhase;
+    
+    import loom.platform.LoomKey;
 
     /**
      * @inheritDoc
@@ -58,10 +58,7 @@ package feathers.controls.popups
          */
         public function open(content:DisplayObject, source:DisplayObject):void
         {
-            if(this.content)
-            {
-                throw new IllegalOperationError("Pop-up content is already defined.");
-            }
+            Debug.assert( content == null, "Pop-up content is already defined." );
 
             this.content = content;
             this.source = source;
@@ -71,9 +68,9 @@ package feathers.controls.popups
                 this.content.addEventListener(FeathersEventType.RESIZE, content_resizeHandler);
             }
             this.layout();
-            Starling.current.stage.addEventListener(TouchEvent.TOUCH, stage_touchHandler);
-            Starling.current.stage.addEventListener(ResizeEvent.RESIZE, stage_resizeHandler);
-            Starling.current.nativeStage.addEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler, false, 0, true);
+            Loom2D.stage.addEventListener(TouchEvent.TOUCH, stage_touchHandler);
+            Loom2D.stage.addEventListener(ResizeEvent.RESIZE, stage_resizeHandler);
+            Loom2D.stage.addEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
         }
 
         /**
@@ -85,9 +82,9 @@ package feathers.controls.popups
             {
                 return;
             }
-            Starling.current.stage.removeEventListener(TouchEvent.TOUCH, stage_touchHandler);
-            Starling.current.stage.removeEventListener(ResizeEvent.RESIZE, stage_resizeHandler);
-            Starling.current.nativeStage.removeEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
+            Loom2D.stage.removeEventListener(TouchEvent.TOUCH, stage_touchHandler);
+            Loom2D.stage.removeEventListener(ResizeEvent.RESIZE, stage_resizeHandler);
+            Loom2D.stage.removeEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
             if(this.content is IFeathersControl)
             {
                 this.content.removeEventListener(FeathersEventType.RESIZE, content_resizeHandler);
@@ -111,7 +108,7 @@ package feathers.controls.popups
          */
         protected function layout():void
         {
-            const globalOrigin:Rectangle = this.source.getBounds(Starling.current.stage);
+            const globalOrigin:Rectangle = this.source.getBounds(Loom2D.stage);
 
             if(this.source is IFeathersControl)
             {
@@ -128,7 +125,7 @@ package feathers.controls.popups
                 this.content.width = Math.max(this.content.width, this.source.width);
             }
 
-            const downSpace:Number = (Starling.current.stage.stageHeight - this.content.height) - (globalOrigin.y + globalOrigin.height);
+            const downSpace:Number = (Loom2D.stage.stageHeight - this.content.height) - (globalOrigin.y + globalOrigin.height);
             if(downSpace >= 0)
             {
                 layoutBelow(globalOrigin);
@@ -160,7 +157,7 @@ package feathers.controls.popups
         protected function layoutAbove(globalOrigin:Rectangle):void
         {
             const idealXPosition:Number = globalOrigin.x + (globalOrigin.width - this.content.width) / 2;
-            const xPosition:Number = Math.max(0, Math.min(Starling.current.stage.stageWidth - this.content.width, idealXPosition));
+            const xPosition:Number = Math.max(0, Math.min(Loom2D.stage.stageWidth - this.content.width, idealXPosition));
             this.content.x = xPosition;
             this.content.y = globalOrigin.y - this.content.height;
         }
@@ -171,7 +168,7 @@ package feathers.controls.popups
         protected function layoutBelow(globalOrigin:Rectangle):void
         {
             const idealXPosition:Number = globalOrigin.x;
-            const xPosition:Number = Math.max(0, Math.min(Starling.current.stage.stageWidth - this.content.width, idealXPosition));
+            const xPosition:Number = Math.max(0, Math.min(Loom2D.stage.stageWidth - this.content.width, idealXPosition));
             this.content.x = xPosition;
             this.content.y = globalOrigin.y + globalOrigin.height;
         }
@@ -189,12 +186,11 @@ package feathers.controls.popups
          */
         protected function stage_keyDownHandler(event:KeyboardEvent):void
         {
-            if(event.keyCode != Keyboard.BACK && event.keyCode != Keyboard.ESCAPE)
+            if(event.keyCode != LoomKey.BUTTON_BACK && event.keyCode != LoomKey.ESCAPE)
             {
                 return;
             }
-            //don't let the OS handle the event
-            event.preventDefault();
+
             //don't let other event handlers handle the event
             event.stopImmediatePropagation();
             this.close();
@@ -227,7 +223,7 @@ package feathers.controls.popups
                 return;
             }
             //any began touch is okay here. we don't need to check all touches
-            const touch:Touch = event.getTouch(Starling.current.stage, TouchPhase.BEGAN);
+            const touch:Touch = event.getTouch(Loom2D.stage, TouchPhase.BEGAN);
             if(!touch)
             {
                 return;

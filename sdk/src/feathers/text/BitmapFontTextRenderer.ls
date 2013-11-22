@@ -114,7 +114,14 @@ package feathers.text
 
         public function get baseline():Number
         {
-            return _textFormat.font.baseline;
+            const font:BitmapFont = this._textFormat.font;
+            const formatSize:Number = this._textFormat.size;
+            const fontSizeScale:Number = isNaN(formatSize) ? 1 : (formatSize / font.size);
+            if(isNaN(font.baseline))
+            {
+                return font.lineHeight * fontSizeScale;
+            }
+            return font.baseline * fontSizeScale;            
         }
 
         public function measureText():Point

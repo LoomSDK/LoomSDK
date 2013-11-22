@@ -11,23 +11,23 @@ package feathers.controls
     import feathers.core.IFocusDisplayObject;
     import feathers.core.ITextRenderer;
     import feathers.core.IToggle;
-    import feathers.core.PropertyProxy;
     import feathers.events.FeathersEventType;
     import feathers.system.DeviceCapabilities;
 
-    import Loom2D.Math.Point;
-    import Loom2D.Math.Rectangle;
-    import flash.ui.Keyboard;
+    import loom2d.math.Point;
+    import loom2d.math.Rectangle;
 
-    import starling.animation.Transitions;
-    import starling.animation.Tween;
-    import Loom2D.Loom2D;
-    import Loom2D.Display.DisplayObject;
-    import Loom2D.Events.Event;
-    import Loom2D.Events.KeyboardEvent;
-    import Loom2D.Events.Touch;
-    import Loom2D.Events.TouchEvent;
-    import Loom2D.Events.TouchPhase;
+    import loom2d.animation.Transitions;
+    import loom2d.animation.Tween;
+    import loom2d.Loom2D;
+    import loom2d.display.DisplayObject;
+    import loom2d.events.Event;
+    import loom2d.events.KeyboardEvent;
+    import loom2d.events.Touch;
+    import loom2d.events.TouchEvent;
+    import loom2d.events.TouchPhase;
+    
+    import loom.platform.LoomKey;
 
     /**
      * @inheritDoc
@@ -749,7 +749,7 @@ package feathers.controls
          */
         public function set onText(value:String):void
         {
-            if(value === null)
+            if(value == null)
             {
                 value = "";
             }
@@ -779,7 +779,7 @@ package feathers.controls
          */
         public function set offText(value:String):void
         {
-            if(value === null)
+            if(value == null)
             {
                 value = "";
             }
@@ -1412,6 +1412,7 @@ package feathers.controls
 
             const maxLabelWidth:Number = Math.max(0, this.actualWidth - this.thumb.width - this._paddingLeft - this._paddingRight);
             var totalLabelHeight:Number = Math.max(this.onTextRenderer.height, this.offTextRenderer.height);
+            
             var labelHeight:Number;
             if(this._labelAlign == LABEL_ALIGN_MIDDLE)
             {
@@ -1458,7 +1459,7 @@ package feathers.controls
             {
                 const displayOnLabelRenderer:FeathersControl = FeathersControl(this.onTextRenderer);
                 var currentClipRect:Rectangle = displayOnLabelRenderer.clipRect;
-                currentClipRect.x = onScrollOffset
+                currentClipRect.x = onScrollOffset;
                 displayOnLabelRenderer.clipRect = currentClipRect;
             }
             this.onTextRenderer.x = this._paddingLeft - onScrollOffset;
@@ -1468,7 +1469,7 @@ package feathers.controls
             {
                 const displayOffLabelRenderer:FeathersControl = FeathersControl(this.offTextRenderer);
                 currentClipRect = displayOffLabelRenderer.clipRect;
-                currentClipRect.x = offScrollOffset
+                currentClipRect.x = offScrollOffset;
                 displayOffLabelRenderer.clipRect = currentClipRect;
             }
             this.offTextRenderer.x = this.actualWidth - this._paddingRight - maxLabelWidth - offScrollOffset;
@@ -1530,7 +1531,8 @@ package feathers.controls
                 return;
             }
 
-            var properties:PropertyProxy;
+            var properties:Dictionary.<String, Object>;
+            
             if(!this._isEnabled)
             {
                 properties = this._disabledLabelProperties;
@@ -1565,7 +1567,7 @@ package feathers.controls
                 return;
             }
 
-            var properties:PropertyProxy;
+            var properties:Dictionary.<String, Object>;
             if(!this._isEnabled)
             {
                 properties = this._disabledLabelProperties;
@@ -1582,7 +1584,7 @@ package feathers.controls
             this.offTextRenderer.text = this._offText;
             if(properties)
             {
-                Dictionary.mapToObject(properties, onTextRenderer);
+                Dictionary.mapToObject(properties, offTextRenderer);
             }
             this.offTextRenderer.validate();
             this.offTextRenderer.visible = true;
@@ -1647,10 +1649,13 @@ package feathers.controls
         /**
          * @private
          */
+        
+        /*
         protected function childProperties_onChange(proxy:PropertyProxy, name:Object):void
         {
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
+        */
 
         /**
          * @private
@@ -1718,8 +1723,9 @@ package feathers.controls
             }
 
             this._touchPointID = -1;
-            touch.getLocation(this.stage, HELPER_POINT);
-            if(this.contains(this.stage.hitTest(HELPER_POINT, true)))
+            
+            var helperPoint:Point = touch.getLocation(this.stage);
+            if(this.contains(this.stage.hitTest(helperPoint, true)))
             {
                 this.isSelected = !this._isSelected;
                 this._isSelectionChangedByUser = true;
@@ -1732,6 +1738,8 @@ package feathers.controls
          */
         protected function thumb_touchHandler(event:TouchEvent):void
         {
+            var helperPoint:Point;
+            
             if(!this._isEnabled)
             {
                 return;
@@ -1757,18 +1765,18 @@ package feathers.controls
                     HELPER_TOUCHES_VECTOR.length = 0;
                     return;
                 }
-                touch.getLocation(this, HELPER_POINT);
+                helperPoint = touch.getLocation(this);
                 const trackScrollableWidth:Number = this.actualWidth - this._paddingLeft - this._paddingRight - this.thumb.width;
                 if(touch.phase == TouchPhase.MOVED)
                 {
-                    const xOffset:Number = HELPER_POINT.x - this._touchStartX;
+                    const xOffset:Number = helperPoint.x - this._touchStartX;
                     const xPosition:Number = Math.min(Math.max(this._paddingLeft, this._thumbStartX + xOffset), this._paddingLeft + trackScrollableWidth);
                     this.thumb.x = xPosition;
                     this.layoutTracks();
                 }
                 else if(touch.phase == TouchPhase.ENDED)
                 {
-                    const inchesMoved:Number = Math.abs(HELPER_POINT.x - this._touchStartX) / DeviceCapabilities.dpi;
+                    const inchesMoved:Number = Math.abs(helperPoint.x - this._touchStartX) / DeviceCapabilities.dpi;
                     if(inchesMoved > MINIMUM_DRAG_DISTANCE)
                     {
                         this._touchPointID = -1;
@@ -1784,10 +1792,10 @@ package feathers.controls
                 {
                     if(touch.phase == TouchPhase.BEGAN)
                     {
-                        touch.getLocation(this, HELPER_POINT);
+                        helperPoint = touch.getLocation(this);
                         this._touchPointID = touch.id;
                         this._thumbStartX = this.thumb.x;
-                        this._touchStartX = HELPER_POINT.x;
+                        this._touchStartX = helperPoint.x;
                         break;
                     }
                 }
@@ -1800,11 +1808,11 @@ package feathers.controls
          */
         protected function stage_keyDownHandler(event:KeyboardEvent):void
         {
-            if(event.keyCode == Keyboard.ESCAPE)
+            if(event.keyCode == LoomKey.ESCAPE)
             {
                 this._touchPointID = -1;
             }
-            if(this._touchPointID >= 0 || event.keyCode != Keyboard.SPACE)
+            if(this._touchPointID >= 0 || event.keyCode != LoomKey.SPACEBAR)
             {
                 return;
             }
@@ -1816,7 +1824,7 @@ package feathers.controls
          */
         protected function stage_keyUpHandler(event:KeyboardEvent):void
         {
-            if(this._touchPointID != int.MAX_VALUE || event.keyCode != Keyboard.SPACE)
+            if(this._touchPointID != int.MAX_VALUE || event.keyCode != LoomKey.SPACEBAR)
             {
                 return;
             }

@@ -7,7 +7,7 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.controls.popups
 {
-    import Loom2D.Display.DisplayObject;
+    import loom2d.display.DisplayObject;
 
     /**
      * Dispatched when the pop-up content closes.
