@@ -95,6 +95,7 @@ static inline cpFloat cpBBMergedArea(cpBB a, cpBB b)
 static inline cpFloat cpBBSegmentQuery(cpBB bb, cpVect a, cpVect b)
 {
 	cpFloat idx = 1.0f/(b.x - a.x);
+#pragma warning( disable : 4056 )
 	cpFloat tx1 = (bb.l == a.x ? -INFINITY : (bb.l - a.x)*idx);
 	cpFloat tx2 = (bb.r == a.x ?  INFINITY : (bb.r - a.x)*idx);
 	cpFloat txmin = cpfmin(tx1, tx2);

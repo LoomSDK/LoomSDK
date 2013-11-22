@@ -765,8 +765,12 @@ extern ALint RTPrioLevel;
 
 // Windows hacks.
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
-#define strdup(x) _strdup(x)
+
+#ifndef isfinite
 #define isfinite(_a) _finite(_a)
+#endif
+
+#define strdup(x) _strdup(x)
 #define strncasecmp _strnicmp
 #define snprintf sprintf_s
 #define strcasecmp lstrcmpiA

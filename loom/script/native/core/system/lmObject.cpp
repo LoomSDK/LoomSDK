@@ -27,7 +27,7 @@
 
 // Workaround for no NAN on Windows.
 // From http://tdistler.com/2011/03/24/how-to-define-nan-not-a-number-on-windows
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(INFINITE) && !defined(NAN)
 #define INFINITY    (DBL_MAX + DBL_MAX)
 #define NAN         (INFINITY - INFINITY)
 #endif

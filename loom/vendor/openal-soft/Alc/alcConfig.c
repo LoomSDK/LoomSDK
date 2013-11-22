@@ -42,7 +42,11 @@
 // Windows hacks.
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 #define strdup(x) _strdup(x)
+
+#ifndef isfinite
 #define isfinite(_a) _finite(_a)
+#endif
+
 #endif
 
 typedef struct ConfigEntry {
