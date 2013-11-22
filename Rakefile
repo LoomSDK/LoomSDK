@@ -97,7 +97,7 @@ end
 
 # For matz's sake just include rubyzip directly.
 path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'lib'))
-puts "Adding #{path} to $LOAD_PATH to work around rubyzip retardation."
+puts "Adding #{path} to $LOAD_PATH to work around rubyzip issues."
 $LOAD_PATH << path
 require 'zip'
 require 'zip/file'
