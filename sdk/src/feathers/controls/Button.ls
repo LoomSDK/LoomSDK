@@ -52,7 +52,7 @@ package feathers.controls
      *
      * ~~~as3
      * var button:Button = new Button();
-     * button.label = "Click Me";
+     * button.label = "Click Me!";
      * button.addEventListener( Event.TRIGGERED, button_triggeredHandler );
      * this.addChild( button );
      * ~~~
