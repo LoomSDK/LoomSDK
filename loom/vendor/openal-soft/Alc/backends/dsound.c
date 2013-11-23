@@ -231,7 +231,6 @@ static BOOL CALLBACK DSoundEnumCaptureDevices(LPGUID guid, LPCSTR desc, LPCSTR d
     return TRUE;
 }
 
-
 static ALuint DSoundPlaybackProc(ALvoid *ptr)
 {
     ALCdevice *pDevice = (ALCdevice*)ptr;

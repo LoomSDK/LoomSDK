@@ -338,6 +338,13 @@ public:
         CHECK_OPENAL_ERROR();
     }
 
+    float getGain()
+    {
+        float v = 1.f;
+        alGetSourcefv(source, AL_GAIN, &v);
+        return v;
+    }
+
     void setLooping(bool loop)
     {
 		ALCenum err;
@@ -471,6 +478,13 @@ public:
         CHECK_OPENAL_ERROR();
     }
 
+    static float getGain()
+    {
+        float v = 1.f;
+        alGetListenerfv(AL_GAIN, &v);
+        return v;
+    }
+
     static void setPosition(float x, float y, float z)
     {
 		ALCenum err;
@@ -509,6 +523,7 @@ static int registerLoomSoundSound(lua_State *L)
 
        .addMethod("setFalloffRadius", &Sound::setFalloffRadius)
        .addMethod("setGain", &Sound::setGain)
+       .addMethod("getGain", &Sound::getGain)
 
        .addMethod("setLooping", &Sound::setLooping)
        .addMethod("setPitch", &Sound::setPitch)
@@ -532,6 +547,7 @@ static int registerLoomSoundListener(lua_State *L)
 
        .beginClass<Listener>("Listener")
        .addStaticMethod("setGain", &Listener::setGain)
+       .addStaticMethod("getGain", &Listener::getGain)
        .addStaticMethod("setPosition", &Listener::setPosition)
        .addStaticMethod("setVelocity", &Listener::setVelocity)
        .addStaticMethod("setOrientation", &Listener::setOrientation)
