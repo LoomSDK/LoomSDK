@@ -196,17 +196,8 @@ static int fesetround(int rounding_mode)
 /* Define if we have pthread_setschedparam() */
 #define HAVE_PTHREAD_SETSCHEDPARAM
 
-#if LOOM_PLATFORM_IS_APPLE == 1
-
 /* Define if we have the restrict keyword */
-#define HAVE_RESTRICT
+#undef HAVE_RESTRICT
 
 /* Define if we have the __restrict keyword */
-#define HAVE___RESTRICT
-
-#else
-
-#undef HAVE_RESTRICT
 #undef HAVE___RESTRICT
-
-#endif

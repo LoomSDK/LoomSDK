@@ -109,10 +109,19 @@ static __inline int sched_yield(void)
 #define IsBadWritePtr(a,b) ((a) == NULL && (b) != 0)
 
 typedef pthread_mutex_t CRITICAL_SECTION;
+
+#if LOOM_PLATFORM != LOOM_PLATFORM_WIN32 && defined(__cplusplus)
+extern "C" {
+#endif
+
 void InitializeCriticalSection(CRITICAL_SECTION *cs);
 void DeleteCriticalSection(CRITICAL_SECTION *cs);
 void EnterCriticalSection(CRITICAL_SECTION *cs);
 void LeaveCriticalSection(CRITICAL_SECTION *cs);
+
+#if LOOM_PLATFORM != LOOM_PLATFORM_WIN32 && defined(__cplusplus)
+};
+#endif
 
 ALuint timeGetTime(void);
 void Sleep(ALuint t);
