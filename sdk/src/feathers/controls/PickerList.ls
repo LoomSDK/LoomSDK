@@ -151,7 +151,7 @@ package feathers.controls
         protected var _dataProvider:ListCollection;
         
         /**
-         * @copy List#dataProvider
+         * @copy feathers.controls.List#dataProvider
          */
         public function get dataProvider():ListCollection
         {
@@ -185,7 +185,7 @@ package feathers.controls
         protected var _selectedIndex:int = -1;
         
         /**
-         * @copy List#selectedIndex
+         * @copy feathers.controls.List#selectedIndex
          */
         public function get selectedIndex():int
         {
@@ -207,7 +207,7 @@ package feathers.controls
         }
         
         /**
-         * @copy List#selectedItem
+         * @copy feathers.controls.List#selectedItem
          */
         public function get selectedItem():Object
         {
