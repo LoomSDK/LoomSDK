@@ -56,7 +56,11 @@ module Zip
 
     def pack_for_c_dir
       # central directory entries contain only fields that didn't fit in the main entry part
-      packed = ''.force_encoding('BINARY')
+      if ''.respond_to?(:force_encoding)
+        packed = ''.force_encoding('BINARY') 
+      else
+        packed = ''
+      end
       packed << [@original_size].pack("Q<") if @original_size
       packed << [@compressed_size].pack("Q<") if @compressed_size
       packed << [@relative_header_offset].pack("Q<") if @relative_header_offset
