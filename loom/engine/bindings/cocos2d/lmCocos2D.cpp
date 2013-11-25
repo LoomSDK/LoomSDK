@@ -197,51 +197,12 @@ static int registerCocos2D(lua_State *L)
 
 using namespace cocos2d;
 
-static int registerSimpleAudioEngine(lua_State *L)
-{
-/*    beginPackage(L, "loom.sound")
-
-       .beginClass<CocosDenshion::SimpleAudioEngine>("SimpleAudioEngine")
-
-       .addStaticMethod("sharedEngine", &CocosDenshion::SimpleAudioEngine::sharedEngine)
-       .addStaticMethod("end", &CocosDenshion::SimpleAudioEngine::end)
-       .addMethod("playBackgroundMusic", &CocosDenshion::SimpleAudioEngine::playBackgroundMusic)
-       .addMethod("preloadBackgroundMusic", &CocosDenshion::SimpleAudioEngine::preloadBackgroundMusic)
-       .addMethod("stopBackgroundMusic", &CocosDenshion::SimpleAudioEngine::stopBackgroundMusic)
-       .addMethod("pauseBackgroundMusic", &CocosDenshion::SimpleAudioEngine::pauseBackgroundMusic)
-       .addMethod("resumeBackgroundMusic", &CocosDenshion::SimpleAudioEngine::resumeBackgroundMusic)
-       .addMethod("rewindBackgroundMusic", &CocosDenshion::SimpleAudioEngine::rewindBackgroundMusic)
-       .addMethod("willPlayBackgroundMusic", &CocosDenshion::SimpleAudioEngine::willPlayBackgroundMusic)
-       .addMethod("isBackgroundMusicPlaying", &CocosDenshion::SimpleAudioEngine::isBackgroundMusicPlaying)
-       .addMethod("getBackgroundMusicVolume", &CocosDenshion::SimpleAudioEngine::getBackgroundMusicVolume)
-       .addMethod("setBackgroundMusicVolume", &CocosDenshion::SimpleAudioEngine::setBackgroundMusicVolume)
-       .addMethod("getEffectsVolume", &CocosDenshion::SimpleAudioEngine::getEffectsVolume)
-       .addMethod("setEffectsVolume", &CocosDenshion::SimpleAudioEngine::setEffectsVolume)
-       .addMethod("playEffect", &CocosDenshion::SimpleAudioEngine::playEffect)
-       .addMethod("pauseEffect", &CocosDenshion::SimpleAudioEngine::pauseEffect)
-       .addMethod("pauseAllEffects", &CocosDenshion::SimpleAudioEngine::pauseAllEffects)
-       .addMethod("resumeEffect", &CocosDenshion::SimpleAudioEngine::resumeEffect)
-       .addMethod("resumeAllEffects", &CocosDenshion::SimpleAudioEngine::resumeAllEffects)
-       .addMethod("stopEffect", &CocosDenshion::SimpleAudioEngine::stopEffect)
-       .addMethod("stopAllEffects", &CocosDenshion::SimpleAudioEngine::stopAllEffects)
-       .addMethod("preloadEffect", &CocosDenshion::SimpleAudioEngine::preloadEffect)
-       .addMethod("unloadEffect", &CocosDenshion::SimpleAudioEngine::unloadEffect)
-
-       .endClass()
-
-       .endPackage();
-*/
-    return 0;
-}
-
-
 void installPackage();
 
 void installPackageCocos2DX()
 {
     // Register some bindings for Cocos.
     LOOM_DECLARE_NATIVETYPE(LoomCocos2d, registerCocos2D);
-    //LOOM_DECLARE_NATIVETYPE(CocosDenshion::SimpleAudioEngine, registerSimpleAudioEngine);
 
     installPackage();
 }
