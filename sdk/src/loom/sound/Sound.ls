@@ -25,6 +25,9 @@ package loom.sound
      * steal from old Sounds which are not playing. This will keep things running
      * smoothly, but can lead to absent/silent sounds.
      *
+     * See the PositionalAudioExample for a great example of using the Sound and
+     * Listener classes.
+     *
      * @see Listener
      */
     public native class Sound

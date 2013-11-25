@@ -21,9 +21,14 @@ limitations under the License.
 package loom.sound
 {
     /**
-    @class          SimpleAudioEngine
-    @brief          offer a VERY simple interface to play background music & sound effect
-    */
+     * A VERY simple interface to play background music & sound effects.
+     *
+     * This is implemented on top of Sound and Listener to allow easy sound
+     * playback. Sometimes you just want to play a sound!
+     *
+     * @see Sound
+     * @see Listener
+     */
     public class SimpleAudioEngine
     {
         // TODO: Disallow explicit creation of this class.
@@ -35,7 +40,7 @@ package loom.sound
 
 
         /**
-        @brief Get the shared Engine object,it will new one when first time be called
+        Get the shared Engine object,it will new one when first time be called
         */
         public static function sharedEngine():SimpleAudioEngine
         {
@@ -45,7 +50,7 @@ package loom.sound
         }
 
         /**
-        @brief Release the shared Engine object
+        Release the shared Engine object
         @warning It must be called before the application exit, or a memroy leak will be casued.
         */
         public static function end():void
@@ -54,7 +59,7 @@ package loom.sound
         }
 
         /**
-        @brief Preload background music
+        Preload background music
         @param pszFilePath The path of the background music file,or the FileName of T_SoundResInfo
         */
         public function preloadBackgroundMusic(path:String):void
@@ -65,7 +70,7 @@ package loom.sound
         }
 
         /**
-        @brief Play background music
+        Play background music
         @param pszFilePath The path of the background music file,or the FileName of T_SoundResInfo
         @param bLoop Whether the background music loop or not
         */
@@ -80,8 +85,8 @@ package loom.sound
         }
 
         /**
-        @brief Stop playing background music
-        @param bReleaseData If release the background music data or not.As default value is false
+        Stop playing background music
+        @param release If release the background music data or not. As default value is false
         */
         public function stopBackgroundMusic(release:Boolean):void
         {
@@ -90,7 +95,7 @@ package loom.sound
         }
 
         /**
-        @brief Pause playing background music
+        Pause playing background music
         */
         public function pauseBackgroundMusic():void
         {
@@ -99,7 +104,7 @@ package loom.sound
         }
 
         /**
-        @brief Resume playing background music
+        Resume playing background music
         */
         public function resumeBackgroundMusic():void
         {
@@ -108,7 +113,7 @@ package loom.sound
         }
 
         /**
-        @brief Rewind playing background music
+        Rewind playing background music
         */
         public function rewindBackgroundMusic():void
         {
@@ -122,7 +127,7 @@ package loom.sound
         }
 
         /**
-        @brief Whether the background music is playing
+        Whether the background music is playing
         @return If is playing return true,or return false
         */
         public function isBackgroundMusicPlaying():Boolean
@@ -131,7 +136,7 @@ package loom.sound
         }
 
         /**
-        @brief The volume of the background music max value is 1.0,the min value is 0.0
+        The volume of the background music max value is 1.0,the min value is 0.0
         */
         public function getBackgroundMusicVolume():Number
         {
@@ -141,7 +146,7 @@ package loom.sound
         }
 
         /**
-        @brief set the volume of background music
+        set the volume of background music
         @param volume must be in 0.0~1.0
         */
         public function setBackgroundMusicVolume(volume:Number):void
@@ -151,7 +156,7 @@ package loom.sound
         }
 
         /**
-        @brief The volume of the effects max value is 1.0,the min value is 0.0
+        The volume of the effects max value is 1.0,the min value is 0.0
         */
         public function getEffectsVolume():Number
         {
@@ -159,7 +164,7 @@ package loom.sound
         }
 
         /**
-        @brief set the volume of sound effecs
+        set the volume of sound effecs
         @param volume must be in 0.0~1.0
         */
         public function setEffectsVolume(volume:Number):void
@@ -168,9 +173,9 @@ package loom.sound
         }
 
         /**
-        @brief Play sound effect
-        @param pszFilePath The path of the effect file,or the FileName of T_SoundResInfo
-        @bLoop Whether to loop the effect playing, default value is false
+        Play sound effect
+        @param filePath The path of the effect file,or the FileName of T_SoundResInfo
+        @param loop Whether to loop the effect playing, default value is false
         */
         public function playEffect(path:String, loop:Boolean = false):int
         {
@@ -184,8 +189,8 @@ package loom.sound
         }
 
         /**
-        @brief Pause playing sound effect
-        @param nSoundId The return value of function playEffect
+        Pause playing sound effect
+        @param soundId The return value of function playEffect
         */
         public function pauseEffect(soundId:int):void
         {
@@ -193,7 +198,7 @@ package loom.sound
         }
 
         /**
-        @brief Pause all playing sound effect
+        Pause all playing sound effect
         */
         public function pauseAllEffects():void
         {
@@ -202,8 +207,8 @@ package loom.sound
         }
 
         /**
-        @brief Resume playing sound effect
-        @param nSoundId The return value of function playEffect
+        Resume playing sound effect
+        @param soundId The return value of function playEffect
         */
         public function resumeEffect(soundId:int):void
         {
@@ -211,7 +216,7 @@ package loom.sound
         }
 
         /**
-        @brief Resume all playing sound effect
+        Resume all playing sound effect
         */
         public function resumeAllEffects():void
         {
@@ -220,8 +225,8 @@ package loom.sound
         }
 
         /**
-        @brief Stop playing sound effect
-        @param nSoundId The return value of function playEffect
+        Stop playing sound effect
+        @param soundId The return value of function playEffect
         */
         public function stopEffect(soundId:int):void
         {
@@ -229,7 +234,7 @@ package loom.sound
         }
 
         /**
-        @brief Stop all playing sound effects
+        Stop all playing sound effects
         */
         public function stopAllEffects():void
         {
@@ -238,9 +243,7 @@ package loom.sound
         }
 
         /**
-        @brief          preload a compressed audio file
-        @details        the compressed audio will be decode to wave, then write into an 
-        internal buffer in SimpleaudioEngine
+         preload an audio file for quicker playback.
         */
         public function preloadEffect(path:String):void
         {
@@ -250,8 +253,8 @@ package loom.sound
         }
 
         /**
-        @brief          unload the preloaded effect from internal buffer
-        @param[in]        pszFilePath        The path of the effect file,or the FileName of T_SoundResInfo
+                 unload the preloaded effect from internal buffer
+        @param        pszFilePath        The path of the effect file,or the FileName of T_SoundResInfo
         */
         public function unloadEffect(path:string):void
         {
