@@ -160,15 +160,7 @@ package feathers.controls
         /**
          * @private
          */
-        protected static const DIRECTION_TO_FUNCTION:Dictionary.<String, Function> = {
-            DIRECTION_ANY: positionBestSideOfOrigin,
-            DIRECTION_UP: positionAboveOrigin,
-            DIRECTION_DOWN: positionBelowOrigin,
-            DIRECTION_LEFT: positionToLeftOfOrigin,
-            DIRECTION_RIGHT: positionToRightOfOrigin,
-            DIRECTION_VERTICAL: positionAboveOrBelowOrigin,
-            DIRECTION_HORIZONTAL: positionToLeftOrRightOfOrigin
-        };
+        protected static const DIRECTION_TO_FUNCTION:Dictionary.<String, Function> = {};
 
         /**
          * The padding between a callout and the top edge of the stage when the
@@ -570,6 +562,17 @@ package feathers.controls
          */
         public function Callout()
         {
+            if ( DIRECTION_TO_FUNCTION.length == 0 )
+            {
+                DIRECTION_TO_FUNCTION[DIRECTION_ANY] = positionBestSideOfOrigin;
+                DIRECTION_TO_FUNCTION[DIRECTION_UP] = positionAboveOrigin;
+                DIRECTION_TO_FUNCTION[DIRECTION_DOWN] = positionBelowOrigin;
+                DIRECTION_TO_FUNCTION[DIRECTION_LEFT] = positionToLeftOfOrigin;
+                DIRECTION_TO_FUNCTION[DIRECTION_RIGHT] = positionToRightOfOrigin;
+                DIRECTION_TO_FUNCTION[DIRECTION_VERTICAL] = positionAboveOrBelowOrigin;
+                DIRECTION_TO_FUNCTION[DIRECTION_HORIZONTAL] = positionToLeftOrRightOfOrigin;
+            }
+                            
             this.addEventListener(Event.ADDED_TO_STAGE, callout_addedToStageHandler);
         }
 
