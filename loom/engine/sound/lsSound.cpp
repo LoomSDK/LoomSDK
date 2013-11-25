@@ -438,7 +438,8 @@ void OALBufferManager::soundUpdater(void *payload, const char *name)
         }
         else
         {
-            walk->needsRestart = 1; // Updated this scan, no play needed.
+			alSourcei(walk->source, AL_BUFFER, 0);
+			walk->needsRestart = 1; // Updated this scan, no play needed.
         }
 
         walk = walk->next;
