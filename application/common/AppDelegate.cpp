@@ -67,6 +67,8 @@ void AppDelegate::applicationDidEnterBackground()
 {
     NativeDelegate::markMainThread();
     LoomApplication::applicationDeactivated.invoke();
+
+    // Revisit this under LOOM-1822
     //CocosDenshion::SimpleAudioEngine::sharedEngine()->pauseBackgroundMusic();
     //CocosDenshion::SimpleAudioEngine::sharedEngine()->pauseAllEffects();
     CCDirector::sharedDirector()->stopAnimation();
@@ -77,6 +79,8 @@ void AppDelegate::applicationWillEnterForeground()
 {
     NativeDelegate::markMainThread();
     CCDirector::sharedDirector()->startAnimation();
+    
+    // Revisit this under LOOM-1822
     //CocosDenshion::SimpleAudioEngine::sharedEngine()->resumeBackgroundMusic();
     //CocosDenshion::SimpleAudioEngine::sharedEngine()->resumeAllEffects();
     LoomApplication::applicationActivated.invoke();
