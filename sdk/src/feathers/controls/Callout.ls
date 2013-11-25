@@ -768,7 +768,7 @@ package feathers.controls
             }
             if(this._origin)
             {
-                this.removeEventListener(EnterFrameEvent.ENTER_FRAME, callout_enterFrameHandler);
+                Loom2D.stage.removeEventListener(EnterFrameEvent.ENTER_FRAME, callout_enterFrameHandler);
                 this._origin.removeEventListener(Event.REMOVED_FROM_STAGE, origin_removedFromStageHandler);
             }
             this._origin = value;
@@ -776,7 +776,7 @@ package feathers.controls
             if(this._origin)
             {
                 this._origin.addEventListener(Event.REMOVED_FROM_STAGE, origin_removedFromStageHandler);
-                this.addEventListener(EnterFrameEvent.ENTER_FRAME, callout_enterFrameHandler);
+                Loom2D.stage.addEventListener(EnterFrameEvent.ENTER_FRAME, callout_enterFrameHandler);
             }
             this.invalidate(INVALIDATION_FLAG_ORIGIN);
         }

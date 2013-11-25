@@ -21,6 +21,8 @@ package feathers.controls
 
     import loom2d.events.Event;
     import loom2d.events.KeyboardEvent;
+    
+    import loom2d.Loom2D;
 
     /**
      * Dispatched when the selected item changes.
@@ -660,12 +662,11 @@ package feathers.controls
         {
             if(this._layout)
             {
-                var l = this._layout;
+                Loom2D.juggler.delayCall( Object( this._layout ).deleteNative, 0.1 );
                 this._layout = null;
             }
             this.dataProvider = null;
             super.dispose();
-            if(l) (l as Object).deleteNative();
         }
         
         /**

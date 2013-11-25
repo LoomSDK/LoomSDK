@@ -23,6 +23,7 @@ package feathers.core
     import loom2d.display.DisplayObject;
     import loom2d.display.Sprite;
     import loom2d.events.Event;
+    import loom2d.Loom2D;
 
     /**
      * Dispatched after initialize() has been called, but before the first time
@@ -212,13 +213,11 @@ package feathers.core
         {
             if(this.layoutData)
             {
-                var ld = this.layoutData;
+                Loom2D.juggler.delayCall( Object( this.layoutData ).deleteNative, 0.1 );
                 this.layoutData = null;
             }
 
             super.dispose();
-
-            if(ld) (ld as Object).deleteNative();
         }
 
         /**
