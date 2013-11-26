@@ -28,7 +28,8 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.opengl.GLSurfaceView;
 
-public class Cocos2dxRenderer implements GLSurfaceView.Renderer {
+public class Cocos2dxRenderer implements GLSurfaceView.Renderer 
+{
 	private final static long NANOSECONDSPERSECOND = 1000000000L;
 	private final static long NANOSECONDSPERMINISECOND = 1000000;
 	private static long animationInterval = (long)(1.0 / 60 * NANOSECONDSPERSECOND);
@@ -61,12 +62,18 @@ public class Cocos2dxRenderer implements GLSurfaceView.Renderer {
     	// or there is a "ghost"
     	nativeRender();   	
    	
-    	// fps controlling
-    	if (interval < animationInterval){ 
-    		try {
+    	// FPS throttle.
+    	if (interval < animationInterval)
+        {
+    		try 
+            {
     			// because we render it before, so we should sleep twice time interval
     			Thread.sleep((animationInterval - interval) * 2 / NANOSECONDSPERMINISECOND);
-    		} catch (Exception e){}
+    		} 
+            catch (Exception e)
+            {
+
+            }
     	}	
     	
     	last = now;

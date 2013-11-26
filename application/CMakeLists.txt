@@ -113,10 +113,10 @@ if (APPLE)
           "-framework SystemConfiguration"
           "-framework AdSupport"
 
-          # For CocosDenshion
+          # For Audio
           "-framework AVFoundation"
           "-framework AudioToolbox"
-          "-framework OpenAL"  
+          "-framework CoreAudio"
 
           # Admob SDK
           ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a
@@ -149,10 +149,11 @@ if (APPLE)
            "-framework OpenGL"
            "-framework WebKit"
 
-          # For CocosDenshion
+          # For Audio
           "-framework AudioToolbox"
-          "-framework OpenAL"  
-        )
+          "-framework AudioUnit"
+          "-framework CoreAudio"
+          )
 
         # Use our own Info.plist.
         set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/osx/Info.plist")

@@ -9,6 +9,9 @@ include_directories(
     telemetry-01052012/include
     chipmunk-physics/include/chipmunk
     jemalloc-3.4.0/include
+    openal-soft/include
+    openal-soft/OpenAL32/Include
+    minimp3
 )
 
 add_definitions(-DCURL_STATICLIB)
@@ -455,6 +458,7 @@ set (STB_HDR
 
 set (STB_SRC
     stb/stb_image.c
+    stb/stb_vorbis.c
 )
 
 set (GELDREICH_HDR
@@ -500,6 +504,63 @@ set (JEMALLOC_SRC
     ${JEMALLOC_ROOT}/src/zone.c
 )
 
+set(OPENALSOFT_ROOT openal-soft)
+set(OPENALSOFT_SRC
+    ${OPENALSOFT_ROOT}/Alc/backends/wave.c
+    ${OPENALSOFT_ROOT}/Alc/backends/null.c
+    ${OPENALSOFT_ROOT}/Alc/backends/loopback.c
+    ${OPENALSOFT_ROOT}/Alc/ALc.c
+    ${OPENALSOFT_ROOT}/Alc/alcConfig.c
+    ${OPENALSOFT_ROOT}/Alc/alcDedicated.c
+    ${OPENALSOFT_ROOT}/Alc/alcEcho.c
+    ${OPENALSOFT_ROOT}/Alc/alcModulator.c
+    ${OPENALSOFT_ROOT}/Alc/alcReverb.c
+    ${OPENALSOFT_ROOT}/Alc/alcRing.c
+    ${OPENALSOFT_ROOT}/Alc/alcThread.c
+    ${OPENALSOFT_ROOT}/Alc/ALu.cpp
+    ${OPENALSOFT_ROOT}/Alc/bs2b.c
+    ${OPENALSOFT_ROOT}/Alc/helpers.c
+    ${OPENALSOFT_ROOT}/Alc/hrtf.c
+    ${OPENALSOFT_ROOT}/Alc/mixer.c
+    ${OPENALSOFT_ROOT}/Alc/panning.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alAuxEffectSlot.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alBuffer.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alEffect.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alError.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alExtension.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alFilter.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alListener.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alSource.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alState.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alThunk.c
+)
+
+if(APPLE)
+    set(OPENALSOFT_SRC
+        ${OPENALSOFT_SRC}
+        ${OPENALSOFT_ROOT}/Alc/backends/coreaudio.c
+    )
+endif()
+
+if(ANDROID)
+    set(OPENALSOFT_SRC
+        ${OPENALSOFT_SRC}
+        ${OPENALSOFT_ROOT}/Alc/backends/android.cpp
+    )
+endif()
+
+if(MSVC)
+    set(OPENALSOFT_SRC
+        ${OPENALSOFT_SRC}
+        ${OPENALSOFT_ROOT}/Alc/backends/dsound.c
+    )
+endif()
+
+set(MINIMP3_ROOT minimp3)
+set(MINIMP3_SRC
+    ${MINIMP3_ROOT}/minimp3.c
+)
+
 if (MSVC)
 
     set (GLEW_HDR )
@@ -542,6 +603,8 @@ set (ALL_FILES
     ${GLEW_HDR} ${GLEW_SRC}
     ${GELDREICH_HDR} ${GELDREICH_SRC}
     ${JEMALLOC_SRC}
+    ${OPENALSOFT_SRC}
+    ${MINIMP3_SRC}
 )
 
 if (MSVC)

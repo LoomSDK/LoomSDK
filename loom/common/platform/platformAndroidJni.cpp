@@ -36,12 +36,10 @@
 
 static loom_logGroup_t jniLogGroup = { "jni", 1 };
 
-
 void loom_set_javavm(void *vm)
 {
     LoomJni::setJavaVM((JavaVM *)vm);
 }
-
 
 extern "C"
 {

@@ -98,6 +98,8 @@ set (ENGINE_SRC
     physics/lsPhysics.cpp
     physics/lsPhysicsPackage.cpp
 
+    sound/lsSound.cpp
+    sound/lsSoundPackage.cpp
 )
 
 if (APPLE)
@@ -125,12 +127,6 @@ if (APPLE)
         cocos2dx/platform/ios/FontLabel/ZFont.m
         
         cocos2dx/platform/ios/Simulation/AccelerometerSimulation.m
-
-        CocosDenshion/ios/CDAudioManager.m
-        CocosDenshion/ios/CDOpenALSupport.m
-        CocosDenshion/ios/CocosDenshion.m
-        CocosDenshion/ios/SimpleAudioEngine_objc.m
-        CocosDenshion/ios/SimpleAudioEngine.mm
     )
 
     else()
@@ -147,13 +143,6 @@ if (APPLE)
             cocos2dx/platform/mac/CCThread.mm
             cocos2dx/platform/mac/CCWindow.m
             cocos2dx/platform/mac/EAGLView.mm
-
-            CocosDenshion/mac/CDAudioManager.m
-            CocosDenshion/mac/CDOpenALSupport.m
-            CocosDenshion/mac/CDXMacOSXSupport.mm
-            CocosDenshion/mac/CocosDenshion.m
-            CocosDenshion/mac/SimpleAudioEngine_objc.m
-            CocosDenshion/mac/SimpleAudioEngine.mm
             
             )
     endif()
@@ -178,12 +167,7 @@ set (ENGINE_SRC
     cocos2dx/platform/android/jni/SensorJni.cpp
     cocos2dx/platform/android/jni/SystemInfoJni.cpp
     cocos2dx/platform/android/jni/TouchesJni.cpp
-    
-    CocosDenshion/android/SimpleAudioEngine.cpp
-    CocosDenshion/android/jni/SimpleAudioEngineJni.cpp 
-    CocosDenshion/android/opensl/OpenSLEngine.cpp 
-	CocosDenshion/android/opensl/SimpleAudioEngineOpenSL.cpp
-    
+        
 )
 endif(ANDROID)
 
@@ -201,9 +185,6 @@ set (ENGINE_SRC
     cocos2dx/platform/linux/CCImage.cpp
     cocos2dx/platform/linux/CCStdC.cpp
 
-    CocosDenshion/linux/SimpleAudioEngine.cpp
-    #CocosDenshion/linux/FmodAudioPlayer.cpp
-    
 )
 endif(LINUX)
 
@@ -229,15 +210,8 @@ set (ENGINE_SRC
     cocos2dx/platform/win32/CCFileUtils.cpp
     cocos2dx/platform/win32/CCImage.cpp
     cocos2dx/platform/win32/CCStdC.cpp
-
-    CocosDenshion/win32/SimpleAudioEngine.cpp
-    CocosDenshion/win32/MciPlayer.cpp
-    
+   
 )
-
-#for cocosdenshion
-add_definitions(-DIGNORE_EXPORT)
-
 endif()
 
 

@@ -42,12 +42,11 @@ import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.content.Intent;
 import android.graphics.Rect;
+import android.media.AudioManager;
 
 import co.theengine.loomdemo.billing.LoomStore;
 
 import com.dolby.DolbyAudio;
-
-
 
 public class LoomDemo extends Cocos2dxActivity {
 
@@ -154,12 +153,14 @@ public class LoomDemo extends Cocos2dxActivity {
         // ...add to FrameLayout
         framelayout.addView(edittext);
 
+        // Make sure we control volume properly.
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
         // Cocos2dxGLSurfaceView
         mGLView = new Cocos2dxGLSurfaceView(this);
 
         // ...add to FrameLayout
         framelayout.addView(mGLView);
-
         framelayout.addView(webViewGroup);
 
         mGLView.setEGLContextClientVersion(2);

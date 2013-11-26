@@ -38,6 +38,7 @@
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetProtocol.h"
 #include "loom/common/assets/assetsImage.h"
+#include "loom/common/assets/assetsSound.h"
 #include "loom/common/assets/assetsScript.h"
 
 #include <jansson.h>
@@ -332,6 +333,7 @@ void loom_asset_initialize(const char *rootUri)
     loom_asset_registerType(LATText, loom_asset_textDeserializer, loom_asset_textRecognizer);
 
     loom_asset_registerImageAsset();
+    loom_asset_registerSoundAsset();
     loom_asset_registerScriptAsset();
 
     // Listen to log and send it if we have a connection.

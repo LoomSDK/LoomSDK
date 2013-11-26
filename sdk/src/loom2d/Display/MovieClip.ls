@@ -11,7 +11,6 @@
 package loom2d.display
 {
     import system.errors.IllegalOperationError;
-    //import flash.media.Sound;
     import loom.sound.SimpleAudioEngine;
     
     import loom2d.animation.IAnimatable;
@@ -259,7 +258,7 @@ package loom2d.display
                     }
                     
                     var sound:String = mSounds[mCurrentFrame];
-                    //if (sound) sound.play();
+
                     if(sound) SimpleAudioEngine.sharedEngine().playEffect(sound);
                     if (breakAfterFrame) break;
                 }
