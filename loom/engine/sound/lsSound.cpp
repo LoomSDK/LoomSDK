@@ -36,13 +36,13 @@ lmDefineLogGroup(gLoomSoundLogGroup, "loom.sound", 1, LoomLogInfo);
 
 // Nop for now
 #define CHECK_OPENAL_ERROR() \
-	err = alcGetError(dev); if (err != 0) lmLogError(gLoomSoundLogGroup, "OpenAL error %d %s:%d",err, __FILE__, __LINE__); 
+    err = alcGetError(dev); if (err != 0) lmLogError(gLoomSoundLogGroup, "OpenAL error %d %s:%d",err, __FILE__, __LINE__); 
 
 extern "C"
 {
     void loomsound_init()
     {
-		ALCenum err;
+        ALCenum err;
 
         dev = alcOpenDevice(NULL);
         if(!dev)
@@ -82,7 +82,7 @@ extern "C"
         alListenerfv(AL_ORIENTATION, listenerOri);
         CHECK_OPENAL_ERROR();
 
-		lmLogInfo(gLoomSoundLogGroup, "Loom Sound engine OpenAL '%s' initialized.", alcGetString(dev, ALC_ALL_DEVICES_SPECIFIER));
+        lmLogInfo(gLoomSoundLogGroup, "Loom Sound engine OpenAL '%s' initialized.", alcGetString(dev, ALC_ALL_DEVICES_SPECIFIER));
     }
 
     void loomsound_shutdown()
@@ -121,7 +121,7 @@ public:
 
     static ALuint getBufferForAsset(const char *assetPath)
     {
-		ALCenum err;
+        ALCenum err;
 
         // If we don't have it, create a new one.
         OALBufferNote **notePtr = buffers.get(assetPath);
@@ -190,7 +190,7 @@ public:
 
     static Sound *load(const char *assetPath)
     {
-		ALCenum err;
+        ALCenum err;
 
         // Get the buffer.
         ALuint buffer = OALBufferManager::getBufferForAsset(assetPath);
@@ -305,36 +305,36 @@ public:
 
     void setPosition(float x, float y, float z)
     {
-		ALCenum err;
+        ALCenum err;
         alSource3f(source, AL_POSITION, x, y, z);
         CHECK_OPENAL_ERROR();
     }
 
     void setVelocity(float x, float y, float z)
     {
-		ALCenum err;
-		alSource3f(source, AL_VELOCITY, x, y, z);
+        ALCenum err;
+        alSource3f(source, AL_VELOCITY, x, y, z);
         CHECK_OPENAL_ERROR();
     }
 
     void setListenerRelative(bool flag)
     {
-		ALCenum err;
-		alSourcei(source, AL_SOURCE_RELATIVE, flag ? 1 : 0);
+        ALCenum err;
+        alSourcei(source, AL_SOURCE_RELATIVE, flag ? 1 : 0);
         CHECK_OPENAL_ERROR();
     }
 
     void setFalloffRadius(float radius)
     {
-		ALCenum err;
-		alSourcef(source, AL_MAX_DISTANCE, radius);
+        ALCenum err;
+        alSourcef(source, AL_MAX_DISTANCE, radius);
         CHECK_OPENAL_ERROR();
     }
 
     void setGain(float gain)
     {
-		ALCenum err;
-		alSourcef(source, AL_GAIN, gain);
+        ALCenum err;
+        alSourcef(source, AL_GAIN, gain);
         CHECK_OPENAL_ERROR();
     }
 
@@ -347,43 +347,43 @@ public:
 
     void setLooping(bool loop)
     {
-		ALCenum err;
-		alSourcei(source, AL_LOOPING, loop ? 1 : 0);
+        ALCenum err;
+        alSourcei(source, AL_LOOPING, loop ? 1 : 0);
         CHECK_OPENAL_ERROR();
     }
 
     void setPitch(float pitchFactor)
     {
-		ALCenum err;
-		alSourcef(source, AL_PITCH, pitchFactor);
+        ALCenum err;
+        alSourcef(source, AL_PITCH, pitchFactor);
         CHECK_OPENAL_ERROR();
     }
 
     void play()
     {
-		ALCenum err;
-		alSourcePlay(source);
+        ALCenum err;
+        alSourcePlay(source);
         CHECK_OPENAL_ERROR();
     }
 
     void pause()
     {
-		ALCenum err;
-		alSourcePause(source);
+        ALCenum err;
+        alSourcePause(source);
         CHECK_OPENAL_ERROR();
     }
 
     void stop()
     {
-		ALCenum err;
-		alSourceStop(source);
+        ALCenum err;
+        alSourceStop(source);
         CHECK_OPENAL_ERROR();
     }
 
     void rewind()
     {
-		ALCenum err;
-		alSourceRewind(source);
+        ALCenum err;
+        alSourceRewind(source);
         CHECK_OPENAL_ERROR();
     }
 
@@ -400,9 +400,9 @@ int Sound::count = 0;
 
 void OALBufferManager::soundUpdater(void *payload, const char *name)
 {
-	ALCenum err;
-	
-	// Update the buffer.
+    ALCenum err;
+    
+    // Update the buffer.
     loom_asset_sound *sound = (loom_asset_sound *)loom_asset_lock(name, LATSound, 1);
 
     if(!sound)
@@ -438,8 +438,8 @@ void OALBufferManager::soundUpdater(void *payload, const char *name)
         }
         else
         {
-			alSourcei(walk->source, AL_BUFFER, 0);
-			walk->needsRestart = 1; // Updated this scan, no play needed.
+            alSourcei(walk->source, AL_BUFFER, 0);
+            walk->needsRestart = 1; // Updated this scan, no play needed.
         }
 
         walk = walk->next;
@@ -474,8 +474,8 @@ public:
 
     static void setGain(float gainFactor)
     {
-		ALCenum err;
-		alListenerf(AL_GAIN, gainFactor);
+        ALCenum err;
+        alListenerf(AL_GAIN, gainFactor);
         CHECK_OPENAL_ERROR();
     }
 
@@ -488,22 +488,22 @@ public:
 
     static void setPosition(float x, float y, float z)
     {
-		ALCenum err;
-		alListener3f(AL_POSITION, x, y, z);
+        ALCenum err;
+        alListener3f(AL_POSITION, x, y, z);
         CHECK_OPENAL_ERROR();
     }
 
     static void setVelocity(float x, float y, float z)
     {
-		ALCenum err;
-		alListener3f(AL_VELOCITY, x, y, z);
+        ALCenum err;
+        alListener3f(AL_VELOCITY, x, y, z);
         CHECK_OPENAL_ERROR();
     }
 
     static void setOrientation(float atX, float atY, float atZ, float upX, float upY, float upZ)
     {
-		ALCenum err;
-		float vars[] = { atX, atY, atZ, upX, upY, upZ };
+        ALCenum err;
+        float vars[] = { atX, atY, atZ, upX, upY, upZ };
         alListenerfv(AL_ORIENTATION, vars);
         CHECK_OPENAL_ERROR();
     }
