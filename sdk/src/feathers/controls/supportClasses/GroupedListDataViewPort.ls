@@ -1144,26 +1144,26 @@ package feathers.controls.supportClasses
             
             if ( _activeFirstItemRenderers != null )
             {
-	            for each(renderer in _activeFirstItemRenderers)
-	            {
-	                refreshOneItemRendererStyles(renderer);
-	            }
+                for each(renderer in _activeFirstItemRenderers)
+                {
+                    refreshOneItemRendererStyles(renderer);
+                }
             }
             
             if ( _activeLastItemRenderers != null )
-	        {
-	            for each(renderer in _activeLastItemRenderers)
-	            {
-	                refreshOneItemRendererStyles(renderer);
-	            }
+            {
+                for each(renderer in _activeLastItemRenderers)
+                {
+                    refreshOneItemRendererStyles(renderer);
+                }
             }
             
             if ( _activeSingleItemRenderers != null )
             {
-	            for each(renderer in _activeSingleItemRenderers)
-	            {
-	                refreshOneItemRendererStyles(renderer);
-	            }
+                for each(renderer in _activeSingleItemRenderers)
+                {
+                    refreshOneItemRendererStyles(renderer);
+                }
             }
         }
 
@@ -1210,31 +1210,31 @@ package feathers.controls.supportClasses
             
             if ( _activeFirstItemRenderers )
             {
-	            for each(renderer in _activeFirstItemRenderers)
-	            {
-	                renderer.isSelected = renderer.groupIndex == _selectedGroupIndex &&
-	                    renderer.itemIndex == _selectedItemIndex;
-	            }
-	        }
-	        
+                for each(renderer in _activeFirstItemRenderers)
+                {
+                    renderer.isSelected = renderer.groupIndex == _selectedGroupIndex &&
+                        renderer.itemIndex == _selectedItemIndex;
+                }
+            }
+            
             if ( _activeLastItemRenderers )
             {
-	            for each(renderer in _activeLastItemRenderers)
-	            {
-	                renderer.isSelected = renderer.groupIndex == _selectedGroupIndex &&
-	                    renderer.itemIndex == _selectedItemIndex;
-	            }
-	        }
-	            
+                for each(renderer in _activeLastItemRenderers)
+                {
+                    renderer.isSelected = renderer.groupIndex == _selectedGroupIndex &&
+                        renderer.itemIndex == _selectedItemIndex;
+                }
+            }
+                
             if ( _activeSingleItemRenderers )
             {
-	            for each(renderer in _activeSingleItemRenderers)
-	            {
-	                renderer.isSelected = renderer.groupIndex == _selectedGroupIndex &&
-	                    renderer.itemIndex == _selectedItemIndex;
-	            }
-	        }
-	        
+                for each(renderer in _activeSingleItemRenderers)
+                {
+                    renderer.isSelected = renderer.groupIndex == _selectedGroupIndex &&
+                        renderer.itemIndex == _selectedItemIndex;
+                }
+            }
+            
             _ignoreSelectionChanges = false;
         }
 

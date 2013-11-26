@@ -1893,8 +1893,7 @@ package feathers.controls
             {
                 return;
             }
-            //don't let the OS handle the event
-            //event.preventDefault();
+
             //don't let other event handlers handle the event
             event.stopImmediatePropagation();
             this.close(this.disposeOnSelfClose);
