@@ -1,5 +1,10 @@
 package
 {
+    import loom.platform.Timer;
+    import loom.gameframework.LoomGroup;
+    import loom.gameframework.TimeManager;
+    import loom.gameframework.ITicked;
+
     import loom.Application;
 
     import loom2d.events.Event;
@@ -11,12 +16,26 @@ package
     import loom2d.math.Point;
     import loom2d.ui.SimpleLabel;
 
+    private class TickedObject implements ITicked
+    {
+        var count = 0;
+        function onTick():void
+        {
+            trace("tick", count++);
+        }
+
+    }
+
     /**
      * Show how to listen to activate/deactivate events and display size changes.
      */
-    public class ApplicationFocusDemo extends Application
+    public class ApplicationFocusDemo extends Application 
     {
         public var label:SimpleLabel;
+
+        public var timeManager:TimeManager;
+        public var tickedObject = new TickedObject();
+        public var timer:Timer;
 
         override public function run():void
         {
@@ -43,6 +62,15 @@ package
             Application.applicationActivated += gainFocus;
             Application.applicationDeactivated += loseFocus;
 
+            // add a ticked object to the time manager, which we will pause on losing focus
+            timeManager = LoomGroup.rootGroup.getManager(TimeManager) as TimeManager;
+            timeManager.addTickedObject(tickedObject);
+
+            // create a new Timer which will be paused/restarted on losing/gaining focus
+            timer = new Timer(10000);
+            timer.onComplete = function() { trace("timer fired!"); };
+            timer.start();
+
             stage.addEventListener( Event.RESIZE, function(e:ResizeEvent) { 
 
                 // display the native side as the ResizeEvent stores 
@@ -61,12 +89,20 @@ package
         {
             trace("Gained focus!");
             label.text = "Active!";
+
+            // restart timeManager and our timer
+            timeManager.start();
+            timer.start();
         }
 
         public function loseFocus():void
         {
             trace("Lost focus!");
             label.text = "Inactive.";
+
+            // pause timeManager and our timer
+            timeManager.stop();
+            timer.pause();
         }
 
     }
