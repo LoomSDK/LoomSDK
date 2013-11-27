@@ -28,6 +28,8 @@ namespace GFX
 // Define the maximum number of Quads on a single frame
 // this defaults to 65k and can be raised by increasing
 // MAXVERTEXBUFFERS (quad batches themselves use 16 bit indices)
+
+// TODO: LOOM-1833 allocate this dynamically 
 #define MAXBATCHQUADS       8192
 #define MAXVERTEXBUFFERS    8  
 
