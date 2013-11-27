@@ -16,11 +16,17 @@ package
     import loom2d.math.Point;
     import loom2d.ui.SimpleLabel;
 
+    /**
+     * Small class which implements ITicked to verify
+     * that ticks are paused when we lose application focus
+     */
     private class TickedObject implements ITicked
     {
         var count = 0;
         function onTick():void
         {
+            // ticks should stop being logged when the app loses focus
+            // the TimeManager is paused
             trace("tick", count++);
         }
 
@@ -28,6 +34,7 @@ package
 
     /**
      * Show how to listen to activate/deactivate events and display size changes.
+     * Also demonstrates how to pause/resume the TimeManager and a Timer 
      */
     public class ApplicationFocusDemo extends Application 
     {
