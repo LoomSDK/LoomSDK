@@ -25,9 +25,11 @@
 namespace GFX
 {
 
-// 256,000 quad max on a frame (around 8 megs of vertex data)
-#define MAXBATCHQUADS       10000
-#define MAXVERTEXBUFFERS    256  
+// Define the maximum number of Quads on a single frame
+// this defaults to 65k and can be raised by increasing
+// MAXVERTEXBUFFERS (quad batches themselves use 16 bit indices)
+#define MAXBATCHQUADS       8192
+#define MAXVERTEXBUFFERS    8  
 
 struct VertexPosColorTex
 {
