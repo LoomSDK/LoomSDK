@@ -22,6 +22,10 @@ package feathers.controls
      */
     public class Label extends FeathersControl
     {
+        public static const ALTERNATE_NAME_HEADING:String = "feathers-heading-label";
+        
+        public static const ALTERNATE_NAME_DETAIL:String = "feathers-detail-label";      
+        
         /**
          * @private
          */

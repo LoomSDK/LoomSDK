@@ -176,8 +176,11 @@ package feathers.controls
             //Loom2D.stage.addEventListener(KeyboardEvent.KEY_DOWN, panelScreen_stage_keyDownHandler, false, 0, true);
             Loom2D.stage.addEventListener(KeyboardEvent.KEY_DOWN, panelScreen_stage_keyDownHandler);
 
-            owner.addEventListener(FeathersEventType.TRANSITION_START, onTransitionStart);
-            owner.addEventListener(FeathersEventType.TRANSITION_COMPLETE, onTransitionComplete);
+            if ( owner )
+            {
+                owner.addEventListener(FeathersEventType.TRANSITION_START, onTransitionStart);
+                owner.addEventListener(FeathersEventType.TRANSITION_COMPLETE, onTransitionComplete);
+            }
         }
 
         /**

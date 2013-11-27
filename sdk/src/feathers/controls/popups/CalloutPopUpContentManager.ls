@@ -9,11 +9,9 @@ package feathers.controls.popups
 {
     import feathers.controls.Callout;
 
-    import System.Errors.IllegalOperationError;
-
-    import Loom2D.Display.DisplayObject;
-    import Loom2D.Events.Event;
-    import Loom2D.Events.EventDispatcher;
+    import loom2d.display.DisplayObject;
+    import loom2d.events.Event;
+    import loom2d.events.EventDispatcher;
 
     /**
      * @inheritDoc

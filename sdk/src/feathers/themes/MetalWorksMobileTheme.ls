@@ -25,31 +25,31 @@
 package feathers.themes
 {
     import feathers.controls.Button;
-//    import feathers.controls.ButtonGroup;
-//    import feathers.controls.Callout;
+    import feathers.controls.ButtonGroup;
+    import feathers.controls.Callout;
     import feathers.controls.Check;
     import feathers.controls.GroupedList;
     import feathers.controls.Header;
     import feathers.controls.ImageLoader;
     import feathers.controls.Label;
     import feathers.controls.List;
-//    import feathers.controls.NumericStepper;
-//    import feathers.controls.PageIndicator;
+    import feathers.controls.NumericStepper;
+    import feathers.controls.PageIndicator;
     import feathers.controls.Panel;
     import feathers.controls.PanelScreen;
-//    import feathers.controls.PickerList;
+    import feathers.controls.PickerList;
     import feathers.controls.ProgressBar;
     import feathers.controls.Radio;
     import feathers.controls.Screen;
     import feathers.controls.ScrollContainer;
 //    import feathers.controls.ScrollText;
     import feathers.controls.SimpleScrollBar;
-//    import feathers.controls.Slider;
+    import feathers.controls.Slider;
     import feathers.controls.TabBar;
     import feathers.controls.TextInput;
-//    import feathers.controls.ToggleSwitch;
-//    import feathers.controls.popups.CalloutPopUpContentManager;
-//    import feathers.controls.popups.VerticalCenteredPopUpContentManager;
+    import feathers.controls.ToggleSwitch;
+    import feathers.controls.popups.CalloutPopUpContentManager;
+    import feathers.controls.popups.VerticalCenteredPopUpContentManager;
     import feathers.controls.renderers.BaseDefaultItemRenderer;
     import feathers.controls.renderers.DefaultGroupedListHeaderOrFooterRenderer;
     import feathers.controls.renderers.DefaultGroupedListItemRenderer;
@@ -66,7 +66,7 @@ package feathers.themes
     import feathers.layout.HorizontalLayout;
     import feathers.layout.VerticalLayout;
     import feathers.skins.SmartDisplayObjectStateValueSelector;
-//    import feathers.skins.StandardIcons;
+    import feathers.skins.StandardIcons;
     import feathers.system.DeviceCapabilities;
     import feathers.textures.Scale3Textures;
     import feathers.textures.Scale9Textures;
@@ -340,8 +340,8 @@ package feathers.themes
             this.largeDisabledTextFormat = new BitmapFontTextFormat(regularFontNames, 28 * this.scale, DISABLED_TEXT_COLOR);
 
             PopUpManager.overlayFactory = popUpOverlayFactory;
-//            Callout.stagePaddingTop = Callout.stagePaddingRight = Callout.stagePaddingBottom =
-//                Callout.stagePaddingLeft = 16 * this.scale;
+            Callout.stagePaddingTop = Callout.stagePaddingRight = Callout.stagePaddingBottom =
+            Callout.stagePaddingLeft = 16 * this.scale;
 
             // Load the theme atlas.
             var xmld = new XMLDocument();
@@ -423,7 +423,7 @@ package feathers.themes
             this.horizontalScrollBarThumbSkinTextures = new Scale3Textures(this.atlas.getTexture("horizontal-scroll-bar-thumb-skin"), SCROLL_BAR_THUMB_REGION1, SCROLL_BAR_THUMB_REGION2, Scale3Textures.DIRECTION_HORIZONTAL);
             this.verticalScrollBarThumbSkinTextures = new Scale3Textures(this.atlas.getTexture("vertical-scroll-bar-thumb-skin"), SCROLL_BAR_THUMB_REGION1, SCROLL_BAR_THUMB_REGION2, Scale3Textures.DIRECTION_VERTICAL);
 
-//            StandardIcons.listDrillDownAccessoryTexture = this.atlas.getTexture("list-accessory-drill-down-icon");
+            StandardIcons.listDrillDownAccessoryTexture = this.atlas.getTexture("list-accessory-drill-down-icon");
 
             if(this.root.stage)
             {
@@ -446,16 +446,16 @@ package feathers.themes
             this.setInitializerForClass(Button, backButtonInitializer, Button.ALTERNATE_NAME_BACK_BUTTON);
             this.setInitializerForClass(Button, forwardButtonInitializer, Button.ALTERNATE_NAME_FORWARD_BUTTON);
             this.setInitializerForClass(Button, buttonInitializer);
-//            this.setInitializerForClass(Button, buttonGroupButtonInitializer, ButtonGroup.DEFAULT_CHILD_NAME_BUTTON);
-//            this.setInitializerForClass(Button, simpleButtonInitializer, ToggleSwitch.DEFAULT_CHILD_NAME_THUMB);
-//            this.setInitializerForClass(Button, simpleButtonInitializer, Slider.DEFAULT_CHILD_NAME_THUMB);
-//            this.setInitializerForClass(Button, pickerListButtonInitializer, PickerList.DEFAULT_CHILD_NAME_BUTTON);
+            this.setInitializerForClass(Button, buttonGroupButtonInitializer, ButtonGroup.DEFAULT_CHILD_NAME_BUTTON);
+            this.setInitializerForClass(Button, simpleButtonInitializer, ToggleSwitch.DEFAULT_CHILD_NAME_THUMB);
+            this.setInitializerForClass(Button, simpleButtonInitializer, Slider.DEFAULT_CHILD_NAME_THUMB);
+            this.setInitializerForClass(Button, pickerListButtonInitializer, PickerList.DEFAULT_CHILD_NAME_BUTTON);
             this.setInitializerForClass(Button, tabInitializer, TabBar.DEFAULT_CHILD_NAME_TAB);
-//            this.setInitializerForClass(Button, nothingInitializer, Slider.DEFAULT_CHILD_NAME_MINIMUM_TRACK);
-//            this.setInitializerForClass(Button, nothingInitializer, Slider.DEFAULT_CHILD_NAME_MAXIMUM_TRACK);
-//            this.setInitializerForClass(Button, toggleSwitchTrackInitializer, ToggleSwitch.DEFAULT_CHILD_NAME_ON_TRACK);
+            this.setInitializerForClass(Button, nothingInitializer, Slider.DEFAULT_CHILD_NAME_MINIMUM_TRACK);
+            this.setInitializerForClass(Button, nothingInitializer, Slider.DEFAULT_CHILD_NAME_MAXIMUM_TRACK);
+            this.setInitializerForClass(Button, toggleSwitchTrackInitializer, ToggleSwitch.DEFAULT_CHILD_NAME_ON_TRACK);
             this.setInitializerForClass(Button, nothingInitializer, SimpleScrollBar.DEFAULT_CHILD_NAME_THUMB);
-//            this.setInitializerForClass(ButtonGroup, buttonGroupInitializer);
+            this.setInitializerForClass(ButtonGroup, buttonGroupInitializer);
             this.setInitializerForClass(DefaultListItemRenderer, itemRendererInitializer);
             this.setInitializerForClass(DefaultListItemRenderer, pickerListItemRendererInitializer, COMPONENT_NAME_PICKER_LIST_ITEM_RENDERER);
             this.setInitializerForClass(DefaultGroupedListItemRenderer, itemRendererInitializer);
@@ -469,19 +469,19 @@ package feathers.themes
             this.setInitializerForClass(DefaultGroupedListHeaderOrFooterRenderer, insetFooterRendererInitializer, GroupedList.ALTERNATE_CHILD_NAME_INSET_FOOTER_RENDERER);
             this.setInitializerForClass(Radio, radioInitializer);
             this.setInitializerForClass(Check, checkInitializer);
-//            this.setInitializerForClass(Slider, sliderInitializer);
-//            this.setInitializerForClass(ToggleSwitch, toggleSwitchInitializer);
-//            this.setInitializerForClass(NumericStepper, numericStepperInitializer);
+            this.setInitializerForClass(Slider, sliderInitializer);
+            this.setInitializerForClass(ToggleSwitch, toggleSwitchInitializer);
+            this.setInitializerForClass(NumericStepper, numericStepperInitializer);
             this.setInitializerForClass(TextInput, textInputInitializer);
-//            this.setInitializerForClass(TextInput, numericStepperTextInputInitializer, NumericStepper.DEFAULT_CHILD_NAME_TEXT_INPUT);
-//            this.setInitializerForClass(PageIndicator, pageIndicatorInitializer);
+            this.setInitializerForClass(TextInput, numericStepperTextInputInitializer, NumericStepper.DEFAULT_CHILD_NAME_TEXT_INPUT);
+            this.setInitializerForClass(PageIndicator, pageIndicatorInitializer);
             this.setInitializerForClass(ProgressBar, progressBarInitializer);
-//            this.setInitializerForClass(PickerList, pickerListInitializer);
+            this.setInitializerForClass(PickerList, pickerListInitializer);
             this.setInitializerForClass(Header, headerInitializer);
             this.setInitializerForClass(Header, headerWithoutBackgroundInitializer, Panel.DEFAULT_CHILD_NAME_HEADER);
-//            this.setInitializerForClass(Callout, calloutInitializer);
+            this.setInitializerForClass(Callout, calloutInitializer);
             this.setInitializerForClass(List, listInitializer);
-//            this.setInitializerForClass(List, pickerListListInitializer, PickerList.DEFAULT_CHILD_NAME_LIST);
+            this.setInitializerForClass(List, pickerListListInitializer, PickerList.DEFAULT_CHILD_NAME_LIST);
             this.setInitializerForClass(GroupedList, groupedListInitializer);
             this.setInitializerForClass(GroupedList, insetGroupedListInitializer, GroupedList.ALTERNATE_NAME_INSET_GROUPED_LIST);
             this.setInitializerForClass(Panel, panelInitializer);
@@ -574,11 +574,13 @@ package feathers.themes
             label.textRendererProperties["embedFonts"] = true;
         }
 
-/*        protected function itemRendererAccessoryLabelInitializer(renderer:TextFieldTextRenderer):void
+        /*
+        protected function itemRendererAccessoryLabelInitializer(renderer:TextFieldTextRenderer):void
         {
             renderer.textFormat = this.smallLightTextFormat;
             renderer.embedFonts = true;
-        } */
+        }
+        */
 
 /*        protected function scrollTextInitializer(text:ScrollText):void
         {
@@ -798,11 +800,11 @@ package feathers.themes
             tab.minTouchWidth = tab.minTouchHeight = 88 * this.scale;
         }
 
-/*        protected function buttonGroupInitializer(group:ButtonGroup):void
+        protected function buttonGroupInitializer(group:ButtonGroup):void
         {
             group.minWidth = 560 * this.scale;
             group.gap = 18 * this.scale;
-        } */
+        }
 
         protected function itemRendererInitializer(renderer:BaseDefaultItemRenderer):void
         {
@@ -1055,7 +1057,7 @@ package feathers.themes
             check.minTouchWidth = check.minTouchHeight = 88 * this.scale;
         }
 
-/*        protected function sliderInitializer(slider:Slider):void
+        protected function sliderInitializer(slider:Slider):void
         {
             slider.trackLayoutMode = Slider.TRACK_LAYOUT_MODE_MIN_MAX;
 
@@ -1079,9 +1081,9 @@ package feathers.themes
             }
             slider.minimumTrackProperties["stateToSkinFunction"] = skinSelector.updateValue;
             slider.maximumTrackProperties["stateToSkinFunction"] = skinSelector.updateValue;
-        } */
+        }
 
-/*        protected function toggleSwitchInitializer(toggle:ToggleSwitch):void
+        protected function toggleSwitchInitializer(toggle:ToggleSwitch):void
         {
             toggle.trackLayoutMode = ToggleSwitch.TRACK_LAYOUT_MODE_SINGLE;
 
@@ -1089,14 +1091,14 @@ package feathers.themes
             toggle.defaultLabelProperties["embedFonts"] = true;
             toggle.onLabelProperties["textFormat"] = this.smallUISelectedTextFormat;
             toggle.onLabelProperties["embedFonts"] = true;
-        } */
+        }
 
-/*        protected function numericStepperInitializer(stepper:NumericStepper):void
+        protected function numericStepperInitializer(stepper:NumericStepper):void
         {
             stepper.buttonLayoutMode = NumericStepper.BUTTON_LAYOUT_MODE_SPLIT_HORIZONTAL;
             stepper.incrementButtonLabel = "+";
             stepper.decrementButtonLabel = "-";
-        } */
+        }
 
         protected function textInputInitializer(input:TextInput):void
         {
@@ -1126,7 +1128,7 @@ package feathers.themes
             input.promptProperties["embedFonts"] = true;
         } 
 
-/*        protected function numericStepperTextInputInitializer(input:TextInput):void
+        protected function numericStepperTextInputInitializer(input:TextInput):void
         {
             const backgroundSkin:Scale9Image = new Scale9Image(this.backgroundSkinTextures, this.scale);
             backgroundSkin.width = 60 * this.scale;
@@ -1152,17 +1154,17 @@ package feathers.themes
             input.textEditorFactory = stepperTextEditorFactory;
             input.textEditorProperties["textFormat"] = this.smallLightTextFormatCentered;
             input.textEditorProperties["embedFonts"] = true;
-        } */
+        }
 
-/*        protected function pageIndicatorInitializer(pageIndicator:PageIndicator):void
+        protected function pageIndicatorInitializer(pageIndicator:PageIndicator):void
         {
             pageIndicator.normalSymbolFactory = this.pageIndicatorNormalSymbolFactory;
             pageIndicator.selectedSymbolFactory = this.pageIndicatorSelectedSymbolFactory;
             pageIndicator.gap = 10 * this.scale;
             pageIndicator.paddingTop = pageIndicator.paddingRight = pageIndicator.paddingBottom =
-                pageIndicator.paddingLeft = 6 * this.scale;
+            pageIndicator.paddingLeft = 6 * this.scale;
             pageIndicator.minTouchWidth = pageIndicator.minTouchHeight = 44 * this.scale;
-        } */
+        }
 
         protected function progressBarInitializer(progress:ProgressBar):void
         {
@@ -1214,19 +1216,19 @@ package feathers.themes
             header.titleProperties["embedFonts"] = true;
         }
 
-/*        protected function pickerListInitializer(list:PickerList):void
+        protected function pickerListInitializer(list:PickerList):void
         {
-            if(DeviceCapabilities.isTablet(Starling.current.nativeStage))
-            {
-                list.popUpContentManager = new CalloutPopUpContentManager();
-            }
-            else
-            {
+            //if(DeviceCapabilities.isTablet())
+            //{
+            //    list.popUpContentManager = new CalloutPopUpContentManager();
+            //}
+            //else
+            //{
                 const centerStage:VerticalCenteredPopUpContentManager = new VerticalCenteredPopUpContentManager();
                 centerStage.marginTop = centerStage.marginRight = centerStage.marginBottom =
                     centerStage.marginLeft = 24 * this.scale;
                 list.popUpContentManager = centerStage;
-            }
+            //}
 
             const layout:VerticalLayout = new VerticalLayout();
             layout.verticalAlign = VerticalLayout.VERTICAL_ALIGN_BOTTOM;
@@ -1240,7 +1242,7 @@ package feathers.themes
             list.listProperties["verticalScrollBarFactory"] = this.verticalScrollBarFactory;
             list.listProperties["horizontalScrollBarFactory"] = this.horizontalScrollBarFactory;
 
-            if(DeviceCapabilities.isTablet(Starling.current.nativeStage))
+            if(DeviceCapabilities.isTablet())
             {
                 list.listProperties["minWidth"] = 560 * this.scale;
                 list.listProperties["maxHeight"] = 528 * this.scale;
@@ -1256,9 +1258,9 @@ package feathers.themes
             }
 
             list.listProperties["itemRendererName"] = COMPONENT_NAME_PICKER_LIST_ITEM_RENDERER;
-        } */
+        }
 
-/*        protected function calloutInitializer(callout:Callout):void
+        protected function calloutInitializer(callout:Callout):void
         {
             const backgroundSkin:Scale9Image = new Scale9Image(this.backgroundPopUpSkinTextures, this.scale);
             callout.backgroundSkin = backgroundSkin;
@@ -1280,7 +1282,7 @@ package feathers.themes
             callout.leftArrowSkin = leftArrowSkin;
 
             callout.padding = 8 * this.scale;
-        } */
+        }
 
         protected function panelInitializer(panel:Panel):void
         {

@@ -16,14 +16,14 @@ package feathers.controls
     import feathers.layout.VerticalLayout;
     import feathers.layout.ViewPortBounds;
 
-    import Loom2D.Math.Point;
+    import loom2d.math.Point;
 
-    import Loom2D.Display.DisplayObject;
-    import Loom2D.Display.Quad;
-    import Loom2D.Events.Event;
-    import Loom2D.Events.Touch;
-    import Loom2D.Events.TouchEvent;
-    import Loom2D.Events.TouchPhase;
+    import loom2d.display.DisplayObject;
+    import loom2d.display.Quad;
+    import loom2d.events.Event;
+    import loom2d.events.Touch;
+    import loom2d.events.TouchEvent;
+    import loom2d.events.TouchPhase;
 
     /**
      * Dispatched when the selected item changes.
@@ -561,7 +561,7 @@ package feathers.controls
                 {
                     if(!this.selectedSymbol)
                     {
-                        this.selectedSymbol = this._selectedSymbolFactory();
+                        this.selectedSymbol = this._selectedSymbolFactory() as DisplayObject;
                         this.addChild(this.selectedSymbol);
                     }
                     this.symbols.push(this.selectedSymbol);
@@ -578,7 +578,7 @@ package feathers.controls
                     }
                     else
                     {
-                        symbol = this._normalSymbolFactory();
+                        symbol = this._normalSymbolFactory() as DisplayObject;
                         this.addChild(symbol);
                     }
                     this.unselectedSymbols.push(symbol);
@@ -690,11 +690,11 @@ package feathers.controls
                 if(touch.phase == TouchPhase.ENDED)
                 {
                     this.touchPointID = -1;
-                    touch.getLocation(this.stage, HELPER_POINT);
+                    HELPER_POINT = touch.getLocation(this.stage);
                     const isInBounds:Boolean = this.contains(this.stage.hitTest(HELPER_POINT, true));
                     if(isInBounds)
                     {
-                        this.globalToLocal(HELPER_POINT, HELPER_POINT);
+                        HELPER_POINT = this.globalToLocal(HELPER_POINT);
                         if(this._direction == DIRECTION_VERTICAL)
                         {
                             if(HELPER_POINT.y < this.selectedSymbol.y)

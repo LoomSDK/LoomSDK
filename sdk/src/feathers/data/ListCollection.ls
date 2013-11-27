@@ -135,31 +135,10 @@ package feathers.data
                 return;
             }
             this._data = value;
-            //we'll automatically detect an array, vector, or xmllist for convenience
-            //if(this._data is Array && !(this._dataDescriptor is ArrayListCollectionDataDescriptor))
-            //{
-            //    this.dataDescriptor = new ArrayListCollectionDataDescriptor();
-            //}
-            /*else*/ /*if(this._data is Vector.<Number> && !(this._dataDescriptor is VectorNumberListCollectionDataDescriptor))
-            {
-                this.dataDescriptor = new VectorNumberListCollectionDataDescriptor();
-            }
-            else if(this._data is Vector.<int> && !(this._dataDescriptor is VectorIntListCollectionDataDescriptor))
-            {
-                this.dataDescriptor = new VectorIntListCollectionDataDescriptor();
-            }
-            else if(this._data is Vector.<uint> && !(this._dataDescriptor is VectorUintListCollectionDataDescriptor))
-            {
-                this.dataDescriptor = new VectorUintListCollectionDataDescriptor();
-            }
-            else if(this._data is Vector.<Object> && !(this._dataDescriptor is VectorListCollectionDataDescriptor))
-            {
-                this.dataDescriptor = new VectorListCollectionDataDescriptor();
-            }
-            else if(this._data is XMLList && !(this._dataDescriptor is XMLListListCollectionDataDescriptor))
-            {
-                this.dataDescriptor = new XMLListListCollectionDataDescriptor();
-            } */
+            
+            // Check for Vector type and auto assign if found
+            if ( _data is Vector && _dataDescriptor.getType() != VectorListCollectionDataDescriptor ) dataDescriptor = new VectorListCollectionDataDescriptor();
+            
             this.dispatchEventWith(CollectionEventType.RESET);
             this.dispatchEventWith(Event.CHANGE);
         }

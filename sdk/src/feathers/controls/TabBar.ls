@@ -760,29 +760,27 @@ package feathers.controls
          */
         protected function defaultTabInitializer(tab:Button, item:Object):void
         {
-            if(item is Object)
+            var itemAsDictionary:Dictionary.<String, Object> = item as Dictionary.<String, Object>;
+            
+            if ( itemAsDictionary && itemAsDictionary[ "label" ] != null )
             {
-                if(item.hasOwnProperty("label"))
-                {
-                    tab.label = item.getType().getFieldOrPropertyValueByName(item, "label") as String;
-                }
-                else
-                {
-                    tab.label = item.toString();
-                }
-
-                const t = tab.getType();
-                for each(var key:String in DEFAULT_TAB_FIELDS)
-                {
-                    if(!t.setFieldOrPropertyValueByName(tab, key, _tabProperties[key]))
-                        trace("Could not find field '" + key + "' on " + tab.toString());
-                }
+                tab.label = itemAsDictionary[ "label" ]  as String;
+            }
+            else if ( item is String )
+            {
+                tab.label = item as String;
             }
             else
             {
                 tab.label = "";
             }
 
+            const t = tab.getType();
+            for each(var key:String in DEFAULT_TAB_FIELDS)
+            {
+                if(!t.setFieldOrPropertyValueByName(tab, key, tabProperties[key]))
+                    trace("Could not find field '" + key + "' on " + tab.toString());
+            }
         }
 
         /**

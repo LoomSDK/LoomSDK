@@ -9,22 +9,17 @@ package feathers.controls
 {
     import feathers.core.FeathersControl;
     import feathers.core.IFocusDisplayObject;
-    import feathers.core.PropertyProxy;
     import feathers.events.FeathersEventType;
-    import feathers.utils.math.clamp;
-    import feathers.utils.math.roundToNearest;
+    import feathers.utils.FeathersMath;
 
-    import flash.events.TimerEvent;
-
-    import flash.ui.Keyboard;
-
-    import flash.utils.Timer;
-
-    import Loom2D.Events.Event;
-    import Loom2D.Events.KeyboardEvent;
-    import Loom2D.Events.Touch;
-    import Loom2D.Events.TouchEvent;
-    import Loom2D.Events.TouchPhase;
+    import loom2d.events.Event;
+    import loom2d.events.KeyboardEvent;
+    import loom2d.events.Touch;
+    import loom2d.events.TouchEvent;
+    import loom2d.events.TouchPhase;
+    
+    import loom.platform.Timer;
+    import loom.platform.LoomKey;
 
     /**
      * Dispatched when the stepper's value changes.
@@ -234,9 +229,9 @@ package feathers.controls
         {
             if(this._step != 0 && newValue != this._maximum && newValue != this._minimum)
             {
-                newValue = roundToNearest(newValue, this._step);
+                newValue = FeathersMath.roundToNearest(newValue, this._step);
             }
-            newValue = clamp(newValue, this._minimum, this._maximum);
+            newValue = FeathersMath.clamp(newValue, this._minimum, this._maximum);
             if(this._value == newValue)
             {
                 return;
@@ -464,7 +459,7 @@ package feathers.controls
         /**
          * @private
          */
-        protected var _decrementButtonProperties:PropertyProxy;
+        protected var _decrementButtonProperties:Dictionary.<String, Object>;
 
         /**
          * A set of key/value pairs to be passed down to the numeric stepper's
@@ -486,11 +481,11 @@ package feathers.controls
          * @see #decrementButtonFactory
          * @see feathers.controls.Button
          */
-        public function get decrementButtonProperties():Object
+        public function get decrementButtonProperties():Dictionary.<String, Object>
         {
             if(!this._decrementButtonProperties)
             {
-                this._decrementButtonProperties = new PropertyProxy(childProperties_onChange);
+                this._decrementButtonProperties = {};
             }
             return this._decrementButtonProperties;
         }
@@ -498,34 +493,19 @@ package feathers.controls
         /**
          * @private
          */
-        public function set decrementButtonProperties(value:Object):void
+        public function set decrementButtonProperties(value:Dictionary.<String, Object>):void
         {
             if(this._decrementButtonProperties == value)
             {
                 return;
             }
+            
             if(!value)
             {
-                value = new PropertyProxy();
+                value = {};
             }
-            if(!(value is PropertyProxy))
-            {
-                const newValue:PropertyProxy = new PropertyProxy();
-                for(var propertyName:String in value)
-                {
-                    newValue[propertyName] = value[propertyName];
-                }
-                value = newValue;
-            }
-            if(this._decrementButtonProperties)
-            {
-                this._decrementButtonProperties.removeOnChangeCallback(childProperties_onChange);
-            }
-            this._decrementButtonProperties = PropertyProxy(value);
-            if(this._decrementButtonProperties)
-            {
-                this._decrementButtonProperties.addOnChangeCallback(childProperties_onChange);
-            }
+            
+            this._decrementButtonProperties = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
 
@@ -627,7 +607,7 @@ package feathers.controls
         /**
          * @private
          */
-        protected var _incrementButtonProperties:PropertyProxy;
+        protected var _incrementButtonProperties:Dictionary.<String, Object>;
 
         /**
          * A set of key/value pairs to be passed down to the numeric stepper's
@@ -649,11 +629,11 @@ package feathers.controls
          * @see #incrementButtonFactory
          * @see feathers.controls.Button
          */
-        public function get incrementButtonProperties():Object
+        public function get incrementButtonProperties():Dictionary.<String, Object>
         {
             if(!this._incrementButtonProperties)
             {
-                this._incrementButtonProperties = new PropertyProxy(childProperties_onChange);
+                this._incrementButtonProperties = {};
             }
             return this._incrementButtonProperties;
         }
@@ -661,34 +641,19 @@ package feathers.controls
         /**
          * @private
          */
-        public function set incrementButtonProperties(value:Object):void
+        public function set incrementButtonProperties(value:Dictionary.<String, Object>):void
         {
             if(this._incrementButtonProperties == value)
             {
                 return;
             }
+            
             if(!value)
             {
-                value = new PropertyProxy();
+                value = {};
             }
-            if(!(value is PropertyProxy))
-            {
-                const newValue:PropertyProxy = new PropertyProxy();
-                for(var propertyName:String in value)
-                {
-                    newValue[propertyName] = value[propertyName];
-                }
-                value = newValue;
-            }
-            if(this._incrementButtonProperties)
-            {
-                this._incrementButtonProperties.removeOnChangeCallback(childProperties_onChange);
-            }
-            this._incrementButtonProperties = PropertyProxy(value);
-            if(this._incrementButtonProperties)
-            {
-                this._incrementButtonProperties.addOnChangeCallback(childProperties_onChange);
-            }
+            
+            this._incrementButtonProperties = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
 
@@ -790,7 +755,7 @@ package feathers.controls
         /**
          * @private
          */
-        protected var _textInputProperties:PropertyProxy;
+        protected var _textInputProperties:Dictionary.<String, Object>;
 
         /**
          * A set of key/value pairs to be passed down to the numeric stepper's
@@ -812,11 +777,11 @@ package feathers.controls
          * @see #textInputFactory
          * @see feathers.controls.TextInput
          */
-        public function get textInputProperties():Object
+        public function get textInputProperties():Dictionary.<String, Object>
         {
             if(!this._textInputProperties)
             {
-                this._textInputProperties = new PropertyProxy(childProperties_onChange);
+                this._textInputProperties = {};
             }
             return this._textInputProperties;
         }
@@ -824,34 +789,19 @@ package feathers.controls
         /**
          * @private
          */
-        public function set textInputProperties(value:Object):void
+        public function set textInputProperties(value:Dictionary.<String, Object>):void
         {
             if(this._textInputProperties == value)
             {
                 return;
             }
+            
             if(!value)
             {
-                value = new PropertyProxy();
+                value = {};
             }
-            if(!(value is PropertyProxy))
-            {
-                const newValue:PropertyProxy = new PropertyProxy();
-                for(var propertyName:String in value)
-                {
-                    newValue[propertyName] = value[propertyName];
-                }
-                value = newValue;
-            }
-            if(this._textInputProperties)
-            {
-                this._textInputProperties.removeOnChangeCallback(childProperties_onChange);
-            }
-            this._textInputProperties = PropertyProxy(value);
-            if(this._textInputProperties)
-            {
-                this._textInputProperties.addOnChangeCallback(childProperties_onChange);
-            }
+            
+            this._textInputProperties = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
 
@@ -958,7 +908,7 @@ package feathers.controls
                 const maxButtonWidth:Number = Math.max(this.decrementButton.width, this.incrementButton.width);
                 this.textInput.minWidth = Math.max(0, this._minWidth - maxButtonWidth);
                 this.textInput.maxWidth = Math.max(0, this._maxWidth - maxButtonWidth);
-                this.textInput.width = Math.max(0, this.explicitWidth - maxButtonWidth)
+                this.textInput.width = Math.max(0, this.explicitWidth - maxButtonWidth);
                 this.textInput.height = this.explicitHeight;
                 this.textInput.validate();
 
@@ -1090,14 +1040,7 @@ package feathers.controls
          */
         protected function refreshDecrementButtonStyles():void
         {
-            for(var propertyName:String in this._decrementButtonProperties)
-            {
-                if(this.decrementButton.hasOwnProperty(propertyName))
-                {
-                    var propertyValue:Object = this._decrementButtonProperties[propertyName];
-                    this.decrementButton[propertyName] = propertyValue;
-                }
-            }
+            Dictionary.mapToObject( this._decrementButtonProperties, this.decrementButton );
             this.decrementButton.label = this._decrementButtonLabel;
         }
 
@@ -1106,14 +1049,7 @@ package feathers.controls
          */
         protected function refreshIncrementButtonStyles():void
         {
-            for(var propertyName:String in this._incrementButtonProperties)
-            {
-                if(this.incrementButton.hasOwnProperty(propertyName))
-                {
-                    var propertyValue:Object = this._incrementButtonProperties[propertyName];
-                    this.incrementButton[propertyName] = propertyValue;
-                }
-            }
+            Dictionary.mapToObject( this._incrementButtonProperties, this.incrementButton );
             this.incrementButton.label = this._incrementButtonLabel;
         }
 
@@ -1122,14 +1058,7 @@ package feathers.controls
          */
         protected function refreshTextInputStyles():void
         {
-            for(var propertyName:String in this._textInputProperties)
-            {
-                if(this.textInput.hasOwnProperty(propertyName))
-                {
-                    var propertyValue:Object = this._textInputProperties[propertyName];
-                    this.textInput[propertyName] = propertyValue;
-                }
-            }
+            Dictionary.mapToObject( this._textInputProperties, this.textInput );
         }
 
         /**
@@ -1218,7 +1147,8 @@ package feathers.controls
                 if(!this._repeatTimer)
                 {
                     this._repeatTimer = new Timer(this._repeatDelay * 1000);
-                    this._repeatTimer.addEventListener(TimerEvent.TIMER, repeatTimer_timerHandler);
+                    this._repeatTimer.repeats = true;
+                    this._repeatTimer.onComplete += repeatTimer_timerHandler;
                 }
                 else
                 {
@@ -1227,14 +1157,6 @@ package feathers.controls
                 }
                 this._repeatTimer.start();
             }
-        }
-
-        /**
-         * @private
-         */
-        protected function childProperties_onChange(proxy:PropertyProxy, name:Object):void
-        {
-            this.invalidate(INVALIDATION_FLAG_STYLES);
         }
 
         /**
@@ -1268,7 +1190,7 @@ package feathers.controls
          */
         protected function textInput_enterHandler(event:Event):void
         {
-            const newValue:Number = parseFloat(this.textInput.text);
+            const newValue:Number = Number(this.textInput.text);
             if(!isNaN(newValue))
             {
                 this.value = newValue;
@@ -1280,7 +1202,7 @@ package feathers.controls
          */
         protected function textInput_focusOutHandler(event:Event):void
         {
-            const newValue:Number = parseFloat(this.textInput.text);
+            const newValue:Number = Number(this.textInput.text);
             if(!isNaN(newValue))
             {
                 this.value = newValue;
@@ -1406,21 +1328,21 @@ package feathers.controls
          */
         protected function stage_keyDownHandler(event:KeyboardEvent):void
         {
-            if(event.keyCode == Keyboard.HOME)
+            if(event.keyCode == LoomKey.HOME)
             {
                 this.value = this._minimum;
                 return;
             }
-            if(event.keyCode == Keyboard.END)
+            if(event.keyCode == LoomKey.END)
             {
                 this.value = this._maximum;
                 return;
             }
-            if(event.keyCode == Keyboard.UP)
+            if(event.keyCode == LoomKey.UP_ARROW)
             {
                 this.value += this._step;
             }
-            else if(event.keyCode == Keyboard.DOWN)
+            else if(event.keyCode == LoomKey.DOWN_ARROW)
             {
                 this.value -= this._step;
             }
@@ -1429,7 +1351,7 @@ package feathers.controls
         /**
          * @private
          */
-        protected function repeatTimer_timerHandler(event:TimerEvent):void
+        protected function repeatTimer_timerHandler(timer:Timer):void
         {
             if(this._repeatTimer.currentCount < 5)
             {

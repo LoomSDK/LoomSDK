@@ -21,6 +21,8 @@ package feathers.controls
 
     import loom2d.events.Event;
     import loom2d.events.KeyboardEvent;
+    
+    import loom2d.Loom2D;
 
     /**
      * Dispatched when the selected item changes.
@@ -455,7 +457,7 @@ package feathers.controls
          * @see feathers.controls.renderers.IListItemRenderer
          * @see feathers.controls.renderers.DefaultListItemRenderer
          */
-        public function get itemRendererProperties():Object
+        public function get itemRendererProperties():Dictionary.<String, Object>
         {
             if(!this._itemRendererProperties)
             {
@@ -467,7 +469,7 @@ package feathers.controls
         /**
          * @private
          */
-        public function set itemRendererProperties(value:Object):void
+        public function set itemRendererProperties(value:Dictionary.<String, Object>):void
         {
             if(this._itemRendererProperties == value)
             {
@@ -660,12 +662,11 @@ package feathers.controls
         {
             if(this._layout)
             {
-                var l = this._layout;
+                Loom2D.juggler.delayCall( Object( this._layout ).deleteNative, 0.1 );
                 this._layout = null;
             }
             this.dataProvider = null;
             super.dispose();
-            if(l) (l as Object).deleteNative();
         }
         
         /**

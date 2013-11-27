@@ -623,32 +623,20 @@ package feathers.controls
         protected function transitionComplete():void
         {
             this._transitionIsActive = false;
+            this.dispatchEventWith(FeathersEventType.TRANSITION_COMPLETE);
             if(this._previousScreenInTransition)
             {
                 const item:ScreenNavigatorItem = this._screens[this._previousScreenInTransitionID];
-                
-                if ( item )
+                const canBeDisposed:Boolean = autoDisposeScreens && !(item.screen is DisplayObject);
+                if(this._previousScreenInTransition is IScreen)
                 {
-                    const canBeDisposed:Boolean = autoDisposeScreens && (item.screen is DisplayObject);
-                    if(this._previousScreenInTransition is IScreen)
-                    {
-                        const screen:IScreen = IScreen(this._previousScreenInTransition);
-                        screen.screenID = null;
-                        screen.owner = null;
-                    }
-
-                    trace("*** REMOVING CHILD " + _previousScreenInTransition + " canBeDisposed=" + canBeDisposed);
-                    this.removeChild(this._previousScreenInTransition, false);
-
-                    if(canBeDisposed)
-                    {
-                        Loom2D.juggler.delayCall(function(item:DisplayObject):void {
-                            item.dispose();
-                            trace("Cleaned up old screen");
-                            }, 0.1, this._previousScreenInTransition);
-                    }
+                    const screen:IScreen = IScreen(this._previousScreenInTransition);
+                    screen.screenID = null;
+                    screen.owner = null;
                 }
-                
+
+                trace("*** REMOVING CHILD " + _previousScreenInTransition + " canBeDisposed=" + canBeDisposed);
+                this.removeChild(this._previousScreenInTransition, canBeDisposed);
                 this._previousScreenInTransition = null;
                 this._previousScreenInTransitionID = null;
             }
@@ -664,9 +652,8 @@ package feathers.controls
 
             this._nextScreenID = null;
             this._clearAfterTransition = false;
-            
-            this.dispatchEventWith(FeathersEventType.TRANSITION_COMPLETE);
         }
+        
 
         /**
          * @private

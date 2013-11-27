@@ -587,16 +587,17 @@ package feathers.controls.renderers
          */
         protected function itemToContent(item:Object):DisplayObject
         {
+            var itemAsDictionary:Dictionary.<String, Object> = item as Dictionary.<String, Object>;
+            
             if(this._contentSourceFunction != null)
             {
                 var source:Object = this._contentSourceFunction.call(null, item);
                 this.refreshContentSource(source);
                 return this.contentImage;
             }
-            else if(this._contentSourceField != null && item && item.hasOwnProperty(this._contentSourceField))
+            else if(this._contentSourceField != null && itemAsDictionary && itemAsDictionary[_contentSourceField] != null)
             {
-                //source = item[this._contentSourceField];
-                source = item.getType().getFieldOrPropertyValueByName(item, this._contentSourceField);
+                source = itemAsDictionary[_contentSourceField];
                 this.refreshContentSource(source);
                 return this.contentImage;
             }
@@ -606,10 +607,9 @@ package feathers.controls.renderers
                 this.refreshContentLabel(label);
                 return DisplayObject(this.contentLabel);
             }
-            else if(this._contentLabelField != null && item && item.hasOwnProperty(this._contentLabelField))
+            else if(this._contentLabelField != null && itemAsDictionary && itemAsDictionary[_contentLabelField] != null)
             {
-                //label = item[this._contentLabelField] as String;
-                label = item.getType().getFieldOrPropertyValueByName(item, this._contentLabelField) as String;
+                label = itemAsDictionary[_contentLabelField] as String;
                 this.refreshContentLabel(label);
                 return DisplayObject(this.contentLabel);
             }
@@ -617,10 +617,9 @@ package feathers.controls.renderers
             {
                 return this._contentFunction.call(null, item) as DisplayObject;
             }
-            else if(this._contentField != null && item && item.hasOwnProperty(this._contentField))
+            else if(this._contentField != null && itemAsDictionary && itemAsDictionary[_contentField])
             {
-                //return item[this._contentField] as DisplayObject;
-                return item.getType().getFieldOrPropertyValueByName(item, this._contentField) as DisplayObject;
+                return itemAsDictionary[this._contentField] as DisplayObject;
             }
             else if(item)
             {

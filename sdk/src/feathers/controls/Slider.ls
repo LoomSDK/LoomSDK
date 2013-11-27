@@ -9,22 +9,20 @@ package feathers.controls
 {
     import feathers.core.FeathersControl;
     import feathers.core.IFocusDisplayObject;
-    import feathers.core.PropertyProxy;
     import feathers.events.FeathersEventType;
-    import feathers.utils.math.clamp;
-    import feathers.utils.math.roundToNearest;
+    import feathers.utils.FeathersMath;
 
-    import flash.events.TimerEvent;
-    import Loom2D.Math.Point;
-    import flash.ui.Keyboard;
-    import flash.utils.Timer;
+    import loom2d.math.Point;
 
-    import Loom2D.Display.DisplayObject;
-    import Loom2D.Events.Event;
-    import Loom2D.Events.KeyboardEvent;
-    import Loom2D.Events.Touch;
-    import Loom2D.Events.TouchEvent;
-    import Loom2D.Events.TouchPhase;
+    import loom2d.display.DisplayObject;
+    import loom2d.events.Event;
+    import loom2d.events.KeyboardEvent;
+    import loom2d.events.Touch;
+    import loom2d.events.TouchEvent;
+    import loom2d.events.TouchPhase;
+    
+    import loom.platform.Timer;
+    import loom.platform.LoomKey;
 
     /**
      * Dispatched when the slider's value changes.
@@ -331,9 +329,9 @@ package feathers.controls
         {
             if(this._step != 0 && newValue != this._maximum && newValue != this._minimum)
             {
-                newValue = roundToNearest(newValue, this._step);
+                newValue = FeathersMath.roundToNearest(newValue, this._step);
             }
-            newValue = clamp(newValue, this._minimum, this._maximum);
+            newValue = FeathersMath.clamp(newValue, this._minimum, this._maximum);
             if(this._value == newValue)
             {
                 return;
@@ -727,7 +725,7 @@ package feathers.controls
         /**
          * @private
          */
-        protected var _minimumTrackProperties:PropertyProxy;
+        protected var _minimumTrackProperties:Dictionary.<String, Object>;
 
         /**
          * A set of key/value pairs to be passed down to the slider's minimum
@@ -749,11 +747,11 @@ package feathers.controls
          * @see #minimumTrackFactory
          * @see feathers.controls.Button
          */
-        public function get minimumTrackProperties():Object
+        public function get minimumTrackProperties():Dictionary.<String, Object>
         {
             if(!this._minimumTrackProperties)
             {
-                this._minimumTrackProperties = new PropertyProxy(childProperties_onChange);
+                this._minimumTrackProperties = {};
             }
             return this._minimumTrackProperties;
         }
@@ -761,34 +759,19 @@ package feathers.controls
         /**
          * @private
          */
-        public function set minimumTrackProperties(value:Object):void
+        public function set minimumTrackProperties(value:Dictionary.<String, Object>):void
         {
             if(this._minimumTrackProperties == value)
             {
                 return;
             }
+            
             if(!value)
             {
-                value = new PropertyProxy();
+                value = {};
             }
-            if(!(value is PropertyProxy))
-            {
-                const newValue:PropertyProxy = new PropertyProxy();
-                for(var propertyName:String in value)
-                {
-                    newValue[propertyName] = value[propertyName];
-                }
-                value = newValue;
-            }
-            if(this._minimumTrackProperties)
-            {
-                this._minimumTrackProperties.removeOnChangeCallback(childProperties_onChange);
-            }
-            this._minimumTrackProperties = PropertyProxy(value);
-            if(this._minimumTrackProperties)
-            {
-                this._minimumTrackProperties.addOnChangeCallback(childProperties_onChange);
-            }
+
+            this._minimumTrackProperties = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
 
@@ -863,7 +846,7 @@ package feathers.controls
         /**
          * @private
          */
-        protected var _maximumTrackProperties:PropertyProxy;
+        protected var _maximumTrackProperties:Dictionary.<String, Object>;
         
         /**
          * A set of key/value pairs to be passed down to the slider's maximum
@@ -885,11 +868,11 @@ package feathers.controls
          * @see #maximumTrackFactory
          * @see feathers.controls.Button
          */
-        public function get maximumTrackProperties():Object
+        public function get maximumTrackProperties():Dictionary.<String, Object>
         {
             if(!this._maximumTrackProperties)
             {
-                this._maximumTrackProperties = new PropertyProxy(childProperties_onChange);
+                this._maximumTrackProperties = {};
             }
             return this._maximumTrackProperties;
         }
@@ -897,34 +880,19 @@ package feathers.controls
         /**
          * @private
          */
-        public function set maximumTrackProperties(value:Object):void
+        public function set maximumTrackProperties(value:Dictionary.<String, Object>):void
         {
             if(this._maximumTrackProperties == value)
             {
                 return;
             }
+            
             if(!value)
             {
-                value = new PropertyProxy();
+                value = {};
             }
-            if(!(value is PropertyProxy))
-            {
-                const newValue:PropertyProxy = new PropertyProxy();
-                for(var propertyName:String in value)
-                {
-                    newValue[propertyName] = value[propertyName];
-                }
-                value = newValue;
-            }
-            if(this._maximumTrackProperties)
-            {
-                this._maximumTrackProperties.removeOnChangeCallback(childProperties_onChange);
-            }
-            this._maximumTrackProperties = PropertyProxy(value);
-            if(this._maximumTrackProperties)
-            {
-                this._maximumTrackProperties.addOnChangeCallback(childProperties_onChange);
-            }
+
+            this._maximumTrackProperties = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
 
@@ -999,7 +967,7 @@ package feathers.controls
         /**
          * @private
          */
-        protected var _thumbProperties:PropertyProxy;
+        protected var _thumbProperties:Dictionary.<String, Object>;
         
         /**
          * A set of key/value pairs to be passed down to the slider's thumb
@@ -1020,11 +988,11 @@ package feathers.controls
          * @see feathers.controls.Button
          * @see #thumbFactory
          */
-        public function get thumbProperties():Object
+        public function get thumbProperties():Dictionary.<String, Object>
         {
             if(!this._thumbProperties)
             {
-                this._thumbProperties = new PropertyProxy(childProperties_onChange);
+                this._thumbProperties = {};
             }
             return this._thumbProperties;
         }
@@ -1032,34 +1000,19 @@ package feathers.controls
         /**
          * @private
          */
-        public function set thumbProperties(value:Object):void
+        public function set thumbProperties(value:Dictionary.<String, Object>):void
         {
             if(this._thumbProperties == value)
             {
                 return;
             }
+            
             if(!value)
             {
-                value = new PropertyProxy();
+                value = {};
             }
-            if(!(value is PropertyProxy))
-            {
-                const newValue:PropertyProxy = new PropertyProxy();
-                for(var propertyName:String in value)
-                {
-                    newValue[propertyName] = value[propertyName];
-                }
-                value = newValue;
-            }
-            if(this._thumbProperties)
-            {
-                this._thumbProperties.removeOnChangeCallback(childProperties_onChange);
-            }
-            this._thumbProperties = PropertyProxy(value);
-            if(this._thumbProperties)
-            {
-                this._thumbProperties.addOnChangeCallback(childProperties_onChange);
-            }
+            
+            this._thumbProperties = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
 
@@ -1320,14 +1273,7 @@ package feathers.controls
          */
         protected function refreshThumbStyles():void
         {
-            for(var propertyName:String in this._thumbProperties)
-            {
-                if(this.thumb.hasOwnProperty(propertyName))
-                {
-                    var propertyValue:Object = this._thumbProperties[propertyName];
-                    this.thumb[propertyName] = propertyValue;
-                }
-            }
+            Dictionary.mapToObject( this._thumbProperties, this.thumb );
             this.thumb.visible = this._showThumb;
         }
         
@@ -1336,14 +1282,7 @@ package feathers.controls
          */
         protected function refreshMinimumTrackStyles():void
         {
-            for(var propertyName:String in this._minimumTrackProperties)
-            {
-                if(this.minimumTrack.hasOwnProperty(propertyName))
-                {
-                    var propertyValue:Object = this._minimumTrackProperties[propertyName];
-                    this.minimumTrack[propertyName] = propertyValue;
-                }
-            }
+            Dictionary.mapToObject( this._minimumTrackProperties, this.minimumTrack );
         }
 
         /**
@@ -1355,14 +1294,8 @@ package feathers.controls
             {
                 return;
             }
-            for(var propertyName:String in this._maximumTrackProperties)
-            {
-                if(this.maximumTrack.hasOwnProperty(propertyName))
-                {
-                    var propertyValue:Object = this._maximumTrackProperties[propertyName];
-                    this.maximumTrack[propertyName] = propertyValue;
-                }
-            }
+            
+            Dictionary.mapToObject( this._maximumTrackProperties, this.maximumTrack );
         }
 
         /**
@@ -1527,7 +1460,8 @@ package feathers.controls
                 if(!this._repeatTimer)
                 {
                     this._repeatTimer = new Timer(this._repeatDelay * 1000);
-                    this._repeatTimer.addEventListener(TimerEvent.TIMER, repeatTimer_timerHandler);
+                    this._repeatTimer.repeats = true;
+                    this._repeatTimer.onComplete += repeatTimer_timerHandler;
                 }
                 else
                 {
@@ -1552,14 +1486,6 @@ package feathers.controls
             {
                 this.value = Math.min(this._touchValue, this._value + page);
             }
-        }
-
-        /**
-         * @private
-         */
-        protected function childProperties_onChange(proxy:PropertyProxy, name:Object):void
-        {
-            this.invalidate(INVALIDATION_FLAG_STYLES);
         }
 
         /**
@@ -1623,7 +1549,7 @@ package feathers.controls
                 }
                 if(!this._showThumb && touch.phase == TouchPhase.MOVED)
                 {
-                    touch.getLocation(this, HELPER_POINT);
+                    HELPER_POINT = touch.getLocation(this);
                     this.value = this.locationToValue(HELPER_POINT);
                 }
                 else if(touch.phase == TouchPhase.ENDED)
@@ -1647,7 +1573,7 @@ package feathers.controls
                 {
                     if(touch.phase == TouchPhase.BEGAN)
                     {
-                        touch.getLocation(this, HELPER_POINT);
+                        HELPER_POINT = touch.getLocation(this);
                         this._touchPointID = touch.id;
                         if(this._direction == DIRECTION_VERTICAL)
                         {
@@ -1713,7 +1639,7 @@ package feathers.controls
                 }
                 if(touch.phase == TouchPhase.MOVED)
                 {
-                    touch.getLocation(this, HELPER_POINT);
+                    HELPER_POINT = touch.getLocation(this);
                     this.value = this.locationToValue(HELPER_POINT);
                 }
                 else if(touch.phase == TouchPhase.ENDED)
@@ -1733,7 +1659,7 @@ package feathers.controls
                 {
                     if(touch.phase == TouchPhase.BEGAN)
                     {
-                        touch.getLocation(this, HELPER_POINT);
+                        HELPER_POINT = touch.getLocation(this);
                         this._touchPointID = touch.id;
                         this._thumbStartX = this.thumb.x;
                         this._thumbStartY = this.thumb.y;
@@ -1753,12 +1679,12 @@ package feathers.controls
          */
         protected function stage_keyDownHandler(event:KeyboardEvent):void
         {
-            if(event.keyCode == Keyboard.HOME)
+            if(event.keyCode == LoomKey.HOME)
             {
                 this.value = this._minimum;
                 return;
             }
-            if(event.keyCode == Keyboard.END)
+            if(event.keyCode == LoomKey.END)
             {
                 this.value = this._maximum;
                 return;
@@ -1766,7 +1692,7 @@ package feathers.controls
             const page:Number = isNaN(this._page) ? this._step : this._page;
             if(this._direction == Slider.DIRECTION_VERTICAL)
             {
-                if(event.keyCode == Keyboard.UP)
+                if(event.keyCode == LoomKey.UP_ARROW)
                 {
                     if(event.shiftKey)
                     {
@@ -1777,7 +1703,7 @@ package feathers.controls
                         this.value += this._step;
                     }
                 }
-                else if(event.keyCode == Keyboard.DOWN)
+                else if(event.keyCode == LoomKey.DOWN_ARROW)
                 {
                     if(event.shiftKey)
                     {
@@ -1791,7 +1717,7 @@ package feathers.controls
             }
             else
             {
-                if(event.keyCode == Keyboard.LEFT)
+                if(event.keyCode == LoomKey.LEFT_ARROW)
                 {
                     if(event.shiftKey)
                     {
@@ -1802,7 +1728,7 @@ package feathers.controls
                         this.value -= this._step;
                     }
                 }
-                else if(event.keyCode == Keyboard.RIGHT)
+                else if(event.keyCode == LoomKey.RIGHT_ARROW)
                 {
                     if(event.shiftKey)
                     {
@@ -1819,7 +1745,7 @@ package feathers.controls
         /**
          * @private
          */
-        protected function repeatTimer_timerHandler(event:TimerEvent):void
+        protected function repeatTimer_timerHandler(timer:Timer):void
         {
             if(this._repeatTimer.currentCount < 5)
             {

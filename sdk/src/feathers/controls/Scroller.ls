@@ -3600,7 +3600,7 @@ package feathers.controls
             this._previousVelocityY.length = 0;
             this._horizontalScrollBarIsScrolling = false;
             this._verticalScrollBarIsScrolling = false;
-            this.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
+            this.stage.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
             this.stage.removeEventListener(TouchEvent.TOUCH, stage_touchHandler);
             if(this._verticalAutoScrollTween)
             {

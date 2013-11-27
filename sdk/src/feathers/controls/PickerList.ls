@@ -12,16 +12,15 @@ package feathers.controls
     import feathers.controls.popups.VerticalCenteredPopUpContentManager;
     import feathers.controls.renderers.IListItemRenderer;
     import feathers.core.FeathersControl;
-    import feathers.core.PropertyProxy;
     import feathers.data.ListCollection;
     import feathers.system.DeviceCapabilities;
 
-    import Loom2D.Loom2D;
-    import Loom2D.Display.DisplayObject;
-    import Loom2D.Events.Event;
-    import Loom2D.Events.Touch;
-    import Loom2D.Events.TouchEvent;
-    import Loom2D.Events.TouchPhase;
+    import loom2d.Loom2D;
+    import loom2d.display.DisplayObject;
+    import loom2d.events.Event;
+    import loom2d.events.Touch;
+    import loom2d.events.TouchEvent;
+    import loom2d.events.TouchPhase;
 
     /**
      * Dispatched when the selected item changes.
@@ -152,7 +151,7 @@ package feathers.controls
         protected var _dataProvider:ListCollection;
         
         /**
-         * @copy List#dataProvider
+         * @copy feathers.controls.List#dataProvider
          */
         public function get dataProvider():ListCollection
         {
@@ -186,7 +185,7 @@ package feathers.controls
         protected var _selectedIndex:int = -1;
         
         /**
-         * @copy List#selectedIndex
+         * @copy feathers.controls.List#selectedIndex
          */
         public function get selectedIndex():int
         {
@@ -208,7 +207,7 @@ package feathers.controls
         }
         
         /**
-         * @copy List#selectedItem
+         * @copy feathers.controls.List#selectedItem
          */
         public function get selectedItem():Object
         {
@@ -464,7 +463,7 @@ package feathers.controls
         /**
          * @private
          */
-        protected var _buttonProperties:PropertyProxy;
+        protected var _buttonProperties:Dictionary.<String, Object>;
         
         /**
          * A set of key/value pairs to be passed down to the picker's button
@@ -485,11 +484,11 @@ package feathers.controls
          * @see #buttonFactory
          * @see feathers.controls.Button
          */
-        public function get buttonProperties():Object
+        public function get buttonProperties():Dictionary.<String, Object>
         {
             if(!this._buttonProperties)
             {
-                this._buttonProperties = new PropertyProxy(childProperties_onChange);
+                this._buttonProperties = {};
             }
             return this._buttonProperties;
         }
@@ -497,34 +496,19 @@ package feathers.controls
         /**
          * @private
          */
-        public function set buttonProperties(value:Object):void
+        public function set buttonProperties(value:Dictionary.<String, Object>):void
         {
             if(this._buttonProperties == value)
             {
                 return;
             }
+            
             if(!value)
             {
-                value = new PropertyProxy();
+                value = {};
             }
-            if(!(value is PropertyProxy))
-            {
-                const newValue:PropertyProxy = new PropertyProxy();
-                for(var propertyName:String in value)
-                {
-                    newValue[propertyName] = value[propertyName];
-                }
-                value = newValue;
-            }
-            if(this._buttonProperties)
-            {
-                this._buttonProperties.removeOnChangeCallback(childProperties_onChange);
-            }
-            this._buttonProperties = PropertyProxy(value);
-            if(this._buttonProperties)
-            {
-                this._buttonProperties.addOnChangeCallback(childProperties_onChange);
-            }
+            
+            this._buttonProperties = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
 
@@ -599,7 +583,7 @@ package feathers.controls
         /**
          * @private
          */
-        protected var _listProperties:PropertyProxy;
+        protected var _listProperties:Dictionary.<String, Object>;
         
         /**
          * A set of key/value pairs to be passed down to the picker's pop-up
@@ -621,11 +605,11 @@ package feathers.controls
          * @see #listFactory
          * @see feathers.controls.List
          */
-        public function get listProperties():Object
+        public function get listProperties():Dictionary.<String, Object>
         {
             if(!this._listProperties)
             {
-                this._listProperties = new PropertyProxy(childProperties_onChange);
+                this._listProperties = {};
             }
             return this._listProperties;
         }
@@ -633,34 +617,19 @@ package feathers.controls
         /**
          * @private
          */
-        public function set listProperties(value:Object):void
+        public function set listProperties(value:Dictionary.<String, Object>):void
         {
             if(this._listProperties == value)
             {
                 return;
             }
+            
             if(!value)
             {
-                value = new PropertyProxy();
+                value = {};
             }
-            if(!(value is PropertyProxy))
-            {
-                const newValue:PropertyProxy = new PropertyProxy();
-                for(var propertyName:String in value)
-                {
-                    newValue[propertyName] = value[propertyName];
-                }
-                value = newValue;
-            }
-            if(this._listProperties)
-            {
-                this._listProperties.removeOnChangeCallback(childProperties_onChange);
-            }
-            this._listProperties = PropertyProxy(value);
-            if(this._listProperties)
-            {
-                this._listProperties.addOnChangeCallback(childProperties_onChange);
-            }
+            
+            this._listProperties = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
         
@@ -679,15 +648,19 @@ package feathers.controls
             {
                 return this._labelFunction(item) as String;
             }
-            else if(this._labelField != null && item && item.hasOwnProperty(this._labelField))
+            else if ( item is String )
             {
-                return item[this._labelField] as String;
+                return item as String;
             }
-            else if(item is Object)
+            else if ( this._labelField != null )
             {
-                return item.toString();
+                var itemAsDictionary:Dictionary.<String, Object> = item as Dictionary.<String, Object>;
+                return itemAsDictionary ? itemAsDictionary[ _labelField ] as String : "";
             }
-            return "";
+            else
+            {
+                return "";
+            }
         }
         
         /**
@@ -707,7 +680,7 @@ package feathers.controls
         {
             if(!this._popUpContentManager)
             {
-                if(DeviceCapabilities.isTablet(Starling.current.nativeStage))
+                if(DeviceCapabilities.isTablet())
                 {
                     this.popUpContentManager = new CalloutPopUpContentManager();
                 }
@@ -906,14 +879,7 @@ package feathers.controls
          */
         protected function refreshButtonProperties():void
         {
-            for(var propertyName:String in this._buttonProperties)
-            {
-                if(this.button.hasOwnProperty(propertyName))
-                {
-                    var propertyValue:Object = this._buttonProperties[propertyName];
-                    this.button[propertyName] = propertyValue;
-                }
-            }
+            Dictionary.mapToObject( _buttonProperties, button );
         }
         
         /**
@@ -921,14 +887,7 @@ package feathers.controls
          */
         protected function refreshListProperties():void
         {
-            for(var propertyName:String in this._listProperties)
-            {
-                if(this.list.hasOwnProperty(propertyName))
-                {
-                    var propertyValue:Object = this._listProperties[propertyName];
-                    this.list[propertyName] = propertyValue;
-                }
-            }
+            Dictionary.mapToObject( _listProperties, list );
         }
 
         /**
@@ -949,14 +908,6 @@ package feathers.controls
             this._popUpContentManager.close();
         }
 
-        /**
-         * @private
-         */
-        protected function childProperties_onChange(proxy:PropertyProxy, name:String):void
-        {
-            this.invalidate(INVALIDATION_FLAG_STYLES);
-        }
-        
         /**
          * @private
          */

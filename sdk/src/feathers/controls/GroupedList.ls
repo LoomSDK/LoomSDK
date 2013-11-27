@@ -21,6 +21,8 @@ package feathers.controls
 
     import loom2d.events.Event;
     import loom2d.events.KeyboardEvent;
+    
+    import loom2d.Loom2D;
 
     /**
      * Dispatched when the selected item changes.
@@ -1884,12 +1886,11 @@ package feathers.controls
         {
             if(this._layout)
             {
-                var l = this._layout;
+                Loom2D.juggler.delayCall( Object( this._layout ).deleteNative, 0.1 );
                 this._layout = null;
             }
             this.dataProvider = null;
             super.dispose();
-            if(l) (l as Object).deleteNative();
         }
 
         /**
@@ -1959,15 +1960,15 @@ package feathers.controls
          */
         public function groupToHeaderData(group:Object):Object
         {
+            var groupAsDictionary:Dictionary.<String, Object> = group as Dictionary.<String, Object>;
+            
             if(this._headerFunction != null)
             {
                 return this._headerFunction.call(null, group);
             }
-            else if(this._headerField != null 
-                && group 
-                && group.getType().getFieldOrPropertyValueByName(group, this._headerField) != null)
+            else if(this._headerField != null && groupAsDictionary && groupAsDictionary[_headerField] != null)
             {
-                return group.getType().getFieldOrPropertyValueByName(group, this._headerField);
+                return groupAsDictionary[_headerField];
             }
 
             return null;

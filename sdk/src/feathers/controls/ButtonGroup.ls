@@ -8,10 +8,9 @@ accordance with the terms of the accompanying license agreement.
 package feathers.controls
 {
     import feathers.core.FeathersControl;
-    import feathers.core.PropertyProxy;
     import feathers.data.ListCollection;
 
-    import Loom2D.Events.Event;
+    import loom2d.events.Event;
 
     [DefaultProperty(value="dataProvider")]
     /**
@@ -825,7 +824,7 @@ package feathers.controls
             for(var i:int = 0; i < buttonCount; i++)
             {
                 var button:Button = this.activeButtons[i];
-                button.isEnabled &&= this._isEnabled;
+                button.isEnabled = button.isEnabled && this._isEnabled;
             }
         }
 
@@ -864,40 +863,33 @@ package feathers.controls
          */
         protected function defaultButtonInitializer(button:Button, item:Object):void
         {
-            if(item is Object)
+            if ( item is String )
             {
-                if(item.hasOwnProperty("label"))
+                button.label = item as String;
+                return;
+            }
+            
+            var itemAsDictionary:Dictionary.<String, Object> = item as Dictionary.<String, Object>;
+            
+            if( itemAsDictionary != null )
+            {
+                button.label = ( itemAsDictionary[ "label" ] != null ) ? itemAsDictionary[ "label" ] as String : "";
+                button.isEnabled = ( itemAsDictionary[ "isEnabled" ] != null ) ? itemAsDictionary[ "isEnabled" ] as Boolean : true;
+                
+                var field:String;
+                for each( field in DEFAULT_BUTTON_FIELDS )
                 {
-                    button.label = item.label as String;
+                    if ( itemAsDictionary[ field ] != null ) button.getType().setFieldOrPropertyValueByName( button, field, itemAsDictionary[ field ] );
                 }
-                else
+                for each( field in DEFAULT_BUTTON_EVENTS )
                 {
-                    button.label = item.toString();
-                }
-                if(item.hasOwnProperty("isEnabled"))
-                {
-                    button.isEnabled = item.isEnabled as Boolean;
-                }
-                for each(var field:String in DEFAULT_BUTTON_FIELDS)
-                {
-                    if(item.hasOwnProperty(field))
-                    {
-                        button[field] = item[field];
-                    }
-                }
-                for each(field in DEFAULT_BUTTON_EVENTS)
-                {
-                    if(item.hasOwnProperty(field))
-                    {
-                        button.addEventListener(field, item[field] as Function);
-                    }
+                    if ( itemAsDictionary[ field ] != null ) button.addEventListener( field, itemAsDictionary[ field ] as Function );
                 }
             }
             else
             {
                 button.label = "";
             }
-
         }
 
         /**
@@ -1041,7 +1033,7 @@ package feathers.controls
         {
             if(this.inactiveButtons.length == 0)
             {
-                var button:Button = this._buttonFactory();
+                var button:Button = this._buttonFactory() as Button;
                 if(this._customButtonName)
                 {
                     button.nameList.add(this._customButtonName);
@@ -1188,14 +1180,6 @@ package feathers.controls
                     position += this._gap;
                 }
             }
-        }
-
-        /**
-         * @private
-         */
-        protected function childProperties_onChange(proxy:PropertyProxy, name:String):void
-        {
-            this.invalidate(INVALIDATION_FLAG_STYLES);
         }
 
         /**

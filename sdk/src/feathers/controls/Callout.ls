@@ -10,19 +10,20 @@ package feathers.controls
     import feathers.core.FeathersControl;
     import feathers.core.PopUpManager;
 
-    import flash.events.KeyboardEvent;
-    import Loom2D.Math.Point;
-    import Loom2D.Math.Rectangle;
-    import flash.ui.Keyboard;
+    import loom2d.math.Point;
+    import loom2d.math.Rectangle;
 
-    import Loom2D.Loom2D;
-    import Loom2D.Display.DisplayObject;
-    import Loom2D.Display.DisplayObjectContainer;
-    import Loom2D.Events.EnterFrameEvent;
-    import Loom2D.Events.Event;
-    import Loom2D.Events.Touch;
-    import Loom2D.Events.TouchEvent;
-    import Loom2D.Events.TouchPhase;
+    import loom2d.Loom2D;
+    import loom2d.display.DisplayObject;
+    import loom2d.display.DisplayObjectContainer;
+    import loom2d.events.EnterFrameEvent;
+    import loom2d.events.Event;
+    import loom2d.events.Touch;
+    import loom2d.events.TouchEvent;
+    import loom2d.events.TouchPhase;
+    import loom2d.events.KeyboardEvent;
+    
+    import loom.platform.LoomKey;
 
     /**
      * Dispatched when the callout is closed.
@@ -160,13 +161,6 @@ package feathers.controls
          * @private
          */
         protected static const DIRECTION_TO_FUNCTION:Dictionary.<String, Function> = {};
-        DIRECTION_TO_FUNCTION[DIRECTION_ANY] = positionBestSideOfOrigin;
-        DIRECTION_TO_FUNCTION[DIRECTION_UP] = positionAboveOrigin;
-        DIRECTION_TO_FUNCTION[DIRECTION_DOWN] = positionBelowOrigin;
-        DIRECTION_TO_FUNCTION[DIRECTION_LEFT] = positionToLeftOfOrigin;
-        DIRECTION_TO_FUNCTION[DIRECTION_RIGHT] = positionToRightOfOrigin;
-        DIRECTION_TO_FUNCTION[DIRECTION_VERTICAL] = positionAboveOrBelowOrigin;
-        DIRECTION_TO_FUNCTION[DIRECTION_HORIZONTAL] = positionToLeftOrRightOfOrigin;
 
         /**
          * The padding between a callout and the top edge of the stage when the
@@ -331,7 +325,7 @@ package feathers.controls
             const callout:Callout = new Callout();
             callout.closeOnTouchBeganOutside = true;
             callout.closeOnTouchEndedOutside = true;
-            callout.closeOnKeys = new <uint>[Keyboard.BACK, Keyboard.ESCAPE];
+            callout.closeOnKeys = [ LoomKey.BUTTON_BACK, LoomKey.ESCAPE ];
             return callout;
         }
 
@@ -340,7 +334,7 @@ package feathers.controls
          */
         protected static function positionWithSupportedDirections(callout:Callout, globalOrigin:Rectangle, direction:String):void
         {
-            if(DIRECTION_TO_FUNCTION.hasOwnProperty(direction))
+            if(DIRECTION_TO_FUNCTION[direction] != null)
             {
                 const calloutPositionFunction:Function = DIRECTION_TO_FUNCTION[direction];
                 calloutPositionFunction(callout, globalOrigin);
@@ -356,32 +350,32 @@ package feathers.controls
          */
         protected static function positionBestSideOfOrigin(callout:Callout, globalOrigin:Rectangle):void
         {
-            callout.measureWithArrowPosition(ARROW_POSITION_TOP, HELPER_POINT);
-            const downSpace:Number = (Starling.current.stage.stageHeight - HELPER_POINT.y) - (globalOrigin.y + globalOrigin.height);
+            var helperPoint = callout.measureWithArrowPosition(ARROW_POSITION_TOP);
+            const downSpace:Number = (Loom2D.stage.stageHeight - helperPoint.y) - (globalOrigin.y + globalOrigin.height);
             if(downSpace >= stagePaddingBottom)
             {
                 positionBelowOrigin(callout, globalOrigin);
                 return;
             }
 
-            callout.measureWithArrowPosition(ARROW_POSITION_BOTTOM, HELPER_POINT);
-            const upSpace:Number = globalOrigin.y - HELPER_POINT.y;
+            helperPoint = callout.measureWithArrowPosition(ARROW_POSITION_BOTTOM);
+            const upSpace:Number = globalOrigin.y - helperPoint.y;
             if(upSpace >= stagePaddingTop)
             {
                 positionAboveOrigin(callout, globalOrigin);
                 return;
             }
 
-            callout.measureWithArrowPosition(ARROW_POSITION_LEFT, HELPER_POINT);
-            const rightSpace:Number = (Starling.current.stage.stageWidth - HELPER_POINT.x) - (globalOrigin.x + globalOrigin.width);
+            helperPoint = callout.measureWithArrowPosition(ARROW_POSITION_LEFT);
+            const rightSpace:Number = (Loom2D.stage.stageWidth - helperPoint.x) - (globalOrigin.x + globalOrigin.width);
             if(rightSpace >= stagePaddingRight)
             {
                 positionToRightOfOrigin(callout, globalOrigin);
                 return;
             }
 
-            callout.measureWithArrowPosition(ARROW_POSITION_RIGHT, HELPER_POINT);
-            const leftSpace:Number = globalOrigin.x - HELPER_POINT.x;
+            helperPoint = callout.measureWithArrowPosition(ARROW_POSITION_RIGHT);
+            const leftSpace:Number = globalOrigin.x - helperPoint.x;
             if(leftSpace >= stagePaddingLeft)
             {
                 positionToLeftOfOrigin(callout, globalOrigin);
@@ -412,16 +406,16 @@ package feathers.controls
          */
         protected static function positionAboveOrBelowOrigin(callout:Callout, globalOrigin:Rectangle):void
         {
-            callout.measureWithArrowPosition(ARROW_POSITION_TOP, HELPER_POINT);
-            const downSpace:Number = (Starling.current.stage.stageHeight - HELPER_POINT.y) - (globalOrigin.y + globalOrigin.height);
+            var helperPoint = callout.measureWithArrowPosition(ARROW_POSITION_TOP);
+            const downSpace:Number = (Loom2D.stage.stageHeight - helperPoint.y) - (globalOrigin.y + globalOrigin.height);
             if(downSpace >= stagePaddingBottom)
             {
                 positionBelowOrigin(callout, globalOrigin);
                 return;
             }
 
-            callout.measureWithArrowPosition(ARROW_POSITION_BOTTOM, HELPER_POINT);
-            const upSpace:Number = globalOrigin.y - HELPER_POINT.y;
+            helperPoint = callout.measureWithArrowPosition(ARROW_POSITION_BOTTOM);
+            const upSpace:Number = globalOrigin.y - helperPoint.y;
             if(upSpace >= stagePaddingTop)
             {
                 positionAboveOrigin(callout, globalOrigin);
@@ -444,16 +438,16 @@ package feathers.controls
          */
         protected static function positionToLeftOrRightOfOrigin(callout:Callout, globalOrigin:Rectangle):void
         {
-            callout.measureWithArrowPosition(ARROW_POSITION_LEFT, HELPER_POINT);
-            const rightSpace:Number = (Starling.current.stage.stageWidth - HELPER_POINT.x) - (globalOrigin.x + globalOrigin.width);
+            var helperPoint = callout.measureWithArrowPosition(ARROW_POSITION_LEFT);
+            const rightSpace:Number = (Loom2D.stage.stageWidth - helperPoint.x) - (globalOrigin.x + globalOrigin.width);
             if(rightSpace >= stagePaddingRight)
             {
                 positionToRightOfOrigin(callout, globalOrigin);
                 return;
             }
 
-            callout.measureWithArrowPosition(ARROW_POSITION_RIGHT, HELPER_POINT);
-            const leftSpace:Number = globalOrigin.x - HELPER_POINT.x;
+            helperPoint = callout.measureWithArrowPosition(ARROW_POSITION_RIGHT);
+            const leftSpace:Number = globalOrigin.x - helperPoint.x;
             if(leftSpace >= stagePaddingLeft)
             {
                 positionToLeftOfOrigin(callout, globalOrigin);
@@ -476,9 +470,9 @@ package feathers.controls
          */
         protected static function positionBelowOrigin(callout:Callout, globalOrigin:Rectangle):void
         {
-            callout.measureWithArrowPosition(ARROW_POSITION_TOP, HELPER_POINT);
-            const idealXPosition:Number = globalOrigin.x + (globalOrigin.width - HELPER_POINT.x) / 2;
-            const xPosition:Number = Math.max(stagePaddingLeft, Math.min(Starling.current.stage.stageWidth - HELPER_POINT.x - stagePaddingRight, idealXPosition));
+            var helperPoint = callout.measureWithArrowPosition(ARROW_POSITION_TOP);
+            const idealXPosition:Number = globalOrigin.x + (globalOrigin.width - helperPoint.x) / 2;
+            const xPosition:Number = Math.max(stagePaddingLeft, Math.min(Loom2D.stage.stageWidth - helperPoint.x - stagePaddingRight, idealXPosition));
             callout.x = xPosition;
             callout.y = globalOrigin.y + globalOrigin.height;
             if(callout._isValidating)
@@ -499,11 +493,11 @@ package feathers.controls
          */
         protected static function positionAboveOrigin(callout:Callout, globalOrigin:Rectangle):void
         {
-            callout.measureWithArrowPosition(ARROW_POSITION_BOTTOM, HELPER_POINT);
-            const idealXPosition:Number = globalOrigin.x + (globalOrigin.width - HELPER_POINT.x) / 2;
-            const xPosition:Number = Math.max(stagePaddingLeft, Math.min(Starling.current.stage.stageWidth - HELPER_POINT.x - stagePaddingRight, idealXPosition));
+            var helperPoint = callout.measureWithArrowPosition(ARROW_POSITION_BOTTOM);
+            const idealXPosition:Number = globalOrigin.x + (globalOrigin.width - helperPoint.x) / 2;
+            const xPosition:Number = Math.max(stagePaddingLeft, Math.min(Loom2D.stage.stageWidth - helperPoint.x - stagePaddingRight, idealXPosition));
             callout.x = xPosition;
-            callout.y = globalOrigin.y - HELPER_POINT.y;
+            callout.y = globalOrigin.y - helperPoint.y;
             if(callout._isValidating)
             {
                 //no need to invalidate and need to validate again next frame
@@ -522,10 +516,10 @@ package feathers.controls
          */
         protected static function positionToRightOfOrigin(callout:Callout, globalOrigin:Rectangle):void
         {
-            callout.measureWithArrowPosition(ARROW_POSITION_LEFT, HELPER_POINT);
+            var helperPoint = callout.measureWithArrowPosition(ARROW_POSITION_LEFT);
             callout.x = globalOrigin.x + globalOrigin.width;
-            const idealYPosition:Number = globalOrigin.y + (globalOrigin.height - HELPER_POINT.y) / 2;
-            const yPosition:Number = Math.max(stagePaddingTop, Math.min(Starling.current.stage.stageHeight - HELPER_POINT.y - stagePaddingBottom, idealYPosition));
+            const idealYPosition:Number = globalOrigin.y + (globalOrigin.height - helperPoint.y) / 2;
+            const yPosition:Number = Math.max(stagePaddingTop, Math.min(Loom2D.stage.stageHeight - helperPoint.y - stagePaddingBottom, idealYPosition));
             callout.y = yPosition;
             if(callout._isValidating)
             {
@@ -545,10 +539,10 @@ package feathers.controls
          */
         protected static function positionToLeftOfOrigin(callout:Callout, globalOrigin:Rectangle):void
         {
-            callout.measureWithArrowPosition(ARROW_POSITION_RIGHT, HELPER_POINT);
-            callout.x = globalOrigin.x - HELPER_POINT.x;
-            const idealYPosition:Number = globalOrigin.y + (globalOrigin.height - HELPER_POINT.y) / 2;
-            const yPosition:Number = Math.max(stagePaddingLeft, Math.min(Starling.current.stage.stageHeight - HELPER_POINT.y - stagePaddingBottom, idealYPosition));
+            var helperPoint = callout.measureWithArrowPosition(ARROW_POSITION_RIGHT);
+            callout.x = globalOrigin.x - helperPoint.x;
+            const idealYPosition:Number = globalOrigin.y + (globalOrigin.height - helperPoint.y) / 2;
+            const yPosition:Number = Math.max(stagePaddingLeft, Math.min(Loom2D.stage.stageHeight - helperPoint.y - stagePaddingBottom, idealYPosition));
             callout.y = yPosition;
             if(callout._isValidating)
             {
@@ -568,6 +562,17 @@ package feathers.controls
          */
         public function Callout()
         {
+            if ( DIRECTION_TO_FUNCTION.length == 0 )
+            {
+                DIRECTION_TO_FUNCTION[DIRECTION_ANY] = positionBestSideOfOrigin;
+                DIRECTION_TO_FUNCTION[DIRECTION_UP] = positionAboveOrigin;
+                DIRECTION_TO_FUNCTION[DIRECTION_DOWN] = positionBelowOrigin;
+                DIRECTION_TO_FUNCTION[DIRECTION_LEFT] = positionToLeftOfOrigin;
+                DIRECTION_TO_FUNCTION[DIRECTION_RIGHT] = positionToRightOfOrigin;
+                DIRECTION_TO_FUNCTION[DIRECTION_VERTICAL] = positionAboveOrBelowOrigin;
+                DIRECTION_TO_FUNCTION[DIRECTION_HORIZONTAL] = positionToLeftOrRightOfOrigin;
+            }
+                            
             this.addEventListener(Event.ADDED_TO_STAGE, callout_addedToStageHandler);
         }
 
@@ -766,7 +771,7 @@ package feathers.controls
             }
             if(this._origin)
             {
-                this.removeEventListener(EnterFrameEvent.ENTER_FRAME, callout_enterFrameHandler);
+                Loom2D.stage.removeEventListener(EnterFrameEvent.ENTER_FRAME, callout_enterFrameHandler);
                 this._origin.removeEventListener(Event.REMOVED_FROM_STAGE, origin_removedFromStageHandler);
             }
             this._origin = value;
@@ -774,7 +779,7 @@ package feathers.controls
             if(this._origin)
             {
                 this._origin.addEventListener(Event.REMOVED_FROM_STAGE, origin_removedFromStageHandler);
-                this.addEventListener(EnterFrameEvent.ENTER_FRAME, callout_enterFrameHandler);
+                Loom2D.stage.addEventListener(EnterFrameEvent.ENTER_FRAME, callout_enterFrameHandler);
             }
             this.invalidate(INVALIDATION_FLAG_ORIGIN);
         }
@@ -1541,7 +1546,7 @@ package feathers.controls
         override protected function initialize():void
         {
             this.stage.addEventListener(TouchEvent.TOUCH, stage_touchHandler);
-            Starling.current.nativeStage.addEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler, false, int.MAX_VALUE, true);
+            Loom2D.stage.addEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
             this.addEventListener(Event.REMOVED_FROM_STAGE, callout_removedFromStageHandler);
         }
 
@@ -1587,19 +1592,17 @@ package feathers.controls
          */
         protected function autoSizeIfNeeded():Boolean
         {
-            this.measureWithArrowPosition(this._arrowPosition, HELPER_POINT);
-            return this.setSizeInternal(HELPER_POINT.x, HELPER_POINT.y, false);
+            var helperPoint = this.measureWithArrowPosition(this._arrowPosition);
+            return this.setSizeInternal(helperPoint.x, helperPoint.y, false);
         }
 
         /**
          * @private
          */
-        protected function measureWithArrowPosition(arrowPosition:String, result:Point = null):Point
+        protected function measureWithArrowPosition(arrowPosition:String):Point
         {
-            if(!result)
-            {
-                result = new Point();
-            }
+            var result = new Point();
+
             const needsWidth:Boolean = isNaN(this.explicitWidth);
             const needsHeight:Boolean = isNaN(this.explicitHeight);
             if(!needsWidth && !needsHeight)
@@ -1737,6 +1740,7 @@ package feathers.controls
             const yPosition:Number = (this._topArrowSkin &&  this._arrowPosition == ARROW_POSITION_TOP) ? this._topArrowSkin.height + this._topArrowGap : 0;
             const widthOffset:Number = (this._rightArrowSkin && this._arrowPosition == ARROW_POSITION_RIGHT) ? this._rightArrowSkin.width + this._rightArrowGap : 0;
             const heightOffset:Number = (this._bottomArrowSkin && this._arrowPosition == ARROW_POSITION_BOTTOM) ? this._bottomArrowSkin.height + this._bottomArrowGap : 0;
+            
             this._backgroundSkin.x = xPosition;
             this._backgroundSkin.y = yPosition;
             this._backgroundSkin.width = this.actualWidth - xPosition - widthOffset;
@@ -1788,9 +1792,13 @@ package feathers.controls
             {
                 return;
             }
-            this._origin.getBounds(Starling.current.stage, HELPER_RECT);
+            this._origin.getBounds(Loom2D.stage, HELPER_RECT);
             const hasGlobalBounds:Boolean = this._lastGlobalBoundsOfOrigin != null;
-            if(!hasGlobalBounds || !this._lastGlobalBoundsOfOrigin.equals(HELPER_RECT))
+            
+            var lastBoundsEqualsHelper:Boolean = hasGlobalBounds && _lastGlobalBoundsOfOrigin.x == HELPER_RECT.x && _lastGlobalBoundsOfOrigin.y == HELPER_RECT.y &&
+                _lastGlobalBoundsOfOrigin.width == HELPER_RECT.width && _lastGlobalBoundsOfOrigin.height == HELPER_RECT.height;
+            
+            if(!hasGlobalBounds || !lastBoundsEqualsHelper)
             {
                 if(!hasGlobalBounds)
                 {
@@ -1813,7 +1821,7 @@ package feathers.controls
             //close immediately, we wait one frame before allowing it to close
             //based on touches.
             this._isReadyToClose = false;
-            this.addEventListener(EnterFrameEvent.ENTER_FRAME, callout_oneEnterFrameHandler);
+            this.stage.addEventListener(EnterFrameEvent.ENTER_FRAME, callout_oneEnterFrameHandler);
         }
 
         /**
@@ -1822,7 +1830,7 @@ package feathers.controls
         protected function callout_removedFromStageHandler(event:Event):void
         {
             this.stage.removeEventListener(TouchEvent.TOUCH, stage_touchHandler);
-            Starling.current.nativeStage.removeEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
+            Loom2D.stage.removeEventListener(KeyboardEvent.KEY_DOWN, stage_keyDownHandler);
         }
 
         /**
@@ -1830,7 +1838,7 @@ package feathers.controls
          */
         protected function callout_oneEnterFrameHandler(event:Event):void
         {
-            this.removeEventListener(EnterFrameEvent.ENTER_FRAME, callout_oneEnterFrameHandler);
+            this.stage.removeEventListener(EnterFrameEvent.ENTER_FRAME, callout_oneEnterFrameHandler);
             this._isReadyToClose = true;
         }
 
@@ -1885,8 +1893,7 @@ package feathers.controls
             {
                 return;
             }
-            //don't let the OS handle the event
-            event.preventDefault();
+
             //don't let other event handlers handle the event
             event.stopImmediatePropagation();
             this.close(this.disposeOnSelfClose);

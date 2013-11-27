@@ -51,7 +51,7 @@ package feathers.core
         /**
          * Determines if the default focus manager is enabled.
          */
-        public static function get isEnabled():Boolean
+        public static function get defaultIsEnabled():Boolean
         {
             return _defaultFocusManager != null;
         }
@@ -59,7 +59,7 @@ package feathers.core
         /**
          * @private
          */
-        public static function set isEnabled(value:Boolean):void
+        public static function set defaultIsEnabled(value:Boolean):void
         {
             if((value && _defaultFocusManager != null) ||
                 (!value && !_defaultFocusManager))

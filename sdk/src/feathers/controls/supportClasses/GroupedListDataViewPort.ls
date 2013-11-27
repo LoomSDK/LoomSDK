@@ -1135,21 +1135,35 @@ package feathers.controls.supportClasses
 
         private function refreshItemRendererStyles():void
         {
-            for each(var renderer:IGroupedListItemRenderer in _activeItemRenderers)
+            var renderer:IGroupedListItemRenderer;
+            
+            for each(renderer in _activeItemRenderers)
             {
                 refreshOneItemRendererStyles(renderer);
             }
-            for each(renderer in _activeFirstItemRenderers)
+            
+            if ( _activeFirstItemRenderers != null )
             {
-                refreshOneItemRendererStyles(renderer);
+                for each(renderer in _activeFirstItemRenderers)
+                {
+                    refreshOneItemRendererStyles(renderer);
+                }
             }
-            for each(renderer in _activeLastItemRenderers)
+            
+            if ( _activeLastItemRenderers != null )
             {
-                refreshOneItemRendererStyles(renderer);
+                for each(renderer in _activeLastItemRenderers)
+                {
+                    refreshOneItemRendererStyles(renderer);
+                }
             }
-            for each(renderer in _activeSingleItemRenderers)
+            
+            if ( _activeSingleItemRenderers != null )
             {
-                refreshOneItemRendererStyles(renderer);
+                for each(renderer in _activeSingleItemRenderers)
+                {
+                    refreshOneItemRendererStyles(renderer);
+                }
             }
         }
 
@@ -1187,26 +1201,40 @@ package feathers.controls.supportClasses
         private function refreshSelection():void
         {
             _ignoreSelectionChanges = true;
+            
             for each(var renderer:IGroupedListItemRenderer in _activeItemRenderers)
             {
                 renderer.isSelected = renderer.groupIndex == _selectedGroupIndex &&
                     renderer.itemIndex == _selectedItemIndex;
             }
-            for each(renderer in _activeFirstItemRenderers)
+            
+            if ( _activeFirstItemRenderers )
             {
-                renderer.isSelected = renderer.groupIndex == _selectedGroupIndex &&
-                    renderer.itemIndex == _selectedItemIndex;
+                for each(renderer in _activeFirstItemRenderers)
+                {
+                    renderer.isSelected = renderer.groupIndex == _selectedGroupIndex &&
+                        renderer.itemIndex == _selectedItemIndex;
+                }
             }
-            for each(renderer in _activeLastItemRenderers)
+            
+            if ( _activeLastItemRenderers )
             {
-                renderer.isSelected = renderer.groupIndex == _selectedGroupIndex &&
-                    renderer.itemIndex == _selectedItemIndex;
+                for each(renderer in _activeLastItemRenderers)
+                {
+                    renderer.isSelected = renderer.groupIndex == _selectedGroupIndex &&
+                        renderer.itemIndex == _selectedItemIndex;
+                }
             }
-            for each(renderer in _activeSingleItemRenderers)
+                
+            if ( _activeSingleItemRenderers )
             {
-                renderer.isSelected = renderer.groupIndex == _selectedGroupIndex &&
-                    renderer.itemIndex == _selectedItemIndex;
+                for each(renderer in _activeSingleItemRenderers)
+                {
+                    renderer.isSelected = renderer.groupIndex == _selectedGroupIndex &&
+                        renderer.itemIndex == _selectedItemIndex;
+                }
             }
+            
             _ignoreSelectionChanges = false;
         }
 

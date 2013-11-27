@@ -52,7 +52,7 @@ package feathers.controls
      *
      * ~~~as3
      * var button:Button = new Button();
-     * button.label = "Click Me!";
+     * button.label = "Click Me";
      * button.addEventListener( Event.TRIGGERED, button_triggeredHandler );
      * this.addChild( button );
      * ~~~
@@ -1615,7 +1615,9 @@ package feathers.controls
          */
         public function get downLabelProperties():Dictionary.<String, Object>
         {
-            return this._labelPropertiesSelector.getValueForState(STATE_DOWN, false) as Dictionary.<String, Object>;
+            var returnValue:Dictionary.<String, Object> = this._labelPropertiesSelector.getValueForState(STATE_DOWN, false) as Dictionary.<String, Object>;
+            if ( !returnValue ) downLabelProperties = returnValue = {};
+            return returnValue;
         }
         
         /**

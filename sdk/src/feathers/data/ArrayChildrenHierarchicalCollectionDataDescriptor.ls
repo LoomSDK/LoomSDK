@@ -58,14 +58,14 @@ package feathers.data
         public function getLength(data:Object, ...rest:Vector.<Object>):int
         {
             var branch:Vector.<Object> = data as Vector.<Object>;
-            const indexCount:int = rest.length;
+            
+            const indexCount:int = rest.getType() == Vector ? rest.length : 0;
+            
             for(var i:int = 0; i < indexCount; i++)
             {
                 var index:int = rest[i] as int;
-                
-                var potentialNewBranch:Object = branch[index];
-                var potentialNewBranchType = potentialNewBranch.getType();
-                branch = potentialNewBranchType.getFieldOrPropertyValueByName(potentialNewBranch, childrenField) as Vector.<Object>;
+                var potentialNewBranchParent:Dictionary.<String, Object> = branch[index] as Dictionary.<String, Object>;
+                branch = potentialNewBranchParent[ childrenField ] as Vector.<Object>;
             }
 
             return branch.length;
@@ -76,16 +76,15 @@ package feathers.data
          */
         public function getItemAt(data:Object, index:int, ...rest:Vector.<Object>):Object
         {
+            if ( !rest ) rest = [];
             rest.unshift(index);
             var branch:Vector.<Object> = data as Vector.<Object>;
             const indexCount:int = rest.length - 1;
             for(var i:int = 0; i < indexCount; i++)
             {
                 index = rest[i] as int;
-
-                var potentialNewBranch:Object = branch[index];
-                var potentialNewBranchType = potentialNewBranch.getType();
-                branch = potentialNewBranchType.getFieldOrPropertyValueByName(potentialNewBranch, childrenField) as Vector.<Object>;
+                var potentialNewBranchParent:Dictionary.<String, Object> = branch[index] as Dictionary.<String, Object>;
+                branch = potentialNewBranchParent[ childrenField ] as Vector.<Object>;
             }
             const lastIndex:int = rest[indexCount] as int;
             return branch[lastIndex];
@@ -102,10 +101,8 @@ package feathers.data
             for(var i:int = 0; i < indexCount; i++)
             {
                 index = rest[i] as int;
-
-                var potentialNewBranch:Object = branch[index];
-                var potentialNewBranchType = potentialNewBranch.getType();
-                branch = potentialNewBranchType.getFieldOrPropertyValueByName(potentialNewBranch, childrenField) as Vector.<Object>;
+                var potentialNewBranchParent:Dictionary.<String, Object> = branch[index] as Dictionary.<String, Object>;
+                branch = potentialNewBranchParent[ childrenField ] as Vector.<Object>;
             }
             const lastIndex:int = rest[indexCount] as int;
             branch[lastIndex] = item;
@@ -191,12 +188,9 @@ package feathers.data
          */
         public function isBranch(node:Object):Boolean
         {
-            if(!node.hasOwnProperty(this.childrenField))
-                return false;
-
-            var potentialNewBranchType = node.getType();
-            var branch:Vector.<Object> = potentialNewBranchType.getFieldOrPropertyValueByName(node, childrenField) as Vector.<Object>;
-
+            var nodeAsDictionary:Dictionary.<String, Object> = node as Dictionary.<String, Object>;
+            if ( !node || nodeAsDictionary[ childrenField ] == null ) return false;
+            var branch:Vector.<Object> = nodeAsDictionary[ childrenField ] as Vector.<Object>;
             return branch && branch is Vector.<Object>;
         }
 

@@ -802,11 +802,6 @@ package feathers.controls.supportClasses
             this.removeChild(DisplayObject(renderer), true);
         }
 
-        /*private function childProperties_onChange(proxy:PropertyProxy, name:String):void
-        {
-            this.invalidate(INVALIDATION_FLAG_STYLES);
-        }*/
-
         private function owner_scrollHandler(event:Event):void
         {
             this._isScrolling = true;
