@@ -63,7 +63,7 @@ package feathers.core
          * Starling in its constructor, so it needs to be instantiated after
          * Starling is initialized.
          */
-        protected static var VALIDATION_QUEUE:ValidationQueue = new ValidationQueue();
+        protected static var VALIDATION_QUEUE:ValidationQueue;
 
         /**
          * @private
@@ -205,6 +205,7 @@ package feathers.core
         public function FeathersControl()
         {
             super();
+            if ( !VALIDATION_QUEUE ) VALIDATION_QUEUE = new ValidationQueue();
             this.addEventListener(Event.ADDED_TO_STAGE, initialize_addedToStageHandler);
             this.addEventListener(Event.FLATTEN, feathersControl_flattenHandler);
         }
