@@ -911,17 +911,6 @@ package feathers.controls
         /**
          * @private
          */
-        
-        /*
-        protected function childProperties_onChange(proxy:PropertyProxy, name:String):void
-        {
-            this.invalidate(INVALIDATION_FLAG_STYLES);
-        }
-        */
-        
-        /**
-         * @private
-         */
         protected function button_triggeredHandler(event:Event):void
         {
             if(this.list.stage)

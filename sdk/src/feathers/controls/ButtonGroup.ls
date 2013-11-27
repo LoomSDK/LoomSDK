@@ -1185,19 +1185,6 @@ package feathers.controls
         /**
          * @private
          */
-        
-        /*
-        
-        protected function childProperties_onChange(proxy:PropertyProxy, name:String):void
-        {
-            this.invalidate(INVALIDATION_FLAG_STYLES);
-        }
-        
-        */
-
-        /**
-         * @private
-         */
         protected function dataProvider_changeHandler(event:Event):void
         {
             this.invalidate(INVALIDATION_FLAG_DATA);
