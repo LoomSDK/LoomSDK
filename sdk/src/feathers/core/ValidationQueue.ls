@@ -11,6 +11,9 @@ package feathers.core
     import loom2d.display.DisplayObjectContainer;
     import loom.Application;
     
+    import loom2d.Loom2D;
+    import loom2d.events.Event;
+    
     [ExcludeClass]
     public final class ValidationQueue
     {
@@ -19,7 +22,7 @@ package feathers.core
          */
         public function ValidationQueue()
         {
-            Application.ticks += process;
+            Loom2D.stage.addEventListener( Event.ENTER_FRAME, process );
         }
 
         private var _isValidating:Boolean = false;
@@ -66,7 +69,7 @@ package feathers.core
         /**
          * @private
          */
-        public function process():void
+        public function process( e:Event = null ):void
         {
             this._isValidating = true;
             while(this._queue.length > 0)
