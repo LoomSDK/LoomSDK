@@ -36,7 +36,7 @@ lmDefineLogGroup(gLoomSoundLogGroup, "loom.sound", 1, LoomLogInfo);
 
 // Nop for now
 #define CHECK_OPENAL_ERROR() \
-    err = alcGetError(dev); if (err != 0) lmLogError(gLoomSoundLogGroup, "OpenAL error %d %s:%d",err, __FILE__, __LINE__); 
+    err = alcGetError(dev); if (err != 0) lmLogError(gLoomSoundLogGroup, "OpenAL error %d %s:%d", err, __FILE__, __LINE__); 
 
 extern "C"
 {
@@ -179,7 +179,7 @@ class Sound
 
 protected:
     static Sound *smList;
-    const static int csmMaxSounds = 64;
+    const static int csmMaxSounds = 256;
     static int count;
 
 public:
@@ -187,6 +187,12 @@ public:
     ALuint source;
     Sound *next;
     int needsRestart;
+    int playCount;
+
+    static void preload(const char *assetPath)
+    {
+        OALBufferManager::getBufferForAsset(assetPath);
+    }
 
     static Sound *load(const char *assetPath)
     {
@@ -210,7 +216,7 @@ public:
         {
             while(walk)
             {
-                if(walk->isPlaying() == false && walk->source != 0)
+                if(walk->isPlaying() == false && walk->source != 0 && walk->hasEverPlayed() == false)
                 {
                     // Snag the source and reuse it.
                     lmLogError(gLoomSoundLogGroup, "Too many active sources, reusing source #%d", walk->source);
@@ -278,6 +284,9 @@ public:
         source = 0;
         next = NULL;
         needsRestart = 0;
+        playCount = 0;
+
+        // Note the allocation.
         count++;
     }
 
@@ -297,7 +306,7 @@ public:
         }
 
         count--;
-        lmAssert(count > 0, "Unbalanced Sound allocations! Should never delete more than we allocated!");
+        lmAssert(count >= 0, "Unbalanced Sound allocations! Should never delete more than we allocated!");
 
         if(source != 0)
             alDeleteSources(1, &source);
@@ -320,7 +329,7 @@ public:
     void setListenerRelative(bool flag)
     {
         ALCenum err;
-        alSourcei(source, AL_SOURCE_RELATIVE, flag ? 1 : 0);
+        alSourcei(source, AL_SOURCE_RELATIVE, flag ? 0 : 1);
         CHECK_OPENAL_ERROR();
     }
 
@@ -364,6 +373,8 @@ public:
         ALCenum err;
         alSourcePlay(source);
         CHECK_OPENAL_ERROR();
+
+        playCount++;
     }
 
     void pause()
@@ -392,6 +403,11 @@ public:
         ALint state = 0;
         alGetSourcei(source, AL_SOURCE_STATE, &state);
         return (state == AL_PLAYING || state == AL_PAUSED);
+    }
+
+    bool hasEverPlayed()
+    {
+        return playCount != 0;
     }
 };
 
@@ -517,6 +533,7 @@ static int registerLoomSoundSound(lua_State *L)
        .beginClass<Sound>("Sound")
 
        .addStaticMethod("load", &Sound::load)
+       .addStaticMethod("preload", &Sound::preload)
 
        .addMethod("setPosition", &Sound::setPosition)
        .addMethod("setVelocity", &Sound::setVelocity)
@@ -535,6 +552,7 @@ static int registerLoomSoundSound(lua_State *L)
        .addMethod("rewind", &Sound::rewind)
 
        .addMethod("isPlaying", &Sound::isPlaying)
+       .addMethod("hasEverPlayed", &Sound::hasEverPlayed)
        
        .endClass()
     .endPackage();

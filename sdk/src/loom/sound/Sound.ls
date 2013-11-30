@@ -18,7 +18,7 @@ package loom.sound
      * Sound asset data is only loaded once, so you can safely call Sound.load()
      * as much as you like without consuming lots of memory.
      *
-     * Make sure to call nativeDelete() on Sounds when you are done with them.
+     * Make sure to call deleteNative() on Sounds when you are done with them.
      * This frees up critical audio resources. Behind the scenes, Loom attempts
      * to reuse audio playback resources. It does this by stealing inactive 
      * Sound's resources after about 64 are active. New Sound instances will 
@@ -39,6 +39,11 @@ package loom.sound
          * requires that you have a valid license to perform MP3 playback.
          */
         public static native function load(assetPath:String):Sound;
+
+        /**
+         * Load and decompress a sound into memory for on-demand playback.
+         */
+        public static native function preload(assetPath:String):void;
 
         /**
          * Set the position in meters relative to world origin for sound 
@@ -110,5 +115,10 @@ package loom.sound
          * True if we are currently playing the sound.
          */
         public native function isPlaying():Boolean;
+
+        /**
+         * True if we have ever played the sound.
+         */
+        public native function hasEveryPlayed():Boolean;
     }
 }
