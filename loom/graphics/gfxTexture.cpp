@@ -339,7 +339,9 @@ void Texture::reset()
         tinfo->handle.idx = bgfx::invalidHandle;
         tinfo->reload     = false;
 
+        loom_asset_lock(tinfo->texturePath.c_str(), LATImage, 1);
         handleAssetNotification((void *)tinfo->id, tinfo->texturePath.c_str());
+        loom_asset_unlock(tinfo->texturePath.c_str());
     }
 }
 
