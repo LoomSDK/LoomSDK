@@ -159,7 +159,7 @@ protected:
 	static void Destroy(b2Joint* joint, b2BlockAllocator* allocator);
 
 	b2Joint(const b2JointDef* def);
-	virtual ~b2Joint() {}
+public:	virtual ~b2Joint() {}; protected:
 
 	virtual void InitVelocityConstraints(const b2SolverData& data) = 0;
 	virtual void SolveVelocityConstraints(const b2SolverData& data) = 0;

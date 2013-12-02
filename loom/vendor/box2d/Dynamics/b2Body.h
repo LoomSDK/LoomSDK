@@ -416,7 +416,7 @@ private:
 	};
 
 	b2Body(const b2BodyDef* bd, b2World* world);
-	~b2Body();
+public:	~b2Body(); private:
 
 	void SynchronizeFixtures();
 	void SynchronizeTransform();

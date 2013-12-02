@@ -185,7 +185,7 @@ protected:
 
 	b2Contact() : m_fixtureA(NULL), m_fixtureB(NULL) {}
 	b2Contact(b2Fixture* fixtureA, int32 indexA, b2Fixture* fixtureB, int32 indexB);
-	virtual ~b2Contact() {}
+public:	virtual ~b2Contact() {}; protected:
 
 	void Update(b2ContactListener* listener);
 
