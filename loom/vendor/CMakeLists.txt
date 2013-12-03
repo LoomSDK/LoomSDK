@@ -54,6 +54,7 @@ set(BOX2D_SRC
     box2d/Dynamics/Joints/b2FrictionJoint.cpp
     box2d/Dynamics/Joints/b2GearJoint.cpp
     box2d/Dynamics/Joints/b2Joint.cpp
+    box2d/Dynamics/Joints/b2MotorJoint.cpp
     box2d/Dynamics/Joints/b2MouseJoint.cpp
     box2d/Dynamics/Joints/b2PrismaticJoint.cpp
     box2d/Dynamics/Joints/b2PulleyJoint.cpp
@@ -104,6 +105,7 @@ set(BOX2D_HDR
     box2d/Dynamics/Joints/b2FrictionJoint.h
     box2d/Dynamics/Joints/b2GearJoint.h
     box2d/Dynamics/Joints/b2Joint.h
+    box2d/Dynamics/Joints/b2MotorJoint.h
     box2d/Dynamics/Joints/b2MouseJoint.h
     box2d/Dynamics/Joints/b2PrismaticJoint.h
     box2d/Dynamics/Joints/b2PulleyJoint.h

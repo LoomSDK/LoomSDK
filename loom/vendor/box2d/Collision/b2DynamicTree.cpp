@@ -19,6 +19,7 @@
 #include <Box2D/Collision/b2DynamicTree.h>
 #include <cstring>
 #include <cfloat>
+#include <string.h>
 using namespace std;
 
 
