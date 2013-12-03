@@ -258,7 +258,7 @@ class TestStruct extends Test
 
         testLocalInitialization();    
 
-        // compiler errors, boolean operation on struct ty
+        // compiler errors, boolean operation on struct type
         //if (a1) {}
         //if (!a1) {}
         //takesAStruct(!a1);

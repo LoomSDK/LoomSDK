@@ -2729,7 +2729,7 @@ public:
     {
         expression = (ConditionalExpression *)TraversalVisitor::visit(expression);
             
-        //TODO: verify false expression type
+        //LOOM-1837: verify false expression type
         expression->type = expression->trueExpression->type;
 
         if (expression->expression)
