@@ -11,6 +11,8 @@ package
 
     import loom2d.text.BitmapFont;
 
+    import loom.box2d;
+
     public class Box2DExample extends Application
     {
         override public function run():void
@@ -29,7 +31,7 @@ package
             bg.scale = assetScale;
             stage.addChild(bg);
 
-            
+            var gravity:b2Vec2 = new b2Vec2(0,-10);
 
         }
 
