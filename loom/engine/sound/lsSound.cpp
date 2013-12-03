@@ -82,6 +82,10 @@ extern "C"
         alListenerfv(AL_ORIENTATION, listenerOri);
         CHECK_OPENAL_ERROR();
 
+        // Use inverse distance clamped mode (see section 3.4 of the OpenAL 1.1 spec).
+        alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
+        CHECK_OPENAL_ERROR();
+
         lmLogInfo(gLoomSoundLogGroup, "Loom Sound engine OpenAL '%s' initialized.", alcGetString(dev, ALC_ALL_DEVICES_SPECIFIER));
     }
 
@@ -329,14 +333,18 @@ public:
     void setListenerRelative(bool flag)
     {
         ALCenum err;
-        alSourcei(source, AL_SOURCE_RELATIVE, flag ? 0 : 1);
+        alSourcei(source, AL_SOURCE_RELATIVE, flag ? AL_FALSE : AL_TRUE);
         CHECK_OPENAL_ERROR();
     }
 
-    void setFalloffRadius(float radius)
+    void setFalloff(float innerRadius, float outerRadius, float rollOff = 1.0)
     {
         ALCenum err;
-        alSourcef(source, AL_MAX_DISTANCE, radius);
+        alSourcef(source, AL_REFERENCE_DISTANCE, innerRadius);
+        CHECK_OPENAL_ERROR();
+        alSourcef(source, AL_MAX_DISTANCE, outerRadius);
+        CHECK_OPENAL_ERROR();
+        alSourcef(source, AL_ROLLOFF_FACTOR, rollOff);
         CHECK_OPENAL_ERROR();
     }
 
@@ -539,7 +547,7 @@ static int registerLoomSoundSound(lua_State *L)
        .addMethod("setVelocity", &Sound::setVelocity)
        .addMethod("setListenerRelative", &Sound::setListenerRelative)
 
-       .addMethod("setFalloffRadius", &Sound::setFalloffRadius)
+       .addMethod("setFalloff", &Sound::setFalloff)
        .addMethod("setGain", &Sound::setGain)
        .addMethod("getGain", &Sound::getGain)
 

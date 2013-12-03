@@ -64,9 +64,14 @@ package loom.sound
         public native function setListenerRelative(isRelative:Boolean):void;
 
         /**
-         * Distance in meters before the sound cannot be heard.
+         * Adjust how distance affects this sound. See Section 3.4 of the OpenAL 1.1 specification
+         * for full details; the parameters will get you most of the way there though!
+         *
+         * @param innerRadius When closer than this distance, the sound is played at full volume.
+         * @param outerRadius When further than this distance, the sound is no longer audible.
+         * @param rollOff     Adjust the curve used for gain falloff.
          */
-        public native function setFalloffRadius(radius:Number):void;
+        public native function setFalloffRadius(innerRadius:Number, outerRadius:Number, rollOff:Number = 1.0):void;
 
         /**
          * Adjust sound volume. Gain of 1 preserves sound volume, 0 mutes it.
@@ -119,6 +124,6 @@ package loom.sound
         /**
          * True if we have ever played the sound.
          */
-        public native function hasEveryPlayed():Boolean;
+        public native function hasEverPlayed():Boolean;
     }
 }
