@@ -2497,13 +2497,20 @@ public:
 
     Expression *visit(UnaryOperatorExpression *expression)
     {
-        expression->subExpression->visitExpression(this);
+        Expression* subExpr = expression->subExpression;
+        subExpr->visitExpression(this);
 
         int c = expression->op->value.str()[0];
 
         if (c == '!')
         {
             expression->type = Scope::resolveType("system.Boolean");
+
+            if (subExpr->type->isStruct())
+            {
+                error("Boolean operation on Struct type: %s", subExpr->type->getFullName().c_str());
+                return expression;
+            }
         }
         else if (c == '-')
         {
@@ -2688,6 +2695,18 @@ public:
         error("multiple assignment expression is not implemented");
         return expression;
     }
+
+    Statement *visit(IfStatement *ifStatement)
+    {
+        TraversalVisitor::visit(ifStatement);
+
+        if (ifStatement->expression && ifStatement->expression->type->isStruct())
+        {
+                error("Boolean operation on Struct type: %s", ifStatement->expression->type->getFullName().c_str());
+        }
+        return ifStatement;
+    }
+
 };
 }
 #endif

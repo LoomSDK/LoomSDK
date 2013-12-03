@@ -107,7 +107,12 @@ class TestStruct extends Test
     
         testPoint  = value;
         
-    }    
+    }   
+
+    function takesAStruct(v:MyStruct)
+    {
+
+    } 
     
     public static var svalue:MyStruct = new MyStruct(-1, -2);
     public var value:MyStruct = svalue;
@@ -251,7 +256,13 @@ class TestStruct extends Test
         assert(a1.x == 4);
         assert(a1.y == 6);   
 
-        testLocalInitialization();     
+        testLocalInitialization();    
+
+        // compiler errors, boolean operation on struct ty
+        //if (a1) {}
+        //if (!a1) {}
+        //takesAStruct(!a1);
+
     }
     
     function TestStruct()

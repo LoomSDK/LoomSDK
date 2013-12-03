@@ -339,11 +339,9 @@ public:
     Statement *visit(IfStatement *ifStatement)
     {
         lastVisited = ifStatement;
-
         ifStatement->expression     = visitExpression(ifStatement->expression);
         ifStatement->trueStatement  = visitStatement(ifStatement->trueStatement);
-        ifStatement->falseStatement = visitStatement(
-            ifStatement->falseStatement);
+        ifStatement->falseStatement = visitStatement(ifStatement->falseStatement);            
         return ifStatement;
     }
 
