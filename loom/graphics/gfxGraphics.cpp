@@ -145,7 +145,11 @@ void Graphics::handleContextLoss()
     lmLog(gGFXLogGroup, "Graphics::handleContextLoss - %dx%d", sWidth, sHeight);
 
     lmLog(gGFXLogGroup, "Handle context loss: Shutdown %i", _scount++);
+
+    // make sure the QuadRenderer resources are freed before we shutdown bgfx
+    QuadRenderer::destroyGraphicsResources();
     bgfx::shutdown();
+    
     lmLog(gGFXLogGroup, "Handle context loss: Init");
     bgfx::init();
 
