@@ -529,12 +529,9 @@ public:
 
     Expression *visit(ConditionalExpression *conditionalExpression)
     {
-        conditionalExpression->expression = visitExpression(
-            conditionalExpression->expression);
-        conditionalExpression->trueExpression = visitExpression(
-            conditionalExpression->trueExpression);
-        conditionalExpression->falseExpression = visitExpression(
-            conditionalExpression->falseExpression);
+        conditionalExpression->expression = visitExpression(conditionalExpression->expression);            
+        conditionalExpression->trueExpression = visitExpression(conditionalExpression->trueExpression);        
+        conditionalExpression->falseExpression = visitExpression(conditionalExpression->falseExpression);
 
         lastVisited = conditionalExpression;
 
