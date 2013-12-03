@@ -40,6 +40,7 @@ void *Graphics::sPlatformData[3] = { NULL, NULL, NULL };
 
 int Graphics::sWidth     = 0;
 int Graphics::sHeight    = 0;
+uint32_t Graphics::sFlags    = 0xFFFFFFFF;
 int Graphics::sFillColor = 0x000000FF;
 int Graphics::sView      = 0;
 
@@ -85,18 +86,29 @@ void Graphics::reset(int width, int height, uint32_t flags)
 
     lmLogDebug(gGFXLogGroup, "Graphics::reset - %dx%d %x", width, height, flags);
 
-    bgfx::reset(width, height, flags);
-
+    // if we're experiencing a context loss we must reset regardless
     if (sContextLost)
-    {
+    {   
+        bgfx::reset(width, height, flags);     
         QuadRenderer::reset();
-        Texture::reset();
+        Texture::reset();        
+    }
+    else
+    {
+        // otherwise, reset only on width/height/flag change
+        if (width != sWidth || height != sHeight || sFlags != flags)
+        {
+            bgfx::reset(width, height, flags);         
+        }
     }
 
+    // clear context loss state
     sContextLost = false;
 
+    // cache current values
     sWidth  = width;
     sHeight = height;
+    sFlags = flags;
 }
 
 

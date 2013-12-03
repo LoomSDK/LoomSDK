@@ -36,6 +36,7 @@ private:
 
     static int sWidth;
     static int sHeight;
+    static uint32_t sFlags;
     static int sFillColor;
     static int sView;
 
