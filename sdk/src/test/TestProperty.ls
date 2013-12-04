@@ -307,8 +307,6 @@ class TestProperty extends Test
         assert(TPB.svalue == 13);
         assert(TPC.svalue == 13);
 
-        trace(errorOnSpecifyParameterOnGetter);
-
 
     }
     
