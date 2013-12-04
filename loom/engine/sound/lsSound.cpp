@@ -337,7 +337,7 @@ public:
         CHECK_OPENAL_ERROR();
     }
 
-    void setFalloff(float innerRadius, float outerRadius, float rollOff = 1.0)
+    void setFalloffRadius(float innerRadius, float outerRadius, float rollOff = 1.0)
     {
         ALCenum err;
         alSourcef(source, AL_REFERENCE_DISTANCE, innerRadius);
@@ -547,7 +547,7 @@ static int registerLoomSoundSound(lua_State *L)
        .addMethod("setVelocity", &Sound::setVelocity)
        .addMethod("setListenerRelative", &Sound::setListenerRelative)
 
-       .addMethod("setFalloff", &Sound::setFalloff)
+       .addMethod("setFalloffRadius", &Sound::setFalloffRadius)
        .addMethod("setGain", &Sound::setGain)
        .addMethod("getGain", &Sound::getGain)
 
