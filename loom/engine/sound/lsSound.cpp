@@ -208,11 +208,15 @@ public:
         {
             // Failed, return a dummy sound.
             lmLogError(gLoomSoundLogGroup, "Failed to get buffer for sound '%s', returning dummy Sound...", assetPath);
-            return lmNew(NULL) Sound();
+            // LOOM-1839: We cannot lmNew here currently as managed natives call delete in nativeDelete
+            //return lmNew(NULL) Sound();
+            return new Sound();
         }
 
         // We got a live one!
-        Sound *s = lmNew(NULL) Sound();
+        // LOOM-1839: We cannot lmNew here currently as managed natives call delete in nativeDelete
+        //Sound *s = lmNew(NULL) Sound();
+        Sound *s = new Sound();
 
         // Check the list for dead sources if we exceeded our cap.
         Sound *walk = smList;
