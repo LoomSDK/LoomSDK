@@ -241,6 +241,14 @@ FunctionLiteral *Parser::parseFunctionLiteral(bool nameFlag)
 
     if (nextToken != LSTOKEN(OPERATOR_CLOSEPAREN))
     {
+
+        if (lit->isGetter)
+        {
+            utString errormsg = "Property get function specifies parameters: ";
+            errormsg += lit->name->string;
+            error(errormsg.c_str());            
+        }
+
         if (!lit->parameters)
         {
             lit->parameters = new utArray<VariableDeclaration *>();
