@@ -39,7 +39,7 @@ static int registerLoomBox2D(lua_State *L)
             .addVar("y", &b2Vec2::y)
 
             .addMethod("setZero", &b2Vec2::SetZero)
-            .addMethod("set", &b2Vec2::Set)
+            .addMethod("setValue", &b2Vec2::Set)
             .addMethod("length", &b2Vec2::Length)
             .addMethod("lengthSquared", &b2Vec2::LengthSquared)
             .addMethod("normalize", &b2Vec2::Normalize)
@@ -57,6 +57,8 @@ static int registerLoomBox2D(lua_State *L)
         .endClass()
 
         .beginClass<b2BodyDef>("b2BodyDef")
+
+            .addConstructor <void (*)(void) >()
 
             .addVar("type", (int b2BodyDef::*)&b2BodyDef::type)
             //.addVar("userData", &b2BodyDef::userData)
