@@ -246,7 +246,7 @@ public:
         Type            *base = cls->baseType;
         while (base)
         {
-            if (scriptClass && !cls->isStatic && (base->isNative() && !base->isNativeManaged()))
+            if (scriptClass && !cls->isStatic && (base->isNativePure()))
             {
                 error("Script class %s derived from pure native class %s.  Script classes may only be derived from managed and static native classes",
                       cls->name->string.c_str(), base->getFullName().c_str());
@@ -924,7 +924,7 @@ public:
 
                         p->type = vd->templateInfo->types[1]->type;
 
-                        if (right->type->isNative() && !right->type->isNativeManaged())
+                        if (right->type->isNativePure())
                         {
                             error("Dictionary indexed with pure native class %s", right->type->getFullName().c_str());
                             return p;
@@ -1615,7 +1615,7 @@ public:
         for (size_t i = 0; i  < expression->pairs.size(); i++)
         {
             Expression* key = expression->pairs[i]->key;
-            if (key->type && key->type->isNative() && !key->type->isNativeManaged())
+            if (key->type && key->type->isNativePure())
             {
                 error("Pure native type %s used as Dictionary key", key->type->getFullName().c_str());
             }

@@ -253,7 +253,7 @@ public:
 
     bool isNativeMemberPure(bool ignoreStaticMembers = false);
 
-    bool isNativeScriptExtension()
+    inline bool isNativeScriptExtension()
     {
         if (!isNativeDerived())
         {
@@ -268,7 +268,7 @@ public:
         return false;
     }
 
-    bool isNativeOrNativeDerived()
+    inline bool isNativeOrNativeDerived()
     {
         if (attr.isNative)
         {
@@ -278,7 +278,7 @@ public:
         return isNativeDerived();
     }
 
-    bool isNativeManaged()
+    inline bool isNativeManaged()
     {
         if (attr.isNativeManaged)
         {
@@ -297,6 +297,12 @@ public:
 
         return false;
     }
+
+    inline bool isNativePure()
+    {
+        return isNative() && !isNativeManaged();
+    }
+
 
     bool hasStaticNativeMember()
     {

@@ -91,7 +91,7 @@ public:
         {
             if (out->types[0] && out->types[0]->type)
             {
-                if (out->types[0]->type->isNative() && !out->types[0]->type->isNativeManaged())
+                if (out->types[0]->type->isNativePure())
                 {
                     error("Pure native class %s cannot be used as Dictionary key", out->types[0]->type->getFullName().c_str());
                     return NULL;
