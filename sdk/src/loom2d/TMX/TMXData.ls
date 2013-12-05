@@ -3,6 +3,10 @@ package loom2d.tmx
     import system.utils.Base64;
     import system.xml.*;
 
+    /**
+     * A class that handles decoding, decompression and parsing of TMX tile layer data
+     */
+
     class TMXData
     {
         public var data:Vector.<uint> = [];

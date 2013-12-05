@@ -2,6 +2,10 @@ package loom2d.tmx
 {
     import system.xml.*;
 
+    /**
+     * A class used to parse and store data from a TMX object layer
+     */
+
     public class TMXObjectGroup
     {
         public var name:String;
@@ -96,6 +100,10 @@ package loom2d.tmx
         }
     }
 
+    /**
+     * An Enum used to reference TMXObject shape types
+     */
+
     public enum TMXObjectShape
     {
         RECTANGLE,
@@ -104,6 +112,10 @@ package loom2d.tmx
         POLYGON,
         POLYLINE
     }
+
+    /**
+     * A base class for storing data about TMX objects.
+     */
 
     public class TMXObject
     {
@@ -122,6 +134,10 @@ package loom2d.tmx
         }
     }
 
+    /**
+     * Stores data about TMX Rectangle objects
+     */
+
     public class TMXRectangle extends TMXObject
     {
         public var width:int;
@@ -135,6 +151,10 @@ package loom2d.tmx
             this.height = height;
         }
     }
+
+    /**
+     * Stores data about TMX Ellipse objects
+     */
 
     public class TMXEllipse extends TMXObject
     {
@@ -150,6 +170,10 @@ package loom2d.tmx
         }
     }
 
+    /**
+     * Stores data about TMX Tile objects
+     */
+     
     public class TMXTileObject extends TMXObject
     {
         public var gid:int;
@@ -162,6 +186,10 @@ package loom2d.tmx
         }
     }
 
+    /**
+     * Stores data about TMX Polygon objects
+     */
+
     public class TMXPolygon extends TMXObject
     {
         public var points:Vector.<int> = [];
@@ -173,6 +201,10 @@ package loom2d.tmx
             this.points = points;
         }
     }
+
+    /**
+     * Stores data about TMX PolyLine objects
+     */
 
     public class TMXPolyLine extends TMXObject
     {

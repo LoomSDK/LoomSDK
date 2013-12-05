@@ -12,6 +12,11 @@ package loom2d.tmx
     public delegate TMXImageLayerParsedCallback(file:String, imageLayer:TMXImageLayer);
     public delegate TMXPropertiesParsedCallback(file:String, properties:Dictionary.<String, String>);
 
+    /**
+     * A class used to parse and store data from a TMX file, including tile/object layers and
+     * their properties.
+     */
+
     public class TMXDocument
     {
         public var version:Number;
@@ -51,6 +56,14 @@ package loom2d.tmx
         public function load():void
         {
             _textAsset.load();
+        }
+
+        public function getLayerByName(name:String):TMXLayer
+        {
+            for each(var layer:TMXLayer in layers)
+                if (layer.name == name) return layer;
+
+            return null;
         }
 
         public static function loadProperties(element:XMLElement, propertiesMap:Dictionary.<String, String>)
@@ -117,7 +130,7 @@ package loom2d.tmx
                 }
                 else if (nextChild.getValue() == "layer")
                 {
-                    var layer:TMXLayer = new TMXLayer(nextChild, width, height);
+                    var layer:TMXLayer = new TMXLayer(nextChild, tileWidth, tileHeight);
                     layers.pushSingle(layer);
                     onLayerParsed(_filename, layer);
                 }

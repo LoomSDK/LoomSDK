@@ -2,6 +2,10 @@ package loom2d.tmx
 {
     import system.xml.*;
 
+    /**
+     * A class used to parse and store TMX image layer data and properties
+     */
+
     public class TMXImageLayer
     {
         public var name:String;

@@ -3,6 +3,10 @@ package loom2d.tmx
     import system.platform.Path;
     import system.xml.*;
 
+    /**
+     * A class used to parse and store data from TMX tile sets
+     */
+
     public class TMXTileset
     {
         public var name:String;
@@ -103,6 +107,10 @@ package loom2d.tmx
         }
     }
 
+    /**
+     * Parses and stores data from TMX images
+     */
+
     public class TMXImage
     {
         public var format:String;
@@ -126,6 +134,10 @@ package loom2d.tmx
         }
     }
 
+    /**
+     * A simple class that parses and stores x and y tile offsets
+     */
+
     public class TMXTileOffset
     {
         public var x:int;
@@ -137,6 +149,10 @@ package loom2d.tmx
             y = element.getNumberAttribute("y");
         }
     }
+
+    /**
+     * A class used to parse and store data from a TMX tile
+     */
 
     public class TMXTile
     {
@@ -160,6 +176,10 @@ package loom2d.tmx
             }
         }
     }
+
+    /**
+     * A class used to parse and store TMX terrain data
+     */
 
     public class TMXTerrain
     {

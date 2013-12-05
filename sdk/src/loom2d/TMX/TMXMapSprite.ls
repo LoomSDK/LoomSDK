@@ -6,6 +6,11 @@ package loom2d.tmx
     import loom2d.textures.TextureAtlas;
     import system.xml.XMLDocument;
 
+    /**
+     * A Sprite container that takes a TMXDocument and renders the tile maps for
+     * each layer. Supports live reload.
+     */
+
     public class TMXMapSprite extends Sprite
     {
         private var _tileWidth:Number;
