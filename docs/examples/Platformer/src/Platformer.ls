@@ -1,21 +1,18 @@
 package
 {
-    import loom2d.display.Cocos2DGame;
-    import loom2d.display.Cocos2D;
-    import cocos2d.CCSprite;
-    import loom2d.display.CCLayer;
-    import cocos2d.ScaleMode;
-    import cocos2d.CCSpriteFrameCache;
-    import cocos2d.CCDirector;
-    import cocos2d.CCTMXTiledMap;
-
-
     import system.platform.Gamepad;
+    
+    import loom2d.ui.TextureAtlasManager;
+    
+    import loom2d.events.KeyboardEvent;
 
     import loom.Application;
     import loom.platform.LoomKey;
-
-    import UI.Label;
+    import loom2d.display.StageScaleMode;
+    
+    import loom2d.math.Point;
+    
+    import loom2d.events.*;
 
     // Wiimote Buttons (held sideways, dpad on left)
     // UP: 1
@@ -45,7 +42,7 @@ package
     /**
      * Platformer demo game.
      */
-    public class Platformer extends Cocos2DGame
+    public class Platformer extends Application
     {
         public static var trackVertically = true;
 
@@ -56,22 +53,28 @@ package
         public static var jumpFlag = false;
         public static var moveDirX = 0.0;
         public static var moveDirY = 0.0;
+        
+        private var jumpTouchId:int = -1;
+        private var rightTouchId:int = -1;
+        private var leftTouchId:int = -1;
 
         override public function run():void
         {
-            super.run();
-
-            // Load our sprite sheets
-            CCSpriteFrameCache.sharedSpriteFrameCache().addSpriteFramesWithFile(
-                "assets/sprites/PlatformerSprites.plist", 
-                "assets/sprites/PlatformerSprites.png");
+            GC.setBackOffTime( 30000 );
+            
+            stage.scaleMode = StageScaleMode.FILL;
+            stage.stageWidth = 720;
+            stage.stageHeight = 480;
+        
+            TextureAtlasManager.register("PlatformerSprites", "assets/sprites/PlatformerSprites.xml");
 
             // Create our game scene (TODO: Add a menu here, to choose which scene we're going to load)
-            var startingLevel = "assets/tilemaps/action_map_1.tmx"
+            var startingLevel = "assets/tilemaps/action_map_1.tmx";
             //var startingLevel = "assets/tilemaps/test_angles.tmx"
             level = new PlatformerLevel(this, startingLevel);
 
-            CCDirector.sharedDirector().replaceScene(level.getScene());
+            //CCDirector.sharedDirector().replaceScene(level.getScene());
+            stage.addChild(level.getScene());
 
             // Set up gamepad support.
             Gamepad.initialize();
@@ -97,34 +100,90 @@ package
             if(pads.length > 0) gamepadConnected = true;
 
             // Also listen to the keyboard.
-            level.setKeypadEnabled(true);
-            level.onKeyDown += handleKeyDown;
-            level.onKeyUp += handleKeyUp;
+            //level.setKeypadEnabled(true);
+            //level.onKeyDown += handleKeyDown;
+            //level.onKeyUp += handleKeyUp;
+            
+            stage.addEventListener( KeyboardEvent.KEY_DOWN, handleKeyDown );
+            stage.addEventListener( KeyboardEvent.KEY_UP, handleKeyUp );
+            stage.addEventListener( TouchEvent.TOUCH, onTouch );
+            
 
         }
+        
+        private function onTouch( e:TouchEvent ):void
+        {
+            var touch = e.getTouch(stage, TouchPhase.BEGAN);
+            if (touch) onTouchBegan(touch.id, touch.getLocation(stage));
+            touch = e.getTouch(stage, TouchPhase.ENDED);
+            if (touch) onTouchEnded(touch.id, touch.getLocation(stage));
+        }
+        
+        private function onTouchBegan( id:int, position:Point ):void
+        {
+            if ( position.y > stage.stageHeight * 0.8 && jumpTouchId == -1 )
+            {
+                jumpTouchId = id;
+                jumpFlag = true;
+            }
+            else if ( position.x > stage.stageWidth * 0.5 && rightTouchId == -1 )
+            {
+                rightTouchId = id;
+                rightKeyFlag = true;
+            }
+            else if ( position.x < stage.stageWidth * 0.5 && leftTouchId == -1 )
+            {
+                leftTouchId = id;
+                leftKeyFlag = true;
+            }
+            
+            recalculateKeyInput();
+        }
+        
+        private function onTouchEnded( id:int, position:Point ):void
+        {
+            if ( jumpTouchId == id )
+            {
+                jumpTouchId = -1;
+                jumpFlag = false;
+            }
+            else if ( rightTouchId == id )
+            {
+                rightTouchId = -1;
+                rightKeyFlag = false;
+            }
+            else if ( leftTouchId == id )
+            {
+                leftTouchId = -1;
+                leftKeyFlag = false;
+            }
+
+            recalculateKeyInput();
+        }
+        
 
         public var leftKeyFlag:Boolean = false;
         public var rightKeyFlag:Boolean = false;
 
-        protected function handleKeyDown(keycode:int):void
+        protected function handleKeyDown(e:KeyboardEvent):void
         {
-            if(keycode == LoomKey.A)
+            if(e.keyCode == LoomKey.A)
                 leftKeyFlag = true;
-            if(keycode == LoomKey.D)
+            if(e.keyCode == LoomKey.D)
                 rightKeyFlag = true;
-            if(keycode == LoomKey.W)
+            if(e.keyCode == LoomKey.W)
                 jumpFlag = true;
 
             recalculateKeyInput();
         }
 
-        protected function handleKeyUp(keycode:int):void
+        protected function handleKeyUp(e:KeyboardEvent):void
         {
-            if(keycode == LoomKey.A)
+            if(e.keyCode == LoomKey.A)
                 leftKeyFlag = false;
-            if(keycode == LoomKey.D)
+            if(e.keyCode == LoomKey.D)
                 rightKeyFlag = false;
-            if(keycode == LoomKey.W)
+            if(e.keyCode == LoomKey.W)
                 jumpFlag = false;
 
             recalculateKeyInput();
@@ -221,6 +280,8 @@ package
 
         override public function onTick():void
         {
+            super.onTick();
+            
             if(gamepadConnected)
             {
                 Gamepad.update();
@@ -231,6 +292,8 @@ package
 
         override public function onFrame():void
         {
+            super.onFrame();
+            
             if (level != null)
             {
                 if (level.trackObject != null)
@@ -243,8 +306,9 @@ package
                     {
                         level.fgLayer.y = -(level.trackObject.y - 5 * 32); //  * level.getScaleX());
 
-                        if (level.fgLayer.y > 0)
-                            level.fgLayer.y = 0;
+                        var minLevelY = -level.tmxDocument.height * level.tmxDocument.tileHeight + stage.stageHeight;
+                        if (level.fgLayer.y < minLevelY )
+                            level.fgLayer.y = minLevelY;
                     }
                     else
                     {
@@ -260,12 +324,12 @@ package
 
         public static function onFellOffMap(obj:PlatformerMover):void
         {
-            obj.dest.originX = 32;
-            obj.dest.originY = 500;
+            obj.dest.x = 32;
+            obj.dest.y = 500;
             obj.velocityX = 0;
             obj.velocityY = 0;
 
-            verticalTracking = false;
+            //verticalTracking = false;
         }
     }
 }

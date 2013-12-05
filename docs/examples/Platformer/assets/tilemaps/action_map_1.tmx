@@ -18,7 +18,7 @@
    eJzt10EKgzAQBVDv6EZdehHXubV1UWyF0EJHk9T3YBBBklH4huk6AACAeg2PGk+s6bpXgSY9Mygr8NnrmSUz3NmWBRmA3Vy6AajAt3NFC3lJpRuACqTD9dfnWlfrLPjv3701fekGCjAbvlsyFb1e5B7RcudC7v7M/1jKVPR6kXsAwN2sjvIndg==
   </data>
  </layer>
- <objectgroup name="objects" width="100" height="30">
+ <objectgroup draworder="topdown" name="objects" width="100" height="30">
   <object name="hero" type="player" x="64" y="704" width="28" height="50"/>
   <object name="cloud_crate" type="crate_lg" x="736" y="128" width="64" height="64"/>
   <object name="hill_crate" type="crate_sm" x="1504" y="512" width="32" height="32"/>

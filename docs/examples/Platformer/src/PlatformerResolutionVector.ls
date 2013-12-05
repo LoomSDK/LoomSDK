@@ -9,10 +9,10 @@ package
     {
         public var enabled:Boolean = false;
         protected var _distance:Number = 0;
-        public var axis:Point2;
+        public var axis:Point;
         public var slope:Number = 0;
         
-        public function PlatformerResolutionVector(axis:Point2)
+        public function PlatformerResolutionVector(axis:Point)
         {
             this.axis = axis;
         }

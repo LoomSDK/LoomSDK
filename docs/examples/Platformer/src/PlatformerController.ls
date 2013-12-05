@@ -3,8 +3,9 @@ package
 
   import loom.gameframework.AnimatedComponent;
   import loom.gameframework.TickedComponent;
-  import cocos2d.CCRect;
+
   import loom2d.math.Point;
+  import loom2d.math.Rectangle;
 
 
    /**
@@ -66,7 +67,7 @@ package
 
         if(Platformer.jumpFlag && mover.onGround && canJump)
         {
-            mover.velocityY += jumpSpeed;
+            mover.velocityY -= jumpSpeed;
             canJump = false;
         }
         else
@@ -100,7 +101,7 @@ package
           {
             spriteFrame = wallSlideFrame;
           }
-          else if (mover.velocityY > 0)
+          else if (mover.velocityY < 0)
           {
             spriteFrame = jumpUpFrame;
           }

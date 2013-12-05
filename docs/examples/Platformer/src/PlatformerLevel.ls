@@ -1,84 +1,86 @@
 package
 {
-    import loom2d.display.Cocos2DGame;
-    import loom2d.display.Cocos2D;
-    import loom2d.display.CCLayer;
-    import cocos2d.CCSprite;
-    import cocos2d.CCScene;
-    import cocos2d.CCScaledLayer;
-    import cocos2d.ScaleMode;
-    import cocos2d.CCTMXTiledMap;
-    import cocos2d.CCTMXObjectGroup;
-    import cocos2d.CCSpriteFrameCache;
-    import cocos2d.CCDictionary;
-    import cocos2d.CCArray;
-
+	import loom2d.tmx.TMXMapSprite;
+	import loom2d.tmx.TMXDocument;
+	import loom2d.display.DisplayObject;
+	import loom2d.display.Image;
+    import loom2d.tmx.TMXMapSprite;
+    import loom2d.tmx.TMXDocument;
+    import loom2d.tmx.TMXLayer;
+    import loom2d.tmx.TMXRectangle;
+    import loom2d.tmx.TMXObject;
+    import loom2d.tmx.TMXObjectGroup;
+	import loom2d.display.Sprite;
+	import loom2d.textures.Texture;
+	
+    import loom.Application;
+    
     import loom.gameframework.AnimatedComponent;
     import loom.gameframework.LoomComponent;
     import loom.gameframework.LoomGroup;
     import loom.gameframework.LoomGameObject;
 
-    import UI.Label;
-
     /** 
      * Manage state related to the current level, tilemap, etc.
      */
-    public class PlatformerLevel extends CCScaledLayer
+    public class PlatformerLevel extends Sprite
     {
 
         public var tmxFile:String;
-        public var map:CCTMXTiledMap;
+        public var map:TMXMapSprite;
+        public var tmxDocument:TMXDocument;
 
-        public var game:Cocos2DGame;
+        public var game:Application;
         public var group:LoomGroup;
 
-        protected var scene:CCScene;
+        protected var scene:Sprite;
 
         // Everything that scrolls gets added to the foreground
-        public var fgLayer:CCLayer;
-        public var bgLayer:CCLayer;
+        public var fgLayer:Sprite;
+        public var bgLayer:Sprite;
 
-        public var trackObject:CCSprite;
+        public var trackObject:DisplayObject;
 
         public var moverManager:PlatformerMoverManager = new PlatformerMoverManager();
 
-        public function getScene():CCScene
+        public function getScene():Sprite
         {
             return scene;
         }
 
         // Constructor
-        public function PlatformerLevel( gameInstance:Cocos2DGame, tmxFileName:String )
+        public function PlatformerLevel( gameInstance:Application, tmxFileName:String )
         {
-            scaleMode = ScaleMode.FILL;
-            designWidth = 720;
-            designHeight = 480;
-
             tmxFile = tmxFileName;
             game = gameInstance;
             group = game.group;
 
-            scene = CCScene.create();
+            scene = new Sprite();
             scene.addChild(this);
 
             // Parallaxed stuff gets added to the background
-            bgLayer = CCLayer.create();
+            bgLayer = new Sprite();
             addChild(bgLayer);
 
             // Everything that scrolls gets added to the foreground
-            fgLayer = CCLayer.create();
+            fgLayer = new Sprite();
             addChild(fgLayer);
 
             // Initialize everything that goes into the view
-            map = CCTMXTiledMap.tiledMapWithTMXFile(tmxFile);
-            map.reload = onMapReload;
+            
+            tmxDocument = new TMXDocument(tmxFile);
+            tmxDocument.onTMXUpdated = onMapReload;
+            map = new TMXMapSprite(tmxDocument);
+            
+            tmxDocument.load();
 
             // Turn on collision for foreground and background layers.
             setLayerCollisionActive("bg", true);
-            var collisionLayer = map.layerNamed("collision");
+            
+            var collisionLayer = map.getLayer("collision");
             if(collisionLayer)
             {
-                collisionLayer.setVisible(false);
+                collisionLayer.visible = false;
             }
             setLayerCollisionActive("fg", true);
 
@@ -104,15 +106,15 @@ package
                 );
 
             // Load map properties (namely: background images)
-            var mapProps:CCDictionary = map.getProperties();
+            var mapProps:Dictionary.<String, String> = tmxDocument.properties;
 
-            var bgFile:String = mapProps.valueForKey("bg_far");
+            var bgFile:String = mapProps["bg_far"];
             if (bgFile != null)
             {
-                var bgSprite:CCSprite = CCSprite.createFromFile(bgFile);
+                var bgSprite:Image = new Image(Texture.fromAsset(bgFile));
+                bgSprite.center();
                 bgSprite.x = 848 * 0.5;
                 bgSprite.y = 480 * 0.5;
-
                 bgLayer.addChild(bgSprite);
             }
 
@@ -121,21 +123,22 @@ package
             fgLayer.addChild(map);
 
             // Spawn all objects listed in the TMX
-            var objGroups:CCArray = map.getObjectGroups();
-            for (var groupCnt = 0; groupCnt < objGroups.count(); groupCnt++)
+            var objGroups:Vector.<TMXObjectGroup> = tmxDocument.objectGroups;
+            for (var groupCnt = 0; groupCnt < objGroups.length; groupCnt++)
             {
-                var objGroup:CCTMXObjectGroup = objGroups.objectAtIndex(groupCnt) as CCTMXObjectGroup;
-                var objs:CCArray = objGroup.getObjects();
-                for (var objCnt = 0; objCnt < objs.count(); objCnt++)
+                var objGroup:TMXObjectGroup = objGroups[groupCnt];
+                var objs:Vector.<TMXObject> = objGroup.objects;
+                for (var objCnt = 0; objCnt < objs.length; objCnt++)
                 {
-                    var obj:CCDictionary = objs.objectAtIndex(objCnt) as CCDictionary;
+                    var obj:TMXRectangle = objs[objCnt] as TMXRectangle;
+                    if (!obj) continue;
 
-                    var objType:String = obj.valueForKey("type");
-                    var objName:String = obj.valueForKey("name");
-                    var objX:int = obj.valueForKey("x").toNumber();
-                    var objY:int = obj.valueForKey("y").toNumber();
-                    var objW:int = obj.valueForKey("width").toNumber();
-                    var objH:int = obj.valueForKey("height").toNumber();
+                    var objType:String = obj.type;
+                    var objName:String = obj.name;
+                    var objX:int = obj.x;
+                    var objY:int = obj.y;
+                    var objW:int = obj.width;
+                    var objH:int = obj.height;
 
                     objX += objW / 2;
                     objY += objH / 2;
@@ -184,7 +187,7 @@ package
 
         public function setLayerCollisionActive( layerName:String, layerActive:Boolean )
         {
-            var layer = map.layerNamed(layerName);
+            var layer = tmxDocument.getLayerByName(layerName);
 
             if (layer == null)
             {
@@ -208,7 +211,7 @@ package
             }
         }
 
-        protected function onMapReload():void
+        protected function onMapReload(file:String, tmx:TMXDocument):void
         {
             // Anything that needs to happen on a map live reload can go here
             moverManager.collisionLayers.clear();
@@ -223,7 +226,7 @@ package
             var solidSizeX:int = w;
             var solidSizeY:int = h;
 
-            var rend = new PlatformerRenderer(spriteName, fgLayer);
+            var rend = new PlatformerRenderer("PlatformerSprites", spriteName, fgLayer);
             var mover = new PlatformerMover(x, y, this.moverManager);
 
             mover.solidSizeX = solidSizeX;

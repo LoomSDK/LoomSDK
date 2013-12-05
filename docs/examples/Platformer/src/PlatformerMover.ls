@@ -1,14 +1,16 @@
 package
 {
+  import loom2d.tmx.TMXLayer;
 
   import loom.gameframework.AnimatedComponent;
   import loom.gameframework.TickedComponent;
-  import cocos2d.CCRect;
-  import cocos2d.CCTMXLayer;
+  
   import loom2d.math.Point;
+  import loom2d.math.Rectangle;
+  
   import loom.gameframework.TimeManager;
 
-   delegate PlatformerMoverTileCollisionCallback(theObject:PlatformerMover, gid:int, tileX:int, tileY:int, mapLayer:CCTMXLayer, resolution:PlatformerResolutionVector):void;
+   delegate PlatformerMoverTileCollisionCallback(theObject:PlatformerMover, gid:int, tileX:int, tileY:int, mapLayer:TMXLayer, resolution:PlatformerResolutionVector):void;
    delegate PlatformerMoverObjectCollisionCallback(theObject:PlatformerMover, otherObject:PlatformerMover, resolution:PlatformerResolutionVector):void;
    delegate PlatformerMoverTriggerContactCallback(theObject:PlatformerMover, otherObject:PlatformerMover):void;
 
@@ -17,7 +19,7 @@ package
     */
    public class PlatformerMover extends TickedComponent
    {
-      public var manager:PlatformerMoverManager
+      public var manager:PlatformerMoverManager;
 
       /**
        * Position of the object, X
@@ -58,7 +60,7 @@ package
       /**
        * The constant force applied to the object each tick, Y.
        */
-      public    var gravityY:Number = -0.5;
+      public    var gravityY:Number = 0.5;
 
       /**
        * The 'bounciness' of the object -- 0 to 1
@@ -192,7 +194,7 @@ package
       protected  var wasOnWall:int = 0;
 
 
-      public var dest:CCRect;
+      public var dest:Rectangle = new Rectangle();
 
       /**
        * Initialize a PlatformerMover directly from an object in a CCTMXObjectGroup loaded from a TMX
@@ -203,7 +205,7 @@ package
          positionX = x;
          positionY = y;
 
-        // HACK TO WORK AROUND PROBLEM WITH POINT2
+        // HACK TO WORK AROUND PROBLEM WITH Point
         AXIS_RIGHT.x = 1;
         AXIS_RIGHT.y = 0;
         AXIS_LEFT.x = -1;
@@ -278,9 +280,9 @@ package
         var ydir:int = velocityY > 0 ? 1 : velocityY < 0 ? -1 : 0;
 
         // Find the new desired location for this frame
-        dest.setRect(topLeftX + velocityX, topLeftY + velocityY, solidSizeX, solidSizeY);
+        dest.setTo(topLeftX + velocityX, topLeftY + velocityY, solidSizeX, solidSizeY);
 //        Console.print("Setting dest to (" + (topLeftX + velocityX) + "," + (topLeftY + velocityY) + "," + solidSizeX + "," + solidSizeY + ")");
-//        Console.print("Plat dest rect: (" + dest.getMinX() + "-" + dest.getMaxX() + "," + dest.getMinY() + "-" + dest.getMaxY() + ")");
+//        Console.print("Plat dest rect: (" + dest.x + "-" + dest.right + "," + dest.y + "-" + dest.bottom + ")");
 
 
         // Query the spatial manager to test the new position against other world objects
@@ -288,8 +290,8 @@ package
 
         // Finalize
 
-        positionX = dest.getMidX(); 
-        positionY = dest.getMidY();
+        positionX = dest.x + dest.width * 0.5; 
+        positionY = dest.y + dest.height * 0.5;
 
         // Decelerate due to friction
         if (onWall != 0 || onGround)
@@ -302,55 +304,48 @@ package
         }
       }
 
-
-
-        protected var resolutions:Vector.<PlatformerResolutionVector> = [new PlatformerResolutionVector(AXIS_RIGHT), new PlatformerResolutionVector(AXIS_LEFT), new PlatformerResolutionVector(AXIS_DOWN), new PlatformerResolutionVector(AXIS_UP)];
         private static const V_RIGHT:int = 0;
         private static const V_LEFT :int = 1;
         private static const V_DOWN :int = 2;
         private static const V_UP   :int = 3;
         
-        private static const AXIS_RIGHT:Point2 = new Point2( 1,  0);
-        private static const AXIS_LEFT :Point2 = new Point2(-1,  0);
-        private static const AXIS_DOWN :Point2 = new Point2( 0, -1);
-        private static const AXIS_UP   :Point2 = new Point2( 0,  1);
-
+        private static const AXIS_RIGHT:Point = new Point( 1,  0);
+        private static const AXIS_LEFT :Point = new Point(-1,  0);
+        private static const AXIS_DOWN :Point = new Point( 0,  1);
+        private static const AXIS_UP   :Point = new Point( 0, -1);
+        
+        protected var resolutions:Vector.<PlatformerResolutionVector> = [
+            new PlatformerResolutionVector(AXIS_RIGHT),
+            new PlatformerResolutionVector(AXIS_LEFT),
+            new PlatformerResolutionVector(AXIS_DOWN),
+            new PlatformerResolutionVector(AXIS_UP)
+        ];
+        
         public function contactVsObj( obj:PlatformerMover ):Boolean {
             if (!solid || !obj.solid || !(obj.collidesWithObjectMask & this.objectMask))
                 return false;
             
-            var bounds:CCRect      = this.bounds;
-            var otherBounds:CCRect = obj.dest;
+            var bounds:Rectangle      = this.bounds;
+            var otherBounds:Rectangle = obj.dest;
             
-            return bounds.intersectsRect(otherBounds);
+            return rectsOverlap( bounds, otherBounds );
         }
         
-        public function collideVsObj( obj:PlatformerMover ):Boolean {
-            // HACK because Point2 constructors don't work
-            AXIS_RIGHT.x = 1;
-            AXIS_LEFT.x = -1;
-            AXIS_DOWN.y = -1;
-            AXIS_UP.y = 1;
-
-            resolutions[V_RIGHT].axis.x = 1;
-            resolutions[V_LEFT].axis.x = -1;
-            resolutions[V_DOWN].axis.y = -1;
-            resolutions[V_UP].axis.y   =  1;
-
-
+        public function collideVsObj( obj:PlatformerMover ):Boolean
+        {
             if (!solid || !obj.solid || !(obj.collidesWithObjectMask & this.objectMask))
                 return false;
             
-            var thisBounds:CCRect      = this.bounds;
-            var objBounds:CCRect = obj.dest;
+            var thisBounds:Rectangle      = this.bounds;
+            var objBounds:Rectangle = obj.dest;
             
-            if (!thisBounds.intersectsRect(objBounds))
+            if (!rectsOverlap(thisBounds,objBounds))
                 return false;
             
-            resolutions[V_RIGHT].distance =   thisBounds.getMaxX()  -  objBounds.getMinX();
-            resolutions[V_LEFT].distance  =    objBounds.getMaxX()  - thisBounds.getMinX();
-            resolutions[V_DOWN].distance  = -(thisBounds.getMinY()  -  objBounds.getMaxY());
-            resolutions[V_UP].distance    =  -(objBounds.getMinY()  - thisBounds.getMaxY());
+            resolutions[V_RIGHT].distance =   thisBounds.right   - objBounds.x;
+            resolutions[V_LEFT].distance  =   objBounds.right   - thisBounds.x;
+            resolutions[V_DOWN].distance  =   thisBounds.bottom  - objBounds.y;
+            resolutions[V_UP].distance    =   objBounds.bottom  - thisBounds.y;
 
             resolutions[V_RIGHT].enabled  = true;
             resolutions[V_LEFT].enabled   = true;
@@ -358,17 +353,13 @@ package
             resolutions[V_UP].enabled     = true;
 
             
-            var relVelocity:Point2 = new Point2(); // obj.velocityX - this.velocityX, obj.velocityY - this.velocityY);
-            relVelocity.x = obj.velocityX - this.velocityX;
-            relVelocity.y = obj.velocityY - this.velocityY;
-
             // Disqualify vectors based on whether or not we're one-way
             if (oneWay) {
                 resolutions[V_RIGHT].enabled = false;
                 resolutions[V_LEFT].enabled = false;
                 resolutions[V_DOWN].enabled = false;
                 
-                if (obj.bounds.getMinY() > bounds.getMaxY())
+                if (obj.bounds.bottom > bounds.y)
                     resolutions[V_UP].enabled = false;
             }
             
@@ -424,8 +415,8 @@ package
                 // Then collide!
 
                 // Resolve the collisions
-                obj.dest.originX += res.axis.x * res.distance;
-                obj.dest.originY += res.axis.y * res.distance;
+                obj.dest.x += res.axis.x * res.distance;
+                obj.dest.y += res.axis.y * res.distance;
 
                 // TODO: Store the overlap
 
@@ -453,7 +444,7 @@ package
                 }
                 
                 // Set wall / ground flags
-                if (res.axis.y == 1)
+                if (res.axis.y == -1)
                     obj.onGround = true;
                 if (res.axis.x != 0)
                     obj.onWall = res.axis.x;
@@ -468,17 +459,18 @@ package
           obj.onCollideObject(obj, other, res);
         }
 
-      public function get bounds():CCRect
+      private static var _boundsCache:Rectangle = new Rectangle();
+      
+      public function get bounds():Rectangle
       {
-        var _bounds:CCRect;
-
-        _bounds.setRect(
+        _boundsCache.setTo(
           positionX - solidSizeX * 0.5,
           positionY - solidSizeY * 0.5,
           solidSizeX,
-          solidSizeY);
-        
-        return _bounds;
+          solidSizeY
+        );
+
+        return _boundsCache;
       }
 
       /**
@@ -496,5 +488,14 @@ package
       {
         return positionY - solidSizeY * 0.5;
       }
+      
+	private static function rectsOverlap(rectA:Rectangle, rectB:Rectangle):Boolean
+	{
+	    return ((rectA.x <= rectB.right) &&
+	            (rectB.x <= rectA.right) &&
+	            (rectA.y <= rectB.bottom) &&
+	            (rectB.y <= rectA.bottom));
+	}
+      
    }
 }

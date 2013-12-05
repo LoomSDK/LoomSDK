@@ -1,10 +1,6 @@
 package
 {
-   import cocos2d.CCDictionary;
-   import cocos2d.CCRect;
-   import cocos2d.CCPoint;
-   import cocos2d.CCSize;
-   import cocos2d.CCTMXLayer;
+   import loom2d.tmx.TMXLayer;
    import loom2d.math.Point;
    import loom.gameframework.TimeManager;
 
@@ -18,8 +14,8 @@ package
 
       public static var tileShapes:Vector.<PlatformerTileShape> = new Vector.<PlatformerTileShape>();
       public static var emptyShape:PlatformerTileShape;
-      public static var _collisionLayers:Vector.<CCTMXLayer> = new Vector.<CCTMXLayer>();
-      public function get collisionLayers():Vector.<CCTMXLayer> {
+      public static var _collisionLayers:Vector.<TMXLayer> = new Vector.<TMXLayer>();
+      public function get collisionLayers():Vector.<TMXLayer> {
         return _collisionLayers;
       }
 
@@ -135,7 +131,7 @@ package
       {
           var cnt:int;
           var otherObj:PlatformerMover;
-          var mapLayer:CCTMXLayer;
+          var mapLayer:TMXLayer;
 
           // Compare against the tile map layers in the world
           for (cnt = 0; cnt < this._collisionLayers.length; cnt++)
@@ -164,7 +160,7 @@ package
       {
         var cnt:int;
         var otherObj:PlatformerMover;
-        var mapLayer:CCTMXLayer;
+        var mapLayer:TMXLayer;
         
         // Compare against the tile maps in the world
         for (cnt = 0; cnt < _collisionLayers.length; cnt++)
@@ -193,27 +189,21 @@ package
         return false;
       }
 
-      public function tileCoordForPosition( mapLayer:CCTMXLayer, x:Number, y:Number):Point2 {
-        var mapSize = mapLayer.getLayerSize();
-        var tileSize = mapLayer.getMapTileSize();
-
-        var retVal:Point2 = new Point2();
-        retVal.x = Math.floor(x / tileSize.width);
-        retVal.y = Math.floor(((mapSize.height * tileSize.height) - y) / tileSize.height);
-
-        return retVal;
+      private var _tilePoint:Point;
+      
+      public function tileCoordForPosition( mapLayer:TMXLayer, x:Number, y:Number):Point
+      {
+        _tilePoint.x = Math.floor(x / mapLayer.tileWidth);
+        _tilePoint.y = Math.floor(y / mapLayer.tileHeight);
+        return _tilePoint;
       }
 
-      public static function getTileShape( mapLayer:CCTMXLayer, xIndex:int, yIndex:int ):PlatformerTileShape
+      public static function getTileShape( mapLayer:TMXLayer, xIndex:int, yIndex:int ):PlatformerTileShape
       {
         if (mapLayer == null)
           return emptyShape;
 
-        var pt:CCPoint = new CCPoint();
-        pt.x = xIndex;
-        pt.y = yIndex;
-
-        var gid:int = mapLayer.tileGIDAt(pt);
+        var gid:int = mapLayer.getTileGidAt(xIndex, yIndex);
 
         if (gid > 0 &&
             gid < tileShapes.length)
@@ -222,50 +212,51 @@ package
           return emptyShape;
       }
       
-      public function contactMapVsObj( mapLayer:CCTMXLayer, obj:PlatformerMover ):Boolean {
+      public function contactMapVsObj( mapLayer:TMXLayer, obj:PlatformerMover ):Boolean {
           return collideMapVsObj( mapLayer, obj, false );
       }
       
-      public function collideMapVsObj( mapLayer:CCTMXLayer, obj:PlatformerMover, resolveCollision:Boolean = true ):Boolean {
+      private var minCorner:Point;
+      private var maxCorner:Point;
+      
+      public function collideMapVsObj( mapLayer:TMXLayer, obj:PlatformerMover, resolveCollision:Boolean = true ):Boolean {
         var colliding:Boolean = false;
-        var mapSize = mapLayer.getLayerSize();
-        var tileSize = mapLayer.getMapTileSize();
 
         if (obj.clampMapLeft &&
-            obj.dest.originX < 0)
+            obj.dest.x < 0)
         {
-          obj.dest.originX = 0;
+          obj.dest.x = 0;
           obj.velocityX = 0;
         }
         if (obj.clampMapRight &&
-            obj.dest.getMaxX() > mapSize.width * tileSize.width)
+            obj.dest.right > mapLayer.width * mapLayer.tileWidth)
         {
-          obj.dest.originX = mapSize.width * tileSize.width - obj.dest.width;
+          obj.dest.x = mapLayer.width * mapLayer.tileWidth - obj.dest.width;
           obj.velocityX = 0;
         }
         if (obj.clampMapBottom &&
-            obj.dest.originY < 0)
+            obj.dest.bottom > mapLayer.height * mapLayer.tileHeight)
         {
-          obj.dest.originY = 0;
+          obj.dest.y = mapLayer.height * mapLayer.tileHeight - obj.dest.height;
           obj.velocityY = 0;
         }
         if (obj.clampMapTop &&
-            obj.dest.getMaxY() > mapSize.height * tileSize.height)
+            obj.dest.y < 0)
         {
-          obj.dest.originY = mapSize.height * tileSize.height - obj.dest.height;
+          obj.dest.y = 0;
           obj.velocityY = 0;
         }
 
         // If we fell off the bottom of the map...
-        if (obj.dest.getMaxY() < 0)
+        if (obj.dest.y > mapLayer.height * mapLayer.tileHeight)
         {
           Platformer.onFellOffMap(obj);
         }
 
-        var minCorner:Point2 = tileCoordForPosition(mapLayer, obj.dest.getMinX(), obj.dest.getMaxY()); // Flip Min/Max Y here, because that axis is inverted
-        var maxCorner:Point2 = tileCoordForPosition(mapLayer, obj.dest.getMaxX(), obj.dest.getMinY());
+        minCorner = tileCoordForPosition(mapLayer, obj.dest.x, obj.dest.y);
         
-        var tileBounds:CCRect;
+        maxCorner= tileCoordForPosition(mapLayer, obj.dest.right, obj.dest.bottom);
+        
         var tileShape:PlatformerTileShape;
         
         var res:PlatformerResolutionVector;
@@ -288,6 +279,7 @@ package
             if (tileShape == null)
               continue;
             
+            
             if (tileShape.shape != "none")
             {
               res = null;
@@ -301,8 +293,8 @@ package
               if (res != null)
               {
                 // Resolve the collisions
-                obj.dest.originX += res.axis.x * res.distance;
-                obj.dest.originY += res.axis.y * res.distance;
+                obj.dest.x += res.axis.x * res.distance;
+                obj.dest.y += res.axis.y * res.distance;
 
                 // Store the slope
                 obj.collisionSlope = res.slope;
@@ -318,7 +310,7 @@ package
                   obj.velocityY = 0;
                 
                 // Set wall / ground flags
-                if ((res.axis.y == 1) && (obj.velocityY == 0))
+                if ((res.axis.y == -1) && (obj.velocityY == 0))
                   obj.onGround = true;
 
                 if (res.axis.x != 0)
