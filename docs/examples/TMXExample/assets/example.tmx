@@ -13,7 +13,7 @@
    eJzt2EEOgjAQBVAUd+ANdKnewTu4ds39L2FJmKSZOJRO67TF/5IJIYhWPgOFrgMAAAAAAAAAAAAAgFQHV0eveleDq/OyrS83NMhgznJkRfmOyxLaNbB1v5/n3kW+baN8r8L2WvOdSg+gEbx/CeVda75a0nm8VzdX95Xte8u3VannpZRz6Xwntkz93L/jOWvyxTNVGTE9Tjk/IvZBrnYs5xGnwPanyShgxp9vU6Bf7YX61n9fpZ07+bn++johzZuk9RzzqzcrjVeGcWh8y/eylIR6XtOvrV2bJ6Fihe5ZuVGfbelfnjftU/pZCcI01+fYfFt8R7RlzDH/S3MM1vbZ+n0W+VrIcZ+t/TzUjC9HvrUfFwulj4H0+3vpX60PIbAPxQ==
   </data>
  </layer>
- <objectgroup name="objects" width="120" height="30">
+ <objectgroup draworder="topdown" name="objects" width="120" height="30">
   <object name="hero" x="96" y="736" width="32" height="64"/>
   <object name="exit_level" x="3392" y="736" width="32" height="64"/>
   <object name="walker" x="1696" y="512" width="32" height="64"/>
