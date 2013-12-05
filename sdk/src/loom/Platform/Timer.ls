@@ -176,6 +176,13 @@ class Timer {
             _lastTickTime = currentTime;
 
         var delta:Number = currentTime - _lastTickTime;
+
+        // clamp the delta to <= 500ms
+        // note that when pausing the timer the _lastTickTime is set
+        // to -1 which will avoid large deltas on resume
+        if (delta > 500)
+            delta = 500;
+
         _elapsed += delta;
         _lastTickTime = currentTime;
 
