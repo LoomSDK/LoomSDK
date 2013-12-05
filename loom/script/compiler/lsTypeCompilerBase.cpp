@@ -423,8 +423,31 @@ Expression *TypeCompilerBase::visit(VectorLiteral *vector)
 
     int restore = fs->freereg;
 
+    // vtable will go into this reg
+    fs->freereg = fs->freereg + 1;
+
     // comes in from NewExpression visitor
     ExpDesc ethis = vector->e;
+
+    // initialize the internal vector table
+    ethis = vector->e;
+    ExpDesc eidxVectorIndex;
+    BC::initExpDesc(&eidxVectorIndex, VKNUM, 0);
+
+#ifdef LOOM_ENABLE_JIT
+    setnumV(&eidxVectorIndex.u.nval, LSINDEXVECTOR);
+#else
+    eidxVectorIndex.u.nval = (int)LSINDEXVECTOR;
+#endif
+
+    BC::expToNextReg(fs, &ethis);    
+
+    BC::expToNextReg(fs, &eidxVectorIndex);
+    BC::expToVal(fs, &eidxVectorIndex);
+    BC::indexed(fs, &ethis, &eidxVectorIndex);
+
+    // moves vtables into ethis
+    BC::expToNextReg(fs, &ethis);
 
     // store vector length to LSINDEXVECTORLENGTH
 
@@ -432,6 +455,7 @@ Expression *TypeCompilerBase::visit(VectorLiteral *vector)
 
     BC::initExpDesc(&eidxVectorLength, VKNUM, 0);
 
+    // LSINDEXVECTORLENGTH access will get forwarded to internal vector table
 #ifdef LOOM_ENABLE_JIT
     setnumV(&eidxVectorLength.u.nval, LSINDEXVECTORLENGTH);
 #else
@@ -447,28 +471,12 @@ Expression *TypeCompilerBase::visit(VectorLiteral *vector)
     nelements.u.nval = (int)vector->elements.size();
 #endif
 
-    // set length
-    BC::expToNextReg(fs, &ethis);
+    // set length    
     BC::expToNextReg(fs, &eidxVectorLength);
     BC::expToVal(fs, &eidxVectorLength);
     BC::indexed(fs, &ethis, &eidxVectorLength);
     BC::storeVar(fs, &ethis, &nelements);
 
-    // initialize the internal vector table
-    ethis = vector->e;
-    ExpDesc eidxVectorIndex;
-    BC::initExpDesc(&eidxVectorIndex, VKNUM, 0);
-
-#ifdef LOOM_ENABLE_JIT
-    setnumV(&eidxVectorIndex.u.nval, LSINDEXVECTOR);
-#else
-    eidxVectorIndex.u.nval = (int)LSINDEXVECTOR;
-#endif
-
-    BC::expToNextReg(fs, &ethis);
-    BC::expToNextReg(fs, &eidxVectorIndex);
-    BC::expToVal(fs, &eidxVectorIndex);
-    BC::indexed(fs, &ethis, &eidxVectorIndex);
 
     // add any elements to vector
     for (UTsize i = 0; i < vector->elements.size(); i++)
@@ -1370,12 +1378,12 @@ void TypeCompilerBase::declareLocalVariables(FunctionLiteral *literal)
 
     // for functions that contain (direct) child functions, we need to use unqiue upvalues
     // to store function information, such as how many arguments the functions takes for the
-    // Function.length property
+    // Function.length property, note that Lua 5.2 has support for this internally'
+    // and this can be removed upon upgrading to it (once LuaJIT supports 5.2 features)
     for (UTsize i = 0; i < literal->childFunctions.size(); i++)
     {
         char funcinfo[256];
-        snprintf(funcinfo, 250, "__ls_funcinfo_numargs_%i", i);
-
+        snprintf(funcinfo, 250, "__ls_funcinfo_arginfo_%i", i);
         BC::newLocalVar(cs, funcinfo, nlocals++);
     }
 

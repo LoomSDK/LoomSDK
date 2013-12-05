@@ -7,17 +7,17 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.layout
 {
-	import feathers.core.IFeathersEventDispatcher;
+    import feathers.core.IFeathersEventDispatcher;
 
-	/**
-	 * Dispatched when a property of the layout data changes.
-	 */
-	[Event(name="change",type="loom2d.events.Event")]
+    /**
+     * Dispatched when a property of the layout data changes.
+     */
+    [Event(name="change",type="loom2d.events.Event")]
 
-	/**
-	 * Extra data used by layout algorithms.
-	 */
-	public interface ILayoutData extends IFeathersEventDispatcher
-	{
-	}
+    /**
+     * Extra data used by layout algorithms.
+     */
+    public interface ILayoutData extends IFeathersEventDispatcher
+    {
+    }
 }

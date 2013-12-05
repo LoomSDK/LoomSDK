@@ -52,8 +52,7 @@ package loom.platform
          */
         NumberPad = 4
     };
-
-    [Native(managed)] 
+ 
     /**
      * Helper to communicate with Loom's IME API.
      *
@@ -69,6 +68,7 @@ package loom.platform
      *
      * Each text input area should have its own instance of this class.
      */
+    [Native(managed)]     
     public native class IMEDelegate
     {
         /**
@@ -119,7 +119,7 @@ package loom.platform
         
         /**
          * Indicates the on-screen keyboard has become visible. No
-         * parameters.
+         * parameters. (iOS Only)
          */
         public native var onKeyboardDidShow:NativeDelegate;
 
@@ -131,7 +131,7 @@ package loom.platform
 
         /**
          * Indicates the on-screen keyboard has become invisible. No
-         * parameters.
+         * parameters. (iOS Only)
          */
         public native var onKeyboardDidHide:NativeDelegate;
 

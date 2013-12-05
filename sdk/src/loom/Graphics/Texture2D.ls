@@ -41,6 +41,24 @@ package loom.graphics
         public native var height:Number;
 
         /**
+         *  None/Nearest Neighbor = 0, Bilinear = 1
+         *  See @TextureSmoothing for more details
+         */        
+        public native var smoothing:int;
+
+        /**
+         *  Repeat = 0, Mirror = 1, Clamp = 2. Default is Clamp.
+         *  See @TextureWrap for more details
+         */        
+        public native var wrapU:int;
+
+        /**
+         *  Repeat = 0, Mirror = 1, Clamp = 2. Default is Clamp.
+         *  See @TextureWrap for more details
+         */        
+        public native var wrapV:int;
+
+        /**
          * ID identifying native side existence of this texture.
          */
         public native var id:int;

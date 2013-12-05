@@ -213,6 +213,31 @@ curl_calloc_callback Curl_ccalloc;
 #  pragma warning(default:4232) /* MSVC extension, dllimport identity */
 #endif
 
+#include "jemalloc/jemalloc.h"
+
+static char *curlx_strdup_hack(const char *str)
+{
+  size_t len;
+  char *newstr;
+
+  if(!str)
+    return (char *)NULL;
+
+  len = strlen(str);
+
+  if(len >= ((size_t)-1) / sizeof(char))
+    return (char *)NULL;
+
+  newstr = je_malloc((len+1)*sizeof(char));
+  if(!newstr)
+    return (char *)NULL;
+
+  memcpy(newstr,str,(len+1)*sizeof(char));
+
+  return newstr;
+
+}
+
 /**
  * curl_global_init() globally initializes cURL given a bitwise set of the
  * different features of what to initialize.
@@ -223,11 +248,11 @@ CURLcode curl_global_init(long flags)
     return CURLE_OK;
 
   /* Setup the default memory functions here (again) */
-  Curl_cmalloc = (curl_malloc_callback)malloc;
-  Curl_cfree = (curl_free_callback)free;
-  Curl_crealloc = (curl_realloc_callback)realloc;
-  Curl_cstrdup = (curl_strdup_callback)system_strdup;
-  Curl_ccalloc = (curl_calloc_callback)calloc;
+  Curl_cmalloc = (curl_malloc_callback)je_malloc;
+  Curl_cfree = (curl_free_callback)je_free;
+  Curl_crealloc = (curl_realloc_callback)je_realloc;
+  Curl_cstrdup = (curl_strdup_callback)curlx_strdup_hack;
+  Curl_ccalloc = (curl_calloc_callback)je_calloc;
 
   if(flags & CURL_GLOBAL_SSL)
     if(!Curl_ssl_init()) {

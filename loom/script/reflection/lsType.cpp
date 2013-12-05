@@ -73,6 +73,44 @@ void Type::addMember(MemberInfo *member)
 }
 
 
+void Type::freeByteCode()
+{
+    for (size_t i = 0; i < members.size(); i++)
+    {
+        MemberInfo *m = members.at((int)i);
+        if (m->isConstructor())
+        {
+            ConstructorInfo *ci = (ConstructorInfo*)m;
+            ci->freeByteCode();
+        }
+        else if(m->isMethod())
+        {
+            MethodInfo *mi = (MethodInfo *)m;
+            mi->freeByteCode();
+        }
+        else if (m->isProperty())
+        {
+            PropertyInfo *pi = (PropertyInfo *)m;
+            if(pi->getGetMethod())
+                pi->getGetMethod()->freeByteCode();
+            if(pi->getSetMethod())
+                pi->getSetMethod()->freeByteCode();
+        }
+    }
+
+    if (bcStaticInitializer)
+    {
+        delete bcStaticInitializer;
+        bcStaticInitializer = NULL;
+    }
+
+    if (bcInstanceInitializer)
+    {
+        delete bcInstanceInitializer;
+        bcInstanceInitializer = NULL;
+    }
+}
+
 void Type::findMembers(const MemberTypes& memberTypes,
                        utArray<MemberInfo *>& membersOut, bool includeBases, bool includePropertyGetterSetters)
 {

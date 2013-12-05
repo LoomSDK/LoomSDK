@@ -28,7 +28,7 @@ namespace LS {
 class LSCompilerLog {
 public:
 
-    struct Message
+    struct Message 
     {
         utString filename;
         int      line;

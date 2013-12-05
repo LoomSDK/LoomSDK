@@ -808,6 +808,22 @@ namespace bgfx
 		m_submit->destroy();
 		m_render->destroy();
 
+		//LOOM BEGIN: IF YOU ARE UPDATING BGFX DO NOT REMOVE THIS BLOCK
+		m_dynamicIndexBufferHandle.reset();	
+		m_dynamicVertexBufferHandle.reset();
+		m_indexBufferHandle.reset();
+		m_vertexDeclHandle.reset();
+		m_vertexBufferHandle.reset();
+		m_vertexShaderHandle.reset();
+		m_fragmentShaderHandle.reset();
+		m_programHandle.reset();
+		m_textureHandle.reset();
+		m_renderTargetHandle.reset();
+		m_uniformHandle.reset();
+		m_dynamicVertexBufferAllocator.reset();
+		m_dynamicIndexBufferAllocator.reset(); 		
+		//LOOM END: IF YOU ARE UPDATING BGFX DO NOT REMOVE THIS BLOCK
+
 #if BGFX_CONFIG_DEBUG
 #	define CHECK_HANDLE_LEAK(_handleAlloc) \
 		do { \

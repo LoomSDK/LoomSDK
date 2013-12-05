@@ -59,8 +59,8 @@ public:
     void initOperator(const char *value);
 
     Token();
-    Token(TokenType t, const char *value, const char *preAlias = NULL);
-    Token(TokenType t, utString input, int start, int end);
+    Token(TokenType t, const char* value, const char* preAlias = NULL);
+    Token(TokenType t, const utString &input, int start, int end);
 
     static Token *getKeyword(const char *t);
 
@@ -106,9 +106,9 @@ public:
         return type == TKEYWORD;
     }
 
-    bool isModifier()
-    {
-        utString s = value.str();
+    bool isModifier() {
+
+        const utString &s = value.str();
 
         if (s == "public")
         {

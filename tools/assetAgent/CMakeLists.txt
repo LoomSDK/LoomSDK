@@ -3,9 +3,7 @@ project(assetAgent)
 include_directories( ${LOOM_INCLUDE_FOLDERS} )
 
 set (MAINDEMO_SRC
-
     src/main.cpp
-
 )
 
 set (MAINDEMO_HDR
@@ -24,7 +22,6 @@ if (APPLE)
     target_link_libraries(${PROJECT_NAME} 
        LoomVendor
        LoomCommon
-       "-framework IOKit"
        "-framework CoreFoundation"
        "-framework Cocoa"
        "-framework OpenGL"

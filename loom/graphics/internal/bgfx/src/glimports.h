@@ -49,6 +49,7 @@ GL_IMPORT(false, PFNGLSTENCILOPPROC,                      glStencilOp);
 #endif // BX_PLATFORM_WINDOWS
 
 GL_IMPORT(false, PFNGLACTIVETEXTUREPROC,                  glActiveTexture);
+GL_IMPORT(false, PFNGLGENERATEMIPMAPEXTPROC,              glGenerateMipmap);
 GL_IMPORT(false, PFNGLCOMPRESSEDTEXIMAGE2DPROC,           glCompressedTexImage2D);
 GL_IMPORT(false, PFNGLCOMPRESSEDTEXSUBIMAGE2DPROC,        glCompressedTexSubImage2D);
 GL_IMPORT(false, PFNGLCOMPRESSEDTEXIMAGE3DPROC,           glCompressedTexImage3D);

@@ -7,47 +7,47 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.layout
 {
-	import loom2d.display.DisplayObject;
+    import loom2d.display.DisplayObject;
 
-	/**
-	 * A virtual layout that supports variable item dimensions.
-	 */
-	public interface IVariableVirtualLayout extends IVirtualLayout
-	{
-		/**
-		 * When the layout is virtualized, and this value is true, the items may
-		 * have variable dimensions. If false, the items will all share the
-		 * same dimensions as the typical item. Performance is better for
-		 * layouts where all items have the same dimensions.
-		 */
-		function get hasVariableItemDimensions():Boolean;
+    /**
+     * A virtual layout that supports variable item dimensions.
+     */
+    public interface IVariableVirtualLayout extends IVirtualLayout
+    {
+        /**
+         * When the layout is virtualized, and this value is true, the items may
+         * have variable dimensions. If false, the items will all share the
+         * same dimensions as the typical item. Performance is better for
+         * layouts where all items have the same dimensions.
+         */
+        function get hasVariableItemDimensions():Boolean;
 
-		/**
-		 * @private
-		 */
-		function set hasVariableItemDimensions(value:Boolean):void;
+        /**
+         * @private
+         */
+        function set hasVariableItemDimensions(value:Boolean):void;
 
-		/**
-		 * Clears the cached dimensions for all virtualized indices.
-		 */
-		function resetVariableVirtualCache():void;
+        /**
+         * Clears the cached dimensions for all virtualized indices.
+         */
+        function resetVariableVirtualCache():void;
 
-		/**
-		 * Clears the cached dimensions for one specific virtualized index.
-		 */
-		function resetVariableVirtualCacheAtIndex(index:int, item:DisplayObject = null):void;
+        /**
+         * Clears the cached dimensions for one specific virtualized index.
+         */
+        function resetVariableVirtualCacheAtIndex(index:int, item:DisplayObject = null):void;
 
-		/**
-		 * Inserts an item in to the cache at the specified index, pushing the
-		 * old cached value at that index, and all following values, up one
-		 * index.
-		 */
-		function addToVariableVirtualCacheAtIndex(index:int, item:DisplayObject = null):void;
+        /**
+         * Inserts an item in to the cache at the specified index, pushing the
+         * old cached value at that index, and all following values, up one
+         * index.
+         */
+        function addToVariableVirtualCacheAtIndex(index:int, item:DisplayObject = null):void;
 
-		/**
-		 * Removes an item in to the cache at the specified index, moving the
-		 * values at following indexes down by one.
-		 */
-		function removeFromVariableVirtualCacheAtIndex(index:int):void;
-	}
+        /**
+         * Removes an item in to the cache at the specified index, moving the
+         * values at following indexes down by one.
+         */
+        function removeFromVariableVirtualCacheAtIndex(index:int):void;
+    }
 }

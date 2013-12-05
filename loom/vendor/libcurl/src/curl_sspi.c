@@ -77,7 +77,8 @@ CURLcode Curl_sspi_global_init(void)
     /* Find out Windows version */
     memset(&osver, 0, sizeof(osver));
     osver.dwOSVersionInfoSize = sizeof(osver);
-    if(!GetVersionEx(&osver))
+#pragma warning( disable : 4996 )
+	if(!GetVersionEx(&osver))
       return CURLE_FAILED_INIT;
 
     /* Security Service Provider Interface (SSPI) functions are located in

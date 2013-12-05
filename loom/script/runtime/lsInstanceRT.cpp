@@ -94,7 +94,12 @@ int lsr_method(lua_State *L)
     if (dargs < method->getNumParameters())
     {
         // TODO: Report line numbers LOOM-603
-        lmAssert(fidx >= 0, "Method '%s::%s' called with too few arguments.", method->getDeclaringType()->getFullName().c_str(), method->getStringSignature().c_str());
+        // if we have var args and not enough parameters, VM will insert null for ...args value
+        // otherwise, we have a compiler error
+        if (varArgIdx < 0)
+        {
+            lmAssert(fidx >= 0, "Method '%s::%s' called with too few arguments.", method->getDeclaringType()->getFullName().c_str(), method->getStringSignature().c_str());
+        }
 
         bool inserted = false;
         for (int i = dargs; i < method->getNumParameters(); i++)
@@ -501,47 +506,6 @@ static int lsr_dictionary_newindex(lua_State *L)
     return 0;
 }
 
-
-static int lsr_vector_index(lua_State *L)
-{
-    // default to standard indexer
-    return lsr_instanceindex(L);
-}
-
-
-static int lsr_vector_newindex(lua_State *L)
-{
-    lua_rawgeti(L, 1, LSINDEXVECTORLENGTH);
-    int length = (int)lua_tonumber(L, -1);
-    lua_pop(L, 1);
-
-    if (!lua_isnumber(L, 2))
-    {
-        lua_pushstring(L, "Vector indexed with non-number");
-        lua_error(L);
-    }
-
-    int idx = (int)lua_tonumber(L, 2);
-
-    if (idx < 0)
-    {
-        lua_pushstring(L, "Vector indexed with negative number");
-        lua_error(L);
-    }
-
-    if (idx >= length)
-    {
-        lua_pushstring(L, "Vector index out of bounds");
-        lua_error(L);
-    }
-
-    lua_rawgeti(L, 1, LSINDEXVECTOR);
-    lua_replace(L, 1);
-    lua_rawset(L, 1);
-    return 0;
-}
-
-
 static void lsr_deletedmanagederror(lua_State *L)
 {
     lua_Debug ar;
@@ -623,10 +587,10 @@ void lsr_instanceregister(lua_State *L)
     // Specialized metatable for vectors
     luaL_newmetatable(L, LSVECTOR);
 
-    lua_pushcfunction(L, lsr_vector_index);
+    lua_pushcfunction(L, lsr_instanceindex);
     lua_setfield(L, -2, "__index");
 
-    lua_pushcfunction(L, lsr_vector_newindex);
+    lua_pushcfunction(L, lsr_instancenewindex);
     lua_setfield(L, -2, "__newindex");
 
     lua_pushcfunction(L, lsr_instanceequality);

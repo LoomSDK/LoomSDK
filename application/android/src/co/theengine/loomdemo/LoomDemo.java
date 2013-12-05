@@ -41,35 +41,40 @@ import android.view.WindowManager;
 import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.content.Intent;
+import android.graphics.Rect;
+import android.media.AudioManager;
 
 import co.theengine.loomdemo.billing.LoomStore;
 
+import com.dolby.DolbyAudio;
+
 public class LoomDemo extends Cocos2dxActivity {
 
-	private Cocos2dxGLSurfaceView mGLView;
+    private Cocos2dxGLSurfaceView mGLView;
 
-	public static LoomDemo instance = null;
+    public static LoomDemo instance = null;
 
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) 
-	{
-		// Process camera results.
-		LoomCamera.onActivityResult(this, requestCode, resultCode, data);
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) 
+    {
+        // Process camera results.
+        LoomCamera.onActivityResult(this, requestCode, resultCode, data);
 
-	    // Check which request we're responding to
-	    if (requestCode == LoomStore.INTENT_CODE) 
-	    {
-	    	LoomStore.handleActivityResponse(resultCode, data);
-	    }
-	    else
-	    {
-	    	super.onActivityResult(requestCode, resultCode, data);
-	    }
-	}
+        // Check which request we're responding to
+        if (requestCode == LoomStore.INTENT_CODE) 
+        {
+            LoomStore.handleActivityResponse(resultCode, data);
+        }
+        else
+        {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
 
-	public static void triggerGenericEvent(String type, String payload)
-	{
-		// Submit callback on proper thread.
+
+    public static void triggerGenericEvent(String type, String payload)
+    {
+        // Submit callback on proper thread.
         final String fType = type;
         final String fPayload = payload;
 
@@ -79,171 +84,210 @@ public class LoomDemo extends Cocos2dxActivity {
                 internalTriggerGenericEvent(fType, fPayload);
             }
         });
-	}
+    }
 
-	private static native void internalTriggerGenericEvent(String type, String payload);
+    private static native void internalTriggerGenericEvent(String type, String payload);
 
-	public static void handleGenericEvent(String type, String payload)
-	{
-		Log.d("Loom", "Saw generic event " + type + " " + payload);
-		if(type.equals("cameraRequest"))
-		{
-			LoomCamera.triggerCameraIntent(instance);
-		}
-		else if(type.equals("showStatusBar"))
-		{
-			instance.runOnUiThread(new Runnable() {
-			     public void run() {
-					instance.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-					instance.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-			    }
-			});
-		}
-		else if(type.equals("hideStatusBar"))
-		{
-			instance.runOnUiThread(new Runnable() {
-			     public void run() {
-					instance.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-					instance.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-			    }
-			});
-		}
-	}
+    public static void handleGenericEvent(String type, String payload)
+    {
+        Log.d("Loom", "Saw generic event " + type + " " + payload);
+        if(type.equals("cameraRequest"))
+        {
+            LoomCamera.triggerCameraIntent(instance);
+        }
+        else if(type.equals("showStatusBar"))
+        {
+            instance.runOnUiThread(new Runnable() {
+                public void run() {
+                    instance.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                    instance.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+                }
+            });
+        }
+        else if(type.equals("hideStatusBar"))
+        {
+            instance.runOnUiThread(new Runnable() {
+                public void run() {
+                    instance.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                    instance.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+                }
+            });
+        }
+    }
 
-	protected void onCreate(Bundle savedInstanceState) 
-	{
-		instance = this;
+    private boolean keyboardHidden = true;
 
-		super.onCreate(savedInstanceState);
-		
-		if (!detectOpenGLES20())
-		{
-			Log.d("Loom", "Could not initialize OpenGL ES 2.0 - terminating!");
-			finish();
-			return;
-		}
+    protected void onCreate(Bundle savedInstanceState) 
+    {
+        instance = this;
 
-		// get the packageName, it's used to set the resource path
-		String packageName = getApplication().getPackageName();
-		super.setPackageName(packageName);
+        super.onCreate(savedInstanceState);
 
-		// FrameLayout
-		ViewGroup.LayoutParams framelayout_params = new ViewGroup.LayoutParams(
-				ViewGroup.LayoutParams.FILL_PARENT,
-				ViewGroup.LayoutParams.FILL_PARENT);
-		FrameLayout framelayout = new FrameLayout(this);
-		framelayout.setLayoutParams(framelayout_params);
+        if (!detectOpenGLES20())
+        {
+            Log.d("Loom", "Could not initialize OpenGL ES 2.0 - terminating!");
+            finish();
+            return;
+            }
 
-		// Cocos2dxEditText layout
-		ViewGroup.LayoutParams edittext_layout_params = new ViewGroup.LayoutParams(
-				ViewGroup.LayoutParams.FILL_PARENT,
-				ViewGroup.LayoutParams.WRAP_CONTENT);
-		Cocos2dxEditText edittext = new Cocos2dxEditText(this);
-		edittext.setLayoutParams(edittext_layout_params);
-		
-		ViewGroup webViewGroup = new RelativeLayout(this);
+        // get the packageName, it's used to set the resource path
+        String packageName = getApplication().getPackageName();
+        super.setPackageName(packageName);
 
-		// ...add to FrameLayout
-		framelayout.addView(edittext);
+        // FrameLayout
+        ViewGroup.LayoutParams framelayout_params = new ViewGroup.LayoutParams(
+                                                            ViewGroup.LayoutParams.MATCH_PARENT,
+                                                            ViewGroup.LayoutParams.MATCH_PARENT);
+        FrameLayout framelayout = new FrameLayout(this);
+        framelayout.setLayoutParams(framelayout_params);
 
-		// Cocos2dxGLSurfaceView
-		mGLView = new Cocos2dxGLSurfaceView(this);
+        // Cocos2dxEditText layout
+        ViewGroup.LayoutParams edittext_layout_params = new ViewGroup.LayoutParams(
+                                                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                                                ViewGroup.LayoutParams.WRAP_CONTENT);
+        Cocos2dxEditText edittext = new Cocos2dxEditText(this);
+        edittext.setLayoutParams(edittext_layout_params);
 
-		// ...add to FrameLayout
-		framelayout.addView(mGLView);
-		
-		framelayout.addView(webViewGroup);
+        ViewGroup webViewGroup = new RelativeLayout(this);
 
-		mGLView.setEGLContextClientVersion(2);
-		mGLView.setCocos2dxRenderer(new Cocos2dxRenderer());
-		mGLView.setTextField(edittext);
+        // ...add to FrameLayout
+        framelayout.addView(edittext);
 
-		// Set framelayout as the content view
-		setContentView(framelayout);
-		
-		// give the webview class our layout
-		LoomWebView.setRootLayout(webViewGroup);
-		LoomAdMob.setRootLayout(webViewGroup);
+        // Make sure we control volume properly.
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
-		// Hook up the store.
-		LoomStore.bind(this);
+        // Cocos2dxGLSurfaceView
+        mGLView = new Cocos2dxGLSurfaceView(this);
 
-        // Initialize Loom Mobile class
-        LoomMobile.init(this);
+        // ...add to FrameLayout
+        framelayout.addView(mGLView);
+        framelayout.addView(webViewGroup);
+
+        mGLView.setEGLContextClientVersion(2);
+        mGLView.setCocos2dxRenderer(new Cocos2dxRenderer());
+        mGLView.setTextField(edittext);
+
+        // Set framelayout as the content view
+        setContentView(framelayout);
+
+        // give the webview class our layout
+        LoomWebView.setRootLayout(webViewGroup);
+        LoomAdMob.setRootLayout(webViewGroup);
+
+        // Hook up the store.
+        LoomStore.bind(this);
+
+        ///Create Video View for our layout
+        LoomVideo.onCreate(webViewGroup);
+
+        ///Create Sensor class
+        LoomSensors.onCreate(this);
+
+        ///attempt to initialize Dolby Audio for this device
+        DolbyAudio.onCreate(this);
 
         // Listen for IME-initiated resizes.
         // Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
         final View activityRootView = framelayout;
         Log.d("Loom", "Registering for global layout listener!");
-        logError("keyboardResize BUTTS");
         activityRootView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() 
         {
             @Override
             public void onGlobalLayout() 
             {
-                logError("keyboardResize " + activityRootView.getHeight());
-                Log.d("Loom", "keyboardResize " + activityRootView.getHeight());
+                final Rect r = new Rect();
+                activityRootView.getWindowVisibleDisplayFrame(r);
+                final int heightDiff = activityRootView.getRootView().getHeight() - (r.bottom - r.top);
 
                 // Convert the dps to pixels
                 final float scale = activityRootView.getContext().getResources().getDisplayMetrics().density;
                 final float scaledThreshold = (int) (100 * scale + 0.5f);
-                int heightDiff = activityRootView.getRootView().getHeight() - activityRootView.getHeight();
+
                 if (heightDiff > scaledThreshold)
                 {
-                    // if more than 100 points, its probably a keyboard...
-                    logError("keyboardResize " + activityRootView.getHeight());
-                    triggerGenericEvent("keyboardResize", "" + activityRootView.getHeight());
+                    // ignore if not hidden as this is probably an autocomplete bar coming up
+                    if (keyboardHidden)
+                    {
+                        keyboardHidden = false;
+                        triggerGenericEvent("keyboardResize", "" + heightDiff);
+                    }
+                }
+                else
+                {
+                    if (keyboardHidden)
+                        return;
+
+                    keyboardHidden = true;
+                    // this matches iOS behavior
+                    triggerGenericEvent("keyboardResize", "0");
                 }
              }
-        }); 
+        });     
+    }
 
-	}
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) 
+    {
+        super.onConfigurationChanged(newConfig);
 
-	@Override
-	public void onConfigurationChanged(Configuration newConfig) 
-	{
-		super.onConfigurationChanged(newConfig);
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE)
+            nativeSetOrientation("landscape");
+        else
+            nativeSetOrientation("portrait");
+    }
 
-		if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE)
-			nativeSetOrientation("landscape");
-		else
-			nativeSetOrientation("portrait");
-	}
+    @Override
+    protected void onStart() {
+        super.onStart();
+        DolbyAudio.onStart();
+    }
 
-	@Override
-	protected void onPause() {
-		super.onPause();
-		mGLView.onPause();
-	}
+    @Override
+    protected void onStop() {
+        super.onStop();
+        DolbyAudio.onStop();
+    }
+
+    @Override
+    protected void onPause() {
+        LoomSensors.onPause();
+        LoomVideo.onPause();
+        super.onPause();
+        mGLView.onPause();
+    }
 
     @Override
     protected void onResume() {
+        LoomSensors.onResume();
+        LoomVideo.onResume();
         super.onResume();
         mGLView.onResume();
     }
 
     @Override
     protected void onDestroy() {
-        LoomMobile.kill();
+        LoomSensors.onDestroy();
+        LoomVideo.onDestroy();
+        DolbyAudio.onDestroy();
         super.onDestroy();
     }
 
-	private boolean detectOpenGLES20() 
-	{
-		ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-		ConfigurationInfo info = am.getDeviceConfigurationInfo();
-		return (info.reqGlEsVersion >= 0x20000);
-	}
+    private boolean detectOpenGLES20() 
+    {
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        ConfigurationInfo info = am.getDeviceConfigurationInfo();
+        return (info.reqGlEsVersion >= 0x20000);
+    }
 
-	public static native void log(String message);
-	public static native void logWarn(String message);
-	public static native void logError(String message);
-	public static native void logDebug(String message);
-	public static void logInfo(String message) { log(message); }
+    public static native void log(String message);
+    public static native void logWarn(String message);
+    public static native void logError(String message);
+    public static native void logDebug(String message);
+    public static void logInfo(String message) { log(message); }
 
-	static 
-	{
-		// Initialize our native library.
-		System.loadLibrary("LoomDemo");
-	}
+    static 
+    {
+        // Initialize our native library.
+        System.loadLibrary("LoomDemo");
+    }
 }

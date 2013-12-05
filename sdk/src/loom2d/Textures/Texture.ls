@@ -73,7 +73,21 @@ package loom2d.textures
     public class Texture
     {
         protected var mFrame:Rectangle;
-        protected var mRepeat:Boolean;
+
+        /**
+         * See @TextureSmoothing for modes
+         */        
+        protected var mSmoothing:int = TextureSmoothing.defaultSmoothing;
+        
+        /**
+         * See @TextureWrap for modes
+         */        
+        protected var mWrapU:int = TextureWrap.defaultWrap;
+        
+        /**
+         * See @TextureWrap for modes
+         */        
+        protected var mWrapV:int = TextureWrap.defaultWrap;
         
         /** helper object */
         private static var sOrigin:Point = new Point();
@@ -89,8 +103,6 @@ package loom2d.textures
         public function Texture()
         {
             Debug.assert(getType() != Texture, "Texture is abstract; please use a subclass like ConcreteTexture or SubTexture.");
-            
-            mRepeat = false;
         }
         
         /** Disposes the underlying texture data. Note that not all textures need to be disposed: 
@@ -131,7 +143,7 @@ package loom2d.textures
 
             var textureInfo = Texture2D.initFromAsset(path);
             Debug.assert(textureInfo, "Unable to load texture from asset: " + path);
-   
+
             // And set up the concrete texture.
             var tex:ConcreteTexture = new ConcreteTexture(path, textureInfo.width, textureInfo.height);
             tex.mFrame = new Rectangle(0, 0, textureInfo.width, textureInfo.height);
@@ -177,8 +189,7 @@ package loom2d.textures
             
             // the frame property is readonly - set the frame in the 'fromTexture' method.
             // why is it readonly? To be able to efficiently cache the texture coordinates on
-            // rendering, textures need to be immutable (except 'repeat', which is not cached,
-            // anyway).
+            // rendering, textures need to be immutable.
         }
 
         private static var tmpRect:Rectangle = new Rectangle();
@@ -205,13 +216,75 @@ package loom2d.textures
             return tmpRect;
         }
 
-        
-        /** Indicates if the texture should repeat like a wallpaper or stretch the outermost pixels.
-         *  Note: this only works in textures with sidelengths that are powers of two and 
-         *  that are not loaded from a texture atlas (i.e. no subtextures). @default false */
-        public function get repeat():Boolean { return mRepeat; }
-        public function set repeat(value:Boolean):void { mRepeat = value; }
-        
+
+        /**
+          *  Helper function to warn about dodgy wrap mode usage
+          */
+        private function wrapModeWarning(mode:int):void
+        {
+            if(mode != TextureWrap.CLAMP)
+            {
+                if(!(this is ConcreteTexture))
+                {
+                    Console.print("WARNING: Use of TextureWrap other than CLAMP on a Texture that is not a ConcreteTexture will probably not do what you expect: " + assetPath); 
+                }
+                else if(!Math.isPowerOf2(width) || !Math.isPowerOf2(height))
+                {
+                    Console.print("WARNING: Use of TextureWrap other than CLAMP on a Non Power of 2 Texture is not advised: " + assetPath); 
+                }
+            }            
+        }
+
+
+        /** 
+          *  Indicates if the texture do smooth filtering when it is scaled (BILINEAR) or just choose the nearest pixel (NONE)
+          *  @default TextureSmoothing.BILINEAR
+          */
+        public function get smoothing():int { return mSmoothing; }
+        public function set smoothing(mode:int)
+        {
+            mSmoothing = mode;
+
+            if (textureInfo)
+                textureInfo.smoothing = mode;
+        }
+
+        /** 
+          *  Indicates if the texture should repeat like a wallpaper or stretch the outermost horizontal pixels.
+          *  Note: this only works in textures with dimensions that are powers of two and 
+          *  that are not loaded from a texture atlas (i.e. no subtextures). 
+          *  @default TextureWrap.CLAMP
+          */
+        public function get wrapU():int { return mWrapU; }
+        public function set wrapU(mode:int)
+        {
+            mWrapU = mode;
+
+            if (textureInfo)
+                textureInfo.wrapU = mode;
+
+            ///warn if texture is NPOT or isn't a ConcreteTexture!
+            wrapModeWarning(mode);
+        }
+
+        /** 
+          *  Indicates if the texture should repeat like a wallpaper or stretch the outermost vertical pixels.
+          *  Note: this only works in textures with dimensions that are powers of two and 
+          *  that are not loaded from a texture atlas (i.e. no subtextures). 
+          *  @default TextureWrap.CLAMP
+          */
+        public function get wrapV():int { return mWrapV; }
+        public function set wrapV(mode:int)
+        {
+            mWrapV = mode;
+
+            if (textureInfo)
+                textureInfo.wrapV = mode;
+
+            ///warn if texture is NPOT or isn't a ConcreteTexture!
+            wrapModeWarning(mode);
+        }
+
         /** The width of the texture in points. */
         public function get width():Number { return 0; }
         
@@ -238,5 +311,8 @@ package loom2d.textures
         
         /** Indicates if the alpha values are premultiplied into the RGB values. */
         public function get premultipliedAlpha():Boolean { return false; }
+
+        /** Returns the path of the texture asset */
+        public function get assetPath():String { return ""; }
     }
 }

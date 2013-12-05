@@ -29,6 +29,11 @@ limitations under the License.
 #include "loom/common/core/assert.h"
 #include "loom/vendor/jansson/jansson.h"
 
+extern "C"
+{
+  #include "loom/vendor/jansson/src/jansson_private.h"
+}
+
 lmDefineLogGroup(gAppleStoreLogGroup, "loom.store.apple", 1, 0);
 
 static StoreEventCallback gEventCallback = NULL;
@@ -93,7 +98,7 @@ static StoreEventCallback gEventCallback = NULL;
     gEventCallback("product", packagedString);
 
     // Clean it up!
-    free((void*)packagedString);
+    jsonp_free((void*)packagedString);
     json_decref(packaged);
 }
 
@@ -119,7 +124,7 @@ static StoreEventCallback gEventCallback = NULL;
     gEventCallback("transaction", transactionString);
 
     // Clean it up!
-    free((void*)transactionString);
+    jsonp_free((void*)transactionString);
     json_decref(transaction);
 }
 

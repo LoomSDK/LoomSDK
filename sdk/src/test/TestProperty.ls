@@ -164,6 +164,14 @@ class TestProperty extends Test
     
         return _svalue;
     }
+
+    // Compiler Error
+    /*
+    public function get errorOnSpecifyParameterOnGetter(x:Number):Number
+    {
+        return 1;
+    } 
+    */   
     
     // test initializer with static property
     public static var testValue:Number = svalue;

@@ -151,9 +151,7 @@ public:
         if ((lua_gettop(L) == 3) && !lua_isnil(L, 3))
         {
             // get the ...rest length
-            lua_rawgeti(L, 3, LSINDEXVECTORLENGTH);
-            int vlength = (int)lua_tonumber(L, -1);
-            lua_pop(L, 1);
+            int vlength = lsr_vector_get_length(L, 3);
 
             // get the vector table into stack position 4
             lua_rawgeti(L, 3, LSINDEXVECTOR);
@@ -194,9 +192,7 @@ public:
         if ((lua_gettop(L) == 3) && !lua_isnil(L, 3))
         {
             // get the ...rest length
-            lua_rawgeti(L, 3, LSINDEXVECTORLENGTH);
-            int vlength = (int)lua_tonumber(L, -1);
-            lua_pop(L, 1);
+            int vlength = lsr_vector_get_length(L, 3);
 
             // get the vector table into stack position 4
             lua_rawgeti(L, 3, LSINDEXVECTOR);

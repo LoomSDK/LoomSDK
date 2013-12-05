@@ -50,6 +50,12 @@ public:
         return bc;
     }
 
+    void clear()
+    {
+        bc64 = "";
+        bc.clear();
+    }
+
     static utBase64 decode64(const utString& code64);
 
     static utBase64 encode64(const utArray<unsigned char>& bc);

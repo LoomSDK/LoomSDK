@@ -58,6 +58,9 @@ JNIEXPORT void JNICALL Java_org_cocos2dx_lib_Cocos2dxRenderer_nativeInit(JNIEnv 
 
         GFX::Graphics::initialize();
 
+        // set initial width and height
+        GFX::Graphics::reset(w, h);
+
         CCApplication::sharedApplication().run();
     }
     else

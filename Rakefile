@@ -95,6 +95,13 @@ else
   $numCores = Integer(`cat /proc/cpuinfo | grep processor | wc -l`)
 end
 
+# For matz's sake just include rubyzip directly.
+path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'lib'))
+puts "Adding #{path} to $LOAD_PATH to use local rubyzip."
+$LOAD_PATH << path
+require 'zip'
+require 'zip/file'
+
 puts "*** Building with #{$numCores} cores."
 
 # Windows specific checks and settings
@@ -779,7 +786,11 @@ file 'build/luajit_ios/lib/libluajit-5.1.a' do
     luajit_ios_dir = File.join(rootFolder, "build", "luajit_ios")
     Dir.chdir("loom/vendor/luajit") do
         sh "make clean"
-        sh "make install -j#{$numCores} HOST_CC=\"gcc -m32 -arch i386\" CROSS=" + ISDKP + " TARGET_FLAGS=\"" + ISDKF + "\" TARGET=arm TARGET_SYS=iOS PREFIX=\"#{luajit_ios_dir.shellescape}\""
+        if $targetIOSSDK >= "7.0"
+              sh "make install -j#{$numCores} HOST_CC=\"gcc -m32 -arch i386\" TARGET_FLAGS=\"" + ISDKF + "\" TARGET=arm TARGET_SYS=iOS PREFIX=\"#{luajit_ios_dir.shellescape}\""
+        else
+              sh "make install -j#{$numCores} HOST_CC=\"gcc -m32 -arch i386\" CROSS=" + ISDKP + " TARGET_FLAGS=\"" + ISDKF + "\" TARGET=arm TARGET_SYS=iOS PREFIX=\"#{luajit_ios_dir.shellescape}\""
+        end            
     end
   end
 end
@@ -877,7 +888,7 @@ namespace :package do
     omit_files = %w[ examples.zip loomsdk.zip certs/LoomDemoBuild.mobileprovision loom/vendor/telemetry-01052012 pkg/ artifacts/ docs/output cmake_osx/ cmake_msvc/ cmake_ios/ cmake_android/]
 
     require 'zip/zip'
-    Zip::ZipFile.open("nativesdk.zip", 'w') do |zipfile|
+    Zip::File.open("nativesdk.zip", 'w') do |zipfile|
       Dir["**/**"].each do |file|
         
         do_omit = false
@@ -906,7 +917,7 @@ namespace :package do
     FileUtils.mkdir_p "pkg"
 
     require 'zip/zip'
-    Zip::ZipFile.open("pkg/examples.zip", 'w') do |zipfile|
+    Zip::File.open("pkg/examples.zip", 'w') do |zipfile|
       Dir["docs/examples/**/**"].each do |file|
         zipfile.add(file.sub("docs/examples/", ''),file)
       end
@@ -974,7 +985,7 @@ namespace :package do
     require_dependencies
 
     puts "Compressing Loom SDK..."
-    Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|
+    Zip::File.open("pkg/loomsdk.zip", 'w') do |zipfile|
       Dir["pkg/sdk/**/**"].each do |file|
         zipfile.add(file.sub("pkg/sdk/", ''),file)
       end
@@ -994,7 +1005,7 @@ namespace :package do
 
     FileUtils.mkdir_p "pkg"
 
-    Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|
+    Zip::File.open("pkg/loomsdk.zip", 'w') do |zipfile|
       Dir["pkg/sdk/**/**"].each do |file|
         zipfile.add(file.sub("pkg/sdk/", ''),file)
       end
@@ -1015,9 +1026,10 @@ end
 def require_dependencies
   begin
     require 'rubygems'
-    require 'zip/zip'
-    require 'zip/zipfilesystem'
-  rescue LoadError
+    require 'zip'
+    require 'zip/file'
+  rescue LoadError => e
+    puts "LoadError: #{e}"
     puts "This Rakefile requires the rubyzip gem. Install it using: gem install rubyzip"
     exit(1)
   end
@@ -1026,7 +1038,7 @@ end
 def unzip_file (file, destination)
   require_dependencies
 
-  Zip::ZipFile.open(file) do |zip_file|
+  Zip::File.open(file) do |zip_file|
     zip_file.each do |f|
       f_path=File.join(destination, f.name)
       FileUtils.mkdir_p(File.dirname(f_path))

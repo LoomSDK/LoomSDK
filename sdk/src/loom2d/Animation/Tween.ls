@@ -82,6 +82,16 @@ package loom2d.animation
              reset(target, time, transition);
         }
 
+        /** Resets a minimal number of the tween values so that it can be started again. 
+        *   Useful for manual restarts of a Tween where you don't have access to the original values. 
+        */
+        public function resetSoft():void
+        {
+            mCurrentCycle = -1;
+            mCurrentTime = -mDelay;
+            mProgress = 0.0;
+        }
+
         /** Resets the tween to its default values. Useful for pooling tweens. */
         public function reset(target:Object, time:Number, transition:Object="linear"):Tween
         {

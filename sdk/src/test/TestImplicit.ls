@@ -60,7 +60,7 @@ class TestImplicit extends Test
         
         // implicit Vector.<Object> from []
         var iv = [];
-        
+
         assert(iv.length == 0);
         
         // implicit Vector.Object of length 3

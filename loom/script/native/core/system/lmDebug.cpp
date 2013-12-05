@@ -352,8 +352,7 @@ public:
         lua_pop(L, 1);
         // pop the vector table
 
-        lua_pushnumber(L, nstack);
-        lua_rawseti(L, -2, LSINDEXVECTORLENGTH);
+        lsr_vector_set_length(L, -1, nstack);
 
         lmAssert(lua_gettop(L) - top == 1, "getCallStack - stack wasn't properly cleaned up");
 
@@ -529,9 +528,8 @@ public:
         // we are passed a Vector of CallStack infos
         // which are a snapshot, so query out the basic
         // info from the Vector
-        lua_rawgeti(L, 1, LSINDEXVECTORLENGTH);
-        int length = (int)lua_tonumber(L, -1);
-        lua_pop(L, 1);
+        int length = lsr_vector_get_length(L, 1);
+
         lua_rawgeti(L, 1, LSINDEXVECTOR);
         int vidx = lua_gettop(L);
 
@@ -767,8 +765,7 @@ public:
         lsr_createinstance(L, vectorType);
 
         // store the length
-        lua_pushnumber(L, breakpoints.size());
-        lua_rawseti(L, -2, LSINDEXVECTORLENGTH);
+        lsr_vector_set_length(L, -1, breakpoints.size());
 
         lua_rawgeti(L, -1, LSINDEXVECTOR);
 

@@ -83,7 +83,47 @@ void QuadRenderer::submit()
         bgfx::setIndexBuffer(sIndexBufferHandle, currentIndexBufferIdx, (quadCount * 6));
         bgfx::setVertexBuffer(vertexBuffers[currentVertexBufferIdx], MAXBATCHQUADS * 4);
 
-        bgfx::setTexture(0, sUniformTexColor, Texture::sTextureInfos[currentTexture].handle);
+        // set U and V wrap modes (repeat / mirror / clamp)
+        uint32_t textureFlags = BGFX_TEXTURE_W_CLAMP;
+        ///U
+        switch(Texture::sTextureInfos[currentTexture].wrapU)
+        {
+            case TEXTUREINFO_WRAP_REPEAT:
+                textureFlags |= BGFX_TEXTURE_NONE;
+                break;
+            case TEXTUREINFO_WRAP_MIRROR:
+                textureFlags |= BGFX_TEXTURE_U_MIRROR;
+                break;
+            case TEXTUREINFO_WRAP_CLAMP:
+                textureFlags |= BGFX_TEXTURE_U_CLAMP;
+                break;
+        }
+        ///V
+        switch(Texture::sTextureInfos[currentTexture].wrapV)
+        {
+            case TEXTUREINFO_WRAP_REPEAT:
+                textureFlags |= BGFX_TEXTURE_NONE;
+                break;
+            case TEXTUREINFO_WRAP_MIRROR:
+                textureFlags |= BGFX_TEXTURE_V_MIRROR;
+                break;
+            case TEXTUREINFO_WRAP_CLAMP:
+                textureFlags |= BGFX_TEXTURE_V_CLAMP;
+                break;
+        }
+
+        // set smoothing mode, bgfx default is bilinear
+        switch (Texture::sTextureInfos[currentTexture].smoothing)
+        {
+            // use nearest neighbor 
+            case TEXTUREINFO_SMOOTHING_NONE:
+                textureFlags |= BGFX_TEXTURE_MIN_POINT;
+                textureFlags |= BGFX_TEXTURE_MAG_POINT;
+                textureFlags |= BGFX_TEXTURE_MIP_POINT;
+                break;
+        }   
+        
+        bgfx::setTexture(0, sUniformTexColor, Texture::sTextureInfos[currentTexture].handle, textureFlags);
 
         // Set render states.
         bgfx::setState(0

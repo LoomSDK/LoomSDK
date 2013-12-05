@@ -81,6 +81,28 @@ class TestFunction extends Test
 
     var memberFunction:Function;
 
+    private function testVarArgs(...args)
+    {
+        // test for member function called from Function without args
+        assert(args == null);
+    }
+
+    private function testVarArgsApply( ...args ):void
+    {   
+        assert(args.getType().getFullName() == "system.Vector");
+        assert(args[0] == 101);
+        assert(args[1] == "hello1");
+        assert(args[2] == "hello2");
+    }
+
+    private function addItemAt(item:Object, index:int, ...rest:Array):void
+    {
+        assert(rest.getType().getFullName() == "system.Vector");
+        assert(rest[0] == "The Rest");
+        assert(item == "Object");
+        assert(index == 0);
+    }
+
     function test()
     {
         
@@ -221,8 +243,50 @@ class TestFunction extends Test
         memberFunction = _funkypants3;
         assert(memberFunction.length == 2);
         memberFunction("HelloMemberFunction", 101);
-        FunctionMethodTestClass.checkTestArgs("HelloMemberFunction", "101");                
-        
+        FunctionMethodTestClass.checkTestArgs("HelloMemberFunction", "101");   
+
+        var funcTestVarArgs:Function;
+
+        // assign to member, which takes var args
+        funcTestVarArgs = testVarArgs;
+
+        // call without var args, which will be null args
+        funcTestVarArgs();    
+
+        // anonymous function
+        funcTestVarArgs = function (...args)  { 
+            assert(args == null);
+        };
+
+        // call with no args,  will be null args
+        funcTestVarArgs();   
+
+        var funcRef:Function = testVarArgsApply;
+        funcRef.apply( null, [101, "hello1", "hello2"] );
+
+        funcRef = function (...args) {
+            assert(args.getType().getFullName() == "system.Vector");
+            assert(args[0] == 102);
+            assert(args[1] == "hello3");
+            assert(args[2] == "hello4");            
+        };
+
+        funcRef.apply( null, [102, "hello3", "hello4"] );
+
+        funcRef = addItemAt;
+        funcRef.apply(null, ["Object", 0, "The Rest"]);
+
+        // and test local unwind + varargs        
+        funcRef = function (x:String, y:Number, ...args) {
+            assert(args.getType().getFullName() == "system.Vector");
+            assert(args[0] == "The Rest");
+            assert(args[1] == "Of The Args");
+            assert(args.length == 2);
+            assert(x == "Loom");
+            assert(y == 102);
+        };
+
+        funcRef.apply(null, ["Loom", 102, "The Rest", "Of The Args"]);
 
     }
     

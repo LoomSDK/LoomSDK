@@ -7,35 +7,35 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.controls
 {
-	import feathers.core.IFeathersControl;
+    import feathers.core.IFeathersControl;
 
-	/**
-	 * A screen for use with `ScreenNavigator`.
-	 *
-	 * @see ScreenNavigator
-	 * @see ScreenNavigatorItem
-	 */
-	public interface IScreen extends IFeathersControl
-	{
-		/**
-		 * The identifier for the screen. This value is passed in by the
-		 * `ScreenNavigator` when the screen is instantiated.
-		 */
-		function get screenID():String;
+    /**
+     * A screen for use with `ScreenNavigator`.
+     *
+     * @see ScreenNavigator
+     * @see ScreenNavigatorItem
+     */
+    public interface IScreen extends IFeathersControl
+    {
+        /**
+         * The identifier for the screen. This value is passed in by the
+         * `ScreenNavigator` when the screen is instantiated.
+         */
+        function get screenID():String;
 
-		/**
-		 * @private
-		 */
-		function set screenID(value:String):void;
+        /**
+         * @private
+         */
+        function set screenID(value:String):void;
 
-		/**
-		 * The ScreenNavigator that is displaying this screen.
-		 */
-		function get owner():ScreenNavigator;
+        /**
+         * The ScreenNavigator that is displaying this screen.
+         */
+        function get owner():ScreenNavigator;
 
-		/**
-		 * @private
-		 */
-		function set owner(value:ScreenNavigator):void;
-	}
+        /**
+         * @private
+         */
+        function set owner(value:ScreenNavigator):void;
+    }
 }

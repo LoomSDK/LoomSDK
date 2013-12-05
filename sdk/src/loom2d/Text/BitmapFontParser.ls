@@ -174,6 +174,9 @@ package loom2d.text
             {
                 var tokens = line.split(" ");
 
+                if (!tokens.length)
+                    continue;
+
                 // handle info line
                 if (tokens[0] == "info")
                 {

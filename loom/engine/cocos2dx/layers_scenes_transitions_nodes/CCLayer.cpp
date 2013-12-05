@@ -274,14 +274,14 @@ void CCLayer::scrollWheelYMoved(float delta)
 }
 
 
-/// isAccelerometerEnabled getter
+/// isScrollWheelEnabled getter
 bool CCLayer::isScrollWheelEnabled()
 {
     return m_bIsScrollWheelEnabled;
 }
 
 
-/// isAccelerometerEnabled setter
+/// isScrollWheelEnabled setter
 void CCLayer::setScrollWheelEnabled(bool enabled)
 {
     if (enabled != m_bIsScrollWheelEnabled)

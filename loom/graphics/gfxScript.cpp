@@ -296,10 +296,12 @@ static int registerLoomGraphics(lua_State *L)
        .beginClass<TextureInfo> ("TextureInfo")
        .addVar("width", &TextureInfo::width)
        .addVar("height", &TextureInfo::height)
+       .addVar("smoothing", &TextureInfo::smoothing)
+       .addVar("wrapU", &TextureInfo::wrapU)
+       .addVar("wrapV", &TextureInfo::wrapV)
        .addVar("id", &TextureInfo::id)
        .addVarAccessor("update", &TextureInfo::getUpdateDelegate)
        .endClass()
-
 
        .endPackage();
 

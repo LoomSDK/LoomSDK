@@ -165,5 +165,8 @@ package loom2d.textures
         
         /** @inheritDoc */
         public override function get scale():Number { return mParent.scale; } 
+        
+        /** @inheritDoc */
+        public override function get assetPath():String { return mParent.assetPath; }
     }
 }

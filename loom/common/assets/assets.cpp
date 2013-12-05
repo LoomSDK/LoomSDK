@@ -38,6 +38,7 @@
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetProtocol.h"
 #include "loom/common/assets/assetsImage.h"
+#include "loom/common/assets/assetsSound.h"
 #include "loom/common/assets/assetsScript.h"
 
 #include <jansson.h>
@@ -56,9 +57,9 @@
 // This actually lives in lsAsset.cpp, but is useful to call from in the asset manager implementation.
 void loom_asset_notifyPendingCountChange();
 
-extern "C"
+extern "C" 
 {
-    loom_allocator_t *gAssetAllocator = NULL;
+  loom_allocator_t *gAssetAllocator = NULL;
 }
 
 // Small helper class to track a change callback for an asset.
@@ -72,123 +73,123 @@ struct loom_asset_subscription_t
 // until they are unlocked.
 struct loom_assetBlob_t
 {
-    loom_assetBlob_t()
-    {
-        refCount = 0;
-        hash[0] = 0;
-        length = 0;
-        bits = NULL;
-        dtor = NULL;
-    }
+   loom_assetBlob_t()
+   {
+      refCount = 0;
+      hash[0] = 0;
+      length = 0;
+      bits = NULL;
+      dtor = NULL;
+   }
 
-    ~loom_assetBlob_t()
-    {
-        if(bits)
-        {
+   ~loom_assetBlob_t()
+   {
+      if(bits)
+      {
+         lmFree(gAssetAllocator, bits);
+         bits = NULL;
+      }
+   }
+
+   void incRef()
+   {
+      refCount++;
+   }
+
+   bool decRef()
+   {
+      refCount--;
+      
+      if(refCount == 0)
+      {
+         if(dtor)
+            dtor(bits);
+         else
             lmFree(gAssetAllocator, bits);
-            bits = NULL;
-        }
-    }
 
-    void incRef()
-    {
-        refCount++;
-    }
+         refCount = 0xBAADF00D;
+         length = -1;
+         bits = NULL;
+         
+         lmDelete(gAssetAllocator, this);
+         return true;
+      }
+      return false;
+   }
 
-    bool decRef()
-    {
-        refCount--;
-
-        if(refCount == 0)
-        {
-            if(dtor)
-                dtor(bits);
-            else
-                lmFree(gAssetAllocator, bits);
-
-            refCount = 0xBAADF00D;
-            length = -1;
-            bits = NULL;
-
-            lmDelete(gAssetAllocator, this);
-            return true;
-        }
-        return false;
-    }
-
-    int refCount;
-    char hash[40]; // sha1 of the specific data we loaded.
-    size_t length;
-    void *bits;
-    LoomAssetCleanupCallback dtor;
+   int refCount;
+   char hash[40]; // sha1 of the specific data we loaded.
+   size_t length;
+   void *bits;
+   LoomAssetCleanupCallback dtor;
 };
 
 // An individual asset; tracks all the state related to an asset, if it's loaded
 // or not, the actual bits behind it, type, and so on.
 struct loom_asset_t
 {
-    loom_asset_t()
-    {
-        state = Unloaded;
-        type = 0;
-        blob = NULL;
-        isSupplied = 0;
-    }
+   loom_asset_t()
+   {
+      state = Unloaded;
+      type = 0;
+      blob = NULL;
+      isSupplied = 0;
+   }
 
-    enum {
-        Unloaded,
-        QueuedForDownload,
-        Downloading,
-        WaitingForDependencies,
-        QueuedForDeserialize,
-        Deserializing,
-        Loaded,
-        QueuedForUnload,
-    } state;
+   enum {
+      Unloaded,
+      QueuedForDownload,
+      Downloading,
+      WaitingForDependencies,
+      QueuedForDeserialize,
+      Deserializing,
+      Loaded,
+      QueuedForUnload,
+   } state;
 
-    // Not currently used; but allows an asset to wait until all its dependencies
-    // are deserialized.
-    utArray<loom_asset_t*> dependencies;
+   // Not currently used; but allows an asset to wait until all its dependencies
+   // are deserialized.
+   utArray<loom_asset_t*> dependencies;
 
-    // All the callbacks to call when an asset changes state (is loaded, unloaded, 
-    // etc.)
-    utArray<loom_asset_subscription_t> subscribers;
+   // All the callbacks to call when an asset changes state (is loaded, unloaded, 
+   // etc.)
+   utArray<loom_asset_subscription_t> subscribers;
 
-    // Actual bits for the asset. Note this is refcounted so be careful how you
-    // mess with it.
-    loom_assetBlob_t *blob;
+   // Actual bits for the asset. Note this is refcounted so be careful how you
+   // mess with it.
+   loom_assetBlob_t *blob;
 
-    // The path/name of the asset.
-    utString name;
+   // The path/name of the asset.
+   utString name;
 
-    // The type of the asset as inferred.
-    unsigned int type;
+   // The type of the asset as inferred.
+   unsigned int type;
 
-    // Set if this asset was supplied; we assume it means that it can't be
-    // flushed as there is no backing copy on disk/elsewhere.
-    unsigned int isSupplied;
+   // Set if this asset was supplied; we assume it means that it can't be
+   // flushed as there is no backing copy on disk/elsewhere.
+   unsigned int isSupplied;
 
-    // Instate new bits/type to the asset.
-    void instate(int _type, void *bits, LoomAssetCleanupCallback dtor)
-    {
-        // Swap in a new blob.
-        if(blob)
-            blob->decRef();
-        blob = lmNew(gAssetAllocator) loom_assetBlob_t();
-        blob->incRef();
+   // Instate new bits/type to the asset.
+   void instate(int _type, void *bits, LoomAssetCleanupCallback dtor)
+   {
+      // Swap in a new blob.
+      if(blob)
+         blob->decRef();
+      blob = lmNew(gAssetAllocator) loom_assetBlob_t();
+      blob->incRef();
 
-        blob->bits = bits;
-        blob->dtor = dtor;
+      blob->bits = bits;
+      blob->dtor = dtor;
 
-        // Update the type.
-        type = _type;
+      // Update the type.
+      type = _type;
 
-        // We're by definition loaded at this point.
-        state = loom_asset_t::Loaded;
+      // We're by definition loaded at this point.
+      state = loom_asset_t::Loaded;
 
-        // Fire subscribers.
-        loom_asset_notifySubscribers(name.c_str());
-     }
+      // Fire subscribers.
+      loom_asset_notifySubscribers(name.c_str());
+   }
 };
 
 lmDefineLogGroup(gAssetLogGroup, "asset.core", 1, LoomLogInfo);
@@ -332,6 +333,7 @@ void loom_asset_initialize(const char *rootUri)
     loom_asset_registerType(LATText, loom_asset_textDeserializer, loom_asset_textRecognizer);
 
     loom_asset_registerImageAsset();
+    loom_asset_registerSoundAsset();
     loom_asset_registerScriptAsset();
 
     // Listen to log and send it if we have a connection.
@@ -429,7 +431,7 @@ static void *loom_asset_deserializeAsset(const utString &path, int type, int siz
         return NULL;
     }
 
-    void *assetBits = ladc(ptr, size, dtor);
+   void *assetBits = ladc(ptr, size, dtor);
 
     if (assetBits == NULL)
     {
@@ -511,100 +513,100 @@ public:
         switch (fourcc)
         {
         case LOOM_FOURCC('F', 'I', 'L', 'E'):
-            {
-                // How many pending files?
-                gPendingFiles = buffer.readInt();
-                loom_asset_notifyPendingCountChange();
+           {
+               // How many pending files?
+               gPendingFiles = buffer.readInt();
+               loom_asset_notifyPendingCountChange();
 
-                // Read the filename.
-                char *path;
-                int  fileStringLength;
-                buffer.readString(&path, &fileStringLength);
+               // Read the filename.
+               char *path;
+               int  fileStringLength;
+               buffer.readString(&path, &fileStringLength);
 
-                // And the file length.
-                int bitsLength = buffer.readInt();
+               // And the file length.
+               int bitsLength = buffer.readInt();
 
-                // Checkpoint at end!
-                buffer.readCheckpoint(0xDEADBEE3);
+               // Checkpoint at end!
+               buffer.readCheckpoint(0xDEADBEE3);
 
-                // Prepare the buffer!
-                if (pendingFile != NULL)
-                {
-                    lmLogError(gAssetLogGroup, "Got a new FILE '%s' while still processing existing file '%s'!", path, pendingFilePath.c_str());
-                    wipePendingData();
-                }
+               // Prepare the buffer!
+               if (pendingFile != NULL)
+               {
+                   lmLogError(gAssetLogGroup, "Got a new FILE '%s' while still processing existing file '%s'!", path, pendingFilePath.c_str());
+                   wipePendingData();
+               }
 
-                // Update the pending file state.
-                pendingFilePath = path;
-                lmFree(NULL, path);
-                path = NULL;
+               // Update the pending file state.
+               pendingFilePath = path;
+               lmFree(NULL, path);
+               path = NULL;
 
-                pendingFileLength = bitsLength;
-                pendingFile       = (const char *)lmAlloc(gAssetAllocator, pendingFileLength);
+               pendingFileLength = bitsLength;
+               pendingFile       = (const char *)lmAlloc(gAssetAllocator, pendingFileLength);
 
-                // Log it.
-                lmLogDebug(gAssetLogGroup, "FILE '%s' %d bytes incoming.", pendingFilePath.c_str(), bitsLength);
+               // Log it.
+               lmLogDebug(gAssetLogGroup, "FILE '%s' %d bytes incoming.", pendingFilePath.c_str(), bitsLength);
 
-                // Awesome, sit back and wait for chunks to come in.
-                return true;
-            }
+               // Awesome, sit back and wait for chunks to come in.
+               return true;
+           }
 
         case LOOM_FOURCC('F', 'C', 'H', 'K'):
-            {
-                // How many pending files?
-                gPendingFiles = buffer.readInt();
-                loom_asset_notifyPendingCountChange();
+           {
+               // How many pending files?
+               gPendingFiles = buffer.readInt();
+               loom_asset_notifyPendingCountChange();
 
-                // Get the offset.
-                int chunkOffset = buffer.readInt();
+               // Get the offset.
+               int chunkOffset = buffer.readInt();
 
-                // Read bits into the buffer.
-                char *fileBits;
-                int  fileBitsLength;
-                buffer.readString(&fileBits, &fileBitsLength);
-                memcpy((void *)(pendingFile + chunkOffset), (void *)fileBits, fileBitsLength);
-                lmFree(NULL, fileBits);
+               // Read bits into the buffer.
+               char *fileBits;
+               int  fileBitsLength;
+               buffer.readString(&fileBits, &fileBitsLength);
+               memcpy((void *)(pendingFile + chunkOffset), (void *)fileBits, fileBitsLength);
+               lmFree(NULL, fileBits);
 
-                // Checkpoint at end!
-                buffer.readCheckpoint(0xDEADBEE2);
+               // Checkpoint at end!
+               buffer.readCheckpoint(0xDEADBEE2);
 
-                int lastByteOffset = chunkOffset + fileBitsLength;
+               int lastByteOffset = chunkOffset + fileBitsLength;
 
-                // Log it.
-                lmLogInfo(gAssetLogGroup, "FILE '%s' %d of %d bytes!", pendingFilePath.c_str(), lastByteOffset, pendingFileLength);
+               // Log it.
+               lmLogInfo(gAssetLogGroup, "FILE '%s' %d of %d bytes!", pendingFilePath.c_str(), lastByteOffset, pendingFileLength);
 
-                // If it's the last one, instate it and wipe our buffer.
-                if (lastByteOffset == pendingFileLength)
-                {
-                    // And this resolves a file so decrement the pending count. This way
-                    // we will get to zero.
-                    gPendingFiles--;
-                    loom_asset_notifyPendingCountChange();
+               // If it's the last one, instate it and wipe our buffer.
+               if (lastByteOffset == pendingFileLength)
+               {
+                   // And this resolves a file so decrement the pending count. This way
+                   // we will get to zero.
+                   gPendingFiles--;
+                   loom_asset_notifyPendingCountChange();
 
-                    // Instate the new asset data.
-                    loom_asset_t *asset    = loom_asset_getAssetByName(pendingFilePath.c_str(), 1);
-                    int          assetType = loom_asset_recognizeAssetTypeFromPath(pendingFilePath);
-                    if (assetType == 0)
-                    {
-                        lmLogDebug(gAssetLogGroup, "Couldn't infer file type for '%s', ignoring.", pendingFilePath.c_str());
-                        wipePendingData();
-                        return true;
-                    }
+                   // Instate the new asset data.
+                   loom_asset_t *asset    = loom_asset_getAssetByName(pendingFilePath.c_str(), 1);
+                   int          assetType = loom_asset_recognizeAssetTypeFromPath(pendingFilePath);
+                   if (assetType == 0)
+                   {
+                       lmLogDebug(gAssetLogGroup, "Couldn't infer file type for '%s', ignoring.", pendingFilePath.c_str());
+                       wipePendingData();
+                       return true;
+                   }
 
-                    lmLogWarn(gAssetLogGroup, "Applying new version of '%s', %d bytes.", pendingFilePath.c_str(), pendingFileLength);
-                    LoomAssetCleanupCallback dtor = NULL;
-                    void *assetBits = loom_asset_deserializeAsset(pendingFilePath.c_str(), assetType, pendingFileLength, (void *)pendingFile, &dtor);
-                    asset->instate(assetType, assetBits, dtor);
+                   lmLogWarn(gAssetLogGroup, "Applying new version of '%s', %d bytes.", pendingFilePath.c_str(), pendingFileLength);
+                   LoomAssetCleanupCallback dtor = NULL;
+                   void *assetBits = loom_asset_deserializeAsset(pendingFilePath.c_str(), assetType, pendingFileLength, (void *)pendingFile, &dtor);
+                   asset->instate(assetType, assetBits, dtor);
 
-                    // And wipe the pending date.
-                    wipePendingData();
-                }
-            }
+                   // And wipe the pending date.
+                   wipePendingData();
+               }
+         }
 
-            return true;
-        }
+         return true;
+      }
 
-        return false;
+    return false;
     }
 };
 
@@ -708,56 +710,56 @@ static void loom_asset_serviceServer()
 
 void loom_asset_pump()
 {
-    // Currently we only want to do this on the main thread so piggy back on the
-    // native delegate sanity check to bail if on secondary thread.
-    if(platform_getCurrentThreadId() != LS::NativeDelegate::smMainThreadID && LS::NativeDelegate::smMainThreadID != 0xBAADF00D)
-        return;
+   // Currently we only want to do this on the main thread so piggy back on the
+   // native delegate sanity check to bail if on secondary thread.
+   if(platform_getCurrentThreadId() != LS::NativeDelegate::smMainThreadID && LS::NativeDelegate::smMainThreadID != 0xBAADF00D)
+      return;
 
-    loom_mutex_lock(gAssetLock);
+   loom_mutex_lock(gAssetLock);
 
-    // Talk to the asset server.
-    loom_asset_serviceServer();
+   // Talk to the asset server.
+   loom_asset_serviceServer();
 
-    // For now just blast all the data from each file into the asset.
-    while(gAssetLoadQueue.size())
-    {
-        loom_asset_t *asset = gAssetLoadQueue.front();
+   // For now just blast all the data from each file into the asset.
+   while(gAssetLoadQueue.size())
+   {
+      loom_asset_t *asset = gAssetLoadQueue.front();
 
-        // Figure out the type from the path.
-        utString path = asset->name;
-        int type = loom_asset_recognizeAssetTypeFromPath(path);
+      // Figure out the type from the path.
+      utString path = asset->name;
+      int type = loom_asset_recognizeAssetTypeFromPath(path);
       
-        if(type == 0)
-        {
-            lmLog(gAssetLogGroup, "Could not infer type of resource '%s', skipping it...", path.c_str());
-            asset->state = loom_asset_t::Unloaded;
-            gAssetLoadQueue.erase((UTsize)0, true);
-            continue;
-        }
+      if(type == 0)
+      {
+         lmLog(gAssetLogGroup, "Could not infer type of resource '%s', skipping it...", path.c_str());
+         asset->state = loom_asset_t::Unloaded;
+         gAssetLoadQueue.erase((UTsize)0, true);
+         continue;
+      }
 
-        // Open the file.
-        void *ptr;
-        long size;
-        if(!platform_mapFile(asset->name.c_str(), &ptr, &size))
-        {
-            lmAssert(false, "Could not open file '%s'.", asset->name.c_str());
-        }
+      // Open the file.
+      void *ptr;
+      long size;
+      if(!platform_mapFile(asset->name.c_str(), &ptr, &size))
+      {
+         lmAssert(false, "Could not open file '%s'.", asset->name.c_str());
+      }
 
-        // Deserialize it.
-        LoomAssetCleanupCallback dtor = NULL;
-        void *assetBits = loom_asset_deserializeAsset(path, type, size, ptr, &dtor);
+      // Deserialize it.
+      LoomAssetCleanupCallback dtor = NULL;
+      void *assetBits = loom_asset_deserializeAsset(path, type, size, ptr, &dtor);
 
-        // Close the file.
-        platform_unmapFile(ptr);
+      // Close the file.
+      platform_unmapFile(ptr);
 
-        // Instate the asset.
-        asset->instate(type, assetBits, dtor);
+      // Instate the asset.
+      asset->instate(type, assetBits, dtor);
 
-        // Done! Update queue.
-        gAssetLoadQueue.erase((UTsize)0, true);
-    }
+      // Done! Update queue.
+      gAssetLoadQueue.erase((UTsize)0, true);
+   }
 
-    loom_mutex_unlock(gAssetLock);
+   loom_mutex_unlock(gAssetLock);
 }
 
 
@@ -781,25 +783,43 @@ void loom_asset_preload(const char *name)
     loom_mutex_unlock(gAssetLock);
 }
 
+int loom_asset_pending(const char *name)
+{
+    loom_mutex_lock(gAssetLock);
+    
+    // Look 'er up.
+    loom_asset_t *asset = loom_asset_getAssetByName(name, 0);
+    
+    // If it's not pending load, then stick it in the queue.
+    int result;
+    if(asset && loom_asset_isOnTrackToLoad(asset))
+        result = 1;
+    else
+        result = 0;
+    
+    loom_mutex_unlock(gAssetLock);
+    
+    return result;
+}
 
 void loom_asset_flush(const char *name)
 {
-    // Currently we only want to do this on the main thread so piggy back on the
-    // native delegate sanity check to bail if on secondary thread.
-    if(platform_getCurrentThreadId() != LS::NativeDelegate::smMainThreadID && LS::NativeDelegate::smMainThreadID != 0xBAADF00D)
-        return;
+   // Currently we only want to do this on the main thread so piggy back on the
+   // native delegate sanity check to bail if on secondary thread.
+   if(platform_getCurrentThreadId() != LS::NativeDelegate::smMainThreadID && LS::NativeDelegate::smMainThreadID != 0xBAADF00D)
+      return;
 
-    loom_mutex_lock(gAssetLock);
+   loom_mutex_lock(gAssetLock);
     // Delete it + unload it.
     loom_asset_t *asset = loom_asset_getAssetByName(name, 0);
 
-    if(!asset || asset->isSupplied)
-    {
-        loom_mutex_unlock(gAssetLock);
-        return;
-    }
+   if(!asset || asset->isSupplied)
+   {
+      loom_mutex_unlock(gAssetLock);
+      return;
+   }
     
-    lmLog(gAssetLogGroup, "Flushing '%s'", name);
+   lmLog(gAssetLogGroup, "Flushing '%s'", name);
 
     if (asset->blob)
     {
@@ -855,39 +875,39 @@ float loom_asset_checkLoadedPercentage(const char *name)
 
 void loom_asset_unlock( const char *name )
 {
-    // Hack to report usage.
-    //size_t allocBytes, allocCount;
-    //loom_allocator_getTrackerProxyStats(gAssetAllocator, &allocBytes, &allocCount);
-    //lmLogError(gAssetLogGroup, "Seeing %d bytes of allocator and %d allocations", allocBytes, allocCount);
+   // Hack to report usage.
+   //size_t allocBytes, allocCount;
+   //loom_allocator_getTrackerProxyStats(gAssetAllocator, &allocBytes, &allocCount);
+   //lmLogError(gAssetLogGroup, "Seeing %d bytes of allocator and %d allocations", allocBytes, allocCount);
 
-    loom_mutex_lock(gAssetLock);
+   loom_mutex_lock(gAssetLock);
 
-    // TODO: This needs to be against the blob we locked NOT the asset's
-    //       current state.
+   // TODO: This needs to be against the blob we locked NOT the asset's
+   //       current state.
 
-    // Look it up.
-    loom_asset_t *asset = loom_asset_getAssetByName(name, 0);
+   // Look it up.
+   loom_asset_t *asset = loom_asset_getAssetByName(name, 0);
 
-    // Assert if not loaded.
-    lmAssert(asset, "Could not find asset '%s' to unlock!", name);
-    //lmAssert(asset->blob, "Asset was not locked!");
+   // Assert if not loaded.
+   lmAssert(asset, "Could not find asset '%s' to unlock!", name);
+   //lmAssert(asset->blob, "Asset was not locked!");
 
-    if(asset->state == loom_asset_t::Loaded)
-    {
-        // Dec count.
-        if(asset->blob->decRef())
-        {
-            asset->state = loom_asset_t::Unloaded;
-            asset->blob = NULL;
-        }
-    }
-    else
-    {
-        // Nothing - it's not loaded.
-        lmLogWarn(gAssetLogGroup, "Couldn't unlock '%s' as it was not loaded.", name);
-    }
+   if(asset->state == loom_asset_t::Loaded)
+   {
+      // Dec count.
+      if(asset->blob->decRef())
+      {
+         asset->state = loom_asset_t::Unloaded;
+         asset->blob = NULL;
+      }
+   }
+   else
+   {
+      // Nothing - it's not loaded.
+      lmLogWarn(gAssetLogGroup, "Couldn't unlock '%s' as it was not loaded.", name);
+   }
 
-    loom_mutex_unlock(gAssetLock);
+   loom_mutex_unlock(gAssetLock);
 }
 
 void *loom_asset_lock(const char *name, unsigned int type, int block)
@@ -1091,13 +1111,13 @@ void loom_asset_supply(const char *name, void *bits, int length)
         return;
     }
 
-    // Deserialize it.
+   // Deserialize it.
     LoomAssetCleanupCallback dtor = NULL;
-    void *assetBits = loom_asset_deserializeAsset(name, type, length, bits, &dtor);
+   void *assetBits = loom_asset_deserializeAsset(name, type, length, bits, &dtor);
 
-    // Instate the asset.
-    // TODO: We can save some memory by pointing directly and not making a copy.
-    asset->instate(type, assetBits, dtor);
+   // Instate the asset.
+   // TODO: We can save some memory by pointing directly and not making a copy.
+   asset->instate(type, assetBits, dtor);
 
     // Note it's supplied so we don't flush it.
     asset->isSupplied = 1;
