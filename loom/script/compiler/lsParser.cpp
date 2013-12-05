@@ -461,6 +461,11 @@ Statement *Parser::parseFunctionDeclaration()
 {
     int lineNumber = lexer.lineNumber;
 
+    if (!curClass)
+    {
+        error("Function declaration outside of class");
+    }    
+
     FunctionDeclaration *decl = new FunctionDeclaration(
         parseFunctionLiteral(true));
 
@@ -1788,6 +1793,12 @@ Statement *Parser::parseDoStatement()
 VariableDeclaration *Parser::parseVariableDeclaration(bool inFlag,
                                                       bool inFunctionParameters)
 {
+
+    if (!curClass)
+    {
+        error("Variable declaration outside of class");
+    }
+
     Identifier *identifier = parseIdentifier();
 
     Expression *initializer = NULL;
@@ -2784,6 +2795,8 @@ Statement *Parser::parseClassDeclaration()
     }
 
     readToken(LSTOKEN(OPERATOR_CLOSEBRACE));
+
+    curClass = NULL;
 
     return cls;
 }
