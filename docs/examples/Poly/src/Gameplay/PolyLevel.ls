@@ -167,12 +167,6 @@ package poly.gameplay
             reacted = true;
 
             var p:Point = touch.getLocation(playfield);
-            
-            if (!p)
-            {
-               trace("Bad touch");
-               return;
-            }
             var lgo:LoomGameObject = spawnReaction(p.x, p.y);
             var mover:PolyMover = lgo.lookupComponentByName("mover") as PolyMover;
 
