@@ -17,8 +17,16 @@ package
     
     import loom2d.math.Point;
 
-    import loom2d.tmx.*;
+    import loom2d.tmx.TMXDocument;
+    import loom2d.tmx.TMXObjectGroup;
+    import loom2d.tmx.TMXObject;
+    import loom2d.tmx.TMXMapSprite;
 
+
+	/**
+	 * Create and render a TMX tilemap created by Tiled.
+	 */
+	 
     public class TMXDemo extends Application
     {
         public var map:TMXMapSprite;
