@@ -79,6 +79,8 @@ static int registerLoomBox2D(lua_State *L)
 
         .beginClass<b2JointDef>("b2JointDef")
 
+            .addConstructor <void (*)(void) >()
+
             .addVar("type", (int b2JointDef::*)&b2JointDef::type)
             //.addVar("userData", &b2JointDef::userData)
             .addVar("bodyA", &b2JointDef::bodyA)
@@ -89,6 +91,8 @@ static int registerLoomBox2D(lua_State *L)
 
         .beginClass<b2JointEdge>("b2JointEdge")
 
+            .addConstructor <void (*)(void) >()
+
             .addVar("other", &b2JointEdge::other)
             .addVar("joint", &b2JointEdge::joint)
             .addVar("prev", &b2JointEdge::prev)
@@ -98,13 +102,15 @@ static int registerLoomBox2D(lua_State *L)
 
         .beginClass<b2FixtureDef>("b2FixtureDef")
 
+            .addConstructor <void (*)(void) >()
+
             .addVar("shape", &b2FixtureDef::shape)
             //.addVar("userData", &b2FixtureDef::userData)
             .addVar("friction", &b2FixtureDef::friction)
             .addVar("restitution", &b2FixtureDef::restitution)
             .addVar("density", &b2FixtureDef::density)
             .addVar("isSensor", &b2FixtureDef::isSensor)
-            .addVar("filter", &b2FixtureDef::filter)
+            //.addVar("filter", &b2FixtureDef::filter)
 
         .endClass()
 
@@ -119,6 +125,14 @@ static int registerLoomBox2D(lua_State *L)
             .addMethod("computeMass", &b2Shape::ComputeMass)
 
         .endClass()
+
+        .deriveClass<b2PolygonShape, b2Shape>("b2PolygonShape")
+
+            .addConstructor <void (*)(void) >()
+
+            .addMethod("setAsBox", (void (b2PolygonShape::*)(float32, float32))&b2PolygonShape::SetAsBox)
+
+        .endClass()        
 
         .beginClass<b2Fixture>("b2Fixture")
 
@@ -137,6 +151,7 @@ static int registerLoomBox2D(lua_State *L)
             .addMethod("rayCast", &b2Fixture::RayCast)
             .addMethod("getMassData", &b2Fixture::GetMassData)
             .addMethod("setDensity", &b2Fixture::SetDensity)
+            .addMethod("getDensity", &b2Fixture::GetDensity)
             .addMethod("getFriction", &b2Fixture::GetFriction)
             .addMethod("setFriction", &b2Fixture::SetFriction)
             .addMethod("getRestitution", &b2Fixture::GetRestitution)
@@ -198,6 +213,8 @@ static int registerLoomBox2D(lua_State *L)
         .endClass()
 
         .beginClass<b2ContactEdge>("b2ContactEdge")
+
+            .addConstructor <void (*)(void) >()
 
             .addVar("other", &b2ContactEdge::other)
             .addVar("contact", &b2ContactEdge::contact)
@@ -331,6 +348,7 @@ void installLoomBox2D()
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2JointEdge, registerLoomBox2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2FixtureDef, registerLoomBox2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2Shape, registerLoomBox2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(b2PolygonShape, registerLoomBox2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2Fixture, registerLoomBox2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2Contact, registerLoomBox2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2ContactEdge, registerLoomBox2D);
