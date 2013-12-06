@@ -55,10 +55,44 @@ package loom.box2d
     }
 
     [Native(managed)]
+    final public native class b2PolygonShape extends b2Shape
+    {        
+        public native function setAsBox(hx:Number, hy:Number):void;
+    }
+
+    [Native(managed)]
+    public native class b2Shape
+    {        
+    }
+
+    [Native(managed)]
+    final public native class b2FixtureDef
+    {        
+        public native var shape:b2Shape;
+        public native var friction:Number;
+        public native var restitution:Number;
+        public native var density:Number;
+        public native var isSensor:Boolean;
+        //public native var filter:b2Filter;
+    }
+
+    [Native(managed)]
+    final public native class b2Fixture
+    {        
+        public native function setDensity(d:Number):void;
+        public native function getDensity():Number;
+        public native function setFriction(f:Number):void;
+        public native function getFriction():Number;
+        public native function setRestitution(r:Number):void;
+        public native function getRestitution():Number;
+        public native function dump(bodyIndex:int=0):void;
+    }
+
+    [Native(managed)]
     final public native class b2Body
     {
-        //public native function createFixture(def:b2FixtureDef):b2Fixture;
-        //public native function destroyFixture(fixture:b2Fixture):void;
+        public native function createFixture(def:b2FixtureDef):b2Fixture;
+        public native function destroyFixture(fixture:b2Fixture):void;
         public native function setTransform(position:b2Vec2, angle:Number):void;
         //public native function getTransform():b2Transform;
         public native function getPosition():b2Vec2;
