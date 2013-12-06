@@ -120,6 +120,11 @@ class TestString extends Test
         stringToSplit = "|X|";
         log(stringToSplit.split("|X|").length);
 
+        stringToSplit = "LoomScript was born in 2011";
+        var split = stringToSplit.split("born in");        
+        assert(split[0] == "LoomScript was ");
+        assert(split[1] == " 2011");
+
         stringToSplit = "1|2|3|4|5|6|7";
         var splitRes:Vector.<String> = stringToSplit.split("|");
         for(var i=0; i<splitRes.length; i++)
