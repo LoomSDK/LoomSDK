@@ -72,6 +72,24 @@ package system.platform {
         }
 
         /**
+         *  Copies a file from pathSource to pathDestination
+         *
+         *  @param pathSource the source file to copy
+         *  @param pathDestination the destination file to write
+         *  @return true on success, false on failure.
+         */
+        public static function copy(pathSource:String, pathDestination:String):Boolean
+        {
+            var bytes = loadBinaryFile(Path.normalizePath(pathSource));
+
+            if (!bytes)
+                return false;
+
+            return writeBinaryFile(Path.normalizePath(pathDestination), bytes);
+        }
+
+
+        /**
          *  Checks whether a file exists at the given path.
          *
          *  @param path the full path to the file to check.
