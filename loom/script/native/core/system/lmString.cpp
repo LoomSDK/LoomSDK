@@ -550,7 +550,7 @@ public:
 
         if (start - str < slen)
         {
-            strcpy(temp, start);
+            strncpy(temp, start, slen + 1);
             lua_pushnumber(L, count++);
             lua_pushstring(L, temp);
             lua_rawset(L, -3);            
