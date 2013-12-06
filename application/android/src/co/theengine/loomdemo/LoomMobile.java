@@ -8,37 +8,36 @@ import android.util.Log;
 import android.provider.Settings.System;
 
 
+/**
+ * Java Class that exposes miscellaneous Android mobile platform support
+ */
 public class LoomMobile
 {
     private static Activity     _context;
-    private static int          _originalTimeout;
 
 
 
-
-    public static void init(Activity ctx)
+    ///handles initialization of the Loom Mobile class
+    public static void onCreate(Activity ctx)
     {
         _context = ctx;
-
-        ///store original screen timeout to reset at application end
-        _originalTimeout = System.getInt(_context.getContentResolver(), System.SCREEN_OFF_TIMEOUT, -1);
     }
     
 
-    public static void kill()
+    ///sets whether or not the application root view screen can go to sleep or not
+    public static void allowScreenSleep(boolean sleep)
     {
-        Log.d("Loom", "KILL LoomMobile");
+        Log.d("Loom", "Allow Screen Sleep: " + sleep);
 
-        ///reset the original screen timeout on the system
-        System.putInt(_context.getContentResolver(), System.SCREEN_OFF_TIMEOUT, _originalTimeout);
-    }
-
-
-    public static void setScreenTimeout(int timeout)
-    {
-        Log.d("Loom", "setScreenTimeout: " + timeout);
-
-        ///set new screen timeout to use... -1 means "never"
-        System.putInt(_context.getContentResolver(), System.SCREEN_OFF_TIMEOUT, timeout);
+        ///run this code on the UI Thread
+        final boolean fSleep = sleep;
+        _context.runOnUiThread(new Runnable() 
+        {
+            @Override
+            public void run() 
+            {
+                _context.getWindow().getDecorView().getRootView().setKeepScreenOn(!fSleep);
+            }
+        });
     }    
 }

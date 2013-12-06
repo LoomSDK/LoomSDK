@@ -98,11 +98,19 @@ package loom.platform
      * Static control class for accessing various Mobile specific functionality.
      */
     ///
-    /// TODO: LOOM-1810: screen timeout
     /// TODO: LOOM-1811: vibration
     ///
     public native class Mobile 
     {
+        /**
+         * Enables or disables the device's screen sleep timer. Useful for stopping 
+         * the device screen from auto-locking during gameplay if the screen isn't touched.
+         *
+         *  @param sleep true to allow for the device to sleep as per its settings,
+         *          false to disable device sleeping completely
+         */
+        public static native function allowScreenSleep(sleep:Boolean):int;
+
         /**
          * Queries whether or not the specified sensor is supported on this device
          *
