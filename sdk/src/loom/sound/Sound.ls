@@ -18,7 +18,7 @@ package loom.sound
      * Sound asset data is only loaded once, so you can safely call Sound.load()
      * as much as you like without consuming lots of memory.
      *
-     * Make sure to call nativeDelete() on Sounds when you are done with them.
+     * Make sure to call deleteNative() on Sounds when you are done with them.
      * This frees up critical audio resources. Behind the scenes, Loom attempts
      * to reuse audio playback resources. It does this by stealing inactive 
      * Sound's resources after about 64 are active. New Sound instances will 
@@ -41,6 +41,11 @@ package loom.sound
         public static native function load(assetPath:String):Sound;
 
         /**
+         * Load and decompress a sound into memory for on-demand playback.
+         */
+        public static native function preload(assetPath:String):void;
+
+        /**
          * Set the position in meters relative to world origin for sound 
          * playback.
          */
@@ -59,9 +64,14 @@ package loom.sound
         public native function setListenerRelative(isRelative:Boolean):void;
 
         /**
-         * Distance in meters before the sound cannot be heard.
+         * Adjust how distance affects this sound. See Section 3.4 of the OpenAL 1.1 specification
+         * for full details; the parameters will get you most of the way there though!
+         *
+         * @param innerRadius When closer than this distance, the sound is played at full volume.
+         * @param outerRadius When further than this distance, the sound is no longer audible.
+         * @param rollOff     Adjust the curve used for gain falloff.
          */
-        public native function setFalloffRadius(radius:Number):void;
+        public native function setFalloffRadius(innerRadius:Number, outerRadius:Number, rollOff:Number = 1.0):void;
 
         /**
          * Adjust sound volume. Gain of 1 preserves sound volume, 0 mutes it.
@@ -110,5 +120,10 @@ package loom.sound
          * True if we are currently playing the sound.
          */
         public native function isPlaying():Boolean;
+
+        /**
+         * True if we have ever played the sound.
+         */
+        public native function hasEverPlayed():Boolean;
     }
 }
