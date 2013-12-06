@@ -109,7 +109,7 @@ package loom.platform
          *  @param sleep true to allow for the device to sleep as per its settings,
          *          false to disable device sleeping completely
          */
-        public static native function allowScreenSleep(sleep:Boolean):int;
+        public static native function allowScreenSleep(sleep:Boolean):void;
 
         /**
          * Queries whether or not the specified sensor is supported on this device
