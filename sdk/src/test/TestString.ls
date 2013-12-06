@@ -125,6 +125,19 @@ class TestString extends Test
         assert(split[0] == "LoomScript was ");
         assert(split[1] == " 2011");
 
+        stringToSplit = "Ben likes cats";
+        split = stringToSplit.split(" likes cats");                
+        assert(split.length == 2);
+        assert(split[0] == "Ben");
+        assert(split[1] == "");
+
+        stringToSplit = "It snowed in Eugene on 12/6/2013";
+        split = stringToSplit.split("in Eugene on 12/6/2013");                
+        assert(split.length == 2);
+        assert(split[0] == "It snowed ");
+        assert(split[1] == "");
+
+
         stringToSplit = "1|2|3|4|5|6|7";
         var splitRes:Vector.<String> = stringToSplit.split("|");
         for(var i=0; i<splitRes.length; i++)
