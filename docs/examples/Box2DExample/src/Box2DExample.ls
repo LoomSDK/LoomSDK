@@ -37,6 +37,11 @@ package
             var gravity:b2Vec2 = new b2Vec2(0,-10);
             var world:b2World = new b2World(gravity);
 
+            trace("world");
+            trace("======================");
+            trace(world.dump());
+            trace("======================");
+
             // create a body
             var bodyDef:b2BodyDef = new b2BodyDef();
             bodyDef.position = new b2Vec2(0,4);
@@ -46,12 +51,22 @@ package
             var dynamicBox:b2PolygonShape = new b2PolygonShape();
             dynamicBox.setAsBox(1,1);
 
+            trace("shape");
+            trace("======================");
+            trace(dynamicBox);
+            trace("======================");
+
             // create a fixture for the body with the shape
             var fixtureDef:b2FixtureDef = new b2FixtureDef();
             fixtureDef.shape = dynamicBox;
             fixtureDef.density = 1;
             fixtureDef.friction = 0.3;
-            body.createFixture(fixtureDef);
+            var fixture:b2Fixture = body.createFixture(fixtureDef);
+
+            trace("fixture");
+            trace("======================");
+            trace(fixture.dump());
+            trace("======================");
 
             // set up step vars
             var timeStep:Number = 1/60;
@@ -68,6 +83,11 @@ package
 
                 trace("Body position: " + position.x + ":" + position.y + ", angle: " + angle);
             }
+
+            trace("world");
+            trace("======================");
+            trace(world.dump());
+            trace("======================");
 
         }
 
