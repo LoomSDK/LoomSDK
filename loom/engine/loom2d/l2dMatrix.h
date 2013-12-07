@@ -144,7 +144,7 @@ public:
 
     inline void skew(float xSkew, float ySkew)
     {
-        Matrix skewMatrix(0, tan(xSkew), tan(ySkew), 1);
+        Matrix skewMatrix(1, tan(ySkew), tan(xSkew), 1);
 
         concat(&skewMatrix);
     }
