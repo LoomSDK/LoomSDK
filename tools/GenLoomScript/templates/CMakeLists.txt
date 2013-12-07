@@ -24,6 +24,8 @@ set (CORE_SOURCE $$CORE_SOURCE$$)
 
 set (COMPILER_SOURCE $$COMPILER_SOURCE$$)
 
+set (SDK_SOURCES $$SDK_SOURCE$$)
+
 if (MSVC OR APPLE OR LINUX)
     if (NOT LOOM_BUILD_IOS)                          
         set (CORE_SOURCE ${CORE_SOURCE} ${COMPILER_SOURCE} )
@@ -44,10 +46,38 @@ endif(APPLE)
 
 add_library(loomscript STATIC ${VENDOR_SOURCE} ${LUA_SOURCE} ${CORE_SOURCE} ${COMPILER_SOURCE} ${OBJC_SOURCE})
 
-#tinylsc 
+add_executable(bin2c tools/bin2c/bin2c.c)
 
-add_executable(lsc tools/lsc/main.cpp)
+get_target_property(BIN2CBIN bin2c LOCATION)
 
+add_custom_command(TARGET bin2c
+    POST_BUILD
+    COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/artifacts
+    COMMAND cp ${BIN2CBIN} ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/bin2c    
+)
+
+#lscbootstrap
+add_executable(lscbootstrap tools/lsc/main.cpp)
+target_link_libraries(lscbootstrap loomscript -lz -lpthread)
+
+get_target_property(LSCBOOTSTRAPBIN lscbootstrap LOCATION)
+
+add_custom_command(TARGET lscbootstrap
+    POST_BUILD
+    COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/artifacts
+    COMMAND cp ${LSCBOOTSTRAPBIN} ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/lscbootstrap
+)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/system_loomlib.c
+    COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/sdk && ../artifacts/lscbootstrap System.build
+    COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/sdk && ../artifacts/bin2c -o ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/system_loomlib.c --name system_loomlib ./libs/System.loomlib 
+    DEPENDS lscbootstrap ${SDK_SOURCES}
+    COMMENT "Building System Loom Library" )
+
+
+add_executable(lsc tools/lsc/main.cpp ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/system_loomlib.c)
+set_target_properties(lsc PROPERTIES COMPILE_DEFINITIONS "LOOM_EMBEDDED_SYSTEMLIB=1")
 target_link_libraries(lsc loomscript -lz -lpthread)
 
 get_target_property(LSCBIN lsc LOCATION)
@@ -59,7 +89,6 @@ add_custom_command(TARGET lsc
 )
 
 # loomrun
-
 add_executable(loomrun tools/loomrun/main.cpp)
 
 target_link_libraries(loomrun loomscript -lz -lpthread)

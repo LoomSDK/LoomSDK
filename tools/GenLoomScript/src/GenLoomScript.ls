@@ -62,6 +62,10 @@ package
             Path.makeDir(loomArtifacts + "/tools/loomrun");
             File.copy("tools/loomrun/main.cpp", loomArtifacts + "/tools/loomrun/main.cpp");                       
 
+            Path.makeDir(loomArtifacts + "/tools/bin2c");
+            File.copy("../../tools/bin2c/bin2c.c", loomArtifacts + "/tools/bin2c/bin2c.c");                       
+
+
             Path.makeDir(loomArtifacts + "/sdk/bin");
             Path.makeDir(loomArtifacts + "/sdk/libs");
 
@@ -110,7 +114,7 @@ package
                 var filename = file.slice(loomRoot.length); 
                 if (sdkExclusions.contains(filename))
                     return;
-                sdkSources.push(filename);
+                sources.push(filename);
             });
         }
 
@@ -137,12 +141,14 @@ package
             var compiler = compilerSources.join("\n    ") + "\n    " + compilerHeaders.join("\n    ");
             var lua = luaSources.join("\n    ") + "\n    " + luaHeaders.join("\n    ");
             var objC = objCSources.join("\n    ");
+            var sdk = sdkSystemSources.join("\n    ");
 
             cmake = replaceTemplate(cmake, "$$VENDOR_SOURCE$$", vendor);
             cmake = replaceTemplate(cmake, "$$LUA_SOURCE$$", lua);
             cmake = replaceTemplate(cmake, "$$CORE_SOURCE$$", core);
             cmake = replaceTemplate(cmake, "$$COMPILER_SOURCE$$", compiler);   
-            cmake = replaceTemplate(cmake, "$$OBJC_SOURCE$$", objC);   
+            cmake = replaceTemplate(cmake, "$$OBJC_SOURCE$$", objC);  
+            cmake = replaceTemplate(cmake, "$$SDK_SOURCE$$", sdk);   
 
             cmakeListsTxt = cmake;         
         }
@@ -169,7 +175,19 @@ package
             // SDK paths
             for each (path in sdkPaths)
             {
-                walkSDKPath(path, sdkSources);
+
+                if (path == "sdk/src/system")
+                {
+
+                    walkSDKPath(path, sdkSystemSources);
+                    for each (var source in sdkSystemSources)
+                    {
+                        sdkSources.push(source);
+                    }
+                }
+                else
+                    walkSDKPath(path, sdkSources);
+
             }
 
         }
@@ -196,6 +214,7 @@ package
         var luaHeaders = new Vector.<String>;
 
         var sdkSources = new Vector.<String>;
+        var sdkSystemSources = new Vector.<String>;
 
         var sdkBuildFiles:Vector.<String> = ["Benchmarks.build", "Compiler.build", "LDB.build", "System.build", "Tests.build", "UnitTest.build"];
 
