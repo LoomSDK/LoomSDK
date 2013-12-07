@@ -14,13 +14,42 @@ package
             init();
 
             fillCMake();
+
+            if (!Path.dirExists(loomArtifacts))
+                Path.makeDir(loomArtifacts);
+
+            File.writeTextFile(loomArtifacts + "/" + "CMakeLists.txt", cmakeListsTxt);
+
+            copyFiles();
+        }
+
+        function copyFiles()
+        {
+            var allSources:Vector.<Vector.<String> > = [coreSources, coreHeaders, compilerSources, compilerHeaders, 
+                                                        vendorSources, vendorHeaders, luaSources, luaHeaders];
+
+            for each(var vector:Vector.<String> in allSources)
+            {
+                for each (var source in vector)
+                {
+                    var destFolder = loomArtifacts + "/" + Path.folderFromPath(source);
+                    Path.makeDir(destFolder);
+                    File.copy("../../" + source, loomArtifacts + "/" + source);                    
+                }
+            }
+
         }
 
         function walkSourcePath(path:String, sources:Vector.<String>, headers:Vector.<String>, excludePaths:Vector.<String> = null)
         {
-            Path.walkFiles(loomRoot + path, function(file:String) { 
+            Path.walkFiles(loomRoot + path, function(file:String) {
 
-                var filename = file.slice(loomRoot.length);
+                var filename = file.slice(loomRoot.length); 
+
+                if (sourceExclusions.contains(filename))
+                {
+                    return;
+                }                            
 
                 if (excludePaths)
                 {
@@ -46,44 +75,34 @@ package
             });
         }
 
-        function setDefines()
-        {
-            defines["LOOM_DISABLE_JEMALLOC"] = "";
-            defines["HAVE_CXA_DEMANGLE"] = "";
-            defines["NPERFORMANCE"] = "";
-            defines["NTELEMETRY"] = "";
-        }
-
-        function setIncludes()
-        {
-            // base include dirs 
-            includeDirs = ["${CMAKE_SOURCE_DIR}", "loom/common", "loom/vendor/jansson", "loom/vendor/lua/src", "loom/vendor/seatest"];
-        }        
-
         function loadTemplates()
         {
             templateCMakeLists = File.loadTextFile("templates/CMakeLists.txt");
-            templateRakefile = File.loadTextFile("templates/Rakefile");
         }
+
+        function replaceTemplate(source:String, search:String, replace:String):String
+        {
+            var t = source.split(search);
+            source = t[0] + replace + t[1];
+            return source;
+        }        
 
         function fillCMake()
         {
             var cmake = templateCMakeLists;
 
-            var includes = "\ninclude_directories( ";
-            for each (var include in includeDirs)
-            {
-                includes += include + " ";
-            }
+            // sources
+            var vendor = vendorSources.join(" ") + " " + vendorHeaders.join(" ");
+            var core = coreSources.join(" ") + " " + coreHeaders.join(" ");
+            var compiler = compilerSources.join(" ") + " " + compilerHeaders.join(" ");
+            var lua = luaSources.join(" ") + " " + luaHeaders.join(" ");
 
-            includes += ")\n";
+            cmake = replaceTemplate(cmake, "$$VENDOR_SOURCE$$", vendor);
+            cmake = replaceTemplate(cmake, "$$LUA_SOURCE$$", lua);
+            cmake = replaceTemplate(cmake, "$$CORE_SOURCE$$", core);
+            cmake = replaceTemplate(cmake, "$$COMPILER_SOURCE$$", compiler);   
 
-            var t = cmake.split("$INCLUDE_DIRS$");
-            cmake = t[0] + includes + t[1];
-
-            for each (var s in t)
-                trace(s);
-
+            cmakeListsTxt = cmake;         
         }
 
         function init()
@@ -91,15 +110,13 @@ package
             var path:String;
 
             loadTemplates();
-            setDefines();
-            setIncludes();
 
             var excludes:Vector.<String> = ["loom/script/compiler", "loom/script/native/core/compiler"];
             for each (path in corePaths)
                 walkSourcePath(path, coreSources, coreHeaders, excludes);
 
             for each (path in compilerPaths)
-                walkSourcePath(path, compilerSources, compilerHeaders, excludes);
+                walkSourcePath(path, compilerSources, compilerHeaders);
 
             for each (path in vendorPaths)
                 walkSourcePath(path, vendorSources, vendorHeaders);
@@ -110,7 +127,7 @@ package
         }
 
         var loomRoot = "../../";
-        var loomArtifacts = "../../artifacts";
+        var loomArtifacts = "../../artifacts/LoomScript";
 
         var sourceFilters:Vector.<String> = [".c", ".cpp", ".m", ".mm"];
         var headerFilters:Vector.<String> = [".h", ".hpp"];
@@ -127,19 +144,21 @@ package
         var luaSources = new Vector.<String>;
         var luaHeaders = new Vector.<String>;
 
-        var defines = new Dictionary.<String, String>;
-        var includeDirs:Vector.<String>;        
-
         var corePaths:Vector.<String> = [ "loom/common/xml", "loom/common/utils", "loom/common/core", "loom/common/platform", "loom/script" ];
 
         var compilerPaths:Vector.<String> = ["loom/script/compiler", "loom/script/native/core/compiler"];
 
-        var vendorPaths:Vector.<String> = [ "loom/vendor/jansson", "loom/vendor/seatest" ];
+        var vendorPaths:Vector.<String> = [ "loom/vendor/jansson", "loom/vendor/seatest", "loom/vendor/jemalloc-3.4.0" ];
 
         var luaPaths:Vector.<String> = [ "loom/vendor/lua/src" ];
 
+        var sourceExclusions:Vector.<String> = ["loom/common/platform/platformAdMobIOS.mm", "loom/common/platform/EBPurchase.m", 
+                                                "loom/common/platform/platformWebViewIOS.mm", "loom/common/platform/platformVideoIOS.mm",
+                                                "loom/common/platform/RootViewController.mm", "loom/script/native/core/assets/lmAssets.cpp",
+                                                "loom/script/native/core/system/Platform/lmGamePad.cpp"];
+
         var templateCMakeLists:String;
-        var templateRakefile:String;
+        var cmakeListsTxt:String;
 
     }
 
