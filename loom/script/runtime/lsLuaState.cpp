@@ -463,7 +463,7 @@ Assembly *LSLuaState::loadExecutableAssembly(const utString& assemblyName, bool 
     utByteArray bytes;
     bytes.resize(sz);
 
-    unsigned int readSZ = sz;
+    uLongf readSZ = sz;
 
     int ok = uncompress((Bytef *)bytes.getDataPtr(), (uLongf *)&readSZ, (const Bytef *)((unsigned char *)buffer + sizeof(unsigned int) * 4), (uLong)sz);
 
