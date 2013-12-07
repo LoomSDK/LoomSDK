@@ -72,6 +72,11 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
 {
 }
 
+///sets whether or not to use the system screen sleep timeout
+void platform_allowScreenSleep(bool sleep)
+{
+}
+
 ///checks if a given sensor is supported on this hardware
 bool platform_isSensorSupported(int sensor)
 {
@@ -103,7 +108,6 @@ void platform_disableSensor(int sensor)
 
 
 
-///TODO: LOOM-1810: screen timeout
 ///TODO: LOOM-1811: vibration
 
 

@@ -20,6 +20,7 @@ limitations under the License.
 
 #import <Foundation/Foundation.h>
 #import <Foundation/NSSet.h>
+#import <UIKit/UIKit.h>
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformMobile.h"
@@ -37,6 +38,21 @@ static SensorTripleChangedCallback gTripleChangedCallback = NULL;
 void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB)
 {
     gTripleChangedCallback = sensorTripleChangedCB;    
+}
+
+///sets whether or not to use the system screen sleep timeout
+void platform_allowScreenSleep(bool sleep)
+{
+    if(sleep)
+    {
+        ///idle time act as normal
+        [[UIApplication sharedApplication] setIdleTimerDisabled:NO];
+    }
+    else
+    {
+        ///disable the idle timer
+        [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
+    }
 }
 
 ///checks if a given sensor is supported on this hardware

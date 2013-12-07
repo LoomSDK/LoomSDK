@@ -180,6 +180,9 @@ public class LoomDemo extends Cocos2dxActivity {
         ///Create Video View for our layout
         LoomVideo.onCreate(webViewGroup);
 
+        ///Create Mobile class
+        LoomMobile.onCreate(this);
+
         ///Create Sensor class
         LoomSensors.onCreate(this);
 

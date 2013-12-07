@@ -58,6 +58,7 @@ void Java_co_theengine_loomdemo_LoomSensors_onGravityChangedNative(JNIEnv *env, 
 }
 
 
+static loomJniMethodInfo gAllowScreenSleep;
 static loomJniMethodInfo gIsSensorSupported;
 static loomJniMethodInfo gIsSensorEnabled;
 static loomJniMethodInfo gHasSensorReceivedData;
@@ -83,6 +84,10 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
 
     ///Bind to JNI entry points.
     ///Mobile
+    LoomJni::getStaticMethodInfo(gAllowScreenSleep,
+                                 "co/theengine/loomdemo/LoomMobile",
+                                 "allowScreenSleep",
+                                 "(Z)V");
     LoomJni::getStaticMethodInfo(gIsSensorSupported,
                                  "co/theengine/loomdemo/LoomSensors",
                                  "isSensorSupported",
@@ -131,6 +136,14 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
                                  "()Ljava/lang/String;");
 }
 
+
+///sets whether or not to use the system screen sleep timeout
+void platform_allowScreenSleep(bool sleep)
+{
+    gAllowScreenSleep.env->CallStaticVoidMethod(gAllowScreenSleep.classID, 
+                                                gAllowScreenSleep.methodID, 
+                                                (jboolean)sleep);    
+}
 
 ///checks if a given sensor is supported on this hardware
 bool platform_isSensorSupported(int sensor)
