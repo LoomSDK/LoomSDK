@@ -59,8 +59,7 @@ public:
         const char *path = lua_tostring(L, 1);
         const char *data = lua_tostring(L, 2);
 
-        // include terminator
-        int sz = strlen(data) + 1;
+        int sz = strlen(data);
 
         !platform_writeFile(path, (void *)data, sz) ? lua_pushboolean(L, 1) : lua_pushboolean(L, 0);
 
