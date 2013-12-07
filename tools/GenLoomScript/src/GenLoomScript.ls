@@ -26,7 +26,7 @@ package
         function copyFiles()
         {
             var allSources:Vector.<Vector.<String> > = [coreSources, coreHeaders, compilerSources, compilerHeaders, 
-                                                        vendorSources, vendorHeaders, luaSources, luaHeaders];
+                                                        vendorSources, vendorHeaders, luaSources, luaHeaders, objCSources];
 
             var vector:Vector.<String>;
             var source:String;
@@ -99,6 +99,8 @@ package
                     sources.push(filename);
                 else if (headerFilters.contains(ext))
                     headers.push(filename);                
+                else if (objCFilters.contains(ext))
+                    objCSources.push(filename);
             });
         }
 
@@ -130,15 +132,17 @@ package
             var cmake = templateCMakeLists;
 
             // sources
-            var vendor = vendorSources.join(" ") + " " + vendorHeaders.join(" ");
-            var core = coreSources.join(" ") + " " + coreHeaders.join(" ");
-            var compiler = compilerSources.join(" ") + " " + compilerHeaders.join(" ");
-            var lua = luaSources.join(" ") + " " + luaHeaders.join(" ");
+            var vendor = vendorSources.join("\n    ") + "\n    " + vendorHeaders.join("\n    ");
+            var core = coreSources.join("\n    ") + "\n    " + coreHeaders.join("\n    ");
+            var compiler = compilerSources.join("\n    ") + "\n    " + compilerHeaders.join("\n    ");
+            var lua = luaSources.join("\n    ") + "\n    " + luaHeaders.join("\n    ");
+            var objC = objCSources.join("\n    ");
 
             cmake = replaceTemplate(cmake, "$$VENDOR_SOURCE$$", vendor);
             cmake = replaceTemplate(cmake, "$$LUA_SOURCE$$", lua);
             cmake = replaceTemplate(cmake, "$$CORE_SOURCE$$", core);
             cmake = replaceTemplate(cmake, "$$COMPILER_SOURCE$$", compiler);   
+            cmake = replaceTemplate(cmake, "$$OBJC_SOURCE$$", objC);   
 
             cmakeListsTxt = cmake;         
         }
@@ -173,8 +177,11 @@ package
         var loomRoot = "../../";
         var loomArtifacts = "../../artifacts/LoomScript";
 
-        var sourceFilters:Vector.<String> = [".c", ".cpp", ".m", ".mm"];
+        var sourceFilters:Vector.<String> = [".c", ".cpp"];
+        var objCFilters:Vector.<String> = [".m", ".mm"];
         var headerFilters:Vector.<String> = [".h", ".hpp"];
+
+        var objCSources = new Vector.<String>;
 
         var coreSources = new Vector.<String>;     
         var coreHeaders = new Vector.<String>;     

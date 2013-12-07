@@ -18,6 +18,9 @@ limitations under the License.
 ===========================================================================
 */
 
+extern "C"
+{
+
 #include "loom/common/platform/platform.h"
 #if LOOM_PLATFORM_IS_APPLE == 1
 #import "Foundation/Foundation.h"
@@ -143,7 +146,6 @@ const char* platform_getWritablePath()
 
 #endif
 
-
-
-
 #endif
+
+}
