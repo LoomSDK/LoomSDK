@@ -4,7 +4,7 @@ project (TinyLoomScript)
 # Set minimum version
 cmake_minimum_required (VERSION 2.8.6)
 
-add_definitions(-DLOOM_DISABLE_JEMALLOC -DHAVE_CXA_DEMANGLE -DNPERFORMANCE -DNTELEMETRY)
+add_definitions(-DLOOM_DISABLE_JEMALLOC -DHAVE_CXA_DEMANGLE -DNPERFORMANCE -DNTELEMETRY -DLOOMSCRIPT_STANDALONE)
 
 include_directories( 
     ${CMAKE_SOURCE_DIR}
@@ -51,30 +51,30 @@ add_library(loomscript STATIC ${VENDOR_SOURCE} ${LUA_SOURCE} ${CORE_SOURCE} ${CO
 
 #tinylsc 
 
-#add_executable(tinylsc loom/tinylsc/main.cpp)
+add_executable(lsc tools/lsc/main.cpp)
 
-#target_link_libraries(tinylsc tinyloomscript -lz -lpthread)
+target_link_libraries(lsc loomscript -lz -lpthread)
 
-#get_target_property(TINYLSCBIN tinylsc LOCATION)
+get_target_property(LSCBIN lsc LOCATION)
 
-#add_custom_command(TARGET tinylsc
-#    POST_BUILD
-#    COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts
-#    COMMAND cp ${TINYLSCBIN} ${CMAKE_SOURCE_DIR}/artifacts/tinylsc
-#)
+add_custom_command(TARGET lsc
+    POST_BUILD
+    COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts
+    COMMAND cp ${LSCBIN} ${CMAKE_SOURCE_DIR}/artifacts/lsc
+)
 
-# tinyrun
+# loomrun
 
-#add_executable(tinyrun loom/tinyrun/main.cpp)
+add_executable(loomrun tools/loomrun/main.cpp)
 
-#target_link_libraries(tinyrun tinyloomscript -lz -lpthread)
+target_link_libraries(loomrun loomscript -lz -lpthread)
 
-#get_target_property(TINYRUNBIN tinyrun LOCATION)
+get_target_property(LOOMRUNBIN loomrun LOCATION)
 
-#add_custom_command(TARGET tinyrun
-#    POST_BUILD
-#    COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts
-#    COMMAND cp ${TINYRUNBIN} ${CMAKE_SOURCE_DIR}/artifacts/tinyrun
-#)
+add_custom_command(TARGET loomrun
+    POST_BUILD
+    COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts
+    COMMAND cp ${LOOMRUNBIN} ${CMAKE_SOURCE_DIR}/artifacts/loomrun
+)
 
 

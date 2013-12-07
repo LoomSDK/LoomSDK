@@ -28,15 +28,42 @@ package
             var allSources:Vector.<Vector.<String> > = [coreSources, coreHeaders, compilerSources, compilerHeaders, 
                                                         vendorSources, vendorHeaders, luaSources, luaHeaders];
 
-            for each(var vector:Vector.<String> in allSources)
+            var vector:Vector.<String>;
+            var source:String;
+            var destFolder:String;
+
+            File.copy("templates/Rakefile", loomArtifacts + "/Rakefile");                    
+
+            for each(vector in allSources)
             {
-                for each (var source in vector)
+                for each (source in vector)
                 {
-                    var destFolder = loomArtifacts + "/" + Path.folderFromPath(source);
+                    destFolder = loomArtifacts + "/" + Path.folderFromPath(source);
                     Path.makeDir(destFolder);
                     File.copy("../../" + source, loomArtifacts + "/" + source);                    
                 }
             }
+
+            for each (source in sdkSources)
+            {
+                destFolder = loomArtifacts + "/" + Path.folderFromPath(source);
+                Path.makeDir(destFolder);
+                File.copy("../../" + source, loomArtifacts + "/" + source);                    
+            }
+
+            for each (source in sdkBuildFiles)
+            {
+                File.copy("../../sdk/src/" + source, loomArtifacts + "/sdk/src/" + source);                       
+            }
+
+            Path.makeDir(loomArtifacts + "/tools/lsc");
+            File.copy("tools/lsc/main.cpp", loomArtifacts + "/tools/lsc/main.cpp");                       
+
+            Path.makeDir(loomArtifacts + "/tools/loomrun");
+            File.copy("tools/loomrun/main.cpp", loomArtifacts + "/tools/loomrun/main.cpp");                       
+
+            Path.makeDir(loomArtifacts + "/sdk/bin");
+            Path.makeDir(loomArtifacts + "/sdk/libs");
 
         }
 
@@ -74,6 +101,17 @@ package
                     headers.push(filename);                
             });
         }
+
+        function walkSDKPath(path:String, sources:Vector.<String>)
+        {
+            Path.walkFiles(loomRoot + path, function(file:String) {
+                var filename = file.slice(loomRoot.length); 
+                if (sdkExclusions.contains(filename))
+                    return;
+                sdkSources.push(filename);
+            });
+        }
+
 
         function loadTemplates()
         {
@@ -124,6 +162,12 @@ package
             for each (path in luaPaths)
                 walkSourcePath(path, luaSources, luaHeaders);
 
+            // SDK paths
+            for each (path in sdkPaths)
+            {
+                walkSDKPath(path, sdkSources);
+            }
+
         }
 
         var loomRoot = "../../";
@@ -144,6 +188,12 @@ package
         var luaSources = new Vector.<String>;
         var luaHeaders = new Vector.<String>;
 
+        var sdkSources = new Vector.<String>;
+
+        var sdkBuildFiles:Vector.<String> = ["Benchmarks.build", "Compiler.build", "LDB.build", "System.build", "Tests.build", "UnitTest.build"];
+
+        var sdkPaths:Vector.<String> = [ "sdk/src/system", "sdk/src/test", "sdk/src/benchmark", "sdk/src/compiler", "sdk/src/unittest"];
+
         var corePaths:Vector.<String> = [ "loom/common/xml", "loom/common/utils", "loom/common/core", "loom/common/platform", "loom/script" ];
 
         var compilerPaths:Vector.<String> = ["loom/script/compiler", "loom/script/native/core/compiler"];
@@ -152,10 +202,13 @@ package
 
         var luaPaths:Vector.<String> = [ "loom/vendor/lua/src" ];
 
+        // these really should be moved down to the engine module
         var sourceExclusions:Vector.<String> = ["loom/common/platform/platformAdMobIOS.mm", "loom/common/platform/EBPurchase.m", 
                                                 "loom/common/platform/platformWebViewIOS.mm", "loom/common/platform/platformVideoIOS.mm",
                                                 "loom/common/platform/RootViewController.mm", "loom/script/native/core/assets/lmAssets.cpp",
                                                 "loom/script/native/core/system/Platform/lmGamePad.cpp"];
+
+        var sdkExclusions:Vector.<String> = ["sdk/src/system/Platform/Gamepad.ls"];
 
         var templateCMakeLists:String;
         var cmakeListsTxt:String;

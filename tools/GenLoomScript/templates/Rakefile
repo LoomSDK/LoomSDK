@@ -31,12 +31,12 @@ desc "Builds OS X"
         sh "xcodebuild -configuration #{$buildTarget}"
       end
       
-      Dir.chdir("script") do
-         sh "../artifacts/lsc --symbols --verbose Main.build"
+      Dir.chdir("sdk") do
+         sh "../artifacts/lsc --symbols --verbose Tests.build"
       end
 
       #copy bin
-      FileUtils.cp_r("script/bin", "artifacts/")
+      FileUtils.cp_r("sdk/bin", "artifacts/")
 
   end
 

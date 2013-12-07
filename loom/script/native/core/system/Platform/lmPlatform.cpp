@@ -101,5 +101,7 @@ void installSystemPlatform()
 {
     LOOM_DECLARE_NATIVETYPE(Platform, registerSystemPlatform);
     installSystemPlatformFile();
+#ifndef LOOMSCRIPT_STANDALONE    
     installSystemPlatformGamepad();
+#endif    
 }
