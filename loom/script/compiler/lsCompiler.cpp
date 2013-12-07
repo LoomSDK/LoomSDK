@@ -602,7 +602,18 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
             utString libPath = sdkPath + delim + "libs" + delim + libName + ".loomlib";
 
             utArray<unsigned char> rarray;
-            lmAssert(utFileStream::tryReadToArray(libPath, rarray), "Unable to load library assembly %s", libName.c_str());
+
+            if (libName == "System" && embeddedSystemAssembly)
+            {
+                size_t embeddedSystemAssemblyLength = strlen(embeddedSystemAssembly);
+                rarray.resize(embeddedSystemAssemblyLength + 1);
+                memcpy(&rarray[0], embeddedSystemAssembly, embeddedSystemAssemblyLength + 1);
+            }
+            else
+            {
+                lmAssert(utFileStream::tryReadToArray(libPath, rarray), "Unable to load library assembly %s", libName.c_str());    
+            }
+
             utBase64 base64 = utBase64::encode64(rarray);
             json_object_set(jref, "binary", json_string(base64.getBase64().c_str()));
 
