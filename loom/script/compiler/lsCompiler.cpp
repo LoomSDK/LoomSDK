@@ -562,7 +562,14 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
         utString jname = json_string_value(json_object_get(jref, "name"));
 
         bool found = false;
-        for (UTsize k = 0; k < importedAssemblies.size(); k++)
+
+        // always find the System assembly, so we don't have to explicitly import from it
+        if (jname == "System")
+        {
+            found = true;
+        }
+
+        for (UTsize k = 0; k < importedAssemblies.size() && !found; k++)
         {
             if (importedAssemblies.at(k)->getName() == jname)
             {
