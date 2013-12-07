@@ -25,6 +25,7 @@
 #include "loom/script/common/lsError.h"
 #include "loom/common/utils/utBase64.h"
 #include "loom/common/core/assert.h"
+#include "loom/script/compiler/LSCompiler.h"
 
 namespace LS {
 utHashTable<utHashedString, utString> AssemblyReader::linkedAssemblies;
@@ -32,6 +33,13 @@ utArray<utString> AssemblyReader::libraryAssemblyPath;
 
 bool AssemblyReader::loadLibraryAssemblyJSON(const utString& assemblyName, utString& json)
 {
+
+    if (assemblyName == "System" && LSCompiler::getEmbeddedSystemAssembly())
+    {
+        json = LSCompiler::getEmbeddedSystemAssembly();
+        return true;
+    }
+
     for (UTsize i = 0; i < libraryAssemblyPath.size(); i++)
     {
         utString path = libraryAssemblyPath.at(i);

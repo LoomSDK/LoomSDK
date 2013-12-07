@@ -64,6 +64,8 @@ utArray<BuildInfo *> LSCompiler::rootBuildDependencies;
 json_t            *LSCompiler::loomConfigJSON = NULL;
 utArray<utString> LSCompiler::loomConfigClassPath;
 
+const char* LSCompiler::embeddedSystemAssembly = NULL;
+
 lmDefineLogGroup(LSCompiler::compilerLogGroup, "loom.compiler", 1, LoomLogInfo);
 lmDefineLogGroup(LSCompiler::compilerVerboseLogGroup, "loom.compiler.verbose", 0, LoomLogInfo);
 

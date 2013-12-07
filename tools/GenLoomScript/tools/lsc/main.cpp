@@ -37,6 +37,11 @@ void installPackageCompiler();
 
 extern "C" {
 void stringtable_initialize();
+#ifdef LOOM_EMBEDDED_SYSTEMLIB
+extern const long int system_loomlib_size;
+extern const unsigned char system_loomlib[];
+#endif
+
 }
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_OSX
@@ -126,6 +131,17 @@ int main(int argc, const char **argv)
     platform_timeInitialize();
 
     NativeDelegate::markMainThread();
+
+#ifdef LOOM_EMBEDDED_SYSTEMLIB
+    // ensure null terminated
+    
+    char* data = (char*) malloc(system_loomlib_size + 1);
+    memset(data, 0, system_loomlib_size + 1);
+    memcpy(data, system_loomlib, system_loomlib_size);
+    LSCompiler::setEmbeddedSystemAssembly((const char*)data);
+    
+#endif    
+    
 
     LSLuaState::initCommandLine(argc, argv);
 

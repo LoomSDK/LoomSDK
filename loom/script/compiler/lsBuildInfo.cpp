@@ -202,6 +202,12 @@ BuildInfo *BuildInfo::createDefaultBuildFile()
         recursiveGlob(libPath[i].c_str(), "loomlib", defaultLibs);
     }
 
+    // embedded System.loomlib is available
+    if (LSCompiler::getEmbeddedSystemAssembly())
+    {
+        defaultLibs.push_back("libs/System.loomlib");
+    }
+
     for (UTsize i = 0; i < defaultLibs.size(); i++)
     {
         // Strip the name from the path...

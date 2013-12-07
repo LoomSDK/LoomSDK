@@ -35,7 +35,9 @@
 namespace LS {
 class AssemblyBuilder;
 
-class LSCompiler {
+class LSCompiler 
+{
+
 private:
 
     // dedicated lua_State we build/tear down at compile time
@@ -102,6 +104,8 @@ private:
 
     static loom_logGroup_t compilerLogGroup;
     static loom_logGroup_t compilerVerboseLogGroup;
+
+    static const char* embeddedSystemAssembly;
 
 public:
 
@@ -228,6 +232,16 @@ public:
 
             markImportAssembly(assembly);
         }
+    }
+
+    static void setEmbeddedSystemAssembly(const char* data)
+    {
+        embeddedSystemAssembly = data;    
+    }
+
+    static const char* getEmbeddedSystemAssembly()
+    {
+        return embeddedSystemAssembly;
     }
 };
 }
