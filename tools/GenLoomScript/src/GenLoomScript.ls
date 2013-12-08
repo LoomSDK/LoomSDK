@@ -38,9 +38,9 @@ package
             {
                 for each (source in vector)
                 {
-                    destFolder = loomArtifacts + "/" + Path.folderFromPath(source);
+                    destFolder = loomArtifacts + "/source/" + Path.folderFromPath(source);
                     Path.makeDir(destFolder);
-                    File.copy("../../" + source, loomArtifacts + "/" + source);                    
+                    File.copy("../../" + source, loomArtifacts + "/source/" + source);                    
                 }
             }
 
@@ -56,14 +56,14 @@ package
                 File.copy("../../sdk/src/" + source, loomArtifacts + "/sdk/src/" + source);                       
             }
 
-            Path.makeDir(loomArtifacts + "/tools/lsc");
-            File.copy("tools/lsc/main.cpp", loomArtifacts + "/tools/lsc/main.cpp");                       
+            Path.makeDir(loomArtifacts + "/source/tools/lsc");
+            File.copy("tools/lsc/main.cpp", loomArtifacts + "/source/tools/lsc/main.cpp");                       
 
-            Path.makeDir(loomArtifacts + "/tools/loomrun");
-            File.copy("tools/loomrun/main.cpp", loomArtifacts + "/tools/loomrun/main.cpp");                       
+            Path.makeDir(loomArtifacts + "/source/tools/loomrun");
+            File.copy("tools/loomrun/main.cpp", loomArtifacts + "/source/tools/loomrun/main.cpp");                       
 
-            Path.makeDir(loomArtifacts + "/tools/bin2c");
-            File.copy("../../tools/bin2c/bin2c.c", loomArtifacts + "/tools/bin2c/bin2c.c");                       
+            Path.makeDir(loomArtifacts + "/source/tools/bin2c");
+            File.copy("../../tools/bin2c/bin2c.c", loomArtifacts + "/source/tools/bin2c/bin2c.c");                       
 
 
             Path.makeDir(loomArtifacts + "/sdk/bin");
@@ -135,12 +135,25 @@ package
         {
             var cmake = templateCMakeLists;
 
+            
+            var process = function(sources:Vector.<String>):String
+            {
+                var tmp = [];
+
+                sources.every(function(item:Object, index:Number, v:Vector):Boolean {   
+                    tmp.push("source/" + item);
+                    return true; });              
+
+                return tmp.join("\n    ");
+            };
+
             // sources
-            var vendor = vendorSources.join("\n    ") + "\n    " + vendorHeaders.join("\n    ");
-            var core = coreSources.join("\n    ") + "\n    " + coreHeaders.join("\n    ");
-            var compiler = compilerSources.join("\n    ") + "\n    " + compilerHeaders.join("\n    ");
-            var lua = luaSources.join("\n    ") + "\n    " + luaHeaders.join("\n    ");
-            var objC = objCSources.join("\n    ");
+            var vendor = process(vendorSources) + "\n    " + process(vendorHeaders);
+            var core = process(coreSources) + "\n    " + process(coreHeaders);
+            var compiler = process(compilerSources) + "\n    " + process(compilerHeaders);
+            var lua = process(luaSources) + "\n    " + process(luaHeaders);
+            var objC = process(objCSources) + "\n";
+
             var sdk = sdkSystemSources.join("\n    ");
 
             cmake = replaceTemplate(cmake, "$$VENDOR_SOURCE$$", vendor);

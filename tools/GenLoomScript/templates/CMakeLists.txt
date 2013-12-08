@@ -8,12 +8,12 @@ add_definitions(-DLOOM_DISABLE_JEMALLOC -DHAVE_CXA_DEMANGLE -DNPERFORMANCE -DNTE
 
 #use CMAKE_CURRENT_SOURCE_DIR so we can build in other CMake source hierarchies
 include_directories( 
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    loom/common
-    loom/vendor/jansson
-    loom/vendor/lua/src
-    loom/vendor/seatest
-    loom/vendor/jemalloc-3.4.0/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/source
+    source/loom/common
+    source/loom/vendor/jansson
+    source/loom/vendor/lua/src
+    source/loom/vendor/seatest
+    source/loom/vendor/jemalloc-3.4.0/include
 )
 
 set (VENDOR_SOURCE $$VENDOR_SOURCE$$)
@@ -33,10 +33,10 @@ if (MSVC OR APPLE OR LINUX)
 endif()
                                 
 if (MSVC)                                
-    list(REMOVE_ITEM CORE_SOURCE loom/script/native/core/system/Socket/usocket.c)
-    list(REMOVE_ITEM CORE_SOURCE loom/script/native/core/system/Socket/unix.c)
+    list(REMOVE_ITEM CORE_SOURCE source/loom/script/native/core/system/Socket/usocket.c)
+    list(REMOVE_ITEM CORE_SOURCE source/loom/script/native/core/system/Socket/unix.c)
 else() 
-    list(REMOVE_ITEM CORE_SOURCE loom/script/native/core/system/Socket/wsocket.c)
+    list(REMOVE_ITEM CORE_SOURCE source/loom/script/native/core/system/Socket/wsocket.c)
 endif()                  
 
 if (APPLE)
@@ -46,7 +46,7 @@ endif(APPLE)
 
 add_library(loomscript STATIC ${VENDOR_SOURCE} ${LUA_SOURCE} ${CORE_SOURCE} ${COMPILER_SOURCE} ${OBJC_SOURCE})
 
-add_executable(bin2c tools/bin2c/bin2c.c)
+add_executable(bin2c source/tools/bin2c/bin2c.c)
 
 get_target_property(BIN2CBIN bin2c LOCATION)
 
@@ -57,7 +57,7 @@ add_custom_command(TARGET bin2c
 )
 
 #lscbootstrap
-add_executable(lscbootstrap tools/lsc/main.cpp)
+add_executable(lscbootstrap source/tools/lsc/main.cpp)
 target_link_libraries(lscbootstrap loomscript -lz -lpthread)
 
 get_target_property(LSCBOOTSTRAPBIN lscbootstrap LOCATION)
@@ -76,7 +76,7 @@ add_custom_command(
     COMMENT "Building System Loom Library" )
 
 
-add_executable(lsc tools/lsc/main.cpp ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/system_loomlib.c)
+add_executable(lsc source/tools/lsc/main.cpp ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/system_loomlib.c)
 set_target_properties(lsc PROPERTIES COMPILE_DEFINITIONS "LOOM_EMBEDDED_SYSTEMLIB=1")
 target_link_libraries(lsc loomscript -lz -lpthread)
 
@@ -89,7 +89,7 @@ add_custom_command(TARGET lsc
 )
 
 # loomrun
-add_executable(loomrun tools/loomrun/main.cpp)
+add_executable(loomrun source/tools/loomrun/main.cpp)
 
 target_link_libraries(loomrun loomscript -lz -lpthread)
 
