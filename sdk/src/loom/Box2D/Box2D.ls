@@ -39,7 +39,8 @@ package loom.box2d
  
     [Native(managed)]
     final public native class b2BodyDef
-    {        
+    {
+        public native var type:int;
         public native var position:b2Vec2;
         public native var angle:Number;
         public native var linearVelocity:b2Vec2;
@@ -61,8 +62,14 @@ package loom.box2d
     }
 
     [Native(managed)]
+    final public native class b2CircleShape extends b2Shape
+    {        
+    }
+
+    [Native(managed)]
     public native class b2Shape
     {        
+        public native var radius:Number;
     }
 
     [Native(managed)]
@@ -86,6 +93,11 @@ package loom.box2d
         public native function setRestitution(r:Number):void;
         public native function getRestitution():Number;
         public native function dump(bodyIndex:int=0):void;
+
+        public var userData:Object;
+
+        public function getUserData():Object { return userData; };
+        public function setUserData(data:Object):void { userData = data; };
     }
 
     [Native(managed)]
@@ -140,6 +152,11 @@ package loom.box2d
         public native function getNext():b2Body;
         public native function getWorld():b2World;
         public native function dump():void;
+
+        public var userData:Object;
+
+        public function getUserData():Object { return userData; };
+        public function setUserData(data:Object):void { userData = data; };
     }
  
     [Native(managed)]
@@ -150,6 +167,7 @@ package loom.box2d
         public native function createBody(def:b2BodyDef):b2Body;
         public native function destroyBody(body:b2Body):void;
         public native function getBodyCount():Number;
+        public native function getBodyList():b2Body;
         //public native function createJoint(def:b2JointDef):b2Joint;
         //public native function destroyJoint(joint:b2Joint):void;
         public native function getJointCount():Number;

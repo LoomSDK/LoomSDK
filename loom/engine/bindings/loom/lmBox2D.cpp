@@ -116,6 +116,8 @@ static int registerLoomBox2D(lua_State *L)
 
         .beginClass<b2Shape>("b2Shape")
 
+            .addVar("radius", &b2Shape::m_radius)
+
             .addMethod("clone", &b2Shape::Clone)
             .addMethod("getType", &b2Shape::GetType)
             .addMethod("getChildCount", &b2Shape::GetChildCount)
@@ -131,6 +133,12 @@ static int registerLoomBox2D(lua_State *L)
             .addConstructor <void (*)(void) >()
 
             .addMethod("setAsBox", (void (b2PolygonShape::*)(float32, float32))&b2PolygonShape::SetAsBox)
+
+        .endClass()        
+
+        .deriveClass<b2CircleShape, b2Shape>("b2CircleShape")
+
+            .addConstructor <void (*)(void) >()
 
         .endClass()        
 
@@ -308,8 +316,7 @@ static int registerLoomBox2D(lua_State *L)
             .addMethod("createBody", &b2World::CreateBody)
             .addMethod("destroyBody", &b2World::DestroyBody)
             .addMethod("getBodyCount", &b2World::GetBodyCount)
-            //.addMethod("getBodyList", &b2World::GetBodyList)
-
+            .addMethod("getBodyList", (b2Body* (b2World::*)())&b2World::GetBodyList)
             .addMethod("createJoint", &b2World::CreateJoint)
             .addMethod("destroyJoint", &b2World::DestroyJoint)
             .addMethod("getJointCount", &b2World::GetJointCount)
@@ -338,7 +345,6 @@ static int registerLoomBox2D(lua_State *L)
     return 0;
 }
 
-
 void installLoomBox2D()
 {
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2Vec2, registerLoomBox2D);
@@ -349,6 +355,7 @@ void installLoomBox2D()
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2FixtureDef, registerLoomBox2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2Shape, registerLoomBox2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2PolygonShape, registerLoomBox2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(b2CircleShape, registerLoomBox2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2Fixture, registerLoomBox2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2Contact, registerLoomBox2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2ContactEdge, registerLoomBox2D);
