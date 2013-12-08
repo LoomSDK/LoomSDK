@@ -232,9 +232,7 @@ public:
 
     virtual CompilationUnit *visit(CompilationUnit *cunit)
     {
-        cunit->functions  = visitStatementArray(cunit->functions);
         cunit->statements = visitStatementArray(cunit->statements);
-
         return cunit;
     }
 

@@ -194,7 +194,8 @@ public:
 
         this->cunit = cunit;
 
-        cunit = TraversalVisitor::visit(cunit);
+
+        TraversalVisitor::visit(cunit);
 
         Scope::setVM(NULL);
 
@@ -297,7 +298,41 @@ public:
         Scope::push(cls);
 
         cls->name->type = cls->type;
-        cls             = (ClassDeclaration *)TraversalVisitor::visit(cls);
+
+        utArray<Statement *> *statements = cls->statements;
+
+        if (statements != NULL)
+        {
+            errorFlag = false;
+
+            // first pass do variables so we have valid implicit types
+            // regardless where the definition appears in the class
+            for (unsigned int i = 0; i < statements->size(); i++)
+            {
+                if ((*statements)[i]->astType == AST_VARSTATEMENT)
+                    (*statements)[i] = visitStatement(statements->at(i));
+
+                if (errorFlag)
+                {
+                    break;
+                }
+            }
+
+            // now do the rest
+            for (unsigned int i = 0; i < statements->size(); i++)
+            {
+                if ((*statements)[i]->astType != AST_VARSTATEMENT)
+                    (*statements)[i] = visitStatement(statements->at(i));
+
+                if (errorFlag)
+                {
+                    break;
+                }
+
+            }
+        }
+
+        lastVisited = cls;
 
         Scope::pop();
 
@@ -308,6 +343,9 @@ public:
         }
 
         curClass = oldClass;
+
+        // reset error status
+        errorFlag = false;
 
         return cls;
     }
