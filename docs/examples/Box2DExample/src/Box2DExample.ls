@@ -11,6 +11,10 @@ package
 
     import loom2d.text.BitmapFont;
 
+    import loom2d.events.Touch;
+    import loom2d.events.TouchEvent;
+    import loom2d.events.TouchPhase;  
+
     import loom.gameframework.LoomGroup;
     import loom.gameframework.TimeManager;
     import loom.box2d.*;
@@ -50,21 +54,32 @@ package
                 pgo.sprite.y = b.getPosition().y * pixelsPerMeter;
                 pgo.sprite.rotation = b.getAngle();
 
+                // clean up bodies that fell out of the visible area
+                // actually, removing the sprite from the stage is a hit on performance
+                // and the world does a great job GCing bodies
+                /*
+                if (b.getPosition().y > (stage.stageHeight + Math.max(pgo.sprite.width, pgo.sprite.height))/pixelsPerMeter)
+                {
+                    stage.removeChild(pgo.sprite);
+                    world.destroyBody(b);
+                }
+                */
+
                 b = b.getNext();
             }
         }
 
-        public function createBox(world:b2World, type:int, position:b2Vec2, rotation:Number, dimensions:b2Vec2, imagePath:String, density:Number, friction:Number)
+        public function createBox(world:b2World, type:int, position:b2Vec2, rotation:Number, dimensions:b2Vec2, imagePath:String, density:Number, friction:Number):b2Body
         {
-            createBody(world, type, position, rotation, dimensions, dimensions.x/2, imagePath, density, friction, "box");
+            return createBody(world, type, position, rotation, dimensions, dimensions.x/2, imagePath, density, friction, "box");
         }
 
-        public function createCircle(world:b2World, type:int, position:b2Vec2, rotation:Number, radius:Number, imagePath:String, density:Number, friction:Number)
+        public function createCircle(world:b2World, type:int, position:b2Vec2, rotation:Number, radius:Number, imagePath:String, density:Number, friction:Number):b2Body
         {
-            createBody(world, type, position, rotation, new b2Vec2(radius*2, radius*2), radius, imagePath, density, friction, "circle");
+            return createBody(world, type, position, rotation, new b2Vec2(radius*2, radius*2), radius, imagePath, density, friction, "circle");
         }
 
-        public function createBody(world:b2World, type:int, position:b2Vec2, rotation:Number, dimensions:b2Vec2, radius:Number, imagePath:String, density:Number, friction:Number, shapeType:String="box")
+        public function createBody(world:b2World, type:int, position:b2Vec2, rotation:Number, dimensions:b2Vec2, radius:Number, imagePath:String, density:Number, friction:Number, shapeType:String="box"):b2Body
         {
             // create a body
             var bodyDef:b2BodyDef = new b2BodyDef();
@@ -107,22 +122,34 @@ package
             }
 
             body.createFixture(fixtureBody);
+
+            return body;
+        }
+
+        public function createRandomShape(px:Number, py:Number)
+        {
+            // find a random shape
+            var body:b2Body;
+            if (Math.random()<0.5)
+                body = createBox(world, 2, new b2Vec2(px, py), 0, new b2Vec2(Math.random()*2+0.25, Math.random()*2+0.25), "assets/square.png", 1, 0.3);
+            else
+                body = createCircle(world, 2, new b2Vec2(px, py), 0, Math.random()+0.125, "assets/circle.png", 1, 0.3);            
+
+            // apply a random force
+            body.applyForceToCenter(new b2Vec2(Math.random()*2000-1000, Math.random()*2000-1000), true);
+            body.applyTorque(Math.random()*2000-1000, true);
         }
 
         override public function run():void
         {
 
-            stage.scaleMode = StageScaleMode.LETTERBOX;
+            stage.scaleMode = StageScaleMode.NONE;
 
             var bg = new Image(Texture.fromAsset("assets/bg.png"));
-
-            var ascale_w:Number = stage.stageWidth / bg.width;
-            var ascale_h:Number = stage.stageHeight / bg.height;
-            var assetScale:Number = (ascale_w > ascale_h) ? ascale_w : ascale_h;
-
             bg.x = 0;
             bg.y = 0;
-            bg.scale = assetScale;
+            bg.width = stage.nativeStageWidth;
+            bg.height = stage.nativeStageHeight;
             stage.addChild(bg);
 
             // *******
@@ -133,20 +160,25 @@ package
             var gravity:b2Vec2 = new b2Vec2(0, 9.78);
             world = new b2World(gravity);
 
-            // screen center in meters
-            var center:b2Vec2 = new b2Vec2((stage.nativeStageWidth/2)/pixelsPerMeter, (stage.nativeStageHeight/2)/pixelsPerMeter);
+            // stage in meters
+            var mWidth:Number = stage.stageWidth/pixelsPerMeter;
+            var mHeight:Number = stage.stageHeight/pixelsPerMeter;
 
-            // create a floor
-            createBox(world, 0, new b2Vec2(center.x,center.y+8), 0, new b2Vec2(20,1), "images/rect.png", 1, 0.3);
+            // create a floor (center, bottom)
+            createBox(world, 0, new b2Vec2(mWidth*0.5, mHeight*0.9), 0, new b2Vec2(mWidth*0.75, mHeight*0.1), "assets/rect.png", 1, 0.3);
 
-            // create falling shapes
-            for (var i:int = 0; i<100; i++)
+            // create falling shapes (full width, top half)
+            for (var i:int = 0; i<50; i++)
+                createRandomShape(Math.random()*mWidth, Math.random()*mHeight*0.5);
+
+            // listen for touch and generate a new shape on touch
+            stage.addEventListener( TouchEvent.TOUCH, function(e:TouchEvent)
             {
-                if (Math.random()<0.5)
-                    createBox(world, 2, new b2Vec2(center.x,center.y-5), 0, new b2Vec2(Math.random()*2+0.25, Math.random()*2+0.25), "images/square.png", 1, 0.3);
-                else
-                    createCircle(world, 2, new b2Vec2(center.x,center.y-5), 0, Math.random()+0.125, "images/circle.png", 1, 0.3);
-            }
+                var touch = e.getTouch(stage, TouchPhase.BEGAN);
+                if (touch && simulationEnabled)
+                for (var i:int = 0; i<10; i++)
+                    createRandomShape(touch.globalX/pixelsPerMeter, touch.globalY/pixelsPerMeter);
+            });            
 
             // set up tick rate and iterations
             var timeManager = (LoomGroup.rootGroup.getManager(TimeManager) as TimeManager);
