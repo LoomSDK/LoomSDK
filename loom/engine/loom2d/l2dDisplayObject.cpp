@@ -71,6 +71,9 @@ void DisplayObject::getTargetTransformationMatrix(DisplayObject *targetSpace, Ma
         currentObject = this;
         while (currentObject != targetSpace)
         {
+            if (currentObject->transformDirty) {
+                currentObject->updateLocalTransform();
+            }
             resultMatrix->concat(&currentObject->transformMatrix);
 
             currentObject = currentObject->parent;
@@ -121,6 +124,9 @@ void DisplayObject::getTargetTransformationMatrix(DisplayObject *targetSpace, Ma
     currentObject = this;
     while (currentObject != commonParent)
     {
+        if (currentObject->transformDirty) {
+            currentObject->updateLocalTransform();
+        }
         resultMatrix->concat(&currentObject->transformMatrix);
         currentObject = currentObject->parent;
     }
