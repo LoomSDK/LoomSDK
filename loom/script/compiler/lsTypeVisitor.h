@@ -246,7 +246,7 @@ public:
         Type            *base = cls->baseType;
         while (base)
         {
-            if (scriptClass && !cls->isStatic && (base->isNative() && !base->isNativeManaged()))
+            if (scriptClass && !cls->isStatic && (base->isNativePure()))
             {
                 error("Script class %s derived from pure native class %s.  Script classes may only be derived from managed and static native classes",
                       cls->name->string.c_str(), base->getFullName().c_str());
@@ -923,6 +923,19 @@ public:
                         }
 
                         p->type = vd->templateInfo->types[1]->type;
+
+                        if (right->type->isNativePure())
+                        {
+                            error("Dictionary indexed with pure native class %s", right->type->getFullName().c_str());
+                            return p;
+                        }
+
+                       if (!right->type->castToType(vd->templateInfo->types[0]->type))
+                        {
+                            error("unable to cast %s to %s for Dictionary index", right->type->getFullName().c_str(), vd->templateInfo->types[0]->type->getFullName().c_str());
+                            return p;
+                        }
+ 
                     }
                     else
                     {
@@ -1598,6 +1611,15 @@ public:
         expression = (DictionaryLiteral *)TraversalVisitor::visit(expression);
 
         expression->type = Scope::resolveType("Dictionary");
+
+        for (size_t i = 0; i  < expression->pairs.size(); i++)
+        {
+            Expression* key = expression->pairs[i]->key;
+            if (key->type && key->type->isNativePure())
+            {
+                error("Pure native type %s used as Dictionary key", key->type->getFullName().c_str());
+            }
+        }
 
         return expression;
     }

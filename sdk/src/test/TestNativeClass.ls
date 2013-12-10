@@ -216,9 +216,17 @@ class TestNativeClass extends Test
         assert(testConstruct.boolValue);        
 
         assert(!!(testConstruct.numberValue == 0));        
-        assert(!testConstruct.numberValue);        
+        assert(!testConstruct.numberValue);    
 
-        
+        // Compiler Error
+        // var testPureNativeKeyDecl = new Dictionary.<MyNativeClass, MyNativeClass>;
+
+        // Compiler Error
+        //var testPureNativeKeyAccess = {new MyNativeClass:100};
+
+        //var testPureNativeKeyAccess = {};
+        //testPureNativeKeyAccess[new MyNativeClass] = "This is a compiler error";
+
     }
     
     function TestNativeClass()
