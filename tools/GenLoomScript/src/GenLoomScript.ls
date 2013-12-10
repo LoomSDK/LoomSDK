@@ -56,6 +56,20 @@ package
                 File.copy("../../sdk/src/" + source, loomArtifacts + "/sdk/src/" + source);                       
             }
 
+
+            for each (source in testSources)
+            {
+                var dest = source.substr(8);
+                destFolder = loomArtifacts + "/test/" + Path.folderFromPath(dest);
+                Path.makeDir(destFolder);
+                File.copy("../../" + source, loomArtifacts + "/test/" + dest);                    
+            }
+
+            for each (source in testBuildFiles)
+            {
+                File.copy("../../sdk/src/" + source, loomArtifacts + "/test/" + source);                       
+            }
+
             Path.makeDir(loomArtifacts + "/source/tools/lsc");
             File.copy("tools/lsc/main.cpp", loomArtifacts + "/source/tools/lsc/main.cpp");                       
 
@@ -203,6 +217,11 @@ package
 
             }
 
+            for each (path in testPaths)
+            {
+                walkSDKPath(path, testSources);    
+            }
+
         }
 
         var loomRoot = "../../";
@@ -229,9 +248,15 @@ package
         var sdkSources = new Vector.<String>;
         var sdkSystemSources = new Vector.<String>;
 
-        var sdkBuildFiles:Vector.<String> = ["Benchmarks.build", "Compiler.build", "LDB.build", "System.build", "Tests.build", "UnitTest.build"];
+        var testSources = new Vector.<String>;
 
-        var sdkPaths:Vector.<String> = [ "sdk/src/system", "sdk/src/test", "sdk/src/benchmark", "sdk/src/compiler", "sdk/src/unittest"];
+        var sdkBuildFiles:Vector.<String> = ["System.build"];
+
+        var testBuildFiles:Vector.<String> = ["Tests.build", "UnitTest.build"];
+
+        var sdkPaths:Vector.<String> = [ "sdk/src/system"];
+
+        var testPaths:Vector.<String> = ["sdk/src/test", "sdk/src/unittest"];
 
         var corePaths:Vector.<String> = [ "loom/common/xml", "loom/common/utils", "loom/common/core", "loom/common/platform", "loom/script" ];
 

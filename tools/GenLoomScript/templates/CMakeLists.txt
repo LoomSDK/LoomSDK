@@ -52,8 +52,8 @@ get_target_property(BIN2CBIN bin2c LOCATION)
 
 add_custom_command(TARGET bin2c
     POST_BUILD
-    COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/artifacts
-    COMMAND cp ${BIN2CBIN} ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/bin2c    
+    COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/temp && mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/bin && mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/libs
+    COMMAND cp ${BIN2CBIN} ${CMAKE_CURRENT_SOURCE_DIR}/temp/bin2c
 )
 
 #lscbootstrap
@@ -64,19 +64,19 @@ get_target_property(LSCBOOTSTRAPBIN lscbootstrap LOCATION)
 
 add_custom_command(TARGET lscbootstrap
     POST_BUILD
-    COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/artifacts
-    COMMAND cp ${LSCBOOTSTRAPBIN} ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/lscbootstrap
+    COMMAND mkdir -p ${CMAKE_CURRENT_SOURCE_DIR}/temp
+    COMMAND cp ${LSCBOOTSTRAPBIN} ${CMAKE_CURRENT_SOURCE_DIR}/temp/lscbootstrap
 )
 
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/system_loomlib.c
-    COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/sdk && ../artifacts/lscbootstrap System.build
-    COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/sdk && ../artifacts/bin2c -o ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/system_loomlib.c --name system_loomlib ./libs/System.loomlib 
-    DEPENDS lscbootstrap ${SDK_SOURCES}
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/temp/system_loomlib.c
+    COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/sdk && ../temp/lscbootstrap System.build
+    COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/sdk && ../temp/bin2c -o ${CMAKE_CURRENT_SOURCE_DIR}/temp/system_loomlib.c --name system_loomlib ./libs/System.loomlib
+    DEPENDS lscbootstrap bin2c ${SDK_SOURCES}
     COMMENT "Building System Loom Library" )
 
 
-add_executable(lsc source/tools/lsc/main.cpp ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/system_loomlib.c)
+add_executable(lsc source/tools/lsc/main.cpp ${CMAKE_CURRENT_SOURCE_DIR}/temp/system_loomlib.c)
 set_target_properties(lsc PROPERTIES COMPILE_DEFINITIONS "LOOM_EMBEDDED_SYSTEMLIB=1")
 target_link_libraries(lsc loomscript -lz -lpthread)
 
