@@ -137,9 +137,24 @@ void ModuleBuildInfo::parse(json_t *json)
 
     int numPaths = (int)json_array_size(lsourcePath);
 
+    char buildPath[1024];
+    strncpy(buildPath, buildInfo->getBuildFilePath().c_str(), 1024);
+
+    for (int i = strlen(buildPath) - 1; i >= 0; i--)
+    {
+        if (buildPath[i] == '\\' || buildPath[i] == '/')
+        {
+            buildPath[i] = 0;
+            break;
+        }
+    }
+
     for (int i = 0; i < numPaths; i++)
     {
-        utString path = json_string_value(json_array_get(lsourcePath, i));
+        // relative to the build file
+        utString path = buildPath;
+        path += platform_getFolderDelimiter();
+        path += json_string_value(json_array_get(lsourcePath, i));
 
         sourcePath.push_back(path);
     }
@@ -148,19 +163,15 @@ void ModuleBuildInfo::parse(json_t *json)
     {
         utString path = sourcePath[i];
 
-        utString filename = buildInfo->buildFileDirectory;
-
-        if (filename.size() && (filename[filename.size() - 1] != *platform_getFolderDelimiter()))
+        if (path.size() && (path[path.size() - 1] != *platform_getFolderDelimiter()))
         {
-            if (path.size() && filename.size())
+            if (path.size() && path.size())
             {
-                filename += platform_getFolderDelimiter();
+                path += platform_getFolderDelimiter();
             }
         }
 
-        filename += path;
-
-        recursiveGlob(filename.c_str(), "ls", sourceFiles);
+        recursiveGlob(path.c_str(), "ls", sourceFiles);
     }
 
     for (UTsize i = 0; i < sourceFiles.size(); i++)

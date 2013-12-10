@@ -188,6 +188,13 @@ int main(int argc, const char **argv)
             i++;      // skip the filename
             continue; // unit tests option
         }
+        else if (!strcmp(argv[i], "--classpath") && i + 1 < argc)
+        {
+            i++;      // add the sourcepath
+            LSCompiler::addSourcePath(argv[i]);
+            continue;
+
+        }
         else if (!strcmp(argv[i], "--root"))
         {
             i++;
@@ -211,7 +218,9 @@ int main(int argc, const char **argv)
             printf("--unittest [--xmlfile filename.xml]: run unit tests with optional xml file output\n");
             printf("--root: set the SDK root\n");
             printf("--symbols : dump symbols for binary executable\n");
+            printf("--classpath [--classpath ../moresources]: add an additional source folder\n");
             printf("--help: display this help\n");
+            return EXIT_SUCCESS;
         }
         else if (strstr(argv[i], ".build"))
         {
