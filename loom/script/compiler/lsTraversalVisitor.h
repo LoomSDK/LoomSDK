@@ -352,11 +352,9 @@ public:
     Statement *visit(IfStatement *ifStatement)
     {
         lastVisited = ifStatement;
-
         ifStatement->expression     = visitExpression(ifStatement->expression);
         ifStatement->trueStatement  = visitStatement(ifStatement->trueStatement);
-        ifStatement->falseStatement = visitStatement(
-            ifStatement->falseStatement);
+        ifStatement->falseStatement = visitStatement(ifStatement->falseStatement);            
         return ifStatement;
     }
 
@@ -544,12 +542,9 @@ public:
 
     Expression *visit(ConditionalExpression *conditionalExpression)
     {
-        conditionalExpression->expression = visitExpression(
-            conditionalExpression->expression);
-        conditionalExpression->trueExpression = visitExpression(
-            conditionalExpression->trueExpression);
-        conditionalExpression->falseExpression = visitExpression(
-            conditionalExpression->falseExpression);
+        conditionalExpression->expression = visitExpression(conditionalExpression->expression);            
+        conditionalExpression->trueExpression = visitExpression(conditionalExpression->trueExpression);        
+        conditionalExpression->falseExpression = visitExpression(conditionalExpression->falseExpression);
 
         lastVisited = conditionalExpression;
 

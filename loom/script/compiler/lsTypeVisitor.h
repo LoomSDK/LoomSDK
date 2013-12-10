@@ -79,6 +79,18 @@ public:
         visitor = this;
     }
 
+    bool checkStructCoerceToBooleanError(Type* type)
+    {
+        if (type->isStruct())
+        {
+            error("Boolean operation on Struct type: %s", type->getFullName().c_str());
+            return true;
+        }
+
+        return false;
+
+    }
+
     // checks for access violation on member for current class
     // public, private, protected
     bool checkAccessError(MemberInfo *memberInfo)
@@ -1917,17 +1929,6 @@ public:
         return NULL;
     }
 
-    Expression *visit(ConditionalExpression *expression)
-    {
-        expression = (ConditionalExpression *)TraversalVisitor::visit(
-            expression);
-
-        //TODO: verify false expression type
-        expression->type = expression->trueExpression->type;
-
-        return expression;
-    }
-
     Expression *visit(BinaryOperatorExpression *expression)
     {
         Tokens *tok = Tokens::getSingletonPtr();
@@ -2519,13 +2520,18 @@ public:
 
     Expression *visit(UnaryOperatorExpression *expression)
     {
-        expression->subExpression->visitExpression(this);
+        Expression* subExpr = expression->subExpression;
+        subExpr->visitExpression(this);
 
         int c = expression->op->value.str()[0];
 
         if (c == '!')
         {
             expression->type = Scope::resolveType("system.Boolean");
+
+            if (checkStructCoerceToBooleanError(subExpr->type))
+                return expression;
+
         }
         else if (c == '-')
         {
@@ -2710,6 +2716,53 @@ public:
         error("multiple assignment expression is not implemented");
         return expression;
     }
+
+    Statement *visit(IfStatement *ifStatement)
+    {
+        TraversalVisitor::visit(ifStatement);
+
+        if (ifStatement->expression)
+            checkStructCoerceToBooleanError(ifStatement->expression->type);
+
+        return ifStatement;
+    }
+
+    Statement *visit(WhileStatement *whileStatement)
+    {
+        TraversalVisitor::visit(whileStatement);
+
+        if (whileStatement->expression)
+            checkStructCoerceToBooleanError(whileStatement->expression->type);
+
+        return whileStatement;
+    }
+
+    Statement *visit(ForStatement *forStatement)
+    {
+        TraversalVisitor::visit(forStatement);
+
+        if (forStatement->condition)
+            checkStructCoerceToBooleanError(forStatement->condition->type);
+
+        return forStatement;
+    }
+
+    Expression *visit(ConditionalExpression *expression)
+    {
+        expression = (ConditionalExpression *)TraversalVisitor::visit(expression);
+            
+        //LOOM-1837: verify false expression type
+        expression->type = expression->trueExpression->type;
+
+        if (expression->expression)
+            checkStructCoerceToBooleanError(expression->expression->type);
+
+        return expression;
+    }
+
+
+
+
 };
 }
 #endif
