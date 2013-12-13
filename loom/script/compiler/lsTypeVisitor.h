@@ -81,6 +81,10 @@ public:
 
     bool checkStructCoerceToBooleanError(Type* type)
     {
+        // this can happen if typing fails elsewhere, which we'll already have an error for
+        if (!type)
+            return false;
+
         if (type->isStruct())
         {
             error("Boolean operation on Struct type: %s", type->getFullName().c_str());
