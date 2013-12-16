@@ -89,6 +89,8 @@ package
         {
             Path.walkFiles(loomRoot + path, function(file:String) {
 
+                file = normalizePath(file);
+
                 var filename = file.slice(loomRoot.length); 
 
                 if (sourceExclusions.contains(filename))
@@ -111,7 +113,7 @@ package
                 if (lastIndex == -1)
                     return;
 
-                var ext = filename.substr(lastIndex);    
+                var ext = filename.substr(lastIndex);
 
                 if (sourceFilters.contains(ext))
                     sources.push(filename);
@@ -125,6 +127,9 @@ package
         function walkSDKPath(path:String, sources:Vector.<String>)
         {
             Path.walkFiles(loomRoot + path, function(file:String) {
+
+                file = normalizePath(file);
+                
                 var filename = file.slice(loomRoot.length); 
                 if (sdkExclusions.contains(filename))
                     return;
@@ -222,6 +227,12 @@ package
                 walkSDKPath(path, testSources);    
             }
 
+        }
+
+        private static function normalizePath(path:String):String
+        {
+            var v = path.split("\\");
+            return v.join("/");
         }
 
         var loomRoot = "../../";
