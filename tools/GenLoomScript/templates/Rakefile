@@ -20,25 +20,22 @@ end
 
 namespace :build do
 
-desc "Builds OS X"
-
   task :osx do
-
       puts "== Building OS X =="
       FileUtils.mkdir_p("build/cmake_osx")    
       Dir.chdir("build/cmake_osx") do
         sh "cmake ../../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine}"
         sh "xcodebuild -configuration #{$buildTarget}"
       end
-      
-      #Dir.chdir("sdk") do
-      #   sh "../artifacts/lsc --symbols --verbose Tests.build"
-      #end
-
-      #copy bin
-      #FileUtils.cp_r("sdk/bin", "artifacts/")
-
   end
 
+  task :windows do
+      puts "== Building Windows =="
+      FileUtils.mkdir_p("build/cmake_windows")    
+      Dir.chdir("build/cmake_windows") do
+        sh "cmake ../../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -G \"NMake Makefiles\" -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine}"
+        sh "nmake"
+      end
+  end
 
 end

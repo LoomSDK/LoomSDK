@@ -216,7 +216,10 @@ BuildInfo *BuildInfo::createDefaultBuildFile()
     // embedded System.loomlib is available
     if (LSCompiler::getEmbeddedSystemAssembly())
     {
-        defaultLibs.push_back("libs/System.loomlib");
+        utString systemLoomLib = "libs";
+        systemLoomLib += platform_getFolderDelimiter();
+        systemLoomLib += "System.loomlib";
+        defaultLibs.push_back(systemLoomLib);
     }
 
     for (UTsize i = 0; i < defaultLibs.size(); i++)

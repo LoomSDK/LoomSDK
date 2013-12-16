@@ -273,7 +273,7 @@ package
 
         var compilerPaths:Vector.<String> = ["loom/script/compiler", "loom/script/native/core/compiler"];
 
-        var vendorPaths:Vector.<String> = [ "loom/vendor/jansson", "loom/vendor/seatest", "loom/vendor/jemalloc-3.4.0" ];
+        var vendorPaths:Vector.<String> = [ "loom/vendor/jansson", "loom/vendor/seatest", "loom/vendor/jemalloc-3.4.0", "loom/vendor/zlib" ];
 
         var luaPaths:Vector.<String> = [ "loom/vendor/lua/src" ];
 
