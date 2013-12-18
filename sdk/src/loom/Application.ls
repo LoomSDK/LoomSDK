@@ -219,6 +219,11 @@ package loom
             Profiler.dump();
         }
 
+        protected function onDumpManagedNatives():void
+        {
+            VM.getExecutingVM().dumpManagedNatives();
+        }
+
         protected function onReload():void
         {
             Application.reloadMainAssembly();
@@ -287,6 +292,7 @@ package loom
             commandManager.registerCommand("terminate", onTerminate);
             commandManager.registerCommand("profilerEnable", onProfilerEnable);
             commandManager.registerCommand("profilerDump", onProfilerDump);
+            commandManager.registerCommand("dumpManagedNatives", onDumpManagedNatives);
             group.registerManager(commandManager);
         }
 
