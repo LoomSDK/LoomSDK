@@ -18,12 +18,12 @@
 			<key>star</key>
 			<dict>
 				<key>anchorpoint</key>
-                <string>{ 0.5000,0.4922 }</string>
+                <string>{ 0.5000,0.5000 }</string>
 				<key>fixtures</key>
 				<array>
 
 					<dict>
-                        <key>density</key> <real>2</real>
+                        <key>density</key> <real>1</real>
                         <key>friction</key> <real>0.6</real>
                         <key>restitution</key> <real>0.3</real>
                         <key>filter_categoryBits</key> <integer>1</integer>
@@ -36,42 +36,11 @@
 						<key>polygons</key>
 						<array>
 							<array>	
-								<string>{ 61.000,-88.500 }</string>	
-								<string>{ 72.500,-66.000 }</string>	
-								<string>{ 67.000,-25.500 }</string>	
-								<string>{ 40.000,52.500 }</string>	
-								<string>{ 20.500,89.000 }</string>	
-								<string>{ -40.500,53.000 }</string>	
-								<string>{ -2.000,-75.500 }</string>	
-								<string>{ 36.000,-93.500 }</string>
-							</array>
-							<array>	
-								<string>{ 98.500,11.000 }</string>	
-								<string>{ 89.000,39.500 }</string>	
-								<string>{ 40.000,52.500 }</string>	
-								<string>{ 67.000,-25.500 }</string>
-							</array>
-							<array>	
-								<string>{ -98.500,29.000 }</string>	
-								<string>{ -97.000,3.500 }</string>	
-								<string>{ -67.500,-29.000 }</string>	
-								<string>{ -2.000,-75.500 }</string>	
-								<string>{ -40.500,53.000 }</string>	
-								<string>{ -85.000,43.500 }</string>
-							</array>
-							<array>	
-								<string>{ -54.000,-92.500 }</string>	
-								<string>{ -34.000,-92.500 }</string>	
-								<string>{ -2.000,-75.500 }</string>	
-								<string>{ -67.500,-29.000 }</string>	
-								<string>{ -70.000,-79.500 }</string>
-							</array>
-							<array>	
-								<string>{ -40.500,53.000 }</string>	
-								<string>{ 20.500,89.000 }</string>	
-								<string>{ 2.000,97.500 }</string>	
-								<string>{ 1.000,97.500 }</string>	
-								<string>{ -24.500,86.000 }</string>
+								<string>{ 31.000,7.000 }</string>	
+								<string>{ 0.000,30.000 }</string>	
+								<string>{ -31.000,8.000 }</string>	
+								<string>{ -19.000,-29.000 }</string>	
+								<string>{ 18.000,-29.000 }</string>
 							</array>
 						</array>
                     </dict>

@@ -184,4 +184,15 @@ package loom.box2d
         public native function dump():void;
     }
 
+    [Native(managed)]
+    final public native class b2ShapeCache
+    {
+        public static native function sharedB2ShapeCache():b2ShapeCache;
+        
+        public native function reset():void;
+        public native function addFixturesToBody(body:b2Body, shapeName:String):void;
+        public native function addShapesWithFile(plistPath:String, vertexScale:b2Vec2, ptm:Number=0):void;
+        public native function anchorPointForShape(shapeName:String):b2Vec2;
+    }
+
 }

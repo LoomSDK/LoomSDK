@@ -18,14 +18,278 @@
  * ===========================================================================
  */
 
+//  Based on
+//  https://github.com/AndreasLoew/PhysicsEditor-Cocos2d-x-Box2d/blob/master
+//  /Demo/generic-box2d-plist/GB2ShapeCache-x.cpp
+
+//  GB2ShapeCache-x.cpp
+//  
+//  Loads physics sprites created with http://www.PhysicsEditor.de
+//  To be used with cocos2d-x
+//
+//  Generic Shape Cache for box2d
+//
+//  Created by Thomas Broquist
+//
+//      http://www.PhysicsEditor.de
+//      http://texturepacker.com
+//      http://www.code-and-web.de
+//  
+//  All rights reserved.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//  
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
+//
+
 #include "loom/common/core/log.h"
 #include "loom/script/loomscript.h"
 #include "loom/script/native/lsNativeDelegate.h"
 #include "loom/vendor/box2d/Box2D.h"
+#include "cocoa/CCNS.h"
+#include "cocoa/CCObject.h"
+#include "cocoa/CCArray.h"
+#include "cocoa/CCDictionary.h"
+#include "platform/CCFileUtils.h"
+#include <map>
 
 using namespace LS;
+using namespace cocos2d;
 
 lmDefineLogGroup(gBox2DLogGroup, "Loom.Box2D", 1, 0);
+
+class BodyDef;
+class b2Body;
+
+class b2ShapeCache {
+public:
+    // Static interface
+    static b2ShapeCache* sharedB2ShapeCache(void);
+        
+    bool init();                        
+    void addShapesWithFile(const std::string &plist, b2Vec2 vertexScale, float ptm=0);
+    void addFixturesToBody(b2Body *body, const std::string &shape);
+    b2Vec2& anchorPointForShape(const std::string &shape);
+    void reset();
+    float getPtmRatio() { return ptmRatio; }
+    ~b2ShapeCache() {}
+        
+private:
+    std::map<std::string, BodyDef *> shapeObjects;
+    b2ShapeCache(void) {}
+    float ptmRatio;
+};
+
+/**
+ * Internal class to hold the fixtures
+ */
+class FixtureDef {
+public:
+    FixtureDef()
+    : next(NULL) {}
+    
+    ~FixtureDef() {
+        delete next;
+        delete fixture.shape;
+    }
+    
+    FixtureDef *next;
+    b2FixtureDef fixture;
+    int callbackData;
+};
+
+class BodyDef {
+public:
+    BodyDef()
+    : fixtures(NULL) {}
+    
+    ~BodyDef() {
+        if (fixtures)
+            delete fixtures;
+    }
+    
+    FixtureDef *fixtures;
+    b2Vec2 anchorPoint;
+};
+
+static b2ShapeCache *_sharedB2ShapeCache = NULL;
+
+b2ShapeCache* b2ShapeCache::sharedB2ShapeCache(void) {
+    if (!_sharedB2ShapeCache) {
+        _sharedB2ShapeCache = new b2ShapeCache();
+        _sharedB2ShapeCache->init();
+    }
+    
+    return _sharedB2ShapeCache;
+}
+
+bool b2ShapeCache::init() {
+    return true;
+}
+
+void b2ShapeCache::reset() {
+    std::map<std::string, BodyDef *>::iterator iter;
+    for (iter = shapeObjects.begin() ; iter != shapeObjects.end() ; ++iter) {
+        delete iter->second;
+    }
+    shapeObjects.clear();
+}
+
+void b2ShapeCache::addFixturesToBody(b2Body *body, const std::string &shape) {
+    std::map<std::string, BodyDef *>::iterator pos = shapeObjects.find(shape);
+    assert(pos != shapeObjects.end());
+    
+    BodyDef *so = (*pos).second;
+
+    FixtureDef *fix = so->fixtures;
+    while (fix) {
+        body->CreateFixture(&fix->fixture);
+        fix = fix->next;
+    }
+}
+
+b2Vec2& b2ShapeCache::anchorPointForShape(const std::string &shape) {
+    std::map<std::string, BodyDef *>::iterator pos = shapeObjects.find(shape);
+    assert(pos != shapeObjects.end());
+    
+    BodyDef *bd = (*pos).second;
+    return bd->anchorPoint;
+}
+
+
+void b2ShapeCache::addShapesWithFile(const std::string &plist, b2Vec2 vertexScale, float ptm) {
+    
+    CCDictionary *dict = CCDictionary::createWithContentsOfFile(plist.c_str());
+    CCAssert(dict != NULL, "Shape-file not found");
+    CCAssert(dict->count() != 0, "plist file empty or not existing");
+    
+    CCDictionary *metadataDict = (CCDictionary *)dict->objectForKey("metadata");
+    int format = metadataDict->valueForKey("format")->intValue();
+    ptmRatio = metadataDict->valueForKey("ptm_ratio")->floatValue();
+    if (ptm <= 0)
+        ptm = ptmRatio;
+    CCLOG("ptmRatio = %f",ptmRatio);
+    CCAssert(format == 1, "Format not supported");
+    
+    CCDictionary *bodyDict = (CCDictionary *)dict->objectForKey("bodies");
+
+    b2Vec2 vertices[b2_maxPolygonVertices];
+    
+    CCDictElement *dictElem;
+    std::string bodyName;
+    CCDictionary *bodyData;
+    //iterate body list
+    CCDICT_FOREACH(bodyDict,dictElem )
+    {
+        bodyData = (CCDictionary*)dictElem->getObject();
+        bodyName = dictElem->getStrKey();
+        
+        
+        BodyDef *bodyDef = new BodyDef();
+        CCPoint a = CCPointFromString(bodyData->valueForKey("anchorpoint")->getCString());
+        float32 ax = (vertexScale.x >= 0) ? (float32)a.x : (float32)(1-a.x);
+        float32 ay = (vertexScale.y >= 0) ? (float32)a.y : (float32)(1-a.y);
+        bodyDef->anchorPoint = b2Vec2(ax, ay);
+        CCArray *fixtureList = (CCArray*)(bodyData->objectForKey("fixtures"));
+        FixtureDef **nextFixtureDef = &(bodyDef->fixtures);
+        
+        //iterate fixture list
+        CCObject *arrayElem;
+        CCARRAY_FOREACH(fixtureList, arrayElem)
+        {
+            b2FixtureDef basicData;
+            CCDictionary* fixtureData = (CCDictionary*)arrayElem;
+            
+            basicData.filter.categoryBits = fixtureData->valueForKey("filter_categoryBits")->intValue();
+            basicData.filter.maskBits = fixtureData->valueForKey("filter_maskBits")->intValue();
+            basicData.filter.groupIndex = fixtureData->valueForKey("filter_groupIndex")->intValue();
+            basicData.friction = fixtureData->valueForKey("friction")->floatValue();
+            basicData.density = fixtureData->valueForKey("density")->floatValue();
+            basicData.restitution = fixtureData->valueForKey("restitution")->floatValue();
+            basicData.isSensor = (bool)fixtureData->valueForKey("isSensor")->intValue();
+           
+            int callbackData = fixtureData->valueForKey("userdataCbValue")->intValue();
+            
+            const char* fixtureType = fixtureData->valueForKey("fixture_type")->getCString();
+
+            if (strcmp(fixtureType, "POLYGON")==0) {
+                CCArray *polygonsArray = (CCArray *)(fixtureData->objectForKey("polygons"));
+                
+                CCObject *dicArrayElem;
+                CCARRAY_FOREACH(polygonsArray, dicArrayElem)
+                {
+                    FixtureDef *fix = new FixtureDef();
+                    fix->fixture = basicData; // copy basic data
+                    fix->callbackData = callbackData;
+                    
+                    b2PolygonShape *polyshape = new b2PolygonShape();
+                    int vindex = 0;
+                    
+                    CCArray *polygonArray = (CCArray*)dicArrayElem;
+                    
+                    assert(polygonArray->count() <= b2_maxPolygonVertices);
+                    
+                    CCObject *piter;
+                    CCARRAY_FOREACH(polygonArray, piter)
+                    {
+                        CCString *verStr = (CCString*)piter;
+                        CCPoint offset = CCPointFromString(verStr->getCString());
+                        vertices[vindex] = b2Vec2((float32)(offset.x / ptmRatio) * vertexScale.x, (float32)(offset.y / ptmRatio) * vertexScale.y);
+                        vindex++;
+                    }
+                    
+                    polyshape->Set(vertices, vindex);
+                    fix->fixture.shape = polyshape;
+                    
+                    // create a list
+                    *nextFixtureDef = fix;
+                    nextFixtureDef = &(fix->next);
+                }
+
+            }
+            else if (strcmp(fixtureType, "CIRCLE")==0) {
+                FixtureDef *fix = new FixtureDef();
+                fix->fixture = basicData; // copy basic data
+                fix->callbackData = callbackData;
+
+                CCDictionary *circleData = (CCDictionary *)fixtureData->objectForKey("circle");
+
+                b2CircleShape *circleShape = new b2CircleShape();
+                
+                circleShape->m_radius = (circleData->valueForKey("radius")->floatValue() / ptmRatio);
+                CCPoint p = CCPointFromString(circleData->valueForKey("position")->getCString());
+                circleShape->m_p = b2Vec2((float32)(p.x / ptmRatio), (float32)(p.y / ptmRatio));
+                fix->fixture.shape = circleShape;
+                
+                // create a list
+                *nextFixtureDef = fix;
+                nextFixtureDef = &(fix->next);
+
+            }
+            else {
+                CCAssert(0, "Unknown fixtureType");
+            }
+        }
+        // add the body element to the hash
+        shapeObjects[bodyName] = bodyDef;
+
+    }
+
+}
 
 static int registerLoomBox2D(lua_State *L)
 {
@@ -340,6 +604,17 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
     
+        .beginClass<b2ShapeCache>("b2ShapeCache")
+
+            .addStaticMethod("sharedB2ShapeCache", &b2ShapeCache::sharedB2ShapeCache)
+
+            .addMethod("reset", &b2ShapeCache::reset)
+            .addMethod("addFixturesToBody", &b2ShapeCache::addFixturesToBody)
+            .addMethod("addShapesWithFile", &b2ShapeCache::addShapesWithFile)
+            .addMethod("anchorPointForShape", &b2ShapeCache::anchorPointForShape)
+
+        .endClass()
+
     .endPackage();
 
     return 0;
@@ -362,4 +637,5 @@ void installLoomBox2D()
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2Body, registerLoomBox2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2Joint, registerLoomBox2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2World, registerLoomBox2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(b2ShapeCache, registerLoomBox2D);
 }
