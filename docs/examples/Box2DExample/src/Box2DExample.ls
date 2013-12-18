@@ -57,17 +57,13 @@ package
                 pgo.sprite.y = b.getPosition().y * ptmRatio;
                 pgo.sprite.rotation = b.getAngle();
 
-                // clean up bodies that fell out of the visible area
-                // actually, removing the sprite from the stage is a hit on performance
-                // and the world does a great job GCing bodies
-                /*
+                // clean up bodies that fall out of the visible area
                 if (b.getPosition().y > (stage.stageHeight + Math.max(pgo.sprite.width, pgo.sprite.height))/ptmRatio)
                 {
                     stage.removeChild(pgo.sprite);
                     world.destroyBody(b);
                 }
-                */
-
+                
                 b = b.getNext();
             }
         }
