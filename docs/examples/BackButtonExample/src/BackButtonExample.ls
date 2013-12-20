@@ -13,8 +13,8 @@ package
     import loom2d.events.KeyboardEvent;
     import loom2d.events.TouchPhase;        
 
-    import loom.animation.LoomTween;
-    import loom.animation.LoomEaseType;
+    import loom2d.Loom2D;
+    import loom2d.animation.Transitions;
 
     /**
      *  Simple example to showcase the handling of back-button presses on Android
@@ -66,16 +66,16 @@ package
 
         protected function goToNextScreen()
         {
-            LoomTween.to(sprite, 0.5, {"x": -300, "ease": LoomEaseType.EASE_IN_BACK});
-            LoomTween.to(label, 0.5, {"x": -300, "ease": LoomEaseType.EASE_IN_BACK});
-            LoomTween.to(backLabel, 0.5, {"x": stage.stageWidth/2 - 160, "ease": LoomEaseType.EASE_IN_BACK});
+            Loom2D.juggler.tween(sprite, 0.5, {"x": -300, "transition": Transitions.EASE_IN_BACK});
+            Loom2D.juggler.tween(label, 0.5, {"x": -300, "transition": Transitions.EASE_IN_BACK});
+            Loom2D.juggler.tween(backLabel, 0.5, {"x": stage.stageWidth/2 - 160, "transition": Transitions.EASE_IN_BACK});
         }
 
         protected function goToPreviousScreen(event:KeyboardEvent)
         {
-            LoomTween.to(sprite, 0.5, {"x": 240, "ease": LoomEaseType.EASE_OUT_BACK});
-            LoomTween.to(label, 0.5, {"x": stage.stageWidth/2 - 120, "ease": LoomEaseType.EASE_OUT_BACK});
-            LoomTween.to(backLabel, 0.5, {"x": 720, "ease": LoomEaseType.EASE_OUT_BACK});
+            Loom2D.juggler.tween(sprite, 0.5, {"x": 240, "transition": Transitions.EASE_OUT_BACK});
+            Loom2D.juggler.tween(label, 0.5, {"x": stage.stageWidth/2 - 120, "transition": Transitions.EASE_OUT_BACK});
+            Loom2D.juggler.tween(backLabel, 0.5, {"x": 720, "transition": Transitions.EASE_OUT_BACK});
         }
     }
 }
