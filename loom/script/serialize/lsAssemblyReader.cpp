@@ -25,20 +25,27 @@
 #include "loom/script/common/lsError.h"
 #include "loom/common/utils/utBase64.h"
 #include "loom/common/core/assert.h"
-#include "loom/script/compiler/LSCompiler.h"
 
-namespace LS {
+#if LOOM_PLATFORM != LOOM_PLATFORM_IOS && LOOM_PLATFORM != LOOM_PLATFORM_ANDROID 
+#include "loom/script/compiler/LSCompiler.h"
+#endif
+
+namespace LS 
+{
+
 utHashTable<utHashedString, utString> AssemblyReader::linkedAssemblies;
 utArray<utString> AssemblyReader::libraryAssemblyPath;
 
 bool AssemblyReader::loadLibraryAssemblyJSON(const utString& assemblyName, utString& json)
 {
 
+#if LOOM_PLATFORM != LOOM_PLATFORM_IOS && LOOM_PLATFORM != LOOM_PLATFORM_ANDROID 
     if (assemblyName == "System" && LSCompiler::getEmbeddedSystemAssembly())
     {
         json = LSCompiler::getEmbeddedSystemAssembly();
         return true;
     }
+#endif    
 
     for (UTsize i = 0; i < libraryAssemblyPath.size(); i++)
     {
