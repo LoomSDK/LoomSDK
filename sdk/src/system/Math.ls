@@ -75,9 +75,19 @@ final class Math {
     public static const SQRT2 : Number = 1.4142135623730951;    
 
     /**
-     *  Returns a pseudo-random number n, where 0 <= n < 1.
+     *  Returns a pseudo-random number n, where 0 <= n <= 1.
      */
     public static native function random():Number;
+    
+    /**
+     *  Returns a pseudo-random number n, where min <= n <= max.
+     */
+    public static native function randomRange(min:Number, max:Number):Number;
+    
+    /**
+     *  Returns a pseudo-random integer value n, where min <= n <= max.
+     */
+    public static native function randomRangeInt(min:int, max:int):int;
     
     /**
      *  Computes and returns an absolute value for the number specified by the parameter value.
