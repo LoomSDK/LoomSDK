@@ -22,8 +22,8 @@ package poly.gameplay
 
    import loom2d.ui.SimpleLabel;
 
-   import loom.animation.LoomTween;
-   import loom.animation.LoomEaseType;
+   import loom2d.Loom2D;
+   import loom2d.animation.Transitions;
 
    delegate PolyLevelCompletionCallback(exploded:int, total:int):void;
 
@@ -139,19 +139,9 @@ package poly.gameplay
          return lgo;         
       }
 
-      public function reactionStage2(tween:LoomTween):void
+      public function reactionComplete(target:PolyMover):void
       {
-         LoomTween.to(tween.targetObj, 0.3, {"scale": 1, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += reactionStage3;
-      }
-
-      public function reactionStage3(tween:LoomTween):void
-      {
-         LoomTween.to(tween.targetObj, 0.3, {"scale": 0, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += reactionStage4;
-      }
-
-      public function reactionStage4(tween:LoomTween):void
-      {
-         reactions.remove(tween.targetObj);
+         reactions.remove(target);
       }
 
       public function onTouchBegan(te:TouchEvent):void
@@ -170,7 +160,9 @@ package poly.gameplay
             var lgo:LoomGameObject = spawnReaction(p.x, p.y);
             var mover:PolyMover = lgo.lookupComponentByName("mover") as PolyMover;
 
-            LoomTween.to(mover, 0.3, {"scale": 1, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += reactionStage2;
+            Loom2D.juggler.tween(mover, 0.3, {"scale": 1, "transition": Transitions.EASE_OUT_BOUNCE});
+            Loom2D.juggler.tween(mover, 0.3, {"scale": 1, "transition": Transitions.EASE_OUT_BOUNCE, "delay": 0.3});
+            Loom2D.juggler.tween(mover, 0.3, {"scale": 0, "transition": Transitions.EASE_OUT_BOUNCE, "delay": 0.6, "onComplete": reactionComplete, "onCompleteArgs": [ mover ]});
 
             reactions.pushSingle(mover);
          }
@@ -237,25 +229,17 @@ package poly.gameplay
 
          poly.stopped = true;
 
-         LoomTween.to(poly, 0.4, {"scale": 1, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += onPolyComplete;
+         Loom2D.juggler.tween(poly, 0.4, {"scale": 1, "transition": Transitions.EASE_OUT_BOUNCE});
+         Loom2D.juggler.tween(poly, 0.5, {"scale": 1, "transition": Transitions.EASE_OUT_BOUNCE, "delay": 0.4});
+         Loom2D.juggler.tween(poly, 0.3, {"scale": 0, "transition": Transitions.EASE_OUT_BOUNCE, "delay": 0.9, "onComplete": onPolyGone, "onCompleteArgs": [ poly ]});
 
          reactions.pushSingle(poly);
          polies.remove(poly);
       }
 
-      public function onPolyComplete(tween:LoomTween):void
+      public function onPolyGone(poly:PolyMover):void
       {
-         LoomTween.to(tween.targetObj, 0.5, {"scale": 1, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += onPolyReadyToDie;
-      }
-
-      public function onPolyReadyToDie(tween:LoomTween):void
-      {
-         LoomTween.to(tween.targetObj, 0.3, {"scale": 0, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += onPolyGone;
-      }
-
-      public function onPolyGone(tween:LoomTween):void
-      {
-         reactions.remove(tween.targetObj as PolyMover);
+         reactions.remove(poly);
       }
    }
 }

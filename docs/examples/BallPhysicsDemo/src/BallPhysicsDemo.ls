@@ -126,6 +126,8 @@ package
         // Add any managers to group here
         override public function installManagers():void
         {
+            // Call super to install default managers first
+            super.installManagers();
             Physics.init();
             physicsActive = true;            
         }

@@ -3,8 +3,8 @@ package
     import loom.platform.UserDefault;
     
     import loom.Application;    
-    import loom.animation.LoomTween;
-    import loom.animation.LoomEaseType;
+    import loom2d.Loom2D;
+    import loom2d.animation.Transitions;
     import loom2d.math.Point;
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
@@ -44,7 +44,7 @@ package
                 {   
                     var point:Point;
                     point = touch.getLocation(stage);
-                    LoomTween.to(sprite, 1, {"x": point.x, "y": point.y, "ease":LoomEaseType.EASE_OUT_ELASTIC});
+                    Loom2D.juggler.tween(sprite, 1, {"x": point.x, "y": point.y, "transition":Transitions.EASE_OUT_ELASTIC});
                     label.text = "Saved!";
                     trace("Saving Position (x: ", point.x, " y:", point.y, ")");
                     userDefaults.setFloatForKey("polyX", point.x);

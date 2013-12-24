@@ -28,12 +28,13 @@
 }
 
 #backToMenu {
-    x: 230;
+    x: 310;
     y: 480;
 }
 
 #backToMenu[normal] {
     scale: 1.5;
+    x: 230;
 }
 
 #restartButton {

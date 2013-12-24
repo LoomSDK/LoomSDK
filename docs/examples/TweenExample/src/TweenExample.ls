@@ -2,8 +2,8 @@ package
 {
 
     import loom.Application;    
-    import loom.animation.LoomTween;
-    import loom.animation.LoomEaseType;
+    import loom2d.Loom2D;
+    import loom2d.animation.Transitions;
     import loom2d.math.Point;
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
@@ -20,7 +20,7 @@ package
             stage.scaleMode = StageScaleMode.LETTERBOX;
 
             var label = new SimpleLabel("assets/fonts/Curse-hd.fnt", 320, 128);
-            label.text = "Hello LoomTween!";
+            label.text = "Hello Tween!";
 
             label.x = stage.stageWidth/2 - 320/2;
             label.y = stage.stageHeight - 164;
@@ -38,7 +38,7 @@ package
                 {
                     var point:Point;    
                     point = touch.getLocation(stage);
-                    LoomTween.to(sprite, 1, {"x": point.x, "y": point.y, "ease":LoomEaseType.EASE_OUT_ELASTIC});    
+                    Loom2D.juggler.tween(sprite, 1, {"x": point.x, "y": point.y, "transition": Transitions.EASE_OUT_ELASTIC});    
                 }
             } );            
 
