@@ -35,9 +35,10 @@ loom_allocator_t *gGFXTextureAllocator = NULL;
 
 namespace GFX
 {
-TextureInfo Texture::sTextureInfos[MAXTEXTURES];
 
+TextureInfo Texture::sTextureInfos[MAXTEXTURES];
 utHashTable<utFastStringHash, TextureID> Texture::sTexturePathLookup;
+bool Texture::sTextureAssetNofificationsEnabled = true;
 
 void Texture::initialize()
 {
@@ -251,6 +252,10 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
 
 void Texture::handleAssetNotification(void *payload, const char *name)
 {
+
+    if (!sTextureAssetNofificationsEnabled)
+        return;
+
     TextureID id = (TextureID)payload;
 
     // Get the image via the asset manager.    

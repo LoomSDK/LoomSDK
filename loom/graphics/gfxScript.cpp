@@ -248,6 +248,10 @@ static int __stdcall scaleImageOnDisk_body(void *param)
     // Post completion event.
     postResampleEvent(outPath, 1.0, inPath);
 
+    Texture::enableAssetNotifications(true);
+
+    loom_asset_preload(inPath);
+
     delete rn;
 
     return 0;
@@ -264,7 +268,9 @@ static void scaleImageOnDisk(const char *outPath, const char *inPath, int outWid
     rn->outHeight = outHeight;
     rn->preserveAspect = preserveAspect;
 
-    loom_thread_start(scaleImageOnDisk_body, rn);
+    Texture::enableAssetNotifications(false);
+
+    loom_thread_start(scaleImageOnDisk_body, rn);    
 }
 
 
