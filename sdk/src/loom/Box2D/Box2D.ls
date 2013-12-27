@@ -20,6 +20,14 @@ limitations under the License.
 
 package loom.box2d 
 {
+    import loom.LoomTextAsset;
+
+    enum b2BodyType {
+        STATIC = 0,
+        KINEMATIC,
+        DYNAMIC
+    };    
+        
     [Native(managed)]
     final public native class b2Vec2
     {        
@@ -40,7 +48,7 @@ package loom.box2d
     [Native(managed)]
     final public native class b2BodyDef
     {
-        public native var type:int;
+        public static native const type:int;
         public native var position:b2Vec2;
         public native var angle:Number;
         public native var linearVelocity:b2Vec2;
