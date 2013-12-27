@@ -250,7 +250,7 @@ static int __stdcall scaleImageOnDisk_body(void *param)
 
     Texture::enableAssetNotifications(true);
 
-    loom_asset_preload(inPath);
+    loom_asset_preload(outPath);
 
     delete rn;
 
