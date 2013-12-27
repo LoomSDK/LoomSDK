@@ -195,7 +195,9 @@ public class Cocos2dxGLSurfaceView extends GLSurfaceView {
                         }
 
                         // never use autocomplete
-                        mTextField.setInputType(mTextField.getInputType() | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);                            
+                        mTextField.setInputType(mTextField.getInputType() | 
+                                                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS |
+                                                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
 
                         InputMethodManager imm = (InputMethodManager)mainView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.showSoftInput(mTextField, 0);
