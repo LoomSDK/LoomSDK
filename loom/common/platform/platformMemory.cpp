@@ -15,7 +15,7 @@ unsigned int platform_getProcessMemory()
        &size);
 
     if( kerr == KERN_SUCCESS ) 
-        return info.resident_size
+        return info.resident_size;
 
     return 0;
 
