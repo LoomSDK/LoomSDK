@@ -1738,7 +1738,6 @@ public:
     utString filename;
 
     utArray<Statement *>       *statements;
-    utArray<Statement *>       *functions;
     utArray<CompilationUnit *> imports;
 
     utArray<utString> dependencies;
@@ -1762,7 +1761,6 @@ public:
     {
         astType        = AST_COMPILEUNIT;
         statements     = NULL;
-        functions      = NULL;
         proto          = NULL;
         classDecl      = NULL;
         pkgDecl        = NULL;

@@ -18,6 +18,10 @@ limitations under the License.
 ===========================================================================
 */
 
+#include "loom/common/platform/platform.h"
+
+#if LOOM_PLATFORM == LOOM_PLATFORM_IOS
+
 #import <Foundation/Foundation.h>
 #import <Foundation/NSSet.h>
 #import <UIKit/UIKit.h>
@@ -92,3 +96,5 @@ void platform_disableSensor(int sensor)
 
 ///TODO: LOOM-1810: screen timeout
 ///TODO: LOOM-1811: vibration
+
+#endif

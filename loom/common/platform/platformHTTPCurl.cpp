@@ -24,6 +24,7 @@
 #include <cassert>
 #include "platform.h"
 
+#ifndef LOOMSCRIPT_STANDALONE
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32 || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
 
 
@@ -286,3 +287,5 @@ void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback ca
     curl_multi_add_handle(gMultiHandle, curlHandle);
 }
 #endif
+#endif //LOOMSCRIPT_STANDALONE
+

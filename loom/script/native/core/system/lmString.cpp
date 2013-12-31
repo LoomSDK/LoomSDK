@@ -20,6 +20,8 @@
 
 #include <ctype.h>
 #include <string.h>
+#include <cstring>
+#include "loom/common/core/allocator.h"
 #include "loom/script/loomscript.h"
 #include "loom/script/runtime/lsRuntime.h"
 
@@ -524,19 +526,37 @@ public:
             lua_rawset(L, -3);
         }
 
-        char *sstr  = (char *)strdup(str);
-        char *token = strtok(sstr, delim);
+        char *start = str;
+        char *found;
+        char *temp = (char*) lmAlloc(NULL, slen + 1);
+        do {
+            found = strstr(start, delim);
 
-        while (token != NULL)
+            if (found)
+            {
+                if (found - start > 0)
+                {
+                    memcpy(temp, start, found - start);
+                    temp[found - start] = 0;
+                    lua_pushnumber(L, count++);
+                    lua_pushstring(L, temp);
+                    lua_rawset(L, -3);
+                }
+
+                start = found + dlen;
+            }
+            
+        } while (found);        
+
+        if (start - str < slen)
         {
+            strncpy(temp, start, slen + 1);
             lua_pushnumber(L, count++);
-            lua_pushstring(L, token);
-            lua_rawset(L, -3);
-
-            token = strtok(NULL, delim);
+            lua_pushstring(L, temp);
+            lua_rawset(L, -3);            
         }
 
-        free(sstr);
+        lmFree(NULL, temp);
 
         // handle the case of ..., delta, ""
         if (slen >= dlen)

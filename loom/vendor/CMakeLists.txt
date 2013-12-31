@@ -561,6 +561,38 @@ set(MINIMP3_SRC
     ${MINIMP3_ROOT}/minimp3.c
 )
 
+set(ZLIB_HDR
+    zlib/include/zconf.h
+    zlib/include/zlib.h
+    zlib/include/crc32.h
+    zlib/include/deflate.h
+    zlib/include/gzguts.h
+    zlib/include/inffast.h
+    zlib/include/inffixed.h
+    zlib/include/inflate.h
+    zlib/include/inftrees.h
+    zlib/include/trees.h
+    zlib/include/zutil.h
+)
+set(ZLIB_SRC
+    zlib/source/adler32.c
+    zlib/source/compress.c
+    zlib/source/crc32.c
+    zlib/source/deflate.c
+    zlib/source/gzclose.c
+    zlib/source/gzlib.c
+    zlib/source/gzread.c
+    zlib/source/gzwrite.c
+    zlib/source/inflate.c
+    zlib/source/infback.c
+    zlib/source/inftrees.c
+    zlib/source/inffast.c
+    zlib/source/trees.c
+    zlib/source/uncompr.c
+    zlib/source/zutil.c
+)
+
+
 if (MSVC)
 
     set (GLEW_HDR )
@@ -568,6 +600,7 @@ if (MSVC)
 
     # Enable SSL
     add_definitions(-DUSE_WINDOWS_SSPI=1 -DUSE_SCHANNEL=1)
+    add_definitions(-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
 
 elseif(APPLE)
     if (LOOM_BUILD_IOS EQUAL 1)
@@ -613,6 +646,11 @@ if (MSVC)
     list (APPEND ALL_FILES 
         ${LIBCURL_HDR} ${LIBCURL_SRC} 
     )
+
+    list (APPEND ALL_FILES 
+        ${ZLIB_SRC} ${ZLIB_HDR} 
+    )
+
 endif()
 
 if (APPLE)

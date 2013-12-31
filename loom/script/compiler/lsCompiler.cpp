@@ -64,6 +64,8 @@ utArray<BuildInfo *> LSCompiler::rootBuildDependencies;
 json_t            *LSCompiler::loomConfigJSON = NULL;
 utArray<utString> LSCompiler::loomConfigClassPath;
 
+const char* LSCompiler::embeddedSystemAssembly = NULL;
+
 lmDefineLogGroup(LSCompiler::compilerLogGroup, "loom.compiler", 1, LoomLogInfo);
 lmDefineLogGroup(LSCompiler::compilerVerboseLogGroup, "loom.compiler.verbose", 0, LoomLogInfo);
 
@@ -560,7 +562,14 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
         utString jname = json_string_value(json_object_get(jref, "name"));
 
         bool found = false;
-        for (UTsize k = 0; k < importedAssemblies.size(); k++)
+
+        // always find the System assembly, so we don't have to explicitly import from it
+        if (jname == "System")
+        {
+            found = true;
+        }
+
+        for (UTsize k = 0; k < importedAssemblies.size() && !found; k++)
         {
             if (importedAssemblies.at(k)->getName() == jname)
             {
@@ -600,7 +609,18 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
             utString libPath = sdkPath + delim + "libs" + delim + libName + ".loomlib";
 
             utArray<unsigned char> rarray;
-            lmAssert(utFileStream::tryReadToArray(libPath, rarray), "Unable to load library assembly %s", libName.c_str());
+
+            if (libName == "System" && embeddedSystemAssembly)
+            {
+                size_t embeddedSystemAssemblyLength = strlen(embeddedSystemAssembly);
+                rarray.resize(embeddedSystemAssemblyLength + 1);
+                memcpy(&rarray[0], embeddedSystemAssembly, embeddedSystemAssemblyLength + 1);
+            }
+            else
+            {
+                lmAssert(utFileStream::tryReadToArray(libPath, rarray), "Unable to load library assembly %s", libName.c_str());    
+            }
+
             utBase64 base64 = utBase64::encode64(rarray);
             json_object_set(jref, "binary", json_string(base64.getBase64().c_str()));
 

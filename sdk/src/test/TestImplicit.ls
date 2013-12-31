@@ -22,8 +22,22 @@ package tests {
 
 import unittest.Test;
 
+class TestImplicitHelper
+{
+    public var anumber:Number = 100.123;
+}
+
 class TestImplicit extends Test
 {
+
+    function usesAVariableImplicitlyDefinedAfter():String
+    {
+        // implicit of an implicit defined after the function declaration
+        var fixed = variableDeclatedAfter.anumber.toFixed(2);
+        return fixed;
+    }
+
+    var variableDeclatedAfter = new TestImplicitHelper;
 
     function takesANumber(x:Number) {
         
@@ -163,6 +177,8 @@ class TestImplicit extends Test
         for each(nn in properties) {
             assert(nn == 1003);
         }
+
+        assert (usesAVariableImplicitlyDefinedAfter() == "100.12");
         
     }
     

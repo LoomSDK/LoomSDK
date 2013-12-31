@@ -14,7 +14,7 @@ if (APPLE)
     if (LOOM_BUILD_IOS EQUAL 1)
         set (CPP_FILES ${CPP_FILES} 
             platform/platformDisplayIOS.mm 
-            platform/platformFileIOS.m 
+            platform/platformFileIOS.mm
             platform/platformHTTPOSX.mm 
             platform/platformWebViewIOS.mm 
             platform/platformAdMobIOS.mm
@@ -25,7 +25,7 @@ if (APPLE)
         )
     else()
         set (CPP_FILES ${CPP_FILES} 
-            platform/platformFileIOS.m 
+            platform/platformFileIOS.mm
             platform/platformWebViewOSX.mm 
             platform/platformHTTPOSX.mm
         )

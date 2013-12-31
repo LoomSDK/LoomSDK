@@ -34,7 +34,7 @@ Parser::Parser(const utString& input, const utString& filename)
 
     tokens = Tokens::getSingletonPtr();
 
-    lexer.setInput(input);
+    lexer.setInput(input, filename);
 
     this->filename = filename;
 
