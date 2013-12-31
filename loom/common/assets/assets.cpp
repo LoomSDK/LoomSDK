@@ -145,6 +145,7 @@ struct loom_asset_t
       Deserializing,
       Loaded,
       QueuedForUnload,
+      Failed,
    } state;
 
    // Not currently used; but allows an asset to wait until all its dependencies
@@ -752,8 +753,16 @@ void loom_asset_pump()
       // Close the file.
       platform_unmapFile(ptr);
 
-      // Instate the asset.
-      asset->instate(type, assetBits, dtor);
+      if(!assetBits)
+      {
+        // Note it as failed.
+        asset->state = loom_asset_t::Failed;
+      }
+      else
+      {
+        // Instate the asset.
+        asset->instate(type, assetBits, dtor);        
+      }
 
       // Done! Update queue.
       gAssetLoadQueue.erase((UTsize)0, true);
