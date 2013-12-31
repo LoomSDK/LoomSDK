@@ -27,6 +27,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef _MSC_VER
+#include <math.h>
+#endif
+
 #define JPGE_MAX(a,b) (((a)>(b))?(a):(b))
 #define JPGE_MIN(a,b) (((a)<(b))?(a):(b))
 
@@ -57,23 +61,23 @@ template<class T> static void RGB_to_YCC(image *img, const T *src, int width, in
 {
     for (int x = 0; x < width; x++) {
         const int r = src[x].r, g = src[x].g, b = src[x].b;
-        img[0].set_px( (0.299     * r) + (0.587     * g) + (0.114     * b)-128.0, x, y);
-        img[1].set_px(-(0.168736  * r) - (0.331264  * g) + (0.5       * b), x, y);
-        img[2].set_px( (0.5       * r) - (0.418688  * g) - (0.081312  * b), x, y);
+        img[0].set_px( (0.299f     * r) + (0.587f     * g) + (0.114f     * b)-128.0f, x, y);
+        img[1].set_px(-(0.168736f  * r) - (0.331264f  * g) + (0.5f       * b), x, y);
+        img[2].set_px( (0.5f       * r) - (0.418688f  * g) - (0.081312f  * b), x, y);
     }
 }
 
 template<class T> static void RGB_to_Y(image &img, const T *pSrc, int width, int y)
 {
     for (int x=0; x < width; x++) {
-        img.set_px((pSrc[x].r*0.299) + (pSrc[x].g*0.587) + (pSrc[x].b*0.114)-128.0, x, y);
+        img.set_px((pSrc[x].r*0.299f) + (pSrc[x].g*0.587f) + (pSrc[x].b*0.114f)-128.0f, x, y);
     }
 }
 
 static void Y_to_YCC(image *img, const uint8 *pSrc, int width, int y)
 {
     for(int x=0; x < width; x++) {
-        img[0].set_px(pSrc[x]-128.0, x, y);
+        img[0].set_px(pSrc[x]-128.0f, x, y);
         img[1].set_px(0, x, y);
         img[2].set_px(0, x, y);
     }
@@ -95,7 +99,7 @@ void image::subsample(image &luma, int v_samp) {
     if (v_samp == 2) {
         for(int y=0; y < m_y; y+=2) {
             for(int x=0; x < m_x; x+=2) {
-                m_pixels[m_x/4*y + x/2] = blend_quad(x, y, luma);
+                m_pixels[m_x/4*y + x/2] = (float) blend_quad(x, y, luma);
             }
         }
         m_x /= 2;
@@ -103,7 +107,7 @@ void image::subsample(image &luma, int v_samp) {
     } else {
         for(int y=0; y < m_y; y++) {
             for(int x=0; x < m_x; x+=2) {
-                m_pixels[m_x/2*y + x/2] = blend_dual(x, y, luma);
+                m_pixels[m_x/2*y + x/2] = (float) blend_dual(x, y, luma);
             }
         }
         m_x /= 2;
@@ -488,11 +492,11 @@ void jpeg_encoder::compute_quant_table(int32 *pDst, int16 *pSrc)
 {
     float q;
     if (m_params.m_quality < 50)
-        q = 5000.0 / m_params.m_quality;
+        q = 5000.0f / m_params.m_quality;
     else
-        q = 200.0 - m_params.m_quality * 2.0;
+        q = 200.0f - m_params.m_quality * 2.0f;
     for (int i = 0; i < 64; i++) {
-        int32 j = pSrc[i]; j = (j * q + 50L) / 100L;
+        int32 j = pSrc[i]; j = (int32) (j * q + 50L) / 100L;
         pDst[i] = JPGE_MIN(JPGE_MAX(j, 1), 1024/3);
     }
     // DC quantized worse than 8 makes overall quality fall off the cliff
@@ -585,7 +589,6 @@ void image::deinit() {
 
 void image::load_block(dct_t *pDst, int x, int y)
 {
-    uint8 *pSrc;
     for (int i = 0; i < 8; i++, pDst += 8) {
         pDst[0] = get_px(x+0, y+i);
         pDst[1] = get_px(x+1, y+i);
@@ -620,10 +623,10 @@ inline dct_t image::blend_quad(int x, int y, image &luma)
 
 inline static dctq_t round_to_zero(const dct_t j, const int32 quant) {
     if (j < 0) {
-        dctq_t jtmp = -j + (quant >> 1);
+        dctq_t jtmp = (dctq_t) (-j + (quant >> 1));
         return (jtmp < quant) ? 0 : static_cast<dctq_t>(-(jtmp / quant));
     } else {
-        dctq_t jtmp = j + (quant >> 1);
+        dctq_t jtmp = (dctq_t) (j + (quant >> 1));
         return (jtmp < quant) ? 0 : static_cast<dctq_t>((jtmp / quant));
     }
 }
@@ -794,7 +797,7 @@ void jpeg_encoder::load_mcu_Y(const uint8 *pSrc, int width, int bpp, int y)
         RGB_to_Y(m_image[0], reinterpret_cast<const rgb *>(pSrc), width, y);
     else
         for(int x=0; x < width; x++) {
-            m_image[0].set_px(pSrc[x]-128.0, x, y);
+            m_image[0].set_px(pSrc[x]-128.0f, x, y);
         }
 
     // Possibly duplicate pixels at end of scanline if not a multiple of 8 or 16
