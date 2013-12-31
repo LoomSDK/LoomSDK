@@ -74,6 +74,9 @@ package system.platform {
         /**
          *  Copies a file from pathSource to pathDestination
          *
+         *  Please note that this implementation requires the file be loaded into memory.
+         *  Therefore, it must fit into available memory.
+         *  
          *  @param pathSource the source file to copy
          *  @param pathDestination the destination file to write
          *  @return true on success, false on failure.

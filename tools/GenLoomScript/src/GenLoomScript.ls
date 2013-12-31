@@ -5,6 +5,7 @@ package
 
     /**
      * Generates core LoomScript from the full Loom source tree and places it in artifacts
+     * The generated LoomScript source tree can be built independently of LoomSDK for embedding purposes
      **/
     public class GenLoomScript extends ConsoleApplication
     {   

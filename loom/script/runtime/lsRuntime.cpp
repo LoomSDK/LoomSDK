@@ -176,37 +176,23 @@ void lsr_loomscript_open(int argc, const char **argv)
         return;
     }
 
-#ifdef LOOM_ENABLE_JIT
-    //platform_debugOut("Loom - JIT\n");
-#else
-    //platform_debugOut("Loom - Interpreted\n");
-#endif
-
     // Mark the main thread for NativeDelegates.
     NativeDelegate::markMainThread();
-
-    // Initialize services.
-    //platform_debugOut("Initializing services...");
 
     // Initialize logging.
     loom_log_initialize();
 
     // Set up assert handling callback.
-    //lmLog(applicationLogGroup, "   o asserts");
     loom_setAssertCallback(lsr_handle_assert);
 
-    //lmLog(applicationLogGroup, "   o performance");
     performance_initialize();
 
-    //lmLog(applicationLogGroup, "   o time");
     platform_timeInitialize();
 
-    //lmLog(applicationLogGroup, "   o stringtable");
     stringtable_initialize();
 
     installPackageSystem();
 
-    //lmLog(applicationLogGroup, "   o network");
     loom_net_initialize();
 
     // Initialize script hooks.
