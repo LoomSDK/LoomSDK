@@ -27,7 +27,7 @@
 #include "loom/common/core/assert.h"
 
 #if LOOM_PLATFORM != LOOM_PLATFORM_IOS && LOOM_PLATFORM != LOOM_PLATFORM_ANDROID 
-#include "loom/script/compiler/LSCompiler.h"
+#include "loom/script/compiler/lsCompiler.h"
 #endif
 
 namespace LS 
