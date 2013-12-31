@@ -489,6 +489,21 @@ void NativeDelegate::invalidateLuaStateDelegates(lua_State *L)
 
 NativeDelegate::~NativeDelegate()
 {
+    // If we are in the native delegate list, remove ourselves.
+    utArray<NativeDelegate *> *delegates = NULL;
+    if (sActiveNativeDelegates.find(L) != UT_NPOS)
+    {
+        delegates = *(sActiveNativeDelegates.get(L));
+    }
+
+    if (delegates)
+    {
+        UTsize idx = delegates->find(this);
+        if(idx != UT_NPOS)
+            delegates->erase(idx);
+    }
+
+    // And clean up our Lua VM state.
     invalidate();
 }
 
