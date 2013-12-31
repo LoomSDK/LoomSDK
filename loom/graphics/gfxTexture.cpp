@@ -260,7 +260,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
 
     // Get the image via the asset manager.    
     loom_asset_image_t *lat = (loom_asset_image_t *)loom_asset_lock(name, LATImage, 0);
-    
+
     // If we couldn't load it, and we have never loaded it, generate a checkerboard placeholder texture.
     if (!lat)
     {

@@ -113,6 +113,37 @@ static void postResampleEvent(const char *path, float progress, const char *asse
     loom_mutex_unlock(gEventQueueMutex);
 }
 
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX || LOOM_PLATFORM == LOOM_PLATFORM_IOS
+
+#include <mach/mach.h>
+
+void report_memory(const char* words) 
+{
+  struct task_basic_info info;
+  mach_msg_type_number_t size = sizeof(info);
+  kern_return_t kerr = task_info(mach_task_self(),
+                                 TASK_BASIC_INFO,
+                                 (task_info_t)&info,
+                                 &size);
+  if( kerr == KERN_SUCCESS ) 
+  {
+    lmLog(gGFXTextureLogGroup, "Memory in use (in bytes): %s %u", words, info.resident_size);
+  } 
+  else 
+  {
+    lmLog(gGFXTextureLogGroup, "Error with task_info(): %s %s", words, mach_error_string(kerr));
+  }
+}
+
+#else
+
+void report_memory(const char* words)
+{
+
+}
+
+#endif
+
 
 static int __stdcall scaleImageOnDisk_body(void *param)
 {
@@ -126,6 +157,8 @@ static int __stdcall scaleImageOnDisk_body(void *param)
 
     // Load the image. We always work in 4 components (rgba).
     int t0 = platform_getMilliseconds();
+
+    report_memory("one");
 
     loom_asset_image *lai = NULL;
 
@@ -244,6 +277,8 @@ static int __stdcall scaleImageOnDisk_body(void *param)
     lmFree(gRescalerAllocator, buffGreen);
     lmFree(gRescalerAllocator, buffBlue);
     lmFree(gRescalerAllocator, outBuffer);
+
+    report_memory("three");
 
     // Post completion event.
     postResampleEvent(outPath, 1.0, inPath);
