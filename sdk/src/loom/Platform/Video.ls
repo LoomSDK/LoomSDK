@@ -35,6 +35,9 @@ package loom.platform
      * playback.  If your video is not 16:9, adjust that value to match your aspect ratio, or remove 
      * it completely.
      *
+     *  IMPORTANT NOTE: Android is especially particular as to filenames used for video files. They must be
+     *  all lowercase and contain no spaces for maximum compatibiity.
+     *
      */
 
 
