@@ -127,5 +127,8 @@ private:
     // Internal method used to initialize platform data 
     static void initializePlatform();
 
+    // If set, at next opportunity we will store a screenshot to this path and clear it.
+    static char pendingScreenshot[1024];
+
 };
 }

@@ -46,6 +46,7 @@ int Graphics::sView      = 0;
 
 uint32_t Graphics::sCurrentFrame = 0;
 
+char Graphics::pendingScreenshot[1024] = { 0, };
 
 void Graphics::initialize()
 {
@@ -146,6 +147,12 @@ void Graphics::endFrame()
 {
     QuadRenderer::endFrame();
     bgfx::frame();
+
+    if(pendingScreenshot[0] != 0)
+    {
+        bgfx::saveScreenShot(pendingScreenshot);
+        pendingScreenshot[0] = 0;
+    }
 }
 
 
@@ -176,7 +183,7 @@ void Graphics::handleContextLoss()
 
 void Graphics::screenshot(const char *path)
 {
-    bgfx::saveScreenShot(path);
+    strcpy(pendingScreenshot, path);
 }
 
 
