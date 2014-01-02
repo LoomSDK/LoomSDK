@@ -108,11 +108,13 @@ class OALBufferNote
 public:
     const char *asset;
     ALuint buffer;
+    int refCounter;
 
     OALBufferNote()
     {
         asset = NULL;
         buffer = 0;
+        refCounter = 1;
     }
 };
 
@@ -166,10 +168,32 @@ public:
         {
             // Get the value from the hashtable.
             note = *notePtr;
+            note->refCounter++;
         }
 
         // Return the buffer.
         return note->buffer;
+    }
+
+
+    static void decBufferForAsset(const char *assetPath)
+    {
+        ///find note
+        OALBufferNote **notePtr = buffers.get(assetPath);
+        if(notePtr == NULL)
+        {
+            return;
+        }
+        OALBufferNote *note = *notePtr;
+
+        ///decrement ref counter
+        note->refCounter--;
+        if(note->refCounter == 0)
+        {
+            ///delete and remove the buffer if it has no more references
+            alDeleteBuffers((ALuint)1, (const ALuint*)(&note->buffer));
+            buffers.remove(assetPath);
+        }
     }
 
     static void soundUpdater(void *payload, const char *name);
@@ -192,6 +216,7 @@ public:
     Sound *next;
     int needsRestart;
     int playCount;
+    char *path;
 
     static void preload(const char *assetPath)
     {
@@ -210,13 +235,13 @@ public:
             lmLogError(gLoomSoundLogGroup, "Failed to get buffer for sound '%s', returning dummy Sound...", assetPath);
             // LOOM-1839: We cannot lmNew here currently as managed natives call delete in nativeDelete
             //return lmNew(NULL) Sound();
-            return new Sound();
+            return new Sound(NULL);
         }
 
         // We got a live one!
         // LOOM-1839: We cannot lmNew here currently as managed natives call delete in nativeDelete
         //Sound *s = lmNew(NULL) Sound();
-        Sound *s = new Sound();
+        Sound *s = new Sound(assetPath);
 
         // Check the list for dead sources if we exceeded our cap.
         Sound *walk = smList;
@@ -287,12 +312,19 @@ public:
         return s;
     }
 
-    Sound()
+    Sound(const char *assetPath)
     {
         source = 0;
         next = NULL;
         needsRestart = 0;
         playCount = 0;
+        path = NULL;
+        if(assetPath != NULL)
+        {
+            int strLen = strlen(assetPath) + 1;
+            path = new char[strLen];
+            memcpy(path, assetPath, strLen * sizeof(char));
+        }
 
         // Note the allocation.
         count++;
@@ -302,14 +334,25 @@ public:
     {
         // Remove from the list.
         Sound **walk = &smList;
+        Sound *prev = NULL;
         while(*walk)
         {
             if(*walk == this)
             {
-                *walk = this->next;
+                ///if we're at the head, move the list down, otherwise, link prev to next to skip this node 
+                ///while keeping the head where it was
+                if(prev == NULL)
+                {
+                    *walk = this->next;                    
+                }
+                else
+                {
+                    prev->next = this->next;
+                }
                 break;
             }
 
+            prev = *walk;
             walk = &(*walk)->next;
         }
 
@@ -318,6 +361,15 @@ public:
 
         if(source != 0)
             alDeleteSources(1, &source);
+
+        ///decrement the buffer ref counter
+        OALBufferManager::decBufferForAsset(path);
+
+        ///delete path memory
+        if(path != NULL)
+        {
+            delete[] path;
+        }
     }
 
     void setPosition(float x, float y, float z)
