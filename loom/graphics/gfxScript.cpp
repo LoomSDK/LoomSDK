@@ -268,6 +268,7 @@ static void scaleImageOnDisk(const char *outPath, const char *inPath, int outWid
     rn->outWidth  = outWidth;
     rn->outHeight = outHeight;
     rn->preserveAspect = preserveAspect;
+    rn->skipPreload = skipPreload;
 
     Texture::enableAssetNotifications(false);
 
