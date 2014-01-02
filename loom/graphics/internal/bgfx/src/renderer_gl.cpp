@@ -778,7 +778,8 @@ namespace bgfx
         {
             uint32_t length = m_resolution.m_width*m_resolution.m_height*4;
             uint8_t* data = (uint8_t*)g_realloc(NULL, length);
-            GLint fmt = s_extension[Extension::EXT_texture_format_BGRA8888].m_supported ? GL_BGRA_EXT : GL_RGBA;
+            // Disable this, it gives black screenshot on some devices.
+            GLint fmt = /*s_extension[Extension::EXT_texture_format_BGRA8888].m_supported ? GL_BGRA_EXT : */ GL_RGBA;
 
             uint32_t width = m_resolution.m_width;
             uint32_t height = m_resolution.m_height;
