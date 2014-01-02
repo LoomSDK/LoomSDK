@@ -59,6 +59,7 @@ struct RescaleNote
     int      outWidth;
     int      outHeight;
     bool     preserveAspect;
+    bool     skipPreload;
 };
 
 static MutexHandle                gEventQueueMutex = NULL;
@@ -249,7 +250,8 @@ static int __stdcall scaleImageOnDisk_body(void *param)
 
     Texture::enableAssetNotifications(true);
 
-    loom_asset_preload(outPath);
+    if(rn->skipPreload == false)
+        loom_asset_preload(outPath);
 
     delete rn;
 
@@ -257,7 +259,7 @@ static int __stdcall scaleImageOnDisk_body(void *param)
 }
 
 
-static void scaleImageOnDisk(const char *outPath, const char *inPath, int outWidth, int outHeight, bool preserveAspect)
+static void scaleImageOnDisk(const char *outPath, const char *inPath, int outWidth, int outHeight, bool preserveAspect, bool skipPreload)
 {
     RescaleNote *rn = new RescaleNote();
 
