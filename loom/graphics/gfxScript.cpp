@@ -225,7 +225,14 @@ static int __stdcall scaleImageOnDisk_body(void *param)
 
             // Every hundred lines post an update.
             if(resultY % 100 == 0)
-                postResampleEvent(outPath, (float)resultY / (float)outHeight, inPath);
+            {
+                // calculate the progress, but keep from reporting 1.0 as this is used to 
+                // mark completion
+                float value = (float)resultY / (float)outHeight;
+                if (value == 1.0f)
+                    value = .99f;
+                postResampleEvent(outPath, value , inPath);
+            }
         }
     }
 
