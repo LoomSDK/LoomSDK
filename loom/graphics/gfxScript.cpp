@@ -59,6 +59,7 @@ struct RescaleNote
     int      outWidth;
     int      outHeight;
     bool     preserveAspect;
+    bool     skipPreload;
 };
 
 static MutexHandle                gEventQueueMutex = NULL;
@@ -224,7 +225,14 @@ static int __stdcall scaleImageOnDisk_body(void *param)
 
             // Every hundred lines post an update.
             if(resultY % 100 == 0)
-                postResampleEvent(outPath, (float)resultY / (float)outHeight, inPath);
+            {
+                // calculate the progress, but keep from reporting 1.0 as this is used to 
+                // mark completion
+                float value = (float)resultY / (float)outHeight;
+                if (value == 1.0f)
+                    value = .99f;
+                postResampleEvent(outPath, value , inPath);
+            }
         }
     }
 
@@ -249,7 +257,8 @@ static int __stdcall scaleImageOnDisk_body(void *param)
 
     Texture::enableAssetNotifications(true);
 
-    loom_asset_preload(outPath);
+    if(rn->skipPreload == false)
+        loom_asset_preload(outPath);
 
     delete rn;
 
@@ -257,7 +266,7 @@ static int __stdcall scaleImageOnDisk_body(void *param)
 }
 
 
-static void scaleImageOnDisk(const char *outPath, const char *inPath, int outWidth, int outHeight, bool preserveAspect)
+static void scaleImageOnDisk(const char *outPath, const char *inPath, int outWidth, int outHeight, bool preserveAspect, bool skipPreload)
 {
     RescaleNote *rn = new RescaleNote();
 
@@ -266,6 +275,7 @@ static void scaleImageOnDisk(const char *outPath, const char *inPath, int outWid
     rn->outWidth  = outWidth;
     rn->outHeight = outHeight;
     rn->preserveAspect = preserveAspect;
+    rn->skipPreload = skipPreload;
 
     Texture::enableAssetNotifications(false);
 

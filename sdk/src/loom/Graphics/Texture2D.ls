@@ -116,8 +116,11 @@ package loom.graphics
          * @param outHeight The desired height of the output image.
          * @param preserveAspect Preserve the aspect ratio of the source image, fitting
          *        within the outWidth/outHeight dimensions.
+         * @param skipPreload If true, then don't preload the image after it 
+         *        has been resized. This is helpful if you don't plan on loading it, ie, 
+         *        you just want to upload it somewhere.
          */
-        public static native function scaleImageOnDisk(outPath:String, inPath:String, outWidth:int, outHeight:int, preserveAspect:Boolean):void;
+        public static native function scaleImageOnDisk(outPath:String, inPath:String, outWidth:int, outHeight:int, preserveAspect:Boolean, skipPreload:Boolean = false):void;
 
         /**
          * Takes any pending reports from scaling operations and fire them on the
