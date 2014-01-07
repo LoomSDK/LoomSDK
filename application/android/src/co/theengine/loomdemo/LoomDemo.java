@@ -253,6 +253,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onPause() {
+        LoomMobile.onPause();
         LoomSensors.onPause();
         LoomVideo.onPause();
         super.onPause();
@@ -269,6 +270,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onDestroy() {
+        LoomMobile.onDestroy();
         LoomSensors.onDestroy();
         LoomVideo.onDestroy();
         DolbyAudio.onDestroy();

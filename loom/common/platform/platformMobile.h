@@ -35,6 +35,9 @@ typedef void (*SensorTripleChangedCallback)(int sensor, float x, float y, float 
 ///initializes the data for the Mobile class for this platform
 void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB);
 
+///tells the device to do a short vibration, if supported by the hardware
+void platform_vibrate();
+
 ///sets whether or not to use the system screen sleep timeout
 void platform_allowScreenSleep(bool sleep);
 

@@ -22,6 +22,7 @@ limitations under the License.
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
 
+#import <AudioToolbox/AudioServices.h>
 #import <Foundation/Foundation.h>
 #import <Foundation/NSSet.h>
 #import <UIKit/UIKit.h>
@@ -44,6 +45,12 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
     gTripleChangedCallback = sensorTripleChangedCB;    
 }
 
+///tells the device to do a short vibration, if supported by the hardware
+void platform_vibrate()
+{
+    AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
+}
+
 ///sets whether or not to use the system screen sleep timeout
 void platform_allowScreenSleep(bool sleep)
 {
@@ -62,39 +69,35 @@ void platform_allowScreenSleep(bool sleep)
 ///checks if a given sensor is supported on this hardware
 bool platform_isSensorSupported(int sensor)
 {
-    ///TODO: Support sensors on iOS
+    ///TODO: 1844: Support sensors on iOS
     return false;
 }
 
 ///checks if a given sensor is currently enabled
 bool platform_isSensorEnabled(int sensor)
 {
-    ///TODO: Support sensors on iOS
+    ///TODO: 1844: Support sensors on iOS
     return false;
 }
 
 ///checks if a given sensor has received any data yet
 bool platform_hasSensorReceivedData(int sensor)
 {
-    ///TODO: Support sensors on iOS
+    ///TODO: 1844: Support sensors on iOS
     return false;
 }
 
 ///enables the given sensor
 bool platform_enableSensor(int sensor)
 {
-    ///TODO: Support sensors on iOS
+    ///TODO: 1844: Support sensors on iOS
     return false;
 }
 
 ///disables the given sensor
 void platform_disableSensor(int sensor)
 {
-    ///TODO: Support sensors on iOS
+    ///TODO: 1844: Support sensors on iOS
 }
-
-
-///TODO: LOOM-1810: screen timeout
-///TODO: LOOM-1811: vibration
 
 #endif
