@@ -72,6 +72,11 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
 {
 }
 
+///tells the device to do a short vibration, if supported by the hardware
+void platform_vibrate()
+{
+}
+
 ///sets whether or not to use the system screen sleep timeout
 void platform_allowScreenSleep(bool sleep)
 {
