@@ -58,6 +58,7 @@ void Java_co_theengine_loomdemo_LoomSensors_onGravityChangedNative(JNIEnv *env, 
 }
 
 
+static loomJniMethodInfo gVibrate;
 static loomJniMethodInfo gAllowScreenSleep;
 static loomJniMethodInfo gIsSensorSupported;
 static loomJniMethodInfo gIsSensorEnabled;
@@ -84,6 +85,10 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
 
     ///Bind to JNI entry points.
     ///Mobile
+    LoomJni::getStaticMethodInfo(gVibrate,
+                                 "co/theengine/loomdemo/LoomMobile",
+                                 "vibrate",
+                                 "()V");
     LoomJni::getStaticMethodInfo(gAllowScreenSleep,
                                  "co/theengine/loomdemo/LoomMobile",
                                  "allowScreenSleep",
@@ -136,6 +141,12 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
                                  "()Ljava/lang/String;");
 }
 
+
+///tells the device to do a short vibration, if supported by the hardware
+void platform_vibrate()
+{
+    gVibrate.env->CallStaticVoidMethod(gVibrate.classID, gVibrate.methodID);
+}
 
 ///sets whether or not to use the system screen sleep timeout
 void platform_allowScreenSleep(bool sleep)

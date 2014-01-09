@@ -252,7 +252,10 @@ public:
                 if(walk->isPlaying() == false && walk->source != 0 && walk->hasEverPlayed() == false)
                 {
                     // Snag the source and reuse it.
-                    lmLogError(gLoomSoundLogGroup, "Too many active sources, reusing source #%d", walk->source);
+                    lmLogError(gLoomSoundLogGroup, 
+                                "Too many active sources, reusing source #%d, which means that Sound Asset %s is no longer valid. Don't load so many sounds at once!", 
+                                walk->source, 
+                                walk->path);
                     s->source = walk->source;
                     walk->source = 0;
                     break;

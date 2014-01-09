@@ -97,11 +97,14 @@ package loom.platform
     /**
      * Static control class for accessing various Mobile specific functionality.
      */
-    ///
-    /// TODO: LOOM-1811: vibration
-    ///
     public native class Mobile 
     {
+        /**
+         * Tells the device to perform a brief vibration, if supported by the hardware.
+         *
+         */
+        public static native function vibrate():void;
+
         /**
          * Enables or disables the device's screen sleep timer. Useful for stopping 
          * the device screen from auto-locking during gameplay if the screen isn't touched.

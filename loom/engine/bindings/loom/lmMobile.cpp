@@ -54,6 +54,10 @@ public:
     {
         platform_mobileInitialize(sensorTripleChanged);
     }
+    static void vibrate()
+    {
+        platform_vibrate();
+    }
     static void allowScreenSleep(bool sleep)
     {
         platform_allowScreenSleep(sleep);
@@ -125,8 +129,7 @@ static int registerLoomMobile(lua_State *L)
 
         .beginClass<Mobile>("Mobile")
 
-///TODO: LOOM-1811: vibration
-
+            .addStaticMethod("vibrate", &Mobile::vibrate)
             .addStaticMethod("allowScreenSleep", &Mobile::allowScreenSleep)
             .addStaticMethod("isSensorSupported", &Mobile::isSensorSupported)
             .addStaticMethod("isSensorEnabled", &Mobile::isSensorEnabled)
