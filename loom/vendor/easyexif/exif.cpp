@@ -143,6 +143,20 @@ namespace {
   }
 }
 
+extern "C"
+{
+  int exifinfo_parse_orientation(const unsigned char *buf, unsigned len)
+  {
+      EXIFInfo info;
+
+      // if there was an error, orientation is not specified
+      if (info.parseFrom(buf, len) != PARSE_EXIF_SUCCESS)
+        return 0;
+
+      return (int) info.Orientation;
+  }
+}
+
 //
 // Locates the EXIF segment and parses it using parseFromEXIFSegment 
 //
