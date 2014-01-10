@@ -593,7 +593,7 @@ set(ZLIB_SRC
     zlib/source/zutil.c
 )
 
-set( JHEADEXIF_SRC jheadexif/exif.c jheadexif/jhead.c)
+set( JHEADEXIF_SRC jheadexif/exif.c jheadexif/jhead.c jheadexif/jpgfile.c)
     
 
 
