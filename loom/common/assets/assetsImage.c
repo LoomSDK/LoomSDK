@@ -38,7 +38,7 @@
 extern loom_allocator_t *gAssetAllocator;
 static loom_logGroup_t gImageAssetGroup = { "imageAsset", 1 };
 
-int EXIFInfo_parseFrom(const unsigned char *buf, unsigned len);
+int exifinfo_parse_orientation(const unsigned char *buf, unsigned len);
 
 void loom_asset_registerImageAsset()
 {
