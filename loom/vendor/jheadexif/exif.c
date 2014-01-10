@@ -1118,7 +1118,7 @@ void create_EXIF(int orientation)
             DataWriteIndex += 20;
 
             {
-                // Original date/time entry
+                // orientation entry
                 Put16u(Buffer+DirIndex, TAG_ORIENTATION);         // Tag
                 Put16u(Buffer+DirIndex + 2, FMT_USHORT);       // Format
                 Put32u(Buffer+DirIndex + 4, 1);               // Components
