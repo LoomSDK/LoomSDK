@@ -918,7 +918,7 @@ static void ProcessFile(const char * FileName)
 
     if (CreateExifSection){
         // Make a new minimal exif section
-        create_EXIF();
+        create_EXIF(0);
         Modified = TRUE;
     }
 

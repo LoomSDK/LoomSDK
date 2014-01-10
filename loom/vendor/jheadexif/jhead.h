@@ -172,7 +172,7 @@ int Get16u(void * Short);
 unsigned Get32u(void * Long);
 int Get32s(void * Long);
 void Put32u(void * Value, unsigned PutValue);
-void create_EXIF(void);
+void create_EXIF(int orientation);
 
 //--------------------------------------------------------------------------
 // Exif format descriptor stuff

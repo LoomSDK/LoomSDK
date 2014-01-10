@@ -249,14 +249,15 @@ static int __stdcall scaleImageOnDisk_body(void *param)
     jpge::compress_image_to_jpeg_file(outPath, outWidth, outHeight, 3, outBuffer);
     lmLog(gGFXTextureLogGroup, "JPEG output took %dms", t3 - platform_getMilliseconds());
 
+    //preserve orientation if we need to
     if (lai->orientation != IMAGE_ORIENTATION_UNSPECIFIED)
     {
         ResetJpgfile();
 
         if (ReadJpegFile(outPath, READ_ALL))
         {
-            create_EXIF();            
-            WriteJpegFile("/Users/josh/Dev/poop.jpg");    
+            create_EXIF(lai->orientation);            
+            WriteJpegFile(outPath);    
             DiscardData();
 
         }

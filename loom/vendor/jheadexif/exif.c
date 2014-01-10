@@ -1070,7 +1070,7 @@ void process_EXIF (unsigned char * ExifSection, unsigned int length)
 // Create minimal exif header - just date and thumbnail pointers,
 // so that date and thumbnail may be filled later.
 //--------------------------------------------------------------------------
-void create_EXIF(void)
+void create_EXIF(int orientation)
 {
     char Buffer[256];
 
@@ -1090,7 +1090,7 @@ void create_EXIF(void)
 
     {
         DirIndex = DataWriteIndex;
-        NumEntries = 2;
+        NumEntries = 3;
         DataWriteIndex += 2 + NumEntries*12 + 4;
 
         Put16u(Buffer+DirIndex, NumEntries); // Number of entries
@@ -1114,8 +1114,18 @@ void create_EXIF(void)
                 // Oterwise, use the file's timestamp.
                 FileTimeAsString(Buffer+DataWriteIndex);
             }
+
             DataWriteIndex += 20;
-        
+
+            {
+                // Original date/time entry
+                Put16u(Buffer+DirIndex, TAG_ORIENTATION);         // Tag
+                Put16u(Buffer+DirIndex + 2, FMT_USHORT);       // Format
+                Put32u(Buffer+DirIndex + 4, 1);               // Components
+                Put16u(Buffer+DirIndex + 8, (unsigned short) orientation); // Pointer or value.
+                DirIndex += 12;
+            }
+
             // Link to exif dir entry
             Put16u(Buffer+DirIndex, TAG_EXIF_OFFSET);      // Tag
             Put16u(Buffer+DirIndex + 2, FMT_ULONG);        // Format
@@ -1154,7 +1164,7 @@ void create_EXIF(void)
         //Continuation which links to this directory;
         Put32u(Buffer+DirContinuation, DataWriteIndex-8);
         DirIndex = DataWriteIndex;
-        NumEntries = 3;
+        NumEntries = 2;
         DataWriteIndex += 2 + NumEntries*12 + 4;
 
         Put16u(Buffer+DirIndex, NumEntries); // Number of entries
@@ -1177,16 +1187,6 @@ void create_EXIF(void)
             Put32u(Buffer+DirIndex + 8, 0); // Pointer or value.
             DirIndex += 12;
         }
-
-        {
-            // Original date/time entry
-            Put16u(Buffer+DirIndex, TAG_ORIENTATION);         // Tag
-            Put16u(Buffer+DirIndex + 2, FMT_ULONG);       // Format
-            Put32u(Buffer+DirIndex + 4, 1);               // Components
-            Put32u(Buffer+DirIndex + 8, 6); // Pointer or value.
-            DirIndex += 12;
-        }
-
 
         // End of directory - contains optional link to continued directory.
         Put32u(Buffer+DirIndex, 0);
