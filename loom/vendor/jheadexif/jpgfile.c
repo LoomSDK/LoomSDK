@@ -222,12 +222,12 @@ int ReadJpegSections (FILE * infile, ReadMode_t ReadMode)
 
             case M_DQT:
                 // Use for jpeg quality guessing
-                process_DQT(Data, itemlen);
+                //process_DQT(Data, itemlen);
                 break;
 
             case M_DHT:   
                 // Use for jpeg quality guessing
-                process_DHT(Data, itemlen);
+                //process_DHT(Data, itemlen);
                 break;
 
 
@@ -293,7 +293,7 @@ int ReadJpegSections (FILE * infile, ReadMode_t ReadMode)
                         if (ShowTags){
                             printf("Image cotains XMP section, %d bytes long\n", itemlen);
                             if (ShowTags){
-                                ShowXmp(Sections[SectionsRead-1]);
+                                //ShowXmp(Sections[SectionsRead-1]);
                             }
                         }
                         break;
@@ -508,12 +508,12 @@ int ReadJpegSectionsFromBuffer (const char* data, int length, ReadMode_t ReadMod
 
             case M_DQT:
                 // Use for jpeg quality guessing
-                process_DQT(Data, itemlen);
+                //process_DQT(Data, itemlen);
                 break;
 
             case M_DHT:   
                 // Use for jpeg quality guessing
-                process_DHT(Data, itemlen);
+                //process_DHT(Data, itemlen);
                 break;
 
 
@@ -579,7 +579,7 @@ int ReadJpegSectionsFromBuffer (const char* data, int length, ReadMode_t ReadMod
                         if (ShowTags){
                             printf("Image cotains XMP section, %d bytes long\n", itemlen);
                             if (ShowTags){
-                                ShowXmp(Sections[SectionsRead-1]);
+                                //ShowXmp(Sections[SectionsRead-1]);
                             }
                         }
                         break;

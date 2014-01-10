@@ -13,6 +13,11 @@
 #include <errno.h>
 #include <ctype.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 //--------------------------------------------------------------------------
 
 #ifdef _WIN32
@@ -262,3 +267,8 @@ extern int ShowTags;
 #define M_DHT   0xC4          // Define Huffmann Table
 #define M_DRI   0xDD
 #define M_IPTC  0xED          // IPTC marker
+
+#ifdef __cplusplus
+}
+#endif
+

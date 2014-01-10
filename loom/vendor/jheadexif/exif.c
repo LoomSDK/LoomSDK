@@ -547,10 +547,10 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
         }
 
         if (Tag == TAG_MAKER_NOTE){
-            if (ShowTags){
-                printf("%s    Maker note: ",IndentString);
-            }
-            ProcessMakerNote(ValuePtr, ByteCount, OffsetBase, ExifLength);
+            //if (ShowTags){
+            //    printf("%s    Maker note: ",IndentString);
+            //}
+            //ProcessMakerNote(ValuePtr, ByteCount, OffsetBase, ExifLength);
             continue;
         }
 
@@ -857,6 +857,7 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
                 break;
 
             case TAG_GPSINFO:
+                /*
                 if (ShowTags) printf("%s    GPS info dir:",IndentString);
                 {
                     unsigned char * SubdirStart;
@@ -868,6 +869,7 @@ static void ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase,
                     }
                     continue;
                 }
+                */
                 break;
 
             case TAG_FOCALLENGTH_35MM:
@@ -1152,11 +1154,12 @@ void create_EXIF(void)
         //Continuation which links to this directory;
         Put32u(Buffer+DirContinuation, DataWriteIndex-8);
         DirIndex = DataWriteIndex;
-        NumEntries = 2;
+        NumEntries = 3;
         DataWriteIndex += 2 + NumEntries*12 + 4;
 
         Put16u(Buffer+DirIndex, NumEntries); // Number of entries
         DirIndex += 2;
+
         {
             // Link to exif dir entry
             Put16u(Buffer+DirIndex, TAG_THUMBNAIL_OFFSET);         // Tag
@@ -1174,6 +1177,16 @@ void create_EXIF(void)
             Put32u(Buffer+DirIndex + 8, 0); // Pointer or value.
             DirIndex += 12;
         }
+
+        {
+            // Original date/time entry
+            Put16u(Buffer+DirIndex, TAG_ORIENTATION);         // Tag
+            Put16u(Buffer+DirIndex + 2, FMT_ULONG);       // Format
+            Put32u(Buffer+DirIndex + 4, 1);               // Components
+            Put32u(Buffer+DirIndex + 8, 6); // Pointer or value.
+            DirIndex += 12;
+        }
+
 
         // End of directory - contains optional link to continued directory.
         Put32u(Buffer+DirIndex, 0);
