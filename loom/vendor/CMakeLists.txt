@@ -593,7 +593,7 @@ set(ZLIB_SRC
     zlib/source/zutil.c
 )
 
-set( EASYEXIF_SRC easyexif/exif.cpp )
+set( JHEADEXIF_SRC jheadexif/exif.c jheadexif/jhead.c)
     
 
 
@@ -633,7 +633,7 @@ endif()
 SET_SOURCE_FILES_PROPERTIES( ${CHIPMUNK_SRC} PROPERTIES LANGUAGE CXX)
 
 set (ALL_FILES 
-    ${EASYEXIF_SRC}
+    ${JHEADEXIF_SRC}
     ${SEATEST_HDR} ${SEATEST_SRC} 
     ${STB_HDR} ${STB_SRC} 
     ${JANSSON_HDR} ${JANSSON_SRC} 
