@@ -249,17 +249,22 @@ static int __stdcall scaleImageOnDisk_body(void *param)
     jpge::compress_image_to_jpeg_file(outPath, outWidth, outHeight, 3, outBuffer);
     lmLog(gGFXTextureLogGroup, "JPEG output took %dms", t3 - platform_getMilliseconds());
 
-    //preserve orientation if we need to
-    if (lai->orientation != IMAGE_ORIENTATION_UNSPECIFIED)
+    // preserve orientation (but only if we need to)
+    if (lai->orientation > IMAGE_ORIENTATION_UPPER_LEFT)
     {
         ResetJpgfile();
 
+        // read in the jpg data (does not decompress it!)
         if (ReadJpegFile(outPath, READ_ALL))
         {
+            // create the exif segment and attach it to jpeg image
             create_EXIF(lai->orientation);            
-            WriteJpegFile(outPath);    
-            DiscardData();
 
+            // write it out with exif data
+            WriteJpegFile(outPath);    
+
+            // free all data
+            DiscardData();
         }
     }
 
