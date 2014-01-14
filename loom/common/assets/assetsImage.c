@@ -38,6 +38,8 @@
 extern loom_allocator_t *gAssetAllocator;
 static loom_logGroup_t gImageAssetGroup = { "imageAsset", 1 };
 
+int exifinfo_parse_orientation(const unsigned char *buf, unsigned len);
+
 void loom_asset_registerImageAsset()
 {
    loom_asset_registerType(LATImage, loom_asset_imageDeserializer, loom_asset_identifyImage);
@@ -90,15 +92,24 @@ void loom_asset_imageDtor(void *bits)
 
 void *loom_asset_imageDeserializer( void *buffer, size_t bufferLen, LoomAssetCleanupCallback *dtor )
 {
+
    loom_asset_image_t *img = lmAlloc(gAssetAllocator, sizeof(loom_asset_image_t));
+
+    // parse any orientation info from exif format
+   img->orientation = exifinfo_parse_orientation(buffer, bufferLen);
+
    img->bits = stbi_load_from_memory((const stbi_uc *)buffer, (int)bufferLen, &img->width, &img->height, &img->bpp, 4);
+   
    *dtor = loom_asset_imageDtor;
+   
    if(!img->bits)
    {
       lmLogError(gImageAssetGroup, "Image load failed due to this cryptic reason: %s", stbi_failure_reason());
       lmFree(gAssetAllocator, img);
       return 0;
    }
+   
    lmLogError(gImageAssetGroup, "Allocated %d bytes for an image!", img->width * img->height * 4);
+   
    return img;
 }
