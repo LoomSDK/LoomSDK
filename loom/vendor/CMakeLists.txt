@@ -574,6 +574,7 @@ set(ZLIB_HDR
     zlib/include/trees.h
     zlib/include/zutil.h
 )
+
 set(ZLIB_SRC
     zlib/source/adler32.c
     zlib/source/compress.c
@@ -591,6 +592,10 @@ set(ZLIB_SRC
     zlib/source/uncompr.c
     zlib/source/zutil.c
 )
+
+set( JHEADEXIF_SRC jheadexif/exif.c jheadexif/jhead.c jheadexif/jpgfile.c jheadexif/easyexif.cpp)
+    
+
 
 
 if (MSVC)
@@ -628,6 +633,7 @@ endif()
 SET_SOURCE_FILES_PROPERTIES( ${CHIPMUNK_SRC} PROPERTIES LANGUAGE CXX)
 
 set (ALL_FILES 
+    ${JHEADEXIF_SRC}
     ${SEATEST_HDR} ${SEATEST_SRC} 
     ${STB_HDR} ${STB_SRC} 
     ${JANSSON_HDR} ${JANSSON_SRC} 
