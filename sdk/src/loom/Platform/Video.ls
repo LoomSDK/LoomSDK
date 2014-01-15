@@ -26,6 +26,7 @@ package loom.platform
      * Loom abstracts the native video playback functionality on your platform 
      * (if present) and provides a streamlined interface to play videos.
      *
+     *
      * MP4 encoding can sometimes be tricky and some encodes will not work on all devices. A good
      * base method that we have found is to use 'ffmpeg' (ffmpeg.org) with the following settings:
      *
@@ -35,8 +36,14 @@ package loom.platform
      * playback.  If your video is not 16:9, adjust that value to match your aspect ratio, or remove 
      * it completely.
      *
+     *
      *  IMPORTANT NOTE: Android is especially particular as to filenames used for video files. They must be
      *  all lowercase and contain no spaces for maximum compatibiity.
+     *
+     *  IMPORTANT NOTE #2: Android playback requires video files to be located in "assets/videos/" in order for
+     *  them to be packaged into the APK correctly.  We suggest that you keep all of your video files in that
+     *  folder no matter what platform you are developing for in order to avoid confusion in the future, and 
+     *  as such have provided a const called 'Video.RootFolder' to use.
      *
      */
 
@@ -103,9 +110,14 @@ package loom.platform
     public native class Video 
     {
         /**
+         * Constant string helper that denotes the folder where video files should be located for maximum platform compatibility
+         */
+        public static const RootFolder:String       = "assets/videos/";
+
+        /**
          * Plays a video in Fullscreen mode
          *
-         *  @param video Name of the video file to play, NOT including its extension
+         *  @param video Name of the video file to play, NOT including its extension. NOTE: This file must reside in "assets/videos/" in order to work across all platforms.
          *  @param scaleMode Method of scaling the video on screen
          *  @param controlMode Type of video controls to display over the video
          *  @param bgColor Hex formatted color (ie. 0xFF000000) to set the area of the screen not filled with the video, in cases where it does not fill the screen

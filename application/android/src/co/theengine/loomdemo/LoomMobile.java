@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.app.Activity;
 import android.os.Environment;
 import android.os.Vibrator;
+import android.os.Build;
 import android.util.Log;
 import android.provider.Settings.System;
 
@@ -33,7 +34,20 @@ public class LoomMobile
     {
         _context = ctx;
         _vibrator = (Vibrator)_context.getSystemService(Context.VIBRATOR_SERVICE);
-        _canVibrate = ((_vibrator != null) && _vibrator.hasVibrator()) ? true : false;
+        _canVibrate = false;
+        if(_vibrator != null)
+        {
+            ///'hasVibrator' was only added in API 11 (Honeycomb 3.0)
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            {
+                _canVibrate = _vibrator.hasVibrator();
+            }
+            else
+            {
+                ///assume pre-API 11 that if there is a VIBRATOR_SERVICE found, that we can vibrate!
+                _canVibrate = true;
+            }
+        }
         Log.d("Loom", "Vibration supported: " + _canVibrate);
     }
 

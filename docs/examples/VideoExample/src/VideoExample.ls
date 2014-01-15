@@ -33,6 +33,15 @@ package
      * playback.  If your video is not 16:9, adjust that value to match your aspect ratio, or remove 
      * it completely.
      *
+     *
+     *  IMPORTANT NOTE: Android is especially particular as to filenames used for video files. They must be
+     *  all lowercase and contain no spaces for maximum compatibiity.
+     *
+     *  IMPORTANT NOTE #2: Android playback requires video files to be located in "assets/videos/" in order for
+     *  them to be packaged into the APK correctly.  We suggest that you keep all of your video files in that
+     *  folder no matter what platform you are developing for in order to avoid confusion in the future, and 
+     *  as such have provided a const called 'Video.RootFolder' to use.
+     *
      */
 
 
@@ -50,7 +59,7 @@ package
                 Video.onFail += videoFail;
 
                 ///start video Playback
-                Video.playFullscreen("assets/bigbuckbunny.mp4", VideoScaleMode.FitAspect, VideoControlMode.Show, 0xff000000);
+                Video.playFullscreen(Video.RootFolder + "bigbuckbunny.mp4", VideoScaleMode.FitAspect, VideoControlMode.Show, 0xff000000);
             }
             else
             {
