@@ -95,15 +95,15 @@ package
             // ----------------------------------------------------------
             
             // Whack a Potato
-            this.whackMovieCard = CreateMovieCard("Whack a Potato", "assets/WhackPreview.png", "assets/whackapotato.mp4");
+            this.whackMovieCard = CreateMovieCard("Whack a Potato", "assets/WhackPreview.png", Video.RootFolder + "whackapotato.mp4");
             stage.addChild(this.whackMovieCard);
 
              // Contraption Maker
-            this.contraptionMovieCard = CreateMovieCard("Contraption Maker", "assets/ContraptionMakerPreview.png", "assets/contraptionmaker.mp4");
+            this.contraptionMovieCard = CreateMovieCard("Contraption Maker", "assets/ContraptionMakerPreview.png", Video.RootFolder + "contraptionmaker.mp4");
             stage.addChild(this.contraptionMovieCard);
             
             // The Loom Demo
-            this.loomMovieCard = CreateMovieCard("The Loom Demo", "assets/LoomDemoPreview.png", "assets/theloomdemo.mp4");
+            this.loomMovieCard = CreateMovieCard("The Loom Demo", "assets/LoomDemoPreview.png", Video.RootFolder + "theloomdemo.mp4");
             stage.addChild(this.loomMovieCard);
 
             // Move the MovieCards into position
