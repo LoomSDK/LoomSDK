@@ -497,6 +497,13 @@ namespace :build do
       package_command += " --sign '#{args.sign_as}'"
       package_command += " --embed '#{$iosProvision}'"
       sh package_command
+
+      # if Debug build, copy over the dSYM too
+      if $buildTarget == "Debug" 
+        dsymPath = Dir.glob("cmake_ios/application/#{$buildTarget}-iphoneos/*.dSYM")[0]
+        puts "dSYM path found: #{dsymPath}"
+        FileUtils.cp_r(dsymPath, full_output_path)
+      end
     end
   end
 
@@ -945,6 +952,9 @@ namespace :package do
       
       # add the ios app bundle
       FileUtils.cp_r("artifacts/ios/LoomDemo.app", "pkg/sdk/bin/ios")
+      if $buildTarget == "Debug"
+        FileUtils.cp_r("artifacts/ios/LoomDemo.app.dSYM", "pkg/sdk/bin/ios")
+      end
       
       # Strip out the bundled assets and binaries
       FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/assets"
