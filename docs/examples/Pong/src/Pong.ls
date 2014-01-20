@@ -3,12 +3,14 @@ package
     import loom.sound.SimpleAudioEngine;
 
     import loom.Application;
+    import loom2d.Loom2D;
     import loom2d.display.Image;
     import loom2d.display.Stage;
     import loom2d.display.StageScaleMode;
     import loom2d.textures.Texture;    
 
     import loom2d.math.Point;
+    import loom2d.animation.Transitions;
 
     import loom2d.ui.SimpleLabel;
     import loom2d.ui.TextureAtlasManager;
@@ -18,8 +20,6 @@ package
     import loom2d.events.TouchPhase;    
 
     import loom.Application;
-    import loom.animation.LoomEaseType;
-    import loom.animation.LoomTween;    
     import loom.gameframework.LoomGameObject;
     import loom.gameframework.LoomGroup;
     import system.platform.Platform;
@@ -237,10 +237,10 @@ package
 
             for (var b=0;b<ballObjs.length-1;b++)
             {
-                LoomTween.to(getBallMover(b), 0.3, {"alpha": 0, "ease": LoomEaseType.EASE_OUT_BOUNCE});
+                Loom2D.juggler.tween(getBallMover(b), 0.3, {"alpha": 0, "transition": Transitions.EASE_OUT_BOUNCE});
             }
             // the last one triggers the callback
-            LoomTween.to(getBallMover(ballObjs.length-1), 0.3, {"alpha": 0, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += _callback;
+            Loom2D.juggler.tween(getBallMover(ballObjs.length-1), 0.3, {"alpha": 0, "transition": Transitions.EASE_OUT_BOUNCE, "onComplete": _callback});
         }
 
         /**
@@ -255,10 +255,10 @@ package
 
             for (var p=0;p<paddleObjs.length-1;p++)
             {
-                LoomTween.to(getPaddleMover(p), 0.3, {"alpha": 0, "ease": LoomEaseType.EASE_OUT_BOUNCE});
+                Loom2D.juggler.tween(getPaddleMover(p), 0.3, {"alpha": 0, "transition": Transitions.EASE_OUT_BOUNCE});
             }
             // the last one triggers the callback
-            LoomTween.to(getPaddleMover(paddleObjs.length-1), 0.3, {"alpha": 0, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += _callback;
+            Loom2D.juggler.tween(getPaddleMover(paddleObjs.length-1), 0.3, {"alpha": 0, "transition": Transitions.EASE_OUT_BOUNCE, "onComplete": _callback});
         }
 
         /**
@@ -273,10 +273,10 @@ package
 
             for (var b=0;b<ballObjs.length-1;b++)
             {
-                LoomTween.to(getPaddleMover(b), 0.3, {"alpha": 1, "ease": LoomEaseType.EASE_OUT_BOUNCE});
+                Loom2D.juggler.tween(getPaddleMover(b), 0.3, {"alpha": 1, "transition": Transitions.EASE_OUT_BOUNCE});
             }
             // the last one triggers the callback
-            LoomTween.to(getBallMover(ballObjs.length-1), 0.3, {"alpha": 1, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += _callback;
+            Loom2D.juggler.tween(getBallMover(ballObjs.length-1), 0.3, {"alpha": 1, "transition": Transitions.EASE_OUT_BOUNCE, "onComplete": _callback});
         }
 
         /**
@@ -291,10 +291,10 @@ package
 
             for (var p=0;p<paddleObjs.length-1;p++)
             {
-                LoomTween.to(getPaddleMover(p), 0.3, {"alpha": 1, "ease": LoomEaseType.EASE_OUT_BOUNCE});
+                Loom2D.juggler.tween(getPaddleMover(p), 0.3, {"alpha": 1, "transition": Transitions.EASE_OUT_BOUNCE});
             }
             // the last one triggers the callback
-            LoomTween.to(getPaddleMover(paddleObjs.length-1), 0.3, {"alpha": 1, "ease": LoomEaseType.EASE_OUT_BOUNCE}).onComplete += _callback;
+            Loom2D.juggler.tween(getPaddleMover(paddleObjs.length-1), 0.3, {"alpha": 1, "transition": Transitions.EASE_OUT_BOUNCE, "onComplete": _callback});
         }
 
         /**
@@ -310,11 +310,9 @@ package
             score.y = stage.stageHeight/2 - (score.height);
 
             // and show the score
-            LoomTween.to(score, 2, {"alpha":1, "ease":LoomEaseType.EASE_OUT}).onComplete += function ()
-            {
-                // then hide the score and trigger the callback
-                LoomTween.to(score, 0.5, {"alpha":0, "ease":LoomEaseType.EASE_IN}).onComplete += _callback;
-            };
+            Loom2D.juggler.tween(score, 2, {"alpha":1, "transition":Transitions.EASE_OUT});
+            // then hide the score and trigger the callback
+            Loom2D.juggler.tween(score, 0.5, {"delay": 2, "alpha":0, "transition":Transitions.EASE_IN, "onComplete": _callback});
         }
 
         /**
@@ -331,15 +329,15 @@ package
             score.y = stage.stageHeight/2 - score.size.y/2;
             
             // show the message slowly by scaling it up
-            LoomTween.to(score, 5, {"alpha":1, "ease":LoomEaseType.EASE_OUT}).onComplete += function ()
-            {
-                // hide the message again via scaling it back to 0
-                LoomTween.to(score, 0.5, {"alpha":0, "ease":LoomEaseType.EASE_IN}).onComplete += function ()
-                {
-                    // Game Over
-                    // TODO: Add option to restart
-                };
-            };
+            Loom2D.juggler.tween(score, 5, {"alpha":1, "transition":Transitions.EASE_OUT});
+            // hide the message again via scaling it back to 0
+            Loom2D.juggler.tween(score, 0.5, {"delay": 5, "alpha":0, "transition":Transitions.EASE_IN, "onComplete": onGameEnded});
+        }
+
+        public function onGameEnded():void
+        {
+            // Game Over
+            // TODO: Add option to restart
         }
 
         /**
