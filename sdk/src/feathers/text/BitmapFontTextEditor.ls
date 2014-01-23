@@ -155,6 +155,12 @@ package feathers.text
             if(!_isEditable)
                 return;
 
+            if(inText == "\n")
+            {
+                // We only support single line text input for now.
+                clearFocus();
+            }
+
             text += inText;
         }
 
