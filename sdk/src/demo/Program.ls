@@ -20,41 +20,20 @@ limitations under the License.
 
 package demo 
 {
-    import system.platform.Platform;
-
     import loom.Application;
+
     import loom2d.display.StageScaleMode;
     import loom2d.display.Image;
-    import loom2d.display.Sprite;
-    import loom2d.textures.Texture;    
 
-    // for ticks
-    import loom.Application;
-
-    //import loom.graphics.Texture;
+    import loom2d.textures.Texture;
 
     /**
-     * Fun color matching game! Use the buttons in the bottom of the screen to
-     * change the colors of the region in the bottom left to make the whole 
-     * board one color.
+     * Default Loom Demo when no working directory is specified
      */
-    public class DemoGame extends Application
+
+    public class Demo extends Application
     {
-
-        /**
-         * Entry point for the game (see main.ls)
-         */
-
-        var sprite:Sprite;
-        var img:Image;
-        var img2:Image;
-
-        function onFrame()
-        {
-            sprite.rotation += .01;         
-
-            sprite.scale = Math.sin(Platform.getTime()/1000.0);  
-        }
+        public var img:Image;
 
         override public function run():void
         {
@@ -62,28 +41,14 @@ package demo
             // Set up automatic scaling.
             stage.scaleMode = StageScaleMode.LETTERBOX;
 
-            sprite = new Sprite;
-            stage.addChild(sprite); 
+            img = new Image(Texture.fromAsset("assets/default.png"));
+            img.center();
+            img.x = stage.stageWidth / 2;
+            img.y = stage.stageHeight / 2;
 
-            sprite.x = 256;
-            sprite.y = 256;
+            stage.addChild(img);
 
-            img = new Image(Texture.fromAsset("assets/boss1.png")); 
-            img.x = -128;
-            img.y = -128;
-
-            sprite.addChild(img);      
-
-            img2 = new Image(Texture.fromAsset("assets/boss1.png")); 
-            img2.x = 128;
-            img2.y = 128;
- 
-            sprite.addChild(img2);       
-
+            trace( "This is the default demo application found in the sdk/src/demo folder. To debug your application instead, make sure your working directory is set to your project directory." );
         }
-
-
     }
-
-
 }
