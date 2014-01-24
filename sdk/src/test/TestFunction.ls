@@ -29,6 +29,8 @@ class FunctionMethodTestClass {
     public var intValue = 100;
     
     static var argTest:Vector.<String> = new Vector.<String>;
+
+    var preInitializedFunctionVarTest:Function = function():void{};
     
     public static function checkTestArgs(...args) {
     

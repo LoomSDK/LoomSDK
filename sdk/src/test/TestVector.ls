@@ -35,6 +35,8 @@ class TestVector extends Test
     public var aMemberVectorArray:Vector.<Array> = [["hi"], ["there", "buddy"]];
     public var aNotherTest:Vector.<String> = new <String>["one", "2", "thr333"];
 
+    public var aWhiteSpaceTest:Vector.<Object>=null;
+
     static function staticSortMethod(x:Number, y:Number):Number {
     
         if (x < y)  return -1;
