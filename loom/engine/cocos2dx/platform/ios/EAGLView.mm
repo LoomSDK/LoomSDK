@@ -515,7 +515,6 @@ static EAGLView *view = 0;
     return UITextAutocapitalizationTypeNone;
 }
 
-
 #pragma mark -
 #pragma mark UITextInput protocol
 
@@ -529,6 +528,7 @@ static EAGLView *view = 0;
 // @synthesize selectedTextRange;       // must implement
 @synthesize tokenizer;
 @synthesize keyboardType;
+@synthesize returnKeyType;
 
 /* Text may have a selection, either zero-length (a caret) or ranged.  Editing operations are
  * always performed on the text from this selection.  nil corresponds to no selection. */

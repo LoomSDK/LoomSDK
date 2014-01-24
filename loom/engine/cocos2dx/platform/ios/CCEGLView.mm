@@ -104,6 +104,8 @@ void CCEGLView::setIMEKeyboardState(bool bOpen, int type)
             case 4: view.keyboardType = UIKeyboardTypeNumberPad; break;
         }
 
+        view.returnKeyType = UIReturnKeyDone;
+
         [[EAGLView sharedEGLView] becomeFirstResponder];
     }
     else
