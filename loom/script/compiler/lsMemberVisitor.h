@@ -245,6 +245,17 @@ public:
                 {
                     mi->setType(Scope::resolveType("system.Boolean"));
                 }
+                else if (varDecl->initializer->astType == AST_FUNCTIONLITERAL)
+                {
+
+                   error("Local functions must be delcared in method scope %s:%s type: %s in %s at line %i",
+                          cls->name->string.c_str(),
+                          varDecl->identifier->string.c_str(),
+                          varDecl->typeString.c_str(), cunit->filename.c_str(), lineNumber);
+                    fatalError = true;
+                    return;
+                }
+
             }
         }
     }
