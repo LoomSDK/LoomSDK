@@ -230,8 +230,8 @@ package loom2d.display
             if (!valid)
                 validate();
                 
-            pivotX = width / 2;
-            pivotY = height / 2;
+            pivotX = width / scaleX / 2;
+            pivotY = height / scaleY / 2;
         }
                  
         /** Disposes all resources of the display object. 
