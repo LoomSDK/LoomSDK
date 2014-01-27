@@ -2876,6 +2876,11 @@ ASTTemplateTypeInfo *Parser::parseTemplateType(const utString& templateType, AST
         // Convert the >> into a > and let parsing continue.
         nextToken = LSTOKEN(OPERATOR_GREATERTHAN);
     }
+    else if (nextToken == LSTOKEN(OPERATOR_GREATERTHANOREQUAL))
+    {
+        // Convert the >= into a = and let parsing continue.
+        nextToken = LSTOKEN(OPERATOR_ASSIGNMENT);
+    }    
     else
     {
         // Advance normally.
