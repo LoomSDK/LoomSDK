@@ -30,7 +30,9 @@ class FunctionMethodTestClass {
     
     static var argTest:Vector.<String> = new Vector.<String>;
 
-    var preInitializedFunctionVarTest:Function = function():void{};
+    // This raises a compiler error, local functions must be declared in method scope
+    // LOOM-1855
+    //var preInitializedFunctionVarTest:Function = function():void{};
     
     public static function checkTestArgs(...args) {
     
