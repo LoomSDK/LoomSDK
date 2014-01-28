@@ -94,6 +94,8 @@ set (LOOM_INCLUDE_FOLDERS
     link_directories ( ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/third_party/win32/libraries )
 
     # Warnings as errors
+    add_definitions (/wd4819)
+
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /WX /arch:SSE2")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /WX /arch:SSE2")    
     #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMT")
