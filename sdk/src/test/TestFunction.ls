@@ -29,6 +29,10 @@ class FunctionMethodTestClass {
     public var intValue = 100;
     
     static var argTest:Vector.<String> = new Vector.<String>;
+
+    // This raises a compiler error, local functions must be declared in method scope
+    // LOOM-1855
+    //var preInitializedFunctionVarTest:Function = function():void{};
     
     public static function checkTestArgs(...args) {
     
