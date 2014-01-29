@@ -17,8 +17,6 @@ void loom_appShutdown();
 
 #include "loom/common/core/log.h"
 
-lmDefineLogGroup(jniGroup, "loom.jni", 1, LoomLogInfo);
-
 #include "platform/android/jni/JniHelper.h"
 #include <jni.h>
 #include <android/log.h>

@@ -26,9 +26,6 @@
 
 using namespace LS;
 
-lmDefineLogGroup(gMobileLogGroup, "Loom.Mobile", 1, 0);
-
-
 
 /// Script bindings to the native Mobile API.
 ///
