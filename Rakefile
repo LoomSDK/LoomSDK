@@ -96,7 +96,7 @@ else
 end
 
 # For matz's sake just include rubyzip directly.
-path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'lib'))
+path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'libs'))
 puts "Adding #{path} to $LOAD_PATH to use local rubyzip."
 $LOAD_PATH << path
 require 'zip'
