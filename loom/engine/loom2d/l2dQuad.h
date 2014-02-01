@@ -34,12 +34,14 @@ public:
     GFX::VertexPosColorTex quadVertices[4];
 
     bool nativeVertexDataInvalid;
+    bool tinted;
 
     int nativeTextureID;
 
     Quad()
     {
         type = typeQuad;
+        tinted = false;
     }
 
     int getNativeTextureID() const

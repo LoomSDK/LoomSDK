@@ -84,7 +84,7 @@ public:
 
     static void endFrame();
 
-    static VertexPosColorTex *getQuadVertices(TextureID texture, uint16_t numVertices);
+    static VertexPosColorTex *getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted);
 
     static void batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices);
 };
