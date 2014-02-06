@@ -202,10 +202,10 @@ package loom2d.display
             var numFrames:int = this.numFrames;
             
             mStartTimes.length = 0;
-            mStartTimes[0] = 0;
+            mStartTimes.pushSingle( 0 );
             
             for (var i:int=1; i<numFrames; ++i)
-                mStartTimes[i] = mStartTimes[int(i-1)] + mDurations[int(i-1)];
+                mStartTimes.pushSingle( mStartTimes[int(i-1)] + mDurations[int(i-1)] );
         }
         
         // IAnimatable
