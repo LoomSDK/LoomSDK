@@ -1,6 +1,7 @@
 title: JSON Example
 description: Usage of the Loom JSON API
 source: src/JSONExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

@@ -1,6 +1,7 @@
 title: Ball Physics
 description: An app demoing the use of the loom Physics class, featuring the creation and destruction of a series of various sized physics-enabled sprite objects.
 source: src/BallPhysicsDemo.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

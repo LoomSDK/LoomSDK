@@ -1,6 +1,7 @@
 title: Application Focus
 description: Demonstrates how to listen for activate/deactivate events and display size changes.
 source: src/ApplicationFocusDemo.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

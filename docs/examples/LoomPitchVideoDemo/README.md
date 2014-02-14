@@ -1,6 +1,7 @@
 title: Loom Pitch Video Example
 description: Simple app with 3 videos showing games developed with Loom.
 source: src/LoomPitchVideoDemo.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

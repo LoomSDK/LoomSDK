@@ -1,6 +1,7 @@
 title: ClipRectangleExample
 description: How to use the ClipRects to control the rendered area of screen
 source: src/ClipRectExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

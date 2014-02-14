@@ -1,6 +1,7 @@
 title: Classpath Example
 description: How to use the loom.config classpath array to specify source folders to compile.
 source: loom.config
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

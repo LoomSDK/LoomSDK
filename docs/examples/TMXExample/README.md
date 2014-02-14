@@ -1,6 +1,7 @@
 title: TMX Example
 description: Create and render a TMX tilemap created by Tiled.
 source: src/TMXExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

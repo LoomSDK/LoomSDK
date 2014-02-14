@@ -1,6 +1,7 @@
 title: WebView Example
 description: Loom Example showcasing some of the features of Loom.WebView.
 source: src/WebViewExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

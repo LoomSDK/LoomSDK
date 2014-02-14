@@ -1,6 +1,7 @@
 title: File Example
 description: Simple example demonstrating File operations
 source: src/FileExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

@@ -1,6 +1,7 @@
 title: Loom Hexagon
 description: A small game based on Terry Cavaghn's 'Hexagon'
 source: src/LoomHexagon.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview
