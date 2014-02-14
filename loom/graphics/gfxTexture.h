@@ -113,6 +113,8 @@ private:
         return id;
     }
 
+    static void loadCheckerBoard(TextureID id);
+
     static void initialize();
 
     static void handleAssetNotification(void *payload, const char *name);
