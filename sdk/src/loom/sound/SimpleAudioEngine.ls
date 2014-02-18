@@ -29,15 +29,22 @@ package loom.sound
      * @see Sound
      * @see Listener
      */
+
     public class SimpleAudioEngine
     {
-        // TODO: Disallow explicit creation of this class.
-
         protected static var _sharedInstance:SimpleAudioEngine = null;
+        protected static var _allowInstantiation:Boolean = false;
 
         protected var backgroundMusic:Sound;
         protected var sounds = new Vector.<Sound>();
+        protected var pausedEffects = new Vector.<Sound>();
+        protected var soundIdLookup:Dictionary.<Object, Object> = {};
+        protected var lastSoundId:int = -1;
 
+        public function SimpleAudioEngine()
+        {
+            Debug.assert( _allowInstantiation, "SimpleAudioEngine cannot be instantiated directly. Please use SimpleAudioEngine.sharedEngine() to access the appropriate instance." );
+        }
 
         /**
         Get the shared Engine object,it will new one when first time be called
@@ -45,13 +52,17 @@ package loom.sound
         public static function sharedEngine():SimpleAudioEngine
         {
             if(!_sharedInstance)
+            {
+                _allowInstantiation = true;
                 _sharedInstance = new SimpleAudioEngine();
+                _allowInstantiation = false;
+            }
             return _sharedInstance;
         }
 
         /**
         Release the shared Engine object
-        @warning It must be called before the application exit, or a memroy leak will be casued.
+        @warning It must be called before the application exit, or a memory leak will be caused.
         */
         public static function end():void
         {
@@ -182,10 +193,40 @@ package loom.sound
             var s = Sound.load(path);
             if(!s)
                 return -1;
+
+            lastSoundId++;
+
             s.setLooping(loop);
             s.play();
-            sounds.push(s);
-            return sounds.length - 1;
+
+            // Loop through all sounds in the Vector. If a sound is found that is done playing, remove it.
+            // Our sound vector should never contain more sounds than were simultaneously playing at one point.
+
+            var soundCount:int = sounds.length;
+            var i:int = 0;
+            while ( i < soundCount )
+            {
+                var sound:Sound = sounds[ i ];
+                if ( !sound ) break;
+                else if ( !sound.isPlaying() )
+                {
+                    removeSound( sound );
+                    break;
+                }
+                i++;
+            }
+
+            // If we removed a used sound from the vector, use its slot for the new sound. Otherwise create a new slot.
+            if ( i < soundCount ) sounds[ i ] = s;
+            else sounds.pushSingle( s );
+
+            // Add our new sound ID to our double lookup table. This ensures a unique ID for every sound.
+            soundIdLookup[ lastSoundId ] = s;
+            soundIdLookup[ s ] = lastSoundId;
+
+            //trace( "Last sound ID:", lastSoundId, "::", "Total sounds in vector:", sounds.length, "::", "Total paused Sounds:", pausedEffects.length );
+
+            return lastSoundId;
         }
 
         /**
@@ -194,7 +235,14 @@ package loom.sound
         */
         public function pauseEffect(soundId:int):void
         {
-            sounds[soundId].pause();
+            var sound = getSoundById( soundId );
+            if ( sound )
+            {
+                 sound.pause();
+                 var soundIndex:int = sounds.indexOf( sound );
+                 sounds[ soundIndex ] = null;
+                 pausedEffects.pushSingle( sound );
+            }
         }
 
         /**
@@ -202,8 +250,17 @@ package loom.sound
         */
         public function pauseAllEffects():void
         {
-            for(var i=0; i<sounds.length; i++)
-                sounds[i].pause();
+            var soundCount:int = sounds.length;
+            for ( var i:int = 0; i < soundCount; i++ )
+            {
+                var sound = sounds[ i ];
+                if ( sound )
+                {
+                    sound.pause();
+                    pausedEffects.pushSingle( sound );
+                    sounds[i] = null;
+                }
+            }
         }
 
         /**
@@ -212,7 +269,14 @@ package loom.sound
         */
         public function resumeEffect(soundId:int):void
         {
-            sounds[soundId].play();
+            var sound = getSoundById( soundId );
+            var soundIndex = -1;
+            if ( sound ) soundIndex = pausedEffects.indexOf( sound );
+            if ( soundIndex != -1 )
+            {
+                sound.play();
+                mergeSoundsWithActiveList( pausedEffects.splice( soundIndex, 1 ) );
+            }
         }
 
         /**
@@ -220,17 +284,36 @@ package loom.sound
         */
         public function resumeAllEffects():void
         {
-            for(var i=0; i<sounds.length; i++)
-                sounds[i].play();
+            var soundCount:int = pausedEffects.length;
+            if ( soundCount == 0 ) return;
+            for ( var i:int = 0; i < soundCount; i++ ) pausedEffects[ i ].play();
+            mergeSoundsWithActiveList( pausedEffects );
+            pausedEffects.clear();
         }
 
         /**
         Stop playing sound effect
         @param soundId The return value of function playEffect
         */
-        public function stopEffect(soundId:int):void
+        public function stopEffect( soundId:int ):void
         {
-            sounds[soundId].stop();
+            var sound = getSoundById( soundId );
+            if ( !sound ) return;
+
+            sound.stop();
+
+            var soundIndex = sounds.indexOf( sound );
+            if ( soundIndex != -1 )
+            {
+                sounds[ soundIndex ] = null;
+            }
+            else
+            {
+                soundIndex = pausedEffects.indexOf( sound );
+                if ( soundIndex != -1 ) pausedEffects.splice( soundIndex, 1 );
+            }
+
+            removeSound( sound );
         }
 
         /**
@@ -238,8 +321,18 @@ package loom.sound
         */
         public function stopAllEffects():void
         {
-            for(var i=0; i<sounds.length; i++)
-                sounds[i].stop();
+            var combinedSounds:Vector.<Sound> = sounds.concat( pausedEffects );
+            var combinedSoundCount:int = 0;
+
+            for ( var i:int = 0; i < combinedSoundCount; i++ )
+            {
+                combinedSounds[ i ].stop();
+                removeSound( combinedSounds[ i ] );
+            }
+            
+            combinedSounds.clear();
+            sounds.clear();
+            pausedEffects.clear();
         }
 
         /**
@@ -259,6 +352,41 @@ package loom.sound
         public function unloadEffect(path:string):void
         {
             // TODO
+        }
+
+        public function getSoundById( soundId:int ):Sound
+        {
+            var sound:Sound = soundIdLookup[ soundId ] as Sound;
+            return sound;
+        }
+
+        private function mergeSoundsWithActiveList( mergeList:Vector.<Sound> ):void
+        {
+            var masterSoundCount:int = sounds.length;
+            var mergeSoundCount:int = mergeList.length;
+            var masterIndex:int = 0;
+
+            for ( var i:int = 0; i < mergeSoundCount; i++ )
+            {
+                while( masterIndex < masterSoundCount && sounds[ masterIndex ] && sounds[ masterIndex ].isPlaying() ) masterIndex++;
+
+                if ( masterIndex >= masterSoundCount )
+                {
+                    sounds = sounds.concat( mergeList.slice( i ) );
+                    return;
+                }
+
+                if ( sounds[ masterIndex ] ) removeSound( sounds[ masterIndex ] );
+                sounds[ masterIndex ] = mergeList[ i ];
+            }
+        }
+
+        private function removeSound( sound:Sound ):void
+        {
+            var soundId:int = soundIdLookup[ sound ] as int;
+            soundIdLookup[ sound ] = null;
+            soundIdLookup[ soundId ] = null;
+            sound.deleteNative();
         }
     }
 }
