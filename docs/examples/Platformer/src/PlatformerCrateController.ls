@@ -3,7 +3,6 @@ package
 
   import loom.gameframework.AnimatedComponent;
   import loom.gameframework.TickedComponent;
-  import cocos2d.CCRect;
   import loom2d.math.Point;
 
 
@@ -49,6 +48,8 @@ package
         var dir = 0;
         var posX = mover.positionX;
         var deltaX = 0;
+        
+        if (Math.abs(posX - destX) > snapX) destX = posX;
 
         if (posX > destX)
           dir = -1;

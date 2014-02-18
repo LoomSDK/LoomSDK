@@ -1,10 +1,9 @@
 package 
 {
-    import cocos2d.CCDictionary;
-    import cocos2d.CCRect;
-    import cocos2d.CCSize;
-    import cocos2d.CCTMXLayer;
     import loom2d.math.Point;
+    import loom2d.math.Rectangle;
+    
+    import loom2d.tmx.TMXLayer;
     import loom.gameframework.TickedComponent;
 
     /**
@@ -12,17 +11,15 @@ package
      */
     public class PlatformerTileShape
     {
-        protected var resolutions:Vector.<PlatformerResolutionVector> = [new PlatformerResolutionVector(AXIS_RIGHT), new PlatformerResolutionVector(AXIS_LEFT), new PlatformerResolutionVector(AXIS_DOWN), new PlatformerResolutionVector(AXIS_UP)];
-
         private static const V_RIGHT:int = 0;
         private static const V_LEFT :int = 1;
         private static const V_DOWN :int = 2;
         private static const V_UP   :int = 3;
         
-        private static const AXIS_RIGHT:Point2 = new Point2( 1,  0);
-        private static const AXIS_LEFT :Point2 = new Point2(-1,  0);
-        private static const AXIS_DOWN :Point2 = new Point2( 0, -1);
-        private static const AXIS_UP   :Point2 = new Point2( 0,  1);
+        private static const AXIS_RIGHT:Point = new Point( 1,  0);
+        private static const AXIS_LEFT :Point = new Point(-1,  0);
+        private static const AXIS_DOWN :Point = new Point( 0,  1);
+        private static const AXIS_UP   :Point = new Point( 0, -1);
         
         public var objectMask:int = 0xff;
 		
@@ -36,21 +33,20 @@ package
 		private var _flipX:Boolean = false;
 		private var _flipY:Boolean = false;
 		
+		private static var _tileBoundsCache:Rectangle = new Rectangle();
+		private static var _partialResolutionsBoundsCache:Rectangle = new Rectangle();
+		
+        protected var resolutions:Vector.<PlatformerResolutionVector> = [
+            new PlatformerResolutionVector(AXIS_RIGHT),
+            new PlatformerResolutionVector(AXIS_LEFT),
+            new PlatformerResolutionVector(AXIS_DOWN),
+            new PlatformerResolutionVector(AXIS_UP)
+        ];
+        
 		private var buildResolutions:Function = getResolutionsNone;
 
         public function PlatformerTileShape(shape:String, xFlip:Boolean, yFlip:Boolean, onlyOneWay:Boolean)
         {
-            // HACK TO WORK AROUND PROBLEM WITH POINT2
-            AXIS_RIGHT.x = 1;
-            AXIS_RIGHT.y = 0;
-            AXIS_LEFT.x = -1;
-            AXIS_LEFT.y = 0;
-            AXIS_DOWN.x = 0;
-            AXIS_DOWN.y = -1;
-            AXIS_UP.x = 0;
-            AXIS_UP.y = 1;
-            // END HACK
-
             _shape  = shape;
             _flipX  = xFlip;
             _flipY  = yFlip;
@@ -61,42 +57,35 @@ package
             refreshShapeCache();
         }
         
-        public function contactVsObj( obj:PlatformerMover, mapLayer:CCTMXLayer, tilex:int, tiley:int ): Boolean
+        public function contactVsObj( obj:PlatformerMover, mapLayer:TMXLayer, tilex:int, tiley:int ): Boolean
         {
             // If there is no valid resolution vector, then we're not colliding.
             
             // TODO: This could possibly be optimized with simpler checks?  
-            return (resolveVsObj(obj, mapLayer, tilex, tiley, false) != null)
+            return (resolveVsObj(obj, mapLayer, tilex, tiley, false) != null);
         }
 		
-        public function tileBoundsForCoord( mapLayer:CCTMXLayer, tilex:int, tiley:int):CCRect {
-          var tileSize = mapLayer.getMapTileSize();
-          var mapSize = mapLayer.getLayerSize();
-
-          var retVal:CCRect = new CCRect();
-          retVal.setRect(   tilex * tileSize.width,
-                            ((mapSize.height - tiley - 1) * tileSize.height),
-                            tileSize.width,
-                            tileSize.height );
-
+        public function tileBoundsForCoord(mapLayer:TMXLayer, tilex:int, tiley:int):Rectangle
+        {
+            _tileBoundsCache.setTo( tilex * mapLayer.tileWidth, tiley * mapLayer.tileHeight, mapLayer.tileWidth, mapLayer.tileHeight );
+          
 //          Algebra to solve for pixelY
 //          tileY = ((mapH * tileH) - pixelY) / tileH;
 //          tileY * tileH = ((mapH * tileH) - pixelY);
 //          mapH * tileH - tileY * tileH = pixelY;
 //          (mapH - tileY) * tileH = pixelY;
 
-          return retVal;
+          return _tileBoundsCache;
         }
 
-        public function getResolutions( obj:PlatformerMover, mapLayer:CCTMXLayer, tilex:int, tiley:int, doCull:Boolean = true ):Vector.<PlatformerResolutionVector>
+        public function getResolutions( obj:PlatformerMover, mapLayer:TMXLayer, tilex:int, tiley:int, doCull:Boolean = true ):Vector.<PlatformerResolutionVector>
         {
-            var tileSize:CCSize = mapLayer.getMapTileSize();
-            var tileBounds:CCRect = tileBoundsForCoord(mapLayer, tilex, tiley);
+            var tileBounds:Rectangle = tileBoundsForCoord(mapLayer, tilex, tiley);
 
             if (shape == "none")
                 return null;
             
-            if (!tileBounds.intersectsRect(obj.dest)) // rectsOverlap(tileBounds, obj.dest)) // 
+            if (!rectsOverlap(tileBounds, obj.dest))
             {
                 return null;
             }
@@ -158,7 +147,7 @@ package
                 resolutions[V_LEFT].enabled = false;
                 resolutions[V_DOWN].enabled = false;
                 
-                if (obj.bounds.getMinY() < tileBounds.getMaxY() && _shape == "full")
+                if (obj.bounds.bottom > tileBounds.y && _shape == "full")
                     resolutions[V_UP].enabled = false;
             }                
 
@@ -166,7 +155,7 @@ package
         }
 
 
-        public function resolveVsObj( obj:PlatformerMover, mapLayer:CCTMXLayer, tilex:int, tiley:int, doCull:Boolean = true ):PlatformerResolutionVector
+        public function resolveVsObj( obj:PlatformerMover, mapLayer:TMXLayer, tilex:int, tiley:int, doCull:Boolean = true ):PlatformerResolutionVector
         {
             getResolutions(obj, mapLayer, tilex, tiley, doCull);
             
@@ -195,7 +184,7 @@ package
             return null;            
         }
 		
-		private function cullResolutions(obj:PlatformerMover, mapLayer:CCTMXLayer, tilex:int, tiley:int, tileBounds:CCRect):void
+		private function cullResolutions(obj:PlatformerMover, mapLayer:TMXLayer, tilex:int, tiley:int, tileBounds:Rectangle):void
 		{ 
 			// Disqualify resolution vectors based on the objects' velocity
             if ((obj.velocityX > 0) && (resolutions[V_RIGHT].distance != 0))
@@ -204,11 +193,11 @@ package
             if ((obj.velocityX < 0) && (resolutions[V_LEFT].distance != 0))
                 resolutions[V_LEFT].enabled = false;
 
-            if ((obj.velocityY < 0) && (resolutions[V_DOWN].distance != 0))
+            if ((obj.velocityY > 0) && (resolutions[V_DOWN].distance != 0))
                 resolutions[V_DOWN].enabled = false;
             
             // TODO: May need to check for angled tiles here once implemented
-            if ((obj.velocityY > 0) && (resolutions[V_UP].distance != 0))
+            if ((obj.velocityY < 0) && (resolutions[V_UP].distance != 0))
                 resolutions[V_UP].enabled = false;
 
             // Disqualify resolution for directions that have solid edges that are butted up against other solid edges.
@@ -256,7 +245,7 @@ package
             }
 		}
 		
-		private function getResolutionsNone( obj:PlatformerMover, tileBounds:CCRect ):void
+		private function getResolutionsNone( obj:PlatformerMover, tileBounds:Rectangle ):void
 		{
             resolutions[V_RIGHT].distance = 0;
             resolutions[V_LEFT].distance  = 0;
@@ -269,12 +258,12 @@ package
 			resolutions[V_UP].enabled     = false;
 		}
 		
-		private function getResolutionsFull( obj:PlatformerMover, tileBounds:CCRect ):void
+		private function getResolutionsFull( obj:PlatformerMover, tileBounds:Rectangle ):void
 		{
-            resolutions[V_RIGHT].distance = tileBounds.getMaxX() -    obj.dest.getMinX();
-            resolutions[V_LEFT].distance  =   obj.dest.getMaxX() -  tileBounds.getMinX();
-            resolutions[V_DOWN].distance  = -(tileBounds.getMinY() -    obj.dest.getMaxY());
-            resolutions[V_UP].distance    =   -(obj.dest.getMinY() -  tileBounds.getMaxY());
+            resolutions[V_RIGHT].distance = tileBounds.right -    obj.dest.x;
+            resolutions[V_LEFT].distance  =   obj.dest.right -  tileBounds.x;
+            resolutions[V_DOWN].distance  =   tileBounds.bottom -    obj.dest.y;
+            resolutions[V_UP].distance    =   obj.dest.bottom -  tileBounds.y;
 
 			resolutions[V_RIGHT].enabled  = true;
 			resolutions[V_LEFT].enabled   = true;
@@ -282,54 +271,56 @@ package
 			resolutions[V_UP].enabled     = true;
 		}
         
-        private function getResolutionsPartial( obj:PlatformerMover, tileBounds:CCRect, sizeX:Number, sizeY:Number):void
+        private function getResolutionsPartial( obj:PlatformerMover, tileBounds:Rectangle, sizeX:Number, sizeY:Number):void
         {
+            _partialResolutionsBoundsCache.setTo( tileBounds.x, tileBounds.y, tileBounds.width, tileBounds.height );
+            
             if (!flipX)
-                tileBounds.originX += (1 - sizeX) * tileBounds.width;
-            if (flipY)
-                tileBounds.originY += (1 - sizeY) * tileBounds.height;
+                _partialResolutionsBoundsCache.x += (1 - sizeX) * _partialResolutionsBoundsCache.width;
+            if (!flipY)
+                _partialResolutionsBoundsCache.y += (1 - sizeY) * _partialResolutionsBoundsCache.height;
             
-            tileBounds.height *= sizeY;
-            tileBounds.width *= sizeX;
+            _partialResolutionsBoundsCache.height *= sizeY;
+            _partialResolutionsBoundsCache.width *= sizeX;
             
-            if ( tileBounds.intersectsRect(obj.dest))
-                getResolutionsFull(obj, tileBounds);
+            if (rectsOverlap(_partialResolutionsBoundsCache, obj.dest))
+                getResolutionsFull(obj, _partialResolutionsBoundsCache);
             else
-                getResolutionsNone(obj, tileBounds);
+                getResolutionsNone(obj, _partialResolutionsBoundsCache);
         }
         
-        private function getResolutionsQuarter( obj:PlatformerMover, tileBounds:CCRect ):void
+        private function getResolutionsQuarter( obj:PlatformerMover, tileBounds:Rectangle ):void
         {
             getResolutionsPartial( obj, tileBounds, 0.5, 0.5);
         }
 
-        private function getResolutionsHalfH( obj:PlatformerMover, tileBounds:CCRect ):void
+        private function getResolutionsHalfH( obj:PlatformerMover, tileBounds:Rectangle ):void
         {
             getResolutionsPartial( obj, tileBounds, 1, 0.5);
         }
-        private function getResolutionsHalfV( obj:PlatformerMover, tileBounds:CCRect ):void
+        private function getResolutionsHalfV( obj:PlatformerMover, tileBounds:Rectangle ):void
         {
             getResolutionsPartial( obj, tileBounds, 0.5, 1);
         }
         
-        private function getResolutionsConcave( obj:PlatformerMover, tileBounds:CCRect):void
+        private function getResolutionsConcave( obj:PlatformerMover, tileBounds:Rectangle):void
         {
             // TODO: Implement
             getResolutionsNone( obj, tileBounds );
         }
 		
-		private function getResolutionsRound( obj:PlatformerMover, tileBounds:CCRect):void
+		private function getResolutionsRound( obj:PlatformerMover, tileBounds:Rectangle):void
 		{
             // TODO: Implement
             getResolutionsNone( obj, tileBounds );
 		}
 
-		private function getResolutionSloped( obj:PlatformerMover, tileBounds:CCRect, slope:Number, invSlope:Number, yOffset:Number):void
+		private function getResolutionSloped( obj:PlatformerMover, tileBounds:Rectangle, slope:Number, invSlope:Number, yOffset:Number):void
 		{
             getResolutionsFull( obj, tileBounds );
 
-            var overlapY:int = obj.bounds.getMinY() - tileBounds.getMinY();
-            var overlapX:int = tileBounds.getMaxX() - obj.bounds.getMaxY();
+            var overlapY:int = obj.bounds.y - tileBounds.y;
+            var overlapX:int = tileBounds.right - obj.bounds.bottom;
 
             // If the bottom edge of the object is above the bottom edge of the tile
             if (overlapY > 0)
@@ -352,7 +343,7 @@ package
         //      /  |
         //    /    |
         //  /______|
-		private function getResolutions45( obj:PlatformerMover, tileBounds:CCRect ):void
+		private function getResolutions45( obj:PlatformerMover, tileBounds:Rectangle ):void
 		{
             // TODO: Implement
 			getResolutionSloped( obj, tileBounds, 1, 1, 0 );
@@ -360,7 +351,7 @@ package
 
         //      _-`|
         //   _-`___|
-		private function getResolutions22a( obj:PlatformerMover, tileBounds:CCRect ):void
+		private function getResolutions22a( obj:PlatformerMover, tileBounds:Rectangle ):void
 		{
             // TODO: Implement
 			getResolutionSloped( obj, tileBounds, 0.5, 2, 0 );
@@ -370,26 +361,26 @@ package
         //   _-`   |
         //  |      |
         //  |______|
-		private function getResolutions22b( obj:PlatformerMover, tileBounds:CCRect ):void
+		private function getResolutions22b( obj:PlatformerMover, tileBounds:Rectangle ):void
 		{
             // TODO: Implement
-			getResolutionSloped( obj, tileBounds, 0.5, 2, (tileBounds.getMaxY() - tileBounds.getMinY()) * 0.5 );
+			getResolutionSloped( obj, tileBounds, 0.5, 2, (tileBounds.bottom - tileBounds.y) * 0.5 );
 		}
 
         //       /|
         //      / |
         //     /__|
-		private function getResolutions67a( obj:PlatformerMover, tileBounds:CCRect ):void
+		private function getResolutions67a( obj:PlatformerMover, tileBounds:Rectangle ):void
 		{
             // TODO: Implement
-			getResolutionSloped( obj, tileBounds, 2, 0.5, -(tileBounds.getMaxY() - tileBounds.getMinY()) );
+			getResolutionSloped( obj, tileBounds, 2, 0.5, -(tileBounds.bottom - tileBounds.y) );
 		}
 
         //      ___
         //    /    |
         //   /     |
         //  /______|
-		private function getResolutions67b( obj:PlatformerMover, tileBounds:CCRect ):void
+		private function getResolutions67b( obj:PlatformerMover, tileBounds:Rectangle ):void
 		{
             // TODO: Implement
 			getResolutionSloped( obj, tileBounds, 2, 0.5, 0 );
@@ -427,11 +418,11 @@ package
 			return _flipY;
 		}
 
-        public function rectsOverlap(rectA:CCRect, rectB:CCRect):Boolean {
-            return ((rectA.getMinX() < rectB.getMaxX()) &&
-                    (rectB.getMinX() < rectA.getMaxX()) &&
-                    (rectA.getMinY() < rectB.getMaxY()) &&
-                    (rectB.getMinY() < rectA.getMaxY()));
+        public function rectsOverlap(rectA:Rectangle, rectB:Rectangle):Boolean {
+            return ((rectA.x <= rectB.right) &&
+                    (rectB.x <= rectA.right) &&
+                    (rectA.y <= rectB.bottom) &&
+                    (rectB.y <= rectA.bottom));
         }
 
 		

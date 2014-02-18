@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker http://www.codeandweb.com/texturepacker-->
+<!-- $TexturePacker:SmartUpdate:43dfc1aab0ac4572b64a405e17d37fd1:b93551b2747afb71ae3d461ab03b7487:c4b143bb20ac9f95e87ec20d384c316b$ -->
+<TextureAtlas imagePath="PlatformerSprites.png">
+    <SubTexture name="block32.png" x="2" y="2" width="32" height="32"/>
+    <SubTexture name="block48.png" x="36" y="2" width="32" height="48"/>
+    <SubTexture name="block64.png" x="70" y="2" width="64" height="16"/>
+    <SubTexture name="crate_lg.png" x="136" y="2" width="64" height="64"/>
+    <SubTexture name="crate_med.png" x="202" y="2" width="32" height="48"/>
+    <SubTexture name="crate_sm.png" x="2" y="68" width="32" height="32"/>
+    <SubTexture name="flyer0.png" x="36" y="68" width="42" height="44" frameX="-11" frameY="-9" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="flyer1.png" x="80" y="68" width="40" height="36" frameX="-13" frameY="-19" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="flyer2.png" x="122" y="68" width="40" height="38" frameX="-13" frameY="-17" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="flyer3.png" x="164" y="68" width="40" height="36" frameX="-13" frameY="-16" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="flyer_dead0.png" x="206" y="68" width="40" height="36" frameX="-12" frameY="-14" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="flyer_dead1.png" x="2" y="114" width="42" height="36" frameX="-11" frameY="-16" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="flyer_dead2.png" x="46" y="114" width="42" height="36" frameX="-12" frameY="-17" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="flyer_dead3.png" x="90" y="114" width="42" height="36" frameX="-11" frameY="-15" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_dead.png" x="134" y="114" width="50" height="22" frameX="-7" frameY="-36" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_duck0.png" x="186" y="114" width="38" height="36" frameX="-13" frameY="-22" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_duck1.png" x="2" y="152" width="46" height="36" frameX="-11" frameY="-22" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_jump0.png" x="50" y="152" width="32" height="54" frameX="-17" frameY="-4" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_jump1.png" x="84" y="152" width="36" height="52" frameX="-14" frameY="-6" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_run0.png" x="122" y="152" width="32" height="52" frameX="-16" frameY="-6" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_run1.png" x="156" y="152" width="24" height="52" frameX="-20" frameY="-6" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_run2.png" x="182" y="152" width="24" height="52" frameX="-20" frameY="-6" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_run3.png" x="208" y="152" width="36" height="52" frameX="-14" frameY="-6" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_run4.png" x="2" y="208" width="26" height="52" frameX="-19" frameY="-6" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_run5.png" x="30" y="208" width="24" height="50" frameX="-20" frameY="-8" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_stand.png" x="56" y="208" width="30" height="52" frameX="-17" frameY="-6" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_stun.png" x="88" y="208" width="34" height="54" frameX="-15" frameY="-5" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_throw0.png" x="124" y="208" width="36" height="52" frameX="-14" frameY="-6" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_throw1.png" x="162" y="208" width="34" height="50" frameX="-15" frameY="-8" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_turn.png" x="198" y="208" width="26" height="52" frameX="-19" frameY="-6" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="hero_wall.png" x="2" y="264" width="36" height="52" frameX="-14" frameY="-6" frameWidth="64" frameHeight="64"/>
+    <SubTexture name="snagger0.png" x="40" y="264" width="32" height="26" frameX="-7" frameY="-15" frameWidth="42" frameHeight="42"/>
+    <SubTexture name="snagger1.png" x="74" y="264" width="38" height="42" frameX="-2" frameY="0" frameWidth="42" frameHeight="42"/>
+    <SubTexture name="snagger2.png" x="114" y="264" width="34" height="42" frameX="-6" frameY="0" frameWidth="42" frameHeight="42"/>
+    <SubTexture name="walker.png" x="150" y="264" width="30" height="40" frameX="-9" frameY="-3" frameWidth="48" frameHeight="48"/>
+    <SubTexture name="walker_dead.png" x="182" y="264" width="42" height="12" frameX="-3" frameY="-31" frameWidth="48" frameHeight="48"/>
+    <SubTexture name="walker_walk0.png" x="2" y="318" width="32" height="38" frameX="-8" frameY="-6" frameWidth="48" frameHeight="48"/>
+    <SubTexture name="walker_walk1.png" x="36" y="318" width="32" height="40" frameX="-8" frameY="-5" frameWidth="48" frameHeight="48"/>
+    <SubTexture name="walker_walk2.png" x="70" y="318" width="44" height="42" frameX="-1" frameY="-2" frameWidth="48" frameHeight="48"/>
+    <SubTexture name="walker_walk3.png" x="116" y="318" width="32" height="38" frameX="-8" frameY="-5" frameWidth="48" frameHeight="48"/>
+    <SubTexture name="walker_walk4.png" x="150" y="318" width="32" height="38" frameX="-8" frameY="-5" frameWidth="48" frameHeight="48"/>
+    <SubTexture name="walker_walk5.png" x="184" y="318" width="44" height="40" frameX="0" frameY="-2" frameWidth="48" frameHeight="48"/>
+</TextureAtlas>
