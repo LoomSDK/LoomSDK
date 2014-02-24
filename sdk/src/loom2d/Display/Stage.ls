@@ -106,7 +106,13 @@ package loom2d.display
             layer.onScrollWheelYMoved += onScrollWheel;
 
             // Note the stage.
-            Loom2D.stage = this;            
+            Loom2D.stage = this;
+
+            // Show stats specified in config file
+            if ( Cocos2D.configStats == Cocos2D.STATS_REPORT_FPS )
+                reportFps = true;
+            else if ( Cocos2D.configStats == Cocos2D.STATS_SHOW_DEBUG_OVERLAY )
+                Graphics.setDebug( Graphics.DEBUG_STATS );
         }
 
         protected function onKeyDown(key:int):void
@@ -336,6 +342,9 @@ package loom2d.display
         public static const ORIENTATION_LANDSCAPE:String = "landscape";
         public static const ORIENTATION_AUTO:String = "auto";
 
+        public static const STATS_REPORT_FPS:int = 1;
+        public static const STATS_SHOW_DEBUG_OVERLAY:int = 2;
+
         public static function initializeFromConfig()
         {
             //trace("initializing config");
@@ -346,7 +355,7 @@ package loom2d.display
             var width = display.getInteger("width");
             var height = display.getInteger("height");
             var title = display.getString("title");
-            var displayStats = display.getBoolean("stats");
+            configStats = display.getInteger("stats");
             var orientation = display.getString("orientation");
 
             // set the orientation to landscape by default
@@ -366,7 +375,6 @@ package loom2d.display
             initialize();
 
             setDisplayInfo(width, height, title);
-            setDisplayStats(displayStats);
             setDisplayOrientation(orientation);
         }
 
@@ -438,6 +446,8 @@ package loom2d.display
         */
         public static var configDisplayWidth:int;
         public static var configDisplayHeight:int;
+
+        public static var configStats:int;
 
         private static native function setDisplayOrientation(orientation:String);
         private static native function setDisplayCaption(caption:String);
