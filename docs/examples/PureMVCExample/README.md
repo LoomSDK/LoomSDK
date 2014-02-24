@@ -1,6 +1,7 @@
 title: PureMVC Shop Example
 description: Basic implementation of an in-game shop using the PureMVC framework
 source: src/Demo.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

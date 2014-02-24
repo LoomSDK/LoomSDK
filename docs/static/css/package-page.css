@@ -1476,3 +1476,30 @@ ul.items-list li {
   margin-left: 20px;
   width: 430px;
 }
+
+/* TODO: This should be moved to a scss file */
+#example-grid {
+  width: 120%;
+}
+
+#example-grid .example {
+  float: left;
+  margin: 0 5px 5px 0;
+}
+
+#example-grid .example a {
+  text-decoration: none;
+  color: #474747;
+}
+
+#example-grid .example img,
+#example-grid .example .placeholder {
+  width: 250px;
+  height: 180px;
+}
+
+#example-grid .example .placeholder {
+  text-align: center;
+  line-height: 180px;
+}
+

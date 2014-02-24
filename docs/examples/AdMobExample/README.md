@@ -1,6 +1,7 @@
 title: AdMob Example
 description: Showcases AdMob integration with banner and interstitial ads.
 source: src/AdMobExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

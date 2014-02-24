@@ -1,6 +1,7 @@
 title: Positional Audio Example
 description: How to use the Sound and Listener classes to play spatialized sounds!
 source: src/PositionalAudioExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

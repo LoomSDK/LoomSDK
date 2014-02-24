@@ -1,5 +1,6 @@
 title: Poly
 description: A basic chain reaction game with Menu UI and Gameplay.
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

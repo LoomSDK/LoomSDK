@@ -1,6 +1,7 @@
 title: FloodIt
-description: 
+description:
 source: src/FloodIt.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview
