@@ -39,6 +39,13 @@ public class Cocos2dxRenderer implements GLSurfaceView.Renderer
 	
     public void onSurfaceCreated(GL10 gl, EGLConfig config) 
     {
+        // Setting thread priority aggressively here helps us max out our
+        // performance. Specifically, we want to make sure that we process
+        // frames as fast as possible with no interruptions. The OS seems
+        // to do a good job of keeping us from breaking anything. Note
+        // that Android makes us sleep to vsync (60hz) so we won't bake 
+        // the CPU unless people actually max out frame time - in which case
+        // they can call sleep explicitly.
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         Process.setThreadPriority(-20);
     	nativeInit(screenWidth, screenHeight);

@@ -151,7 +151,10 @@ struct timespec dawn;
 
 typedef struct timespec   loom_linux_precisionTimer_t; // Don't bother creating our own timer struct -- for now, just use timespec
 
-// Select a platform appropriate clock.
+// Select a platform appropriate clock. CLOCK_MONOTONIC is reported
+// to give best results on Android, 
+// see http://gamasutra.com/view/feature/171774/getting_high_precision_timing_on_.php?print=1
+// for a full discussion.
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
 #define WHICH_CLOCK CLOCK_MONOTONIC
 #else

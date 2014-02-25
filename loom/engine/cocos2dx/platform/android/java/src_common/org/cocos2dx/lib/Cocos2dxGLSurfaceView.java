@@ -43,8 +43,7 @@ class TextInputWrapper implements TextWatcher, OnEditorActionListener
 {
 	
 	private static final Boolean debug = false;
-	private void LogD(String msg) 
-    {
+	private void LogD(String msg) {
 		if (debug) Log.d("TextInputFilter", msg);
 	}
 	
@@ -53,7 +52,7 @@ class TextInputWrapper implements TextWatcher, OnEditorActionListener
 	private String mOriginText;
 	
 	private Boolean isFullScreenEdit() 
-    {
+	{
 		InputMethodManager imm = (InputMethodManager)mMainView.getTextField().getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
 		return imm.isFullscreenMode();
 	}
@@ -130,342 +129,342 @@ class TextInputWrapper implements TextWatcher, OnEditorActionListener
 
 public class Cocos2dxGLSurfaceView extends GLSurfaceView 
 {    
-    static public Cocos2dxGLSurfaceView mainView;
+	static public Cocos2dxGLSurfaceView mainView;
 
-    private static final String TAG = Cocos2dxGLSurfaceView.class.getCanonicalName();
-    private Cocos2dxRenderer mRenderer;
-    
-    private static final boolean debug = false;
+	private static final String TAG = Cocos2dxGLSurfaceView.class.getCanonicalName();
+	private Cocos2dxRenderer mRenderer;
 	
-    ///////////////////////////////////////////////////////////////////////////
-    // for initialize
+	private static final boolean debug = false;
+	
 	///////////////////////////////////////////////////////////////////////////
-    public Cocos2dxGLSurfaceView(Context context) {
-        super(context);
-        //setDebugFlags(DEBUG_CHECK_GL_ERROR | DEBUG_LOG_GL_CALLS);
-        initView();
-    }
-
-    public Cocos2dxGLSurfaceView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        initView();
-    }
-    
-    public void setCocos2dxRenderer(Cocos2dxRenderer renderer){
-    	mRenderer = renderer;
-    	setRenderer(mRenderer);
-    }
-
-    protected void initView() 
-    {
-        setFocusableInTouchMode(true);
-        
-        textInputWraper = new TextInputWrapper(this);
-
-        handler = new Handler()
-        {
-        	public void handleMessage(Message msg)
-            {
-        		switch(msg.what){
-        		case HANDLER_OPEN_IME_KEYBOARD:
-        			if (null != mTextField && mTextField.requestFocus()) {
-        				mTextField.removeTextChangedListener(textInputWraper);
-        				mTextField.setText("");
-        				String text = (String)msg.obj;
-        				mTextField.append(text);
-        				textInputWraper.setOriginText(text);
-        				mTextField.addTextChangedListener(textInputWraper);
-
-                        // These correspond to the LoomScript LoomKeyboardType enum.
-                        switch(msg.arg1)
-                        {
-                            case 0:
-                            mTextField.setInputType(InputType.TYPE_CLASS_TEXT);                                                            
-                            break;
-
-                            case 1:
-                            mTextField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
-                            break;
-                            
-                            case 2:
-                            mTextField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
-                            break;
-                            
-                            case 3:
-                            mTextField.setInputType(InputType.TYPE_CLASS_PHONE);
-                            break;
-                            
-                            case 4:
-                            mTextField.setInputType(InputType.TYPE_CLASS_NUMBER);                            
-                            break;
-                        }
-
-                        // never use autocomplete
-                        mTextField.setInputType(mTextField.getInputType() | 
-                                                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS |
-                                                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-
-                        InputMethodManager imm = (InputMethodManager)mainView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.showSoftInput(mTextField, 0);
-                        Log.d("GLSurfaceView", "showSoftInput");
-        			}
-        			break;
-        			
-        		case HANDLER_CLOSE_IME_KEYBOARD:
-        			if (null != mTextField) {
-        				mTextField.removeTextChangedListener(textInputWraper);
-                        InputMethodManager imm = (InputMethodManager)mainView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(mTextField.getWindowToken(), 0);
-                        Log.d("GLSurfaceView", "HideSoftInput");
-        			}
-        			break;
-        		}
-        	}
-        };
-
-        mainView = this;
-    }
-    
-    public void onPause()
-    {
-    	queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                mRenderer.handleOnPause();
-            }
-        });
-    	
-    	//super.onPause();
-    }
-
-    private boolean needsResume = false;
-
-    public void surfaceDestroyed(SurfaceHolder sh)
-    {
-        super.surfaceDestroyed(sh);
-        needsResume = true;
-    }
-    
-    public void onResume()
-    {
-        if(needsResume)
-        {
-    	   super.onResume();
-           needsResume = false;
-        }
-    	
-    	queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                mRenderer.handleOnResume();
-            }
-        });
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // for text input
+	// for initialize
 	///////////////////////////////////////////////////////////////////////////
-    private final static int HANDLER_OPEN_IME_KEYBOARD = 2;
-    private final static int HANDLER_CLOSE_IME_KEYBOARD = 3;
-    private static Handler handler;
-    private static TextInputWrapper textInputWraper;
-    private Cocos2dxEditText mTextField;
-    
-    public TextView getTextField() {
-    	return mTextField;
-    }
-    
-    public void setTextField(Cocos2dxEditText view) {
-    	mTextField = view;
-    	if (null != mTextField && null != textInputWraper) {
-    		mTextField.setOnEditorActionListener(textInputWraper);
-    		mTextField.setMainView(this);
-    		this.requestFocus();
-    	}
-    }
-    
-    public static void openIMEKeyboard(int type) {
-    	Message msg = new Message();
-    	msg.what = HANDLER_OPEN_IME_KEYBOARD;
-        msg.arg1 = type;
-    	msg.obj = mainView.getContentText();
-    	handler.sendMessage(msg);
-    }
-    
-    private String getContentText() {
+	public Cocos2dxGLSurfaceView(Context context) {
+		super(context);
+		//setDebugFlags(DEBUG_CHECK_GL_ERROR | DEBUG_LOG_GL_CALLS);
+		initView();
+	}
+
+	public Cocos2dxGLSurfaceView(Context context, AttributeSet attrs) {
+		super(context, attrs);
+		initView();
+	}
+	
+	public void setCocos2dxRenderer(Cocos2dxRenderer renderer){
+		mRenderer = renderer;
+		setRenderer(mRenderer);
+	}
+
+	protected void initView() 
+	{
+		setFocusableInTouchMode(true);
+		
+		textInputWraper = new TextInputWrapper(this);
+
+		handler = new Handler()
+		{
+			public void handleMessage(Message msg)
+			{
+				switch(msg.what){
+				case HANDLER_OPEN_IME_KEYBOARD:
+					if (null != mTextField && mTextField.requestFocus()) {
+						mTextField.removeTextChangedListener(textInputWraper);
+						mTextField.setText("");
+						String text = (String)msg.obj;
+						mTextField.append(text);
+						textInputWraper.setOriginText(text);
+						mTextField.addTextChangedListener(textInputWraper);
+
+						// These correspond to the LoomScript LoomKeyboardType enum.
+						switch(msg.arg1)
+						{
+							case 0:
+							mTextField.setInputType(InputType.TYPE_CLASS_TEXT);                                                            
+							break;
+
+							case 1:
+							mTextField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+							break;
+							
+							case 2:
+							mTextField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+							break;
+							
+							case 3:
+							mTextField.setInputType(InputType.TYPE_CLASS_PHONE);
+							break;
+							
+							case 4:
+							mTextField.setInputType(InputType.TYPE_CLASS_NUMBER);                            
+							break;
+						}
+
+						// never use autocomplete
+						mTextField.setInputType(mTextField.getInputType() | 
+												InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS |
+												InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+
+						InputMethodManager imm = (InputMethodManager)mainView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+						imm.showSoftInput(mTextField, 0);
+						Log.d("GLSurfaceView", "showSoftInput");
+					}
+					break;
+					
+				case HANDLER_CLOSE_IME_KEYBOARD:
+					if (null != mTextField) {
+						mTextField.removeTextChangedListener(textInputWraper);
+						InputMethodManager imm = (InputMethodManager)mainView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+						imm.hideSoftInputFromWindow(mTextField.getWindowToken(), 0);
+						Log.d("GLSurfaceView", "HideSoftInput");
+					}
+					break;
+				}
+			}
+		};
+
+		mainView = this;
+	}
+	
+	public void onPause()
+	{
+		queueEvent(new Runnable() {
+			@Override
+			public void run() {
+				mRenderer.handleOnPause();
+			}
+		});
+		
+		//super.onPause();
+	}
+
+	private boolean needsResume = false;
+
+	public void surfaceDestroyed(SurfaceHolder sh)
+	{
+		super.surfaceDestroyed(sh);
+		needsResume = true;
+	}
+	
+	public void onResume()
+	{
+		if(needsResume)
+		{
+		   super.onResume();
+		   needsResume = false;
+		}
+		
+		queueEvent(new Runnable() {
+			@Override
+			public void run() {
+				mRenderer.handleOnResume();
+			}
+		});
+	}
+
+	///////////////////////////////////////////////////////////////////////////
+	// for text input
+	///////////////////////////////////////////////////////////////////////////
+	private final static int HANDLER_OPEN_IME_KEYBOARD = 2;
+	private final static int HANDLER_CLOSE_IME_KEYBOARD = 3;
+	private static Handler handler;
+	private static TextInputWrapper textInputWraper;
+	private Cocos2dxEditText mTextField;
+	
+	public TextView getTextField() {
+		return mTextField;
+	}
+	
+	public void setTextField(Cocos2dxEditText view) {
+		mTextField = view;
+		if (null != mTextField && null != textInputWraper) {
+			mTextField.setOnEditorActionListener(textInputWraper);
+			mTextField.setMainView(this);
+			this.requestFocus();
+		}
+	}
+	
+	public static void openIMEKeyboard(int type) {
+		Message msg = new Message();
+		msg.what = HANDLER_OPEN_IME_KEYBOARD;
+		msg.arg1 = type;
+		msg.obj = mainView.getContentText();
+		handler.sendMessage(msg);
+	}
+	
+	private String getContentText() {
 		return mRenderer.getContentText();
 	}
 
 	public static void closeIMEKeyboard(int type) {
-    	Message msg = new Message();
-    	msg.what = HANDLER_CLOSE_IME_KEYBOARD;
-    	handler.sendMessage(msg);
-    }
-    
-    public void insertText(final String text) {
-        queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                mRenderer.handleInsertText(text);
-            }
-        });
-    }
-    
-    public void deleteBackward() {
-        queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                mRenderer.handleDeleteBackward();
-            }
-        });
-    }
+		Message msg = new Message();
+		msg.what = HANDLER_CLOSE_IME_KEYBOARD;
+		handler.sendMessage(msg);
+	}
+	
+	public void insertText(final String text) {
+		queueEvent(new Runnable() {
+			@Override
+			public void run() {
+				mRenderer.handleInsertText(text);
+			}
+		});
+	}
+	
+	public void deleteBackward() {
+		queueEvent(new Runnable() {
+			@Override
+			public void run() {
+				mRenderer.handleDeleteBackward();
+			}
+		});
+	}
 
 	///////////////////////////////////////////////////////////////////////////
-    // for touch event
-    ///////////////////////////////////////////////////////////////////////////
+	// for touch event
+	///////////////////////////////////////////////////////////////////////////
 
-    public boolean onTouchEvent(final MotionEvent event) {
-    	// these data are used in ACTION_MOVE and ACTION_CANCEL
-    	final int pointerNumber = event.getPointerCount();
-    	final int[] ids = new int[pointerNumber];
-    	final float[] xs = new float[pointerNumber];
-    	final float[] ys = new float[pointerNumber];
+	public boolean onTouchEvent(final MotionEvent event) {
+		// these data are used in ACTION_MOVE and ACTION_CANCEL
+		final int pointerNumber = event.getPointerCount();
+		final int[] ids = new int[pointerNumber];
+		final float[] xs = new float[pointerNumber];
+		final float[] ys = new float[pointerNumber];
 
-    	for (int i = 0; i < pointerNumber; i++) {
-            ids[i] = event.getPointerId(i);
-            xs[i] = event.getX(i);
-            ys[i] = event.getY(i);
-        }
-        
-        switch (event.getAction() & MotionEvent.ACTION_MASK) {
-        case MotionEvent.ACTION_POINTER_DOWN:
-        	final int indexPointerDown = event.getAction() >> MotionEvent.ACTION_POINTER_ID_SHIFT;
-        	final int idPointerDown = event.getPointerId(indexPointerDown);
-            final float xPointerDown = event.getX(indexPointerDown);
-            final float yPointerDown = event.getY(indexPointerDown);
+		for (int i = 0; i < pointerNumber; i++) {
+			ids[i] = event.getPointerId(i);
+			xs[i] = event.getX(i);
+			ys[i] = event.getY(i);
+		}
+		
+		switch (event.getAction() & MotionEvent.ACTION_MASK) {
+		case MotionEvent.ACTION_POINTER_DOWN:
+			final int indexPointerDown = event.getAction() >> MotionEvent.ACTION_POINTER_ID_SHIFT;
+			final int idPointerDown = event.getPointerId(indexPointerDown);
+			final float xPointerDown = event.getX(indexPointerDown);
+			final float yPointerDown = event.getY(indexPointerDown);
 
-            queueEvent(new Runnable() {
-                @Override
-                public void run() {
-                    mRenderer.handleActionDown(idPointerDown, xPointerDown, yPointerDown);
-                }
-            });
-            break;
-            
-        case MotionEvent.ACTION_DOWN:
-        	// there are only one finger on the screen
-        	final int idDown = event.getPointerId(0);
-            final float xDown = xs[0];
-            final float yDown = ys[0];
-            
-            queueEvent(new Runnable() {
-                @Override
-                public void run() {
-                    mRenderer.handleActionDown(idDown, xDown, yDown);
-                }
-            });
-            break;
+			queueEvent(new Runnable() {
+				@Override
+				public void run() {
+					mRenderer.handleActionDown(idPointerDown, xPointerDown, yPointerDown);
+				}
+			});
+			break;
+			
+		case MotionEvent.ACTION_DOWN:
+			// there are only one finger on the screen
+			final int idDown = event.getPointerId(0);
+			final float xDown = xs[0];
+			final float yDown = ys[0];
+			
+			queueEvent(new Runnable() {
+				@Override
+				public void run() {
+					mRenderer.handleActionDown(idDown, xDown, yDown);
+				}
+			});
+			break;
 
-        case MotionEvent.ACTION_MOVE:
-            queueEvent(new Runnable() {
-                @Override
-                public void run() {
-                    mRenderer.handleActionMove(ids, xs, ys);
-                }
-            });
-            break;
+		case MotionEvent.ACTION_MOVE:
+			queueEvent(new Runnable() {
+				@Override
+				public void run() {
+					mRenderer.handleActionMove(ids, xs, ys);
+				}
+			});
+			break;
 
-        case MotionEvent.ACTION_POINTER_UP:
-        	final int indexPointUp = event.getAction() >> MotionEvent.ACTION_POINTER_ID_SHIFT;
-        	final int idPointerUp = event.getPointerId(indexPointUp);
-            final float xPointerUp = event.getX(indexPointUp);
-            final float yPointerUp = event.getY(indexPointUp);
-            
-            queueEvent(new Runnable() {
-                @Override
-                public void run() {
-                    mRenderer.handleActionUp(idPointerUp, xPointerUp, yPointerUp);
-                }
-            });
-            break;
-            
-        case MotionEvent.ACTION_UP:  
-        	// there are only one finger on the screen
-        	final int idUp = event.getPointerId(0);
-            final float xUp = xs[0];
-            final float yUp = ys[0];
-            
-            queueEvent(new Runnable() {
-                @Override
-                public void run() {
-                    mRenderer.handleActionUp(idUp, xUp, yUp);
-                }
-            });
-            break;
+		case MotionEvent.ACTION_POINTER_UP:
+			final int indexPointUp = event.getAction() >> MotionEvent.ACTION_POINTER_ID_SHIFT;
+			final int idPointerUp = event.getPointerId(indexPointUp);
+			final float xPointerUp = event.getX(indexPointUp);
+			final float yPointerUp = event.getY(indexPointUp);
+			
+			queueEvent(new Runnable() {
+				@Override
+				public void run() {
+					mRenderer.handleActionUp(idPointerUp, xPointerUp, yPointerUp);
+				}
+			});
+			break;
+			
+		case MotionEvent.ACTION_UP:  
+			// there are only one finger on the screen
+			final int idUp = event.getPointerId(0);
+			final float xUp = xs[0];
+			final float yUp = ys[0];
+			
+			queueEvent(new Runnable() {
+				@Override
+				public void run() {
+					mRenderer.handleActionUp(idUp, xUp, yUp);
+				}
+			});
+			break;
 
-        case MotionEvent.ACTION_CANCEL:
-            queueEvent(new Runnable() {
-               @Override
-                public void run() {
-                    mRenderer.handleActionCancel(ids, xs, ys);
-                }
-            });
-            break;
-        }
-      
-        if (debug){
-        	dumpEvent(event);
-        }
-        return true;
-    }
-    
-    /*
-     * This function is called before Cocos2dxRenderer.nativeInit(), so the width and height is correct.
-     */
-    protected void onSizeChanged(int w, int h, int oldw, int oldh){
-    	this.mRenderer.setScreenWidthAndHeight(w, h);
-    }
-    
+		case MotionEvent.ACTION_CANCEL:
+			queueEvent(new Runnable() {
+			   @Override
+				public void run() {
+					mRenderer.handleActionCancel(ids, xs, ys);
+				}
+			});
+			break;
+		}
+	  
+		if (debug){
+			dumpEvent(event);
+		}
+		return true;
+	}
+	
+	/*
+	 * This function is called before Cocos2dxRenderer.nativeInit(), so the width and height is correct.
+	 */
+	protected void onSizeChanged(int w, int h, int oldw, int oldh){
+		this.mRenderer.setScreenWidthAndHeight(w, h);
+	}
+	
  @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-    	final int kc = keyCode;
-    	if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_MENU) {
-    		queueEvent(new Runnable() {
-	            @Override
-	            public void run() {
-	                mRenderer.handleKeyDown(kc);
-	            }
-    		});
-    		return true;
-    	}
-        return super.onKeyDown(keyCode, event);
-    }
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		final int kc = keyCode;
+		if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_MENU) {
+			queueEvent(new Runnable() {
+				@Override
+				public void run() {
+					mRenderer.handleKeyDown(kc);
+				}
+			});
+			return true;
+		}
+		return super.onKeyDown(keyCode, event);
+	}
  
-    // Show an event in the LogCat view, for debugging
-    private void dumpEvent(MotionEvent event) 
-    {
-       String names[] = { "DOWN" , "UP" , "MOVE" , "CANCEL" , "OUTSIDE" ,
-          "POINTER_DOWN" , "POINTER_UP" , "7?" , "8?" , "9?" };
-       StringBuilder sb = new StringBuilder();
-       int action = event.getAction();
-       int actionCode = action & MotionEvent.ACTION_MASK;
-       sb.append("event ACTION_" ).append(names[actionCode]);
-       if (actionCode == MotionEvent.ACTION_POINTER_DOWN
-             || actionCode == MotionEvent.ACTION_POINTER_UP) {
-          sb.append("(pid " ).append(
-          action >> MotionEvent.ACTION_POINTER_ID_SHIFT);
-          sb.append(")" );
-       }
-       sb.append("[" );
-       for (int i = 0; i < event.getPointerCount(); i++) {
-          sb.append("#" ).append(i);
-          sb.append("(pid " ).append(event.getPointerId(i));
-          sb.append(")=" ).append((int) event.getX(i));
-          sb.append("," ).append((int) event.getY(i));
-          if (i + 1 < event.getPointerCount())
-             sb.append(";" );
-       }
-       sb.append("]" );
-       Log.d(TAG, sb.toString());
-    }
+	// Show an event in the LogCat view, for debugging
+	private void dumpEvent(MotionEvent event) 
+	{
+	   String names[] = { "DOWN" , "UP" , "MOVE" , "CANCEL" , "OUTSIDE" ,
+		  "POINTER_DOWN" , "POINTER_UP" , "7?" , "8?" , "9?" };
+	   StringBuilder sb = new StringBuilder();
+	   int action = event.getAction();
+	   int actionCode = action & MotionEvent.ACTION_MASK;
+	   sb.append("event ACTION_" ).append(names[actionCode]);
+	   if (actionCode == MotionEvent.ACTION_POINTER_DOWN
+			 || actionCode == MotionEvent.ACTION_POINTER_UP) {
+		  sb.append("(pid " ).append(
+		  action >> MotionEvent.ACTION_POINTER_ID_SHIFT);
+		  sb.append(")" );
+	   }
+	   sb.append("[" );
+	   for (int i = 0; i < event.getPointerCount(); i++) {
+		  sb.append("#" ).append(i);
+		  sb.append("(pid " ).append(event.getPointerId(i));
+		  sb.append(")=" ).append((int) event.getX(i));
+		  sb.append("," ).append((int) event.getY(i));
+		  if (i + 1 < event.getPointerCount())
+			 sb.append(";" );
+	   }
+	   sb.append("]" );
+	   Log.d(TAG, sb.toString());
+	}
 }
