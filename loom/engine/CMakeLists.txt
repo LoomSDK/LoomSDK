@@ -32,9 +32,6 @@ set (ENGINE_SRC
 
     bindings/cocos2d/lmCocos2D.cpp
     
-    tasks/tasks.c
-    tasks/tasksTests.cpp
-
     cocos2dx/CCCamera.cpp
     cocos2dx/CCConfiguration.cpp
     cocos2dx/CCDirector.cpp
@@ -194,8 +191,6 @@ set (ENGINE_HDR
     bindings/loom/lmApplication.h
     cocos2dx/loom/CCLoomCocos2D.h
     
-    tasks/tasks.h
-    tasks/tasksInternal.h
 )
 
 if(MSVC)

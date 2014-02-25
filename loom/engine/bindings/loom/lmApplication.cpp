@@ -32,7 +32,6 @@ using namespace LS;
 
 #include "loom/common/core/log.h"
 #include "loom/common/assets/assetsScript.h"
-#include "loom/engine/tasks/tasks.h"
 #include "loom/common/platform/platformNetwork.h"
 #include "loom/common/platform/platformWebView.h"
 
@@ -44,8 +43,6 @@ using namespace LS;
 #include "loom/common/platform/platformAdMob.h"
 
 #include "loom/common/config/applicationConfig.h"
-
-LOOM_DECLARE_TASK(Frame);
 
 LSLuaState     *LoomApplication::rootVM      = NULL;
 bool           LoomApplication::reloadQueued = false;
@@ -348,13 +345,6 @@ int LoomApplication::initializeCoreServices()
     suppressAssetTriggeredReload = true;
     loom_asset_subscribe(utString("bin/" + bootAssembly).c_str(), LoomApplication::__handleMainAssemblyUpdate, NULL, 0);
 
-    // Start the task system.
-    tasks_startup(1);
-
-    task_t *firstTask = task_initialize(task_FrameTask, NULL);
-    task_setThreadAffinity(firstTask, 0);
-    tasks_schedule(firstTask);
-
     // And fire script executoin.
     execMainAssembly();
     suppressAssetTriggeredReload = false;
@@ -369,8 +359,7 @@ void LoomApplication::shutdown()
 
     // Shut down application subsystems.
     loom_asset_shutdown();
-    tasks_shutdown();
-}
+} 
 
 
 void LoomApplication::reloadAssets()
