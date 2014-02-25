@@ -26,45 +26,38 @@ loom config --global globalPropertyName value
 
 ## Built-In Configuration Properties
 
-**android_sdk_path** - The path to your android sdk. This can only be set globally using the --global flag.
-
-**app_id** - the app's ID
-
-**app_type** [ default, console ] - The type of app; this determines whether it is run in a window as a normal app, or as a console app using loomexec.
-
-**assetAgentHost** - the host of the server running the asset agent
-
-**assetAgentPort** - the asset agent server port number
-
-**debuggerHost** - the host of the server running the LoomScript Debugger
-
-**debuggerPort** - the LoomScript Debugger server port number
-
-**display.height** - the default height of your app
-
-**display.orientation** [ portrait, landscape, auto ] - The orientation of your app. Set to 'auto' for auto-orientation.
-
-**display.stats** [ 0, 1, 2 ] - Show stats. 0 = no stats, 1 = Report FPS to console, 2 = Show Debug Overlay
-
-**display.title** - The title of your app
-
-**display.width**- The default width of your app
-
-**ios_signing_identity** - The target iOS Developer certificate to use when creating an iOS app, in the format "iPhone Developer: John Doe (XXXX)". This can be set locally, or globally using the --global flag.
-
-**log** - See 'logging options' below
-
-**mobile_provision** - The path to the .mobileProvision file for your app. This can be set locally, or globally using the --global flag. 
-
-**sdk_version** - The target SDK used to compile your app. 'latest' will point to the latest stable release.
-
-**version** - the current version number of the application
-
-**waitForAssetAgent** - number of milliseconds to wait before application attempts to connect to asset agent
-
-**waitForDebugger** - number of milliseconds to wait for LoomScript debugger
-
-**_wants51Audio** [ true, false ] - Set to true to initialize 5.1 audio
+| Name                 | Available Flags      | Description                                                       |
+| -------------------- | -------------------- | ----------------------------------------------------------------- |
+| android_sdk_path     |                      | The path to your android sdk. This can only be set globally using |
+|                      |                      | the --global flag.                                                |
+| app_id               |                      | the app's ID                                                      |
+| app_type             | [ default, console ] | The type of app; this determines whether it is run in a window as |
+|                      |                      | a normal app, or as a console app using loomexec.                 |
+| assetAgentHost       |                      | the host of the server running the asset agent                    |
+| assetAgentPort       |                      | the asset agent server port number                                |
+| debuggerHost         |                      | the host of the server running the LoomScript Debugger            |
+| debuggerPort         |                      | the LoomScript Debugger server port number                        |
+| display.height       |                      | the default height of your app                                    |
+| display.orientation  | [ portrait,          | The orientation of your app. Set to 'auto' for auto-orientation.  |
+|                      |   landscape,         |                                                                   |
+|                      |   auto ]             |                                                                   |
+| display.stats        | [ 0, 1, 2 ]          | Show stats. 0 = no stats, 1 = Report FPS to console,              |
+|                      |                      | 2 = Show Debug Overlay                                            |
+| display.title        |                      | The title of your app                                             |
+| display.width        |                      | The default width of your app                                     |
+| ios_signing_identity |                      | The target iOS Developer certificate to use when creating an iOS  |
+|                      |                      | app, in the format "iPhone Developer: John Doe (XXXX)". This can  |
+|                      |                      |  be set locally, or globally using the --global flag.             |
+| log                  |                      | See 'logging options' below                                       |
+| mobile_provision     |                      | The path to the .mobileProvision file for your app. This can be   |
+|                      |                      | set locally, or globally using the --global flag.                 |
+| sdk_version          |                      | The target SDK used to compile your app. 'latest' will point to   |
+|                      |                      | the latest stable release.                                        |
+| version              |                      | the current version number of the application                     |
+| waitForAssetAgent    |                      | maximum number of milliseconds to pause execution while           |
+|                      |                      | application attempts to connect to asset agent                    |
+| waitForDebugger      |                      | number of milliseconds to wait for LoomScript debugger            |
+| _wants51Audio        | [ true, false ]      | Set to true to initialize 5.1 audio                               |
 
 ## Logging Options
 
