@@ -39,10 +39,12 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
-class TextInputWrapper implements TextWatcher, OnEditorActionListener {
+class TextInputWrapper implements TextWatcher, OnEditorActionListener 
+{
 	
 	private static final Boolean debug = false;
-	private void LogD(String msg) {
+	private void LogD(String msg) 
+    {
 		if (debug) Log.d("TextInputFilter", msg);
 	}
 	
@@ -50,7 +52,8 @@ class TextInputWrapper implements TextWatcher, OnEditorActionListener {
 	private String mText;
 	private String mOriginText;
 	
-	private Boolean isFullScreenEdit() {
+	private Boolean isFullScreenEdit() 
+    {
 		InputMethodManager imm = (InputMethodManager)mMainView.getTextField().getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
 		return imm.isFullscreenMode();
 	}
@@ -125,8 +128,8 @@ class TextInputWrapper implements TextWatcher, OnEditorActionListener {
 	}
 }
 
-public class Cocos2dxGLSurfaceView extends GLSurfaceView {
-    
+public class Cocos2dxGLSurfaceView extends GLSurfaceView 
+{    
     static public Cocos2dxGLSurfaceView mainView;
 
     private static final String TAG = Cocos2dxGLSurfaceView.class.getCanonicalName();
@@ -153,13 +156,16 @@ public class Cocos2dxGLSurfaceView extends GLSurfaceView {
     	setRenderer(mRenderer);
     }
 
-    protected void initView() {   
+    protected void initView() 
+    {
         setFocusableInTouchMode(true);
         
         textInputWraper = new TextInputWrapper(this);
 
-        handler = new Handler(){
-        	public void handleMessage(Message msg){
+        handler = new Handler()
+        {
+        	public void handleMessage(Message msg)
+            {
         		switch(msg.what){
         		case HANDLER_OPEN_IME_KEYBOARD:
         			if (null != mTextField && mTextField.requestFocus()) {
@@ -436,7 +442,8 @@ public class Cocos2dxGLSurfaceView extends GLSurfaceView {
     }
  
     // Show an event in the LogCat view, for debugging
-    private void dumpEvent(MotionEvent event) {
+    private void dumpEvent(MotionEvent event) 
+    {
        String names[] = { "DOWN" , "UP" , "MOVE" , "CANCEL" , "OUTSIDE" ,
           "POINTER_DOWN" , "POINTER_UP" , "7?" , "8?" , "9?" };
        StringBuilder sb = new StringBuilder();
