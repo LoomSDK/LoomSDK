@@ -23,15 +23,9 @@ package loom2d.tmx
                 var bytes:ByteArray = new ByteArray;
                 Base64.decode(text, bytes);
 
-                if (compression == "zlib")
+                if (compression == "zlib" || compression == "gzip")
                 {
                     bytes.uncompress(width * height * 4);
-                }
-                else if (compression == "gzip")
-                {
-                    // TODO: Support gzip.  Ideally, this would be done by adding
-                    // gzip deflate to ByteArray in the native SDK
-                    Debug.assert(false, "gzip compression not yet supported!");
                 }
 
                 for (var i:int = 0; i < bytes.length; i += 4)
