@@ -16,7 +16,6 @@ if (MSVC)
         LoomCommon
         LoomScript
         "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "OPENGL32" "WSOCK32" "Ws2_32" 
-        ${CMAKE_SOURCE_DIR}/loom/vendor/zlib/lib/win32/zlibstatic.lib
     )
 
     add_custom_command(TARGET loomexec

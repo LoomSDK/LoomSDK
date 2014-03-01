@@ -32,6 +32,14 @@ package system.metrics {
          *  @return The number of managed native objects in memory that match the classPath.
          */
         public static native function getManagedObjectCount(classPath:String):Number;
+
+        /**
+         *  Gets the process memory usage in bytes
+         *  
+         *  @return The amount of memory in bytes used by the current process
+         */
+        public static native function getProcessMemoryUsage():Number;
+
         
     }
     

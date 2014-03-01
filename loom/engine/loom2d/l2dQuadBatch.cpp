@@ -47,7 +47,7 @@ void QuadBatch::render(lua_State *L)
     Matrix mtx;
     getTargetTransformationMatrix(NULL, &mtx);
 
-    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 4 * numQuads);
+    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 4 * numQuads, true);
     GFX::VertexPosColorTex *src = quadData;
 
     // apply the parent alpha

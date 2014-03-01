@@ -33,7 +33,7 @@ bool LSProfiler::enabled = false;
 utStack<MethodBase *> LSProfiler::methodStack;
 utHashTable<utPointerHashKey, LSProfilerTypeAllocation *> LSProfiler::allocations;
 
-lmDefineLogGroup(gProfilerLogGroup, "Profiler", 1, LoomLogInfo);
+lmDefineLogGroup(gProfilerLogGroup, "profiler", 1, LoomLogInfo);
 
 static inline void primeProfiler()
 {

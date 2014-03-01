@@ -8,95 +8,95 @@ accordance with the terms of the accompanying license agreement.
 */
 package feathers.data
 {
-	import System.Errors.IllegalOperationError;
+    import System.Errors.IllegalOperationError;
 
-	/**
-	 * An `IListCollectionDataDescriptor` implementation for Vector.&lt;Number&gt;.
-	 * 
-	 * @see ListCollection
-	 * @see IListCollectionDataDescriptor
-	 */
-	public class VectorNumberListCollectionDataDescriptor implements IListCollectionDataDescriptor
-	{
-		/**
-		 * Constructor.
-		 */
-		public function VectorNumberListCollectionDataDescriptor()
-		{
-		}
-		
-		/**
-		 * @inheritDoc
-		 */
-		public function getLength(data:Object):int
-		{
-			this.checkForCorrectDataType(data);
-			return (data as Vector.<Number>).length;
-		}
-		
-		/**
-		 * @inheritDoc
-		 */
-		public function getItemAt(data:Object, index:int):Object
-		{
-			this.checkForCorrectDataType(data);
-			return (data as Vector.<Number>)[index];
-		}
-		
-		/**
-		 * @inheritDoc
-		 */
-		public function setItemAt(data:Object, item:Object, index:int):void
-		{
-			this.checkForCorrectDataType(data);
-			(data as Vector.<Number>)[index] = item as Number;
-		}
-		
-		/**
-		 * @inheritDoc
-		 */
-		public function addItemAt(data:Object, item:Object, index:int):void
-		{
-			this.checkForCorrectDataType(data);
-			(data as Vector.<Number>).splice(index, 0, item);
-		}
-		
-		/**
-		 * @inheritDoc
-		 */
-		public function removeItemAt(data:Object, index:int):Object
-		{
-			this.checkForCorrectDataType(data);
-			return (data as Vector.<Number>).splice(index, 1)[0];
-		}
+    /**
+     * An `IListCollectionDataDescriptor` implementation for Vector.&lt;Number&gt;.
+     * 
+     * @see ListCollection
+     * @see IListCollectionDataDescriptor
+     */
+    public class VectorNumberListCollectionDataDescriptor implements IListCollectionDataDescriptor
+    {
+        /**
+         * Constructor.
+         */
+        public function VectorNumberListCollectionDataDescriptor()
+        {
+        }
+        
+        /**
+         * @inheritDoc
+         */
+        public function getLength(data:Object):int
+        {
+            this.checkForCorrectDataType(data);
+            return (data as Vector.<Number>).length;
+        }
+        
+        /**
+         * @inheritDoc
+         */
+        public function getItemAt(data:Object, index:int):Object
+        {
+            this.checkForCorrectDataType(data);
+            return (data as Vector.<Number>)[index];
+        }
+        
+        /**
+         * @inheritDoc
+         */
+        public function setItemAt(data:Object, item:Object, index:int):void
+        {
+            this.checkForCorrectDataType(data);
+            (data as Vector.<Number>)[index] = item as Number;
+        }
+        
+        /**
+         * @inheritDoc
+         */
+        public function addItemAt(data:Object, item:Object, index:int):void
+        {
+            this.checkForCorrectDataType(data);
+            (data as Vector.<Number>).splice(index, 0, item);
+        }
+        
+        /**
+         * @inheritDoc
+         */
+        public function removeItemAt(data:Object, index:int):Object
+        {
+            this.checkForCorrectDataType(data);
+            return (data as Vector.<Number>).splice(index, 1)[0];
+        }
 
-		/**
-		 * @inheritDoc
-		 */
-		public function removeAll(data:Object):void
-		{
-			this.checkForCorrectDataType(data);
-			(data as Vector.<Number>).length = 0;
-		}
-		
-		/**
-		 * @inheritDoc
-		 */
-		public function getItemIndex(data:Object, item:Object):int
-		{
-			this.checkForCorrectDataType(data);
-			return (data as Vector.<Number>).indexOf(item as Number);
-		}
-		
-		/**
-		 * @private
-		 */
-		protected function checkForCorrectDataType(data:Object):void
-		{
-			if(!(data is Vector.<Number>))
-			{
-				throw new IllegalOperationError("Expected Vector.<Number>. Received " + Object(data).constructor + " instead.");
-			}
-		}
-	}
+        /**
+         * @inheritDoc
+         */
+        public function removeAll(data:Object):void
+        {
+            this.checkForCorrectDataType(data);
+            (data as Vector.<Number>).length = 0;
+        }
+        
+        /**
+         * @inheritDoc
+         */
+        public function getItemIndex(data:Object, item:Object):int
+        {
+            this.checkForCorrectDataType(data);
+            return (data as Vector.<Number>).indexOf(item as Number);
+        }
+        
+        /**
+         * @private
+         */
+        protected function checkForCorrectDataType(data:Object):void
+        {
+            if(!(data is Vector.<Number>))
+            {
+                throw new IllegalOperationError("Expected Vector.<Number>. Received " + Object(data).constructor + " instead.");
+            }
+        }
+    }
 }

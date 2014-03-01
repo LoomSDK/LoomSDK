@@ -47,6 +47,3 @@ Once successfuly compiled and deployed, change directory to your project and iss
 You'll now be developing with your custom Loom build!
 
 For more information, please see the individual Readme files for platform specific setup instructions
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/LoomSDK/loomsdk/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-

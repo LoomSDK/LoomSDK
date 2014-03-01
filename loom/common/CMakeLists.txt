@@ -14,17 +14,18 @@ if (APPLE)
     if (LOOM_BUILD_IOS EQUAL 1)
         set (CPP_FILES ${CPP_FILES} 
             platform/platformDisplayIOS.mm 
-            platform/platformFileIOS.m 
+            platform/platformFileIOS.mm
             platform/platformHTTPOSX.mm 
             platform/platformWebViewIOS.mm 
             platform/platformAdMobIOS.mm
             platform/platformStoreiOS.mm
             platform/platformVideoiOS.mm
+            platform/platformMobileiOS.mm
             platform/EBPurchase.m
         )
     else()
         set (CPP_FILES ${CPP_FILES} 
-            platform/platformFileIOS.m 
+            platform/platformFileIOS.mm
             platform/platformWebViewOSX.mm 
             platform/platformHTTPOSX.mm
         )
@@ -34,7 +35,7 @@ endif(APPLE)
 set (CPP_FILES ${CPP_FILES} input/platformGamePad.c)
 
 if (MSVC)
-    set (CPP_FILES ${CPP_FILES} core/jemalloc/jemalloc.c input/platformGamePadWindows.c)
+    set (CPP_FILES ${CPP_FILES} input/platformGamePadWindows.c)
 elseif(ANDROID)
 	set (CPP_FILES ${CPP_FILES} input/platformGamePadOuya.cpp)
 elseif(APPLE)

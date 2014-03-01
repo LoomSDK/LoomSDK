@@ -26,7 +26,7 @@
 
 // Workaround for no NAN on Windows.
 // From http://tdistler.com/2011/03/24/how-to-define-nan-not-a-number-on-windows
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(INFINITY) && !defined(NAN)
 #define INFINITY    (DBL_MAX + DBL_MAX)
 #define NAN         (INFINITY - INFINITY)
 #endif
@@ -97,6 +97,7 @@ public:
 
     static int getNEGATIVE_INFINITY(lua_State *L)
     {
+#pragma warning ( disable : 4056 )
         lua_pushnumber(L, -INFINITY);
         return 1;
     }

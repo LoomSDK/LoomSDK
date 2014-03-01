@@ -79,6 +79,22 @@ public:
         visitor = this;
     }
 
+    bool checkStructCoerceToBooleanError(Type* type)
+    {
+        // this can happen if typing fails elsewhere, which we'll already have an error for
+        if (!type)
+            return false;
+
+        if (type->isStruct())
+        {
+            error("Boolean operation on Struct type: %s", type->getFullName().c_str());
+            return true;
+        }
+
+        return false;
+
+    }
+
     // checks for access violation on member for current class
     // public, private, protected
     bool checkAccessError(MemberInfo *memberInfo)
@@ -178,7 +194,8 @@ public:
 
         this->cunit = cunit;
 
-        cunit = TraversalVisitor::visit(cunit);
+
+        TraversalVisitor::visit(cunit);
 
         Scope::setVM(NULL);
 
@@ -246,7 +263,7 @@ public:
         Type            *base = cls->baseType;
         while (base)
         {
-            if (scriptClass && !cls->isStatic && (base->isNative() && !base->isNativeManaged()))
+            if (scriptClass && !cls->isStatic && (base->isNativePure()))
             {
                 error("Script class %s derived from pure native class %s.  Script classes may only be derived from managed and static native classes",
                       cls->name->string.c_str(), base->getFullName().c_str());
@@ -281,7 +298,41 @@ public:
         Scope::push(cls);
 
         cls->name->type = cls->type;
-        cls             = (ClassDeclaration *)TraversalVisitor::visit(cls);
+
+        utArray<Statement *> *statements = cls->statements;
+
+        if (statements != NULL)
+        {
+            errorFlag = false;
+
+            // first pass do variables so we have valid implicit types
+            // regardless where the definition appears in the class
+            for (unsigned int i = 0; i < statements->size(); i++)
+            {
+                if ((*statements)[i]->astType == AST_VARSTATEMENT)
+                    (*statements)[i] = visitStatement(statements->at(i));
+
+                if (errorFlag)
+                {
+                    break;
+                }
+            }
+
+            // now do the rest
+            for (unsigned int i = 0; i < statements->size(); i++)
+            {
+                if ((*statements)[i]->astType != AST_VARSTATEMENT)
+                    (*statements)[i] = visitStatement(statements->at(i));
+
+                if (errorFlag)
+                {
+                    break;
+                }
+
+            }
+        }
+
+        lastVisited = cls;
 
         Scope::pop();
 
@@ -292,6 +343,9 @@ public:
         }
 
         curClass = oldClass;
+
+        // reset error status
+        errorFlag = false;
 
         return cls;
     }
@@ -923,6 +977,19 @@ public:
                         }
 
                         p->type = vd->templateInfo->types[1]->type;
+
+                        if (right->type->isNativePure())
+                        {
+                            error("Dictionary indexed with pure native class %s", right->type->getFullName().c_str());
+                            return p;
+                        }
+
+                       if (!right->type->castToType(vd->templateInfo->types[0]->type))
+                        {
+                            error("unable to cast %s to %s for Dictionary index", right->type->getFullName().c_str(), vd->templateInfo->types[0]->type->getFullName().c_str());
+                            return p;
+                        }
+ 
                     }
                     else
                     {
@@ -1599,6 +1666,15 @@ public:
 
         expression->type = Scope::resolveType("Dictionary");
 
+        for (size_t i = 0; i  < expression->pairs.size(); i++)
+        {
+            Expression* key = expression->pairs[i]->key;
+            if (key->type && key->type->isNativePure())
+            {
+                error("Pure native type %s used as Dictionary key", key->type->getFullName().c_str());
+            }
+        }
+
         return expression;
     }
 
@@ -1893,17 +1969,6 @@ public:
 
         error("Unknown binary operator");
         return NULL;
-    }
-
-    Expression *visit(ConditionalExpression *expression)
-    {
-        expression = (ConditionalExpression *)TraversalVisitor::visit(
-            expression);
-
-        //TODO: verify false expression type
-        expression->type = expression->trueExpression->type;
-
-        return expression;
     }
 
     Expression *visit(BinaryOperatorExpression *expression)
@@ -2497,13 +2562,18 @@ public:
 
     Expression *visit(UnaryOperatorExpression *expression)
     {
-        expression->subExpression->visitExpression(this);
+        Expression* subExpr = expression->subExpression;
+        subExpr->visitExpression(this);
 
         int c = expression->op->value.str()[0];
 
         if (c == '!')
         {
             expression->type = Scope::resolveType("system.Boolean");
+
+            if (checkStructCoerceToBooleanError(subExpr->type))
+                return expression;
+
         }
         else if (c == '-')
         {
@@ -2688,6 +2758,53 @@ public:
         error("multiple assignment expression is not implemented");
         return expression;
     }
+
+    Statement *visit(IfStatement *ifStatement)
+    {
+        TraversalVisitor::visit(ifStatement);
+
+        if (ifStatement->expression)
+            checkStructCoerceToBooleanError(ifStatement->expression->type);
+
+        return ifStatement;
+    }
+
+    Statement *visit(WhileStatement *whileStatement)
+    {
+        TraversalVisitor::visit(whileStatement);
+
+        if (whileStatement->expression)
+            checkStructCoerceToBooleanError(whileStatement->expression->type);
+
+        return whileStatement;
+    }
+
+    Statement *visit(ForStatement *forStatement)
+    {
+        TraversalVisitor::visit(forStatement);
+
+        if (forStatement->condition)
+            checkStructCoerceToBooleanError(forStatement->condition->type);
+
+        return forStatement;
+    }
+
+    Expression *visit(ConditionalExpression *expression)
+    {
+        expression = (ConditionalExpression *)TraversalVisitor::visit(expression);
+            
+        //LOOM-1837: verify false expression type
+        expression->type = expression->trueExpression->type;
+
+        if (expression->expression)
+            checkStructCoerceToBooleanError(expression->expression->type);
+
+        return expression;
+    }
+
+
+
+
 };
 }
 #endif

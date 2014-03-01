@@ -40,11 +40,13 @@ void *Graphics::sPlatformData[3] = { NULL, NULL, NULL };
 
 int Graphics::sWidth     = 0;
 int Graphics::sHeight    = 0;
+uint32_t Graphics::sFlags    = 0xFFFFFFFF;
 int Graphics::sFillColor = 0x000000FF;
 int Graphics::sView      = 0;
 
 uint32_t Graphics::sCurrentFrame = 0;
 
+char Graphics::pendingScreenshot[1024] = { 0, };
 
 void Graphics::initialize()
 {
@@ -85,18 +87,29 @@ void Graphics::reset(int width, int height, uint32_t flags)
 
     lmLogDebug(gGFXLogGroup, "Graphics::reset - %dx%d %x", width, height, flags);
 
-    bgfx::reset(width, height, flags);
-
+    // if we're experiencing a context loss we must reset regardless
     if (sContextLost)
-    {
+    {   
+        bgfx::reset(width, height, flags);     
         QuadRenderer::reset();
-        Texture::reset();
+        Texture::reset();        
+    }
+    else
+    {
+        // otherwise, reset only on width/height/flag change
+        if (width != sWidth || height != sHeight || sFlags != flags)
+        {
+            bgfx::reset(width, height, flags);         
+        }
     }
 
+    // clear context loss state
     sContextLost = false;
 
+    // cache current values
     sWidth  = width;
     sHeight = height;
+    sFlags = flags;
 }
 
 
@@ -134,6 +147,12 @@ void Graphics::endFrame()
 {
     QuadRenderer::endFrame();
     bgfx::frame();
+
+    if(pendingScreenshot[0] != 0)
+    {
+        bgfx::saveScreenShot(pendingScreenshot);
+        pendingScreenshot[0] = 0;
+    }
 }
 
 
@@ -145,7 +164,11 @@ void Graphics::handleContextLoss()
     lmLog(gGFXLogGroup, "Graphics::handleContextLoss - %dx%d", sWidth, sHeight);
 
     lmLog(gGFXLogGroup, "Handle context loss: Shutdown %i", _scount++);
+
+    // make sure the QuadRenderer resources are freed before we shutdown bgfx
+    QuadRenderer::destroyGraphicsResources();
     bgfx::shutdown();
+    
     lmLog(gGFXLogGroup, "Handle context loss: Init");
     bgfx::init();
 
@@ -160,7 +183,7 @@ void Graphics::handleContextLoss()
 
 void Graphics::screenshot(const char *path)
 {
-    bgfx::saveScreenShot(path);
+    strcpy(pendingScreenshot, path);
 }
 
 

@@ -26,8 +26,12 @@
 #ifndef __ANDROID_JNI_H__
 #define __ANDROID_JNI_H__
 
-#include <jni.h>
+#include "loom/common/core/assert.h"
+#include "loom/common/core/log.h"
+#include "loom/common/platform/platform.h"
 #include "loom/common/utils/utString.h"
+
+#include <jni.h>
 
 typedef struct loomJniMethodInfo_
 {

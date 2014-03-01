@@ -8,6 +8,10 @@ include_directories(
     ${LOOM_INCLUDE_FOLDERS}
     telemetry-01052012/include
     chipmunk-physics/include/chipmunk
+    jemalloc-3.4.0/include
+    openal-soft/include
+    openal-soft/OpenAL32/Include
+    minimp3
 )
 
 add_definitions(-DCURL_STATICLIB)
@@ -454,6 +458,7 @@ set (STB_HDR
 
 set (STB_SRC
     stb/stb_image.c
+    stb/stb_vorbis.c
 )
 
 set (GELDREICH_HDR
@@ -470,6 +475,129 @@ set (GELDREICH_SRC
 
 )
 
+
+set (JEMALLOC_ROOT jemalloc-3.4.0)
+
+set (JEMALLOC_SRC
+    ${JEMALLOC_ROOT}/src/arena.c
+    ${JEMALLOC_ROOT}/src/atomic.c
+    ${JEMALLOC_ROOT}/src/base.c
+    ${JEMALLOC_ROOT}/src/bitmap.c
+    ${JEMALLOC_ROOT}/src/chunk.c
+    ${JEMALLOC_ROOT}/src/chunk_dss.c
+    ${JEMALLOC_ROOT}/src/chunk_mmap.c
+    ${JEMALLOC_ROOT}/src/ckh.c
+    ${JEMALLOC_ROOT}/src/ctl.c
+    ${JEMALLOC_ROOT}/src/extent.c
+    ${JEMALLOC_ROOT}/src/hash.c
+    ${JEMALLOC_ROOT}/src/huge.c
+    ${JEMALLOC_ROOT}/src/jemalloc.c
+    ${JEMALLOC_ROOT}/src/mb.c
+    ${JEMALLOC_ROOT}/src/mutex.c
+    ${JEMALLOC_ROOT}/src/prof.c
+    ${JEMALLOC_ROOT}/src/quarantine.c
+    ${JEMALLOC_ROOT}/src/rtree.c
+    ${JEMALLOC_ROOT}/src/stats.c
+    ${JEMALLOC_ROOT}/src/tcache.c
+    ${JEMALLOC_ROOT}/src/tsd.c
+    ${JEMALLOC_ROOT}/src/util.c
+    ${JEMALLOC_ROOT}/src/zone.c
+)
+
+set(OPENALSOFT_ROOT openal-soft)
+set(OPENALSOFT_SRC
+    ${OPENALSOFT_ROOT}/Alc/backends/wave.c
+    ${OPENALSOFT_ROOT}/Alc/backends/null.c
+    ${OPENALSOFT_ROOT}/Alc/backends/loopback.c
+    ${OPENALSOFT_ROOT}/Alc/ALc.c
+    ${OPENALSOFT_ROOT}/Alc/alcConfig.c
+    ${OPENALSOFT_ROOT}/Alc/alcDedicated.c
+    ${OPENALSOFT_ROOT}/Alc/alcEcho.c
+    ${OPENALSOFT_ROOT}/Alc/alcModulator.c
+    ${OPENALSOFT_ROOT}/Alc/alcReverb.c
+    ${OPENALSOFT_ROOT}/Alc/alcRing.c
+    ${OPENALSOFT_ROOT}/Alc/alcThread.c
+    ${OPENALSOFT_ROOT}/Alc/ALu.cpp
+    ${OPENALSOFT_ROOT}/Alc/bs2b.c
+    ${OPENALSOFT_ROOT}/Alc/helpers.c
+    ${OPENALSOFT_ROOT}/Alc/hrtf.c
+    ${OPENALSOFT_ROOT}/Alc/mixer.c
+    ${OPENALSOFT_ROOT}/Alc/panning.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alAuxEffectSlot.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alBuffer.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alEffect.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alError.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alExtension.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alFilter.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alListener.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alSource.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alState.c
+    ${OPENALSOFT_ROOT}/OpenAL32/alThunk.c
+)
+
+if(APPLE)
+    set(OPENALSOFT_SRC
+        ${OPENALSOFT_SRC}
+        ${OPENALSOFT_ROOT}/Alc/backends/coreaudio.c
+    )
+endif()
+
+if(ANDROID)
+    set(OPENALSOFT_SRC
+        ${OPENALSOFT_SRC}
+        ${OPENALSOFT_ROOT}/Alc/backends/android.cpp
+    )
+endif()
+
+if(MSVC)
+    set(OPENALSOFT_SRC
+        ${OPENALSOFT_SRC}
+        ${OPENALSOFT_ROOT}/Alc/backends/dsound.c
+    )
+endif()
+
+set(MINIMP3_ROOT minimp3)
+set(MINIMP3_SRC
+    ${MINIMP3_ROOT}/minimp3.c
+)
+
+set(ZLIB_HDR
+    zlib/include/zconf.h
+    zlib/include/zlib.h
+    zlib/include/crc32.h
+    zlib/include/deflate.h
+    zlib/include/gzguts.h
+    zlib/include/inffast.h
+    zlib/include/inffixed.h
+    zlib/include/inflate.h
+    zlib/include/inftrees.h
+    zlib/include/trees.h
+    zlib/include/zutil.h
+)
+
+set(ZLIB_SRC
+    zlib/source/adler32.c
+    zlib/source/compress.c
+    zlib/source/crc32.c
+    zlib/source/deflate.c
+    zlib/source/gzclose.c
+    zlib/source/gzlib.c
+    zlib/source/gzread.c
+    zlib/source/gzwrite.c
+    zlib/source/inflate.c
+    zlib/source/infback.c
+    zlib/source/inftrees.c
+    zlib/source/inffast.c
+    zlib/source/trees.c
+    zlib/source/uncompr.c
+    zlib/source/zutil.c
+)
+
+set( JHEADEXIF_SRC jheadexif/exif.c jheadexif/jhead.c jheadexif/jpgfile.c jheadexif/easyexif.cpp)
+    
+
+
+
 if (MSVC)
 
     set (GLEW_HDR )
@@ -477,6 +605,7 @@ if (MSVC)
 
     # Enable SSL
     add_definitions(-DUSE_WINDOWS_SSPI=1 -DUSE_SCHANNEL=1)
+    add_definitions(-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
 
 elseif(APPLE)
     if (LOOM_BUILD_IOS EQUAL 1)
@@ -504,6 +633,7 @@ endif()
 SET_SOURCE_FILES_PROPERTIES( ${CHIPMUNK_SRC} PROPERTIES LANGUAGE CXX)
 
 set (ALL_FILES 
+    ${JHEADEXIF_SRC}
     ${SEATEST_HDR} ${SEATEST_SRC} 
     ${STB_HDR} ${STB_SRC} 
     ${JANSSON_HDR} ${JANSSON_SRC} 
@@ -511,6 +641,9 @@ set (ALL_FILES
     ${LUA_HDR} ${LUA_SRC} 
     ${GLEW_HDR} ${GLEW_SRC}
     ${GELDREICH_HDR} ${GELDREICH_SRC}
+    ${JEMALLOC_SRC}
+    ${OPENALSOFT_SRC}
+    ${MINIMP3_SRC}
 )
 
 if (MSVC)
@@ -519,6 +652,11 @@ if (MSVC)
     list (APPEND ALL_FILES 
         ${LIBCURL_HDR} ${LIBCURL_SRC} 
     )
+
+    list (APPEND ALL_FILES 
+        ${ZLIB_SRC} ${ZLIB_HDR} 
+    )
+
 endif()
 
 if (APPLE)

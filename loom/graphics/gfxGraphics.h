@@ -25,27 +25,15 @@
 
 namespace GFX
 {
+
+/** 
+  *  Graphics subsystem class in charge of initializing bgfx graphics and handling context loss
+  */    
 class Graphics
 {
-private:
-
-    static bool sInitialized;
-    static bool sContextLost;
-
-    static void *sPlatformData[3];
-
-    static int sWidth;
-    static int sHeight;
-    static int sFillColor;
-    static int sView;
-
-    static uint32_t sCurrentFrame;
-
-    static void initializePlatform();
 
 public:
 
-    // this must be the
     static void initialize();
 
     static bool isInitialized()
@@ -104,5 +92,43 @@ public:
 
     // Render with no cliprect.
     static void clearClipRect();
+
+private:
+
+    // Once the Graphics system is initialized, this will be true!
+    static bool sInitialized;
+
+    // If we're currently in a OpenGL context loss situation (the application has changed orientation, etc), 
+    // this will be true.  Once we're recovering the graphics subsystem will need to recreate vertex/index buffers, 
+    // texture resources, etc
+    static bool sContextLost;    
+
+    // The current width of the graphics device
+    static int sWidth;
+
+    // The current height of the graphics device
+    static int sHeight;
+
+    // The flags used to create the graphics device( see bgfx.h BGFX_RESET_ for a list of flags )
+    static uint32_t sFlags;
+
+    // The current fill color used when clearing the color buffer
+    static int sFillColor;
+
+    // The current view number being rendered
+    static int sView;
+
+    // The current frame counter
+    static uint32_t sCurrentFrame;
+
+    // Opaque platform data, such as HWND
+    static void *sPlatformData[3];
+
+    // Internal method used to initialize platform data 
+    static void initializePlatform();
+
+    // If set, at next opportunity we will store a screenshot to this path and clear it.
+    static char pendingScreenshot[1024];
+
 };
 }

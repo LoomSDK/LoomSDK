@@ -18,6 +18,7 @@
  * ===========================================================================
  */
 
+#include "loom/common/platform/platformMemory.h"
 #include "loom/script/native/lsLuaBridge.h"
 #include "loom/script/runtime/lsLuaState.h"
 
@@ -34,6 +35,12 @@ public:
 
         return NativeInterface::getManagedObectCount(path, ls);
     }
+
+    static int getProcessMemoryUsage()
+    {
+         return (int) platform_getProcessMemory();
+    }
+
 };
 
 static int registerSystemMetrics(lua_State *L)
@@ -43,6 +50,7 @@ static int registerSystemMetrics(lua_State *L)
        .beginClass<Metrics>("Metrics")
 
        .addStaticMethod("getManagedObjectCount", &Metrics::getManagedObjectCount)
+       .addStaticMethod("getProcessMemoryUsage", &Metrics::getProcessMemoryUsage)
 
        .endClass()
 

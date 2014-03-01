@@ -174,6 +174,7 @@ package loom2d.display
         public function set smoothing(value:Boolean):void
         {
             //TODO: smoothing
+            Debug.assert( false, ".smoothing is not implemented on Image. Use loom2d.textures.Texture.smoothing instead." );
         }
 
         private function updateVertexData()

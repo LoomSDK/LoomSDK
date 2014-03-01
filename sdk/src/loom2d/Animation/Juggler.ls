@@ -239,7 +239,13 @@ package loom2d.animation
             
             var tween:Tween = event.target as Tween;
             if (tween && tween.isComplete)
-                add(tween.nextTween);
+            {
+                if(tween.nextTween != null)
+                {
+                    add(tween.nextTween);
+                    tween.nextTween.resetSoft();
+                }
+            }
         }
         
         /** The total life time of the juggler. */

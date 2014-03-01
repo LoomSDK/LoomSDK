@@ -39,7 +39,7 @@ extern "C"
 {
 void Java_co_theengine_loomdemo_LoomVideo_nativeCallback(JNIEnv *env, jobject thiz, jint callbackType, jstring data)
 {
-    lmLogError(gAndroidVideoLogGroup, "LoomVideo Android Callback fired! %d", callbackType);
+    lmLog(gAndroidVideoLogGroup, "LoomVideo Android Callback fired! %d", callbackType);
 
     const char *dataString = env->GetStringUTFChars(data, 0);
     if (gEventCallback)
@@ -48,11 +48,12 @@ void Java_co_theengine_loomdemo_LoomVideo_nativeCallback(JNIEnv *env, jobject th
         switch (callbackType)
         {
             case 0:
+                lmLog(gAndroidVideoLogGroup, "Video playback failed");
                 gEventCallback("fail", dataString);
                 break;
 
             case 1:
-                lmLogError(gAndroidVideoLogGroup, "Video playback complete");
+                lmLog(gAndroidVideoLogGroup, "Video playback complete");
                 gEventCallback("complete", dataString);
                 break;
 
@@ -97,11 +98,42 @@ void platform_videoInitialize(VideoEventCallback eventCallback)
 
 void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlMode, unsigned int bgColor)
 {
+    ///error and don't play if the video name does not start with "assets/videos/"
+    if(strstr(video, ROOT_FOLDER) != video)
+    {
+        lmLogError(gAndroidVideoLogGroup, "Unable to play Video %s that does not reside in '%s'", video, ROOT_FOLDER);
+        gEventCallback("fail", "Video path does not begin with 'assets/videos/'");      
+        return;
+    }
+
+
+    ///strip out the raw filename only to use on Android
+    int index = 0;
+    int firstChar = 0;
+    int lastChar = strlen(video) - 1;
+    while(video[index] != '\0')
+    {
+        ///track extention start if found
+        if(video[index] == '.')
+        {
+            lastChar = index - 1;
+        }
+        else if((video[index] == '/') || (video[index] == '\\'))
+        {
+            firstChar = index + 1;
+        }
+        index++;
+    }
+    int len = (lastChar - firstChar) + 1;
+    char *newVideoName = new char[len + 1];
+    memcpy(newVideoName, &video[firstChar], len * sizeof(char));
+    newVideoName[len] = '\0';
+
     ///call java method to play the video
-    jstring jVideo    = gPlayVideoFullscreen.env->NewStringUTF(video);
+    lmLog(gAndroidVideoLogGroup, "videoPlayFullscreen: '%s' became '%s'", video, newVideoName);
+    jstring jVideo    = gPlayVideoFullscreen.env->NewStringUTF(newVideoName);
     gPlayVideoFullscreen.env->CallStaticVoidMethod(gPlayVideoFullscreen.classID, gPlayVideoFullscreen.methodID, jVideo, scaleMode, controlMode, bgColor);
     gPlayVideoFullscreen.env->DeleteLocalRef(jVideo);
+    delete []newVideoName;
 }
-
-
 #endif

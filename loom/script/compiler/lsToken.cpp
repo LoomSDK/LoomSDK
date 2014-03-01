@@ -37,29 +37,25 @@ Token::Token(TokenType t, const char *value, const char *preAlias)
 
     type = t;
 
-    utHashedString svalue(value);
+    //utHashedString svalue(value);
 
-    if (sAllValues.find(svalue.hash()) == UT_NPOS)
-    {
-        sAllValues.insert(svalue.hash(), svalue);
-    }
+    //if (sAllValues.find(svalue.hash()) == UT_NPOS)
+    //    sAllValues.insert(svalue.hash(), svalue);
 
-    this->value = *sAllValues.get(svalue.hash());
+    this->value = value; //*sAllValues.get(svalue.hash());
+
 }
 
-
-Token::Token(TokenType t, utString input, int start, int end)
+Token::Token(TokenType t, const utString &input, int start, int end) 
 {
     type = t;
 
-    utHashedString svalue(input.substr(start, end - start));
+    //utHashedString svalue(input.substr(start, end - start));
+    
+    //if (sAllValues.find(svalue.hash()) == UT_NPOS)
+    //    sAllValues.insert(svalue.hash(), svalue);
 
-    if (sAllValues.find(svalue.hash()) == UT_NPOS)
-    {
-        sAllValues.insert(svalue.hash(), svalue);
-    }
-
-    this->value = *sAllValues.get(svalue.hash());
+    value = input.substr(start, end - start); //*sAllValues.get(svalue.hash());
 }
 
 

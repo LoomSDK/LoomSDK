@@ -313,7 +313,7 @@ void Assembly::close()
     for (UTsize i = 0; i < types.size(); i++)
     {
         typeAssemblyLookup.remove(types.at(i));
-        delete types.at(i);
+        lmFree(NULL,  types.at(i));
     }
 
     assemblies.remove(vm);

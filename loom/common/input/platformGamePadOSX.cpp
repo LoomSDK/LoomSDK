@@ -5,6 +5,7 @@
  */
 
 #include "loom/common/core/assert.h"
+#include "loom/common/core/allocator.h"
 #include "loom/common/core/log.h"
 #include "platformGamePad.h"
 #include "platformSysGamePad.h"
@@ -13,6 +14,8 @@
 #include <IOKit/hid/IOHIDLib.h>
 #include <IOKit/hid/IOHIDKeys.h>
 #include <IOKit/IOKitLib.h>
+
+loom_allocator_t *gOSXGamePadAllocator = NULL;
 
 static int SYS_NumJoysticks = 0;
 
@@ -1180,7 +1183,7 @@ input_sysGamepadClose(InputGamepad *gamepad)
     if (gamepad->hwdata != NULL)
     {
         /* free system specific hardware data */
-        free(gamepad->hwdata);
+        lmFree(gOSXGamePadAllocator, gamepad->hwdata);
     }
 }
 

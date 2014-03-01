@@ -47,6 +47,8 @@ class BinReader {
         int        length;
         // whether or not the assembly has been loaded
         bool       loaded;
+        // The loaded assembly.
+        Assembly *assembly;
     };
 
     /*

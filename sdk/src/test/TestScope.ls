@@ -141,6 +141,12 @@ class TestScope extends Test
     var EXPECTED_TEST_RESULT:String = "140 623";    
 }
 
+// Compiler error
+//var thisVariableIsDeclaredOutsideOfClassScope:Number = 1;
+
+// Compiler error
+//private function thisFunctionIsDeclaredOutsideOfClassScope():void {}
+
 }
 
 

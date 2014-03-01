@@ -26,50 +26,45 @@ package org.cocos2dx.lib;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import android.os.Process;
+
 import android.opengl.GLSurfaceView;
 
-public class Cocos2dxRenderer implements GLSurfaceView.Renderer {
-	private final static long NANOSECONDSPERSECOND = 1000000000L;
-	private final static long NANOSECONDSPERMINISECOND = 1000000;
-	private static long animationInterval = (long)(1.0 / 60 * NANOSECONDSPERSECOND);
-	private long last;
+public class Cocos2dxRenderer implements GLSurfaceView.Renderer 
+{
 	private int screenWidth;
 	private int screenHeight;
 
     protected static native void nativeReshapeProjection(int width, int height);
 	
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) { 
-    	nativeInit(screenWidth, screenHeight); 
-    	last = System.nanoTime();
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) 
+    {
+        // Setting thread priority aggressively here helps us max out our
+        // performance. Specifically, we want to make sure that we process
+        // frames as fast as possible with no interruptions. The OS seems
+        // to do a good job of keeping us from breaking anything. Note
+        // that Android makes us sleep to vsync (60hz) so we won't bake 
+        // the CPU unless people actually max out frame time - in which case
+        // they can call sleep explicitly to tune power usage.
+        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+        Process.setThreadPriority(-20);
+    	nativeInit(screenWidth, screenHeight);
     }
     
-    public void setScreenWidthAndHeight(int w, int h){
+    public void setScreenWidthAndHeight(int w, int h)
+    {
     	this.screenWidth = w;
     	this.screenHeight = h;
     }
 
-    public void onSurfaceChanged(GL10 gl, int w, int h) { 	
+    public void onSurfaceChanged(GL10 gl, int w, int h) 
+    {
         nativeReshapeProjection(w,h);
     }
     
-    public void onDrawFrame(GL10 gl) {
-    	
-    	long now = System.nanoTime();
-    	long interval = now - last;
-    	
-    	// should render a frame when onDrawFrame() is called
-    	// or there is a "ghost"
+    public void onDrawFrame(GL10 gl) 
+    {
     	nativeRender();   	
-   	
-    	// fps controlling
-    	if (interval < animationInterval){ 
-    		try {
-    			// because we render it before, so we should sleep twice time interval
-    			Thread.sleep((animationInterval - interval) * 2 / NANOSECONDSPERMINISECOND);
-    		} catch (Exception e){}
-    	}	
-    	
-    	last = now;
     }
     
     public void handleActionDown(int id, float x, float y)
@@ -104,10 +99,12 @@ public class Cocos2dxRenderer implements GLSurfaceView.Renderer {
     public void handleOnResume(){
     	nativeOnResume();
     }
-    
-    public static void setAnimationInterval(double interval){
-    	animationInterval = (long)(interval * NANOSECONDSPERSECOND);
+
+    public static void setAnimationInterval(double interval)
+    {
+        // NOP for now.
     }
+    
     private static native void nativeTouchesBegin(int id, float x, float y);
     private static native void nativeTouchesEnd(int id, float x, float y);
     private static native void nativeTouchesMove(int[] id, float[] x, float[] y);

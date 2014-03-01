@@ -102,9 +102,7 @@ int MethodInfo::_invoke(lua_State *L)
     // index 2 = this (for non-static) or null for static
     // index 3 = var arg table
 
-    lua_rawgeti(L, 3, LSINDEXVECTORLENGTH);
-    int nargs = (int)lua_tonumber(L, -1);
-    lua_pop(L, 1);
+    int nargs = lsr_vector_get_length(L, 3);
 
     lua_rawgeti(L, 3, LSINDEXVECTOR);
     lua_replace(L, 3);

@@ -41,6 +41,14 @@ package loom2d.textures
         public function setTextureInfo(ti:TextureInfo):void
         {
             textureInfo = ti;
+            
+            if (textureInfo)
+            {
+                textureInfo.smoothing = mSmoothing;
+                textureInfo.wrapU = mWrapU;
+                textureInfo.wrapV = mWrapV;
+            }
+
             textureInfo.update += onUpdate;
         }
 
@@ -96,6 +104,7 @@ package loom2d.textures
         /** @inheritDoc */
         public override function get premultipliedAlpha():Boolean { return mPremultipliedAlpha; }
         
+        /** @inheritDoc */
         public override function get assetPath():String { return mAssetPath; }
     }
 }

@@ -28,10 +28,22 @@ extern "C" {
 
 #define LATImage    LOOM_FOURCC('I', 'M', 'G', 1)
 
+// correspond to the easyexif Orientation field values
+#define IMAGE_ORIENTATION_UNSPECIFIED 0
+#define IMAGE_ORIENTATION_UPPER_LEFT 1
+#define IMAGE_ORIENTATION_LOWER_RIGHT 3
+#define IMAGE_ORIENTATION_UPPER_RIGHT 6
+#define IMAGE_ORIENTATION_LOWER_LEFT 8
+
 typedef struct loom_asset_image
 {
     int  width, height, bpp;
+
+    // see IMAGE_ORIENTATION values above
+    int orientation;
+
     void *bits;
+
 } loom_asset_image_t;
 
 void loom_asset_registerImageAsset();

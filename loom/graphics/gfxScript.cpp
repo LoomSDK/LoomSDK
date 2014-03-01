@@ -36,6 +36,9 @@
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
 
+// for exif encoding
+#include "loom/vendor/jheadexif/jhead.h"
+
 lmDeclareLogGroup(gGFXTextureLogGroup);
 loom_allocator_t *gRescalerAllocator = NULL;
 
@@ -59,6 +62,7 @@ struct RescaleNote
     int      outWidth;
     int      outHeight;
     bool     preserveAspect;
+    bool     skipPreload;
 };
 
 static MutexHandle                gEventQueueMutex = NULL;
@@ -112,7 +116,6 @@ static void postResampleEvent(const char *path, float progress, const char *asse
 
     loom_mutex_unlock(gEventQueueMutex);
 }
-
 
 static int __stdcall scaleImageOnDisk_body(void *param)
 {
@@ -225,7 +228,14 @@ static int __stdcall scaleImageOnDisk_body(void *param)
 
             // Every hundred lines post an update.
             if(resultY % 100 == 0)
-                postResampleEvent(outPath, (float)resultY / (float)outHeight, inPath);
+            {
+                // calculate the progress, but keep from reporting 1.0 as this is used to 
+                // mark completion
+                float value = (float)resultY / (float)outHeight;
+                if (value == 1.0f)
+                    value = .99f;
+                postResampleEvent(outPath, value , inPath);
+            }
         }
     }
 
@@ -239,6 +249,25 @@ static int __stdcall scaleImageOnDisk_body(void *param)
     jpge::compress_image_to_jpeg_file(outPath, outWidth, outHeight, 3, outBuffer);
     lmLog(gGFXTextureLogGroup, "JPEG output took %dms", t3 - platform_getMilliseconds());
 
+    // preserve orientation (but only if we need to)
+    if (lai->orientation > IMAGE_ORIENTATION_UPPER_LEFT)
+    {
+        ResetJpgfile();
+
+        // read in the jpg data (does not decompress it!)
+        if (ReadJpegFile(outPath, READ_ALL))
+        {
+            // create the exif segment and attach it to jpeg image
+            create_EXIF(lai->orientation);            
+
+            // write it out with exif data
+            WriteJpegFile(outPath);    
+
+            // free all data
+            DiscardData();
+        }
+    }
+
     // Free everything!
     lmFree(gRescalerAllocator, buffRed);
     lmFree(gRescalerAllocator, buffGreen);
@@ -248,13 +277,18 @@ static int __stdcall scaleImageOnDisk_body(void *param)
     // Post completion event.
     postResampleEvent(outPath, 1.0, inPath);
 
+    Texture::enableAssetNotifications(true);
+
+    if(rn->skipPreload == false)
+        loom_asset_preload(outPath);
+
     delete rn;
 
     return 0;
 }
 
 
-static void scaleImageOnDisk(const char *outPath, const char *inPath, int outWidth, int outHeight, bool preserveAspect)
+static void scaleImageOnDisk(const char *outPath, const char *inPath, int outWidth, int outHeight, bool preserveAspect, bool skipPreload)
 {
     RescaleNote *rn = new RescaleNote();
 
@@ -263,8 +297,11 @@ static void scaleImageOnDisk(const char *outPath, const char *inPath, int outWid
     rn->outWidth  = outWidth;
     rn->outHeight = outHeight;
     rn->preserveAspect = preserveAspect;
+    rn->skipPreload = skipPreload;
 
-    loom_thread_start(scaleImageOnDisk_body, rn);
+    Texture::enableAssetNotifications(false);
+
+    loom_thread_start(scaleImageOnDisk_body, rn);    
 }
 
 
@@ -296,10 +333,12 @@ static int registerLoomGraphics(lua_State *L)
        .beginClass<TextureInfo> ("TextureInfo")
        .addVar("width", &TextureInfo::width)
        .addVar("height", &TextureInfo::height)
+       .addVar("smoothing", &TextureInfo::smoothing)
+       .addVar("wrapU", &TextureInfo::wrapU)
+       .addVar("wrapV", &TextureInfo::wrapV)
        .addVar("id", &TextureInfo::id)
        .addVarAccessor("update", &TextureInfo::getUpdateDelegate)
        .endClass()
-
 
        .endPackage();
 

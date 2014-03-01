@@ -136,7 +136,7 @@ utList<CallbackQueueNote *> gCallbackQueue;
 
 static void enqueueLogCallback(const char *msg)
 {
-    CallbackQueueNote *cqn = new CallbackQueueNote();
+    CallbackQueueNote *cqn = lmNew(NULL) CallbackQueueNote;
 
     cqn->type = QNT_Log;
     cqn->text = strdup(msg);
@@ -149,7 +149,7 @@ static void enqueueLogCallback(const char *msg)
 
 static void enqueueFileChangeCallback(const char *path)
 {
-    CallbackQueueNote *cqn = new CallbackQueueNote();
+    CallbackQueueNote *cqn = lmNew(NULL) CallbackQueueNote;
 
     cqn->type = QNT_Change;
     cqn->text = strdup(path);
@@ -212,13 +212,13 @@ static int makeAssetPathCanonical(const char *pathIn, char pathOut[MAXPATHLEN])
     {
         // Great, it's known to us.
         strncpy(pathOut, prefixOffset + strlen(cwd) + 1, MAXPATHLEN);
-        free(resolvedPathPtr);
+        // free(resolvedPathPtr);
         return 1;
     }
     else
     {
         // Nope, unknown.
-        free(resolvedPathPtr);
+        // free(resolvedPathPtr);
         return 0;
     }
 }
@@ -299,7 +299,7 @@ static bool compareFileEntryBool(const FileEntry& a, const FileEntry& b)
 // then be compared to identify changes.
 static utArray<FileEntry> *generateFileState(const char *root)
 {
-    utArray<FileEntry> *list = new utArray<FileEntry>();
+    utArray<FileEntry> *list = lmNew(NULL) utArray<FileEntry>();
 
     // Walk files in assets and src.
     char buffer[2048];
@@ -327,7 +327,7 @@ static utArray<FileEntryDelta> *compareFileEntries(utArray<FileEntry> *oldList, 
 {
     UTsize oldIndex = 0, newIndex = 0;
 
-    utArray<FileEntryDelta> *deltaList = new utArray<FileEntryDelta>();
+    utArray<FileEntryDelta> *deltaList = lmNew(NULL) utArray<FileEntryDelta>();
 
     // If we have no lists, it's a trivial case.
     if (!oldList && !newList)
@@ -657,7 +657,7 @@ static void postAllFiles(int clientId = -1)
     loom_mutex_lock(gFileScannerLock);
 
     // Walk all the files.
-    utArray<FileEntry> *list = new utArray<FileEntry>();
+    utArray<FileEntry> *list = lmNew(NULL) utArray<FileEntry>();
     platform_walkFiles(".", handleFileStateWalkCallback, list);
 
     // Queue them all to be sent.
@@ -858,8 +858,8 @@ void DLLEXPORT assetAgent_run(IdleCallback idleCb, LogCallback logCb, FileChange
             }
 
             // Clean it up.
-            free((void *)cqn->text);
-            delete cqn;
+            //free((void *)cqn->text);
+            lmDelete(NULL, cqn);
         }
 
         // Poll at about 60hz.

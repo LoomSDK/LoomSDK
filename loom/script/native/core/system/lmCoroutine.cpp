@@ -35,9 +35,8 @@ public:
         lua_pushvalue(L, 1);
 
         // unwind our var args
-        lua_rawgeti(L, 2, LSINDEXVECTORLENGTH);
-        int length = (int)lua_tonumber(L, -1);
-        lua_pop(L, 1);
+        int length = lsr_vector_get_length(L, 2);
+
         lua_rawgeti(L, 2, LSINDEXVECTOR);
         int vidx = lua_gettop(L);
 

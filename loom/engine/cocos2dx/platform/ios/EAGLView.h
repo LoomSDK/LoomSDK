@@ -101,9 +101,11 @@
 @property(nonatomic, readonly) UITextPosition           *endOfDocument;
 @property(nonatomic, assign) id<UITextInputDelegate>    inputDelegate;
 @property(nonatomic, readonly) UITextRange              *markedTextRange;
-@property (nonatomic, copy) NSDictionary                *markedTextStyle;
+@property(nonatomic, copy) NSDictionary                 *markedTextStyle;
 @property(readwrite, copy) UITextRange                  *selectedTextRange;
 @property(nonatomic, readonly) id<UITextInputTokenizer> tokenizer;
+@property(nonatomic) UIKeyboardType                     keyboardType;
+@property(nonatomic) UIReturnKeyType                    returnKeyType;
 
 /** creates an initializes an EAGLView with a frame and 0-bit depth buffer, and a RGB565 color buffer */
 + (id)viewWithFrame:(CGRect)frame;
@@ -137,7 +139,6 @@
 
 @property(nonatomic, readwrite) BOOL multiSampling;
 
-@property(nonatomic) UIKeyboardType keyboardType;
 
 /** EAGLView uses double-buffer. This method swaps the buffers */
 -(void)swapBuffers;

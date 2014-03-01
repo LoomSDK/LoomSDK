@@ -26,9 +26,13 @@
 #include "loom/script/runtime/lsLuaState.h"
 #include "loom/script/reflection/lsAssembly.h"
 
-namespace LS {
-class AssemblyReader {
+namespace LS 
+{
+
+class AssemblyReader 
+{
     static utHashTable<utHashedString, utString> linkedAssemblies;
+
     static utArray<utString> libraryAssemblyPath;
 
     static void parseLinkedAssemblies(json_t *executableJSON);
@@ -36,6 +40,7 @@ class AssemblyReader {
     static bool loadLibraryAssemblyJSON(const utString& assemblyName, utString& json);
 
 public:
+
     static Assembly *deserialize(LSLuaState *vm, const utString& sjson);
 
     static void addLibraryAssemblyPath(const utString& path)
@@ -48,5 +53,6 @@ public:
         return libraryAssemblyPath;
     }
 };
+
 }
 #endif

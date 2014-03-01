@@ -360,6 +360,11 @@ class TestDictionary extends Test
         assert(++memberTest[memberIndexer] == 1);
         assert(memberTest[memberIndexer]++ == 1);
         assert(++memberTest[memberIndexer] == 3);
+        
+        var checkIndexError = new Dictionary.<String, Number>;
+        // Compiler Error
+        //checkIndexError[100] = 100;
+
     
     }
     

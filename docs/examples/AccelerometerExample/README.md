@@ -1,6 +1,7 @@
 title: Accelerometer Example
 description: A Loom Example!
 source: src/AccelerometerExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

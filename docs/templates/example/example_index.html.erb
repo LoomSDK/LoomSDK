@@ -12,10 +12,10 @@
         <link type="text/css" rel="stylesheet" href="<%= relative_base_path %>/css/jquery.dropdown.css" />
     </head>
     <body>
-      
+
       <div id="top">&nbsp;</div>
 
-      <!-- Header. -->   
+      <!-- Header. -->
       <header class="site-header">
           <div class="site-header__logo">
               <div class="site-header__logo__version"><%= version_number %></div>
@@ -52,32 +52,40 @@
               </div>
           </div>
       </div><!-- End sidebar. -->
-      
+
       <!-- Page. -->
       <div class="page">
-        
+
         <!-- Page nav. -->
         <nav class="page-nav">
             <h4 class="page-nav__title"><%= @package_path %></h4>
             <ul id="page-nav__list" class="page-nav__list">
             </ul>
         </nav><!-- End page nav. -->
-        
+
         <div class="content">
           <!-- Content header. -->
           <header class="content-header">
             <h1>Examples</h1>
           </header>
-          
-          <p>
+
+          <section id="example-grid">
             <span class="is-light">Examples</span><br/>
             <% examples.sort.each do |key, example_doc| %>
-              <a href="<%= File.join(example_doc.name, "index.html") %>"><%= example_doc.data[:title] %></a><br/>
+              <div class="example">
+                <a href="<%= File.join(example_doc.name, "index.html") %>" title="<%= example_doc.data[:title] %>">
+                  <% if example_doc.data[:thumbnail] %>
+                    <img border="0" src="<%= File.join(example_doc.name, example_doc.data[:thumbnail]) %>" />
+                  <% else %>
+                    <div class="placeholder"><%= example_doc.name %></div>
+                  <% end %>
+                </a>
+              </div>
             <% end %>
-          </p>
+          </section>
         </div>
       </div>
-      
+
       <script type="text/javascript" src="<%= relative_base_path %>/js/vendor/fuse.min.js"></script>
       <script type="text/javascript" src="<%= relative_base_path %>/js/vendor/jquery-1.9.0.min.js"></script>
       <script type="text/javascript" src="<%= relative_base_path %>/js/vendor/jquery.easing.min.js"></script>

@@ -14,4 +14,3 @@ loom use dev (enter)
 loom run --android
 
 5. Your project should compile and run on the connected Android device
-

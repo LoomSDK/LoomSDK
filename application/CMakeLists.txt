@@ -113,10 +113,10 @@ if (APPLE)
           "-framework SystemConfiguration"
           "-framework AdSupport"
 
-          # For CocosDenshion
+          # For Audio
           "-framework AVFoundation"
           "-framework AudioToolbox"
-          "-framework OpenAL"  
+          "-framework CoreAudio"
 
           # Admob SDK
           ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a
@@ -149,10 +149,11 @@ if (APPLE)
            "-framework OpenGL"
            "-framework WebKit"
 
-          # For CocosDenshion
+          # For Audio
           "-framework AudioToolbox"
-          "-framework OpenAL"  
-        )
+          "-framework AudioUnit"
+          "-framework CoreAudio"
+          )
 
         # Use our own Info.plist.
         set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/osx/Info.plist")
@@ -203,7 +204,6 @@ elseif(MSVC)
        LoomGraphics
        LoomCore
        "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "WSOCK32" "Ws2_32" 
-       ${CMAKE_SOURCE_DIR}/loom/vendor/zlib/lib/win32/zlibstatic.lib
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)

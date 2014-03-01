@@ -3,9 +3,6 @@
 #include "loom/common/core/log.h"
 #include "loom/CCLoomCocos2D.h"
 #include "loom/engine/bindings/loom/lmApplication.h"
-#include "loom/engine/CocosDenshion/include/SimpleAudioEngine.h"
-
-lmDefineLogGroup(gAppDelegateLogGroup, "appDelegate", 1, 0);
 
 USING_NS_CC;
 
@@ -22,6 +19,12 @@ AppDelegate::AppDelegate()
 
 AppDelegate::~AppDelegate()
 {
+}
+
+extern "C" 
+{
+    extern void loomsound_init();
+    extern void loomsound_shutdown();
 }
 
 bool AppDelegate::applicationDidFinishLaunching()
@@ -51,7 +54,9 @@ bool AppDelegate::applicationDidFinishLaunching()
     pScene = CCScene::create();
 
     pDirector->runWithScene(pScene);
-   
+  
+    loomsound_init();
+
     return true;
 }
 
@@ -60,8 +65,10 @@ void AppDelegate::applicationDidEnterBackground()
 {
     NativeDelegate::markMainThread();
     LoomApplication::applicationDeactivated.invoke();
-    CocosDenshion::SimpleAudioEngine::sharedEngine()->pauseBackgroundMusic();
-    CocosDenshion::SimpleAudioEngine::sharedEngine()->pauseAllEffects();
+
+    // Revisit this under LOOM-1822
+    //CocosDenshion::SimpleAudioEngine::sharedEngine()->pauseBackgroundMusic();
+    //CocosDenshion::SimpleAudioEngine::sharedEngine()->pauseAllEffects();
     CCDirector::sharedDirector()->stopAnimation();
 }
 
@@ -70,7 +77,9 @@ void AppDelegate::applicationWillEnterForeground()
 {
     NativeDelegate::markMainThread();
     CCDirector::sharedDirector()->startAnimation();
-    CocosDenshion::SimpleAudioEngine::sharedEngine()->resumeBackgroundMusic();
-    CocosDenshion::SimpleAudioEngine::sharedEngine()->resumeAllEffects();
+    
+    // Revisit this under LOOM-1822
+    //CocosDenshion::SimpleAudioEngine::sharedEngine()->resumeBackgroundMusic();
+    //CocosDenshion::SimpleAudioEngine::sharedEngine()->resumeAllEffects();
     LoomApplication::applicationActivated.invoke();
 }

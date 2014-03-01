@@ -39,6 +39,7 @@ void Java_co_theengine_loomdemo_LoomHTTP_onSuccess(JNIEnv *env, jobject thiz, js
     int               dataLen     = env->GetStringUTFLength(data);
     const char        *dataString = env->GetStringUTFChars(data, 0);
 
+    // Commented out below because long responses can break logging
     //lmLog(gAndroidHTTPLogGroup, "Sending success to %x %s (%x long) %x\n", payload, strlen(dataString), dataString, dataLen, data);
 
     cb((void *)payload, LOOM_HTTP_SUCCESS, dataString);

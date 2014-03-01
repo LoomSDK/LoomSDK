@@ -42,8 +42,11 @@ import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.content.Intent;
 import android.graphics.Rect;
+import android.media.AudioManager;
 
 import co.theengine.loomdemo.billing.LoomStore;
+
+import com.dolby.DolbyAudio;
 
 public class LoomDemo extends Cocos2dxActivity {
 
@@ -150,12 +153,14 @@ public class LoomDemo extends Cocos2dxActivity {
         // ...add to FrameLayout
         framelayout.addView(edittext);
 
+        // Make sure we control volume properly.
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
         // Cocos2dxGLSurfaceView
         mGLView = new Cocos2dxGLSurfaceView(this);
 
         // ...add to FrameLayout
         framelayout.addView(mGLView);
-
         framelayout.addView(webViewGroup);
 
         mGLView.setEGLContextClientVersion(2);
@@ -175,6 +180,15 @@ public class LoomDemo extends Cocos2dxActivity {
         ///Create Video View for our layout
         LoomVideo.onCreate(webViewGroup);
 
+        ///Create Mobile class
+        LoomMobile.onCreate(this);
+
+        ///Create Sensor class
+        LoomSensors.onCreate(this);
+
+        ///attempt to initialize Dolby Audio for this device
+        DolbyAudio.onCreate(this);
+
         // Listen for IME-initiated resizes.
         // Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
         final View activityRootView = framelayout;
@@ -184,7 +198,6 @@ public class LoomDemo extends Cocos2dxActivity {
             @Override
             public void onGlobalLayout() 
             {
-
                 final Rect r = new Rect();
                 activityRootView.getWindowVisibleDisplayFrame(r);
                 final int heightDiff = activityRootView.getRootView().getHeight() - (r.bottom - r.top);
@@ -201,7 +214,6 @@ public class LoomDemo extends Cocos2dxActivity {
                         keyboardHidden = false;
                         triggerGenericEvent("keyboardResize", "" + heightDiff);
                     }
-
                 }
                 else
                 {
@@ -210,13 +222,11 @@ public class LoomDemo extends Cocos2dxActivity {
 
                     keyboardHidden = true;
                     // this matches iOS behavior
-                    triggerGenericEvent("keyboardResize", "0");                 
-
+                    triggerGenericEvent("keyboardResize", "0");
                 }
-
-
              }
-        });     }
+        });     
+    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) 
@@ -230,7 +240,21 @@ public class LoomDemo extends Cocos2dxActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        DolbyAudio.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        DolbyAudio.onStop();
+    }
+
+    @Override
     protected void onPause() {
+        LoomMobile.onPause();
+        LoomSensors.onPause();
         LoomVideo.onPause();
         super.onPause();
         mGLView.onPause();
@@ -238,6 +262,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onResume() {
+        LoomSensors.onResume();
         LoomVideo.onResume();
         super.onResume();
         mGLView.onResume();
@@ -245,7 +270,10 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onDestroy() {
+        LoomMobile.onDestroy();
+        LoomSensors.onDestroy();
         LoomVideo.onDestroy();
+        DolbyAudio.onDestroy();
         super.onDestroy();
     }
 

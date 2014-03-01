@@ -176,8 +176,11 @@ package feathers.controls
             //Loom2D.stage.addEventListener(KeyboardEvent.KEY_DOWN, panelScreen_stage_keyDownHandler, false, 0, true);
             Loom2D.stage.addEventListener(KeyboardEvent.KEY_DOWN, panelScreen_stage_keyDownHandler);
 
-            owner.addEventListener(FeathersEventType.TRANSITION_START, onTransitionStart);
-            owner.addEventListener(FeathersEventType.TRANSITION_COMPLETE, onTransitionComplete);
+            if ( owner )
+            {
+                owner.addEventListener(FeathersEventType.TRANSITION_START, onTransitionStart);
+                owner.addEventListener(FeathersEventType.TRANSITION_COMPLETE, onTransitionComplete);
+            }
         }
 
         /**
@@ -212,11 +215,11 @@ package feathers.controls
          */
         protected function panelScreen_stage_keyDownHandler(event:KeyboardEvent):void
         {
-			if (event.keyCode == LoomKey.BUTTON_BACK)
-			{
-				event.stopImmediatePropagation();				
-				this.backButtonHandler.call(null);				
-			}
+            if (event.keyCode == LoomKey.BUTTON_BACK)
+            {
+                event.stopImmediatePropagation();                
+                this.backButtonHandler.call(null);                
+            }
         
             //trace("REVIVE ME!");
             //we're accessing Keyboard.BACK (and others) using a string because

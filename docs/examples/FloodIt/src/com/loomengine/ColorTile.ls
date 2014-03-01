@@ -2,11 +2,11 @@ package com.loomengine.flooder
 {
     import FloodIt;
     
+    import loom2d.Loom2D;
     import loom2d.display.Image;
     import loom2d.textures.Texture;
     import loom2d.math.Color;
         
-    import loom.animation.LoomTween;
     
     public class ColorTile extends Image
     {
@@ -40,7 +40,7 @@ package com.loomengine.flooder
             _colorIndex = value;
             
             var goalColor = Color.fromInteger(FloodIt.colors[colorIndex]);
-            LoomTween.to(this, 0.2, { "r": goalColor.red, "g": goalColor.green, "b": goalColor.blue});
+            Loom2D.juggler.tween(this, 0.2, { "r": goalColor.red, "g": goalColor.green, "b": goalColor.blue});
         }
         
         override public function toString():String

@@ -75,7 +75,7 @@ void TypeReader::declareClass(Type *type, json_t *classJSON)
 
 Type *TypeReader::declareType(Module *module, json_t *json)
 {
-    Type *type = new Type();
+    Type *type = lmNew(NULL) Type;
 
     const char *stype = json_string_value(json_object_get(json, "type"));
 

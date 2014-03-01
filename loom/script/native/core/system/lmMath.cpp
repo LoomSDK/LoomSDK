@@ -50,6 +50,22 @@ public:
         return 1;
     }
 
+    static int _randomRange(lua_State *L)
+    {
+        double min = lua_tonumber(L, 1);
+        double max = lua_tonumber(L, 2);
+        lua_pushnumber(L, min + (((double)rand() / (double)RAND_MAX) * (max - min)));
+        return 1;
+    }
+
+    static int _randomRangeInt(lua_State *L)
+    {
+        int min = (int)lua_tonumber(L, 1);
+        int max = (int)lua_tonumber(L, 2);
+        lua_pushnumber(L, (rand() % (max - min + 1)) + min);
+        return 1;
+    }    
+
     static int _pow(lua_State *L)
     {
         lua_pushnumber(L, pow(lua_tonumber(L, 1), lua_tonumber(L, 2)));
@@ -151,9 +167,7 @@ public:
         if ((lua_gettop(L) == 3) && !lua_isnil(L, 3))
         {
             // get the ...rest length
-            lua_rawgeti(L, 3, LSINDEXVECTORLENGTH);
-            int vlength = (int)lua_tonumber(L, -1);
-            lua_pop(L, 1);
+            int vlength = lsr_vector_get_length(L, 3);
 
             // get the vector table into stack position 4
             lua_rawgeti(L, 3, LSINDEXVECTOR);
@@ -194,9 +208,7 @@ public:
         if ((lua_gettop(L) == 3) && !lua_isnil(L, 3))
         {
             // get the ...rest length
-            lua_rawgeti(L, 3, LSINDEXVECTORLENGTH);
-            int vlength = (int)lua_tonumber(L, -1);
-            lua_pop(L, 1);
+            int vlength = lsr_vector_get_length(L, 3);
 
             // get the vector table into stack position 4
             lua_rawgeti(L, 3, LSINDEXVECTOR);
@@ -231,6 +243,8 @@ static int registerSystemMath(lua_State *L)
 
        .addStaticLuaFunction("__pget_RAND_MAX", &Math::__pget_RAND_MAX)
        .addStaticLuaFunction("random", &Math::_random)
+       .addStaticLuaFunction("randomRange", &Math::_randomRange)
+       .addStaticLuaFunction("randomRangeInt", &Math::_randomRangeInt)
        .addStaticLuaFunction("abs", &Math::_abs)
        .addStaticLuaFunction("sin", &Math::_sin)
        .addStaticLuaFunction("cos", &Math::_cos)

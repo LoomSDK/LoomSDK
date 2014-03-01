@@ -27,11 +27,15 @@
 #include "loom/common/core/performance.h"
 #include "loom/common/platform/platformThread.h"
 
-// This is our alignment size for general allocations. When we need to
+#include "jemalloc/jemalloc.h"
+
+// This is our alignment size for general allocations. When we need to 
 // pre-post pad data on an allocation, we'll use this many bytes to move
 // fore/back.
 #define LOOM_ALLOCATOR_ALIGNMENT    16
 
+#define USE_JEMALLOC 1
+ 
 static loom_allocator_t gGlobalHeap;
 static int              heap_allocated = 0;
 
@@ -71,8 +75,18 @@ void *lmAlloc_inner(loom_allocator_t *allocator, size_t size, const char *file, 
     return obj;
 }
 
+void * lmCalloc_inner( loom_allocator_t *allocator, size_t count, size_t size, const char *file, int line )
+{
+   void *obj = NULL;
+   if(!allocator) allocator = loom_allocator_getGlobalHeap();
+   
+   obj = allocator->allocCall(allocator, size * count, file, line);
+   memset(obj, 0, size * count);
+   tmAllocEx(gTelemetryContext, file, line, obj, size, "lmAlloc");
+   return obj;
+}
 
-void lmFree_inner(loom_allocator_t *allocator, void *ptr, const char *file, int line)
+void lmFree_inner( loom_allocator_t *allocator, void *ptr, const char *file, int line )
 {
     if (!allocator)
     {
@@ -87,15 +101,16 @@ void lmFree_inner(loom_allocator_t *allocator, void *ptr, const char *file, int 
 
 void *lmRealloc_inner(loom_allocator_t *allocator, void *ptr, size_t size, const char *file, int line)
 {
-    void *obj = NULL;
+   void *obj = NULL;
+   if(!allocator) allocator = loom_allocator_getGlobalHeap();
 
-    if (!allocator)
-    {
-        allocator = loom_allocator_getGlobalHeap();
-    }
-    obj = allocator->reallocCall(allocator, ptr, size, file, line);
-    tmAllocEx(gTelemetryContext, file, line, ptr, size, "lmRealloc");
-    return obj;
+   if(ptr == NULL)
+      obj = allocator->allocCall(allocator, size, file, line);
+   else
+      obj = allocator->reallocCall(allocator, ptr, size, file, line);
+
+   tmAllocEx(gTelemetryContext, file, line, ptr, size, "lmRealloc");
+   return obj;
 }
 
 
@@ -119,19 +134,29 @@ void loom_allocator_destroy(loom_allocator_t *allocator)
 
 static void *loom_heapAlloc_alloc(loom_allocator_t *thiz, size_t size, const char *file, int line)
 {
-    return malloc(size);
+#if USE_JEMALLOC == 1
+   return je_malloc(size);
+#else
+   return malloc(size);
+#endif
 }
-
 
 static void loom_heapAlloc_free(loom_allocator_t *thiz, void *ptr, const char *file, int line)
 {
-    free(ptr);
+#if USE_JEMALLOC == 1
+   je_free(ptr);
+#else
+   free(ptr);
+#endif
 }
-
 
 static void *loom_heapAlloc_realloc(loom_allocator_t *thiz, void *ptr, size_t size, const char *file, int line)
 {
-    return realloc(ptr, size);
+#if USE_JEMALLOC == 1
+   return je_realloc(ptr, size);
+#else
+   return realloc(ptr, size);
+#endif
 }
 
 

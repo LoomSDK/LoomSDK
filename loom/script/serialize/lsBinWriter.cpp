@@ -21,6 +21,7 @@
 
 #include "zlib.h"
 
+#include "loom/common/core/allocator.h"
 #include "loom/common/utils/utBase64.h"
 #include "loom/common/utils/utStreams.h"
 #include "lsBinWriter.h"
@@ -29,10 +30,12 @@ namespace LS {
 utHashTable<utHashedString, int>         BinWriter::stringPool;
 utHashTable<utHashedString, BinWriter *> BinWriter::binWriters;
 
-void BinWriter::writeMemberInfo(json_t *jminfo)
-{
-    int iname       = poolJString(json_object_get(jminfo, "name"));
-    int isource     = -1;
+loom_allocator_t *gBinWriterAllocator = NULL;
+
+void BinWriter::writeMemberInfo(json_t* jminfo) {
+
+    int iname = poolJString(json_object_get(jminfo, "name"));
+    int isource = -1;
     int ilinenumber = -1;
 
     json_t *jsource = json_object_get(jminfo, "source");
@@ -745,9 +748,9 @@ void BinWriter::writeExecutable(const char *path, json_t *sjson)
 
     int dataLength = bytes.getPosition();
 
-    Bytef  *compressed = (Bytef *)malloc(dataLength);
-    uLongf length      = (uLongf)dataLength;
-    int    ok          = compress(compressed, &length, (Bytef *)bytes.getDataPtr(), (uLong)dataLength);
+    Bytef *compressed = (Bytef *) lmAlloc(gBinWriterAllocator, dataLength);
+    uLongf length = (uLongf) dataLength;
+    int ok = compress(compressed, &length, (Bytef *) bytes.getDataPtr(), (uLong) dataLength);
     lmAssert(ok == Z_OK, "problem compressing executable assemby");
 
     bytes.clear();
@@ -765,6 +768,6 @@ void BinWriter::writeExecutable(const char *path, json_t *sjson)
 
     binStream.close();
 
-    free(compressed);
+    lmFree(gBinWriterAllocator, compressed);
 }
 }

@@ -1,7 +1,6 @@
 package
 {
-    import loom.animation.LoomTween;
-
+    import loom2d.Loom2D;
     import loom2d.math.Point;
 
     import loom.Application;
@@ -297,7 +296,7 @@ package
             scoreLabel.text = value + "/" + maxMoves;
             scoreLabel.scaleX = 1.1;
             scoreLabel.scaleY = 1.1;
-            LoomTween.to(scoreLabel, 0.2, { "scaleX": 1, "scaleY": 1 } );
+            Loom2D.juggler.tween(scoreLabel, 0.2, { "scaleX": 1, "scaleY": 1 } );
         }
         
         /**

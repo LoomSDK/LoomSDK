@@ -62,12 +62,16 @@ static void DumpString(const TString* s, DumpState* D)
 {
  if (s==NULL || getstr(s)==NULL)
  {
-  size_t size=0;
+  // LOOM: This was using size_t whereas the LoadString in undump is using in32_t, this
+  // will break bytecode compiled under 64 bit
+  int32_t size=0;
   DumpVar(size,D);
  }
  else
  {
-  size_t size=s->tsv.len+1;		/* include trailing '\0' */
+  // LOOM: This was using size_t whereas the LoadString in undump is using in32_t, this
+  // will break bytecode compiled under 64 bit  
+  int32_t size=s->tsv.len+1;		/* include trailing '\0' */
   DumpVar(size,D);
   DumpBlock(getstr(s),size,D);
  }

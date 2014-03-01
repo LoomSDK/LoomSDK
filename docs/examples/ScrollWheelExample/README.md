@@ -1,6 +1,7 @@
 title: Scroll Wheel Example
 description: Basic usage of a mouse's scroll wheel.
 source: src/ScrollWheelExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

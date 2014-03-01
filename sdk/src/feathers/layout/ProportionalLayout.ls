@@ -1,8 +1,8 @@
 package feathers.layout
 {
-	import loom2d.events.EventDispatcher;
-	import loom2d.math.Point;
-	import loom2d.display.DisplayObject;
+    import loom2d.events.EventDispatcher;
+    import loom2d.math.Point;
+    import loom2d.display.DisplayObject;
 
     protected enum DecomposedDimensionType
     {
@@ -65,24 +65,24 @@ package feathers.layout
         }
     }
 
-	/**
-	 * Lay out along vertically or horizontally using a mix of pixel and 
-	 * percentage sizing information.
+    /**
+     * Lay out along vertically or horizontally using a mix of pixel and 
+     * percentage sizing information.
      *
      * Assign this as the layout for a container, then set ProportionalLayoutData 
      * on all the children that you wish to be laid out using the algorithm.
      *
      * This lays out vertically by default, but set isVertical to false and it will
      * lay out horizontally.
-	 */
-	public class ProportionalLayout extends EventDispatcher implements ILayout
-	{
+     */
+    public class ProportionalLayout extends EventDispatcher implements ILayout
+    {
         /**
          * If true, layout is done vertically (with alignment happening horizontally).
          * If false, layout is done horizontally (with alignment happening 
          * vertically).
          */
-		public var isVertical:Boolean = true;
+        public var isVertical:Boolean = true;
 
         /**
          * Set align to LEFT to align controls to the left of the free space.
@@ -147,8 +147,8 @@ package feathers.layout
             return 0;
         }
 
-		function layout(items:Vector.<DisplayObject>, viewPortBounds:ViewPortBounds = null, result:LayoutBoundsResult = null):LayoutBoundsResult
-		{
+        function layout(items:Vector.<DisplayObject>, viewPortBounds:ViewPortBounds = null, result:LayoutBoundsResult = null):LayoutBoundsResult
+        {
             Debug.assert(viewPortBounds, "Cannot do proportional layout with no view port bounds!");
 
             public var goalWidth = viewPortBounds.explicitWidth;
@@ -171,14 +171,14 @@ package feathers.layout
 
             for(var i:int=0; i<items.length; i++)
             {
-            	// Determine if this item is eligible for layout.
+                // Determine if this item is eligible for layout.
                 var curItem = items[i] as ILayoutDisplayObject;
                 if(!curItem)
                     continue;
 
                 var curLayoutData = curItem.layoutData as ProportionalLayoutData;
                 if(!curLayoutData)
-                	continue;
+                    continue;
 
                 // Parse height.
                 var stackedDimLiteral = isVertical ? curLayoutData.height : curLayoutData.width;
@@ -216,14 +216,14 @@ package feathers.layout
             var currentStackedPos:Number = isVertical ? paddingTop : paddingLeft;
             for(i=0; i<items.length; i++)
             {
-            	// Determine if this item is eligible for layout.
+                // Determine if this item is eligible for layout.
                 curItem = items[i] as ILayoutDisplayObject;
                 if(!curItem)
                     continue;
 
                 curLayoutData = curItem.layoutData as ProportionalLayoutData;
                 if(!curLayoutData)
-                	continue;
+                    continue;
 
                 // Parse height and width.
                 var looseDimLiteral = isVertical ? curLayoutData.width : curLayoutData.height;
@@ -273,14 +273,14 @@ package feathers.layout
             result.contentHeight = goalHeight;
 
             return result;
-		}
+        }
 
-		function getScrollPositionForIndex(index:int, items:Vector.<DisplayObject>, x:Number, y:Number, width:Number, height:Number):Point
-		{
-			HELPER_POINT.x = 0;
-			HELPER_POINT.y = 0;
-			return HELPER_POINT;
-		}
+        function getScrollPositionForIndex(index:int, items:Vector.<DisplayObject>, x:Number, y:Number, width:Number, height:Number):Point
+        {
+            HELPER_POINT.x = 0;
+            HELPER_POINT.y = 0;
+            return HELPER_POINT;
+        }
 
         /**
          * @private
@@ -288,5 +288,5 @@ package feathers.layout
         private static const HELPER_POINT:Point;
         
 
-	}
+    }
 }

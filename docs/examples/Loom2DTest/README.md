@@ -1,6 +1,7 @@
 title: Loom2D Tests
 description: Tests for Loom2D
 source: src/Loom2DTest.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

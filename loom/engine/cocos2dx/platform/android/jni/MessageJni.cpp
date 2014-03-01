@@ -54,7 +54,6 @@ void tasks_runAnyTaskForDuration(int millis);
 
 void Java_org_cocos2dx_lib_Cocos2dxRenderer_nativeRender(JNIEnv *env)
 {
-    tasks_runAnyTaskForDuration(2);
     cocos2d::CCDirector::sharedDirector()->mainLoop();
 }
 

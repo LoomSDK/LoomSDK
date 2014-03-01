@@ -1,6 +1,7 @@
 title: Daisy Mark
 description: Loom version of the DaisyMark benchmark.
 source: src/LoomDaisyMark.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

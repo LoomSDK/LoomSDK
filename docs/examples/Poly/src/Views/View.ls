@@ -5,7 +5,7 @@ package poly.ui
     public delegate ViewCallback():void;
 
     /**
-     * Base view class; convenience callbacks to trigger transitions and 
+     * Base view class; convenience callbacks to trigger Transitions and 
      * sequence adding/removing from parent.
      */
     class View extends DisplayObjectContainer

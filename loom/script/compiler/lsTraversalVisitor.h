@@ -87,6 +87,19 @@ public:
             }
         }
 
+        if (out->type->getFullName() == "system.Dictionary")
+        {
+            if (out->types[0] && out->types[0]->type)
+            {
+                if (out->types[0]->type->isNativePure())
+                {
+                    error("Pure native class %s cannot be used as Dictionary key", out->types[0]->type->getFullName().c_str());
+                    return NULL;
+                }
+            }
+
+        }
+
         return out;
     }
 
@@ -219,9 +232,7 @@ public:
 
     virtual CompilationUnit *visit(CompilationUnit *cunit)
     {
-        cunit->functions  = visitStatementArray(cunit->functions);
         cunit->statements = visitStatementArray(cunit->statements);
-
         return cunit;
     }
 
@@ -339,11 +350,9 @@ public:
     Statement *visit(IfStatement *ifStatement)
     {
         lastVisited = ifStatement;
-
         ifStatement->expression     = visitExpression(ifStatement->expression);
         ifStatement->trueStatement  = visitStatement(ifStatement->trueStatement);
-        ifStatement->falseStatement = visitStatement(
-            ifStatement->falseStatement);
+        ifStatement->falseStatement = visitStatement(ifStatement->falseStatement);            
         return ifStatement;
     }
 
@@ -531,12 +540,9 @@ public:
 
     Expression *visit(ConditionalExpression *conditionalExpression)
     {
-        conditionalExpression->expression = visitExpression(
-            conditionalExpression->expression);
-        conditionalExpression->trueExpression = visitExpression(
-            conditionalExpression->trueExpression);
-        conditionalExpression->falseExpression = visitExpression(
-            conditionalExpression->falseExpression);
+        conditionalExpression->expression = visitExpression(conditionalExpression->expression);            
+        conditionalExpression->trueExpression = visitExpression(conditionalExpression->trueExpression);        
+        conditionalExpression->falseExpression = visitExpression(conditionalExpression->falseExpression);
 
         lastVisited = conditionalExpression;
 

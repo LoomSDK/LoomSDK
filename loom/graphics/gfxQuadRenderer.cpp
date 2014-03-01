@@ -42,8 +42,11 @@ static bgfx::VertexDecl sVertexPosColorTexDecl;
 static bgfx::UniformHandle sUniformTexColor;
 static bgfx::UniformHandle sUniformNodeMatrixRemoveMe;
 static bgfx::ProgramHandle sProgramPosColorTex;
+static bgfx::ProgramHandle sProgramPosTex;
 
 static bgfx::IndexBufferHandle sIndexBufferHandle;
+
+static bool sTinted = true;
 
 bgfx::DynamicVertexBufferHandle QuadRenderer::vertexBuffers[MAXVERTEXBUFFERS];
 
@@ -79,11 +82,59 @@ void QuadRenderer::submit()
 
     if (Texture::sTextureInfos[currentTexture].handle.idx != MARKEDTEXTURE)
     {
+        // On iPad 1, the PosColorTex shader, which multiplies texture color with
+        // vertex color, is 5x slower than PosTex, which just draws the texture
+        // unmodified. So we do this.
+        if(sTinted)
+            bgfx::setProgram(sProgramPosColorTex);
+        else
+            bgfx::setProgram(sProgramPosTex);
+
         lmAssert(sIndexBufferHandle.idx != bgfx::invalidHandle, "No index buffer!");
         bgfx::setIndexBuffer(sIndexBufferHandle, currentIndexBufferIdx, (quadCount * 6));
         bgfx::setVertexBuffer(vertexBuffers[currentVertexBufferIdx], MAXBATCHQUADS * 4);
 
-        bgfx::setTexture(0, sUniformTexColor, Texture::sTextureInfos[currentTexture].handle);
+        // set U and V wrap modes (repeat / mirror / clamp)
+        uint32_t textureFlags = BGFX_TEXTURE_W_CLAMP;
+        ///U
+        switch(Texture::sTextureInfos[currentTexture].wrapU)
+        {
+            case TEXTUREINFO_WRAP_REPEAT:
+                textureFlags |= BGFX_TEXTURE_NONE;
+                break;
+            case TEXTUREINFO_WRAP_MIRROR:
+                textureFlags |= BGFX_TEXTURE_U_MIRROR;
+                break;
+            case TEXTUREINFO_WRAP_CLAMP:
+                textureFlags |= BGFX_TEXTURE_U_CLAMP;
+                break;
+        }
+        ///V
+        switch(Texture::sTextureInfos[currentTexture].wrapV)
+        {
+            case TEXTUREINFO_WRAP_REPEAT:
+                textureFlags |= BGFX_TEXTURE_NONE;
+                break;
+            case TEXTUREINFO_WRAP_MIRROR:
+                textureFlags |= BGFX_TEXTURE_V_MIRROR;
+                break;
+            case TEXTUREINFO_WRAP_CLAMP:
+                textureFlags |= BGFX_TEXTURE_V_CLAMP;
+                break;
+        }
+
+        // set smoothing mode, bgfx default is bilinear
+        switch (Texture::sTextureInfos[currentTexture].smoothing)
+        {
+            // use nearest neighbor 
+            case TEXTUREINFO_SMOOTHING_NONE:
+                textureFlags |= BGFX_TEXTURE_MIN_POINT;
+                textureFlags |= BGFX_TEXTURE_MAG_POINT;
+                textureFlags |= BGFX_TEXTURE_MIP_POINT;
+                break;
+        }   
+        
+        bgfx::setTexture(0, sUniformTexColor, Texture::sTextureInfos[currentTexture].handle, textureFlags);
 
         // Set render states.
         bgfx::setState(0
@@ -96,6 +147,7 @@ void QuadRenderer::submit()
 
         bgfx::submit(Graphics::getView());
 
+
         currentIndexBufferIdx += quadCount * 6;
     }
 
@@ -103,7 +155,7 @@ void QuadRenderer::submit()
 }
 
 
-VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t numVertices)
+VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted)
 {
     if (!numVertices || (texture < 0) || (numVertices > MAXBATCHQUADS * 4))
     {
@@ -112,7 +164,8 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
 
     lmAssert(!(numVertices % 4), "numVertices % 4 != 0");
 
-    if ((currentTexture != TEXTUREINVALID) && (currentTexture != texture))
+    if (((currentTexture != TEXTUREINVALID) && (currentTexture != texture))
+        || (sTinted != tinted))
     {
         submit();
     }
@@ -145,6 +198,8 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
 
     VertexPosColorTex *returnPtr = currentVertexPtr;
 
+    sTinted = tinted;
+
     currentVertexPtr += numVertices;
     vertexCount      += numVertices;
 
@@ -160,7 +215,7 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
 
 void QuadRenderer::batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices)
 {
-    VertexPosColorTex *verticePtr = getQuadVertices(texture, numVertices);
+    VertexPosColorTex *verticePtr = getQuadVertices(texture, numVertices, true);
 
     if (!verticePtr)
     {
@@ -266,26 +321,39 @@ void QuadRenderer::initializeGraphicsResources()
     const uint8_t *pshader;
 
     // Load vertex shader.
-    bgfx::VertexShaderHandle vsh;
+    bgfx::VertexShaderHandle vsh_pct;
     pshader = GetVertexShaderPosColorTex(sz);
     mem     = bgfx::makeRef(pshader, sz);
-    vsh     = bgfx::createVertexShader(mem);
+    vsh_pct = bgfx::createVertexShader(mem);
 
-    // Load fragment shader.
-    bgfx::FragmentShaderHandle fsh;
+    bgfx::VertexShaderHandle vsh_pt;
+    pshader = GetVertexShaderPosTex(sz);
+    mem     = bgfx::makeRef(pshader, sz);
+    vsh_pt  = bgfx::createVertexShader(mem);
+
+    // Load fragment shaders.
+    bgfx::FragmentShaderHandle fsh_pct;
     pshader = GetFragmentShaderPosColorTex(sz);
     mem     = bgfx::makeRef(pshader, sz);
-    fsh     = bgfx::createFragmentShader(mem);
+    fsh_pct = bgfx::createFragmentShader(mem);
+
+    bgfx::FragmentShaderHandle fsh_pt;
+    pshader = GetFragmentShaderPosTex(sz);
+    mem     = bgfx::makeRef(pshader, sz);
+    fsh_pt  = bgfx::createFragmentShader(mem);
 
     // Create program from shaders.
-    sProgramPosColorTex = bgfx::createProgram(vsh, fsh);
+    sProgramPosColorTex = bgfx::createProgram(vsh_pct, fsh_pct);
+    sProgramPosTex = bgfx::createProgram(vsh_pt, fsh_pt);
 
     // We can destroy vertex and fragment shader here since
     // their reference is kept inside bgfx after calling createProgram.
     // Vertex and fragment shader will be destroyed once program is
     // destroyed.
-    bgfx::destroyVertexShader(vsh);
-    bgfx::destroyFragmentShader(fsh);
+    bgfx::destroyVertexShader(vsh_pct);
+    bgfx::destroyVertexShader(vsh_pt);
+    bgfx::destroyFragmentShader(fsh_pct);
+    bgfx::destroyFragmentShader(fsh_pt);
 
     // create the vertex stream
     sVertexPosColorTexDecl.begin();
@@ -328,9 +396,7 @@ void QuadRenderer::initializeGraphicsResources()
         vertexData[i] = p;
 
         p += MAXBATCHQUADS * 4;
-        
     }
-
 }
 
 

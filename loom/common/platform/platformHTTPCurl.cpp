@@ -24,6 +24,7 @@
 #include <cassert>
 #include "platform.h"
 
+#ifndef LOOMSCRIPT_STANDALONE
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32 || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
 
 
@@ -73,7 +74,7 @@ typedef struct
 
 static void loom_HTTPCleanupUserData(loom_HTTPUserData *data)
 {
-    free(data->chunk->memory);
+    lmFree(NULL, data->chunk->memory);
     curl_slist_free_all(data->headers);
     delete data->chunk;
     delete data;
@@ -173,10 +174,8 @@ void platform_HTTPUpdate()
                 // notify the callback that we are successful
                 userData->callback(userData->payload, LOOM_HTTP_SUCCESS, userData->chunk->memory);
 
-                if (userData->base64)
-                {
-                    free((void *)result);
-                }
+                if(userData->base64)
+                   lmFree(NULL, (void*)result);
             }
             else
             {
@@ -246,8 +245,8 @@ void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback ca
     }
 
     // initialize our chunk data, it will eventually be resized.
-    userData->chunk            = new loom_HTTPChunk;
-    userData->chunk->memory    = (char *)malloc(1);
+    userData->chunk = new loom_HTTPChunk;
+    userData->chunk->memory = (char*)lmAlloc(NULL, 1);
     userData->chunk->memory[0] = 0;
     userData->chunk->size      = 0;
 
@@ -288,3 +287,5 @@ void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback ca
     curl_multi_add_handle(gMultiHandle, curlHandle);
 }
 #endif
+#endif //LOOMSCRIPT_STANDALONE
+

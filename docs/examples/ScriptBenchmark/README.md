@@ -1,6 +1,7 @@
 title: Script Benchmark
 description: Script benchmark for performance metrics on desktop/device via CLI
 source: src/ScriptBenchmark.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

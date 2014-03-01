@@ -1,6 +1,7 @@
 title: Persistence Example
 description: Simple example demostrating saving persistent data across app sessions.
 source: src/PersistenceExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

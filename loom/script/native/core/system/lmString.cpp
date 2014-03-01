@@ -20,6 +20,8 @@
 
 #include <ctype.h>
 #include <string.h>
+#include <cstring>
+#include "loom/common/core/allocator.h"
 #include "loom/script/loomscript.h"
 #include "loom/script/runtime/lsRuntime.h"
 
@@ -30,9 +32,7 @@ public:
     static int format(lua_State *L)
     {
         // unwind the input args
-        lua_rawgeti(L, 2, LSINDEXVECTORLENGTH);
-        int nargs = (int)lua_tonumber(L, -1);
-        lua_pop(L, 1);
+        int nargs = lsr_vector_get_length(L, 2);
 
         lua_rawgeti(L, 2, LSINDEXVECTOR);
         lua_replace(L, 2);
@@ -248,10 +248,7 @@ public:
         utString value = lua_tostring(L, 1);
 
         lua_rawgeti(L, 2, LSINDEXVECTOR);
-        lua_rawgeti(L, 2, LSINDEXVECTORLENGTH);
-
-        int length = (int)lua_tonumber(L, -1);
-        lua_pop(L, 1);
+        int length = lsr_vector_get_length(L, 2);
 
         for (int i = 0; i < length; i++)
         {
@@ -488,8 +485,7 @@ public:
             lua_rawset(L, newVectorTbl);
         }
 
-        lua_pushnumber(L, scount);
-        lua_rawseti(L, newVectorIdx, LSINDEXVECTORLENGTH);
+        lsr_vector_set_length(L, newVectorIdx, scount);
 
         lua_pushvalue(L, newVectorIdx);
 
@@ -527,22 +523,40 @@ public:
         {
             lua_pushnumber(L, count++);
             lua_pushstring(L, "");
-            lua_settable(L, -3);
+            lua_rawset(L, -3);
         }
 
-        char *sstr  = (char *)strdup(str);
-        char *token = strtok(sstr, delim);
+        char *start = str;
+        char *found;
+        char *temp = (char*) lmAlloc(NULL, slen + 1);
+        do {
+            found = strstr(start, delim);
 
-        while (token != NULL)
+            if (found)
+            {
+                if (found - start > 0)
+                {
+                    memcpy(temp, start, found - start);
+                    temp[found - start] = 0;
+                    lua_pushnumber(L, count++);
+                    lua_pushstring(L, temp);
+                    lua_rawset(L, -3);
+                }
+
+                start = found + dlen;
+            }
+            
+        } while (found);        
+
+        if (start - str < slen)
         {
+            strncpy(temp, start, slen + 1);
             lua_pushnumber(L, count++);
-            lua_pushstring(L, token);
-            lua_settable(L, -3);
-
-            token = strtok(NULL, delim);
+            lua_pushstring(L, temp);
+            lua_rawset(L, -3);            
         }
 
-        free(sstr);
+        lmFree(NULL, temp);
 
         // handle the case of ..., delta, ""
         if (slen >= dlen)
@@ -551,12 +565,11 @@ public:
             {
                 lua_pushnumber(L, count++);
                 lua_pushstring(L, "");
-                lua_settable(L, -3);
+                lua_rawset(L, -3);
             }
         }
 
-        lua_pushnumber(L, count);
-        lua_rawseti(L, newVectorIdx, LSINDEXVECTORLENGTH);
+        lsr_vector_set_length(L, newVectorIdx, count);
 
         lua_settop(L, newVectorIdx);
         return 1;

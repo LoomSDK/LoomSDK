@@ -1,3 +1,4 @@
+#include "loom/common/core/allocator.h"
 #include "loom/common/core/assert.h"
 #include "loom/common/core/log.h"
 #include "loom/common/platform/platformAndroidJni.h"
@@ -34,6 +35,8 @@
 #define OUYA_MAX_CONTROLLERS      4
 
 static loom_logGroup_t ouyaLogGroup = { "ouya", 1 };
+
+loom_allocator_t *gOuyaGamePadAllocator = NULL;
 
 static int SYS_NumJoysticks = 0;
 
@@ -206,10 +209,9 @@ void input_sysGamepadQuit(void)
  */
 int input_sysGamepadOpen(InputGamepad *gamepad)
 {
-    gamepad->hwdata = (struct gamepad_hwdata *)malloc(sizeof(struct gamepad_hwdata));
-
-    if (gamepad->hwdata == NULL)
-    {
+    gamepad->hwdata = (struct gamepad_hwdata *) lmAlloc(gOuyaGamePadAllocator, sizeof(struct gamepad_hwdata));
+        
+    if (gamepad->hwdata == NULL) {
         lmAssert(0, "Out of memory");
         return(-1);
     }

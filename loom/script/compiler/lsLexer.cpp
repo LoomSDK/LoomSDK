@@ -24,6 +24,7 @@
 
 #include "loom/script/compiler/lsLexer.h"
 #include "loom/script/compiler/lsAlias.h"
+ #include "loom/script/compiler/lsCompilerLog.h"
 
 
 namespace LS {
@@ -42,11 +43,12 @@ Lexer::Lexer()
 }
 
 
-void Lexer::setInput(const utString& input)
+void Lexer::setInput(const utString& input, const utString& filename)
 {
     int length = (int)input.size();
 
     this->input = input;
+    this->filename = filename;
 
     lineNumber  = 1;
     maxPosition = length;
@@ -64,6 +66,11 @@ Lexer::~Lexer()
 
 void Lexer::error(const char *message)
 {
+    LSCompilerLog::logError(filename.c_str(), lineNumber, message, "Lexer");
+
+    // throw an exception see not about LOOM-1183 in handler
+    throw -1;
+
 }
 
 
@@ -1327,7 +1334,6 @@ void Lexer::gotoBookmark(int bookmark)
         unreadToken();
     }
 }
-
 
 Token *Lexer::nextToken()
 {

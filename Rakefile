@@ -95,6 +95,13 @@ else
   $numCores = Integer(`cat /proc/cpuinfo | grep processor | wc -l`)
 end
 
+# For matz's sake just include rubyzip directly.
+path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'libs'))
+puts "Adding #{path} to $LOAD_PATH to use local rubyzip."
+$LOAD_PATH << path
+require 'zip'
+require 'zip/file'
+
 puts "*** Building with #{$numCores} cores."
 
 # Windows specific checks and settings
@@ -142,6 +149,12 @@ if $LOOM_HOST_OS == 'windows'
     $LSC_BINARY = "artifacts\\lsc.exe"
 else
     $LSC_BINARY = "artifacts/lsc"
+end
+
+if $LOOM_HOST_OS == 'windows' 
+    $SHADERC_BINARY = "artifacts\\shaderc.exe"
+else
+    $SHADERC_BINARY = "artifacts/shaderc"
 end
 
 #############
@@ -269,11 +282,28 @@ namespace :utility do
     puts " *** lsc built!"
   end
   
+  desc "Builds shaderc if it doesn't exist"
+  file $SHADERC_BINARY => "build:desktop" do
+    puts " *** shaderc built!"
+  end
+
   desc "Compile scripts and report any errors."
   task :compileScripts => $LSC_BINARY do
     puts "===== Compiling Core Scripts ====="
     Dir.chdir("sdk") do
       sh "../artifacts/lsc Main.build"
+    end
+  end
+
+  desc "Compile new version of shaders for the current platform."
+  task :compileShaders => $SHADERC_BINARY do
+    puts "===== Compiling Shaders ====="
+    Dir.chdir("sdk/shaders") do
+      if $LOOM_HOST_OS == 'windows'
+        sh "buildShaders.bat"
+      else
+        sh "sh buildShaders.sh"
+      end
     end
   end
 
@@ -490,6 +520,13 @@ namespace :build do
       package_command += " --sign '#{args.sign_as}'"
       package_command += " --embed '#{$iosProvision}'"
       sh package_command
+
+      # if Debug build, copy over the dSYM too
+      if $buildTarget == "Debug" 
+        dsymPath = Dir.glob("cmake_ios/application/#{$buildTarget}-iphoneos/*.dSYM")[0]
+        puts "dSYM path found: #{dsymPath}"
+        FileUtils.cp_r(dsymPath, full_output_path)
+      end
     end
   end
 
@@ -881,7 +918,7 @@ namespace :package do
     omit_files = %w[ examples.zip loomsdk.zip certs/LoomDemoBuild.mobileprovision loom/vendor/telemetry-01052012 pkg/ artifacts/ docs/output cmake_osx/ cmake_msvc/ cmake_ios/ cmake_android/]
 
     require 'zip/zip'
-    Zip::ZipFile.open("nativesdk.zip", 'w') do |zipfile|
+    Zip::File.open("nativesdk.zip", 'w') do |zipfile|
       Dir["**/**"].each do |file|
         
         do_omit = false
@@ -910,7 +947,7 @@ namespace :package do
     FileUtils.mkdir_p "pkg"
 
     require 'zip/zip'
-    Zip::ZipFile.open("pkg/examples.zip", 'w') do |zipfile|
+    Zip::File.open("pkg/examples.zip", 'w') do |zipfile|
       Dir["docs/examples/**/**"].each do |file|
         zipfile.add(file.sub("docs/examples/", ''),file)
       end
@@ -938,6 +975,9 @@ namespace :package do
       
       # add the ios app bundle
       FileUtils.cp_r("artifacts/ios/LoomDemo.app", "pkg/sdk/bin/ios")
+      if $buildTarget == "Debug"
+        FileUtils.cp_r("artifacts/ios/LoomDemo.app.dSYM", "pkg/sdk/bin/ios")
+      end
       
       # Strip out the bundled assets and binaries
       FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/assets"
@@ -978,7 +1018,7 @@ namespace :package do
     require_dependencies
 
     puts "Compressing Loom SDK..."
-    Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|
+    Zip::File.open("pkg/loomsdk.zip", 'w') do |zipfile|
       Dir["pkg/sdk/**/**"].each do |file|
         zipfile.add(file.sub("pkg/sdk/", ''),file)
       end
@@ -998,7 +1038,7 @@ namespace :package do
 
     FileUtils.mkdir_p "pkg"
 
-    Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|
+    Zip::File.open("pkg/loomsdk.zip", 'w') do |zipfile|
       Dir["pkg/sdk/**/**"].each do |file|
         zipfile.add(file.sub("pkg/sdk/", ''),file)
       end
@@ -1019,9 +1059,10 @@ end
 def require_dependencies
   begin
     require 'rubygems'
-    require 'zip/zip'
-    require 'zip/zipfilesystem'
-  rescue LoadError
+    require 'zip'
+    require 'zip/file'
+  rescue LoadError => e
+    puts "LoadError: #{e}"
     puts "This Rakefile requires the rubyzip gem. Install it using: gem install rubyzip"
     exit(1)
   end
@@ -1030,7 +1071,7 @@ end
 def unzip_file (file, destination)
   require_dependencies
 
-  Zip::ZipFile.open(file) do |zip_file|
+  Zip::File.open(file) do |zip_file|
     zip_file.each do |f|
       f_path=File.join(destination, f.name)
       FileUtils.mkdir_p(File.dirname(f_path))

@@ -42,16 +42,17 @@ public class LoomVideo
 
 
     ///private vars
-    private static ViewGroup    _rootView = null;
-    private static VideoView    _videoView = null;
-    private static Activity     _context = null;
-    private static String       _videoFile = null;
-    private static int          _controlMode = Controls_Show;
-    private static int          _scaleMode = Scale_None;
-    private static int          _bgColor = Color.TRANSPARENT;
-    private static int          _suspendedVideoPos = 0;
-    private static boolean      _isPlaying = false;
-    private static boolean      _isPaused = false;
+    private static ViewGroup        _rootView = null;
+    private static VideoView        _videoView = null;
+    private static MediaController  _mediaController = null;
+    private static Activity         _context = null;
+    private static String           _videoFile = null;
+    private static int              _controlMode = Controls_Show;
+    private static int              _scaleMode = Scale_None;
+    private static int              _bgColor = Color.TRANSPARENT;
+    private static int              _suspendedVideoPos = 0;
+    private static boolean          _isPlaying = false;
+    private static boolean          _isPaused = false;
 
 
 
@@ -61,18 +62,13 @@ public class LoomVideo
         @Override
         public void onCompletion(MediaPlayer mp) 
         {
-             Log.d("Loom", "Video Completed!");
+            Log.d("Loom", "Video Completed!");
 
-             ///remove the video view from the root
-            _rootView.removeView(_videoView);
-            _rootView.setBackgroundColor(Color.TRANSPARENT);
-
-            ///give focus back to the main surface view after we have removed the video view 
-            Cocos2dxGLSurfaceView.mainView.requestFocus();
+            ///cleans up playback
+            cleanup();
 
             ///fire native callback noting completion
             deferNativeCallback(1, "success");
-            _isPlaying = false;
         }    
 
         @Override
@@ -80,12 +76,8 @@ public class LoomVideo
         {
             Log.d("Loom", "Video Failed!");
 
-            ///remove the video view from the root
-            _rootView.removeView(_videoView);
-            _rootView.setBackgroundColor(Color.TRANSPARENT);
-
-            ///give focus back to the main surface view after we have removed the video view 
-            Cocos2dxGLSurfaceView.mainView.requestFocus();
+            ///cleans up playback
+            cleanup();
 
             ///create error string
             String message = "error";
@@ -123,7 +115,7 @@ public class LoomVideo
         
             ///fire failed delegate
             deferNativeCallback(0, message);
-            _isPlaying = false;
+
             return true;
         }
 
@@ -131,18 +123,40 @@ public class LoomVideo
         @Override
         public boolean onTouch(View v, MotionEvent event)
         {
-            ///stop playback on touch if video flags indiated that
-            if(_controlMode == Controls_StopOnTouch)
+            ///only care about touch events
+            if(event.getActionMasked() == MotionEvent.ACTION_DOWN)
             {
-                Log.d("Loom", "Video Skipped!");
-
-                _videoView.stopPlayback();
-                onCompletion(null);
-                return true;
+                ///stop playback on touch if video flags indiated that
+                if(_controlMode == Controls_StopOnTouch)
+                {
+                    _videoView.stopPlayback();
+                    onCompletion(null);
+                    Log.d("Loom", "Video Skipped!");
+                }
+                else if(_controlMode == Controls_Show)
+                {
+                    ///take over manual show/hide of the mediaController to avoid strange auto-showing 
+                    ///of the controls on secondary playbacks if setMediaController() has a videoView 
+                    ///set when their playback starts
+                    if(_mediaController.isShowing())
+                    {
+                        ///hide controls
+                        _mediaController.hide();
+                        _videoView.setMediaController(null);
+                        _mediaController.setAnchorView(null);
+                    }
+                    else
+                    {
+                        ///show controls
+                        _videoView.setMediaController(_mediaController);
+                        _mediaController.setAnchorView(_videoView);
+                        _mediaController.show();
+                    }
+                }
             }
 
-            ///swallow the event if controls are hidden
-            return (_controlMode == Controls_Hide) ? true : false;
+            ///swallow the touch
+            return true;
         }
 
 
@@ -161,7 +175,6 @@ public class LoomVideo
             _rootView.setBackgroundColor(_bgColor);
         }
     } 
-
 
 
 
@@ -186,6 +199,9 @@ public class LoomVideo
         _videoView.setOnErrorListener(videoListeners);
         _videoView.setOnTouchListener(videoListeners);
         _videoView.setOnPreparedListener(videoListeners);
+
+        ///create media controller for possible use later on
+        _mediaController = new MediaController(_context, true);
     }
 
 
@@ -234,10 +250,10 @@ public class LoomVideo
     {
         if(_isPaused)
         {
-            Log.d("Loom", "Resuming Video Playback at position: " + _suspendedVideoPos);
             _videoView.seekTo(_suspendedVideoPos);
             _videoView.start();
             _isPaused = false;
+            Log.d("Loom", "Resuming Video Playback at position: " + _suspendedVideoPos);
         }
     }
 
@@ -247,9 +263,9 @@ public class LoomVideo
     {
         if(_isPlaying)
         {
-            Log.d("Loom", "Stopping Video Playback");
             _videoView.stopPlayback();
-            _isPlaying = false;
+            cleanup();
+            Log.d("Loom", "Stopping Video Playback onDestroy");
         }
     }
 
@@ -265,23 +281,6 @@ public class LoomVideo
         _controlMode = controlMode;
         _bgColor = bgColor;
 
-        ///if specified, create media controller and link it with the video view
-        switch(_controlMode)
-        {
-            case Controls_Show:
-                MediaController mediaController = new MediaController(_context);
-                mediaController.setAnchorView(_videoView);
-                mediaController.setMediaPlayer(_videoView);
-                _videoView.setMediaController(mediaController);
-                break;
-            case Controls_Hide:
-                _videoView.setMediaController(null);
-                break;
-            case Controls_StopOnTouch:
-                _videoView.setMediaController(null);
-                break;
-        }
-
         ///ignore gravity to try and stop the stupid retarded video view from stupid retarded sliding
         ((RelativeLayout)_rootView).setIgnoreGravity(_videoView.getId());
 
@@ -294,12 +293,35 @@ public class LoomVideo
              // Uri videoUri = Uri.parse("android.resource://" + _context.getPackageName() + "/" + videoResourceID);        
         Uri videoUri = Uri.parse("android.resource://" + _context.getPackageName() + "/raw/" + file);
         _videoView.setVideoURI(videoUri);
-
-        ///add video to the root view (with dummy size to minimize the stupid sliding effect) and start it
-        _rootView.addView(_videoView, getLayout(512, 512));
+        _rootView.addView(_videoView);
         _videoView.start();
         _isPlaying = true;
     }  
+
+
+    ///shared cleanup function for when a video has finished playing
+    private static void cleanup()
+    {
+        _isPlaying = false;
+
+        ///clean up the media controller
+        if(_mediaController != null)
+        {
+            if(_mediaController.isShowing())
+            {
+                _mediaController.hide();
+            }
+            _videoView.setMediaController(null);
+            _mediaController.setAnchorView(null);    
+        }
+
+         ///remove the video view from the root
+        _rootView.removeView(_videoView);
+        _rootView.setBackgroundColor(Color.TRANSPARENT);
+
+        ///give focus back to the main surface view after we have removed the video view 
+        Cocos2dxGLSurfaceView.mainView.requestFocus();
+    }
 
 
     ///sets the layout for the video

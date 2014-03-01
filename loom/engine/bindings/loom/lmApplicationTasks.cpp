@@ -21,7 +21,6 @@
 #include "loom/common/platform/platformTime.h"
 #include "loom/common/platform/platformHttp.h"
 #include "loom/common/core/performance.h"
-#include "loom/engine/tasks/tasks.h"
 #include "loom/common/assets/assets.h"
 #include "loom/script/native/lsNativeDelegate.h"
 #include "lmApplication.h"
@@ -37,6 +36,8 @@ void loom_tick()
     // Mark the main thread for NativeDelegates. On some platforms this
     // may change so we remark every frame.
     NativeDelegate::markMainThread();
+
+    performance_tick();
 
     profilerBlock_t p = { "loom_tick", platform_getMilliseconds(), 8 };
 
@@ -63,69 +64,8 @@ void loom_tick()
 
     loom_asset_pump();
     platform_HTTPUpdate();
-
     lualoom_gc_update(LoomApplication::getRootVM()->VM());
-
     finishProfilerBlock(&p);
 }
 }
 
-
-LOOM_IMPLEMENT_TASK(PreTick)
-{
-    return NULL;
-}
-
-LOOM_IMPLEMENT_TASK(PostTick)
-{
-    return NULL;
-}
-
-LOOM_IMPLEMENT_TASK(Network)
-{
-    loom_asset_pump();
-    return NULL;
-}
-
-LOOM_IMPLEMENT_TASK(Frame)
-{
-    performance_tick();
-
-    // Check that it's been at least tickms from last tick.
-
-    int msToRunTasks = 32 - (platform_getMilliseconds() - gLastTickTime);
-    if (msToRunTasks < 0)
-    {
-        msToRunTasks = 0;
-    }
-    if (msToRunTasks > 32)
-    {
-        msToRunTasks = 32;
-    }
-    tasks_runAnyTaskForDuration(msToRunTasks);
-
-    // Pre-tick
-    task_t *prett = task_initialize(task_PreTickTask, NULL);
-    task_setThreadAffinity(prett, 1);
-
-    // Post-tick
-    task_t *posttt = task_initialize(task_PostTickTask, NULL);
-    task_setFinishes(posttt, task);
-
-    // Network
-    task_t *nt = task_initialize(task_NetworkTask, NULL);
-    task_setFinishes(nt, task);
-
-    // Set up next frame.
-    task_t *ft = task_initialize(task_FrameTask, NULL);
-    task_setThreadAffinity(ft, 1);
-    task_setStarts(task, ft);
-
-    // Fire it all off!
-    tasks_schedule(prett);
-    tasks_schedule(nt);
-
-    gLastTickTime = platform_getMilliseconds();
-
-    return NULL;
-}
