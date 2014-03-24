@@ -100,9 +100,9 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
 
         free(outputBuffer);
     }
-    else if(charBuff[0] == 0x49
+    else if((charBuff[0] == 0x49
         && charBuff[1] == 0x44
-        && charBuff[2] == 0x33)
+        && charBuff[2] == 0x33) || (charBuff[0] == 0xFF && charBuff[1] == 0xFB))
     {
         // It's an MP3, y'all!
         short *outBuffer = (short*)lmAlloc(gAssetAllocator, MP3_MAX_SAMPLES_PER_FRAME * 2);
