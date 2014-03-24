@@ -28,7 +28,7 @@ package loom2d.tmx
 
         public function TMXTileset(parentFile:String, element:XMLElement)
         {
-            _parentFile = parentFile;
+            _parentFile = Path.normalizePath(parentFile);
             parseTileSet(element);
         }
 
