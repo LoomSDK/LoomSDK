@@ -2,29 +2,84 @@ title: Deploying To TestFlight
 description: Deploy your app to TestFlight straight from the Loom CLI
 !------
 
-One of the many great features of Loom is its simple built-in TestFlight upload API integration. To upload your app to TestFlight, you will need:
+[TestFlight][testflight] is a free platform used to distribute beta and internal iOS applications to team members over-the-air.
 
-* A TestFlight Account
-* Your Team Token, which can be found at https://testflightapp.com/dashboard/team/edit/
-* Your Upload API Token, which can be found at https://testflightapp.com/account/#api
+You can upload your app directly to TestFlight from Loom and then log in to TestFlight to make it available to your team.
 
-If uploading an iOS app, you will also need to have the following already set up for your project:
 
-* An Apple Distribution Certificate
-* An Apple adhoc distribution .mobileProvision file with an app id that matches your app
+## Preparation
 
-( If you don't have these, check out the **Deploying To iOS** section under *Guides -> Devices* )
+To configure your project for TestFlight, you will need:
 
-## Set Your API and Team Tokens
+* A TestFlight account
+* Your TestFlight team token
+* Your TestFlight API token
+* A version number for your app
 
-Modify your loom.config file to include the following:
+You will also need the following iOS-specific items (if you don't have all of these, refer to the [Deploying To iOS][deploy-ios] section under _Guides_ > _Devices_ ):
 
-~~~
-"testflight_api_token": "YOUR_UPLOAD_API_TOKEN_HERE",
-"testflight_team_token": "YOUR_TEAM_TOKEN_HERE"
-~~~
+* A distribution certificate
+* An Ad Hoc mobile provision file with an app id that matches your app
 
-## Upload To TestFlight
 
-By this point you should be set up and ready to go. Upload your app by running `loom testflight ios` for iOS or `loom testflight android` for Android. That's it!
-To see more options available to you such as distribution lists and notification settings, run the `loom testflight --help` command.
+### TestFlight Account
+
+Register at https://testflightapp.com/register/
+
+
+### TestFlight API Token
+
+0. Log in to https://testflightapp.com/account/
+0. Select _Upload API_ from the left-side menu
+0. Copy your api token to the clipboard
+
+Set the api token as the value of `testflight_api_token` in your `loom.config` file, making sure to replace `<your-token>` with the actual api token:
+
+```bash
+$ loom config testflight_api_token "<your-token>"
+```
+
+
+### TestFlight Team Token
+
+0. Log in to https://testflightapp.com/dashboard/
+0. If you don't have any teams, the dashboard will provide a link to _Create a new team_
+0. Provide a team name
+0. Open the dropdown next to your avatar in the top menu
+0. Select a team and choose _Edit Info_
+0. Copy your team token to the clipboard
+
+Set the team token as the value of `testflight_team_token` in your `loom.config` file, making sure to replace `<your-token>` with the actual team token:
+
+```bash
+$ loom config testflight_team_token "<your-token>"
+```
+
+
+### App version
+
+Set the value of `app_version` in your `loom.config` file. A [Semantic Versioning][semver] scheme is recommended:
+
+```bash
+$ loom config app_version 0.0.0
+```
+
+
+## Build and Upload To TestFlight
+
+After you've completed the preparation above, you can use Loom to deploy new versions of your app through TestFlight by running the `testflight` command:
+
+```bash
+$ loom testflight ios
+```
+
+To see more options available to you such as distribution lists and notification settings, add the `--help` parameter:
+
+```bash
+$ loom testflight --help
+```
+
+
+[testflight]: https://www.testflightapp.com/
+[deploy-ios]: ../03_Devices/01_deploying_to_ios.html
+[semver]: http://semver.org/
