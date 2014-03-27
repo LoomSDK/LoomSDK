@@ -140,6 +140,11 @@ public class LoomAdMob {
             @Override
             public void run() {
                 AdView adView = LoomAdMob.adViews.get(handle);
+
+                // Remove from parent if it was on one.
+                if(adView.getParent() != null)
+                    adView.getParent().removeView(adView);
+
                 layout.addView(adView);
                 RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(adView.getLayoutParams());
                 params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
