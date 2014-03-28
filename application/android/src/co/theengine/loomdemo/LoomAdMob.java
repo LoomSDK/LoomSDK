@@ -142,8 +142,8 @@ public class LoomAdMob {
                 AdView adView = LoomAdMob.adViews.get(handle);
 
                 // Remove from parent if it was on one.
-                if(adView.getParent() != null)
-                    adView.getParent().removeView(adView);
+                if(adView.getParent() == layout)
+                    layout.removeView(adView);
 
                 layout.addView(adView);
                 RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(adView.getLayoutParams());
