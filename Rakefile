@@ -917,7 +917,6 @@ namespace :package do
 
     omit_files = %w[ examples.zip loomsdk.zip certs/LoomDemoBuild.mobileprovision loom/vendor/telemetry-01052012 pkg/ artifacts/ docs/output cmake_osx/ cmake_msvc/ cmake_ios/ cmake_android/]
 
-    require 'zip/zip'
     Zip::File.open("nativesdk.zip", 'w') do |zipfile|
       Dir["**/**"].each do |file|
         
@@ -946,7 +945,6 @@ namespace :package do
     FileUtils.rm_rf "pkg/examples.zip"
     FileUtils.mkdir_p "pkg"
 
-    require 'zip/zip'
     Zip::File.open("pkg/examples.zip", 'w') do |zipfile|
       Dir["docs/examples/**/**"].each do |file|
         zipfile.add(file.sub("docs/examples/", ''),file)
