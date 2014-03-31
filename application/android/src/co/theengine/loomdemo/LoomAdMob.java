@@ -24,7 +24,7 @@ public class LoomAdMob {
     {
         final String fData = data;
         final long fCallback = callback;
-        final long fPayload = payload;
+        final long fPayload  = payload;
         final int fType = type;
 
         Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
