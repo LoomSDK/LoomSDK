@@ -13,6 +13,7 @@ package
     import loom2d.events.TouchEvent;
     import loom2d.events.TouchPhase;
 
+    import loom2d.Loom2D;
 
     import loom.admob.BannerAd;
     import loom.admob.InterstitialAd;
@@ -22,6 +23,11 @@ package
      */
     public class AdMobExample extends Application
     {
+        // Note - if you don't keep a reference to the ads, they will
+        // be garbage collected and disappear shortly.
+        public var banner1:BannerAd = null;
+        public var banner2:BannerAd = null;
+
         override public function run():void
         {
             // Comment out this line to turn off automatic scaling.
@@ -37,18 +43,8 @@ package
             label.x = stage.stageWidth/2 - label.size.x/2;
             label.y = stage.stageHeight/2 - label.size.y/2;
             stage.addChild(label);
-            
-            var banner1 = new BannerAd("a15149eca129bce");
-            banner1.show();
-            banner1.y = 0;
 
-            var banner2 = new BannerAd("a15149eca129bce");
-            banner2.show();
-            
-            // we want the banner to be at the bottom of the screen
-            // regardless of stage scaling so use the native height
-            banner2.y = stage.nativeStageHeight - banner2.height;
-
+            // Handle taps by showing an interstitial ad.
             stage.addEventListener( TouchEvent.TOUCH, function(e:TouchEvent) { 
 
                 // bail on any began touches in the mix
@@ -64,10 +60,23 @@ package
                 };
 
                 ad.onAdError += function(s:String) {
-                    Console.print("Error!: ", s);
+                    Console.print("Ad error:  ", s);
                 };
                     
-            } );            
+            } );
+
+            trace("Showing banner ads.");
+            
+            banner1 = new BannerAd("a15149eca129bce");
+            banner1.show();
+            banner1.y = 0;
+
+            banner2 = new BannerAd("a15149eca129bce");
+            banner2.show();
+            
+            // we want the banner to be at the bottom of the screen
+            // regardless of stage scaling so use the native height
+            banner2.y = stage.nativeStageHeight - banner2.height;
         }
     }
 }
