@@ -1,14 +1,10 @@
- //LUKECHECK: DoodleLine is the main culprit here. I've commented out all the unfound/Cocos libraries and draw methods with prefix //GW, 
-//but there are other missing libraries for parameters and return types that are necessary for compile. Comments without //GW are not my own.
+
 
 #include "loom/common/platform/platformTime.h"
 #include "loom/common/core/stringTable.h"
-//GW #include "loom/common/core/typeRegistry.h"
-//GW #include "loom/engine/graphics/matrix.h"
 #include "loom/script/loomscript.h"
-//#include "script/native.h"
-//GW #include "loom/engine/tasks/tasks.h"
 #include "loom/common/core/performance.h"
+
 #ifdef _TRY_BEGIN
    #undef _TRY_BEGIN
    #undef _CATCH_ALL
@@ -18,10 +14,8 @@
    #define _CATCH_END }
 #endif
 #include "DoodleLine.h"
-//GW #include "shaders/CCShaderCache.h"
 
-//GW using namespace cocos2d;
-
+/*
 //LOOM_GETSET_IMPLEMENTATION(DoodleScoreComputer, float, NumPoints);
 //LOOM_GETSET_IMPLEMENTATION(DoodleScoreComputer, float, ScoringDistanceSquared);
 
@@ -310,8 +304,7 @@ float DoodleLine::minDistFromLine(utArray<Point2F> path, Point2F &pt)
 
 void DoodleLine::addPoint(const Point2F& p, const ColorF& c)
 {
-   /*platform_debugOut("DoodleLine::addPoint(): %f,%f / %f, %f, %f, %f", 
-                     p.x,p.y,c.r,c.g,c.b,c.a);*/
+   //platform_debugOut("DoodleLine::addPoint(): %f,%f / %f, %f, %f, %f", p.x,p.y,c.r,c.g,c.b,c.a);
 
    linePoints.push_back(p);
    lineColors.push_back(c);
@@ -387,10 +380,9 @@ bool DoodleLine::getBeveled() const
 
 void DoodleLine::setTexture( const char *texName )
 {
-   /* GW 
    texture = stringtable_insert(texName);
    lineTexture2d = CCTextureCache::sharedTextureCache()->addImage(texName);
-   lineDirty = true;*/
+   lineDirty = true;
 }
 
 StringTableEntry DoodleLine::getTexture()
@@ -400,10 +392,9 @@ StringTableEntry DoodleLine::getTexture()
 
 void DoodleLine::setSplotchTexture( const char *texName )
 {
-   /*GW 
    splotchTexture = stringtable_insert(texName);
    splotchTexture2d = CCTextureCache::sharedTextureCache()->addImage(texName);
-   lineDirty = true;*/
+   lineDirty = true;
 }
 
 StringTableEntry DoodleLine::getSplotchTexture()
@@ -584,48 +575,48 @@ void DoodleLine::buildMesh()
       
       // See if we should drop a splotch. Only drop splotches for points
       // that are not goin to be retesselated.
-/*      if(i < numPoints - retesselateWindow)
-      {         
-         //check for discontinuity
-         Point2F d2 = p3 - p2;
-         d2.normalize();
-         Point2F d1 = p1 - p2;
-         d1.normalize();
-         float dot = d1.x*d2.x + d1.y*d2.y;
+      // if(i < numPoints - retesselateWindow)
+      // {         
+      //    //check for discontinuity
+      //    Point2F d2 = p3 - p2;
+      //    d2.normalize();
+      //    Point2F d1 = p1 - p2;
+      //    d1.normalize();
+      //    float dot = d1.x*d2.x + d1.y*d2.y;
 
-         bool forceSplotch = false;
-         if(lastPoint == false)
-            forceSplotch = randGenerator.randUnit() < 0.025f;
+      //    bool forceSplotch = false;
+      //    if(lastPoint == false)
+      //       forceSplotch = randGenerator.randUnit() < 0.025f;
 
-         if((dot > -0.5 || forceSplotch) && !lastPoint)
-         {
-            Point2F splotchDir = p3 - p1;
-            splotchDir.normalize();
-            sharpTurn = true;
+      //    if((dot > -0.5 || forceSplotch) && !lastPoint)
+      //    {
+      //       Point2F splotchDir = p3 - p1;
+      //       splotchDir.normalize();
+      //       sharpTurn = true;
 
-            Splotch s;
-            s.position = p2;
-            s.dir = splotchDir;
-            s.color = lc;
-            float size = randGenerator.randRangeInt(48, 64);
-            s.size = Point2F(size,size);
-            s.textureCell = randGenerator.randRangeInt(1, 3);
+      //       Splotch s;
+      //       s.position = p2;
+      //       s.dir = splotchDir;
+      //       s.color = lc;
+      //       float size = randGenerator.randRangeInt(48, 64);
+      //       s.size = Point2F(size,size);
+      //       s.textureCell = randGenerator.randRangeInt(1, 3);
 
-            splotches.push_back(s);
-         }
+      //       splotches.push_back(s);
+      //    }
 
-         if(firstPoint || lastPoint)
-         {
-            Splotch s;
-            s.position = firstPoint?p1:p2;
-            s.dir = dir;
-            s.color = firstPoint?lc:uc;
+      //    if(firstPoint || lastPoint)
+      //    {
+      //       Splotch s;
+      //       s.position = firstPoint?p1:p2;
+      //       s.dir = dir;
+      //       s.color = firstPoint?lc:uc;
 
-            s.size = Point2F(lineWidth*0.5f,lineWidth*0.5f);
-            s.textureCell = 0;
-            underSplotches.push_back(s);
-         } 
-      } */
+      //       s.size = Point2F(lineWidth*0.5f,lineWidth*0.5f);
+      //       s.textureCell = 0;
+      //       underSplotches.push_back(s);
+      //    } 
+      // } 
 
       generateQuads(i, p1,p2,p3,lc,uc,dir,firstPoint,lastPoint, lastUL, lastUR, sharpTurn);
       
@@ -913,14 +904,14 @@ void DoodleLine::createSplotches()
 }
 
 void drawVertexArray(const utArray<doodleline_vert_t> &verts)
-{  /*GW 
+{
    ccGLEnableVertexAttribs( kCCVertexAttribFlag_Position | kCCVertexAttribFlag_TexCoords | kCCVertexAttribFlag_Color );
    glVertexAttribPointer(kCCVertexAttrib_Position, 3, GL_FLOAT, GL_FALSE, sizeof(doodleline_vert_t), &verts[0].x);
    glVertexAttribPointer(kCCVertexAttrib_Color, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(doodleline_vert_t), &verts[0].r);
    glVertexAttribPointer(kCCVertexAttrib_TexCoords, 2, GL_FLOAT, GL_FALSE, sizeof(doodleline_vert_t), &verts[0].u);
   
    glDrawArrays(GL_TRIANGLES, 0, verts.size());
-   CC_INCREMENT_GL_DRAWS(1);*/
+   CC_INCREMENT_GL_DRAWS(1);
 }
 
 void DoodleLine::tesselateLine()
@@ -950,7 +941,6 @@ void DoodleLine::tesselateLine()
 
 void DoodleLine::draw()
 {
-   /*GW
    int numPoints = (int)linePoints.size();
    if(numPoints < 2)
       return;
@@ -1020,7 +1010,6 @@ void DoodleLine::draw()
    setShaderProgram(NULL);
    
    finishProfilerBlock(&drawBlock);
-    */
 }
 
 //------------------------------------------------------------------------------
@@ -1070,3 +1059,4 @@ int registerDoodleTypes(lua_State* L)
    return 0;
 
 }
+*/
