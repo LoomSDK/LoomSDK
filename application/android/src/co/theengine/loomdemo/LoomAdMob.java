@@ -24,7 +24,7 @@ public class LoomAdMob {
     {
         final String fData = data;
         final long fCallback = callback;
-        final long fPayload = payload;
+        final long fPayload  = payload;
         final int fType = type;
 
         Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
@@ -140,6 +140,11 @@ public class LoomAdMob {
             @Override
             public void run() {
                 AdView adView = LoomAdMob.adViews.get(handle);
+
+                // Remove from parent if it was on one.
+                if(adView.getParent() == layout)
+                    layout.removeView(adView);
+
                 layout.addView(adView);
                 RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(adView.getLayoutParams());
                 params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);

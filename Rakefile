@@ -2,7 +2,7 @@ require 'rubygems'
 require 'rbconfig'
 
 puts "== Executing as '#{ENV['USER']}' =="
-
+ 
 ###############################
 # BUILD CONFIGURATION VARIABLES
 ###############################
@@ -107,14 +107,24 @@ puts "*** Building with #{$numCores} cores."
 # Windows specific checks and settings
 if $LOOM_HOST_OS == 'windows'
   # This gets the true architecture of the machine, not the target architecture of the currently executing binary (that is what %PROCESSOR_ARCHITECTURE% returns)
-  WINDOWS_PROCARCH_BITS = `reg query "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\Environment" /v PROCESSOR_ARCHITECTURE`.split("AMD")[1].split(" ")[0].split("\n")[0]
+  # Note: Original check of this seemed way over complicated; just default to 32 and then search for 64 instead! 
+  # => Valid values seem to only be "AMD64", "IA64", or "x86"
+  proc_arch = `reg query "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\Environment" /v PROCESSOR_ARCHITECTURE`
+  if proc_arch.empty? || proc_arch.index("64").nil?
+    WINDOWS_PROCARCH_BITS = "32"
+  else
+    WINDOWS_PROCARCH_BITS = "64"
+  end
+  
   # Is this a 32 or a 64 bit OS?
   if WINDOWS_PROCARCH_BITS == "64"
     puts "*** Windows x64"
+    puts "*** Detected 64 Bit Windows PROCESSOR_ARCHITECTURE: #{proc_arch}"
     WINDOWS_ISX64 = "1"
     WINDOWS_ANDROID_PREBUILT_DIR = "windows-x86_64"
   else
     puts "*** Windows x86"
+    puts "*** Detected 32 Bit Windows PROCESSOR_ARCHITECTURE: #{proc_arch}"
     WINDOWS_PROCARCH_BITS = "32"
     WINDOWS_ANDROID_PREBUILT_DIR = "windows"
   end
@@ -126,6 +136,8 @@ else
   WINDOWS_PROCARCH_BITS = "32"
   WINDOWS_ISX64 = "0"
   WINDOWS_ANDROID_PREBUILT_DIR = "windows"
+  puts "*** Non-Windows Platform"
+  puts "*** Defaulting to 32 Bit Windows PROCESSOR_ARCHITECTURE"
 end
 
 # Determine the APK name.
@@ -917,7 +929,6 @@ namespace :package do
 
     omit_files = %w[ examples.zip loomsdk.zip certs/LoomDemoBuild.mobileprovision loom/vendor/telemetry-01052012 pkg/ artifacts/ docs/output cmake_osx/ cmake_msvc/ cmake_ios/ cmake_android/]
 
-    require 'zip/zip'
     Zip::File.open("nativesdk.zip", 'w') do |zipfile|
       Dir["**/**"].each do |file|
         
@@ -946,7 +957,6 @@ namespace :package do
     FileUtils.rm_rf "pkg/examples.zip"
     FileUtils.mkdir_p "pkg"
 
-    require 'zip/zip'
     Zip::File.open("pkg/examples.zip", 'w') do |zipfile|
       Dir["docs/examples/**/**"].each do |file|
         zipfile.add(file.sub("docs/examples/", ''),file)
