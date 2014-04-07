@@ -1,11 +1,10 @@
 #ifndef _GRAPHICS_CATMULLROM_H_
 #define _GRAPHICS_CATMULLROM_H_
 
-#include <float.h>
 
-//LUKECHECK: These don't exist in the engine
-#include "loom/engine/graphics/structs.h"
+#include <float.h>
 #include "loom/common/utils/utTypes.h"
+
 
 //------------------------------------------------------------------------------
 // Catmull Rom Spline.

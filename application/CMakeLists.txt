@@ -8,14 +8,12 @@ project(${APPLICATION_NAME})
 include_directories( ${LOOM_INCLUDE_FOLDERS} )
 
 set (APPLICATION_SRC
-    common/base64.cpp
     common/AppDelegate.cpp
     common/embeddedAssets.cpp
     common/DoodleLine.cpp
 )
 
 set (APPLICATION_HDR
-    common/base64.h
     common/AppDelegate.h
     common/DoodleLine.h
     common/catmullRom.h

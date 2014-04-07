@@ -1,20 +1,17 @@
 #ifndef _DOODLELINE_H_
 #define _DOODLELINE_H_
 
-//LUKECHECK: missing libraries in new engine OR Cocos dependencies for parameters. DoodleLine is the main culprit, but certain GL byte arrays are also required.
-#include "loom/engine/graphics/structs.h"
-#include "loom/common/core/handle.h"
-#include "loom/common/core/stringTable.h"
-#include "loom/common/utils/utTypes.h"
-#include "loom/common/utils/utRandom.h"
-//GW #include "base_nodes/CCNode.h"
-#include "catmullRom.h"
+//#include "loom/common/core/stringTable.h"
+//#include "loom/common/utils/utTypes.h"
+//#include "loom/common/utils/utRandom.h"
+//#include "catmullRom.h"
+
 #ifdef _NO_LOCALES
 #undef _NO_LOCALES
 #endif
 #define _NO_LOCALES 1
-//GW #include "textures/CCTextureCache.h"
 
+/*
 struct doodleline_vert_t
 {
    float x,y,z;      // 12 bytes
@@ -188,5 +185,5 @@ public:
 
 
 
-
+*/
 #endif
