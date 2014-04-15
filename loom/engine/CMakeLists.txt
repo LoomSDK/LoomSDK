@@ -28,6 +28,7 @@ set (ENGINE_SRC
     bindings/loom/lmVideo.cpp
     bindings/loom/lmMobile.cpp
     bindings/loom/lmPackageLoom.cpp
+    bindings/loom/lmCarrot.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
 
     bindings/cocos2d/lmCocos2D.cpp
