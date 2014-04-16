@@ -49,8 +49,8 @@ public:
 
     static int _randRange(lua_State *L)
     {
-        float min = lua_tonumber(L, 1);
-        float max = lua_tonumber(L, 2);
+        float min = (float)lua_tonumber(L, 1);
+        float max = (float)lua_tonumber(L, 2);
         lua_pushnumber(L, utRand->randRange(min, max));
         return 1;
     }
@@ -65,30 +65,30 @@ public:
 
     static int _randNormal(lua_State *L)
     {
-        float mean = lua_tonumber(L, 1);
-        float deviation = lua_tonumber(L, 2);
+        float mean = (float)lua_tonumber(L, 1);
+        float deviation = (float)lua_tonumber(L, 2);
         lua_pushnumber(L, utRand->randNormal(mean, deviation));
         return 1;
     }
 
     static int _randNegativeExponential(lua_State *L)
     {
-        float halfLife = lua_tonumber(L, 1);
+        float halfLife = (float)lua_tonumber(L, 1);
         lua_pushnumber(L, utRand->randNegativeExponential(halfLife));
         return 1;
     }
 
     static int _randPoisson(lua_State *L)
     {
-        float mean = lua_tonumber(L, 1);
+        float mean = (float)lua_tonumber(L, 1);
         lua_pushnumber(L, utRand->randPoisson(mean));
         return 1;
     }
 };
 
 
-// always seed to 0; up to the user to change the seed in script if they want a unique set
-utRandomNumberGenerator *Random::utRand = new utRandomNumberGenerator(0);
+// always seed to fixed value; up to the user to change the seed in script if they want a unique set
+utRandomNumberGenerator *Random::utRand = new utRandomNumberGenerator(736);
 
 
 
