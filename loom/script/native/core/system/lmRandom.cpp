@@ -87,8 +87,8 @@ public:
 };
 
 
-// always seed to 0; up to the user to change the seed in script if they want a unique set
-utRandomNumberGenerator *Random::utRand = new utRandomNumberGenerator(0);
+// always seed to fixed value; up to the user to change the seed in script if they want a unique set
+utRandomNumberGenerator *Random::utRand = new utRandomNumberGenerator(736);
 
 
 
