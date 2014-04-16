@@ -87,6 +87,7 @@ void installPackageSystem()
     installSystemFunction();
     installSystemGC();
     installSystemMath();
+    installSystemRandom();
     installSystemVector();
     installSystemVM();
     installSystemCommandLine();
