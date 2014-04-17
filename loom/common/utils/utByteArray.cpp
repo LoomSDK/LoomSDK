@@ -65,26 +65,44 @@ bool utByteArray::tryReadToArray(const utString& path, utByteArray& bytes, bool 
 void utByteArray::uncompress(int uncompressedSize, int maxBuffer)
 {
     _position = 0;
-
-    int sz = uncompressedSize;
-
-    if (!sz)
-    {
-        sz = maxBuffer;
-    }
-
+ 
+    int ok = Z_OK;
+ 
+    int sz = uncompressedSize > 0 ? uncompressedSize : maxBuffer;
+ 
     utByteArray dest;
     dest.resize(sz);
-
+ 
     unsigned int readSZ = sz;
-
-    int ok = ::uncompress((Bytef *)dest.getDataPtr(), (uLongf *)&readSZ, (const Bytef *)((unsigned char *)getDataPtr()), (uLong)getSize());
-
-    if ((ok != Z_OK) || (uncompressedSize && (readSZ != uncompressedSize)))
+ 
+    z_stream stream;   
+    stream.zalloc = (alloc_func)0;
+    stream.zfree = (free_func)0;
+    stream.opaque = (voidpf)0;
+ 
+    stream.next_in = (Bytef *) ( (unsigned char*) getDataPtr());
+    stream.avail_in = (uLong) getSize();
+    stream.next_out = (Bytef*) dest.getDataPtr();
+    stream.avail_out = sz;
+ 
+    ok = inflateInit2(&stream, 15 + 32);
+    if (ok != Z_OK)
     {
         resize(0);
         return;
     }
-
+ 
+    ok = inflate(&stream, Z_NO_FLUSH);
+ 
+    if (ok != Z_STREAM_END)
+    {
+        inflateEnd(&stream);
+        resize(0);
+        return;
+    }
+ 
+    readSZ = sz - stream.avail_out;
+    inflateEnd(&stream);
+ 
     _data = dest._data;
 }
