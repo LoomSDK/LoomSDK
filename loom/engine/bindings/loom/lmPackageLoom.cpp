@@ -55,4 +55,7 @@ void installPackageLoom()
 
     installLoomGraphics();
     installLoom2D();
+
+//SOCIALTODO: LFL: likely move over to new Teak API eventually
+    installLoomCarrot();
 }
