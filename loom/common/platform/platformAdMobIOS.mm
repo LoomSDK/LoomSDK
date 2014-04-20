@@ -119,8 +119,7 @@ static GADAdSize getSize(loom_adMobHandle size)
     callback(payload, ADMOB_AD_RECEIVED, NULL);
 }
 
-- (void)interstitial:(GADInterstitial *)interstitial
-didFailToReceiveAdWithError:(GADRequestError *)error
+- (void)interstitial:(GADInterstitial *)interstitial didFailToReceiveAdWithError:(GADRequestError *)error
 {
     callback(payload, ADMOB_AD_ERROR, [[error localizedDescription] cStringUsingEncoding:1]);
 }
@@ -234,7 +233,8 @@ void platform_adMobSetDimensions(loom_adMobHandle handle, loom_adMobDimensions f
     float parentHeight = getScreenHeight();
     
     // reverse the Y position
-    CGRect rect = CGRectMake(frame.x, frame.y, frame.width, frame.height);
+    CGFloat screenScale = [[UIScreen mainScreen] scale];
+    CGRect rect = CGRectMake(frame.x / screenScale, frame.y / screenScale, frame.width / screenScale, frame.height / screenScale);
     
     [banner setFrame:rect];
 }
@@ -245,12 +245,14 @@ loom_adMobDimensions platform_adMobGetDimensions(loom_adMobHandle handle)
     
     int parentHeight = getScreenHeight();
     
+    CGFloat screenScale = [[UIScreen mainScreen] scale];
+
     CGRect rect = banner.frame;
     loom_adMobDimensions frame;
-    frame.x = rect.origin.x;
-    frame.y = rect.origin.y;
-    frame.width = rect.size.width;
-    frame.height = rect.size.height;
+    frame.x = rect.origin.x * screenScale;
+    frame.y = rect.origin.y * screenScale;
+    frame.width = rect.size.width * screenScale;
+    frame.height = rect.size.height * screenScale;
     
     return frame;
 }
