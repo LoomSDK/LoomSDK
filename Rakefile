@@ -26,6 +26,8 @@ else
   $targetIOSSDK="6.0"
 end
 
+if(ENV["IOS_
+
 # If 1, then we link against LuaJIT. If 0, we use classic Lua VM.
 $doBuildJIT=1
 
@@ -502,6 +504,9 @@ namespace :build do
         puts "Using IOS Signing Identity from ENV"
         args.with_defaults(:sign_as => ENV['IOS_SIGNING_IDENTITY'])
       else
+        puts "**********************************************"
+        puts "WARNING: Using default iOS signing identity. Set IOS_SIGNING_IDENTITY to control the identity used."
+        puts "**********************************************"
         args.with_defaults(:sign_as => "iPhone Developer")
       end
       puts "*** Signing Identity = #{args.sign_as}"
