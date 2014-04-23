@@ -18,8 +18,10 @@
  * ===========================================================================
  */
 
+#include "loom/script/loomscript.h"
 #include "loom/script/runtime/lsRuntime.h"
 #include "loom/script/runtime/lsLuaState.h"
+
 
 void installPackageSystem();
 
@@ -96,6 +98,8 @@ Type *lsr_gettype(lua_State *L, int index)
     // Infer type directly.
     int type = lua_type(L, index);
 
+    Type* _type = NULL;
+
     switch (type)
     {
     case LUA_TNIL:
@@ -124,8 +128,23 @@ Type *lsr_gettype(lua_State *L, int index)
         break;
 
     case LUA_TTABLE:
-        lua_rawgeti(L, 1, LSINDEXTYPE);
-        return (Type *)lua_topointer(L, -1);
+        lua_rawgeti(L, index, LSINDEXTYPE);
+        _type = _type = (Type *)lua_topointer(L, -1);
+        lua_pop(L, 1);
+
+        // if we're the reflection type, get the wrapped type
+        if (_type == lstate->reflectionType)
+        {
+            lua_rawgeti(L, index, LSINDEXNATIVE);
+            if (lua_isuserdata(L, -1))
+            {
+                Detail::Userdata *p1 = (Detail::Userdata *)lua_topointer(L, -1);
+                _type = (Type*)p1->getPointer();
+            }
+            lua_pop(L, 1);
+        }
+
+        return _type;
 
         break;
 

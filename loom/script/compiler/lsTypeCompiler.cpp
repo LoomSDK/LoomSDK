@@ -1366,8 +1366,7 @@ Expression *TypeCompiler::visit(BinaryOperatorExpression *expression)
 
         utArray<Expression *> args;
         args.push_back(eleft);
-        args.push_back(new StringLiteral(eright->type->getAssembly()->getName().c_str()));
-        args.push_back(new NumberLiteral(eright->type->getTypeID()));
+        args.push_back(eright);
 
         generateCall(&object, &args);
 
