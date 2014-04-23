@@ -36,7 +36,7 @@
 #include "loom/script/reflection/lsPropertyInfo.h"
 
 namespace LS {
-//
+
 class MemberTypeVisitor : public TraversalVisitor {
     LSLuaState *vm;
 
