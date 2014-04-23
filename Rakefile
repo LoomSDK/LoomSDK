@@ -26,8 +26,6 @@ else
   $targetIOSSDK="6.0"
 end
 
-if(ENV["IOS_
-
 # If 1, then we link against LuaJIT. If 0, we use classic Lua VM.
 $doBuildJIT=1
 
