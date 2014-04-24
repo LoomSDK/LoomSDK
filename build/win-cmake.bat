@@ -1,5 +1,7 @@
 @echo off
 
+REM Try a whole bunch of potential visual studio paths and see which if any exist.
+
 echo Checking for Visual Studio 2013...
 IF EXIST "%programfiles%\Microsoft Visual Studio 12.0\VC" (GOTO VS2013-X64-CMAKE) ELSE (GOTO VS2013-X86)
 
