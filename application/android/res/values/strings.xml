@@ -2,6 +2,10 @@
 <resources>
     <string name="app_name">LoomDemo</string>
 
+    <!-- Your Facebook Application Id goes here, or the CLI tool will populate it using the 'facebook_app_id' property in loom.config -->
+    <string name="facebookApplicationId">456634377752782</string>
+    
     <!-- Your Carrot App Secret goes here, or the CLI tool will populate it using the 'carrot_app_secret' property in loom.config -->
     <string name="carrotAppSecret">f5dc695912cf5de9e25ff3699f67a8dc</string>
 </resources>
+
