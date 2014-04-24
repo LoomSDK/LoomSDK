@@ -502,6 +502,9 @@ namespace :build do
         puts "Using IOS Signing Identity from ENV"
         args.with_defaults(:sign_as => ENV['IOS_SIGNING_IDENTITY'])
       else
+        puts "**********************************************"
+        puts "WARNING: Using default iOS signing identity. Set IOS_SIGNING_IDENTITY to control the identity used."
+        puts "**********************************************"
         args.with_defaults(:sign_as => "iPhone Developer")
       end
       puts "*** Signing Identity = #{args.sign_as}"
@@ -792,7 +795,7 @@ file 'build/luajit_android/lib/libluajit-5.1.a' do
       # OSX / LINUX
       NDK = ENV['ANDROID_NDK']
       if (!NDK)
-          raise "\n\nPlease ensure ndk-build from NDK rev 8b is on your path"
+          raise "\n\nPlease ensure ANDROID_NDK is set to your NDK folder, ie, ANDROID_NDK=/Users/bengarney/android/android-ndk-r8e. NDK r8 series is recommended."
       end
       rootFolder = Dir.pwd
       luajit_android_dir = File.join(rootFolder, "build", "luajit_android")
