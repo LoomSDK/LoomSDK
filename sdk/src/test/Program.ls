@@ -38,9 +38,10 @@ import system.xml.XMLTest;
                     xmlFile = CommandLine.getArg(i + 1);
                     break;
                 }
-            }
-        
+            }        
             trace("Running Tests");
+
+            new TestCoercion().run();
             
             new TestNativeClass().run();
             new TestManagedNativeClass().run();
@@ -71,7 +72,7 @@ import system.xml.XMLTest;
             new TestLocal().run();
             new TestFib().run();
             new TestProperty().run();
-            new TestCoercion().run();
+            
             new TestDefaultArguments().run();
             new TestDictionary().run();
             new TestBitOps().run();
@@ -103,12 +104,15 @@ import system.xml.XMLTest;
             new TestThrow().run();
 
             new TestIncrementExpression().run();
+
+            new TestTypeOps().run();     
             
             trace("Tests Passed: " + Test.passed.length);
             trace("Tests Failed: " + Test.failed.length);
             
             if (xmlFile)
                 Test.generateXML(xmlFile);
+            
         }
     
     }

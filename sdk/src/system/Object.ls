@@ -112,7 +112,7 @@ package system
        
         // private transformations which handle primitive and complex types
         private static native function _is (o:Object, classPath:String):Boolean;
-        private static native function _as (o:Object, assembly:String, typeId:Number):Object;
+        private static native function _as (o:Object, type:Type):Object;
         private static native function _instanceof (o:Object, classPath:String):Boolean;
         
         private static native function _toString(o:Object):String;
