@@ -11,7 +11,7 @@ echo Checking for Visual Studio 2012...
 IF EXIST "%programfiles%\Microsoft Visual Studio 11.0\VC" (GOTO VS2012-X64-CMAKE) ELSE (GOTO VS2012-X86)
 
 :VS2012-X86
-IF EXIST "%programfiles(x86)%\Microsoft Visual Studio 11.0\VC" (GOTO VS2012-X86-CMAKE) ELSE (GOTO VS2012-X64)
+IF EXIST "%programfiles(x86)%\Microsoft Visual Studio 11.0\VC" (GOTO VS2012-X86-CMAKE) ELSE (GOTO VS2010-X64)
 
 :VS2010-X64
 echo Checking for Visual Studio 2010...
