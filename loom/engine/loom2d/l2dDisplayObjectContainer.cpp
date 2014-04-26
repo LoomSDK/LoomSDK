@@ -86,6 +86,7 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
     }
 
     renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
+    renderState.clampAlpha();
     renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
 
     int docidx = lua_gettop(L);
