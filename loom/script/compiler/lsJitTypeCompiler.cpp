@@ -1576,13 +1576,9 @@ Expression *JitTypeCompiler::visit(BinaryOperatorExpression *expression)
         BC::expToVal(fs, &method);
         BC::indexed(fs, &object, &method);
 
-        // when dynamic casting, we pass the expression to be cast,
-        // the assembly name (which has been interned by the VM), and the typeID in that assembly
-        // this greatly speeds up type resolution at runtime
         utArray<Expression *> args;
         args.push_back(eleft);
-        args.push_back(new StringLiteral(eright->type->getAssembly()->getName().c_str()));
-        args.push_back(new NumberLiteral(eright->type->getTypeID()));
+        args.push_back(eright);
 
         generateCall(&object, &args);
 

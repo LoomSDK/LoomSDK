@@ -111,6 +111,7 @@ public:
         stringType   = NULL;
         functionType = NULL;
         vectorType   = NULL;
+        reflectionType = NULL;
     }
 
     inline lua_State *VM()
@@ -188,6 +189,7 @@ public:
     Type *stringType;
     Type *vectorType;
     Type *functionType;
+    Type *reflectionType;
 
     // get all currently loaded types
     void getAllTypes(utArray<Type *>& types)

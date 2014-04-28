@@ -113,6 +113,7 @@ void Quad::render(lua_State *L)
     getTargetTransformationMatrix(NULL, &mtx);
 
     renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
+    renderState.clampAlpha();
     renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
 
     GFX::Graphics::setClipRect(renderState.cachedClipRect);

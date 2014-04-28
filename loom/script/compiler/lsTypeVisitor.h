@@ -1272,14 +1272,9 @@ public:
                 }
 
                 // add the parameters to the call
-                StringLiteral *assemblyName = new StringLiteral(castType->getAssembly()->getName().c_str());
-                assemblyName->type = Scope::resolveType("system.String");
-
-                NumberLiteral *typeId = new NumberLiteral(castType->getTypeID());
-                typeId->type = Scope::resolveType("system.Number");
-
-                expression->arguments->push_back(assemblyName);
-                expression->arguments->push_back(typeId);
+                Identifier* arg0 = new Identifier(castType->getName());
+                arg0->type = Scope::resolveType("system.reflection.Type");
+                expression->arguments->push_back(arg0);
             }
         }
         else if (expression->function->astType == AST_PROPERTYEXPRESSION)
