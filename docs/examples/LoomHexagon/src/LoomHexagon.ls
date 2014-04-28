@@ -538,7 +538,7 @@ package
         
         public function HexagonSector()
         {
-            super( 1, 1, 0xffffff );
+            super( 1, 1, 0xffffff, true );
         }
         
         /**
