@@ -207,16 +207,20 @@ public:
         // ... and add the (transformed) quad data to the batch
         GFX::VertexPosColorTex *dst = &quadData[numQuads * 4];
         GFX::VertexPosColorTex *src = quad->quadVertices;
-
+        bool isIdentity = modelViewMatrix->isIdentity();
         for (int i = 0; i < 4; i++)
         {
             *dst = *src;
 
-            float _x = modelViewMatrix->a * dst->x + modelViewMatrix->c * dst->y + modelViewMatrix->tx;
-            float _y = modelViewMatrix->b * dst->x + modelViewMatrix->d * dst->y + modelViewMatrix->ty;
+            //only do transform if matrix is not identity matrix
+            if(!isIdentity)
+            {
+                float _x = modelViewMatrix->a * dst->x + modelViewMatrix->c * dst->y + modelViewMatrix->tx;
+                float _y = modelViewMatrix->b * dst->x + modelViewMatrix->d * dst->y + modelViewMatrix->ty;
 
-            dst->x = _x;
-            dst->y = _y;
+                dst->x = _x;
+                dst->y = _y;
+            }
 
             dst++;
             src++;
