@@ -37,9 +37,16 @@ package loom2d.display
             
             var alpha:Number = parentAlpha * quad.alpha;
 
+            //TODO: This .texture seems to do nothing! Natively, _addQuad() takes the texture from the Quad submitted, not this one!
             this.texture = texture;
 
             _addQuad(quad, modelViewMatrix);
+
+            //set the QuadBatch's native texture to be the one passed in here
+            if(texture != null)
+            {
+                nativeTextureID = texture.nativeID;
+            }
         }   
 
         /** @inheritDoc */
