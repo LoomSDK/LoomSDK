@@ -177,6 +177,7 @@ public:
 
         Matrix *modelViewMatrix = (Matrix *)lualoom_getnativepointer(L, 3);
 
+        //QUESTION: Why do we take the Quad's nativeTextureID here when Quads() in LoomScript only ever use an empty square texture and are not public for changing?
         nativeTextureID = quad->nativeTextureID;
 
         quad->validate(L, 2);

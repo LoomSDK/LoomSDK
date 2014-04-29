@@ -199,7 +199,10 @@ package loom2d.display
          * ~~~
          * 
          */  
-        protected native var customRender:NativeDelegate;        
+        protected native var customRender:NativeDelegate;
+
+        /* delegate that can be set up to be called prior to normal DisplayObject rendering */
+        protected native var onRender:NativeDelegate;        
 
         // TODO: Resurrect blend mode. LOOM-1327
         //protected var mBlendMode:String;
