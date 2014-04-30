@@ -69,6 +69,9 @@ public class LoomDemo extends Cocos2dxActivity {
         {
             super.onActivityResult(requestCode, resultCode, data);
         }
+        
+        //Process facebook activity result
+        LoomFacebook.onActivityResult(this, requestCode, resultCode, data);
     }
 
 
@@ -178,6 +181,9 @@ public class LoomDemo extends Cocos2dxActivity {
         // Create Carrot
         LoomCarrot.onCreate(this);
 
+        // Create Facebook
+        LoomFacebook.onCreate(this, savedInstanceState);
+
         // Hook up the store.
         LoomStore.bind(this);
 
@@ -246,12 +252,14 @@ public class LoomDemo extends Cocos2dxActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        LoomFacebook.onStart(this);
         DolbyAudio.onStart();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        LoomFacebook.onStop(this);
         DolbyAudio.onStop();
     }
 
@@ -281,6 +289,12 @@ public class LoomDemo extends Cocos2dxActivity {
 //SOCIALTODO: LFL: likely move over to new Teak API eventually
         LoomCarrot.onDestroy();
         super.onDestroy();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        LoomFacebook.onSaveInstanceState(this, outState);
     }
 
     private boolean detectOpenGLES20() 
