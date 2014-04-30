@@ -46,7 +46,7 @@ package loom2d.display
             var height:Number = frame ? frame.height : _texture.height;
             var pma:Boolean = _texture.premultipliedAlpha;
             
-            super(width, height, 0xffffff, pma);
+            super(width, height, 0xffffff, pma, true);
             
             mVertexData.setTexCoords(0, 0.0, 0.0);
             mVertexData.setTexCoords(1, 1.0, 0.0);

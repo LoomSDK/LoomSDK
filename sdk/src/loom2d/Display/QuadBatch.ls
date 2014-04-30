@@ -26,6 +26,8 @@ package loom2d.display
          *  i.e. the values for texture, smoothing and blendmode. When you add additional quads,  
          *  make sure they share that state (e.g. with the 'isStageChange' method), or reset
          *  the batch. */ 
+         //TODO: Neither 'smoothing' nor 'blendMode' do anything here!?!?!?! Shouldn't they???
+         //gfxQuadRenderer seems to a) use whatever smoothing is set for the Texture and b) force SrcAlpha / InvSrcAlpha alpha blending
         public function addQuad(quad:Quad, parentAlpha:Number=1.0, texture:Texture=null, 
                                 smoothing:Boolean=false, modelViewMatrix:Matrix=null, 
                                 blendMode:String=null):void
@@ -35,9 +37,16 @@ package loom2d.display
             
             var alpha:Number = parentAlpha * quad.alpha;
 
+            //QUESTION: This .texture seems to do nothing! Natively, _addQuad() takes the texture from the Quad submitted, not this one!
             this.texture = texture;
 
             _addQuad(quad, modelViewMatrix);
+
+            //set the QuadBatch's native texture to be the one passed in here
+            if(texture != null)
+            {
+                nativeTextureID = texture.nativeID;
+            }
         }   
 
         /** @inheritDoc */

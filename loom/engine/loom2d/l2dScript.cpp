@@ -201,6 +201,7 @@ static int registerLoom2D(lua_State *L)
        .addMethod("getTargetTransformationMatrix", &DisplayObject::getTargetTransformationMatrix)
 
        .addVarAccessor("customRender", &DisplayObject::getCustomRenderDelegate)
+       .addVarAccessor("onRender", &DisplayObject::getOnRenderDelegate)
 
        .endClass()
 
