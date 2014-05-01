@@ -80,6 +80,7 @@ package  {
 			submersible.addChild(lights);
 			
 			lightSwitchOnSound = Sound.load("assets/lightsSwitchOn.ogg");
+			lightSwitchOnSound.setListenerRelative(false);
 			
 			explosion = new Explosion("assets/submersibleExplosion.png", 12);
 			display.addChild(explosion);
