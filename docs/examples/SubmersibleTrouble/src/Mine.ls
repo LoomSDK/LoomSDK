@@ -29,6 +29,10 @@ package  {
 		private var maxDepth:Number;
 		private var player:Player;
 		
+		private var beep:Sound;
+		private var beepDelay:Number = 0;
+		private var beepCount:Number = 0;
+		
 		public function Mine(container:DisplayObjectContainer, maxDepth:Number, player:Player) {
 			this.maxDepth = maxDepth;
 			this.player = player;
@@ -54,8 +58,36 @@ package  {
 			explosion = new Explosion("assets/mineExplosion.png", 6);
 			display.addChild(explosion);
 			
+			loadExplosion();
+			loadBeep();
+			
+		}
+		
+		private function disposeSound(sound:Sound) {
+			if (sound != null) {
+				sound.stop();
+			}
+		}
+		
+		private function loadExplosion() {
+			disposeSound(explosionSound);
 			explosionSound = Sound.load("assets/mineExplosion.ogg");
 			explosionSound.setPitch(1+Math.randomRange(-0.1, 0.1));
+		}
+		
+		private function playExplosion() {
+			//loadExplosion();
+			explosionSound.play();
+		}
+		
+		private function loadBeep() {
+			disposeSound(beep);
+			beep = Sound.load("assets/beep.ogg");
+		}
+		
+		private function playBeep() {
+			//loadBeep();
+			beep.play();
 		}
 		
 		public function dispose() {
@@ -63,7 +95,8 @@ package  {
 			body.dispose();
 			bodyActive.dispose();
 			explosion.dispose();
-			explosionSound.deleteNative();
+			disposeSound(explosionSound);
+			disposeSound(beep);
 		}
 		
 		public function setPosition(x:Number, y:Number)
@@ -113,10 +146,12 @@ package  {
 					if (dist < 60) state = STATE_WARN;
 					break;
 				case STATE_WARN:
+					beepDelay = 0.5;
 					if (dist > 70) state = STATE_IDLE;
 					if (dist < 30) state = STATE_SEEK;
 					break;
 				case STATE_SEEK:
+					beepDelay = 0.1;
 					
 					var thrust:Point = delta.clone();
 					thrust.normalize(thrust.length*10);
@@ -126,17 +161,32 @@ package  {
 					if (dist > 40) state = STATE_WARN;
 					break;
 				case STATE_EXPLODING:
+					beepDelay = 0.05;
 					if (explosionStart == Number.MIN_VALUE) explosionStart = t;
 					if (t-explosionStart > explosionStagger) {
 						explosionStart = Number.MAX_VALUE;
 						explosion.visible = true;
 						body.visible = bodyActive.visible = false;
 						explosion.play();
-						explosionSound.play();
+						playExplosion();
+						placeSound(explosionSound);
 					}
 					if (explosionStart == Number.MAX_VALUE) explosion.advanceTime(dt);
 					if (explosion.isComplete) exploded();
 					break;
+				case STATE_EXPLODED:
+					beepDelay = Number.MAX_VALUE;
+					break;
+			}
+			if (state == STATE_SEEK || state == STATE_WARN) {
+				beepCount -= dt;
+				if (beepCount < 0) {
+					playBeep();
+					beep.setGain(1-dist/60);
+					beep.setPitch(1.3-dist/60);
+					placeSound(beep);
+					beepCount = beepDelay;
+				}
 			}
 			drag(dt, DRAG_WATER);
 			super.tick(t, dt);
@@ -150,10 +200,12 @@ package  {
 					bodyActive.alpha = 0;
 					break;
 				case STATE_WARN:
-					bodyActive.alpha = Math.clamp((Math.sin(t*Math.PI*5)+1)*0.5, 0, 1);
+					//bodyActive.alpha = Math.clamp((Math.sin(t*Math.PI*5)+1)*0.5, 0, 1);
+					bodyActive.alpha = Math.clamp(beepCount/beepDelay, 0, 1);
 					break;
 				case STATE_SEEK:
-					bodyActive.alpha = Math.clamp((Math.sin(t*Math.PI*30)+1)*0.5, 0, 1);
+					//bodyActive.alpha = Math.clamp((Math.sin(t*Math.PI*30)+1)*0.5, 0, 1);
+					bodyActive.alpha = Math.clamp(beepCount/beepDelay, 0, 1);
 					break;
 			}
 			body.alpha = Math.clamp(1-getDepth()/maxDepth, 0.4, 1);

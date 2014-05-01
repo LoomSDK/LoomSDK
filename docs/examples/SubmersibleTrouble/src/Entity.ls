@@ -1,5 +1,7 @@
 package
 {
+	import loom.sound.Listener;
+	import loom.sound.Sound;
 	import loom2d.math.Point;
 	import loom2d.math.Rectangle;
 	
@@ -23,10 +25,20 @@ package
 		
 		protected var bounds:Rectangle = new Rectangle();
 		
-		protected static const DRAG_AIR = 0.05;
+		protected static const DRAG_AIR = 0.01;
 		protected static const DRAG_WATER = 0.05;
+		protected static const SOUND_SCALE = 0.15;
 		
 		public function Entity() {}
+		
+		protected function placeSound(sound:Sound) {
+			sound.setPosition(p.x*SOUND_SCALE, 0, p.y*SOUND_SCALE);
+			sound.setVelocity(v.x*SOUND_SCALE, 0, v.y*SOUND_SCALE);
+		}
+		protected function placeListener() {
+			Listener.setPosition(p.x*SOUND_SCALE, 0, p.y*SOUND_SCALE);
+			Listener.setVelocity(v.x*SOUND_SCALE, 0, v.y*SOUND_SCALE);
+		}
 		
 		public function checkCollision(entity:Entity):Boolean {
 			return p.x+bounds.right  > entity.p.x+entity.bounds.left  &&

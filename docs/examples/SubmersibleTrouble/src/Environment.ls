@@ -1,6 +1,7 @@
 package
 {
 	import feathers.display.TiledImage;
+	import loom.sound.Listener;
 	import loom.sound.Sound;
 	import loom.utils.Injector;
 	import loom2d.display.Image;
@@ -38,7 +39,14 @@ package
 		private var targetOffset:Number;
 		private var cameraPos:Number = 0;
 		
-		private var launched:Boolean;
+		public static const STATE_INIT = 0;
+		public static const STATE_LAUNCHED = 1;
+		public static const STATE_RETURNING = 2;
+		public static const STATE_RETURN = 3;
+		public static const STATE_WINNER = 4;
+		public var state:Number;
+		
+		private var over:Boolean = false;
 		
 		private var w:Number;
 		private var h:Number;
@@ -49,14 +57,18 @@ package
 		private var player:Player;
 		private var mines:Vector.<Mine> = new Vector.<Mine>();
 		private var mineDisplay:Sprite = new Sprite();
+		private var arrowUp:Image;
 		private var title:SimpleLabel;
 		private var scoreTime:SimpleLabel;
 		private var scoreMines:SimpleLabel;
+		private var winnerTitle:SimpleLabel;
+		private var returnStartTime:Number;
 		
 		private var lastTouch:Touch;
-		private var gameover:Boolean = false;
 		
 		private var ambience:Sound;
+		private var winnerSound:Sound;
+		private var warning:Sound;
 		
 		public function Environment(stage:Stage)
 		{
@@ -79,6 +91,13 @@ package
 			
 			player = new Player(display, maxDepth);
 			
+			tex = Texture.fromAsset("assets/arrowUp.png");
+			tex.smoothing = TextureSmoothing.NONE;
+			arrowUp = new Image(tex);
+			arrowUp.center();
+			arrowUp.x = w/2;
+			display.addChild(arrowUp);
+			
 			tex = Texture.fromAsset("assets/sea.png");
 			tex.smoothing = TextureSmoothing.NONE;
 			sea = new Image(tex);
@@ -90,16 +109,25 @@ package
 			tex.smoothing = TextureSmoothing.NONE;
 			seaTiled = new TiledImage(tex, 1);
 			seaTiled.width = w;
-			seaTiled.height = maxDepth;
+			seaTiled.height = maxDepth+h*2;
 			display.addChild(seaTiled);
 			
 			title = getLabel("Submersible Trouble", true, w/2, -85, 0.2);
-			scoreTime  = getLabel("", false, 10, -50, 0.1);
+			scoreTime  = getLabel("", false, 10, -47, 0.1);
 			scoreMines = getLabel("", false, 10, -35, 0.1);
+			winnerTitle = getLabel("WINNER!", true, w/2, -62, 0.15);
+			winnerTitle.visible = false;
 			
 			ambience = Sound.load("assets/ObservingTheStar.ogg");
 			ambience.setLooping(true);
+			ambience.setListenerRelative(false);
 			ambience.play();
+			
+			winnerSound = Sound.load("assets/winner.ogg");
+			winnerSound.setListenerRelative(false);
+			
+			warning = Sound.load("assets/warning.ogg");
+			warning.setListenerRelative(false);
 			
 			reset();
 		}
@@ -120,16 +148,21 @@ package
 			lastTouch = null;
 			clearMines();
 			placeMines();
+			arrowUp.visible = false;
+			targetOffset = introOffset;
 			resetPlayer();
+			state = STATE_INIT;
 			render();
 		}
 		
 		public function resetPlayer() {
-			player.reset();
-			player.setPosition(w/2, 0);
+			if (state == STATE_WINNER) {
+				player.reset(false);
+			} else {
+				player.reset();
+				player.setPosition(w/2, 0);
+			}
 			player.setTarget(new Point(w/2, h/2));
-			targetOffset = introOffset;
-			launched = false;
 		}
 		
 		private function clearMines() {
@@ -140,16 +173,24 @@ package
 		}
 		
 		private function placeMines() {
-			for (var i = 0; i < 50; i++) {
-				addMine(Math.randomRangeInt(0, w), 100+i*20);
+			var offset = 100;
+			var mineNum = 45;
+			for (var i = 0; i < mineNum; i++) {
+				addMine(Math.randomRangeInt(0, w), offset+(maxDepth-offset-h)*mineDistribution(i/(mineNum-1)));
 			}
+		}
+		
+		private function mineDistribution(x:Number):Number {
+			var sharpness:Number = 5;
+			return Math.log(1+x*sharpness)/Math.log(1+sharpness);
 		}
 		
 		public function launch() {
 			reset();
 			targetOffset = launchedOffset;
 			player.setVelocity(0, 120);
-			launched = true;
+			player.launch();
+			state = STATE_LAUNCHED;
 		}
 		
 		public function touched(touch:Touch)
@@ -170,45 +211,95 @@ package
 			
 			var targetCamera:Number;
 			
-			if (launched) {
-				if (lastTouch) {
+			if (state != STATE_INIT) {
+				if (state != STATE_WINNER && state != STATE_RETURNING && lastTouch) {
 					var loc:Point = lastTouch.getLocation(display);
 					player.setTarget(loc);
 				}
-				
-				var mine:Mine;
-				for each (mine in mines) {
-					mine.tick(t, dt);
-				}
-				player.tick(t, dt);
-				
-				for (var i = 0; i < mines.length; i++) {
-					mine = mines[i];
-					mine.checkCollisionPlayer(player);
-					for (var j = i+1; j < mines.length; j++) {
-						mine.checkCollisionMine(mines[j]);
-					}
-				}
-				
+				entityTick();
+				checkCollisions();
 				if (player.state == Player.STATE_EXPLODED) {
-					gameover = true;
-					setScores();
-					resetPlayer();
+					gameover();
 				}
-				
-				targetCamera = player.getDepth()-h/2+player.getDepthSpeed()*1;
-			} else {
-				targetCamera = 0;
+			}
+			
+			switch (state) {
+				case STATE_INIT:
+					targetCamera = 0;
+					break;
+				case STATE_LAUNCHED:
+					if (player.getDepth() > maxDepth) {
+						state = STATE_RETURNING;
+						returnStartTime = t;
+						arrowUp.y = player.getDepth()+50;
+						arrowUp.visible = true;
+						warning.play();
+					}
+					targetCamera = player.getDepth()-h/2+player.getDepthSpeed()*1;
+					break;
+				case STATE_RETURNING:
+					arrowUp.alpha = 0.25+0.75*0.5*(Math.sin(t*Math.PI*5)+1);
+					if (t-returnStartTime > 2) {
+						state = STATE_RETURN;
+						player.state = Player.STATE_RETURN;
+						arrowUp.visible = false;
+					}
+					targetCamera = player.getDepth()-h/2+player.getDepthSpeed()*1;
+					break;
+				case STATE_RETURN:
+					if (player.getDepth() < h) {
+						gameover(true);
+					}
+					targetCamera = player.getDepth()-h/2+player.getDepthSpeed()*1.2;
+					break;
+				case STATE_WINNER:
+					targetCamera = 0;
+					break;
 			}
 			
 			var maxCameraSpeed = 5;
 			cameraPos += Math.clamp((targetCamera-cameraPos)*0.02, -maxCameraSpeed, maxCameraSpeed);
-			if (gameover && Math.abs(targetCamera-cameraPos) < 50) {
-				gameover = false;
+			if (over && Math.abs(targetCamera-cameraPos) < 50) {
+				over = false;
 				stage.dispatchEvent(new Event(GAMEOVER));
 			}
 			
 			t += dt;
+		}
+		
+		private function entityTick() {
+			var mine:Mine;
+			for each (mine in mines) {
+				mine.tick(t, dt);
+			}
+			player.tick(t, dt);
+		}
+		
+		private function checkCollisions() {
+			var mine:Mine;
+			for (var i = 0; i < mines.length; i++) {
+				mine = mines[i];
+				mine.checkCollisionPlayer(player);
+				for (var j = i+1; j < mines.length; j++) {
+					mine.checkCollisionMine(mines[j]);
+				}
+			}
+		}
+		
+		private function gameover(winner:Boolean = false) {
+			over = true;
+			setScores();
+			targetOffset = introOffset;
+			winnerTitle.visible = winner;
+			if (winner) {
+				state = STATE_WINNER;
+				player.state = Player.STATE_WINNER;
+				player.setTarget(new Point(w/2, 0));
+				winnerSound.play();
+			} else {
+				state = STATE_INIT;
+				resetPlayer();
+			}
 		}
 		
 		private function setScores() {

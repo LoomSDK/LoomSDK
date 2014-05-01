@@ -1,4 +1,5 @@
 package  {
+	import loom.sound.Listener;
 	import loom.sound.Sound;
 	import loom2d.display.DisplayObjectContainer;
 	import loom2d.display.Image;
@@ -13,8 +14,10 @@ package  {
 	public class Player extends Entity {
 		
 		public static const STATE_FOLLOW = 0;
-		public static const STATE_EXPLODING = 1;
-		public static const STATE_EXPLODED = 2;
+		public static const STATE_RETURN = 1;
+		public static const STATE_EXPLODING = 2;
+		public static const STATE_EXPLODED = 3;
+		public static const STATE_WINNER = 4;
 		public var state:Number;
 		
 		private var maxDepth:Number;
@@ -26,6 +29,9 @@ package  {
 		private var lights:Image;
 		
 		private var target:Point = new Point();
+		
+		private var thrustMax:Number = 150;
+		private var thrust:Point = new Point();
 		
 		private var lightDepth:Number = 400;
 		private var lightHysteresis:Number = 40;
@@ -40,6 +46,8 @@ package  {
 		
 		private var engineSound:Sound;
 		private var engineActivity:Number = 0;
+		
+		private var dive:Sound;
 		
 		public function Player(container:DisplayObjectContainer, maxDepth:Number) {
 			this.maxDepth = maxDepth;
@@ -77,22 +85,33 @@ package  {
 			display.addChild(explosion);
 			
 			explosionSound = Sound.load("assets/submersibleExplosion.ogg");
+			explosionSound.setListenerRelative(false);
 			
 			engineSound = Sound.load("assets/submersibleEngine.ogg");
 			engineSound.setLooping(true);
 			engineSound.play();
 			engineSound.setPitch(0);
+			engineSound.setListenerRelative(false);
+			
+			dive = Sound.load("assets/dive.ogg");
+			dive.setListenerRelative(false);
+			
+			Listener.setOrientation(0, 0, -1, 0, 1, 0);
 			
 			reset();
 		}
 		
-		public function reset() {
-			p.x = p.y = v.x = v.y = a.x = a.y = 0;
+		public function reset(position:Boolean = true) {
+			if (position) p.x = p.y = v.x = v.y = a.x = a.y = 0;
 			lightsEnabled = false;
 			lightSwitchTime = Number.MAX_VALUE;
 			lights.alpha = 0;
 			submersible.visible = true;
 			state = STATE_FOLLOW;
+		}
+		
+		public function launch() {
+			dive.play();
 		}
 		
 		public function setPosition(x:Number, y:Number)
@@ -172,15 +191,26 @@ package  {
 					}
 				}
 				
-				if (state == STATE_FOLLOW) {
-					var delta = target.subtract(p);
-					if (delta.length > 10) {
-						var thrust:Point = delta.clone();
-						thrust.normalize(thrust.length*10);
-						if (thrust.length > 150) thrust.normalize(150);
-						engineActivity += (thrust.length/150-engineActivity)*0.025;
-						a.offset(thrust.x, thrust.y);
+				var delta = target.subtract(p);
+				thrust.x = thrust.y = 0;
+				if (state == STATE_FOLLOW || state == STATE_RETURN || state == STATE_WINNER) {
+					switch (state) {
+						case STATE_FOLLOW:
+							if (delta.length > 10) {
+								thrust = delta;
+								thrust.normalize(thrust.length*10);
+							}
+							if (thrust.length > thrustMax) thrust.normalize(thrustMax);
+							break;
+						case STATE_RETURN:
+							thrust.offset(delta.x*5, -thrustMax*1.5);
+							break;
+						case STATE_WINNER:
+							thrust.offset(delta.x*2, -Math.clamp(getDepth(), 0, thrustMax)*2);
+							break;
 					}
+					engineActivity += (thrust.length/thrustMax-engineActivity)*0.05;
+					a.offset(thrust.x, thrust.y);
 				}
 				
 				drag(dt, DRAG_WATER);
@@ -197,6 +227,8 @@ package  {
 			engineActivity *= 0.9;
 			
 			super.tick(t, dt);
+			
+			placeListener();
 		}
 		
 		private function lightSwitchOn(x:Number):Number {
