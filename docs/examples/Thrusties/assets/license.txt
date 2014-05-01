@@ -1,0 +1,4 @@
+All graphical assets in this directory are CC0 (Public Domain) from the Space Shooter Redux art pack by Kenney: http://opengameart.org/content/space-shooter-redux
+
+The sound effect loop is a modified version of the CC0 (Public Domain) spray.mp3 file by BernzSed:
+https://www.freesound.org/people/BernzSed/sounds/53413/

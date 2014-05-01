@@ -94,23 +94,9 @@ public:
             return 1;
         }
 
-        // get the assembly lookup table
-        lua_rawgeti(L, LUA_GLOBALSINDEX, LSASSEMBLYLOOKUP);
-        // push the (interned) assembly name
-        lua_pushvalue(L, 2);
-        lua_gettable(L, -2);
-        // get the Assembly*
-        Assembly *assembly = (Assembly *)lua_topointer(L, -1);
-        lua_pop(L, 2);
+        LSLuaState *lstate = LSLuaState::getLuaState(L);
 
-        lmAssert(assembly, "Object::_as - unable to get Assembly");
-
-        LSLuaState *lstate = assembly->getLuaState();
-
-        // the castType is the type we're casting to
-        Type *castType = assembly->getTypeByOrdinal((LSTYPEID)lua_tonumber(L, 3));
-
-        lmAssert(castType, "Object::_as - unable to resolve TypeID %u", (LSTYPEID)lua_tonumber(L, 3));
+        Type* castType = lsr_gettype(L, 2);
 
         // checking number -> enum coercian
         if (lua_isnumber(L, 1))
