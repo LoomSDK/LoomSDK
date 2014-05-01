@@ -130,6 +130,7 @@ package loom2d.display
          *  order of a Quad (see above). */
         public function setVertexData(pos:Vector.<Point>, uv:Vector.<Point>, color:Vector.<int>, alpha:Vector.<float>)
         {
+            mTinted = false;
             for(var i=0;i<4;i++)
             {
                 mVertexData.setPosition(i, pos[i].x, pos[i].y);
