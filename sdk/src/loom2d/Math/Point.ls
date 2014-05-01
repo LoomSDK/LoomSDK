@@ -176,32 +176,32 @@ package loom2d.math
         /**
          * Multiplies This point by the scalar s.
          */
-        // public operator function *=(s:Number):void
-        // {
-        //     x *= s;
-        //     y *= s;
-        // }
+        public operator function *=(s:Number):void
+        {
+            x *= s;
+            y *= s;
+        }
         
         /**
          * Divides Point p by scalar s and returns the result.
          */
-        // public static operator function /(p:Point, s:Number):Point
-        // {
-        //     var invS = 1.0 / s;
-        //     tempPoint.x = p.x * invS;
-        //     tempPoint.y = p.y * invS;
-        //     return tempPoint;
-        // }    
+        public static operator function /(p:Point, s:Number):Point
+        {
+            var invS = 1.0 / s;
+            tempPoint.x = p.x * invS;
+            tempPoint.y = p.y * invS;
+            return tempPoint;
+        }    
 
         /**
          * Divides This point by the scalar s.
          */
-        // public operator function /=(s:Number):void
-        // {
-        //     var invS = 1.0 / s;
-        //     x *= invS;
-        //     y *= invS;
-        // }
+        public operator function /=(s:Number):void
+        {
+            var invS = 1.0 / s;
+            x *= invS;
+            y *= invS;
+        }
     
         /**
          * Gets the distance between two Points.
