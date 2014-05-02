@@ -8,7 +8,7 @@ package loom2d.display
     [Native(managed)]
     public native class QuadBatch extends DisplayObject
     {
-
+        //QUESTION: This texture member seems to do nothing! Natively, _addQuad() takes the texture from the Quad submitted, not this one!
         public var texture:Texture;        
 
         /** The number of Quads currently contained within the batch */
@@ -26,8 +26,8 @@ package loom2d.display
          *  i.e. the values for texture, smoothing and blendmode. When you add additional quads,  
          *  make sure they share that state (e.g. with the 'isStageChange' method), or reset
          *  the batch. */ 
-         //TODO: Neither 'smoothing' nor 'blendMode' do anything here!?!?!?! Shouldn't they???
-         //gfxQuadRenderer seems to a) use whatever smoothing is set for the Texture and b) force SrcAlpha / InvSrcAlpha alpha blending
+         //QUESTION: Neither 'smoothing' nor 'blendMode' do anything here!?!?!?! Should they? Or should they be removed?
+         //         gfxQuadRenderer seems to A) use whatever smoothing is set for the Texture and B) force SrcAlpha / InvSrcAlpha alpha blending
         public function addQuad(quad:Quad, parentAlpha:Number=1.0, texture:Texture=null, 
                                 smoothing:Boolean=false, modelViewMatrix:Matrix=null, 
                                 blendMode:String=null):void
@@ -42,7 +42,8 @@ package loom2d.display
 
             _addQuad(quad, modelViewMatrix);
 
-            //set the QuadBatch's native texture to be the one passed in here
+            // set the QuadBatch's native texture to be the one passed in here, or let it just keep the one 
+            // from the Quad (which is assigned Natively inside of _addQuad() if null)
             if(texture != null)
             {
                 nativeTextureID = texture.nativeID;
