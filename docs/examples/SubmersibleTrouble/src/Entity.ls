@@ -31,23 +31,36 @@ package
 		
 		public function Entity() {}
 		
-		protected function placeSound(sound:Sound) {
+		/** Set sound position and velocity to entity position and velocity */
+		protected function placeSound(sound:Sound)
+		{
 			sound.setPosition(p.x*SOUND_SCALE, 0, p.y*SOUND_SCALE);
 			sound.setVelocity(v.x*SOUND_SCALE, 0, v.y*SOUND_SCALE);
 		}
-		protected function placeListener() {
+		
+		/** Set listener position and velocity to entity position and velocity */
+		protected function placeListener()
+		{
 			Listener.setPosition(p.x*SOUND_SCALE, 0, p.y*SOUND_SCALE);
 			Listener.setVelocity(v.x*SOUND_SCALE, 0, v.y*SOUND_SCALE);
 		}
 		
-		public function checkCollision(entity:Entity):Boolean {
+		/**
+		 * Entity-entity collision check based on bounds AABB, returns true if they intersect.
+		 */
+		public function checkCollision(entity:Entity):Boolean
+		{
 			return p.x+bounds.right  > entity.p.x+entity.bounds.left  &&
 			       p.x+bounds.left   < entity.p.x+entity.bounds.right &&
 				   p.y+bounds.bottom > entity.p.y+entity.bounds.top   &&
 			       p.y+bounds.top    < entity.p.y+entity.bounds.bottom;
 		}
 		
-		public function drag(dt:Number, coefficient:Number) {
+		/**
+		 * Adds drag as acceleration.
+		 */
+		public function drag(dt:Number, coefficient:Number)
+		{
 			var amount = -coefficient/dt;
 			a.offset(amount*v.x, amount*v.y);
 		}

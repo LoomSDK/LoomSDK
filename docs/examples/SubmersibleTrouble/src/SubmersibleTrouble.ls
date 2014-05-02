@@ -17,56 +17,45 @@ package
 	import system.Void;
 	
 	/**
-	*/
+	 * Main entry point that handles general game state
+	 * with an example of a simple state machine.
+	 */
 	public class SubmersibleTrouble extends Application
 	{
 		
 		private static const STATE_INIT = 0;
 		private static const STATE_GAME = 1;
-		private static const STATE_OVER = 2;
-		
 		private var state:Number = STATE_INIT;
 		
 		private var environment:Environment;
 		
 		override public function run():void
 		{
-			// Responsive stage size
+			// Scale stage with black borders
 			stage.scaleMode = StageScaleMode.LETTERBOX;
 			
 			// Triggers on touch start, move and end
 			stage.addEventListener(TouchEvent.TOUCH, touched);
 			
-			stage.addEventListener(Event.RESIZE, resized);
-			resized();
-			
 			environment = new Environment(stage);
 			stage.addEventListener(Environment.GAMEOVER, gameover);
-			
-			//switchState(STATE_GAME);
-		}
-		
-		private function resized(e:Event = null):void
-		{
 		}
 		
 		private function touched(e:TouchEvent):void
 		{
 			var touch:Touch = e.getTouch(stage);
-			
-			switch (touch.phase) {
-				case TouchPhase.BEGAN:
-					switch (state) {
-						case STATE_INIT: switchState(STATE_GAME); break;
-					}
-			}
-			
-			if (state == STATE_GAME) {
-				environment.touched(touch);
+			switch (state) {
+				case STATE_INIT:
+					if (touch.phase == TouchPhase.BEGAN) switchState(STATE_GAME);
+					break;
+				case STATE_GAME:
+					environment.touched(touch);
+					break;
 			}
 		}
 		
-		private function gameover(e:Event):void {
+		private function gameover(e:Event):void
+		{
 			switchState(STATE_INIT);
 		}
 		
@@ -77,21 +66,16 @@ package
 			stateEnter(state);
 		}
 		
-		private function stateExit(state:Number) {
-			switch (state) {
-				case STATE_INIT:
-					break;
-			}
-		}
+		private function stateExit(state:Number) {}
 		
-		private function stateEnter(state:Number) {
+		private function stateEnter(state:Number)
+		{
 			switch (state) {
 				case STATE_GAME:
 					environment.launch();
 					break;
 			}
 		}
-		
 		
 		override public function onTick()
 		{
