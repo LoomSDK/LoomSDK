@@ -253,6 +253,21 @@ const char *Tokens::getOperatorMethodName(Token *token)
         return "__op_multiply";
     }
 
+    if (token == &OPERATOR_MULTIPLYASSIGNMENT)
+    {
+        return "__op_multiplyassignment";
+    }
+
+    if (token == &OPERATOR_DIVIDE)
+    {
+        return "__op_divide";
+    }
+
+    if (token == &OPERATOR_DIVIDEASSIGNMENT)
+    {
+        return "__op_divideassignment";
+    }
+
     if (token == &OPERATOR_MINUS)
     {
         return "__op_minus";
