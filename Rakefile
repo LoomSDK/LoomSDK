@@ -126,6 +126,7 @@ if $LOOM_HOST_OS == 'windows'
     puts "*** Windows x86"
     puts "*** Detected 32 Bit Windows PROCESSOR_ARCHITECTURE: #{proc_arch}"
     WINDOWS_PROCARCH_BITS = "32"
+	WINDOWS_ISX64 = "0"
     WINDOWS_ANDROID_PREBUILT_DIR = "windows"
   end
   #Dir.chdir("build") do
