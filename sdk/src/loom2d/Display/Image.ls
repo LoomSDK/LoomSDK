@@ -46,6 +46,8 @@ package loom2d.display
             var height:Number = frame ? frame.height : _texture.height;
             var pma:Boolean = _texture.premultipliedAlpha;
             
+            // LOOM-1233: super() constructors in Loom don't appear to respect default parameters 
+            //              (hence the need for the final value of 'true' passed through below)
             super(width, height, 0xffffff, pma, true);
             
             mVertexData.setTexCoords(0, 0.0, 0.0);

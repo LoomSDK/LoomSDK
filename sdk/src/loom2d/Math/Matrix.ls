@@ -31,7 +31,7 @@ package loom2d.math
         /**
          * Static Identity matrix for general use
         */
-        public static var IDENTITY:Matrix = new Matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+        public static const IDENTITY:Matrix = new Matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
         
         
         public native function Matrix(_a:Number = 1.0, _b:Number = 0.0, 

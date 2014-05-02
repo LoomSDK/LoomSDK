@@ -41,12 +41,6 @@ void QuadBatch::render(lua_State *L)
         return;
     }
 
-    // update and get our transformation matrix
-    updateLocalTransform();
-
-    Matrix mtx;
-    getTargetTransformationMatrix(NULL, &mtx);
-
     // apply the parent alpha
     renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
     renderState.clampAlpha();
@@ -59,6 +53,12 @@ void QuadBatch::render(lua_State *L)
     renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
     GFX::Graphics::setClipRect(renderState.cachedClipRect);
 
+    // update and get our transformation matrix
+    updateLocalTransform();
+    
+    Matrix mtx;
+    getTargetTransformationMatrix(NULL, &mtx);
+    
     // quick render and early out of the entire function if the transform is identity and there is no alpha modulation by the render state
     bool isIdentity = mtx.isIdentity();
     if((renderState.alpha == 1.0f) && isIdentity)

@@ -8,7 +8,7 @@ package loom2d.math
 
         // note that we need to new here as the default args
         // won't be setup as we're in the static initializer
-        public static var ZERO:Point = new Point(0, 0);
+        public static const ZERO:Point = new Point(0, 0);
 
         /**
          * Direct access to the x and y components of the Point.
