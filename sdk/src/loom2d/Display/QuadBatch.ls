@@ -19,15 +19,14 @@ package loom2d.display
         public function addImage(image:Image, parentAlpha:Number=1.0, modelViewMatrix:Matrix=null,
                                  blendMode:String=null):void
         {
-            addQuad(image, parentAlpha, image.texture, image.smoothing, modelViewMatrix, blendMode);
+            // don't pass through the Image texture, or smoothing as QuadBatch doesn't use it currently
+            addQuad(image, parentAlpha, null, false, modelViewMatrix, blendMode);
         }
 
         /** Adds a quad to the batch. The first quad determines the state of the batch,
          *  i.e. the values for texture, smoothing and blendmode. When you add additional quads,  
          *  make sure they share that state (e.g. with the 'isStageChange' method), or reset
          *  the batch. */ 
-         //QUESTION: Neither 'smoothing' nor 'blendMode' do anything here!?!?!?! Should they? Or should they be removed?
-         //         gfxQuadRenderer seems to A) use whatever smoothing is set for the Texture and B) force SrcAlpha / InvSrcAlpha alpha blending
         public function addQuad(quad:Quad, parentAlpha:Number=1.0, texture:Texture=null, 
                                 smoothing:Boolean=false, modelViewMatrix:Matrix=null, 
                                 blendMode:String=null):void
@@ -35,6 +34,7 @@ package loom2d.display
             if (modelViewMatrix == null)
                 modelViewMatrix = quad.transformationMatrix;
             
+            //QUESTION: looks like this 'alpha' value is also useless!!! Ugh...
             var alpha:Number = parentAlpha * quad.alpha;
 
             //QUESTION: This .texture seems to do nothing! Natively, _addQuad() takes the texture from the Quad submitted, not this one!
@@ -42,12 +42,12 @@ package loom2d.display
 
             _addQuad(quad, modelViewMatrix);
 
-            // set the QuadBatch's native texture to be the one passed in here, or let it just keep the one 
-            // from the Quad (which is assigned Natively inside of _addQuad() if null)
-            if(texture != null)
-            {
-                nativeTextureID = texture.nativeID;
-            }
+            // LOOM-1868: Support the below functionality so that we can remove these asserts!
+            // add some messages for now that tell users when they are trying to something unsupported currently
+            Debug.assert(parentAlpha == 1.0, "QuadBatch 'addQuad' doesn't support per-Quad alpha modifications at the moment. You must set the alpha on the Quad via 'setVertexAlpha()' prior to adding it to the batch.");
+            Debug.assert(texture == null, "QuadBatch 'addQuad' doesn't support per-Quad texture modifications at the moment. You must derive your own Quad-based class, create an object of that type, and set its 'nativeTextureID prior to adding it to the batch.");
+            Debug.assert(smoothing == false, "QuadBatch 'addQuad' doesn't support per-Quad texture smoothing at the moment. You must set the 'smoothing' value on the Texture assigned to the Quad prior to adding it to the batch.");
+            Debug.assert(blendMode == null, "QuadBatch 'addQuad' doesn't support per-Quad blend mode values at the moment.  Currently, Loom Quads always force blending to be SrcAlpha / OneMinusSrcAlpha.");
         }   
 
         /** @inheritDoc */
