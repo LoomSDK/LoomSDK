@@ -1,5 +1,5 @@
 /**
- * Copyright 2012 Facebook
+ * Copyright 2010-present Facebook.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,24 +22,28 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.provider.Settings.Secure;
 import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
-import com.facebook.FacebookException;
-import com.facebook.Session;
+import com.facebook.*;
 import com.facebook.android.BuildConfig;
+import com.facebook.model.GraphObject;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * com.facebook.internal is solely for the use of other packages within the Facebook SDK for Android. Use of
@@ -49,10 +53,39 @@ import java.util.*;
 public final class Utility {
     static final String LOG_TAG = "FacebookSDK";
     private static final String HASH_ALGORITHM_MD5 = "MD5";
+    private static final String HASH_ALGORITHM_SHA1 = "SHA-1";
     private static final String URL_SCHEME = "https";
+    private static final String SUPPORTS_ATTRIBUTION = "supports_attribution";
+    private static final String SUPPORTS_IMPLICIT_SDK_LOGGING = "supports_implicit_sdk_logging";
+    private static final String [] APP_SETTING_FIELDS = new String[] {
+            SUPPORTS_ATTRIBUTION,
+            SUPPORTS_IMPLICIT_SDK_LOGGING
+    };
+    private static final String APPLICATION_FIELDS = "fields";
 
     // This is the default used by the buffer streams, but they trace a warning if you do not specify.
     public static final int DEFAULT_STREAM_BUFFER_SIZE = 8192;
+
+    private static Map<String, FetchedAppSettings> fetchedAppSettings =
+            new ConcurrentHashMap<String, FetchedAppSettings>();
+
+    public static class FetchedAppSettings {
+        private boolean supportsAttribution;
+        private boolean supportsImplicitLogging;
+
+        private FetchedAppSettings(boolean supportsAttribution, boolean supportsImplicitLogging) {
+            this.supportsAttribution = supportsAttribution;
+            this.supportsImplicitLogging = supportsImplicitLogging;
+        }
+
+        public boolean supportsAttribution() {
+            return supportsAttribution;
+        }
+
+        public boolean supportsImplicitLogging() {
+            return supportsImplicitLogging;
+        }
+    }
 
     // Returns true iff all items in subset are in superset, treating null and
     // empty collections as
@@ -92,9 +125,17 @@ public final class Utility {
     }
 
     static String md5hash(String key) {
+        return hashWithAlgorithm(HASH_ALGORITHM_MD5, key);
+    }
+
+    private static String sha1hash(String key) {
+        return hashWithAlgorithm(HASH_ALGORITHM_SHA1, key);
+    }
+
+    private static String hashWithAlgorithm(String algorithm, String key) {
         MessageDigest hash = null;
         try {
-            hash = MessageDigest.getInstance(HASH_ALGORITHM_MD5);
+            hash = MessageDigest.getInstance(algorithm);
         } catch (NoSuchAlgorithmException e) {
             return null;
         }
@@ -152,6 +193,8 @@ public final class Utility {
     }
 
     public static String getMetadataApplicationId(Context context) {
+        Validate.notNull(context, "context");
+
         try {
             ApplicationInfo ai = context.getPackageManager().getApplicationInfo(
                     context.getPackageName(), PackageManager.GET_META_DATA);
@@ -282,9 +325,142 @@ public final class Utility {
         clearCookiesForDomain(context, "https://.facebook.com");
     }
 
+    public static void logd(String tag, Exception e) {
+        if (BuildConfig.DEBUG && tag != null && e != null) {
+            Log.d(tag, e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
+    }
+
     public static void logd(String tag, String msg) {
-        if (BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG && tag != null && msg != null) {
             Log.d(tag, msg);
+        }
+    }
+
+    public static <T> boolean areObjectsEqual(T a, T b) {
+        if (a == null) {
+            return b == null;
+        }
+        return a.equals(b);
+    }
+
+    // Note that this method makes a synchronous Graph API call, so should not be called from the main thread.
+    public static FetchedAppSettings queryAppSettings(final String applicationId, final boolean forceRequery) {
+
+        // Cache the last app checked results.
+        if (!forceRequery && fetchedAppSettings.containsKey(applicationId)) {
+            return fetchedAppSettings.get(applicationId);
+        }
+
+        Bundle appSettingsParams = new Bundle();
+        appSettingsParams.putString(APPLICATION_FIELDS, TextUtils.join(",", APP_SETTING_FIELDS));
+
+        Request request = Request.newGraphPathRequest(null, applicationId, null);
+        request.setParameters(appSettingsParams);
+
+        GraphObject supportResponse = request.executeAndWait().getGraphObject();
+        FetchedAppSettings result = new FetchedAppSettings(
+                safeGetBooleanFromResponse(supportResponse, SUPPORTS_ATTRIBUTION),
+                safeGetBooleanFromResponse(supportResponse, SUPPORTS_IMPLICIT_SDK_LOGGING));
+
+        fetchedAppSettings.put(applicationId, result);
+
+        return result;
+    }
+
+    private static boolean safeGetBooleanFromResponse(GraphObject response, String propertyName) {
+        Object result = false;
+        if (response != null) {
+            result = response.getProperty(propertyName);
+        }
+        if (!(result instanceof Boolean)) {
+            result = false;
+        }
+        return (Boolean) result;
+    }
+
+    public static void clearCaches(Context context) {
+        ImageDownloader.clearCache(context);
+    }
+
+    public static void deleteDirectory(File directoryOrFile) {
+        if (!directoryOrFile.exists()) {
+            return;
+        }
+
+        if (directoryOrFile.isDirectory()) {
+            for (File child : directoryOrFile.listFiles()) {
+                deleteDirectory(child);
+            }
+        }
+        directoryOrFile.delete();
+    }
+
+    public static <T> List<T> asListNoNulls(T... array) {
+        ArrayList<T> result = new ArrayList<T>();
+        for (T t : array) {
+            if (t != null) {
+                result.add(t);
+            }
+        }
+        return result;
+    }
+
+    // Return a hash of the android_id combined with the appid.  Intended to dedupe requests on the server side
+    // in order to do counting of users unknown to Facebook.  Because we put the appid into the key prior to hashing,
+    // we cannot do correlation of the same user across multiple apps -- this is intentional.  When we transition to
+    // the Google advertising ID, we'll get rid of this and always send that up.
+    public static String getHashedDeviceAndAppID(Context context, String applicationId) {
+        String androidId = Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
+
+        if (androidId == null) {
+            return null;
+        } else {
+            return sha1hash(androidId + applicationId);
+        }
+    }
+
+    public static void setAppEventAttributionParameters(GraphObject params,
+            AttributionIdentifiers attributionIdentifiers, String hashedDeviceAndAppId, boolean limitEventUsage) {
+        // Send attributionID if it exists, otherwise send a hashed device+appid specific value as the advertiser_id.
+        if (attributionIdentifiers.getAttributionId() != null) {
+            params.setProperty("attribution", attributionIdentifiers.getAttributionId());
+        }
+
+        if (attributionIdentifiers.getAndroidAdvertiserId() != null) {
+            params.setProperty("advertiser_id", attributionIdentifiers.getAndroidAdvertiserId());
+            params.setProperty("advertiser_tracking_enabled", !attributionIdentifiers.isTrackingLimited());
+        } else if (hashedDeviceAndAppId != null) {
+            params.setProperty("advertiser_id", hashedDeviceAndAppId);
+        }
+
+        params.setProperty("application_tracking_enabled", !limitEventUsage);
+    }
+
+    public static Method getMethodQuietly(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
+        try {
+            return clazz.getMethod(methodName, parameterTypes);
+        } catch (NoSuchMethodException ex) {
+            return null;
+        }
+    }
+
+    public static Method getMethodQuietly(String className, String methodName, Class<?>... parameterTypes) {
+        try {
+            Class<?> clazz = Class.forName(className);
+            return getMethodQuietly(clazz, methodName, parameterTypes);
+        } catch (ClassNotFoundException ex) {
+            return null;
+        }
+    }
+
+    public static Object invokeMethodQuietly(Object receiver, Method method, Object... args) {
+        try {
+            return method.invoke(receiver, args);
+        } catch (IllegalAccessException ex) {
+            return null;
+        } catch (InvocationTargetException ex) {
+            return null;
         }
     }
 }
