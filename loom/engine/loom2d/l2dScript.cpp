@@ -31,6 +31,7 @@
 #include "loom/engine/loom2d/l2dQuad.h"
 #include "loom/engine/loom2d/l2dImage.h"
 #include "loom/engine/loom2d/l2dQuadBatch.h"
+#include "loom/engine/loom2d/l2dCatmullRomSpline.h"
 
 namespace Loom2D
 {
@@ -48,6 +49,7 @@ public:
         Point::initialize(L);
         Rectangle::initialize(L);
         Matrix::initialize(L);
+        CatmullRomSpline::initialize(L);
 
         DisplayObject::initialize(L);
         DisplayObjectContainer::initialize(L);
@@ -76,6 +78,10 @@ static Rectangle *StaticRectangleConstructor(lua_State *L)
                          (float)lua_tonumber(L, 4), (float)lua_tonumber(L, 5));
 }
 
+static CatmullRomSpline *StaticCatmullRomSplineConstructor(lua_State *L)
+{
+    return new CatmullRomSpline((int)lua_tonumber(L, 2));
+}
 
 static int registerLoom2D(lua_State *L)
 {
@@ -151,8 +157,21 @@ static int registerLoom2D(lua_State *L)
 
        .endClass()
 
+    // CatmullRomSpline
+       .beginClass<CatmullRomSpline>("CatmullRomSpline")
+       .addStaticConstructor(StaticCatmullRomSplineConstructor)
+       .addMethod("__pget_elementSize", &CatmullRomSpline::getElementSize)
+       .addMethod("__pget_splineLength", &CatmullRomSpline::getSplineLength)
+       .addMethod("clear", &CatmullRomSpline::clear)
+       .addLuaFunction("addElement", &CatmullRomSpline::_addElement)
+       .addLuaFunction("finalize", &CatmullRomSpline::_finalize)
+       .addLuaFunction("evaluate", &CatmullRomSpline::_evaluate)
+       .addLuaFunction("secondDerivative", &CatmullRomSpline::_secondDeriv)
+       .endClass()
 
        .endPackage();
+
+
 
     beginPackage(L, "loom2d.events")
 
@@ -260,6 +279,7 @@ void installLoom2D()
 
     LOOM_DECLARE_NATIVETYPE(Loom2D::Rectangle, Loom2D::registerLoom2D);
     LOOM_DECLARE_NATIVETYPE(Loom2D::Matrix, Loom2D::registerLoom2D);
+    LOOM_DECLARE_NATIVETYPE(Loom2D::CatmullRomSpline, Loom2D::registerLoom2D);
 
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::EventDispatcher, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::DisplayObject, Loom2D::registerLoom2D);
