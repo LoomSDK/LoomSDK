@@ -402,7 +402,7 @@ public:
 
 
    inline float getSplineLength() { return _totalLength; }
-   inline float getElementSize() { return _elementSize; }
+   inline unsigned int getElementSize() { return _elementSize; }
     
 
 
@@ -410,7 +410,7 @@ public:
    // lua accessor for addElement
    int _addElement(lua_State *L)
    {
-       bool replaceLast = lua_toboolean(L, 3);
+       bool replaceLast = lua_toboolean(L, 3) ? true : false;
        switch(_elementSize)
        {
          case 2:
