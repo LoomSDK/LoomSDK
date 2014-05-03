@@ -18,6 +18,7 @@ set (ENGINE_SRC
     loom2d/l2dImage.cpp
     loom2d/l2dQuadBatch.cpp
     loom2d/l2dScript.cpp
+    loom2d/l2dCatmullRomSpline.cpp
     
     bindings/loom/lmApplication.cpp
     bindings/loom/lmApplicationTasks.cpp
