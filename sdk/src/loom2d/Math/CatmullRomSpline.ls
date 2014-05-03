@@ -44,10 +44,21 @@ package loom2d.math
         public native function evaluate(t:float):Object;
 
         /**
+         * Returns the First Derivative of the Spline at time 't'.  The return Object must be 
+         * cast into the expected type (ie. as Point)
+         */
+        public native function firstDerivative(t:float):Object;
+
+        /**
          * Returns the Second Derivative of the Spline at time 't'.  The return Object must be 
          * cast into the expected type (ie. as Point)
          */
         public native function secondDerivative(t:float):Object;
+
+        /**
+         * Returns the Length of the spline arc between t0 and t1
+         */
+        public native function arcLength(t0:float, t1:float):float;
     }
     
 }

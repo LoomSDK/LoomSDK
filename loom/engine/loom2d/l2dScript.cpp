@@ -166,7 +166,9 @@ static int registerLoom2D(lua_State *L)
        .addLuaFunction("addElement", &CatmullRomSpline::_addElement)
        .addLuaFunction("finalize", &CatmullRomSpline::_finalize)
        .addLuaFunction("evaluate", &CatmullRomSpline::_evaluate)
+       .addLuaFunction("firstDerivative", &CatmullRomSpline::_firstDeriv)
        .addLuaFunction("secondDerivative", &CatmullRomSpline::_secondDeriv)
+       .addLuaFunction("arcLength", &CatmullRomSpline::_arcLength)
        .endClass()
 
        .endPackage();

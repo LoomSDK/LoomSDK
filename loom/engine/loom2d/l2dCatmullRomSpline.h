@@ -260,7 +260,7 @@ public:
 
 
    template<typename T>
-   T secondDeriv( float t, utArray<T>& elements )
+   T derivative( bool firstDerivative, float t, utArray<T>& elements )
    {
       // make sure data is valid
       lmAssert( _count >= 2,"CatmullRom - Too Few Data Points" );
@@ -293,13 +293,31 @@ public:
       // quadratic Catmull-Rom for Q_0
       if (i == 0)
       {
-         return elements[0] - 2.0f*elements[1] + elements[2];
+         T A = elements[0] - 2.0f*elements[1] + elements[2];
+         if(firstDerivative)
+         {
+            T B = 4.0f*elements[1] - 3.0f*elements[0] - elements[2];
+            return 0.5f*B + u*A;
+         }
+         else
+         {
+            return A;
+         }
       }
       // quadratic Catmull-Rom for Q_n-1
       else if (i >= _count-2)
       {
          i = _count-2;
-         return elements[i-1] - 2.0f*elements[i] + elements[i+1];
+         T A = elements[i-1] - 2.0f*elements[i] + elements[i+1];
+         if(firstDerivative)
+         {
+            T B = elements[i+1] - elements[i-1];
+            return 0.5f*B + u*A;
+         }
+         else
+         {
+            return A;
+         }
       }
       // cubic Catmull-Rom for interior segments
       else
@@ -313,10 +331,75 @@ public:
          - 5.0f*elements[i]
          + 4.0f*elements[i+1]
          - elements[i+2];
-         
-         return B + (3.0f*u)*A;
+         if(firstDerivative)
+         {
+            T C = elements[i+1] - elements[i-1];
+            return 0.5f*C + u*(B + 1.5f*u*A);
+         }
+         else
+         {
+            return B + (3.0f*u)*A;
+        }
       } 
    } 
+   
+   
+   //-------------------------------------------------------------------------------
+   // Finds the length of the spline arc between 2 times
+   //-------------------------------------------------------------------------------
+   template<typename T>
+   float arcLength( utArray<T>& elements, float t1, float t2 )
+   {
+      if ( t2 <= t1 )
+         return 0.0f;
+      
+      if ( t1 < _times[0] )
+         t1 = _times[0];
+      
+      if ( t2 > _times[_count-1] )
+         t2 = _times[_count-1];
+      
+      // find segment and parameter
+      unsigned int seg1;
+      for ( seg1 = 0; seg1 < _count-1; ++seg1 )
+      {
+         if ( t1 <= _times[seg1+1] )
+         {
+            break;
+         }
+      }
+      float u1 = (t1 - _times[seg1])/(_times[seg1+1] - _times[seg1]);
+      
+      // find segment and parameter
+      unsigned int seg2;
+      for ( seg2 = 0; seg2 < _count-1; ++seg2 )
+      {
+         if ( t2 <= _times[seg2+1] )
+         {
+            break;
+         }
+      }
+      float u2 = (t2 - _times[seg2])/(_times[seg2+1] - _times[seg2]);
+      
+      float result;
+      // both parameters lie in one segment
+      if ( seg1 == seg2 )
+      {
+         result = segmentArcLength( elements, seg1, u1, u2 );
+      }
+      // parameters cross segments
+      else
+      {
+         result = segmentArcLength( elements, seg1, u1, 1.0f );
+         for ( unsigned int i = seg1+1; i < seg2; ++i )
+            result += _lengths[i];
+         result += segmentArcLength( elements, seg2, 0.0f, u2 );
+      }
+      
+      return result;
+      
+   }   
+
 
    inline float getSplineLength() { return _totalLength; }
    inline float getElementSize() { return _elementSize; }
@@ -384,15 +467,15 @@ public:
       return 1;
    }
 
-   // lua accessor for secondDeriv
-   int _secondDeriv(lua_State *L)
+   // lua accessor to get the first derivative
+   int _firstDeriv(lua_State *L)
    {
       float t = (float)lua_tonumber(L, 2);
       switch(_elementSize)
       {
          case 2:
             {
-                CatmullRomTuple tuple = secondDeriv(t, _tupleElement);
+                CatmullRomTuple tuple = derivative(true, t, _tupleElement);
                 pushLuaTuple(L, 3, tuple);
                 break;
             }
@@ -401,6 +484,47 @@ public:
                 lmAssert(false, "Unsupported element size for CatmullRomSpline. Only 2 (tuple) is supported at the moment.");
                 lua_pushnil(L);
       }
+      return 1;
+   }
+
+   // lua accessor to get the second derivative
+   int _secondDeriv(lua_State *L)
+   {
+      float t = (float)lua_tonumber(L, 2);
+      switch(_elementSize)
+      {
+         case 2:
+            {
+                CatmullRomTuple tuple = derivative(false, t, _tupleElement);
+                pushLuaTuple(L, 3, tuple);
+                break;
+            }
+         //CANDO: _tripleElement / _quadrupleElement support
+         default:
+                lmAssert(false, "Unsupported element size for CatmullRomSpline. Only 2 (tuple) is supported at the moment.");
+                lua_pushnil(L);
+      }
+      return 1;
+   }
+
+   // lua accessor to get the second derivative
+   int _arcLength(lua_State *L)
+   {
+      float t0 = (float)lua_tonumber(L, 2);
+      float t1 = (float)lua_tonumber(L, 3);
+      float result = 0.0f;
+      switch(_elementSize)
+      {
+         case 2:
+            {
+                result = arcLength(_tupleElement, t0, t1);
+                break;
+            }
+         //CANDO: _tripleElement / _quadrupleElement support
+         default:
+                lmAssert(false, "Unsupported element size for CatmullRomSpline. Only 2 (tuple) is supported at the moment.");
+      }
+      lua_pushnumber(L, result);
       return 1;
    }
 
