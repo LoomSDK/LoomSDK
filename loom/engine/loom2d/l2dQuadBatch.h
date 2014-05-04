@@ -174,30 +174,19 @@ public:
     {
         // get the infos off the stack
         Quad *quad = (Quad *)lualoom_getnativepointer(L, 2);
-
         Matrix *modelViewMatrix = (Matrix *)lualoom_getnativepointer(L, 3);
-
-        nativeTextureID = quad->nativeTextureID;
 
         quad->validate(L, 2);
 
         // check whether we need to allocate more quad storage
         if (numQuads == maxQuads)
         {
-            if (maxQuads == 0)
-            {
-                maxQuads = DEFAULT_QUADS;
-            }
-            else
-            {
-                maxQuads *= 2;
-            }
-
+            maxQuads = (maxQuads == 0) ? DEFAULT_QUADS : maxQuads * 2;
             GFX::VertexPosColorTex *newData = (GFX::VertexPosColorTex *)lmAlloc(NULL, sizeof(GFX::VertexPosColorTex) * 4 * maxQuads);
 
             if (quadData)
             {
-                memcpy(newData, quadData, (numQuads) * (sizeof(GFX::VertexPosColorTex) * 4));
+                memcpy(newData, quadData, numQuads * sizeof(GFX::VertexPosColorTex) * 4);
                 lmFree(NULL, quadData);
             }
 
@@ -205,30 +194,63 @@ public:
         }
 
         // ... and add the (transformed) quad data to the batch
-        GFX::VertexPosColorTex *dst = &quadData[numQuads * 4];
-        GFX::VertexPosColorTex *src = quad->quadVertices;
-        bool isIdentity = modelViewMatrix->isIdentity();
-        for (int i = 0; i < 4; i++)
-        {
-            *dst = *src;
-
-            //only do transform if matrix is not identity matrix
-            if(!isIdentity)
-            {
-                float _x = modelViewMatrix->a * dst->x + modelViewMatrix->c * dst->y + modelViewMatrix->tx;
-                float _y = modelViewMatrix->b * dst->x + modelViewMatrix->d * dst->y + modelViewMatrix->ty;
-
-                dst->x = _x;
-                dst->y = _y;
-            }
-
-            dst++;
-            src++;
-        }
-
+        _setQuadData(numQuads, quad, modelViewMatrix);
         numQuads++;
 
         return 0;
+    }
+
+
+    // adds a quad to the QuadBatch
+    int _updateQuad(lua_State *L)
+    {
+        // get the infos off the stack
+        int quadID = (int)lua_tointeger(L, 2);
+        Quad *quad = (Quad *)lualoom_getnativepointer(L, 3);
+        Matrix *modelViewMatrix = (Matrix *)lualoom_getnativepointer(L, 4);
+
+        quad->validate(L, 3);
+
+        // check whether this is a valid quad to update
+        lmAssert((quadID < numQuads), "Attempting to updateQuad in a QuadBatch with an non-existant quad index");
+
+        // ... and add the (transformed) quad data to the batch
+        _setQuadData(quadID, quad, modelViewMatrix);
+        numQuads++;
+
+        return 0;
+    }
+
+
+    // copies over data from a single quad into the quadData
+    void _setQuadData(int quadID, Quad *quad, Matrix *mtx)
+    {
+        nativeTextureID = quad->nativeTextureID;
+
+        GFX::VertexPosColorTex *dst = &quadData[numQuads * 4];
+        GFX::VertexPosColorTex *src = quad->quadVertices;
+        bool isIdentity = mtx->isIdentity();
+        if(isIdentity)
+        {
+            //quick memcpy if data can stay as-is
+            memcpy(dst, src, sizeof(GFX::VertexPosColorTex) * 4);
+        }
+        else
+        {
+            //only do transform if matrix is not identity matrix
+            for (int i = 0; i < 4; i++)
+            {
+                *dst = *src;
+
+                float _x = mtx->a * dst->x + mtx->c * dst->y + mtx->tx;
+                float _y = mtx->b * dst->x + mtx->d * dst->y + mtx->ty;
+                dst->x = _x;
+                dst->y = _y;
+
+                dst++;
+                src++;
+            }
+        }
     }
 };
 }

@@ -50,6 +50,15 @@ package loom2d.display
             Debug.assert(blendMode == null, "QuadBatch 'addQuad' doesn't support per-Quad blend mode values at the moment.  Currently, Loom Quads always force blending to be SrcAlpha / OneMinusSrcAlpha.");
         }   
 
+        /** Updates an already existing Quad in the QuadBatch to take on whatever new data the Quad has been set with */ 
+        public function updateQuad(index:int, quad:Quad, modelViewMatrix:Matrix=null):void
+        {
+            if (modelViewMatrix == null)
+                modelViewMatrix = quad.transformationMatrix;
+            
+            _updateQuad(index, quad, modelViewMatrix);
+        }   
+
         /** @inheritDoc */
         public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
         {
