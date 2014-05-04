@@ -162,16 +162,7 @@ package loom2d.math
             x -= p.x;
             y -= p.y;
         }
-    
-        /**
-         * Multiplies Point p by scalar s and returns the result.
-         */
-        public static operator function *(p:Point, s:Number):Point
-        {
-            tempPoint.x = p.x * s;
-            tempPoint.y = p.y * s;
-            return tempPoint;
-        }    
+     
 
         /**
          * Multiplies This point by the scalar s.
@@ -182,16 +173,6 @@ package loom2d.math
             y *= s;
         }
         
-        /**
-         * Divides Point p by scalar s and returns the result.
-         */
-        public static operator function /(p:Point, s:Number):Point
-        {
-            var invS = 1.0 / s;
-            tempPoint.x = p.x * invS;
-            tempPoint.y = p.y * invS;
-            return tempPoint;
-        }    
 
         /**
          * Divides This point by the scalar s.
@@ -236,7 +217,7 @@ package loom2d.math
          */
         public static function dot(p1:Point, p2:Point):Number
         {
-            return (p1.x * p2.x) + (p1.y + p2.y);
+            return (p1.x * p2.x) + (p1.y * p2.y);
         }
 
         /**
