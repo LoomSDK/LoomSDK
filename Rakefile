@@ -250,7 +250,7 @@ namespace :generate do
 
     if $buildDocs || ARGV.include?('generate:docs')
       Dir.chdir("docs") do
-        sh "ruby main.rb"
+        load "./main.rb"
       end
 
       FileUtils.mkdir_p "artifacts/docs"
