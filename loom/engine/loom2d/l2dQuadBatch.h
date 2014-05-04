@@ -216,7 +216,6 @@ public:
 
         // ... and add the (transformed) quad data to the batch
         _setQuadData(quadID, quad, modelViewMatrix);
-        numQuads++;
 
         return 0;
     }
@@ -227,7 +226,7 @@ public:
     {
         nativeTextureID = quad->nativeTextureID;
 
-        GFX::VertexPosColorTex *dst = &quadData[numQuads * 4];
+        GFX::VertexPosColorTex *dst = &quadData[quadID * 4];
         GFX::VertexPosColorTex *src = quad->quadVertices;
         bool isIdentity = mtx->isIdentity();
         if(isIdentity)
