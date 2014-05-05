@@ -116,7 +116,7 @@ package loom2d.display
                 child.removeFromParent();
                 
                 // 'splice' creates a temporary object, so we avoid it if it's not necessary
-                if (index == numChildren) mChildren.push(child);
+                if (index == numChildren) mChildren.pushSingle(child);
                 else                      mChildren.splice(index, 0, child);
                 
                 child.setParent(this);
@@ -170,8 +170,8 @@ package loom2d.display
                 }
                                 
                 child.setParent(null);
-                index = mChildren.indexOf(child); // index might have changed by event handler
-                if (index >= 0) mChildren.splice(index, 1); 
+                //index = mChildren.indexOf(child); // index might have changed by event handler
+                if (index >= 0) mChildren.remove(child);
                 if (dispose) child.dispose();
                 
                 return child;
