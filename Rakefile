@@ -126,6 +126,7 @@ if $LOOM_HOST_OS == 'windows'
     puts "*** Windows x86"
     puts "*** Detected 32 Bit Windows PROCESSOR_ARCHITECTURE: #{proc_arch}"
     WINDOWS_PROCARCH_BITS = "32"
+	WINDOWS_ISX64 = "0"
     WINDOWS_ANDROID_PREBUILT_DIR = "windows"
   end
   #Dir.chdir("build") do
@@ -249,7 +250,7 @@ namespace :generate do
 
     if $buildDocs || ARGV.include?('generate:docs')
       Dir.chdir("docs") do
-        ruby "main.rb"
+        load "./main.rb"
       end
 
       FileUtils.mkdir_p "artifacts/docs"
@@ -514,7 +515,7 @@ namespace :build do
       # TODO: Find a way to resolve resources in xcode for ios.
       Dir.chdir("cmake_ios") do
         sh "cmake ../ -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} -G Xcode"
-        sh "xcodebuild -configuration #{$buildTarget}"
+        sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\""
       end
 
       # TODO When we clean this up... we should have get_app_prefix return and object with, appPath, 

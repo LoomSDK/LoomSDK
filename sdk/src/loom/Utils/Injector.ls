@@ -71,6 +71,7 @@ class Injector
         if(recursionProtection > 64)
         {
             trace("INFINITE RECURSION IN INJECTOR FOR (" + type.getName() + ", " + id + ")");
+            recursionProtection--;
             return null;
         }
 
@@ -139,7 +140,7 @@ class Injector
             // Should dictioary keys be compared strictly or looseley?
             // This problem is outlined in Jira Issue: LOOM-10
             var injectedValue:Object;
-
+            
             injectedValue = getValue(injectionTarget.type, injectionTarget.id);
             if(injectedValue) 
             {
