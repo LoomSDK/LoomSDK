@@ -8,9 +8,6 @@ package loom2d.display
     [Native(managed)]
     public native class QuadBatch extends DisplayObject
     {
-        //QUESTION: This texture member seems to do nothing! Natively, _addQuad() takes the texture from the Quad submitted, not this one!
-        public var texture:Texture;        
-
         /** The number of Quads currently contained within the batch */
         public native function get numQuads():float;
 
@@ -34,12 +31,6 @@ package loom2d.display
             if (modelViewMatrix == null)
                 modelViewMatrix = quad.transformationMatrix;
             
-            //QUESTION: looks like this 'alpha' value is also useless!!! Ugh...
-            var alpha:Number = parentAlpha * quad.alpha;
-
-            //QUESTION: This .texture seems to do nothing! Natively, _addQuad() takes the texture from the Quad submitted, not this one!
-            this.texture = texture;
-
             _addQuad(quad, modelViewMatrix);
 
             // LOOM-1868: Support the below functionality so that we can remove these asserts!
@@ -50,8 +41,8 @@ package loom2d.display
             Debug.assert(blendMode == null, "QuadBatch 'addQuad' doesn't support per-Quad blend mode values at the moment.  Currently, Loom Quads always force blending to be SrcAlpha / OneMinusSrcAlpha.");
         }   
 
-        /** Updates the 'index'th Quad in the QuadBatch to take use whatever new data the Quad has been set with.  If 'index'
-         *  is larger than the number of Quads in the batch, it will fail. */ 
+        /** Updates the 'index'th Quad in the QuadBatch to take use whatever new vertex & texture data the Quad has been set with.  
+         *  If 'index' is larger than the number of Quads in the batch, it will fail. */ 
         public function updateQuad(index:int, quad:Quad, modelViewMatrix:Matrix=null):void
         {
             if (modelViewMatrix == null)
