@@ -170,7 +170,7 @@ package loom2d.display
                 }
                                 
                 child.setParent(null);
-                //index = mChildren.indexOf(child); // index might have changed by event handler
+                index = mChildren.indexOf(child); // index might have changed by event handler
                 if (index >= 0) mChildren.remove(child);
                 if (dispose) child.dispose();
                 
