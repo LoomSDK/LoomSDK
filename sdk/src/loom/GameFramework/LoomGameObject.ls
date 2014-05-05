@@ -32,7 +32,7 @@ package loom.gameframework
     */
    class LoomGameObject extends LoomObject
    {
-      public var broadcast:BroadCastDelegate;
+      public const broadcast:BroadCastDelegate;
 
       private var _deferring:Boolean = true;
       private var _components:Dictionary.<String, LoomComponent> = new Dictionary.<String, LoomComponent>();
