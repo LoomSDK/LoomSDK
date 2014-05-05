@@ -72,7 +72,8 @@ package  {
 		private function disposeSound(sound:Sound)
 		{
 			if (sound != null) {
-				sound.stop();
+				sound.deleteNative();
+				sound = null;
 			}
 		}
 		

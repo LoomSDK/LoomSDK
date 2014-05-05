@@ -12,16 +12,16 @@ package
 	public class Entity
 	{
 		/** Position */
-		protected var p:Point = new Point();
+		protected var p:Point;
 		
 		/** Velocity */
-		protected var v:Point = new Point();
+		protected var v:Point;
 		
 		/** Old acceleration - used for integration */
-		private var oa:Point = new Point();
+		private var oa:Point;
 		
 		/** Acceleration */
-		protected var a:Point = new Point();
+		protected var a:Point;
 		
 		protected var bounds:Rectangle = new Rectangle();
 		
