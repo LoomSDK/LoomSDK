@@ -18,6 +18,7 @@ set (ENGINE_SRC
     loom2d/l2dImage.cpp
     loom2d/l2dQuadBatch.cpp
     loom2d/l2dScript.cpp
+    loom2d/l2dCatmullRomSpline.cpp
     
     bindings/loom/lmApplication.cpp
     bindings/loom/lmApplicationTasks.cpp
@@ -28,6 +29,8 @@ set (ENGINE_SRC
     bindings/loom/lmVideo.cpp
     bindings/loom/lmMobile.cpp
     bindings/loom/lmPackageLoom.cpp
+    bindings/loom/lmCarrot.cpp
+    bindings/loom/lmFacebook.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
 
     bindings/cocos2d/lmCocos2D.cpp

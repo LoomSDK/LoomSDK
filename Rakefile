@@ -10,6 +10,9 @@ puts "== Executing as '#{ENV['USER']}' =="
 # Specify the build target - Debug, Release, RelMinSize, RelWithDebug
 $buildTarget="Release" # "Debug"
 
+# the sdk_version name that will be generated when this sdk is deployed (default = "dev")
+$targetSDKVersion = "dev"
+
 # What version of the android SDK are going to target? Note you also need to
 # update the Android project and manifest to match.
 $targetAndroidSDK="android-13"
@@ -591,6 +594,10 @@ namespace :build do
       puts "*** Building against AndroidSDK " + $targetAndroidSDK
       api_id = get_android_api_id($targetAndroidSDK)
 
+      Dir.chdir("loom/vendor/facebook/android") do
+        sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
+      end
+
       Dir.chdir("loom/engine/cocos2dx/platform/android/java") do
         sh "android update project --name Cocos2DLib --subprojects --target #{api_id} --path ."
       end
@@ -626,6 +633,11 @@ namespace :build do
       end
       
       api_id = get_android_api_id($targetAndroidSDK)
+
+      Dir.chdir("loom/vendor/facebook/android") do
+        puts "*** Building against AndroidSDK " + $targetAndroidSDK
+        sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
+      end
 
       Dir.chdir("loom/engine/cocos2dx/platform/android/java") do
         puts "*** Building against AndroidSDK " + $targetAndroidSDK
@@ -864,7 +876,7 @@ namespace :deploy do
 
   desc "Deploy sdk locally"
   task :sdk, [:sdk_version] => ['package:sdk'] do |t, args|
-    args.with_defaults(:sdk_version => "dev")
+    args.with_defaults(:sdk_version => $targetSDKVersion)
     sdk_path = File.join("#{ENV['HOME']}/.loom", "sdks", args[:sdk_version])
 
     # Remove the previous version
@@ -876,7 +888,7 @@ namespace :deploy do
 
   desc "Deploy the free version of the sdk locally"
   task :free_sdk, [:sdk_version] => ['package:free_sdk'] do |t, args|
-    args.with_defaults(:sdk_version => "dev")
+    args.with_defaults(:sdk_version => $targetSDKVersion)
     sdk_path = File.join("#{ENV['HOME']}/.loom", "sdks", args[:sdk_version])
 
     # Remove the previous version
@@ -904,7 +916,7 @@ end
 namespace :update do
   desc "Updates the scripts in an already deployed sdk."
   task :sdk, [:sdk_version] do |t, args|
-    args.with_defaults(:sdk_version => "dev")
+    args.with_defaults(:sdk_version => $targetSDKVersion)
     sdk = args[:sdk_version]
     sdk_path = File.join("#{ENV['HOME']}/.loom", "sdks", sdk)
 

@@ -51,11 +51,13 @@ package loom2d.display
         protected native function get nativeTextureID():int;
         protected native function set nativeTextureID(value:int);
 
-        /** Creates a quad with a certain size and color. The last parameter controls if the 
-         *  alpha value should be premultiplied into the color values on rendering, which can
-         *  influence blending output. You can use the default value in most cases.  */
+        /** Creates a quad with a certain size and color. The 'premultipliedAlpha' parameter 
+         *  controls if the alpha value should be premultiplied into the color values on 
+         *  rendering, which can influence blending output. You can use the default value in 
+         *  most cases.  The last parameter is whether or not to initialize the vertices of
+         *  the Quad with the data provided, or to leave empty for custom manipulation.  */
         public function Quad(width:Number, height:Number, color:uint=0xffffff,
-                             premultipliedAlpha:Boolean=true)
+                             premultipliedAlpha:Boolean=true, initVertexData:Boolean=true)
         {            
 
             // Quads internally use a white texture with vertex colors applied
@@ -63,27 +65,30 @@ package loom2d.display
             
             nativeVertexDataInvalid = true;
 
-            mTinted = color != 0xffffff;
-            
             mVertexData = new VertexData(4, premultipliedAlpha);
             
             // Useful for debugging.
-            //trace("Size is " + width + ", " + height + " c=" + color + " r=" + (color & 0xFF) + " g= " + ((color >> 8) & 0xFF) + " b=" + ((color >> 16) & 0xFF));
+            //trace("Size is " + width + ", " + height + " c=" + color + " r=" + (color & 0xFF) + " g= " + ((color >> 8) & 0xFF) + " b=" + ((color >> 16) & 0xFF));           
+            if(initVertexData)
+            {
+                // ignore alpha incase somebody passes in full ARGB value unknowningly...
+                mTinted = (color & 0x00ffffff) != 0x00ffffff;
             
-            mVertexData.setPosition(0, 0.0,   0.0);
-            mVertexData.setPosition(1, width, 0.0);
-            mVertexData.setPosition(2, 0.0,   height);
-            mVertexData.setPosition(3, width, height);            
-            mVertexData.setUniformColor(color);
+                mVertexData.setPosition(0, 0.0,   0.0);
+                mVertexData.setPosition(1, width, 0.0);
+                mVertexData.setPosition(2, 0.0,   height);
+                mVertexData.setPosition(3, width, height);            
+                mVertexData.setUniformColor(color);
 
-            mVertexData.setTexCoords(0, 0.0, 0.0);
-            mVertexData.setTexCoords(1, 1.0, 0.0);
-            mVertexData.setTexCoords(2, 0.0, 1.0);
-            mVertexData.setTexCoords(3, 1.0, 1.0);
+                mVertexData.setTexCoords(0, 0.0, 0.0);
+                mVertexData.setTexCoords(1, 1.0, 0.0);
+                mVertexData.setTexCoords(2, 0.0, 1.0);
+                mVertexData.setTexCoords(3, 1.0, 1.0);
+            }
             
             onVertexDataChanged();
         }
-        
+
         /** Call this method after manually changing the contents of 'mVertexData'. */
         protected function onVertexDataChanged():void
         {
@@ -119,6 +124,29 @@ package loom2d.display
             
             return resultRect;
         }
+
+        /** Fills in all of the vertex data for the quad with an arbitrary set of 4 position, UV, color (RGB), 
+         *  and alpha values. Make sure that data in the Vectors is ordered to correspond to the vertex index 
+         *  order of a Quad (see above). */
+        public function setVertexData(pos:Vector.<Point>, uv:Vector.<Point>, color:Vector.<int>, alpha:Vector.<float>)
+        {
+            mTinted = false;
+            for(var i=0;i<4;i++)
+            {
+                mVertexData.setPosition(i, pos[i].x, pos[i].y);
+                mVertexData.setTexCoords(i, uv[i].x, uv[i].y);
+                var rgb:int = color[i] & 0x00ffffff;
+                mVertexData.setColor(i, rgb);
+                mVertexData.setAlpha(i, alpha[i]);
+                if((alpha[i] != 1.0) || (rgb != 0x00ffffff))
+                {
+                    mTinted = true;
+                }
+            }
+            
+            onVertexDataChanged();
+        }        
+        
 
         /** Returns the color of a vertex at a certain index. */
         public function getVertexColor(vertexID:int):uint

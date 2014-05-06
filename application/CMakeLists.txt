@@ -10,10 +10,13 @@ include_directories( ${LOOM_INCLUDE_FOLDERS} )
 set (APPLICATION_SRC
     common/AppDelegate.cpp
     common/embeddedAssets.cpp
+    common/DoodleLine.cpp
 )
 
 set (APPLICATION_HDR
     common/AppDelegate.h
+    common/DoodleLine.h
+    common/catmullRom.h
 )
 
 if (MSVC)
