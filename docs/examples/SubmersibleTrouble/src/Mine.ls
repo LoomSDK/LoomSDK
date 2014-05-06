@@ -188,7 +188,7 @@ package  {
 					if (dist > 40) state = STATE_WARN;
 					beepDelay = 0.1;
 					
-					var thrust:Point = delta.clone();
+					var thrust:Point = delta;
 					thrust.normalize(thrust.length*10);
 					
 					var maxSeekThrust = 120;
@@ -238,14 +238,14 @@ package  {
 			display.x = p.x;
 			display.y = p.y;
 			// Visual beeping indicator
+			bodyActive.visible = false;
 			switch (state) {
-				case STATE_IDLE:
-					bodyActive.alpha = 0;
-					break;
 				case STATE_WARN:
+					bodyActive.visible = true;
 					bodyActive.alpha = Math.clamp(beepCount/beepDelay, 0, 1);
 					break;
 				case STATE_SEEK:
+					bodyActive.visible = true;
 					bodyActive.alpha = Math.clamp(beepCount/beepDelay, 0, 1);
 					break;
 			}

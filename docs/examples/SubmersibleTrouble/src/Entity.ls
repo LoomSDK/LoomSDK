@@ -50,10 +50,16 @@ package
 		 */
 		public function checkCollision(entity:Entity):Boolean
 		{
-			return p.x+bounds.right  > entity.p.x+entity.bounds.left  &&
-			       p.x+bounds.left   < entity.p.x+entity.bounds.right &&
-				   p.y+bounds.bottom > entity.p.y+entity.bounds.top   &&
-			       p.y+bounds.top    < entity.p.y+entity.bounds.bottom;
+			var px = p.x;
+			var py = p.y;
+			var epx = entity.p.x;
+			var epy = entity.p.y;
+			var b = bounds;
+			var eb = entity.bounds;
+			return py+b.bottom > epy+eb.top   &&
+			       py+b.top    < epy+eb.bottom &&
+			       px+b.right  > epx+eb.left  &&
+			       px+b.left   < epx+eb.right;
 		}
 		
 		/**
