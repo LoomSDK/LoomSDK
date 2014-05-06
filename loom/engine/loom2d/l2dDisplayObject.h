@@ -483,5 +483,8 @@ public:
 
     // a delegate which can be used for custom rendering
     LOOM_DELEGATE(CustomRender);
+
+    // a delegate which is called prior to normal rendering
+    LOOM_DELEGATE(OnRender);
 };
 }

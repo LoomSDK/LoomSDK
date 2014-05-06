@@ -41,38 +41,54 @@ void QuadBatch::render(lua_State *L)
         return;
     }
 
-    // update and get our transformation matrix
-    updateLocalTransform();
-
-    Matrix mtx;
-    getTargetTransformationMatrix(NULL, &mtx);
-
-    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 4 * numQuads, true);
-    GFX::VertexPosColorTex *src = quadData;
-
     // apply the parent alpha
     renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
     renderState.clampAlpha();
-    renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
 
+    // if render state has 0.0 alpha, quad batch is invisible so don't render at all and get out of here now!
+    if(renderState.alpha == 0.0f)
+    {
+        return;
+    }
+    renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
     GFX::Graphics::setClipRect(renderState.cachedClipRect);
 
+    // update and get our transformation matrix
+    updateLocalTransform();
+    
+    Matrix mtx;
+    getTargetTransformationMatrix(NULL, &mtx);
+    
+    // quick render and early out of the entire function if the transform is identity and there is no alpha modulation by the render state
+    bool isIdentity = mtx.isIdentity();
+    if((renderState.alpha == 1.0f) && isIdentity)
+    {
+        GFX::QuadRenderer::batch(nativeTextureID, quadData, 4 * numQuads);
+        return;
+    }
+
+    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 4 * numQuads, true);
     if (!v)
     {
         return;
     }
+    GFX::VertexPosColorTex *src = quadData;
+
 
     // transform all quads in the batch and submit them to the QuadBatcher
     for (int i = 0; i < numQuads * 4; i++)
     {
         *v = *src;
 
+        // only do matrix transform if the matrix is not identity
+        if(!isIdentity)
+        {
+            float _x = mtx.a * v->x + mtx.c * v->y + mtx.tx;
+            float _y = mtx.b * v->x + mtx.d * v->y + mtx.ty;
 
-        float _x = mtx.a * v->x + mtx.c * v->y + mtx.tx;
-        float _y = mtx.b * v->x + mtx.d * v->y + mtx.ty;
-
-        v->x = _x;
-        v->y = _y;
+            v->x = _x;
+            v->y = _y;
+        }
 
         // modulate vertex alpha by our DisplayObject alpha setting
         if (renderState.alpha != 1.0f)

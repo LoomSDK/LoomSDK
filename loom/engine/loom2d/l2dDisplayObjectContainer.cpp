@@ -63,6 +63,11 @@ static inline void renderType(lua_State *L, Type *type, DisplayObject *dobj)
     }
     else
     {
+        //invoke an onRender method in script if specified, that can do work before the default rendering
+        if (dobj->getOnRenderDelegate()->getCount())
+        {
+            dobj->getOnRenderDelegate()->invoke();
+        }
         dobj->render(L);
     }
 }
