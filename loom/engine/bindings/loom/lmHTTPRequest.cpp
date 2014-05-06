@@ -46,8 +46,6 @@ public:
         base64EncodeResponseData = false;
         followRedirects          = true;
 
-        // Default
-        header.insert("Content-Type", "application/x-www-form-urlencoded");
     }
 
     void setHeaderField(const char *key, const char *value)
