@@ -40,12 +40,20 @@ public:
     LOOM_DELEGATE(OnSuccess);
     LOOM_DELEGATE(OnFailure);
 
-    HTTPRequest(const char *urlString) : method("GET"), body(""), responseCacheFile(NULL), bodyBytes(NULL)
+    HTTPRequest(const char *urlString, const char *contentType) : method("GET"), body(""), responseCacheFile(NULL), bodyBytes(NULL)
     {
         url = urlString;
         base64EncodeResponseData = false;
         followRedirects          = true;
 
+        // set the Content-Type in the header
+        const char *ctKey = contentType;
+        if((ctKey == NULL) || (ctKey[0] == '\0'))
+        {
+            // use the default content type if none specified
+            ctKey = "application/x-www-form-urlencoded";
+        }
+        setHeaderField("Content-Type", ctKey);
     }
 
     void setHeaderField(const char *key, const char *value)
@@ -128,7 +136,7 @@ static int registerLoomHTTPRequest(lua_State *L)
     beginPackage(L, "loom")
 
        .beginClass<HTTPRequest>("HTTPRequest")
-       .addConstructor<void (*)(const char *)>()
+       .addConstructor<void (*)(const char *, const char *)>()
        .addMethod("setHeaderField", &HTTPRequest::setHeaderField)
        .addMethod("getHeaderField", &HTTPRequest::getHeaderField)
        .addMethod("send", &HTTPRequest::send)
