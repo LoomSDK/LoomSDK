@@ -33,11 +33,13 @@ package loom
 
 
         /**
-         *  Constructs and initializes the HTTP request with the (optionally) specified URL. 
+         *  Constructs and initializes the HTTP request with the (optionally) specified URL 
+         *  and Content-Type. If 'contentType' is null or empty, then the default of 
+         *  'application/x-www-form-urlencoded' will be used.
          *  Keep in mind that the URL can be changed later with the URL property if you wish. 
          *  Headers will be initialized to empty when the HTTPRequest is instantiated.
          */
-        public native function HTTPRequest(url:String=null);
+        public native function HTTPRequest(url:String=null, contentType:String=null);
 
         /**
          *  Sets the specified value-key pair in the request that is to be sent. This function 
