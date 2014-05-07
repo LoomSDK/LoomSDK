@@ -25,7 +25,9 @@ package loom2d.core
 
     /** @private
      *  The TouchProcessor is used internally to convert mouse and touch events of the conventional
-     *  Flash stage to Starling's TouchEvents. */
+     *  Flash stage to Starling's TouchEvents.
+     */
+    
     public class TouchProcessor
     {
         private static const MULTITAP_TIME:Number = 0.3;
@@ -37,11 +39,13 @@ package loom2d.core
         private var mTouchMarker:TouchMarker;
         
         private var mCurrentTouches:Vector.<Touch>;
-        private var mQueue:Vector.<Vector.<Object>>;
+        private var mQueue:TouchQueue;
         private var mLastTaps:Vector.<Touch>;
         
         private var mShiftDown:Boolean = false;
         private var mCtrlDown:Boolean = false;
+
+        private var touchQueueDataPool:Vector.<TouchQueueData> = [];
         
         /** Helper objects. */
         private static var sProcessedTouchIDs:Vector.<int> = new Vector.<int>[];
@@ -53,7 +57,7 @@ package loom2d.core
             mRootLayer = rootLayer;
             mElapsedTime = 0.0;
             mCurrentTouches = new Vector.<Touch>[];
-            mQueue = new Vector.<Array>[];
+            mQueue = new TouchQueue();
             mLastTaps = new Vector.<Touch>[];
             
             mRootLayer.onTouchBegan += handleTouchBegan;
@@ -126,7 +130,8 @@ package loom2d.core
             
             while (mQueue.length > 0)
             {                
-                sProcessedTouchIDs.length = sHoveringTouchData.length = 0;
+                sProcessedTouchIDs.clear();
+                sHoveringTouchData.clear();
                 
                 // set touches that were new or moving to phase 'stationary'
                 for each (touch in mCurrentTouches)
@@ -135,18 +140,20 @@ package loom2d.core
                 
                 // process new touches, but each ID only once
                 while (mQueue.length > 0 && 
-                    sProcessedTouchIDs.indexOf(mQueue[mQueue.length-1][0]) == -1)
+                    sProcessedTouchIDs.indexOf(mQueue.head.touchID) == -1)
                 {
-                    var touchArgs:Vector.<Object> = mQueue.pop();
-                    touchID = touchArgs[0] as int;
+                    var touchArgs:TouchQueueData = mQueue.getNext();
+                    touchID = touchArgs.touchID;
                     touch = getCurrentTouch(touchID);
                     
                     // hovering touches need special handling (see below)
                     if (touch && touch.phase == TouchPhase.HOVER && touch.target)
                         sHoveringTouchData.push(new TouchProcessorNote(touch, touch.target, touch.bubbleChain));
                     
-                    processTouch.apply(this, touchArgs);
+                    processTouch(touchArgs);
                     sProcessedTouchIDs.push(touchID);
+
+                    returnTouchQueueDataToPool(touchArgs);
                 }
                 
                 // the same touch event will be dispatched to all targets; 
@@ -180,13 +187,13 @@ package loom2d.core
         public function enqueue(touchID:int, phase:String, globalX:Number, globalY:Number,
                                 pressure:Number=1.0, width:Number=1.0, height:Number=1.0):void
         {
-            mQueue.unshift([touchID, phase, globalX, globalY, pressure, width, height]);
+            mQueue.addToQueue( retrieveTouchQueueDataFromPool(touchID, phase, globalX, globalY, pressure, width, height) );
             
             // multitouch simulation (only with mouse)
             if (mCtrlDown && simulateMultitouch && touchID == 0) 
             {
                 mTouchMarker.moveMarker(globalX, globalY, mShiftDown);
-                mQueue.unshift([1, phase, mTouchMarker.mockX, mTouchMarker.mockY]);
+                mQueue.addToQueue( retrieveTouchQueueDataFromPool(1, phase, mTouchMarker.mockX, mTouchMarker.mockY) );
             }
         }
         
@@ -219,31 +226,33 @@ package loom2d.core
             enqueue(0, TouchPhase.HOVER, exitX, exitY);
         }
         
-        private function processTouch(touchID:int, phase:String, globalX:Number, globalY:Number,
-                                      pressure:Number=1.0, width:Number=1.0, height:Number=1.0):void
+        private static const processTouchHelperPoint:Point;
+
+        private function processTouch(data:TouchQueueData):void
         {
-            var position:Point = new Point(globalX, globalY);
-            var touch:Touch = getCurrentTouch(touchID);
+            var touch:Touch = getCurrentTouch(data.touchID);
             
             if (touch == null)
             {
-                touch = new Touch(touchID, globalX, globalY, phase, null);
+                touch = new Touch(data.touchID, data.globalX, data.globalY, data.phase, null);
                 addCurrentTouch(touch);
             }
             
-            touch.setPosition(globalX, globalY);
-            touch.setPhase(phase);
+            touch.setPosition(data.globalX, data.globalY);
+            touch.setPhase(data.phase);
             touch.setTimestamp(mElapsedTime);
-            touch.setPressure(pressure);
-            touch.setSize(width, height);
+            touch.setPressure(data.pressure);
+            touch.setSize(data.width, data.height);
             
-            if (phase == TouchPhase.HOVER || phase == TouchPhase.BEGAN)
+            if (data.phase == TouchPhase.HOVER || data.phase == TouchPhase.BEGAN)
             {
-                var hitResult = mStage.hitTest(position, true);
+                processTouchHelperPoint.x = data.globalX;
+                processTouchHelperPoint.y = data.globalY;
+                var hitResult = mStage.hitTest(processTouchHelperPoint, true);
                 touch.setTarget(hitResult);
             }
             
-            if (phase == TouchPhase.BEGAN)
+            if (data.phase == TouchPhase.BEGAN)
                 processTap(touch);
         }
         
@@ -265,16 +274,18 @@ package loom2d.core
                     if (mouseTouch)
                         mTouchMarker.moveMarker(mouseTouch.globalX, mouseTouch.globalY);
                     
-                    // end active touch ...
                     if (wasCtrlDown && mockedTouch && mockedTouch.phase != TouchPhase.ENDED)
-                        mQueue.unshift([1, TouchPhase.ENDED, mockedTouch.globalX, mockedTouch.globalY]);
-                    // ... or start new one
+                    {
+                        // end active touch ...
+                        mQueue.addToQueue( retrieveTouchQueueDataFromPool(1, TouchPhase.ENDED, mockedTouch.globalX, mockedTouch.globalY) );
+                    }
                     else if (mCtrlDown && mouseTouch)
                     {
+                        // ... or start new one
                         if (mouseTouch.phase == TouchPhase.HOVER || mouseTouch.phase == TouchPhase.ENDED)
-                            mQueue.unshift([1, TouchPhase.HOVER, mTouchMarker.mockX, mTouchMarker.mockY]);
+                            mQueue.addToQueue( retrieveTouchQueueDataFromPool(1, TouchPhase.HOVER, mTouchMarker.mockX, mTouchMarker.mockY) );
                         else
-                            mQueue.unshift([1, TouchPhase.BEGAN, mTouchMarker.mockX, mTouchMarker.mockY]);
+                            mQueue.addToQueue( retrieveTouchQueueDataFromPool(1, TouchPhase.BEGAN, mTouchMarker.mockX, mTouchMarker.mockY) );
                     }
                 }
             }
@@ -380,6 +391,19 @@ package loom2d.core
             // purge touches
             mCurrentTouches.length = 0;
         }
+
+        private function retrieveTouchQueueDataFromPool(touchID:int, phase:String, globalX:Number, globalY:Number,
+                                pressure:Number=1.0, width:Number=1.0, height:Number=1.0):TouchQueueData
+        {
+            var result:TouchQueueData = touchQueueDataPool.length > 0 ? touchQueueDataPool.pop() : new TouchQueueData();
+            result.setTo(touchID, phase, globalX, globalY, pressure, width, height);
+            return result;
+        }
+
+        private function returnTouchQueueDataToPool(data:TouchQueueData):void
+        {
+            touchQueueDataPool.pushSingle(data);
+        }
     }
 
     /** @private
@@ -398,5 +422,70 @@ package loom2d.core
         public var touch:Touch;
         public var target:EventDispatcher;
         public var bubbleChain:Vector.<EventDispatcher>;
+    }
+
+    /** 
+     * @private
+     * Internal helper for TouchProcessor to keep track of queued touches
+     */
+    
+    public class TouchQueue
+    {
+        private var _head:TouchQueueData;
+        private var _tail:TouchQueueData;
+        private var _length:int = 0;
+
+        public function get length():int { return _length; }
+        public function get head():TouchQueueData { return _head; }
+
+        public function addToQueue( data:TouchQueueData ):void
+        {
+            data.nextData = null;
+            if ( !_head ) _head = data;
+            if ( _tail ) _tail.nextData = data;
+            _tail = data;
+            _length++;
+        }
+
+        public function getNext():TouchQueueData
+        {
+            if ( !_head ) return null;
+            if ( _head == _tail ) _tail = null;
+
+            var returnData:TouchQueueData = _head;
+            _head = returnData.nextData;
+            _length--;
+            
+            return returnData;
+        }
+    }    
+    
+    /** 
+     * @private
+     * Internal helper for TouchProcessor to keep track of queued touches
+     */
+    public class TouchQueueData
+    {
+        public var touchID:int;
+        public var phase:String;
+        public var globalX:Number;
+        public var globalY:Number;
+        public var pressure:Number;
+        public var width:Number;
+        public var height:Number;
+
+        public var nextData:TouchQueueData;
+
+        public function setTo(touchID:int, phase:String, globalX:Number, globalY:Number,
+                                pressure:Number=1.0, width:Number=1.0, height:Number=1.0)
+        {
+            this.touchID = touchID;
+            this.phase = phase;
+            this.globalX = globalX;
+            this.globalY = globalY;
+            this.pressure = pressure;
+            this.width = width;
+            this.height = height;
+        }
     }
 }
