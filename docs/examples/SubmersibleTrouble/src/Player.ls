@@ -35,10 +35,10 @@ package
 		private var bodyTinted:Image;
 		private var lights:Image;
 		
-		private var target:Point = new Point();
+		private var target:Point;
 		
 		private var thrustMax:Number = 150;
-		private var thrust:Point = new Point();
+		private var thrust:Point;
 		
 		/** The depth at which the lights get turned on */
 		private var lightDepth:Number = 400;
@@ -57,6 +57,9 @@ package
 		private var engineActivity:Number = 0;
 		
 		private var dive:Sound;
+		
+		// Class propertiy to avoid instantiation every tick
+		private var delta:Point;
 		
 		public function Player(container:DisplayObjectContainer, maxDepth:Number)
 		{
@@ -222,7 +225,7 @@ package
 				}
 				
 				// Propulsion based on current state
-				var delta = target.subtract(p);
+				delta = target.subtract(p);
 				thrust.x = thrust.y = 0;
 				if (state == STATE_FOLLOW || state == STATE_RETURN || state == STATE_WINNER) {
 					switch (state) {

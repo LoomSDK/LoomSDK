@@ -39,6 +39,10 @@ package  {
 		private var beepDelay:Number = 0;
 		private var beepCount:Number = 0;
 		
+		// Class properties to avoid instantiation every tick
+		private var delta:Point;
+		private var thrust:Point;
+		
 		public function Mine(container:DisplayObjectContainer, maxDepth:Number, player:Player) {
 			this.maxDepth = maxDepth;
 			this.player = player;
@@ -164,7 +168,7 @@ package  {
 		
 		override public function tick(t:Number, dt:Number)
 		{
-			var delta = player.p.subtract(p);
+			delta = player.p.subtract(p);
 			
 			/** Distance from player */
 			var dist = delta.length;
@@ -188,7 +192,7 @@ package  {
 					if (dist > 40) state = STATE_WARN;
 					beepDelay = 0.1;
 					
-					var thrust:Point = delta;
+					thrust = delta;
 					thrust.normalize(thrust.length*10);
 					
 					var maxSeekThrust = 120;
