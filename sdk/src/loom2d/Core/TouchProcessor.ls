@@ -39,7 +39,7 @@ package loom2d.core
         private var mTouchMarker:TouchMarker;
         
         private var mCurrentTouches:Vector.<Touch>;
-        private var mQueue:Vector.<TouchQueueData>;
+        private var mQueue:TouchQueue;
         private var mLastTaps:Vector.<Touch>;
         
         private var mShiftDown:Boolean = false;
@@ -57,7 +57,7 @@ package loom2d.core
             mRootLayer = rootLayer;
             mElapsedTime = 0.0;
             mCurrentTouches = new Vector.<Touch>[];
-            mQueue = [];
+            mQueue = new TouchQueue();
             mLastTaps = new Vector.<Touch>[];
             
             mRootLayer.onTouchBegan += handleTouchBegan;
@@ -140,9 +140,9 @@ package loom2d.core
                 
                 // process new touches, but each ID only once
                 while (mQueue.length > 0 && 
-                    sProcessedTouchIDs.indexOf(mQueue[mQueue.length-1].touchID) == -1)
+                    sProcessedTouchIDs.indexOf(mQueue.head.touchID) == -1)
                 {
-                    var touchArgs:TouchQueueData = mQueue.pop();
+                    var touchArgs:TouchQueueData = mQueue.getNext();
                     touchID = touchArgs.touchID;
                     touch = getCurrentTouch(touchID);
                     
@@ -187,13 +187,13 @@ package loom2d.core
         public function enqueue(touchID:int, phase:String, globalX:Number, globalY:Number,
                                 pressure:Number=1.0, width:Number=1.0, height:Number=1.0):void
         {
-            mQueue.unshift( retrieveTouchQueueDataFromPool(touchID, phase, globalX, globalY, pressure, width, height) );
+            mQueue.addToQueue( retrieveTouchQueueDataFromPool(touchID, phase, globalX, globalY, pressure, width, height) );
             
             // multitouch simulation (only with mouse)
             if (mCtrlDown && simulateMultitouch && touchID == 0) 
             {
                 mTouchMarker.moveMarker(globalX, globalY, mShiftDown);
-                mQueue.unshift( retrieveTouchQueueDataFromPool(1, phase, mTouchMarker.mockX, mTouchMarker.mockY) );
+                mQueue.addToQueue( retrieveTouchQueueDataFromPool(1, phase, mTouchMarker.mockX, mTouchMarker.mockY) );
             }
         }
         
@@ -277,15 +277,15 @@ package loom2d.core
                     if (wasCtrlDown && mockedTouch && mockedTouch.phase != TouchPhase.ENDED)
                     {
                         // end active touch ...
-                        mQueue.unshift( retrieveTouchQueueDataFromPool(1, TouchPhase.ENDED, mockedTouch.globalX, mockedTouch.globalY) );
+                        mQueue.addToQueue( retrieveTouchQueueDataFromPool(1, TouchPhase.ENDED, mockedTouch.globalX, mockedTouch.globalY) );
                     }
                     else if (mCtrlDown && mouseTouch)
                     {
                         // ... or start new one
                         if (mouseTouch.phase == TouchPhase.HOVER || mouseTouch.phase == TouchPhase.ENDED)
-                            mQueue.unshift( retrieveTouchQueueDataFromPool(1, TouchPhase.HOVER, mTouchMarker.mockX, mTouchMarker.mockY) );
+                            mQueue.addToQueue( retrieveTouchQueueDataFromPool(1, TouchPhase.HOVER, mTouchMarker.mockX, mTouchMarker.mockY) );
                         else
-                            mQueue.unshift( retrieveTouchQueueDataFromPool(1, TouchPhase.BEGAN, mTouchMarker.mockX, mTouchMarker.mockY) );
+                            mQueue.addToQueue( retrieveTouchQueueDataFromPool(1, TouchPhase.BEGAN, mTouchMarker.mockX, mTouchMarker.mockY) );
                     }
                 }
             }
@@ -424,6 +424,41 @@ package loom2d.core
         public var bubbleChain:Vector.<EventDispatcher>;
     }
 
+    /** 
+     * @private
+     * Internal helper for TouchProcessor to keep track of queued touches
+     */
+    
+    public class TouchQueue
+    {
+        private var _head:TouchQueueData;
+        private var _tail:TouchQueueData;
+        private var _length:int = 0;
+
+        public function get length():int { return _length; }
+        public function get head():TouchQueueData { return _head; }
+
+        public function addToQueue( data:TouchQueueData ):void
+        {
+            data.nextData = null;
+            if ( !_head ) _head = data;
+            if ( _tail ) _tail.nextData = data;
+            _tail = data;
+            _length++;
+        }
+
+        public function getNext():TouchQueueData
+        {
+            if ( !_head ) return null;
+            if ( _head == _tail ) _tail = null;
+
+            var returnData:TouchQueueData = _head;
+            _head = returnData.nextData;
+            _length--;
+            
+            return returnData;
+        }
+    }    
     
     /** 
      * @private
@@ -438,6 +473,8 @@ package loom2d.core
         public var pressure:Number;
         public var width:Number;
         public var height:Number;
+
+        public var nextData:TouchQueueData;
 
         public function setTo(touchID:int, phase:String, globalX:Number, globalY:Number,
                                 pressure:Number=1.0, width:Number=1.0, height:Number=1.0)
