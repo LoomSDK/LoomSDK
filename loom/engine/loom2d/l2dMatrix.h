@@ -207,6 +207,11 @@ public:
         ty = 0;
     }
 
+    inline bool isIdentity()
+    {
+        return ((tx != 0.0f) || (ty != 0.0f) || (a != 1.0f) || (d != 1.0f) || (b != 0.0f) || (c != 0.0f)) ? false : true;
+    }
+
     inline void invert()
     {
         float a  = this->a;

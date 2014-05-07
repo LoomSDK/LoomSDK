@@ -21,12 +21,19 @@ limitations under the License.
 package loom.gameframework
 {
    /**
+    * A delegate used to broadcast LoomGameObject notifications to components that register with it
+    */
+   delegate BroadCastDelegate( type:String, data:Object );
+
+   /**
     * Container class for LoomComponent. Most game objects are made by 
     * instantiating LoomGameObject and filling it with one or more LoomComponent
     * instances.
     */
    class LoomGameObject extends LoomObject
    {
+      public const broadcast:BroadCastDelegate;
+
       private var _deferring:Boolean = true;
       private var _components:Dictionary.<String, LoomComponent> = new Dictionary.<String, LoomComponent>();
 

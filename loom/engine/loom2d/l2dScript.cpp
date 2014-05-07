@@ -201,6 +201,7 @@ static int registerLoom2D(lua_State *L)
        .addMethod("getTargetTransformationMatrix", &DisplayObject::getTargetTransformationMatrix)
 
        .addVarAccessor("customRender", &DisplayObject::getCustomRenderDelegate)
+       .addVarAccessor("onRender", &DisplayObject::getOnRenderDelegate)
 
        .endClass()
 
@@ -242,6 +243,7 @@ static int registerLoom2D(lua_State *L)
        .addProperty("nativeTextureID", &QuadBatch::getNativeTextureID, &QuadBatch::setNativeTextureID)
        .addProperty("numQuads", &QuadBatch::getNumQuads)
        .addLuaFunction("_addQuad", &QuadBatch::_addQuad)
+       .addLuaFunction("_updateQuad", &QuadBatch::_updateQuad)
        .addLuaFunction("_getBounds", &QuadBatch::_getBounds)
        .addLuaFunction("reset", &QuadBatch::reset)
        .endClass()
