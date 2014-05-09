@@ -111,6 +111,41 @@ public:
         }
         return json_typeof(_json);
     }
+    
+    int getObjectJSONType(const char *key)
+    {
+        if (!_json || isArray())
+        {
+            return JSON_NULL;
+        }
+        
+        json_t *jobject = json_object_get(_json, key);
+        
+        if (!jobject)
+        {
+            return JSON_NULL;
+        }
+        
+        return json_typeof(jobject);
+    }
+    
+    int getArrayJSONType(int index)
+    {
+        if (!isArray())
+        {
+            return JSON_NULL;
+        }
+        
+        json_t *jobject = json_array_get(_json, index);
+        
+        if (!jobject)
+        {
+            return JSON_NULL;
+        }
+        
+        return json_typeof(jobject);
+    }
+    
 
     int getInteger(const char *key)
     {
@@ -548,6 +583,8 @@ static int registerSystemJSON(lua_State *L)
 
        .addMethod("getError", &JSON::getError)
        .addMethod("getJSONType", &JSON::getJSONType)
+       .addMethod("getObjectJSONType", &JSON::getObjectJSONType)
+       .addMethod("getArrayJSONType", &JSON::getArrayJSONType)
 
        .addMethod("getInteger", &JSON::getInteger)
        .addMethod("setInteger", &JSON::setInteger)
