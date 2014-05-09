@@ -367,8 +367,10 @@ package
 			var mine:Mine;
 			for (var i = 0; i < mines.length; i++) {
 				mine = mines[i];
+				if (mine.sleeping) continue;
 				mine.checkCollisionPlayer(player);
-				for (var j = i+1; j < mines.length; j++) {
+				for (var j = 0; j < mines.length; j++) {
+					if (i == j) continue;
 					mine.checkCollisionMine(mines[j]);
 				}
 			}

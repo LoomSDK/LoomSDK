@@ -43,6 +43,9 @@ package  {
 		private var delta:Point;
 		private var thrust:Point;
 		
+		// Sleeping mines aren't checked for collisions and aren't simulated
+		public var sleeping:Boolean = false;
+		
 		public function Mine(container:DisplayObjectContainer, maxDepth:Number, player:Player) {
 			this.maxDepth = maxDepth;
 			this.player = player;
@@ -181,14 +184,17 @@ package  {
 			 */
 			switch (state) {
 				case STATE_IDLE:
+					sleeping = true;
 					if (dist < 60) state = STATE_WARN;
 					break;
 				case STATE_WARN:
+					sleeping = true;
 					if (dist > 70) state = STATE_IDLE;
 					if (dist < 30) state = STATE_SEEK;
 					beepDelay = 0.5;
 					break;
 				case STATE_SEEK:
+					sleeping = false;
 					if (dist > 40) state = STATE_WARN;
 					beepDelay = 0.1;
 					
@@ -201,6 +207,7 @@ package  {
 					
 					break;
 				case STATE_EXPLODING:
+					sleeping = false;
 					beepDelay = 0.05;
 					// Waits for explosion delay
 					if (explosionStart == Number.MIN_VALUE) explosionStart = t;
@@ -217,9 +224,9 @@ package  {
 					if (explosion.isComplete) exploded();
 					break;
 				case STATE_EXPLODED:
-					// Disable beeping after exploded
-					beepDelay = Number.MAX_VALUE;
-					break;
+					sleeping = true;
+					// Exploded mines don't need to do anything else
+					return;
 			}
 			// Boop, beep, beep!
 			if (state == STATE_SEEK || state == STATE_WARN) {
@@ -233,8 +240,12 @@ package  {
 					beepCount = beepDelay;
 				}
 			}
-			drag(dt, DRAG_WATER);
-			super.tick(t, dt);
+			// Mine shouldn't sleep while moving
+			if (v.lengthSquared > 1) sleeping = false;
+			if (!sleeping) {
+				drag(dt, DRAG_WATER);
+				super.tick(t, dt);
+			}
 		}
 		
 		override public function render(t:Number)
@@ -242,7 +253,6 @@ package  {
 			display.x = p.x;
 			display.y = p.y;
 			// Visual beeping indicator
-			bodyActive.visible = false;
 			switch (state) {
 				case STATE_WARN:
 					bodyActive.visible = true;
@@ -252,9 +262,11 @@ package  {
 					bodyActive.visible = true;
 					bodyActive.alpha = Math.clamp(beepCount/beepDelay, 0, 1);
 					break;
+				default:
+					bodyActive.visible = false;
 			}
 			// Fades out body with depth, so it's harder to see, but doesn't affect indicator (bodyActive)
-			body.alpha = Math.clamp(1-getDepth()/maxDepth, 0.4, 1);
+			if (!sleeping) body.alpha = Math.clamp(1-getDepth()/maxDepth, 0.4, 1);
 			super.render(t);
 		}
 		
