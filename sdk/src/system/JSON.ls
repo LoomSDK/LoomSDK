@@ -65,6 +65,14 @@ native class JSON {
      */
     public native function getJSONType():JSONType;
 
+    /** Get the type of the object mapped to the String key.
+     */
+    public native function getObjectJSONType(key:String):JSONType;
+
+    /** Get the type of the object mapped to the int index.
+     */
+    public native function getArrayJSONType(index:int):JSONType;
+
     /**
      *  Gets the int value mapped to the key String on this JSON object.
      *
