@@ -32,7 +32,6 @@ package loom2d.display
         private var mVertexDataCache:VertexData;
         private var mVertexDataCacheInvalid:Boolean;
         private var _textureFile:String = null;
-        private static var resultPoint:Point;
         
         public function Image(_texture:Texture = null):void
         {
@@ -96,13 +95,10 @@ package loom2d.display
             onVertexDataChanged();
         }
         
-        /** Gets the texture coordinates of a vertex. Coordinates are in the range [0, 1]. 
-         *  If you pass a 'resultPoint', the result will be stored in this point instead of 
-         *  creating a new object.*/
+        /** Gets the texture coordinates of a vertex. Coordinates are in the range [0, 1]. */
         public function getTexCoords(vertexID:int):Point
         {            
-            mVertexData.getTexCoords(vertexID, resultPoint);
-            return resultPoint;
+            return mVertexData.getTexCoords(vertexID);
         }
         
         /** Copies the raw vertex data to a VertexData instance.

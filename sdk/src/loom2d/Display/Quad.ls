@@ -146,7 +146,7 @@ package loom2d.display
             
             onVertexDataChanged();
         }        
-        
+
 
         /** Returns the color of a vertex at a certain index. */
         public function getVertexColor(vertexID:int):uint
@@ -157,6 +157,7 @@ package loom2d.display
         /** Sets the color of a vertex at a certain index. */
         public function setVertexColor(vertexID:int, color:uint):void
         {
+            color &= 0x00ffffff;
             mVertexData.setColor(vertexID, color);
             onVertexDataChanged();
             
@@ -192,6 +193,19 @@ package loom2d.display
         {
             return mVertexData.getPosition(vertexID);
         }
+
+        /** Sets the texture coordinates of a vertex at a certain index. */
+        public function setVertexTexCoords(vertexID:int, u:Number, v:Number):void
+        {
+            mVertexData.setTexCoords(vertexID, u, v);
+            onVertexDataChanged();
+        }
+
+        /** Gets the texture coordinates of a vertex at a certain index. */
+        public function getVertexTexCoords(vertexID:int):Point
+        {
+            return mVertexData.getTexCoords(vertexID);
+        }
         
         /** Returns the color of the quad, or of vertex 0 if vertices have different colors. */
         public function get color():uint 
@@ -202,6 +216,7 @@ package loom2d.display
         /** Sets the colors of all vertices to a certain value. */
         public function set color(value:uint):void 
         {
+            value &= 0x00ffffff;
             for (var i:int=0; i<4; ++i)
                 setVertexColor(i, value);
             
