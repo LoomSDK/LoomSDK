@@ -4,6 +4,8 @@ The Loom SDK is a great mobile game and application framework (www.loomsdk.com).
 
 This is the "Loom Native SDK" - our term for the C, C++, Java, and Objective C source code for the Loom runtime, compilers, etc. It is for power users and confident native developers.
 
+The Native SDK is a complement to the workflow available through Loom Turbo. It can be used by itself but be prepared to suffer through a frustrating and complex workflow that is greatly improved when combined with Loom Turbo and the CLI. Cross platform native development is hard!
+
 ### [Loom Turbo](http://www.loomsdk.com/plans) 
 
 The Loom official maintainers, The Engine Company, actively build Loom on our build farm, with the binaries available in [Loom Turbo](http://www.loomsdk.com/plans)'s firehose builds within minutes!
