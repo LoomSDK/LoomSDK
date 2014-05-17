@@ -57,6 +57,15 @@ package loom
          */
         public static var KEYBOARD_RESIZE:String = "keyboardResize";
 
+        /**
+         * On mobile devices, hide the status bar across the top of the screen.
+         */
+        public static var HIDE_STATUS_BAR:String = "hideStatusBar";
+
+        /**
+         * On mobile devices, show the status bar across the top of the screen.
+         */
+        public static var SHOW_STATUS_BAR:String = "showStatusBar";
     }
 
 }
