@@ -177,7 +177,8 @@ end
 # BUILD TASKS
 #############
 
-CLEAN.include ["cmake_android", "cmake_osx", "cmake_ios", "cmake_msvc", "cmake_ubuntu", "build/lua_*/**", "application/android/bin", "application/ouya/bin"]
+# Don't use clean defaults, they will nuke things we don't want!
+CLEAN = Rake::FileList["cmake_android", "cmake_osx", "cmake_ios", "cmake_msvc", "cmake_ubuntu", "build/lua_*/**", "application/android/bin", "application/ouya/bin"]
 CLEAN.include ["build/**/lib/**", "artifacts/**"]
 CLOBBER.include ["**/*.loom",$OUTPUT_DIRECTORY]
 CLOBBER.include ["**/*.loomlib",$OUTPUT_DIRECTORY]
