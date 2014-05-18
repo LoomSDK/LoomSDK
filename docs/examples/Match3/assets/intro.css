@@ -1,0 +1,59 @@
+#logo {
+    x: 540;
+    y: 60;
+    scale: 0.8;
+}
+
+#playButton {
+    x: 60;
+    y: 80;
+    scale: 0.8;
+}
+
+#helpButton {
+    x: 60;
+    y: 260;
+    scale: 0.8;
+}
+
+#aboutButton {
+    x: 60;
+    y: 440;
+    scale: 0.8;
+}
+
+#pausedText {
+    x: 340;
+    y: 100;
+}
+
+#backToMenu {
+    x: 310;
+    y: 480;
+}
+
+#backToMenu[normal] {
+    scale: 1.5;
+    x: 230;
+}
+
+#restartButton {
+    x: 520;
+    y: 250;
+}
+
+#resumeButton {
+    x: 280;
+    y: 270;
+}
+
+#pauseButton {
+    x: 860;
+    y: 520;
+    alpha: 0.5;
+}
+
+#restartButtonScore {
+    x: 400;
+    y: 245;
+}
