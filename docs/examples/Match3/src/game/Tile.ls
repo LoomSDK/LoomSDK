@@ -8,10 +8,10 @@ package  {
 		private var display:Image;
 		
 		public var type:int;
-		private var tx:int;
-		private var ty:int;
-		private var tw:int;
-		private var th:int;
+		public var tx:int;
+		public var ty:int;
+		public var tw:int;
+		public var th:int;
 		
 		public function Tile(container:DisplayObjectContainer, tx:int, ty:int, tw:int, th:int) {
 			this.tx = tx;
@@ -19,14 +19,22 @@ package  {
 			this.tw = tw;
 			this.th = th;
 			display = new Image();
-			display.x = tx*tw;
-			display.y = ty*th;
+			display.x = (tx+0.5)*tw;
+			display.y = (ty+0.5)*th;
 			container.addChild(display);
 		}
 		
-		public function reset(type:int, texture:Texture) {
+		public function reset(type:int, texture:Texture = null) {
 			this.type = type;
+			
+			if (type == -1) {
+				display.visible = false;
+				return;
+			}
+			
+			display.visible = true;
 			display.texture = texture;
+			display.center();
 			
 			var typeColors:Vector.<Number> = new <Number>[
 				0xBF0C43,

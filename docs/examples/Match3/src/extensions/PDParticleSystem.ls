@@ -12,6 +12,9 @@ package extensions {
 	import loom.LoomTextAsset;
 	import loom2d.math.Color;
 	import loom2d.textures.Texture;
+	import loom2d.textures.TextureSmoothing;
+	import system.platform.File;
+	import system.platform.Path;
 	import system.xml.XMLDocument;
 	import system.xml.XMLElement;
 	import system.xml.XMLNode;
@@ -65,26 +68,26 @@ package extensions {
         private var mEndColor:Color                        = new Color(); // finishColor
         private var mEndColorVariance:Color                = new Color(); // finishColorVariance
         
-		public static function loadLiveSystem(path:String, texture:Texture):PDParticleSystem {
+		public static function loadLiveSystem(path:String, texture:Texture = null):PDParticleSystem {
 			var config = new XMLDocument();
 			config.loadFile(path);
-			var ps = new PDParticleSystem(config, texture);
+			var basePath = Path.folderFromPath(path);
+			var ps = new PDParticleSystem(config, texture, basePath);
 			var xml = LoomTextAsset.create(path);
 			xml.updateDelegate += function(path:String, contents:String):void {
 				config.parse(contents);
-				ps.parseConfig(config);
+				ps.parseConfig(config, texture, basePath);
 			};
 			xml.load();
 			return ps;
 		}
 		
-		public function PDParticleSystem(config:XMLNode, texture:Texture)
-		//public function PDParticleSystem(texture:Texture)
+		public function PDParticleSystem(config:XMLNode, texture:Texture = null, basePath:String = "")
         {
-			parseConfig(config);
+			parseConfig(config, texture, basePath);
             
-			super(texture, emissionRate, mMaxNumParticles, mMaxNumParticles);
-            
+			super(this.texture, emissionRate, mMaxNumParticles, mMaxNumParticles);
+			
             mPremultipliedAlpha = false;
         }
 		
@@ -131,8 +134,10 @@ package extensions {
             var endSize:Number = mEndSize + mEndSizeVariance * (Math.random() * 2.0 - 1.0);
             if (startSize < 0.1) startSize = 0.1;
             if (endSize < 0.1)   endSize = 0.1;
-            particle.scale = startSize / texture.width;
-            particle.scaleDelta = ((endSize - startSize) / lifespan) / texture.width;
+            if (texture) {
+				particle.scale = startSize / texture.width;
+				particle.scaleDelta = ((endSize - startSize) / lifespan) / texture.width;
+			}
             
             // colors
             
@@ -149,6 +154,11 @@ package extensions {
             if (mStartColorVariance.blue != 0)  startColor.blue  += mStartColorVariance.blue  * (Math.random() * 2.0 - 1.0);
             if (mStartColorVariance.alpha != 0) startColor.alpha += mStartColorVariance.alpha * (Math.random() * 2.0 - 1.0);
             
+			startColor.red = Math.clamp(startColor.red, 0, 0xFF);
+			startColor.green = Math.clamp(startColor.green, 0, 0xFF);
+			startColor.blue = Math.clamp(startColor.blue, 0, 0xFF);
+			startColor.alpha = Math.clamp(startColor.alpha, 0, 0xFF);
+			
             var endColorRed:Number   = mEndColor.red;
             var endColorGreen:Number = mEndColor.green;
             var endColorBlue:Number  = mEndColor.blue;
@@ -159,7 +169,12 @@ package extensions {
             if (mEndColorVariance.blue != 0)  endColorBlue  += mEndColorVariance.blue  * (Math.random() * 2.0 - 1.0);
             if (mEndColorVariance.alpha != 0) endColorAlpha += mEndColorVariance.alpha * (Math.random() * 2.0 - 1.0);
             
-            colorDelta.red   = (endColorRed   - startColor.red)   / lifespan;
+			endColorRed = Math.clamp(endColorRed, 0, 0xFF);
+			endColorGreen = Math.clamp(endColorGreen, 0, 0xFF);
+			endColorBlue = Math.clamp(endColorBlue, 0, 0xFF);
+			endColorAlpha = Math.clamp(endColorAlpha, 0, 0xFF);
+			
+			colorDelta.red   = (endColorRed   - startColor.red)   / lifespan;
             colorDelta.green = (endColorGreen - startColor.green) / lifespan;
             colorDelta.blue  = (endColorBlue  - startColor.blue)  / lifespan;
             colorDelta.alpha = (endColorAlpha - startColor.alpha) / lifespan;
@@ -258,13 +273,35 @@ package extensions {
 				parseFloat(config, name, "red")*0xFF,
 				parseFloat(config, name, "green")*0xFF,
 				parseFloat(config, name, "blue")*0xFF,
-				parseFloat(config, name, "alpha")*0xFF
+				parseFloat(config, name, "alpha")
 			);
 		}
 		
-        public function parseConfig(config:XMLNode):void
+		private function parseTexture(config:XMLNode, name:String, basePath:String = ""):Texture {
+			var element = config.firstChildElement(name);
+			if (!element) return null;
+			var relPath = element.getAttribute("name");
+			//trace("TEXTUREEEEEEEE "+basePath+" "+relPath);
+			if (basePath.length > 0) basePath += Path.getFolderDelimiter();
+			var path = basePath+relPath;
+			Debug.assert(File.fileExists(path), "Texture file in particle config not found");
+			var tex = Texture.fromAsset(path);
+			var smoothing = element.getAttribute("smoothing");
+			switch (smoothing) {
+				case "bilinear": tex.smoothing = TextureSmoothing.BILINEAR; break;
+				case "max":      tex.smoothing = TextureSmoothing.MAX;      break;
+				case "none":     tex.smoothing = TextureSmoothing.NONE;     break;
+			}
+			return tex;
+		}
+		
+        public function parseConfig(config:XMLNode, texture:Texture = null, basePath:String = ""):void
         {
 			config = config.firstChild();
+			
+			if (!texture) texture = parseTexture(config, "texture", basePath);
+			this.texture = texture;
+			
             mEmitterXVariance = parseFloat(config, "sourcePositionVariance", "x");
             mEmitterYVariance = parseFloat(config, "sourcePositionVariance", "y");
             mGravityX = parseFloat(config, "gravity", "x");
@@ -312,8 +349,7 @@ package extensions {
             if (isNaN(mLifespan))
                 mLifespan = Math.max(0.01, parseFloatValue(config, "particleLifespan"));
             if (isNaN(mLifespanVariance))
-                mLifespanVariance = parseFloatValue(config, "particleLifeSpanVariance");
-            
+                mLifespanVariance = parseFloatValue(config, "particleLifeSpanVariance");	
         }
 		
         public function get emitterType():int { return mEmitterType; }

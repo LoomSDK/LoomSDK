@@ -3,6 +3,10 @@ package
 	import loom2d.display.DisplayObjectContainer;
 	import loom2d.display.Image;
 	import loom2d.display.Sprite;
+	import loom2d.events.Touch;
+	import loom2d.events.TouchEvent;
+	import loom2d.events.TouchPhase;
+	import loom2d.math.Point;
 	import loom2d.textures.Texture;
 	import loom2d.textures.TextureSmoothing;
 	
@@ -24,8 +28,11 @@ package
 		}
 	}
 	
+	public delegate TileCleared(x:Number, y:Number):Void;
+	
 	public class Board extends DisplayObjectContainer
 	{
+		public var onTileClear:TileCleared;
 		
 		var types = 5;
 		var typeTextures:Vector.<Texture>;
@@ -44,12 +51,16 @@ package
 		
 		public function Board()
 		{
-			loadTypeTextures();
-			generateTiles();
-			randomizeTiles();
-			findMatches();
 			
 			addChild(tileDisplay);
+			
+			addEventListener(TouchEvent.TOUCH, onTouch);
+		}
+		
+		public function init() {
+			loadTypeTextures();
+			generateTiles();
+			reset();
 		}
 		
 		public function resize(w:Number, h:Number) {
@@ -57,12 +68,17 @@ package
 			tileDisplay.y = (h-tileCols*tileHeight)/2;
 		}
 		
+		public function reset() {
+			randomizeTiles();
+			findMatches();
+		}
+		
 		private function loadTypeTextures() {
 			typeTextures = new Vector.<Texture>(types);
 			for (var i in typeTextures) {
 				//var tex = Texture.fromAsset("assets/tiles/tile" + i + ".png");
 				var tex = Texture.fromAsset("assets/tiles/tileGrayscale.png");
-				tex.smoothing = TextureSmoothing.NONE;
+				//tex.smoothing = TextureSmoothing.NONE;
 				typeTextures[i] = tex;
 			}
 		}
@@ -87,13 +103,58 @@ package
 			tile.reset(type, typeTextures[type]);
 		}
 		
+		
+		private function onTouch(e:TouchEvent):void {
+			for each (var touch in e.touches) {
+				processTouch(touch);
+			}
+		}
+		
+		private function processTouch(touch:Touch) {
+			switch (touch.phase) {
+				case TouchPhase.BEGAN:
+					//tileSelect(getTouchedTile(touch));
+					reset();
+					break;
+			}
+		}
+		
+		private function getTouchedTile(touch:Touch):Tile {
+			var p:Point = touch.getLocation(tileDisplay);
+			p.x = Math.clamp(Math.floor(p.x/tileWidth), 0, tileCols-1);
+			p.y = Math.clamp(Math.floor(p.y/tileHeight), 0, tileRows-1);
+			return tiles[p.x+p.y*tileCols];
+		}
+		
+		private function tileSelect(tile:Tile) {
+			trace(tile.type);
+		}
+		
+		
 		private function findMatches() {
 			rowMatches.clear();
 			findSequentialMatches(rowMatches, 0);
 			colMatches.clear();
 			findSequentialMatches(colMatches, 1);
-			trace("row " + rowMatches);
-			trace("col " + colMatches);
+			clearMatches(rowMatches, 0);
+			clearMatches(colMatches, 1);
+		}
+		
+		private function clearMatches(matches:Vector.<Match>, dim:int) {
+			for (var mi = 0; mi < matches.length; mi++) {
+				var match = matches[mi];
+				for (var i = match.begin; i <= match.end; i++) {
+					var index = dim == 0 ? match.index+i*tileRows : i+match.index*tileRows;
+					var tile = tiles[index];
+					clearTile(tile);
+				}
+			}
+		}
+		
+		private function clearTile(tile:Tile) {
+			if (tile.type == -1) return;
+			tile.reset(-1);
+			onTileClear((tile.tx+0.5)*tileWidth+tileDisplay.x, (tile.ty+0.5)*tileHeight+tileDisplay.y);
 		}
 		
 		private function findSequentialMatches(matches:Vector.<Match>, dim:int) {

@@ -49,10 +49,10 @@ package extensions {
 		
         public function ParticleSystem(texture:Texture, emissionRate:Number, initialCapacity:int = 128, maxCapacity:int = MAX_NUM_PARTICLES, blendFactorSource:String=null, blendFactorDest:String=null)
         {
-            if (texture == null) throw new ArgumentError("texture must not be null");
+            //if (texture == null) throw new ArgumentError("texture must not be null");
             
             mTexture = texture;
-            mPremultipliedAlpha = texture.premultipliedAlpha;
+            //mPremultipliedAlpha = texture.premultipliedAlpha;
             mParticles = new Vector.<Particle>(0);
             mImages = new Vector.<Image>(0);
 			//mIndices = new <uint>[];
@@ -62,6 +62,8 @@ package extensions {
             mEmitterX = mEmitterY = 0;
             mMaxCapacity = Math.min(MAX_NUM_PARTICLES, maxCapacity);
             mSmoothing = TextureSmoothing.BILINEAR;
+			
+			touchable = false;
 			
             //debug = new SimpleLabel("assets/Curse-hd.fnt", 120*5, 1000);
             //debug.text = "Hello Quad!";
@@ -235,9 +237,11 @@ package extensions {
             var rotation:Number;
             var x:Number, y:Number;
             var xOffset:Number, yOffset:Number;
-            var textureWidth:Number = mTexture.width;
-            var textureHeight:Number = mTexture.height;
-            
+			if (mTexture) {
+				var textureWidth:Number = mTexture.width;
+				var textureHeight:Number = mTexture.height;
+            }
+			
 			var i:int;
 			
 			for (i=0; i<mImages.length; ++i) {
@@ -302,8 +306,8 @@ package extensions {
 		
 		
         /** Initialize the <tt>ParticleSystem</tt> with particles distributed randomly throughout
-         *  their lifespans. */
-        public function populate(count:int):void
+         *  the lifespan times the range. */
+        public function populate(count:int, range:Number = 1):void
         {
             count = Math.min(count, mMaxCapacity - mNumParticles);
 			
@@ -317,7 +321,7 @@ package extensions {
             {
                 p = mParticles[mNumParticles+i];
                 initParticle(p);
-                advanceParticle(p, Math.random() * p.totalTime);
+				if (range > 0) advanceParticle(p, Math.random() * p.totalTime * range);
             }
             
             mNumParticles += count;
@@ -351,7 +355,14 @@ package extensions {
         public function get texture():Texture { return mTexture; }
         public function set texture(value:Texture):void
         {
-            mTexture = value;
+            if (mImages && mTexture != value) {
+				for (var i:int = 0; i < mImages.length; i++) {
+					mImages[i].texture = value;
+				}
+			}
+			
+			mTexture = value;
+			
 			
             //createProgram();
             //for (var i:int = mVertexData.numVertices - 4; i >= 0; i -= 4)

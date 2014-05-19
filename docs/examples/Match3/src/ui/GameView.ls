@@ -19,33 +19,52 @@ package ui {
 		private var particles:PDParticleSystem;
 		
 		public function init() {
+			
+			//particles = PDParticleSystem.loadLiveSystem("assets/explosion.pex", getTexture("assets/explosion.png"));
+			//particles = PDParticleSystem.loadLiveSystem("assets/pointer.pex");
+			particles = PDParticleSystem.loadLiveSystem("assets/explosion.pex");
+			particles.emitterX = 60;
+			particles.emitterY = 60;
+			
 			board = new Board();
+			board.onTileClear += tileClear;
 			addChild(board);
+			
+			addChild(particles);
 			
 			//particles = new ParticleSystem(getTexture("assets/intro.png"), 6, 5, 5);
 			//particles = new PDParticleSystem(getTexture("assets/intro.png"));
 			//particles = new PDParticleSystem(getTexture("assets/tiles/tile0.png"));
 			
-			particles = PDParticleSystem.loadLiveSystem("assets/particle.pex", getTexture("assets/tiles/tile0.png"));
-			particles.emitterX = 60;
-			particles.emitterY = 60;
-			addChild(particles);
 			//particles.populate(50);
-			particles.start();
+			//particles.start();
 			
-			addEventListener(TouchEvent.TOUCH, onTouch);
+			//addEventListener(TouchEvent.TOUCH, onTouch);
+		}
+		
+		private function tileClear(x:Number, y:Number) {
+			explode(x, y);
+		}
+		
+		private function explode(x:Number, y:Number) {
+			particles.emitterX = x;
+			particles.emitterY = y;
+			particles.populate(6, 0);
 		}
 		
 		private function onTouch(e:TouchEvent):void {
 			var t:Touch = e.touches[0];
+			if (t.phase != TouchPhase.BEGAN) return;
 			var p = t.getLocation(this);
 			particles.emitterX = p.x;
 			particles.emitterY = p.y;
+			particles.populate(20, 0);
 		}
 		
         public function enter(owner:DisplayObjectContainer) {
 			super.enter(owner);
 			board.resize(120, 120);
+			board.init();
 			Loom2D.juggler.add(particles);
 		}
 		

@@ -8,7 +8,7 @@ package ui {
 		public var onStart:ViewCallback;
 		
 		public function init() {
-			var display = new Image(getTexture("assets/intro.png"));
+			var display = new Image(Texture.fromAsset("assets/intro.png"));
 			display.center();
 			display.x = 60;
 			display.y = 60;

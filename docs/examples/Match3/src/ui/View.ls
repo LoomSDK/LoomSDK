@@ -15,11 +15,11 @@ package ui
 		public var onEnter:ViewCallback;
 		public var onExit:ViewCallback;
 		
-		protected function getTexture(path:String):Texture {
-			var tex = Texture.fromAsset(path);
-			tex.smoothing = TextureSmoothing.NONE;
-			return tex;
-		}
+		//protected function getTexture(path:String):Texture {
+			//var tex = Texture.fromAsset(path);
+			//tex.smoothing = TextureSmoothing.NONE;
+			//return tex;
+		//}
 		
 		public function init()
 		{

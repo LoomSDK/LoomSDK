@@ -4,6 +4,7 @@ package
 	import loom2d.display.Sprite;
 	import loom2d.display.StageScaleMode;
 	import loom2d.textures.Texture;
+	import loom2d.textures.TextureSmoothing;
 	import ui.IntroView;
 	import ui.ModeView;
 	import ui.GameView;
@@ -23,6 +24,8 @@ package
 		{
 			// Scale stage with black borders
 			stage.scaleMode = StageScaleMode.LETTERBOX;
+			
+			TextureSmoothing.defaultSmoothing = TextureSmoothing.NONE;
 			
 			var views:Vector.<View> = new <View>[intro, mode, game];
 			for each (var view:View in views) {
