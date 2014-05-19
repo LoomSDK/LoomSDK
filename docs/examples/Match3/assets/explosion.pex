@@ -26,7 +26,7 @@
   <particleLifeSpan value="0.8"/>
   <particleLifespanVariance value="0.2"/>
   
-  <speed value="50.00"/>
+  <speed value="30.00"/>
   <speedVariance value="10.00"/>
   
   <maxParticles value="300"/>

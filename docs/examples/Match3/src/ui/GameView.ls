@@ -8,6 +8,7 @@ package ui {
 	import loom2d.events.TouchPhase;
 	import Board;
 	import loom2d.Loom2D;
+	import loom2d.math.Color;
 	import loom2d.math.Point;
 	import system.xml.XMLDocument;
 	class GameView extends View {
@@ -42,13 +43,14 @@ package ui {
 			//addEventListener(TouchEvent.TOUCH, onTouch);
 		}
 		
-		private function tileClear(x:Number, y:Number) {
-			explode(x, y);
+		private function tileClear(x:Number, y:Number, color:Color) {
+			explode(x, y, color);
 		}
 		
-		private function explode(x:Number, y:Number) {
+		private function explode(x:Number, y:Number, color:Color) {
 			particles.emitterX = x;
 			particles.emitterY = y;
+			particles.startColor = color;
 			particles.populate(6, 0);
 		}
 		
