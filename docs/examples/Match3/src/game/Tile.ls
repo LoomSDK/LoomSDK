@@ -1,4 +1,5 @@
 package  {
+	import loom2d.animation.Juggler;
 	import loom2d.animation.Transitions;
 	import loom2d.display.DisplayObjectContainer;
 	import loom2d.display.Image;
@@ -9,6 +10,8 @@ package  {
 	public delegate Drop(tile:Tile):Void;
 	
 	public class Tile {
+		
+		private var juggler:Juggler;
 		
 		public static var IDLE = 0;
 		public static var CLEARED = 1;
@@ -25,7 +28,8 @@ package  {
 		
 		private var display:Image;
 		
-		public function Tile(container:DisplayObjectContainer, tx:int, ty:int, tw:int, th:int) {
+		public function Tile(juggler:Juggler, container:DisplayObjectContainer, tx:int, ty:int, tw:int, th:int) {
+			this.juggler = juggler;
 			this.tx = tx;
 			this.ty = ty;
 			this.tw = tw;
@@ -69,7 +73,7 @@ package  {
 			//display.rotation = Math.PI/4;
 			//var delta = ty-y;
 			var delta = ty-y;
-			Loom2D.juggler.tween(display, delta*0.3, {
+			juggler.tween(display, delta*0.3, {
 			//Loom2D.juggler.tween(display, delta, {
 			//Loom2D.juggler.tween(display, delta*0.1, {
 				y: getDisplayY(ty),

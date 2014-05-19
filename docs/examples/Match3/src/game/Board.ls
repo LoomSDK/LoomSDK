@@ -1,5 +1,6 @@
 package
 {
+	import loom2d.animation.Juggler;
 	import loom2d.display.DisplayObjectContainer;
 	import loom2d.display.Image;
 	import loom2d.display.Sprite;
@@ -34,10 +35,12 @@ package
 	
 	public class Board extends DisplayObjectContainer
 	{
-		private var DIM_ROWS = 0;
-		private var DIM_COLS = 1;
+		static const DIM_ROW = 0;
+		static const DIM_COL = 1;
 		
 		public var onTileClear:TileCleared;
+		
+		var juggler:Juggler;
 		
 		var types = 5;
 		var typeTextures:Vector.<Texture>;
@@ -56,8 +59,9 @@ package
 		
 		var selectedTile:Tile = null;
 		
-		public function Board()
+		public function Board(juggler:Juggler)
 		{
+			this.juggler = juggler;
 			
 			addChild(tileDisplay);
 			
@@ -94,7 +98,7 @@ package
 			tiles = new Vector.<Tile>(tileRows*tileCols);
 			for (var iy = 0; iy < tileRows; iy++) {
 				for (var ix = 0; ix < tileCols; ix++) {
-					var tile = new Tile(tileDisplay, ix, iy, tileWidth, tileHeight);
+					var tile = new Tile(juggler, tileDisplay, ix, iy, tileWidth, tileHeight);
 					tile.onDrop += tileDropped;
 					tiles[ix+iy*tileRows] = tile;
 				}
@@ -135,6 +139,10 @@ package
 					tileSelect(getTouchedTile(touch));
 					//reset();
 					break;
+				case TouchPhase.MOVED:
+					// TODO fix call spam
+					tileSelect(getTouchedTile(touch), true);
+					break;
 			}
 		}
 		
@@ -145,41 +153,88 @@ package
 			return tiles[p.x+p.y*tileCols];
 		}
 		
-		private function tileSelect(tile:Tile) {
+		private function tileSelect(tile:Tile, sticky:Boolean = false) {
+			if (selectedTile == tile) return;
 			if (selectedTile) {
-				selectedTile.deselect();
-				swapTiles(tile, selectedTile);
-				selectedTile = null;
-			} else {
-				selectedTile = tile;
-				selectedTile.select();
+				if (tile.state == Tile.IDLE && selectedTile.state == Tile.IDLE && neighborTiles(selectedTile, tile)) {
+					swapTiles(tile, selectedTile);
+					updateMatches();
+					if (containedInCurrentMatches(tile) || containedInCurrentMatches(selectedTile)) {
+						selectedTile.deselect();
+						selectedTile = null;
+						updateBoard();
+						return;
+					} else {
+						swapTiles(selectedTile, tile);
+					}
+				}
 			}
+			if (sticky) return;
+			if (selectedTile) selectedTile.deselect();
+			selectedTile = tile;
+			selectedTile.select();
+		}
+		
+		private function neighborTiles(a:Tile, b:Tile):Boolean {
+			return Math.abs(a.tx-b.tx)+Math.abs(a.ty-b.ty) == 1;
+		}
+		
+		private function containedInCurrentMatches(tile:Tile):Boolean {
+			return containedInMatches(tile, rowMatches, DIM_ROW) || containedInMatches(tile, colMatches, DIM_COL);
 		}
 		
 		private function swapTiles(a:Tile, b:Tile) {
 			var t = a.type;
 			resetTile(a, b.type);
 			resetTile(b, t);
-			updateBoard();
 		}
 		
 		private function updateBoard() {
-			rowMatches.clear();
-			findSequentialMatches(rowMatches, DIM_ROWS);
-			colMatches.clear();
-			findSequentialMatches(colMatches, DIM_COLS);
+			updateMatches();
 			if (rowMatches.length+colMatches.length > 0) {
 				//trace(rowMatches.length+colMatches.length + " matches");
 				//trace(rowMatches);
 				//trace(colMatches);
 				//debugMatches(rowMatches, DIM_ROWS);
 				//debugMatches(colMatches, DIM_COLS);
-				clearMatches(rowMatches, DIM_ROWS);
-				clearMatches(colMatches, DIM_COLS);
+				clearMatches(rowMatches, DIM_ROW);
+				clearMatches(colMatches, DIM_COL);
 				//Loom2D.juggler.delayCall(collapseColumns, 0.1);
 			}
-			Loom2D.juggler.delayCall(collapseColumns, 0.5);
+			Loom2D.juggler.delayCall(collapseColumns, 0.3);
 			//collapseColumns();
+		}
+		
+		private function updateMatches() {
+			rowMatches.clear();
+			findSequentialMatches(rowMatches, DIM_ROW);
+			colMatches.clear();
+			findSequentialMatches(colMatches, DIM_COL);
+		}
+		
+		private function containedInMatches(tile:Tile, matches:Vector.<Match>, dim:int):Boolean {
+			for (var mi = 0; mi < matches.length; mi++) {
+				var match = matches[mi];
+				//for (var i = match.begin; i <= match.end; i++) {
+					//var index = dim == DIM_ROWS ? i+match.index*tileRows : match.index+i*tileRows;
+					//var tile 
+				if (containedInMatch(tile, match, dim)) return true;
+				//}
+			}
+			return false;
+		}
+		
+		private function containedInMatch(tile:Tile, match:Match, dim:int):Boolean {
+			var tileOuter:int;
+			var tileInner:int;
+			if (dim == DIM_ROW) {
+				tileOuter = tile.ty;
+				tileInner = tile.tx;
+			} else {
+				tileOuter = tile.tx;
+				tileInner = tile.ty;
+			}
+			return match.index == tileOuter && match.begin <= tileInner && match.end >= tileInner;
 		}
 		
 		private function tileDropped(tile:Tile) {
@@ -188,8 +243,8 @@ package
 		}
 		
 		private function findSequentialMatches(matches:Vector.<Match>, dim:int) {
-			var lo = dim == DIM_ROWS ? tileRows : tileCols;
-			var li = dim == DIM_ROWS ? tileCols : tileRows;
+			var lo = dim == DIM_ROW ? tileRows : tileCols;
+			var li = dim == DIM_ROW ? tileCols : tileRows;
 			for (var io = 0; io < lo; io++) {
 				var prevType = -1;
 				var sum = -1;
@@ -198,7 +253,7 @@ package
 					if (ii >= li) {
 						type = -1;
 					} else {
-						var index = dim == DIM_ROWS ? ii+io*tileRows : io+ii*tileRows;
+						var index = dim == DIM_ROW ? ii+io*tileRows : io+ii*tileRows;
 						var tile = tiles[index];
 						switch (tile.state) {
 							case Tile.IDLE:
@@ -229,7 +284,7 @@ package
 			for (var mi = 0; mi < matches.length; mi++) {
 				var match = matches[mi];
 				for (var i = match.begin; i <= match.end; i++) {
-					var index = dim == DIM_ROWS ? i+match.index*tileRows : match.index+i*tileRows;
+					var index = dim == DIM_ROW ? i+match.index*tileRows : match.index+i*tileRows;
 					var tile = tiles[index];
 					tile.debugDisable();
 				}
@@ -240,7 +295,7 @@ package
 			for (var mi = 0; mi < matches.length; mi++) {
 				var match = matches[mi];
 				for (var i = match.begin; i <= match.end; i++) {
-					var index = dim == DIM_ROWS ? i+match.index*tileRows : match.index+i*tileRows;
+					var index = dim == DIM_ROW ? i+match.index*tileRows : match.index+i*tileRows;
 					var tile = tiles[index];
 					Debug.assert(tile.state != Tile.DROPPING);
 					clearTile(tile);

@@ -2,6 +2,7 @@ package ui {
 	import extensions.ParticleSystem;
 	import extensions.PDParticleSystem;
 	import loom.LoomTextAsset;
+	import loom2d.animation.Juggler;
 	import loom2d.display.DisplayObjectContainer;
 	import loom2d.events.Touch;
 	import loom2d.events.TouchEvent;
@@ -15,6 +16,9 @@ package ui {
 		
 		public var onQuit:ViewCallback;
 		
+		private var dt:Number = 1/60;
+		private var juggler:Juggler = new Juggler();
+		
 		private var board:Board;
 		//private var particles:ParticleSystem;
 		private var particles:PDParticleSystem;
@@ -27,7 +31,7 @@ package ui {
 			particles.emitterX = 60;
 			particles.emitterY = 60;
 			
-			board = new Board();
+			board = new Board(juggler);
 			board.onTileClear += tileClear;
 			addChild(board);
 			
@@ -67,17 +71,17 @@ package ui {
 			super.enter(owner);
 			board.resize(120, 120);
 			board.init();
-			Loom2D.juggler.add(particles);
+			juggler.add(particles);
 		}
 		
         public function exit() {
 			super.exit();
-			Loom2D.juggler.remove(particles);
+			juggler.remove(particles);
 		}
 		
 		public function tick() {
+			juggler.advanceTime(dt);
 			board.tick();
-			
 		}
 		
 		public function render() {
