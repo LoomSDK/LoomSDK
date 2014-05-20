@@ -2,6 +2,7 @@ package ui {
 	import extensions.ParticleSystem;
 	import extensions.PDParticleSystem;
 	import loom.LoomTextAsset;
+	import loom.sound.Sound;
 	import loom2d.animation.Juggler;
 	import loom2d.display.DisplayObjectContainer;
 	import loom2d.events.Touch;
@@ -23,6 +24,10 @@ package ui {
 		//private var particles:ParticleSystem;
 		private var particles:PDParticleSystem;
 		
+		private var explosion:Sound;
+		
+		private var momentum:Number = 0;
+		
 		public function init() {
 			
 			//particles = PDParticleSystem.loadLiveSystem("assets/explosion.pex", getTexture("assets/explosion.png"));
@@ -36,6 +41,8 @@ package ui {
 			addChild(board);
 			
 			addChild(particles);
+			
+			explosion = Sound.load("assets/tileExplosion.ogg");
 			
 			//particles = new ParticleSystem(getTexture("assets/intro.png"), 6, 5, 5);
 			//particles = new PDParticleSystem(getTexture("assets/intro.png"));
@@ -51,11 +58,20 @@ package ui {
 			explode(x, y, color);
 		}
 		
+		public function getPitch(x:Number):Number {
+			//return 0.8+0.4*(1-Math.exp(-x*0.25));
+			return 0.8+0.2*(Math.exp(x*0.08)-1);
+			//return 0.8+0.2*x*0.1;
+		}
+		
 		private function explode(x:Number, y:Number, color:Color) {
 			particles.emitterX = x;
 			particles.emitterY = y;
 			particles.startColor = color;
 			particles.populate(6, 0);
+			explosion.setPitch(getPitch(momentum)+Math.randomRange(-0.1, 0.1));
+			explosion.play();
+			momentum++;
 		}
 		
 		private function onTouch(e:TouchEvent):void {
@@ -82,6 +98,7 @@ package ui {
 		public function tick() {
 			juggler.advanceTime(dt);
 			board.tick();
+			momentum -= momentum*0.2*dt;
 		}
 		
 		public function render() {

@@ -1,4 +1,5 @@
 package game {
+	import loom.sound.Sound;
 	import loom2d.animation.IAnimatable;
 	import loom2d.animation.Juggler;
 	import loom2d.display.DisplayObject;
@@ -9,11 +10,14 @@ package game {
 		private var origX:Number;
 		private var origY:Number;
 		private var juggler:Juggler;
+		private var shaking:Sound;
 		
 		public var strength:Number = 1;
 		
 		public function Shaker(shakee:DisplayObject) {
 			this.shakee = shakee;
+			shaking = Sound.load("assets/shaking.ogg");
+			shaking.setLooping(true);
 		}
 		
 		public function start(juggler:Juggler) {
@@ -21,6 +25,7 @@ package game {
 			origX = shakee.x;
 			origY = shakee.y;
 			juggler.add(this);
+			shaking.play();
 		}
 		
 		public function advanceTime(time:Number) {
@@ -34,6 +39,7 @@ package game {
 				juggler = null;
 				shakee.x = origX;
 				shakee.y = origY;
+				shaking.stop();
 			}
 		}
 		

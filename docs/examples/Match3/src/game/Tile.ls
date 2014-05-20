@@ -106,13 +106,14 @@ package  {
 			}
 		}
 		
-		public function clear(delayed:Boolean = false) {
+		public function clear(delayed:Boolean = false, index:int = 0) {
 			if (state != IDLE) return;
 			reset(-1);
 			state = CLEARING;
 			if (delayed) {
 				//display.rotation = Math.PI/4;
-				var duration = Math.randomRange(0, 0.5);
+				//var duration = Math.randomRange(0, 0.5);
+				var duration = index*0.1;
 				shaker.start(juggler);
 				juggler.delayCall(cleared, duration);
 			} else {

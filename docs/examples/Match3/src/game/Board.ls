@@ -44,6 +44,8 @@ package
 		var juggler:Juggler;
 		
 		var types = 5;
+		//var types = 4;
+		//var types = 3;
 		var typeTextures:Vector.<Texture>;
 		
 		var tileCols = 8;
@@ -55,6 +57,7 @@ package
 		
 		var rowMatches = new Vector.<Match>();
 		var colMatches = new Vector.<Match>();
+		var matchIndex:int;
 		
 		var minSequence:int = 3;
 		
@@ -213,6 +216,7 @@ package
 			findSequentialMatches(rowMatches, DIM_ROW);
 			colMatches.clear();
 			findSequentialMatches(colMatches, DIM_COL);
+			matchIndex = 0;
 		}
 		
 		private function containedInMatches(tile:Tile, matches:Vector.<Match>, dim:int):Boolean {
@@ -258,6 +262,8 @@ package
 			for (var io = 0; io < lo; io++) {
 				var prevType = -1;
 				var sum = -1;
+				// Don't find matches in non-ready columns
+				if (dim == DIM_COL && !columnReady(io)) continue;
 				for (var ii = 0; ii < li+1; ii++) {
 					var type:int;
 					if (ii >= li) {
@@ -308,14 +314,10 @@ package
 					var index = dim == DIM_ROW ? i+match.index*tileRows : match.index+i*tileRows;
 					var tile = tiles[index];
 					Debug.assert(tile.state != Tile.DROPPING);
-					clearTile(tile);
+					if (tile.state != Tile.IDLE) continue;
+					tile.clear(true, matchIndex++);
 				}
 			}
-		}
-		
-		private function clearTile(tile:Tile) {
-			if (tile.state != Tile.IDLE) return;
-			tile.clear(true);
 		}
 		
 		private function columnReady(ix:int):Boolean {
