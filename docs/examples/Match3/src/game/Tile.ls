@@ -1,4 +1,5 @@
 package  {
+	import game.Shaker;
 	import loom2d.animation.Juggler;
 	import loom2d.animation.Transitions;
 	import loom2d.display.DisplayObjectContainer;
@@ -7,6 +8,7 @@ package  {
 	import loom2d.math.Color;
 	import loom2d.textures.Texture;
 	
+	public delegate Cleared(tile:Tile):Void;
 	public delegate Drop(tile:Tile):Void;
 	
 	public class Tile {
@@ -14,11 +16,13 @@ package  {
 		private var juggler:Juggler;
 		
 		public static var IDLE = 0;
-		public static var CLEARED = 1;
-		public static var DROPPING = 2;
+		public static var CLEARING = 1;
+		public static var CLEARED = 2;
+		public static var DROPPING = 3;
 		public var state = IDLE;
 		
 		public var onDrop:Drop;
+		public var onClear:Cleared;
 		
 		public var type:int;
 		public var tx:int;
@@ -26,7 +30,10 @@ package  {
 		public var tw:int;
 		public var th:int;
 		
+		public var lastColor:Color;
+		
 		private var display:Image;
+		private var shaker:Shaker;
 		
 		public function Tile(juggler:Juggler, container:DisplayObjectContainer, tx:int, ty:int, tw:int, th:int) {
 			this.juggler = juggler;
@@ -35,6 +42,7 @@ package  {
 			this.tw = tw;
 			this.th = th;
 			display = new Image();
+			shaker = new Shaker(display);
 			resetPosition();
 			container.addChild(display);
 		}
@@ -65,6 +73,64 @@ package  {
 			return (ty+0.5)*th;
 		}
 		
+		//public function getColor():Color {
+			//// TODO fix instances
+			//return Color.fromInt(getTypeColor(type));
+		//}
+		
+		private function getTypeColor(type:int):uint {
+			var typeColors:Vector.<Number> = new <Number>[
+				0xBF0C43,
+				0xF9BA15,
+				0x8EAC00,
+				0x127A97,
+				0x452B72,
+				0xE5DDCB,
+				0x689B8D,
+			];
+			return type == -1 ? 0x818181 : typeColors[type];
+		}
+		
+		public function reset(type:int, texture:Texture = null) {
+			this.type = type;
+			
+			state = IDLE;
+			
+			display.rotation = 0;
+			display.visible = true;
+			if (texture) {
+				display.texture = texture;
+				display.center();
+				display.color = getTypeColor(type);
+				lastColor = Color.fromInt(display.color);
+			}
+		}
+		
+		public function clear(delayed:Boolean = false) {
+			if (state != IDLE) return;
+			reset(-1);
+			state = CLEARING;
+			if (delayed) {
+				//display.rotation = Math.PI/4;
+				var duration = Math.randomRange(0, 0.5);
+				shaker.start(juggler);
+				juggler.delayCall(cleared, duration);
+			} else {
+				cleared(false);
+			}
+			//display.visible = false;
+			//display.rotation = Math.PI/4;
+		}
+		
+		private function cleared(delayed:Boolean = true) {
+			state = CLEARED;
+			display.visible = false;
+			if (delayed) {
+				shaker.stop();
+				onClear(this);
+			}
+		}
+		
 		//public function dropFrom(y:int) {
 		public function dropFrom(y:Number) {
 			state = DROPPING;
@@ -88,53 +154,6 @@ package  {
 		private function dropComplete() {
 			state = IDLE;
 			onDrop(this);
-		}
-		
-		public function clear() {
-			reset(-1);
-		}
-		
-		public function getColor():Color {
-			// TODO fix instances
-			return Color.fromInt(getTypeColor(type));
-		}
-		
-		private function getTypeColor(type:int):uint {
-			var typeColors:Vector.<Number> = new <Number>[
-				0xBF0C43,
-				0xF9BA15,
-				0x8EAC00,
-				0x127A97,
-				0x452B72,
-				0xE5DDCB,
-				0x689B8D,
-			];
-			return type == -1 ? 0x818181 : typeColors[type];
-		}
-		
-		public function reset(type:int, texture:Texture = null) {
-			this.type = type;
-			
-			if (type == -1) {
-				display.visible = false;
-				//display.rotation = Math.PI/4;
-				state = CLEARED;
-				return;
-			}
-			
-			state = IDLE;
-			
-			display.rotation = 0;
-			
-			display.visible = true;
-			display.texture = texture;
-			display.center();
-			
-			display.color = getTypeColor(type);
-		}
-		
-		private function setColor(color:Number) {
-			display.color = color;
 		}
 		
 	}

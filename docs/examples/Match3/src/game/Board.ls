@@ -10,6 +10,7 @@ package
 	import loom2d.Loom2D;
 	import loom2d.math.Color;
 	import loom2d.math.Point;
+	import loom2d.math.Rectangle;
 	import loom2d.textures.Texture;
 	import loom2d.textures.TextureSmoothing;
 	
@@ -63,6 +64,7 @@ package
 		{
 			this.juggler = juggler;
 			
+			tileDisplay.clipRect = new Rectangle(0, 0, tileCols*tileWidth, tileRows*tileHeight);
 			addChild(tileDisplay);
 			
 			addEventListener(TouchEvent.TOUCH, onTouch);
@@ -100,6 +102,7 @@ package
 				for (var ix = 0; ix < tileCols; ix++) {
 					var tile = new Tile(juggler, tileDisplay, ix, iy, tileWidth, tileHeight);
 					tile.onDrop += tileDropped;
+					tile.onClear += tileCleared;
 					tiles[ix+iy*tileRows] = tile;
 				}
 			}
@@ -242,6 +245,13 @@ package
 			updateBoard();
 		}
 		
+		private function tileCleared(tile:Tile) {
+			var color = tile.lastColor;
+			onTileClear((tile.tx+0.5)*tileWidth+tileDisplay.x, (tile.ty+0.5)*tileHeight+tileDisplay.y, color);
+			//Loom2D.juggler.delayCall(collapseColumns, 0.3);
+			collapseColumns();
+		}
+		
 		private function findSequentialMatches(matches:Vector.<Match>, dim:int) {
 			var lo = dim == DIM_ROW ? tileRows : tileCols;
 			var li = dim == DIM_ROW ? tileCols : tileRows;
@@ -304,23 +314,22 @@ package
 		}
 		
 		private function clearTile(tile:Tile) {
-			if (tile.state == Tile.CLEARED) return;
-			var color = tile.getColor();
-			tile.clear();
-			onTileClear((tile.tx+0.5)*tileWidth+tileDisplay.x, (tile.ty+0.5)*tileHeight+tileDisplay.y, color);
+			if (tile.state != Tile.IDLE) return;
+			tile.clear(true);
 		}
 		
-		private function isColumnDropping(ix:int):Boolean {
+		private function columnReady(ix:int):Boolean {
 			for (var iy = tileRows-1; iy >= 0; iy--) {
-				if (tiles[ix+iy*tileRows].state == Tile.DROPPING) return true;
+				var tile:Tile = tiles[ix+iy*tileRows];
+				if (tile.state != Tile.IDLE && tile.state != Tile.CLEARED) return false;
 			}
-			return false;
+			return true;
 		}
 		
 		private function collapseColumns() {
 			for (var ix = 0; ix < tileCols; ix++) {
 				var iy:int;
-				if (isColumnDropping(ix)) continue;
+				if (!columnReady(ix)) continue;
 				var drop = 0;
 				for (iy = tileRows-1; iy >= 0; iy--) {
 					var tile = tiles[ix+iy*tileRows];
