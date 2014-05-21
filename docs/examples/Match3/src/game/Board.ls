@@ -161,8 +161,13 @@ package
 		
 		private function tileSelect(tile:Tile, sticky:Boolean = false) {
 			if (selectedTile == tile) return;
+			if (tile.state == Tile.SWAPPING) return;
 			if (selectedTile) {
 				if (tile.state == Tile.IDLE && selectedTile.state == Tile.IDLE && neighborTiles(selectedTile, tile)) {
+					swapTiles(tile, selectedTile);
+					sticky = false;
+					tile = null;
+					/*
 					swapTiles(tile, selectedTile);
 					updateMatches();
 					if (containedInCurrentMatches(tile) || containedInCurrentMatches(selectedTile)) {
@@ -173,12 +178,13 @@ package
 					} else {
 						swapTiles(selectedTile, tile);
 					}
+					*/
 				}
 			}
 			if (sticky) return;
 			if (selectedTile) selectedTile.deselect();
 			selectedTile = tile;
-			selectedTile.select();
+			if (selectedTile) selectedTile.select();
 		}
 		
 		private function neighborTiles(a:Tile, b:Tile):Boolean {
@@ -189,10 +195,32 @@ package
 			return containedInMatches(tile, rowMatches, DIM_ROW) || containedInMatches(tile, colMatches, DIM_COL);
 		}
 		
-		private function swapTiles(a:Tile, b:Tile) {
+		private function swapTiles(a:Tile, b:Tile, returning:Boolean = false) {
 			var t = a.type;
 			resetTile(a, b.type);
 			resetTile(b, t);
+			var tx = a.transitionalTileX;
+			var ty = a.transitionalTileY;
+			a.swapFrom(b.transitionalTileX, b.transitionalTileY);
+			b.swapFrom(tx, ty);
+			juggler.delayCall(tilesSwapped, Tile.SWAP_TIME, a, b, returning);
+		}
+		
+		private function tilesSwapped(a:Tile, b:Tile, returning:Boolean) {
+			a.state = Tile.IDLE;
+			b.state = Tile.IDLE;
+			a.resetPosition();
+			b.resetPosition();
+			if (returning) {
+				updateBoard();
+				return;
+			}
+			updateMatches();
+			if (containedInCurrentMatches(a) || containedInCurrentMatches(b)) {
+				updateBoard();
+			} else {
+				swapTiles(b, a, true);
+			}
 		}
 		
 		private function updateBoard() {
@@ -344,7 +372,7 @@ package
 						var above = tiles[ix+ay*tileRows];
 						if (above.state != Tile.CLEARED) {
 							type = above.type;
-							dropY = above.transitionalTileY();
+							dropY = above.transitionalTileY;
 							above.clear();
 							break;
 						}

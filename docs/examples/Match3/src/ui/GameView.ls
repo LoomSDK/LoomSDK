@@ -1,6 +1,7 @@
 package ui {
 	import extensions.ParticleSystem;
 	import extensions.PDParticleSystem;
+	import game.Shaker;
 	import loom.LoomTextAsset;
 	import loom.sound.Sound;
 	import loom2d.animation.Juggler;
@@ -20,9 +21,14 @@ package ui {
 		private var dt:Number = 1/60;
 		private var juggler:Juggler = new Juggler();
 		
+		private var screenshaker:Shaker;
+		private var screenshake:Number = 0;
+		
 		private var board:Board;
 		//private var particles:ParticleSystem;
 		private var particles:PDParticleSystem;
+		
+		private var background:Sound;
 		
 		private var explosion:Sound;
 		
@@ -40,7 +46,13 @@ package ui {
 			board.onTileClear += tileClear;
 			addChild(board);
 			
+			screenshaker = new Shaker(board);
+			screenshaker.start(juggler);
+			
 			addChild(particles);
+			
+			background = Sound.load("assets/contemplation 2.ogg");
+			background.setLooping(true);
 			
 			explosion = Sound.load("assets/tileExplosion.ogg");
 			
@@ -72,6 +84,7 @@ package ui {
 			explosion.setPitch(getPitch(momentum)+Math.randomRange(-0.1, 0.1));
 			explosion.play();
 			momentum++;
+			screenshake += 0.25;
 		}
 		
 		private function onTouch(e:TouchEvent):void {
@@ -88,16 +101,21 @@ package ui {
 			board.resize(120, 120);
 			board.init();
 			juggler.add(particles);
+			//background.play();
 		}
 		
         public function exit() {
 			super.exit();
 			juggler.remove(particles);
+			background.stop();
 		}
 		
 		public function tick() {
 			juggler.advanceTime(dt);
 			board.tick();
+			screenshaker.strength = screenshake;
+			screenshake -= screenshake*6*dt;
+			if (Math.abs(screenshake) < 0.1) screenshake = 0;
 			momentum -= momentum*0.2*dt;
 		}
 		

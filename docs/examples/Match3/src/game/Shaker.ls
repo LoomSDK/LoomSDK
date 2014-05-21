@@ -14,10 +14,12 @@ package game {
 		
 		public var strength:Number = 1;
 		
-		public function Shaker(shakee:DisplayObject) {
+		public function Shaker(shakee:DisplayObject, sound:Sound = null) {
 			this.shakee = shakee;
-			shaking = Sound.load("assets/shaking.ogg");
-			shaking.setLooping(true);
+			if (sound) {
+				shaking = sound;
+				shaking.setLooping(true);
+			}
 		}
 		
 		public function start(juggler:Juggler) {
@@ -25,7 +27,7 @@ package game {
 			origX = shakee.x;
 			origY = shakee.y;
 			juggler.add(this);
-			shaking.play();
+			if (shaking) shaking.play();
 		}
 		
 		public function advanceTime(time:Number) {
@@ -39,7 +41,7 @@ package game {
 				juggler = null;
 				shakee.x = origX;
 				shakee.y = origY;
-				shaking.stop();
+				if (shaking) shaking.stop();
 			}
 		}
 		
