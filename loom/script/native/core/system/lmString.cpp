@@ -21,6 +21,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <cstring>
+#include "loom/common/utils/md5.h"
 #include "loom/common/core/allocator.h"
 #include "loom/script/loomscript.h"
 #include "loom/script/runtime/lsRuntime.h"
@@ -442,6 +443,22 @@ public:
         return 1;
     }
 
+    static int _toMD5(lua_State *L)
+    {
+        lmAssert(lua_isstring(L, 1), "Non-string passed to String._toMD5");
+
+        const char *svalue = lua_tostring(L, 1);
+
+        if (!svalue || !svalue[0])
+        {
+            lua_pushstring(L, "");
+            return 1;
+        }
+
+        lua_pushstring(L, mdfive(svalue).c_str());
+        return 1;
+    }    
+
     static int _find(lua_State *L)
     {
         lua_getglobal(L, "string");
@@ -601,6 +618,7 @@ static int registerSystemString(lua_State *L)
        .addStaticLuaFunction("_substring", &LSString::_substring)
        .addStaticLuaFunction("_toNumber", &LSString::_toNumber)
        .addStaticLuaFunction("_toBoolean", &LSString::_toBoolean)
+       .addStaticLuaFunction("_toMD5", &LSString::_toMD5)
        .addStaticLuaFunction("_find", &LSString::_find)
        .addStaticLuaFunction("_split", &LSString::_split)
        .addStaticLuaFunction("format", &LSString::format)
