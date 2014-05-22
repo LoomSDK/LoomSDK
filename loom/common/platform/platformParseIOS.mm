@@ -22,10 +22,10 @@ limitations under the License.
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
 
-#import <AudioToolbox/AudioServices.h>
+#import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
 #import <Foundation/NSSet.h>
-#import <UIKit/UIKit.h>
+// #import <Parse/Parse.h>
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformParse.h"
@@ -43,8 +43,17 @@ void platform_parseInitialize()
 ///starts up the Parse service
 bool platform_startUp(const char *appID, const char *clientKey)
 {
-//TODO: Parse setup for iOS    
+//TODO: Finish and test once we have the .framework linking
+    NSString *app_id = (appID) ? [NSString stringWithUTF8String : appID] : nil;
+    NSString *client_key = (clientKey) ? [NSString stringWithUTF8String : clientKey] : nil;
+
+    // [Parse setApplicationId:app_id clientKey:client_key];
+
+    [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|
+                                                                            UIRemoteNotificationTypeAlert|
+                                                                            UIRemoteNotificationTypeSound];
     return false;
 }
+
 
 #endif

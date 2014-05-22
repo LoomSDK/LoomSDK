@@ -103,26 +103,33 @@ if (APPLE)
           "-framework CoreGraphics"
           "-framework CoreFoundation"
           "-framework CoreMotion"
+          "-framework CoreLocation"
           "-framework Foundation"
           "-framework UIKit"          
           "-framework GLKit"  
           "-framework OpenGLES"
           "-framework StoreKit"
+          "-framework Security"
+          "-framework QuartzCore"
+          "-framework MobileCoreServices"
           "-framework OpenGLES"
           "-framework MessageUI"
           "-framework SystemConfiguration"
           "-framework AdSupport"
+          "-framework CFNetwork"
 
           # For Audio
           "-framework AVFoundation"
           "-framework AudioToolbox"
           "-framework CoreAudio"
 
+          # Parse
+          # "-framework ${CMAKE_SOURCE_DIR}/loom/vendor/parse/Parse"
+
           # Admob SDK
           ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a
           "-ObjC"
-          "-lc++"
-          )
+          "-lc++")
 
         #iPhone app bundle
         set_target_properties(${PROJECT_NAME} PROPERTIES

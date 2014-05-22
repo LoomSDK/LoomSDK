@@ -22,6 +22,7 @@
  THE SOFTWARE.
  ****************************************************************************/
 #import <UIKit/UIKit.h>
+// #import <Parse/Parse.h>
 #import "AppController.h"
 #import "cocos2d.h"
 #import "EAGLView.h"
@@ -122,6 +123,22 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
      Called when the application is about to terminate.
      See also applicationDidEnterBackground:.
      */
+}
+
+
+/// Parse Push Notifications
+- (void)application:(UIApplication *)application
+  didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
+{
+  // Store the deviceToken in the current installation and save it to Parse.
+  // PFInstallation *currentInstallation = [PFInstallation currentInstallation];
+  // [currentInstallation setDeviceTokenFromData:deviceToken];
+  // [currentInstallation saveInBackground];
+}
+ 
+- (void)application:(UIApplication *)application
+  didReceiveRemoteNotification:(NSDictionary *)userInfo {
+  // [PFPush handlePush:userInfo];
 }
 
 
