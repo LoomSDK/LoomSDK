@@ -31,7 +31,7 @@ package ui
 			onEnter();
 		}
 		
-		public function resize() {
+		public function resize(w:Number, h:Number) {
 			//if (parent && parent.stage) parent.stage.sta
 		}
 

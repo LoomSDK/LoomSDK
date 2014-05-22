@@ -1,5 +1,6 @@
 package
 {
+	import loom.sound.Sound;
 	import loom2d.animation.Juggler;
 	import loom2d.display.DisplayObjectContainer;
 	import loom2d.display.Image;
@@ -63,12 +64,16 @@ package
 		
 		var selectedTile:Tile = null;
 		
+		var tileMove:Sound;
+		
 		public function Board(juggler:Juggler)
 		{
 			this.juggler = juggler;
 			
 			tileDisplay.clipRect = new Rectangle(0, 0, tileCols*tileWidth, tileRows*tileHeight);
 			addChild(tileDisplay);
+			
+			tileMove = Sound.load("assets/tileMove.ogg");
 			
 			addEventListener(TouchEvent.TOUCH, onTouch);
 		}
@@ -204,6 +209,8 @@ package
 			a.swapFrom(b.transitionalTileX, b.transitionalTileY);
 			b.swapFrom(tx, ty);
 			juggler.delayCall(tilesSwapped, Tile.SWAP_TIME, a, b, returning);
+			tileMove.setPitch(1+Math.randomRange(-0.1, 0.1));
+			tileMove.play();
 		}
 		
 		private function tilesSwapped(a:Tile, b:Tile, returning:Boolean) {
