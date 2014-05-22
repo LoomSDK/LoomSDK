@@ -183,6 +183,9 @@ public class LoomDemo extends Cocos2dxActivity {
         ///Create Mobile class
         LoomMobile.onCreate(this);
 
+        ///Create Parse class
+        LoomParse.onCreate(this);
+
         ///Create Sensor class
         LoomSensors.onCreate(this);
 
