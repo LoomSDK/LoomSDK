@@ -2,6 +2,7 @@ package game {
 	import loom2d.textures.Texture;
 	
 	public class TileType {
+		public var index:int;
 		public var color:uint;
 		public var character:String;
 		public var texture:Texture;

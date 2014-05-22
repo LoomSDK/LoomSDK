@@ -16,6 +16,21 @@ package
 	import loom2d.textures.Texture;
 	import loom2d.textures.TextureSmoothing;
 	
+	struct Swap {
+		public var a:Tile;
+		public var b:Tile;
+		public function Swap(a:Tile = null, b:Tile = null) {
+			this.a = a;
+			this.b = b;
+		}
+		public static operator function =(a:Swap, b:Swap):Swap
+        {
+            a.a = b.a;
+            a.b = b.b;
+            return a;
+        }
+	}
+	
 	public struct Match {
 		public var index:int;
 		public var type:TileType;
@@ -66,6 +81,10 @@ package
 		var colMatches = new Vector.<Match>();
 		var matchIndex:int;
 		
+		var rowSwaps = new Vector.<Swap>();
+		var colSwaps = new Vector.<Swap>();
+		var typeSums:Vector.<int>;
+		
 		var minSequence:int = 3;
 		
 		var selectedTile:Tile = null;
@@ -89,6 +108,7 @@ package
 		}
 		
 		public function init() {
+			typeSums = new Vector.<int>(types);
 			initTypes();
 			generateTiles();
 			reset();
@@ -115,6 +135,9 @@ package
 				new TileType(0xE5DDCB, "K", Texture.fromAsset("assets/tiles/tileK.png")),
 				new TileType(0x689B8D, "", Texture.fromAsset("assets/tiles/tileGrayscale.png")),
 			];
+			for (var i:int = 0; i < tileTypes.length; i++) {
+				tileTypes[i].index = i;
+			}
 		}
 		
 		private function generateTiles():void {
@@ -124,7 +147,7 @@ package
 					var tile = new Tile(juggler, tileDisplay, ix, iy, tileWidth, tileHeight);
 					tile.onDrop += tileDropped;
 					tile.onClear += tileCleared;
-					tiles[ix+iy*tileRows] = tile;
+					tiles[ix+iy*tileCols] = tile;
 				}
 			}
 		}
@@ -142,8 +165,8 @@ package
 			return rseed = (rseed * 1103515245 + 12345) & 0xFFFFFFFF;
 		}
 		private function getRandomType():TileType {
-			return tileTypes[Math.randomRangeInt(0, types-1)];
-			//return rand()%types;
+			//return tileTypes[Math.randomRangeInt(0, types-1)];
+			return tileTypes[rand()%types];
 		}
 		
 		private function onTouch(e:TouchEvent):void {
@@ -241,15 +264,34 @@ package
 		private function updateBoard() {
 			updateMatches();
 			if (rowMatches.length+colMatches.length > 0) {
-				//trace(rowMatches.length+colMatches.length + " matches");
-				//trace(rowMatches);
-				//trace(colMatches);
-				//debugMatches(rowMatches, DIM_ROWS);
-				//debugMatches(colMatches, DIM_COLS);
 				clearMatches(rowMatches, DIM_ROW);
 				clearMatches(colMatches, DIM_COL);
-				//Loom2D.juggler.delayCall(collapseColumns, 0.1);
 			}
+			
+			rowSwaps.clear();
+			findPossibleSwaps(rowSwaps, typeSums, DIM_ROW);
+			colSwaps.clear();
+			findPossibleSwaps(colSwaps, typeSums, DIM_COL);
+			
+			if (rowSwaps.length+colSwaps.length > 0) {
+				var index = Math.randomRangeInt(0, rowSwaps.length+colSwaps.length-1);
+				var swap = index < rowSwaps.length ? rowSwaps[index] : colSwaps[index-rowSwaps.length];
+				if (columnReady(swap.a.tx) && columnReady(swap.b.tx)) swapTiles(swap.a, swap.b);
+				//if (Math.random() < 0.2) swapTiles(swap.a, swap.b);
+				//juggler.delayCall(swapTiles, 0.5, swap.a, swap.b);
+			} else {
+				var i:int;
+				for (i = 0; i < tiles.length; i++) {
+					if (tiles[i].state != Tile.IDLE) break;
+				}
+				if (i >= tiles.length) {
+					trace("NO MOVES LEFT");
+					randomizeTiles();
+					updateBoard();
+					return;
+				}
+			}
+			
 			Loom2D.juggler.delayCall(collapseColumns, 0.3);
 			//collapseColumns();
 		}
@@ -266,7 +308,7 @@ package
 			for (var mi = 0; mi < matches.length; mi++) {
 				var match = matches[mi];
 				//for (var i = match.begin; i <= match.end; i++) {
-					//var index = dim == DIM_ROWS ? i+match.index*tileRows : match.index+i*tileRows;
+					//var index = dim == DIM_ROWS ? i+match.index*tileCols : match.index+i*tileCols;
 					//var tile 
 				if (containedInMatch(tile, match, dim)) return true;
 				//}
@@ -311,7 +353,7 @@ package
 				for (var ii = 0; ii < li+1; ii++) {
 					var type:TileType = null;
 					if (ii < li) {
-						var index = dim == DIM_ROW ? ii+io*tileRows : io+ii*tileRows;
+						var index = dim == DIM_ROW ? ii+io*tileCols : io+ii*tileCols;
 						var tile = tiles[index];
 						switch (tile.state) {
 							case Tile.IDLE:
@@ -360,22 +402,95 @@ package
 			}
 		}
 		
-		private function debugMatches(matches:Vector.<Match>, dim:int) {
-			for (var mi = 0; mi < matches.length; mi++) {
-				var match = matches[mi];
-				for (var i = match.begin; i <= match.end; i++) {
-					var index = dim == DIM_ROW ? i+match.index*tileRows : match.index+i*tileRows;
-					var tile = tiles[index];
-					tile.debugDisable();
+		private function findPossibleSwaps(swaps:Vector.<Swap>, typeSums:Vector.<int>, dim:int) {
+			var lo = dim == DIM_ROW ? tileRows : tileCols;
+			var li = dim == DIM_ROW ? tileCols : tileRows;
+			for (var io:int = 0; io < lo; io++) {
+				resetVector(typeSums);
+				for (var ii:int = 0; ii < li; ii++) {
+					var index = dim == DIM_ROW ? ii+io*tileCols : io+ii*tileCols;
+					var stride = dim == DIM_ROW ? 1 : tileCols;
+					var tile:Tile = tiles[index];
+					var type:TileType = tile.type;
+					if (type) typeSums[type.index]++;
+					if (ii >= minSequence) {
+						type = tiles[index-minSequence*stride].type;
+						if (type) typeSums[type.index]--;
+					}
+					var i:int;
+					if (ii >= minSequence-1) {
+						var oneShort = -1;
+						var justOne = -1;
+						for (i = 0; i < typeSums.length; i++) {
+							if (typeSums[i] == 1) justOne = i;
+							if (typeSums[i] == minSequence-1) oneShort = i;
+						}
+						if (oneShort != -1 && justOne != -1) {
+							var justOneIndex:int = -1;
+							for (i = 0; i < minSequence; i++) {
+								justOneIndex = index+(-(minSequence-1)+i)*stride;
+								if (tiles[justOneIndex].type.index == justOne) break;
+							}
+							Debug.assert(justOneIndex != -1);
+							var standout = tiles[justOneIndex];
+							if (standout.state != Tile.IDLE) continue;
+							
+							var jx = justOneIndex%tileCols;
+							var jy = Math.floor(justOneIndex/tileCols);
+							var swapLeft  = jx > 0;
+							var swapRight = jx < tileCols-1;
+							var swapUp    = jy > 0;
+							var swapDown  = jy < tileRows-1;
+							if (dim == DIM_ROW) {
+								swapLeft  = swapLeft  && i == 0;
+								swapRight = swapRight && i == minSequence-1;
+							} else {
+								swapUp    = swapUp    && i == 0;
+								swapDown  = swapDown  && i == minSequence-1;
+							}
+							
+							var swapIndex:int;
+							var swapee:Tile;
+							
+							if (swapLeft) {
+								swapee = tiles[justOneIndex-1];
+								if (swapee.type && swapee.type.index == oneShort && swapee.state == Tile.IDLE) swaps.push(new Swap(standout, swapee));
+							}
+							if (swapRight) {
+								swapee = tiles[justOneIndex+1];
+								if (swapee.type && swapee.type.index == oneShort && swapee.state == Tile.IDLE) swaps.push(new Swap(standout, swapee));
+							}
+							if (swapUp) {
+								swapee = tiles[justOneIndex-tileCols];
+								if (swapee.type && swapee.type.index == oneShort && swapee.state == Tile.IDLE) swaps.push(new Swap(standout, swapee));
+							}
+							if (swapDown) {
+								swapee = tiles[justOneIndex+tileCols];
+								if (swapee.type && swapee.type.index == oneShort && swapee.state == Tile.IDLE) swaps.push(new Swap(standout, swapee));
+							}
+						}
+					}
 				}
 			}
+			//if (swaps.length > 0) {
+				//var swap = swaps[Math.randomRangeInt(0, swaps.length-1)];
+				//if (columnReady(swap.a.tx) && columnReady(swap.b.tx)) swapTiles(swap.a, swap.b);
+				//if (Math.random() < 0.2) swapTiles(swap.a, swap.b);
+				//juggler.delayCall(swapTiles, 0.5, swap.a, swap.b);
+			//}
+			//for (var si:int = 0; si < swaps.length; si++) {
+				//var swap = swaps[si];
+				//swap.a.debug();
+				//juggler.delayCall(swapTiles, 1+si, swap.a, swap.b);
+				//swapTiles(swap.a, swap.b);
+			//}
 		}
 		
 		private function clearMatches(matches:Vector.<Match>, dim:int) {
 			for (var mi = 0; mi < matches.length; mi++) {
 				var match = matches[mi];
 				for (var i = match.begin; i <= match.end; i++) {
-					var index = dim == DIM_ROW ? i+match.index*tileRows : match.index+i*tileRows;
+					var index = dim == DIM_ROW ? i+match.index*tileCols : match.index+i*tileCols;
 					var tile = tiles[index];
 					Debug.assert(tile.state != Tile.DROPPING);
 					if (tile.state != Tile.IDLE) continue;
@@ -387,7 +502,7 @@ package
 		
 		private function columnReady(ix:int):Boolean {
 			for (var iy = tileRows-1; iy >= 0; iy--) {
-				var tile:Tile = tiles[ix+iy*tileRows];
+				var tile:Tile = tiles[ix+iy*tileCols];
 				if (tile.state != Tile.IDLE && tile.state != Tile.CLEARED) return false;
 			}
 			return true;
@@ -399,14 +514,14 @@ package
 				if (!columnReady(ix)) continue;
 				var drop = 0;
 				for (iy = tileRows-1; iy >= 0; iy--) {
-					var tile = tiles[ix+iy*tileRows];
+					var tile = tiles[ix+iy*tileCols];
 					if (tile.state != Tile.CLEARED) continue;
 					
 					var type:TileType = null;
 					var ay = iy;
 					var dropY:Number = 0;
 					while (ay >= 0) {
-						var above = tiles[ix+ay*tileRows];
+						var above = tiles[ix+ay*tileCols];
 						if (above.state != Tile.CLEARED) {
 							type = above.type;
 							dropY = above.transitionalTileY;

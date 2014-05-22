@@ -1,6 +1,7 @@
 package ui {
 	import Board;
 	import loom2d.animation.Transitions;
+	import loom2d.textures.TextureSmoothing;
 	import loom2d.ui.SimpleLabel;
 	import Match;
 	import feathers.display.TiledImage2;
@@ -33,7 +34,8 @@ package ui {
 		private var score:int;
 		private var scoreDisplay:SimpleLabel;
 		private var multiDisplay:SimpleLabel;
-		private var textScale:Number = 0.4;
+		//private var textScale:Number = 0.4;
+		private var textScale:Number = 1;
 		
 		private var multiplier:Number;
 		
@@ -71,17 +73,24 @@ package ui {
 			board.onTilesMatched += tilesMatched;
 			addChild(board);
 			
-			scoreDisplay = new SimpleLabel("assets/Curse.fnt", 30, 20);
+			//var fontFile = "assets/Curse.fnt";
+			var fontFile = "assets/CourierNew.fnt";
+			
+			scoreDisplay = new SimpleLabel(fontFile, 30, 20);
 			scoreDisplay.scale = textScale;
 			scoreDisplay.text = "";
-			scoreDisplay.y = 9;
+			//scoreDisplay.y = 9;
+			scoreDisplay.y = 4;
 			addChild(scoreDisplay);
 			
-			multiDisplay = new SimpleLabel("assets/Curse.fnt", 100, 20);
+			multiDisplay = new SimpleLabel(fontFile, 100, 20);
 			multiDisplay.scale = textScale;
 			multiDisplay.text = "";
-			multiDisplay.y = 9;
+			//multiDisplay.y = 9;
+			multiDisplay.y = 4;
 			addChild(multiDisplay);
+			
+			Texture.fromAsset(fontFile).smoothing = TextureSmoothing.MAX;
 			
 			screenshaker = new Shaker(board);
 			screenshaker.start(juggler);
@@ -108,6 +117,8 @@ package ui {
 			this.w = w;
 			this.h = h;
 			background.setSize(w, h);
+			updateScore();
+			updateMulti();
 		}
 		
 		private function tileClear(x:Number, y:Number, color:Color) {
@@ -135,7 +146,8 @@ package ui {
 			scoreDisplay.text = ""+score;
 			scoreDisplay.center();
 			scoreDisplay.scale = textScale*2;
-			scoreDisplay.x = w-scoreDisplay.size.x*textScale-10;
+			//scoreDisplay.x = w-scoreDisplay.size.x*textScale-10;
+			scoreDisplay.x = w-scoreDisplay.size.x*textScale;
 			juggler.tween(scoreDisplay, 0.5, {
 				scale: textScale,
 				transition: Transitions.EASE_OUT
@@ -147,7 +159,8 @@ package ui {
 			if (newText != multiDisplay.text) {
 				multiDisplay.text = newText;
 				multiDisplay.center();
-				multiDisplay.x = w-multiDisplay.size.x*textScale-40;
+				//multiDisplay.x = w-multiDisplay.size.x*textScale-40;
+				multiDisplay.x = w-multiDisplay.size.x*textScale-10;
 			}
 		}
 		
@@ -209,7 +222,8 @@ package ui {
 			if (Math.abs(screenshake) < 0.1) screenshake = 0;
 			momentum -= momentum*0.2*dt;
 			bgScroll -= momentum*1.5*dt;
-			multiplier = Math.round((1+0.1*momentum)/0.25)*0.25;
+			//multiplier = Math.round((1+0.1*momentum)/0.25)*0.25;
+			multiplier = Math.round(Math.pow(1+0.1*momentum, 2)/0.5)*0.5;
 			updateMulti();
 			//soundtrack.setPitch(getPitch(momentum));
 			//while (beatAccumulator < t) {

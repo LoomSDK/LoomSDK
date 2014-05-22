@@ -58,8 +58,8 @@ package  {
 			display.y = getDisplayY(ty);
 		}
 		
-		public function debugDisable() {
-			display.rotation += 5;
+		public function debug() {
+			display.rotation += Math.degToRad(45);
 		}
 		
 		public function select() {
