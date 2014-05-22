@@ -26,6 +26,7 @@ package feathers.display
     {
         private static const HELPER_POINT:Point = new Point();
         private static const HELPER_MATRIX:Matrix = new Matrix();
+        private static const HELPER_RECTANGLE:Rectangle = new Rectangle();
         
         /**
          * Constructor.
@@ -55,6 +56,9 @@ package feathers.display
 
         private var _originalImageWidth:Number;
         private var _originalImageHeight:Number;
+        
+        private var _scrollX:Number = 0;
+        private var _scrollY:Number = 0;
         
         /**
          * @private
@@ -240,6 +244,53 @@ package feathers.display
         }
         
         /**
+         * Offset the tiles on the X axis.
+         */
+        public function get scrollX():Number
+        {
+            return _scrollX;
+        }
+        
+        /**
+         * @private
+         */
+        public function set scrollX(value:Number):void
+        {
+            if (value == 0 && this.scrollX != 0 || value != 0 && this.scrollX == 0) this._layoutChanged = true;
+            this._scrollX = value;
+            this._propertiesChanged = true;
+            this.valid = false;
+        }
+        
+        /**
+         * Offset the tiles on the Y axis.
+         */
+        public function get scrollY():Number
+        {
+            return _scrollY;
+        }
+        
+        /**
+         * @private
+         */
+        public function set scrollY(value:Number):void
+        {
+            if (value == 0 && this._scrollY != 0 || value != 0 && this._scrollY == 0) this._layoutChanged = true;
+            this._scrollY = value;
+            this._propertiesChanged = true;
+            this.valid = false;
+        }
+        
+        /**
+         * Set both the x and y scroll values in one call.
+         */
+        public function setScroll(x:Number, y:Number):void
+        {
+            this.scrollX = x;
+            this.scrollY = y;
+        }
+        
+        /**
          * @private
          */
         public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
@@ -331,19 +382,30 @@ package feathers.display
          */
         public function validate():void
         {
+            const scaledTextureWidth:Number = this._originalImageWidth * this._textureScale;
+            const scaledTextureHeight:Number = this._originalImageHeight * this._textureScale;
             if(this._propertiesChanged)
             {
                 //this._image.smoothing = this._smoothing;
                 this._image.color = this._color;
+                this._batch.x = -(this._scrollX%scaledTextureWidth);
+                this._batch.y = -(this._scrollY%scaledTextureHeight);
             }
             if(this._propertiesChanged || this._layoutChanged)
             {
                 this._batch.reset();
                 this._image.scaleX = this._image.scaleY = this._textureScale;
-                const scaledTextureWidth:Number = this._originalImageWidth * this._textureScale;
-                const scaledTextureHeight:Number = this._originalImageHeight * this._textureScale;
-                const xImageCount:int = Math.ceil(this._width / scaledTextureWidth);
-                const yImageCount:int = Math.ceil(this._height / scaledTextureHeight);
+                const scx:Boolean = this._scrollX != 0;
+                const scy:Boolean = this._scrollY != 0;
+                if (scx || scy) {
+                    HELPER_RECTANGLE.width = this._width;
+                    HELPER_RECTANGLE.height = this._height;
+                    this.clipRect = HELPER_RECTANGLE;
+                }
+                const batchWidth:Number = this._width + (scx ? scaledTextureWidth : 0);
+                const batchHeight:Number = this._height + (scy ? scaledTextureHeight : 0);
+                const xImageCount:int = Math.ceil(batchWidth / scaledTextureWidth);
+                const yImageCount:int = Math.ceil(batchHeight / scaledTextureHeight);
                 const imageCount:int = xImageCount * yImageCount;
                 var xPosition:Number = 0;
                 var yPosition:Number = 0;
@@ -355,8 +417,8 @@ package feathers.display
                     this._image.x = xPosition;
                     this._image.y = yPosition;
 
-                    var imageWidth:Number = (nextXPosition >= this._width) ? (this._width - xPosition) : scaledTextureWidth;
-                    var imageHeight:Number = (nextYPosition >= this._height) ? (this._height - yPosition) : scaledTextureHeight;
+                    var imageWidth:Number = (nextXPosition >= batchWidth) ? (batchWidth - xPosition) : scaledTextureWidth;
+                    var imageHeight:Number = (nextYPosition >= batchHeight) ? (batchHeight - yPosition) : scaledTextureHeight;
                     this._image.width = imageWidth;
                     this._image.height = imageHeight;
 
@@ -374,7 +436,7 @@ package feathers.display
 
                     this._batch.addImage(this._image);
 
-                    if(nextXPosition >= this._width)
+                    if(nextXPosition >= batchWidth)
                     {
                         xPosition = 0;
                         nextXPosition = scaledTextureWidth;
