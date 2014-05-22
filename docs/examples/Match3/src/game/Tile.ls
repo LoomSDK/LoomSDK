@@ -1,5 +1,6 @@
 package  {
 	import game.Shaker;
+	import game.TileType;
 	import loom.sound.Sound;
 	import loom2d.animation.Juggler;
 	import loom2d.animation.Transitions;
@@ -28,7 +29,7 @@ package  {
 		public var onDrop:Drop;
 		public var onClear:Cleared;
 		
-		public var type:int;
+		public var type:TileType = null;
 		public var tx:int;
 		public var ty:int;
 		public var tw:int;
@@ -89,37 +90,24 @@ package  {
 			//return Color.fromInt(getTypeColor(type));
 		//}
 		
-		private function getTypeColor(type:int):uint {
-			var typeColors:Vector.<Number> = new <Number>[
-				0xBF0C43,
-				0xF9BA15,
-				0x8EAC00,
-				0x127A97,
-				0x452B72,
-				0xE5DDCB,
-				0x689B8D,
-			];
-			return type == -1 ? 0x818181 : typeColors[type];
-		}
-		
-		public function reset(type:int, texture:Texture = null) {
+		public function reset(type:TileType) {
 			this.type = type;
 			
 			state = IDLE;
 			
 			display.rotation = 0;
 			display.visible = true;
-			if (texture) {
-				display.texture = texture;
+			if (type) {
+				display.texture = type.texture;
 				display.center();
-				display.color = getTypeColor(type);
-				lastColor = Color.fromInt(display.color);
+				display.color = type.color;
+				lastColor = Color.fromInt(type.color);
 			}
 		}
 		
 		public function clear(delayed:Boolean = false, index:int = 0) {
 			if (state != IDLE) return;
-			reset(-1);
+			reset(null);
 			state = CLEARING;
 			if (delayed) {
 				//display.rotation = Math.PI/4;

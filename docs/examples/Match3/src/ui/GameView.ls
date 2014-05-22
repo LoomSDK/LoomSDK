@@ -1,5 +1,8 @@
 package ui {
 	import Board;
+	import loom2d.animation.Transitions;
+	import loom2d.ui.SimpleLabel;
+	import Match;
 	import feathers.display.TiledImage2;
 	import extensions.PDParticleSystem;
 	import game.Shaker;
@@ -18,26 +21,35 @@ package ui {
 		public var onQuit:ViewCallback;
 		
 		private var dt:Number = 1/60;
-		private var t:Number = 0;
+		private var t:Number;
 		private var juggler:Juggler = new Juggler();
 		
+		private var w:Number = 0;
+		private var h:Number = 0;
+		
 		private var screenshaker:Shaker;
-		private var screenshake:Number = 0;
+		private var screenshake:Number;
+		
+		private var score:int;
+		private var scoreDisplay:SimpleLabel;
+		private var multiDisplay:SimpleLabel;
+		private var textScale:Number = 0.4;
+		
+		private var multiplier:Number;
 		
 		private var board:Board;
 		//private var particles:ParticleSystem;
 		private var particles:PDParticleSystem;
 		
-		
 		private var explosion:Sound;
 		
-		private var momentum:Number = 0;
+		private var momentum:Number;
 		
 		private var soundtrack:Sound;
 		private var background:TiledImage2;
 		//private var background:ScrollingImage;
 		private var bgColor = new Color(0, 0.3*0xFF, 0.3*0xFF);
-		private var bgScroll:Number = 0;
+		private var bgScroll:Number;
 		
 		private var beatAccumulator:Number = 0;
 		private var beatInterval:Number = 1.71425;
@@ -56,7 +68,20 @@ package ui {
 			
 			board = new Board(juggler);
 			board.onTileClear += tileClear;
+			board.onTilesMatched += tilesMatched;
 			addChild(board);
+			
+			scoreDisplay = new SimpleLabel("assets/Curse.fnt", 30, 20);
+			scoreDisplay.scale = textScale;
+			scoreDisplay.text = "";
+			scoreDisplay.y = 9;
+			addChild(scoreDisplay);
+			
+			multiDisplay = new SimpleLabel("assets/Curse.fnt", 100, 20);
+			multiDisplay.scale = textScale;
+			multiDisplay.text = "";
+			multiDisplay.y = 9;
+			addChild(multiDisplay);
 			
 			screenshaker = new Shaker(board);
 			screenshaker.start(juggler);
@@ -78,12 +103,52 @@ package ui {
 			//addEventListener(TouchEvent.TOUCH, onTouch);
 		}
 		
+		
 		public function resize(w:Number, h:Number) {
+			this.w = w;
+			this.h = h;
 			background.setSize(w, h);
 		}
 		
 		private function tileClear(x:Number, y:Number, color:Color) {
 			explode(x, y, color);
+		}
+		
+		private function tilesMatched(m:Match):void {
+			var matchLength = m.end-m.begin+1;
+			addScore(matchLength*matchLength);
+			if (m.type == null) {
+				addScore(100);
+				momentum += 30;
+				screenshake += 20;
+				explosion.setPitch(0.5);
+				explosion.play();
+			}
+			updateScore();
+		}
+		
+		private function addScore(delta:int) {
+			score += Math.ceil(multiplier*delta);
+		}
+		
+		private function updateScore() {
+			scoreDisplay.text = ""+score;
+			scoreDisplay.center();
+			scoreDisplay.scale = textScale*2;
+			scoreDisplay.x = w-scoreDisplay.size.x*textScale-10;
+			juggler.tween(scoreDisplay, 0.5, {
+				scale: textScale,
+				transition: Transitions.EASE_OUT
+			});
+		}
+		
+		private function updateMulti() {
+			var newText = "x "+multiplier.toFixed(2);
+			if (newText != multiDisplay.text) {
+				multiDisplay.text = newText;
+				multiDisplay.center();
+				multiDisplay.x = w-multiDisplay.size.x*textScale-40;
+			}
 		}
 		
 		public function getPitch(x:Number):Number {
@@ -118,6 +183,11 @@ package ui {
 			board.init();
 			t = 0;
 			beatAccumulator = 0;
+			score = 0;
+			momentum = 0;
+			screenshake = 0;
+			bgScroll = 0;
+			multiplier = 1;
 			//soundtrack.play();
 			//stage.addEventListener(TouchEvent.TOUCH, function(e:TouchEvent) {
 				//var t:Touch = e.touches[0];
@@ -138,7 +208,9 @@ package ui {
 			screenshake -= screenshake*6*dt;
 			if (Math.abs(screenshake) < 0.1) screenshake = 0;
 			momentum -= momentum*0.2*dt;
-			bgScroll += momentum*1.5*dt;
+			bgScroll -= momentum*1.5*dt;
+			multiplier = Math.round((1+0.1*momentum)/0.25)*0.25;
+			updateMulti();
 			//soundtrack.setPitch(getPitch(momentum));
 			//while (beatAccumulator < t) {
 				//screenshake = 2;

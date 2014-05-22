@@ -1,5 +1,6 @@
 package
 {
+	import game.TileType;
 	import loom.sound.Sound;
 	import loom2d.animation.Juggler;
 	import loom2d.display.DisplayObjectContainer;
@@ -15,9 +16,9 @@ package
 	import loom2d.textures.Texture;
 	import loom2d.textures.TextureSmoothing;
 	
-	struct Match {
+	public struct Match {
 		public var index:int;
-		public var type:int;
+		public var type:TileType;
 		public var begin:int;
 		public var end:int;
 		public static operator function =(a:Match, b:Match):Match
@@ -34,6 +35,7 @@ package
 	}
 	
 	public delegate TileCleared(x:Number, y:Number, color:Color):Void;
+	public delegate TilesMatched(m:Match):Void;
 	
 	public class Board extends DisplayObjectContainer
 	{
@@ -41,13 +43,17 @@ package
 		static const DIM_COL = 1;
 		
 		public var onTileClear:TileCleared;
+		public var onTilesMatched:TilesMatched;
 		
 		var juggler:Juggler;
 		
-		var types = 5;
+		//var types = 5;
 		//var types = 4;
 		//var types = 3;
-		var typeTextures:Vector.<Texture>;
+		
+		var types:int = 6;
+		//var types:int = 5;
+		var tileTypes:Vector.<TileType>;
 		
 		var tileCols = 8;
 		var tileRows = 8;
@@ -66,9 +72,13 @@ package
 		
 		var tileMove:Sound;
 		
+		var freeformMode:Boolean = false;
+		var matchSequence:String = "LOOMSDK";
+		
 		public function Board(juggler:Juggler)
 		{
 			this.juggler = juggler;
+			
 			
 			tileDisplay.clipRect = new Rectangle(0, 0, tileCols*tileWidth, tileRows*tileHeight);
 			addChild(tileDisplay);
@@ -79,14 +89,14 @@ package
 		}
 		
 		public function init() {
-			loadTypeTextures();
+			initTypes();
 			generateTiles();
 			reset();
 		}
 		
 		public function resize(w:Number, h:Number) {
 			tileDisplay.x = (w-tileRows*tileWidth)/2;
-			tileDisplay.y = (h-tileCols*tileHeight)/2;
+			tileDisplay.y = (h-tileCols*tileHeight)/2+5;
 		}
 		
 		public function reset() {
@@ -94,14 +104,17 @@ package
 			updateBoard();
 		}
 		
-		private function loadTypeTextures() {
-			typeTextures = new Vector.<Texture>(types);
-			for (var i in typeTextures) {
-				//var tex = Texture.fromAsset("assets/tiles/tile" + i + ".png");
-				var tex = Texture.fromAsset("assets/tiles/tileGrayscale.png");
-				//tex.smoothing = TextureSmoothing.NONE;
-				typeTextures[i] = tex;
-			}
+		private function initTypes() {
+			tileTypes = new <TileType>[
+				//new TileType(0x818181, Texture.fromAsset("assets/tileGrayscale.png")),
+				new TileType(0xBF0C43, "L", Texture.fromAsset("assets/tiles/tileL.png")),
+				new TileType(0xF9BA15, "O", Texture.fromAsset("assets/tiles/tileO.png")),
+				new TileType(0x8EAC00, "M", Texture.fromAsset("assets/tiles/tileM.png")),
+				new TileType(0x127A97, "S", Texture.fromAsset("assets/tiles/tileS.png")),
+				new TileType(0x452B72, "D", Texture.fromAsset("assets/tiles/tileD.png")),
+				new TileType(0xE5DDCB, "K", Texture.fromAsset("assets/tiles/tileK.png")),
+				new TileType(0x689B8D, "", Texture.fromAsset("assets/tiles/tileGrayscale.png")),
+			];
 		}
 		
 		private function generateTiles():void {
@@ -119,7 +132,7 @@ package
 		private function randomizeTiles() {
 			rseed = 1;
 			for each (var tile in tiles) {
-				resetTile(tile, getRandomType());
+				tile.reset(getRandomType());
 				tile.resetPosition();
 			}
 		}
@@ -128,15 +141,10 @@ package
 		private function rand():int {
 			return rseed = (rseed * 1103515245 + 12345) & 0xFFFFFFFF;
 		}
-		private function getRandomType():int {
-			return Math.randomRangeInt(0, types-1);
+		private function getRandomType():TileType {
+			return tileTypes[Math.randomRangeInt(0, types-1)];
 			//return rand()%types;
 		}
-		
-		private function resetTile(tile:Tile, type:int) {
-			tile.reset(type, typeTextures[type]);
-		}
-		
 		
 		private function onTouch(e:TouchEvent):void {
 			for each (var touch in e.touches) {
@@ -202,8 +210,8 @@ package
 		
 		private function swapTiles(a:Tile, b:Tile, returning:Boolean = false) {
 			var t = a.type;
-			resetTile(a, b.type);
-			resetTile(b, t);
+			a.reset(b.type);
+			b.reset(t);
 			var tx = a.transitionalTileX;
 			var ty = a.transitionalTileY;
 			a.swapFrom(b.transitionalTileX, b.transitionalTileY);
@@ -223,7 +231,7 @@ package
 				return;
 			}
 			updateMatches();
-			if (containedInCurrentMatches(a) || containedInCurrentMatches(b)) {
+			if (freeformMode || containedInCurrentMatches(a) || containedInCurrentMatches(b)) {
 				updateBoard();
 			} else {
 				swapTiles(b, a, true);
@@ -295,37 +303,58 @@ package
 			var lo = dim == DIM_ROW ? tileRows : tileCols;
 			var li = dim == DIM_ROW ? tileCols : tileRows;
 			for (var io = 0; io < lo; io++) {
-				var prevType = -1;
-				var sum = -1;
 				// Don't find matches in non-ready columns
 				if (dim == DIM_COL && !columnReady(io)) continue;
+				var prevType:TileType = null;
+				var sum = 0;
+				var seqIndex = 0;
 				for (var ii = 0; ii < li+1; ii++) {
-					var type:int;
-					if (ii >= li) {
-						type = -1;
-					} else {
+					var type:TileType = null;
+					if (ii < li) {
 						var index = dim == DIM_ROW ? ii+io*tileRows : io+ii*tileRows;
 						var tile = tiles[index];
 						switch (tile.state) {
 							case Tile.IDLE:
 								type = tile.type; break;
 							default:
-								type = -1;
+								type = null;
+						}
+					}
+					var sequenceMatched = false;
+					if (type && type.character == matchSequence.charAt(seqIndex)) {
+						seqIndex++;
+						if (seqIndex >= matchSequence.length) {
+							sum = seqIndex;
+							prevType = null;
+							sequenceMatched = true;
+							seqIndex = 0;
+						}
+					} else {
+						if (seqIndex > 0) {
+							seqIndex = 0;
+							ii--;
+							continue;
 						}
 					}
 					if (type == prevType) {
 						sum++;
 					} else {
-						if (prevType != -1 && sum >= minSequence) {
-							var m = new Match();
+						var m:Match;
+						if ((prevType != null && sum >= minSequence) || sequenceMatched) {
+							m = new Match();
 							m.index = io;
 							m.type = prevType;
-							m.begin = ii-sum;
-							m.end = ii-1;
+							if (sequenceMatched) {
+								m.begin = ii-sum+1;
+								m.end = ii;
+							} else {
+								m.begin = ii-sum;
+								m.end = ii-1;
+							}
 							matches.push(m);
 						}
-						sum = 1;
 						prevType = type;
+						sum = 1;
 					}
 				}
 			}
@@ -352,6 +381,7 @@ package
 					if (tile.state != Tile.IDLE) continue;
 					tile.clear(true, matchIndex++);
 				}
+				onTilesMatched(match);
 			}
 		}
 		
@@ -372,7 +402,7 @@ package
 					var tile = tiles[ix+iy*tileRows];
 					if (tile.state != Tile.CLEARED) continue;
 					
-					var type:int = -1;
+					var type:TileType = null;
 					var ay = iy;
 					var dropY:Number = 0;
 					while (ay >= 0) {
@@ -385,12 +415,12 @@ package
 						}
 						ay--;
 					}
-					if (type == -1) {
+					if (!type) {
 						type = getRandomType();
 						drop++;
 						dropY = -drop;
 					}
-					resetTile(tile, type);
+					tile.reset(type);
 					tile.dropFrom(dropY);
 					//drop++;
 				}
