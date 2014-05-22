@@ -1,5 +1,6 @@
 package co.theengine.loomdemo;
 
+import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.app.Activity;
@@ -21,29 +22,32 @@ import com.parse.PushService;
 public class LoomParse
 {
     ///vars
-    private static Activity     _context;
-
+    private static Context     _context;
 
 
     ///handles initialization of the Loom Mobile class
-    public static void onCreate(Activity ctx)
+    public static void onCreate(Application app)
     {
-        _context = ctx;
+        _context = app;
+
+        String appID = app.getString(R.string.parseAppID);
+        String clientKey = app.getString(R.string.parseClientKey);
+        Log.d("Loom", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
+
+        ///initialize Parse for our application
+        Parse.initialize(app, appID, clientKey);
+
+        ///initialize Push Notifications service
+        PushService.setDefaultPushCallback(app, LoomDemo.class);
+        ParseInstallation.getCurrentInstallation().saveInBackground();
     }
 
 
     ///initializes Parse with the app and client IDs
     public static boolean startUp(String appID, String clientKey)
     {
-        Log.d("Loom", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
-
-        ///initialize Parse for our application
-        Parse.initialize(_context, appID, clientKey);
-
-        ///initialize Push Notifications service
-        PushService.setDefaultPushCallback(_context, LoomDemo.class);
-        ParseInstallation.getCurrentInstallation().saveInBackground();
-        
+//TODO: likely remove this and have the C++ code just do nothing instead; wait until we see what happens with iOS Parse 1st        
+        //Dummy function as Parse is started up in OnCreate above
         return true;
     }
 }
