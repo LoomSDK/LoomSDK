@@ -1,8 +1,14 @@
 package co.theengine.loomdemo;
 
+import android.app.Activity;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.util.Log;
 import android.util.Base64;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.content.Intent;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -10,9 +16,14 @@ import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.Signature;
 
+import com.facebook.android.Facebook.DialogListener;
 import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.Settings;
+import com.facebook.widget.WebDialog;
+import com.facebook.FacebookException;
+import com.facebook.FacebookOperationCanceledException;
+import com.facebook.widget.WebDialog.RequestsDialogBuilder;
 
 import java.util.List;
 import java.util.Arrays;
@@ -20,6 +31,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.util.Log;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 
@@ -54,9 +68,66 @@ public class LoomFacebook {
 		return Session.getActiveSession().getAccessToken();
 	}
 
+	public static void showFrictionlessRequestDialog(final String recipients, final String title, final String message) {
+
+		handler.post(new Runnable() {
+
+			@Override
+			public void run() {
+
+				Bundle params = new Bundle();
+				params.putString("title", title);
+				params.putString("to", recipients);
+				params.putString("message", message);
+				params.putString("frictionless", "1");
+
+		        WebDialog.OnCompleteListener listener = new WebDialog.OnCompleteListener() {
+		            @Override
+		            public void onComplete(Bundle values, FacebookException error) {
+		                // ... TODO: handle errors...
+		            }
+		        };
+
+				WebDialog reqDialog;
+		        WebDialog.RequestsDialogBuilder builder = new WebDialog.RequestsDialogBuilder(
+		        	activity, 
+		        	Session.getActiveSession(), 
+		        	params
+		        ).setOnCompleteListener(listener);
+
+		        reqDialog = builder.build();
+		        reqDialog.show();
+
+		    }
+
+	    });
+
+	}
+	
+	public static String getExpirationDate(String dateFormat) {
+		String returnString;
+		Session session = Session.getActiveSession();
+		
+		if(dateFormat != null)
+		{
+			DateFormat df = new SimpleDateFormat(dateFormat);
+			returnString = df.format(session.getExpirationDate());
+		}
+		else
+			returnString = session.getExpirationDate().toString();
+			
+		return returnString;
+	}
+
 	// Internal use
-	public static void onCreate(LoomDemo loomDemo, Bundle savedInstanceState) {
+	public static void onCreate(LoomDemo loomDemo, Bundle savedInstanceState, ViewGroup value) {
+		
+		rootLayout = value;
+		activity = (Activity)rootLayout.getContext();
+		handler = new Handler(Looper.getMainLooper());
+
 		setLoomDemo(loomDemo);
+
 		Session session = Session.getActiveSession();
 		if (session == null) 
 		{
@@ -167,6 +238,10 @@ public class LoomFacebook {
 
 		return true;
 	}
+	
+	protected static ViewGroup rootLayout;
+	protected static Activity activity;
+	protected static Handler handler;
 
 	private static Session.StatusCallback mStatusCallback = new SessionStatusCallback();
 	private static native void nativeStatusCallback(String sessionState, String sessionPermissions);

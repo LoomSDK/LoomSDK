@@ -29,5 +29,15 @@ package Loom
          * Get the access token for the current Facebook user, or null.
          */
          public static native function getAccessToken():String;
+
+        /**
+        * Get the expiry time for our session with the provided date format
+        */
+        public static native function getExpirationDate(dateFormat:String):String;
+		
+		/**
+         * Show a frictionless app request dialog.
+         */
+        public static native function showFrictionlessRequestDialog(recipients:String, title:String, message:String):Boolean;
     }
 }

@@ -182,7 +182,7 @@ public class LoomDemo extends Cocos2dxActivity {
         LoomCarrot.onCreate(this);
 
         // Create Facebook
-        LoomFacebook.onCreate(this, savedInstanceState);
+        LoomFacebook.onCreate(this, savedInstanceState, webViewGroup);
 
         // Hook up the store.
         LoomStore.bind(this);
