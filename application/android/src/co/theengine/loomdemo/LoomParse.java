@@ -33,7 +33,7 @@ public class LoomParse
 
 
     ///initializes Parse with the app and client IDs
-    public static void startUp(String appID, String clientKey)
+    public static boolean startUp(String appID, String clientKey)
     {
         Log.d("Loom", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
 
@@ -43,5 +43,7 @@ public class LoomParse
         ///initialize Push Notifications service
         PushService.setDefaultPushCallback(_context, LoomDemo.class);
         ParseInstallation.getCurrentInstallation().saveInBackground();
+        
+        return true;
     }
 }
