@@ -124,12 +124,14 @@ if (APPLE)
           "-framework CoreAudio"
 
           # Parse
-          # "-framework ${CMAKE_SOURCE_DIR}/loom/vendor/parse/Parse"
+#TODO: Parse requires Facebook on iOS... weeeee!!!!          
+          # "-framework Parse -F ${CMAKE_SOURCE_DIR}/loom/vendor/parse"
 
           # Admob SDK
           ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a
           "-ObjC"
-          "-lc++")
+          "-lc++"
+        )
 
         #iPhone app bundle
         set_target_properties(${PROJECT_NAME} PROPERTIES
