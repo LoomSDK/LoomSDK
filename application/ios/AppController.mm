@@ -22,6 +22,7 @@
  THE SOFTWARE.
  ****************************************************************************/
 #import <UIKit/UIKit.h>
+#import "AssetsLibrary/AssetsLibrary.h"
 #import "AppController.h"
 #import "cocos2d.h"
 #import "EAGLView.h"
@@ -163,6 +164,48 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
     {
         [[UIApplication sharedApplication] setStatusBarHidden: YES];
     }
+    else if(!strcmp(type, "saveToPhotoLibrary"))
+    {
+        NSString *path = [NSString stringWithUTF8String:payload];
+        NSObject *dataObject = [NSData dataWithContentsOfFile:path];
+
+        // If we're not looking in the app bundle already, try looking in there.
+        if(dataObject == nil && [path rangeOfString:[[NSBundle mainBundle] resourcePath] options:NSCaseInsensitiveSearch].location == NSNotFound)
+        {
+            NSString *inBundlePath = [NSString stringWithFormat:@"%@/%@", [[NSBundle mainBundle] resourcePath], path];
+            dataObject = [NSData dataWithContentsOfFile:inBundlePath];
+        }
+
+        if(dataObject == nil)
+        {
+            LoomApplication::fireGenericEvent("saveToPhotoLibraryFail", "badPath");
+        }
+        else
+        {
+            ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+            [library writeImageDataToSavedPhotosAlbum:dataObject metadata:nil completionBlock:^(NSURL *assetURL, NSError *error)
+            {
+                if (error)
+                {
+                    NSString *errorType = [error localizedDescription];
+                    if ([error code] == ALAssetsLibraryAccessGloballyDeniedError || [error code] == ALAssetsLibraryAccessUserDeniedError)
+                    {
+                        errorType = @"accessDenied";
+                    }
+
+                    LoomApplication::fireGenericEvent("saveToPhotoLibraryFail", [errorType UTF8String]);
+                }
+                else
+                {
+                    LoomApplication::fireGenericEvent("saveToPhotoLibrarySuccess", "");
+                }
+            }];
+
+            [library release];
+        }
+    }
+
+    return 0;
 }
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
