@@ -50,4 +50,31 @@ public class LoomParse
         //Dummy function as Parse is started up in OnCreate above
         return true;
     }
+	
+	///Allows user to pull the installation ID from Loom for registration functionality.
+	public static String getInstallationID()
+	{
+		String installId = ParseInstallation.getCurrentInstallation().getInstallationId();
+		
+		return installId;
+	}
+	
+	///Allows uer to pull the installation's objectId for registration functionality.
+	public static String getInstallationObjectID()
+	{
+		String objectId = ParseInstallation.getCurrentInstallation().getObjectId();
+		
+		return objectId;
+	}
+		///DoubleDoodle special case function that updates the custom userId property.
+	public static String updateInstallationUserID(String userId)
+	{
+		ParseInstallation installation = ParseInstallation.getCurrentInstallation();
+		
+		installation.put("userId",userId);
+				
+		installation.saveInBackground();
+		
+		return("Installation saving data.");
+	}
 }

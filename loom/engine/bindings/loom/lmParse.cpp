@@ -41,6 +41,21 @@ public:
     {
         return platform_startUp(appID, clientKey);
     }
+	
+	static const char* getInstallationID()
+	{
+		return platform_getInstallationID();
+	}
+	
+	static const char* getInstallationObjectID()
+	{
+		return platform_getInstallationObjectID();
+	}
+	
+	static const char* updateInstallationUserID(const char* userId)
+	{
+		return platform_updateInstallationUserID(userId);
+	}
 };
 
 
@@ -52,6 +67,9 @@ static int registerLoomParse(lua_State *L)
         .beginClass<Parse>("Parse")
 
             .addStaticMethod("startUp", &Parse::startUp)
+			.addStaticMethod("getInstallationID", &Parse::getInstallationID)
+			.addStaticMethod("getInstallationObjectID", &Parse::getInstallationObjectID)
+			.addStaticMethod("updateInstallationUserID", &Parse::updateInstallationUserID)
 
         .endClass()
 
@@ -59,6 +77,8 @@ static int registerLoomParse(lua_State *L)
 
     return 0;
 }
+
+
 
 
 void installLoomParse()

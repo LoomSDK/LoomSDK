@@ -40,5 +40,13 @@ package loom.platform
          *  @param clientKey The Parse Client ID, obtained after creating your App on www.parse.com
          */
         public static native function startUp(appID:String, clientKey:String):Boolean;
+
+        public static native function getInstallationID():String;
+
+        public static native function getInstallationObjectID():String;
+
+        public static native function updateInstallationUserID(userId:String):String;
     }
+
+
 }

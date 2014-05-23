@@ -37,6 +37,23 @@ bool platform_startUp(const char *appID, const char *clientKey)
     return false;
 }
 
+///Returns the parse installation ID
+const char* platform_getInstallationID()
+{
+    return "";
+}
+
+///Returns the parse installation object's objectId
+const char* platform_getInstallationObjectID()
+{
+    return "";
+}
+
+///DD function that updates the custom userId property on the installation
+const char* platform_updateInstallationUserID(const char* userId)
+{
+	return "";
+}
 
 #endif //LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_IOS
 
