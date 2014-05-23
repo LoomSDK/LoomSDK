@@ -16,20 +16,6 @@ class Facebook
 public:
     LOOM_STATICDELEGATE(OnSessionStatus);
 
-    static void noteGamewoofToken(const char *token)
-    {
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-        loomJniMethodInfo methodInfo;
-        LoomJni::getStaticMethodInfo(   methodInfo,
-                                        "co/theengine/loomdemo/LoomDemo",
-                                        "registerDeviceWithSpotkinStatic",
-                                        "(Ljava/lang/String;)V");
-        jstring jTokenString = methodInfo.env->NewStringUTF(token);
-        methodInfo.env->CallStaticVoidMethod(methodInfo.classID, methodInfo.methodID, jTokenString);
-        methodInfo.env->DeleteLocalRef(jTokenString);
-#endif
-    }
-
     static bool openSessionWithReadPermissions(const char* permissionsString)
     {
         bool ret = false;
@@ -146,7 +132,6 @@ static int registerLoomFacebook(lua_State* L)
     beginPackage(L, "Loom")
 
     .beginClass<Facebook>("Facebook")
-        .addStaticMethod("noteGamewoofToken", &Facebook::noteGamewoofToken)
         .addStaticMethod("openSessionWithReadPermissions", &Facebook::openSessionWithReadPermissions)
         .addStaticMethod("requestNewPublishPermissions", &Facebook::requestNewPublishPermissions)
         .addStaticMethod("showFrictionlessRequestDialog", &Facebook::showFrictionlessRequestDialog)
