@@ -121,6 +121,11 @@ if (APPLE)
           "-framework AudioToolbox"
           "-framework CoreAudio"
 
+          # Custom Vendors
+
+          # Facebook
+          "-framework FacebookSDK -F ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios"
+
           # Admob SDK
           ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a
           "-ObjC"
