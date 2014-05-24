@@ -46,7 +46,7 @@ public class LoomParse
     ///initializes Parse with the app and client IDs
     public static boolean startUp(String appID, String clientKey)
     {
-//TODO: likely remove this and have the C++ code just do nothing instead; wait until we see what happens with iOS Parse 1st        
+//LFL TODO: likely remove this and have the C++ code just do nothing instead; wait until we see what happens with iOS Parse 1st        
         //Dummy function as Parse is started up in OnCreate above
         return true;
     }
@@ -54,27 +54,20 @@ public class LoomParse
 	///Allows user to pull the installation ID from Loom for registration functionality.
 	public static String getInstallationID()
 	{
-		String installId = ParseInstallation.getCurrentInstallation().getInstallationId();
-		
-		return installId;
+		return ParseInstallation.getCurrentInstallation().getInstallationId();
 	}
 	
-	///Allows uer to pull the installation's objectId for registration functionality.
+	///Allows user to pull the installation's objectId for registration functionality.
 	public static String getInstallationObjectID()
 	{
-		String objectId = ParseInstallation.getCurrentInstallation().getObjectId();
-		
-		return objectId;
+		return ParseInstallation.getCurrentInstallation().getObjectId();
 	}
-		///DoubleDoodle special case function that updates the custom userId property.
-	public static String updateInstallationUserID(String userId)
+	
+    ///Updates the custom userId property.
+	public static void updateInstallationUserID(String userId)
 	{
 		ParseInstallation installation = ParseInstallation.getCurrentInstallation();
-		
 		installation.put("userId",userId);
-				
 		installation.saveInBackground();
-		
-		return("Installation saving data.");
 	}
 }

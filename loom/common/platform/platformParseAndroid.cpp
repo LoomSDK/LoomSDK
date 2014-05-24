@@ -35,6 +35,9 @@ lmDefineLogGroup(gAndroidParseLogGroup, "loom.parse.android", 1, 0);
 
 
 static loomJniMethodInfo gStartUp;
+static loomJniMethodInfo gGetInstallationID;
+static loomJniMethodInfo gGetInstallationObjectID;
+static loomJniMethodInfo gUpdateInstallationUserID;
 
 
 ///initializes the data for the Parse class for Android
@@ -47,6 +50,18 @@ void platform_parseInitialize()
                                  "co/theengine/loomdemo/LoomParse",
                                  "startUp",
                                  "(Ljava/lang/String;Ljava/lang/String;)Z");
+    LoomJni::getStaticMethodInfo(gGetInstallationID,
+                                 "co/theengine/loomdemo/LoomParse",
+                                 "getInstallationID",
+                                 "()Ljava/lang/String;");
+    LoomJni::getStaticMethodInfo(gGetInstallationObjectID,
+                                 "co/theengine/loomdemo/LoomParse",
+                                 "getInstallationObjectID",
+                                 "()Ljava/lang/String;");
+    LoomJni::getStaticMethodInfo(gUpdateInstallationUserID,
+                                 "co/theengine/loomdemo/LoomParse",
+                                 "updateInstallationUserID",
+                                 "(Ljava/lang/String;)V");
 }
 
 
@@ -67,51 +82,32 @@ bool platform_startUp(const char *appID, const char *clientKey)
 ///gets Parse installation ID
 const char* platform_getInstallationID()
 {       
-        static utString installID;
-        loomJniMethodInfo methodInfo;
-        LoomJni::getStaticMethodInfo(   methodInfo,
-                                        "co/theengine/loomdemo/LoomParse",
-                                        "getInstallationID",
-                                        "()Ljava/lang/String;");
-        jstring installIDString = (jstring)methodInfo.env->CallStaticObjectMethod(methodInfo.classID, methodInfo.methodID);
-        installID = LoomJni::jstring2string(installIDString);
-        methodInfo.env->DeleteLocalRef(installIDString);
-
-        return installID.c_str();
+    jstring result = (jstring)gGetInstallationID.env->CallStaticObjectMethod(gGetInstallationID.classID, gGetInstallationID.methodID);
     
+    ///convert jstring result into const char* for us to return
+    cocos2d::CCString *installID = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
+    installID->autorelease();
+    gGetInstallationID.env->DeleteLocalRef(result);
+    return installID->m_sString.c_str();
 }
+
 
 ///gets Parse installation object's objectId
 const char* platform_getInstallationObjectID()
 {       
-        static utString installOID;
-        loomJniMethodInfo methodInfo;
-        LoomJni::getStaticMethodInfo(   methodInfo,
-                                        "co/theengine/loomdemo/LoomParse",
-                                        "getInstallationObjectID",
-                                        "()Ljava/lang/String;");
-        jstring installOIDString = (jstring)methodInfo.env->CallStaticObjectMethod(methodInfo.classID, methodInfo.methodID);
-        installOID = LoomJni::jstring2string(installOIDString);
-        methodInfo.env->DeleteLocalRef(installOIDString);
-
-        return installOID.c_str();
+    jstring result = (jstring)gGetInstallationObjectID.env->CallStaticObjectMethod(gGetInstallationObjectID.classID, gGetInstallationObjectID.methodID);
     
+    ///convert jstring result into const char* for us to return
+    cocos2d::CCString *installID = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
+    installID->autorelease();
+    gGetInstallationObjectID.env->DeleteLocalRef(result);
+    return installID->m_sString.c_str();
 }
 
-const char* platform_updateInstallationUserID(const char* userId)
+void platform_updateInstallationUserID(const char* userId)
 {
-    static utString returnID;
-	loomJniMethodInfo methodInfo;    
-	LoomJni::getStaticMethodInfo(methodInfo,
-                                 "co/theengine/loomdemo/LoomParse",
-                                 "updateInstallationUserID",
-                                 "(Ljava/lang/String;)Ljava/lang/String;");
-	jstring jUserID = methodInfo.env->NewStringUTF(userId);
-	jstring returnIDString = (jstring)methodInfo.env->CallStaticObjectMethod(methodInfo.classID, methodInfo.methodID,jUserID);
-    returnID = LoomJni::jstring2string(returnIDString);
-    methodInfo.env->DeleteLocalRef(jUserID);
-	
-	return returnID.c_str();
-	  
+    jstring jUserID = gUpdateInstallationUserID.env->NewStringUTF(userId);
+	gUpdateInstallationUserID.env->CallStaticVoidMethod(gUpdateInstallationUserID.classID, gUpdateInstallationUserID.methodID, jUserID);
+    gUpdateInstallationUserID.env->DeleteLocalRef(jUserID);
 }
 #endif

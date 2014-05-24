@@ -37,11 +37,10 @@ bool platform_startUp(const char *appID, const char *clientKey);
 ///Returns the parse installation ID
 const char* platform_getInstallationID();
 
-
 ///Returns the parse installation's objectId
 const char* platform_getInstallationObjectID();
 
-///DD function that updates the custom userId property on the installation
-const char* platform_updateInstallationUserID(const char* userId);
+///Updates the custom userId property on the installation
+void platform_updateInstallationUserID(const char* userId);
 
 #endif

@@ -19,7 +19,6 @@
  */
 
 #include "loom/common/platform/platform.h"
-#include "loom/common/platform/platformMobile.h"
 
 #if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_IOS
 
@@ -49,10 +48,9 @@ const char* platform_getInstallationObjectID()
     return "";
 }
 
-///DD function that updates the custom userId property on the installation
-const char* platform_updateInstallationUserID(const char* userId)
+///Updates the custom userId property on the installation
+void platform_updateInstallationUserID(const char* userId)
 {
-	return "";
 }
 
 #endif //LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_IOS

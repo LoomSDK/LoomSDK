@@ -37,6 +37,7 @@ public:
     {
         platform_parseInitialize();
     }
+    
     static bool startUp(const char *appID, const char *clientKey)
     {
         return platform_startUp(appID, clientKey);
@@ -52,9 +53,9 @@ public:
 		return platform_getInstallationObjectID();
 	}
 	
-	static const char* updateInstallationUserID(const char* userId)
+	static void updateInstallationUserID(const char* userId)
 	{
-		return platform_updateInstallationUserID(userId);
+		platform_updateInstallationUserID(userId);
 	}
 };
 

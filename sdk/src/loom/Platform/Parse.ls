@@ -41,11 +41,26 @@ package loom.platform
          */
         public static native function startUp(appID:String, clientKey:String):Boolean;
 
+        /**
+         * Obtains the Parse Installation ID
+         *
+         *  @return the current installation ID
+         */
         public static native function getInstallationID():String;
 
+        /**
+         * Obtains the Parse Installation ObjectID
+         *
+         *  @return the current installation objectID
+         */
         public static native function getInstallationObjectID():String;
 
-        public static native function updateInstallationUserID(userId:String):String;
+        /**
+         * Sets the Parse Installation userId property
+         *
+         *  @param userId The new installation userID to set
+         */
+        public static native function updateInstallationUserID(userId:String):void;
     }
 
 

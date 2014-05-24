@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">LoomDemo</string>
+
+    <!-- Your Parse App ID goes here, or the CLI tool will populate it using the 'parse_app_id' property in loom.config -->
+    <string name="parseAppID">NO_APP_ID_SET</string>
+    
+    <!-- Your Parse Client Key goes here, or the CLI tool will populate it using the 'parse_client_key' property in loom.config -->
+    <string name="parseClientKey">NO_CLIENT_KEY_SET</string>
 </resources>

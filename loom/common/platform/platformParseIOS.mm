@@ -56,4 +56,24 @@ bool platform_startUp(const char *appID, const char *clientKey)
 }
 
 
+
+//TODO: Finish and test once we have the .framework linking
+///Returns the parse installation ID
+const char* platform_getInstallationID()
+{
+    return "";
+}
+
+///Returns the parse installation object's objectId
+const char* platform_getInstallationObjectID()
+{
+    return "";
+}
+
+///Updates the custom userId property on the installation
+void platform_updateInstallationUserID(const char* userId)
+{
+}
+
+
 #endif
