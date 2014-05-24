@@ -110,6 +110,8 @@ if (APPLE)
           "-framework OpenGLES"
           "-framework StoreKit"
           "-framework Security"
+          "-framework Social"
+          "-framework Accounts"
           "-framework QuartzCore"
           "-framework MobileCoreServices"
           "-framework OpenGLES"
@@ -129,7 +131,7 @@ if (APPLE)
           "-framework FacebookSDK -F ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios"
 
           # Parse (NOTE: Requires FacebookSDK on iOS!)
-          # "-framework Parse -F ${CMAKE_SOURCE_DIR}/loom/vendor/parse"
+          "-framework Parse -F ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios"
 
           # Admob SDK
           ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a

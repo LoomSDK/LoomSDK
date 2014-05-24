@@ -25,7 +25,7 @@ limitations under the License.
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
 #import <Foundation/NSSet.h>
-// #import <Parse/Parse.h>
+// #import "Parse.h"
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformParse.h"
@@ -43,21 +43,19 @@ void platform_parseInitialize()
 ///starts up the Parse service
 bool platform_startUp(const char *appID, const char *clientKey)
 {
-//TODO: Finish and test once we have the .framework linking
-    NSString *app_id = (appID) ? [NSString stringWithUTF8String : appID] : nil;
-    NSString *client_key = (clientKey) ? [NSString stringWithUTF8String : clientKey] : nil;
+    // NSString *app_id = (appID) ? [NSString stringWithUTF8String : appID] : nil;
+    // NSString *client_key = (clientKey) ? [NSString stringWithUTF8String : clientKey] : nil;
 
     // [Parse setApplicationId:app_id clientKey:client_key];
 
-    [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|
-                                                                            UIRemoteNotificationTypeAlert|
-                                                                            UIRemoteNotificationTypeSound];
-    return false;
+    // [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|
+    //                                                                         UIRemoteNotificationTypeAlert|
+    //                                                                         UIRemoteNotificationTypeSound];
+    return true;
 }
 
 
 
-//TODO: Finish and test once we have the .framework linking
 ///Returns the parse installation ID
 const char* platform_getInstallationID()
 {

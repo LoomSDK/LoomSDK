@@ -22,7 +22,7 @@
  THE SOFTWARE.
  ****************************************************************************/
 #import <UIKit/UIKit.h>
-// #import <Parse/Parse.h>
+#import "Parse.h"
 #import "AppController.h"
 #import "cocos2d.h"
 #import "EAGLView.h"
@@ -82,6 +82,19 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
 
     [[UIApplication sharedApplication] setStatusBarHidden: YES];
     
+    // Parse setup for Push Notifications
+NSString *app_id = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ParseAppIDString"];
+NSString *client_key = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ParseClientKeyString"];
+NSLog(@"-----Got Parse Strings: %s %s", app_id, client_key);
+
+// NSString *app_id = @"EUl1VhYqZ2bWjkiGNUTWABoJD6eGHVUboB9taPvC";//(appID) ? [NSString stringWithUTF8String : appID] : nil;
+// NSString *client_key = @"17pJDP3YV6kA0mxoS7YfEcdrrEC9kQ82iEbJ8OYT";//(clientKey) ? [NSString stringWithUTF8String : clientKey] : nil;
+// NSLog(@"-----Got Parse Strings: %s %s", app_id, client_key);
+    [Parse setApplicationId:app_id clientKey:client_key];
+    [application registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|
+                                                    UIRemoteNotificationTypeAlert|
+                                                    UIRemoteNotificationTypeSound];
+
     cocos2d::CCApplication::sharedApplication().run();
     
     return YES;
@@ -126,19 +139,18 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
 }
 
 
-/// Parse Push Notifications
-- (void)application:(UIApplication *)application
-  didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
 {
-  // Store the deviceToken in the current installation and save it to Parse.
-  // PFInstallation *currentInstallation = [PFInstallation currentInstallation];
-  // [currentInstallation setDeviceTokenFromData:deviceToken];
-  // [currentInstallation saveInBackground];
+    /// Parse Push Notifications
+    // Store the deviceToken in the current installation and save it to Parse.
+    PFInstallation *currentInstallation = [PFInstallation currentInstallation];
+    [currentInstallation setDeviceTokenFromData:deviceToken];
+    [currentInstallation saveInBackground];
 }
  
-- (void)application:(UIApplication *)application
-  didReceiveRemoteNotification:(NSDictionary *)userInfo {
-  // [PFPush handlePush:userInfo];
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
+    /// Parse Push Notifications
+    [PFPush handlePush:userInfo];
 }
 
 
