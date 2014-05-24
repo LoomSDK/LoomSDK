@@ -123,8 +123,12 @@ if (APPLE)
           "-framework AudioToolbox"
           "-framework CoreAudio"
 
-          # Parse
-#TODO: Parse requires Facebook on iOS... weeeee!!!!          
+          # Custom Vendors
+
+          # Facebook
+          "-framework FacebookSDK -F ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios"
+
+          # Parse (NOTE: Requires FacebookSDK on iOS!)
           # "-framework Parse -F ${CMAKE_SOURCE_DIR}/loom/vendor/parse"
 
           # Admob SDK
