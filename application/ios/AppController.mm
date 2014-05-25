@@ -22,7 +22,6 @@
  THE SOFTWARE.
  ****************************************************************************/
 #import <UIKit/UIKit.h>
-#import "Parse.h"
 #import "AppController.h"
 #import "cocos2d.h"
 #import "EAGLView.h"
@@ -31,6 +30,7 @@
 #import "RootViewController.h"
 
 #include "loom/engine/bindings/loom/lmApplication.h"
+
 
 static void handleGenericEvent(void *userData, const char *type, const char *payload)
 {
@@ -83,17 +83,8 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
     [[UIApplication sharedApplication] setStatusBarHidden: YES];
     
     // Parse setup for Push Notifications
-NSString *app_id = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ParseAppIDString"];
-NSString *client_key = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"ParseClientKeyString"];
-NSLog(@"-----Got Parse Strings: %s %s", app_id, client_key);
-
-// NSString *app_id = @"EUl1VhYqZ2bWjkiGNUTWABoJD6eGHVUboB9taPvC";//(appID) ? [NSString stringWithUTF8String : appID] : nil;
-// NSString *client_key = @"17pJDP3YV6kA0mxoS7YfEcdrrEC9kQ82iEbJ8OYT";//(clientKey) ? [NSString stringWithUTF8String : clientKey] : nil;
-// NSLog(@"-----Got Parse Strings: %s %s", app_id, client_key);
-    [Parse setApplicationId:app_id clientKey:client_key];
-    [application registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|
-                                                    UIRemoteNotificationTypeAlert|
-                                                    UIRemoteNotificationTypeSound];
+    parse = [[ParseAPIiOS alloc] init];
+    [parse initialize];
 
     cocos2d::CCApplication::sharedApplication().run();
     
@@ -142,15 +133,21 @@ NSLog(@"-----Got Parse Strings: %s %s", app_id, client_key);
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
 {
     /// Parse Push Notifications
-    // Store the deviceToken in the current installation and save it to Parse.
-    PFInstallation *currentInstallation = [PFInstallation currentInstallation];
-    [currentInstallation setDeviceTokenFromData:deviceToken];
-    [currentInstallation saveInBackground];
+    NSLog(@"---------Registered Parse for Remote Notifiations");
+    [parse registerForRemoteNotifications: deviceToken];
 }
- 
+- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
+{
+    /// Parse Push Notifications
+    NSInteger code = [error code];
+    NSString *codeString = [NSString stringWithFormat:@"Error code: %ld",(long)code];
+    NSLog(@"---------Failed to register Parse for Remote Notifications: %@", codeString);
+    [parse failedToRegister: error];
+}
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
     /// Parse Push Notifications
-    [PFPush handlePush:userInfo];
+    NSLog(@"---------Received Remote Notification: sending through to Parse");
+    [parse receivedRemoteNotification: userInfo];
 }
 
 

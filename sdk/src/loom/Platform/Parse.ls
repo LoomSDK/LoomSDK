@@ -36,22 +36,21 @@ package loom.platform
         /**
          * Starts up the Parse API service
          *
-         *  @param appID The Parse Application ID, obtained after creating your App on www.parse.com
-         *  @param clientKey The Parse Client ID, obtained after creating your App on www.parse.com
+         *  @return Whether or not the Native Parse API was able to initialize
          */
-        public static native function startUp(appID:String, clientKey:String):Boolean;
+        public static native function hasInitialized():Boolean;
 
         /**
          * Obtains the Parse Installation ID
          *
-         *  @return the current installation ID
+         *  @return the current installation ID, or and empty string if there was an error or Parse has not been initialized
          */
         public static native function getInstallationID():String;
 
         /**
          * Obtains the Parse Installation ObjectID
          *
-         *  @return the current installation objectID
+         *  @return the current installation objectID, or an empty string if there was an error or Parse has not been initialized
          */
         public static native function getInstallationObjectID():String;
 
@@ -59,8 +58,9 @@ package loom.platform
          * Sets the Parse Installation userId property
          *
          *  @param userId The new installation userID to set
+         *  @return Whether or not the the userID was able to be updated
          */
-        public static native function updateInstallationUserID(userId:String):void;
+        public static native function updateInstallationUserID(userId:String):Boolean;
     }
 
 

@@ -23,15 +23,71 @@ limitations under the License.
 #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
 
 #import <UIKit/UIKit.h>
-#import <Foundation/Foundation.h>
-#import <Foundation/NSSet.h>
-// #import "Parse.h"
+#import "Parse.h"
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformParse.h"
+#include "loom/common/platform/platformParseiOS.h"
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
 #include "loom/vendor/jansson/jansson.h"
+
+
+
+static bool _initialized = false;
+
+
+@implementation ParseAPIiOS
+
+
+-(void) initialize
+{
+    NSBundle *mainBundle = [NSBundle mainBundle];
+    NSString *app_id = [mainBundle objectForInfoDictionaryKey:@"ParseAppIDString"];
+    NSString *client_key = [mainBundle objectForInfoDictionaryKey:@"ParseClientKeyString"];
+//TEMP: LFL: Remove this log once we are all working 1005
+NSLog(@"-----Info.plist Parse Strings: %@ %@", app_id, client_key);
+
+//TODO: don't initialize without valid strings
+    [Parse setApplicationId:app_id clientKey:client_key];
+    [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|
+                                                    UIRemoteNotificationTypeAlert|
+                                                    UIRemoteNotificationTypeSound];    
+    _initialized = true;
+}
+
+-(void) registerForRemoteNotifications:(NSData *)deviceToken
+{
+    if(_initialized)
+    {
+        // Store the deviceToken in the current installation and save it to Parse.
+        PFInstallation *currentInstallation = [PFInstallation currentInstallation];
+        if(currentInstallation != NULL)
+        {
+            [currentInstallation setDeviceTokenFromData:deviceToken];
+            [currentInstallation saveInBackground];    
+        }
+    }
+}
+
+-(void) failedToRegister:(NSError *)error
+{
+    _initialized = false;
+}
+
+-(void) receivedRemoteNotification:(NSDictionary *)userInfo
+{
+    if(_initialized)
+    {
+        [PFPush handlePush:userInfo];
+    }
+}
+
+
+@end
+
+
+
 
 
 ///initializes the data for the Parse class for iOS
@@ -39,38 +95,40 @@ void platform_parseInitialize()
 {
 }
 
-
-///starts up the Parse service
-bool platform_startUp(const char *appID, const char *clientKey)
+///check if the Parse API has initialized
+bool platform_hasInitialized()
 {
-    // NSString *app_id = (appID) ? [NSString stringWithUTF8String : appID] : nil;
-    // NSString *client_key = (clientKey) ? [NSString stringWithUTF8String : clientKey] : nil;
-
-    // [Parse setApplicationId:app_id clientKey:client_key];
-
-    // [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|
-    //                                                                         UIRemoteNotificationTypeAlert|
-    //                                                                         UIRemoteNotificationTypeSound];
-    return true;
+    return _initialized;
 }
-
-
 
 ///Returns the parse installation ID
 const char* platform_getInstallationID()
 {
+    if(_initialized)
+    {
+
+    }
     return "";
 }
 
 ///Returns the parse installation object's objectId
 const char* platform_getInstallationObjectID()
 {
+    if(_initialized)
+    {
+
+    }
     return "";
 }
 
 ///Updates the custom userId property on the installation
-void platform_updateInstallationUserID(const char* userId)
+bool platform_updateInstallationUserID(const char* userId)
 {
+    if(_initialized)
+    {
+        // return true;
+    }
+    return false;
 }
 
 

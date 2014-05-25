@@ -23,6 +23,7 @@ public class LoomParse
 {
     ///vars
     private static Context     _context;
+    private static boolean     _initialized = false;
 
 
     ///handles initialization of the Loom Mobile class
@@ -32,7 +33,11 @@ public class LoomParse
 
         String appID = app.getString(R.string.parseAppID);
         String clientKey = app.getString(R.string.parseClientKey);
-        Log.d("Loom", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
+//TEMP: LFL: Remove this log once we are all working 1005
+Log.d("Loom", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
+
+//TODO: if invalid strings or error on initialize, make sure to set _initialized = false
+// _initialized = false;
 
         ///initialize Parse for our application
         Parse.initialize(app, appID, clientKey);
@@ -40,34 +45,59 @@ public class LoomParse
         ///initialize Push Notifications service
         PushService.setDefaultPushCallback(app, LoomDemo.class);
         ParseInstallation.getCurrentInstallation().saveInBackground();
+        _initialized = true;
     }
 
 
-    ///initializes Parse with the app and client IDs
-    public static boolean startUp(String appID, String clientKey)
+    ///returns if Parse was able to to initialize at startup or not
+    public static boolean hasInitialized()
     {
-//LFL TODO: likely remove this and have the C++ code just do nothing instead; wait until we see what happens with iOS Parse 1st        
-        //Dummy function as Parse is started up in OnCreate above
-        return true;
+        return _initialized;
     }
+
 	
 	///Allows user to pull the installation ID from Loom for registration functionality.
 	public static String getInstallationID()
 	{
-		return ParseInstallation.getCurrentInstallation().getInstallationId();
+        if(_initialized)
+        {
+            ParseInstallation installation = ParseInstallation.getCurrentInstallation();
+            if(installation != null)
+            {
+                return installation.getInstallationId();
+            }
+        }
+        return null;
 	}
 	
 	///Allows user to pull the installation's objectId for registration functionality.
 	public static String getInstallationObjectID()
 	{
-		return ParseInstallation.getCurrentInstallation().getObjectId();
+        if(_initialized)
+        {
+            ParseInstallation installation = ParseInstallation.getCurrentInstallation();
+            if(installation != null)
+            {
+                return installation.getObjectId();
+            }
+        }
+        return null;
 	}
 	
     ///Updates the custom userId property.
-	public static void updateInstallationUserID(String userId)
-	{
-		ParseInstallation installation = ParseInstallation.getCurrentInstallation();
-		installation.put("userId",userId);
-		installation.saveInBackground();
+	public static boolean updateInstallationUserID(String userId)
+    {
+        if(_initialized)
+        {
+            ParseInstallation installation = ParseInstallation.getCurrentInstallation();
+            if(installation != null)
+            {
+//TODO: error check?                
+                installation.put("userId",userId); 
+                installation.saveInBackground();
+                return true;
+            }
+        }
+        return false;
 	}
 }

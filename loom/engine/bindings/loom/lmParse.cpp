@@ -38,9 +38,9 @@ public:
         platform_parseInitialize();
     }
     
-    static bool startUp(const char *appID, const char *clientKey)
+    static bool hasInitialized()
     {
-        return platform_startUp(appID, clientKey);
+        return platform_hasInitialized();
     }
 	
 	static const char* getInstallationID()
@@ -53,9 +53,9 @@ public:
 		return platform_getInstallationObjectID();
 	}
 	
-	static void updateInstallationUserID(const char* userId)
+	static bool updateInstallationUserID(const char* userId)
 	{
-		platform_updateInstallationUserID(userId);
+		return platform_updateInstallationUserID(userId);
 	}
 };
 
@@ -67,7 +67,7 @@ static int registerLoomParse(lua_State *L)
 
         .beginClass<Parse>("Parse")
 
-            .addStaticMethod("startUp", &Parse::startUp)
+            .addStaticMethod("hasInitialized", &Parse::hasInitialized)
 			.addStaticMethod("getInstallationID", &Parse::getInstallationID)
 			.addStaticMethod("getInstallationObjectID", &Parse::getInstallationObjectID)
 			.addStaticMethod("updateInstallationUserID", &Parse::updateInstallationUserID)
@@ -78,8 +78,6 @@ static int registerLoomParse(lua_State *L)
 
     return 0;
 }
-
-
 
 
 void installLoomParse()

@@ -31,8 +31,8 @@
 ///initializes the data for the Parse class
 void platform_parseInitialize();
 
-///starts up the Parse service
-bool platform_startUp(const char *appID, const char *clientKey);
+///check if the Parse API has initialized
+bool platform_hasInitialized();
 
 ///Returns the parse installation ID
 const char* platform_getInstallationID();
@@ -41,6 +41,6 @@ const char* platform_getInstallationID();
 const char* platform_getInstallationObjectID();
 
 ///Updates the custom userId property on the installation
-void platform_updateInstallationUserID(const char* userId);
+bool platform_updateInstallationUserID(const char* userId);
 
 #endif

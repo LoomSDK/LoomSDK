@@ -34,7 +34,7 @@
 lmDefineLogGroup(gAndroidParseLogGroup, "loom.parse.android", 1, 0);
 
 
-static loomJniMethodInfo gStartUp;
+static loomJniMethodInfo gHasInitialized;
 static loomJniMethodInfo gGetInstallationID;
 static loomJniMethodInfo gGetInstallationObjectID;
 static loomJniMethodInfo gUpdateInstallationUserID;
@@ -46,10 +46,10 @@ void platform_parseInitialize()
     lmLog(gAndroidParseLogGroup, "INIT ***** PARSE ***** ANDROID ****");
 
     ///Bind to JNI entry points.
-    LoomJni::getStaticMethodInfo(gStartUp,
+    LoomJni::getStaticMethodInfo(gHasInitialized,
                                  "co/theengine/loomdemo/LoomParse",
                                  "startUp",
-                                 "(Ljava/lang/String;Ljava/lang/String;)Z");
+                                 "()Z");
     LoomJni::getStaticMethodInfo(gGetInstallationID,
                                  "co/theengine/loomdemo/LoomParse",
                                  "getInstallationID",
@@ -61,21 +61,14 @@ void platform_parseInitialize()
     LoomJni::getStaticMethodInfo(gUpdateInstallationUserID,
                                  "co/theengine/loomdemo/LoomParse",
                                  "updateInstallationUserID",
-                                 "(Ljava/lang/String;)V");
+                                 "(Ljava/lang/String;)Z");
 }
 
 
 ///starts up the Parse service
-bool platform_startUp(const char *appID, const char *clientKey)
+bool platform_hasInitialized()
 {
-    jstring jAppID = gStartUp.env->NewStringUTF(appID);
-    jstring jClientKey = gStartUp.env->NewStringUTF(clientKey);
-    jboolean result = gStartUp.env->CallStaticBooleanMethod(gStartUp.classID, 
-                                                            gStartUp.methodID, 
-                                                            jAppID,
-                                                            jClientKey);
-    gStartUp.env->DeleteLocalRef(jAppID);
-    gStartUp.env->DeleteLocalRef(jClientKey);
+    jboolean result = gHasInitialized.env->CallStaticBooleanMethod(gHasInitialized.classID, gHasInitialized.methodID);
     return (bool)result;
 }
 
@@ -83,6 +76,10 @@ bool platform_startUp(const char *appID, const char *clientKey)
 const char* platform_getInstallationID()
 {       
     jstring result = (jstring)gGetInstallationID.env->CallStaticObjectMethod(gGetInstallationID.classID, gGetInstallationID.methodID);
+    if(result == NULL)
+    {
+        return "";
+    }
     
     ///convert jstring result into const char* for us to return
     cocos2d::CCString *installID = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
@@ -96,6 +93,10 @@ const char* platform_getInstallationID()
 const char* platform_getInstallationObjectID()
 {       
     jstring result = (jstring)gGetInstallationObjectID.env->CallStaticObjectMethod(gGetInstallationObjectID.classID, gGetInstallationObjectID.methodID);
+    if(result == NULL)
+    {
+        return "";
+    }
     
     ///convert jstring result into const char* for us to return
     cocos2d::CCString *installID = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
@@ -104,10 +105,11 @@ const char* platform_getInstallationObjectID()
     return installID->m_sString.c_str();
 }
 
-void platform_updateInstallationUserID(const char* userId)
+bool platform_updateInstallationUserID(const char* userId)
 {
     jstring jUserID = gUpdateInstallationUserID.env->NewStringUTF(userId);
-	gUpdateInstallationUserID.env->CallStaticVoidMethod(gUpdateInstallationUserID.classID, gUpdateInstallationUserID.methodID, jUserID);
+	jboolean result = gUpdateInstallationUserID.env->CallStaticBooleanMethod(gUpdateInstallationUserID.classID, gUpdateInstallationUserID.methodID, jUserID);
     gUpdateInstallationUserID.env->DeleteLocalRef(jUserID);
+    return (bool)result;
 }
 #endif

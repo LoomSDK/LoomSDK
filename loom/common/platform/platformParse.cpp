@@ -30,8 +30,8 @@ void platform_parseInitialize()
 {
 }
 
-///starts up the Parse service 
-bool platform_startUp(const char *appID, const char *clientKey)
+///checks if the Parse service has initialized
+bool platform_hasInitialized()
 {
     return false;
 }
@@ -49,8 +49,9 @@ const char* platform_getInstallationObjectID()
 }
 
 ///Updates the custom userId property on the installation
-void platform_updateInstallationUserID(const char* userId)
+bool platform_updateInstallationUserID(const char* userId)
 {
+    return false;
 }
 
 #endif //LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_IOS
