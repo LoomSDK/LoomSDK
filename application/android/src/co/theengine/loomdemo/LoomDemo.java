@@ -177,10 +177,6 @@ public class LoomDemo extends Cocos2dxActivity {
         LoomWebView.setRootLayout(webViewGroup);
         LoomAdMob.setRootLayout(webViewGroup);
 
-//SOCIALTODO: LFL: likely move over to new Teak API eventually
-        // Create Carrot
-        LoomCarrot.onCreate(this);
-
         // Create Facebook
         LoomFacebook.onCreate(this, savedInstanceState, webViewGroup);
 
@@ -286,8 +282,6 @@ public class LoomDemo extends Cocos2dxActivity {
         LoomSensors.onDestroy();
         LoomVideo.onDestroy();
         DolbyAudio.onDestroy();   
-//SOCIALTODO: LFL: likely move over to new Teak API eventually
-        LoomCarrot.onDestroy();
         super.onDestroy();
     }
 

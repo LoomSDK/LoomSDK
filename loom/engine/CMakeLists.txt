@@ -28,7 +28,6 @@ set (ENGINE_SRC
     bindings/loom/lmVideo.cpp
     bindings/loom/lmMobile.cpp
     bindings/loom/lmPackageLoom.cpp
-    bindings/loom/lmCarrot.cpp
     bindings/loom/lmFacebook.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
 

@@ -186,7 +186,8 @@ public class LoomFacebook {
 					final String sessionPermissionsString = (session.isOpened() ? session.getPermissions().toString() : "");
 					LoomDemo.logDebug("Notifying Facebook on thread ID " + Thread.currentThread().getId());
 					nativeStatusCallback(sessionStateString, sessionPermissionsString);
-					LoomCarrot.setAccessToken(getAccessToken());
+//TODO: LFL: don't want to hardcode Carrot here, but instead have a delegate that Carrot can register with                    
+					// LoomCarrot.setAccessToken(getAccessToken());
 				}
 			});
 		}
