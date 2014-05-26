@@ -56,10 +56,10 @@ public class LoomApplication extends Application
     @Override
     public void onCreate() 
     {
-        super.onCreate();
-
-        // need to initialize Parse here as it needs to be running before any Push Notifications are noticed
+        // need to initialize Parse here as it needs to be running before the Parse Service has started up
         LoomParse.onCreate(this);
+
+        super.onCreate();
     }
  
     @Override

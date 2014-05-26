@@ -34,12 +34,16 @@ public class LoomParse
         String appID = app.getString(R.string.parseAppID);
         String clientKey = app.getString(R.string.parseClientKey);
 //TEMP: LFL: Remove this log once we are all working as we don't want these values public!
-Log.d("Loom", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
+Log.d("LoomParse", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
 
         // if invalid strings or error on initialize, make sure to set _initialized = false
         _initialized = false;
         if((appID != null) && (clientKey != null) && !appID.isEmpty() && !clientKey.isEmpty())
         {
+            ///NOTE: If your AndroidManifest specifies the com.parse.PushService but you do not call 
+            ///         Parse.initialize (ie. no valid appId or clientKey) then your application *will* 
+            ///         crash as soon as a Push Notification is detected
+
             ///initialize Parse for our application
             Parse.initialize(app, appID, clientKey);
 
@@ -47,6 +51,7 @@ Log.d("Loom", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKe
             PushService.setDefaultPushCallback(app, LoomDemo.class);
             ParseInstallation.getCurrentInstallation().saveInBackground();
             _initialized = true;
+            Log.d("LoomParse", "Completed initialization of Parse!");
         }
     }
 
