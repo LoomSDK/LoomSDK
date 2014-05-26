@@ -48,7 +48,7 @@ void platform_parseInitialize()
     ///Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gHasInitialized,
                                  "co/theengine/loomdemo/LoomParse",
-                                 "startUp",
+                                 "hasInitialized",
                                  "()Z");
     LoomJni::getStaticMethodInfo(gGetInstallationID,
                                  "co/theengine/loomdemo/LoomParse",
@@ -65,7 +65,7 @@ void platform_parseInitialize()
 }
 
 
-///starts up the Parse service
+///checks if the Parse service has initialized
 bool platform_hasInitialized()
 {
     jboolean result = gHasInitialized.env->CallStaticBooleanMethod(gHasInitialized.classID, gHasInitialized.methodID);
