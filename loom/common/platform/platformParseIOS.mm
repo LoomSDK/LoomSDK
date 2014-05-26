@@ -45,15 +45,20 @@ static bool _initialized = false;
     NSBundle *mainBundle = [NSBundle mainBundle];
     NSString *app_id = [mainBundle objectForInfoDictionaryKey:@"ParseAppIDString"];
     NSString *client_key = [mainBundle objectForInfoDictionaryKey:@"ParseClientKeyString"];
-//TEMP: LFL: Remove this log once we are all working 1005
+//TEMP: LFL: Remove this log once we are all working as we don't want these values public!
 NSLog(@"-----Info.plist Parse Strings: %@ %@", app_id, client_key);
 
-//TODO: don't initialize without valid strings
-    [Parse setApplicationId:app_id clientKey:client_key];
-    [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|
-                                                    UIRemoteNotificationTypeAlert|
-                                                    UIRemoteNotificationTypeSound];    
-    _initialized = true;
+    //don't initialize without valid strings
+    _initialized = false;
+    if(([app_id isEqualToString:@""] == FALSE) && ([client_key isEqualToString:@""] == FALSE))
+    {
+        [Parse setApplicationId:app_id clientKey:client_key];
+        [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|
+                                                        UIRemoteNotificationTypeAlert|
+                                                        UIRemoteNotificationTypeSound];    
+        _initialized = true;
+        NSLog(@"-----Parse Initialized Successfully");
+    }
 }
 
 -(void) registerForRemoteNotifications:(NSData *)deviceToken
@@ -66,6 +71,7 @@ NSLog(@"-----Info.plist Parse Strings: %@ %@", app_id, client_key);
         {
             [currentInstallation setDeviceTokenFromData:deviceToken];
             [currentInstallation saveInBackground];    
+            NSLog(@"-----Parse Registered for Remote Notifications Successfully");
         }
     }
 }
@@ -80,6 +86,7 @@ NSLog(@"-----Info.plist Parse Strings: %@ %@", app_id, client_key);
     if(_initialized)
     {
         [PFPush handlePush:userInfo];
+        NSLog(@"-----Parse Received Remote Notifications");
     }
 }
 
@@ -106,7 +113,13 @@ const char* platform_getInstallationID()
 {
     if(_initialized)
     {
-
+        PFInstallation *installation = [PFInstallation currentInstallation];
+        if(installation != NULL)
+        {
+            NSString *instID = [installation installationId];
+            const char *cString = [instID cStringUsingEncoding:NSUTF8StringEncoding];
+            return (cString != NULL) ? cString : "";
+        }
     }
     return "";
 }
@@ -116,7 +129,13 @@ const char* platform_getInstallationObjectID()
 {
     if(_initialized)
     {
-
+        PFInstallation *installation = [PFInstallation currentInstallation];
+        if(installation != NULL)
+        {
+            NSString *objID = [installation objectId];
+            const char *cString = [objID cStringUsingEncoding:NSUTF8StringEncoding];
+            return (cString != NULL) ? cString : "";
+        }
     }
     return "";
 }
@@ -126,7 +145,14 @@ bool platform_updateInstallationUserID(const char* userId)
 {
     if(_initialized)
     {
-        // return true;
+        PFInstallation *installation = [PFInstallation currentInstallation];
+        if(installation != NULL)
+        {
+            NSString *user_id = [NSString stringWithUTF8String:userId];
+            [installation setObject:user_id forKey:@"userId"];
+            [installation saveInBackground];
+        }
+        return true;
     }
     return false;
 }

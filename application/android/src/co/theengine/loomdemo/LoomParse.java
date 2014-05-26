@@ -33,19 +33,21 @@ public class LoomParse
 
         String appID = app.getString(R.string.parseAppID);
         String clientKey = app.getString(R.string.parseClientKey);
-//TEMP: LFL: Remove this log once we are all working 1005
+//TEMP: LFL: Remove this log once we are all working as we don't want these values public!
 Log.d("Loom", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
 
-//TODO: if invalid strings or error on initialize, make sure to set _initialized = false
-// _initialized = false;
+        // if invalid strings or error on initialize, make sure to set _initialized = false
+        _initialized = false;
+        if((appID != null) && (clientKey != null) && !appID.isEmpty() && !clientKey.isEmpty())
+        {
+            ///initialize Parse for our application
+            Parse.initialize(app, appID, clientKey);
 
-        ///initialize Parse for our application
-        Parse.initialize(app, appID, clientKey);
-
-        ///initialize Push Notifications service
-        PushService.setDefaultPushCallback(app, LoomDemo.class);
-        ParseInstallation.getCurrentInstallation().saveInBackground();
-        _initialized = true;
+            ///initialize Push Notifications service
+            PushService.setDefaultPushCallback(app, LoomDemo.class);
+            ParseInstallation.getCurrentInstallation().saveInBackground();
+            _initialized = true;
+        }
     }
 
 
@@ -92,8 +94,7 @@ Log.d("Loom", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKe
             ParseInstallation installation = ParseInstallation.getCurrentInstallation();
             if(installation != null)
             {
-//TODO: error check?                
-                installation.put("userId",userId); 
+                installation.put("userId", userId); 
                 installation.saveInBackground();
                 return true;
             }
