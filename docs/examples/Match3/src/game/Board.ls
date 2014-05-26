@@ -121,6 +121,7 @@ package
 		
 		public function reset() {
 			randomizeTiles();
+			neutralizeTiles();
 			updateBoard();
 		}
 		
@@ -154,19 +155,41 @@ package
 		
 		private function randomizeTiles() {
 			rseed = 1;
+			//rseed = 4;
 			for each (var tile in tiles) {
 				tile.reset(getRandomType());
 				tile.resetPosition();
 			}
 		}
 		
-		private var rseed = 0;
+		private var rseed = -1;
 		private function rand():int {
 			return rseed = (rseed * 1103515245 + 12345) & 0xFFFFFFFF;
 		}
 		private function getRandomType():TileType {
 			//return tileTypes[Math.randomRangeInt(0, types-1)];
 			return tileTypes[rand()%types];
+		}
+		
+		private function neutralizeTiles() {
+			updateMatches();
+			while (rowMatches.length+colMatches.length > 0) {
+				neutralizeMatches(rowMatches, DIM_ROW);
+				neutralizeMatches(colMatches, DIM_COL);
+				updateMatches();
+			}
+		}
+		
+		private function neutralizeMatches(matches:Vector.<Match>, dim:int) {
+			for (var mi = 0; mi < matches.length; mi++) {
+				var match = matches[mi];
+				for (var i = match.begin; i <= match.end; i++) {
+					var index = dim == DIM_ROW ? i+match.index*tileCols : match.index+i*tileCols;
+					var tile:Tile = tiles[index];
+					tile.reset(getRandomType());
+				}
+				onTilesMatched(match);
+			}
 		}
 		
 		private function onTouch(e:TouchEvent):void {
@@ -285,8 +308,7 @@ package
 				}
 				if (i >= tiles.length) {
 					trace("NO MOVES LEFT");
-					randomizeTiles();
-					updateBoard();
+					reset();
 					return;
 				}
 			}

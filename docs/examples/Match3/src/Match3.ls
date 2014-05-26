@@ -70,10 +70,10 @@ package
 			
 			stage.addEventListener(Event.RESIZE, resize);
 			
-			switchView(intro);
+			//switchView(intro);
 			//switchView(mode);
 			//switchView(difficulty);
-			//switchView(game);
+			switchView(game);
 		}
 		
 		private function resize(e:Event = null):void {
