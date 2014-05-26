@@ -38,6 +38,7 @@ The major language features we've added to LoomScript are:
       VICTORY,
       DEFEAT
     }
+    ~~~
 
 ## Why LoomScript?
 Why not use JavaScript or Lua directly? Why develop our own language?
