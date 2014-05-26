@@ -1,5 +1,7 @@
 package ui {
 	import Board;
+	import feathers.controls.Label;
+	import feathers.text.BitmapFontTextFormat;
 	import loom2d.animation.Transitions;
 	import loom2d.textures.TextureSmoothing;
 	import loom2d.ui.SimpleLabel;
@@ -17,9 +19,11 @@ package ui {
 	import loom2d.math.Color;
 	import loom2d.math.Point;
 	import loom2d.textures.Texture;
-	class GameView extends View {
+	import system.Number;
+	class GameView extends ConfigView {
 		
 		public var onQuit:ViewCallback;
+		public var onTimeout:ViewCallback;
 		
 		private var dt:Number = 1/60;
 		private var t:Number;
@@ -31,12 +35,18 @@ package ui {
 		private var screenshaker:Shaker;
 		private var screenshake:Number;
 		
-		private var score:int;
-		private var scoreDisplay:SimpleLabel;
+		public var score:int;
+		
+		public var timeDisplay:SimpleLabel;
+		[Bind]
+		public var scoreDisplay:SimpleLabel;
+		//public var scoreDisplay:Label;
+		private var lastDisplay:SimpleLabel;
 		private var multiDisplay:SimpleLabel;
 		//private var textScale:Number = 0.4;
 		private var textScale:Number = 1;
 		
+		private var last:Number;
 		private var multiplier:Number;
 		
 		private var board:Board;
@@ -56,7 +66,16 @@ package ui {
 		private var beatAccumulator:Number = 0;
 		private var beatInterval:Number = 1.71425;
 		
+		function get layoutFile():String {
+			return "assets/game.lml";
+		}
+		
 		public function init() {
+			
+			background = new TiledImage2(Texture.fromAsset("assets/background.png"), 2);
+			addChild(background);
+			
+			super.init();
 			
 			//particles = PDParticleSystem.loadLiveSystem("assets/explosion.pex", getTexture("assets/explosion.png"));
 			//particles = PDParticleSystem.loadLiveSystem("assets/pointer.pex");
@@ -65,30 +84,46 @@ package ui {
 			particles.emitterY = 60;
 			juggler.add(particles);
 			
-			background = new TiledImage2(Texture.fromAsset("assets/background.png"), 2);
-			addChild(background);
-			
 			board = new Board(juggler);
 			board.onTileClear += tileClear;
 			board.onTilesMatched += tilesMatched;
 			addChild(board);
 			
 			//var fontFile = "assets/Curse.fnt";
-			var fontFile = "assets/CourierNew.fnt";
+			//var fontFile = "assets/CourierNew.fnt";
+			var fontFile = "assets/kremlin-export.fnt";
+			
+			timeDisplay = new SimpleLabel(fontFile, 30, 20);
+			timeDisplay.scale = textScale;
+			timeDisplay.text = "";
+			//scoreDisplay.y = 9;
+			timeDisplay.y = 0;
+			addChild(timeDisplay);
 			
 			scoreDisplay = new SimpleLabel(fontFile, 30, 20);
 			scoreDisplay.scale = textScale;
 			scoreDisplay.text = "";
 			//scoreDisplay.y = 9;
-			scoreDisplay.y = 4;
+			scoreDisplay.y = 0;
 			addChild(scoreDisplay);
 			
-			multiDisplay = new SimpleLabel(fontFile, 100, 20);
+			//scoreDisplay.textRendererProperties["textFormat"] = new BitmapFontTextFormat("SourceSansPro", 8*4, 0xFFFF00);
+			//scoreDisplay.text = "iashd";
+			//scoreDisplay.invalidate();
+			
+			multiDisplay = new SimpleLabel(fontFile, 40, 20);
 			multiDisplay.scale = textScale;
 			multiDisplay.text = "";
 			//multiDisplay.y = 9;
-			multiDisplay.y = 4;
+			multiDisplay.y = 0;
 			addChild(multiDisplay);
+			
+			lastDisplay = new SimpleLabel(fontFile, 40, 20);
+			lastDisplay.scale = textScale;
+			lastDisplay.text = "";
+			//multiDisplay.y = 9;
+			lastDisplay.y = 0;
+			addChild(lastDisplay);
 			
 			Texture.fromAsset(fontFile).smoothing = TextureSmoothing.MAX;
 			
@@ -139,14 +174,16 @@ package ui {
 		}
 		
 		private function addScore(delta:int) {
-			score += Math.ceil(multiplier*delta);
+			var d = Math.ceil(multiplier*delta);
+			score += d;
+			last = d;
+			updateLast();
 		}
 		
 		private function updateScore() {
 			scoreDisplay.text = ""+score;
 			scoreDisplay.center();
 			scoreDisplay.scale = textScale*2;
-			//scoreDisplay.x = w-scoreDisplay.size.x*textScale-10;
 			scoreDisplay.x = w-scoreDisplay.size.x*textScale;
 			juggler.tween(scoreDisplay, 0.5, {
 				scale: textScale,
@@ -160,8 +197,26 @@ package ui {
 				multiDisplay.text = newText;
 				multiDisplay.center();
 				//multiDisplay.x = w-multiDisplay.size.x*textScale-40;
-				multiDisplay.x = w-multiDisplay.size.x*textScale-10;
+				multiDisplay.x = w-multiDisplay.size.x*textScale-15;
 			}
+		}
+		
+		private function updateLast() {
+			lastDisplay.text = "+"+last;
+			lastDisplay.center();
+			lastDisplay.x = w-lastDisplay.size.x*textScale-40;
+			juggler.removeTweens(lastDisplay);
+			lastDisplay.alpha = 1;
+			juggler.tween(lastDisplay, 3, {
+				alpha: 0,
+				transition: Transitions.EASE_IN
+			});
+		}
+		
+		private function updateTime() {
+			timeDisplay.text = Math.abs(Math.ceil(config.duration - t)).toFixed(2);
+			timeDisplay.center();
+			timeDisplay.x = 24;
 		}
 		
 		public function getPitch(x:Number):Number {
@@ -192,6 +247,7 @@ package ui {
 		
         public function enter(owner:DisplayObjectContainer) {
 			super.enter(owner);
+			board.freeformMode = config.freeform;
 			board.resize(120, 120);
 			board.init();
 			t = 0;
@@ -230,6 +286,10 @@ package ui {
 				//screenshake = 2;
 				//beatAccumulator += beatInterval;
 			//}
+			updateTime();
+			if (config.duration > 0 && t >= config.duration) {
+				onTimeout();
+			}
 		}
 		
 		public function render() {

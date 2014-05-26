@@ -1,0 +1,6 @@
+<ui.GameView>
+
+    <loom.css.StyleSheet source="assets/style.css"/>
+	
+	
+</ui.GameView>

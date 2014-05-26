@@ -1,0 +1,29 @@
+<ui.ModeView>
+
+    <loom.css.StyleSheet source="assets/style.css"/>
+	
+	<loom2d.display.Image
+		id="title"
+		styleName="title"
+		source="assets/modeTitle.png"
+	/>
+	
+	<feathers.controls.Button
+		id="modeTimed"
+		styleName="modeTimed"
+		label="Temporal"
+	/>
+	
+	<feathers.controls.Button
+		id="modeUnlimited"
+		styleName="modeUnlimited"
+		label="Endless"
+	/>
+	
+	<feathers.controls.Check
+		id="modeFreeform"
+		styleName="modeFreeform"
+		label="FrEeform MODE"
+	/>
+	
+</ui.ModeView>

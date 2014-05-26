@@ -91,7 +91,7 @@ package
 		
 		var tileMove:Sound;
 		
-		var freeformMode:Boolean = false;
+		public var freeformMode:Boolean = false;
 		var matchSequence:String = "LOOMSDK";
 		
 		public function Board(juggler:Juggler)
@@ -274,11 +274,10 @@ package
 			findPossibleSwaps(colSwaps, typeSums, DIM_COL);
 			
 			if (rowSwaps.length+colSwaps.length > 0) {
-				var index = Math.randomRangeInt(0, rowSwaps.length+colSwaps.length-1);
-				var swap = index < rowSwaps.length ? rowSwaps[index] : colSwaps[index-rowSwaps.length];
-				if (columnReady(swap.a.tx) && columnReady(swap.b.tx)) swapTiles(swap.a, swap.b);
-				//if (Math.random() < 0.2) swapTiles(swap.a, swap.b);
-				//juggler.delayCall(swapTiles, 0.5, swap.a, swap.b);
+				// autoswap
+				//var index = Math.randomRangeInt(0, rowSwaps.length+colSwaps.length-1);
+				//var swap = index < rowSwaps.length ? rowSwaps[index] : colSwaps[index-rowSwaps.length];
+				//if (columnReady(swap.a.tx) && columnReady(swap.b.tx)) swapTiles(swap.a, swap.b);
 			} else {
 				var i:int;
 				for (i = 0; i < tiles.length; i++) {

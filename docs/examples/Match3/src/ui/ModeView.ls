@@ -1,29 +1,43 @@
 package ui {
-	import loom2d.display.DisplayObjectContainer;
-	import loom2d.events.Touch;
-	import loom2d.events.TouchEvent;
-	import loom2d.events.TouchPhase;
-	class ModeView extends View {
+	import feathers.controls.Button;
+	import feathers.controls.Check;
+	import loom2d.events.Event;
+	import loom2d.ui.SimpleButton;
+	class ModeView extends ConfigView {
 		
-		public var onPick:ViewCallback;
+		[Bind] public var modeTimed:Button;
+		[Bind] public var modeUnlimited:Button;
+		[Bind] public var modeFreeform:Check;
 		
-		public function ModeView()
-		{
-			super();
-		}
-        public function enter(owner:DisplayObjectContainer) {
-			super.enter(owner);
-			owner.stage.addEventListener(TouchEvent.TOUCH, touch);
-		}
+		function get layoutFile():String { return "assets/mode.lml"; }
 		
-		private function touch(e:TouchEvent):void {
-			var t:Touch = e.touches[0];
-			if (t.phase == TouchPhase.BEGAN) onPick();
-		}
-		
-        public function exit() {
-			parent.stage.removeEventListener(TouchEvent.TOUCH, touch);
-			super.exit();
+		public function created() {
+			modeTimed.addEventListener(Event.TRIGGERED, pick(function(e:Event) {
+				config.freeform = modeFreeform.isSelected;
+				config.duration = 0;
+			}));
+			modeUnlimited.addEventListener(Event.TRIGGERED, pick(function(e:Event) {
+				config.freeform = modeFreeform.isSelected;
+				config.duration = -1;
+			}));
+			//modeTimed.onClick += pick(function() {
+				//config.duration = 0;
+			//});
+			//modeUnlimited.onClick += pick(function() {
+				//config.duration = -1;
+			//});
+			//var button:Button = new Button();
+			//button.padding = 3;
+			//button.label = "what";
+			//button.x = 30;
+			//button.y = 90;
+			//this.addChild(button);
+			//var check:Check = new Check();
+			//check.isSelected = config.freeform;
+			//check.label = "FrEeform MODE";
+			//check.x = 16;
+			//check.y = 90;
+			//this.addChild(check);
 		}
 	}
 }
