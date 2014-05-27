@@ -37,7 +37,9 @@ import java.text.SimpleDateFormat;
 
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 
-public class LoomFacebook {
+public class LoomFacebook 
+{
+    private static final String TAG = "LoomFacebook";
 
 	// Loom.Facebook API
 	public static boolean openSessionWithReadPermissions(String permissionsString) {
@@ -177,14 +179,12 @@ public class LoomFacebook {
 		public void call(Session _session, SessionState state, Exception exception) 
 		{
 			final Session session = _session;
-			LoomDemo.logDebug("Pre-notifying Facebook on thread ID " + Thread.currentThread().getId());
 
 			Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
 				@Override
 				public void run() {
 					final String sessionStateString = (session.isOpened() ? "OPENED" : (session.isClosed() ? "CLOSED" : "CREATED"));
 					final String sessionPermissionsString = (session.isOpened() ? session.getPermissions().toString() : "");
-					LoomDemo.logDebug("Notifying Facebook on thread ID " + Thread.currentThread().getId());
 					nativeStatusCallback(sessionStateString, sessionPermissionsString);
 //TODO: LFL: don't want to hardcode Carrot here, but instead have a delegate that Carrot can register with                    
 					// LoomCarrot.setAccessToken(getAccessToken());
@@ -205,12 +205,12 @@ public class LoomFacebook {
 	    	for (Signature signature : packageInfo.signatures) {
 		        MessageDigest md = MessageDigest.getInstance("SHA");
 		        md.update(signature.toByteArray());
-		        LoomDemo.logDebug("KeyHash: " + Base64.encodeToString(md.digest(), Base64.DEFAULT));
+		        Log.d(TAG, "KeyHash: " + Base64.encodeToString(md.digest(), Base64.DEFAULT));
 	        }
 		} catch (NameNotFoundException e) {
-	        LoomDemo.logDebug("KeyHash: (NameNotFoundException)");
+	        Log.d(TAG, "KeyHash: (NameNotFoundException)");
 		} catch (NoSuchAlgorithmException e) {
-	        LoomDemo.logDebug("KeyHash: (NoSuchAlgorithmException)");
+	        Log.d(TAG, "KeyHash: (NoSuchAlgorithmException)");
 		}        
         // --------------------------
 
@@ -230,10 +230,10 @@ public class LoomFacebook {
 	private static boolean checkFacebookAppId(Context context) {
 		// Sanity check for a valid application id
 		String facebookAppId = getFacebookAppId(context);
-		LoomDemo.logDebug("facebookAppId: " + facebookAppId);
+		Log.d(TAG, "facebookAppId: " + facebookAppId);
 
 		if(facebookAppId == null || facebookAppId.isEmpty() || facebookAppId.trim().isEmpty()) {
-			LoomDemo.logDebug("No Facebook Application Id defined. Alter your 'loom.config' file, or 'application/android/res/values/strings.xml' file to use Loom.Facebook functionality.");
+			Log.d(TAG, "No Facebook Application Id defined. Alter your 'loom.config' file, or 'application/android/res/values/strings.xml' file to use Loom.Facebook functionality.");
 			return false;
 		}
 
