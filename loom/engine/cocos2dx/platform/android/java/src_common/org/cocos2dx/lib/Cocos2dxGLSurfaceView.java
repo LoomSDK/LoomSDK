@@ -247,18 +247,20 @@ public class Cocos2dxGLSurfaceView extends GLSurfaceView
 	
 	public void onResume()
 	{
-		if(needsResume)
+        //handleOnResume needs to happen as soon as possible so that any change in Main Thread ID 
+        //can be noted for NativeDelegates
+        queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                mRenderer.handleOnResume();
+            }
+        });
+
+        if(needsResume)
 		{
 		   super.onResume();
 		   needsResume = false;
 		}
-		
-		queueEvent(new Runnable() {
-			@Override
-			public void run() {
-				mRenderer.handleOnResume();
-			}
-		});
 	}
 
 	///////////////////////////////////////////////////////////////////////////

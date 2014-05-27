@@ -128,7 +128,7 @@ public class LoomDemo extends Cocos2dxActivity {
             Log.d("Loom", "Could not initialize OpenGL ES 2.0 - terminating!");
             finish();
             return;
-            }
+        }
 
         // get the packageName, it's used to set the resource path
         String packageName = getApplication().getPackageName();
@@ -262,10 +262,12 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onResume() {
+        //NOTE: mGLView needs to resume 1st so that it can inform NativeDelegates of any possible change in Thread IDs
+        mGLView.onResume();
+
         LoomSensors.onResume();
         LoomVideo.onResume();
         super.onResume();
-        mGLView.onResume();
     }
 
     @Override
@@ -283,12 +285,6 @@ public class LoomDemo extends Cocos2dxActivity {
         ConfigurationInfo info = am.getDeviceConfigurationInfo();
         return (info.reqGlEsVersion >= 0x20000);
     }
-
-    public static native void log(String message);
-    public static native void logWarn(String message);
-    public static native void logError(String message);
-    public static native void logDebug(String message);
-    public static void logInfo(String message) { log(message); }
 
     static 
     {
