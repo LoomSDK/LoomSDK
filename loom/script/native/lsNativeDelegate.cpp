@@ -185,10 +185,13 @@ int NativeDelegate::getCount() const
 
 // We don't currently support return values as this makes it the responsibility
 // of the caller to clean up the stack, this can be changed if we automate
-void NativeDelegate::invoke() const
+void NativeDelegate::invoke(bool checkMainThread) const
 {
     // Don't do this from non-main thread.
-    assertMainThread();
+    if(checkMainThread)
+    {
+        assertMainThread();
+    }
 
     // if we have no callbacks defined, the VM state will be NULL
     if (!L)

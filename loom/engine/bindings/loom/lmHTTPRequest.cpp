@@ -22,6 +22,7 @@
 #include "loom/script/native/lsNativeDelegate.h"
 #include "loom/common/platform/platformHttp.h"
 #include "loom/common/utils/utByteArray.h"
+#include "loom/common/core/log.h"
 
 using namespace LS;
 
@@ -117,12 +118,14 @@ public:
         {
         case LOOM_HTTP_SUCCESS:
             request->_OnSuccessDelegate.pushArgument(data);
-            request->_OnSuccessDelegate.invoke();
+            //HACK: don't bother checking for main thread execution on HTTP to avoid Android crashes on Pause/Resume
+            request->_OnSuccessDelegate.invoke(false);
             break;
 
         case LOOM_HTTP_ERROR:
             request->_OnFailureDelegate.pushArgument(data);
-            request->_OnFailureDelegate.invoke();
+            //HACK: don't bother checking for main thread execution on HTTP to avoid Android crashes on Pause/Resume
+            request->_OnFailureDelegate.invoke(false);
             break;
 
         default:
