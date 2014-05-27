@@ -18,6 +18,7 @@ package ui {
 		
 		public var textFormat:BitmapFontTextFormat;
 		public var textFormatDisabled:BitmapFontTextFormat;
+		public var textFormatLight:BitmapFontTextFormat;
 		
 		public var buttonUp:Scale9Textures;
 		public var buttonDown:Scale9Textures;
@@ -41,7 +42,7 @@ package ui {
 			var scale = 4;
 			
 			textFormat = new BitmapFontTextFormat("SourceSansPro", 8*scale, 0x000000);
-			//textFormat = new BitmapFontTextFormat("SourceSansPro", 8*scale, 0xFFFFFF);
+			textFormatLight = new BitmapFontTextFormat("SourceSansPro", 8*scale, 0xFFFFFF);
 			
 			const background = Texture.fromAsset("assets/ui/background-skin.png");
 			const backgroundDown = Texture.fromAsset("assets/ui/background-down-skin.png");
@@ -55,14 +56,35 @@ package ui {
 			checkSelectedUpIcon = new Scale9Textures(Texture.fromAsset("assets/ui/check-selected-up-icon.png"), DEFAULT_SCALE9_GRID);
 			checkSelectedDownIcon = new Scale9Textures(Texture.fromAsset("assets/ui/check-selected-down-icon.png"), DEFAULT_SCALE9_GRID);
 			
+			//setInitializerForClass(Label, labelInitializer);
+			setInitializerForClass(Label, function(label:Label) {
+				labelInitializer(label);
+				label.textRendererProperties["textFormat"] = new BitmapFontTextFormat("SourceSansPro", 8*scale, 0xFFFFFF);
+			}, "light");
+			//setInitializerForClass(Label, labelInitializer());
+			//setInitializerForClass(Label, labelInitializer(0xFFFFFF), "light");
 			setInitializerForClass(Label, labelInitializer);
+			setInitializerForClass(Label, labelInitializerLight, "light");
 			setInitializerForClass(Button, buttonInitializer);
 			setInitializerForClass(Check, checkInitializer);
 		}
 		
+		//protected function labelInitializer(color:Number = 0x000000):Function {
+			//return function(label:Label):void {
+				////label.textRendererProperties["textFormat"] = textFormat;
+				//label.textRendererProperties["textFormat"] = new BitmapFontTextFormat("SourceSansPro", 8*4, color);
+				//label.textRendererProperties["embedFonts"] = true;
+			//};
+		//}
+		
 		protected function labelInitializer(label:Label) {
 			label.textRendererProperties["textFormat"] = textFormat;
 			label.textRendererProperties["embedFonts"] = true;
+		}
+		
+		protected function labelInitializerLight(label:Label) {
+			labelInitializer(label);
+			label.textRendererProperties["textFormat"] = textFormatLight;
 		}
 		
 		protected function baseButtonInitializer(button:Button):void

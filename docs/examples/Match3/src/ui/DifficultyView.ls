@@ -35,9 +35,9 @@ package ui {
 		}
 		
 		public function initButton(b:Button, icon:String, onClick:Function) {
-			b.paddingLeft = 20;
-			b.defaultLabelProperties["width"] = 60;
-			b.width = 70;
+			b.paddingLeft = 25;
+			b.defaultLabelProperties["width"] = 55;
+			b.width = 60;
 			b.defaultIcon = new Image(Texture.fromAsset(icon));
 			b.iconPosition = Button.ICON_POSITION_RIGHT;
 			b.addEventListener(Event.TRIGGERED, onClick);

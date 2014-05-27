@@ -45,14 +45,12 @@ package ui {
 		
 		public var score:int;
 		
-		[Bind]
-		public var esc:Button;
+		[Bind] public var esc:Button;
+		[Bind] public var timeDisplay:Label;
+		[Bind] public var lastDisplay:Label;
+		[Bind] public var multiDisplay:Label;
+		[Bind] public var scoreDisplay:Label;
 		
-		public var timeDisplay:SimpleLabel;
-		public var scoreDisplay:SimpleLabel;
-		//public var scoreDisplay:Label;
-		private var lastDisplay:SimpleLabel;
-		private var multiDisplay:SimpleLabel;
 		//private var textScale:Number = 0.4;
 		private var textScale:Number = 1;
 		
@@ -94,7 +92,6 @@ package ui {
 			confirmView.onNo += confirmNo;
 			confirmView.init();
 			
-			//particles = PDParticleSystem.loadLiveSystem("assets/explosion.pex", getTexture("assets/explosion.png"));
 			//particles = PDParticleSystem.loadLiveSystem("assets/pointer.pex");
 			particles = PDParticleSystem.loadLiveSystem("assets/explosion.pex");
 			particles.emitterX = 60;
@@ -104,51 +101,13 @@ package ui {
 			board = new Board(juggler);
 			board.onTileClear += tileClear;
 			board.onTilesMatched += tilesMatched;
+			board.init();
 			field.addChild(board);
 			
-			//var fontFile = "assets/Curse.fnt";
-			//var fontFile = "assets/CourierNew.fnt";
-			var fontFile = "assets/kremlin-export.fnt";
-			
-			timeDisplay = new SimpleLabel(fontFile, 30, 20);
-			timeDisplay.scale = textScale;
-			timeDisplay.text = "";
-			//scoreDisplay.y = 9;
-			timeDisplay.y = 0;
-			field.addChild(timeDisplay);
-			
-			scoreDisplay = new SimpleLabel(fontFile, 30, 20);
-			scoreDisplay.scale = textScale;
-			scoreDisplay.text = "";
-			field.addChild(scoreDisplay);
-			
-			//scoreDisplay.textRendererProperties["textFormat"] = new BitmapFontTextFormat("SourceSansPro", 8*4, 0xFFFF00);
-			//scoreDisplay.textRendererFactory = function():ITextRenderer
-			//{
-				//var textRenderer:BitmapFontTextRenderer = new BitmapFontTextRenderer();
-				//textRenderer.textFormat = new BitmapFontTextFormat("SourceSansPro", 20*4, 0xFFFF00);
-				//return textRenderer;
-			//};
-			//scoreDisplay.textRendererProperties["textFormat"].color = 0xFFFF00;
-			//scoreDisplay.
-			//scoreDisplay.text = "iashd";
-			//scoreDisplay.invalidate();
-			
-			multiDisplay = new SimpleLabel(fontFile, 40, 20);
-			multiDisplay.scale = textScale;
-			multiDisplay.text = "";
-			//multiDisplay.y = 9;
-			multiDisplay.y = 0;
-			field.addChild(multiDisplay);
-			
-			lastDisplay = new SimpleLabel(fontFile, 40, 20);
-			lastDisplay.scale = textScale;
-			lastDisplay.text = "";
-			//multiDisplay.y = 9;
-			lastDisplay.y = 0;
-			field.addChild(lastDisplay);
-			
-			Texture.fromAsset(fontFile).smoothing = TextureSmoothing.MAX;
+			initDisplay(timeDisplay);
+			initDisplay(lastDisplay);
+			initDisplay(multiDisplay);
+			initDisplay(scoreDisplay);
 			
 			screenshaker = new Shaker(board);
 			screenshaker.start(juggler);
@@ -164,14 +123,11 @@ package ui {
 			
 			explosion = Sound.load("assets/tileExplosion.ogg");
 			
-			//particles = new ParticleSystem(getTexture("assets/intro.png"), 6, 5, 5);
-			//particles = new PDParticleSystem(getTexture("assets/intro.png"));
-			//particles = new PDParticleSystem(getTexture("assets/tiles/tile0.png"));
-			
-			//particles.populate(50);
-			//particles.start();
-			
-			//addEventListener(TouchEvent.TOUCH, onTouch);
+		}
+		
+		private function initDisplay(display:Label) {
+			display.nameList.add("light");
+			field.addChild(display);
 		}
 		
 		private function confirmQuit(e:Event):void {
@@ -227,9 +183,9 @@ package ui {
 			updateLast();
 		}
 		
-		private function positionRight(d:SimpleLabel, offset:Number) {
-			d.x = 5+board.contentWidth-d.size.x*textScale-offset;
-			d.y = -8-d.size.y*textScale+10;
+		private function positionRight(d:DisplayObject, offset:Number) {
+			d.x = 5+board.contentWidth-d.width-offset;
+			d.y = -10;
 		}
 		
 		private function updateDisplay() {
@@ -240,10 +196,11 @@ package ui {
 		}
 		
 		private function updateScore() {
-			scoreDisplay.text = ""+score;
-			//scoreDisplay.center();
-			//scoreDisplay.x = w-scoreDisplay.size.x*textScale;
-			//scoreDisplay.y = h-w-scoreDisplay.size.y*textScale;
+			var newText = ""+score;
+			if (newText != scoreDisplay.text) {
+				scoreDisplay.text = ""+score;
+				scoreDisplay.validate();
+			}
 			positionRight(scoreDisplay, 5);
 			scoreDisplay.scale = textScale*2;
 			juggler.tween(scoreDisplay, 0.5, {
@@ -256,37 +213,38 @@ package ui {
 			var newText = "x "+multiplier.toFixed(2);
 			if (newText != multiDisplay.text) {
 				multiDisplay.text = newText;
+				multiDisplay.validate();
 				//multiDisplay.center();
 				//multiDisplay.x = w-multiDisplay.size.x*textScale-40;
 				//multiDisplay.x = w-multiDisplay.size.x*textScale-15;
 				//multiDisplay.y = h-w-multiDisplay.size.y*textScale;
 			}
-			positionRight(multiDisplay, 30);
+			positionRight(multiDisplay, 35);
 		}
 		
 		private function updateLast() {
 			var newText = "+"+last;
 			if (newText != lastDisplay.text) {
 				lastDisplay.text = newText;
-				//lastDisplay.center();
-				juggler.removeTweens(lastDisplay);
-				lastDisplay.alpha = 1;
-				juggler.tween(lastDisplay, 3, {
-					alpha: 0,
-					transition: Transitions.EASE_IN
-				});
+				lastDisplay.validate();
 			}
-			positionRight(lastDisplay, 50);
+			juggler.removeTweens(lastDisplay);
+			lastDisplay.alpha = 1;
+			juggler.tween(lastDisplay, 3, {
+				alpha: 0,
+				transition: Transitions.EASE_IN
+			});
+			lastDisplay.x = multiDisplay.x-lastDisplay.width-2;
+			lastDisplay.y = multiDisplay.y;
 		}
 		
 		private function updateTime() {
 			var newText = Math.abs(Math.ceil(config.duration - t)).toFixed(0);
 			if (newText != timeDisplay.text) {
 				timeDisplay.text = newText;
-				//timeDisplay.center();
-				//timeDisplay.x = 24;
+				timeDisplay.validate();
 			}
-			positionRight(timeDisplay, 80);
+			positionRight(timeDisplay, 85);
 		}
 		
 		public function getPitch(x:Number):Number {
@@ -319,7 +277,7 @@ package ui {
 			super.enter(owner);
 			hideConfirm();
 			board.freeformMode = config.freeform;
-			board.init();
+			board.reset();
 			t = 0;
 			beatAccumulator = 0;
 			score = 0;
@@ -337,6 +295,7 @@ package ui {
 		
         public function exit() {
 			super.exit();
+			particles.clear();
 			//soundtrack.stop();
 		}
 		

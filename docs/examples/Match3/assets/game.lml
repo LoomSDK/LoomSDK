@@ -8,4 +8,25 @@
 		label="Esc"
 	/>
 	
+	<feathers.controls.Label
+		id="timeDisplay"
+		styleName="timeDisplay"
+		text=""
+	/>
+	<feathers.controls.Label
+		id="lastDisplay"
+		styleName="lastDisplay"
+		text=""
+	/>
+	<feathers.controls.Label
+		id="multiDisplay"
+		styleName="multiDisplay"
+		text=""
+	/>
+	<feathers.controls.Label
+		id="scoreDisplay"
+		styleName="scoreDisplay"
+		text=""
+	/>
+	
 </ui.GameView>

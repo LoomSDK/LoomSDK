@@ -111,7 +111,6 @@ package
 			typeSums = new Vector.<int>(types);
 			initTypes();
 			generateTiles();
-			reset();
 		}
 		
 		public function get contentWidth():Number { return tileRows*tileWidth; }
