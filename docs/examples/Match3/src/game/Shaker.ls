@@ -23,6 +23,7 @@ package game {
 		}
 		
 		public function start(juggler:Juggler) {
+			stop(false);
 			this.juggler = juggler;
 			origX = shakee.x;
 			origY = shakee.y;
@@ -35,12 +36,14 @@ package game {
 			shakee.y = origY+Math.randomRange(-strength, strength);
 		}
 		
-		public function stop() {
+		public function stop(resetPosition:Boolean = true) {
 			if (juggler) {
 				juggler.remove(this);
 				juggler = null;
-				shakee.x = origX;
-				shakee.y = origY;
+				if (resetPosition) {
+					shakee.x = origX;
+					shakee.y = origY;
+				}
 				if (shaking) shaking.stop();
 			}
 		}

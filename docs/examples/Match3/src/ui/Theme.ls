@@ -41,6 +41,7 @@ package ui {
 			var scale = 4;
 			
 			textFormat = new BitmapFontTextFormat("SourceSansPro", 8*scale, 0x000000);
+			//textFormat = new BitmapFontTextFormat("SourceSansPro", 8*scale, 0xFFFFFF);
 			
 			const background = Texture.fromAsset("assets/ui/background-skin.png");
 			const backgroundDown = Texture.fromAsset("assets/ui/background-down-skin.png");

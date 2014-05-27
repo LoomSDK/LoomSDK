@@ -30,10 +30,14 @@ package
 		private var display:Sprite = new Sprite();
 		private var currentView:View;
 		
+		private var contentWidth = 450;
+		private var contentHeight = 580;
+		private var pixelScale = 4;
+		
 		override public function run():void
 		{
-			// Scale stage with black borders
-			stage.scaleMode = StageScaleMode.LETTERBOX;
+			// No scaling for stage
+			stage.scaleMode = StageScaleMode.NONE;
 			
 			TextureSmoothing.defaultSmoothing = TextureSmoothing.NONE;
 			
@@ -60,12 +64,15 @@ package
 			difficulty.onPick += function() {
 				switchView(game);
 			};
+			game.onQuit += function() {
+				trace("QUIT! "+game.score);
+				switchView(intro);
+			};
 			game.onTimeout += function() {
 				trace("TIMEOUT! "+game.score);
 				switchView(intro);
 			};
 			
-			display.scale = 4;
 			stage.addChild(display);
 			
 			stage.addEventListener(Event.RESIZE, resize);
@@ -77,6 +84,11 @@ package
 		}
 		
 		private function resize(e:Event = null):void {
+			if (stage.stageWidth/stage.stageHeight < contentWidth/contentHeight) {
+				display.scale = Math.max(1, Math.floor(pixelScale*stage.stageWidth/contentWidth));
+			} else {
+				display.scale = Math.max(1, Math.floor(pixelScale*stage.stageHeight/contentHeight));
+			}
 			var w = stage.stageWidth/display.scale;
 			var h = stage.stageHeight/display.scale;
 			currentView.resize(w, h);

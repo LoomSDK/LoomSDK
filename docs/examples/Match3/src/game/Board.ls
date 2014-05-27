@@ -114,14 +114,15 @@ package
 			reset();
 		}
 		
-		public function resize(w:Number, h:Number) {
-			tileDisplay.x = (w-tileRows*tileWidth)/2;
-			tileDisplay.y = (h-tileCols*tileHeight)/2+5;
-		}
+		public function get contentWidth():Number { return tileRows*tileWidth; }
+		public function get contentHeight():Number { return tileCols*tileHeight; }
 		
 		public function reset() {
 			randomizeTiles();
 			neutralizeTiles();
+			//tiles[2].reset(tileTypes[2]);
+			//tiles[2+2*tileCols].reset(tileTypes[1]);
+			//tiles[1+2*tileCols].reset(tileTypes[2]);
 			updateBoard();
 		}
 		

@@ -2,5 +2,10 @@
 
     <loom.css.StyleSheet source="assets/style.css"/>
 	
+	<feathers.controls.Button
+		id="esc"
+		styleName="esc"
+		label="Esc"
+	/>
 	
 </ui.GameView>

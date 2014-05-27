@@ -1,8 +1,14 @@
 package ui {
 	import Board;
+	import feathers.controls.Button;
 	import feathers.controls.Label;
+	import feathers.core.ITextRenderer;
 	import feathers.text.BitmapFontTextFormat;
+	import feathers.text.BitmapFontTextRenderer;
 	import loom2d.animation.Transitions;
+	import loom2d.display.DisplayObject;
+	import loom2d.display.Sprite;
+	import loom2d.events.Event;
 	import loom2d.textures.TextureSmoothing;
 	import loom2d.ui.SimpleLabel;
 	import Match;
@@ -35,10 +41,14 @@ package ui {
 		private var screenshaker:Shaker;
 		private var screenshake:Number;
 		
+		private var confirmView:ConfirmView;
+		
 		public var score:int;
 		
-		public var timeDisplay:SimpleLabel;
 		[Bind]
+		public var esc:Button;
+		
+		public var timeDisplay:SimpleLabel;
 		public var scoreDisplay:SimpleLabel;
 		//public var scoreDisplay:Label;
 		private var lastDisplay:SimpleLabel;
@@ -49,6 +59,7 @@ package ui {
 		private var last:Number;
 		private var multiplier:Number;
 		
+		private var field:Sprite = new Sprite();
 		private var board:Board;
 		//private var particles:ParticleSystem;
 		private var particles:PDParticleSystem;
@@ -77,6 +88,12 @@ package ui {
 			
 			super.init();
 			
+			esc.addEventListener(Event.TRIGGERED, confirmQuit);
+			confirmView = new ConfirmView();
+			confirmView.onYes += confirmYes;
+			confirmView.onNo += confirmNo;
+			confirmView.init();
+			
 			//particles = PDParticleSystem.loadLiveSystem("assets/explosion.pex", getTexture("assets/explosion.png"));
 			//particles = PDParticleSystem.loadLiveSystem("assets/pointer.pex");
 			particles = PDParticleSystem.loadLiveSystem("assets/explosion.pex");
@@ -87,7 +104,7 @@ package ui {
 			board = new Board(juggler);
 			board.onTileClear += tileClear;
 			board.onTilesMatched += tilesMatched;
-			addChild(board);
+			field.addChild(board);
 			
 			//var fontFile = "assets/Curse.fnt";
 			//var fontFile = "assets/CourierNew.fnt";
@@ -98,16 +115,22 @@ package ui {
 			timeDisplay.text = "";
 			//scoreDisplay.y = 9;
 			timeDisplay.y = 0;
-			addChild(timeDisplay);
+			field.addChild(timeDisplay);
 			
 			scoreDisplay = new SimpleLabel(fontFile, 30, 20);
 			scoreDisplay.scale = textScale;
 			scoreDisplay.text = "";
-			//scoreDisplay.y = 9;
-			scoreDisplay.y = 0;
-			addChild(scoreDisplay);
+			field.addChild(scoreDisplay);
 			
 			//scoreDisplay.textRendererProperties["textFormat"] = new BitmapFontTextFormat("SourceSansPro", 8*4, 0xFFFF00);
+			//scoreDisplay.textRendererFactory = function():ITextRenderer
+			//{
+				//var textRenderer:BitmapFontTextRenderer = new BitmapFontTextRenderer();
+				//textRenderer.textFormat = new BitmapFontTextFormat("SourceSansPro", 20*4, 0xFFFF00);
+				//return textRenderer;
+			//};
+			//scoreDisplay.textRendererProperties["textFormat"].color = 0xFFFF00;
+			//scoreDisplay.
 			//scoreDisplay.text = "iashd";
 			//scoreDisplay.invalidate();
 			
@@ -116,21 +139,25 @@ package ui {
 			multiDisplay.text = "";
 			//multiDisplay.y = 9;
 			multiDisplay.y = 0;
-			addChild(multiDisplay);
+			field.addChild(multiDisplay);
 			
 			lastDisplay = new SimpleLabel(fontFile, 40, 20);
 			lastDisplay.scale = textScale;
 			lastDisplay.text = "";
 			//multiDisplay.y = 9;
 			lastDisplay.y = 0;
-			addChild(lastDisplay);
+			field.addChild(lastDisplay);
 			
 			Texture.fromAsset(fontFile).smoothing = TextureSmoothing.MAX;
 			
 			screenshaker = new Shaker(board);
 			screenshaker.start(juggler);
 			
-			addChild(particles);
+			field.addChild(particles);
+			
+			addChild(field);
+			
+			addChild(confirmView);
 			
 			//soundtrack = Sound.load("assets/contemplation 2.ogg");
 			//soundtrack.setLooping(true);
@@ -147,13 +174,33 @@ package ui {
 			//addEventListener(TouchEvent.TOUCH, onTouch);
 		}
 		
+		private function confirmQuit(e:Event):void {
+			showConfirm();
+		}
+		private function showConfirm() {
+			confirmView.visible = true;
+		}
+		private function hideConfirm() {
+			confirmView.visible = false;
+		}
+		private function confirmYes():void {
+			onQuit();
+		}
+		private function confirmNo():void {
+			hideConfirm();
+		}
 		
 		public function resize(w:Number, h:Number) {
 			this.w = w;
 			this.h = h;
+			confirmView.resize(w, h);
+			esc.width = 30;
+			esc.x = w-esc.width;
 			background.setSize(w, h);
-			updateScore();
-			updateMulti();
+			//field.x = (w-s)/2;
+			field.x = (w-board.contentWidth)/2;
+			field.y = h-board.contentHeight-10;
+			updateDisplay();
 		}
 		
 		private function tileClear(x:Number, y:Number, color:Color) {
@@ -180,14 +227,28 @@ package ui {
 			updateLast();
 		}
 		
+		private function positionRight(d:SimpleLabel, offset:Number) {
+			d.x = 5+board.contentWidth-d.size.x*textScale-offset;
+			d.y = -8-d.size.y*textScale+10;
+		}
+		
+		private function updateDisplay() {
+			updateScore();
+			updateMulti();
+			updateLast();
+			updateTime();
+		}
+		
 		private function updateScore() {
 			scoreDisplay.text = ""+score;
-			scoreDisplay.center();
+			//scoreDisplay.center();
+			//scoreDisplay.x = w-scoreDisplay.size.x*textScale;
+			//scoreDisplay.y = h-w-scoreDisplay.size.y*textScale;
+			positionRight(scoreDisplay, 5);
 			scoreDisplay.scale = textScale*2;
-			scoreDisplay.x = w-scoreDisplay.size.x*textScale;
 			juggler.tween(scoreDisplay, 0.5, {
 				scale: textScale,
-				transition: Transitions.EASE_OUT
+				transition: Transitions.EASE_OUT_ELASTIC
 			});
 		}
 		
@@ -195,28 +256,37 @@ package ui {
 			var newText = "x "+multiplier.toFixed(2);
 			if (newText != multiDisplay.text) {
 				multiDisplay.text = newText;
-				multiDisplay.center();
+				//multiDisplay.center();
 				//multiDisplay.x = w-multiDisplay.size.x*textScale-40;
-				multiDisplay.x = w-multiDisplay.size.x*textScale-15;
+				//multiDisplay.x = w-multiDisplay.size.x*textScale-15;
+				//multiDisplay.y = h-w-multiDisplay.size.y*textScale;
 			}
+			positionRight(multiDisplay, 30);
 		}
 		
 		private function updateLast() {
-			lastDisplay.text = "+"+last;
-			lastDisplay.center();
-			lastDisplay.x = w-lastDisplay.size.x*textScale-40;
-			juggler.removeTweens(lastDisplay);
-			lastDisplay.alpha = 1;
-			juggler.tween(lastDisplay, 3, {
-				alpha: 0,
-				transition: Transitions.EASE_IN
-			});
+			var newText = "+"+last;
+			if (newText != lastDisplay.text) {
+				lastDisplay.text = newText;
+				//lastDisplay.center();
+				juggler.removeTweens(lastDisplay);
+				lastDisplay.alpha = 1;
+				juggler.tween(lastDisplay, 3, {
+					alpha: 0,
+					transition: Transitions.EASE_IN
+				});
+			}
+			positionRight(lastDisplay, 50);
 		}
 		
 		private function updateTime() {
-			timeDisplay.text = Math.abs(Math.ceil(config.duration - t)).toFixed(2);
-			timeDisplay.center();
-			timeDisplay.x = 24;
+			var newText = Math.abs(Math.ceil(config.duration - t)).toFixed(0);
+			if (newText != timeDisplay.text) {
+				timeDisplay.text = newText;
+				//timeDisplay.center();
+				//timeDisplay.x = 24;
+			}
+			positionRight(timeDisplay, 80);
 		}
 		
 		public function getPitch(x:Number):Number {
@@ -247,8 +317,8 @@ package ui {
 		
         public function enter(owner:DisplayObjectContainer) {
 			super.enter(owner);
+			hideConfirm();
 			board.freeformMode = config.freeform;
-			board.resize(120, 120);
 			board.init();
 			t = 0;
 			beatAccumulator = 0;
@@ -257,6 +327,7 @@ package ui {
 			screenshake = 0;
 			bgScroll = 0;
 			multiplier = 1;
+			updateDisplay();
 			//soundtrack.play();
 			//stage.addEventListener(TouchEvent.TOUCH, function(e:TouchEvent) {
 				//var t:Touch = e.touches[0];
@@ -270,6 +341,8 @@ package ui {
 		}
 		
 		public function tick() {
+			if (confirmView.visible) return;
+			
 			t += dt;
 			juggler.advanceTime(dt);
 			board.tick();
@@ -278,7 +351,6 @@ package ui {
 			if (Math.abs(screenshake) < 0.1) screenshake = 0;
 			momentum -= momentum*0.2*dt;
 			bgScroll -= momentum*1.5*dt;
-			//multiplier = Math.round((1+0.1*momentum)/0.25)*0.25;
 			multiplier = Math.round(Math.pow(1+0.1*momentum, 2)/0.5)*0.5;
 			updateMulti();
 			//soundtrack.setPitch(getPitch(momentum));
