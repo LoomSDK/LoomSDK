@@ -27,7 +27,7 @@ package Loom
         /**
          * Get the access token for the current Facebook user, or null.
          */
-         public static native function getAccessToken():String;
+        public static native function getAccessToken():String;
 
         /**
          * Get the expiry time for our session with the provided date format
@@ -41,6 +41,6 @@ package Loom
          *  @param title Title of the dialog
          *  @param message Message to display in the dialog
          */
-        public static native function showFrictionlessRequestDialog(recipients:String, title:String, message:String):Boolean;
+        public static native function showFrictionlessRequestDialog(recipients:String, title:String, message:String):void;
     }
 }
