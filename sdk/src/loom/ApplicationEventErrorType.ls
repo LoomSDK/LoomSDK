@@ -38,5 +38,10 @@ package loom
          * Received when a bad path has been passed to an ApplicationEvent
          */
         public static var BAD_PATH:String = "badPath";
+
+        /**
+         * Received when there is a problem reading from or writing to the media
+         */
+        public static var MEDIA_ERROR:String = "mediaError";
     }
 }
