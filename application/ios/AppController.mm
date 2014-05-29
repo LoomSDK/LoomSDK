@@ -197,7 +197,7 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
                 }
                 else
                 {
-                    LoomApplication::fireGenericEvent("saveToPhotoLibrarySuccess", "");
+                    LoomApplication::fireGenericEvent("saveToPhotoLibrarySuccess", [[assetURL absoluteString] UTF8String]);
                 }
             }];
 
