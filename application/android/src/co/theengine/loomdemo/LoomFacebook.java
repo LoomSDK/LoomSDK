@@ -37,12 +37,25 @@ import java.text.SimpleDateFormat;
 
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 
+
+
+// Loom.Facebook API
 public class LoomFacebook 
 {
     private static final String TAG = "LoomFacebook";
 
-	// Loom.Facebook API
-	public static boolean openSessionWithReadPermissions(String permissionsString) {
+    private static Session.StatusCallback mStatusCallback = new SessionStatusCallback();
+    private static native void nativeStatusCallback(String sessionState, String sessionPermissions);
+    private static LoomDemo mLoomDemo;
+ 
+    protected static ViewGroup rootLayout;
+    protected static Activity activity;
+    protected static Handler handler;
+
+
+
+	public static boolean openSessionWithReadPermissions(String permissionsString) 
+    {
 		if(checkFacebookAppId(mLoomDemo)) {
 			Session session = Session.getActiveSession();
 			if (!session.isOpened() && !session.isClosed()) {
@@ -56,7 +69,9 @@ public class LoomFacebook
 		return false;
 	}
 
-	public static boolean requestNewPublishPermissions(String permissionsString) {
+
+	public static boolean requestNewPublishPermissions(String permissionsString) 
+    {
 		Session session = Session.getActiveSession();
 		if (!checkFacebookAppId(mLoomDemo) || session.isOpened()) {
 			List<String> permissions = Arrays.asList(permissionsString.split(",|\\s+|,\\s+"));
@@ -66,27 +81,32 @@ public class LoomFacebook
 		return false;
 	}
 
-	public static String getAccessToken() {
+
+	public static String getAccessToken() 
+    {
 		return Session.getActiveSession().getAccessToken();
 	}
 
-	public static void showFrictionlessRequestDialog(final String recipients, final String title, final String message) {
 
-		handler.post(new Runnable() {
-
+	public static void showFrictionlessRequestDialog(final String recipients, final String title, final String message) 
+    {
+		handler.post(new Runnable() 
+        {
 			@Override
-			public void run() {
-
+			public void run() 
+            {
 				Bundle params = new Bundle();
 				params.putString("title", title);
 				params.putString("to", recipients);
 				params.putString("message", message);
 				params.putString("frictionless", "1");
 
-		        WebDialog.OnCompleteListener listener = new WebDialog.OnCompleteListener() {
+		        WebDialog.OnCompleteListener listener = new WebDialog.OnCompleteListener() 
+                {
 		            @Override
-		            public void onComplete(Bundle values, FacebookException error) {
-		                // ... TODO: handle errors...
+		            public void onComplete(Bundle values, FacebookException error) 
+                    {
+// ... TODO: handle errors...???
 		            }
 		        };
 
@@ -99,14 +119,13 @@ public class LoomFacebook
 
 		        reqDialog = builder.build();
 		        reqDialog.show();
-
 		    }
-
 	    });
-
 	}
 	
-	public static String getExpirationDate(String dateFormat) {
+
+	public static String getExpirationDate(String dateFormat) 
+    {
 		String returnString;
 		Session session = Session.getActiveSession();
 		
@@ -116,14 +135,16 @@ public class LoomFacebook
 			returnString = df.format(session.getExpirationDate());
 		}
 		else
+        {
 			returnString = session.getExpirationDate().toString();
+        }
 			
 		return returnString;
 	}
 
 	// Internal use
-	public static void onCreate(LoomDemo loomDemo, Bundle savedInstanceState, ViewGroup value) {
-		
+	public static void onCreate(LoomDemo loomDemo, Bundle savedInstanceState, ViewGroup value) 
+    {	
 		rootLayout = value;
 		activity = (Activity)rootLayout.getContext();
 		handler = new Handler(Looper.getMainLooper());
@@ -152,26 +173,34 @@ public class LoomFacebook
 		}	
 	}
 
-	public static void onStart(LoomDemo loomDemo) {
+	public static void onStart(LoomDemo loomDemo) 
+    {
 		setLoomDemo(loomDemo);
 		Session.getActiveSession().addCallback(mStatusCallback);
 	}
 
-	public static void onStop(LoomDemo loomDemo) {
+
+	public static void onStop(LoomDemo loomDemo) 
+    {
 		setLoomDemo(loomDemo);
 		Session.getActiveSession().removeCallback(mStatusCallback);
 	}
 
-	public static void onSaveInstanceState(LoomDemo loomDemo, Bundle outState) {
+
+	public static void onSaveInstanceState(LoomDemo loomDemo, Bundle outState) 
+    {
 		setLoomDemo(loomDemo);
 		Session session = Session.getActiveSession();
 		Session.saveSession(session, outState);
 	}
 
-	public static void onActivityResult(LoomDemo loomDemo, int requestCode, int resultCode, Intent data) {
+
+	public static void onActivityResult(LoomDemo loomDemo, int requestCode, int resultCode, Intent data) 
+    {
 		setLoomDemo(loomDemo);
 		Session.getActiveSession().onActivityResult(mLoomDemo, requestCode, resultCode, data);
 	}
+
 
 	private static class SessionStatusCallback implements Session.StatusCallback 
 	{
@@ -180,73 +209,78 @@ public class LoomFacebook
 		{
 			final Session session = _session;
 
-			Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
+			Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+            {
 				@Override
-				public void run() {
+				public void run() 
+                {
 					final String sessionStateString = (session.isOpened() ? "OPENED" : (session.isClosed() ? "CLOSED" : "CREATED"));
 					final String sessionPermissionsString = (session.isOpened() ? session.getPermissions().toString() : "");
 					nativeStatusCallback(sessionStateString, sessionPermissionsString);
-//TODO: LFL: don't want to hardcode Carrot here, but instead have a delegate that Carrot can register with                    
+//TODO: CARROT: LFL: don't want to hardcode Carrot here, but instead have a delegate that Carrot can register with
+//ie. notifySessionStatus(getAccessToken());
 					// LoomCarrot.setAccessToken(getAccessToken());
 				}
 			});
 		}
 	}
 
-	private static void setLoomDemo(LoomDemo loomDemo) {
+
+	private static void setLoomDemo(LoomDemo loomDemo) 
+    {
 		mLoomDemo = loomDemo;
 	}
 
-	public static String getFacebookAppId(Context context) {
 
-        // --------------------------
-        try {
+	public static String getFacebookAppId(Context context) 
+    {
+        try 
+        {
 			PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), PackageManager.GET_SIGNATURES);
 	    	for (Signature signature : packageInfo.signatures) {
 		        MessageDigest md = MessageDigest.getInstance("SHA");
 		        md.update(signature.toByteArray());
 		        Log.d(TAG, "KeyHash: " + Base64.encodeToString(md.digest(), Base64.DEFAULT));
 	        }
-		} catch (NameNotFoundException e) {
+		} 
+        catch (NameNotFoundException e) 
+        {
 	        Log.d(TAG, "KeyHash: (NameNotFoundException)");
-		} catch (NoSuchAlgorithmException e) {
+		} 
+        catch (NoSuchAlgorithmException e) 
+        {
 	        Log.d(TAG, "KeyHash: (NoSuchAlgorithmException)");
 		}        
         // --------------------------
 
 		String facebookAppId = null;
-		try {
-			ApplicationInfo ai = context.getPackageManager().getApplicationInfo(
-				context.getPackageName(), PackageManager.GET_META_DATA);
-			if (ai.metaData != null) {
+		try 
+        {
+			ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+			if (ai.metaData != null) 
+            {
 				facebookAppId = ai.metaData.getString(Session.APPLICATION_ID_PROPERTY);
 			}
-		} catch (PackageManager.NameNotFoundException e) {
+		} 
+        catch (PackageManager.NameNotFoundException e) 
+        {
 			// facebookAppId stays null
 		}
 		return facebookAppId;
 	}
 
-	private static boolean checkFacebookAppId(Context context) {
+	
+    private static boolean checkFacebookAppId(Context context) 
+    {
 		// Sanity check for a valid application id
 		String facebookAppId = getFacebookAppId(context);
 		Log.d(TAG, "facebookAppId: " + facebookAppId);
 
-		if(facebookAppId == null || facebookAppId.isEmpty() || facebookAppId.trim().isEmpty()) {
+		if(facebookAppId == null || facebookAppId.isEmpty() || facebookAppId.trim().isEmpty()) 
+        {
 			Log.d(TAG, "No Facebook Application Id defined. Alter your 'loom.config' file, or 'application/android/res/values/strings.xml' file to use Loom.Facebook functionality.");
 			return false;
 		}
-
 		return true;
 	}
-	
-	protected static ViewGroup rootLayout;
-	protected static Activity activity;
-	protected static Handler handler;
-
-	private static Session.StatusCallback mStatusCallback = new SessionStatusCallback();
-	private static native void nativeStatusCallback(String sessionState, String sessionPermissions);
-
-	private static LoomDemo mLoomDemo;
-
 }
