@@ -48,6 +48,11 @@ public:
     {
         return platform_getAccessToken();
     }
+    
+	static void closeAndClearTokenInformation()
+	{
+        platform_closeAndClearTokenInformation();
+	}
 	
 	static const char* getExpirationDate(const char* dateFormat)
     {
@@ -69,6 +74,7 @@ static int registerLoomFacebook(lua_State* L)
         .addStaticMethod("requestNewPublishPermissions", &Facebook::requestNewPublishPermissions)
         .addStaticMethod("showFrictionlessRequestDialog", &Facebook::showFrictionlessRequestDialog)
         .addStaticMethod("getAccessToken", &Facebook::getAccessToken)
+        .addStaticMethod("closeAndClearTokenInformation", &Facebook::closeAndClearTokenInformation)
         .addStaticMethod("getExpirationDate", &Facebook::getExpirationDate)
 		.addStaticProperty("onSessionStatus", &Facebook::getOnSessionStatusDelegate)
     .endClass()

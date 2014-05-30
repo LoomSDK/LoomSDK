@@ -47,6 +47,9 @@ void platform_showFrictionlessRequestDialog(const char* recipientsString, const 
 ///Returns the Facebook Access Token
 const char* platform_getAccessToken();
 
+///Closes Facebook the session and clears Token information
+void platform_closeAndClearTokenInformation();
+
 ///Retruns the expiration date of the current Facebook Session
 const char* platform_getExpirationDate(const char* dateFormat);
 
