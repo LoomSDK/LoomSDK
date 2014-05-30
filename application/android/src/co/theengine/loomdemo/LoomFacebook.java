@@ -58,10 +58,13 @@ public class LoomFacebook
     {
 		if(checkFacebookAppId(mLoomDemo)) {
 			Session session = Session.getActiveSession();
-			if (!session.isOpened() && !session.isClosed()) {
+			if ((session != null) && (!session.isOpened() && !session.isClosed()))
+            {
 				List<String> permissions = Arrays.asList(permissionsString.split(",|\\s+|,\\s+"));
 				session.openForRead(new Session.OpenRequest(mLoomDemo).setCallback(mStatusCallback).setPermissions(permissions));
-			} else {
+			}
+            else
+            {
 				Session.openActiveSession(mLoomDemo, true, mStatusCallback);
 			}
 			return true;
@@ -73,7 +76,8 @@ public class LoomFacebook
 	public static boolean requestNewPublishPermissions(String permissionsString) 
     {
 		Session session = Session.getActiveSession();
-		if (!checkFacebookAppId(mLoomDemo) || session.isOpened()) {
+		if ((session != null) && (!checkFacebookAppId(mLoomDemo) || session.isOpened()))
+        {
 			List<String> permissions = Arrays.asList(permissionsString.split(",|\\s+|,\\s+"));
 			session.requestNewPublishPermissions(new Session.NewPermissionsRequest(mLoomDemo, permissions));
 			return true;
@@ -84,7 +88,8 @@ public class LoomFacebook
 
 	public static String getAccessToken() 
     {
-		return Session.getActiveSession().getAccessToken();
+        Session session = Session.getActiveSession();
+		return (session != null) ? session.getAccessToken() : null;
 	}
 
 
@@ -122,7 +127,17 @@ public class LoomFacebook
 		    }
 	    });
 	}
-	
+
+
+    public static void closeAndClearTokenInformation()
+	{
+		Session session = Session.getActiveSession();
+        if(session != null)
+        {
+            session.closeAndClearTokenInformation();
+        }
+	}
+
 
 	public static String getExpirationDate(String dateFormat) 
     {
@@ -176,14 +191,22 @@ public class LoomFacebook
 	public static void onStart(LoomDemo loomDemo) 
     {
 		setLoomDemo(loomDemo);
-		Session.getActiveSession().addCallback(mStatusCallback);
+		Session session = Session.getActiveSession();
+        if(session != null)
+        {
+            session.addCallback(mStatusCallback);
+        }
 	}
 
 
 	public static void onStop(LoomDemo loomDemo) 
     {
 		setLoomDemo(loomDemo);
-		Session.getActiveSession().removeCallback(mStatusCallback);
+		Session session = Session.getActiveSession();
+        if(session != null)
+        {
+            session.removeCallback(mStatusCallback);
+        }
 	}
 
 
@@ -191,14 +214,21 @@ public class LoomFacebook
     {
 		setLoomDemo(loomDemo);
 		Session session = Session.getActiveSession();
-		Session.saveSession(session, outState);
+        if(session != null)
+        {
+            Session.saveSession(session, outState);
+        }
 	}
 
 
 	public static void onActivityResult(LoomDemo loomDemo, int requestCode, int resultCode, Intent data) 
     {
 		setLoomDemo(loomDemo);
-		Session.getActiveSession().onActivityResult(mLoomDemo, requestCode, resultCode, data);
+		Session session = Session.getActiveSession();
+        if(session != null)
+        {
+            session.onActivityResult(mLoomDemo, requestCode, resultCode, data);
+        }
 	}
 
 

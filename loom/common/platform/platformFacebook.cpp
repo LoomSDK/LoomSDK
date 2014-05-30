@@ -48,6 +48,10 @@ const char* platform_getAccessToken()
     return "";
 }
 
+void platform_closeAndClearTokenInformation()
+{
+}
+
 const char* platform_getExpirationDate(const char* dateFormat)
 {
     return "";

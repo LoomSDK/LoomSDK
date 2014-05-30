@@ -59,6 +59,7 @@ static loomJniMethodInfo gOpenSessionReadPermissions;
 static loomJniMethodInfo gRequestNewPublishPermissions;
 static loomJniMethodInfo gFrictionlessRequestDialog;
 static loomJniMethodInfo gGetAccessToken;
+static loomJniMethodInfo gCloseTokenInfo;
 static loomJniMethodInfo gGetExpirationDate;
 
 
@@ -86,6 +87,10 @@ void platform_facebookInitialize(SessionStatusCallback sessionStatusCB)
                                     "co/theengine/loomdemo/LoomFacebook",
                                     "getAccessToken",
                                     "()Ljava/lang/String;");
+    LoomJni::getStaticMethodInfo(gCloseTokenInfo,
+                                 "co/theengine/loomdemo/LoomFacebook",
+                                 "closeAndClearTokenInformation",
+                                 "()V");    
     LoomJni::getStaticMethodInfo(gGetExpirationDate,
                                     "co/theengine/loomdemo/LoomFacebook",
                                     "getExpirationDate",
@@ -141,6 +146,12 @@ const char* platform_getAccessToken()
     accessToken->autorelease();
     gGetAccessToken.env->DeleteLocalRef(result);
     return accessToken->m_sString.c_str();
+}
+
+
+void platform_closeAndClearTokenInformation()
+{       
+    gCloseTokenInfo.env->CallStaticVoidMethod(gCloseTokenInfo.classID, gCloseTokenInfo.methodID);
 }
 
 
