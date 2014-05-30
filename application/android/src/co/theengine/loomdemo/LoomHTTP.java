@@ -108,22 +108,22 @@ public class LoomHTTP
             @Override
             public void onFailure(Throwable error, byte[] binaryData) {
 
-                final String fContent;
+                String content;
 
                 if (base64EncodeResponseData)
                 {
-                    fContent = Base64.encodeToString(binaryData, Base64.NO_WRAP | Base64.NO_PADDING);
+                    content = Base64.encodeToString(binaryData, Base64.NO_WRAP | Base64.NO_PADDING);
                 }
                 else
                 {
                     try {
-                        fContent = new String(binaryData, "UTF8");
+                        content = new String(binaryData, "UTF8");
                     } catch (UnsupportedEncodingException e) {
                         throw new AssertionError("UTF-8 is unknown");
                     }
                 }
 
-                onFailure(error, fContent);
+                onFailure(error, content);
             } 
 
             @Override
