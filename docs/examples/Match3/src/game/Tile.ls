@@ -39,6 +39,7 @@ package  {
 		
 		private var display:Image;
 		private var shaker:Shaker;
+		private var shakingSound:Sound;
 		
 		public function Tile(juggler:Juggler, container:DisplayObjectContainer, tx:int, ty:int, tw:int, th:int) {
 			this.juggler = juggler;
@@ -47,7 +48,8 @@ package  {
 			this.tw = tw;
 			this.th = th;
 			display = new Image();
-			shaker = new Shaker(display, Sound.load("assets/shaking.ogg"));
+			shakingSound = Sound.load("assets/shaking.ogg");
+			shaker = new Shaker(display, shakingSound);
 			resetPosition();
 			container.addChild(display);
 		}
@@ -112,6 +114,7 @@ package  {
 			if (delayed) {
 				//display.rotation = Math.PI/4;
 				//var duration = Math.randomRange(0, 0.5);
+				shakingSound.setGain(force ? 0.1 : 1);
 				shaker.start(juggler);
 				juggler.delayCall(cleared, delay);
 			} else {

@@ -53,7 +53,7 @@ package ui {
 			info.validate();
 			
 			super.enter(owner);
-			Loom2D.juggler.delayCall(enableTouch, 2);
+			Loom2D.juggler.delayCall(enableTouch, 1);
 		}
 		
 		public function exit():void {

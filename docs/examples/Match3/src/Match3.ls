@@ -9,6 +9,7 @@ package
 	import loom2d.text.TextField;
 	import loom2d.textures.Texture;
 	import loom2d.textures.TextureSmoothing;
+	import ui.AdView;
 	import ui.ConfigView;
 	import ui.IntroView;
 	import ui.ModeView;
@@ -28,6 +29,7 @@ package
 		private var difficulty = new DifficultyView();
 		private var game = new GameView();
 		private var end = new EndView();
+		private var ad = new AdView();
 		
 		private var display:Sprite = new Sprite();
 		private var currentView:View;
@@ -50,7 +52,7 @@ package
 			
 			config.reset();
 			
-			var views:Vector.<View> = new <View>[intro, mode, difficulty, game, end];
+			var views:Vector.<View> = new <View>[intro, mode, difficulty, game, end, ad];
 			for each (var view:View in views) {
 				if (view is ConfigView) (view as ConfigView).config = config;
 				view.init();
@@ -78,6 +80,9 @@ package
 				switchView(end);
 			};
 			end.onContinue += function() {
+				switchView(ad);
+			};
+			ad.onContinue += function() {
 				switchView(intro);
 			};
 			
@@ -90,6 +95,7 @@ package
 			//switchView(difficulty);
 			//switchView(game);
 			//switchView(end);
+			//switchView(ad);
 		}
 		
 		private function resize(e:Event = null):void {

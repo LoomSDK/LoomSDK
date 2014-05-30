@@ -29,16 +29,16 @@ package ui {
 			super.enter(owner);
 			for (var i = 0; i < items.length; i++) {
 				var item = items[i];
-				Loom2D.juggler.tween(item, 1, {
+				Loom2D.juggler.tween(item, 0.8, {
 					y: item.y,
-					delay: (1-(i+1)/items.length)*0.5,
+					delay: (1-(i+1)/items.length)*0.3,
 					transition: Transitions.EASE_OUT_BOUNCE
 				});
 				item.y = -30;
 			}
-			Loom2D.juggler.tween(header, 1, {
+			Loom2D.juggler.tween(header, 0.8, {
 				y: header.y,
-				delay: 0.5,
+				delay: 0.3,
 				transition: Transitions.EASE_OUT_BOUNCE
 			});
 			header.y = -header.height;

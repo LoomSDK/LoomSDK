@@ -25,7 +25,6 @@ package ui {
 	import loom2d.math.Color;
 	import loom2d.math.Point;
 	import loom2d.textures.Texture;
-	import system.Number;
 	class GameView extends ConfigView {
 		
 		public var onQuit:ViewCallback;
@@ -73,7 +72,7 @@ package ui {
 		
 		private var soundtrack:Sound;
 		private var background:TiledImage2;
-		//private var background:ScrollingImage;
+		//private var background:OffsetTiledImage;
 		private var bgColor = new Color(0, 0.3*0xFF, 0.3*0xFF);
 		private var bgScroll:Number;
 		
@@ -87,6 +86,7 @@ package ui {
 		public function init() {
 			
 			background = new TiledImage2(Texture.fromAsset("assets/background.png"), 2);
+			//background = new OffsetTiledImage(Texture.fromAsset("assets/background.png"), 2);
 			addChild(background);
 			
 			super.init();
@@ -268,7 +268,11 @@ package ui {
 			particles.emitterY = y;
 			particles.startColor = color;
 			particles.populate(6, 0);
-			explosion.setPitch(getPitch(momentum)+Math.randomRange(-0.1, 0.1));
+			if (state == STATE_ENDING) {
+				explosion.setPitch(1+Math.randomRange(-0.1, 0.1));
+			} else {
+				explosion.setPitch(getPitch(momentum)+Math.randomRange(-0.1, 0.1));
+			}
 			explosion.play();
 			momentum++;
 			screenshake += 0.25;
