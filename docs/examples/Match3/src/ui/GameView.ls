@@ -31,6 +31,11 @@ package ui {
 		public var onQuit:ViewCallback;
 		public var onTimeout:ViewCallback;
 		
+		private static const STATE_GAME   = 0;
+		private static const STATE_QUIT   = 1;
+		private static const STATE_ENDING = 2;
+		private var state = STATE_GAME;
+		
 		private var dt:Number = 1/60;
 		private var t:Number;
 		private var juggler:Juggler = new Juggler();
@@ -101,6 +106,7 @@ package ui {
 			board = new Board(juggler);
 			board.onTileClear += tileClear;
 			board.onTilesMatched += tilesMatched;
+			board.onEnded += boardEnded;
 			board.init();
 			field.addChild(board);
 			
@@ -125,6 +131,7 @@ package ui {
 			
 		}
 		
+		
 		private function initDisplay(display:Label) {
 			display.nameList.add("light");
 			field.addChild(display);
@@ -132,6 +139,7 @@ package ui {
 		
 		private function confirmQuit(e:Event):void {
 			showConfirm();
+			state = STATE_QUIT;
 		}
 		private function showConfirm() {
 			confirmView.visible = true;
@@ -144,6 +152,7 @@ package ui {
 		}
 		private function confirmNo():void {
 			hideConfirm();
+			state = STATE_GAME;
 		}
 		
 		public function resize(w:Number, h:Number) {
@@ -164,6 +173,7 @@ package ui {
 		}
 		
 		private function tilesMatched(m:Match):void {
+			if (state == STATE_ENDING) return;
 			var matchLength = m.end-m.begin+1;
 			addScore(matchLength*matchLength);
 			if (m.type == null) {
@@ -275,6 +285,7 @@ package ui {
 		
         public function enter(owner:DisplayObjectContainer) {
 			super.enter(owner);
+			state = STATE_GAME;
 			hideConfirm();
 			board.freeformMode = config.freeform;
 			board.reset();
@@ -300,16 +311,18 @@ package ui {
 		}
 		
 		public function tick() {
-			if (confirmView.visible) return;
+			if (state == STATE_QUIT) return;
 			
 			t += dt;
 			juggler.advanceTime(dt);
-			board.tick();
 			screenshaker.strength = screenshake;
 			screenshake -= screenshake*6*dt;
 			if (Math.abs(screenshake) < 0.1) screenshake = 0;
 			momentum -= momentum*0.2*dt;
 			bgScroll -= momentum*1.5*dt;
+			
+			if (state == STATE_ENDING) return;
+			
 			multiplier = Math.round(Math.pow(1+0.1*momentum, 2)/0.5)*0.5;
 			updateMulti();
 			//soundtrack.setPitch(getPitch(momentum));
@@ -319,8 +332,17 @@ package ui {
 			//}
 			updateTime();
 			if (config.duration > 0 && t >= config.duration) {
-				onTimeout();
+				end();
 			}
+		}
+		
+		private function end() {
+			state = STATE_ENDING;
+			board.end();
+		}
+		
+		private function boardEnded():void {
+			onTimeout();
 		}
 		
 		public function render() {

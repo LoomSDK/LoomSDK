@@ -14,6 +14,7 @@ package
 	import ui.ModeView;
 	import ui.DifficultyView;
 	import ui.GameView;
+	import ui.EndView;
 	import ui.Theme;
 	import ui.View;
 	
@@ -26,6 +27,7 @@ package
 		private var mode = new ModeView();
 		private var difficulty = new DifficultyView();
 		private var game = new GameView();
+		private var end = new EndView();
 		
 		private var display:Sprite = new Sprite();
 		private var currentView:View;
@@ -38,6 +40,7 @@ package
 		{
 			// No scaling for stage
 			stage.scaleMode = StageScaleMode.NONE;
+			//stage.color = 0xFFFFFF;
 			
 			TextureSmoothing.defaultSmoothing = TextureSmoothing.NONE;
 			
@@ -47,7 +50,7 @@ package
 			
 			config.reset();
 			
-			var views:Vector.<View> = new <View>[intro, mode, difficulty, game];
+			var views:Vector.<View> = new <View>[intro, mode, difficulty, game, end];
 			for each (var view:View in views) {
 				if (view is ConfigView) (view as ConfigView).config = config;
 				view.init();
@@ -65,11 +68,16 @@ package
 				switchView(game);
 			};
 			game.onQuit += function() {
-				trace("QUIT! "+game.score);
-				switchView(intro);
+				end.gameScore = game.score;
+				end.quitManually = true;
+				switchView(end);
 			};
 			game.onTimeout += function() {
-				trace("TIMEOUT! "+game.score);
+				end.gameScore = game.score;
+				end.quitManually = false;
+				switchView(end);
+			};
+			end.onContinue += function() {
 				switchView(intro);
 			};
 			
@@ -77,10 +85,11 @@ package
 			
 			stage.addEventListener(Event.RESIZE, resize);
 			
-			//switchView(intro);
+			switchView(intro);
 			//switchView(mode);
 			//switchView(difficulty);
-			switchView(game);
+			//switchView(game);
+			//switchView(end);
 		}
 		
 		private function resize(e:Event = null):void {

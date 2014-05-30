@@ -2,10 +2,10 @@
 
     <loom.css.StyleSheet source="assets/style.css"/>
 	
-	<loom2d.display.Image
-		id="title"
-		styleName="title"
-		source="assets/modeTitle.png"
+	<feathers.controls.Label
+		id="header"
+		styleName="header"
+		text="BattlE plan"
 	/>
 	
 	<feathers.controls.Button
@@ -23,7 +23,7 @@
 	<feathers.controls.Check
 		id="modeFreeform"
 		styleName="modeFreeform"
-		label="FrEeform MODE"
+		label="FrEefoRm MODE"
 	/>
 	
 </ui.ModeView>

@@ -2,10 +2,10 @@
 
     <loom.css.StyleSheet source="assets/style.css"/>
 	
-	<loom2d.display.Image
-		id="title"
-		styleName="title"
-		source="assets/modeTitle.png"
+	<feathers.controls.Label
+		id="header"
+		styleName="header"
+		text="YOUr destiny"
 	/>
 	
 	<feathers.controls.Button

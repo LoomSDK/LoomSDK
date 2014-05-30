@@ -5,6 +5,7 @@ package ui {
 	import feathers.core.DisplayListWatcher;
 	import feathers.skins.SmartDisplayObjectStateValueSelector;
 	import feathers.text.BitmapFontTextFormat;
+	import feathers.text.TextFormatAlign;
 	import feathers.textures.Scale9Textures;
 	import loom2d.display.DisplayObjectContainer;
 	import loom2d.Loom2D;
@@ -19,6 +20,8 @@ package ui {
 		public var textFormat:BitmapFontTextFormat;
 		public var textFormatDisabled:BitmapFontTextFormat;
 		public var textFormatLight:BitmapFontTextFormat;
+		public var textFormatTitle:BitmapFontTextFormat;
+		public var textFormatHeader:BitmapFontTextFormat;
 		
 		public var buttonUp:Scale9Textures;
 		public var buttonDown:Scale9Textures;
@@ -43,6 +46,8 @@ package ui {
 			
 			textFormat = new BitmapFontTextFormat("SourceSansPro", 8*scale, 0x000000);
 			textFormatLight = new BitmapFontTextFormat("SourceSansPro", 8*scale, 0xFFFFFF);
+			textFormatTitle = new BitmapFontTextFormat("SourceSansPro", 4*8*scale, 0xFFFFFF, false, TextFormatAlign.CENTER);
+			textFormatHeader = new BitmapFontTextFormat("SourceSansPro", 2*8*scale, 0xFFFFFF, false, TextFormatAlign.CENTER);
 			
 			const background = Texture.fromAsset("assets/ui/background-skin.png");
 			const backgroundDown = Texture.fromAsset("assets/ui/background-down-skin.png");
@@ -65,6 +70,8 @@ package ui {
 			//setInitializerForClass(Label, labelInitializer(0xFFFFFF), "light");
 			setInitializerForClass(Label, labelInitializer);
 			setInitializerForClass(Label, labelInitializerLight, "light");
+			setInitializerForClass(Label, labelInitializerTitle, "title");
+			setInitializerForClass(Label, labelInitializerHeader, "header");
 			setInitializerForClass(Button, buttonInitializer);
 			setInitializerForClass(Check, checkInitializer);
 		}
@@ -85,6 +92,16 @@ package ui {
 		protected function labelInitializerLight(label:Label) {
 			labelInitializer(label);
 			label.textRendererProperties["textFormat"] = textFormatLight;
+		}
+		
+		protected function labelInitializerTitle(label:Label) {
+			labelInitializer(label);
+			label.textRendererProperties["textFormat"] = textFormatTitle;
+		}
+		
+		protected function labelInitializerHeader(label:Label) {
+			labelInitializer(label);
+			label.textRendererProperties["textFormat"] = textFormatHeader;
 		}
 		
 		protected function baseButtonInitializer(button:Button):void

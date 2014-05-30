@@ -3,7 +3,7 @@ package ui {
 	import feathers.controls.Check;
 	import loom2d.events.Event;
 	import loom2d.ui.SimpleButton;
-	class ModeView extends ConfigView {
+	class ModeView extends DialogView {
 		
 		[Bind] public var modeTimed:Button;
 		[Bind] public var modeUnlimited:Button;
@@ -12,13 +12,18 @@ package ui {
 		function get layoutFile():String { return "assets/mode.lml"; }
 		
 		public function created() {
+			items.push(modeTimed);
+			items.push(modeUnlimited);
+			items.push(modeFreeform);
 			modeTimed.addEventListener(Event.TRIGGERED, pick(function(e:Event) {
 				config.freeform = modeFreeform.isSelected;
 				config.duration = 0;
+				config.diffLabel = modeTimed.label;
 			}));
 			modeUnlimited.addEventListener(Event.TRIGGERED, pick(function(e:Event) {
 				config.freeform = modeFreeform.isSelected;
 				config.duration = -1;
+				config.diffLabel = modeUnlimited.label;
 			}));
 			//modeTimed.onClick += pick(function() {
 				//config.duration = 0;

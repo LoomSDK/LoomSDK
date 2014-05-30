@@ -6,7 +6,7 @@ package ui {
 	import loom2d.events.Event;
 	import loom2d.textures.Texture;
 	import loom2d.ui.SimpleButton;
-	class DifficultyView extends ConfigView {
+	class DifficultyView extends DialogView {
 		
 		//[Bind] public var modeLeisurely:SimpleButton;
 		//[Bind] public var modeStandard:SimpleButton;
@@ -23,13 +23,20 @@ package ui {
 			//modeLeisurely.defaultIcon = new Image(Texture.fromAsset("assets/ui/iconLeisurely.png"));
 			//modeLeisurely.iconPosition = Button.ICON_POSITION_RIGHT;
 			
+			items.push(modeLeisurely);
+			items.push(modeStandard);
+			items.push(modeBeast);
+			
 			initButton(modeLeisurely, "assets/ui/iconLeisurely.png", pick(function() {
+				config.modeLabel = modeLeisurely.label;
 				config.duration = 60*5;
 			}));
 			initButton(modeStandard, "assets/ui/iconStandard.png", pick(function() {
+				config.modeLabel = modeStandard.label;
 				config.duration = 60*2;
 			}));
 			initButton(modeBeast, "assets/ui/iconBeast.png", pick(function() {
+				config.modeLabel = modeBeast.label;
 				config.duration = 30;
 			}));
 		}

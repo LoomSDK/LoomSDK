@@ -51,6 +51,7 @@ package
 	
 	public delegate TileCleared(x:Number, y:Number, color:Color):Void;
 	public delegate TilesMatched(m:Match):Void;
+	public delegate GameEnded():Void;
 	
 	public class Board extends DisplayObjectContainer
 	{
@@ -59,6 +60,10 @@ package
 		
 		public var onTileClear:TileCleared;
 		public var onTilesMatched:TilesMatched;
+		public var onEnded:GameEnded;
+		
+		private var ending:Boolean = false;
+		private var endedTiles:int;
 		
 		var juggler:Juggler;
 		
@@ -117,12 +122,26 @@ package
 		public function get contentHeight():Number { return tileCols*tileHeight; }
 		
 		public function reset() {
+			ending = false;
 			randomizeTiles();
 			neutralizeTiles();
 			//tiles[2].reset(tileTypes[2]);
 			//tiles[2+2*tileCols].reset(tileTypes[1]);
 			//tiles[1+2*tileCols].reset(tileTypes[2]);
 			updateBoard();
+		}
+		
+		public function end() {
+			ending = true;
+			endedTiles = 0;
+			for (var i = 0; i < tiles.length; i++) {
+				var tile:Tile = tiles[i];
+				var row = Math.floor(i/tileCols);
+				var col = i%tileCols;
+				var oddRow = row&1;
+				tile.clear(true, (i*(1-oddRow)+(tileCols-col+row*tileCols)*oddRow)*0.04, true);
+				//tile.clear(true, (tileCols-col+row*tileCols)*0.04, true);
+			}
 		}
 		
 		private function initTypes() {
@@ -359,7 +378,14 @@ package
 			var color = tile.lastColor;
 			onTileClear((tile.tx+0.5)*tileWidth+tileDisplay.x, (tile.ty+0.5)*tileHeight+tileDisplay.y, color);
 			//Loom2D.juggler.delayCall(collapseColumns, 0.3);
-			collapseColumns();
+			if (ending) {
+				endedTiles++;
+				if (endedTiles >= tiles.length) {
+					onEnded();
+				}
+			} else {
+				collapseColumns();
+			}
 		}
 		
 		private function findSequentialMatches(matches:Vector.<Match>, dim:int) {
@@ -515,7 +541,7 @@ package
 					var tile = tiles[index];
 					Debug.assert(tile.state != Tile.DROPPING);
 					if (tile.state != Tile.IDLE) continue;
-					tile.clear(true, matchIndex++);
+					tile.clear(true, (matchIndex++)*0.1);
 				}
 				onTilesMatched(match);
 			}
@@ -568,6 +594,7 @@ package
 			if (end == -1) end = l;
 			for (var i = begin; i < end; i++) vec[i] = 0;
 		}
+		
 		
 		public function tick() {
 			
