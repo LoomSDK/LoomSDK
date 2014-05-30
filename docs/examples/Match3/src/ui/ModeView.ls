@@ -18,12 +18,12 @@ package ui {
 			modeTimed.addEventListener(Event.TRIGGERED, pick(function(e:Event) {
 				config.freeform = modeFreeform.isSelected;
 				config.duration = 0;
-				config.diffLabel = modeTimed.label;
+				config.modeLabel = modeTimed.label;
 			}));
 			modeUnlimited.addEventListener(Event.TRIGGERED, pick(function(e:Event) {
 				config.freeform = modeFreeform.isSelected;
 				config.duration = -1;
-				config.diffLabel = modeUnlimited.label;
+				config.modeLabel = modeUnlimited.label;
 			}));
 			//modeTimed.onClick += pick(function() {
 				//config.duration = 0;

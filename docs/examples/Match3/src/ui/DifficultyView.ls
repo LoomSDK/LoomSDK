@@ -28,15 +28,15 @@ package ui {
 			items.push(modeBeast);
 			
 			initButton(modeLeisurely, "assets/ui/iconLeisurely.png", pick(function() {
-				config.modeLabel = modeLeisurely.label;
+				config.diffLabel = modeLeisurely.label;
 				config.duration = 60*5;
 			}));
 			initButton(modeStandard, "assets/ui/iconStandard.png", pick(function() {
-				config.modeLabel = modeStandard.label;
+				config.diffLabel = modeStandard.label;
 				config.duration = 60*2;
 			}));
 			initButton(modeBeast, "assets/ui/iconBeast.png", pick(function() {
-				config.modeLabel = modeBeast.label;
+				config.diffLabel = modeBeast.label;
 				config.duration = 30;
 			}));
 		}

@@ -44,8 +44,8 @@ package game {
 					shakee.x = origX;
 					shakee.y = origY;
 				}
-				if (shaking) shaking.stop();
 			}
+			if (shaking) shaking.stop();
 		}
 		
 	}
