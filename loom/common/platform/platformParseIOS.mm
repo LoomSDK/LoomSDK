@@ -45,8 +45,7 @@ static bool _initialized = false;
     NSBundle *mainBundle = [NSBundle mainBundle];
     NSString *app_id = [mainBundle objectForInfoDictionaryKey:@"ParseAppIDString"];
     NSString *client_key = [mainBundle objectForInfoDictionaryKey:@"ParseClientKeyString"];
-//TEMP: LFL: Remove this log once we are all working as we don't want these values public!
-NSLog(@"-----Info.plist Parse Strings: %@ %@", app_id, client_key);
+    // NSLog(@"-----Info.plist Parse Strings: %@ %@", app_id, client_key);
 
     //don't initialize without valid strings
     _initialized = false;
@@ -111,6 +110,7 @@ bool platform_hasInitialized()
 ///Returns the parse installation ID
 const char* platform_getInstallationID()
 {
+    static char installationId[1024];
     if(_initialized)
     {
         PFInstallation *installation = [PFInstallation currentInstallation];
@@ -118,7 +118,11 @@ const char* platform_getInstallationID()
         {
             NSString *instID = [installation installationId];
             const char *cString = [instID cStringUsingEncoding:NSUTF8StringEncoding];
-            return (cString != NULL) ? cString : "";
+            if(cString != NULL)
+            {
+                strcpy(installationId, cString);
+                return installationId;
+            }
         }
     }
     return "";
@@ -127,6 +131,7 @@ const char* platform_getInstallationID()
 ///Returns the parse installation object's objectId
 const char* platform_getInstallationObjectID()
 {
+    static char objectId[1024];
     if(_initialized)
     {
         PFInstallation *installation = [PFInstallation currentInstallation];
@@ -134,7 +139,11 @@ const char* platform_getInstallationObjectID()
         {
             NSString *objID = [installation objectId];
             const char *cString = [objID cStringUsingEncoding:NSUTF8StringEncoding];
-            return (cString != NULL) ? cString : "";
+            if(cString != NULL)
+            {
+                strcpy(objectId, cString);
+                return objectId;
+            }
         }
     }
     return "";
