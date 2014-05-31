@@ -14,10 +14,10 @@ The major language features we've added to LoomScript are:
 
 * Delegates. LoomScript has C#-esque delegates for binding to script or native code.
 
-~~~
-delegate LMLDelegate():void;
-public var lmlChildRemoved:LMLDelegate;
-~~~
+    ~~~
+    delegate LMLDelegate():void;
+    public var lmlChildRemoved:LMLDelegate;
+    ~~~
 
 * Implicit typing. When you declare something as `var foo = new Point();` the compiler automatically determines that the type of foo is `Point` and statically checks your code for you.
 
@@ -26,6 +26,19 @@ public var lmlChildRemoved:LMLDelegate;
 * The `struct` keyword. `struct` works just like class, with two differences. First, all variables of type struct are pre-initialized and are never null. Second, assignment is treated as copy, so `=` copies by value rather than assigning by reference. This prevents a wide class of issues related to inadvertantly sharing Points (for instance).
 
 * Operator overloads. You can overload +, -, /, =, and other operators by declaring functions named after the operators.
+
+* Enums. [Enumerated Types](http://en.wikipedia.org/wiki/Enumerated_type) provide type-safe keys, symbols and configuration valuables. 
+
+    ~~~
+    public enum GameState
+    {
+      MAIN_MENU,
+      IN-GAME,
+      PAUSED,
+      VICTORY,
+      DEFEAT
+    }
+    ~~~
 
 ## Why LoomScript?
 Why not use JavaScript or Lua directly? Why develop our own language?
