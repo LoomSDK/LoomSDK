@@ -360,7 +360,7 @@ public class LoomDemo extends Cocos2dxActivity {
         super.onDestroy();
     }
 
-    private boolean detectOpenGLES20() 
+    private boolean detectOpenGLES20()
     {
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         ConfigurationInfo info = am.getDeviceConfigurationInfo();
