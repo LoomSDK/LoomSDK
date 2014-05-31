@@ -7,6 +7,7 @@ package ui {
 	import feathers.text.BitmapFontTextRenderer;
 	import loom2d.animation.Transitions;
 	import loom2d.display.DisplayObject;
+	import loom2d.Display.OffsetTiledImage;
 	import loom2d.display.Sprite;
 	import loom2d.events.Event;
 	import loom2d.textures.TextureSmoothing;
@@ -71,8 +72,8 @@ package ui {
 		private var momentum:Number;
 		
 		private var soundtrack:Sound;
-		private var background:TiledImage2;
-		//private var background:OffsetTiledImage;
+		//private var background:TiledImage2;
+		private var background:OffsetTiledImage;
 		private var bgColor = new Color(0, 0.3*0xFF, 0.3*0xFF);
 		private var bgScroll:Number;
 		
@@ -85,8 +86,8 @@ package ui {
 		
 		public function init() {
 			
-			background = new TiledImage2(Texture.fromAsset("assets/background.png"), 2);
-			//background = new OffsetTiledImage(Texture.fromAsset("assets/background.png"), 2);
+			//background = new TiledImage2(Texture.fromAsset("assets/background.png"), 2);
+			background = new OffsetTiledImage(Texture.fromAsset("assets/background.png"), 2);
 			addChild(background);
 			
 			super.init();
@@ -162,6 +163,7 @@ package ui {
 			esc.width = 30;
 			esc.x = w-esc.width;
 			background.setSize(w, h);
+			//background.x = 10; background.y = 10; background.setSize(w-20, h-20);
 			//field.x = (w-s)/2;
 			field.x = (w-board.contentWidth)/2;
 			field.y = h-board.contentHeight-10;
