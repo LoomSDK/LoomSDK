@@ -370,7 +370,7 @@ package feathers.core
                             continue;
 
                         Debug.assert(target, "Trying to run initialize without target.");
-                        initializer.call(this, target);
+                        initializer(target);
                         (uiControl as FeathersControl).invalidate();
                         return;
                     }
