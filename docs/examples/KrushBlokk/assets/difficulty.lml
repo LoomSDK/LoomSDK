@@ -1,0 +1,29 @@
+<ui.views.game.DifficultyView>
+
+    <loom.css.StyleSheet source="assets/style.css"/>
+	
+	<feathers.controls.Label
+		id="header"
+		styleName="header"
+		text="YOUr destiny"
+	/>
+	
+	<feathers.controls.Button
+		id="modeLeisurely"
+		styleName="modeLeisurely"
+		label="Socialist"
+	/>
+	
+	<feathers.controls.Button
+		id="modeStandard"
+		styleName="modeStandard"
+		label="Standard"
+	/>
+	
+	<feathers.controls.Button
+		id="modeBeast"
+		styleName="modeBeast"
+		label="Beast"
+	/>
+	
+</ui.views.game.DifficultyView>

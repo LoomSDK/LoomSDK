@@ -1,0 +1,11 @@
+<ui.views.game.ModeView>
+
+    <loom.css.StyleSheet source="assets/style.css"/>
+	
+	<feathers.controls.Label
+		id="title"
+		styleName="title"
+		text=""
+	/>
+	
+</ui.views.game.ModeView>

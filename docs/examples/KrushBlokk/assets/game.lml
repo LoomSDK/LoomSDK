@@ -1,0 +1,32 @@
+<ui.views.game.GameView>
+
+    <loom.css.StyleSheet source="assets/style.css"/>
+	
+	<feathers.controls.Button
+		id="esc"
+		styleName="esc"
+		label="Esc"
+	/>
+	
+	<feathers.controls.Label
+		id="timeDisplay"
+		styleName="timeDisplay"
+		text=""
+	/>
+	<feathers.controls.Label
+		id="lastDisplay"
+		styleName="lastDisplay"
+		text=""
+	/>
+	<feathers.controls.Label
+		id="multiDisplay"
+		styleName="multiDisplay"
+		text=""
+	/>
+	<feathers.controls.Label
+		id="scoreDisplay"
+		styleName="scoreDisplay"
+		text=""
+	/>
+	
+</ui.views.game.GameView>
