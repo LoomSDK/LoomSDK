@@ -1,0 +1,17 @@
+fonts/kremlin-export.png
+Free font by Vic Fieger: http://www.dafont.com/kremlin.font
+Rendered with GIMP, exported with ShoeBox: http://renderhjs.net/shoebox/
+
+sounds/tileExplosion.ogg
+Generated with bfxr: http://bfxr.net/
+
+sounds/shaking.ogg
+Original sample "171932__qubodup__shaking-mints.flac" Public Domain (CC0) by qubodup: https://www.freesound.org/people/qubodup/sounds/171932/
+
+sounds/tileMove.ogg
+Original sample "95007__j1987__stonegrind1.mp3" Public Domain (CC0) by j1987: https://www.freesound.org/people/j1987/sounds/95007/
+
+sounds/contemplation 2.ogg
+CC-BY 3.0 by Bart Kelsey: http://opengameart.org/content/contemplation-ii
+
+Other assets drawn with Paint.NET or GIMP
