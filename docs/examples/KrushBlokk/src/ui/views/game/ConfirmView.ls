@@ -21,7 +21,7 @@ package ui.views.game {
 		[Bind] var yes:Button;
 		[Bind] var no:Button;
 		
-		function get layoutFile():String { return "assets/confirm.lml"; }
+		function get layoutFile():String { return "confirm.lml"; }
 		
 		public function created()
 		{

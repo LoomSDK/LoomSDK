@@ -122,7 +122,7 @@ package
 			tileDisplay.clipRect = new Rectangle(0, 0, tileCols*tileWidth, tileRows*tileHeight);
 			addChild(tileDisplay);
 			
-			tileMove = Sound.load("assets/tileMove.ogg");
+			tileMove = Sound.load("assets/sounds/tileMove.ogg");
 			
 			addEventListener(TouchEvent.TOUCH, onTouch);
 		}

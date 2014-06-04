@@ -1,0 +1,23 @@
+<ui.views.game.EndView>
+
+    <loom.css.StyleSheet source="assets/layout/style.css"/>
+	
+	<feathers.controls.Label
+		id="header"
+		styleName="header"
+		text="GamE Over"
+	/>
+	
+	<feathers.controls.Label
+		id="info"
+		styleName="info"
+		text="info"
+	/>
+	
+	<feathers.controls.Label
+		id="score"
+		styleName="score"
+		text="score"
+	/>
+	
+</ui.views.game.EndView>

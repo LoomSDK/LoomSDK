@@ -52,7 +52,7 @@ package  {
 			this.tw = tw;
 			this.th = th;
 			display = new Image();
-			shakingSound = Sound.load("assets/shaking.ogg");
+			shakingSound = Sound.load("assets/sounds/shaking.ogg");
 			shaker = new Shaker(display, shakingSound);
 			resetPosition();
 			container.addChild(display);

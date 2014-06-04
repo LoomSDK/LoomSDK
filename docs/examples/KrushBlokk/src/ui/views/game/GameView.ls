@@ -87,7 +87,7 @@ package ui.views.game {
 		private var explosion:Sound;
 		private var soundtrack:Sound;
 		
-		function get layoutFile():String { return "assets/game.lml"; }
+		function get layoutFile():String { return "game.lml"; }
 		
 		public function init()
 		{
@@ -119,7 +119,7 @@ package ui.views.game {
 			screenshaker = new Shaker(board);
 			screenshaker.start(juggler);
 			
-			particles = PDParticleSystem.loadLiveSystem("assets/explosion.pex");
+			particles = PDParticleSystem.loadLiveSystem("assets/particles/explosion.pex");
 			particles.emitterX = 60;
 			particles.emitterY = 60;
 			juggler.add(particles);
@@ -127,10 +127,10 @@ package ui.views.game {
 			
 			addChild(field);
 			
-			//soundtrack = Sound.load("assets/contemplation 2.ogg");
-			//soundtrack.setLooping(true);
+			soundtrack = Sound.load("assets/sounds/contemplation 2.ogg");
+			soundtrack.setLooping(true);
 			
-			explosion = Sound.load("assets/tileExplosion.ogg");
+			explosion = Sound.load("assets/sounds/tileExplosion.ogg");
 		}
 		
 		/** Some additional label setup */
@@ -334,7 +334,7 @@ package ui.views.game {
 			multiplier = 1;
 			updateDisplay();
 			
-			//soundtrack.play();
+			soundtrack.play();
 			//stage.addEventListener(TouchEvent.TOUCH, function(e:TouchEvent) {
 				//var t:Touch = e.touches[0];
 				//background.setScroll(t.globalX, t.globalY);
@@ -345,7 +345,7 @@ package ui.views.game {
 		{
 			super.exit();
 			particles.clear();
-			//soundtrack.stop();
+			soundtrack.stop();
 		}
 		
 		public function tick()
@@ -371,7 +371,6 @@ package ui.views.game {
 			
 			multiplier = Math.round(Math.pow(1+0.1*momentum, 2)/0.5)*0.5;
 			updateMulti();
-			//soundtrack.setPitch(getPitch(momentum));
 			updateTime();
 			if (config.duration > 0 && t >= config.duration) {
 				end();

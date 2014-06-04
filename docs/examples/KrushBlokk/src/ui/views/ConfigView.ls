@@ -18,7 +18,7 @@ package ui.views {
 		public function init()
 		{
 			if (layoutFile != null) {
-				var doc:LMLDocument = LML.bind(layoutFile, this);
+				var doc:LMLDocument = LML.bind("assets/layout/" + layoutFile, this);
 				doc.onLMLCreated += created;
 				doc.apply();
 			}

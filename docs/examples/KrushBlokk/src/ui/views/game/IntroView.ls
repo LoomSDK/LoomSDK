@@ -21,7 +21,7 @@ package ui.views.game {
 		[Bind] public var title:Label;
 		private var h:Number;
 		
-		function get layoutFile():String { return "assets/intro.lml"; }
+		function get layoutFile():String { return "intro.lml"; }
 		
 		public function init()
 		{

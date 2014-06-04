@@ -1,0 +1,23 @@
+<ui.views.game.DifficultyView>
+
+    <loom.css.StyleSheet source="assets/layout/style.css"/>
+	
+	<feathers.controls.Button
+		id="quit"
+		styleName="quit"
+		label="Quit?"
+	/>
+	
+	<feathers.controls.Button
+		id="yes"
+		styleName="yes"
+		label="Yes"
+	/>
+	
+	<feathers.controls.Button
+		id="no"
+		styleName="no"
+		label="No"
+	/>
+	
+</ui.views.game.DifficultyView>

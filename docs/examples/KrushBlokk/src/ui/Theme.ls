@@ -43,8 +43,13 @@ package ui {
 		
 		protected function initialize()
 		{
-			TextField.registerBitmapFont(BitmapFont.load("assets/kremlin-export.fnt"), "SourceSansPro");
-			TextField.registerBitmapFont(BitmapFont.load("assets/kremlin-export.fnt"), "main");
+			var assetPath = "assets/";
+			var fontPath = assetPath + "fonts/";
+			var uiPath = assetPath + "ui/";
+			
+			var font = fontPath + "kremlin-export.fnt";
+			TextField.registerBitmapFont(BitmapFont.load(font), "SourceSansPro");
+			TextField.registerBitmapFont(BitmapFont.load(font), "main");
 			
 			var scale = 4;
 			
@@ -53,8 +58,8 @@ package ui {
 			textFormatTitle = new BitmapFontTextFormat("main", 4*8*scale, 0xFFFFFF, false, TextFormatAlign.CENTER);
 			textFormatHeader = new BitmapFontTextFormat("main", 2*8*scale, 0xFFFFFF, false, TextFormatAlign.CENTER);
 			
-			const background = Texture.fromAsset("assets/ui/background-skin.png");
-			const backgroundDown = Texture.fromAsset("assets/ui/background-down-skin.png");
+			const background = Texture.fromAsset(uiPath + "background-skin.png");
+			const backgroundDown = Texture.fromAsset(uiPath + "background-down-skin.png");
 			const background9 = new Scale9Textures(background, DEFAULT_SCALE9_GRID);
 			const backgroundDown9 = new Scale9Textures(backgroundDown, DEFAULT_SCALE9_GRID);
 			
@@ -62,8 +67,8 @@ package ui {
 			buttonDown = backgroundDown9;
 			checkUpIcon = background9;
 			checkDownIcon = backgroundDown9;
-			checkSelectedUpIcon = new Scale9Textures(Texture.fromAsset("assets/ui/check-selected-up-icon.png"), DEFAULT_SCALE9_GRID);
-			checkSelectedDownIcon = new Scale9Textures(Texture.fromAsset("assets/ui/check-selected-down-icon.png"), DEFAULT_SCALE9_GRID);
+			checkSelectedUpIcon = new Scale9Textures(Texture.fromAsset(uiPath + "check-selected-up-icon.png"), DEFAULT_SCALE9_GRID);
+			checkSelectedDownIcon = new Scale9Textures(Texture.fromAsset(uiPath + "check-selected-down-icon.png"), DEFAULT_SCALE9_GRID);
 			
 			setInitializerForClass(Label, labelInitializer);
 			setInitializerForClass(Label, labelInitializerLight, "light");

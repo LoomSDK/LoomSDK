@@ -15,7 +15,7 @@ package ui.views.game {
 		[Bind] public var modeStandard:Button;
 		[Bind] public var modeBeast:Button;
 		
-		function get layoutFile():String { return "assets/difficulty.lml"; }
+		function get layoutFile():String { return "difficulty.lml"; }
 		
 		public function created()
 		{
@@ -23,15 +23,15 @@ package ui.views.game {
 			items.push(modeStandard);
 			items.push(modeBeast);
 			
-			initButton(modeLeisurely, "assets/ui/iconLeisurely.png", pick(function() {
+			initButton(modeLeisurely, "iconLeisurely.png", pick(function() {
 				config.diffLabel = modeLeisurely.label;
 				config.duration = 60*5;
 			}));
-			initButton(modeStandard, "assets/ui/iconStandard.png", pick(function() {
+			initButton(modeStandard, "iconStandard.png", pick(function() {
 				config.diffLabel = modeStandard.label;
 				config.duration = 60*2;
 			}));
-			initButton(modeBeast, "assets/ui/iconBeast.png", pick(function() {
+			initButton(modeBeast, "iconBeast.png", pick(function() {
 				config.diffLabel = modeBeast.label;
 				config.duration = 30;
 			}));
@@ -45,7 +45,7 @@ package ui.views.game {
 			b.paddingLeft = 25;
 			b.defaultLabelProperties["width"] = 55;
 			b.width = 60;
-			b.defaultIcon = new Image(Texture.fromAsset(icon));
+			b.defaultIcon = new Image(Texture.fromAsset("assets/ui/" + icon));
 			b.iconPosition = Button.ICON_POSITION_RIGHT;
 			b.addEventListener(Event.TRIGGERED, onTouch);
 		}
