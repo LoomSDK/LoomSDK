@@ -75,7 +75,6 @@ package ui.views.game {
 		private var board:Board;
 		
 		/** Tiled scrolling background */
-		//private var background:TiledImage2;
 		private var background:OffsetTiledImage;
 		private var bgColor = new Color(0, 0.3*0xFF, 0.3*0xFF);
 		private var bgScroll:Number;
@@ -91,7 +90,6 @@ package ui.views.game {
 		
 		public function init()
 		{
-			//background = new TiledImage2(Texture.fromAsset("assets/background.png"), 2);
 			background = new OffsetTiledImage(Texture.fromAsset("assets/background.png"), 2);
 			addChild(background);
 			

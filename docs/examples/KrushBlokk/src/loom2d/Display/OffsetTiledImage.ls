@@ -79,6 +79,7 @@ package loom2d.Display {
                 
                 HELPER_RECTANGLE.width = this._width;
                 HELPER_RECTANGLE.height = this._height;
+				this.clipRect = HELPER_RECTANGLE;
                 
                 const batchWidth:Number = this._width + scaledTextureWidth;
                 const batchHeight:Number = this._height + scaledTextureHeight;
