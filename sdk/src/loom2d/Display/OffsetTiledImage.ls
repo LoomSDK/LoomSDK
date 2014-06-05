@@ -68,7 +68,6 @@ package loom2d.Display {
             const scaledTextureHeight:Number = this._originalImageHeight * this._textureScale;
             if(this._propertiesChanged)
             {
-                //this._image.smoothing = this._smoothing;
                 this._image.color = this._color;
                 this._batch.x = -(this._scrollX%scaledTextureWidth);
                 this._batch.y = -(this._scrollY%scaledTextureHeight);
@@ -80,7 +79,7 @@ package loom2d.Display {
                 
                 HELPER_RECTANGLE.width = this._width;
                 HELPER_RECTANGLE.height = this._height;
-                //this.clipRect = HELPER_RECTANGLE;
+                this.clipRect = HELPER_RECTANGLE;
                 
                 const batchWidth:Number = this._width + scaledTextureWidth;
                 const batchHeight:Number = this._height + scaledTextureHeight;
