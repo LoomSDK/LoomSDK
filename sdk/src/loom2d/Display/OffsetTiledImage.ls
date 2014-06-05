@@ -3,6 +3,9 @@ package loom2d.Display {
     import loom2d.math.Rectangle;
     import loom2d.textures.Texture;
     
+    /**
+     * Adds offset/scrolling functionality for infinitely scrolling tiled images.
+     */
     public class OffsetTiledImage extends TiledImage {
         
         private static const HELPER_RECTANGLE:Rectangle = new Rectangle();
