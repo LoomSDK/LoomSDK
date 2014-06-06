@@ -12,11 +12,12 @@ class Facebook
 {
 private:
     /// Event handler; this is called by the C mobile API when there is a recorded sensor change
-    static void sessionStatusDelegate(const char *state, const char *permissions)
+    static void sessionStatusDelegate(const char *state, const char *permissions, int errorCode)
     {
         ///Convert to delegate calls.
         _OnSessionStatusDelegate.pushArgument(state);
         _OnSessionStatusDelegate.pushArgument(permissions);
+        _OnSessionStatusDelegate.pushArgument(errorCode);
         _OnSessionStatusDelegate.invoke();
     }
 

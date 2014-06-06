@@ -22,8 +22,12 @@ import com.facebook.SessionState;
 import com.facebook.Settings;
 import com.facebook.widget.WebDialog;
 import com.facebook.FacebookException;
+import com.facebook.FacebookRequestError;
+import com.facebook.FacebookRequestError.Category;
+import com.facebook.FacebookServiceException;
 import com.facebook.FacebookOperationCanceledException;
 import com.facebook.widget.WebDialog.RequestsDialogBuilder;
+
 
 import java.util.List;
 import java.util.Arrays;
@@ -45,7 +49,7 @@ public class LoomFacebook
     private static final String TAG = "LoomFacebook";
 
     private static Session.StatusCallback mStatusCallback = new SessionStatusCallback();
-    private static native void nativeStatusCallback(String sessionState, String sessionPermissions);
+    private static native void nativeStatusCallback(String sessionState, String sessionPermissions, int errorCode);
     private static LoomDemo mLoomDemo;
  
     protected static ViewGroup rootLayout;
@@ -54,13 +58,91 @@ public class LoomFacebook
 
 
 
+    // Internal use
+    public static void onCreate(LoomDemo loomDemo, Bundle savedInstanceState, ViewGroup value) 
+    {   
+        rootLayout = value;
+        activity = (Activity)rootLayout.getContext();
+        handler = new Handler(Looper.getMainLooper());
+
+        setLoomDemo(loomDemo);
+
+        Session session = Session.getActiveSession();
+        if (session == null) 
+        {
+            if (savedInstanceState != null) 
+            {
+                session = Session.restoreSession(mLoomDemo, null, mStatusCallback, savedInstanceState);
+            }
+            if (session == null) 
+            {
+                session = new Session(mLoomDemo);
+            }
+            
+            Session.setActiveSession(session);
+            
+            if (session.getState().equals(SessionState.CREATED_TOKEN_LOADED)) 
+            {
+                session.openForRead(new Session.OpenRequest(mLoomDemo).setCallback(mStatusCallback));
+            }
+        }
+    }
+
+    public static void onStart(LoomDemo loomDemo) 
+    {
+        setLoomDemo(loomDemo);
+        Session session = Session.getActiveSession();
+        if(session != null)
+        {
+            session.addCallback(mStatusCallback);
+        }
+    }
+
+
+    public static void onStop(LoomDemo loomDemo) 
+    {
+        setLoomDemo(loomDemo);
+        Session session = Session.getActiveSession();
+        if(session != null)
+        {
+            session.removeCallback(mStatusCallback);
+        }
+    }
+
+
+    public static void onSaveInstanceState(LoomDemo loomDemo, Bundle outState) 
+    {
+        setLoomDemo(loomDemo);
+        Session session = Session.getActiveSession();
+        if(session != null)
+        {
+            Session.saveSession(session, outState);
+        }
+    }
+
+
+    public static void onActivityResult(LoomDemo loomDemo, int requestCode, int resultCode, Intent data) 
+    {
+        setLoomDemo(loomDemo);
+        Session session = Session.getActiveSession();
+        if(session != null)
+        {
+            session.onActivityResult(mLoomDemo, requestCode, resultCode, data);
+        }
+    }
+
+
+
+
+
 	public static boolean openSessionWithReadPermissions(String permissionsString) 
     {
-		if(checkFacebookAppId(mLoomDemo)) {
+		if(checkFacebookAppId(mLoomDemo)) 
+        {
 			Session session = Session.getActiveSession();
 			if ((session != null) && (!session.isOpened() && !session.isClosed()))
             {
-				List<String> permissions = Arrays.asList(permissionsString.split(",|\\s+|,\\s+"));
+				List<String> permissions = Arrays.asList(permissionsString.split(","));
 				session.openForRead(new Session.OpenRequest(mLoomDemo).setCallback(mStatusCallback).setPermissions(permissions));
 			}
             else
@@ -75,13 +157,16 @@ public class LoomFacebook
 
 	public static boolean requestNewPublishPermissions(String permissionsString) 
     {
-		Session session = Session.getActiveSession();
-		if ((session != null) && (!checkFacebookAppId(mLoomDemo) || session.isOpened()))
+        if(checkFacebookAppId(mLoomDemo))
         {
-			List<String> permissions = Arrays.asList(permissionsString.split(",|\\s+|,\\s+"));
-			session.requestNewPublishPermissions(new Session.NewPermissionsRequest(mLoomDemo, permissions));
-			return true;
-		}
+    		Session session = Session.getActiveSession();
+    		if ((session != null) && session.isOpened())
+            {
+    			List<String> permissions = Arrays.asList(permissionsString.split(","));
+    			session.requestNewPublishPermissions(new Session.NewPermissionsRequest(mLoomDemo, permissions));
+    			return true;
+    		}
+        }
 		return false;
 	}
 
@@ -152,84 +237,10 @@ public class LoomFacebook
 		else
         {
 			returnString = session.getExpirationDate().toString();
-        }
-			
+        }			
 		return returnString;
 	}
 
-	// Internal use
-	public static void onCreate(LoomDemo loomDemo, Bundle savedInstanceState, ViewGroup value) 
-    {	
-		rootLayout = value;
-		activity = (Activity)rootLayout.getContext();
-		handler = new Handler(Looper.getMainLooper());
-
-		setLoomDemo(loomDemo);
-
-		Session session = Session.getActiveSession();
-		if (session == null) 
-		{
-			if (savedInstanceState != null) 
-			{
-				session = Session.restoreSession(mLoomDemo, null, mStatusCallback, savedInstanceState);
-			}
-			
-			if (session == null) 
-			{
-				session = new Session(mLoomDemo);
-			}
-			
-			Session.setActiveSession(session);
-			
-			if (session.getState().equals(SessionState.CREATED_TOKEN_LOADED)) 
-			{
-				session.openForRead(new Session.OpenRequest(mLoomDemo).setCallback(mStatusCallback));
-			}
-		}	
-	}
-
-	public static void onStart(LoomDemo loomDemo) 
-    {
-		setLoomDemo(loomDemo);
-		Session session = Session.getActiveSession();
-        if(session != null)
-        {
-            session.addCallback(mStatusCallback);
-        }
-	}
-
-
-	public static void onStop(LoomDemo loomDemo) 
-    {
-		setLoomDemo(loomDemo);
-		Session session = Session.getActiveSession();
-        if(session != null)
-        {
-            session.removeCallback(mStatusCallback);
-        }
-	}
-
-
-	public static void onSaveInstanceState(LoomDemo loomDemo, Bundle outState) 
-    {
-		setLoomDemo(loomDemo);
-		Session session = Session.getActiveSession();
-        if(session != null)
-        {
-            Session.saveSession(session, outState);
-        }
-	}
-
-
-	public static void onActivityResult(LoomDemo loomDemo, int requestCode, int resultCode, Intent data) 
-    {
-		setLoomDemo(loomDemo);
-		Session session = Session.getActiveSession();
-        if(session != null)
-        {
-            session.onActivityResult(mLoomDemo, requestCode, resultCode, data);
-        }
-	}
 
 
 	private static class SessionStatusCallback implements Session.StatusCallback 
@@ -237,8 +248,44 @@ public class LoomFacebook
 		@Override
 		public void call(Session _session, SessionState state, Exception exception) 
 		{
-			final Session session = _session;
+            final Session session = _session;
 
+            //handle errors
+			int errorCode = 0;
+            if(exception != null)
+            {
+                if(exception instanceof FacebookOperationCanceledException)
+                {
+                    errorCode = 2;  //UserCancelled
+                }
+                else if(exception instanceof FacebookServiceException)
+                {
+                    FacebookRequestError statusError = ((FacebookServiceException)exception).getRequestError();
+                    switch(statusError.getCategory())
+                    {
+                        case AUTHENTICATION_RETRY:
+                        case AUTHENTICATION_REOPEN_SESSION:
+                            errorCode = 1;  //RetryLogin
+                            break;
+                        case SERVER:
+                            errorCode = 3;  //ApplicationNotPermitted
+                            break;
+                        case PERMISSION:
+                        case THROTTLING:
+                        case CLIENT:
+                        case BAD_REQUEST:
+                        case OTHER:
+                            errorCode = 4;  //Unknown
+                            break;
+                    }
+                }
+                else
+                {
+                    errorCode = 4; //Unknown
+                }
+            }
+
+            final int fErrorCode = errorCode;
 			Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
             {
 				@Override
@@ -246,10 +293,12 @@ public class LoomFacebook
                 {
 					final String sessionStateString = (session.isOpened() ? "OPENED" : (session.isClosed() ? "CLOSED" : "CREATED"));
 					final String sessionPermissionsString = (session.isOpened() ? session.getPermissions().toString() : "");
-					nativeStatusCallback(sessionStateString, sessionPermissionsString);
+                    
+                    Log.d(TAG, "FB SessionStatusCallback: State: " + sessionStateString + "  Permissions: " + sessionPermissionsString+ "  ErrorCode: " + fErrorCode);					
+                    nativeStatusCallback(sessionStateString, sessionPermissionsString, fErrorCode);
 //TODO: CARROT: LFL: don't want to hardcode Carrot here, but instead have a delegate that Carrot can register with
 //ie. notifySessionStatus(getAccessToken());
-					// LoomCarrot.setAccessToken(getAccessToken());
+// LoomCarrot.setAccessToken(getAccessToken());
 				}
 			});
 		}

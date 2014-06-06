@@ -34,5 +34,20 @@
 	<string></string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+    <key>FacebookAppID</key>
+    <string>145359302297405</string>
+    <key>FacebookDisplayName</key>
+    <string>Double Doodle Dev</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>co.theengine.DoubleDoodle</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>fb145359302297405</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>
