@@ -40,14 +40,14 @@ static SessionStatusCallback gSessionStatusCallback = NULL;
 
 extern "C"
 {
-    void Java_co_theengine_loomdemo_LoomFacebook_nativeStatusCallback(JNIEnv* env, jobject thiz, jstring sessonState, jstring sessionPermissions)
+    void Java_co_theengine_loomdemo_LoomFacebook_nativeStatusCallback(JNIEnv* env, jobject thiz, jstring sessonState, jstring sessionPermissions, jint errorCode)
     {
         const char *sessonStateString = env->GetStringUTFChars(sessonState, 0);
         const char *sessionPermissionsString = env->GetStringUTFChars(sessionPermissions, 0);
 
         if (gSessionStatusCallback)
         {
-            gSessionStatusCallback(sessonStateString, sessionPermissionsString);
+            gSessionStatusCallback(sessonStateString, sessionPermissionsString, (int)errorCode);
         }
         env->ReleaseStringUTFChars(sessonState, sessonStateString);
         env->ReleaseStringUTFChars(sessionPermissions, sessionPermissionsString);

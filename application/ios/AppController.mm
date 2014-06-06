@@ -28,6 +28,7 @@
 #import "../common/AppDelegate.h"
 
 #import "RootViewController.h"
+#import "FBAppCall.h"
 
 #include "loom/engine/bindings/loom/lmApplication.h"
 
@@ -87,6 +88,18 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
 }
 
 
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+{
+    if([[sourceApplication lowercaseString] isEqualToString:@"com.facebook.facebook"])
+    {
+        // handle Facebook sign in re-launching the application
+        NSLog(@"---------Facebook openURL: %@", [url absoluteString]);
+        return [FBSession.activeSession handleOpenURL:url];
+    }
+}
+
+
+
 - (void)applicationWillResignActive:(UIApplication *)application {
     /*
      Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
@@ -100,6 +113,12 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
      Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
      */
     cocos2d::CCDirector::sharedDirector()->resume();
+
+
+    // Handle the user leaving the app while the Facebook login dialog is being shown
+    // For example: when the user presses the iOS "home" button while the login dialog is active
+    NSLog(@"---------Application Did Become Active: Notifying Facebook");
+    [FBAppCall handleDidBecomeActive];    
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {

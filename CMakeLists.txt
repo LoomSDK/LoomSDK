@@ -29,6 +29,7 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/jansson
     ${CMAKE_SOURCE_DIR}/loom/vendor/admob/include
     ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-3.4.0/include
+    ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios/FacebookSDK.framework/Headers
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/cocoa
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/include

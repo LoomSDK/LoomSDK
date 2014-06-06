@@ -1,6 +1,38 @@
 package Loom
 {
     /**
+     * The different types of mobile device sensors available
+     */
+    public enum FacebookErrorCode
+    {
+        /**
+         * No error detected
+         */
+        NoError = 0,
+        
+        /**
+         * User must Retry the Login Process
+         */
+        RetryLogin = 1,
+
+        /**
+         * User cancelled the Login Process
+         */
+        UserCancelled = 2,
+
+        /**
+         * Application does not have permission to access Facebook
+         */
+        ApplicationNotPermitted = 3,
+
+        /**
+         * Unknown error
+         */
+        Unknown = 4
+    };
+
+
+    /**
      *  Facebook is currently supported on Android and iOS.
      */
     public native class Facebook
@@ -12,14 +44,14 @@ package Loom
 
         /**
          * Open a Facebook session with read permissions.
-         *  @param permissions String defining the Facebook permissions you wish to read (ie. "email")
+         *  @param permissions String defining the Facebook permissions (comma separated) you wish to read (ie. "email,user_friends")
          *  @return false if there is no Facebook Application Id defined, true otherwise.
          */
         public static native function openSessionWithReadPermissions(permissions:String):Boolean;
 
         /**
          * Open a Facebook session with read permissions.
-         *  @param permissions String defining the Facebook permissions you wish to publish via (ie. "email")
+         *  @param permissions String defining the Facebook permissions (comma separated) you wish to publish via (ie. "email,user_friends")
          *  @return false if the there is no Facebook Application Id defined, or session has not been opened yet, true otherwise.
          */
         public static native function requestNewPublishPermissions(permissions:String):Boolean;

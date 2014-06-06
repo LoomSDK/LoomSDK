@@ -32,5 +32,27 @@
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string></string>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
+    <key>FacebookAppID</key>
+    <string>145359302297405</string>
+    <key>FacebookDisplayName</key>
+    <string>Double Doodle Dev</string>
+    <key>ParseAppIDString</key>
+    <string>EUl1VhYqZ2bWjkiGNUTWABoJD6eGHVUboB9taPvC</string>
+    <key>ParseClientKeyString</key>
+    <string>17pJDP3YV6kA0mxoS7YfEcdrrEC9kQ82iEbJ8OYT</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>co.theengine.DoubleDoodle</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>playdd</string>
+                <string>fb145359302297405</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>
