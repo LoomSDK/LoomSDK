@@ -24,8 +24,8 @@ package feathers.display
      */
     public class TiledImage extends Sprite
     {
-        private static const HELPER_POINT:Point = new Point();
-        private static const HELPER_MATRIX:Matrix = new Matrix();
+        protected static const HELPER_POINT:Point = new Point();
+        protected static const HELPER_MATRIX:Matrix = new Matrix();
         
         /**
          * Constructor.
@@ -45,21 +45,21 @@ package feathers.display
             this.addEventListener(Event.FLATTEN, flattenHandler);
         }
 
-        private var _propertiesChanged:Boolean = true;
-        private var _layoutChanged:Boolean = true;
+        protected var _propertiesChanged:Boolean = true;
+        protected var _layoutChanged:Boolean = true;
         
         private var _hitArea:Rectangle;
 
-        private var _batch:QuadBatch;
-        private var _image:Image;
+        protected var _batch:QuadBatch;
+        protected var _image:Image;
 
-        private var _originalImageWidth:Number;
-        private var _originalImageHeight:Number;
+        protected var _originalImageWidth:Number;
+        protected var _originalImageHeight:Number;
         
         /**
          * @private
          */
-        private var _width:Number = NaN;
+        protected var _width:Number = NaN;
         
         /**
          * @private
@@ -86,7 +86,7 @@ package feathers.display
         /**
          * @private
          */
-        private var _height:Number = NaN;
+        protected var _height:Number = NaN;
         
         /**
          * @private
@@ -188,7 +188,7 @@ package feathers.display
         /**
          * @private
          */
-        private var _color:uint = 0xffffff;
+        protected var _color:uint = 0xffffff;
 
         /**
          * The color value to pass to the tiled images.
@@ -215,7 +215,7 @@ package feathers.display
         /**
          * @private
          */
-        private var _textureScale:Number = 1;
+        protected var _textureScale:Number = 1;
         
         /**
          * The amount to scale the texture. Useful for DPI changes.
@@ -342,56 +342,63 @@ package feathers.display
                 this._image.scaleX = this._image.scaleY = this._textureScale;
                 const scaledTextureWidth:Number = this._originalImageWidth * this._textureScale;
                 const scaledTextureHeight:Number = this._originalImageHeight * this._textureScale;
-                const xImageCount:int = Math.ceil(this._width / scaledTextureWidth);
-                const yImageCount:int = Math.ceil(this._height / scaledTextureHeight);
-                const imageCount:int = xImageCount * yImageCount;
-                var xPosition:Number = 0;
-                var yPosition:Number = 0;
-                var nextXPosition:Number = xPosition + scaledTextureWidth;
-                var nextYPosition:Number = yPosition + scaledTextureHeight;
-                
-                for(var i:int = 0; i < imageCount; i++)
-                {
-                    this._image.x = xPosition;
-                    this._image.y = yPosition;
-
-                    var imageWidth:Number = (nextXPosition >= this._width) ? (this._width - xPosition) : scaledTextureWidth;
-                    var imageHeight:Number = (nextYPosition >= this._height) ? (this._height - yPosition) : scaledTextureHeight;
-                    this._image.width = imageWidth;
-                    this._image.height = imageHeight;
-
-                    var xCoord:Number = imageWidth / scaledTextureWidth;
-                    var yCoord:Number = imageHeight / scaledTextureHeight;
-                    HELPER_POINT.x = xCoord;
-                    HELPER_POINT.y = 0;
-                    this._image.setTexCoords(1, HELPER_POINT);
-
-                    HELPER_POINT.y = yCoord;
-                    this._image.setTexCoords(3, HELPER_POINT);
-
-                    HELPER_POINT.x = 0;
-                    this._image.setTexCoords(2, HELPER_POINT);
-
-                    this._batch.addImage(this._image);
-
-                    if(nextXPosition >= this._width)
-                    {
-                        xPosition = 0;
-                        nextXPosition = scaledTextureWidth;
-                        yPosition = nextYPosition;
-                        nextYPosition += scaledTextureHeight;
-                    }
-                    else
-                    {
-                        xPosition = nextXPosition;
-                        nextXPosition += scaledTextureWidth;
-                    }
-                }
-
+                updateBatch(this._width, this._height, scaledTextureWidth, scaledTextureHeight);
             }
 
             this._layoutChanged = false;
             this._propertiesChanged = false;
+        }
+        
+        /**
+         * @private
+         */
+        protected function updateBatch(batchWidth:Number, batchHeight:Number, scaledTextureWidth:Number, scaledTextureHeight:Number)
+        {
+            const xImageCount:int = Math.ceil(batchWidth / scaledTextureWidth);
+            const yImageCount:int = Math.ceil(batchHeight / scaledTextureHeight);
+            const imageCount:int = xImageCount * yImageCount;
+            var xPosition:Number = 0;
+            var yPosition:Number = 0;
+            var nextXPosition:Number = xPosition + scaledTextureWidth;
+            var nextYPosition:Number = yPosition + scaledTextureHeight;
+            
+            for(var i:int = 0; i < imageCount; i++)
+            {
+                this._image.x = xPosition;
+                this._image.y = yPosition;
+
+                var imageWidth:Number = (nextXPosition >= batchWidth) ? (batchWidth - xPosition) : scaledTextureWidth;
+                var imageHeight:Number = (nextYPosition >= batchHeight) ? (batchHeight - yPosition) : scaledTextureHeight;
+                this._image.width = imageWidth;
+                this._image.height = imageHeight;
+
+                var xCoord:Number = imageWidth / scaledTextureWidth;
+                var yCoord:Number = imageHeight / scaledTextureHeight;
+                HELPER_POINT.x = xCoord;
+                HELPER_POINT.y = 0;
+                this._image.setTexCoords(1, HELPER_POINT);
+
+                HELPER_POINT.y = yCoord;
+                this._image.setTexCoords(3, HELPER_POINT);
+
+                HELPER_POINT.x = 0;
+                this._image.setTexCoords(2, HELPER_POINT);
+
+                this._batch.addImage(this._image);
+
+                if(nextXPosition >= batchWidth)
+                {
+                    xPosition = 0;
+                    nextXPosition = scaledTextureWidth;
+                    yPosition = nextYPosition;
+                    nextYPosition += scaledTextureHeight;
+                }
+                else
+                {
+                    xPosition = nextXPosition;
+                    nextXPosition += scaledTextureWidth;
+                }
+            }
         }
 
         /**
