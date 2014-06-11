@@ -170,22 +170,22 @@ package feathers.core
             }
             for(var key:Object in this.initializedObjects)
             {
-                //delete this.initializedObjects[key];
+                // delete this.initializedObjects[key];
                 this.initializedObjects[key] = null;
             }
             for(key in this._initializerNameTypeMap)
             {
-                //delete this._initializerNameTypeMap[key];
+                // delete this._initializerNameTypeMap[key];
                 this._initializerNameTypeMap[key] = null;
             }
             for(key in this._initializerNoNameTypeMap)
             {
-                //delete this._initializerNoNameTypeMap[key];
+                // delete this._initializerNoNameTypeMap[key];
                 this._initializerNoNameTypeMap[key] = null;
             }
             for(key in this._initializerSuperTypeMap)
             {
-                //delete this._initializerSuperTypeMap[key];
+                // delete this._initializerSuperTypeMap[key];
                 this._initializerSuperTypeMap[key] = null;
             }
             this._initializerSuperTypes.length = 0;
