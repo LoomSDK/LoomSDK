@@ -72,7 +72,7 @@ void platform_teakInitialize(AuthStatusCallback authStatusCB)
     LoomJni::getStaticMethodInfo(gGetStatus,
                                     "co/theengine/loomdemo/LoomTeak",
                                     "getStatus",
-                                    "()Ljava/lang/String;");
+                                    "()I");
     LoomJni::getStaticMethodInfo(gPostAchievement,
                                     "co/theengine/loomdemo/LoomTeak",
                                     "postAchievement",

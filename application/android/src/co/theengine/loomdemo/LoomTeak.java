@@ -16,7 +16,7 @@ public class LoomTeak
 {
     public static final String TEAK_KEY_PROPERTY = "com.teak.AppSecret";
 
-    static Carrot mTeak;
+    static Carrot mTeak = null;
 
 
 
