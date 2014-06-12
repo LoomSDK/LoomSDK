@@ -63,7 +63,7 @@ public:
 static int registerLoomParse(lua_State *L)
 {
     ///set up lua bindings
-    beginPackage(L, "loom.platform")
+    beginPackage(L, "loom.social")
 
         .beginClass<Parse>("Parse")
 

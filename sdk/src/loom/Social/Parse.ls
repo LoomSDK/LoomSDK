@@ -18,7 +18,7 @@ limitations under the License.
 ===========================================================================
 */
 
-package loom.platform 
+package loom.social 
 {
     /**
      * Loom Parse API.
