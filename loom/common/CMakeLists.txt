@@ -22,6 +22,7 @@ if (APPLE)
             platform/platformVideoiOS.mm
             platform/platformMobileiOS.mm
             platform/platformFacebookiOS.mm
+            platform/platformTeakiOS.mm
             platform/EBPurchase.m
         )
     else()

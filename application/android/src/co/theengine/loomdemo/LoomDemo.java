@@ -180,6 +180,9 @@ public class LoomDemo extends Cocos2dxActivity {
         // Create Facebook
         LoomFacebook.onCreate(this, savedInstanceState, webViewGroup);
 
+        // Create Teak
+        LoomTeak.onCreate(this, LoomFacebook.getFacebookAppId(this));
+
         // Hook up the store.
         LoomStore.bind(this);
 
@@ -278,6 +281,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onDestroy() {
+        LoomTeak.onDestroy();
         LoomMobile.onDestroy();
         LoomSensors.onDestroy();
         LoomVideo.onDestroy();

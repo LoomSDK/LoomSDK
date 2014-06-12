@@ -34,6 +34,8 @@
 	<string></string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+    <key>TeakAppSecret</key>
+    <string>f5dc695912cf5de9e25ff3699f67a8dc</string>
     <key>FacebookAppID</key>
     <string>145359302297405</string>
     <key>FacebookDisplayName</key>
