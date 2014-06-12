@@ -11,8 +11,8 @@ using namespace LS;
 class Facebook
 {
 private:
-    /// Event handler; this is called by the C mobile API when there is a recorded sensor change
-    static void sessionStatusDelegate(const char *state, const char *permissions, int errorCode)
+    /// Event handler; this is called by the C mobile API when there is a recorded Session Status change
+    static void sessionStatusDelegate(int state, const char *permissions, int errorCode)
     {
         ///Convert to delegate calls.
         _OnSessionStatusDelegate.pushArgument(state);
@@ -68,7 +68,7 @@ NativeDelegate Facebook::_OnSessionStatusDelegate;
 
 static int registerLoomFacebook(lua_State* L)
 {
-    beginPackage(L, "Loom")
+    beginPackage(L, "loom.social")
 
     .beginClass<Facebook>("Facebook")
         .addStaticMethod("openSessionWithReadPermissions", &Facebook::openSessionWithReadPermissions)

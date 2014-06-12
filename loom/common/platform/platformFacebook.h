@@ -30,9 +30,9 @@
 
 
 ///Callback for facebook session status API events
-typedef void (*SessionStatusCallback)(const char *state, const char *permissions, int errorCode);
+typedef void (*SessionStatusCallback)(int state, const char *permissions, int errorCode);
 
-///Initializes the video playback for the platform
+///Initializes Facebook for the platform
 void platform_facebookInitialize(SessionStatusCallback sessionStatusCB);
 
 ///Opens up a Facebook session with Read Permissions

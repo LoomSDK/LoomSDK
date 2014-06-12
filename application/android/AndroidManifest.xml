@@ -29,6 +29,7 @@
         android:debuggable="true"
         android:icon="@drawable/icon">
 
+<!-- TODO: remove @string and use direct value here? easier to set from the CLI likely! -->
         <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebookApplicationId"/>
         <activity android:name=".LoomDemo"
                   android:label="@string/app_name"

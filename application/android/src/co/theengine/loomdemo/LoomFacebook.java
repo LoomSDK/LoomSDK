@@ -49,7 +49,7 @@ public class LoomFacebook
     private static final String TAG = "LoomFacebook";
 
     private static Session.StatusCallback mStatusCallback = new SessionStatusCallback();
-    private static native void nativeStatusCallback(String sessionState, String sessionPermissions, int errorCode);
+    private static native void sessionStatusCallback(int sessionState, String sessionPermissions, int errorCode);
     private static LoomDemo mLoomDemo;
  
     protected static ViewGroup rootLayout;
@@ -87,6 +87,7 @@ public class LoomFacebook
             }
         }
     }
+    
 
     public static void onStart(LoomDemo loomDemo) 
     {
@@ -251,7 +252,7 @@ public class LoomFacebook
             final Session session = _session;
 
             //handle errors
-			int errorCode = 0;
+			int errorCode = 0;   //NoError
             if(exception != null)
             {
                 if(exception instanceof FacebookOperationCanceledException)
@@ -291,14 +292,20 @@ public class LoomFacebook
 				@Override
 				public void run() 
                 {
-					final String sessionStateString = (session.isOpened() ? "OPENED" : (session.isClosed() ? "CLOSED" : "CREATED"));
+                    int state = 0;  //Created
+                    if(session.isOpened())
+                    {
+                        state = 1;  //Opened
+                    }
+                    else if(session.isClosed())
+                    {
+                        state = 2; //Closed
+                    }
+					final int sessionState = state;
 					final String sessionPermissionsString = (session.isOpened() ? session.getPermissions().toString() : "");
                     
-                    Log.d(TAG, "FB SessionStatusCallback: State: " + sessionStateString + "  Permissions: " + sessionPermissionsString+ "  ErrorCode: " + fErrorCode);					
-                    nativeStatusCallback(sessionStateString, sessionPermissionsString, fErrorCode);
-//TODO: CARROT: LFL: don't want to hardcode Carrot here, but instead have a delegate that Carrot can register with
-//ie. notifySessionStatus(getAccessToken());
-// LoomCarrot.setAccessToken(getAccessToken());
+                    Log.d(TAG, "FB SessionStatusCallback: State: " + sessionState + "  Permissions: " + sessionPermissionsString+ "  ErrorCode: " + fErrorCode);
+                    sessionStatusCallback(sessionState, sessionPermissionsString, fErrorCode);
 				}
 			});
 		}

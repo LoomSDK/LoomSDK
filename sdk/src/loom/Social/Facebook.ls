@@ -1,7 +1,39 @@
-package Loom
+package loom.social
 {
     /**
-     * The different types of mobile device sensors available
+     * Delegate used to register when the Facebook Session Status changes
+     *
+     *  @param state State of the session
+     *  @param permissions String detailing the current permissions of this session
+     *  @param errorCode Error, if any
+     */
+    public delegate FacebookSessionStatusDelegate(state:FacebookSessionState, permissions:String, errorCode:FacebookErrorCode):void;
+
+
+    /**
+     * Possible Facebook Session States
+     */
+    public enum FacebookSessionState
+    {
+        /**
+         * Session has been created
+         */
+        Created = 0,
+
+        /**
+         * Session has been opened
+         */
+        Openen = 1,
+
+        /**
+         * Session has been closed
+         */
+        Closed = 2,
+    };
+
+
+    /**
+     * Possible Facebook Error Codes
      */
     public enum FacebookErrorCode
     {
@@ -40,7 +72,7 @@ package Loom
         /**
          *  Called when the Facebook Session state changes.
          */
-        public static native var onSessionStatus:NativeDelegate;
+        public static native var onSessionStatus:FacebookSessionStatusDelegate;
 
         /**
          * Open a Facebook session with read permissions.

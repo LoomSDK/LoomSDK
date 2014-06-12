@@ -20,7 +20,6 @@ limitations under the License.
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import <MediaPlayer/MediaPlayer.h>
 #import <Foundation/NSSet.h>
 #import "FBSession.h"
 #import "FBWebDialogs.h"
@@ -129,27 +128,26 @@ static FBFrictionlessRecipientCache* gFriendCache = NULL;
         }
 
         NSLog(@"----FBStatusCallback errorCode: %d", errorCode);
-        gSessionStatusCallback("", "", errorCode);
+        gSessionStatusCallback(0, "", errorCode);
         return;
     }
 
-
     //state
-    const char *sessionStateString = NULL;
+    int sessionState = 0;
     switch(session.state)
     {
         case FBSessionStateCreated:
         case FBSessionStateCreatedTokenLoaded:
         case FBSessionStateCreatedOpening:
-            sessionStateString = "CREATED";
+            sessionState = 0;       //Created
             break;
         case FBSessionStateOpen:
         case FBSessionStateOpenTokenExtended:
-            sessionStateString = "OPENED";
+            sessionState = 1;       //Opened
             break;
         case FBSessionStateClosedLoginFailed:
         case FBSessionStateClosed:
-            sessionStateString = "CLOSED";
+            sessionState = 2;       //Closed
             break;
     }
 
@@ -173,8 +171,8 @@ static FBFrictionlessRecipientCache* gFriendCache = NULL;
     }
     
     //do native callback
-    NSLog(@"----FBStatusCallback state: %s   permissions: %s", sessionStateString, permissionsStatic);
-    gSessionStatusCallback(sessionStateString, permissionsStatic, 0);
+    NSLog(@"----FBStatusCallback state: %i   permissions: %s", sessionState, permissionsStatic);
+    gSessionStatusCallback(sessionState, permissionsStatic, 0);
 }
 
 @end
