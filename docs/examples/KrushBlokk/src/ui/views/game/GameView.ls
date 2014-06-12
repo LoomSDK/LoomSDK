@@ -3,13 +3,13 @@ package ui.views.game {
 	import extensions.PDParticleSystem;
 	import feathers.controls.Button;
 	import feathers.controls.Label;
+	import feathers.display.OffsetTiledImage;
 	import game.Shaker;
 	import loom.sound.Sound;
 	import loom2d.animation.Juggler;
 	import loom2d.animation.Transitions;
 	import loom2d.display.DisplayObject;
 	import loom2d.display.DisplayObjectContainer;
-	import loom2d.Display.OffsetTiledImage;
 	import loom2d.display.Sprite;
 	import loom2d.events.Event;
 	import loom2d.events.Touch;
