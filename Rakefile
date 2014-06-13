@@ -825,7 +825,7 @@ file 'build/luajit_ios/lib/libluajit-5.1.a' do
     ISDK="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer"
     ISDKVER="iPhoneOS#{$targetIOSSDK}.sdk"
     ISDKP=ISDK + "/usr/bin/"
-    ISDKF="-arch armv7 -isysroot " + ISDK + "/SDKs/" + ISDKVER
+    ISDKF="-arch armv7 -isysroot " + ISDK + "/SDKs/" + ISDKVER + " -mios-version-min=6.0.0"
     
     ENV['ISDK'] = ISDK
     ENV['ISDKVER'] = ISDKVER
