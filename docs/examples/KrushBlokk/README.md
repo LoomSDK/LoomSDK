@@ -21,9 +21,11 @@ Features include:
 * scrolling dynamically color tinted tiled background,
 * touch input logic allowing for two-touch swaps and drag to swap,
 * game modes including
-    * timed and unlimited and
-    * constrained or freeform (allowing non-matching tile swaps),
-* algorithm heavy core making use of Vectors for game logic,
+	* timed (with different durations),
+	* unlimited (no time constraint),
+    * constrained (not allowing for non-matching tile swaps) and
+	* freeform (allowing for any kind of tile swap),
+* game logic making heavy use of Vectors for match 3 algorithms,
 * simple state machines for explicit game states and
 * a momentum-based scoring system.
 

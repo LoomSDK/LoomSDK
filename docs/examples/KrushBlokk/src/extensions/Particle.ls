@@ -10,6 +10,9 @@
 
 package extensions
 {
+	/**
+	 * Defines all of the state of a single particle.
+	 */
     public class Particle
     {
         public var x:Number;

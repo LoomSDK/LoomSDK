@@ -1,11 +1,22 @@
-<ui.views.game.ModeView>
+<!--
+	Loom Markup Language layout file defining the style and label for
+	the intro title screen.
+	Animation is handled in the IntroView class.
+-->
+
+<ui.views.game.IntroView>
 
     <loom.css.StyleSheet source="assets/layout/style.css"/>
 	
+	<!--
+		Capitalization of text is mixed here because of the font having backwards letters
+		for lower case and normal letters for upper case characters.
+		The line feed entity &#10; is used for breaking the text into a new line.
+	-->
 	<feathers.controls.Label
 		id="title"
 		styleName="title"
-		text=""
+		text="KrUSH&#10;BLOkk"
 	/>
 	
-</ui.views.game.ModeView>
+</ui.views.game.IntroView>

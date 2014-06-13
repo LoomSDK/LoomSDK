@@ -27,7 +27,6 @@ package ui.views.game {
 		{
 			super.init();
 			title.nameList.add("title");
-			title.text = "KrUSH\nBLOkk";
 		}
 		
 		public function resize(w:Number, h:Number)

@@ -66,6 +66,11 @@ package
 	public delegate TilesMatched(m:Match):Void;
 	public delegate GameEnded():Void;
 	
+	/**
+	 * Match 3 board logic handling all the tiles and the interaction between them,
+	 * contains the algorithms responsible for checking possible swaps, matching tiles and
+	 * collapsing columns.
+	 */
 	public class Board extends DisplayObjectContainer
 	{
 		/** Dimension of rows */
@@ -208,6 +213,9 @@ package
 		}
 		private function getRandomType():TileType
 		{
+			// Switching between these two lines allows for switching between randomized seed random
+			// and constant-seed random. The former better for replayability, the latter better for
+			// consistently random boards while debugging.
 			return tileTypes[Math.randomRangeInt(0, types-1)];
 			//return tileTypes[rand()%types];
 		}
@@ -354,7 +362,7 @@ package
 			findPossibleSwaps(colSwaps, typeSums, DIM_COL);
 			
 			if (rowSwaps.length+colSwaps.length > 0) {
-				// autoswap
+				// Uncommenting the following lines allows for automatic swapping of matching tiles - good for debugging.
 				//var index = Math.randomRangeInt(0, rowSwaps.length+colSwaps.length-1);
 				//var swap = index < rowSwaps.length ? rowSwaps[index] : colSwaps[index-rowSwaps.length];
 				//if (columnReady(swap.a.tx) && columnReady(swap.b.tx)) swapTiles(swap.a, swap.b);

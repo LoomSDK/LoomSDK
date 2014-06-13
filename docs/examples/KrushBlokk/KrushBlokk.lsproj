@@ -12,7 +12,7 @@
     <movie minorVersion="0" />
     <movie platform="Loom" />
     <movie background="#FFFFFF" />
-    <movie preferredSDK="sprint32;;" />
+    <movie preferredSDK="1.1.3255;;" />
   </output>
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>

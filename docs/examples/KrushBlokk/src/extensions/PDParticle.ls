@@ -11,6 +11,10 @@
 package extensions
 {
 	import loom2d.math.Color;
+	
+	/**
+	 * Extends upon `Particle` to add Particle Designer compatible state.
+	 */
     public class PDParticle extends Particle
     {
         public var colorArgb:Color;

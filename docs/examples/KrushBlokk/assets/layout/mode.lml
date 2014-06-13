@@ -1,7 +1,17 @@
+<!--
+	Loom Markup Language layout file defining the style, label, buttons and a checkbox for
+	the game mode dialog screen.
+	Text and animation are handled in the IntroView class.
+-->
+
 <ui.views.game.ModeView>
 
     <loom.css.StyleSheet source="assets/layout/style.css"/>
 	
+	<!--
+		Capitalization of text is mixed here because of the font having backwards letters
+		for lower case and normal letters for upper case characters.
+	-->
 	<feathers.controls.Label
 		id="header"
 		styleName="header"
@@ -20,6 +30,10 @@
 		label="Endless"
 	/>
 	
+	<!--
+		Capitalization of text is mixed here because of the font having backwards letters
+		for lower case and normal letters for upper case characters.
+	-->
 	<feathers.controls.Check
 		id="modeFreeform"
 		styleName="modeFreeform"

@@ -1,3 +1,6 @@
+/*
+	Stylesheet defining positions for some LML labels and buttons.
+*/
 
 #header {
 	y: 10;
@@ -31,11 +34,6 @@
 #modeBeast {
 	x: 20;
 	y: 100;
-}
-
-#scoreDisplay {
-	x: 3;
-	y: 3;
 }
 
 #quit {

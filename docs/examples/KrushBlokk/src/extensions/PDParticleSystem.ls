@@ -19,6 +19,9 @@ package extensions {
 	import system.xml.XMLElement;
 	import system.xml.XMLNode;
 	
+	/**
+	 * Provides a particle system compatible with Particle Designer with live reload capability.
+	 */
 	public class PDParticleSystem extends ParticleSystem
 	{
 		private const EMITTER_TYPE_GRAVITY:int = 0;
@@ -68,6 +71,12 @@ package extensions {
         private var mEndColor:Color                        = new Color(); // finishColor
         private var mEndColorVariance:Color                = new Color(); // finishColorVariance
         
+		/**
+		 * Construct a live reloading particle system.
+		 * @param	path	Path to the .pex particle system configuration file.
+		 * @param	texture	Custom texture for the particle (optional). If not provided, it's read from the configuration file.
+		 * @return
+		 */
 		public static function loadLiveSystem(path:String, texture:Texture = null):PDParticleSystem {
 			var config = new XMLDocument();
 			config.loadFile(path);
@@ -82,20 +91,22 @@ package extensions {
 			return ps;
 		}
 		
+		/**
+		 * @param	config	XML structure defining the Particle Designer compatible configuration variables.
+		 * @param	texture	Custom texture for the particle (optional). If not provided, it's read from the configuration file.
+		 * @param	basePath	Relative path of the texture file specified in configuration file. Ignored if a custom `texture` is set.
+		 */
 		public function PDParticleSystem(config:XMLNode, texture:Texture = null, basePath:String = "")
         {
 			parseConfig(config, texture, basePath);
             
 			super(this.texture, emissionRate, mMaxNumParticles, mMaxNumParticles);
-			
-            mPremultipliedAlpha = false;
         }
 		
         protected override function createParticle():Particle
         {
             return new PDParticle();
         }
-		
 		
         protected override function initParticle(aParticle:Particle):void
         {
@@ -294,6 +305,12 @@ package extensions {
 			return tex;
 		}
 		
+		/**
+		 * Parses a Particle Designer compatible configuration file.
+		 * @param	config	XML structure defining the Particle Designer compatible configuration variables.
+		 * @param	texture	Custom texture for the particle (optional). If not provided, it's read from the configuration file.
+		 * @param	basePath	Relative path of the texture file specified in configuration file. Ignored if a custom `texture` is set.
+		 */
         public function parseConfig(config:XMLNode, texture:Texture = null, basePath:String = ""):void
         {
 			config = config.firstChild();
@@ -336,10 +353,6 @@ package extensions {
             mEndColor = parseColor(config, "finishColor");
             mEndColorVariance = parseColor(config, "finishColorVariance");
 			
-			// TODO
-            //mBlendFactorSource = ;
-            //mBlendFactorDestination = getBlendFunc(config.blendFuncDestination);
-            
             // compatibility with future Particle Designer versions
             // (might fix some of the uppercase/lowercase typos)
             

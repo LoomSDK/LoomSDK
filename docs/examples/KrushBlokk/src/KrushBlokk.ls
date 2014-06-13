@@ -18,6 +18,10 @@ package
 	
 	/**
 	 * Main application class containing all the views and transitions between them.
+	 * The game involves a full gameplay loop from the intro screen (IntroView)
+	 * to picking game modes (ModeView, DifficultyView),
+	 * the actual game itself (GameView),
+	 * the game over (EndView) and ad (AdView) screens.
 	 */
 	public class KrushBlokk extends Application
 	{
@@ -45,6 +49,8 @@ package
 			// Don't interpolate pixels - rough pixel art look
 			TextureSmoothing.defaultSmoothing = TextureSmoothing.NONE;
 			
+			// Instantiates the custom theme contained in the Theme class,
+			// setting up the fonts and custom label, button and checkbox styles.
 			new Theme();
 			
 			config.reset();

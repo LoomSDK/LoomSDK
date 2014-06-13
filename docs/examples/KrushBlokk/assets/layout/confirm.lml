@@ -1,4 +1,10 @@
-<ui.views.game.DifficultyView>
+<!--
+	Loom Markup Language layout file defining the style and buttons for
+	the quit screen asking for confirmation, the title is defined as a button as an easter egg.
+	Interactivity is handled in the ConfirmView class, buttons are positioned in the stylesheet.
+-->
+
+<ui.views.game.ConfirmView>
 
     <loom.css.StyleSheet source="assets/layout/style.css"/>
 	
@@ -20,4 +26,4 @@
 		label="No"
 	/>
 	
-</ui.views.game.DifficultyView>
+</ui.views.game.ConfirmView>

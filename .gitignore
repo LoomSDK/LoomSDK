@@ -95,4 +95,3 @@ loom/vendor/luajit/libluajit64.a
 
 loom/vendor/luajit/libluajit32.a
 output
-*.min.css

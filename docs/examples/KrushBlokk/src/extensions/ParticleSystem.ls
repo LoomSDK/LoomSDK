@@ -5,7 +5,6 @@ package extensions {
 	import loom2d.display.DisplayObjectContainer;
 	import loom2d.display.Image;
 	import loom2d.display.Quad;
-	import loom2d.display.QuadBatch;
 	import loom2d.events.Event;
 	import loom2d.math.Matrix;
 	import loom2d.math.Point;
@@ -18,6 +17,9 @@ package extensions {
 	/** Dispatched when emission of particles is finished. */
 	[Event(name="complete", type="starling.events.Event")]
 	
+	/**
+	 * Basic particle system with support for position, scaling, rotation, tinting and alpha.
+	 */
 	public class ParticleSystem extends DisplayObjectContainer implements IAnimatable
 	{
 		public static const MAX_NUM_PARTICLES = 16383;
@@ -26,7 +28,6 @@ package extensions {
 		private var mParticles:Vector.<Particle>;
 		private var mFrameTime:Number;
 		
-		private var batch:QuadBatch = new QuadBatch();
 		private var mImages:Vector.<Image>;
 		
 		private var mNumParticles:int;
@@ -40,19 +41,14 @@ package extensions {
 		
 		protected var mEmitterX:Number;
 		protected var mEmitterY:Number;
-		protected var mPremultipliedAlpha:Boolean;
-		protected var mBlendFactorSource:String;     
-		protected var mBlendFactorDestination:String;
 		protected var mSmoothing:Number;
 		
-        public function ParticleSystem(texture:Texture, emissionRate:Number, initialCapacity:int = 128, maxCapacity:int = MAX_NUM_PARTICLES, blendFactorSource:String=null, blendFactorDest:String=null)
+        public function ParticleSystem(texture:Texture, emissionRate:Number, initialCapacity:int = 128, maxCapacity:int = MAX_NUM_PARTICLES)
         {
             mTexture = texture;
-            //mPremultipliedAlpha = texture.premultipliedAlpha;
             mParticles = new Vector.<Particle>(0);
             mImages = new Vector.<Image>(0);
-			//mIndices = new <uint>[];
-            mEmissionRate = emissionRate;
+			mEmissionRate = emissionRate;
             mEmissionTime = 0.0;
             mFrameTime = 0.0;
             mEmitterX = mEmitterY = 0;
@@ -61,15 +57,7 @@ package extensions {
 			
 			touchable = false;
 			
-            //mBlendFactorDestination = blendFactorDest || Context3DBlendFactor.ONE_MINUS_SOURCE_ALPHA;
-            //mBlendFactorSource = blendFactorSource ||
-                //(mPremultipliedAlpha ? Context3DBlendFactor.ONE : Context3DBlendFactor.SOURCE_ALPHA);
-            
             raiseCapacity(initialCapacity);
-            
-            // handle a lost device context
-            //Starling.current.stage3D.addEventListener(Event.CONTEXT3D_CREATE, 
-                //onContextCreated, false, 0, true);
         }
 		
         protected function createParticle():Particle
@@ -123,10 +111,9 @@ package extensions {
             if (resultRect == null) resultRect = new Rectangle();
             
             getTargetTransformationMatrix(targetSpace, sHelperMatrix);
-            //MatrixUtil.transformCoords(sHelperMatrix, 0, 0, sHelperPoint);
 			
-            resultRect.x = sHelperPoint.x;
-            resultRect.y = sHelperPoint.y;
+            resultRect.x = sHelperMatrix.tx;
+            resultRect.y = sHelperMatrix.ty;
             resultRect.width = resultRect.height = 0;
             
             return resultRect;
@@ -235,8 +222,6 @@ package extensions {
 				mImages[i].visible = i < mNumParticles;
 			}
 			
-			//var dbg = "";
-			
             for (i=0; i<mNumParticles; ++i)
             {
                 vertexID = i << 2;
@@ -249,10 +234,6 @@ package extensions {
                 xOffset = textureWidth  * particle.scale >> 1;
                 yOffset = textureHeight * particle.scale >> 1;
                 
-                //for (var j:int=0; j<4; ++j)
-                    //mVertexData.setColor(vertexID+j, color);
-                    //mVertexData.setAlpha(vertexID+j, alpha);
-                
 				var image:Image = mImages[i];
 				image.scale = particle.scale;
 				image.color = particle.color;
@@ -260,29 +241,6 @@ package extensions {
 				image.rotation = rotation;
 				image.x = x;
 				image.y = y;
-				
-                //if (rotation)
-                //{
-                    //var cos:Number  = Math.cos(rotation);
-                    //var sin:Number  = Math.sin(rotation);
-                    //var cosX:Number = cos * xOffset;
-                    //var cosY:Number = cos * yOffset;
-                    //var sinX:Number = sin * xOffset;
-                    //var sinY:Number = sin * yOffset;
-                    
-                    //mVertexData.setPosition(vertexID,   x - cosX + sinY, y - sinX - cosY);
-                    //mVertexData.setPosition(vertexID+1, x + cosX + sinY, y + sinX - cosY);
-                    //mVertexData.setPosition(vertexID+2, x - cosX - sinY, y - sinX + cosY);
-                    //mVertexData.setPosition(vertexID+3, x + cosX - sinY, y + sinX + cosY);
-                //}
-                //else 
-                //{
-                    // optimization for rotation == 0
-                    //mVertexData.setPosition(vertexID,   x - xOffset, y - yOffset);
-                    //mVertexData.setPosition(vertexID+1, x + xOffset, y - yOffset);
-                    //mVertexData.setPosition(vertexID+2, x - xOffset, y + yOffset);
-                    //mVertexData.setPosition(vertexID+3, x + xOffset, y + yOffset);
-                //}
             }
         }
 		
@@ -325,13 +283,7 @@ package extensions {
         
         public function get emitterY():Number { return mEmitterY; }
         public function set emitterY(value:Number):void { mEmitterY = value; }
-        
-        public function get blendFactorSource():String { return mBlendFactorSource; }
-        public function set blendFactorSource(value:String):void { mBlendFactorSource = value; }
-        
-        public function get blendFactorDestination():String { return mBlendFactorDestination; }
-        public function set blendFactorDestination(value:String):void { mBlendFactorDestination = value; }
-        
+		
         public function get texture():Texture { return mTexture; }
         public function set texture(value:Texture):void
         {

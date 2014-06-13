@@ -1,3 +1,9 @@
+<!--
+	Loom Markup Language layout file defining the style, buttons and labels for
+	the game view consisting of the exit button and various info labels.
+	Positioning, text and interactivity are handled in the GameView class.
+-->
+
 <ui.views.game.GameView>
 
     <loom.css.StyleSheet source="assets/layout/style.css"/>
