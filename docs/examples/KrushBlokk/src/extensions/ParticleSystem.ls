@@ -1,65 +1,76 @@
-package extensions {
-	import feathers.controls.Label;
-	import loom2d.animation.IAnimatable;
-	import loom2d.display.DisplayObject;
-	import loom2d.display.DisplayObjectContainer;
-	import loom2d.display.Image;
-	import loom2d.display.Quad;
-	import loom2d.events.Event;
-	import loom2d.math.Matrix;
-	import loom2d.math.Point;
-	import loom2d.math.Rectangle;
-	import loom2d.textures.Texture;
-	import loom2d.textures.TextureSmoothing;
-	import loom2d.ui.SimpleLabel;
-	import loom2d.utils.VertexData;
-	import system.errors.ArgumentError;
-	/** Dispatched when emission of particles is finished. */
-	[Event(name="complete", type="starling.events.Event")]
-	
-	/**
-	 * Basic particle system with support for position, scaling, rotation, tinting and alpha.
-	 */
-	public class ParticleSystem extends DisplayObjectContainer implements IAnimatable
-	{
-		public static const MAX_NUM_PARTICLES = 16383;
-		
-		private var mTexture:Texture;
-		private var mParticles:Vector.<Particle>;
-		private var mFrameTime:Number;
-		
-		private var mImages:Vector.<Image>;
-		
-		private var mNumParticles:int;
-		private var mMaxCapacity:int;
-		private var mEmissionRate:Number; // emitted particles per second
-		private var mEmissionTime:Number;
-		
-		/** Helper objects. */
-		private static var sHelperMatrix:Matrix = new Matrix();
-		private static var sRenderAlpha:Vector.<Number> = new <Number>[1.0, 1.0, 1.0, 1.0];
-		
-		protected var mEmitterX:Number;
-		protected var mEmitterY:Number;
-		protected var mSmoothing:Number;
-		
+// =================================================================================================
+//
+//  Starling Framework - Particle System Extension
+//  Copyright 2012 Gamua OG. All Rights Reserved.
+//
+//  This program is free software. You can redistribute and/or modify it
+//  in accordance with the terms of the accompanying license agreement.
+//
+// =================================================================================================
+
+package extensions
+{
+    import feathers.controls.Label;
+    import loom2d.animation.IAnimatable;
+    import loom2d.display.DisplayObject;
+    import loom2d.display.DisplayObjectContainer;
+    import loom2d.display.Image;
+    import loom2d.display.Quad;
+    import loom2d.events.Event;
+    import loom2d.math.Matrix;
+    import loom2d.math.Point;
+    import loom2d.math.Rectangle;
+    import loom2d.textures.Texture;
+    import loom2d.textures.TextureSmoothing;
+    import loom2d.ui.SimpleLabel;
+    import loom2d.utils.VertexData;
+    import system.errors.ArgumentError;
+    /** Dispatched when emission of particles is finished. */
+    [Event(name="complete", type="starling.events.Event")]
+    
+    /**
+     * Basic particle system with support for position, scaling, rotation, tinting and alpha.
+     */
+    public class ParticleSystem extends DisplayObjectContainer implements IAnimatable
+    {
+        public static const MAX_NUM_PARTICLES = 16383;
+        
+        private var mTexture:Texture;
+        private var mParticles:Vector.<Particle>;
+        private var mFrameTime:Number;
+        
+        private var mImages:Vector.<Image>;
+        
+        private var mNumParticles:int;
+        private var mMaxCapacity:int;
+        private var mEmissionRate:Number; // emitted particles per second
+        private var mEmissionTime:Number;
+        
+        /** Helper objects. */
+        private static var sHelperMatrix:Matrix = new Matrix();
+        private static var sRenderAlpha:Vector.<Number> = new <Number>[1.0, 1.0, 1.0, 1.0];
+        
+        protected var mEmitterX:Number;
+        protected var mEmitterY:Number;
+        protected var mSmoothing:Number;
+        
         public function ParticleSystem(texture:Texture, emissionRate:Number, initialCapacity:int = 128, maxCapacity:int = MAX_NUM_PARTICLES)
         {
             mTexture = texture;
             mParticles = new Vector.<Particle>(0);
             mImages = new Vector.<Image>(0);
-			mEmissionRate = emissionRate;
+            mEmissionRate = emissionRate;
             mEmissionTime = 0.0;
             mFrameTime = 0.0;
             mEmitterX = mEmitterY = 0;
             mMaxCapacity = Math.min(MAX_NUM_PARTICLES, maxCapacity);
             mSmoothing = TextureSmoothing.BILINEAR;
-			
-			touchable = false;
-			
+            
+            touchable = false;
+            
             raiseCapacity(initialCapacity);
         }
-		
+        
         protected function createParticle():Particle
         {
             return new Particle();
@@ -73,7 +84,7 @@ package extensions {
             particle.totalTime = 1;
             particle.color = Math.random() * 0xffffff;
         }
-		
+        
         protected function advanceParticle(particle:Particle, passedTime:Number):void
         {
             particle.y += passedTime * 250;
@@ -81,22 +92,22 @@ package extensions {
             particle.scale = 1.0 - particle.alpha; 
             particle.currentTime += passedTime;
         }
-		
-		/** Starts the emitter for a certain time. @default infinite time */
-		public function start(duration:Number=Number.MAX_VALUE):void
-		{
-			if (mEmissionRate != 0)                
-				mEmissionTime = duration;
-		}
-		
-		/** Stops emitting new particles. Depending on 'clearParticles', the existing particles
+        
+        /** Starts the emitter for a certain time. @default infinite time */
+        public function start(duration:Number=Number.MAX_VALUE):void
+        {
+            if (mEmissionRate != 0)                
+                mEmissionTime = duration;
+        }
+        
+        /** Stops emitting new particles. Depending on 'clearParticles', the existing particles
          *  will either keep animating until they die or will be removed right away. */
         public function stop(clearParticles:Boolean=false):void
         {
             mEmissionTime = 0.0;
             if (clearParticles) clear();
         }
-		
+        
         /** Removes all currently active particles. */
         public function clear():void
         {
@@ -111,7 +122,7 @@ package extensions {
             if (resultRect == null) resultRect = new Rectangle();
             
             getTargetTransformationMatrix(targetSpace, sHelperMatrix);
-			
+            
             resultRect.x = sHelperMatrix.tx;
             resultRect.y = sHelperMatrix.ty;
             resultRect.width = resultRect.height = 0;
@@ -124,24 +135,24 @@ package extensions {
             var oldCapacity:int = capacity;
             var newCapacity:int = Math.min(mMaxCapacity, capacity + byAmount);
             
-			mParticles.length = newCapacity;
-			mImages.length = newCapacity;
-			
+            mParticles.length = newCapacity;
+            mImages.length = newCapacity;
+            
             for (var i:int=oldCapacity; i<newCapacity; ++i)  
             {
-				mParticles[i] = createParticle();
-				var image = new Image();
-				if (mTexture) image.texture = mTexture;
-				image.center();
-				addChild(image);
-				mImages[i] = image;
+                mParticles[i] = createParticle();
+                var image = new Image();
+                if (mTexture) image.texture = mTexture;
+                image.center();
+                addChild(image);
+                mImages[i] = image;
             }
         }
         
-		
+        
         public function advanceTime(passedTime:Number):void
         {
-			var particleIndex:int = 0;
+            var particleIndex:int = 0;
             var particle:Particle;
             
             // advance existing particles
@@ -184,7 +195,7 @@ package extensions {
                     {
                         if (mNumParticles == capacity)
                             raiseCapacity(capacity);
-						
+                        
                         particle = mParticles[mNumParticles] as Particle;
                         initParticle(particle);
                         
@@ -211,17 +222,17 @@ package extensions {
             var rotation:Number;
             var x:Number, y:Number;
             var xOffset:Number, yOffset:Number;
-			if (mTexture) {
-				var textureWidth:Number = mTexture.width;
-				var textureHeight:Number = mTexture.height;
+            if (mTexture) {
+                var textureWidth:Number = mTexture.width;
+                var textureHeight:Number = mTexture.height;
             }
-			
-			var i:int;
-			
-			for (i=0; i<mImages.length; ++i) {
-				mImages[i].visible = i < mNumParticles;
-			}
-			
+            
+            var i:int;
+            
+            for (i=0; i<mImages.length; ++i) {
+                mImages[i].visible = i < mNumParticles;
+            }
+            
             for (i=0; i<mNumParticles; ++i)
             {
                 vertexID = i << 2;
@@ -234,23 +245,23 @@ package extensions {
                 xOffset = textureWidth  * particle.scale >> 1;
                 yOffset = textureHeight * particle.scale >> 1;
                 
-				var image:Image = mImages[i];
-				image.scale = particle.scale;
-				image.color = particle.color;
-				image.alpha = Math.clamp(particle.alpha, 0, 1);
-				image.rotation = rotation;
-				image.x = x;
-				image.y = y;
+                var image:Image = mImages[i];
+                image.scale = particle.scale;
+                image.color = particle.color;
+                image.alpha = Math.clamp(particle.alpha, 0, 1);
+                image.rotation = rotation;
+                image.x = x;
+                image.y = y;
             }
         }
-		
-		
+        
+        
         /** Initialize the <tt>ParticleSystem</tt> with particles distributed randomly throughout
          *  the lifespan times the range. */
         public function populate(count:int, range:Number = 1):void
         {
             count = Math.min(count, mMaxCapacity - mNumParticles);
-			
+            
             if (mNumParticles + count > capacity)
                 raiseCapacity(mNumParticles + count - capacity);
             
@@ -259,7 +270,7 @@ package extensions {
             {
                 p = mParticles[mNumParticles+i];
                 initParticle(p);
-				if (range > 0) advanceParticle(p, Math.random() * p.totalTime * range);
+                if (range > 0) advanceParticle(p, Math.random() * p.totalTime * range);
             }
             
             mNumParticles += count;
@@ -283,22 +294,22 @@ package extensions {
         
         public function get emitterY():Number { return mEmitterY; }
         public function set emitterY(value:Number):void { mEmitterY = value; }
-		
+        
         public function get texture():Texture { return mTexture; }
         public function set texture(value:Texture):void
         {
             if (mImages && mTexture != value) {
-				for (var i:int = 0; i < mImages.length; i++) {
-					mImages[i].texture = value;
-				}
-			}
-			
-			mTexture = value;
+                for (var i:int = 0; i < mImages.length; i++) {
+                    mImages[i].texture = value;
+                }
+            }
+            
+            mTexture = value;
         }
         
         public function get smoothing():Number { return mSmoothing; }
         public function set smoothing(value:Number):void { mSmoothing = value; }
-		
-	}
-	
+        
+    }
+    
 }

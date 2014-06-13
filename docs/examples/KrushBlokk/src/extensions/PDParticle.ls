@@ -1,20 +1,20 @@
 // =================================================================================================
 //
-//	Starling Framework - Particle System Extension
-//	Copyright 2012 Gamua OG. All Rights Reserved.
+//  Starling Framework - Particle System Extension
+//  Copyright 2012 Gamua OG. All Rights Reserved.
 //
-//	This program is free software. You can redistribute and/or modify it
-//	in accordance with the terms of the accompanying license agreement.
+//  This program is free software. You can redistribute and/or modify it
+//  in accordance with the terms of the accompanying license agreement.
 //
 // =================================================================================================
 
 package extensions
 {
-	import loom2d.math.Color;
-	
-	/**
-	 * Extends upon `Particle` to add Particle Designer compatible state.
-	 */
+    import loom2d.math.Color;
+    
+    /**
+     * Extends upon `Particle` to add Particle Designer compatible state.
+     */
     public class PDParticle extends Particle
     {
         public var colorArgb:Color;

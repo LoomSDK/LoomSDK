@@ -1,30 +1,31 @@
 // =================================================================================================
 //
-//	Starling Framework - Particle System Extension
-//	Copyright 2012 Gamua OG. All Rights Reserved.
+//  Starling Framework - Particle System Extension
+//  Copyright 2012 Gamua OG. All Rights Reserved.
 //
-//	This program is free software. You can redistribute and/or modify it
-//	in accordance with the terms of the accompanying license agreement.
+//  This program is free software. You can redistribute and/or modify it
+//  in accordance with the terms of the accompanying license agreement.
 //
 // =================================================================================================
 
-package extensions {
-	import loom.LoomTextAsset;
-	import loom2d.math.Color;
-	import loom2d.textures.Texture;
-	import loom2d.textures.TextureSmoothing;
-	import system.platform.File;
-	import system.platform.Path;
-	import system.xml.XMLDocument;
-	import system.xml.XMLElement;
-	import system.xml.XMLNode;
-	
-	/**
-	 * Provides a particle system compatible with Particle Designer with live reload capability.
-	 */
-	public class PDParticleSystem extends ParticleSystem
-	{
-		private const EMITTER_TYPE_GRAVITY:int = 0;
+package extensions
+{
+    import loom.LoomTextAsset;
+    import loom2d.math.Color;
+    import loom2d.textures.Texture;
+    import loom2d.textures.TextureSmoothing;
+    import system.platform.File;
+    import system.platform.Path;
+    import system.xml.XMLDocument;
+    import system.xml.XMLElement;
+    import system.xml.XMLNode;
+    
+    /**
+     * Provides a particle system compatible with Particle Designer with live reload capability.
+     */
+    public class PDParticleSystem extends ParticleSystem
+    {
+        private const EMITTER_TYPE_GRAVITY:int = 0;
         private const EMITTER_TYPE_RADIAL:int  = 1;
         
         // emitter configuration                                // .pex element name
@@ -71,43 +72,42 @@ package extensions {
         private var mEndColor:Color                        = new Color(); // finishColor
         private var mEndColorVariance:Color                = new Color(); // finishColorVariance
         
-		/**
-		 * Construct a live reloading particle system.
-		 * @param	path	Path to the .pex particle system configuration file.
-		 * @param	texture	Custom texture for the particle (optional). If not provided, it's read from the configuration file.
-		 * @return
-		 */
-		public static function loadLiveSystem(path:String, texture:Texture = null):PDParticleSystem {
-			var config = new XMLDocument();
-			config.loadFile(path);
-			var basePath = Path.folderFromPath(path);
-			var ps = new PDParticleSystem(config, texture, basePath);
-			var xml = LoomTextAsset.create(path);
-			xml.updateDelegate += function(path:String, contents:String):void {
-				config.parse(contents);
-				ps.parseConfig(config, texture, basePath);
-			};
-			xml.load();
-			return ps;
-		}
-		
-		/**
-		 * @param	config	XML structure defining the Particle Designer compatible configuration variables.
-		 * @param	texture	Custom texture for the particle (optional). If not provided, it's read from the configuration file.
-		 * @param	basePath	Relative path of the texture file specified in configuration file. Ignored if a custom `texture` is set.
-		 */
-		public function PDParticleSystem(config:XMLNode, texture:Texture = null, basePath:String = "")
-        {
-			parseConfig(config, texture, basePath);
-            
-			super(this.texture, emissionRate, mMaxNumParticles, mMaxNumParticles);
+        /**
+         * Construct a live reloading particle system.
+         * @param   path    Path to the .pex particle system configuration file.
+         * @param   texture Custom texture for the particle (optional). If not provided, it's read from the configuration file.
+         */
+        public static function loadLiveSystem(path:String, texture:Texture = null):PDParticleSystem {
+            var config = new XMLDocument();
+            config.loadFile(path);
+            var basePath = Path.folderFromPath(path);
+            var ps = new PDParticleSystem(config, texture, basePath);
+            var xml = LoomTextAsset.create(path);
+            xml.updateDelegate += function(path:String, contents:String):void {
+                config.parse(contents);
+                ps.parseConfig(config, texture, basePath);
+            };
+            xml.load();
+            return ps;
         }
-		
+        
+        /**
+         * @param   config   XML structure defining the Particle Designer compatible configuration variables.
+         * @param   texture  Custom texture for the particle (optional). If not provided, it's read from the configuration file.
+         * @param   basePath Relative path of the texture file specified in configuration file. Ignored if a custom `texture` is set.
+         */
+        public function PDParticleSystem(config:XMLNode, texture:Texture = null, basePath:String = "")
+        {
+            parseConfig(config, texture, basePath);
+            
+            super(this.texture, emissionRate, mMaxNumParticles, mMaxNumParticles);
+        }
+        
         protected override function createParticle():Particle
         {
             return new PDParticle();
         }
-		
+        
         protected override function initParticle(aParticle:Particle):void
         {
             var particle:PDParticle = aParticle as PDParticle; 
@@ -146,9 +146,9 @@ package extensions {
             if (startSize < 0.1) startSize = 0.1;
             if (endSize < 0.1)   endSize = 0.1;
             if (texture) {
-				particle.scale = startSize / texture.width;
-				particle.scaleDelta = ((endSize - startSize) / lifespan) / texture.width;
-			}
+                particle.scale = startSize / texture.width;
+                particle.scaleDelta = ((endSize - startSize) / lifespan) / texture.width;
+            }
             
             // colors
             
@@ -165,11 +165,11 @@ package extensions {
             if (mStartColorVariance.blue != 0)  startColor.blue  += mStartColorVariance.blue  * (Math.random() * 2.0 - 1.0);
             if (mStartColorVariance.alpha != 0) startColor.alpha += mStartColorVariance.alpha * (Math.random() * 2.0 - 1.0);
             
-			startColor.red = Math.clamp(startColor.red, 0, 0xFF);
-			startColor.green = Math.clamp(startColor.green, 0, 0xFF);
-			startColor.blue = Math.clamp(startColor.blue, 0, 0xFF);
-			startColor.alpha = Math.clamp(startColor.alpha, 0, 0xFF);
-			
+            startColor.red = Math.clamp(startColor.red, 0, 0xFF);
+            startColor.green = Math.clamp(startColor.green, 0, 0xFF);
+            startColor.blue = Math.clamp(startColor.blue, 0, 0xFF);
+            startColor.alpha = Math.clamp(startColor.alpha, 0, 0xFF);
+            
             var endColorRed:Number   = mEndColor.red;
             var endColorGreen:Number = mEndColor.green;
             var endColorBlue:Number  = mEndColor.blue;
@@ -180,12 +180,12 @@ package extensions {
             if (mEndColorVariance.blue != 0)  endColorBlue  += mEndColorVariance.blue  * (Math.random() * 2.0 - 1.0);
             if (mEndColorVariance.alpha != 0) endColorAlpha += mEndColorVariance.alpha * (Math.random() * 2.0 - 1.0);
             
-			endColorRed = Math.clamp(endColorRed, 0, 0xFF);
-			endColorGreen = Math.clamp(endColorGreen, 0, 0xFF);
-			endColorBlue = Math.clamp(endColorBlue, 0, 0xFF);
-			endColorAlpha = Math.clamp(endColorAlpha, 0, 0xFF);
-			
-			colorDelta.red   = (endColorRed   - startColor.red)   / lifespan;
+            endColorRed = Math.clamp(endColorRed, 0, 0xFF);
+            endColorGreen = Math.clamp(endColorGreen, 0, 0xFF);
+            endColorBlue = Math.clamp(endColorBlue, 0, 0xFF);
+            endColorAlpha = Math.clamp(endColorAlpha, 0, 0xFF);
+            
+            colorDelta.red   = (endColorRed   - startColor.red)   / lifespan;
             colorDelta.green = (endColorGreen - startColor.green) / lifespan;
             colorDelta.blue  = (endColorBlue  - startColor.blue)  / lifespan;
             colorDelta.alpha = (endColorAlpha - startColor.alpha) / lifespan;
@@ -201,7 +201,7 @@ package extensions {
         
         protected override function advanceParticle(aParticle:Particle, passedTime:Number):void
         {
-			
+            
             var particle:PDParticle = aParticle as PDParticle;
             
             var restTime:Number = particle.totalTime - particle.currentTime;
@@ -254,70 +254,70 @@ package extensions {
         
         private function updateEmissionRate():void
         {
-			// -1 fixes unintentional behavior of skipping a particle in original implementation
+            // -1 fixes unintentional behavior of skipping a particle in original implementation
             emissionRate = (mMaxNumParticles-1) / mLifespan;
         }
-		
-		private function parseFloat(config:XMLNode, name:String, attr:String):Number {
-			var element = config.firstChildElement(name);
-			if (!element) return NaN;
-			return Number.fromString(element.getAttribute(attr));
-		}
-		private function parseFloatValue(config:XMLNode, name:String):Number {
-			return parseFloat(config, name, "value");
-		}
-		private function parseAngle(config:XMLNode, name:String):Number {
-			return Math.degToRad(parseFloatValue(config, name));
-		}
-		
-		private function parseInt(config:XMLNode, name:String, attr:String):int {
-			var element = config.firstChildElement(name);
-			if (!element) return 0;
-			return int.fromString(element.getAttribute(attr));
-		}
-		private function parseIntValue(config:XMLNode, name:String):int {
-			return parseInt(config, name, "value");
-		}
-		
-		private function parseColor(config:XMLNode, name:String):Color {
-			return new Color(
-				parseFloat(config, name, "red")*0xFF,
-				parseFloat(config, name, "green")*0xFF,
-				parseFloat(config, name, "blue")*0xFF,
-				parseFloat(config, name, "alpha")
-			);
-		}
-		
-		private function parseTexture(config:XMLNode, name:String, basePath:String = ""):Texture {
-			var element = config.firstChildElement(name);
-			if (!element) return null;
-			var relPath = element.getAttribute("name");
-			if (basePath.length > 0) basePath += Path.getFolderDelimiter();
-			var path = basePath+relPath;
-			Debug.assert(File.fileExists(path), "Texture file in particle config not found");
-			var tex = Texture.fromAsset(path);
-			var smoothing = element.getAttribute("smoothing");
-			switch (smoothing) {
-				case "bilinear": tex.smoothing = TextureSmoothing.BILINEAR; break;
-				case "max":      tex.smoothing = TextureSmoothing.MAX;      break;
-				case "none":     tex.smoothing = TextureSmoothing.NONE;     break;
-			}
-			return tex;
-		}
-		
-		/**
-		 * Parses a Particle Designer compatible configuration file.
-		 * @param	config	XML structure defining the Particle Designer compatible configuration variables.
-		 * @param	texture	Custom texture for the particle (optional). If not provided, it's read from the configuration file.
-		 * @param	basePath	Relative path of the texture file specified in configuration file. Ignored if a custom `texture` is set.
-		 */
+        
+        private function parseFloat(config:XMLNode, name:String, attr:String):Number {
+            var element = config.firstChildElement(name);
+            if (!element) return NaN;
+            return Number.fromString(element.getAttribute(attr));
+        }
+        private function parseFloatValue(config:XMLNode, name:String):Number {
+            return parseFloat(config, name, "value");
+        }
+        private function parseAngle(config:XMLNode, name:String):Number {
+            return Math.degToRad(parseFloatValue(config, name));
+        }
+        
+        private function parseInt(config:XMLNode, name:String, attr:String):int {
+            var element = config.firstChildElement(name);
+            if (!element) return 0;
+            return int.fromString(element.getAttribute(attr));
+        }
+        private function parseIntValue(config:XMLNode, name:String):int {
+            return parseInt(config, name, "value");
+        }
+        
+        private function parseColor(config:XMLNode, name:String):Color {
+            return new Color(
+                parseFloat(config, name, "red")*0xFF,
+                parseFloat(config, name, "green")*0xFF,
+                parseFloat(config, name, "blue")*0xFF,
+                parseFloat(config, name, "alpha")
+            );
+        }
+        
+        private function parseTexture(config:XMLNode, name:String, basePath:String = ""):Texture {
+            var element = config.firstChildElement(name);
+            if (!element) return null;
+            var relPath = element.getAttribute("name");
+            if (basePath.length > 0) basePath += Path.getFolderDelimiter();
+            var path = basePath+relPath;
+            Debug.assert(File.fileExists(path), "Texture file in particle config not found");
+            var tex = Texture.fromAsset(path);
+            var smoothing = element.getAttribute("smoothing");
+            switch (smoothing) {
+                case "bilinear": tex.smoothing = TextureSmoothing.BILINEAR; break;
+                case "max":      tex.smoothing = TextureSmoothing.MAX;      break;
+                case "none":     tex.smoothing = TextureSmoothing.NONE;     break;
+            }
+            return tex;
+        }
+        
+        /**
+         * Parses a Particle Designer compatible configuration file.
+         * @param   config   XML structure defining the Particle Designer compatible configuration variables.
+         * @param   texture  Custom texture for the particle (optional). If not provided, it's read from the configuration file.
+         * @param   basePath Relative path of the texture file specified in configuration file. Ignored if a custom `texture` is set.
+         */
         public function parseConfig(config:XMLNode, texture:Texture = null, basePath:String = ""):void
         {
-			config = config.firstChild();
-			
-			if (!texture) texture = parseTexture(config, "texture", basePath);
-			this.texture = texture;
-			
+            config = config.firstChild();
+            
+            if (!texture) texture = parseTexture(config, "texture", basePath);
+            this.texture = texture;
+            
             mEmitterXVariance = parseFloat(config, "sourcePositionVariance", "x");
             mEmitterYVariance = parseFloat(config, "sourcePositionVariance", "y");
             mGravityX = parseFloat(config, "gravity", "x");
@@ -352,7 +352,7 @@ package extensions {
             mStartColorVariance = parseColor(config, "startColorVariance");
             mEndColor = parseColor(config, "finishColor");
             mEndColorVariance = parseColor(config, "finishColorVariance");
-			
+            
             // compatibility with future Particle Designer versions
             // (might fix some of the uppercase/lowercase typos)
             
@@ -361,9 +361,9 @@ package extensions {
             if (isNaN(mLifespan))
                 mLifespan = Math.max(0.01, parseFloatValue(config, "particleLifespan"));
             if (isNaN(mLifespanVariance))
-                mLifespanVariance = parseFloatValue(config, "particleLifeSpanVariance");	
+                mLifespanVariance = parseFloatValue(config, "particleLifeSpanVariance");    
         }
-		
+        
         public function get emitterType():int { return mEmitterType; }
         public function set emitterType(value:int):void { mEmitterType = value; }
 
@@ -474,7 +474,7 @@ package extensions {
 
         public function get endColorVariance():Color { return mEndColorVariance; }
         public function set endColorVariance(value:Color):void { mEndColorVariance = value; }
-		
-	}
-	
+        
+    }
+    
 }
