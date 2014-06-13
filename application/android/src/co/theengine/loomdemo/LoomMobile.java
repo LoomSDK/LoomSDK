@@ -103,5 +103,25 @@ public class LoomMobile
         {
             _vibrator.cancel();
         }        
-    } 
+    }
+
+
+    ///sends text to another android application
+    public static boolean shareText(String subject, String text)
+    {
+        Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+        sharingIntent.setType("text/plain");
+        sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, subject);
+        sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, text);
+
+        Intent shareChooserIntent = Intent.createChooser(sharingIntent, "Share via...");
+        shareChooserIntent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+        if(shareChooserIntent != null)
+        {
+            _context.startActivity(shareChooserIntent);
+            return true;
+        }
+
+        return false;
+    }    
 }

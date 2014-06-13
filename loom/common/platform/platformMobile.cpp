@@ -82,6 +82,12 @@ void platform_allowScreenSleep(bool sleep)
 {
 }
 
+///shares the specfied text via other applications on the device (ie. Twitter, Facebook)
+bool platform_shareText(const char *subject, const char *text)
+{
+    return false;
+}
+
 ///checks if a given sensor is supported on this hardware
 bool platform_isSensorSupported(int sensor)
 {
@@ -111,9 +117,6 @@ void platform_disableSensor(int sensor)
 {
 }
 
-
-
-///TODO: LOOM-1811: vibration
 
 
 #endif  //LOOM_PLATFORM != LOOM_PLATFORM_IOS
