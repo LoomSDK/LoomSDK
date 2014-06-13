@@ -53,8 +53,10 @@ const char* platform_getAccessToken();
 ///Closes Facebook the session and clears Token information
 void platform_closeAndClearTokenInformation();
 
-///Retruns the expiration date of the current Facebook Session
+///Returns the expiration date of the current Facebook Session
 const char* platform_getExpirationDate(const char* dateFormat);
 
+///Returns whether the active FB session has been granted a given permission.
+bool platform_isPermissionGranted(const char* permission);
 
 #endif

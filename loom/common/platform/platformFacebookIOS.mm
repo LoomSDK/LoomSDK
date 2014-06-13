@@ -410,4 +410,10 @@ const char* platform_getExpirationDate(const char *dateFormat)
     return "";
 }
 
+bool platform_isPermissionGranted(const char* permission)
+{
+    ///TODO: Call the native session method to determine if this permission is granted, and return result.
+    return false;
+}
+
 

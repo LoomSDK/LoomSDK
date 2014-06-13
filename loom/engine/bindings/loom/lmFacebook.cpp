@@ -64,6 +64,11 @@ public:
     {
         return platform_getExpirationDate(dateFormat);
     }
+	
+	static bool isPermissionGranted(const char* permission)
+    {
+        return platform_isPermissionGranted(permission);
+    }
 };
 
 
@@ -83,6 +88,7 @@ static int registerLoomFacebook(lua_State* L)
         .addStaticMethod("getAccessToken", &Facebook::getAccessToken)
         .addStaticMethod("closeAndClearTokenInformation", &Facebook::closeAndClearTokenInformation)
         .addStaticMethod("getExpirationDate", &Facebook::getExpirationDate)
+		.addStaticMethod("isPermissionGranted", &Facebook::isPermissionGranted)
 		.addStaticProperty("onSessionStatus", &Facebook::getOnSessionStatusDelegate)
     .endClass()
 

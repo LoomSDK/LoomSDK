@@ -62,5 +62,9 @@ const char* platform_getExpirationDate(const char* dateFormat)
     return "";
 }
 
+bool platform_isPermissionGranted(const char* permission)
+{
+	return false;
+}
 
 #endif

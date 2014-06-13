@@ -59,6 +59,7 @@ static loomJniMethodInfo gFrictionlessRequestDialog;
 static loomJniMethodInfo gGetAccessToken;
 static loomJniMethodInfo gCloseTokenInfo;
 static loomJniMethodInfo gGetExpirationDate;
+static loomJniMethodInfo gIsPermissionGranted;
 
 
 ///initializes the data for the Facebook class for Android
@@ -97,6 +98,10 @@ void platform_facebookInitialize(SessionStatusCallback sessionStatusCB)
                                     "co/theengine/loomdemo/LoomFacebook",
                                     "getExpirationDate",
                                     "(Ljava/lang/String;)Ljava/lang/String;");
+	LoomJni::getStaticMethodInfo(gIsPermissionGranted,
+                                    "co/theengine/loomdemo/LoomFacebook",
+                                    "isPermissionGranted",
+                                    "(Ljava/lang/String;)Z");
 }
 
 
@@ -177,5 +182,14 @@ const char* platform_getExpirationDate(const char* dateFormat)
     return expirationDate->m_sString.c_str();
 }
 
+bool platform_isPermissionGranted(const char* permission)
+{
+    jstring jPermission = gIsPermissionGranted.env->NewStringUTF(permission);
+    jboolean result = gIsPermissionGranted.env->CallStaticBooleanMethod(gIsPermissionGranted.classID, 
+                                                                                gIsPermissionGranted.methodID, 
+                                                                                jPermission);
+    gIsPermissionGranted.env->DeleteLocalRef(jPermission);
+    return result;    
+}
 
 #endif

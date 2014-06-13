@@ -111,5 +111,11 @@ package loom.social
          *  @param message Message to display in the dialog
          */
         public static native function showFrictionlessRequestDialog(recipients:String, title:String, message:String):void;
+		
+		/**
+         * Request whether the active session has a given permission.
+         *  @param permission Permission name to check
+         */
+        public static native function isPermissionGranted(permission:String):Boolean;
     }
 }
