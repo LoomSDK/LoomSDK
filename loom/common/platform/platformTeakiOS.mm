@@ -21,7 +21,7 @@ limitations under the License.
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <Foundation/NSSet.h>
-// #import "Carrot.h"
+#import "Carrot.h"
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformTeak.h"
@@ -32,10 +32,46 @@ limitations under the License.
 lmDefineLogGroup(giOSTeakLogGroup, "loom.teak.ios", 1, 0);
 
 
-
 static AuthStatusCallback gAuthStatusCallback = NULL;
 static bool _initialized = false;
 static const char *_teakAppSecret = NULL;
+
+
+
+
+@interface TeakDelegate:NSObject<CarrotDelegate>
+@end
+
+
+@implementation TeakDelegate
+
+- (void)applicationLinkRecieved:(NSURL *)targetURL
+{
+//TODO: Support this?
+}
+
+
+- (void)authenticationStatusChanged:(int)status withError:(NSError *)error
+{
+
+    if(error)
+    {
+        NSLog(@"-=-=-=-=-=-=-Teak Authentication Status Error!-=-=-=-=-=-=-=-");
+//TODO: Handle NSError?
+        return;
+    }
+
+    NSLog(@"-=-=-=-=-=-=-Teak Authentication Status Changed!-=-=-=-=-=-=-=-");
+    if(gAuthStatusCallback != NULL)
+    {
+        gAuthStatusCallback(status);
+    }
+}
+
+@end
+
+TeakDelegate *_teakDelegate = nil;
+
 
 
 
@@ -50,7 +86,6 @@ bool checkTeakAppSecret()
 }
 
 
-//TODO: Teak for iOS
 void platform_teakInitialize(AuthStatusCallback authStatusCB)
 {
     gAuthStatusCallback = authStatusCB;
@@ -58,58 +93,72 @@ void platform_teakInitialize(AuthStatusCallback authStatusCB)
     //find the Teak ID for later use; if not present, then log and don't do further initialization!
     NSBundle *mainBundle = [NSBundle mainBundle];
     NSString *app_secret = [mainBundle objectForInfoDictionaryKey:@"TeakAppSecret"];
-NSLog(@"-----Info.plist TeakAppSecret String: %@", app_secret);
+    // NSLog(@"-----Info.plist TeakAppSecret String: %@", app_secret);
 
      //don't initialize without valid strings
     _initialized = false;
     if([app_secret isEqualToString:@""] == FALSE)
     {
         _initialized = true;
-        _teakAppSecret = [app_secret cStringUsingEncoding:NSUTF8StringEncoding];
     
         //set up the app secret
-        // [[Carrot sharedInstance] setAppSecret:@app_secret];
+        _teakAppSecret = [app_secret cStringUsingEncoding:NSUTF8StringEncoding];
+        [[Carrot sharedInstance] setAppSecret:app_secret];
+
+        //set status notification delegate
+        _teakDelegate = [[TeakDelegate alloc] init];
+        [[Carrot sharedInstance] setDelegate:_teakDelegate];
+
+        lmLog(giOSTeakLogGroup, "Teak initialized successfully!!!");
     }
 }
 
-//TODO: delegate!!!
 
 void platform_setAccessToken(const char *fbAccessToken)
 {
-    if(checkTeakAppSecret())
+    if(_initialized)
     {
-        // NSString *accessToken = [NSString stringWithCString:fbAccessToken encoding:NSUTF8StringEncoding];
-        // [[Carrot sharedInstance] setAccessToken:@accessToken];
+        NSString *accessToken = [NSString stringWithCString:fbAccessToken encoding:NSUTF8StringEncoding];
+        [[Carrot sharedInstance] setAccessToken:accessToken];
     }
 }
+
+
 int platform_getStatus()
 {
-    if(checkTeakAppSecret())
+    if(_initialized)
     {
-//TODO: are the values here 1:1 with Android?
-        // return [[Carrot sharedInstance] authenticationStatus];
+        return [[Carrot sharedInstance] authenticationStatus];
     }
     return -1;
 }
+
+
 bool platform_postAchievement(const char *achievementId)
 {
-    if(checkTeakAppSecret())
+    if(_initialized)
     {
-        // return ([[Carrot sharedInstance] postAchievement:@"chicken"] == YES) ? true : false;
+        NSString *achievementString = [NSString stringWithCString:achievementId encoding:NSUTF8StringEncoding];
+        return ([[Carrot sharedInstance] postAchievement:achievementString] == YES) ? true : false;
     }
     return false;
 }
+
+
 bool platform_postHighScore(int score)
 {
-    if(checkTeakAppSecret())
+    if(_initialized)
     {
-        // return ([[Carrot sharedInstance] postHighScore:score] == YES) ? true : false;
+        return ([[Carrot sharedInstance] postHighScore:score] == YES) ? true : false;
     }
     return false;
 }
+
+
 bool platform_postAction(const char *actionId, const char *objectInstanceId)
 {
-    if(checkTeakAppSecret())
+//TODO: postAction support
+    if(_initialized)
     {
         // NSDictionary* objectProperties = @{
         //     @"title": @"Obj-C Test",
