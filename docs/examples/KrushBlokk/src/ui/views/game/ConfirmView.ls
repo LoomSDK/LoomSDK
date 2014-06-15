@@ -1,4 +1,5 @@
-package ui.views.game {
+package ui.views.game
+{
     import feathers.controls.Button;
     import loom2d.display.Image;
     import loom2d.events.Event;
