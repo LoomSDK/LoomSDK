@@ -808,8 +808,22 @@ void loom_semaphore_destroy_real(const char *file, int line, SemaphoreHandle s)
 void loom_thread_sleep(long ms)
 {
     int err = usleep(ms * 1000);
-
-    lmAssert(err == 0, "Failed to sleep for %d ms.", ms);
+    
+    if(err != 0)
+    {
+        if(errno == EINVAL)
+        {
+           lmAssert(err == 0, "Failed to sleep for %d ms due to EINVAL.", ms);
+           return;
+        }
+        else if(errno == EINTR)
+        {
+           lmAssert(err == 0, "Failed to sleep for %d ms due to EINTR.", ms);
+           return;
+        }
+    }
+    
+    lmAssert(err == 0, "Failed to sleep for %d ms due to unknown cause, err=%d errno=%d.", ms, err, errno);
 }
 
 
