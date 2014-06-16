@@ -161,8 +161,16 @@ public class BinaryHttpResponseHandler extends AsyncHttpResponseHandler {
                 {
                     if(response[1] != null)
                     {
-                        //Log.d("BinaryHttpResponseHandler", "response[1] = " + response[1].toString());
-                        handleFailureMessage((Throwable)response[0], response[1].toString());                        
+                        // response[1] at this point could be either byte[] or String, so handle either.
+                        if (response[1] instanceof byte[])
+                        {
+                            handleFailureMessage((Throwable)response[0], (byte[])response[1]);                        
+                        }
+                        else
+                        {
+                            //Log.d("BinaryHttpResponseHandler", "response[1] = " + response[1].toString());
+                            handleFailureMessage((Throwable)response[0], response[1].toString());                        
+                        }
                     }
                     else
                     {

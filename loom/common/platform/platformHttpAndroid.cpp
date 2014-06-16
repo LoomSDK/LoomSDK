@@ -53,7 +53,8 @@ void Java_co_theengine_loomdemo_LoomHTTP_onFailure(JNIEnv *env, jobject thiz, js
     loom_HTTPCallback cb          = (loom_HTTPCallback)callback;
     const char        *dataString = env->GetStringUTFChars(data, 0);
 
-    lmLog(gAndroidHTTPLogGroup, "Sending fail to %x %s\n", payload, dataString);
+    // Commented out because lmLog, Android, and HTTP reponse strings don't play nice together and tend to CRASH!!!
+    // lmLog(gAndroidHTTPLogGroup, "Sending fail to %x %s\n", payload, dataString);
 
     cb((void *)payload, LOOM_HTTP_ERROR, dataString);
 
