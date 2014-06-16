@@ -96,6 +96,11 @@ package
             stage.addEventListener(Event.RESIZE, resize);
             
             // View on startup
+            // You can uncomment a different view to start from that one.
+            // Note that this can lead to uninitialized state (i.e. for game config),
+            // so it's good to have sensible implicit defaults of values.
+            // Even better, Loom allows for state persistence,
+            // but that is out of scope for this example (see PersistenceExample).
             switchView(intro);
             //switchView(mode);
             //switchView(difficulty);
