@@ -104,6 +104,7 @@ if (APPLE)
           "-framework CoreFoundation"
           "-framework CoreMotion"
           "-framework Foundation"
+          "-framework AssetsLibrary"
           "-framework UIKit"          
           "-framework GLKit"  
           "-framework OpenGLES"

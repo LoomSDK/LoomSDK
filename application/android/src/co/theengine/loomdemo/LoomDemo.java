@@ -31,6 +31,7 @@ import org.cocos2dx.lib.Cocos2dxRenderer;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.content.res.AssetManager;
 import android.content.pm.ConfigurationInfo;
 import android.os.Bundle;
 import android.util.Log;
@@ -43,6 +44,17 @@ import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.media.AudioManager;
+import android.media.MediaScannerConnection;
+
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import android.net.Uri;
+import android.os.Environment;
 
 import co.theengine.loomdemo.billing.LoomStore;
 
@@ -113,6 +125,77 @@ public class LoomDemo extends Cocos2dxActivity {
                 }
             });
         }
+        else if(type.equals("saveToPhotoLibrary"))
+        {
+            instance.saveToPhotoLibrary(payload);
+        }
+    }
+
+    protected void saveToPhotoLibrary(String path)
+    {
+        // Create a persistent storage location for saved library photos
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "AppPhotoLibrary");
+
+        // Create the storage directory if it does not exist
+        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs())
+        {
+            Log.d("Loom", "failed to create directory: " + mediaStorageDir.getAbsolutePath());
+            triggerGenericEvent("saveToPhotoLibraryFail", "mediaError");
+            return;
+        }
+
+        File file = new File(path);
+        InputStream in;
+
+        try {
+            if (file.exists())
+            {
+                in = new FileInputStream(file);
+            }
+            else
+            {
+                // Check if the file exists in the assets directory.
+                AssetManager assetManager = getAssets();
+                in = assetManager.open(path);
+            }
+        } catch (Exception e) {
+            // Our file wasn't found apparently, so report error and exit.
+            triggerGenericEvent("saveToPhotoLibraryFail", "badPath");
+            return;
+        }
+
+        String mediaPath = mediaStorageDir + File.separator + path.substring( path.lastIndexOf( File.separator ) + 1 );
+        
+        try {
+            // Copy our target file into our photo directory
+
+            OutputStream out = new FileOutputStream(mediaPath);
+
+            int len;
+            byte[] buffer = new byte[1024];
+
+            while ((len = in.read(buffer)) > 0)
+            {
+                out.write(buffer, 0, len);
+            }
+
+            in.close();
+            out.close();
+
+        } catch (Exception e) {
+            Log.e("Loom", "exception", e);
+            triggerGenericEvent("saveToPhotoLibraryFail", "mediaError");
+            return;
+        }
+
+        // Scan the newly copied file into our MediaStore
+
+        MediaScannerConnection.scanFile(this, new String[] { mediaPath }, null, new MediaScannerConnection.OnScanCompletedListener()
+        {
+            public void onScanCompleted(String path, Uri uri) {
+                triggerGenericEvent("saveToPhotoLibrarySuccess", path);
+            }
+        });
     }
 
     private boolean keyboardHidden = true;
@@ -277,7 +360,7 @@ public class LoomDemo extends Cocos2dxActivity {
         super.onDestroy();
     }
 
-    private boolean detectOpenGLES20() 
+    private boolean detectOpenGLES20()
     {
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         ConfigurationInfo info = am.getDeviceConfigurationInfo();
