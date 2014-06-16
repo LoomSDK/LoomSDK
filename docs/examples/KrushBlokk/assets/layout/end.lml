@@ -1,0 +1,33 @@
+<!--
+	Loom Markup Language layout file defining the style and labels for
+	the ending game over screen consisting of a header, score and general info.
+	Text and interactivity are handled in the EndView class, positioning is in the stylesheet.
+-->
+
+<ui.views.game.EndView>
+
+    <loom.css.StyleSheet source="assets/layout/style.css"/>
+	
+	<!--
+		Capitalization of text is mixed here because of the font having backwards letters
+		for lower case and normal letters for upper case characters.
+	-->
+	<feathers.controls.Label
+		id="header"
+		styleName="header"
+		text="GamE Over"
+	/>
+	
+	<feathers.controls.Label
+		id="info"
+		styleName="info"
+		text="info"
+	/>
+	
+	<feathers.controls.Label
+		id="score"
+		styleName="score"
+		text="score"
+	/>
+	
+</ui.views.game.EndView>
