@@ -22,7 +22,7 @@ package ui.views.game
         [Bind] public var title:Label;
         private var h:Number;
         
-        function get layoutFile():String { return "intro.lml"; }
+        protected function get layoutFile():String { return "intro.lml"; }
         
         public function init()
         {

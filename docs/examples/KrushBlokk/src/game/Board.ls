@@ -88,36 +88,36 @@ package game
         private var ending:Boolean = false;
         private var endedTiles:int;
         
-        var juggler:Juggler;
+        private var juggler:Juggler;
         
         /** Number of tile types used */
-        var types:int = 6;
-        var tileTypes:Vector.<TileType>;
+        private var types:int = 6;
+        private var tileTypes:Vector.<TileType>;
         
-        var tileCols = 8;
-        var tileRows = 8;
-        var tileWidth = 12;
-        var tileHeight = 12;
-        var tiles:Vector.<Tile>;
-        var tileDisplay = new Sprite();
+        private var tileCols = 8;
+        private var tileRows = 8;
+        private var tileWidth = 12;
+        private var tileHeight = 12;
+        private var tiles:Vector.<Tile>;
+        private var tileDisplay = new Sprite();
         
-        var rowMatches = new Vector.<Match>();
-        var colMatches = new Vector.<Match>();
-        var matchIndex:int;
+        private var rowMatches = new Vector.<Match>();
+        private var colMatches = new Vector.<Match>();
+        private var matchIndex:int;
         
-        var rowSwaps = new Vector.<Swap>();
-        var colSwaps = new Vector.<Swap>();
-        var typeSums:Vector.<int>;
+        private var rowSwaps = new Vector.<Swap>();
+        private var colSwaps = new Vector.<Swap>();
+        private var typeSums:Vector.<int>;
         
-        /** The minimum amount of same-type tiles needed to get a match */
-        var minSequence:int = 3;
+        private /** The minimum amount of same-type tiles needed to get a match */
+        private var minSequence:int = 3;
         
-        var selectedTile:Tile = null;
+        private var selectedTile:Tile = null;
         
-        var tileMove:Sound;
+        private var tileMove:Sound;
         
         // Super special matching sequence
-        var matchSequence:String = "LOOMSDK";
+        private var matchSequence:String = "LOOMSDK";
         
         public function Board(juggler:Juggler)
         {

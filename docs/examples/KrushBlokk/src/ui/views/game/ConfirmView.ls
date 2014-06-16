@@ -18,11 +18,11 @@ package ui.views.game
         
         private var background:Image;
         
-        [Bind] var quit:Button;
-        [Bind] var yes:Button;
-        [Bind] var no:Button;
+        [Bind] private var quit:Button;
+        [Bind] private var yes:Button;
+        [Bind] private var no:Button;
         
-        function get layoutFile():String { return "confirm.lml"; }
+        protected function get layoutFile():String { return "confirm.lml"; }
         
         public function created()
         {

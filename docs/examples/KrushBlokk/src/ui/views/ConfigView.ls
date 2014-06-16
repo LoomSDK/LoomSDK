@@ -14,7 +14,7 @@ package ui.views
         public var config:GameConfig;
         public var onPick:ViewCallback;
         
-        function get layoutFile():String { return null; }
+        protected function get layoutFile():String { return null; }
         
         public function init()
         {

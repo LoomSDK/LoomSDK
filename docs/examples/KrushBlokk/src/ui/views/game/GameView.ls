@@ -87,7 +87,7 @@ package ui.views.game
         private var explosion:Sound;
         private var soundtrack:Sound;
         
-        function get layoutFile():String { return "game.lml"; }
+        protected function get layoutFile():String { return "game.lml"; }
         
         public function init()
         {

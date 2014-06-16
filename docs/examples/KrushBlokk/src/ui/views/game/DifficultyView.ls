@@ -16,7 +16,7 @@ package ui.views.game
         [Bind] public var modeStandard:Button;
         [Bind] public var modeBeast:Button;
         
-        function get layoutFile():String { return "difficulty.lml"; }
+        protected function get layoutFile():String { return "difficulty.lml"; }
         
         public function created()
         {

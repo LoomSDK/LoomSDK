@@ -22,7 +22,7 @@ package ui.views.game
         public var quitManually:Boolean;
         public var gameScore:int;
         
-        function get layoutFile():String { return "end.lml"; }
+        protected function get layoutFile():String { return "end.lml"; }
         
         public function created()
         {

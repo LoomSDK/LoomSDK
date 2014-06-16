@@ -15,7 +15,7 @@ package ui.views.game
         [Bind] public var modeUnlimited:Button;
         [Bind] public var modeFreeform:Check;
         
-        function get layoutFile():String { return "mode.lml"; }
+        protected function get layoutFile():String { return "mode.lml"; }
         
         public function created() {
             items.push(modeTimed);
