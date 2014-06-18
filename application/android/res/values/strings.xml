@@ -6,6 +6,6 @@
     <string name="facebookApplicationId">456634377752782</string>
     
     <!-- Your Teak App Secret goes here, or the CLI tool will populate it using the 'teak_app_secret' property in loom.config -->
-    <string name="teakAppSecret">f5dc695912cf5de9e25ff3699f67a8dc</string>
+    <string name="teakAppSecret">f33f2c9c5df4edc2b866b3dcd8e634df</string>
 </resources>
 
