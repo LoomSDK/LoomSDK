@@ -132,6 +132,9 @@ public class LoomFacebook
         }
     }
 
+
+
+
 	public static boolean isPermissionGranted(String permission)
 	{
 		Session session = Session.getActiveSession();
@@ -142,7 +145,6 @@ public class LoomFacebook
         return false;
 		
 	}
-
 
 
     public static boolean isActive() 
