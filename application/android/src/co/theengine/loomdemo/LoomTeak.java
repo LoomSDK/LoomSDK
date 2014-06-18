@@ -81,6 +81,11 @@ public class LoomTeak
     }
 
 
+    public static boolean isActive() 
+    {
+        return (mTeak == null) ? false : true;
+    }
+
 
     public static void setAccessToken(String accessToken) 
     {

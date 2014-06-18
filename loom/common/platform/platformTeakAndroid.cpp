@@ -50,6 +50,7 @@ extern "C"
 }
 
 
+static loomJniMethodInfo gIsActive;
 static loomJniMethodInfo gSetAccessToken;
 static loomJniMethodInfo gGetStatus;
 static loomJniMethodInfo gPostAchievement;
@@ -65,6 +66,10 @@ void platform_teakInitialize(AuthStatusCallback authStatusCB)
     gAuthStatusCallback = authStatusCB;   
  
     // Bind to JNI entry points.
+    LoomJni::getStaticMethodInfo(gIsActive,
+                                    "co/theengine/loomdemo/LoomTeak",
+                                    "isActive",
+                                    "()Z");
     LoomJni::getStaticMethodInfo(gSetAccessToken,
                                     "co/theengine/loomdemo/LoomTeak",
                                     "setAccessToken",
@@ -89,6 +94,12 @@ void platform_teakInitialize(AuthStatusCallback authStatusCB)
 }
 
 
+
+bool platform_isActive()
+{
+    return gIsActive.env->CallStaticBooleanMethod(gIsActive.classID, gIsActive.methodID);
+}
+
 void platform_setAccessToken(const char *fbAccessToken)
 {
     jstring jAccessToken = gSetAccessToken.env->NewStringUTF(fbAccessToken);
@@ -112,6 +123,7 @@ bool platform_postAchievement(const char* achievementId)
                                                                     gPostAchievement.methodID, 
                                                                     jAchievementId);
     gPostAchievement.env->DeleteLocalRef(jAchievementId);
+    return result;
 }
 
 bool platform_postHighScore(int score)

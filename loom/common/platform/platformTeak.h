@@ -36,6 +36,7 @@ typedef void (*AuthStatusCallback)(int authState);
 void platform_teakInitialize(AuthStatusCallback sessionStatusCB);
 
 //TODO: make nice for LoomSDK
+bool platform_isActive();
 void platform_setAccessToken(const char *fbAccessToken);
 int platform_getStatus();
 bool platform_postAchievement(const char *achievementId);

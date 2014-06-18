@@ -27,6 +27,10 @@ public:
         platform_teakInitialize(authStatusDelegate);
     }
     
+    static bool isActive()
+    {
+        return platform_isActive();
+    }    
     static void setAccessToken(const char* fbAccessToken)
     {
         return platform_setAccessToken(fbAccessToken);
@@ -63,6 +67,7 @@ static int registerLoomTeak(lua_State* L)
     beginPackage(L, "loom.social")
 
     .beginClass<Teak>("Teak")
+        .addStaticMethod("isActive", &Teak::isActive)
         .addStaticMethod("setAccessToken", &Teak::setAccessToken)
         .addStaticMethod("getStatus", &Teak::getStatus)
         .addStaticMethod("postAchievement", &Teak::postAchievement)

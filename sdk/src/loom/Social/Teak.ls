@@ -47,6 +47,12 @@ package loom.social
         public static native var onAuthStatus:TeakAuthStatusDelegate;
 
         /**
+         * Checks if Teak was initialized successfully and is active
+         *  @return True if Teak is active, false if not
+         */
+        public static native function isActive():Boolean;
+
+        /**
          * Called in order to give the Facebook Access Token through to Teak to use.  
          * NOTE: This must be done before any other calls to Teak are made!!!
          *  @param String Facebook Access Token obtained via loom.social.Facebook.getAccessToken()
