@@ -258,37 +258,37 @@ package extensions
             emissionRate = (mMaxNumParticles-1) / mLifespan;
         }
         
-        private function parseFloatFromConfig(config:XMLNode, name:String, attr:String):Number {
+        private function parseConfigFloat(config:XMLNode, name:String, attr:String):Number {
             var element = config.firstChildElement(name);
             if (!element) return NaN;
             return Number.fromString(element.getAttribute(attr));
         }
-        private function parseFloatValueFromConfig(config:XMLNode, name:String):Number {
-            return parseFloatFromConfig(config, name, "value");
+        private function parseConfigFloatValue(config:XMLNode, name:String):Number {
+            return parseConfigFloat(config, name, "value");
         }
-        private function parseAngleFromConfig(config:XMLNode, name:String):Number {
-            return Math.degToRad(parseFloatValueFromConfig(config, name));
+        private function parseConfigAngle(config:XMLNode, name:String):Number {
+            return Math.degToRad(parseConfigFloatValue(config, name));
         }
         
-        private function parseIntFromConfig(config:XMLNode, name:String, attr:String):int {
+        private function parseConfigInt(config:XMLNode, name:String, attr:String):int {
             var element = config.firstChildElement(name);
             if (!element) return 0;
             return int.fromString(element.getAttribute(attr));
         }
-        private function parseIntValue(config:XMLNode, name:String):int {
-            return parseIntFromConfig(config, name, "value");
+        private function parseConfigIntValue(config:XMLNode, name:String):int {
+            return parseConfigInt(config, name, "value");
         }
         
-        private function parseColorFromConfig(config:XMLNode, name:String):Color {
+        private function parseConfigColor(config:XMLNode, name:String):Color {
             return new Color(
-                parseFloatFromConfig(config, name, "red")*0xFF,
-                parseFloatFromConfig(config, name, "green")*0xFF,
-                parseFloatFromConfig(config, name, "blue")*0xFF,
-                parseFloatFromConfig(config, name, "alpha")
+                parseConfigFloat(config, name, "red")*0xFF,
+                parseConfigFloat(config, name, "green")*0xFF,
+                parseConfigFloat(config, name, "blue")*0xFF,
+                parseConfigFloat(config, name, "alpha")
             );
         }
         
-        private function parseTextureFromConfig(config:XMLNode, name:String, basePath:String = ""):Texture {
+        private function parseConfigTexture(config:XMLNode, name:String, basePath:String = ""):Texture {
             var element = config.firstChildElement(name);
             if (!element) return null;
             var relPath = element.getAttribute("name");
@@ -315,53 +315,53 @@ package extensions
         {
             config = config.firstChild();
             
-            if (!texture) texture = parseTextureFromConfig(config, "texture", basePath);
+            if (!texture) texture = parseConfigTexture(config, "texture", basePath);
             this.texture = texture;
             
-            mEmitterXVariance                = parseFloatFromConfig(config, "sourcePositionVariance", "x");
-            mEmitterYVariance                = parseFloatFromConfig(config, "sourcePositionVariance", "y");
-            mGravityX                        = parseFloatFromConfig(config, "gravity", "x");
-            mGravityY                        = parseFloatFromConfig(config, "gravity", "y");
-            mEmitterType                     = parseIntValue(config, "emitterType");
-            maxNumParticles                  = parseIntValue(config, "maxParticles");
-            mLifespan                        = Math.max(0.01, parseFloatValueFromConfig(config, "particleLifeSpan"));
-            mLifespanVariance                = parseFloatValueFromConfig(config, "particleLifespanVariance");
-            mStartSize                       = parseFloatValueFromConfig(config, "startParticleSize");
-            mStartSizeVariance               = parseFloatValueFromConfig(config, "startParticleSizeVariance");
-            mEndSize                         = parseFloatValueFromConfig(config, "finishParticleSize");
-            mEndSizeVariance                 = parseFloatValueFromConfig(config, "FinishParticleSizeVariance");
-            mEmitAngle                       = parseAngleFromConfig(config, "angle");
-            mEmitAngleVariance               = parseAngleFromConfig(config, "angleVariance");
-            mStartRotation                   = parseAngleFromConfig(config, "rotationStart");
-            mStartRotationVariance           = parseAngleFromConfig(config, "rotationStartVariance");
-            mEndRotation                     = parseAngleFromConfig(config, "rotationEnd");
-            mEndRotationVariance             = parseAngleFromConfig(config, "rotationEndVariance");
-            mSpeed                           = parseFloatValueFromConfig(config, "speed");
-            mSpeedVariance                   = parseFloatValueFromConfig(config, "speedVariance");
-            mRadialAcceleration              = parseFloatValueFromConfig(config, "radialAcceleration");
-            mRadialAccelerationVariance      = parseFloatValueFromConfig(config, "radialAccelVariance");
-            mTangentialAcceleration          = parseFloatValueFromConfig(config, "tangentialAcceleration");
-            mTangentialAccelerationVariance  = parseFloatValueFromConfig(config, "tangentialAccelVariance");
-            mMaxRadius                       = parseFloatValueFromConfig(config, "maxRadius");
-            mMaxRadiusVariance               = parseFloatValueFromConfig(config, "maxRadiusVariance");
-            mMinRadius                       = parseFloatValueFromConfig(config, "minRadius");
-            mMinRadiusVariance               = parseFloatValueFromConfig(config, "minRadiusVariance");
-            mRotatePerSecond                 = parseFloatValueFromConfig(config, "rotatePerSecond");
-            mRotatePerSecondVariance         = parseFloatValueFromConfig(config, "rotatePerSecondVariance");
-            mStartColor                      = parseColorFromConfig(config, "startColor");
-            mStartColorVariance              = parseColorFromConfig(config, "startColorVariance");
-            mEndColor                        = parseColorFromConfig(config, "finishColor");
-            mEndColorVariance                = parseColorFromConfig(config, "finishColorVariance");
+            mEmitterXVariance                = parseConfigFloat(config, "sourcePositionVariance", "x");
+            mEmitterYVariance                = parseConfigFloat(config, "sourcePositionVariance", "y");
+            mGravityX                        = parseConfigFloat(config, "gravity", "x");
+            mGravityY                        = parseConfigFloat(config, "gravity", "y");
+            mEmitterType                     = parseConfigIntValue(config, "emitterType");
+            maxNumParticles                  = parseConfigIntValue(config, "maxParticles");
+            mLifespan                        = Math.max(0.01, parseConfigFloatValue(config, "particleLifeSpan"));
+            mLifespanVariance                = parseConfigFloatValue(config, "particleLifespanVariance");
+            mStartSize                       = parseConfigFloatValue(config, "startParticleSize");
+            mStartSizeVariance               = parseConfigFloatValue(config, "startParticleSizeVariance");
+            mEndSize                         = parseConfigFloatValue(config, "finishParticleSize");
+            mEndSizeVariance                 = parseConfigFloatValue(config, "FinishParticleSizeVariance");
+            mEmitAngle                       = parseConfigAngle(config, "angle");
+            mEmitAngleVariance               = parseConfigAngle(config, "angleVariance");
+            mStartRotation                   = parseConfigAngle(config, "rotationStart");
+            mStartRotationVariance           = parseConfigAngle(config, "rotationStartVariance");
+            mEndRotation                     = parseConfigAngle(config, "rotationEnd");
+            mEndRotationVariance             = parseConfigAngle(config, "rotationEndVariance");
+            mSpeed                           = parseConfigFloatValue(config, "speed");
+            mSpeedVariance                   = parseConfigFloatValue(config, "speedVariance");
+            mRadialAcceleration              = parseConfigFloatValue(config, "radialAcceleration");
+            mRadialAccelerationVariance      = parseConfigFloatValue(config, "radialAccelVariance");
+            mTangentialAcceleration          = parseConfigFloatValue(config, "tangentialAcceleration");
+            mTangentialAccelerationVariance  = parseConfigFloatValue(config, "tangentialAccelVariance");
+            mMaxRadius                       = parseConfigFloatValue(config, "maxRadius");
+            mMaxRadiusVariance               = parseConfigFloatValue(config, "maxRadiusVariance");
+            mMinRadius                       = parseConfigFloatValue(config, "minRadius");
+            mMinRadiusVariance               = parseConfigFloatValue(config, "minRadiusVariance");
+            mRotatePerSecond                 = parseConfigFloatValue(config, "rotatePerSecond");
+            mRotatePerSecondVariance         = parseConfigFloatValue(config, "rotatePerSecondVariance");
+            mStartColor                      = parseConfigColor(config, "startColor");
+            mStartColorVariance              = parseConfigColor(config, "startColorVariance");
+            mEndColor                        = parseConfigColor(config, "finishColor");
+            mEndColorVariance                = parseConfigColor(config, "finishColorVariance");
             
             // compatibility with future Particle Designer versions
             // (might fix some of the uppercase/lowercase typos)
             
             if (isNaN(mEndSizeVariance))
-                mEndSizeVariance = parseFloatValueFromConfig(config, "finishParticleSizeVariance");
+                mEndSizeVariance = parseConfigFloatValue(config, "finishParticleSizeVariance");
             if (isNaN(mLifespan))
-                mLifespan = Math.max(0.01, parseFloatValueFromConfig(config, "particleLifespan"));
+                mLifespan = Math.max(0.01, parseConfigFloatValue(config, "particleLifespan"));
             if (isNaN(mLifespanVariance))
-                mLifespanVariance = parseFloatValueFromConfig(config, "particleLifeSpanVariance");    
+                mLifespanVariance = parseConfigFloatValue(config, "particleLifeSpanVariance");    
         }
         
         public function get emitterType():int { return mEmitterType; }
