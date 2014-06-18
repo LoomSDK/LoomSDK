@@ -60,6 +60,7 @@ void Java_co_theengine_loomdemo_LoomSensors_onGravityChangedNative(JNIEnv *env, 
 
 static loomJniMethodInfo gVibrate;
 static loomJniMethodInfo gAllowScreenSleep;
+static loomJniMethodInfo gShareText;
 static loomJniMethodInfo gIsSensorSupported;
 static loomJniMethodInfo gIsSensorEnabled;
 static loomJniMethodInfo gHasSensorReceivedData;
@@ -93,6 +94,10 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
                                  "co/theengine/loomdemo/LoomMobile",
                                  "allowScreenSleep",
                                  "(Z)V");
+    LoomJni::getStaticMethodInfo(gShareText,
+                                 "co/theengine/loomdemo/LoomMobile",
+                                 "shareText",
+                                 "(Ljava/lang/String;Ljava/lang/String;)Z");
     LoomJni::getStaticMethodInfo(gIsSensorSupported,
                                  "co/theengine/loomdemo/LoomSensors",
                                  "isSensorSupported",
@@ -154,6 +159,20 @@ void platform_allowScreenSleep(bool sleep)
     gAllowScreenSleep.env->CallStaticVoidMethod(gAllowScreenSleep.classID, 
                                                 gAllowScreenSleep.methodID, 
                                                 (jboolean)sleep);    
+}
+
+///shares the specfied text via other applications on the device (ie. Twitter, Facebook)
+bool platform_shareText(const char *subject, const char *text)
+{
+    jstring jSubject = gShareText.env->NewStringUTF(subject);
+    jstring jText = gShareText.env->NewStringUTF(text);
+    jboolean result = gShareText.env->CallStaticBooleanMethod(gShareText.classID, 
+                                                                gShareText.methodID, 
+                                                                jSubject,
+                                                                jText);    
+    gShareText.env->DeleteLocalRef(jSubject);
+    gShareText.env->DeleteLocalRef(jText);
+    return (bool)result;
 }
 
 ///checks if a given sensor is supported on this hardware

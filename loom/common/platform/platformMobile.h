@@ -41,6 +41,9 @@ void platform_vibrate();
 ///sets whether or not to use the system screen sleep timeout
 void platform_allowScreenSleep(bool sleep);
 
+///shares the specfied text via other applications on the device (ie. Twitter, Facebook)
+bool platform_shareText(const char *subject, const char *text);
+
 ///checks if a given sensor is supported on this hardware
 bool platform_isSensorSupported(int sensor);
 

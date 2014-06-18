@@ -115,6 +115,16 @@ package loom.platform
         public static native function allowScreenSleep(sleep:Boolean):void;
 
         /**
+         * Shares the specified text to other applications (ie. Twitter, Facebook, Email) 
+         * via the device's native sharing dialog
+         *
+         *  @param subject The Subject of the text to share, for certain applications 
+         *          (ie. email). NOTE: Android Only!
+         *  @param text Text to share to another application
+         */
+        public static native function shareText(subject:String, text:String):Boolean;
+
+        /**
          * Queries whether or not the specified sensor is supported on this device
          *
          *  @param type MobileSensorType value for the desired sensor
@@ -156,7 +166,6 @@ package loom.platform
          *  @param type MobileSensorType value for the desired sensor
          */
         public static native function disableSensor(type:MobileSensorType):void;
-
 
         /**
          * Called when the a sensor triple changes

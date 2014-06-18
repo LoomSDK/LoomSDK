@@ -59,6 +59,10 @@ public:
     {
         platform_allowScreenSleep(sleep);
     }
+    static bool shareText(const char *subject, const char *text)
+    {
+        return platform_shareText(subject, text);
+    }       
     static bool isSensorSupported(int sensor)
     {
         return platform_isSensorSupported(sensor);
@@ -78,7 +82,7 @@ public:
     static void disableSensor(int sensor)
     {
         platform_disableSensor(sensor);
-    }   
+    }
 };
 
 
@@ -128,6 +132,7 @@ static int registerLoomMobile(lua_State *L)
 
             .addStaticMethod("vibrate", &Mobile::vibrate)
             .addStaticMethod("allowScreenSleep", &Mobile::allowScreenSleep)
+            .addStaticMethod("shareText", &Mobile::shareText)
             .addStaticMethod("isSensorSupported", &Mobile::isSensorSupported)
             .addStaticMethod("isSensorEnabled", &Mobile::isSensorEnabled)
             .addStaticMethod("hasSensorReceivedData", &Mobile::hasSensorReceivedData)

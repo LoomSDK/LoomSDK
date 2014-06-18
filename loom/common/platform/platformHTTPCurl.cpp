@@ -182,8 +182,11 @@ void platform_HTTPUpdate()
             // Make sure no error was thrown
             if (message->data.result == CURLE_OK)
             {
+                long http_code = 0;
+                curl_easy_getinfo (handle, CURLINFO_RESPONSE_CODE, &http_code);
+
                 // Will we cache to a file?
-                if (userData->cacheFile.length())
+                if (http_code < 400 && userData->cacheFile.length())
                 {
                     platform_writeFile(userData->cacheFile.c_str(), userData->chunk->memory, userData->chunk->size);
                 }
@@ -204,8 +207,11 @@ void platform_HTTPUpdate()
                     result = userData->chunk->memory;
                 }
 
-                // notify the callback that we are successful
-                userData->callback(userData->payload, LOOM_HTTP_SUCCESS, userData->chunk->memory);
+                // notify the callback if we are successful
+                if (http_code < 400)
+                    userData->callback(userData->payload, LOOM_HTTP_SUCCESS, userData->chunk->memory);
+                else
+                    userData->callback(userData->payload, LOOM_HTTP_ERROR, userData->chunk->memory);
 
                 if(userData->base64)
                    lmFree(NULL, (void*)result);
