@@ -203,9 +203,8 @@ void platform_facebookInitialize(SessionStatusCallback sessionStatusCB)
 
      //don't initialize without valid strings
     _initialized = false;
-    if([app_id isEqualToString:@""] == FALSE)
+    if((app_id != nil) && ([app_id isEqualToString:@""] == FALSE))
     {
-        _initialized = true;
         _facebookAppID = [app_id cStringUsingEncoding:NSUTF8StringEncoding];
 
         //see if session exists first
@@ -229,7 +228,13 @@ void platform_facebookInitialize(SessionStatusCallback sessionStatusCB)
                      }];
         }
         lmLog(giOSFacebookLogGroup, "Facebook initialized successfully!!!");
+        _initialized = true;
     }
+}
+
+bool platform_isActive()
+{
+    return _initialized;
 }
 
 bool platform_openSessionWithReadPermissions(const char* permissionsString)

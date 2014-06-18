@@ -29,6 +29,11 @@ void platform_facebookInitialize(SessionStatusCallback sessionStatusCB)
 {
 }
 
+bool platform_isActive()
+{
+    return false;
+}
+
 bool platform_openSessionWithReadPermissions(const char* permissionsString)
 {
     return false;

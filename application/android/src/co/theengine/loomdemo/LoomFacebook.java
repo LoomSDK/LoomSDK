@@ -136,6 +136,12 @@ public class LoomFacebook
 
 
 
+    public static boolean isActive() 
+    {
+        return checkFacebookAppId(mLoomDemo);
+    }
+
+
 	public static boolean openSessionWithReadPermissions(String permissionsString) 
     {
 		if(checkFacebookAppId(mLoomDemo)) 

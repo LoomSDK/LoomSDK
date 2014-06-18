@@ -30,6 +30,11 @@ public:
         platform_facebookInitialize(sessionStatusDelegate);
     }
 
+    static bool isActive()
+    {
+        return platform_isActive();
+    }
+
     static bool openSessionWithReadPermissions(const char* permissionsString)
     {
         return platform_openSessionWithReadPermissions(permissionsString);
@@ -71,6 +76,7 @@ static int registerLoomFacebook(lua_State* L)
     beginPackage(L, "loom.social")
 
     .beginClass<Facebook>("Facebook")
+        .addStaticMethod("isActive", &Facebook::isActive)
         .addStaticMethod("openSessionWithReadPermissions", &Facebook::openSessionWithReadPermissions)
         .addStaticMethod("requestNewPublishPermissions", &Facebook::requestNewPublishPermissions)
         .addStaticMethod("showFrictionlessRequestDialog", &Facebook::showFrictionlessRequestDialog)
