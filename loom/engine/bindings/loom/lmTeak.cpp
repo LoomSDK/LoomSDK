@@ -29,7 +29,7 @@ public:
     
     static bool isActive()
     {
-        return platform_isActive();
+        return platform_isTeakActive();
     }    
     static void setAccessToken(const char* fbAccessToken)
     {

@@ -29,7 +29,7 @@ void platform_teakInitialize(AuthStatusCallback authStatusCB)
 {
 }
 
-bool platform_isActive()
+bool platform_isTeakActive()
 {
 }
 
