@@ -105,7 +105,7 @@ void platform_facebookInitialize(SessionStatusCallback sessionStatusCB)
 }
 
 
-bool platform_isActive()
+bool platform_isFacebookActive()
 {
     return gIsActive.env->CallStaticBooleanMethod(gIsActive.classID, gIsActive.methodID);
 }

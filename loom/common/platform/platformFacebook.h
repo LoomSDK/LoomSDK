@@ -36,7 +36,7 @@ typedef void (*SessionStatusCallback)(int state, const char *permissions, int er
 void platform_facebookInitialize(SessionStatusCallback sessionStatusCB);
 
 ///Checks whether or not Facebook support has been activated
-bool platform_isActive();
+bool platform_isFacebookActive();
 
 ///Opens up a Facebook session with Read Permissions
 bool platform_openSessionWithReadPermissions(const char* permissionsString);

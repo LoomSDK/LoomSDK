@@ -32,7 +32,7 @@ public:
 
     static bool isActive()
     {
-        return platform_isActive();
+        return platform_isFacebookActive();
     }
 
     static bool openSessionWithReadPermissions(const char* permissionsString)

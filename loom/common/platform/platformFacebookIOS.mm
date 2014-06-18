@@ -232,7 +232,7 @@ void platform_facebookInitialize(SessionStatusCallback sessionStatusCB)
     }
 }
 
-bool platform_isActive()
+bool platform_isFacebookActive()
 {
     return _initialized;
 }
