@@ -97,10 +97,8 @@ void platform_teakInitialize(AuthStatusCallback authStatusCB)
 
      //don't initialize without valid strings
     _initialized = false;
-    if([app_secret isEqualToString:@""] == FALSE)
-    {
-        _initialized = true;
-    
+    if((app_secret != nil) && ([app_secret isEqualToString:@""] == FALSE))
+    {    
         //set up the app secret
         _teakAppSecret = [app_secret cStringUsingEncoding:NSUTF8StringEncoding];
         [[Carrot sharedInstance] setAppSecret:app_secret];
@@ -110,6 +108,7 @@ void platform_teakInitialize(AuthStatusCallback authStatusCB)
         [[Carrot sharedInstance] setDelegate:_teakDelegate];
 
         lmLog(giOSTeakLogGroup, "Teak initialized successfully!!!");
+        _initialized = true;
     }
 }
 
