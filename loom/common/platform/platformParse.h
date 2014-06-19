@@ -31,8 +31,8 @@
 ///initializes the data for the Parse class
 void platform_parseInitialize();
 
-///check if the Parse API has initialized
-bool platform_hasInitialized();
+///check if the Parse API is active for use
+bool platform_isParseActive();
 
 ///Returns the parse installation ID
 const char* platform_getInstallationID();

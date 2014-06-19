@@ -33,8 +33,7 @@ public class LoomParse
 
         String appID = app.getString(R.string.parseAppID);
         String clientKey = app.getString(R.string.parseClientKey);
-//TEMP: LFL: Remove this log once we are all working as we don't want these values public!
-Log.d("LoomParse", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
+        // Log.d("LoomParse", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
 
         // if invalid strings or error on initialize, make sure to set _initialized = false
         _initialized = false;
@@ -50,14 +49,14 @@ Log.d("LoomParse", "Initialize Parse... AppID: " + appID + "  ClientKey: " + cli
             ///initialize Push Notifications service
             PushService.setDefaultPushCallback(app, LoomDemo.class);
             ParseInstallation.getCurrentInstallation().saveInBackground();
-            _initialized = true;
             Log.d("LoomParse", "Completed initialization of Parse!");
+            _initialized = true;
         }
     }
 
 
     ///returns if Parse was able to to initialize at startup or not
-    public static boolean hasInitialized()
+    public static boolean isActive()
     {
         return _initialized;
     }

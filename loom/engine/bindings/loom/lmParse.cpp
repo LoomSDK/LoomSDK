@@ -38,9 +38,9 @@ public:
         platform_parseInitialize();
     }
     
-    static bool hasInitialized()
+    static bool isActive()
     {
-        return platform_hasInitialized();
+        return platform_isParseActive();
     }
 	
 	static const char* getInstallationID()
@@ -67,7 +67,7 @@ static int registerLoomParse(lua_State *L)
 
         .beginClass<Parse>("Parse")
 
-            .addStaticMethod("hasInitialized", &Parse::hasInitialized)
+            .addStaticMethod("isActive", &Parse::isActive)
 			.addStaticMethod("getInstallationID", &Parse::getInstallationID)
 			.addStaticMethod("getInstallationObjectID", &Parse::getInstallationObjectID)
 			.addStaticMethod("updateInstallationUserID", &Parse::updateInstallationUserID)

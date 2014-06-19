@@ -34,7 +34,7 @@
 lmDefineLogGroup(gAndroidParseLogGroup, "loom.parse.android", 1, 0);
 
 
-static loomJniMethodInfo gHasInitialized;
+static loomJniMethodInfo gIsActive;
 static loomJniMethodInfo gGetInstallationID;
 static loomJniMethodInfo gGetInstallationObjectID;
 static loomJniMethodInfo gUpdateInstallationUserID;
@@ -46,9 +46,9 @@ void platform_parseInitialize()
     lmLog(gAndroidParseLogGroup, "INIT ***** PARSE ***** ANDROID ****");
 
     ///Bind to JNI entry points.
-    LoomJni::getStaticMethodInfo(gHasInitialized,
+    LoomJni::getStaticMethodInfo(gIsActive,
                                  "co/theengine/loomdemo/LoomParse",
-                                 "hasInitialized",
+                                 "isActive",
                                  "()Z");
     LoomJni::getStaticMethodInfo(gGetInstallationID,
                                  "co/theengine/loomdemo/LoomParse",
@@ -65,11 +65,10 @@ void platform_parseInitialize()
 }
 
 
-///checks if the Parse service has initialized
-bool platform_hasInitialized()
+///checks if the Parse service is active for use
+bool platform_isParseActive()
 {
-    jboolean result = gHasInitialized.env->CallStaticBooleanMethod(gHasInitialized.classID, gHasInitialized.methodID);
-    return (bool)result;
+    return gIsActive.env->CallStaticBooleanMethod(gIsActive.classID, gIsActive.methodID);
 }
 
 ///gets Parse installation ID

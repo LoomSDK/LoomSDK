@@ -101,8 +101,8 @@ void platform_parseInitialize()
 {
 }
 
-///check if the Parse API has initialized
-bool platform_hasInitialized()
+///check if the Parse API is active for use
+bool platform_isParseActive()
 {
     return _initialized;
 }

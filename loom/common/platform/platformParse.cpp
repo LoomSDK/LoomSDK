@@ -30,8 +30,8 @@ void platform_parseInitialize()
 {
 }
 
-///checks if the Parse service has initialized
-bool platform_hasInitialized()
+///checks if the Parse service is active for use
+bool platform_isParseActive()
 {
     return false;
 }

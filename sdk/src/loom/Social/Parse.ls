@@ -36,9 +36,9 @@ package loom.social
         /**
          * Starts up the Parse API service
          *
-         *  @return Whether or not the Native Parse API was able to initialize
+         *  @return Whether or not the Native Parse API is currently active
          */
-        public static native function hasInitialized():Boolean;
+        public static native function isActive():Boolean;
 
         /**
          * Obtains the Parse Installation ID
