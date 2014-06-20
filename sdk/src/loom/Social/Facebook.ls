@@ -75,6 +75,13 @@ package loom.social
         public static native var onSessionStatus:FacebookSessionStatusDelegate;
 
         /**
+         * Checks if Facebook is active and ready for use
+         *
+         *  @return Whether or not the Facebook API is currently active
+         */
+        public static native function isActive():Boolean;
+
+        /**
          * Open a Facebook session with read permissions.
          *  @param permissions String defining the Facebook permissions (comma separated) you wish to read (ie. "email,user_friends")
          *  @return false if there is no Facebook Application Id defined, true otherwise.
