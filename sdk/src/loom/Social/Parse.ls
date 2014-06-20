@@ -34,7 +34,7 @@ package loom.social
     public native class Parse 
     {
         /**
-         * Starts up the Parse API service
+         * Checks if Native Parse is active and ready for use
          *
          *  @return Whether or not the Native Parse API is currently active
          */
