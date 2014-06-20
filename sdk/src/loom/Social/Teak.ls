@@ -47,8 +47,9 @@ package loom.social
         public static native var onAuthStatus:TeakAuthStatusDelegate;
 
         /**
-         * Checks if Teak was initialized successfully and is active
-         *  @return True if Teak is active, false if not
+         * Checks if Teak is active and ready for use
+         *
+         *  @return Whether or not the Teak API is currently active
          */
         public static native function isActive():Boolean;
 
