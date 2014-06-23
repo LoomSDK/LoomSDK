@@ -50,6 +50,7 @@ public class LoomFacebook
 
     private static Session.StatusCallback mStatusCallback = new SessionStatusCallback();
     private static native void sessionStatusCallback(int sessionState, String sessionPermissions, int errorCode);
+    private static native void frictionlessRequestCallback(boolean success);
     private static LoomDemo mLoomDemo;
  
     protected static ViewGroup rootLayout;
@@ -214,7 +215,16 @@ public class LoomFacebook
 		            @Override
 		            public void onComplete(Bundle values, FacebookException error) 
                     {
-// ... TODO: handle errors...???
+                        final boolean fSuccess = (error == null) ? true : false;
+                        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+                        {
+                            @Override
+                            public void run() 
+                            {
+                                Log.d(TAG, "FB FrictionlessRequestCallback: Success: " + fSuccess);
+                                frictionlessRequestCallback(fSuccess);
+                            }
+                        });                        
 		            }
 		        };
 

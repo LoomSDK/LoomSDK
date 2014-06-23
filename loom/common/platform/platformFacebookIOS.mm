@@ -39,6 +39,7 @@ lmDefineLogGroup(giOSFacebookLogGroup, "loom.facebook.ios", 1, 0);
 
 
 static SessionStatusCallback gSessionStatusCallback = NULL;
+static FrictionlessRequestCallback gFrictionlessRequestCallback = NULL;
 static bool _initialized = false;
 static const char *_facebookAppID = NULL;
 static FBFrictionlessRecipientCache* gFriendCache = NULL;
@@ -50,6 +51,7 @@ static FBFrictionlessRecipientCache* gFriendCache = NULL;
 +(void)StatusCallback:(FBSession *)session status:(FBSessionState)status error:(NSError*)error;
 +(NSArray *)parsePermissionString:(const char *)permissionsString;
 +(BOOL)isSessionClosed:(FBSession *)session;
++(NSDictionary*)parseURLParams:(NSString *)query;
 
 @end
 
@@ -175,6 +177,21 @@ static FBFrictionlessRecipientCache* gFriendCache = NULL;
     gSessionStatusCallback(sessionState, permissionsStatic, 0);
 }
 
++ (NSDictionary*)parseURLParams:(NSString *)query 
+{
+    NSArray *pairs = [query componentsSeparatedByString:@"&"];
+    NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
+    for (NSString *pair in pairs) {
+        NSArray *kv = [pair componentsSeparatedByString:@"="];
+        NSString *val =
+        [[kv objectAtIndex:1]
+         stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+
+        [params setObject:val forKey:[kv objectAtIndex:0]];
+    }
+    return params;
+}
+
 @end
 
 
@@ -192,9 +209,10 @@ bool checkFacebookAppId()
 
 
 
-void platform_facebookInitialize(SessionStatusCallback sessionStatusCB)
+void platform_facebookInitialize(SessionStatusCallback sessionStatusCB, FrictionlessRequestCallback frictionlessRequestCB)
 {
     gSessionStatusCallback = sessionStatusCB;
+    gFrictionlessRequestCallback = frictionlessRequestCB;
 
     //find the Facebook ID for later use; if not present, then log and don't do further initialization!
     NSBundle *mainBundle = [NSBundle mainBundle];
@@ -318,20 +336,15 @@ void platform_showFrictionlessRequestDialog(const char* recipientsString, const 
                     parameters:params
                     handler:^(FBWebDialogResult result, NSURL *resultURL, NSError *error) 
                     {
-                        if(error) 
+                        //invoke native callback
+                        NSDictionary *urlParams = [FacebookAPIiOS parseURLParams:[resultURL query]];
+                        bool success = (error || 
+                                        (result == FBWebDialogResultDialogNotCompleted) ||
+                                        ![urlParams valueForKey:@"request"]) ? false : true;
+                        NSLog(@"----FB Frictionless Dialog: SUCCESS? %i", success);
+                        if(gFrictionlessRequestCallback != NULL)
                         {
-                            NSLog(@"----FB Frictionless Dialog:  Error sending request.");
-                        }
-                        else 
-                        {
-                            if (result == FBWebDialogResultDialogNotCompleted) 
-                            {
-                                NSLog(@"----FB Frictionless Dialog:  User canceled request.");
-                            } 
-                            else 
-                            {
-                                NSLog(@"----FB Frictionless Dialog:  Request Sent.");
-                            }
+                            gFrictionlessRequestCallback(success);
                         }
                     }
                     friendCache:gFriendCache];

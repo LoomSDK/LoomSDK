@@ -21,13 +21,22 @@ private:
         _OnSessionStatusDelegate.invoke();
     }
 
+    /// Event handler; this is called by the C mobile API when a Frictionless Request Dialog cas completed
+    static void frictionlessRequestDelegate(bool success)
+    {
+        ///Convert to delegate calls.
+        _OnFrictionlessRequestDelegate.pushArgument(success);
+        _OnFrictionlessRequestDelegate.invoke();
+    }
+
 public:
     LOOM_STATICDELEGATE(OnSessionStatus);
+    LOOM_STATICDELEGATE(OnFrictionlessRequest);
 
 
     static void initialize()
     {
-        platform_facebookInitialize(sessionStatusDelegate);
+        platform_facebookInitialize(sessionStatusDelegate, frictionlessRequestDelegate);
     }
 
     static bool isActive()
@@ -74,6 +83,7 @@ public:
 
 
 NativeDelegate Facebook::_OnSessionStatusDelegate;
+NativeDelegate Facebook::_OnFrictionlessRequestDelegate;
 
 
 static int registerLoomFacebook(lua_State* L)
@@ -89,7 +99,8 @@ static int registerLoomFacebook(lua_State* L)
         .addStaticMethod("closeAndClearTokenInformation", &Facebook::closeAndClearTokenInformation)
         .addStaticMethod("getExpirationDate", &Facebook::getExpirationDate)
 		.addStaticMethod("isPermissionGranted", &Facebook::isPermissionGranted)
-		.addStaticProperty("onSessionStatus", &Facebook::getOnSessionStatusDelegate)
+        .addStaticProperty("onSessionStatus", &Facebook::getOnSessionStatusDelegate)
+		.addStaticProperty("onFrictionlessRequest", &Facebook::getOnFrictionlessRequestDelegate)
     .endClass()
 
     .endPackage();

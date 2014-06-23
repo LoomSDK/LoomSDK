@@ -9,6 +9,12 @@ package loom.social
      */
     public delegate FacebookSessionStatusDelegate(state:FacebookSessionState, permissions:String, errorCode:FacebookErrorCode):void;
 
+    /**
+     * Delegate called when the Frictionless Request Dialog ends 
+     *
+     *  @param success true if the user completed the request, false if it was cancelled
+     */
+    public delegate FacebookFrictionlessRequstDelegate(success:Boolean):void;
 
     /**
      * Possible Facebook Session States
@@ -73,6 +79,11 @@ package loom.social
          *  Called when the Facebook Session state changes.
          */
         public static native var onSessionStatus:FacebookSessionStatusDelegate;
+
+        /**
+         *  Called when the Facebook Frictionless Request dialog completes.
+         */
+        public static native var onFrictionlessRequest:FacebookFrictionlessRequstDelegate;
 
         /**
          * Checks if Facebook is active and ready for use

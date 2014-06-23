@@ -36,6 +36,7 @@ lmDefineLogGroup(gAndroidFacebookLogGroup, "loom.facebook.android", 1, 0);
 
 
 static SessionStatusCallback gSessionStatusCallback = NULL;
+static FrictionlessRequestCallback gFrictionlessRequestCallback = NULL;
 
 
 extern "C"
@@ -48,6 +49,14 @@ extern "C"
             gSessionStatusCallback((int)sessonState, sessionPermissionsString, (int)errorCode);
         }
         env->ReleaseStringUTFChars(sessionPermissions, sessionPermissionsString);
+    }
+    
+    void Java_co_theengine_loomdemo_LoomFacebook_frictionlessRequestCallback(JNIEnv* env, jobject thiz, jboolean jSuccess)
+    {
+        if (gFrictionlessRequestCallback)
+        {
+            gFrictionlessRequestCallback((bool)jSuccess);
+        }
     }
 }
 
@@ -63,11 +72,12 @@ static loomJniMethodInfo gIsPermissionGranted;
 
 
 ///initializes the data for the Facebook class for Android
-void platform_facebookInitialize(SessionStatusCallback sessionStatusCB)
+void platform_facebookInitialize(SessionStatusCallback sessionStatusCB, FrictionlessRequestCallback frictionlessRequestCB)
 {
     lmLog(gAndroidFacebookLogGroup, "INIT ***** FACEBOOK ***** ANDROID ****");
 
     gSessionStatusCallback = sessionStatusCB;   
+    gFrictionlessRequestCallback = frictionlessRequestCB;   
  
     // Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gIsActive,

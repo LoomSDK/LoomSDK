@@ -25,7 +25,7 @@
 
 ///The NULL Facebook implementation
 
-void platform_facebookInitialize(SessionStatusCallback sessionStatusCB)
+void platform_facebookInitialize(SessionStatusCallback sessionStatusCB, FrictionlessRequestCallback frictionlessRequestCB)
 {
 }
 

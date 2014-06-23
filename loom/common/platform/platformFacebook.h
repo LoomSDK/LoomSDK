@@ -32,8 +32,11 @@
 ///Callback for facebook session status API events
 typedef void (*SessionStatusCallback)(int state, const char *permissions, int errorCode);
 
+///Callback for facebook frictionless request completed
+typedef void (*FrictionlessRequestCallback)(bool success);
+
 ///Initializes Facebook for the platform
-void platform_facebookInitialize(SessionStatusCallback sessionStatusCB);
+void platform_facebookInitialize(SessionStatusCallback sessionStatusCB, FrictionlessRequestCallback frictionlessRequestCB);
 
 ///Checks whether or not Facebook support has been activated
 bool platform_isFacebookActive();
