@@ -85,7 +85,7 @@ public:
     void pushArgument(float value) const;
     void pushArgument(double value) const;
     void pushArgument(bool value) const;
-    void invoke(bool checkMainThread = true) const;
+    void invoke() const;
 
     // allows you to hand push values not available in pushArgument overloaded
     // Example:
