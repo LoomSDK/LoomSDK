@@ -32,6 +32,7 @@ import android.hardware.SensorManager;
 import android.view.Display;
 import android.view.Surface;
 import android.view.WindowManager;
+import android.util.Log;
 
 /**
  * 
@@ -94,8 +95,20 @@ public class Cocos2dxAccelerometer implements SensorEventListener {
 	         x = y;
 	         y = -tmp;
 		}
-				
-        onSensorChanged(x, y, z, event.timestamp);
+			
+        ///make sure to call the native delegate in the main thread!!!
+        final float fX = x;
+        final float fY = y;
+        final float fZ = z;
+        final long fT = event.timestamp;
+        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+        {
+            @Override
+            public void run() 
+            {
+                onSensorChanged(fX, fY, fZ, fT);
+            }
+        });        
         // Log.d(TAG, "x = " + event.values[0] + " y = " + event.values[1] + " z = " + event.values[2]);
 	}
 
