@@ -34,6 +34,7 @@ limitations under the License.
     const char *cacheToFile;
     bool base64EncodeResponse;
     NSMutableData* receivedData;
+    bool statusCodeFail;
 }
 
 -(id)initWithCallback:(loom_HTTPCallback)cb payload:(void *)pl allowRedirect:(bool)ar cacheToFile:(const char *)cf base64EncodeResponse:(bool)b64;
@@ -97,6 +98,11 @@ limitations under the License.
   return [[[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding] autorelease];
 }
 
+-(void) connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
+{
+    statusCodeFail = [response statusCode] >= 400;
+}
+
 -(void) connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
     [receivedData appendData:data];
@@ -115,7 +121,10 @@ limitations under the License.
     else
         response = [[NSString alloc] initWithData:receivedData encoding:NSUTF8StringEncoding];
 
-    callback(payload, LOOM_HTTP_SUCCESS, [response cStringUsingEncoding:NSUTF8StringEncoding]);
+    if(statusCodeFail)
+        callback(payload, LOOM_HTTP_ERROR, [response cStringUsingEncoding:NSUTF8StringEncoding]);
+    else
+        callback(payload, LOOM_HTTP_SUCCESS, [response cStringUsingEncoding:NSUTF8StringEncoding]);
 
     [receivedData release];
 }

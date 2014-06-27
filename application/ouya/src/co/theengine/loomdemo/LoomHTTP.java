@@ -110,8 +110,6 @@ public class LoomHTTP
 
                 final String fContent;
 
-                Log.d("LoomHTTP", "Failed request!");
-
                 if (base64EncodeResponseData)
                 {
                     fContent = Base64.encodeToString(binaryData, Base64.NO_WRAP | Base64.NO_PADDING);
@@ -124,6 +122,16 @@ public class LoomHTTP
                         throw new AssertionError("UTF-8 is unknown");
                     }
                 }
+
+                onFailure(error, fContent);
+            } 
+
+            @Override
+            public void onFailure(Throwable error, String content) {
+
+                final String fContent = content;
+
+                Log.d("LoomHTTP", "Failed request with message: " + content);
 
                 Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
                     @Override

@@ -138,19 +138,25 @@ package system {
     public native function slice(startIndex:Number = 0, endIndex:Number = 0x7fffffff):String;
     
     /**
-     *  Safetly evaluate the String to a Number value.
+     *  Safely evaluate the String to a Number value.
      *
      *  @return The Number value evaluated from the String
      */
     public native function toNumber():Number;
     
     /**
-     *  Safetly evaluate the String to a Boolean value.
+     *  Safely evaluate the String to a Boolean value.
      *
      *  @return The Boolean value evaluated from the String
      */
     public native function toBoolean():Boolean;
-
+    
+    /**
+     *  Safetly evaluate the String to an MD5 encoded string value.
+     *
+     *  @return The MD5 String value evaluated from the String
+     */
+    public native function toMD5():String;
     
     /**
      *  Splits a String object into an array of substrings by dividing it wherever the specified delimiter parameter occurs.
@@ -270,6 +276,7 @@ package system {
     private static native function _substring(value:String, startIndex:int = 0, endIndex:int = -1):String;
     private static native function _toNumber(value:String):Number;
     private static native function _toBoolean(value:String):Boolean;
+    private static native function _toMD5(value:String):String;
     private static native function _find(value:String, pattern:String):Vector.<String>;
     
     }

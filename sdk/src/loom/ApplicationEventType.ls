@@ -50,6 +50,23 @@ package loom
         public static var CAMERA_FAIL:String = "cameraFail";
 
         /**
+         * Fire to save a photo to the device's library; payload is the path to the image to save.
+         */
+        public static var SAVE_TO_PHOTO_LIBARY:String = "saveToPhotoLibrary";
+
+        /**
+         * Fired when the device successfully saves an image to its photo lobrary; no payload.
+         */
+        public static var SAVE_TO_PHOTO_LIBARY_SUCCESS:String = "saveToPhotoLibrarySuccess";
+
+        /**
+         * Fired when the device fails to save an image to its photo lobrary. Payload is either
+         * an ApplicationEventErrorType constant, or a localized description of the error
+         * if a constant does not exist for it.
+         */
+        public static var SAVE_TO_PHOTO_LIBARY_FAIL:String = "saveToPhotoLibraryFail";
+
+        /**
          * Fired when the soft keyboard (IME) becomes visible. Payload is the new 
          * visible height of the screen. (ie, if the screen is 1024px high and the
          * keyboard takes up 200px, you are passed 824px when the keyboard becomes

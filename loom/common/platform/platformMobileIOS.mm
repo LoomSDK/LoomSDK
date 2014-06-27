@@ -36,6 +36,10 @@ limitations under the License.
 static SensorTripleChangedCallback gTripleChangedCallback = NULL;
 
 
+static UIViewController* getParentViewController()
+{
+    return [[[UIApplication sharedApplication] keyWindow] rootViewController];
+}
 
 ///initializes the data for the Mobile class for iOS
 void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB)
@@ -62,6 +66,17 @@ void platform_allowScreenSleep(bool sleep)
         ///disable the idle timer
         [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
     }
+}
+
+///shares the specfied text via other applications on the device (ie. Twitter, Facebook)
+bool platform_shareText(const char *subject, const char *text)
+{
+    NSString *body = (text) ? [NSString stringWithUTF8String : text] : nil;
+    NSArray *activityItems = @[body];
+
+    UIActivityViewController *controller = [[UIActivityViewController alloc] initWithActivityItems:activityItems applicationActivities:nil];
+    [getParentViewController() presentViewController:controller animated:YES completion:nil];
+    return true;
 }
 
 ///checks if a given sensor is supported on this hardware
@@ -97,5 +112,6 @@ void platform_disableSensor(int sensor)
 {
     ///TODO: 1844: Support sensors on iOS
 }
+
 
 #endif

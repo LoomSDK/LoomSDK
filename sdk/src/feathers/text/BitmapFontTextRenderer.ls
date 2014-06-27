@@ -4,6 +4,7 @@ package feathers.text
     import feathers.core.ITextRenderer;
     import feathers.core.FeathersControl;
     import feathers.system.DeviceCapabilities;
+    import loom2d.text.TextField;
     import loom2d.text.BitmapFont;
     import loom2d.math.Point;
     import loom2d.Loom2D;
@@ -22,7 +23,12 @@ package feathers.text
 
         public function BitmapFontTextRenderer()
         {
-            _textFormat = new BitmapFontTextFormat("SourceSansPro", 12, 0xffffff);
+            Debug.assert( TextField.defaultBitmapFont != null,
+                "Tried creating a BitmapFontTextRenderer and no BitmapFonts are registered. " + 
+                "Have you called registerBitmapFont() on loom2d.text.TextField?"
+            );
+            
+            _textFormat = new BitmapFontTextFormat(TextField.defaultBitmapFont, 12, 0xffffff);
 
             super();
 
