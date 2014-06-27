@@ -117,88 +117,88 @@ void platform_facebookInitialize(SessionStatusCallback sessionStatusCB, Friction
 
 bool platform_isFacebookActive()
 {
-    return gIsActive.env->CallStaticBooleanMethod(gIsActive.classID, gIsActive.methodID);
+    return gIsActive.getEnv()->CallStaticBooleanMethod(gIsActive.classID, gIsActive.methodID);
 }
 
 
 bool platform_openSessionWithReadPermissions(const char* permissionsString)
 {
-    jstring jPermissionsString = gOpenSessionReadPermissions.env->NewStringUTF(permissionsString);
-    jboolean result = gOpenSessionReadPermissions.env->CallStaticBooleanMethod(gOpenSessionReadPermissions.classID, 
+    jstring jPermissionsString = gOpenSessionReadPermissions.getEnv()->NewStringUTF(permissionsString);
+    jboolean result = gOpenSessionReadPermissions.getEnv()->CallStaticBooleanMethod(gOpenSessionReadPermissions.classID, 
                                                                                 gOpenSessionReadPermissions.methodID, 
                                                                                 jPermissionsString);
-    gOpenSessionReadPermissions.env->DeleteLocalRef(jPermissionsString);
+    gOpenSessionReadPermissions.getEnv()->DeleteLocalRef(jPermissionsString);
     return result;    
 }
 
 
 bool platform_requestNewPublishPermissions(const char* permissionsString)
 {
-    jstring jPermissionsString = gRequestNewPublishPermissions.env->NewStringUTF(permissionsString);
-    jboolean result = gRequestNewPublishPermissions.env->CallStaticBooleanMethod(gRequestNewPublishPermissions.classID, 
+    jstring jPermissionsString = gRequestNewPublishPermissions.getEnv()->NewStringUTF(permissionsString);
+    jboolean result = gRequestNewPublishPermissions.getEnv()->CallStaticBooleanMethod(gRequestNewPublishPermissions.classID, 
                                                                                     gRequestNewPublishPermissions.methodID, 
                                                                                     jPermissionsString);
-    gRequestNewPublishPermissions.env->DeleteLocalRef(jPermissionsString);
+    gRequestNewPublishPermissions.getEnv()->DeleteLocalRef(jPermissionsString);
     return result;
 }
 
 
 void platform_showFrictionlessRequestDialog(const char* recipientsString, const char* titleString, const char* messageString)
 {
-    jstring jRecipientsString = gFrictionlessRequestDialog.env->NewStringUTF(recipientsString);
-    jstring jTitleString = gFrictionlessRequestDialog.env->NewStringUTF(titleString);
-    jstring jMessageString = gFrictionlessRequestDialog.env->NewStringUTF(messageString);
+    jstring jRecipientsString = gFrictionlessRequestDialog.getEnv()->NewStringUTF(recipientsString);
+    jstring jTitleString = gFrictionlessRequestDialog.getEnv()->NewStringUTF(titleString);
+    jstring jMessageString = gFrictionlessRequestDialog.getEnv()->NewStringUTF(messageString);
     
-    gFrictionlessRequestDialog.env->CallStaticVoidMethod(gFrictionlessRequestDialog.classID, 
+    gFrictionlessRequestDialog.getEnv()->CallStaticVoidMethod(gFrictionlessRequestDialog.classID, 
                                                             gFrictionlessRequestDialog.methodID, 
                                                             jRecipientsString, 
                                                             jTitleString, 
                                                             jMessageString);
-    gFrictionlessRequestDialog.env->DeleteLocalRef(jRecipientsString);
-    gFrictionlessRequestDialog.env->DeleteLocalRef(jTitleString);
-    gFrictionlessRequestDialog.env->DeleteLocalRef(jMessageString);
+    gFrictionlessRequestDialog.getEnv()->DeleteLocalRef(jRecipientsString);
+    gFrictionlessRequestDialog.getEnv()->DeleteLocalRef(jTitleString);
+    gFrictionlessRequestDialog.getEnv()->DeleteLocalRef(jMessageString);
 }
 
 
 const char* platform_getAccessToken()
 {
-    jstring result = (jstring)gGetAccessToken.env->CallStaticObjectMethod(gGetAccessToken.classID, 
+    jstring result = (jstring)gGetAccessToken.getEnv()->CallStaticObjectMethod(gGetAccessToken.classID, 
                                                                             gGetAccessToken.methodID);
     
     cocos2d::CCString *accessToken = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
     accessToken->autorelease();
-    gGetAccessToken.env->DeleteLocalRef(result);
+    gGetAccessToken.getEnv()->DeleteLocalRef(result);
     return accessToken->m_sString.c_str();
 }
 
 
 void platform_closeAndClearTokenInformation()
 {       
-    gCloseTokenInfo.env->CallStaticVoidMethod(gCloseTokenInfo.classID, gCloseTokenInfo.methodID);
+    gCloseTokenInfo.getEnv()->CallStaticVoidMethod(gCloseTokenInfo.classID, gCloseTokenInfo.methodID);
 }
 
 
 const char* platform_getExpirationDate(const char* dateFormat)
 {
-    jstring jdateFormatString   = gGetExpirationDate.env->NewStringUTF(dateFormat);
+    jstring jdateFormatString   = gGetExpirationDate.getEnv()->NewStringUTF(dateFormat);
 
-    jstring result = (jstring)gGetExpirationDate.env->CallStaticObjectMethod(gGetExpirationDate.classID, 
+    jstring result = (jstring)gGetExpirationDate.getEnv()->CallStaticObjectMethod(gGetExpirationDate.classID, 
                                                                                 gGetExpirationDate.methodID,
                                                                                 jdateFormatString);
 
     cocos2d::CCString *expirationDate = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
     expirationDate->autorelease();
-    gGetExpirationDate.env->DeleteLocalRef(result);
+    gGetExpirationDate.getEnv()->DeleteLocalRef(result);
     return expirationDate->m_sString.c_str();
 }
 
 bool platform_isPermissionGranted(const char* permission)
 {
-    jstring jPermission = gIsPermissionGranted.env->NewStringUTF(permission);
-    jboolean result = gIsPermissionGranted.env->CallStaticBooleanMethod(gIsPermissionGranted.classID, 
+    jstring jPermission = gIsPermissionGranted.getEnv()->NewStringUTF(permission);
+    jboolean result = gIsPermissionGranted.getEnv()->CallStaticBooleanMethod(gIsPermissionGranted.classID, 
                                                                                 gIsPermissionGranted.methodID, 
                                                                                 jPermission);
-    gIsPermissionGranted.env->DeleteLocalRef(jPermission);
+    gIsPermissionGranted.getEnv()->DeleteLocalRef(jPermission);
     return result;    
 }
 
