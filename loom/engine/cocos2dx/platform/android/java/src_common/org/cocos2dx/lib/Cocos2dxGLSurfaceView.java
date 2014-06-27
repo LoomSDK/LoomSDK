@@ -42,7 +42,7 @@ import android.widget.TextView.OnEditorActionListener;
 class TextInputWrapper implements TextWatcher, OnEditorActionListener 
 {
 	
-	private static final Boolean debug = true;
+	private static final Boolean debug = false;
 	private void LogD(String msg) {
 		if (debug) Log.d("TextInputWrapper", msg);
 	}
@@ -54,7 +54,7 @@ class TextInputWrapper implements TextWatcher, OnEditorActionListener
 	private Boolean isFullScreenEdit() 
 	{
 		InputMethodManager imm = (InputMethodManager)mMainView.getTextField().getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-		return false; // Let's assume it is never so.
+		return false; // Let's assume it is never so, as some devices (HTC One) are reporting true inaccurately.
 		//return imm.isFullscreenMode();
 	}
 
