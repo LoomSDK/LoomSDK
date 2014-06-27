@@ -80,11 +80,11 @@ void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback ca
         utHashedString key   = headersIterator.peekNextKey();
         utString       value = headersIterator.peekNextValue();
 
-        jstring headerKey   = addHeaderMethodInfo.env->NewStringUTF(key.str().c_str());
-        jstring headerValue = addHeaderMethodInfo.env->NewStringUTF(value.c_str());
-        addHeaderMethodInfo.env->CallStaticVoidMethod(addHeaderMethodInfo.classID, addHeaderMethodInfo.methodID, headerKey, headerValue);
-        addHeaderMethodInfo.env->DeleteLocalRef(headerKey);
-        addHeaderMethodInfo.env->DeleteLocalRef(headerValue);
+        jstring headerKey   = addHeaderMethodInfo.getEnv()->NewStringUTF(key.str().c_str());
+        jstring headerValue = addHeaderMethodInfo.getEnv()->NewStringUTF(value.c_str());
+        addHeaderMethodInfo.getEnv()->CallStaticVoidMethod(addHeaderMethodInfo.classID, addHeaderMethodInfo.methodID, headerKey, headerValue);
+        addHeaderMethodInfo.getEnv()->DeleteLocalRef(headerKey);
+        addHeaderMethodInfo.getEnv()->DeleteLocalRef(headerValue);
 
         headersIterator.next();
     }
@@ -97,18 +97,18 @@ void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback ca
                                  "(Ljava/lang/String;Ljava/lang/String;JJ[BLjava/lang/String;ZZ)V");
 
     // pass in the URL and pointers
-    jstring reqURL    = sendMethodInfo.env->NewStringUTF(url);
-    jstring reqMethod = sendMethodInfo.env->NewStringUTF(method);
+    jstring reqURL    = sendMethodInfo.getEnv()->NewStringUTF(url);
+    jstring reqMethod = sendMethodInfo.getEnv()->NewStringUTF(method);
 
-    jbyteArray reqBody = sendMethodInfo.env->NewByteArray(bodyLength);
-    sendMethodInfo.env->SetByteArrayRegion(reqBody, 0, bodyLength, (jbyte *)body);
+    jbyteArray reqBody = sendMethodInfo.getEnv()->NewByteArray(bodyLength);
+    sendMethodInfo.getEnv()->SetByteArrayRegion(reqBody, 0, bodyLength, (jbyte *)body);
 
-    jstring reqResponseCacheFile = sendMethodInfo.env->NewStringUTF(responseCacheFile);
-    sendMethodInfo.env->CallStaticVoidMethod(sendMethodInfo.classID, sendMethodInfo.methodID, reqURL, reqMethod, (jlong)callback, (jlong)payload, reqBody, reqResponseCacheFile, (jboolean)base64EncodeResponseData, (jboolean)followRedirects);
-    sendMethodInfo.env->DeleteLocalRef(reqURL);
-    sendMethodInfo.env->DeleteLocalRef(reqMethod);
-    sendMethodInfo.env->DeleteLocalRef(reqBody);
-    sendMethodInfo.env->DeleteLocalRef(reqResponseCacheFile);
+    jstring reqResponseCacheFile = sendMethodInfo.getEnv()->NewStringUTF(responseCacheFile);
+    sendMethodInfo.getEnv()->CallStaticVoidMethod(sendMethodInfo.classID, sendMethodInfo.methodID, reqURL, reqMethod, (jlong)callback, (jlong)payload, reqBody, reqResponseCacheFile, (jboolean)base64EncodeResponseData, (jboolean)followRedirects);
+    sendMethodInfo.getEnv()->DeleteLocalRef(reqURL);
+    sendMethodInfo.getEnv()->DeleteLocalRef(reqMethod);
+    sendMethodInfo.getEnv()->DeleteLocalRef(reqBody);
+    sendMethodInfo.getEnv()->DeleteLocalRef(reqResponseCacheFile);
 }
 
 
@@ -119,7 +119,7 @@ bool platform_HTTPIsConnected()
                                  "co/theengine/loomdemo/LoomHTTP",
                                  "isConnected",
                                  "()Z");
-    jboolean result = isConnectedMethodInfo.env->CallStaticBooleanMethod(isConnectedMethodInfo.classID, isConnectedMethodInfo.methodID);
+    jboolean result = isConnectedMethodInfo.getEnv()->CallStaticBooleanMethod(isConnectedMethodInfo.classID, isConnectedMethodInfo.methodID);
 
     return (bool)result;
 }

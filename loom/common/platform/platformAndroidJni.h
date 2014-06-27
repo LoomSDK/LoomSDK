@@ -35,7 +35,8 @@
 
 typedef struct loomJniMethodInfo_
 {
-    JNIEnv    *env;
+    JNIEnv *getEnv();
+
     jclass    classID;
     jmethodID methodID;
 } loomJniMethodInfo;

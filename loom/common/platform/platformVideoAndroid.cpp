@@ -131,9 +131,9 @@ void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlM
 
     ///call java method to play the video
     lmLog(gAndroidVideoLogGroup, "videoPlayFullscreen: '%s' became '%s'", video, newVideoName);
-    jstring jVideo    = gPlayVideoFullscreen.env->NewStringUTF(newVideoName);
-    gPlayVideoFullscreen.env->CallStaticVoidMethod(gPlayVideoFullscreen.classID, gPlayVideoFullscreen.methodID, jVideo, scaleMode, controlMode, bgColor);
-    gPlayVideoFullscreen.env->DeleteLocalRef(jVideo);
+    jstring jVideo    = gPlayVideoFullscreen.getEnv()->NewStringUTF(newVideoName);
+    gPlayVideoFullscreen.getEnv()->CallStaticVoidMethod(gPlayVideoFullscreen.classID, gPlayVideoFullscreen.methodID, jVideo, scaleMode, controlMode, bgColor);
+    gPlayVideoFullscreen.getEnv()->DeleteLocalRef(jVideo);
     delete []newVideoName;
 }
 #endif

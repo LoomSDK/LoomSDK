@@ -431,11 +431,11 @@ void LoomApplication::fireGenericEvent(const char *type, const char *payload)
         initialized = true;
     }
 
-    jstring jType    = eventCallback.env->NewStringUTF(type);
-    jstring jPayload = eventCallback.env->NewStringUTF(payload);
-    eventCallback.env->CallStaticVoidMethod(eventCallback.classID, eventCallback.methodID, jType, jPayload);
-    eventCallback.env->DeleteLocalRef(jType);
-    eventCallback.env->DeleteLocalRef(jPayload);
+    jstring jType    = eventCallback.getEnv()->NewStringUTF(type);
+    jstring jPayload = eventCallback.getEnv()->NewStringUTF(payload);
+    eventCallback.getEnv()->CallStaticVoidMethod(eventCallback.classID, eventCallback.methodID, jType, jPayload);
+    eventCallback.getEnv()->DeleteLocalRef(jType);
+    eventCallback.getEnv()->DeleteLocalRef(jPayload);
 #endif
 }
 

@@ -32,7 +32,8 @@ NS_CC_BEGIN
 
 typedef struct JniMethodInfo_
 {
-    JNIEnv    *env;
+    JNIEnv *getEnv();
+
     jclass    classID;
     jmethodID methodID;
 } JniMethodInfo;

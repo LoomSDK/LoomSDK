@@ -176,48 +176,48 @@ loom_webView platform_webViewCreate(loom_webViewCallback callback, void *payload
 {
     android_webViewEnsureInitialized();
 
-    jint handle = gCreateMethodInfo.env->CallStaticIntMethod(gCreateMethodInfo.classID, gCreateMethodInfo.methodID, (jlong)callback, (jlong)payload);
+    jint handle = gCreateMethodInfo.getEnv()->CallStaticIntMethod(gCreateMethodInfo.classID, gCreateMethodInfo.methodID, (jlong)callback, (jlong)payload);
     return (int)handle;
 }
 
 
 void platform_webViewDestroy(loom_webView handle)
 {
-    gDestroyMethodInfo.env->CallStaticVoidMethod(gDestroyMethodInfo.classID, gDestroyMethodInfo.methodID, (jint)handle);
+    gDestroyMethodInfo.getEnv()->CallStaticVoidMethod(gDestroyMethodInfo.classID, gDestroyMethodInfo.methodID, (jint)handle);
 }
 
 
 void platform_webViewDestroyAll()
 {
     android_webViewEnsureInitialized();
-    gDestroyAllMethodInfo.env->CallStaticVoidMethod(gDestroyAllMethodInfo.classID, gDestroyAllMethodInfo.methodID);
+    gDestroyAllMethodInfo.getEnv()->CallStaticVoidMethod(gDestroyAllMethodInfo.classID, gDestroyAllMethodInfo.methodID);
 }
 
 
 void platform_webViewShow(loom_webView handle)
 {
-    gShowMethodInfo.env->CallStaticVoidMethod(gShowMethodInfo.classID, gShowMethodInfo.methodID, (jint)handle);
+    gShowMethodInfo.getEnv()->CallStaticVoidMethod(gShowMethodInfo.classID, gShowMethodInfo.methodID, (jint)handle);
 }
 
 
 void platform_webViewHide(loom_webView handle)
 {
-    gHideMethodInfo.env->CallStaticVoidMethod(gHideMethodInfo.classID, gHideMethodInfo.methodID, (jint)handle);
+    gHideMethodInfo.getEnv()->CallStaticVoidMethod(gHideMethodInfo.classID, gHideMethodInfo.methodID, (jint)handle);
 }
 
 
 void platform_webViewRequest(loom_webView handle, const char *url)
 {
-    jstring urlString = gRequestMethodInfo.env->NewStringUTF(url);
+    jstring urlString = gRequestMethodInfo.getEnv()->NewStringUTF(url);
 
-    gRequestMethodInfo.env->CallStaticVoidMethod(gRequestMethodInfo.classID, gRequestMethodInfo.methodID, (jint)handle, urlString);
-    gRequestMethodInfo.env->DeleteLocalRef(urlString);
+    gRequestMethodInfo.getEnv()->CallStaticVoidMethod(gRequestMethodInfo.classID, gRequestMethodInfo.methodID, (jint)handle, urlString);
+    gRequestMethodInfo.getEnv()->DeleteLocalRef(urlString);
 }
 
 
 bool platform_webViewGoBack(loom_webView handle)
 {
-    jboolean result = gGoBackMethodInfo.env->CallStaticBooleanMethod(gGoBackMethodInfo.classID, gGoBackMethodInfo.methodID, (jint)handle);
+    jboolean result = gGoBackMethodInfo.getEnv()->CallStaticBooleanMethod(gGoBackMethodInfo.classID, gGoBackMethodInfo.methodID, (jint)handle);
 
     return (bool)result;
 }
@@ -225,7 +225,7 @@ bool platform_webViewGoBack(loom_webView handle)
 
 bool platform_webViewGoForward(loom_webView handle)
 {
-    jboolean result = gGoForwardMethodInfo.env->CallStaticBooleanMethod(gGoForwardMethodInfo.classID, gGoForwardMethodInfo.methodID, (jint)handle);
+    jboolean result = gGoForwardMethodInfo.getEnv()->CallStaticBooleanMethod(gGoForwardMethodInfo.classID, gGoForwardMethodInfo.methodID, (jint)handle);
 
     return (bool)result;
 }
@@ -233,7 +233,7 @@ bool platform_webViewGoForward(loom_webView handle)
 
 bool platform_webViewCanGoBack(loom_webView handle)
 {
-    jboolean result = gCanGoBackMethodInfo.env->CallStaticBooleanMethod(gCanGoBackMethodInfo.classID, gCanGoBackMethodInfo.methodID, (jint)handle);
+    jboolean result = gCanGoBackMethodInfo.getEnv()->CallStaticBooleanMethod(gCanGoBackMethodInfo.classID, gCanGoBackMethodInfo.methodID, (jint)handle);
 
     return (bool)result;
 }
@@ -241,7 +241,7 @@ bool platform_webViewCanGoBack(loom_webView handle)
 
 bool platform_webViewCanGoForward(loom_webView handle)
 {
-    jboolean result = gCanGoForwardMethodInfo.env->CallStaticBooleanMethod(gCanGoForwardMethodInfo.classID, gCanGoForwardMethodInfo.methodID, (jint)handle);
+    jboolean result = gCanGoForwardMethodInfo.getEnv()->CallStaticBooleanMethod(gCanGoForwardMethodInfo.classID, gCanGoForwardMethodInfo.methodID, (jint)handle);
 
     return (bool)result;
 }
@@ -249,13 +249,13 @@ bool platform_webViewCanGoForward(loom_webView handle)
 
 void platform_webViewSetDimensions(loom_webView handle, float x, float y, float width, float height)
 {
-    gSetDimensionsMethodInfo.env->CallStaticVoidMethod(gSetDimensionsMethodInfo.classID, gSetDimensionsMethodInfo.methodID, (jint)handle, (jint)x, (jint)y, (jint)width, (jint)height);
+    gSetDimensionsMethodInfo.getEnv()->CallStaticVoidMethod(gSetDimensionsMethodInfo.classID, gSetDimensionsMethodInfo.methodID, (jint)handle, (jint)x, (jint)y, (jint)width, (jint)height);
 }
 
 
 float platform_webViewGetX(loom_webView handle)
 {
-    jint result = gGetXMethodInfo.env->CallStaticFloatMethod(gGetXMethodInfo.classID, gGetXMethodInfo.methodID, (jint)handle);
+    jint result = gGetXMethodInfo.getEnv()->CallStaticFloatMethod(gGetXMethodInfo.classID, gGetXMethodInfo.methodID, (jint)handle);
 
     return (float)result;
 }
@@ -263,13 +263,13 @@ float platform_webViewGetX(loom_webView handle)
 
 void platform_webViewSetX(loom_webView handle, float x)
 {
-    gSetXMethodInfo.env->CallStaticVoidMethod(gSetXMethodInfo.classID, gSetXMethodInfo.methodID, (jint)handle, (jint)x);
+    gSetXMethodInfo.getEnv()->CallStaticVoidMethod(gSetXMethodInfo.classID, gSetXMethodInfo.methodID, (jint)handle, (jint)x);
 }
 
 
 float platform_webViewGetY(loom_webView handle)
 {
-    jint result = gGetYMethodInfo.env->CallStaticFloatMethod(gGetYMethodInfo.classID, gGetYMethodInfo.methodID, (jint)handle);
+    jint result = gGetYMethodInfo.getEnv()->CallStaticFloatMethod(gGetYMethodInfo.classID, gGetYMethodInfo.methodID, (jint)handle);
 
     return (float)result;
 }
@@ -277,13 +277,13 @@ float platform_webViewGetY(loom_webView handle)
 
 void platform_webViewSetY(loom_webView handle, float y)
 {
-    gSetYMethodInfo.env->CallStaticVoidMethod(gSetYMethodInfo.classID, gSetYMethodInfo.methodID, (jint)handle, (jint)y);
+    gSetYMethodInfo.getEnv()->CallStaticVoidMethod(gSetYMethodInfo.classID, gSetYMethodInfo.methodID, (jint)handle, (jint)y);
 }
 
 
 float platform_webViewGetWidth(loom_webView handle)
 {
-    jint result = gGetWidthMethodInfo.env->CallStaticFloatMethod(gGetWidthMethodInfo.classID, gGetWidthMethodInfo.methodID, (jint)handle);
+    jint result = gGetWidthMethodInfo.getEnv()->CallStaticFloatMethod(gGetWidthMethodInfo.classID, gGetWidthMethodInfo.methodID, (jint)handle);
 
     return (float)result;
 }
@@ -291,13 +291,13 @@ float platform_webViewGetWidth(loom_webView handle)
 
 void platform_webViewSetWidth(loom_webView handle, float width)
 {
-    gSetWidthMethodInfo.env->CallStaticVoidMethod(gSetWidthMethodInfo.classID, gSetWidthMethodInfo.methodID, (jint)handle, (jint)width);
+    gSetWidthMethodInfo.getEnv()->CallStaticVoidMethod(gSetWidthMethodInfo.classID, gSetWidthMethodInfo.methodID, (jint)handle, (jint)width);
 }
 
 
 float platform_webViewGetHeight(loom_webView handle)
 {
-    jint result = gGetHeightMethodInfo.env->CallStaticFloatMethod(gGetHeightMethodInfo.classID, gGetHeightMethodInfo.methodID, (jint)handle);
+    jint result = gGetHeightMethodInfo.getEnv()->CallStaticFloatMethod(gGetHeightMethodInfo.classID, gGetHeightMethodInfo.methodID, (jint)handle);
 
     return (float)result;
 }
@@ -305,6 +305,6 @@ float platform_webViewGetHeight(loom_webView handle)
 
 void platform_webViewSetHeight(loom_webView handle, float height)
 {
-    gSetHeightMethodInfo.env->CallStaticVoidMethod(gSetHeightMethodInfo.classID, gSetHeightMethodInfo.methodID, (jint)handle, (jint)height);
+    gSetHeightMethodInfo.getEnv()->CallStaticVoidMethod(gSetHeightMethodInfo.classID, gSetHeightMethodInfo.methodID, (jint)handle, (jint)height);
 }
 #endif
