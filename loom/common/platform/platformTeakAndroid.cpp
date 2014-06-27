@@ -97,38 +97,38 @@ void platform_teakInitialize(AuthStatusCallback authStatusCB)
 
 bool platform_isTeakActive()
 {
-    return gIsActive.env->CallStaticBooleanMethod(gIsActive.classID, gIsActive.methodID);
+    return gIsActive.getEnv()->CallStaticBooleanMethod(gIsActive.classID, gIsActive.methodID);
 }
 
 void platform_setAccessToken(const char *fbAccessToken)
 {
-    jstring jAccessToken = gSetAccessToken.env->NewStringUTF(fbAccessToken);
-    gSetAccessToken.env->CallStaticVoidMethod(gSetAccessToken.classID, 
+    jstring jAccessToken = gSetAccessToken.getEnv()->NewStringUTF(fbAccessToken);
+    gSetAccessToken.getEnv()->CallStaticVoidMethod(gSetAccessToken.classID, 
                                                 gSetAccessToken.methodID, 
                                                 jAccessToken);
-    gSetAccessToken.env->DeleteLocalRef(jAccessToken);
+    gSetAccessToken.getEnv()->DeleteLocalRef(jAccessToken);
 }
 
 int platform_getStatus()
 {
-    jint status = gGetStatus.env->CallStaticIntMethod(gGetStatus.classID, 
+    jint status = gGetStatus.getEnv()->CallStaticIntMethod(gGetStatus.classID, 
                                                                 gGetStatus.methodID);
     return (int)status;
 }
 
 bool platform_postAchievement(const char* achievementId)
 {
-    jstring jAchievementId = gPostAchievement.env->NewStringUTF(achievementId);
-    jboolean result = gPostAchievement.env->CallStaticBooleanMethod(gPostAchievement.classID, 
+    jstring jAchievementId = gPostAchievement.getEnv()->NewStringUTF(achievementId);
+    jboolean result = gPostAchievement.getEnv()->CallStaticBooleanMethod(gPostAchievement.classID, 
                                                                     gPostAchievement.methodID, 
                                                                     jAchievementId);
-    gPostAchievement.env->DeleteLocalRef(jAchievementId);
+    gPostAchievement.getEnv()->DeleteLocalRef(jAchievementId);
     return result;
 }
 
 bool platform_postHighScore(int score)
 {
-    jboolean result = gPostHighScore.env->CallStaticBooleanMethod(gPostHighScore.classID, 
+    jboolean result = gPostHighScore.getEnv()->CallStaticBooleanMethod(gPostHighScore.classID, 
                                                                     gPostHighScore.methodID, 
                                                                     score);
     return result;
@@ -136,14 +136,14 @@ bool platform_postHighScore(int score)
 
 bool platform_postAction(const char* actionId, const char* objectInstanceId)
 {
-    jstring jActionId = gPostAction.env->NewStringUTF(actionId);
-    jstring jObjectInstanceId = gPostAction.env->NewStringUTF(objectInstanceId);
-    jboolean result = gPostAction.env->CallStaticBooleanMethod(gPostAction.classID, 
+    jstring jActionId = gPostAction.getEnv()->NewStringUTF(actionId);
+    jstring jObjectInstanceId = gPostAction.getEnv()->NewStringUTF(objectInstanceId);
+    jboolean result = gPostAction.getEnv()->CallStaticBooleanMethod(gPostAction.classID, 
                                                                 gPostAction.methodID, 
                                                                 jActionId, 
                                                                 jObjectInstanceId);
-    gPostAction.env->DeleteLocalRef(jActionId);
-    gPostAction.env->DeleteLocalRef(jObjectInstanceId);
+    gPostAction.getEnv()->DeleteLocalRef(jActionId);
+    gPostAction.getEnv()->DeleteLocalRef(jObjectInstanceId);
     return result;
 }
 
