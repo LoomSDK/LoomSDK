@@ -239,6 +239,7 @@ void platform_facebookInitialize(SessionStatusCallback sessionStatusCB, Friction
         if(session.state == FBSessionStateCreatedTokenLoaded)
         {
             lmLog(giOSFacebookLogGroup, "FBSession already has TokenLoaded at application startup: automatically opening the session.");
+            //NOTE: FBSessionLoginBehaviorForcingWebView will open up an in-app WebView login in desired instead
             [session openWithBehavior:FBSessionLoginBehaviorUseSystemAccountIfPresent
                      completionHandler:^(FBSession *session, FBSessionState status, NSError *error)
                      {
@@ -273,6 +274,7 @@ bool platform_openSessionWithReadPermissions(const char* permissionsString)
             [FBSession setActiveSession: session];
             
             //open up new session with login dialog if necessary
+            //NOTE: FBSessionLoginBehaviorForcingWebView will open up an in-app WebView login in desired instead
             [session openWithBehavior:FBSessionLoginBehaviorUseSystemAccountIfPresent
                      completionHandler:^(FBSession *session, FBSessionState status, NSError *error)
                      {
