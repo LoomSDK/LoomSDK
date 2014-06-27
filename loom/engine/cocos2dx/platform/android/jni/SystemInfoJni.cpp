@@ -50,11 +50,11 @@ const char *getPackageNameJNI()
                                        "getCocos2dxPackageName",
                                        "()Ljava/lang/String;"))
     {
-        jstring str = (jstring)t.env->CallStaticObjectMethod(t.classID, t.methodID);
-        t.env->DeleteLocalRef(t.classID);
+        jstring str = (jstring)t.getEnv()->CallStaticObjectMethod(t.classID, t.methodID);
+        t.getEnv()->DeleteLocalRef(t.classID);
         CCString *ret = new CCString(JniHelper::jstring2string(str).c_str());
         ret->autorelease();
-        t.env->DeleteLocalRef(str);
+        t.getEnv()->DeleteLocalRef(str);
 
         LOGD("package name %s", ret->m_sString.c_str());
 
@@ -77,11 +77,11 @@ const char *getCurrentLanguageJNI()
                                        , "getCurrentLanguage"
                                        , "()Ljava/lang/String;"))
     {
-        jstring str = (jstring)t.env->CallStaticObjectMethod(t.classID, t.methodID);
-        t.env->DeleteLocalRef(t.classID);
+        jstring str = (jstring)t.getEnv()->CallStaticObjectMethod(t.classID, t.methodID);
+        t.getEnv()->DeleteLocalRef(t.classID);
         CCString *ret = new CCString(JniHelper::jstring2string(str).c_str());
         ret->autorelease();
-        t.env->DeleteLocalRef(str);
+        t.getEnv()->DeleteLocalRef(str);
 
         LOGD("language name %s", ret.c_str());
 
@@ -101,8 +101,8 @@ display_profile display_getProfile()
                                        , "getProfile"
                                        , "()I"))
     {
-        jint p = (jint)t.env->CallStaticIntMethod(t.classID, t.methodID);
-        t.env->DeleteLocalRef(t.classID);
+        jint p = (jint)t.getEnv()->CallStaticIntMethod(t.classID, t.methodID);
+        t.getEnv()->DeleteLocalRef(t.classID);
 
         switch (p)
         {
@@ -131,8 +131,8 @@ float display_getDPI()
                                        , "getDPI"
                                        , "()F"))
     {
-        jfloat p = (jint)t.env->CallStaticFloatMethod(t.classID, t.methodID);
-        t.env->DeleteLocalRef(t.classID);
+        jfloat p = (jint)t.getEnv()->CallStaticFloatMethod(t.classID, t.methodID);
+        t.getEnv()->DeleteLocalRef(t.classID);
         return p;
     }
 

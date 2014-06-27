@@ -132,7 +132,7 @@ static OSStatus ca_capture_callback(void *inRefCon, AudioUnitRenderActionFlags *
     err = AudioUnitRender(data->audioUnit, &flags, inTimeStamp, 1, inNumberFrames, data->bufferList);
     if(err != noErr)
     {
-        ERR("AudioUnitRender error: %d\n", err);
+        ERR("AudioUnitRender error: %d\n", (int)err);
         return err;
     }
 
@@ -728,7 +728,7 @@ static ALCenum ca_capture_samples(ALCdevice *device, ALCvoid *buffer, ALCuint sa
                                           device, &frameCount, list, NULL);
     if(err != noErr)
     {
-        ERR("AudioConverterFillComplexBuffer error: %d\n", err);
+        ERR("AudioConverterFillComplexBuffer error: %d\n", (int)err);
         return ALC_INVALID_VALUE;
     }
     return ALC_NO_ERROR;
