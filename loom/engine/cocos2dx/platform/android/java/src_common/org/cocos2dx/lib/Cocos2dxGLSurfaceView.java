@@ -42,9 +42,9 @@ import android.widget.TextView.OnEditorActionListener;
 class TextInputWrapper implements TextWatcher, OnEditorActionListener 
 {
 	
-	private static final Boolean debug = false;
+	private static final Boolean debug = true;
 	private void LogD(String msg) {
-		if (debug) Log.d("TextInputFilter", msg);
+		if (debug) Log.d("TextInputWrapper", msg);
 	}
 	
 	private Cocos2dxGLSurfaceView mMainView;
@@ -54,20 +54,26 @@ class TextInputWrapper implements TextWatcher, OnEditorActionListener
 	private Boolean isFullScreenEdit() 
 	{
 		InputMethodManager imm = (InputMethodManager)mMainView.getTextField().getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-		return imm.isFullscreenMode();
+		return false; // Let's assume it is never so.
+		//return imm.isFullscreenMode();
 	}
 
-	public TextInputWrapper(Cocos2dxGLSurfaceView view) {
+	public TextInputWrapper(Cocos2dxGLSurfaceView view) 
+	{
 		mMainView = view;
 	}
 	
-	public void setOriginText(String text) {
+	public void setOriginText(String text) 
+	{
 		mOriginText = text;
 	}
 	
 	@Override
-	public void afterTextChanged(Editable s) {
-		if (isFullScreenEdit()) {
+	public void afterTextChanged(Editable s) 
+	{
+		if (isFullScreenEdit())
+		{
+			LogD("Ignoring text change due to isFullScreenEdit");
 			return;
 		}
 		
@@ -88,8 +94,8 @@ class TextInputWrapper implements TextWatcher, OnEditorActionListener
 	}
 
 	@Override
-	public void beforeTextChanged(CharSequence s, int start, int count,
-			int after) {
+	public void beforeTextChanged(CharSequence s, int start, int count, int after) 
+	{
 		LogD("beforeTextChanged(" + s + ")start: " + start + ",count: " + count + ",after: " + after);
 		mText = s.toString();
 	}
@@ -99,10 +105,13 @@ class TextInputWrapper implements TextWatcher, OnEditorActionListener
 	}
 
 	@Override
-	public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-		if (mMainView.getTextField() == v && isFullScreenEdit()) {
+	public boolean onEditorAction(TextView v, int actionId, KeyEvent event) 
+	{
+		if (mMainView.getTextField() == v && isFullScreenEdit()) 
+		{
 			// user press the action button, delete all old text and insert new text
-			for (int i = mOriginText.length(); i > 0; --i) {
+			for (int i = mOriginText.length(); i > 0; --i) 
+			{
 				mMainView.deleteBackward();
 				LogD("deleteBackward");
 			}
