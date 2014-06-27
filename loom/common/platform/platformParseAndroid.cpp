@@ -68,13 +68,13 @@ void platform_parseInitialize()
 ///checks if the Parse service is active for use
 bool platform_isParseActive()
 {
-    return gIsActive.env->CallStaticBooleanMethod(gIsActive.classID, gIsActive.methodID);
+    return gIsActive.getEnv()->CallStaticBooleanMethod(gIsActive.classID, gIsActive.methodID);
 }
 
 ///gets Parse installation ID
 const char* platform_getInstallationID()
 {       
-    jstring result = (jstring)gGetInstallationID.env->CallStaticObjectMethod(gGetInstallationID.classID, gGetInstallationID.methodID);
+    jstring result = (jstring)gGetInstallationID.getEnv()->CallStaticObjectMethod(gGetInstallationID.classID, gGetInstallationID.methodID);
     if(result == NULL)
     {
         return "";
@@ -83,7 +83,7 @@ const char* platform_getInstallationID()
     ///convert jstring result into const char* for us to return
     cocos2d::CCString *installID = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
     installID->autorelease();
-    gGetInstallationID.env->DeleteLocalRef(result);
+    gGetInstallationID.getEnv()->DeleteLocalRef(result);
     return installID->m_sString.c_str();
 }
 
@@ -91,7 +91,7 @@ const char* platform_getInstallationID()
 ///gets Parse installation object's objectId
 const char* platform_getInstallationObjectID()
 {       
-    jstring result = (jstring)gGetInstallationObjectID.env->CallStaticObjectMethod(gGetInstallationObjectID.classID, gGetInstallationObjectID.methodID);
+    jstring result = (jstring)gGetInstallationObjectID.getEnv()->CallStaticObjectMethod(gGetInstallationObjectID.classID, gGetInstallationObjectID.methodID);
     if(result == NULL)
     {
         return "";
@@ -100,15 +100,15 @@ const char* platform_getInstallationObjectID()
     ///convert jstring result into const char* for us to return
     cocos2d::CCString *installID = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
     installID->autorelease();
-    gGetInstallationObjectID.env->DeleteLocalRef(result);
+    gGetInstallationObjectID.getEnv()->DeleteLocalRef(result);
     return installID->m_sString.c_str();
 }
 
 bool platform_updateInstallationUserID(const char* userId)
 {
-    jstring jUserID = gUpdateInstallationUserID.env->NewStringUTF(userId);
-	jboolean result = gUpdateInstallationUserID.env->CallStaticBooleanMethod(gUpdateInstallationUserID.classID, gUpdateInstallationUserID.methodID, jUserID);
-    gUpdateInstallationUserID.env->DeleteLocalRef(jUserID);
+    jstring jUserID = gUpdateInstallationUserID.getEnv()->NewStringUTF(userId);
+	jboolean result = gUpdateInstallationUserID.getEnv()->CallStaticBooleanMethod(gUpdateInstallationUserID.classID, gUpdateInstallationUserID.methodID, jUserID);
+    gUpdateInstallationUserID.getEnv()->DeleteLocalRef(jUserID);
     return (bool)result;
 }
 #endif
