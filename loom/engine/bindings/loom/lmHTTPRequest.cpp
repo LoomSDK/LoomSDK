@@ -28,19 +28,22 @@ using namespace LS;
 class HTTPRequest {
 public:
 
-    const char  *method;
-    const char  *body;
-    const char  *url;
-    const char  *responseCacheFile;
+    utString method;
+    utString body;
+    utString url;
+    utString responseCacheFile;
+
     utByteArray *bodyBytes;
+
     bool        base64EncodeResponseData;
     bool        followRedirects;
+
     utHashTable<utHashedString, utString> header;
 
     LOOM_DELEGATE(OnSuccess);
     LOOM_DELEGATE(OnFailure);
 
-    HTTPRequest(const char *urlString, const char *contentType) : method("GET"), body(""), responseCacheFile(NULL), bodyBytes(NULL)
+    HTTPRequest(const char *urlString, const char *contentType) : method("GET"), body(""), responseCacheFile(""), bodyBytes(NULL)
     {
         url = urlString;
         base64EncodeResponseData = false;
@@ -77,9 +80,9 @@ public:
 
     void send()
     {
-        if (url == NULL)
+        if (url == "")
         {
-            _OnFailureDelegate.pushArgument("Error: URL is null");
+            _OnFailureDelegate.pushArgument("Error: Empty URL");
             _OnFailureDelegate.invoke();
         }
         else
@@ -87,16 +90,16 @@ public:
             if (bodyBytes != NULL)
             {
                 // Send with body as byte array.
-                platform_HTTPSend(url, method, &HTTPRequest::respond, (void *)this,
+                platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
                                   (const char *)bodyBytes->getInternalArray()->ptr(), bodyBytes->getSize(), header,
-                                  responseCacheFile, base64EncodeResponseData, followRedirects);
+                                  (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
             }
             else
             {
                 // Send with body as string.
-                platform_HTTPSend(url, method, &HTTPRequest::respond, (void *)this,
-                                  (const char *)body, strlen(body), header,
-                                  responseCacheFile, base64EncodeResponseData, followRedirects);
+                platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
+                                  (const char *)body.c_str(), body.length(), header,
+                                  (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
             }
         }
     }
