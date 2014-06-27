@@ -52,7 +52,7 @@ void CCApplication::setAnimationInterval(double interval)
     }
     else
     {
-        methodInfo.env->CallStaticVoidMethod(methodInfo.classID, methodInfo.methodID, interval);
+        methodInfo.getEnv()->CallStaticVoidMethod(methodInfo.classID, methodInfo.methodID, interval);
     }
 }
 

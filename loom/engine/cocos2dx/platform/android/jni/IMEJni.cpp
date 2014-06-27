@@ -53,8 +53,8 @@ void setKeyboardStateJNI(int bOpen, int type)
                                        (bOpen) ? "openIMEKeyboard" : "closeIMEKeyboard",
                                        "(I)V"))
     {
-        t.env->CallStaticVoidMethod(t.classID, t.methodID, type);
-        t.env->DeleteLocalRef(t.classID);
+        t.getEnv()->CallStaticVoidMethod(t.classID, t.methodID, type);
+        t.getEnv()->DeleteLocalRef(t.classID);
     }
 }
 

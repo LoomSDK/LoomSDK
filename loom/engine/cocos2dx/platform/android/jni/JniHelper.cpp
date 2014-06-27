@@ -69,7 +69,6 @@ static bool getEnv(JNIEnv **env)
     return bRet;
 }
 
-
 static jclass getClassID_(const char *className, JNIEnv *env)
 {
     JNIEnv *pEnv = env;
@@ -120,7 +119,6 @@ static bool getStaticMethodInfo_(cocos2d::JniMethodInfo& methodinfo, const char 
         }
 
         methodinfo.classID  = classID;
-        methodinfo.env      = pEnv;
         methodinfo.methodID = methodID;
 
         bRet = true;
@@ -153,7 +151,6 @@ static bool getMethodInfo_(cocos2d::JniMethodInfo& methodinfo, const char *class
         }
 
         methodinfo.classID  = classID;
-        methodinfo.env      = pEnv;
         methodinfo.methodID = methodID;
 
         bRet = true;
@@ -186,6 +183,13 @@ static string jstring2string_(jstring jstr)
 }
 
 NS_CC_BEGIN
+
+JNIEnv *JniMethodInfo_::getEnv()
+{
+    JNIEnv *env = NULL;
+    ::getEnv(&env);
+    return env;
+}
 
 JavaVM *JniHelper::m_psJavaVM = NULL;
 

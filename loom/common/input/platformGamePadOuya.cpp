@@ -49,7 +49,7 @@ public:
 
     static float getControllerAxisValue(int playerNum, int axis)
     {
-        jfloat jvalue = (jfloat)_getControllerAxisValue.env->CallStaticFloatMethod(_getControllerAxisValue.classID,
+        jfloat jvalue = (jfloat)_getControllerAxisValue.getEnv()->CallStaticFloatMethod(_getControllerAxisValue.classID,
                                                                                    _getControllerAxisValue.methodID,
                                                                                    playerNum, axis);
 
@@ -58,7 +58,7 @@ public:
 
     static bool getControllerButton(int playerNum, int button)
     {
-        jboolean jvalue = (jboolean)_getControllerButton.env->CallStaticBooleanMethod(_getControllerButton.classID,
+        jboolean jvalue = (jboolean)_getControllerButton.getEnv()->CallStaticBooleanMethod(_getControllerButton.classID,
                                                                                       _getControllerButton.methodID,
                                                                                       playerNum, button);
 
