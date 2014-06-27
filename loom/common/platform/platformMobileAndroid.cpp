@@ -164,14 +164,14 @@ void platform_allowScreenSleep(bool sleep)
 ///shares the specfied text via other applications on the device (ie. Twitter, Facebook)
 bool platform_shareText(const char *subject, const char *text)
 {
-    jstring jSubject = gShareText.env->NewStringUTF(subject);
-    jstring jText = gShareText.env->NewStringUTF(text);
-    jboolean result = gShareText.env->CallStaticBooleanMethod(gShareText.classID, 
+    jstring jSubject = gShareText.getEnv()->NewStringUTF(subject);
+    jstring jText = gShareText.getEnv()->NewStringUTF(text);
+    jboolean result = gShareText.getEnv()->CallStaticBooleanMethod(gShareText.classID, 
                                                                 gShareText.methodID, 
                                                                 jSubject,
                                                                 jText);    
-    gShareText.env->DeleteLocalRef(jSubject);
-    gShareText.env->DeleteLocalRef(jText);
+    gShareText.getEnv()->DeleteLocalRef(jSubject);
+    gShareText.getEnv()->DeleteLocalRef(jText);
     return (bool)result;
 }
 
