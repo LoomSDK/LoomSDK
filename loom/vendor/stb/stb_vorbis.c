@@ -1199,7 +1199,7 @@ static void sincos(float x, float *cosOut, float *sinOut)
     
     if (x < 0.f)
     {
-        cosTmp = 1.27323954.f * x + 0.405284735.f * x * x;
+        cosTmp = 1.27323954f * x + 0.405284735f * x * x;
         
         if (cosTmp < 0.f)
             cosTmp = .225f * (cosTmp *-cosTmp - cosTmp) + cosTmp;
