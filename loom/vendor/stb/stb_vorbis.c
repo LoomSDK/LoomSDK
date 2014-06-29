@@ -1166,15 +1166,12 @@ static int lookup1_values(int entries, int dim)
 // other places if further crashes result -- BJG
 static void sincos(float x, float *cosOut, float *sinOut)
 {
+    float sinTmp, cosTmp;
+    
     // Apply wrapping.
-    while(x < -3.14159265)
-        x += 6.28318531;
-    
-    while(x >  3.14159265)
-        x -= 6.28318531;
-    
+    x = fmod(x + 3.14159265, 6.28318531) -  3.14159265;
+
     //compute sine
-    float sinTmp;
     if (x < 0)
     {
         sinTmp = 1.27323954 * x + .405284735 * x * x;
@@ -1199,8 +1196,6 @@ static void sincos(float x, float *cosOut, float *sinOut)
     x += 1.57079632;
     if (x >  3.14159265)
         x -= 6.28318531;
-    
-    float cosTmp;
     
     if (x < 0)
     {
