@@ -1169,7 +1169,7 @@ static void sincos(float x, float *cosOut, float *sinOut)
     float sinTmp, cosTmp;
     
     // Apply wrapping.
-    x = fmod(x + 3.14159265f, 6.28318531f) -  3.14159265f;
+    x = (float)fmod(x + 3.14159265f, 6.28318531f) -  3.14159265f;
 
     //compute sine
     if (x < 0)
