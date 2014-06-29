@@ -1160,21 +1160,94 @@ static int lookup1_values(int entries, int dim)
    return r;
 }
 
+// For inexplicable reasons, XCode from iOS7 optimizes this routine using a sincos routine
+// that is dynamically linked and not present on iOS 6, so we will provide our own. It's
+// courtesy of http://lab.polygonal.de/?p=205 Michael Baczynski. We could pull this in
+// other places if further crashes result -- BJG
+static void sincos(float x, float *cosOut, float *sinOut)
+{
+    // Apply wrapping.
+    while(x < -3.14159265)
+        x += 6.28318531;
+    
+    while(x >  3.14159265)
+        x -= 6.28318531;
+    
+    //compute sine
+    float sinTmp;
+    if (x < 0)
+    {
+        sinTmp = 1.27323954 * x + .405284735 * x * x;
+        
+        if (sinTmp < 0)
+            sinTmp = .225 * (sinTmp *-sinTmp - sinTmp) + sinTmp;
+        else
+            sinTmp = .225 * (sinTmp * sinTmp - sinTmp) + sinTmp;
+    }
+    else
+    {
+        sinTmp = 1.27323954 * x - 0.405284735 * x * x;
+        
+        if (sinTmp < 0)
+            sinTmp = .225 * (sinTmp *-sinTmp - sinTmp) + sinTmp;
+        else
+            sinTmp = .225 * (sinTmp * sinTmp - sinTmp) + sinTmp;
+    }
+    *sinOut = sinTmp;
+    
+    //compute cosine: sin(x + PI/2) = cos(x)
+    x += 1.57079632;
+    if (x >  3.14159265)
+        x -= 6.28318531;
+    
+    float cosTmp;
+    
+    if (x < 0)
+    {
+        cosTmp = 1.27323954 * x + 0.405284735 * x * x;
+        
+        if (cosTmp < 0)
+            cosTmp = .225 * (cosTmp *-cosTmp - cosTmp) + cosTmp;
+        else
+            cosTmp = .225 * (cosTmp * cosTmp - cosTmp) + cosTmp;
+    }
+    else
+    {
+        cosTmp = 1.27323954 * x - 0.405284735 * x * x;
+        
+        if (cosTmp < 0)
+            cosTmp = .225 * (cosTmp *-cosTmp - cosTmp) + cosTmp;
+        else
+            cosTmp = .225 * (cosTmp * cosTmp - cosTmp) + cosTmp;
+    }
+    
+    *cosOut = cosTmp;
+}
+
 // called twice per file
 static void compute_twiddle_factors(int n, float *A, float *B, float *C)
 {
    int n4 = n >> 2, n8 = n >> 3;
    int k,k2;
 
-   for (k=k2=0; k < n4; ++k,k2+=2) {
-      A[k2  ] = (float)  cos(4*k*M_PI/n);
-      A[k2+1] = (float) -sin(4*k*M_PI/n);
-      B[k2  ] = (float)  cos((k2+1)*M_PI/n/2) * 0.5f;
-      B[k2+1] = (float)  sin((k2+1)*M_PI/n/2) * 0.5f;
+   for (k=k2=0; k < n4; ++k,k2+=2)
+   {
+       float sinA, cosA, sinB, cosB;
+       sincos(4*k*M_PI/n, &cosA, &sinA);
+       sincos((k2+1)*M_PI/n/2, &cosB, &sinB);
+       
+       A[k2  ] = (float)  cosA;
+       A[k2+1] = (float) -sinA;
+       B[k2  ] = (float)  cosB * 0.5f;
+       B[k2+1] = (float)  sinB * 0.5f;
    }
-   for (k=k2=0; k < n8; ++k,k2+=2) {
-      C[k2  ] = (float)  cos(2*(k2+1)*M_PI/n);
-      C[k2+1] = (float) -sin(2*(k2+1)*M_PI/n);
+    
+   for (k=k2=0; k < n8; ++k,k2+=2)
+   {
+       float cosC, sinC;
+       sincos(2*(k2+1)*M_PI/n, &cosC, &sinC);
+       C[k2  ] = (float)  cosC;
+       C[k2+1] = (float) -sinC;
    }
 }
 
