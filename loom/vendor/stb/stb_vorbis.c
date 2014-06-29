@@ -1186,9 +1186,9 @@ static void sincos(float x, float *cosOut, float *sinOut)
         sinTmp = 1.27323954f * x - 0.405284735f * x * x;
         
         if (sinTmp < 0.f)
-            sinTmp = .225.f * (sinTmp *-sinTmp - sinTmp) + sinTmp;
+            sinTmp = .225f * (sinTmp *-sinTmp - sinTmp) + sinTmp;
         else
-            sinTmp = .225.f * (sinTmp * sinTmp - sinTmp) + sinTmp;
+            sinTmp = .225f * (sinTmp * sinTmp - sinTmp) + sinTmp;
     }
     *sinOut = sinTmp;
     
