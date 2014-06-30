@@ -71,6 +71,12 @@ static bool getEnv(JNIEnv **env)
     return bRet;
 }
 
+JNIEnv *loomJniMethodInfo_::getEnv()
+{
+    JNIEnv *env = NULL;
+    ::getEnv(&env);
+    return env;
+}
 
 static jclass getClassID_(const char *className, JNIEnv *env)
 {
@@ -134,7 +140,6 @@ static bool getStaticMethodInfo_(loomJniMethodInfo& methodinfo, const char *clas
         }
 
         methodinfo.classID  = classID;
-        methodinfo.env      = pEnv;
         methodinfo.methodID = methodID;
 
         bRet = true;
@@ -172,7 +177,6 @@ static bool getMethodInfo_(loomJniMethodInfo& methodinfo, const char *className,
         }
 
         methodinfo.classID  = classID;
-        methodinfo.env      = pEnv;
         methodinfo.methodID = methodID;
 
         bRet = true;
@@ -258,10 +262,10 @@ const char *LoomJni::getPackageName()
                             "getCocos2dxPackageName",
                             "()Ljava/lang/String;"))
     {
-        jstring str = (jstring)t.env->CallStaticObjectMethod(t.classID, t.methodID);
-        t.env->DeleteLocalRef(t.classID);
+        jstring str = (jstring)t.getEnv()->CallStaticObjectMethod(t.classID, t.methodID);
+        t.getEnv()->DeleteLocalRef(t.classID);
         packageName = jstring2string(str);
-        t.env->DeleteLocalRef(str);
+        t.getEnv()->DeleteLocalRef(str);
 
         lmLog(jniLogGroup, "package name %s", packageName.c_str());
 

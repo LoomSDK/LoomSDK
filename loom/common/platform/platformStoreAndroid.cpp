@@ -146,13 +146,13 @@ void platform_storeInitialize(StoreEventCallback eventCallback)
 
 
     // Kick off query.
-    gQueryPurchasesMethodInfo.env->CallStaticVoidMethod(gQueryPurchasesMethodInfo.classID, gQueryPurchasesMethodInfo.methodID);
+    gQueryPurchasesMethodInfo.getEnv()->CallStaticVoidMethod(gQueryPurchasesMethodInfo.classID, gQueryPurchasesMethodInfo.methodID);
 }
 
 
 int platform_storeAvailable()
 {
-    return gIsAvailableMethodInfo.env->CallStaticBooleanMethod(gIsAvailableMethodInfo.classID, gIsAvailableMethodInfo.methodID);
+    return gIsAvailableMethodInfo.getEnv()->CallStaticBooleanMethod(gIsAvailableMethodInfo.classID, gIsAvailableMethodInfo.methodID);
 }
 
 
@@ -179,21 +179,21 @@ void platform_storeListProducts(const char *requestJson)
         const char *itemStr = json_string_value(item);
         lmAssert(itemStr != NULL, "Got a NULL string somehow!");
 
-        jstring jProductID = gPushProductMethodInfo.env->NewStringUTF(itemStr);
-        gPushProductMethodInfo.env->CallStaticVoidMethod(gPushProductMethodInfo.classID, gPushProductMethodInfo.methodID, jProductID);
-        gPushProductMethodInfo.env->DeleteLocalRef(jProductID);
+        jstring jProductID = gPushProductMethodInfo.getEnv()->NewStringUTF(itemStr);
+        gPushProductMethodInfo.getEnv()->CallStaticVoidMethod(gPushProductMethodInfo.classID, gPushProductMethodInfo.methodID, jProductID);
+        gPushProductMethodInfo.getEnv()->DeleteLocalRef(jProductID);
     }
 
     // Kick off the request.
-    gLoadProductsMethodInfo.env->CallStaticVoidMethod(gLoadProductsMethodInfo.classID, gLoadProductsMethodInfo.methodID);
+    gLoadProductsMethodInfo.getEnv()->CallStaticVoidMethod(gLoadProductsMethodInfo.classID, gLoadProductsMethodInfo.methodID);
 }
 
 
 void platform_storeRequestPurchase(const char *identifier)
 {
-    jstring jIdentifier = gPurchaseProductMethodInfo.env->NewStringUTF(identifier);
+    jstring jIdentifier = gPurchaseProductMethodInfo.getEnv()->NewStringUTF(identifier);
 
-    gPurchaseProductMethodInfo.env->CallStaticVoidMethod(gPurchaseProductMethodInfo.classID, gPurchaseProductMethodInfo.methodID, jIdentifier);
-    gPurchaseProductMethodInfo.env->DeleteLocalRef(jIdentifier);
+    gPurchaseProductMethodInfo.getEnv()->CallStaticVoidMethod(gPurchaseProductMethodInfo.classID, gPurchaseProductMethodInfo.methodID, jIdentifier);
+    gPurchaseProductMethodInfo.getEnv()->DeleteLocalRef(jIdentifier);
 }
 #endif
