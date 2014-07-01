@@ -414,20 +414,6 @@ namespace bgfx
        x = x | (x >>16);
        return x + 1;
    }
- 
-    
-    // Some GL hardware requires POT texture to generate mipmaps
-    // so, we enforce this
-    static bool canGenMips(uint32_t width, uint32_t height)
-    {
-      if( width == getNextPOT(width) && 
-        height == getNextPOT(height))
-      {
-        return true;
-      }
- 
-      return false;
-    }
 
 
     void dumpExtensions(const char* _extensions)
@@ -899,6 +885,24 @@ namespace bgfx
     };
 
     RendererContext s_renderCtx;
+
+    
+    // Some GL hardware requires POT texture to generate mipmaps
+    // so, we enforce this
+    static bool canGenMips(uint32_t width, uint32_t height)
+    {
+      if( width == getNextPOT(width) && 
+        height == getNextPOT(height) &&
+        //LFL: don't allow mipmaps on SGX540 devices as they can be buggy!!!
+        (!strstr(s_renderCtx.m_renderer, "SGX") || !strstr(s_renderCtx.m_renderer, "540")))
+      {
+        return true;
+      }
+ 
+      return false;
+    }
+
+
 
 #if BX_PLATFORM_NACL
     static void GL_APIENTRY naclVertexAttribDivisor(GLuint _index, GLuint _divisor)

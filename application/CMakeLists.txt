@@ -34,9 +34,25 @@ endif()
 if (APPLE)
     if (LOOM_BUILD_IOS EQUAL 1)
         
-        set(APPLE_ICON_FILES ios/Icon-144.png ios/Icon-114.png ios/Icon-72.png ios/Icon-57.png)
+        set(APPLE_ICON_FILES 
+            ios/Icon-60@2x.png 
+            ios/Icon-72.png 
+            ios/Icon-72@2x.png 
+            ios/Icon-76.png
+            ios/Icon-76@2x.png
+            ios/Icon-Small-40.png
+            ios/Icon-Small-40@2x.png
+            ios/Icon-Small-50.png
+            ios/Icon-Small-50@2x.png
+            ios/Icon-Small.png
+            ios/Icon-Small@2x.png
+            ios/Icon.png
+            ios/Icon@2x.png
+            )
         set (APPLICATION_SRC
           ${APPLICATION_SRC}
+          ios/Default-iphone.png
+          ios/Default@2x-iphone.png
           ios/Default.png
           ios/Default@2x.png
           ios/Default-568h@2x.png
@@ -45,6 +61,8 @@ if (APPLE)
           ios/RootViewController.mm
         )
         
+        SET_SOURCE_FILES_PROPERTIES(ios/Default-iphone.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
+        SET_SOURCE_FILES_PROPERTIES(ios/Default@2x-iphone.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
         SET_SOURCE_FILES_PROPERTIES(ios/Default.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
         SET_SOURCE_FILES_PROPERTIES(ios/Default@2x.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
         SET_SOURCE_FILES_PROPERTIES(ios/Default-568h@2x.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
