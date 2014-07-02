@@ -23,7 +23,7 @@ package
     import loom2d.text.TextField;    
     import loom2d.text.BitmapFont;
 
-    public class TeakDemo extends Application
+    public class FBTeakExample extends Application
     {
         var fbAccessToken:String;
         var label:Label;
@@ -112,20 +112,22 @@ package
             teakPostButton.addEventListener(Event.TRIGGERED,
             function(e:Event)
             {
-                //We open our session with email read permissions. This will automatically prompt the user to log in and provide permissions if necessary.
+                //We call teak to post the achievement defined server-side.
                 Teak.postAchievement("teakWorks");
                 label.text = "Posting achievement. Check your Facebook account.";
             });
-            stage.addChild(teakPostButton);
-
-              
+            stage.addChild(teakPostButton);              
             
         }
+
+        //This function will be called every time a change is made to the Facebook session - login, logout, change in permissions, etc.
 
         function sessionStatusChanged(sessionState:FacebookSessionState, sessionPermissions:String, errorCode:FacebookErrorCode):void
         {           
 
             Debug.print("{FACEBOOK} sessionState changes to: " + sessionState.toString() + " with permissions: " + sessionPermissions);
+
+            //We first check for any errors and prompt the user accordingly.
 
             if(errorCode != FacebookErrorCode.NoError)
             {            
@@ -138,7 +140,7 @@ package
                     
                     case FacebookErrorCode.UserCancelled:                        
 
-//User cancelled the login process, so rest states and let them try again
+                    //User cancelled the login process, so rest states and let them try again
                         
                         label.text = "Facebook login cancelled by user.";
 
@@ -146,23 +148,23 @@ package
                     
                     case FacebookErrorCode.ApplicationNotPermitted:                        
 
-//Application does not have permission to access Facebook, likely on iOS.
+                    //Application does not have permission to access Facebook, likely on iOS.
+
                         label.text = "Facebook application error. Please ensure your Facebook app has the correct settings.";
                         
                         break;
                     
                     case FacebookErrorCode.Unknown:  
 
-//Could be anything... display generic FB error dialog and let user try whatever they were doing again
+                    //Could be anything... display generic FB error dialog and let user try whatever they were doing again
                         
                         label.text = "An unknown Facebook error occurred.";
                         break;
                 }
                 return;   
-            }
+            }            
 
-
-            //Note that you'll have needed to set up a test app on Facebook and placed its Application ID in your config files before it will open a session.
+            //The session has changed with state Opened (generally after successful login, but also when requesting permissions)
 
             if (sessionState==FacebookSessionState.Opened)
             {
@@ -174,7 +176,9 @@ package
                 fbPublishButton.visible=true;
 
                 Debug.print("{FACEBOOK} access token:       " + fbAccessToken);
-    
+                
+                //Ensure that we got a valid access token
+
                 if (String.isNullOrEmpty(fbAccessToken))
                 {
                     label.text += "Error: Invalid FB Access Token.";
@@ -182,20 +186,25 @@ package
                     return;
                 }
 
+                //Check whether we have publishing permissions on this session update
+
                 if(!Facebook.isPermissionGranted("publish_actions"))
                 {
-                    label.text += "We do not have publish permissions. Requesting.";
-                    trace("{FACEBOOK} We do not have publish permissions. Requesting.");
-                    
+                    label.text += "We do not have publish permissions.";
+                    trace("{FACEBOOK} We do not have publish permissions.");     
                 }
                 else
-                {
+                {                    
                     label.text += "We have publish permissions.";
                     trace("{FACEBOOK} We have publish permissions.");
+                    
+                    //If we do have publish permissions, we can disable the request button and will pass the FB token to Teak.
                     fbPublishButton.visible=false;
                     InitTeak();   
                 }
             }
+
+            //Session has changed with state Closed
 
             if (sessionState==FacebookSessionState.Closed)
             {
@@ -205,17 +214,16 @@ package
 
         }
 
+        //Pass FB token to Teak if Teak is supported on this device.
+
         function InitTeak()
-        {
-            
+        {          
             if(Teak.isActive())
             {
                 label.text += "\nPassing access token to Teak.";
                 trace("{TEAK} Facebook access token passed to Teak.");
+                
                 Teak.setAccessToken(fbAccessToken);
-                
-                trace("{TEAK} Access status is "+Teak.getStatus());                
-                
             }
             else
             {
@@ -224,10 +232,14 @@ package
             }
         }
 
+        //This will be called whenever Teak's auth status changes
+
         function teakAuthStatusChanged()
         {
             trace("{TEAK} Auth Status has changed.");
             trace("{TEAK} Access status is now "+Teak.getStatus());
+            
+            //Status 2 means Teak is ready for requests. We'll display the Post Achievement button in that case.
             if(Teak.getStatus() == 2)
                 {
                     teakIsReady = true;
