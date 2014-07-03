@@ -88,6 +88,12 @@ package loom.social
         static var nextTick:Number;
         static var nextTimeout:Number=0;
 
+        /**
+         * Sets the REST credentials to append to our http requests. Also initializes request queues.
+         *
+         *  @param appId The Parse application ID
+         *  @param restKey The Parse REST API key.
+         */
         public static function REST_setCredentials(appID:String = "", restKey:String = "")
         {
             parseAppID = appID;
@@ -98,54 +104,52 @@ package loom.social
             nextTick = Platform.getTime()+requestDelay;
         }
         
-        public static function REST_setAppID(newID:String)
-        {
-            parseAppID = newID;
-        }
+        /**
+         * Individually sets/gets the Parse App ID
+         */
+        public static function set REST_AppID(newID:String):void  {parseAppID = newID;}
+        public static function get REST_AppID():String {return parseAppID;}
 
-        public static function REST_getAppID():String
-        {
-            return parseAppID;
-        }
-
-        public static function REST_setDateFormat(newFormat:String)
-        {
-            dateFormat = newFormat;
-        }
-
-        public static function REST_getDateFormat():String
-        {
-            return dateFormat;
-        }
+        /**
+         * Individually sets/gets the date format string for Parse. (This is a convenience variable to store the date format string for Oauth tokens)
+         */
+        public static function set REST_DateFormat(newFormat:String):void {dateFormat = newFormat;}
+        public static function get REST_DateFormat():String {return dateFormat;}
         
-        public static function REST_setRESTKey(newKey:String)
-        {
-            parseRESTKey = newKey;
-        }
-
-        public static function REST_getRESTKey():String
-        {
-            return parseRESTKey;
-        }
+        /**
+         * Individually sets/gets the REST API key
+         */
+        public static function set REST_RESTKey(newKey:String):void {parseRESTKey = newKey;}
+        public static function get REST_RESTKey():String {return parseRESTKey;}
         
-        public static function REST_setSessionToken(newToken:String)
-        {
-            parseSessionToken = newToken;
-        }
-
-        
-        public static function REST_getSessionToken():String
-        {
-            return parseSessionToken;
-        }
+        /**
+         * Individually sets/gets the Parse session token.
+         */
+        public static function set REST_SessionToken(newToken:String):void {parseSessionToken = newToken;}      
+        public static function get REST_SessionToken():String {return parseSessionToken;}
 
         //REST functionality calls
 
+        /**
+         * Logs the user in using an Oauth json object formatted as per Parse REST specs for the third-party service (Facebook, Twitter, etc.)
+         *
+         *@param oathJSON - JSON object containing the necessary Oauth data for the service, as per Parse documentation
+         *@param success - delegate function to run on request success
+         *@param failure - delegate function to run on request failure
+         */
         public static function REST_OauthLogin(oauthJSON:JSON = null, success:Function=null, failure:Function=null)
         {
             POST("users",oauthJSON,success,failure);
         }
 
+        /**
+         * Logs an existing user in using their username and password
+         *
+         *@param userName - The user's username
+         *@param password - The user's password
+         *@param success - delegate function to run on request success
+         *@param failure - delegate function to run on request failure
+         */
         public static function REST_loginWithUsername(userName:String, password:String, success:Function=null, failure:Function=null)
         {                       
             var arguments = "username="+userName+"&password="+password;
@@ -153,51 +157,116 @@ package loom.social
             GET("login",null,arguments,success,failure);
         }
 
-        
+        /**
+         * Signs a user up for a new account using the data passed via json object (formatted as per Parse REST signup specs)
+         *         
+         *@param signupParameters - JSON containing the required signup data
+         *@param success - delegate function to run on request success
+         *@param failure - delegate function to run on request failure
+         */
         public static function REST_signupWithUsername(signupParameters:JSON = null, success:Function=null, failure:Function=null)
         {            
             POST("users",signupParameters,success,failure);
         }
 
-        
+        /**
+         * Requests a password reset mail from Parse for the given account data
+         *         
+         *@param resetParams - JSON containing the required account data for reset
+         *@param success - delegate function to run on request success
+         *@param failure - delegate function to run on request failure
+         */
         public static function REST_requestPasswordReset(resetParams:JSON,success:Function = null,failure:Function = null)
         {            
             POST("requestPasswordReset",resetParams,success,failure);
         }
 
-                
+        /**
+         * Calls a Cloud Function on the Parse servers
+         *         
+         *@param functionName - String containing the name of the cloud function to call
+         *@param functionParameters - JSON containing any parameters being passed to the cloud function
+         *@param success - delegate function to run on request success
+         *@param failure - delegate function to run on request failure
+         */     
         public static function REST_callCloudFunction(functionName:String, functionParameters:JSON = null, success:Function=null, failure:Function=null)
         {                       
             POST("functions/"+functionName,functionParameters,success,failure);
         }       
         
+        /**
+         * Gets the current user's data (assuming a valid session token has been provided)
+         *                  
+         *@param success - delegate function to run on request success
+         *@param failure - delegate function to run on request failure
+         */   
         public static function REST_getCurrentUser(success:Function=null,failure:Function=null)
         {
             GET("users/me",null,"",success,failure);
         }
 
+        /**
+         * Creates a new Parse object
+         *         
+         *@param objectName - string containing the name of the object
+         *@param additionalData - JSON object containing additional fields and data to be assigned to the object
+         *@param success - delegate function to run on request success
+         *@param failure - delegate function to run on request failure
+         */
         public static function REST_createObject(objectName:String,additionalData:JSON = null,success:Function = null, failure:Function=null)
         {           
             POST("classes/"+objectName,additionalData,success,failure);
         }
 
+        /**
+         * Retrieves data from an existing Parse object
+         *         
+         *@param objectName - string containing the type of the object
+         *@param objectID - string containing the unique objectId of the object to retrieve
+         *@param success - delegate function to run on request success
+         *@param failure - delegate function to run on request failure
+         */
         public static function REST_retrieveObject(objectName:String,objectID:String,success:Function = null, failure:Function=null)
         {           
             GET("classes/"+objectName+"/"+objectID,null,"",success,failure);
         }
 
+        /**
+         * Updates an existing Parse object with new data
+         *         
+         *@param objectName - string containing the type of the object
+         *@param objectID - string containing the unique objectId of the object to retrieve
+         *@param updateData - JSON object containing update data
+         *@param success - delegate function to run on request success
+         *@param failure - delegate function to run on request failure
+         */
         public static function REST_updateObject(objectName:String,objectID:String,updateData:JSON = null,success:Function = null, failure:Function=null)
         {           
             PUT("classes/"+objectName+"/"+objectID,updateData,success,failure);
         }
 
+        /**
+         * Passes a query to the Parse servers
+         *         
+         *@param objectName - string containing the type of the object to query
+         *@param queryString - URI-formatted string containing query, as per Parse REST query format
+         *@param success - delegate function to run on request success
+         *@param failure - delegate function to run on request failure
+         */
         public static function REST_makeQuery(objectName:String,queryString:String,success:Function = null, failure:Function = null)
         {            
             GET("classes/"+objectName,null,queryString,success,failure);
         }
         
         //HTTP Request functions
-
+        /**
+         * Sends a POST httprequest
+         *         
+         *@param URL - string to be appended to the base REST API URL for specific functions
+         *@param data - JSON object containing any data to pass to the server in this query
+         *@param success - delegate function to run on request success
+         *@param failure - delegate function to run on request failure
+         */
         public static function POST(URL:String="", data:JSON=null, success:Function=null, failure:Function=null)
         {            
             var req = new HTTPRequest(PARSE_API_BASE+URL,"application/json");            
@@ -233,6 +302,14 @@ package loom.social
             
         }
 
+        /**
+         * Sends a PUT httprequest
+         *         
+         *@param URL - string to be appended to the base REST API URL for specific functions
+         *@param data - JSON object containing any data to pass to the server in this query
+         *@param success - delegate function to run on request success
+         *@param failure - delegate function to run on request failure
+         */
         public static function PUT(URL:String="", data:JSON=null, success:Function=null, failure:Function=null)
         {         
             var req = new HTTPRequest(PARSE_API_BASE+URL,"application/json");            
@@ -267,6 +344,15 @@ package loom.social
             
         }
         
+        /**
+         * Sends a GET httprequest
+         *         
+         *@param URL - string to be appended to the base REST API URL for specific functions
+         *@param jsonData - JSON object containing any data to pass to the server in this query
+         *@param urlData - string containing any URI-formatted data to pass to the server in this query
+         *@param success - delegate function to run on request success
+         *@param failure - delegate function to run on request failure
+         */
         public static function GET(URL:String, jsonData:JSON = null, urlData:String = "", success:Function=null, failure:Function=null)
         {           
             var url = PARSE_API_BASE+URL;       
@@ -304,37 +390,40 @@ package loom.social
 
         //Request control variables and timeout functions
                 
+        /**
+         * Pushes an outside HTTPRequest to the internal request queue
+         *         
+         *@param newReq - request to be pushed into the queue
+         */
         public static function REST_pushToRequestQueue(newReq:HTTPRequest)
         {            
             requestQueue.push(newReq);
         }
         
-        public static function REST_setTimeoutDuration(newTimeout:Number)
-        {
-            timeoutDuration = newTimeout;
-        }
+        /**
+         * Sets/gets the request timeout duration
+         */
+        public static function set REST_TimeoutDuration(newTimeout:Number):void {timeoutDuration = newTimeout;}
+        public static function get REST_TimeoutDuration():Number {return timeoutDuration;}
 
-        public static function REST_getTimeoutDuration():Number
-        {
-            return timeoutDuration;
-        }
+        /**
+         * Sets/gets the period between requests being sent from the request queue
+         */
+        public static function set REST_RequestDelay(newDelay:Number):void {requestDelay = newDelay;}
+        public static function get REST_RequestDelay():Number {return requestDelay;}
 
-        public static function REST_setRequestDelay(newDelay:Number)
-        {
-            requestDelay = newDelay;
-        }
-
-        public static function REST_getRequestDelay():Number
-        {
-            return requestDelay;
-        }
-
+        /**
+         * Resets the request timeout time to 0, preventing timeout from firing.
+         */
         public static function REST_resetTimeout()
         {
             //We reset the timeout count to 0, so as to ignore it.
             nextTimeout = 0;
         }
 
+        /**
+         * Check current time, fire off requests and trigger timeouts where necessary
+         */
         public static function tick() 
         {
             var currentTick = Platform.getTime();
