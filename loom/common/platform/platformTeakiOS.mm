@@ -22,6 +22,7 @@ limitations under the License.
 #import <UIKit/UIKit.h>
 #import <Foundation/NSSet.h>
 #import "Carrot.h"
+#import "application/ios/AppController.h"
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformTeak.h"
@@ -47,7 +48,7 @@ static const char *_teakAppSecret = NULL;
 
 - (void)applicationLinkRecieved:(NSURL *)targetURL
 {
-//TODO: Support this?
+    //Should we support this?
 }
 
 
@@ -57,11 +58,11 @@ static const char *_teakAppSecret = NULL;
     if(error)
     {
         NSLog(@"-=-=-=-=-=-=-Teak Authentication Status Error!-=-=-=-=-=-=-=-");
-//TODO: Handle NSError?
+        //Handle NSError?
         return;
     }
 
-    NSLog(@"-=-=-=-=-=-=-Teak Authentication Status Changed!-=-=-=-=-=-=-=-");
+    NSLog(@"-=-=-=-=-=-=-Teak Authentication Status Changed To: %i-=-=-=-=-=-=-=-", status);
     if(gAuthStatusCallback != NULL)
     {
         gAuthStatusCallback(status);
@@ -93,14 +94,23 @@ void platform_teakInitialize(AuthStatusCallback authStatusCB)
     //find the Teak ID for later use; if not present, then log and don't do further initialization!
     NSBundle *mainBundle = [NSBundle mainBundle];
     NSString *app_secret = [mainBundle objectForInfoDictionaryKey:@"TeakAppSecret"];
+    NSString *app_id = [mainBundle objectForInfoDictionaryKey:@"FacebookAppID"];
     // NSLog(@"-----Info.plist TeakAppSecret String: %@", app_secret);
+    // NSLog(@"-----Info.plist FBID String: %@", app_id);
 
      //don't initialize without valid strings
     _initialized = false;
-    if((app_secret != nil) && ([app_secret isEqualToString:@""] == FALSE))
+    if((app_secret != nil) && ([app_secret isEqualToString:@""] == FALSE) &&
+        (app_id != nil) && ([app_id isEqualToString:@""] == FALSE))
     {    
-        //set up the app secret
         _teakAppSecret = [app_secret cStringUsingEncoding:NSUTF8StringEncoding];
+
+        //plant teak into our App with the Secret
+        // [Carrot plant:app_id inApplication:[AppController class] withSecret:app_secret];
+        // [Carrot plantInApplication:[AppController class] withSecret:app_secret];
+
+        //manually set Facebook App ID & Teak Secret: NOTE: setSharedAppID *MUST* be called prior to any sharedInstance usages!
+        [Carrot setSharedAppID:app_id];
         [[Carrot sharedInstance] setAppSecret:app_secret];
 
         //set status notification delegate
@@ -162,19 +172,12 @@ bool platform_postHighScore(int score)
 
 bool platform_postAction(const char *actionId, const char *objectInstanceId)
 {
-//TODO: postAction support
     if(_initialized)
     {
-        // NSDictionary* objectProperties = @{
-        //     @"title": @"Obj-C Test",
-        //     @"image":@"http://static.ak.fbcdn.net/rsrc.php/v2/y_/r/9myDd8iyu0B.gif",
-        //     @"description":@"Testing the objective-c dynamic object generation",
-        //     @"fields": @{@"sha": @"abcdefg"}
-        // };
-        // return ([[Carrot sharedInstance] postAction:@"push"
-        //                             withProperties:nil
-        //                             creatingInstanceOf:@"commit"
-        //                             withProperties:objectProperties] == YES) ? true : false;
+        NSString *actionString = [NSString stringWithCString:actionId encoding:NSUTF8StringEncoding];
+        NSString *instanceString = [NSString stringWithCString:objectInstanceId encoding:NSUTF8StringEncoding];
+        return ([[Carrot sharedInstance] postAction:actionString
+                                            forObjectInstance:instanceString] == YES) ? true : false;
     }
     return false;
 }
