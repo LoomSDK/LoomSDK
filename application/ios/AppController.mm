@@ -91,14 +91,22 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
 
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
 {
-    if([[sourceApplication lowercaseString] isEqualToString:@"com.facebook.facebook"])
+    NSBundle *mainBundle = [NSBundle mainBundle];
+    
+    //Facebook Scheme Launch?
+    NSString *app_id = [mainBundle objectForInfoDictionaryKey:@"FacebookAppID"];
+    if((app_id != nil) && ([app_id isEqualToString:@""] == FALSE))
     {
-        // handle Facebook sign in re-launching the application
-        NSLog(@"---------Facebook openURL: %@", [url absoluteString]);
-        return [FBSession.activeSession handleOpenURL:url];
+        NSString *fbScheme = [NSString stringWithFormat:@"%@%@", @"fb", app_id];
+        if([[url scheme] isEqualToString:fbScheme])
+        {
+            // handle Facebook sign in re-launching the application
+            NSLog(@"---------Facebook openURL: %@", [url absoluteString]);
+            return [FBSession.activeSession handleOpenURL:url];
+        }
     }
+    return YES;
 }
-
 
 
 - (void)applicationWillResignActive:(UIApplication *)application {
