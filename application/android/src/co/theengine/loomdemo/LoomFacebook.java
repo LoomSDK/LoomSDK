@@ -139,9 +139,13 @@ public class LoomFacebook
 	public static boolean isPermissionGranted(String permission)
 	{
 		Session session = Session.getActiveSession();
-        List<String> grantedPermissions = session.getPermissions();
-        if (grantedPermissions != null) {
-            return grantedPermissions.contains(permission);
+        if(session != null)
+        {
+            List<String> grantedPermissions = session.getPermissions();
+            if (grantedPermissions != null) 
+            {
+                return grantedPermissions.contains(permission);
+            }
         }
         return false;
 		
