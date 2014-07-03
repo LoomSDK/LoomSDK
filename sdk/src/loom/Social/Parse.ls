@@ -34,9 +34,8 @@ package loom.social
      */
     public native class Parse 
     {
-        
-
         /*******NATIVE LINKS******/
+
         /**
          * Checks if Native Parse is active and ready for use
          *
@@ -69,24 +68,28 @@ package loom.social
         
         /******REST COMMANDS******/
 
-        static var parseAppID:String;
-        static var parseRESTKey:String;
-        static var parseSessionToken:String;
+        private static var parseAppID:String;
+        private static var parseRESTKey:String;
+        private static var parseSessionToken:String;
 
-        static var requestQueue:Vector.<HTTPRequest>;
-        static var activeQueryQueue:Vector.<HTTPRequest>;
-        static var timeoutDuration = 10000;                                //Time in ms before a request is considered to have timed out. 0 = no timeout.
-        static var requestDelay = 50;                                      //Delay in ms between queued HTTPrequests being sent.
+        private static var requestQueue:Vector.<HTTPRequest>;
+        private static var activeQueryQueue:Vector.<HTTPRequest>;
+        private static var timeoutDuration = 10000;                                //Time in ms before a request is considered to have timed out. 0 = no timeout.
+        private static var requestDelay = 50;                                      //Delay in ms between queued HTTPrequests being sent.
 
-        static const PARSE_API_BASE:String = "https://api.parse.com/1/";   //Base REST URL for Parse.
-        static const REQUEST_BUFFER_LENGTH = 20;                           //We keep a buffer of sent HTTPRequests to prevent them from being GC'd before they can complete.
+        private static const PARSE_API_BASE:String = "https://api.parse.com/1/";   //Base REST URL for Parse.
+        private static const REQUEST_BUFFER_LENGTH = 20;                           //We keep a buffer of sent HTTPRequests to prevent them from being GC'd before they can complete.
 
-        static public var REST_onTimeout:Function;
+        private static var dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";            //Parse date format string
+        private static var nextTick:Number;
+        private static var nextTimeout:Number=0;
 
-        static var dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";            //Parse date format string
 
-        static var nextTick:Number;
-        static var nextTimeout:Number=0;
+        /**
+         *  Called when the any REST operation times out.
+         */
+        public static var REST_onTimeout:Function;
+
 
         /**
          * Sets the REST credentials to append to our http requests. Also initializes request queues.
@@ -99,43 +102,56 @@ package loom.social
             parseAppID = appID;
             parseRESTKey = restKey;
             requestQueue = new Vector.<HTTPRequest>;
-            activeQueryQueue = new Vector.<HTTPRequest>;          
-
+            activeQueryQueue = new Vector.<HTTPRequest>;
             nextTick = Platform.getTime()+requestDelay;
         }
         
         /**
-         * Individually sets/gets the Parse App ID
+         * Individually sets the Parse App ID
          */
         public static function set REST_AppID(newID:String):void  {parseAppID = newID;}
+        /**
+         * Individually gets the Parse App ID
+         */
         public static function get REST_AppID():String {return parseAppID;}
 
         /**
-         * Individually sets/gets the date format string for Parse. (This is a convenience variable to store the date format string for Oauth tokens)
+         * Individually sets the date format string for Parse. (This is a convenience variable to store the date format string for Oauth tokens)
          */
         public static function set REST_DateFormat(newFormat:String):void {dateFormat = newFormat;}
+        /**
+         * Individually gets the date format string for Parse. (This is a convenience variable to store the date format string for Oauth tokens)
+         */
         public static function get REST_DateFormat():String {return dateFormat;}
         
         /**
-         * Individually sets/gets the REST API key
+         * Individually sets the REST API key
          */
         public static function set REST_RESTKey(newKey:String):void {parseRESTKey = newKey;}
+        /**
+         * Individually gets the REST API key
+         */
         public static function get REST_RESTKey():String {return parseRESTKey;}
         
         /**
-         * Individually sets/gets the Parse session token.
+         * Individually sets the Parse session token.
          */
         public static function set REST_SessionToken(newToken:String):void {parseSessionToken = newToken;}      
+        /**
+         * Individually gets the Parse session token.
+         */
         public static function get REST_SessionToken():String {return parseSessionToken;}
+
+
 
         //REST functionality calls
 
         /**
          * Logs the user in using an Oauth json object formatted as per Parse REST specs for the third-party service (Facebook, Twitter, etc.)
          *
-         *@param oathJSON - JSON object containing the necessary Oauth data for the service, as per Parse documentation
-         *@param success - delegate function to run on request success
-         *@param failure - delegate function to run on request failure
+         *  @param oathJSON - JSON object containing the necessary Oauth data for the service, as per Parse documentation
+         *  @param success - delegate function to run on request success
+         *  @param failure - delegate function to run on request failure
          */
         public static function REST_OauthLogin(oauthJSON:JSON = null, success:Function=null, failure:Function=null)
         {
@@ -145,24 +161,23 @@ package loom.social
         /**
          * Logs an existing user in using their username and password
          *
-         *@param userName - The user's username
-         *@param password - The user's password
-         *@param success - delegate function to run on request success
-         *@param failure - delegate function to run on request failure
+         *  @param userName - The user's username
+         *  @param password - The user's password
+         *  @param success - delegate function to run on request success
+         *  @param failure - delegate function to run on request failure
          */
         public static function REST_loginWithUsername(userName:String, password:String, success:Function=null, failure:Function=null)
         {                       
             var arguments = "username="+userName+"&password="+password;
-            
             GET("login",null,arguments,success,failure);
         }
 
         /**
          * Signs a user up for a new account using the data passed via json object (formatted as per Parse REST signup specs)
          *         
-         *@param signupParameters - JSON containing the required signup data
-         *@param success - delegate function to run on request success
-         *@param failure - delegate function to run on request failure
+         *  @param signupParameters - JSON containing the required signup data
+         *  @param success - delegate function to run on request success
+         *  @param failure - delegate function to run on request failure
          */
         public static function REST_signupWithUsername(signupParameters:JSON = null, success:Function=null, failure:Function=null)
         {            
@@ -172,9 +187,9 @@ package loom.social
         /**
          * Requests a password reset mail from Parse for the given account data
          *         
-         *@param resetParams - JSON containing the required account data for reset
-         *@param success - delegate function to run on request success
-         *@param failure - delegate function to run on request failure
+         *  @param resetParams - JSON containing the required account data for reset
+         *  @param success - delegate function to run on request success
+         *  @param failure - delegate function to run on request failure
          */
         public static function REST_requestPasswordReset(resetParams:JSON,success:Function = null,failure:Function = null)
         {            
@@ -184,10 +199,10 @@ package loom.social
         /**
          * Calls a Cloud Function on the Parse servers
          *         
-         *@param functionName - String containing the name of the cloud function to call
-         *@param functionParameters - JSON containing any parameters being passed to the cloud function
-         *@param success - delegate function to run on request success
-         *@param failure - delegate function to run on request failure
+         *  @param functionName - String containing the name of the cloud function to call
+         *  @param functionParameters - JSON containing any parameters being passed to the cloud function
+         *  @param success - delegate function to run on request success
+         *  @param failure - delegate function to run on request failure
          */     
         public static function REST_callCloudFunction(functionName:String, functionParameters:JSON = null, success:Function=null, failure:Function=null)
         {                       
@@ -197,8 +212,8 @@ package loom.social
         /**
          * Gets the current user's data (assuming a valid session token has been provided)
          *                  
-         *@param success - delegate function to run on request success
-         *@param failure - delegate function to run on request failure
+         *  @param success - delegate function to run on request success
+         *  @param failure - delegate function to run on request failure
          */   
         public static function REST_getCurrentUser(success:Function=null,failure:Function=null)
         {
@@ -208,10 +223,10 @@ package loom.social
         /**
          * Creates a new Parse object
          *         
-         *@param objectName - string containing the name of the object
-         *@param additionalData - JSON object containing additional fields and data to be assigned to the object
-         *@param success - delegate function to run on request success
-         *@param failure - delegate function to run on request failure
+         *  @param objectName - string containing the name of the object
+         *  @param additionalData - JSON object containing additional fields and data to be assigned to the object
+         *  @param success - delegate function to run on request success
+         *  @param failure - delegate function to run on request failure
          */
         public static function REST_createObject(objectName:String,additionalData:JSON = null,success:Function = null, failure:Function=null)
         {           
@@ -221,10 +236,10 @@ package loom.social
         /**
          * Retrieves data from an existing Parse object
          *         
-         *@param objectName - string containing the type of the object
-         *@param objectID - string containing the unique objectId of the object to retrieve
-         *@param success - delegate function to run on request success
-         *@param failure - delegate function to run on request failure
+         *  @param objectName - string containing the type of the object
+         *  @param objectID - string containing the unique objectId of the object to retrieve
+         *  @param success - delegate function to run on request success
+         *  @param failure - delegate function to run on request failure
          */
         public static function REST_retrieveObject(objectName:String,objectID:String,success:Function = null, failure:Function=null)
         {           
@@ -234,11 +249,11 @@ package loom.social
         /**
          * Updates an existing Parse object with new data
          *         
-         *@param objectName - string containing the type of the object
-         *@param objectID - string containing the unique objectId of the object to retrieve
-         *@param updateData - JSON object containing update data
-         *@param success - delegate function to run on request success
-         *@param failure - delegate function to run on request failure
+         *  @param objectName - string containing the type of the object
+         *  @param objectID - string containing the unique objectId of the object to retrieve
+         *  @param updateData - JSON object containing update data
+         *  @param success - delegate function to run on request success
+         *  @param failure - delegate function to run on request failure
          */
         public static function REST_updateObject(objectName:String,objectID:String,updateData:JSON = null,success:Function = null, failure:Function=null)
         {           
@@ -248,24 +263,28 @@ package loom.social
         /**
          * Passes a query to the Parse servers
          *         
-         *@param objectName - string containing the type of the object to query
-         *@param queryString - URI-formatted string containing query, as per Parse REST query format
-         *@param success - delegate function to run on request success
-         *@param failure - delegate function to run on request failure
+         *  @param objectName - string containing the type of the object to query
+         *  @param queryString - URI-formatted string containing query, as per Parse REST query format
+         *  @param success - delegate function to run on request success
+         *  @param failure - delegate function to run on request failure
          */
         public static function REST_makeQuery(objectName:String,queryString:String,success:Function = null, failure:Function = null)
         {            
             GET("classes/"+objectName,null,queryString,success,failure);
         }
         
+
+
+
         //HTTP Request functions
+
         /**
          * Sends a POST httprequest
          *         
-         *@param URL - string to be appended to the base REST API URL for specific functions
-         *@param data - JSON object containing any data to pass to the server in this query
-         *@param success - delegate function to run on request success
-         *@param failure - delegate function to run on request failure
+         *  @param URL - string to be appended to the base REST API URL for specific functions
+         *  @param data - JSON object containing any data to pass to the server in this query
+         *  @param success - delegate function to run on request success
+         *  @param failure - delegate function to run on request failure
          */
         public static function POST(URL:String="", data:JSON=null, success:Function=null, failure:Function=null)
         {            
@@ -287,10 +306,8 @@ package loom.social
             }                                  
 
             //We add the timeout cancellation function to success and failure delegates.
-
             req.onSuccess += REST_resetTimeout;
             req.onFailure += REST_resetTimeout;
-
 
             if(failure != null)
                 req.onFailure += failure;
@@ -299,16 +316,15 @@ package loom.social
                 req.onSuccess += success;
 
             requestQueue.push(req);
-            
         }
 
         /**
          * Sends a PUT httprequest
          *         
-         *@param URL - string to be appended to the base REST API URL for specific functions
-         *@param data - JSON object containing any data to pass to the server in this query
-         *@param success - delegate function to run on request success
-         *@param failure - delegate function to run on request failure
+         *  @param URL - string to be appended to the base REST API URL for specific functions
+         *  @param data - JSON object containing any data to pass to the server in this query
+         *  @param success - delegate function to run on request success
+         *  @param failure - delegate function to run on request failure
          */
         public static function PUT(URL:String="", data:JSON=null, success:Function=null, failure:Function=null)
         {         
@@ -330,7 +346,6 @@ package loom.social
             }                                  
 
             //We add the timeout cancellation function to success and failure delegates.
-
             req.onSuccess += REST_resetTimeout;
             req.onFailure += REST_resetTimeout;
 
@@ -341,17 +356,16 @@ package loom.social
                 req.onSuccess += success;
 
             requestQueue.push(req);
-            
         }
         
         /**
          * Sends a GET httprequest
          *         
-         *@param URL - string to be appended to the base REST API URL for specific functions
-         *@param jsonData - JSON object containing any data to pass to the server in this query
-         *@param urlData - string containing any URI-formatted data to pass to the server in this query
-         *@param success - delegate function to run on request success
-         *@param failure - delegate function to run on request failure
+         *  @param URL - string to be appended to the base REST API URL for specific functions
+         *  @param jsonData - JSON object containing any data to pass to the server in this query
+         *  @param urlData - string containing any URI-formatted data to pass to the server in this query
+         *  @param success - delegate function to run on request success
+         *  @param failure - delegate function to run on request failure
          */
         public static function GET(URL:String, jsonData:JSON = null, urlData:String = "", success:Function=null, failure:Function=null)
         {           
@@ -375,7 +389,6 @@ package loom.social
                 req.body = jsonData.serialize();          
             
             //We add the timeout cancellation function to success and failure delegates.
-
             req.onSuccess += REST_resetTimeout;
             req.onFailure += REST_resetTimeout;
             
@@ -388,12 +401,13 @@ package loom.social
         }
 
 
+
         //Request control variables and timeout functions
                 
         /**
          * Pushes an outside HTTPRequest to the internal request queue
          *         
-         *@param newReq - request to be pushed into the queue
+         *  @param newReq - request to be pushed into the queue
          */
         public static function REST_pushToRequestQueue(newReq:HTTPRequest)
         {            
@@ -401,15 +415,21 @@ package loom.social
         }
         
         /**
-         * Sets/gets the request timeout duration
+         * Sets the request timeout duration
          */
         public static function set REST_TimeoutDuration(newTimeout:Number):void {timeoutDuration = newTimeout;}
+        /**
+         * Gets the request timeout duration
+         */
         public static function get REST_TimeoutDuration():Number {return timeoutDuration;}
 
         /**
-         * Sets/gets the period between requests being sent from the request queue
+         * Sets the period between requests being sent from the request queue
          */
         public static function set REST_RequestDelay(newDelay:Number):void {requestDelay = newDelay;}
+        /**
+         * Gets the period between requests being sent from the request queue
+         */
         public static function get REST_RequestDelay():Number {return requestDelay;}
 
         /**
@@ -440,7 +460,6 @@ package loom.social
             }
 
             //Send the next request in the queue
-
             if(currentTick>=nextTick)
             {
                 if(requestQueue.length>0)
@@ -465,6 +484,4 @@ package loom.social
             }
         }
     }
-
-
 }
