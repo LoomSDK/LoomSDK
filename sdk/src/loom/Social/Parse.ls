@@ -217,6 +217,12 @@ package loom.social
                 req.body = "{}";
             }                                  
 
+            //We add the timeout cancellation function to success and failure delegates.
+
+            req.onSuccess += REST_resetTimeout;
+            req.onFailure += REST_resetTimeout;
+
+
             if(failure != null)
                 req.onFailure += failure;
             
@@ -245,6 +251,11 @@ package loom.social
             {
                 req.body = "{}";
             }                                  
+
+            //We add the timeout cancellation function to success and failure delegates.
+
+            req.onSuccess += REST_resetTimeout;
+            req.onFailure += REST_resetTimeout;
 
             if(failure != null)
                 req.onFailure += failure;
@@ -276,6 +287,11 @@ package loom.social
             
             if(jsonData != null)
                 req.body = jsonData.serialize();          
+            
+            //We add the timeout cancellation function to success and failure delegates.
+
+            req.onSuccess += REST_resetTimeout;
+            req.onFailure += REST_resetTimeout;
             
             if(success != null)
                 req.onSuccess += success;
@@ -342,11 +358,6 @@ package loom.social
                 {                   
                     //We send the next queued request and add it to the active request buffer.
                     var nextReq = requestQueue[0];                              
-
-                    //We add the timeout cancellation function to success and failure delegates.
-
-                    nextReq.onSuccess += REST_resetTimeout;
-                    nextReq.onFailure += REST_resetTimeout;
 
                     nextReq.send();
 
