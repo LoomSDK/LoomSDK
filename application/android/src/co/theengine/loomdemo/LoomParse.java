@@ -31,9 +31,10 @@ public class LoomParse
     {
         _context = app;
 
-        String appID = app.getString(R.string.parseAppID);
-        String clientKey = app.getString(R.string.parseClientKey);
-        // Log.d("LoomParse", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
+//TODO: replace with manifest searches
+String appID = app.getString(R.string.parseAppID);
+String clientKey = app.getString(R.string.parseClientKey);
+// Log.d("LoomParse", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
 
         // if invalid strings or error on initialize, make sure to set _initialized = false
         _initialized = false;

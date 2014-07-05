@@ -34,9 +34,5 @@
 	<string></string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-    <key>ParseAppIDString</key>
-    <string>EUl1VhYqZ2bWjkiGNUTWABoJD6eGHVUboB9taPvC</string>
-    <key>ParseClientKeyString</key>
-    <string>17pJDP3YV6kA0mxoS7YfEcdrrEC9kQ82iEbJ8OYT</string>
 </dict>
 </plist>
