@@ -43,8 +43,8 @@ static bool _initialized = false;
 -(void) initialize
 {
     NSBundle *mainBundle = [NSBundle mainBundle];
-    NSString *app_id = [mainBundle objectForInfoDictionaryKey:@"ParseAppIDString"];
-    NSString *client_key = [mainBundle objectForInfoDictionaryKey:@"ParseClientKeyString"];
+    NSString *app_id = [mainBundle objectForInfoDictionaryKey:@"ParseAppID"];
+    NSString *client_key = [mainBundle objectForInfoDictionaryKey:@"ParseClientKey"];
     // NSLog(@"-----Info.plist Parse Strings: %@ %@", app_id, client_key);
 
     //don't initialize without valid strings
