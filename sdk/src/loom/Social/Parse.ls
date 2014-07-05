@@ -411,6 +411,8 @@ package loom.social
          */
         public static function REST_pushToRequestQueue(newReq:HTTPRequest)
         {            
+            newReq.onSuccess+=REST_resetTimeout;
+            newReq.onFailure+=REST_resetTimeout;
             requestQueue.push(newReq);
         }
         
