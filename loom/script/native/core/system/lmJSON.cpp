@@ -146,6 +146,27 @@ public:
         return json_typeof(jobject);
     }
     
+    const char *getLongLongAsString(const char *key)
+    {
+        if (!_json)
+        {
+            return "";
+        }
+
+        json_t *jllu = json_object_get(_json, key);
+
+        if (!jllu)
+        {
+            return "";
+        }
+
+        static char buffer[64];
+        memset(buffer, 0x00, 64);
+        unsigned long long val = (unsigned long long)json_integer_value(jllu);
+        sprintf(buffer, "%llu", val);
+
+        return buffer;
+    }    
 
     int getInteger(const char *key)
     {
@@ -586,6 +607,7 @@ static int registerSystemJSON(lua_State *L)
        .addMethod("getObjectJSONType", &JSON::getObjectJSONType)
        .addMethod("getArrayJSONType", &JSON::getArrayJSONType)
 
+       .addMethod("getLongLongAsString", &JSON::getLongLongAsString)
        .addMethod("getInteger", &JSON::getInteger)
        .addMethod("setInteger", &JSON::setInteger)
        .addMethod("getFloat", &JSON::getFloat)

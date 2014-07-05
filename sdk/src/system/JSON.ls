@@ -74,6 +74,15 @@ native class JSON {
     public native function getArrayJSONType(index:int):JSONType;
 
     /**
+     *  For very large integers that the platform does not reliably support,
+     *  (ie. Facebook user ids) this is a way to read those in as strings.
+     * 
+     *  @param key String key mapped to the String value.
+     *  @return the String value mapped to the String key.
+     */
+    public native function getLongLongAsString(key:String):String;
+ 
+    /**
      *  Gets the int value mapped to the key String on this JSON object.
      *
      *  @param key String key mapped to the int value.
