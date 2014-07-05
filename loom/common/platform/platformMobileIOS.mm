@@ -29,11 +29,15 @@ limitations under the License.
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformMobile.h"
+#include "loom/common/platform/platformMobileiOS.h"
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
 #include "loom/vendor/jansson/jansson.h"
 
 static SensorTripleChangedCallback gTripleChangedCallback = NULL;
+
+NSMutableDictionary *gOpenUrlQueryStringDictionary = nil;
+
 
 
 static UIViewController* getParentViewController()
@@ -77,6 +81,31 @@ bool platform_shareText(const char *subject, const char *text)
     UIActivityViewController *controller = [[UIActivityViewController alloc] initWithActivityItems:activityItems applicationActivities:nil];
     [getParentViewController() presentViewController:controller animated:YES completion:nil];
     return true;
+}
+
+///gets the the specified query key data from any custom scheme URL path that the application was launched with, or "" if not found
+const char *platform_getOpenURLQueryData(const char *queryKey)
+{
+    static char queryDataStatic[1024];
+    const char *cString;
+    if(queryKey && gOpenUrlQueryStringDictionary)
+    {
+        NSString *queryKeyString = (queryKey) ? [NSString stringWithUTF8String : queryKey] : nil;
+        if(queryKeyString)
+        {
+            NSString *queryData = [gOpenUrlQueryStringDictionary objectForKey:queryKeyString];
+            if(queryData)
+            {
+                cString = [queryData cStringUsingEncoding:NSUTF8StringEncoding];    
+                strcpy(queryDataStatic, cString);
+                return queryDataStatic;
+            }
+        }
+    }
+    else
+    {
+        return "";
+    }
 }
 
 ///checks if a given sensor is supported on this hardware

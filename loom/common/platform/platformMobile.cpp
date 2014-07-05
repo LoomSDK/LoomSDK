@@ -88,6 +88,12 @@ bool platform_shareText(const char *subject, const char *text)
     return false;
 }
 
+///gets the the specified query key data from any custom scheme URL path that the application was launched with, or "" if not found
+const char *platform_getOpenURLQueryData(const char *queryKey)
+{
+    return "";
+}
+
 ///checks if a given sensor is supported on this hardware
 bool platform_isSensorSupported(int sensor)
 {

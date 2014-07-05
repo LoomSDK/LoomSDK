@@ -63,6 +63,10 @@ public:
     {
         return platform_shareText(subject, text);
     }       
+    static const char *getOpenURLQueryData(const char *queryKey)
+    {
+        return platform_getOpenURLQueryData(queryKey);
+    }       
     static bool isSensorSupported(int sensor)
     {
         return platform_isSensorSupported(sensor);
@@ -133,6 +137,7 @@ static int registerLoomMobile(lua_State *L)
             .addStaticMethod("vibrate", &Mobile::vibrate)
             .addStaticMethod("allowScreenSleep", &Mobile::allowScreenSleep)
             .addStaticMethod("shareText", &Mobile::shareText)
+            .addStaticMethod("getOpenURLQueryData", &Mobile::getOpenURLQueryData)
             .addStaticMethod("isSensorSupported", &Mobile::isSensorSupported)
             .addStaticMethod("isSensorEnabled", &Mobile::isSensorEnabled)
             .addStaticMethod("hasSensorReceivedData", &Mobile::hasSensorReceivedData)

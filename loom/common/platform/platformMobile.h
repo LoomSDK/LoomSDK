@@ -44,6 +44,9 @@ void platform_allowScreenSleep(bool sleep);
 ///shares the specfied text via other applications on the device (ie. Twitter, Facebook)
 bool platform_shareText(const char *subject, const char *text);
 
+///gets the the specified query key data from any custom scheme URL path that the application was launched with, or "" if not found
+const char *platform_getOpenURLQueryData(const char *queryKey);
+
 ///checks if a given sensor is supported on this hardware
 bool platform_isSensorSupported(int sensor);
 

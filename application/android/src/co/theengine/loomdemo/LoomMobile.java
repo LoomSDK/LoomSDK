@@ -8,6 +8,7 @@ import android.os.Vibrator;
 import android.os.Build;
 import android.util.Log;
 import android.provider.Settings.System;
+import android.net.Uri;
 
 
 /**
@@ -26,6 +27,7 @@ public class LoomMobile
     private static Activity     _context;
     private static Vibrator     _vibrator;
     private static boolean      _canVibrate;
+    private static Uri          _customURI = null;
 
 
 
@@ -49,6 +51,10 @@ public class LoomMobile
             }
         }
         Log.d("Loom", "Vibration supported: " + _canVibrate);
+
+        //see if we have a custom intent scheme URI to snag now for Querying later on
+        Intent intent = ctx.getIntent();
+        _customURI = (intent != null) ? intent.getData() : null;
     }
 
 
@@ -124,4 +130,12 @@ public class LoomMobile
 
         return false;
     }    
+
+
+    ///returns the data for a query of the custom scheme data string used to launch the app with, or null if not found / app wasn not launched with a custom URI scheme
+    public static String getCustomSchemeQueryData(String queryKey)
+    {
+        return (_customURI != null) ? _customURI.getQueryParameter(queryKey) : null;
+    }    
+
 }

@@ -125,6 +125,17 @@ package loom.platform
         public static native function shareText(subject:String, text:String):Boolean;
 
         /**
+         * Gets the the specified query key data from any custom scheme URL path 
+         * that the application was launched with, or an Empty String if not found.
+         *
+         * Valid URLs are formatted as such:   someScheme://someHostOrNoHost/?key1=someData&key2=moreData
+         *
+         *  @param queryKey The key to search for in the URL query to return the data of
+         *  @return Data string for the given query key, or "" one was not found
+         */
+        public static native function getOpenURLQueryData(queryKey:String):String;
+
+        /**
          * Queries whether or not the specified sensor is supported on this device
          *
          *  @param type MobileSensorType value for the desired sensor
