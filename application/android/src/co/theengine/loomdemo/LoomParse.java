@@ -9,6 +9,7 @@ import android.os.Vibrator;
 import android.os.Build;
 import android.util.Log;
 import android.provider.Settings.System;
+import android.provider.Settings.Secure;
 
 import com.parse.Parse;
 import com.parse.ParseAnalytics;
@@ -21,6 +22,10 @@ import com.parse.PushService;
  */
 public class LoomParse
 {
+    private static final String TAG = "LoomParse";
+    private static final String PARSE_APPID_KEY = "com.parse.ApplicationId";
+    private static final String PARSE_CLIENTKEY_KEY = "com.parse.ClientKey";
+
     ///vars
     private static Context     _context;
     private static boolean     _initialized = false;
@@ -31,10 +36,9 @@ public class LoomParse
     {
         _context = app;
 
-//TODO: replace with manifest searches
-String appID = app.getString(R.string.parseAppID);
-String clientKey = app.getString(R.string.parseClientKey);
-// Log.d("LoomParse", "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
+        String appID = LoomDemo.getMetadataString(app, PARSE_APPID_KEY);
+        String clientKey = LoomDemo.getMetadataString(app, PARSE_CLIENTKEY_KEY);
+        // Log.d(TAG, "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
 
         // if invalid strings or error on initialize, make sure to set _initialized = false
         _initialized = false;
@@ -49,8 +53,14 @@ String clientKey = app.getString(R.string.parseClientKey);
 
             ///initialize Push Notifications service
             PushService.setDefaultPushCallback(app, LoomDemo.class);
-            ParseInstallation.getCurrentInstallation().saveInBackground();
-            Log.d("LoomParse", "Completed initialization of Parse!");
+
+            ParseInstallation installation = ParseInstallation.getCurrentInstallation();
+            //set Android ID as the UniqueID for this installation to avoid bug with re-installs
+            String androidId = Secure.getString(app.getContentResolver(), Secure.ANDROID_ID);
+            installation.put("UniqueId", androidId);
+
+            installation.saveInBackground();
+            Log.d("LoomParse", "Completed initialization of Parse. InstallationID: " + installation.getInstallationId());
             _initialized = true;
         }
     }
