@@ -13,7 +13,6 @@ import android.content.Intent;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.Signature;
 
 import com.facebook.android.Facebook.DialogListener;
@@ -370,19 +369,7 @@ public class LoomFacebook
 		}        
         // --------------------------
 
-		String facebookAppId = null;
-		try 
-        {
-			ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-			if (ai.metaData != null) 
-            {
-				facebookAppId = ai.metaData.getString(Session.APPLICATION_ID_PROPERTY);
-			}
-		} 
-        catch (PackageManager.NameNotFoundException e) 
-        {
-			// facebookAppId stays null
-		}
+		String facebookAppId = LoomDemo.getMetadataString(context, Session.APPLICATION_ID_PROPERTY);
 		return facebookAppId;
 	}
 
@@ -395,7 +382,6 @@ public class LoomFacebook
 
 		if(facebookAppId == null || facebookAppId.isEmpty() || facebookAppId.trim().isEmpty()) 
         {
-			Log.d(TAG, "No Facebook Application Id defined. Alter your 'loom.config' file, or 'application/android/res/values/strings.xml' file to use Loom.Facebook functionality.");
 			return false;
 		}
 		return true;

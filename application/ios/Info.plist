@@ -34,22 +34,5 @@
 	<string></string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-    <key>TeakAppSecret</key>
-    <string>f33f2c9c5df4edc2b866b3dcd8e634df</string>
-    <key>FacebookAppID</key>
-    <string>145359302297405</string>
-    <key>FacebookDisplayName</key>
-    <string>Double Doodle Dev</string>
-    <key>CFBundleURLTypes</key>
-    <array>
-        <dict>
-            <key>CFBundleURLName</key>
-            <string>co.theengine.DoubleDoodle</string>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <string>fb145359302297405</string>
-            </array>
-        </dict>
-    </array>
 </dict>
 </plist>

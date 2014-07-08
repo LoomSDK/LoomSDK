@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">LoomDemo</string>
-
-    <!-- Your Facebook Application Id goes here, or the CLI tool will populate it using the 'facebook_app_id' property in loom.config -->
-    <string name="facebookApplicationId">145359302297405</string>
 </resources>
 
