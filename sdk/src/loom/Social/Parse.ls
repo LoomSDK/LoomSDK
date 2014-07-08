@@ -24,6 +24,13 @@ package loom.social
      * Loom Parse API.
      *
      * Loom provides access to the Parse API on mobile devices for social networking services.
+     * Visit https://parse.com/ for more information
+     *
+     *  In order to use Parse support in Loom, you must set both 
+     *  'parse_app_id' (unique App ID) and 'parse_client_key' 
+     *  (unique Client Key) in your project's loom.config file.
+     *  These values are availble to you as a Parse Developer once 
+     *  you have created your App on https://parse.com/
      *
      */
 
