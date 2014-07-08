@@ -27,6 +27,16 @@ package loom.platform
      * Note that not all of the items found here will be available 
      * on every mobile platform.
      *
+     *  Custom URL Schemes:
+     *
+     * In order to use custom URL Scheme launching of your app, you must specify
+     * a 'custom_url_scheme' inside of your loom.config file for the app such as:
+     * "custom_url_scheme": "startmygame"
+     * This will allow a url such as: "startmygame://?key=myData" to launch your app
+     * as send Query data to it to be parsed
+     * NOTE: Custom URL schemes need to be unique enough that another app on the same device
+     * will not also use the same one as your.
+     *
      */
 
     /**
