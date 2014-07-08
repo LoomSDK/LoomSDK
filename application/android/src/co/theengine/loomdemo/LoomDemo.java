@@ -33,6 +33,8 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.AssetManager;
 import android.content.pm.ConfigurationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.FrameLayout;
@@ -65,6 +67,23 @@ public class LoomDemo extends Cocos2dxActivity {
     private Cocos2dxGLSurfaceView mGLView;
 
     public static LoomDemo instance = null;
+
+
+    public static String getMetadataString(Context context, String key) 
+    {
+        String metaString = null;
+        try 
+        {
+            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), 
+                                                                                    PackageManager.GET_META_DATA);
+            if (ai.metaData != null) 
+            {
+                return ai.metaData.getString(key);
+            }
+        } 
+        catch (PackageManager.NameNotFoundException e) {}
+        return null;
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) 
