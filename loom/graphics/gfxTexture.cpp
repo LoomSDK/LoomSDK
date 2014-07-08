@@ -222,6 +222,14 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
         return tinfo;
     }
 
+    // Force it to load.
+    if(loom_asset_lock(path, LATImage, 1) == NULL)
+    {
+        lmLog(gGFXTextureLogGroup, "Unable to lock the asset for texture %s", path);
+        return NULL;
+    }
+    loom_asset_unlock(path);
+
     // Get a new texture ID.
     TextureID id = getAvailableTextureID();
     if (id == TEXTUREINVALID)
@@ -235,10 +243,6 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
     tinfo->handle.idx  = MARKEDTEXTURE;    // mark in use, but not yet loaded
     tinfo->texturePath = path;
     sTexturePathLookup.insert(path, id);
-
-    // Force it to load.
-    loom_asset_lock(path, LATImage, 1);
-    loom_asset_unlock(path);
 
     // allocate the texture handle/id
     lmLog(gGFXTextureLogGroup, "loading %s", path);

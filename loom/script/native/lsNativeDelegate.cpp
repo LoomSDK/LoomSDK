@@ -19,12 +19,17 @@
  */
 
 #include "loom/common/platform/platformThread.h"
+#include "loom/common/core/log.h"
 #include "loom/script/native/lsLuaBridge.h"
 #include "loom/script/runtime/lsRuntime.h"
 #include "loom/script/runtime/lsProfiler.h"
 #include "loom/script/reflection/lsFieldInfo.h"
 #include "loom/script/reflection/lsPropertyInfo.h"
 #include "loom/script/native/lsNativeDelegate.h"
+
+
+lmDefineLogGroup(gNativeDelegateGroup, "script.native", 1, LoomLogInfo);
+
 
 namespace LS {
 utHashTable<utPointerHashKey, utArray<NativeDelegate *> *> NativeDelegate::sActiveNativeDelegates;
@@ -516,13 +521,19 @@ void NativeDelegate::markMainThread()
 
 void NativeDelegate::assertMainThread()
 {
-    lmAssert(smMainThreadID != scmBadThreadID,
-             "Tried to touch a NativeDelegate before the main thread was marked. "
-             "Probably need to add a markMainThread call?");
+    if(smMainThreadID == scmBadThreadID)
+    {
+        lmLogWarn(gNativeDelegateGroup,
+                 "Tried to touch a NativeDelegate before the main thread was marked. "
+                 "Probably need to add a markMainThread call?");
+    }
 
-    lmAssert(platform_getCurrentThreadId() == smMainThreadID,
-             "Trying to fire a NativeDelegate from thread %x that is not the main "
-             "thread %x. This will result in memory corruption and race conditions!",
-             platform_getCurrentThreadId(), smMainThreadID);
+    if( smMainThreadID != platform_getCurrentThreadId())
+    {
+        lmLogWarn(gNativeDelegateGroup,
+                 "Trying to fire a NativeDelegate from thread %x that is not the main "
+                 "thread %x. This will result in memory corruption and race conditions!",
+                platform_getCurrentThreadId(), smMainThreadID);
+    }
 }
 }

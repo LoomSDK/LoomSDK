@@ -28,6 +28,8 @@ import android.util.Log;
  */
 public class LoomHTTP 
 {
+    private static final String TAG = "LoomHTTP";
+    
     public static void send(final String url, String httpMethod, final long callback, final long payload, byte[] body, final String responseCacheFile, final boolean base64EncodeResponseData, boolean followRedirects)
     {
         final Activity activity = LoomAdMob.activity;
@@ -51,7 +53,7 @@ public class LoomHTTP
         }
         catch(Exception e)
         {
-            LoomDemo.logDebug("Failed to open responseCacheFile " + responseCacheFile);
+            Log.d(TAG, "Failed to open responseCacheFile " + responseCacheFile);
         }
         final File savedFile = trySaveFile;
 
@@ -63,17 +65,17 @@ public class LoomHTTP
 
                 if (responseCacheFile != null && responseCacheFile.length() > 0)
                 {
-                    LoomDemo.logDebug("Caching HTTP response to '" + responseCacheFile + "'");
+                    Log.d(TAG, "Caching HTTP response to '" + responseCacheFile + "'");
                     try {
                         BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(savedFile));
                         bos.write(binaryData);
                         bos.flush();
                         bos.close();
-                        LoomDemo.logDebug("file written...");
+                        Log.d(TAG, "file written...");
                     }
                     catch (Exception e)
                     {
-                        LoomDemo.logDebug("file write failed...");
+                        Log.d(TAG, "file write failed...");
                         throw new AssertionError("HTTP Response could not be cached.");
                     }
                 }
@@ -98,7 +100,7 @@ public class LoomHTTP
                 Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
                     @Override
                     public void run() {
-                        //Log.d("LoomHTTP", "Main view thread submitting '" + rfResponse + "'' from queue!");
+                        // Log.d(TAG, "Main view thread submitting '" + rfResponse + "'' from queue!");
                         LoomHTTP.onSuccess(rfResponse, callback, payload);
                     }
                 });
