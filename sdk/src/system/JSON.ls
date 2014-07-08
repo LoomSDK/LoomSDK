@@ -74,6 +74,14 @@ native class JSON {
     public native function getArrayJSONType(index:int):JSONType;
 
     /**
+     *  Gets a 64-bit long long integer as a String as LoomScript does not support 64-bit integers natively
+     * 
+     *  @param key String key mapped to the String value.
+     *  @return the 64-bit valuemapped to the String key, stored as a String.
+     */
+    public native function getLongLongAsString(key:String):String;
+ 
+    /**
      *  Gets the int value mapped to the key String on this JSON object.
      *
      *  @param key String key mapped to the int value.
