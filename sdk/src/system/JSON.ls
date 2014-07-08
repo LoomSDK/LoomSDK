@@ -74,11 +74,10 @@ native class JSON {
     public native function getArrayJSONType(index:int):JSONType;
 
     /**
-     *  For very large integers that the platform does not reliably support,
-     *  (ie. Facebook user ids) this is a way to read those in as strings.
+     *  Gets a 64-bit long long integer as a String as LoomScript does not support 64-bit integers natively
      * 
      *  @param key String key mapped to the String value.
-     *  @return the String value mapped to the String key.
+     *  @return the 64-bit valuemapped to the String key, stored as a String.
      */
     public native function getLongLongAsString(key:String):String;
  

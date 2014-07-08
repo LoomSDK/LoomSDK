@@ -160,8 +160,10 @@ public:
             return "";
         }
 
-        static char buffer[64];
-        memset(buffer, 0x00, 64);
+        //create static char buffer to return to Loomscript (it makes a copy of this, so it will not be overwritten)
+        //NOTE: the longest string length of an unsigned long long is 20 characters (0 to 18446744073709551615) + null terminator
+        static char buffer[32];
+        memset(buffer, 0x00, 32);
         unsigned long long val = (unsigned long long)json_integer_value(jllu);
         sprintf(buffer, "%llu", val);
 
