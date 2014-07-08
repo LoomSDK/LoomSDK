@@ -53,8 +53,17 @@ public class LoomMobile
         Log.d("Loom", "Vibration supported: " + _canVibrate);
 
         //see if we have a custom intent scheme URI to snag now for Querying later on
-        Intent intent = ctx.getIntent();
+        Intent intent = ctx.getIntent();        
         _customURI = (intent != null) ? intent.getData() : null;
+        if(_customURI != null)
+        {
+            String customURLScheme = LoomDemo.getMetadataString(_context, "co.theengine.loomdemo.CustomURL");
+            if((customURLScheme != null) && (_customURI.getScheme() != null) && !customURLScheme.equalsIgnoreCase(_customURI.getScheme()))
+            {
+                //not our custom URL scheme so ignore!
+                _customURI = null;
+            }
+        }
     }
 
 

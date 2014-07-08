@@ -34,18 +34,5 @@
 	<string></string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-    <key>CustomAppURLScheme</key>
-    <string>launchLoom</string>
-    <key>CFBundleURLTypes</key>
-    <array>
-        <dict>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <string>launchLoom</string>
-            </array>
-            <key>CFBundleURLName</key>
-            <string>co.theengine.LoomDemo</string>
-        </dict>
-    </array>
 </dict>
 </plist>
