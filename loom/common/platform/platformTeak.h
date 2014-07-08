@@ -35,12 +35,22 @@ typedef void (*AuthStatusCallback)(int authState);
 ///Initializes Teak for the platform
 void platform_teakInitialize(AuthStatusCallback sessionStatusCB);
 
-//TODO: make nice for LoomSDK
+///checks if Teak is currently active for this platform
 bool platform_isTeakActive();
+
+///sets the Facebook Access Token of the current FB Session with Teak
 void platform_setAccessToken(const char *fbAccessToken);
+
+///Queries the current status of Teak
 int platform_getStatus();
+
+///Posts a Teak Achievement from ones located on your Applications Teak Page
 bool platform_postAchievement(const char *achievementId);
+
+///Posts a Teak High Score
 bool platform_postHighScore(int score);
+
+///Posts a Teak Action from ones located on your Applications Teak Page
 bool platform_postAction(const char *actionId, const char *objectInstanceId);
 
 

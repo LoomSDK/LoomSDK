@@ -71,7 +71,14 @@ package loom.social
 
 
     /**
-     *  Facebook is currently supported on Android and iOS.
+     *  Facebook is currently supported on Android and iOS. 
+     *
+     *  In order to use Facebook support in Loom, you must set both 
+     *  'facebook_app_id' (unique Facebook App ID for your application) 
+     *  and 'facebook_display_name' (the name of your App Page on Facebook)
+     *  in your project's loom.config file.  These values are availble to 
+     *  you as a Facebook Developer once you have created your App on 
+     *  https://developers.facebook.com/
      */
     public native class Facebook
     {

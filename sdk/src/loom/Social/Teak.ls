@@ -10,7 +10,14 @@ package loom.social
 
 
     /**
-     *  Teak is currently supported on Android and iOS.
+     *  Teak is a Facebook Integration API and is currently supported on Android and iOS.  
+     *  See https://teak.io/ for more information
+     *
+     *  In order to use Facebook support in Loom, you must set 
+     *  'teak_app_secret' (unique Teak Secret) in your project's 
+     *  loom.config file.  This value is availble to you as a Teak 
+     *  Developer once you have created your App on 
+     *  https://teak.io/
      */
     public native class Teak
     {
