@@ -4,8 +4,6 @@ import android.util.Log;
 import android.os.Bundle;
 import android.content.Intent;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.content.pm.ApplicationInfo;
 
 import com.CarrotInc.Carrot.Carrot;
 
@@ -14,7 +12,8 @@ import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 
 public class LoomTeak 
 {
-    public static final String TEAK_KEY_PROPERTY = "com.teak.AppSecret";
+    private static final String TAG = "LoomTeak";
+    private static final String TEAK_SECRET_KEY = "com.teak.AppSecret";
 
     static Carrot mTeak = null;
 
@@ -24,7 +23,8 @@ public class LoomTeak
     {
         if(mTeak == null) 
         {
-            String teakKey = getTeakKey(loomDemo);
+            String teakKey = LoomDemo.getMetadataString(loomDemo, TEAK_SECRET_KEY);
+            // Log.d(TAG, "Initialize Teak... TeakKey: " + teakKey);
 
             if((teakKey != null) && !teakKey.isEmpty() && !teakKey.trim().isEmpty() &&
                 (facebookAppId != null) && !facebookAppId.isEmpty() && !facebookAppId.trim().isEmpty()) 
@@ -61,31 +61,10 @@ public class LoomTeak
     }
 
 
-    private static String getTeakKey(Context context) 
-    {
-        String teakKey = null;
-        try 
-        {
-            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), 
-                                                                                PackageManager.GET_META_DATA);
-            if (ai.metaData != null) 
-            {
-                teakKey = ai.metaData.getString(TEAK_KEY_PROPERTY);
-            }
-        } 
-        catch (PackageManager.NameNotFoundException e)
-        {
-            // teakKey stays null
-        }
-        return teakKey;
-    }
-
-
     public static boolean isActive() 
     {
         return (mTeak == null) ? false : true;
     }
-
 
     public static void setAccessToken(String accessToken) 
     {
