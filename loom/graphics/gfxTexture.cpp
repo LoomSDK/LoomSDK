@@ -225,7 +225,7 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
     // Force it to load.
     if(loom_asset_lock(path, LATImage, 1) == NULL)
     {
-        lmLog(gGFXTextureLogGroup, "Unable to lock the asset for texture %s", path);
+        lmLogWarn(gGFXTextureLogGroup, "Unable to lock the asset for texture %s", path);
         return NULL;
     }
     loom_asset_unlock(path);
