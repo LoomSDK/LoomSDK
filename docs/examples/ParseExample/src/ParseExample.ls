@@ -151,7 +151,7 @@ package
                 sessiontoken = responseJSON.getString("sessionToken");
 
                 //Set the user's session token in the Parse object.
-                Parse.REST_setSessionToken(sessiontoken);
+                Parse.REST_SessionToken = sessiontoken;
 
                 //If Parse Push Notes are supported on this device, we pass the username to the Installation so we can target our push notes.
                 if(Parse.isActive())
