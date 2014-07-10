@@ -198,6 +198,7 @@ def write_packages
   puts "Generating packages and classes"
   # loop through packages
   @packages.each do |package_doc|
+    puts "Processing #{package_doc.path}"
     package_doc.write
     
     # write class docs for package
