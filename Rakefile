@@ -282,15 +282,38 @@ namespace :generate do
 
 end
 
-desc "Opens the docs in a web browser"
-task :docs => ['generate:docs'] do
-  if $LOOM_HOST_OS == 'windows'
-    `start artifacts/docs/index.html`
-  else
-    `open artifacts/docs/index.html`
+
+namespace :docs do
+
+  desc "Regenerates loomlibs and docs"
+  task :regen do
+    puts "===== Recompiling loomlibs ====="
+    Dir.chdir("sdk") do
+      sh "../artifacts/lsc Main.build"
+    end
+    FileUtils.cp_r("sdk/libs", "artifacts/")
+
+    puts "===== Recreating the docs ====="
+    Dir.chdir("docs") do
+      load "./main.rb"
+    end
+    FileUtils.mkdir_p "artifacts/docs"
+    FileUtils.cp_r "docs/output/.", "artifacts/docs/"
   end
-  
-end 
+
+  desc "Opens the docs in a web browser"
+  task :open do
+    if $LOOM_HOST_OS == 'windows'
+      `start artifacts/docs/index.html`
+    else
+      `open artifacts/docs/index.html`
+    end
+  end
+
+  desc "Regenerates docs and opens them in a web browser"
+  task :refresh => ['docs:regen', 'docs:open']
+
+end
 
 namespace :utility do
 
