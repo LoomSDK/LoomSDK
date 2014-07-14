@@ -32,6 +32,7 @@ package
         private var fbLoginButton:Button;
         private var fbPublishButton:Button;
         private var teakPostButton:Button;
+        private var logoutButton:Button;
         private var theme:MetalWorksMobileTheme;
         private var teakIsReady:Boolean = false;
 
@@ -65,7 +66,7 @@ package
                 Debug.print("{FACEBOOK} Sorry, Facebook is not initialised on this device. Facebook is only supported on Android and iOS.");
                 return;
             }
-
+            
             //Delegate a function to Facebook onSessionStatus to handle any changes in session.
             Facebook.onSessionStatus = sessionStatusChanged;
 
@@ -76,7 +77,7 @@ package
             fbLoginButton = new Button();
             fbLoginButton.label = "Log in to Facebook!";
             fbLoginButton.x = label.x = stage.stageWidth / 2;
-            fbLoginButton.y = stage.stageHeight / 2;
+            fbLoginButton.y = stage.stageHeight / 2+75;
             fbLoginButton.width = 200;
             fbLoginButton.height = 50;
             fbLoginButton.center();
@@ -90,8 +91,8 @@ package
 
             fbPublishButton = new Button();
             fbPublishButton.label = "Get FB publish permissions!";
-            fbPublishButton.x = label.x = stage.stageWidth / 2;
-            fbPublishButton.y = stage.stageHeight / 2;
+            fbPublishButton.x = stage.stageWidth / 2;
+            fbPublishButton.y = stage.stageHeight / 2+75;
             fbPublishButton.width = 200;
             fbPublishButton.height = 50;
             fbPublishButton.center();
@@ -106,8 +107,8 @@ package
 
             teakPostButton = new Button();
             teakPostButton.label = "Post Achievement!";
-            teakPostButton.x = label.x = stage.stageWidth / 2;
-            teakPostButton.y = stage.stageHeight / 2;
+            teakPostButton.x = stage.stageWidth / 2;
+            teakPostButton.y = stage.stageHeight / 2 +75;
             teakPostButton.width = 200;
             teakPostButton.height = 50;
             teakPostButton.center();
@@ -118,8 +119,33 @@ package
                 //We call teak to post the achievement defined server-side.
                 Teak.postAchievement("teakWorks");
                 label.text = "Posting achievement. Check your Facebook account.";
+                teakPostButton.visible=false;
+                logoutButton.visible=true;
+
             });
-            stage.addChild(teakPostButton);              
+            stage.addChild(teakPostButton);    
+
+            logoutButton = new Button();
+            logoutButton.label = "Log out!";
+            logoutButton.x = stage.stageWidth / 2;
+            logoutButton.y = stage.stageHeight / 2 +75;
+            logoutButton.width = 200;
+            logoutButton.height = 50;
+            logoutButton.center();
+            logoutButton.visible = false;
+            logoutButton.addEventListener(Event.TRIGGERED,
+            function(e:Event)
+            {
+                //Log out of our Facebook session and clear the token cache
+                Facebook.closeAndClearTokenInformation();
+                
+                label.text = "Logging out.";
+                logoutButton.visible=false;
+                fbLoginButton.visible=true;
+
+                
+            });
+            stage.addChild(logoutButton);           
             
         }
 
@@ -205,10 +231,19 @@ package
         {          
             if(Teak.isActive())
             {
-                label.text += "\nPassing access token to Teak.";
-                trace("{TEAK} Facebook access token passed to Teak.");
-                
-                Teak.setAccessToken(fbAccessToken);
+                //If Teak is already ready (for instance, if we have already passed it a token previously in this session), just activate the button.                
+                if(Teak.getStatus() == Teak.StatusReady)
+                {    
+                    label.text+="\nTeak is already ready";
+                    enablePostButton();                  
+                }
+                else //Otherwise, we pass the token and let the teakAuthStatusChanged function do the work
+                {
+                    label.text += "\nPassing access token to Teak.";
+                    trace("{TEAK} Facebook access token passed to Teak.");
+                    
+                    Teak.setAccessToken(fbAccessToken);
+                }
             }
             else
             {
@@ -228,7 +263,7 @@ package
             if(Teak.getStatus() == Teak.StatusReady)
             {
                 teakIsReady = true;
-                teakPostButton.visible = true;
+                enablePostButton();
             }
             else
             {
@@ -237,6 +272,11 @@ package
 
             trace("{TEAK} Ready: "+teakIsReady);
             label.text+="\nTeak ready: "+teakIsReady;
+        }
+
+        function enablePostButton()
+        {            
+            teakPostButton.visible = true;
         }
     }
 }
