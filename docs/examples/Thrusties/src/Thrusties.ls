@@ -9,6 +9,7 @@ package
 	import loom2d.display.StageScaleMode;
 	import loom2d.display.Image;
 	import loom2d.events.Event;
+	import loom2d.events.KeyboardEvent;
 	import loom2d.events.Touch;
 	import loom2d.events.TouchEvent;
 	import loom2d.textures.Texture;
@@ -35,10 +36,24 @@ package
 			// Triggers on touch start, move and end
 			stage.addEventListener(TouchEvent.TOUCH, touched);
 			
+			stage.addEventListener(KeyboardEvent.BACK_PRESSED, back);
+			
 			stage.addEventListener(Event.RESIZE, resized);
 			resized();
 			
 			environment = new Environment(stage);
+			
+			var demo = new Help(environment);
+			stage.addChild(demo);
+			demo.run();
+		}
+		
+		/**
+		 * Exits the application when the back button is pressed
+		 */
+		private function back(e:KeyboardEvent):void 
+		{
+			Process.exit(0);
 		}
 		
 		private function resized(e:Event = null):void
@@ -49,8 +64,7 @@ package
 		
 		private function touched(e:TouchEvent):void
 		{
-			var touch:Touch = e.getTouch(stage);
-			environment.touched(touch.getLocation(stage));
+			environment.touched(e);
 		}
 		
 		override public function onTick()
