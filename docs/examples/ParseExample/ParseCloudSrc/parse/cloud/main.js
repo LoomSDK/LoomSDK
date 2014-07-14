@@ -3,6 +3,7 @@
 // For example:
 Parse.Cloud.define("sendPN", function(request, response) {
   
+			var username = request.user.get("username");
 			var iQuery = new Parse.Query(Parse.Installation);
 			iQuery.equalTo("userId",request.params.recipientName);
 						
@@ -10,7 +11,7 @@ Parse.Cloud.define("sendPN", function(request, response) {
 			{
 				  where: iQuery, // Set our Installation query
 					  data: {						
-						alert: "Hi, "+request.params.recipientName + "! This is a test Parse push note from user " + request.user.username + "!"
+						alert: "Hi, "+request.params.recipientName + "! This is a test Parse push note from user " + username + "!"
 					  }
 			}, {
 				  success: function() {

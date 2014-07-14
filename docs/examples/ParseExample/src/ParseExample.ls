@@ -3,8 +3,7 @@ package
     import loom.Application;
     import loom2d.display.StageScaleMode;
     import loom2d.display.Image;
-    import loom2d.textures.Texture;
-    import loom2d.ui.SimpleLabel;
+    import loom2d.textures.Texture;    
     import loom2d.events.Event;
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
@@ -15,7 +14,8 @@ package
     
     import feathers.themes.MetalWorksMobileTheme;
     import feathers.controls.TextInput;
-    import feathers.controls.Button;
+    import feathers.controls.Button;    
+    import feathers.controls.Label;
     import feathers.events.FeathersEventType;
 
     import loom.social.Parse;
@@ -29,7 +29,7 @@ package
     {
         //Declare all of our controls
 
-        var statusLabel:SimpleLabel;
+        var statusLabel:Label;
         var username:String;        
         var sessiontoken:String;
         var usernameInput:TextInput;        
@@ -45,6 +45,8 @@ package
         {
             // Comment out this line to turn off automatic scaling.
             stage.scaleMode = StageScaleMode.LETTERBOX;
+            /*stage.stageWidth = 640;
+            stage.stageHeight = 480;*/
             
             //Initialize Feathers source assets
             TextField.registerBitmapFont(BitmapFont.load("assets/arialComplete.fnt"), "SourceSansPro");
@@ -62,18 +64,13 @@ package
                 statusLabel.text = "Timed out.";
             };
 
-            // Set up all our UI elements
-            var bg = new Image(Texture.fromAsset("assets/bg.png"));
-            bg.width = stage.stageWidth;
-            bg.height = stage.stageHeight;
-            stage.addChild(bg);
-
-            statusLabel = new SimpleLabel("assets/Curse-hd.fnt");
+            
+            statusLabel = new Label();
             statusLabel.text = "Please log in";
-            statusLabel.height = 50;            
-            statusLabel.x = stage.stageWidth / 2;
-            statusLabel.y = 10;
-            statusLabel.center();
+                        
+            statusLabel.x = stage.stageWidth / 2-100;
+            statusLabel.y = 40;
+            
             stage.addChild(statusLabel);
 
             usernameInput = new TextInput();
@@ -97,7 +94,7 @@ package
             loginButton.width = 100;
             loginButton.height = 50;
             loginButton.x = stage.stageWidth / 2;
-            loginButton.y = 280;
+            loginButton.y = 250;
             loginButton.label = "Login!";
             loginButton.center();
             loginButton.addEventListener(Event.TRIGGERED,loginUser);
@@ -107,7 +104,7 @@ package
             logoutButton.width = 100;
             logoutButton.height = 50;
             logoutButton.x = stage.stageWidth / 2;
-            logoutButton.y = 280;
+            logoutButton.y = 250;
             logoutButton.label = "Logout!";
             logoutButton.center();
             logoutButton.addEventListener(Event.TRIGGERED,logoutUser);
@@ -115,11 +112,11 @@ package
             stage.addChild(logoutButton);   
 
             pushnoteButton = new Button();
-            pushnoteButton.width = 200;
+            pushnoteButton.width = 280;
             pushnoteButton.height = 75;
             pushnoteButton.x = stage.stageWidth / 2;
             pushnoteButton.y = 185;
-            pushnoteButton.label = "Send Push Note!";
+            pushnoteButton.label = "Send Push Notification!";
             pushnoteButton.center();
             pushnoteButton.addEventListener(Event.TRIGGERED,sendPN);
             pushnoteButton.visible = false;         
@@ -151,7 +148,7 @@ package
 
             //Update our status label
             statusLabel.text = "Logging in...";
-            statusLabel.center();
+            
 
             //Fire off the Parse REST function to log the user in                          
             Parse.REST_loginWithUsername(usernameInput.text,passwordInput.text,
@@ -165,7 +162,7 @@ package
 
                 username = responseJSON.getString("username");
                 statusLabel.text = username+" logged in!";
-                statusLabel.center();
+                
                 sessiontoken = responseJSON.getString("sessionToken");
 
                 //Set the user's session token in the Parse object.
@@ -191,7 +188,7 @@ package
             {
                 trace(result);
                 statusLabel.text = "Login failed!";
-                statusLabel.center();
+                
             });
         }
 
@@ -208,7 +205,7 @@ package
             pushnoteButton.visible = false;
 
             statusLabel.text = "Logged out!";
-            statusLabel.center();
+            
         }
 
 
@@ -216,8 +213,10 @@ package
         public function sendPN()
         {
             if(String.isNullOrEmpty(usernameInput.text))
+            {
+                statusLabel.text = "Please enter a recipient username.";
                 return;
-
+            }
             statusLabel.text = "Sending Push Notification...";
 
             //Construct a JSON object to pass parameters to our cloud function
