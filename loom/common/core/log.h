@@ -53,8 +53,8 @@ extern "C" {
 
 #define lmLogDebug(group, format, ...)                                if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogDebug, "[%s] " format, group.name, ## __VA_ARGS__); }
 #define lmLogInfo(group, format, ...)                                 if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogInfo, "[%s] " format, group.name, ## __VA_ARGS__); }
-#define lmLogError(group, format, ...)                                if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogWarn, "[%s] " format, group.name, ## __VA_ARGS__); }
-#define lmLogWarn(group, format, ...)                                 if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogError, "[%s] " format, group.name, ## __VA_ARGS__); }
+#define lmLogError(group, format, ...)                                if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogError, "[%s] " format, group.name, ## __VA_ARGS__); }
+#define lmLogWarn(group, format, ...)                                 if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogWarn, "[%s] " format, group.name, ## __VA_ARGS__); }
 #define lmLog    lmLogInfo // Alias for completeness.
 
 typedef struct loom_logGroup
