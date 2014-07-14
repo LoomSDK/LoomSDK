@@ -20,6 +20,8 @@ package
 
     import loom.social.Parse;
 
+
+
     /**
      *  Example Showcasing basic Parse REST functionality and Parse Push Note functionality
      */
@@ -124,12 +126,28 @@ package
             stage.addChild(pushnoteButton);                                               
         }
 
+
+
+        //Call the Parse tick function to increment timeout and the request queue timer.
+        //If this is not called, requests will not send or time out.
+        override public function onTick():void
+        {            
+            super.onTick();
+
+            //tick Parse so that it can handle timeouts
+            Parse.tick();
+        }
+
+
+
         //Logs the user into a user account with the provided credentials
         public function loginUser(e:Event)
         {           
             //Ensure we don't try sending empty strings.
-            if(String.isNullOrEmpty(usernameInput.text)||String.isNullOrEmpty(passwordInput.text))
+            if(String.isNullOrEmpty(usernameInput.text) || String.isNullOrEmpty(passwordInput.text))
+            {
                 return;
+            }
 
             //Update our status label
             statusLabel.text = "Logging in...";
@@ -155,7 +173,9 @@ package
 
                 //If Parse Push Notes are supported on this device, we pass the username to the Installation so we can target our push notes.
                 if(Parse.isActive())
+                {
                     Parse.updateInstallationUserID(username);
+                }
 
                 //Change our UI to send Push Notes
                 usernameInput.text = "";
@@ -191,13 +211,14 @@ package
             statusLabel.center();
         }
 
+
         //Calls a Parse Cloud Function that sends a push note to the specified user.
         public function sendPN()
         {
             if(String.isNullOrEmpty(usernameInput.text))
                 return;
 
-            statusLabel.text = "Sending Push Note...";
+            statusLabel.text = "Sending Push Notification...";
 
             //Construct a JSON object to pass parameters to our cloud function
             
@@ -206,24 +227,16 @@ package
             dataJSON.setString("recipientName",usernameInput.text);
 
             //Call the cloud function via Parse
-
             Parse.REST_callCloudFunction("sendPN",dataJSON,
             function(result:String) //Success!
             {
                 usernameInput.text = "";
-                statusLabel.text = "Push Note Sent!";
+                statusLabel.text = "Push Notification Sent!";
             },
             function(result:String) //Failure!
             {
                 statusLabel.text = "Error running cloud code";
             });
-        }
-
-        //Call the Parse tick function to increment timeout and the request queue timer.
-        //If this is not called, requests will not send or time out.
-        public function onTick()
-        {            
-            Parse.tick();
         }
     }
 }
