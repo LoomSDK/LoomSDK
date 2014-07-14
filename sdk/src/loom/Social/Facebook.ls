@@ -29,7 +29,7 @@ package loom.social
         /**
          * Session has been opened
          */
-        Openen = 1,
+        Opened = 1,
 
         /**
          * Session has been closed
