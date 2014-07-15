@@ -30,6 +30,7 @@ package
         //Declare all of our controls
 
         var statusLabel:Label;
+        var userLabel:Label;
         var username:String;        
         var sessiontoken:String;
         var usernameInput:TextInput;        
@@ -44,9 +45,9 @@ package
         override public function run():void
         {
             // Comment out this line to turn off automatic scaling.
-            stage.scaleMode = StageScaleMode.LETTERBOX;
-            /*stage.stageWidth = 640;
-            stage.stageHeight = 480;*/
+            stage.scaleMode = StageScaleMode.FILL;
+            stage.stageWidth = 640;
+            stage.stageHeight = 480;
             
             //Initialize Feathers source assets
             TextField.registerBitmapFont(BitmapFont.load("assets/arialComplete.fnt"), "SourceSansPro");
@@ -64,18 +65,22 @@ package
                 statusLabel.text = "Timed out.";
             };
 
-            
+            userLabel = new Label();
+            userLabel.text = "";
+            userLabel.y=52;
+            stage.addChild(userLabel);
+
             statusLabel = new Label();
             statusLabel.text = "Please log in";
                         
             statusLabel.x = stage.stageWidth / 2-100;
-            statusLabel.y = 40;
+            statusLabel.y = 50;
             
             stage.addChild(statusLabel);
 
             usernameInput = new TextInput();
             usernameInput.x = stage.stageWidth / 2-100;
-            usernameInput.y = 100;            
+            usernameInput.y = 150;            
             usernameInput.prompt = "Username";                        
             usernameInput.maxChars = 100; 
             usernameInput.isEditable = true;                                
@@ -83,7 +88,7 @@ package
                         
             passwordInput = new TextInput();
             passwordInput.x = stage.stageWidth / 2-100;
-            passwordInput.y = 150;
+            passwordInput.y = 200;
             passwordInput.prompt = "Password";            
             passwordInput.displayAsPassword = true; 
             passwordInput.maxChars = 100; 
@@ -94,7 +99,7 @@ package
             loginButton.width = 100;
             loginButton.height = 50;
             loginButton.x = stage.stageWidth / 2;
-            loginButton.y = 250;
+            loginButton.y = 300;
             loginButton.label = "Login!";
             loginButton.center();
             loginButton.addEventListener(Event.TRIGGERED,loginUser);
@@ -103,8 +108,8 @@ package
             logoutButton = new Button();
             logoutButton.width = 100;
             logoutButton.height = 50;
-            logoutButton.x = stage.stageWidth / 2;
-            logoutButton.y = 250;
+            logoutButton.x = 50;
+            logoutButton.y = 25;
             logoutButton.label = "Logout!";
             logoutButton.center();
             logoutButton.addEventListener(Event.TRIGGERED,logoutUser);
@@ -115,7 +120,7 @@ package
             pushnoteButton.width = 280;
             pushnoteButton.height = 75;
             pushnoteButton.x = stage.stageWidth / 2;
-            pushnoteButton.y = 185;
+            pushnoteButton.y = 280;
             pushnoteButton.label = "Send Push Notification!";
             pushnoteButton.center();
             pushnoteButton.addEventListener(Event.TRIGGERED,sendPN);
@@ -162,6 +167,7 @@ package
 
                 username = responseJSON.getString("username");
                 statusLabel.text = username+" logged in!";
+                userLabel.text = "user: "+username;
                 
                 sessiontoken = responseJSON.getString("sessionToken");
 
@@ -205,6 +211,7 @@ package
             pushnoteButton.visible = false;
 
             statusLabel.text = "Logged out!";
+            userLabel.text="";
             
         }
 
