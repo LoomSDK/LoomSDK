@@ -80,30 +80,30 @@ You can set the logging settings for a particular group like so:
 
 Here is a list of the built-in logging groups used by the Loom SDK:
 
-* asset.core - Logs related to local asset management
-* asset.protocol - Logs related to the Asset Manager's asset protocol
-* error - A log group for dumping platform errors
-* GFX - Logs relating to native loom Graphics state
-* GFXQuadRenderer - Logs coming from Loom's QuadRenderer
-* GFXTexture - Logs specific to texture loading
-* http.android - Logs relating to Android HTTP requests
-* imageAsset - Logs related to the loading of image assets
-* logger - Logs specific to Loom's logging system
-* loom.application - Application-specific logs, including output from initialization and setup routines
-* loom.asset - Logs specific to the Asset Agent
-* loom.compiler - Basic log output from the LoomScript Compiler
-* loom.compiler.verbose - More verbose output from the LoomScript Compiler
-* loom.mobile.android - Logs specific to the Android platform
-* Loom.NativeStore - Logs relating to the native cross-platform store API
-* loom.script - 
-* loom.sound - Logs coming from the native cross-platform sound API
-* loom.store.apple - Logs related to the Apple app store API
-* loom.store.googlePlay - Logs related to the Google Play store API
-* loom.textAsset - Logs related to loading of Loom TextAssets
-* Loom.Video - Logs relating to the native cross-platform video API
-* loom.video.android - Logs related to Android native video states
-* openal.android - Logs specific to the Android OpenAL implementation
-* platform.network - Logs related to Loom's native networking implementation
-* profiler - Logs coming from Loom's profiler
-* script.LoomApplicationConfig - Log output related to the parsing of the loom.config file
+* `asset.core` - Logs related to local asset management
+* `asset.protocol` - Logs related to the Asset Manager's asset protocol
+* `error` - A log group for dumping platform errors
+* `GFX` - Logs relating to native loom Graphics state
+* `GFXQuadRenderer` - Logs coming from Loom's QuadRenderer
+* `GFXTexture` - Logs specific to texture loading
+* `http.android` - Logs relating to Android HTTP requests
+* `imageAsset` - Logs related to the loading of image assets
+* `logger` - Logs specific to Loom's logging system
+* `loom.application` - Application-specific logs, including output from initialization and setup routines
+* `loom.asset` - Logs specific to the Asset Agent
+* `loom.compiler` - Basic log output from the LoomScript Compiler
+* `loom.compiler`.verbose - More verbose output from the LoomScript Compiler
+* `loom.mobile`.android - Logs specific to the Android platform
+* `Loom.NativeStore` - Logs relating to the native cross-platform store API
+* `loom.script` - Logs from core script runtime.
+* `loom.sound` - Logs coming from the native cross-platform sound API
+* `loom.store.apple` - Logs related to the Apple app store API
+* `loom.store.googlePlay` - Logs related to the Google Play store API
+* `loom.textAsset` - Logs related to loading of Loom TextAssets
+* `Loom.Video` - Logs relating to the native cross-platform video API
+* `loom.video.android` - Logs related to Android native video states
+* `openal.android` - Logs specific to the Android OpenAL implementation
+* `platform.network` - Logs related to Loom's native networking implementation
+* `profiler` - Logs coming from Loom's profiler
+* `script.LoomApplicationConfig` - Log output related to the parsing of the loom.config file
 
