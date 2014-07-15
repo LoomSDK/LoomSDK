@@ -293,6 +293,7 @@ namespace :post do
           key = "#{destination}/#{f}"
           print "[#{destination}] Uploading file #{f}... "
           s3.buckets[bucket_name].objects[key].write(:file => f, :acl => "public_read")
+          AWS.config.http_handler.pool.empty!
           puts "Done"
         end
       end      
