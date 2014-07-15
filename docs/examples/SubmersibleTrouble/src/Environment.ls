@@ -13,6 +13,7 @@ package
 	import loom2d.math.Point;
 	import loom2d.textures.Texture;
 	import loom2d.textures.TextureSmoothing;
+	import loom2d.ui.SimpleButton;
 	import loom2d.ui.SimpleLabel;
 	
 	/**
@@ -21,7 +22,6 @@ package
 	 */
 	public class Environment
 	{
-		public static const GAMEOVER:String = "gameover";
 		
 		private var stage:Stage;
 		
@@ -37,12 +37,16 @@ package
 		private var maxDepth = 800;
 		
 		// Camera offsets (for transitions between intro and game)
+		private var creditsOffset = 730;
 		private var initOffset = 280;
 		private var introOffset = 100;
 		private var launchedOffset = 0;
 		private var displayOffsetEase = 0.05;
 		
-		private var mineOffset = 100;
+		private var creditsSpeed = 8;
+		private var instructionHidingDepth = 300;
+		
+		private var mineOffset = 150;
 		private var mineNum = 50;
 		private var mineDistributionSharpness = 5;
 		
@@ -87,6 +91,7 @@ package
 		public static const STATE_RETURNING = 2;
 		public static const STATE_RETURN = 3;
 		public static const STATE_WINNER = 4;
+		public static const STATE_CREDITS = 5;
 		public var state:Number;
 		
 		// Entities
@@ -100,6 +105,9 @@ package
 		private var mineDisplay:Sprite = new Sprite();
 		private var arrowUp:Image;
 		private var title:SimpleLabel;
+		private var credits:Image;
+		private var creditsBtn:SimpleButton;
+		private var instructions:Image;
 		private var scoreTime:SimpleLabel;
 		private var scoreMines:SimpleLabel;
 		private var winnerTitle:SimpleLabel;
@@ -127,6 +135,32 @@ package
 			sky.y = -sky.height;
 			display.addChild(sky);
 			
+			// Stars behind credits
+			tex = Texture.fromAsset("assets/stars.png");
+			tex.smoothing = TextureSmoothing.NONE;
+			var stars = new Image(tex);
+			stars.width = w;
+			stars.height = 300;
+			display.addChild(stars);
+			
+			// Credits
+			tex = Texture.fromAsset("assets/credits.png");
+			credits = new Image(tex);
+			credits.scale = 1/displayScale;
+			credits.y = -400-credits.height;
+			display.addChild(credits);
+			stars.y = credits.y-h;
+			
+			// Instructions
+			tex = Texture.fromAsset("assets/instructions.png");
+			// Smoothing set to NONE to ensure rough pixel look
+			tex.smoothing = TextureSmoothing.NONE;
+			instructions = new Image(tex);
+			instructions.width = w;
+			instructions.y = 60;
+			display.addChild(instructions);
+			
+			
 			display.addChild(mineDisplay);
 			
 			// Player adds itself to display
@@ -134,7 +168,6 @@ package
 			
 			// Blinking up arrow on return
 			tex = Texture.fromAsset("assets/arrowUp.png");
-			// Smoothing set to NONE to ensure rough pixel look
 			tex.smoothing = TextureSmoothing.NONE;
 			arrowUp = new Image(tex);
 			arrowUp.center();
@@ -158,8 +191,17 @@ package
 			seaTiled.height = maxDepth+h*2;
 			display.addChild(seaTiled);
 			
+			// Credits button
+			creditsBtn = new SimpleButton();
+			creditsBtn.upImage = "assets/info.png";
+			creditsBtn.onClick = showCredits;
+			creditsBtn.scale = 1.2/displayScale;
+			creditsBtn.x = w - 14;
+			creditsBtn.alpha = 0.5;
+			display.addChild(creditsBtn);
+			
 			// Title and score text config
-			title = getLabel("Submersible Trouble", true, w/2, -85, 0.2);
+			title = getLabel("Submersible Trouble", true, w/2, -85, 0.2, 0.8);
 			scoreTime  = getLabel("", false, 10, -47, 0.1);
 			scoreMines = getLabel("", false, 10, -35, 0.1);
 			winnerTitle = getLabel("WINNER!", true, w/2, -62, 0.15);
@@ -183,7 +225,7 @@ package
 		/**
 		 * Helper function for placing labels
 		 */
-		private function getLabel(txt:String, center:Boolean, x:Number, y:Number, scale:Number):SimpleLabel
+		private function getLabel(txt:String, center:Boolean, x:Number, y:Number, scale:Number, alpha:Number = 1):SimpleLabel
 		{
 			var label = new SimpleLabel("assets/Curse-hd.fnt");
 			label.text = txt;
@@ -191,6 +233,7 @@ package
 			label.x = x;
 			label.y = y;
 			label.scale = scale;
+			label.alpha = alpha;
 			display.addChild(label);
 			return label;
 		}
@@ -256,6 +299,12 @@ package
 			return Math.log(1+x*mineDistributionSharpness)/Math.log(1+mineDistributionSharpness);
 		}
 		
+		private function showCredits() 
+		{
+			state = STATE_CREDITS;
+			targetOffset = creditsOffset;
+		}
+		
 		/**
 		 * Launch player from initial state and begin the game.
 		 */
@@ -265,13 +314,24 @@ package
 			targetOffset = launchedOffset;
 			player.setVelocity(0, launchSpeed);
 			player.launch();
+			instructions.visible = true;
 			state = STATE_LAUNCHED;
 		}
 		
 		public function touched(touch:Touch)
 		{
-			lastTouch = touch;
-			if (touch.phase == TouchPhase.ENDED) lastTouch = null;
+			switch (state) {
+				case STATE_INIT:
+					if (touch.phase == TouchPhase.BEGAN) launch();
+					break;
+				case STATE_CREDITS:
+					state = STATE_INIT;
+					targetOffset = introOffset;
+					break;
+				default:
+					lastTouch = touch;
+					if (touch.phase == TouchPhase.ENDED) lastTouch = null;
+			}
 		}
 		
 		private function addMine(x:Number, y:Number)
@@ -289,7 +349,7 @@ package
 			var targetCamera:Number;
 			
 			// Common core game loop - update entities, check for collisions and end state
-			if (state != STATE_INIT) {
+			if (state != STATE_INIT && state != STATE_CREDITS) {
 				if (state != STATE_WINNER && state != STATE_RETURNING && lastTouch) {
 					var loc:Point = lastTouch.getLocation(display);
 					player.setTarget(loc);
@@ -303,10 +363,22 @@ package
 			
 			// State-specific behavior for camera and transitioning between states
 			switch (state) {
+				case STATE_CREDITS:
+					if (targetOffset > creditsOffset-credits.height-50) {
+						targetOffset -= creditsSpeed*dt;
+					} else {
+						targetOffset = introOffset;
+						state = STATE_INIT;
+					}
+					break;
 				case STATE_INIT:
 					targetCamera = 0;
 					break;
 				case STATE_LAUNCHED:
+					// Hide instructions after diving a certain depth
+					if (player.getDepth() > instructionHidingDepth && instructions.visible) {
+						instructions.visible = false;
+					}
 					// Transition to returning state if player reaches bottom
 					if (player.getDepth() > maxDepth) {
 						state = STATE_RETURNING;
@@ -347,7 +419,7 @@ package
 			// After game over, check if camera returned to initial state and dispatch gameover (allowing for restart)
 			if (over && Math.abs(targetCamera-cameraPos) < overCameraThreshold) {
 				over = false;
-				stage.dispatchEvent(new Event(GAMEOVER));
+				state = STATE_INIT;
 			}
 			
 			t += dt;
