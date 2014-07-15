@@ -97,14 +97,12 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
     NSString *customAppScheme = [mainBundle objectForInfoDictionaryKey:@"CustomAppURLScheme"];
     if((customAppScheme != nil) && 
         ([customAppScheme isEqualToString:@""] == FALSE) && 
-        [[url scheme] isEqualToString:customAppScheme])
+        ([[url scheme] caseInsensitiveCompare:customAppScheme] == NSOrderedSame))
     {
-        // check for query to parse and if so, do it!
-        NSString *queryString = [url query];
-        if(queryString)
-        {
-            [self application:application handleOpenURLQuery:queryString];
-        }
+        gOpenedWithCustomURL = YES;
+
+        //attempt to parse the query
+        [self application:application handleOpenURLQuery:[url query]];
     }
     return YES;
 }

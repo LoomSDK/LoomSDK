@@ -62,6 +62,7 @@ static loomJniMethodInfo gVibrate;
 static loomJniMethodInfo gAllowScreenSleep;
 static loomJniMethodInfo gShareText;
 static loomJniMethodInfo gIsSensorSupported;
+static loomJniMethodInfo gDidCustomURLOpen;
 static loomJniMethodInfo gGetCustomSchemeData;
 static loomJniMethodInfo gIsSensorEnabled;
 static loomJniMethodInfo gHasSensorReceivedData;
@@ -99,6 +100,10 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
                                  "co/theengine/loomdemo/LoomMobile",
                                  "shareText",
                                  "(Ljava/lang/String;Ljava/lang/String;)Z");
+    LoomJni::getStaticMethodInfo(gDidCustomURLOpen,
+                                 "co/theengine/loomdemo/LoomMobile",
+                                 "openedWithCustomScheme",
+                                 "()Z");
     LoomJni::getStaticMethodInfo(gGetCustomSchemeData,
                                  "co/theengine/loomdemo/LoomMobile",
                                  "getCustomSchemeQueryData",
@@ -177,6 +182,14 @@ bool platform_shareText(const char *subject, const char *text)
                                                                 jText);    
     gShareText.getEnv()->DeleteLocalRef(jSubject);
     gShareText.getEnv()->DeleteLocalRef(jText);
+    return (bool)result;
+}
+
+
+///returns if the application was launched via a Custom URL Scheme
+bool platform_wasOpenedViaCustomURL()
+{
+    jboolean result = gDidCustomURLOpen.getEnv()->CallStaticBooleanMethod(gDidCustomURLOpen.classID, gDidCustomURLOpen.methodID);    
     return (bool)result;
 }
 

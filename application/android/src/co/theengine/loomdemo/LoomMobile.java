@@ -141,6 +141,13 @@ public class LoomMobile
     }    
 
 
+    ///returns if the application was launched via a Custom URL Scheme
+    public static boolean openedWithCustomScheme()
+    {
+        return (_customURI != null) ? true : false;
+    }    
+
+
     ///returns the data for a query of the custom scheme data string used to launch the app with, or null if not found / app wasn not launched with a custom URI scheme
     public static String getCustomSchemeQueryData(String queryKey)
     {
