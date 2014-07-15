@@ -51,6 +51,7 @@ public class LoomFacebook
     private static native void sessionStatusCallback(int sessionState, String sessionPermissions, int errorCode);
     private static native void frictionlessRequestCallback(boolean success);
     private static LoomDemo mLoomDemo;
+    private static String _facebookAppId = null;
  
     protected static ViewGroup rootLayout;
     protected static Activity activity;
@@ -60,30 +61,32 @@ public class LoomFacebook
 
     // Internal use
     public static void onCreate(LoomDemo loomDemo, Bundle savedInstanceState, ViewGroup value) 
-    {   
+    {
         rootLayout = value;
         activity = (Activity)rootLayout.getContext();
         handler = new Handler(Looper.getMainLooper());
-
         setLoomDemo(loomDemo);
 
-        Session session = Session.getActiveSession();
-        if (session == null) 
+        if(checkFacebookAppId())
         {
-            if (savedInstanceState != null) 
-            {
-                session = Session.restoreSession(mLoomDemo, null, mStatusCallback, savedInstanceState);
-            }
+            Session session = Session.getActiveSession();
             if (session == null) 
             {
-                session = new Session(mLoomDemo);
-            }
-            
-            Session.setActiveSession(session);
-            
-            if (session.getState().equals(SessionState.CREATED_TOKEN_LOADED)) 
-            {
-                session.openForRead(new Session.OpenRequest(mLoomDemo).setCallback(mStatusCallback));
+                if (savedInstanceState != null) 
+                {
+                    session = Session.restoreSession(mLoomDemo, null, mStatusCallback, savedInstanceState);
+                }
+                if (session == null) 
+                {
+                    session = new Session(mLoomDemo);
+                }
+                
+                Session.setActiveSession(session);
+                
+                if (session.getState().equals(SessionState.CREATED_TOKEN_LOADED)) 
+                {
+                    session.openForRead(new Session.OpenRequest(mLoomDemo).setCallback(mStatusCallback));
+                }
             }
         }
     }
@@ -92,10 +95,13 @@ public class LoomFacebook
     public static void onStart(LoomDemo loomDemo) 
     {
         setLoomDemo(loomDemo);
-        Session session = Session.getActiveSession();
-        if(session != null)
+        if(checkFacebookAppId())
         {
-            session.addCallback(mStatusCallback);
+            Session session = Session.getActiveSession();
+            if(session != null)
+            {
+                session.addCallback(mStatusCallback);
+            }
         }
     }
 
@@ -103,10 +109,13 @@ public class LoomFacebook
     public static void onStop(LoomDemo loomDemo) 
     {
         setLoomDemo(loomDemo);
-        Session session = Session.getActiveSession();
-        if(session != null)
+        if(checkFacebookAppId())
         {
-            session.removeCallback(mStatusCallback);
+            Session session = Session.getActiveSession();
+            if(session != null)
+            {
+                session.removeCallback(mStatusCallback);
+            }
         }
     }
 
@@ -114,10 +123,13 @@ public class LoomFacebook
     public static void onSaveInstanceState(LoomDemo loomDemo, Bundle outState) 
     {
         setLoomDemo(loomDemo);
-        Session session = Session.getActiveSession();
-        if(session != null)
+        if(checkFacebookAppId())
         {
-            Session.saveSession(session, outState);
+            Session session = Session.getActiveSession();
+            if(session != null)
+            {
+                Session.saveSession(session, outState);
+            }
         }
     }
 
@@ -125,10 +137,13 @@ public class LoomFacebook
     public static void onActivityResult(LoomDemo loomDemo, int requestCode, int resultCode, Intent data) 
     {
         setLoomDemo(loomDemo);
-        Session session = Session.getActiveSession();
-        if(session != null)
+        if(checkFacebookAppId())
         {
-            session.onActivityResult(mLoomDemo, requestCode, resultCode, data);
+            Session session = Session.getActiveSession();
+            if(session != null)
+            {
+                session.onActivityResult(mLoomDemo, requestCode, resultCode, data);
+            }
         }
     }
 
@@ -137,29 +152,31 @@ public class LoomFacebook
 
 	public static boolean isPermissionGranted(String permission)
 	{
-		Session session = Session.getActiveSession();
-        if(session != null)
+        if(checkFacebookAppId())
         {
-            List<String> grantedPermissions = session.getPermissions();
-            if (grantedPermissions != null) 
+    		Session session = Session.getActiveSession();
+            if(session != null)
             {
-                return grantedPermissions.contains(permission);
+                List<String> grantedPermissions = session.getPermissions();
+                if (grantedPermissions != null) 
+                {
+                    return grantedPermissions.contains(permission);
+                }
             }
         }
-        return false;
-		
+        return false;		
 	}
 
 
     public static boolean isActive() 
     {
-        return checkFacebookAppId(mLoomDemo);
+        return checkFacebookAppId();
     }
 
 
 	public static boolean openSessionWithReadPermissions(String permissionsString) 
     {
-		if(checkFacebookAppId(mLoomDemo)) 
+		if(checkFacebookAppId()) 
         {
 			Session session = Session.getActiveSession();
 			if ((session != null) && (!session.isOpened() && !session.isClosed()))
@@ -179,7 +196,7 @@ public class LoomFacebook
 
 	public static boolean requestNewPublishPermissions(String permissionsString) 
     {
-        if(checkFacebookAppId(mLoomDemo))
+        if(checkFacebookAppId())
         {
     		Session session = Session.getActiveSession();
     		if ((session != null) && session.isOpened())
@@ -195,80 +212,92 @@ public class LoomFacebook
 
 	public static String getAccessToken() 
     {
-        Session session = Session.getActiveSession();
-		return (session != null) ? session.getAccessToken() : null;
+        if(checkFacebookAppId())
+        {
+            Session session = Session.getActiveSession();
+    		return (session != null) ? session.getAccessToken() : null;
+        }
+        return null;
 	}
 
 
 	public static void showFrictionlessRequestDialog(final String recipients, final String title, final String message) 
     {
-		handler.post(new Runnable() 
+        if(checkFacebookAppId())
         {
-			@Override
-			public void run() 
+    		handler.post(new Runnable() 
             {
-				Bundle params = new Bundle();
-				params.putString("title", title);
-				params.putString("to", recipients);
-				params.putString("message", message);
-				params.putString("frictionless", "1");
-
-		        WebDialog.OnCompleteListener listener = new WebDialog.OnCompleteListener() 
+    			@Override
+    			public void run() 
                 {
-		            @Override
-		            public void onComplete(Bundle values, FacebookException error) 
+    				Bundle params = new Bundle();
+    				params.putString("title", title);
+    				params.putString("to", recipients);
+    				params.putString("message", message);
+    				params.putString("frictionless", "1");
+
+    		        WebDialog.OnCompleteListener listener = new WebDialog.OnCompleteListener() 
                     {
-                        final boolean fSuccess = (error == null) ? true : false;
-                        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+    		            @Override
+    		            public void onComplete(Bundle values, FacebookException error) 
                         {
-                            @Override
-                            public void run() 
+                            final boolean fSuccess = (error == null) ? true : false;
+                            Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
                             {
-                                Log.d(TAG, "FB FrictionlessRequestCallback: Success: " + fSuccess);
-                                frictionlessRequestCallback(fSuccess);
-                            }
-                        });                        
-		            }
-		        };
+                                @Override
+                                public void run() 
+                                {
+                                    Log.d(TAG, "FB FrictionlessRequestCallback: Success: " + fSuccess);
+                                    frictionlessRequestCallback(fSuccess);
+                                }
+                            });                        
+    		            }
+    		        };
 
-				WebDialog reqDialog;
-		        WebDialog.RequestsDialogBuilder builder = new WebDialog.RequestsDialogBuilder(
-		        	activity, 
-		        	Session.getActiveSession(), 
-		        	params
-		        ).setOnCompleteListener(listener);
+    				WebDialog reqDialog;
+    		        WebDialog.RequestsDialogBuilder builder = new WebDialog.RequestsDialogBuilder(
+    		        	activity, 
+    		        	Session.getActiveSession(), 
+    		        	params
+    		        ).setOnCompleteListener(listener);
 
-		        reqDialog = builder.build();
-		        reqDialog.show();
-		    }
-	    });
+    		        reqDialog = builder.build();
+    		        reqDialog.show();
+    		    }
+    	    });
+        }
 	}
 
 
     public static void closeAndClearTokenInformation()
 	{
-		Session session = Session.getActiveSession();
-        if(session != null)
+        if(checkFacebookAppId())
         {
-            session.closeAndClearTokenInformation();
+    		Session session = Session.getActiveSession();
+            if(session != null)
+            {
+                session.closeAndClearTokenInformation();
+            }
         }
 	}
 
 
 	public static String getExpirationDate(String dateFormat) 
     {
-		String returnString;
-		Session session = Session.getActiveSession();
-		
-		if(dateFormat != null)
-		{
-			DateFormat df = new SimpleDateFormat(dateFormat);
-			returnString = df.format(session.getExpirationDate());
-		}
-		else
+        String returnString = null;
+        if(checkFacebookAppId())
         {
-			returnString = session.getExpirationDate().toString();
-        }			
+		    Session session = Session.getActiveSession();		
+    		if(dateFormat != null)
+    		{
+    			DateFormat df = new SimpleDateFormat(dateFormat);
+    			returnString = df.format(session.getExpirationDate());
+    		}
+    		else
+            {
+    			returnString = session.getExpirationDate().toString();
+            }
+        }
 		return returnString;
 	}
 
@@ -367,20 +396,22 @@ public class LoomFacebook
         {
 	        Log.d(TAG, "KeyHash: (NoSuchAlgorithmException)");
 		}        
-        // --------------------------
 
-		String facebookAppId = LoomDemo.getMetadataString(context, Session.APPLICATION_ID_PROPERTY);
-		return facebookAppId;
+        //check actual Id from the manifest metadata
+        checkFacebookAppId();
+		return _facebookAppId;
 	}
 
 	
-    private static boolean checkFacebookAppId(Context context) 
+    private static boolean checkFacebookAppId() 
     {
-		// Sanity check for a valid application id
-		String facebookAppId = getFacebookAppId(context);
-		Log.d(TAG, "facebookAppId: " + facebookAppId);
-
-		if(facebookAppId == null || facebookAppId.isEmpty() || facebookAppId.trim().isEmpty()) 
+        // Sanity check for a valid application id
+        if(_facebookAppId == null)
+        {
+            _facebookAppId = LoomDemo.getMetadataString(mLoomDemo, Session.APPLICATION_ID_PROPERTY);
+            Log.d(TAG, "facebookAppId: " + _facebookAppId);
+        }
+		if(_facebookAppId == null || _facebookAppId.isEmpty() || _facebookAppId.trim().isEmpty()) 
         {
 			return false;
 		}
