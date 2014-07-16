@@ -2,11 +2,11 @@ title: LoomScript
 description: A general overview of LoomScript.
 !------
 
-LoomScript is the proprietary scripting language for Loom. It is a simple and effective tool for building game logic. It features an ActionScript3-like syntax extended with some C#-esque capabilities, and runs on an unmodified Lua or LuaJIT VM. Compiler, debugger, and profiler source code is included with Loom, and can be readily modified for your project's specific needs.
+LoomScript is the scripting language for Loom. It is a simple and effective tool for building game logic. It features an ActionScript3-like syntax extended with some C#-esque capabilities, and runs on an unmodified Lua or LuaJIT VM. Compiler, debugger, and profiler source code is included with Loom, and can be readily modified for your project's specific needs.
 
 We highly recommend reading "Essential ActionScript 3" by Colin Moock to learn more about the basics of ActionScript 3 syntax. LoomScript does not support all the language features of ActionScript 3 (currently we do not support namespaces, E4X, or exceptions). But it does support most things that make AS3 pleasant to develop in (closures, static typing, effective inheritance model).
 
-In practice, existing ActionScript 3 code can be ported quickly and easily - for instance, we were able to port PushButton Engine 2, Feathers, and Starling, all large AS3 projects, to run on Loom with only a few modifications.
+In practice, existing ActionScript 3 code can be ported quickly and easily - for instance, we were able to port PushButton Engine 2, Feathers, and Starling, all large AS3 projects, to run on Loom with only minor modifications.
 
 ## LoomScript Extensions
 The major language features we've added to LoomScript are:
