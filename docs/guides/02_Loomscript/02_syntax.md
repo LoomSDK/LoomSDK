@@ -12,7 +12,7 @@ Note that this section is an overview of LoomScript language features, not a Loo
 
 LoomScript is object oriented, meaning that everything is defined in the context of a class. For instance, if we are working on a racing game we might define a Car class:
 
-~~~
+~~~as3
 // First, boring version of our Car class.
 public class Car
 {
@@ -21,7 +21,7 @@ public class Car
 
 Even though right now it's empty, and therefore not very useful, we might instantiate it somewhere and store it in a variable:
 
-~~~
+~~~as3
 var myCar = new Car();
 ~~~
 
@@ -29,7 +29,7 @@ We use JavaScript style, declaring a variable by giving `var` followed by the va
 
 It's good practice to put each class definition in its own file named after the class, surrounded by a `package`. (While everything has to be in a `package`, you can put multiple classes in a single file if you want.) Here's what our Car class would look like in its own file:
 
-~~~
+~~~as3
 Contents of Car.ls:
 
 package com.myracinggame.example 
@@ -44,7 +44,7 @@ It's also good practice to put LoomScript files in folders named after their pac
 
 Let's modify the `Car` class to include some useful members:
 
-~~~
+~~~as3
 // Second version of our Car class.
 public class Car
 {
@@ -77,7 +77,7 @@ If you don't care about something's type, or want to program generically, you ca
 
 Of course, a car is still pretty boring when it can't do anything. Let's add some behavior:
 
-~~~
+~~~as3
 // Second version of our Car class.
 public class Car
 {
@@ -117,7 +117,7 @@ We also started using the `trace` method, which is a globally available utility 
 
 Let's look at using our `Car`:
 
-~~~
+~~~as3
 var car = new Car();
 car.start();
 car.revTheEngine(100);
@@ -140,7 +140,7 @@ As you can see, we end up at 1000+100+500=1600 rpm!
 
 Anonymous functions are handy and powerful:
 
-~~~
+~~~as3
 var something = function(x:int, y:int):void { trace("sum " + (x+y)); };
 something(1, 2);
 
@@ -150,7 +150,7 @@ data.forEach(trace); // Call trace on each item.
 
 A closure is a function with its own local variables packaged with it. LoomScript allows this:
 
-~~~
+~~~as3
 function countUp()
 {
 	var counter:int = 100;
@@ -176,13 +176,13 @@ Would print:
 
 Functions are powerful. They can take a lot of arguments if you so desire, although we think it's a bad idea to pass more then 10 arguments or so for readability reasons. They can have default arguments and return types:
 
-~~~
+~~~as3
 public function showDefaultArgs(arg1:Number, anotherArg:String = "ThisIsADefault"):Object
 ~~~
 
 Functions can also handle variable numbers of arguments:
 
-~~~
+~~~as3
     function doSomething(x:Number, s:String, ...args)
     {
         trace(x);
@@ -200,7 +200,7 @@ Notice that you specify variable arguments with `...`, and give them a name by p
 
 LoomScript supports a few templated types, specifically `Vector` and `Dictionary`. These are types that allow you to specify other types that they operate on. For instance:
 
-~~~
+~~~as3
 var carList = new Vector.<Car>();
 ~~~
 
@@ -210,7 +210,7 @@ Above, `carList` is a `Vector` that only holds `Car`s or subclasses thereof. Thi
 
 LoomScript also provides a number of type aliases to simplify porting ActionScript 3 code and as shorthand. For instance, `Array` is the same as `Vector.<Object>`, and the rest are implemented in `lsAlias.cpp`, reproduced here for convenience:
 
-~~~
+~~~as3
     // Each line rewrites the first type to the second.
     addAlias("byte", "Number");
     addAlias("char", "Number");
@@ -230,7 +230,7 @@ LoomScript also provides a number of type aliases to simplify porting ActionScri
 
 LoomScript supports interfaces and subclassing, as seen below:
 
-~~~
+~~~as3
 public interface ITowingVehicle
 {
     function hitch(trailer:Object):void;
@@ -279,7 +279,7 @@ An interface defines one or more functions, getters, or setters that must be imp
 
 Let's make something we can tow:
 
-~~~
+~~~as3
 public class BoringTrailer implements ITowable
 {
     public function dragAlong():void
@@ -296,7 +296,7 @@ public class BoringTrailer implements ITowable
 
 And drive our `Truck`:
 
-~~~
+~~~as3
 var bigRedTruck = new Truck();
 var lilTrailer = new BoringTrailer();
 bigRedTruck.hitch(lilTrailer);
@@ -305,7 +305,7 @@ bigRedTruck.tow();
 
 We get the following output:
 
-~~~
+~~~as3
 Now towing [BoringTrailer]
 Dragged [BoringTrailer] a bit.
 [BoringTrailer] got towed!
@@ -313,7 +313,7 @@ Dragged [BoringTrailer] a bit.
 
 Let's modify Truck and make a more interesting example. First, let's make Truck an `ITowable`, omitting functions we already defined:
 
-~~~
+~~~as3
 public class Truck extends Car implements ITowingVehicle, ITowable
 {
     protected towed:ITowable;
@@ -335,7 +335,7 @@ public class Truck extends Car implements ITowingVehicle, ITowable
 
 Now we can tow our `Truck`, so let's have some fun:
 
-~~~
+~~~as3
 var hugeRedTruck = new Truck();
 var bigRedTruck = new Truck();
 var lilTrailer = new BoringTrailer();
@@ -362,7 +362,7 @@ Notice that the compiler is smart enough to know that `Truck` and `BoringTrailer
 
 Let's declare a couple of classes and variables for reference in this section:
 
-~~~
+~~~as3
 public interface I1
 {
 }
@@ -385,7 +385,7 @@ var refToB:A = b;
 
 `X is Y` returns true if `X` is of class `Y`, and false if not. It's useful for checking if an object is of an expected type. For instance, if you want a function that takes an Object, and processes it one way if it is a `Number` and another if it is a `String`:
 
-~~~
+~~~as3
 function doLogic(param:Object):void
 {
 	if(param is String)
@@ -439,7 +439,7 @@ Note that "Saw an A!" is not repeated - because `b` is `A` but it is NOT `instan
 
 `X as Y` tries to cast `X` to class `Y`. If this is possible, then it returns a reference to `X` using type `Y`. If it is not, it returns `null`. So we can do the following:
 
-~~~
+~~~as3
 function tryIt(param:Object):void
 {
 	var possibly:B = param as B;
@@ -472,7 +472,7 @@ Another useful idiom with as is the following, if you're sure the cast will succ
 
 You can also do a cast that will fail with an error rather than with `null`:
 
-~~~
+~~~as3
 var definitely:B = B(param);
 ~~~
 
@@ -480,7 +480,7 @@ var definitely:B = B(param);
 
 LoomScript supports a wide range of C-style math:
 
-~~~
+~~~as3
 	var a = ((100 + 200) / 300) % 2;
 	var b = 100 * 30;
 	var c = (Math.random() > 0.5) ? true : false;
@@ -494,7 +494,7 @@ All math is done at double precision; that is all, numeric types are Number. `Na
 
 LoomScript supports operator overloads for +,-,/,*,+=,-=,/=,*=, and =, as seen below:
 
-~~~
+~~~as3
 class OpClass {
 
     public function OpClass(x:Number = 0, y:Number = 0) {
@@ -524,7 +524,7 @@ class OpClass {
 
 LoomScript supports the usual conditionals:
 
-~~~
+~~~as3
 if(true)
    trace("Always do this.");
 else if(anotherCondition)
@@ -541,7 +541,7 @@ LoomScript supports a number of ways of iterating over data.
 
 For loops are alive and well:
 
-~~~
+~~~as3
 for(var i=0; i<100; i++) 
 	trace(i);
 
@@ -555,7 +555,7 @@ for(;;)
 
 LoomScript also supports `for each`, which loops over each **value** in a `Vector` or a `Dictionary`:
 
-~~~
+~~~as3
 var resolutions:Vector.<String> = ["1280x720", "1368x768", "1920x1080"];
 for each (var r:String in resolutions)
 {
@@ -566,7 +566,7 @@ for each (var r:String in resolutions)
 
 `for in` allows you to iterate over keys in a `Dictionary` or `Vector`:
 
-~~~
+~~~as3
 var values = { "hello": 1, "world": 2};
 for (x in values)
 {
@@ -580,7 +580,7 @@ for (x in values)
 
 The venerable do/while loop requires no introduction:
 
-~~~
+~~~as3as3
 while(i>0)
 {
 	i--;
@@ -597,7 +597,7 @@ while(i < 100);
 
 You can use an `enum` to conveniently define multiple numeric constants:
 
-~~~
+~~~as3
 enum Days 
 { 
 	Saturday, // Default starts at zero. 
@@ -624,7 +624,7 @@ Note that an `enum` is considered to be like a `class` and must be at the `packa
 
 Every LoomScript file contains exactly one `package`, but it can have other file-scope classes defined after the `package` block:
 
-~~~
+~~~as3
 package foo.bar
 {
 	class MyClass
@@ -639,7 +639,7 @@ class OnlyMyClassCanSeeMe
 
 `import` allows you to specify classes that you want to use from elsewhere in your project, ie:
 
-~~~
+~~~as3
 package tests 
 {
 
@@ -659,13 +659,13 @@ LoomScript has first class delegate support, as seen in C#. A delegate is a type
 
 You can declare a delegate:
 
-~~~
+~~~as3
 delegate MyDelegate(x:Number, y:Number):String;
 ~~~
 
 And add some listeners to an instance of it, then call it:
 
-~~~
+~~~as3
 var d:MyDelegate;
 d += function(x:Number, y:Number):String { trace("Got " + x + " + " + y + "!"); };
 d += function(x:Number, y:Number):String { return "Saw " + x + " + " + y; };
@@ -681,13 +681,13 @@ D gave me: Saw 1 + 2
 
 You can remove listeners from a delegate, but adding/removing is done by INSTANCE - that is, doing:
 
-~~~
+~~~as3
 d -= function(x:Number, y:Number):String { return "Saw " + x + " + " + y; };
 ~~~
 
 Would do nothing, because you are creating a new `Function` instance about which the delegate knows nothing. Instead you have to do:
 
-~~~
+~~~as3
 var myFunc = function(x:Number, y:Number):String { return "Saw " + x + " + " + y; };
 d += myFunc;
 d -= myFunc;
@@ -695,7 +695,7 @@ d -= myFunc;
 
 You can also reset a delegate by assigning `null` to it:
 
-~~~
+~~~as3
 var d:MyDelegate;
 d += function(x:Number, y:Number):String { return "Saw " + x + " + " + y; };
 trace("D gave me: " + d(1,2));
@@ -716,7 +716,7 @@ Delegates are a powerful building block, especially when working with compositio
 
 Loom provides an alternative to the `class` keyword, `struct`. It's identical to a class, except that variables of `struct` type are never null, and `struct`s assign by copy rather than by reference, using an assignment operator. For instance:
 
-~~~
+~~~as3
 struct MyStruct {
 
     public function MyStruct(_x:Number = 1, _y:Number = 2) {
@@ -754,7 +754,7 @@ struct MyStruct {
 
 Which can be used as follows:
 
-~~~
+~~~as3
 var ms:MyStruct;
 trace(ms.x); // No need to initialize!
 var ms2:MyStruct;
@@ -765,6 +765,25 @@ trace(ms.x); // x and y are copied by assignment overload so we get 100 here.
 ~~~
 
 `struct`s can be useful when trying to avoid logic errors when working with complex math, and to reduce temporary object allocation.
+
+## Getters and Setters
+
+LoomScript supports getters and setters, functions which are run when a property is read to or written from:
+
+~~~as3
+public function get somefield():String
+{
+    trace("Read somefield!");
+    return "Hello";
+}
+
+public function set somefield(value:String):void
+{
+    trace("Set somefield to " + value);
+}
+~~~
+
+If you omit a getter or setter, then the field is treated as write or read only.
 
 ## Unsupported
 
