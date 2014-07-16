@@ -580,7 +580,7 @@ for (x in values)
 
 The venerable do/while loop requires no introduction:
 
-~~~as3as3
+~~~as3
 while(i>0)
 {
 	i--;
