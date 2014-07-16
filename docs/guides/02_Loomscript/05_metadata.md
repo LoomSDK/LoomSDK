@@ -2,7 +2,9 @@ title: Metadata
 description: Annotate your objects.
 !------
 
-It's often useful to annotate your code with metadata - a simple dictionary of string keys and values associated with a class, method, property, or field. Metadata can be used to extend language capabilities without cumbersome workarounds like secondary fields or registration functions. Here's a fictional LoomScript example showing how Metadata might be used to show a UI caption for a field on an object:
+It's often useful to annotate your code with metadata - a simple dictionary of string keys and values associated with a class, method, property, or field. Metadata can be used to extend language capabilities without cumbersome workarounds like secondary fields or registration functions. Examples of metadata use include building editor UIs, dependency injection, validating or populating fields on value objects, UI binding, and much much more.
+
+Here's a fictional LoomScript example showing how Metadata might be used to show a UI caption for a field on an object:
 
 ~~~
 class Foo
