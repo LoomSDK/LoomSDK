@@ -19,4 +19,10 @@
 		text="KrUSH&#10;BLOkk"
 	/>
 	
+	<feathers.controls.Button
+		id="creditsBtn"
+		styleName="creditsBtn"
+		label="?"
+	/>
+	
 </ui.views.game.IntroView>

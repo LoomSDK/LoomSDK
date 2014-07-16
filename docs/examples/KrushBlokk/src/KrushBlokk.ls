@@ -9,6 +9,7 @@ package
     import ui.Theme;
     import ui.views.ConfigView;
     import ui.views.game.AdView;
+	import ui.views.game.CreditsView;
     import ui.views.game.DifficultyView;
     import ui.views.game.EndView;
     import ui.views.game.GameView;
@@ -28,6 +29,7 @@ package
         public var config:GameConfig = new GameConfig();
         
         private var intro = new IntroView();
+        private var credits = new CreditsView();
         private var mode = new ModeView();
         private var difficulty = new DifficultyView();
         private var game = new GameView();
@@ -56,7 +58,7 @@ package
             config.reset();
             
             // View initialization
-            var views:Vector.<View> = new <View>[intro, mode, difficulty, game, end, ad];
+            var views:Vector.<View> = new <View>[intro, credits, mode, difficulty, game, end, ad];
             for each (var view:View in views) {
                 if (view is ConfigView) (view as ConfigView).config = config;
                 view.init();
@@ -64,6 +66,8 @@ package
             
             // Transitions between views
             intro.onStart += function() { switchView(mode); };
+            intro.onCredits += function() { switchView(credits); };
+            credits.onBack += function() { switchView(intro); };
             mode.onPick += function() {
                 if (config.duration == -1) {
                     switchView(game);
@@ -102,6 +106,7 @@ package
             // Even better, Loom allows for state persistence,
             // but that is out of scope for this example (see PersistenceExample).
             switchView(intro);
+            //switchView(credits);
             //switchView(mode);
             //switchView(difficulty);
             //switchView(game);
