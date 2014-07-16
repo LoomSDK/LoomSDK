@@ -38,6 +38,7 @@ $search_json = ""
 @packages = PackageTree.new()
 $examples = {}
 $guides = GuideTree.new()
+$packages = @packages
 
 # Set this flag to true via CLI for testing.
 # This will output only the classes in the test_class_docs array.
