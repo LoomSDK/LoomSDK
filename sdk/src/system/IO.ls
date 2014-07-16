@@ -20,16 +20,17 @@ limitations under the License.
 
 package system {
     
-    /// @cond PRIVATE    
-    // Loom IO is a class for reading/writing from stdin/stdout 
-    // it is very simple and may be superceded at some point
+    /**
+     * A class for reading/writing from stdin/stdout 
+     * it is very simple and may be superceded at some point
+     *
+     * @private
+     */
     class IO {
         
         public static native function read(format:String):String;
         public static native function write(value:String);
         
     }
-
-    /// @endcond
-    
+   
 }

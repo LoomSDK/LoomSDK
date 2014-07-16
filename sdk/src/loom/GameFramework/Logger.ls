@@ -20,13 +20,29 @@ limitations under the License.
 
 package loom.gameframework
 {
+   /**
+    * Helper class to handle log output.
+    */
    class Logger
    {
+      /**
+       * Call to print warnings to the log.
+       *
+       * @param object Object initiating output.
+       * @param method Method initiating output.
+       * @param message Message to log.
+       */
       public static function warn(object:Object, method:String, message:String):void
       {
-         Console.print(object.toString() + " - " + method + " - " + message);
+         Console.print(object.toString() + " - WARN " + method + " - " + message);
       }
 
+      /**
+       * Call to print normal output to the log.
+       *
+       * @param object Object initiating output.
+       * @param message Message to log.
+       */
       public static function print(object:Object, message:String):void
       {
          Console.print(object.toString() + " - " + message);

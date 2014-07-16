@@ -20,15 +20,15 @@ limitations under the License.
 
 package system {
 
-/// @cond PRIVATE
-// LOOM-582
-// Bootstrap initialize called at assembly load
-// derive a class from Bootstrap and at assembly load
-// the initialize method will be called
-class Bootstrap {
+/**
+ * Classes that subclass Bootstrap.initialize will have this method called
+ * at assembly load.
+ */
+class Bootstrap 
+{
     
     public static native function initialize();
 
 }
-/// @endcond
+
 }

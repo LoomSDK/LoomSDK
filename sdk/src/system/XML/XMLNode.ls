@@ -48,13 +48,25 @@ package system.xml {
     	XML_ERROR_PARSING
     };
 
+    /**
+     * Helper class for working with XML error messages.
+     */
     class XMLErrorMessages
     {
+        /**
+         * Convert an XMLError to an English string.
+         *
+         * @see buildErrorMessage for more complete functionality.
+         */
         public static function lookup(error:XMLError):String
         {
             return messages[error];
         }
 
+        /**
+         * Return a nice error message given an error code and the document that
+         * just generated it.
+         */
         public static function buildErrorMessage(error:XMLError, document:XMLDocument):String
         {
             var message = lookup(error);

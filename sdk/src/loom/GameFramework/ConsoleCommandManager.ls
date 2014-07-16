@@ -22,6 +22,10 @@ package loom.gameframework
 {
    import loom.Application;
    
+   /**
+    * Represent a conmmand in the console command manager.
+    * @private
+    */
    protected class ConsoleCommand
    {
       public var name:String;
@@ -38,12 +42,18 @@ package loom.gameframework
       protected var commandList:Vector.<ConsoleCommand> = new Vector.<ConsoleCommand>();
       protected var commandListOrdered:Boolean = false;
 
+      /**
+       * Start the console command manager.
+       */
       public function initialize():void
       {
          Console.print("Command manager online.");
          Application.assetCommandDelegate += process;
       }
 
+      /**
+       * Stop the console command manager.
+       */
       public function destroy():void
       {
          Console.print("Command manager offline.");

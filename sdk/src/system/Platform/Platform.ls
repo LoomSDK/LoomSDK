@@ -20,6 +20,9 @@ limitations under the License.
 
 package system.platform {
 
+/**
+ * Identifiers for supported platforms.
+ */
 public enum PlatformType {
     WINDOWS = 1,
     OSX = 2,
@@ -28,6 +31,9 @@ public enum PlatformType {
     LINUX = 5
 }
 
+/**
+ * Identifiers for display/device categories.
+ */
 public enum DisplayProfile {
     DESKTOP,
     SMALL,
@@ -35,8 +41,11 @@ public enum DisplayProfile {
     LARGE
 }
 
-class Platform {
-
+/**
+ * Query and control platform-specific state.
+ */
+class Platform 
+{
    /*!
     Return the current time in milliseconds since application start.
    */

@@ -20,6 +20,9 @@ limitations under the License.
 
 package system.errors
 {
+	/**
+	 * Error thrown when wrong number or type of arguments are passed.
+	 */
 	public class ArgumentError extends Error
 	{
 		public function ArgumentError(msg:String = null)
