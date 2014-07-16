@@ -1,4 +1,4 @@
-title: Loom SDKs
+title: The Loom SDK
 description: The software development kits making up Loom.
 !------
 

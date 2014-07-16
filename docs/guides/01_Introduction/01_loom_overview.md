@@ -1,4 +1,4 @@
-title: Loom Overview
+title: Overview
 description: High level overview of Loom, LoomScript, and LoomCLI.
 !------
 
@@ -13,7 +13,7 @@ Developing in LoomScript, using Loom CLI to deploy, run, and develop with live r
 
 However, LoomScript may not be suitable for all tasks, and at times, it may be desirable to avoid Loom CLI in favor of an IDE such as XCode or Visual Studio for debugging, profiling, or more convenient (but still relatively cumbersome) native development. 
 
-In these situations, you can use the Loom Native SDK and work directly with Loom's C++ implementation. Of course, C++ development is not as agile as working in script. But if you need better insight into a crash, or want to fix a bug or extend Loom for your app with a new feature, it's worth the slow down. We recommend exposing new features or SDKs in LoomScript so that the bulk of integration and development work can be done with fast iteration times.
+In these situations, you can use the Loom Native SDK and work directly with Loom's C++ implementation. Of course, C++ development is not as agile as working in script. But if you need better insight into a crash, or want to fix a bug or extend Loom for your app with a new feature, it's worth the effort. We recommend exposing new features or SDKs in LoomScript so that the bulk of integration and development work can be done with less setup and faster iteration times.
 
 ## System Architecture
 Loom has three main components:
@@ -24,7 +24,7 @@ Loom has three main components:
 
 Loom CLI and Loom Engine work together to support live reloading of assets and LoomScript code. Together, these pieces form the foundation for app development with Loom.
 
-On top of this, live the system libraries - like 2d and 3d rendering, sound playback, asset loading, XML parsing, file I/O, logging, memory management, input/touch handling, and so on. And on top of them lives your application code.
+On top of this, live the system libraries - like 2d rendering, sound playback, asset loading, XML parsing, file I/O, logging, memory management, input/touch handling, and so on. On top of them lives your application code.
 
 ### Loom's Execution Model
 
