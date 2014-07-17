@@ -1,6 +1,7 @@
 package ui.views
 {
     import loom2d.display.DisplayObjectContainer;
+	import loom2d.events.KeyboardEvent;
     import loom2d.textures.Texture;
     import loom2d.textures.TextureSmoothing;
 
@@ -14,6 +15,7 @@ package ui.views
     {
         public var onEnter:ViewCallback;
         public var onExit:ViewCallback;
+        public var onBack:ViewCallback;
         
         public function init() {}
         public function resize(w:Number, h:Number) {}
@@ -23,11 +25,18 @@ package ui.views
         public function enter(owner:DisplayObjectContainer)
         {
             owner.addChild(this);
+            stage.addEventListener(KeyboardEvent.BACK_PRESSED, backPressed);
             onEnter();
+        }
+        
+        private function backPressed(e:KeyboardEvent):void 
+        {
+            onBack();
         }
         
         public function exit()
         {
+            if (stage) stage.removeEventListener(KeyboardEvent.BACK_PRESSED, backPressed);
             if (parent) parent.removeChild(this);
             onExit();
         }

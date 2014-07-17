@@ -9,7 +9,7 @@ package
     import ui.Theme;
     import ui.views.ConfigView;
     import ui.views.game.AdView;
-	import ui.views.game.CreditsView;
+    import ui.views.game.CreditsView;
     import ui.views.game.DifficultyView;
     import ui.views.game.EndView;
     import ui.views.game.GameView;
@@ -67,6 +67,7 @@ package
             // Transitions between views
             intro.onStart += function() { switchView(mode); };
             intro.onCredits += function() { switchView(credits); };
+            intro.onBack += function() { Process.exit(0); };
             credits.onBack += function() { switchView(intro); };
             mode.onPick += function() {
                 if (config.duration == -1) {
@@ -75,10 +76,20 @@ package
                     switchView(difficulty);
                 }
             };
+            mode.onDemo += function() {
+                switchView(game);
+                game.demo();
+            };
+            mode.onBack += function() { switchView(intro); };
             difficulty.onPick += function() {
                 switchView(game);
             };
+            difficulty.onBack += function() { switchView(mode); };
             game.onQuit += function() {
+                if (game.demoMode) {
+                    switchView(mode);
+                    return;
+                }
                 end.gameScore = game.score;
                 end.quitManually = true;
                 switchView(end);
@@ -89,6 +100,9 @@ package
                 switchView(end);
             };
             end.onContinue += function() {
+                switchView(ad);
+            };
+            end.onBack += function() {
                 switchView(ad);
             };
             ad.onContinue += function() {
@@ -119,10 +133,17 @@ package
          */
         private function resize(e:Event = null)
         {
+            var scale:Number;
             if (stage.stageWidth/stage.stageHeight < contentWidth/contentHeight) {
-                display.scale = Math.max(1, Math.floor(pixelScale*stage.stageWidth/contentWidth));
+                scale = stage.stageWidth/contentWidth;
             } else {
-                display.scale = Math.max(1, Math.floor(pixelScale*stage.stageHeight/contentHeight));
+                scale = stage.stageHeight/contentHeight;
+            }
+            // Scale to whole multiples, unless it's too small
+            if (stage.stageWidth >= contentWidth) {
+                display.scale = Math.max(1, Math.floor(pixelScale*scale));
+            } else {
+                display.scale = pixelScale * scale;
             }
             var w = stage.stageWidth/display.scale;
             var h = stage.stageHeight/display.scale;
