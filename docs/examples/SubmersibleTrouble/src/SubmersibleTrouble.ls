@@ -30,15 +30,12 @@ package
 		
 		override public function run():void
 		{
-			// Scale stage with black borders
-			stage.scaleMode = StageScaleMode.LETTERBOX;
+			// No scaling for stage for custom scaling logic in Environment
+			stage.scaleMode = StageScaleMode.NONE;
 			SplashLoader.init(stage, timeManager, load);
 		}
 		
 		private function load():void {
-			// Triggers on touch start, move and end
-			stage.addEventListener(TouchEvent.TOUCH, touched);
-			
 			stage.addEventListener(KeyboardEvent.BACK_PRESSED, back);
 			
 			environment = new Environment(stage);
@@ -50,11 +47,6 @@ package
 		private function back(e:KeyboardEvent):void 
 		{
 			Process.exit(0);
-		}
-		
-		private function touched(e:TouchEvent):void
-		{
-			if (environment) environment.touched(e.getTouch(stage));
 		}
 		
 		override public function onTick()

@@ -1,6 +1,7 @@
 package
 {
 	import feathers.display.TiledImage;
+	import loom.platform.Mobile;
 	import loom.sound.Listener;
 	import loom.sound.Sound;
 	import loom.utils.Injector;
@@ -9,7 +10,9 @@ package
 	import loom2d.display.Stage;
 	import loom2d.events.Event;
 	import loom2d.events.Touch;
+	import loom2d.events.TouchEvent;
 	import loom2d.events.TouchPhase;
+	import loom2d.Loom2D;
 	import loom2d.math.Point;
 	import loom2d.textures.Texture;
 	import loom2d.textures.TextureSmoothing;
@@ -31,21 +34,31 @@ package
 		/** Simulation time */
 		private var t = 0;
 		
-		/** Pixel scaling */
-		private var displayScale = 4;
+		// Target content width/height;
+		// the view is scaled to contain these
+		private var contentWidth = 480;
+		private var contentHeight = 480;
 		
+		/** Pixel scaling */
+		private var pixelScale = 4;
+		
+		/** The return depth point */
 		private var maxDepth = 800;
 		
 		// Camera offsets (for transitions between intro and game)
-		private var creditsOffset = 730;
+		private var creditsOffset = 750;
 		private var initOffset = 280;
 		private var introOffset = 100;
 		private var launchedOffset = 0;
 		private var displayOffsetEase = 0.05;
 		
+		/** Scrolling speed for credits */
 		private var creditsSpeed = 8;
+		
+		/** The depth at which the instructions get hidden */
 		private var instructionHidingDepth = 300;
 		
+		/** Mine depth offset */
 		private var mineOffset = 150;
 		private var mineNum = 50;
 		private var mineDistributionSharpness = 5;
@@ -86,12 +99,13 @@ package
 		private var lastTouch:Touch;
 		
 		// General game state machine states
-		public static const STATE_INIT = 0;
-		public static const STATE_LAUNCHED = 1;
+		public static const STATE_INIT      = 0;
+		public static const STATE_LAUNCHED  = 1;
 		public static const STATE_RETURNING = 2;
-		public static const STATE_RETURN = 3;
-		public static const STATE_WINNER = 4;
-		public static const STATE_CREDITS = 5;
+		public static const STATE_RETURN    = 3;
+		public static const STATE_EXPLODED  = 4;
+		public static const STATE_WINNER    = 5;
+		public static const STATE_CREDITS   = 6;
 		public var state:Number;
 		
 		// Entities
@@ -121,11 +135,16 @@ package
 		{
 			this.stage = stage;
 			
-			display.scale = displayScale;
+			stage.addEventListener(Event.RESIZE, resize);
+			resize();
+			
+			// Triggers on touch start, move and end
+			display.addEventListener(TouchEvent.TOUCH, touched);
+			
 			stage.addChild(display);
 			
-			w = stage.stageWidth/displayScale;
-			h = stage.stageHeight/displayScale;
+			w = contentWidth/pixelScale;
+			h = contentHeight/pixelScale;
 			
 			var tex:Texture;
 			
@@ -139,14 +158,13 @@ package
 			tex = Texture.fromAsset("assets/stars.png");
 			tex.smoothing = TextureSmoothing.NONE;
 			var stars = new Image(tex);
-			stars.width = w;
-			stars.height = 300;
+			stars.scale = w/stars.width;
 			display.addChild(stars);
 			
 			// Credits
 			tex = Texture.fromAsset("assets/credits.png");
 			credits = new Image(tex);
-			credits.scale = 1/displayScale;
+			credits.scale = contentWidth/credits.width/pixelScale;
 			credits.y = -400-credits.height;
 			display.addChild(credits);
 			stars.y = credits.y-h;
@@ -156,7 +174,7 @@ package
 			// Smoothing set to NONE to ensure rough pixel look
 			tex.smoothing = TextureSmoothing.NONE;
 			instructions = new Image(tex);
-			instructions.width = w;
+			instructions.scale = w/instructions.width;
 			instructions.y = 60;
 			display.addChild(instructions);
 			
@@ -195,7 +213,7 @@ package
 			creditsBtn = new SimpleButton();
 			creditsBtn.upImage = "assets/info.png";
 			creditsBtn.onClick = showCredits;
-			creditsBtn.scale = 1.2/displayScale;
+			creditsBtn.scale = 1.2/pixelScale;
 			creditsBtn.x = w - 14;
 			creditsBtn.alpha = 0.5;
 			display.addChild(creditsBtn);
@@ -220,6 +238,14 @@ package
 			warning.setListenerRelative(false);
 			
 			reset();
+		}
+		
+		/**
+		 * Scale stage so it's contained within stage
+		 */
+		private function resize(e:Event = null)
+		{
+			stage.scale = stage.stageWidth / contentWidth * pixelScale;
 		}
 		
 		/**
@@ -301,9 +327,34 @@ package
 		
 		private function showCredits() 
 		{
+			Mobile.allowScreenSleep(false);
 			state = STATE_CREDITS;
 			targetOffset = creditsOffset;
 		}
+		
+		private function hideCredits()
+		{
+			targetOffset = introOffset;
+			state = STATE_INIT;
+			Mobile.allowScreenSleep(false);
+		}
+		
+		private function disableCredits() 
+		{
+			creditsBtn.touchable = false;
+			Loom2D.juggler.tween(creditsBtn, 0.2, {
+				alpha: 0
+			});
+		}
+		
+		private function enableCredits() 
+		{
+			creditsBtn.touchable = true;
+			Loom2D.juggler.tween(creditsBtn, 1, {
+				alpha: 1
+			});
+		}
+		
 		
 		/**
 		 * Launch player from initial state and begin the game.
@@ -316,13 +367,19 @@ package
 			player.launch();
 			instructions.visible = true;
 			state = STATE_LAUNCHED;
+			disableCredits();
 		}
 		
-		public function touched(touch:Touch)
+		private function touched(e:TouchEvent)
 		{
+			var touch = e.getTouch(display);
 			switch (state) {
 				case STATE_INIT:
-					if (touch.phase == TouchPhase.BEGAN) launch();
+				case STATE_WINNER:
+					if (touch.phase == TouchPhase.BEGAN) {
+						launch();
+						touched(e);
+					}
 					break;
 				case STATE_CREDITS:
 					state = STATE_INIT;
@@ -349,7 +406,7 @@ package
 			var targetCamera:Number;
 			
 			// Common core game loop - update entities, check for collisions and end state
-			if (state != STATE_INIT && state != STATE_CREDITS) {
+			if (state != STATE_INIT && state != STATE_EXPLODED && state != STATE_CREDITS) {
 				if (state != STATE_WINNER && state != STATE_RETURNING && lastTouch) {
 					var loc:Point = lastTouch.getLocation(display);
 					player.setTarget(loc);
@@ -367,11 +424,11 @@ package
 					if (targetOffset > creditsOffset-credits.height-50) {
 						targetOffset -= creditsSpeed*dt;
 					} else {
-						targetOffset = introOffset;
-						state = STATE_INIT;
+						hideCredits();
 					}
 					break;
 				case STATE_INIT:
+				case STATE_EXPLODED:
 					targetCamera = 0;
 					break;
 				case STATE_LAUNCHED:
@@ -416,10 +473,10 @@ package
 			// Eased camera movement
 			cameraPos += Math.clamp((targetCamera-cameraPos)*cameraEase, -maxCameraSpeed, maxCameraSpeed);
 			
-			// After game over, check if camera returned to initial state and dispatch gameover (allowing for restart)
+			// After game over, check if camera returned to initial state and allow for restart
 			if (over && Math.abs(targetCamera-cameraPos) < overCameraThreshold) {
 				over = false;
-				state = STATE_INIT;
+				if (state != STATE_WINNER) state = STATE_INIT;
 			}
 			
 			t += dt;
@@ -450,6 +507,7 @@ package
 		
 		private function gameover(winner:Boolean = false)
 		{
+			enableCredits();
 			over = true;
 			setScores();
 			targetOffset = introOffset;
@@ -460,7 +518,7 @@ package
 				player.setTarget(new Point(w/2, 0));
 				winnerSound.play();
 			} else {
-				state = STATE_INIT;
+				state = STATE_EXPLODED;
 				resetPlayer();
 			}
 		}
@@ -511,7 +569,9 @@ package
 				mine.render(t);
 			}
 			player.render(t);
-			display.y = (displayOffset-cameraPos)*displayScale;
+			
+			var center = (stage.stageHeight/stage.scale-contentHeight/pixelScale)/2;
+			display.y = (displayOffset-cameraPos)+center;
 		}
 		
 	}
