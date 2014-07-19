@@ -36,17 +36,7 @@ package
 		}
 		
 		private function load():void {
-			stage.addEventListener(KeyboardEvent.BACK_PRESSED, back);
-			
 			environment = new Environment(stage);
-		}
-		
-		/**
-		 * Exits the application when the back button is pressed
-		 */
-		private function back(e:KeyboardEvent):void 
-		{
-			Process.exit(0);
 		}
 		
 		override public function onTick()

@@ -9,6 +9,7 @@ package
 	import loom2d.display.Sprite;
 	import loom2d.display.Stage;
 	import loom2d.events.Event;
+	import loom2d.events.KeyboardEvent;
 	import loom2d.events.Touch;
 	import loom2d.events.TouchEvent;
 	import loom2d.events.TouchPhase;
@@ -138,6 +139,8 @@ package
 			stage.addEventListener(Event.RESIZE, resize);
 			resize();
 			
+			stage.addEventListener(KeyboardEvent.BACK_PRESSED, back);
+			
 			// Triggers on touch start, move and end
 			display.addEventListener(TouchEvent.TOUCH, touched);
 			
@@ -237,7 +240,26 @@ package
 			warning = Sound.load("assets/warning.ogg");
 			warning.setListenerRelative(false);
 			
+			placeMines();
 			reset();
+		}
+		
+		/**
+		 * Exits the application when the back button is pressed
+		 */
+		private function back(e:KeyboardEvent):void 
+		{
+			switch (state) {
+				case STATE_INIT:
+				case STATE_WINNER:
+					Process.exit(0);
+					break;
+				case STATE_CREDITS:
+					hideCredits();
+					break;
+				default:
+					gameover();
+			}
 		}
 		
 		/**
@@ -271,8 +293,7 @@ package
 		{
 			t = 0;
 			lastTouch = null;
-			clearMines();
-			placeMines();
+			resetMines();
 			arrowUp.visible = false;
 			targetOffset = introOffset;
 			resetPlayer();
@@ -297,13 +318,14 @@ package
 		}
 		
 		/**
-		 * Remove and dispose of all the mines.
+		 * Reset all the mines
 		 */
-		private function clearMines()
+		private function resetMines() 
 		{
-			while (mines.length > 0) {
-				var mine:Mine = mines.pop();
-				mine.dispose();
+			for (var i = 0; i < mines.length; i++) {
+				var mine = mines[i];
+				mine.reset();
+				mine.setPosition(Math.randomRangeInt(0, w), mineOffset+(maxDepth-mineOffset-h)*mineDistribution(i/(mineNum-1)));
 			}
 		}
 		
@@ -313,7 +335,9 @@ package
 		private function placeMines()
 		{
 			for (var i = 0; i < mineNum; i++) {
-				addMine(Math.randomRangeInt(0, w), mineOffset+(maxDepth-mineOffset-h)*mineDistribution(i/(mineNum-1)));
+				var mine = new Mine(mineDisplay, maxDepth, player);
+				mine.setPosition(w/2, maxDepth);
+				mines.push(mine);
 			}
 		}
 		
@@ -382,20 +406,12 @@ package
 					}
 					break;
 				case STATE_CREDITS:
-					state = STATE_INIT;
-					targetOffset = introOffset;
+					hideCredits();
 					break;
 				default:
 					lastTouch = touch;
 					if (touch.phase == TouchPhase.ENDED) lastTouch = null;
 			}
-		}
-		
-		private function addMine(x:Number, y:Number)
-		{
-			var mine = new Mine(mineDisplay, maxDepth, player);
-			mine.setPosition(x, y);
-			mines.push(mine);
 		}
 		
 		public function tick()
@@ -476,6 +492,7 @@ package
 			// After game over, check if camera returned to initial state and allow for restart
 			if (over && Math.abs(targetCamera-cameraPos) < overCameraThreshold) {
 				over = false;
+				enableCredits();
 				if (state != STATE_WINNER) state = STATE_INIT;
 			}
 			
@@ -507,7 +524,6 @@ package
 		
 		private function gameover(winner:Boolean = false)
 		{
-			enableCredits();
 			over = true;
 			setScores();
 			targetOffset = introOffset;

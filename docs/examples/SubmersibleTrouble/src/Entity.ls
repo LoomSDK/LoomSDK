@@ -45,6 +45,11 @@ package
 			Listener.setVelocity(v.x*SOUND_SCALE, 0, v.y*SOUND_SCALE);
 		}
 		
+		protected function resetPhysics()
+		{
+			p = v = oa = a = Point.ZERO;
+		}
+		
 		/**
 		 * Entity-entity collision check based on bounds AABB, returns true if they intersect.
 		 */
