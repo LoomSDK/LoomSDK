@@ -4,6 +4,7 @@ package
 	import loom.Application;
 	import loom.physics.Physics;
 	import loom.physics.PhysicsBall;
+	import loom.sound.Listener;
 	import loom.utils.Injector;
 	import loom2d.display.Stage;
 	import loom2d.display.StageScaleMode;
@@ -38,6 +39,10 @@ package
 			
 			stage.addEventListener(KeyboardEvent.BACK_PRESSED, back);
 			
+			// Handle app pausing
+			applicationActivated += onActivated;
+			applicationDeactivated += onDeactivated;
+			
 			stage.addEventListener(Event.RESIZE, resized);
 			resized();
 			
@@ -54,6 +59,22 @@ package
 		private function back(e:KeyboardEvent):void 
 		{
 			Process.exit(0);
+		}
+		
+		/**
+		 * Mute sounds when the app is paused
+		 */
+		private function onDeactivated():void 
+		{
+			Listener.setGain(0);
+		}
+		
+		/**
+		 * Unmute sounds when the app is resumed
+		 */
+		private function onActivated():void 
+		{
+			Listener.setGain(1);
 		}
 		
 		private function resized(e:Event = null):void
