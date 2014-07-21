@@ -5,6 +5,7 @@ package
 	import loom.gameframework.TimeManager;
 	import loom.physics.Physics;
 	import loom.physics.PhysicsBall;
+	import loom.sound.Listener;
 	import loom.utils.Injector;
 	import loom2d.display.Stage;
 	import loom2d.display.StageScaleMode;
@@ -33,6 +34,27 @@ package
 			// No scaling for stage for custom scaling logic in Environment
 			stage.scaleMode = StageScaleMode.NONE;
 			SplashLoader.init(stage, timeManager, load);
+			
+			// Handle app pausing
+			applicationActivated += onActivated;
+			applicationDeactivated += onDeactivated;
+			
+		}
+
+		/**
+		* Mute sounds when the app is paused
+		*/
+		private function onDeactivated():void
+		{
+			Listener.setGain(0);
+		}
+		
+		/**
+		* Unmute sounds when the app is resumed
+		*/
+		private function onActivated():void
+		{
+			Listener.setGain(1);
 		}
 		
 		private function load():void {
