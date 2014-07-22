@@ -274,7 +274,7 @@ package ui.views.game
             esc.x = w-esc.width;
             background.setSize(w, h);
             field.x = (w-board.contentWidth)/2;
-            field.y = h-board.contentHeight-10;
+            field.y = (h-board.contentHeight)/2+10;
             demoInstructions.setSize(board.contentWidth, 20);
             updateDisplay();
         }
@@ -531,7 +531,7 @@ package ui.views.game
             juggler.delayCall(nextRandomSwap, time+0.1);
         }
         
-        public function demoMode():Boolean
+        public function get demoMode():Boolean
         {
             return state == STATE_DEMO;
         }
