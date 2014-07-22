@@ -11,6 +11,8 @@ package ui.views.game
     import game.Swap;
     import game.Tile;
     import loom.platform.Mobile;
+    import loom.platform.UserDefault;
+    import loom.sound.Listener;
     import loom.sound.Sound;
     import loom2d.animation.Juggler;
     import loom2d.animation.Transitions;
@@ -66,10 +68,16 @@ package ui.views.game
         
         // User interface from LML
         [Bind] public var esc:Button;
+        [Bind] public var mute:Button;
         [Bind] public var timeDisplay:Label;
         [Bind] public var lastDisplay:Label;
         [Bind] public var multiDisplay:Label;
         [Bind] public var scoreDisplay:Label;
+        
+        private static const MUTE_NONE  = 0;
+        private static const MUTE_MUSIC = 1;
+        private static const MUTE_ALL   = 2;
+        private var muteMode = MUTE_NONE;
         
         private var textScale:Number = 1;
         
@@ -131,6 +139,11 @@ package ui.views.game
                 }
             };
             
+            mute.addEventListener(Event.TRIGGERED, switchMuteMode);
+            
+            // Get saved mute mode (or default if none exists)
+            muteMode = UserDefault.sharedUserDefault().getIntegerForKey("muteMode", muteMode);
+            
             confirmView = new ConfirmView();
             confirmView.onYes += confirmYes;
             confirmView.onNo += confirmNo;
@@ -167,6 +180,56 @@ package ui.views.game
             soundtrack.setLooping(true);
             
             explosion = Sound.load("assets/sounds/tileExplosion.ogg");
+        }
+        
+        /**
+         * Exists for symmetry against activate()
+         */
+        public function deactivate() {}
+        
+        /**
+         * Update mute mode on activation,
+         * keeps sound from getting unmuted unintentionally
+         */
+        public function activate() {
+            updateMuteMode();
+        }
+        
+        /**
+         * Switch over to the next mute mode
+         */
+        private function switchMuteMode(e:Event) 
+        {
+            switch (muteMode) {
+                case MUTE_NONE:  muteMode = MUTE_MUSIC; break;
+                case MUTE_MUSIC: muteMode = MUTE_ALL; break;
+                case MUTE_ALL:   muteMode = MUTE_NONE; break;
+            }
+            // Save mute mode to persistent storage
+            UserDefault.sharedUserDefault().setIntegerForKey("muteMode", muteMode);
+            updateMuteMode();
+        }
+        
+        /**
+         * Update the sounds and state based on the current mute mode
+         */
+        private function updateMuteMode() 
+        {
+            if (muteMode == MUTE_MUSIC || muteMode == MUTE_ALL) {
+                soundtrack.pause();
+            } else {
+                soundtrack.play();
+            }
+            if (muteMode == MUTE_ALL) {
+                Listener.setGain(0);
+            } else {
+                Listener.setGain(1);
+            }
+            switch (muteMode) {
+                case MUTE_NONE: mute.label = "MUTE"; break;
+                case MUTE_MUSIC: mute.label = "SFX"; break;
+                case MUTE_ALL: mute.label = "MUTED"; break;
+            }
         }
         
         
@@ -207,6 +270,7 @@ package ui.views.game
         {
             confirmView.resize(w, h);
             esc.width = 30;
+            mute.width = 30;
             esc.x = w-esc.width;
             background.setSize(w, h);
             field.x = (w-board.contentWidth)/2;
@@ -374,6 +438,8 @@ package ui.views.game
             updateDisplay();
             
             soundtrack.play();
+            
+            updateMuteMode();
         }
         
         /**

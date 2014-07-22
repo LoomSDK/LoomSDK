@@ -2,6 +2,8 @@ package
 {
     import game.GameConfig;
     import loom.Application;
+    import loom.gameframework.TimeManager;
+    import loom.sound.Listener;
     import loom2d.display.Sprite;
     import loom2d.display.StageScaleMode;
     import loom2d.events.Event;
@@ -43,6 +45,11 @@ package
         private var contentHeight = 580;
         private var pixelScale = 4;
         
+        
+        // Gets injected automatically before run() is called
+        [Inject] private var timeManager:TimeManager;
+        
+        
         override public function run()
         {
             // No scaling for stage for custom scaling logic in resize()
@@ -51,6 +58,11 @@ package
             // Don't interpolate pixels - rough pixel art look
             TextureSmoothing.defaultSmoothing = TextureSmoothing.NONE;
             
+            SplashLoader.init(stage, timeManager, load);
+        }
+        
+        private function load() 
+        {
             // Instantiates the custom theme contained in the Theme class,
             // setting up the fonts and custom label, button and checkbox styles.
             new Theme();
@@ -108,7 +120,11 @@ package
             ad.onContinue += function() {
                 switchView(intro);
             };
+            ;
             
+            // Handle app pausing
+            applicationActivated += onActivated;
+            applicationDeactivated += onDeactivated;
             
             stage.addChild(display);
             stage.addEventListener(Event.RESIZE, resize);
@@ -126,6 +142,24 @@ package
             //switchView(game);
             //switchView(end);
             //switchView(ad);
+        }
+        
+        /**
+         * Mute sounds when the app is paused
+         */
+        private function onDeactivated():void 
+        {
+            Listener.setGain(0);
+            game.deactivate();
+        }
+        
+        /**
+         * Unmute sounds when the app is resumed
+         */
+        private function onActivated():void 
+        {
+            Listener.setGain(1);
+            game.activate();
         }
         
         /**
