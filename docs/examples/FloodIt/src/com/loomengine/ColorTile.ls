@@ -39,7 +39,7 @@ package com.loomengine.flooder
         {
             _colorIndex = value;
             
-            var goalColor = Color.fromInteger(FloodIt.colors[colorIndex]);
+            var goalColor = Color.fromInt(FloodIt.colors[colorIndex]);
             Loom2D.juggler.tween(this, 0.2, { "r": goalColor.red, "g": goalColor.green, "b": goalColor.blue});
         }
         
