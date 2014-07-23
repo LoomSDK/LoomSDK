@@ -2,6 +2,7 @@ package
 {
 	import feathers.display.TiledImage;
 	import loom.Application;
+	import loom.gameframework.TimeManager;
 	import loom.physics.Physics;
 	import loom.physics.PhysicsBall;
 	import loom.sound.Listener;
@@ -25,11 +26,19 @@ package
 		private var bg:TiledImage;
 		private var environment:Environment;
 		
+		// Gets injected automatically before run() is called
+		[Inject] private var timeManager:TimeManager;
+		
 		override public function run():void
 		{
 			// Responsive stage size
 			stage.scaleMode = StageScaleMode.NONE;
 			
+			SplashLoader.init(stage, timeManager, load);
+		}
+		
+		private function load():void
+		{
 			// Tiled background image
 			bg = new TiledImage(Texture.fromAsset("assets/bg.png"), 2);
 			stage.addChild(bg);
