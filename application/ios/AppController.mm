@@ -27,6 +27,7 @@
 #import "cocos2d.h"
 #import "EAGLView.h"
 #import "../common/AppDelegate.h"
+ #import "HockeySDK.h"
 
 #import "RootViewController.h"
 
@@ -63,6 +64,17 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
     viewController.wantsFullScreenLayout = YES;
     viewController.view = glView;
    
+    // check for and initialize HockeyApp
+    NSBundle *mainBundle = [NSBundle mainBundle];
+    NSString *hockeyAppId = [mainBundle objectForInfoDictionaryKey:@"HockeyAppID"];
+NSLog(@"-----Info.plist HockeyAppID String: %@", hockeyAppId);
+    if((hockeyAppId != nil) && ([hockeyAppId isEqualToString:@""] == FALSE))
+    {
+        [[BITHockeyManager sharedHockeyManager] configureWithIdentifier:hockeyAppId];
+        [[BITHockeyManager sharedHockeyManager] startManager];
+        [[BITHockeyManager sharedHockeyManager].authenticator authenticateInstallation];   
+    }
+
     // Enable multitouch.
     [glView setMultipleTouchEnabled:YES];
 

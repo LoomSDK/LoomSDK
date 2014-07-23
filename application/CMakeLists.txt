@@ -118,6 +118,7 @@ if (APPLE)
           LoomGraphics
           LoomCore
           
+          "-framework CoreText"
           "-framework CoreGraphics"
           "-framework CoreFoundation"
           "-framework CoreMotion"
@@ -131,11 +132,16 @@ if (APPLE)
           "-framework MessageUI"
           "-framework SystemConfiguration"
           "-framework AdSupport"
+          "-framework Security"
+          "-framework QuartzCore"
 
           # For Audio
           "-framework AVFoundation"
           "-framework AudioToolbox"
           "-framework CoreAudio"
+
+          # HockeyApp SDK
+          "-framework HockeySDK -F ${CMAKE_SOURCE_DIR}/loom/vendor/hockeyapp/ios"
 
           # Admob SDK
           ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a

@@ -253,6 +253,9 @@ public class LoomDemo extends Cocos2dxActivity {
         // Set framelayout as the content view
         setContentView(framelayout);
 
+        // hook up HockeyApp
+        LoomHockeyApp.onCreate(this);
+
         // give the webview class our layout
         LoomWebView.setRootLayout(webViewGroup);
         LoomAdMob.setRootLayout(webViewGroup);
@@ -348,6 +351,7 @@ public class LoomDemo extends Cocos2dxActivity {
         //NOTE: mGLView needs to resume 1st so that it can inform NativeDelegates of any possible change in Thread IDs
         mGLView.onResume();
 
+        LoomHockeyApp.onResume();
         LoomSensors.onResume();
         LoomVideo.onResume();
         super.onResume();
