@@ -1,6 +1,5 @@
 logs/
 bin/
-bin-release/
 build/
 assets-src/*.aif
 assets-src/*.wav

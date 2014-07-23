@@ -1,0 +1,22 @@
+gimp^
+	-b "(resize-image 512 512 \"icon.xcf\" \"android-high-res.png\")"^
+	-b "(resize-image 72 72 \"icon.xcf\" \"android/drawable-hdpi/icon.png\")"^
+	-b "(resize-image 48 48 \"icon.xcf\" \"android/drawable-mdpi/icon.png\")"^
+	-b "(resize-image 36 36 \"icon.xcf\" \"android/drawable-ldpi/icon.png\")"^
+	-b "(resize-image 152 152 \"icon.xcf\" \"ios/Icon-76@2x.png\")"^
+	-b "(resize-image 144 144 \"icon.xcf\" \"ios/Icon-72@2x.png\")"^
+	-b "(resize-image 144 144 \"icon.xcf\" \"ios/Icon-144.png\")"^
+	-b "(resize-image 120 120 \"icon.xcf\" \"ios/Icon-60@2x.png\")"^
+	-b "(resize-image 114 114 \"icon.xcf\" \"ios/Icon@2x.png\")"^
+	-b "(resize-image 114 114 \"icon.xcf\" \"ios/Icon-114.png\")"^
+	-b "(resize-image 100 100 \"icon.xcf\" \"ios/Icon-Small-50@2x.png\")"^
+	-b "(resize-image 80 80 \"icon.xcf\" \"ios/Icon-Small-40@2x.png\")"^
+	-b "(resize-image 76 76 \"icon.xcf\" \"ios/Icon-76.png\")"^
+	-b "(resize-image 72 72 \"icon.xcf\" \"ios/Icon-72.png\")"^
+	-b "(resize-image 58 58 \"icon.xcf\" \"ios/Icon-Small@2x.png\")"^
+	-b "(resize-image 57 57 \"icon.xcf\" \"ios/Icon.png\")"^
+	-b "(resize-image 57 57 \"icon.xcf\" \"ios/Icon-57.png\")"^
+	-b "(resize-image 50 50 \"icon.xcf\" \"ios/Icon-Small-50.png\")"^
+	-b "(resize-image 40 40 \"icon.xcf\" \"ios/Icon-Small-40.png\")"^
+	-b "(resize-image 29 29 \"icon.xcf\" \"ios/Icon-Small.png\")"^
+	-b "(gimp-quit 0)"
