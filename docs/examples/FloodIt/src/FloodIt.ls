@@ -1,5 +1,7 @@
 package
 {
+    import loom.gameframework.TimeManager;
+    import loom2d.events.KeyboardEvent;
     import loom2d.Loom2D;
     import loom2d.math.Point;
 
@@ -66,17 +68,38 @@ package
          */
         public var orbs:Vector.<Image> = new Vector.<Image>(6);
         
+        // Gets injected automatically before run() is called
+        [Inject] private var timeManager:TimeManager;
+        
         /**
          * Entry point for the game (see main.ls)
          */
         override public function run():void
         {
+            // Set up automatic scaling.
+            stage.scaleMode = StageScaleMode.LETTERBOX;
+            SplashLoader.init(stage, timeManager, load);
+        }
+        
+        /**
+         * Called with a delay to allow the splash display to show
+         */
+        protected function load():void {
+            stage.addEventListener(KeyboardEvent.BACK_PRESSED, back);
             
             // Initialize the labels, grid, and buttons.
             layout();
-
+            
             // And start play.
             startGame();
+        }
+        
+        /**
+         * Exit app on back button press
+         */
+        private function back(e:KeyboardEvent):void 
+        {
+            Process.exit(0);
         }
         
         /**
@@ -84,9 +107,6 @@ package
          */
         protected function layout():void
         {
-            // Set up automatic scaling.
-            stage.scaleMode = StageScaleMode.LETTERBOX;
-
             // Score Label
             scoreLabel = new SimpleLabel("assets/Curse-hd.fnt", 128, 40);
             scoreLabel.x = stage.stageWidth / 2 - 64;
