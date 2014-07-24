@@ -42,9 +42,10 @@ package
             label.center();
             label.x = stage.stageWidth / 2;
             label.y = stage.stageHeight / 2 - 100;
-            label.addEventListener(TouchEvent.TOUCH, onTouch);
             stage.addChild(label);
-
+            
+            stage.addEventListener(TouchEvent.TOUCH, onTouch);
+            
             // Listen for application events, ie, if the camera succeeds.
             Application.event += onAppEvent;
         }
@@ -71,7 +72,7 @@ package
 
         protected function onTouch(te:TouchEvent):void
         {
-            if(te.getTouch(label, TouchPhase.BEGAN))
+            if(te.getTouch(stage, TouchPhase.BEGAN))
             {
                 // Trigger camera native UI if present.
                 trace("Triggering native camera!");
