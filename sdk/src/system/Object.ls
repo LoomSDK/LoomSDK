@@ -79,7 +79,7 @@ package system
         public native function toString():String;
 
         /**
-         * Does this object have a property with the name provided.
+         * Returns true if this object has a property with the provided name.
          * @param name Property to test for.
          * @hide-from-inherited
          */
@@ -88,10 +88,10 @@ package system
         /**
          *  Prints a variable number of arguments to the console output.
          *
-         *  Passing objects to this method calls Object.toString() on them
-         *  To format objects for pretty printing, override Object.toString() on the subclass.
+         *  Passing objects to this method calls Object.toString() on them.
+         *  To format objects for pretty printing, override the Object.toString() method.
          *
-         *  @param args variable number of arguments to print
+         *  @param args A variable number of arguments to print.
          *  @see Object#toString()
          *  @hide-from-inherited
          */
@@ -104,7 +104,7 @@ package system
         public static native function get NaN():Number;
         
         /**
-         *  Checks to see if the provided number is NaN.
+         *  Returns true if the provided Number is NaN.
          *  @param n Number to check if it is NaN.
          *  @hide-from-inherited
          */

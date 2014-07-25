@@ -33,7 +33,7 @@ package system
         public static native function isEnabled():Boolean;
 
         /**
-        *  Enable of disable profiling.
+        *  Enable or disable profiling.
         */
         public static native function enable(value:Boolean = true);
 
