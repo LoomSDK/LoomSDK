@@ -28,7 +28,7 @@ package system
     {  
 
         /**
-        *  Whether profiling is enabled or not.
+        *  Returns true if profiling is enabled.
         */
         public static native function isEnabled():Boolean;
 
