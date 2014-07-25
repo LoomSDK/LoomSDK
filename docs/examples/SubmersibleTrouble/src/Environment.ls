@@ -93,6 +93,11 @@ package
 		/** Set to game time when the bottom is reached */
 		private var returnStartTime:Number;
 		
+		// Results
+		private var explodedMines:int;
+		private var finishTime:int;
+		private var playerWon:Boolean;
+		
 		/**
 		 * Last touch received, stored so the target can be
 		 * updated every tick based on camera movement.
@@ -525,6 +530,7 @@ package
 		private function gameover(winner:Boolean = false)
 		{
 			over = true;
+			updateResults(winner);
 			setScores();
 			targetOffset = introOffset;
 			winnerTitle.visible = winner;
@@ -539,17 +545,22 @@ package
 			}
 		}
 		
+		private function updateResults(winner:Boolean)
+		{
+			explodedMines = 0;
+			for each (var mine:Mine in mines) {
+				if (mine.state == Mine.STATE_EXPLODED || mine.state == Mine.STATE_EXPLODING) explodedMines++;
+			}
+			finishTime = t;
+			playerWon = winner;
+		}
+		
 		/**
 		 * Set score labels to current state
 		 */
 		private function setScores()
 		{
-			var explodedMines = 0;
-			for each (var mine:Mine in mines) {
-				if (mine.state == Mine.STATE_EXPLODED || mine.state == Mine.STATE_EXPLODING) explodedMines++;
-			}
-			
-			scoreTime.text = "Time                                  " + getFormattedTime(t);
+			scoreTime.text = "Time                                  " + getFormattedTime(finishTime);
 			scoreMines.text = "Mines exploded      " + explodedMines;
 		}
 		
