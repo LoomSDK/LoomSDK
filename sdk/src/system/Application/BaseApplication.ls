@@ -21,9 +21,12 @@ limitations under the License.
 
 package system.application
 {
-
-	public class BaseApplication
-	{
+    /**
+     * Base abstract application class that can be extended by different application types.
+     * Extend the the Application or the ConsoleApplication class for your own application.
+     */
+    public class BaseApplication
+    {
 
         protected function run()
         {
@@ -42,8 +45,6 @@ package system.application
             GC.setMemoryWarningLevel(megabytes);
         }
 
-
-
-	}
+    }
 
 }
