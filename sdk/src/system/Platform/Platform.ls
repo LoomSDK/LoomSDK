@@ -53,18 +53,18 @@ class Platform
 
    /*!
     Return the time in seconds since the Unix epoch.
-  */
-  public static native function getEpochTime():Number;
+   */
+   public static native function getEpochTime():Number;
 
    /*!
-    Get the platform on which we are currently running.
+    Get the platform which we are currently running on.
 
     @see PlatformType
    */
    public static native function getPlatform():PlatformType;
 
    /*!
-    Get the device category on which we are currently running. This is the size
+    Get the device category which we are currently running on. This is the size
     of the screen, not pixel density - see getDPI() for that.
 
     @see DisplayProfile

@@ -27,8 +27,8 @@ package system.debugger
     import system.reflection.MethodInfo;
     import system.CallStackInfo;
 
-    /*
-     * Delegate to call for the reload command.
+    /**
+     *  Delegate to call for the reload command.
      */
     delegate ReloadDelegate():void;
     
