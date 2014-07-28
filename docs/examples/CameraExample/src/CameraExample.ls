@@ -44,6 +44,8 @@ package
             label.y = stage.stageHeight / 2 - 100;
             stage.addChild(label);
             
+            // Add to the stage to capture touches for the entire stage,
+            // allowing for a touch anywhere to open up the camera.
             stage.addEventListener(TouchEvent.TOUCH, onTouch);
             
             // Listen for application events, ie, if the camera succeeds.
