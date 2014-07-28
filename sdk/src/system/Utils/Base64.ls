@@ -23,7 +23,7 @@ package system.utils
 {
 
     /**
-     * Utility for conversion to/from Base 64.
+     * Utility for conversion to/from Base64.
      */
     public static native class Base64
     {
@@ -33,7 +33,7 @@ package system.utils
         public native static function encode(data:ByteArray):String;
 
         /**
-         * Convert data from a base64 string into the provided ByteArray.
+         * Convert data from a Base64 string into the provided ByteArray.
          */
         public native static function decode(base64:String, data:ByteArray):void;
     }

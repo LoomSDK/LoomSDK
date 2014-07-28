@@ -23,7 +23,7 @@ package system.application
 {
     /**
      * Base abstract application class that can be extended by different application types.
-     * Extend the the Application or the ConsoleApplication class for your own application.
+     * Extend the Application or the ConsoleApplication class for your own application.
      */
     public class BaseApplication
     {

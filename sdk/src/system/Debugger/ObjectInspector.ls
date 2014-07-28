@@ -22,7 +22,7 @@ package system.debugger {
 
     /**
      *  ObjectInspector take a source object and returns 
-     *  a nicely formatted JSON dump of its type/value and field member values.
+     *  a nicely formatted JSON string representing the type and field member values.
      */
     public native class ObjectInspector
     {
