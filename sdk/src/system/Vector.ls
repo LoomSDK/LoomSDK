@@ -89,10 +89,11 @@ final class Vector
     public native function clear();
     
     /*
-     * Executes a callback function for every element of the Vector, stopping if the callback returns false.
+     * Executes a callback function for each element of the Vector, stopping at the first false result of the callback.
      *
      * @param callback A callback in the form of function(item:Object, index:Number, v:Vector):Boolean which will be called on each element of the Vector.
      * @param thisObject Required if the callback is an instance method and not a local or static function.
+     * @return True when every element passes the callback test, false if any one fails.
      */
     public function every(callback:Function, thisObject:Object = null):Boolean {
         
@@ -109,10 +110,11 @@ final class Vector
     }
     
     /*
-     * Executes a callback function for every element of the Vector, stopping if the callback returns true.
+     * Executes a callback function for each element of the Vector, stopping at the first true result of the callback.
      *
      * @param callback A callback in the form of function(item:Object, index:Number, v:Vector):Boolean which will be called on each element of the Vector.
      * @param thisObject Required if the callback is an instance method and not a local or static function.
+     * @return True when any element passes the callback test, false if every one fails.
      */
     public function some(callback:Function, thisObject:Object = null):Boolean {
     
@@ -130,11 +132,11 @@ final class Vector
     
     
     /*
-     * Executes a callback function for every element of the Vector and adds it to the return Vector if the callback returns true.
+     * Executes a callback function for each element of the Vector and adds it to the return Vector if the callback returns true.
      *
-     * @param callback A callback in the form of function(item:Object, index:Number, v:Vector):Boolean which will be called on each element of the Vector.
+     * @param callback A callback in the form of function(item:Object, index:Number, vector:Vector):Boolean which will be called for each element of the Vector.
      * @param thisObject Required if the callback is an instance method and not a local or static function.
-     * @return A new Vector with the elements from the original Vector that pass the callback function test.
+     * @return A new Vector containing only the elements from the original vector that passed the callback function test.
      */
     public function filter(callback:Function, thisObject:Object = null):Vector {
     
@@ -153,11 +155,11 @@ final class Vector
     }
     
     /*
-     * Executes a callback function for every element of a Vector, storing the result of the call into a new return Vector.
+     * Executes a callback function for every element of the Vector, adding the result to a new return Vector.
      *
-     * @param callback A callback in the form of function(item:Object, index:Number, v:Vector):Boolean which will be called on each element of the Vector.
+     * @param callback A callback in the form of function(item:Object, index:Number, vector:Vector):Object which will be called for each element of the Vector.
      * @param thisObject Required if the callback is an instance method and not a local or static function.
-     * @return A new Vector containing objects returned from the callback. The elements the vector will have the same number of elements as the source Vector
+     * @return A new Vector whose elements are the return values of the callback. The result Vector will have the same number of elements as the source Vector.
      */
     public function map(callback:Function, thisObject:Object = null):Vector {
     
@@ -178,7 +180,7 @@ final class Vector
     /*
      * Executes a callback function for every element of the Vector.
      *
-     * @param callback A callback in the form of function(item:Object, index:Number, v:Vector):Void which will be called on each element of the Vector.
+     * @param callback A callback in the form of function(item:Object, index:Number, vector:Vector):void which will be called for each element of the Vector.
      * @param thisObject Required if the callback is an instance method and not a local or static function.
      */
     public function forEach(callback:Function, thisObject:Object = null):void {
@@ -255,20 +257,20 @@ final class Vector
     public native function set length(value:Number):void;
     
     /**
-     *  Searches for an item in the Vector and returns the index position of the item.
+     *  Searches forwards for an item in the Vector from startIndex to the last item.
      *
      *  @param o The item to find in the Vector.
      *  @param startIndex The location in the Vector from which to start searching for the item. If no startIndex is given, the search begins at the first element of the Vector. If this parameter is negative, it is treated as length + fromIndex, meaning the search starts -fromIndex items from the end and continues from that position forward to the end of the Vector.
-     *  @return The index of the item found or -1 if no item was found.
+     *  @return The index of the item in the Vector, or -1 if the item is not found between the start index and the end of the Vector.
      */
     public native function indexOf(o:Object, startIndex:Number = 0):Number;
     
     /**
-     *  Searches backwards for an item in the Vector and returns the index position of the item.
+     *  Searches backwards for an item in the Vector from startIndex to the first item.
      *
      *  @param o The item to find in the Vector.
      *  @param startIndex The index in the Vector to start the search from. If no startIndex is given, the search begins at the last element of the Vector.
-     *  @return The index of the item found or -1 if no item was found.
+     *  @return The index of the item in the Vector, or -1 if the item is not found between the start index and the beginning of the Vector.
      */
     public function lastIndexOf(o:Object, startIndex:Number = -1):Number {
     
@@ -286,7 +288,9 @@ final class Vector
     }
     
     /**
-     *  Reverses the elements of a Vector, returns the original Vector.
+     *  Reverses the elements of a Vector in place.
+     *
+     *  @return Returns a reference to the modified Vector.
      */
     public function reverse():Vector {
     
