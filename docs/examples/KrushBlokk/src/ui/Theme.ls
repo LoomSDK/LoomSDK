@@ -23,6 +23,7 @@ package ui
         public var textFormatDisabled:BitmapFontTextFormat;
         public var textFormatLight:BitmapFontTextFormat;
         public var textFormatTitle:BitmapFontTextFormat;
+        public var textFormatSubtitle:BitmapFontTextFormat;
         public var textFormatHeader:BitmapFontTextFormat;
         
         public var buttonUp:Scale9Textures;
@@ -57,6 +58,7 @@ package ui
             textFormat = new BitmapFontTextFormat("main", 8*scale, 0x000000);
             textFormatLight = new BitmapFontTextFormat("main", 8*scale, 0xFFFFFF);
             textFormatTitle = new BitmapFontTextFormat("main", 4*8*scale, 0xFFFFFF, false, TextFormatAlign.CENTER);
+            textFormatSubtitle = new BitmapFontTextFormat("main", 1*8*scale, 0x4F4F4F, false, TextFormatAlign.CENTER);
             textFormatHeader = new BitmapFontTextFormat("main", 2*8*scale, 0xFFFFFF, false, TextFormatAlign.CENTER);
             
             const background = Texture.fromAsset(uiPath + "background-skin.png");
@@ -74,6 +76,7 @@ package ui
             setInitializerForClass(Label, labelInitializer);
             setInitializerForClass(Label, labelInitializerLight, "light");
             setInitializerForClass(Label, labelInitializerTitle, "title");
+            setInitializerForClass(Label, labelInitializerSubtitle, "subtitle");
             setInitializerForClass(Label, labelInitializerHeader, "header");
             setInitializerForClass(Button, buttonInitializer);
             setInitializerForClass(Check, checkInitializer);
@@ -95,6 +98,12 @@ package ui
         {
             labelInitializer(label);
             label.textRendererProperties["textFormat"] = textFormatTitle;
+        }
+        
+        protected function labelInitializerSubtitle(label:Label)
+        {
+            labelInitializer(label);
+            label.textRendererProperties["textFormat"] = textFormatSubtitle;
         }
         
         protected function labelInitializerHeader(label:Label)

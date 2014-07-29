@@ -200,7 +200,7 @@ package
          */
         override public function onTick()
         {
-            currentView.tick();
+            if (currentView) currentView.tick();
             return super.onTick();
         }
         
@@ -209,7 +209,7 @@ package
          */
         override public function onFrame()
         {
-            currentView.render();
+            if (currentView) currentView.render();
             return super.onFrame();
         }
         
