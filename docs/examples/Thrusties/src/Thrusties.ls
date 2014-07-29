@@ -94,18 +94,18 @@ package
 		
 		private function touched(e:TouchEvent):void
 		{
-			environment.touched(e);
+			if (environment) environment.touched(e);
 		}
 		
 		override public function onTick()
 		{
-			environment.tick();
+			if (environment) environment.tick();
 			return super.onTick();
 		}
 		
 		override public function onFrame()
 		{
-			environment.render();
+			if (environment) environment.render();
 			return super.onFrame();
 		}
 		
