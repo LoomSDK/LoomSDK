@@ -1,4 +1,7 @@
 convert icon.png -resize 512x512 android-high-res.png
+convert icon.png -resize 192x192 android/drawable-640dpi/icon.png
+convert icon.png -resize 144x144 android/drawable-xxhdpi/icon.png
+convert icon.png -resize 96x96 android/drawable-xhdpi/icon.png
 convert icon.png -resize 72x72 android/drawable-hdpi/icon.png
 convert icon.png -resize 48x48 android/drawable-mdpi/icon.png
 convert icon.png -resize 36x36 android/drawable-ldpi/icon.png
