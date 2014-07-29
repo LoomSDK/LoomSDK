@@ -36,11 +36,12 @@ package ui.views.game
         public var onTimeout:ViewCallback;
         
         // Quick and simple state machine for easier overal game state control
-        private static const STATE_GAME   = 0;
-        private static const STATE_QUIT   = 1;
-        private static const STATE_ENDING = 2;
-        private static const STATE_DEMO   = 3;
-        private var state = STATE_GAME;
+        private static const STATE_SLEEP   = 0;
+        private static const STATE_GAME    = 1;
+        private static const STATE_QUIT    = 2;
+        private static const STATE_ENDING  = 3;
+        private static const STATE_DEMO    = 4;
+        private var state = STATE_SLEEP;
         
         private var origConfig:GameConfig;
         private var demoConfig:GameConfig = new GameConfig();
@@ -50,6 +51,8 @@ package ui.views.game
         private var demoHand:Image;
         private var demoStartTime:Number;
         private var demoInstructions:Label;
+        
+        private var paused:Boolean = false;
         
         /** Delta time, how long each game tick lasts */
         private var dt:Number = 1/60;
@@ -185,7 +188,9 @@ package ui.views.game
         /**
          * Exists for symmetry against activate()
          */
-        public function deactivate() {}
+        public function deactivate() {
+            paused = true;
+        }
         
         /**
          * Update mute mode on activation,
@@ -193,6 +198,7 @@ package ui.views.game
          */
         public function activate() {
             updateMuteMode();
+            paused = false;
         }
         
         /**
@@ -217,7 +223,7 @@ package ui.views.game
         {
             if (muteMode == MUTE_MUSIC || muteMode == MUTE_ALL) {
                 soundtrack.pause();
-            } else {
+            } else if (state != STATE_SLEEP) {
                 soundtrack.play();
             }
             if (muteMode == MUTE_ALL) {
@@ -546,6 +552,7 @@ package ui.views.game
                 demoHand.visible = false;
                 demoInstructions.visible = false;
             }
+            state = STATE_SLEEP;
             resetJuggler();
             particles.clear();
             soundtrack.stop();
@@ -562,6 +569,7 @@ package ui.views.game
         {
             // Do not process ticks after quitting
             if (state == STATE_QUIT) return;
+            if (paused) return;
             
             t += dt;
             juggler.advanceTime(dt);
