@@ -22,6 +22,7 @@ public class LoomMobile
     private static final int           VIBRATION_DURATION  = 400;  
     private static final int           VIBRATION_SLEEP     = 100;
     private static final long[]        VIBRATION_PATTERN   = { VIBRATION_DELAY, VIBRATION_DURATION, VIBRATION_SLEEP };
+    private static final String        MANIFEST_CUSTOM_URI_META_KEY = "co.theengine.loomdemo.CustomURL";
 
     ///vars
     private static Activity     _context;
@@ -57,7 +58,7 @@ public class LoomMobile
         _customURI = (intent != null) ? intent.getData() : null;
         if(_customURI != null)
         {
-            String customURLScheme = LoomDemo.getMetadataString(_context, "co.theengine.loomdemo.CustomURL");
+            String customURLScheme = LoomDemo.getMetadataString(_context, MANIFEST_CUSTOM_URI_META_KEY);
             if((customURLScheme != null) && (_customURI.getScheme() != null) && !customURLScheme.equalsIgnoreCase(_customURI.getScheme()))
             {
                 //not our custom URL scheme so ignore!
