@@ -68,8 +68,8 @@ package ui
             
             buttonUp = background9;
             buttonDown = backgroundDown9;
-            checkUpIcon = background9;
-            checkDownIcon = backgroundDown9;
+            checkUpIcon = new Scale9Textures(Texture.fromAsset(uiPath + "check-up-icon.png"), DEFAULT_SCALE9_GRID);
+            checkDownIcon = new Scale9Textures(Texture.fromAsset(uiPath + "check-down-icon.png"), DEFAULT_SCALE9_GRID);
             checkSelectedUpIcon = new Scale9Textures(Texture.fromAsset(uiPath + "check-selected-up-icon.png"), DEFAULT_SCALE9_GRID);
             checkSelectedDownIcon = new Scale9Textures(Texture.fromAsset(uiPath + "check-selected-down-icon.png"), DEFAULT_SCALE9_GRID);
             
