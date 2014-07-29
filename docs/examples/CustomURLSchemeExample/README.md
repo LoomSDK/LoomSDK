@@ -11,7 +11,7 @@ Inside of loom.config there is a property called 'custom_url_scheme'.  You can c
 
 This also allows you to pass in Query data along with the URL in a format such as: 'playmygame://?key=data&key2=data2'
 
-To run this example, you must first deploy it to a mobile device.  Once there, you must send your Custom URL Scheme to a web browser on the device which will then launch the example automatically.  If you also specify a single key of query data, such as 'playmygame://?key=LoomRocks', the app will pick that up and display it for you.
+To run this example, you must first deploy it to a mobile device.  Once there, you must send your Custom URL Scheme to a web browser on the device which will then launch the example automatically.  If you specify a value for 'key', such as 'playmygame://?key=LoomRocks', the app will pick that up and display it for you.
 
 
 ## Try It
