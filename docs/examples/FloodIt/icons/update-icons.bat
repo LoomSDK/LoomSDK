@@ -1,8 +1,12 @@
 gimp^
 	-b "(resize-image 512 512 \"icon.xcf\" \"android-high-res.png\")"^
+	-b "(resize-image 192 192 \"icon.xcf\" \"android/drawable-640dpi/icon.png\")"^
+	-b "(resize-image 144 144 \"icon.xcf\" \"android/drawable-xxhdpi/icon.png\")"^
+	-b "(resize-image 96 96 \"icon.xcf\" \"android/drawable-xhdpi/icon.png\")"^
 	-b "(resize-image 72 72 \"icon.xcf\" \"android/drawable-hdpi/icon.png\")"^
 	-b "(resize-image 48 48 \"icon.xcf\" \"android/drawable-mdpi/icon.png\")"^
 	-b "(resize-image 36 36 \"icon.xcf\" \"android/drawable-ldpi/icon.png\")"^
+    
 	-b "(resize-image 152 152 \"icon.xcf\" \"ios/Icon-76@2x.png\")"^
 	-b "(resize-image 144 144 \"icon.xcf\" \"ios/Icon-72@2x.png\")"^
 	-b "(resize-image 144 144 \"icon.xcf\" \"ios/Icon-144.png\")"^
