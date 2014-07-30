@@ -23,10 +23,10 @@ package com.loomengine.flooder
             this.tileY = tileY;
         }
         
-        public function reset(color:int):void
+        public function reset():void
         {
             visited = 0;
-            colorIndex = color;
+            Loom2D.juggler.removeTweens(this);
         }
         
         public function get colorIndex():int
@@ -34,18 +34,13 @@ package com.loomengine.flooder
             return _colorIndex;
         }
         
-        public function set colorIndex(value:int):void
+        public function paint(color:int, delay:Number = 0):void
         {
-            var init = _colorIndex == -1;
-            _colorIndex = value;
+            _colorIndex = color;
             
             var goalColor = Color.fromInt(FloodIt.colors[colorIndex]);
             
-            if (init) {
-                color = goalColor.toInt();
-            } else {
-                Loom2D.juggler.tween(this, 0.2, { "r": goalColor.red, "g": goalColor.green, "b": goalColor.blue } );
-            }
+            Loom2D.juggler.tween(this, 0.2, { "delay": delay, "r": goalColor.red, "g": goalColor.green, "b": goalColor.blue } );
         }
         
         override public function toString():String

@@ -59,7 +59,17 @@ package
          * current flood fill.
          */
         public var floodToken:int = 0;
-
+        
+        /**
+         * Controls the speed of the flooding.
+         */
+        public var floodDelay = 0.01;
+        
+        /**
+         * Block interaction until this time.
+         */
+        public var waitUntil = -1;
+        
         /**
          * Set when the game has ended.
          */
@@ -179,6 +189,9 @@ package
          */
         protected function orbClicked(e:TouchEvent)
         {
+            // Don't respond if waiting is to be had!
+            if (Loom2D.juggler.elapsedTime < waitUntil) return;
+            
             // Only respond on release.
             if(e.getTouch(e.target as DisplayObject, TouchPhase.ENDED) == null)
                 return;
@@ -213,8 +226,13 @@ package
             gameOver = false;
             
             // Set the grid to random colors.
-            for(var i=0; i<gridSize*gridSize; i++)
-                tiles[i].reset(Math.floor(Math.random() * 6));
+            for(var i=0; i<gridSize*gridSize; i++) {
+                var tile = tiles[i];
+                tile.reset();
+                tile.paint(Math.floor(Math.random() * 6), floodDelay * i);
+            }
+            
+            waitUntil = Loom2D.juggler.elapsedTime + floodDelay*gridSize*gridSize;
         }
         
         /**
@@ -263,6 +281,8 @@ package
             // Note the original color.
             var originalColor:int = getTile(0,0).colorIndex;
             
+            var count = 0;
+            
             // Now walk everything that is a match to the current color,
             // always adding bottom or right tiles.
             while(toProcess.length)
@@ -275,8 +295,10 @@ package
                   continue;
                 
                 // Color and note that we visited them.
-                curTile.colorIndex = color;
+                curTile.paint(color, floodDelay*count);
                 curTile.visited = floodToken;
+                
+                count++;
 
                 // Check if we need to color any adjacent tiles.
                 var rightTile = getTile(curTile.tileX + 1, curTile.tileY);
