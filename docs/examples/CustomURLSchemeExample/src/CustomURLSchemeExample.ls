@@ -18,7 +18,6 @@ package
 
         private var statusLabel:SimpleLabel;
         private var queryLabel:SimpleLabel;
-        private var refreshURLStatus:Boolean = false;
 
 
         override public function run():void
@@ -49,26 +48,15 @@ package
             queryLabel.scale = 0.35;
             stage.addChild(queryLabel);
 
-            Application.applicationActivated += onActivated;
+            Mobile.onOpenedViaCustomURL = onCustomURLOpened;
         }
 
-        public function onActivated():void
+        public function onCustomURLOpened():void
         {
-            //on some platforms, we get the focus activation message before the Custom URL Scheme has been processed, 
-            //so let's note that it needs refreshing!
-            refreshURLStatus = true;
-        }
+            statusLabel.text = Mobile.wasOpenedViaCustomURL() ? "App Launched via Custom URL!" : "App Manually Launched :(";
 
-        public function onTick()
-        {
-            if(refreshURLStatus)
-            {
-                statusLabel.text = Mobile.wasOpenedViaCustomURL() ? "App Launched via Custom URL!" : "App Manually Launched :(";
-
-                var queryData:String = Mobile.getOpenURLQueryData(URLDataKey);
-                queryLabel.text = String.isNullOrEmpty(queryData) ? "No Query Data Found" : "Query Data Found: " + queryData;
-                refreshURLStatus = false;
-            }
+            var queryData:String = Mobile.getOpenURLQueryData(URLDataKey);
+            queryLabel.text = String.isNullOrEmpty(queryData) ? "No Query Data Found" : "Query Data Found: " + queryData;
         }
     }
 }

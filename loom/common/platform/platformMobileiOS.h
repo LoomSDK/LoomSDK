@@ -27,7 +27,7 @@
 
 #import <Foundation/Foundation.h>
 
-extern BOOL gOpenedWithCustomURL;
+void ios_CustomURLOpen();
 extern NSMutableDictionary *gOpenUrlQueryStringDictionary;
 
 #endif

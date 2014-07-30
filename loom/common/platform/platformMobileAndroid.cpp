@@ -35,6 +35,7 @@ lmDefineLogGroup(gAndroidMobileLogGroup, "loom.mobile.android", 1, 0);
 
 
 static SensorTripleChangedCallback gTripleChangedCallback = NULL;
+static OpenedViaCustomURLCallback gOpenedViaCustomURLCallback = NULL;
 
 
 extern "C"
@@ -53,6 +54,13 @@ void Java_co_theengine_loomdemo_LoomSensors_onGravityChangedNative(JNIEnv *env, 
     {
         ///4 == MobileSensorType.Gravity
         gTripleChangedCallback(4, x, y, z);
+    }
+}
+void Java_co_theengine_loomdemo_LoomMobile_onOpenedViaCustomURL(JNIEnv *env, jobject thiz)
+{
+    if (gOpenedViaCustomURLCallback)
+    {
+        gOpenedViaCustomURLCallback();
     }
 }
 }
@@ -79,11 +87,12 @@ static loomJniMethodInfo gGetSelectedDolbyAudioProfile;
 
 
 ///initializes the data for the Mobile class for Android
-void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB)
+void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB, OpenedViaCustomURLCallback customURLCB)
 {
     lmLog(gAndroidMobileLogGroup, "INIT ***** MOBILE ***** ANDROID ****");
 
     gTripleChangedCallback = sensorTripleChangedCB;    
+    gOpenedViaCustomURLCallback = customURLCB;    
 
 
     ///Bind to JNI entry points.

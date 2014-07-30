@@ -10,6 +10,9 @@ import android.util.Log;
 import android.provider.Settings.System;
 import android.net.Uri;
 
+import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
+
+
 
 /**
  * Java Class that exposes miscellaneous Android mobile platform support
@@ -63,6 +66,18 @@ public class LoomMobile
             {
                 //not our custom URL scheme so ignore!
                 _customURI = null;
+            }
+            else
+            {
+                //notify that we've launched via a custom URL
+                Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+                {
+                    @Override
+                    public void run() 
+                    {
+                        onOpenedViaCustomURL();
+                    }
+                });
             }
         }
     }
@@ -155,4 +170,8 @@ public class LoomMobile
         return (_customURI != null) ? _customURI.getQueryParameter(queryKey) : null;
     }    
 
+
+
+    ///native delegate stubs
+    private static native void onOpenedViaCustomURL();
 }

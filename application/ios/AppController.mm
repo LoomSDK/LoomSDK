@@ -99,10 +99,11 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
         ([customAppScheme isEqualToString:@""] == FALSE) && 
         ([[url scheme] caseInsensitiveCompare:customAppScheme] == NSOrderedSame))
     {
-        gOpenedWithCustomURL = YES;
-
         //attempt to parse the query
         [self application:application handleOpenURLQuery:[url query]];
+
+        //mark as being opened from a custrom URL and call our native callback
+        ios_CustomURLOpen();
     }
     return YES;
 }

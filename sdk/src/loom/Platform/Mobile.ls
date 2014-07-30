@@ -203,6 +203,12 @@ package loom.platform
          *  @param z Value for the Z of the triple
          */
         public static native var onSensorTripleChanged:MobileSensorChangedTripleDelegate;
+
+        /**
+         * Called when app has been opened via a Custom URL launch
+         *
+         */
+        public static native var onOpenedViaCustomURL:NativeDelegate;
     }
 
 

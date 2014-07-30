@@ -43,13 +43,20 @@ private:
         _OnSensorTripleChangedDelegate.pushArgument(z);
         _OnSensorTripleChangedDelegate.invoke();
     }
+    /// Event handler; this is called by the C mobile API when the app is launched via a custom URL
+    static void openedViaCustomURL()
+    {
+        ///Convert to delegate calls.
+        _OnOpenedViaCustomURLDelegate.invoke();
+    }
 
 public:
     LOOM_STATICDELEGATE(OnSensorTripleChanged);
+    LOOM_STATICDELEGATE(OnOpenedViaCustomURL);
 
     static void initialize()
     {
-        platform_mobileInitialize(sensorTripleChanged);
+        platform_mobileInitialize(sensorTripleChanged, openedViaCustomURL);
     }
     static void vibrate()
     {
@@ -129,6 +136,7 @@ public:
 
 
 NativeDelegate Mobile::_OnSensorTripleChangedDelegate;
+NativeDelegate Mobile::_OnOpenedViaCustomURLDelegate;
 
 
 static int registerLoomMobile(lua_State *L)
@@ -149,6 +157,7 @@ static int registerLoomMobile(lua_State *L)
             .addStaticMethod("enableSensor", &Mobile::enableSensor)
             .addStaticMethod("disableSensor", &Mobile::disableSensor)
             .addStaticProperty("onSensorTripleChanged", &Mobile::getOnSensorTripleChangedDelegate)
+            .addStaticProperty("onOpenedViaCustomURL", &Mobile::getOnOpenedViaCustomURLDelegate)
 
         .endClass()
 

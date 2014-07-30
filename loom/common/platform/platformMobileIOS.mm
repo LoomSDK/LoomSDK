@@ -35,6 +35,7 @@ limitations under the License.
 #include "loom/vendor/jansson/jansson.h"
 
 static SensorTripleChangedCallback gTripleChangedCallback = NULL;
+static OpenedViaCustomURLCallback gOpenedViaCustomURLCallback = NULL;
 
 BOOL gOpenedWithCustomURL = NO;
 NSMutableDictionary *gOpenUrlQueryStringDictionary = nil;
@@ -45,10 +46,21 @@ static UIViewController* getParentViewController()
     return [[[UIApplication sharedApplication] keyWindow] rootViewController];
 }
 
+void ios_CustomURLOpen()
+{
+    gOpenedWithCustomURL = YES;
+    if (gOpenedViaCustomURLCallback)
+    {
+        gOpenedViaCustomURLCallback();
+    }
+}
+
+
 ///initializes the data for the Mobile class for iOS
-void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB)
+void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB, OpenedViaCustomURLCallback customURLCB)
 {
     gTripleChangedCallback = sensorTripleChangedCB;    
+    gOpenedViaCustomURLCallback = customURLCB;    
 }
 
 ///tells the device to do a short vibration, if supported by the hardware

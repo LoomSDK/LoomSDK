@@ -68,7 +68,7 @@ const char *platform_getSelectedDolbyAudioProfile()
 ///Null Mobile class for all non-Mobile platforms
 
 ///initializes the data for the Mobile class for this platform
-void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB)
+void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB, OpenedViaCustomURLCallback customURLCB)
 {
 }
 

@@ -29,11 +29,14 @@
  *
  */
 
-///Callback for video API events.
+///Callback for sensor changed API events.
 typedef void (*SensorTripleChangedCallback)(int sensor, float x, float y, float z);
 
+///Callback for custom URL opening event
+typedef void (*OpenedViaCustomURLCallback)();
+
 ///initializes the data for the Mobile class for this platform
-void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB);
+void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB, OpenedViaCustomURLCallback customURLCB);
 
 ///tells the device to do a short vibration, if supported by the hardware
 void platform_vibrate();
