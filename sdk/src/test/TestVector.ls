@@ -415,6 +415,22 @@ class TestVector extends Test
         assert(testreverse[3] == 2);
         assert(testreverse[4] == 1);
         
+        testreverse = [1, 2, 3, 4];
+        testreverse.reverse();
+
+        assert(testreverse[0] == 4);
+        assert(testreverse[1] == 3);
+        assert(testreverse[2] == 2);
+        assert(testreverse[3] == 1);
+
+        testreverse = [1];
+        testreverse.reverse();
+        assert(testreverse[0] == 1);
+
+        testreverse = [];
+        testreverse.reverse();
+        assert(testreverse.length == 0);
+
         var testunshift = [4, 5];
         assert(testunshift.unshift(1, 2, 3) == 5);
         assert(testunshift[0] == 1);
