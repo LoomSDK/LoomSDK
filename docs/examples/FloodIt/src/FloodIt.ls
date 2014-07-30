@@ -232,6 +232,7 @@ package
                 tile.paint(Math.floor(Math.random() * 6), floodDelay * i);
             }
             
+            // Block interaction until all the tiles are finished transitioning
             waitUntil = Loom2D.juggler.elapsedTime + floodDelay*gridSize*gridSize;
         }
         
@@ -317,6 +318,9 @@ package
                 if(topTile && topTile.colorIndex == originalColor)
                     toProcess.push(topTile);
             }
+            
+            // Block interaction until all the tiles are finished transitioning
+            waitUntil = Loom2D.juggler.elapsedTime + floodDelay*count;
             
             // Check to see if we won. Note that because the array is linear,
             // we don't have to do a 2d traversal - we can just walk it directly.
