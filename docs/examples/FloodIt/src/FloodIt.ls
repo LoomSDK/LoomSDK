@@ -43,6 +43,11 @@ package
          * The width of the content.
          */
         public var contentWidth = 320;
+        
+        /**
+         * The height of the content.
+         */
+        public var contentHeight = 480;
 
         /**
          * Size of the game grid. Try changing this via live reload!
@@ -94,7 +99,7 @@ package
         override public function run():void
         {
             // Set up automatic scaling.
-            stage.scaleMode = StageScaleMode.NONE;
+            stage.scaleMode = StageScaleMode.LETTERBOX;
             SplashLoader.init(stage, timeManager, load);
         }
         
@@ -103,22 +108,12 @@ package
          */
         protected function load():void {
             stage.addEventListener(KeyboardEvent.BACK_PRESSED, back);
-            stage.addEventListener(Event.RESIZE, resize);
-            resize();
             
             // Initialize the labels, grid, and buttons.
             layout();
             
             // And start play.
             startGame();
-        }
-        
-        /**
-         * Scale the stage to fit width.
-         */
-        private function resize(e:Event = null):void 
-        {
-            stage.scale = stage.stageWidth / contentWidth;
         }
         
         /**
@@ -154,7 +149,7 @@ package
                 {
                     var tile = new ColorTile(w, h);
                     tile.x = w * tileSize + 10;
-                    tile.y = h * tileSize + 20;
+                    tile.y = h * tileSize + 10;
                     tile.width = tileSize;
                     tile.height = tileSize;
 
