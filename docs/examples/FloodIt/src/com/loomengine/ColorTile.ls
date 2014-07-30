@@ -13,13 +13,12 @@ package com.loomengine.flooder
         public var tileX:int, tileY:int;
         public var visited:int = 0;
         
-        protected var _colorIndex:int;
+        protected var _colorIndex:int = -1;
 
-        public function ColorTile(colorIndex:int, tileX:int, tileY:int)
+        public function ColorTile(tileX:int, tileY:int)
         {
             super(Texture.fromAsset("assets/tile.png"));
-
-            this.colorIndex = colorIndex;
+            
             this.tileX = tileX;
             this.tileY = tileY;
         }
@@ -37,10 +36,16 @@ package com.loomengine.flooder
         
         public function set colorIndex(value:int):void
         {
+            var init = _colorIndex == -1;
             _colorIndex = value;
             
             var goalColor = Color.fromInt(FloodIt.colors[colorIndex]);
-            Loom2D.juggler.tween(this, 0.2, { "r": goalColor.red, "g": goalColor.green, "b": goalColor.blue});
+            
+            if (init) {
+                color = goalColor.toInt();
+            } else {
+                Loom2D.juggler.tween(this, 0.2, { "r": goalColor.red, "g": goalColor.green, "b": goalColor.blue } );
+            }
         }
         
         override public function toString():String

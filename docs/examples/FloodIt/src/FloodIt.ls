@@ -31,7 +31,9 @@ package
          * The RGB values for the six tile colors.
          */
         public static var colors:Vector.<int> = [0x602462, 0x396EAA, 0xDDC222, 0xFDF5E6, 0xFB2447, 0x6C8C16];
-    
+        
+        public var instructions:Image;
+        
         /**
          * The score label.
          */
@@ -127,13 +129,20 @@ package
             scoreLabel.x = contentWidth / 2 - 64;
             scoreLabel.y = 385;
             stage.addChild(scoreLabel);
-
+            
+            // Instructions that are hidden after a short delay
+            instructions = new Image(Texture.fromAsset("assets/instructions.png"));
+            instructions.scale = contentWidth / instructions.width;
+            instructions.y = 70;
+            instructions.touchable = false;
+            Loom2D.juggler.tween(instructions, 2, { alpha: 0, delay: 3 } );
+            
             var tileSize:Number = Number(25*12) / Number(gridSize);        
             for(var h:int=0; h < gridSize; h++)
             {
                 for(var w:int=0; w < gridSize; w++)
                 {
-                    var tile = new ColorTile(Math.floor(Math.random() * 6), w, h);
+                    var tile = new ColorTile(w, h);
                     tile.x = w * tileSize + 10;
                     tile.y = h * tileSize + 20;
                     tile.width = tileSize;
@@ -160,6 +169,8 @@ package
                 orbs[i] = button;
                 stage.addChild(button);
             }
+            
+            stage.addChild(instructions);
         }
         
         /**
