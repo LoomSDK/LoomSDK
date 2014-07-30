@@ -54,7 +54,9 @@ package
 		private var displayOffsetEase = 0.05;
 		
 		/** Scrolling speed for credits */
-		private var creditsSpeed = 8;
+		private var creditsTargetSpeed = 8;
+		/** Current eased speed, modified while dragging */
+		private var creditsSpeed = 0;
 		
 		/** The depth at which the instructions get hidden */
 		private var instructionHidingDepth = 300;
@@ -222,8 +224,8 @@ package
 			creditsBtn.upImage = "assets/info.png";
 			creditsBtn.onClick = showCredits;
 			creditsBtn.scale = 1.2/pixelScale;
-			creditsBtn.x = w - 14;
-			creditsBtn.alpha = 0.5;
+			creditsBtn.x = w - 18;
+			creditsBtn.alpha = 0.2;
 			display.addChild(creditsBtn);
 			
 			// Title and score text config
@@ -380,7 +382,7 @@ package
 		{
 			creditsBtn.touchable = true;
 			Loom2D.juggler.tween(creditsBtn, 1, {
-				alpha: 1
+				alpha: 0.2
 			});
 		}
 		
@@ -411,7 +413,8 @@ package
 					}
 					break;
 				case STATE_CREDITS:
-					hideCredits();
+					// Change the speed of scrolling credits based on the dragging direction
+					creditsSpeed -= (touch.getLocation(stage).y-touch.getPreviousLocation(stage).y)*2000*dt;
 					break;
 				default:
 					lastTouch = touch;
@@ -442,8 +445,14 @@ package
 			// State-specific behavior for camera and transitioning between states
 			switch (state) {
 				case STATE_CREDITS:
+					// Force the view back to the credits if it goes too high
+					if (targetOffset > creditsOffset) {
+						targetOffset += (creditsOffset-targetOffset*2)*0.005;
+					}
+					// Scroll down by default, return current speed to target speed
 					if (targetOffset > creditsOffset-credits.height-50) {
 						targetOffset -= creditsSpeed*dt;
+						creditsSpeed += (creditsTargetSpeed-creditsSpeed)*0.5;
 					} else {
 						hideCredits();
 					}
