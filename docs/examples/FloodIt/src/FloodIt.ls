@@ -1,6 +1,8 @@
 package
 {
+    import game.TileType;
     import loom.gameframework.TimeManager;
+    import loom2d.display.Sprite;
     import loom2d.events.KeyboardEvent;
     import loom2d.Loom2D;
     import loom2d.math.Point;
@@ -18,7 +20,7 @@ package
 
     import loom2d.ui.SimpleLabel;
     
-    import com.loomengine.flooder.ColorTile;
+    import game.ColorTile;
 
     /**
      * Fun color matching game! Use the buttons in the bottom of the screen to
@@ -30,7 +32,7 @@ package
         /**
          * The RGB values for the six tile colors.
          */
-        public static var colors:Vector.<int> = [0x602462, 0x396EAA, 0xDDC222, 0xFDF5E6, 0xFB2447, 0x6C8C16];
+        public var types:Vector.<TileType> = [];
         
         public var instructions:Image;
         
@@ -69,6 +71,7 @@ package
          * Controls the speed of the flooding.
          */
         public var floodDelay = 0.01;
+        //public var floodDelay = 0.1;
         
         /**
          * Block interaction until this time.
@@ -83,12 +86,12 @@ package
         /**
          * References to every tile on the board.
          */
-        public var tiles:Vector.<ColorTile> = new Vector.<ColorTile>(gridSize * gridSize);
+        public var tiles = new Vector.<ColorTile>(gridSize * gridSize);
    
         /**
-         *  References to the six orb buttons, indexed by their color ID.
+         *  References to the six buttons, indexed by their color ID.
          */
-        public var orbs:Vector.<Image> = new Vector.<Image>(6);
+        public var buttons = new Vector.<Sprite>(6);
         
         // Gets injected automatically before run() is called
         [Inject] private var timeManager:TimeManager;
@@ -125,7 +128,7 @@ package
         }
         
         /**
-         * Initialize the score label, game grid, and the orbs.
+         * Initialize the score label, game grid, and the buttons.
          */
         protected function layout():void
         {
@@ -148,9 +151,10 @@ package
                 for(var w:int=0; w < gridSize; w++)
                 {
                     var tile = new ColorTile(w, h);
-                    tile.x = w * tileSize + 10;
-                    tile.y = h * tileSize + 10;
+                    tile.x = 10 + w*tileSize;
+                    tile.y = 10 + h*tileSize;
                     tile.width = tileSize;
+                    trace(tile.width, tileSize);
                     tile.height = tileSize;
 
                     setTile(w, h, tile);
@@ -158,20 +162,32 @@ package
                     stage.addChild(tile);
                 }
             }
+            
+            types = [
+                new TileType(0, 0x602462, Texture.fromAsset("assets/tiles/tile0.png")),
+                new TileType(1, 0x396EAA, Texture.fromAsset("assets/tiles/tile1.png")),
+                new TileType(2, 0xDDC222, Texture.fromAsset("assets/tiles/tile2.png")),
+                new TileType(3, 0xFDF5E6, Texture.fromAsset("assets/tiles/tile3.png")),
+                new TileType(4, 0xFB2447, Texture.fromAsset("assets/tiles/tile4.png")),
+                new TileType(5, 0x6C8C16, Texture.fromAsset("assets/tiles/tile5.png"))
+            ];
 
             for(var i:int=0; i < 6; i++)
             {
-                var button:Image = new Image(Texture.fromAsset("assets/orb.png"));
+                //var button:Image = new Image(Texture.fromAsset("assets/orb.png"));
+                var button = new ColorTile(i, 0);
+                button.paint(types[i]);
                 button.x = i * 50 + 35;
                 button.y = 355;
-                button.pivotX = button.width / 2;
-                button.pivotY = button.height / 2;
-                button.scaleX = button.scaleY = 0.5;
-                button.color = colors[i];
+                button.center();
+                button.scale = 50/button.width;
+                //button.pivotX = button.width / 2;
+                //button.pivotY = button.height / 2;
+                //button.scaleX = button.scaleY = 0.5;
 
-                button.addEventListener(TouchEvent.TOUCH, orbClicked);
+                button.addEventListener(TouchEvent.TOUCH, buttonClicked);
 
-                orbs[i] = button;
+                buttons[i] = button;
                 stage.addChild(button);
             }
             
@@ -179,23 +195,23 @@ package
         }
         
         /**
-         * Handle an orb being clicked.
+         * Handle a button being clicked.
          * @param   e Event describing the touch.
          */
-        protected function orbClicked(e:TouchEvent)
+        protected function buttonClicked(e:TouchEvent)
         {
             // Don't respond if waiting is to be had!
             if (Loom2D.juggler.elapsedTime < waitUntil) return;
             
             // Only respond on release.
-            if(e.getTouch(e.target as DisplayObject, TouchPhase.ENDED) == null)
+            if(e.getTouch(e.currentTarget as DisplayObject, TouchPhase.ENDED) == null)
                 return;
 
-            // Retrieve the index of the orb.
-            var i = orbs.indexOf(e.target);
+            // Retrieve the index of the button.
+            var i = buttons.indexOf(e.currentTarget);
             if (i == -1)
             {
-                trace("Got click on non-orb.");
+                trace("Got click on a non-button.");
                 return;
             }
             
@@ -224,7 +240,8 @@ package
             for(var i=0; i<gridSize*gridSize; i++) {
                 var tile = tiles[i];
                 tile.reset();
-                tile.paint(Math.floor(Math.random() * 6), floodDelay * i);
+                tile.paint(types[int(Math.random() * 6)], floodDelay * i);
+                //tile.paint(types[int(Math.random() * 6)], 0);
             }
             
             // Block interaction until all the tiles are finished transitioning
@@ -271,13 +288,21 @@ package
             // loop.
             var toProcess:Vector.<ColorTile> = new Vector.<ColorTile>();
             
+            var origin = getTile(0, 0);
+            
             // Seed the stack with the tile at 0,0
-            toProcess.push(getTile(0,0));
+            toProcess.push(origin);
             
             // Note the original color.
-            var originalColor:int = getTile(0,0).colorIndex;
+            var originalColor:int = origin.colorIndex;
+            
+            origin.counter = 0;
             
             var count = 0;
+            
+            //for each (var tile:ColorTile in tiles) {
+                //tile.counter = 0;
+            //}
             
             // Now walk everything that is a match to the current color,
             // always adding bottom or right tiles.
@@ -291,27 +316,36 @@ package
                   continue;
                 
                 // Color and note that we visited them.
-                curTile.paint(color, floodDelay*count);
+                curTile.paint(types[color], floodDelay*count);
+                //curTile.paint(types[color], floodDelay*curTile.counter);
                 curTile.visited = floodToken;
                 
                 count++;
-
+                
                 // Check if we need to color any adjacent tiles.
                 var rightTile = getTile(curTile.tileX + 1, curTile.tileY);
-                if(rightTile && rightTile.colorIndex == originalColor)
+                if (rightTile && rightTile.colorIndex == originalColor) {
+                    rightTile.counter = curTile.counter+1;
                     toProcess.push(rightTile);
+                }
                 
                 var bottomTile = getTile(curTile.tileX, curTile.tileY + 1);
-                if(bottomTile && bottomTile.colorIndex == originalColor)
+                if (bottomTile && bottomTile.colorIndex == originalColor) {
+                    bottomTile.counter = curTile.counter+1;
                     toProcess.push(bottomTile);
+                }
                     
                 var leftTile = getTile(curTile.tileX - 1, curTile.tileY);
-                if(leftTile && leftTile.colorIndex == originalColor)
+                if (leftTile && leftTile.colorIndex == originalColor) {
+                    leftTile.counter = curTile.counter+1;
                     toProcess.push(leftTile);
+                }
                 
                 var topTile = getTile(curTile.tileX, curTile.tileY - 1);
-                if(topTile && topTile.colorIndex == originalColor)
+                if (topTile && topTile.colorIndex == originalColor) {
+                    topTile.counter = curTile.counter+1;
                     toProcess.push(topTile);
+                }
             }
             
             // Block interaction until all the tiles are finished transitioning
