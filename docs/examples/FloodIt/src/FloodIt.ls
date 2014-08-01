@@ -1,33 +1,23 @@
 package
 {
     import feathers.display.OffsetTiledImage;
-    import feathers.display.TiledImage;
+    import game.ColorTile;
     import game.TileType;
+    import loom.Application;
     import loom.gameframework.TimeManager;
     import loom2d.animation.Transitions;
+    import loom2d.display.Image;
     import loom2d.display.Sprite;
+    import loom2d.display.StageScaleMode;
     import loom2d.events.KeyboardEvent;
     import loom2d.events.Touch;
-    import loom2d.Loom2D;
-    import loom2d.math.Point;
-    import loom2d.math.Rectangle;
-    import loom2d.textures.TextureSmoothing;
-    import system.Void;
-
-    import loom.Application;
-
-    import loom2d.display.DisplayObject;
-    import loom2d.display.Image;    
-    import loom2d.display.StageScaleMode;
-    
-    import loom2d.events.Event;
     import loom2d.events.TouchEvent;
     import loom2d.events.TouchPhase;
+    import loom2d.Loom2D;
+    import loom2d.math.Point;
     import loom2d.textures.Texture;
-
+    import loom2d.textures.TextureSmoothing;
     import loom2d.ui.SimpleLabel;
-    
-    import game.ColorTile;
 
     /**
      * Fun color matching game! Use the buttons in the bottom of the screen to
@@ -57,9 +47,16 @@ package
          * The height of the content.
          */
         public var contentHeight = 480;
-
+        
+        /**
+         * Spacing around the edges next to tiles.
+         */
+        private var tilePadding = 10;
+        
+        /**
+         * The width of a button on the bottom strip of buttons.
+         */
         private var buttonWidth = 50;
-        private var buttonScale = buttonWidth/64;
         
         /**
          * Size of the game grid. Try changing this via live reload!
@@ -84,7 +81,7 @@ package
         public var floodDelay = 0.03;
         
         /**
-         * Block interaction until this time.
+         * Block interaction until this time (same timebase as Loom2D.juggler.elapsedTime).
          */
         public var waitUntil = -1;
         
@@ -92,25 +89,54 @@ package
          * Set when the game has ended.
          */
         public var gameOver:Boolean = false;
-
+        
+        
         /**
          * References to every tile on the board.
          */
         public var tiles = new Vector.<ColorTile>(gridSize * gridSize);
-   
+        
+        
         /**
-         *  References to the six buttons, indexed by their color ID.
+         * Container for the buttons.
          */
         public var buttonStrip = new Sprite();
-        public var buttons = new Vector.<Sprite>(6);
-        private var currentButton:Sprite = null;
         
+        /**
+         * References to the six buttons, indexed by their color ID.
+         */
+        public var buttons = new Vector.<ColorTile>(6);
+        
+        /**
+         * The currently active ("down state") button.
+         */
+        private var activeButton:ColorTile = null;
+        
+        
+        /**
+         * Scrolling tiled background.
+         */
         public var background:OffsetTiledImage;
         
-        // Gets injected automatically before run() is called
-        [Inject] private var timeManager:TimeManager;
+        /**
+         * Background scrolling position.
+         */
         private var scroll:Number = 0;
+        
+        /**
+         * Background scrolling speed.
+         */
         private var scrollSpeed:Number = 0;
+        
+        
+        /**
+         * Temporary helper for passing Point to functions.
+         */
+        private var tempPoint:Point;
+        
+        
+        // Gets injected automatically before run() is called, used in the splash loader.
+        [Inject] private var timeManager:TimeManager;
         
         /**
          * Entry point for the game (see main.ls)
@@ -126,6 +152,7 @@ package
          * Called with a delay to allow the splash display to show.
          */
         protected function load():void {
+            // Listen to system events
             stage.addEventListener(KeyboardEvent.BACK_PRESSED, back);
             
             // Initialize the labels, grid, and buttons.
@@ -136,19 +163,25 @@ package
         }
         
         /**
-         * Exit app on back button press
+         * Exit app on back button press.
          */
         private function back(e:KeyboardEvent):void 
         {
             Process.exit(0);
         }
         
+        /**
+         * Scroll the background on every tick.
+         */
         override public function onTick()
         {
             scrollSpeed *= 0.99;
             scroll += scrollSpeed;
         }
         
+        /**
+         * Update the background scroll every frame.
+         */
         override public function onFrame()
         {
             background.setScroll(scroll, scroll);
@@ -159,6 +192,7 @@ package
          */
         protected function layout():void
         {
+            // Scrolling tiled background, scaled with no smoothing to preserve hard edges.
             var tex = Texture.fromAsset("assets/background.png");
             tex.smoothing = TextureSmoothing.NONE;
             background = new OffsetTiledImage(tex, 4);
@@ -182,23 +216,7 @@ package
             Loom2D.juggler.tween(scoreLabel, 0.3, { delay: 2.2, alpha: 1, y: 334+40/2, transition: Transitions.EASE_OUT } );
             stage.addChild(scoreLabel);
             
-            var tileSize:Number = Number(25*12) / Number(gridSize);        
-            for(var h:int=0; h < gridSize; h++)
-            {
-                for(var w:int=0; w < gridSize; w++)
-                {
-                    var tile = new ColorTile(w, h);
-                    tile.x = 10 + w*tileSize;
-                    tile.y = 10 + h*tileSize;
-                    tile.width = tileSize;
-                    tile.height = tileSize;
-
-                    setTile(w, h, tile);
-                    
-                    stage.addChild(tile);
-                }
-            }
-            
+            // Define all the different tile types
             types = [
                 new TileType(0, 0x602462, Texture.fromAsset("assets/tiles/tile0.png")),
                 new TileType(1, 0x396EAA, Texture.fromAsset("assets/tiles/tile1.png")),
@@ -208,113 +226,135 @@ package
                 new TileType(5, 0x6C8C16, Texture.fromAsset("assets/tiles/tile5.png"))
             ];
             
+            // Create and place tiles
+            var tileSize:Number = (contentWidth-tilePadding*2)/gridSize;        
+            for(var h:int = 0; h < gridSize; h++)
+            {
+                for(var w:int = 0; w < gridSize; w++)
+                {
+                    var tile = new ColorTile(w, h);
+                    tile.x = tilePadding + w*tileSize;
+                    tile.y = tilePadding + h*tileSize;
+                    tile.width = tileSize;
+                    tile.height = tileSize;
+                    
+                    setTile(w, h, tile);
+                    
+                    stage.addChild(tile);
+                }
+            }
+            
+            // Place the button container
+            buttonStrip.x = 35;
+            buttonStrip.y = 445;
             stage.addChild(buttonStrip);
             
-            for(var i:int=0; i < 6; i++)
+            // Create and place the buttons
+            for(var i:int=0; i < types.length; i++)
             {
-                //var button:Image = new Image(Texture.fromAsset("assets/orb.png"));
                 var button = new ColorTile(i, 0);
+                
+                // Position the button
+                button.x = i * buttonWidth;
+                button.y = -120;
+                
+                // Set the button type (with additional delayed animation)
                 button.paint(types[i]);
                 button.paint(types[i], 1.4+i*0.05);
-                button.x = i * buttonWidth + 35;
-                button.y = 445-120;
+                
+                // Initial dropping animation
                 button.alpha = 0;
-                Loom2D.juggler.tween(button, 0.6, { "delay": 1+i*0.05, "y": 445, "alpha": 1, "transition": Transitions.EASE_OUT_BOUNCE } );
+                Loom2D.juggler.tween(button, 0.6, { "delay": 1+i*0.05, "y": 0, "alpha": 1, "transition": Transitions.EASE_OUT_BOUNCE } );
+                
+                // Center and scale to fit predefined width
                 button.center();
-                button.scale = buttonScale;
-                //button.pivotX = button.width / 2;
-                //button.pivotY = button.height / 2;
-                //button.scaleX = button.scaleY = 0.5;
-
-
+                button.scale = buttonWidth/button.image.width;
+                
+                // Add to Vector and container
                 buttons[i] = button;
                 buttonStrip.addChild(button);
             }
             
-            stage.addEventListener(TouchEvent.TOUCH, buttonTouch);
+            // Listen to the stage for custom touch logic
+            stage.addEventListener(TouchEvent.TOUCH, onTouch);
             
+            // Add the instructions on top of everything else
             stage.addChild(instructions);
         }
         
-        protected function buttonEnter(button:Sprite):Boolean
+        /**
+         * Activate a button, making it the currently active button in the "down" state.
+         * @param button The button to activate.
+         * @return `false` if the button was already active, `true` otherwise.
+         */
+        protected function buttonActivate(button:ColorTile):Boolean
         {
-            //trace(currentButton == button);
-            if (currentButton) {
-                if (currentButton == button) return false;
-                buttonExit();
+            if (activeButton) {
+                if (activeButton == button) return false;
+                buttonDeactivate();
             }
-            currentButton = button;
-            Loom2D.juggler.tween(currentButton, 0.1, { "scale": 0.6*buttonScale, "transition": Transitions.EASE_OUT } );
-            return true;
-        }
-        
-        private function buttonExit():Boolean
-        {
-            if (!currentButton) {
-                return false;
-            }
-            Loom2D.juggler.tween(currentButton, 0.3, { "scale": 1*buttonScale, "transition": Transitions.EASE_OUT_BACK } );
-            currentButton = null;
+            activeButton = button;
+            var buttonScale = buttonWidth/activeButton.image.width;
+            Loom2D.juggler.tween(activeButton, 0.1, { "scale": 0.6*buttonScale, "transition": Transitions.EASE_OUT } );
             return true;
         }
         
         /**
-         * Handle a button being clicked.
-         * @param   e Event describing the touch.
+         * Deactivate the currently active button (if any).
+         * @return `false` if there was no currently active button, `true` otherwise.
          */
-        protected function buttonTouch(e:TouchEvent)
+        private function buttonDeactivate():Boolean
+        {
+            if (!activeButton) {
+                return false;
+            }
+            var buttonScale = buttonWidth/activeButton.image.width;
+            Loom2D.juggler.tween(activeButton, 0.3, { "scale": 1*buttonScale, "transition": Transitions.EASE_OUT_BACK } );
+            activeButton = null;
+            return true;
+        }
+        
+        /**
+         * Custom button handling logic for better usability.
+         * @param e TouchEvent describing the touch.
+         */
+        protected function onTouch(e:TouchEvent)
         {
             // Don't respond if waiting is to be had!
             if (Loom2D.juggler.elapsedTime < waitUntil) return;
             
-            // Only respond on release.
-            //if(e.getTouch(e.currentTarget as DisplayObject, TouchPhase.ENDED) == null)
-                //return;
-            
             var touch:Touch = e.getTouch(stage);
-            var bounds:Rectangle = new Rectangle();
             
-            // Find button under touch
-            var button:Sprite = null;
+            // Find the closest button to the touch
+            var button:ColorTile = null;
             var minDist:Number = Number.POSITIVE_INFINITY;
-            for each (var b:Sprite in buttons) {
-                b.getBounds(b, bounds);
-                //if (bounds.containsPoint(touch.getLocation(b))) {
-                var dist = Point.distance(touch.getLocation(buttonStrip), new Point(b.x, b.y));
-                //trace(touch.getLocation(b), dist);
+            for each (var b:ColorTile in buttons) {
+                tempPoint.x = b.x;
+                tempPoint.y = b.y;
+                var dist = Point.distance(touch.getLocation(buttonStrip), tempPoint);
                 if (dist < minDist) {
                     minDist = dist;
                     button = b;
-                    //break;
                 }
             }
             
-            // If no button was found, return
-            //if (!button) {
+            // Handle touches too far away from the nearest button
             if (minDist > 100) {
-                buttonExit();
+                buttonDeactivate();
                 return;
             }
             
             // Retrieve the index of the button.
-            //var i = buttons.indexOf((e.target as DisplayObject).parent);
             var i = buttons.indexOf(button);
-            //trace(i);
-            //if (i == -1)
-            //{
-                //trace("Got click on a non-button.");
-                //return;
-            //}
-            //
-             //= buttons[i];
             
+            // Handle begin/move separately from ending.
             switch (touch.phase) {
                 case TouchPhase.BEGAN:
                 case TouchPhase.MOVED:
-                    buttonEnter(button);
+                    buttonActivate(button);
                     return;
                 case TouchPhase.ENDED:
-                    buttonExit();
+                    buttonDeactivate();
                     break;
             }
 
@@ -345,18 +385,22 @@ package
             for(var i=0; i<gridSize*gridSize; i++) {
                 var tile = tiles[i];
                 tile.reset();
-                //tile.paint(types[int(Math.random() * 6)], floodDelay * i);
-                //tile.paint(types[int(Math.random() * 6)], 0);
+                // Paint the tiles with a delayed animation
                 var delay = getTileDelay(tile);
                 if (delay > maxDelay) maxDelay = delay;
                 tile.paint(types[int(Math.random() * 6)], delay);
             }
             
             // Block interaction until all the tiles are finished transitioning
-            //waitUntil = Loom2D.juggler.elapsedTime + floodDelay*gridSize*gridSize;
             waitUntil = Loom2D.juggler.elapsedTime+maxDelay+0.7;
         }
         
+        /**
+         * Return the animation delay for the specified tile.
+         * Based on the distance from the top left corner.
+         * @param tile The tile to return the delay for.
+         * @return The animation delay in seconds.
+         */
         protected function getTileDelay(tile:ColorTile):Number
         {
             var dx = tile.tileX;
@@ -407,6 +451,7 @@ package
             // loop.
             var toProcess:Vector.<ColorTile> = new Vector.<ColorTile>();
             
+            // The seed tile at origin
             var origin = getTile(0, 0);
             
             // Seed the stack with the tile at 0,0
@@ -415,14 +460,8 @@ package
             // Note the original color.
             var originalColor:int = origin.colorIndex;
             
-            origin.counter = 0;
-            
-            var count = 0;
-            
-            //for each (var tile:ColorTile in tiles) {
-                //tile.counter = 0;
-            //}
-            
+            // The maximum animation delay of all the processed tiles,
+            // used to block interactivity for that period of time.
             var maxDelay = 0;
             
             // Now walk everything that is a match to the current color,
@@ -439,42 +478,33 @@ package
                 if (delay > maxDelay) maxDelay = delay;
                 
                 // Color and note that we visited them.
-                //curTile.paint(types[color], floodDelay*count);
-                //curTile.paint(types[color], floodDelay*curTile.counter);
                 curTile.paint(types[color], delay);
                 curTile.visited = floodToken;
-                
-                count++;
                 
                 // Check if we need to color any adjacent tiles.
                 var rightTile = getTile(curTile.tileX + 1, curTile.tileY);
                 if (rightTile && rightTile.colorIndex == originalColor) {
-                    rightTile.counter = curTile.counter+1;
                     toProcess.push(rightTile);
                 }
                 
                 var bottomTile = getTile(curTile.tileX, curTile.tileY + 1);
                 if (bottomTile && bottomTile.colorIndex == originalColor) {
-                    bottomTile.counter = curTile.counter+1;
                     toProcess.push(bottomTile);
                 }
                     
                 var leftTile = getTile(curTile.tileX - 1, curTile.tileY);
                 if (leftTile && leftTile.colorIndex == originalColor) {
-                    leftTile.counter = curTile.counter+1;
                     toProcess.push(leftTile);
                 }
                 
                 var topTile = getTile(curTile.tileX, curTile.tileY - 1);
                 if (topTile && topTile.colorIndex == originalColor) {
-                    topTile.counter = curTile.counter+1;
                     toProcess.push(topTile);
                 }
             }
             
             // Block interaction until all the tiles are finished transitioning
-            //waitUntil = Loom2D.juggler.elapsedTime + floodDelay*count;
-            waitUntil = Loom2D.juggler.elapsedTime+maxDelay+0.7;
+            waitUntil = Loom2D.juggler.elapsedTime+maxDelay+0.62;
             
             // Check to see if we won. Note that because the array is linear,
             // we don't have to do a 2d traversal - we can just walk it directly.
@@ -519,13 +549,10 @@ package
          */
         protected function setScore(value:int):void
         {
-            //scoreLabel.text = value + "/" + maxMoves;
             var left = (maxMoves-value);
             scoreLabel.text = left == 0 ? "No moves left" : left == 1 ? "One move left" : left+" moves left";
             scoreLabel.center();
             scoreLabel.x = contentWidth/2;
-            //scoreLabel.scale = 0.6;
-            //Loom2D.juggler.tween(scoreLabel, 0.2, { "scaleX": 1, "scaleY": 1 } );
         }
         
         /**
