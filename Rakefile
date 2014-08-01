@@ -289,8 +289,14 @@ end
 
 namespace :docs do
 
-  desc "Regenerates loomlibs and docs"
-  task :regen do
+  $DOCS_INDEX = 'artifacts/docs/index.html'
+
+  file $DOCS_INDEX => 'docs:regen' do
+    puts " *** docs built!"
+  end
+
+  desc "Rebuilds loomlibs and docs"
+  task :regen => $LSC_BINARY do
     puts "===== Recompiling loomlibs ====="
     Dir.chdir("sdk") do
       sh "../artifacts/lsc Main.build"
@@ -306,11 +312,14 @@ namespace :docs do
   end
 
   desc "Opens the docs in a web browser"
-  task :open do
-    if $LOOM_HOST_OS == 'windows'
+  task :open => $DOCS_INDEX do
+    case $LOOM_HOST_OS
+    when 'windows'
       `start artifacts/docs/index.html`
-    else
+    when 'darwin'
       `open artifacts/docs/index.html`
+    else
+      abort "not sure how to open '#{$DOCS_INDEX}' on #{$LOOM_HOST_OS}"
     end
   end
 
