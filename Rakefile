@@ -249,7 +249,7 @@ namespace :generate do
     end
   end
 
-  desc "Generates API documentation for the loomscript sdk"
+  desc "Generates API docs for the loomscript sdk"
   task :docs => ['build:desktop'] do
 
     if $buildDocs || ARGV.include?('generate:docs')
@@ -264,7 +264,7 @@ namespace :generate do
     end
   end
 
-  desc "Generates API documentation for the loomscript sdk"
+  desc "Tests API docs for a class"
   task :test_docs, [:class] do |t, args|
 
     puts "===== Running Test Docs #{args[:class]} ====="
@@ -310,7 +310,7 @@ namespace :docs do
     end
   end
 
-  desc "Regenerates docs and opens them in a web browser"
+  desc "Rebuilds docs and opens in browser"
   task :refresh => ['docs:regen', 'docs:open']
 
 end
