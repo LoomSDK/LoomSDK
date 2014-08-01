@@ -40,12 +40,15 @@ $buildDocs = ENV['LOOM_BUILD_DOCS'] == "1" || ENV['LOOM_BUILD_DOCS'] == "true"
 # END OF BUILD CONFIGURATION VARIABLES
 ######################################
 
-# Ruby version check.
-if RUBY_VERSION < '1.8.7'
-  abort("Please update your version of ruby. Loom requires 1.8.7 or newer.")
-else
-  puts "Loom Rakefile running on Ruby #{RUBY_VERSION}"
+def version_outdated?(current, required)
+  (Gem::Version.new(current) < Gem::Version.new(required))
 end
+
+# Ruby version check.
+$RUBY_REQUIRED_VERSION = '1.8.7'
+ruby_err = "LoomSDK requires ruby version #{$RUBY_REQUIRED_VERSION} or newer.\nPlease go to https://www.ruby-lang.org/en/downloads/ and install the latest version."
+abort(ruby_err) if version_outdated?(RUBY_VERSION, $RUBY_REQUIRED_VERSION)
+puts "LoomSDK Rakefile running on Ruby version #{RUBY_VERSION}"
 
 include RbConfig
 
@@ -60,20 +63,22 @@ case CONFIG['host_os']
       abort("Unknown host config: Config::CONFIG['host_os']: #{Config::CONFIG['host_os']}")
 end
 
-$CMAKE_VERSION = %x[cmake --version]
-$CMAKE_REQUIRED_VERSION = '2.8.9'
-
-#TODO: Make this platform independent
-#https://theengineco.atlassian.net/browse/LOOM-659
-if $LOOM_HOST_OS == 'darwin'
-    # CMAKE version check
-    if(%x[which cmake].empty? || Gem::Version.new($CMAKE_VERSION.gsub("cmake version ", "")) < Gem::Version.new($CMAKE_REQUIRED_VERSION))
-      abort("The rakefile requires cmake version #{$CMAKE_REQUIRED_VERSION} and above, please go to http://www.cmake.org/ and install the latest version.")
-    else
-      puts "Running #{$CMAKE_VERSION}"
-    end
-
+# CMake version check
+def cmake_version
+  %x[cmake --version].lines.first.gsub("cmake version ", "")
 end
+
+def installed?(tool)
+  cmd = "which #{tool}" unless ($LOOM_HOST_OS == 'windows')
+  cmd = "where #{tool} > nul 2>&1" if ($LOOM_HOST_OS == 'windows')
+  system(cmd)
+  return ($? == 0)
+end
+
+$CMAKE_REQUIRED_VERSION = '2.8.9'
+cmake_err = "LoomSDK requires CMake version #{$CMAKE_REQUIRED_VERSION} or above.\nPlease go to http://www.cmake.org/ and install the latest version."
+abort(cmake_err) if (!installed?('cmake') || version_outdated?(cmake_version, $CMAKE_REQUIRED_VERSION))
+puts "Running CMake version #{cmake_version}"
 
 # Report configuration variables and validate them.
 puts "*** Using JIT? = #{$doBuildJIT}"
