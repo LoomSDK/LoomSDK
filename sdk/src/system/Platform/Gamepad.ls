@@ -22,38 +22,36 @@ package system.platform {
 
     /**
      * Delegate for receiving button events.
-     * @param button - the index of the button.
-     * @param state - true for pressed, false for released.
+     * @param button The index of the button.
+     * @param state True for pressed, false for released.
      */
     delegate GamePadButtonDelegate(button:int, state:Boolean):void;
 
     /**
      * Delegate for receiving hat events.
-     * @param hat - the index of the hat (directional pad).
-     * @param state - see constants for hat positions in Gamepad.
+     * @param hat The index of the hat (directional pad).
+     * @param state See constants for hat positions in Gamepad.
      */
     delegate GamePadHatDelegate(hat:int, state:int):void;
 
     /**
      * Delegate for receiving axis events.
-     * @param axis - the index of the axis.
-     * @param state - the normalized state of the gamepad axis (-1 to 1).
+     * @param axis The index of the axis.
+     * @param state The normalized state of the gamepad axis (-1 to 1).
      * Note that some gamepads return only a range of 0 - 1 for a given axis.
      */
     delegate GamePadAxisDelegate(axis:int, state:float):void;
 
     /**
      * The Gamepad class provides cross platform access to gamepad controllers.
-     * It currently is supported on the Windows and OUYA platforms.
+     * It is currently supported on the Windows and OUYA platforms.
      */
     [Native(managed)]
     final public native class Gamepad 
     {
 
-        /**
-        *  Constants for hat (dpad) positions.
-        */
-       
+        // Constants for hat (dpad) positions.
+        
         public static const HAT_CENTERED = 0;
         public static const HAT_UP = 1;
         public static const HAT_RIGHT = 2;
@@ -63,50 +61,69 @@ package system.platform {
         public static const HAT_RIGHTDOWN = 6;
         public static const HAT_LEFTUP = 9;
         public static const HAT_LEFTDOWN  = 12;
-
+        
+        
+        // Delegates for event processing.
+        
         /**
-        *  Delegates for event processing.
-        */
-       
-        public var buttonEvent:GamePadButtonDelegate;        
+         * Delegate called when a button is pressed or released.
+         */
+        public var buttonEvent:GamePadButtonDelegate;
+        
+        /**
+         * Delegate called when the direction of a hat (dpad) changes.
+         */
         public var hatEvent:GamePadHatDelegate;
+        
+        /**
+         * Delegate called when there's a change on an axis.
+         */
         public var axisEvent:GamePadAxisDelegate;
-
-        /**
-        *  Direct gamepad state access.
-        */
-       
+        
+        
+        // Direct gamepad state access.
+        
+        /** Direct access to the button state. */
         public var buttons:Vector.<Boolean> = [];
+        
+        /** Direct access to the axis state. */
         public var axis:Vector.<Number> = [];
+        
+        /** Direct access to the hat (dpad) state. */
         public var hats:Vector.<Number> = [];
-
-        /**
-        *  Metrics for this gamepad.
-        */
-       
+        
+        
+        // Metrics for this gamepad.
+        
+        /** The number of buttons on the gamepad. */
         public native var numButtons:Number;
+        
+        /** The number of axes on the gamepad. */
         public native var numAxis:Number;
+        
+        /** The number of hats on the gamepad. */
         public native var numHats:Number;
-
+        
+        
         /**
-        *  Direct access to all gamepads enumerated on system.
-        */
+         *  Direct access to all gamepads enumerated on the system.
+         */
         public static var gamepads:Vector.<Gamepad> = [];
-
+        
         /**
-        *  The number of gamepads which exist.
-        */        
+         *  The number of gamepads available.
+         */        
         public static native var numGamepads:Number;
-
+        
         /**
-        *  Retrieve the system name of the given gamepad.
-        */
+         *  Retrieve the system name of the given gamepad.
+         */
         public static native function getGamePadName(index:Number):String;        
-
+        
         /**
-        *  Initializes the system gamepads and opens them
-        *  this must be called before accessing any gamepad methods.
-        */
+         *  Initializes the system gamepads and opens them.
+         *  This must be called before accessing any gamepad methods.
+         */
         public static function initialize()
         {
             if (!_initialize())
@@ -126,14 +143,13 @@ package system.platform {
                 gamepad.hatState.length = gamepad.numHats;
                 gamepads.pushSingle(gamepad);
             }
-
         }
 
         /**
-        *  Gamepads are a polled device, update is called 
-        *  to poll gamepad data, update state, and fire
-        *  any attached event delegates.
-        */
+         *  Gamepads are a polled device, update is called 
+         *  to poll gamepad data, update state, and fire
+         *  any attached event delegates.
+         */
         public static function update() 
         {
             _update();
@@ -197,10 +213,9 @@ package system.platform {
 
             }
         }        
-
-        /** 
-         * Privates
-         */
+        
+        
+        // Privates
         
         private static native function _update():void;
 

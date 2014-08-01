@@ -21,12 +21,12 @@ limitations under the License.
 package loom.platform
 {
    /**
-    * UserDefault acts as a tiny database. You can save and get base type values by it.
-    * For example, setBoolForKey("played", true) will add a bool value true into the database.
-    * Its key is "played". You can get the value of the key by getBoolForKey("played").
+    * UserDefault acts as a tiny database for local settings. You can save and 
+    * get base type values by it. For example, setBoolForKey("played", true) 
+    * will add a bool value true into the database. Its key is "played". You
+    * can get the value of the key by getBoolForKey("played").
     * 
-    * It supports the following base types:
-    * bool, int, float, double, string
+    * It supports the following base types: bool, int, float, double, string
     */
    [Native(managed)]
    public native class UserDefault
@@ -87,7 +87,7 @@ package loom.platform
       public native function setDoubleForKey(key:String, value:Number);
 
       /** 
-      Get the singleton instance of CCUserDefault.
+      Get the singleton instance of UserDefault.
       */
       public static native function sharedUserDefault():UserDefault;
 

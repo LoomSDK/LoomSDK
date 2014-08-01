@@ -1,4 +1,4 @@
-title: Loom Editing
+title: Live Editing
 description: Edit code and assets in real time.
 !------
 

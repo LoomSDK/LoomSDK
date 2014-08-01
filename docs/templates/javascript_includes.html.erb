@@ -23,7 +23,7 @@
 	var sidebarData = [
 	    { "name" : "Guides", "link" : [] },
 	    { "name" : "Examples", "link" : [] },
-	    { "name" : "API reference", "link" : "<%= @relative_base_path %>/api/index.html" }
+	    { "name" : "API reference", "link" : [] }
 	];
 
   // populate examples links
@@ -35,6 +35,10 @@
 	
 	// populate guides links
 	sidebarData[0].link = $.parseJSON('<%= $guides.sidebar_links_json(@relative_base_path) %>');
+	
+	// populate API reference links
+	sidebarData[2].link = $.parseJSON('<%= $packages.sidebar_links_json(@relative_base_path) %>');            
+
 	
 </script>
 

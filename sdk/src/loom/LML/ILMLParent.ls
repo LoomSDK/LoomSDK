@@ -20,13 +20,19 @@ limitations under the License.
 
 package loom.lml {
 
-/// Required interface for classes that want to have children via LML.
+/**
+ * Required interface for classes that want to have children via LML.
+ */
 interface ILMLParent {
 
-	/// Add a child to this LML node, identifying it by id.    
+	/**
+	 * Add a child to this LML node, identifying it by id.
+	 */
     function addLMLChild(id:String, child:Object):void;
 
-    /// Remove (and destroy) all LML children from this node.
+    /**
+     * Remove (and destroy) all LML children from this node.
+     */
     function removeLMLChildren():void;
 
 }

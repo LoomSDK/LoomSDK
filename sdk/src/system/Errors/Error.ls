@@ -20,6 +20,11 @@ limitations under the License.
 
 package system.errors
 {
+	/**
+	 * Base error class.
+	 *
+	 * Note that Loom currently ignores try and implements throw as an assert.
+	 */
 	public class Error
 	{
 		public var message:String;

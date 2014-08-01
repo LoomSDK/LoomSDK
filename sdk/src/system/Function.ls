@@ -30,29 +30,20 @@ final class Function extends Object {
     /**
      *  Invokes the specified function.
      *
-     *  @param theArg either the instance for the method to be called on or null in the case of static/anonymous functions
+     *  @param thisArg either the instance for the method to be called on or null in the case of static/anonymous functions
      *  @param ...args Arbitrary list of arguments to pass in the function call.
      *  @return The Object returned by the called function.
      */
-     
     public native function call(thisArg:Object = null, ...args):Object;
     
-    /**
-     *  Invokes the specified function.
-     *
-     *  @param theArg either the instance for the method to be called on or null in the case of static/anonymous functions
-     *  @param args a vector containing the arguments to apply to the function
-     *  @return The Object returned by the called function.
-     */
-
+    public native function apply(thisArg:Object = null, args:Vector.<Object> = null):Object;
+    
     /**
      *  Gets the maximum number of arguments a member or local function can be passed
      *
      *  @return The maximum number of arguments a member or local function can be passed
      */
     public native function get length():Number;
-    
-    public native function apply(thisArg:Object = null, args:Vector.<Object> = null):Object;
      
     private native static function _call(func:Function, thisArg:Object = null, ...args):Object;
     

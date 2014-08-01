@@ -21,6 +21,9 @@ limitations under the License.
 package system.xml {
 
 /// @cond IGNORED    
+    /**
+     * @private
+     */
     public class XMLTest {
     
         private static function testFive() {

@@ -22,6 +22,11 @@ package loom.lml
 {
     import loom.utils.Injector;
 
+    /**
+     * Subclass for injecting into LML documents.
+     *
+     * @private
+     */
     public class LMLInjector extends Injector
     {
         override protected function warnCouldNotGetValue(type:Type, id:String)

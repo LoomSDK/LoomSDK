@@ -15,8 +15,6 @@ package loom2d.display
     import loom2d.math.Rectangle;
     import loom2d.math.Matrix;
 
-    import loom2d.native.DisplayObjectPool;
-
     /**
      *  The DisplayObject class is the base class for all objects that are rendered on the 
      *  screen.

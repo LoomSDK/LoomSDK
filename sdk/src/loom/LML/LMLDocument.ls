@@ -22,6 +22,9 @@ package loom.lml {
 
 import loom.utils.Injector;
 
+/**
+ * Called when certain LML events occur.
+ */
 delegate LMLDelegate():void;
 
 /* 
