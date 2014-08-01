@@ -158,7 +158,7 @@ function closurizeCountUp():Function
 	return function() { trace(counter++); };
 }
 
-// Genrate the closure.
+// Generate the closure.
 var func = closurizeCountUp();
 
 // Count up.
@@ -209,7 +209,7 @@ LoomScript supports a few templated types, specifically `Vector` and `Dictionary
 var carList = new Vector.<Car>();
 ~~~
 
-Above, `carList` is a `Vector` that only holds instances of `Car`s or its subclasses. This is very helpful for keeping containers organized, as you can make sure at compile-time that you are writing and reading the right types. You can also specify a `Vector` with no type parameter (no `.<Car>` or equivalent) and it will default to holding anything, i.e., `.<Object>`.
+Above, `carList` is a `Vector` that only holds instances of `Car` or its subclasses. This is very helpful for keeping containers organized, as you can make sure at compile-time that you are writing and reading the right types. You can also specify a `Vector` with no type parameter (no `.<Car>` or equivalent) and it will default to holding anything, i.e., `.<Object>`.
 
 `Dictionary` is similar; you might do `Dictionary.<String, Car>` to make a `Dictionary` that accepts `String` keys and `Car` values. `Dictionary` defaults to `.<Object,Object>` if you don't specify any parameter types.
 
@@ -687,7 +687,7 @@ Got 1 + 2!
 D gave me: Saw 1 + 2
 ```
 
-You can remove listeners from a delegate, but adding/removing is done by INSTANCE - that is, doing:
+You can remove listeners from a delegate, but adding/removing is done by *instance* - that is, doing:
 
 ~~~as3
 d -= function(x:Number, y:Number):String { return "Saw " + x + " + " + y; };
