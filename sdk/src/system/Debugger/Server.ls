@@ -23,9 +23,9 @@ package system.debugger {
     import system.socket.Socket;
     
     /**
-     *  Extremely simple %Server class for communication with the client debugger
+     *  Extremely simple %Server class for communication with the client debugger.
      *  This class is purposefully simple as it may be implemented in a number of different
-     *  scenarios/languages
+     *  scenarios/languages.
      */
     class Server {
     
@@ -54,7 +54,6 @@ package system.debugger {
 
         /**
          *  Shutdown an instance of the debugger server, closing ports.
-         *
          */
         public function shutdown() 
         {

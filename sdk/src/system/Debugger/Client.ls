@@ -27,8 +27,8 @@ package system.debugger
     import system.reflection.MethodInfo;
     import system.CallStackInfo;
 
-    /*
-     * Delegate to call for the reload command.
+    /**
+     *  Delegate to call for the reload command.
      */
     delegate ReloadDelegate():void;
     
@@ -38,17 +38,17 @@ package system.debugger
      */
     static class DebuggerClient {
 
-        /*
-         * Delegate to call when given the reload command.
+        /**
+         *  Delegate to call when given the reload command.
          */
         static public var reloaded:ReloadDelegate;
 
 
-        /*
-         * Enable the debugger client's VM reload command
-         * Reload starts disabled to give the application a
-         * chance to do base initialization and get to a valid
-         * reload state.
+        /**
+         *  Enable the debugger client's VM reload command.
+         *  Reload starts disabled to give the application a
+         *  chance to do base initialization and get to a valid
+         *  reload state.
          */
         static public function enableReload(value:Boolean)
         {
@@ -56,7 +56,7 @@ package system.debugger
         }
       
         /**
-         *  Connects to the Debugger Server service either locally or over TCPIP.
+         *  Connects to the Debugger Server service either locally or over TCP/IP.
          *  
          *  @param host The socket host of the Debugger Server.
          *  @param port The socket port of the Debugger Server.
@@ -85,7 +85,7 @@ package system.debugger
         }
 
         /**
-         *  Sends a generic OK respose code to the Debugger Server.
+         *  Sends a generic OK response code to the Debugger Server.
          */
         static function responseOK() {
             
@@ -94,11 +94,11 @@ package system.debugger
 
         /**
          *  This is generally called from the C++ application code with no need for the client code to be 
-         *  aware of it.  However, it is possible to drive the DebuggerClient from script.
+         *  aware of it. However, it is possible to drive the DebuggerClient from script.
          */
         public static function update() {
             
-            mainDebugLoop.resume();            
+            mainDebugLoop.resume();
             
         }
         
@@ -166,8 +166,8 @@ package system.debugger
         
         }
         
-        /*
-         * Clear command.
+        /**
+         *  Clear command.
          */
         static function cmdCLEAR(line:String) {
         
@@ -198,7 +198,7 @@ package system.debugger
         }
         
         /**
-         *  Steps over code (please not that this is currently stepping into methods, we have followup debugger tasks).
+         *  Steps over code (please note that this is currently stepping into methods, we have followup debugger tasks).
          */
         static function cmdOVER() {
         
@@ -234,8 +234,8 @@ package system.debugger
             
         }
         
-        /*
-         * BT command.
+        /**
+         *  BT command.
          */        
         static function cmdBACKTRACE() {
         
@@ -254,8 +254,8 @@ package system.debugger
         
         }
         
-        /*
-         * Info command.
+        /**
+         *  Info command.
          */
         static function cmdINFO(line:String) {
         
@@ -312,8 +312,8 @@ package system.debugger
             
         }
         
-        /*
-         * Print command.
+        /**
+         *  Print command.
          */
         static function cmdPRINT(line:String) {
         
@@ -390,8 +390,8 @@ package system.debugger
         }
         
         
-        /*
-         * Frame command.
+        /**
+         *  Frame command.
          */
         static function cmdFRAME(line:String) {
         
@@ -422,8 +422,8 @@ package system.debugger
             
         }
         
-        /*
-         * Delete command.
+        /**
+         *  Delete command.
          */
         static function cmdDELETE(line:String) {
                                 
@@ -629,8 +629,8 @@ package system.debugger
             return msg;
         }
 
-        /*
-         * Callback for call events.
+        /**
+         *  Callback for call events.
          */
         static function callEventHook(callstack:Vector.<CallStackInfo>) {
                                     
@@ -642,8 +642,8 @@ package system.debugger
                                     
         }
         
-        /*
-         * Callback for return events.
+        /**
+         *  Callback for return events.
          */
         static function returnEventHook(callstack:Vector.<CallStackInfo>) {
                     
@@ -659,8 +659,8 @@ package system.debugger
                     
         }
         
-        /*
-         * Callback for assetion events.
+        /**
+         *  Callback for assertion events.
          */
         static function assertEventHook(callstack:Vector.<CallStackInfo>) {
 
@@ -819,8 +819,7 @@ package system.debugger
             return Debug.assertion;    
             
         }
-
-                        
+        
         /**
          *  The current stack snapshot, when we are stepping, have hit an assertion, etc.
          */
@@ -852,7 +851,7 @@ package system.debugger
          */
         static var ideMode = false;
 
-                        
+        
     }
     
     
