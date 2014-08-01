@@ -22,14 +22,14 @@ limitations under the License.
 package system.utils
 {
 
-	/**
-	 * Utility for conversion to/from Base 64.
-	 */
+    /**
+     * Utility for conversion to/from Base 64.
+     */
     public static native class Base64
     {
-    	/**
-    	 * Convert binary data in a ByteArray to base64 encoded string.
-    	 */
+        /**
+         * Convert binary data in a ByteArray to base64 encoded string.
+         */
         public native static function encode(data:ByteArray):String;
 
         /**

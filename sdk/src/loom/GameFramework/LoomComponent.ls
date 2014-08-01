@@ -112,8 +112,7 @@ package loom.gameframework
       }
 
       /**
-       * Add a binding - that is, a string defining a field elsewhere to draw
-       * data from.
+       * Add a binding - that is, a string defining a field elsewhere to draw data from.
        */
       public function addBinding(fieldName:String, propertyReference:String):void
       {

@@ -111,7 +111,7 @@ Methods with `__pget_` in them are getters, by the way, and `__pset_` are setter
 
 ## Tracking Memory
 
-If performance is time, memory is space. Naturally, Loom's profiler tracks boath. In the profiler output, you will see a hierarchical list of objects created and destroyed since profiling began, broken out by the method doing the allocation.
+If performance is time, memory is space. Naturally, Loom's profiler tracks both. In the profiler output, you will see a hierarchical list of objects created and destroyed since profiling began, broken out by the method doing the allocation.
 
 For instance, here is one section showing a single object's allocation behavior (ignoring logger prefix output, and with package names trimmed for width):
 

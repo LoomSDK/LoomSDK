@@ -25,9 +25,9 @@ Even though right now it's empty, and therefore not very useful, we might instan
 var myCar = new Car();
 ~~~
 
-We use JavaScript style, declaring a variable by giving `var` followed by the variable name (`myCar`). Then, we assign using the `=` operator, and create the object using `new`. To summarize, we now have a variable called `myCar` which holds an instance of the `Car` class.
+We use JavaScript style, declaring a variable by giving `var` followed by the variable name `myCar`. Then, we assign using the `=` operator, and create the object using `new`. To summarize, we now have a variable called `myCar` which holds an instance of the `Car` class.
 
-It's good practice to put each class definition in its own file named after the class, surrounded by a `package`. (While everything has to be in a `package`, you can put multiple classes in a single file if you want.) Here's what our Car class would look like in its own file:
+It's good practice to put each class definition in its own file named after the class, surrounded by a `package`. While everything has to be in a `package`, you can put multiple classes in a single file if you want. Here's what our Car class would look like in its own file:
 
 ~~~as3
 Contents of Car.ls:
@@ -65,7 +65,7 @@ Now we have more going on. Specifically, our `Car` has some fields that store in
 
 `public` is a new keyword. It controls what code can access the item that comes after it. LoomScript has four access modifiers: `public` gives anyone access to the member, `protected` lets only the current class or subclasses have access, `private` allows only the current class have access, and `internal` denies any classes outside of the current package. Accessing a member you don't have permission for will result in a compiler error.
 
-`manufacturer` is a little more complex; we see that we define it, and then we explicitly specify the type by adding a colon and the type name (`String`) after the variable name (`manufacturer`). More on this in a second. Finally, we don't give it an initial value right away, but rather, set it in `Car`, a function defined a little later in the class. `Car`, of course, is named after the type holding it and is the constructor, called on creation of the object.
+`manufacturer` is a little more complex; we see that we define it, and then we explicitly specify the type by adding a colon and the type name `String` after the variable name `manufacturer`. More on this in a second. Finally, we don't give it an initial value right away, but rather, set it in `Car`, a function defined a little later in the class. `Car`, of course, is named after the type holding it and is the constructor, called on creation of the object.
 
 Specifying the type for `manufacturer` is necessary because LoomScript is statically typed. That is, it must know at compile time the type of every variable in your program. This allows the compiler to give you excellent error reports and also enables script to run faster. 
 
@@ -111,7 +111,7 @@ public class Car
 }
 ~~~
 
-We now add three members to `Car` - `rpms`, `start`, and `revTheEngine`. `rpms` is a public variable of type `Number`, which is acted on by two public functions: `start` and `revTheEngine`. `start` takes no arguments, while `revTheEngine` takes one argument, a number indicating by how much to rev the engine. We use the `+` and `+=` operators to implement our logic.
+We now add three members to `Car`: `rpms`, `start`, and `revTheEngine`. `rpms` is a public variable of type `Number`, which is acted on by two public functions: `start` and `revTheEngine`. `start` takes no arguments, while `revTheEngine` takes one argument, a number indicating by how much to rev the engine.
 
 We also started using the `trace` method, which is a globally available utility method that prints a string to the Loom log. Anything you pass to it that isn't a `String` gets its `toString` method called, turning it into a `String` for display purposes!
 
@@ -142,25 +142,30 @@ Anonymous functions are handy and powerful:
 
 ~~~as3
 var something = function(x:int, y:int):void { trace("sum " + (x+y)); };
-something(1, 2);
+something(1, 2); // Outputs 'sum 3'
 
 var data = [1,2,3];
-data.forEach(trace); // Call trace on each item.
+var count = 0;
+data.forEach(function(val:int) { trace(" Item #" + (count++) + " = " + val); }); // Print a nice table of the values in data.
 ~~~
 
 A closure is a function with its own local variables packaged with it. LoomScript allows this:
 
 ~~~as3
-function countUp()
+function closurizeCountUp():Function
 {
 	var counter:int = 100;
 	return function() { trace(counter++); };
 }
 
-countUp();
-countUp();
-countUp();
-countUp();
+// Genrate the closure.
+var func = closurizeCountUp();
+
+// Count up.
+func();
+func();
+func();
+func();
 ~~~
 
 Would print:
@@ -174,7 +179,7 @@ Would print:
 
 ### Default Arguments and Variable Arguments
 
-Functions are powerful. They can take a lot of arguments if you so desire, although we think it's a bad idea to pass more then 10 arguments or so for readability reasons. They can have default arguments and return types:
+Functions are powerful. They can take a lot of arguments if you so desire, although we think it's a bad idea to pass more than 10 arguments or so for readability reasons. They can have default arguments and return types:
 
 ~~~as3
 public function showDefaultArgs(arg1:Number, anotherArg:String = "ThisIsADefault"):Object
@@ -198,17 +203,17 @@ Notice that you specify variable arguments with `...`, and give them a name by p
 
 ## Templated Types and Type Aliases
 
-LoomScript supports a few templated types, specifically `Vector` and `Dictionary`. These are types that allow you to specify other types that they operate on. For instance:
+LoomScript supports a few templated types, specifically `Vector` and `Dictionary`. (Note that `Array` is treated the same as `Vector.<Object>` in LoomScript.) These types allow you to specify other types that they operate on. For instance:
 
 ~~~as3
 var carList = new Vector.<Car>();
 ~~~
 
-Above, `carList` is a `Vector` that only holds `Car`s or subclasses thereof. This is very helpful for keeping containers organized, as you don't have to worry about putting the wrong kind of thing getting into it. You can also specify a `Vector` with no type parameter (no `.<Car>` or equivalent) and it will defaul to holding anything, ie, `.<Object>`.
+Above, `carList` is a `Vector` that only holds instances of `Car`s or its subclasses. This is very helpful for keeping containers organized, as you can make sure at compile-time that you are writing and reading the right types. You can also specify a `Vector` with no type parameter (no `.<Car>` or equivalent) and it will default to holding anything, i.e., `.<Object>`.
 
 `Dictionary` is similar; you might do `Dictionary.<String, Car>` to make a `Dictionary` that accepts `String` keys and `Car` values. `Dictionary` defaults to `.<Object,Object>` if you don't specify any parameter types.
 
-LoomScript also provides a number of type aliases to simplify porting ActionScript 3 code and as shorthand. For instance, `Array` is the same as `Vector.<Object>`, and the rest are implemented in `lsAlias.cpp`, reproduced here for convenience:
+LoomScript also provides a number of type aliases to simplify porting ActionScript 3 code and as shorthand. For instance, `Array` is actually `Vector.<Object>`, and the rest are implemented in `lsAlias.cpp`, reproduced here for convenience:
 
 ~~~as3
     // Each line rewrites the first type to the second.
@@ -233,7 +238,7 @@ LoomScript supports interfaces and subclassing, as seen below:
 ~~~as3
 public interface ITowingVehicle
 {
-    function hitch(trailer:Object):void;
+    function hitch(towable:Object):void;
     function tow():void;
 }
 
@@ -256,16 +261,19 @@ public class Truck extends Car implements ITowingVehicle
         engineVolumeCC = 3000;
     }
 
-    public function hitch(trailer:ITowable):void
+    public function hitch(towable:ITowable):void
     {
-        trace("Now towing " + trailer);
-        towed = trailer;
+        trace("Now towing " + towable);
+        towed = towable;
     }
 
     public function tow():void
     {
-        trace("Dragged " + trailer + " a bit.");
-        towed.dragAlong();
+        if(towed)
+        {
+            trace("Dragged " + towed + " a bit.");
+            towed.dragAlong();            
+        }
     }
 
     public override function toString():String
@@ -319,7 +327,7 @@ public class Truck extends Car implements ITowingVehicle, ITowable
     protected towed:ITowable;
 
     function Truck() ...
-    public function hitch(trailer:ITowable):void ...
+    public function hitch(towable:ITowable):void ...
     public function tow():void ...
     public override function toString():String ...
 
@@ -328,7 +336,8 @@ public class Truck extends Car implements ITowingVehicle, ITowable
         trace(this + " comes along, rumbling and spinning its wheels!");
 
         // Also drag whatever we tow!
-        towed.dragAlong();
+        if(towed)
+            towed.dragAlong();
     }
 }
 ~~~
@@ -349,8 +358,7 @@ We get the following output:
 ~~~
 Now towing [Truck manufacturer=Ford engineVolumeCC=3000]
 Now towing [Truck manufacturer=Ford engineVolumeCC=3000]
-Now towing [Truck manufacturer=Ford engineVolumeCC=3000]
-Truck manufacturer=Ford engineVolumeCC=3000] comes along, rumbling and spinning its wheels!
+[Truck manufacturer=Ford engineVolumeCC=3000] comes along, rumbling and spinning its wheels!
 Now towing [BoringTrailer]
 Dragged [BoringTrailer] a bit.
 [BoringTrailer] got towed!
@@ -470,7 +478,7 @@ Another useful idiom with as is the following, if you're sure the cast will succ
 (possibly as B).bMethod();
 ~~~
 
-You can also do a cast that will fail with an error rather than with `null`:
+We also support a more concise cast syntax, which is equivalent to using `as`:
 
 ~~~as3
 var definitely:B = B(param);
@@ -526,7 +534,7 @@ LoomScript supports the usual conditionals:
 
 ~~~as3
 if(true)
-   trace("Always do this.");
+    trace("Always do this.");
 else if(anotherCondition)
 	trace("Won't actually ever do this.");
 else
@@ -568,7 +576,7 @@ for each (var r:String in resolutions)
 
 ~~~as3
 var values = { "hello": 1, "world": 2};
-for (x in values)
+for (var x:String in values)
 {
     if (x == "world")
         break;
@@ -663,11 +671,11 @@ You can declare a delegate:
 delegate MyDelegate(x:Number, y:Number):String;
 ~~~
 
-And add some listeners to an instance of it, then call it:
+And add some listeners to an instance of MyDelegate, then call it. Note that variables of delegate type are auto-instantiated. Also, note that only the return value of the last listener is used, so we don't have to match return types.
 
 ~~~as3
 var d:MyDelegate;
-d += function(x:Number, y:Number):String { trace("Got " + x + " + " + y + "!"); };
+d += function(x:Number, y:Number):Void { trace("Got " + x + " + " + y + "!"); };
 d += function(x:Number, y:Number):String { return "Saw " + x + " + " + y; };
 trace("D gave me: " + d(1,2));
 ~~~
@@ -714,7 +722,7 @@ Delegates are a powerful building block, especially when working with compositio
 
 ## Structs
 
-Loom provides an alternative to the `class` keyword, `struct`. It's identical to a class, except that variables of `struct` type are never null, and `struct`s assign by copy rather than by reference, using an assignment operator. For instance:
+Loom provides an alternative to the `class` keyword, `struct`. `struct` identical to `class`, except that variables of `struct` type are never null, and `struct` types assign by copy rather than by reference, using an assignment operator. For instance:
 
 ~~~as3
 struct MyStruct {
