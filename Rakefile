@@ -80,6 +80,13 @@ cmake_err = "LoomSDK requires CMake version #{$CMAKE_REQUIRED_VERSION} or above.
 abort(cmake_err) if (!installed?('cmake') || version_outdated?(cmake_version, $CMAKE_REQUIRED_VERSION))
 puts "Running CMake version #{cmake_version}"
 
+# For matz's sake just include rubyzip directly.
+path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'libs'))
+puts "Adding #{path} to $LOAD_PATH to use local rubyzip."
+$LOAD_PATH << path
+require 'zip'
+require 'zip/file'
+
 # Report configuration variables and validate them.
 puts "*** Using JIT? = #{$doBuildJIT}"
 puts "*** Build Type = #{$buildTarget}"
@@ -102,14 +109,6 @@ elsif $LOOM_HOST_OS == 'windows'
 else 
   $numCores = Integer(`cat /proc/cpuinfo | grep processor | wc -l`)
 end
-
-# For matz's sake just include rubyzip directly.
-path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'libs'))
-puts "Adding #{path} to $LOAD_PATH to use local rubyzip."
-$LOAD_PATH << path
-require 'zip'
-require 'zip/file'
-
 puts "*** Building with #{$numCores} cores."
 
 # Windows specific checks and settings
