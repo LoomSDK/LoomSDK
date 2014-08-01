@@ -291,7 +291,8 @@ namespace :docs do
 
   $DOCS_INDEX = 'artifacts/docs/index.html'
 
-  file $DOCS_INDEX => 'docs:regen' do
+  file $DOCS_INDEX do
+    Rake::Task['docs:regen'].invoke
     puts " *** docs built!"
   end
 
@@ -331,12 +332,14 @@ end
 namespace :utility do
 
   desc "Builds lsc if it doesn't exist"
-  file $LSC_BINARY => "build:desktop" do
+  file $LSC_BINARY do
+    Rake::Task['build:desktop'].invoke
     puts " *** lsc built!"
   end
-  
+
   desc "Builds shaderc if it doesn't exist"
-  file $SHADERC_BINARY => "build:desktop" do
+  file $SHADERC_BINARY do
+    Rake::Task['build:desktop'].invoke
     puts " *** shaderc built!"
   end
 
