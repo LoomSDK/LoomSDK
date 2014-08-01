@@ -23,7 +23,9 @@ package loom2d
 		public static var juggler:Juggler = new Juggler();
 
 		/**
-		 * Set this early to control the scale factor, for instance on HiDPI devices.
+		 * Set this at startup to control the display scale factor, for 
+		 * instance on HiDPI devices. It sets how many native pixels a Loom2D 
+		 * unit corresponds to.
 		 */
 		public static var contentScaleFactor:Number = 1;
 	}

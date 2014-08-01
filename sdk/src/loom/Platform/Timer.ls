@@ -24,7 +24,7 @@ import system.platform.Platform;
 import loom.Application;
 
 /**
- * Called when a Timer finishes something.
+ * Called when a Timer fires various events (start, complete, stop, pause).
  */
 public delegate TimerCallback(timer:Timer):void;
 

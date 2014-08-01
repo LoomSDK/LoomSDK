@@ -28,7 +28,7 @@ package system.utils
     public static native class Base64
     {
         /**
-         * Convert binary data in a ByteArray to a base64 encoded string.
+         * Convert binary data in a ByteArray to a Base64 encoded string.
          */
         public native static function encode(data:ByteArray):String;
 

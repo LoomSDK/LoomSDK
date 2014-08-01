@@ -24,7 +24,7 @@ The major language features we've added to LoomScript are:
 
 * The `struct` keyword. `struct` works just like class, with two differences. First, all variables of type struct are pre-initialized and are never null. Second, assignment is treated as copy, so `=` copies by value rather than assigning by reference. This prevents a wide class of issues related to inadvertantly sharing Points (for instance). This class is very helpful for preventing programming errors and minimizing temporary allocations.
 
-* Operator overloads. You can overload +, -, /, =, and other operators by declaring functions named after the operators.
+* Operator overloads. You can overload +, -, /, =, and other operators by declaring functions named after the operators. See the "Math and Operators" section for details.
 
 * Enums. [Enumerated Types](http://en.wikipedia.org/wiki/Enumerated_type) provide type-safe keys, symbols and configuration valuables. For instance:
 
