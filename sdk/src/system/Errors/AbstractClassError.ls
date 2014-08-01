@@ -20,6 +20,9 @@ limitations under the License.
 
 package system.errors
 {
+	/**
+	 * Error thrown when user attempts to instantiate an incomplete class.
+	 */
 	public class AbstractClassError extends Error
 	{
 		public function AbstractClassError(msg:String = null)

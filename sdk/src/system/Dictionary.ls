@@ -25,34 +25,37 @@ package system {
  *  When an object is used as a key, the object's identity is used to look up the object, and not the value returned from calling toString() on it. 
  *
  *  The Dictionary's value and key types are specified using postfix type parameter syntax.
- *  Dictionaries in LoomScript also have support for literal support:
+ *  Dictionaries in LoomScript also have support for literals:
  *  @include DictionaryInstantiation.ls
  */
 final class Dictionary extends Object {
     
     /**
-     *  Creates a new Dictionary object. if weakKeys is true, the dictionary will not hold a reference to its keys
-     *  If the key is garbage collected, it will be removed from the Dictionary.  (Please note that a full GC may need to
-     *  be run for the key to be removed from the weak dictionary).
+     *  Creates a new Dictionary object.
+     *  
+     * 
+     *  @param weakKeys
+     *      If true, the dictionary will not hold a reference to its keys. If the key is garbage collected, it will be removed from the Dictionary. (Please note that a full GC may need to
+     *      be run for the key to be removed from the weak dictionary).
      */
     public native function Dictionary(weakKeys:Boolean = false);
     
     /**
-     *  Removes all of the properties on the Dictionary.
+     *  Removes all of the properties in the Dictionary.
      */
     public native function clear();
     
     /**
-     *  Gets the number of properties on the Dictionary.
+     *  Gets the number of properties in the Dictionary.
      */
     public native function get length():Number;
     
     /**
-     *  Removes a property from the dictionary based on the Object index.
+     *  Removes a property from the dictionary based on the Object key.
      *
-     *  @param index The key for the property.
+     *  @param key The key for the property.
      */
-    public native function deleteKey(index:Object);
+    public native function deleteKey(key:Object);
 
     /**
      * Assign a dictionary's values to the corresponding fields (if present) on an Object.
@@ -81,9 +84,9 @@ final class Dictionary extends Object {
      * to the provided functions. The Dictionary is not modified after intercept() is
      * called, so if you leave it empty you'll see all traffic.
      *
-     * read is called with (table, key) and returns value.
-     *
-     * write is called with (table, key, value) and returns void.
+     * @param dict The dictionary to intercept.
+     * @param read A function that has parameters (table, key) and returns a value.
+     * @param write A function that has paraneters (table, key, value) and returns void.
      */
     public native static function intercept(dict:Object, read:Function, write:Function):void;
 

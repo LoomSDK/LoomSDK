@@ -20,13 +20,51 @@ limitations under the License.
 
 package loom
 {
+    /**
+     * Called when the pending asset update count changes during streaming of
+     * live assets.
+     *
+     * @param count How many asset updates are pending?
+     */
+    delegate PendingAssetUpdateCountDelegate(count:int);
+
+    /**
+     * Asset handling interface.
+     *
+     * The low level asset manager handles streaming, loading, and 
+     * decompressing files as needed, but it can be useful to manage it from
+     * LoomScript.
+     */
     public native class LoomAssetManager
     {
+        /**
+         * How many asset updates are left to stream?
+         */
         public static native function pendingUpdateCount():int;
+
+        /**
+         * Preload a give asset; useful to prevent loading hitches later.
+         */
         public static native function preload(filename:String):void;
+
+        /**
+         * Forcibly unload the requested asset.
+         */
         public static native function flush(filename:String):void;
+
+        /**
+         * Forcibly unload all assets.
+         */
         public static native function flushAll():void;
+
+        /**
+         * True when connected to the asset manager.
+         */
         public static native function isConnected():Boolean;
-        public static native var pendingCountChange:NativeDelegate;
+
+        /**
+         * Called when the pending asset update count changes.
+         */
+        public static native var pendingCountChange:PendingAssetUpdateCountDelegate;
     }
 }

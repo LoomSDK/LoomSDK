@@ -38,10 +38,12 @@ $search_json = ""
 @packages = PackageTree.new()
 $examples = {}
 $guides = GuideTree.new()
+$packages = @packages
 
 # Set this flag to true via CLI for testing.
 # This will output only the classes in the test_class_docs array.
 @is_test = ARGV[ ARG_TEST ]
+puts "ARG_TEST = #{@is_test}"
 @test_class_docs = [ ARGV[ ARG_TEST ] ]
 # "DisplayObject",
 #   "Sprite",
@@ -160,6 +162,8 @@ end
 
 def write_class_file( class_doc )
   return if class_doc.nil?
+
+  # puts "Writing #{class_doc.data[:name]}"
 
   class_dir = File.join( API_OUTPUT_DIR, class_doc.data[:package].split('.') )
   FileUtils.mkdir_p class_dir

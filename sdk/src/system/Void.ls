@@ -20,12 +20,13 @@ limitations under the License.
 
 package system {
 
-/// @cond PRIVATE
+/**
+ * @private
+ */
 final class Void extends Object {
 
 
 
 }
-/// @endcond
 
 }

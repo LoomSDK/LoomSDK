@@ -19,7 +19,7 @@ limitations under the License.
 */
 
 package loom.utils {
-/*
+/**
 Injector is an interface that provides a minimalist dependency 
 injection API.
 */
@@ -173,6 +173,10 @@ class Injector
 
 }
 
+/**
+ * Internal cache for info about injection sites.
+ * @private
+ */
 protected class InjectionTarget
 {
     public var type:Type;

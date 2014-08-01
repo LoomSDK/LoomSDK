@@ -20,6 +20,10 @@ limitations under the License.
 
 package loom
 {
+    /**
+     * Called when a LoomTextAsset has finished loading or has been updated
+     * by live editing.
+     */
     delegate LoomTextAssetUpdateDelegate(path:String, contents:String);
 
     /**
@@ -47,7 +51,8 @@ package loom
         public static native function create(path:String):LoomTextAsset;
 
         /**
-         * Initiate loading of the asset.
+         * Initiate loading of the asset. Make sure to assign a callback to
+         * updateDelegate before you call this! Loading may not be synchronous.
          */
         public native function load():void;
 

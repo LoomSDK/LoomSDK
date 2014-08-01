@@ -35,6 +35,24 @@ class PackageTree
     super_package = value
   end
   
+  def sidebar_links_json(relative_path)
+    data = []
+    self.root_package.sub_packages.values.each do |sub_package|
+      data << sidebar_links(sub_package, relative_path)
+    end
+    JSON.dump(data)
+  end
+  
+  def sidebar_links(package, relative_path)
+    packagename = package.path.split(".").last
+    data = {:name => packagename, :link => []}
+    data[:link] << {:name => "Index", :link => package.url(relative_path) }
+    package.sub_packages.values.each do |sub_package|
+      data[:link] << sidebar_links(sub_package, relative_path)
+    end
+    data
+  end
+
   def each(&block)
     root_package.sub_packages.each do |key, package_doc|
       block_for_packages package_doc, block

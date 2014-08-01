@@ -20,6 +20,9 @@ limitations under the License.
 
 package system.errors
 {
+	/**
+	 * Error thrown when a bad type is present.
+	 */
 	public class TypeError extends Error
 	{
 		public function TypeError(msg:String = null)

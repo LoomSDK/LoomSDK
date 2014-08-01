@@ -33,17 +33,17 @@ package system {
     public native function get length():Number;
 
     /**
-     *  Gets the character at the specified index
+     *  Gets the character at the specified index.
      *
-     *  @param index The index of the character
+     *  @param index The index of the character.
      *  @return The character at the specified index, Null if index is out of range.
      */
     public native function charAt(index:int):String;
 
     /**
-     *  Gets the character code for the specified index
+     *  Gets the character code for the specified index.
      *
-     *  @param index the index of the character code.
+     *  @param index The index of the character code.
      *  @return The character code for the specified index, -1 if the index is out of range.
      */
     public native function charCodeAt(index:int):Number;
@@ -52,7 +52,7 @@ package system {
      *  Converts a char code to s String value.
      *
      *  @param code The char code to convert
-     *  @return a String value that represents the char code.
+     *  @return A String value that represents the char code.
      */
     public static native function fromCharCode(code:int):String;
 
@@ -85,7 +85,7 @@ package system {
     public native function toLocaleLowerCase():String;
     
     /**
-     *  Gets the index of a serach val in the string, starting at the index specified.
+     *  Gets the index of a search val in the string, starting at the index specified.
      *
      *  @param val The String to search.
      *  @param startIndex The index to begin the search on.
@@ -94,7 +94,7 @@ package system {
     public native function indexOf(val:String, startIndex:Number = 0):int;
     
     /**
-     *  Gets the last index of a serach val in the string, starting at the index specified.
+     *  Gets the last index of a search val in the string, starting at the index specified.
      *
      *  @param val The String to search.
      *  @param startIndex The index to begin the search on.
@@ -123,7 +123,7 @@ package system {
     /**
      *  Returns a string consisting of the character specified by startIndex and all characters up to endIndex - 1. If endIndex is not specified, String.length is used. If the value of startIndex equals the value of endIndex, the method returns an empty string. If the value of startIndex is greater than the value of endIndex, the parameters are automatically swapped before the function executes. The original string is unmodified.
      *
-     *  @param startIndex An integer specifying the index of the first character used to create the substring. Valid values for startIndex are 0 through String.length. If startIndex is a negative value, 0 is used..
+     *  @param startIndex An integer specifying the index of the first character used to create the substring. Valid values for startIndex are 0 through String.length. If startIndex is a negative value, 0 is used.
      *  @param endIndex An integer that is one greater than the index of the last character in the extracted substring. Valid values for endIndex are 0 through String.length. The character at endIndex is not included in the substring. The default is the maximum value allowed for an index. If this parameter is omitted, String.length is used. If this parameter is a negative value, 0 is used.
      */
     public native function substring(startIndex:int = 0, endIndex:int = -1):String;
@@ -140,28 +140,28 @@ package system {
     /**
      *  Safely evaluate the String to a Number value.
      *
-     *  @return The Number value evaluated from the String
+     *  @return The Number value evaluated from the String.
      */
     public native function toNumber():Number;
     
     /**
      *  Safely evaluate the String to a Boolean value.
      *
-     *  @return The Boolean value evaluated from the String
+     *  @return The Boolean value evaluated from the String.
      */
     public native function toBoolean():Boolean;
     
     /**
      *  Safetly evaluate the String to an MD5 encoded string value.
      *
-     *  @return The MD5 String value evaluated from the String
+     *  @return The MD5 String value evaluated from the String.
      */
     public native function toMD5():String;
     
     /**
      *  Splits a String object into an array of substrings by dividing it wherever the specified delimiter parameter occurs.
      *
-     *  @param delimiter The pattern that specifies where to split this String. 
+     *  @param delimiter The pattern that specifies where to split this String.
      */
     public native function split(delimiter:String):Vector.<String>;
 
@@ -202,7 +202,7 @@ package system {
     }
 
     /**
-     *  Determines if a string is a whitespace
+     *  Determines if a string is a whitespace character.
      *
      *  @param c The string to check
      *  @return a Boolean value indicating the result of the test.
@@ -213,7 +213,7 @@ package system {
     }
 
     /**
-     *  Determines if a string is either null or empty
+     *  Determines if a string is either null or empty.
      *
      *  @param c The string to check
      *  @return a Boolean value indicating the result of the test.
@@ -233,7 +233,7 @@ package system {
      * the string is written between double quotes, and all double quotes, newlines, embedded zeros, 
      * and backslashes in the string are correctly escaped when written. 
      * For instance, the call
-     * string.format('%q', 'a string with "quotes" and \n new line')
+     * String.format('%q', 'a string with "quotes" and \n new line')
      * will produce the string:
      *
      * "a string with \"quotes\" and \

@@ -28,7 +28,7 @@ native class Assembly {
 
     /**
      *  Executes the Assembly by calling its main() function.
-     *  Will throw and error if the assembly does not have a main() function.
+     *  Will throw an error if the assembly does not have a main() function.
      */
     public native function execute();
 
@@ -40,14 +40,14 @@ native class Assembly {
     public native function getName():String;
 
     /**
-     *  Gets the number of types associated to the Assembly.
+     *  Gets the number of types associated with the Assembly.
      *
      *  @return Number of types in the assembly.
      */
     public native function getTypeCount():int;
 
     /**
-     *  Gets the associated Type at the specified index.
+     *  Gets the Type associated with the specified index.
      *
      *  @param index Index of associated Type.
      *  @return Instance of the associated Type.

@@ -37,6 +37,11 @@ class Module::PackageDoc
     classes.concat interfaces.concat(enums.concat(structs.concat(delegates)))
   end
   
+  def url(relative_base)
+    relative_base == "" ? "api/#{path}/index.html" : "#{relative_base}/api/#{File.join(path.split("."))}/index.html"
+  end
+  
+
   def write
     package_dir = File.join( API_OUTPUT_DIR, path.split(".") )
     FileUtils.mkdir_p package_dir

@@ -21,7 +21,7 @@ limitations under the License.
 package system.socket {
     
     /**
-     * A Simple %Socket interface in loomscript.
+     * A simple %Socket interface.
      */
     public native class Socket {
     
@@ -43,8 +43,7 @@ package system.socket {
         public static native function connect(host:String, port:Number):Socket;
 
         /**
-         *  Closes a Socket instance.
-         *
+         *  Disconnects from the host and closes the socket.
          */
         public native function close():void;
 
@@ -60,14 +59,14 @@ package system.socket {
         public static native function bind(host:String, port:Number, backlog:Number = 32):Socket;
         
         /**
-         *  Recieves a message from an accepted Socket.
+         *  Receives a message from the accepted socket.
          *
          *  @return The recieved message string.
          */
         public native function receive():String;
         
         /**
-         * Sends a message to an accepted Socket.
+         *  Sends a message to the accepted socket.
          *
          *  @param msg The message to send.
          */
@@ -83,7 +82,7 @@ package system.socket {
         public native function getError(clear:Boolean = true):String;
 
         /**
-         *  Clears the last Socket error.
+         *  Clears the last socket error.
          *
          *  @see getError
          */

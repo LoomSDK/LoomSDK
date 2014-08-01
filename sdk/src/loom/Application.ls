@@ -50,6 +50,12 @@ package loom
     import loom2d.display.Cocos2D;
     import loom2d.display.CCLayer;
 
+    /**
+     * Simple delegate called by Application on the start of the first frame.
+     *
+     * Useful for startup logic that requires fully configured graphics or other
+     * resources that aren't available in the app constructor.
+     */
     delegate OnStart():void;
 
     /**
@@ -347,7 +353,7 @@ package loom
             onStart += _run;
         }
     
-        public static function tick() 
+        protected static function tick() 
         {
             if (initialTick) 
             {
@@ -364,11 +370,13 @@ package loom
          */
         public var group:LoomGroup = LoomGroup.rootGroup;
 
+        /**
+         * Delegate called at start of the first rendered frame.
+         */
         public static var onStart:OnStart;
 
         private var layer:CCLayer = new CCLayer();
 
-        //protected var feedbackLayer:CCLayerColor;
         protected var lastSeenQuantity:Number = 0;
 
         private var theStage:Stage;

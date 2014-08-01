@@ -83,6 +83,8 @@
 
                     <img src="images/home-logo.jpg" />
                     <p>Version <%= version_number %></p>
+                    <p></p>
+                    <p><b>Press 'S' to jump to the search box!</b></p>
 
                 </div><!-- End title. -->
 
@@ -172,18 +174,21 @@
         	var sidebarData = [
         	    { "name" : "Guides", "link" : [] },
         	    { "name" : "Examples", "link" : [] },
-                { "name" : "API reference", "link" : "api/index.html" }
+                { "name" : "API reference", "link" : [] }
         	];
 
-          // populate examples links
+            // populate guides links
+            sidebarData[0].link = $.parseJSON('<%= $guides.sidebar_links_json("") %>');
+
+            // populate examples links
         	for(var index in search_objects.examples)
         	{
         	  example = search_objects.examples[index]
         	  sidebarData[1].link.push({"name": example.name, "link": example.path.split(".").join("/") + ".html"});
         	}
 
-        	// populate guides links
-        	sidebarData[0].link = $.parseJSON('<%= $guides.sidebar_links_json("") %>');
+            // populate API reference links
+            sidebarData[2].link = $.parseJSON('<%= $packages.sidebar_links_json("") %>');            
 
         </script>
 

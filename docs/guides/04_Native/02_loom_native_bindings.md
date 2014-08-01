@@ -1,4 +1,4 @@
-title: Loom Native Bindings
+title: Script Bindings
 description: Exposing C++ to LoomScript.
 !------
 
