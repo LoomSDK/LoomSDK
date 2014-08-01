@@ -16,6 +16,8 @@ package game {
         public var visited:int = 0;
         public var counter:int = 0;
         
+        protected var initialized:Boolean = false;
+        
         protected var type:TileType;
         protected var previous:Image;
         protected var current:Image;
@@ -23,11 +25,12 @@ package game {
 
         public function ColorTile(tileX:int, tileY:int)
         {
-            super();
-            previous = new Image();
+            previous = new Image(Texture.fromAsset("assets/tiles/tile0.png"));
             addChild(previous);
-            current = new Image();
+            current = new Image(Texture.fromAsset("assets/tiles/tile0.png"));
             addChild(current);
+            
+            previous.visible = false;
             
             this.tileX = tileX;
             this.tileY = tileY;
@@ -46,7 +49,7 @@ package game {
         
         protected function resize(image:Image)
         {
-            image.scale = 2;
+            image.scale = 1;
             //image.width = 128;
             //image.height = 128;
             image.center();
@@ -58,17 +61,20 @@ package game {
         {
             this.type = type;
             
-            if (current.texture) {
+            if (initialized) {
+                previous.visible = true;
                 previous.texture = current.texture;
                 //previous.width = 128;
                 //previous.height = 128;
                 //previous.center();
                 resize(previous);
                 previous.color = currentColor;
-                current.alpha = 0;
                 //current.scale = 0.6;
+            } else {
+                initialized = true;
             }
             
+            current.alpha = 0;
             current.texture = type.texture;
             resize(current);
             //current.width = 128;
@@ -83,9 +89,13 @@ package game {
             
             var goalColor = Color.fromInt(currentColor);
             
-            Loom2D.juggler.tween(previous, 1, { "delay": delay*5, "scale": 0.6, "transition": Transitions.EASE_OUT } );
-            Loom2D.juggler.tween(current, 0.0, { "delay": delay*5+1.5, "alpha": 1, "scale": 0.6 } );
-            Loom2D.juggler.tween(current, 1.0, { "delay": delay*5+2, "scale": 2, "transition": Transitions.EASE_OUT_BACK } );
+            var midScale = 0.2;
+            
+            Loom2D.juggler.tween(previous, 0.5, { "delay": delay, "scale": midScale, "transition": Transitions.EASE_OUT, "onComplete": function() {
+                previous.visible = false;
+            }} );
+            Loom2D.juggler.tween(current, 0.0, { "delay": delay+0.1, "alpha": 1, "scale": 0 } );
+            Loom2D.juggler.tween(current, 0.5, { "delay": delay+0.11, "scale": 1, "transition": Transitions.EASE_OUT_BACK } );
             
             //current.scale = 0;
             //Loom2D.juggler.tween(current, 1, { "delay": delay*0.2, "scale": 1, "transition": Transitions.EASE_IN_OUT_BACK } );
