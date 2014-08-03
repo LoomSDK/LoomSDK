@@ -39,6 +39,11 @@ package
         public var scoreLabel:SimpleLabel;
         
         /**
+         * The result label.
+         */
+        public var resultLabel:SimpleLabel;
+        
+        /**
          * The width of the content.
          */
         public var contentWidth = 320;
@@ -216,6 +221,13 @@ package
             Loom2D.juggler.tween(scoreLabel, 0.3, { delay: 2.2, alpha: 1, y: 334+40/2, transition: Transitions.EASE_OUT } );
             stage.addChild(scoreLabel);
             
+            resultLabel = new SimpleLabel("assets/Curse-hd.fnt", contentWidth-40, 26);
+            resultLabel.x = 20;
+            resultLabel.y = 334+40/2+60;
+            resultLabel.text = "You won!";
+            resultLabel.visible = false;
+            stage.addChild(resultLabel);
+            
             // Define all the different tile types
             types = [
                 new TileType(0, 0x602462, Texture.fromAsset("assets/tiles/tile0.png")),
@@ -256,15 +268,13 @@ package
                 
                 // Position the button
                 button.x = i * buttonWidth;
-                button.y = -120;
+                
+                // Hide it at first
+                button.alpha = 0;
                 
                 // Set the button type (with additional delayed animation)
                 button.paint(types[i]);
-                button.paint(types[i], 1.4+i*0.05);
-                
-                // Initial dropping animation
-                button.alpha = 0;
-                Loom2D.juggler.tween(button, 0.6, { "delay": 1+i*0.05, "y": 0, "alpha": 1, "transition": Transitions.EASE_OUT_BOUNCE } );
+                button.paint(types[i], 1.65+i*0.05);
                 
                 // Center and scale to fit predefined width
                 button.center();
@@ -323,6 +333,19 @@ package
             // Don't respond if waiting is to be had!
             if (Loom2D.juggler.elapsedTime < waitUntil) return;
             
+            // If buttons aren't touchable / visible, show them first
+            if (!buttonStrip.touchable) {
+                showButtons();
+                return;
+            }
+            
+            // If game is over, restart.
+            if (gameOver)
+            {
+                startGame();
+                return;
+            }
+            
             var touch:Touch = e.getTouch(stage);
             
             // Find the closest button to the touch
@@ -357,14 +380,6 @@ package
                     buttonDeactivate();
                     break;
             }
-
-            // If game is over, restart.
-            if (gameOver)
-            {
-                startGame();
-                return;
-            }   
-
             // Otherwise, flood fill the new color.
             flood(i);
         }
@@ -378,6 +393,11 @@ package
             floodToken = 0;
             setScore(0);
             gameOver = false;
+            showButtons();
+            
+            Loom2D.juggler.tween(resultLabel, 0.3, { alpha: 0, onComplete: function() {
+                resultLabel.visible = false;
+            }});
             
             var maxDelay = 0;
             
@@ -420,30 +440,6 @@ package
          */
         protected function flood(color:int):void
         {
-            scrollSpeed += 1;
-            
-            // Change the token. We could use a flag, but then we'd have to
-            // reset the flag after every fill, which I hate. So instead we
-            // have this counter and check for equality.
-            floodToken++;
-            
-            // Check if we've exceeded the move count. floodToken is convenient
-            // for this because it never resets and it increments every turn, but
-            // if that changed you'd want to use a seperate counter.
-            if(floodToken > maxMoves)
-            {
-                // If they exceeded move max, they lost.
-                scoreLabel.text = "You lost!";
-                gameOver = true;
-                return;
-            }
-            else
-            {
-                // Otherwise update score.
-                setScore(floodToken);
-                trace("Moves left: " + (maxMoves - floodToken));
-            }
-        
             // We'll use this to store a stack of tiles we need to process.
             //
             // We could implement this behavior recursively, but it's a lot
@@ -459,6 +455,31 @@ package
             
             // Note the original color.
             var originalColor:int = origin.colorIndex;
+            
+            if (color == originalColor) return;
+            
+            scrollSpeed += 1;
+            
+            // Change the token. We could use a flag, but then we'd have to
+            // reset the flag after every fill, which I hate. So instead we
+            // have this counter and check for equality.
+            floodToken++;
+            
+            // Check if we've exceeded the move count. floodToken is convenient
+            // for this because it never resets and it increments every turn, but
+            // if that changed you'd want to use a seperate counter.
+            //if (floodToken > maxMoves)
+            //{
+                //// If they exceeded move max, they lost.
+                //stopGame(false);
+                //return;
+            //}
+            //else
+            //{
+                // Otherwise update score.
+                setScore(floodToken);
+                //trace("Moves left: " + (maxMoves - floodToken));
+            //}
             
             // The maximum animation delay of all the processed tiles,
             // used to block interactivity for that period of time.
@@ -504,7 +525,7 @@ package
             }
             
             // Block interaction until all the tiles are finished transitioning
-            waitUntil = Loom2D.juggler.elapsedTime+maxDelay+0.62;
+            //waitUntil = Loom2D.juggler.elapsedTime+maxDelay+0.5;
             
             // Check to see if we won. Note that because the array is linear,
             // we don't have to do a 2d traversal - we can just walk it directly.
@@ -514,11 +535,47 @@ package
                     didWeWin = false;
             
             // Handle victory.
-            if(didWeWin == true)
-            {
-                gameOver = true;
-                scoreLabel.text = "You Won!";
-                trace("You Won!");
+            if (didWeWin == true) {
+                stopGame(true);
+            } else if (floodToken >= maxMoves) {
+                // If they exceeded move max, they lost.
+                stopGame(false);
+            }
+        }
+        
+        private function stopGame(winner:Boolean) 
+        {
+            gameOver = true;
+            hideButtons();
+            if (winner) {
+                resultLabel.text = "You won!";
+            } else {
+                resultLabel.text = "You lost!";
+            }
+            resultLabel.alpha = 0;
+            resultLabel.visible = true;
+            Loom2D.juggler.tween(resultLabel, 0.3, { alpha: 1 } );
+        }
+        
+        private function showButtons()
+        {
+            buttonStrip.touchable = true;
+            for (var i = 0; i < buttons.length; i++) {
+                var button = buttons[i];
+                button.y = -120;
+                button.alpha = 0;
+                Loom2D.juggler.tween(button, 0.6, { "delay": 1+i*0.05, "y": 0, "alpha": 1, "transition": Transitions.EASE_OUT_BOUNCE } );
+            }
+        }
+        
+        private function hideButtons()
+        {
+            buttonStrip.touchable = false;
+            for (var i = 0; i < buttons.length; i++) {
+                var button = buttons[i];
+                button.y = 0;
+                button.alpha = 1;
+                Loom2D.juggler.tween(button, 0.6, { "delay": 1+i*0.05, "y": -120, "alpha": 0, "transition": Transitions.EASE_IN_BACK } );
             }
         }
         
