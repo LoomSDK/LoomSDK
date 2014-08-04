@@ -45,9 +45,16 @@ package
         public var scoreLabel:SimpleLabel;
         
         /**
-         * The result label.
+         * The results label.
          */
         public var resultLabel:SimpleLabel;
+        
+        /**
+         * The tap-twice-to-quit label.
+         */
+        public var quitLabel:SimpleLabel;
+        
+        public var backTapped:Boolean = false;
         
         /**
          * The width of the content.
@@ -123,7 +130,6 @@ package
          */
         public var activeButton:ColorTile = null;
         
-        
         /**
          * Scrolling tiled background.
          */
@@ -175,7 +181,7 @@ package
          */
         protected function load():void {
             // Listen to system events
-            stage.addEventListener(KeyboardEvent.BACK_PRESSED, back);
+            stage.addEventListener(KeyboardEvent.BACK_PRESSED, onBack);
             stage.addEventListener(Event.RESIZE, resize);
             
             // Initialize the labels, grid, and buttons.
@@ -205,9 +211,21 @@ package
         /**
          * Exit app on back button press.
          */
-        private function back(e:KeyboardEvent):void 
+        private function onBack(e:KeyboardEvent):void 
         {
-            Process.exit(0);
+            if (backTapped) {
+                Process.exit(0);
+            } else {
+                backTapped = true;
+                Loom2D.juggler.tween(scoreLabel, 0.1, { alpha: 0 } );
+                quitLabel.visible = true;
+                Loom2D.juggler.tween(quitLabel, 0.1, { delay: 0.1, alpha: 1 } );
+                Loom2D.juggler.tween(quitLabel, 0.1, { delay: 1.9, alpha: 0, onComplete: function() {
+                    quitLabel.visible = false;
+                    backTapped = false;
+                }});
+                Loom2D.juggler.tween(scoreLabel, 0.1, { delay: 2.01, alpha: 1 } );
+            }
         }
         
         /**
@@ -266,6 +284,14 @@ package
             resultLabel.text = "";
             resultLabel.visible = false;
             content.addChild(resultLabel);
+            
+            // Tap twice quit label
+            quitLabel = new SimpleLabel(fontFile, contentWidth-40, 20);
+            quitLabel.x = 20;
+            quitLabel.y = scorePos-10;
+            quitLabel.text = "Tap again to quit!";
+            quitLabel.visible = false;
+            quitLabel.alpha = 0;
             
             // Define all the different tile types
             var tileDir = "assets/tiles/";
@@ -330,6 +356,9 @@ package
             
             // Add the instructions on top of everything else
             content.addChild(instructions);
+            
+            // Add quit label even higher
+            content.addChild(quitLabel);
         }
         
         /**
