@@ -9,6 +9,7 @@ package
     import loom2d.display.Image;
     import loom2d.display.Sprite;
     import loom2d.display.StageScaleMode;
+    import loom2d.events.Event;
     import loom2d.events.KeyboardEvent;
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
@@ -31,6 +32,11 @@ package
          */
         public var types:Vector.<TileType> = [];
         
+        public var content:Sprite = new Sprite();
+        
+        /**
+         * Instruction text image.
+         */
         public var instructions:Image;
         
         /**
@@ -115,7 +121,7 @@ package
         /**
          * The currently active ("down state") button.
          */
-        private var activeButton:ColorTile = null;
+        public var activeButton:ColorTile = null;
         
         
         /**
@@ -124,21 +130,32 @@ package
         public var background:OffsetTiledImage;
         
         /**
+         * Background scrolling toggle.
+         */
+        public var backgroundScroll = false;
+        
+        /**
          * Background scrolling position.
          */
-        private var scroll:Number = 0;
+        public var scroll:Number = 0;
         
         /**
          * Background scrolling speed.
          */
-        private var scrollSpeed:Number = 0;
+        public var scrollSpeed:Number = 0;
         
+        public var scorePos = 334+40/2;
+        public var scorePosOffset = 40;
         
         /**
          * Temporary helper for passing Point to functions.
          */
         private var tempPoint:Point;
         
+        /**
+         * Temporary helper to avoid allocation of new Vectors.
+         */
+        private var tempTileVector = new Vector.<ColorTile>();
         
         // Gets injected automatically before run() is called, used in the splash loader.
         [Inject] private var timeManager:TimeManager;
@@ -149,7 +166,7 @@ package
         override public function run():void
         {
             // Set up automatic scaling.
-            stage.scaleMode = StageScaleMode.LETTERBOX;
+            stage.scaleMode = StageScaleMode.NONE;
             SplashLoader.init(stage, timeManager, load);
         }
         
@@ -159,12 +176,30 @@ package
         protected function load():void {
             // Listen to system events
             stage.addEventListener(KeyboardEvent.BACK_PRESSED, back);
+            stage.addEventListener(Event.RESIZE, resize);
             
             // Initialize the labels, grid, and buttons.
             layout();
             
             // And start play.
             startGame();
+            
+            resize();
+        }
+        
+        /**
+         * Scale the content to fit width.
+         */
+        private function resize(e:Event = null):void 
+        {
+            if (stage.stageWidth/stage.stageHeight < contentWidth/contentHeight) {
+                content.scale = stage.stageWidth/contentWidth;
+            } else {
+                content.scale = stage.stageHeight/contentHeight;
+            }
+            content.x = (stage.stageWidth-contentWidth*content.scale)/2;
+            content.y = (stage.stageHeight - contentHeight * content.scale) / 2;
+            background.setSize(stage.stageWidth, stage.stageHeight);
         }
         
         /**
@@ -189,20 +224,21 @@ package
          */
         override public function onFrame()
         {
-            background.setScroll(scroll, scroll);
+            if (backgroundScroll) background.setScroll(-scroll, -scroll);
         }
         
         /**
          * Initialize the score label, game grid, and the buttons.
          */
         protected function layout():void
-        {
+        {   
             // Scrolling tiled background, scaled with no smoothing to preserve hard edges.
             var tex = Texture.fromAsset("assets/background.png");
             tex.smoothing = TextureSmoothing.NONE;
             background = new OffsetTiledImage(tex, 4);
-            background.setSize(contentWidth, contentHeight);
             stage.addChild(background);
+            
+            stage.addChild(content);
             
             // Instructions that are hidden after a short delay
             instructions = new Image(Texture.fromAsset("assets/instructions.png"));
@@ -213,29 +249,33 @@ package
             Loom2D.juggler.tween(instructions, 0.3, { delay: 0.8, alpha: 1, y: 70, transition: Transitions.EASE_OUT } );
             Loom2D.juggler.tween(instructions, 2, { delay: 2+3, alpha: 0 } );
             
-            // Score Label
-            scoreLabel = new SimpleLabel("assets/Curse-hd.fnt", contentWidth-40, 40);
-            scoreLabel.x = 20;
-            scoreLabel.y = 334+40/2+40;
-            scoreLabel.alpha = 0;
-            Loom2D.juggler.tween(scoreLabel, 0.3, { delay: 2.2, alpha: 1, y: 334+40/2, transition: Transitions.EASE_OUT } );
-            stage.addChild(scoreLabel);
+            var fontFile = "assets/Curse-hd.fnt";
             
-            resultLabel = new SimpleLabel("assets/Curse-hd.fnt", contentWidth-40, 26);
+            // Score Label
+            scoreLabel = new SimpleLabel(fontFile, contentWidth-40, 40);
+            scoreLabel.x = 20;
+            scoreLabel.y = scorePos+scorePosOffset;
+            scoreLabel.alpha = 0;
+            Loom2D.juggler.tween(scoreLabel, 0.3, { delay: 2.2, alpha: 1, y: scorePos, transition: Transitions.EASE_OUT } );
+            content.addChild(scoreLabel);
+            
+            // Result (win/loss) text
+            resultLabel = new SimpleLabel(fontFile, contentWidth-40, 26);
             resultLabel.x = 20;
             resultLabel.y = 334+40/2+60;
-            resultLabel.text = "You won!";
+            resultLabel.text = "";
             resultLabel.visible = false;
-            stage.addChild(resultLabel);
+            content.addChild(resultLabel);
             
             // Define all the different tile types
+            var tileDir = "assets/tiles/";
             types = [
-                new TileType(0, 0x602462, Texture.fromAsset("assets/tiles/tile0.png")),
-                new TileType(1, 0x396EAA, Texture.fromAsset("assets/tiles/tile1.png")),
-                new TileType(2, 0xDDC222, Texture.fromAsset("assets/tiles/tile2.png")),
-                new TileType(3, 0xFDF5E6, Texture.fromAsset("assets/tiles/tile3.png")),
-                new TileType(4, 0xFB2447, Texture.fromAsset("assets/tiles/tile4.png")),
-                new TileType(5, 0x6C8C16, Texture.fromAsset("assets/tiles/tile5.png"))
+                new TileType(0, 0x602462, Texture.fromAsset(tileDir+"tile0.png")),
+                new TileType(1, 0x396EAA, Texture.fromAsset(tileDir+"tile1.png")),
+                new TileType(2, 0xDDC222, Texture.fromAsset(tileDir+"tile2.png")),
+                new TileType(3, 0xFDF5E6, Texture.fromAsset(tileDir+"tile3.png")),
+                new TileType(4, 0xFB2447, Texture.fromAsset(tileDir+"tile4.png")),
+                new TileType(5, 0x6C8C16, Texture.fromAsset(tileDir+"tile5.png"))
             ];
             
             // Create and place tiles
@@ -252,14 +292,14 @@ package
                     
                     setTile(w, h, tile);
                     
-                    stage.addChild(tile);
+                    content.addChild(tile);
                 }
             }
             
             // Place the button container
             buttonStrip.x = 35;
             buttonStrip.y = 445;
-            stage.addChild(buttonStrip);
+            content.addChild(buttonStrip);
             
             // Create and place the buttons
             for(var i:int=0; i < types.length; i++)
@@ -289,7 +329,7 @@ package
             stage.addEventListener(TouchEvent.TOUCH, onTouch);
             
             // Add the instructions on top of everything else
-            stage.addChild(instructions);
+            content.addChild(instructions);
         }
         
         /**
@@ -305,7 +345,7 @@ package
             }
             activeButton = button;
             var buttonScale = buttonWidth/activeButton.image.width;
-            Loom2D.juggler.tween(activeButton, 0.1, { "scale": 0.6*buttonScale, "transition": Transitions.EASE_OUT } );
+            Loom2D.juggler.tween(activeButton, 0.1, { scale: 0.6*buttonScale, transition: Transitions.EASE_OUT } );
             return true;
         }
         
@@ -319,7 +359,7 @@ package
                 return false;
             }
             var buttonScale = buttonWidth/activeButton.image.width;
-            Loom2D.juggler.tween(activeButton, 0.3, { "scale": 1*buttonScale, "transition": Transitions.EASE_OUT_BACK } );
+            Loom2D.juggler.tween(activeButton, 0.3, { scale: 1*buttonScale, transition: Transitions.EASE_OUT_BACK } );
             activeButton = null;
             return true;
         }
@@ -332,12 +372,6 @@ package
         {
             // Don't respond if waiting is to be had!
             if (Loom2D.juggler.elapsedTime < waitUntil) return;
-            
-            // If buttons aren't touchable / visible, show them first
-            if (!buttonStrip.touchable) {
-                showButtons();
-                return;
-            }
             
             // If game is over, restart.
             if (gameOver)
@@ -391,11 +425,11 @@ package
         {
             trace("Starting game");
             floodToken = 0;
-            setScore(0);
             gameOver = false;
-            showButtons();
             
-            Loom2D.juggler.tween(resultLabel, 0.3, { alpha: 0, onComplete: function() {
+            Loom2D.juggler.delayCall(setScore, 1.5, 0);
+            Loom2D.juggler.delayCall(showButtons, 1);
+            Loom2D.juggler.tween(resultLabel, 0.3, { delay: 2, alpha: 0, onComplete: function() {
                 resultLabel.visible = false;
             }});
             
@@ -414,6 +448,24 @@ package
             // Block interaction until all the tiles are finished transitioning
             waitUntil = Loom2D.juggler.elapsedTime+maxDelay+0.7;
         }
+        
+        /**
+         * Stop the game resulting in either a win or a loss.
+         */
+        private function stopGame(winner:Boolean) 
+        {
+            gameOver = true;
+            hideButtons();
+            if (winner) {
+                resultLabel.text = "You won!";
+            } else {
+                resultLabel.text = "You lost!";
+            }
+            resultLabel.alpha = 0;
+            resultLabel.visible = true;
+            Loom2D.juggler.tween(resultLabel, 0.3, { alpha: 1 } );
+        }
+        
         
         /**
          * Return the animation delay for the specified tile.
@@ -445,7 +497,8 @@ package
             // We could implement this behavior recursively, but it's a lot
             // simpler and more reliable to do it with an explicit stack and
             // loop.
-            var toProcess:Vector.<ColorTile> = new Vector.<ColorTile>();
+            tempTileVector.clear();
+            var toProcess = tempTileVector;
             
             // The seed tile at origin
             var origin = getTile(0, 0);
@@ -465,21 +518,7 @@ package
             // have this counter and check for equality.
             floodToken++;
             
-            // Check if we've exceeded the move count. floodToken is convenient
-            // for this because it never resets and it increments every turn, but
-            // if that changed you'd want to use a seperate counter.
-            //if (floodToken > maxMoves)
-            //{
-                //// If they exceeded move max, they lost.
-                //stopGame(false);
-                //return;
-            //}
-            //else
-            //{
-                // Otherwise update score.
-                setScore(floodToken);
-                //trace("Moves left: " + (maxMoves - floodToken));
-            //}
+            setScore(floodToken);
             
             // The maximum animation delay of all the processed tiles,
             // used to block interactivity for that period of time.
@@ -525,7 +564,7 @@ package
             }
             
             // Block interaction until all the tiles are finished transitioning
-            //waitUntil = Loom2D.juggler.elapsedTime+maxDelay+0.5;
+            waitUntil = Loom2D.juggler.elapsedTime+maxDelay+0.5;
             
             // Check to see if we won. Note that because the array is linear,
             // we don't have to do a 2d traversal - we can just walk it directly.
@@ -543,31 +582,25 @@ package
             }
         }
         
-        private function stopGame(winner:Boolean) 
-        {
-            gameOver = true;
-            hideButtons();
-            if (winner) {
-                resultLabel.text = "You won!";
-            } else {
-                resultLabel.text = "You lost!";
-            }
-            resultLabel.alpha = 0;
-            resultLabel.visible = true;
-            Loom2D.juggler.tween(resultLabel, 0.3, { alpha: 1 } );
-        }
-        
+        /**
+         * Show and enable the buttons for tile types with a neat animation.
+         */
         private function showButtons()
         {
-            buttonStrip.touchable = true;
             for (var i = 0; i < buttons.length; i++) {
                 var button = buttons[i];
                 button.y = -120;
                 button.alpha = 0;
-                Loom2D.juggler.tween(button, 0.6, { "delay": 1+i*0.05, "y": 0, "alpha": 1, "transition": Transitions.EASE_OUT_BOUNCE } );
+                Loom2D.juggler.tween(button, 0.6, { delay: i*0.05, y: 0, alpha: 1, transition: Transitions.EASE_OUT_BOUNCE } );
             }
+            Loom2D.juggler.delayCall(function() {
+                buttonStrip.touchable = true;
+            }, 1+buttons.length*0.05);
         }
         
+        /**
+         * Hide and disable the buttons for tile types with a neat animation.
+         */
         private function hideButtons()
         {
             buttonStrip.touchable = false;
@@ -575,7 +608,7 @@ package
                 var button = buttons[i];
                 button.y = 0;
                 button.alpha = 1;
-                Loom2D.juggler.tween(button, 0.6, { "delay": 1+i*0.05, "y": -120, "alpha": 0, "transition": Transitions.EASE_IN_BACK } );
+                Loom2D.juggler.tween(button, 0.6, { delay: i*0.05, y: -120, alpha: 0, transition: Transitions.EASE_IN_BACK } );
             }
         }
         
@@ -610,6 +643,7 @@ package
             scoreLabel.text = left == 0 ? "No moves left" : left == 1 ? "One move left" : left+" moves left";
             scoreLabel.center();
             scoreLabel.x = contentWidth/2;
+            scoreLabel.y = scorePos;
         }
         
         /**

@@ -80,6 +80,17 @@ package game {
             image.y = image.height/2;
         }
         
+        private function hidePrevious() 
+        {
+            previous.visible = false;
+        }
+        
+        private function preshowCurrent() 
+        {
+            current.alpha = 1;
+            current.scale = 0;
+        }
+        
         public function paint(newType:TileType, delay:Number = 0):void
         {
             var prevColor = type ? type.color : 0;
@@ -106,12 +117,10 @@ package game {
             var midScale = 0.2;
             
             // Shrink the previous type
-            Loom2D.juggler.tween(previous, 0.5, { "delay": delay, "scale": midScale, "transition": Transitions.EASE_OUT, "onComplete": function() {
-                previous.visible = false;
-            }} );
+            Loom2D.juggler.tween(previous, 0.5, { delay: delay, scale: midScale, transition: Transitions.EASE_OUT, onComplete: hidePrevious } );
             // Show and bring in the current type
-            Loom2D.juggler.tween(current, 0.0, { "delay": delay+0.1, "alpha": 1, "scale": 0 } );
-            Loom2D.juggler.tween(current, 0.5, { "delay": delay+0.11, "scale": 1, "transition": Transitions.EASE_OUT_BACK } );
+            Loom2D.juggler.delayCall(preshowCurrent, delay+0.1);
+            Loom2D.juggler.tween(current, 0.5, { delay: delay+0.11, scale: 1, transition: Transitions.EASE_OUT_BACK } );
             
             current.color = type.color;
         }
