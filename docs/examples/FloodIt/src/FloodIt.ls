@@ -27,17 +27,34 @@ package
      */
     public class FloodIt extends Application
     {
-        /**
-         * The RGB values for the six tile colors.
-         */
-        public var types:Vector.<TileType> = [];
+        public static var STATE_INTRO   = 0;
+        public static var STATE_GAME    = 1;
+        public static var STATE_CREDITS = 2;
+        public var state = -1;
         
-        public var content:Sprite = new Sprite();
+        public var content = new Sprite();
+        public var intro = new Sprite();
+        public var gameDisplay = new Sprite();
+        
+        /**
+         * Game logo.
+         */
+        public var logo:Image;
+        
+        /**
+         * Info button showing credits on touch.
+         */
+        public var info:Image;
         
         /**
          * Instruction text image.
          */
         public var instructions:Image;
+        
+        /**
+         * Credits text overlay.
+         */
+        public var credits:Image;
         
         /**
          * The score label.
@@ -65,6 +82,11 @@ package
          * The height of the content.
          */
         public var contentHeight = 480;
+        
+        /**
+         * The RGB values for the six tile colors.
+         */
+        public var types:Vector.<TileType> = [];
         
         /**
          * Spacing around the edges next to tiles.
@@ -187,10 +209,70 @@ package
             // Initialize the labels, grid, and buttons.
             layout();
             
-            // And start play.
-            startGame();
+            // Hide all the displays
+            gameDisplay.visible = false;
+            credits.visible = false;
+            
+            switchState(STATE_INTRO);
             
             resize();
+        }
+        
+        private function switchState(newState:int)
+        {
+            // Exit state
+            switch (state) {
+                case STATE_INTRO:
+                    intro.visible = false;
+                    stage.removeEventListener(TouchEvent.TOUCH, onTouchIntro);
+                    break;
+                case STATE_GAME:
+                    gameDisplay.visible = false;
+                    stage.removeEventListener(TouchEvent.TOUCH, onTouch);
+                    break;
+                case STATE_CREDITS:
+                    credits.visible = false;
+                    stage.removeEventListener(TouchEvent.TOUCH, onTouchCredits);
+                    break;
+            }
+            
+            // Switch state
+            state = newState;
+            
+            // Enter state
+            switch (state) {
+                case STATE_INTRO:
+                    intro.visible = true;
+                    stage.addEventListener(TouchEvent.TOUCH, onTouchIntro);
+                    break;
+                case STATE_GAME:
+                    gameDisplay.visible = true;
+                    // Listen to the stage for custom touch logic
+                    stage.addEventListener(TouchEvent.TOUCH, onTouch);
+                    startGame();
+                    break;
+                case STATE_CREDITS:
+                    credits.visible = true;
+                    stage.addEventListener(TouchEvent.TOUCH, onTouchCredits);
+                    break;
+            }
+        }
+        
+        private function onTouchIntro(e:TouchEvent):void 
+        {
+            if (e.getTouch(stage).phase != TouchPhase.ENDED) return;
+            switch (e.target) {
+                case info:
+                    switchState(STATE_CREDITS);
+                    break;
+                default:
+                    switchState(STATE_GAME);
+            }
+        }
+        
+        private function onTouchCredits(e:TouchEvent):void 
+        {
+            if (e.getTouch(stage).phase == TouchPhase.ENDED) switchState(STATE_INTRO);
         }
         
         /**
@@ -204,7 +286,7 @@ package
                 content.scale = stage.stageHeight/contentHeight;
             }
             content.x = (stage.stageWidth-contentWidth*content.scale)/2;
-            content.y = (stage.stageHeight - contentHeight * content.scale) / 2;
+            content.y = (stage.stageHeight-contentHeight*content.scale)/2;
             background.setSize(stage.stageWidth, stage.stageHeight);
         }
         
@@ -213,19 +295,31 @@ package
          */
         private function onBack(e:KeyboardEvent):void 
         {
-            if (backTapped) {
-                Process.exit(0);
-            } else {
-                backTapped = true;
-                Loom2D.juggler.tween(scoreLabel, 0.1, { alpha: 0 } );
-                quitLabel.visible = true;
-                Loom2D.juggler.tween(quitLabel, 0.1, { delay: 0.1, alpha: 1 } );
-                Loom2D.juggler.tween(quitLabel, 0.1, { delay: 1.9, alpha: 0, onComplete: function() {
-                    quitLabel.visible = false;
-                    backTapped = false;
-                }});
-                Loom2D.juggler.tween(scoreLabel, 0.1, { delay: 2.01, alpha: 1 } );
+            switch (state) {
+                case STATE_INTRO:
+                    Process.exit(0);
+                    break;
+                case STATE_CREDITS:
+                    switchState(STATE_INTRO);
+                    break;
+                case STATE_GAME:
+                    if (backTapped) {
+                        stopGame(false);
+                        switchState(STATE_INTRO);
+                    } else {
+                        backTapped = true;
+                        Loom2D.juggler.tween(scoreLabel, 0.1, { alpha: 0 } );
+                        quitLabel.visible = true;
+                        Loom2D.juggler.tween(quitLabel, 0.1, { delay: 0.1, alpha: 1 } );
+                        Loom2D.juggler.tween(quitLabel, 0.1, { delay: 1.9, alpha: 0, onComplete: function() {
+                            quitLabel.visible = false;
+                            backTapped = false;
+                        }});
+                        Loom2D.juggler.tween(scoreLabel, 0.1, { delay: 2.01, alpha: 1 } );
+                    }
+                    break;
             }
+            
         }
         
         /**
@@ -251,12 +345,33 @@ package
         protected function layout():void
         {   
             // Scrolling tiled background, scaled with no smoothing to preserve hard edges.
-            var tex = Texture.fromAsset("assets/background.png");
+            var tex:Texture;
+            
+            tex = Texture.fromAsset("assets/background.png");
             tex.smoothing = TextureSmoothing.NONE;
             background = new OffsetTiledImage(tex, 4);
             stage.addChild(background);
             
             stage.addChild(content);
+            
+            
+            content.addChild(intro);
+            
+            tex = Texture.fromAsset("assets/logo.png");
+            tex.smoothing = TextureSmoothing.NONE;
+            logo = new Image(tex);
+            logo.scale = (contentWidth - 60) / logo.width;
+            logo.x = (contentWidth - logo.width) / 2;
+            logo.y = contentHeight*0.3 - logo.height/2;
+            intro.addChild(logo);
+            
+            info = new Image(Texture.fromAsset("assets/info.png"));
+            info.x = (contentWidth - info.width) / 2;
+            info.y = contentHeight - info.height;
+            intro.addChild(info);
+            
+            
+            content.addChild(gameDisplay);
             
             // Instructions that are hidden after a short delay
             instructions = new Image(Texture.fromAsset("assets/instructions.png"));
@@ -275,7 +390,7 @@ package
             scoreLabel.y = scorePos+scorePosOffset;
             scoreLabel.alpha = 0;
             Loom2D.juggler.tween(scoreLabel, 0.3, { delay: 2.2, alpha: 1, y: scorePos, transition: Transitions.EASE_OUT } );
-            content.addChild(scoreLabel);
+            gameDisplay.addChild(scoreLabel);
             
             // Result (win/loss) text
             resultLabel = new SimpleLabel(fontFile, contentWidth-40, 26);
@@ -283,7 +398,7 @@ package
             resultLabel.y = 334+40/2+60;
             resultLabel.text = "";
             resultLabel.visible = false;
-            content.addChild(resultLabel);
+            gameDisplay.addChild(resultLabel);
             
             // Tap twice quit label
             quitLabel = new SimpleLabel(fontFile, contentWidth-40, 20);
@@ -318,14 +433,14 @@ package
                     
                     setTile(w, h, tile);
                     
-                    content.addChild(tile);
+                    gameDisplay.addChild(tile);
                 }
             }
             
             // Place the button container
             buttonStrip.x = 35;
             buttonStrip.y = 445;
-            content.addChild(buttonStrip);
+            gameDisplay.addChild(buttonStrip);
             
             // Create and place the buttons
             for(var i:int=0; i < types.length; i++)
@@ -351,14 +466,16 @@ package
                 buttonStrip.addChild(button);
             }
             
-            // Listen to the stage for custom touch logic
-            stage.addEventListener(TouchEvent.TOUCH, onTouch);
+            // Add the overlays on top of everything else
+            gameDisplay.addChild(instructions);
+            gameDisplay.addChild(quitLabel);
             
-            // Add the instructions on top of everything else
-            content.addChild(instructions);
-            
-            // Add quit label even higher
-            content.addChild(quitLabel);
+            // Credits
+            credits = new Image(Texture.fromAsset("assets/credits.png"));
+            credits.scale = contentWidth / credits.width;
+            credits.y = (contentHeight-credits.height)/2;
+            credits.touchable = false;
+            content.addChild(credits);
         }
         
         /**
