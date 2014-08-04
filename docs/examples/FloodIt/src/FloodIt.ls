@@ -19,6 +19,7 @@ package
     import loom2d.textures.Texture;
     import loom2d.textures.TextureSmoothing;
     import loom2d.ui.SimpleLabel;
+    import loom2d.ui.TextureAtlasManager;
 
     /**
      * Fun color matching game! Use the buttons in the bottom of the screen to
@@ -205,6 +206,8 @@ package
             // Listen to system events
             stage.addEventListener(KeyboardEvent.BACK_PRESSED, onBack);
             stage.addEventListener(Event.RESIZE, resize);
+            
+            TextureAtlasManager.register("tiles", "assets/tiles/sprites.xml");
             
             // Initialize the labels, grid, and buttons.
             layout();
@@ -411,12 +414,12 @@ package
             // Define all the different tile types
             var tileDir = "assets/tiles/";
             types = [
-                new TileType(0, 0x602462, Texture.fromAsset(tileDir+"tile0.png")),
-                new TileType(1, 0x396EAA, Texture.fromAsset(tileDir+"tile1.png")),
-                new TileType(2, 0xDDC222, Texture.fromAsset(tileDir+"tile2.png")),
-                new TileType(3, 0xFDF5E6, Texture.fromAsset(tileDir+"tile3.png")),
-                new TileType(4, 0xFB2447, Texture.fromAsset(tileDir+"tile4.png")),
-                new TileType(5, 0x6C8C16, Texture.fromAsset(tileDir+"tile5.png"))
+                new TileType(0, 0x602462, TextureAtlasManager.getTexture("tiles", "tile0.png")),
+                new TileType(1, 0x396EAA, TextureAtlasManager.getTexture("tiles", "tile1.png")),
+                new TileType(2, 0xDDC222, TextureAtlasManager.getTexture("tiles", "tile2.png")),
+                new TileType(3, 0xFDF5E6, TextureAtlasManager.getTexture("tiles", "tile3.png")),
+                new TileType(4, 0xFB2447, TextureAtlasManager.getTexture("tiles", "tile4.png")),
+                new TileType(5, 0x6C8C16, TextureAtlasManager.getTexture("tiles", "tile5.png")),
             ];
             
             // Create and place tiles
