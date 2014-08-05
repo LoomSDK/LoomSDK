@@ -41,7 +41,7 @@ $buildDocs = ENV['LOOM_BUILD_DOCS'] == "1" || ENV['LOOM_BUILD_DOCS'] == "true"
 ######################################
 
 def version_outdated?(current, required)
-  (Gem::Version.new(current) < Gem::Version.new(required))
+  (Gem::Version.new(current.dup) < Gem::Version.new(required.dup))
 end
 
 # Ruby version check.
