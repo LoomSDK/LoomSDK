@@ -52,6 +52,8 @@ package
 			creditsBtn = new SimpleButton();
 			creditsBtn.upImage = "assets/info.png";
 			creditsBtn.onClick = toggleCredits;
+			creditsBtn.alpha = 0.3;
+			creditsBtn.y = 10;
 			addChild(creditsBtn);
 		}
 		
@@ -60,10 +62,16 @@ package
 		 */
 		private function toggleCredits():void 
 		{
-			Loom2D.juggler.tween(credits, 0.5, {
-				alpha: creditsShown ? 0 : 1
-			});
 			creditsShown = !creditsShown;
+			
+			Loom2D.juggler.tween(credits, 0.5, {
+				alpha: creditsShown ? 1 : 0
+			});
+			if (creditsShown) {
+				credits.scale = Math.min(stage.stageWidth/credits.texture.width, stage.stageHeight/credits.texture.height)*0.8;
+				credits.x = stage.stageWidth * 0.5;
+				credits.y = stage.stageHeight * 0.5;
+			}
 		}
 		
 		/**
@@ -75,9 +83,6 @@ package
 			
 			instructions.x = stage.stageWidth * 0.5;
 			instructions.y = stage.stageHeight * 0.5;
-			
-			credits.x = stage.stageWidth * 0.5;
-			credits.y = stage.stageHeight * 0.5;
 			
 			instructions.visible = true;
 			instructions.alpha = 0;
