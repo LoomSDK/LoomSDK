@@ -40,12 +40,15 @@ $buildDocs = ENV['LOOM_BUILD_DOCS'] == "1" || ENV['LOOM_BUILD_DOCS'] == "true"
 # END OF BUILD CONFIGURATION VARIABLES
 ######################################
 
-# Ruby version check.
-if RUBY_VERSION < '1.8.7'
-  abort("Please update your version of ruby. Loom requires 1.8.7 or newer.")
-else
-  puts "Loom Rakefile running on Ruby #{RUBY_VERSION}"
+def version_outdated?(current, required)
+  (Gem::Version.new(current) < Gem::Version.new(required))
 end
+
+# Ruby version check.
+$RUBY_REQUIRED_VERSION = '1.8.7'
+ruby_err = "LoomSDK requires ruby version #{$RUBY_REQUIRED_VERSION} or newer.\nPlease go to https://www.ruby-lang.org/en/downloads/ and install the latest version."
+abort(ruby_err) if version_outdated?(RUBY_VERSION, $RUBY_REQUIRED_VERSION)
+puts "LoomSDK Rakefile running on Ruby version #{RUBY_VERSION}"
 
 include RbConfig
 
@@ -60,20 +63,29 @@ case CONFIG['host_os']
       abort("Unknown host config: Config::CONFIG['host_os']: #{Config::CONFIG['host_os']}")
 end
 
-$CMAKE_VERSION = %x[cmake --version]
-$CMAKE_REQUIRED_VERSION = '2.8.9'
-
-#TODO: Make this platform independent
-#https://theengineco.atlassian.net/browse/LOOM-659
-if $LOOM_HOST_OS == 'darwin'
-    # CMAKE version check
-    if(%x[which cmake].empty? || Gem::Version.new($CMAKE_VERSION.gsub("cmake version ", "")) < Gem::Version.new($CMAKE_REQUIRED_VERSION))
-      abort("The rakefile requires cmake version #{$CMAKE_REQUIRED_VERSION} and above, please go to http://www.cmake.org/ and install the latest version.")
-    else
-      puts "Running #{$CMAKE_VERSION}"
-    end
-
+# CMake version check
+def cmake_version
+  %x[cmake --version].lines.first.gsub("cmake version ", "")
 end
+
+def installed?(tool)
+  cmd = "which #{tool}" unless ($LOOM_HOST_OS == 'windows')
+  cmd = "where #{tool} > nul 2>&1" if ($LOOM_HOST_OS == 'windows')
+  system(cmd)
+  return ($? == 0)
+end
+
+$CMAKE_REQUIRED_VERSION = '2.8.9'
+cmake_err = "LoomSDK requires CMake version #{$CMAKE_REQUIRED_VERSION} or above.\nPlease go to http://www.cmake.org/ and install the latest version."
+abort(cmake_err) if (!installed?('cmake') || version_outdated?(cmake_version, $CMAKE_REQUIRED_VERSION))
+puts "Running CMake version #{cmake_version}"
+
+# For matz's sake just include rubyzip directly.
+path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'libs'))
+puts "Adding #{path} to $LOAD_PATH to use local rubyzip."
+$LOAD_PATH << path
+require 'zip'
+require 'zip/file'
 
 # Report configuration variables and validate them.
 puts "*** Using JIT? = #{$doBuildJIT}"
@@ -97,14 +109,6 @@ elsif $LOOM_HOST_OS == 'windows'
 else 
   $numCores = Integer(`cat /proc/cpuinfo | grep processor | wc -l`)
 end
-
-# For matz's sake just include rubyzip directly.
-path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'libs'))
-puts "Adding #{path} to $LOAD_PATH to use local rubyzip."
-$LOAD_PATH << path
-require 'zip'
-require 'zip/file'
-
 puts "*** Building with #{$numCores} cores."
 
 # Windows specific checks and settings
@@ -178,7 +182,7 @@ end
 #############
 
 # Don't use clean defaults, they will nuke things we don't want!
-CLEAN = Rake::FileList["cmake_android", "cmake_osx", "cmake_ios", "cmake_msvc", "cmake_ubuntu", "build/lua_*/**", "application/android/bin", "application/ouya/bin"]
+CLEAN.replace(["cmake_android", "cmake_osx", "cmake_ios", "cmake_msvc", "cmake_ubuntu", "build/lua_*/**", "application/android/bin", "application/ouya/bin"])
 CLEAN.include ["build/**/lib/**", "artifacts/**"]
 CLOBBER.include ["**/*.loom",$OUTPUT_DIRECTORY]
 CLOBBER.include ["**/*.loomlib",$OUTPUT_DIRECTORY]
@@ -249,7 +253,7 @@ namespace :generate do
     end
   end
 
-  desc "Generates API documentation for the loomscript sdk"
+  desc "Generates API docs for the loomscript sdk"
   task :docs => ['build:desktop'] do
 
     if $buildDocs || ARGV.include?('generate:docs')
@@ -264,7 +268,7 @@ namespace :generate do
     end
   end
 
-  desc "Generates API documentation for the loomscript sdk"
+  desc "Tests API docs for a class"
   task :test_docs, [:class] do |t, args|
 
     puts "===== Running Test Docs #{args[:class]} ====="
@@ -282,25 +286,60 @@ namespace :generate do
 
 end
 
-desc "Opens the docs in a web browser"
-task :docs => ['generate:docs'] do
-  if $LOOM_HOST_OS == 'windows'
-    `start artifacts/docs/index.html`
-  else
-    `open artifacts/docs/index.html`
+
+namespace :docs do
+
+  $DOCS_INDEX = 'artifacts/docs/index.html'
+
+  file $DOCS_INDEX do
+    Rake::Task['docs:regen'].invoke
+    puts " *** docs built!"
   end
-  
-end 
+
+  desc "Rebuilds loomlibs and docs"
+  task :regen => $LSC_BINARY do
+    puts "===== Recompiling loomlibs ====="
+    Dir.chdir("sdk") do
+      sh "../artifacts/lsc Main.build"
+    end
+    FileUtils.cp_r("sdk/libs", "artifacts/")
+
+    puts "===== Recreating the docs ====="
+    Dir.chdir("docs") do
+      load "./main.rb"
+    end
+    FileUtils.mkdir_p "artifacts/docs"
+    FileUtils.cp_r "docs/output/.", "artifacts/docs/"
+  end
+
+  desc "Opens the docs in a web browser"
+  task :open => $DOCS_INDEX do
+    case $LOOM_HOST_OS
+    when 'windows'
+      `start artifacts/docs/index.html`
+    when 'darwin'
+      `open artifacts/docs/index.html`
+    else
+      abort "not sure how to open '#{$DOCS_INDEX}' on #{$LOOM_HOST_OS}"
+    end
+  end
+
+  desc "Rebuilds docs and opens in browser"
+  task :refresh => ['docs:regen', 'docs:open']
+
+end
 
 namespace :utility do
 
   desc "Builds lsc if it doesn't exist"
-  file $LSC_BINARY => "build:desktop" do
+  file $LSC_BINARY do
+    Rake::Task['build:desktop'].invoke
     puts " *** lsc built!"
   end
-  
+
   desc "Builds shaderc if it doesn't exist"
-  file $SHADERC_BINARY => "build:desktop" do
+  file $SHADERC_BINARY do
+    Rake::Task['build:desktop'].invoke
     puts " *** shaderc built!"
   end
 
