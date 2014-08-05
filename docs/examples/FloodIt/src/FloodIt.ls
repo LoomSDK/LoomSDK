@@ -535,8 +535,8 @@ package
             
             // Credits
             credits = new Image(Texture.fromAsset("assets/credits.png"));
+            credits.pivotY = -140;
             credits.scale = contentWidth / credits.width;
-            credits.pivotY = -contentHeight/2;
             credits.touchable = false;
             content.addChild(credits);
         }
