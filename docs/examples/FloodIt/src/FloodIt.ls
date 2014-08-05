@@ -424,11 +424,10 @@ package
             // Scrolling tiled background, scaled with no smoothing to preserve hard edges.
             tex = Texture.fromAsset("assets/background.png");
             tex.smoothing = TextureSmoothing.NONE;
-            background = new OffsetTiledImage(tex, 4);
+            background = new OffsetTiledImage(tex, 4*Math.round(stage.stageWidth/contentWidth));
             stage.addChild(background);
             
             stage.addChild(content);
-            
             
             content.addChild(intro);
             
