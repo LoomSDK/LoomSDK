@@ -42,6 +42,8 @@ package
          */
         public var logo:Image;
         
+        public var introMessage:SimpleLabel;
+        
         /**
          * Info button showing credits on touch.
          */
@@ -217,12 +219,17 @@ package
             credits.visible = false;
             
             switchState(STATE_INTRO);
+            //switchState(STATE_GAME);
             
             resize();
         }
         
         private function switchState(newState:int)
         {
+            Loom2D.juggler.purge();
+            
+            backgroundScroll = true;
+            
             // Exit state
             switch (state) {
                 case STATE_INTRO:
@@ -232,6 +239,7 @@ package
                 case STATE_GAME:
                     gameDisplay.visible = false;
                     stage.removeEventListener(TouchEvent.TOUCH, onTouch);
+                    resetGame();
                     break;
                 case STATE_CREDITS:
                     credits.visible = false;
@@ -249,9 +257,38 @@ package
                     stage.addEventListener(TouchEvent.TOUCH, onTouchIntro);
                     break;
                 case STATE_GAME:
+                    backgroundScroll = false;
+                    
                     gameDisplay.visible = true;
                     // Listen to the stage for custom touch logic
                     stage.addEventListener(TouchEvent.TOUCH, onTouch);
+                    
+                    instructions.y = 70-40;
+                    instructions.touchable = false;
+                    instructions.alpha = 0;
+                    Loom2D.juggler.tween(instructions, 0.3, { delay: 0.8, alpha: 1, y: 70, transition: Transitions.EASE_OUT } );
+                    Loom2D.juggler.tween(instructions, 2, { delay: 2+3, alpha: 0 } );
+            
+                    scoreLabel.alpha = 0;
+                    scoreLabel.y = scorePos+scorePosOffset;
+                    Loom2D.juggler.tween(scoreLabel, 0.3, { delay: 2.2, alpha: 1, y: scorePos, transition: Transitions.EASE_OUT } );
+                    
+                    resultLabel.visible = false;
+                    
+                    quitLabel.visible = false;
+                    quitLabel.alpha = 0;
+                    
+                    for (var i = 0; i < buttons.length; i++) {
+                        var button = buttons[i];
+                        // Hide it at first
+                        button.alpha = 0;
+                        // Reset to initial state
+                        button.reset(true);
+                        // Set the button type (with additional delayed animation)
+                        button.paint(types[i]);
+                        button.paint(types[i], 1.65+i*0.05);
+                    }
+                    
                     startGame();
                     break;
                 case STATE_CREDITS:
@@ -308,6 +345,7 @@ package
                 case STATE_GAME:
                     if (backTapped) {
                         stopGame(false);
+                        resetGame();
                         switchState(STATE_INTRO);
                     } else {
                         backTapped = true;
@@ -330,6 +368,12 @@ package
          */
         override public function onTick()
         {
+            switch (state) {
+                case STATE_GAME:
+                    break;
+                default:
+                    scrollSpeed += 0.02;
+            }
             scrollSpeed *= 0.99;
             scroll += scrollSpeed;
         }
@@ -339,7 +383,7 @@ package
          */
         override public function onFrame()
         {
-            if (backgroundScroll) background.setScroll(-scroll, -scroll);
+            if (backgroundScroll) background.setScroll(0, -scroll);
         }
         
         /**
@@ -347,9 +391,11 @@ package
          */
         protected function layout():void
         {   
-            // Scrolling tiled background, scaled with no smoothing to preserve hard edges.
             var tex:Texture;
             
+            var fontFile = "assets/Curse-hd.fnt";
+            
+            // Scrolling tiled background, scaled with no smoothing to preserve hard edges.
             tex = Texture.fromAsset("assets/background.png");
             tex.smoothing = TextureSmoothing.NONE;
             background = new OffsetTiledImage(tex, 4);
@@ -368,6 +414,14 @@ package
             logo.y = contentHeight*0.3 - logo.height/2;
             intro.addChild(logo);
             
+            introMessage = new SimpleLabel(fontFile, contentWidth * 0.6, 40);
+            introMessage.text = "Tap to start!";
+            introMessage.alpha = 0.5;
+            introMessage.scale = 0.6;
+            introMessage.x = (contentWidth - introMessage.width) / 2;
+            introMessage.y = contentHeight*0.3 - introMessage.height/2 + logo.height + 50;
+            intro.addChild(introMessage);
+            
             info = new Image(Texture.fromAsset("assets/info.png"));
             info.x = (contentWidth - info.width) / 2;
             info.y = contentHeight - info.height;
@@ -379,20 +433,10 @@ package
             // Instructions that are hidden after a short delay
             instructions = new Image(Texture.fromAsset("assets/instructions.png"));
             instructions.scale = contentWidth / instructions.width;
-            instructions.y = 70-40;
-            instructions.touchable = false;
-            instructions.alpha = 0;
-            Loom2D.juggler.tween(instructions, 0.3, { delay: 0.8, alpha: 1, y: 70, transition: Transitions.EASE_OUT } );
-            Loom2D.juggler.tween(instructions, 2, { delay: 2+3, alpha: 0 } );
-            
-            var fontFile = "assets/Curse-hd.fnt";
             
             // Score Label
             scoreLabel = new SimpleLabel(fontFile, contentWidth-40, 40);
             scoreLabel.x = 20;
-            scoreLabel.y = scorePos+scorePosOffset;
-            scoreLabel.alpha = 0;
-            Loom2D.juggler.tween(scoreLabel, 0.3, { delay: 2.2, alpha: 1, y: scorePos, transition: Transitions.EASE_OUT } );
             gameDisplay.addChild(scoreLabel);
             
             // Result (win/loss) text
@@ -400,7 +444,6 @@ package
             resultLabel.x = 20;
             resultLabel.y = 334+40/2+60;
             resultLabel.text = "";
-            resultLabel.visible = false;
             gameDisplay.addChild(resultLabel);
             
             // Tap twice quit label
@@ -408,8 +451,6 @@ package
             quitLabel.x = 20;
             quitLabel.y = scorePos-10;
             quitLabel.text = "Tap again to quit!";
-            quitLabel.visible = false;
-            quitLabel.alpha = 0;
             
             // Define all the different tile types
             var tileDir = "assets/tiles/";
@@ -452,13 +493,6 @@ package
                 
                 // Position the button
                 button.x = i * buttonWidth;
-                
-                // Hide it at first
-                button.alpha = 0;
-                
-                // Set the button type (with additional delayed animation)
-                button.paint(types[i]);
-                button.paint(types[i], 1.65+i*0.05);
                 
                 // Center and scale to fit predefined width
                 button.center();
@@ -568,6 +602,16 @@ package
         }
         
         /**
+         * Reset the game state to a fresh start.
+         */
+        private function resetGame() 
+        {
+            for each (var tile in tiles) {
+                tile.reset(true);
+            }
+        }
+        
+        /**
          * Begin gameplay.
          */
         protected function startGame():void
@@ -581,6 +625,14 @@ package
             Loom2D.juggler.tween(resultLabel, 0.3, { delay: 2, alpha: 0, onComplete: function() {
                 resultLabel.visible = false;
             }});
+            
+            /*
+            Loom2D.juggler.delayCall(function() {
+                stopGame(false);
+                switchState(STATE_INTRO);
+                switchState(STATE_GAME);
+            }, 4);
+            //*/
             
             var maxDelay = 0;
             
@@ -792,7 +844,6 @@ package
             scoreLabel.text = left == 0 ? "No moves left" : left == 1 ? "One move left" : left+" moves left";
             scoreLabel.center();
             scoreLabel.x = contentWidth/2;
-            scoreLabel.y = scorePos;
         }
         
         /**

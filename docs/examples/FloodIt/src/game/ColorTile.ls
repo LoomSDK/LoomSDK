@@ -33,7 +33,10 @@ package game {
         /**
          * Marks first-time tile painting.
          */
-        private var painted = false;
+        private var painted:Boolean;
+        
+        private var shrinkTween:Dictionary.<Object> = { delay: 0, scale: 0.2, transition: Transitions.EASE_OUT, onComplete: hidePrevious };
+        private var showTween:Dictionary.<Object> = { delay: 0, scale: 1, transition: Transitions.EASE_OUT_BACK };
         
         public function ColorTile(tileX:int, tileY:int)
         {
@@ -43,11 +46,10 @@ package game {
             current = new Image(Texture.fromAsset("assets/tiles/tile0.png"));
             addChild(current);
             
-            // Hide the non-existent previous tile first
-            previous.visible = false;
-            
             this.tileX = tileX;
             this.tileY = tileY;
+            
+            reset(true);
         }
         
         public function get image():Image
@@ -58,10 +60,17 @@ package game {
         /**
          * Reset the state and stop animation.
          */
-        public function reset():void
+        public function reset(initial:Boolean = false):void
         {
             visited = 0;
             Loom2D.juggler.removeTweens(this);
+            if (initial) {
+                // Hide the previous tile
+                previous.visible = false;
+                painted = false;
+                previous.scale = 1;
+                current.scale = 1;
+            }
         }
         
         public function get colorIndex():int
@@ -87,7 +96,7 @@ package game {
         
         private function preshowCurrent() 
         {
-            current.alpha = 1;
+            current.visible = true;
             current.scale = 0;
         }
         
@@ -109,18 +118,17 @@ package game {
             }
             
             // Setup the current type for animation
-            current.alpha = 0;
+            current.visible = false;
             current.texture = type.texture;
             resize(current);
             
-            // The scale to shrink to mid-animation
-            var midScale = 0.2;
-            
             // Shrink the previous type
-            Loom2D.juggler.tween(previous, 0.5, { delay: delay, scale: midScale, transition: Transitions.EASE_OUT, onComplete: hidePrevious } );
+            shrinkTween["delay"] = delay;
+            Loom2D.juggler.tween(previous, 0.5, shrinkTween);
             // Show and bring in the current type
-            Loom2D.juggler.delayCall(preshowCurrent, delay+0.1);
-            Loom2D.juggler.tween(current, 0.5, { delay: delay+0.11, scale: 1, transition: Transitions.EASE_OUT_BACK } );
+            Loom2D.juggler.delayCall(preshowCurrent, delay + 0.1);
+            showTween["delay"] = delay+0.11;
+            Loom2D.juggler.tween(current, 0.5, showTween);
             
             current.color = type.color;
         }
