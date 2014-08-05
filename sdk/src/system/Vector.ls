@@ -297,20 +297,17 @@ final class Vector
         var count = length;
         var i:int;
         var j:int;
-        var tmp = new Vector.<Object>(length);
-        
-        j = 0;
-        for (i = count - 1; i >= 0; i--) {
-        
-            tmp[i] = this[j++];
-            
+        var tmp:Object;
+
+        j = count - 1;
+        for (i = 0; i < count / 2; i++) {
+            tmp = this[i];
+            this[i] = this[j-i];
+            this[j-i] = tmp;
         }
-            
-        for (i = 0; i < count; i++)
-            this[i] = tmp[i];
-            
-        return this;    
-        
+
+        return this;
+
     }
     
     
