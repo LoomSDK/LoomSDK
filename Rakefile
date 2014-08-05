@@ -75,7 +75,7 @@ def installed?(tool)
   return ($? == 0)
 end
 
-$CMAKE_REQUIRED_VERSION = '2.8.9'
+$CMAKE_REQUIRED_VERSION = ($LOOM_HOST_OS == "linux") ? '2.8.7' : '2.8.9'
 cmake_err = "LoomSDK requires CMake version #{$CMAKE_REQUIRED_VERSION} or above.\nPlease go to http://www.cmake.org/ and install the latest version."
 abort(cmake_err) if (!installed?('cmake') || version_outdated?(cmake_version, $CMAKE_REQUIRED_VERSION))
 puts "Running CMake version #{cmake_version}"
