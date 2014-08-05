@@ -6,6 +6,7 @@ package
     import loom.Application;
     import loom.gameframework.TimeManager;
     import loom2d.animation.Transitions;
+    import loom2d.display.DisplayObject;
     import loom2d.display.Image;
     import loom2d.display.Sprite;
     import loom2d.display.StageScaleMode;
@@ -233,16 +234,16 @@ package
             // Exit state
             switch (state) {
                 case STATE_INTRO:
-                    intro.visible = false;
+                    hideScreen(intro);
                     stage.removeEventListener(TouchEvent.TOUCH, onTouchIntro);
                     break;
                 case STATE_GAME:
-                    gameDisplay.visible = false;
+                    hideScreen(gameDisplay);
                     stage.removeEventListener(TouchEvent.TOUCH, onTouch);
                     resetGame();
                     break;
                 case STATE_CREDITS:
-                    credits.visible = false;
+                    hideScreen(credits);
                     stage.removeEventListener(TouchEvent.TOUCH, onTouchCredits);
                     break;
             }
@@ -253,13 +254,14 @@ package
             // Enter state
             switch (state) {
                 case STATE_INTRO:
-                    intro.visible = true;
+                    showScreen(intro);
+                    
                     stage.addEventListener(TouchEvent.TOUCH, onTouchIntro);
                     break;
                 case STATE_GAME:
-                    backgroundScroll = false;
+                    showScreen(gameDisplay);
                     
-                    gameDisplay.visible = true;
+                    backgroundScroll = false;
                     // Listen to the stage for custom touch logic
                     stage.addEventListener(TouchEvent.TOUCH, onTouch);
                     
@@ -292,10 +294,34 @@ package
                     startGame();
                     break;
                 case STATE_CREDITS:
-                    credits.visible = true;
+                    showScreen(credits);
+                    
                     stage.addEventListener(TouchEvent.TOUCH, onTouchCredits);
                     break;
             }
+        }
+        
+        private function hideScreen(screen:DisplayObject) 
+        {
+            Loom2D.juggler.tween(screen, 0.3, {
+                y: -contentHeight,
+                transition: Transitions.EASE_IN_BACK,
+                onComplete: function() {
+                    screen.visible = false;
+                    screen.y = 0;
+                }
+            });
+        }
+        
+        private function showScreen(screen:DisplayObject) 
+        {
+            screen.visible = true;
+            screen.y = contentHeight;
+            Loom2D.juggler.tween(screen, 0.3, {
+                delay: 0.1,
+                y: 0,
+                transition: Transitions.EASE_OUT_BACK
+            });
         }
         
         private function onTouchIntro(e:TouchEvent):void 
@@ -510,7 +536,7 @@ package
             // Credits
             credits = new Image(Texture.fromAsset("assets/credits.png"));
             credits.scale = contentWidth / credits.width;
-            credits.y = (contentHeight-credits.height)/2;
+            credits.pivotY = -contentHeight/2;
             credits.touchable = false;
             content.addChild(credits);
         }
