@@ -1,0 +1,8 @@
+<TextureAtlas imagePath="sprites.png">
+	<SubTexture name="tileD.png" x="14" y="0" width="12" height="12"/>
+	<SubTexture name="tileK.png" x="28" y="0" width="12" height="12"/>
+	<SubTexture name="tileL.png" x="14" y="14" width="12" height="12"/>
+	<SubTexture name="tileM.png" x="28" y="14" width="12" height="12"/>
+	<SubTexture name="tileO.png" x="0" y="14" width="12" height="12"/>
+	<SubTexture name="tileS.png" x="0" y="0" width="12" height="12"/>
+</TextureAtlas>

@@ -15,6 +15,7 @@ package game
     import loom2d.math.Rectangle;
     import loom2d.textures.Texture;
     import loom2d.textures.TextureSmoothing;
+    import loom2d.ui.TextureAtlasManager;
     
     /**
      * Value object for storing found possible swaps
@@ -170,12 +171,12 @@ package game
         private function initTypes()
         {
             tileTypes = new <TileType>[
-                new TileType(0xBF0C43, "L", Texture.fromAsset("assets/tiles/tileL.png")),
-                new TileType(0xF9BA15, "O", Texture.fromAsset("assets/tiles/tileO.png")),
-                new TileType(0x8EAC00, "M", Texture.fromAsset("assets/tiles/tileM.png")),
-                new TileType(0x127A97, "S", Texture.fromAsset("assets/tiles/tileS.png")),
-                new TileType(0x452B72, "D", Texture.fromAsset("assets/tiles/tileD.png")),
-                new TileType(0xE5DDCB, "K", Texture.fromAsset("assets/tiles/tileK.png")),
+                new TileType(0xBF0C43, "L", TextureAtlasManager.getTexture("tiles", "tileL.png")),
+                new TileType(0xF9BA15, "O", TextureAtlasManager.getTexture("tiles", "tileO.png")),
+                new TileType(0x8EAC00, "M", TextureAtlasManager.getTexture("tiles", "tileM.png")),
+                new TileType(0x127A97, "S", TextureAtlasManager.getTexture("tiles", "tileS.png")),
+                new TileType(0x452B72, "D", TextureAtlasManager.getTexture("tiles", "tileD.png")),
+                new TileType(0xE5DDCB, "K", TextureAtlasManager.getTexture("tiles", "tileK.png")),
             ];
             for (var i:int = 0; i < tileTypes.length; i++) {
                 tileTypes[i].index = i;

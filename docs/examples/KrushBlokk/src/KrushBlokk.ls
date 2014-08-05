@@ -8,6 +8,7 @@ package
     import loom2d.display.StageScaleMode;
     import loom2d.events.Event;
     import loom2d.textures.TextureSmoothing;
+    import loom2d.ui.TextureAtlasManager;
     import ui.Theme;
     import ui.views.ConfigView;
     import ui.views.game.AdView;
@@ -63,6 +64,9 @@ package
         
         private function load() 
         {
+            // Load the sprite atlas containing textures
+            TextureAtlasManager.register("tiles", "assets/tiles/sprites.xml");
+            
             // Instantiates the custom theme contained in the Theme class,
             // setting up the fonts and custom label, button and checkbox styles.
             new Theme();
