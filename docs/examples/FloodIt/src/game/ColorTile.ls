@@ -4,6 +4,7 @@ package game {
     import loom2d.display.Sprite;
     import loom2d.Loom2D;
     import loom2d.textures.Texture;
+    import loom2d.ui.TextureAtlasManager;
     
     public class ColorTile extends Sprite
     {
@@ -41,9 +42,9 @@ package game {
         public function ColorTile(tileX:int, tileY:int)
         {
             // Load with a texture initially due to unintended behavior if no texture is set on Image
-            previous = new Image(Texture.fromAsset("assets/tiles/tile0.png"));
+            previous = new Image(TextureAtlasManager.getTexture("tiles", "tile0.png"));
             addChild(previous);
-            current = new Image(Texture.fromAsset("assets/tiles/tile0.png"));
+            current = new Image(TextureAtlasManager.getTexture("tiles", "tile0.png"));
             addChild(current);
             
             this.tileX = tileX;

@@ -75,7 +75,7 @@ package
          */
         public var quitLabel:SimpleLabel;
         
-        public var backTapped:Boolean = false;
+        public var backTapped:Boolean;
         
         /**
          * The width of the content.
@@ -116,30 +116,27 @@ package
          * Identifier used to tell if we have visited a tile before during the 
          * current flood fill.
          */
-        public var floodToken:int = 0;
+        public var floodToken:int;
         
         /**
          * Controls the speed of the flooding.
          */
-        //public var floodDelay = 0.01;
         public var floodDelay = 0.03;
         
         /**
          * Block interaction until this time (same timebase as Loom2D.juggler.elapsedTime).
          */
-        public var waitUntil = -1;
+        public var waitUntil:int;
         
         /**
          * Set when the game has ended.
          */
-        public var gameOver:Boolean = false;
-        
+        public var gameOver:Boolean;
         
         /**
          * References to every tile on the board.
          */
         public var tiles = new Vector.<ColorTile>(gridSize * gridSize);
-        
         
         /**
          * Container for the buttons.
@@ -154,7 +151,7 @@ package
         /**
          * The currently active ("down state") button.
          */
-        public var activeButton:ColorTile = null;
+        public var activeButton:ColorTile;
         
         /**
          * Scrolling tiled background.
@@ -280,6 +277,13 @@ package
                     quitLabel.visible = false;
                     quitLabel.alpha = 0;
                     
+                    backTapped = false;
+                    
+                    floodToken = 0;
+                    waitUntil = -1;
+                    gameOver = false;
+                    activeButton = null;
+                    
                     for (var i = 0; i < buttons.length; i++) {
                         var button = buttons[i];
                         // Hide it at first
@@ -313,15 +317,19 @@ package
             });
         }
         
-        private function showScreen(screen:DisplayObject) 
+        private function showScreen(screen:DisplayObject, animate:Boolean = true) 
         {
             screen.visible = true;
             screen.y = contentHeight;
-            Loom2D.juggler.tween(screen, 0.3, {
-                delay: 0.1,
-                y: 0,
-                transition: Transitions.EASE_OUT_BACK
-            });
+            if (animate) {
+                Loom2D.juggler.tween(screen, 0.3, {
+                    delay: 0.1,
+                    y: 0,
+                    transition: Transitions.EASE_OUT_BACK
+                });
+            } else {
+                screen.y = 0;
+            }
         }
         
         private function onTouchIntro(e:TouchEvent):void 
