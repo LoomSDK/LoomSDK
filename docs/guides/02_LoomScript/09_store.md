@@ -1,4 +1,4 @@
-title: Store
+title: Store API
 description: In-app payments API.
 !------
 

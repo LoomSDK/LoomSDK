@@ -43,13 +43,20 @@ private:
         _OnSensorTripleChangedDelegate.pushArgument(z);
         _OnSensorTripleChangedDelegate.invoke();
     }
+    /// Event handler; this is called by the C mobile API when the app is launched via a custom URL
+    static void openedViaCustomURL()
+    {
+        ///Convert to delegate calls.
+        _OnOpenedViaCustomURLDelegate.invoke();
+    }
 
 public:
     LOOM_STATICDELEGATE(OnSensorTripleChanged);
+    LOOM_STATICDELEGATE(OnOpenedViaCustomURL);
 
     static void initialize()
     {
-        platform_mobileInitialize(sensorTripleChanged);
+        platform_mobileInitialize(sensorTripleChanged, openedViaCustomURL);
     }
     static void vibrate()
     {
@@ -62,6 +69,14 @@ public:
     static bool shareText(const char *subject, const char *text)
     {
         return platform_shareText(subject, text);
+    }       
+    static bool wasOpenedViaCustomURL()
+    {
+        return platform_wasOpenedViaCustomURL();
+    }       
+    static const char *getOpenURLQueryData(const char *queryKey)
+    {
+        return platform_getOpenURLQueryData(queryKey);
     }       
     static bool isSensorSupported(int sensor)
     {
@@ -121,6 +136,7 @@ public:
 
 
 NativeDelegate Mobile::_OnSensorTripleChangedDelegate;
+NativeDelegate Mobile::_OnOpenedViaCustomURLDelegate;
 
 
 static int registerLoomMobile(lua_State *L)
@@ -133,12 +149,15 @@ static int registerLoomMobile(lua_State *L)
             .addStaticMethod("vibrate", &Mobile::vibrate)
             .addStaticMethod("allowScreenSleep", &Mobile::allowScreenSleep)
             .addStaticMethod("shareText", &Mobile::shareText)
+            .addStaticMethod("wasOpenedViaCustomURL", &Mobile::wasOpenedViaCustomURL)
+            .addStaticMethod("getOpenURLQueryData", &Mobile::getOpenURLQueryData)
             .addStaticMethod("isSensorSupported", &Mobile::isSensorSupported)
             .addStaticMethod("isSensorEnabled", &Mobile::isSensorEnabled)
             .addStaticMethod("hasSensorReceivedData", &Mobile::hasSensorReceivedData)
             .addStaticMethod("enableSensor", &Mobile::enableSensor)
             .addStaticMethod("disableSensor", &Mobile::disableSensor)
             .addStaticProperty("onSensorTripleChanged", &Mobile::getOnSensorTripleChangedDelegate)
+            .addStaticProperty("onOpenedViaCustomURL", &Mobile::getOnOpenedViaCustomURLDelegate)
 
         .endClass()
 

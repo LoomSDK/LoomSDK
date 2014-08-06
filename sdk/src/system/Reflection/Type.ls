@@ -54,7 +54,7 @@ native class MemberTypes {
 };
 
 /**
- *  Represents information about the attributes of a member and provides access to member MetaInfo
+ *  Represents information about the attributes of a member and provides access to member MetaInfo.
  *  MemberInfos can represent Member methods, fields, properties or constructors.
  *  
  *  @section examples Example
@@ -185,7 +185,7 @@ native class ParameterInfo {
     /**
      *  Gets the name of the ParameterInfo.
      *
-     *  @return name of the parameter.
+     *  @return Name of the parameter.
      */
     public native function getName():String;
     
@@ -265,7 +265,7 @@ native class MethodInfo extends MethodBase {
      *  Calls the represented method on the specified object.
      *
      *  @param obj Target that contains the method represented in the MethodInfo.
-     *  @param args Arbitraty list of values to take as the parameters in calling the method.
+     *  @param args Arbitrary list of values to take as the parameters in calling the method.
      */
     public native function invoke(obj:Object, ...args);
 
@@ -273,8 +273,8 @@ native class MethodInfo extends MethodBase {
      *  Calls the represented method on the specified object.
      *
      *  @param obj Target that contains the method represented in the MethodInfo.
-     *  @param arg A single argument which makes invokeSingle considerably faster to call as doesn't 
-     *             require a varargs vector to be created.
+     *  @param arg A single argument which makes invokeSingle considerably faster to call as it doesn't 
+     *             require a varargs Vector to be created.
      */
     public native function invokeSingle(obj:Object, arg:Object);
         
@@ -292,7 +292,7 @@ native class ConstructorInfo extends MethodBase {
     /**
      *  Calls the represented constructor.
      *
-     *  @return an instance of the object that was constructed.
+     *  @return An instance of the object that was constructed.
      */
     public native function invoke():Object;    
 }
@@ -356,7 +356,7 @@ public native class Type extends MemberInfo {
     public native function getPropertyInfoCount():int;
     
     /**
-     *  Gets the associated FieldInfo at the specified index.
+     *  Gets the FieldInfo associated with the specified index.
      *
      *  @param index Index of associated FieldInfo.
      *  @return Instance of the associated FieldInfo.
@@ -364,7 +364,7 @@ public native class Type extends MemberInfo {
     public native function getFieldInfo(index:int):FieldInfo;
 
     /**
-     *  Gets the associated MethodInfo with the specified name.
+     *  Gets the MethodInfo associated with the specified name.
      *
      *  @param name Name of the MethodInfo.
      *  @return Instance of the associated FieldInfo, null if the method name does not exist.
@@ -372,7 +372,7 @@ public native class Type extends MemberInfo {
     public native function getMethodInfo(name:String):MethodInfo;
 
     /**
-     *  Gets the associated PropertyInfo at the specified index.
+     *  Gets the PropertyInfo associated with the specified index.
      *
      *  @param index Index of associated PropertyInfo.
      *  @return Instance of the associated PropertyInfo.
@@ -478,7 +478,7 @@ public native class Type extends MemberInfo {
 
         return false;
     }
-
+    
     public function typeHasOwnProperty(object:Object, name:String):Boolean
     {
         var field = getFieldInfoByName(name);

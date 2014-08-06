@@ -32,6 +32,10 @@ package loom.gameframework
     */
    class LoomGameObject extends LoomObject
    {
+      /**
+       * Broadcast path; call this to broadcast events to other components on 
+       * this object, and add your listeners to it to receive them.
+       */
       public const broadcast:BroadCastDelegate;
 
       private var _deferring:Boolean = true;
@@ -42,6 +46,9 @@ package loom.gameframework
          return _deferring;
       }
 
+      /**
+       * True when we are deferring initialization to make object assembly cheaper.
+       */
       public function set deferring(value:Boolean):void
       {
          if(_deferring && value == false)
@@ -84,6 +91,13 @@ package loom.gameframework
          component.doAdd();         
       }
 
+      /**
+       * Initialize this game object.
+       *
+       * Call after adding components and putting it in a LoomGroup.
+       * Name may optionally be provided. You can also do your own initialization
+       * logic here by overriding, but don't forget to call super.initialize()!
+       */
       public override function initialize(objectName:String = null):void
       {
          super.initialize(objectName);
@@ -125,6 +139,10 @@ package loom.gameframework
          }     
       }
 
+      /** 
+       * Tear down this game object, removing all components and unregistering
+       * from owning groups and sets.
+       */
       public override function destroy():void
       {
         // Remove all the components.
@@ -134,6 +152,12 @@ package loom.gameframework
         super.destroy();
       }
 
+      /**
+       * Add a component to the game object, optionally setting its name.
+       *
+       * Note that adding components before initialize() or while deferring is true
+       * is most efficient.
+       */
       public function addComponent(component:LoomComponent, name:String = null):Boolean
       {
          if(name)
@@ -166,6 +190,9 @@ package loom.gameframework
          return true;
       }
 
+      /**
+       * Remove a specified component from the GameObject.
+       */
       public function removeComponent(component:LoomComponent):void
       {
          // Sanity.
@@ -189,6 +216,9 @@ package loom.gameframework
       }
 
       // TODO: Explicit templated downcast would be nice here.
+      /**
+       * Get a component by name.
+       */
       public function lookupComponentByName(name:String):LoomComponent
       {
          return _components[name];

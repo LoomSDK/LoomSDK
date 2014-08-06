@@ -20,9 +20,13 @@ limitations under the License.
 
 package system {
 
-/// @cond PRIVATE
-// not sure that we need this documented in the API Docs
-class BaseDelegate {
+/**
+ * Internal fictional base class for delegates and native delegates.
+ *
+ * @private
+ */
+class BaseDelegate 
+{
 
     private native function call();
     private native function BaseDelegate();
@@ -43,6 +47,5 @@ class BaseDelegate {
     public static native operator function =(a:BaseDelegate, b:Object):BaseDelegate;
 
 }
-/// @endcond
 
 }

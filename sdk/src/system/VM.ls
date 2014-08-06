@@ -22,6 +22,9 @@ package system {
 
 import system.reflection.Assembly;
 
+/**
+ * Callback when ticks occur in the VM.
+ */
 delegate TickDelegate();
 
 /**
@@ -33,9 +36,9 @@ native class VM {
     // will tick the actual VM, this may happen outside of the VM this method
     // is called from (ie. the owning VM)
     ///@cond PRIVATE
-    public native function tick();
+    private  native function tick();
 
-    public static function _tick() {
+    private static function _tick() {
         ticks();
     }
     ///@endcond
@@ -50,20 +53,36 @@ native class VM {
      */
     public native var onReload:NativeDelegate;
 
-    /// @cond PRIVATE
-    // these should be cleaned up before they are documented
+    /**
+     * Open the VM (internal).
+     */
     public native function open():void;
     
+    /**
+     * Close the VM (internal).
+     */
     public native function close():void;
     
+    /**
+     * Return a reference to the currently executing VM.
+     */
     public static native function getExecutingVM():VM;
     
+    /**
+     * Return the depth of the underlying Lua stack (internal).
+     */
     public native function getStackSize():Number;
     
+    /**
+     * Print a report showing information about all allocated native structures.
+     */
     public native function dumpManagedNatives():void;    
     
+    /**
+     * True when we are executing under the JIT.
+     */
     static public native function isJIT():Boolean;
-    /// @endcond
+    
     
 }
 

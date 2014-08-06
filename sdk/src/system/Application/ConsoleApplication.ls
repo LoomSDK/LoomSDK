@@ -20,16 +20,19 @@ limitations under the License.
 
 package system.application 
 {
+    /**
+     * Extend this class in console applications that don't require a graphical window to draw on.
+     */
     public class ConsoleApplication extends BaseApplication
     {
 
         override protected function run()
         {
-        }               
+        }
 
         public function initialize()
         {
             run();
-        }               
+        }
     }
 }
