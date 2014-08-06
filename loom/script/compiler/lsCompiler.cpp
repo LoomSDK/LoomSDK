@@ -381,7 +381,7 @@ void LSCompiler::compileAssembly(BuildInfo *buildInfo)
 
             if (outputDir.length())
             {
-                jsonFileName = outputDir + "/" + compiler->buildInfo->getAssemblyName() + ".symbols";
+                jsonFileName = outputDir + platform_getFolderDelimiter() + compiler->buildInfo->getAssemblyName() + ".symbols";
             }
             else
             {
@@ -389,6 +389,8 @@ void LSCompiler::compileAssembly(BuildInfo *buildInfo)
             }
 
             ab->writeToFile(jsonFileName);
+
+			log("Symbols Generated: %s", jsonFileName.c_str());
         }
 
         // finally link the root assembly
