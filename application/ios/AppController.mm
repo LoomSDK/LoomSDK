@@ -31,6 +31,8 @@
 #import "RootViewController.h"
 
 #include "loom/engine/bindings/loom/lmApplication.h"
+#include "loom/common/platform/platformMobileiOS.h"
+
 
 static void handleGenericEvent(void *userData, const char *type, const char *payload)
 {
@@ -87,6 +89,48 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
     return YES;
 }
 
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+{
+    NSBundle *mainBundle = [NSBundle mainBundle];
+
+    //Custom App URL Scheme Launch?
+    NSString *customAppScheme = [mainBundle objectForInfoDictionaryKey:@"CustomAppURLScheme"];
+    if((customAppScheme != nil) && 
+        ([customAppScheme isEqualToString:@""] == FALSE) && 
+        ([[url scheme] caseInsensitiveCompare:customAppScheme] == NSOrderedSame))
+    {
+        //attempt to parse the query
+        [self application:application handleOpenURLQuery:[url query]];
+
+        //mark as being opened from a custrom URL and call our native callback
+        ios_CustomURLOpen();
+    }
+    return YES;
+}
+
+// called when the application is opened via a Custom URL Scheme
+- (void)application:(UIApplication *)application handleOpenURLQuery:(NSString *)query
+{
+    gOpenUrlQueryStringDictionary = nil;
+    if(query)
+    {
+        // build a dictionary and store the Open URL query there in key/data pairs
+        NSLog(@"---------Open URL Query String: %@", query);
+
+        gOpenUrlQueryStringDictionary = [[NSMutableDictionary alloc] init];
+        NSArray *queryComponents = [query componentsSeparatedByString:@"&"];
+        for (NSString *keyValuePair in queryComponents)
+        {
+            NSArray *pairComponents = [keyValuePair componentsSeparatedByString:@"="];
+            if((pairComponents != nil) && ([pairComponents count] == 2))
+            {
+                NSString *key = [pairComponents objectAtIndex:0];
+                NSString *value = [pairComponents objectAtIndex:1];
+                [gOpenUrlQueryStringDictionary setObject:value forKey:key];
+            }
+        }
+    }
+}
 
 - (void)applicationWillResignActive:(UIApplication *)application {
     /*

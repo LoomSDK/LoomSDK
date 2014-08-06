@@ -29,11 +29,14 @@
  *
  */
 
-///Callback for video API events.
+///Callback for sensor changed API events.
 typedef void (*SensorTripleChangedCallback)(int sensor, float x, float y, float z);
 
+///Callback for custom URL opening event
+typedef void (*OpenedViaCustomURLCallback)();
+
 ///initializes the data for the Mobile class for this platform
-void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB);
+void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB, OpenedViaCustomURLCallback customURLCB);
 
 ///tells the device to do a short vibration, if supported by the hardware
 void platform_vibrate();
@@ -43,6 +46,12 @@ void platform_allowScreenSleep(bool sleep);
 
 ///shares the specfied text via other applications on the device (ie. Twitter, Facebook)
 bool platform_shareText(const char *subject, const char *text);
+
+///returns if the application was launched via a Custom URL Scheme
+bool platform_wasOpenedViaCustomURL();
+
+///gets the the specified query key data from any custom scheme URL path that the application was launched with, or "" if not found
+const char *platform_getOpenURLQueryData(const char *queryKey);
 
 ///checks if a given sensor is supported on this hardware
 bool platform_isSensorSupported(int sensor);

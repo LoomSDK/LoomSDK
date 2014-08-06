@@ -27,6 +27,16 @@ package loom.platform
      * Note that not all of the items found here will be available 
      * on every mobile platform.
      *
+     *  Custom URL Schemes:
+     *
+     * In order to use custom URL Scheme launching of your app, you must specify
+     * a 'custom_url_scheme' inside of your loom.config file for the app such as:
+     * "custom_url_scheme": "startmygame"
+     * This will allow a url such as: "startmygame://?key=myData" to launch your app
+     * as send Query data to it to be parsed
+     * NOTE: Custom URL schemes need to be unique enough that another app on the same device
+     * will not also use the same one as your.
+     *
      */
 
     /**
@@ -125,6 +135,24 @@ package loom.platform
         public static native function shareText(subject:String, text:String):Boolean;
 
         /**
+         * Checks whether or not the application was opened with a Custom URL launch
+         *
+         *  @return true if the application was opened via a Custom URL Scheme, false if not
+         */
+        public static native function wasOpenedViaCustomURL():Boolean;
+
+        /**
+         * Gets the the specified query key data from any custom scheme URL path 
+         * that the application was launched with, or an Empty String if not found.
+         *
+         * Valid URLs are formatted as such:   myscheme://someHostOrNoHost/?key1=someData&key2=moreData
+         *
+         *  @param queryKey The key to search for in the URL query to return the data of
+         *  @return Data string for the given query key, or "" one was not found
+         */
+        public static native function getOpenURLQueryData(queryKey:String):String;
+
+        /**
          * Queries whether or not the specified sensor is supported on this device
          *
          *  @param type MobileSensorType value for the desired sensor
@@ -175,6 +203,12 @@ package loom.platform
          *  @param z Value for the Z of the triple
          */
         public static native var onSensorTripleChanged:MobileSensorChangedTripleDelegate;
+
+        /**
+         * Called when app has been opened via a Custom URL launch
+         *
+         */
+        public static native var onOpenedViaCustomURL:NativeDelegate;
     }
 
 
