@@ -170,7 +170,17 @@ package feathers.text
                 return;
 
             if(text.length > 0)
-                text = text.substr(0, text.length-1);            
+            {
+                //check for a UTF8 character to make sure we delete them fully
+                //NOTE: Only support single-byte UTF8 characters, not full multi-byte ones at this time!
+                var newTextLen:int = text.length - 1;
+                var endCharID:int = text.charCodeAt(newTextLen - 1);
+                if((endCharID == 0xC2) || (endCharID == 0xC3))
+                {
+                    newTextLen--;
+                }
+                text = text.substr(0, newTextLen);            
+            }
         }
 
         public function set text(v:String):void

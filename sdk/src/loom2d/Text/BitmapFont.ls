@@ -345,8 +345,17 @@ package loom2d.text
                         //trace("Considering char " + i);
                         var lineFull:Boolean = false;
                         var charID:int = text.charCodeAt(i);
-                        var _char:BitmapChar = getChar(charID);
-                        
+
+                        //check for a UTF8 character
+                        //NOTE: Only support single-byte UTF8 characters, not full multi-byte ones at this time!
+                        if((i < (numChars - 1)) && ((charID == 0xC2) || (charID == 0xC3)))
+                        {
+                            var newChar:int = text.charCodeAt(++i);
+                            //UTF8 C2 means we can use the next char as-is, but C3 needs an additional bit set
+                            charID = (charID == 0xC3) ? newChar | 0x40 : newChar;
+                        }
+
+                        var _char:BitmapChar = getChar(charID);                    
                         if (charID == CHAR_NEWLINE || charID == CHAR_CARRIAGE_RETURN)
                         {
                             lineFull = true;
