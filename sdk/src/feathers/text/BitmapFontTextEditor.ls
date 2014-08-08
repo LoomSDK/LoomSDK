@@ -172,7 +172,7 @@ package feathers.text
             if(text.length > 0)
             {
                 //check for a UTF8 character to make sure we delete them fully
-                //NOTE: Only support single-byte UTF8 characters, not full multi-byte ones at this time!
+                //NOTE: This only supports Latin UTF8 characters for now. Others alphabets such as Cyrillic or Mandarin will have unexpected results
                 var newTextLen:int = text.length - 1;
                 var endCharID:int = text.charCodeAt(newTextLen - 1);
                 if((endCharID == 0xC2) || (endCharID == 0xC3))

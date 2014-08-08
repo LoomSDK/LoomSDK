@@ -347,7 +347,7 @@ package loom2d.text
                         var charID:int = text.charCodeAt(i);
 
                         //check for a UTF8 character
-                        //NOTE: Only support single-byte UTF8 characters, not full multi-byte ones at this time!
+                        //NOTE: This only supports Latin UTF8 characters for now. Others alphabets such as Cyrillic or Mandarin will have unexpected results
                         if((i < (numChars - 1)) && ((charID == 0xC2) || (charID == 0xC3)))
                         {
                             var newChar:int = text.charCodeAt(++i);
