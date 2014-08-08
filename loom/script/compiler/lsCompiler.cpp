@@ -37,7 +37,7 @@
 
 
 namespace LS {
-bool LSCompiler::debugBuild = false;
+bool LSCompiler::debugBuild = true;
 
 utString LSCompiler::sdkPath = ".";
 

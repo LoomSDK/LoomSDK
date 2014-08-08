@@ -80,7 +80,7 @@ class JitTypeCompiler : public TypeCompilerBase {
      */
     BCPos encodeCondition(Expression *expr);
 
-    ByteCode *generateByteCode(GCproto *proto);
+    ByteCode *generateByteCode(GCproto *proto, bool debug);
 
 public:
 

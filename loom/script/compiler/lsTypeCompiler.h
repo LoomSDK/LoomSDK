@@ -51,7 +51,7 @@ class TypeCompiler : public TypeCompilerBase  {
 
     void functionBody(ExpDesc *e, FunctionLiteral *flit, int line);
 
-    ByteCode *generateByteCode(Proto *proto);
+    ByteCode *generateByteCode(Proto *proto, bool debug);
 
     void createVarArg(ExpDesc *varg, utArray<Expression *> *arguments,
                       int startIdx);
