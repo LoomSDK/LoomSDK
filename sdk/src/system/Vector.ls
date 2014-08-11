@@ -21,11 +21,22 @@ limitations under the License.
 package system {
 
 /**
- * The Vector class lets you access and manipulate a vector. The data type of 
- * a Vector's elements is known as the Vector's base type. The base type can be
- * any class, including built in classes and custom classes. The base type is
- * specified when declaring a Vector variable as well as when creating an 
- * instance by calling the class constructor.
+ *  A Vector is an ordered collection of items where every item is of the same type.
+ *
+ *  * The base type can be any class, including built in classes and custom classes.
+ *  * Vectors are dynamic (the number of items is allowed to change) unless the `setFixed` method is used to freeze the size.
+ *  * Items will be initialized to `null` if a non-zero size is provided to the constructor.
+ *  * When increasing the size of a Vector, the `push` or `unshift` methods must used. Assigning a value to an index beyond the final value will result in an out-of-bounds error.
+ *
+ *  Vectors can be instantiated via their constructor function, or with a literal syntax using square brackets (`[]`):
+ *
+ *  ```as3
+ *  var v1:Vector.<String> = new Vector.<String>(26);
+ *  v1[0] = 'a';
+ *  v1[25] = 'z';
+ *
+ *  var v2:Vector.<String> = [ 'one', 'two', 'three' ];
+ *  ```
  */
 final class Vector 
 {

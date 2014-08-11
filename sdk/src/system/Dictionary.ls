@@ -21,12 +21,21 @@ limitations under the License.
 package system {
 
 /**
- *  A Dictionary lets you create a dynamic collection of properties, which uses strict equality (===) for key comparison. 
- *  When an object is used as a key, the object's identity is used to look up the object, and not the value returned from calling toString() on it. 
+ *  A Dictionary is a collection of key-value pairs, which uses strict equality (`===`) for key comparison.
  *
- *  The Dictionary's value and key types are specified using postfix type parameter syntax.
- *  Dictionaries in LoomScript also have support for literals:
- *  @include DictionaryInstantiation.ls
+ *  * When an object is used as a key, the object's identity is used to look up the object, and not the value returned from calling `toString()` on it.
+ *  * Keys are unique. Re-assigning to a key simply overwrites the existing value. Declaring a dictionary with duplicate keys does not error, but takes the last value.
+ *  * When typing a dictionary variable or instantiating a new Dictionary, the element types must be specified in `<KeyType, ValueType>` format.
+ *
+ *  Dictionaries in LoomScript can be instantiated via their constructor function, or with a literal syntax using curly brackets (`{}`):
+ *
+ *  ```as3
+ *  var d1:Dictionary.<String, Number> = new Dictionary.<String, Number>();
+ *  d1['one'] = 1;
+ *  d1['two'] = 2;
+ *
+ *  var d2:Dictionary.<String, Number> = { 'three': 3, 'four': 4 };
+ *  ```
  */
 final class Dictionary extends Object {
     
