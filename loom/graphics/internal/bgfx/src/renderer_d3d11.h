@@ -1,10 +1,17 @@
 /*
- * Copyright 2011-2013 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2014 Branimir Karadzic. All rights reserved.
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
 
-#ifndef __RENDERER_D3D11_H__
-#define __RENDERER_D3D11_H__
+#ifndef BGFX_RENDERER_D3D11_H_HEADER_GUARD
+#define BGFX_RENDERER_D3D11_H_HEADER_GUARD
+
+#define USE_D3D11_DYNAMIC_LIB !BX_PLATFORM_WINRT
+
+#if !USE_D3D11_DYNAMIC_LIB
+#	undef  BGFX_CONFIG_DEBUG_PIX
+#	define BGFX_CONFIG_DEBUG_PIX 0
+#endif // !USE_D3D11_DYNAMIC_LIB
 
 #define D3D11_NO_HELPERS
 #include <d3d11.h>
@@ -43,7 +50,7 @@ namespace bgfx
 			HashMap::iterator it = m_hashMap.find(_id);
 			if (it != m_hashMap.end() )
 			{
-				DX_RELEASE(it->second, 0);
+				DX_RELEASE_WARNONLY(it->second, 0);
 				m_hashMap.erase(it);
 			}
 		}
@@ -52,8 +59,10 @@ namespace bgfx
 		{
 			for (HashMap::iterator it = m_hashMap.begin(), itEnd = m_hashMap.end(); it != itEnd; ++it)
 			{
-				DX_RELEASE(it->second, 0);
+				DX_CHECK_REFCOUNT(it->second, 1);
+				it->second->Release();
 			}
+
 			m_hashMap.clear();
 		}
 
@@ -62,9 +71,9 @@ namespace bgfx
 		HashMap m_hashMap;
 	};
 
-	struct IndexBuffer
+	struct IndexBufferD3D11
 	{
-		IndexBuffer()
+		IndexBufferD3D11()
 			: m_ptr(NULL)
 			, m_dynamic(false)
 		{
@@ -87,9 +96,9 @@ namespace bgfx
 		bool m_dynamic;
 	};
 
-	struct VertexBuffer
+	struct VertexBufferD3D11
 	{
-		VertexBuffer()
+		VertexBufferD3D11()
 			: m_ptr(NULL)
 			, m_dynamic(false)
 		{
@@ -113,38 +122,30 @@ namespace bgfx
 		bool m_dynamic;
 	};
 
-	struct UniformBuffer
+	struct ShaderD3D11
 	{
-		UniformBuffer()
-			: m_ptr(NULL)
-			, m_data(NULL)
-		{
-		}
-
-		void create(UniformType::Enum _type, uint16_t _num, bool _alloc = true);
-		void destroy();
-
-		ID3D11Buffer* m_ptr;
-		void* m_data;
-	};
-
-	struct Shader
-	{
-		Shader()
+		ShaderD3D11()
 			: m_ptr(NULL)
 			, m_code(NULL)
 			, m_buffer(NULL)
+			, m_constantBuffer(NULL)
 			, m_hash(0)
+			, m_numUniforms(0)
+			, m_numPredefined(0)
 		{
 		}
 
-		void create(bool _fragment, const Memory* _mem);
+		void create(const Memory* _mem);
 		DWORD* getShaderCode(uint8_t _fragmentBit, const Memory* _mem);
 
 		void destroy()
 		{
-			ConstantBuffer::destroy(m_constantBuffer);
-			m_constantBuffer = NULL;
+			if (NULL != m_constantBuffer)
+			{
+				ConstantBuffer::destroy(m_constantBuffer);
+				m_constantBuffer = NULL;
+			}
+
 			m_numPredefined = 0;
 
 			if (NULL != m_buffer)
@@ -162,7 +163,13 @@ namespace bgfx
 			}
 		}
 
-		IUnknown* m_ptr;
+		union
+		{
+			ID3D11ComputeShader* m_computeShader;
+			ID3D11PixelShader*   m_pixelShader;
+			ID3D11VertexShader*  m_vertexShader;
+			IUnknown*            m_ptr;
+		};
 		const Memory* m_code;
 		ID3D11Buffer* m_buffer;
 		ConstantBuffer* m_constantBuffer;
@@ -176,25 +183,28 @@ namespace bgfx
 		uint8_t m_numPredefined;
 	};
 
-	struct Program
+	struct ProgramD3D11
 	{
-		Program()
+		ProgramD3D11()
 			: m_vsh(NULL)
 			, m_fsh(NULL)
 		{
 		}
 
-		void create(const Shader& _vsh, const Shader& _fsh)
+		void create(const ShaderD3D11* _vsh, const ShaderD3D11* _fsh)
 		{
-			BX_CHECK(NULL != _vsh.m_ptr, "Vertex shader doesn't exist.");
-			m_vsh = &_vsh;
+			BX_CHECK(NULL != _vsh->m_ptr, "Vertex shader doesn't exist.");
+			m_vsh = _vsh;
+			memcpy(&m_predefined[0], _vsh->m_predefined, _vsh->m_numPredefined*sizeof(PredefinedUniform) );
+			m_numPredefined = _vsh->m_numPredefined;
 
-			BX_CHECK(NULL != _fsh.m_ptr, "Fragment shader doesn't exist.");
-			m_fsh = &_fsh;
-
-			memcpy(&m_predefined[0], _vsh.m_predefined, _vsh.m_numPredefined*sizeof(PredefinedUniform) );
-			memcpy(&m_predefined[_vsh.m_numPredefined], _fsh.m_predefined, _fsh.m_numPredefined*sizeof(PredefinedUniform) );
-			m_numPredefined = _vsh.m_numPredefined + _fsh.m_numPredefined;
+			if (NULL != _fsh)
+			{
+				BX_CHECK(NULL != _fsh->m_ptr, "Fragment shader doesn't exist.");
+				m_fsh = _fsh;
+				memcpy(&m_predefined[m_numPredefined], _fsh->m_predefined, _fsh->m_numPredefined*sizeof(PredefinedUniform) );
+				m_numPredefined += _fsh->m_numPredefined;
+			}
 		}
 
 		void destroy()
@@ -204,27 +214,14 @@ namespace bgfx
 			m_fsh = NULL;
 		}
 
-		void commit()
-		{
-			if (NULL != m_vsh->m_constantBuffer)
-			{
-				m_vsh->m_constantBuffer->commit();
-			}
-
-			if (NULL != m_fsh->m_constantBuffer)
-			{
-				m_fsh->m_constantBuffer->commit();
-			}
-		}
-
-		const Shader* m_vsh;
-		const Shader* m_fsh;
+		const ShaderD3D11* m_vsh;
+		const ShaderD3D11* m_fsh;
 
 		PredefinedUniform m_predefined[PredefinedUniform::Count*2];
 		uint8_t m_numPredefined;
 	};
 
-	struct Texture
+	struct TextureD3D11
 	{
 		enum Enum
 		{
@@ -233,18 +230,20 @@ namespace bgfx
 			TextureCube,
 		};
 
-		Texture()
+		TextureD3D11()
 			: m_ptr(NULL)
 			, m_srv(NULL)
+			, m_uav(NULL)
 			, m_sampler(NULL)
 			, m_numMips(0)
 		{
 		}
 
-		void create(const Memory* _mem, uint32_t _flags);
+		void create(const Memory* _mem, uint32_t _flags, uint8_t _skip);
 		void destroy();
-		void update(uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, const Memory* _mem);
+		void update(uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem);
 		void commit(uint8_t _stage, uint32_t _flags = BGFX_SAMPLER_DEFAULT_FLAGS);
+		void resolve();
 
 		union
 		{
@@ -254,42 +253,33 @@ namespace bgfx
 		};
 
 		ID3D11ShaderResourceView* m_srv;
+		ID3D11UnorderedAccessView* m_uav;
 		ID3D11SamplerState* m_sampler;
-		Enum m_type;
+		uint32_t m_flags;
+		uint8_t m_type;
+		uint8_t m_requestedFormat;
+		uint8_t m_textureFormat;
 		uint8_t m_numMips;
 	};
 
-	struct RenderTarget
+	struct FrameBufferD3D11
 	{
-		RenderTarget()
-			: m_colorTexture(NULL)
- 			, m_depthTexture(NULL)
-			, m_rtv(NULL)
- 			, m_dsv(NULL)
-			, m_srv(NULL)
-			, m_width(0)
-			, m_height(0)
-			, m_flags(0)
-			, m_depthOnly(false)
+		FrameBufferD3D11()
+			: m_num(0)
 		{
 		}
 
-		void create(uint16_t _width, uint16_t _height, uint32_t _flags, uint32_t _textureFlags);
+		void create(uint8_t _num, const TextureHandle* _handles);
 		void destroy();
- 		void commit(uint8_t _stage, uint32_t _flags = BGFX_SAMPLER_DEFAULT_FLAGS);
+		void resolve();
+		void clear(const Clear& _clear);
 
-		ID3D11Texture2D* m_colorTexture;
-		ID3D11Texture2D* m_depthTexture;
-		ID3D11RenderTargetView* m_rtv;
+		ID3D11RenderTargetView* m_rtv[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
+		ID3D11ShaderResourceView* m_srv[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
 		ID3D11DepthStencilView* m_dsv;
-		ID3D11ShaderResourceView* m_srv;
-		ID3D11SamplerState* m_sampler;
-		uint16_t m_width;
-		uint16_t m_height;
-		uint32_t m_flags;
-		bool m_depthOnly;
+		uint8_t m_num;
 	};
 
 } // namespace bgfx
 
-#endif // __RENDERER_D3D11_H__
+#endif // BGFX_RENDERER_D3D11_H_HEADER_GUARD

@@ -1,15 +1,18 @@
 /*
- * Copyright 2011-2013 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2014 Branimir Karadzic. All rights reserved.
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
 
-#ifndef __VERTEXDECL_H__
-#define __VERTEXDECL_H__
+#ifndef BGFX_VERTEXDECL_H_HEADER_GUARD
+#define BGFX_VERTEXDECL_H_HEADER_GUARD
 
 #include <bgfx.h>
 
 namespace bgfx
 {
+	///
+	void initAttribTypeSizeTable(RendererType::Enum _type);
+
 	/// Returns attribute name.
 	const char* getAttribName(Attrib::Enum _attr);
 
@@ -18,4 +21,4 @@ namespace bgfx
 
 } // namespace bgfx
 
-#endif // __VERTEXDECL_H__
+#endif // BGFX_VERTEXDECL_H_HEADER_GUARD

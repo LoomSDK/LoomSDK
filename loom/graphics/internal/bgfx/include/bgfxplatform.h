@@ -1,16 +1,36 @@
 /*
- * Copyright 2011-2013 Branimir Karadzic. All rights reserved.
- * License: http://www.opensource.org/licenses/BSD-2-Clause
+ * Copyright 2011-2014 Branimir Karadzic. All rights reserved.
+ * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
-#ifndef __BGFXPLATFORM_H__
-#define __BGFXPLATFORM_H__
+#ifndef BGFX_PLATFORM_H_HEADER_GUARD
+#define BGFX_PLATFORM_H_HEADER_GUARD
 
 // NOTICE:
 // This header file contains platform specific interfaces. It is only
 // necessary to use this header in conjunction with creating windows.
 
-#include <bx/bx.h>
+#include <bx/platform.h>
+
+namespace bgfx
+{
+	struct RenderFrame
+	{
+		enum Enum
+		{
+			NoContext,
+			Render,
+			Exiting,
+
+			Count
+		};
+	};
+
+	/// WARNING: This call should be only used on platforms that don't
+	/// allow creating separate rendering thread. If it is called before
+	/// to bgfx::init, render thread won't be created by bgfx::init call.
+	RenderFrame::Enum renderFrame();
+}
 
 #if BX_PLATFORM_ANDROID
 #	include <android/native_window.h>
@@ -30,7 +50,7 @@ namespace bgfx
 
 } // namespace bgfx
 
-#elif BX_PLATFORM_LINUX
+#elif BX_PLATFORM_LINUX || BX_PLATFORM_FREEBSD
 #	include <X11/Xlib.h>
 
 namespace bgfx
@@ -49,7 +69,7 @@ namespace bgfx
 	typedef void (*PostSwapBuffersFn)(uint32_t _width, uint32_t _height);
 
 	///
-	void naclSetIntefraces(::PP_Instance, const ::PPB_Instance*, const ::PPB_Graphics3D*, PostSwapBuffersFn);
+	bool naclSetInterfaces(::PP_Instance, const ::PPB_Instance*, const ::PPB_Graphics3D*, PostSwapBuffersFn);
 
 } // namespace bgfx
 
@@ -86,12 +106,12 @@ namespace bgfx
 	{
 		SDL_SysWMinfo wmi;
 		SDL_VERSION(&wmi.version);
-		if (-1 == SDL_GetWindowWMInfo(_window, &wmi) )
+		if (!SDL_GetWindowWMInfo(_window, &wmi) )
 		{
 			return false;
 		}
 
-#	if BX_PLATFORM_LINUX
+#	if BX_PLATFORM_LINUX || BX_PLATFORM_FREEBSD
 		x11SetDisplayWindow(wmi.info.x11.display, wmi.info.x11.window);
 #	elif BX_PLATFORM_OSX
 		osxSetNSWindow(wmi.info.cocoa.window);
@@ -107,7 +127,7 @@ namespace bgfx
 // If GLFW/glfw3.h is included before bgfxplatform.h we can enable GLFW3
 // window interop convenience code.
 
-#	if BX_PLATFORM_LINUX
+#	if BX_PLATFORM_LINUX || BX_PLATFORM_FREEBSD
 #		define GLFW_EXPOSE_NATIVE_X11
 #		define GLFW_EXPOSE_NATIVE_GLX
 #	elif BX_PLATFORM_OSX
@@ -123,7 +143,7 @@ namespace bgfx
 {
 	inline void glfwSetWindow(GLFWwindow* _window)
 	{
-#	if BX_PLATFORM_LINUX
+#	if BX_PLATFORM_LINUX || BX_PLATFORM_FREEBSD
 		::Display* display = glfwGetX11Display();
 		::Window window = glfwGetX11Window(_window);
 		x11SetDisplayWindow(display, window);
@@ -140,4 +160,4 @@ namespace bgfx
 
 #endif // defined(_SDL_H)
 
-#endif // __BGFXPLATFORM_H__
+#endif // BGFX_PLATFORM_H_HEADER_GUARD

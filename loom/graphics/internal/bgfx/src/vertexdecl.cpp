@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2014 Branimir Karadzic. All rights reserved.
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
 
@@ -9,6 +9,7 @@
 #include <bx/uint32_t.h>
 #include <bx/string.h>
 
+#include "config.h"
 #include "vertexdecl.h"
 
 namespace bgfx
@@ -43,7 +44,7 @@ namespace bgfx
 		&s_attribTypeSizeDx9,
 #elif BGFX_CONFIG_RENDERER_DIRECT3D11
 		&s_attribTypeSizeDx11,
-#elif BGFX_CONFIG_RENDERER_OPENGL|BGFX_CONFIG_RENDERER_OPENGLES2|BGFX_CONFIG_RENDERER_OPENGLES3
+#elif BGFX_CONFIG_RENDERER_OPENGL || BGFX_CONFIG_RENDERER_OPENGLES
 		&s_attribTypeSizeGl,
 #else
 		&s_attribTypeSizeDx9,
@@ -52,8 +53,12 @@ namespace bgfx
 		&s_attribTypeSizeDx11,
 		&s_attribTypeSizeGl,
 		&s_attribTypeSizeGl,
-		&s_attribTypeSizeGl,
 	};
+
+	void initAttribTypeSizeTable(RendererType::Enum _type)
+	{
+		s_attribTypeSize[0] = s_attribTypeSize[_type];
+	}
 
 	void dbgPrintfVargs(const char* _format, va_list _argList)
 	{
@@ -77,12 +82,14 @@ namespace bgfx
 		va_end(argList);
 	}
 
-	void VertexDecl::begin(RendererType::Enum _renderer)
+	VertexDecl& VertexDecl::begin(RendererType::Enum _renderer)
 	{
 		m_hash = _renderer; // use hash to store renderer type while building VertexDecl.
 		m_stride = 0;
 		memset(m_attributes, 0xff, sizeof(m_attributes) );
 		memset(m_offset, 0, sizeof(m_offset) );
+
+		return *this;
 	}
 
 	void VertexDecl::end()
@@ -90,7 +97,7 @@ namespace bgfx
 		m_hash = bx::hashMurmur2A(m_attributes);
 	}
 
-	void VertexDecl::add(Attrib::Enum _attrib, uint8_t _num, AttribType::Enum _type, bool _normalized, bool _asInt)
+	VertexDecl& VertexDecl::add(Attrib::Enum _attrib, uint8_t _num, AttribType::Enum _type, bool _normalized, bool _asInt)
 	{
 		const uint8_t encodedNorm = (_normalized&1)<<6;
 		const uint8_t encodedType = (_type&3)<<3;
@@ -100,6 +107,15 @@ namespace bgfx
 		m_attributes[_attrib] = encodedNorm|encodedType|encodedNum|encodeAsInt;
 		m_offset[_attrib] = m_stride;
 		m_stride += (*s_attribTypeSize[m_hash])[_type][_num-1];
+
+		return *this;
+	}
+
+	VertexDecl& VertexDecl::skip(uint8_t _num)
+	{
+		m_stride += _num;
+
+		return *this;
 	}
 
 	void VertexDecl::decode(Attrib::Enum _attrib, uint8_t& _num, AttribType::Enum& _type, bool& _normalized, bool& _asInt) const
@@ -137,37 +153,36 @@ namespace bgfx
 
 	void dump(const VertexDecl& _decl)
 	{
-#if BGFX_CONFIG_DEBUG
-		dbgPrintf("vertexdecl %08x (%08x), stride %d\n"
-			, _decl.m_hash
-			, bx::hashMurmur2A(_decl.m_attributes)
-			, _decl.m_stride
-			);
-
-		for (uint32_t attr = 0; attr < Attrib::Count; ++attr)
+		if (BX_ENABLED(BGFX_CONFIG_DEBUG) )
 		{
-			if (0xff != _decl.m_attributes[attr])
-			{
-				uint8_t num;
-				AttribType::Enum type;
-				bool normalized;
-				bool asInt;
-				_decl.decode(Attrib::Enum(attr), num, type, normalized, asInt);
-
-				dbgPrintf("\tattr %d - %s, num %d, type %d, norm %d, asint %d, offset %d\n"
-					, attr
-					, getAttribName(Attrib::Enum(attr) )
-					, num
-					, type
-					, normalized
-					, asInt
-					, _decl.m_offset[attr]
+			dbgPrintf("vertexdecl %08x (%08x), stride %d\n"
+				, _decl.m_hash
+				, bx::hashMurmur2A(_decl.m_attributes)
+				, _decl.m_stride
 				);
+
+			for (uint32_t attr = 0; attr < Attrib::Count; ++attr)
+			{
+				if (0xff != _decl.m_attributes[attr])
+				{
+					uint8_t num;
+					AttribType::Enum type;
+					bool normalized;
+					bool asInt;
+					_decl.decode(Attrib::Enum(attr), num, type, normalized, asInt);
+
+					dbgPrintf("\tattr %d - %s, num %d, type %d, norm %d, asint %d, offset %d\n"
+						, attr
+						, getAttribName(Attrib::Enum(attr) )
+						, num
+						, type
+						, normalized
+						, asInt
+						, _decl.m_offset[attr]
+					);
+				}
 			}
 		}
-#else
-		BX_UNUSED(_decl);
-#endif // BGFX_CONFIG_DEBUG
 	}
 
 	void vertexPack(const float _input[4], bool _inputNormalized, Attrib::Enum _attr, const VertexDecl& _decl, void* _data, uint32_t _index)
@@ -483,4 +498,97 @@ namespace bgfx
 		}
 	}
 
+	inline float sqLength(const float _a[3], const float _b[3])
+	{
+		const float xx = _a[0] - _b[0];
+		const float yy = _a[1] - _b[1];
+		const float zz = _a[2] - _b[2];
+		return xx*xx + yy*yy + zz*zz;
+	}
+
+	uint16_t weldVerticesRef(uint16_t* _output, const VertexDecl& _decl, const void* _data, uint16_t _num, float _epsilon)
+	{
+		// Brute force slow vertex welding...
+		const float epsilonSq = _epsilon*_epsilon;
+
+		uint32_t numVertices = 0;
+		memset(_output, 0xff, _num*sizeof(uint16_t) );
+
+		for (uint32_t ii = 0; ii < _num; ++ii)
+		{
+			if (UINT16_MAX != _output[ii])
+			{
+				continue;
+			}
+
+			_output[ii] = (uint16_t)ii;
+			++numVertices;
+
+			float pos[4];
+			vertexUnpack(pos, bgfx::Attrib::Position, _decl, _data, ii);
+
+			for (uint32_t jj = 0; jj < _num; ++jj)
+			{
+				if (UINT16_MAX != _output[jj])
+				{
+					continue;
+				}
+
+				float test[4];
+				vertexUnpack(test, bgfx::Attrib::Position, _decl, _data, jj);
+
+				if (sqLength(test, pos) < epsilonSq)
+				{
+					_output[jj] = (uint16_t)ii;
+				}
+			}
+		}
+
+		return (uint16_t)numVertices;
+	}
+
+	uint16_t weldVertices(uint16_t* _output, const VertexDecl& _decl, const void* _data, uint16_t _num, float _epsilon)
+	{
+		const uint32_t hashSize = bx::uint32_nextpow2(_num);
+		const uint32_t hashMask = hashSize-1;
+		const float epsilonSq = _epsilon*_epsilon;
+
+		uint32_t numVertices = 0;
+
+		const uint32_t size = sizeof(uint16_t)*(hashSize + _num);
+		uint16_t* hashTable = (uint16_t*)alloca(size);
+		memset(hashTable, 0xff, size);
+
+		uint16_t* next = hashTable + hashSize;
+
+		for (uint32_t ii = 0; ii < _num; ++ii)
+		{
+			float pos[4];
+			vertexUnpack(pos, bgfx::Attrib::Position, _decl, _data, ii);
+			uint32_t hashValue = bx::hashMurmur2A(pos, 3*sizeof(float) ) & hashMask;
+
+			uint16_t offset = hashTable[hashValue];
+			for (; UINT16_MAX != offset; offset = next[offset])
+			{
+				float test[4];
+				vertexUnpack(test, bgfx::Attrib::Position, _decl, _data, _output[offset]);
+
+				if (sqLength(test, pos) < epsilonSq)
+				{
+					_output[ii] = _output[offset];
+					break;
+				}
+			}
+
+			if (UINT16_MAX == offset)
+			{
+				_output[ii] = (uint16_t)ii;
+				next[ii] = hashTable[hashValue];
+				hashTable[hashValue] = (uint16_t)ii;
+				numVertices++;
+			}
+		}
+
+		return (uint16_t)numVertices;
+	}
 } // namespace bgfx

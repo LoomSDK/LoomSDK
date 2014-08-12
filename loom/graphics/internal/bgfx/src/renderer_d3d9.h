@@ -1,10 +1,10 @@
 /*
- * Copyright 2011-2013 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2014 Branimir Karadzic. All rights reserved.
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
 
-#ifndef __RENDERER_D3D9_H__
-#define __RENDERER_D3D9_H__
+#ifndef BGFX_RENDERER_D3D9_H_HEADER_GUARD
+#define BGFX_RENDERER_D3D9_H_HEADER_GUARD
 
 #define BGFX_CONFIG_RENDERER_DIRECT3D9EX (BX_PLATFORM_WINDOWS && 0)
 
@@ -30,9 +30,9 @@ typedef IDirect3D9* (WINAPI *Direct3DCreate9Fn)(UINT SDKVersion);
 
 #	define D3DFMT_DF24 D3DFMT_D24FS8
 
-#	define _PIX_SETMARKER(_col, _name) do {} while(0)
-#	define _PIX_BEGINEVENT(_col, _name) do {} while(0)
-#	define _PIX_ENDEVENT() do {} while(0)
+#	define _PIX_SETMARKER(_col, _name) BX_NOOP()
+#	define _PIX_BEGINEVENT(_col, _name) BX_NOOP()
+#	define _PIX_ENDEVENT() BX_NOOP
 #endif // BX_PLATFORM_
 
 #ifndef D3DSTREAMSOURCE_INDEXEDDATA
@@ -116,9 +116,9 @@ namespace bgfx
 		DWORD m_quality;
 	};
 
-	struct IndexBuffer
+	struct IndexBufferD3D9
 	{
-		IndexBuffer()
+		IndexBufferD3D9()
 			: m_ptr(NULL)
 			, m_dynamic(false)
 		{
@@ -156,9 +156,9 @@ namespace bgfx
 		bool m_dynamic;
 	};
 
-	struct VertexBuffer
+	struct VertexBufferD3D9
 	{
-		VertexBuffer()
+		VertexBufferD3D9()
 			: m_ptr(NULL)
 			, m_dynamic(false)
 		{
@@ -199,6 +199,11 @@ namespace bgfx
 
 	struct VertexDeclaration
 	{
+		VertexDeclaration()
+			: m_ptr(NULL)
+		{
+		}
+
 		void create(const VertexDecl& _decl);
 
 		void destroy()
@@ -210,39 +215,55 @@ namespace bgfx
 		VertexDecl m_decl;
 	};
 
-	struct Shader
+	struct ShaderD3D9
 	{
-		Shader()
-			: m_ptr(NULL)
+		ShaderD3D9()
+			: m_vertexShader(NULL)
+			, m_constantBuffer(NULL)
+			, m_numPredefined(0)
+			, m_type(0)
 		{
 		}
 
-		void create(bool _fragment, const Memory* _mem);
+		void create(const Memory* _mem);
 		DWORD* getShaderCode(uint8_t _fragmentBit, const Memory* _mem);
 
 		void destroy()
 		{
-			ConstantBuffer::destroy(m_constantBuffer);
-			m_constantBuffer = NULL;
+			if (NULL != m_constantBuffer)
+			{
+				ConstantBuffer::destroy(m_constantBuffer);
+				m_constantBuffer = NULL;
+			}
 			m_numPredefined = 0;
 
-			DX_RELEASE(m_ptr, 0);
+			switch (m_type)
+			{
+			case 0:  DX_RELEASE(m_vertexShader, 0);
+			default: DX_RELEASE(m_pixelShader,  0);
+			}
 		}
 
-		IUnknown* m_ptr;
+		union
+		{
+			// X360 doesn't have interface inheritance (can't use IUnknown*).
+			IDirect3DVertexShader9* m_vertexShader;
+			IDirect3DPixelShader9*  m_pixelShader;
+		};
 		ConstantBuffer* m_constantBuffer;
 		PredefinedUniform m_predefined[PredefinedUniform::Count];
 		uint8_t m_numPredefined;
+		uint8_t m_type;
 	};
 
-	struct Program
+	struct ProgramD3D9
 	{
-		void create(const Shader& _vsh, const Shader& _fsh)
+		void create(const ShaderD3D9& _vsh, const ShaderD3D9& _fsh)
 		{
-			BX_CHECK(NULL != _vsh.m_ptr, "Vertex shader doesn't exist.");
+			BX_CHECK(NULL != _vsh.m_vertexShader, "Vertex shader doesn't exist.");
 			m_vsh = &_vsh;
 
-			BX_CHECK(NULL != _fsh.m_ptr, "Fragment shader doesn't exist.");
+			BX_CHECK(NULL != _fsh.m_pixelShader, "Fragment shader doesn't exist.");
 			m_fsh = &_fsh;
 
 			memcpy(&m_predefined[0], _vsh.m_predefined, _vsh.m_numPredefined*sizeof(PredefinedUniform) );
@@ -257,27 +278,14 @@ namespace bgfx
 			m_fsh = NULL;
 		}
 
-		void commit()
-		{
-			if (NULL != m_vsh->m_constantBuffer)
-			{
-				m_vsh->m_constantBuffer->commit();
-			}
-
-			if (NULL != m_fsh->m_constantBuffer)
-			{
-				m_fsh->m_constantBuffer->commit();
-			}
-		}
-
-		const Shader* m_vsh;
-		const Shader* m_fsh;
+		const ShaderD3D9* m_vsh;
+		const ShaderD3D9* m_fsh;
 
 		PredefinedUniform m_predefined[PredefinedUniform::Count*2];
 		uint8_t m_numPredefined;
 	};
 
-	struct Texture
+	struct TextureD3D9
 	{
 		enum Enum
 		{
@@ -286,95 +294,81 @@ namespace bgfx
 			TextureCube,
 		};
 
-		Texture()
+		TextureD3D9()
 			: m_ptr(NULL)
+			, m_surface(NULL)
+			, m_textureFormat(TextureFormat::Unknown)
 		{
 		}
 
-		void createTexture(uint32_t _width, uint32_t _height, uint8_t _numMips, D3DFORMAT _fmt);
-		void createVolumeTexture(uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _numMips, D3DFORMAT _fmt);
-		void createCubeTexture(uint32_t _edge, uint32_t _numMips, D3DFORMAT _fmt);
+		void createTexture(uint32_t _width, uint32_t _height, uint8_t _numMips);
+		void createVolumeTexture(uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _numMips);
+		void createCubeTexture(uint32_t _edge, uint32_t _numMips);
 
 		uint8_t* lock(uint8_t _side, uint8_t _lod, uint32_t& _pitch, uint32_t& _slicePitch, const Rect* _rect = NULL);
 		void unlock(uint8_t _side, uint8_t _lod);
 		void dirty(uint8_t _side, const Rect& _rect, uint16_t _z, uint16_t _depth);
 
-		void create(const Memory* _mem, uint32_t _flags);
+		void create(const Memory* _mem, uint32_t _flags, uint8_t _skip);
 
 		void destroy()
 		{
 			DX_RELEASE(m_ptr, 0);
+			DX_RELEASE(m_surface, 0);
+			m_textureFormat = TextureFormat::Unknown;
 		}
 
 		void updateBegin(uint8_t _side, uint8_t _mip);
-		void update(uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, const Memory* _mem);
+		void update(uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem);
 		void updateEnd();
 		void commit(uint8_t _stage, uint32_t _flags = BGFX_SAMPLER_DEFAULT_FLAGS);
+		void resolve() const;
+
+		void preReset();
+		void postReset();
 	
 		union
 		{
-			IDirect3DBaseTexture9* m_ptr;
-			IDirect3DTexture9* m_texture2d;
+			IDirect3DBaseTexture9*   m_ptr;
+			IDirect3DTexture9*       m_texture2d;
 			IDirect3DVolumeTexture9* m_texture3d;
-			IDirect3DCubeTexture9* m_textureCube;
+			IDirect3DCubeTexture9*   m_textureCube;
 		};
 
+		IDirect3DSurface9* m_surface;
 		uint32_t m_flags;
-		TextureFormat::Enum m_format;
-		Enum m_type;
-	};
-
-	struct RenderTarget
-	{
-		RenderTarget()
-			: m_rt(NULL)
-			, m_colorTexture(NULL)
-			, m_color(NULL)
-			, m_depthTexture(NULL)
-			, m_depth(NULL)
-			, m_width(0)
-			, m_height(0)
-			, m_flags(0)
-			, m_depthOnly(false)
-		{
-		}
-
-		void create(uint16_t _width, uint16_t _height, uint32_t _flags, uint32_t _textureFlags);
-		void createTextures();
-		void destroyTextures();
-
-		void destroy()
-		{
-			destroyTextures();
-			m_flags = 0;
-		}
-
-		void preReset()
-		{
-			destroyTextures();
-		}
-
-		void postReset()
-		{
-			createTextures();
-		}
-
-		void commit(uint8_t _stage, uint32_t _textureFlags = BGFX_SAMPLER_DEFAULT_FLAGS);
-		void resolve();
-
-		Msaa m_msaa;
-		IDirect3DSurface9* m_rt;
-		IDirect3DTexture9* m_colorTexture;
-		IDirect3DSurface9* m_color;
-		IDirect3DTexture9* m_depthTexture;
-		IDirect3DSurface9* m_depth;
 		uint16_t m_width;
 		uint16_t m_height;
-		uint32_t m_flags;
-		uint32_t m_textureFlags;
-		bool m_depthOnly;
+		uint8_t m_numMips;
+		uint8_t m_type;
+		uint8_t m_requestedFormat;
+		uint8_t m_textureFormat;
+	};
+
+	struct FrameBufferD3D9
+	{
+		FrameBufferD3D9()
+			: m_num(0)
+			, m_needResolve(0)
+		{
+			m_depthHandle.idx = invalidHandle;
+		}
+
+		void create(uint8_t _num, const TextureHandle* _handles);
+		void destroy();
+		void resolve() const;
+		void preReset();
+		void postReset();
+		void createNullColorRT();
+
+		IDirect3DSurface9* m_color[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
+		IDirect3DSurface9* m_depthStencil;
+		TextureHandle m_colorHandle[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
+		TextureHandle m_depthHandle;
+		uint8_t m_num;
+		bool m_needResolve;
 	};
 
 } // namespace bgfx
 
-#endif // __RENDERER_D3D9_H__
+#endif // BGFX_RENDERER_D3D9_H_HEADER_GUARD
