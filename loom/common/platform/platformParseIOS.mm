@@ -23,7 +23,7 @@ limitations under the License.
 #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
 
 #import <UIKit/UIKit.h>
-#import "Parse.h"
+#include "Parse.h"
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformParse.h"

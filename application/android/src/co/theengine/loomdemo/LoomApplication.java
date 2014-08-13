@@ -23,25 +23,9 @@ THE SOFTWARE.
  ****************************************************************************/
 package co.theengine.loomdemo;
 
-import org.cocos2dx.lib.Cocos2dxActivity;
-import org.cocos2dx.lib.Cocos2dxEditText;
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
-import org.cocos2dx.lib.Cocos2dxRenderer;
-
 import android.app.Application;
-import android.app.ActivityManager;
-import android.content.Context;
 import android.content.res.Configuration;
-import android.content.pm.ConfigurationInfo;
-import android.os.Bundle;
-import android.util.Log;
-import android.widget.FrameLayout;
-import android.widget.RelativeLayout;
-import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.view.View;
-import android.view.ViewTreeObserver.OnGlobalLayoutListener;
-import android.content.Intent;
+
 
 
 //global state Application class

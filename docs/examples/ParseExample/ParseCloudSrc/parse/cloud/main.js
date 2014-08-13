@@ -11,12 +11,12 @@ Parse.Cloud.define("sendPN", function(request, response) {
 			{
 				  where: iQuery, // Set our Installation query
 					  data: {						
-						alert: "Hi, "+request.params.recipientName + "! This is a test Parse push note from user " + username + "!"
+						alert: "Hi, "+request.params.recipientName + "! This is a test Parse Push Notfication from user " + username + "!"
 					  }
 			}, {
 				  success: function() {
 					
-					response.success("Push note to user "+request.params.recipientName+" sent.");
+					response.success("Push Notification to user "+request.params.recipientName+" sent.");
 				  },
 				  error: function(error) {
 					response.error(error);
