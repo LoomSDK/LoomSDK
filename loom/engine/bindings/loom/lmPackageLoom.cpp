@@ -29,6 +29,7 @@ void installLoomHTTPRequest();
 void installLoomNativeStore();
 void installLoomVideo();
 void installLoomMobile();
+void installLoomParse();
 void installLoomGraphics();
 void installLoom2D();
 void installPackageLoomSound();
@@ -45,6 +46,7 @@ void installPackageLoom()
     installLoomNativeStore();
     installLoomVideo();
     installLoomMobile();
+    installLoomParse();
     installPackageLoomSound();
 
     // Should be its own package for maximum correctness.

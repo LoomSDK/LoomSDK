@@ -34,6 +34,7 @@
 #include "loom/common/platform/platformMobileiOS.h"
 
 
+
 static void handleGenericEvent(void *userData, const char *type, const char *payload)
 {
     RootViewController *ac = (RootViewController*)userData;
@@ -84,6 +85,10 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
 
     [[UIApplication sharedApplication] setStatusBarHidden: YES];
     
+    // Parse setup for Push Notifications
+    parse = [[ParseAPIiOS alloc] init];
+    [parse initialize];
+
     cocos2d::CCApplication::sharedApplication().run();
     
     return YES;
@@ -167,6 +172,27 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
      Called when the application is about to terminate.
      See also applicationDidEnterBackground:.
      */
+}
+
+
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
+{
+    /// Parse Push Notifications
+    NSLog(@"---------Registered Parse for Remote Notifiations");
+    [parse registerForRemoteNotifications: deviceToken];
+}
+- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
+{
+    /// Parse Push Notifications
+    NSInteger code = [error code];
+    NSString *codeString = [NSString stringWithFormat:@"Error code: %ld",(long)code];
+    NSLog(@"---------Failed to register Parse for Remote Notifications: %@", codeString);
+    [parse failedToRegister: error];
+}
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
+    /// Parse Push Notifications
+    NSLog(@"---------Received Remote Notification: sending through to Parse");
+    [parse receivedRemoteNotification: userInfo];
 }
 
 

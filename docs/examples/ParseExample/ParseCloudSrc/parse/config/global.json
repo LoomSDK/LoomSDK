@@ -1,0 +1,14 @@
+{
+    "applications": {
+        "ParseREST": {
+            "applicationId": "DWevTlDmSZuMRJIhCJMjR4baGdKh8eeYMQMOMzyD", 
+            "masterKey": "GuC3UU8MY0XlbFiElM9xAHewNEl7UF9hbkvdJsZI"
+        }, 
+        "_default": {
+            "link": "ParseREST"
+        }
+    }, 
+    "global": {
+        "parseVersion": "1.2.18"
+    }
+}
