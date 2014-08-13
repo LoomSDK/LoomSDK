@@ -3,31 +3,35 @@
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
 
-#ifndef __BX_PLATFORM_H__
-#define __BX_PLATFORM_H__
+#ifndef BX_PLATFORM_H_HEADER_GUARD
+#define BX_PLATFORM_H_HEADER_GUARD
 
 #define BX_COMPILER_CLANG 0
-#define BX_COMPILER_GCC 0
-#define BX_COMPILER_MSVC 0
+#define BX_COMPILER_GCC   0
+#define BX_COMPILER_MSVC  0
 
-#define BX_PLATFORM_ANDROID 0
+#define BX_PLATFORM_ANDROID    0
 #define BX_PLATFORM_EMSCRIPTEN 0
-#define BX_PLATFORM_IOS 0
-#define BX_PLATFORM_LINUX 0
-#define BX_PLATFORM_NACL 0
-#define BX_PLATFORM_OSX 0
-#define BX_PLATFORM_QNX 0
-#define BX_PLATFORM_WINDOWS 0
-#define BX_PLATFORM_XBOX360 0
+#define BX_PLATFORM_FREEBSD    0
+#define BX_PLATFORM_IOS        0
+#define BX_PLATFORM_LINUX      0
+#define BX_PLATFORM_NACL       0
+#define BX_PLATFORM_OSX        0
+#define BX_PLATFORM_QNX        0
+#define BX_PLATFORM_WINDOWS    0
+#define BX_PLATFORM_WINRT      0
+#define BX_PLATFORM_XBOX360    0
 
-#define BX_CPU_ARM 0
-#define BX_CPU_PPC 0
-#define BX_CPU_X86 0
+#define BX_CPU_ARM  0
+#define BX_CPU_JIT  0
+#define BX_CPU_MIPS 0
+#define BX_CPU_PPC  0
+#define BX_CPU_X86  0
 
 #define BX_ARCH_32BIT 0
 #define BX_ARCH_64BIT 0
 
-#define BX_CPU_ENDIAN_BIG 0
+#define BX_CPU_ENDIAN_BIG    0
 #define BX_CPU_ENDIAN_LITTLE 0
 
 // http://sourceforge.net/apps/mediawiki/predef/index.php?title=Compilers
@@ -50,8 +54,19 @@
 #	undef BX_PLATFORM_XBOX360
 #	define BX_PLATFORM_XBOX360 1
 #elif defined(_WIN32) || defined(_WIN64)
-#	undef BX_PLATFORM_WINDOWS
-#	define BX_PLATFORM_WINDOWS 1
+// http://msdn.microsoft.com/en-us/library/6sehtctf.aspx
+#	if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+#		undef BX_PLATFORM_WINDOWS
+#		if !defined(WINVER) && !defined(_WIN32_WINNT)
+		// Windows Server 2003 with SP1, Windows XP with SP2 and above
+#			define WINVER 0x0502
+#			define _WIN32_WINNT 0x0502
+#		endif // !defined(WINVER) && !defined(_WIN32_WINNT)
+#		define BX_PLATFORM_WINDOWS _WIN32_WINNT
+#	else
+#		undef BX_PLATFORM_WINRT
+#		define BX_PLATFORM_WINRT 1
+#	endif
 #elif defined(__native_client__)
 // NaCl compiler defines __linux__
 #	undef BX_PLATFORM_NACL
@@ -75,22 +90,32 @@
 #elif defined(__QNX__)
 #	undef BX_PLATFORM_QNX
 #	define BX_PLATFORM_QNX 1
+#elif defined(__FreeBSD__)
+#	undef BX_PLATFORM_FREEBSD
+#	define BX_PLATFORM_FREEBSD 1
 #else
 #	error "BX_PLATFORM_* is not defined!"
 #endif //
 
-#define BX_PLATFORM_POSIX (BX_PLATFORM_ANDROID \
+#define BX_PLATFORM_POSIX (0 \
+						|| BX_PLATFORM_ANDROID \
 						|| BX_PLATFORM_EMSCRIPTEN \
+						|| BX_PLATFORM_FREEBSD \
 						|| BX_PLATFORM_IOS \
 						|| BX_PLATFORM_LINUX \
 						|| BX_PLATFORM_NACL \
 						|| BX_PLATFORM_OSX \
-						|| BX_PLATFORM_QNX)
+						|| BX_PLATFORM_QNX \
+						)
 
 // http://sourceforge.net/apps/mediawiki/predef/index.php?title=Architectures
-#if defined(__arm__)
+#if defined(__arm__) || (defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP))
 #	undef BX_CPU_ARM
 #	define BX_CPU_ARM 1
+#	define BX_CACHE_LINE_SIZE 64
+#elif defined(__MIPSEL__) || defined(__mips_isa_rev) // defined(mips)
+#	undef BX_CPU_MIPS
+#	define BX_CPU_MIPS 1
 #	define BX_CACHE_LINE_SIZE 64
 #elif defined(_M_PPC) || defined(__powerpc__) || defined(__powerpc64__)
 #	undef BX_CPU_PPC
@@ -100,14 +125,18 @@
 #	undef BX_CPU_X86
 #	define BX_CPU_X86 1
 #	define BX_CACHE_LINE_SIZE 64
+#else // PNaCl doesn't have CPU defined.
+#	undef BX_CPU_JIT
+#	define BX_CPU_JIT 1
+#	define BX_CACHE_LINE_SIZE 64
 #endif // 
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__64BIT__) || defined(__powerpc64__) || defined(__ppc64__)
 #	undef BX_ARCH_64BIT
-#	define BX_ARCH_64BIT 1
+#	define BX_ARCH_64BIT 64
 #else
 #	undef BX_ARCH_32BIT
-#	define BX_ARCH_32BIT 1
+#	define BX_ARCH_32BIT 32
 #endif //
 
 #if BX_CPU_PPC
@@ -122,12 +151,62 @@
 #	define BX_CONFIG_ENABLE_MSVC_LEVEL4_WARNINGS 0
 #endif // BX_CONFIG_ENABLE_MSVC_LEVEL4_WARNINGS
 
+#if BX_COMPILER_GCC
+#	define BX_COMPILER_NAME "GCC"
+#elif BX_COMPILER_CLANG
+#	define BX_COMPILER_NAME "Clang"
+#elif BX_COMPILER_MSVC
+#	define BX_COMPILER_NAME "MSVC"
+#endif // BX_COMPILER_
+
+#if BX_PLATFORM_ANDROID
+#	define BX_PLATFORM_NAME "Android"
+#elif BX_PLATFORM_EMSCRIPTEN
+#	define BX_PLATFORM_NAME "asm.js"
+#elif BX_PLATFORM_FREEBSD
+#	define BX_PLATFORM_NAME "FreeBSD"
+#elif BX_PLATFORM_IOS
+#	define BX_PLATFORM_NAME "iOS"
+#elif BX_PLATFORM_LINUX
+#	define BX_PLATFORM_NAME "Linux"
+#elif BX_PLATFORM_NACL
+#	define BX_PLATFORM_NAME "NaCl"
+#elif BX_PLATFORM_OSX
+#	define BX_PLATFORM_NAME "OSX"
+#elif BX_PLATFORM_QNX
+#	define BX_PLATFORM_NAME "QNX"
+#elif BX_PLATFORM_WINDOWS
+#	define BX_PLATFORM_NAME "Windows"
+#elif BX_PLATFORM_WINRT
+#	define BX_PLATFORM_NAME "WinRT"
+#endif // BX_PLATFORM_
+
+#if BX_CPU_ARM
+#	define BX_CPU_NAME "ARM"
+#elif BX_CPU_MIPS
+#	define BX_CPU_NAME "MIPS"
+#elif BX_CPU_PPC
+#	define BX_CPU_NAME "PowerPC"
+#elif BX_CPU_JIT
+#	define BX_CPU_NAME "JIT-VM"
+#elif BX_CPU_X86
+#	define BX_CPU_NAME "x86"
+#endif // BX_CPU_
+
+#if BX_ARCH_32BIT
+#	define BX_ARCH_NAME "32-bit"
+#elif BX_ARCH_64BIT
+#	define BX_ARCH_NAME "64-bit"
+#endif // BX_ARCH_
+
 #if BX_CONFIG_ENABLE_MSVC_LEVEL4_WARNINGS && BX_COMPILER_MSVC
 #	pragma warning(error:4062) // ENABLE warning C4062: enumerator'...' in switch of enum '...' is not handled
 #	pragma warning(error:4121) // ENABLE warning C4121: 'symbol' : alignment of a member was sensitive to packing
+//#	pragma warning(error:4127) // ENABLE warning C4127: conditional expression is constant
 #	pragma warning(error:4130) // ENABLE warning C4130: 'operator' : logical operation on address of string constant
 #	pragma warning(error:4239) // ENABLE warning C4239: nonstandard extension used : 'argument' : conversion from '*' to '* &' A non-const reference may only be bound to an lvalue
-//#	pragma warning(error:4244) // ENABLE warning C4244: 'conversion' conversion from 'type1' to 'type2', possible loss of data
+//#	pragma warning(error:4244) // ENABLE warning C4244: 'argument' : conversion from 'type1' to 'type2', possible loss of data
+#	pragma warning(error:4245) // ENABLE warning C4245: 'conversion' : conversion from 'type1' to 'type2', signed/unsigned mismatch
 #	pragma warning(error:4263) // ENABLE warning C4263: 'function' : member function does not override any base class virtual member function
 #	pragma warning(error:4265) // ENABLE warning C4265: class has virtual functions, but destructor is not virtual
 #	pragma warning(error:4431) // ENABLE warning C4431: missing type specifier - int assumed. Note: C no longer supports default-int
@@ -145,13 +224,4 @@
 typedef struct { long double x, y; } __float128;
 #endif // BX_COMPILER_CLANG && BX_PLATFORM_LINUX
 
-#if BX_PLATFORM_WINDOWS
-// http://msdn.microsoft.com/en-us/library/6sehtctf.aspx
-#	if !defined(WINVER) && !defined(_WIN32_WINNT)
-		// Windows 2000 and above
-#		define WINVER 0x0500
-#		define _WIN32_WINNT 0x0500
-#	endif // !defined(WINVER) && !defined(_WIN32_WINNT)
-#endif // BX_PLATFORM_WINDOWS
-
-#endif // __BX_PLATFORM_H__
+#endif // BX_PLATFORM_H_HEADER_GUARD

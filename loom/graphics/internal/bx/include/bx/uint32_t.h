@@ -23,13 +23,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE
 
-#ifndef __BX_UINT32_T_H__
-#define __BX_UINT32_T_H__
+#ifndef BX_UINT32_T_H_HEADER_GUARD
+#define BX_UINT32_T_H_HEADER_GUARD
 
 #include "bx.h"
 
 #if BX_COMPILER_MSVC
-#	if BX_PLATFORM_WINDOWS
+#	if BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
 #		include <math.h> // math.h is included because VS bitches:
 						 // warning C4985: 'ceil': attributes not present on previous declaration.
 						 // must be included before intrin.h.
@@ -42,6 +42,11 @@
 #		endif // BX_ARCH_64BIT
 #	endif // BX_PLATFORM_WINDOWS
 #endif // BX_COMPILER_MSVC
+
+#define BX_HALF_FLOAT_ZERO UINT16_C(0)
+#define BX_HALF_FLOAT_HALF UINT16_C(0x3800)
+#define BX_HALF_FLOAT_ONE  UINT16_C(0x3c00)
+#define BX_HALF_FLOAT_TWO  UINT16_C(0x4000)
 
 namespace bx
 {
@@ -256,6 +261,14 @@ namespace bx
 	inline uint32_t uint32_max(uint32_t _a, uint32_t _b)
 	{
 		return _a > _b ? _a : _b;
+	}
+
+	inline uint32_t uint32_clamp(uint32_t _a, uint32_t _min, uint32_t _max)
+	{
+		const uint32_t tmp    = uint32_max(_a, _min);
+		const uint32_t result = uint32_min(tmp, _max);
+
+		return result;
 	}
 
 	inline uint32_t uint32_incwrap(uint32_t _val, uint32_t _min, uint32_t _max)
@@ -582,6 +595,24 @@ namespace bx
 		return _a < _b ? _b : _a;
 	}
 
+	inline int64_t int64_min(int64_t _a, int64_t _b)
+	{
+		return _a < _b ? _a : _b;
+	}
+
+	inline int64_t int64_max(int64_t _a, int64_t _b)
+	{
+		return _a > _b ? _a : _b;
+	}
+
+	inline int64_t int64_clamp(int64_t _a, int64_t _min, int64_t _max)
+	{
+		const int64_t min    = int64_min(_a, _max);
+		const int64_t result = int64_max(_min, min);
+
+		return result;
+	}
+
 	inline uint64_t uint64_cntlz_ref(uint64_t _val)
 	{
 		return _val & UINT64_C(0xffffffff00000000)
@@ -627,4 +658,4 @@ namespace bx
 
 } // namespace bx
 
-#endif // __BX_UINT32_T_H__
+#endif // BX_UINT32_T_H_HEADER_GUARD

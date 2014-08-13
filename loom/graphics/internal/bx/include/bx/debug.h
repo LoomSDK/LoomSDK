@@ -3,14 +3,14 @@
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
 
-#ifndef __BX_DEBUG_H__
-#define __BX_DEBUG_H__
+#ifndef BX_DEBUG_H_HEADER_GUARD
+#define BX_DEBUG_H_HEADER_GUARD
 
 #include "bx.h"
 
 #if BX_PLATFORM_ANDROID
 #	include <android/log.h>
-#elif BX_PLATFORM_WINDOWS || BX_PLATFORM_XBOX360
+#elif BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT || BX_PLATFORM_XBOX360
 extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char* _str);
 #elif BX_PLATFORM_IOS || BX_PLATFORM_OSX
 #	if defined(__OBJC__)
@@ -19,6 +19,8 @@ extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char* _
 #		include <CoreFoundation/CFString.h>
 extern "C" void NSLog(CFStringRef _format, ...);
 #	endif // defined(__OBJC__)
+#elif 0 // BX_PLATFORM_EMSCRIPTEN
+#	include <emscripten.h>
 #else
 #	include <stdio.h>
 #endif // BX_PLATFORM_WINDOWS
@@ -45,7 +47,7 @@ namespace bx
 	{
 #if BX_PLATFORM_ANDROID
 		__android_log_write(ANDROID_LOG_DEBUG, "", _out);
-#elif BX_PLATFORM_WINDOWS || BX_PLATFORM_XBOX360
+#elif BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT || BX_PLATFORM_XBOX360
 		OutputDebugStringA(_out);
 #elif BX_PLATFORM_IOS || BX_PLATFORM_OSX
 #	if defined(__OBJC__)
@@ -53,12 +55,14 @@ namespace bx
 #	else
 		NSLog(__CFStringMakeConstantString("%s"), _out);
 #	endif // defined(__OBJC__)
+#elif 0 // BX_PLATFORM_EMSCRIPTEN
+		emscripten_log(EM_LOG_CONSOLE, "%s", _out);
 #else
-		fputs(_out, stderr);
-		fflush(stderr);
+		fputs(_out, stdout);
+		fflush(stdout);
 #endif // BX_PLATFORM_
 	}
 
 } // namespace bx
 
-#endif // __BX_DEBUG_H__
+#endif // BX_DEBUG_H_HEADER_GUARD

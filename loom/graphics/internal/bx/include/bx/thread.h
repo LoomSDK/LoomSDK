@@ -3,8 +3,8 @@
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
 
-#ifndef __BX_THREAD_H__
-#define __BX_THREAD_H__
+#ifndef BX_THREAD_H_HEADER_GUARD
+#define BX_THREAD_H_HEADER_GUARD
 
 #if BX_PLATFORM_POSIX
 #	include <pthread.h>
@@ -12,13 +12,18 @@
 
 #include "sem.h"
 
+#if BX_CONFIG_SUPPORTS_THREADING
+
 namespace bx
 {
 	typedef int32_t (*ThreadFn)(void* _userData);
 
 	class Thread
 	{
-		BX_CLASS_NO_COPY_NO_ASSIGNMENT(Thread);
+		BX_CLASS(Thread
+			, NO_COPY
+			, NO_ASSIGNMENT
+			);
 
 	public:
 		Thread()
@@ -112,6 +117,11 @@ namespace bx
 			return m_running;
 		}
 
+		int32_t getExitCode() const
+		{
+			return m_exitCode;
+		}
+
 	private:
 		int32_t entry()
 		{
@@ -154,6 +164,71 @@ namespace bx
 		bool m_running;
 	};
 
+#if BX_PLATFORM_WINDOWS
+	class TlsData
+	{
+	public:
+		TlsData()
+		{
+			m_id = TlsAlloc();
+			BX_CHECK(TLS_OUT_OF_INDEXES != m_id, "Failed to allocated TLS index (err: 0x%08x).", GetLastError() );
+		}
+
+		~TlsData()
+		{
+			BOOL result = TlsFree(m_id);
+			BX_CHECK(0 != result, "Failed to free TLS index (err: 0x%08x).", GetLastError() ); BX_UNUSED(result);
+		}
+
+		void* get() const
+		{
+			return TlsGetValue(m_id);
+		}
+
+		void set(void* _ptr)
+		{
+			TlsSetValue(m_id, _ptr);
+		}
+
+	private:
+		uint32_t m_id;
+	};
+
+#else
+
+	class TlsData
+	{
+	public:
+		TlsData()
+		{
+			int result = pthread_key_create(&m_id, NULL);
+			BX_CHECK(0 == result, "pthread_key_create failed %d.", result); BX_UNUSED(result);
+		}
+
+		~TlsData()
+		{
+			int result = pthread_key_delete(m_id);
+			BX_CHECK(0 == result, "pthread_key_delete failed %d.", result); BX_UNUSED(result);
+		}
+
+		void* get() const
+		{
+			return pthread_getspecific(m_id);
+		}
+
+		void set(void* _ptr)
+		{
+			int result = pthread_setspecific(m_id, _ptr);
+			BX_CHECK(0 == result, "pthread_setspecific failed %d.", result); BX_UNUSED(result);
+		}
+
+	private:
+		pthread_key_t m_id;
+	};
+#endif // BX_PLATFORM_WINDOWS
+
 } // namespace bx
 
-#endif // __BX_THREAD_H__
+#endif // BX_CONFIG_SUPPORTS_THREADING
+
+#endif // BX_THREAD_H_HEADER_GUARD

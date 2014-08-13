@@ -3,8 +3,8 @@
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
 
-#ifndef __BX_ENDIAN_H__
-#define __BX_ENDIAN_H__
+#ifndef BX_ENDIAN_H_HEADER_GUARD
+#define BX_ENDIAN_H_HEADER_GUARD
 
 #include "bx.h"
 
@@ -46,8 +46,10 @@ namespace bx
 		return (int64_t)endianSwap( (uint64_t)_in);
 	}
 
+	/// Input argument is encoded as little endian, convert it if neccessary
+	/// depending on host CPU endianess.
 	template <typename Ty>
-	inline Ty littleEndian(const Ty _in)
+	inline Ty toLittleEndian(const Ty _in)
 	{
 #if BX_CPU_ENDIAN_BIG
 		return endianSwap(_in);
@@ -56,8 +58,10 @@ namespace bx
 #endif // BX_CPU_ENDIAN_BIG
 	}
 
+	/// Input argument is encoded as big endian, convert it if neccessary
+	/// depending on host CPU endianess.
 	template <typename Ty>
-	inline Ty bigEndian(const Ty _in)
+	inline Ty toBigEndian(const Ty _in)
 	{
 #if BX_CPU_ENDIAN_LITTLE
 		return endianSwap(_in);
@@ -66,6 +70,18 @@ namespace bx
 #endif // BX_CPU_ENDIAN_LITTLE
 	}
 
+	/// If _littleEndian is true, converts input argument to from little endian
+	/// to host CPU endiness.
+	template <typename Ty>
+	inline Ty toHostEndian(const Ty _in, bool _fromLittleEndian)
+	{
+#if BX_CPU_ENDIAN_LITTLE
+		return _fromLittleEndian ? _in : endianSwap(_in);
+#else
+		return _fromLittleEndian ? endianSwap(_in) : _in;
+#endif // BX_CPU_ENDIAN_LITTLE
+	}
+
 } // namespace bx
 
-#endif // __BX_ENDIAN_H__
+#endif // BX_ENDIAN_H_HEADER_GUARD

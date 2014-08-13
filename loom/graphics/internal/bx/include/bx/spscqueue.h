@@ -3,8 +3,8 @@
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
 
-#ifndef __BX_SPSCQUEUE_H__
-#define __BX_SPSCQUEUE_H__
+#ifndef BX_SPSCQUEUE_H_HEADER_GUARD
+#define BX_SPSCQUEUE_H_HEADER_GUARD
 
 #include "bx.h"
 #include "cpu.h"
@@ -19,7 +19,10 @@ namespace bx
 	template <typename Ty>
 	class SpScUnboundedQueueLf
 	{
-		BX_CLASS_NO_COPY_NO_ASSIGNMENT(SpScUnboundedQueueLf);
+		BX_CLASS(SpScUnboundedQueueLf
+			, NO_COPY
+			, NO_ASSIGNMENT
+			);
 
 	public:
 		SpScUnboundedQueueLf()
@@ -92,10 +95,14 @@ namespace bx
 		Node* m_last;
 	};
 
+#if BX_CONFIG_SUPPORTS_THREADING
 	template<typename Ty>
 	class SpScUnboundedQueueMutex
 	{
-		BX_CLASS_NO_COPY_NO_ASSIGNMENT(SpScUnboundedQueueMutex);
+		BX_CLASS(SpScUnboundedQueueMutex
+			, NO_COPY
+			, NO_ASSIGNMENT
+			);
 
 	public:
 		SpScUnboundedQueueMutex()
@@ -141,17 +148,22 @@ namespace bx
 		bx::LwMutex m_mutex;
 		std::list<Ty*> m_queue;
 	};
+#endif // BX_CONFIG_SUPPORTS_THREADING
 
-#if BX_CONFIG_SPSCQUEUE_USE_MUTEX
+#if BX_CONFIG_SPSCQUEUE_USE_MUTEX && BX_CONFIG_SUPPORTS_THREADING
 #	define SpScUnboundedQueue SpScUnboundedQueueMutex
 #else
 #	define SpScUnboundedQueue SpScUnboundedQueueLf
 #endif // BX_CONFIG_SPSCQUEUE_USE_MUTEX
 
+#if BX_CONFIG_SUPPORTS_THREADING
 	template <typename Ty>
 	class SpScBlockingUnboundedQueue
 	{
-		BX_CLASS_NO_COPY_NO_ASSIGNMENT(SpScBlockingUnboundedQueue);
+		BX_CLASS(SpScBlockingUnboundedQueue
+			, NO_COPY
+			, NO_ASSIGNMENT
+			);
 
 	public:
 		SpScBlockingUnboundedQueue()
@@ -187,7 +199,8 @@ namespace bx
 		Semaphore m_count;
 		SpScUnboundedQueue<void> m_queue;
 	};
+#endif // BX_CONFIG_SUPPORTS_THREADING
 
 } // namespace bx
 
-#endif // __BX_RINGBUFFER_H__
+#endif // BX_RINGBUFFER_H_HEADER_GUARD

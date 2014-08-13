@@ -3,23 +3,23 @@
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
 
-#ifndef __BX_PRINTF_H__
-#define __BX_PRINTF_H__
+#ifndef BX_PRINTF_H_HEADER_GUARD
+#define BX_PRINTF_H_HEADER_GUARD
 
 #include "bx.h"
 #include <alloca.h>
-#include <ctype.h> // tolower
+#include <ctype.h>  // tolower
 #include <stdarg.h> // va_list
 #include <stdio.h>  // vsnprintf, vsnwprintf
 #include <string.h>
-#include <string>
 #include <wchar.h>  // wchar_t
 
 namespace bx
 {
+	///
 	inline bool toBool(const char* _str)
 	{
-		char ch = tolower(_str[0]);
+		char ch = (char)tolower(_str[0]);
 		return ch == 't' ||  ch == '1';
 	}
 
@@ -38,7 +38,7 @@ namespace bx
 	{
 		const char* end = _str + _max;
 		const char* ptr;
-		for (ptr = _str; ptr < end && *ptr != '\0'; ++ptr);
+		for (ptr = _str; ptr < end && *ptr != '\0'; ++ptr) {};
 		return ptr - _str;
 	}
 
@@ -53,7 +53,7 @@ namespace bx
 
 		const char* cmp = _find + 1;
 		size_t len = strlen(cmp);
-		do 
+		do
 		{
 			for (char match = *_str++; match != first && 0 < _size; match = *_str++, --_size)
 			{
@@ -67,7 +67,7 @@ namespace bx
 			{
 				return NULL;
 			}
-			
+
 		} while (0 != strncmp(_str, cmp, len) );
 
 		return --_str;
@@ -118,21 +118,21 @@ namespace bx
 	/// Skip whitespace.
 	inline const char* strws(const char* _str)
 	{
-		for (; isspace(*_str); ++_str);
+		for (; isspace(*_str); ++_str) {};
 		return _str;
 	}
 
 	/// Skip non-whitespace.
 	inline const char* strnws(const char* _str)
 	{
-		for (; !isspace(*_str); ++_str);
+		for (; !isspace(*_str); ++_str) {};
 		return _str;
 	}
 
 	/// Skip word.
 	inline const char* strword(const char* _str)
 	{
-		for (char ch = *_str++; isalnum(ch) || '_' == ch; ch = *_str++);
+		for (char ch = *_str++; isalnum(ch) || '_' == ch; ch = *_str++) {};
 		return _str-1;
 	}
 
@@ -177,13 +177,56 @@ namespace bx
 		}
 	}
 
+	// Finds identifier.
+	inline const char* findIdentifierMatch(const char* _str, const char* _word)
+	{
+		size_t len = strlen(_word);
+		const char* ptr = strstr(_str, _word);
+		for (; NULL != ptr; ptr = strstr(ptr + len, _word) )
+		{
+			if (ptr != _str)
+			{
+				char ch = *(ptr - 1);
+				if (isalnum(ch) || '_' == ch)
+				{
+					continue;
+				}
+			}
+
+			char ch = ptr[len];
+			if (isalnum(ch) || '_' == ch)
+			{
+				continue;
+			}
+
+			return ptr;
+		}
+
+		return ptr;
+	}
+
+	// Finds any identifier from NULL terminated array of identifiers.
+	inline const char* findIdentifierMatch(const char* _str, const char* _words[])
+	{
+		for (const char* word = *_words; NULL != word; ++_words, word = *_words)
+		{
+			const char* match = findIdentifierMatch(_str, word);
+			if (NULL != match)
+			{
+				return match;
+			}
+		}
+
+		return NULL;
+	}
+
 	/// Cross platform implementation of vsnprintf that returns number of
 	/// characters which would have been written to the final string if
 	/// enough space had been available.
 	inline int32_t vsnprintf(char* _str, size_t _count, const char* _format, va_list _argList)
 	{
 #if BX_COMPILER_MSVC
-		int32_t len = ::vsnprintf(_str, _count, _format, _argList);
+		int32_t len = ::vsnprintf_s(_str, _count, size_t(-1), _format, _argList);
 		return -1 == len ? ::_vscprintf(_format, _argList) : len;
 #else
 		return ::vsnprintf(_str, _count, _format, _argList);
@@ -196,7 +239,7 @@ namespace bx
 	inline int32_t vsnwprintf(wchar_t* _str, size_t _count, const wchar_t* _format, va_list _argList)
 	{
 #if BX_COMPILER_MSVC
-		int32_t len = ::_vsnwprintf_s(_str, _count, _count, _format, _argList);
+		int32_t len = ::_vsnwprintf_s(_str, _count, size_t(-1), _format, _argList);
 		return -1 == len ? ::_vscwprintf(_format, _argList) : len;
 #elif defined(__MINGW32__)
 		return ::vsnwprintf(_str, _count, _format, _argList);
@@ -205,6 +248,7 @@ namespace bx
 #endif // BX_COMPILER_MSVC
 	}
 
+	///
 	inline int32_t snprintf(char* _str, size_t _count, const char* _format, ...) // BX_PRINTF_ARGS(3, 4)
 	{
 		va_list argList;
@@ -214,6 +258,7 @@ namespace bx
 		return len;
 	}
 
+	///
 	inline int32_t swnprintf(wchar_t* _out, size_t _count, const wchar_t* _format, ...)
 	{
 		va_list argList;
@@ -223,7 +268,9 @@ namespace bx
 		return len;
 	}
 
-	inline void stringPrintfVargs(std::string& _out, const char* _format, va_list _argList)
+	///
+	template <typename Ty>
+	inline void stringPrintfVargs(Ty& _out, const char* _format, va_list _argList)
 	{
 		char temp[2048];
 
@@ -238,12 +285,30 @@ namespace bx
 		_out.append(out);
 	}
 
-	inline void stringPrintf(std::string& _out, const char* _format, ...)
+	///
+	template <typename Ty>
+	inline void stringPrintf(Ty& _out, const char* _format, ...)
 	{
 		va_list argList;
 		va_start(argList, _format);
 		stringPrintfVargs(_out, _format, argList);
 		va_end(argList);
+	}
+
+	/// Extract base file name from file path.
+	inline const char* baseName(const char* _filePath)
+	{
+		const char* bs       = strrchr(_filePath, '\\');
+		const char* fs       = strrchr(_filePath, '/');
+		const char* slash    = (bs > fs ? bs : fs);
+		const char* colon    = strrchr(_filePath, ':');
+		const char* basename = slash > colon ? slash : colon;
+		if (NULL != basename)
+		{
+			return basename+1;
+		}
+
+		return _filePath;
 	}
 
 	/*
@@ -341,4 +406,4 @@ namespace bx
 
 } // namespace bx
 
-#endif // __BX_PRINTF_H__
+#endif // BX_PRINTF_H_HEADER_GUARD

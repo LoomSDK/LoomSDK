@@ -3,22 +3,24 @@
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
 
-#ifndef __BX_MUTEX_H__
-#define __BX_MUTEX_H__
+#ifndef BX_MUTEX_H_HEADER_GUARD
+#define BX_MUTEX_H_HEADER_GUARD
 
 #include "bx.h"
 #include "cpu.h"
 #include "sem.h"
 
+#if BX_CONFIG_SUPPORTS_THREADING
+
 #if BX_PLATFORM_NACL || BX_PLATFORM_LINUX || BX_PLATFORM_ANDROID || BX_PLATFORM_OSX
 #	include <pthread.h>
-#elif BX_PLATFORM_WINDOWS || BX_PLATFORM_XBOX360
+#elif BX_PLATFORM_WINDOWS || BX_PLATFORM_XBOX360 || BX_PLATFORM_WINRT
 #	include <errno.h>
 #endif // BX_PLATFORM_
 
 namespace bx
 {
-#if BX_PLATFORM_WINDOWS || BX_PLATFORM_XBOX360
+#if BX_PLATFORM_WINDOWS || BX_PLATFORM_XBOX360 || BX_PLATFORM_WINRT
 	typedef CRITICAL_SECTION pthread_mutex_t;
 	typedef unsigned pthread_mutexattr_t;
 
@@ -41,7 +43,11 @@ namespace bx
 
 	inline int pthread_mutex_init(pthread_mutex_t* _mutex, pthread_mutexattr_t* /*_attr*/)
 	{
+#if BX_PLATFORM_WINRT
+        InitializeCriticalSectionEx(_mutex, 4000, 0);   // docs recommend 4000 spincount as sane default
+#else
 		InitializeCriticalSection(_mutex);
+#endif
 		return 0;
 	}
 
@@ -54,6 +60,11 @@ namespace bx
 
 	class Mutex
 	{
+		BX_CLASS(Mutex
+			, NO_COPY
+			, NO_ASSIGNMENT
+			);
+
 	public:
 		Mutex()
 		{
@@ -76,14 +87,17 @@ namespace bx
 		}
 
 	private:
-		Mutex(const Mutex& _rhs); // no copy constructor
-		Mutex& operator=(const Mutex& _rhs); // no assignment operator
-
 		pthread_mutex_t m_handle;
 	};
 
 	class MutexScope
 	{
+		BX_CLASS(MutexScope
+			, NO_DEFAULT_CTOR
+			, NO_COPY
+			, NO_ASSIGNMENT
+			);
+
 	public:
 		MutexScope(Mutex& _mutex)
 			: m_mutex(_mutex)
@@ -97,55 +111,19 @@ namespace bx
 		}
 
 	private:
-		MutexScope(); // no default constructor
-		MutexScope(const MutexScope& _rhs); // no copy constructor
-		MutexScope& operator=(const MutexScope& _rhs); // no assignment operator
-
 		Mutex& m_mutex;
 	};
 
-#if 1
 	typedef Mutex LwMutex;
-#else
-	class LwMutex
-	{
-	public:
-		LwMutex()
-			: m_count(0)
-		{
-		}
-
-		~LwMutex()
-		{
-		}
-
-		void lock()
-		{
-			if (atomicIncr(&m_count) > 1)
-			{
-				m_sem.wait();
-			}
-		}
-
-		void unlock()
-		{
-			if (atomicDecr(&m_count) > 0)
-			{
-				m_sem.post();
-			}
-		}
-
-	private:
-		LwMutex(const LwMutex& _rhs); // no copy constructor
-		LwMutex& operator=(const LwMutex& _rhs); // no assignment operator
-
-		Semaphore m_sem;
-		volatile int32_t m_count;
-	};
-#endif // 0
 
 	class LwMutexScope
 	{
+		BX_CLASS(LwMutexScope
+			, NO_DEFAULT_CTOR
+			, NO_COPY
+			, NO_ASSIGNMENT
+			);
+
 	public:
 		LwMutexScope(LwMutex& _mutex)
 			: m_mutex(_mutex)
@@ -159,13 +137,11 @@ namespace bx
 		}
 
 	private:
-		LwMutexScope(); // no default constructor
-		LwMutexScope(const LwMutexScope& _rhs); // no copy constructor
-		LwMutexScope& operator=(const LwMutexScope& _rhs); // no assignment operator
-
 		LwMutex& m_mutex;
 	};
 
 } // namespace bx
 
-#endif // __BX_MUTEX_H__
+#endif // BX_CONFIG_SUPPORTS_THREADING
+
+#endif // BX_MUTEX_H_HEADER_GUARD

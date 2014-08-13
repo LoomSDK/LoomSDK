@@ -3,8 +3,8 @@
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
 
-#ifndef __BX_COMMANDLINE_H__
-#define __BX_COMMANDLINE_H__
+#ifndef BX_COMMANDLINE_H_HEADER_GUARD
+#define BX_COMMANDLINE_H_HEADER_GUARD
 
 #include "bx.h"
 #include "string.h"
@@ -87,16 +87,40 @@ namespace bx
 			return false;
 		}
 
+		bool hasArg(float& _value, const char _short, const char* _long = NULL) const
+		{
+			const char* arg = findOption(_short, _long, 1);
+			if (NULL != arg)
+			{
+				_value = float(atof(arg));
+				return true;
+			}
+
+			return false;
+		}
+
+		bool hasArg(double& _value, const char _short, const char* _long = NULL) const
+		{
+			const char* arg = findOption(_short, _long, 1);
+			if (NULL != arg)
+			{
+				_value = atof(arg);
+				return true;
+			}
+
+			return false;
+		}
+
 		bool hasArg(bool& _value, const char _short, const char* _long = NULL) const
 		{
 			const char* arg = findOption(_short, _long, 1);
 			if (NULL != arg)
 			{
-				if ('0' == *arg || stricmp(arg, "false") )
+				if ('0' == *arg || (0 == stricmp(arg, "false") ) )
 				{
 					_value = false;
 				}
-				else if ('0' != *arg || stricmp(arg, "true") )
+				else if ('0' != *arg || (0 == stricmp(arg, "true") ) )
 				{
 					_value = true;
 				}
@@ -161,4 +185,4 @@ namespace bx
 
 } // namespace bx
 
-#endif /// __BX_COMMANDLINE_H__
+#endif /// BX_COMMANDLINE_H_HEADER_GUARD

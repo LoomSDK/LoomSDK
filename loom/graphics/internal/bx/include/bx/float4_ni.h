@@ -1,10 +1,10 @@
 /*
- * Copyright 2010-2013 Branimir Karadzic. All rights reserved.
+ * Copyright 2010-2014 Branimir Karadzic. All rights reserved.
  * License: http://www.opensource.org/licenses/BSD-2-Clause
  */
 
-#ifndef __BX_FLOAT4_NI_H__
-#define __BX_FLOAT4_NI_H__
+#ifndef BX_FLOAT4_NI_H_HEADER_GUARD
+#define BX_FLOAT4_NI_H_HEADER_GUARD
 
 namespace bx
 {
@@ -57,7 +57,7 @@ namespace bx
 	{
 		const float4_t one    = float4_splat(1.0f);
 		const float4_t result = float4_div(one, _a);
-		
+
 		return result;
 	}
 
@@ -67,7 +67,7 @@ namespace bx
 		const float4_t tmp0   = float4_or(_a, zwxy);
 		const float4_t tmp1   = float4_swiz_yyyy(_a);
 		const float4_t tmp2   = float4_or(tmp0, tmp1);
-		const float4_t mf000  = float4_ild(-1, 0, 0, 0);
+		const float4_t mf000  = float4_ild(UINT32_MAX, 0, 0, 0);
 		const float4_t result = float4_and(tmp2, mf000);
 
 		return result;
@@ -76,7 +76,7 @@ namespace bx
 	BX_FLOAT4_INLINE float4_t float4_orc_ni(float4_t _a, float4_t _b)
 	{
 		const float4_t aorb   = float4_or(_a, _b);
-		const float4_t mffff  = float4_isplat(-1);
+		const float4_t mffff  = float4_isplat(UINT32_MAX);
 		const float4_t result = float4_xor(aorb, mffff);
 
 		return result;
@@ -109,8 +109,24 @@ namespace bx
 
 	BX_FLOAT4_INLINE float4_t float4_not_ni(float4_t _a)
 	{
-		const float4_t mffff  = float4_isplat(-1);
+		const float4_t mffff  = float4_isplat(UINT32_MAX);
 		const float4_t result = float4_xor(_a, mffff);
+
+		return result;
+	}
+
+	BX_FLOAT4_INLINE float4_t float4_min_ni(float4_t _a, float4_t _b)
+	{
+		const float4_t mask   = float4_cmplt(_a, _b);
+		const float4_t result = float4_selb(mask, _a, _b);
+
+		return result;
+	}
+
+	BX_FLOAT4_INLINE float4_t float4_max_ni(float4_t _a, float4_t _b)
+	{
+		const float4_t mask   = float4_cmpgt(_a, _b);
+		const float4_t result = float4_selb(mask, _a, _b);
 
 		return result;
 	}
@@ -119,6 +135,22 @@ namespace bx
 	{
 		const float4_t a_neg  = float4_neg(_a);
 		const float4_t result = float4_max(a_neg, _a);
+
+		return result;
+	}
+
+	BX_FLOAT4_INLINE float4_t float4_imin_ni(float4_t _a, float4_t _b)
+	{
+		const float4_t mask   = float4_icmplt(_a, _b);
+		const float4_t result = float4_selb(mask, _a, _b);
+
+		return result;
+	}
+
+	BX_FLOAT4_INLINE float4_t float4_imax_ni(float4_t _a, float4_t _b)
+	{
+		const float4_t mask   = float4_icmpgt(_a, _b);
+		const float4_t result = float4_selb(mask, _a, _b);
 
 		return result;
 	}
@@ -194,16 +226,11 @@ namespace bx
 
 	namespace float4_logexp_detail
 	{
-		BX_FLOAT4_INLINE float4_t float4_poly0(float4_t _a, float _b)
-		{
-			return float4_splat(_b);
-		}
-
 		BX_FLOAT4_INLINE float4_t float4_poly1(float4_t _a, float _b, float _c)
 		{
 			const float4_t bbbb   = float4_splat(_b);
-			const float4_t poly0  = float4_poly0(_a, _c);
-			const float4_t result = float4_madd(poly0, _a, bbbb);
+			const float4_t cccc   = float4_splat(_c);
+			const float4_t result = float4_madd(cccc, _a, bbbb);
 
 			return result;
 		}
@@ -426,6 +453,32 @@ namespace bx
 		return result;
 	}
 
+	BX_FLOAT4_INLINE bool float4_test_any_ni(float4_t _a)
+	{
+		const float4_t mask   = float4_sra(_a, 31);
+		const float4_t zwxy   = float4_swiz_zwxy(mask);
+		const float4_t tmp0   = float4_or(mask, zwxy);
+		const float4_t tmp1   = float4_swiz_yyyy(tmp0);
+		const float4_t tmp2   = float4_or(tmp0, tmp1);
+		int res;
+		float4_stx(&res, tmp2);
+		return 0 != res;
+	}
+
+	BX_FLOAT4_INLINE bool float4_test_all_ni(float4_t _a)
+	{
+		const float4_t bits   = float4_sra(_a, 31);
+		const float4_t m1248  = float4_ild(1, 2, 4, 8);
+		const float4_t mask   = float4_and(bits, m1248);
+		const float4_t zwxy   = float4_swiz_zwxy(mask);
+		const float4_t tmp0   = float4_or(mask, zwxy);
+		const float4_t tmp1   = float4_swiz_yyyy(tmp0);
+		const float4_t tmp2   = float4_or(tmp0, tmp1);
+		int res;
+		float4_stx(&res, tmp2);
+		return 0xf == res;
+	}
+
 } // namespace bx
 
-#endif // __BX_FLOAT4_NI_H__
+#endif // BX_FLOAT4_NI_H_HEADER_GUARD
