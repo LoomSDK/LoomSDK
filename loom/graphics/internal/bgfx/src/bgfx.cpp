@@ -1027,16 +1027,17 @@ namespace bgfx
 		m_indexBufferHandle.reset();
 		m_vertexDeclHandle.reset();
 		m_vertexBufferHandle.reset();
-		m_vertexShaderHandle.reset();
-		m_fragmentShaderHandle.reset();
+		m_shaderHandle.reset();
 		m_programHandle.reset();
 		m_textureHandle.reset();
-		m_renderTargetHandle.reset();
+		m_frameBufferHandle.reset();
 		m_uniformHandle.reset();
 		m_dynamicVertexBufferAllocator.reset();
-		m_dynamicIndexBufferAllocator.reset(); 		
+		m_dynamicIndexBufferAllocator.reset(); 
 		//LOOM END: IF YOU ARE UPDATING BGFX DO NOT REMOVE THIS BLOCK
-
+		
+		if (BX_ENABLED(BGFX_CONFIG_DEBUG) )
+		{
 #define CHECK_HANDLE_LEAK(_handleAlloc) \
 					BX_MACRO_BLOCK_BEGIN \
 						BX_WARN(0 == _handleAlloc.getNumHandles() \
@@ -1329,6 +1330,7 @@ namespace bgfx
 		OSVERSIONINFOEXA ovi;
 		memset(&ovi, 0, sizeof(ovi) );
 		ovi.dwOSVersionInfoSize = sizeof(ovi);
+		// TODO fix deprecated call (for VS2013)
 		if (!GetVersionExA( (LPOSVERSIONINFOA)&ovi) )
 		{
 			return 0x0501; // _WIN32_WINNT_WINXP
@@ -2699,7 +2701,8 @@ again:
 		s_ctx->saveScreenShot(_filePath);
 	}
 
-#if BX_PLATFORM_IOS
+
+#if BX_PLATFORM_IOS
 extern "C"
 {
     void bgfx_hack_iosSetEaglLayer(void *l)

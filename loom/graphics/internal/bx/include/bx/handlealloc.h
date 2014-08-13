@@ -77,6 +77,19 @@ namespace bx
 			m_handles[index] = temp;
 		}
 
+		//LOOM BEGIN: IF YOU ARE UPDATING BGFX DO NOT REMOVE THIS BLOCK
+		void reset()
+		{
+			m_numHandles = 0;
+
+			for (uint16_t ii = 0; ii < MaxHandlesT; ++ii)
+			{
+				m_handles[ii] = ii;
+			}
+
+		}
+		//LOOM END: IF YOU ARE UPDATING BGFX DO NOT REMOVE THIS BLOCK
+
 	private:
 		uint16_t m_handles[MaxHandlesT*2];
 		uint16_t m_numHandles;
@@ -156,7 +169,7 @@ namespace bx
 
 			for (uint16_t ii = 0; ii < m_maxHandles; ++ii)
 			{
-				m_dense[ii] = ii;
+				m_handles[ii] = ii;
 			}
 
 		}    		
