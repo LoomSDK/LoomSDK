@@ -56,6 +56,7 @@ static loomJniMethodInfo gGetStatus;
 static loomJniMethodInfo gPostAchievement;
 static loomJniMethodInfo gPostHighScore;
 static loomJniMethodInfo gPostAction;
+static loomJniMethodInfo gPostActionWithProperties;
 
 
 ///initializes the data for the Teak class for Android
@@ -90,7 +91,10 @@ void platform_teakInitialize(AuthStatusCallback authStatusCB)
                                     "co/theengine/loomdemo/LoomTeak",
                                     "postAction",
                                     "(Ljava/lang/String;Ljava/lang/String;)Z");
-
+    LoomJni::getStaticMethodInfo(gPostActionWithProperties,
+                                    "co/theengine/loomdemo/LoomTeak",
+                                    "postActionWithProperties",
+                                    "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
 }
 
 
@@ -144,6 +148,22 @@ bool platform_postAction(const char* actionId, const char* objectInstanceId)
                                                                 jObjectInstanceId);
     gPostAction.getEnv()->DeleteLocalRef(jActionId);
     gPostAction.getEnv()->DeleteLocalRef(jObjectInstanceId);
+    return result;
+}
+
+bool platform_postActionWithProperties(const char* actionId, const char* objectInstanceId, const char* jsonProperties)
+{
+    jstring jActionId = gPostActionWithProperties.getEnv()->NewStringUTF(actionId);
+    jstring jObjectInstanceId = gPostActionWithProperties.getEnv()->NewStringUTF(objectInstanceId);
+    jstring jProperties = gPostActionWithProperties.getEnv()->NewStringUTF(jsonProperties);
+    jboolean result = gPostActionWithProperties.getEnv()->CallStaticBooleanMethod(gPostActionWithProperties.classID, 
+                                                                                    gPostActionWithProperties.methodID, 
+                                                                                    jActionId, 
+                                                                                    jObjectInstanceId,
+                                                                                    jProperties);
+    gPostActionWithProperties.getEnv()->DeleteLocalRef(jActionId);
+    gPostActionWithProperties.getEnv()->DeleteLocalRef(jObjectInstanceId);
+    gPostActionWithProperties.getEnv()->DeleteLocalRef(jProperties);
     return result;
 }
 

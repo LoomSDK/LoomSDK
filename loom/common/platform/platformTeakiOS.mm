@@ -182,3 +182,31 @@ bool platform_postAction(const char *actionId, const char *objectInstanceId)
     return false;
 }
 
+
+bool platform_postActionWithProperties(const char *actionId, const char *objectInstanceId, const char *jsonProperties)
+{
+    if(_initialized)
+    {
+        NSString *actionString = [NSString stringWithCString:actionId encoding:NSUTF8StringEncoding];
+        NSString *instanceString = [NSString stringWithCString:objectInstanceId encoding:NSUTF8StringEncoding];
+
+        //build property dictionary from the incoming JSON properties string
+        NSError *e = nil;
+        NSString *jsonString = [NSString stringWithCString:jsonProperties encoding:NSUTF8StringEncoding];
+        NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+        NSDictionary *actionProperties = [NSJSONSerialization JSONObjectWithData:jsonData
+                                                                options:NSJSONReadingMutableContainers 
+                                                                error:&e];
+        // NSLog(@"-----Teak Action Properties: %@", [actionProperties description]);
+        if(e != nil)
+        {
+            NSLog(@"[Teak] Error [%@  %d] creating NSDictionary for JSON Property String: %@", [e localizedDescription], e.code, jsonString);
+            return false;
+        }        
+
+        return ([[Carrot sharedInstance] postAction:actionString
+                                            withProperties:actionProperties
+                                            forObjectInstance:instanceString] == YES) ? true : false;
+    }
+    return false;
+}

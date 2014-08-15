@@ -110,6 +110,15 @@ public class LoomTeak
         return false;
     }
 
+    public static boolean postActionWithProperties(String actionId, String objectInstanceId, String jsonProperties)
+    {
+        if(mTeak != null) 
+        {
+            return mTeak.postJsonAction(actionId, jsonProperties, objectInstanceId);
+        }
+        return false;
+    }
+
 
     private static native void authStatusCallback(int authStatus);
 }

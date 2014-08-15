@@ -55,6 +55,11 @@ public:
     {
         return platform_postAction(actionId, objectInstanceId);
     }
+
+    static bool postActionWithProperties(const char* actionId, const char* objectInstanceId, const char* jsonProperties)
+    {
+        return platform_postActionWithProperties(actionId, objectInstanceId, jsonProperties);
+    }
 };
 
 
@@ -73,6 +78,7 @@ static int registerLoomTeak(lua_State* L)
         .addStaticMethod("postAchievement", &Teak::postAchievement)
         .addStaticMethod("postHighScore", &Teak::postHighScore)
         .addStaticMethod("postAction", &Teak::postAction)
+        .addStaticMethod("postActionWithProperties", &Teak::postActionWithProperties)
         .addStaticProperty("onAuthStatus", &Teak::getOnAuthStatusDelegate)
     .endClass()
 

@@ -53,6 +53,9 @@ bool platform_postHighScore(int score);
 ///Posts a Teak Action from ones located on your Applications Teak Page
 bool platform_postAction(const char *actionId, const char *objectInstanceId);
 
+///Posts a Teak Action from ones located on your Applications Teak Page, with an additional list of JSON formatted Properties
+bool platform_postActionWithProperties(const char *actionId, const char *objectInstanceId, const char *jsonProperties);
+
 
 
 #endif

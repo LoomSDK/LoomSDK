@@ -58,4 +58,9 @@ bool platform_postAction(const char *actionId, const char *objectInstanceId)
     return false;
 }
 
+bool platform_postActionWithProperties(const char *actionId, const char *objectInstanceId, const char *jsonProperties)
+{
+    return false;
+}
+
 #endif

@@ -94,5 +94,16 @@ package loom.social
          *  @return True if successful, false if not
          */
         public static native function postAction(actionId:String, objectInstanceId:String):Boolean;
+
+        /**
+         * Posts a new Open Graph Action via Teak
+         *  @param String representation of the Action to post
+         *  @param String instance Id of the Teak object
+         *  @param JSON formatted String of keypairs for the properties to post to the Action
+         *  @return True if successful, false if not
+         */
+        public static native function postActionWithProperties(actionId:String, objectInstanceId:String, jsonProperties:String):Boolean;
     }
 }
+
+
