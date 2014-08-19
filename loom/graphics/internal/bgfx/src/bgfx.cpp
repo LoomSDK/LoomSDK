@@ -1330,7 +1330,9 @@ namespace bgfx
 		OSVERSIONINFOEXA ovi;
 		memset(&ovi, 0, sizeof(ovi) );
 		ovi.dwOSVersionInfoSize = sizeof(ovi);
-		// TODO fix deprecated call (for VS2013)
+		
+		// Ignore the VS2013 GetVersionExA deprecated warning
+		#pragma warning (disable:4996)
 		if (!GetVersionExA( (LPOSVERSIONINFOA)&ovi) )
 		{
 			return 0x0501; // _WIN32_WINNT_WINXP

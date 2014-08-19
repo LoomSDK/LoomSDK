@@ -6,9 +6,9 @@
 #include "bgfx_p.h"
 
 #if (BGFX_CONFIG_RENDERER_OPENGLES|BGFX_CONFIG_RENDERER_OPENGL)
-#   include "renderer_gl.h"
-#   include <bx/timer.h>
-#   include <bx/uint32_t.h>
+#	include "renderer_gl.h"
+#	include <bx/timer.h>
+#	include <bx/uint32_t.h>
 
  #  include "loom/common/core/log.h"
 
@@ -16,8 +16,9 @@ namespace bgfx
 {
 	static char s_viewName[BGFX_CONFIG_MAX_VIEWS][256];
 
-	struct PrimInfo
+	lmDefineLogGroup(gBGFXLogGroup, "BGFX", 1, LoomLogInfo);
 
+	struct PrimInfo
 	{
 		GLenum m_type;
 		uint32_t m_min;
@@ -2225,26 +2226,24 @@ namespace bgfx
 	RendererContextGL* s_renderGL;
 
 	RendererContextI* rendererCreateGL()
+	{
+		s_renderGL = BX_NEW(g_allocator, RendererContextGL);
+		return s_renderGL;
+	}
+
 	// Some GL hardware requires POT texture to generate mipmaps
 	// so, we enforce this
 	static bool canGenMips(uint32_t width, uint32_t height)
 	{
-	  if( width == getNextPOT(width) && 
-		height == getNextPOT(height) &&
-		//LFL: don't allow mipmaps on SGX540 devices as they can be buggy!!!
-		(!strstr(s_renderCtx.m_renderer, "SGX") || !strstr(s_renderCtx.m_renderer, "540")))
-	  {
-		return true;
-	  }
- 
-	  return false;
-	}
+		if (width == getNextPOT(width) &&
+			height == getNextPOT(height) &&
+			//LFL: don't allow mipmaps on SGX540 devices as they can be buggy!!!
+			(!strstr(s_renderGL->m_renderer, "SGX") || !strstr(s_renderGL->m_renderer, "540")))
+		{
+			return true;
+		}
 
-
-
-	{
-		s_renderGL = BX_NEW(g_allocator, RendererContextGL);
-		return s_renderGL;
+		return false;
 	}
 
 	void rendererDestroyGL()
@@ -2274,17 +2273,17 @@ namespace bgfx
 			GLSL_TYPE(GL_FLOAT_MAT2);
 			GLSL_TYPE(GL_FLOAT_MAT3);
 			GLSL_TYPE(GL_FLOAT_MAT4);
-//          GLSL_TYPE(GL_FLOAT_MAT2x3);
-//          GLSL_TYPE(GL_FLOAT_MAT2x4);
-//          GLSL_TYPE(GL_FLOAT_MAT3x2);
-//          GLSL_TYPE(GL_FLOAT_MAT3x4);
-//          GLSL_TYPE(GL_FLOAT_MAT4x2);
-//          GLSL_TYPE(GL_FLOAT_MAT4x3);
-//          GLSL_TYPE(GL_SAMPLER_1D);
-			GLSL_TYPE(GL_SAMPLER_2D);
+// 			GLSL_TYPE(GL_FLOAT_MAT2x3);
+// 			GLSL_TYPE(GL_FLOAT_MAT2x4);
+// 			GLSL_TYPE(GL_FLOAT_MAT3x2);
+// 			GLSL_TYPE(GL_FLOAT_MAT3x4);
+// 			GLSL_TYPE(GL_FLOAT_MAT4x2);
+// 			GLSL_TYPE(GL_FLOAT_MAT4x3);
+// 			GLSL_TYPE(GL_SAMPLER_1D);
+ 			GLSL_TYPE(GL_SAMPLER_2D);
 			GLSL_TYPE(GL_SAMPLER_3D);
 			GLSL_TYPE(GL_SAMPLER_CUBE);
-//          GLSL_TYPE(GL_SAMPLER_1D_SHADOW);
+// 			GLSL_TYPE(GL_SAMPLER_1D_SHADOW);
 			GLSL_TYPE(GL_SAMPLER_2D_SHADOW);
 			GLSL_TYPE(GL_IMAGE_1D);
 			GLSL_TYPE(GL_IMAGE_2D);
@@ -2354,19 +2353,19 @@ namespace bgfx
 		case GL_FLOAT_MAT4:
 			return UniformType::Uniform4x4fv;
 
-//      case GL_FLOAT_MAT2x3:
-//      case GL_FLOAT_MAT2x4:
-//      case GL_FLOAT_MAT3x2:
-//      case GL_FLOAT_MAT3x4:
-//      case GL_FLOAT_MAT4x2:
-//      case GL_FLOAT_MAT4x3:
-//          break;
+// 		case GL_FLOAT_MAT2x3:
+// 		case GL_FLOAT_MAT2x4:
+// 		case GL_FLOAT_MAT3x2:
+// 		case GL_FLOAT_MAT3x4:
+// 		case GL_FLOAT_MAT4x2:
+// 		case GL_FLOAT_MAT4x3:
+// 			break;
 
-//      case GL_SAMPLER_1D:
+// 		case GL_SAMPLER_1D:
 		case GL_SAMPLER_2D:
 		case GL_SAMPLER_3D:
 		case GL_SAMPLER_CUBE:
-//      case GL_SAMPLER_1D_SHADOW:
+// 		case GL_SAMPLER_1D_SHADOW:
  		case GL_SAMPLER_2D_SHADOW:
 		case GL_IMAGE_1D:
 		case GL_IMAGE_2D:
@@ -2397,8 +2396,6 @@ namespace bgfx
 			}
 
 			GL_CHECK(glLinkProgram(m_id) );
-			//GL_CHECK(glDetachShader(m_id, _vsh.m_id) );
-			//GL_CHECK(glDetachShader(m_id, _fsh.m_id) );
 
 			GLint linked = 0;
 			GL_CHECK(glGetProgramiv(m_id, GL_LINK_STATUS, &linked) );
@@ -2497,7 +2494,7 @@ namespace bgfx
 
 		m_numPredefined = 0;
 		m_constantBuffer = ConstantBuffer::create(1024);
-		m_numSamplers = 0;
+ 		m_numSamplers = 0;
 
 		struct VariableInfo
 		{
@@ -2889,6 +2886,8 @@ namespace bgfx
 	{
 		ImageContainer imageContainer;
 
+		int genMips = 0;
+
 		if (imageParse(imageContainer, _mem->data, _mem->size) )
 		{
 			uint8_t numMips = imageContainer.m_numMips;
@@ -2907,6 +2906,37 @@ namespace bgfx
 			{
 				target = GL_TEXTURE_3D;
 			}
+			else
+			{
+				// We automatically generate mipmaps for POT textures
+
+				if (numMips == 1 && !canGenMips(textureWidth, textureHeight))
+				{
+					lmLog(gBGFXLogGroup, "Unable to generate mips for non-POT texture %i %i", textureWidth, textureHeight);
+				}
+				else if (numMips == 1)
+				{
+					int mips = 1;
+					int w = textureWidth;
+					int h = textureHeight;
+
+					while (w > 1 && h > 1)
+					{
+						mips++;
+						w /= 2;
+						h /= 2;
+					}
+
+					genMips = mips;
+
+					//lmLog(gBGFXLogGroup, "Generate mips for POT texture %i %i with %i levels", tc.m_width, tc.m_height, mips);                       
+
+				}
+
+				target = GL_TEXTURE_2D;
+				if (genMips) numMips = genMips;
+			}
+
 
 			if (!init(target
 					, textureWidth
@@ -2999,34 +3029,6 @@ namespace bgfx
 							{
 								imageDecodeToBgra8(temp, mip.m_data, mip.m_width, mip.m_height, mip.m_width*4, mip.m_format);
 								data = temp;
-
-					// We automatically generate mipmaps for POT textures
-
-					if( numMips == 1 && !canGenMips(tc.m_width, tc.m_height))
-					{
-					   lmLog(gBGFXLogGroup, "Unable to generate mips for non-POT texture %i %i", tc.m_width, tc.m_height);
-					}
-					else if (numMips == 1)
-					{                       
-					   int mips = 1;
-					   int w = tc.m_width;
-					   int h = tc.m_height;
- 
-					   while (w > 1 && h > 1)
-					   {    
-							mips++;
-							w /= 2;
-							h /= 2;
-					   }
-
-					   genMips = mips;
-
-					   //lmLog(gBGFXLogGroup, "Generate mips for POT texture %i %i with %i levels", tc.m_width, tc.m_height, mips);                       
-
-					}                
-
-					init(GL_TEXTURE_2D, genMips ? genMips : numMips, _flags);                    
-
 							}
 
 							if (swizzle)
@@ -3124,9 +3126,9 @@ namespace bgfx
 		}
 	}
 
-	void TextureGL::update(uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem)
+	static void rgbaToBgra(uint8_t* _data, uint32_t _width, uint32_t _height)
 	{
-		uint32_t dstpitch = _width*4;
+		uint32_t dstpitch = _width * 4;
 		for (uint32_t yy = 0; yy < _height; ++yy)
 		{
 			uint8_t* dst = &_data[yy*dstpitch];
@@ -3141,7 +3143,7 @@ namespace bgfx
 		}
 	}
 
-
+	void TextureGL::update(uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem)
 	{
 		BX_UNUSED(_z, _depth);
 
@@ -3968,8 +3970,8 @@ namespace bgfx
 		uint32_t statsNumIndices = 0;
 
 		if (0 == (_render->m_debug&BGFX_DEBUG_IFH) )
-		{		
-			GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, s_renderGL->m_msaaBackBufferFbo ? s_renderGL->m_msaaBackBufferFbo : s_renderGL->m_backBufferFbo) )
+		{
+			GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, s_renderGL->m_msaaBackBufferFbo ? s_renderGL->m_msaaBackBufferFbo : s_renderGL->m_backBufferFbo));
 
 			for (uint32_t item = 0, numItems = _render->m_num; item < numItems; ++item)
 			{
@@ -4121,12 +4123,12 @@ namespace bgfx
 						uint32_t bstencil = unpackStencil(1, newStencil);
 						uint32_t frontAndBack = bstencil != BGFX_STENCIL_NONE && bstencil != unpackStencil(0, newStencil);
 
-//                      uint32_t bchanged = unpackStencil(1, changedStencil);
-//                      if (BGFX_STENCIL_FUNC_RMASK_MASK & bchanged)
-//                      {
-//                          uint32_t wmask = (bstencil&BGFX_STENCIL_FUNC_RMASK_MASK)>>BGFX_STENCIL_FUNC_RMASK_SHIFT;
-//                          GL_CHECK(glStencilMask(wmask) );
-//                      }
+// 						uint32_t bchanged = unpackStencil(1, changedStencil);
+// 						if (BGFX_STENCIL_FUNC_RMASK_MASK & bchanged)
+// 						{
+// 							uint32_t wmask = (bstencil&BGFX_STENCIL_FUNC_RMASK_MASK)>>BGFX_STENCIL_FUNC_RMASK_SHIFT;
+// 							GL_CHECK(glStencilMask(wmask) );
+// 						}
 
 						for (uint32_t ii = 0, num = frontAndBack+1; ii < num; ++ii)
 						{

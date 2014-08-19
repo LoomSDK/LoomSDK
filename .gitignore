@@ -95,3 +95,6 @@ loom/vendor/luajit/libluajit64.a
 
 loom/vendor/luajit/libluajit32.a
 output
+*.orig
+tools/shaderc/glsl-optimizer/tests/
+tools/shaderc/glsl-optimizer/projects/

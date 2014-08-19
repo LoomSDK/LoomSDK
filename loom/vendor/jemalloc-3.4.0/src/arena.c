@@ -1475,7 +1475,7 @@ void *
 arena_malloc_large(arena_t *arena, size_t size, bool zero)
 {
 	void *ret;
-	UNUSED bool idump;
+	UNUSED bool idump = false;
 
 	/* Large allocation. */
 	size = PAGE_CEILING(size);

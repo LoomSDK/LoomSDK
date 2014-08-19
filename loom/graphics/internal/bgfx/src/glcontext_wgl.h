@@ -16,7 +16,7 @@ typedef PROC (APIENTRYP PFNWGLGETPROCADDRESSPROC) (LPCSTR lpszProc);
 typedef BOOL (APIENTRYP PFNWGLMAKECURRENTPROC) (HDC hdc, HGLRC hglrc);
 typedef HGLRC (APIENTRYP PFNWGLCREATECONTEXTPROC) (HDC hdc);
 typedef BOOL (APIENTRYP PFNWGLDELETECONTEXTPROC) (HGLRC hglrc);
-//
+
 typedef GLenum (APIENTRYP PFNGLGETERRORPROC) (void);
 typedef void (APIENTRYP PFNGLREADPIXELSPROC) (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels);
 typedef void (APIENTRYP PFNGLTEXIMAGE2DPROC) (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
