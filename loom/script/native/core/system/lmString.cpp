@@ -93,7 +93,8 @@ public:
             return 1;
         }
 
-        lua_pushnumber(L, (double)svalue[index]);
+        //return unsigned-char so we can support Single-Byte UTF8 characters
+        lua_pushinteger(L, (unsigned int)svalue[index] & 0xff);
 
         return 1;
     }

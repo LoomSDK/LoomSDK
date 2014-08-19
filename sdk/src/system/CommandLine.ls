@@ -21,22 +21,22 @@ limitations under the License.
 package system {
     
     /**
-     *  The CommandLine class provides methods for retrieving command line arguments passed into the %Loom executable at runtime.
+     *  The CommandLine class provides methods for retrieving command line arguments passed into the Loom executable at runtime.
      */
     class CommandLine {
     
         /**
-         *  Gets the number of arguments passed into the %Loom executable
+         *  Gets the number of arguments passed into the Loom executable.
          *
          *  @return The number of arguments
          */
         public static native function getArgCount():Number;
 
         /**
-         *  Gets an argument at the specified index.
+         *  Gets the argument at the specified index.
          *
          *  @param idx The index of the argument.
-         *  @return The argument at the specified index, will throw an error if the index is out of range. 
+         *  @return The argument at the specified index, will throw an error if the index is out of range.
          */
         public static native function getArg(idx:Number):String;
     

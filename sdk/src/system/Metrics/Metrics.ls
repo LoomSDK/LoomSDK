@@ -34,9 +34,9 @@ package system.metrics {
         public static native function getManagedObjectCount(classPath:String):Number;
 
         /**
-         *  Gets the process memory usage in bytes
+         *  Gets the process memory usage in bytes.
          *  
-         *  @return The amount of memory in bytes used by the current process
+         *  @return The amount of memory used by the current process in bytes.
          */
         public static native function getProcessMemoryUsage():Number;
 

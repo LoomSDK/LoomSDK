@@ -97,6 +97,7 @@ final class Coroutine {
     }
     
     /// @cond PRIVATE    
+    /** @private */
     public var thread:Object;
     
     public static native function _create(f:Function, c:Coroutine):Object;

@@ -48,13 +48,25 @@ package system.xml {
     	XML_ERROR_PARSING
     };
 
+    /**
+     * Helper class for working with XML error messages.
+     */
     class XMLErrorMessages
     {
+        /**
+         * Convert an XMLError to an English string.
+         *
+         * @see buildErrorMessage for more complete functionality.
+         */
         public static function lookup(error:XMLError):String
         {
             return messages[error];
         }
 
+        /**
+         * Return a nice error message given an error code and the document that
+         * generated it.
+         */
         public static function buildErrorMessage(error:XMLError, document:XMLDocument):String
         {
             var message = lookup(error);
@@ -98,13 +110,13 @@ package system.xml {
      *  Nodes have siblings, a parent, and children which can be navigated. A node is always in a XMLDocument. 
      *  The type of a XMLNode can be queried, and it can be cast to its more defined type.
      *
-     *  @attention Looms XML Library is based on TinyXML 2. If you see something in TinyXML 2 that you do not see in this API, please contact The Engine Co.
+     *  @attention Loom's XML Library is based on TinyXML 2. If you see something in TinyXML 2 that you do not see in this API, please contact The Engine Co.
      */
     native public class XMLNode {
         
         /**
          *  Gets the value of the XMLNode.
-         *  The meaning of 'value' changes for the specific type.
+         *  The meaning of 'value' changes based on the type.
          *  
          *  ~~~text
          *  Document:   empty
@@ -114,12 +126,12 @@ package system.xml {
          *  Text:       the text string
          *  ~~~
          *
-         *  @return Te value of the XMLNode.
+         *  @return The value of the XMLNode.
          */
         public native function getValue():String;
 
         /**
-         *  Set the Value of the XMLNode.
+         *  Sets the value of the XMLNode.
          *  
          *  @param v The value to set.
          *
@@ -137,43 +149,43 @@ package system.xml {
         /**
          *  Safely cast to an XMLElement.
          *
-         *  @return The casted XMLElement, Null if cast was unsuccessful.
+         *  @return The casted XMLElement or null if the cast was unsuccessful.
          */
     	public native function toElement():XMLElement;
 
         /**
          *  Safely cast to an XMLText.
          *
-         *  @return The casted XMLText, Null if cast was unsuccessful.
+         *  @return The casted XMLText or null if the cast was unsuccessful.
          */
     	public native function toText():XMLText;
 
         /**
          *  Safely cast to an XMLComment.
          *
-         *  @return The casted XMLComment, Null if cast was unsuccessful.
+         *  @return The casted XMLComment or null if the cast was unsuccessful.
          */
     	public native function toComment():XMLComment;
 
         /**
          *  Safely cast to an XMLDocument.
          *
-         *  @return The casted XMLDocument, Null if cast was unsuccessful.
+         *  @return The casted XMLDocument or null if the cast was unsuccessful.
          */
     	public native function toDocument():XMLDocument;
 
         /**
          *  Safely cast to an XMLDeclaration.
          *
-         *  @return The casted XMLDeclaration, Null if cast was unsuccessful.
+         *  @return The casted XMLDeclaration or null if the cast was unsuccessful.
          */
     	public native function toDeclaration():XMLDeclaration;
     	//public native function ToUnknown():XMLUnknown;
     	
         /**
-         *  Gets the parent of this node on the DOM. 
+         *  Gets the parent of this node in the DOM. 
          *  
-         *  @return The parent of this XMLNode, Null if the XMLNode has no parent.
+         *  @return The parent of this XMLNode or null if the XMLNode has no parent.
          */
     	public native function getParent():XMLNode;
 
@@ -185,60 +197,60 @@ package system.xml {
         /**
          *  Gets the first child XMLNode.
          *
-         *  @return The first child XMLNode, Null if none exist.  
+         *  @return The first child XMLNode or null if none exist.  
          */
         public native function firstChild():XMLNode;
 
         /**
          *  Get the first child XMLElement, or optionally the first child element with the specified name.
          *
-         *  @param name Optional name for finding first child element by name.
-         *  @return First child XMLElement, Null if none exist or if name does not match any child XMLElements.
+         *  @param name Optional name for finding the first child element by name.
+         *  @return First child XMLElement or null if none exist or if name does not match any child XMLElements.
          */
         public native function firstChildElement(name:String = null):XMLElement;
         
         /**
-         *  Gets the lasr child XMLNode.
+         *  Gets the last child XMLNode.
          *
-         *  @return The last child XMLNode, Null if none exist.  
+         *  @return The last child XMLNode or null if none exist.  
          */
         public native function lastChild():XMLNode;
 
         /**
-         *  Get the last child XMLElement, or optionally the last child element with the specified name.
+         *  Gets the last child XMLElement, or optionally the last child element with the specified name.
          *
-         *  @param name Optional name for finding last child element by name.
-         *  @return First child XMLElement, Null if none exist or if name does not match any child XMLElements.
+         *  @param name Optional name for finding the last child element by name.
+         *  @return First child XMLElement or null if none exist or if name does not match any child XMLElements.
          */
         public native function lastChildElement(name:String = null):XMLElement;
         
         /**
          *  Gets the previous (left) sibling XMLNode of this node.
          *
-         *  @return previous sibling XMLNode, Null if none exist.
+         *  @return Previous sibling XMLNode or null if none exist.
          */
         public native function previousSibling():XMLNode;
 
         /**
          *  Get the previous (left) sibling XMLElement of this node.
          *
-         *  @param name Optional name for finding previous sibling element by name.
-         *  @return previous sibling XMLNode, Null if none exist.
+         *  @param name Optional name for finding the previous sibling element by name.
+         *  @return Previous sibling XMLNode or null if none exist.
          */
         public native function previousSiblingElement(name:String = null):XMLElement;
 
         /**
          *  Gets the next (right) sibling XMLNode of this node.
          *
-         *  @return next sibling XMLNode, Null if none exist.
+         *  @return Next sibling XMLNode or null if none exist.
          */
         public native function nextSibling():XMLNode;
 
         /**
-         *  Get the next (right) sibling XMLElement of this node.
+         *  Gets the next (right) sibling XMLElement of this node.
          *
-         *  @param name Optional name for finding next sibling element by name.
-         *  @return next sibling XMLNode, Null if none exist.
+         *  @param name Optional name for finding the next sibling element by name.
+         *  @return Next sibling XMLNode or null if none exist.
          */
         public native function nextSiblingElement(name:String = null):XMLElement;
         
@@ -288,16 +300,16 @@ package system.xml {
          *  Make a copy of this XMLNode, but not its children. You may pass in a Document pointer that will be the owner of the new Node. 
          *  If the 'document' is null, then the node returned will be allocated from the current Document. (this.getDocument())
          *
-         *  @note If called on a XMLDocument, this will return Null.
+         *  @note If called on an XMLDocument, this will return null.
          *  @param doc The owner of the new XMLNode.
-         *  @return shallow copy of the XMLNode, Null if called on a XMLDocument.
+         *  @return Shallow copy of the XMLNode or null if called on a XMLDocument.
          */
     	public native function shallowClone(doc:XMLDocument):XMLNode;
     	
         /**
          *  Test if 2 XMLNode%s are the same, but don't test children. The 2 nodes do not need to be in the same XMLDocument.
          *  
-         *  @note If called on a XMLDocument, this will return false.
+         *  @note If called on an XMLDocument, this will return false.
          *  @param compare The XMLNode to compare to.
          *  @return Whether or not the XMLNode%s are shallow equals.
          */
@@ -317,7 +329,7 @@ package system.xml {
         /**
          *  Convenience function for easy access to the text inside an element. Although easy and concise, getText() is limited compared to getting the XMLText child and accessing it directly.
          *  
-         * @return String if first child is XMLText, Null otherwise. 
+         * @return String if first child is XMLText, null otherwise. 
          */
         public native function getText():String;
         
@@ -347,26 +359,26 @@ package system.xml {
         public native function getBoolAttribute( name:String ):Boolean;        
         
         /**
-         *  Sets a String Attribute onthe XMLElement.
+         *  Sets a String Attribute on the XMLElement.
          *  
          *  @param name The name of the attribute to be set.
-         *  @patam value The value to set for the attribute.
+         *  @param value The value to set for the attribute.
          */
         public native function setAttribute( name:String, value:String); 
 
         /**
-         *  Sets a Number Attribute onthe XMLElement.
+         *  Sets a Number Attribute on the XMLElement.
          *  
          *  @param name The name of the attribute to be set.
-         *  @patam value The value to set for the attribute.
+         *  @param value The value to set for the attribute.
          */       
         public native function setNumberAttribute( name:String, value:Number);  
 
         /**
-         *  Sets a Boolean Attribute onthe XMLElement.
+         *  Sets a Boolean Attribute on the XMLElement.
          *  
          *  @param name The name of the attribute to be set.
-         *  @patam value The value to set for the attribute.
+         *  @param value The value to set for the attribute.
          */      
         public native function setBoolAttribute( name:String, value:Boolean);   
         
@@ -378,14 +390,14 @@ package system.xml {
         /**
          *  Gets the first attribute in the list of attibutes.
          *
-         *  @return First XMLAttribute, Null of none exist.
+         *  @return First XMLAttribute or null of none exist.
          */
         public native function firstAttribute( ):XMLAttribute;        
         
         /**
          *  Looks up an XMLAttribute by name.
          *
-         *  @return Matched XMlAttribute, Null if none exist.
+         *  @return Matched XMlAttribute or null if none exist.
          */
         public native function findAttribute(name:String ):XMLAttribute;        
         
@@ -400,7 +412,7 @@ package system.xml {
      *  <root>This is <b>bold</b></root>
      *  ~~~
      *  
-     * A text node can have 2 ways to output the next. "normal" output and CDATA. It will default to the mode it was parsed from the XML file and you generally want to leave it alone, but you can change the output mode with SetCDATA() and query it with CDATA().
+     *  A text node can have 2 ways to output the text. "normal" output and CDATA. It will default to the mode it was parsed from the XML file and you generally want to leave it alone, but you can change the output mode with SetCDATA() and query it with CDATA().
      */
     native public class XMLText extends XMLNode {
     
@@ -431,13 +443,13 @@ package system.xml {
     }
     
     /**
-     *  A Document binds together all the functionality. It can be saved, loaded, and printed to the screen. All Nodes are connected and allocated to a Document. 
-     *  If the Document is deleted, all its Nodes are also deleted.
+     *  An XMLDocument binds together all the functionality. It can be saved, loaded, and printed to the screen. All XMLNodes are connected and allocated to an XMLDocument. 
+     *  If the XMLDocument is deleted, all its XMLNodes are also deleted.
      */
     native public class XMLDocument extends XMLNode {
         
         /**
-         *  Load an XML file from disk.
+         *  Load an XML file from the file system.
          *
          *  @param filename The file to load.
          *  @return XMLError.XML_NO_ERROR (0) on success, or an XMLError.
@@ -445,7 +457,7 @@ package system.xml {
         public native function loadFile(filename:String):Number;
 
         /**
-         *  Save an XML file to disk.
+         *  Save an XML file to the file system.
          *
          *  @param filename The file to save.
          *  @return XMLError.XML_NO_ERROR (0) on success, or an XMLError.
@@ -453,9 +465,9 @@ package system.xml {
         public native function saveFile(filename:String):Number;
 
         /**
-         *  Parse an XML file from a character string.
+         *  Parse an XML file from a String.
          *
-         *  @param xml The xml to parse.
+         *  @param xml The XML to parse.
          *  @return XMLError.XML_NO_ERROR (0) on success, or an XMLError.
          */
         public native function parse(xml:String):Number;
@@ -468,7 +480,7 @@ package system.xml {
         public native function rootElement():XMLElement;
 
         /**
-         *  Print the Document. If the XMLPrinter is not provided, it will print to stdout. If you provide XMLPrinter, this can print to a file:
+         *  Print the XMLDocument. If an XMLPrinter is not provided, it will print to stdout. If you provide an XMLPrinter, it can print to a file.
          *
          *  @param printer XMLPrinter to print to a file.
          */
@@ -509,7 +521,7 @@ package system.xml {
         /**
          *  Delete a node associated with this document. It will be unlinked from the DOM.
          *
-         *  @param node XMLNode to unlink from the DOM. 
+         *  @param node XMLNode to unlink from the DOM.
          */
         public native function deleteNode(node:XMLNode);
 
@@ -523,7 +535,7 @@ package system.xml {
      *  
      *  @note The attributes are not XMLNodes. You may only query the next() attribute in a list.
      */
-    native public class XMLAttribute  {
+    native public class XMLAttribute {
     
         /**
          *  The name of the XMLAttribute. 
@@ -531,22 +543,22 @@ package system.xml {
         public native function get name():String;
 
         /**
-         *  The String value of the XMLAttribute.
+         *  Returns the String value of the XMLAttribute.
          */
         public native function get value():String;
 
         /**
-         *  Gets the Next XMLAttribute in the list.
+         *  Returns the next XMLAttribute in the list.
          */
         public native function get next():XMLAttribute;
         
         /**
-         *  The Number value of the XMLAttribute.
+         *  Returns the Number value of the XMLAttribute.
          */
         public native function get numberValue():Number;
 
         /**
-         *  The Boolean value of the XMLAttribute.
+         *  Returns the Boolean value of the XMLAttribute.
          */
         public native function get boolValue():Boolean;
         
@@ -570,7 +582,7 @@ package system.xml {
     /**
      * Provides extra methods for printing XML other than stdout.
      */
-    native public class XMLPrinter  {
+    native public class XMLPrinter {
     
         /**
          *  Gets the String value of the printed XMLDocument.

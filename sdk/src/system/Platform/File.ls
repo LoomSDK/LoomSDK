@@ -26,10 +26,10 @@ package system.platform {
     native class File 
     {
         /**
-         *  Loads a text file at the given path.
+         *  Loads a text file from the given file path.
          *
-         *  @param path the full path to the text file to load.
-         *  @return a string with the contents of the text file or null if the file can't be loaded.
+         *  @param path The full path to the text file to load.
+         *  @return A String with the contents of the text file or null if the file can't be loaded.
          */
         public static function loadTextFile(path:String):String 
         {
@@ -37,10 +37,10 @@ package system.platform {
         }
 
         /**
-         *  Loads a binary file at the given path.
+         *  Loads a binary file from the given file path.
          *
-         *  @param path the full path to the binary file to load.
-         *  @return a ByteArray with the contents of the binary file or null if the file can't be loaded.
+         *  @param path The full path to the binary file to load.
+         *  @return ByteArray with the contents of the binary file or null if the file can't be loaded.
          */
         public static function loadBinaryFile(path:String):ByteArray 
         {
@@ -48,11 +48,11 @@ package system.platform {
         }
 
         /**
-         *  Writes a text file at the given path.
+         *  Writes a text file to the given file path.
          *
-         *  @param path the full path to the binary file to load.
-         *  @param text the text to write to the file.
-         *  @return true on success, false on failure.
+         *  @param path The full path to the text file to save.
+         *  @param text The text String to write to the file.
+         *  @return True on success, false on failure.
          */
         public static function writeTextFile(path:String, text:String):Boolean 
         {
@@ -60,11 +60,11 @@ package system.platform {
         }
 
         /**
-         *  Writes a binary file at the given path.
+         *  Writes a binary file to the given file path.
          *
-         *  @param path the full path to the binary file to load.
-         *  @param data the ByteArray which contains the data to write to the file.
-         *  @return true on success, false on failure.
+         *  @param path The full path to the binary file to save.
+         *  @param data The ByteArray containing the data to write to the file.
+         *  @return True on success, false on failure.
          */
         public static function writeBinaryFile(path:String, data:ByteArray):Boolean
         {
@@ -77,9 +77,9 @@ package system.platform {
          *  Please note that this implementation requires the file be loaded into memory.
          *  Therefore, it must fit into available memory.
          *  
-         *  @param pathSource the source file to copy
-         *  @param pathDestination the destination file to write
-         *  @return true on success, false on failure.
+         *  @param pathSource The source file to copy.
+         *  @param pathDestination The destination file to write to.
+         *  @return True on success, false on failure.
          */
         public static function copy(pathSource:String, pathDestination:String):Boolean
         {
@@ -95,8 +95,8 @@ package system.platform {
         /**
          *  Checks whether a file exists at the given path.
          *
-         *  @param path the full path to the file to check.
-         *  @result true if the file exists, false if it doesn't.
+         *  @param path The full path to the file to check.
+         *  @return True if the file exists, false if it doesn't.
          */
         public static function fileExists(path:String):Boolean
         {
@@ -106,8 +106,8 @@ package system.platform {
         /**
          *  Removes a file at the given path.
          *
-         *  @param path the full path to the file to remove.
-         *  @result true on success, false on failure.
+         *  @param path The full path of the file to be removed.
+         *  @return True on success, false on failure.
          */
         public static function removeFile(path:String):Boolean
         {

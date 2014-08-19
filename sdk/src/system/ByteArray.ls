@@ -25,46 +25,47 @@ package system
    */
   native class ByteArray
   {
-
+    
     /*
     // Compresses the byte array.
     public native function compress(algorithm:String):void;
     
-
+    
     // Compresses the byte array using the deflate compression algorithm.
     public native function deflate():void;
 
     // Decompresses the byte array using the deflate compression algorithm.
     public native function inflate():void;   
     */
-
+    
     /**
      * Return the length in bytes of this ByteArray.
      */
     public native var length:Number;
-
+    
     /**
      * Set the current position of the byte array.
      */
     public native function set position(value:int);
-
+    
     /**
      * Get the current position of the byte array.
      */
     public native function get position():int;
-
+    
     /**
      *  Clears the contents of the byte array and resets the length and position properties to 0.
      */
     public native function clear():void;
-
+    
     /**
-     *  Reserves the number of bytes specified, this does not set the ByteArray's size 
-     *  however, it reserves the desired capacy to avoid memory thrashing when writing
-     *  to a ByteArray.
+     *  Reserves the number of bytes specified.
+     * 
+     *  This does not set the ByteArray's size, it just reserves the desired capacity
+     *  to avoid memory thrashing when writing to the ByteArray.
      */
     public native function reserve(bytes:Number):void;
-
+    
     /**
      *  Reads the number of data bytes, specified by the length parameter, from the byte stream. 
      *  The bytes are read into the ByteArray object specified by the bytes parameter, and the bytes 
@@ -75,7 +76,7 @@ package system
      *  @param length The number of bytes to read. The default value of 0 causes all available data to be read.
      */
     public native function readBytes(bytes:ByteArray, offset:int = 0, length:int = 0):int;
-        
+    
     /**
      *  Reads a signed byte from the byte stream.
      *
@@ -88,7 +89,7 @@ package system
     /**
      *  Reads a Boolean value from the byte stream.
      *
-     *  A single byte is read, and true is returned if the byte is nonzero, false otherwise.
+     *  A single byte is read, returning true for non-zero values, false otherwise.
      *
      *  @return Returns true if the byte is nonzero, false otherwise.
      */
@@ -100,14 +101,14 @@ package system
      *  @return A double-precision (64-bit) floating-point number.
      */
     public native function readDouble():Number;
-        
+    
     /**
      *  Reads an IEEE 754 single-precision (32-bit) floating-point number from the byte stream.
      *
      *  @return A single-precision (32-bit) floating-point number.
      */
     public native function readFloat():Number;
-        
+    
     /**
      *  Reads a signed 32-bit integer from the byte stream.
      *
@@ -116,14 +117,14 @@ package system
      *  @return A 32-bit signed integer between -2147483648 and 2147483647.
      */
     public native function readInt():int;
-
+    
     /**
-     *  Moves the current position, in bytes, of the file pointer into the ByteArray object. 
+     *  Moves the current position of the file pointer (in bytes) into the ByteArray object. 
      *  
      *  This is the point at which the next call to a read method starts reading or a write method starts writing.
      */
     public native function setPosition(value:int):void;
-          
+    
     /**
      *  Reads a signed 16-bit integer from the byte stream.
      *
@@ -132,7 +133,7 @@ package system
      *  @return A 16-bit signed integer between -32768 and 32767.
      */
     public native function readShort():int;
-        
+    
     /**
      *  Reads an unsigned byte from the byte stream.
      *
@@ -158,7 +159,7 @@ package system
      *  @return UTF-8 encoded String.
      */
     public native function readString():String;
-      
+    
     /**
      *  Reads an unsigned 16-bit integer from the byte stream.
      *  
@@ -167,14 +168,14 @@ package system
      *  @return A 16-bit unsigned integer between 0 and 65535.
      */
     public native function readUnsignedShort():int;
-                    
+    
     /**
      *  Converts the byte array to a string.
      *
      *  If the data in the array begins with a Unicode byte order mark, the application will honor that mark when converting to a string.
      */
     public native function toString():String;
-
+    
     /**
      *  Writes a sequence of length bytes from the specified byte array, bytes, starting offset(zero-based index) bytes into the byte stream.
      *
@@ -210,7 +211,7 @@ package system
      *  @param value A Boolean value determining which byte is written. If the parameter is true, the method writes a 1; if false, the method writes a 0.
      */
     public native function writeBoolean(value:Boolean):void;
-        
+    
     /**
      *  Writes an IEEE 754 double-precision (64-bit) floating-point number to the byte stream.
      *  

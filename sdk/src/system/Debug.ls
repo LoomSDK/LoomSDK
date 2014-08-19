@@ -24,7 +24,7 @@ package system {
 
     /// @cond PRIVATE
     /**
-     *  Represents an frame in a loom callstack. Instances of this class can be retreived by calling Debug.getCallStack()
+     *  Represents an frame in a loom callstack. Instances of this class can be retrieved by calling Debug.getCallStack()
      *
      *  @see Debug.getCallStack()
      */
@@ -42,7 +42,7 @@ package system {
         
         // 
         /**
-         *  Represents either a method, a contstructor, a propery getter/setter etc
+         *  Represents either a method, a constructor, a property getter/setter, etc.
          *  The callstack has full reflection information.
          */
         public var method:MethodBase;
@@ -171,7 +171,7 @@ package system {
 
         /**
          * When set, we have hit a fatal assertion and while we can inspect the 
-         * program state under the debugger we cannot continue execution.
+         * program state under the debugger, we cannot continue execution.
          */ 
         public static native var assertion:Boolean;        
         

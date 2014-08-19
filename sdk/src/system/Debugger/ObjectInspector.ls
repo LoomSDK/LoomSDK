@@ -20,10 +20,10 @@ limitations under the License.
 
 package system.debugger {
 
-    /*
-    * ObjectInspector take a source object and returns 
-    * a nicely formatted json dump of its type/value + field member values
-    */
+    /**
+     *  ObjectInspector take a source object and returns 
+     *  a nicely formatted JSON string representing the type and field member values.
+     */
     public native class ObjectInspector
     {
         public static native function inspect(o:Object):String;

@@ -20,6 +20,9 @@ limitations under the License.
 
 package system.errors
 {
+	/**
+	 * Error thrown when an out of range access occurs.
+	 */
 	public class RangeError extends Error
 	{
 		public function RangeError(msg:String = "")

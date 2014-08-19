@@ -22,10 +22,15 @@ package system.platform {
 
 
     /**
-     * The File class provides many common file operations for text and binary files.
+     * Provides utility functions for working with file system paths.
      */
     native class Path 
     {
+        /**
+         *  Returns the folder the file at the path provided is in.
+         *  @param path The file path to return the folder path for.
+         *  @return The folder of the file path provided.
+         */
         public static function folderFromPath(path:String):String
         {
             // Find the last folder delimiter.
@@ -36,29 +41,28 @@ package system.platform {
             // No slash, who knows!
             if(lastSlash == -1)
                 return path;
-
+            
             return path.substring(0, lastSlash);
         }
-
         
         /**
-         *  Get's a platform dependent path which may be written to 
+         *  Returns a platform dependent path which may be written to.
          *  For example "Documents" on OSX and Windows or the local cache on iOS/Android.
-         *  @return an absolute path to the writeable folder.
+         *  @return An absolute path to the writable folder.
          */
         public static native function getWritablePath():String;
 
         /**
          *  Normalizes an input path to use the system folder delimiters.
-         *  @param path the path to normalize.
-         *  @return the normalized path with platform directory delimiters.
+         *  @param path The path to normalize.
+         *  @return The normalized path with platform directory delimiters.
          */
         public static native function normalizePath(path:String):String;
 
         /**
          *  Recursively makes the full directory tree of the path provided.
-         *  @param path the path to create.
-         *  @return true on success, false on failure.
+         *  @param path The path to create.
+         *  @return True on success, false on failure.
          */
         public static function makeDir(path:String):Boolean 
         {
@@ -69,8 +73,8 @@ package system.platform {
 
         /**
          *  Checks whether a directory exists at the given path.
-         *  @param path the path to check.
-         *  @return true if the path exists, false if it doesn't.
+         *  @param path The path to check.
+         *  @return True if the path exists, false if it doesn't.
          */
         public static function dirExists(path:String):Boolean
         {
@@ -79,10 +83,10 @@ package system.platform {
 
         /**
          *  Removes a directory (or directory tree) at the given path.
-         *  @param path the path to remove.
-         *  @param: recursive whether to delete all subfolders and files (note that if the directory is not empty
+         *  @param path The path to remove.
+         *  @param recursive If true, delete all subfolders and files (note that if the directory is not empty
          *          and recursive is not specified the directory will not be removed).
-         *  @return true if the directory was removed, false if it wasn't.
+         *  @return True if the directory was removed, false if it wasn't.
          */
         public static function removeDir(path:String, recursive:Boolean = false):Boolean
         {
@@ -127,10 +131,10 @@ package system.platform {
 
         /**
          *  Walks a given path calling the given callback function for every file in the directory and 
-         *  its subdirectorys.
-         *  @param path the path to walk.
-         *  @param callback a function with the following signature function(fileName:String, payload:Object).
-         *  @param payload an optional object to send to the callback function.
+         *  its subdirectories.
+         *  @param path The path to walk.
+         *  @param callback A function with the signature function(fileName:String, payload:Object).
+         *  @param payload An optional object to send to the callback function.
          */
         public static function walkFiles(path:String, callback:Function, payload:Object = null):void
         {
@@ -139,7 +143,7 @@ package system.platform {
 
         /**
          *  Gets the system's folder delimiter "/" or "\".
-\        *  @return returns the system folder delimiter string.
+\        *  @return The system folder delimiter string.
          */
         public static native function getFolderDelimiter():String;
 
@@ -147,7 +151,6 @@ package system.platform {
         private static function removeDirCallback(filename:String, files:Vector.<String>) 
         {
             files.pushSingle(filename);
-
         }
 
         private static native function _makeDir(path:String):Boolean;

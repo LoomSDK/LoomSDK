@@ -62,6 +62,7 @@ import co.theengine.loomdemo.billing.LoomStore;
 
 import com.dolby.DolbyAudio;
 
+
 public class LoomDemo extends Cocos2dxActivity {
 
     private Cocos2dxGLSurfaceView mGLView;

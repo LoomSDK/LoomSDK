@@ -26,7 +26,7 @@ function makeList( obj, depth, id ) {
         } else {
             
             // Else, we assume link contains an object
-            // of children, so we add a list we cna twirl down.
+            // of children, so we add a list we can twirl down.
             var linkDom = makeLink( '#' );
             listItemDom.append( linkDom );
             var listDom = makeList( link, depth + 1, id );

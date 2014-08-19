@@ -37,7 +37,7 @@
 
 
 namespace LS {
-bool LSCompiler::debugBuild = false;
+bool LSCompiler::debugBuild = true;
 
 utString LSCompiler::sdkPath = ".";
 
@@ -381,7 +381,7 @@ void LSCompiler::compileAssembly(BuildInfo *buildInfo)
 
             if (outputDir.length())
             {
-                jsonFileName = outputDir + "/" + compiler->buildInfo->getAssemblyName() + ".symbols";
+                jsonFileName = outputDir + platform_getFolderDelimiter() + compiler->buildInfo->getAssemblyName() + ".symbols";
             }
             else
             {
@@ -389,6 +389,8 @@ void LSCompiler::compileAssembly(BuildInfo *buildInfo)
             }
 
             ab->writeToFile(jsonFileName);
+
+			log("Symbols Generated: %s", jsonFileName.c_str());
         }
 
         // finally link the root assembly
@@ -402,7 +404,7 @@ void LSCompiler::compileAssembly(BuildInfo *buildInfo)
 
         if (outputDir.length())
         {
-            jsonFileName = outputDir + "/" + compiler->buildInfo->getAssemblyName() + ext;
+			jsonFileName = outputDir + platform_getFolderDelimiter() + compiler->buildInfo->getAssemblyName() + ext;
         }
         else
         {
@@ -427,7 +429,7 @@ BuildInfo *LSCompiler::loadBuildFile(const utString& cref)
     for (UTsize i = 0; i < sourcePath.size(); i++)
     {
         utString path = sourcePath.at(i);
-        path += "/";
+		path += platform_getFolderDelimiter();
         path += cref;
         if (!strstr(cref.c_str(), ".build"))
         {
@@ -533,7 +535,7 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
     for (UTsize i = 0; i < rootBuildDependencies.size(); i++)
     {
         BuildInfo *buildInfo     = rootBuildDependencies.at(i);
-        utString  assemblySource = buildInfo->getOutputDir() + "/" + buildInfo->getAssemblyName() + ".loomlib";
+		utString  assemblySource = buildInfo->getOutputDir() + platform_getFolderDelimiter() + buildInfo->getAssemblyName() + ".loomlib";
 
         utArray<unsigned char> rarray;
         lmAssert(utFileStream::tryReadToArray(assemblySource, rarray), "Unable to load library assembly %s", assemblySource.c_str());

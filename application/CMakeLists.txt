@@ -125,16 +125,23 @@ if (APPLE)
           "-framework CoreGraphics"
           "-framework CoreFoundation"
           "-framework CoreMotion"
+          "-framework CoreLocation"
           "-framework Foundation"
           "-framework AssetsLibrary"
           "-framework UIKit"          
           "-framework GLKit"  
           "-framework OpenGLES"
           "-framework StoreKit"
+          "-framework Security"
+          "-framework Social"
+          "-framework Accounts"
+          "-framework QuartzCore"
+          "-framework MobileCoreServices"
           "-framework OpenGLES"
           "-framework MessageUI"
           "-framework SystemConfiguration"
           "-framework AdSupport"
+          "-framework CFNetwork"
 
           # For Audio
           "-framework AVFoundation"
@@ -148,6 +155,9 @@ if (APPLE)
 
           # Teak (NOTE: Requires FacebookSDK)
           "-framework Carrot -F ${CMAKE_SOURCE_DIR}/loom/vendor/teak/ios"
+
+          # Parse (NOTE: Requires FacebookSDK)
+          "-framework Parse -F ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios"
 
           # Admob SDK
           ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a

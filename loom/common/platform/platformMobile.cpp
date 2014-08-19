@@ -68,7 +68,7 @@ const char *platform_getSelectedDolbyAudioProfile()
 ///Null Mobile class for all non-Mobile platforms
 
 ///initializes the data for the Mobile class for this platform
-void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB)
+void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB, OpenedViaCustomURLCallback customURLCB)
 {
 }
 
@@ -86,6 +86,18 @@ void platform_allowScreenSleep(bool sleep)
 bool platform_shareText(const char *subject, const char *text)
 {
     return false;
+}
+
+///returns if the application was launched via a Custom URL Scheme
+bool platform_wasOpenedViaCustomURL()
+{
+    return false;
+}
+
+///gets the the specified query key data from any custom scheme URL path that the application was launched with, or "" if not found
+const char *platform_getOpenURLQueryData(const char *queryKey)
+{
+    return "";
 }
 
 ///checks if a given sensor is supported on this hardware

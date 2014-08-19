@@ -128,13 +128,17 @@ package loom.gameframework
 
    }
 
-   // Interface for plugins that implement property lookups. They shouldn't store much if any data.
+   /**
+    * Interface for plugins that implement property lookups. They shouldn't store much if any data.
+    */
    public interface IPropertyPlugin
    {
       function resolve(context:Object, cached:Vector.<String>, propertyInfo:PropertyManagerInfo):void;
    }
 
-   // Implement lookups of fields, ie "blah.foo.bar"
+   /**
+    * Implement lookups of fields, ie "blah.foo.bar"
+    */
    public class FieldPlugin implements IPropertyPlugin
    {
       public function resolve(context:Object, cached:Vector.<String>, propertyInfo:PropertyManagerInfo):void
@@ -164,7 +168,9 @@ package loom.gameframework
       }
    }
 
-   // Implement lookups of "@foo" on a LoomGameObject ("@foo" means look up the component named foo).
+   /**
+    * Implement lookups of "@foo" on a LoomGameObject ("@foo" means look up the component named foo).
+    */
    public class ComponentPlugin implements IPropertyPlugin
    {
       protected var fieldResolver:FieldPlugin = new FieldPlugin();
@@ -201,6 +207,7 @@ package loom.gameframework
 
    /**
     * Internal class used by PropertyManager to service property lookups.
+    * @private
     */
    class PropertyManagerInfo
    {

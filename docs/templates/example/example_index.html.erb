@@ -102,10 +102,13 @@
         var search_objects = $.parseJSON('<%= search_object_string %>');
 
       	var sidebarData = [
-      	    { "name" : "API reference", "link" : "<%= relative_base_path %>/api/index.html" },
+      	    { "name" : "API reference", "link" : [] },
       	    { "name" : "Guides", "link" : [] },
       	    { "name" : "Examples", "link" : [] }
       	];
+
+        // populate API reference links
+        sidebarData[0].link = $.parseJSON('<%= $packages.sidebar_links_json("") %>');            
 
         // populate examples links
       	for(var index in search_objects.examples)
@@ -116,6 +119,7 @@
 
       	// populate guides links
       	sidebarData[1].link = $.parseJSON('<%= $guides.sidebar_links_json(relative_base_path) %>');
+
 
       </script>
 
