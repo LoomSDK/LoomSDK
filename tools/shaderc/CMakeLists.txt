@@ -24,10 +24,12 @@ endif()
 # fcpp
 add_definitions(-DNINCLUDE=64 -DNWORK=65536 -DNBUFF=65536)
 
-file (GLOB SRC_FILES glsl-optimizer/src/mesa/program/*.c 
-					 glsl-optimizer/src/glsl/*.c 
-				     glsl-optimizer/src/glsl/*.cpp 
-				     glsl-optimizer/src/glsl/glcpp/*.c )
+file (GLOB SRC_FILES
+    glsl-optimizer/src/mesa/program/*.c
+    glsl-optimizer/src/mesa/main/*.c
+    glsl-optimizer/src/glsl/*.c 
+    glsl-optimizer/src/glsl/*.cpp
+    glsl-optimizer/src/glsl/glcpp/*.c )
 
 set (SRC_FILES ${SRC_FILES} fcpp/cpp1.c fcpp/cpp2.c fcpp/cpp3.c fcpp/cpp4.c fcpp/cpp5.c fcpp/cpp6.c )
 

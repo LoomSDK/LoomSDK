@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 2.5.  */
+/* A Bison parser, made by GNU Bison 2.7.12-4996.  */
 
 /* Bison interface for Yacc-like parsers in C
    
-      Copyright (C) 1984, 1989-1990, 2000-2011 Free Software Foundation, Inc.
+      Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
    
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -30,6 +30,15 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
+#ifndef YY_GLCPP_PARSER_SRC_GLSL_GLCPP_GLCPP_PARSE_H_INCLUDED
+# define YY_GLCPP_PARSER_SRC_GLSL_GLCPP_GLCPP_PARSE_H_INCLUDED
+/* Enabling traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+#if YYDEBUG
+extern int glcpp_parser_debug;
+#endif
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -41,39 +50,39 @@
      DEFINED = 259,
      ELIF_EXPANDED = 260,
      HASH = 261,
-     HASH_DEFINE_FUNC = 262,
-     HASH_DEFINE_OBJ = 263,
-     HASH_ELIF = 264,
-     HASH_ELSE = 265,
-     HASH_ENDIF = 266,
-     HASH_IF = 267,
-     HASH_IFDEF = 268,
-     HASH_IFNDEF = 269,
-     HASH_LINE = 270,
-     HASH_UNDEF = 271,
-     HASH_VERSION = 272,
-     IDENTIFIER = 273,
-     IF_EXPANDED = 274,
-     INTEGER = 275,
-     INTEGER_STRING = 276,
-     LINE_EXPANDED = 277,
-     NEWLINE = 278,
-     OTHER = 279,
-     PLACEHOLDER = 280,
-     SPACE = 281,
-     PASTE = 282,
-     OR = 283,
-     AND = 284,
-     NOT_EQUAL = 285,
-     EQUAL = 286,
-     GREATER_OR_EQUAL = 287,
-     LESS_OR_EQUAL = 288,
-     RIGHT_SHIFT = 289,
-     LEFT_SHIFT = 290,
-     UNARY = 291
+     HASH_DEFINE = 262,
+     FUNC_IDENTIFIER = 263,
+     OBJ_IDENTIFIER = 264,
+     HASH_ELIF = 265,
+     HASH_ELSE = 266,
+     HASH_ENDIF = 267,
+     HASH_IF = 268,
+     HASH_IFDEF = 269,
+     HASH_IFNDEF = 270,
+     HASH_LINE = 271,
+     HASH_UNDEF = 272,
+     HASH_VERSION = 273,
+     IDENTIFIER = 274,
+     IF_EXPANDED = 275,
+     INTEGER = 276,
+     INTEGER_STRING = 277,
+     LINE_EXPANDED = 278,
+     NEWLINE = 279,
+     OTHER = 280,
+     PLACEHOLDER = 281,
+     SPACE = 282,
+     PASTE = 283,
+     OR = 284,
+     AND = 285,
+     NOT_EQUAL = 286,
+     EQUAL = 287,
+     GREATER_OR_EQUAL = 288,
+     LESS_OR_EQUAL = 289,
+     RIGHT_SHIFT = 290,
+     LEFT_SHIFT = 291,
+     UNARY = 292
    };
 #endif
-
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -81,8 +90,6 @@
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 #endif
-
-
 
 #if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
 typedef struct YYLTYPE
@@ -98,4 +105,18 @@ typedef struct YYLTYPE
 #endif
 
 
+#ifdef YYPARSE_PARAM
+#if defined __STDC__ || defined __cplusplus
+int glcpp_parser_parse (void *YYPARSE_PARAM);
+#else
+int glcpp_parser_parse ();
+#endif
+#else /* ! YYPARSE_PARAM */
+#if defined __STDC__ || defined __cplusplus
+int glcpp_parser_parse (glcpp_parser_t *parser);
+#else
+int glcpp_parser_parse ();
+#endif
+#endif /* ! YYPARSE_PARAM */
 
+#endif /* !YY_GLCPP_PARSER_SRC_GLSL_GLCPP_GLCPP_PARSE_H_INCLUDED  */

@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 2.5.  */
+/* A Bison parser, made by GNU Bison 2.7.12-4996.  */
 
 /* Bison interface for Yacc-like parsers in C
    
-      Copyright (C) 1984, 1989-1990, 2000-2011 Free Software Foundation, Inc.
+      Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
    
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -30,6 +30,15 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
+#ifndef YY__MESA_GLSL_SRC_GLSL_GLSL_PARSER_H_INCLUDED
+# define YY__MESA_GLSL_SRC_GLSL_GLSL_PARSER_H_INCLUDED
+/* Enabling traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+#if YYDEBUG
+extern int _mesa_glsl_debug;
+#endif
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -95,157 +104,187 @@
      SAMPLER2DARRAY = 313,
      SAMPLER1DARRAYSHADOW = 314,
      SAMPLER2DARRAYSHADOW = 315,
-     ISAMPLER1D = 316,
-     ISAMPLER2D = 317,
-     ISAMPLER3D = 318,
-     ISAMPLERCUBE = 319,
-     ISAMPLER1DARRAY = 320,
-     ISAMPLER2DARRAY = 321,
-     USAMPLER1D = 322,
-     USAMPLER2D = 323,
-     USAMPLER3D = 324,
-     USAMPLERCUBE = 325,
-     USAMPLER1DARRAY = 326,
-     USAMPLER2DARRAY = 327,
-     SAMPLER2DRECT = 328,
-     ISAMPLER2DRECT = 329,
-     USAMPLER2DRECT = 330,
-     SAMPLER2DRECTSHADOW = 331,
-     SAMPLERBUFFER = 332,
-     ISAMPLERBUFFER = 333,
-     USAMPLERBUFFER = 334,
-     SAMPLEREXTERNALOES = 335,
-     STRUCT = 336,
-     VOID_TOK = 337,
-     WHILE = 338,
-     IDENTIFIER = 339,
-     TYPE_IDENTIFIER = 340,
-     NEW_IDENTIFIER = 341,
-     FLOATCONSTANT = 342,
-     INTCONSTANT = 343,
-     UINTCONSTANT = 344,
-     BOOLCONSTANT = 345,
-     FIELD_SELECTION = 346,
-     LEFT_OP = 347,
-     RIGHT_OP = 348,
-     INC_OP = 349,
-     DEC_OP = 350,
-     LE_OP = 351,
-     GE_OP = 352,
-     EQ_OP = 353,
-     NE_OP = 354,
-     AND_OP = 355,
-     OR_OP = 356,
-     XOR_OP = 357,
-     MUL_ASSIGN = 358,
-     DIV_ASSIGN = 359,
-     ADD_ASSIGN = 360,
-     MOD_ASSIGN = 361,
-     LEFT_ASSIGN = 362,
-     RIGHT_ASSIGN = 363,
-     AND_ASSIGN = 364,
-     XOR_ASSIGN = 365,
-     OR_ASSIGN = 366,
-     SUB_ASSIGN = 367,
-     INVARIANT = 368,
-     LOWP = 369,
-     MEDIUMP = 370,
-     HIGHP = 371,
-     SUPERP = 372,
-     PRECISION = 373,
-     VERSION_TOK = 374,
-     EXTENSION = 375,
-     LINE = 376,
-     COLON = 377,
-     EOL = 378,
-     INTERFACE = 379,
-     OUTPUT = 380,
-     PRAGMA_DEBUG_ON = 381,
-     PRAGMA_DEBUG_OFF = 382,
-     PRAGMA_OPTIMIZE_ON = 383,
-     PRAGMA_OPTIMIZE_OFF = 384,
-     PRAGMA_INVARIANT_ALL = 385,
-     LAYOUT_TOK = 386,
-     ASM = 387,
-     CLASS = 388,
-     UNION = 389,
-     ENUM = 390,
-     TYPEDEF = 391,
-     TEMPLATE = 392,
-     THIS = 393,
-     PACKED_TOK = 394,
-     GOTO = 395,
-     INLINE_TOK = 396,
-     NOINLINE = 397,
-     VOLATILE = 398,
-     PUBLIC_TOK = 399,
-     STATIC = 400,
-     EXTERN = 401,
-     EXTERNAL = 402,
-     LONG_TOK = 403,
-     SHORT_TOK = 404,
-     DOUBLE_TOK = 405,
-     HALF = 406,
-     FIXED_TOK = 407,
-     UNSIGNED = 408,
-     INPUT_TOK = 409,
-     OUPTUT = 410,
-     HVEC2 = 411,
-     HVEC3 = 412,
-     HVEC4 = 413,
-     DVEC2 = 414,
-     DVEC3 = 415,
-     DVEC4 = 416,
-     FVEC2 = 417,
-     FVEC3 = 418,
-     FVEC4 = 419,
-     SAMPLER3DRECT = 420,
-     SIZEOF = 421,
-     CAST = 422,
-     NAMESPACE = 423,
-     USING = 424,
-     ERROR_TOK = 425,
-     COMMON = 426,
-     PARTITION = 427,
-     ACTIVE = 428,
-     FILTER = 429,
-     IMAGE1D = 430,
-     IMAGE2D = 431,
-     IMAGE3D = 432,
-     IMAGECUBE = 433,
-     IMAGE1DARRAY = 434,
-     IMAGE2DARRAY = 435,
-     IIMAGE1D = 436,
-     IIMAGE2D = 437,
-     IIMAGE3D = 438,
-     IIMAGECUBE = 439,
-     IIMAGE1DARRAY = 440,
-     IIMAGE2DARRAY = 441,
-     UIMAGE1D = 442,
-     UIMAGE2D = 443,
-     UIMAGE3D = 444,
-     UIMAGECUBE = 445,
-     UIMAGE1DARRAY = 446,
-     UIMAGE2DARRAY = 447,
-     IMAGE1DSHADOW = 448,
-     IMAGE2DSHADOW = 449,
-     IMAGEBUFFER = 450,
-     IIMAGEBUFFER = 451,
-     UIMAGEBUFFER = 452,
-     IMAGE1DARRAYSHADOW = 453,
-     IMAGE2DARRAYSHADOW = 454,
-     ROW_MAJOR = 455
+     SAMPLERCUBEARRAY = 316,
+     SAMPLERCUBEARRAYSHADOW = 317,
+     ISAMPLER1D = 318,
+     ISAMPLER2D = 319,
+     ISAMPLER3D = 320,
+     ISAMPLERCUBE = 321,
+     ISAMPLER1DARRAY = 322,
+     ISAMPLER2DARRAY = 323,
+     ISAMPLERCUBEARRAY = 324,
+     USAMPLER1D = 325,
+     USAMPLER2D = 326,
+     USAMPLER3D = 327,
+     USAMPLERCUBE = 328,
+     USAMPLER1DARRAY = 329,
+     USAMPLER2DARRAY = 330,
+     USAMPLERCUBEARRAY = 331,
+     SAMPLER2DRECT = 332,
+     ISAMPLER2DRECT = 333,
+     USAMPLER2DRECT = 334,
+     SAMPLER2DRECTSHADOW = 335,
+     SAMPLERBUFFER = 336,
+     ISAMPLERBUFFER = 337,
+     USAMPLERBUFFER = 338,
+     SAMPLER2DMS = 339,
+     ISAMPLER2DMS = 340,
+     USAMPLER2DMS = 341,
+     SAMPLER2DMSARRAY = 342,
+     ISAMPLER2DMSARRAY = 343,
+     USAMPLER2DMSARRAY = 344,
+     SAMPLEREXTERNALOES = 345,
+     IMAGE1D = 346,
+     IMAGE2D = 347,
+     IMAGE3D = 348,
+     IMAGE2DRECT = 349,
+     IMAGECUBE = 350,
+     IMAGEBUFFER = 351,
+     IMAGE1DARRAY = 352,
+     IMAGE2DARRAY = 353,
+     IMAGECUBEARRAY = 354,
+     IMAGE2DMS = 355,
+     IMAGE2DMSARRAY = 356,
+     IIMAGE1D = 357,
+     IIMAGE2D = 358,
+     IIMAGE3D = 359,
+     IIMAGE2DRECT = 360,
+     IIMAGECUBE = 361,
+     IIMAGEBUFFER = 362,
+     IIMAGE1DARRAY = 363,
+     IIMAGE2DARRAY = 364,
+     IIMAGECUBEARRAY = 365,
+     IIMAGE2DMS = 366,
+     IIMAGE2DMSARRAY = 367,
+     UIMAGE1D = 368,
+     UIMAGE2D = 369,
+     UIMAGE3D = 370,
+     UIMAGE2DRECT = 371,
+     UIMAGECUBE = 372,
+     UIMAGEBUFFER = 373,
+     UIMAGE1DARRAY = 374,
+     UIMAGE2DARRAY = 375,
+     UIMAGECUBEARRAY = 376,
+     UIMAGE2DMS = 377,
+     UIMAGE2DMSARRAY = 378,
+     IMAGE1DSHADOW = 379,
+     IMAGE2DSHADOW = 380,
+     IMAGE1DARRAYSHADOW = 381,
+     IMAGE2DARRAYSHADOW = 382,
+     COHERENT = 383,
+     VOLATILE = 384,
+     RESTRICT = 385,
+     READONLY = 386,
+     WRITEONLY = 387,
+     ATOMIC_UINT = 388,
+     STRUCT = 389,
+     VOID_TOK = 390,
+     WHILE = 391,
+     IDENTIFIER = 392,
+     TYPE_IDENTIFIER = 393,
+     NEW_IDENTIFIER = 394,
+     FLOATCONSTANT = 395,
+     INTCONSTANT = 396,
+     UINTCONSTANT = 397,
+     BOOLCONSTANT = 398,
+     FIELD_SELECTION = 399,
+     LEFT_OP = 400,
+     RIGHT_OP = 401,
+     INC_OP = 402,
+     DEC_OP = 403,
+     LE_OP = 404,
+     GE_OP = 405,
+     EQ_OP = 406,
+     NE_OP = 407,
+     AND_OP = 408,
+     OR_OP = 409,
+     XOR_OP = 410,
+     MUL_ASSIGN = 411,
+     DIV_ASSIGN = 412,
+     ADD_ASSIGN = 413,
+     MOD_ASSIGN = 414,
+     LEFT_ASSIGN = 415,
+     RIGHT_ASSIGN = 416,
+     AND_ASSIGN = 417,
+     XOR_ASSIGN = 418,
+     OR_ASSIGN = 419,
+     SUB_ASSIGN = 420,
+     INVARIANT = 421,
+     LOWP = 422,
+     MEDIUMP = 423,
+     HIGHP = 424,
+     SUPERP = 425,
+     PRECISION = 426,
+     VERSION_TOK = 427,
+     EXTENSION = 428,
+     LINE = 429,
+     COLON = 430,
+     EOL = 431,
+     INTERFACE = 432,
+     OUTPUT = 433,
+     PRAGMA_DEBUG_ON = 434,
+     PRAGMA_DEBUG_OFF = 435,
+     PRAGMA_OPTIMIZE_ON = 436,
+     PRAGMA_OPTIMIZE_OFF = 437,
+     PRAGMA_INVARIANT_ALL = 438,
+     LAYOUT_TOK = 439,
+     ASM = 440,
+     CLASS = 441,
+     UNION = 442,
+     ENUM = 443,
+     TYPEDEF = 444,
+     TEMPLATE = 445,
+     THIS = 446,
+     PACKED_TOK = 447,
+     GOTO = 448,
+     INLINE_TOK = 449,
+     NOINLINE = 450,
+     PUBLIC_TOK = 451,
+     STATIC = 452,
+     EXTERN = 453,
+     EXTERNAL = 454,
+     LONG_TOK = 455,
+     SHORT_TOK = 456,
+     DOUBLE_TOK = 457,
+     HALF = 458,
+     FIXED_TOK = 459,
+     UNSIGNED = 460,
+     INPUT_TOK = 461,
+     OUPTUT = 462,
+     HVEC2 = 463,
+     HVEC3 = 464,
+     HVEC4 = 465,
+     DVEC2 = 466,
+     DVEC3 = 467,
+     DVEC4 = 468,
+     FVEC2 = 469,
+     FVEC3 = 470,
+     FVEC4 = 471,
+     SAMPLER3DRECT = 472,
+     SIZEOF = 473,
+     CAST = 474,
+     NAMESPACE = 475,
+     USING = 476,
+     RESOURCE = 477,
+     PATCH = 478,
+     SAMPLE = 479,
+     SUBROUTINE = 480,
+     ERROR_TOK = 481,
+     COMMON = 482,
+     PARTITION = 483,
+     ACTIVE = 484,
+     FILTER = 485,
+     ROW_MAJOR = 486,
+     THEN = 487
    };
 #endif
-
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
 {
-
-/* Line 2068 of yacc.c  */
-#line 64 "src/glsl/glsl_parser.yy"
+/* Line 2053 of yacc.c  */
+#line 96 "src/glsl/glsl_parser.yy"
 
    int n;
    float real;
@@ -255,6 +294,7 @@ typedef union YYSTYPE
 
    ast_node *node;
    ast_type_specifier *type_specifier;
+   ast_array_specifier *array_specifier;
    ast_fully_specified_type *fully_specified_type;
    ast_function *function;
    ast_parameter_declarator *parameter_declarator;
@@ -269,6 +309,7 @@ typedef union YYSTYPE
    ast_case_label_list *case_label_list;
    ast_case_statement *case_statement;
    ast_case_statement_list *case_statement_list;
+   ast_interface_block *interface_block;
 
    struct {
       ast_node *cond;
@@ -281,16 +322,13 @@ typedef union YYSTYPE
    } selection_rest_statement;
 
 
-
-/* Line 2068 of yacc.c  */
-#line 287 "src/glsl/glsl_parser.h"
+/* Line 2053 of yacc.c  */
+#line 327 "src/glsl/glsl_parser.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 #endif
-
-
 
 #if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
 typedef struct YYLTYPE
@@ -306,4 +344,18 @@ typedef struct YYLTYPE
 #endif
 
 
+#ifdef YYPARSE_PARAM
+#if defined __STDC__ || defined __cplusplus
+int _mesa_glsl_parse (void *YYPARSE_PARAM);
+#else
+int _mesa_glsl_parse ();
+#endif
+#else /* ! YYPARSE_PARAM */
+#if defined __STDC__ || defined __cplusplus
+int _mesa_glsl_parse (struct _mesa_glsl_parse_state *state);
+#else
+int _mesa_glsl_parse ();
+#endif
+#endif /* ! YYPARSE_PARAM */
 
+#endif /* !YY__MESA_GLSL_SRC_GLSL_GLSL_PARSER_H_INCLUDED  */
