@@ -1084,6 +1084,9 @@ namespace bgfx
 				}
 			}
 
+// TODO loom is this still needed with updated bgfx?
+// LOOM: Having this enabled failed on Nexus 7 (is the N7 lying?)
+#if BX_PLATFORM_ANDROID == 0
 			if (s_extension[Extension::EXT_texture_format_BGRA8888  ].m_supported
 			||  s_extension[Extension::EXT_bgra                     ].m_supported
 			||  s_extension[Extension::IMG_texture_format_BGRA8888  ].m_supported
@@ -1118,6 +1121,7 @@ namespace bgfx
 					setTextureFormat(TextureFormat::BGRA8, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
 				}
 			}
+#endif
 
 			if (!BX_ENABLED(BX_PLATFORM_EMSCRIPTEN) )
 			{
@@ -3668,8 +3672,6 @@ namespace bgfx
 						}
 					}
 					else
-// LOOM: Having this enabled failed on Nexus 7 (is the N7 lying?)
-#if BX_PLATFORM_ANDROID == 0
 					{
 						writeString(&writer, "#define attribute in\n");
 						writeString(&writer, "#define varying out\n");
@@ -3687,7 +3689,6 @@ namespace bgfx
 					bx::write(&writer, code, codeLen);
 					bx::write(&writer, '\0');
 				}
-#endif      
 
 				code = temp;
 			}

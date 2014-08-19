@@ -25,20 +25,20 @@ namespace bgfx
         return dylib ? dlsym(dylib, name) : NULL;
     }
 
-    #define GL_IMPORT(_optional, _proto, _func) _proto _func
+    #define GL_IMPORT(_optional, _proto, _func, _import) _proto _func
     #include "glimports.h"
     #undef GL_IMPORT
 #endif // OSX
 
 #if BX_PLATFORM_ANDROID
     #include <EGL/egl.h>
-    #define GL_IMPORT(_optional, _proto, _func) _proto _func
+    #define GL_IMPORT(_optional, _proto, _func, _import) _proto _func
     #include "glimports.h"
     #undef GL_IMPORT
 #endif // ANDROID
 
 #if BX_PLATFORM_LINUX
-    # define GL_IMPORT(_optional, _proto, _func) _proto _func
+    # define GL_IMPORT(_optional, _proto, _func, _import) _proto _func
     # include "glimports.h" 
     # undef GL_IMPORT    
 #endif // LINUX
@@ -55,7 +55,7 @@ namespace bgfx
     PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB;
     PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
 
-#   define GL_IMPORT(_optional, _proto, _func) _proto _func
+#   define GL_IMPORT(_optional, _proto, _func, _import) _proto _func
 #       include "glimports.h"
 #   undef GL_IMPORT
 
@@ -102,7 +102,7 @@ void GlContext::import()
 
     #if BX_PLATFORM_OSX
 
-    #define GL_IMPORT(_optional, _proto, _func) \
+    #define GL_IMPORT(_optional, _proto, _func, _import) \
     { \
         _func = (_proto)NSGLGetProcAddress(#_func); \
         BGFX_FATAL(_optional || NULL != _func, Fatal::UnableToInitialize, "Failed to create OpenGL context. NSGLGetProcAddress(\"%s\")", #_func); \
@@ -114,7 +114,7 @@ void GlContext::import()
 
 // ANDROID ------------------------
 #if BX_PLATFORM_ANDROID
-#define GL_IMPORT(_optional, _proto, _func) \
+#define GL_IMPORT(_optional, _proto, _func, _import) \
 { \
     _func = (_proto)eglGetProcAddress(#_func); \
     BX_TRACE(#_func " 0x%08x", _func); \
@@ -127,7 +127,7 @@ void GlContext::import()
 
 #if BX_PLATFORM_WINDOWS
 
-#   define GL_IMPORT(_optional, _proto, _func) \
+#   define GL_IMPORT(_optional, _proto, _func, _import) \
         { \
             _func = (_proto)wglGetProcAddress(#_func); \
             if (_func == NULL) \

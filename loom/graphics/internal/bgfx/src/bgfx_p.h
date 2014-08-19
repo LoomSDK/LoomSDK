@@ -73,7 +73,6 @@ namespace bgfx
 #include <bx/allocator.h>
 #include <bx/string.h>
 #include <bx/os.h>
-#include <bx/countof.h>
 
 #include "bgfxplatform.h"
 #include "image.h"

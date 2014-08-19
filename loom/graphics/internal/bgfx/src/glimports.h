@@ -32,6 +32,7 @@
 
 #if GL_IMPORT_TYPEDEFS
 typedef void (GL_APIENTRYP GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam);
+typedef void           (GL_APIENTRYP PFNGLGENERATEMIPMAPEXTPROC) (GLenum target);
 typedef void           (GL_APIENTRYP PFNGLACTIVETEXTUREPROC) (GLenum texture);
 typedef void           (GL_APIENTRYP PFNGLATTACHSHADERPROC) (GLuint program, GLuint shader);
 typedef void           (GL_APIENTRYP PFNGLBEGINQUERYPROC) (GLenum target, GLuint id);
@@ -201,8 +202,8 @@ typedef void           (GL_APIENTRYP PFNGLPOPGROUPMARKEREXTPROC) (void);
 #endif // GL_IMPORT_TYPEDEFS
 
 #if BGFX_USE_GL_DYNAMIC_LIB
-GL_IMPORT______(false, PFNGLACTIVETEXTUREPROC,                     glActiveTexture);
 GL_IMPORT______(false, PFNGLGENERATEMIPMAPEXTPROC,                 glGenerateMipmap);
+GL_IMPORT______(false, PFNGLACTIVETEXTUREPROC,                     glActiveTexture);
 GL_IMPORT______(false, PFNGLATTACHSHADERPROC,                      glAttachShader);
 GL_IMPORT______(true,  PFNGLBEGINQUERYPROC,                        glBeginQuery);
 GL_IMPORT______(false, PFNGLBINDBUFFERPROC,                        glBindBuffer);
