@@ -13,6 +13,7 @@ set (ENGINE_SRC
     loom2d/l2dDisplayObject.cpp
     loom2d/l2dDisplayObjectContainer.cpp
     loom2d/l2dSprite.cpp
+    loom2d/l2dShape.cpp
     loom2d/l2dStage.cpp
     loom2d/l2dQuad.cpp
     loom2d/l2dImage.cpp

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * ===========================================================================
  * Loom SDK
  * Copyright 2011, 2012, 2013
@@ -19,6 +19,8 @@
  */
 
 #include "bgfx.h"
+#include "nanovg.h"
+
 #include "loom/common/platform/platform.h"
 #include "loom/common/core/log.h"
 
@@ -48,6 +50,9 @@ uint32_t Graphics::sCurrentFrame = 0;
 
 char Graphics::pendingScreenshot[1024] = { 0, };
 
+NVGcontext *nvg = NULL;
+int font;
+
 void Graphics::initialize()
 {
     // when using internal bgfx context management
@@ -61,6 +66,14 @@ void Graphics::initialize()
     // initialize the static QuadRenderer initialize
     QuadRenderer::initialize();
 
+	nvg = nvgCreate(512, 512, 1, 0);
+	//font = nvgCreateFont(nvg, "sans", "font/droidsans.ttf");
+	//font = nvgCreateFont(nvg, "sans", "font/Pecita.otf");
+	font = nvgCreateFont(nvg, "sans", "font/Cyberbit.ttf");
+
+	nvgFontFaceId(nvg, font);
+	nvgFontSize(nvg, 30);
+
     sInitialized = true;
 
     ///   BGFX_DEBUG_STATS - Display internal statistics.
@@ -71,7 +84,7 @@ void Graphics::initialize()
     ///     primitives will be rendered as lines.
     ///
 
-    // bgfx::setDebug(BGFX_DEBUG_STATS | BGFX_DEBUG_TEXT);
+    bgfx::setDebug(BGFX_DEBUG_STATS | BGFX_DEBUG_TEXT);
 }
 
 
@@ -137,15 +150,72 @@ void Graphics::beginFrame()
 
     QuadRenderer::beginFrame();
 
+	nvgBeginFrame(nvg, sWidth, sHeight, 1, NVG_STRAIGHT_ALPHA);
+
     // This dummy draw call is here to make sure that view 0 is cleared
     // if no other draw calls are submitted to view 0.
     bgfx::submit(sView);
 }
 
 
+void drawLabel(struct NVGcontext* vg, const char* text, float x, float y, float w, float h)
+{
+	NVG_NOTUSED(w);
+
+	nvgFontSize(vg, 30.0f);
+	nvgFontFace(vg, "sans");
+	nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
+
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	nvgText(vg, x, y + h*0.5f, text, NULL);
+}
+
+#include <windows.h>
+#include <wchar.h>
+
+#if defined(_MSC_VER) && _MSC_VER > 1310
+// Visual C++ 2005 and later require the source files in UTF-8, and all strings 
+// to be encoded as wchar_t otherwise the strings will be converted into the 
+// local multibyte encoding and cause errors. To use a wchar_t as UTF-8, these 
+// strings then need to be convert back to UTF-8. This function is just a rough 
+// example of how to do this.
+# define utf8(str)  ConvertToUTF8(L##str)
+const char * ConvertToUTF8(const wchar_t * pStr) {
+	static char szBuf[1024];
+	WideCharToMultiByte(CP_UTF8, 0, pStr, -1, szBuf, sizeof(szBuf), NULL, NULL);
+	return szBuf;
+}
+#else
+// Visual C++ 2003 and gcc will use the string literals as is, so the files 
+// should be saved as UTF-8. gcc requires the files to not have a UTF-8 BOM.
+# define utf8(str)  str
+#endif
+
 void Graphics::endFrame()
 {
     QuadRenderer::endFrame();
+
+	nvgSave(nvg);
+
+	nvgLineCap(nvg, NVG_BUTT);
+	nvgLineJoin(nvg, NVG_ROUND);
+
+	nvgStrokeWidth(nvg, 1);
+	nvgStrokeColor(nvg, nvgRGBA(0, 255, 0, 160));
+	nvgBeginPath(nvg);
+	nvgMoveTo(nvg, 100, 100);
+	nvgLineTo(nvg, 200, 100);
+	nvgLineTo(nvg, 200, 200);
+	nvgLineTo(nvg, 100, 200);
+	nvgStroke(nvg);
+
+	nvgRestore(nvg);
+
+	drawLabel(nvg, utf8("Hello nanovg! Pokakaj se v hlače. あなたのズボンをうんち。便便在裤子上"), 10, 50, 280, 20);
+
+	nvgEndFrame(nvg);
+
+
     bgfx::frame();
 
     if(pendingScreenshot[0] != 0)

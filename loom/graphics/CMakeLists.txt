@@ -6,14 +6,23 @@ set ( GRAPHICS_SRC gfxGraphics.cpp gfxQuadRenderer.cpp gfxShaders.cpp gfxTexture
 
 set (LOOMBGFX_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/internal/bgfx/src)
 set (LOOMBGFX_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/internal/bgfx/include)
+set (LOOMNANOVG_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/internal/nanovg/src)
+set (LOOMNANOVG_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/internal/nanovg/include)
 
-include_directories( ${LOOM_INCLUDE_FOLDERS} ${CMAKE_CURRENT_SOURCE_DIR}/internal/bx/include ${LOOMBGFX_INCLUDE_DIR} )
+include_directories(
+    ${LOOM_INCLUDE_FOLDERS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/internal/bx/include
+    ${LOOMBGFX_INCLUDE_DIR}
+    ${LOOMNANOVG_INCLUDE_DIR}
+)
 
 if (NOT ANDROID)
     include_directories( ${LOOMBGFX_INCLUDE_DIR}/khronos )
     endif()
 
 set ( BGFX_SRC ${LOOMBGFX_SOURCE_DIR}/bgfx.cpp ${LOOMBGFX_SOURCE_DIR}/vertexdecl.cpp ${LOOMBGFX_SOURCE_DIR}/image.cpp )
+
+set ( NANOVG_SRC ${LOOMNANOVG_SOURCE_DIR}/nanovg.cpp ${LOOMNANOVG_SOURCE_DIR}/nanovg_bgfx.cpp )
 
 if(APPLE)
 
@@ -68,7 +77,7 @@ if (FLASH)
 
 endif()
 
-add_library( LoomGraphics ${BGFX_SRC} ${GRAPHICS_SRC} )
+add_library( LoomGraphics ${BGFX_SRC} ${NANOVG_SRC} ${GRAPHICS_SRC} )
 target_link_libraries(LoomGraphics LoomVendor )
 
 
