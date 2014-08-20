@@ -2,7 +2,7 @@
 # Debugging support
 # add_definitions(-DBGFX_CONFIG_DEBUG=1)
 
-set ( GRAPHICS_SRC gfxGraphics.cpp gfxQuadRenderer.cpp gfxShaders.cpp gfxTexture.cpp gfxScript.cpp)
+set ( GRAPHICS_SRC gfxGraphics.cpp gfxQuadRenderer.cpp gfxVectorRenderer.cpp gfxShaders.cpp gfxTexture.cpp gfxScript.cpp)
 
 set (LOOMBGFX_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/internal/bgfx/src)
 set (LOOMBGFX_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/internal/bgfx/include)
