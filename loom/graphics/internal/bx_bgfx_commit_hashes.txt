@@ -3,5 +3,5 @@ Source commit hashes from:
 https://github.com/bkaradzic/bgfx.git
 https://github.com/bkaradzic/bx
 
-bgfx commit: 752fa73cecb001c0a8f869b56d09cfb7d475f7f1
-bx commit: 5b4cf5c16d65cff896da82534226ccb885e0630e
+bgfx commit: e42d878fe8730d9dc4a5538350ba268a09007e0e + cherry picked 93a87ff9a33b0541139c327e70748ffa19cbc9dd
+bx commit: d20b8d9a19f2c0342490e014c114ead12715e8d3
