@@ -21,6 +21,10 @@ limitations under the License.
 package system {
 
 /// @cond PRIVATE
+/**
+ * Internal helper for representing null.
+ * @private
+ */
 final class Null extends Object {
 
 

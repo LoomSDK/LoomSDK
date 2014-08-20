@@ -35,6 +35,12 @@ struct RenderState
 {
     float alpha;
     int   cachedClipRect;
+
+    void clampAlpha()
+    {
+        if(alpha < 0.f) alpha = 0.f;
+        if(alpha > 1.f) alpha = 1.f;
+    }
 };
 
 class DisplayObject : public EventDispatcher
@@ -477,5 +483,8 @@ public:
 
     // a delegate which can be used for custom rendering
     LOOM_DELEGATE(CustomRender);
+
+    // a delegate which is called prior to normal rendering
+    LOOM_DELEGATE(OnRender);
 };
 }

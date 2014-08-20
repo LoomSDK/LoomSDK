@@ -1,6 +1,7 @@
 title: Quad Example
 description: Basic usage of a Quad with Loom2D
 source: src/HelloQuad.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

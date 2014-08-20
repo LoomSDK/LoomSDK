@@ -1,6 +1,5 @@
 #include "loom/common/platform/platformDisplay.h"
 #include "loom/common/platform/platformFile.h"
-#include "loom/engine/tasks/tasks.h"
 
 extern "C"
 {
@@ -16,8 +15,6 @@ void loom_appShutdown();
 #include <android/asset_manager_jni.h>
 
 #include "loom/common/core/log.h"
-
-lmDefineLogGroup(jniGroup, "loom.jni", 1, LoomLogInfo);
 
 #include "platform/android/jni/JniHelper.h"
 #include <jni.h>
@@ -57,6 +54,9 @@ JNIEXPORT void JNICALL Java_org_cocos2dx_lib_Cocos2dxRenderer_nativeInit(JNIEnv 
         GFX::Graphics::setPlatformData(NULL, NULL, NULL);
 
         GFX::Graphics::initialize();
+
+        // set initial width and height
+        GFX::Graphics::reset(w, h);
 
         CCApplication::sharedApplication().run();
     }

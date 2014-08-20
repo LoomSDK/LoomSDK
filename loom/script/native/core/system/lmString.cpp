@@ -20,6 +20,9 @@
 
 #include <ctype.h>
 #include <string.h>
+#include <cstring>
+#include "loom/common/utils/md5.h"
+#include "loom/common/core/allocator.h"
 #include "loom/script/loomscript.h"
 #include "loom/script/runtime/lsRuntime.h"
 
@@ -90,7 +93,8 @@ public:
             return 1;
         }
 
-        lua_pushnumber(L, (double)svalue[index]);
+        //return unsigned-char so we can support Single-Byte UTF8 characters
+        lua_pushinteger(L, (unsigned int)svalue[index] & 0xff);
 
         return 1;
     }
@@ -440,6 +444,22 @@ public:
         return 1;
     }
 
+    static int _toMD5(lua_State *L)
+    {
+        lmAssert(lua_isstring(L, 1), "Non-string passed to String._toMD5");
+
+        const char *svalue = lua_tostring(L, 1);
+
+        if (!svalue || !svalue[0])
+        {
+            lua_pushstring(L, "");
+            return 1;
+        }
+
+        lua_pushstring(L, mdfive(svalue).c_str());
+        return 1;
+    }    
+
     static int _find(lua_State *L)
     {
         lua_getglobal(L, "string");
@@ -524,19 +544,37 @@ public:
             lua_rawset(L, -3);
         }
 
-        char *sstr  = (char *)strdup(str);
-        char *token = strtok(sstr, delim);
+        char *start = str;
+        char *found;
+        char *temp = (char*) lmAlloc(NULL, slen + 1);
+        do {
+            found = strstr(start, delim);
 
-        while (token != NULL)
+            if (found)
+            {
+                if (found - start > 0)
+                {
+                    memcpy(temp, start, found - start);
+                    temp[found - start] = 0;
+                    lua_pushnumber(L, count++);
+                    lua_pushstring(L, temp);
+                    lua_rawset(L, -3);
+                }
+
+                start = found + dlen;
+            }
+            
+        } while (found);        
+
+        if (start - str < slen)
         {
+            strncpy(temp, start, slen + 1);
             lua_pushnumber(L, count++);
-            lua_pushstring(L, token);
-            lua_rawset(L, -3);
-
-            token = strtok(NULL, delim);
+            lua_pushstring(L, temp);
+            lua_rawset(L, -3);            
         }
 
-        free(sstr);
+        lmFree(NULL, temp);
 
         // handle the case of ..., delta, ""
         if (slen >= dlen)
@@ -581,6 +619,7 @@ static int registerSystemString(lua_State *L)
        .addStaticLuaFunction("_substring", &LSString::_substring)
        .addStaticLuaFunction("_toNumber", &LSString::_toNumber)
        .addStaticLuaFunction("_toBoolean", &LSString::_toBoolean)
+       .addStaticLuaFunction("_toMD5", &LSString::_toMD5)
        .addStaticLuaFunction("_find", &LSString::_find)
        .addStaticLuaFunction("_split", &LSString::_split)
        .addStaticLuaFunction("format", &LSString::format)

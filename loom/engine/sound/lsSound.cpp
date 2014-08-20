@@ -36,7 +36,7 @@ lmDefineLogGroup(gLoomSoundLogGroup, "loom.sound", 1, LoomLogInfo);
 
 // Nop for now
 #define CHECK_OPENAL_ERROR() \
-    err = alcGetError(dev); if (err != 0) lmLogError(gLoomSoundLogGroup, "OpenAL error %d %s:%d",err, __FILE__, __LINE__); 
+    err = alcGetError(dev); if (err != 0) lmLogError(gLoomSoundLogGroup, "OpenAL error %d %s:%d", err, __FILE__, __LINE__); 
 
 extern "C"
 {
@@ -82,6 +82,10 @@ extern "C"
         alListenerfv(AL_ORIENTATION, listenerOri);
         CHECK_OPENAL_ERROR();
 
+        // Use inverse distance clamped mode (see section 3.4 of the OpenAL 1.1 spec).
+        alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
+        CHECK_OPENAL_ERROR();
+
         lmLogInfo(gLoomSoundLogGroup, "Loom Sound engine OpenAL '%s' initialized.", alcGetString(dev, ALC_ALL_DEVICES_SPECIFIER));
     }
 
@@ -104,11 +108,13 @@ class OALBufferNote
 public:
     const char *asset;
     ALuint buffer;
+    int refCounter;
 
     OALBufferNote()
     {
         asset = NULL;
         buffer = 0;
+        refCounter = 1;
     }
 };
 
@@ -162,10 +168,32 @@ public:
         {
             // Get the value from the hashtable.
             note = *notePtr;
+            note->refCounter++;
         }
 
         // Return the buffer.
         return note->buffer;
+    }
+
+
+    static void decBufferForAsset(const char *assetPath)
+    {
+        ///find note
+        OALBufferNote **notePtr = buffers.get(assetPath);
+        if(notePtr == NULL)
+        {
+            return;
+        }
+        OALBufferNote *note = *notePtr;
+
+        ///decrement ref counter
+        note->refCounter--;
+        if(note->refCounter == 0)
+        {
+            ///delete and remove the buffer if it has no more references
+            alDeleteBuffers((ALuint)1, (const ALuint*)(&note->buffer));
+            buffers.remove(assetPath);
+        }
     }
 
     static void soundUpdater(void *payload, const char *name);
@@ -179,7 +207,7 @@ class Sound
 
 protected:
     static Sound *smList;
-    const static int csmMaxSounds = 64;
+    const static int csmMaxSounds = 256;
     static int count;
 
 public:
@@ -187,6 +215,13 @@ public:
     ALuint source;
     Sound *next;
     int needsRestart;
+    int playCount;
+    char *path;
+
+    static void preload(const char *assetPath)
+    {
+        OALBufferManager::getBufferForAsset(assetPath);
+    }
 
     static Sound *load(const char *assetPath)
     {
@@ -198,11 +233,15 @@ public:
         {
             // Failed, return a dummy sound.
             lmLogError(gLoomSoundLogGroup, "Failed to get buffer for sound '%s', returning dummy Sound...", assetPath);
-            return lmNew(NULL) Sound();
+            // LOOM-1839: We cannot lmNew here currently as managed natives call delete in nativeDelete
+            //return lmNew(NULL) Sound();
+            return new Sound(NULL);
         }
 
         // We got a live one!
-        Sound *s = lmNew(NULL) Sound();
+        // LOOM-1839: We cannot lmNew here currently as managed natives call delete in nativeDelete
+        //Sound *s = lmNew(NULL) Sound();
+        Sound *s = new Sound(assetPath);
 
         // Check the list for dead sources if we exceeded our cap.
         Sound *walk = smList;
@@ -210,10 +249,13 @@ public:
         {
             while(walk)
             {
-                if(walk->isPlaying() == false && walk->source != 0)
+                if(walk->isPlaying() == false && walk->source != 0 && walk->hasEverPlayed() == false)
                 {
                     // Snag the source and reuse it.
-                    lmLogError(gLoomSoundLogGroup, "Too many active sources, reusing source #%d", walk->source);
+                    lmLogError(gLoomSoundLogGroup, 
+                                "Too many active sources, reusing source #%d, which means that Sound Asset %s is no longer valid. Don't load so many sounds at once!", 
+                                walk->source, 
+                                walk->path);
                     s->source = walk->source;
                     walk->source = 0;
                     break;
@@ -273,11 +315,21 @@ public:
         return s;
     }
 
-    Sound()
+    Sound(const char *assetPath)
     {
         source = 0;
         next = NULL;
         needsRestart = 0;
+        playCount = 0;
+        path = NULL;
+        if(assetPath != NULL)
+        {
+            int strLen = strlen(assetPath) + 1;
+            path = new char[strLen];
+            memcpy(path, assetPath, strLen * sizeof(char));
+        }
+
+        // Note the allocation.
         count++;
     }
 
@@ -285,22 +337,42 @@ public:
     {
         // Remove from the list.
         Sound **walk = &smList;
+        Sound *prev = NULL;
         while(*walk)
         {
             if(*walk == this)
             {
-                *walk = this->next;
+                ///if we're at the head, move the list down, otherwise, link prev to next to skip this node 
+                ///while keeping the head where it was
+                if(prev == NULL)
+                {
+                    *walk = this->next;                    
+                }
+                else
+                {
+                    prev->next = this->next;
+                }
                 break;
             }
 
+            prev = *walk;
             walk = &(*walk)->next;
         }
 
         count--;
-        lmAssert(count > 0, "Unbalanced Sound allocations! Should never delete more than we allocated!");
+        lmAssert(count >= 0, "Unbalanced Sound allocations! Should never delete more than we allocated!");
 
         if(source != 0)
             alDeleteSources(1, &source);
+
+        ///decrement the buffer ref counter
+        OALBufferManager::decBufferForAsset(path);
+
+        ///delete path memory
+        if(path != NULL)
+        {
+            delete[] path;
+        }
     }
 
     void setPosition(float x, float y, float z)
@@ -320,14 +392,18 @@ public:
     void setListenerRelative(bool flag)
     {
         ALCenum err;
-        alSourcei(source, AL_SOURCE_RELATIVE, flag ? 1 : 0);
+        alSourcei(source, AL_SOURCE_RELATIVE, flag ? AL_FALSE : AL_TRUE);
         CHECK_OPENAL_ERROR();
     }
 
-    void setFalloffRadius(float radius)
+    void setFalloffRadius(float innerRadius, float outerRadius, float rollOff = 1.0)
     {
         ALCenum err;
-        alSourcef(source, AL_MAX_DISTANCE, radius);
+        alSourcef(source, AL_REFERENCE_DISTANCE, innerRadius);
+        CHECK_OPENAL_ERROR();
+        alSourcef(source, AL_MAX_DISTANCE, outerRadius);
+        CHECK_OPENAL_ERROR();
+        alSourcef(source, AL_ROLLOFF_FACTOR, rollOff);
         CHECK_OPENAL_ERROR();
     }
 
@@ -364,6 +440,8 @@ public:
         ALCenum err;
         alSourcePlay(source);
         CHECK_OPENAL_ERROR();
+
+        playCount++;
     }
 
     void pause()
@@ -392,6 +470,11 @@ public:
         ALint state = 0;
         alGetSourcei(source, AL_SOURCE_STATE, &state);
         return (state == AL_PLAYING || state == AL_PAUSED);
+    }
+
+    bool hasEverPlayed()
+    {
+        return playCount != 0;
     }
 };
 
@@ -517,6 +600,7 @@ static int registerLoomSoundSound(lua_State *L)
        .beginClass<Sound>("Sound")
 
        .addStaticMethod("load", &Sound::load)
+       .addStaticMethod("preload", &Sound::preload)
 
        .addMethod("setPosition", &Sound::setPosition)
        .addMethod("setVelocity", &Sound::setVelocity)
@@ -535,6 +619,7 @@ static int registerLoomSoundSound(lua_State *L)
        .addMethod("rewind", &Sound::rewind)
 
        .addMethod("isPlaying", &Sound::isPlaying)
+       .addMethod("hasEverPlayed", &Sound::hasEverPlayed)
        
        .endClass()
     .endPackage();

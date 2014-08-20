@@ -1,6 +1,7 @@
 title: HTTP Example
 description: Simple example which makes a simple Restful JSON request
 source: src/HTTPExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

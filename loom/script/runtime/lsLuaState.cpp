@@ -310,6 +310,10 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
         {
             vectorType = type;
         }
+        else if (!strcmp(typeName, "system.reflection.Type"))
+        {
+            reflectionType = type;
+        }
 
         lua_rawgeti(L, LUA_GLOBALSINDEX, LSINDEXMEMBERINFONAME);
         lua_pushlightuserdata(L, type);
@@ -361,6 +365,7 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
     lmAssert(numberType, "LSLuaState::cacheAssemblyTypes - system.Number not found");
     lmAssert(stringType, "LSLuaState::cacheAssemblyTypes - system.String not found");
     lmAssert(functionType, "LSLuaState::cacheAssemblyTypes - system.Function not found");
+    lmAssert(reflectionType, "LSLuaState::cacheAssemblyTypes - system.reflection.Type not found");
     lmAssert(vectorType, "LSLuaState::cacheAssemblyTypes - system.Vector not found");
 }
 
@@ -463,7 +468,7 @@ Assembly *LSLuaState::loadExecutableAssembly(const utString& assemblyName, bool 
     utByteArray bytes;
     bytes.resize(sz);
 
-    unsigned int readSZ = sz;
+    uLongf readSZ = sz;
 
     int ok = uncompress((Bytef *)bytes.getDataPtr(), (uLongf *)&readSZ, (const Bytef *)((unsigned char *)buffer + sizeof(unsigned int) * 4), (uLong)sz);
 

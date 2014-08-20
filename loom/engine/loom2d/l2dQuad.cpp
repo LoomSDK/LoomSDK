@@ -48,6 +48,8 @@ void Quad::updateNativeVertexData(lua_State *L, int index)
         int rawDataTable = lua_gettop(L);
         int rcounter     = 0;
 
+        tinted = false;
+
         for (int i = 0; i < 4; i++)
         {
             GFX::VertexPosColorTex *v = &quadVertices[i];
@@ -75,6 +77,9 @@ void Quad::updateNativeVertexData(lua_State *L, int index)
                       ((uint32_t)(b * 255) << 16) |
                       ((uint32_t)(g * 255) << 8) |
                       ((uint32_t)(r * 255));
+
+            if(v->abgr != 0x00FFFFFFFF)
+                tinted = true;
 
             lua_rawgeti(L, rawDataTable, rcounter++);
             v->u = (float)lua_tonumber(L, -1);
@@ -108,11 +113,12 @@ void Quad::render(lua_State *L)
     getTargetTransformationMatrix(NULL, &mtx);
 
     renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
+    renderState.clampAlpha();
     renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
 
     GFX::Graphics::setClipRect(renderState.cachedClipRect);
 
-    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 4);
+    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 4, tinted || renderState.alpha != 1.f);
     GFX::VertexPosColorTex *src = quadVertices;
 
     if (!v)

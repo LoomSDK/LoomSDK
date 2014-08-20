@@ -69,8 +69,8 @@ void enableAccelerometerJNI()
                                        "enableAccelerometer",
                                        "()V"))
     {
-        t.env->CallStaticVoidMethod(t.classID, t.methodID);
-        t.env->DeleteLocalRef(t.classID);
+        t.getEnv()->CallStaticVoidMethod(t.classID, t.methodID);
+        t.getEnv()->DeleteLocalRef(t.classID);
     }
 }
 
@@ -84,8 +84,8 @@ void disableAccelerometerJNI()
                                        "disableAccelerometer",
                                        "()V"))
     {
-        t.env->CallStaticVoidMethod(t.classID, t.methodID);
-        t.env->DeleteLocalRef(t.classID);
+        t.getEnv()->CallStaticVoidMethod(t.classID, t.methodID);
+        t.getEnv()->DeleteLocalRef(t.classID);
     }
 }
 }

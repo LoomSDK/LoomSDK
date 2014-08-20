@@ -19,7 +19,7 @@ limitations under the License.
 */
 
 package loom.utils {
-/*
+/**
 Injector is an interface that provides a minimalist dependency 
 injection API.
 */
@@ -71,6 +71,7 @@ class Injector
         if(recursionProtection > 64)
         {
             trace("INFINITE RECURSION IN INJECTOR FOR (" + type.getName() + ", " + id + ")");
+            recursionProtection--;
             return null;
         }
 
@@ -139,7 +140,7 @@ class Injector
             // Should dictioary keys be compared strictly or looseley?
             // This problem is outlined in Jira Issue: LOOM-10
             var injectedValue:Object;
-
+            
             injectedValue = getValue(injectionTarget.type, injectionTarget.id);
             if(injectedValue) 
             {
@@ -172,6 +173,10 @@ class Injector
 
 }
 
+/**
+ * Internal cache for info about injection sites.
+ * @private
+ */
 protected class InjectionTarget
 {
     public var type:Type;

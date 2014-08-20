@@ -61,11 +61,11 @@ static int luaByteCodewriter(lua_State *L, const void *p, size_t size,
 }
 
 
-ByteCode *TypeCompiler::generateByteCode(Proto *proto)
+ByteCode *TypeCompiler::generateByteCode(Proto *proto, bool debug = true)
 {
     utArray<unsigned char> bc;
     // always include debug info
-    luaU_dump(L, proto, luaByteCodewriter, &bc, 0);
+    luaU_dump(L, proto, luaByteCodewriter, &bc, debug ? 0 : 1);
     return ByteCode::encode64(bc);
 }
 
@@ -235,7 +235,9 @@ void TypeCompiler::generateMethod(FunctionLiteral *function,
 
     closeCodeState(&codeState);
 
-    method->setByteCode(generateByteCode(funcState.f));
+	bool debug = cunit->buildInfo->isDebugBuild();
+
+    method->setByteCode(generateByteCode(funcState.f, debug));
 
     currentMethod          = NULL;
     currentMethodCoroutine = false;
@@ -265,7 +267,9 @@ void TypeCompiler::generateConstructor(FunctionLiteral *function,
 
     closeCodeState(&codeState);
 
-    constructor->setByteCode(generateByteCode(funcState.f));
+	bool debug = cunit->buildInfo->isDebugBuild();
+
+    constructor->setByteCode(generateByteCode(funcState.f, debug));
 
     currentMethod = NULL;
 }
@@ -1366,8 +1370,7 @@ Expression *TypeCompiler::visit(BinaryOperatorExpression *expression)
 
         utArray<Expression *> args;
         args.push_back(eleft);
-        args.push_back(new StringLiteral(eright->type->getAssembly()->getName().c_str()));
-        args.push_back(new NumberLiteral(eright->type->getTypeID()));
+        args.push_back(eright);
 
         generateCall(&object, &args);
 

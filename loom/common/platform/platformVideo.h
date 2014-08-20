@@ -28,7 +28,8 @@
  * abstraction handles playing back fullscreen video on mobile devices.
  *
  */
-
+#define ROOT_FOLDER     "assets/videos/"
+ 
 
 ///Types of the control widget to display over the video
 enum LoomVideoControlMode

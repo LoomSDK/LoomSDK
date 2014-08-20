@@ -129,6 +129,7 @@ package loom2d.utils
         }
         
         private static var pointCache:Point;
+        private static var uvCache:Point;
 
         /** Returns the position of a vertex. */
         public function getPosition(vertexID:int):Point
@@ -191,7 +192,7 @@ package loom2d.utils
             return mRawData[offset];
         }
         
-        /** Updates the texture coordinates of a vertex (range 0-1). */
+        /** Updates the texture coordinates of a vertex. */
         public function setTexCoords(vertexID:int, u:Number, v:Number):void
         {
             var offset:int = getOffset(vertexID) + TEXCOORD_OFFSET;
@@ -199,12 +200,13 @@ package loom2d.utils
             mRawData[offset+1] = v;
         }
         
-        /** Returns the texture coordinates of a vertex in the range 0-1. */
-        public function getTexCoords(vertexID:int, texCoords:Point):void
+        /** Returns the texture coordinates of a vertex. */
+        public function getTexCoords(vertexID:int):Point
         {
             var offset:int = getOffset(vertexID) + TEXCOORD_OFFSET;
-            texCoords.x = mRawData[offset];
-            texCoords.y = mRawData[offset+1];
+            uvCache.x = mRawData[offset];
+            uvCache.y = mRawData[offset+1];
+            return uvCache;
         }
         
         // utility functions

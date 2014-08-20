@@ -1,7 +1,7 @@
 /*
 ===========================================================================
 Loom SDK
-Copyright 2011, 2012, 2013 
+Copyright 2011, 2012, 2013
 The Game Engine Company, LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +14,16 @@ Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
-limitations under the License. 
+limitations under the License.
 ===========================================================================
 */
 
 package system {
-    
 
+
+/**
+ *   Types supported by the Loom JSON parser
+ */
 enum JSONType
 {
     JSON_OBJECT,
@@ -34,238 +37,326 @@ enum JSONType
 };
 
 /**
- *   The JSON class lets applications parse data using JavaScript %Object Notation (JSON) format.
+ *  Provides utilities for parsing data in JavaScript Object Notation (JSON) format.
+ *
+ *  Populate the JSON data structure by calling `loadString()`.
+ *  Dump the JSON data structure by calling `serialize()`.
+ *
+ *  In order to return strongly typed values from the data structure, every data type has its own getter and setter.
+ *  The getters and setters come in two flavors, for operating on Objects or Arrays, e.g.:
+ *
+ *  * `getBoolean(key)`, `setBoolean(key, value)`
+ *  * `getArrayBoolean(index)`, `setArrayBoolean(index, value)`
+ *
+ *  @see http://www.json.org/
+ *  @see #loadString()
+ *  @see #serialize()
  */
 native class JSON {
 
-    /**
-     *  Loads a JSON-formatted String into the object.
+    /** Loads a JSON-formatted string into memory. Required before getters can be called.
      *
-     *  This call is required to successfully call any other functions on this class.
+     *  If parsing fails, the `getError()` method will return the error message.
      *
-     *  @param json - JSON-formatted String object.
-     *  @return True if the JSON loaded properly, false if there was an error.
-     *  @see getError()
+     *  The `serialize()` method will convert the in-memory data back to a JSON string.
+     *
+     *  @param json A JSON formatted String
+     *  @return true if the JSON string was parsed successfully, false if there was an error.
+     *  @see #getError()
+     *  @see #serialize()
      */
     public native function loadString(json:String):Boolean;
 
     /**
-     * Serialize this object to a JSON String.
+     *  Serializes the in-memory data structure to a JSON formatted String.
+     *
+     *  @return A JSON formatted String that can be parsed with loadString()
+     *  @see #loadString()
      */
     public native function serialize():String;
 
-    /**
-     *  Gets a string representation of the last error thrown by this JSON object.
-     *  
-     *  @return The error text String
+    /** Retrieves a string representation of the last error thrown.
      */
     public native function getError():String;
-    
-    /** Get the type of this object.
+
+    /** Retrieves the type of the current JSON Object.
+     *
+     *  @return An enumerated type value
+     *  @see JSONType
      */
     public native function getJSONType():JSONType;
 
-    /**
-     *  Gets the int value mapped to the key String on this JSON object.
+    /** For a JSON Object, retrieves the type of the value associated with the provided key.
      *
-     *  @param key String key mapped to the int value.
-     *  @return the int value mapped to the String key.
+     *  @param key Identifies the item in the Object to be queried
+     */
+    public native function getObjectJSONType(key:String):JSONType;
+
+    /** For a JSON Array, retrieves the type of the value at the provided index.
+     *
+     *  @param index Identifies the item in the Array to be queried
+     */
+    public native function getArrayJSONType(index:int):JSONType;
+
+    /** For a JSON Object, retrieves a String representation of the 64-bit Integer value associated with the provided key.
+     *
+     *  LoomScript does not support 64-bit integers natively.
+     *
+     *  @param key Identifies the number in the Object to be retrieved (as a String)
+     */
+    public native function getLongLongAsString(key:String):String;
+
+    /** For a JSON Object, retrieves the 32-bit Integer value associated with the provided key.
+     *
+     *  _Note:_ LoomScript does not support 64-bit integers natively, but longer integers can be retrieved as Strings via `getLongLongAsString()`.
+     *
+     *  @param key Identifies the number to be retrieved
+     *  @see #getLongLongAsString()
      */
     public native function getInteger(key:String):int;
 
-    /**
-     *  Gets the float value mapped to the key String on this JSON object.
+    /** For a JSON Object, retrieves the 64-bit Float value associated with the provided key.
      *
-     *  @param key String key mapped to the float value.
-     *  @return the int value mapped to the String key.
+     *  @param key Identifies the number to be retrieved
+     *  @see #setFloat()
      */
     public native function getFloat(key:String):float;
 
     /**
-     *  Gets the String value mapped to the key String on this JSON object.
+     *  For a JSON Object, retrieves the String value associated with the provided key.
      *
-     *  @param key String key mapped to the String value.
-     *  @return The String value mapped to the key String.
+     *  @param key Identifies the string to be retrieved
+     *  @see #setString()
      */
     public native function getString(key:String):String;
-    
+
     /**
-     *  Gets the Boolean value mapped to the key String on this JSON object.
-     *  
-     *  @param key String key mapped to the Boolean value.
-     *  @return The Boolean value mapped to the key String.
+     *  For a JSON Object, retrieves the Boolean value associated with the provided key.
+     *
+     *  @param key Identifies the boolean to be retrieved
+     *  @see #setBoolean()
      */
     public native function getBoolean(key:String):Boolean;
-    
+
     /**
-     *  Gets the JSON value mapped to the key String on this JSON object.
+     *  For a JSON Object, retrieves the JSON Object value associated with the provided key.
      *
-     *  @param key String key mapped to the JSON value.
-     *  @return The JSON value mapped to the key String.
+     *  The object returned is a JSON Object (map of key-value pairs).
+     *
+     *  @param key Identifies the object to be retrieved
+     *  @see #getObjectJSONType()
+     *  @see #getObjectFirstKey()
+     *  @see #getObjectNextKey()
+     *  @see #getBoolean()
+     *  @see #getInteger()
+     *  @see #getLongLongAsString()
+     *  @see #getFloat()
+     *  @see #getString()
+     *  @see #getArray()
+     *  @see #getObject()
      */
     public native function getObject(key:String):JSON;
-    
+
     /**
-     *  Gets the JSON value mapped to the key String on this JSON object.
+     *  For a JSON Object, retrieves the JSON Array value associated with the provided key.
      *
-     *  The object returned is a JSON array. Calling JSON.isArray on this object will
-     *  resolve to true and the following array methods can be successfully called:
-     *  - JSON.getArrayCount
-     *  - JSON.getArrayBoolean
-     *  - JSON.getArrayInteger
-     *  - JSON.getArrayString
-     *  - JSON.getArrayObject
+     *  The object returned is a JSON array (ordered set of values).
      *
-     *  @param key String key mapped to the JSON value
-     *  @return The JSON value mapped to the key String.
+     *  @param key Identifies the array to be retrieved
+     *  @see #getArrayJSONType()
+     *  @see #getArrayCount()
+     *  @see #getArrayBoolean()
+     *  @see #getArrayInteger()
+     *  @see #getArrayString()
+     *  @see #getArrayArray()
+     *  @see #getArrayObject()
      */
     public native function getArray(key:String):JSON;
 
-    /**
-     * Set an integer value on this JSON object.
+    /** For a JSON Object, associates an Integer value with the provided key.
+     *
+     *  This value can be later retrieved with `getInteger(key)`.
+     *
+     *  @param key Identifier for the integer
+     *  @param value Integer to be associated with the key
+     *  @see #getInteger()
      */
     public native function setInteger(key:String, value:int):void;
 
-    /**
-     * Set an string value on this JSON object.
+    /** For a JSON Object, associates a String value with the provided key.
+     *
+     *  This value can be later retrieved with `getString(key)`.
+     *
+     *  @param key Identifier for the string
+     *  @param value String to be associated with the key
+     *  @see #getString()
      */
     public native function setString(key:String, value:String):void;
 
-    /**
-     * Set a float value on this JSON object.
+    /** For a JSON Object, associates a 64-bit Float value with the provided key.
+     *
+     *  This value can be later retrieved with `getFloat(key)`.
+     *
+     *  @param key Identifier for the float
+     *  @param value Float to be associated with the key
+     *  @see #getFloat()
      */
     public native function setFloat(key:String, value:Number):void;
 
-    /**
-     * Set a boolean value on this JSON object.
+    /** For a JSON Object, associates a Boolean value with the provided key.
+     *
+     *  This value can be later retrieved with `getBoolean(key)`.
+     *
+     *  @param key Identifier for the boolean
+     *  @param value Boolean to be associated with the key
+     *  @see #getBoolean()
      */
     public native function setBoolean(key:String, value:Boolean):void;
 
-    /**
-     * Set an Object value on this JSON object.
+    /** For a JSON Object, associates a JSON Object value with the provided key.
+     *
+     *  This value can be later retrieved with `getObject(key)`.
+     *
+     *  @param key Identifier for the object
+     *  @param value JSON Object to be associated with the key
+     *  @see #getObject()
      */
     public native function setObject(key:String, value:JSON):void;
 
-    /**
-     * Set an Array value on this JSON object.
+    /** For a JSON Object, associates a JSON Array value with the provided key.
+     *
+     *  This value can be later retrieved with `getArray(key)`.
+     *
+     *  @param key Identifier for the array
+     *  @param value JSON Array to be associated with the key
+     *  @see #getArray()
      */
     public native function setArray(key:String, value:JSON):void;
 
-    /**
-     *  Indicates whether the JSON object is considered an object.
+    /** Indicates whether the JSON Object is considered an Object.
      *
-     *  @return True if the JSON object is an object, false otherwise
+     *  @return true if the JSON object represents an object, false otherwise
      */
     public native function isObject():Boolean;
 
-    /**
-     *  Gets the first key's name in the property list of an object.
-     *
-     *  @return The name if the matching key or an empty string.
+    /** For a JSON Object, retrieves the name of the first key in the property list.
      */
     public native function getObjectFirstKey():String;
-    
-    /**
-     *  Gets the key's name that follows the key given as a parameter
-     *  in the property list of an object.
+
+    /** For a JSON Object, retrieves the name of the key immediately following the provided key in the property list.
      *
-     *  @return The name if the matching key or an empty string.
+     *  @return The next key, or null if no further keys exist.
      */
     public native function getObjectNextKey(key:String):String;
-    
-    /**
-     *  Indicates whether the JSON object is considered an array.
+
+    /** Indicates whether the JSON Object is considered an Array.
      *
-     *  @return True if the JSON object is an array, false otherwise
+     *  @return true if the JSON object represents an Array, false otherwise
      */
     public native function isArray():Boolean;
-    
-    /**
-     *  Gets the number of items in the JSON array.
+
+    /** For a JSON Array, retrieves the number of items.
      *
-     *  @return The number of items, 0 if object is not a JSON array.
+     *  @return The number of items, 0 if object is not a JSON Array.
      */
     public native function getArrayCount():int;
-    
-    /**
-     *  Gets a Boolean value at the specified index in the JSON array.
+
+    /** For a JSON Array, retrieves a Boolean value at the provided index.
      *
-     *  @param index The index of the Boolean value
-     *  @return The Boolean value
+     *  @param index Identifies the item in the Array to be retrieved as a Boolean
      */
     public native function getArrayBoolean(index:int):Boolean;
-    
-    /**
-     *  Gets a int value at the specified index in the JSON array.
+
+    /** For a JSON Array, retrieves a 32-bit Integer value at the provided index.
      *
-     *  @param index The index of the int value
-     *  @return The int value
+     *  @param index Identifies the item in the Array to be retrieved as an Integer
      */
     public native function getArrayInteger(index:int):int;
-    
-    /**
-     *  Gets a real value at the specified index in the JSON array.
+
+    /** For a JSON Array, retrieves a 64-bit Float value at the provided index.
      *
-     *  @param index The index of the int value
-     *  @return The int value
+     *  @param index Identifies the item in the Array to be retrieved as a Float
      */
     public native function getArrayFloat(index:int):Number;
 
-    /**
-     *  Gets a String value at the specified index in the JSON array.
+    /** For a JSON Array, retrieves a String value at the provided index.
      *
-     *  @param index The index of the String value
-     *  @return The String value
+     *  @param index Identifies the item in the Array to be retrieved as a String
      */
     public native function getArrayString(index:int):String;
-    
-    /**
-     *  Gets a JSON value at the specified index in the JSON array.
+
+    /** For a JSON Array, retrieves a JSON Object value at the provided index.
      *
-     *  @param index The index of the JSON value
-     *  @return The JSON value
+     *  @param index Identifies the item in the Array to be retrieved as a JSON Object
      */
     public native function getArrayObject(index:int):JSON;
 
-    /**
-     *  Gets an Array value at the specified index in the JSON array.
+    /** For a JSON Array, retrieves a JSON Array value at the provided index.
      *
-     *  @param index The index of the JSON value
-     *  @return The JSON value
+     *  @param index Identifies the item in the Array to be retrieved as a JSON Array
      */
     public native function getArrayArray(index:int):JSON;
 
-    /**
-     *  Set a Boolean value at the specified index in the JSON array.
+    /** For a JSON Array, associates a Boolean value with the provided index.
+     *
+     *  This value can be later retrieved with `getArrayBoolean(index)`.
+     *
+     *  @param index Array position to receive the Boolean
+     *  @param value Boolean to be set at the index
+     *  @see #getArrayBoolean()
      */
     public native function setArrayBoolean(index:int, value:Boolean):void;
 
-    /**
-     *  Set a Boolean value at the specified index in the JSON array.
+    /** For a JSON Array, associates a 32-bit Integer value with the provided index.
+     *
+     *  This value can be later retrieved with `getArrayInteger(index)`.
+     *
+     *  @param index Array position to receive the Integer
+     *  @param value Integer to be set at the index
+     *  @see #getArrayInteger()
      */
     public native function setArrayInteger(index:int, value:int):void;
 
-    /**
-     *  Set a Boolean value at the specified index in the JSON array.
+    /** For a JSON Array, associates a 64-bit Float value with the provided index.
+     *
+     *  This value can be later retrieved with `getArrayFloat(index)`.
+     *
+     *  @param index Array position to receive the Float
+     *  @param value Float to be set at the index
+     *  @see #getArrayFloat()
      */
     public native function setArrayFloat(index:int, value:Number):void;
 
-    /**
-     *  Set a Boolean value at the specified index in the JSON array.
+    /** For a JSON Array, associates a String value with the provided index.
+     *
+     *  This value can be later retrieved with `getArrayString(index)`.
+     *
+     *  @param index Array position to receive the String
+     *  @param value String to be set at the index
+     *  @see #getArrayString()
      */
     public native function setArrayString(index:int, value:String):void;
 
-    /**
-     *  Set a Boolean value at the specified index in the JSON array.
+    /** For a JSON Array, associates a JSON Object value with the provided index.
+     *
+     *  This value can be later retrieved with `getArrayObject(index)`.
+     *
+     *  @param index Array position to receive the JSON Object
+     *  @param value JSON Object to be set at the index
+     *  @see #getArrayObject()
      */
     public native function setArrayObject(index:int, value:JSON):void;
 
-    /**
-     *  Set a Boolean value at the specified index in the JSON array.
+    /** For a JSON Array, associates a JSON Array value with the provided index.
+     *
+     *  This value can be later retrieved with `getArrayArray(index)`.
+     *
+     *  @param index Array position to receive the JSON Array
+     *  @param value JSON Array to be set at the index
+     *  @see #getArrayArray()
      */
     public native function setArrayArray(index:int, value:JSON):void;
 
-    
 }
-    
+
 }

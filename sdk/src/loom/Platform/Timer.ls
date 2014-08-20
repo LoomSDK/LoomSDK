@@ -23,12 +23,23 @@ package loom.platform {
 import system.platform.Platform;
 import loom.Application;
 
+/**
+ * Called when a Timer fires various events (start, complete, stop, pause).
+ */
 public delegate TimerCallback(timer:Timer):void;
 
-class Timer {
+/**
+ * Simple self-contained timer class that fires events as time passes.
+ */
+class Timer 
+{
     //_________________________________________________
     //  Constructor
     //_________________________________________________
+
+    /** 
+     * Create a timer with an optional starting delay.
+     */
     public function Timer(delay:Number = 0.0)
     {
         _delay = delay;
@@ -149,9 +160,25 @@ class Timer {
     //_________________________________________________
     //  Delegate Members
     //_________________________________________________
+
+    /**
+     * Called when the timer starts.
+     */
     public var onStart:TimerCallback;
+
+    /**
+     * Called when the timer fires.
+     */
     public var onComplete:TimerCallback;
+
+    /**
+     * Called when the timer stops.
+     */
     public var onStop:TimerCallback;
+
+    /**
+     * Called when the timer is paused.
+     */
     public var onPause:TimerCallback;
 
     //_________________________________________________
@@ -176,6 +203,13 @@ class Timer {
             _lastTickTime = currentTime;
 
         var delta:Number = currentTime - _lastTickTime;
+
+        // clamp the delta to <= 500ms
+        // note that when pausing the timer the _lastTickTime is set
+        // to -1 which will avoid large deltas on resume
+        if (delta > 500)
+            delta = 500;
+
         _elapsed += delta;
         _lastTickTime = currentTime;
 

@@ -10,8 +10,8 @@ package poly.views
     import loom.lml.LML;
     import loom.lml.LMLDocument;
 
-    import loom.animation.LoomTween;
-    import loom.animation.LoomEaseType;
+    import loom2d.Loom2D;
+    import loom2d.animation.Transitions;
 
     import loom2d.display.DisplayObjectContainer;
 
@@ -62,19 +62,19 @@ package poly.views
             bg.height = owner.stage.stageHeight + 256;            
             
             bg.alpha = 0;
-            LoomTween.to(bg, 0.2, {"alpha": 0.5});
+            Loom2D.juggler.tween(bg, 0.2, {"alpha": 0.5});
 
             pausedText.y = 800;
-            LoomTween.to(pausedText, 0.2, {"y": 100, "delay": 0.1, "ease": LoomEaseType.EASE_OUT});
+            Loom2D.juggler.tween(pausedText, 0.2, {"y": 100, "delay": 0.1, "transition": Transitions.EASE_OUT});
 
             backToMenu.y = -150;
-            LoomTween.to(backToMenu, 0.2, {"y": 480, "delay": 0.1, "ease": LoomEaseType.EASE_OUT});
+            Loom2D.juggler.tween(backToMenu, 0.2, {"y": 480, "delay": 0.1, "transition": Transitions.EASE_OUT});
 
             restartButton.x = 1300;
-            LoomTween.to(restartButton, 0.2, {"x": 520, "delay": 0.1, "ease": LoomEaseType.EASE_OUT});
+            Loom2D.juggler.tween(restartButton, 0.2, {"x": 520, "delay": 0.1, "transition": Transitions.EASE_OUT});
 
             resumeButton.x = -300;
-            LoomTween.to(resumeButton, 0.2, {"x": 280, "delay": 0.1, "ease": LoomEaseType.EASE_OUT});
+            Loom2D.juggler.tween(resumeButton, 0.2, {"x": 280, "delay": 0.1, "transition": Transitions.EASE_OUT});
         }
 
         public function exit():void
@@ -84,14 +84,14 @@ package poly.views
 
             exiting = true;
 
-            LoomTween.to(bg, 0.2, {"alpha": 0});
-            LoomTween.to(pausedText, 0.2, {"y": 800, "delay": 0.1, "ease": LoomEaseType.EASE_OUT});
-            LoomTween.to(backToMenu, 0.2, {"y": -150, "delay": 0.1, "ease": LoomEaseType.EASE_OUT});
-            LoomTween.to(restartButton, 0.2, {"x": 1300, "delay": 0.1, "ease": LoomEaseType.EASE_OUT});
-            LoomTween.to(resumeButton, 0.2, {"x": -300, "delay": 0.1, "ease": LoomEaseType.EASE_OUT}).onComplete += onExitComplete;
+            Loom2D.juggler.tween(bg, 0.2, {"alpha": 0});
+            Loom2D.juggler.tween(pausedText, 0.2, {"y": 800, "delay": 0.1, "transition": Transitions.EASE_OUT});
+            Loom2D.juggler.tween(backToMenu, 0.2, {"y": -150, "delay": 0.1, "transition": Transitions.EASE_OUT});
+            Loom2D.juggler.tween(restartButton, 0.2, {"x": 1300, "delay": 0.1, "transition": Transitions.EASE_OUT});
+            Loom2D.juggler.tween(resumeButton, 0.2, {"x": -300, "delay": 0.1, "transition": Transitions.EASE_OUT, "onComplete": onExitComplete});
         }
 
-        public function onExitComplete(tween:LoomTween):void
+        public function onExitComplete():void
         {
             exiting = false;
 

@@ -15,8 +15,6 @@ package loom2d.display
     import loom2d.math.Rectangle;
     import loom2d.math.Matrix;
 
-    import loom2d.native.DisplayObjectPool;
-
     /**
      *  The DisplayObject class is the base class for all objects that are rendered on the 
      *  screen.
@@ -199,7 +197,10 @@ package loom2d.display
          * ~~~
          * 
          */  
-        protected native var customRender:NativeDelegate;        
+        protected native var customRender:NativeDelegate;
+
+        /* delegate that can be set up to be called prior to normal DisplayObject rendering */
+        protected native var onRender:NativeDelegate;        
 
         // TODO: Resurrect blend mode. LOOM-1327
         //protected var mBlendMode:String;
@@ -230,8 +231,8 @@ package loom2d.display
             if (!valid)
                 validate();
                 
-            pivotX = width / 2;
-            pivotY = height / 2;
+            pivotX = width / scaleX / 2;
+            pivotY = height / scaleY / 2;
         }
                  
         /** Disposes all resources of the display object. 

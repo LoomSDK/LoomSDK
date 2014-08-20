@@ -1,0 +1,29 @@
+<!--
+	Loom Markup Language layout file defining the style and buttons for
+	the quit screen asking for confirmation, the title is defined as a button as an easter egg.
+	Interactivity is handled in the ConfirmView class, buttons are positioned in the stylesheet.
+-->
+
+<ui.views.game.ConfirmView>
+
+    <loom.css.StyleSheet source="assets/layout/style.css"/>
+	
+	<feathers.controls.Button
+		id="quit"
+		styleName="quit"
+		label="Quit?"
+	/>
+	
+	<feathers.controls.Button
+		id="yes"
+		styleName="yes"
+		label="Yes"
+	/>
+	
+	<feathers.controls.Button
+		id="no"
+		styleName="no"
+		label="No"
+	/>
+	
+</ui.views.game.ConfirmView>

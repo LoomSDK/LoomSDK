@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="120" height="30" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="pbe_psk_outdoor_tiles" tilewidth="32" tileheight="32">
+  <image source="tiles.png" width="320" height="480"/>
+ </tileset>
+ <layer name="bg" width="120" height="30">
+  <data encoding="base64" compression="zlib">
+   eJztmslOwzAQhoe2rF1YhcSNOz33AbhAj4DEBRBI7YH1wiJeH0fJqKOp1zjGSepf+pXYTe1xPjxxXACSkpKSkpLqq5vYASQF1UPsAJKCaU24GzuIpGDqCw9jB5EURNncRb5pDrdPfVjwbdMczv5uO7GDiKR14Y3ivK18szENYgcRSZvCW5AzTnzbp93Ce1B/vnNDWSXkm+XoVV5X9Ml5HflOiuOclU1CvpnrOK5V0wxyhjNWPynqx8WR81V9r018XfcWBxrHUsZtDMv8sH5s+JzXt4mv695iE/k+Gj5vE198t+O2XUeE4Ov7+8RE44zfGSw4qkzVZL40dmqbcXwKfym+78PX9/cJnodpPtaVVXm7SXxPWFnH1zSnkS+6Cr6YT3zeQ3gepvlYxld2HVWT+E5ZWcfXNKc5X87ZRcgV+/W5jzwP03ysK9N6qibyxWdcFXyfQc75xSIe5Mr7rYLvKuVnzMvIF59xVc9fylrHt1ccZVybwndbeMcjzio1ZUfkXSVfPo9lfOl8BVjmWsU8+S+++8JHxfmV8LVlfCH+f4nzxaMvX1VuzuopX10eVvVfVqb11S0rl11fHQofQD6H74TvLWI7B/X7wYXwpUUbMoXiS3nq5m8f7LhWyVe1vnpiZdv1lWyfwLRnYLu/ILtO1l5PUqfqowNh1s+q/GzDtSxf3Rh9rbpHNjHb7i/IrpO1N3LoY2DoPwRfW5v4Up5dwxipX4XfhN8d47GN+ZhZd39N18naGzn04cuX9yMzle+9Uo1paBgj9S/kz98PyDm72CbmU2bd/TVdJ2tv5NCHL1/ej8xUrnx17Zbl+w358/enhBPf+vP18R97t4aR
+  </data>
+ </layer>
+ <layer name="fg" width="120" height="30">
+  <data encoding="base64" compression="zlib">
+   eJzt2EEOgjAQBVAUd+ANdKnewTu4ds39L2FJmKSZOJRO67TF/5IJIYhWPgOFrgMAAAAAAAAAAAAAgFQHV0eveleDq/OyrS83NMhgznJkRfmOyxLaNbB1v5/n3kW+baN8r8L2WvOdSg+gEbx/CeVda75a0nm8VzdX95Xte8u3VannpZRz6Xwntkz93L/jOWvyxTNVGTE9Tjk/IvZBrnYs5xGnwPanyShgxp9vU6Bf7YX61n9fpZ07+bn++johzZuk9RzzqzcrjVeGcWh8y/eylIR6XtOvrV2bJ6Fihe5ZuVGfbelfnjftU/pZCcI01+fYfFt8R7RlzDH/S3MM1vbZ+n0W+VrIcZ+t/TzUjC9HvrUfFwulj4H0+3vpX60PIbAPxQ==
+  </data>
+ </layer>
+ <objectgroup draworder="topdown" name="objects" width="120" height="30">
+  <object name="hero" x="96" y="736" width="32" height="64"/>
+  <object name="exit_level" x="3392" y="736" width="32" height="64"/>
+  <object name="walker" x="1696" y="512" width="32" height="64"/>
+  <object name="walker" x="1856" y="640" width="32" height="64"/>
+  <object name="snagger" x="2432" y="704" width="32" height="32"/>
+  <object name="sign_intro" x="224" y="736" width="64" height="64"/>
+  <object name="gem" x="96" y="480" width="32" height="32"/>
+  <object name="gem" x="2112" y="35" width="32" height="32"/>
+  <object name="gem" x="2720" y="800" width="32" height="32"/>
+  <object name="gem" x="3392" y="352" width="32" height="32"/>
+  <object name="gem" x="2080" y="608" width="32" height="32"/>
+  <object name="sign_one_way" x="1376" y="640" width="32" height="64"/>
+  <object name="sign_baddies" x="1568" y="448" width="32" height="64"/>
+  <object name="sign_final_jump" x="2624" y="512" width="32" height="64"/>
+  <object name="sign_jump" x="576" y="736" width="32" height="64"/>
+  <object name="sign_secret" x="2112" y="96" width="32" height="64"/>
+ </objectgroup>
+</map>

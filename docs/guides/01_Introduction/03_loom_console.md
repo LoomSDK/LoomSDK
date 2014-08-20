@@ -1,8 +1,8 @@
-title: Loom Console
+title: The Console
 description: The powerful debug console.
 !------
 
-When you run your game with `loom run`, you have access to a powerful debug console.
+When you run your game with `loom run`, you have access to a powerful debug console and logging toolkit along with live editing.
 
 The Loom Console shows you all the log output from any connected games. Games deployed to mobile devices or desktop via `loom run --ios` or `loom run --android` or `loom run --desktop` will have the right IP/port in their configuration data and connect automatically. If mobile builds of your game exit or crash, just relaunch them on device to reconnect.
 
@@ -10,7 +10,7 @@ If you hit enter, you can send commands to games or to the console itself. Note 
 
 ## Log Output Format
 
-Loom log output from the console looks like the following:
+Log output from the console looks like the following:
 
 ~~~ text
 [loom.asset] Starting file watcher thread...
@@ -21,7 +21,7 @@ The part in square brackets ("[loom.asset]") is the log group with which this lo
 Log output from the game looks like this:
 
 ~~~ text
-[asset.protocol] LOG: [cocos.CCTexture2D] loading assets/PolyUI.png
+[asset.protocol] LOG: loading assets/PolyUI.png
 ~~~
 
 Notice it has `[asset.protocol] LOG:` in front of it, showing that it came through the asset agent's logging.
@@ -30,7 +30,7 @@ Log entries have a severity level, but it is not currently shown in the Loom con
 
 You can emit log output from script using `trace` and from C++ using `lmLog`.
 
-## Loom Console Comands
+## Console Comands
 
 There are two kinds of console commands, local and remote commands.
 

@@ -36,7 +36,7 @@
 #include "loom/script/reflection/lsPropertyInfo.h"
 
 namespace LS {
-//
+
 class MemberTypeVisitor : public TraversalVisitor {
     LSLuaState *vm;
 
@@ -245,6 +245,17 @@ public:
                 {
                     mi->setType(Scope::resolveType("system.Boolean"));
                 }
+                else if (varDecl->initializer->astType == AST_FUNCTIONLITERAL)
+                {
+
+                   error("Local functions must be declared in method scope %s:%s type: %s in %s at line %i (LOOM-1855)",
+                          cls->name->string.c_str(),
+                          varDecl->identifier->string.c_str(),
+                          varDecl->typeString.c_str(), cunit->filename.c_str(), lineNumber);
+                    fatalError = true;
+                    return;
+                }
+
             }
         }
     }
@@ -256,8 +267,26 @@ public:
         lineNumber = property->lineNumber;
 
         MemberInfo *mi = cls->type->findMember(property->name.c_str());
-        assert(mi);
-        assert(mi->isProperty());
+
+        if(!mi)
+        {
+            error("Unknown property %s on type: %s in %s at line %i",
+                  property->name.c_str(),
+                  cls->name->string.c_str(),
+                  cunit->filename.c_str());
+            fatalError = true;
+            return;            
+        }
+
+        if(!mi->isProperty())
+        {
+            error("Expected %s to be a property, but it was not on type: %s in %s",
+                  property->name.c_str(),
+                  cls->name->string.c_str(),
+                  cunit->filename.c_str());
+            fatalError = true;
+            return;            
+        }
 
         mi->setDocString(property->docString);
         property->memberInfo = mi;

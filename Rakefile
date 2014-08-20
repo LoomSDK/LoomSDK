@@ -2,13 +2,16 @@ require 'rubygems'
 require 'rbconfig'
 
 puts "== Executing as '#{ENV['USER']}' =="
-
+ 
 ###############################
 # BUILD CONFIGURATION VARIABLES
 ###############################
 
 # Specify the build target - Debug, Release, RelMinSize, RelWithDebug
 $buildTarget="Release" # "Debug"
+
+# the sdk_version name that will be generated when this sdk is deployed (default = "dev")
+$targetSDKVersion = "dev"
 
 # What version of the android SDK are going to target? Note you also need to
 # update the Android project and manifest to match.
@@ -37,12 +40,15 @@ $buildDocs = ENV['LOOM_BUILD_DOCS'] == "1" || ENV['LOOM_BUILD_DOCS'] == "true"
 # END OF BUILD CONFIGURATION VARIABLES
 ######################################
 
-# Ruby version check.
-if RUBY_VERSION < '1.8.7'
-  abort("Please update your version of ruby. Loom requires 1.8.7 or newer.")
-else
-  puts "Loom Rakefile running on Ruby #{RUBY_VERSION}"
+def version_outdated?(current, required)
+  (Gem::Version.new(current.dup) < Gem::Version.new(required.dup))
 end
+
+# Ruby version check.
+$RUBY_REQUIRED_VERSION = '1.8.7'
+ruby_err = "LoomSDK requires ruby version #{$RUBY_REQUIRED_VERSION} or newer.\nPlease go to https://www.ruby-lang.org/en/downloads/ and install the latest version."
+abort(ruby_err) if version_outdated?(RUBY_VERSION, $RUBY_REQUIRED_VERSION)
+puts "LoomSDK Rakefile running on Ruby version #{RUBY_VERSION}"
 
 include RbConfig
 
@@ -57,20 +63,29 @@ case CONFIG['host_os']
       abort("Unknown host config: Config::CONFIG['host_os']: #{Config::CONFIG['host_os']}")
 end
 
-$CMAKE_VERSION = %x[cmake --version]
-$CMAKE_REQUIRED_VERSION = '2.8.9'
-
-#TODO: Make this platform independent
-#https://theengineco.atlassian.net/browse/LOOM-659
-if $LOOM_HOST_OS == 'darwin'
-    # CMAKE version check
-    if(%x[which cmake].empty? || Gem::Version.new($CMAKE_VERSION.gsub("cmake version ", "")) < Gem::Version.new($CMAKE_REQUIRED_VERSION))
-      abort("The rakefile requires cmake version #{$CMAKE_REQUIRED_VERSION} and above, please go to http://www.cmake.org/ and install the latest version.")
-    else
-      puts "Running #{$CMAKE_VERSION}"
-    end
-
+# CMake version check
+def cmake_version
+  %x[cmake --version].lines.first.gsub("cmake version ", "")
 end
+
+def installed?(tool)
+  cmd = "which #{tool}" unless ($LOOM_HOST_OS == 'windows')
+  cmd = "where #{tool} > nul 2>&1" if ($LOOM_HOST_OS == 'windows')
+  system(cmd)
+  return ($? == 0)
+end
+
+$CMAKE_REQUIRED_VERSION = ($LOOM_HOST_OS == "linux") ? '2.8.7' : '2.8.9'
+cmake_err = "LoomSDK requires CMake version #{$CMAKE_REQUIRED_VERSION} or above.\nPlease go to http://www.cmake.org/ and install the latest version."
+abort(cmake_err) if (!installed?('cmake') || version_outdated?(cmake_version, $CMAKE_REQUIRED_VERSION))
+puts "Running CMake version #{cmake_version}"
+
+# For matz's sake just include rubyzip directly.
+path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'libs'))
+puts "Adding #{path} to $LOAD_PATH to use local rubyzip."
+$LOAD_PATH << path
+require 'zip'
+require 'zip/file'
 
 # Report configuration variables and validate them.
 puts "*** Using JIT? = #{$doBuildJIT}"
@@ -94,28 +109,31 @@ elsif $LOOM_HOST_OS == 'windows'
 else 
   $numCores = Integer(`cat /proc/cpuinfo | grep processor | wc -l`)
 end
-
-# For matz's sake just include rubyzip directly.
-path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'lib'))
-puts "Adding #{path} to $LOAD_PATH to use local rubyzip."
-$LOAD_PATH << path
-require 'zip'
-require 'zip/file'
-
 puts "*** Building with #{$numCores} cores."
 
 # Windows specific checks and settings
 if $LOOM_HOST_OS == 'windows'
   # This gets the true architecture of the machine, not the target architecture of the currently executing binary (that is what %PROCESSOR_ARCHITECTURE% returns)
-  WINDOWS_PROCARCH_BITS = `reg query "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\Environment" /v PROCESSOR_ARCHITECTURE`.split("AMD")[1].split(" ")[0].split("\n")[0]
+  # Note: Original check of this seemed way over complicated; just default to 32 and then search for 64 instead! 
+  # => Valid values seem to only be "AMD64", "IA64", or "x86"
+  proc_arch = `reg query "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\Environment" /v PROCESSOR_ARCHITECTURE`
+  if proc_arch.empty? || proc_arch.index("64").nil?
+    WINDOWS_PROCARCH_BITS = "32"
+  else
+    WINDOWS_PROCARCH_BITS = "64"
+  end
+  
   # Is this a 32 or a 64 bit OS?
   if WINDOWS_PROCARCH_BITS == "64"
     puts "*** Windows x64"
+    puts "*** Detected 64 Bit Windows PROCESSOR_ARCHITECTURE: #{proc_arch}"
     WINDOWS_ISX64 = "1"
     WINDOWS_ANDROID_PREBUILT_DIR = "windows-x86_64"
   else
     puts "*** Windows x86"
+    puts "*** Detected 32 Bit Windows PROCESSOR_ARCHITECTURE: #{proc_arch}"
     WINDOWS_PROCARCH_BITS = "32"
+	WINDOWS_ISX64 = "0"
     WINDOWS_ANDROID_PREBUILT_DIR = "windows"
   end
   #Dir.chdir("build") do
@@ -126,6 +144,8 @@ else
   WINDOWS_PROCARCH_BITS = "32"
   WINDOWS_ISX64 = "0"
   WINDOWS_ANDROID_PREBUILT_DIR = "windows"
+  puts "*** Non-Windows Platform"
+  puts "*** Defaulting to 32 Bit Windows PROCESSOR_ARCHITECTURE"
 end
 
 # Determine the APK name.
@@ -151,11 +171,18 @@ else
     $LSC_BINARY = "artifacts/lsc"
 end
 
+if $LOOM_HOST_OS == 'windows' 
+    $SHADERC_BINARY = "artifacts\\shaderc.exe"
+else
+    $SHADERC_BINARY = "artifacts/shaderc"
+end
+
 #############
 # BUILD TASKS
 #############
 
-CLEAN.include ["cmake_android", "cmake_osx", "cmake_ios", "cmake_msvc", "cmake_ubuntu", "build/lua_*/**", "application/android/bin", "application/ouya/bin"]
+# Don't use clean defaults, they will nuke things we don't want!
+CLEAN.replace(["cmake_android", "cmake_osx", "cmake_ios", "cmake_msvc", "cmake_ubuntu", "build/lua_*/**", "application/android/bin", "application/ouya/bin"])
 CLEAN.include ["build/**/lib/**", "artifacts/**"]
 CLOBBER.include ["**/*.loom",$OUTPUT_DIRECTORY]
 CLOBBER.include ["**/*.loomlib",$OUTPUT_DIRECTORY]
@@ -226,12 +253,12 @@ namespace :generate do
     end
   end
 
-  desc "Generates API documentation for the loomscript sdk"
+  desc "Generates API docs for the loomscript sdk"
   task :docs => ['build:desktop'] do
 
     if $buildDocs || ARGV.include?('generate:docs')
       Dir.chdir("docs") do
-        ruby "main.rb"
+        load "./main.rb"
       end
 
       FileUtils.mkdir_p "artifacts/docs"
@@ -241,7 +268,7 @@ namespace :generate do
     end
   end
 
-  desc "Generates API documentation for the loomscript sdk"
+  desc "Tests API docs for a class"
   task :test_docs, [:class] do |t, args|
 
     puts "===== Running Test Docs #{args[:class]} ====="
@@ -259,28 +286,80 @@ namespace :generate do
 
 end
 
-desc "Opens the docs in a web browser"
-task :docs => ['generate:docs'] do
-  if $LOOM_HOST_OS == 'windows'
-    `start artifacts/docs/index.html`
-  else
-    `open artifacts/docs/index.html`
+
+namespace :docs do
+
+  $DOCS_INDEX = 'artifacts/docs/index.html'
+
+  file $DOCS_INDEX do
+    Rake::Task['docs:regen'].invoke
+    puts " *** docs built!"
   end
-  
-end 
+
+  desc "Rebuilds loomlibs and docs"
+  task :regen => $LSC_BINARY do
+    puts "===== Recompiling loomlibs ====="
+    Dir.chdir("sdk") do
+      sh "../artifacts/lsc Main.build"
+    end
+    FileUtils.cp_r("sdk/libs", "artifacts/")
+
+    puts "===== Recreating the docs ====="
+    Dir.chdir("docs") do
+      load "./main.rb"
+    end
+    FileUtils.mkdir_p "artifacts/docs"
+    FileUtils.cp_r "docs/output/.", "artifacts/docs/"
+  end
+
+  desc "Opens the docs in a web browser"
+  task :open => $DOCS_INDEX do
+    case $LOOM_HOST_OS
+    when 'windows'
+      `start artifacts/docs/index.html`
+    when 'darwin'
+      `open artifacts/docs/index.html`
+    else
+      abort "not sure how to open '#{$DOCS_INDEX}' on #{$LOOM_HOST_OS}"
+    end
+  end
+
+  desc "Rebuilds docs and opens in browser"
+  task :refresh => ['docs:regen', 'docs:open']
+
+end
 
 namespace :utility do
 
   desc "Builds lsc if it doesn't exist"
-  file $LSC_BINARY => "build:desktop" do
+  file $LSC_BINARY do
+    Rake::Task['build:desktop'].invoke
     puts " *** lsc built!"
   end
-  
+
+  desc "Builds shaderc if it doesn't exist"
+  file $SHADERC_BINARY do
+    Rake::Task['build:desktop'].invoke
+    puts " *** shaderc built!"
+  end
+
   desc "Compile scripts and report any errors."
   task :compileScripts => $LSC_BINARY do
     puts "===== Compiling Core Scripts ====="
     Dir.chdir("sdk") do
       sh "../artifacts/lsc Main.build"
+    end
+  end
+
+  desc "Compile new version of shaders for the current platform."
+  task :compileShaders => $SHADERC_BINARY do
+    puts "===== Compiling Shaders ====="
+    Dir.chdir("sdk/shaders") do
+      if $LOOM_HOST_OS == 'windows'
+        sh "buildShaders.bat"
+      else
+        sh "sh buildShaders.sh"
+      end
     end
   end
 
@@ -467,6 +546,9 @@ namespace :build do
         puts "Using IOS Signing Identity from ENV"
         args.with_defaults(:sign_as => ENV['IOS_SIGNING_IDENTITY'])
       else
+        puts "**********************************************"
+        puts "WARNING: Using default iOS signing identity. Set IOS_SIGNING_IDENTITY to control the identity used."
+        puts "**********************************************"
         args.with_defaults(:sign_as => "iPhone Developer")
       end
       puts "*** Signing Identity = #{args.sign_as}"
@@ -476,7 +558,7 @@ namespace :build do
       # TODO: Find a way to resolve resources in xcode for ios.
       Dir.chdir("cmake_ios") do
         sh "cmake ../ -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} -G Xcode"
-        sh "xcodebuild -configuration #{$buildTarget}"
+        sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\""
       end
 
       # TODO When we clean this up... we should have get_app_prefix return and object with, appPath, 
@@ -497,6 +579,13 @@ namespace :build do
       package_command += " --sign '#{args.sign_as}'"
       package_command += " --embed '#{$iosProvision}'"
       sh package_command
+
+      # if Debug build, copy over the dSYM too
+      if $buildTarget == "Debug" 
+        dsymPath = Dir.glob("cmake_ios/application/#{$buildTarget}-iphoneos/*.dSYM")[0]
+        puts "dSYM path found: #{dsymPath}"
+        FileUtils.cp_r(dsymPath, full_output_path)
+      end
     end
   end
 
@@ -750,7 +839,7 @@ file 'build/luajit_android/lib/libluajit-5.1.a' do
       # OSX / LINUX
       NDK = ENV['ANDROID_NDK']
       if (!NDK)
-          raise "\n\nPlease ensure ndk-build from NDK rev 8b is on your path"
+          raise "\n\nPlease ensure ANDROID_NDK is set to your NDK folder, ie, ANDROID_NDK=/Users/bengarney/android/android-ndk-r8e. NDK r8 series is recommended."
       end
       rootFolder = Dir.pwd
       luajit_android_dir = File.join(rootFolder, "build", "luajit_android")
@@ -818,7 +907,7 @@ namespace :deploy do
 
   desc "Deploy sdk locally"
   task :sdk, [:sdk_version] => ['package:sdk'] do |t, args|
-    args.with_defaults(:sdk_version => "dev")
+    args.with_defaults(:sdk_version => $targetSDKVersion)
     sdk_path = File.join("#{ENV['HOME']}/.loom", "sdks", args[:sdk_version])
 
     # Remove the previous version
@@ -830,7 +919,7 @@ namespace :deploy do
 
   desc "Deploy the free version of the sdk locally"
   task :free_sdk, [:sdk_version] => ['package:free_sdk'] do |t, args|
-    args.with_defaults(:sdk_version => "dev")
+    args.with_defaults(:sdk_version => $targetSDKVersion)
     sdk_path = File.join("#{ENV['HOME']}/.loom", "sdks", args[:sdk_version])
 
     # Remove the previous version
@@ -858,7 +947,7 @@ end
 namespace :update do
   desc "Updates the scripts in an already deployed sdk."
   task :sdk, [:sdk_version] do |t, args|
-    args.with_defaults(:sdk_version => "dev")
+    args.with_defaults(:sdk_version => $targetSDKVersion)
     sdk = args[:sdk_version]
     sdk_path = File.join("#{ENV['HOME']}/.loom", "sdks", sdk)
 
@@ -887,7 +976,6 @@ namespace :package do
 
     omit_files = %w[ examples.zip loomsdk.zip certs/LoomDemoBuild.mobileprovision loom/vendor/telemetry-01052012 pkg/ artifacts/ docs/output cmake_osx/ cmake_msvc/ cmake_ios/ cmake_android/]
 
-    require 'zip/zip'
     Zip::File.open("nativesdk.zip", 'w') do |zipfile|
       Dir["**/**"].each do |file|
         
@@ -916,7 +1004,6 @@ namespace :package do
     FileUtils.rm_rf "pkg/examples.zip"
     FileUtils.mkdir_p "pkg"
 
-    require 'zip/zip'
     Zip::File.open("pkg/examples.zip", 'w') do |zipfile|
       Dir["docs/examples/**/**"].each do |file|
         zipfile.add(file.sub("docs/examples/", ''),file)
@@ -945,6 +1032,9 @@ namespace :package do
       
       # add the ios app bundle
       FileUtils.cp_r("artifacts/ios/LoomDemo.app", "pkg/sdk/bin/ios")
+      if $buildTarget == "Debug"
+        FileUtils.cp_r("artifacts/ios/LoomDemo.app.dSYM", "pkg/sdk/bin/ios")
+      end
       
       # Strip out the bundled assets and binaries
       FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/assets"

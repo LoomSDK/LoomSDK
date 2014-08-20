@@ -4,7 +4,6 @@ package
     import system.platform.Platform;
     import loom.Application;
 
-    import loom.animation.LoomTween;
     import loom.gameframework.ITicked;
     import loom.gameframework.TimeManager;    
 

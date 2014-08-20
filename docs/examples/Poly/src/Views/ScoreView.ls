@@ -13,8 +13,8 @@ package poly.views
     import loom.lml.LML;
     import loom.lml.LMLDocument;
 
-    import loom.animation.LoomTween;
-    import loom.animation.LoomEaseType;
+    import loom2d.Loom2D;
+    import loom2d.animation.Transitions;
 
     /**
      * View implementing after-game score screen.
@@ -57,26 +57,26 @@ package poly.views
             bg.y = -128;
             bg.width = parent.stage.stageWidth + 256;            
             bg.height = parent.stage.stageHeight + 256;            
-            LoomTween.to(bg, 0.2, {"alpha": 0.5});            
+            Loom2D.juggler.tween(bg, 0.2, {"alpha": 0.5});            
 
             // center score on stage
             scoreLabel.x = stage.stageWidth/2 - scoreLabel.size.x/2;
             scoreLabel.y = -100;
-            LoomTween.to(scoreLabel, 0.3, {"y": 100, "ease": LoomEaseType.EASE_OUT});
+            Loom2D.juggler.tween(scoreLabel, 0.3, {"y": 100, "transition": Transitions.EASE_OUT});
 
             backToMenu.y = 1000;
-            LoomTween.to(backToMenu, 0.3, {"y": 480, "ease": LoomEaseType.EASE_OUT});
+            Loom2D.juggler.tween(backToMenu, 0.3, {"y": 480, "transition": Transitions.EASE_OUT});
 
             restartButton.x = -200;
-            LoomTween.to(restartButton, 0.3, {"x": 400, "ease": LoomEaseType.EASE_OUT});
+            Loom2D.juggler.tween(restartButton, 0.3, {"x": 400, "transition": Transitions.EASE_OUT});
         }
 
         public function exit():void
         {   
-            LoomTween.to(bg, 0.4, {"alpha": 0});
-            LoomTween.to(scoreLabel, 0.3, {"y": -100, "ease": LoomEaseType.EASE_IN});
-            LoomTween.to(backToMenu, 0.3, {"y": -150, "ease": LoomEaseType.EASE_IN});
-            LoomTween.to(restartButton, 0.3, {"x": -200, "ease": LoomEaseType.EASE_IN}).onComplete += onExitComplete;
+            Loom2D.juggler.tween(bg, 0.4, {"alpha": 0});
+            Loom2D.juggler.tween(scoreLabel, 0.3, {"y": -100, "transition": Transitions.EASE_IN});
+            Loom2D.juggler.tween(backToMenu, 0.3, {"y": -150, "transition": Transitions.EASE_IN});
+            Loom2D.juggler.tween(restartButton, 0.3, {"x": -200, "transition": Transitions.EASE_IN, "onComplete": onExitComplete});
         }
 
         public function setScore(score:Number, total:Number):void
@@ -111,7 +111,7 @@ package poly.views
             onRestart();
         }
 
-        public function onExitComplete(tween:LoomTween):void
+        public function onExitComplete():void
         {
             super.exit();
         }

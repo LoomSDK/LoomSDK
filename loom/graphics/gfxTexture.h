@@ -88,6 +88,7 @@ class Texture
 private:
 
     static utHashTable<utFastStringHash, TextureID> sTexturePathLookup;
+    static bool sTextureAssetNofificationsEnabled;
 
     // simple linear TextureID -> TextureHandle
     static TextureInfo sTextureInfos[MAXTEXTURES];
@@ -111,6 +112,8 @@ private:
 
         return id;
     }
+
+    static void loadCheckerBoard(TextureID id);
 
     static void initialize();
 
@@ -150,6 +153,11 @@ public:
         }
 
         return tinfo;
+    }
+
+    inline static void enableAssetNotifications(bool value)
+    {
+        sTextureAssetNofificationsEnabled = value;
     }
 
     static void reset();

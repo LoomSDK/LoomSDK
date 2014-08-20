@@ -18,61 +18,145 @@ limitations under the License.
 ===========================================================================
 */
 
+#include "loom/common/platform/platform.h"
+
+#if LOOM_PLATFORM == LOOM_PLATFORM_IOS
+
+#import <AudioToolbox/AudioServices.h>
 #import <Foundation/Foundation.h>
 #import <Foundation/NSSet.h>
+#import <UIKit/UIKit.h>
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformMobile.h"
+#include "loom/common/platform/platformMobileiOS.h"
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
 #include "loom/vendor/jansson/jansson.h"
 
-lmDefineLogGroup(gIOSMobileLogGroup, "loom.mobile.ios", 1, 0);
-
 static SensorTripleChangedCallback gTripleChangedCallback = NULL;
+static OpenedViaCustomURLCallback gOpenedViaCustomURLCallback = NULL;
 
+BOOL gOpenedWithCustomURL = NO;
+NSMutableDictionary *gOpenUrlQueryStringDictionary = nil;
+
+
+static UIViewController* getParentViewController()
+{
+    return [[[UIApplication sharedApplication] keyWindow] rootViewController];
+}
+
+void ios_CustomURLOpen()
+{
+    gOpenedWithCustomURL = YES;
+    if (gOpenedViaCustomURLCallback)
+    {
+        gOpenedViaCustomURLCallback();
+    }
+}
 
 
 ///initializes the data for the Mobile class for iOS
-void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB)
+void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB, OpenedViaCustomURLCallback customURLCB)
 {
     gTripleChangedCallback = sensorTripleChangedCB;    
+    gOpenedViaCustomURLCallback = customURLCB;    
+}
+
+///tells the device to do a short vibration, if supported by the hardware
+void platform_vibrate()
+{
+    AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
+}
+
+///sets whether or not to use the system screen sleep timeout
+void platform_allowScreenSleep(bool sleep)
+{
+    if(sleep)
+    {
+        ///idle time act as normal
+        [[UIApplication sharedApplication] setIdleTimerDisabled:NO];
+    }
+    else
+    {
+        ///disable the idle timer
+        [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
+    }
+}
+
+///shares the specfied text via other applications on the device (ie. Twitter, Facebook)
+bool platform_shareText(const char *subject, const char *text)
+{
+    NSString *body = (text) ? [NSString stringWithUTF8String : text] : nil;
+    NSArray *activityItems = @[body];
+
+    UIActivityViewController *controller = [[UIActivityViewController alloc] initWithActivityItems:activityItems applicationActivities:nil];
+    [getParentViewController() presentViewController:controller animated:YES completion:nil];
+    return true;
+}
+
+///returns if the application was launched via a Custom URL Scheme
+bool platform_wasOpenedViaCustomURL()
+{
+    return gOpenedWithCustomURL;
+}
+
+///gets the the specified query key data from any custom scheme URL path that the application was launched with, or "" if not found
+const char *platform_getOpenURLQueryData(const char *queryKey)
+{
+    static char queryDataStatic[1024];
+    const char *cString;
+    queryDataStatic[0] = '\0';
+    if(queryKey && gOpenUrlQueryStringDictionary)
+    {
+        NSString *queryKeyString = (queryKey) ? [NSString stringWithUTF8String : queryKey] : nil;
+        if(queryKeyString)
+        {
+            NSString *queryData = [gOpenUrlQueryStringDictionary objectForKey:queryKeyString];
+            if(queryData)
+            {
+                cString = [queryData cStringUsingEncoding:NSUTF8StringEncoding];    
+                strcpy(queryDataStatic, cString);
+                return queryDataStatic;
+            }
+        }
+    }
+    return queryDataStatic;
 }
 
 ///checks if a given sensor is supported on this hardware
 bool platform_isSensorSupported(int sensor)
 {
-    ///TODO: Support sensors on iOS
+    ///TODO: 1844: Support sensors on iOS
     return false;
 }
 
 ///checks if a given sensor is currently enabled
 bool platform_isSensorEnabled(int sensor)
 {
-    ///TODO: Support sensors on iOS
+    ///TODO: 1844: Support sensors on iOS
     return false;
 }
 
 ///checks if a given sensor has received any data yet
 bool platform_hasSensorReceivedData(int sensor)
 {
-    ///TODO: Support sensors on iOS
+    ///TODO: 1844: Support sensors on iOS
     return false;
 }
 
 ///enables the given sensor
 bool platform_enableSensor(int sensor)
 {
-    ///TODO: Support sensors on iOS
+    ///TODO: 1844: Support sensors on iOS
     return false;
 }
 
 ///disables the given sensor
 void platform_disableSensor(int sensor)
 {
-    ///TODO: Support sensors on iOS
+    ///TODO: 1844: Support sensors on iOS
 }
 
 
-///TODO: LOOM-1810: screen timeout
-///TODO: LOOM-1811: vibration
+#endif

@@ -22,6 +22,7 @@
  THE SOFTWARE.
  ****************************************************************************/
 #import <UIKit/UIKit.h>
+#import "AssetsLibrary/AssetsLibrary.h"
 #import "AppController.h"
 #import "cocos2d.h"
 #import "EAGLView.h"
@@ -30,6 +31,9 @@
 #import "RootViewController.h"
 
 #include "loom/engine/bindings/loom/lmApplication.h"
+#include "loom/common/platform/platformMobileiOS.h"
+
+
 
 static void handleGenericEvent(void *userData, const char *type, const char *payload)
 {
@@ -81,11 +85,57 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
 
     [[UIApplication sharedApplication] setStatusBarHidden: YES];
     
+    // Parse setup for Push Notifications
+    parse = [[ParseAPIiOS alloc] init];
+    [parse initialize];
+
     cocos2d::CCApplication::sharedApplication().run();
     
     return YES;
 }
 
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+{
+    NSBundle *mainBundle = [NSBundle mainBundle];
+
+    //Custom App URL Scheme Launch?
+    NSString *customAppScheme = [mainBundle objectForInfoDictionaryKey:@"CustomAppURLScheme"];
+    if((customAppScheme != nil) && 
+        ([customAppScheme isEqualToString:@""] == FALSE) && 
+        ([[url scheme] caseInsensitiveCompare:customAppScheme] == NSOrderedSame))
+    {
+        //attempt to parse the query
+        [self application:application handleOpenURLQuery:[url query]];
+
+        //mark as being opened from a custrom URL and call our native callback
+        ios_CustomURLOpen();
+    }
+    return YES;
+}
+
+// called when the application is opened via a Custom URL Scheme
+- (void)application:(UIApplication *)application handleOpenURLQuery:(NSString *)query
+{
+    gOpenUrlQueryStringDictionary = nil;
+    if(query)
+    {
+        // build a dictionary and store the Open URL query there in key/data pairs
+        NSLog(@"---------Open URL Query String: %@", query);
+
+        gOpenUrlQueryStringDictionary = [[NSMutableDictionary alloc] init];
+        NSArray *queryComponents = [query componentsSeparatedByString:@"&"];
+        for (NSString *keyValuePair in queryComponents)
+        {
+            NSArray *pairComponents = [keyValuePair componentsSeparatedByString:@"="];
+            if((pairComponents != nil) && ([pairComponents count] == 2))
+            {
+                NSString *key = [pairComponents objectAtIndex:0];
+                NSString *value = [pairComponents objectAtIndex:1];
+                [gOpenUrlQueryStringDictionary setObject:value forKey:key];
+            }
+        }
+    }
+}
 
 - (void)applicationWillResignActive:(UIApplication *)application {
     /*
@@ -122,6 +172,27 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
      Called when the application is about to terminate.
      See also applicationDidEnterBackground:.
      */
+}
+
+
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
+{
+    /// Parse Push Notifications
+    NSLog(@"---------Registered Parse for Remote Notifiations");
+    [parse registerForRemoteNotifications: deviceToken];
+}
+- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
+{
+    /// Parse Push Notifications
+    NSInteger code = [error code];
+    NSString *codeString = [NSString stringWithFormat:@"Error code: %ld",(long)code];
+    NSLog(@"---------Failed to register Parse for Remote Notifications: %@", codeString);
+    [parse failedToRegister: error];
+}
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
+    /// Parse Push Notifications
+    NSLog(@"---------Received Remote Notification: sending through to Parse");
+    [parse receivedRemoteNotification: userInfo];
 }
 
 
@@ -163,6 +234,48 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
     {
         [[UIApplication sharedApplication] setStatusBarHidden: YES];
     }
+    else if(!strcmp(type, "saveToPhotoLibrary"))
+    {
+        NSString *path = [NSString stringWithUTF8String:payload];
+        NSObject *dataObject = [NSData dataWithContentsOfFile:path];
+
+        // If we're not looking in the app bundle already, try looking in there.
+        if(dataObject == nil && [path rangeOfString:[[NSBundle mainBundle] resourcePath] options:NSCaseInsensitiveSearch].location == NSNotFound)
+        {
+            NSString *inBundlePath = [NSString stringWithFormat:@"%@/%@", [[NSBundle mainBundle] resourcePath], path];
+            dataObject = [NSData dataWithContentsOfFile:inBundlePath];
+        }
+
+        if(dataObject == nil)
+        {
+            LoomApplication::fireGenericEvent("saveToPhotoLibraryFail", "badPath");
+        }
+        else
+        {
+            ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+            [library writeImageDataToSavedPhotosAlbum:dataObject metadata:nil completionBlock:^(NSURL *assetURL, NSError *error)
+            {
+                if (error)
+                {
+                    NSString *errorType = [error localizedDescription];
+                    if ([error code] == ALAssetsLibraryAccessGloballyDeniedError || [error code] == ALAssetsLibraryAccessUserDeniedError)
+                    {
+                        errorType = @"accessDenied";
+                    }
+
+                    LoomApplication::fireGenericEvent("saveToPhotoLibraryFail", [errorType UTF8String]);
+                }
+                else
+                {
+                    LoomApplication::fireGenericEvent("saveToPhotoLibrarySuccess", [[assetURL absoluteString] UTF8String]);
+                }
+            }];
+
+            [library release];
+        }
+    }
+
+    return 0;
 }
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info

@@ -4,8 +4,6 @@
 #include "loom/CCLoomCocos2D.h"
 #include "loom/engine/bindings/loom/lmApplication.h"
 
-lmDefineLogGroup(gAppDelegateLogGroup, "appDelegate", 1, 0);
-
 USING_NS_CC;
 
 // cocos2d application instance

@@ -3,8 +3,6 @@ package
 
     import system.platform.Platform;
     import loom.Application;    
-    import loom.animation.LoomTween;
-    import loom.animation.LoomEaseType;    
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
     import loom2d.events.TouchPhase;    

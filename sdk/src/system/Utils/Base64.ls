@@ -22,9 +22,19 @@ limitations under the License.
 package system.utils
 {
 
+    /**
+     * Utility for conversion to/from Base64.
+     */
     public static native class Base64
     {
+        /**
+         * Convert binary data in a ByteArray to a Base64 encoded string.
+         */
         public native static function encode(data:ByteArray):String;
+
+        /**
+         * Convert data from a Base64 string into the provided ByteArray.
+         */
         public native static function decode(base64:String, data:ByteArray):void;
     }
 

@@ -389,12 +389,22 @@ public class Cocos2dxBitmap{
 	}
     
     private static void initNativeObject(Bitmap bitmap){
-    	byte[] pixels = getPixels(bitmap);
+    	final byte[] pixels = getPixels(bitmap);
     	if (pixels == null){
     		return;
     	}
     	
-    	nativeInitBitmapDC(bitmap.getWidth(), bitmap.getHeight(), pixels);
+        ///make sure to call the delegate in the main thread
+        final int width = bitmap.getWidth();
+        final int height = bitmap.getHeight();
+        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+        {
+            @Override
+            public void run() 
+            {        
+    	       nativeInitBitmapDC(width, height, pixels);
+            }
+        });
     }
     
     private static byte[] getPixels(Bitmap bitmap){

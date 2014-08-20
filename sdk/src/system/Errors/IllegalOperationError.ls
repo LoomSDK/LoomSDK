@@ -20,6 +20,9 @@ limitations under the License.
 
 package system.errors
 {
+	/**
+	 * Error class thrown when an illegal operation occurs.
+	 */
 	public class IllegalOperationError extends Error
 	{
 		public function IllegalOperationError(msg:String = null)

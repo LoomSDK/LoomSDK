@@ -142,7 +142,11 @@ package loom2d.textures
                 return assetPathCache[path];
 
             var textureInfo = Texture2D.initFromAsset(path);
-            Debug.assert(textureInfo, "Unable to load texture from asset: " + path);
+            if(textureInfo == null)
+            {
+                Console.print("WARNING: Unable to load texture from asset: " + path); 
+                return null;
+            }
 
             // And set up the concrete texture.
             var tex:ConcreteTexture = new ConcreteTexture(path, textureInfo.width, textureInfo.height);

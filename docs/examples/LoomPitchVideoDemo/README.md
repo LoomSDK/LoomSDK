@@ -1,16 +1,17 @@
-title: Loom Video Example
-description: Basic usage of the Loom Video class.
-source: src/LoomVideo.ls
+title: Loom Pitch Video Example
+description: Simple app with 3 videos showing games developed with Loom.
+source: src/LoomPitchVideoDemo.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview
-Basic usage of the Loom Video class.
+Simple app with 3 videos showing games developed with Loom.
 
 ## Try It
 @cli_usage
 
 ## Screenshot
-![Loom Video Example Screenshot](images/screenshot.png)
+![Loom Video Pitch Example Screenshot](images/screenshot.png)
 
 ## Code
 @insert_source

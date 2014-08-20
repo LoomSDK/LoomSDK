@@ -120,7 +120,7 @@ package loom2d.textures
             
             for (var i:int=vertexID; i<endIndex; ++i)
             {
-                vertexData.getTexCoords(i, sTexCoords);
+                sTexCoords = vertexData.getTexCoords(i);
                 vertexData.setTexCoords(i, clipX + sTexCoords.x * clipWidth,
                                            clipY + sTexCoords.y * clipHeight);
             }

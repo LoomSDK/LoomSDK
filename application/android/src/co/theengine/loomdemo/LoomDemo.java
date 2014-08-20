@@ -31,7 +31,10 @@ import org.cocos2dx.lib.Cocos2dxRenderer;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.content.res.AssetManager;
 import android.content.pm.ConfigurationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.FrameLayout;
@@ -43,16 +46,45 @@ import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.media.AudioManager;
+import android.media.MediaScannerConnection;
+
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import android.net.Uri;
+import android.os.Environment;
 
 import co.theengine.loomdemo.billing.LoomStore;
 
 import com.dolby.DolbyAudio;
+
 
 public class LoomDemo extends Cocos2dxActivity {
 
     private Cocos2dxGLSurfaceView mGLView;
 
     public static LoomDemo instance = null;
+
+
+    public static String getMetadataString(Context context, String key) 
+    {
+        String metaString = null;
+        try 
+        {
+            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), 
+                                                                                    PackageManager.GET_META_DATA);
+            if (ai.metaData != null) 
+            {
+                return ai.metaData.getString(key);
+            }
+        } 
+        catch (PackageManager.NameNotFoundException e) {}
+        return null;
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) 
@@ -113,6 +145,77 @@ public class LoomDemo extends Cocos2dxActivity {
                 }
             });
         }
+        else if(type.equals("saveToPhotoLibrary"))
+        {
+            instance.saveToPhotoLibrary(payload);
+        }
+    }
+
+    protected void saveToPhotoLibrary(String path)
+    {
+        // Create a persistent storage location for saved library photos
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "AppPhotoLibrary");
+
+        // Create the storage directory if it does not exist
+        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs())
+        {
+            Log.d("Loom", "failed to create directory: " + mediaStorageDir.getAbsolutePath());
+            triggerGenericEvent("saveToPhotoLibraryFail", "mediaError");
+            return;
+        }
+
+        File file = new File(path);
+        InputStream in;
+
+        try {
+            if (file.exists())
+            {
+                in = new FileInputStream(file);
+            }
+            else
+            {
+                // Check if the file exists in the assets directory.
+                AssetManager assetManager = getAssets();
+                in = assetManager.open(path);
+            }
+        } catch (Exception e) {
+            // Our file wasn't found apparently, so report error and exit.
+            triggerGenericEvent("saveToPhotoLibraryFail", "badPath");
+            return;
+        }
+
+        String mediaPath = mediaStorageDir + File.separator + path.substring( path.lastIndexOf( File.separator ) + 1 );
+        
+        try {
+            // Copy our target file into our photo directory
+
+            OutputStream out = new FileOutputStream(mediaPath);
+
+            int len;
+            byte[] buffer = new byte[1024];
+
+            while ((len = in.read(buffer)) > 0)
+            {
+                out.write(buffer, 0, len);
+            }
+
+            in.close();
+            out.close();
+
+        } catch (Exception e) {
+            Log.e("Loom", "exception", e);
+            triggerGenericEvent("saveToPhotoLibraryFail", "mediaError");
+            return;
+        }
+
+        // Scan the newly copied file into our MediaStore
+
+        MediaScannerConnection.scanFile(this, new String[] { mediaPath }, null, new MediaScannerConnection.OnScanCompletedListener()
+        {
+            public void onScanCompleted(String path, Uri uri) {
+                triggerGenericEvent("saveToPhotoLibrarySuccess", path);
+            }
+        });
     }
 
     private boolean keyboardHidden = true;
@@ -128,7 +231,7 @@ public class LoomDemo extends Cocos2dxActivity {
             Log.d("Loom", "Could not initialize OpenGL ES 2.0 - terminating!");
             finish();
             return;
-            }
+        }
 
         // get the packageName, it's used to set the resource path
         String packageName = getApplication().getPackageName();
@@ -179,6 +282,9 @@ public class LoomDemo extends Cocos2dxActivity {
 
         ///Create Video View for our layout
         LoomVideo.onCreate(webViewGroup);
+
+        ///Create Mobile class
+        LoomMobile.onCreate(this);
 
         ///Create Sensor class
         LoomSensors.onCreate(this);
@@ -250,6 +356,7 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onPause() {
+        LoomMobile.onPause();
         LoomSensors.onPause();
         LoomVideo.onPause();
         super.onPause();
@@ -258,32 +365,29 @@ public class LoomDemo extends Cocos2dxActivity {
 
     @Override
     protected void onResume() {
+        //NOTE: mGLView needs to resume 1st so that it can inform NativeDelegates of any possible change in Thread IDs
+        mGLView.onResume();
+
         LoomSensors.onResume();
         LoomVideo.onResume();
         super.onResume();
-        mGLView.onResume();
     }
 
     @Override
     protected void onDestroy() {
+        LoomMobile.onDestroy();
         LoomSensors.onDestroy();
         LoomVideo.onDestroy();
         DolbyAudio.onDestroy();
         super.onDestroy();
     }
 
-    private boolean detectOpenGLES20() 
+    private boolean detectOpenGLES20()
     {
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         ConfigurationInfo info = am.getDeviceConfigurationInfo();
         return (info.reqGlEsVersion >= 0x20000);
     }
-
-    public static native void log(String message);
-    public static native void logWarn(String message);
-    public static native void logError(String message);
-    public static native void logDebug(String message);
-    public static void logInfo(String message) { log(message); }
 
     static 
     {

@@ -1,6 +1,7 @@
 title: Back Button Example
 description: A simple showcase for the handling of back-button presses on Android.
 source: src/BackButtonExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

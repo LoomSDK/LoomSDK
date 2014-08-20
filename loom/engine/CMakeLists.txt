@@ -28,14 +28,12 @@ set (ENGINE_SRC
     bindings/loom/lmStore.cpp
     bindings/loom/lmVideo.cpp
     bindings/loom/lmMobile.cpp
+    bindings/loom/lmParse.cpp
     bindings/loom/lmPackageLoom.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
 
     bindings/cocos2d/lmCocos2D.cpp
     
-    tasks/tasks.c
-    tasks/tasksTests.cpp
-
     cocos2dx/CCCamera.cpp
     cocos2dx/CCConfiguration.cpp
     cocos2dx/CCDirector.cpp
@@ -195,8 +193,6 @@ set (ENGINE_HDR
     bindings/loom/lmApplication.h
     cocos2dx/loom/CCLoomCocos2D.h
     
-    tasks/tasks.h
-    tasks/tasksInternal.h
 )
 
 if(MSVC)

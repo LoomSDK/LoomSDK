@@ -144,7 +144,7 @@ public:
 
     inline void skew(float xSkew, float ySkew)
     {
-        Matrix skewMatrix(0, tan(xSkew), tan(ySkew), 1);
+        Matrix skewMatrix(1, tan(ySkew), tan(xSkew), 1);
 
         concat(&skewMatrix);
     }
@@ -205,6 +205,11 @@ public:
         c  = 0;
         d  = 1;
         ty = 0;
+    }
+
+    inline bool isIdentity()
+    {
+        return ((tx != 0.0f) || (ty != 0.0f) || (a != 1.0f) || (d != 1.0f) || (b != 0.0f) || (c != 0.0f)) ? false : true;
     }
 
     inline void invert()

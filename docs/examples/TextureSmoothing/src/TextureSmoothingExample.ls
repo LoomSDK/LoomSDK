@@ -2,8 +2,6 @@ package
 {
 
     import loom.Application;    
-    import loom.animation.LoomTween;
-    import loom.animation.LoomEaseType;
     import loom2d.math.Point;
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;

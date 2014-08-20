@@ -3,16 +3,13 @@ package
 
     import loom.Application;    
     import loom.platform.Timer;
-    import loom.animation.LoomTween;
-    import loom.animation.LoomEaseType;
-
-    import loom2d.display.StageScaleMode;
     
+    import loom2d.Loom2D;
     import loom2d.display.Image;        
+    import loom2d.display.StageScaleMode;
+    import loom2d.animation.Transitions;
     import loom2d.textures.Texture;
-
     import loom2d.ui.SimpleLabel;
-
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
     import loom2d.events.TouchPhase;
@@ -189,12 +186,12 @@ package
             for(var i = 0; i<scores.length; i++)
             {
                 var score = scores[i];
-                if(!LoomTween.isTweening(score))
+                if(!Loom2D.juggler.containsTweens(score))
                     return score;
             }
 
             // default, return the first one
-            LoomTween.killTweensOf(scores[0]);
+            Loom2D.juggler.removeTweens(scores[0]);
             return scores[0];
         }
 
@@ -203,12 +200,12 @@ package
             for(var i = 0; i<misses.length; i++)
             {
                 var miss = misses[i];
-                if(!LoomTween.isTweening(miss))
+                if(!Loom2D.juggler.containsTweens(miss))
                     return miss;
             }
 
             // default, return the first one
-            LoomTween.killTweensOf(misses[0]);
+            Loom2D.juggler.removeTweens(misses[0]);
             return misses[0];
         }
 
@@ -225,10 +222,10 @@ package
                         mole.source = "assets/sprites/mole_1.png";
                     }
 
-                    if(!LoomTween.isTweening(mole))
+                    if(!Loom2D.juggler.containsTweens(mole))
                     {
-                        LoomTween.to(mole, 0.5, {"y": 85, "ease": LoomEaseType.EASE_OUT});
-                        LoomTween.to(mole, 0.3, {"y": 180, "ease": LoomEaseType.EASE_OUT, "delay": 0.5+waitTime});
+                        Loom2D.juggler.tween(mole, 0.5, {"y": 85, "transition": Transitions.EASE_OUT});
+                        Loom2D.juggler.tween(mole, 0.3, {"y": 180, "transition": Transitions.EASE_OUT, "delay": 0.5+waitTime});
                     }
                 }
             }
@@ -265,13 +262,13 @@ package
                 // center
                 totalScore.x = stage.stageWidth/2 - totalScore.size.x*.5/2;
 
-                LoomTween.to(score, 0.3, {"scaleX": 0.5, "ease": LoomEaseType.EASE_OUT_BACK});
-                LoomTween.to(score, 0.3, {"scaleY": 0.5, "ease": LoomEaseType.EASE_OUT_BACK});
-                LoomTween.to(score, 0.3, {"y": -100, "ease": LoomEaseType.EASE_IN_BACK, "delay": 0.3});
+                Loom2D.juggler.tween(score, 0.3, {"scaleX": 0.5, "transition": Transitions.EASE_OUT_BACK});
+                Loom2D.juggler.tween(score, 0.3, {"scaleY": 0.5, "transition": Transitions.EASE_OUT_BACK});
+                Loom2D.juggler.tween(score, 0.3, {"y": -100, "transition": Transitions.EASE_IN_BACK, "delay": 0.3});
 
-                LoomTween.killTweensOf(mole);
+                Loom2D.juggler.removeTweens(mole);
                 mole.source = "assets/sprites/mole_thump4.png";
-                LoomTween.to(mole, 0.3, {"y": 180, "ease": LoomEaseType.EASE_OUT, "delay": 0.1}).onComplete;
+                Loom2D.juggler.tween(mole, 0.3, {"y": 180, "transition": Transitions.EASE_OUT, "delay": 0.1});
 
                 // stop the event propogating to the miss handler
                 e.stopImmediatePropagation();
@@ -290,9 +287,8 @@ package
             miss.y = y - miss.height/2;
             miss.scale = 0;
 
-            LoomTween.to(miss, 0.3, {"scaleX": 0.5, "ease": LoomEaseType.EASE_OUT_BACK});
-            LoomTween.to(miss, 0.3, {"scaleY": 0.5, "ease": LoomEaseType.EASE_OUT_BACK});
-            LoomTween.to(miss, 0.3, {"y": -100, "ease": LoomEaseType.EASE_IN_BACK, "delay": 0.3});
+            Loom2D.juggler.tween(miss, 0.3, {"scaleX": 0.5, "scaleY": 0.5, "transition": Transitions.EASE_OUT_BACK});
+            Loom2D.juggler.tween(miss, 0.3, {"y": -100, "transition": Transitions.EASE_IN_BACK, "delay": 0.3});
 
             if(strikes == 3) {
                 endGame();

@@ -116,8 +116,8 @@ public:
 
         curFunction = function;
 
-        // if we're not a local function
-        if (!oldFunction)
+        // if we're not a local/anonymous function
+        if (!oldFunction && curFunction->name)
         {
             function->classDecl = curClass;
 

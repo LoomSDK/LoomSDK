@@ -1,4 +1,4 @@
-title: Loom SDKs
+title: The Loom SDK
 description: The software development kits making up Loom.
 !------
 
@@ -85,8 +85,8 @@ This will install the SDK for normal use under the version `versionName`. You ca
 
 Why do we introduce all of this complexity? Wouldn't it be simpler to just give people C++ source code and let them compile directly? Or, wouldn't it be simpler to just make zips of the Script SDK directly available and let developers run binaries from it directly as needed?
 
-In fact, it turns out that running Loom games requires many steps! First, you need to compile scripts. Assets may need to be processed or packaged. Then you need to launch both the game and the asset agent (for live reloading of assets). If you want to run on mobile devices, you may need to package the game multiple times for each device type, deploy it, and trigger launch. If developers perform these steps manually, it is certain that they will do them out of order, forget to do them, or mistype and fail at doing some of them. (Certainly I would… maybe you are a perfect developer! ;) Thus, we want something to coordinate all these steps - simply running binaries directly is undesirable.
+In fact, it turns out that running Loom projects requires many steps! First, you need to compile scripts. Assets may need to be processed or packaged. Then you need to launch both the game and the asset agent (for live reloading of assets). If you want to run on mobile devices, you may need to package the game multiple times for each device type, deploy it, and trigger a launch. If developers perform these steps manually, it is certain that they will do them out of order, forget to do them, or mistype and fail at doing some of them. (Certainly I would… maybe you are a perfect developer! ;) Thus, we want something to coordinate all these steps - simply running binaries directly is undesirable.
 
 Why package Script SDKs instead of building Loom locally? Of course, we do support this (for advanced developers), but most of the time we think it's an inefficient choice. The reason is simple - setting up toolchains for each platform is a big commitment. Getting XCode all installed and proper is a complex process. So is getting set up for native Android development. And so is setting up OS X or Win32 or other development environments. For an experienced cross platform developer, getting all of these ready can take days; for a developer with less multiplatform experience, it can take longer.
 
-With Loom, you can download a Script SDK with prepackaged binaries, or have just one or two of your team members tackle cross platform development and produce Script SDK builds themselves. Then you can do 90% of your development in the fast, efficient script workflow, and only dip down to native when you need it (which for some projects will be never - or only late in the project lifecycle).
+With Loom, you can download a Script SDK with prepackaged binaries, or have just one or two of your team members tackle native cross platform development and produce Script SDK builds themselves. This puts 90% of your team's development effort on the fast, efficient script workflow path, only requiring native development when you need it (which for some projects will be never - or only late in the project lifecycle).

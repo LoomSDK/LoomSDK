@@ -30,6 +30,7 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/jansson
     ${CMAKE_SOURCE_DIR}/loom/vendor/admob/include
     ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-3.4.0/include
+    ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios/Parse.framework/Headers
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/cocoa
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/include
@@ -95,6 +96,8 @@ set (LOOM_INCLUDE_FOLDERS
     link_directories ( ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/third_party/win32/libraries )
 
     # Warnings as errors
+    add_definitions (/wd4819)
+
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /WX /arch:SSE2")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /WX /arch:SSE2")    
     #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMT")
@@ -218,7 +221,6 @@ if (LINUX)
     set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_x86/lib/libluajit-5.1.a)
     
 endif()
-
 
 #--------------------------------------
 # Core Engine

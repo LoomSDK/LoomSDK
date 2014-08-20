@@ -1,6 +1,7 @@
 title: Tween Example
 description: How to use the Tween Library.
 source: src/TweenExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

@@ -1,8 +1,11 @@
 package loom2d.text
 {
-	public class TextField
-	{
-		protected static var bitmapFonts:Dictionary.<String, BitmapFont> = new Dictionary.<String, BitmapFont>();
+    public class TextField
+    {
+        /** The default BitmapFont to use when none is specified. It is set to the first registered font. */
+        public static var defaultBitmapFont:BitmapFont;
+
+        protected static var bitmapFonts:Dictionary.<String, BitmapFont> = new Dictionary.<String, BitmapFont>();
 
         /** Makes a bitmap font available at any TextField in the current stage3D context.
          *  The font is identified by its `name`.
@@ -12,6 +15,7 @@ package loom2d.text
         {
             if (name == null) name = bitmapFont.name;
             bitmapFonts[name] = bitmapFont;
+            if (!defaultBitmapFont) defaultBitmapFont = bitmapFont;
             return name;
         }
         
@@ -30,5 +34,5 @@ package loom2d.text
         {
             return bitmapFonts[name];
         }
-	}
+    }
 }

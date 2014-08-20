@@ -33,11 +33,17 @@ package loom.gameframework
    class LoomComponent
    {
       [Inject]
+      /**
+       * The property manager we'll use for lookups.
+       */
       public var propertyManager:PropertyManager;
 
       // Make internal when LOOM-312 is fixed.
       public var _owner:LoomGameObject;
 
+      /**
+       * The game object we are attached to.
+       */
       public function get owner():LoomGameObject
       {
          return _owner;
@@ -48,8 +54,15 @@ package loom.gameframework
 
       private var bindings:Vector.<String>;
       private var bindingsCache:Vector.<Object> = [];
+
+      /**
+       * Internal book-keeping flag for bindings.
+       */
       public var bindingsDirty:Boolean;
 
+      /**
+       * The name of the component.
+       */
       public function getName():String
       {
         return _name;
@@ -81,17 +94,26 @@ package loom.gameframework
          Debug.assert(_safetyFlag == true, "You forgot to call super.onRemove() in an onRemove override.");
       }
 
+      /**
+       * Called when the component is added to a LoomGameObject; subclass with your own logic.
+       */
       protected function onAdd():Boolean
       {
          _safetyFlag = true;
          return true;
       }
 
+      /**
+       * Called when the component is removed from a LoomGameObject; subclass with your own logic.
+       */
       protected function onRemove():void
       {
          _safetyFlag = true;
       }
 
+      /**
+       * Add a binding - that is, a string defining a field elsewhere to draw data from.
+       */
       public function addBinding(fieldName:String, propertyReference:String):void
       {
          if(!bindings)
@@ -103,6 +125,9 @@ package loom.gameframework
          bindingsDirty = true;
       }
 
+      /**
+       * Call with same args as prior call to addBinding to remove that binding.
+       */
       public function removeBinding(fieldName:String, propertyReference:String):void
       {
          if(!bindings || !bindings.length)
@@ -115,6 +140,10 @@ package loom.gameframework
           bindingsDirty = true;
       }
 
+      /**
+       * Call whenever you need bindings propagated to your component. Ideally, 
+       * not more than once a frame.
+       */
       public function applyBindings():void
       {
          if(!bindings || !bindings.length || !_owner)
@@ -242,22 +271,4 @@ package loom.gameframework
 
       }
    }
-
-   public class VerboseComponent extends LoomComponent
-   {
-      // Handy variable for testing.
-      public var counter:int = 0;
-
-      protected function onAdd():Boolean
-      {
-         Console.print("VerboseComponent added!");
-         return super.onAdd();
-      }
-
-      protected function onRemove():void
-      {
-         Console.print("VerboseComponent removed!");
-      }
-   }
-
 }

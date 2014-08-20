@@ -1,6 +1,7 @@
 title: Texture Smoothing Example
 description: Basic usage of Texture Smoothing with Loom2D
 source: src/TextureSmoothingExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

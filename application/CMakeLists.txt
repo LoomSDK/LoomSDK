@@ -34,9 +34,25 @@ endif()
 if (APPLE)
     if (LOOM_BUILD_IOS EQUAL 1)
         
-        set(APPLE_ICON_FILES ios/Icon-144.png ios/Icon-114.png ios/Icon-72.png ios/Icon-57.png)
+        set(APPLE_ICON_FILES 
+            ios/Icon-60@2x.png 
+            ios/Icon-72.png 
+            ios/Icon-72@2x.png 
+            ios/Icon-76.png
+            ios/Icon-76@2x.png
+            ios/Icon-Small-40.png
+            ios/Icon-Small-40@2x.png
+            ios/Icon-Small-50.png
+            ios/Icon-Small-50@2x.png
+            ios/Icon-Small.png
+            ios/Icon-Small@2x.png
+            ios/Icon.png
+            ios/Icon@2x.png
+            )
         set (APPLICATION_SRC
           ${APPLICATION_SRC}
+          ios/Default-iphone.png
+          ios/Default@2x-iphone.png
           ios/Default.png
           ios/Default@2x.png
           ios/Default-568h@2x.png
@@ -45,6 +61,8 @@ if (APPLE)
           ios/RootViewController.mm
         )
         
+        SET_SOURCE_FILES_PROPERTIES(ios/Default-iphone.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
+        SET_SOURCE_FILES_PROPERTIES(ios/Default@2x-iphone.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
         SET_SOURCE_FILES_PROPERTIES(ios/Default.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
         SET_SOURCE_FILES_PROPERTIES(ios/Default@2x.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
         SET_SOURCE_FILES_PROPERTIES(ios/Default-568h@2x.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
@@ -103,26 +121,42 @@ if (APPLE)
           "-framework CoreGraphics"
           "-framework CoreFoundation"
           "-framework CoreMotion"
+          "-framework CoreLocation"
           "-framework Foundation"
+          "-framework AssetsLibrary"
           "-framework UIKit"          
           "-framework GLKit"  
           "-framework OpenGLES"
           "-framework StoreKit"
+          "-framework Security"
+          "-framework Social"
+          "-framework Accounts"
+          "-framework QuartzCore"
+          "-framework MobileCoreServices"
           "-framework OpenGLES"
           "-framework MessageUI"
           "-framework SystemConfiguration"
           "-framework AdSupport"
+          "-framework CFNetwork"
 
           # For Audio
           "-framework AVFoundation"
           "-framework AudioToolbox"
           "-framework CoreAudio"
 
+          # Custom Vendors
+
+          # Facebook
+          "-framework FacebookSDK -F ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios"
+
+          # Parse (NOTE: Requires FacebookSDK on iOS!)
+          "-framework Parse -F ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios"
+
           # Admob SDK
           ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a
           "-ObjC"
           "-lc++"
-          )
+        )
 
         #iPhone app bundle
         set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -204,7 +238,6 @@ elseif(MSVC)
        LoomGraphics
        LoomCore
        "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "WSOCK32" "Ws2_32" 
-       ${CMAKE_SOURCE_DIR}/loom/vendor/zlib/lib/win32/zlibstatic.lib
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)

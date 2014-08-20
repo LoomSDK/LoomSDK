@@ -63,6 +63,11 @@ static inline void renderType(lua_State *L, Type *type, DisplayObject *dobj)
     }
     else
     {
+        //invoke an onRender method in script if specified, that can do work before the default rendering
+        if (dobj->getOnRenderDelegate()->getCount())
+        {
+            dobj->getOnRenderDelegate()->invoke();
+        }
         dobj->render(L);
     }
 }
@@ -86,6 +91,7 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
     }
 
     renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
+    renderState.clampAlpha();
     renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
 
     int docidx = lua_gettop(L);

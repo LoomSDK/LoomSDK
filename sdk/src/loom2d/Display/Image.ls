@@ -32,7 +32,6 @@ package loom2d.display
         private var mVertexDataCache:VertexData;
         private var mVertexDataCacheInvalid:Boolean;
         private var _textureFile:String = null;
-        private static var resultPoint:Point;
         
         public function Image(_texture:Texture = null):void
         {
@@ -46,7 +45,9 @@ package loom2d.display
             var height:Number = frame ? frame.height : _texture.height;
             var pma:Boolean = _texture.premultipliedAlpha;
             
-            super(width, height, 0xffffff, pma);
+            // LOOM-1233: super() constructors in Loom don't appear to respect default parameters 
+            //              (hence the need for the final value of 'true' passed through below)
+            super(width, height, 0xffffff, pma, true);
             
             mVertexData.setTexCoords(0, 0.0, 0.0);
             mVertexData.setTexCoords(1, 1.0, 0.0);
@@ -94,13 +95,10 @@ package loom2d.display
             onVertexDataChanged();
         }
         
-        /** Gets the texture coordinates of a vertex. Coordinates are in the range [0, 1]. 
-         *  If you pass a 'resultPoint', the result will be stored in this point instead of 
-         *  creating a new object.*/
+        /** Gets the texture coordinates of a vertex. Coordinates are in the range [0, 1]. */
         public function getTexCoords(vertexID:int):Point
         {            
-            mVertexData.getTexCoords(vertexID, resultPoint);
-            return resultPoint;
+            return mVertexData.getTexCoords(vertexID);
         }
         
         /** Copies the raw vertex data to a VertexData instance.
@@ -174,6 +172,7 @@ package loom2d.display
         public function set smoothing(value:Boolean):void
         {
             //TODO: smoothing
+            Debug.assert( false, ".smoothing is not implemented on Image. Use loom2d.textures.Texture.smoothing instead." );
         }
 
         private function updateVertexData()

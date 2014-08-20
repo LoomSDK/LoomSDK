@@ -1,6 +1,7 @@
 package
 {
     import loom.Application;
+    import loom2d.Loom2D;
     import loom2d.display.StageScaleMode;
     import loom2d.display.Image;
     import loom2d.textures.Texture;
@@ -15,8 +16,8 @@ package
     import loom.platform.Video;
     import feathers.display.TiledImage;
     import loom2d.display.Sprite;
-    import loom.animation.LoomTween;
-    import loom.animation.LoomEaseType;
+    import loom2d.animation.Transitions;
+
 
     public class LoomVids extends Application
     {
@@ -95,15 +96,15 @@ package
             // ----------------------------------------------------------
             
             // Whack a Potato
-            this.whackMovieCard = CreateMovieCard("Whack a Potato", "assets/WhackPreview.png", "assets/whack-a-potato.mp4");
+            this.whackMovieCard = CreateMovieCard("Whack a Potato", "assets/WhackPreview.png", Video.RootFolder + "whackapotato.mp4");
             stage.addChild(this.whackMovieCard);
 
              // Contraption Maker
-            this.contraptionMovieCard = CreateMovieCard("Contraption Maker", "assets/ContraptionMakerPreview.png", "assets/Contraption.mp4");
+            this.contraptionMovieCard = CreateMovieCard("Contraption Maker", "assets/ContraptionMakerPreview.png", Video.RootFolder + "contraptionmaker.mp4");
             stage.addChild(this.contraptionMovieCard);
             
             // The Loom Demo
-            this.loomMovieCard = CreateMovieCard("The Loom Demo", "assets/LoomDemoPreview.png", "assets/The Loom Demo.MOV");
+            this.loomMovieCard = CreateMovieCard("The Loom Demo", "assets/LoomDemoPreview.png", Video.RootFolder + "theloomdemo.mp4");
             stage.addChild(this.loomMovieCard);
 
             // Move the MovieCards into position
@@ -115,9 +116,9 @@ package
         //-----------------------------------------------------------------------------------------------------------------------
         protected function TweenMovieCards()
         {
-            LoomTween.to(this.loomMovieCard, 0.2, {"x": stage.stageWidth * 0.18, "ease": LoomEaseType.EASE_OUT});
-            LoomTween.to(this.contraptionMovieCard, 0.3, {"x": stage.stageWidth * 0.5, "ease": LoomEaseType.EASE_OUT});
-            LoomTween.to(this.whackMovieCard, 0.4, {"x": stage.stageWidth * 0.82, "ease": LoomEaseType.EASE_OUT});
+            Loom2D.juggler.tween(this.loomMovieCard, 0.2, {"x": stage.stageWidth * 0.18, "transition": Transitions.EASE_OUT});
+            Loom2D.juggler.tween(this.contraptionMovieCard, 0.3, {"x": stage.stageWidth * 0.5, "transition": Transitions.EASE_OUT});
+            Loom2D.juggler.tween(this.whackMovieCard, 0.4, {"x": stage.stageWidth * 0.82, "transition": Transitions.EASE_OUT});
         }
 
         //-----------------------------------------------------------------------------------------------------------------------

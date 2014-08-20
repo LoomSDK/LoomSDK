@@ -37,7 +37,7 @@
 
 
 namespace LS {
-bool LSCompiler::debugBuild = false;
+bool LSCompiler::debugBuild = true;
 
 utString LSCompiler::sdkPath = ".";
 
@@ -63,6 +63,8 @@ utArray<BuildInfo *> LSCompiler::rootBuildDependencies;
 
 json_t            *LSCompiler::loomConfigJSON = NULL;
 utArray<utString> LSCompiler::loomConfigClassPath;
+
+const char* LSCompiler::embeddedSystemAssembly = NULL;
 
 lmDefineLogGroup(LSCompiler::compilerLogGroup, "loom.compiler", 1, LoomLogInfo);
 lmDefineLogGroup(LSCompiler::compilerVerboseLogGroup, "loom.compiler.verbose", 0, LoomLogInfo);
@@ -379,7 +381,7 @@ void LSCompiler::compileAssembly(BuildInfo *buildInfo)
 
             if (outputDir.length())
             {
-                jsonFileName = outputDir + "/" + compiler->buildInfo->getAssemblyName() + ".symbols";
+                jsonFileName = outputDir + platform_getFolderDelimiter() + compiler->buildInfo->getAssemblyName() + ".symbols";
             }
             else
             {
@@ -387,6 +389,8 @@ void LSCompiler::compileAssembly(BuildInfo *buildInfo)
             }
 
             ab->writeToFile(jsonFileName);
+
+			log("Symbols Generated: %s", jsonFileName.c_str());
         }
 
         // finally link the root assembly
@@ -400,7 +404,7 @@ void LSCompiler::compileAssembly(BuildInfo *buildInfo)
 
         if (outputDir.length())
         {
-            jsonFileName = outputDir + "/" + compiler->buildInfo->getAssemblyName() + ext;
+			jsonFileName = outputDir + platform_getFolderDelimiter() + compiler->buildInfo->getAssemblyName() + ext;
         }
         else
         {
@@ -425,7 +429,7 @@ BuildInfo *LSCompiler::loadBuildFile(const utString& cref)
     for (UTsize i = 0; i < sourcePath.size(); i++)
     {
         utString path = sourcePath.at(i);
-        path += "/";
+		path += platform_getFolderDelimiter();
         path += cref;
         if (!strstr(cref.c_str(), ".build"))
         {
@@ -531,7 +535,7 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
     for (UTsize i = 0; i < rootBuildDependencies.size(); i++)
     {
         BuildInfo *buildInfo     = rootBuildDependencies.at(i);
-        utString  assemblySource = buildInfo->getOutputDir() + "/" + buildInfo->getAssemblyName() + ".loomlib";
+		utString  assemblySource = buildInfo->getOutputDir() + platform_getFolderDelimiter() + buildInfo->getAssemblyName() + ".loomlib";
 
         utArray<unsigned char> rarray;
         lmAssert(utFileStream::tryReadToArray(assemblySource, rarray), "Unable to load library assembly %s", assemblySource.c_str());
@@ -560,7 +564,14 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
         utString jname = json_string_value(json_object_get(jref, "name"));
 
         bool found = false;
-        for (UTsize k = 0; k < importedAssemblies.size(); k++)
+
+        // always find the System assembly, so we don't have to explicitly import from it
+        if (jname == "System")
+        {
+            found = true;
+        }
+
+        for (UTsize k = 0; k < importedAssemblies.size() && !found; k++)
         {
             if (importedAssemblies.at(k)->getName() == jname)
             {
@@ -600,7 +611,18 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
             utString libPath = sdkPath + delim + "libs" + delim + libName + ".loomlib";
 
             utArray<unsigned char> rarray;
-            lmAssert(utFileStream::tryReadToArray(libPath, rarray), "Unable to load library assembly %s", libName.c_str());
+
+            if (libName == "System" && embeddedSystemAssembly)
+            {
+                size_t embeddedSystemAssemblyLength = strlen(embeddedSystemAssembly);
+                rarray.resize(embeddedSystemAssemblyLength + 1);
+                memcpy(&rarray[0], embeddedSystemAssembly, embeddedSystemAssemblyLength + 1);
+            }
+            else
+            {
+                lmAssert(utFileStream::tryReadToArray(libPath, rarray), "Unable to load library assembly %s", libName.c_str());    
+            }
+
             utBase64 base64 = utBase64::encode64(rarray);
             json_object_set(jref, "binary", json_string(base64.getBase64().c_str()));
 

@@ -28,26 +28,35 @@ using namespace LS;
 class HTTPRequest {
 public:
 
-    const char  *method;
-    const char  *body;
-    const char  *url;
-    const char  *responseCacheFile;
+    utString method;
+    utString body;
+    utString url;
+    utString responseCacheFile;
+
     utByteArray *bodyBytes;
+
     bool        base64EncodeResponseData;
     bool        followRedirects;
+
     utHashTable<utHashedString, utString> header;
 
     LOOM_DELEGATE(OnSuccess);
     LOOM_DELEGATE(OnFailure);
 
-    HTTPRequest(const char *urlString) : method("GET"), body(""), responseCacheFile(NULL), bodyBytes(NULL)
+    HTTPRequest(const char *urlString, const char *contentType) : method("GET"), body(""), responseCacheFile(""), bodyBytes(NULL)
     {
         url = urlString;
         base64EncodeResponseData = false;
         followRedirects          = true;
 
-        // Default
-        header.insert("Content-Type", "application/x-www-form-urlencoded");
+        // set the Content-Type in the header
+        const char *ctKey = contentType;
+        if((ctKey == NULL) || (ctKey[0] == '\0'))
+        {
+            // use the default content type if none specified
+            ctKey = "application/x-www-form-urlencoded";
+        }
+        setHeaderField("Content-Type", ctKey);
     }
 
     void setHeaderField(const char *key, const char *value)
@@ -71,9 +80,9 @@ public:
 
     void send()
     {
-        if (url == NULL)
+        if (url == "")
         {
-            _OnFailureDelegate.pushArgument("Error: URL is null");
+            _OnFailureDelegate.pushArgument("Error: Empty URL");
             _OnFailureDelegate.invoke();
         }
         else
@@ -81,16 +90,16 @@ public:
             if (bodyBytes != NULL)
             {
                 // Send with body as byte array.
-                platform_HTTPSend(url, method, &HTTPRequest::respond, (void *)this,
+                platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
                                   (const char *)bodyBytes->getInternalArray()->ptr(), bodyBytes->getSize(), header,
-                                  responseCacheFile, base64EncodeResponseData, followRedirects);
+                                  (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
             }
             else
             {
                 // Send with body as string.
-                platform_HTTPSend(url, method, &HTTPRequest::respond, (void *)this,
-                                  (const char *)body, strlen(body), header,
-                                  responseCacheFile, base64EncodeResponseData, followRedirects);
+                platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
+                                  (const char *)body.c_str(), body.length(), header,
+                                  (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
             }
         }
     }
@@ -130,7 +139,7 @@ static int registerLoomHTTPRequest(lua_State *L)
     beginPackage(L, "loom")
 
        .beginClass<HTTPRequest>("HTTPRequest")
-       .addConstructor<void (*)(const char *)>()
+       .addConstructor<void (*)(const char *, const char *)>()
        .addMethod("setHeaderField", &HTTPRequest::setHeaderField)
        .addMethod("getHeaderField", &HTTPRequest::getHeaderField)
        .addMethod("send", &HTTPRequest::send)

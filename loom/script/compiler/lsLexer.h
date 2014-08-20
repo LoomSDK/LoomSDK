@@ -108,7 +108,7 @@ public:
     Lexer();
     ~Lexer();
 
-    void setInput(const utString& input);
+    void setInput(const utString& input, const utString& filename);
 
     Token *nextToken();
     void unreadToken();
@@ -126,6 +126,7 @@ public:
     void gotoBookmark(int mark);
 
     int lineNumber;
+    utString filename;
 };
 }
 #endif

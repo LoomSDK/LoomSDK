@@ -54,7 +54,6 @@ void tasks_runAnyTaskForDuration(int millis);
 
 void Java_org_cocos2dx_lib_Cocos2dxRenderer_nativeRender(JNIEnv *env)
 {
-    tasks_runAnyTaskForDuration(2);
     cocos2d::CCDirector::sharedDirector()->mainLoop();
 }
 
@@ -96,19 +95,19 @@ void showMessageBoxJNI(const char *pszMsg, const char *pszTitle)
 
         if (!pszTitle)
         {
-            stringArg1 = t.env->NewStringUTF("");
+            stringArg1 = t.getEnv()->NewStringUTF("");
         }
         else
         {
-            stringArg1 = t.env->NewStringUTF(pszTitle);
+            stringArg1 = t.getEnv()->NewStringUTF(pszTitle);
         }
 
-        jstring stringArg2 = t.env->NewStringUTF(pszMsg);
-        t.env->CallStaticVoidMethod(t.classID, t.methodID, stringArg1, stringArg2);
+        jstring stringArg2 = t.getEnv()->NewStringUTF(pszMsg);
+        t.getEnv()->CallStaticVoidMethod(t.classID, t.methodID, stringArg1, stringArg2);
 
-        t.env->DeleteLocalRef(stringArg1);
-        t.env->DeleteLocalRef(stringArg2);
-        t.env->DeleteLocalRef(t.classID);
+        t.getEnv()->DeleteLocalRef(stringArg1);
+        t.getEnv()->DeleteLocalRef(stringArg2);
+        t.getEnv()->DeleteLocalRef(t.classID);
     }
 }
 
@@ -125,8 +124,8 @@ void terminateProcessJNI()
                                        , "terminateProcess"
                                        , "()V"))
     {
-        t.env->CallStaticVoidMethod(t.classID, t.methodID);
-        t.env->DeleteLocalRef(t.classID);
+        t.getEnv()->CallStaticVoidMethod(t.classID, t.methodID);
+        t.getEnv()->DeleteLocalRef(t.classID);
     }
 }
 

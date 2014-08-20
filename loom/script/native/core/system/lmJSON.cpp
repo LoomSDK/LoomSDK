@@ -111,6 +111,64 @@ public:
         }
         return json_typeof(_json);
     }
+    
+    int getObjectJSONType(const char *key)
+    {
+        if (!_json || isArray())
+        {
+            return JSON_NULL;
+        }
+        
+        json_t *jobject = json_object_get(_json, key);
+        
+        if (!jobject)
+        {
+            return JSON_NULL;
+        }
+        
+        return json_typeof(jobject);
+    }
+    
+    int getArrayJSONType(int index)
+    {
+        if (!isArray())
+        {
+            return JSON_NULL;
+        }
+        
+        json_t *jobject = json_array_get(_json, index);
+        
+        if (!jobject)
+        {
+            return JSON_NULL;
+        }
+        
+        return json_typeof(jobject);
+    }
+    
+    const char *getLongLongAsString(const char *key)
+    {
+        if (!_json)
+        {
+            return "";
+        }
+
+        json_t *jllu = json_object_get(_json, key);
+
+        if (!jllu)
+        {
+            return "";
+        }
+
+        //create static char buffer to return to Loomscript (it makes a copy of this, so it will not be overwritten)
+        //NOTE: the longest string length of an unsigned long long is 20 characters (0 to 18446744073709551615) + null terminator
+        static char buffer[32];
+        memset(buffer, 0x00, 32);
+        unsigned long long val = (unsigned long long)json_integer_value(jllu);
+        sprintf(buffer, "%llu", val);
+
+        return buffer;
+    }    
 
     int getInteger(const char *key)
     {
@@ -548,7 +606,10 @@ static int registerSystemJSON(lua_State *L)
 
        .addMethod("getError", &JSON::getError)
        .addMethod("getJSONType", &JSON::getJSONType)
+       .addMethod("getObjectJSONType", &JSON::getObjectJSONType)
+       .addMethod("getArrayJSONType", &JSON::getArrayJSONType)
 
+       .addMethod("getLongLongAsString", &JSON::getLongLongAsString)
        .addMethod("getInteger", &JSON::getInteger)
        .addMethod("setInteger", &JSON::setInteger)
        .addMethod("getFloat", &JSON::getFloat)

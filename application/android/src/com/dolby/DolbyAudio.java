@@ -332,17 +332,20 @@ public class DolbyAudio
     /** Call to check if Dolby audio processing is currently enabled. */
     public static boolean isProcessingEnabled()
     {
-        try
+        if(isProcessingSupported())
         {
-            return _dolbyAudioProcessing.isAudioProcessingEnabled();
-        }
-        catch(IllegalStateException ex)
-        {
-            handleIllegalStateException(ex);
-        }
-        catch(RuntimeException ex) 
-        {
-            handleRuntimeException(ex);
+            try
+            {
+                return _dolbyAudioProcessing.isAudioProcessingEnabled();
+            }
+            catch(IllegalStateException ex)
+            {
+                handleIllegalStateException(ex);
+            }
+            catch(RuntimeException ex) 
+            {
+                handleRuntimeException(ex);
+            }
         }
         return false;
     }
@@ -352,17 +355,20 @@ public class DolbyAudio
     private static int getNumProfiles()
     {
         int numProfiles = 0;
-        try
+        if(isProcessingSupported())
         {
-            numProfiles = _dolbyAudioProcessing.getNumProfiles();
-        }
-        catch(IllegalStateException ex)
-        {
-            handleIllegalStateException(ex);
-        }
-        catch(RuntimeException ex) 
-        {
-            handleRuntimeException(ex);
+            try
+            {
+                numProfiles = _dolbyAudioProcessing.getNumProfiles();
+            }
+            catch(IllegalStateException ex)
+            {
+                handleIllegalStateException(ex);
+            }
+            catch(RuntimeException ex) 
+            {
+                handleRuntimeException(ex);
+            }
         }
         return numProfiles;
     } 
@@ -372,17 +378,20 @@ public class DolbyAudio
     private static String getProfileName(int profileIndex)
     {
         String profileName = "";
-        try
+        if(isProcessingSupported())
         {
-            profileName = _dolbyAudioProcessing.getProfileName(profileIndex);
-        }
-        catch(IllegalStateException ex)
-        {
-            handleIllegalStateException(ex);
-        }
-        catch(IllegalArgumentException ex)
-        {
-            handleIllegalArgumentException(ex);
+            try
+            {
+                profileName = _dolbyAudioProcessing.getProfileName(profileIndex);
+            }
+            catch(IllegalStateException ex)
+            {
+                handleIllegalStateException(ex);
+            }
+            catch(IllegalArgumentException ex)
+            {
+                handleIllegalArgumentException(ex);
+            }
         }
         return profileName;
     }

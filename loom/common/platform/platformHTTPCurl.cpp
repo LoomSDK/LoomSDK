@@ -24,6 +24,7 @@
 #include <cassert>
 #include "platform.h"
 
+#ifndef LOOMSCRIPT_STANDALONE
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32 || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
 
 
@@ -75,8 +76,8 @@ static void loom_HTTPCleanupUserData(loom_HTTPUserData *data)
 {
     lmFree(NULL, data->chunk->memory);
     curl_slist_free_all(data->headers);
-    delete data->chunk;
-    delete data;
+    lmDelete(NULL, data->chunk);
+    lmDelete(NULL, data);
 }
 
 
@@ -90,7 +91,7 @@ static size_t write_data(void *buffer, size_t size, size_t nmemb, void *userp)
     loom_HTTPChunk    *chunk     = userData->chunk;
 
     // reallocate memory for our chunk. +1 for our null terminator.
-    chunk->memory = (char *)realloc(chunk->memory, chunk->size + actualSize + 1);
+    chunk->memory = (char *)lmRealloc(NULL, chunk->memory, chunk->size + actualSize + 1);
     if (chunk->memory == NULL) // OOM?
     {
         // TODO: Log OOM error in loom
@@ -106,11 +107,44 @@ static size_t write_data(void *buffer, size_t size, size_t nmemb, void *userp)
     return actualSize;
 }
 
+// Memory management overrides for CURL.
+static void *malloc_callback(size_t size)
+{
+   return lmAlloc(NULL, size);
+}
+
+static void free_callback(void *ptr)
+{
+   return lmFree(NULL, ptr);
+}
+
+static void *realloc_callback(void *ptr, size_t size)
+{
+   return lmRealloc(NULL, ptr, size);
+}
+
+static char *strdup_callback(const char *str)
+{
+   if (!str)
+      return NULL;
+
+   char *s = (char *)lmAlloc(NULL, strlen(str));
+   strcpy(s, str);
+   return s;
+}
+
+static void *calloc_callback(size_t nmemb, size_t size)
+{
+   void *res = lmAlloc(NULL, nmemb * size);
+   memset(res, 0, nmemb * size);
+   return res;
+}
 
 void platform_HTTPInit()
 {
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-
+    curl_global_init_mem(CURL_GLOBAL_DEFAULT,
+       malloc_callback, free_callback, realloc_callback, 
+       strdup_callback, calloc_callback);
     gMultiHandle     = curl_multi_init();
     gHandleCount     = 0;
     gHTTPInitialized = true;
@@ -148,8 +182,11 @@ void platform_HTTPUpdate()
             // Make sure no error was thrown
             if (message->data.result == CURLE_OK)
             {
+                long http_code = 0;
+                curl_easy_getinfo (handle, CURLINFO_RESPONSE_CODE, &http_code);
+
                 // Will we cache to a file?
-                if (userData->cacheFile.length())
+                if (http_code < 400 && userData->cacheFile.length())
                 {
                     platform_writeFile(userData->cacheFile.c_str(), userData->chunk->memory, userData->chunk->size);
                 }
@@ -163,15 +200,18 @@ void platform_HTTPUpdate()
                     memcpy(data.ptr(), userData->chunk->memory, userData->chunk->size);
 
                     utBase64 result64 = utBase64::encode64(data);
-                    result = strdup(result64.getBase64().c_str());
+                    result = strdup_callback(result64.getBase64().c_str());
                 }
                 else
                 {
                     result = userData->chunk->memory;
                 }
 
-                // notify the callback that we are successful
-                userData->callback(userData->payload, LOOM_HTTP_SUCCESS, userData->chunk->memory);
+                // notify the callback if we are successful
+                if (http_code < 400)
+                    userData->callback(userData->payload, LOOM_HTTP_SUCCESS, userData->chunk->memory);
+                else
+                    userData->callback(userData->payload, LOOM_HTTP_ERROR, userData->chunk->memory);
 
                 if(userData->base64)
                    lmFree(NULL, (void*)result);
@@ -218,7 +258,7 @@ void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback ca
 
     // alloc our struct, this needs to be alloc'd in the heap
     // because it should persist past the initial request
-    loom_HTTPUserData *userData = new loom_HTTPUserData;
+    loom_HTTPUserData *userData = lmNew(NULL) loom_HTTPUserData;
 
     // do not keep pointers to the strings passed in
     userData->cacheFile  = responseCacheFile ? responseCacheFile : "";
@@ -244,8 +284,8 @@ void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback ca
     }
 
     // initialize our chunk data, it will eventually be resized.
-    userData->chunk = new loom_HTTPChunk;
-    userData->chunk->memory = (char*)lmAlloc(NULL, 1);
+    userData->chunk = lmNew(NULL) loom_HTTPChunk;
+    userData->chunk->memory = (char*)lmAlloc(NULL, 1); // Must use malloc as Curl wants to realloc.
     userData->chunk->memory[0] = 0;
     userData->chunk->size      = 0;
 
@@ -278,7 +318,7 @@ void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback ca
     }
     else // call error
     {
-        callback(payload, LOOM_HTTP_ERROR, "Error: Unknown HTTP Method");
+        callback(payload, LOOM_HTTP_ERROR, "Error: Unknown HTTP Method.");
         return;
     }
 
@@ -286,3 +326,5 @@ void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback ca
     curl_multi_add_handle(gMultiHandle, curlHandle);
 }
 #endif
+#endif //LOOMSCRIPT_STANDALONE
+

@@ -1,6 +1,7 @@
 title: CSS Example
 description: Example of Loom CSS features
 source: src/CSSExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

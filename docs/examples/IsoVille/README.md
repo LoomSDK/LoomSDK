@@ -1,6 +1,7 @@
 title: IsoVille
 description: A simple Isometric Demo with pinch, pan and zoom support.
 source: src/IsoVille.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

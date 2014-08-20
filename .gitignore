@@ -94,3 +94,4 @@ s3_docs
 loom/vendor/luajit/libluajit64.a
 
 loom/vendor/luajit/libluajit32.a
+output

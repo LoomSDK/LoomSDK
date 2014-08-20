@@ -1,10 +1,14 @@
 ### Loom Native SDK - Mobile App and Game Development
 
-Welcome to the Loom Native SDK!  This repository contains the full source code of the Loom mobile technology.  
+The Loom SDK is a great mobile game and application framework (www.loomsdk.com). 
 
-The Loom development team is actively building Loom, right here, with the work available in [Loom Turbo](http://www.loomsdk.com/plans)'s firehose builds within minutes!  
+This is the "Loom Native SDK" - our term for the C, C++, Java, and Objective C source code for the Loom runtime, compilers, etc. It is for power users and confident native developers.
+
+The Native SDK is a complement to the workflow available through Loom Turbo. It can be used by itself but be prepared to suffer through a frustrating and complex workflow that is greatly improved when combined with Loom Turbo and the CLI. Cross platform native development is hard!
 
 ### [Loom Turbo](http://www.loomsdk.com/plans) 
+
+The Loom official maintainers, The Engine Company, actively build Loom on our build farm, with the binaries available in [Loom Turbo](http://www.loomsdk.com/plans)'s firehose builds within minutes!
 
 We realize not everyone is an experienced C/C++ programmer with working native toolchains and a need to extend Loom at a low level.  We also use Loom to create applications, so we built Loom Turbo.
 
@@ -28,7 +32,7 @@ http://www.loomsdk.com/community
 
 The build system is setup to generate a "dev" sdk for use with the Loom command line interface (Loom CLI) available from [LoomSDK.com](http://www.loomsdk.com)
 
-Firstly, building Loom from the native source code requires having [Rake](http://rake.rubyforge.org) & [CMake](http://www.cmake.org) installed and on your path.
+Firstly, building Loom from the native source code requires having [Rake](https://github.com/jimweirich/rake) & [CMake](http://www.cmake.org) installed and on your path.
 
 There are 2 important rake commands
 
@@ -46,7 +50,4 @@ Once successfuly compiled and deployed, change directory to your project and iss
 
 You'll now be developing with your custom Loom build!
 
-For more information, please see the individual Readme files for platform specific setup instructions
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/LoomSDK/loomsdk/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
+For more information, please see the individual Readme files for platform specific setup instructions.

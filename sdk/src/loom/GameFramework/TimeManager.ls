@@ -27,6 +27,9 @@ package loom.gameframework
    import system.platform.Platform;
    import system.Profiler;
 
+   /**
+    * Called by TimeManager on every frame.
+    */
    delegate FrameDelegate():void;
 
     /**
@@ -100,6 +103,10 @@ package loom.gameframework
         function onTick():void;
     }
 
+    /**
+     * Internal class for TimeManager
+     * @private
+     */
    class ProcessObject
    {
       public var profilerKey:String = null;
@@ -109,6 +116,10 @@ package loom.gameframework
       public var priority:Number = 0.0;
    }
 
+    /**
+     * Internal class for TimeManager
+     * @private
+     */
    class DeferredMethod
    {
       public var method:Function = null;
@@ -118,6 +129,8 @@ package loom.gameframework
     /**
      * Helper class for internal use by ProcessManager. This is used to 
      * track scheduled callbacks from schedule().
+     *
+     * @private
      */
     class ScheduleEntry implements IPrioritizable
     {

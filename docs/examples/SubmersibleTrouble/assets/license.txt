@@ -1,0 +1,17 @@
+dive.ogg
+Original sample "dive_mixdown.wav" Public Domain (CC0) by gyzhor: https://www.freesound.org/people/gyzhor/sounds/67882/
+
+lightsSwitchOn.ogg
+Original sample "Lights Flicker On.wav" Public Domain (CC0) by mmaruska: https://www.freesound.org/people/mmaruska/sounds/232447/
+
+ObservingTheStar.ogg
+Original sample "Another space background track" Public Domain (CC0) by yd: http://opengameart.org/content/another-space-background-track
+
+submersibleEngine.ogg
+Original sample "Whirr_industrial.WAV" Public Domain (CC0) by Adam_N: https://www.freesound.org/people/Adam_N/sounds/144956/
+
+winner.ogg
+Original sample "golfclap.aif" Public Domain (CC0) by mattheos: https://www.freesound.org/people/mattheos/sounds/116769/
+
+Other sounds generated with http://www.bfxr.net/
+Graphics assets drawn in Paint.NET

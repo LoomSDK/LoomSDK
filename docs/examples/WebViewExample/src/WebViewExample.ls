@@ -15,8 +15,6 @@ package
     import loom2d.events.ResizeEvent;
 
     import loom.WebView;
-    import loom.animation.LoomTween;
-    import loom.animation.LoomEaseType;
 
     /**
      *  Loom Example showcasing some of the features of Loom.WebView.

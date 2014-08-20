@@ -21,38 +21,50 @@ limitations under the License.
 package system {
 
 /**
- *  A Dictionary lets you create a dynamic collection of properties, which uses strict equality (===) for key comparison. 
- *  When an object is used as a key, the object's identity is used to look up the object, and not the value returned from calling toString() on it. 
+ *  A Dictionary is a collection of key-value pairs, which uses strict equality (`===`) for key comparison.
  *
- *  The Dictionary's value and key types are specified using postfix type parameter syntax.
- *  Dictionaries in LoomScript also have support for literal support:
- *  @include DictionaryInstantiation.ls
+ *  * When an object is used as a key, the object's identity is used to look up the object, and not the value returned from calling `toString()` on it.
+ *  * Keys are unique. Re-assigning to a key simply overwrites the existing value. Declaring a dictionary with duplicate keys does not error, but takes the last value.
+ *  * When typing a dictionary variable or instantiating a new Dictionary, the element types must be specified in `<KeyType, ValueType>` format.
+ *
+ *  Dictionaries in LoomScript can be instantiated via their constructor function, or with a literal syntax using curly brackets (`{}`):
+ *
+ *  ```as3
+ *  var d1:Dictionary.<String, Number> = new Dictionary.<String, Number>();
+ *  d1['one'] = 1;
+ *  d1['two'] = 2;
+ *
+ *  var d2:Dictionary.<String, Number> = { 'three': 3, 'four': 4 };
+ *  ```
  */
 final class Dictionary extends Object {
     
     /**
-     *  Creates a new Dictionary object. if weakKeys is true, the dictionary will not hold a reference to its keys
-     *  If the key is garbage collected, it will be removed from the Dictionary.  (Please note that a full GC may need to
-     *  be run for the key to be removed from the weak dictionary).
+     *  Creates a new Dictionary object.
+     *  
+     * 
+     *  @param weakKeys
+     *      If true, the dictionary will not hold a reference to its keys. If the key is garbage collected, it will be removed from the Dictionary. (Please note that a full GC may need to
+     *      be run for the key to be removed from the weak dictionary).
      */
     public native function Dictionary(weakKeys:Boolean = false);
     
     /**
-     *  Removes all of the properties on the Dictionary.
+     *  Removes all of the properties in the Dictionary.
      */
     public native function clear();
     
     /**
-     *  Gets the number of properties on the Dictionary.
+     *  Gets the number of properties in the Dictionary.
      */
     public native function get length():Number;
     
     /**
-     *  Removes a property from the dictionary based on the Object index.
+     *  Removes a property from the dictionary based on the Object key.
      *
-     *  @param index The key for the property.
+     *  @param key The key for the property.
      */
-    public native function deleteKey(index:Object);
+    public native function deleteKey(key:Object);
 
     /**
      * Assign a dictionary's values to the corresponding fields (if present) on an Object.
@@ -81,9 +93,9 @@ final class Dictionary extends Object {
      * to the provided functions. The Dictionary is not modified after intercept() is
      * called, so if you leave it empty you'll see all traffic.
      *
-     * read is called with (table, key) and returns value.
-     *
-     * write is called with (table, key, value) and returns void.
+     * @param dict The dictionary to intercept.
+     * @param read A function that has parameters (table, key) and returns a value.
+     * @param write A function that has paraneters (table, key, value) and returns void.
      */
     public native static function intercept(dict:Object, read:Function, write:Function):void;
 

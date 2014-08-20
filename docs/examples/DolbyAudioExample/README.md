@@ -1,6 +1,7 @@
 title: Dolby Audio Example
 description: Basic usage of the Dolby Audio Library for Android Devices.
 source: src/DolbyAudioExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

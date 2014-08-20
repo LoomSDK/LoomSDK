@@ -107,11 +107,11 @@ static int luaByteCodewriter(lua_State *L, const void *p, size_t size,
 }
 
 
-ByteCode *JitTypeCompiler::generateByteCode(GCproto *proto)
+ByteCode *JitTypeCompiler::generateByteCode(GCproto *proto, bool debug = true)
 {
     utArray<unsigned char> bc;
-    // always include debug info
-    lj_bcwrite(L, proto, luaByteCodewriter, &bc, 0);
+
+    lj_bcwrite(L, proto, luaByteCodewriter, &bc, debug ? 0 : 1);
 
     return ByteCode::encode64(bc);
 }
@@ -200,7 +200,9 @@ void JitTypeCompiler::generateMethod(FunctionLiteral *function,
 
     closeCodeState(&codeState);
 
-    method->setByteCode(generateByteCode(codeState.proto));
+	bool debug = cunit->buildInfo->isDebugBuild();
+
+    method->setByteCode(generateByteCode(codeState.proto, debug));
 
     currentMethod          = NULL;
     currentMethodCoroutine = false;
@@ -230,7 +232,9 @@ void JitTypeCompiler::generateConstructor(FunctionLiteral *function,
 
     closeCodeState(&codeState);
 
-    constructor->setByteCode(generateByteCode(codeState.proto));
+	bool debug = cunit->buildInfo->isDebugBuild();
+
+    constructor->setByteCode(generateByteCode(codeState.proto, debug));
 
     currentMethod = NULL;
 }
@@ -1576,13 +1580,9 @@ Expression *JitTypeCompiler::visit(BinaryOperatorExpression *expression)
         BC::expToVal(fs, &method);
         BC::indexed(fs, &object, &method);
 
-        // when dynamic casting, we pass the expression to be cast,
-        // the assembly name (which has been interned by the VM), and the typeID in that assembly
-        // this greatly speeds up type resolution at runtime
         utArray<Expression *> args;
         args.push_back(eleft);
-        args.push_back(new StringLiteral(eright->type->getAssembly()->getName().c_str()));
-        args.push_back(new NumberLiteral(eright->type->getTypeID()));
+        args.push_back(eright);
 
         generateCall(&object, &args);
 

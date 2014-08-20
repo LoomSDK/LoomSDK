@@ -6,8 +6,8 @@ package poly.views
     import loom.lml.LML;
     import loom.lml.LMLDocument;
 
-    import loom.animation.LoomTween;
-    import loom.animation.LoomEaseType;
+    import loom2d.Loom2D;
+    import loom2d.animation.Transitions;
 
     import loom2d.display.DisplayObjectContainer;
 
@@ -47,32 +47,31 @@ package poly.views
             // add to the screen
             super.enter(owner);
 
-            // do some tweens based on their existing positions; this
-            // would be improved with LoomTween.from            
+            // do some tweens based on their existing positions
             playButton.x = -500;
-            LoomTween.to(playButton, 0.4, {"x": playButtonX, "ease": LoomEaseType.EASE_OUT_BACK});
+            Loom2D.juggler.tween(playButton, 0.4, {"x": playButtonX, "transition": Transitions.EASE_OUT_BACK});
 
             helpButton.x = -500;
-            LoomTween.to(helpButton, 0.4, {"x": helpButtonX, "ease": LoomEaseType.EASE_OUT_BACK, "delay": 0.1});
+            Loom2D.juggler.tween(helpButton, 0.4, {"x": helpButtonX, "transition": Transitions.EASE_OUT_BACK, "delay": 0.1});
 
             aboutButton.x = -500;
-            LoomTween.to(aboutButton, 0.4, {"x": aboutButtonX, "ease": LoomEaseType.EASE_OUT_BACK, "delay": 0.2});
+            Loom2D.juggler.tween(aboutButton, 0.4, {"x": aboutButtonX, "transition": Transitions.EASE_OUT_BACK, "delay": 0.2});
 
             logo.y = 850;
-            LoomTween.to(logo, 0.4, {"y": logoY, "ease": LoomEaseType.EASE_OUT_BACK, "delay": 0.2});
+            Loom2D.juggler.tween(logo, 0.4, {"y": logoY, "transition": Transitions.EASE_OUT_BACK, "delay": 0.2});
             
         }
 
         public function exit():void
         {
-            // LoomTween out
-            LoomTween.to(playButton, 0.3, {"x": -500, "ease": LoomEaseType.EASE_IN_BACK});
-            LoomTween.to(helpButton, 0.3, {"x": -500, "ease": LoomEaseType.EASE_IN_BACK, "delay": 0.1});
-            LoomTween.to(aboutButton, 0.3, {"x": -500, "ease": LoomEaseType.EASE_IN_BACK, "delay": 0.2});
-            LoomTween.to(logo, 0.3, {"y": 850, "ease": LoomEaseType.EASE_IN_BACK, "delay": 0.2}).onComplete += onExitComplete;;
+            // Tween out
+            Loom2D.juggler.tween(playButton, 0.3, {"x": -500, "transition": Transitions.EASE_IN_BACK});
+            Loom2D.juggler.tween(helpButton, 0.3, {"x": -500, "transition": Transitions.EASE_IN_BACK, "delay": 0.1});
+            Loom2D.juggler.tween(aboutButton, 0.3, {"x": -500, "transition": Transitions.EASE_IN_BACK, "delay": 0.2});
+            Loom2D.juggler.tween(logo, 0.3, {"y": 850, "transition": Transitions.EASE_IN_BACK, "delay": 0.2, "onComplete": onExitComplete});
         }
 
-        protected function onExitComplete(tween:LoomTween):void
+        protected function onExitComplete():void
         {
             // really exit
             super.exit();

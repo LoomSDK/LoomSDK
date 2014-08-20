@@ -26,6 +26,9 @@ package system {
 final class Math {
 
     /// @cond PRIVATE
+    /**
+     * @private
+     */
     public static native function get RAND_MAX():Number;
     /// @endcond
 
@@ -75,57 +78,67 @@ final class Math {
     public static const SQRT2 : Number = 1.4142135623730951;    
 
     /**
-     *  Returns a pseudo-random number n, where 0 <= n < 1.
+     *  Returns a pseudo-random number n, where 0 <= n <= 1.
      */
     public static native function random():Number;
     
     /**
-     *  Computes and returns an absolute value for the number specified by the parameter value.
+     *  Returns a pseudo-random number n, where min <= n <= max.
+     */
+    public static native function randomRange(min:Number, max:Number):Number;
+    
+    /**
+     *  Returns a pseudo-random integer value n, where min <= n <= max.
+     */
+    public static native function randomRangeInt(min:int, max:int):int;
+    
+    /**
+     *  Returns the absolute value for the number specified by the parameter value.
      */
     public static native function abs(value:Number):Number;
 
     /**
-     *  Computes and returns base to the power of exponent.
+     *  Returns base to the power of exponent.
      */
     public static native function pow(base:Number, exponent:Number):Number;
 	
     /**
-     *  Computes and returns the sine of the specified angle in radians.
+     *  Returns the sine of the specified angle in radians.
      */
     public static native function sin(value:Number):Number;
 
     /**
-     *  Computes and returns the cosine of the specified angle in radians.
+     *  Returns the cosine of the specified angle in radians.
      */
     public static native function cos(value:Number):Number;
 
     /**
-     *  Computes and returns the tangent of the specified angle.
+     *  Returns the tangent of the specified angle.
      */
     public static native function tan(value:Number):Number;
 
     /**
-     *  Computes and returns the square root of the specified number.
+     *  Returns the square root of the specified number.
      */
     public static native function sqrt(value:Number):Number;
 
     /**
-     *  Computes and returns the angle of the point y/x in radians, when measured counterclockwise from a circle's x axis (where 0,0 represents the center of the circle).
+     *  Returns the angle of the point y/x in radians, when measured counterclockwise from a circle's x axis (where 0,0 represents the center of the circle).
      */
     public static native function atan2(y:Number, x:Number):Number;
     
     /**
-     *  Computes and returns the arc cosine of the number specified in the parameter val, in radians.
+     *  Returns the arc cosine of the number specified in the parameter val, in radians.
      */
     public static native function acos(val:Number):Number;
 
     /**
-     *  Computes and returns the arc sine for the number specified in the parameter val, in radians.
+     *  Returns the arc sine for the number specified in the parameter val, in radians.
      */
     public static native function asin(val:Number):Number;
     
     /**
-     *  Computes and returns the value, in radians, of the angle whose tangent is specified in the parameter val.
+     *  Returns the value, in radians, of the angle whose tangent is specified in the parameter val.
      */
     public static native function atan(val:Number):Number;
     
@@ -145,7 +158,7 @@ final class Math {
     public static native function max(val1:Number, val2:Number, ...rest):Number;
 
     /**
-     * Fast path for max of just 2 values.
+     *  Fast path for max of just 2 values.
      */
     public static function max2(val1:Number, val2:Number):Number
     {
@@ -158,7 +171,7 @@ final class Math {
     public static native function min(val1:Number, val2:Number, ...rest):Number;
     
     /**
-     * Fast path for min of just 2 values.
+     *  Fast path for min of just 2 values.
      */
     public static function min2(val1:Number, val2:Number):Number
     {
@@ -199,7 +212,7 @@ final class Math {
     }
 
     /**
-     *  Converts the angle provided, in Degrees, to its Radian representation
+     *  Converts the angle provided, in degrees, to its radian representation.
      */
     static public function degToRad(deg:Number):Number
     {
@@ -207,11 +220,12 @@ final class Math {
     }
 
     /**
-     *  Converts the angle provided, in Radians, to its Degree representation
+     *  Converts the angle provided, in radians, to its degree representation.
      */
     static public function radToDeg(rad:Number):Number
     {
         return rad * (180.0 / Math.PI);
     }
 }
+
 }

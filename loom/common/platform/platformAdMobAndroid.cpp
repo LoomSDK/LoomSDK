@@ -120,9 +120,9 @@ loom_adMobHandle platform_adMobCreate(const char *publisherID, loom_adMobBannerS
 {
     android_adMobEnsureInitialized();
 
-    jstring jPublisherID = gCreateMethodInfo.env->NewStringUTF(publisherID);
-    jint    handle       = gCreateMethodInfo.env->CallStaticIntMethod(gCreateMethodInfo.classID, gCreateMethodInfo.methodID, jPublisherID, (jint)size);
-    gCreateMethodInfo.env->DeleteLocalRef(jPublisherID);
+    jstring jPublisherID = gCreateMethodInfo.getEnv()->NewStringUTF(publisherID);
+    jint    handle       = gCreateMethodInfo.getEnv()->CallStaticIntMethod(gCreateMethodInfo.classID, gCreateMethodInfo.methodID, jPublisherID, (jint)size);
+    gCreateMethodInfo.getEnv()->DeleteLocalRef(jPublisherID);
 
     return (int)handle;
 }
@@ -130,39 +130,39 @@ loom_adMobHandle platform_adMobCreate(const char *publisherID, loom_adMobBannerS
 
 void platform_adMobShow(loom_adMobHandle handle)
 {
-    gShowMethodInfo.env->CallStaticVoidMethod(gShowMethodInfo.classID, gShowMethodInfo.methodID, (jint)handle);
+    gShowMethodInfo.getEnv()->CallStaticVoidMethod(gShowMethodInfo.classID, gShowMethodInfo.methodID, (jint)handle);
 }
 
 
 void platform_adMobHide(loom_adMobHandle handle)
 {
-    gHideMethodInfo.env->CallStaticVoidMethod(gHideMethodInfo.classID, gHideMethodInfo.methodID, (jint)handle);
+    gHideMethodInfo.getEnv()->CallStaticVoidMethod(gHideMethodInfo.classID, gHideMethodInfo.methodID, (jint)handle);
 }
 
 
 void platform_adMobDestroy(loom_adMobHandle handle)
 {
-    gDestroyMethodInfo.env->CallStaticVoidMethod(gDestroyMethodInfo.classID, gDestroyMethodInfo.methodID, (jint)handle);
+    gDestroyMethodInfo.getEnv()->CallStaticVoidMethod(gDestroyMethodInfo.classID, gDestroyMethodInfo.methodID, (jint)handle);
 }
 
 
 void platform_adMobDestroyAll()
 {
     android_adMobEnsureInitialized();
-    gDestroyAllMethodInfo.env->CallStaticVoidMethod(gDestroyAllMethodInfo.classID, gDestroyAllMethodInfo.methodID);
+    gDestroyAllMethodInfo.getEnv()->CallStaticVoidMethod(gDestroyAllMethodInfo.classID, gDestroyAllMethodInfo.methodID);
 }
 
 
 void platform_adMobSetDimensions(loom_adMobHandle handle, loom_adMobDimensions frame)
 {
-    gSetDimensionsMethodInfo.env->CallStaticVoidMethod(gSetDimensionsMethodInfo.classID, gSetDimensionsMethodInfo.methodID, (jint)handle, (jint)frame.x, (jint)frame.y, (jint)frame.width, (jint)frame.height);
+    gSetDimensionsMethodInfo.getEnv()->CallStaticVoidMethod(gSetDimensionsMethodInfo.classID, gSetDimensionsMethodInfo.methodID, (jint)handle, (jint)frame.x, (jint)frame.y, (jint)frame.width, (jint)frame.height);
 }
 
 
 loom_adMobDimensions platform_adMobGetDimensions(loom_adMobHandle handle)
 {
-    jintArray arr   = (jintArray)gGetDimensionsMethodInfo.env->CallStaticObjectMethod(gGetDimensionsMethodInfo.classID, gGetDimensionsMethodInfo.methodID, (jint)handle);
-    jint      *body = gGetDimensionsMethodInfo.env->GetIntArrayElements(arr, 0);
+    jintArray arr   = (jintArray)gGetDimensionsMethodInfo.getEnv()->CallStaticObjectMethod(gGetDimensionsMethodInfo.classID, gGetDimensionsMethodInfo.methodID, (jint)handle);
+    jint      *body = gGetDimensionsMethodInfo.getEnv()->GetIntArrayElements(arr, 0);
 
     loom_adMobDimensions frame;
 
@@ -180,9 +180,9 @@ loom_adMobHandle platform_adMobCreateInterstitial(const char *publisherID, loom_
     android_adMobEnsureInitialized();
 
 
-    jstring jPublisherID = gCreateInterstitialInfo.env->NewStringUTF(publisherID);
-    jint    handle       = gCreateInterstitialInfo.env->CallStaticIntMethod(gCreateInterstitialInfo.classID, gCreateInterstitialInfo.methodID, jPublisherID, (jlong)callback, (jlong)payload);
-    gCreateInterstitialInfo.env->DeleteLocalRef(jPublisherID);
+    jstring jPublisherID = gCreateInterstitialInfo.getEnv()->NewStringUTF(publisherID);
+    jint    handle       = gCreateInterstitialInfo.getEnv()->CallStaticIntMethod(gCreateInterstitialInfo.classID, gCreateInterstitialInfo.methodID, jPublisherID, (jlong)callback, (jlong)payload);
+    gCreateInterstitialInfo.getEnv()->DeleteLocalRef(jPublisherID);
 
     return (int)handle;
 }
@@ -190,12 +190,12 @@ loom_adMobHandle platform_adMobCreateInterstitial(const char *publisherID, loom_
 
 void platform_adMobShowInterstitial(loom_adMobHandle handle)
 {
-    gShowInterstitialMethodInfo.env->CallStaticVoidMethod(gShowInterstitialMethodInfo.classID, gShowInterstitialMethodInfo.methodID, (jint)handle);
+    gShowInterstitialMethodInfo.getEnv()->CallStaticVoidMethod(gShowInterstitialMethodInfo.classID, gShowInterstitialMethodInfo.methodID, (jint)handle);
 }
 
 
 void platform_adMobDestroyInterstitial(loom_adMobHandle handle)
 {
-    gDestroyInterstitialMethodInfo.env->CallStaticVoidMethod(gDestroyInterstitialMethodInfo.classID, gDestroyInterstitialMethodInfo.methodID, (jint)handle);
+    gDestroyInterstitialMethodInfo.getEnv()->CallStaticVoidMethod(gDestroyInterstitialMethodInfo.classID, gDestroyInterstitialMethodInfo.methodID, (jint)handle);
 }
 #endif

@@ -8,9 +8,6 @@ package
     import loom2d.math.Point;
     import loom2d.ui.SimpleLabel;
 
-    import loom.animation.LoomTween;
-    import loom.animation.LoomEaseType;
-
     import system.platform.Gamepad;
 
     public class GamePadExample extends Application

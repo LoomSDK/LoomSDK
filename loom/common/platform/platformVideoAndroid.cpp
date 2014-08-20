@@ -48,11 +48,12 @@ void Java_co_theengine_loomdemo_LoomVideo_nativeCallback(JNIEnv *env, jobject th
         switch (callbackType)
         {
             case 0:
+                lmLog(gAndroidVideoLogGroup, "Video playback failed");
                 gEventCallback("fail", dataString);
                 break;
 
             case 1:
-                lmLogError(gAndroidVideoLogGroup, "Video playback complete");
+                lmLog(gAndroidVideoLogGroup, "Video playback complete");
                 gEventCallback("complete", dataString);
                 break;
 
@@ -97,6 +98,15 @@ void platform_videoInitialize(VideoEventCallback eventCallback)
 
 void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlMode, unsigned int bgColor)
 {
+    ///error and don't play if the video name does not start with "assets/videos/"
+    if(strstr(video, ROOT_FOLDER) != video)
+    {
+        lmLogError(gAndroidVideoLogGroup, "Unable to play Video %s that does not reside in '%s'", video, ROOT_FOLDER);
+        gEventCallback("fail", "Video path does not begin with 'assets/videos/'");      
+        return;
+    }
+
+
     ///strip out the raw filename only to use on Android
     int index = 0;
     int firstChar = 0;
@@ -121,9 +131,9 @@ void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlM
 
     ///call java method to play the video
     lmLog(gAndroidVideoLogGroup, "videoPlayFullscreen: '%s' became '%s'", video, newVideoName);
-    jstring jVideo    = gPlayVideoFullscreen.env->NewStringUTF(newVideoName);
-    gPlayVideoFullscreen.env->CallStaticVoidMethod(gPlayVideoFullscreen.classID, gPlayVideoFullscreen.methodID, jVideo, scaleMode, controlMode, bgColor);
-    gPlayVideoFullscreen.env->DeleteLocalRef(jVideo);
+    jstring jVideo    = gPlayVideoFullscreen.getEnv()->NewStringUTF(newVideoName);
+    gPlayVideoFullscreen.getEnv()->CallStaticVoidMethod(gPlayVideoFullscreen.classID, gPlayVideoFullscreen.methodID, jVideo, scaleMode, controlMode, bgColor);
+    gPlayVideoFullscreen.getEnv()->DeleteLocalRef(jVideo);
     delete []newVideoName;
 }
 #endif

@@ -414,20 +414,6 @@ namespace bgfx
        x = x | (x >>16);
        return x + 1;
    }
- 
-    
-    // Some GL hardware requires POT texture to generate mipmaps
-    // so, we enforce this
-    static bool canGenMips(uint32_t width, uint32_t height)
-    {
-      if( width == getNextPOT(width) && 
-        height == getNextPOT(height))
-      {
-        return true;
-      }
- 
-      return false;
-    }
 
 
     void dumpExtensions(const char* _extensions)
@@ -778,7 +764,8 @@ namespace bgfx
         {
             uint32_t length = m_resolution.m_width*m_resolution.m_height*4;
             uint8_t* data = (uint8_t*)g_realloc(NULL, length);
-            GLint fmt = s_extension[Extension::EXT_texture_format_BGRA8888].m_supported ? GL_BGRA_EXT : GL_RGBA;
+            // Disable this, it gives black screenshot on some devices.
+            GLint fmt = /*s_extension[Extension::EXT_texture_format_BGRA8888].m_supported ? GL_BGRA_EXT : */ GL_RGBA;
 
             uint32_t width = m_resolution.m_width;
             uint32_t height = m_resolution.m_height;
@@ -898,6 +885,24 @@ namespace bgfx
     };
 
     RendererContext s_renderCtx;
+
+    
+    // Some GL hardware requires POT texture to generate mipmaps
+    // so, we enforce this
+    static bool canGenMips(uint32_t width, uint32_t height)
+    {
+      if( width == getNextPOT(width) && 
+        height == getNextPOT(height) &&
+        //LFL: don't allow mipmaps on SGX540 devices as they can be buggy!!!
+        (!strstr(s_renderCtx.m_renderer, "SGX") || !strstr(s_renderCtx.m_renderer, "540")))
+      {
+        return true;
+      }
+ 
+      return false;
+    }
+
+
 
 #if BX_PLATFORM_NACL
     static void GL_APIENTRY naclVertexAttribDivisor(GLuint _index, GLuint _divisor)

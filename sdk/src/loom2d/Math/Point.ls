@@ -8,7 +8,7 @@ package loom2d.math
 
         // note that we need to new here as the default args
         // won't be setup as we're in the static initializer
-        public static var ZERO:Point = new Point(0, 0);
+        public static const ZERO:Point = new Point(0, 0);
 
         /**
          * Direct access to the x and y components of the Point.
@@ -90,9 +90,39 @@ package loom2d.math
             y += dy;
         }
 
+        /**
+         * Scales the point by the given Scalar.
+         */
+        public function scale(s:Number):void
+        {
+            x *= s;
+            y *= s;
+        }
+
+        /**
+         * Subtracts the supplied Point from this Point.
+         */
         public function subtract(other:Point):Point
         {
             return this - other;
+        }
+
+        /**
+         * Adds the supplied Point to this Point.
+         */
+        public function add(other:Point):Point
+        {
+            return this + other;
+        }
+
+        /**
+         * Assigns p2 to p1 and returns p1 (required by struct types).
+         */
+        public static operator function =(p1:Point, p2:Point):Point
+        {
+            p1.x = p2.x;
+            p1.y = p2.y;
+            return p1;
         }
 
         /**
@@ -115,7 +145,7 @@ package loom2d.math
         }
 
         /**
-         * Subtracts Point p2 to Point p1 and returns p1.
+         * Subtracts Point p2 from Point p1 and returns the result.
          */
         public static operator function -(p1:Point, p2:Point):Point
         {
@@ -131,6 +161,27 @@ package loom2d.math
         {
             x -= p.x;
             y -= p.y;
+        }
+     
+
+        /**
+         * Multiplies This point by the scalar s.
+         */
+        public operator function *=(s:Number):void
+        {
+            x *= s;
+            y *= s;
+        }
+        
+
+        /**
+         * Divides This point by the scalar s.
+         */
+        public operator function /=(s:Number):void
+        {
+            var invS = 1.0 / s;
+            x *= invS;
+            y *= invS;
         }
     
         /**
@@ -162,6 +213,14 @@ package loom2d.math
         }
 
         /**
+         * Returns the dot product between p1 and p2, as though they were Vectors
+         */
+        public static function dot(p1:Point, p2:Point):Number
+        {
+            return (p1.x * p2.x) + (p1.y * p2.y);
+        }
+
+        /**
          * Gets a polar Point given an angle and length.
          */         
         public static function polar(len:Number, angle:Number):Point
@@ -169,16 +228,6 @@ package loom2d.math
             tempPoint.x = len * Math.cos(angle);
             tempPoint.y = len * Math.sin(angle);
             return tempPoint;
-        }
-
-        /**
-         * Assigns p2 to p1 and returns p1 (required by struct types).
-         */
-        public static operator function =(p1:Point, p2:Point):Point
-        {
-            p1.x = p2.x;
-            p1.y = p2.y;
-            return p1;
         }
 
         /**

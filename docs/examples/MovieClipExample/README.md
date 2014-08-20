@@ -1,6 +1,7 @@
 title: MovieClip Example
 description: Basic usage of the Loom2D MovieClip class.
 source: src/MovieClipExample.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview

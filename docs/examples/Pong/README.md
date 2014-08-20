@@ -1,6 +1,7 @@
 title: Pong
 description: Basic implemenation of Pong with Background Music
 source: src/Pong.ls
+thumbnail: images/screenshot.png
 !------
 
 ## Overview
