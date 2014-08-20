@@ -220,7 +220,7 @@ void b2ShapeCache::addShapesWithFile(const std::string &plist, b2Vec2 vertexScal
             basicData.friction = fixtureData->valueForKey("friction")->floatValue();
             basicData.density = fixtureData->valueForKey("density")->floatValue();
             basicData.restitution = fixtureData->valueForKey("restitution")->floatValue();
-            basicData.isSensor = (bool)fixtureData->valueForKey("isSensor")->intValue();
+            basicData.isSensor = fixtureData->valueForKey("isSensor")->intValue() != 0;
            
             int callbackData = fixtureData->valueForKey("userdataCbValue")->intValue();
             
