@@ -16,9 +16,9 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include <Box2D/Dynamics/Joints/b2WheelJoint.h>
-#include <Box2D/Dynamics/b2Body.h>
-#include <Box2D/Dynamics/b2TimeStep.h>
+#include <box2d/Dynamics/Joints/b2WheelJoint.h>
+#include <box2d/Dynamics/b2Body.h>
+#include <box2d/Dynamics/b2TimeStep.h>
 
 // Linear constraint (point-to-line)
 // d = pB - pA = xB + rB - xA - rA

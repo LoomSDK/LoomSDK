@@ -16,7 +16,7 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include <Box2D/Collision/b2BroadPhase.h>
+#include <box2d/Collision/b2BroadPhase.h>
 #include <cstring>
 using namespace std;
 

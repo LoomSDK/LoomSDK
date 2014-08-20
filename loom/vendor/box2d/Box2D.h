@@ -31,38 +31,38 @@ For discussion please visit http://box2d.org/forum
 
 // These include files constitute the main Box2D API
 
-#include <Box2D/Common/b2Settings.h>
-#include <Box2D/Common/b2Draw.h>
-#include <Box2D/Common/b2Timer.h>
+#include <box2d/Common/b2Settings.h>
+#include <box2d/Common/b2Draw.h>
+#include <box2d/Common/b2Timer.h>
 
-#include <Box2D/Collision/Shapes/b2CircleShape.h>
-#include <Box2D/Collision/Shapes/b2EdgeShape.h>
-#include <Box2D/Collision/Shapes/b2ChainShape.h>
-#include <Box2D/Collision/Shapes/b2PolygonShape.h>
+#include <box2d/Collision/Shapes/b2CircleShape.h>
+#include <box2d/Collision/Shapes/b2EdgeShape.h>
+#include <box2d/Collision/Shapes/b2ChainShape.h>
+#include <box2d/Collision/Shapes/b2PolygonShape.h>
 
-#include <Box2D/Collision/b2BroadPhase.h>
-#include <Box2D/Collision/b2Distance.h>
-#include <Box2D/Collision/b2DynamicTree.h>
-#include <Box2D/Collision/b2TimeOfImpact.h>
+#include <box2d/Collision/b2BroadPhase.h>
+#include <box2d/Collision/b2Distance.h>
+#include <box2d/Collision/b2DynamicTree.h>
+#include <box2d/Collision/b2TimeOfImpact.h>
 
-#include <Box2D/Dynamics/b2Body.h>
-#include <Box2D/Dynamics/b2Fixture.h>
-#include <Box2D/Dynamics/b2WorldCallbacks.h>
-#include <Box2D/Dynamics/b2TimeStep.h>
-#include <Box2D/Dynamics/b2World.h>
+#include <box2d/Dynamics/b2Body.h>
+#include <box2d/Dynamics/b2Fixture.h>
+#include <box2d/Dynamics/b2WorldCallbacks.h>
+#include <box2d/Dynamics/b2TimeStep.h>
+#include <box2d/Dynamics/b2World.h>
 
-#include <Box2D/Dynamics/Contacts/b2Contact.h>
+#include <box2d/Dynamics/Contacts/b2Contact.h>
 
-#include <Box2D/Dynamics/Joints/b2DistanceJoint.h>
-#include <Box2D/Dynamics/Joints/b2FrictionJoint.h>
-#include <Box2D/Dynamics/Joints/b2GearJoint.h>
-#include <Box2D/Dynamics/Joints/b2MotorJoint.h>
-#include <Box2D/Dynamics/Joints/b2MouseJoint.h>
-#include <Box2D/Dynamics/Joints/b2PrismaticJoint.h>
-#include <Box2D/Dynamics/Joints/b2PulleyJoint.h>
-#include <Box2D/Dynamics/Joints/b2RevoluteJoint.h>
-#include <Box2D/Dynamics/Joints/b2RopeJoint.h>
-#include <Box2D/Dynamics/Joints/b2WeldJoint.h>
-#include <Box2D/Dynamics/Joints/b2WheelJoint.h>
+#include <box2d/Dynamics/Joints/b2DistanceJoint.h>
+#include <box2d/Dynamics/Joints/b2FrictionJoint.h>
+#include <box2d/Dynamics/Joints/b2GearJoint.h>
+#include <box2d/Dynamics/Joints/b2MotorJoint.h>
+#include <box2d/Dynamics/Joints/b2MouseJoint.h>
+#include <box2d/Dynamics/Joints/b2PrismaticJoint.h>
+#include <box2d/Dynamics/Joints/b2PulleyJoint.h>
+#include <box2d/Dynamics/Joints/b2RevoluteJoint.h>
+#include <box2d/Dynamics/Joints/b2RopeJoint.h>
+#include <box2d/Dynamics/Joints/b2WeldJoint.h>
+#include <box2d/Dynamics/Joints/b2WheelJoint.h>
 
 #endif
