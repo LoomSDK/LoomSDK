@@ -20,27 +20,34 @@
 
 #pragma once
 
+#include "loom/engine/loom2d/l2dDisplayObject.h"
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 
 namespace Loom2D
 {
-class Shape : public DisplayObjectContainer
-{
-public:
+	class Shape : public DisplayObject
+	{
+	public:
 
-    static Type *typeShape;
+		static Type *typeShape;
 
-    Shape()
-    {
-		type = typeShape;
-    }
+		Shape()
+		{
+			type = typeShape;
+		}
 
-    void render(lua_State *L);
+		void render(lua_State *L);
 
-    static void initialize(lua_State *L)
-    {
-		typeShape = LSLuaState::getLuaState(L)->getType("loom2d.display.Shape");
-		lmAssert(typeShape, "unable to get loom2d.display.Shape type");
-    }
-};
+		void moveTo(float x, float y);
+		void lineTo(float x, float y);
+
+		static void initialize(lua_State *L)
+		{
+			typeShape = LSLuaState::getLuaState(L)->getType("loom2d.display.Shape");
+			lmAssert(typeShape, "unable to get loom2d.display.Shape type");
+
+		}
+
+	};
+
 }

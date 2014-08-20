@@ -152,6 +152,8 @@ void Graphics::beginFrame()
 
 void Graphics::endFrame()
 {
+	VectorRenderer::moveTo(100, 100);
+	VectorRenderer::lineTo(200, 100);
     QuadRenderer::endFrame();
 	VectorRenderer::endFrame();
 

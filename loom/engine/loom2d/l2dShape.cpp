@@ -18,7 +18,9 @@
  * ===========================================================================
  */
 
+#include "loom/graphics/gfxVectorRenderer.h"
 #include "loom/engine/loom2d/l2dShape.h"
+#include "loom/graphics/gfxGraphics.h"
 
 namespace Loom2D
 {
@@ -29,7 +31,15 @@ void Shape::render(lua_State *L)
     updateLocalTransform();
 
 	lualoom_pushnative<Shape>(L, this);
-	renderChildren(L);
     lua_pop(L, 1);
 }
+
+void moveTo(float x, float y) {
+	GFX::VectorRenderer::moveTo(x, y);
+}
+
+void lineTo(float x, float y) {
+	GFX::VectorRenderer::lineTo(x, y);
+}
+
 }

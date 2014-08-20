@@ -46,6 +46,10 @@ public:
 
 	static void beginFrame(int width, int height);
 
+	static void moveTo(float x, float y);
+	static void lineTo(float x, float y);
+
     static void endFrame();
 };
+
 }

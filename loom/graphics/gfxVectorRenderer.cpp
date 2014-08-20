@@ -80,30 +80,36 @@ const char * ConvertToUTF8(const wchar_t * pStr) {
 void VectorRenderer::beginFrame(int width, int height)
 {
 	nvgBeginFrame(nvg, width, height, 1, NVG_STRAIGHT_ALPHA);
-}
 
-
-void VectorRenderer::endFrame()
-{
 	nvgSave(nvg);
 
 	nvgLineCap(nvg, NVG_BUTT);
 	nvgLineJoin(nvg, NVG_ROUND);
 
-	nvgStrokeWidth(nvg, 1);
+	nvgStrokeWidth(nvg, 10);
 	nvgStrokeColor(nvg, nvgRGBA(0, 255, 0, 160));
 	nvgBeginPath(nvg);
-	nvgMoveTo(nvg, 100, 100);
-	nvgLineTo(nvg, 200, 100);
-	nvgLineTo(nvg, 200, 200);
-	nvgLineTo(nvg, 100, 200);
+}
+
+
+void VectorRenderer::endFrame()
+{
 	nvgStroke(nvg);
 
 	nvgRestore(nvg);
 
-	drawLabel(nvg, utf8("Hello nanovg! Pokakaj se v hlače. あなたのズボンをうんち。便便在裤子上"), 10, 50, 280, 20);
+	//drawLabel(nvg, utf8("Hello nanovg! Pokakaj se v hlače. あなたのズボンをうんち。便便在裤子上"), 10, 50, 280, 20);
 
 	nvgEndFrame(nvg);
+
+}
+
+void VectorRenderer::moveTo(float x, float y) {
+	nvgMoveTo(nvg, x, y);
+}
+
+void VectorRenderer::lineTo(float x, float y) {
+	nvgLineTo(nvg, x, y);
 }
 
 

@@ -42,7 +42,7 @@ struct VertexPosColorTex
 
 class QuadRenderer
 {
-    friend class Graphics;
+	friend class Graphics;
 
 private:
 
