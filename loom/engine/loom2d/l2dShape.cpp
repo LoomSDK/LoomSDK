@@ -18,28 +18,53 @@
  * ===========================================================================
  */
 
+#include "loom/common/core/assert.h"
 #include "loom/graphics/gfxVectorRenderer.h"
 #include "loom/engine/loom2d/l2dShape.h"
-#include "loom/graphics/gfxGraphics.h"
 
 namespace Loom2D
 {
+
 Type *Shape::typeShape = NULL;
+
+void Shape::moveTo(float x, float y) {
+	lmAssert(commandIndex < MAXCOMMANDS, "Too many Shape commands added");
+	lmAssert(dataIndex+1 < MAXDATA, "Too much Shape data added");
+	commands[commandIndex++] = MOVE_TO;
+	data[dataIndex++] = x;
+	data[dataIndex++] = y;
+	//GFX::VectorRenderer::moveTo(x, y);
+}
+
+void Shape::lineTo(float x, float y) {
+	lmAssert(commandIndex < MAXCOMMANDS, "Too many Shape commands added");
+	lmAssert(dataIndex + 1 < MAXDATA, "Too much Shape data added");
+	commands[commandIndex++] = LINE_TO;
+	data[dataIndex++] = x;
+	data[dataIndex++] = y;
+	//GFX::VectorRenderer::lineTo(x, y);
+}
 
 void Shape::render(lua_State *L)
 {
     updateLocalTransform();
 
 	lualoom_pushnative<Shape>(L, this);
+
+	int ci = 0;
+	int di = 0;
+	while (ci < commandIndex) {
+		switch (commands[ci++]) {
+			case MOVE_TO:
+				GFX::VectorRenderer::moveTo(data[di++], data[di++]);
+				break;
+			case LINE_TO:
+				GFX::VectorRenderer::lineTo(data[di++], data[di++]);
+				break;
+		}
+	}
+
     lua_pop(L, 1);
-}
-
-void moveTo(float x, float y) {
-	GFX::VectorRenderer::moveTo(x, y);
-}
-
-void lineTo(float x, float y) {
-	GFX::VectorRenderer::lineTo(x, y);
 }
 
 }

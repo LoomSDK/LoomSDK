@@ -21,33 +21,57 @@
 #pragma once
 
 #include "loom/engine/loom2d/l2dDisplayObject.h"
-#include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 
 namespace Loom2D
 {
-	class Shape : public DisplayObject
+
+enum VectorPathCommand { MOVE_TO, LINE_TO };
+
+
+#define MAXCOMMANDS 10
+#define MAXDATA 100
+
+class Shape : public DisplayObject
+{
+public:
+
+    static Type *typeShape;
+
+	VectorPathCommand commands[MAXCOMMANDS];
+	int commandIndex = 0;
+	float data[MAXDATA];
+	int dataIndex = 0;
+
+	Shape()
 	{
-	public:
+		type = typeShape;
+	}
 
-		static Type *typeShape;
+    void render(lua_State *L);
 
-		Shape()
-		{
-			type = typeShape;
-		}
+	void moveTo(float x, float y);
+	void lineTo(float x, float y);
 
-		void render(lua_State *L);
+    static void initialize(lua_State *L)
+    {
+		typeShape = LSLuaState::getLuaState(L)->getType("loom2d.display.Shape");
+		lmAssert(typeShape, "unable to get loom2d.display.Shape type");
 
-		void moveTo(float x, float y);
-		void lineTo(float x, float y);
-
-		static void initialize(lua_State *L)
-		{
-			typeShape = LSLuaState::getLuaState(L)->getType("loom2d.display.Shape");
-			lmAssert(typeShape, "unable to get loom2d.display.Shape type");
-
-		}
-
-	};
-
+		//NativeInterface::registerManagedNativeType<Shape>(registerNative);
+		//LOOM_DECLARE_MANAGEDNATIVETYPE(Shape, registerNative);
+	}
+	/*
+	static int registerNative(lua_State *L)
+	{
+		beginPackage(L, "loom2d.display")
+			.deriveClass<Shape, DisplayObject>("Shape")
+			.addConstructor<void(*)(void)>()
+			.addMethod("moveTo", &Shape::moveTo)
+			.addMethod("lineTo", &Shape::lineTo)
+			.endClass()
+			.endPackage();
+		return 0;
+	}
+	*/
+};
 }

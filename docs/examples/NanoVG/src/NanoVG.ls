@@ -6,9 +6,11 @@ package
     import loom2d.display.Image;
     import loom2d.textures.Texture;
     import loom2d.ui.SimpleLabel;
+    import system.Void;
 
     public class NanoVG extends Application
     {
+        private var gfx:Shape;
         override public function run():void
         {
             // Comment out this line to turn off automatic scaling.
@@ -33,11 +35,17 @@ package
             label.y = stage.stageHeight / 2 - 100;
             stage.addChild(label);
             
-            var gfx = new Shape();
-            gfx.moveTo(100, 100);
+            gfx = new Shape();
+            gfx.moveTo(50, 50);
             gfx.lineTo(200, 200);
             stage.addChild(gfx);
-
+            
         }
+        
+        override public function onFrame() 
+        {
+            return super.onFrame();
+        }
+        
     }
 }

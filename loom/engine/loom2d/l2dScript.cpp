@@ -28,6 +28,7 @@
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/engine/loom2d/l2dSprite.h"
+#include "loom/engine/loom2d/l2dShape.h"
 #include "loom/engine/loom2d/l2dQuad.h"
 #include "loom/engine/loom2d/l2dImage.h"
 #include "loom/engine/loom2d/l2dQuadBatch.h"
@@ -218,12 +219,19 @@ static int registerLoom2D(lua_State *L)
        .addConstructor<void (*)(void)>()
        .addMethod("render", &Stage::render)
        .addStaticProperty("onRenderStage", &Stage::getRenderStageDelegate)
-       .endClass()
+	   .endClass()
 
-    // Sprite
-       .deriveClass<Sprite, DisplayObjectContainer>("Sprite")
-       .addConstructor<void (*)(void)>()
-       .endClass()
+	// Sprite
+	   .deriveClass<Sprite, DisplayObjectContainer>("Sprite")
+	   .addConstructor<void(*)(void)>()
+	   .endClass()
+
+	// Shape
+	   .deriveClass<Shape, DisplayObject>("Shape")
+	   .addConstructor<void(*)(void)>()
+	   .addMethod("moveTo", &Shape::moveTo)
+	   .addMethod("lineTo", &Shape::lineTo)
+	   .endClass()
 
     // Quad
        .deriveClass<Quad, DisplayObject>("Quad")
@@ -266,8 +274,9 @@ void installLoom2D()
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::EventDispatcher, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::DisplayObject, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::DisplayObjectContainer, Loom2D::registerLoom2D);
-    LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Stage, Loom2D::registerLoom2D);
-    LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Sprite, Loom2D::registerLoom2D);
+	LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Stage, Loom2D::registerLoom2D);
+	LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Sprite, Loom2D::registerLoom2D);
+	LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Shape, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Image, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Quad, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::QuadBatch, Loom2D::registerLoom2D);
