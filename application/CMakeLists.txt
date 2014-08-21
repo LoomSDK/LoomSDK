@@ -3,6 +3,7 @@ if (NOT LOOM_BUILD_IOS EQUAL 1)
   set(CMAKE_OSX_ARCHITECTURES "i386")
 endif()
 
+
 project(${APPLICATION_NAME})
 
 include_directories( ${LOOM_INCLUDE_FOLDERS} )
@@ -149,14 +150,18 @@ if (APPLE)
           # Facebook
           "-framework FacebookSDK -F ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios"
 
-          # Parse (NOTE: Requires FacebookSDK on iOS!)
+          # Teak (NOTE: Requires FacebookSDK)
+          "-framework Carrot -F ${CMAKE_SOURCE_DIR}/loom/vendor/teak/ios"
+
+          # Parse (NOTE: Requires FacebookSDK)
           "-framework Parse -F ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios"
 
           # Admob SDK
           ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a
           "-ObjC"
           "-lc++"
-        )
+          )
+
 
         #iPhone app bundle
         set_target_properties(${PROJECT_NAME} PROPERTIES

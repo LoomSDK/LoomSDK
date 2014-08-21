@@ -29,6 +29,8 @@ set (ENGINE_SRC
     bindings/loom/lmMobile.cpp
     bindings/loom/lmParse.cpp
     bindings/loom/lmPackageLoom.cpp
+    bindings/loom/lmFacebook.cpp
+    bindings/loom/lmTeak.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
 
     bindings/cocos2d/lmCocos2D.cpp
