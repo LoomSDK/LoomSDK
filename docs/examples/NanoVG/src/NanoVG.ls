@@ -5,6 +5,10 @@ package
     import loom2d.display.Shape;
     import loom2d.display.StageScaleMode;
     import loom2d.display.Image;
+    import loom2d.events.Touch;
+    import loom2d.events.TouchEvent;
+    import loom2d.events.TouchPhase;
+    import loom2d.Loom2D;
     import loom2d.textures.Texture;
     import loom2d.ui.SimpleLabel;
     import system.Void;
@@ -41,23 +45,41 @@ package
             q = new Quad(200, 200, 0xBDC5F9); q.x = 10; q.y = 10; stage.addChild(q);
             q = new Quad(200, 200, 0xA8B1F7); q.x = 40; q.y = 40; stage.addChild(q);
             
+            q = new Quad(200, 200, 0x8A98F4); q.x = 80; q.y = 80; stage.addChild(q);
+            
             gfx = new Shape();
             gfx.x = 100;
-            gfx.y = 70;
+            gfx.y = 50;
             gfx.moveTo(0, 0);
-            gfx.lineTo(50, 200);
+            gfx.lineTo(50, 0);
+            gfx.lineTo(0, 50);
+            gfx.clear();
+            gfx.moveTo(0, 0);
+            gfx.lineTo(50, -50);
+            gfx.cubicCurveTo(0, 0, 20, 20, 50, 50);
             stage.addChild(gfx);
             
-            q = new Quad(200, 200, 0x8A98F4); q.x = 80; q.y = 80; stage.addChild(q);
+            
             q = new Quad(200, 200, 0x596CF0); q.x = 120; q.y = 120; stage.addChild(q);
             //*/
             
+            stage.addEventListener(TouchEvent.TOUCH, onTouch);
             
-            
+        }
+        
+        private function onTouch(e:TouchEvent):void 
+        {
+            var t:Touch = e.getTouch(stage, TouchPhase.BEGAN);
+            if (!t) return;
+            gfx.lineTo(t.globalX, t.globalY);
         }
         
         override public function onFrame() 
         {
+            var t = Loom2D.juggler.elapsedTime;
+            gfx.clear();
+            gfx.moveTo(0, 0);
+            gfx.cubicCurveTo(Math.cos(t*2.5)*100, Math.sin(t*2.1)*100, Math.cos(t*1.51)*100, Math.sin(t*1.11)*100, 0, 100);
             return super.onFrame();
         }
         

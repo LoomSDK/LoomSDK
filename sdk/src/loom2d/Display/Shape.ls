@@ -33,8 +33,10 @@ package loom2d.display
             
         }
         
+        public native function clear():void;
         public native function moveTo(x:Number, y:Number):void;
         public native function lineTo(x:Number, y:Number):void;
+        public native function cubicCurveTo(controlX1:Number, controlY1:Number, controlX2:Number, controlY2:Number, anchorX:Number, anchorY:Number):void;
         
         /** @inheritDoc */
         public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle

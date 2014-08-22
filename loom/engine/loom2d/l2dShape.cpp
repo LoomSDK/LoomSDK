@@ -31,14 +31,29 @@ Type *Shape::typeShape = NULL;
 void VectorPath::render(lua_State *L) {
 	int ci = 0;
 	int di = 0;
+	float x, y, c1x, c1y, c2x, c2y;
 	while (ci < commandIndex) {
 		switch (commands[ci++]) {
-		case MOVE_TO:
-			GFX::VectorRenderer::moveTo(data[di++], data[di++]);
-			break;
-		case LINE_TO:
-			GFX::VectorRenderer::lineTo(data[di++], data[di++]);
-			break;
+			case MOVE_TO:
+				// If we don't store it in vars first, the arguments get swapped?
+				x = data[di++];
+				y = data[di++];
+				GFX::VectorRenderer::moveTo(x, y);
+				break;
+			case LINE_TO:
+				x = data[di++];
+				y = data[di++];
+				GFX::VectorRenderer::lineTo(x, y);
+				break;
+			case CUBIC_CURVE_TO:
+				c1x = data[di++];
+				c1y = data[di++];
+				c2x = data[di++];
+				c2y = data[di++];
+				x = data[di++];
+				y = data[di++];
+				GFX::VectorRenderer::cubicCurveTo(c1x, c1y, c2x, c2y, x, y);
+				break;
 		}
 	}
 }
@@ -57,6 +72,17 @@ void VectorPath::lineTo(float x, float y) {
 	data[dataIndex++] = x;
 	data[dataIndex++] = y;
 }
+void VectorPath::cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY) {
+	lmAssert(commandIndex < MAXCOMMANDS, "Too many Shape commands added");
+	lmAssert(dataIndex + 1 < MAXDATA, "Too much Shape data added");
+	commands[commandIndex++] = CUBIC_CURVE_TO;
+	data[dataIndex++] = controlX1;
+	data[dataIndex++] = controlY1;
+	data[dataIndex++] = controlX2;
+	data[dataIndex++] = controlY2;
+	data[dataIndex++] = anchorX;
+	data[dataIndex++] = anchorY;
+}
 
 VectorPath* Shape::getPath() {
 	VectorPath* path = lastPath;
@@ -71,12 +97,26 @@ VectorPath* Shape::getPath() {
 	return path;
 }
 
+void Shape::clear() {
+	utArray<VectorData*>::Iterator it = queue->iterator();
+	while (it.hasMoreElements()) {
+		VectorData* d = it.getNext();
+		delete d;
+	}
+	queue->clear();
+	if (lastPath) lastPath = NULL;
+}
+
 void Shape::moveTo(float x, float y) {
 	getPath()->moveTo(x, y);
 }
 
 void Shape::lineTo(float x, float y) {
 	getPath()->lineTo(x, y);
+}
+
+void Shape::cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY) {
+	getPath()->cubicCurveTo(controlX1, controlX2, controlY1, controlY2, anchorX, anchorY);
 }
 
 void Shape::render(lua_State *L)

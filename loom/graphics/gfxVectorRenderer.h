@@ -56,6 +56,7 @@ public:
 
 	static void moveTo(float x, float y);
 	static void lineTo(float x, float y);
+	static void cubicCurveTo(float c1x, float c1y, float c2x, float c2y, float x, float y);
 
     static void endFrame();
 };

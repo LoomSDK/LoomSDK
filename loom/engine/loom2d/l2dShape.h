@@ -31,10 +31,14 @@ class VectorData {
 		virtual void render(lua_State *L) = 0;
 };
 
-#define MAXCOMMANDS 10
-#define MAXDATA 100
+#define MAXCOMMANDS 20
+#define MAXDATA 200
 
-enum VectorPathCommand { MOVE_TO, LINE_TO };
+enum VectorPathCommand {
+	MOVE_TO,
+	LINE_TO,
+	CUBIC_CURVE_TO
+};
 class VectorPath : public VectorData {
 	protected:
 		VectorPathCommand commands[MAXCOMMANDS];
@@ -45,6 +49,7 @@ class VectorPath : public VectorData {
 	public:
 		void moveTo(float x, float y);
 		void lineTo(float x, float y);
+		void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);
 
 		virtual void render(lua_State *L);
 };
@@ -71,8 +76,10 @@ public:
 
     void render(lua_State *L);
 
+	void clear();
 	void moveTo(float x, float y);
 	void lineTo(float x, float y);
+	void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);
 
     static void initialize(lua_State *L)
     {

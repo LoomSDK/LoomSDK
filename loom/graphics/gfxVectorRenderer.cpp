@@ -126,6 +126,9 @@ void VectorRenderer::lineTo(float x, float y) {
 	nvgLineTo(nvg, x, y);
 }
 
+void VectorRenderer::cubicCurveTo(float c1x, float c1y, float c2x, float c2y, float x, float y) {
+	nvgBezierTo(nvg, c1x, c1y, c2x, c2y, x, y);
+}
 
 void VectorRenderer::destroyGraphicsResources()
 {

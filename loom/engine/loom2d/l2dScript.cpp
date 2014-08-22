@@ -229,8 +229,10 @@ static int registerLoom2D(lua_State *L)
 	// Shape
 	   .deriveClass<Shape, DisplayObject>("Shape")
 	   .addConstructor<void(*)(void)>()
+	   .addMethod("clear", &Shape::clear)
 	   .addMethod("moveTo", &Shape::moveTo)
 	   .addMethod("lineTo", &Shape::lineTo)
+	   .addMethod("cubicCurveTo", &Shape::cubicCurveTo)
 	   .endClass()
 
     // Quad
