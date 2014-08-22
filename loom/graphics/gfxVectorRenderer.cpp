@@ -24,34 +24,12 @@
 
 #include "loom/common/core/log.h"
 #include "loom/common/core/allocator.h"
-
 #include "loom/common/core/assert.h"
+
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxVectorRenderer.h"
 
 #include "stdio.h"
-
-NVGcontext *nvg = NULL;
-static int font;
-
-namespace GFX
-{
-lmDefineLogGroup(gGFXVectorRendererLogGroup, "GFXVectorRenderer", 1, LoomLogInfo);
-
-
-
-void drawLabel(struct NVGcontext* vg, const char* text, float x, float y, float w, float h)
-{
-	NVG_NOTUSED(w);
-
-	nvgFontSize(vg, 30.0f);
-	nvgFontFace(vg, "sans");
-	nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
-
-	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-	nvgText(vg, x, y + h*0.5f, text, NULL);
-}
-
 
 
 #include <windows.h>
@@ -77,9 +55,37 @@ const char * ConvertToUTF8(const wchar_t * pStr) {
 
 
 
-void VectorRenderer::beginFrame(int width, int height)
+
+namespace GFX
 {
-	nvgBeginFrame(nvg, width, height, 1, NVG_STRAIGHT_ALPHA);
+lmDefineLogGroup(gGFXVectorRendererLogGroup, "GFXVectorRenderer", 1, LoomLogInfo);
+
+NVGcontext *nvg = NULL;
+static int font;
+
+int VectorRenderer::frameWidth = 0;
+int VectorRenderer::frameHeight = 0;
+
+void drawLabel(struct NVGcontext* vg, const char* text, float x, float y, float w, float h)
+{
+	NVG_NOTUSED(w);
+
+	nvgFontSize(vg, 30.0f);
+	nvgFontFace(vg, "sans");
+	nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
+
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	nvgText(vg, x, y + h*0.5f, text, NULL);
+}
+
+void VectorRenderer::setSize(int width, int height) {
+	frameWidth = width;
+	frameHeight = height;
+}
+
+void VectorRenderer::beginFrame()
+{
+	nvgBeginFrame(nvg, frameWidth, frameHeight, 1, NVG_STRAIGHT_ALPHA);
 
 	nvgSave(nvg);
 
@@ -91,6 +97,14 @@ void VectorRenderer::beginFrame(int width, int height)
 	nvgBeginPath(nvg);
 }
 
+void VectorRenderer::preDraw(float a, float b, float c, float d, float e, float f) {
+	nvgSave(nvg);
+	nvgTransform(nvg, a, b, c, d, e, f);
+}
+
+void VectorRenderer::postDraw() {
+	nvgRestore(nvg);
+}
 
 void VectorRenderer::endFrame()
 {

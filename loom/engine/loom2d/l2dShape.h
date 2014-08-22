@@ -25,26 +25,48 @@
 namespace Loom2D
 {
 
-enum VectorPathCommand { MOVE_TO, LINE_TO };
-
+class VectorData {
+	public:
+		virtual ~VectorData() {}
+		virtual void render(lua_State *L) = 0;
+};
 
 #define MAXCOMMANDS 10
 #define MAXDATA 100
 
+enum VectorPathCommand { MOVE_TO, LINE_TO };
+class VectorPath : public VectorData {
+	protected:
+		VectorPathCommand commands[MAXCOMMANDS];
+		int commandIndex = 0;
+		float data[MAXDATA];
+		int dataIndex = 0;
+
+	public:
+		void moveTo(float x, float y);
+		void lineTo(float x, float y);
+
+		virtual void render(lua_State *L);
+};
+
 class Shape : public DisplayObject
 {
+protected:
+	VectorPath* getPath();
+
 public:
 
     static Type *typeShape;
 
-	VectorPathCommand commands[MAXCOMMANDS];
-	int commandIndex = 0;
-	float data[MAXDATA];
-	int dataIndex = 0;
+	utArray<VectorData*> *queue;
+
+	VectorPath *lastPath;
 
 	Shape()
 	{
 		type = typeShape;
+		queue = new utArray<VectorData*>();
+		lastPath = NULL;
 	}
 
     void render(lua_State *L);

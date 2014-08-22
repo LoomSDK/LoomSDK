@@ -20,6 +20,7 @@
 
 #include "loom/common/core/assert.h"
 #include "loom/graphics/gfxVectorRenderer.h"
+#include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/engine/loom2d/l2dShape.h"
 
 namespace Loom2D
@@ -27,44 +28,78 @@ namespace Loom2D
 
 Type *Shape::typeShape = NULL;
 
-void Shape::moveTo(float x, float y) {
+void VectorPath::render(lua_State *L) {
+	int ci = 0;
+	int di = 0;
+	while (ci < commandIndex) {
+		switch (commands[ci++]) {
+		case MOVE_TO:
+			GFX::VectorRenderer::moveTo(data[di++], data[di++]);
+			break;
+		case LINE_TO:
+			GFX::VectorRenderer::lineTo(data[di++], data[di++]);
+			break;
+		}
+	}
+}
+
+void VectorPath::moveTo(float x, float y) {
 	lmAssert(commandIndex < MAXCOMMANDS, "Too many Shape commands added");
-	lmAssert(dataIndex+1 < MAXDATA, "Too much Shape data added");
+	lmAssert(dataIndex + 1 < MAXDATA, "Too much Shape data added");
 	commands[commandIndex++] = MOVE_TO;
 	data[dataIndex++] = x;
 	data[dataIndex++] = y;
-	//GFX::VectorRenderer::moveTo(x, y);
 }
-
-void Shape::lineTo(float x, float y) {
+void VectorPath::lineTo(float x, float y) {
 	lmAssert(commandIndex < MAXCOMMANDS, "Too many Shape commands added");
 	lmAssert(dataIndex + 1 < MAXDATA, "Too much Shape data added");
 	commands[commandIndex++] = LINE_TO;
 	data[dataIndex++] = x;
 	data[dataIndex++] = y;
-	//GFX::VectorRenderer::lineTo(x, y);
+}
+
+VectorPath* Shape::getPath() {
+	VectorPath* path = lastPath;
+	if (path == NULL) {
+		path = queue->empty() ? NULL : dynamic_cast<VectorPath*>(queue->back());
+		if (path == NULL) {
+			path = new VectorPath();
+			queue->push_back(path);
+		}
+		lastPath = path;
+	}
+	return path;
+}
+
+void Shape::moveTo(float x, float y) {
+	getPath()->moveTo(x, y);
+}
+
+void Shape::lineTo(float x, float y) {
+	getPath()->lineTo(x, y);
 }
 
 void Shape::render(lua_State *L)
 {
     updateLocalTransform();
 
-	lualoom_pushnative<Shape>(L, this);
+	Matrix transform;
+	getTargetTransformationMatrix(NULL, &transform);
 
-	int ci = 0;
-	int di = 0;
-	while (ci < commandIndex) {
-		switch (commands[ci++]) {
-			case MOVE_TO:
-				GFX::VectorRenderer::moveTo(data[di++], data[di++]);
-				break;
-			case LINE_TO:
-				GFX::VectorRenderer::lineTo(data[di++], data[di++]);
-				break;
-		}
+	GFX::QuadRenderer::submit();
+
+	GFX::VectorRenderer::beginFrame();
+	GFX::VectorRenderer::preDraw(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
+
+	utArray<VectorData*>::Iterator it = queue->iterator();
+	while (it.hasMoreElements()) {
+		VectorData* d = it.getNext();
+		d->render(L);
 	}
 
-    lua_pop(L, 1);
+	GFX::VectorRenderer::postDraw();
+	GFX::VectorRenderer::endFrame();
+	
 }
 
 }

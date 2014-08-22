@@ -42,9 +42,17 @@ private:
 
 public:
 
+	static int frameWidth;
+	static int frameHeight;
+
     static void submit();
 
-	static void beginFrame(int width, int height);
+	static void setSize(int width, int height);
+
+	static void beginFrame();
+
+	static void preDraw(float a, float b, float c, float d, float e, float f);
+	static void postDraw();
 
 	static void moveTo(float x, float y);
 	static void lineTo(float x, float y);

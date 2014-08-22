@@ -76,7 +76,7 @@ void Graphics::initialize()
     ///     primitives will be rendered as lines.
     ///
 
-    bgfx::setDebug(BGFX_DEBUG_STATS | BGFX_DEBUG_TEXT);
+    //bgfx::setDebug(BGFX_DEBUG_STATS | BGFX_DEBUG_TEXT);
 }
 
 
@@ -141,8 +141,9 @@ void Graphics::beginFrame()
 
     bgfx::setViewSeq(sView, true);
 
-    QuadRenderer::beginFrame();
-	VectorRenderer::beginFrame(sWidth, sHeight);
+	QuadRenderer::beginFrame();
+	VectorRenderer::setSize(sWidth, sHeight);
+	//VectorRenderer::beginFrame();
 
     // This dummy draw call is here to make sure that view 0 is cleared
     // if no other draw calls are submitted to view 0.
@@ -155,7 +156,7 @@ void Graphics::endFrame()
 	VectorRenderer::moveTo(100, 100);
 	VectorRenderer::lineTo(200, 100);
     QuadRenderer::endFrame();
-	VectorRenderer::endFrame();
+	//VectorRenderer::endFrame();
 
 
     bgfx::frame();

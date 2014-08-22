@@ -1,6 +1,7 @@
 package
 {
     import loom.Application;
+    import loom2d.display.Quad;
     import loom2d.display.Shape;
     import loom2d.display.StageScaleMode;
     import loom2d.display.Image;
@@ -35,10 +36,23 @@ package
             label.y = stage.stageHeight / 2 - 100;
             stage.addChild(label);
             
+            var q:Quad;
+            //*
+            q = new Quad(200, 200, 0xBDC5F9); q.x = 10; q.y = 10; stage.addChild(q);
+            q = new Quad(200, 200, 0xA8B1F7); q.x = 40; q.y = 40; stage.addChild(q);
+            
             gfx = new Shape();
-            gfx.moveTo(50, 50);
-            gfx.lineTo(200, 200);
+            gfx.x = 100;
+            gfx.y = 70;
+            gfx.moveTo(0, 0);
+            gfx.lineTo(50, 200);
             stage.addChild(gfx);
+            
+            q = new Quad(200, 200, 0x8A98F4); q.x = 80; q.y = 80; stage.addChild(q);
+            q = new Quad(200, 200, 0x596CF0); q.x = 120; q.y = 120; stage.addChild(q);
+            //*/
+            
+            
             
         }
         
