@@ -29,9 +29,11 @@
 #import "../common/AppDelegate.h"
 
 #import "RootViewController.h"
+#import "FBAppCall.h"
 
 #include "loom/engine/bindings/loom/lmApplication.h"
 #include "loom/common/platform/platformMobileiOS.h"
+
 
 
 static void handleGenericEvent(void *userData, const char *type, const char *payload)
@@ -84,6 +86,10 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
 
     [[UIApplication sharedApplication] setStatusBarHidden: YES];
     
+    // Parse setup for Push Notifications
+    parse = [[ParseAPIiOS alloc] init];
+    [parse initialize];
+
     cocos2d::CCApplication::sharedApplication().run();
     
     return YES;
@@ -101,12 +107,28 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
     {
         //attempt to parse the query
         [self application:application handleOpenURLQuery:[url query]];
-
+        
         //mark as being opened from a custrom URL and call our native callback
         ios_CustomURLOpen();
     }
+    else
+    {
+        //Facebook Scheme Launch?
+        NSString *app_id = [mainBundle objectForInfoDictionaryKey:@"FacebookAppID"];
+        if((app_id != nil) && ([app_id isEqualToString:@""] == FALSE))
+        {
+            NSString *fbScheme = [NSString stringWithFormat:@"%@%@", @"fb", app_id];
+            if([[url scheme] isEqualToString:fbScheme])
+            {
+                // handle Facebook sign in re-launching the application
+                NSLog(@"---------Facebook openURL: %@", [url absoluteString]);
+                return [FBSession.activeSession handleOpenURL:url];
+            }
+        }
+    }
     return YES;
 }
+
 
 // called when the application is opened via a Custom URL Scheme
 - (void)application:(UIApplication *)application handleOpenURLQuery:(NSString *)query
@@ -145,6 +167,17 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
      Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
      */
     cocos2d::CCDirector::sharedDirector()->resume();
+
+
+    // Handle the user leaving the app while the Facebook login dialog is being shown
+    // For example: when the user presses the iOS "home" button while the login dialog is active
+    NSBundle *mainBundle = [NSBundle mainBundle];
+    NSString *app_id = [mainBundle objectForInfoDictionaryKey:@"FacebookAppID"];
+    if((app_id != nil) && ([app_id isEqualToString:@""] == FALSE))
+    {
+        NSLog(@"---------Application Did Become Active: Notifying Facebook");
+        [FBAppCall handleDidBecomeActive];    
+    }
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
@@ -167,6 +200,36 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
      Called when the application is about to terminate.
      See also applicationDidEnterBackground:.
      */
+}
+
+
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
+{
+    /// Parse Push Notifications
+    if(parse)
+    {
+        NSLog(@"---------Registered Parse for Remote Notifiations");
+        [parse registerForRemoteNotifications: deviceToken];
+    }
+}
+- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
+{
+    /// Parse Push Notifications
+    if(parse)
+    {
+        NSInteger code = [error code];
+        NSString *codeString = [NSString stringWithFormat:@"Error code: %ld",(long)code];
+        NSLog(@"---------Failed to register Parse for Remote Notifications: %@", codeString);
+        [parse failedToRegister: error];        
+    }
+}
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
+    if(parse)
+    {
+        /// Parse Push Notifications
+        NSLog(@"---------Received Remote Notification: sending through to Parse");
+        [parse receivedRemoteNotification: userInfo];        
+    }
 }
 
 

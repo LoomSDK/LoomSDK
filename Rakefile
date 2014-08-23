@@ -634,6 +634,10 @@ namespace :build do
       puts "*** Building against AndroidSDK " + $targetAndroidSDK
       api_id = get_android_api_id($targetAndroidSDK)
 
+      Dir.chdir("loom/vendor/facebook/android") do
+        sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
+      end
+
       Dir.chdir("loom/engine/cocos2dx/platform/android/java") do
         sh "android update project --name Cocos2DLib --subprojects --target #{api_id} --path ."
       end
@@ -669,6 +673,11 @@ namespace :build do
       end
       
       api_id = get_android_api_id($targetAndroidSDK)
+
+      Dir.chdir("loom/vendor/facebook/android") do
+        puts "*** Building against AndroidSDK " + $targetAndroidSDK
+        sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
+      end
 
       Dir.chdir("loom/engine/cocos2dx/platform/android/java") do
         puts "*** Building against AndroidSDK " + $targetAndroidSDK
