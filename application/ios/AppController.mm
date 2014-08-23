@@ -171,8 +171,13 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
 
     // Handle the user leaving the app while the Facebook login dialog is being shown
     // For example: when the user presses the iOS "home" button while the login dialog is active
-    NSLog(@"---------Application Did Become Active: Notifying Facebook");
-    [FBAppCall handleDidBecomeActive];    
+    NSBundle *mainBundle = [NSBundle mainBundle];
+    NSString *app_id = [mainBundle objectForInfoDictionaryKey:@"FacebookAppID"];
+    if((app_id != nil) && ([app_id isEqualToString:@""] == FALSE))
+    {
+        NSLog(@"---------Application Did Become Active: Notifying Facebook");
+        [FBAppCall handleDidBecomeActive];    
+    }
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
@@ -201,21 +206,30 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
 {
     /// Parse Push Notifications
-    NSLog(@"---------Registered Parse for Remote Notifiations");
-    [parse registerForRemoteNotifications: deviceToken];
+    if(parse)
+    {
+        NSLog(@"---------Registered Parse for Remote Notifiations");
+        [parse registerForRemoteNotifications: deviceToken];
+    }
 }
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
 {
     /// Parse Push Notifications
-    NSInteger code = [error code];
-    NSString *codeString = [NSString stringWithFormat:@"Error code: %ld",(long)code];
-    NSLog(@"---------Failed to register Parse for Remote Notifications: %@", codeString);
-    [parse failedToRegister: error];
+    if(parse)
+    {
+        NSInteger code = [error code];
+        NSString *codeString = [NSString stringWithFormat:@"Error code: %ld",(long)code];
+        NSLog(@"---------Failed to register Parse for Remote Notifications: %@", codeString);
+        [parse failedToRegister: error];        
+    }
 }
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
-    /// Parse Push Notifications
-    NSLog(@"---------Received Remote Notification: sending through to Parse");
-    [parse receivedRemoteNotification: userInfo];
+    if(parse)
+    {
+        /// Parse Push Notifications
+        NSLog(@"---------Received Remote Notification: sending through to Parse");
+        [parse receivedRemoteNotification: userInfo];        
+    }
 }
 
 
