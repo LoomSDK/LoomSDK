@@ -334,8 +334,10 @@ extern void stbi_install_YCbCr_to_RGB(stbi_YCbCr_to_RGB_run func);
 
 #ifndef STBI_HEADER_FILE_ONLY
 
+#include "loom/vendor/jpgd/jpgd.h"
 #include "loom/common/core/allocator.h"
 loom_allocator_t *gSTBImageAllocator = NULL;
+
 
 #ifndef STBI_NO_HDR
 #include <math.h>  // ldexp
@@ -527,6 +529,7 @@ static int e(const char *str)
 
 void stbi_image_free(void *retval_from_stbi_load)
 {
+   //NOTE: in the case of this image being a JPGD loaded JPG, this is fine as JPGD also uses the 'gSTBImageAllocator'
    lmFree(gSTBImageAllocator, retval_from_stbi_load);
 }
 
@@ -537,7 +540,10 @@ static stbi_uc *hdr_to_ldr(float   *data, int x, int y, int comp);
 
 static unsigned char *stbi_load_main(stbi *s, int *x, int *y, int *comp, int req_comp)
 {
-   if (stbi_jpeg_test(s)) return stbi_jpeg_load(s,x,y,comp,req_comp);
+   //JPGD has *MUCH* better JPG support, specifically for Progressive JPEGs, so let's use that instead of we are a JPG!
+   //if (stbi_jpeg_test(s)) return stbi_jpeg_load(s,x,y,comp,req_comp);
+   unsigned char * jpgData = jpgd::decompress_jpeg_image_from_memory(s->img_buffer, (int)(s->img_buffer_end - s->img_buffer), x, y, comp, req_comp);
+   if (jpgData != NULL)   return jpgData;
    if (stbi_png_test(s))  return stbi_png_load(s,x,y,comp,req_comp);
    if (stbi_bmp_test(s))  return stbi_bmp_load(s,x,y,comp,req_comp);
    if (stbi_gif_test(s))  return stbi_gif_load(s,x,y,comp,req_comp);
