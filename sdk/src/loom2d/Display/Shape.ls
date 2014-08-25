@@ -37,6 +37,10 @@ package loom2d.display
         public native function moveTo(x:Number, y:Number):void;
         public native function lineTo(x:Number, y:Number):void;
         public native function cubicCurveTo(controlX1:Number, controlY1:Number, controlX2:Number, controlY2:Number, anchorX:Number, anchorY:Number):void;
+        public native function drawCircle(x:Number, y:Number, radius:Number):void;
+        public native function drawEllipse(x:Number, y:Number, width:Number, height:Number):void;
+        public native function drawRect(x:Number, y:Number, width:Number, height:Number):void;
+        public native function drawRoundRect(x:Number, y:Number, width:Number, height:Number, ellipseWidth:Number, ellipseHeight:Number):void;
         
         /** @inheritDoc */
         public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle

@@ -39,25 +39,49 @@ enum VectorPathCommand {
 	LINE_TO,
 	CUBIC_CURVE_TO
 };
+
 class VectorPath : public VectorData {
-	protected:
-		VectorPathCommand commands[MAXCOMMANDS];
-		int commandIndex = 0;
-		float data[MAXDATA];
-		int dataIndex = 0;
+protected:
+	VectorPathCommand commands[MAXCOMMANDS];
+	int commandIndex = 0;
+	float data[MAXDATA];
+	int dataIndex = 0;
 
-	public:
-		void moveTo(float x, float y);
-		void lineTo(float x, float y);
-		void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);
+public:
+	void moveTo(float x, float y);
+	void lineTo(float x, float y);
+	void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);
 
-		virtual void render(lua_State *L);
+	virtual void render(lua_State *L);
+};
+
+enum VectorShapeType {
+	CIRCLE,
+	ELLIPSE,
+	RECT,
+	ROUND_RECT
+};
+
+class VectorShape : public VectorData {
+protected:
+	VectorShapeType type;
+	float x;
+	float y;
+	float a;
+	float b;
+	float c;
+
+public:
+	VectorShape(VectorShapeType type, float x, float y, float a = 0.0, float b = 0.0, float c = 0.0) : type(type), x(x), y(y), a(a), b(b), c(c) {};
+
+	virtual void render(lua_State *L);
 };
 
 class Shape : public DisplayObject
 {
 protected:
 	VectorPath* getPath();
+	void addShape(VectorShape *shape);
 
 public:
 
@@ -80,6 +104,10 @@ public:
 	void moveTo(float x, float y);
 	void lineTo(float x, float y);
 	void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);
+	void drawCircle(float x, float y, float radius);
+	void drawEllipse(float x, float y, float width, float height);
+	void drawRect(float x, float y, float width, float height);
+	void drawRoundRect(float x, float y, float width, float height, float ellipseWidth, float ellipseHeight);
 
     static void initialize(lua_State *L)
     {
@@ -97,6 +125,11 @@ public:
 			.addConstructor<void(*)(void)>()
 			.addMethod("moveTo", &Shape::moveTo)
 			.addMethod("lineTo", &Shape::lineTo)
+			.addMethod("cubicCurveTo", &Shape::cubicCurveTo)
+			.addMethod("drawCircle", &Shape::drawCircle)
+			.addMethod("drawEllipse", &Shape::drawEllipse)
+			.addMethod("drawRect", &Shape::drawRect)
+			.addMethod("drawRoundRect", &Shape::drawRoundRect)
 			.endClass()
 			.endPackage();
 		return 0;

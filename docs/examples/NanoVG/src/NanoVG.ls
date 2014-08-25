@@ -80,6 +80,10 @@ package
             gfx.clear();
             gfx.moveTo(0, 0);
             gfx.cubicCurveTo(Math.cos(t*2.5)*100, Math.sin(t*2.1)*100, Math.cos(t*1.51)*100, Math.sin(t*1.11)*100, 0, 100);
+            gfx.drawCircle(20, 20, 10);
+            gfx.drawEllipse(50, 20, 10, 20);
+            gfx.drawRect(80, 0, 40, 60);
+            gfx.drawRoundRect(140, 0, 40, 60, 10, 10);
             return super.onFrame();
         }
         

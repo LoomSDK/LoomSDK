@@ -84,6 +84,16 @@ void VectorPath::cubicCurveTo(float controlX1, float controlY1, float controlX2,
 	data[dataIndex++] = anchorY;
 }
 
+void VectorShape::render(lua_State *L) {
+	switch (type) {
+		case CIRCLE:     GFX::VectorRenderer::circle(x, y, a); break;
+		case ELLIPSE:    GFX::VectorRenderer::ellipse(x, y, a, b); break;
+		case RECT:       GFX::VectorRenderer::rect(x, y, a, b); break;
+		case ROUND_RECT: GFX::VectorRenderer::roundRect(x, y, a, b, c); break;
+	}
+}
+
+
 VectorPath* Shape::getPath() {
 	VectorPath* path = lastPath;
 	if (path == NULL) {
@@ -117,6 +127,27 @@ void Shape::lineTo(float x, float y) {
 
 void Shape::cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY) {
 	getPath()->cubicCurveTo(controlX1, controlX2, controlY1, controlY2, anchorX, anchorY);
+}
+
+void Shape::addShape(VectorShape *shape) {
+	queue->push_back(shape);
+}
+
+void Shape::drawCircle(float x, float y, float radius) {
+	addShape(new VectorShape(CIRCLE, x, y, radius));
+}
+
+void Shape::drawEllipse(float x, float y, float width, float height) {
+	addShape(new VectorShape(ELLIPSE, x, y, width, height));
+}
+
+void Shape::drawRect(float x, float y, float width, float height) {
+	addShape(new VectorShape(RECT, x, y, width, height));
+}
+
+// TODO implement ellipseHeight?
+void Shape::drawRoundRect(float x, float y, float width, float height, float ellipseWidth, float ellipseHeight) {
+	addShape(new VectorShape(ROUND_RECT, x, y, width, height, ellipseWidth));
 }
 
 void Shape::render(lua_State *L)

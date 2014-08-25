@@ -118,6 +118,8 @@ void VectorRenderer::endFrame()
 
 }
 
+
+
 void VectorRenderer::moveTo(float x, float y) {
 	nvgMoveTo(nvg, x, y);
 }
@@ -129,6 +131,24 @@ void VectorRenderer::lineTo(float x, float y) {
 void VectorRenderer::cubicCurveTo(float c1x, float c1y, float c2x, float c2y, float x, float y) {
 	nvgBezierTo(nvg, c1x, c1y, c2x, c2y, x, y);
 }
+
+void VectorRenderer::circle(float x, float y, float radius) {
+	nvgCircle(nvg, x, y, radius);
+}
+
+void VectorRenderer::ellipse(float x, float y, float width, float height) {
+	nvgEllipse(nvg, x, y, width, height);
+}
+
+void VectorRenderer::rect(float x, float y, float width, float height) {
+	nvgRect(nvg, x, y, width, height);
+}
+
+void VectorRenderer::roundRect(float x, float y, float width, float height, float radius) {
+	nvgRoundedRect(nvg, x, y, width, height, radius);
+}
+
+
 
 void VectorRenderer::destroyGraphicsResources()
 {
