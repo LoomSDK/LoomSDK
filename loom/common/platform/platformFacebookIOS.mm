@@ -321,9 +321,23 @@ bool platform_requestNewPublishPermissions(const char* permissionsString)
 void platform_showFrictionlessRequestDialog(const char* recipientsString, const char* titleString, const char* messageString)
 {
     NSString *recipients = [NSString stringWithCString:recipientsString encoding:NSUTF8StringEncoding];
+    if([recipients isEqualToString:@""])
+    {
+       recipients = nil;
+    }
     NSString *message = [NSString stringWithCString:messageString encoding:NSUTF8StringEncoding];
+    if((message == nil) || ([message isEqualToString:@""]))
+    {
+       message = @"No Message";
+    }
     NSString *title = [NSString stringWithCString:titleString encoding:NSUTF8StringEncoding];
-    NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys: recipients, @"to", nil];
+    if((title == nil) || ([title isEqualToString:@""]))
+    {
+       title = @"No Title";
+    }
+    NSMutableDictionary* params = (recipients == nil) ? 
+                                    [NSMutableDictionary dictionaryWithObjectsAndKeys:nil] : 
+                                    [NSMutableDictionary dictionaryWithObjectsAndKeys: recipients, @"to", nil];
     if (gFriendCache == NULL) 
     {
         gFriendCache = [[FBFrictionlessRecipientCache alloc] init];
@@ -338,12 +352,14 @@ void platform_showFrictionlessRequestDialog(const char* recipientsString, const 
                     parameters:params
                     handler:^(FBWebDialogResult result, NSURL *resultURL, NSError *error) 
                     {
+
                         //invoke native callback
                         NSDictionary *urlParams = [FacebookAPIiOS parseURLParams:[resultURL query]];
                         bool success = (error || 
                                         (result == FBWebDialogResultDialogNotCompleted) ||
                                         ![urlParams valueForKey:@"request"]) ? false : true;
                         NSLog(@"----FB Frictionless Dialog: SUCCESS? %i", success);
+                        // NSLog(@"----FB Frictionless Dialog ResultURL: %@", [resultURL absoluteString]);
                         if(gFrictionlessRequestCallback != NULL)
                         {
                             gFrictionlessRequestCallback(success);
