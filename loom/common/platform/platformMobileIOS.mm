@@ -87,10 +87,24 @@ void platform_allowScreenSleep(bool sleep)
 ///shares the specfied text via other applications on the device (ie. Twitter, Facebook)
 bool platform_shareText(const char *subject, const char *text)
 {
-    NSString *body = (text) ? [NSString stringWithUTF8String : text] : nil;
+    NSString *body = (text && (text[0] != '\0')) ? [NSString stringWithUTF8String : text] : nil;
+    NSString *title = (subject && (subject[0] != '\0')) ? [NSString stringWithUTF8String : subject] : nil;
     NSArray *activityItems = @[body];
 
     UIActivityViewController *controller = [[UIActivityViewController alloc] initWithActivityItems:activityItems applicationActivities:nil];
+    if(title != nil)
+    {
+        [controller setValue:title forKey:@"subject"];
+    }
+
+    //TODO: options to exclude various activity types, ie: [UIActivityTypeMessage, UIActivityTypeMail, UIActivityTypePostToFacebook, UIActivityTypePostToTwitter, UIActivityTypePostToFlickr, etc.]
+
+    //if the text body is too long, it ends up being completely empty if we use Twitter, so make sure to exclude it!!!
+    if((body != nil) && (body.length > 140))
+    {
+        controller.excludedActivityTypes = @[UIActivityTypePostToTwitter];
+    }
+
     [getParentViewController() presentViewController:controller animated:YES completion:nil];
     return true;
 }
