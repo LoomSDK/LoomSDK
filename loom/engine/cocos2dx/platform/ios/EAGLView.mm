@@ -194,8 +194,6 @@ static EAGLView *view = 0;
                                                  selector:@selector(onUIKeyboardNotification:)
                                                      name:UIKeyboardDidHideNotification object:nil];
         
-        
-        
         view = self;
         
         acceptFirstResponder_ = NO;
