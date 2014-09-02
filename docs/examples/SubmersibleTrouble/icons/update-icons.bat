@@ -1,6 +1,6 @@
 start gimp^
 	-b "(resize-image 512 512 \"icon.xcf\" \"android-high-res.png\")"^
-	-b "(resize-image 192 192 \"icon.xcf\" \"android/drawable-xxxdpi/icon.png\")"^
+	-b "(resize-image 192 192 \"icon.xcf\" \"android/drawable-640dpi/icon.png\")"^
 	-b "(resize-image 144 144 \"icon.xcf\" \"android/drawable-xxhdpi/icon.png\")"^
 	-b "(resize-image 96 96 \"icon.xcf\" \"android/drawable-xhdpi/icon.png\")"^
 	-b "(resize-image 72 72 \"icon.xcf\" \"android/drawable-hdpi/icon.png\")"^
@@ -9,6 +9,7 @@ start gimp^
 	-b "(gimp-quit 0)"
 
 start gimp^
+	-b "(resize-image 1024 1024 \"icon-ios.xcf\" \"ios-high-res.png\")"^
 	-b "(resize-image 152 152 \"icon-ios.xcf\" \"ios/Icon-76@2x.png\")"^
 	-b "(resize-image 144 144 \"icon-ios.xcf\" \"ios/Icon-72@2x.png\")"^
 	-b "(resize-image 144 144 \"icon-ios.xcf\" \"ios/Icon-144.png\")"^
