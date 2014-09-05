@@ -268,7 +268,7 @@ package ui.views.game
         private function confirmNo()
         {
             hideConfirm();
-            state = STATE_GAME;
+            if (state != STATE_DEMO) state = STATE_GAME;
         }
         
         
@@ -277,7 +277,7 @@ package ui.views.game
             confirmView.resize(w, h);
             esc.width = 30;
             mute.width = 30;
-            esc.x = w-esc.width;
+            mute.x = w-mute.width;
             background.setSize(w, h);
             field.x = (w-board.contentWidth)/2;
             field.y = (h-board.contentHeight)/2+10;

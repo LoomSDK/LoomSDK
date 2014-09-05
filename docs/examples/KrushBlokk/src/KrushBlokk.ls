@@ -1,14 +1,19 @@
 package
 {
+    import feathers.controls.Button;
     import game.GameConfig;
     import loom.Application;
     import loom.gameframework.TimeManager;
     import loom.sound.Listener;
+    import loom2d.display.Image;
     import loom2d.display.Sprite;
     import loom2d.display.StageScaleMode;
     import loom2d.events.Event;
+    import loom2d.textures.Texture;
     import loom2d.textures.TextureSmoothing;
     import loom2d.ui.TextureAtlasManager;
+    import system.platform.Platform;
+    import system.platform.PlatformType;
     import ui.Theme;
     import ui.views.ConfigView;
     import ui.views.game.AdView;
@@ -45,6 +50,8 @@ package
         private var contentWidth = 450;
         private var contentHeight = 580;
         private var pixelScale = 4;
+        
+        private var backBtn:Button;
         
         
         // Gets injected automatically before run() is called
@@ -124,7 +131,6 @@ package
             ad.onContinue += function() {
                 switchView(intro);
             };
-            ;
             
             // Handle app pausing
             applicationActivated += onActivated;
@@ -132,6 +138,14 @@ package
             
             stage.addChild(display);
             stage.addEventListener(Event.RESIZE, resize);
+            
+            // Back button for non-Android platforms
+            backBtn = new Button();
+            backBtn.width = 20;
+            backBtn.height = 20;
+            backBtn.defaultIcon = new Image(Texture.fromAsset("assets/ui/iconBack.png"));
+            backBtn.addEventListener(Event.TRIGGERED, onBack);
+            if (Platform.getPlatform() != PlatformType.ANDROID) stage.addChild(backBtn);
             
             // View on startup
             // You can uncomment a different view to start from that one.
@@ -146,6 +160,11 @@ package
             //switchView(game);
             //switchView(end);
             //switchView(ad);
+        }
+        
+        private function onBack(e:Event):void 
+        {
+            currentView.onBack();
         }
         
         /**
@@ -183,6 +202,7 @@ package
             } else {
                 display.scale = pixelScale * scale;
             }
+            backBtn.scale = display.scale;
             var w = stage.stageWidth/display.scale;
             var h = stage.stageHeight/display.scale;
             currentView.resize(w, h);
@@ -196,6 +216,13 @@ package
             if (currentView) currentView.exit();
             currentView = newView;
             currentView.enter(display);
+            switch (currentView) {
+                case intro:
+                case game:
+                    backBtn.visible = false;
+                    break;
+                default: backBtn.visible = true; break;
+            }
             resize();
         }
         
