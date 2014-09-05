@@ -66,7 +66,7 @@ package ui.views.game
         private function touch(e:TouchEvent)
         {
             var t = e.getTouch(stage);
-            speed -= (t.getLocation(stage).y-t.getPreviousLocation(stage).y)*4*dt;
+            speed -= (t.getLocation(this).y-t.getPreviousLocation(this).y)*12*dt;
         }
         
         public function exit()
