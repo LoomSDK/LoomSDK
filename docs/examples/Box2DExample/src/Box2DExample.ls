@@ -2,6 +2,7 @@ package
 {
 
     import loom.Application;
+	import loom.platform.Timer;
 
     import system.platform.Platform;
     import loom2d.display.StageScaleMode;    
@@ -50,7 +51,7 @@ package
 
         var bodyScale:Number = 1;
 
-        var world:b2World;
+        var world:World;
 
         public function onFrame():void
         {
@@ -59,7 +60,7 @@ package
 
             world.step(tickRate, velocityIterations, positionIterations);
             
-            var b:b2Body = world.getBodyList();
+            var b:Body = world.getBodyList();
             while (b)
             {
                 var pgo = b.getUserData() as Box2DPhysicsGameObject;
@@ -82,17 +83,17 @@ package
             }
         }
 
-        public function createBox(world:b2World, type:int, position:b2Vec2, rotation:Number, dimensions:b2Vec2, imagePath:String, density:Number, friction:Number, restitution:Number):b2Body
+        public function createBox(world:World, type:int, position:Vec2, rotation:Number, dimensions:Vec2, imagePath:String, density:Number, friction:Number, restitution:Number):Body
         {
             return createBody(world, type, position, rotation, dimensions, dimensions.x/2, imagePath, density, friction, restitution, "box");
         }
 
-        public function createCircle(world:b2World, type:int, position:b2Vec2, rotation:Number, radius:Number, imagePath:String, density:Number, friction:Number, restitution:Number):b2Body
+        public function createCircle(world:World, type:int, position:Vec2, rotation:Number, radius:Number, imagePath:String, density:Number, friction:Number, restitution:Number):Body
         {
-            return createBody(world, type, position, rotation, new b2Vec2(radius*2, radius*2), radius, imagePath, density, friction, restitution, "circle");
+            return createBody(world, type, position, rotation, new Vec2(radius*2, radius*2), radius, imagePath, density, friction, restitution, "circle");
         }
 
-        public function createGameObject(body:b2Body, position:b2Vec2, rotation:Number, dimensions:b2Vec2, imagePath:String):Box2DPhysicsGameObject
+        public function createGameObject(body:Body, position:Vec2, rotation:Number, dimensions:Vec2, imagePath:String):Box2DPhysicsGameObject
         {
             var goBody:Box2DPhysicsGameObject = new Box2DPhysicsGameObject();
             goBody.sprite = new Image(Texture.fromAsset(imagePath));
@@ -107,14 +108,14 @@ package
             return goBody;
         }
 
-        public function createBody(world:b2World, type:int, position:b2Vec2, rotation:Number, dimensions:b2Vec2, radius:Number, imagePath:String, density:Number, friction:Number, restitution:Number, shapeType:String="box"):b2Body
+        public function createBody(world:World, type:int, position:Vec2, rotation:Number, dimensions:Vec2, radius:Number, imagePath:String, density:Number, friction:Number, restitution:Number, shapeType:String="box"):Body
         {
             // create a body
-            var bodyDef:b2BodyDef = new b2BodyDef();
+            var bodyDef:BodyDef = new BodyDef();
             bodyDef.type = type;
             bodyDef.position = position;
             bodyDef.allowSleep = true;
-            var body:b2Body = world.createBody(bodyDef);
+            var body:Body = world.createBody(bodyDef);
             body.setTransform(position, rotation);
 
             // create a game object for the body
@@ -125,7 +126,7 @@ package
             body.setUserData(goBody);
 
             // create a fixture for the body body with the body shape
-            var fixtureBody:b2FixtureDef = new b2FixtureDef();
+            var fixtureBody:FixtureDef = new FixtureDef();
             fixtureBody.density = density;
             fixtureBody.friction = friction;
             fixtureBody.restitution = restitution;
@@ -134,12 +135,12 @@ package
             switch (shapeType)
             {
                 case "circle":
-                    var circShape:b2CircleShape = new b2CircleShape();
+                    var circShape:CircleShape = new CircleShape();
                     circShape.radius = radius * bodyScale;
                     fixtureBody.shape = circShape;
                     break;
                 default: // box
-                    var rectShape:b2PolygonShape = new b2PolygonShape();
+                    var rectShape:PolygonShape = new PolygonShape();
                     rectShape.setAsBox(dimensions.x/2 * bodyScale, dimensions.y/2 * bodyScale);
                     fixtureBody.shape = rectShape;
                     break;
@@ -150,18 +151,18 @@ package
             return body;
         }
 
-        public function loadBody(world:b2World, type:int, position:b2Vec2, rotation:Number, dimensions:b2Vec2, scale:b2Vec2, imagePath:String, plistPath:String, shapeName:String):b2Body
+        public function loadBody(world:World, type:int, position:Vec2, rotation:Number, dimensions:Vec2, scale:Vec2, imagePath:String, plistPath:String, shapeName:String):Body
         {
             // create a body
-            var bodyDef:b2BodyDef = new b2BodyDef();
+            var bodyDef:BodyDef = new BodyDef();
             bodyDef.type = type; // 2-dynamic, 1-kinematic, 0-static
             bodyDef.position = position;
             bodyDef.allowSleep = true;
 
-            var body:b2Body = world.createBody(bodyDef);
+            var body:Body = world.createBody(bodyDef);
 
             // reference the global shape cache
-            var shapeCache:b2ShapeCache = b2ShapeCache.sharedB2ShapeCache();
+            var shapeCache:ShapeCache = ShapeCache.sharedShapeCache();
 
             // load the shape into the shape cache
             shapeCache.addShapesWithFile(plistPath, scale, ptmRatio);
@@ -170,7 +171,7 @@ package
             shapeCache.addFixturesToBody(body, shapeName);
 
             // create a game object for the body
-            var goBody:Box2DPhysicsGameObject = createGameObject(body, position, rotation, new b2Vec2(Math.abs(dimensions.x * scale.x), Math.abs(dimensions.y * scale.y)), imagePath);
+            var goBody:Box2DPhysicsGameObject = createGameObject(body, position, rotation, new Vec2(Math.abs(dimensions.x * scale.x), Math.abs(dimensions.y * scale.y)), imagePath);
             stage.addChild(goBody.sprite);
 
             // attach the body game object to the body body
@@ -183,28 +184,29 @@ package
         public function createRandomShape(px:Number, py:Number)
         {
             var dens:Number = 1;
-            var fric:Number = 0.6;
+            var fric:Number = 0.2;
             var rest:Number = 0.3;
 
             // find a random shape
-            var body:b2Body;
+            var body:Body;
             var rnd:Number = Math.random();
+			
             if (rnd<0.333)
-                body = createBox(world, b2BodyType.DYNAMIC, new b2Vec2(px, py), 0, new b2Vec2(Math.random()*2+0.25, Math.random()*2+0.25), "assets/square.png", dens, fric, rest);
+                body = createBox(world, BodyType.DYNAMIC, new Vec2(px, py), 0, new Vec2(Math.random()*2+0.25, Math.random()*2+0.25), "assets/square.png", dens, fric, rest);
             else if (rnd>0.666)
-                body = createCircle(world, b2BodyType.DYNAMIC, new b2Vec2(px, py), 0, Math.random()+0.125, "assets/circle.png", dens, fric, rest);
+                body = createCircle(world, BodyType.DYNAMIC, new Vec2(px, py), 0, Math.random()+0.125, "assets/circle.png", dens, fric, rest);
             else
             {
                 var scale:Number = Math.random() * 1.25 + 0.25;
                 // we're using a negative scale.y because Physics Editor uses a positive up coordinate system for Y while Loom has Y increasing downwards
-                body = loadBody(world, b2BodyType.DYNAMIC, new b2Vec2(px, py), 0, new b2Vec2(64/ptmRatio, 62/ptmRatio), new b2Vec2(1 * scale, -1 * scale), "assets/star.png", "assets/star.box2d-generic.plist", "star");
+                body = loadBody(world, BodyType.DYNAMIC, new Vec2(px, py), 0, new Vec2(64/ptmRatio, 62/ptmRatio), new Vec2(1 * scale, -1 * scale), "assets/star.png", "assets/star.box2d-generic.plist", "star");
             }
-    
+			
             if (!body)
                 return;
 
             // apply a random force
-            body.applyForceToCenter(new b2Vec2(Math.random()*2000-1000, Math.random()*2000-1000), true);
+            body.applyForceToCenter(new Vec2(Math.random()*2000-1000, Math.random()*2000-1000), true);
             body.applyTorque(Math.random()*2000-1000, true);
 
             // make less dense bodies be slightly transparent as if they were balloons
@@ -216,8 +218,8 @@ package
         {
 
             stage.scaleMode = StageScaleMode.NONE;
-
-            var bg = new Image(Texture.fromAsset("assets/bg.png"));
+			
+			var bg = new Image(Texture.fromAsset("assets/bg.png"));
             bg.x = 0;
             bg.y = 0;
             bg.width = stage.nativeStageWidth;
@@ -232,22 +234,22 @@ package
             // Create the world and set up gravity.
             // Earth (9.78), Moon (1.622), Mars (3.711), Venus (8.87)
             // Using a gravity vector pointing downwards on the screen.
-            var gravity:b2Vec2 = new b2Vec2(0, 9.78);
-            world = new b2World(gravity);
+            var gravity:Vec2 = new Vec2(0, 9.78);
+            world = new World(gravity);
 
             // stage in meters
             var mWidth:Number = stage.stageWidth/ptmRatio;
             var mHeight:Number = stage.stageHeight/ptmRatio;
 
             // create a ceiling and a floor (center, bottom) and two side walls (rotated CCW & CW by 90 degrees)
-            createBox(world, b2BodyType.STATIC, new b2Vec2(mWidth * 0.5, mHeight * 0.05), 0, new b2Vec2(mWidth * 0.75, mHeight * 0.05), "assets/rect.png", 1, 0.6, 0.3);
-            createBox(world, b2BodyType.STATIC, new b2Vec2(mWidth * 0.5, mHeight * 0.95), 0, new b2Vec2(mWidth * 0.75, mHeight * 0.05), "assets/rect.png", 1, 0.6, 0.3);
-            createBox(world, b2BodyType.STATIC, new b2Vec2(mWidth * 0.05, mHeight * 0.5), Math.PI/2, new b2Vec2(mHeight * 0.5, mHeight * 0.05), "assets/rect.png", 1, 0.6, 0.3);
-            createBox(world, b2BodyType.STATIC, new b2Vec2(mWidth * 0.95, mHeight * 0.5), 3*Math.PI/2, new b2Vec2(mHeight * 0.5, mHeight * 0.05), "assets/rect.png", 1, 0.6, 0.3);
+            createBox(world, BodyType.STATIC, new Vec2(mWidth * 0.5, mHeight * 0.05), 0, new Vec2(mWidth * 0.75, mHeight * 0.05), "assets/rect.png", 1, 0.6, 0.3);
+            createBox(world, BodyType.STATIC, new Vec2(mWidth * 0.5, mHeight * 0.95), 0, new Vec2(mWidth * 0.75, mHeight * 0.05), "assets/rect.png", 1, 0.6, 0.3);
+            createBox(world, BodyType.STATIC, new Vec2(mWidth * 0.05, mHeight * 0.5), Math.PI/2, new Vec2(mHeight * 0.5, mHeight * 0.05), "assets/rect.png", 1, 0.6, 0.3);
+            createBox(world, BodyType.STATIC, new Vec2(mWidth * 0.95, mHeight * 0.5), 3*Math.PI/2, new Vec2(mHeight * 0.5, mHeight * 0.05), "assets/rect.png", 1, 0.6, 0.3);
 
             // create a few static platforms at an angle
-            createBox(world, b2BodyType.STATIC, new b2Vec2(mWidth * 0.25, mHeight * 0.35), Math.PI/6, new b2Vec2(mWidth * 0.25, mHeight * 0.025), "assets/rect.png", 1, 0.6, 0.3);
-            createBox(world, b2BodyType.STATIC, new b2Vec2(mWidth * 0.75, mHeight * 0.35), -Math.PI/6, new b2Vec2(mWidth * 0.25, mHeight * 0.025), "assets/rect.png", 1, 0.6, 0.3);
+            createBox(world, BodyType.STATIC, new Vec2(mWidth * 0.25, mHeight * 0.35), Math.PI/6, new Vec2(mWidth * 0.25, mHeight * 0.025), "assets/rect.png", 1, 0.6, 0.3);
+            createBox(world, BodyType.STATIC, new Vec2(mWidth * 0.75, mHeight * 0.35), -Math.PI/6, new Vec2(mWidth * 0.25, mHeight * 0.025), "assets/rect.png", 1, 0.6, 0.3);
 
 
             // listen for touch and generate a new shape on touch
@@ -264,7 +266,17 @@ package
 
             // enable the simulation so that onFrame handles physics stepping
             simulationEnabled = true;
+			
+			var timer = new Timer(500);
+			timer.onComplete += spawn;
+			timer.start();
         }
+		
+		private function spawn(timer:Timer):void {
+			createRandomShape(500/ptmRatio, 100/ptmRatio);
+			timer.start();
+		}
+		
 
     }
 }

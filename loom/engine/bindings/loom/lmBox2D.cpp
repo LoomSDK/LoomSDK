@@ -295,7 +295,7 @@ static int registerLoomBox2D(lua_State *L)
 {
     beginPackage(L, "loom.box2d")
 
-        .beginClass<b2Vec2>("b2Vec2")
+        .beginClass<b2Vec2>("Vec2")
 
             .addConstructor<void (*)(float32, float32)>()
 
@@ -312,7 +312,7 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
 
-        .beginClass<b2MassData>("b2MassData")
+        .beginClass<b2MassData>("MassData")
 
             .addVar("mass", &b2MassData::mass)
             .addVar("center", &b2MassData::center)
@@ -320,7 +320,7 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
 
-        .beginClass<b2BodyDef>("b2BodyDef")
+        .beginClass<b2BodyDef>("BodyDef")
 
             .addConstructor <void (*)(void) >()
 
@@ -341,7 +341,7 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
 
-        .beginClass<b2JointDef>("b2JointDef")
+        .beginClass<b2JointDef>("JointDef")
 
             .addConstructor <void (*)(void) >()
 
@@ -353,7 +353,7 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
 
-        .beginClass<b2JointEdge>("b2JointEdge")
+        .beginClass<b2JointEdge>("JointEdge")
 
             .addConstructor <void (*)(void) >()
 
@@ -364,7 +364,7 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
 
-        .beginClass<b2FixtureDef>("b2FixtureDef")
+        .beginClass<b2FixtureDef>("FixtureDef")
 
             .addConstructor <void (*)(void) >()
 
@@ -378,7 +378,7 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
 
-        .beginClass<b2Shape>("b2Shape")
+        .beginClass<b2Shape>("Shape")
 
             .addVar("radius", &b2Shape::m_radius)
 
@@ -392,7 +392,7 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
 
-        .deriveClass<b2PolygonShape, b2Shape>("b2PolygonShape")
+        .deriveClass<b2PolygonShape, b2Shape>("PolygonShape")
 
             .addConstructor <void (*)(void) >()
 
@@ -400,13 +400,13 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()        
 
-        .deriveClass<b2CircleShape, b2Shape>("b2CircleShape")
+        .deriveClass<b2CircleShape, b2Shape>("CircleShape")
 
             .addConstructor <void (*)(void) >()
 
         .endClass()        
 
-        .beginClass<b2Fixture>("b2Fixture")
+        .beginClass<b2Fixture>("Fixture")
 
             .addMethod("getType", &b2Fixture::GetType)
             .addMethod("getShape", (b2Shape* (b2Fixture::*)())&b2Fixture::GetShape)
@@ -434,13 +434,13 @@ static int registerLoomBox2D(lua_State *L)
         .endClass()
 
         /*
-        .beginClass<b2ContactID>("b2ContactID")
+        .beginClass<b2ContactID>("ContactID")
 
             .addVar("key", &b2ContactID::key)
 
         .endClass()        
 
-        .beginClass<b2ManifoldPoint>("b2ManifoldPoint")
+        .beginClass<b2ManifoldPoint>("ManifoldPoint")
 
             .addVar("localPoint", &b2Manifold::localPoint)
             .addVar("normalImpulse", &b2Manifold::normalImpulse)
@@ -449,7 +449,7 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
 
-        .beginClass<b2Manifold>("b2Manifold")
+        .beginClass<b2Manifold>("Manifold")
 
             .addVar("type", (int b2Manifold::*)&b2Manifold::type)
             //.addVar("points", &b2Manifold::points)
@@ -460,7 +460,7 @@ static int registerLoomBox2D(lua_State *L)
         .endClass()
         */
 
-        .beginClass<b2Contact>("b2Contact")
+        .beginClass<b2Contact>("Contact")
 
             //.addMethod("getManifold", (b2Manifold* (b2Contact::*)())&b2Contact::GetManifold)
             //.addMethod("getWorldManifold", (b2Manifold* (b2Contact::*)())&b2Contact::GetWorldManifold)
@@ -484,7 +484,7 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
 
-        .beginClass<b2ContactEdge>("b2ContactEdge")
+        .beginClass<b2ContactEdge>("ContactEdge")
 
             .addConstructor <void (*)(void) >()
 
@@ -495,7 +495,7 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass() 
 
-        .beginClass<b2Body>("b2Body")
+        .beginClass<b2Body>("Body")
 
             .addMethod("createFixture", (b2Fixture* (b2Body::*)(const b2FixtureDef*))&b2Body::CreateFixture)
             .addMethod("destroyFixture", (void (b2Body::*)(b2Fixture*))&b2Body::DestroyFixture)
@@ -554,7 +554,7 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
 
-        .beginClass<b2Joint>("b2Joint")
+        .beginClass<b2Joint>("Joint")
 
             .addMethod("getType", &b2Joint::GetType)
             .addMethod("getBodyA", &b2Joint::GetBodyA)
@@ -573,7 +573,7 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
 
-        .beginClass<b2World>("b2World")
+        .beginClass<b2World>("World")
 
             .addConstructor<void (*)(b2Vec2&)>()
 
@@ -604,9 +604,9 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
     
-        .beginClass<b2ShapeCache>("b2ShapeCache")
+        .beginClass<b2ShapeCache>("ShapeCache")
 
-            .addStaticMethod("sharedB2ShapeCache", &b2ShapeCache::sharedB2ShapeCache)
+            .addStaticMethod("sharedShapeCache", &b2ShapeCache::sharedB2ShapeCache)
 
             .addMethod("reset", &b2ShapeCache::reset)
             .addMethod("addFixturesToBody", &b2ShapeCache::addFixturesToBody)
