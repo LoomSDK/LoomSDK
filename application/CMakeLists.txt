@@ -110,6 +110,14 @@ if (APPLE)
 
     if (LOOM_BUILD_IOS EQUAL 1)
 
+        # Allow Admob to be included for iOS?
+        if (LOOM_BUILD_ADMOB EQUAL 1)
+            target_link_libraries(${PROJECT_NAME} 
+                "-framework AdSupport"
+                ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a
+            )
+        endif()
+
         target_link_libraries(${PROJECT_NAME}
     
           ${LOOM_IOS_LIB_GCC}
@@ -137,7 +145,6 @@ if (APPLE)
           "-framework OpenGLES"
           "-framework MessageUI"
           "-framework SystemConfiguration"
-          "-framework AdSupport"
           "-framework CFNetwork"
 
           # For Audio
@@ -155,9 +162,6 @@ if (APPLE)
 
           # Parse (NOTE: Requires FacebookSDK)
           "-framework Parse -F ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios"
-
-          # Admob SDK
-          ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a
           "-ObjC"
           "-lc++"
           )

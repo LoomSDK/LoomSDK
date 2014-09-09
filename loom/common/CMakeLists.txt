@@ -17,7 +17,6 @@ if (APPLE)
             platform/platformFileIOS.mm
             platform/platformHTTPOSX.mm 
             platform/platformWebViewIOS.mm 
-            platform/platformAdMobIOS.mm
             platform/platformStoreiOS.mm
             platform/platformVideoiOS.mm
             platform/platformMobileiOS.mm
@@ -26,6 +25,14 @@ if (APPLE)
             platform/platformParseiOS.mm
             platform/EBPurchase.m
         )
+        
+        # Allow Admob to be included for iOS?
+        if(LOOM_BUILD_ADMOB EQUAL 1)
+            set (CPP_FILES ${CPP_FILES} 
+                platform/platformAdMobIOS.mm
+            )
+        endif()
+
     else()
         set (CPP_FILES ${CPP_FILES} 
             platform/platformFileIOS.mm

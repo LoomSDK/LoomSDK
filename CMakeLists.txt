@@ -41,6 +41,11 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/engine/CocosDenshion/include
     )
 
+# Allow Admob to be built into the SDK?
+if(LOOM_BUILD_ADMOB EQUAL 1)
+    add_definitions(-DLOOM_ALLOW_ADMOB)
+endif()
+
 if (LOOM_BUILD_JIT EQUAL 1)
 
     add_definitions(-DLOOM_ENABLE_JIT)

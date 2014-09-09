@@ -32,6 +32,9 @@ end
 # If 1, then we link against LuaJIT. If 0, we use classic Lua VM.
 $doBuildJIT=1
 
+# Whether or not to include Admob in the build... for Great Apple Compliance!
+$doBuildAdmob=1
+
 # Allow disabling Loom doc generation, as it can be very slow.
 # Disabled by default, set environment variable 'LOOM_BUILD_DOCS'
 $buildDocs = ENV['LOOM_BUILD_DOCS'] == "1" || ENV['LOOM_BUILD_DOCS'] == "true"
@@ -217,7 +220,7 @@ namespace :generate do
   task :xcode_osx do
     FileUtils.mkdir_p("cmake_osx")    
     Dir.chdir("cmake_osx") do
-      sh "cmake ../ -G Xcode -DLOOM_BUILD_JIT=#{$doBuildJIT} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine}"
+      sh "cmake ../ -G Xcode -DLOOM_BUILD_JIT=#{$doBuildJIT} -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLOOM_BUILD_ADMOB=#{$doBuildAdmob} #{$buildDebugDefine}"
     end
   end
 
@@ -225,7 +228,7 @@ namespace :generate do
   task :xcode_ios do
     FileUtils.mkdir_p("cmake_ios")
     Dir.chdir("cmake_ios") do
-      sh "cmake ../ -G Xcode -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_IOS_VERSION=#{$targetIOSSDK} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine}"
+      sh "cmake ../ -G Xcode -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_IOS_VERSION=#{$targetIOSSDK} -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLOOM_BUILD_ADMOB=#{$doBuildAdmob} #{$buildDebugDefine}"
     end
   end
 
@@ -233,7 +236,7 @@ namespace :generate do
   task :vs2010 do
     FileUtils.mkdir_p("cmake_msvc")
     Dir.chdir("cmake_msvc") do
-      sh "cmake .. -G \"Visual Studio 10\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_BUILD_NUMCORES=#{$numCores} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine}"
+      sh "cmake .. -G \"Visual Studio 10\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_BUILD_NUMCORES=#{$numCores} -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLOOM_BUILD_ADMOB=#{$doBuildAdmob} #{$buildDebugDefine}"
     end
   end
 
@@ -241,7 +244,7 @@ namespace :generate do
   task :vs2012 do
     FileUtils.mkdir_p("cmake_msvc")
     Dir.chdir("cmake_msvc") do
-      sh "cmake .. -G \"Visual Studio 11\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_BUILD_NUMCORES=#{$numCores} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine}"
+      sh "cmake .. -G \"Visual Studio 11\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_BUILD_NUMCORES=#{$numCores} -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLOOM_BUILD_ADMOB=#{$doBuildAdmob} #{$buildDebugDefine}"
     end
   end
 
@@ -249,7 +252,7 @@ namespace :generate do
   task :makefiles_ubuntu do
     FileUtils.mkdir_p("cmake_ubuntu")    
     Dir.chdir("cmake_ubuntu") do
-      sh "cmake ../ -G \"Unix Makefiles\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine}"
+      sh "cmake ../ -G \"Unix Makefiles\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLOOM_BUILD_ADMOB=#{$doBuildAdmob} #{$buildDebugDefine}"
     end
   end
 
@@ -495,7 +498,7 @@ namespace :build do
       puts "== Building OS X =="
       FileUtils.mkdir_p("cmake_osx")    
       Dir.chdir("cmake_osx") do
-        sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine}"
+        sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLOOM_BUILD_ADMOB=#{$doBuildAdmob} #{$buildDebugDefine}"
         sh "xcodebuild -configuration #{$buildTarget}"
       end
       
@@ -557,7 +560,7 @@ namespace :build do
 
       # TODO: Find a way to resolve resources in xcode for ios.
       Dir.chdir("cmake_ios") do
-        sh "cmake ../ -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} -G Xcode"
+        sh "cmake ../ -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_IOS_VERSION=#{$targetIOSSDK} -DLOOM_BUILD_ADMOB=#{$doBuildAdmob} #{$buildDebugDefine} -G Xcode"
         sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\""
       end
 
@@ -668,7 +671,7 @@ namespace :build do
       # OSX / LINUX
       FileUtils.mkdir_p("cmake_android")
       Dir.chdir("cmake_android") do
-        sh "cmake -DCMAKE_TOOLCHAIN_FILE=../build/cmake/loom.android.toolchain.cmake #{$buildDebugDefine} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} .."
+        sh "cmake -DCMAKE_TOOLCHAIN_FILE=../build/cmake/loom.android.toolchain.cmake #{$buildDebugDefine} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLOOM_BUILD_ADMOB=#{$doBuildAdmob} .."
         sh "make -j#{$numCores}"
       end
       
@@ -755,7 +758,7 @@ namespace :build do
     puts "== Building Ubuntu =="
     FileUtils.mkdir_p("cmake_ubuntu")    
     Dir.chdir("cmake_ubuntu") do
-      sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -G \"Unix Makefiles\" -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine}"
+      sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -G \"Unix Makefiles\" -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLOOM_BUILD_ADMOB=#{$doBuildAdmob} #{$buildDebugDefine}"
       sh "make -j#{$numCores}"
     end
     
