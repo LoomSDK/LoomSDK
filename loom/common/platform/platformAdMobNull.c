@@ -21,7 +21,8 @@
 #include "platformAdMob.h"
 #include "platform.h"
 
-#if LOOM_PLATFORM != LOOM_PLATFORM_IOS && LOOM_PLATFORM != LOOM_PLATFORM_ANDROID
+
+#if !LOOM_ALLOW_ADMOB || (LOOM_PLATFORM != LOOM_PLATFORM_IOS && LOOM_PLATFORM != LOOM_PLATFORM_ANDROID)
 
 loom_adMobHandle platform_adMobCreate(const char *publisherID, loom_adMobBannerSize size)
 {

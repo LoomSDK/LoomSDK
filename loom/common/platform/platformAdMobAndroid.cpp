@@ -21,7 +21,7 @@
 #include "platformAdMob.h"
 #include "platform.h"
 
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+#if LOOM_ALLOW_ADMOB && (LOOM_PLATFORM == LOOM_PLATFORM_ANDROID)
 
 #include <jni.h>
 #include "platformAndroidJni.h"
