@@ -7,7 +7,6 @@ project(LoomVendor)
 include_directories(
     ${LOOM_INCLUDE_FOLDERS}
     telemetry-01052012/include
-    chipmunk-physics/include/chipmunk
     jemalloc-3.4.0/include
     openal-soft/include
     openal-soft/OpenAL32/Include
@@ -358,75 +357,6 @@ set (LIBCURL_HDR
 
 )
 
-
-set (CHIPMUNK_SRC
-
-    chipmunk-physics/src/chipmunk.c
-    chipmunk-physics/src/cpArbiter.c
-    chipmunk-physics/src/cpArray.c
-    chipmunk-physics/src/cpBB.c
-    chipmunk-physics/src/cpBBTree.c
-    chipmunk-physics/src/cpBody.c
-    chipmunk-physics/src/cpCollision.c
-    chipmunk-physics/src/cpHashSet.c
-    chipmunk-physics/src/cpPolyShape.c
-    chipmunk-physics/src/cpShape.c
-    chipmunk-physics/src/cpSpace.c
-    chipmunk-physics/src/cpSpaceComponent.c
-    chipmunk-physics/src/cpSpaceHash.c
-    chipmunk-physics/src/cpSpaceQuery.c
-    chipmunk-physics/src/cpSpaceStep.c
-    chipmunk-physics/src/cpSpatialIndex.c
-    chipmunk-physics/src/cpSweep1D.c
-    chipmunk-physics/src/cpVect.c
-    
-    chipmunk-physics/src/constraints/cpConstraint.c
-    chipmunk-physics/src/constraints/cpDampedRotarySpring.c
-    chipmunk-physics/src/constraints/cpDampedSpring.c
-    chipmunk-physics/src/constraints/cpGearJoint.c
-    chipmunk-physics/src/constraints/cpGrooveJoint.c
-    chipmunk-physics/src/constraints/cpPinJoint.c
-    chipmunk-physics/src/constraints/cpPivotJoint.c
-    chipmunk-physics/src/constraints/cpRatchetJoint.c
-    chipmunk-physics/src/constraints/cpRotaryLimitJoint.c
-    chipmunk-physics/src/constraints/cpSimpleMotor.c
-    chipmunk-physics/src/constraints/cpSlideJoint.c
-
-)
-
-set (CHIPMUNK_HDR
-
-    chipmunk-physics/src/prime.h
-    
-    chipmunk-physics/include/chipmunk/chipmunk.h
-    chipmunk-physics/include/chipmunk/chipmunk_ffi.h
-    chipmunk-physics/include/chipmunk/chipmunk_private.h
-    chipmunk-physics/include/chipmunk/chipmunk_types.h
-    chipmunk-physics/include/chipmunk/chipmunk_unsafe.h
-    chipmunk-physics/include/chipmunk/cpArbiter.h
-    chipmunk-physics/include/chipmunk/cpBB.h
-    chipmunk-physics/include/chipmunk/cpBody.h
-    chipmunk-physics/include/chipmunk/cpPolyShape.h
-    chipmunk-physics/include/chipmunk/cpShape.h
-    chipmunk-physics/include/chipmunk/cpSpace.h
-    chipmunk-physics/include/chipmunk/cpSpatialIndex.h
-    chipmunk-physics/include/chipmunk/cpVect.h
-    
-    chipmunk-physics/include/chipmunk/constraints/cpConstraint.h
-    chipmunk-physics/include/chipmunk/constraints/cpDampedRotarySpring.h
-    chipmunk-physics/include/chipmunk/constraints/cpDampedSpring.h
-    chipmunk-physics/include/chipmunk/constraints/cpGearJoint.h
-    chipmunk-physics/include/chipmunk/constraints/cpGrooveJoint.h
-    chipmunk-physics/include/chipmunk/constraints/cpPinJoint.h
-    chipmunk-physics/include/chipmunk/constraints/cpPivotJoint.h
-    chipmunk-physics/include/chipmunk/constraints/cpRatchetJoint.h
-    chipmunk-physics/include/chipmunk/constraints/cpRotaryLimitJoint.h
-    chipmunk-physics/include/chipmunk/constraints/cpSimpleMotor.h
-    chipmunk-physics/include/chipmunk/constraints/cpSlideJoint.h
-    chipmunk-physics/include/chipmunk/constraints/util.h
-
-)
-
 set (JANSSONROOT ${CMAKE_CURRENT_SOURCE_DIR}/jansson)
 
 set (JANSSON_SRC
@@ -734,7 +664,7 @@ else()
 endif()
 
 
-SET_SOURCE_FILES_PROPERTIES( ${CHIPMUNK_SRC} PROPERTIES LANGUAGE CXX)
+SET_SOURCE_FILES_PROPERTIES( PROPERTIES LANGUAGE CXX)
 
 set (ALL_FILES
     ${BOX2D_HDR} ${BOX2D_SRC}
@@ -742,7 +672,6 @@ set (ALL_FILES
     ${SEATEST_HDR} ${SEATEST_SRC} 
     ${STB_HDR} ${STB_SRC} 
     ${JANSSON_HDR} ${JANSSON_SRC} 
-    ${CHIPMUNK_HDR} ${CHIPMUNK_SRC} 
     ${LUA_HDR} ${LUA_SRC} 
     ${GLEW_HDR} ${GLEW_SRC}
     ${GELDREICH_HDR} ${GELDREICH_SRC}

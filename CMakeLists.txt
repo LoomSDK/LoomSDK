@@ -25,7 +25,6 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/stb
     ${CMAKE_SOURCE_DIR}/loom/vendor/minimp3
     ${CMAKE_SOURCE_DIR}/loom/vendor/smslib
-    ${CMAKE_SOURCE_DIR}/loom/vendor/chipmunk-physics/include
     ${CMAKE_SOURCE_DIR}/loom/vendor/geldreich
     ${CMAKE_SOURCE_DIR}/loom/vendor/jansson
     ${CMAKE_SOURCE_DIR}/loom/vendor/admob/include

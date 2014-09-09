@@ -94,9 +94,6 @@ set (ENGINE_SRC
     cocos2dx/loom/CCLoomLog.cpp
     cocos2dx/loom/CCLoomCocos2D.cpp
     
-    physics/lsPhysics.cpp
-    physics/lsPhysicsPackage.cpp
-
     sound/lsSound.cpp
     sound/lsSoundPackage.cpp
 )
