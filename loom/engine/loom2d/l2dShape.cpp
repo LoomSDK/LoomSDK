@@ -30,9 +30,10 @@ Type *Shape::typeShape = NULL;
 
 void VectorPath::render(lua_State *L) {
 	int ci = 0;
+	int commandNum = commands.size();
 	int di = 0;
 	float x, y, c1x, c1y, c2x, c2y;
-	while (ci < commandIndex) {
+	while (ci < commandNum) {
 		switch (commands[ci++]) {
 			case MOVE_TO:
 				// If we don't store it in vars first, the arguments get swapped?
@@ -56,43 +57,39 @@ void VectorPath::render(lua_State *L) {
 				break;
 		}
 	}
+	GFX::VectorRenderer::renderStroke();
 }
 
 void VectorPath::moveTo(float x, float y) {
-	lmAssert(commandIndex < MAXCOMMANDS, "Too many Shape commands added");
-	lmAssert(dataIndex + 1 < MAXDATA, "Too much Shape data added");
-	commands[commandIndex++] = MOVE_TO;
-	data[dataIndex++] = x;
-	data[dataIndex++] = y;
+	commands.push_back(MOVE_TO);
+	data.push_back(x);
+	data.push_back(y);
 }
 void VectorPath::lineTo(float x, float y) {
-	lmAssert(commandIndex < MAXCOMMANDS, "Too many Shape commands added");
-	lmAssert(dataIndex + 1 < MAXDATA, "Too much Shape data added");
-	commands[commandIndex++] = LINE_TO;
-	data[dataIndex++] = x;
-	data[dataIndex++] = y;
+	commands.push_back(LINE_TO);
+	data.push_back(x);
+	data.push_back(y);
 }
 void VectorPath::cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY) {
-	lmAssert(commandIndex < MAXCOMMANDS, "Too many Shape commands added");
-	lmAssert(dataIndex + 1 < MAXDATA, "Too much Shape data added");
-	commands[commandIndex++] = CUBIC_CURVE_TO;
-	data[dataIndex++] = controlX1;
-	data[dataIndex++] = controlY1;
-	data[dataIndex++] = controlX2;
-	data[dataIndex++] = controlY2;
-	data[dataIndex++] = anchorX;
-	data[dataIndex++] = anchorY;
+	commands.push_back(CUBIC_CURVE_TO);
+	data.push_back(controlX1);
+	data.push_back(controlY1);
+	data.push_back(controlX2);
+	data.push_back(controlY2);
+	data.push_back(anchorX);
+	data.push_back(anchorY);
 }
 
 void VectorShape::render(lua_State *L) {
+	GFX::VectorRenderer::clearPath();
 	switch (type) {
 		case CIRCLE:     GFX::VectorRenderer::circle(x, y, a); break;
 		case ELLIPSE:    GFX::VectorRenderer::ellipse(x, y, a, b); break;
 		case RECT:       GFX::VectorRenderer::rect(x, y, a, b); break;
 		case ROUND_RECT: GFX::VectorRenderer::roundRect(x, y, a, b, c); break;
 	}
+	GFX::VectorRenderer::renderStroke();
 }
-
 
 VectorPath* Shape::getPath() {
 	VectorPath* path = lastPath;
@@ -107,6 +104,17 @@ VectorPath* Shape::getPath() {
 	return path;
 }
 
+
+void VectorLineStyle::render(lua_State *L) {
+	GFX::VectorRenderer::clearPath();
+	GFX::VectorRenderer::strokeWidth(thickness);
+	float r = ((color >> 16) & 0xff) / 255.0f;
+	float g = ((color >> 8) & 0xff) / 255.0f;
+	float b = ((color >> 0) & 0xff) / 255.0f;
+	GFX::VectorRenderer::strokeColor(r, g, b, alpha);
+}
+
+
 void Shape::clear() {
 	utArray<VectorData*>::Iterator it = queue->iterator();
 	while (it.hasMoreElements()) {
@@ -114,7 +122,22 @@ void Shape::clear() {
 		delete d;
 	}
 	queue->clear();
-	if (lastPath) lastPath = NULL;
+	lastPath = NULL;
+}
+
+void Shape::lineStyle(float thickness, unsigned int color, float alpha) {
+	queue->push_back(new VectorLineStyle(thickness, color, alpha));
+	if (lastPath) {
+		int dataNum = lastPath->data.size();
+		if (dataNum >= 2) {
+			float x = lastPath->data[dataNum-2];
+			float y = lastPath->data[dataNum-1];
+			lastPath = NULL;
+			moveTo(x, y);
+		} else {
+			lastPath = NULL;
+		}
+	}
 }
 
 void Shape::moveTo(float x, float y) {

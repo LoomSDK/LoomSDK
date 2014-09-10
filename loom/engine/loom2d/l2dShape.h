@@ -41,13 +41,11 @@ enum VectorPathCommand {
 };
 
 class VectorPath : public VectorData {
-protected:
-	VectorPathCommand commands[MAXCOMMANDS];
-	int commandIndex = 0;
-	float data[MAXDATA];
-	int dataIndex = 0;
 
 public:
+	utArray<VectorPathCommand> commands;
+	utArray<float> data;
+
 	void moveTo(float x, float y);
 	void lineTo(float x, float y);
 	void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);
@@ -77,6 +75,19 @@ public:
 	virtual void render(lua_State *L);
 };
 
+class VectorLineStyle : public VectorData {
+protected:
+	float thickness;
+	unsigned int color;
+	float alpha;
+
+public:
+	VectorLineStyle(float thickness, unsigned int color, float alpha) : thickness(thickness), color(color), alpha(alpha) {};
+
+	virtual void render(lua_State *L);
+};
+
+
 class Shape : public DisplayObject
 {
 protected:
@@ -101,6 +112,8 @@ public:
     void render(lua_State *L);
 
 	void clear();
+	void lineStyle(float thickness, unsigned int color, float alpha);
+	void strokeColor(float r, float g, float b, float a);
 	void moveTo(float x, float y);
 	void lineTo(float x, float y);
 	void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);

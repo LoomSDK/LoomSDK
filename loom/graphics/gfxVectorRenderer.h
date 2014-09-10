@@ -53,6 +53,12 @@ public:
 
 	static void preDraw(float a, float b, float c, float d, float e, float f);
 	static void postDraw();
+	
+	static void clearPath();
+	static void renderStroke();
+
+	static void strokeWidth(float size);
+	static void strokeColor(float r, float g, float b, float a);
 
 	static void moveTo(float x, float y);
 	static void lineTo(float x, float y);

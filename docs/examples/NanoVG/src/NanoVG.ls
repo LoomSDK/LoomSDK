@@ -42,28 +42,41 @@ package
             
             var q:Quad;
             //*
+            /*
             q = new Quad(200, 200, 0xBDC5F9); q.x = 10; q.y = 10; stage.addChild(q);
             q = new Quad(200, 200, 0xA8B1F7); q.x = 40; q.y = 40; stage.addChild(q);
-            
             q = new Quad(200, 200, 0x8A98F4); q.x = 80; q.y = 80; stage.addChild(q);
+            q = new Quad(200, 200, 0x596CF0); q.x = 120; q.y = 120; stage.addChild(q);
+            */
             
             gfx = new Shape();
             gfx.x = 100;
             gfx.y = 50;
-            gfx.moveTo(0, 0);
-            gfx.lineTo(50, 0);
-            gfx.lineTo(0, 50);
-            gfx.clear();
-            gfx.moveTo(0, 0);
-            gfx.lineTo(50, -50);
-            gfx.cubicCurveTo(0, 0, 20, 20, 50, 50);
+            
+            //gfx.moveTo(0, 0);
+            //gfx.lineTo(50, 0);
+            //gfx.lineTo(0, 50);
+            //gfx.clear();
+            //gfx.moveTo(0, 0);
+            //gfx.lineTo(50, -50);
+            //gfx.cubicCurveTo(0, 0, 20, 20, 50, 50);
+            
+            gfx.moveTo(10, 40);
+            gfx.lineTo(40, 40);
+            gfx.drawCircle(40, 40, 20);
+            gfx.lineTo(40, 80);
+            
+            gfx.lineStyle(10, 0xF1AD0E, 1);
+            gfx.moveTo(50, 50);
+            gfx.lineTo(100, 50);
+            gfx.lineStyle(20, 0x0B0BF4, 0.5);
+            gfx.lineTo(100, 100);
+            gfx.lineTo(50, 100);
+            
             stage.addChild(gfx);
-            
-            
-            q = new Quad(200, 200, 0x596CF0); q.x = 120; q.y = 120; stage.addChild(q);
             //*/
             
-            stage.addEventListener(TouchEvent.TOUCH, onTouch);
+            //stage.addEventListener(TouchEvent.TOUCH, onTouch);
             
         }
         
@@ -76,6 +89,7 @@ package
         
         override public function onFrame() 
         {
+            /*
             var t = Loom2D.juggler.elapsedTime;
             gfx.clear();
             gfx.moveTo(0, 0);
@@ -85,6 +99,7 @@ package
             gfx.drawRect(80, 0, 40, 60);
             gfx.drawRoundRect(140, 0, 40, 60, 10, 10);
             return super.onFrame();
+            */
         }
         
     }

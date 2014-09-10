@@ -199,7 +199,7 @@ void nvgFillPaint(struct NVGcontext* ctx, struct NVGpaint paint);
 // Miter limit controls when a sharp corner is beveled.
 void nvgMiterLimit(struct NVGcontext* ctx, float limit);
 
-// Sets the stroke witdth of the stroke style.
+// Sets the stroke width of the stroke style.
 void nvgStrokeWidth(struct NVGcontext* ctx, float size);
 
 // Sets how the end of the line (cap) is drawn,

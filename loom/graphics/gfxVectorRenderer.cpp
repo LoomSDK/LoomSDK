@@ -86,31 +86,40 @@ void VectorRenderer::setSize(int width, int height) {
 void VectorRenderer::beginFrame()
 {
 	nvgBeginFrame(nvg, frameWidth, frameHeight, 1, NVG_STRAIGHT_ALPHA);
-
-	nvgSave(nvg);
-
-	nvgLineCap(nvg, NVG_BUTT);
-	nvgLineJoin(nvg, NVG_ROUND);
-
-	nvgStrokeWidth(nvg, 10);
-	nvgStrokeColor(nvg, nvgRGBA(0, 255, 0, 160));
-	nvgBeginPath(nvg);
 }
 
 void VectorRenderer::preDraw(float a, float b, float c, float d, float e, float f) {
 	nvgSave(nvg);
 	nvgTransform(nvg, a, b, c, d, e, f);
+
+	nvgBeginPath(nvg);
+
+	nvgLineCap(nvg, NVG_BUTT);
+	nvgLineJoin(nvg, NVG_ROUND);
+	nvgStrokeWidth(nvg, 1);
+	nvgStrokeColor(nvg, nvgRGBA(0, 0, 0, 0xFF));
 }
 
 void VectorRenderer::postDraw() {
+	/*
+	nvgBeginPath(nvg);
+	nvgStrokeColor(nvg, nvgRGBAf(0, 1, 0, 1));
+	nvgMoveTo(nvg, 150, 150);
+	nvgLineTo(nvg, 250, 150);
+	nvgStroke(nvg);
+	
+	nvgBeginPath(nvg);
+	nvgStrokeColor(nvg, nvgRGBAf(1, 0, 0, 1));
+	nvgMoveTo(nvg, 150, 180);
+	nvgLineTo(nvg, 250, 180);
+	nvgStroke(nvg);
+	*/
+
 	nvgRestore(nvg);
 }
 
 void VectorRenderer::endFrame()
 {
-	nvgStroke(nvg);
-
-	nvgRestore(nvg);
 
 	//drawLabel(nvg, utf8("Hello nanovg! Pokakaj se v hlače. あなたのズボンをうんち。便便在裤子上"), 10, 50, 280, 20);
 
@@ -118,6 +127,20 @@ void VectorRenderer::endFrame()
 
 }
 
+void VectorRenderer::clearPath() {
+	nvgBeginPath(nvg);
+}
+void VectorRenderer::renderStroke() {
+	nvgStroke(nvg);
+}
+
+void VectorRenderer::strokeWidth(float size) {
+	nvgStrokeWidth(nvg, size);
+}
+
+void VectorRenderer::strokeColor(float r, float g, float b, float a) {
+	nvgStrokeColor(nvg, nvgRGBAf(r, g, b, a));
+}
 
 
 void VectorRenderer::moveTo(float x, float y) {
