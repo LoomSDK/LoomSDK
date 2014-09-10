@@ -15,7 +15,7 @@ package
 
     public class NanoVG extends Application
     {
-        private var gfx:Shape;
+        private var g:Shape;
         override public function run():void
         {
             // Comment out this line to turn off automatic scaling.
@@ -49,9 +49,12 @@ package
             q = new Quad(200, 200, 0x596CF0); q.x = 120; q.y = 120; stage.addChild(q);
             */
             
-            gfx = new Shape();
-            gfx.x = 100;
-            gfx.y = 50;
+            q = new Quad(400, 300, 0xBDC5F9); q.x = 10; q.y = 10; stage.addChild(q);
+            
+            g = new Shape();
+            g.x = 50;
+            g.y = 50;
+            stage.addChild(g);
             
             //gfx.moveTo(0, 0);
             //gfx.lineTo(50, 0);
@@ -60,7 +63,7 @@ package
             //gfx.moveTo(0, 0);
             //gfx.lineTo(50, -50);
             //gfx.cubicCurveTo(0, 0, 20, 20, 50, 50);
-            
+            /*
             gfx.moveTo(10, 40);
             gfx.lineTo(40, 40);
             gfx.drawCircle(40, 40, 20);
@@ -72,8 +75,61 @@ package
             gfx.lineStyle(20, 0x0B0BF4, 0.5);
             gfx.lineTo(100, 100);
             gfx.lineTo(50, 100);
+            */
             
-            stage.addChild(gfx);
+            
+            var x = 0, y = 0;
+            
+            // Fill
+            g.beginFill(0x3EA80B, 1);
+            g.drawRect(110, y, 100, 30);
+            g.endFill();
+            y += 40;
+            
+            g.lineStyle(1, 0x000000, 1);
+            
+            // Implicit moveTo(0,0)
+            g.lineTo(100, 0);
+            
+            // Explicit moveTo
+            g.moveTo(0, 0);
+            g.lineTo(0, 100);
+            
+            // Shape rendering
+            g.drawCircle(50, 50, 50);
+            g.drawEllipse(50, 50, 20, 50);
+            g.drawRect(25, 25, 50, 50);
+            g.drawRoundRect(35, 35, 30, 30, 10, 10);
+            
+            // Mixed line and shape rendering
+            g.moveTo(100, 0);
+            g.lineTo(100, 100);
+            g.drawCircle(50, 50, 40);
+            
+            return;
+            g.lineTo(0, 100);
+            
+            // Line styles
+            g.lineStyle(1, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
+            g.lineStyle(8, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
+            g.lineStyle(8, 0x0000FF, 0.5); g.moveTo(110, y); g.lineTo(210, y); y += 10;
+            g.lineStyle(8, 0x0000FF, 0.1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
+            
+            // Continuous line style switching
+            g.lineStyle(8, 0x0000FF, 0.1);
+            x = 110;
+            g.moveTo(x, y); x += 10;
+            g.lineStyle(8, 0x000000, 1); g.lineTo(x, y); x += 10;
+            g.lineStyle(8, 0xFF0000, 1); g.lineTo(x, y); x += 10;
+            g.lineStyle(8, 0xFF7F00, 1); g.lineTo(x, y); x += 10;
+            g.lineStyle(8, 0xFFFF00, 1); g.lineTo(x, y); x += 10;
+            g.lineStyle(8, 0x00FF00, 1); g.lineTo(x, y); x += 10;
+            g.lineStyle(8, 0x0000FF, 1); g.lineTo(x, y); x += 10;
+            g.lineStyle(8, 0x4B0082, 1); g.lineTo(x, y); x += 10;
+            g.lineStyle(8, 0x8B00FF, 1); g.lineTo(x, y); x += 10;
+            g.lineStyle(8, 0x8F8F8F, 1); g.lineTo(x, y); x += 10;
+            g.lineStyle(8, 0xFFFFFF, 1); g.lineTo(x, y); x += 10;
+            
             //*/
             
             //stage.addEventListener(TouchEvent.TOUCH, onTouch);
@@ -84,7 +140,7 @@ package
         {
             var t:Touch = e.getTouch(stage, TouchPhase.BEGAN);
             if (!t) return;
-            gfx.lineTo(t.globalX, t.globalY);
+            g.lineTo(t.globalX, t.globalY);
         }
         
         override public function onFrame() 

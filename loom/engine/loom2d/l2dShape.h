@@ -25,10 +25,12 @@
 namespace Loom2D
 {
 
+class Shape;
+
 class VectorData {
 	public:
 		virtual ~VectorData() {}
-		virtual void render(lua_State *L) = 0;
+		virtual void render(lua_State *L, Shape* g) = 0;
 };
 
 #define MAXCOMMANDS 20
@@ -50,7 +52,7 @@ public:
 	void lineTo(float x, float y);
 	void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);
 
-	virtual void render(lua_State *L);
+	virtual void render(lua_State *L, Shape* g);
 };
 
 enum VectorShapeType {
@@ -72,19 +74,40 @@ protected:
 public:
 	VectorShape(VectorShapeType type, float x, float y, float a = 0.0, float b = 0.0, float c = 0.0) : type(type), x(x), y(y), a(a), b(b), c(c) {};
 
-	virtual void render(lua_State *L);
+	virtual void render(lua_State *L, Shape* g);
 };
 
+
 class VectorLineStyle : public VectorData {
-protected:
+public:
 	float thickness;
 	unsigned int color;
 	float alpha;
 
-public:
+	VectorLineStyle() {
+		thickness = NAN;
+		color = 0x000000;
+		alpha = 1;
+	}
 	VectorLineStyle(float thickness, unsigned int color, float alpha) : thickness(thickness), color(color), alpha(alpha) {};
 
-	virtual void render(lua_State *L);
+	virtual void render(lua_State *L, Shape* g);
+};
+
+class VectorFill : public VectorData {
+public:
+	bool active;
+	unsigned int color;
+	float alpha;
+
+	VectorFill() {
+		active = false;
+	}
+	VectorFill(unsigned int color, float alpha) : color(color), alpha(alpha) {
+		active = true;
+	};
+
+	virtual void render(lua_State *L, Shape* g);
 };
 
 
@@ -93,14 +116,16 @@ class Shape : public DisplayObject
 protected:
 	VectorPath* getPath();
 	void addShape(VectorShape *shape);
+	void restartPath();
 
 public:
 
     static Type *typeShape;
 
 	utArray<VectorData*> *queue;
-
 	VectorPath *lastPath;
+	VectorLineStyle currentLineStyle;
+	VectorFill currentFill;
 
 	Shape()
 	{
@@ -109,11 +134,15 @@ public:
 		lastPath = NULL;
 	}
 
+	bool isStyleVisible();
+	void flushPath();
+
     void render(lua_State *L);
 
 	void clear();
 	void lineStyle(float thickness, unsigned int color, float alpha);
-	void strokeColor(float r, float g, float b, float a);
+	void beginFill(unsigned int color, float alpha);
+	void endFill();
 	void moveTo(float x, float y);
 	void lineTo(float x, float y);
 	void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);

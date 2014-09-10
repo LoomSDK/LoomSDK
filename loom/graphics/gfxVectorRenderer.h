@@ -56,9 +56,12 @@ public:
 	
 	static void clearPath();
 	static void renderStroke();
+	static void renderFill();
 
 	static void strokeWidth(float size);
 	static void strokeColor(float r, float g, float b, float a);
+
+	static void fillColor(float r, float g, float b, float a);
 
 	static void moveTo(float x, float y);
 	static void lineTo(float x, float y);
