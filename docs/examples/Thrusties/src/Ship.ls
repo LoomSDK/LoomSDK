@@ -1,14 +1,12 @@
 package
 {
-	import loom.physics.Physics;
-	import loom.physics.PhysicsBall;
-	import loom.sound.Sound;
-	import loom2d.display.Image;
-	import loom2d.display.Sprite;
-	import loom2d.display.Stage;
-	import loom2d.math.Matrix;
-	import loom2d.math.Point;
-	import loom2d.textures.Texture;
+    import loom.sound.Sound;
+    import loom2d.display.Image;
+    import loom2d.display.Sprite;
+    import loom2d.display.Stage;
+    import loom2d.math.Matrix;
+    import loom2d.math.Point;
+    import loom2d.textures.Texture;
 	
 	/**
 	 * Runs all the spaceship-related simulation and logic - the main part.

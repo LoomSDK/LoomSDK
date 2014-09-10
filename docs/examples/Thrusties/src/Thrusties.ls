@@ -1,19 +1,12 @@
 package
 {
-	import feathers.display.TiledImage;
-	import loom.Application;
-	import loom.physics.Physics;
-	import loom.physics.PhysicsBall;
-	import loom.utils.Injector;
-	import loom2d.display.Stage;
-	import loom2d.display.StageScaleMode;
-	import loom2d.display.Image;
-	import loom2d.events.Event;
-	import loom2d.events.Touch;
-	import loom2d.events.TouchEvent;
-	import loom2d.textures.Texture;
-	import loom2d.ui.SimpleLabel;
-	import system.Void;
+    import feathers.display.TiledImage;
+    import loom.Application;
+    import loom2d.display.StageScaleMode;
+    import loom2d.events.Event;
+    import loom2d.events.Touch;
+    import loom2d.events.TouchEvent;
+    import loom2d.textures.Texture;
 	
 	/**
 	* Main entry class that mostly just handles initialization and events.
