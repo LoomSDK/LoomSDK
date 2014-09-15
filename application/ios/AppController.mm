@@ -87,9 +87,11 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
     [[UIApplication sharedApplication] setStatusBarHidden: YES];
     
     // Parse setup for Push Notifications
+    parse = nil;
+#if LOOM_ALLOW_FACEBOOK
     parse = [[ParseAPIiOS alloc] init];
     [parse initialize];
-
+#endif
     cocos2d::CCApplication::sharedApplication().run();
     
     return YES;
@@ -113,6 +115,7 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
     }
     else
     {
+#if LOOM_ALLOW_FACEBOOK
         //Facebook Scheme Launch?
         NSString *app_id = [mainBundle objectForInfoDictionaryKey:@"FacebookAppID"];
         if((app_id != nil) && ([app_id isEqualToString:@""] == FALSE))
@@ -125,6 +128,7 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
                 return [FBSession.activeSession handleOpenURL:url];
             }
         }
+#endif
     }
     return YES;
 }
@@ -168,7 +172,7 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
      */
     cocos2d::CCDirector::sharedDirector()->resume();
 
-
+#if LOOM_ALLOW_FACEBOOK
     // Handle the user leaving the app while the Facebook login dialog is being shown
     // For example: when the user presses the iOS "home" button while the login dialog is active
     NSBundle *mainBundle = [NSBundle mainBundle];
@@ -178,6 +182,7 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
         NSLog(@"---------Application Did Become Active: Notifying Facebook");
         [FBAppCall handleDidBecomeActive];    
     }
+#endif
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {

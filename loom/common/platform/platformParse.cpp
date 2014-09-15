@@ -20,7 +20,7 @@
 
 #include "loom/common/platform/platform.h"
 
-#if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_IOS
+#if !LOOM_ALLOW_FACEBOOK || (LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_IOS)
 
 ///Null Parse class for all non-Mobile platforms
 

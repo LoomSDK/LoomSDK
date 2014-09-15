@@ -21,7 +21,7 @@
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformFacebook.h"
 
-#if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_IOS
+#if !LOOM_ALLOW_FACEBOOK || (LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_IOS)
 
 ///The NULL Facebook implementation
 
