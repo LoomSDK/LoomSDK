@@ -925,8 +925,8 @@ public:
         lua_rawseti(L, 1, LSINDEXVECTOR);
         lsr_vector_set_length(L, 1, _sortVectorLength);
 
-		lua_pushvalue(L, 1); // return the existing vector table
-		delete [] indices;
+        lua_pushvalue(L, 1); // return the existing vector table
+        delete [] indices;
 
         return 1;
     }

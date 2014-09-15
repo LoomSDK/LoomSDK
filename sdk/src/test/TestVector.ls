@@ -288,7 +288,7 @@ class TestVector extends Test
         assert(iv[3] == 4);
         assert(iv[4] == 1);
         
-		
+        
         av = ["apple", "orange", null, "Cherry", "apple"];
         
         // Returns 0 when unique sort fails
@@ -300,12 +300,12 @@ class TestVector extends Test
         assert(av[2] == null);
         assert(av[3] == "Cherry");
         assert(av[4] == "apple");
-		
-		
-		av = ["apple", "orange", null, "Cherry", "kiwi"];
         
-		// Returns the original Vector
-		var rav = av.sort(Vector.UNIQUESORT);
+        
+        av = ["apple", "orange", null, "Cherry", "kiwi"];
+        
+        // Returns the original Vector
+        var rav = av.sort(Vector.UNIQUESORT);
         assert(av == rav);
         
         // ensure elements are sorted
@@ -315,7 +315,7 @@ class TestVector extends Test
         assert(av[3] == "kiwi");
         assert(av[4] == "orange");
         
-		
+        
         var functions:Vector.<Function> = [staticSortMethod, instanceSortMethod, function (x:Number, y:Number):Number { if (x < y)  return -1; if (x > y)  return 1; return 0;}];
         
         for each (var f:Function in functions) {
