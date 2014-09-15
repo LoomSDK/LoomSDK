@@ -905,7 +905,7 @@ public:
             Type *vectorType = LSLuaState::getLuaState(L)->getType("system.Vector");            
             lsr_createinstance(L, vectorType);
 
-            lua_pushvalue(L, -2); // push the new vector table
+            lua_pushvalue(L, -2); // return the new vector table
             lua_rawseti(L, -2, LSINDEXVECTOR);
 
             lsr_vector_set_length(L, -1, _sortVectorLength);
@@ -924,6 +924,8 @@ public:
         // replace vector table
         lua_rawseti(L, 1, LSINDEXVECTOR);
         lsr_vector_set_length(L, 1, _sortVectorLength);
+
+        lua_pushvalue(L, 1); // return the existing vector table
         delete [] indices;
 
         return 1;
