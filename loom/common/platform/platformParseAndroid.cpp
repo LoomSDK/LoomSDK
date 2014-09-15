@@ -20,7 +20,7 @@
 
 #include "loom/common/platform/platform.h"
 
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+#if LOOM_ALLOW_FACEBOOK && (LOOM_PLATFORM == LOOM_PLATFORM_ANDROID)
 
 #include <jni.h>
 #include "platformAndroidJni.h"

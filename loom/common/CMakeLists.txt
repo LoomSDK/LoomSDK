@@ -20,16 +20,20 @@ if (APPLE)
             platform/platformStoreiOS.mm
             platform/platformVideoiOS.mm
             platform/platformMobileiOS.mm
-            platform/platformFacebookiOS.mm
-            platform/platformTeakiOS.mm
-            platform/platformParseiOS.mm
             platform/EBPurchase.m
         )
         
-        # Allow Admob to be included for iOS?
+        # Allow Admob and/or Facebook to be included for iOS?
         if(LOOM_BUILD_ADMOB EQUAL 1)
             set (CPP_FILES ${CPP_FILES} 
                 platform/platformAdMobIOS.mm
+            )
+        endif()
+        if(LOOM_BUILD_FACEBOOK EQUAL 1)
+            set (CPP_FILES ${CPP_FILES} 
+                platform/platformFacebookiOS.mm
+                platform/platformTeakiOS.mm
+                platform/platformParseiOS.mm
             )
         endif()
 
