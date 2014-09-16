@@ -31,7 +31,7 @@
 
 #include "stdio.h"
 
-
+/*
 #include <windows.h>
 #include <wchar.h>
 
@@ -52,7 +52,7 @@ const char * ConvertToUTF8(const wchar_t * pStr) {
 // should be saved as UTF-8. gcc requires the files to not have a UTF-8 BOM.
 # define utf8(str)  str
 #endif
-
+*/
 
 
 
