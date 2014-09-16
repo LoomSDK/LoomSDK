@@ -85,6 +85,9 @@ public:
 	float alpha;
 
 	VectorLineStyle() {
+		reset();
+	}
+	void reset() {
 		thickness = NAN;
 		color = 0x000000;
 		alpha = 1;
@@ -101,7 +104,12 @@ public:
 	float alpha;
 
 	VectorFill() {
+		reset();
+	}
+	void reset() {
 		active = false;
+		color = 0x000000;
+		alpha = 1;
 	}
 	VectorFill(unsigned int color, float alpha) : color(color), alpha(alpha) {
 		active = true;
@@ -117,6 +125,7 @@ protected:
 	VectorPath* getPath();
 	void addShape(VectorShape *shape);
 	void restartPath();
+	void resetStyle();
 
 public:
 

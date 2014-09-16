@@ -129,7 +129,7 @@ void VectorFill::render(lua_State *L, Shape* g) {
 	float cb = ((color >> 0) & 0xff) / 255.0f;
 	GFX::VectorRenderer::fillColor(cr, cg, cb, alpha);
 	*/
-	g->flushPath();
+	if (!active) g->flushPath();
 	g->currentFill.active = active;
 	g->currentFill.color = color;
 	g->currentFill.alpha = alpha;
@@ -239,6 +239,11 @@ void Shape::drawRoundRect(float x, float y, float width, float height, float ell
 	addShape(new VectorShape(ROUND_RECT, x, y, width, height, ellipseWidth));
 }
 
+void Shape::resetStyle() {
+	currentLineStyle.reset();
+	currentFill.reset();
+}
+
 void Shape::render(lua_State *L)
 {
     updateLocalTransform();
@@ -251,6 +256,8 @@ void Shape::render(lua_State *L)
 	GFX::VectorRenderer::beginFrame();
 	GFX::VectorRenderer::preDraw(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
 	
+	resetStyle();
+
 	flushPath();
 	utArray<VectorData*>::Iterator it = queue->iterator();
 	while (it.hasMoreElements()) {

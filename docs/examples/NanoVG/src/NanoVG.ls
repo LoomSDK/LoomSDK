@@ -49,7 +49,8 @@ package
             q = new Quad(200, 200, 0x596CF0); q.x = 120; q.y = 120; stage.addChild(q);
             */
             
-            q = new Quad(400, 300, 0xBDC5F9); q.x = 10; q.y = 10; stage.addChild(q);
+            //q = new Quad(400, 300, 0xBDC5F9); q.x = 10; q.y = 10; stage.addChild(q);
+            q = new Quad(460, 300, 0x282828); q.x = 10; q.y = 10; stage.addChild(q);
             
             g = new Shape();
             g.x = 50;
@@ -82,9 +83,9 @@ package
             
             // Fill
             g.beginFill(0x3EA80B, 1);
-            g.drawRect(110, y, 100, 30);
+            g.drawRect(110, y, 100, 10);
             g.endFill();
-            y += 40;
+            y += 20;
             
             g.lineStyle(1, 0x000000, 1);
             
@@ -106,7 +107,6 @@ package
             g.lineTo(100, 100);
             g.drawCircle(50, 50, 40);
             
-            return;
             g.lineTo(0, 100);
             
             // Line styles
@@ -129,6 +129,26 @@ package
             g.lineStyle(8, 0x8B00FF, 1); g.lineTo(x, y); x += 10;
             g.lineStyle(8, 0x8F8F8F, 1); g.lineTo(x, y); x += 10;
             g.lineStyle(8, 0xFFFFFF, 1); g.lineTo(x, y); x += 10;
+            y += 10;
+            
+            // Fill with linestyle
+            g.lineStyle(4, 0xFFFF00, 1);
+            g.beginFill(0xF40B74, 1);
+            g.drawRect(110, y, 100, 10);
+            g.endFill();
+            y += 16;
+            
+            // Non-stroked fill after linestyle
+            g.lineStyle(NaN, 0, 0);
+            g.beginFill(0xC90A60, 1);
+            g.drawRect(110, y, 100, 10);
+            g.endFill();
+            y += 12;
+            
+            // Implicit endFill
+            g.beginFill(0x940746, 1);
+            g.drawRect(110, y, 100, 10);
+            y += 12;
             
             //*/
             
@@ -147,14 +167,43 @@ package
         {
             /*
             var t = Loom2D.juggler.elapsedTime;
-            gfx.clear();
-            gfx.moveTo(0, 0);
-            gfx.cubicCurveTo(Math.cos(t*2.5)*100, Math.sin(t*2.1)*100, Math.cos(t*1.51)*100, Math.sin(t*1.11)*100, 0, 100);
-            gfx.drawCircle(20, 20, 10);
-            gfx.drawEllipse(50, 20, 10, 20);
-            gfx.drawRect(80, 0, 40, 60);
-            gfx.drawRoundRect(140, 0, 40, 60, 10, 10);
+            g.clear();
+            g.lineStyle(1, 0xBD55F4, 1);
+            g.moveTo(0, 0);
+            g.moveTo(0, 0);
+            g.moveTo(0, 0);
+            g.moveTo(0, 0);
+            g.cubicCurveTo(Math.cos(t*2.5)*100, Math.sin(t*2.1)*100, Math.cos(t*1.51)*100, Math.sin(t*1.11)*100, 0, 100);
+            g.drawCircle(20, 20, 10);
+            g.drawEllipse(50, 20, 10, 20);
+            g.drawRect(80, 0, 40, 60);
+            g.drawRoundRect(140, 0, 40, 60, 10, 10);
             return super.onFrame();
+            //*/
+            
+            /*
+            g.clear();
+            g.lineStyle(1, 0xFFFFFF, 1);
+            var n = 10;
+            var w = 460-g.x*2;
+            var h = 300-g.y*2;
+            
+            var t = Loom2D.juggler.elapsedTime;
+            
+            var cx = w / 2;
+            var cy = h / 2;
+            var r = 130;
+            
+            g.moveTo(cx, cy);
+            for (var i:int = 0; i < n; i++) {
+                var a:Number = t + i / n * Math.TWOPI * (1000 + Math.cos(t*0.000001)*10);
+                var b:Number = t + i / n * Math.TWOPI * (1000 + Math.sin(t*0.00001)*10);
+                //var l:Number = Math.sqrt(a*a + b*b);
+                //a /= l;
+                //b /= l;
+                //g.lineTo(0+i/(n-1)*w, h/2+Math.sin(a)*h/2);
+                g.lineTo(cx+Math.cos(a)*r, cy+Math.sin(b)*r);
+            }
             */
         }
         
