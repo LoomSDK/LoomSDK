@@ -36,8 +36,247 @@ utHashTable<utPointerHashKey, utArray<NativeDelegate *> *> NativeDelegate::sActi
 static const int scmBadThreadID = 0xBAADF00D;
 int              NativeDelegate::smMainThreadID = scmBadThreadID;
 
+// todo
+//   - handles to active nativedelegates (rw from main thread, ro from secondary)
+//      - store pointer and counter
+//      - each instance gets unique count
+//      - check instance in the sActiveNativeDelegates list before calling
+//   - locked queue of pending calls and args
+//      - write out preamble + delegate id 
+//      - write out arg type + value into buffer
+//      - write out postamble
+//      - realloc as needed
+//      - keep vector of pending calls
+//   - delayed call executor routine
+//      - loop queue
+//      - check and call each delegate, warn-skip if no good
+//      - clear queue
+
+struct NativeDelegateCallNote
+{
+    NativeDelegate *delegate;
+    int delegateKey;
+    unsigned char *data;
+    int ndata;
+    int offset;
+
+    NativeDelegateCallNote()
+    {
+        delegate = NULL;
+        delegateKey = -1;
+        data = (unsigned char*)malloc(1024);
+        ndata = 1024;
+        offset = 0;
+    }
+
+    ~NativeDelegateCallNote()
+    {
+        delegate = NULL;
+        delegateKey = -1;
+        free(data);
+        data = NULL;
+        ndata = -1;
+        offset = -1;
+    }
+
+    void ensureBuffer(int freeBytes)
+    {
+        // Nop if enough free space.
+        if(offset+freeBytes<ndata)
+            return;
+
+        ndata *= 2; // Pow 2 growth factor - dumb but effective.
+        data = (unsigned char*)lmRealloc(NULL, data, ndata);
+    }
+
+    void writeByte(unsigned char value)
+    {
+        ensureBuffer(1);
+
+        data[offset] = value;
+        offset++;
+    }
+
+    void writeInt(unsigned int value)
+    {
+        ensureBuffer(4);
+        *(int*)(&data[offset]) = value;
+        offset += 4;
+    }
+
+    void writeFloat(float value)
+    {
+        ensureBuffer(4);
+        *(float*)(&data[offset]) = value;
+        offset += 4;
+    }
+
+    void writeDouble(double value)
+    {
+        ensureBuffer(8);
+        *(double*)(&data[offset]) = value;
+        offset += 8;
+    }
+
+    void writeString(const char *value)
+    {
+        writeInt(strlen(value));
+        for(int i=0; i<strlen(value); i++)
+            writeByte(value[i]);
+    }
+
+    void rewind()
+    {
+        offset = 0;
+    }
+
+    unsigned char readByte()
+    {
+        assert(offset + 1 < ndata);
+        unsigned char v = data[offset];
+        offset ++;
+        return v;
+    }
+
+    unsigned int readInt()
+    {
+        assert(offset + 4 < ndata);
+        int v = *(int*)(&data[offset]);
+        offset += 4;
+        return v;
+    }
+
+    float readFloat()
+    {
+        assert(offset + 4 < ndata);
+        float v = *(float*)(&data[offset]);
+        offset += 4;
+        return v;
+    }
+
+    double readDouble()
+    {
+        assert(offset + 8 < ndata);
+        double v = *(double*)(&data[offset]);
+        offset += 8;
+        return v;
+    }
+
+    // Don't forget to free()
+    char *readString()
+    {
+        int strLen = readInt();
+        char *str = (char*)malloc(strLen+1);
+        memset(str, 0, strLen+1);
+        for(int i=0; i<strLen; i++)
+            str[i] = readByte();
+        return str;
+    }
+};
+
+enum
+{
+    MSG_Nop = 0,
+    MSG_PushInt,
+    MSG_PushFloat,
+    MSG_PushDouble,
+    MSG_PushString,
+    MSG_Invoke,
+};
+
+static utArray<NativeDelegateCallNote*> gNDCallNoteQueue;
+
+void NativeDelegate::postNativeDelegateCallNote(NativeDelegateCallNote *ndcn)
+{
+    gNDCallNoteQueue.push_back(ndcn);
+}
+
+void NativeDelegate::runNativeDelegateCallNoteQueue(lua_State *L)
+{
+    for(int i=0; i<gNDCallNoteQueue.size(); i++)
+    {
+        NativeDelegateCallNote *ndcn = gNDCallNoteQueue[i];
+
+        // Try to resolve the delegate pointer.
+        utArray<NativeDelegate *> *delegates = *(sActiveNativeDelegates.get(L));
+        bool found = false;
+        for(int i=0; i<delegates->size(); i++)
+        {
+            // Look for our delegate.
+            if((*delegates)[i] != ndcn->delegate)
+                continue;
+
+            // If key mismatches, warn and bail.
+            if((*delegates)[i]->_key != ndcn->delegateKey)
+            {
+                LSError("Found delegate call note with key mismatch (delegate=%x actualKey=%x expectedKey=%x), ignoring...", (*delegates)[i], (*delegates)[i]->_key, ndcn->delegateKey);
+                break;
+            }
+
+            // Match!
+            found = true;
+            break;
+        }
+
+        // Bail if no match.
+        if(!found)
+            continue;
+
+        // Otherwise, let's call it.
+        NativeDelegate *theDelegate = ndcn->delegate;
+        for(;;)
+        {
+            unsigned char actionType = ndcn->readByte();
+            bool done = false;
+            char *str = NULL;
+            switch(actionType)
+            {
+                case MSG_Nop:
+                    LSError("Got a nop in delegate data stream.");
+                break;
+
+                case MSG_PushString:
+                    str = ndcn->readString();
+                    theDelegate->pushArgument(str);
+                    free(str);
+                break;
+
+                case MSG_PushDouble:
+                    theDelegate->pushArgument(ndcn->readDouble());
+                    break;
+
+                case MSG_PushFloat:
+                    theDelegate->pushArgument(ndcn->readFloat());
+                    break;
+                
+                case MSG_PushInt:
+                    theDelegate->pushArgument((int)ndcn->readInt());
+                    break;
+                
+                case MSG_Invoke:
+                    theDelegate->invoke();
+                    done = true;
+                    break;
+            }
+
+            if(done)
+                break;
+        }
+
+    }
+
+    // Purge queue.
+    gNDCallNoteQueue.clear();
+}
+
+// To disambiguate NativeDelegates at the address of old NDs, we have a key.
+// in order to collide you have to allocate and free 4 billion NDs and get the same address
+// on the 4 billionth ND as you did on the first. If you get a crash due to this coincidence,
+// I'll buy you something nice.
+static int gNativeDelegateKeyGenerator = 1000;
+
 NativeDelegate::NativeDelegate()
-    : L(NULL), _argumentCount(0), _callbackCount(0)
+    : L(NULL), _argumentCount(0), _callbackCount(0), _isAsync(false), _key(gNativeDelegateKeyGenerator++)
 {
 }
 
@@ -124,10 +363,14 @@ void NativeDelegate::getCallbacks(lua_State *L) const
 
 void NativeDelegate::pushArgument(const char *value) const
 {
-    if (!L)
+    if(_isAsync)
     {
+
         return;
     }
+
+    if (!L)
+        return;
 
     lua_pushstring(L, value);
     _argumentCount++;
@@ -136,10 +379,14 @@ void NativeDelegate::pushArgument(const char *value) const
 
 void NativeDelegate::pushArgument(int value) const
 {
-    if (!L)
+    if(_isAsync)
     {
+
         return;
     }
+
+    if (!L)
+        return;
 
     lua_pushinteger(L, value);
     _argumentCount++;
@@ -148,10 +395,14 @@ void NativeDelegate::pushArgument(int value) const
 
 void NativeDelegate::pushArgument(float value) const
 {
-    if (!L)
+    if(_isAsync)
     {
+
         return;
     }
+
+    if (!L)
+        return;
 
     lua_pushnumber(L, value);
     _argumentCount++;
@@ -160,10 +411,14 @@ void NativeDelegate::pushArgument(float value) const
 
 void NativeDelegate::pushArgument(double value) const
 {
-    if (!L)
+    if(_isAsync)
     {
+
         return;
     }
+
+    if (!L)
+        return;
 
     lua_pushnumber(L, value);
     _argumentCount++;
@@ -172,10 +427,14 @@ void NativeDelegate::pushArgument(double value) const
 
 void NativeDelegate::pushArgument(bool value) const
 {
-    if (!L)
+    if(_isAsync)
     {
+
         return;
     }
+
+    if (!L)
+        return;
 
     lua_pushboolean(L, value);
     _argumentCount++;
@@ -192,6 +451,12 @@ int NativeDelegate::getCount() const
 // of the caller to clean up the stack, this can be changed if we automate
 void NativeDelegate::invoke() const
 {
+    if(_isAsync)
+    {
+        // Purge the invoke.
+        return;
+    }
+
     // Don't do this from non-main thread.
     assertMainThread();
 

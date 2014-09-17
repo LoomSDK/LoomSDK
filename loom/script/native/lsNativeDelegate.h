@@ -26,6 +26,7 @@
 
 namespace LS {
 class MethodBase;
+struct NativeDelegateCallNote;
 
 /*
  * NativeDelegate class which can be used to setup script callbacks, from script, for native code
@@ -36,6 +37,9 @@ class NativeDelegate
 
     // the number of callbacks assigned to this delegate
     int _callbackCount;
+
+    bool _isAsync;
+    int _key;
 
     // This is mutable because it's an implementation detail for the push/invoke API,
     // not "real" object state. So push/invoke can be const, yet still work properly.
@@ -53,6 +57,9 @@ class NativeDelegate
     static utHashTable<utPointerHashKey, utArray<NativeDelegate *> *> sActiveNativeDelegates;
 
     static void registerDelegate(lua_State *L, NativeDelegate *delegate);
+
+    static void runNativeDelegateCallNoteQueue(lua_State *L);
+    static void postNativeDelegateCallNote(NativeDelegateCallNote *ndcn);
 
 public:
 
@@ -76,6 +83,11 @@ public:
     {
         return L;
     }
+
+    // Mark this delegate as async, and it will be run at start of next tick's 
+    // processing rather than when invoked. This is thread-safe and useful for
+    // passing not-super-time-sensitive native events.
+    void flagAsync() const;
 
     // To call the delegate, just pushArgument the parameters, then call invoke.
     // No conditional checks are required, NativeDelegate deals with all that for
