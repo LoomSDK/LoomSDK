@@ -63,7 +63,8 @@ namespace bgfx
         static int fbo;
         static int msaaFbo;
 #endif
-        
+		bool valid = false;
+
         void create(uint32_t _width, uint32_t _height);
         void destroy();
         void resize(uint32_t _width, uint32_t _height, bool _vsync);
@@ -72,7 +73,7 @@ namespace bgfx
         
         bool isValid() const
         {
-            return 0 != m_context;
+            return valid;
         }
 
 #if BX_PLATFORM_WINDOWS

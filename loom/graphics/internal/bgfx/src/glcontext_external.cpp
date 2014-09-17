@@ -80,12 +80,14 @@ void GlContext::create(uint32_t _width, uint32_t _height)
     wglDeleteContext = (PFNWGLDELETECONTEXTPROC)GetProcAddress(m_opengl32dll, "wglDeleteContext");
     BGFX_FATAL(NULL != wglDeleteContext, Fatal::UnableToInitialize, "Failed get wglDeleteContext.");   
 
-#endif    
-    import();
+#endif
+	import();
+	valid = true;
 }
 
 void GlContext::destroy()
 {
+	valid = false;
 }
 
 void GlContext::resize(uint32_t _width, uint32_t _height, bool _vsync)
