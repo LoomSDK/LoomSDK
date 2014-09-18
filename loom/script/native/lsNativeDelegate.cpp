@@ -262,7 +262,7 @@ void NativeDelegate::executeDeferredCalls(lua_State *L)
             // If key mismatches, warn and bail.
             if((*delegates)[i]->_key != ndcn->delegateKey)
             {
-                LSError("Found delegate call note with key mismatch (delegate=%x actualKey=%x expectedKey=%x), ignoring...", (*delegates)[i], (*delegates)[i]->_key, ndcn->delegateKey);
+                lmLogError(gNativeDelegateGroup, "Found delegate call note with key mismatch (delegate=%x actualKey=%x expectedKey=%x), ignoring...", (*delegates)[i], (*delegates)[i]->_key, ndcn->delegateKey);
                 break;
             }
 
@@ -285,7 +285,7 @@ void NativeDelegate::executeDeferredCalls(lua_State *L)
             switch(actionType)
             {
                 case MSG_Nop:
-                    LSError("Got a nop in delegate data stream.");
+                    lmLogError(gNativeDelegateGroup, "Got a nop in delegate data stream.");
                 break;
 
                 case MSG_PushString:
@@ -341,7 +341,7 @@ NativeDelegate::NativeDelegate()
 
 void NativeDelegate::allowAsync()
 {
-    lmLogError(gNativeDelegateGroup, "SETTING ASYNC ON %x", this);
+    lmLogDebug(gNativeDelegateGroup, "SETTING ASYNC ON %x", this);
     _isAsync = true;
 }
 
@@ -427,19 +427,19 @@ void NativeDelegate::getCallbacks(lua_State *L) const
 
 NativeDelegateCallNote *NativeDelegate::prepCallbackNote() const
 {
-    lmLogError(gNativeDelegateGroup, "Considering async callback %x", this);
+    lmLogDebug(gNativeDelegateGroup, "Considering async callback %x", this);
     
     // Are noting currently? Just work with that.
     if(_activeNote)
     {
-        lmLogError(gNativeDelegateGroup, " OUT 1");
+        lmLogDebug(gNativeDelegateGroup, " OUT 1");
         return _activeNote;
     }
 
     // See if we should try to go async.
     if(_isAsync == false)
     {
-        lmLogError(gNativeDelegateGroup, " OUT 2");
+        lmLogDebug(gNativeDelegateGroup, " OUT 2");
         return NULL;
     }
 
@@ -447,7 +447,7 @@ NativeDelegateCallNote *NativeDelegate::prepCallbackNote() const
         return NULL;
 
     // Only do this for async delegates off main thread.
-    lmLogError(gNativeDelegateGroup, "Queueing async callback");
+    lmLogDebug(gNativeDelegateGroup, "Queueing async callback");
     _activeNote = lmNew(NULL) NativeDelegateCallNote(this);
     return _activeNote;
 }
