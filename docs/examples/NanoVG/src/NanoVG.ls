@@ -50,7 +50,7 @@ package
             */
             
             //q = new Quad(400, 300, 0xBDC5F9); q.x = 10; q.y = 10; stage.addChild(q);
-            q = new Quad(460, 300, 0x282828); q.x = 10; q.y = 10; stage.addChild(q);
+            q = new Quad(460, 300, 0xF3F3F3); q.x = 10; q.y = 10; stage.addChild(q);
             
             g = new Shape();
             g.x = 50;
@@ -109,8 +109,21 @@ package
             
             g.lineTo(0, 100);
             
+            // curveTo
+            g.moveTo(0, 50);
+            g.cubicCurveTo(1/3*100, 50-50, 2/3*100, 50+50, 100, 50);
+            g.cubicCurveTo(2/3*100, 50-50, 1/3*100, 50+50, 0, 50);
+            
             // Line styles
+            g.lineStyle(0, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
+            g.lineStyle(0.1, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
+            g.lineStyle(0.2, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
+            g.lineStyle(0.5, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
             g.lineStyle(1, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
+            g.lineStyle(2, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
+            g.lineStyle(3, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
+            g.lineStyle(4, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
+            g.lineStyle(5, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
             g.lineStyle(8, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
             g.lineStyle(8, 0x0000FF, 0.5); g.moveTo(110, y); g.lineTo(210, y); y += 10;
             g.lineStyle(8, 0x0000FF, 0.1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
@@ -273,7 +286,7 @@ package
             }
             //*/
             
-            ///*
+            /*
             g.clear();
             g.lineStyle(1, 0xFFFFFF, 0.1);
             var n = 200;
@@ -293,9 +306,9 @@ package
             
             g.moveTo(cx, cy);
             for (var i:int = a; i < b; i++) {
-                var r = i/(n-1)*120;
-                var ang = (i/(n-1)*10+t*0.5) * Math.TWOPI;
-                g.lineStyle(3 + 1*Math.sin(30*i/(n-1)*Math.TWOPI + t*50), hsvToRgb((i/n*360*3 + t*200)%360, 1, 1), 1);
+                var r = i/(n-1)*500;
+                var ang = (i/(n-1)*50+t*0.5) * Math.TWOPI;
+                g.lineStyle(3 + 1*Math.sin(1000*i/(n-1)*Math.TWOPI + t*50), hsvToRgb((i/n*360*3 + t*200)%360, 1, 1), 1);
                 g.lineTo(cx+Math.cos(ang)*r, cy+Math.sin(ang)*r);
             }
             //*/

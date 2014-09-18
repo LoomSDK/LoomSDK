@@ -214,7 +214,7 @@ void Shape::lineTo(float x, float y) {
 }
 
 void Shape::cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY) {
-	getPath()->cubicCurveTo(controlX1, controlX2, controlY1, controlY2, anchorX, anchorY);
+	getPath()->cubicCurveTo(controlX1, controlY1, controlX2, controlY2, anchorX, anchorY);
 }
 
 void Shape::addShape(VectorShape *shape) {
