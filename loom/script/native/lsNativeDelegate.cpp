@@ -54,18 +54,18 @@ int              NativeDelegate::smMainThreadID = scmBadThreadID;
 
 struct NativeDelegateCallNote
 {
-    NativeDelegate *delegate;
+    const NativeDelegate *delegate;
     int delegateKey;
     unsigned char *data;
     int ndata;
     int offset;
 
-    NativeDelegateCallNote()
+    NativeDelegateCallNote(const NativeDelegate *target)
     {
-        delegate = NULL;
-        delegateKey = -1;
-        data = (unsigned char*)malloc(1024);
+        delegate = target;
+        delegateKey = target->_key;
         ndata = 1024;
+        data = (unsigned char*)malloc(ndata);
         offset = 0;
     }
 
@@ -73,8 +73,11 @@ struct NativeDelegateCallNote
     {
         delegate = NULL;
         delegateKey = -1;
-        free(data);
-        data = NULL;
+        if(data)
+        {        
+            free(data);
+            data = NULL;
+        }
         ndata = -1;
         offset = -1;
     }
@@ -92,7 +95,6 @@ struct NativeDelegateCallNote
     void writeByte(unsigned char value)
     {
         ensureBuffer(1);
-
         data[offset] = value;
         offset++;
     }
@@ -100,21 +102,21 @@ struct NativeDelegateCallNote
     void writeInt(unsigned int value)
     {
         ensureBuffer(4);
-        *(int*)(&data[offset]) = value;
+        memcpy(&data[offset], &value, sizeof(unsigned int));
         offset += 4;
     }
 
     void writeFloat(float value)
     {
         ensureBuffer(4);
-        *(float*)(&data[offset]) = value;
+        memcpy(&data[offset], &value, sizeof(float));
         offset += 4;
     }
 
     void writeDouble(double value)
     {
         ensureBuffer(8);
-        *(double*)(&data[offset]) = value;
+        memcpy(&data[offset], &value, sizeof(double));
         offset += 8;
     }
 
@@ -125,6 +127,14 @@ struct NativeDelegateCallNote
             writeByte(value[i]);
     }
 
+    void writeBool(bool value)
+    {
+        if(value)
+            writeByte(1);
+        else
+            writeByte(0);
+    }
+
     void rewind()
     {
         offset = 0;
@@ -132,7 +142,7 @@ struct NativeDelegateCallNote
 
     unsigned char readByte()
     {
-        assert(offset + 1 < ndata);
+        //assert(offset + 1 < ndata);
         unsigned char v = data[offset];
         offset ++;
         return v;
@@ -140,24 +150,27 @@ struct NativeDelegateCallNote
 
     unsigned int readInt()
     {
-        assert(offset + 4 < ndata);
-        int v = *(int*)(&data[offset]);
+        //assert(offset + 4 < ndata);
+        int v = 0;
+        memcpy(&v, &data[offset], sizeof(unsigned int));
         offset += 4;
         return v;
     }
 
     float readFloat()
     {
-        assert(offset + 4 < ndata);
-        float v = *(float*)(&data[offset]);
+        //assert(offset + 4 < ndata);
+        float v = 0.f;
+        memcpy(&v, &data[offset], sizeof(float));
         offset += 4;
         return v;
     }
 
     double readDouble()
     {
-        assert(offset + 8 < ndata);
-        double v = *(double*)(&data[offset]);
+        //assert(offset + 8 < ndata);
+        double v = 0.0;
+        memcpy(&v, &data[offset], sizeof(double));
         offset += 8;
         return v;
     }
@@ -172,6 +185,11 @@ struct NativeDelegateCallNote
             str[i] = readByte();
         return str;
     }
+
+    bool readBool()
+    {
+        return readByte() == 0 ? false : true;
+    }
 };
 
 enum
@@ -181,24 +199,59 @@ enum
     MSG_PushFloat,
     MSG_PushDouble,
     MSG_PushString,
+    MSG_PushBool,
     MSG_Invoke,
 };
 
+static MutexHandle gCallNoteMutex = NULL;
 static utArray<NativeDelegateCallNote*> gNDCallNoteQueue;
+
+static void ensureQueueInit()
+{
+    if(gCallNoteMutex)
+        return;
+
+    gCallNoteMutex = loom_mutex_create();
+}
 
 void NativeDelegate::postNativeDelegateCallNote(NativeDelegateCallNote *ndcn)
 {
+    ensureQueueInit();
+
+    loom_mutex_lock(gCallNoteMutex);
+
+    // Prep for reading.
+    ndcn->rewind();
+
+    // Store for later access.
     gNDCallNoteQueue.push_back(ndcn);
+
+    loom_mutex_unlock(gCallNoteMutex);
 }
 
-void NativeDelegate::runNativeDelegateCallNoteQueue(lua_State *L)
+void NativeDelegate::executeDeferredCalls(lua_State *L)
 {
+    ensureQueueInit();
+
+    loom_mutex_lock(gCallNoteMutex);
+
     for(int i=0; i<gNDCallNoteQueue.size(); i++)
     {
         NativeDelegateCallNote *ndcn = gNDCallNoteQueue[i];
 
         // Try to resolve the delegate pointer.
-        utArray<NativeDelegate *> *delegates = *(sActiveNativeDelegates.get(L));
+        utArray<NativeDelegate *> *delegates = NULL;
+        if (sActiveNativeDelegates.find(L) != UT_NPOS)
+        {
+            delegates = *(sActiveNativeDelegates.get(L));
+        }
+        else
+        {
+            // No delegate list, can't do it.
+            loom_mutex_unlock(gCallNoteMutex);
+            return;
+        }
+        
         bool found = false;
         for(int i=0; i<delegates->size(); i++)
         {
@@ -223,7 +276,7 @@ void NativeDelegate::runNativeDelegateCallNoteQueue(lua_State *L)
             continue;
 
         // Otherwise, let's call it.
-        NativeDelegate *theDelegate = ndcn->delegate;
+        const NativeDelegate *theDelegate = ndcn->delegate;
         for(;;)
         {
             unsigned char actionType = ndcn->readByte();
@@ -253,6 +306,10 @@ void NativeDelegate::runNativeDelegateCallNoteQueue(lua_State *L)
                     theDelegate->pushArgument((int)ndcn->readInt());
                     break;
                 
+                case MSG_PushBool:
+                    theDelegate->pushArgument(ndcn->readBool());
+                    break;
+
                 case MSG_Invoke:
                     theDelegate->invoke();
                     done = true;
@@ -267,6 +324,8 @@ void NativeDelegate::runNativeDelegateCallNoteQueue(lua_State *L)
 
     // Purge queue.
     gNDCallNoteQueue.clear();
+
+    loom_mutex_unlock(gCallNoteMutex);
 }
 
 // To disambiguate NativeDelegates at the address of old NDs, we have a key.
@@ -276,10 +335,15 @@ void NativeDelegate::runNativeDelegateCallNoteQueue(lua_State *L)
 static int gNativeDelegateKeyGenerator = 1000;
 
 NativeDelegate::NativeDelegate()
-    : L(NULL), _argumentCount(0), _callbackCount(0), _isAsync(false), _key(gNativeDelegateKeyGenerator++)
+    : L(NULL), _callbackCount(0), _isAsync(false), _argumentCount(0), _activeNote(NULL), _key(gNativeDelegateKeyGenerator++)
 {
 }
 
+void NativeDelegate::allowAsync()
+{
+    lmLogError(gNativeDelegateGroup, "SETTING ASYNC ON %x", this);
+    _isAsync = true;
+}
 
 void NativeDelegate::createCallbacks()
 {
@@ -361,11 +425,39 @@ void NativeDelegate::getCallbacks(lua_State *L) const
 }
 
 
+NativeDelegateCallNote *NativeDelegate::prepCallbackNote() const
+{
+    lmLogError(gNativeDelegateGroup, "Considering async callback %x", this);
+    
+    // Are noting currently? Just work with that.
+    if(_activeNote)
+    {
+        lmLogError(gNativeDelegateGroup, " OUT 1");
+        return _activeNote;
+    }
+
+    // See if we should try to go async.
+    if(_isAsync == false)
+    {
+        lmLogError(gNativeDelegateGroup, " OUT 2");
+        return NULL;
+    }
+
+    if(smMainThreadID == platform_getCurrentThreadId())
+        return NULL;
+
+    // Only do this for async delegates off main thread.
+    lmLogError(gNativeDelegateGroup, "Queueing async callback");
+    _activeNote = lmNew(NULL) NativeDelegateCallNote(this);
+    return _activeNote;
+}
+
 void NativeDelegate::pushArgument(const char *value) const
 {
-    if(_isAsync)
+    if(NativeDelegateCallNote *ndcn = prepCallbackNote())
     {
-
+        ndcn->writeByte(MSG_PushString);
+        ndcn->writeString(value);
         return;
     }
 
@@ -379,9 +471,10 @@ void NativeDelegate::pushArgument(const char *value) const
 
 void NativeDelegate::pushArgument(int value) const
 {
-    if(_isAsync)
+    if(NativeDelegateCallNote *ndcn = prepCallbackNote())
     {
-
+        ndcn->writeByte(MSG_PushInt);
+        ndcn->writeInt(value);
         return;
     }
 
@@ -395,9 +488,10 @@ void NativeDelegate::pushArgument(int value) const
 
 void NativeDelegate::pushArgument(float value) const
 {
-    if(_isAsync)
+    if(NativeDelegateCallNote *ndcn = prepCallbackNote())
     {
-
+        ndcn->writeByte(MSG_PushFloat);
+        ndcn->writeFloat(value);
         return;
     }
 
@@ -411,9 +505,10 @@ void NativeDelegate::pushArgument(float value) const
 
 void NativeDelegate::pushArgument(double value) const
 {
-    if(_isAsync)
+    if(NativeDelegateCallNote *ndcn = prepCallbackNote())
     {
-
+        ndcn->writeByte(MSG_PushDouble);
+        ndcn->writeDouble(value);
         return;
     }
 
@@ -427,9 +522,10 @@ void NativeDelegate::pushArgument(double value) const
 
 void NativeDelegate::pushArgument(bool value) const
 {
-    if(_isAsync)
+    if(NativeDelegateCallNote *ndcn = prepCallbackNote())
     {
-
+        ndcn->writeByte(MSG_PushBool);
+        ndcn->writeBool(value);
         return;
     }
 
@@ -449,11 +545,15 @@ int NativeDelegate::getCount() const
 
 // We don't currently support return values as this makes it the responsibility
 // of the caller to clean up the stack, this can be changed if we automate
-void NativeDelegate::invoke() const
+void NativeDelegate::invoke () const
 {
-    if(_isAsync)
+    if(NativeDelegateCallNote *ndcn = prepCallbackNote())
     {
-        // Purge the invoke.
+        ndcn->writeByte(MSG_Invoke);
+
+        // Submit it and clear state.
+        postNativeDelegateCallNote(ndcn);
+        _activeNote = NULL;
         return;
     }
 

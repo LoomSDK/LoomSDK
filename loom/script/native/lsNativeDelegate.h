@@ -33,12 +33,15 @@ struct NativeDelegateCallNote;
  */
 class NativeDelegate
 {
+    friend struct NativeDelegateCallNote;
+
     lua_State *L;
 
     // the number of callbacks assigned to this delegate
     int _callbackCount;
 
     bool _isAsync;
+    mutable NativeDelegateCallNote *_activeNote;
     int _key;
 
     // This is mutable because it's an implementation detail for the push/invoke API,
@@ -58,8 +61,11 @@ class NativeDelegate
 
     static void registerDelegate(lua_State *L, NativeDelegate *delegate);
 
-    static void runNativeDelegateCallNoteQueue(lua_State *L);
     static void postNativeDelegateCallNote(NativeDelegateCallNote *ndcn);
+
+
+    // Returns a note in cases where we should be doing an async delegate.
+    NativeDelegateCallNote *prepCallbackNote() const;
 
 public:
 
@@ -78,6 +84,11 @@ public:
     // threads and corrupting our state.
     static void assertMainThread();
 
+    static bool checkMainThread();
+
+    // Run all the deferred calls that have been deferred.
+    static void executeDeferredCalls(lua_State *L);
+
     // Access the lua state bound to this native delegate
     lua_State *getVM() const
     {
@@ -85,9 +96,10 @@ public:
     }
 
     // Mark this delegate as async, and it will be run at start of next tick's 
-    // processing rather than when invoked. This is thread-safe and useful for
-    // passing not-super-time-sensitive native events.
-    void flagAsync() const;
+    // processing rather than when invoked if it's not on the main thread. 
+    // This is thread-safe and useful for passing not-super-time-sensitive 
+    // native events.
+    void allowAsync();
 
     // To call the delegate, just pushArgument the parameters, then call invoke.
     // No conditional checks are required, NativeDelegate deals with all that for
