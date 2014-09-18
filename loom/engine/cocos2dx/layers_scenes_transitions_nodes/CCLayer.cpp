@@ -202,7 +202,6 @@ void CCLayer::setAccelerometerEnabled(bool enabled)
 
 void CCLayer::didAccelerate(CCAcceleration *pAccelerationValue)
 {
-    _DidAccelerateDelegate.allowAsync();
     _DidAccelerateDelegate.pushArgument(pAccelerationValue->x);
     _DidAccelerateDelegate.pushArgument(pAccelerationValue->y);
     _DidAccelerateDelegate.pushArgument(pAccelerationValue->z);

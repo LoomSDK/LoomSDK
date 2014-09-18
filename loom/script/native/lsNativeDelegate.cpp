@@ -36,19 +36,35 @@ utHashTable<utPointerHashKey, utArray<NativeDelegate *> *> NativeDelegate::sActi
 static const int scmBadThreadID = 0xBAADF00D;
 int              NativeDelegate::smMainThreadID = scmBadThreadID;
 
+/**
+ * Responsible for storing and recalling serialized NativeDelegate calls.
+ *
+ * Used internally by NativeDelegate for "async" delegate calls.
+ */
 struct NativeDelegateCallNote
 {
+    // Keep a reference to the delegate we're working with. This is used as a key
+    // and verified against the global list of valid nativedelegates before being
+    // dereferenced. The delegateKey is used to disambiguate new allocations at 
+    // the same memory location.
     const NativeDelegate *delegate;
     int delegateKey;
+
+    // Storage for serialized parameters.
     unsigned char *data;
     int ndata;
+
+    // Current offset in data for read or write.
     int offset;
 
     NativeDelegateCallNote(const NativeDelegate *target)
     {
+        // Note our target delegate.
         delegate = target;
         delegateKey = target->_key;
-        ndata = 1024;
+
+        // Start with enough buffer space we won't need to realloc in most cases.
+        ndata = 512; 
         data = (unsigned char*)malloc(ndata);
         offset = 0;
     }
@@ -57,15 +73,19 @@ struct NativeDelegateCallNote
     {
         delegate = NULL;
         delegateKey = -1;
+        
         if(data)
         {        
             free(data);
             data = NULL;
         }
         ndata = -1;
+        
         offset = -1;
     }
 
+    // Make sure we have enough room to write freeBytes, and grow the buffer
+    // if we don't.
     void ensureBuffer(int freeBytes)
     {
         // Nop if enough free space.
@@ -176,6 +196,7 @@ struct NativeDelegateCallNote
     }
 };
 
+// Constants used to encode NativeDelegate parameters in a NativeDelegateCallNote.
 enum
 {
     MSG_Nop = 0,
@@ -187,6 +208,7 @@ enum
     MSG_Invoke,
 };
 
+// Thread-safe queue of NativeDelegateCallNotes for execution on main thread.
 static MutexHandle gCallNoteMutex = NULL;
 static utArray<NativeDelegateCallNote*> gNDCallNoteQueue;
 
@@ -201,7 +223,6 @@ static void ensureQueueInit()
 void NativeDelegate::postNativeDelegateCallNote(NativeDelegateCallNote *ndcn)
 {
     ensureQueueInit();
-
     loom_mutex_lock(gCallNoteMutex);
 
     // Prep for reading.
@@ -216,26 +237,25 @@ void NativeDelegate::postNativeDelegateCallNote(NativeDelegateCallNote *ndcn)
 void NativeDelegate::executeDeferredCalls(lua_State *L)
 {
     ensureQueueInit();
-
     loom_mutex_lock(gCallNoteMutex);
+
+    // Try to resolve the delegate pointer.
+    utArray<NativeDelegate *> *delegates = NULL;
+    if (sActiveNativeDelegates.find(L) != UT_NPOS)
+    {
+        delegates = *(sActiveNativeDelegates.get(L));
+    }
+    else
+    {
+        // No delegate list, can't do it.
+        loom_mutex_unlock(gCallNoteMutex);
+        return;
+    }
 
     for(int i=0; i<gNDCallNoteQueue.size(); i++)
     {
         NativeDelegateCallNote *ndcn = gNDCallNoteQueue[i];
 
-        // Try to resolve the delegate pointer.
-        utArray<NativeDelegate *> *delegates = NULL;
-        if (sActiveNativeDelegates.find(L) != UT_NPOS)
-        {
-            delegates = *(sActiveNativeDelegates.get(L));
-        }
-        else
-        {
-            // No delegate list, can't do it.
-            loom_mutex_unlock(gCallNoteMutex);
-            return;
-        }
-        
         bool found = false;
         for(int i=0; i<delegates->size(); i++)
         {
@@ -319,14 +339,14 @@ void NativeDelegate::executeDeferredCalls(lua_State *L)
 static int gNativeDelegateKeyGenerator = 1000;
 
 NativeDelegate::NativeDelegate()
-    : L(NULL), _callbackCount(0), _isAsync(false), _argumentCount(0), _activeNote(NULL), _key(gNativeDelegateKeyGenerator++)
+    : L(NULL), _callbackCount(0), _allowAsync(true), _argumentCount(0), _activeNote(NULL), _key(gNativeDelegateKeyGenerator++)
 {
 }
 
-void NativeDelegate::allowAsync()
+void NativeDelegate::disallowAsync()
 {
-    lmLogDebug(gNativeDelegateGroup, "SETTING ASYNC ON %x", this);
-    _isAsync = true;
+    lmLogDebug(gNativeDelegateGroup, "SETTING ASYNC OFF %x", this);
+    _allowAsync = false;
 }
 
 void NativeDelegate::createCallbacks()
@@ -416,14 +436,14 @@ NativeDelegateCallNote *NativeDelegate::prepCallbackNote() const
     // Are noting currently? Just work with that.
     if(_activeNote)
     {
-        lmLogDebug(gNativeDelegateGroup, " OUT 1");
+        lmLogDebug(gNativeDelegateGroup, " OUT due to activeNote already present");
         return _activeNote;
     }
 
     // See if we should try to go async.
-    if(_isAsync == false)
+    if(_allowAsync == false)
     {
-        lmLogDebug(gNativeDelegateGroup, " OUT 2");
+        lmLogDebug(gNativeDelegateGroup, " OUT due to async being disallowed");
         return NULL;
     }
 
@@ -431,7 +451,7 @@ NativeDelegateCallNote *NativeDelegate::prepCallbackNote() const
         return NULL;
 
     // Only do this for async delegates off main thread.
-    lmLogDebug(gNativeDelegateGroup, "Queueing async callback");
+    lmLogDebug(gNativeDelegateGroup, "Prepping async callback!");
     _activeNote = lmNew(NULL) NativeDelegateCallNote(this);
     return _activeNote;
 }

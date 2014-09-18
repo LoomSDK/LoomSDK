@@ -40,7 +40,7 @@ class NativeDelegate
     // the number of callbacks assigned to this delegate
     int _callbackCount;
 
-    bool _isAsync;
+    bool _allowAsync;
     mutable NativeDelegateCallNote *_activeNote;
     int _key;
 
@@ -95,11 +95,12 @@ public:
         return L;
     }
 
-    // Mark this delegate as async, and it will be run at start of next tick's 
-    // processing rather than when invoked if it's not on the main thread. 
-    // This is thread-safe and useful for passing not-super-time-sensitive 
-    // native events.
-    void allowAsync();
+    // Mark this delegate as disallowing async. By default if a NativeDelegate 
+    // is run outside the main thread it is queued to be run later, but in some
+    // cases (render callbacks) delegates must be run synchronously. This method
+    // flags the delegate to error if the delegate can't be run synchronously. It
+    // may be called as much as you want; it just sets a flag.
+    void disallowAsync();
 
     // To call the delegate, just pushArgument the parameters, then call invoke.
     // No conditional checks are required, NativeDelegate deals with all that for

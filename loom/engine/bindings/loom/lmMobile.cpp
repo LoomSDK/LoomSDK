@@ -37,7 +37,6 @@ private:
     static void sensorTripleChanged(int sensor, float x, float y, float z)
     {
         ///Convert to delegate calls.
-        _OnSensorTripleChangedDelegate.allowAsync();
         _OnSensorTripleChangedDelegate.pushArgument(sensor);
         _OnSensorTripleChangedDelegate.pushArgument(x);
         _OnSensorTripleChangedDelegate.pushArgument(y);
@@ -49,7 +48,6 @@ private:
     static void openedViaCustomURL()
     {
         ///Convert to delegate calls.
-        _OnOpenedViaCustomURLDelegate.allowAsync();
         _OnOpenedViaCustomURLDelegate.invoke();
     }
 
