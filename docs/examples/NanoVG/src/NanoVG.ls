@@ -150,7 +150,57 @@ package
             g.drawRect(110, y, 100, 10);
             y += 12;
             
+            
+            /*
+            
+            g.clear();
+            g.lineStyle(1, 0xFFFFFF, 0.01);
+            var n = 5000;
+            var w = 460-g.x*2;
+            var h = 300-g.y*2;
+            
+            var t = 0;
+            
+            var cx = w / 2;
+            var cy = h / 2;
+            var r = 130;
+            
+            g.moveTo(cx, cy);
+            
+            for (var it:int = 0; it < 10; it++) {
+                for (var i:int = 0; i < n; i++) {
+                    var a:Number = t + i / (n-1) * Math.TWOPI * (1000 + Math.cos(t*0.000001)*10);
+                    var b:Number = t + i / (n-1) * Math.TWOPI * (1000 + Math.sin(t*0.00001)*10);
+                    //var l:Number = Math.sqrt(a*a + b*b);
+                    //a /= l;
+                    //b /= l;
+                    //g.lineTo(0+i/(n-1)*w, h/2+Math.sin(a)*h/2);
+                    g.lineTo(cx+Math.cos(a)*r, cy+Math.sin(b)*r);
+                }
+                t += 1/60;
+            }
+            
             //*/
+            
+            /*
+            g.clear();
+            g.lineStyle(1, 0xFFFFFF, 0.1);
+            var n = 4000;
+            var w = 460-g.x*2;
+            var h = 300-g.y*2;
+            
+            var t = Loom2D.juggler.elapsedTime;
+            
+            var cx = w / 2;
+            var cy = h / 2;
+            
+            g.moveTo(cx, cy);
+            for (var i:int = 0; i < n; i++) {
+                var r = i/(n-1)*120;
+                var a = (i/(n-1)*30+t*0.02) * Math.TWOPI;
+                g.lineTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r);
+            }
+            */
             
             //stage.addEventListener(TouchEvent.TOUCH, onTouch);
             
@@ -162,6 +212,23 @@ package
             if (!t) return;
             g.lineTo(t.globalX, t.globalY);
         }
+        
+        private function hsvToRgb(h:Number, s:Number, v:Number):uint {
+			var hi:int = int(h/60)%60;
+			var f:Number = h/60-Math.floor(h/60);
+			var p:Number = v*(1-s);
+			var q:Number = v*(1-f*s);
+			var t:Number = v*(1-(1-f)*s);
+			switch (hi) {
+				case 0: return ((int(v*255) << 16) | (int(t*255) << 8) | int(p*255));
+				case 1: return ((int(q*255) << 16) | (int(v*255) << 8) | int(p*255));
+				case 2: return ((int(p*255) << 16) | (int(v*255) << 8) | int(t*255));
+				case 3: return ((int(p*255) << 16) | (int(q*255) << 8) | int(v*255));
+				case 4: return ((int(t*255) << 16) | (int(p*255) << 8) | int(v*255));
+				case 5: return ((int(v*255) << 16) | (int(p*255) << 8) | int(q*255));
+			}
+			return 0;
+		}
         
         override public function onFrame() 
         {
@@ -183,8 +250,8 @@ package
             
             /*
             g.clear();
-            g.lineStyle(1, 0xFFFFFF, 1);
-            var n = 10;
+            g.lineStyle(1, 0xFFFFFF, 0.1);
+            var n = 5000;
             var w = 460-g.x*2;
             var h = 300-g.y*2;
             
@@ -196,15 +263,42 @@ package
             
             g.moveTo(cx, cy);
             for (var i:int = 0; i < n; i++) {
-                var a:Number = t + i / n * Math.TWOPI * (1000 + Math.cos(t*0.000001)*10);
-                var b:Number = t + i / n * Math.TWOPI * (1000 + Math.sin(t*0.00001)*10);
+                var a:Number = t + i / (n-1) * Math.TWOPI * (1000 + Math.cos(t*0.000001)*10);
+                var b:Number = t + i / (n-1) * Math.TWOPI * (1000 + Math.sin(t*0.00001)*10);
                 //var l:Number = Math.sqrt(a*a + b*b);
                 //a /= l;
                 //b /= l;
                 //g.lineTo(0+i/(n-1)*w, h/2+Math.sin(a)*h/2);
                 g.lineTo(cx+Math.cos(a)*r, cy+Math.sin(b)*r);
             }
-            */
+            //*/
+            
+            ///*
+            g.clear();
+            g.lineStyle(1, 0xFFFFFF, 0.1);
+            var n = 200;
+            var w = 460-g.x*2;
+            var h = 300-g.y*2;
+            
+            var t = Loom2D.juggler.elapsedTime;
+            
+            var cx = w / 2;
+            var cy = h / 2;
+            
+            //var a = Math.floor((0.25+0.25*Math.sin(t*1.1+Math.PI/2))*n);
+            //var b = Math.floor((0.75+0.25*Math.sin(t*1.3-Math.PI/2))*n);
+            
+            var a = 0;
+            var b = n;
+            
+            g.moveTo(cx, cy);
+            for (var i:int = a; i < b; i++) {
+                var r = i/(n-1)*120;
+                var ang = (i/(n-1)*10+t*0.5) * Math.TWOPI;
+                g.lineStyle(3 + 1*Math.sin(30*i/(n-1)*Math.TWOPI + t*50), hsvToRgb((i/n*360*3 + t*200)%360, 1, 1), 1);
+                g.lineTo(cx+Math.cos(ang)*r, cy+Math.sin(ang)*r);
+            }
+            //*/
         }
         
     }
