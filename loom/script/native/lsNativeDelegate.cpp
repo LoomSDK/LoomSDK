@@ -36,22 +36,6 @@ utHashTable<utPointerHashKey, utArray<NativeDelegate *> *> NativeDelegate::sActi
 static const int scmBadThreadID = 0xBAADF00D;
 int              NativeDelegate::smMainThreadID = scmBadThreadID;
 
-// todo
-//   - handles to active nativedelegates (rw from main thread, ro from secondary)
-//      - store pointer and counter
-//      - each instance gets unique count
-//      - check instance in the sActiveNativeDelegates list before calling
-//   - locked queue of pending calls and args
-//      - write out preamble + delegate id 
-//      - write out arg type + value into buffer
-//      - write out postamble
-//      - realloc as needed
-//      - keep vector of pending calls
-//   - delayed call executor routine
-//      - loop queue
-//      - check and call each delegate, warn-skip if no good
-//      - clear queue
-
 struct NativeDelegateCallNote
 {
     const NativeDelegate *delegate;
