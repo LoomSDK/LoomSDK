@@ -127,7 +127,7 @@ struct NativeDelegateCallNote
     void writeString(const char *value)
     {
         writeInt(strlen(value));
-        for(int i=0; i<strlen(value); i++)
+        for(unsigned int i=0; i<strlen(value); i++)
             writeByte(value[i]);
     }
 
@@ -252,12 +252,12 @@ void NativeDelegate::executeDeferredCalls(lua_State *L)
         return;
     }
 
-    for(int i=0; i<gNDCallNoteQueue.size(); i++)
+    for(unsigned int i=0; i<gNDCallNoteQueue.size(); i++)
     {
         NativeDelegateCallNote *ndcn = gNDCallNoteQueue[i];
 
         bool found = false;
-        for(int i=0; i<delegates->size(); i++)
+        for(unsigned int i=0; i<delegates->size(); i++)
         {
             // Look for our delegate.
             if((*delegates)[i] != ndcn->delegate)
