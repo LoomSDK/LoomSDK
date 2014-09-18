@@ -66,10 +66,10 @@ package loom2d.math
          */
         public static function intersects(rect1:Rectangle, rect2:Rectangle):Boolean
         {
-            var left:Number   = Math.max(rect1.x, rect2.x);
-            var right:Number  = Math.min(rect1.x + rect1.width, rect2.x + rect2.width);
-            var top:Number    = Math.max(rect1.y, rect2.y);
-            var bottom:Number = Math.min(rect1.y + rect1.height, rect2.y + rect2.height);
+            var left:Number   = Math.max2(rect1.x, rect2.x);
+            var right:Number  = Math.min2(rect1.x + rect1.width, rect2.x + rect2.width);
+            var top:Number    = Math.max2(rect1.y, rect2.y);
+            var bottom:Number = Math.min2(rect1.y + rect1.height, rect2.y + rect2.height);
 
             if (left > right || top > bottom)
                 return false;
