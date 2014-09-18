@@ -109,7 +109,10 @@ package
             
             g.lineTo(0, 100);
             
-            // curveTo
+            // Curve rendering
+            g.moveTo(50, 0);
+            g.curveTo(50-30, 50, 50, 100);
+            g.curveTo(50+30, 50, 50, 0);
             g.moveTo(0, 50);
             g.cubicCurveTo(1/3*100, 50-50, 2/3*100, 50+50, 100, 50);
             g.cubicCurveTo(2/3*100, 50-50, 1/3*100, 50+50, 0, 50);

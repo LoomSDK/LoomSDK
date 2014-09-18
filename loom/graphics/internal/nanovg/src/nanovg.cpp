@@ -810,6 +810,11 @@ static void nvg__appendCommands(struct NVGcontext* ctx, float* vals, int nvals)
 		if (ctx->commands == NULL) return;
 	}
 
+	if ((int)vals[0] != NVG_CLOSE && (int)vals[0] != NVG_WINDING) {
+		ctx->commandx = vals[nvals - 2];
+		ctx->commandy = vals[nvals - 1];
+	}
+
 	// transform commands
 	i = 0;
 	while (i < nvals) {
@@ -843,11 +848,6 @@ static void nvg__appendCommands(struct NVGcontext* ctx, float* vals, int nvals)
 	memcpy(&ctx->commands[ctx->ncommands], vals, nvals*sizeof(float));
 
 	ctx->ncommands += nvals;
-
-	if ((int)vals[0] != NVG_CLOSE && (int)vals[0] != NVG_WINDING) {
-		ctx->commandx = vals[nvals-2];
-		ctx->commandy = vals[nvals-1];
-	}
 }
 
 
@@ -1613,6 +1613,17 @@ void nvgLineTo(struct NVGcontext* ctx, float x, float y)
 void nvgBezierTo(struct NVGcontext* ctx, float c1x, float c1y, float c2x, float c2y, float x, float y)
 {
 	float vals[] = { NVG_BEZIERTO, c1x, c1y, c2x, c2y, x, y };
+	nvg__appendCommands(ctx, vals, NVG_COUNTOF(vals));
+}
+
+void nvgQuadTo(NVGcontext* ctx, float cx, float cy, float x, float y)
+{
+	float x0 = ctx->commandx;
+	float y0 = ctx->commandy;
+	float vals[] = { NVG_BEZIERTO,
+		x0 + 2.0f / 3.0f*(cx - x0), y0 + 2.0f / 3.0f*(cy - y0),
+		x + 2.0f / 3.0f*(cx - x), y + 2.0f / 3.0f*(cy - y),
+		x, y };
 	nvg__appendCommands(ctx, vals, NVG_COUNTOF(vals));
 }
 

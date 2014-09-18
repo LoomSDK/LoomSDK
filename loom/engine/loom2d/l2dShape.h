@@ -39,6 +39,7 @@ class VectorData {
 enum VectorPathCommand {
 	MOVE_TO,
 	LINE_TO,
+	CURVE_TO,
 	CUBIC_CURVE_TO
 };
 
@@ -50,6 +51,7 @@ public:
 
 	void moveTo(float x, float y);
 	void lineTo(float x, float y);
+	void curveTo(float controlX, float controlY, float anchorX, float anchorY);
 	void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);
 
 	virtual void render(lua_State *L, Shape* g);
@@ -154,6 +156,7 @@ public:
 	void endFill();
 	void moveTo(float x, float y);
 	void lineTo(float x, float y);
+	void curveTo(float controlX, float controlY, float anchorX, float anchorY);
 	void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);
 	void drawCircle(float x, float y, float radius);
 	void drawEllipse(float x, float y, float width, float height);

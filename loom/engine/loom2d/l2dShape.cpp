@@ -49,6 +49,13 @@ void VectorPath::render(lua_State *L, Shape* g) {
 				y = data[di++];
 				GFX::VectorRenderer::lineTo(x, y);
 				break;
+			case CURVE_TO:
+				c1x = data[di++];
+				c1y = data[di++];
+				x = data[di++];
+				y = data[di++];
+				GFX::VectorRenderer::curveTo(c1x, c1y, x, y);
+				break;
 			case CUBIC_CURVE_TO:
 				c1x = data[di++];
 				c1y = data[di++];
@@ -71,6 +78,13 @@ void VectorPath::lineTo(float x, float y) {
 	commands.push_back(LINE_TO);
 	data.push_back(x);
 	data.push_back(y);
+}
+void VectorPath::curveTo(float controlX, float controlY, float anchorX, float anchorY) {
+	commands.push_back(CURVE_TO);
+	data.push_back(controlX);
+	data.push_back(controlY);
+	data.push_back(anchorX);
+	data.push_back(anchorY);
 }
 void VectorPath::cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY) {
 	commands.push_back(CUBIC_CURVE_TO);
@@ -211,6 +225,10 @@ void Shape::moveTo(float x, float y) {
 
 void Shape::lineTo(float x, float y) {
 	getPath()->lineTo(x, y);
+}
+
+void Shape::curveTo(float controlX, float controlY, float anchorX, float anchorY) {
+	getPath()->curveTo(controlX, controlY, anchorX, anchorY);
 }
 
 void Shape::cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY) {

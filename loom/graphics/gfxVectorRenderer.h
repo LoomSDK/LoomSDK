@@ -65,6 +65,7 @@ public:
 
 	static void moveTo(float x, float y);
 	static void lineTo(float x, float y);
+	static void curveTo(float cx, float cy, float x, float y);
 	static void cubicCurveTo(float c1x, float c1y, float c2x, float c2y, float x, float y);
 	static void circle(float x, float y, float radius);
 	static void ellipse(float x, float y, float width, float height);
