@@ -46,7 +46,7 @@ bool g_verbose = false;
 #include <algorithm>
 #include <string>
 #include <vector>
-#include <unordered_map>
+#include <tr1/unordered_map>
 
 #define MAX_TAGS 256
 extern "C"

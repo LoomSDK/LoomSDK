@@ -22,8 +22,7 @@
 #include "nanovg.h"
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
-#include <stb_image/stb_image.c>
-
+#include "stb_image.h"
 
 #define NVG_INIT_PATH_SIZE 256
 #define NVG_MAX_STATES 32
@@ -587,7 +586,8 @@ void nvgFillPaint(struct NVGcontext* ctx, struct NVGpaint paint)
 int nvgCreateImage(struct NVGcontext* ctx, const char* filename)
 {
 	int w, h, n, image;
-	unsigned char* img = stbi_load(filename, &w, &h, &n, 4);
+	unsigned char* img = NULL;// TODO: stbi_load(filename, &w, &h, &n, 4);
+	w = h = n = 0;
 	if (img == NULL) {
 //		printf("Failed to load %s - %s\n", filename, stbi_failure_reason());
 		return 0;
