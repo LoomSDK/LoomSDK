@@ -548,6 +548,7 @@ namespace bgfx
 #	define GL_CHECK_I(_call) _call
 #endif // BGFX_CONFIG_DEBUG
 
+
 #define GL_IMPORT_TYPEDEFS 1
 #define GL_IMPORT(_optional, _proto, _func, _import) extern _proto _func
 #include "glimports.h"

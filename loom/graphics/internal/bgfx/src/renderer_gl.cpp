@@ -12,6 +12,41 @@
 
  #  include "loom/common/core/log.h"
 
+#if BX_PLATFORM_IOS == 1
+namespace bgfx
+{
+#   define GL_IMPORT(_optional, _proto, _func, _import) _proto _func = NULL
+#   include "loom/graphics/internal/bgfx/src/glimports.h"
+
+    int GlContext::fbo = 0;
+    int GlContext::msaaFbo = 0;
+
+void GlContext::create(uint32_t _width, uint32_t _height)
+{
+    BX_UNUSED(_width, _height);
+}
+
+void GlContext::destroy()
+{
+}
+
+void GlContext::resize(uint32_t _width, uint32_t _height, bool _vsync)
+{
+    BX_UNUSED(_width, _height, _vsync);
+    BX_TRACE("resize context");
+}
+
+void GlContext::swap()
+{
+}
+
+void GlContext::import()
+{
+}
+
+}
+#endif
+
 namespace bgfx
 {
 	static char s_viewName[BGFX_CONFIG_MAX_VIEWS][256];
