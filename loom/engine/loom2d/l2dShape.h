@@ -21,6 +21,7 @@
 #pragma once
 
 #include "loom/engine/loom2d/l2dDisplayObject.h"
+#include "loom/graphics/gfxVectorRenderer.h"
 
 namespace Loom2D
 {
@@ -79,13 +80,16 @@ public:
 	virtual void render(lua_State *L, Shape* g);
 };
 
-
 class VectorLineStyle : public VectorData {
 public:
+
 	float thickness;
 	unsigned int color;
 	float alpha;
-
+	GFX::VectorLineCaps caps;
+	GFX::VectorLineJoints joints;
+	float miterLimit;
+	
 	VectorLineStyle() {
 		reset();
 	}
@@ -93,8 +97,11 @@ public:
 		thickness = NAN;
 		color = 0x000000;
 		alpha = 1;
+		caps = GFX::VectorLineCaps::CAPS_ROUND;
+		joints = GFX::VectorLineJoints::JOINTS_ROUND;
+		miterLimit = 0;
 	}
-	VectorLineStyle(float thickness, unsigned int color, float alpha) : thickness(thickness), color(color), alpha(alpha) {};
+	VectorLineStyle(float thickness, unsigned int color, float alpha, GFX::VectorLineCaps caps, GFX::VectorLineJoints joints, float miterLimit) : thickness(thickness), color(color), alpha(alpha), caps(caps), joints(joints), miterLimit(miterLimit) {};
 
 	virtual void render(lua_State *L, Shape* g);
 };
@@ -151,7 +158,7 @@ public:
     void render(lua_State *L);
 
 	void clear();
-	void lineStyle(float thickness, unsigned int color, float alpha);
+	void lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit);
 	void beginFill(unsigned int color, float alpha);
 	void endFill();
 	void moveTo(float x, float y);

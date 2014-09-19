@@ -24,6 +24,18 @@
 
 namespace GFX
 {
+	
+enum VectorLineCaps {
+	CAPS_NONE,
+	CAPS_ROUND,
+	CAPS_SQUARE,
+};
+
+enum VectorLineJoints {
+	JOINTS_MITER,
+	JOINTS_ROUND,
+	JOINTS_BEVEL,
+};
 
 class VectorRenderer
 {
@@ -60,6 +72,10 @@ public:
 
 	static void strokeWidth(float size);
 	static void strokeColor(float r, float g, float b, float a);
+	
+	static void lineCaps(VectorLineCaps caps);
+	static void lineJoints(VectorLineJoints joints);
+	static void lineMiterLimit(float limit);
 
 	static void fillColor(float r, float g, float b, float a);
 

@@ -134,6 +134,9 @@ void VectorLineStyle::render(lua_State *L, Shape* g) {
 	g->currentLineStyle.thickness = thickness;
 	g->currentLineStyle.color = color;
 	g->currentLineStyle.alpha = alpha;
+	g->currentLineStyle.caps = caps;
+	g->currentLineStyle.joints = joints;
+	g->currentLineStyle.miterLimit = miterLimit;
 }
 
 void VectorFill::render(lua_State *L, Shape* g) {
@@ -175,6 +178,9 @@ void Shape::flushPath() {
 		float cg = ((color >> 8) & 0xff) / 255.0f;
 		float cb = ((color >> 0) & 0xff) / 255.0f;
 		GFX::VectorRenderer::strokeColor(cr, cg, cb, currentLineStyle.alpha);
+		GFX::VectorRenderer::lineCaps(currentLineStyle.caps);
+		GFX::VectorRenderer::lineJoints(currentLineStyle.joints);
+		GFX::VectorRenderer::lineMiterLimit(currentLineStyle.miterLimit);
 		GFX::VectorRenderer::renderStroke();
 	}
 	bool fill = currentFill.active;
@@ -204,8 +210,23 @@ void Shape::restartPath() {
 	}
 }
 
-void Shape::lineStyle(float thickness, unsigned int color, float alpha) {
-	queue->push_back(new VectorLineStyle(thickness, color, alpha));
+void Shape::lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit) {
+	
+	const char* c = caps.c_str();
+	GFX::VectorLineCaps capsEnum = 
+		!strcmp(c, "round")  ? GFX::VectorLineCaps::CAPS_ROUND :
+		!strcmp(c, "square") ? GFX::VectorLineCaps::CAPS_SQUARE :
+		!strcmp(c, "none") ? GFX::VectorLineCaps::CAPS_NONE :
+		GFX::VectorLineCaps::CAPS_ROUND;
+
+	const char* j = joints.c_str();
+	GFX::VectorLineJoints jointsEnum =
+		!strcmp(j, "round") ? GFX::VectorLineJoints::JOINTS_ROUND :
+		!strcmp(j, "bevel") ? GFX::VectorLineJoints::JOINTS_BEVEL :
+		!strcmp(j, "miter") ? GFX::VectorLineJoints::JOINTS_MITER :
+		GFX::VectorLineJoints::JOINTS_ROUND;
+
+	queue->push_back(new VectorLineStyle(thickness, color, alpha, capsEnum, jointsEnum, miterLimit));
 	restartPath();
 }
 

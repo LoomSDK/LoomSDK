@@ -126,7 +126,6 @@ void VectorRenderer::endFrame()
 	//drawLabel(nvg, utf8("Hello nanovg! Pokakaj se v hlače. あなたのズボンをうんち。便便在裤子上"), 10, 50, 280, 20);
 
 	nvgEndFrame(nvg);
-
 }
 
 void VectorRenderer::clearPath() {
@@ -148,11 +147,21 @@ void VectorRenderer::strokeColor(float r, float g, float b, float a) {
 	nvgStrokeColor(nvg, nvgRGBAf(r, g, b, a));
 }
 
+void VectorRenderer::lineCaps(VectorLineCaps caps) {
+	nvgLineCap(nvg, caps);
+}
+
+void VectorRenderer::lineJoints(VectorLineJoints joints) {
+	nvgLineJoin(nvg, joints);
+}
+
+void VectorRenderer::lineMiterLimit(float limit) {
+	nvgMiterLimit(nvg, limit);
+}
 
 void VectorRenderer::fillColor(float r, float g, float b, float a) {
 	nvgFillColor(nvg, nvgRGBAf(r, g, b, a));
 }
-
 
 void VectorRenderer::moveTo(float x, float y) {
 	nvgMoveTo(nvg, x, y);
@@ -191,7 +200,7 @@ void VectorRenderer::roundRect(float x, float y, float width, float height, floa
 void VectorRenderer::destroyGraphicsResources()
 {
 	if (nvg != NULL) {
-		
+		nvgDelete(nvg);
 	}
 }
 

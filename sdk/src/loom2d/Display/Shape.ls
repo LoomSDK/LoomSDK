@@ -34,8 +34,8 @@ package loom2d.display
         }
         
         public native function clear():void;
-        public native function lineStyle(thickness:Number, color:uint, alpha:Number):void;
-        public native function beginFill(color:uint, alpha:Number):void;
+        public native function lineStyle(thickness:Number = NaN, color:uint = 0x00000000, alpha:Number = 1, pixelHinting:Boolean = false, scaleMode:String = "", caps:String = "round", joints:String = "round", miterLimit:Number = 0):void;
+        public native function beginFill(color:uint = 0x00000000, alpha:Number = 1):void;
         public native function endFill():void;
         public native function moveTo(x:Number, y:Number):void;
         public native function lineTo(x:Number, y:Number):void;
