@@ -37,7 +37,9 @@ public class Test
     protected static function handleAssertFailure(msg:String):void
     {
         currentTestFailureCount ++;
-        currentTestErrors.pushSingle(msg);
+
+        if (msg)
+            currentTestErrors.pushSingle(msg);
     }
 
     protected static function handleAssertSuccess():void
@@ -79,6 +81,8 @@ public class Test
     protected function fail() 
     {
         Console.print(currentTest + " FAILED " + currentTestFailureCount + "/" + (currentTestFailureCount + currentTestSuccessCount) + "!");
+        Console.print("  " +currentTestErrors.join("\n  "));
+
         failed.pushSingle(this);
     }
     
