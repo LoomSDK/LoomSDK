@@ -26,8 +26,8 @@ import system.xml.XMLDocument;
 public class Test
 {
     public static var verbose:Boolean = true;
-    public static var passed:Vector.<Test> = new Vector.<Test>;
-    public static var failed:Vector.<Test> = new Vector.<Test>;
+    public static var passed:Vector.<Test> = [];
+    public static var failed:Vector.<Test> = [];
     
     public static var currentTest:String = "UNKNOWN";
     public static var currentTestSuccessCount:int = 0;
