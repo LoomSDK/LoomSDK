@@ -28,6 +28,7 @@ public class Test
     public static var verbose:Boolean = true;
     public static var passed:Vector.<Test> = [];
     public static var failed:Vector.<Test> = [];
+    public static var errors:Dictionary.<Test,Vector.<String>> = {};
     
     public static var currentTest:String = "UNKNOWN";
     public static var currentTestSuccessCount:int = 0;
@@ -84,6 +85,9 @@ public class Test
         Console.print("  " +currentTestErrors.join("\n  "));
 
         failed.pushSingle(this);
+
+        if (!errors[this]) errors[this] = new Vector.<String>();
+        errors[this] = errors[this].concat(currentTestErrors.slice());
     }
     
     public function begin()
@@ -177,31 +181,30 @@ public class Test
     
     public static function generateXML(xmlFile:String) {
     
-        var xml:String = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        
+        var xml:String = "";
         var total = passed.length + failed.length;
+        var i:int, j:int;
         
+        xml += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         xml += "\n<!-- LoomScript Test Suite -->\n";
-        
         xml += "\n<testsuite name=\"LoomScript Tests\" tests=\"" + total +"\" errors=\"" + failed.length + "\" failures=\"0\" skip=\"0\">\n";
         
         xml += "\n<!-- PASSED -->\n";
-        
-        var i:int;
         for (i = 0; i < passed.length; i++) {
-        
             var test = passed[i];
             xml += "\n<testcase name=\"" + test.name +"\" /> ";    
-            
         }
         
         xml += "\n\n<!-- FAILED -->\n";
-        
         for (i = 0; i < failed.length; i++) {
+            var fail:Test = failed[i];
+            var failErrors:Vector.<String> = errors[fail];
         
-            var fail = failed[i];
-            xml += "\n<testcase name=\"" + fail.name + "\" > <error /> </testcase>\n";    
-            
+            xml += "\n<testcase name=\"" + fail.name + "\" >";
+            for (j = 0; j < failErrors.length; j++) {
+                xml += "\n  <failure type=\"assertion\" message=\"" +failErrors[j] + "\" />";
+            }
+            xml += "\n</testcase>\n";
         }
         
         xml += "\n</testsuite>\n";
