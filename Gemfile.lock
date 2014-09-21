@@ -1,6 +1,5 @@
 GEM
   remote: http://rubygems.org/
-  remote: http://rubygems.org/
   specs:
     json (1.8.0)
     nokogiri (1.5.10)
