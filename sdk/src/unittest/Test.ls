@@ -48,12 +48,12 @@ public class Test
         currentTestSuccessCount++;
     }
 
-    public static function assertEqual(a:Object, b:Object, msg:String = null):void
+    public static function assertEqual(a:Object, b:Object, msg:String = ""):void
     {
         if(a == b)
             handleAssertSuccess();
         else
-            handleAssertFailure(msg);
+            handleAssertFailure(msg + " (expected " + a + " to equal " + b + ")");
     }
 
     public static function assert(value:Object, msg:String = null):void
