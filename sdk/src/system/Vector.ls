@@ -37,6 +37,30 @@ package system {
  *
  *  var v2:Vector.<String> = [ 'one', 'two', 'three' ];
  *  ```
+ *
+ *  Iteration over vectors can be done in several ways:
+ *
+ *  * with a `for` loop, for indexed iteration
+ *  * with a `for each` loop, for simple iteration
+ *  * using the callback iterators: `every()`, `filter()`, `forEach()`, `map()`, `some()`
+ *
+ *  ```as3
+ *  var v:Vector.<String> = [ 'a', 'b', 'c' ];
+ *
+ *  for (var i:Number = 0; i < v.length; i++) {
+ *      trace('v[' + i +'] =', v[i]);
+ *  }
+ *
+ *  for each(var s:String in v) {
+ *      trace(s);
+ *  }
+ *  ```
+ *
+ *  @see #every()
+ *  @see #filter()
+ *  @see #forEach()
+ *  @see #map()
+ *  @see #some()
  */
 final class Vector
 {

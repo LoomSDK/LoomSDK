@@ -36,6 +36,20 @@ package system {
  *
  *  var d2:Dictionary.<String, Number> = { 'three': 3, 'four': 4 };
  *  ```
+ *
+ *  Iteration over dictionaries can be done wth a `for..in` loop:
+ *
+ *  ```as3
+ *  var d:Dictionary.<String, Number> = {
+ *      'one' : 1,
+ *      'two' : 2,
+ *      'three' : 3,
+ *  };
+ *  for (var key:String in d) {
+ *      var v:Number = d[key];
+ *      trace('d["' +key +'"] =', v);
+ *  }
+ *  ```
  */
 final class Dictionary extends Object {
     
