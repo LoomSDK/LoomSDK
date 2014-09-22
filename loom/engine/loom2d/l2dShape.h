@@ -34,9 +34,6 @@ class VectorData {
 		virtual void render(lua_State *L, Shape* g) = 0;
 };
 
-#define MAXCOMMANDS 20
-#define MAXDATA 200
-
 enum VectorPathCommand {
 	MOVE_TO,
 	LINE_TO,
@@ -66,7 +63,7 @@ enum VectorShapeType {
 	RECT,
 	ROUND_RECT,
 	ARC_CW,
-	ARC_CCW,
+	ARC_CCW
 };
 
 class VectorShape : public VectorData {
@@ -126,6 +123,24 @@ public:
 	virtual void render(lua_State *L, Shape* g);
 };
 
+class VectorText : public VectorData {
+protected:
+	float x;
+	float y;
+	utString* text;
+
+public:
+	VectorText(float x, float y, utString* text) : x(x), y(y), text(text) {};
+
+	virtual void render(lua_State *L, Shape* g);
+};
+
+class VectorTextFormatData : public VectorData {
+public:
+	GFX::VectorTextFormat* format;
+	VectorTextFormatData(GFX::VectorTextFormat* format) : format(format) {};
+	virtual void render(lua_State *L, Shape* g);
+};
 
 class Shape : public DisplayObject
 {
@@ -159,8 +174,10 @@ public:
 
 	void clear();
 	void lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit);
+	void textFormat(GFX::VectorTextFormat format);
 	void beginFill(unsigned int color, float alpha);
 	void endFill();
+
 	void moveTo(float x, float y);
 	void lineTo(float x, float y);
 	void curveTo(float controlX, float controlY, float anchorX, float anchorY);
@@ -172,6 +189,8 @@ public:
 	void drawRect(float x, float y, float width, float height);
 	void drawRoundRect(float x, float y, float width, float height, float ellipseWidth, float ellipseHeight);
 	void drawArc(float x, float y, float radius, float angleFrom, float angleTo, int direction);
+	
+	void drawText(float x, float y, utString text);
 
     static void initialize(lua_State *L)
     {

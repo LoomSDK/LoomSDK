@@ -113,6 +113,10 @@ void Shape::lineStyle(float thickness, unsigned int color, float alpha, bool pix
 	restartPath();
 }
 
+void Shape::textFormat(GFX::VectorTextFormat format) {
+	queue->push_back(new VectorTextFormatData(new GFX::VectorTextFormat(format)));
+}
+
 void Shape::beginFill(unsigned int color, float alpha) {
 	queue->push_back(new VectorFill(color, alpha));
 	restartPath();
@@ -166,7 +170,9 @@ void Shape::drawArc(float x, float y, float radius, float angleFrom, float angle
 	addShape(new VectorShape(direction == GFX::VectorWinding::CW ? ARC_CW : ARC_CCW, x, y, radius, angleFrom, angleTo));
 }
 
-
+void Shape::drawText(float x, float y, utString text) {
+	queue->push_back(new VectorText(x, y, new utString(text)));
+}
 
 
 
@@ -279,7 +285,13 @@ void VectorFill::render(lua_State *L, Shape* g) {
 	g->currentFill.alpha = alpha;
 }
 
+void VectorText::render(lua_State *L, Shape* g) {
+	GFX::VectorRenderer::text(x, y, text);
+}
 
+void VectorTextFormatData::render(lua_State *L, Shape* g) {
+	GFX::VectorRenderer::textFormat(format);
+}
 
 
 

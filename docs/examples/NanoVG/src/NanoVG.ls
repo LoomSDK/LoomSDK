@@ -5,6 +5,7 @@ package
     import loom2d.display.Shape;
     import loom2d.display.StageScaleMode;
     import loom2d.display.Image;
+    import loom2d.display.TextFormat;
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
     import loom2d.events.TouchPhase;
@@ -99,7 +100,8 @@ package
             g.endFill();
             y += 20;
             
-            g.lineStyle(1, 0x000000, 1, false, "", "round", "round", 2);
+            // Set default line style
+            g.lineStyle(1);
             
             // Implicit moveTo(0,0)
             g.lineTo(100, 0);
@@ -118,17 +120,27 @@ package
             g.drawArc(25, 75, 23,  0.5*Math.PI, 1.0*Math.PI, 2);
             g.drawArc(75, 75, 23,  0.5*Math.PI, 0.0*Math.PI, 1);
             
-            // arcTo with implicit moveTo after shapes
+            // arcTo with implicit initial moveTo after shapes
                                 g.arcTo(  0,  75, 25, 75, 25);
             g.moveTo(100, 100); g.arcTo(100,  75, 75, 75, 25);
             g.moveTo(100,   0); g.arcTo(100,  25, 75, 25, 25);
             g.moveTo(  0,   0); g.arcTo(  0,  25, 25, 25, 25);
             
+            // Draw text
+            var format = new TextFormat();
+            
+            format.size = 20;
+            g.textFormat(format);
+            g.drawText(220, 10, "hello");
+            
+            format.size = 30;
+            g.textFormat(format);
+            g.drawText(220, 24, "world");
+            
             // Mixed line and shape rendering
             g.moveTo(100, 0);
             g.lineTo(100, 100);
             g.drawCircle(50, 50, 40);
-            
             g.lineTo(0, 100);
             
             // Curve rendering

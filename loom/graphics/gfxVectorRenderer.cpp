@@ -72,7 +72,7 @@ void drawLabel(struct NVGcontext* vg, const char* text, float x, float y, float 
 
 	nvgFontSize(vg, 30.0f);
 	nvgFontFace(vg, "sans");
-	nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
+	nvgFillColor(vg, nvgRGBA(0, 255, 255, 128));
 
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 	nvgText(vg, x, y + h*0.5f, text, NULL);
@@ -125,6 +125,8 @@ void VectorRenderer::endFrame()
 
 	//drawLabel(nvg, utf8("Hello nanovg! Pokakaj se v hlače. あなたのズボンをうんち。便便在裤子上"), 10, 50, 280, 20);
 
+	//drawLabel(nvg, "hello!", 10, 50, 280, 20);
+
 	nvgEndFrame(nvg);
 }
 
@@ -162,6 +164,11 @@ void VectorRenderer::lineMiterLimit(float limit) {
 void VectorRenderer::fillColor(float r, float g, float b, float a) {
 	nvgFillColor(nvg, nvgRGBAf(r, g, b, a));
 }
+
+void VectorRenderer::textFormat(VectorTextFormat* format) {
+	nvgFontSize(nvg, format->size);
+}
+
 
 void VectorRenderer::moveTo(float x, float y) {
 	nvgMoveTo(nvg, x, y);
@@ -206,6 +213,10 @@ void VectorRenderer::arc(float x, float y, float radius, float angleFrom, float 
 }
 
 
+void VectorRenderer::text(float x, float y, utString* string) {
+	nvgText(nvg, x, y, string->c_str(), NULL);
+}
+
 
 void VectorRenderer::destroyGraphicsResources()
 {
@@ -221,9 +232,6 @@ void VectorRenderer::initializeGraphicsResources()
 	//font = nvgCreateFont(nvg, "sans", "font/droidsans.ttf");
 	//font = nvgCreateFont(nvg, "sans", "font/Pecita.otf");
 	font = nvgCreateFont(nvg, "sans", "font/Cyberbit.ttf");
-
-	nvgFontFaceId(nvg, font);
-	nvgFontSize(nvg, 30);
 }
 
 

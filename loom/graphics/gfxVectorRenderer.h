@@ -55,6 +55,13 @@ struct VectorWinding {
 	};
 };
 
+class VectorTextFormat {
+public:
+	float size = 12.0f;
+	inline float getSize() const { return size; }
+	void setSize(float t) { size = t; }
+};
+
 class VectorRenderer
 {
     friend class Graphics;
@@ -97,6 +104,8 @@ public:
 
 	static void fillColor(float r, float g, float b, float a);
 
+	static void textFormat(VectorTextFormat* format);
+
 	static void moveTo(float x, float y);
 	static void lineTo(float x, float y);
 	static void curveTo(float cx, float cy, float x, float y);
@@ -108,6 +117,8 @@ public:
 	static void rect(float x, float y, float width, float height);
 	static void roundRect(float x, float y, float width, float height, float radius);
 	static void arc(float x, float y, float radius, float angleFrom, float angleTo, VectorWinding::Enum direction);
+
+	static void text(float x, float y, utString* string);
 
     static void endFrame();
 };

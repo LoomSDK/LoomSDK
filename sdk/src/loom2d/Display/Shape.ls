@@ -19,7 +19,13 @@ package loom2d.display
     
     /** TODO
      */
-
+    
+    public native class TextFormat
+    {
+        public native function set size(value:float);
+        public native function get size():float;
+    }
+    
     [Native(managed)]
     public native class Shape extends DisplayObject
     {
@@ -35,6 +41,7 @@ package loom2d.display
         
         public native function clear():void;
         public native function lineStyle(thickness:Number = NaN, color:uint = 0x00000000, alpha:Number = 1, pixelHinting:Boolean = false, scaleMode:String = "", caps:String = "round", joints:String = "round", miterLimit:Number = 0):void;
+        public native function textFormat(format:TextFormat):void;
         public native function beginFill(color:uint = 0x00000000, alpha:Number = 1):void;
         public native function endFill():void;
         public native function moveTo(x:Number, y:Number):void;
@@ -47,6 +54,7 @@ package loom2d.display
         public native function drawRect(x:Number, y:Number, width:Number, height:Number):void;
         public native function drawRoundRect(x:Number, y:Number, width:Number, height:Number, ellipseWidth:Number, ellipseHeight:Number):void;
         public native function drawArc(x:Number, y:Number, radius:Number, angleFrom:Number, angleTo:Number, direction:int):void;
+        public native function drawText(x:Number, y:Number, text:String):void;
         
         /** @inheritDoc */
         public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
