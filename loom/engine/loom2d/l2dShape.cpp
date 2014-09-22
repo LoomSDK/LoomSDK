@@ -213,18 +213,18 @@ void Shape::restartPath() {
 void Shape::lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit) {
 	
 	const char* c = caps.c_str();
-	GFX::VectorLineCaps capsEnum = 
-		!strcmp(c, "round")  ? GFX::VectorLineCaps::CAPS_ROUND :
-		!strcmp(c, "square") ? GFX::VectorLineCaps::CAPS_SQUARE :
-		!strcmp(c, "none") ? GFX::VectorLineCaps::CAPS_NONE :
-		GFX::VectorLineCaps::CAPS_ROUND;
+	GFX::VectorLineCaps::Enum capsEnum = 
+		!strcmp(c, "round")  ? GFX::VectorLineCaps::ROUND :
+		!strcmp(c, "square") ? GFX::VectorLineCaps::SQUARE :
+		!strcmp(c, "none") ? GFX::VectorLineCaps::NONE :
+		GFX::VectorLineCaps::ROUND;
 
 	const char* j = joints.c_str();
-	GFX::VectorLineJoints jointsEnum =
-		!strcmp(j, "round") ? GFX::VectorLineJoints::JOINTS_ROUND :
-		!strcmp(j, "bevel") ? GFX::VectorLineJoints::JOINTS_BEVEL :
-		!strcmp(j, "miter") ? GFX::VectorLineJoints::JOINTS_MITER :
-		GFX::VectorLineJoints::JOINTS_ROUND;
+	GFX::VectorLineJoints::Enum jointsEnum =
+		!strcmp(j, "round") ? GFX::VectorLineJoints::ROUND :
+		!strcmp(j, "bevel") ? GFX::VectorLineJoints::BEVEL :
+		!strcmp(j, "miter") ? GFX::VectorLineJoints::MITER :
+		GFX::VectorLineJoints::ROUND;
 
 	queue->push_back(new VectorLineStyle(thickness, color, alpha, capsEnum, jointsEnum, miterLimit));
 	restartPath();

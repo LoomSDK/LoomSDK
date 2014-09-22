@@ -147,11 +147,11 @@ void VectorRenderer::strokeColor(float r, float g, float b, float a) {
 	nvgStrokeColor(nvg, nvgRGBAf(r, g, b, a));
 }
 
-void VectorRenderer::lineCaps(VectorLineCaps caps) {
+void VectorRenderer::lineCaps(VectorLineCaps::Enum caps) {
 	nvgLineCap(nvg, caps);
 }
 
-void VectorRenderer::lineJoints(VectorLineJoints joints) {
+void VectorRenderer::lineJoints(VectorLineJoints::Enum joints) {
 	nvgLineJoin(nvg, joints);
 }
 

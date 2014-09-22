@@ -86,8 +86,8 @@ public:
 	float thickness;
 	unsigned int color;
 	float alpha;
-	GFX::VectorLineCaps caps;
-	GFX::VectorLineJoints joints;
+	GFX::VectorLineCaps::Enum caps;
+	GFX::VectorLineJoints::Enum joints;
 	float miterLimit;
 	
 	VectorLineStyle() {
@@ -97,11 +97,11 @@ public:
 		thickness = NAN;
 		color = 0x000000;
 		alpha = 1;
-		caps = GFX::VectorLineCaps::CAPS_ROUND;
-		joints = GFX::VectorLineJoints::JOINTS_ROUND;
+		caps = GFX::VectorLineCaps::ROUND;
+		joints = GFX::VectorLineJoints::ROUND;
 		miterLimit = 0;
 	}
-	VectorLineStyle(float thickness, unsigned int color, float alpha, GFX::VectorLineCaps caps, GFX::VectorLineJoints joints, float miterLimit) : thickness(thickness), color(color), alpha(alpha), caps(caps), joints(joints), miterLimit(miterLimit) {};
+	VectorLineStyle(float thickness, unsigned int color, float alpha, GFX::VectorLineCaps::Enum caps, GFX::VectorLineJoints::Enum joints, float miterLimit) : thickness(thickness), color(color), alpha(alpha), caps(caps), joints(joints), miterLimit(miterLimit) {};
 
 	virtual void render(lua_State *L, Shape* g);
 };
