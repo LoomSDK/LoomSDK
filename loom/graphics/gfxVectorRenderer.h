@@ -41,6 +41,13 @@ struct VectorLineJoints {
 	};
 };
 
+struct VectorLineScaleMode {
+	enum Enum {
+		NORMAL,
+		NONE,
+	};
+};
+
 class VectorRenderer
 {
     friend class Graphics;

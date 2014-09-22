@@ -67,6 +67,8 @@ void VectorPath::render(lua_State *L, Shape* g) {
 				break;
 		}
 	}
+
+	g->pathDirty = true;
 }
 
 void VectorPath::moveTo(float x, float y) {
@@ -104,6 +106,7 @@ void VectorShape::render(lua_State *L, Shape* g) {
 		case RECT:       GFX::VectorRenderer::rect(x, y, a, b); break;
 		case ROUND_RECT: GFX::VectorRenderer::roundRect(x, y, a, b, c); break;
 	}
+	g->pathDirty = true;
 }
 
 VectorPath* Shape::getPath() {
@@ -120,6 +123,25 @@ VectorPath* Shape::getPath() {
 	return path;
 }
 
+void VectorLineStyle::reset() {
+	thickness = NAN;
+	color = 0x000000;
+	alpha = 1;
+	scaleMode = GFX::VectorLineScaleMode::NORMAL;
+	caps = GFX::VectorLineCaps::ROUND;
+	joints = GFX::VectorLineJoints::ROUND;
+	miterLimit = 0;
+}
+
+void VectorLineStyle::copyTo(VectorLineStyle* s) {
+	s->thickness = thickness;
+	s->color = color;
+	s->alpha = alpha;
+	s->scaleMode = scaleMode;
+	s->caps = caps;
+	s->joints = joints;
+	s->miterLimit = miterLimit;
+}
 
 void VectorLineStyle::render(lua_State *L, Shape* g) {
 	/*
@@ -131,12 +153,7 @@ void VectorLineStyle::render(lua_State *L, Shape* g) {
 	GFX::VectorRenderer::strokeColor(cr, cg, cb, alpha);
 	//*/
 	g->flushPath();
-	g->currentLineStyle.thickness = thickness;
-	g->currentLineStyle.color = color;
-	g->currentLineStyle.alpha = alpha;
-	g->currentLineStyle.caps = caps;
-	g->currentLineStyle.joints = joints;
-	g->currentLineStyle.miterLimit = miterLimit;
+	copyTo(&g->currentLineStyle);
 }
 
 void VectorFill::render(lua_State *L, Shape* g) {
@@ -171,8 +188,12 @@ bool Shape::isStyleVisible() {
 
 void Shape::flushPath() {
 	bool stroke = !isnan(currentLineStyle.thickness);
-	if (stroke) {
-		GFX::VectorRenderer::strokeWidth(currentLineStyle.thickness);
+	if (stroke && pathDirty) {
+		float scale = 1.0f;
+		switch (currentLineStyle.scaleMode) {
+			case GFX::VectorLineScaleMode::NONE: scale = 1/sqrt(scaleX*scaleX+scaleY*scaleY); break;
+		}
+		GFX::VectorRenderer::strokeWidth(currentLineStyle.thickness*scale);
 		unsigned int color = currentLineStyle.color;
 		float cr = ((color >> 16) & 0xff) / 255.0f;
 		float cg = ((color >> 8) & 0xff) / 255.0f;
@@ -184,7 +205,7 @@ void Shape::flushPath() {
 		GFX::VectorRenderer::renderStroke();
 	}
 	bool fill = currentFill.active;
-	if (fill) {
+	if (fill && pathDirty) {
 		unsigned int color = currentFill.color;
 		float cr = ((color >> 16) & 0xff) / 255.0f;
 		float cg = ((color >> 8) & 0xff) / 255.0f;
@@ -193,6 +214,7 @@ void Shape::flushPath() {
 		GFX::VectorRenderer::renderFill();
 		currentFill.active = false;
 	}
+	pathDirty = false;
 	GFX::VectorRenderer::clearPath();
 }
 
@@ -211,22 +233,30 @@ void Shape::restartPath() {
 }
 
 void Shape::lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit) {
+
+	const char* t;
 	
-	const char* c = caps.c_str();
+	t = scaleMode.c_str();
+	GFX::VectorLineScaleMode::Enum scaleModeEnum =
+		!strcmp(t, "normal") ? GFX::VectorLineScaleMode::NORMAL :
+		!strcmp(t, "none") ? GFX::VectorLineScaleMode::NONE :
+		GFX::VectorLineScaleMode::NORMAL;
+
+	t = caps.c_str();
 	GFX::VectorLineCaps::Enum capsEnum = 
-		!strcmp(c, "round")  ? GFX::VectorLineCaps::ROUND :
-		!strcmp(c, "square") ? GFX::VectorLineCaps::SQUARE :
-		!strcmp(c, "none") ? GFX::VectorLineCaps::NONE :
+		!strcmp(t, "round")  ? GFX::VectorLineCaps::ROUND :
+		!strcmp(t, "square") ? GFX::VectorLineCaps::SQUARE :
+		!strcmp(t, "none") ? GFX::VectorLineCaps::NONE :
 		GFX::VectorLineCaps::ROUND;
 
-	const char* j = joints.c_str();
+	t = joints.c_str();
 	GFX::VectorLineJoints::Enum jointsEnum =
-		!strcmp(j, "round") ? GFX::VectorLineJoints::ROUND :
-		!strcmp(j, "bevel") ? GFX::VectorLineJoints::BEVEL :
-		!strcmp(j, "miter") ? GFX::VectorLineJoints::MITER :
+		!strcmp(t, "round") ? GFX::VectorLineJoints::ROUND :
+		!strcmp(t, "bevel") ? GFX::VectorLineJoints::BEVEL :
+		!strcmp(t, "miter") ? GFX::VectorLineJoints::MITER :
 		GFX::VectorLineJoints::ROUND;
 
-	queue->push_back(new VectorLineStyle(thickness, color, alpha, capsEnum, jointsEnum, miterLimit));
+	queue->push_back(new VectorLineStyle(thickness, color, alpha, scaleModeEnum, capsEnum, jointsEnum, miterLimit));
 	restartPath();
 }
 
