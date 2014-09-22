@@ -211,13 +211,13 @@ class TestVector extends Test
         var nv:Vector.<Number> = [34000, 77800, 12300, 11000, 21600, 33120, 18190, 43090];
 
         // test default splice args
-        var vsplice:Vector.<Number> = nv.slice();
+        var nvslice:Vector.<Number> = nv.slice();
 
-        assert(vsplice.length == nv.length);
+        assert(nvslice.length == nv.length);
 
-        for (x in vsplice)
+        for (x in nvslice)
         {
-            assert(nv[x] == vsplice[x]);
+            assert(nv[x] == nvslice[x]);
         }
         
         nv.sort(Vector.NUMERIC);
@@ -305,8 +305,8 @@ class TestVector extends Test
         av = ["apple", "orange", null, "Cherry", "kiwi"];
         
         // Returns the original Vector
-        var rav = av.sort(Vector.UNIQUESORT);
-        assert(av == rav);
+        var vr:Object = av.sort(Vector.UNIQUESORT);
+        assert(av == vr);
         
         // ensure elements are sorted
         assert(av[0] == null);
