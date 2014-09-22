@@ -41,7 +41,8 @@ enum VectorPathCommand {
 	MOVE_TO,
 	LINE_TO,
 	CURVE_TO,
-	CUBIC_CURVE_TO
+	CUBIC_CURVE_TO,
+	ARC_TO,
 };
 
 class VectorPath : public VectorData {
@@ -54,6 +55,7 @@ public:
 	void lineTo(float x, float y);
 	void curveTo(float controlX, float controlY, float anchorX, float anchorY);
 	void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);
+	void arcTo(float controlX, float controlY, float anchorX, float anchorY, float radius);
 
 	virtual void render(lua_State *L, Shape* g);
 };
@@ -62,7 +64,9 @@ enum VectorShapeType {
 	CIRCLE,
 	ELLIPSE,
 	RECT,
-	ROUND_RECT
+	ROUND_RECT,
+	ARC_CW,
+	ARC_CCW,
 };
 
 class VectorShape : public VectorData {
@@ -161,10 +165,13 @@ public:
 	void lineTo(float x, float y);
 	void curveTo(float controlX, float controlY, float anchorX, float anchorY);
 	void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);
+	void arcTo(float controlX, float controlY, float anchorX, float anchorY, float radius);
+
 	void drawCircle(float x, float y, float radius);
 	void drawEllipse(float x, float y, float width, float height);
 	void drawRect(float x, float y, float width, float height);
 	void drawRoundRect(float x, float y, float width, float height, float ellipseWidth, float ellipseHeight);
+	void drawArc(float x, float y, float radius, float angleFrom, float angleTo, int direction);
 
     static void initialize(lua_State *L)
     {

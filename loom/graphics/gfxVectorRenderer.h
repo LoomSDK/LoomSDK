@@ -48,6 +48,13 @@ struct VectorLineScaleMode {
 	};
 };
 
+struct VectorWinding {
+	enum Enum {
+		CCW = 1,
+		CW  = 2,
+	};
+};
+
 class VectorRenderer
 {
     friend class Graphics;
@@ -94,10 +101,13 @@ public:
 	static void lineTo(float x, float y);
 	static void curveTo(float cx, float cy, float x, float y);
 	static void cubicCurveTo(float c1x, float c1y, float c2x, float c2y, float x, float y);
+	static void arcTo(float cx, float cy, float x, float y, float radius);
+
 	static void circle(float x, float y, float radius);
 	static void ellipse(float x, float y, float width, float height);
 	static void rect(float x, float y, float width, float height);
 	static void roundRect(float x, float y, float width, float height, float radius);
+	static void arc(float x, float y, float radius, float angleFrom, float angleTo, VectorWinding::Enum direction);
 
     static void endFrame();
 };

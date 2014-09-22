@@ -179,6 +179,12 @@ void VectorRenderer::cubicCurveTo(float c1x, float c1y, float c2x, float c2y, fl
 	nvgBezierTo(nvg, c1x, c1y, c2x, c2y, x, y);
 }
 
+void VectorRenderer::arcTo(float cx, float cy, float x, float y, float radius) {
+	nvgArcTo(nvg, cx, cy, x, y, radius);
+}
+
+
+
 void VectorRenderer::circle(float x, float y, float radius) {
 	nvgCircle(nvg, x, y, radius);
 }
@@ -193,6 +199,10 @@ void VectorRenderer::rect(float x, float y, float width, float height) {
 
 void VectorRenderer::roundRect(float x, float y, float width, float height, float radius) {
 	nvgRoundedRect(nvg, x, y, width, height, radius);
+}
+
+void VectorRenderer::arc(float x, float y, float radius, float angleFrom, float angleTo, VectorWinding::Enum direction) {
+	nvgArc(nvg, x, y, radius, angleFrom, angleTo, direction);
 }
 
 

@@ -57,6 +57,12 @@ package
             g.y = 50;
             stage.addChild(g);
             
+            var s = new Shape();
+            s.x = 50;
+            s.y = 50;
+            s.scale = 10;
+            stage.addChild(s);
+            
             //gfx.moveTo(0, 0);
             //gfx.lineTo(50, 0);
             //gfx.lineTo(0, 50);
@@ -81,6 +87,12 @@ package
             
             var x = 0, y = 0;
             
+            // Fill before clearing
+            g.beginFill(0xFF2424, 1);
+            g.drawRect(0, y, 500, 500);
+            g.endFill();
+            g.clear();
+            
             // Fill
             g.beginFill(0x3EA80B, 1);
             g.drawRect(110, y, 100, 10);
@@ -101,6 +113,16 @@ package
             g.drawEllipse(50, 50, 20, 50);
             g.drawRect(25, 25, 50, 50);
             g.drawRoundRect(35, 35, 30, 30, 10, 10);
+            g.drawArc(25, 25, 23,  1.5*Math.PI, 1.0*Math.PI, 1);
+            g.drawArc(75, 25, 23, -0.5*Math.PI, 0.0*Math.PI, 2);
+            g.drawArc(25, 75, 23,  0.5*Math.PI, 1.0*Math.PI, 2);
+            g.drawArc(75, 75, 23,  0.5*Math.PI, 0.0*Math.PI, 1);
+            
+            // arcTo with implicit moveTo after shapes
+                                g.arcTo(  0,  75, 25, 75, 25);
+            g.moveTo(100, 100); g.arcTo(100,  75, 75, 75, 25);
+            g.moveTo(100,   0); g.arcTo(100,  25, 75, 25, 25);
+            g.moveTo(  0,   0); g.arcTo(  0,  25, 25, 25, 25);
             
             // Mixed line and shape rendering
             g.moveTo(100, 0);
@@ -145,7 +167,22 @@ package
             g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185);
             g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190);
             
-            // Line styles
+            
+            // Miter joint angles
+            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(05, 170); g.lineTo(25, 170); g.lineTo(05, 175);
+            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185);
+            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190);
+            
+            // Skeleton
+            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(05, 170); g.lineTo(25, 170); g.lineTo(05, 175);
+            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185);
+            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190);
+            
+            // Line scale mode
+            s.lineStyle(1, 0x000000, 1, false, "normal"); s.moveTo(0.5, 21); s.lineTo(2.5, 21); s.lineTo(0.5, 21);
+            s.lineStyle(1, 0x000000, 1, false, "none");   s.moveTo(4, 21); s.lineTo(6, 21); s.lineTo(4, 21);
+            
+            // Various line styles
             g.lineStyle(0, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
             g.lineStyle(0.1, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
             g.lineStyle(0.2, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
@@ -198,8 +235,8 @@ package
             /*
             
             g.clear();
-            g.lineStyle(1, 0xFFFFFF, 0.01);
-            var n = 5000;
+            g.lineStyle(10, 0x000000, 0.05);
+            var n = 100;
             var w = 460-g.x*2;
             var h = 300-g.y*2;
             
@@ -211,7 +248,7 @@ package
             
             g.moveTo(cx, cy);
             
-            for (var it:int = 0; it < 10; it++) {
+            for (var it:int = 0; it < 1; it++) {
                 for (var i:int = 0; i < n; i++) {
                     var a:Number = t + i / (n-1) * Math.TWOPI * (1000 + Math.cos(t*0.000001)*10);
                     var b:Number = t + i / (n-1) * Math.TWOPI * (1000 + Math.sin(t*0.00001)*10);
@@ -280,9 +317,6 @@ package
             var t = Loom2D.juggler.elapsedTime;
             g.clear();
             g.lineStyle(1, 0xBD55F4, 1);
-            g.moveTo(0, 0);
-            g.moveTo(0, 0);
-            g.moveTo(0, 0);
             g.moveTo(0, 0);
             g.cubicCurveTo(Math.cos(t*2.5)*100, Math.sin(t*2.1)*100, Math.cos(t*1.51)*100, Math.sin(t*1.11)*100, 0, 100);
             g.drawCircle(20, 20, 10);

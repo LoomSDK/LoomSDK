@@ -237,10 +237,12 @@ static int registerLoom2D(lua_State *L)
 	   .addMethod("lineTo", &Shape::lineTo)
 	   .addMethod("curveTo", &Shape::curveTo)
 	   .addMethod("cubicCurveTo", &Shape::cubicCurveTo)
+	   .addMethod("arcTo", &Shape::arcTo)
 	   .addMethod("drawCircle", &Shape::drawCircle)
 	   .addMethod("drawEllipse", &Shape::drawEllipse)
 	   .addMethod("drawRect", &Shape::drawRect)
 	   .addMethod("drawRoundRect", &Shape::drawRoundRect)
+	   .addMethod("drawArc", &Shape::drawArc)
 	   .endClass()
 
     // Quad
