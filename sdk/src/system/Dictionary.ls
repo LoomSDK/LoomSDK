@@ -37,7 +37,17 @@ package system {
  *  var d2:Dictionary.<String, Number> = { 'three': 3, 'four': 4 };
  *  ```
  *
- *  Iteration over dictionaries can be done wth a `for..in` loop:
+ *  Dictionary values are accessed via the square bracket operators (`[]`) and a key:
+ *
+ *  ```as3
+ *  var n:Number = d1['two'];
+ *  d2['five'] = 5;
+ *  ```
+ *
+ *  Iteration over dictionaries can be done in a couple of ways:
+ *
+ *  * with a `for..in` loop, for iteration by key
+ *  * with a `for each` loop, for iteration by value
  *
  *  ```as3
  *  var d:Dictionary.<String, Number> = {
@@ -45,9 +55,14 @@ package system {
  *      'two' : 2,
  *      'three' : 3,
  *  };
+ *
  *  for (var key:String in d) {
- *      var v:Number = d[key];
- *      trace('d["' +key +'"] =', v);
+ *      trace('d["' +key +'"] =', d[key]);
+ *  }
+ *
+ *  for each(var val:Number in d)
+ *  {
+ *      trace(val);
  *  }
  *  ```
  */
