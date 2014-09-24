@@ -153,6 +153,10 @@ public class LoomStore
             _activity.bindService(new Intent(BILLING_INTENT), _serviceConnection,
                     Context.BIND_AUTO_CREATE);
         }
+        else
+        {
+            Log.i(TAG, "Billing permission 'android.permission.BILLING' not found in the AndroidManifest. Billing Support will not be initialized.");
+        }
     }
 
     /**

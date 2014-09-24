@@ -47,6 +47,10 @@ public class LoomMobile
         {
             _vibrator = (Vibrator)_context.getSystemService(Context.VIBRATOR_SERVICE);
         }
+        else
+        {
+            Log.d("Loom", "Vibration permission 'android.permission.VIBRATE' not found in the AndroidManifest. Vibration Support will not be initialized.");
+        }
         if(_vibrator != null)
         {
             ///'hasVibrator' was only added in API 11 (Honeycomb 3.0)

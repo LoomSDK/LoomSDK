@@ -73,6 +73,7 @@ public class LoomCamera
         //if no permission for camera, early out
         if(!LoomDemo.checkPermission(ctx, "android.permission.CAMERA"))
         {
+            Log.d("Loom", "Camera permission 'android.permission.CAMERA' not found in the AndroidManifest. Camera Intent will not be launched.");
             return;
         }
 
