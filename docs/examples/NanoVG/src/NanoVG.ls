@@ -5,6 +5,7 @@ package
     import loom2d.display.Shape;
     import loom2d.display.StageScaleMode;
     import loom2d.display.Image;
+    import loom2d.display.TextAlign;
     import loom2d.display.TextFormat;
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
@@ -127,15 +128,28 @@ package
             g.moveTo(  0,   0); g.arcTo(  0,  25, 25, 25, 25);
             
             // Draw text
-            var format = new TextFormat();
+            g.drawTextLabel(220, 10, "hello");
             
-            format.size = 20;
-            g.textFormat(format);
-            g.drawText(220, 10, "hello");
+            var format = new TextFormat();
             
             format.size = 30;
             g.textFormat(format);
-            g.drawText(220, 24, "world");
+            g.drawTextLabel(220, 24, "world");
+            
+            format.size = 14;
+            format.lineHeight = 1;
+            format.align = TextAlign.CENTER | TextAlign.TOP;
+            g.textFormat(format);
+            g.moveTo(300, 0); g.lineTo(400, 0);
+            g.drawTextBox(300, 0, 100, "The five boxing wizards jump quickly.");
+            
+            format.size = 10;
+            g.textFormat(format);
+            g.moveTo(300, 50); g.lineTo(330, 50);
+            g.drawTextBox(300, 50, 30, "The five boxing wizards jump quickly.");
+            g.moveTo(330, 50); g.lineTo(400, 50);
+            g.drawTextBox(330, 50, 70, "The five boxing wizards jump quickly.");
+            
             
             // Mixed line and shape rendering
             g.moveTo(100, 0);

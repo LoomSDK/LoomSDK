@@ -20,10 +20,44 @@ package loom2d.display
     /** TODO
      */
     
+    public enum TextAlign {
+        // Horizontal align
+        
+        /** Default, align text horizontally to left. */
+        LEFT = 1,
+        
+        /** Align text horizontally to center. */
+        CENTER = 2,
+        
+        /** Align text horizontally to right. */
+        RIGHT = 4,
+        
+        
+        // Vertical align
+        
+        /** Align text vertically to top. */
+        TOP = 8,
+        
+        /** Align text vertically to middle. */
+        MIDDLE = 16,
+        
+        /** Align text vertically to bottom. */
+        BOTTOM = 32,
+        
+        /** Default, align text vertically to baseline. */
+        BASELINE = 64,
+    };
+    
     public native class TextFormat
     {
         public native function set size(value:float);
         public native function get size():float;
+        public native function set align(value:int);
+        public native function get align():float;
+        public native function set letterSpacing(value:float);
+        public native function get letterSpacing():float;
+        public native function set lineHeight(value:float);
+        public native function get lineHeight():float;
     }
     
     [Native(managed)]
@@ -54,7 +88,8 @@ package loom2d.display
         public native function drawRect(x:Number, y:Number, width:Number, height:Number):void;
         public native function drawRoundRect(x:Number, y:Number, width:Number, height:Number, ellipseWidth:Number, ellipseHeight:Number):void;
         public native function drawArc(x:Number, y:Number, radius:Number, angleFrom:Number, angleTo:Number, direction:int):void;
-        public native function drawText(x:Number, y:Number, text:String):void;
+        public native function drawTextLabel(x:Number, y:Number, text:String):void;
+        public native function drawTextBox(x:Number, y:Number, width:Number, text:String):void;
         
         /** @inheritDoc */
         public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle

@@ -127,10 +127,11 @@ class VectorText : public VectorData {
 protected:
 	float x;
 	float y;
+	float width;
 	utString* text;
 
 public:
-	VectorText(float x, float y, utString* text) : x(x), y(y), text(text) {};
+	VectorText(float x, float y, float width, utString* text) : x(x), y(y), width(width), text(text) {};
 
 	virtual void render(lua_State *L, Shape* g);
 };
@@ -190,7 +191,8 @@ public:
 	void drawRoundRect(float x, float y, float width, float height, float ellipseWidth, float ellipseHeight);
 	void drawArc(float x, float y, float radius, float angleFrom, float angleTo, int direction);
 	
-	void drawText(float x, float y, utString text);
+	void drawTextLabel(float x, float y, utString text);
+	void drawTextBox(float x, float y, float width, utString text);
 
     static void initialize(lua_State *L)
     {

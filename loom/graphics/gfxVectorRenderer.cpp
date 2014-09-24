@@ -54,8 +54,6 @@ const char * ConvertToUTF8(const wchar_t * pStr) {
 #endif
 */
 
-
-
 namespace GFX
 {
 lmDefineLogGroup(gGFXVectorRendererLogGroup, "GFXVectorRenderer", 1, LoomLogInfo);
@@ -94,6 +92,8 @@ void VectorRenderer::preDraw(float a, float b, float c, float d, float e, float 
 	
 	nvgLineCap(nvg, NVG_BUTT);
 	nvgLineJoin(nvg, NVG_ROUND);
+	nvgFontSize(nvg, 12.0f);
+	nvgTextLineHeight(nvg, 1.0f);
 }
 
 void VectorRenderer::postDraw() {
@@ -166,7 +166,10 @@ void VectorRenderer::fillColor(float r, float g, float b, float a) {
 }
 
 void VectorRenderer::textFormat(VectorTextFormat* format) {
-	nvgFontSize(nvg, format->size);
+	if (!isnan(format->size)) nvgFontSize(nvg, format->size);
+	if (format->align != -1) nvgTextAlign(nvg, format->align);
+	if (!isnan(format->letterSpacing)) nvgTextLetterSpacing(nvg, format->letterSpacing);
+	if (!isnan(format->lineHeight)) nvgTextLineHeight(nvg, format->lineHeight);
 }
 
 
@@ -213,8 +216,12 @@ void VectorRenderer::arc(float x, float y, float radius, float angleFrom, float 
 }
 
 
-void VectorRenderer::text(float x, float y, utString* string) {
+void VectorRenderer::textLabel(float x, float y, utString* string) {
 	nvgText(nvg, x, y, string->c_str(), NULL);
+}
+
+void VectorRenderer::textBox(float x, float y, float width, utString* string) {
+	nvgTextBox(nvg, x, y, width, string->c_str(), NULL);
 }
 
 
@@ -229,9 +236,9 @@ void VectorRenderer::destroyGraphicsResources()
 void VectorRenderer::initializeGraphicsResources()
 {
 	nvg = nvgCreate(512, 512, 1, 0);
-	//font = nvgCreateFont(nvg, "sans", "font/droidsans.ttf");
+	font = nvgCreateFont(nvg, "sans", "font/droidsans.ttf");
 	//font = nvgCreateFont(nvg, "sans", "font/Pecita.otf");
-	font = nvgCreateFont(nvg, "sans", "font/Cyberbit.ttf");
+	//font = nvgCreateFont(nvg, "sans", "font/Cyberbit.ttf");
 }
 
 

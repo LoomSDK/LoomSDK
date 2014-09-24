@@ -230,6 +230,9 @@ static int registerLoom2D(lua_State *L)
 	   .beginClass<GFX::VectorTextFormat>("TextFormat")
 	   .addConstructor<void(*)(void)>()
 	   .addProperty("size", &GFX::VectorTextFormat::getSize, &GFX::VectorTextFormat::setSize)
+	   .addProperty("align", &GFX::VectorTextFormat::getAlign, &GFX::VectorTextFormat::setAlign)
+	   .addProperty("letterSpacing", &GFX::VectorTextFormat::getLetterSpacing, &GFX::VectorTextFormat::setLetterSpacing)
+	   .addProperty("lineHeight", &GFX::VectorTextFormat::getLineHeight, &GFX::VectorTextFormat::setLineHeight)
 	   .endClass()
 
 	// Shape
@@ -250,7 +253,8 @@ static int registerLoom2D(lua_State *L)
 	   .addMethod("drawRect", &Shape::drawRect)
 	   .addMethod("drawRoundRect", &Shape::drawRoundRect)
 	   .addMethod("drawArc", &Shape::drawArc)
-	   .addMethod("drawText", &Shape::drawText)
+	   .addMethod("drawTextLabel", &Shape::drawTextLabel)
+	   .addMethod("drawTextBox", &Shape::drawTextBox)
 	   .endClass()
 
     // Quad

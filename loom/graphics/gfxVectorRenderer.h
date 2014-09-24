@@ -21,6 +21,7 @@
 #pragma once
 
 #include "loom/graphics/gfxTexture.h"
+#include <math.h>
 
 namespace GFX
 {
@@ -57,9 +58,33 @@ struct VectorWinding {
 
 class VectorTextFormat {
 public:
-	float size = 12.0f;
+	enum TextAlign {
+		// Horizontal align
+		ALIGN_LEFT = 1 << 0,	// Default, align text horizontally to left.
+		ALIGN_CENTER = 1 << 1,	// Align text horizontally to center.
+		ALIGN_RIGHT = 1 << 2,	// Align text horizontally to right.
+		// Vertical align
+		ALIGN_TOP = 1 << 3,	// Align text vertically to top.
+		ALIGN_MIDDLE = 1 << 4,	// Align text vertically to middle.
+		ALIGN_BOTTOM = 1 << 5,	// Align text vertically to bottom. 
+		ALIGN_BASELINE = 1 << 6, // Default, align text vertically to baseline. 
+	};
+
+	float size = NAN;
 	inline float getSize() const { return size; }
 	void setSize(float t) { size = t; }
+
+	int align = -1;
+	inline int getAlign() const { return align; }
+	void setAlign(int t) { align = t; }
+
+	float letterSpacing = NAN;
+	inline float getLetterSpacing() const { return letterSpacing; }
+	void setLetterSpacing(float t) { letterSpacing = t; }
+
+	float lineHeight = NAN;
+	inline float getLineHeight() const { return lineHeight; }
+	void setLineHeight(float t) { lineHeight = t; }
 };
 
 class VectorRenderer
@@ -118,7 +143,8 @@ public:
 	static void roundRect(float x, float y, float width, float height, float radius);
 	static void arc(float x, float y, float radius, float angleFrom, float angleTo, VectorWinding::Enum direction);
 
-	static void text(float x, float y, utString* string);
+	static void textLabel(float x, float y, utString* string);
+	static void textBox(float x, float y, float width, utString* string);
 
     static void endFrame();
 };

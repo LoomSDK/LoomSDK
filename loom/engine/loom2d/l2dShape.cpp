@@ -23,6 +23,8 @@
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/engine/loom2d/l2dShape.h"
 
+#include <math.h>
+
 namespace Loom2D
 {
 
@@ -170,8 +172,12 @@ void Shape::drawArc(float x, float y, float radius, float angleFrom, float angle
 	addShape(new VectorShape(direction == GFX::VectorWinding::CW ? ARC_CW : ARC_CCW, x, y, radius, angleFrom, angleTo));
 }
 
-void Shape::drawText(float x, float y, utString text) {
-	queue->push_back(new VectorText(x, y, new utString(text)));
+void Shape::drawTextLabel(float x, float y, utString text) {
+	queue->push_back(new VectorText(x, y, NAN, new utString(text)));
+}
+
+void Shape::drawTextBox(float x, float y, float width, utString text) {
+	queue->push_back(new VectorText(x, y, width, new utString(text)));
 }
 
 
@@ -286,7 +292,11 @@ void VectorFill::render(lua_State *L, Shape* g) {
 }
 
 void VectorText::render(lua_State *L, Shape* g) {
-	GFX::VectorRenderer::text(x, y, text);
+	if (isnan(width)) {
+		GFX::VectorRenderer::textLabel(x, y, text);
+	} else {
+		GFX::VectorRenderer::textBox(x, y, width, text);
+	}
 }
 
 void VectorTextFormatData::render(lua_State *L, Shape* g) {
