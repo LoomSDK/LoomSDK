@@ -3,7 +3,6 @@ if (NOT LOOM_BUILD_IOS EQUAL 1)
   set(CMAKE_OSX_ARCHITECTURES "i386")
 endif()
 
-
 project(${APPLICATION_NAME})
 
 include_directories( ${LOOM_INCLUDE_FOLDERS} )
