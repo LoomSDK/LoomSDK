@@ -86,6 +86,13 @@ public class LoomDemo extends Cocos2dxActivity {
         return null;
     }
 
+    public static boolean checkPermission(Context context, String permission)
+    {
+        int res = context.checkCallingOrSelfPermission(permission);
+        return (res == PackageManager.PERMISSION_GRANTED) ? true : false;            
+    }    
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) 
     {
