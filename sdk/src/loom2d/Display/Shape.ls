@@ -61,6 +61,13 @@ package loom2d.display
     }
     
     [Native(managed)]
+    public native class SVG
+    {
+        public native function loadFile(path:String, units:String = "px", dpi:Number = 96);
+        public native function loadString(svg:String, units:String = "px", dpi:Number = 96);
+    }
+    
+    [Native(managed)]
     public native class Shape extends DisplayObject
     {
         /** Creates a quad with a certain size and color. The 'premultipliedAlpha' parameter 
@@ -90,6 +97,7 @@ package loom2d.display
         public native function drawArc(x:Number, y:Number, radius:Number, angleFrom:Number, angleTo:Number, direction:int):void;
         public native function drawTextLabel(x:Number, y:Number, text:String):void;
         public native function drawTextBox(x:Number, y:Number, width:Number, text:String):void;
+        public native function drawSVG(svg:SVG):void;
         
         /** @inheritDoc */
         public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle

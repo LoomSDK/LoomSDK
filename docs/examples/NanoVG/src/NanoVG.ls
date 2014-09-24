@@ -5,6 +5,7 @@ package
     import loom2d.display.Shape;
     import loom2d.display.StageScaleMode;
     import loom2d.display.Image;
+    import loom2d.display.SVG;
     import loom2d.display.TextAlign;
     import loom2d.display.TextFormat;
     import loom2d.events.Touch;
@@ -94,6 +95,11 @@ package
             g.drawRect(0, y, 500, 500);
             g.endFill();
             g.clear();
+            
+            // SVG
+            var nano = new SVG();
+            nano.loadFile("assets/nano.svg");
+            g.drawSVG(nano);
             
             // Fill
             g.beginFill(0x3EA80B, 1);

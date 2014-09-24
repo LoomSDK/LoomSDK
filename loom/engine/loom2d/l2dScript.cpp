@@ -235,6 +235,13 @@ static int registerLoom2D(lua_State *L)
 	   .addProperty("lineHeight", &GFX::VectorTextFormat::getLineHeight, &GFX::VectorTextFormat::setLineHeight)
 	   .endClass()
 
+	// SVG
+       .beginClass<GFX::VectorSVG>("SVG")
+       .addConstructor<void(*)(void)>()
+       .addMethod("loadFile", &GFX::VectorSVG::loadFile)
+       .addMethod("loadString", &GFX::VectorSVG::loadString)
+       .endClass()
+
 	// Shape
 	   .deriveClass<Shape, DisplayObject>("Shape")
 	   .addConstructor<void(*)(void)>()
@@ -255,6 +262,7 @@ static int registerLoom2D(lua_State *L)
 	   .addMethod("drawArc", &Shape::drawArc)
 	   .addMethod("drawTextLabel", &Shape::drawTextLabel)
 	   .addMethod("drawTextBox", &Shape::drawTextBox)
+	   .addMethod("drawSVG", &Shape::drawSVG)
 	   .endClass()
 
     // Quad
@@ -296,6 +304,7 @@ void installLoom2D()
 	LOOM_DECLARE_NATIVETYPE(Loom2D::Matrix, Loom2D::registerLoom2D);
 
 	LOOM_DECLARE_NATIVETYPE(GFX::VectorTextFormat, Loom2D::registerLoom2D);
+	LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorSVG, Loom2D::registerLoom2D);
 
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::EventDispatcher, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::DisplayObject, Loom2D::registerLoom2D);

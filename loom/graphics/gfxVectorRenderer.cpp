@@ -19,8 +19,13 @@
  */
 
 #include <string.h>
+#include "stdio.h"
+
 #include "bgfx.h"
 #include "nanovg.h"
+
+#define NANOSVG_IMPLEMENTATION
+#include "nanosvg.h"
 
 #include "loom/common/core/log.h"
 #include "loom/common/core/allocator.h"
@@ -28,8 +33,6 @@
 
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxVectorRenderer.h"
-
-#include "stdio.h"
 
 /*
 #include <windows.h>
@@ -149,6 +152,13 @@ void VectorRenderer::strokeColor(float r, float g, float b, float a) {
 	nvgStrokeColor(nvg, nvgRGBAf(r, g, b, a));
 }
 
+void VectorRenderer::strokeColor(unsigned int rgb, float a) {
+	float cr = ((rgb >> 16) & 0xff) / 255.0f;
+	float cg = ((rgb >> 8) & 0xff) / 255.0f;
+	float cb = ((rgb >> 0) & 0xff) / 255.0f;
+	strokeColor(cr, cg, cb, a);
+}
+
 void VectorRenderer::lineCaps(VectorLineCaps::Enum caps) {
 	nvgLineCap(nvg, caps);
 }
@@ -163,6 +173,13 @@ void VectorRenderer::lineMiterLimit(float limit) {
 
 void VectorRenderer::fillColor(float r, float g, float b, float a) {
 	nvgFillColor(nvg, nvgRGBAf(r, g, b, a));
+}
+
+void VectorRenderer::fillColor(unsigned int rgb, float a) {
+	float cr = ((rgb >> 16) & 0xff) / 255.0f;
+	float cg = ((rgb >> 8) & 0xff) / 255.0f;
+	float cb = ((rgb >> 0) & 0xff) / 255.0f;
+	fillColor(cr, cg, cb, a);
 }
 
 void VectorRenderer::textFormat(VectorTextFormat* format) {
@@ -225,6 +242,10 @@ void VectorRenderer::textBox(float x, float y, float width, utString* string) {
 }
 
 
+void VectorRenderer::svg(VectorSVG* image) {
+	image->render();
+}
+
 void VectorRenderer::destroyGraphicsResources()
 {
 	if (nvg != NULL) {
@@ -237,8 +258,73 @@ void VectorRenderer::initializeGraphicsResources()
 {
 	nvg = nvgCreate(512, 512, 1, 0);
 	font = nvgCreateFont(nvg, "sans", "font/droidsans.ttf");
+	
+
 	//font = nvgCreateFont(nvg, "sans", "font/Pecita.otf");
 	//font = nvgCreateFont(nvg, "sans", "font/Cyberbit.ttf");
+}
+
+VectorSVG::VectorSVG() {}
+VectorSVG::~VectorSVG() {
+	reset();
+}
+void VectorSVG::reset() {
+	if (image != NULL) {
+		nsvgDelete(image);
+		image = NULL;
+	}
+}
+void VectorSVG::loadFile(utString path, utString units, float dpi) {
+	reset();
+	image = nsvgParseFromFile(path.c_str(), units.c_str(), dpi);
+}
+void VectorSVG::loadString(utString svg, utString units, float dpi) {
+	reset();
+	size_t size = svg.size();
+	char* copy = new char[size];
+	strncpy(copy, svg.c_str(), size);
+	image = nsvgParse(copy, units.c_str(), dpi);
+}
+void VectorSVG::render() {
+	// TODO: fix winding?
+	//nvgPathWinding(nvg, NVG_CW);
+	for (NSVGshape* shape = image->shapes; shape != NULL; shape = shape->next) {
+		NSVGpaint* fill = &shape->fill;
+		bool hasFill = false;
+		switch (fill->type) {
+			case NSVG_PAINT_COLOR:
+				VectorRenderer::fillColor(fill->color, shape->opacity*0.5f);
+				hasFill = true;
+				break;
+			case NSVG_PAINT_NONE:
+			default: break;
+		}
+		NSVGpaint* stroke = &shape->stroke;
+		bool hasStroke = false;
+		switch (stroke->type) {
+			case NSVG_PAINT_COLOR:
+				VectorRenderer::strokeColor(stroke->color, shape->opacity);
+				VectorRenderer::strokeWidth(shape->strokeWidth);
+				hasStroke = true;
+			default: break;
+		}
+		if (!hasFill && !hasStroke) continue;
+		int pathind = 0;
+		for (NSVGpath* path = shape->paths; path != NULL; path = path->next) {
+			if (path->npts < 1) continue;
+			//nvgPathWinding(nvg, pathind%2 == 1 ? NVG_CW : NVG_CCW);
+			pathind++;
+			VectorRenderer::moveTo(path->pts[0], path->pts[1]);
+			for (int i = 1; i < path->npts - 1; i += 3) {
+				float* p = &path->pts[i*2];
+				VectorRenderer::cubicCurveTo(p[0], p[1], p[2], p[3], p[4], p[5]);
+			}
+		}
+		//nvgPathWinding(nvg, NVG_CW);
+		if (hasFill) VectorRenderer::renderFill();
+		if (hasStroke) VectorRenderer::renderStroke();
+		VectorRenderer::clearPath();
+	}
 }
 
 

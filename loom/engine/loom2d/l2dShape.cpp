@@ -180,6 +180,10 @@ void Shape::drawTextBox(float x, float y, float width, utString text) {
 	queue->push_back(new VectorText(x, y, width, new utString(text)));
 }
 
+void Shape::drawSVG(GFX::VectorSVG* svg) {
+	queue->push_back(new VectorSVGData(svg));
+	restartPath();
+}
 
 
 /*************************
@@ -203,6 +207,7 @@ void Shape::render(lua_State *L)
 	resetStyle();
 
 	flushPath();
+
 	utArray<VectorData*>::Iterator it = queue->iterator();
 	while (it.hasMoreElements()) {
 		VectorData* d = it.getNext();
@@ -303,6 +308,10 @@ void VectorTextFormatData::render(lua_State *L, Shape* g) {
 	GFX::VectorRenderer::textFormat(format);
 }
 
+void VectorSVGData::render(lua_State *L, Shape* g) {
+	GFX::VectorRenderer::svg(image);
+}
+
 
 
 /*******************
@@ -366,11 +375,7 @@ void Shape::flushPath() {
 			case GFX::VectorLineScaleMode::NONE: scale = 1/sqrt(scaleX*scaleX+scaleY*scaleY); break;
 		}
 		GFX::VectorRenderer::strokeWidth(currentLineStyle.thickness*scale);
-		unsigned int color = currentLineStyle.color;
-		float cr = ((color >> 16) & 0xff) / 255.0f;
-		float cg = ((color >> 8) & 0xff) / 255.0f;
-		float cb = ((color >> 0) & 0xff) / 255.0f;
-		GFX::VectorRenderer::strokeColor(cr, cg, cb, currentLineStyle.alpha);
+		GFX::VectorRenderer::strokeColor(currentLineStyle.color, currentLineStyle.alpha);
 		GFX::VectorRenderer::lineCaps(currentLineStyle.caps);
 		GFX::VectorRenderer::lineJoints(currentLineStyle.joints);
 		GFX::VectorRenderer::lineMiterLimit(currentLineStyle.miterLimit);
@@ -378,11 +383,7 @@ void Shape::flushPath() {
 	}
 	bool fill = currentFill.active;
 	if (fill && pathDirty) {
-		unsigned int color = currentFill.color;
-		float cr = ((color >> 16) & 0xff) / 255.0f;
-		float cg = ((color >> 8) & 0xff) / 255.0f;
-		float cb = ((color >> 0) & 0xff) / 255.0f;
-		GFX::VectorRenderer::fillColor(cr, cg, cb, currentFill.alpha);
+		GFX::VectorRenderer::fillColor(currentFill.color, currentFill.alpha);
 		GFX::VectorRenderer::renderFill();
 		currentFill.active = false;
 	}

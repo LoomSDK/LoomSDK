@@ -22,6 +22,7 @@
 
 #include "loom/graphics/gfxTexture.h"
 #include <math.h>
+struct NSVGimage;
 
 namespace GFX
 {
@@ -87,6 +88,18 @@ public:
 	void setLineHeight(float t) { lineHeight = t; }
 };
 
+class VectorSVG {
+protected:
+	NSVGimage* image = NULL;
+	void reset();
+public:
+	VectorSVG();
+	~VectorSVG();
+	void loadFile(utString path, utString units = utString("px"), float dpi = 96.0f);
+	void loadString(utString svg, utString units = utString("px"), float dpi = 96.0f);
+	void render();
+};
+
 class VectorRenderer
 {
     friend class Graphics;
@@ -122,12 +135,14 @@ public:
 
 	static void strokeWidth(float size);
 	static void strokeColor(float r, float g, float b, float a);
+	static void strokeColor(unsigned int rgb, float a);
 	
 	static void lineCaps(VectorLineCaps::Enum caps);
 	static void lineJoints(VectorLineJoints::Enum joints);
 	static void lineMiterLimit(float limit);
 
 	static void fillColor(float r, float g, float b, float a);
+	static void fillColor(unsigned int rgb, float a);
 
 	static void textFormat(VectorTextFormat* format);
 
@@ -145,6 +160,8 @@ public:
 
 	static void textLabel(float x, float y, utString* string);
 	static void textBox(float x, float y, float width, utString* string);
+
+	static void svg(VectorSVG* image);
 
     static void endFrame();
 };
