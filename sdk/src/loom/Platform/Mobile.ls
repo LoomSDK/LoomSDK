@@ -112,6 +112,15 @@ package loom.platform
         /**
          * Tells the device to perform a brief vibration, if supported by the hardware.
          *
+         * NOTES: 
+         *
+         * 1) If you are not using Loom CLI and you wish to use vibrate() on Android, 
+         * you will manually need to add the "android.permission.VIBRATE" permission to 
+         * the AndroidManifest.xml file.
+         *
+         * 2) If you are using Loom CLI and you wish to not include VIBRATE permissions
+         * in your App, you can disable them by specifying "uses_vibrate": "false" in your
+         * loom.config file.
          */
         public static native function vibrate():void;
 

@@ -70,6 +70,12 @@ public class LoomCamera
 
     public static void triggerCameraIntent(Activity ctx)
     {
+        //if no permission for camera, early out
+        if(!LoomDemo.checkPermission(ctx, "android.permission.CAMERA"))
+        {
+            return;
+        }
+
         // create Intent to take a picture and return control to the calling application
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
@@ -83,6 +89,12 @@ public class LoomCamera
 
     public static void onActivityResult(Activity ctx, int requestCode, int resultCode, Intent data) 
     {
+        //if no permission for camera, early out
+        if(!LoomDemo.checkPermission(ctx, "android.permission.CAMERA"))
+        {
+            return;
+        }
+
         if (requestCode != CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE)
             return;
 
