@@ -1,5 +1,7 @@
 package co.theengine.loomdemo.billing;
 
+import co.theengine.loomdemo.LoomDemo;
+
 import java.util.ArrayList;
 
 import org.json.JSONException;
@@ -145,8 +147,16 @@ public class LoomStore
     public static void bind(Activity activity) 
     {
         _activity = activity;
-        _activity.bindService(new Intent(BILLING_INTENT), _serviceConnection,
-                Context.BIND_AUTO_CREATE);
+        _billingAllowed = LoomDemo.checkPermission(_activity, "android.permission.BILLING");
+        if(_billingAllowed)
+        {
+            _activity.bindService(new Intent(BILLING_INTENT), _serviceConnection,
+                    Context.BIND_AUTO_CREATE);
+        }
+        else
+        {
+            Log.i(TAG, "Billing permission 'android.permission.BILLING' not found in the AndroidManifest. Billing Support will not be initialized.");
+        }
     }
 
     /**
@@ -154,7 +164,7 @@ public class LoomStore
      */
     public static void unbind() 
     {
-        if (_serviceConnection != null) 
+        if (_billingAllowed && (_serviceConnection != null))
         {
             _activity.unbindService(_serviceConnection);
         }
@@ -165,6 +175,11 @@ public class LoomStore
      */
     public static boolean isAvailable()
     {
+        if(!_billingAllowed)
+        {
+            return false;
+        }
+
         try
         {
             Log.i(TAG, "Billing availability check!");
@@ -307,6 +322,7 @@ public class LoomStore
     // ________________________________________________
     private static ArrayList<String> _products = new ArrayList<String>();
     private static Activity _activity;
+    private static boolean _billingAllowed;
     private static IInAppBillingService _service;
     private static ServiceConnection _serviceConnection = new ServiceConnection() {
         @Override
