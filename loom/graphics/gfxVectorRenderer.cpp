@@ -30,6 +30,7 @@
 #include "loom/common/core/log.h"
 #include "loom/common/core/allocator.h"
 #include "loom/common/core/assert.h"
+#include "loom/common/assets/assets.h"
 
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxVectorRenderer.h"
@@ -159,6 +160,11 @@ void VectorRenderer::strokeColor(unsigned int rgb, float a) {
 	strokeColor(cr, cg, cb, a);
 }
 
+void VectorRenderer::strokeColor32(unsigned int argb, float a) {
+	float ca = ((argb >> 24) & 0xff) / 255.0f;
+	strokeColor(argb, a*ca);
+}
+
 void VectorRenderer::lineCaps(VectorLineCaps::Enum caps) {
 	nvgLineCap(nvg, caps);
 }
@@ -180,6 +186,11 @@ void VectorRenderer::fillColor(unsigned int rgb, float a) {
 	float cg = ((rgb >> 8) & 0xff) / 255.0f;
 	float cb = ((rgb >> 0) & 0xff) / 255.0f;
 	fillColor(cr, cg, cb, a);
+}
+
+void VectorRenderer::fillColor32(unsigned int argb, float a) {
+	float ca = ((argb >> 24) & 0xff) / 255.0f;
+	fillColor(argb, a*ca);
 }
 
 void VectorRenderer::textFormat(VectorTextFormat* format) {
@@ -242,8 +253,8 @@ void VectorRenderer::textBox(float x, float y, float width, utString* string) {
 }
 
 
-void VectorRenderer::svg(VectorSVG* image) {
-	image->render();
+void VectorRenderer::svg(float x, float y, float scale, VectorSVG* image) {
+	image->render(x, y, scale);
 }
 
 void VectorRenderer::destroyGraphicsResources()
@@ -268,7 +279,12 @@ VectorSVG::VectorSVG() {}
 VectorSVG::~VectorSVG() {
 	reset();
 }
-void VectorSVG::reset() {
+void VectorSVG::reset(bool reloaded) {
+	if (!reloaded && path != NULL) {
+		loom_asset_unsubscribe(path->c_str(), onReload, this);
+		delete path;
+		path = NULL;
+	}
 	if (image != NULL) {
 		nsvgDelete(image);
 		image = NULL;
@@ -276,7 +292,21 @@ void VectorSVG::reset() {
 }
 void VectorSVG::loadFile(utString path, utString units, float dpi) {
 	reset();
-	image = nsvgParseFromFile(path.c_str(), units.c_str(), dpi);
+	this->units = utString(path);
+	this->dpi = dpi;
+	this->path = new utString(path);
+	loom_asset_subscribe(path.c_str(), onReload, this, false);
+	loom_asset_preload(path.c_str());
+}
+void VectorSVG::onReload(void *payload, const char *name) {
+	VectorSVG* svg = static_cast<VectorSVG*>(payload);
+	svg->reload(utString(name));
+}
+void VectorSVG::reload(utString path) {
+	reset(true);
+	void* data = loom_asset_lock(path.c_str(), LATText, true);
+	image = nsvgParse(static_cast<char*>(data), units.c_str(), dpi);
+	loom_asset_unlock(path.c_str());
 }
 void VectorSVG::loadString(utString svg, utString units, float dpi) {
 	reset();
@@ -285,15 +315,17 @@ void VectorSVG::loadString(utString svg, utString units, float dpi) {
 	strncpy(copy, svg.c_str(), size);
 	image = nsvgParse(copy, units.c_str(), dpi);
 }
-void VectorSVG::render() {
-	// TODO: fix winding?
-	//nvgPathWinding(nvg, NVG_CW);
+void VectorSVG::render(float x, float y, float scale) {
+	if (image == NULL) return;
+	nvgSave(nvg);
+	nvgTranslate(nvg, x, y);
+	nvgScale(nvg, scale, scale);
 	for (NSVGshape* shape = image->shapes; shape != NULL; shape = shape->next) {
 		NSVGpaint* fill = &shape->fill;
 		bool hasFill = false;
 		switch (fill->type) {
 			case NSVG_PAINT_COLOR:
-				VectorRenderer::fillColor(fill->color, shape->opacity*0.5f);
+				VectorRenderer::fillColor32(fill->color, shape->opacity);
 				hasFill = true;
 				break;
 			case NSVG_PAINT_NONE:
@@ -303,8 +335,8 @@ void VectorSVG::render() {
 		bool hasStroke = false;
 		switch (stroke->type) {
 			case NSVG_PAINT_COLOR:
-				VectorRenderer::strokeColor(stroke->color, shape->opacity);
-				VectorRenderer::strokeWidth(shape->strokeWidth);
+				VectorRenderer::strokeColor32(stroke->color, shape->opacity);
+				VectorRenderer::strokeWidth(1);
 				hasStroke = true;
 			default: break;
 		}
@@ -312,19 +344,22 @@ void VectorSVG::render() {
 		int pathind = 0;
 		for (NSVGpath* path = shape->paths; path != NULL; path = path->next) {
 			if (path->npts < 1) continue;
-			//nvgPathWinding(nvg, pathind%2 == 1 ? NVG_CW : NVG_CCW);
-			pathind++;
+			float winding = 0.0f;
 			VectorRenderer::moveTo(path->pts[0], path->pts[1]);
 			for (int i = 1; i < path->npts - 1; i += 3) {
-				float* p = &path->pts[i*2];
+				float* p = &path->pts[i * 2];
+				winding += (p[4] - p[-2]) * (p[5] + p[-1]);
 				VectorRenderer::cubicCurveTo(p[0], p[1], p[2], p[3], p[4], p[5]);
 			}
+			nvgPathWinding(nvg, winding > 0 ? NVG_CW : NVG_CCW);
+			pathind++;
+			
 		}
-		//nvgPathWinding(nvg, NVG_CW);
 		if (hasFill) VectorRenderer::renderFill();
 		if (hasStroke) VectorRenderer::renderStroke();
 		VectorRenderer::clearPath();
 	}
+	nvgRestore(nvg);
 }
 
 

@@ -145,8 +145,11 @@ public:
 
 class VectorSVGData : public VectorData {
 public:
+	float x;
+	float y;
+	float scale;
 	GFX::VectorSVG* image;
-	VectorSVGData(GFX::VectorSVG* image) : image(image) {};
+	VectorSVGData(float x, float y, float scale, GFX::VectorSVG* image) : x(x), y(y), scale(scale), image(image) {};
 	virtual void render(lua_State *L, Shape* g);
 };
 
@@ -203,7 +206,7 @@ public:
 	void drawTextLabel(float x, float y, utString text);
 	void drawTextBox(float x, float y, float width, utString text);
 
-	void drawSVG(GFX::VectorSVG* svg);
+	void drawSVG(float x, float y, float scale, GFX::VectorSVG* svg);
 
     static void initialize(lua_State *L)
     {

@@ -180,8 +180,8 @@ void Shape::drawTextBox(float x, float y, float width, utString text) {
 	queue->push_back(new VectorText(x, y, width, new utString(text)));
 }
 
-void Shape::drawSVG(GFX::VectorSVG* svg) {
-	queue->push_back(new VectorSVGData(svg));
+void Shape::drawSVG(float x, float y, float scale, GFX::VectorSVG* svg) {
+	queue->push_back(new VectorSVGData(x, y, scale, svg));
 	restartPath();
 }
 
@@ -309,7 +309,8 @@ void VectorTextFormatData::render(lua_State *L, Shape* g) {
 }
 
 void VectorSVGData::render(lua_State *L, Shape* g) {
-	GFX::VectorRenderer::svg(image);
+	g->flushPath();
+	GFX::VectorRenderer::svg(x, y, scale, image);
 }
 
 

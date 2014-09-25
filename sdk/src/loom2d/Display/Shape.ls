@@ -97,7 +97,7 @@ package loom2d.display
         public native function drawArc(x:Number, y:Number, radius:Number, angleFrom:Number, angleTo:Number, direction:int):void;
         public native function drawTextLabel(x:Number, y:Number, text:String):void;
         public native function drawTextBox(x:Number, y:Number, width:Number, text:String):void;
-        public native function drawSVG(svg:SVG):void;
+        public native function drawSVG(x:Number, y:Number, scale:Number, svg:SVG):void;
         
         /** @inheritDoc */
         public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle

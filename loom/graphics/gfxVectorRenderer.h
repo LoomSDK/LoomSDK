@@ -90,14 +90,19 @@ public:
 
 class VectorSVG {
 protected:
+	utString* path = NULL;
+	utString units;
+	float dpi;
 	NSVGimage* image = NULL;
-	void reset();
+	void reset(bool reloaded = false);
 public:
 	VectorSVG();
 	~VectorSVG();
+	static void onReload(void *payload, const char *name);
+	void reload(utString name);
 	void loadFile(utString path, utString units = utString("px"), float dpi = 96.0f);
 	void loadString(utString svg, utString units = utString("px"), float dpi = 96.0f);
-	void render();
+	void render(float x, float y, float scale);
 };
 
 class VectorRenderer
@@ -136,6 +141,7 @@ public:
 	static void strokeWidth(float size);
 	static void strokeColor(float r, float g, float b, float a);
 	static void strokeColor(unsigned int rgb, float a);
+	static void strokeColor32(unsigned int argb, float a);
 	
 	static void lineCaps(VectorLineCaps::Enum caps);
 	static void lineJoints(VectorLineJoints::Enum joints);
@@ -143,6 +149,7 @@ public:
 
 	static void fillColor(float r, float g, float b, float a);
 	static void fillColor(unsigned int rgb, float a);
+	static void fillColor32(unsigned int argb, float a);
 
 	static void textFormat(VectorTextFormat* format);
 
@@ -161,7 +168,7 @@ public:
 	static void textLabel(float x, float y, utString* string);
 	static void textBox(float x, float y, float width, utString* string);
 
-	static void svg(VectorSVG* image);
+	static void svg(float x, float y, float scale, VectorSVG* image);
 
     static void endFrame();
 };

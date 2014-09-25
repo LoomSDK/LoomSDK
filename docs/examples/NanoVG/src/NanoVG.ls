@@ -8,6 +8,8 @@ package
     import loom2d.display.SVG;
     import loom2d.display.TextAlign;
     import loom2d.display.TextFormat;
+    import loom2d.events.Event;
+    import loom2d.events.ScrollWheelEvent;
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
     import loom2d.events.TouchPhase;
@@ -97,9 +99,12 @@ package
             g.clear();
             
             // SVG
-            var nano = new SVG();
-            nano.loadFile("assets/nano.svg");
-            g.drawSVG(nano);
+            var svg = new SVG();
+            svg.loadFile("assets/nano.svg");
+            g.drawSVG(220, 30, 0.2, svg);
+            
+            //g.pivotX = 245; g.pivotY = 45; g.scale *= 20;
+            //return;
             
             // Fill
             g.beginFill(0x3EA80B, 1);
@@ -263,6 +268,7 @@ package
             g.drawRect(110, y, 100, 10);
             y += 12;
             
+            stage.addEventListener(ScrollWheelEvent.SCROLLWHEEL, onScroll);
             
             /*
             
@@ -317,6 +323,10 @@ package
             
             //stage.addEventListener(TouchEvent.TOUCH, onTouch);
             
+        }
+        
+        private function onScroll(e:ScrollWheelEvent):void {
+            g.scale *= 1-0.1*e.delta;
         }
         
         private function onTouch(e:TouchEvent):void 
