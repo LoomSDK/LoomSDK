@@ -840,7 +840,7 @@ public:
             val = descending ? -strcmp(s1, s2) : strcmp(s1, s2);
         }
 
-		if (!val && (_sortFlags & UNIQUESORT))
+        if (!val && (_sortFlags & UNIQUESORT))
         {
             _sortUniqueAbort = true;
         }
