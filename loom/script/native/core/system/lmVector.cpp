@@ -777,7 +777,7 @@ public:
             d1 = lua_tonumber(L, -1);
             if (!(_sortFlags & NUMERIC))
             {
-                snprintf(sbuffer1, 1024, "%512.8f", d1); // up to 512 digits before decimal and 8 after
+                snprintf(sbuffer1, 1024, "%f", d1); // up to 512 digits before decimal and 8 after
                 s1 = sbuffer1;
             }
         }
@@ -795,7 +795,7 @@ public:
             d2 = lua_tonumber(L, -1);
             if (!(_sortFlags & NUMERIC))
             {
-                snprintf(sbuffer2, 1024, "%512.8f", d2); // up to 512 digits before decimal and 8 after
+                snprintf(sbuffer2, 1024, "%f", d2); // up to 512 digits before decimal and 8 after
                 s2 = sbuffer2;
             }
         }
@@ -840,7 +840,7 @@ public:
             val = descending ? -strcmp(s1, s2) : strcmp(s1, s2);
         }
 
-        if (!val)
+        if (!val && (_sortFlags & UNIQUESORT))
         {
             _sortUniqueAbort = true;
         }

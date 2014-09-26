@@ -245,13 +245,7 @@ class TestVector extends Test
         nv = [10, 100, 99, -99, -100, 20, 1];
         nv.sort();
         
-        assert(nv[0] == 1);
-        assert(nv[1] == 10);
-        assert(nv[2] == 20);
-        assert(nv[3] == 99);
-        assert(nv[4] == -99);
-        assert(nv[5] == 100);
-        assert(nv[6] == -100);
+        testVectorEqual(nv, [-100, -99, 1, 10, 100, 20, 99], "default number-as-string mismatch");
         
         av = ["apple", "orange", null, "Cherry", "kiwi"];
         
@@ -319,7 +313,7 @@ class TestVector extends Test
 
         /// alpha vs numeric
         var msg = "plain sort should order elements alphabetically";
-        av = ["111", "22", "3"];
+        av = ["22", "111", "3"];
         var av2:Vector.<String> = ["111", "22", "3"];
         av.sort();
         testVectorEqual(av, av2, msg);
@@ -359,13 +353,13 @@ class TestVector extends Test
         av = ["c", "c", "c"];
         nvslice = [0, 1, 2];
         vr = av.sort(Vector.RETURNINDEXEDARRAY);
-        testVectorEqual(vr, nvslice, msg);
+        assertEqual(([]).getFullTypeName(), vr.getFullTypeName(), msg);
 
         msg = "indexed array sort should allow dupes in Vector.<Number>";
         nv = [1, 1, 1];
         nvslice = [0, 1, 2];
         vr = nv.sort(Vector.RETURNINDEXEDARRAY);
-        testVectorEqual(vr, nvslice, msg);
+        assertEqual(([]).getFullTypeName(), vr.getFullTypeName(), msg);
 
         msg = "numeric sort should allow dupes in Vector.<String>";
         av = ["d", "d", "d"];
@@ -395,10 +389,10 @@ class TestVector extends Test
         }
         
         av = ["apple", "orange", null, "Cherry", "apple"];
-        assert(av.join() == "apple,orange,null,Cherry,apple");
+        assert(av.join() == "apple,orange,null,Cherry,apple", "join mismatch");
         
         var rv:Vector.<Object> = [1, "hello", av, true, null];
-        assert(rv.join(";") == "1;hello;apple,orange,null,Cherry,apple;true;null");
+        assert(rv.join(";") == "1;hello;apple,orange,null,Cherry,apple;true;null", "join with separator mismatch");
         
         var spliceTest:Vector.<Number> = [1, 2, 3, 4];
 
