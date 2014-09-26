@@ -21,6 +21,7 @@
 #pragma once
 
 #include "loom/engine/loom2d/l2dDisplayObject.h"
+#include "loom/graphics/gfxVectorRenderer.h"
 
 namespace Loom2D
 {
@@ -33,14 +34,12 @@ class VectorData {
 		virtual void render(lua_State *L, Shape* g) = 0;
 };
 
-#define MAXCOMMANDS 20
-#define MAXDATA 200
-
 enum VectorPathCommand {
 	MOVE_TO,
 	LINE_TO,
 	CURVE_TO,
-	CUBIC_CURVE_TO
+	CUBIC_CURVE_TO,
+	ARC_TO,
 };
 
 class VectorPath : public VectorData {
@@ -53,6 +52,7 @@ public:
 	void lineTo(float x, float y);
 	void curveTo(float controlX, float controlY, float anchorX, float anchorY);
 	void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);
+	void arcTo(float controlX, float controlY, float anchorX, float anchorY, float radius);
 
 	virtual void render(lua_State *L, Shape* g);
 };
@@ -61,7 +61,9 @@ enum VectorShapeType {
 	CIRCLE,
 	ELLIPSE,
 	RECT,
-	ROUND_RECT
+	ROUND_RECT,
+	ARC_CW,
+	ARC_CCW
 };
 
 class VectorShape : public VectorData {
@@ -79,22 +81,23 @@ public:
 	virtual void render(lua_State *L, Shape* g);
 };
 
-
 class VectorLineStyle : public VectorData {
 public:
+
 	float thickness;
 	unsigned int color;
 	float alpha;
-
+	GFX::VectorLineScaleMode::Enum scaleMode;
+	GFX::VectorLineCaps::Enum caps;
+	GFX::VectorLineJoints::Enum joints;
+	float miterLimit;
+	
 	VectorLineStyle() {
 		reset();
 	}
-	void reset() {
-		thickness = NAN;
-		color = 0x000000;
-		alpha = 1;
-	}
-	VectorLineStyle(float thickness, unsigned int color, float alpha) : thickness(thickness), color(color), alpha(alpha) {};
+	void reset();
+	void copyTo(VectorLineStyle* s);
+	VectorLineStyle(float thickness, unsigned int color, float alpha, GFX::VectorLineScaleMode::Enum scaleMode, GFX::VectorLineCaps::Enum caps, GFX::VectorLineJoints::Enum joints, float miterLimit) : thickness(thickness), color(color), alpha(alpha), scaleMode(scaleMode), caps(caps), joints(joints), miterLimit(miterLimit) {};
 
 	virtual void render(lua_State *L, Shape* g);
 };
@@ -120,6 +123,37 @@ public:
 	virtual void render(lua_State *L, Shape* g);
 };
 
+class VectorText : public VectorData {
+protected:
+	float x;
+	float y;
+	float width;
+	utString* text;
+
+public:
+	VectorText(float x, float y, float width, utString* text) : x(x), y(y), width(width), text(text) {};
+
+	virtual void render(lua_State *L, Shape* g);
+};
+
+class VectorTextFormatData : public VectorData {
+public:
+	GFX::VectorTextFormat* format;
+	VectorTextFormatData(GFX::VectorTextFormat* format) : format(format) {};
+	virtual void render(lua_State *L, Shape* g);
+};
+
+class VectorSVGData : public VectorData {
+public:
+	float x;
+	float y;
+	float scale;
+	GFX::VectorSVG* image;
+	VectorSVGData(float x, float y, float scale, GFX::VectorSVG* image) : x(x), y(y), scale(scale), image(image) {};
+	virtual void render(lua_State *L, Shape* g);
+};
+
+
 
 class Shape : public DisplayObject
 {
@@ -137,6 +171,7 @@ public:
 	VectorPath *lastPath;
 	VectorLineStyle currentLineStyle;
 	VectorFill currentFill;
+	bool pathDirty = false;
 
 	Shape()
 	{
@@ -151,17 +186,27 @@ public:
     void render(lua_State *L);
 
 	void clear();
-	void lineStyle(float thickness, unsigned int color, float alpha);
+	void lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit);
+	void textFormat(GFX::VectorTextFormat format);
 	void beginFill(unsigned int color, float alpha);
 	void endFill();
+
 	void moveTo(float x, float y);
 	void lineTo(float x, float y);
 	void curveTo(float controlX, float controlY, float anchorX, float anchorY);
 	void cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY);
+	void arcTo(float controlX, float controlY, float anchorX, float anchorY, float radius);
+
 	void drawCircle(float x, float y, float radius);
 	void drawEllipse(float x, float y, float width, float height);
 	void drawRect(float x, float y, float width, float height);
 	void drawRoundRect(float x, float y, float width, float height, float ellipseWidth, float ellipseHeight);
+	void drawArc(float x, float y, float radius, float angleFrom, float angleTo, int direction);
+	
+	void drawTextLabel(float x, float y, utString text);
+	void drawTextBox(float x, float y, float width, utString text);
+
+	void drawSVG(float x, float y, float scale, GFX::VectorSVG* svg);
 
     static void initialize(lua_State *L)
     {

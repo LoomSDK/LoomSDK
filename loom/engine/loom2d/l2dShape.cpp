@@ -23,51 +23,22 @@
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/engine/loom2d/l2dShape.h"
 
+#include <math.h>
+
 namespace Loom2D
 {
 
 Type *Shape::typeShape = NULL;
 
-void VectorPath::render(lua_State *L, Shape* g) {
-	int ci = 0;
-	int commandNum = commands.size();
-	int di = 0;
-	float x, y, c1x, c1y, c2x, c2y;
 
-	if (!g->isStyleVisible()) return;
 
-	while (ci < commandNum) {
-		switch (commands[ci++]) {
-			case MOVE_TO:
-				// If we don't store it in vars first, the arguments get swapped?
-				x = data[di++];
-				y = data[di++];
-				GFX::VectorRenderer::moveTo(x, y);
-				break;
-			case LINE_TO:
-				x = data[di++];
-				y = data[di++];
-				GFX::VectorRenderer::lineTo(x, y);
-				break;
-			case CURVE_TO:
-				c1x = data[di++];
-				c1y = data[di++];
-				x = data[di++];
-				y = data[di++];
-				GFX::VectorRenderer::curveTo(c1x, c1y, x, y);
-				break;
-			case CUBIC_CURVE_TO:
-				c1x = data[di++];
-				c1y = data[di++];
-				c2x = data[di++];
-				c2y = data[di++];
-				x = data[di++];
-				y = data[di++];
-				GFX::VectorRenderer::cubicCurveTo(c1x, c1y, c2x, c2y, x, y);
-				break;
-		}
-	}
-}
+
+
+/****************************
+        API FUNCTIONS
+****************************/
+
+
 
 void VectorPath::moveTo(float x, float y) {
 	commands.push_back(MOVE_TO);
@@ -95,59 +66,15 @@ void VectorPath::cubicCurveTo(float controlX1, float controlY1, float controlX2,
 	data.push_back(anchorX);
 	data.push_back(anchorY);
 }
-
-void VectorShape::render(lua_State *L, Shape* g) {
-	if (!g->isStyleVisible()) return;
-	switch (type) {
-		case CIRCLE:     GFX::VectorRenderer::circle(x, y, a); break;
-		case ELLIPSE:    GFX::VectorRenderer::ellipse(x, y, a, b); break;
-		case RECT:       GFX::VectorRenderer::rect(x, y, a, b); break;
-		case ROUND_RECT: GFX::VectorRenderer::roundRect(x, y, a, b, c); break;
-	}
+void VectorPath::arcTo(float controlX, float controlY, float anchorX, float anchorY, float radius) {
+	commands.push_back(ARC_TO);
+	data.push_back(controlX);
+	data.push_back(controlY);
+	data.push_back(anchorX);
+	data.push_back(anchorY);
+	data.push_back(radius);
 }
 
-VectorPath* Shape::getPath() {
-	VectorPath* path = lastPath;
-	if (path == NULL) {
-		path = queue->empty() ? NULL : dynamic_cast<VectorPath*>(queue->back());
-		if (path == NULL) {
-			path = new VectorPath();
-			path->moveTo(0, 0);
-			queue->push_back(path);
-		}
-		lastPath = path;
-	}
-	return path;
-}
-
-
-void VectorLineStyle::render(lua_State *L, Shape* g) {
-	/*
-	GFX::VectorRenderer::clearPath();
-	GFX::VectorRenderer::strokeWidth(thickness);
-	float cr = ((color >> 16) & 0xff) / 255.0f;
-	float cg = ((color >> 8) & 0xff) / 255.0f;
-	float cb = ((color >> 0) & 0xff) / 255.0f;
-	GFX::VectorRenderer::strokeColor(cr, cg, cb, alpha);
-	//*/
-	g->flushPath();
-	g->currentLineStyle.thickness = thickness;
-	g->currentLineStyle.color = color;
-	g->currentLineStyle.alpha = alpha;
-}
-
-void VectorFill::render(lua_State *L, Shape* g) {
-	/*
-	float cr = ((color >> 16) & 0xff) / 255.0f;
-	float cg = ((color >> 8) & 0xff) / 255.0f;
-	float cb = ((color >> 0) & 0xff) / 255.0f;
-	GFX::VectorRenderer::fillColor(cr, cg, cb, alpha);
-	*/
-	if (!active) g->flushPath();
-	g->currentFill.active = active;
-	g->currentFill.color = color;
-	g->currentFill.alpha = alpha;
-}
 
 
 void Shape::clear() {
@@ -160,53 +87,36 @@ void Shape::clear() {
 	lastPath = NULL;
 }
 
-bool Shape::isStyleVisible() {
-	bool stroke = !isnan(currentLineStyle.thickness);
-	bool fill = currentFill.active;
-	return stroke || fill;
-}
+void Shape::lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit) {
 
-void Shape::flushPath() {
-	bool stroke = !isnan(currentLineStyle.thickness);
-	if (stroke) {
-		GFX::VectorRenderer::strokeWidth(currentLineStyle.thickness);
-		unsigned int color = currentLineStyle.color;
-		float cr = ((color >> 16) & 0xff) / 255.0f;
-		float cg = ((color >> 8) & 0xff) / 255.0f;
-		float cb = ((color >> 0) & 0xff) / 255.0f;
-		GFX::VectorRenderer::strokeColor(cr, cg, cb, currentLineStyle.alpha);
-		GFX::VectorRenderer::renderStroke();
-	}
-	bool fill = currentFill.active;
-	if (fill) {
-		unsigned int color = currentFill.color;
-		float cr = ((color >> 16) & 0xff) / 255.0f;
-		float cg = ((color >> 8) & 0xff) / 255.0f;
-		float cb = ((color >> 0) & 0xff) / 255.0f;
-		GFX::VectorRenderer::fillColor(cr, cg, cb, currentFill.alpha);
-		GFX::VectorRenderer::renderFill();
-		currentFill.active = false;
-	}
-	GFX::VectorRenderer::clearPath();
-}
+	const char* t;
 
-void Shape::restartPath() {
-	if (lastPath) {
-		int dataNum = lastPath->data.size();
-		if (dataNum >= 2) {
-			float x = lastPath->data[dataNum - 2];
-			float y = lastPath->data[dataNum - 1];
-			lastPath = NULL;
-			moveTo(x, y);
-		} else {
-			lastPath = NULL;
-		}
-	}
-}
+	t = scaleMode.c_str();
+	GFX::VectorLineScaleMode::Enum scaleModeEnum =
+		!strcmp(t, "normal") ? GFX::VectorLineScaleMode::NORMAL :
+		!strcmp(t, "none") ? GFX::VectorLineScaleMode::NONE :
+		GFX::VectorLineScaleMode::NORMAL;
 
-void Shape::lineStyle(float thickness, unsigned int color, float alpha) {
-	queue->push_back(new VectorLineStyle(thickness, color, alpha));
+	t = caps.c_str();
+	GFX::VectorLineCaps::Enum capsEnum =
+		!strcmp(t, "round") ? GFX::VectorLineCaps::ROUND :
+		!strcmp(t, "square") ? GFX::VectorLineCaps::SQUARE :
+		!strcmp(t, "none") ? GFX::VectorLineCaps::NONE :
+		GFX::VectorLineCaps::ROUND;
+
+	t = joints.c_str();
+	GFX::VectorLineJoints::Enum jointsEnum =
+		!strcmp(t, "round") ? GFX::VectorLineJoints::ROUND :
+		!strcmp(t, "bevel") ? GFX::VectorLineJoints::BEVEL :
+		!strcmp(t, "miter") ? GFX::VectorLineJoints::MITER :
+		GFX::VectorLineJoints::ROUND;
+
+	queue->push_back(new VectorLineStyle(thickness, color, alpha, scaleModeEnum, capsEnum, jointsEnum, miterLimit));
 	restartPath();
+}
+
+void Shape::textFormat(GFX::VectorTextFormat format) {
+	queue->push_back(new VectorTextFormatData(new GFX::VectorTextFormat(format)));
 }
 
 void Shape::beginFill(unsigned int color, float alpha) {
@@ -218,6 +128,7 @@ void Shape::endFill() {
 	queue->push_back(new VectorFill());
 	restartPath();
 }
+
 
 void Shape::moveTo(float x, float y) {
 	getPath()->moveTo(x, y);
@@ -235,10 +146,10 @@ void Shape::cubicCurveTo(float controlX1, float controlY1, float controlX2, floa
 	getPath()->cubicCurveTo(controlX1, controlY1, controlX2, controlY2, anchorX, anchorY);
 }
 
-void Shape::addShape(VectorShape *shape) {
-	queue->push_back(shape);
-	restartPath();
+void Shape::arcTo(float controlX, float controlY, float anchorX, float anchorY, float radius) {
+	getPath()->arcTo(controlX, controlY, anchorX, anchorY, radius);
 }
+
 
 void Shape::drawCircle(float x, float y, float radius) {
 	addShape(new VectorShape(CIRCLE, x, y, radius));
@@ -257,14 +168,33 @@ void Shape::drawRoundRect(float x, float y, float width, float height, float ell
 	addShape(new VectorShape(ROUND_RECT, x, y, width, height, ellipseWidth));
 }
 
-void Shape::resetStyle() {
-	currentLineStyle.reset();
-	currentFill.reset();
+void Shape::drawArc(float x, float y, float radius, float angleFrom, float angleTo, int direction) {
+	addShape(new VectorShape(direction == GFX::VectorWinding::CW ? ARC_CW : ARC_CCW, x, y, radius, angleFrom, angleTo));
 }
+
+void Shape::drawTextLabel(float x, float y, utString text) {
+	queue->push_back(new VectorText(x, y, NAN, new utString(text)));
+}
+
+void Shape::drawTextBox(float x, float y, float width, utString text) {
+	queue->push_back(new VectorText(x, y, width, new utString(text)));
+}
+
+void Shape::drawSVG(float x, float y, float scale, GFX::VectorSVG* svg) {
+	queue->push_back(new VectorSVGData(x, y, scale, svg));
+	restartPath();
+}
+
+
+/*************************
+        RENDERING
+*************************/
+
+
 
 void Shape::render(lua_State *L)
 {
-    updateLocalTransform();
+	updateLocalTransform();
 
 	Matrix transform;
 	getTargetTransformationMatrix(NULL, &transform);
@@ -273,10 +203,11 @@ void Shape::render(lua_State *L)
 
 	GFX::VectorRenderer::beginFrame();
 	GFX::VectorRenderer::preDraw(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
-	
+
 	resetStyle();
 
 	flushPath();
+
 	utArray<VectorData*>::Iterator it = queue->iterator();
 	while (it.hasMoreElements()) {
 		VectorData* d = it.getNext();
@@ -286,7 +217,198 @@ void Shape::render(lua_State *L)
 
 	GFX::VectorRenderer::postDraw();
 	GFX::VectorRenderer::endFrame();
-	
+
+}
+
+void VectorPath::render(lua_State *L, Shape* g) {
+	int ci = 0;
+	int commandNum = commands.size();
+	int di = 0;
+	float x, y, c1x, c1y, c2x, c2y, r;
+
+	if (!g->isStyleVisible()) return;
+
+	while (ci < commandNum) {
+		switch (commands[ci++]) {
+		case MOVE_TO:
+			// If we don't store it in vars first, the arguments get swapped?
+			x = data[di++];
+			y = data[di++];
+			GFX::VectorRenderer::moveTo(x, y);
+			break;
+		case LINE_TO:
+			x = data[di++];
+			y = data[di++];
+			GFX::VectorRenderer::lineTo(x, y);
+			break;
+		case CURVE_TO:
+			c1x = data[di++];
+			c1y = data[di++];
+			x = data[di++];
+			y = data[di++];
+			GFX::VectorRenderer::curveTo(c1x, c1y, x, y);
+			break;
+		case CUBIC_CURVE_TO:
+			c1x = data[di++];
+			c1y = data[di++];
+			c2x = data[di++];
+			c2y = data[di++];
+			x = data[di++];
+			y = data[di++];
+			GFX::VectorRenderer::cubicCurveTo(c1x, c1y, c2x, c2y, x, y);
+			break;
+		case ARC_TO:
+			c1x = data[di++];
+			c1y = data[di++];
+			x = data[di++];
+			y = data[di++];
+			r = data[di++];
+			GFX::VectorRenderer::arcTo(c1x, c1y, x, y, r);
+			break;
+		}
+	}
+
+	g->pathDirty = true;
+}
+
+void VectorShape::render(lua_State *L, Shape* g) {
+	if (!g->isStyleVisible()) return;
+	switch (type) {
+		case CIRCLE:     GFX::VectorRenderer::circle(x, y, a); break;
+		case ELLIPSE:    GFX::VectorRenderer::ellipse(x, y, a, b); break;
+		case RECT:       GFX::VectorRenderer::rect(x, y, a, b); break;
+		case ROUND_RECT: GFX::VectorRenderer::roundRect(x, y, a, b, c); break;
+		case ARC_CW:     GFX::VectorRenderer::arc(x, y, a, b, c, GFX::VectorWinding::CW); break;
+		case ARC_CCW:    GFX::VectorRenderer::arc(x, y, a, b, c, GFX::VectorWinding::CCW); break;
+	}
+	g->pathDirty = true;
+}
+
+void VectorLineStyle::render(lua_State *L, Shape* g) {
+	g->flushPath();
+	copyTo(&g->currentLineStyle);
+}
+
+void VectorFill::render(lua_State *L, Shape* g) {
+	if (!active) g->flushPath();
+	g->currentFill.active = active;
+	g->currentFill.color = color;
+	g->currentFill.alpha = alpha;
+}
+
+void VectorText::render(lua_State *L, Shape* g) {
+	if (isnan(width)) {
+		GFX::VectorRenderer::textLabel(x, y, text);
+	} else {
+		GFX::VectorRenderer::textBox(x, y, width, text);
+	}
+}
+
+void VectorTextFormatData::render(lua_State *L, Shape* g) {
+	GFX::VectorRenderer::textFormat(format);
+}
+
+void VectorSVGData::render(lua_State *L, Shape* g) {
+	g->flushPath();
+	GFX::VectorRenderer::svg(x, y, scale, image);
+}
+
+
+
+/*******************
+        MISC
+********************/
+
+
+
+void VectorLineStyle::reset() {
+	thickness = NAN;
+	color = 0x000000;
+	alpha = 1;
+	scaleMode = GFX::VectorLineScaleMode::NORMAL;
+	caps = GFX::VectorLineCaps::ROUND;
+	joints = GFX::VectorLineJoints::ROUND;
+	miterLimit = 0;
+}
+
+void VectorLineStyle::copyTo(VectorLineStyle* s) {
+	s->thickness = thickness;
+	s->color = color;
+	s->alpha = alpha;
+	s->scaleMode = scaleMode;
+	s->caps = caps;
+	s->joints = joints;
+	s->miterLimit = miterLimit;
+}
+
+
+
+VectorPath* Shape::getPath() {
+	VectorPath* path = lastPath;
+	if (path == NULL) {
+		path = queue->empty() ? NULL : dynamic_cast<VectorPath*>(queue->back());
+		if (path == NULL) {
+			path = new VectorPath();
+			path->moveTo(0, 0);
+			queue->push_back(path);
+		}
+		lastPath = path;
+	}
+	return path;
+}
+
+void Shape::addShape(VectorShape *shape) {
+	queue->push_back(shape);
+	restartPath();
+}
+
+bool Shape::isStyleVisible() {
+	bool stroke = !isnan(currentLineStyle.thickness);
+	bool fill = currentFill.active;
+	return stroke || fill;
+}
+
+void Shape::flushPath() {
+	bool stroke = !isnan(currentLineStyle.thickness);
+	if (stroke && pathDirty) {
+		float scale = 1.0f;
+		switch (currentLineStyle.scaleMode) {
+			case GFX::VectorLineScaleMode::NONE: scale = 1/sqrt(scaleX*scaleX+scaleY*scaleY); break;
+		}
+		GFX::VectorRenderer::strokeWidth(currentLineStyle.thickness*scale);
+		GFX::VectorRenderer::strokeColor(currentLineStyle.color, currentLineStyle.alpha);
+		GFX::VectorRenderer::lineCaps(currentLineStyle.caps);
+		GFX::VectorRenderer::lineJoints(currentLineStyle.joints);
+		GFX::VectorRenderer::lineMiterLimit(currentLineStyle.miterLimit);
+		GFX::VectorRenderer::renderStroke();
+	}
+	bool fill = currentFill.active;
+	if (fill && pathDirty) {
+		GFX::VectorRenderer::fillColor(currentFill.color, currentFill.alpha);
+		GFX::VectorRenderer::renderFill();
+		currentFill.active = false;
+	}
+	pathDirty = false;
+	GFX::VectorRenderer::clearPath();
+}
+
+void Shape::restartPath() {
+	if (lastPath) {
+		int dataNum = lastPath->data.size();
+		if (dataNum >= 2) {
+			float x = lastPath->data[dataNum - 2];
+			float y = lastPath->data[dataNum - 1];
+			lastPath = NULL;
+			moveTo(x, y);
+		} else {
+			lastPath = NULL;
+		}
+	}
+}
+
+void Shape::resetStyle() {
+	currentLineStyle.reset();
+	currentFill.reset();
 }
 
 }

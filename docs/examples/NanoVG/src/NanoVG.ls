@@ -5,6 +5,11 @@ package
     import loom2d.display.Shape;
     import loom2d.display.StageScaleMode;
     import loom2d.display.Image;
+    import loom2d.display.SVG;
+    import loom2d.display.TextAlign;
+    import loom2d.display.TextFormat;
+    import loom2d.events.Event;
+    import loom2d.events.ScrollWheelEvent;
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
     import loom2d.events.TouchPhase;
@@ -57,6 +62,12 @@ package
             g.y = 50;
             stage.addChild(g);
             
+            var s = new Shape();
+            s.x = 50;
+            s.y = 50;
+            s.scale = 10;
+            stage.addChild(s);
+            
             //gfx.moveTo(0, 0);
             //gfx.lineTo(50, 0);
             //gfx.lineTo(0, 50);
@@ -81,13 +92,28 @@ package
             
             var x = 0, y = 0;
             
+            // Fill before clearing
+            g.beginFill(0xFF2424, 1);
+            g.drawRect(0, y, 500, 500);
+            g.endFill();
+            g.clear();
+            
+            // SVG
+            var svg = new SVG();
+            svg.loadFile("assets/nano.svg");
+            g.drawSVG(220, 30, 0.2, svg);
+            
+            //g.pivotX = 245; g.pivotY = 45; g.scale *= 20;
+            //return;
+            
             // Fill
             g.beginFill(0x3EA80B, 1);
             g.drawRect(110, y, 100, 10);
             g.endFill();
             y += 20;
             
-            g.lineStyle(1, 0x000000, 1);
+            // Set default line style
+            g.lineStyle(1);
             
             // Implicit moveTo(0,0)
             g.lineTo(100, 0);
@@ -101,12 +127,45 @@ package
             g.drawEllipse(50, 50, 20, 50);
             g.drawRect(25, 25, 50, 50);
             g.drawRoundRect(35, 35, 30, 30, 10, 10);
+            g.drawArc(25, 25, 23,  1.5*Math.PI, 1.0*Math.PI, 1);
+            g.drawArc(75, 25, 23, -0.5*Math.PI, 0.0*Math.PI, 2);
+            g.drawArc(25, 75, 23,  0.5*Math.PI, 1.0*Math.PI, 2);
+            g.drawArc(75, 75, 23,  0.5*Math.PI, 0.0*Math.PI, 1);
+            
+            // arcTo with implicit initial moveTo after shapes
+                                g.arcTo(  0,  75, 25, 75, 25);
+            g.moveTo(100, 100); g.arcTo(100,  75, 75, 75, 25);
+            g.moveTo(100,   0); g.arcTo(100,  25, 75, 25, 25);
+            g.moveTo(  0,   0); g.arcTo(  0,  25, 25, 25, 25);
+            
+            // Draw text
+            g.drawTextLabel(220, 10, "hello");
+            
+            var format = new TextFormat();
+            
+            format.size = 30;
+            g.textFormat(format);
+            g.drawTextLabel(220, 24, "world");
+            
+            format.size = 14;
+            format.lineHeight = 1;
+            format.align = TextAlign.CENTER | TextAlign.TOP;
+            g.textFormat(format);
+            g.moveTo(300, 0); g.lineTo(400, 0);
+            g.drawTextBox(300, 0, 100, "The five boxing wizards jump quickly.");
+            
+            format.size = 10;
+            g.textFormat(format);
+            g.moveTo(300, 50); g.lineTo(330, 50);
+            g.drawTextBox(300, 50, 30, "The five boxing wizards jump quickly.");
+            g.moveTo(330, 50); g.lineTo(400, 50);
+            g.drawTextBox(330, 50, 70, "The five boxing wizards jump quickly.");
+            
             
             // Mixed line and shape rendering
             g.moveTo(100, 0);
             g.lineTo(100, 100);
             g.drawCircle(50, 50, 40);
-            
             g.lineTo(0, 100);
             
             // Curve rendering
@@ -117,7 +176,50 @@ package
             g.cubicCurveTo(1/3*100, 50-50, 2/3*100, 50+50, 100, 50);
             g.cubicCurveTo(2/3*100, 50-50, 1/3*100, 50+50, 0, 50);
             
-            // Line styles
+            // Cap styles
+            g.lineStyle(10, 0x000000, 1, false, "", "round", "round", 0);  g.moveTo(05, 110); g.lineTo(25, 110);
+            g.lineStyle(10, 0x000000, 1, false, "", "square", "round", 0); g.moveTo(40, 110); g.lineTo(60, 110);
+            g.lineStyle(10, 0x000000, 1, false, "", "none", "round", 0);   g.moveTo(75, 110); g.lineTo(95, 110);
+            
+            g.lineStyle(01, 0xDADADA, 1, false, "", "round", "round", 0);  g.moveTo(05, 110); g.lineTo(25, 110);
+            g.lineStyle(01, 0xDADADA, 1, false, "", "square", "round", 0); g.moveTo(40, 110); g.lineTo(60, 110);
+            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "round", 0);   g.moveTo(75, 110); g.lineTo(95, 110);
+            
+            // Joint styles
+            g.lineStyle(10, 0x000000, 1, false, "", "none", "round", 0);  g.moveTo(05, 130); g.lineTo(25, 130); g.lineTo(05, 150);
+            g.lineStyle(10, 0x000000, 1, false, "", "none", "bevel", 0);  g.moveTo(40, 130); g.lineTo(60, 130); g.lineTo(40, 150);
+            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(75, 130); g.lineTo(95, 130); g.lineTo(75, 150);
+            
+            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "round", 0);  g.moveTo(05, 130); g.lineTo(25, 130); g.lineTo(05, 150);
+            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "bevel", 0);  g.moveTo(40, 130); g.lineTo(60, 130); g.lineTo(40, 150);
+            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(75, 130); g.lineTo(95, 130); g.lineTo(75, 150);
+            
+            // Miter joint angles
+            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(05, 170); g.lineTo(25, 170); g.lineTo(05, 175);
+            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185);
+            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190);
+            
+            // Skeleton
+            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(05, 170); g.lineTo(25, 170); g.lineTo(05, 175);
+            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185);
+            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190);
+            
+            
+            // Miter joint angles
+            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(05, 170); g.lineTo(25, 170); g.lineTo(05, 175);
+            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185);
+            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190);
+            
+            // Skeleton
+            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(05, 170); g.lineTo(25, 170); g.lineTo(05, 175);
+            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185);
+            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190);
+            
+            // Line scale mode
+            s.lineStyle(1, 0x000000, 1, false, "normal"); s.moveTo(0.5, 21); s.lineTo(2.5, 21); s.lineTo(0.5, 21);
+            s.lineStyle(1, 0x000000, 1, false, "none");   s.moveTo(4, 21); s.lineTo(6, 21); s.lineTo(4, 21);
+            
+            // Various line styles
             g.lineStyle(0, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
             g.lineStyle(0.1, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
             g.lineStyle(0.2, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
@@ -166,12 +268,13 @@ package
             g.drawRect(110, y, 100, 10);
             y += 12;
             
+            stage.addEventListener(ScrollWheelEvent.SCROLLWHEEL, onScroll);
             
             /*
             
             g.clear();
-            g.lineStyle(1, 0xFFFFFF, 0.01);
-            var n = 5000;
+            g.lineStyle(10, 0x000000, 0.05);
+            var n = 100;
             var w = 460-g.x*2;
             var h = 300-g.y*2;
             
@@ -183,7 +286,7 @@ package
             
             g.moveTo(cx, cy);
             
-            for (var it:int = 0; it < 10; it++) {
+            for (var it:int = 0; it < 1; it++) {
                 for (var i:int = 0; i < n; i++) {
                     var a:Number = t + i / (n-1) * Math.TWOPI * (1000 + Math.cos(t*0.000001)*10);
                     var b:Number = t + i / (n-1) * Math.TWOPI * (1000 + Math.sin(t*0.00001)*10);
@@ -222,6 +325,10 @@ package
             
         }
         
+        private function onScroll(e:ScrollWheelEvent):void {
+            g.scale *= 1-0.1*e.delta;
+        }
+        
         private function onTouch(e:TouchEvent):void 
         {
             var t:Touch = e.getTouch(stage, TouchPhase.BEGAN);
@@ -252,9 +359,6 @@ package
             var t = Loom2D.juggler.elapsedTime;
             g.clear();
             g.lineStyle(1, 0xBD55F4, 1);
-            g.moveTo(0, 0);
-            g.moveTo(0, 0);
-            g.moveTo(0, 0);
             g.moveTo(0, 0);
             g.cubicCurveTo(Math.cos(t*2.5)*100, Math.sin(t*2.1)*100, Math.cos(t*1.51)*100, Math.sin(t*1.11)*100, 0, 100);
             g.drawCircle(20, 20, 10);
