@@ -456,6 +456,8 @@ final class Vector
      *
      *  * `3` will be placed before `11`.
      *  * `'100'` will be placed after `'9'`.
+     *
+     *  Numeric sorting for types other than `String` or `Number` is undefined; a custom sorting function should be used instead.
      */
     public static const NUMERIC:uint = 16;
 
