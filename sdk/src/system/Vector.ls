@@ -483,7 +483,7 @@ final class Vector
      *  * return `1` when the first item should be placed after the second
      *  * return `-1` when the first item should be placed before the second
      *
-     *  @param sortBehavior Either a bitwise OR of sorting constants (CASEINSENSITIVE, DESCENDING, UNIQUESORT, RETURNINDEXEDARRAY, NUMERIC) or a sorting function in the form of "function (x:Object, y:Object):Number" where x/y can be of any type and the function returns 0 for equality, 1 for x>y and -1 for x<y.
+     *  @param sortBehavior Either a bitwise OR of sorting constants (CASEINSENSITIVE, DESCENDING, UNIQUESORT, RETURNINDEXEDARRAY, NUMERIC) or a sorting function in the form of "function (x:Object, y:Object):Number" where x/y can be of any type and the function returns 0 for equality, 1 for x&gt;y and -1 for x&lt;y.
      */
     public native function sort(sortBehavior:Object = 0):Object;
 }
