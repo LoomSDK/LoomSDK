@@ -27,7 +27,7 @@
 #define NVG_INIT_PATH_SIZE 256
 #define NVG_MAX_STATES 32
 
-#define NVG_KAPPA90 0.5522847493f	// Lenght proportional to radius of a cubic bezier handle for 90deg arcs.
+#define NVG_KAPPA90 0.5522847493f	// Length proportional to radius of a cubic bezier handle for 90deg arcs.
 
 #define NVG_COUNTOF(arr) (sizeof(arr) / sizeof(0[arr]))
 
@@ -1627,6 +1627,8 @@ void nvgQuadTo(NVGcontext* ctx, float cx, float cy, float x, float y)
 	nvg__appendCommands(ctx, vals, NVG_COUNTOF(vals));
 }
 
+void nvg__Arc(struct NVGcontext* ctx, float cx, float cy, float r, float a0, float a1, int dir, NVGcommands firstCommand);
+
 void nvgArcTo(struct NVGcontext* ctx, float x1, float y1, float x2, float y2, float radius)
 {
 	float x0 = ctx->commandx;
@@ -1680,7 +1682,7 @@ void nvgArcTo(struct NVGcontext* ctx, float x1, float y1, float x2, float y2, fl
 //		printf("CCW c=(%f, %f) a0=%f° a1=%f°\n", cx, cy, a0/NVG_PI*180.0f, a1/NVG_PI*180.0f);
 	}
 
-	nvgArc(ctx, cx, cy, radius, a0, a1, dir);
+	nvg__Arc(ctx, cx, cy, radius, a0, a1, dir, ctx->ncommands > 0 ? NVG_LINETO : NVG_MOVETO);
 }
 
 void nvgClosePath(struct NVGcontext* ctx)
@@ -1697,12 +1699,16 @@ void nvgPathWinding(struct NVGcontext* ctx, int dir)
 
 void nvgArc(struct NVGcontext* ctx, float cx, float cy, float r, float a0, float a1, int dir)
 {
+	nvg__Arc(ctx, cx, cy, r, a0, a1, dir, NVG_MOVETO);
+}
+
+void nvg__Arc(struct NVGcontext* ctx, float cx, float cy, float r, float a0, float a1, int dir, NVGcommands firstCommand)
+{
 	float a = 0, da = 0, hda = 0, kappa = 0;
 	float dx = 0, dy = 0, x = 0, y = 0, tanx = 0, tany = 0;
 	float px = 0, py = 0, ptanx = 0, ptany = 0;
 	float vals[3 + 5*7 + 100];
-	int i, ndivs, nvals;
-	int move = ctx->ncommands > 0 ? NVG_LINETO : NVG_MOVETO; 
+	int i, ndivs, nvals; 
 
 	// Clamp angles
 	da = a1 - a0;
@@ -1739,7 +1745,7 @@ void nvgArc(struct NVGcontext* ctx, float cx, float cy, float r, float a0, float
 		tany = dx*r*kappa;
 
 		if (i == 0) {
-			vals[nvals++] = (float)move;
+			vals[nvals++] = (float)firstCommand;
 			vals[nvals++] = x;
 			vals[nvals++] = y;
 		} else {

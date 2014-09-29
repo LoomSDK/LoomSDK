@@ -226,21 +226,43 @@ static int registerLoom2D(lua_State *L)
 	   .addConstructor<void(*)(void)>()
 	   .endClass()
 
+	// TextFormat
+	   .beginClass<GFX::VectorTextFormat>("TextFormat")
+	   .addConstructor<void(*)(void)>()
+	   .addProperty("size", &GFX::VectorTextFormat::getSize, &GFX::VectorTextFormat::setSize)
+	   .addProperty("align", &GFX::VectorTextFormat::getAlign, &GFX::VectorTextFormat::setAlign)
+	   .addProperty("letterSpacing", &GFX::VectorTextFormat::getLetterSpacing, &GFX::VectorTextFormat::setLetterSpacing)
+	   .addProperty("lineHeight", &GFX::VectorTextFormat::getLineHeight, &GFX::VectorTextFormat::setLineHeight)
+	   .endClass()
+
+	// SVG
+       .beginClass<GFX::VectorSVG>("SVG")
+       .addConstructor<void(*)(void)>()
+       .addMethod("loadFile", &GFX::VectorSVG::loadFile)
+       .addMethod("loadString", &GFX::VectorSVG::loadString)
+       .endClass()
+
 	// Shape
 	   .deriveClass<Shape, DisplayObject>("Shape")
 	   .addConstructor<void(*)(void)>()
 	   .addMethod("clear", &Shape::clear)
 	   .addMethod("lineStyle", &Shape::lineStyle)
+	   .addMethod("textFormat", &Shape::textFormat)
 	   .addMethod("beginFill", &Shape::beginFill)
 	   .addMethod("endFill", &Shape::endFill)
 	   .addMethod("moveTo", &Shape::moveTo)
 	   .addMethod("lineTo", &Shape::lineTo)
 	   .addMethod("curveTo", &Shape::curveTo)
 	   .addMethod("cubicCurveTo", &Shape::cubicCurveTo)
+	   .addMethod("arcTo", &Shape::arcTo)
 	   .addMethod("drawCircle", &Shape::drawCircle)
 	   .addMethod("drawEllipse", &Shape::drawEllipse)
 	   .addMethod("drawRect", &Shape::drawRect)
 	   .addMethod("drawRoundRect", &Shape::drawRoundRect)
+	   .addMethod("drawArc", &Shape::drawArc)
+	   .addMethod("drawTextLabel", &Shape::drawTextLabel)
+	   .addMethod("drawTextBox", &Shape::drawTextBox)
+	   .addMethod("drawSVG", &Shape::drawSVG)
 	   .endClass()
 
     // Quad
@@ -278,8 +300,11 @@ void installLoom2D()
 {
     LOOM_DECLARE_NATIVETYPE(Loom2D::Loom2DNative, Loom2D::registerLoom2D);
 
-    LOOM_DECLARE_NATIVETYPE(Loom2D::Rectangle, Loom2D::registerLoom2D);
-    LOOM_DECLARE_NATIVETYPE(Loom2D::Matrix, Loom2D::registerLoom2D);
+	LOOM_DECLARE_NATIVETYPE(Loom2D::Rectangle, Loom2D::registerLoom2D);
+	LOOM_DECLARE_NATIVETYPE(Loom2D::Matrix, Loom2D::registerLoom2D);
+
+	LOOM_DECLARE_NATIVETYPE(GFX::VectorTextFormat, Loom2D::registerLoom2D);
+	LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorSVG, Loom2D::registerLoom2D);
 
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::EventDispatcher, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::DisplayObject, Loom2D::registerLoom2D);

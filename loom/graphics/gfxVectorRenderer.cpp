@@ -19,17 +19,21 @@
  */
 
 #include <string.h>
+#include "stdio.h"
+
 #include "bgfx.h"
 #include "nanovg.h"
+
+#define NANOSVG_IMPLEMENTATION
+#include "nanosvg.h"
 
 #include "loom/common/core/log.h"
 #include "loom/common/core/allocator.h"
 #include "loom/common/core/assert.h"
+#include "loom/common/assets/assets.h"
 
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxVectorRenderer.h"
-
-#include "stdio.h"
 
 /*
 #include <windows.h>
@@ -54,8 +58,6 @@ const char * ConvertToUTF8(const wchar_t * pStr) {
 #endif
 */
 
-
-
 namespace GFX
 {
 lmDefineLogGroup(gGFXVectorRendererLogGroup, "GFXVectorRenderer", 1, LoomLogInfo);
@@ -72,7 +74,7 @@ void drawLabel(struct NVGcontext* vg, const char* text, float x, float y, float 
 
 	nvgFontSize(vg, 30.0f);
 	nvgFontFace(vg, "sans");
-	nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
+	nvgFillColor(vg, nvgRGBA(0, 255, 255, 128));
 
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 	nvgText(vg, x, y + h*0.5f, text, NULL);
@@ -94,6 +96,8 @@ void VectorRenderer::preDraw(float a, float b, float c, float d, float e, float 
 	
 	nvgLineCap(nvg, NVG_BUTT);
 	nvgLineJoin(nvg, NVG_ROUND);
+	nvgFontSize(nvg, 12.0f);
+	nvgTextLineHeight(nvg, 1.0f);
 }
 
 void VectorRenderer::postDraw() {
@@ -125,8 +129,9 @@ void VectorRenderer::endFrame()
 
 	//drawLabel(nvg, utf8("Hello nanovg! Pokakaj se v hlače. あなたのズボンをうんち。便便在裤子上"), 10, 50, 280, 20);
 
-	nvgEndFrame(nvg);
+	//drawLabel(nvg, "hello!", 10, 50, 280, 20);
 
+	nvgEndFrame(nvg);
 }
 
 void VectorRenderer::clearPath() {
@@ -148,9 +153,51 @@ void VectorRenderer::strokeColor(float r, float g, float b, float a) {
 	nvgStrokeColor(nvg, nvgRGBAf(r, g, b, a));
 }
 
+void VectorRenderer::strokeColor(unsigned int rgb, float a) {
+	float cr = ((rgb >> 16) & 0xff) / 255.0f;
+	float cg = ((rgb >> 8) & 0xff) / 255.0f;
+	float cb = ((rgb >> 0) & 0xff) / 255.0f;
+	strokeColor(cr, cg, cb, a);
+}
+
+void VectorRenderer::strokeColor32(unsigned int argb, float a) {
+	float ca = ((argb >> 24) & 0xff) / 255.0f;
+	strokeColor(argb, a*ca);
+}
+
+void VectorRenderer::lineCaps(VectorLineCaps::Enum caps) {
+	nvgLineCap(nvg, caps);
+}
+
+void VectorRenderer::lineJoints(VectorLineJoints::Enum joints) {
+	nvgLineJoin(nvg, joints);
+}
+
+void VectorRenderer::lineMiterLimit(float limit) {
+	nvgMiterLimit(nvg, limit);
+}
 
 void VectorRenderer::fillColor(float r, float g, float b, float a) {
 	nvgFillColor(nvg, nvgRGBAf(r, g, b, a));
+}
+
+void VectorRenderer::fillColor(unsigned int rgb, float a) {
+	float cr = ((rgb >> 16) & 0xff) / 255.0f;
+	float cg = ((rgb >> 8) & 0xff) / 255.0f;
+	float cb = ((rgb >> 0) & 0xff) / 255.0f;
+	fillColor(cr, cg, cb, a);
+}
+
+void VectorRenderer::fillColor32(unsigned int argb, float a) {
+	float ca = ((argb >> 24) & 0xff) / 255.0f;
+	fillColor(argb, a*ca);
+}
+
+void VectorRenderer::textFormat(VectorTextFormat* format) {
+	if (!isnan(format->size)) nvgFontSize(nvg, format->size);
+	if (format->align != -1) nvgTextAlign(nvg, format->align);
+	if (!isnan(format->letterSpacing)) nvgTextLetterSpacing(nvg, format->letterSpacing);
+	if (!isnan(format->lineHeight)) nvgTextLineHeight(nvg, format->lineHeight);
 }
 
 
@@ -170,6 +217,12 @@ void VectorRenderer::cubicCurveTo(float c1x, float c1y, float c2x, float c2y, fl
 	nvgBezierTo(nvg, c1x, c1y, c2x, c2y, x, y);
 }
 
+void VectorRenderer::arcTo(float cx, float cy, float x, float y, float radius) {
+	nvgArcTo(nvg, cx, cy, x, y, radius);
+}
+
+
+
 void VectorRenderer::circle(float x, float y, float radius) {
 	nvgCircle(nvg, x, y, radius);
 }
@@ -186,12 +239,28 @@ void VectorRenderer::roundRect(float x, float y, float width, float height, floa
 	nvgRoundedRect(nvg, x, y, width, height, radius);
 }
 
+void VectorRenderer::arc(float x, float y, float radius, float angleFrom, float angleTo, VectorWinding::Enum direction) {
+	nvgArc(nvg, x, y, radius, angleFrom, angleTo, direction);
+}
 
+
+void VectorRenderer::textLabel(float x, float y, utString* string) {
+	nvgText(nvg, x, y, string->c_str(), NULL);
+}
+
+void VectorRenderer::textBox(float x, float y, float width, utString* string) {
+	nvgTextBox(nvg, x, y, width, string->c_str(), NULL);
+}
+
+
+void VectorRenderer::svg(float x, float y, float scale, VectorSVG* image) {
+	image->render(x, y, scale);
+}
 
 void VectorRenderer::destroyGraphicsResources()
 {
 	if (nvg != NULL) {
-		
+		nvgDelete(nvg);
 	}
 }
 
@@ -199,12 +268,98 @@ void VectorRenderer::destroyGraphicsResources()
 void VectorRenderer::initializeGraphicsResources()
 {
 	nvg = nvgCreate(512, 512, 1, 0);
-	//font = nvgCreateFont(nvg, "sans", "font/droidsans.ttf");
-	//font = nvgCreateFont(nvg, "sans", "font/Pecita.otf");
-	font = nvgCreateFont(nvg, "sans", "font/Cyberbit.ttf");
+	font = nvgCreateFont(nvg, "sans", "font/droidsans.ttf");
+	
 
-	nvgFontFaceId(nvg, font);
-	nvgFontSize(nvg, 30);
+	//font = nvgCreateFont(nvg, "sans", "font/Pecita.otf");
+	//font = nvgCreateFont(nvg, "sans", "font/Cyberbit.ttf");
+}
+
+VectorSVG::VectorSVG() {}
+VectorSVG::~VectorSVG() {
+	reset();
+}
+void VectorSVG::reset(bool reloaded) {
+	if (!reloaded && path != NULL) {
+		loom_asset_unsubscribe(path->c_str(), onReload, this);
+		delete path;
+		path = NULL;
+	}
+	if (image != NULL) {
+		nsvgDelete(image);
+		image = NULL;
+	}
+}
+void VectorSVG::loadFile(utString path, utString units, float dpi) {
+	reset();
+	this->units = utString(path);
+	this->dpi = dpi;
+	this->path = new utString(path);
+	loom_asset_subscribe(path.c_str(), onReload, this, false);
+	loom_asset_preload(path.c_str());
+}
+void VectorSVG::onReload(void *payload, const char *name) {
+	VectorSVG* svg = static_cast<VectorSVG*>(payload);
+	svg->reload(utString(name));
+}
+void VectorSVG::reload(utString path) {
+	reset(true);
+	void* data = loom_asset_lock(path.c_str(), LATText, true);
+	image = nsvgParse(static_cast<char*>(data), units.c_str(), dpi);
+	loom_asset_unlock(path.c_str());
+}
+void VectorSVG::loadString(utString svg, utString units, float dpi) {
+	reset();
+	size_t size = svg.size();
+	char* copy = new char[size];
+	strncpy(copy, svg.c_str(), size);
+	image = nsvgParse(copy, units.c_str(), dpi);
+}
+void VectorSVG::render(float x, float y, float scale) {
+	if (image == NULL) return;
+	nvgSave(nvg);
+	nvgTranslate(nvg, x, y);
+	nvgScale(nvg, scale, scale);
+	for (NSVGshape* shape = image->shapes; shape != NULL; shape = shape->next) {
+		NSVGpaint* fill = &shape->fill;
+		bool hasFill = false;
+		switch (fill->type) {
+			case NSVG_PAINT_COLOR:
+				VectorRenderer::fillColor32(fill->color, shape->opacity);
+				hasFill = true;
+				break;
+			case NSVG_PAINT_NONE:
+			default: break;
+		}
+		NSVGpaint* stroke = &shape->stroke;
+		bool hasStroke = false;
+		switch (stroke->type) {
+			case NSVG_PAINT_COLOR:
+				VectorRenderer::strokeColor32(stroke->color, shape->opacity);
+				VectorRenderer::strokeWidth(1);
+				hasStroke = true;
+			default: break;
+		}
+		if (!hasFill && !hasStroke) continue;
+		int pathind = 0;
+		for (NSVGpath* path = shape->paths; path != NULL; path = path->next) {
+			if (path->npts < 1) continue;
+			float winding = 0.0f;
+			VectorRenderer::moveTo(path->pts[0], path->pts[1]);
+			for (int i = 1; i < path->npts - 1; i += 3) {
+				float* p = &path->pts[i * 2];
+				winding += (p[4] - p[-2]) * (p[5] + p[-1]);
+				VectorRenderer::cubicCurveTo(p[0], p[1], p[2], p[3], p[4], p[5]);
+			}
+			nvgPathWinding(nvg, winding > 0 ? NVG_CW : NVG_CCW);
+			pathind++;
+			
+		}
+		if (hasFill) VectorRenderer::renderFill();
+		if (hasStroke) VectorRenderer::renderStroke();
+		VectorRenderer::clearPath();
+	}
+	nvgRestore(nvg);
 }
 
 
