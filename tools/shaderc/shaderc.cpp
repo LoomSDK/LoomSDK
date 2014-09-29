@@ -46,7 +46,12 @@ bool g_verbose = false;
 #include <algorithm>
 #include <string>
 #include <vector>
+
+#if BX_PLATFORM_OSX
 #include <tr1/unordered_map>
+#else
+#include <unordered_map>
+#endif
 
 #define MAX_TAGS 256
 extern "C"
