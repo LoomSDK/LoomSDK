@@ -504,6 +504,50 @@ class TestVector extends Test
         testreverse.reverse();
         assert(testreverse.length == 0);
 
+        var testshuffle = [1, 2, 3, 4, 5];
+        nv = testshuffle.slice();
+        testshuffle.shuffle();
+
+        assertEqual(testshuffle.length, 5, "shuffle should not affect length of vector");
+
+        assert((
+            testshuffle.contains(1) &&
+            testshuffle.contains(2) &&
+            testshuffle.contains(3) &&
+            testshuffle.contains(4) &&
+            testshuffle.contains(5)
+            ), "shuffle should not lose any items");
+
+        assert((
+            testshuffle.indexOf(1) != nv.indexOf(1) ||
+            testshuffle.indexOf(2) != nv.indexOf(2) ||
+            testshuffle.indexOf(3) != nv.indexOf(3) ||
+            testshuffle.indexOf(4) != nv.indexOf(4) ||
+            testshuffle.indexOf(5) != nv.indexOf(5)
+            ), "shuffle should change the ordering of the items");
+
+        testshuffle = [1];
+        testshuffle.shuffle();
+        assertEqual(testshuffle[0], 1, "shuffle of a single item should equal that item");
+
+        testshuffle = [];
+        testshuffle.shuffle();
+        assertEqual(testshuffle.length, 0, "shuffle of an empty vector should remain empty");
+
+        testshuffle = ['a', 'b', 'c'];
+        var perm:Number = 6; // factorial of testshuffle.length
+        var N:Number = perm * 100;
+        var D:Dictionary.<String, Number> = {};
+        var seq:String;
+        for (i = 0; i < N; i++)
+        {
+            testshuffle.shuffle();
+            seq = testshuffle.join('');
+            if (!D[seq]) D[seq] = 0;
+            D[seq] += 1;
+        }
+        assertEqual(D.length, perm, "across a sample size of " + N + ", shuffle should achieve all of the possible permutations");
+
         var testunshift = [4, 5];
         assert(testunshift.unshift(1, 2, 3) == 5);
         assert(testunshift[0] == 1);
