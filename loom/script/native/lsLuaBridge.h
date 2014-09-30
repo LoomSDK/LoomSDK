@@ -4073,7 +4073,7 @@ public:
         }
 
         /*
-         * Adds a data property __pget_ method which *must* have a speciaized
+         * Adds a data property __pget_ method which *must* have a specialized
          * CallFastGetMember template available
          */
         template<class TG>
@@ -4095,7 +4095,7 @@ public:
         }
 
         /*
-         * Adds a data property __pset_ method which *must* have a speciaized
+         * Adds a data property __pset_ method which *must* have a specialized
          * CallFastSetMember template available
          */
         template<class TS>
@@ -4117,7 +4117,7 @@ public:
         }
 
         /*
-         * Adds a data property __pset_ and __pget_ method which both *must* have a speciaized
+         * Adds a data property __pset_ and __pget_ method which both *must* have a specialized
          * CallFastSetMember and CallFastGetMember template available
          */
         template<class TG, class TS>
