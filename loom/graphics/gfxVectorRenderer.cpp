@@ -351,7 +351,7 @@ void VectorSVG::render(float x, float y, float scale) {
 				winding += (p[4] - p[-2]) * (p[5] + p[-1]);
 				VectorRenderer::cubicCurveTo(p[0], p[1], p[2], p[3], p[4], p[5]);
 			}
-			nvgPathWinding(nvg, winding > 0 ? NVG_CW : NVG_CCW);
+			nvgPathWinding(nvg, winding < 0 ? NVG_CW : NVG_CCW);
 			pathind++;
 			
 		}

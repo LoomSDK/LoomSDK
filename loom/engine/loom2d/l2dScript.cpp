@@ -219,51 +219,56 @@ static int registerLoom2D(lua_State *L)
        .addConstructor<void (*)(void)>()
        .addMethod("render", &Stage::render)
        .addStaticProperty("onRenderStage", &Stage::getRenderStageDelegate)
-	   .endClass()
+       .endClass()
 
-	// Sprite
-	   .deriveClass<Sprite, DisplayObjectContainer>("Sprite")
-	   .addConstructor<void(*)(void)>()
-	   .endClass()
+    // Sprite
+       .deriveClass<Sprite, DisplayObjectContainer>("Sprite")
+       .addConstructor<void(*)(void)>()
+       .endClass()
 
-	// TextFormat
-	   .beginClass<GFX::VectorTextFormat>("TextFormat")
-	   .addConstructor<void(*)(void)>()
-	   .addProperty("size", &GFX::VectorTextFormat::getSize, &GFX::VectorTextFormat::setSize)
-	   .addProperty("align", &GFX::VectorTextFormat::getAlign, &GFX::VectorTextFormat::setAlign)
-	   .addProperty("letterSpacing", &GFX::VectorTextFormat::getLetterSpacing, &GFX::VectorTextFormat::setLetterSpacing)
-	   .addProperty("lineHeight", &GFX::VectorTextFormat::getLineHeight, &GFX::VectorTextFormat::setLineHeight)
-	   .endClass()
+    // TextFormat
+       .beginClass<GFX::VectorTextFormat>("TextFormat")
+       .addConstructor<void(*)(void)>()
+       .addProperty("size", &GFX::VectorTextFormat::getSize, &GFX::VectorTextFormat::setSize)
+       .addProperty("align", &GFX::VectorTextFormat::getAlign, &GFX::VectorTextFormat::setAlign)
+       .addProperty("letterSpacing", &GFX::VectorTextFormat::getLetterSpacing, &GFX::VectorTextFormat::setLetterSpacing)
+       .addProperty("lineHeight", &GFX::VectorTextFormat::getLineHeight, &GFX::VectorTextFormat::setLineHeight)
+       .endClass()
 
-	// SVG
+    // SVG
        .beginClass<GFX::VectorSVG>("SVG")
        .addConstructor<void(*)(void)>()
        .addMethod("loadFile", &GFX::VectorSVG::loadFile)
        .addMethod("loadString", &GFX::VectorSVG::loadString)
        .endClass()
 
-	// Shape
-	   .deriveClass<Shape, DisplayObject>("Shape")
-	   .addConstructor<void(*)(void)>()
-	   .addMethod("clear", &Shape::clear)
-	   .addMethod("lineStyle", &Shape::lineStyle)
-	   .addMethod("textFormat", &Shape::textFormat)
-	   .addMethod("beginFill", &Shape::beginFill)
-	   .addMethod("endFill", &Shape::endFill)
-	   .addMethod("moveTo", &Shape::moveTo)
-	   .addMethod("lineTo", &Shape::lineTo)
-	   .addMethod("curveTo", &Shape::curveTo)
-	   .addMethod("cubicCurveTo", &Shape::cubicCurveTo)
-	   .addMethod("arcTo", &Shape::arcTo)
-	   .addMethod("drawCircle", &Shape::drawCircle)
-	   .addMethod("drawEllipse", &Shape::drawEllipse)
-	   .addMethod("drawRect", &Shape::drawRect)
-	   .addMethod("drawRoundRect", &Shape::drawRoundRect)
-	   .addMethod("drawArc", &Shape::drawArc)
-	   .addMethod("drawTextLabel", &Shape::drawTextLabel)
-	   .addMethod("drawTextBox", &Shape::drawTextBox)
-	   .addMethod("drawSVG", &Shape::drawSVG)
-	   .endClass()
+    // Shape
+       .deriveClass<Shape, DisplayObject>("Shape")
+       .addConstructor<void(*)(void)>()
+       .addMethod("__pget_graphics", &Shape::getGraphics)
+       .endClass()
+
+    // Graphics
+       .beginClass<GFX::VectorGraphics>("Graphics")
+       .addMethod("clear", &GFX::VectorGraphics::clear)
+       .addMethod("lineStyle", &GFX::VectorGraphics::lineStyle)
+       .addMethod("textFormat", &GFX::VectorGraphics::textFormat)
+       .addMethod("beginFill", &GFX::VectorGraphics::beginFill)
+       .addMethod("endFill", &GFX::VectorGraphics::endFill)
+       .addMethod("moveTo", &GFX::VectorGraphics::moveTo)
+       .addMethod("lineTo", &GFX::VectorGraphics::lineTo)
+       .addMethod("curveTo", &GFX::VectorGraphics::curveTo)
+       .addMethod("cubicCurveTo", &GFX::VectorGraphics::cubicCurveTo)
+       .addMethod("arcTo", &GFX::VectorGraphics::arcTo)
+       .addMethod("drawCircle", &GFX::VectorGraphics::drawCircle)
+       .addMethod("drawEllipse", &GFX::VectorGraphics::drawEllipse)
+       .addMethod("drawRect", &GFX::VectorGraphics::drawRect)
+       .addMethod("drawRoundRect", &GFX::VectorGraphics::drawRoundRect)
+       .addMethod("drawArc", &GFX::VectorGraphics::drawArc)
+       .addMethod("drawTextLabel", &GFX::VectorGraphics::drawTextLabel)
+       .addMethod("drawTextBox", &GFX::VectorGraphics::drawTextBox)
+       .addMethod("drawSVG", &GFX::VectorGraphics::drawSVG)
+       .endClass()
 
     // Quad
        .deriveClass<Quad, DisplayObject>("Quad")
@@ -300,18 +305,19 @@ void installLoom2D()
 {
     LOOM_DECLARE_NATIVETYPE(Loom2D::Loom2DNative, Loom2D::registerLoom2D);
 
-	LOOM_DECLARE_NATIVETYPE(Loom2D::Rectangle, Loom2D::registerLoom2D);
-	LOOM_DECLARE_NATIVETYPE(Loom2D::Matrix, Loom2D::registerLoom2D);
+    LOOM_DECLARE_NATIVETYPE(Loom2D::Rectangle, Loom2D::registerLoom2D);
+    LOOM_DECLARE_NATIVETYPE(Loom2D::Matrix, Loom2D::registerLoom2D);
 
-	LOOM_DECLARE_NATIVETYPE(GFX::VectorTextFormat, Loom2D::registerLoom2D);
-	LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorSVG, Loom2D::registerLoom2D);
+    LOOM_DECLARE_NATIVETYPE(GFX::VectorTextFormat, Loom2D::registerLoom2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorSVG, Loom2D::registerLoom2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorGraphics, Loom2D::registerLoom2D);
 
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::EventDispatcher, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::DisplayObject, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::DisplayObjectContainer, Loom2D::registerLoom2D);
-	LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Stage, Loom2D::registerLoom2D);
-	LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Sprite, Loom2D::registerLoom2D);
-	LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Shape, Loom2D::registerLoom2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Stage, Loom2D::registerLoom2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Sprite, Loom2D::registerLoom2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Shape, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Image, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Quad, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::QuadBatch, Loom2D::registerLoom2D);

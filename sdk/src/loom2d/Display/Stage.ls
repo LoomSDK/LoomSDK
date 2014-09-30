@@ -112,7 +112,7 @@ package loom2d.display
             if ( Cocos2D.configStats == Cocos2D.STATS_REPORT_FPS )
                 reportFps = true;
             else if ( Cocos2D.configStats == Cocos2D.STATS_SHOW_DEBUG_OVERLAY )
-                Graphics.setDebug( Graphics.DEBUG_STATS );
+                loom.graphics.Graphics.setDebug( loom.graphics.Graphics.DEBUG_STATS );
         }
 
         protected function onKeyDown(key:int):void
@@ -212,7 +212,7 @@ package loom2d.display
             // Update the background. Add alpha to the color.
             var swizzleColor = (value << 8) | 0xFF;
 
-            Graphics.setFillColor(swizzleColor);
+            loom.graphics.Graphics.setFillColor(swizzleColor);
         }
         
         /** The width of the stage coordinate system. Change it to scale its contents relative

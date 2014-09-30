@@ -1,6 +1,7 @@
 package
 {
     import loom.Application;
+    import loom2d.display.Graphics;
     import loom2d.display.Quad;
     import loom2d.display.Shape;
     import loom2d.display.StageScaleMode;
@@ -20,7 +21,7 @@ package
 
     public class NanoVG extends Application
     {
-        private var g:Shape;
+        private var g:Graphics;
         override public function run():void
         {
             // Comment out this line to turn off automatic scaling.
@@ -57,16 +58,19 @@ package
             //q = new Quad(400, 300, 0xBDC5F9); q.x = 10; q.y = 10; stage.addChild(q);
             q = new Quad(460, 300, 0xF3F3F3); q.x = 10; q.y = 10; stage.addChild(q);
             
-            g = new Shape();
-            g.x = 50;
-            g.y = 50;
-            stage.addChild(g);
+            var sg = new Shape();
+            sg.x = 50;
+            sg.y = 50;
+            stage.addChild(sg);
             
-            var s = new Shape();
-            s.x = 50;
-            s.y = 50;
-            s.scale = 10;
-            stage.addChild(s);
+            var ss = new Shape();
+            ss.x = 50;
+            ss.y = 50;
+            ss.scale = 10;
+            stage.addChild(ss);
+            
+            g = sg.graphics;
+            var s:Graphics = ss.graphics;
             
             //gfx.moveTo(0, 0);
             //gfx.lineTo(50, 0);
@@ -103,7 +107,7 @@ package
             svg.loadFile("assets/nano.svg");
             g.drawSVG(220, 30, 0.2, svg);
             
-            //g.pivotX = 245; g.pivotY = 45; g.scale *= 20;
+            //sg.pivotX = 220; sg.pivotY = 30; sg.scale *= 5;
             //return;
             
             // Fill
@@ -326,7 +330,7 @@ package
         }
         
         private function onScroll(e:ScrollWheelEvent):void {
-            g.scale *= 1-0.1*e.delta;
+            //g.scale *= 1-0.1*e.delta;
         }
         
         private function onTouch(e:TouchEvent):void 
