@@ -22,6 +22,7 @@
 
 #include "loom/graphics/gfxVectorRenderer.h"
 #include "loom/engine/loom2d/l2dMatrix.h"
+#include "loom/engine/loom2d/l2dRectangle.h"
 
 namespace GFX
 {
@@ -163,6 +164,7 @@ protected:
 	void addShape(VectorShape *shape);
 	void restartPath();
 	void resetStyle();
+	void inflateBounds(float x, float y);
 
 public:
 	utArray<VectorData*> *queue;
@@ -170,10 +172,14 @@ public:
 	VectorLineStyle currentLineStyle;
 	VectorFill currentFill;
 	bool pathDirty = false;
+	float boundL;
+	float boundT;
+	float boundR;
+	float boundB;
 
 	VectorGraphics() {
 		queue = new utArray<VectorData*>();
-		lastPath = NULL;
+		clear();
 	}
 
 	bool isStyleVisible();
@@ -185,6 +191,8 @@ public:
 	void textFormat(GFX::VectorTextFormat format);
 	void beginFill(unsigned int color, float alpha);
 	void endFill();
+
+	Loom2D::Rectangle getBounds();
 
 	void moveTo(float x, float y);
 	void lineTo(float x, float y);

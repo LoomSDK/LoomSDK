@@ -257,6 +257,12 @@ void VectorRenderer::svg(float x, float y, float scale, VectorSVG* image) {
 	image->render(x, y, scale);
 }
 
+
+float* VectorRenderer::getBounds() {
+	return nvgGetBounds(nvg);
+}
+
+
 void VectorRenderer::destroyGraphicsResources()
 {
 	if (nvg != NULL) {
@@ -289,31 +295,41 @@ void VectorSVG::reset(bool reloaded) {
 		nsvgDelete(image);
 		image = NULL;
 	}
+	width = height = 0;
 }
 void VectorSVG::loadFile(utString path, utString units, float dpi) {
 	reset();
 	this->units = utString(path);
 	this->dpi = dpi;
 	this->path = new utString(path);
+	reload();
 	loom_asset_subscribe(path.c_str(), onReload, this, false);
-	loom_asset_preload(path.c_str());
 }
 void VectorSVG::onReload(void *payload, const char *name) {
 	VectorSVG* svg = static_cast<VectorSVG*>(payload);
-	svg->reload(utString(name));
+	lmAssert(strncmp(svg->path->c_str(), name, svg->path->size()) == 0, "expected svg path and reloaded path mismatch");
+	svg->reload();
 }
-void VectorSVG::reload(utString path) {
+void VectorSVG::reload() {
 	reset(true);
-	void* data = loom_asset_lock(path.c_str(), LATText, true);
-	image = nsvgParse(static_cast<char*>(data), units.c_str(), dpi);
-	loom_asset_unlock(path.c_str());
+	char* data = static_cast<char*>(loom_asset_lock(path->c_str(), LATText, true));
+	parse(data, units.c_str(), dpi);
+	loom_asset_unlock(path->c_str());
 }
 void VectorSVG::loadString(utString svg, utString units, float dpi) {
 	reset();
-	size_t size = svg.size();
-	char* copy = new char[size];
-	strncpy(copy, svg.c_str(), size);
-	image = nsvgParse(copy, units.c_str(), dpi);
+	parse(svg.c_str(), units.c_str(), dpi);
+}
+void VectorSVG::parse(const char* svg, const char* units, float dpi) {
+	char* copy = strdup(svg);
+	image = nsvgParse(copy, units, dpi);
+	delete copy;
+	if (image->shapes == NULL) {
+		image = NULL;
+		return;
+	}
+	width = image->width;
+	height = image->height;
 }
 void VectorSVG::render(float x, float y, float scale) {
 	if (image == NULL) return;

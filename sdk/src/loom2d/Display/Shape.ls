@@ -10,11 +10,15 @@
 
 package loom2d.display
 {    
+    import loom2d.math.Point;
     import loom2d.math.Rectangle;
     
     [Native(managed)]
     public native class Shape extends DisplayObject
     {
+        /** Helper objects. */
+        private static var sHelperPoint:Point = new Point();
+        
         public function Shape() {}
         
         public native function get graphics():Graphics;
@@ -22,10 +26,57 @@ package loom2d.display
         /** @inheritDoc */
         public override function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
         {
-            if (resultRect == null) resultRect = new Rectangle();
+            if(!resultRect)
+            {
+                resultRect = new Rectangle();
+            }
             
-            // TODO fix
-            resultRect.setTo(0, 0, 100, 100);
+            var bounds:Rectangle = graphics.getBounds();
+            
+            var minX:Number = Number.MAX_VALUE, maxX:Number = -Number.MAX_VALUE;
+            var minY:Number = Number.MAX_VALUE, maxY:Number = -Number.MAX_VALUE;
+            
+            if (targetSpace == this) // optimization
+            {
+                minX = bounds.x;
+                minY = bounds.y;
+                maxX = bounds.x + bounds.width;
+                maxY = bounds.y + bounds.height;
+            }
+            else
+            {
+                this.getTargetTransformationMatrix(targetSpace, sHelperMatrix);
+
+                sHelperPoint = sHelperMatrix.transformCoord(bounds.x, bounds.y);
+               
+                minX = minX < sHelperPoint.x ? minX : sHelperPoint.x;
+                maxX = maxX > sHelperPoint.x ? maxX : sHelperPoint.x;
+                minY = minY < sHelperPoint.y ? minY : sHelperPoint.y;
+                maxY = maxY > sHelperPoint.y ? maxY : sHelperPoint.y;
+
+                sHelperPoint = sHelperMatrix.transformCoord(bounds.x, bounds.y + bounds.height);
+                minX = minX < sHelperPoint.x ? minX : sHelperPoint.x;
+                maxX = maxX > sHelperPoint.x ? maxX : sHelperPoint.x;
+                minY = minY < sHelperPoint.y ? minY : sHelperPoint.y;
+                maxY = maxY > sHelperPoint.y ? maxY : sHelperPoint.y;
+
+                sHelperPoint = sHelperMatrix.transformCoord(bounds.x + bounds.width, bounds.y);
+                minX = minX < sHelperPoint.x ? minX : sHelperPoint.x;
+                maxX = maxX > sHelperPoint.x ? maxX : sHelperPoint.x;
+                minY = minY < sHelperPoint.y ? minY : sHelperPoint.y;
+                maxY = maxY > sHelperPoint.y ? maxY : sHelperPoint.y;
+
+                sHelperPoint = sHelperMatrix.transformCoord(bounds.x + bounds.width, bounds.y + bounds.height);
+                minX = minX < sHelperPoint.x ? minX : sHelperPoint.x;
+                maxX = maxX > sHelperPoint.x ? maxX : sHelperPoint.x;
+                minY = minY < sHelperPoint.y ? minY : sHelperPoint.y;
+                maxY = maxY > sHelperPoint.y ? maxY : sHelperPoint.y;
+            }
+            
+            resultRect.x = minX;
+            resultRect.y = minY;
+            resultRect.width  = maxX - minX;
+            resultRect.height = maxY - minY;
             
             return resultRect;
         }

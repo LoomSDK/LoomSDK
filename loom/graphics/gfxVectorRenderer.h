@@ -95,11 +95,15 @@ protected:
 	float dpi;
 	NSVGimage* image = NULL;
 	void reset(bool reloaded = false);
+	void parse(const char* input, const char* units, float dpi);
 public:
+	float width = 0.f;
+	float height = 0.f;
+
 	VectorSVG();
 	~VectorSVG();
 	static void onReload(void *payload, const char *name);
-	void reload(utString name);
+	void reload();
 	void loadFile(utString path, utString units = utString("px"), float dpi = 96.0f);
 	void loadString(utString svg, utString units = utString("px"), float dpi = 96.0f);
 	void render(float x, float y, float scale);
@@ -130,6 +134,7 @@ public:
 	static void setSize(int width, int height);
 
 	static void beginFrame();
+	static void endFrame();
 
 	static void preDraw(float a, float b, float c, float d, float e, float f);
 	static void postDraw();
@@ -170,7 +175,8 @@ public:
 
 	static void svg(float x, float y, float scale, VectorSVG* image);
 
-    static void endFrame();
+	static float* getBounds();
+
 };
 
 }

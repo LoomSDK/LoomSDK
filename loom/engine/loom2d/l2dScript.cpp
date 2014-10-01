@@ -268,6 +268,7 @@ static int registerLoom2D(lua_State *L)
        .addMethod("drawTextLabel", &GFX::VectorGraphics::drawTextLabel)
        .addMethod("drawTextBox", &GFX::VectorGraphics::drawTextBox)
        .addMethod("drawSVG", &GFX::VectorGraphics::drawSVG)
+	   .addMethod("getBounds", &GFX::VectorGraphics::getBounds)
        .endClass()
 
     // Quad

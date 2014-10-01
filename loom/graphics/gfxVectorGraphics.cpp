@@ -70,7 +70,7 @@ void VectorPath::arcTo(float controlX, float controlY, float anchorX, float anch
 }
 
 
-
+#pragma warning(disable: 4056 4756)
 void VectorGraphics::clear() {
 	utArray<VectorData*>::Iterator it = queue->iterator();
 	while (it.hasMoreElements()) {
@@ -78,7 +78,36 @@ void VectorGraphics::clear() {
 		delete d;
 	}
 	queue->clear();
+	/*
+	bounds.x = INFINITY;
+	bounds.y = INFINITY;
+	bounds.width = 0;
+	bounds.height = 0;
+	*/
+	boundL = INFINITY;
+	boundT = INFINITY;
+	boundR = -INFINITY;
+	boundB = -INFINITY;
 	lastPath = NULL;
+#pragma warning(default: 4056 4756)
+}
+
+void VectorGraphics::inflateBounds(float x, float y) {
+	/*
+	float bx = bounds.x;
+	float by = bounds.y;
+	float bw = bounds.width;
+	float bh = bounds.height;
+	float a = fminf(bx, x);
+	float b = fminf(by, y);
+	float c = fmaxf(bx + bw, x) - bw;
+	float d = fmaxf(by + bh, y) - bh;
+	bounds.setTo(fminf(bx, x), fminf(by, y), fmaxf(bx+bw, x)-bw, fmaxf(by+bh, y)-bh);
+	*/
+	boundL = fminf(boundL, x);
+	boundT = fminf(boundT, y);
+	boundR = fmaxf(boundR, x);
+	boundB = fmaxf(boundB, y);
 }
 
 void VectorGraphics::lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit) {
@@ -126,57 +155,78 @@ void VectorGraphics::endFill() {
 
 void VectorGraphics::moveTo(float x, float y) {
 	getPath()->moveTo(x, y);
+	inflateBounds(x, y);
 }
 
 void VectorGraphics::lineTo(float x, float y) {
 	getPath()->lineTo(x, y);
+	inflateBounds(x, y);
 }
 
 void VectorGraphics::curveTo(float controlX, float controlY, float anchorX, float anchorY) {
 	getPath()->curveTo(controlX, controlY, anchorX, anchorY);
+	inflateBounds(anchorX, anchorY);
 }
 
 void VectorGraphics::cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY) {
 	getPath()->cubicCurveTo(controlX1, controlY1, controlX2, controlY2, anchorX, anchorY);
+	inflateBounds(anchorX, anchorY);
 }
 
 void VectorGraphics::arcTo(float controlX, float controlY, float anchorX, float anchorY, float radius) {
 	getPath()->arcTo(controlX, controlY, anchorX, anchorY, radius);
+	inflateBounds(controlX, controlY);
+	inflateBounds(anchorX, anchorY);
 }
 
 
 void VectorGraphics::drawCircle(float x, float y, float radius) {
 	addShape(new VectorShape(CIRCLE, x, y, radius));
+	inflateBounds(x-radius, y-radius);
+	inflateBounds(x+radius, y+radius);
 }
 
 void VectorGraphics::drawEllipse(float x, float y, float width, float height) {
 	addShape(new VectorShape(ELLIPSE, x, y, width, height));
+	inflateBounds(x, y);
+	inflateBounds(x+width, y+height);
 }
 
 void VectorGraphics::drawRect(float x, float y, float width, float height) {
 	addShape(new VectorShape(RECT, x, y, width, height));
+	inflateBounds(x, y);
+	inflateBounds(x+width, y+height);
 }
 
 // TODO implement ellipseHeight?
 void VectorGraphics::drawRoundRect(float x, float y, float width, float height, float ellipseWidth, float ellipseHeight) {
 	addShape(new VectorShape(ROUND_RECT, x, y, width, height, ellipseWidth));
+	inflateBounds(x, y);
+	inflateBounds(x+width, y+height);
 }
 
 void VectorGraphics::drawArc(float x, float y, float radius, float angleFrom, float angleTo, int direction) {
 	addShape(new VectorShape(direction == VectorWinding::CW ? ARC_CW : ARC_CCW, x, y, radius, angleFrom, angleTo));
+	inflateBounds(x-radius, y-radius);
+	inflateBounds(x+radius, y+radius);
 }
 
 void VectorGraphics::drawTextLabel(float x, float y, utString text) {
 	queue->push_back(new VectorText(x, y, NAN, new utString(text)));
+	inflateBounds(x, y);
 }
 
 void VectorGraphics::drawTextBox(float x, float y, float width, utString text) {
 	queue->push_back(new VectorText(x, y, width, new utString(text)));
+	inflateBounds(x, y);
+	inflateBounds(x+width, y);
 }
 
 void VectorGraphics::drawSVG(float x, float y, float scale, VectorSVG* svg) {
 	queue->push_back(new VectorSVGData(x, y, scale, svg));
 	restartPath();
+	inflateBounds(x, y);
+	inflateBounds(x+svg->width*scale, y+svg->height*scale);
 }
 
 
@@ -259,7 +309,7 @@ void VectorLineStyle::render(VectorGraphics* g) {
 }
 
 void VectorFill::render(VectorGraphics* g) {
-	if (!active) g->flushPath();
+	g->flushPath();
 	g->currentFill.active = active;
 	g->currentFill.color = color;
 	g->currentFill.alpha = alpha;
@@ -338,6 +388,7 @@ VectorPath* VectorGraphics::getPath() {
 		if (path == NULL) {
 			path = new VectorPath();
 			path->moveTo(0, 0);
+			inflateBounds(0, 0);
 			queue->push_back(path);
 		}
 		lastPath = path;
@@ -400,6 +451,15 @@ void VectorGraphics::restartPath() {
 void VectorGraphics::resetStyle() {
 	currentLineStyle.reset();
 	currentFill.reset();
+}
+
+#pragma warning(disable: 4056 4756)
+Loom2D::Rectangle VectorGraphics::getBounds() {
+	//float* bounds = VectorRenderer::getBounds();
+	//return Loom2D::Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]);
+	if (boundL == INFINITY || boundT == INFINITY || boundR == -INFINITY || boundB == -INFINITY) return Loom2D::Rectangle(0.f, 0.f, 0.f, 0.f);
+	return Loom2D::Rectangle(boundL, boundT, boundR-boundL, boundB-boundT);
+#pragma warning(default: 4056 4756)
 }
 
 }

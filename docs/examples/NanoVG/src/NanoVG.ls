@@ -15,6 +15,7 @@ package
     import loom2d.events.TouchEvent;
     import loom2d.events.TouchPhase;
     import loom2d.Loom2D;
+    import loom2d.math.Rectangle;
     import loom2d.textures.Texture;
     import loom2d.ui.SimpleLabel;
     import system.Void;
@@ -69,8 +70,14 @@ package
             ss.scale = 10;
             stage.addChild(ss);
             
+            var sd = new Shape();
+            sd.x = 50;
+            sd.y = 50;
+            stage.addChild(sd);
+            
             g = sg.graphics;
             var s:Graphics = ss.graphics;
+            var d:Graphics = sd.graphics;
             
             //gfx.moveTo(0, 0);
             //gfx.lineTo(50, 0);
@@ -95,12 +102,14 @@ package
             
             
             var x = 0, y = 0;
+            var b:Rectangle;
             
             // Fill before clearing
             g.beginFill(0xFF2424, 1);
             g.drawRect(0, y, 500, 500);
             g.endFill();
             g.clear();
+            
             
             // SVG
             var svg = new SVG();
@@ -271,6 +280,8 @@ package
             g.beginFill(0x940746, 1);
             g.drawRect(110, y, 100, 10);
             y += 12;
+            
+            b = sg.getBounds(sg); trace(b); d.lineStyle(1, 0x00FF00); d.drawRect(b.x-2, b.y-2, b.width+4, b.height+4);
             
             stage.addEventListener(ScrollWheelEvent.SCROLLWHEEL, onScroll);
             

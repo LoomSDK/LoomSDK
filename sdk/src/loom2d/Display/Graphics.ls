@@ -10,6 +10,7 @@
 
 package loom2d.display
 {
+    import loom2d.math.Rectangle;
     
     /** TODO
      */
@@ -87,6 +88,7 @@ package loom2d.display
         public native function drawTextLabel(x:Number, y:Number, text:String):void;
         public native function drawTextBox(x:Number, y:Number, width:Number, text:String):void;
         public native function drawSVG(x:Number, y:Number, scale:Number, svg:SVG):void;
+        public native function getBounds():Rectangle;
 
     }
 }
