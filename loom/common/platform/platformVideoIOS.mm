@@ -34,15 +34,26 @@ limitations under the License.
        green:((float)((rgbValue & 0xFF00) >> 8))/255.0 \
        blue:((float)(rgbValue & 0xFF))/255.0 alpha:((float)((rgbValue & 0xFF000000) >> 24))/255.0]
 
+
+//syncs to the control modes defined in the LoomScript file Video.ls
+enum 
+{
+    ControlMode_Show            = 0,
+    ControlMode_Hide            = 1,
+    ControlMode_StopOnTouch     = 2
+};
+
+
 static VideoEventCallback gEventCallback = NULL;
 static unsigned int gBackgroundColor = 0xFF000000;
+static unsigned int gControlMode = 0;
 
 static UIViewController* getParentViewController()
 {
     return [[[UIApplication sharedApplication] keyWindow] rootViewController];
 }
 
-@interface MoviePlayerViewController : UIViewController
+@interface MoviePlayerViewController : UIViewController <UIGestureRecognizerDelegate>
 
 + (MoviePlayerViewController *)controller:(NSURL *)videoUrl;
 
@@ -53,6 +64,7 @@ static UIViewController* getParentViewController()
 @property (nonatomic, retain) MPMoviePlayerController* videoPlayer; 
 @property (nonatomic, retain) NSURL*                   videoUrl;    
 
+
 @end
 
 @implementation MoviePlayerViewController
@@ -60,20 +72,19 @@ static UIViewController* getParentViewController()
 + (MoviePlayerViewController *)controller:(NSURL *)videoUrl
 {
     MoviePlayerViewController* controller = [[MoviePlayerViewController alloc] autorelease];    
-    controller.videoUrl = videoUrl;    
+    controller.videoUrl = videoUrl;
     return controller;
 }
 
 - (void)dealloc
 {
+NSLog(@"---dealloc");
     [self.videoPlayer stop];
     
     self.videoPlayer = nil;
     self.videoUrl    = nil;
     
     [super dealloc];
-
-    //NSLog(@"Video deallocated!");
 }
 
 - (void)viewDidLoad
@@ -83,7 +94,7 @@ static UIViewController* getParentViewController()
     self.title = @"MPMoviePlayerController";    
 
     self.videoPlayer = [[[MPMoviePlayerController alloc] initWithContentURL:self.videoUrl] autorelease];
-    self.videoPlayer.controlStyle             = MPMovieControlStyleNone;
+    self.videoPlayer.controlStyle             = (gControlMode == ControlMode_Show) ? MPMovieControlStyleFullscreen : MPMovieControlStyleNone;
     self.videoPlayer.scalingMode              = MPMovieScalingModeAspectFit;
     self.videoPlayer.shouldAutoplay           = YES;
     self.videoPlayer.view.frame               = getParentViewController().view.bounds;
@@ -99,25 +110,47 @@ static UIViewController* getParentViewController()
     [self.videoPlayer prepareToPlay];
     [self.view addSubview:self.videoPlayer.view];
 
+    //do we need to stop on touch?
+    if(gControlMode == ControlMode_StopOnTouch)
+    {
+        UITapGestureRecognizer *touch = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(touchPlayer:)];
+        touch.delegate = self;
+        [self.videoPlayer.view addGestureRecognizer:touch];
+        [touch release];
+    }    
+}
 
+// this allows you to dispatch touches
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch 
+{
+    return YES;
+}
+
+// this enables you to handle multiple recognizers on single view
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer 
+{
+    return YES;
+}
+
+- (void)touchPlayer:(UITapGestureRecognizer *)gesture
+{
+    [self.videoPlayer stop];
 }
 
 - (void)viewDidUnload
 {
+NSLog(@"---viewDidUnload");
     [self.videoPlayer stop];
 
     self.videoPlayer = nil;
     self.videoUrl    = nil;
 
     [super viewDidUnload];
-
-    //NSLog(@"Video unloaded!");
-
-
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
+NSLog(@"---viewWillAppear");
     [super viewWillAppear:animated];
     
     [self setWantsFullScreenLayout:YES];
@@ -125,21 +158,21 @@ static UIViewController* getParentViewController()
 
 - (void)viewWillDisappear:(BOOL)animated
 {
+NSLog(@"---viewWillDisappear");
     [super viewWillDisappear:animated];
 }
 
 - (void) videoFinished:(NSNotification*)notification 
 {
     int reason = [[[notification userInfo] valueForKey:MPMoviePlayerPlaybackDidFinishReasonUserInfoKey] intValue];
-    
     if (reason == MPMovieFinishReasonPlaybackEnded || reason == MPMovieFinishReasonUserExited)  
     {
-        //movie finished playin
+        //movie finished playing
         gEventCallback("complete", "");
     }
-    else 
+    else
     {
-        //user hit the done button
+        //error?
         gEventCallback("fail", "");
     }
 
@@ -161,9 +194,9 @@ void platform_videoInitialize(VideoEventCallback eventCallback)
 
 void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlMode, unsigned int bgColor)
 {
-
     // remember the background color as we can't set it here
     gBackgroundColor = bgColor;
+    gControlMode = controlMode;
 
     NSString* resourcePath = [[NSBundle mainBundle] resourcePath];
     resourcePath = [resourcePath stringByAppendingString:@"/"];
@@ -172,7 +205,6 @@ void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlM
     NSLog(@"%@", resourcePath);
 
     NSURL *videoUrl = [NSURL fileURLWithPath:resourcePath];
-
     [getParentViewController() presentViewController:[MoviePlayerViewController controller:videoUrl] animated:NO completion:nil];
 
 }
