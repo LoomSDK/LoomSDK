@@ -61,9 +61,9 @@ static UIViewController* getParentViewController()
 
 @interface MoviePlayerViewController ()
 
-@property (nonatomic, retain) MPMoviePlayerController* videoPlayer; 
-@property (nonatomic, retain) NSURL*                   videoUrl;    
-
+@property (nonatomic, retain) MPMoviePlayerController*  videoPlayer; 
+@property (nonatomic, retain) NSURL*                    videoUrl;    
+@property (nonatomic, retain) id                        becameActiveObserver;    
 
 @end
 
@@ -78,7 +78,6 @@ static UIViewController* getParentViewController()
 
 - (void)dealloc
 {
-NSLog(@"---dealloc");
     [self.videoPlayer stop];
     
     self.videoPlayer = nil;
@@ -107,6 +106,14 @@ NSLog(@"---dealloc");
                                           name:MPMoviePlayerPlaybackDidFinishNotification
                                           object:self.videoPlayer];    
     
+    //auto-resume video playback when the application becomes active
+    self.becameActiveObserver = [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationDidBecomeActiveNotification 
+                                                                        object:[UIApplication sharedApplication] 
+                                                                        queue:[NSOperationQueue mainQueue] 
+                                                                        usingBlock:^(NSNotification *note) 
+                                                                        { [self.videoPlayer play]; }
+    ];    
+
     [self.videoPlayer prepareToPlay];
     [self.view addSubview:self.videoPlayer.view];
 
@@ -139,7 +146,6 @@ NSLog(@"---dealloc");
 
 - (void)viewDidUnload
 {
-NSLog(@"---viewDidUnload");
     [self.videoPlayer stop];
 
     self.videoPlayer = nil;
@@ -150,7 +156,6 @@ NSLog(@"---viewDidUnload");
 
 - (void)viewWillAppear:(BOOL)animated
 {
-NSLog(@"---viewWillAppear");
     [super viewWillAppear:animated];
     
     [self setWantsFullScreenLayout:YES];
@@ -158,7 +163,6 @@ NSLog(@"---viewWillAppear");
 
 - (void)viewWillDisappear:(BOOL)animated
 {
-NSLog(@"---viewWillDisappear");
     [super viewWillDisappear:animated];
 }
 
@@ -175,6 +179,9 @@ NSLog(@"---viewWillDisappear");
         //error?
         gEventCallback("fail", "");
     }
+
+    //remove active observer
+    [[NSNotificationCenter defaultCenter] removeObserver:self.becameActiveObserver];
 
     [self dismissViewControllerAnimated:NO completion:nil];
 }
