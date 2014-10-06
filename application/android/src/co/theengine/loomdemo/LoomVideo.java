@@ -20,6 +20,7 @@ import java.util.Date;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
+import android.view.KeyEvent;
 import android.graphics.Color;
 
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
@@ -39,6 +40,7 @@ public class LoomVideo
     public static final int             Controls_Hide = 1;
     public static final int             Controls_StopOnTouch = 2;
     public static final int             Video_Resume_Offset = 500;
+    private static final String         TAG = "LoomVideo";
 
 
     ///private vars
@@ -62,7 +64,7 @@ public class LoomVideo
         @Override
         public void onCompletion(MediaPlayer mp) 
         {
-            Log.d("Loom", "Video Completed!");
+            Log.d(TAG, "Video Completed!");
 
             ///cleans up playback
             cleanup();
@@ -74,7 +76,7 @@ public class LoomVideo
         @Override
         public boolean onError(MediaPlayer mp, int what, int extra) 
         {
-            Log.d("Loom", "Video Failed!");
+            Log.d(TAG, "Video Failed!");
 
             ///cleans up playback
             cleanup();
@@ -131,7 +133,7 @@ public class LoomVideo
                 {
                     _videoView.stopPlayback();
                     onCompletion(null);
-                    Log.d("Loom", "Video Skipped!");
+                    Log.d(TAG, "Video Skipped!");
                 }
                 else if(_controlMode == Controls_Show)
                 {
@@ -163,7 +165,7 @@ public class LoomVideo
         @Override
         public void onPrepared(MediaPlayer mp)
         {
-            Log.d("Loom", "Video Prepared");
+            Log.d(TAG, "Video Prepared");
             _videoView.requestFocus();
 
             ///set the layout of the video to the user specs
@@ -186,7 +188,31 @@ public class LoomVideo
         _context = (Activity)_rootView.getContext();
 
         ///create video view to play videos on and set initial data for it
-        _videoView = new VideoView(_context);
+        _videoView = new VideoView(_context)
+        {
+            ///intercept the Back Button
+            @Override
+            public boolean dispatchKeyEvent (KeyEvent event)
+            {
+                if(event.getKeyCode() == KeyEvent.KEYCODE_BACK)
+                {
+                    ///we don't want KEYCODE_BACK to do anything unless we are StopOnTouch
+                    if(_controlMode == Controls_StopOnTouch)
+                    {
+                        _videoView.stopPlayback();
+                        cleanup();
+
+                        ///fire native callback noting completion
+                        deferNativeCallback(1, "success");
+
+                        Log.d(TAG, "Video Skipped!");
+                    }
+                    return true;
+                }
+                return super.dispatchKeyEvent(event);
+            }
+        }
+        ;
         _videoView.setZOrderOnTop(true);
         _videoView.setVisibility(View.VISIBLE);
         _videoView.setBackgroundColor(Color.TRANSPARENT);
@@ -240,7 +266,7 @@ public class LoomVideo
                 _suspendedVideoPos = 0;
             }
             _isPaused = true;
-            Log.d("Loom", "Pausing Video Playback at position: " + _suspendedVideoPos);
+            Log.d(TAG, "Pausing Video Playback at position: " + _suspendedVideoPos);
         }
     }
 
@@ -253,7 +279,7 @@ public class LoomVideo
             _videoView.seekTo(_suspendedVideoPos);
             _videoView.start();
             _isPaused = false;
-            Log.d("Loom", "Resuming Video Playback at position: " + _suspendedVideoPos);
+            Log.d(TAG, "Resuming Video Playback at position: " + _suspendedVideoPos);
         }
     }
 
@@ -265,7 +291,9 @@ public class LoomVideo
         {
             _videoView.stopPlayback();
             cleanup();
-            Log.d("Loom", "Stopping Video Playback onDestroy");
+            _mediaController = null;
+            _videoView = null;
+            Log.d(TAG, "Stopping Video Playback onDestroy");
         }
     }
 
@@ -273,7 +301,7 @@ public class LoomVideo
     ///internal function for playing a video
     private static void playFSInternal(String file, int scaleMode, int controlMode, int bgColor)
     {
-        Log.d("Loom", "Video Play Fullscreen: " + file + " " + scaleMode + " " + controlMode + " " + bgColor);
+        Log.d(TAG, "Video Play Fullscreen: " + file + " " + scaleMode + " " + controlMode + " " + bgColor);
 
         ///store some vars
         _videoFile = file;
