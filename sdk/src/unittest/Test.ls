@@ -1,7 +1,7 @@
 /*
 ===========================================================================
 Loom SDK
-Copyright 2011, 2012, 2013 
+Copyright 2011, 2012, 2013
 The Game Engine Company, LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,7 @@ Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
-limitations under the License. 
+limitations under the License.
 ===========================================================================
 */
 
@@ -26,9 +26,10 @@ import system.xml.XMLDocument;
 public class Test
 {
     public static var verbose:Boolean = true;
-    public static var passed:Vector.<Test> = new Vector.<Test>;
-    public static var failed:Vector.<Test> = new Vector.<Test>;
-    
+    public static var passed:Vector.<Test> = [];
+    public static var failed:Vector.<Test> = [];
+    public static var errors:Dictionary.<Test,Vector.<String>> = {};
+
     public static var currentTest:String = "UNKNOWN";
     public static var currentTestSuccessCount:int = 0;
     public static var currentTestFailureCount:int = 0;
@@ -37,7 +38,9 @@ public class Test
     protected static function handleAssertFailure(msg:String):void
     {
         currentTestFailureCount ++;
-        currentTestErrors.pushSingle(msg);
+
+        if (msg)
+            currentTestErrors.pushSingle(msg);
     }
 
     protected static function handleAssertSuccess():void
@@ -45,16 +48,16 @@ public class Test
         currentTestSuccessCount++;
     }
 
-    public static function assertEqual(a:Object, b:Object, msg:String = null):void
+    public static function assertEqual(a:Object, b:Object, msg:String = ""):void
     {
         if(a == b)
             handleAssertSuccess();
         else
-            handleAssertFailure(msg);
+            handleAssertFailure(msg + " (expected " + a + " to equal " + b + ")");
     }
 
-    public static function assert(value:Object, msg:String = null):void 
-    {        
+    public static function assert(value:Object, msg:String = null):void
+    {
         if(value)
             handleAssertSuccess();
         else
@@ -70,18 +73,23 @@ public class Test
     protected var name:String;
     protected static var expected:String;
     protected static var actual:String;
-    
-    protected function pass() 
+
+    protected function pass()
     {
         passed.pushSingle(this);
     }
-    
-    protected function fail() 
+
+    protected function fail()
     {
         Console.print(currentTest + " FAILED " + currentTestFailureCount + "/" + (currentTestFailureCount + currentTestSuccessCount) + "!");
+        Console.print("  " +currentTestErrors.join("\n  "));
+
         failed.pushSingle(this);
+
+        if (!errors[this]) errors[this] = new Vector.<String>();
+        errors[this] = errors[this].concat(currentTestErrors.slice());
     }
-    
+
     public function begin()
     {
         if (verbose)
@@ -94,7 +102,7 @@ public class Test
         currentTestSuccessCount = 0;
         actual = "";
     }
-    
+
     public function isWhitespace(c:String):Boolean
     {
         if(c == " ") return true;
@@ -157,51 +165,50 @@ public class Test
             pass();
         }
     }
-    
+
     function test()
     {
         Debug.assert(false, "You should never create a Test class without overriding test()!");
     }
-    
+
     public function run()
     {
         name = this.getType().getFullName();
         begin();
         test();
-        end();        
+        end();
     }
-    
+
     public static function generateXML(xmlFile:String) {
-    
-        var xml:String = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        
+
+        var xml:String = "";
         var total = passed.length + failed.length;
-        
+        var i:int, j:int;
+
+        xml += "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         xml += "\n<!-- LoomScript Test Suite -->\n";
-        
         xml += "\n<testsuite name=\"LoomScript Tests\" tests=\"" + total +"\" errors=\"" + failed.length + "\" failures=\"0\" skip=\"0\">\n";
-        
+
         xml += "\n<!-- PASSED -->\n";
-        
-        var i:int;
         for (i = 0; i < passed.length; i++) {
-        
             var test = passed[i];
-            xml += "\n<testcase name=\"" + test.name +"\" /> ";    
-            
+            xml += "\n<testcase name=\"" + test.name +"\" /> ";
         }
-        
+
         xml += "\n\n<!-- FAILED -->\n";
-        
         for (i = 0; i < failed.length; i++) {
-        
-            var fail = failed[i];
-            xml += "\n<testcase name=\"" + fail.name + "\" > <error /> </testcase>\n";    
-            
+            var fail:Test = failed[i];
+            var failErrors:Vector.<String> = errors[fail];
+
+            xml += "\n<testcase name=\"" + fail.name + "\" >";
+            for (j = 0; j < failErrors.length; j++) {
+                xml += "\n  <failure type=\"assertion\" message=\"" +failErrors[j] + "\" />";
+            }
+            xml += "\n</testcase>\n";
         }
-        
+
         xml += "\n</testsuite>\n";
-        
+
         // Save it.
         var doc = new XMLDocument;
         doc.parse(xml);
@@ -210,5 +217,3 @@ public class Test
 }
 
 }
-
-

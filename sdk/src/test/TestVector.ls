@@ -211,13 +211,13 @@ class TestVector extends Test
         var nv:Vector.<Number> = [34000, 77800, 12300, 11000, 21600, 33120, 18190, 43090];
 
         // test default splice args
-        var vsplice:Vector.<Number> = nv.slice();
+        var nvslice:Vector.<Number> = nv.slice();
 
-        assert(vsplice.length == nv.length);
+        assert(nvslice.length == nv.length);
 
-        for (x in vsplice)
+        for (x in nvslice)
         {
-            assert(nv[x] == vsplice[x]);
+            assert(nv[x] == nvslice[x]);
         }
         
         nv.sort(Vector.NUMERIC);
@@ -245,13 +245,7 @@ class TestVector extends Test
         nv = [10, 100, 99, -99, -100, 20, 1];
         nv.sort();
         
-        assert(nv[0] == 1);
-        assert(nv[1] == 10);
-        assert(nv[2] == 20);
-        assert(nv[3] == 99);
-        assert(nv[4] == -99);
-        assert(nv[5] == 100);
-        assert(nv[6] == -100);
+        testVectorEqual(nv, [-100, -99, 1, 10, 100, 20, 99], "default number-as-string mismatch");
         
         av = ["apple", "orange", null, "Cherry", "kiwi"];
         
@@ -305,8 +299,8 @@ class TestVector extends Test
         av = ["apple", "orange", null, "Cherry", "kiwi"];
         
         // Returns the original Vector
-        var rav = av.sort(Vector.UNIQUESORT);
-        assert(av == rav);
+        var vr:Object = av.sort(Vector.UNIQUESORT);
+        assert(av == vr);
         
         // ensure elements are sorted
         assert(av[0] == null);
@@ -315,6 +309,69 @@ class TestVector extends Test
         assert(av[3] == "kiwi");
         assert(av[4] == "orange");
         
+        // ensure consistency with as3 sorting behavior
+
+        /// alpha vs numeric
+        var msg = "plain sort should order elements alphabetically";
+        av = ["22", "111", "3"];
+        var av2:Vector.<String> = ["111", "22", "3"];
+        av.sort();
+        testVectorEqual(av, av2, msg);
+
+        msg = "numeric sort should order elements numerically";
+        av = ["111", "22", "3"];
+        av2 = ["3", "22", "111"];
+        av.sort(Vector.NUMERIC);
+        testVectorEqual(av, av2, msg);
+
+        /// allowing dupes
+        msg = "case-insensitive sort should allow dupes in Vector.<String>";
+        av = ["a", "a", "a"];
+        var avslice:Vector.<String> = av.slice();
+        vr = av.sort(Vector.CASEINSENSITIVE);
+        testVectorEqual(vr, avslice, msg);
+
+        msg = "case-insensitive sort should allow dupes in Vector.<Number>";
+        nv = [1, 1, 1];
+        nvslice = nv.slice();
+        vr = nv.sort(Vector.CASEINSENSITIVE);
+        testVectorEqual(vr, nvslice, msg);
+
+        msg = "descending sort should allow dupes in Vector.<String>";
+        av = ["b", "b", "b"];
+        avslice = av.slice();
+        vr = av.sort(Vector.DESCENDING);
+        testVectorEqual(vr, avslice, msg);
+
+        msg = "descending sort should allow dupes in Vector.<Number>";
+        nv = [1, 1, 1];
+        nvslice = nv.slice();
+        vr = nv.sort(Vector.DESCENDING);
+        testVectorEqual(vr, nvslice, msg);
+
+        msg = "indexed array sort should allow dupes in Vector.<String>";
+        av = ["c", "c", "c"];
+        nvslice = [0, 1, 2];
+        vr = av.sort(Vector.RETURNINDEXEDARRAY);
+        assertEqual(([]).getFullTypeName(), vr.getFullTypeName(), msg);
+
+        msg = "indexed array sort should allow dupes in Vector.<Number>";
+        nv = [1, 1, 1];
+        nvslice = [0, 1, 2];
+        vr = nv.sort(Vector.RETURNINDEXEDARRAY);
+        assertEqual(([]).getFullTypeName(), vr.getFullTypeName(), msg);
+
+        msg = "numeric sort should allow dupes in Vector.<String>";
+        av = ["d", "d", "d"];
+        avslice = av.slice();
+        vr = av.sort(Vector.NUMERIC);
+        testVectorEqual(vr, avslice, msg);
+
+        msg = "numeric sort should allow dupes in Vector.<Number>";
+        nv = [1, 1, 1];
+        nvslice = nv.slice();
+        vr = nv.sort(Vector.NUMERIC);
+        testVectorEqual(vr, nvslice, msg);
         
         var functions:Vector.<Function> = [staticSortMethod, instanceSortMethod, function (x:Number, y:Number):Number { if (x < y)  return -1; if (x > y)  return 1; return 0;}];
         
@@ -332,10 +389,10 @@ class TestVector extends Test
         }
         
         av = ["apple", "orange", null, "Cherry", "apple"];
-        assert(av.join() == "apple,orange,null,Cherry,apple");
+        assert(av.join() == "apple,orange,null,Cherry,apple", "join mismatch");
         
         var rv:Vector.<Object> = [1, "hello", av, true, null];
-        assert(rv.join(";") == "1;hello;apple,orange,null,Cherry,apple;true;null");
+        assert(rv.join(";") == "1;hello;apple,orange,null,Cherry,apple;true;null", "join with separator mismatch");
         
         var spliceTest:Vector.<Number> = [1, 2, 3, 4];
 
@@ -561,6 +618,27 @@ class TestVector extends Test
         
     }
     
+    function testVectorEqual(a:Object, b:Object, msg:String):void
+    {
+        var vectorType:String = ([]).getFullTypeName();
+        var aType:String = a.getFullTypeName();
+        var bType:String = b.getFullTypeName();
+
+        assertEqual(aType, vectorType, (msg + "; object is not a vector"));
+        assertEqual(bType, vectorType, (msg + "; object is not a vector"));
+
+        if (aType == vectorType && bType == vectorType)
+        {
+            var va:Vector.<Object> = a as Vector.<Object>;
+            var vb:Vector.<Object> = b as Vector.<Object>;
+
+            assertEqual(va.length, vb.length, (msg + "; lengths do not match"));
+
+            for (var i:Number in va)
+                assertEqual(va[i], vb[i], (msg + "; mismatch at index " + i));
+        }
+    }
+
     function TestVector()
     {
         name = "TestVector";   

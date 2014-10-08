@@ -89,8 +89,8 @@ loom/engine/cocos2dx/platform/android/java/bin/
 loom/engine/cocos2dx/platform/android/java/gen/
 loom/engine/cocos2dx/platform/android/java/local.properties
 
-loom/vendor/facebook/android/bin
-loom/vendor/facebook/android/gen
+loom/vendor/facebook/android/bin/
+loom/vendor/facebook/android/gen/
 loom/vendor/facebook/android/local.properties
 
 #docs stuff
@@ -99,4 +99,4 @@ loom/vendor/luajit/libluajit64.a
 
 loom/vendor/luajit/libluajit32.a
 output
-loom/vendor/facebook/android/bin/
+gems
