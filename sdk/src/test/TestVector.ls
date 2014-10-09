@@ -468,6 +468,10 @@ class TestVector extends Test
 
         assertEqual(setlength.length, 5, "setting length shorter should truncate vector");
 
+        setlength.length = 10;
+
+        testVectorEqual(setlength, [1, 2, 3, 4, 5, null, null, null, null, null], "setting length longer should fill with null");
+
         // Test nested vector type parse.
         var foo = new Vector.<Vector.<Vector.<Vector.<Object>>>>();
         foo.push(new Vector.<Vector.<Vector.<Object>>>());
