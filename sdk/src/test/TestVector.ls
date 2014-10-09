@@ -244,6 +244,14 @@ class TestVector extends Test
         testVectorEqual(av, ["apple", "orange", null, "Cherry", "kiwi"], "index sort should not modify the vector");
         testVectorEqual(iv, [2, 3, 0, 4, 1], "index sort should return a new array of indices in sort order");
 
+        // check that indices give sorted retrieval
+        s = "";
+        for (x in iv) {
+            s += av[iv[x]].toString();
+            if (x + 1 < iv.length) s += ',';
+        }
+        assertEqual(s, "null,Cherry,apple,kiwi,orange", "index sort indices should retrieve items in sorted order from original vector");
+
         av = ["apple", "orange", null, "Cherry", "apple"];
 
         // Returns 0 when unique sort fails, and leaves vector unmodified
