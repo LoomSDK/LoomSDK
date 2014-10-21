@@ -604,7 +604,7 @@ namespace :build do
 
     FileUtils.mkdir_p("cmake_msvc")
     Dir.chdir("cmake_msvc") do
-      sh "../build/win-cmake.bat #{$doBuildJIT} #{$numCores} \"#{$buildDebugDefine}\" #{$doBuildAdmob} #{doBuildFacebook}"
+      sh "../build/win-cmake.bat #{$doBuildJIT} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\""
       sh "msbuild LoomEngine.sln /p:Configuration=#{$buildTarget}"
     end
     
