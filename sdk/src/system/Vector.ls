@@ -366,8 +366,33 @@ final class Vector
         return this;
 
     }
+    
+    /**
+     *  Shuffles the elements of the Vector in place by randomly reordering them.
+     *
+     *  @return Returns a reference to the modified Vector.
+     */
+    public function shuffle():Vector
+    {
+        var n = length - 1;
+        var i:int;
+        var t:Object;
 
+        while (n > 0)
+        {
+            i = Math.randomRangeInt(0, n);
 
+            t = this[n];
+            this[n] = this[i];
+            this[i] = t;
+
+            n -= 1;
+        }
+
+        return this;
+    }
+
+    
     /**
      *  Freezes the length of the Vector to the current length, optimizing Vector operations.
      */
