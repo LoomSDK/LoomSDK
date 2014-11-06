@@ -659,14 +659,6 @@ package
                 resultLabel.visible = false;
             }});
             
-            /*
-            Loom2D.juggler.delayCall(function() {
-                stopGame(false);
-                switchState(STATE_INTRO);
-                switchState(STATE_GAME);
-            }, 4);
-            //*/
-            
             var maxDelay = 0;
             
             // Set the grid to random colors.
