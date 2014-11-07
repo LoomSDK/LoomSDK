@@ -1,6 +1,7 @@
 package
 {
 	import feathers.display.TiledImage;
+	import loom.platform.Mobile;
 	import loom.sound.Listener;
 	import loom.sound.Sound;
 	import loom.utils.Injector;
@@ -8,11 +9,15 @@ package
 	import loom2d.display.Sprite;
 	import loom2d.display.Stage;
 	import loom2d.events.Event;
+	import loom2d.events.KeyboardEvent;
 	import loom2d.events.Touch;
+	import loom2d.events.TouchEvent;
 	import loom2d.events.TouchPhase;
+	import loom2d.Loom2D;
 	import loom2d.math.Point;
 	import loom2d.textures.Texture;
 	import loom2d.textures.TextureSmoothing;
+	import loom2d.ui.SimpleButton;
 	import loom2d.ui.SimpleLabel;
 	
 	/**
@@ -21,7 +26,6 @@ package
 	 */
 	public class Environment
 	{
-		public static const GAMEOVER:String = "gameover";
 		
 		private var stage:Stage;
 		
@@ -31,18 +35,34 @@ package
 		/** Simulation time */
 		private var t = 0;
 		
-		/** Pixel scaling */
-		private var displayScale = 4;
+		// Target content width/height;
+		// the view is scaled to contain these
+		private var contentWidth = 480;
+		private var contentHeight = 480;
 		
+		/** Pixel scaling */
+		private var pixelScale = 4;
+		
+		/** The return depth point */
 		private var maxDepth = 800;
 		
 		// Camera offsets (for transitions between intro and game)
+		private var creditsOffset = 750;
 		private var initOffset = 280;
 		private var introOffset = 100;
 		private var launchedOffset = 0;
 		private var displayOffsetEase = 0.05;
 		
-		private var mineOffset = 100;
+		/** Scrolling speed for credits */
+		private var creditsTargetSpeed = 8;
+		/** Current eased speed, modified while dragging */
+		private var creditsSpeed = 0;
+		
+		/** The depth at which the instructions get hidden */
+		private var instructionHidingDepth = 300;
+		
+		/** Mine depth offset */
+		private var mineOffset = 150;
 		private var mineNum = 50;
 		private var mineDistributionSharpness = 5;
 		
@@ -75,6 +95,11 @@ package
 		/** Set to game time when the bottom is reached */
 		private var returnStartTime:Number;
 		
+		// Results
+		private var explodedMines:int;
+		private var finishTime:int;
+		private var playerWon:Boolean;
+		
 		/**
 		 * Last touch received, stored so the target can be
 		 * updated every tick based on camera movement.
@@ -82,11 +107,13 @@ package
 		private var lastTouch:Touch;
 		
 		// General game state machine states
-		public static const STATE_INIT = 0;
-		public static const STATE_LAUNCHED = 1;
+		public static const STATE_INIT      = 0;
+		public static const STATE_LAUNCHED  = 1;
 		public static const STATE_RETURNING = 2;
-		public static const STATE_RETURN = 3;
-		public static const STATE_WINNER = 4;
+		public static const STATE_RETURN    = 3;
+		public static const STATE_EXPLODED  = 4;
+		public static const STATE_WINNER    = 5;
+		public static const STATE_CREDITS   = 6;
 		public var state:Number;
 		
 		// Entities
@@ -100,6 +127,9 @@ package
 		private var mineDisplay:Sprite = new Sprite();
 		private var arrowUp:Image;
 		private var title:SimpleLabel;
+		private var credits:Image;
+		private var creditsBtn:SimpleButton;
+		private var instructions:Image;
 		private var scoreTime:SimpleLabel;
 		private var scoreMines:SimpleLabel;
 		private var winnerTitle:SimpleLabel;
@@ -113,11 +143,18 @@ package
 		{
 			this.stage = stage;
 			
-			display.scale = displayScale;
+			stage.addEventListener(Event.RESIZE, resize);
+			resize();
+			
+			stage.addEventListener(KeyboardEvent.BACK_PRESSED, back);
+			
+			// Triggers on touch start, move and end
+			display.addEventListener(TouchEvent.TOUCH, touched);
+			
 			stage.addChild(display);
 			
-			w = stage.stageWidth/displayScale;
-			h = stage.stageHeight/displayScale;
+			w = contentWidth/pixelScale;
+			h = contentHeight/pixelScale;
 			
 			var tex:Texture;
 			
@@ -127,6 +164,31 @@ package
 			sky.y = -sky.height;
 			display.addChild(sky);
 			
+			// Stars behind credits
+			tex = Texture.fromAsset("assets/stars.png");
+			tex.smoothing = TextureSmoothing.NONE;
+			var stars = new Image(tex);
+			stars.scale = w/stars.width;
+			display.addChild(stars);
+			
+			// Credits
+			tex = Texture.fromAsset("assets/credits.png");
+			credits = new Image(tex);
+			credits.scale = contentWidth/credits.width/pixelScale;
+			credits.y = -400-credits.height;
+			display.addChild(credits);
+			stars.y = credits.y-h;
+			
+			// Instructions
+			tex = Texture.fromAsset("assets/instructions.png");
+			// Smoothing set to NONE to ensure rough pixel look
+			tex.smoothing = TextureSmoothing.NONE;
+			instructions = new Image(tex);
+			instructions.scale = w/instructions.width;
+			instructions.y = 60;
+			display.addChild(instructions);
+			
+			
 			display.addChild(mineDisplay);
 			
 			// Player adds itself to display
@@ -134,7 +196,6 @@ package
 			
 			// Blinking up arrow on return
 			tex = Texture.fromAsset("assets/arrowUp.png");
-			// Smoothing set to NONE to ensure rough pixel look
 			tex.smoothing = TextureSmoothing.NONE;
 			arrowUp = new Image(tex);
 			arrowUp.center();
@@ -158,8 +219,17 @@ package
 			seaTiled.height = maxDepth+h*2;
 			display.addChild(seaTiled);
 			
+			// Credits button
+			creditsBtn = new SimpleButton();
+			creditsBtn.upImage = "assets/info.png";
+			creditsBtn.onClick = showCredits;
+			creditsBtn.scale = 1.2/pixelScale;
+			creditsBtn.x = w - 18;
+			creditsBtn.alpha = 0.2;
+			display.addChild(creditsBtn);
+			
 			// Title and score text config
-			title = getLabel("Submersible Trouble", true, w/2, -85, 0.2);
+			title = getLabel("Submersible Trouble", true, w/2, -85, 0.2, 0.8);
 			scoreTime  = getLabel("", false, 10, -47, 0.1);
 			scoreMines = getLabel("", false, 10, -35, 0.1);
 			winnerTitle = getLabel("WINNER!", true, w/2, -62, 0.15);
@@ -177,13 +247,40 @@ package
 			warning = Sound.load("assets/warning.ogg");
 			warning.setListenerRelative(false);
 			
+			placeMines();
 			reset();
+		}
+		
+		/**
+		 * Exits the application when the back button is pressed
+		 */
+		private function back(e:KeyboardEvent):void 
+		{
+			switch (state) {
+				case STATE_INIT:
+				case STATE_WINNER:
+					Process.exit(0);
+					break;
+				case STATE_CREDITS:
+					hideCredits();
+					break;
+				default:
+					gameover();
+			}
+		}
+		
+		/**
+		 * Scale stage so it's contained within stage
+		 */
+		private function resize(e:Event = null)
+		{
+			stage.scale = stage.stageWidth / contentWidth * pixelScale;
 		}
 		
 		/**
 		 * Helper function for placing labels
 		 */
-		private function getLabel(txt:String, center:Boolean, x:Number, y:Number, scale:Number):SimpleLabel
+		private function getLabel(txt:String, center:Boolean, x:Number, y:Number, scale:Number, alpha:Number = 1):SimpleLabel
 		{
 			var label = new SimpleLabel("assets/Curse-hd.fnt");
 			label.text = txt;
@@ -191,6 +288,7 @@ package
 			label.x = x;
 			label.y = y;
 			label.scale = scale;
+			label.alpha = alpha;
 			display.addChild(label);
 			return label;
 		}
@@ -202,8 +300,7 @@ package
 		{
 			t = 0;
 			lastTouch = null;
-			clearMines();
-			placeMines();
+			resetMines();
 			arrowUp.visible = false;
 			targetOffset = introOffset;
 			resetPlayer();
@@ -228,13 +325,14 @@ package
 		}
 		
 		/**
-		 * Remove and dispose of all the mines.
+		 * Reset all the mines
 		 */
-		private function clearMines()
+		private function resetMines() 
 		{
-			while (mines.length > 0) {
-				var mine:Mine = mines.pop();
-				mine.dispose();
+			for (var i = 0; i < mines.length; i++) {
+				var mine = mines[i];
+				mine.reset();
+				mine.setPosition(Math.randomRangeInt(0, w), mineOffset+(maxDepth-mineOffset-h)*mineDistribution(i/(mineNum-1)));
 			}
 		}
 		
@@ -244,7 +342,9 @@ package
 		private function placeMines()
 		{
 			for (var i = 0; i < mineNum; i++) {
-				addMine(Math.randomRangeInt(0, w), mineOffset+(maxDepth-mineOffset-h)*mineDistribution(i/(mineNum-1)));
+				var mine = new Mine(mineDisplay, maxDepth, player);
+				mine.setPosition(w/2, maxDepth);
+				mines.push(mine);
 			}
 		}
 		
@@ -256,6 +356,37 @@ package
 			return Math.log(1+x*mineDistributionSharpness)/Math.log(1+mineDistributionSharpness);
 		}
 		
+		private function showCredits() 
+		{
+			Mobile.allowScreenSleep(false);
+			state = STATE_CREDITS;
+			targetOffset = creditsOffset;
+		}
+		
+		private function hideCredits()
+		{
+			targetOffset = introOffset;
+			state = STATE_INIT;
+			Mobile.allowScreenSleep(false);
+		}
+		
+		private function disableCredits() 
+		{
+			creditsBtn.touchable = false;
+			Loom2D.juggler.tween(creditsBtn, 0.2, {
+				alpha: 0
+			});
+		}
+		
+		private function enableCredits() 
+		{
+			creditsBtn.touchable = true;
+			Loom2D.juggler.tween(creditsBtn, 1, {
+				alpha: 0.2
+			});
+		}
+		
+		
 		/**
 		 * Launch player from initial state and begin the game.
 		 */
@@ -265,20 +396,30 @@ package
 			targetOffset = launchedOffset;
 			player.setVelocity(0, launchSpeed);
 			player.launch();
+			instructions.visible = true;
 			state = STATE_LAUNCHED;
+			disableCredits();
 		}
 		
-		public function touched(touch:Touch)
+		private function touched(e:TouchEvent)
 		{
-			lastTouch = touch;
-			if (touch.phase == TouchPhase.ENDED) lastTouch = null;
-		}
-		
-		private function addMine(x:Number, y:Number)
-		{
-			var mine = new Mine(mineDisplay, maxDepth, player);
-			mine.setPosition(x, y);
-			mines.push(mine);
+			var touch = e.getTouch(display);
+			switch (state) {
+				case STATE_INIT:
+				case STATE_WINNER:
+					if (touch.phase == TouchPhase.BEGAN) {
+						launch();
+						touched(e);
+					}
+					break;
+				case STATE_CREDITS:
+					// Change the speed of scrolling credits based on the dragging direction
+					creditsSpeed -= (touch.getLocation(stage).y-touch.getPreviousLocation(stage).y)*2000*dt;
+					break;
+				default:
+					lastTouch = touch;
+					if (touch.phase == TouchPhase.ENDED) lastTouch = null;
+			}
 		}
 		
 		public function tick()
@@ -289,7 +430,7 @@ package
 			var targetCamera:Number;
 			
 			// Common core game loop - update entities, check for collisions and end state
-			if (state != STATE_INIT) {
+			if (state != STATE_INIT && state != STATE_EXPLODED && state != STATE_CREDITS) {
 				if (state != STATE_WINNER && state != STATE_RETURNING && lastTouch) {
 					var loc:Point = lastTouch.getLocation(display);
 					player.setTarget(loc);
@@ -303,10 +444,28 @@ package
 			
 			// State-specific behavior for camera and transitioning between states
 			switch (state) {
+				case STATE_CREDITS:
+					// Force the view back to the credits if it goes too high
+					if (targetOffset > creditsOffset) {
+						targetOffset += (creditsOffset-targetOffset*2)*0.005;
+					}
+					// Scroll down by default, return current speed to target speed
+					if (targetOffset > creditsOffset-credits.height-50) {
+						targetOffset -= creditsSpeed*dt;
+						creditsSpeed += (creditsTargetSpeed-creditsSpeed)*0.5;
+					} else {
+						hideCredits();
+					}
+					break;
 				case STATE_INIT:
+				case STATE_EXPLODED:
 					targetCamera = 0;
 					break;
 				case STATE_LAUNCHED:
+					// Hide instructions after diving a certain depth
+					if (player.getDepth() > instructionHidingDepth && instructions.visible) {
+						instructions.visible = false;
+					}
 					// Transition to returning state if player reaches bottom
 					if (player.getDepth() > maxDepth) {
 						state = STATE_RETURNING;
@@ -344,10 +503,11 @@ package
 			// Eased camera movement
 			cameraPos += Math.clamp((targetCamera-cameraPos)*cameraEase, -maxCameraSpeed, maxCameraSpeed);
 			
-			// After game over, check if camera returned to initial state and dispatch gameover (allowing for restart)
+			// After game over, check if camera returned to initial state and allow for restart
 			if (over && Math.abs(targetCamera-cameraPos) < overCameraThreshold) {
 				over = false;
-				stage.dispatchEvent(new Event(GAMEOVER));
+				enableCredits();
+				if (state != STATE_WINNER) state = STATE_INIT;
 			}
 			
 			t += dt;
@@ -379,6 +539,7 @@ package
 		private function gameover(winner:Boolean = false)
 		{
 			over = true;
+			updateResults(winner);
 			setScores();
 			targetOffset = introOffset;
 			winnerTitle.visible = winner;
@@ -388,9 +549,19 @@ package
 				player.setTarget(new Point(w/2, 0));
 				winnerSound.play();
 			} else {
-				state = STATE_INIT;
+				state = STATE_EXPLODED;
 				resetPlayer();
 			}
+		}
+		
+		private function updateResults(winner:Boolean)
+		{
+			explodedMines = 0;
+			for each (var mine:Mine in mines) {
+				if (mine.state == Mine.STATE_EXPLODED || mine.state == Mine.STATE_EXPLODING) explodedMines++;
+			}
+			finishTime = t;
+			playerWon = winner;
 		}
 		
 		/**
@@ -398,12 +569,7 @@ package
 		 */
 		private function setScores()
 		{
-			var explodedMines = 0;
-			for each (var mine:Mine in mines) {
-				if (mine.state == Mine.STATE_EXPLODED || mine.state == Mine.STATE_EXPLODING) explodedMines++;
-			}
-			
-			scoreTime.text = "Time                                  " + getFormattedTime(t);
+			scoreTime.text = "Time                                  " + getFormattedTime(finishTime);
 			scoreMines.text = "Mines exploded      " + explodedMines;
 		}
 		
@@ -439,7 +605,9 @@ package
 				mine.render(t);
 			}
 			player.render(t);
-			display.y = (displayOffset-cameraPos)*displayScale;
+			
+			var center = (stage.stageHeight/stage.scale-contentHeight/pixelScale)/2;
+			display.y = (displayOffset-cameraPos)+center;
 		}
 		
 	}
