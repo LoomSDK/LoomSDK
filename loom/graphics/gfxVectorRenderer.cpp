@@ -258,11 +258,6 @@ void VectorRenderer::svg(float x, float y, float scale, VectorSVG* image) {
 }
 
 
-float* VectorRenderer::getBounds() {
-	return nvgGetBounds(nvg);
-}
-
-
 void VectorRenderer::destroyGraphicsResources()
 {
 	if (nvg != NULL) {
