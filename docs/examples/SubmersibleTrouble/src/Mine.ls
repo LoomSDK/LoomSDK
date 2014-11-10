@@ -19,7 +19,7 @@ package  {
 		public static const STATE_SEEK = 2;
 		public static const STATE_EXPLODING = 3;
 		public static const STATE_EXPLODED = 4;
-		public var state = STATE_IDLE;
+		public var state:int;
 		
 		// Required references
 		private var maxDepth:Number;
@@ -36,15 +36,15 @@ package  {
 		private var explosionStagger:Number;
 		
 		private var beep:Sound;
-		private var beepDelay:Number = 0;
-		private var beepCount:Number = 0;
+		private var beepDelay:Number;
+		private var beepCount:Number;
 		
 		// Class properties to avoid instantiation every tick
 		private var delta:Point;
 		private var thrust:Point;
 		
 		// Sleeping mines aren't checked for collisions and aren't simulated
-		public var sleeping:Boolean = false;
+		public var sleeping:Boolean;
 		
 		public function Mine(container:DisplayObjectContainer, maxDepth:Number, player:Player) {
 			this.maxDepth = maxDepth;
@@ -72,49 +72,26 @@ package  {
 			explosion = new Explosion("assets/mineExplosion.png");
 			display.addChild(explosion);
 			
-			loadExplosion();
-			loadBeep();
-		}
-		
-		private function disposeSound(sound:Sound)
-		{
-			if (sound != null) {
-				sound.deleteNative();
-				sound = null;
-			}
-		}
-		
-		private function loadExplosion()
-		{
-			disposeSound(explosionSound);
 			explosionSound = Sound.load("assets/mineExplosion.ogg");
-			explosionSound.setPitch(1+Math.randomRange(-0.1, 0.1));
-		}
-		
-		private function playExplosion()
-		{
-			explosionSound.play();
-		}
-		
-		private function loadBeep()
-		{
-			disposeSound(beep);
 			beep = Sound.load("assets/beep.ogg");
+			
+			reset();
 		}
 		
-		private function playBeep()
+		public function reset()
 		{
-			beep.play();
-		}
-		
-		public function dispose()
-		{
-			display.parent.removeChild(display);
-			body.dispose();
-			bodyActive.dispose();
-			explosion.dispose();
-			disposeSound(explosionSound);
-			disposeSound(beep);
+			beep.stop();
+			beepDelay = 0;
+			beepCount = 0;
+			sleeping = false;
+			state = STATE_IDLE;
+			resetPhysics();
+			body.visible = true;
+			explosion.stop();
+			explosion.currentFrame = 0;
+			explosion.visible = false;
+			explosionSound.stop();
+			explosionSound.setPitch(1+Math.randomRange(-0.1, 0.1));
 		}
 		
 		public function setPosition(x:Number, y:Number)
@@ -216,7 +193,7 @@ package  {
 						explosion.visible = true;
 						body.visible = bodyActive.visible = false;
 						explosion.play();
-						playExplosion();
+						explosionSound.play();
 						placeSound(explosionSound);
 					}
 					// Explosion animation
@@ -232,7 +209,7 @@ package  {
 			if (state == STATE_SEEK || state == STATE_WARN) {
 				beepCount -= dt;
 				if (beepCount < 0) {
-					playBeep();
+					beep.play();
 					// Set volume and pitch based on distance from player
 					beep.setGain(1-dist/60);
 					beep.setPitch(1.3-dist/60);

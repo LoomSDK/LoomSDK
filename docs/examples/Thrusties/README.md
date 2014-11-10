@@ -11,5 +11,6 @@ You can touch / click and drag to set a target for little spaceships to fly to. 
 ## Try It
 @cli_usage
 
-## Screenshot
-![screenshot](images/screenshot.png)
+## Screenshots
+![instructions](images/screenshot.png)
+![action pose](images/screenshot2.png)

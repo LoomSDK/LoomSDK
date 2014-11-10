@@ -34,6 +34,16 @@ package loom.store
      * Product and transactions are reported via the onProduct and onTransaction
      * delegates. Subscribe to them before calling any Store methods.
      *
+     * NOTES: 
+     *
+     * 1) If you are not using Loom CLI and you wish to use the Store on Android, 
+     * you will manually need to add the "com.android.vending.BILLING" permission to 
+     * the AndroidManifest.xml file.
+     *
+     * 2) If you are using Loom CLI and you wish to not include BILLING permissions
+     * in your App, you can disable them by specifying "uses_store": "false" in your
+     * loom.config file.
+     *
      * @see Product
      * @see Transaction
      */

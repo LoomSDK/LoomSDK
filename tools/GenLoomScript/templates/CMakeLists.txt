@@ -39,7 +39,7 @@ else()
 endif()                  
 
 
-add_definitions(-DLOOMSCRIPT_STANDALONE -DLOOM_BUILD_JIT=0)
+add_definitions(-DLOOMSCRIPT_STANDALONE -DLOOM_BUILD_JIT=0 -DLOOM_BUILD_ADMOB=1 -DLOOM_BUILD_FACEBOOK=1)
 
 if (APPLE)
 

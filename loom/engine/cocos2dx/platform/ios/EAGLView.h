@@ -95,6 +95,8 @@
     @private
     NSString *markedText_;
     CGRect   caretRect_;
+
+    BOOL acceptFirstResponder_;
 }
 
 @property(nonatomic, readonly) UITextPosition           *beginningOfDocument;
@@ -104,6 +106,7 @@
 @property(nonatomic, copy) NSDictionary                 *markedTextStyle;
 @property(readwrite, copy) UITextRange                  *selectedTextRange;
 @property(nonatomic, readonly) id<UITextInputTokenizer> tokenizer;
+@property(nonatomic, readwrite, assign) BOOL            acceptFirstResponder;
 @property(nonatomic) UIKeyboardType                     keyboardType;
 @property(nonatomic) UIReturnKeyType                    returnKeyType;
 

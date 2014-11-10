@@ -22,12 +22,15 @@
  THE SOFTWARE.
  ****************************************************************************/
 
+#import "loom/common/platform/platformParseiOS.h"
+
 @class RootViewController;
 
 @interface AppController : NSObject <UIAccelerometerDelegate, UIAlertViewDelegate, UITextFieldDelegate, UIApplicationDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate> 
 {
     UIWindow *window;
     RootViewController    *viewController;
+    ParseAPIiOS *parse;
 }
 
 -(void)handleGenericEvent:(const char*)type withPayload: (const char*)payload;

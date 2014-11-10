@@ -89,12 +89,17 @@ loom/engine/cocos2dx/platform/android/java/bin/
 loom/engine/cocos2dx/platform/android/java/gen/
 loom/engine/cocos2dx/platform/android/java/local.properties
 
+loom/vendor/facebook/android/bin/
+loom/vendor/facebook/android/gen/
+loom/vendor/facebook/android/local.properties
+
 #docs stuff
 s3_docs
 loom/vendor/luajit/libluajit64.a
 
 loom/vendor/luajit/libluajit32.a
 output
+gems
 *.orig
 tools/shaderc/glsl-optimizer/tests/
 tools/shaderc/glsl-optimizer/projects/

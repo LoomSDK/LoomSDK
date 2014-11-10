@@ -457,8 +457,16 @@ set (STB_HDR
 )
 
 set (STB_SRC
-    stb/stb_image.c
+    stb/stb_image.cpp
     stb/stb_vorbis.c
+)
+
+set (JPGD_HDR
+    jpgd/jpgd.h
+)
+
+set (JPGD_SRC
+    jpgd/jpgd.cpp
 )
 
 set (GELDREICH_HDR
@@ -593,6 +601,8 @@ set(ZLIB_SRC
     zlib/source/zutil.c
 )
 
+set(SQLITE3_SRC sqlite3/sqlite3.c)
+
 set( JHEADEXIF_SRC jheadexif/exif.c jheadexif/jhead.c jheadexif/jpgfile.c jheadexif/easyexif.cpp)
     
 
@@ -636,6 +646,7 @@ set (ALL_FILES
     ${JHEADEXIF_SRC}
     ${SEATEST_HDR} ${SEATEST_SRC} 
     ${STB_HDR} ${STB_SRC} 
+    ${JPGD_HDR} ${JPGD_SRC} 
     ${JANSSON_HDR} ${JANSSON_SRC} 
     ${CHIPMUNK_HDR} ${CHIPMUNK_SRC} 
     ${LUA_HDR} ${LUA_SRC} 
@@ -662,6 +673,7 @@ endif()
 if (APPLE)
     list (APPEND ALL_FILES 
         ${SMSLIB_HDR} ${SMSLIB_SRC} 
+        ${SQLITE3_SRC}
     )
 endif()
 

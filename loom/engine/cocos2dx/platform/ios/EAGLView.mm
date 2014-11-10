@@ -120,6 +120,7 @@ static EAGLView *view = 0;
 @synthesize pixelFormat=pixelformat_, depthFormat=depthFormat_;
 @synthesize context=context_;
 @synthesize multiSampling=multiSampling_;
+@synthesize acceptFirstResponder=acceptFirstResponder_;
 
 + (Class) layerClass
 {
@@ -194,6 +195,8 @@ static EAGLView *view = 0;
                                                      name:UIKeyboardDidHideNotification object:nil];
         
         view = self;
+        
+        acceptFirstResponder_ = NO;
     }
         
     return self;
@@ -470,6 +473,15 @@ static EAGLView *view = 0;
 
 #pragma mark -
 #pragma mark UIView - Responder
+
+- (BOOL)becomeFirstResponder
+{
+    if ( acceptFirstResponder_ )
+    {
+        return [super becomeFirstResponder];
+    }
+    return NO;
+}
 
 - (BOOL)canBecomeFirstResponder
 {

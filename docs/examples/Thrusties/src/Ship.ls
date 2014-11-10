@@ -120,6 +120,11 @@ package
 			p.y = y;
 		}
 		
+		public function getPosition():Point
+		{
+			return p;
+		}
+		
 		public function setTarget(t:Point)
 		{
 			target = t;

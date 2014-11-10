@@ -26,8 +26,6 @@
 #include "lmApplication.h"
 #include "loom/common/config/applicationConfig.h"
 
-static int gLastTickTime;
-
 extern "C"
 {
 
@@ -36,6 +34,7 @@ void loom_tick()
     // Mark the main thread for NativeDelegates. On some platforms this
     // may change so we remark every frame.
     NativeDelegate::markMainThread();
+    NativeDelegate::executeDeferredCalls(LoomApplication::getRootVM()->VM());
 
     performance_tick();
 
@@ -63,8 +62,11 @@ void loom_tick()
     }
 
     loom_asset_pump();
+
     platform_HTTPUpdate();
+
     lualoom_gc_update(LoomApplication::getRootVM()->VM());
+
     finishProfilerBlock(&p);
 }
 }

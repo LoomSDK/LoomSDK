@@ -26,6 +26,17 @@ package loom
      * low-bandwidth events which need to be processed; rather than exposing
      * strict APIs, we have a simple and flexible event bus. Use these with
      * Application.fireGenericEvent and Application.event.
+     *
+     * NOTES: 
+     *
+     * 1) If you are not using Loom CLI and you wish to use the Camera on Android, 
+     * you will manually need to add the "android.permission.CAMERA" permission, 
+     * as well as the "android.hardware.camera" and "android.hardware.camera.autofocus" 
+     * features to the AndroidManifest.xml file.
+     *
+     * 2) If you are using Loom CLI and you wish to not include CAMERA permissions or
+     * features in your App, you can disable them by specifying "uses_camera": "false"
+     * in your loom.config file.
      */
     public static class ApplicationEvents
     {
