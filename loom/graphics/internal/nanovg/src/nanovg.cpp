@@ -2223,6 +2223,7 @@ int nvgTextBreakLines(struct NVGcontext* ctx, const char* string, const char* en
 			} else {
 				float nextWidth = iter.nextx - rowStartX; //q.x1 - rowStartX;
 
+				bool breakSpace = false;
 				if (nextWidth > breakRowWidth) {
 					// The run length is too long, need to break to new line.
 					if (breakEnd == rowStart) {
@@ -2246,6 +2247,13 @@ int nvgTextBreakLines(struct NVGcontext* ctx, const char* string, const char* en
 						wordStartX = iter.x;
 						wordMinX = q.x0 - rowStartX;
 					} else {
+						// Take into account the previous space to avoid word duplication
+						if ((ptype == NVG_SPACE || ptype == NVG_SPACE) && type == NVG_CHAR) {
+							wordStart = iter.str;
+							wordStartX = iter.x;
+							wordMinX = q.x0 - rowStartX;
+							breakSpace = true;
+						}
 						// Break the line from the end of the last word, and start new line from the begining of the new.
 						rows[nrows].start = rowStart;
 						rows[nrows].end = breakEnd;
@@ -2283,7 +2291,7 @@ int nvgTextBreakLines(struct NVGcontext* ctx, const char* string, const char* en
 					breakMaxX = rowMaxX;
 				}
 				// track last beginning of a word
-				if ((ptype == NVG_SPACE || ptype == NVG_SPACE) && type == NVG_CHAR) {
+				if (!breakSpace && (ptype == NVG_SPACE || ptype == NVG_SPACE) && type == NVG_CHAR) {
 					wordStart = iter.str;
 					wordStartX = iter.x;
 					wordMinX = q.x0 - rowStartX;
