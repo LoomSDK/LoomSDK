@@ -40,4 +40,10 @@
 		label="FrEefoRm MODE"
 	/>
 	
+	<feathers.controls.Button
+		id="demo"
+		styleName="demo"
+		label="What is this"
+	/>
+	
 </ui.views.game.ModeView>

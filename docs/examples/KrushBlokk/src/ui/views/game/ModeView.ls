@@ -5,15 +5,18 @@ package ui.views.game
     import feathers.controls.Check;
     import loom2d.events.Event;
     import loom2d.ui.SimpleButton;
+    import ui.views.ViewCallback;
     
     /**
      * Mode dialog view for picking game config options.
      */
     class ModeView extends DialogView {
+        public var onDemo:ViewCallback;
         
         [Bind] public var modeTimed:Button;
         [Bind] public var modeUnlimited:Button;
         [Bind] public var modeFreeform:Check;
+        [Bind] public var demo:Button;
         
         protected function get layoutFile():String { return "mode.lml"; }
         
@@ -21,6 +24,7 @@ package ui.views.game
             items.push(modeTimed);
             items.push(modeUnlimited);
             items.push(modeFreeform);
+            items.push(demo);
             modeTimed.addEventListener(Event.TRIGGERED, pick(function(e:Event) {
                 config.freeform = modeFreeform.isSelected;
                 config.duration = 0;
@@ -31,6 +35,9 @@ package ui.views.game
                 config.duration = -1;
                 config.modeLabel = modeUnlimited.label;
             }));
+            demo.addEventListener(Event.TRIGGERED, function(e:Event) {
+                onDemo();
+            });
         }
     }
 }

@@ -19,7 +19,9 @@ package game
      */
     public class Tile
     {
-        public static const SWAP_TIME = 0.3;
+        public static const SWAP_TIME_NORMAL = 0.3;
+        public static const SWAP_TIME_DEMO = 2;
+        public static const swapTime:Number = SWAP_TIME_NORMAL;
         
         private var juggler:Juggler;
         
@@ -86,11 +88,11 @@ package game
             return display.y/th-0.5;
         }
         
-        private function getDisplayX(tx:Number):Number
+        public function getDisplayX(tx:Number):Number
         {
             return (tx+0.5)*tw;
         }
-        private function getDisplayY(ty:Number):Number
+        public function getDisplayY(ty:Number):Number
         {
             return (ty+0.5)*th;
         }
@@ -140,7 +142,7 @@ package game
             state = SWAPPING;
             display.x = getDisplayX(x);
             display.y = getDisplayY(y);
-            juggler.tween(display, SWAP_TIME, {
+            juggler.tween(display, swapTime, {
                 x: getDisplayX(tx),
                 y: getDisplayY(ty),
                 transition: Transitions.EASE_IN_OUT
