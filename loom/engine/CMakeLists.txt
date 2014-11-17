@@ -17,6 +17,7 @@ set (ENGINE_SRC
     loom2d/l2dQuad.cpp
     loom2d/l2dImage.cpp
     loom2d/l2dQuadBatch.cpp
+    loom2d/l2dBlendMode.cpp
     loom2d/l2dScript.cpp
     
     bindings/loom/lmApplication.cpp

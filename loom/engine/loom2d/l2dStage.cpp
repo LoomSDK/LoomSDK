@@ -56,6 +56,7 @@ void Stage::render(lua_State *L)
 
     renderState.alpha          = alpha;
     renderState.cachedClipRect = (unsigned short)-1;
+    renderState.blendMode      = blendMode;
 
 
     renderChildren(L);

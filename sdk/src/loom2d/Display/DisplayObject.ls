@@ -136,6 +136,12 @@ package loom2d.display
         public native function set alpha(value:float);
         public native function get alpha():float;
 
+        /** The blend mode determines how the object is blended with the objects underneath. 
+         *   @default BlendMode.AUTO
+         *   @see loom2d.display.BlendMode */ 
+        public native function set blendMode(value:BlendMode);
+        public native function get blendMode():BlendMode;
+
         /** The visibility of the object, An invisible object will be untouchable. */
         public native function set visible(value:Boolean);
         public native function get visible():Boolean;
@@ -202,9 +208,6 @@ package loom2d.display
         /* delegate that can be set up to be called prior to normal DisplayObject rendering */
         protected native var onRender:NativeDelegate;        
 
-        // TODO: Resurrect blend mode. LOOM-1327
-        //protected var mBlendMode:String;
-        
         protected var mUseHandCursor:Boolean;
 
         protected var _transformationMatrix = new Matrix();
@@ -388,14 +391,7 @@ package loom2d.display
         // gets the average of scaleX and scaleY
         public native function get scale():Number;
         
-        
-        /** The blend mode determines how the object is blended with the objects underneath. 
-         *   @default auto
-         *   @see loom2d.display.BlendMode */ 
-        /*public function get blendMode():String { return mBlendMode; }
-        public function set blendMode(value:String):void { mBlendMode = value; } */
-        
-        
+                
         /** The filter that is attached to the display object. The starling.filters 
          *  package contains several classes that define specific filters you can use. 
          *  Beware that you should NOT use the same filter on more than one object (for 

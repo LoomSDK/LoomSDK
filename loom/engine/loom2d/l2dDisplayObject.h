@@ -23,6 +23,7 @@
 #include <math.h>
 #include "loom/engine/loom2d/l2dMatrix.h"
 #include "loom/engine/loom2d/l2dEventDispatcher.h"
+#include "loom/engine/loom2d/l2dBlendMode.h"
 #include "loom/script/native/lsNativeDelegate.h"
 
 namespace Loom2D
@@ -35,7 +36,7 @@ struct RenderState
 {
     float alpha;
     int   cachedClipRect;
-
+    int   blendMode;
     void clampAlpha()
     {
         if(alpha < 0.f) alpha = 0.f;
@@ -51,6 +52,7 @@ public:
 
     /** The x coordinate of the object relative to the local coordinates of the parent. */
     float x;
+
     /** The y coordinate of the object relative to the local coordinates of the parent. */
     float y;
 
@@ -78,6 +80,9 @@ public:
 
     /** The opacity of the object. 0 = transparent, 1 = opaque. */
     float alpha;
+
+    /** The source blend constant for the object. Default is BlendMode.AUTO */
+    int blendMode;
 
     /** If depth sorting is enabled on parent this will be used to establish draw order. */
     float depth;
@@ -133,6 +138,7 @@ public:
         depth          = 0;
         rotation       = 0;
         alpha          = 1;
+        blendMode      = BlendMode::AUTO;
         visible        = touchable = true;
         name           = stringtable_insert("");
         parent         = NULL;
@@ -424,6 +430,16 @@ public:
     inline void setAlpha(float _alpha)
     {
         alpha = _alpha;
+    }
+
+    inline int getBlendMode() const
+    {
+        return blendMode;
+    }
+
+    inline void setBlendMode(int _mode)
+    {
+        blendMode = _mode;
     }
 
     inline bool getVisible() const
