@@ -71,6 +71,10 @@ public:
 		ALIGN_BASELINE = 1 << 6, // Default, align text vertically to baseline. 
 	};
 
+	int color = 0x000000;
+	inline int getColor() const { return color; }
+	void setColor(int t) { color = t; }
+
 	float size = NAN;
 	inline float getSize() const { return size; }
 	void setSize(float t) { size = t; }
@@ -86,6 +90,7 @@ public:
 	float lineHeight = NAN;
 	inline float getLineHeight() const { return lineHeight; }
 	void setLineHeight(float t) { lineHeight = t; }
+
 };
 
 class VectorSVG {

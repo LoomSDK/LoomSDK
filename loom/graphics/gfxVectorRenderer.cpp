@@ -68,6 +68,7 @@ static int font;
 int VectorRenderer::frameWidth = 0;
 int VectorRenderer::frameHeight = 0;
 
+/*
 void drawLabel(struct NVGcontext* vg, const char* text, float x, float y, float w, float h)
 {
 	NVG_NOTUSED(w);
@@ -79,6 +80,7 @@ void drawLabel(struct NVGcontext* vg, const char* text, float x, float y, float 
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 	nvgText(vg, x, y + h*0.5f, text, NULL);
 }
+*/
 
 void VectorRenderer::setSize(int width, int height) {
 	frameWidth = width;
@@ -96,8 +98,6 @@ void VectorRenderer::preDraw(float a, float b, float c, float d, float e, float 
 	
 	nvgLineCap(nvg, NVG_BUTT);
 	nvgLineJoin(nvg, NVG_ROUND);
-	nvgFontSize(nvg, 12.0f);
-	nvgTextLineHeight(nvg, 1.0f);
 }
 
 void VectorRenderer::postDraw() {
@@ -194,6 +194,11 @@ void VectorRenderer::fillColor32(unsigned int argb, float a) {
 }
 
 void VectorRenderer::textFormat(VectorTextFormat* format) {
+	unsigned int rgb = format->color;
+	float cr = ((rgb >> 16) & 0xff) / 255.0f;
+	float cg = ((rgb >> 8) & 0xff) / 255.0f;
+	float cb = ((rgb >> 0) & 0xff) / 255.0f;
+	nvgFillColor(nvg, nvgRGBAf(cr, cg, cb, 1.0));
 	if (!isnan(format->size)) nvgFontSize(nvg, format->size);
 	if (format->align != -1) nvgTextAlign(nvg, format->align);
 	if (!isnan(format->letterSpacing)) nvgTextLetterSpacing(nvg, format->letterSpacing);

@@ -89,6 +89,10 @@ void VectorGraphics::clear() {
 	boundR = -INFINITY;
 	boundB = -INFINITY;
 	lastPath = NULL;
+
+	pathDirty = false;
+	textFormatDirty = false;
+
 #pragma warning(default: 4056 4756)
 }
 
@@ -139,6 +143,7 @@ void VectorGraphics::lineStyle(float thickness, unsigned int color, float alpha,
 }
 
 void VectorGraphics::textFormat(VectorTextFormat format) {
+	textFormatDirty = true;
 	queue->push_back(new VectorTextFormatData(new VectorTextFormat(format)));
 }
 
@@ -212,14 +217,23 @@ void VectorGraphics::drawArc(float x, float y, float radius, float angleFrom, fl
 }
 
 void VectorGraphics::drawTextLabel(float x, float y, utString text) {
+	ensureTextFormat();
 	queue->push_back(new VectorText(x, y, NAN, new utString(text)));
 	inflateBounds(x, y);
 }
 
 void VectorGraphics::drawTextBox(float x, float y, float width, utString text) {
+	ensureTextFormat();
 	queue->push_back(new VectorText(x, y, width, new utString(text)));
 	inflateBounds(x, y);
 	inflateBounds(x+width, y);
+}
+
+void VectorGraphics::ensureTextFormat() {
+	if (!textFormatDirty) {
+		textFormatDirty = true;
+		queue->push_back(new VectorTextFormatData(new VectorTextFormat()));
+	}
 }
 
 void VectorGraphics::drawSVG(float x, float y, float scale, VectorSVG* svg) {

@@ -165,6 +165,7 @@ protected:
 	void restartPath();
 	void resetStyle();
 	void inflateBounds(float x, float y);
+	void ensureTextFormat();
 
 public:
 	utArray<VectorData*> *queue;
@@ -172,6 +173,7 @@ public:
 	VectorLineStyle currentLineStyle;
 	VectorFill currentFill;
 	bool pathDirty = false;
+	bool textFormatDirty = false;
 	float boundL;
 	float boundT;
 	float boundR;

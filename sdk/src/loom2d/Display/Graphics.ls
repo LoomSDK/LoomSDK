@@ -45,6 +45,8 @@ package loom2d.display
     
     public native class TextFormat
     {
+        public native function set color(value:int);
+        public native function get color():int;
         public native function set size(value:float);
         public native function get size():float;
         public native function set align(value:int);
