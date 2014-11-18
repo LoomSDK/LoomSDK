@@ -194,11 +194,13 @@ void VectorRenderer::fillColor32(unsigned int argb, float a) {
 }
 
 void VectorRenderer::textFormat(VectorTextFormat* format) {
-	unsigned int rgb = format->color;
-	float cr = ((rgb >> 16) & 0xff) / 255.0f;
-	float cg = ((rgb >> 8) & 0xff) / 255.0f;
-	float cb = ((rgb >> 0) & 0xff) / 255.0f;
-	nvgFillColor(nvg, nvgRGBAf(cr, cg, cb, 1.0));
+	if (format->color >= 0) {
+		unsigned int rgb = format->color;
+		float cr = ((rgb >> 16) & 0xff) / 255.0f;
+		float cg = ((rgb >> 8) & 0xff) / 255.0f;
+		float cb = ((rgb >> 0) & 0xff) / 255.0f;
+		nvgFillColor(nvg, nvgRGBAf(cr, cg, cb, 1.0));
+	}
 	if (!isnan(format->size)) nvgFontSize(nvg, format->size);
 	if (format->align != -1) nvgTextAlign(nvg, format->align);
 	if (!isnan(format->letterSpacing)) nvgTextLetterSpacing(nvg, format->letterSpacing);

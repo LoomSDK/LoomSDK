@@ -141,6 +141,7 @@ class VectorTextFormatData : public VectorData {
 public:
 	GFX::VectorTextFormat* format;
 	VectorTextFormatData(GFX::VectorTextFormat* format) : format(format) {};
+	~VectorTextFormatData();
 	virtual void render(VectorGraphics* g);
 };
 

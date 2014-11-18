@@ -71,7 +71,7 @@ public:
 		ALIGN_BASELINE = 1 << 6, // Default, align text vertically to baseline. 
 	};
 
-	int color = 0x000000;
+	int color = -1;
 	inline int getColor() const { return color; }
 	void setColor(int t) { color = t; }
 

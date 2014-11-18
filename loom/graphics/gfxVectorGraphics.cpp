@@ -143,7 +143,7 @@ void VectorGraphics::lineStyle(float thickness, unsigned int color, float alpha,
 }
 
 void VectorGraphics::textFormat(VectorTextFormat format) {
-	textFormatDirty = true;
+	ensureTextFormat();
 	queue->push_back(new VectorTextFormatData(new VectorTextFormat(format)));
 }
 
@@ -232,7 +232,12 @@ void VectorGraphics::drawTextBox(float x, float y, float width, utString text) {
 void VectorGraphics::ensureTextFormat() {
 	if (!textFormatDirty) {
 		textFormatDirty = true;
-		queue->push_back(new VectorTextFormatData(new VectorTextFormat()));
+		// Default text format
+		VectorTextFormat* format = new VectorTextFormat();
+		format->color = 0x000000;
+		format->size = 12;
+		format->align = VectorTextFormat::ALIGN_TOP | VectorTextFormat::ALIGN_LEFT;
+		queue->push_back(new VectorTextFormatData(format));
 	}
 }
 
@@ -339,6 +344,9 @@ void VectorText::render(VectorGraphics* g) {
 
 void VectorTextFormatData::render(VectorGraphics* g) {
 	VectorRenderer::textFormat(format);
+}
+VectorTextFormatData::~VectorTextFormatData() {
+	delete this->format;
 }
 
 void VectorSVGData::render(VectorGraphics* g) {
