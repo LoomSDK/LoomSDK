@@ -57,6 +57,18 @@ struct VectorWinding {
 	};
 };
 
+/*
+class VectorFont {
+protected:
+	int id;
+
+public:
+	utString fontName;
+
+	VectorFont(utString fontName, utString filePath);
+};
+*/
+
 class VectorTextFormat {
 public:
 	enum TextAlign {
@@ -70,6 +82,12 @@ public:
 		ALIGN_BOTTOM = 1 << 5,	// Align text vertically to bottom. 
 		ALIGN_BASELINE = 1 << 6, // Default, align text vertically to baseline. 
 	};
+
+	static void load(utString fontName, utString filePath);
+
+	const char* font = "";
+	inline const char* getFont() const { return font; }
+	void setFont(const char* t) { font = t; }
 
 	int color = -1;
 	inline int getColor() const { return color; }

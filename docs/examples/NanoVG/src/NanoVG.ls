@@ -27,25 +27,6 @@ package
         {
             // Comment out this line to turn off automatic scaling.
             stage.scaleMode = StageScaleMode.LETTERBOX;
-
-            // Setup anything else, like UI, or game objects.
-            var bg = new Image(Texture.fromAsset("assets/bg.png"));
-            bg.width = stage.stageWidth;
-            bg.height = stage.stageHeight;
-            stage.addChild(bg);
-            
-            var sprite = new Image(Texture.fromAsset("assets/logo.png"));
-            sprite.center();
-            sprite.x = stage.stageWidth / 2;
-            sprite.y = stage.stageHeight / 2 + 50;
-            stage.addChild(sprite);
-
-            var label = new SimpleLabel("assets/Curse-hd.fnt");
-            label.text = "Hello Loom!";
-            label.center();
-            label.x = stage.stageWidth / 2;
-            label.y = stage.stageHeight / 2 - 100;
-            stage.addChild(label);
             
             var q:Quad;
             //*
@@ -114,7 +95,7 @@ package
             // SVG
             var svg = new SVG();
             svg.loadFile("assets/nano.svg");
-            g.drawSVG(220, 30, 0.2, svg);
+            g.drawSVG(220, 60, 0.2, svg);
             
             //sg.pivotX = 220; sg.pivotY = 30; sg.scale *= 5;
             //return;
@@ -152,14 +133,16 @@ package
             g.moveTo(  0,   0); g.arcTo(  0,  25, 25, 25, 25);
             
             // Draw text
-            g.drawTextLabel(220, 10, "hello");
+            g.drawTextLabel(220, 0, "hello");
             
             var format = new TextFormat();
             
+            format.color = 0xA60000;
             format.size = 30;
             g.textFormat(format);
-            g.drawTextLabel(220, 24, "world");
+            g.drawTextLabel(220, 2, "world");
             
+            format.color = 0xFF5959;
             format.size = 14;
             format.lineHeight = 1;
             format.align = TextAlign.CENTER | TextAlign.TOP;
@@ -167,6 +150,7 @@ package
             g.moveTo(300, 0); g.lineTo(400, 0);
             g.drawTextBox(300, 0, 100, "The five boxing wizards jump quickly.");
             
+            format.color = 0x2F66F9;
             format.size = 10;
             g.textFormat(format);
             g.moveTo(300, 50); g.lineTo(330, 50);
@@ -174,6 +158,13 @@ package
             g.moveTo(330, 50); g.lineTo(400, 50);
             g.drawTextBox(330, 50, 70, "The five boxing wizards jump quickly.");
             
+            TextFormat.load("lobster", "font/Lobster-Regular.ttf");
+            format.font = "lobster";
+            format.color = 0xFF4848;
+            format.size = 30;
+            format.align = TextAlign.TOP | TextAlign.LEFT;
+            g.textFormat(format);
+            g.drawTextLabel(225, 25, "Lobster");
             
             // Mixed line and shape rendering
             g.moveTo(100, 0);
@@ -283,6 +274,20 @@ package
             
             b = sg.getBounds(sg); trace(b); d.lineStyle(1, 0x00FF00); d.drawRect(b.x-2, b.y-2, b.width+4, b.height+4);
             
+            //g.clear();
+            //g.beginFill(0xFF0000);
+            //g.lineStyle(1, 0xFF0000);
+            //g.moveTo(0, 0);
+            //g.lineTo(100, 0);
+            //g.drawRect(0, 0, 10, 10);
+            //g.textFormat(format);
+            //g.drawTextLabel(0, 0, "hello");
+            //g.textFormat(format);
+            //g.drawRect(0, 0, 10, 10);
+            //g.moveTo(0, 0);
+            //g.lineTo(100, 0);
+            //g.endFill();
+            
             stage.addEventListener(ScrollWheelEvent.SCROLLWHEEL, onScroll);
             
             /*
@@ -352,21 +357,21 @@ package
         }
         
         private function hsvToRgb(h:Number, s:Number, v:Number):uint {
-			var hi:int = int(h/60)%60;
-			var f:Number = h/60-Math.floor(h/60);
-			var p:Number = v*(1-s);
-			var q:Number = v*(1-f*s);
-			var t:Number = v*(1-(1-f)*s);
-			switch (hi) {
-				case 0: return ((int(v*255) << 16) | (int(t*255) << 8) | int(p*255));
-				case 1: return ((int(q*255) << 16) | (int(v*255) << 8) | int(p*255));
-				case 2: return ((int(p*255) << 16) | (int(v*255) << 8) | int(t*255));
-				case 3: return ((int(p*255) << 16) | (int(q*255) << 8) | int(v*255));
-				case 4: return ((int(t*255) << 16) | (int(p*255) << 8) | int(v*255));
-				case 5: return ((int(v*255) << 16) | (int(p*255) << 8) | int(q*255));
-			}
-			return 0;
-		}
+            var hi:int = int(h/60)%60;
+            var f:Number = h/60-Math.floor(h/60);
+            var p:Number = v*(1-s);
+            var q:Number = v*(1-f*s);
+            var t:Number = v*(1-(1-f)*s);
+            switch (hi) {
+                case 0: return ((int(v*255) << 16) | (int(t*255) << 8) | int(p*255));
+                case 1: return ((int(q*255) << 16) | (int(v*255) << 8) | int(p*255));
+                case 2: return ((int(p*255) << 16) | (int(v*255) << 8) | int(t*255));
+                case 3: return ((int(p*255) << 16) | (int(q*255) << 8) | int(v*255));
+                case 4: return ((int(t*255) << 16) | (int(p*255) << 8) | int(v*255));
+                case 5: return ((int(v*255) << 16) | (int(p*255) << 8) | int(q*255));
+            }
+            return 0;
+        }
         
         override public function onFrame() 
         {

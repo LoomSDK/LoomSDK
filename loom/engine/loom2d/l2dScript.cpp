@@ -229,6 +229,8 @@ static int registerLoom2D(lua_State *L)
     // TextFormat
        .beginClass<GFX::VectorTextFormat>("TextFormat")
 	   .addConstructor<void(*)(void)>()
+	   .addStaticMethod("load", &GFX::VectorTextFormat::load)
+	   .addProperty("font", &GFX::VectorTextFormat::getFont, &GFX::VectorTextFormat::setFont)
 	   .addProperty("color", &GFX::VectorTextFormat::getColor, &GFX::VectorTextFormat::setColor)
        .addProperty("size", &GFX::VectorTextFormat::getSize, &GFX::VectorTextFormat::setSize)
        .addProperty("align", &GFX::VectorTextFormat::getAlign, &GFX::VectorTextFormat::setAlign)

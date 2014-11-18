@@ -45,6 +45,8 @@ package loom2d.display
     
     public native class TextFormat
     {
+        public native function set font(value:String);
+        public native function get font():String;
         public native function set color(value:int);
         public native function get color():int;
         public native function set size(value:float);
@@ -55,6 +57,7 @@ package loom2d.display
         public native function get letterSpacing():float;
         public native function set lineHeight(value:float);
         public native function get lineHeight():float;
+        public native static function load(fontName:String, filePath:String);
     }
     
     [Native(managed)]

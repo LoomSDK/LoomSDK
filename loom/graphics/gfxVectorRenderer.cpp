@@ -194,6 +194,9 @@ void VectorRenderer::fillColor32(unsigned int argb, float a) {
 }
 
 void VectorRenderer::textFormat(VectorTextFormat* format) {
+	if (strlen(format->font) > 0) {
+		nvgFontFace(nvg, format->font);
+	}
 	if (format->color >= 0) {
 		unsigned int rgb = format->color;
 		float cr = ((rgb >> 16) & 0xff) / 255.0f;
@@ -276,12 +279,28 @@ void VectorRenderer::destroyGraphicsResources()
 void VectorRenderer::initializeGraphicsResources()
 {
 	nvg = nvgCreate(512, 512, 1, 0);
-	font = nvgCreateFont(nvg, "sans", "font/droidsans.ttf");
+	nvgCreateFont(nvg, "sans", "font/droidsans.ttf");
+	//nvgCreateFont(nvg, "sans", "font/Roboto - Regular.ttf");
+	//nvgCreateFont(nvg, "sans", "font/OpenSans-Regular.ttf");
+
 	
 
 	//font = nvgCreateFont(nvg, "sans", "font/Pecita.otf");
 	//font = nvgCreateFont(nvg, "sans", "font/Cyberbit.ttf");
 }
+
+
+
+/*
+VectorFont::VectorFont(utString fontName, utString filePath) {
+	this->fontName = fontName;
+	this->id = nvgCreateFont(nvg, fontName.c_str(), filePath.c_str());
+}
+*/
+void VectorTextFormat::load(utString fontName, utString filePath) {
+	nvgCreateFont(nvg, fontName.c_str(), filePath.c_str());
+}
+
 
 VectorSVG::VectorSVG() {}
 VectorSVG::~VectorSVG() {
