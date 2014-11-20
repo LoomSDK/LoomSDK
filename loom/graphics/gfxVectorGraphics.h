@@ -63,6 +63,7 @@ enum VectorShapeType {
 	ELLIPSE,
 	RECT,
 	ROUND_RECT,
+	ROUND_RECT_COMPLEX,
 	ARC_CW,
 	ARC_CCW
 };
@@ -75,9 +76,12 @@ protected:
 	float a;
 	float b;
 	float c;
+	float d;
+	float e;
+	float f;
 
 public:
-	VectorShape(VectorShapeType type, float x, float y, float a = 0.0, float b = 0.0, float c = 0.0) : type(type), x(x), y(y), a(a), b(b), c(c) {};
+	VectorShape(VectorShapeType type, float x, float y, float a = 0.0, float b = 0.0, float c = 0.0, float d = 0.0, float e = 0.0, float f = 0.0) : type(type), x(x), y(y), a(a), b(b), c(c), d(d), e(e), f(f) {};
 
 	virtual void render(VectorGraphics* g);
 };
@@ -207,6 +211,7 @@ public:
 	void drawEllipse(float x, float y, float width, float height);
 	void drawRect(float x, float y, float width, float height);
 	void drawRoundRect(float x, float y, float width, float height, float ellipseWidth, float ellipseHeight);
+	void drawRoundRectComplex(float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomLeftRadius, float bottomRightRadius);
 	void drawArc(float x, float y, float radius, float angleFrom, float angleTo, int direction);
 
 	void drawTextLabel(float x, float y, utString text);

@@ -89,6 +89,7 @@ package loom2d.display
         public native function drawEllipse(x:Number, y:Number, width:Number, height:Number):void;
         public native function drawRect(x:Number, y:Number, width:Number, height:Number):void;
         public native function drawRoundRect(x:Number, y:Number, width:Number, height:Number, ellipseWidth:Number, ellipseHeight:Number):void;
+        public native function drawRoundRectComplex(x:Number, y:Number, width:Number, height:Number, topLeftRadius:Number, topRightRadius:Number, bottomLeftRadius:Number, bottomRightRadius:Number):void;
         public native function drawArc(x:Number, y:Number, radius:Number, angleFrom:Number, angleTo:Number, direction:int):void;
         public native function drawTextLabel(x:Number, y:Number, text:String):void;
         public native function drawTextBox(x:Number, y:Number, width:Number, text:String):void;

@@ -245,8 +245,12 @@ void VectorRenderer::rect(float x, float y, float width, float height) {
 	nvgRect(nvg, x, y, width, height);
 }
 
-void VectorRenderer::roundRect(float x, float y, float width, float height, float radius) {
-	nvgRoundedRect(nvg, x, y, width, height, radius);
+void VectorRenderer::roundRect(float x, float y, float width, float height, float ellipseWidth, float ellipseHeight) {
+	nvgRoundedRectEllipse(nvg, x, y, width, height, ellipseWidth, ellipseHeight);
+}
+
+void VectorRenderer::roundRectComplex(float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomLeftRadius, float bottomRightRadius) {
+	nvgRoundedRectComplex(nvg, x, y, width, height, topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius);
 }
 
 void VectorRenderer::arc(float x, float y, float radius, float angleFrom, float angleTo, VectorWinding::Enum direction) {

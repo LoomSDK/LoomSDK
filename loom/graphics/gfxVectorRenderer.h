@@ -190,7 +190,8 @@ public:
 	static void circle(float x, float y, float radius);
 	static void ellipse(float x, float y, float width, float height);
 	static void rect(float x, float y, float width, float height);
-	static void roundRect(float x, float y, float width, float height, float radius);
+	static void roundRect(float x, float y, float width, float height, float ellipseWidth, float ellipseHeight);
+	static void roundRectComplex(float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomLeftRadius, float bottomRightRadius);
 	static void arc(float x, float y, float radius, float angleFrom, float angleTo, VectorWinding::Enum direction);
 
 	static void textLabel(float x, float y, utString* string);

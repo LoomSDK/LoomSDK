@@ -203,11 +203,16 @@ void VectorGraphics::drawRect(float x, float y, float width, float height) {
 	inflateBounds(x+width, y+height);
 }
 
-// TODO implement ellipseHeight?
 void VectorGraphics::drawRoundRect(float x, float y, float width, float height, float ellipseWidth, float ellipseHeight) {
-	addShape(new VectorShape(ROUND_RECT, x, y, width, height, ellipseWidth));
+	addShape(new VectorShape(ROUND_RECT, x, y, width, height, ellipseWidth, ellipseHeight));
 	inflateBounds(x, y);
-	inflateBounds(x+width, y+height);
+	inflateBounds(x + width, y + height);
+}
+
+void VectorGraphics::drawRoundRectComplex(float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomLeftRadius, float bottomRightRadius) {
+	addShape(new VectorShape(ROUND_RECT_COMPLEX , x, y, width, height, topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius));
+	inflateBounds(x, y);
+	inflateBounds(x + width, y + height);
 }
 
 void VectorGraphics::drawArc(float x, float y, float radius, float angleFrom, float angleTo, int direction) {
@@ -316,7 +321,8 @@ void VectorShape::render(VectorGraphics* g) {
 		case CIRCLE:     VectorRenderer::circle(x, y, a); break;
 		case ELLIPSE:    VectorRenderer::ellipse(x, y, a, b); break;
 		case RECT:       VectorRenderer::rect(x, y, a, b); break;
-		case ROUND_RECT: VectorRenderer::roundRect(x, y, a, b, c); break;
+		case ROUND_RECT: VectorRenderer::roundRect(x, y, a, b, c, d); break;
+		case ROUND_RECT_COMPLEX: VectorRenderer::roundRectComplex(x, y, a, b, c, d, e, f); break;
 		case ARC_CW:     VectorRenderer::arc(x, y, a, b, c, VectorWinding::CW); break;
 		case ARC_CCW:    VectorRenderer::arc(x, y, a, b, c, VectorWinding::CCW); break;
 	}

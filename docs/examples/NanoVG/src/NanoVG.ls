@@ -118,9 +118,13 @@ package
             
             // Shape rendering
             g.drawCircle(50, 50, 50);
-            g.drawEllipse(50, 50, 20, 50);
+            g.drawEllipse(50, 50, 50, 20);
             g.drawRect(25, 25, 50, 50);
-            g.drawRoundRect(35, 35, 30, 30, 10, 10);
+            g.drawRoundRect(35, 35, 30, 30, 10, 15);
+            g.drawRoundRectComplex(50-2.5-5, 50-2.5-3.5, 5, 5, 4, 0, 0, 0);
+            g.drawRoundRectComplex(50-2.5-5, 50-2.5+3.5, 5, 5, 0, 0, 4, 0);
+            g.drawRoundRectComplex(50-2.5+5, 50-2.5-3.5, 5, 5, 0, 4, 0, 0);
+            g.drawRoundRectComplex(50-2.5+5, 50-2.5+3.5, 5, 5, 0, 0, 0, 4);
             g.drawArc(25, 25, 23,  1.5*Math.PI, 1.0*Math.PI, 1);
             g.drawArc(75, 25, 23, -0.5*Math.PI, 0.0*Math.PI, 2);
             g.drawArc(25, 75, 23,  0.5*Math.PI, 1.0*Math.PI, 2);
@@ -173,12 +177,12 @@ package
             g.lineTo(0, 100);
             
             // Curve rendering
-            g.moveTo(50, 0);
-            g.curveTo(50-30, 50, 50, 100);
-            g.curveTo(50+30, 50, 50, 0);
             g.moveTo(0, 50);
-            g.cubicCurveTo(1/3*100, 50-50, 2/3*100, 50+50, 100, 50);
-            g.cubicCurveTo(2/3*100, 50-50, 1/3*100, 50+50, 0, 50);
+            g.curveTo(50, 50-30, 100, 50);
+            g.curveTo(50, 50+30, 0, 50);
+            g.moveTo(50, 50-5);
+            g.cubicCurveTo(50-5, 50-5+1/3*10, 50+5, 50-5+2/3*10, 50, 50+5);
+            g.cubicCurveTo(50-5, 50-5+2/3*10, 50+5, 50-5+1/3*10, 50, 50-5);
             
             // Cap styles
             g.lineStyle(10, 0x000000, 1, false, "", "round", "round", 0);  g.moveTo(05, 110); g.lineTo(25, 110);
