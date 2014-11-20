@@ -1795,6 +1795,11 @@ void nvgRoundedRect(struct NVGcontext* ctx, float x, float y, float w, float h, 
 			NVG_BEZIERTO, x+r*(1-NVG_KAPPA90), y+h, x, y+h-r*(1-NVG_KAPPA90), x, y+h-r,
 			NVG_LINETO, x, y+r,
 			NVG_BEZIERTO, x, y+r*(1-NVG_KAPPA90), x+r*(1-NVG_KAPPA90), y, x+r, y,
+			NVG_CLOSE
+		};
+		nvg__appendCommands(ctx, vals, NVG_COUNTOF(vals));
+	}
+}
 
 void nvgRoundedRectEllipse(struct NVGcontext* ctx, float x, float y, float w, float h, float rw, float rh)
 {
