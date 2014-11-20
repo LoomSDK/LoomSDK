@@ -34,10 +34,10 @@ package loom2d.display
           * the background color, resulting in a bleaching effect. */
         SCREEN      = 5,
         
-        /** Erases the background when drawn on a RenderTexture. */
+        /** Clears the area underneath the object to black. */
         ERASE       = 6,
 
-        /** Draws under/below existing objects; useful especially on RenderTextures. */
+        /** Draws under/below existing objects, based on the alpha of those objects */
         BELOW       = 7
     };
 }
