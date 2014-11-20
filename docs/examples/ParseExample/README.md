@@ -10,6 +10,7 @@ Please be aware that Loom currently only supports push note functions on Android
 
 ## Try It
 @cli_usage
+
 You will then need to set up a basic Parse application before running this example.
 Instructions for application setup can be found when signing up at http://www.parse.com.
 
@@ -24,7 +25,7 @@ Once your Parse app is set up, you will then need to do the following:
 You can now run the example! Log in to a user account and try sending yourself a push notification. Better still, try logging in to separate accounts from two devices, and send notes to each other!
 
 ## Screenshot
-![Screenshot](images/screenshot.png)
+![Screenshot](images/Screenshot.png)
 
 ## Code
 @insert_source
