@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <stdint.h> // uint32_t
+#include <stdint.h>
 #include "loom/graphics/gfxTexture.h"
 
 namespace GFX
