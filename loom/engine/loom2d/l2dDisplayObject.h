@@ -81,7 +81,7 @@ public:
     /** The opacity of the object. 0 = transparent, 1 = opaque. */
     float alpha;
 
-    /** The source blend constant for the object. Default is BlendMode.AUTO */
+    /** The blend mode for the object. Default is BlendMode.AUTO (will inherit parent's blendMode) */
     int blendMode;
 
     /** If depth sorting is enabled on parent this will be used to establish draw order. */
