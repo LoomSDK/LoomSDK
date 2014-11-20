@@ -6,7 +6,7 @@ thumbnail: images/screenshot.png
 
 ## Overview
 
-This is a loom minimal application template. 
+This is a minimal application template for Loom. 
 
 Using the Loom Minimal Application Template is simple. Use it for the base of any new project to quickly and easily get started live editing your game.
 
