@@ -30,7 +30,7 @@
 
 #include <bgfx.h>
 
-#include <bx\bx.h>
+#include <bx/bx.h>
 
 namespace
 {
