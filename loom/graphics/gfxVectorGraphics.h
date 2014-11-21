@@ -183,6 +183,7 @@ public:
 	float boundT;
 	float boundR;
 	float boundB;
+	float scale;
 
 	VectorGraphics() {
 		queue = new utArray<VectorData*>();

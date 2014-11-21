@@ -372,6 +372,8 @@ void VectorGraphics::render(Loom2D::Matrix* transform) {
 
 	VectorRenderer::beginFrame();
 	VectorRenderer::preDraw(transform->a, transform->b, transform->c, transform->d, transform->tx, transform->ty);
+	
+	scale = sqrt(transform->a*transform->a + transform->b*transform->b + transform->c*transform->c + transform->d*transform->d);
 
 	resetStyle();
 
@@ -439,14 +441,11 @@ bool VectorGraphics::isStyleVisible() {
 void VectorGraphics::flushPath() {
 	bool stroke = !isnan(currentLineStyle.thickness);
 	if (stroke && pathDirty) {
-		float scale = 1.0f;
-		/*
-		// TODO: reimplement
+		float thicknessScale = 1.0f;
 		switch (currentLineStyle.scaleMode) {
-			case VectorLineScaleMode::NONE: scale = 1/sqrt(scaleX*scaleX+scaleY*scaleY); break;
+			case VectorLineScaleMode::NONE: thicknessScale = 1/scale; break;
 		}
-		*/
-		VectorRenderer::strokeWidth(currentLineStyle.thickness*scale);
+		VectorRenderer::strokeWidth(currentLineStyle.thickness*thicknessScale);
 		VectorRenderer::strokeColor(currentLineStyle.color, currentLineStyle.alpha);
 		VectorRenderer::lineCaps(currentLineStyle.caps);
 		VectorRenderer::lineJoints(currentLineStyle.joints);
