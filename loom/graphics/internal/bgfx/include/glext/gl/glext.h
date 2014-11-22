@@ -5489,7 +5489,7 @@ typedef char GLchar;
 
 #ifndef GL_VERSION_1_5
 /* GL types for handling large vertex buffer objects */
-#if defined(__APPLE__)
+#if defined(__APPLE__) && __MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 typedef long GLintptr;
 typedef long GLsizeiptr;
 #else
@@ -5500,7 +5500,7 @@ typedef ptrdiff_t GLsizeiptr;
 
 #ifndef GL_ARB_vertex_buffer_object
 /* GL types for handling large vertex buffer objects */
-#if defined(__APPLE__)
+#if defined(__APPLE__) && __MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 typedef long GLintptrARB;
 typedef long GLsizeiptrARB;
 #else
