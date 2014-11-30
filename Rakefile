@@ -461,6 +461,28 @@ namespace :utility do
     end
   end
 
+  desc "Prepare 3rd party library for development"
+  task :prepare, [:name] do |t, args|
+    name = args[:name]
+    if name.nil? || name.empty?
+      puts "Missing library name in utility:prepare[name]"
+      error 1
+    end
+    preplib = "./tools/subrepo/prepare.rb"
+    require preplib
+    libs = {
+      "bx" => { :url => "https://github.com/bkaradzic/bx.git" },
+      "bgfx" => { :url => "https://github.com/bkaradzic/bgfx.git" },
+    }
+    if libs.has_key?(name)
+      data = libs[name]
+      prepare("loom", "tools/subrepo/", name, data[:url], data[:branch], data[:dir], data[:template])
+    else
+      puts "Unknown library '#{name}', try running #{preplib} directly"
+      exit 1
+    end
+  end
+
 end
 
 namespace :build do

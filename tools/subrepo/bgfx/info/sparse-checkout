@@ -1,0 +1,8 @@
+include/
+src/
+3rdparty/
+tools/shaderc/
+.gitignore
+.gitattributes
+.editorconfig
+LICENSE
