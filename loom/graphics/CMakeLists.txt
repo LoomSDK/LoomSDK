@@ -8,13 +8,14 @@ set (LOOM_VENDOR ${CMAKE_CURRENT_SOURCE_DIR}/../vendor)
 
 set (LOOMBGFX_SOURCE_DIR ${LOOM_VENDOR}/bgfx/src)
 set (LOOMBGFX_INCLUDE_DIR ${LOOM_VENDOR}/bgfx/include)
+set (LOOMBGFX_THIRDPARTY ${LOOM_VENDOR}/bgfx/3rdparty)
 
 set (LOOMBX_INCLUDE_DIR ${LOOM_VENDOR}/bx/include)
 
 include_directories( ${LOOM_INCLUDE_FOLDERS} ${LOOMBX_INCLUDE_DIR} ${LOOMBGFX_INCLUDE_DIR}  ${LOOM_VENDOR}/bgfx/3rdparty )
 
 if (NOT ANDROID)
-    include_directories( ${LOOMBGFX_INCLUDE_DIR}/glext )
+    include_directories( ${LOOMBGFX_THIRDPARTY}/khronos )
     endif()
 
 set ( BGFX_SRC ${LOOMBGFX_SOURCE_DIR}/bgfx.cpp ${LOOMBGFX_SOURCE_DIR}/vertexdecl.cpp ${LOOMBGFX_SOURCE_DIR}/image.cpp )
@@ -75,7 +76,7 @@ endif()
 if (FLASH)
     
     add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
-    include_directories( ${LOOMBGFX_INCLUDE_DIR}/compat/osx )
+    include_directories( ${LOOMBX_INCLUDE_DIR}/compat/osx )
 
 endif()
 

@@ -11,9 +11,12 @@
 #include <memory.h>
 #include <new>
 
+// malloc.h is missing on OSX and should be included with stdlib from bx.h anyway
+/*
 #if BX_CONFIG_ALLOCATOR_CRT
 #	include <malloc.h>
 #endif // BX_CONFIG_ALLOCATOR_CRT
+*/
 
 #if BX_CONFIG_ALLOCATOR_DEBUG
 #	define BX_ALLOC(_allocator, _size)                         bx::alloc(_allocator, _size, 0, __FILE__, __LINE__)

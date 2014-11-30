@@ -34,7 +34,7 @@
 #import "OpenGL_Internal.h"
 
 #define BX_PLATFORM_IOS 1
-#include "loom/graphics/internal/bgfx/src/glcontext_external.h"
+#include "loom/vendor/bgfx/src/glcontext_external.h"
 
 
 @implementation CCES2Renderer

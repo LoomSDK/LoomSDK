@@ -1871,12 +1871,12 @@ namespace bgfx
 
 #if BX_PLATFORM_IOS
 					// iOS: need to figure out how to deal with FBO created by context.
-					m_backBufferFbo = m_msaaBackBufferFbo = m_glctx.getFbo();
+					//m_backBufferFbo = m_msaaBackBufferFbo = m_glctx.getFbo();
                     // TODO Loom set the FBOs based on values passed from CCES2Renderer.mm?
-                    /*
+                    //*
                     m_backBufferFbo = m_glctx.fbo;
                     m_msaaBackBufferFbo = m_glctx.msaaFbo;
-                    */
+                    //*/
 #endif // BX_PLATFORM_IOS
 				}
 				else
