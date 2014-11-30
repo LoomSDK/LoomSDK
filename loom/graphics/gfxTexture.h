@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "loom/graphics/internal/bgfx/include/bgfx.h"
+#include "loom/vendor/bgfx/include/bgfx.h"
 #include "loom/common/utils/utString.h"
 #include "loom/script/native/lsNativeDelegate.h"
 

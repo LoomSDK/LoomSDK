@@ -321,26 +321,26 @@ void QuadRenderer::initializeGraphicsResources()
     const uint8_t *pshader;
 
     // Load vertex shader.
-    bgfx::VertexShaderHandle vsh_pct;
+    bgfx::ShaderHandle vsh_pct;
     pshader = GetVertexShaderPosColorTex(sz);
     mem     = bgfx::makeRef(pshader, sz);
-    vsh_pct = bgfx::createVertexShader(mem);
+    vsh_pct = bgfx::createShader(mem);
 
-    bgfx::VertexShaderHandle vsh_pt;
+    bgfx::ShaderHandle vsh_pt;
     pshader = GetVertexShaderPosTex(sz);
     mem     = bgfx::makeRef(pshader, sz);
-    vsh_pt  = bgfx::createVertexShader(mem);
+    vsh_pt  = bgfx::createShader(mem);
 
     // Load fragment shaders.
-    bgfx::FragmentShaderHandle fsh_pct;
+    bgfx::ShaderHandle fsh_pct;
     pshader = GetFragmentShaderPosColorTex(sz);
     mem     = bgfx::makeRef(pshader, sz);
-    fsh_pct = bgfx::createFragmentShader(mem);
+    fsh_pct = bgfx::createShader(mem);
 
-    bgfx::FragmentShaderHandle fsh_pt;
+    bgfx::ShaderHandle fsh_pt;
     pshader = GetFragmentShaderPosTex(sz);
     mem     = bgfx::makeRef(pshader, sz);
-    fsh_pt  = bgfx::createFragmentShader(mem);
+    fsh_pt  = bgfx::createShader(mem);
 
     // Create program from shaders.
     sProgramPosColorTex = bgfx::createProgram(vsh_pct, fsh_pct);
@@ -350,10 +350,10 @@ void QuadRenderer::initializeGraphicsResources()
     // their reference is kept inside bgfx after calling createProgram.
     // Vertex and fragment shader will be destroyed once program is
     // destroyed.
-    bgfx::destroyVertexShader(vsh_pct);
-    bgfx::destroyVertexShader(vsh_pt);
-    bgfx::destroyFragmentShader(fsh_pct);
-    bgfx::destroyFragmentShader(fsh_pt);
+    bgfx::destroyShader(vsh_pct);
+    bgfx::destroyShader(vsh_pt);
+    bgfx::destroyShader(fsh_pct);
+    bgfx::destroyShader(fsh_pt);
 
     // create the vertex stream
     sVertexPosColorTexDecl.begin();
