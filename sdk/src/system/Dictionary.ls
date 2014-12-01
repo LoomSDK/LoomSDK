@@ -93,6 +93,29 @@ final class Dictionary extends Object {
     public native function deleteKey(key:Object):void;
 
     /**
+     *  Returns the value for the given key if found in the dictionary, or else the default value.
+     *
+     *  @param key The key for the value to retrieve from the Dictionary.
+     *  @param defaultValue The value to return if the key is not found in the Dictionary. This may be a function that will accept the key and generate a value to return; its signature should be: function(key:Object):Object
+     *  @param thisObject Required if the defaultValue generator is an instance method and not a local or static function.
+     */
+    public function fetch(key:Object, defaultValue:Object, thisObject:Object = null):Object
+    {
+        var d:Dictionary.<Object, Object> = this;
+
+        if (!d[key])
+        {
+            if (defaultValue is Function)
+                return (defaultValue as Function).call(thisObject, key);
+
+            else
+                return defaultValue;
+        }
+
+        return d[key];
+    }
+
+    /**
      *  Assigns a Dictionary's values to the corresponding fields (if present) of a given Object.
      *
      *  @param dictionary A dictionary of String to Object pairs, to be applied to the given Object.
