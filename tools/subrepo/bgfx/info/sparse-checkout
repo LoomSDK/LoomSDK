@@ -1,0 +1,10 @@
+include/
+src/
+3rdparty/
+!3rdparty/glsl-optimizer/projects/
+!3rdparty/glsl-optimizer/tests/
+tools/shaderc/
+.gitignore
+.gitattributes
+.editorconfig
+LICENSE

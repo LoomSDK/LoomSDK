@@ -20,7 +20,7 @@
 
 
 #include "loom/graphics/gfxGraphics.h"
-#include "loom/graphics/internal/bgfx/include/bgfx.h"
+#include "loom/vendor/bgfx/include/bgfx.h"
 #include "loom/engine/loom2d/l2dStage.h"
 
 namespace Loom2D

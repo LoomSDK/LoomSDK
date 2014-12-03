@@ -95,7 +95,7 @@ set (LOOM_INCLUDE_FOLDERS
     add_definitions(-DLOOM_DISABLE_JEMALLOC -D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
     
     # MSVC compatibility stuffs
-    include_directories( ${CMAKE_SOURCE_DIR}/loom/graphics/internal/bx/include/compat/msvc )
+    include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/bx/include/compat/msvc )
     include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-3.4.0/include/msvc_compat )
 
 
