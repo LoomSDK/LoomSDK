@@ -38,7 +38,7 @@ package loom2d.display
             Debug.assert(parentAlpha == 1.0, "QuadBatch 'addQuad' doesn't support per-Quad alpha modifications at the moment. You must set the alpha on the Quad via 'setVertexAlpha()' prior to adding it to the batch.");
             Debug.assert(texture == null, "QuadBatch 'addQuad' doesn't support per-Quad texture modifications at the moment. You must derive your own Quad-based class, create an object of that type, and set its 'nativeTextureID prior to adding it to the batch.");
             Debug.assert(smoothing == false, "QuadBatch 'addQuad' doesn't support per-Quad texture smoothing at the moment. You must set the 'smoothing' value on the Texture assigned to the Quad prior to adding it to the batch.");
-            Debug.assert(blendMode == null, "QuadBatch 'addQuad' doesn't support per-Quad blend mode values at the moment.  Currently, Loom Quads always force blending to be SrcAlpha / OneMinusSrcAlpha.");
+            Debug.assert(blendMode == null, "QuadBatch 'addQuad' doesn't support per-Quad blend mode values at the moment.  You must set the 'blendMode' value on the DisplayObject that Quad inherits to be a valid BlendMode type.");
         }   
 
         /** Updates the 'index'th Quad in the QuadBatch to take use whatever new vertex & texture data the Quad has been set with.  

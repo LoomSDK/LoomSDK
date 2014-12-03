@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <stdint.h>
 #include "loom/graphics/gfxTexture.h"
 
 namespace GFX
@@ -84,8 +85,8 @@ public:
 
     static void endFrame();
 
-    static VertexPosColorTex *getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted);
+    static VertexPosColorTex *getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted, uint64_t blendFunc);
 
-    static void batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices);
+    static void batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices, uint64_t blendFunc);
 };
 }

@@ -20,6 +20,7 @@
 
 #include "loom/engine/loom2d/l2dQuad.h"
 #include "loom/engine/loom2d/l2dImage.h"
+#include "loom/engine/loom2d/l2dBlendMode.h"
 #include "loom/graphics/gfxGraphics.h"
 
 namespace Loom2D
@@ -115,10 +116,15 @@ void Quad::render(lua_State *L)
     renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
     renderState.clampAlpha();
     renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
+    renderState.blendMode = (blendMode == BlendMode::AUTO && parent) ? parent->renderState.blendMode : blendMode;
+    int64_t blendFunc = BlendMode::BlendFunction(renderState.blendMode);
 
     GFX::Graphics::setClipRect(renderState.cachedClipRect);
 
-    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 4, tinted || renderState.alpha != 1.f);
+    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 
+                                                                        4, 
+                                                                        tinted || renderState.alpha != 1.f,
+                                                                        blendFunc);
     GFX::VertexPosColorTex *src = quadVertices;
 
     if (!v)

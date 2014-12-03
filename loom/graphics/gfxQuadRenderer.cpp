@@ -19,6 +19,7 @@
  */
 
 #include <string.h>
+#include <stdint.h>
 #include "bgfx.h"
 
 #include "loom/common/core/log.h"
@@ -47,6 +48,7 @@ static bgfx::ProgramHandle sProgramPosTex;
 static bgfx::IndexBufferHandle sIndexBufferHandle;
 
 static bool sTinted = true;
+static uint64_t sBlendFunc = BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
 
 bgfx::DynamicVertexBufferHandle QuadRenderer::vertexBuffers[MAXVERTEXBUFFERS];
 
@@ -142,7 +144,7 @@ void QuadRenderer::submit()
                        | BGFX_STATE_ALPHA_WRITE
                        //|BGFX_STATE_DEPTH_WRITE
                        //|BGFX_STATE_DEPTH_TEST_LESS
-                       | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
+                       | sBlendFunc
                        );
 
         bgfx::submit(Graphics::getView());
@@ -155,7 +157,7 @@ void QuadRenderer::submit()
 }
 
 
-VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted)
+VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted, uint64_t blendFunc)
 {
     if (!numVertices || (texture < 0) || (numVertices > MAXBATCHQUADS * 4))
     {
@@ -165,7 +167,7 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
     lmAssert(!(numVertices % 4), "numVertices % 4 != 0");
 
     if (((currentTexture != TEXTUREINVALID) && (currentTexture != texture))
-        || (sTinted != tinted))
+        || (sTinted != tinted) || (sBlendFunc != blendFunc))
     {
         submit();
     }
@@ -199,6 +201,7 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
     VertexPosColorTex *returnPtr = currentVertexPtr;
 
     sTinted = tinted;
+    sBlendFunc = blendFunc;
 
     currentVertexPtr += numVertices;
     vertexCount      += numVertices;
@@ -213,9 +216,9 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
 }
 
 
-void QuadRenderer::batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices)
+void QuadRenderer::batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices, uint64_t blendFunc)
 {
-    VertexPosColorTex *verticePtr = getQuadVertices(texture, numVertices, true);
+    VertexPosColorTex *verticePtr = getQuadVertices(texture, numVertices, true, blendFunc);
 
     if (!verticePtr)
     {
