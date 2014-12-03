@@ -21,7 +21,7 @@
 #pragma once
 
 #include "loom/common/core/assert.h"
-#include "loom/graphics/internal/bgfx/include/bgfx.h"
+#include "loom/vendor/bgfx/include/bgfx.h"
 
 
 namespace Loom2D
