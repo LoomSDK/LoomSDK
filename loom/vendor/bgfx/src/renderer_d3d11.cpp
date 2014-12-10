@@ -2539,7 +2539,6 @@ RENDERDOC_IMPORT
 		{
 			m_hash = bx::hashMurmur2A(code, shaderSize);
 			m_code = copy(code, shaderSize);
-            BX_TRACE("Hello %d", shaderSize);
             DX_CHECK(s_renderD3D11->m_device->CreateVertexShader(code, shaderSize, NULL, &m_vertexShader));
 			BGFX_FATAL(NULL != m_ptr, bgfx::Fatal::InvalidShader, "Failed to create vertex shader.");
 		}

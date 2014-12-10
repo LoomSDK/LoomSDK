@@ -1,4 +1,4 @@
-/*
+﻿/*
  * ===========================================================================
  * Loom SDK
  * Copyright 2011, 2012, 2013
@@ -19,11 +19,13 @@
  */
 
 #include "bgfx.h"
+
 #include "loom/common/platform/platform.h"
 #include "loom/common/core/log.h"
 
 #include "loom/graphics/gfxTexture.h"
 #include "loom/graphics/gfxQuadRenderer.h"
+#include "loom/graphics/gfxVectorRenderer.h"
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxMath.h"
 
@@ -48,6 +50,7 @@ uint32_t Graphics::sCurrentFrame = 0;
 
 char Graphics::pendingScreenshot[1024] = { 0, };
 
+
 void Graphics::initialize()
 {
     // when using internal bgfx context management
@@ -61,6 +64,8 @@ void Graphics::initialize()
     // initialize the static QuadRenderer initialize
     QuadRenderer::initialize();
 
+	VectorRenderer::initialize();
+
     sInitialized = true;
 
     ///   BGFX_DEBUG_STATS - Display internal statistics.
@@ -71,7 +76,7 @@ void Graphics::initialize()
     ///     primitives will be rendered as lines.
     ///
 
-    // bgfx::setDebug(BGFX_DEBUG_STATS | BGFX_DEBUG_TEXT);
+    //bgfx::setDebug(BGFX_DEBUG_STATS | BGFX_DEBUG_TEXT);
 }
 
 
@@ -92,6 +97,7 @@ void Graphics::reset(int width, int height, uint32_t flags)
     {   
         bgfx::reset(width, height, flags);     
         QuadRenderer::reset();
+		VectorRenderer::reset();
         Texture::reset();        
     }
     else
@@ -135,7 +141,9 @@ void Graphics::beginFrame()
 
     bgfx::setViewSeq(sView, true);
 
-    QuadRenderer::beginFrame();
+	QuadRenderer::beginFrame();
+	VectorRenderer::setSize(sWidth, sHeight);
+	//VectorRenderer::beginFrame();
 
     // This dummy draw call is here to make sure that view 0 is cleared
     // if no other draw calls are submitted to view 0.
@@ -146,6 +154,9 @@ void Graphics::beginFrame()
 void Graphics::endFrame()
 {
     QuadRenderer::endFrame();
+	//VectorRenderer::endFrame();
+
+
     bgfx::frame();
 
     if(pendingScreenshot[0] != 0)
@@ -167,6 +178,7 @@ void Graphics::handleContextLoss()
 
     // make sure the QuadRenderer resources are freed before we shutdown bgfx
     QuadRenderer::destroyGraphicsResources();
+	VectorRenderer::destroyGraphicsResources();
     bgfx::shutdown();
     
     lmLog(gGFXLogGroup, "Handle context loss: Init");

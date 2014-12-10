@@ -2,9 +2,11 @@
 # Debugging support
 # add_definitions(-DBGFX_CONFIG_DEBUG=1)
 
-set ( GRAPHICS_SRC gfxGraphics.cpp gfxQuadRenderer.cpp gfxShaders.cpp gfxTexture.cpp gfxScript.cpp)
+set ( GRAPHICS_SRC gfxGraphics.cpp gfxQuadRenderer.cpp gfxVectorRenderer.cpp gfxVectorGraphics.cpp gfxShaders.cpp gfxTexture.cpp gfxScript.cpp)
 
 set (LOOM_VENDOR ${CMAKE_CURRENT_SOURCE_DIR}/../vendor)
+set (NANOVG ${LOOM_VENDOR}/bgfx/examples/common/nanovg)
+set (NANOSVG ${LOOM_VENDOR}/nanosvg/src)
 
 set (LOOMBGFX_SOURCE_DIR ${LOOM_VENDOR}/bgfx/src)
 set (LOOMBGFX_INCLUDE_DIR ${LOOM_VENDOR}/bgfx/include)
@@ -12,7 +14,7 @@ set (LOOMBGFX_THIRDPARTY ${LOOM_VENDOR}/bgfx/3rdparty)
 
 set (LOOMBX_INCLUDE_DIR ${LOOM_VENDOR}/bx/include)
 
-include_directories( ${LOOM_INCLUDE_FOLDERS} ${LOOMBX_INCLUDE_DIR} ${LOOMBGFX_INCLUDE_DIR}  ${LOOM_VENDOR}/bgfx/3rdparty )
+include_directories( ${LOOM_INCLUDE_FOLDERS} ${LOOMBX_INCLUDE_DIR} ${LOOMBGFX_INCLUDE_DIR}  ${LOOM_VENDOR}/bgfx/3rdparty ${NANOVG} ${NANOSVG} )
 
 if (NOT ANDROID)
     include_directories( ${LOOMBGFX_THIRDPARTY}/khronos )
@@ -20,6 +22,7 @@ if (NOT ANDROID)
 
 set ( BGFX_SRC ${LOOMBGFX_SOURCE_DIR}/bgfx.cpp ${LOOMBGFX_SOURCE_DIR}/vertexdecl.cpp ${LOOMBGFX_SOURCE_DIR}/image.cpp )
 
+set ( NANOVG_SRC ${NANOVG}/nanovg.cpp ${NANOVG}/nanovg_bgfx.cpp )
 set ( BGFX_SRC ${BGFX_SRC}
   ${LOOMBGFX_SOURCE_DIR}/renderer_null.cpp
   ${LOOMBGFX_SOURCE_DIR}/renderer_gl.cpp
@@ -80,7 +83,7 @@ if (FLASH)
 
 endif()
 
-add_library( LoomGraphics ${BGFX_SRC} ${GRAPHICS_SRC} )
+add_library( LoomGraphics ${BGFX_SRC} ${NANOVG_SRC} ${GRAPHICS_SRC} )
 target_link_libraries(LoomGraphics LoomVendor )
 
 

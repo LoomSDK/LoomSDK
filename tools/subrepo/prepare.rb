@@ -9,7 +9,7 @@ def prepare(srcdir, templatedir, name, url, branch, dir, template, dry = false)
   branch = "master" if branch.nil? || branch.empty?
   dir = "vendor" if dir.nil? || dir.empty?
   template = name if template.nil? || template.empty?
-  template = File.join templatedir, template
+  template = template if templatedir.empty? else File.join templatedir, template
   
   def git(dry, cmd)
     c = "git "+cmd

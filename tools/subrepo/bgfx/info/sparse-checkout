@@ -1,6 +1,7 @@
 include/
 src/
 3rdparty/
+examples/common/nanovg/
 !3rdparty/glsl-optimizer/projects/
 !3rdparty/glsl-optimizer/tests/
 tools/shaderc/

@@ -453,7 +453,7 @@ endif()
 set (STB_HDR
     stb/stb_gl.h
     stb/stb_image.h
-    stb/stb_truetype.h
+    bgfx/3rdparty/stb/stb_truetype.h
 )
 
 set (STB_SRC
