@@ -547,7 +547,6 @@ static void processFileEntryDeltas(utArray<FileEntryDelta> *deltas)
 
         if (canonicalFile[0] == 0)
         {
-            lmLog(gAssetAgentLogGroup, "   o Skipping due to not being in the asset folder!");
             lmLog(gAssetAgentLogGroup, "   o Ignoring file missing from the asset folder!");
 
             // Remove from the pending list.
