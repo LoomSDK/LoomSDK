@@ -152,8 +152,20 @@ public:
 
             if(sound)
             {
-                alBufferData(note->buffer, sound->channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, 
-                    sound->buffer, sound->bufferSize, sound->sampleRate);
+                ALenum sampleFormat;
+                if (sound->channels == 1)
+                {
+                    sampleFormat = sound->bytesPerSample == 1 ? AL_FORMAT_MONO8 : AL_FORMAT_MONO16;
+                }
+                else
+                {
+                    sampleFormat = sound->bytesPerSample == 1 ? AL_FORMAT_STEREO8 : AL_FORMAT_STEREO16;
+                }
+                alBufferData(note->buffer,
+                             sampleFormat,
+                             sound->buffer,
+                             sound->bufferSize,
+                             sound->sampleRate);
                 CHECK_OPENAL_ERROR();
             }
             else

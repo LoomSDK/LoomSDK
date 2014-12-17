@@ -185,6 +185,12 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         
         sound->channels = wav.numChannels;
         sound->bytesPerSample = wav.sampleSize / 8; // wav sample size is in bits
+        if (sound->bytesPerSample != 1 && sound->bytesPerSample != 2)
+        {
+            lmLogError(gSoundAssetGroup, "Unsupported sample format. Currently only 8-bit or 16-bit PCM are supported");
+            loom_asset_soundDtor(&sound);
+            return 0;
+        }
         sound->bufferSize = wav.sampleDataSize;
         sound->sampleCount = sound->bufferSize / sound->bytesPerSample;
         sound->sampleRate = wav.samplesPerSecond;

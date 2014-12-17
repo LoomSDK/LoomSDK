@@ -34,7 +34,7 @@ bool load_wav(const uint8_t* inData,
 {
     if (inData == NULL)
     {
-        lmLogDebug(gLoomSoundLogGroup, "No input data passed to wav loader");
+        lmLogError(gLoomSoundLogGroup, "No input data passed to wav loader");
         return false;
     }
     
@@ -46,7 +46,7 @@ bool load_wav(const uint8_t* inData,
         riff->header.chunkId[2] != 'F' ||
         riff->header.chunkId[3] != 'F')
     {
-        lmLogDebug(gLoomSoundLogGroup, "Bad wav file format");
+        lmLogError(gLoomSoundLogGroup, "Bad wav file format");
         return false;
     }
     
@@ -55,7 +55,7 @@ bool load_wav(const uint8_t* inData,
         riff->riffType[2] != 'V' ||
         riff->riffType[3] != 'E')
     {
-        lmLogDebug(gLoomSoundLogGroup, "Bad wav file format");
+        lmLogError(gLoomSoundLogGroup, "Bad wav file format");
         return false;
     }
     
@@ -63,7 +63,8 @@ bool load_wav(const uint8_t* inData,
     
     if (inDataLen < sizeof(chunk_header) + riff->header.chunkDataSize)
     {
-        lmLogDebug(gLoomSoundLogGroup, "Not enough data in wav buffer");
+        lmLogError(gLoomSoundLogGroup, "Not enough data in wav buffer");
+        return false;
     }
     
     cursor += sizeof(riff_header);
@@ -79,10 +80,12 @@ bool load_wav(const uint8_t* inData,
             curChunkHeader->chunkId[3] == ' ')
         {
             fmt_chunk* fmt = (fmt_chunk*)(cursor + sizeof(chunk_header));
-            if (convertLEndianToHost(fmt->compressionType) != 0x01)
+            fmt->compressionType = convertLEndianToHost(fmt->compressionType);
+            if (fmt->compressionType != 0x01)
             {
-                // This loader only supports PCM (which should be the most common case)
-                lmLogDebug(gLoomSoundLogGroup, "Unsupported wav compression type");
+                // This loader only supports simple PCM (8-bit or 16-bit, which should be the most common)
+                lmLogError(gLoomSoundLogGroup, "Unsupported wav format: 0x%2x. Recommend 8 or 16-bit PCM",
+                           fmt->compressionType);
                 return false;
             }
             
