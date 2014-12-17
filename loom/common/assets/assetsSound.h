@@ -30,8 +30,11 @@ extern "C" {
 
 typedef struct loom_asset_sound
 {
-	int channels, bytesPerSample;
-	int sampleCount, bufferSize;
+    int channels;
+    int bytesPerSample;
+    int sampleCount;
+    int bufferSize;
+    int sampleRate;
     void *buffer;
 } loom_asset_sound_t;
 

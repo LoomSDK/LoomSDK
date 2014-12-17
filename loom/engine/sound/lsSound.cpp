@@ -153,7 +153,7 @@ public:
             if(sound)
             {
                 alBufferData(note->buffer, sound->channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, 
-                    sound->buffer, sound->bufferSize, 44100);            
+                    sound->buffer, sound->bufferSize, sound->sampleRate);
                 CHECK_OPENAL_ERROR();
             }
             else
@@ -553,7 +553,7 @@ void OALBufferManager::soundUpdater(void *payload, const char *name)
 
     // Update the buffer.
     alBufferData(note->buffer, sound->channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, 
-        sound->buffer, sound->bufferSize, 44100);            
+        sound->buffer, sound->bufferSize, sound->sampleRate);
     CHECK_OPENAL_ERROR();
 
     // Now restart all the sources after assigning the new buffer.

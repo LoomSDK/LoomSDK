@@ -42,6 +42,7 @@ set (ENGINE_SRC
     
     sound/lsSound.cpp
     sound/lsSoundPackage.cpp
+    sound/wavloader.cpp
 )
 
 if (APPLE)
@@ -90,9 +91,8 @@ endif(LINUX)
 
 
 set (ENGINE_HDR
-            
     bindings/loom/lmApplication.h
-    
+    sound/wavloader.h
 )
 
 if(MSVC)
