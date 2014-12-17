@@ -116,6 +116,11 @@ public:
         buffer = 0;
         refCounter = 1;
     }
+    
+    ~OALBufferNote()
+    {
+        delete [] asset;
+    }
 };
 
 class OALBufferManager
@@ -193,6 +198,7 @@ public:
             ///delete and remove the buffer if it has no more references
             alDeleteBuffers((ALuint)1, (const ALuint*)(&note->buffer));
             buffers.remove(assetPath);
+            lmDelete(NULL, note);
         }
     }
 
