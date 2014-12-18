@@ -82,6 +82,14 @@ void loom_log_removeListener(loom_logListener_t listener, void *payload);
 
 void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format, ...);
 
+/**
+    Get the arguments of a log function as a char*,
+    make sure you free the char string when you are done with it!
+    format is a pointer to the format argument pointer (required for varargs functionality),
+    so you should use &format when calling this function
+*/
+char* loom_log_getArgs(const char **format);
+
 // TODO: Make sure this inlines.
 int loom_log_willGroupLog(loom_logGroup_t *group);
 void loom_log_addRule(const char *prefix, int enabled, int filterLevel);

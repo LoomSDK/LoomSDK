@@ -65,7 +65,7 @@ void accelerometerUpdate()
 }
 
 
-int platform_debugOut(const char *out, ...)
+int platform_debugOut(const char *format, ...)
 {
     int  len;
 
@@ -78,12 +78,7 @@ int platform_debugOut(const char *out, ...)
     va_end(args);
     */
 
-    va_list args;
-    va_start(args, out);
-    int count = _vscprintf(out, args);
-    char* buff = (char*)malloc(count + 2);
-    vsprintf_s(buff, count + 1, out, args);
-    va_end(args);
+    char* buff = loom_log_getArgs(&format);
 
     // Put a new line in so windows displays this junk right.
     len           = (int)strlen(buff);
@@ -105,9 +100,9 @@ int platform_debugOut(const char *out, ...)
 int platform_error(const char *out, ...)
 {
     static int pesafety = 0;
-    va_list    args;
 
     /*
+    va_list    args;
     char       buff[2048];
     va_start(args, out);
     vsprintf_s(buff, 2046, out, args);

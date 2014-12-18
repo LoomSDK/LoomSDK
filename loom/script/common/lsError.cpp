@@ -30,6 +30,7 @@
 namespace LS {
 void LSError(const char *format, ...)
 {
+    /*
     char    buff[2048];
     va_list args;
 
@@ -40,8 +41,13 @@ void LSError(const char *format, ...)
     vsnprintf(buff, 2046, format, args);
 #endif
     va_end(args);
+    */
+
+    char* buff = loom_log_getArgs(&format);
 
     LSLog(LSLogError, "%s", buff);
+
+    free(buff);
 
     exit(EXIT_FAILURE);
 }
@@ -49,6 +55,7 @@ void LSError(const char *format, ...)
 
 void LSWarning(const char *format, ...)
 {
+    /*
     char    buff[2048];
     va_list args;
 
@@ -59,7 +66,12 @@ void LSWarning(const char *format, ...)
     vsnprintf(buff, 2046, format, args);
 #endif
     va_end(args);
+    */
+
+    char* buff = loom_log_getArgs(&format);
 
     LSLog(LSLogWarn, "%s", buff);
+
+    free(buff);
 }
 }

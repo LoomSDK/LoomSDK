@@ -680,6 +680,7 @@ void LSCompiler::setSDKBuild(const utString& lscPath)
 
 void LSCompiler::log(const char *format, ...)
 {
+    /*
     char    buff[2048];
     va_list args;
 
@@ -690,13 +691,19 @@ void LSCompiler::log(const char *format, ...)
     vsnprintf(buff, 2046, format, args);
 #endif
     va_end(args);
+    */
+
+    char* buff = loom_log_getArgs(&format);
 
     lmLog(compilerLogGroup, "%s", buff);
+
+    free(buff);
 }
 
 
 void LSCompiler::logVerbose(const char *format, ...)
 {
+    /*
     char    buff[2048];
     va_list args;
 
@@ -707,8 +714,13 @@ void LSCompiler::logVerbose(const char *format, ...)
     vsnprintf(buff, 2046, format, args);
 #endif
     va_end(args);
+    */
+
+    char* buff = loom_log_getArgs(&format);
 
     lmLog(compilerVerboseLogGroup, "%s", buff);
+
+    free(buff);
 }
 
 

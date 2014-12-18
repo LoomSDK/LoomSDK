@@ -21,6 +21,8 @@
 #ifndef _lslog_h
 #define _lslog_h
 
+#include "loom/common/core/log.h"
+
 namespace LS {
 enum LSLogLevel
 {

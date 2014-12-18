@@ -136,6 +136,15 @@ void loom_log_removeListener(loom_logListener_t listener, void *payload)
     lmAssert(0, "Could not find listener to remove.");
 }
 
+char* loom_log_getArgs(const char **format) {
+    va_list args;
+    va_start(args, *format);
+    int count = _vscprintf(*format, args);
+    char* buff = (char*)malloc(count + 2);
+    vsprintf_s(buff, count + 1, *format, args);
+    va_end(args);
+    return buff;
+}
 
 void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format, ...)
 {
@@ -162,13 +171,8 @@ void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format,
 #endif
     va_end(args);
     */
-
-    va_list args;
-    va_start(args, format);
-    int count = _vscprintf(format, args);
-    char* buff = (char*)malloc(count + 2);
-    vsprintf_s(buff, count + 1, format, args);
-    va_end(args);
+    
+    char* buff = loom_log_getArgs(&format);
 
     // Walk the listeners and output.
     while (listener)

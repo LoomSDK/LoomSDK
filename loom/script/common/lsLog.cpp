@@ -73,12 +73,16 @@ void LSLog(LSLogLevel level, const char *format, ...)
         return;
     }
 
+    char* buff = loom_log_getArgs(&format);
+
+    /*
     va_list args;
     va_start(args, format);
     int count = _vscprintf(format, args);
     char* buff = (char*)malloc(count+2);
     vsprintf_s(buff, count+1, format, args);
     va_end(args);
+    */
 
     /*
     char    buff[2048];
