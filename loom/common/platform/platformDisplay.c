@@ -67,13 +67,22 @@ void accelerometerUpdate()
 
 int platform_debugOut(const char *out, ...)
 {
-    char buff[2048];
     int  len;
 
+    
+    /*
+    char buff[2048];
     va_list args;
-
     va_start(args, out);
     vsprintf_s(buff, 2046, out, args);
+    va_end(args);
+    */
+
+    va_list args;
+    va_start(args, out);
+    int count = _vscprintf(out, args);
+    char* buff = (char*)malloc(count + 2);
+    vsprintf_s(buff, count + 1, out, args);
     va_end(args);
 
     // Put a new line in so windows displays this junk right.
@@ -87,6 +96,8 @@ int platform_debugOut(const char *out, ...)
     // Make it show in console, too.
     fputs(buff, stdout);
 
+    free(buff);
+
     return 0;
 }
 
@@ -94,13 +105,22 @@ int platform_debugOut(const char *out, ...)
 int platform_error(const char *out, ...)
 {
     static int pesafety = 0;
-    char       buff[2048];
     va_list    args;
 
+    /*
+    char       buff[2048];
     va_start(args, out);
     vsprintf_s(buff, 2046, out, args);
     va_end(args);
+    */
 
+    va_list args;
+    va_start(args, out);
+    int count = _vscprintf(out, args);
+    char* buff = (char*)malloc(count + 2);
+    vsprintf_s(buff, count + 1, out, args);
+    va_end(args);
+    
     OutputDebugStringA(buff);
 
     // Try to output/log error. Add a guard to avid infinite logging.
@@ -110,6 +130,8 @@ int platform_error(const char *out, ...)
         lmLogError(gPlatformErrorLogGroup, "%s", buff);
         pesafety = 0;
     }
+
+    free(buff);
 
     return 0;
 }
@@ -129,14 +151,23 @@ int ios_debugOut(const char *__restrict format, ...);
 
 int platform_debugOut(const char *out, ...)
 {
-    char buff[2048];
     int  len;
 
+    /*
     va_list args;
-
+    char buff[2048];
     va_start(args, out);
     vsnprintf(buff, 2046, out, args);
     va_end(args);
+    */
+
+    va_list args;
+    va_start(args, out);
+    int count = _vscprintf(out, args);
+    char* buff = (char*)malloc(count + 2);
+    vsprintf_s(buff, count + 1, out, args);
+    va_end(args);
+
 
     // Put a new line in so windows displays this junk right.
     len           = strlen(buff);
@@ -148,6 +179,8 @@ int platform_debugOut(const char *out, ...)
 #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
     ios_debugOut("%s", buff);
 #endif
+
+    free(buff);
 
     return 0;
 }

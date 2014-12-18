@@ -139,8 +139,6 @@ void loom_log_removeListener(loom_logListener_t listener, void *payload)
 
 void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format, ...)
 {
-    char    buff[2048];
-    va_list args;
     loom_log_listenerEntry_t *listener = listenerHead;
 
     // sometimes we're not using the lmLog macros, so enforce good behavior.
@@ -154,12 +152,22 @@ void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format,
         return;
     }
 
+    /*
+    char    buff[2048];
     va_start(args, format);
 #if LOOM_COMPILER == LOOM_COMPILER_MSVC
     vsprintf_s(buff, 2046, format, args);
 #else
     vsnprintf(buff, 2046, format, args);
 #endif
+    va_end(args);
+    */
+
+    va_list args;
+    va_start(args, format);
+    int count = _vscprintf(format, args);
+    char* buff = (char*)malloc(count + 2);
+    vsprintf_s(buff, count + 1, format, args);
     va_end(args);
 
     // Walk the listeners and output.
@@ -168,6 +176,9 @@ void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format,
         listener->callback(listener->payload, group, level, buff);
         listener = listener->next;
     }
+
+    free(buff);
+
 }
 
 

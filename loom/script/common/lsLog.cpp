@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "loom/script/loomscript.h"
 
 namespace LS {
 static FunctionLog externLog = 0;
@@ -53,6 +54,17 @@ void LSLogSetLevel(LSLogLevel level)
     logLevel = level;
 }
 
+#ifndef _MSC_VER
+int _vscprintf(const char * format, va_list pargs)
+{
+    int retval;
+    va_list argcopy;
+    va_copy(argcopy, pargs);
+    retval = vsnprintf(NULL, 0, format, argcopy);
+    va_end(argcopy);
+    return retval;
+}
+#endif
 
 void LSLog(LSLogLevel level, const char *format, ...)
 {
@@ -61,15 +73,22 @@ void LSLog(LSLogLevel level, const char *format, ...)
         return;
     }
 
-    char    buff[2048];
     va_list args;
     va_start(args, format);
-#ifdef _MSC_VER
-    vsprintf_s(buff, 2046, format, args);
-#else
-    vsnprintf(buff, 2046, format, args);
-#endif
+    int count = _vscprintf(format, args);
+    char* buff = (char*)malloc(count+2);
+    vsprintf_s(buff, count+1, format, args);
     va_end(args);
+
+    /*
+    char    buff[2048];
+    #ifdef _MSC_VER
+    vsprintf_s(buff, 2046, format, args);
+    #else
+    vsnprintf(buff, 2046, format, args);
+    #endif
+    va_end(args); va_start(args, format);
+    //*/
 
     if (externLog)
     {
@@ -95,9 +114,11 @@ void LSLog(LSLogLevel level, const char *format, ...)
         }
 
         externLog(externExtra, elevel, "%s", buff);
-        return;
+    } else {
+        printf("%s\n", buff);
     }
 
-    printf("%s\n", buff);
+    free(buff);
+
 }
 }
