@@ -65,7 +65,7 @@ void accelerometerUpdate()
 }
 
 
-int platform_debugOut(const char *format, ...)
+int platform_debugOut(const char *out, ...)
 {
     int  len;
 
@@ -78,7 +78,7 @@ int platform_debugOut(const char *format, ...)
     */
 
     char* buff;
-    lmLogArgs(buff, format);
+    lmLogArgs(buff, out);
 
     // Put a new line in so windows displays this junk right.
     len           = (int)strlen(buff);
@@ -109,12 +109,8 @@ int platform_error(const char *out, ...)
     va_end(args);
     */
 
-    va_list args;
-    va_start(args, out);
-    int count = _vscprintf(out, args);
-    char* buff = (char*)malloc(count + 2);
-    vsprintf_s(buff, count + 1, out, args);
-    va_end(args);
+    char* buff;
+    lmLogArgs(buff, out);
     
     OutputDebugStringA(buff);
 
@@ -156,13 +152,8 @@ int platform_debugOut(const char *out, ...)
     va_end(args);
     */
 
-    va_list args;
-    va_start(args, out);
-    int count = _vscprintf(out, args);
-    char* buff = (char*)malloc(count + 2);
-    vsprintf_s(buff, count + 1, out, args);
-    va_end(args);
-
+    char* buff;
+    lmLogArgs(buff, out);
 
     // Put a new line in so windows displays this junk right.
     len           = strlen(buff);
@@ -183,13 +174,8 @@ int platform_debugOut(const char *out, ...)
 
 int platform_error(const char *out, ...)
 {
-    // TODO: Does this need to be smarter, or stripped in release builds?
-    char    buff[4096];
-    va_list args;
-
-    va_start(args, out);
-    vsnprintf(buff, 4094, out, args);
-    va_end(args);
+    char* buff;
+    lmLogArgs(buff, out);
 
     // Try to output/log error with re-entrancy guard.
     static int pesafety = 0;
@@ -199,6 +185,8 @@ int platform_error(const char *out, ...)
         lmLogError(gPlatformErrorLogGroup, "%s", buff);
         pesafety = 0;
     }
+
+    free(buff);
 
     return 0;
 }
