@@ -25,6 +25,8 @@
 extern "C" {
 #endif
 
+#include <stdarg.h>
+
 /**
  * Loom includes a lightweight logging framework.
  *
@@ -57,6 +59,13 @@ extern "C" {
 #define lmLogWarn(group, format, ...)                                 if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogWarn, "[%s] " format, group.name, ## __VA_ARGS__); }
 #define lmLog    lmLogInfo // Alias for completeness.
 
+#define lmLogArgs(buff, format) \
+    va_list args; \
+    va_start(args, format); \
+    buff = loom_log_getArgs(args, &format); \
+    va_end(args); \
+
+
 typedef struct loom_logGroup
 {
     const char *name;
@@ -88,7 +97,7 @@ void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format,
     format is a pointer to the format argument pointer (required for varargs functionality),
     so you should use &format when calling this function
 */
-char* loom_log_getArgs(const char **format);
+char* loom_log_getArgs(va_list args, const char **format);
 
 // TODO: Make sure this inlines.
 int loom_log_willGroupLog(loom_logGroup_t *group);

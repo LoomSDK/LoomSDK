@@ -20,7 +20,6 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include "loom/common/platform/platform.h"
 #include "loom/common/core/log.h"
@@ -136,13 +135,27 @@ void loom_log_removeListener(loom_logListener_t listener, void *payload)
     lmAssert(0, "Could not find listener to remove.");
 }
 
-char* loom_log_getArgs(const char **format) {
-    va_list args;
-    va_start(args, *format);
+#ifndef _MSC_VER
+int _vscprintf(const char *format, va_list pargs)
+{
+    int retval;
+    va_list argcopy;
+    va_copy(argcopy, pargs);
+    printf("_vscprintf %s\n", format);
+    retval = vsnprintf(NULL, 0, format, argcopy);
+    va_end(argcopy);
+    return retval;
+}
+#endif
+
+char* loom_log_getArgs(va_list args, const char **format) {
     int count = _vscprintf(*format, args);
     char* buff = (char*)malloc(count + 2);
-    vsprintf_s(buff, count + 1, *format, args);
-    va_end(args);
+    #if LOOM_COMPILER == LOOM_COMPILER_MSVC
+        vsprintf_s(buff, count + 1, *format, args);
+    #else
+        vsnprintf(buff, count + 1, *format, args);
+    #endif
     return buff;
 }
 
@@ -162,17 +175,34 @@ void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format,
     }
 
     /*
-    char    buff[2048];
+    va_list args;
+    char    buff[3000];
     va_start(args, format);
 #if LOOM_COMPILER == LOOM_COMPILER_MSVC
-    vsprintf_s(buff, 2046, format, args);
+    vsprintf_s(buff, 2998, format, args);
 #else
-    vsnprintf(buff, 2046, format, args);
+    vsnprintf(buff, 2998, format, args);
 #endif
     va_end(args);
-    */
+    //*/
     
-    char* buff = loom_log_getArgs(&format);
+    //char* buff = loom_log_getArgs(&format);
+
+    /*
+    va_list args;
+    va_start(args, format);
+    int count = 3000;
+    char* buff = (char*)malloc(count + 2);
+#if LOOM_COMPILER == LOOM_COMPILER_MSVC
+    vsprintf_s(buff, count + 1, format, args);
+#else
+    vsnprintf(buff, count, format, args);
+#endif
+    va_end(args);
+    //*/
+
+    char* buff;
+    lmLogArgs(buff, format);
 
     // Walk the listeners and output.
     while (listener)

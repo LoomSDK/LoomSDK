@@ -693,10 +693,9 @@ void LSCompiler::log(const char *format, ...)
     va_end(args);
     */
 
-    char* buff = loom_log_getArgs(&format);
-
+    char* buff;
+    lmLogArgs(buff, format);
     lmLog(compilerLogGroup, "%s", buff);
-
     free(buff);
 }
 
@@ -715,11 +714,9 @@ void LSCompiler::logVerbose(const char *format, ...)
 #endif
     va_end(args);
     */
-
-    char* buff = loom_log_getArgs(&format);
-
+    char* buff;
+    lmLogArgs(buff, format);
     lmLog(compilerVerboseLogGroup, "%s", buff);
-
     free(buff);
 }
 

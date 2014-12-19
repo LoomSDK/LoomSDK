@@ -54,26 +54,14 @@ void LSLogSetLevel(LSLogLevel level)
     logLevel = level;
 }
 
-#ifndef _MSC_VER
-int _vscprintf(const char * format, va_list pargs)
-{
-    int retval;
-    va_list argcopy;
-    va_copy(argcopy, pargs);
-    retval = vsnprintf(NULL, 0, format, argcopy);
-    va_end(argcopy);
-    return retval;
-}
-#endif
-
 void LSLog(LSLogLevel level, const char *format, ...)
 {
     if (level < logLevel)
     {
         return;
     }
-
-    char* buff = loom_log_getArgs(&format);
+    char* buff;
+    lmLogArgs(buff, format);
 
     /*
     va_list args;

@@ -43,10 +43,9 @@ void LSError(const char *format, ...)
     va_end(args);
     */
 
-    char* buff = loom_log_getArgs(&format);
-
+    char* buff;
+    lmLogArgs(buff, format);
     LSLog(LSLogError, "%s", buff);
-
     free(buff);
 
     exit(EXIT_FAILURE);
@@ -68,7 +67,8 @@ void LSWarning(const char *format, ...)
     va_end(args);
     */
 
-    char* buff = loom_log_getArgs(&format);
+    char* buff;
+    lmLogArgs(buff, format);
 
     LSLog(LSLogWarn, "%s", buff);
 

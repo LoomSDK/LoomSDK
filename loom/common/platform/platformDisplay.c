@@ -69,7 +69,6 @@ int platform_debugOut(const char *format, ...)
 {
     int  len;
 
-    
     /*
     char buff[2048];
     va_list args;
@@ -78,7 +77,8 @@ int platform_debugOut(const char *format, ...)
     va_end(args);
     */
 
-    char* buff = loom_log_getArgs(&format);
+    char* buff;
+    lmLogArgs(buff, format);
 
     // Put a new line in so windows displays this junk right.
     len           = (int)strlen(buff);
