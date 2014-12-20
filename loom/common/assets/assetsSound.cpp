@@ -28,10 +28,10 @@
 
 #include "stb_vorbis.h"
 #include "minimp3.h"
-#include "loom/engine/sound/wavloader.h"
+#include "wavloader.h"
 
 extern "C" loom_allocator_t *gAssetAllocator;
-static loom_logGroup_t gSoundAssetGroup = { "soundAsset", 1 };
+loom_logGroup_t gSoundAssetGroup = { "soundAsset", 1 };
 
 void loom_asset_registerSoundAsset()
 {
