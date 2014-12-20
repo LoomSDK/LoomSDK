@@ -180,7 +180,7 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         sound->bytesPerSample = wav.sampleSize / 8; // wav sample size is in bits
         if (sound->bytesPerSample != 1 && sound->bytesPerSample != 2)
         {
-            lmLogError(gSoundAssetGroup, "Unsupported sample format. Currently only 8-bit or 16-bit PCM are supported");
+            lmLogError(gSoundAssetGroup, "Unsupported wav format. Currently only 8-bit or 16-bit PCM are supported");
             loom_asset_soundDtor(&sound);
             return 0;
         }
@@ -212,6 +212,6 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
       return 0;
    }
 
-    lmLogError(gSoundAssetGroup, "Allocated %d bytes for a sound!", sound->bufferSize);
+    lmLogInfo(gSoundAssetGroup, "Allocated %d bytes for a sound!", sound->bufferSize);
     return sound;
 }
