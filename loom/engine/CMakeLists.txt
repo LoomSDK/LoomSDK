@@ -101,7 +101,6 @@ set (ENGINE_SRC
 
     sound/lsSound.cpp
     sound/lsSoundPackage.cpp
-    sound/wavloader.cpp
 )
 
 if (APPLE)
@@ -195,7 +194,6 @@ set (ENGINE_HDR
             
     bindings/loom/lmApplication.h
     cocos2dx/loom/CCLoomCocos2D.h
-    sound/wavloader.h
     
 )
 
