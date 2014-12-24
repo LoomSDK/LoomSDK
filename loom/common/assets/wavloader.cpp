@@ -61,7 +61,7 @@ bool load_wav(const uint8_t* inData,
     
     riff->header.chunkDataSize = convertLEndianToHost(riff->header.chunkDataSize);
     
-    if (inDataLen < sizeof(chunk_header) + riff->header.chunkDataSize)
+    if (inDataLen < static_cast<int32_t>(sizeof(chunk_header) + riff->header.chunkDataSize))
     {
         lmLogError(gSoundAssetGroup, "Not enough data in wav buffer");
         return false;
