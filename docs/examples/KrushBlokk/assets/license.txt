@@ -1,3 +1,6 @@
+hand.png
+A white version of "Finger, point, up icon" from the WPZOOM Developer Icon Set licensed CC BY-SA 3.0 (Creative Commons Attribution-Share Alike 3.0 Unported) by WPZOOM: https://www.iconfinder.com/icons/111069/finger_point_up_icon
+
 fonts/kremlin-export.png
 Free font by Vic Fieger: http://www.dafont.com/kremlin.font
 Rendered with GIMP, exported with ShoeBox: http://renderhjs.net/shoebox/

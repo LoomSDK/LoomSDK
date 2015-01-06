@@ -26,6 +26,7 @@
 #include "loom/engine/loom2d/l2dSprite.h"
 #include "loom/engine/loom2d/l2dImage.h"
 #include "loom/engine/loom2d/l2dQuadBatch.h"
+#include "loom/engine/loom2d/l2dBlendMode.h"
 
 
 namespace Loom2D
@@ -93,6 +94,7 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
     renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
     renderState.clampAlpha();
     renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
+    renderState.blendMode = (parent && blendMode == BlendMode::AUTO) ? parent->renderState.blendMode : blendMode;
 
     int docidx = lua_gettop(L);
 

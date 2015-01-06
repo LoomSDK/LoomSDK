@@ -19,6 +19,7 @@
  */
 
 #include "l2dQuadBatch.h"
+#include "loom/engine/loom2d/l2dBlendMode.h"
 #include "loom/graphics/gfxGraphics.h"
 
 namespace Loom2D
@@ -53,6 +54,10 @@ void QuadBatch::render(lua_State *L)
     renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
     GFX::Graphics::setClipRect(renderState.cachedClipRect);
 
+    //set blend mode based to be unique or that of our parent
+    renderState.blendMode = (blendMode == BlendMode::AUTO && parent) ? parent->renderState.blendMode : blendMode;
+    int64_t blendFunc = BlendMode::BlendFunction(renderState.blendMode);
+
     // update and get our transformation matrix
     updateLocalTransform();
     
@@ -63,11 +68,11 @@ void QuadBatch::render(lua_State *L)
     bool isIdentity = mtx.isIdentity();
     if((renderState.alpha == 1.0f) && isIdentity)
     {
-        GFX::QuadRenderer::batch(nativeTextureID, quadData, 4 * numQuads);
+        GFX::QuadRenderer::batch(nativeTextureID, quadData, 4 * numQuads, blendFunc);
         return;
     }
 
-    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 4 * numQuads, true);
+    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 4 * numQuads, true, blendFunc);
     if (!v)
     {
         return;

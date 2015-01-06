@@ -1,6 +1,6 @@
 title: Facebook and Teak Example
 description: A very basic implementation of Facebook login and optional calls to Teak social library.
-source: src/FeathersComponentExplorer.ls
+source: src/FacebookTeakExample.ls
 thumbnail: images/screenshot.png
 !------
 
@@ -26,7 +26,7 @@ Once your test app is set up on Teak and Facebook, you will then need to do the 
 You can now run the example!
 
 ## Screenshot
-![FileExample Screenshot](images/screenshot.png)
+![Screenshot](images/Screenshot.png)
 
 ## Code
 @insert_source

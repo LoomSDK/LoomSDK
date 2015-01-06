@@ -365,7 +365,19 @@ class TestDictionary extends Test
         // Compiler Error
         //checkIndexError[100] = 100;
 
-    
+        // Fetch
+        var validKey = "validKey";
+        var defaultValue = "default";
+        var regularValue = "regular";
+        var generatedValue = "generated";
+
+        var dss = new Dictionary.<String, String>;
+        assert(dss.fetch(validKey, defaultValue) == defaultValue, "fetch on empty Dictionary should return default value");
+
+        dss[validKey] = regularValue;
+        assert(dss.fetch(validKey, defaultValue) == regularValue, "fetch on Dictionary with valid key should return associated value");
+        assert(dss.fetch("invalidKey", defaultValue) == defaultValue, "fetch on Dictionary with invalid key should return default value");
+        assert(dss.fetch("invalidKey", function(key:String):String{return generatedValue;}) == generatedValue, "fetch on Dictionary with invalid key should return generated value when default value is a function");
     }
     
     function TestDictionary()

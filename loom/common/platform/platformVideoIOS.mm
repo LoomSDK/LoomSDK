@@ -141,7 +141,12 @@ static UIViewController* getParentViewController()
 
 - (void)touchPlayer:(UITapGestureRecognizer *)gesture
 {
-    [self.videoPlayer stop];
+    //don't allow touching to stop playback unless the video is ready to play and is actually playing
+    if((self.videoPlayer.readyForDisplay == YES) &&
+        (self.videoPlayer.playbackState == MPMoviePlaybackStatePlaying))
+    {
+        [self.videoPlayer stop];
+    }
 }
 
 - (void)viewDidUnload
