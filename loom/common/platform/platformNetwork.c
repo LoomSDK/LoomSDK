@@ -29,6 +29,7 @@
 #include <WS2tcpip.h>
 #include <WS2def.h>
 #include <errno.h>
+#include <stdio.h>
 #endif
 
 #if LOOM_PLATFORM_IS_APPLE == 1 || LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
@@ -145,16 +146,25 @@ static void loom_net_setSocketReuseAddress(loom_socketId_t s, int reuse)
 
 loom_socketId_t loom_net_openTCPSocket(const char *host, unsigned short port, int blocking)
 {
-    int                status, s;
-    struct sockaddr_in name;
+    int     status, s;
 
-    // Resolve the host.
-    // TODO: Free hostEnt?
-    struct hostent *hostEnt = gethostbyname(host);
+    
+	//set up he hints
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    
+	//copy the port over to a string
+	char portString[16];
+    sprintf(portString, "%ld", port);
 
-    if (!hostEnt)
+	// Resolve the host.
+	struct addrinfo *hostInfo;
+	int res = getaddrinfo(host, portString, &hints, &hostInfo);
+	if (res != 0)
     {
-        lmLogError(netLogGroup, "Failed to resolve host '%s' via gethostbyname.", host);
+        lmLogError(netLogGroup, "Failed to resolve host '%s' via getaddrinfo: %s", host, gai_strerror(res));
         return NULL;
     }
 
@@ -163,13 +173,9 @@ loom_socketId_t loom_net_openTCPSocket(const char *host, unsigned short port, in
     if (s == -1)
     {
         lmLogError(netLogGroup, "Failed to open TCP socket - socket() failed.");
+		freeaddrinfo(hostInfo);
         return NULL;
     }
-
-    // Fill in who we're connecting to.
-    name.sin_family = AF_INET;
-    memcpy(&name.sin_addr.s_addr, hostEnt->h_addr, 4);
-    name.sin_port = htons(port);
 
     // Block if user wants it.
     loom_net_setSocketBlocking((loom_socketId_t)s, blocking);
@@ -181,7 +187,7 @@ loom_socketId_t loom_net_openTCPSocket(const char *host, unsigned short port, in
 #endif
 
     // Do the connect.
-    status = connect(s, (struct sockaddr *)&name, sizeof(name));
+    status = connect(s, hostInfo->ai_addr, hostInfo->ai_addrlen);
     if (status != 0)
     {
         // Get the real error code, might be WOULDBLOCK.
@@ -202,11 +208,13 @@ loom_socketId_t loom_net_openTCPSocket(const char *host, unsigned short port, in
         {
             // Failure due to some grody reason.
             lmLogError(netLogGroup, "Failed to connect() TCP socket due to error code %d.", res);
-            return NULL;
+			closesocket(s);
+			freeaddrinfo(hostInfo);
+			return NULL;
         }
     }
 
-
+	freeaddrinfo(hostInfo);
     return (loom_socketId_t)s;
 }
 
