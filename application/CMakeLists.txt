@@ -11,6 +11,7 @@ include_directories( ${LOOM_INCLUDE_FOLDERS} )
 set (APPLICATION_SRC
     common/AppDelegate.cpp
     common/embeddedAssets.cpp
+    common/System.cpp
 )
 
 set (APPLICATION_HDR

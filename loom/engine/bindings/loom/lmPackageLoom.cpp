@@ -35,6 +35,7 @@ void installLoom2D();
 void installPackageLoomSound();
 void installLoomFacebook();
 void installLoomTeak();
+void installLoomSystem();
 
 void installPackageLoom()
 {
@@ -52,6 +53,7 @@ void installPackageLoom()
     installLoomTeak();
     installLoomParse();
     installPackageLoomSound();
+	installLoomSystem();
 
     // Should be its own package for maximum correctness.
     installPackageCocos2DX();
