@@ -32,7 +32,8 @@ package
     import loom2d.text.TextField;
 
     /**
-     * 
+     * Simple example view that shows off a list driven with virtual items as 
+     * well as featuring a label you can click on to refresh data from a manager.
      */
     public class MyView extends Sprite
     {
@@ -52,8 +53,8 @@ package
 
             label = new SimpleLabel("assets/Curse-hd.fnt");
             label.text = "Hello View!";
-            label.center();
-            label.x = stage.stageWidth / 2;
+            label.x = stage.stageWidth - 200;
+            label.width = 200;
             label.y = stage.stageHeight / 2 - 100;
             label.addEventListener(TouchEvent.TOUCH, onClick);
             addChild(label);
@@ -61,13 +62,14 @@ package
             storeList = new List();
             storeList.dataProvider = new ListCollection(
                 [
-                {text: "Hi"},
-                {text: "There"}
+                {text: "First"},
+                {text: "Second"}
                 ]);
 
-            for(var i=0; i<10000; i++)
+            // Try making this 10000 to see how much virtual lists can help.
+            for(var i=0; i<100; i++)
             {
-                (storeList.dataProvider as ListCollection).push({text: "Yo" + i});
+                (storeList.dataProvider as ListCollection).push({text: "Item #" + i});
             }
             
             storeList.itemRendererFactory = function ():IListItemRenderer
@@ -78,7 +80,7 @@ package
                  return renderer;
              };
             storeList.width = 200;
-            storeList.height = 200;
+            storeList.height = stage.stageHeight;
             addChild(storeList);
         }
 
@@ -90,62 +92,92 @@ package
         }
     }
 
+    /**
+     * The mediator that goes with MyView; it handles business logic related
+     * to the view.
+     */
     public class MyViewMediator extends Mediator
     {
+        // Demonstration of injection on a property.
         private var _view:MyView = null;
 
+        [Inject]
         public function set view(v:MyView)
         {
             _view = v;
         }
 
-        [Inject]
         public function get view():MyView
         {
             return _view;
         }
 
+        // Get the StoreManager, we'll need it!
         [Inject]
         public var stores:StoreManager;
 
+        // Called after we're paired with a view.
         public override function onRegister():void
         {
-            trace("I added a mediator to view " + view);
+            trace("I'm a mediator associated with view " + view);
             view.initialize();
 
-            stores.addEventListener("update", updateUi);
+            // Listen for updates from the StoreManager and update our UI 
+            // when it happens.
+            stores.addEventListener(StoreManager.UPDATE_EVENT, updateUi);
 
+            // If the view dispatches a click event, do something.
             view.addEventListener(MyView.CLICK_REFRESH, triggerUpdate);
 
+            // Make sure the UI starts in a good state.
             updateUi();
         }
 
+        /**
+         * Called when the view reports a click; we want to trigger a 
+         * an update. We could pass more data to the command
+         * by using a subclass of Event and letting the command inject it.
+         */
         protected function triggerUpdate():void
         {
-            dispatch(new Event("refresh"));
+            dispatch(new Event(HandleRefreshCommand.NAME));
         }
 
         protected function updateUi():void
         {
-            view.label.text = "Mediators Rule " + stores.list[0].avgCost;
-            view.label.center();            
+            view.label.text = "avgCost = $" + stores.list[0].avgCost.toFixed(2);
+            view.label.center();
         }
     }
 
+    /**
+     * Startup command. This is responsible for setting up the initial state
+     * of the app. It could fire other commands, load resources, etc. In our
+     * case we just add our single view to the stage.
+     */ 
     public class HandleStartupCommand extends Command
     {
+        /**
+         * Commands are triggered by events and they are available by injection.
+         */
         [Inject]
         public var event:ContextEvent;
 
         override public function execute():void
         {
-            trace("Hello startup! " + contextView + " " + event);
+            trace("Starting up! " + contextView + " " + event);
             contextView.addChild(new MyView());
         }
     }
 
+    /**
+     * Command called when the application wants a refresh; it causes the
+     * StoreManager to refresh its data.
+     */
     public class HandleRefreshCommand extends Command
     {
+        public static const NAME = "refresh";
+
         [Inject]
         public var stores:StoreManager;
 
@@ -153,33 +185,60 @@ package
         {
             stores.refresh();
         }
-
     }
 
-    public class TestContext extends Context
+    /**
+     * The Context is responsible for setting up the execution environment for
+     * the application. Different Contexts can bring together existing code in
+     * new ways for various situations.
+     */
+    public class StoreAppContext extends Context
     {
-        public function TestContext(c:DisplayObjectContainer)
+        public function StoreAppContext(c:DisplayObjectContainer)
         {
             super(c);
         }
 
         override public function startup():void
         {
-            trace("HELLO WORLD ");
+            trace("Beginning StoreAppContext execution.");
 
+            // Map commands to various events that can fire in our system.
             commandMap.mapEvent(ContextEvent.STARTUP_COMPLETE, HandleStartupCommand, ContextEvent);
-            commandMap.mapEvent("refresh", HandleRefreshCommand);
+            commandMap.mapEvent(HandleRefreshCommand.NAME, HandleRefreshCommand);
 
+            // Set up the view map, registering types that represent views and
+            // require special treatment.
             viewMap.mapType(MyView);
 
+            // And the mediator map, indicating what mediators map to what
+            // views.
             mediatorMap.mapView(MyView, MyViewMediator);
 
+            // Set up our store manager for injection (as a singleton).
             injector.mapValue(StoreManager, new StoreManager());
 
+            // Parent class logic.
             super.startup();
+
+            // All done!
+            trace("Finish Context execution.");
+
+            // Give some instructions.
+            trace("");
+            trace("Click the average cost to update the manager and have the UI");
+            trace("update itself. The list demonstrates a virtual list with a large");
+            trace("number of items but low overhead.");
         }
     }
 
+    /**
+     * A Value Object describing a store.
+     *
+     * This is just data describing a store. It's meant to be simple and 
+     * self-contained - other classes act on it but it does very little
+     * by itself.
+     */
     public class StoreVO
     {
         public var name:String;
@@ -187,10 +246,22 @@ package
         public var location:String;
     }
 
+    /**
+     * Manage the VOs for known stores. Includes mock data.
+     *
+     * In real life this manager would work with an HTTP service layer
+     * to get data from a web service, but we want a simple demo that
+     * is self contained.
+     */
     public class StoreManager extends EventDispatcher
     {
+        public static const UPDATE_EVENT = "update";
+
         protected var _list:Vector.<StoreVO>;
 
+        /**
+         * Accessor to get the list of stores.
+         */
         public function get list():Vector.<StoreVO>
         {
             if(!_list)
@@ -223,40 +294,54 @@ package
             _list = [itemA, itemB, itemC, itemD];
         }
 
+        /**
+         * Simulate new data coming in.
+         */
         public function refresh():void
         {
+            // Generate new random prices.
             var l = list;
             for(var i=0; i<l.length; i++)
             {
-                l[i].avgCost = Math.random() * 100;
+                l[i].avgCost = Math.random() * 100 + 50;
             }
 
-            dispatchEventWith("update");
+            // We fire a simple event to let others update.
+            dispatchEventWith(StoreManager.UPDATE_EVENT);
         }
     }
 
+    /**
+     * Main test app.
+     *
+     * This sets up Feathers, loads a background, and initializes execution of
+     * our RobotLegs context.
+     */
     public class RobotLegs extends Application
     {
-        public var context:TestContext;
+        public var context:StoreAppContext;
 
         override public function run():void
         {
             // Comment out this line to turn off automatic scaling.
-            stage.scaleMode = StageScaleMode.LETTERBOX;
+            //stage.scaleMode = StageScaleMode.LETTERBOX;
 
+            // TODO: The visual init here could be made its own command.
+
+            // Initialize Feathers with font and theme data.
             TextField.registerBitmapFont( BitmapFont.load( "assets/arialComplete.fnt" ), "SourceSansPro" );
             TextField.registerBitmapFont( BitmapFont.load( "assets/arialComplete.fnt" ), "SourceSansProSemibold" );
-
             new MetalWorksMobileTheme();
 
-            // Setup anything else, like UI, or game objects.
+            // Set up a simple background.
             var bg = new Image(Texture.fromAsset("assets/bg.png"));
             bg.width = stage.stageWidth;
             bg.height = stage.stageHeight;
             stage.addChild(bg);
             
-            trace("Starting TestContext");
-            context = new TestContext(stage);
+            // Let RobotLegs go!
+            trace("Starting StoreAppContext");
+            context = new StoreAppContext(stage);
             context.startup();
         }
     }
