@@ -98,7 +98,7 @@ package loom2d.events
             event.setTarget(this);
             
             if (bubbles && (this as DisplayObject)) bubbleEvent(event);
-            else                                  invokeEvent(event);
+            else                                    invokeEvent(event);
             
             if (previousTarget) event.setTarget(previousTarget);
         }
@@ -129,7 +129,7 @@ package loom2d.events
 
                     var numArgs:int = listener.length;
                     
-                    if (numArgs == 0) listener();
+                    if (numArgs == 0)      listener();
                     else if (numArgs == 1) listener(event);
                     else listener(event, event.data);
 
