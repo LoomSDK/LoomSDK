@@ -1,0 +1,67 @@
+[loom.asset] Starting file watcher thread...
+[loom.asset]    o OK!
+[loom.asset] Starting socket listener thread...
+[loom.asset]    o OK!
+[loom.asset] Listening on port 12340
+[loom.asset]    o OK!
+[loom.asset] Client connected (5)!
+[asset.protocol] LOG: [loom.application]    o Connected to asset agent.
+[asset.protocol] LOG: [loom.application] LOOM Built (Release) Jan 10 2015 12:14:27
+[asset.protocol] LOG: [loom.application] Instantiating Application: RobotLegs
+[asset.protocol] LOG: Initializing root group.
+[asset.protocol] LOG: [BGFX] Unable to generate mips for non-POT texture 2048 24
+[asset.protocol] LOG: [GFXQuadRenderer] Initializing Graphics Resources
+[asset.protocol] LOG: [imageAsset] Allocated 65536 bytes for an image!
+[asset.protocol] LOG: [imageAsset] Allocated 32768 bytes for an image!
+[asset.protocol] LOG: [imageAsset] Allocated 131072 bytes for an image!
+[asset.protocol] LOG: [imageAsset] Allocated 131072 bytes for an image!
+[asset.protocol] LOG: [imageAsset] Allocated 186912 bytes for an image!
+[asset.protocol] LOG: [loom.sound] Loom Sound engine OpenAL 'CoreAudio Default' initialized.
+[asset.protocol] LOG: Command manager online.
+[asset.protocol] LOG: [imageAsset] Allocated 4194304 bytes for an image!
+[asset.protocol] LOG: [asset.core] Locked asset 'assets/arialComplete.png'...
+[asset.protocol] LOG: [GFXTexture] loading assets/arialComplete.png
+[asset.protocol] LOG: [asset.core] Locked asset 'assets/arialComplete.png'...
+[asset.protocol] LOG: [GFXTexture] loaded assets/arialComplete.png - 1024 x 1024 at id 0
+[asset.protocol] LOG: [GFXTexture] Create texture for assets/arialComplete.png
+[asset.protocol] LOG: [asset.core] Flushing 'assets/arialComplete.png'
+[asset.protocol] LOG: [asset.core] Locked asset 'assets/tile.png'...
+[asset.protocol] LOG: [GFXTexture] loading assets/tile.png
+[asset.protocol] LOG: [asset.core] Locked asset 'assets/tile.png'...
+[asset.protocol] LOG: [GFXTexture] loaded assets/tile.png - 128 x 128 at id 1
+[asset.protocol] LOG: [GFXTexture] Create texture for assets/tile.png
+[asset.protocol] LOG: [imageAsset] Allocated 1048576 bytes for an image!
+[asset.protocol] LOG: [asset.core] Locked asset 'assets/metalworks.png'...
+[asset.protocol] LOG: [GFXTexture] loading assets/metalworks.png
+[asset.protocol] LOG: [asset.core] Locked asset 'assets/metalworks.png'...
+[asset.protocol] LOG: [GFXTexture] loaded assets/metalworks.png - 512 x 512 at id 2
+[asset.protocol] LOG: [GFXTexture] Create texture for assets/metalworks.png
+[asset.protocol] LOG: [asset.core] Flushing 'assets/metalworks.png'
+[asset.protocol] LOG: [imageAsset] Allocated 3942880 bytes for an image!
+[asset.protocol] LOG: [asset.core] Locked asset 'assets/bg.png'...
+[asset.protocol] LOG: [GFXTexture] loading assets/bg.png
+[asset.protocol] LOG: [asset.core] Locked asset 'assets/bg.png'...
+[asset.protocol] LOG: [GFXTexture] loaded assets/bg.png - 1297 x 760 at id 3
+[asset.protocol] LOG: [GFXTexture] Create texture for assets/bg.png
+[asset.protocol] LOG: [asset.core] Flushing 'assets/bg.png'
+[asset.protocol] LOG: Starting TestContext
+[asset.protocol] LOG: HELLO WORLD 
+[asset.protocol] LOG: Hello startup! Object:loom2d.display.Stage [Event ContextEvent]
+[asset.protocol] LOG: WARNING: Injector - could not get a value for .MyViewMediator id=
+[asset.protocol] LOG: WARNING: Injector - could not get a value for .MyViewMediator id=
+[asset.protocol] LOG: I added a mediator to view Object:.MyView
+[asset.protocol] LOG: [imageAsset] Allocated 65536 bytes for an image!
+[asset.protocol] LOG: [asset.core] Locked asset 'assets/logo.png'...
+[asset.protocol] LOG: [GFXTexture] loading assets/logo.png
+[asset.protocol] LOG: [asset.core] Locked asset 'assets/logo.png'...
+[asset.protocol] LOG: [GFXTexture] loaded assets/logo.png - 128 x 128 at id 4
+[asset.protocol] LOG: [GFXTexture] Create texture for assets/logo.png
+[asset.protocol] LOG: [asset.core] Flushing 'assets/logo.png'
+[asset.protocol] LOG: [imageAsset] Allocated 1048576 bytes for an image!
+[asset.protocol] LOG: [asset.core] Locked asset 'assets/Curse-hd.png'...
+[asset.protocol] LOG: [GFXTexture] loading assets/Curse-hd.png
+[asset.protocol] LOG: [asset.core] Locked asset 'assets/Curse-hd.png'...
+[asset.protocol] LOG: [GFXTexture] loaded assets/Curse-hd.png - 512 x 512 at id 5
+[asset.protocol] LOG: [GFXTexture] Create texture for assets/Curse-hd.png
+[asset.protocol] LOG: [asset.core] Flushing 'assets/Curse-hd.png'
+[asset.protocol] LOG: [BGFX] Unable to generate mips for non-POT texture 1297 760
