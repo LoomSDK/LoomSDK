@@ -105,8 +105,22 @@ package loom.platform
 
             //clear and potentially load existing data to populate the JSON
             clear();
+
+            //if file doesn't exist, call function that can be overwritten by users to initilaize their data
+            if(!File.fileExists(_writePath))
+            {
+                init();
+            }
+
             load();
 		}
+
+
+        /**
+        Called when the before the JSON file is created for the first time
+         * Designed to be overwritten by the child object to handle custom actions.
+         */
+        protected function init():void {}
 
 
         /**
