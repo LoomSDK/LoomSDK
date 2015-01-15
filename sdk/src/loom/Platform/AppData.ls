@@ -20,7 +20,7 @@ limitations under the License.
 
 package loom.platform
 {
-	import loom.Application;
+    import loom.Application;
     import loom.gameframework.Logger;
 
 
@@ -35,8 +35,8 @@ package loom.platform
     * 
     * It supports the following base types: bool, int, float, string
     */
-	public class AppData
-	{
+    public class AppData
+    {
         /**
          * Constant subfolder for where all AppData files are stored off of 'Path.getWritablePath()'
          */
@@ -71,8 +71,8 @@ package loom.platform
          *  @param saveOnDeactivated Whether or not the save() function should be called when the 
                 'Application.applicationDeactivated' is triggered by the app
          */
-		function AppData(filename:String, appFolder:String, saveOnSet:Boolean, saveOnDeactivated:Boolean)
-		{
+        function AppData(filename:String, appFolder:String, saveOnSet:Boolean, saveOnDeactivated:Boolean)
+        {
             //do we want to save out the JSON after every set*() call?
             _saveOnSet = saveOnSet;
 
@@ -113,7 +113,7 @@ package loom.platform
             }
 
             load();
-		}
+        }
 
 
         /**
@@ -148,8 +148,8 @@ package loom.platform
          *
          *  @return Boolean Was the JSON data file loaded successfully or not
          */
-		protected function load():Boolean
-		{
+        protected function load():Boolean
+        {
             //load the JSON into a text file
             if(!File.fileExists(_writePath))
             {
@@ -167,19 +167,19 @@ package loom.platform
             //create JSON from text file data
             jsonData = new JSON();
             return jsonData.loadString(textFile);
-		}
+        }
 
 
         /**
         Clears the locally read in JSON data, but leave the file on the system as-is.  
          * Designed to be optionally overwritten by the child object to handle custom actions.
          */
-		protected function clear():void
-		{
+        protected function clear():void
+        {
             //clear the cached JSON data
             jsonData = new JSON();
             jsonData.loadString("{}");
-		}
+        }
 
 
         /**
@@ -342,5 +342,5 @@ package loom.platform
             //auto-save data when the app is deactivated
            	save();
         }
-	}
+    }
 }
