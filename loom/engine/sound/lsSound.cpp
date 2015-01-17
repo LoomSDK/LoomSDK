@@ -218,6 +218,16 @@ public:
     int playCount;
     char *path;
 
+    static void reset()
+    {
+        // Now restart all the sources after assigning the new buffer.
+        while (Sound::smList)
+        {
+            lmLog(gLoomSoundLogGroup, "Deleting sound...");
+            delete Sound::smList;
+        }
+    }
+
     static void preload(const char *assetPath)
     {
         OALBufferManager::getBufferForAsset(assetPath);
@@ -477,6 +487,13 @@ public:
         return playCount != 0;
     }
 };
+
+extern "C" {
+    void loomsound_reset()
+    {
+        Sound::reset();
+    }
+}
 
 Sound *Sound::smList = NULL;
 int Sound::count = 0;

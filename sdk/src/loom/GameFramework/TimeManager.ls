@@ -268,6 +268,22 @@ package loom.gameframework
         }
         
         /**
+         * Amount of time that has elapsed since the previous frame, in Milliseconds.
+         */
+        public function get deltaTimeMS():Number
+        {
+            return _deltaTimeMS;
+        }
+
+        /**
+         * Amount of time that has elapsed since the previous frame, in Seconds.
+         */
+        public function get deltaTime():Number
+        {
+            return _deltaTime;
+        }
+
+        /**
          * Integer identifying this frame. Incremented by one for every frame.
          */
         public function get frameCounter():int
@@ -591,10 +607,13 @@ package loom.gameframework
         }
         
         public function advance(deltaTime:Number, suppressSafety:Boolean = false):void
-        {
-            
+        {            
             // Update platform time, to avoid lots of costly calls to getTimer.
             _platformTime = Platform.getTime();
+
+            // Update the delta time
+            _deltaTimeMS = deltaTime;
+            _deltaTime = _deltaTimeMS / 1000.0;
             
             // Note virtual time we started advancing from.
             var startTime:Number = _virtualTime;
@@ -790,8 +809,11 @@ package loom.gameframework
         protected var tickedObjects:Vector.<ProcessObject> = new Vector.<ProcessObject>;
         protected var needPurgeEmpty:Boolean = false;
         
+        protected var _deltaTime:Number = 0;
+        protected var _deltaTimeMS:Number = 0;
+
         protected var _platformTime:int = 0;
-        
+
         protected var _frameCounter:int = 0;
         
         protected var duringAdvance:Boolean = false;
