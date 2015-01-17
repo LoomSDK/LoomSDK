@@ -70,6 +70,7 @@ void loom_appShutdown(void)
     LoomApplication::shutdown();
 }
 
+extern void loomsound_reset();
 
 // container for external package functions
 typedef void (*FunctionRegisterPackage)(void);
@@ -200,6 +201,8 @@ void LoomApplication::reloadMainAssembly()
     platform_webViewDestroyAll();
     // cleanup ads
     platform_adMobDestroyAll();
+
+    loomsound_reset();
 
     const NativeDelegate *onReload = rootVM->getOnReloadDelegate();
     onReload->invoke();
