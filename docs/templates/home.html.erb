@@ -18,7 +18,7 @@
 
         <div id="top">&nbsp;</div>
 
-        <!-- Header. -->   
+        <!-- Header. -->
         <header class="site-header">
             <div class="site-header__logo">
                 <div class="site-header__logo__version"><%= version_number %></div>
@@ -42,7 +42,6 @@
         </header><!-- End header. -->
 
         <!-- Sidebar. -->
-        <!-- TODO: include this from templates/home.html.erb -->
         <div id="sidebar" class="sidebar">
             <div class="sidebar__inner">
                 <div class="sidebar__button">
@@ -159,14 +158,14 @@
                 </div><!-- End content boxes. -->
 
             </div><!-- End inner page. -->
-            
+
         </div><!-- End page. -->
 
         <script type="text/javascript" src="js/vendor/fuse.min.js"></script>
         <script type="text/javascript" src="js/vendor/jquery-1.9.0.min.js"></script>
         <script type="text/javascript" src="js/vendor/underscore-min.js"></script>
         <script type="text/javascript" src="js/authored/onscroll.js"></script>
-        
+
         <script type="text/javascript">
 
           var relative_base = "";
@@ -189,7 +188,7 @@
         	}
 
             // populate API reference links
-            sidebarData[2].link = $.parseJSON('<%= $packages.sidebar_links_json("") %>');            
+            sidebarData[2].link = $.parseJSON('<%= $packages.sidebar_links_json("") %>');
 
         </script>
 
