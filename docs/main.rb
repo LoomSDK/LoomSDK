@@ -80,15 +80,15 @@ def process_loomlibs
     lib.modules.each do |this_module|
 
       this_module.types.each do |class_doc|
-        
+
         if class_doc.data[:docString].include? "@private"
-          puts "skipping private class: #{class_doc.package_path}"
+          puts "  skipping private class: #{class_doc.package_path}"
           next
         end
 
         # Store each class, keyed to its package_path, so we can derive its superclasses later.
         $classes_by_package_path[ class_doc.package_path ] = class_doc
-        
+
         # Loop through packages
         package = class_doc.data[:package]
         @packages[package] = Module::PackageDoc.new(package) if @packages[package].nil?
@@ -97,13 +97,15 @@ def process_loomlibs
         # Store all subclasses of a particular base type.
         @subclasses_of_base_type[ class_doc.data[:baseType] ] = [] unless @subclasses_of_base_type.has_key? class_doc.data[:baseType]
         @subclasses_of_base_type[ class_doc.data[:baseType] ] << class_doc
-
       end
+
     end
   end
 end
 
 def generate_guides(directory)
+  puts "Generating guides for #{directory}/.."
+
   Dir.glob("#{directory}/*") do |filename|
     next if filename == "." or filename == ".." or filename == directory
     if File.directory? filename
@@ -120,34 +122,37 @@ def generate_guides(directory)
 end
 
 def generate_classes_json
+  puts "Generating search data.."
+
   classes = []
   sorted_classes = $classes_by_package_path.values.sort { |a, b| a.data[:name] <=> b.data[:name] }
   sorted_classes.each do |value|
     classes << { :path => "api.#{value.data[:package]}.#{value.data[:name]}", :name => value.data[:name] }
   end
-  
+
   examples = []
   sorted_examples = $examples.values.sort { |a, b| a.path <=> b.path }
   sorted_examples.each do |example_doc|
     examples << { :path => "examples.#{example_doc.path}.index", :name => example_doc.data[:title] }
   end
-  
+
   guides = []
   $guides.each do |topic_doc|
     topic_doc.guides.each do |guide_doc|
       guides << { :path => "guides.#{guide_doc.path}.#{guide_doc.name}", :name => guide_doc.data[:title] }
     end
   end
-  
+
   $search_json = JSON.dump( { :classes => classes, :examples => examples, :guides => guides } )
 
   File.open("output/manifest.json", "w") { |file| file.write($search_json) }
+  puts "  #{classes.length} classes; #{examples.length} examples; #{guides.length} guides"
 end
 
 def write_class_file( class_doc )
   return if class_doc.nil?
 
-  # puts "Writing #{class_doc.data[:name]}"
+  puts "  writing #{class_doc.data[:name]}"
 
   class_dir = File.join( API_OUTPUT_DIR, class_doc.data[:package].split('.') )
   FileUtils.mkdir_p class_dir
@@ -171,7 +176,7 @@ def write_class_file( class_doc )
   protected_fields = protected_fields.sort_by { |f| f[:name] }
   protected_methods = protected_methods.sort_by { |f| f[:name] }
   events = events.sort_by { |e| e[:name] }
-  
+
   page = ClassPage.new(class_doc, class_doc.superclasses, subclasses, base_path, relative_to_base, constants, public_fields, protected_fields, public_methods, protected_methods, events)
 
   # TO-DO: Use a switch statement on the doc type to determine which template to use.
@@ -180,6 +185,7 @@ end
 
 def write_packages
   puts "Generating packages and classes"
+
   # loop through packages
   @packages.each do |package_doc|
     puts "Processing #{package_doc.path}"
@@ -189,50 +195,58 @@ def write_packages
 end
 
 def write_examples
-  puts "Generating Examples"
+  puts "Writing Examples"
+
   $examples.each do |key, example_doc|
+    puts "  writing #{example_doc.path}"
     example_doc.write
   end
+
   write_example_index
 end
 
 def write_guides
-  puts "Generating Guides"
+  puts "Writing Guides"
+
   $guides.each do |topic_doc|
+    puts "  writing #{topic_doc.path}"
     topic_doc.write
     topic_doc.guides.each { |guide_doc| guide_doc.write }
   end
 end
 
 def write_example_index
+  puts "Writing Examples Index"
+
   template = ERB.new(File.read("templates/example/example_index.html.erb"))
-  
+
   version_number = (ARGV[ARG_VERSION].nil? ? "source" : ARGV[ARG_VERSION])
-  
+
   struct = OpenStruct.new({
     :examples => $examples,
     :search_object_string => $search_json,
     :relative_base_path => Pathname.new(OUTPUT_DIR).relative_path_from( Pathname.new(EXAMPLES_OUTPUT_DIR) )
   })
-  
+
   result = template.result(struct.instance_eval {binding})
-  
+
   File.open(File.join(EXAMPLES_OUTPUT_DIR, "index.html"), 'w') { |f| f.write(result)}
 end
 
 def write_landing_page
-  puts "Generating Home Page"
+  puts "Writing Home Page"
+
   template = ERB.new(File.read("templates/home.html.erb"))
-  
+
   version_number = (ARGV[ARG_VERSION].nil? ? "source" : ARGV[ARG_VERSION])
-  
+
   struct = OpenStruct.new({
     :version_number => version_number,
     :search_object_string => $search_json
   })
-  
+
   result = template.result(struct.instance_eval {binding})
-  
+
   File.open(File.join(OUTPUT_DIR, "index.html"), 'w') { |f| f.write(result)}
 end
 
