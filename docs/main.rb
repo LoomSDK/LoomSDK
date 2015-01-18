@@ -44,13 +44,39 @@ def generate
   FileUtils.rm_rf OUTPUT_DIR
   FileUtils.mkdir_p OUTPUT_DIR
   FileUtils.cp_r Dir['static/*'], OUTPUT_DIR
-  
-  Dir["../artifacts/libs/*.loomlib"].each do |lib_path|
 
+  puts "== Processing loomlibs =="
+  process_loomlibs
+
+  puts "== Copying examples =="
+  copy_examples
+
+  puts "== Generating guides =="
+  generate_guides("guides")
+
+  puts "== Generating Docs =="
+  write_packages
+  write_examples
+  write_guides
+  write_landing_page
+  generate_classes_json
+
+end
+
+def copy_examples
+  FileUtils.cp_r(Dir.glob("examples"), OUTPUT_DIR)
+  Dir["examples/*"].each do |lib_path|
+    example_doc = Module::ExampleDoc.new(lib_path.split("/").last)
+    puts "Processing #{example_doc.path}.."
+    $examples[example_doc.name] = example_doc
+  end
+end
+
+def process_loomlibs
+  Dir["../artifacts/libs/*.loomlib"].each do |lib_path|
     puts "Processing #{lib_path}"
 
     lib = LoomLib.new(lib_path)
-
     lib.modules.each do |this_module|
 
       this_module.types.each do |class_doc|
@@ -78,24 +104,6 @@ def generate
       end
     end
   end
-  
-  # copy examples
-  FileUtils.cp_r(Dir.glob("examples"), OUTPUT_DIR)
-  Dir["examples/*"].each do |lib_path|
-    example_doc = Module::ExampleDoc.new(lib_path.split("/").last)
-    $examples[example_doc.name] = example_doc
-  end
-  
-  generate_guides("guides")
-  
-  generate_classes_json
-  
-  puts "== Generating Docs =="
-  write_packages
-  write_examples
-  write_guides
-  write_landing_page
-  
 end
 
 def generate_guides(directory)
