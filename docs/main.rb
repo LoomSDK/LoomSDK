@@ -40,25 +40,6 @@ $examples = {}
 $guides = GuideTree.new()
 $packages = @packages
 
-# Set this flag to true via CLI for testing.
-# This will output only the classes in the test_class_docs array.
-@is_test = ARGV[ ARG_TEST ]
-puts "ARG_TEST = #{@is_test}"
-@test_class_docs = [ ARGV[ ARG_TEST ] ]
-# "DisplayObject",
-#   "Sprite",
-#   "SimpleAudioEngine",
-#   "Transitions",
-#   "TextField",
-#   "LML", # contains vectors/dictionaries and a dictionary of vectors
-#   "CCArray", # deprecated tag
-#   "AnimatedComponent",
-#   "IStoreProvider",
-#   "BannerAd",
-#   "CCPoint",
-#   "TouchMarker",
-#   "FeathersControl"
-
 def generate
   FileUtils.rm_rf OUTPUT_DIR
   FileUtils.mkdir_p OUTPUT_DIR
@@ -200,17 +181,7 @@ def write_packages
   @packages.each do |package_doc|
     puts "Processing #{package_doc.path}"
     package_doc.write
-    
-    # write class docs for package
-    package_doc.all_class_docs.each do |class_doc|
-
-      # If this is a test, apply whitelist for test class docs.
-      if ( !@is_test ) || ( @test_class_docs.include? class_doc.data[:name] )
-        
-        write_class_file class_doc
-
-      end
-    end
+    package_doc.all_class_docs.each { |class_doc| write_class_file(class_doc) }
   end
 end
 

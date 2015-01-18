@@ -277,22 +277,6 @@ namespace :generate do
     end
   end
 
-  desc "Tests API docs for a class"
-  task :test_docs, [:class] do |t, args|
-
-    puts "===== Running Test Docs #{args[:class]} ====="
-
-    puts "===== Compiling Core Scripts ====="
-    Dir.chdir("sdk") do
-      sh "../artifacts/lsc Main.build"
-    end
-
-    puts "===== Generating Docs ====="
-    Dir.chdir("docs") do
-      ruby "main.rb test #{args[:class]}"
-    end
-  end
-
 end
 
 
