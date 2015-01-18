@@ -40,10 +40,6 @@ $doBuildFacebook=1
 # Disabled by default, set environment variable 'LOOM_BUILD_DOCS'
 $buildDocs = ENV['LOOM_BUILD_DOCS'] == "1" || ENV['LOOM_BUILD_DOCS'] == "true"
 
-######################################
-# END OF BUILD CONFIGURATION VARIABLES
-######################################
-
 def version_outdated?(current, required)
   (Gem::Version.new(current.dup) < Gem::Version.new(required.dup))
 end
@@ -52,8 +48,11 @@ end
 $RUBY_REQUIRED_VERSION = '1.8.7'
 ruby_err = "LoomSDK requires ruby version #{$RUBY_REQUIRED_VERSION} or newer.\nPlease go to https://www.ruby-lang.org/en/downloads/ and install the latest version."
 abort(ruby_err) if version_outdated?(RUBY_VERSION, $RUBY_REQUIRED_VERSION)
-puts "LoomSDK Rakefile running on Ruby version #{RUBY_VERSION}"
 
+# Loom SDK version
+$LOOM_VERSION = File.new("VERSION").read.chomp
+
+# Host operating system check
 include RbConfig
 
 case CONFIG['host_os']
@@ -75,28 +74,19 @@ end
 def installed?(tool)
   cmd = "which #{tool}" unless ($LOOM_HOST_OS == 'windows')
   cmd = "where #{tool} > nul 2>&1" if ($LOOM_HOST_OS == 'windows')
-  system(cmd)
+  %x(#{cmd})
   return ($? == 0)
 end
 
 $CMAKE_REQUIRED_VERSION = ($LOOM_HOST_OS == "linux") ? '2.8.7' : '2.8.9'
 cmake_err = "LoomSDK requires CMake version #{$CMAKE_REQUIRED_VERSION} or above.\nPlease go to http://www.cmake.org/ and install the latest version."
 abort(cmake_err) if (!installed?('cmake') || version_outdated?(cmake_version, $CMAKE_REQUIRED_VERSION))
-puts "Running CMake version #{cmake_version}"
 
 # For matz's sake just include rubyzip directly.
 path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'libs'))
-puts "Adding #{path} to $LOAD_PATH to use local rubyzip."
 $LOAD_PATH << path
 require 'zip'
 require 'zip/file'
-
-# Report configuration variables and validate them.
-puts "*** Using JIT? = #{$doBuildJIT}"
-puts "*** Build Type = #{$buildTarget}"
-puts "*** AndroidSDK = #{$targetAndroidSDK} AndroidBuildType = #{$targetAndroidBuildType}"
-puts "*** iOS SDK Version = #{$targetIOSSDK}"
-puts "*** Build Loom Docs = #{$buildDocs}"
 
 # $buildDebugDefine will trigger the LOOM_DEBUG define if this is a Debug build target
 if $buildTarget == "Debug"
@@ -109,7 +99,6 @@ end
 $buildAdMobDefine = "-DLOOM_BUILD_ADMOB=#{$doBuildAdmob}"
 $buildFacebookDefine = "-DLOOM_BUILD_FACEBOOK=#{$doBuildFacebook}"
 
-
 # How many cores should we use to build?
 if $LOOM_HOST_OS == 'darwin'
   $numCores = Integer(`sysctl hw.ncpu | awk '{print $2}'`)
@@ -118,7 +107,6 @@ elsif $LOOM_HOST_OS == 'windows'
 else 
   $numCores = Integer(`cat /proc/cpuinfo | grep processor | wc -l`)
 end
-puts "*** Building with #{$numCores} cores."
 
 # Windows specific checks and settings
 WINDOWS_PROCARCH_BITS = '32'
@@ -147,7 +135,6 @@ else
 end
 
 $OUTPUT_DIRECTORY = "artifacts"
-$LOOM_VERSION = File.new("VERSION").read
 
 require 'rake/clean'
 require 'rake/packagetask'
@@ -165,6 +152,20 @@ if $LOOM_HOST_OS == 'windows'
 else
     $SHADERC_BINARY = "artifacts/shaderc"
 end
+
+# Report build configuration values
+puts ''
+puts "LoomSDK (#{$LOOM_VERSION}) Rakefile running on Ruby v#{RUBY_VERSION}"
+puts "  CMake version: #{cmake_version}"
+puts "  Using JIT?: #{$doBuildJIT}"
+puts "  Build type: #{$buildTarget}"
+puts "  Detected Windows #{WINDOWS_PROCARCH_BITS} Bit PROCESSOR_ARCHITECTURE: '#{proc_arch}'" if $LOOM_HOST_OS == 'windows'
+puts "  Detected Non-Windows Platform" unless $LOOM_HOST_OS == 'windows'
+puts "  Building with #{$numCores} cores."
+puts "  AndroidSDK: #{$targetAndroidSDK}, AndroidBuildType: #{$targetAndroidBuildType}, target APK: #{$targetAPKName}"
+puts "  iOS SDK version: #{$targetIOSSDK}"
+puts "  Build Loom docs?: #{$buildDocs}"
+puts ''
 
 #############
 # BUILD TASKS
