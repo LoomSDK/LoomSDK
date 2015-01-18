@@ -90,12 +90,9 @@ def process_loomlibs
         $classes_by_package_path[ class_doc.package_path ] = class_doc
         
         # Loop through packages
-        if @packages[class_doc.data[:package]].nil?
-          @packages[class_doc.data[:package]] = Module::PackageDoc.new(class_doc.data[:package])
-          @packages[class_doc.data[:package]].assign_doc(class_doc)
-        else
-          @packages[class_doc.data[:package]].assign_doc(class_doc)
-        end
+        package = class_doc.data[:package]
+        @packages[package] = Module::PackageDoc.new(package) if @packages[package].nil?
+        @packages[package].assign_doc(class_doc)
 
         # Store all subclasses of a particular base type.
         @subclasses_of_base_type[ class_doc.data[:baseType] ] = [] unless @subclasses_of_base_type.has_key? class_doc.data[:baseType]
@@ -143,10 +140,8 @@ def generate_classes_json
   end
   
   $search_json = JSON.dump( { :classes => classes, :examples => examples, :guides => guides } )
-  
-  File.open("output/manifest.json", "w") do |file|
-    file.write($search_json)
-  end
+
+  File.open("output/manifest.json", "w") { |file| file.write($search_json) }
 end
 
 def write_class_file( class_doc )
@@ -205,11 +200,7 @@ def write_guides
   puts "Generating Guides"
   $guides.each do |topic_doc|
     topic_doc.write
-    
-    topic_doc.guides.each do |guide_doc|
-      guide_doc.write
-    end
-    
+    topic_doc.guides.each { |guide_doc| guide_doc.write }
   end
 end
 
