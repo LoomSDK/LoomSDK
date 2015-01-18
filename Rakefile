@@ -176,6 +176,13 @@ CLEAN.include ["build/**/lib/**", "artifacts/**"]
 CLOBBER.include ["**/*.loom",$OUTPUT_DIRECTORY]
 CLOBBER.include ["**/*.loomlib",$OUTPUT_DIRECTORY]
 
+Rake::TaskManager.record_task_metadata = true # this must be outside default task and before all tasks
+task :list_targets do
+  Rake.application.options.show_tasks = :tasks
+  Rake.application.options.show_task_pattern = //
+  Rake.application.display_tasks_and_comments()
+end
+
 task :default => :list_targets
 
 task :clobber, :force do |t, args|
@@ -765,11 +772,6 @@ namespace :build do
     puts "Short: #{git_rev_short}"
   end
 
-end
-
-task :list_targets do
-  puts "Listing all rake targets:"
-  system("rake -T")
 end
 
 file 'build/luajit_x86/lib/libluajit-5.1.a' do 
