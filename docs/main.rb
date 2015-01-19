@@ -1,28 +1,28 @@
 # load gemfiles
-require 'rubygems'
 require 'bundler/setup'
+require 'rubygems'
 
 # require everything else
-require 'fileutils'
 require 'erb'
+require 'fileutils'
 require 'ostruct'
 require 'pathname'
 require 'pp'
 require 'pygments'
 
-require File.expand_path('../lib/loom_lib', __FILE__)
-require File.expand_path('../lib/package_doc', __FILE__)
 require File.expand_path('../lib/example_doc', __FILE__)
 require File.expand_path('../lib/guide_doc', __FILE__)
+require File.expand_path('../lib/guide_tree', __FILE__)
+require File.expand_path('../lib/loom_lib', __FILE__)
+require File.expand_path('../lib/package_doc', __FILE__)
+require File.expand_path('../lib/package_tree', __FILE__)
 require File.expand_path('../lib/topic_doc', __FILE__)
 require File.expand_path('../renderer/class_page', __FILE__)
-require File.expand_path('../renderer/package_page', __FILE__)
 require File.expand_path('../renderer/example_page', __FILE__)
 require File.expand_path('../renderer/guide_page', __FILE__)
-require File.expand_path('../renderer/topic_page', __FILE__)
+require File.expand_path('../renderer/package_page', __FILE__)
 require File.expand_path('../renderer/page', __FILE__)
-require File.expand_path('../lib/package_tree', __FILE__)
-require File.expand_path('../lib/guide_tree', __FILE__)
+require File.expand_path('../renderer/topic_page', __FILE__)
 
 OUTPUT_DIR = "output"
 API_OUTPUT_DIR = File.join(OUTPUT_DIR, "api")
