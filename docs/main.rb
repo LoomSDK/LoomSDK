@@ -20,6 +20,7 @@ require File.expand_path('../lib/topic_doc', __FILE__)
 require File.expand_path('../renderer/class_page', __FILE__)
 require File.expand_path('../renderer/example_page', __FILE__)
 require File.expand_path('../renderer/guide_page', __FILE__)
+require File.expand_path('../renderer/home_page', __FILE__)
 require File.expand_path('../renderer/package_page', __FILE__)
 require File.expand_path('../renderer/page', __FILE__)
 require File.expand_path('../renderer/topic_page', __FILE__)
@@ -240,16 +241,11 @@ end
 def write_landing_page
   puts "Writing Home Page"
 
-  template = ERB.new(File.read("templates/home.html.erb"))
+  home_page = HomePage.new(version_number, './')
 
-  struct = OpenStruct.new({
-    :version_number => version_number,
-    :search_object_string => $search_json
-  })
-
-  result = template.result(struct.instance_eval {binding})
-
-  File.open(File.join(OUTPUT_DIR, "index.html"), 'w') { |f| f.write(result)}
+  File.open(File.join(OUTPUT_DIR, "index.html"), 'w') do |f|
+    f.write(home_page.render File.expand_path("templates/home"))
+  end
 end
 
 def version_number
