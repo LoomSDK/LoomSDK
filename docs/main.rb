@@ -32,13 +32,15 @@ GUIDES_OUTPUT_DIR = File.join(OUTPUT_DIR, "guides")
 ARG_VERSION = 0
 ARG_TEST = 1
 
-$classes_by_package_path = {}
-$search_json = ""
-@subclasses_of_base_type = {}
 @packages = PackageTree.new()
+@stats = {}
+@subclasses_of_base_type = {}
+
+$classes_by_package_path = {}
 $examples = {}
 $guides = GuideTree.new()
 $packages = @packages
+$search_json = ''
 
 def generate
   FileUtils.rm_rf OUTPUT_DIR
@@ -51,16 +53,17 @@ def generate
   puts "== Copying examples =="
   copy_examples
 
-  puts "== Generating guides =="
-  generate_guides("guides")
+  puts "== Processing guides =="
+  process_guides("guides")
 
   puts "== Generating Docs =="
+  generate_search_data
   write_packages
   write_examples
   write_guides
   write_landing_page
-  generate_classes_json
 
+  puts "== #{@stats[:num_classes]} classes; #{@stats[:num_examples]} examples; #{@stats[:num_guides]} guides =="
 end
 
 def copy_examples
@@ -103,13 +106,13 @@ def process_loomlibs
   end
 end
 
-def generate_guides(directory)
+def process_guides(directory)
   puts "Generating guides for #{directory}/.."
 
   Dir.glob("#{directory}/*") do |filename|
     next if filename == "." or filename == ".." or filename == directory
     if File.directory? filename
-      generate_guides filename
+      process_guides filename
     elsif $guides[filename].nil?
       filename.gsub! "guides/", ""
       $guides[File.split(filename).first] = Module::TopicDoc.new(File.split(filename).first)
@@ -121,7 +124,7 @@ def generate_guides(directory)
   end
 end
 
-def generate_classes_json
+def generate_search_data
   puts "Generating search data.."
 
   classes = []
@@ -143,10 +146,13 @@ def generate_classes_json
     end
   end
 
+  @stats[:num_classes] = classes.length
+  @stats[:num_examples] = examples.length
+  @stats[:num_guides] = guides.length
+
   $search_json = JSON.dump( { :classes => classes, :examples => examples, :guides => guides } )
 
   File.open("output/manifest.json", "w") { |file| file.write($search_json) }
-  puts "  #{classes.length} classes; #{examples.length} examples; #{guides.length} guides"
 end
 
 def write_class_file( class_doc )
