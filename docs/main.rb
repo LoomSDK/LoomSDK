@@ -30,7 +30,6 @@ EXAMPLES_OUTPUT_DIR = File.join(OUTPUT_DIR, "examples")
 GUIDES_OUTPUT_DIR = File.join(OUTPUT_DIR, "guides")
 
 ARG_VERSION = 0
-ARG_TEST = 1
 
 @packages = PackageTree.new()
 @stats = {}
@@ -47,6 +46,7 @@ def generate
   FileUtils.mkdir_p OUTPUT_DIR
   FileUtils.cp_r Dir['static/*'], OUTPUT_DIR
 
+  puts "Generating Loomdocs for #{version_number}"
   puts "== Processing loomlibs =="
   process_loomlibs
 
@@ -226,8 +226,6 @@ def write_example_index
 
   template = ERB.new(File.read("templates/example/example_index.html.erb"))
 
-  version_number = (ARGV[ARG_VERSION].nil? ? "source" : ARGV[ARG_VERSION])
-
   struct = OpenStruct.new({
     :examples => $examples,
     :search_object_string => $search_json,
@@ -244,8 +242,6 @@ def write_landing_page
 
   template = ERB.new(File.read("templates/home.html.erb"))
 
-  version_number = (ARGV[ARG_VERSION].nil? ? "source" : ARGV[ARG_VERSION])
-
   struct = OpenStruct.new({
     :version_number => version_number,
     :search_object_string => $search_json
@@ -254,6 +250,10 @@ def write_landing_page
   result = template.result(struct.instance_eval {binding})
 
   File.open(File.join(OUTPUT_DIR, "index.html"), 'w') { |f| f.write(result)}
+end
+
+def version_number
+  ENV.fetch('LOOM_VERSION', '???')
 end
 
 generate # run it!

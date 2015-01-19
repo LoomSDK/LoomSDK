@@ -287,6 +287,7 @@ namespace :docs do
 
     puts "===== Recreating the docs ====="
     Dir.chdir("docs") do
+      ENV['LOOM_VERSION'] = $LOOM_VERSION unless ENV['LOOM_VERSION']
       load "./main.rb"
     end
     FileUtils.mkdir_p "artifacts/docs"
