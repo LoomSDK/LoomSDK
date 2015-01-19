@@ -212,7 +212,7 @@ class HTMLwithPygments < Redcarpet::Render::HTML
     if language && Pygments::Lexer.find(language.downcase)
       lexer = language.downcase
     else
-      puts "Pygments :: Unknown lexer #{language}, setting to text"
+      puts "[Pygments] Unknown lexer '#{language}' for: '#{code.lines.first[0..50].chomp}'.., defaulting to text"
       lexer = "text"
     end
     Pygments.highlight(code, :lexer => lexer)
