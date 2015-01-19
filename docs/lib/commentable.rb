@@ -2,7 +2,7 @@ module Module::Commentable
   require 'redcarpet'
   require 'nokogiri'
   require 'pygments.rb'
-  
+
   def comment(data, relative_base_path)
     @relative_base_path = relative_base_path
     docString = data.is_a?(String) ? data : data[:docString]
@@ -12,7 +12,7 @@ module Module::Commentable
     docString = remove_flags docString
     markdown(docString)
   end
-  
+
   # remove flags
   def remove_flags(docString)
     docString = remove_param_flags docString
@@ -22,56 +22,56 @@ module Module::Commentable
     docString = remove_noinherit_flags docString
     remove_default_flags docString
   end
-  
+
   def remove_default_flags(str)
     str.gsub(/@default\s*(.*)/, "")
   end
-  
+
   def remove_param_flags(str)
     str.gsub(/@param\s*(\S*)\s(.*)/, "")
   end
-  
+
   def remove_throws_flags(str)
     str.gsub(/@throws\s*(\S*)\s*(.*)/, "")
   end
-  
+
   def remove_return_flags(str)
     str.gsub(/@return\s*(.*)/, "")
   end
-  
+
   def remove_deprecated_flags(str)
     str.gsub(/@deprecated\s*(.*)/, "")
   end
-  
+
   def remove_noinherit_flags(str)
     str.gsub(/@hide-from-inherited/, "")
   end
-  
+
   # @inheritDoc
   def inherit_doc_from_class(class_doc, name)
-    
+
     new_docString = ""
-    
+
     #check interfaces
     class_doc.data[:interfaces].each do |interface|
       interface_doc = $classes_by_package_path[interface]
       new_docString = find_docString_in_interface(interface_doc, name)
       break unless new_docString.empty?
     end
-    
+
     #check this class unless its the base class
     if new_docString.empty? && class_doc != self
       new_docString = docString_from_class(class_doc, name)
     end
-    
+
     #check superclass
     if new_docString.empty? && !class_doc.superclass.nil?
       new_docString = inherit_doc_from_class(class_doc.superclass, name)
     end
-    
+
     new_docString
   end
-  
+
   def docString_from_class(doc, name)
     if doc.method_hash[name]
       return doc.method_hash[name][:docString] unless doc.method_hash[name][:docString].include? "@inheritDoc"
@@ -81,21 +81,21 @@ module Module::Commentable
     end
     ""
   end
-  
+
   def find_docString_in_interface(interface_doc, name)
     new_docString = docString_from_class(interface_doc, name)
-    
+
     #check interface superclasses
     if new_docString.empty?
       interface_doc.superclasses.each do |superclass_doc|
         new_docString = docString_from_class(superclass_doc, name)
       end
     end
-    
+
     new_docString
   end
-  
-  
+
+
   # @copy
   def replace_copy(str)
     str.match(/@copy \S*/).to_a.each do |match|
@@ -111,7 +111,7 @@ module Module::Commentable
     end
     str
   end
-  
+
   # @see
   def replace_see(str)
     match_data = str.scan(/@see ((".*")|\S*(\s\[.*\])?)/)
@@ -137,7 +137,7 @@ module Module::Commentable
     end
     str
   end
-  
+
   def link_text(matching_str)
     class_path, attribute = matching_str.split("#")
     unless attribute.nil?
@@ -150,46 +150,46 @@ module Module::Commentable
     class_path = self.package_path if class_path.empty?
     "[#{matching_str}](#{Module::ClassDoc.full_classpath_to_url class_path, @relative_base_path}#{attribute})  "
   end
-  
+
   # @default
   def default_for_property(property)
     match_data = /@default\s*(.*)/.match property[:docString]
     match_data.nil? ? "" : match_data[1]
   end
-  
+
   # @params
   def comment_for_param(param_name, docString)
     match_data = /@param\s*(#{param_name})\s(.*)/.match docString
     match_data.nil? ? "" : match_data[2]
   end
-  
+
   # @return
   def comment_for_return(return_description)
     match_data = /@return\s*(.*)/.match return_description
     match_data.nil? ? "" : match_data[1]
   end
-  
+
   # @throws
   def comment_for_throws(str)
     match_data = /@throws\s*(\S*)\s*(.*)/.match str
     match_data.nil? ? "" : "#{match_data[1]} #{match_data[2]}"
   end
-  
+
   # @deprecated
   def deprecated(str)
     match_data = /@deprecated\s*(.*)/.match str
     match_data.nil? ? "" : "<span class='deprecated-property' title='#{match_data[1]}'>deprecated </span>"
   end
-  
+
   def markdown(text, allow_html=false)
     renderer_options = {
       :hard_wrap => false,
       :with_toc_data => true,
       :filter_html => true
     }
-    
+
     renderer = HTMLwithPygments.new(renderer_options)
-    
+
     options = {
       :autolink => true,
       :no_intra_emphasis => true,
@@ -199,7 +199,7 @@ module Module::Commentable
       :superscript => true,
       :tables => true
     }
-  
+
     Redcarpet::Markdown.new(renderer, options).render(text)
   end
 end
@@ -207,7 +207,7 @@ end
 #markdown
 class HTMLwithPygments < Redcarpet::Render::HTML
   require 'digest/sha1'
-  
+
   def block_code(code, language)
     if language && Pygments::Lexer.find(language.downcase)
       lexer = language.downcase
