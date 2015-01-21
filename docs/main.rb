@@ -18,6 +18,7 @@ require File.expand_path('../lib/package_doc', __FILE__)
 require File.expand_path('../lib/package_tree', __FILE__)
 require File.expand_path('../lib/topic_doc', __FILE__)
 require File.expand_path('../renderer/class_page', __FILE__)
+require File.expand_path('../renderer/example_index', __FILE__)
 require File.expand_path('../renderer/example_page', __FILE__)
 require File.expand_path('../renderer/guide_page', __FILE__)
 require File.expand_path('../renderer/home_page', __FILE__)
@@ -186,7 +187,7 @@ def write_class_file( class_doc )
 
   page = ClassPage.new(class_doc, class_doc.superclasses, subclasses, base_path, relative_to_base, constants, public_fields, protected_fields, public_methods, protected_methods, events)
 
-  # TO-DO: Use a switch statement on the doc type to determine which template to use.
+  # TODO: Use a switch statement on the doc type to determine which template to use.
   File.open(File.join(class_dir, "#{class_doc.data[:name]}.html"), 'w') {|f| f.write(page.render('templates/class_doc')) }
 end
 
@@ -225,17 +226,12 @@ end
 def write_example_index
   puts "Writing Examples Index"
 
-  template = ERB.new(File.read("templates/example/example_index.html.erb"))
+  relative_base_path = Pathname.new(OUTPUT_DIR).relative_path_from( Pathname.new(EXAMPLES_OUTPUT_DIR) )
+  index_page = ExampleIndex.new($examples, version_number, relative_base_path)
 
-  struct = OpenStruct.new({
-    :examples => $examples,
-    :search_object_string => $search_json,
-    :relative_base_path => Pathname.new(OUTPUT_DIR).relative_path_from( Pathname.new(EXAMPLES_OUTPUT_DIR) )
-  })
-
-  result = template.result(struct.instance_eval {binding})
-
-  File.open(File.join(EXAMPLES_OUTPUT_DIR, "index.html"), 'w') { |f| f.write(result)}
+  File.open(File.join(EXAMPLES_OUTPUT_DIR, "index.html"), 'w') do |f|
+    f.write(index_page.render File.expand_path("templates/example/example_index"))
+  end
 end
 
 def write_landing_page
