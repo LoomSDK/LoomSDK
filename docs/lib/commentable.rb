@@ -207,15 +207,19 @@ end
 
 #markdown
 class HTMLwithPygments < Redcarpet::Render::HTML
-  require 'digest/sha1'
 
   def block_code(code, language)
     if language && Pygments::Lexer.find(language.downcase)
       lexer = language.downcase
     else
       puts "[Pygments] Unknown lexer '#{language}' for: '#{code.lines.first[0..50].chomp}'.., defaulting to text"
-      lexer = "text"
+      lexer = 'text'
     end
-    Pygments.highlight(code, :lexer => lexer)
+
+    highlight_options = {
+      :encoding => 'utf-8',
+      :lexer => lexer
+    }
+    Pygments.highlight(code, :options => highlight_options)
   end
 end
