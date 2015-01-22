@@ -20,15 +20,15 @@ The following snippet comes from the [CSS Example](http://docs.theengine.co/loom
     <loom2d.display.Image id="background" styleName="background" source="assets/Background.png"/>
 
     <loom2d.ui.SimpleButton id="myButton" upImage="assets/Button.png" downImage="assets/ButtonDown.png"/>
-    
+
     <loom2d.ui.SimpleButton styleName="button2" upImage="assets/Button.png" downImage="assets/ButtonDown.png"/>
-    
+
     <loom2d.ui.SimpleButton styleName="button3" upImage="assets/Button.png" downImage="assets/ButtonDown.png"/>
 
 </loom2d.display.Sprite>
 ~~~
 
-Let's break it down a bit. 
+Let's break it down a bit.
 
 1. We declare a `Sprite` object to be skinned with the CSS-sheet `main.css`. It will contain all of the sub-elements.
 2. The `Image` tag has an `id` by which it can be referenced in LoomScript code, and the source points to the image file.
@@ -39,29 +39,29 @@ Let's break it down a bit.
 
 You must subclass whatever object is declared as the parent in the `.lml`. In our example, it is the Sprite.
 
-~~~
+~~~as3
 class MainView extends Sprite
-{ 
-	// Nothing to do here- yet!
+{
+    // Nothing to do here- yet!
 }
 ~~~
 
 Optionally, if you've given some of your elements ids and wish to work on them in LoomScript, state their dependencies with the `[Bind]` annotation.
 
-~~~
+~~~as3
 class MainView extends Sprite
 {
-	[Bind]
-	public var background: Image;
+    [Bind]
+    public var background: Image;
 
-	[Bind]
-	public var myButton: SimpleButton;
+    [Bind]
+    public var myButton: SimpleButton;
 }
 ~~~
 
 From here, it's only a matter of loading the `.lml` file and you're good to go!
 
-~~~
+~~~as3
 class CSSExample extends Application
 {
     override public function run()
@@ -74,7 +74,7 @@ class CSSExample extends Application
         LML.bind("assets/main.lml", view);
 
         view.myButton.onClick += function() {
-            trace("Button 1 clicked");                
+            trace("Button 1 clicked");
         };
     }
 }
@@ -90,7 +90,7 @@ If you only had the ability to declare elements and their hierarchy in LML, then
 
 Each `styleName` attribute maps to a `#classname` attribute in CSS. `stylename="background"` resolves to the following piece of CSS (again from the CSSExample)
 
-~~~
+~~~css
 #background {
     x: 480;
     y: 0;
@@ -100,16 +100,16 @@ Each `styleName` attribute maps to a `#classname` attribute in CSS. `stylename="
 
 Additionally, each `id="name"` maps to a CSS id
 
-~~~
+~~~css
 .myButton {
     x: 120;
     y: 20;
 }
 ~~~
 
-Now this is where LML shines! We can declaratively position, rotate, and skin our layout to (almost) our heart's content. We can even use Selectors to skin the same class for a different device. 
+Now this is where LML shines! We can declaratively position, rotate, and skin our layout to (almost) our heart's content. We can even use Selectors to skin the same class for a different device.
 
-~~~
+~~~css
 #button2 {
     x: 120;
     y: 120;

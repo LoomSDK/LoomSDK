@@ -13,7 +13,7 @@ The major language features we've added to LoomScript are:
 
 * Delegates. LoomScript has C#-esque delegates for binding to script or native code.
 
-    ~~~
+    ~~~as3
     delegate LMLDelegate():void;
     public var lmlChildRemoved:LMLDelegate;
     ~~~
@@ -28,7 +28,7 @@ The major language features we've added to LoomScript are:
 
 * Enums. [Enumerated Types](http://en.wikipedia.org/wiki/Enumerated_type) provide type-safe keys, symbols and configuration valuables. For instance:
 
-    ~~~
+    ~~~as3
     public enum GameState
     {
       MAIN_MENU,
@@ -44,7 +44,7 @@ Why not use JavaScript or Lua directly? Why develop "our own" language?
 
 Simply, because we feel that JS and Lua aren't great choices for game or app development. They can certainly work - but they don't have good support for [Programming in the Large](http://en.wikipedia.org/wiki/Programming_in_the_large). As a result, they become painful for larger teams and/or more complicated games. Even small teams benefit from having good frameworks and abstractions, since we provide those things with Loom and they can leverage them in their games.
 
-As far as ""developing our own language"", we have tried very hard to follow the [principle of least astonishment](http://en.wikipedia.org/wiki/Principle_of_least_astonishment). In practice, LoomScript is highly familiar to any developer who has worked with ActionScript 3, C#, Java, C++, PHP, or JavaScript. Where we have added features, we have modelled them closely off of existing major languages implementations. For instance, we have added delegates, assemblies, and implicit typing that are very similar to C#'s. 
+As far as ""developing our own language"", we have tried very hard to follow the [principle of least astonishment](http://en.wikipedia.org/wiki/Principle_of_least_astonishment). In practice, LoomScript is highly familiar to any developer who has worked with ActionScript 3, C#, Java, C++, PHP, or JavaScript. Where we have added features, we have modelled them closely off of existing major languages implementations. For instance, we have added delegates, assemblies, and implicit typing that are very similar to C#'s.
 
 We have aggressively avoided trying to innovate in our language design. We feel there are some very good options if you want an innovative language for your project, such as Erlang, Haxe, Clojure, etc. LoomScript is meant to be a practical tool to let you and your team write compelling interactive experiences quickly.
 
