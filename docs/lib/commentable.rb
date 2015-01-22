@@ -220,6 +220,8 @@ class HTMLwithPygments < Redcarpet::Render::HTML
       :encoding => 'utf-8',
       :lexer => lexer
     }
-    Pygments.highlight(code, :options => highlight_options)
+    # loom compiler eats whitespace runs, so here we restore indentation:
+    # replace unicode right tab ('⇥', U+21E5) with tab spaces
+    Pygments.highlight(code.gsub(/ *⇥/, '    '), :options => highlight_options)
   end
 end

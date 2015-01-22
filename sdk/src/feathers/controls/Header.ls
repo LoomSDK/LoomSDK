@@ -41,7 +41,7 @@ package feathers.controls
      * header.title = "I'm a header";
      * header.leftItems = new &lt;DisplayObject&gt;[ backButton ];
      * this.addChild( header );
-         * ~~~
+     * ~~~
      *
      * @see http://wiki.starling-framework.org/feathers/header
      */
@@ -241,11 +241,10 @@ package feathers.controls
          * header:
          *
          * ~~~as3
-         * header.titleFactory = function():ITextRenderer
-         * {
-         *     var titleRenderer:TextFieldTextRenderer = new TextFieldTextRenderer();
-         *     titleRenderer.textFormat = new TextFormat( "_sans", 12, 0xff0000 );
-         *     return titleRenderer;
+         * header.titleFactory = function():ITextRenderer {
+         *    ⇥var titleRenderer:TextFieldTextRenderer = new TextFieldTextRenderer();
+         *    ⇥titleRenderer.textFormat = new TextFormat( "_sans", 12, 0xff0000 );
+         *    ⇥return titleRenderer;
          * }
          * ~~~
          *

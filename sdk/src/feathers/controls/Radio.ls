@@ -41,7 +41,7 @@ package feathers.controls
      * radio3.label = "Three";
      * radio3.toggleGroup = group;
      * this.addChild( radio3 );
-         * ~~~
+     * ~~~
      *
      * @see http://wiki.starling-framework.org/feathers/radio
      * @see feathers.core.ToggleGroup

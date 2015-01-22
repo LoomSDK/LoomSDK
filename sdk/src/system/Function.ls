@@ -43,7 +43,7 @@ package system {
  *
  *  ```as3
  *  var g:Function = function(n:Number):Function {
- *    return function(x:Number) { return x + n; }
+ *     ⇥return function(x:Number) { return x + n; }
  *  };
  *  var skipTwo:Function = g(2);
  *  skipTwo(7); // -> 9

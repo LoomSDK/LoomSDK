@@ -20,14 +20,13 @@ package feathers.controls
      *
      * ~~~as3
      * var group:ButtonGroup = new ButtonGroup();
-     * group.dataProvider = new ListCollection(
-     * [
-     *     { label: "Yes", triggered: yesButton_triggeredHandler },
-     *     { label: "No", triggered: noButton_triggeredHandler },
-     *     { label: "Cancel", triggered: cancelButton_triggeredHandler },
-     * ]);;
+     * group.dataProvider = new ListCollection([
+     *    ⇥{ label: "Yes", triggered: yesButton_triggeredHandler },
+     *    ⇥{ label: "No", triggered: noButton_triggeredHandler },
+     *    ⇥{ label: "Cancel", triggered: cancelButton_triggeredHandler },
+     * ]);
      * this.addChild( group );
-         * ~~~
+     * ~~~
      *
      * @see http://wiki.starling-framework.org/feathers/button-group
      */
@@ -179,11 +178,10 @@ package feathers.controls
          * The following example sets the button group's data provider:
          *
          * ~~~as3
-         * group.dataProvider = new ListCollection(
-         * [
-         *     { label: "Yes", triggered: yesButton_triggeredHandler },
-         *     { label: "No", triggered: noButton_triggeredHandler },
-         *     { label: "Cancel", triggered: cancelButton_triggeredHandler },
+         * group.dataProvider = new ListCollection([
+         *    ⇥{ label: "Yes", triggered: yesButton_triggeredHandler },
+         *    ⇥{ label: "No", triggered: noButton_triggeredHandler },
+         *    ⇥{ label: "Cancel", triggered: cancelButton_triggeredHandler },
          * ]);
          * ~~~
          *
@@ -207,7 +205,7 @@ package feathers.controls
 
          *
          * Additionally, you can add the following event listeners:
-         * 
+         *
          *     - Event.TRIGGERED
          *     - Event.CHANGE
 
@@ -408,11 +406,10 @@ package feathers.controls
          * factory:
          *
          * ~~~as3
-         * group.buttonFactory = function():Button
-         * {
-         *     var button:Button = new Button();
-         *     button.defaultSkin = new Image( texture );
-         *     return button;
+         * group.buttonFactory = function():Button {
+         *    ⇥var button:Button = new Button();
+         *    ⇥button.defaultSkin = new Image( texture );
+         *    ⇥return button;
          * };
          * ~~~
          *
@@ -460,11 +457,10 @@ package feathers.controls
          * factory:
          *
          * ~~~as3
-         * group.firstButtonFactory = function():Button
-         * {
-         *     var button:Button = new Button();
-         *     button.defaultSkin = new Image( texture );
-         *     return button;
+         * group.firstButtonFactory = function():Button {
+         *    ⇥var button:Button = new Button();
+         *    ⇥button.defaultSkin = new Image( texture );
+         *    ⇥return button;
          * };
          * ~~~
          *
@@ -512,11 +508,10 @@ package feathers.controls
          * factory:
          *
          * ~~~as3
-         * group.lastButtonFactory = function():Button
-         * {
-         *     var button:Button = new Button();
-         *     button.defaultSkin = new Image( texture );
-         *     return button;
+         * group.lastButtonFactory = function():Button {
+         *    ⇥var button:Button = new Button();
+         *    ⇥button.defaultSkin = new Image( texture );
+         *    ⇥return button;
          * };
          * ~~~
          *
@@ -563,9 +558,8 @@ package feathers.controls
          * The following example provides a custom button initializer:
          *
          * ~~~as3
-         * group.buttonInitializer = function( button:Button, item:Object ):void
-         * {
-         *     button.label = item.label;
+         * group.buttonInitializer = function( button:Button, item:Object ):void {
+         *    ⇥button.label = item.label;
          * };
          * ~~~
          */
@@ -868,14 +862,14 @@ package feathers.controls
                 button.label = item as String;
                 return;
             }
-            
+
             var itemAsDictionary:Dictionary.<String, Object> = item as Dictionary.<String, Object>;
-            
+
             if( itemAsDictionary != null )
             {
                 button.label = ( itemAsDictionary[ "label" ] != null ) ? itemAsDictionary[ "label" ] as String : "";
                 button.isEnabled = ( itemAsDictionary[ "isEnabled" ] != null ) ? itemAsDictionary[ "isEnabled" ] as Boolean : true;
-                
+
                 var field:String;
                 for each( field in DEFAULT_BUTTON_FIELDS )
                 {
