@@ -19,6 +19,8 @@ limitations under the License.
 */
 
 package system {
+    import system.reflection.FieldInfo;
+    import system.reflection.Type;
 
 
 /**
@@ -52,7 +54,199 @@ enum JSONType
  *  @see #loadString()
  *  @see #serialize()
  */
+[Native(managed)]
 native class JSON {
+    
+    /**
+     * Convenience function parsing a JSON string and returning a JSON object.
+     * @param json  The JSON string to be parsed.
+     * @return  The JSON object parsed from the string.
+     */
+    public static function parse(json:String):JSON {
+        var j = new JSON();
+        Debug.assert(j.loadString(json), "JSON failed to load");
+        return j;
+    }
+    
+    /**
+     * Traverses through the object's fields and builds a JSON tree
+     * @param o The Object to traverse using the Reflection API.
+     * @return  The JSON tree string built from the fields of the object.
+     */
+    public static function stringify(o:Object, visited:Vector.<Object> = null):String {
+        if (o == null) return "null";
+        
+        var type:Type = o.getType();
+        
+        var name = type.getFullName();
+        
+        switch (name) {
+            case "system.String": return '"' + escape(o.toString()) + '"';
+            case "system.Number": return '' + o + '';
+            case "system.Boolean": return '' + o + '';
+        }
+        
+        var vec = name == "system.Vector";
+        
+        if (visited == null) visited = new Vector.<Object>();
+        if (visited.indexOf(o) != -1) {
+            trace("Recursive reference detected for " + o);
+            return null;
+        }
+        
+        var index = visited.length;
+        visited.push(o);
+        
+        var i:int;
+        var j:String;
+        var vs:String;
+        if (vec) {
+            j = "[ ";
+            var v:Vector.<Object> = o as Vector.<Object>;
+            for (i = 0; i < v.length; i++) {
+                vs = stringify(v[i], visited);
+                if (vs == null) continue;
+                j += vs;
+                if (i < v.length-1) j += ", ";
+            }
+            j += " ]";
+        } else {
+            j = "{ ";
+            var n:int;
+            
+            if (name == "system.Dictionary") {
+                var d:Dictionary.<String, Object> = o as Dictionary.<String, Object>;
+                if (d == null) {
+                    trace("Unsupported Dictionary type: "+type.getFullName());
+                    return null;
+                }
+                for (var k in d) {
+                    vs = stringify(d[k], visited);
+                    if (vs == null) continue;
+                    j += '"' + escape(k) + '": ' + vs + ", ";
+                }
+                j = j.substr(0, j.length-2);
+            } else {
+                n = type.getFieldInfoCount();
+                for (i = 0; i < n; i++) {
+                    var f:FieldInfo = type.getFieldInfo(i);
+                    vs = stringify(f.getValue(o), visited);
+                    if (vs == null) continue;
+                    j += '"' + f.getName() + '": ' + vs;
+                    if (i < n-1) j += ", ";
+                }
+                
+                /*
+                // TODO: Should we add it for properties too?
+                n = type.getPropertyInfoCount();
+                for (i = 0; i < n; i++) {
+                    var p:PropertyInfo = type.getPropertyInfo(i);
+                    vs = stringify(p.getGetMethod().invoke(o), visited);
+                    if (vs == null) continue;
+                    j += '"' + p.getName() + '": ' + vs;
+                    if (i < n-1) j += ", ";
+                }
+                */
+            }
+            
+            j += " }";
+        }
+        
+        visited.splice(index, 1);
+        
+        return j;
+    }
+    
+    private static function escape(s:String):String {
+        var e = "";
+        for (var i = 0; i < s.length; i++) {
+            var c = s.charAt(i);
+            switch (c) {
+                case '"': e += "\\\""; break;
+                case "\\": e += "\\\\"; break;
+                case "\r": e += "\\r"; break;
+                case "\n": e += "\\n"; break;
+                case "\t": e += "\\t"; break;
+                default: e += c;
+            }
+        }
+        return e;
+    }
+    
+    public static function fromDictionary(d:Dictionary.<String, Object>):JSON {
+        var o = new JSON();
+        o.initObject();
+        for (var k in d) {
+            o.setValue(k, d[k]);
+        }
+        return o;
+    }
+    
+    public static function fromVector(v:Vector.<Object>):JSON {
+        var a = new JSON();
+        a.initArray();
+        for (var i:int = 0; i < v.length; i++) {
+            a.setArrayValue(i, v[i]);
+        }
+        return a;
+    }
+    
+    
+    public function applyField(o:Object, field:String) {
+        var info:FieldInfo = o.getType().getFieldInfoByName(field);
+        switch (info.getTypeInfo().getFullName()) {
+            case "system.Boolean": info.setValue(o, getBoolean(field)); break;
+            case "system.Number": info.setValue(o, getInteger(field)); break;
+            case "system.String": info.setValue(o, getString(field)); break;
+            default: throw new Error("Unknown field type: "+info.getTypeInfo().getFullName());
+        }
+    }
+    
+    public function setValue(key:String, o:Object) {
+        var info:Type = o.getType();
+        switch (info.getFullName()) {
+            case "system.Boolean": setBoolean(key, o as Boolean); break;
+            case "system.Number": setFloat(key, o as Number); break;
+            case "system.String": setString(key, o as String); break;
+            case "system.Vector": setVector(key, o as Vector.<Object>); break;
+            case "system.Dictionary": setDictionary(key, o as Dictionary.<String, Object>); break;
+            default: Debug.assert(false, "Unknown object type: "+info.getFullName());
+        }
+    }
+    
+    public function setArrayValue(index:int, o:Object) {
+        var info:Type = o.getType();
+        switch (info.getFullName()) {
+            case "system.Boolean": setArrayBoolean(index, o as Boolean); break;
+            case "system.Number": setArrayFloat(index, o as Number); break;
+            case "system.String": setArrayString(index, o as String); break;
+            case "system.Vector": setArrayVector(index, o as Vector.<Object>); break;
+            case "system.Dictionary": setArrayDictionary(index, o as Dictionary.<String, Object>); break;
+            default: Debug.assert(false, "Unknown object type: "+info.getFullName());
+        }
+    }
+    
+    public function setVector(key:String, v:Vector.<Object>) {
+        setArray(key, fromVector(v));
+    }
+    
+    public function setArrayVector(index:int, v:Vector.<Object>) {
+        setArrayArray(index, fromVector(v));
+    }
+    
+    public function setDictionary(key:String, d:Dictionary.<String, Object>) {
+        setObject(key, fromDictionary(d));
+    }
+    
+    public function setArrayDictionary(index:int, d:Dictionary.<String, Object>) {
+        setArrayObject(index, fromDictionary(d));
+    }
+    
+    
+    
+    public native function initObject():Boolean;
+    public native function initArray():Boolean;
+    
 
     /** Loads a JSON-formatted string into memory. Required before getters can be called.
      *

@@ -41,28 +41,46 @@ public:
     {
     }
 
-    ~JSON()
-    {
+    bool clear() {
         if (_json)
         {
             if (_root)
             {
                 json_decref(_json);
+                _root = false;
             }
             _json = NULL;
+            return true;
         }
+        return false;
+    }
+
+    ~JSON()
+    {
+        clear();
+    }
+
+    bool initObject() {
+        clear();
+
+        _json = json_object();
+        if (_json) _root = true;
+
+        return _json == NULL ? false : true;
+    }
+
+    bool initArray() {
+        clear();
+
+        _json = json_array();
+        if (_json) _root = true;
+
+        return _json == NULL ? false : true;
     }
 
     bool loadString(const char *json)
     {
-        if (_json)
-        {
-            if (_root)
-            {
-                json_decref(_json);
-            }
-            _json = NULL;
-        }
+        clear();
 
         _json = json_loads(json, JSON_DISABLE_EOF_CHECK, &_error);
 
@@ -81,10 +99,7 @@ public:
             _errorMsg = "";
         }
 
-        if (_json)
-        {
-            _root = true;
-        }
+        if (_json) _root = true;
 
         return _json == NULL ? false : true;
     }
@@ -601,6 +616,8 @@ static int registerSystemJSON(lua_State *L)
 
        .beginClass<JSON> ("JSON")
        .addConstructor<void (*)(void)>()
+       .addMethod("initObject", &JSON::initObject)
+       .addMethod("initArray", &JSON::initArray)
        .addMethod("loadString", &JSON::loadString)
        .addMethod("serialize", &JSON::serialize)
 
@@ -658,5 +675,5 @@ static int registerSystemJSON(lua_State *L)
 
 void installSystemJSON()
 {
-    NativeInterface::registerNativeType<JSON>(registerSystemJSON);
+    NativeInterface::registerManagedNativeType<JSON>(registerSystemJSON);
 }
