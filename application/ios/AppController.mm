@@ -92,6 +92,11 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
     parse = [[ParseAPIiOS alloc] init];
     [parse initialize];
 #endif
+
+    // Store potential Remote Notification Dictionary
+    gRemoteNotificationPayloadDictionary = launchOptions[UIApplicationLaunchOptionsRemoteNotificationKey];
+    ios_RemoteNotificationOpen();
+
     cocos2d::CCApplication::sharedApplication().run();
     
     return YES;
@@ -213,7 +218,7 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
     /// Parse Push Notifications
     if(parse)
     {
-        NSLog(@"---------Registered Parse for Remote Notifiations");
+        NSLog(@"---------Registered Parse for Remote Notifications");
         [parse registerForRemoteNotifications: deviceToken];
     }
 }
@@ -235,6 +240,13 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
         NSLog(@"---------Received Remote Notification: sending through to Parse");
         [parse receivedRemoteNotification: userInfo];        
     }
+}
+
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))handler {
+    // Store potential Remote Notification Dictionary
+    NSLog(@"---------Received Remote Notification Payload: %@", userInfo);
+    gRemoteNotificationPayloadDictionary = userInfo;
+    ios_RemoteNotificationOpen();
 }
 
 

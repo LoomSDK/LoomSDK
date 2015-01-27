@@ -36,9 +36,12 @@ limitations under the License.
 
 static SensorTripleChangedCallback gTripleChangedCallback = NULL;
 static OpenedViaCustomURLCallback gOpenedViaCustomURLCallback = NULL;
+static OpenedViaRemoteNotificationCallback gOpenedViaRemoteNotificationCallback = NULL;
 
 BOOL gOpenedWithCustomURL = NO;
+BOOL gOpenedWithRemoteNotification = NO;
 NSMutableDictionary *gOpenUrlQueryStringDictionary = nil;
+NSDictionary *gRemoteNotificationPayloadDictionary = nil;
 
 
 static UIViewController* getParentViewController()
@@ -55,12 +58,29 @@ void ios_CustomURLOpen()
     }
 }
 
+void ios_RemoteNotificationOpen()
+{
+    gOpenedWithRemoteNotification = NO;
+    if((gRemoteNotificationPayloadDictionary != nil) && ([gRemoteNotificationPayloadDictionary count]))
+    {
+NSLog(@"----Remote Notification Payload is: %@", gRemoteNotificationPayloadDictionary);      
+        gOpenedWithRemoteNotification = YES;
+        if (gOpenedViaRemoteNotificationCallback)
+        {
+            gOpenedViaRemoteNotificationCallback();
+        }
+    }
+}
+
 
 ///initializes the data for the Mobile class for iOS
-void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB, OpenedViaCustomURLCallback customURLCB)
+void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB, 
+                                OpenedViaCustomURLCallback customURLCB,
+                                OpenedViaRemoteNotificationCallback remoteNotificationCB)
 {
     gTripleChangedCallback = sensorTripleChangedCB;    
     gOpenedViaCustomURLCallback = customURLCB;    
+    gOpenedViaRemoteNotificationCallback = remoteNotificationCB;    
 }
 
 ///tells the device to do a short vibration, if supported by the hardware
@@ -115,6 +135,12 @@ bool platform_wasOpenedViaCustomURL()
     return gOpenedWithCustomURL;
 }
 
+///returns if the application was launched via a Remote Notification interaction
+bool platform_wasOpenedViaRemoteNotification()
+{
+    return gOpenedWithRemoteNotification;
+}
+
 ///gets the the specified query key data from any custom scheme URL path that the application was launched with, or "" if not found
 const char *platform_getOpenURLQueryData(const char *queryKey)
 {
@@ -136,6 +162,30 @@ const char *platform_getOpenURLQueryData(const char *queryKey)
         }
     }
     return queryDataStatic;
+}
+
+///gets the the data associated with the specified key from any potential custom payload attached to a 
+///Remote Notification that the application was launched with, or "" if not found
+const char *platform_getRemoteNotificationData(const char *key)
+{
+    static char remoteNotificationDataStatic[1024];
+    const char *cString;
+    remoteNotificationDataStatic[0] = '\0';
+    if(key && gRemoteNotificationPayloadDictionary)
+    {
+        NSString *keyString = (key) ? [NSString stringWithUTF8String : key] : nil;
+        if(keyString)
+        {
+            NSString *keyData = [gRemoteNotificationPayloadDictionary objectForKey:keyString];
+            if(keyData)
+            {
+                cString = [keyData cStringUsingEncoding:NSUTF8StringEncoding];    
+                strcpy(remoteNotificationDataStatic, cString);
+                return remoteNotificationDataStatic;
+            }
+        }
+    }
+    return remoteNotificationDataStatic;
 }
 
 ///checks if a given sensor is supported on this hardware

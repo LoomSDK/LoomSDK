@@ -6,12 +6,13 @@ import android.app.Activity;
 import android.os.Environment;
 import android.os.Vibrator;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 import android.provider.Settings.System;
 import android.net.Uri;
 
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
-
+import org.json.JSONObject;
 
 
 /**
@@ -26,12 +27,14 @@ public class LoomMobile
     private static final int           VIBRATION_SLEEP     = 100;
     private static final long[]        VIBRATION_PATTERN   = { VIBRATION_DELAY, VIBRATION_DURATION, VIBRATION_SLEEP };
     private static final String        MANIFEST_CUSTOM_URI_META_KEY = "co.theengine.loomdemo.CustomURL";
+    private static final String        TAG = "LoomMobile";
 
     ///vars
     private static Activity     _context;
     private static Vibrator     _vibrator;
     private static boolean      _canVibrate;
     private static Uri          _customURI = null;
+    private static JSONObject   _remoteNotificationData = null;
 
 
 
@@ -49,7 +52,7 @@ public class LoomMobile
         }
         else
         {
-            Log.d("Loom", "Vibration permission 'android.permission.VIBRATE' not found in the AndroidManifest. Vibration Support will not be initialized.");
+            Log.d(TAG, "Vibration permission 'android.permission.VIBRATE' not found in the AndroidManifest. Vibration Support will not be initialized.");
         }
         if(_vibrator != null)
         {
@@ -64,7 +67,7 @@ public class LoomMobile
                 _canVibrate = true;
             }
         }
-        Log.d("Loom", "Vibration supported: " + _canVibrate);
+        Log.d(TAG, "Vibration supported: " + _canVibrate);
 
         //see if we have a custom intent scheme URI to snag now for Querying later on
         Intent intent = ctx.getIntent();        
@@ -90,6 +93,33 @@ public class LoomMobile
                 });
             }
         }
+
+//test if this gets us parse PN data
+Log.d(TAG, "---->>>>Remote Notification Launch TEST!!!");
+_remoteNotificationData = null;
+if(intent != null)
+{
+    Bundle bundle = intent.getExtras();
+    if (bundle != null) 
+    {
+        String pnData = bundle.getString("com.parse.Data");
+        Log.d(TAG, "---->>>>Remote Notification Payload: " + pnData);
+        try
+        {
+            _remoteNotificationData = new JSONObject(pnData);
+        }
+        catch(Exception e)
+        {
+            _remoteNotificationData = null;
+            Log.e(TAG, "Unable to create JSONObject for Remote Notification Payload: " + pnData);
+        }
+    }
+}
+// http://stackoverflow.com/questions/21454269/how-to-receive-parse-push-notifiactions-on-an-android-device-using-parse-com
+
+//alternate method of overwriting the broadcastreceiver... which looks bad as you need to set up a custom intent-filter!!!
+// http://ahirazitai.blogspot.com/2013/05/push-notification.html
+
     }
 
 
@@ -112,7 +142,7 @@ public class LoomMobile
     ///sets whether or not the application root view screen can go to sleep or not
     public static void allowScreenSleep(boolean sleep)
     {
-        Log.d("Loom", "Allow Screen Sleep: " + sleep);
+        Log.d(TAG, "Allow Screen Sleep: " + sleep);
 
         ///run this code on the UI Thread
         final boolean fSleep = sleep;
@@ -131,7 +161,7 @@ public class LoomMobile
     {
         if(_canVibrate)
         {
-            Log.d("Loom", "Vibrate");
+            Log.d(TAG, "Vibrate");
             _vibrator.vibrate(VIBRATION_PATTERN, -1);
         }
     }
@@ -174,14 +204,39 @@ public class LoomMobile
     }    
 
 
+    ///returns if the application was launched via a Remote Notification
+    public static boolean openedWithRemoteNotification()
+    {
+        return (_remoteNotificationData != null) ? true : false;
+    }    
+
+
     ///returns the data for a query of the custom scheme data string used to launch the app with, or null if not found / app wasn not launched with a custom URI scheme
     public static String getCustomSchemeQueryData(String queryKey)
     {
         return (_customURI != null) ? _customURI.getQueryParameter(queryKey) : null;
     }    
 
+    ///returns the data for a key of the remote notification data string used to launch the app with, or null if not found / app wasn not launched via a remote notification
+    public static String getRemoteNotificationData(String key)
+    {
+        if(_remoteNotificationData != null)
+        {
+            try
+            {
+                return _remoteNotificationData.getString(key);
+            }
+            catch(Exception e)
+            {
+                Log.d(TAG, "Unable to locate Remote Notification Data for key: " + key);
+            }            
+        }
+        return null;
+    }    
+
 
 
     ///native delegate stubs
     private static native void onOpenedViaCustomURL();
+    private static native void onOpenedViaRemoteNotification();
 }
