@@ -157,6 +157,11 @@ native class JSON {
         return j;
     }
     
+    /**
+     * Escapes characters to make the string JSON compatible.
+     * @param s The unescaped string.
+     * @return  The escaped string.
+     */
     private static function escape(s:String):String {
         var e = "";
         for (var i = 0; i < s.length; i++) {
@@ -173,6 +178,11 @@ native class JSON {
         return e;
     }
     
+    /**
+     * Creates a JSON object from the given Dictionary mapping keys to values. setValue is used to get the JSON representation of every Object.
+     * @param d The Dictionary mapping Strings to Objects to source from.
+     * @return  The JSON object having equivalent keys and values.
+     */
     public static function fromDictionary(d:Dictionary.<String, Object>):JSON {
         var o = new JSON();
         o.initObject();
@@ -182,6 +192,11 @@ native class JSON {
         return o;
     }
     
+    /**
+     * Creates a JSON array from the given Vector of objects. setArrayValue is used to get the JSON representation of every Object.
+     * @param v The Vector containing Objects to source from.
+     * @return  The JSON array containing equivalent values to the Vector.
+     */
     public static function fromVector(v:Vector.<Object>):JSON {
         var a = new JSON();
         a.initArray();
@@ -191,17 +206,26 @@ native class JSON {
         return a;
     }
     
-    
+    /**
+     * Convenience method that sets the field on the provided object using the JSON value of the same name.
+     * @param o The Object to set the field on.
+     * @param field The key name of the JSON object to get the value of and the field name on the Object to set the value on.
+     */
     public function applyField(o:Object, field:String) {
         var info:FieldInfo = o.getType().getFieldInfoByName(field);
         switch (info.getTypeInfo().getFullName()) {
             case "system.Boolean": info.setValue(o, getBoolean(field)); break;
             case "system.Number": info.setValue(o, getInteger(field)); break;
             case "system.String": info.setValue(o, getString(field)); break;
-            default: throw new Error("Unknown field type: "+info.getTypeInfo().getFullName());
+            default: throw new Error("Unsupported field type: "+info.getTypeInfo().getFullName());
         }
     }
     
+    /**
+     * General function that sets the value of the key based on the type of object.
+     * @param key   The key name to set the value on.
+     * @param o The value to set on the JSON object.
+     */
     public function setValue(key:String, o:Object) {
         var info:Type = o.getType();
         switch (info.getFullName()) {
@@ -210,10 +234,15 @@ native class JSON {
             case "system.String": setString(key, o as String); break;
             case "system.Vector": setVector(key, o as Vector.<Object>); break;
             case "system.Dictionary": setDictionary(key, o as Dictionary.<String, Object>); break;
-            default: Debug.assert(false, "Unknown object type: "+info.getFullName());
+            default: Debug.assert(false, "Unsupported object type: "+info.getFullName());
         }
     }
     
+    /**
+     * General function that sets the value of the array index based on the type of object.
+     * @param index The array index to set on the JSON array.
+     * @param o The value to set on the JSON array.
+     */
     public function setArrayValue(index:int, o:Object) {
         var info:Type = o.getType();
         switch (info.getFullName()) {
@@ -222,29 +251,56 @@ native class JSON {
             case "system.String": setArrayString(index, o as String); break;
             case "system.Vector": setArrayVector(index, o as Vector.<Object>); break;
             case "system.Dictionary": setArrayDictionary(index, o as Dictionary.<String, Object>); break;
-            default: Debug.assert(false, "Unknown object type: "+info.getFullName());
+            default: Debug.assert(false, "Unsupported object type: "+info.getFullName());
         }
     }
     
+    /**
+     * Sets the value of key to the JSON array created from the provided Vector using fromVector.
+     * @param key   The key to set the JSON array on.
+     * @param v The Vector from which to construct the JSON array.
+     */
     public function setVector(key:String, v:Vector.<Object>) {
         setArray(key, fromVector(v));
     }
     
+    /**
+     * Sets the value of the array index to the JSON array created from the provided Vector using fromVector.
+     * @param index The array index to set the JSON array on.
+     * @param v The Vector from which to construct the JSON array.
+     */
     public function setArrayVector(index:int, v:Vector.<Object>) {
         setArrayArray(index, fromVector(v));
     }
     
+    /**
+     * Sets the value of the key to the JSON object created from the provided Dictionary using fromDictionary.
+     * @param key The key to set the JSON object on.
+     * @param d The Dictionary from which to construct the JSON object.
+     */
     public function setDictionary(key:String, d:Dictionary.<String, Object>) {
         setObject(key, fromDictionary(d));
     }
     
+    /**
+     * Sets the value of the array index to the JSON object created from the provided Dictionary using fromDictionary.
+     * @param key The array index to set the JSON object on.
+     * @param d The Dictionary from which to construct the JSON object.
+     */
     public function setArrayDictionary(index:int, d:Dictionary.<String, Object>) {
         setArrayObject(index, fromDictionary(d));
     }
     
-    
-    
+    /**
+     * Initialize the JSON instance as an empty JSON object, clearing all the previously held values.
+     * @return Returns true if creation was successful.
+     */
     public native function initObject():Boolean;
+    
+    /**
+     * Initialize the JSON instance as an empty JSON array, clearing all the previously held values.
+     * @return Returns true if creation was successful.
+     */
     public native function initArray():Boolean;
     
 
