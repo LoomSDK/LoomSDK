@@ -57,6 +57,8 @@ enum JSONType
 [Native(managed)]
 native class JSON {
     
+    private static var visited = new Vector.<Object>();
+    
     /**
      * Convenience function parsing a JSON string and returning a JSON object.
      * @param json  The JSON string to be parsed.
@@ -227,6 +229,9 @@ native class JSON {
      * @param o The value to set on the JSON object.
      */
     public function setValue(key:String, o:Object) {
+        Debug.assert(visited.indexOf(o) == -1, "Circular reference detected at key: "+key);
+        visited.push(o);
+        
         var info:Type = o.getType();
         switch (info.getFullName()) {
             case "system.Boolean": setBoolean(key, o as Boolean); break;
@@ -236,6 +241,8 @@ native class JSON {
             case "system.Dictionary": setDictionary(key, o as Dictionary.<String, Object>); break;
             default: Debug.assert(false, "Unsupported object type: "+info.getFullName());
         }
+        
+        visited.remove(o);
     }
     
     /**
@@ -244,6 +251,9 @@ native class JSON {
      * @param o The value to set on the JSON array.
      */
     public function setArrayValue(index:int, o:Object) {
+        Debug.assert(visited.indexOf(o) == -1, "Circular reference detected at index: "+index);
+        visited.push(o);
+        
         var info:Type = o.getType();
         switch (info.getFullName()) {
             case "system.Boolean": setArrayBoolean(index, o as Boolean); break;
@@ -253,6 +263,8 @@ native class JSON {
             case "system.Dictionary": setArrayDictionary(index, o as Dictionary.<String, Object>); break;
             default: Debug.assert(false, "Unsupported object type: "+info.getFullName());
         }
+        
+        visited.remove(o);
     }
     
     /**

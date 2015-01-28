@@ -129,6 +129,23 @@ package
             
             json.initObject();
             
+            
+            // Circular reference tests
+            
+            //var a = { };
+            //var b = { "circular": a };
+            //a["circular"] = b;
+            //var a:Vector.<Object> = [];
+            //var b:Vector.<Object> = [a];
+            //a.push(b);
+            //trace(""+a);
+            
+            //json.setValue("infinite", a);
+            
+            //trace(json.serialize());
+            //return;
+            
+            
             json.setValue("index", 5);
             json.setValue("duration", 5);
             json.setValue("loc", [1, 2]);
