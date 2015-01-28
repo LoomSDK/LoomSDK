@@ -63,7 +63,7 @@ void ios_RemoteNotificationOpen()
     gOpenedWithRemoteNotification = NO;
     if((gRemoteNotificationPayloadDictionary != nil) && ([gRemoteNotificationPayloadDictionary count]))
     {
-NSLog(@"----Remote Notification Payload is: %@", gRemoteNotificationPayloadDictionary);      
+        NSLog(@"----Remote Notification Payload is: %@", gRemoteNotificationPayloadDictionary);      
         gOpenedWithRemoteNotification = YES;
         if (gOpenedViaRemoteNotificationCallback)
         {
