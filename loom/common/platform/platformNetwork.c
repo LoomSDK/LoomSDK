@@ -151,17 +151,17 @@ loom_socketId_t loom_net_openTCPSocket(const char *host, unsigned short port, in
     struct addrinfo *hostInfo;
     char portString[16];
 
-	//set up he hints
-	memset(&hints, 0, sizeof(hints));
+    //set up he hints
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
-    
-	//copy the port over to a string
-	sprintf(portString, "%ld", port);
 
-	// Resolve the host.
+    //copy the port over to a string
+    sprintf(portString, "%ld", port);
+
+    // Resolve the host.
     res = getaddrinfo(host, portString, &hints, &hostInfo);
-	if (res != 0)
+    if (res != 0)
     {
         lmLogError(netLogGroup, "Failed to resolve host '%s' via getaddrinfo: %s", host, gai_strerror(res));
         return NULL;
@@ -172,7 +172,7 @@ loom_socketId_t loom_net_openTCPSocket(const char *host, unsigned short port, in
     if (s == -1)
     {
         lmLogError(netLogGroup, "Failed to open TCP socket - socket() failed.");
-		freeaddrinfo(hostInfo);
+        freeaddrinfo(hostInfo);
         return NULL;
     }
 
@@ -207,13 +207,13 @@ loom_socketId_t loom_net_openTCPSocket(const char *host, unsigned short port, in
         {
             // Failure due to some grody reason.
             lmLogError(netLogGroup, "Failed to connect() TCP socket due to error code %d.", res);
-			closesocket(s);
-			freeaddrinfo(hostInfo);
-			return NULL;
+            closesocket(s);
+            freeaddrinfo(hostInfo);
+            return NULL;
         }
     }
 
-	freeaddrinfo(hostInfo);
+    freeaddrinfo(hostInfo);
     return (loom_socketId_t)s;
 }
 
