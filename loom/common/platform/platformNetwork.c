@@ -146,22 +146,21 @@ static void loom_net_setSocketReuseAddress(loom_socketId_t s, int reuse)
 
 loom_socketId_t loom_net_openTCPSocket(const char *host, unsigned short port, int blocking)
 {
-    int     status, s;
+    int     status, s, res;
+    struct addrinfo hints;
+    struct addrinfo *hostInfo;
+    char portString[16];
 
-    
 	//set up he hints
-	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     
 	//copy the port over to a string
-	char portString[16];
-    sprintf(portString, "%ld", port);
+	sprintf(portString, "%ld", port);
 
 	// Resolve the host.
-	struct addrinfo *hostInfo;
-	int res = getaddrinfo(host, portString, &hints, &hostInfo);
+    res = getaddrinfo(host, portString, &hints, &hostInfo);
 	if (res != 0)
     {
         lmLogError(netLogGroup, "Failed to resolve host '%s' via getaddrinfo: %s", host, gai_strerror(res));
