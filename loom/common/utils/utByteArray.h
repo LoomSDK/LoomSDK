@@ -145,6 +145,12 @@ public:
         return _position;
     }
 
+    int bytesAvailable() const
+    {
+        int size = getSize();
+        return size < _position ? 0 : size-_position;
+    }
+
     bool readBoolean()
     {
         return readValue<bool>();
@@ -380,11 +386,18 @@ public:
     utArray<unsigned char> *getInternalArray() { return &_data; }
 
     /*
-     * Uncompress zlib compressed data, if uncompressed size is specified
-     * the resulting uncompressed data must match it or will resize the byte array
-     * to zero.  If not specified, maxBuffer size will be used and ByteArray will
-     * be truncated to the actual size of the data
+     * Compress the ByteArray data with the zlib compression algorithm.
+     * The ByteArray gets resized to the compressed size of the data.
      */
-    void uncompress(int uncompressedSize = 0, int maxBuffer = 262144);
+    void compress();
+
+    /*
+     * Uncompress zlib or gzip compressed data. uncompressedSize is equivalent to
+     * initialSize due to legacy code. If not specified, initialSize will be used
+     * and ByteArray will be truncated to the actual size of the data. If the
+     * uncompressed data size doesn't fit in initialSize bytes, the buffer gets
+     * resized until it does.
+     */
+    void uncompress(int uncompressedSize = 0, int initialSize = 32768);
 };
 #endif // _PLATFORM_BYTEARRAY_H_
