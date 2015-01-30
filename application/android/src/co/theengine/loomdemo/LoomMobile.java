@@ -13,6 +13,8 @@ import android.net.Uri;
 
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 import org.json.JSONObject;
+import org.json.JSONException;
+
 
 
 /**
@@ -35,6 +37,7 @@ public class LoomMobile
     private static boolean      _canVibrate;
     private static Uri          _customURI = null;
     private static JSONObject   _remoteNotificationData = null;
+    private static boolean      _delayedRemoteNotificationDelegate = false;
 
 
 
@@ -94,32 +97,11 @@ public class LoomMobile
             }
         }
 
-//test if this gets us parse PN data
-Log.d(TAG, "---->>>>Remote Notification Launch TEST!!!");
-_remoteNotificationData = null;
-if(intent != null)
-{
-    Bundle bundle = intent.getExtras();
-    if (bundle != null) 
-    {
-        String pnData = bundle.getString("com.parse.Data");
-        Log.d(TAG, "---->>>>Remote Notification Payload: " + pnData);
-        try
+        //do we need to notify the remote notification delegate now from a potential call before mainView was initialized?
+        if(_delayedRemoteNotificationDelegate)
         {
-            _remoteNotificationData = new JSONObject(pnData);
+            _delayedRemoteNotificationDelegate = false;
         }
-        catch(Exception e)
-        {
-            _remoteNotificationData = null;
-            Log.e(TAG, "Unable to create JSONObject for Remote Notification Payload: " + pnData);
-        }
-    }
-}
-// http://stackoverflow.com/questions/21454269/how-to-receive-parse-push-notifiactions-on-an-android-device-using-parse-com
-
-//alternate method of overwriting the broadcastreceiver... which looks bad as you need to set up a custom intent-filter!!!
-// http://ahirazitai.blogspot.com/2013/05/push-notification.html
-
     }
 
 
@@ -234,6 +216,47 @@ if(intent != null)
         return null;
     }    
 
+
+    ///processes the notification data from our custom handler in LoomCustomNotificationReceiver
+    public static void processNotificationData(Bundle bundle)
+    {
+        if(bundle == null)
+        {
+            return;
+        }
+
+        //store the notification data as our custom payload
+        String message = bundle.getString("com.parse.Data");
+        Log.d(TAG, "----Remote Notification Payload is: " + message);
+        _remoteNotificationData = null;
+        try 
+        {
+            //create our new JSON of the message data
+            _remoteNotificationData = new JSONObject(message);
+
+            //fire off the notification delegate if we have a mainView, otherwise delay it until onCreate
+            if(Cocos2dxGLSurfaceView.mainView != null)
+            {
+                //notify that we've launched via a remote notification launch
+                Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+                {
+                    @Override
+                    public void run() 
+                    {
+                        onOpenedViaRemoteNotification();
+                    }
+                });  
+            }
+            else
+            {
+                _delayedRemoteNotificationDelegate = true;
+            }
+        } 
+        catch (JSONException e) 
+        {
+            Log.e(TAG, "Unable to create JSONObject for Remote Notification Payload: " + message);
+        }
+    }
 
 
     ///native delegate stubs
