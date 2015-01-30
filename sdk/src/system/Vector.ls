@@ -77,6 +77,8 @@ package system {
  */
 final class Vector
 {
+    
+    private static var visited = new Vector.<Object>();
 
     /**
      *  Adds one or more elements to the end of the Vector and returns the
@@ -106,7 +108,10 @@ final class Vector
     {
         var vlen = length;
         var returnString = "";
-
+        
+        Debug.assert(visited.indexOf(this) == -1, "Circular reference detected while joining the Vector");
+        visited.push(this);
+        
         for (var i:Number = 0; i < vlen; i++) {
 
             returnString += this[i].toString();
@@ -115,6 +120,8 @@ final class Vector
 
         }
 
+        visited.remove(this);
+        
         return returnString;
     }
 
