@@ -7,7 +7,10 @@ import android.os.Bundle;
 import com.parse.ParsePushBroadcastReceiver;
 
 
-
+/**
+ * Java Class that extends the ParsePushBroadcastReceiver so we can access the data 
+ * attached to the notification and then have access to it at a later time.
+ */
 public class LoomCustomNotificationReceiver extends ParsePushBroadcastReceiver 
 {
     private static final String TAG = "LoomCustomNotificationReceiver";
