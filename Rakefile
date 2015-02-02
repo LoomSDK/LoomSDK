@@ -722,8 +722,40 @@ namespace :build do
   desc "Builds OUYA APK" #TODO: add Ouya build scripts under windows
   task :ouya => ['build:android'] do
 
-    # Ouya build is currently not supported under Windows
-    if $LOOM_HOST_OS != 'windows'
+    if $LOOM_HOST_OS == 'windows'
+      puts "== Building OUYA =="
+      ouyaAndroidSDK = "android-16"
+          
+      Dir.chdir("application/ouya") do
+        puts "*** Building against AndroidSDK " + ouyaAndroidSDK
+        api_id = get_android_api_id(ouyaAndroidSDK)
+        sh "android update project --name LoomDemo --subprojects --target #{api_id} --path ."
+      end
+
+      FileUtils.mkdir_p "application/ouya/assets"
+      FileUtils.mkdir_p "application/ouya/assets/assets"
+      FileUtils.mkdir_p "application/ouya/assets/bin"
+      FileUtils.mkdir_p "application/ouya/assets/libs"
+
+      FileUtils.mkdir_p "application/ouya/libs/armeabi-v7a"
+
+      sh "xcopy /Y /I application\\android\\libs\\armeabi-v7a\\* application\\ouya\\libs\\armeabi-v7a"     
+
+      sh "xcopy /Y /I sdk\\bin\\*.loom application\\ouya\\assets\\bin"
+      sh "xcopy /Y /I sdk\\assets\\*.* application\\ouya\\assets\\assets"
+      
+      # TODO: LOOM-1070 can we build for release or does this have signing issues?
+      Dir.chdir("application/ouya") do
+        sh "ant.bat #{$targetAndroidBuildType}"
+      end
+
+      # Copy APKs to artifacts.
+      FileUtils.mkdir_p "artifacts/ouya"
+      
+      sh "echo f | xcopy /F /Y application\\ouya\\bin\\#{$targetAPKName} #{$OUTPUT_DIRECTORY}\\ouya\\LoomDemo.apk"
+
+      FileUtils.cp_r("tools/apktool/apktool.jar", "artifacts/")
+    else
       puts "== Building OUYA =="
 
       ouyaAndroidSDK = "android-16"
@@ -1039,7 +1071,7 @@ namespace :package do
 
     FileUtils.rm_rf "pkg/sdk/bin/android"
 
-    # iOS and Ouya are currently not supported under Windows
+    # iOS is currently not supported under Windows
     if $LOOM_HOST_OS != "windows"
       # copy tools
       FileUtils.cp_r("artifacts/fruitstrap", "pkg/sdk/tools")
@@ -1058,20 +1090,19 @@ namespace :package do
       FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/assets"
       FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/bin"
       FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/libs"
-
-      # ============================================================= Ouya
-      # decompile the ouya apk
-      decompile_apk("application/ouya/bin/#{$targetAPKName}","pkg/sdk/bin/ouya")
-      
-      # Strip out the bundled assets and binaries
-      FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/assets"
-      FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/bin"
-      FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/libs"
-      FileUtils.rm_rf "pkg/sdk/bin/ouya/META-INF"
-
     end
 
     FileUtils.cp_r("artifacts/apktool.jar", "pkg/sdk/tools")
+
+    # ============================================================= Ouya
+    # decompile the ouya apk
+    decompile_apk("application/ouya/bin/#{$targetAPKName}","pkg/sdk/bin/ouya")
+    
+    # Strip out the bundled assets and binaries
+    FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/assets"
+    FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/bin"
+    FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/libs"
+    FileUtils.rm_rf "pkg/sdk/bin/ouya/META-INF"
 
     # ============================================================= Android
     # decompile the android apk

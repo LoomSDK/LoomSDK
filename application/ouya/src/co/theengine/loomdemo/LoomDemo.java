@@ -70,7 +70,7 @@ public class LoomDemo extends Cocos2dxActivity{
 		
         if(type.equals("cameraRequest"))
 		{
-            logError("Camera not supported on OUYA.");
+            Log.e("Loom", "Camera not supported on OUYA.");
 		}
 	}
 
@@ -132,13 +132,13 @@ public class LoomDemo extends Cocos2dxActivity{
         // Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
         final View activityRootView = framelayout;
         Log.d("Loom", "Registering for global layout listener!");
-        logError("keyboardResize BUTTS");
+        Log.e("Loom", "keyboardResize BUTTS");
         activityRootView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() 
         {
             @Override
             public void onGlobalLayout() 
             {
-                logError("keyboardResize " + activityRootView.getHeight());
+                Log.e("Loom", "keyboardResize " + activityRootView.getHeight());
                 Log.d("Loom", "keyboardResize " + activityRootView.getHeight());
 
                 // Convert the dps to pixels
@@ -148,7 +148,7 @@ public class LoomDemo extends Cocos2dxActivity{
                 if (heightDiff > scaledThreshold)
                 {
                     // if more than 100 points, its probably a keyboard...
-                    logError("keyboardResize " + activityRootView.getHeight());
+                    Log.e("Loom", "keyboardResize " + activityRootView.getHeight());
                     triggerGenericEvent("keyboardResize", "" + activityRootView.getHeight());
                 }
              }
@@ -184,12 +184,6 @@ public class LoomDemo extends Cocos2dxActivity{
          ConfigurationInfo info = am.getDeviceConfigurationInfo();
          return (info.reqGlEsVersion >= 0x20000);
      }
-
-	public static native void log(String message);
-	public static native void logWarn(String message);
-	public static native void logError(String message);
-	public static native void logDebug(String message);
-	public static void logInfo(String message) { log(message); }
 
 	static 
 	{
