@@ -24,7 +24,7 @@ package feathers.controls
      * check.isSelected = true;
      * check.addEventListener( Event.CHANGE, check_changeHandler );
      * this.addChild( check );
-         * ~~~
+     * ~~~
      *
      * @see http://wiki.starling-framework.org/feathers/check
      * @see ToggleSwitch

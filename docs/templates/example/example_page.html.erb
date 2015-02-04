@@ -7,7 +7,7 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width">
 
-        <link rel="stylesheet" href="<%= @relative_base_path %>/css/package-page.css">
+        <link rel="stylesheet" href="<%= @relative_base_path %>/css/pages.css">
         <link rel="stylesheet" href="<%= @relative_base_path %>/css/pygments.css">
         <link type="text/css" rel="stylesheet" href="<%= @relative_base_path %>/css/jquery.dropdown.css" />
     </head>
@@ -18,30 +18,30 @@
         <%= render 'templates/header' %>
 
         <%= render 'templates/sidebar' %>
-        
+
         <div class="page">
-          
+
           <!-- Page nav. -->
           <nav class="page-nav">
               <h4 class="page-nav__title"><%= @doc.data[:title] %></h4>
               <ul id="page-nav__list" class="page-nav__list">
               </ul>
           </nav><!-- End page nav. -->
-          
+
           <div class="content">
-            
+
             <header class="content-header">
               <h1><%= @doc.data[:title] %></h1>
             </header>
-            
+
             <p>
               <%= replace_markdown %>
             </p>
           </div>
         </div>
-        
+
         <%= render "templates/javascript_includes" %>
         <script type="text/javascript" src="<%= @relative_base_path %>/js/authored/table-of-contents-h2s.js"></script>
-        
+
     </body>
 </html>

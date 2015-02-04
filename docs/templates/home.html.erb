@@ -7,9 +7,8 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width">
 
-        <link rel="stylesheet" href="css/home.css">
         <link rel="stylesheet" href="css/pygments.css">
-        <link rel="stylesheet" href="css/all-pages.css">
+        <link rel="stylesheet" href="css/pages.css">
         <link type="text/css" rel="stylesheet" href="css/jquery.dropdown.css" />
 
         <title>Loom Docs</title>
@@ -18,42 +17,9 @@
 
         <div id="top">&nbsp;</div>
 
-        <!-- Header. -->
-        <header class="site-header">
-            <div class="site-header__logo">
-                <div class="site-header__logo__version"><%= version_number %></div>
-            </div>
-            <ul class="site-header__nav">
-                <li><a href="index.html" class="is-perm" style="font-size:14px;">Home</a>
-            </ul>
-            <div id="site-header__search" class="site-header__search" data-dropdown="#results-dropdown">
-                <input type="text"><button><span class="down-arrow"></span><span class="text">Search all</span></button>
-                <div class="options" style="display:none">
-                    <div class="options__option options__option--selected" name="search-all">Search all</div>
-                    <div class="options__option" name="classes">Classes</div>
-                    <div class="options__option" name="examples">Examples</div>
-                    <div class="options__option" name="guides">Guides</div>
-                </div>
-            </div>
-            <div id="results-dropdown" class="dropdown dropdown-tip dropdown-relative">
-                <ul class="dropdown-menu">
-                </ul>
-            </div>
-        </header><!-- End header. -->
+        <%= render 'templates/header' %>
 
-        <!-- Sidebar. -->
-        <div id="sidebar" class="sidebar">
-            <div class="sidebar__inner">
-                <div class="sidebar__button">
-                    <img src="images/sidebar__button__icon.png" class="sidebar__button__icon" />
-                </div>
-                <div class="sidebar__title">
-                    <img src="images/sidebar__title.png" />
-                </div>
-                <div class="sidebar__body">
-                </div>
-            </div>
-        </div><!-- End sidebar. -->
+        <%= render 'templates/sidebar' %>
 
         <!-- Page. -->
         <div class="page">
