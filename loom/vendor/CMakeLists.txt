@@ -601,7 +601,9 @@ set(ZLIB_SRC
     zlib/source/zutil.c
 )
 
-set(SQLITE3_SRC sqlite3/sqlite3.c)
+set(SQLITE3_SRC 
+    sqlite3/sqlite3.c
+)
 
 set( JHEADEXIF_SRC jheadexif/exif.c jheadexif/jhead.c jheadexif/jpgfile.c jheadexif/easyexif.cpp)
     
@@ -655,6 +657,7 @@ set (ALL_FILES
     ${JEMALLOC_SRC}
     ${OPENALSOFT_SRC}
     ${MINIMP3_SRC}
+    ${SQLITE3_SRC}
 )
 
 if (MSVC)
@@ -673,7 +676,6 @@ endif()
 if (APPLE)
     list (APPEND ALL_FILES 
         ${SMSLIB_HDR} ${SMSLIB_SRC} 
-        ${SQLITE3_SRC}
     )
 endif()
 
