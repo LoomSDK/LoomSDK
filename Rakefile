@@ -29,6 +29,10 @@ else
   $targetIOSSDK="6.0"
 end
 
+def flag_enabled?(flag)
+  flag.to_i == 1 || flag == 'true'
+end
+
 # If 1, then we link against LuaJIT. If 0, we use classic Lua VM.
 $doBuildJIT=1
 
@@ -157,14 +161,14 @@ end
 puts ''
 puts "LoomSDK (#{$LOOM_VERSION}) Rakefile running on Ruby v#{RUBY_VERSION}"
 puts "  CMake version: #{cmake_version}"
-puts "  Using JIT?: #{$doBuildJIT}"
 puts "  Build type: #{$buildTarget}"
+puts "  Using JIT? #{flag_enabled?($doBuildJIT)} | Building AdMob? #{flag_enabled?($doBuildAdmob)} | Building FacebookSDK? #{flag_enabled?($doBuildFacebook)}"
 puts "  Detected Windows #{WINDOWS_PROCARCH_BITS} Bit PROCESSOR_ARCHITECTURE: '#{proc_arch}'" if $LOOM_HOST_OS == 'windows'
 puts "  Detected Non-Windows Platform" unless $LOOM_HOST_OS == 'windows'
 puts "  Building with #{$numCores} cores."
-puts "  AndroidSDK: #{$targetAndroidSDK}, AndroidBuildType: #{$targetAndroidBuildType}, target APK: #{$targetAPKName}"
+puts "  AndroidSDK: #{$targetAndroidSDK} | AndroidBuildType: #{$targetAndroidBuildType} | Target APK: #{$targetAPKName}"
 puts "  iOS SDK version: #{$targetIOSSDK}"
-puts "  Build Loom docs?: #{$buildDocs}"
+puts "  Building Loom docs? #{$buildDocs}"
 puts ''
 
 #############
