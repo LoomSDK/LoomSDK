@@ -265,7 +265,7 @@ namespace :generate do
       FileUtils.mkdir_p "artifacts/docs"
       FileUtils.cp_r "docs/output/.", "artifacts/docs/"
     else
-      puts "Skipping docs due to env.BUILD_LOOM_DOCS being false."
+      puts "Skipping docs since LOOM_BUILD_DOCS is not set."
     end
   end
 
