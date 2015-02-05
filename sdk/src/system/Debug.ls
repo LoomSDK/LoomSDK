@@ -117,6 +117,11 @@ package system {
         public static native function getLocals(snapshot:Vector.<CallStackInfo>, stackLevel:Number):Dictionary.<String, Object>;
         
         /*
+         * 
+         */
+        public static native function getCallStack():Vector.<CallStackInfo>;
+        
+        /*
          * Adds a breakpoint at the given source and line number.
          */
         public static native function addBreakpoint(source:String, line:Number);
