@@ -369,6 +369,7 @@ public:
      */
     void resize(UTsize size)
     {
+        _position = _position > size ? size : _position;
         return _data.resize(size);
     }
 
