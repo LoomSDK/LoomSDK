@@ -92,7 +92,7 @@ package system {
         }
         
         /**
-         *  Perform an debugber break if supplied expression fails
+         *  Perform a debugger break if supplied expression fails
          *
          *  @param expression The object to be tested.
          */
@@ -117,7 +117,11 @@ package system {
         public static native function getLocals(snapshot:Vector.<CallStackInfo>, stackLevel:Number):Dictionary.<String, Object>;
         
         /*
+         * Retrieves the current function call stack in the form of a Vector
+         * of CallStackInfo objects with the first element being the latest call
+         * and the last one being the originating enter point.
          * 
+         * @see CallStackInfo
          */
         public static native function getCallStack():Vector.<CallStackInfo>;
         
