@@ -117,9 +117,11 @@ private:
     int propertyInfoCount;
 
     bool fieldMembersValid;
+    bool methodMembersValid;
     bool propertyMembersValid;
 
     utArray<MemberInfo *> fieldMembers;
+    utArray<MemberInfo *> methodMembers;
     utArray<MemberInfo *> propertyMembers;
 
     void addMember(MemberInfo *member);
@@ -137,7 +139,7 @@ public:
         delegateReturnType(NULL),
         bcStaticInitializer(NULL), bcInstanceInitializer(NULL),
         fieldInfoCount(-1), methodInfoCount(-1), propertyInfoCount(-1),
-        fieldMembersValid(false), propertyMembersValid(false),
+        fieldMembersValid(false), methodMembersValid(false), propertyMembersValid(false),
         cached(false), maxMemberOrdinal(0), memberInfoOrdinalLookup(NULL)
     {
     }
@@ -173,12 +175,17 @@ public:
     int getFieldInfoCount();
     FieldInfo *getFieldInfo(int index);
 
+    int getMethodInfoCount();
+    MethodInfo *getMethodInfo(int index);
+
     int getPropertyInfoCount();
     PropertyInfo *getPropertyInfo(int index);
-
+    
     MemberInfo *findMember(const char *name, bool includeBases = true);
 
     FieldInfo *findFieldInfoByName(const char *name);
+
+    MethodInfo *findMethodInfoByName(const utString& name);
 
     PropertyInfo *findPropertyInfoByName(const char *name);
 
@@ -638,8 +645,6 @@ public:
     }
 
     Type *castToType(Type *to, bool tryReverse = false);
-
-    MethodInfo *getMethodInfo(const utString& name);
 
     void assignOrdinals();
 
