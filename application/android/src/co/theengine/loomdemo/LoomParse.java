@@ -14,7 +14,6 @@ import android.provider.Settings.Secure;
 import com.parse.Parse;
 import com.parse.ParseAnalytics;
 import com.parse.ParseInstallation;
-import com.parse.PushService;
 
 
 /**
@@ -50,9 +49,6 @@ public class LoomParse
 
             ///initialize Parse for our application
             Parse.initialize(app, appID, clientKey);
-
-            ///initialize Push Notifications service
-            PushService.setDefaultPushCallback(app, LoomDemo.class);
 
             ParseInstallation installation = ParseInstallation.getCurrentInstallation();
             //set Android ID as the UniqueID for this installation to avoid bug with re-installs
