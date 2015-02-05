@@ -32,6 +32,7 @@ set (ENGINE_SRC
     bindings/loom/lmPackageLoom.cpp
     bindings/loom/lmFacebook.cpp
     bindings/loom/lmTeak.cpp
+    bindings/loom/lmSQLite.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
 
     bindings/cocos2d/lmCocos2D.cpp
