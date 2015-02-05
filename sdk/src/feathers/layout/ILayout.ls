@@ -49,17 +49,15 @@ package feathers.layout
          *
          * ~~~as3
          * const itemCount:int = items.length;
-         * for(var i:int = 0; i &lt; itemCount; i++)
-         * {
-         *     var item:IFeathersControl = items[i] as IFeathersControl;
-         *     if(item)
-         *     {
-         *         item.validate();
-         *     }
+         * for(var i:int = 0; i &lt; itemCount; i++) {
+         *    ⇥var item:IFeathersControl = items[i] as IFeathersControl;
+         *    ⇥if(item) {
+         *    ⇥   ⇥item.validate();
+         *    ⇥}
          * }
          * ~~~
-         * 
-         * @see feathers.core.IFeathersControl#validate()  
+         *
+         * @see feathers.core.IFeathersControl#validate()
          */
         function layout(items:Vector.<DisplayObject>, viewPortBounds:ViewPortBounds = null, result:LayoutBoundsResult = null):LayoutBoundsResult;
 

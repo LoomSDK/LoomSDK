@@ -32,11 +32,11 @@ It's good practice to put each class definition in its own file named after the 
 ~~~as3
 Contents of Car.ls:
 
-package com.myracinggame.example 
+package com.myracinggame.example
 {
     public class Car
     {
-    }    
+    }
 }
 ~~~
 
@@ -67,7 +67,7 @@ Now we have more going on. Specifically, our `Car` has some fields that store in
 
 `manufacturer` is a little more complex; we see that we define it, and then we explicitly specify the type by adding a colon and the type name `String` after the variable name `manufacturer`. More on this in a second. Finally, we don't give it an initial value right away, but rather, set it in `Car`, a function defined a little later in the class. `Car`, of course, is named after the type holding it and is the constructor, called on creation of the object.
 
-Specifying the type for `manufacturer` is necessary because LoomScript is statically typed. That is, it must know at compile time the type of every variable in your program. This allows the compiler to give you excellent error reports and also enables script to run faster. 
+Specifying the type for `manufacturer` is necessary because LoomScript is statically typed. That is, it must know at compile time the type of every variable in your program. This allows the compiler to give you excellent error reports and also enables script to run faster.
 
 The previous examples (`var racecar = new Car()` and `public var engineVolumeCC = 100;`) work because LoomScript is able to infer the type. That is, it can determine the type based on clues around it, for instance, the type of the first value stored in it (Number, in the case of `engineVolumeCC`. However, LoomScript is pragmatic, and doesn't try to make type inference work in every case - so in cases like `manufacturer`, it's good practice to specify the type. It also makes the code self-documenting and self-correcting, which is an even better argument for the explicit type specification.
 
@@ -127,12 +127,12 @@ trace(car.rpms);
 
 If we ran the above code (perhaps in the constructor of our application's main class), we'd see the following output:
 
-```
+~~~console
 Starting the car!
 Revving the engine by 100 revs!
 Revving the engine by 500 revs!
 1600
-```
+~~~
 
 As you can see, we end up at 1000+100+500=1600 rpm!
 
@@ -154,8 +154,8 @@ A closure is a function with its own local variables packaged with it. LoomScrip
 ~~~as3
 function closurizeCountUp():Function
 {
-	var counter:int = 100;
-	return function() { trace(counter++); };
+    var counter:int = 100;
+    return function() { trace(counter++); };
 }
 
 // Generate the closure.
@@ -170,7 +170,7 @@ func();
 
 Would print:
 
-~~~
+~~~console
 101
 102
 103
@@ -272,7 +272,7 @@ public class Truck extends Car implements ITowingVehicle
         if(towed)
         {
             trace("Dragged " + towed + " a bit.");
-            towed.dragAlong();            
+            towed.dragAlong();
         }
     }
 
@@ -355,7 +355,7 @@ hugeRedTruck.tow();
 
 We get the following output:
 
-~~~
+~~~console
 Now towing [Truck manufacturer=Ford engineVolumeCC=3000]
 Now towing [Truck manufacturer=Ford engineVolumeCC=3000]
 [Truck manufacturer=Ford engineVolumeCC=3000] comes along, rumbling and spinning its wheels!
@@ -381,7 +381,7 @@ public class A
 
 public class B extends A implements I1
 {
-	public function bMethod():void { trace("Called bMethod!"); }
+    public function bMethod():void { trace("Called bMethod!"); }
 }
 
 var a = new A();
@@ -396,20 +396,20 @@ var refToB:A = b;
 ~~~as3
 function doLogic(param:Object):void
 {
-	if(param is String)
-		trace("I saw a string: " + param);
-	
-	if(param is Number)
-	{
-		param++;
-		trace("I incremented the parameter: " + param);
-	}
-	
-	if(param is A)
-		trace("Saw an A!");
+    if(param is String)
+        trace("I saw a string: " + param);
 
-	if(param is B)
-		trace("Saw a B!");
+    if(param is Number)
+    {
+        param++;
+        trace("I incremented the parameter: " + param);
+    }
+
+    if(param is A)
+        trace("Saw an A!");
+
+    if(param is B)
+        trace("Saw a B!");
 }
 
 doLogic("Hello!");
@@ -420,13 +420,13 @@ doLogic(b);
 
 Would give output:
 
-```
+~~~console
 I saw a string: Hello!
 I incremented the parameter: 101
 Saw an A!
 Saw an A!
 Saw a B!
-```
+~~~
 
 Notice that when we passed `b` to `doLogic`, it appeared as both an `A` and a `B` - that's because `B` is a subclass of `A`, so `is` returns true for both classes.
 
@@ -434,12 +434,12 @@ Notice that when we passed `b` to `doLogic`, it appeared as both an `A` and a `B
 
 `instanceof` is like `is`, but it requires an **exact** type match. That is, if we replaced `is` with `instanceof` in our above example, we'd see this output:
 
-```
+~~~console
 I saw a string: Hello!
 I incremented the parameter: 101
 Saw an A!
 Saw a B!
-```
+~~~
 
 Note that "Saw an A!" is not repeated - because `b` is `A` but it is NOT `instanceof` of `A`.
 
@@ -450,11 +450,11 @@ Note that "Saw an A!" is not repeated - because `b` is `A` but it is NOT `instan
 ~~~as3
 function tryIt(param:Object):void
 {
-	var possibly:B = param as B;
-	if(possibly)
-		possibly.bMethod();
-	else
-		trace("Couldn't cast!");
+    var possibly:B = param as B;
+    if(possibly)
+        possibly.bMethod();
+    else
+        trace("Couldn't cast!");
 }
 
 trace("Trying a:");
@@ -465,16 +465,16 @@ tryIt(b);
 
 Giving us the following output:
 
-```
+~~~console
 Trying a:
 Couldn't cast!
 Trying b:
 Called bMethod!
-```
+~~~
 
 Another useful idiom with as is the following, if you're sure the cast will succeed!
 
-~~~
+~~~as3
 (possibly as B).bMethod();
 ~~~
 
@@ -489,13 +489,13 @@ var definitely:B = B(param);
 LoomScript supports a wide range of C-style math:
 
 ~~~as3
-	var a = ((100 + 200) / 300) % 2;
-	var b = 100 * 30;
-	var c = (Math.random() > 0.5) ? true : false;
-	var d = true && c;
-	var e = 0x10 | 0x01;
-	b++;
-	a += 300;
+    var a = ((100 + 200) / 300) % 2;
+    var b = 100 * 30;
+    var c = (Math.random() > 0.5) ? true : false;
+    var d = true && c;
+    var e = 0x10 | 0x01;
+    b++;
+    a += 300;
 ~~~
 
 All math is done at double precision; that is all, numeric types are Number. `NaN` is available, and fails all comparisons.
@@ -511,19 +511,19 @@ class OpClass {
     }
 
     public var x:Number;
-    
+
     public var y:Number;
- 
+
     // Addition overload
     public static operator function +(a:OpClass, b:OpClass):OpClass
     {
         return new OpClass(a.x + b.x, a.y + b.y);
-    }    
-    
+    }
+
     public static operator function -(a:OpClass, b:OpClass):OpClass
     {
         return new OpClass(a.x - b.x, a.y - b.y);
-    }    
+    }
 
 }
 ~~~
@@ -536,9 +536,9 @@ LoomScript supports the usual conditionals:
 if(true)
     trace("Always do this.");
 else if(anotherCondition)
-	trace("Won't actually ever do this.");
+    trace("Won't actually ever do this.");
 else
-	trace("And definitely won't do this!")
+    trace("And definitely won't do this!")
 
 true ? trace("Yes, we have ternary operator!") : trace("No, we do not.");
 ~~~
@@ -550,14 +550,14 @@ LoomScript supports a number of ways of iterating over data.
 For loops are alive and well:
 
 ~~~as3
-for(var i=0; i<100; i++) 
-	trace(i);
+for(var i=0; i<100; i++)
+    trace(i);
 
 for(;;)
 {
-	// Loop forever until we explicitly break!
-	if(Math.random() > 0.5) 
-		break;
+    // Loop forever until we explicitly break!
+    if(Math.random() > 0.5)
+        break;
 }
 ~~~
 
@@ -591,12 +591,12 @@ The venerable do/while loop requires no introduction:
 ~~~as3
 while(i>0)
 {
-	i--;
+    i--;
 }
 
 do
 {
-	i++;
+    i++;
 }
 while(i < 100);
 ~~~
@@ -606,23 +606,23 @@ while(i < 100);
 You can use an `enum` to conveniently define multiple numeric constants:
 
 ~~~as3
-enum Days 
-{ 
-	Saturday, // Default starts at zero. 
-	Sunday, 
-	Monday, 
-	Tuesday, 
-	Wednesday, 
-	Thursday, 
-	Friday 
+enum Days
+{
+    Saturday, // Default starts at zero.
+    Sunday,
+    Monday,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday
 };
 
-enum Permissions 
-{ 
+enum Permissions
+{
     All = 3, // But you can override.
     Update = 2,
     Read = 1,
-    None = 0 
+    None = 0
 };
 ~~~
 
@@ -635,9 +635,9 @@ Every LoomScript file contains exactly one `package`, but it can have other file
 ~~~as3
 package foo.bar
 {
-	class MyClass
-	{
-	}
+    class MyClass
+    {
+    }
 }
 
 class OnlyMyClassCanSeeMe
@@ -648,15 +648,14 @@ class OnlyMyClassCanSeeMe
 `import` allows you to specify classes that you want to use from elsewhere in your project, ie:
 
 ~~~as3
-package tests 
+package tests
 {
+    import unittest.Test;
 
-	import unittest.Test;
-
-	class MyTest extends Test
-	{
-	}
-}	
+    class MyTest extends Test
+    {
+    }
+}
 ~~~
 
 You can specify classes by their fully specified name (e.g. `unittest.Test`) but this is more verbose and only recommended if you have imported two classes with the same short name.
@@ -682,10 +681,10 @@ trace("D gave me: " + d(1,2));
 
 Which would output:
 
-```
+~~~console
 Got 1 + 2!
 D gave me: Saw 1 + 2
-```
+~~~
 
 You can remove listeners from a delegate, but adding/removing is done by *instance* - that is, doing:
 
@@ -713,10 +712,10 @@ trace("D gave me: " + d)
 
 Giving output:
 
-```
+~~~console
 D gave me: Saw 1 + 2
 D gave me: null
-```
+~~~
 
 Delegates are a powerful building block, especially when working with composition, but they aren't always appropriate since you don't always have good control over the order of callbacks and it can be hard to clean them up. `EventDispatcher` is a good class if you find that `Delegate` is limiting you.
 
@@ -733,30 +732,30 @@ struct MyStruct {
     }
 
     public var x:Number;
-    
+
     public var y:Number;
 
-    // assignment overload    
+    // assignment overload
     public static operator function =(a:MyStruct, b:MyStruct):MyStruct
-    {           
+    {
         a.x = b.x;
         a.y = b.y;
-        
+
         return a;
-    }    
- 
+    }
+
     // Addition overload
     public static operator function +(a:MyStruct, b:MyStruct):MyStruct
     {
         return new MyStruct(a.x + b.x, a.y + b.y);
-    }    
-    
+    }
+
     // Addition overload
     public operator function +=(b:MyStruct)
     {
         x += b.x;
         y += b.y;
-    }    
+    }
 }
 ~~~
 

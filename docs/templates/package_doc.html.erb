@@ -7,9 +7,8 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width">
 
-        <link rel="stylesheet" href="<%= @relative_base_path %>/css/package-page.css">
         <link rel="stylesheet" href="<%= @relative_base_path %>/css/pygments.css">
-        <link rel="stylesheet" href="<%= @relative_base_path %>/css/all-pages.css">
+        <link rel="stylesheet" href="<%= @relative_base_path %>/css/pages.css">
         <link type="text/css" rel="stylesheet" href="<%= @relative_base_path %>/css/jquery.dropdown.css" />
     </head>
     <body>
@@ -35,15 +34,15 @@
 
                 <!-- Content header. -->
                 <header class="content-header">
-                    
+
                     <% if @doc.path == "" %>
                       <h1>API Reference</h1>
                     <% else %>
-                    
+
                       <h1><%= package_links @doc %></h1>
-                      
+
                     <% end %>
-                    <p>  
+                    <p>
                         <% if @doc.sub_packages.any? %>
                           <span class="is-light">subpackages</span>
                           <% sorted_packages = @doc.sub_packages.values.sort { |a, b| a.path.downcase <=> b.path.downcase } %>
@@ -56,13 +55,13 @@
                 </header><!-- End content header. -->
 
                 <%= render "templates/package/interfaces" %>
-                
+
                 <%= render "templates/package/structs" %>
-                
+
                 <%= render "templates/package/delegates" %>
-                
+
                 <%= render "templates/package/enums" %>
-                
+
                 <%= render "templates/package/classes" %>
 
             </div><!-- End content. -->
