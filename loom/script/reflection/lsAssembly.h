@@ -82,6 +82,10 @@ public:
     {
     }
 
+
+    static int Assembly::loadBytes(lua_State *L);
+
+
     inline LSLuaState *getLuaState()
     {
         return vm;

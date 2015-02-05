@@ -21,11 +21,13 @@ limitations under the License.
 package system.reflection {
 
 /**
- * Represents a %Loom Assembly that has been loaded into the runtime.
- * An Assembly contains a collection of Type%s and each Type has an Assembly associated with it.
+ * Represents a Loom Assembly that has been loaded into the runtime.
+ * An Assembly contains a collection of Type's and each Type has an Assembly associated with it.
  */
 native class Assembly {
 
+    public native static function loadBytes(bytes:ByteArray):void;
+    
     /**
      *  Executes the Assembly by calling its main() function.
      *  Will throw an error if the assembly does not have a main() function.
