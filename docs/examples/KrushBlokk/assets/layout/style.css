@@ -3,37 +3,46 @@
 */
 
 #header {
-	y: 10;
+	y: 28;
 }
+
+
 
 #modeTimed {
 	x: 30;
-	y: 40;
+	y: 50;
 }
 
 #modeUnlimited {
 	x: 30;
-	y: 70;
+	y: 72;
 }
 
 #modeFreeform {
 	x: 16;
-	y: 100;
+	y: 94;
 }
+
+#demo {
+	x: 30;
+	y: 120;
+}
+
+
 
 #modeLeisurely {
 	x: 20;
-	y: 40;
+	y: 60;
 }
 
 #modeStandard {
 	x: 20;
-	y: 70;
+	y: 90;
 }
 
 #modeBeast {
 	x: 20;
-	y: 100;
+	y: 120;
 }
 
 #quit {

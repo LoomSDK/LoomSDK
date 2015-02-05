@@ -3,6 +3,7 @@ if (NOT LOOM_BUILD_IOS EQUAL 1)
   set(CMAKE_OSX_ARCHITECTURES "i386")
 endif()
 
+
 project(${APPLICATION_NAME})
 
 include_directories( ${LOOM_INCLUDE_FOLDERS} )
@@ -109,6 +110,26 @@ if (APPLE)
 
     if (LOOM_BUILD_IOS EQUAL 1)
 
+        # Allow Admob and/or Facebook to be included for iOS?
+        if (LOOM_BUILD_ADMOB EQUAL 1)
+            target_link_libraries(${PROJECT_NAME} 
+                "-framework AdSupport"
+                ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a
+            )
+        endif()
+        if (LOOM_BUILD_FACEBOOK EQUAL 1)
+            target_link_libraries(${PROJECT_NAME} 
+                # Facebook
+                "-framework FacebookSDK -F ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios"
+
+                # Teak (NOTE: Requires FacebookSDK)
+                "-framework Carrot -F ${CMAKE_SOURCE_DIR}/loom/vendor/teak/ios"
+
+                # Parse (NOTE: Requires FacebookSDK)
+                "-framework Parse -F ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios"
+            )
+        endif()
+
         target_link_libraries(${PROJECT_NAME}
     
           ${LOOM_IOS_LIB_GCC}
@@ -136,7 +157,6 @@ if (APPLE)
           "-framework OpenGLES"
           "-framework MessageUI"
           "-framework SystemConfiguration"
-          "-framework AdSupport"
           "-framework CFNetwork"
 
           # For Audio
@@ -144,19 +164,10 @@ if (APPLE)
           "-framework AudioToolbox"
           "-framework CoreAudio"
 
-          # Custom Vendors
-
-          # Facebook
-          "-framework FacebookSDK -F ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios"
-
-          # Parse (NOTE: Requires FacebookSDK on iOS!)
-          "-framework Parse -F ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios"
-
-          # Admob SDK
-          ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a
           "-ObjC"
           "-lc++"
-        )
+          )
+
 
         #iPhone app bundle
         set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -166,6 +177,7 @@ if (APPLE)
           XCODE_ATTRIBUTE_INFOPLIST_PREPROCESS YES
           XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET 5.1
           XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2" # Build a universal (iPad/iPhone) app.
+          XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES NO
         )
         # Use our own Info.plist.
         CONFIGURE_FILE("${CMAKE_CURRENT_LIST_DIR}/ios/Info.plist" "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.plist")
@@ -220,6 +232,7 @@ if (APPLE)
           MACOSX_BUNDLE_GUI_IDENTIFIER ${APPLICATION_PACKAGE}
           XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym"
           XCODE_ATTRIBUTE_INFOPLIST_PREPROCESS YES
+          XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES NO
         )
 
     endif()

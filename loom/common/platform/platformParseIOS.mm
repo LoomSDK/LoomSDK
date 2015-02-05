@@ -45,12 +45,13 @@ static bool _initialized = false;
     NSBundle *mainBundle = [NSBundle mainBundle];
     NSString *app_id = [mainBundle objectForInfoDictionaryKey:@"ParseAppID"];
     NSString *client_key = [mainBundle objectForInfoDictionaryKey:@"ParseClientKey"];
-    // NSLog(@"-----Info.plist Parse Strings: %@ %@", app_id, client_key);
+    NSLog(@"-----Info.plist Parse Strings: %@ %@", app_id, client_key);
 
     //don't initialize without valid strings
     _initialized = false;
-    if(([app_id isEqualToString:@""] == FALSE) && ([client_key isEqualToString:@""] == FALSE))
+    if(app_id != nil && ([app_id isEqualToString:@""] == FALSE) && client_key != nil && ([client_key isEqualToString:@""] == FALSE))
     {
+        NSLog(@"-----Initializing Parse");
         [Parse setApplicationId:app_id clientKey:client_key];
         [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|
                                                         UIRemoteNotificationTypeAlert|
@@ -91,10 +92,6 @@ static bool _initialized = false;
 
 
 @end
-
-
-
-
 
 ///initializes the data for the Parse class for iOS
 void platform_parseInitialize()

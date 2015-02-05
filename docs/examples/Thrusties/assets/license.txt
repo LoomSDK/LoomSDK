@@ -1,4 +1,6 @@
-All graphical assets in this directory are CC0 (Public Domain) from the Space Shooter Redux art pack by Kenney: http://opengameart.org/content/space-shooter-redux
+The hand icon is a white version of "Finger, point, up icon" from the WPZOOM Developer Icon Set licensed CC BY-SA 3.0 (Creative Commons Attribution-Share Alike 3.0 Unported) by WPZOOM: https://www.iconfinder.com/icons/111069/finger_point_up_icon
+
+All other graphical assets in this directory are CC0 (Public Domain) from the Space Shooter Redux art pack by Kenney: http://opengameart.org/content/space-shooter-redux
 
 The sound effect loop is a modified version of the CC0 (Public Domain) spray.mp3 file by BernzSed:
 https://www.freesound.org/people/BernzSed/sounds/53413/

@@ -13,6 +13,12 @@
 		styleName="esc"
 		label="Esc"
 	/>
+    
+	<feathers.controls.Button
+		id="mute"
+		styleName="mute"
+		label="MUTE"
+	/>
 	
 	<feathers.controls.Label
 		id="timeDisplay"

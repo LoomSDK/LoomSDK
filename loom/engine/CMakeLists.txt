@@ -17,6 +17,7 @@ set (ENGINE_SRC
     loom2d/l2dQuad.cpp
     loom2d/l2dImage.cpp
     loom2d/l2dQuadBatch.cpp
+    loom2d/l2dBlendMode.cpp
     loom2d/l2dScript.cpp
     
     bindings/loom/lmApplication.cpp
@@ -30,6 +31,8 @@ set (ENGINE_SRC
     bindings/loom/lmMobile.cpp
     bindings/loom/lmParse.cpp
     bindings/loom/lmPackageLoom.cpp
+    bindings/loom/lmFacebook.cpp
+    bindings/loom/lmTeak.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
 
     bindings/cocos2d/lmCocos2D.cpp

@@ -33,6 +33,8 @@ void installLoomParse();
 void installLoomGraphics();
 void installLoom2D();
 void installPackageLoomSound();
+void installLoomFacebook();
+void installLoomTeak();
 
 void installPackageLoom()
 {
@@ -46,6 +48,8 @@ void installPackageLoom()
     installLoomNativeStore();
     installLoomVideo();
     installLoomMobile();
+    installLoomFacebook();
+    installLoomTeak();
     installLoomParse();
     installPackageLoomSound();
 

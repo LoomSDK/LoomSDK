@@ -1,5 +1,6 @@
 package ui.views.game
 {
+    import feathers.controls.Button;
     import system.platform.Platform;
     import ui.views.ConfigView;
     import feathers.controls.Label;
@@ -18,8 +19,11 @@ package ui.views.game
     class IntroView extends ConfigView
     {
         public var onStart:ViewCallback;
+        public var onCredits:ViewCallback;
         
         [Bind] public var title:Label;
+        [Bind] public var subtitle:Label;
+        [Bind] public var creditsBtn:Button;
         private var h:Number;
         
         protected function get layoutFile():String { return "intro.lml"; }
@@ -27,7 +31,9 @@ package ui.views.game
         public function init()
         {
             super.init();
+            title.x = 2;
             title.nameList.add("title");
+            subtitle.nameList.add("subtitle");
         }
         
         public function resize(w:Number, h:Number)
@@ -35,6 +41,11 @@ package ui.views.game
             super.resize(w, h);
             this.h = h;
             title.width = w;
+            subtitle.width = w;
+            creditsBtn.width = 20;
+            creditsBtn.height = 20;
+            creditsBtn.x = (w-creditsBtn.width)/2;
+            creditsBtn.y = h-creditsBtn.height;
         }
         
         public function enter(owner:DisplayObjectContainer)
@@ -48,10 +59,15 @@ package ui.views.game
             super.tick();
             // Gentle up and down sway animation
             title.y = (h-title.height)/2-20+Math.sin(Platform.getTime()/1000*0.8)*4;
+            subtitle.y = 60+(h-title.height)/2-20+Math.sin(-0.2*Math.PI+Platform.getTime()/1000*0.8)*4;
         }
         
         private function touch(e:TouchEvent)
         {
+            if (e.target == creditsBtn) {
+                onCredits();
+                return;
+            }
             if (e.touches[0].phase == TouchPhase.BEGAN) onStart();
         }
         

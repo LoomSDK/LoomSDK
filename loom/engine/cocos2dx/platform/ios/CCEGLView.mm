@@ -106,7 +106,9 @@ void CCEGLView::setIMEKeyboardState(bool bOpen, int type)
 
         view.returnKeyType = UIReturnKeyDone;
 
+        [[EAGLView sharedEGLView] setAcceptFirstResponder:YES];
         [[EAGLView sharedEGLView] becomeFirstResponder];
+        [[EAGLView sharedEGLView] setAcceptFirstResponder:NO];
     }
     else
     {

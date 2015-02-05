@@ -29,6 +29,9 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/jansson
     ${CMAKE_SOURCE_DIR}/loom/vendor/admob/include
     ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-3.4.0/include
+    ${CMAKE_SOURCE_DIR}/loom/vendor/teak/ios/Carrot.framework/Headers
+    ${CMAKE_SOURCE_DIR}/loom/vendor/sqlite3
+    ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios/FacebookSDK.framework/Headers
     ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios/Parse.framework/Headers
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/cocoa
@@ -37,6 +40,14 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/kazmath/include
     ${CMAKE_SOURCE_DIR}/loom/engine/CocosDenshion/include
     )
+
+# Allow Admob and/or Facebook to be built into the SDK?
+if(LOOM_BUILD_ADMOB EQUAL 1)
+    add_definitions(-DLOOM_ALLOW_ADMOB)
+endif()
+if(LOOM_BUILD_FACEBOOK EQUAL 1)
+    add_definitions(-DLOOM_ALLOW_FACEBOOK)
+endif()
 
 if (LOOM_BUILD_JIT EQUAL 1)
 

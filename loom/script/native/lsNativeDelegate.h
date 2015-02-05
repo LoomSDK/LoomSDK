@@ -26,16 +26,23 @@
 
 namespace LS {
 class MethodBase;
+struct NativeDelegateCallNote;
 
 /*
  * NativeDelegate class which can be used to setup script callbacks, from script, for native code
  */
 class NativeDelegate
 {
+    friend struct NativeDelegateCallNote;
+
     lua_State *L;
 
     // the number of callbacks assigned to this delegate
     int _callbackCount;
+
+    bool _allowAsync;
+    mutable NativeDelegateCallNote *_activeNote;
+    int _key;
 
     // This is mutable because it's an implementation detail for the push/invoke API,
     // not "real" object state. So push/invoke can be const, yet still work properly.
@@ -54,6 +61,12 @@ class NativeDelegate
 
     static void registerDelegate(lua_State *L, NativeDelegate *delegate);
 
+    static void postNativeDelegateCallNote(NativeDelegateCallNote *ndcn);
+
+
+    // Returns a note in cases where we should be doing an async delegate.
+    NativeDelegateCallNote *prepCallbackNote() const;
+
 public:
 
     static int smMainThreadID;
@@ -71,11 +84,23 @@ public:
     // threads and corrupting our state.
     static void assertMainThread();
 
+    static bool checkMainThread();
+
+    // Run all the deferred calls that have been deferred.
+    static void executeDeferredCalls(lua_State *L);
+
     // Access the lua state bound to this native delegate
     lua_State *getVM() const
     {
         return L;
     }
+
+    // Mark this delegate as disallowing async. By default if a NativeDelegate 
+    // is run outside the main thread it is queued to be run later, but in some
+    // cases (render callbacks) delegates must be run synchronously. This method
+    // flags the delegate to error if the delegate can't be run synchronously. It
+    // may be called as much as you want; it just sets a flag.
+    void disallowAsync();
 
     // To call the delegate, just pushArgument the parameters, then call invoke.
     // No conditional checks are required, NativeDelegate deals with all that for

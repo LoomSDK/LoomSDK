@@ -1,2 +1,2 @@
 #define STBI_HEADER_FILE_ONLY
-#include "stb_image.c"
+#include "stb_image.cpp"

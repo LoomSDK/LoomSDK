@@ -15,6 +15,7 @@ package game
     import loom2d.math.Rectangle;
     import loom2d.textures.Texture;
     import loom2d.textures.TextureSmoothing;
+    import loom2d.ui.TextureAtlasManager;
     
     /**
      * Value object for storing found possible swaps
@@ -170,12 +171,12 @@ package game
         private function initTypes()
         {
             tileTypes = new <TileType>[
-                new TileType(0xBF0C43, "L", Texture.fromAsset("assets/tiles/tileL.png")),
-                new TileType(0xF9BA15, "O", Texture.fromAsset("assets/tiles/tileO.png")),
-                new TileType(0x8EAC00, "M", Texture.fromAsset("assets/tiles/tileM.png")),
-                new TileType(0x127A97, "S", Texture.fromAsset("assets/tiles/tileS.png")),
-                new TileType(0x452B72, "D", Texture.fromAsset("assets/tiles/tileD.png")),
-                new TileType(0xE5DDCB, "K", Texture.fromAsset("assets/tiles/tileK.png")),
+                new TileType(0xBF0C43, "L", TextureAtlasManager.getTexture("tiles", "tileL.png")),
+                new TileType(0xF9BA15, "O", TextureAtlasManager.getTexture("tiles", "tileO.png")),
+                new TileType(0x8EAC00, "M", TextureAtlasManager.getTexture("tiles", "tileM.png")),
+                new TileType(0x127A97, "S", TextureAtlasManager.getTexture("tiles", "tileS.png")),
+                new TileType(0x452B72, "D", TextureAtlasManager.getTexture("tiles", "tileD.png")),
+                new TileType(0xE5DDCB, "K", TextureAtlasManager.getTexture("tiles", "tileK.png")),
             ];
             for (var i:int = 0; i < tileTypes.length; i++) {
                 tileTypes[i].index = i;
@@ -316,7 +317,7 @@ package game
             a.swapFrom(b.transitionalTileX, b.transitionalTileY);
             b.swapFrom(tx, ty);
             // Wait for swap 
-            juggler.delayCall(tilesSwapped, Tile.SWAP_TIME, a, b, returning);
+            juggler.delayCall(tilesSwapped, Tile.swapTime, a, b, returning);
             // Sound effect
             tileMove.setPitch(1+Math.randomRange(-0.1, 0.1));
             tileMove.play();
@@ -379,6 +380,56 @@ package game
             }
             
             Loom2D.juggler.delayCall(collapseColumns, 0.3);
+        }
+        
+        /**
+         * Randomly pick a possible swap and swap the tiles
+         * @return Swap containing the tiles swapped or null if no swaps were able to be made
+         */
+        public function randomSwap():Swap
+        {
+            rowSwaps.clear();
+            findPossibleSwaps(rowSwaps, typeSums, DIM_ROW);
+            colSwaps.clear();
+            findPossibleSwaps(colSwaps, typeSums, DIM_COL);
+            
+            var len = rowSwaps.length + colSwaps.length;
+            shuffleSwaps(rowSwaps);
+            shuffleSwaps(colSwaps);
+            var rowIndex = 0;
+            var colIndex = 0;
+            for (var i = 0; i < len; i++) {
+                var index = i;
+                var swap:Swap;
+                // Pick randomly from the row or column array
+                if (colIndex >= colSwaps.length || (Math.random() < 0.5 && rowIndex < rowSwaps.length)) {
+                    swap = rowSwaps[rowIndex++];
+                } else {
+                    swap = colSwaps[colIndex++];
+                }
+                if (columnReady(swap.a.tx) && columnReady(swap.b.tx)) {
+                    swapTiles(swap.a, swap.b);
+                    return swap;
+                }
+            }
+            // Exhausted all the possible swaps due to changed state, return with null swap
+            return new Swap(null, null);
+        }
+        
+        /**
+         * Shuffle the Swap Vector in-place using the Fisher–Yates algorithm
+         */
+        private function shuffleSwaps(v:Vector.<Swap>) {
+            var current = v.length;
+            var random:int;
+            var temp:Swap;
+            while (current != 0) {
+                random = Math.floor(Math.random()*current);
+                current -= 1;
+                temp = v[current];
+                v[current] = v[random];
+                v[random] = temp;
+            }
         }
         
         /**

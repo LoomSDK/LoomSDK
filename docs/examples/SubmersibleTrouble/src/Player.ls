@@ -132,8 +132,15 @@ package
 			lightSwitchTime = Number.MAX_VALUE;
 			lights.alpha = 0;
 			submersible.visible = true;
+            resetExplosion();
 			state = STATE_FOLLOW;
 		}
+        
+        private function resetExplosion() 
+        {
+            explosion.stop();
+            explosion.visible = false;
+        }
 		
 		public function launch()
 		{
@@ -184,8 +191,7 @@ package
 		public function exploded()
 		{
 			state = STATE_EXPLODED;
-			explosion.visible = false;
-			explosion.stop();
+			resetExplosion();
 		}
 		
 		override public function tick(t:Number, dt:Number)

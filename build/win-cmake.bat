@@ -28,25 +28,25 @@ echo exiting build...
 EXIT
 
 :VS2013-X64-CMAKE
-cmake .. -G "Visual Studio 12" -DLOOM_BUILD_JIT=%1 -DLOOM_BUILD_NUMCORES=%2 %3
+cmake .. -G "Visual Studio 12" -DLOOM_BUILD_JIT=%1 -DLOOM_BUILD_NUMCORES=%2 %3 %4 %5
 EXIT
 
 :VS2013-X86-CMAKE
-cmake .. -G "Visual Studio 12" -DLOOM_BUILD_JIT=%1 -DLOOM_BUILD_NUMCORES=%2 %3
+cmake .. -G "Visual Studio 12" -DLOOM_BUILD_JIT=%1 -DLOOM_BUILD_NUMCORES=%2 %3 %4 %5
 EXIT
 
 :VS2012-X64-CMAKE
-cmake .. -G "Visual Studio 11" -DLOOM_BUILD_JIT=%1 -DLOOM_BUILD_NUMCORES=%2 %3
+cmake .. -G "Visual Studio 11" -DLOOM_BUILD_JIT=%1 -DLOOM_BUILD_NUMCORES=%2 %3 %4 %5
 EXIT
 
 :VS2012-X86-CMAKE
-cmake .. -G "Visual Studio 11" -DLOOM_BUILD_JIT=%1 -DLOOM_BUILD_NUMCORES=%2 %3
+cmake .. -G "Visual Studio 11" -DLOOM_BUILD_JIT=%1 -DLOOM_BUILD_NUMCORES=%2 %3 %4 %5
 EXIT
 
 :VS2010-X64-CMAKE
-cmake .. -G "Visual Studio 10" -DLOOM_BUILD_JIT=%1 -DLOOM_BUILD_NUMCORES=%2 %3
+cmake .. -G "Visual Studio 10" -DLOOM_BUILD_JIT=%1 -DLOOM_BUILD_NUMCORES=%2 %3 %4 %5
 EXIT
 
 :VS2010-X86-CMAKE
-cmake .. -G "Visual Studio 10" -DLOOM_BUILD_JIT=%1 -DLOOM_BUILD_NUMCORES=%2 %3
+cmake .. -G "Visual Studio 10" -DLOOM_BUILD_JIT=%1 -DLOOM_BUILD_NUMCORES=%2 %3 %4 %5
 EXIT

@@ -43,6 +43,7 @@ private:
         _OnSensorTripleChangedDelegate.pushArgument(z);
         _OnSensorTripleChangedDelegate.invoke();
     }
+
     /// Event handler; this is called by the C mobile API when the app is launched via a custom URL
     static void openedViaCustomURL()
     {

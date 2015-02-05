@@ -56,7 +56,7 @@ extern "C" {
 *    loom_asset_subscribe("foo.jpg", myCallback, NULL);
 *    loom_asset_preload("foo.jpg");
 *
-*    void myCallback(const char *name, void *payload)
+*    void myCallback(void *payload, const char *name)
 *    {
 *       loom_log("Texture %s changed, instating changes!", name);
 *       loom_asset_image_t *img = loom_asset_lock(name, LATImage, 0);

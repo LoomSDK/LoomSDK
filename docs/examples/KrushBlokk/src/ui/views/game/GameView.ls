@@ -5,20 +5,23 @@ package ui.views.game
     import feathers.controls.Label;
     import feathers.display.OffsetTiledImage;
     import game.Board;
+    import game.GameConfig;
     import game.Match;
     import game.Shaker;
+    import game.Swap;
+    import game.Tile;
+    import loom.platform.Mobile;
+    import loom.platform.UserDefault;
+    import loom.sound.Listener;
     import loom.sound.Sound;
     import loom2d.animation.Juggler;
     import loom2d.animation.Transitions;
     import loom2d.display.DisplayObject;
     import loom2d.display.DisplayObjectContainer;
+    import loom2d.display.Image;
     import loom2d.display.Sprite;
     import loom2d.events.Event;
-    import loom2d.events.Touch;
-    import loom2d.events.TouchEvent;
-    import loom2d.events.TouchPhase;
     import loom2d.math.Color;
-    import loom2d.math.Point;
     import loom2d.textures.Texture;
     import ui.views.ConfigView;
     import ui.views.ViewCallback;
@@ -33,10 +36,23 @@ package ui.views.game
         public var onTimeout:ViewCallback;
         
         // Quick and simple state machine for easier overal game state control
-        private static const STATE_GAME   = 0;
-        private static const STATE_QUIT   = 1;
-        private static const STATE_ENDING = 2;
-        private var state = STATE_GAME;
+        private static const STATE_SLEEP   = 0;
+        private static const STATE_GAME    = 1;
+        private static const STATE_QUIT    = 2;
+        private static const STATE_ENDING  = 3;
+        private static const STATE_DEMO    = 4;
+        private var state = STATE_SLEEP;
+        
+        private var origConfig:GameConfig;
+        private var demoConfig:GameConfig = new GameConfig();
+        private var minDemoDelay = 0.220;
+        private var maxDemoDelay = 4.000;
+        private var demoPeriod = 30;
+        private var demoHand:Image;
+        private var demoStartTime:Number;
+        private var demoInstructions:Label;
+        
+        private var paused:Boolean = false;
         
         /** Delta time, how long each game tick lasts */
         private var dt:Number = 1/60;
@@ -55,10 +71,16 @@ package ui.views.game
         
         // User interface from LML
         [Bind] public var esc:Button;
+        [Bind] public var mute:Button;
         [Bind] public var timeDisplay:Label;
         [Bind] public var lastDisplay:Label;
         [Bind] public var multiDisplay:Label;
         [Bind] public var scoreDisplay:Label;
+        
+        private static const MUTE_NONE  = 0;
+        private static const MUTE_MUSIC = 1;
+        private static const MUTE_ALL   = 2;
+        private var muteMode = MUTE_NONE;
         
         private var textScale:Number = 1;
         
@@ -96,7 +118,34 @@ package ui.views.game
             
             super.init();
             
+            origConfig = config;
+            demoConfig.duration = -1;
+            demoConfig.freeform = false;
+            demoHand = new Image(Texture.fromAsset("assets/hand.png"));
+            demoHand.scale = 0.2;
+            demoHand.pivotX = 105;
+            demoHand.pivotY = 33;
+            demoHand.rotation = -Math.PI*0.3;
+            demoHand.alpha = 0.5;
+            demoHand.touchable = false;
+            demoHand.visible = false;
+            demoInstructions = new Label();
+            demoInstructions.text = "";
+            demoInstructions.nameList.add("header");
+            demoInstructions.visible = false;
+            
             esc.addEventListener(Event.TRIGGERED, confirmQuit);
+            onBack += function() { 
+                switch (state) {
+                    case STATE_QUIT: confirmNo(); break;
+                    default: confirmQuit();
+                }
+            };
+            
+            mute.addEventListener(Event.TRIGGERED, switchMuteMode);
+            
+            // Get saved mute mode (or default if none exists)
+            muteMode = UserDefault.sharedUserDefault().getIntegerForKey("muteMode", muteMode);
             
             confirmView = new ConfirmView();
             confirmView.onYes += confirmYes;
@@ -115,14 +164,18 @@ package ui.views.game
             initDisplay(multiDisplay);
             initDisplay(scoreDisplay);
             
+            field.addChild(demoHand);
+            field.addChild(demoInstructions);
+            
             screenshaker = new Shaker(board);
             screenshaker.start(juggler);
             
             particles = PDParticleSystem.loadLiveSystem("assets/particles/explosion.pex");
             particles.emitterX = 60;
             particles.emitterY = 60;
-            juggler.add(particles);
             field.addChild(particles);
+            
+            resetJuggler();
             
             addChild(field);
             
@@ -131,6 +184,60 @@ package ui.views.game
             
             explosion = Sound.load("assets/sounds/tileExplosion.ogg");
         }
+        
+        /**
+         * Exists for symmetry against activate()
+         */
+        public function deactivate() {
+            paused = true;
+        }
+        
+        /**
+         * Update mute mode on activation,
+         * keeps sound from getting unmuted unintentionally
+         */
+        public function activate() {
+            updateMuteMode();
+            paused = false;
+        }
+        
+        /**
+         * Switch over to the next mute mode
+         */
+        private function switchMuteMode(e:Event) 
+        {
+            switch (muteMode) {
+                case MUTE_NONE:  muteMode = MUTE_MUSIC; break;
+                case MUTE_MUSIC: muteMode = MUTE_ALL; break;
+                case MUTE_ALL:   muteMode = MUTE_NONE; break;
+            }
+            // Save mute mode to persistent storage
+            UserDefault.sharedUserDefault().setIntegerForKey("muteMode", muteMode);
+            updateMuteMode();
+        }
+        
+        /**
+         * Update the sounds and state based on the current mute mode
+         */
+        private function updateMuteMode() 
+        {
+            if (muteMode == MUTE_MUSIC || muteMode == MUTE_ALL) {
+                soundtrack.pause();
+            } else if (state != STATE_SLEEP) {
+                soundtrack.play();
+            }
+            if (muteMode == MUTE_ALL) {
+                Listener.setGain(0);
+            } else {
+                Listener.setGain(1);
+            }
+            switch (muteMode) {
+                case MUTE_NONE: mute.label = "MUTE"; break;
+                case MUTE_MUSIC: mute.label = "SFX"; break;
+                case MUTE_ALL: mute.label = "MUTED"; break;
+            }
+        }
+        
         
         /** Some additional label setup */
         private function initDisplay(display:Label)
@@ -141,10 +248,10 @@ package ui.views.game
         
         
         // Quit confirmation screen
-        private function confirmQuit(e:Event)
+        private function confirmQuit(e:Event = null)
         {
             showConfirm();
-            state = STATE_QUIT;
+            if (state != STATE_DEMO) state = STATE_QUIT;
         }
         private function showConfirm()
         {
@@ -161,7 +268,7 @@ package ui.views.game
         private function confirmNo()
         {
             hideConfirm();
-            state = STATE_GAME;
+            if (state != STATE_DEMO) state = STATE_GAME;
         }
         
         
@@ -169,10 +276,12 @@ package ui.views.game
         {
             confirmView.resize(w, h);
             esc.width = 30;
-            esc.x = w-esc.width;
+            mute.width = 30;
+            mute.x = w-mute.width;
             background.setSize(w, h);
             field.x = (w-board.contentWidth)/2;
-            field.y = h-board.contentHeight-10;
+            field.y = (h-board.contentHeight)/2+10;
+            demoInstructions.setSize(board.contentWidth, 20);
             updateDisplay();
         }
         
@@ -319,6 +428,8 @@ package ui.views.game
             state = STATE_GAME;
             hideConfirm();
             
+            Mobile.allowScreenSleep(false);
+            
             // Set config options
             board.freeformMode = config.freeform;
             board.reset();
@@ -333,19 +444,132 @@ package ui.views.game
             updateDisplay();
             
             soundtrack.play();
+            
+            updateMuteMode();
+        }
+        
+        /**
+         * Enable demo mode with automated swapping and instructional messages
+         */
+        public function demo()
+        {
+            config = demoConfig;
+            state = STATE_DEMO;
+            board.touchable = false;
+            Tile.swapTime = Tile.SWAP_TIME_DEMO;
+            demoStartTime = juggler.elapsedTime;
+            juggler.delayCall(nextRandomSwap, maxDemoDelay);
+            demoHand.visible = true;
+            demoHand.alpha = 0;
+            demoInstructions.visible = true;
+            demoInstructions.alpha = 0;
+            
+            showInstruction("DRAG TILES TO SWAP THEM", 0, 3.8);
+            showInstruction("MATCH 3 OR MORE", 6, 2.5);
+            showInstruction("OF THE SAME TYPE", 8.5, 2.5);
+            
+            showInstruction("QUICKER SWAPPING", 14, 3);
+            showInstruction("MEANS A HIGHER MULTIPLIER", 17, 3);
+            showInstruction("FOR MORE POINTS", 20, 3);
+            
+            showInstruction("TAP ESC TO EXIT DEMO", 40, 3);
+            
+            showInstruction("THERE ARE no", 60, 3);
+            showInstruction("HIDDEN MESSAGES OR FEATURES", 63, 3);
+            showInstruction("for sure", 66, 3);
+            
+            showInstruction("i lied\n\n\n", 120, 1.3);
+            showInstruction("    i lied\n\n", 121, 0.3);
+            showInstruction("i lied    \n", 121.1, 0.3);
+            showInstruction("     i lied", 121.2, 0.3);
+            showInstruction("\ni lied    ", 121.3, 0.3);
+            showInstruction("\n\n    i lied", 121.4, 0.3);
+            showInstruction("\n\n\ni lied", 121.5, 1.3);
+        }   
+        
+        /**
+         * Show instructional text with a specified delay and for a specified duration
+         */
+        private function showInstruction(text:String, delay:Number, duration:Number) 
+        {
+            juggler.delayCall(function() {
+                demoInstructions.text = text;
+                demoInstructions.validate();
+                demoInstructions.y = 20 + demoInstructions.height/2;
+            }, delay);
+            juggler.tween(demoInstructions, 0.1, { delay: delay, alpha: 1 } );
+            juggler.tween(demoInstructions, 0.1, { delay: delay+duration-0.2, alpha: 0 } );
+        }
+        
+        /**
+         * Display a hand performing the tile swap
+         */
+        private function showSwap(swap:Swap) 
+        {
+            demoHand.x = swap.a.getDisplayX(swap.a.transitionalTileX);
+            demoHand.y = swap.a.getDisplayY(swap.a.transitionalTileY);
+            juggler.removeTweens(demoHand);
+            juggler.tween(demoHand, 0.2, { alpha: 0.4 } );
+            juggler.tween(demoHand, Tile.swapTime, {
+                x: swap.a.getDisplayX(swap.b.transitionalTileX),
+                y: swap.b.getDisplayY(swap.b.transitionalTileY),
+                transition: Transitions.EASE_IN_OUT
+            });
+            juggler.tween(demoHand, 0.2, { delay: Tile.swapTime, alpha: 0 } );
+        }
+        
+        /**
+         * Attempt a tile swap from a timer
+         */
+        private function nextRandomSwap() 
+        {
+            var demoTime = juggler.elapsedTime-demoStartTime;
+            // Have the swapping speed start off slowly at minDemoDelay
+            // and ramp up to maxDemoDelay over demoPeriod milliseconds
+            // and then reverse and repeat
+            var time = minDemoDelay+(maxDemoDelay-minDemoDelay)*(Math.cos(demoTime/demoPeriod*Math.PI)+1)/2;
+            // Modify the swapping time for demo purposes
+            Tile.swapTime = Math.clamp(time, Tile.SWAP_TIME_NORMAL, Tile.SWAP_TIME_DEMO);
+            var swap = board.randomSwap();
+            // If the tiles are null, the swap failed
+            if (swap.a != null && swap.b != null) showSwap(swap);
+            // Attempt the next swap with a short delay
+            juggler.delayCall(nextRandomSwap, time+0.1);
+        }
+        
+        public function get demoMode():Boolean
+        {
+            return state == STATE_DEMO;
         }
         
         public function exit()
         {
             super.exit();
+            if (state == STATE_DEMO) {
+                config = origConfig;
+                board.touchable = true;
+                Tile.swapTime = Tile.SWAP_TIME_NORMAL;
+                demoHand.visible = false;
+                demoInstructions.visible = false;
+            }
+            state = STATE_SLEEP;
+            resetJuggler();
             particles.clear();
             soundtrack.stop();
+            Mobile.allowScreenSleep(true);
+        }
+        
+        private function resetJuggler() 
+        {
+            juggler.purge();
+            juggler.add(particles);
         }
         
         public function tick()
         {
             // Do not process ticks after quitting
             if (state == STATE_QUIT) return;
+            if (paused) return;
             
             t += dt;
             juggler.advanceTime(dt);
