@@ -29,12 +29,12 @@ class utByteArray {
 protected:
     // stored as little endian
     utArray<unsigned char> _data;
-    int _position;
+    UTsize _position;
 
     template<typename T>
     T readValue()
     {
-        if (_position > (int)_data.size() - (int)sizeof(T))
+        if (_position > _data.size() - sizeof(T))
         {
             //lmAssert(0, "ByteArray out of data on read of size %u", sizeof(T));
             assert(0);
@@ -135,20 +135,20 @@ public:
 
     void clear();
 
-    void setPosition(int value)
+    void setPosition(unsigned int value)
     {
-        _position = value;
+        _position = (UTsize) value;
     }
 
-    int getPosition() const
+    unsigned int getPosition() const
     {
         return _position;
     }
 
-    int bytesAvailable() const
+    unsigned int bytesAvailable() const
     {
-        int size = getSize();
-        return size < _position ? 0 : size-_position;
+        UTsize size = getSize();
+        return (size < _position ? 0 : size-_position);
     }
 
     bool readBoolean()
