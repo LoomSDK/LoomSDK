@@ -200,6 +200,38 @@ package system {
 
         return value;
     }
+    
+    /**
+     * Left pad the string s with the string c up to the width of l.
+     * c is added to the left of s until it reaches the length of l.
+     * @param s The string to add left padding on.
+     * @param c The string to use as padding, usually a single character.
+     * @param l The length or width of the final string. If the string is already as long or longer, it is returned unmodified.
+     * @return  The new padded string.
+     */
+    public static function lpad(s:String, c:String, l:int):String {
+        if (s == null || c == null || c.length < 1) return s;
+        while (s.length < l) {
+            s = c+s;
+        }
+        return s;
+    }
+    
+    /**
+     * Right pad the string s with the string c up to the width of l.
+     * c is added to the right of s until it reaches the length of l.
+     * @param s The string to add right padding on.
+     * @param c The string to use as padding, usually a single character.
+     * @param l The length or width of the final string. If the string is already as long or longer, it is returned unmodified.
+     * @return  The new padded string.
+     */
+    public static function rpad(s:String, c:String, l:int):String {
+        if (s == null || c == null || c.length < 1) return s;
+        while (s.length < l) {
+            s = s+c;
+        }
+        return s;
+    }
 
     /**
      *  Determines if a string is a whitespace character.
