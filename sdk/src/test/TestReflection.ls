@@ -122,10 +122,10 @@ class TestReflection extends Test
         log(stype.getFullName());
         log(stype.getName());
         
-        var minfo:MethodInfo = stype.getMethodInfo("someMethod");
-        var sinfo:MethodInfo = stype.getMethodInfo("someStaticMethod");
+        var minfo:MethodInfo = stype.getMethodInfoByName("someMethod");
+        var sinfo:MethodInfo = stype.getMethodInfoByName("someStaticMethod");
         
-        var method = stype.getMethodInfo("someMethod");
+        var method = stype.getMethodInfoByName("someMethod");
         for (i = 0; i < method.getNumParameters(); i++) {
             var param = method.getParameter(i);
             log(param.getName() + " : " + param.getParameterType().getFullName());
@@ -133,13 +133,13 @@ class TestReflection extends Test
         
         var constructor = stype.getConstructor();
         
-        stype.getMethodInfo("someStaticMethodNoArgs").invoke(null);
+        stype.getMethodInfoByName("someStaticMethodNoArgs").invoke(null);
         sinfo.invoke(null, "Hey!", "7331");
         
         var c:ReflectClass = constructor.invoke() as ReflectClass;
         minfo.invoke(c, "Josh!", 1337);
         
-        stype.getMethodInfo("someMethodNoArgs").invoke(c);
+        stype.getMethodInfoByName("someMethodNoArgs").invoke(c);
         
         type = c.getType();
         
