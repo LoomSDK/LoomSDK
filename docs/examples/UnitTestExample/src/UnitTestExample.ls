@@ -1,5 +1,7 @@
 package
 {
+    import unittest.TestRunner;
+    import unittest.Assert;
     import loom.Application;
     import system.platform.File;
     import system.reflection.Assembly;
@@ -18,6 +20,11 @@ package
             
             //Assembly.loadBytes(File.loadBinaryFile("assets/Main.loom"));
             
+        }
+        
+        [Test]
+        public static function test() {
+            Assert.isTrue(true);
         }
         
     }
