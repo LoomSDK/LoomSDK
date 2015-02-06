@@ -1,16 +1,69 @@
 package {
+    import system.reflection.Assembly;
+    import system.reflection.MetaInfo;
     import system.reflection.MethodInfo;
     import system.reflection.Type;
+    
+    class StatusReport {
+        public var total:int;
+        public var passed:int;
+        public var failed:int;
+        public var skipped:int;
+        
+        public function operator+=(s:StatusReport) {
+            total += s.total;
+            passed += s.passed;
+            failed += s.failed;
+            skipped += s.skipped;
+        }
+        
+        public function updateFailed() {
+            failed = total - passed - skipped;
+        }
+        public function get successful():Boolean {
+            return failed == 0;
+        }
+        public function reset() {
+            total = 0;
+            passed = 0;
+            failed = 0;
+            skipped = 0;
+        }
+        public function toString():String {
+            var s = String.lpad(""+total, " ", 4)+" total" +
+                    ", "+String.lpad(""+passed, " ", 4)+" passed" +
+                    ", "+String.lpad(""+failed, " ", 4)+" failed" +
+                    (skipped > 0 ? ", "+String.lpad(""+skipped, " ", 4)+" skipped" : "");
+            Debug.assert(total == passed + failed + skipped, "Status report internal error: "+s);
+            return s;
+        }
+    }
+    
+    class TypeTest {
+        public var type:Type;
+        public var tests:Vector.<Test>;
+        
+        public var skip:Boolean;
+        
+        public var report:StatusReport = new StatusReport();
+        public var asserts:StatusReport = new StatusReport();
+    }
     
     class Test {
         /**
          * Can be either a Type or an instance.
          */
+        public var type:Type;
         public var target:Object;
         public var name:String;
         public var method:MethodInfo;
         public var meta:MetaInfo;
+        
+        public var skip:Boolean;
+        
+        public var report:StatusReport = new StatusReport();
         public var results:Vector.<AssertResult>;
+        
         function Test() { };
         
         [UnitTestHideCall]
@@ -30,27 +83,134 @@ package {
         }
         
         
-        private static function lpad(s:String, c:String, l:int):String {
-            while (s.length < l) {
-                s = c+s;
+        public static function runAll(assembly:Assembly, shuffle:Boolean = true):Vector.<Test> {
+            
+            var typeCount = assembly.getTypeCount();
+            
+            IO.write("Scanning "+typeCount+" types\n");
+            
+            var typeTests = getTypeTests(assembly);
+            var totalTests = 0;
+            for each (var typeTest in typeTests) {
+                totalTests += typeTest.tests.length;
             }
-            return s;
+            
+            IO.write("Found "+typeTests.length+" "+(typeTests.length == 1 ? "type" : "types"));
+            IO.write(" with a total of "+totalTests+" "+(totalTests == 1 ? "test" : "tests")+"\n");
+            
+            IO.write("\n");
+            
+            var typeReport:StatusReport = new StatusReport();
+            var testReport:StatusReport = new StatusReport();
+            var assertReport:StatusReport = new StatusReport();
+            
+            runTypes(typeTests, shuffle, typeReport, testReport, assertReport);
+            
+            reportTypes(typeTests, typeReport, testReport, assertReport);
+            
+            return typeTests;
         }
         
-        private static function rpad(s:String, c:String, l:int):String {
-            while (s.length < l) {
-                s = s+c;
+        public static function runTypes(typeTests:Vector.<TypeTest>, shuffle:Boolean = true, typeReport:StatusReport = null, testReport:StatusReport = null, assertReport:StatusReport = null) {
+            if (shuffle) typeTests.shuffle();
+            
+            var tests = new Vector.<Test>();
+            
+            var i:int;
+            var tt:TypeTest;
+            
+            if (typeReport) typeReport.total += typeTests.length;
+            
+            for (i = 0; i < typeTests.length; i++) {
+                tt = typeTests[i];
+                tt.asserts.reset();
+                
+                IO.write((tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"   "+(i+1)+" / "+typeTests.length+"\n");
+                if (tt.skip) {
+                    if (typeReport) typeReport.skipped++;
+                    continue;
+                }
+                
+                IO.write("\n");
+                run(tt.tests, shuffle);
+                
+                tt.report.reset();
+                tt.report.total = tt.tests.length;
+                for (var j = 0; j < tt.tests.length; j++) {
+                    var test:Test = tt.tests[j];
+                    if (assertReport) assertReport += test.report;
+                    tt.asserts += test.report;
+                    if (test.skip) {
+                        tt.report.skipped++;
+                        continue;
+                    }
+                    if (test.report.successful) tt.report.passed++;
+                }
+                tt.report.updateFailed();
+                
+                if (testReport) testReport += tt.report;
+                
+                if (tt.report.successful && typeReport) typeReport.passed++;
+                
+                IO.write("\n\n");
+                tests = tests.concat(tt.tests);
             }
-            return s;
+            if (typeReport) typeReport.updateFailed();
+            
+        }
+        
+        public static function reportTypes(typeTests:Vector.<TypeTest>, typeReport:StatusReport, testReport:StatusReport = null, assertReport:StatusReport = null) {
+            if (typeReport.successful) {
+                IO.write("############# TEST SUCCESS #############\n\n");
+            } else {
+                IO.write("########################################\n\n");
+                IO.write("############# FAILED TESTS #############\n\n");
+                
+                for (var i = 0; i < typeTests.length; i++) {
+                    var tt = typeTests[i];
+                    if (!tt.report.successful) {
+                        IO.write("########################################\n\n");
+                        IO.write("Failing type: "+tt.type.getFullName()+"\n");
+                        IO.write("Tests:   " + tt.report+"\n");
+                        IO.write("Asserts: " + tt.asserts+"\n");
+                        IO.write("\n");
+                        IO.write("########################################\n\n");
+                        report(tt.tests);
+                    }
+                }
+            }
+            
+            if (assertReport) IO.write("Asserts: "+assertReport+"\n");
+            if (testReport) IO.write("Tests:   "+testReport+"\n");
+            IO.write("Types:   "+typeReport+"\n");
+            
+            IO.write("\n");
+        }
+        
+        public static function getTypeTests(assembly:Assembly):Vector.<TypeTest> {
+            var typeCount = assembly.getTypeCount();
+            var typeTests = new Vector.<TypeTest>();
+            for (var i:int = 0; i < typeCount; i++) {
+                var type:Type = assembly.getTypeAtIndex(i);
+                var tests:Vector.<Test> = getTests(type);
+                if (tests.length > 0) {
+                    var tt = new TypeTest();
+                    tt.type = type;
+                    tt.tests = tests;
+                    tt.skip = type.getMetaInfo("SkipTests") != null;
+                    typeTests.push(tt);
+                }
+            }
+            return typeTests;
         }
         
         [UnitTestHideCall]
-        public static function runAll(target:Object, shuffle:Boolean = true):Vector.<Test> {
-            var type:Type = target is Type ? target as Type : target.getType();
+        public static function run(tests:Vector.<Test>, shuffle:Boolean = true) {
+            //var type:Type = target is Type ? target as Type : target.getType();
             
-            IO.write("Testing "+type.getFullName()+"  ");
+            //IO.write("Running "+type.getFullName()+"  ");
             
-            var tests:Vector.<Test> = getTests(target);
+            //var tests:Vector.<Test> = getTests(target);
             
             var i:int;
             var test:Test;
@@ -74,28 +234,36 @@ package {
             
             for (i in tests) {
                 test = tests[i];
-                IO.write(lpad(""+(i+1), " ", 4)+". "+rpad(test.name, " ", 20)+" ");
+                IO.write(String.lpad(""+(i+1), " ", 4)+". "+String.rpad(test.name, " ", 20)+" ");
+                IO.write("   ");
+                if (test.skip) {
+                    IO.write("   skipped\n");
+                    continue;
+                }
                 var ret = test.run();
                 var results = Assert.popResults();
                 var passed = 0;
                 for each (var result in results) {
                     if (result == Assert.RESULT_SUCCESS) passed++;
                 }
-                IO.write("   ");
-                IO.write(lpad(""+passed, " ", 3) + " / " + rpad(""+results.length, " ", 3) + " passed");
+                test.report.total = results.length;
+                test.report.passed = passed;
+                test.report.updateFailed();
+                IO.write(String.lpad(""+test.report.total, " ", 4) + " total " + String.lpad(""+test.report.passed, " ", 4) + " passed");
+                //IO.write(lpad(""+passed, " ", 3) + " / " + rpad(""+results.length, " ", 3) + " passed");
                 if (passed < results.length) {
-                    IO.write(" "+lpad(""+(results.length-passed), " ", 3)+" failed");
+                    IO.write(" "+String.lpad(""+(results.length-passed), " ", 4)+" failed");
                     test.results = results;
                 }
                 if (ret != null) IO.write("   "+ret);
                 IO.write("\n");
             }
             
-            IO.write("\n");
+            //IO.write("\n");
             
-            report(tests);
+            //report(tests);
             
-            return tests;
+            //return tests;
         }
         
         public static function report(tests:Vector.<Test>, stackSkip:int = 2) {
@@ -104,12 +272,7 @@ package {
                 return (item as Test).results != null;
             });
             
-            IO.write("Tests passed: " + (tests.length - failedTests.length) + " / " + tests.length);
-            IO.write("\n\n");
-            
             if (failedTests.length > 0) {
-                IO.write("### FAILED TESTS ###\n\n");
-                
                 for (var i in failedTests) {
                     var test:Test = failedTests[i];
                     var results = test.results;
@@ -148,7 +311,7 @@ package {
                             }
                         }
                         
-                        IO.write(lpad(""+(j+1), " ", 4)+" Assert."+result.info);
+                        IO.write(String.lpad(""+(j+1), " ", 4)+" Assert."+result.info);
                         if (skip == 0) {
                             IO.write(" // "+msg);
                         }
@@ -178,10 +341,12 @@ package {
             var tests = new Vector.<Test>();
             for (var i:int = 0; i < mn; i++) {
                 var m:MethodInfo = type.getMethodInfo(i);
-                var meta = m.getMetaInfo("Test");
+                var meta:MetaInfo = m.getMetaInfo("Test");
                 if (meta != null) {
                     var test = new Test();
+                    test.skip = meta.getAttribute("skip") != null;
                     test.name = m.getName();
+                    test.type = type;
                     test.target = target;
                     test.method = m;
                     test.meta = meta;

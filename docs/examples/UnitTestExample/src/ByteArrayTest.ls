@@ -6,30 +6,6 @@ package {
             
         }
         
-        static function staticTestA() {
-            Assert.isTrue(true, "staticTestA ran!");
-        }
-        
-        static function staticTestB() {
-            Assert.isTrue(true, "staticTestB ran!");
-        }
-        
-        static function staticTestC() {
-            Assert.isTrue(true, "staticTestC ran!");
-        }
-        
-        function nonstaticTestA() {
-            Assert.isTrue(true, "nonstaticTestA ran!");
-        }
-        
-        function nonstaticTestB() {
-            Assert.isTrue(true, "nonstaticTestB ran!");
-        }
-        
-        function nonstaticTestC() {
-            Assert.isTrue(true, "nonstaticTestC ran!");
-        }
-        
         var ba:ByteArray = new ByteArray();
         
         

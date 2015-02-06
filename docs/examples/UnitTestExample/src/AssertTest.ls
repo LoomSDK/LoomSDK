@@ -4,6 +4,18 @@ package {
         
         public var testFailures = false;
         
+        static function staticTest() {
+            Assert.isTrue(true, "staticTest");
+        }
+        
+        function nonstaticTest() {
+            Assert.isTrue(true, "nonstaticTest");
+        }
+        
+        [Test(skip)] function testSkip() {
+            Assert.fail();
+        }
+        
         [Test] function testFail() {
             if (testFailures) Assert.fail();
         }

@@ -10,8 +10,11 @@ package
         override public function run():void
         {
             //trace(TestRunner.getTests(new ByteArrayTest()));
-            TestRunner.runAll(ByteArrayTest, false);
+            //TestRunner.runAll(ByteArrayTest, false);
+            //TestRunner.run(TestRunner.getTests(ByteArrayTest));
             //TestRunner.runAll(AssertTest, false);
+            
+            TestRunner.runAll(getType().getAssembly());
             
             //Assembly.loadBytes(File.loadBinaryFile("assets/Main.loom"));
             
