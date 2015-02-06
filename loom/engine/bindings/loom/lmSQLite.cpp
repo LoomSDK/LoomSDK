@@ -34,6 +34,11 @@ class Statement
 {
 public:
     sqlite3_stmt *statementHandle = NULL;
+
+    int getParameterCount()
+    {
+        return 666;
+    }
 };
 
 
@@ -115,6 +120,7 @@ static int registerLoomSQLiteStatement(lua_State *L)
       .beginClass<Statement>("Statement")
 
 //TODO: Add Statement methods
+        .addMethod("getParameterCount", &Statement::getParameterCount)
 
       .endClass()
     .endPackage();

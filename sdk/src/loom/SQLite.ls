@@ -107,7 +107,7 @@ package loom.sqlite
      * to the next row of results. Synchronous and asynchronous
      * query execution are supported.
      */
-    class Statement
+    public native class Statement
     {
         //SQLite Statement Constants
 //TODO: These don't match 1:1 with sqlite ones...         
@@ -122,7 +122,7 @@ package loom.sqlite
 //TODO
 //         public native function getParameterIndex(name:String):int;
 //         public native function getParameterName(index:int):String;
-//         public native function getParameterCount():int;
+        public native function getParameterCount():int;
  
         // Interface to set query parameters.
 //TODO
