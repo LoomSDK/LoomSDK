@@ -161,16 +161,13 @@ public:
     static Assembly *getCallingAssembly();
 
     static Assembly *create(LSLuaState *vm, const utString& name);
-
-    /*
+	
+	static Assembly *loadBinary(LSLuaState *vm, utByteArray *bytes);
+    
+	/*
      * Loads a JSON assembly which is used during compilation
      */
     static Assembly *loadFromString(LSLuaState *vm, const utString& source);
-
-    /*
-     * Loads an executable binary assembly
-     */
-    static Assembly *loadBinary(LSLuaState *vm, utByteArray *bytes);
 
     MethodInfo *getStaticMethodInfo(const char *name);
 

@@ -456,11 +456,13 @@ Assembly *LSLuaState::loadExecutableAssembly(const utString& assemblyName, bool 
 
     Assembly* assembly = loadExecutableAssemblyBinary(buffer, bufferSize);
 
-    LSUnmapFile(filePath.c_str());
+	LSUnmapFile(filePath.c_str());
 
     lmAssert(assembly, "Error loading executable: %s", assemblyName.c_str());
 
-    return assembly;
+	assembly->freeByteCode();
+	
+	return assembly;
 }
 
 Assembly *LSLuaState::loadExecutableAssemblyBinary(const char *buffer, long bufferSize) {

@@ -139,14 +139,16 @@ int Assembly::loadBytes(lua_State *L) {
 
     lmAssert(assembly, "Error loading assembly bytes");
 
+	lualoom_pushnative(L, assembly);
+
+	assembly->freeByteCode();
+
     return 1;
 }
 
 Assembly *Assembly::loadBinary(LSLuaState *vm, utByteArray *bytes)
 {
     Assembly *assembly = BinReader::loadExecutable(vm, bytes);
-
-    //lualoom_pushnative
 
     return assembly;
 }

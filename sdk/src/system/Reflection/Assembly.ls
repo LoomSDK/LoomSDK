@@ -26,7 +26,7 @@ package system.reflection {
  */
 native class Assembly {
 
-    public native static function loadBytes(bytes:ByteArray):void;
+    public native static function loadBytes(bytes:ByteArray):Assembly;
     
     /**
      *  Executes the Assembly by calling its main() function.
