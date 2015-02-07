@@ -47,12 +47,12 @@ class QuadRenderer
 
 private:
 
-    static bgfx::DynamicVertexBufferHandle vertexBuffers[MAXVERTEXBUFFERS];
+    static void *vertexBuffers[MAXVERTEXBUFFERS];
 
     static VertexPosColorTex* vertexData[MAXVERTEXBUFFERS];
     static void* vertexDataMemory;
 
-    static int               maxVertexIdx[MAXVERTEXBUFFERS];
+    static int maxVertexIdx[MAXVERTEXBUFFERS];
 
     static int numVertexBuffers;
 

@@ -6,7 +6,7 @@ endif()
 
 project(${APPLICATION_NAME})
 
-include_directories( ${LOOM_INCLUDE_FOLDERS} )
+include_directories( ${LOOM_INCLUDE_FOLDERS}  "/usr/local/include/SDL2" )
 
 set (APPLICATION_SRC
     common/AppDelegate.cpp
@@ -76,7 +76,6 @@ if (APPLE)
           osx/Application.icns
           osx/Info.plist
           osx/main.m
-          osx/AppController.mm
           osx/en.lproj/MainMenu.xib
         )
 
@@ -199,6 +198,10 @@ if (APPLE)
           "-framework AudioToolbox"
           "-framework AudioUnit"
           "-framework CoreAudio"
+
+          "-L/usr/local/lib"
+          "-lSDL2"
+
           )
 
         # Use our own Info.plist.

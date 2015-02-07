@@ -10,7 +10,7 @@
 
 package loom2d.core
 {
-    import loom2d.display.CCLayer;
+    //import loom2d.display.CCLayer;
     import loom.Application;
 
     import loom2d.math.Point;
@@ -34,7 +34,7 @@ package loom2d.core
         private static const MULTITAP_DISTANCE:Number = 25;
         
         private var mStage:Stage;
-        private var mRootLayer:CCLayer;
+        //private var mRootLayer:CCLayer;
         private var mElapsedTime:Number;
         private var mTouchMarker:TouchMarker;
         
@@ -51,19 +51,19 @@ package loom2d.core
         private static var sProcessedTouchIDs:Vector.<int> = new Vector.<int>[];
         private static var sHoveringTouchData:Vector.<TouchProcessorNote> = new Vector.<TouchProcessorNote>[];
         
-        public function TouchProcessor(stage:Stage, rootLayer:CCLayer)
+        public function TouchProcessor(stage:Stage /*, rootLayer:CCLayer */)
         {
             mStage = stage;
-            mRootLayer = rootLayer;
+            //mRootLayer = rootLayer;
             mElapsedTime = 0.0;
             mCurrentTouches = new Vector.<Touch>[];
             mQueue = new TouchQueue();
             mLastTaps = new Vector.<Touch>[];
             
-            mRootLayer.onTouchBegan += handleTouchBegan;
+            /*mRootLayer.onTouchBegan += handleTouchBegan;
             mRootLayer.onTouchMoved += handleTouchMoved;
             mRootLayer.onTouchEnded += handleTouchEnded;
-            mRootLayer.onTouchCancelled += handleTouchEnded;
+            mRootLayer.onTouchCancelled += handleTouchEnded; */
 
             mStage.addEventListener(KeyboardEvent.KEY_UP, onKey);
             mStage.addEventListener(KeyboardEvent.KEY_DOWN, onKey);

@@ -1,45 +1,92 @@
-/****************************************************************************
- Copyright (c) 2010 cocos2d-x.org
- 
- http://www.cocos2d-x.org
- 
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
- 
- The above copyright notice and this permission notice shall be included in
- all copies or substantial portions of the Software.
- 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- THE SOFTWARE.
- ****************************************************************************/
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
 
-#import <Cocoa/Cocoa.h>
-#import <Foundation/NSAutoreleasePool.h>
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#endif
 
-void loom_appSetup();
-void loom_appShutdown();
+#include <SDL.h>
 
-int main(int argc, char *argv[])
+#define WINDOW_WIDTH    640
+#define WINDOW_HEIGHT   480
+
+extern void loom_appSetup();
+extern void loom_appShutdown();
+extern void loom_tick();
+extern void supplyEmbeddedAssets();
+
+SDL_GLContext context;
+SDL_Window *window = NULL;
+
+int done = 0;
+
+void loop()
 {
-   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    SDL_Event event;
+    
+    /* Check for events */
+    while (SDL_PollEvent(&event))
+    {
+        if (event.type == SDL_QUIT || event.type == SDL_KEYDOWN)
+        {
+            done = 1;
+        }
+        
+        if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED)
+        {
+            printf("Window %d resized to %dx%d\n",
+                   event.window.windowID, event.window.data1,
+                   event.window.data2);
+        }
+    }
+    
+    /* Draw a gray background */
+    loom_tick();
+    
+    /* Update the screen! */
+    SDL_GL_SwapWindow(window);
+}
 
-   int r = 0;
-   loom_appSetup();
-
-	r = NSApplicationMain(argc, (const char **)argv);
-   
-   loom_appShutdown();
-   
-   [pool release];
-
-   return r;
+int
+main(int argc, char *argv[])
+{
+    
+    /* Enable standard application logging */
+    SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
+    
+    if ((window = SDL_CreateWindow(
+                        "Loom", 0, 0,
+                        WINDOW_WIDTH,
+                        WINDOW_HEIGHT,
+                        SDL_WINDOW_RESIZABLE
+                        | SDL_WINDOW_ALLOW_HIGHDPI)) == NULL)
+    {
+        exit(0);
+    }
+    
+    context = SDL_GL_CreateContext(window);
+    if (!context) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_GL_CreateContext(): %s\n", SDL_GetError());
+        exit(2);
+    }
+    
+    
+    /* Main render loop */
+    done = 0;
+    
+    loom_appSetup();
+    
+    supplyEmbeddedAssets();
+    
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop(loop, 0, 1);
+#else
+    while (!done) loop();
+#endif
+    
+    loom_appShutdown();
+    
+    exit(0);
+    return 0; /* to prevent compiler warning */
 }

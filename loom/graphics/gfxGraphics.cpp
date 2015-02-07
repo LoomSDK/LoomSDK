@@ -18,7 +18,10 @@
  * ===========================================================================
  */
 
-#include "bgfx.h"
+//#include "bgfx.h"
+//#include "SDL_opengl.h"
+#include <SDL.h>
+
 #include "loom/common/platform/platform.h"
 #include "loom/common/core/log.h"
 
@@ -36,7 +39,8 @@ bool Graphics::sInitialized = false;
 // start with context loss as flagged so resources are created
 bool Graphics::sContextLost = true;
 
-void *Graphics::sPlatformData[3] = { NULL, NULL, NULL };
+//void *Graphics::sPlatformData[3] = { NULL, NULL, NULL };
+
 
 int Graphics::sWidth     = 0;
 int Graphics::sHeight    = 0;
@@ -48,12 +52,44 @@ uint32_t Graphics::sCurrentFrame = 0;
 
 char Graphics::pendingScreenshot[1024] = { 0, };
 
+extern SDL_GLContext context;
+GL_Context Graphics::_context;
+
+    
+    static int LoadContext(GL_Context * data)
+    {
+#if SDL_VIDEO_DRIVER_UIKIT
+#define __SDL_NOGETPROCADDR__
+#elif SDL_VIDEO_DRIVER_ANDROID
+#define __SDL_NOGETPROCADDR__
+#elif SDL_VIDEO_DRIVER_PANDORA
+#define __SDL_NOGETPROCADDR__
+#endif
+        
+#if defined __SDL_NOGETPROCADDR__
+#define SDL_PROC(ret,func,params) data->func=func;
+#else
+#define SDL_PROC(ret,func,params) \
+do { \
+void **tmp = (void**)&data->func; \
+*tmp = SDL_GL_GetProcAddress(#func); \
+if ( ! data->func ) { \
+return SDL_SetError("Couldn't load GL function %s: %s\n", #func, SDL_GetError()); \
+} \
+} while ( 0 );
+#endif /* _SDL_NOGETPROCADDR_ */
+        
+#include "gfxGLES2EntryPoints.h"
+#undef SDL_PROC
+        return 0;
+    }
+    
 void Graphics::initialize()
 {
     // when using internal bgfx context management
-    initializePlatform();
-
-    bgfx::init();
+//    initializePlatform();
+    
+    LoadContext(&_context);
 
     // initialize the static Texture initialize
     Texture::initialize();
@@ -77,7 +113,7 @@ void Graphics::initialize()
 
 void Graphics::shutdown()
 {
-    bgfx::shutdown();
+//    bgfx::shutdown();
 }
 
 
@@ -90,7 +126,7 @@ void Graphics::reset(int width, int height, uint32_t flags)
     // if we're experiencing a context loss we must reset regardless
     if (sContextLost)
     {   
-        bgfx::reset(width, height, flags);     
+        //bgfx::reset(width, height, flags);
         QuadRenderer::reset();
         Texture::reset();        
     }
@@ -99,7 +135,7 @@ void Graphics::reset(int width, int height, uint32_t flags)
         // otherwise, reset only on width/height/flag change
         if (width != sWidth || height != sHeight || sFlags != flags)
         {
-            bgfx::reset(width, height, flags);         
+            //bgfx::reset(width, height, flags);
         }
     }
 
@@ -115,7 +151,7 @@ void Graphics::reset(int width, int height, uint32_t flags)
 
 void Graphics::setViewTransform(float *view, float *proj)
 {
-    bgfx::setViewTransform(sView, view, proj);
+    //bgfx::setViewTransform(sView, view, proj);
 }
 
 
@@ -129,28 +165,28 @@ void Graphics::beginFrame()
     sCurrentFrame++;
 
     // Set view 0 default viewport.
-    bgfx::setViewRect(sView, 0, 0, sWidth, sHeight);
+    //bgfx::setViewRect(sView, 0, 0, sWidth, sHeight);
 
     //lmLog(gGFXLogGroup, "View Rect %i %i", sWidth, sHeight);
 
-    bgfx::setViewSeq(sView, true);
+    //bgfx::setViewSeq(sView, true);
 
     QuadRenderer::beginFrame();
 
     // This dummy draw call is here to make sure that view 0 is cleared
     // if no other draw calls are submitted to view 0.
-    bgfx::submit(sView);
+    //bgfx::submit(sView);
 }
 
 
 void Graphics::endFrame()
 {
     QuadRenderer::endFrame();
-    bgfx::frame();
+    //bgfx::frame();
 
     if(pendingScreenshot[0] != 0)
     {
-        bgfx::saveScreenShot(pendingScreenshot);
+        //bgfx::saveScreenShot(pendingScreenshot);
         pendingScreenshot[0] = 0;
     }
 }
@@ -167,10 +203,10 @@ void Graphics::handleContextLoss()
 
     // make sure the QuadRenderer resources are freed before we shutdown bgfx
     QuadRenderer::destroyGraphicsResources();
-    bgfx::shutdown();
+    //bgfx::shutdown();
     
     lmLog(gGFXLogGroup, "Handle context loss: Init");
-    bgfx::init();
+    //bgfx::init();
 
     // if we want hud, set it
     //bgfx::setDebug(BGFX_DEBUG_STATS | BGFX_DEBUG_TEXT);
@@ -189,7 +225,7 @@ void Graphics::screenshot(const char *path)
 
 void Graphics::setDebug(int flags)
 {
-    bgfx::setDebug(flags);
+    //bgfx::setDebug(flags);
 }
 
 
@@ -221,18 +257,18 @@ int Graphics::setClipRect(int x, int y, int width, int height)
         y       = 0;
     }
 
-    return bgfx::setScissor(x, y, width, height);
+    return -1; //bgfx::setScissor(x, y, width, height);
 }
 
 
 void Graphics::setClipRect(int cached)
 {
-    bgfx::setScissor(cached);
+    //bgfx::setScissor(cached);
 }
 
 
 void Graphics::clearClipRect()
 {
-    bgfx::setScissor();
+    //bgfx::setScissor();
 }
 }

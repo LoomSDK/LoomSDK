@@ -36,49 +36,6 @@ set (ENGINE_SRC
 
     bindings/cocos2d/lmCocos2D.cpp
     
-    cocos2dx/CCCamera.cpp
-    cocos2dx/CCConfiguration.cpp
-    cocos2dx/CCDirector.cpp
-    cocos2dx/CCScheduler.cpp
-    cocos2dx/base_nodes/CCNode.cpp
-    cocos2dx/cocoa/CCAffineTransform.cpp
-    cocos2dx/cocoa/CCArray.cpp
-    cocos2dx/cocoa/CCAutoreleasePool.cpp
-    cocos2dx/cocoa/CCDictionary.cpp
-    cocos2dx/cocoa/CCGeometry.cpp
-    cocos2dx/cocoa/CCNS.cpp
-    cocos2dx/cocoa/CCObject.cpp
-    cocos2dx/cocoa/CCSet.cpp
-    cocos2dx/cocoa/CCString.cpp
-    cocos2dx/cocoa/CCZone.cpp
-    cocos2dx/cocos2d.cpp
-    cocos2dx/keypad_dispatcher/CCKeypadDelegate.cpp
-    cocos2dx/keypad_dispatcher/CCKeypadDispatcher.cpp
-    cocos2dx/scrollwheel_dispatcher/CCScrollWheelDelegate.cpp
-    cocos2dx/scrollwheel_dispatcher/CCScrollWheelDispatcher.cpp
-    cocos2dx/layers_scenes_transitions_nodes/CCLayer.cpp
-    cocos2dx/layers_scenes_transitions_nodes/CCScene.cpp
-    cocos2dx/platform/CCEGLViewProtocol.cpp
-    cocos2dx/platform/CCSAXParser.cpp
-    cocos2dx/platform/CCThread.cpp
-    cocos2dx/platform/platform.cpp
-    cocos2dx/support/base64.cpp
-    cocos2dx/support/CCNotificationCenter.cpp
-    cocos2dx/support/CCPointExtension.cpp
-    cocos2dx/support/CCProfiling.cpp
-    cocos2dx/support/CCUserDefault.cpp
-    cocos2dx/support/ccUtils.cpp
-    cocos2dx/support/CCVertex.cpp
-    cocos2dx/support/data_support/ccCArray.cpp
-    cocos2dx/support/TransformUtils.cpp
-    cocos2dx/support/zip_support/ioapi.cpp
-    cocos2dx/support/zip_support/unzip.cpp
-    cocos2dx/support/zip_support/ZipUtils.cpp
-    cocos2dx/text_input_node/CCIMEDispatcher.cpp
-    cocos2dx/touch_dispatcher/CCTouch.cpp
-    cocos2dx/touch_dispatcher/CCTouchDispatcher.cpp
-    cocos2dx/touch_dispatcher/CCTouchHandler.cpp
-    
     cocos2dx/kazmath/src/aabb.c
     cocos2dx/kazmath/src/GL/mat4stack.c
     cocos2dx/kazmath/src/GL/matrix.c
@@ -92,9 +49,6 @@ set (ENGINE_SRC
     cocos2dx/kazmath/src/vec2.c
     cocos2dx/kazmath/src/vec3.c
     cocos2dx/kazmath/src/vec4.c
-    
-    cocos2dx/loom/CCLoomLog.cpp
-    cocos2dx/loom/CCLoomCocos2D.cpp
     
     physics/lsPhysics.cpp
     physics/lsPhysicsPackage.cpp
@@ -135,15 +89,6 @@ if (APPLE)
     
             ${ENGINE_SRC}
 
-            cocos2dx/platform/mac/CCApplication.mm
-            cocos2dx/platform/mac/CCCommon.mm
-            cocos2dx/platform/mac/CCDirectorCaller.mm
-            cocos2dx/platform/mac/CCEGLView.mm
-            cocos2dx/platform/mac/CCEventDispatcher.mm
-            cocos2dx/platform/mac/CCFileUtils.mm
-            cocos2dx/platform/mac/CCThread.mm
-            cocos2dx/platform/mac/CCWindow.m
-            cocos2dx/platform/mac/EAGLView.mm
             
             )
     endif()

@@ -24,7 +24,7 @@
  
 #import "AppController.h"
 #import "../common/AppDelegate.h"
-#import "loom/engine/cocos2dx/loom/CCLoomCocos2D.h"
+//#import "loom/engine/cocos2dx/loom/CCLoomCocos2D.h"
 #include "loom/engine/bindings/loom/lmApplication.h"
 
 extern "C"
@@ -45,57 +45,57 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload)
 	if(width == -1 || height == -1)
 		return;
 
-	AppController *ac = (AppController*)userdata;
-	[ac resizeToWidth:width andHeight:height];
+	//AppController *ac = (AppController*)userdata;
+	//[ac resizeToWidth:width andHeight:height];
 }
 
 @implementation AppController
 
-	@synthesize window, glView;
+//@synthesize window; //, glView;
 
 	-(void) applicationDidFinishLaunching:(NSNotification *)aNotification
 	{
         
-        int width = CCLoomCocos2d::getDisplayWidth();
-        int height = CCLoomCocos2d::getDisplayHeight();
-        const char* ccaption = CCLoomCocos2d::getDisplayCaption().c_str();
+//        int width = CCLoomCocos2d::getDisplayWidth();
+//        int height = CCLoomCocos2d::getDisplayHeight();
+//        const char* ccaption = CCLoomCocos2d::getDisplayCaption().c_str();
         
 		// create the window
 		// note that using NSResizableWindowMask causes the window to be a little
 		// smaller and therefore ipad graphics are not loaded
-		NSRect rect = NSMakeRect(0, 0, width, height);
-		window = [[NSWindow alloc] initWithContentRect:rect
-			styleMask:( NSClosableWindowMask | NSTitledWindowMask | NSResizableWindowMask )
-			backing:NSBackingStoreBuffered
-			defer:YES];
+//		NSRect rect = NSMakeRect(0, 0, width, height);
+//		window = [[NSWindow alloc] initWithContentRect:rect
+//			styleMask:( NSClosableWindowMask | NSTitledWindowMask | NSResizableWindowMask )
+//			backing:NSBackingStoreBuffered
+//			defer:YES];
 		
 		// allocate our GL view
 		// (isn't there already a shared EAGLView?)
-		glView = [[EAGLView alloc] initWithFrame:rect];
-		[glView initWithFrame:rect];
-        
-        NSString *caption = [[NSString alloc] initWithUTF8String:ccaption];
+//		glView = [[EAGLView alloc] initWithFrame:rect];
+//		[glView initWithFrame:rect];
+//        
+//        NSString *caption = [[NSString alloc] initWithUTF8String:ccaption];
 
 		// set window parameters
-		[window becomeFirstResponder];
-		[window setContentView:glView];
-		[window setTitle:caption];
-		[window makeKeyAndOrderFront:self];
-		[window setAcceptsMouseMovedEvents:NO];
+//		[window becomeFirstResponder];
+//		[window setContentView:glView];
+//		[window setTitle:caption];
+//		[window makeKeyAndOrderFront:self];
+//		[window setAcceptsMouseMovedEvents:NO];
 
 		// Initialize menu items to drive DPI/Resolution simulation.
-		NSMenuItem* newItem1 = [[NSMenuItem allocWithZone:[NSMenu menuZone]] initWithTitle:@"Next Resolution" action:@selector(handleNextResClick) keyEquivalent:@"]"];
-		[newItem1 setEnabled:YES];
-		NSMenuItem* newItem2 = [[NSMenuItem allocWithZone:[NSMenu menuZone]] initWithTitle:@"Prev Resolution" action:@selector(handlePrevResClick) keyEquivalent:@"["];
-		[newItem2 setEnabled:YES];
-
-		NSMenu* rootMenu = [NSApp mainMenu];
-		NSMenuItem* menu = [rootMenu itemWithTitle:@"View"];
-		[[menu submenu] insertItem:newItem1 atIndex: [[[menu submenu] itemArray] count]]; [newItem1 release];
-		[[menu submenu] insertItem:newItem2 atIndex: [[[menu submenu] itemArray] count]]; [newItem2 release];
+//		NSMenuItem* newItem1 = [[NSMenuItem allocWithZone:[NSMenu menuZone]] initWithTitle:@"Next Resolution" action:@selector(handleNextResClick) keyEquivalent:@"]"];
+//		[newItem1 setEnabled:YES];
+//		NSMenuItem* newItem2 = [[NSMenuItem allocWithZone:[NSMenu menuZone]] initWithTitle:@"Prev Resolution" action:@selector(handlePrevResClick) keyEquivalent:@"["];
+//		[newItem2 setEnabled:YES];
+//
+//		NSMenu* rootMenu = [NSApp mainMenu];
+//		NSMenuItem* menu = [rootMenu itemWithTitle:@"View"];
+//		[[menu submenu] insertItem:newItem1 atIndex: [[[menu submenu] itemArray] count]]; [newItem1 release];
+//		[[menu submenu] insertItem:newItem2 atIndex: [[[menu submenu] itemArray] count]]; [newItem2 release];
 
 		// set cocos2d-x's opengl view
-		cocos2d::CCApplication::sharedApplication().run();
+//		cocos2d::CCApplication::sharedApplication().run();
 
 		// Listen for resize events.
 		LoomApplication::listenForGenericEvents(handleGenericEvent, (void*)self);
@@ -118,18 +118,18 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload)
 
 	-(void) dealloc
 	{
-		cocos2d::CCDirector::sharedDirector()->end();
+//		cocos2d::CCDirector::sharedDirector()->end();
 		[super dealloc];
 	}
 
 	-(void)resizeToWidth:(int)width andHeight:(int)height
 	{
-		NSRect frame = [window frame];
-		frame.origin.y -= frame.size.height; // remove the old height
-		frame.origin.y += height; // add the new height
-		frame.size.width = width;
-		frame.size.height = height;
-		[window setFrame: frame display: YES animate: YES];
+//		NSRect frame = [window frame];
+//		frame.origin.y -= frame.size.height; // remove the old height
+//		frame.origin.y += height; // add the new height
+//		frame.size.width = width;
+//		frame.size.height = height;
+//		[window setFrame: frame display: YES animate: YES];
 	}
 
 #pragma mark -
@@ -137,13 +137,13 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload)
 
 	-(IBAction) toggleFullScreen:(id)sender
 	{
-		EAGLView* pView = [EAGLView sharedEGLView];
-		[pView setFullScreen:!pView.isFullScreen];
+//		EAGLView* pView = [EAGLView sharedEGLView];
+//		[pView setFullScreen:!pView.isFullScreen];
 	}
 
 	-(IBAction) exitFullScreen:(id)sender
 	{
-		[[EAGLView sharedEGLView] setFullScreen:NO];
+//		[[EAGLView sharedEGLView] setFullScreen:NO];
 	}
 
 @end

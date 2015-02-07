@@ -47,8 +47,8 @@ package loom
     import loom2d.core.TouchProcessor;
     import loom2d.native.Loom2DNative;
 
-    import loom2d.display.Cocos2D;
-    import loom2d.display.CCLayer;
+    //import loom2d.display.Cocos2D;
+//    import loom2d.display.CCLayer;
 
     /**
      * Simple delegate called by Application on the start of the first frame.
@@ -85,14 +85,14 @@ package loom
             DebuggerClient.reloaded += onReload;
 
             // set up the default layer for the cocos2d game
-            layer.autorelease();
+            /*layer.autorelease();
             layer.setKeypadEnabled(true);
             layer.setScrollWheelEnabled(true);
             layer.setAccelerometerEnabled(true);
             layer.onAccelerate += accelerated;
 
-            Cocos2D.addLayer(layer);
-            group.registerManager(layer);
+            Cocos2D.addLayer(layer); */
+            //group.registerManager(layer);
 
             // TODO: LOOM-1521 Resurrent feedback layer with Loom2D
             // create our feedback layer for asset agent transfers
@@ -100,8 +100,8 @@ package loom
             // Listen for asset stream activity and give visual feedback.
             LoomAssetManager.pendingCountChange += onAssetStreamCountChange;
 
-            var displayStats = Cocos2D.getDisplayStats();
-            Cocos2D.onDisplayStatsChanged += onDisplayStatsChanged;
+            //var displayStats = Cocos2D.getDisplayStats();
+            //Cocos2D.onDisplayStatsChanged += onDisplayStatsChanged;
 
             // Only show the feedback layer when the fps stats are shown.
             //feedbackLayer.setVisible(displayStats);
@@ -110,12 +110,13 @@ package loom
             Loom2DNative.initialize();
 
             // create the stage using the initial display size as specified by loom.config
-            theStage = new Stage(layer, Cocos2D.getConfigDisplayWidth(), Cocos2D.getConfigDisplayHeight(), 0x000000);
+            //theStage = new Stage(/*layer,*/ Cocos2D.getConfigDisplayWidth(), Cocos2D.getConfigDisplayHeight(), 0x000000);
+            theStage = new Stage(1024, 768, 0x0);
             Loom2D.stage = theStage;
             Stage.onRenderStage += onCocosFrame;
 
             // This enables touch/mouse input.
-            touchProcessor = new TouchProcessor(stage, layer);
+            touchProcessor = new TouchProcessor(stage/*, layer*/);
 
             // Used to adjust delay for starting the splash screen animation.
             var startDelay = 1.0;
@@ -137,8 +138,8 @@ package loom
                     var splashLowerTexture = Texture.fromTexture(splashTexture, new Rectangle(0, 125, 264, 52));
 
                     // Position everything on the  stage in its own container.
-                    var realStageHeight = Cocos2D.getDisplayHeight();
-                    var realStageWidth = Cocos2D.getDisplayWidth();
+                    var realStageHeight = 1024; //Cocos2D.getDisplayHeight();
+                    var realStageWidth = 768; //Cocos2D.getDisplayWidth();
 
                     splashContainer = new Sprite();
 
@@ -346,7 +347,7 @@ package loom
         private function initialize()
         {
             // we're using Cocos2D for some low level platform stuff, so initialize it
-            Cocos2D.initializeFromConfig();
+            //Cocos2D.initializeFromConfig();
             
             // we would like to get ticks please
             ticks+=tick;
@@ -375,7 +376,7 @@ package loom
          */
         public static var onStart:OnStart;
 
-        private var layer:CCLayer = new CCLayer();
+        //private var layer:CCLayer = new CCLayer();
 
         protected var lastSeenQuantity:Number = 0;
 
@@ -389,11 +390,11 @@ package loom
          * Access to the internal layer
          * (Warning: This is an internal method and WILL BE deprecated in the future).
          */
-        public static function get internalLayer():CCLayer
+        /*public static function get internalLayer():CCLayer
         {
             Debug.assert(theApplication, "Application must exist before getting the internalLayer");
             return theApplication.layer;
-        }
+        }*/
 
         /*
          * Internal delegate callback for native accelerometer event, forwards to the 

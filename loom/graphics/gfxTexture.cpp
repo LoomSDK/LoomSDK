@@ -18,7 +18,10 @@
  * ===========================================================================
  */
 
-#include "bgfx.h"
+//#include "bgfx.h"
+//#include "OpenGL/OpenGL.h"
+//#include "OpenGL/gl.h"
+#include <SDL_opengl.h>
 
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
@@ -26,6 +29,7 @@
 #include "loom/common/core/allocator.h"
 #include "loom/common/core/log.h"
 
+#include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxTexture.h"
 
 #include "loom/common/platform/platformTime.h"
@@ -46,7 +50,7 @@ void Texture::initialize()
     {
         sTextureInfos[i].id         = i;
         sTextureInfos[i].reload     = false;
-        sTextureInfos[i].handle.idx = bgfx::invalidHandle;
+        sTextureInfos[i].handle     = -1;
     }
 }
 
@@ -91,11 +95,11 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 
     // Make a copy of the texture so we can swizzle it safely. No need to
     // free memory, this will be freed at end of frame by bgfx.
-    const bgfx::Memory *mem = bgfx::alloc(width * height * 4);
-    memcpy(mem->data, data, width * height * 4);
+//    const bgfx::Memory *mem = bgfx::alloc(width * height * 4);
+//    memcpy(mem->data, data, width * height * 4);
 
     // Do the swizzle for D3D9 - see LOOM-1713 for details on this.
-    rgbaToBgra(mem->data, width, height);
+    //rgbaToBgra(mem->data, width, height);
 
     if (!tinfo->reload || (tinfo->width != width) || (tinfo->height != height))
     {
@@ -103,10 +107,16 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 
         if (tinfo->reload)
         {
-            bgfx::destroyTexture(tinfo->handle);
+//            bgfx::destroyTexture(tinfo->handle);
+            GFX::Graphics::context()->glDeleteTextures(1, &tinfo->handle);
         }
 
-        tinfo->handle = bgfx::createTexture2D(width, height, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_NONE, mem);
+//        tinfo->handle = bgfx::createTexture2D(width, height, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_NONE, mem);
+        GFX::Graphics::context()->glGenTextures(1, &tinfo->handle);
+        GFX::Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo->handle);
+        GFX::Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+        
         tinfo->width  = width;
         tinfo->height = height;
 
@@ -124,7 +134,9 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     else
     {
         lmLog(gGFXTextureLogGroup, "Updating texture %s", tinfo->texturePath.c_str());
-        bgfx::updateTexture2D(tinfo->handle, 0, 0, 0, width, height, mem);
+//        bgfx::updateTexture2D(tinfo->handle, 0, 0, 0, width, height, mem);
+        GFX::Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo->handle);
+        GFX::Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
         tinfo->width  = width;
         tinfo->height = height;
@@ -214,7 +226,7 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
 
         tinfo = &sTextureInfos[*pid];
 
-        if (tinfo->handle.idx == bgfx::invalidHandle)
+        if (tinfo->handle == -1)
         {
             return NULL;
         }
@@ -240,7 +252,7 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
 
     // Initialize it.
     tinfo              = &sTextureInfos[id];
-    tinfo->handle.idx  = MARKEDTEXTURE;    // mark in use, but not yet loaded
+    tinfo->handle      = MARKEDTEXTURE;    // mark in use, but not yet loaded
     tinfo->texturePath = path;
     sTexturePathLookup.insert(path, id);
 
@@ -309,7 +321,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
     // See if it's over 2048 - if so, downsize to fit.
     const int          maxSize     = 2048;
     void               *localBits  = lat->bits;
-    const bgfx::Memory *localMem   = NULL;
+    void               *localMem   = NULL;
     int                localWidth  = lat->width;
     int                localHeight = lat->height;
     while (localWidth > maxSize || localHeight > maxSize)
@@ -322,8 +334,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
 
         // This will be freed automatically. This will be inefficient for huge bitmaps but it's
         // only around for one frame.
-        localMem  = bgfx::alloc(localWidth * localHeight * 4);
-        localBits = localMem->data;
+        localBits = lmAlloc(NULL, localWidth * localHeight * 4);
 
         lmLog(gGFXTextureLogGroup, "   - Too big! Downsampling to %dx%d", localWidth, localHeight);
 
@@ -333,6 +344,9 @@ void Texture::handleAssetNotification(void *payload, const char *name)
     // Perform the actual load.
     load((uint8_t *)localBits, (uint16_t)localWidth, (uint16_t)localHeight, id);
 
+// TODO: Memory leak
+//    lmFree(NULL, localBits);
+    
     // Release lock on the asset.
     loom_asset_unlock(name);
     
@@ -346,7 +360,7 @@ void Texture::reset()
     for (int i = 0; i < MAXTEXTURES; i++)
     {
         // Ignore invalid entries.
-        if (sTextureInfos[i].handle.idx == bgfx::invalidHandle)
+        if (sTextureInfos[i].handle == -1)
         {
             continue;
         }
@@ -356,7 +370,8 @@ void Texture::reset()
         lmLog(gGFXTextureLogGroup, "Reloading texture for path %s", tinfo->texturePath.c_str());
 
         //bgfx::destroyTexture(sTextureInfos[i].handle);
-        tinfo->handle.idx = bgfx::invalidHandle;
+        Graphics::context()->glDeleteTextures(1, &tinfo->handle);
+        tinfo->handle     = -1;
         tinfo->reload     = false;
 
         loom_asset_lock(tinfo->texturePath.c_str(), LATImage, 1);
@@ -376,7 +391,7 @@ void Texture::dispose(TextureID id)
     TextureInfo *tinfo = &sTextureInfos[id];
 
     // If the texture isn't valid ignore it.
-    if (tinfo->handle.idx == bgfx::invalidHandle)
+    if (tinfo->handle == -1)
     {
         return;
     }
@@ -390,7 +405,7 @@ void Texture::dispose(TextureID id)
     sTexturePathLookup.erase(tinfo->texturePath);
 
     // And erase backing state.
-    bgfx::destroyTexture(tinfo->handle);
+    Graphics::context()->glDeleteTextures(1, &tinfo->handle);
     tinfo->reset();
 }
 }

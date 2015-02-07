@@ -20,7 +20,8 @@
 
 #pragma once
 
-#include "loom/graphics/internal/bgfx/include/bgfx.h"
+//#include "loom/graphics/internal/bgfx/include/bgfx.h"
+#include "OpenGL/OpenGL.h"
 #include "loom/common/utils/utString.h"
 #include "loom/script/native/lsNativeDelegate.h"
 
@@ -57,12 +58,17 @@ struct TextureInfo
 
     bool                     reload;
 
-    bgfx::TextureHandle      handle;
+    GLuint      handle;
 
     utString                 texturePath;
 
     LS::NativeDelegate       updateDelegate;
 
+    TextureInfo()
+    {
+        reset();
+    }
+    
     const LS::NativeDelegate *getUpdateDelegate() const
     {
         return &updateDelegate;
@@ -75,7 +81,8 @@ struct TextureInfo
         wrapU       = TEXTUREINFO_WRAP_CLAMP;
         wrapV       = TEXTUREINFO_WRAP_CLAMP;
         reload      = false;
-        handle.idx  = bgfx::invalidHandle;
+//        handle.idx  = -1bgfx::invalidHandle;
+        handle      = -1;
         texturePath = "";
     }
 };
@@ -99,7 +106,7 @@ private:
 
         for (id = 0; id < MAXTEXTURES; id++)
         {
-            if (sTextureInfos[id].handle.idx == bgfx::invalidHandle)
+            if (sTextureInfos[id].handle == -1)
             {
                 break;
             }
@@ -147,7 +154,7 @@ public:
 
         TextureInfo *tinfo = &sTextureInfos[id];
 
-        if (tinfo->handle.idx == bgfx::invalidHandle)
+        if (tinfo->handle == -1)
         {
             return NULL;
         }

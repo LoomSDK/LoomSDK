@@ -33,7 +33,7 @@ float Stage::mtxModelView[16];
 void Stage::render(lua_State *L)
 {
     // set the stages view, will be used when clearing, etc
-    GFX::Graphics::setView(_view);
+    //GFX::Graphics::setView(_view);
 
     GFX::Graphics::setViewTransform(mtxModelView, mtxProjection);
 
@@ -42,12 +42,12 @@ void Stage::render(lua_State *L)
     // only clear the stage if it is at view 0
     if (_view == 0)
     {
-        bgfx::setViewClear(_view
+/*        bgfx::setViewClear(_view
                            , BGFX_CLEAR_COLOR_BIT | BGFX_CLEAR_DEPTH_BIT
                            , GFX::Graphics::getFillColor()
                            , 1.0f
                            , 0
-                           );
+                           ); */
     }
 
     updateLocalTransform();

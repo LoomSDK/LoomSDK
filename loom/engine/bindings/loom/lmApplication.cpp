@@ -44,6 +44,8 @@ using namespace LS;
 
 #include "loom/common/config/applicationConfig.h"
 
+#include "loom/graphics/gfxGraphics.h"
+
 LSLuaState     *LoomApplication::rootVM      = NULL;
 bool           LoomApplication::reloadQueued = false;
 bool           LoomApplication::suppressAssetTriggeredReload = false;
@@ -62,6 +64,7 @@ extern "C" {
 void loom_appSetup(void)
 {
     LoomApplication::initializeCoreServices();
+    GFX::Graphics::initialize();
 }
 
 
