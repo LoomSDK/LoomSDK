@@ -22,8 +22,10 @@
 
 namespace GFX
 {
+	#if 0
 const uint8_t *GetFragmentShaderPosColorTex(int& size);
 const uint8_t *GetFragmentShaderPosTex(int& size);
 const uint8_t *GetVertexShaderPosColorTex(int& size);
 const uint8_t *GetVertexShaderPosTex(int& size);
+#endif
 }

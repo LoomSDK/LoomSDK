@@ -47,9 +47,9 @@ class QuadRenderer
 
 private:
 
-    static void *vertexBuffers[MAXVERTEXBUFFERS];
+    static unsigned int vertexBuffers[MAXVERTEXBUFFERS];
 
-    static VertexPosColorTex* vertexData[MAXVERTEXBUFFERS];
+    static VertexPosColorTex *vertexData[MAXVERTEXBUFFERS];
     static void* vertexDataMemory;
 
     static int maxVertexIdx[MAXVERTEXBUFFERS];
@@ -75,6 +75,8 @@ private:
 
     // reset the quad renderer, on loss of context etc
     static void reset();
+
+    static void _initializeNextVertexBuffer();
 
 
 public:

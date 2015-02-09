@@ -33,22 +33,6 @@ set (ENGINE_SRC
     bindings/loom/lmFacebook.cpp
     bindings/loom/lmTeak.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
-
-    bindings/cocos2d/lmCocos2D.cpp
-    
-    cocos2dx/kazmath/src/aabb.c
-    cocos2dx/kazmath/src/GL/mat4stack.c
-    cocos2dx/kazmath/src/GL/matrix.c
-    cocos2dx/kazmath/src/mat3.c
-    cocos2dx/kazmath/src/mat4.c
-    cocos2dx/kazmath/src/neon_matrix_impl.c
-    cocos2dx/kazmath/src/plane.c
-    cocos2dx/kazmath/src/quaternion.c
-    cocos2dx/kazmath/src/ray2.c
-    cocos2dx/kazmath/src/utility.c
-    cocos2dx/kazmath/src/vec2.c
-    cocos2dx/kazmath/src/vec3.c
-    cocos2dx/kazmath/src/vec4.c
     
     physics/lsPhysics.cpp
     physics/lsPhysicsPackage.cpp
@@ -138,7 +122,6 @@ endif(LINUX)
 set (ENGINE_HDR
             
     bindings/loom/lmApplication.h
-    cocos2dx/loom/CCLoomCocos2D.h
     
 )
 

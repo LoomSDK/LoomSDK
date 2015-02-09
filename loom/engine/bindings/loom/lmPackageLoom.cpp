@@ -54,7 +54,7 @@ void installPackageLoom()
     installPackageLoomSound();
 
     // Should be its own package for maximum correctness.
-    installPackageCocos2DX();
+    //installPackageCocos2DX();
 
     installLoomGraphics();
     installLoom2D();

@@ -268,22 +268,21 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
 
 void Texture::loadCheckerBoard(TextureID id)
 {
-        const int checkerboardSize = 128, checkSize = 8;        
+    const int checkerboardSize = 128, checkSize = 8;
 
-        int *checkerboard = (int*)lmAlloc(gGFXTextureAllocator, checkerboardSize*checkerboardSize*4);
+    int *checkerboard = (int*)lmAlloc(gGFXTextureAllocator, checkerboardSize*checkerboardSize*4);
 
-        for (int i = 0; i < checkerboardSize; i++)
+    for (int i = 0; i < checkerboardSize; i++)
+    {
+        for (int j = 0; j < checkerboardSize; j++)
         {
-            for (int j = 0; j < checkerboardSize; j++)
-            {
-                checkerboard[(i * checkerboardSize) + j] = (((i / checkSize) ^ (j / checkSize)) & 1) == 0 ? 0xFF00FFFF : 0x00FF0077;
-            }
+            checkerboard[(i * checkerboardSize) + j] = (((i / checkSize) ^ (j / checkSize)) & 1) == 0 ? 0xFF00FFFF : 0x00FF0077;
         }
+    }
 
-        load((uint8_t *)checkerboard, checkerboardSize, checkerboardSize, id);
+    load((uint8_t *)checkerboard, checkerboardSize, checkerboardSize, id);
 
-        lmFree(gGFXTextureAllocator, checkerboard);
-
+    lmFree(gGFXTextureAllocator, checkerboard);
 }
 
 void Texture::handleAssetNotification(void *payload, const char *name)
@@ -296,7 +295,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
         lmLogError(gGFXTextureLogGroup, "Attempting to load texture while notifications are disabled '%s', using debug checkerboard.", name);        
         loadCheckerBoard(id);
         return;
-    }    
+    }
 
     // Get the image via the asset manager.    
     loom_asset_image_t *lat = (loom_asset_image_t *)loom_asset_lock(name, LATImage, 0);
@@ -344,7 +343,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
     // Perform the actual load.
     load((uint8_t *)localBits, (uint16_t)localWidth, (uint16_t)localHeight, id);
 
-// TODO: Memory leak
+// TODO: Memory leak due to resize loop.
 //    lmFree(NULL, localBits);
     
     // Release lock on the asset.

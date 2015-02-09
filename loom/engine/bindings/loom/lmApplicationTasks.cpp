@@ -25,6 +25,7 @@
 #include "loom/script/native/lsNativeDelegate.h"
 #include "lmApplication.h"
 #include "loom/common/config/applicationConfig.h"
+#include "loom/engine/loom2d/l2dStage.h"
 
 extern "C"
 {
@@ -66,6 +67,8 @@ void loom_tick()
     platform_HTTPUpdate();
 
     lualoom_gc_update(LoomApplication::getRootVM()->VM());
+
+    Loom2D::Stage::invokeRenderStage();
 
     finishProfilerBlock(&p);
 }

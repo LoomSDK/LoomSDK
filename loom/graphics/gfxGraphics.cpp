@@ -83,13 +83,26 @@ return SDL_SetError("Couldn't load GL function %s: %s\n", #func, SDL_GetError())
 #undef SDL_PROC
         return 0;
     }
-    
+
+    /*static void APIENTRY gldebughandler(GLenum source,
+                                       GLenum type,
+                                       GLuint id,
+                                       GLenum severity,
+                                       GLsizei length,
+                                       const GLchar *message,
+                                       void *userParam)
+    {
+
+    }*/
+
 void Graphics::initialize()
 {
     // when using internal bgfx context management
 //    initializePlatform();
     
     LoadContext(&_context);
+
+    //context()->glDebugMessageCallback(gldebughandler, 0);
 
     // initialize the static Texture initialize
     Texture::initialize();
@@ -164,25 +177,18 @@ void Graphics::beginFrame()
 
     sCurrentFrame++;
 
-    // Set view 0 default viewport.
-    //bgfx::setViewRect(sView, 0, 0, sWidth, sHeight);
+//    context()->glViewport(0, 0, sWidth, sHeight);
 
     //lmLog(gGFXLogGroup, "View Rect %i %i", sWidth, sHeight);
 
-    //bgfx::setViewSeq(sView, true);
-
     QuadRenderer::beginFrame();
 
-    // This dummy draw call is here to make sure that view 0 is cleared
-    // if no other draw calls are submitted to view 0.
-    //bgfx::submit(sView);
 }
 
 
 void Graphics::endFrame()
 {
     QuadRenderer::endFrame();
-    //bgfx::frame();
 
     if(pendingScreenshot[0] != 0)
     {
@@ -203,13 +209,8 @@ void Graphics::handleContextLoss()
 
     // make sure the QuadRenderer resources are freed before we shutdown bgfx
     QuadRenderer::destroyGraphicsResources();
-    //bgfx::shutdown();
-    
-    lmLog(gGFXLogGroup, "Handle context loss: Init");
-    //bgfx::init();
 
-    // if we want hud, set it
-    //bgfx::setDebug(BGFX_DEBUG_STATS | BGFX_DEBUG_TEXT);
+    lmLog(gGFXLogGroup, "Handle context loss: Init");
 
     lmLog(gGFXLogGroup, "Handle context loss: Reset");
     reset(sWidth, sHeight);
@@ -257,6 +258,7 @@ int Graphics::setClipRect(int x, int y, int width, int height)
         y       = 0;
     }
 
+    context()->glScissor(x, y, width, height);
     return -1; //bgfx::setScissor(x, y, width, height);
 }
 
@@ -269,6 +271,7 @@ void Graphics::setClipRect(int cached)
 
 void Graphics::clearClipRect()
 {
+    context()->glScissor(0, 0, sWidth, sHeight);
     //bgfx::setScissor();
 }
 }

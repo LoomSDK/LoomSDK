@@ -39,17 +39,6 @@ void Stage::render(lua_State *L)
 
     GFX::Graphics::beginFrame();
 
-    // only clear the stage if it is at view 0
-    if (_view == 0)
-    {
-/*        bgfx::setViewClear(_view
-                           , BGFX_CLEAR_COLOR_BIT | BGFX_CLEAR_DEPTH_BIT
-                           , GFX::Graphics::getFillColor()
-                           , 1.0f
-                           , 0
-                           ); */
-    }
-
     updateLocalTransform();
 
     lualoom_pushnative<Stage>(L, this);
@@ -57,7 +46,6 @@ void Stage::render(lua_State *L)
     renderState.alpha          = alpha;
     renderState.cachedClipRect = (unsigned short)-1;
     renderState.blendMode      = blendMode;
-
 
     renderChildren(L);
 

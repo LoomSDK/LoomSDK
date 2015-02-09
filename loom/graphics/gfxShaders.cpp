@@ -18,13 +18,12 @@
  * ===========================================================================
  */
 
-#include "bx/bx.h"
 #include "loom/common/platform/platform.h"
 #include "loom/graphics/gfxShaders.h"
 
 namespace GFX
 {
-
+#if 0
 const uint8_t *GetFragmentShaderPosTex(int& size)
 {
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
@@ -69,5 +68,5 @@ const uint8_t *GetVertexShaderPosTex(int& size)
     size = sizeof(gvShaderPosTex);
     return gvShaderPosTex;
 }
-
+#endif
 }

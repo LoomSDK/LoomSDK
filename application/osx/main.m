@@ -28,9 +28,15 @@ void loop()
     /* Check for events */
     while (SDL_PollEvent(&event))
     {
-        if (event.type == SDL_QUIT || event.type == SDL_KEYDOWN)
+        if (event.type == SDL_QUIT)
         {
             done = 1;
+        }
+
+        if(event.type == SDL_KEYDOWN)
+        {
+            // Handle a key!
+            printf("Someone hit a key\n");
         }
         
         if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED)
@@ -41,8 +47,9 @@ void loop()
         }
     }
     
-    /* Draw a gray background */
+    /* Tick and render Loom. */
     loom_tick();
+
     
     /* Update the screen! */
     SDL_GL_SwapWindow(window);

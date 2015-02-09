@@ -177,13 +177,13 @@ if(APPLE)
 
     else()
 
-        set(CMAKE_EXE_LINKER_FLAGS "-framework Carbon -framework IOKit -framework Foundation -lz -framework QuartzCore -lxml2")
+        set(CMAKE_EXE_LINKER_FLAGS "-framework Carbon -framework IOKit -framework Foundation -lz -framework QuartzCore -lxml2 -L/usr/local/lib -lSDL2")
 
         set(CMAKE_OSX_ARCHITECTURES "i386")
         set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
 
         set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_x86/lib/libluajit-5.1.a)
-        list(APPEND LOOM_INCLUDE_FOLDERS ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/mac )
+        list(APPEND LOOM_INCLUDE_FOLDERS /usr/local/include/SDL2 )
 
     endif()
 

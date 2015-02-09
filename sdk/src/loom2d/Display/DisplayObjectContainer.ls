@@ -59,8 +59,8 @@ package loom2d.display
         public native function get depthSort():Boolean;
 
         /** View controls which indexed view the container's children will be drawn into */
-        public native function set view(value:int);
-        public native function get view():int;
+        //public native function set view(value:int);
+        //public native function get view():int;
 
         /**
          * Native implementation for clip rect functionality; this passes the 

@@ -35,6 +35,7 @@ SDL_PROC(void, glDeleteTextures, (GLsizei, const GLuint *))
 SDL_PROC(void, glDisable, (GLenum))
 SDL_PROC(void, glDisableVertexAttribArray, (GLuint))
 SDL_PROC(void, glDrawArrays, (GLenum, GLint, GLsizei))
+SDL_PROC(void, glDrawElements, (GLenum, GLsizei, GLenum, const GLvoid *))
 SDL_PROC(void, glEnable, (GLenum))
 SDL_PROC(void, glEnableVertexAttribArray, (GLuint))
 SDL_PROC(void, glFinish, (void))
@@ -43,6 +44,13 @@ SDL_PROC(void, glGenTextures, (GLsizei, GLuint *))
 SDL_PROC(void, glGetBooleanv, (GLenum, GLboolean *))
 SDL_PROC(const GLubyte *, glGetString, (GLenum))
 SDL_PROC(GLenum, glGetError, (void))
+//SDL_PROC(GLenum, glDebugMessageCallback, (void (*)(GLenum source,
+//GLenum type,
+//                                                                     GLuint id,
+//                                                                     GLenum severity,
+//                                                                     GLsizei length,
+//                                                                     const GLchar *message,
+//                                                                     void *userParam)), void*)
 SDL_PROC(void, glGetIntegerv, (GLenum, GLint *))
 SDL_PROC(void, glGetProgramiv, (GLuint, GLenum, GLint *))
 SDL_PROC(void, glGetShaderInfoLog, (GLuint, GLsizei, GLsizei *, char *))

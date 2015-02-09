@@ -210,7 +210,7 @@ static int registerLoom2D(lua_State *L)
        .deriveClass<DisplayObjectContainer, DisplayObject>("DisplayObjectContainer")
        .addConstructor<void (*)(void)>()
        .addProperty("depthSort", &DisplayObjectContainer::getDepthSort, &DisplayObjectContainer::setDepthSort)
-       .addProperty("view", &DisplayObjectContainer::getView, &DisplayObjectContainer::setView)
+       //.addProperty("view", &DisplayObjectContainer::getView, &DisplayObjectContainer::setView)
        .addMethod("setClipRect", &DisplayObjectContainer::setClipRect)
        .endClass()
 
