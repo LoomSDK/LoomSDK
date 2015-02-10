@@ -544,7 +544,8 @@ namespace :build do
       # TODO: Find a way to resolve resources in xcode for ios.
       Dir.chdir("cmake_ios") do
         sh "cmake ../ -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -G Xcode"
-        sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\""
+        sdkroot="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS#{$targetIOSSDK}.sdk"
+        sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\" CODE_SIGN_RESOURCE_RULES_PATH=#{sdkroot}/ResourceRules.plist"
       end
 
       # TODO When we clean this up... we should have get_app_prefix return and object with, appPath,
@@ -556,6 +557,9 @@ namespace :build do
       appNameMatch = /\/(\w*\.app)$/.match(appPath)
       appName = appNameMatch[0]
       puts "Application name found: #{appName}"
+
+      # Use fruitstrap's plist.
+      sh "cp tools/fruitstrap/ResourceRules.plist #{appPath}/ResourceRules.plist"
 
       # Make it ito an IPA!
       full_output_path = Pathname.new("#{$OUTPUT_DIRECTORY}/ios").realpath
