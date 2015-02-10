@@ -544,7 +544,7 @@ namespace :build do
       # TODO: Find a way to resolve resources in xcode for ios.
       Dir.chdir("cmake_ios") do
         sh "cmake ../ -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -G Xcode"
-        sh "CODE_SIGN_RESOURCE_RULES_PATH=$(SDKROOT)/ResourceRules.plist xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\""
+        sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\" CODE_SIGN_RESOURCE_RULES_PATH=$(SDKROOT)/ResourceRules.plist"
       end
 
       # TODO When we clean this up... we should have get_app_prefix return and object with, appPath,
