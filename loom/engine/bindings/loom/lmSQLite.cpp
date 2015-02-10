@@ -32,13 +32,129 @@ using namespace LS;
 //SQLite Statement binding for Loomscript
 class Statement
 {
+protected:
+   //Connection *c;
 public:
-    sqlite3_stmt *statementHandle = NULL;
+    sqlite3_stmt *statementHandle;
+
+   // Statement::Statement(Connection *c)
+  //  {
+
+  //  }
 
     int getParameterCount()
     {
-        return 666;
+        int count = sqlite3_bind_parameter_count(statementHandle);
+       // int error = connection->getErrorCode();
+       // if(error != SQLITE_OK)
+      //  {
+      //      lmLogError(gSQLiteGroup, "Error BLAH BLAH BLAH: with message: %s", connection->getErrorMessage());
+      //  }
+        return count;
     }
+
+    const char *getParameterName(int index)
+    {
+        return sqlite3_bind_parameter_name(statementHandle, index);
+    }
+
+    int getParameterIndex(const char* name)
+    {
+        return sqlite3_bind_parameter_index(statementHandle, name);
+    }
+
+    void bindDouble(int index, double value)
+    {
+        int i = sqlite3_bind_double(statementHandle, index, value);
+        if(i != SQLITE_OK)
+        {
+            lmLogError(gSQLiteGroup, "Error BLAH BLAH BLAH: with message: %s", "error:" + i);
+        }
+    }
+
+    void bindInt(int index, int value)
+    {
+        int i =sqlite3_bind_int(statementHandle, index, value);
+        if(i != SQLITE_OK)
+        {
+            lmLogError(gSQLiteGroup, "Error BLAH BLAH BLAH: with message: %s", "error:" + i);
+        }
+    }
+
+    void bindBytes(int index, const sqlite3_value *value)
+    {
+        int i = sqlite3_bind_value(statementHandle, index, value);
+        if(i != SQLITE_OK)
+        {
+            lmLogError(gSQLiteGroup, "Error BLAH BLAH BLAH: with message: %s", "error:" + i);
+        }
+    }
+
+    void bindString(int index, const char *value)
+    {
+        int i = sqlite3_bind_text(statementHandle, index, value, sizeof(value), SQLITE_STATIC); 
+        if(i != SQLITE_OK)
+        {
+            lmLogError(gSQLiteGroup, "Error BLAH BLAH BLAH: with message: %s", "error:" + i);
+        }
+    }
+
+    int step()
+    {
+        int i = sqlite3_step(statementHandle); 
+        if(i != SQLITE_OK)
+        {
+            lmLogError(gSQLiteGroup, "Error BLAH BLAH BLAH: with message: %s", "error:" + i);
+        }
+        return i;
+    }
+
+    double columnDouble(int iCol)
+    {
+        return sqlite3_column_double(statementHandle, iCol);
+    }
+
+    int columnInt(int iCol)
+    {
+        return sqlite3_column_int(statementHandle, iCol);
+    }
+
+//    sqlite3_value* columnBytes(int iCol)
+//    {
+//        return sqlite3_column_value(statementHandle, iCol);
+//    }
+
+    const char* columnString(int iCol)
+    {
+       // unsigned const char* string = (sqlite3_column_text(statementHandle, iCol));
+        return "test";
+    }
+    int reset()
+    {
+        int i = sqlite3_reset(statementHandle); 
+        if(i != SQLITE_OK)
+        {
+            lmLogError(gSQLiteGroup, "Error BLAH BLAH BLAH: with message: %s", "error:" + i);
+        }
+        return i;
+    }
+
+    int finalize()
+    {
+        int i = sqlite3_finalize(statementHandle); 
+        if(i != SQLITE_OK)
+        {
+            lmLogError(gSQLiteGroup, "Error BLAH BLAH BLAH: with message: %s", "error:" + i);
+        }
+        return i;
+    }
+
+//   sqlite3_int64 getlastInsertRowId()
+//   {
+//        sqlite3 *dbHandle;
+//        return sqlite3_last_insert_rowid(dbHandle);
+//    }
+
 };
 
 
@@ -48,7 +164,7 @@ class Connection
 {
 protected:
     char szDBFullPath[1024];
-    sqlite3 *dbHandle = NULL;
+    sqlite3 *dbHandle;
 
 public:
     static Connection *open(const char *database, int flags);
@@ -121,6 +237,17 @@ static int registerLoomSQLiteStatement(lua_State *L)
 
 //TODO: Add Statement methods
         .addMethod("getParameterCount", &Statement::getParameterCount)
+        .addMethod("getParameterName", &Statement::getParameterName)
+        .addMethod("getParameterIndex", &Statement::getParameterIndex)
+        .addMethod("bindDouble", &Statement::bindDouble)
+        .addMethod("step", &Statement::step)
+        .addMethod("columnString", &Statement::columnString)
+    //    .addMethod("columnBytes", &Statement::columnBytes)
+        .addMethod("columnInt", &Statement::columnInt)
+        .addMethod("columnDouble", &Statement::columnDouble)
+        .addMethod("reset", &Statement::reset)
+        .addMethod("finalize", &Statement::finalize)
+    //    .addMethod("getlastInsertRowId", &Statement::getlastInsertRowId)
 
       .endClass()
     .endPackage();

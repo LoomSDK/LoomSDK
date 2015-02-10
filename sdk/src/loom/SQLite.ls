@@ -120,20 +120,20 @@ package loom.sqlite
  
         // Query parameters by name, index, etc.
 //TODO
-//         public native function getParameterIndex(name:String):int;
-//         public native function getParameterName(index:int):String;
+        public native function getParameterIndex(name:String):int;
+        public native function getParameterName(index:int):String;
         public native function getParameterCount():int;
  
         // Interface to set query parameters.
 //TODO
-//         public native function bindDouble(index:int, value:Number):void;
-//         public native function bindInt(index:int, value:int):void;
-//         public native function bindBytes(index:int, value:ByteArray):void;
-//         public native function bindString(index:int, value:String):void;
+         public native function bindDouble(index:int, value:Number):void;
+         public native function bindInt(index:int, value:int):void;
+         public native function bindBytes(index:int, value:ByteArray):void;
+         public native function bindString(index:int, value:String):void;
  
         // Advance to next result.
 //TODO
-//         public native function step():int;
+         public native function step():int;
 
         // Asynchronously advance to next result.
 //TODO: Async support
@@ -143,21 +143,21 @@ package loom.sqlite
  
         // Retrieve result column from current row.
 //TODO
-//         public native function columnDouble(index:int):Number;
-//         public native function columnInt(index:int):int;
-//         public native function columnBytes(index:int):ByteArray;
-//         public native function columnString(index:int):String;
+         public native function columnDouble(index:int):Number;
+         public native function columnInt(index:int):int;
+         public native function columnBytes(index:int):ByteArray;
+         public native function columnString(index:int):String;
  
         // Get row id from last insert.
 //TODO
-        // public native function get lastInsertRowId():int;
+         public native function get lastInsertRowId():int;
  
         // Reset the statement.
 //TODO
-//         public native function reset();
+         public native function reset();
  
         // Clean up this statement.
 //TODO
-//         public native function finalize();
+         public native function finalize();
     }    
 }
