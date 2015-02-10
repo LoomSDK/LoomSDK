@@ -32,8 +32,8 @@ using namespace LS;
 //SQLite Statement binding for Loomscript
 class Statement
 {
-protected:
-   //Connection *c;
+private:
+ //  Connection c; //crashes the build? Not sure if its because it's only defined later in the file? Not sure about c++
 public:
     sqlite3_stmt *statementHandle;
 
@@ -119,14 +119,14 @@ public:
         return sqlite3_column_int(statementHandle, iCol);
     }
 
-//    sqlite3_value* columnBytes(int iCol)
+//    sqlite3_value* columnBytes(int iCol) //wasnt sure which SQLite method to use
 //    {
 //        return sqlite3_column_value(statementHandle, iCol);
 //    }
 
     const char* columnString(int iCol)
     {
-       // unsigned const char* string = (sqlite3_column_text(statementHandle, iCol));
+       // unsigned const char* string = (sqlite3_column_text(statementHandle, iCol)); //the weird memory error
         return "test";
     }
     int reset()
@@ -149,7 +149,7 @@ public:
         return i;
     }
 
-//   sqlite3_int64 getlastInsertRowId()
+//   sqlite3_int64 getlastInsertRowId() //the weird memory error
 //   {
 //        sqlite3 *dbHandle;
 //        return sqlite3_last_insert_rowid(dbHandle);
