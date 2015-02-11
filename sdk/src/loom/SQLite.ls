@@ -128,7 +128,7 @@ package loom.sqlite
 //TODO
          public native function bindDouble(index:int, value:Number):void;
          public native function bindInt(index:int, value:int):void;
-         public native function bindBytes(index:int, value:ByteArray):void;
+   //      public native function bindBytes(index:int, value:ByteArray):void;
          public native function bindString(index:int, value:String):void;
  
         // Advance to next result.
@@ -145,12 +145,12 @@ package loom.sqlite
 //TODO
          public native function columnDouble(index:int):Number;
          public native function columnInt(index:int):int;
-         public native function columnBytes(index:int):ByteArray;
+ //        public native function columnBytes(index:int):ByteArray;
          public native function columnString(index:int):String;
  
         // Get row id from last insert.
 //TODO
-         public native function get lastInsertRowId():int;
+  //       public native function get lastInsertRowId():int;
  
         // Reset the statement.
 //TODO

@@ -109,44 +109,42 @@ public:
         return i;
     }
 
-    double columnDouble(int iCol)
+    double columnDouble(int col)
     {
-        return sqlite3_column_double(statementHandle, iCol);
+        return sqlite3_column_double(statementHandle, col);
     }
 
-    int columnInt(int iCol)
+    int columnInt(int col)
     {
-        return sqlite3_column_int(statementHandle, iCol);
+        return sqlite3_column_int(statementHandle, col);
     }
 
-//    sqlite3_value* columnBytes(int iCol) //wasnt sure which SQLite method to use
+//    sqlite3_value* columnBytes(int col) //wasnt sure which SQLite method to use
 //    {
-//        return sqlite3_column_value(statementHandle, iCol);
+//        return sqlite3_column_value(statementHandle, col);
 //    }
 
-    const char* columnString(int iCol)
+    const char* columnString(int col)
     {
-       // unsigned const char* string = (sqlite3_column_text(statementHandle, iCol)); //the weird memory error
+       // unsigned const char* string = (sqlite3_column_text(statementHandle, col)); //the weird memory error
         return "test";
     }
-    int reset()
+    void reset()
     {
         int i = sqlite3_reset(statementHandle); 
         if(i != SQLITE_OK)
         {
             lmLogError(gSQLiteGroup, "Error BLAH BLAH BLAH: with message: %s", "error:" + i);
         }
-        return i;
     }
 
-    int finalize()
+    void finalize()
     {
         int i = sqlite3_finalize(statementHandle); 
         if(i != SQLITE_OK)
         {
             lmLogError(gSQLiteGroup, "Error BLAH BLAH BLAH: with message: %s", "error:" + i);
         }
-        return i;
     }
 
 //   sqlite3_int64 getlastInsertRowId() //the weird memory error
@@ -240,6 +238,9 @@ static int registerLoomSQLiteStatement(lua_State *L)
         .addMethod("getParameterName", &Statement::getParameterName)
         .addMethod("getParameterIndex", &Statement::getParameterIndex)
         .addMethod("bindDouble", &Statement::bindDouble)
+        .addMethod("bindString", &Statement::bindString)
+     //   .addMethod("bindBytes", &Statement::bindBytes)
+        .addMethod("bindInt", &Statement::bindInt)
         .addMethod("step", &Statement::step)
         .addMethod("columnString", &Statement::columnString)
     //    .addMethod("columnBytes", &Statement::columnBytes)
