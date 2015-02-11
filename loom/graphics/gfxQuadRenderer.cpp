@@ -20,7 +20,6 @@
 
 #include <string.h>
 #include <stdint.h>
-//#include "bgfx.h"
 
 #include "OpenGL/OpenGL.h"
 #include "OpenGL/gl.h"
@@ -40,11 +39,6 @@ namespace GFX
 {
 lmDefineLogGroup(gGFXQuadRendererLogGroup, "GFXQuadRenderer", 1, LoomLogInfo);
 
-// coincides w/ struct VertexPosColorTex in gfxQuadRenderer.h
-//static bgfx::VertexDecl sVertexPosColorTexDecl;
-
-/*static bgfx::UniformHandle sUniformTexColor;
-static bgfx::UniformHandle sUniformNodeMatrixRemoveMe;*/
 static unsigned int sProgramPosColorTex;
 static unsigned int sProgramPosTex;
 
@@ -53,11 +47,12 @@ static unsigned int sProgram_posColorLoc;
 static unsigned int sProgram_posTexCoordLoc;
 static unsigned int sProgram_texUniform;
 
-
 static unsigned int sIndexBufferHandle;
 
 static bool sTinted = true;
-//static uint64_t sBlendFunc = BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA);
+
+unsigned int sSrcBlend = GL_SRC_ALPHA;
+unsigned int sDstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
 unsigned int QuadRenderer::vertexBuffers[MAXVERTEXBUFFERS];
 
@@ -142,7 +137,7 @@ void QuadRenderer::submit()
 
         // Blend mode.
         Graphics::context()->glEnable(GL_BLEND);
-        Graphics::context()->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+        Graphics::context()->glBlendFuncSeparate(sSrcBlend, sDstBlend, sSrcBlend, sDstBlend);
 //        printf("saw err %d", Graphics::context()->glGetError());
 
         // And bind indices and draw.
@@ -171,7 +166,7 @@ void QuadRenderer::submit()
 }
 
 
-VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted, uint64_t blendFunc)
+VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted, uint32_t srcBlend, uint32_t dstBlend)
 {
     if (!numVertices || (texture < 0) || (numVertices > MAXBATCHQUADS * 4))
     {
@@ -181,7 +176,7 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
     lmAssert(!(numVertices % 4), "numVertices % 4 != 0");
 
     if (((currentTexture != TEXTUREINVALID) && (currentTexture != texture))
-        || (sTinted != tinted) /*|| (sBlendFunc != blendFunc)*/)
+        || (sTinted != tinted) || (srcBlend != sSrcBlend) || ( dstBlend != sDstBlend))
     {
         submit();
     }
@@ -214,7 +209,8 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
     VertexPosColorTex *returnPtr = currentVertexPtr;
 
     sTinted = tinted;
-    //sBlendFunc = blendFunc;
+    sSrcBlend = srcBlend;
+    sDstBlend = dstBlend;
 
     currentVertexPtr += numVertices;
     vertexCount      += numVertices;
@@ -229,9 +225,9 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
 }
 
 
-void QuadRenderer::batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices, uint64_t blendFunc)
+void QuadRenderer::batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices, uint32_t srcBlend, uint32_t dstBlend)
 {
-    VertexPosColorTex *verticePtr = getQuadVertices(texture, numVertices, true, blendFunc);
+    VertexPosColorTex *verticePtr = getQuadVertices(texture, numVertices, true, srcBlend, dstBlend);
 
     if (!verticePtr)
         return;

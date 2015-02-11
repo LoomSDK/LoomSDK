@@ -56,7 +56,9 @@ void QuadBatch::render(lua_State *L)
 
     //set blend mode based to be unique or that of our parent
     renderState.blendMode = (blendMode == BlendMode::AUTO && parent) ? parent->renderState.blendMode : blendMode;
-    int64_t blendFunc = BlendMode::BlendFunction(renderState.blendMode);
+
+    unsigned int blendSrc, blendDst;
+    BlendMode::BlendFunction(renderState.blendMode, blendSrc, blendDst);
 
     // update and get our transformation matrix
     updateLocalTransform();
@@ -68,11 +70,11 @@ void QuadBatch::render(lua_State *L)
     bool isIdentity = mtx.isIdentity();
     if((renderState.alpha == 1.0f) && isIdentity)
     {
-        GFX::QuadRenderer::batch(nativeTextureID, quadData, 4 * numQuads, blendFunc);
+        GFX::QuadRenderer::batch(nativeTextureID, quadData, 4 * numQuads, blendSrc, blendDst);
         return;
     }
 
-    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 4 * numQuads, true, blendFunc);
+    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 4 * numQuads, true, blendSrc, blendDst);
     if (!v)
     {
         return;

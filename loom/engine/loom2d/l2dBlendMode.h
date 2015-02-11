@@ -21,7 +21,7 @@
 #pragma once
 
 #include "loom/common/core/assert.h"
-#include "loom/graphics/internal/bgfx/include/bgfx.h"
+//#include "loom/graphics/internal/bgfx/include/bgfx.h"
 
 
 namespace Loom2D
@@ -65,19 +65,21 @@ public:
 
 
     //Returns the numerical blend function value based on the blend mode string
-    static uint64_t BlendFunction(int mode)
+    static void BlendFunction(int mode, unsigned int &srcBlend, unsigned int &dstBlend)
     {
-        if((mode >= 0) && (mode < NUM_BLEND_FUNCTIONS))
-        {
-            return _blendFunctions[mode];
-        }
-        lmAssert(((mode >= 0) && (mode < NUM_BLEND_FUNCTIONS)), "Invalid BlendMode type.");
-        return _blendFunctions[AUTO];
+        // TODO: Log out of bounds.
+        if(mode < 0)
+            mode = 0;
+        if(mode >= NUM_BLEND_FUNCTIONS)
+            mode = NUM_BLEND_FUNCTIONS - 1;
+
+        srcBlend = _blendFunctions[mode][0];
+        dstBlend = _blendFunctions[mode][1];
     }
 
 private:
     //Array associating the full Blend Functions to the Blend Mode enumeration
-    static uint64_t _blendFunctions[NUM_BLEND_FUNCTIONS];
+    static unsigned int _blendFunctions[NUM_BLEND_FUNCTIONS][2];
 };
 }
 

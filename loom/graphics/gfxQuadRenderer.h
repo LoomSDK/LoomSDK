@@ -87,8 +87,8 @@ public:
 
     static void endFrame();
 
-    static VertexPosColorTex *getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted, uint64_t blendFunc);
+    static VertexPosColorTex *getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted, uint32_t srcBlend, uint32_t dstBlend);
 
-    static void batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices, uint64_t blendFunc);
+    static void batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices, uint32_t srcBlend, uint32_t dstBlend);
 };
 }

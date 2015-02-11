@@ -117,14 +117,16 @@ void Quad::render(lua_State *L)
     renderState.clampAlpha();
     renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
     renderState.blendMode = (blendMode == BlendMode::AUTO && parent) ? parent->renderState.blendMode : blendMode;
-    int64_t blendFunc = BlendMode::BlendFunction(renderState.blendMode);
+
+    unsigned int blendSrc, blendDst;
+    BlendMode::BlendFunction(renderState.blendMode, blendSrc, blendDst);
 
     GFX::Graphics::setClipRect(renderState.cachedClipRect);
 
     GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 
                                                                         4, 
                                                                         tinted || renderState.alpha != 1.f,
-                                                                        blendFunc);
+                                                                        blendSrc, blendDst);
     GFX::VertexPosColorTex *src = quadVertices;
 
     if (!v)
