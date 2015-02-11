@@ -141,6 +141,7 @@ void QuadRenderer::submit()
         Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         // Blend mode.
+        Graphics::context()->glEnable(GL_BLEND);
         Graphics::context()->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
 //        printf("saw err %d", Graphics::context()->glGetError());
 
