@@ -72,8 +72,8 @@ package
 
 		private function testTrace()
 		{
-			trace (statement.columnType(0) + " " + statement.columnType(1));
-			//trace (statement.columnInt(0) + statement.columnString(1));
+			//trace (statement.columnType(0) + " " + statement.columnType(1));
+			trace (statement.columnDouble(0) + statement.columnString(1));
 		}
 
 		/*
@@ -93,6 +93,8 @@ package
 						case DataType.SQLITE_FLOAT 		: label[rowCount][i].tesxt = statement.columndouble;
 							break;
 						case DataType.SQLITE_TEXT 		: label[rowCount][i].tesxt = statement.columnstring;
+							break;
+						case DataType.SQLITE_NULL		: i = 5;
 							break;
 					}
 				};	
