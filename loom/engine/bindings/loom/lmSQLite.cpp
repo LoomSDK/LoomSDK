@@ -161,7 +161,7 @@ public:
         int result = sqlite3_step(statementHandle); 
         if((result == SQLITE_ERROR) || (result == SQLITE_MISUSE))
         {
-            lmLogError(gSQLiteGroup, "Error calling bindString for database: %s with Result Code: %i", parentDB->getDBName(), result);
+            lmLogError(gSQLiteGroup, "Error calling step for database: %s with Result Code: %i", parentDB->getDBName(), result);
         }
         return result;
     }
