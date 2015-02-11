@@ -180,12 +180,6 @@ else
     $LSC_BINARY = "artifacts/lsc"
 end
 
-if $LOOM_HOST_OS == 'windows' 
-    $SHADERC_BINARY = "artifacts\\shaderc.exe"
-else
-    $SHADERC_BINARY = "artifacts/shaderc"
-end
-
 #############
 # BUILD TASKS
 #############
@@ -346,29 +340,11 @@ namespace :utility do
     puts " *** lsc built!"
   end
 
-  desc "Builds shaderc if it doesn't exist"
-  file $SHADERC_BINARY do
-    Rake::Task['build:desktop'].invoke
-    puts " *** shaderc built!"
-  end
-
   desc "Compile scripts and report any errors."
   task :compileScripts => $LSC_BINARY do
     puts "===== Compiling Core Scripts ====="
     Dir.chdir("sdk") do
       sh "../artifacts/lsc Main.build"
-    end
-  end
-
-  desc "Compile new version of shaders for the current platform."
-  task :compileShaders => $SHADERC_BINARY do
-    puts "===== Compiling Shaders ====="
-    Dir.chdir("sdk/shaders") do
-      if $LOOM_HOST_OS == 'windows'
-        sh "buildShaders.bat"
-      else
-        sh "sh buildShaders.sh"
-      end
     end
   end
 
