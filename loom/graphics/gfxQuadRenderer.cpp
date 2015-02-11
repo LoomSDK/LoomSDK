@@ -21,8 +21,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "OpenGL/OpenGL.h"
-#include "OpenGL/gl.h"
+#include <SDL_opengl.h>
 
 #include "loom/common/core/log.h"
 #include "loom/common/core/allocator.h"

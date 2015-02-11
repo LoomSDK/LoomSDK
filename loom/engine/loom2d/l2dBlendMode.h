@@ -20,9 +20,8 @@
 
 #pragma once
 
+#include <SDL_opengl.h>
 #include "loom/common/core/assert.h"
-//#include "loom/graphics/internal/bgfx/include/bgfx.h"
-
 
 namespace Loom2D
 {

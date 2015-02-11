@@ -20,8 +20,7 @@
 
 #pragma once
 
-//#include "loom/graphics/internal/bgfx/include/bgfx.h"
-#include "OpenGL/OpenGL.h"
+#include <SDL_opengl.h>
 #include "loom/common/utils/utString.h"
 #include "loom/script/native/lsNativeDelegate.h"
 

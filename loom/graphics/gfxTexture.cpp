@@ -18,9 +18,6 @@
  * ===========================================================================
  */
 
-//#include "bgfx.h"
-//#include "OpenGL/OpenGL.h"
-//#include "OpenGL/gl.h"
 #include <SDL_opengl.h>
 
 #include "loom/common/assets/assets.h"

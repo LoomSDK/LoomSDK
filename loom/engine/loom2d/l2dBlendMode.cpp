@@ -20,10 +20,6 @@
 
 #include "loom/engine/loom2d/l2dBlendMode.h"
 
-#include "OpenGL/OpenGL.h"
-#include "OpenGL/gl.h"
-
-
 namespace Loom2D
 {
 unsigned int BlendMode::_blendFunctions[BlendMode::NUM_BLEND_FUNCTIONS][2] =
