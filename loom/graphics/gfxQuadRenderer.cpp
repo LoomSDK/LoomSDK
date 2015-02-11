@@ -311,7 +311,7 @@ void QuadRenderer::initializeGraphicsResources()
     "varying vec4 v_color0;\n"
     "void main()\n"
     "{\n"
-    "    gl_Position = a_position / vec4(1024.0 / 2.0, 768.0 / 2.0, 1.0, 1.0) + vec4(-1, -1, 0.0, 0.0);\n"
+    "    gl_Position = a_position / vec4(1024.0 / 2.0, -768.0 / 2.0, 1.0, 1.0) + vec4(-1, 1, 0.0, 0.0);\n"
     "    v_color0 = a_color0;\n"
     "    v_texcoord0 = a_texcoord0;\n"
     "}\n";
