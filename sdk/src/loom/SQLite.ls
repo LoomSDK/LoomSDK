@@ -19,11 +19,14 @@ limitations under the License.
 */
 
 
-
-///TODO:
-//  -emulate the 'Example usage' functionality -> slowly bring all functions over to native bindings!
+/////////////////////
+// THINGS TO DO:
+/////////////////////
+//
 //  -asynchronous functionality
 //  -full function/var/const header commenting
+//
+/////////////////////
 
 
 
@@ -112,6 +115,12 @@ package loom.sqlite
         public native function get errorMessage():String;
 
         /**
+         * Returns the returns the rowid of the most recent successful INSERT into a table 
+         * of this database connection
+         */
+        public native function get lastInsertRowId():int;
+         
+        /**
          * Opens a SQLite database.
          */
         public static native function open(database:String, flags:int = FLAG_READWRITE):Connection;
@@ -143,11 +152,10 @@ package loom.sqlite
         public native function getParameterIndex(name:String):int;
  
         // Interface to set query parameters.
-//TODO
-         public native function bindInt(index:int, value:int):ResultCode;
-         public native function bindDouble(index:int, value:Number):ResultCode;
-         public native function bindString(index:int, value:String):ResultCode;
-   //      public native function bindBytes(index:int, value:ByteArray):ResultCode;
+        public native function bindInt(index:int, value:int):ResultCode;
+        public native function bindDouble(index:int, value:Number):ResultCode;
+        public native function bindString(index:int, value:String):ResultCode;
+        public native function bindBytes(index:int, value:ByteArray):ResultCode;
  
         // Advance to next result.
         public native function step():ResultCode;
@@ -163,12 +171,7 @@ package loom.sqlite
         public native function columnInt(index:int):int;
         public native function columnDouble(index:int):Number;
         public native function columnString(index:int):String;
-//TODO
- //        public native function columnBytes(index:int):ByteArray;
- 
-        // Get row id from last insert.
-//TODO
-  //       public native function get lastInsertRowId():int;
+        public native function columnBytes(index:int):ByteArray;
  
         // Reset the statement.
         public native function reset():ResultCode;

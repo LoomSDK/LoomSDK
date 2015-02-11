@@ -21,8 +21,10 @@
 #include "platform/CCFileUtils.h"
 #include "loom/script/loomscript.h"
 #include "loom/common/core/log.h"
+#include "loom/common/utils/utByteArray.h"
 #include "loom/script/native/lsNativeDelegate.h"
 #include "loom/vendor/sqlite3/sqlite3.h"
+#include "loom/common/utils/utByteArray.h"
 
 lmDefineLogGroup(gSQLiteGroup, "loom.sqlite", 1, LoomLogInfo);
 
@@ -59,6 +61,17 @@ public:
         return sqlite3_errmsg(dbHandle);
     }
       
+    int getlastInsertRowId()
+    {
+        //"NOTE: In SQLite the row ID is a 64-bit integer but for all practical 
+        //database sizes you can cast the 64 bit value to a 32-bit integer."
+        //
+        // - Some Guy on The Internet
+        //
+        int rowid = (int)sqlite3_last_insert_rowid(dbHandle);
+        return rowid;
+    }
+
     void close()
     {
         //close the database
@@ -146,15 +159,47 @@ public:
         return result;        
     }
 
-    // int bindBytes(int index, const sqlite3_value *value)
-    // {
-    //     int result = sqlite3_bind_value(statementHandle, index, value);
-    //     if(result != SQLITE_OK)
-    //     {
-    //         lmLogError(gSQLiteGroup, "Error calling bindString for database: %s with Result Code: %i", parentDB->getDBName(), result);
-    //     }
-    //     return result;
-    // }    
+
+    int bindBytes(lua_State *L)
+    {
+        int index;
+        void *bytes;
+        int size;
+
+        if (!lua_isnumber(L, 1) || !lualoom_checkinstancetype(L, 2, "system.ByteArray"))
+        {
+            lmLogError(gSQLiteGroup, "Invalid parameters passed to bindBytes for database: %s", parentDB->getDBName());
+            lua_pushnumber(L, SQLITE_ERROR);
+            return 1;
+        }
+
+        //get the index we are binding to from lua
+        index = (int)lua_tonumber(L, 1);
+
+        //get our ByteArray from lua
+//TODO: test which one is the proper way... both the same... BEN!?!!>!!!        
+        utByteArray *byteArray = (utByteArray *)lualoom_getnativepointer(L, 2);
+        if(!byteArray || !byteArray->getSize())
+        {
+            bytes = NULL;
+            size = 0;
+        }
+        else
+        {
+            bytes = byteArray->getDataPtr();      
+            size = (int)byteArray->getSize();
+        }
+
+        //bind the blob to the statement
+        int result = sqlite3_bind_blob(statementHandle, index, (const void *)bytes, size, SQLITE_TRANSIENT); 
+        if(result != SQLITE_OK)
+        {
+            lmLogError(gSQLiteGroup, "Error calling bindBytes for database: %s with Result Code: %i", parentDB->getDBName(), result);
+        }
+        lua_pushnumber(L, result);
+
+        return 1;
+    }
 
     int step()
     {
@@ -165,7 +210,6 @@ public:
         }
         return result;
     }
-
 
     int columnType(int col)
     {
@@ -195,10 +239,28 @@ public:
         return szReturnString;
     }
 
-//    sqlite3_value* columnBytes(int col) //wasnt sure which SQLite method to use
-//    {
-//        return sqlite3_column_value(statementHandle, col);
-//    }
+    int columnBytes(lua_State *L)
+    {
+        //get the column
+        int col = (int)lua_tonumber(L, 1);
+
+        //get the blob from the column
+        void *blob = (void *)sqlite3_column_blob(statementHandle, col);
+        if(blob == NULL)
+        {
+            lua_pushnil(L);
+            return 1;
+        }
+        int size = sqlite3_column_bytes(statementHandle, col);
+
+        //valid blob so allocate byte array for it
+        utByteArray *bytes = new utByteArray();
+        bytes->allocateAndCopy(blob, size);
+
+        //go lua go!
+        lualoom_pushnative<utByteArray>(L, bytes);
+        return 1;
+    }
 
     int reset()
     {
@@ -219,15 +281,10 @@ public:
         }
         return result;        
     }
-
-//   sqlite3_int64 getlastInsertRowId() //the weird memory error
-//   {
-//        sqlite3 *dbHandle;
-//        return sqlite3_last_insert_rowid(dbHandle);
-//    }
-
 };
+
 char Statement::szReturnString[4096] = "";
+
 
 
 
@@ -269,38 +326,7 @@ const char* Connection::getVersion()
 
 
 
-
-//Loomscript binding registations
-static int registerLoomSQLiteStatement(lua_State *L)
-{
-    beginPackage(L, "loom.sqlite")
-      .beginClass<Statement>("Statement")
-
-//TODO: Add Statement methods
-        .addMethod("getParameterCount", &Statement::getParameterCount)
-        .addMethod("getParameterName", &Statement::getParameterName)
-        .addMethod("getParameterIndex", &Statement::getParameterIndex)
-        .addMethod("bindInt", &Statement::bindInt)
-        .addMethod("bindDouble", &Statement::bindDouble)
-        .addMethod("bindString", &Statement::bindString)
-     //   .addMethod("bindBytes", &Statement::bindBytes)
-        .addMethod("step", &Statement::step)
-        .addMethod("columnType", &Statement::columnType)
-        .addMethod("columnInt", &Statement::columnInt)
-        .addMethod("columnDouble", &Statement::columnDouble)
-        .addMethod("columnString", &Statement::columnString)
-    //    .addMethod("columnBytes", &Statement::columnBytes)
-        .addMethod("reset", &Statement::reset)
-        .addMethod("finalize", &Statement::finalize)
-    //    .addMethod("getlastInsertRowId", &Statement::getlastInsertRowId)
-
-//TODO: Add Async methods
-
-      .endClass()
-    .endPackage();
-    return 0;
-}
-
+//Loomscript binding registations for Connection and Statement
 static int registerLoomSQLiteConnection(lua_State *L)
 {
     beginPackage(L, "loom.sqlite")
@@ -309,10 +335,11 @@ static int registerLoomSQLiteConnection(lua_State *L)
         .addStaticMethod("open", &Connection::open)
         .addStaticMethod("__pget_version", &Connection::getVersion)
 
-        .addMethod("prepare", &Connection::prepare)
-        .addMethod("close", &Connection::close)
         .addMethod("__pget_errorCode", &Connection::getErrorCode)
         .addMethod("__pget_errorMessage", &Connection::getErrorMessage)
+        .addMethod("__pget_lastInsertRowId", &Connection::getlastInsertRowId)
+        .addMethod("prepare", &Connection::prepare)
+        .addMethod("close", &Connection::close)
 
 //TODO: Add Async methods
 
@@ -321,8 +348,38 @@ static int registerLoomSQLiteConnection(lua_State *L)
     return 0;
 }
 
+
+static int registerLoomSQLiteStatement(lua_State *L)
+{
+    beginPackage(L, "loom.sqlite")
+      .beginClass<Statement>("Statement")
+
+        .addMethod("getParameterCount", &Statement::getParameterCount)
+        .addMethod("getParameterName", &Statement::getParameterName)
+        .addMethod("getParameterIndex", &Statement::getParameterIndex)
+        .addMethod("bindInt", &Statement::bindInt)
+        .addMethod("bindDouble", &Statement::bindDouble)
+        .addMethod("bindString", &Statement::bindString)
+        .addLuaFunction("bindBytes", &Statement::bindBytes)
+        .addMethod("step", &Statement::step)
+        .addMethod("columnType", &Statement::columnType)
+        .addMethod("columnInt", &Statement::columnInt)
+        .addMethod("columnDouble", &Statement::columnDouble)
+        .addMethod("columnString", &Statement::columnString)
+        .addLuaFunction("columnBytes", &Statement::columnBytes)
+        .addMethod("reset", &Statement::reset)
+        .addMethod("finalize", &Statement::finalize)
+
+//TODO: Add Async methods
+
+      .endClass()
+    .endPackage();
+    return 0;
+}
+
+
 void installLoomSQLite()
 {
-    LOOM_DECLARE_NATIVETYPE(Statement, registerLoomSQLiteStatement);
     LOOM_DECLARE_NATIVETYPE(Connection, registerLoomSQLiteConnection);
+    LOOM_DECLARE_NATIVETYPE(Statement, registerLoomSQLiteStatement);
 }
