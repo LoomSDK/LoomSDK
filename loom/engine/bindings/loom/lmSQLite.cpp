@@ -177,7 +177,6 @@ public:
         index = (int)lua_tonumber(L, 1);
 
         //get our ByteArray from lua
-//TODO: test which one is the proper way... both the same... BEN!?!!>!!!        
         utByteArray *byteArray = (utByteArray *)lualoom_getnativepointer(L, 2);
         if(!byteArray || !byteArray->getSize())
         {
