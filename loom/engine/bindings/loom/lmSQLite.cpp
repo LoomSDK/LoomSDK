@@ -77,7 +77,7 @@ class Statement
 {
 private:
     Connection *parentDB;
-
+    static char szReturnString[4096];
 public:
     sqlite3_stmt *statementHandle;
 
@@ -98,8 +98,12 @@ public:
         if(name == NULL)
         {
             lmLogError(gSQLiteGroup, "Invalid index for getParameterName in database: %s", parentDB->getDBName());
+            return NULL;
         }
-        return name;
+
+        //copy the string into our static return array so it survives the trip to Loomscript Land!
+        strcpy(szReturnString, name);
+        return szReturnString;
     }
 
     int getParameterIndex(const char* name)
@@ -117,7 +121,7 @@ public:
         int result = sqlite3_bind_int(statementHandle, index, value);
         if(result != SQLITE_OK)
         {
-            lmLogError(gSQLiteGroup, "Error calling bindInt for database: %s with message: %s", parentDB->getDBName(), parentDB->getErrorMessage());
+            lmLogError(gSQLiteGroup, "Error calling bindInt for database: %s with Result Code: %i", parentDB->getDBName(), result);
         }
         return result;        
     }
@@ -127,17 +131,17 @@ public:
         int result = sqlite3_bind_double(statementHandle, index, value);
         if(result != SQLITE_OK)
         {
-            lmLogError(gSQLiteGroup, "Error calling bindDouble for database: %s with message: %s", parentDB->getDBName(), parentDB->getErrorMessage());
+            lmLogError(gSQLiteGroup, "Error calling bindDouble for database: %s with Result Code: %i", parentDB->getDBName(), result);
         }
         return result;        
     }
 
     int bindString(int index, const char *value)
     {
-        int result = sqlite3_bind_text(statementHandle, index, value, sizeof(value), SQLITE_STATIC); 
+        int result = sqlite3_bind_text(statementHandle, index, value, -1, SQLITE_TRANSIENT); 
         if(result != SQLITE_OK)
         {
-            lmLogError(gSQLiteGroup, "Error calling bindString for database: %s with message: %s", parentDB->getDBName(), parentDB->getErrorMessage());
+            lmLogError(gSQLiteGroup, "Error calling bindString for database: %s with Result Code: %i", parentDB->getDBName(), result);
         }
         return result;        
     }
@@ -147,7 +151,7 @@ public:
     //     int result = sqlite3_bind_value(statementHandle, index, value);
     //     if(result != SQLITE_OK)
     //     {
-    //         lmLogError(gSQLiteGroup, "Error calling bindString for database: %s with message: %s", parentDB->getDBName(), parentDB->getErrorMessage());
+    //         lmLogError(gSQLiteGroup, "Error calling bindString for database: %s with Result Code: %i", parentDB->getDBName(), result);
     //     }
     //     return result;
     // }    
@@ -157,14 +161,15 @@ public:
         int result = sqlite3_step(statementHandle); 
         if((result == SQLITE_ERROR) || (result == SQLITE_MISUSE))
         {
-            lmLogError(gSQLiteGroup, "Error calling bindString for database: %s with message: %s", parentDB->getDBName(), parentDB->getErrorMessage());
+            lmLogError(gSQLiteGroup, "Error calling bindString for database: %s with Result Code: %i", parentDB->getDBName(), result);
         }
         return result;
     }
 
-    double columnDouble(int col)
+
+    int columnType(int col)
     {
-        return sqlite3_column_double(statementHandle, col);
+        return sqlite3_column_type(statementHandle, col);
     }
 
     int columnInt(int col)
@@ -172,10 +177,22 @@ public:
         return sqlite3_column_int(statementHandle, col);
     }
 
+    double columnDouble(int col)
+    {
+        return sqlite3_column_double(statementHandle, col);
+    }
+
     const char* columnString(int col)
     {
-       // unsigned const char* string = (sqlite3_column_text(statementHandle, col)); //the weird memory error
-        return "test";
+        const char *text = (const char *)sqlite3_column_text(statementHandle, col);
+        if(text == NULL)
+        {
+            return NULL;
+        }
+
+        //copy the string into our static return array so it survives the trip to Loomscript Land!
+        strcpy(szReturnString, text);
+        return szReturnString;
     }
 
 //    sqlite3_value* columnBytes(int col) //wasnt sure which SQLite method to use
@@ -188,7 +205,7 @@ public:
         int result = sqlite3_reset(statementHandle); 
         if(result != SQLITE_OK)
         {
-            lmLogError(gSQLiteGroup, "Error calling reset for database: %s with message: %s", parentDB->getDBName(), parentDB->getErrorMessage());
+            lmLogError(gSQLiteGroup, "Error calling reset for database: %s with Result Code: %i", parentDB->getDBName(), result);
         }
         return result;        
     }
@@ -198,7 +215,7 @@ public:
         int result = sqlite3_finalize(statementHandle); 
         if(result != SQLITE_OK)
         {
-            lmLogError(gSQLiteGroup, "Error calling finalize for database: %s with message: %s", parentDB->getDBName(), parentDB->getErrorMessage());
+            lmLogError(gSQLiteGroup, "Error calling finalize for database: %s with Result Code: %i", parentDB->getDBName(), result);
         }
         return result;        
     }
@@ -210,7 +227,7 @@ public:
 //    }
 
 };
-
+char Statement::szReturnString[4096] = "";
 
 
 
@@ -268,6 +285,7 @@ static int registerLoomSQLiteStatement(lua_State *L)
         .addMethod("bindString", &Statement::bindString)
      //   .addMethod("bindBytes", &Statement::bindBytes)
         .addMethod("step", &Statement::step)
+        .addMethod("columnType", &Statement::columnType)
         .addMethod("columnInt", &Statement::columnInt)
         .addMethod("columnDouble", &Statement::columnDouble)
         .addMethod("columnString", &Statement::columnString)

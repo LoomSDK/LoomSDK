@@ -46,8 +46,23 @@ package loom.sqlite
         SQLITE_ERROR    = 1,
         SQLITE_BUSY     = 5,
         SQLITE_MISUSE   = 21,
+        SQLITE_RANGE    = 25,
         SQLITE_ROW      = 100,
         SQLITE_DONE     = 101
+    }
+
+
+
+    /** 
+     * An enumeration that defines the possible column data types
+     */
+    public enum DataType
+    {
+        SQLITE_INTEGER  = 1,
+        SQLITE_FLOAT    = 2,
+        SQLITE_TEXT     = 3,
+        SQLITE_BLOB     = 4,
+        SQLITE_NULL     = 5
     }
 
 
@@ -135,7 +150,7 @@ package loom.sqlite
    //      public native function bindBytes(index:int, value:ByteArray):ResultCode;
  
         // Advance to next result.
-        public native function step():int;
+        public native function step():ResultCode;
 
         // Asynchronously advance to next result.
 //TODO: Async support
@@ -144,6 +159,7 @@ package loom.sqlite
 //         public native var onStatementComplete:StatementComplete;
  
         // Retrieve result column from current row.
+        public native function columnType(index:int):DataType;
         public native function columnInt(index:int):int;
         public native function columnDouble(index:int):Number;
         public native function columnString(index:int):String;
