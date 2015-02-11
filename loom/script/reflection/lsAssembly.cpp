@@ -269,7 +269,7 @@ void Assembly::connectToDebugger(const char *host, int port)
         LSError("Unable to get system.debugger.DebuggerClient");
     }
 
-    MethodInfo *method = debuggerClient->getMethodInfo("connect");
+    MethodInfo *method = debuggerClient->findMethodInfoByName("connect");
 
     if (!method)
     {

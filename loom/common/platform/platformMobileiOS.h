@@ -28,7 +28,9 @@
 #import <Foundation/Foundation.h>
 
 void ios_CustomURLOpen();
+void ios_RemoteNotificationOpen();
 extern NSMutableDictionary *gOpenUrlQueryStringDictionary;
+extern NSDictionary *gRemoteNotificationPayloadDictionary;
 
 #endif
 

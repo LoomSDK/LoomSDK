@@ -53,9 +53,32 @@ static bool _initialized = false;
     {
         NSLog(@"-----Initializing Parse");
         [Parse setApplicationId:app_id clientKey:client_key];
-        [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|
-                                                        UIRemoteNotificationTypeAlert|
-                                                        UIRemoteNotificationTypeSound];    
+
+        //register for remote notifications with the system... different for iOS8+ though!
+        //we need to make sure not to compile in any mention of UIUserNotificationSetting if we are on an older Xcode!            
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000        
+        if ([[UIApplication sharedApplication] respondsToSelector:@selector(registerUserNotificationSettings:)])
+        {
+            //iOS 8 and up
+            Class userNotifyClass = NSClassFromString(@"UIUserNotificationSettings");
+            if(userNotifyClass != nil)
+            {
+                id notifySettings = [userNotifyClass settingsForTypes:UIUserNotificationTypeAlert |
+                                                                        UIUserNotificationTypeBadge |
+                                                                        UIUserNotificationTypeSound
+                                                                        categories:nil];
+                [[UIApplication sharedApplication] registerUserNotificationSettings:notifySettings];
+                [[UIApplication sharedApplication] registerForRemoteNotifications];            
+            }
+        }
+        else
+#endif
+        {
+            //pre-iOS 8 code
+            [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|
+                                                                                    UIRemoteNotificationTypeAlert|
+                                                                                    UIRemoteNotificationTypeSound];    
+        }
         _initialized = true;
         NSLog(@"-----Parse Initialized Successfully");
     }
