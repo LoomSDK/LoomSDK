@@ -25,12 +25,14 @@ package {
     import unittest.TestRunner;
     import unittest.TestResult;
     
+    /**
+     * Runs all the tests in the current project (see the tests/ subdir) and exits with the proper error code.
+     */
     public class AllTests {   
         public static function main() {
             var result:TestResult = TestRunner.runAll((AllTests as Type).getAssembly());
             
             Process.exit(result.typeReport.successful ? 0 : 1);
-            
         }
     }
 }

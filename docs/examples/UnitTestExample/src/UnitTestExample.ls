@@ -3,25 +3,24 @@ package
     import unittest.TestRunner;
     import unittest.Assert;
     import loom.Application;
-    import system.platform.File;
     import system.reflection.Assembly;
     
+    /**
+     * Simple usage of the unit test framework.
+     */
     public class UnitTestExample extends Application
     {
+        // Hides the function in the reported call stack of a failed test
         [UnitTestHideCall]
         override public function run():void
         {
-            //trace(TestRunner.getTests(new ByteArrayTest()));
-            //TestRunner.runAll(ByteArrayTest, false);
-            //TestRunner.run(TestRunner.getTests(ByteArrayTest));
-            //TestRunner.runAll(AssertTest, false);
-            
-            TestRunner.runAll(getType().getAssembly());
-            
-            //Assembly.loadBytes(File.loadBinaryFile("assets/Main.loom"));
-            
+            // Finds and runs all the tests in the currently running app
+            TestRunner.runAll(getType().getAssembly());   
         }
         
+        /**
+         * A simple test.
+         */
         [Test]
         public static function test() {
             Assert.isTrue(true);

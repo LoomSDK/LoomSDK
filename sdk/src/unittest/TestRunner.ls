@@ -4,6 +4,10 @@ package unittest {
     import system.reflection.MethodInfo;
     import system.reflection.Type;
     
+    /**
+     * Generic stats value object holding the number of
+     * passed/failed/skipped events.
+     */
     class StatusReport {
         public var total:int;
         public var passed:int;
@@ -39,6 +43,9 @@ package unittest {
         }
     }
     
+    /**
+     * TypeTest groups all the tests found in a specific Type.
+     */
     class TypeTest {
         public var type:Type;
         public var tests:Vector.<Test>;
@@ -49,6 +56,11 @@ package unittest {
         public var asserts:StatusReport = new StatusReport();
     }
     
+    /**
+     * Represents an individual test case. Each test can have several
+     * assertions, the results of which are saved in the results Vector after
+     * running the test.
+     */
     class Test {
         /**
          * Can be either a Type or an instance.
@@ -76,7 +88,13 @@ package unittest {
         }
     }
     
+    /**
+     * TestResult groups all the TypeTests and accumulates their reports.
+     */
     public class TestResult {
+        /**
+         * The total number of scanned types in the test run.
+         */
         public var scannedTypes:int;
         public var typeTests:Vector.<TypeTest>;
         
@@ -85,13 +103,23 @@ package unittest {
         public var assertReport:StatusReport = new StatusReport();
     }
     
+    /**
+     * TestRunner is the main entry point of the framework. It contains several
+     * static modular methods for better flexibility, while still providing a
+     * quick and easy way to run and report on all the tests of an Assembly (see runAll).
+     */
     public class TestRunner {
         
-        public function TestRunner() {
-            
-        }
+        public function TestRunner() {}
         
-        
+        /**
+         * Run and report on all the tests in the specified assembly.
+         * @param assembly  The assembly from which to run the tests.
+         *                  Use Type.getAssembly() or getType().getAssembly() for an easy way to run tests in the currently running application.
+         * @param shuffle   Whether to shuffle the tests or not, defaults to true to allow for faster failure of tests that depend on side effects.
+         * @return  A TestResult containing the run TypeTests and their accumulated results.
+         */
+        [UnitTestHideCall]
         public static function runAll(assembly:Assembly, shuffle:Boolean = true):TestResult {
             var result = new TestResult();
             
@@ -117,6 +145,14 @@ package unittest {
             return result;
         }
         
+        /**
+         * Runs all the provided TypeTests and optionally updates the provided reports.
+         * @param typeTests The TypeTests to run.
+         * @param shuffle   If true, shuffles the types first.
+         * @param typeReport    Accumulated report on types.
+         * @param testReport    Accumulated report on tests.
+         * @param assertReport  Accumulated report on assertions.
+         */
         [UnitTestHideCall]
         public static function runTypes(typeTests:Vector.<TypeTest>, shuffle:Boolean = true, typeReport:StatusReport = null, testReport:StatusReport = null, assertReport:StatusReport = null) {
             if (shuffle) typeTests.shuffle();
@@ -132,6 +168,7 @@ package unittest {
                 tt = typeTests[i];
                 tt.asserts.reset();
                 
+                // Different styles of output
                 //IO.write((tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"   "+(i+1)+" / "+typeTests.length+"\n");
                 //IO.write((i+1)+"/"+typeTests.length+"  "+(tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"\n");
                 IO.write((i+1)+"/"+typeTests.length+" "+tt.type.getFullName()+(tt.skip ? "(skipped)" : "")+"\n");
@@ -168,6 +205,13 @@ package unittest {
             
         }
         
+        /**
+         * Report on all the tests contained in the provided TypeTests.
+         * @param typeTests The TypeTests to report on.
+         * @param typeReport    The status report containing the results of the run.
+         * @param testReport    Optional status report on tests.
+         * @param assertReport  Optional status report on assertions.
+         */
         public static function reportTypes(typeTests:Vector.<TypeTest>, typeReport:StatusReport, testReport:StatusReport = null, assertReport:StatusReport = null) {
             if (typeReport.successful) {
                 IO.write("############# TEST SUCCESS #############\n\n");
@@ -196,6 +240,11 @@ package unittest {
             IO.write("\n");
         }
         
+        /**
+         * Iterate over the provided assembly and retrieve all the types that contain tests in the form of TypeTests.
+         * @param assembly  The assembly to iterate over.
+         * @return  A Vector of TypeTests for each type containing at least one test.
+         */
         public static function getTypeTests(assembly:Assembly):Vector.<TypeTest> {
             var typeCount = assembly.getTypeCount();
             var typeTests = new Vector.<TypeTest>();
@@ -213,14 +262,13 @@ package unittest {
             return typeTests;
         }
         
+        /**
+         * Run all the provided tests. The tests are updated with the results.
+         * @param tests The tests to run.
+         * @param shuffle   If true, shuffle the tests to fail fast for tests that depend on side effects and specific execution order.
+         */
         [UnitTestHideCall]
         public static function run(tests:Vector.<Test>, shuffle:Boolean = true) {
-            //var type:Type = target is Type ? target as Type : target.getType();
-            
-            //IO.write("Running "+type.getFullName()+"  ");
-            
-            //var tests:Vector.<Test> = getTests(target);
-            
             var i:int;
             var test:Test;
             
@@ -259,7 +307,6 @@ package unittest {
                 test.report.passed = passed;
                 test.report.updateFailed();
                 IO.write(String.lpad(""+test.report.total, " ", 4) + " total " + String.lpad(""+test.report.passed, " ", 4) + " passed");
-                //IO.write(lpad(""+passed, " ", 3) + " / " + rpad(""+results.length, " ", 3) + " passed");
                 if (passed < results.length) {
                     IO.write(" "+String.lpad(""+(results.length-passed), " ", 4)+" failed");
                     test.results = results;
@@ -267,14 +314,13 @@ package unittest {
                 if (ret != null) IO.write("   "+ret);
                 IO.write("\n");
             }
-            
-            //IO.write("\n");
-            
-            //report(tests);
-            
-            //return tests;
         }
         
+        /**
+         * Output a detailed report on the tests. It is assumed that the tests have already been ran.
+         * @param tests The tests to report on.
+         * @param stackSkip The number of calls to skip from the bottom of the call stack.
+         */
         public static function report(tests:Vector.<Test>, stackSkip:int = 2) {
             
             var failedTests:Vector.<Test> = tests.filter(function(item:Object, index:Number, vector:Vector.<Test>):Boolean {
@@ -299,8 +345,6 @@ package unittest {
                     for (j in results) {
                         result = results[j];
                         if (result == Assert.RESULT_SUCCESS) continue;
-                        //var msg = result.message == null ? result.info : result.message;
-                        //IO.write(indent+"Assert #"+(j+1)+": "+msg);
                         IO.write("\n");
                         var msg:String = result.message;
                         var stack:Vector.<CallStackInfo> = result.callStack.filter(function(item:Object, index:Number, vector:Vector.<CallStackInfo>):Boolean {
@@ -325,9 +369,6 @@ package unittest {
                             IO.write(" // "+msg);
                         }
                         IO.write("\n");
-                        //if (result.message != null) {
-                            //IO.write(indent+result.info+"\n");
-                        //}
                         for (var k = 1; k < stack.length; k++) {
                             var info:CallStackInfo = stack[k];
                             IO.write(indent+" "+info.source+":"+info.method.getName()+":"+info.line);
@@ -341,6 +382,15 @@ package unittest {
             }
         }
         
+        /**
+         * Scans the provided target and returns all the found tests.
+         * A test is a method marked with the [Test] metadata.
+         * 
+         * @param target    It can be either an instance of a class or a Type object.
+         * @param createInstance    If the provided target was not an instance and the type
+         *                          contains instance tests, create an instance of the type.
+         * @return  All the found test methods in the provided target.
+         */
         public static function getTests(target:Object, createInstance:Boolean = true):Vector.<Test> {
             var type:Type = target is Type ? target as Type : target.getType();
             
@@ -366,7 +416,6 @@ package unittest {
             
             // Create instance if none was provided for instance tests
             if (createInstance && instanceTests > 0 && target is Type) {
-                //IO.write("Creating instance of "+type.getFullName()+" (it has instance tests, but only a Type was provided)\n");
                 var instance = type.getConstructor().invoke();
                 for each (var t:Test in tests) if (!t.method.isStatic()) t.target = instance;
             }
