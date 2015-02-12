@@ -23,6 +23,8 @@
 #include "loom/common/core/log.h"
 #include "loom/script/native/lsNativeDelegate.h"
 #include "loom/vendor/sqlite3/sqlite3.h"
+#include "loom/common/utils/utByteArray.h"
+#include "loom/common/utils/utString.h"
 
 lmDefineLogGroup(gSQLiteGroup, "loom.sqlite", 1, LoomLogInfo);
 
@@ -37,16 +39,19 @@ class Statement;
 class Connection
 {
 protected:
-    char szDBName[128];
-    char szDBFullPath[1024];
+    utString databaseName;
+    utString databaseFullPath;
     sqlite3 *dbHandle;
 
 public:
-    static Connection *open(const char *database, int flags);
+    LOOM_STATICDELEGATE(OnImportComplete);
+
+    static Connection *open(const char *database, const char *path, int flags);
+    static void backgroundImport(const char *database, const char *path, utByteArray *data);
     static const char *getVersion();
 
     Statement *prepare(const char *query);
-    const char* getDBName() { return szDBName; }
+    const char* getDBName() { return databaseName.c_str(); }
 
 
     int getErrorCode()
@@ -59,14 +64,33 @@ public:
         return sqlite3_errmsg(dbHandle);
     }
       
-    void close()
+    int getlastInsertRowId()
+    {
+        //"NOTE: In SQLite the row ID is a 64-bit integer but for all practical 
+        //database sizes you can cast the 64 bit value to a 32-bit integer."
+        //
+        // - Some Guy on The Internet
+        //
+        sqlite3_int64 rowid64 = sqlite3_last_insert_rowid(dbHandle);
+
+        //safety check on the value of the row as SQLite allows 64bit ints and Loomscript 
+        //only supports 32bit (31 for signed)
+        if(rowid64 > (2^31))
+        {
+            lmLogError(gSQLiteGroup, "RowID found in getlastInsertRowId the SQLite database %s is larger than a 32 bit integer! The return value will not be as expected!", getDBName());
+        }
+        return (int)rowid64;
+    }
+
+    int close()
     {
         //close the database
-        int res = sqlite3_close_v2(dbHandle);
-        if(res != SQLITE_OK)
+        int result = sqlite3_close_v2(dbHandle);
+        if(result != SQLITE_OK)
         {
-            lmLogError(gSQLiteGroup, "Error closing the SQLite database: %s with message: %s", szDBName, getErrorMessage());
+            lmLogError(gSQLiteGroup, "Error closing the SQLite database: %s with message: %s", getDBName(), getErrorMessage());
         }
+        return result;
     }
 };
 
@@ -77,8 +101,11 @@ class Statement
 {
 private:
     Connection *parentDB;
-    static char szReturnString[4096];
+
 public:
+    LOOM_DELEGATE(OnStatementProgress);
+    LOOM_DELEGATE(OnStatementComplete);
+
     sqlite3_stmt *statementHandle;
 
 
@@ -98,12 +125,8 @@ public:
         if(name == NULL)
         {
             lmLogError(gSQLiteGroup, "Invalid index for getParameterName in database: %s", parentDB->getDBName());
-            return NULL;
         }
-
-        //copy the string into our static return array so it survives the trip to Loomscript Land!
-        strcpy(szReturnString, name);
-        return szReturnString;
+        return name;
     }
 
     int getParameterIndex(const char* name)
@@ -146,26 +169,69 @@ public:
         return result;        
     }
 
-    // int bindBytes(int index, const sqlite3_value *value)
-    // {
-    //     int result = sqlite3_bind_value(statementHandle, index, value);
-    //     if(result != SQLITE_OK)
-    //     {
-    //         lmLogError(gSQLiteGroup, "Error calling bindString for database: %s with Result Code: %i", parentDB->getDBName(), result);
-    //     }
-    //     return result;
-    // }    
-
-    int step()
+    int bindBytes(int index, utByteArray *value)
     {
-        int result = sqlite3_step(statementHandle); 
-        if((result == SQLITE_ERROR) || (result == SQLITE_MISUSE))
+        void *bytes;
+        int size;
+
+        if(!value || !value->getSize())
         {
-            lmLogError(gSQLiteGroup, "Error calling step for database: %s with Result Code: %i", parentDB->getDBName(), result);
+            bytes = NULL;
+            size = 0;
+        }
+        else
+        {
+            bytes = value->getDataPtr();      
+            size = (int)value->getSize();
+        }
+
+        //bind the blob to the statement
+        int result = sqlite3_bind_blob(statementHandle, index, (const void *)bytes, size, SQLITE_TRANSIENT); 
+        if(result != SQLITE_OK)
+        {
+            lmLogError(gSQLiteGroup, "Error calling bindBytes for database: %s with Result Code: %i", parentDB->getDBName(), result);
         }
         return result;
     }
 
+    int step()
+    {
+        int result = sqlite3_step(statementHandle); 
+        if(result == SQLITE_ERROR)
+        {
+            lmLogError(gSQLiteGroup, "Error calling step for database: %s", parentDB->getDBName());
+        }
+        return result;
+    }
+
+    void stepAsync(lua_State *L)
+    {
+//TODO: create threaded step functionality
+//TEMP: call normal blocking step() for now
+        int result = step();
+
+//TEMP: call the progress or complete delegates immmediately for testing
+        if(result == SQLITE_ROW)
+        {
+            _OnStatementProgressDelegate.invoke();
+        }
+        else if(result == SQLITE_DONE)
+        {
+            lualoom_pushnative<Statement>(L, this);
+            _OnStatementCompleteDelegate.incArgCount();
+            _OnStatementCompleteDelegate.invoke();
+            lua_pop(L, 1);
+        }
+        else
+        {
+//TODO: Should we have an additiona _OnStatementErrorDelegate to call here?
+        }
+    }
+
+    const char *columnName(int col)
+    {
+        return sqlite3_column_name(statementHandle, col);
+    }
 
     int columnType(int col)
     {
@@ -184,21 +250,25 @@ public:
 
     const char* columnString(int col)
     {
-        const char *text = (const char *)sqlite3_column_text(statementHandle, col);
-        if(text == NULL)
+        return (const char *)sqlite3_column_text(statementHandle, col);
+    }
+
+    utByteArray *columnBytes(int col)
+    {
+        //get the blob from the column
+        void *blob = (void *)sqlite3_column_blob(statementHandle, col);
+        if(blob == NULL)
         {
             return NULL;
         }
+        int size = sqlite3_column_bytes(statementHandle, col);
 
-        //copy the string into our static return array so it survives the trip to Loomscript Land!
-        strcpy(szReturnString, text);
-        return szReturnString;
+        //valid blob so allocate byte array for it
+        utByteArray *bytes = new utByteArray();
+        bytes->allocateAndCopy(blob, size);     
+
+        return bytes;   
     }
-
-//    sqlite3_value* columnBytes(int col) //wasnt sure which SQLite method to use
-//    {
-//        return sqlite3_column_value(statementHandle, col);
-//    }
 
     int reset()
     {
@@ -219,19 +289,13 @@ public:
         }
         return result;        
     }
-
-//   sqlite3_int64 getlastInsertRowId() //the weird memory error
-//   {
-//        sqlite3 *dbHandle;
-//        return sqlite3_last_insert_rowid(dbHandle);
-//    }
-
 };
-char Statement::szReturnString[4096] = "";
 
 
 
-//**Connection** external function initialisation
+//**Connection** external function / variable initialisation
+NativeDelegate Connection::_OnImportCompleteDelegate;
+
 Statement *Connection::prepare(const char *query)
 {
     Statement *s = new Statement(this);
@@ -240,26 +304,56 @@ Statement *Connection::prepare(const char *query)
     int res = sqlite3_prepare_v2(dbHandle, query, -1, &s->statementHandle, NULL);
     if(res != SQLITE_OK)
     {
-        lmLogError(gSQLiteGroup, "Error preparing the SQLite database: %s with message: %s", szDBName, getErrorMessage());
+        lmLogError(gSQLiteGroup, "Error preparing the SQLite database: %s with message: %s", getDBName(), getErrorMessage());
     }
     return s;
 }
-Connection *Connection::open(const char *database, int flags)
-{
-    Connection *c = new Connection();
 
-    //prefix the system writable path in front of the database name
-    strcpy(c->szDBName, database);
-    sprintf(c->szDBFullPath, "%s%s", cocos2d::CCFileUtils::sharedFileUtils()->getWriteablePath().c_str(), c->szDBName);
+Connection *Connection::open(const char *database, const char *path, int flags)
+{
+    Connection *c;
+
+    //check for valid database name
+    if((database == NULL) || (database[0] == '\0'))
+    {
+        lmLogError(gSQLiteGroup, "Invalid database name specified!");
+        return NULL;
+    }
+
+    //create the connection
+    c = new Connection();
+    c->databaseName = utString(database);
     
+    //prep the database path
+    if((path == NULL) || (path[0] == '\0'))
+    {
+        //prefix the system writable path in front of the database name
+        c->databaseFullPath = utString(cocos2d::CCFileUtils::sharedFileUtils()->getWriteablePath().c_str());
+    }
+    else
+    {
+        //assume that the user specified a valid system writeable path!!!
+        c->databaseFullPath = utString(path);
+    }
+    c->databaseFullPath += c->databaseName;
+
     //open the SQLite DB
-    int res = sqlite3_open_v2(c->szDBFullPath, &c->dbHandle, flags, 0);
+    int res = sqlite3_open_v2(c->databaseFullPath.c_str(), &c->dbHandle, flags, 0);
     if(res != SQLITE_OK)
     {
-        lmLogError(gSQLiteGroup, "Error opening the SQLite database: %s with message: %s", c->szDBFullPath, c->getErrorMessage());
+        lmLogError(gSQLiteGroup, "Error opening the SQLite database file: %s with message: %s", c->databaseFullPath.c_str(), c->getErrorMessage());
     }
     return c;
 }
+
+void Connection::backgroundImport(const char *database, const char *path, utByteArray *data)
+{
+//TODO: create threaded open and update of the given database
+
+//TEMP: call the completion delegate immmediately for testing
+    _OnImportCompleteDelegate.invoke();
+}
+
 const char* Connection::getVersion()
 {
     return sqlite3_libversion();
@@ -267,62 +361,64 @@ const char* Connection::getVersion()
 
 
 
+//Loomscript binding registations for Connection and Statement
+static int registerLoomSQLiteConnection(lua_State *L)
+{
+    beginPackage(L, "loom.sqlite")
+      .beginClass<Connection>("Connection")
+
+        .addStaticProperty("onImportComplete", &Connection::getOnImportCompleteDelegate)
+
+        .addStaticMethod("open", &Connection::open)
+        .addStaticMethod("backgroundImport", &Connection::backgroundImport)
+        .addStaticMethod("__pget_version", &Connection::getVersion)
+
+        .addMethod("__pget_errorCode", &Connection::getErrorCode)
+        .addMethod("__pget_errorMessage", &Connection::getErrorMessage)
+        .addMethod("__pget_lastInsertRowId", &Connection::getlastInsertRowId)
+        .addMethod("prepare", &Connection::prepare)
+        .addMethod("close", &Connection::close)
+
+      .endClass()
+    .endPackage();
+    return 0;
+}
 
 
-
-//Loomscript binding registations
 static int registerLoomSQLiteStatement(lua_State *L)
 {
     beginPackage(L, "loom.sqlite")
       .beginClass<Statement>("Statement")
 
-//TODO: Add Statement methods
+        .addVarAccessor("onStatementProgress", &Statement::getOnStatementProgressDelegate)
+        .addVarAccessor("onStatementComplete", &Statement::getOnStatementCompleteDelegate)
+
         .addMethod("getParameterCount", &Statement::getParameterCount)
         .addMethod("getParameterName", &Statement::getParameterName)
         .addMethod("getParameterIndex", &Statement::getParameterIndex)
         .addMethod("bindInt", &Statement::bindInt)
         .addMethod("bindDouble", &Statement::bindDouble)
         .addMethod("bindString", &Statement::bindString)
-     //   .addMethod("bindBytes", &Statement::bindBytes)
+        .addMethod("bindBytes", &Statement::bindBytes)
         .addMethod("step", &Statement::step)
+        .addMethod("stepAsync", &Statement::stepAsync)
+        .addMethod("columnName", &Statement::columnName)
         .addMethod("columnType", &Statement::columnType)
         .addMethod("columnInt", &Statement::columnInt)
         .addMethod("columnDouble", &Statement::columnDouble)
         .addMethod("columnString", &Statement::columnString)
-    //    .addMethod("columnBytes", &Statement::columnBytes)
+        .addMethod("columnBytes", &Statement::columnBytes)
         .addMethod("reset", &Statement::reset)
         .addMethod("finalize", &Statement::finalize)
-    //    .addMethod("getlastInsertRowId", &Statement::getlastInsertRowId)
-
-//TODO: Add Async methods
 
       .endClass()
     .endPackage();
     return 0;
 }
 
-static int registerLoomSQLiteConnection(lua_State *L)
-{
-    beginPackage(L, "loom.sqlite")
-      .beginClass<Connection>("Connection")
-
-        .addStaticMethod("open", &Connection::open)
-        .addStaticMethod("__pget_version", &Connection::getVersion)
-
-        .addMethod("prepare", &Connection::prepare)
-        .addMethod("close", &Connection::close)
-        .addMethod("__pget_errorCode", &Connection::getErrorCode)
-        .addMethod("__pget_errorMessage", &Connection::getErrorMessage)
-
-//TODO: Add Async methods
-
-      .endClass()
-    .endPackage();
-    return 0;
-}
 
 void installLoomSQLite()
 {
-    LOOM_DECLARE_NATIVETYPE(Statement, registerLoomSQLiteStatement);
     LOOM_DECLARE_NATIVETYPE(Connection, registerLoomSQLiteConnection);
+    LOOM_DECLARE_NATIVETYPE(Statement, registerLoomSQLiteStatement);
 }
