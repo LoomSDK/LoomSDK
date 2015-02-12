@@ -29,7 +29,10 @@ package
 		var statement:Statement;
 		var queryInput:TextInput;
 
-		var row1:Vector.<Label> = [];
+		var grid:Vector.<Vector.<Label>> =[];
+		
+
+
 
         //Import the Feathers theme we'll use for our controls
         public var theme:MetalWorksMobileTheme;
@@ -65,54 +68,73 @@ package
             
 			openConnection();
 
-/*
-			prepareStatement("CREATE TABLE test_table(id int, name varchar(255))");
-			statement.step();
-			prepareStatement("INSERT INTO test_table(id , name) VALUES (1, 'kevin')");
-			statement.step();
 
-		*/
+			//prepareStatement("CREATE TABLE test_table(id int, name varchar(255), surname varchar(255), age int)");
+			//statement.step();
 
 		//	insert();
 
-			prepareStatement("SELECT * FROM test_table");
+		//	update();
 
-			while (statement.step() == 100)
-				testTrace();
+		//	selectAll();		
+
+			createOutputGrid();
+		//	displayData();
+		var time =  timeQuery(function(){statement = connection.prepare("SELECT * FROM test_table");}, 1000);
+
+		grid[2][2].text = "time: " + time + "ms" ;
         }
 
         private function createOutputGrid()
         {
-        	var label = new Label();
-            label.text = "sdawasd";
-            label.y=300;
-            label.x = stage.stageWidth / 2;
-            stage.addChild(label);
-    		row1.push(label); 
+        	var label:Label;
+        	for (var j = 0; j < 4; j++) 
+        	{
+        		var row:Vector.<Label> = [];
+	        	for (var i = 0; i < 5; i++) 
+	        	{
+					label = new Label();
+		            label.text = "";
+		            label.width = 60;
+		            label.y = 300 + (40 * j);
+		            label.x = label.width * i;
+		            stage.addChild(label);
+		    		row.push(label);      	
+	        	}
+	        	grid.push(row);
+        	}
         }
 
         private function update()
         {
-        	prepareStatement("UPDATE test_table SET id=?, name=? WHERE id=?");
-
-			statement.bindInt(1, 34);
-			statement.bindString(2, "update_string");
-			statement.bindInt(1, 666);
-
+        	prepareStatement("UPDATE test_table SET id=1, name='Kevin' WHERE id=1");
 			statement.step();
 			statement.finalize();
+        }
+
+        private function timeQuery(f:Function, runCount:int):Number
+        {
+        	var start = Platform.getTime();
+
+        	for (var i = 0; i < runCount; i++) 
+        	{
+        		f.call();
+        	};
+
+        	return Platform.getTime() - start;
+        }
+
+        private function selectAll()
+        {
+        	prepareStatement("SELECT * FROM test_table");	
         }
 
         private function insert()
         {
         	prepareStatement("insert into test_table values (?,?)");
 
-        	var bytes = new ByteArray();
-        	bytes.writeDouble(1234);
-        	bytes.writeString("byte_test");
-
-			statement.bindInt(1, 111);
-			statement.bindBytes(2, bytes);
+			statement.bindInt(1, 1);
+			statement.bindString(2, "Kevin");
 
 			statement.step();
 			statement.finalize();
@@ -122,7 +144,8 @@ package
         {
         	prepareStatement(queryInput.text);
 			statement.step();
-			testTrace();
+			
+			displayData();
         }
 
 		private function openConnection()
@@ -151,31 +174,46 @@ package
 			//trace (statement.columnBytes(0) + " " + statement.columnBytes(1));
 		}
 
-		/*
+		
 		private function displayData()
 		{
+			clearGrid();
 			var rowCount = 0;
-			while (statement.step() == ResultCode.SQLITE_ROW)
+			while (statement.step() == ResultCode.SQLITE_ROW && rowCount < 4)
 			{
 				for (var i = 0; i < 5; i++) 
 				{
-					var currentColType = statement.colType(i);
+					var currentColType = statement.columnType(i);
 
 					switch (currentColType)
 					{
-						case DataType.SQLITE_INTEGER 	: label[rowCount][i].tesxt = statemment.colunmInt;
+						case DataType.SQLITE_INTEGER 	: grid[rowCount][i].text = statement.columnInt(i).toString();
 							break;
-						case DataType.SQLITE_FLOAT 		: label[rowCount][i].tesxt = statement.columndouble;
+						case DataType.SQLITE_FLOAT 		: grid[rowCount][i].text = statement.columnDouble(i).toString();
 							break;
-						case DataType.SQLITE_TEXT 		: label[rowCount][i].tesxt = statement.columnstring;
+						case DataType.SQLITE_TEXT 		: grid[rowCount][i].text = statement.columnString(i);
 							break;
-						case DataType.SQLITE_NULL		: i = 5;
+						case DataType.SQLITE_BLOB		: grid[rowCount][i].text = "BLOB";
+							break;
+						case DataType.SQLITE_NULL		: grid[rowCount][i].text = "";
 							break;
 					}
 				};	
 				rowCount++;
 			}
+			statement.finalize();
 		}
-		*/
+
+		private function clearGrid()
+		{
+			for (var i = 0; i < 4; i++) 
+			{
+				for (var j = 0; j < 5; j++) 
+				{
+					grid[i][j].text = "";
+				};
+			};
+		}
+		
 	}
 }
