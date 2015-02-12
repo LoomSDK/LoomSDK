@@ -48,9 +48,9 @@ package
 
             queryInput = new TextInput();
             queryInput.width = stage.stageWidth - 25;
-            queryInput.height = 100;
+            queryInput.height = 200;
             queryInput.x = 12.5;
-            queryInput.y = 150;            
+            queryInput.y = 50;            
             queryInput.prompt = "SQL query";                        
             queryInput.maxChars = 100; 
             queryInput.isEditable = true;                                
@@ -69,20 +69,18 @@ package
 			openConnection();
 
 
-			//prepareStatement("CREATE TABLE test_table(id int, name varchar(255), surname varchar(255), age int)");
-			//statement.step();
+		//	prepareStatement("CREATE TABLE test_table(id int, name varchar(255), surname varchar(255), age int)");
+		//	statement.step();
 
 		//	insert();
 
 		//	update();
 
-		//	selectAll();		
+			selectAll();	
 
 			createOutputGrid();
-		//	displayData();
-		var time =  timeQuery(function(){statement = connection.prepare("SELECT * FROM test_table");}, 1000);
-
-		grid[2][2].text = "time: " + time + "ms" ;
+			displayData();
+		//var time =  timeQuery(function(){statement = connection.prepare("SELECT * FROM test_table");}, 1000);
         }
 
         private function createOutputGrid()
@@ -91,11 +89,11 @@ package
         	for (var j = 0; j < 4; j++) 
         	{
         		var row:Vector.<Label> = [];
-	        	for (var i = 0; i < 5; i++) 
+	        	for (var i = 0; i < 4; i++) 
 	        	{
 					label = new Label();
 		            label.text = "";
-		            label.width = 60;
+		            label.width = 75;
 		            label.y = 300 + (40 * j);
 		            label.x = label.width * i;
 		            stage.addChild(label);
@@ -131,10 +129,12 @@ package
 
         private function insert()
         {
-        	prepareStatement("insert into test_table values (?,?)");
+        	prepareStatement("insert into test_table values (?,?,?,?)");
 
-			statement.bindInt(1, 1);
-			statement.bindString(2, "Kevin");
+			statement.bindInt(1, 2);
+			statement.bindString(2, "Joe");
+			statement.bindString(3, "Soap");
+			statement.bindInt(4, 45);
 
 			statement.step();
 			statement.finalize();
@@ -144,7 +144,7 @@ package
         {
         	prepareStatement(queryInput.text);
 			statement.step();
-			
+			statement.reset();
 			displayData();
         }
 
@@ -166,22 +166,14 @@ package
 		    }
 		}
 
-		private function testTrace()
-		{
-			var bytes = statement.columnBytes(1);
-			trace (bytes.readDouble() + " " + bytes.readString());
-			//trace (statement.columnType(0) + " " + statement.columnType(1));
-			//trace (statement.columnBytes(0) + " " + statement.columnBytes(1));
-		}
-
-		
 		private function displayData()
 		{
 			clearGrid();
-			var rowCount = 0;
+			getColumnNames();
+			var rowCount = 1;
 			while (statement.step() == ResultCode.SQLITE_ROW && rowCount < 4)
 			{
-				for (var i = 0; i < 5; i++) 
+				for (var i = 0; i < 4; i++) 
 				{
 					var currentColType = statement.columnType(i);
 
@@ -204,11 +196,19 @@ package
 			statement.finalize();
 		}
 
+		private function getColumnNames()
+		{
+			for (var i = 0; i < 4; i++) 
+			{
+				grid[0][i].text = statement.columnName(i) ;
+			};
+		}
+
 		private function clearGrid()
 		{
 			for (var i = 0; i < 4; i++) 
 			{
-				for (var j = 0; j < 5; j++) 
+				for (var j = 0; j < 4; j++) 
 				{
 					grid[i][j].text = "";
 				};
