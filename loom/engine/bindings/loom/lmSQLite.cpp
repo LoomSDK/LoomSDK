@@ -20,11 +20,14 @@
 
 #include "platform/CCFileUtils.h"
 #include "loom/script/loomscript.h"
+#include "loom/script/runtime/lsRuntime.h"
 #include "loom/common/core/log.h"
 #include "loom/script/native/lsNativeDelegate.h"
 #include "loom/vendor/sqlite3/sqlite3.h"
 #include "loom/common/utils/utByteArray.h"
 #include "loom/common/utils/utString.h"
+ #include "loom/common/platform/platformThread.h"
+
 
 lmDefineLogGroup(gSQLiteGroup, "loom.sqlite", 1, LoomLogInfo);
 
@@ -99,14 +102,16 @@ public:
 //SQLite Statement binding for Loomscript
 class Statement
 {
-private:
-    Connection *parentDB;
-
 public:
     LOOM_DELEGATE(OnStatementProgress);
     LOOM_DELEGATE(OnStatementComplete);
 
+    MutexHandle stepAsyncDelegateMutex;
+    lua_State *stepAsyncLuaState;
+    Connection *parentDB;
     sqlite3_stmt *statementHandle;
+
+    static int __stdcall stepAsyncBody(void *param);
 
 
     Statement(Connection *c)
@@ -206,27 +211,20 @@ public:
 
     void stepAsync(lua_State *L)
     {
-//TODO: create threaded step functionality
-//TEMP: call normal blocking step() for now
-        int result = step();
-
-//TEMP: call the progress or complete delegates immmediately for testing
-        if(result == SQLITE_ROW)
-        {
-            _OnStatementProgressDelegate.invoke();
-        }
-        else if(result == SQLITE_DONE)
-        {
-            lualoom_pushnative<Statement>(L, this);
-            _OnStatementCompleteDelegate.incArgCount();
-            _OnStatementCompleteDelegate.invoke();
-            lua_pop(L, 1);
-        }
-        else
-        {
-//TODO: Should we have an additiona _OnStatementErrorDelegate to call here?
-        }
+//BEN QUESTION: I need L in order to lualoom_pushnative<> the Statement into the Delegate 
+//              in the thread onComplete... but obviously it doen't always remain valid from 
+//              this call until the time for it to be used at the end of the stepAsync() thread... 
+//              what other options are there for me to pass the Statement through to the Delegate?
+//
+//              NOTE: This wont be an issue if we can nuke the Statement from needing to be passed
+//                    into the onStatementComplete delegate... which i'm still not sure why it is
+//                    done there but not for onStatementProgress...
+//
+//HACK: NOT STABLE!!!!
+stepAsyncLuaState = L;
+        loom_thread_start(Statement::stepAsyncBody, this);    
     }
+
 
     const char *columnName(int col)
     {
@@ -292,8 +290,53 @@ public:
 };
 
 
+//---Statement--- external function initialisation
+int __stdcall Statement::stepAsyncBody(void *param)
+{
+    //get the statement
+    Statement *s = (Statement *)param;
 
-//**Connection** external function / variable initialisation
+
+    //call the internal SQLite step function, then yield the thread
+    int result = sqlite3_step(s->statementHandle); 
+    loom_thread_yield();
+
+    //mutex so we can call the delegate
+    s->stepAsyncDelegateMutex = loom_mutex_create();
+    loom_mutex_lock(s->stepAsyncDelegateMutex);
+
+    //check the result now
+    if(result == SQLITE_ROW)
+    {
+        s->_OnStatementProgressDelegate.invoke();
+    }
+    else if(result == SQLITE_DONE)
+    {
+//HACK: s->stepAsyncLuaState is not working as it can be unstable... 
+//      need another way to pass the Statement through to OnStatementComplete!!!
+lualoom_pushnative<Statement>(s->stepAsyncLuaState, s);
+s->_OnStatementCompleteDelegate.incArgCount();
+s->_OnStatementCompleteDelegate.invoke();
+lua_pop(s->stepAsyncLuaState, 1);
+    }
+    else
+    {
+        if(result == SQLITE_ERROR)
+        {
+            lmLogError(gSQLiteGroup, "Error calling step for database: %s", s->parentDB->getDBName());
+        }
+//TODO: Should we have an additiona _OnStatementErrorDelegate to call here?
+    }
+
+    //we're done now!
+    loom_mutex_unlock(s->stepAsyncDelegateMutex);
+}
+
+
+
+
+
+//---Connection--- external function / variable initialisation
 NativeDelegate Connection::_OnImportCompleteDelegate;
 
 Statement *Connection::prepare(const char *query)

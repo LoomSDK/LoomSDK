@@ -340,7 +340,7 @@ package loom.sqlite
 //BEN QUESTION: How should the functionality of the Result ROW/DONE be handled here?  
 //              Should onStatementProgress be called when the result is ROW, and onStatementComplete c
 //              alled when the result is DONE? What about errors / other codes like MISUSE? 
-//              Should we make a "onStatementError" or something that is called then?
+//              Should we make a "onStatementError" or something that is called in those cases?
         public native function stepAsync():void;
  
         /**
