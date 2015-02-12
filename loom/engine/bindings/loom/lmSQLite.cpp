@@ -101,7 +101,7 @@ class Statement
 {
 private:
     Connection *parentDB;
-    // static char szReturnString[4096];
+
 public:
     LOOM_DELEGATE(OnStatementProgress);
     LOOM_DELEGATE(OnStatementComplete);
@@ -125,15 +125,8 @@ public:
         if(name == NULL)
         {
             lmLogError(gSQLiteGroup, "Invalid index for getParameterName in database: %s", parentDB->getDBName());
-//TODO: verify that the string doesn't need to be copied into a static before returning and that it remains not-garbage in LS, etc.
-            // return NULL;
         }
-
         return name;
-//TODO: verify that the string doesn't need to be copied into a static before returning and that it remains not-garbage in LS, etc.
-        // // copy the string into our static return array so it survives the trip to Loomscript Land!
-        // strcpy(szReturnString, name);
-        // return szReturnString;
     }
 
     int getParameterIndex(const char* name)
@@ -176,33 +169,20 @@ public:
         return result;        
     }
 
-    int bindBytes(lua_State *L)
+    int bindBytes(int index, utByteArray *value)
     {
-        int index;
         void *bytes;
         int size;
 
-        if (!lua_isnumber(L, 2) || !lualoom_checkinstancetype(L, 3, "system.ByteArray"))
-        {
-            lmLogError(gSQLiteGroup, "Invalid parameters passed to bindBytes for database: %s", parentDB->getDBName());
-            lua_pushnumber(L, SQLITE_ERROR);
-            return 1;
-        }
-
-        //get the index we are binding to from lua
-        index = (int)lua_tonumber(L, 2);
-
-        //get our ByteArray from lua
-        utByteArray *byteArray = (utByteArray *)lualoom_getnativepointer(L, 3);
-        if(!byteArray || !byteArray->getSize())
+        if(!value || !value->getSize())
         {
             bytes = NULL;
             size = 0;
         }
         else
         {
-            bytes = byteArray->getDataPtr();      
-            size = (int)byteArray->getSize();
+            bytes = value->getDataPtr();      
+            size = (int)value->getSize();
         }
 
         //bind the blob to the statement
@@ -211,29 +191,46 @@ public:
         {
             lmLogError(gSQLiteGroup, "Error calling bindBytes for database: %s with Result Code: %i", parentDB->getDBName(), result);
         }
-        lua_pushnumber(L, result);
-
-        return 1;
+        return result;
     }
 
     int step()
     {
         int result = sqlite3_step(statementHandle); 
-        if(result != SQLITE_OK)
+        if(result == SQLITE_ERROR)
         {
-            lmLogError(gSQLiteGroup, "Error calling bindString for database: %s with Result Code: %i", parentDB->getDBName(), result);
+            lmLogError(gSQLiteGroup, "Error calling step for database: %s", parentDB->getDBName());
         }
         return result;
     }
 
-    void stepAsync()
+    void stepAsync(lua_State *L)
     {
 //TODO: create threaded step functionality
+//TEMP: call normal blocking step() for now
+        int result = step();
 
-//TEMP: call the progress and complete delegates immmediately for testing
-        _OnStatementProgressDelegate.invoke();
-        _OnStatementCompleteDelegate.pushArgument(this);
-        _OnStatementCompleteDelegate.invoke();
+//TEMP: call the progress or complete delegates immmediately for testing
+        if(result == SQLITE_ROW)
+        {
+            _OnStatementProgressDelegate.invoke();
+        }
+        else if(result == SQLITE_DONE)
+        {
+            lualoom_pushnative<Statement>(L, this);
+            _OnStatementCompleteDelegate.incArgCount();
+            _OnStatementCompleteDelegate.invoke();
+            lua_pop(L, 1);
+        }
+        else
+        {
+//TODO: Should we have an additiona _OnStatementErrorDelegate to call here?
+        }
+    }
+
+    const char *columnName(int col)
+    {
+        return sqlite3_column_name(statementHandle, col);
     }
 
     int columnType(int col)
@@ -254,40 +251,23 @@ public:
     const char* columnString(int col)
     {
         return (const char *)sqlite3_column_text(statementHandle, col);
-//TODO: verify that the string doesn't need to be copied into a static before returning and that it remains not-garbage in LS, etc.
-        // const char *text = (const char *)sqlite3_column_text(statementHandle, col);
-        // if(text == NULL)
-        // {
-        //     return NULL;
-        // }
-
-        // return text;
-        // //copy the string into our static return array so it survives the trip to Loomscript Land!
-        // strcpy(szReturnString, text);
-        // return szReturnString;
     }
 
-    int columnBytes(lua_State *L)
+    utByteArray *columnBytes(int col)
     {
-        //get the column
-        int col = (int)lua_tonumber(L, 2);
-
         //get the blob from the column
         void *blob = (void *)sqlite3_column_blob(statementHandle, col);
         if(blob == NULL)
         {
-            lua_pushnil(L);
-            return 1;
+            return NULL;
         }
         int size = sqlite3_column_bytes(statementHandle, col);
 
         //valid blob so allocate byte array for it
         utByteArray *bytes = new utByteArray();
-        bytes->allocateAndCopy(blob, size);
+        bytes->allocateAndCopy(blob, size);     
 
-        //go lua go!
-        lualoom_pushnative<utByteArray>(L, bytes);
-        return 1;
+        return bytes;   
     }
 
     int reset()
@@ -310,9 +290,6 @@ public:
         return result;        
     }
 };
-
-// char Statement::szReturnString[4096] = "";
-
 
 
 
@@ -422,14 +399,15 @@ static int registerLoomSQLiteStatement(lua_State *L)
         .addMethod("bindInt", &Statement::bindInt)
         .addMethod("bindDouble", &Statement::bindDouble)
         .addMethod("bindString", &Statement::bindString)
-        .addLuaFunction("bindBytes", &Statement::bindBytes)
+        .addMethod("bindBytes", &Statement::bindBytes)
         .addMethod("step", &Statement::step)
         .addMethod("stepAsync", &Statement::stepAsync)
+        .addMethod("columnName", &Statement::columnName)
         .addMethod("columnType", &Statement::columnType)
         .addMethod("columnInt", &Statement::columnInt)
         .addMethod("columnDouble", &Statement::columnDouble)
         .addMethod("columnString", &Statement::columnString)
-        .addLuaFunction("columnBytes", &Statement::columnBytes)
+        .addMethod("columnBytes", &Statement::columnBytes)
         .addMethod("reset", &Statement::reset)
         .addMethod("finalize", &Statement::finalize)
 

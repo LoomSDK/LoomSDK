@@ -34,7 +34,6 @@ package loom.sqlite
      *      while(stmt.step() == Statement.ROW) trace("Saw rate of " + stmt.columnNumber(1));
      *      stmt.finalize();
      *      c.close();
-     *
      */
 
     /**
@@ -74,9 +73,16 @@ package loom.sqlite
         SQLITE_ERROR    = 1,
 
         /** 
-         * The database is currently BUSY handling another process.
+         * The database is currently BUSY handling another process, 
+         * due to a conflict with a different connection.
          */
         SQLITE_BUSY     = 5,
+
+        /** 
+         * The database is currently LOCKED handling another process, 
+         * due to a conflict with the current connection.
+         */
+        SQLITE_LOCKED   = 6,
 
         /** 
          * The current action is a MISUSE of of the SQLite interface.
@@ -171,6 +177,8 @@ package loom.sqlite
          *  @param path System writeable path location to store the database file, or null for the root.
          *  @param data Chunk of data to import into the database.
          */
+//TODO: Make actual asynchronous functionality. 
+//      Currently does nothing except call the onImportComplete delegate 
         public static native function backgroundImport(database:String, path:String, data:ByteArray):void;
 
         /**
@@ -254,35 +262,146 @@ package loom.sqlite
         public native var onStatementComplete:StatementComplete;
 
 
-
-        // Query parameters by name, index, etc.
+        /**
+         * Returns the number of parameters in the current query.
+         *  @return int Parameter count.
+         */
         public native function getParameterCount():int;
+
+        /**
+         * Returns the name of the specified parameter in the current query.
+         *  @param index Index of the parameter to search for. 
+         *               The left-most (first) paramater is index 1.
+         *  @return String Parameter name.
+         */
         public native function getParameterName(index:int):String;
+
+        /**
+         * Returns the index of the specified parameter in the current query.
+         *  @param name Name of the parameter to search for.
+         *  @return int Parameter index.
+         */
         public native function getParameterIndex(name:String):int;
  
-        // Interface to set query parameters.
+        /**
+         * Sets an integeter query parameter for the given index.
+         *  @param index Index of the parameter to bind the value to. 
+         *               The left-most (first) paramater is index 1.
+         *  @param value Integer value to set
+         *  @return ResultCode Result of the bind.
+         */
         public native function bindInt(index:int, value:int):ResultCode;
+
+        /**
+         * Sets a floating point query parameter for the given index.
+         *  @param index Index of the parameter to bind the value to. 
+         *               The left-most (first) paramater is index 1.
+         *  @param value Floating point value to set
+         *  @return ResultCode Result of the bind.
+         */
         public native function bindDouble(index:int, value:Number):ResultCode;
+
+        /**
+         * Sets a string query parameter for the given index.
+         *  @param index Index of the parameter to bind the value to. 
+         *               The left-most (first) paramater is index 1.
+         *  @param value String value to set
+         *  @return ResultCode Result of the bind.
+         */
         public native function bindString(index:int, value:String):ResultCode;
+
+        /**
+         * Sets a ByteArray query parameter for the given index.
+         *  @param index Index of the parameter to bind the value to. 
+         *               The left-most (first) paramater is index 1.
+         *  @param value ByteArray value to set
+         *  @return ResultCode Result of the bind.
+         */
         public native function bindBytes(index:int, value:ByteArray):ResultCode;
  
-        // Advance to next result.
+        /**
+         * Blocking function that advances the statement to the next result in the query.
+         *  @return ResultCode Result of the step. Common values of this are:
+                               ResultCode.SQLITE_ROW indicates that there is valid data.
+                               ResultCode.SQLITE_DONE indicates that the end of the statement has been reached.
+                               ResultCode.SQLITE_MISUSE indicates invalid data in the query.
+         */
         public native function step():ResultCode;
 
-        // Asynchronously advance to next result.
+        /**
+         * Asynchronous function that advances the statement to the next result in the query.
+         *  @return ResultCode Result of the step. Common values of this are:
+                               ResultCode.SQLITE_ROW indicates that there is valid data.
+                               ResultCode.SQLITE_DONE indicates that the end of the statement has been reached.
+                               ResultCode.SQLITE_MISUSE indicates invalid data in the query.
+         */
+//TODO: Make actual asynchronous functionality. 
+//      Currently just calls step() followed by either the onStatementProgress or onStatementComplete delegates
+//BEN QUESTION: How should the functionality of the Result ROW/DONE be handled here?  
+//              Should onStatementProgress be called when the result is ROW, and onStatementComplete c
+//              alled when the result is DONE? What about errors / other codes like MISUSE? 
+//              Should we make a "onStatementError" or something that is called then?
         public native function stepAsync():void;
  
-        // Retrieve result column from current row.
+        /**
+         * Retrieves the name of the specified column in the current row of the query.
+         *  @param index Index of the column to retrieve the name from.
+         *               The left-most (first) paramater is index 0.
+         *  @return String Name of the column.
+         */
+        public native function columnName(index:int):String;
+
+        /**
+         * Retrieves the type of data that specified column is used to storein the 
+         * current row of the query.
+         *  @param index Index of the column to retrieve the type from.
+         *               The left-most (first) paramater is index 0.
+         *  @return DataType Enumation value defining the type of data for the column.
+         */
         public native function columnType(index:int):DataType;
+
+        /**
+         * Retrieves an integer value from the specified column in the current row of the query.
+         *  @param index Index of the column to retrieve the data from.
+         *               The left-most (first) paramater is index 0.
+         *  @return int Integer value stored in this column.
+         */
         public native function columnInt(index:int):int;
+
+        /**
+         * Retrieves a floating point value from the specified column in the current row of the query.
+         *  @param index Index of the column to retrieve the data from.
+         *               The left-most (first) paramater is index 0.
+         *  @return float Floating point value stored in this column.
+         */
         public native function columnDouble(index:int):Number;
+
+        /**
+         * Retrieves a string from the specified column in the current row of the query.
+         *  @param index Index of the column to retrieve the data from.
+         *               The left-most (first) paramater is index 0.
+         *  @return String String stored in this column.
+         */
         public native function columnString(index:int):String;
+
+        /**
+         * Retrieves a byte array from the specified column in the current row of the query.
+         *  @param index Index of the column to retrieve the data from.
+         *               The left-most (first) paramater is index 0.
+         *  @return ByteArray Byte array stored in this column.
+         */
         public native function columnBytes(index:int):ByteArray;
  
-        // Reset the statement.
+        /**
+         * Resets this statement back to its initial state so that it can be re-executed.
+         *  @return ResultCode Result of the function call.
+         */
         public native function reset():ResultCode;
  
-        // Clean up this statement.
+        /**
+         * Deletes and cleans up this statement.
+         *  @return ResultCode Result of the function call.
+         */
         public native function finalize():ResultCode;
     }    
 }
