@@ -21,10 +21,10 @@
 #include "platform/CCFileUtils.h"
 #include "loom/script/loomscript.h"
 #include "loom/common/core/log.h"
-#include "loom/common/utils/utByteArray.h"
 #include "loom/script/native/lsNativeDelegate.h"
 #include "loom/vendor/sqlite3/sqlite3.h"
 #include "loom/common/utils/utByteArray.h"
+#include "loom/common/utils/utString.h"
 
 lmDefineLogGroup(gSQLiteGroup, "loom.sqlite", 1, LoomLogInfo);
 
@@ -39,16 +39,16 @@ class Statement;
 class Connection
 {
 protected:
-    char szDBName[128];
-    char szDBFullPath[1024];
+    utString databaseName;
+    utString databaseFullPath;
     sqlite3 *dbHandle;
 
 public:
-    static Connection *open(const char *database, int flags);
+    static Connection *open(const char *database, const char *path, int flags);
     static const char *getVersion();
 
     Statement *prepare(const char *query);
-    const char* getDBName() { return szDBName; }
+    const char* getDBName() { return databaseName.c_str(); }
 
 
     int getErrorCode()
@@ -68,18 +68,25 @@ public:
         //
         // - Some Guy on The Internet
         //
-        int rowid = (int)sqlite3_last_insert_rowid(dbHandle);
-        return rowid;
+        sqlite3_int64 rowid64 = sqlite3_last_insert_rowid(dbHandle);
+
+        //safety check on the value of the row as SQLite allows 64bit ints and Loomscript only supports 32bit (31 for signed)
+        if(rowid64 > (2^31))
+        {
+            lmLogError(gSQLiteGroup, "RowID found in getlastInsertRowId the SQLite database %s is larger than a 32 bit integer! The return value will not be as expected!", getDBName());
+        }
+        return (int)rowid64;
     }
 
-    void close()
+    int close()
     {
         //close the database
-        int res = sqlite3_close_v2(dbHandle);
-        if(res != SQLITE_OK)
+        int result = sqlite3_close_v2(dbHandle);
+        if(result != SQLITE_OK)
         {
-            lmLogError(gSQLiteGroup, "Error closing the SQLite database: %s with message: %s", szDBName, getErrorMessage());
+            lmLogError(gSQLiteGroup, "Error closing the SQLite database: %s with message: %s", getDBName(), getErrorMessage());
         }
+        return result;
     }
 };
 
@@ -90,7 +97,7 @@ class Statement
 {
 private:
     Connection *parentDB;
-    static char szReturnString[4096];
+    // static char szReturnString[4096];
 public:
     sqlite3_stmt *statementHandle;
 
@@ -111,12 +118,15 @@ public:
         if(name == NULL)
         {
             lmLogError(gSQLiteGroup, "Invalid index for getParameterName in database: %s", parentDB->getDBName());
-            return NULL;
+//TODO: verify that the string doesn't need to be copied into a static before returning and that it remains not-garbage in LS, etc.
+            // return NULL;
         }
 
-        //copy the string into our static return array so it survives the trip to Loomscript Land!
-        strcpy(szReturnString, name);
-        return szReturnString;
+        return name;
+//TODO: verify that the string doesn't need to be copied into a static before returning and that it remains not-garbage in LS, etc.
+        // // copy the string into our static return array so it survives the trip to Loomscript Land!
+        // strcpy(szReturnString, name);
+        // return szReturnString;
     }
 
     int getParameterIndex(const char* name)
@@ -158,7 +168,6 @@ public:
         }
         return result;        
     }
-
 
     int bindBytes(lua_State *L)
     {
@@ -203,7 +212,7 @@ public:
     int step()
     {
         int result = sqlite3_step(statementHandle); 
-        if((result == SQLITE_ERROR) || (result == SQLITE_MISUSE))
+        if(result != SQLITE_OK)
         {
             lmLogError(gSQLiteGroup, "Error calling bindString for database: %s with Result Code: %i", parentDB->getDBName(), result);
         }
@@ -227,15 +236,18 @@ public:
 
     const char* columnString(int col)
     {
-        const char *text = (const char *)sqlite3_column_text(statementHandle, col);
-        if(text == NULL)
-        {
-            return NULL;
-        }
+        return (const char *)sqlite3_column_text(statementHandle, col);
+//TODO: verify that the string doesn't need to be copied into a static before returning and that it remains not-garbage in LS, etc.
+        // const char *text = (const char *)sqlite3_column_text(statementHandle, col);
+        // if(text == NULL)
+        // {
+        //     return NULL;
+        // }
 
-        //copy the string into our static return array so it survives the trip to Loomscript Land!
-        strcpy(szReturnString, text);
-        return szReturnString;
+        // return text;
+        // //copy the string into our static return array so it survives the trip to Loomscript Land!
+        // strcpy(szReturnString, text);
+        // return szReturnString;
     }
 
     int columnBytes(lua_State *L)
@@ -282,7 +294,7 @@ public:
     }
 };
 
-char Statement::szReturnString[4096] = "";
+// char Statement::szReturnString[4096] = "";
 
 
 
@@ -296,26 +308,48 @@ Statement *Connection::prepare(const char *query)
     int res = sqlite3_prepare_v2(dbHandle, query, -1, &s->statementHandle, NULL);
     if(res != SQLITE_OK)
     {
-        lmLogError(gSQLiteGroup, "Error preparing the SQLite database: %s with message: %s", szDBName, getErrorMessage());
+        lmLogError(gSQLiteGroup, "Error preparing the SQLite database: %s with message: %s", getDBName(), getErrorMessage());
     }
     return s;
 }
-Connection *Connection::open(const char *database, int flags)
-{
-    Connection *c = new Connection();
 
-    //prefix the system writable path in front of the database name
-    strcpy(c->szDBName, database);
-    sprintf(c->szDBFullPath, "%s%s", cocos2d::CCFileUtils::sharedFileUtils()->getWriteablePath().c_str(), c->szDBName);
+Connection *Connection::open(const char *database, const char *path, int flags)
+{
+    Connection *c;
+
+    //check for valid database name
+    if((database == NULL) || (database[0] == '\0'))
+    {
+        lmLogError(gSQLiteGroup, "Invalid database name specified!");
+        return NULL;
+    }
+
+    //create the connection
+    c = new Connection();
+    c->databaseName = utString(database);
     
+    //prep the database path
+    if((path == NULL) || (path[0] == '\0'))
+    {
+        //prefix the system writable path in front of the database name
+        c->databaseFullPath = utString(cocos2d::CCFileUtils::sharedFileUtils()->getWriteablePath().c_str());
+    }
+    else
+    {
+        //assume that the user specified a valid system writeable path!!!
+        c->databaseFullPath = utString(path);
+    }
+    c->databaseFullPath += c->databaseName;
+
     //open the SQLite DB
-    int res = sqlite3_open_v2(c->szDBFullPath, &c->dbHandle, flags, 0);
+    int res = sqlite3_open_v2(c->databaseFullPath.c_str(), &c->dbHandle, flags, 0);
     if(res != SQLITE_OK)
     {
-        lmLogError(gSQLiteGroup, "Error opening the SQLite database: %s with message: %s", c->szDBFullPath, c->getErrorMessage());
+        lmLogError(gSQLiteGroup, "Error opening the SQLite database file: %s with message: %s", c->databaseFullPath.c_str(), c->getErrorMessage());
     }
     return c;
 }
+
 const char* Connection::getVersion()
 {
     return sqlite3_libversion();

@@ -105,7 +105,7 @@ package loom.sqlite
         /**
          * Return the most recent error code from SQLite (not threadsafe).  
          * Value will most likely be one of those defined in ResultCode (ie. can be checked 
-         * against ResultCode.SQLITE_OK), but potentially could differ and be any 
+         * against ResultCode.SQLITE_OK), but potentially could differ and be another SQLITE code
          */
         public native function get errorCode():int;
  
@@ -116,14 +116,19 @@ package loom.sqlite
 
         /**
          * Returns the returns the rowid of the most recent successful INSERT into a table 
-         * of this database connection
+         * of this database connection.
+         *
+         * NOTE: As Loomscript only supports 32 bit integers, this function will not return
+         * the expected value if there are more than 2^31 rows in the database.
+         *
          */
         public native function get lastInsertRowId():int;
          
         /**
-         * Opens a SQLite database.
+         * Opens a SQLite database.  If path is not null, it needs to be a valid system path that begins 
+         * with "Path.getWritablePath()".
          */
-        public static native function open(database:String, flags:int = FLAG_READWRITE):Connection;
+        public static native function open(database:String, path:String = null, flags:int = FLAG_READWRITE):Connection;
  
         /**
          * Prepares an SQL statement(s) for processing.
@@ -133,7 +138,7 @@ package loom.sqlite
         /**
          * Closes this database connection.
          */
-        public native function close():void;
+        public native function close():ResultCode;
     }
 
 

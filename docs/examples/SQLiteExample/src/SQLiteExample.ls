@@ -36,7 +36,6 @@ package
             label.y = stage.stageHeight / 2 - 100;
             stage.addChild(label);
 
-			//lukesCode();
 			statementTest();
         }
 	
@@ -52,35 +51,6 @@ package
 
 		    trace("getParameterIndex(): " + s.getParameterIndex("hello"));
 			
-		}
-		
-		private function lukesCode()
-		{
-			trace("SQLite Version: " + Connection.version);
-
-		    var c:Connection = Connection.open("MyTestDB.db", Connection.FLAG_READWRITE | Connection.FLAG_CREATE);
-		    if(c.errorCode != Connection.ERROR_NONE)
-		    {
-			   trace("open ERROR: " + c.errorMessage);
-		    }
-		    else
-		    {
-			   trace("open SUCCESS!");
-		    }
-		    var s:Statement = c.prepare("SELECT * FROM hotel_rates WHERE cityId=? AND rateDate >= ? AND rateDate <= ?");
-		    if(c.errorCode != Connection.ERROR_NONE)
-		    {
-				trace("prepare ERROR: " + c.errorMessage);
-		    }
-		    else
-		    {
-			    trace("prepare SUCCESS!");
-		    }
-
-		    var theDevil:int = s.getParameterCount();
-		    trace("THE DEVIL IS: " + theDevil);
- 
-		    c.close();
 		}
 	}
 }
