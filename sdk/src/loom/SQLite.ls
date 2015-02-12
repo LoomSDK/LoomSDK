@@ -19,59 +19,13 @@ limitations under the License.
 */
 
 
-/////////////////////
-// THINGS TO DO:
-/////////////////////
-//
-//  -asynchronous functionality
-//  -full function/var/const header commenting
-//
-/////////////////////
-
-
-
 package loom.sqlite
 {
-    //SQLite Delegate definitions
-//TODO: Async support
-    // public delegate ImportComplete():void;
-    // public delegate StatementProgress():void;
-    // public delegate StatementComplete(results:Statement):void;
-
-
-
-    /** 
-     * An enumeration that defines the various relavent SQLITE return codes for Connection and Statement usage.
-     */
-    public enum ResultCode
-    {
-        SQLITE_OK       = 0,
-        SQLITE_ERROR    = 1,
-        SQLITE_BUSY     = 5,
-        SQLITE_MISUSE   = 21,
-        SQLITE_RANGE    = 25,
-        SQLITE_ROW      = 100,
-        SQLITE_DONE     = 101
-    }
-
-
-
-    /** 
-     * An enumeration that defines the possible column data types
-     */
-    public enum DataType
-    {
-        SQLITE_INTEGER  = 1,
-        SQLITE_FLOAT    = 2,
-        SQLITE_TEXT     = 3,
-        SQLITE_BLOB     = 4,
-        SQLITE_NULL     = 5
-    }
-
-
-
-    /** 
-     * An open session to a database file.
+    /**
+     * Loom SQLite API.
+     *
+     * Loom provides animplementation of SQLite that can be
+     * used for database management across all supported platforms.
      *
      * Example usage:
      *      var c = Connection.open("my.db");
@@ -80,37 +34,165 @@ package loom.sqlite
      *      while(stmt.step() == Statement.ROW) trace("Saw rate of " + stmt.columnNumber(1));
      *      stmt.finalize();
      *      c.close();
+     *
+     */
+
+    /**
+     * Delegate used to handle when a Connection.backgroundImport has completed.
+     */
+    public delegate ImportComplete():void;
+
+    /**
+     * Delegate used to handle when a Statement.stepAsync has progressed.
+     */
+    public delegate StatementProgress():void;
+
+    /**
+     * Delegate used to handle when a Statement.stepAsync has completed.
+     *
+     *  @param results The resulting Statement of the step.
+     */
+//BEN QUESTION: Why should this will provice a Statement? The StatementProgress delegate doesn't do this...
+    public delegate StatementComplete(results:Statement):void;
+
+
+
+    /** 
+     * The various relavent SQLITE return codes for Connection and Statement usage.
+     */
+    public enum ResultCode
+    {
+        /** 
+         * Everything is OK.
+         */
+        SQLITE_OK       = 0,
+
+        /** 
+         * There is an ERROR that should be handled.  More information may be 
+         * available with a call to Connection.errorMessage.
+         */
+        SQLITE_ERROR    = 1,
+
+        /** 
+         * The database is currently BUSY handling another process.
+         */
+        SQLITE_BUSY     = 5,
+
+        /** 
+         * The current action is a MISUSE of of the SQLite interface.
+         */
+        SQLITE_MISUSE   = 21,
+
+        /** 
+         * A supplied parameter is out of RANGE.
+         */
+        SQLITE_RANGE    = 25,
+
+        /** 
+         * Returned by Statement.step() to indicate that another ROW of output.
+         * is available.
+         */
+        SQLITE_ROW      = 100,
+
+        /** 
+         * The operation is now DONE. Mostly commonly seen returned by Statement.step().
+         */
+        SQLITE_DONE     = 101
+    }
+
+    /** 
+     * The possible column data types returned by Statement.columnType() function.
+     */
+    public enum DataType
+    {
+        /** 
+         * 32 bit integer value.
+         */
+        SQLITE_INTEGER  = 1,
+
+        /** 
+         * 32 bit floating point value.
+         */
+        SQLITE_FLOAT    = 2,
+
+        /** 
+         * NULL terminated string value.
+         */
+        SQLITE_TEXT     = 3,
+
+        /** 
+         * Arbitraty byte array value.
+         */
+        SQLITE_BLOB     = 4,
+
+        /** 
+         * Single NULL value.
+         */
+        SQLITE_NULL     = 5
+    }
+
+
+
+    /** 
+     * An open session to an SQLite database file.
      */
     public native class Connection
     {
-        //Connection Flags
+        /** 
+         * Connection.open() flag to indicate that the databse should be accessed as READONLY.
+         */
         public static const FLAG_READONLY:int   = 1;
+
+        /** 
+         * Connection.open() flag to indicate that the databse should be accessed as as READ AND WRITE.
+         */
         public static const FLAG_READWRITE:int  = 2;
+
+        /** 
+         * Connection.open() flag to indicate that the databse should be CREATED as a new one.
+         */
         public static const FLAG_CREATE:int     = 4;
  
 
-       /**
-         * Background import interface. Load passed bytes in a background thread,
-         * and fire onImportComplete when done.
+        /**
+         * Called when the backgroundImport() completes.
          */
-//TODO: Async support
-        // public static native function backgroundImport(database:String, data:ByteArray):void;
-        // public static native var onImportComplete:ImportComplete;
+        public static native var onImportComplete:ImportComplete;
+
 
         /**
-         * What version of SQLite are we accessing?
+         * Background import interface for an SQLite database. This loads the passed bytes into 
+         * the given database in a background thread, and fires onImportComplete when done.
+         *
+         *  NOTE: If path is not null, it needs to be a valid system path that begins with 
+         *  Path.getWritablePath().
+         *
+         *  @param database Name of the databse to import the data into.
+         *  @param path System writeable path location to store the database file, or null for the root.
+         *  @param data Chunk of data to import into the database.
+         */
+        public static native function backgroundImport(database:String, path:String, data:ByteArray):void;
+
+        /**
+         * Checks the version of SQLite
+         * 
+         *  @return String The current version of SQLite running.
          */
         public static native function get version():String;
 
         /**
-         * Return the most recent error code from SQLite (not threadsafe).  
-         * Value will most likely be one of those defined in ResultCode (ie. can be checked 
-         * against ResultCode.SQLITE_OK), but potentially could differ and be another SQLITE code
+         * Return the most recent error code from SQLite (not threadsafe).  Value will most likely
+         * be one of those defined in ResultCode (ie. can be checked against ResultCode.SQLITE_OK), 
+         * but potentially could differ and be any internal SQLITE code.
+         * 
+         *  @return int Value of the error code.
          */
         public native function get errorCode():int;
  
         /**
          * Returns the most recent error message from SQLite (not threadsafe).
+         * 
+         *  @return String Text message associated with the last error code.
          */
         public native function get errorMessage():String;
 
@@ -120,37 +202,59 @@ package loom.sqlite
          *
          * NOTE: As Loomscript only supports 32 bit integers, this function will not return
          * the expected value if there are more than 2^31 rows in the database.
-         *
+         * 
+         *  @return int ID of the last row successfully inserted into.
          */
         public native function get lastInsertRowId():int;
          
         /**
-         * Opens a SQLite database.  If path is not null, it needs to be a valid system path that begins 
-         * with "Path.getWritablePath()".
+         * Opens the indicated SQLite database for operations.
+         *
+         *  NOTE: If path is not null, it needs to be a valid system path that begins with 
+         *  Path.getWritablePath().
+         *
+         *  @param database Name of the databse to import the data into.
+         *  @param path System writeable path location to store the database file, or null for the root.
+         *  @param flags Flags describing how to open the database.
+         *  @return Connection A newly opened Connection to the provide database.
          */
         public static native function open(database:String, path:String = null, flags:int = FLAG_READWRITE):Connection;
  
         /**
-         * Prepares an SQL statement(s) for processing.
+         * Prepares an SQL statement for processing.
+         *
+         *  @param query Query string to create the compiled Statement with.
+         *  @return Statement The compiled Statement for processing.
          */
         public native function prepare(query:String):Statement;
   
         /**
          * Closes this database connection.
+         *  @return ResultCode Result of the function call.
          */
         public native function close():ResultCode;
     }
 
 
-
     /**
-     * A compiled SQL statement. Parameters can be manipulated
-     * and result columns retrieved. step() advances the query
-     * to the next row of results. Synchronous and asynchronous
+     * A compiled SQL statement. Parameters can be manipulated and result columns retrieved. 
+     * step() advances the query to the next row of results. Synchronous and asynchronous
      * query execution are supported.
      */
     public native class Statement
     {
+        /**
+         * Called when the stepAsync() progresses.
+         */
+        public native var onStatementProgress:StatementProgress;
+
+        /**
+         * Called when the stepAsync() completes.
+         */
+        public native var onStatementComplete:StatementComplete;
+
+
+
         // Query parameters by name, index, etc.
         public native function getParameterCount():int;
         public native function getParameterName(index:int):String;
@@ -166,10 +270,7 @@ package loom.sqlite
         public native function step():ResultCode;
 
         // Asynchronously advance to next result.
-//TODO: Async support
-//         public native function stepAsync():void;
-//         public native var onStatementProgress:StatementProgress;
-//         public native var onStatementComplete:StatementComplete;
+        public native function stepAsync():void;
  
         // Retrieve result column from current row.
         public native function columnType(index:int):DataType;
