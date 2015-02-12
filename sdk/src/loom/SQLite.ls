@@ -19,11 +19,14 @@ limitations under the License.
 */
 
 
-
-///TODO:
-//  -emulate the 'Example usage' functionality -> slowly bring all functions over to native bindings!
+/////////////////////
+// THINGS TO DO:
+/////////////////////
+//
 //  -asynchronous functionality
 //  -full function/var/const header commenting
+//
+/////////////////////
 
 
 
@@ -102,7 +105,7 @@ package loom.sqlite
         /**
          * Return the most recent error code from SQLite (not threadsafe).  
          * Value will most likely be one of those defined in ResultCode (ie. can be checked 
-         * against ResultCode.SQLITE_OK), but potentially could differ and be any 
+         * against ResultCode.SQLITE_OK), but potentially could differ and be another SQLITE code
          */
         public native function get errorCode():int;
  
@@ -112,9 +115,20 @@ package loom.sqlite
         public native function get errorMessage():String;
 
         /**
-         * Opens a SQLite database.
+         * Returns the returns the rowid of the most recent successful INSERT into a table 
+         * of this database connection.
+         *
+         * NOTE: As Loomscript only supports 32 bit integers, this function will not return
+         * the expected value if there are more than 2^31 rows in the database.
+         *
          */
-        public static native function open(database:String, flags:int = FLAG_READWRITE):Connection;
+        public native function get lastInsertRowId():int;
+         
+        /**
+         * Opens a SQLite database.  If path is not null, it needs to be a valid system path that begins 
+         * with "Path.getWritablePath()".
+         */
+        public static native function open(database:String, path:String = null, flags:int = FLAG_READWRITE):Connection;
  
         /**
          * Prepares an SQL statement(s) for processing.
@@ -124,7 +138,7 @@ package loom.sqlite
         /**
          * Closes this database connection.
          */
-        public native function close():void;
+        public native function close():ResultCode;
     }
 
 
@@ -143,11 +157,10 @@ package loom.sqlite
         public native function getParameterIndex(name:String):int;
  
         // Interface to set query parameters.
-//TODO
-         public native function bindInt(index:int, value:int):ResultCode;
-         public native function bindDouble(index:int, value:Number):ResultCode;
-         public native function bindString(index:int, value:String):ResultCode;
-   //      public native function bindBytes(index:int, value:ByteArray):ResultCode;
+        public native function bindInt(index:int, value:int):ResultCode;
+        public native function bindDouble(index:int, value:Number):ResultCode;
+        public native function bindString(index:int, value:String):ResultCode;
+        public native function bindBytes(index:int, value:ByteArray):ResultCode;
  
         // Advance to next result.
         public native function step():ResultCode;
@@ -163,12 +176,7 @@ package loom.sqlite
         public native function columnInt(index:int):int;
         public native function columnDouble(index:int):Number;
         public native function columnString(index:int):String;
-//TODO
- //        public native function columnBytes(index:int):ByteArray;
- 
-        // Get row id from last insert.
-//TODO
-  //       public native function get lastInsertRowId():int;
+        public native function columnBytes(index:int):ByteArray;
  
         // Reset the statement.
         public native function reset():ResultCode;

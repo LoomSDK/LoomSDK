@@ -43,18 +43,6 @@ package
 
             stage.scaleMode = StageScaleMode.LETTERBOX;
 
-            var bg = new Image(Texture.fromAsset("assets/bg.png"));
-            bg.width = stage.stageWidth;
-            bg.height = stage.stageHeight;
-      //      stage.addChild(bg);
-
-            var label = new SimpleLabel("assets/Curse-hd.fnt");
-            label.text = "SQLite Example";
-            label.center();
-            label.x = stage.stageWidth / 2;
-            label.y = stage.stageHeight / 2 - 100;
-            stage.addChild(label);
-
             queryInput = new TextInput();
             queryInput.width = stage.stageWidth - 25;
             queryInput.height = 100;
@@ -65,34 +53,32 @@ package
             queryInput.isEditable = true;                                
             stage.addChild(queryInput);
 
-            var loginButton = new Button();
-            loginButton.width = 150;
-            loginButton.height = 45;
-            loginButton.x = stage.stageWidth / 2;
-            loginButton.y = 275;
-            loginButton.label = "run query";
-            loginButton.center();
-            loginButton.addEventListener(Event.TRIGGERED,runQuery);
-            stage.addChild(loginButton);  
-
-            var userLabel = new Label();
-            userLabel.text = "sdawasd";
-            userLabel.y=300;
-            userLabel.x = stage.stageWidth / 2;
-            stage.addChild(userLabel);
+            var runQueryButton = new Button();
+            runQueryButton.width = 150;
+            runQueryButton.height = 45;
+            runQueryButton.x = stage.stageWidth / 2;
+            runQueryButton.y = 275;
+            runQueryButton.label = "run query";
+            runQueryButton.center();
+            runQueryButton.addEventListener(Event.TRIGGERED,runQuery);
+            stage.addChild(runQueryButton);  
             
 			openConnection();
 
-		//	prepareStatement("CREATE TABLE test_table(id int, name varchar(255))");
-		//	statement.step();
+/*
+			prepareStatement("CREATE TABLE test_table(id int, name varchar(255))");
+			statement.step();
+			prepareStatement("INSERT INTO test_table(id , name) VALUES (1, 'kevin')");
+			statement.step();
 
-		//	prepareStatement("INSERT INTO test_table(id , name) VALUES (1, 'kevin')");
-		//	statement.step();
+		*/
 
-		//	prepareStatement("SELECT * FROM test_table");
-	//		statement.step();
+		//	insert();
 
-	//		testTrace();
+			prepareStatement("SELECT * FROM test_table");
+
+			while (statement.step() == 100)
+				testTrace();
         }
 
         private function createOutputGrid()
@@ -105,6 +91,33 @@ package
     		row1.push(label); 
         }
 
+        private function update()
+        {
+        	prepareStatement("UPDATE test_table SET id=?, name=? WHERE id=?");
+
+			statement.bindInt(1, 34);
+			statement.bindString(2, "update_string");
+			statement.bindInt(1, 666);
+
+			statement.step();
+			statement.finalize();
+        }
+
+        private function insert()
+        {
+        	prepareStatement("insert into test_table values (?,?)");
+
+        	var bytes = new ByteArray();
+        	bytes.writeDouble(1234);
+        	bytes.writeString("byte_test");
+
+			statement.bindInt(1, 111);
+			statement.bindBytes(2, bytes);
+
+			statement.step();
+			statement.finalize();
+        }
+
         private function runQuery()
         {
         	prepareStatement(queryInput.text);
@@ -114,7 +127,7 @@ package
 
 		private function openConnection()
 		{
-		    connection = Connection.open("MyTestDB.db",  Connection.FLAG_CREATE | Connection.FLAG_READWRITE );
+		    connection = Connection.open("MyTestDB.db", null,  Connection.FLAG_CREATE | Connection.FLAG_READWRITE );
 		}
 
 		private function prepareStatement(sqlString:String)
@@ -132,8 +145,10 @@ package
 
 		private function testTrace()
 		{
+			var bytes = statement.columnBytes(1);
+			trace (bytes.readDouble() + " " + bytes.readString());
 			//trace (statement.columnType(0) + " " + statement.columnType(1));
-			trace (statement.columnDouble(0) + statement.columnString(1));
+			//trace (statement.columnBytes(0) + " " + statement.columnBytes(1));
 		}
 
 		/*
