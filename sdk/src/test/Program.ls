@@ -50,7 +50,7 @@ import system.xml.XMLTest;
             new TestImportResolution().run();
             
             new TestJSON().run();
-            new TestByteArray().run();
+            //new TestByteArray().run();
             
             new TestMath().run();
             

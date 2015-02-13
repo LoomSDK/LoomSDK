@@ -29,12 +29,12 @@ class utByteArray {
 protected:
     // stored as little endian
     utArray<unsigned char> _data;
-    int _position;
+    UTsize _position;
 
     template<typename T>
     T readValue()
     {
-        if (_position > (int)_data.size() - (int)sizeof(T))
+        if (_position > _data.size() - sizeof(T))
         {
             //lmAssert(0, "ByteArray out of data on read of size %u", sizeof(T));
             assert(0);
@@ -66,62 +66,54 @@ protected:
         _position += sizeof(T);
     }
 
-    static int readBytesInternal(utByteArray *dstByteArray, utByteArray *srcByteArray, int offset = 0, int length = 0, bool dstOffset = true)
+    static int copyBytesInternal(utByteArray *dstByteArray, utByteArray *srcByteArray, int offset = 0, int length = 0, bool dstOffset = true)
     {
         if (!srcByteArray || !dstByteArray)
         {
             return 0;
         }
 
+        unsigned char *dst = dstByteArray->_data.ptr();
         unsigned char *src = srcByteArray->_data.ptr();
 
-        if (!dstOffset)
-        {
-            srcByteArray->_position = offset;
-        }
+        if (offset < 0) offset = 0;
+        if (length < 0) return 0;
 
-        if (!length)
-        {
+        if (!length) {
             length = srcByteArray->_data.size();
         }
-        else if (length > (int)srcByteArray->_data.size())
-        {
-            length = srcByteArray->_data.size();
-        }
-        else
-        {
-            src = srcByteArray->_data.ptr() + srcByteArray->_position;
-            if (src - srcByteArray->_data.ptr() > length)
-            {
-                length = src - srcByteArray->_data.ptr();
-            }
+
+        if (dstOffset) {
+            offset = utClamp<int>(offset, 0, dstByteArray->_data.size());
+            dst += offset;
+            src += srcByteArray->_position;
+        } else {
+            offset = utClamp<int>(offset, 0, srcByteArray->_data.size());
+            dst += dstByteArray->_position;
+            src += offset;
         }
 
-        // check whether offset is from src or dst
-        if (dstOffset)
+        unsigned char *srcEnd = srcByteArray->_data.ptr() + srcByteArray->_data.size();
+        if (src + length > srcEnd)
         {
-            if ((int)dstByteArray->_data.size() < offset + length)
-            {
-                dstByteArray->_data.resize(offset + length);
-            }
-
-            dstByteArray->_position = offset;
-        }
-        else
-        {
-            if ((int)dstByteArray->_data.size() < dstByteArray->_position + length)
-            {
-                dstByteArray->_data.resize(dstByteArray->_position + length);
-            }
+            length = srcEnd - src;
+            if (length < 0) return 0;
         }
 
-        unsigned char *out = dstByteArray->_data.ptr() + dstByteArray->_position;
-        while (length-- > 0)
+        unsigned char *dstEnd = dstByteArray->_data.ptr() + dstByteArray->_data.size();
+        if (dst + length > dstEnd)
         {
-            *out = *src;
-            src++;
-            out++;
-            dstByteArray->_position++;
+            int off = dst - dstByteArray->_data.ptr();
+            dstByteArray->_data.resize(dst - dstByteArray->_data.ptr() + length);
+            // We have a different backing array now, point pointer to the new one.
+            dst = dstByteArray->_data.ptr() + off;
+        }
+        
+        memcpy(dst, src, length);
+        if (dstOffset) {
+            srcByteArray->_position += length;
+        } else {
+            dstByteArray->_position += length;
         }
 
         return length;
@@ -135,14 +127,20 @@ public:
 
     void clear();
 
-    void setPosition(int value)
+    void setPosition(unsigned int value)
     {
-        _position = value;
+        _position = (UTsize) value;
     }
 
-    int getPosition() const
+    unsigned int getPosition() const
     {
         return _position;
+    }
+
+    unsigned int bytesAvailable() const
+    {
+        UTsize size = getSize();
+        return (size < _position ? 0 : size-_position);
     }
 
     bool readBoolean()
@@ -291,12 +289,12 @@ public:
 
     void writeBytes(utByteArray *byteArray, int offset = 0, int length = 0)
     {
-        readBytesInternal(byteArray, this, offset, length, false);
+        copyBytesInternal(this, byteArray, offset, length, false);
     }
 
     int readBytes(utByteArray *byteArray, int offset = 0, int length = 0)
     {
-        return readBytesInternal(this, byteArray, offset, length);
+        return copyBytesInternal(byteArray, this, offset, length, true);
     }
 
     /*
@@ -363,6 +361,7 @@ public:
      */
     void resize(UTsize size)
     {
+        _position = _position > size ? size : _position;
         return _data.resize(size);
     }
 
@@ -380,11 +379,18 @@ public:
     utArray<unsigned char> *getInternalArray() { return &_data; }
 
     /*
-     * Uncompress zlib compressed data, if uncompressed size is specified
-     * the resulting uncompressed data must match it or will resize the byte array
-     * to zero.  If not specified, maxBuffer size will be used and ByteArray will
-     * be truncated to the actual size of the data
+     * Compress the ByteArray data with the zlib compression algorithm.
+     * The ByteArray gets resized to the compressed size of the data.
      */
-    void uncompress(int uncompressedSize = 0, int maxBuffer = 262144);
+    void compress();
+
+    /*
+     * Uncompress zlib or gzip compressed data. uncompressedSize is equivalent to
+     * initialSize due to legacy code. If not specified, initialSize will be used
+     * and ByteArray will be truncated to the actual size of the data. If the
+     * uncompressed data size doesn't fit in initialSize bytes, the buffer gets
+     * resized until it does.
+     */
+    void uncompress(int uncompressedSize = 0, int initialSize = 32768);
 };
 #endif // _PLATFORM_BYTEARRAY_H_
