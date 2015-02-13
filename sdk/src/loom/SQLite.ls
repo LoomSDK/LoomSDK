@@ -49,10 +49,12 @@ package loom.sqlite
     /**
      * Delegate used to handle when a Statement.stepAsync has completed.
      *
-     *  @param results The resulting Statement of the step.
+     *  @param result Result of the step. Common values of this are:
+                           ResultCode.SQLITE_ROW indicates that there is valid data.
+                           ResultCode.SQLITE_DONE indicates that the end of the statement has been reached.
+                           ResultCode.SQLITE_MISUSE indicates invalid data in the query.
      */
-//BEN QUESTION: Why should this will provice a Statement? The StatementProgress delegate doesn't do this...
-    public delegate StatementComplete(results:Statement):void;
+    public delegate StatementComplete(result:ResultCode):void;
 
 
 
@@ -252,12 +254,19 @@ package loom.sqlite
     public native class Statement
     {
         /**
-         * Called when the stepAsync() progresses.
+         * Number of Virtual Machine Instructions to wait for between 
+         * between each call to onStatementProgress. Setting this to < 1 
+         * will disable the progress handler. The default value is 1.
+         */
+        public static native var statementProgressVMIWait:int;
+
+        /**
+         * Called at intervals during the stepAsync() query processing.
          */
         public native var onStatementProgress:StatementProgress;
 
         /**
-         * Called when the stepAsync() completes.
+         * Called when stepAsync() completes the query processing.
          */
         public native var onStatementComplete:StatementComplete;
 
@@ -330,18 +339,9 @@ package loom.sqlite
 
         /**
          * Asynchronous function that advances the statement to the next result in the query.
-         *  @return ResultCode Result of the step. Common values of this are:
-                               ResultCode.SQLITE_ROW indicates that there is valid data.
-                               ResultCode.SQLITE_DONE indicates that the end of the statement has been reached.
-                               ResultCode.SQLITE_MISUSE indicates invalid data in the query.
+         *  @return Boolean Whether or not the step process was successfully kicked off.
          */
-//TODO: Make actual asynchronous functionality. 
-//      Currently just calls step() followed by either the onStatementProgress or onStatementComplete delegates
-//BEN QUESTION: How should the functionality of the Result ROW/DONE be handled here?  
-//              Should onStatementProgress be called when the result is ROW, and onStatementComplete c
-//              alled when the result is DONE? What about errors / other codes like MISUSE? 
-//              Should we make a "onStatementError" or something that is called in those cases?
-        public native function stepAsync():void;
+        public native function stepAsync():Boolean;
  
         /**
          * Retrieves the name of the specified column in the current row of the query.

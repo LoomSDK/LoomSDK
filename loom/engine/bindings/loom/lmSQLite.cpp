@@ -44,10 +44,11 @@ class Connection
 protected:
     utString databaseName;
     utString databaseFullPath;
-    sqlite3 *dbHandle;
 
 public:
     LOOM_STATICDELEGATE(OnImportComplete);
+
+    sqlite3 *dbHandle;
 
     static Connection *open(const char *database, const char *path, int flags);
     static void backgroundImport(const char *database, const char *path, utByteArray *data);
@@ -82,7 +83,7 @@ public:
         {
             lmLogError(gSQLiteGroup, "RowID found in getlastInsertRowId the SQLite database %s is larger than a 32 bit integer! The return value will not be as expected!", getDBName());
         }
-        return (int)rowid64;
+        return (int)(rowid64 & 0x00000000ffffffff);
     }
 
     int close()
@@ -106,17 +107,28 @@ public:
     LOOM_DELEGATE(OnStatementProgress);
     LOOM_DELEGATE(OnStatementComplete);
 
-    MutexHandle stepAsyncDelegateMutex;
-    lua_State *stepAsyncLuaState;
+    bool asyncStepInProgress;
+    MutexHandle stepAsyncMutex;
     Connection *parentDB;
     sqlite3_stmt *statementHandle;
 
+    static int statementProgressVMIWait;
+    static int stepAsyncProgress(void *param);
     static int __stdcall stepAsyncBody(void *param);
 
 
     Statement(Connection *c)
     {
         parentDB = c;
+        asyncStepInProgress = false;
+
+        //create our mutex now 
+        stepAsyncMutex = loom_mutex_create();
+    }
+
+    ~Statement()
+    {
+        loom_mutex_destroy(stepAsyncMutex);
     }
 
     int getParameterCount()
@@ -209,22 +221,25 @@ public:
         return result;
     }
 
-    void stepAsync(lua_State *L)
+    bool stepAsync()
     {
-//BEN QUESTION: I need L in order to lualoom_pushnative<> the Statement into the Delegate 
-//              in the thread onComplete... but obviously it doen't always remain valid from 
-//              this call until the time for it to be used at the end of the stepAsync() thread... 
-//              what other options are there for me to pass the Statement through to the Delegate?
-//
-//              NOTE: This wont be an issue if we can nuke the Statement from needing to be passed
-//                    into the onStatementComplete delegate... which i'm still not sure why it is
-//                    done there but not for onStatementProgress...
-//
-//HACK: NOT STABLE!!!!
-stepAsyncLuaState = L;
-        loom_thread_start(Statement::stepAsyncBody, this);    
-    }
+        if(asyncStepInProgress)
+        {
+            lmLogError(gSQLiteGroup, "Attempting to run multiple stepAsync calls on the same statement for database: %s", parentDB->getDBName());
+            return false;
+        }
 
+        //set up the progress handler
+        sqlite3_progress_handler(parentDB->dbHandle, 
+                                    Statement::statementProgressVMIWait, 
+                                    Statement::stepAsyncProgress, 
+                                    this);
+
+        //start up the stepAsync thread
+        asyncStepInProgress = true;
+        loom_thread_start(Statement::stepAsyncBody, this);    
+        return true;
+    }
 
     const char *columnName(int col)
     {
@@ -290,46 +305,39 @@ stepAsyncLuaState = L;
 };
 
 
+
+
 //---Statement--- external function initialisation
+int Statement::statementProgressVMIWait = 1;
+
+int Statement::stepAsyncProgress(void *param)
+{
+    //get the statement
+    Statement *s = (Statement *)param;
+
+    //call our progress delegate
+    s->_OnStatementProgressDelegate.invoke();    
+}
+
 int __stdcall Statement::stepAsyncBody(void *param)
 {
     //get the statement
     Statement *s = (Statement *)param;
 
-
     //call the internal SQLite step function, then yield the thread
     int result = sqlite3_step(s->statementHandle); 
-    loom_thread_yield();
 
-    //mutex so we can call the delegate
-    s->stepAsyncDelegateMutex = loom_mutex_create();
-    loom_mutex_lock(s->stepAsyncDelegateMutex);
+    //NOTE: shouldn't need to yield the thread here as the thread will die now anyways...
+    // loom_thread_yield();
 
-    //check the result now
-    if(result == SQLITE_ROW)
-    {
-        s->_OnStatementProgressDelegate.invoke();
-    }
-    else if(result == SQLITE_DONE)
-    {
-//HACK: s->stepAsyncLuaState is not working as it can be unstable... 
-//      need another way to pass the Statement through to OnStatementComplete!!!
-lualoom_pushnative<Statement>(s->stepAsyncLuaState, s);
-s->_OnStatementCompleteDelegate.incArgCount();
-s->_OnStatementCompleteDelegate.invoke();
-lua_pop(s->stepAsyncLuaState, 1);
-    }
-    else
-    {
-        if(result == SQLITE_ERROR)
-        {
-            lmLogError(gSQLiteGroup, "Error calling step for database: %s", s->parentDB->getDBName());
-        }
-//TODO: Should we have an additiona _OnStatementErrorDelegate to call here?
-    }
+    //fire our completion delegate with the result
+    s->_OnStatementCompleteDelegate.pushArgument(result);
+    s->_OnStatementCompleteDelegate.invoke();
 
-    //we're done now!
-    loom_mutex_unlock(s->stepAsyncDelegateMutex);
+    //we're done now, so need to turn off our processing flag
+    loom_mutex_lock(s->stepAsyncMutex);
+    s->asyncStepInProgress = false;
+    loom_mutex_unlock(s->stepAsyncMutex);
 }
 
 
@@ -433,6 +441,7 @@ static int registerLoomSQLiteStatement(lua_State *L)
     beginPackage(L, "loom.sqlite")
       .beginClass<Statement>("Statement")
 
+        .addStaticVar("statementProgressVMIWait", &Statement::statementProgressVMIWait)
         .addVarAccessor("onStatementProgress", &Statement::getOnStatementProgressDelegate)
         .addVarAccessor("onStatementComplete", &Statement::getOnStatementCompleteDelegate)
 
