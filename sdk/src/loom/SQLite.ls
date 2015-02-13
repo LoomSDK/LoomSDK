@@ -38,8 +38,9 @@ package loom.sqlite
 
     /**
      * Delegate used to handle when a Connection.backgroundImport has completed.
+     *  @param result Result of the import process.
      */
-    public delegate ImportComplete():void;
+    public delegate ImportComplete(result:ResultCode):void;
 
     /**
      * Delegate used to handle when a Statement.stepAsync has progressed.
@@ -48,7 +49,6 @@ package loom.sqlite
 
     /**
      * Delegate used to handle when a Statement.stepAsync has completed.
-     *
      *  @param result Result of the step. Common values of this are:
                            ResultCode.SQLITE_ROW indicates that there is valid data.
                            ResultCode.SQLITE_DONE indicates that the end of the statement has been reached.
@@ -172,16 +172,21 @@ package loom.sqlite
          * Background import interface for an SQLite database. This loads the passed bytes into 
          * the given database in a background thread, and fires onImportComplete when done.
          *
-         *  NOTE: If path is not null, it needs to be a valid system path that begins with 
-         *  Path.getWritablePath().
+         *  NOTE: The database name must either be located at a to be a valid system 
+         *  writeable path that begins with Path.getWritablePath(), or merely a plain 
+         *  filename in which case it will internally be saved to the system writeable 
+         *  path location.
+         *
+         *  The format of the JSON data is:
+         *      { "table_name": [ {"column": value}, ... ] }
+         *  Where "table_name" is the name of the table to insert into
          *
          *  @param database Name of the databse to import the data into.
-         *  @param path System writeable path location to store the database file, or null for the root.
-         *  @param data Chunk of data to import into the database.
+         *  @param data JSON data to import into the database.
+         *  @return Boolean Whether or not the background import process was successfully kicked off.
          */
-//TODO: Make actual asynchronous functionality. 
-//      Currently does nothing except call the onImportComplete delegate 
-        public static native function backgroundImport(database:String, path:String, data:ByteArray):void;
+//TODO: Change over to ByteArray or similar eventually
+        public static native function backgroundImport(database:String, data:JSON):Boolean;
 
         /**
          * Checks the version of SQLite
@@ -220,15 +225,16 @@ package loom.sqlite
         /**
          * Opens the indicated SQLite database for operations.
          *
-         *  NOTE: If path is not null, it needs to be a valid system path that begins with 
-         *  Path.getWritablePath().
+         *  NOTE: The database name must either be located at a to be a valid system 
+         *  writeable path that begins with Path.getWritablePath(), or merely a plain 
+         *  filename in which case it will internally be saved to the system writeable 
+         *  path location.
          *
          *  @param database Name of the databse to import the data into.
-         *  @param path System writeable path location to store the database file, or null for the root.
          *  @param flags Flags describing how to open the database.
          *  @return Connection A newly opened Connection to the provide database.
          */
-        public static native function open(database:String, path:String = null, flags:int = FLAG_READWRITE):Connection;
+        public static native function open(database:String, flags:int = FLAG_READWRITE):Connection;
  
         /**
          * Prepares an SQL statement for processing.
