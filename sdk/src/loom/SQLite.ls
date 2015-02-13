@@ -38,8 +38,9 @@ package loom.sqlite
 
     /**
      * Delegate used to handle when a Connection.backgroundImport has completed.
+     *  @param result Result of the import process.
      */
-    public delegate ImportComplete():void;
+    public delegate ImportComplete(result:ResultCode):void;
 
     /**
      * Delegate used to handle when a Statement.stepAsync has progressed.
@@ -48,11 +49,12 @@ package loom.sqlite
 
     /**
      * Delegate used to handle when a Statement.stepAsync has completed.
-     *
-     *  @param results The resulting Statement of the step.
+     *  @param result Result of the step. Common values of this are:
+                           ResultCode.SQLITE_ROW indicates that there is valid data.
+                           ResultCode.SQLITE_DONE indicates that the end of the statement has been reached.
+                           ResultCode.SQLITE_MISUSE indicates invalid data in the query.
      */
-//BEN QUESTION: Why should this will provice a Statement? The StatementProgress delegate doesn't do this...
-    public delegate StatementComplete(results:Statement):void;
+    public delegate StatementComplete(result:ResultCode):void;
 
 
 
@@ -170,16 +172,21 @@ package loom.sqlite
          * Background import interface for an SQLite database. This loads the passed bytes into 
          * the given database in a background thread, and fires onImportComplete when done.
          *
-         *  NOTE: If path is not null, it needs to be a valid system path that begins with 
-         *  Path.getWritablePath().
+         *  NOTE: The database name must either be located at a to be a valid system 
+         *  writeable path that begins with Path.getWritablePath(), or merely a plain 
+         *  filename in which case it will internally be saved to the system writeable 
+         *  path location.
+         *
+         *  The format of the JSON data is:
+         *      { "table_name": [ {"column": value}, ... ] }
+         *  Where "table_name" is the name of the table to insert into
          *
          *  @param database Name of the databse to import the data into.
-         *  @param path System writeable path location to store the database file, or null for the root.
-         *  @param data Chunk of data to import into the database.
+         *  @param data JSON data to import into the database.
+         *  @return Boolean Whether or not the background import process was successfully kicked off.
          */
-//TODO: Make actual asynchronous functionality. 
-//      Currently does nothing except call the onImportComplete delegate 
-        public static native function backgroundImport(database:String, path:String, data:ByteArray):void;
+//TODO: Change over to ByteArray or similar eventually
+        public static native function backgroundImport(database:String, data:JSON):Boolean;
 
         /**
          * Checks the version of SQLite
@@ -218,15 +225,16 @@ package loom.sqlite
         /**
          * Opens the indicated SQLite database for operations.
          *
-         *  NOTE: If path is not null, it needs to be a valid system path that begins with 
-         *  Path.getWritablePath().
+         *  NOTE: The database name must either be located at a to be a valid system 
+         *  writeable path that begins with Path.getWritablePath(), or merely a plain 
+         *  filename in which case it will internally be saved to the system writeable 
+         *  path location.
          *
          *  @param database Name of the databse to import the data into.
-         *  @param path System writeable path location to store the database file, or null for the root.
          *  @param flags Flags describing how to open the database.
          *  @return Connection A newly opened Connection to the provide database.
          */
-        public static native function open(database:String, path:String = null, flags:int = FLAG_READWRITE):Connection;
+        public static native function open(database:String, flags:int = FLAG_READWRITE):Connection;
  
         /**
          * Prepares an SQL statement for processing.
@@ -252,12 +260,19 @@ package loom.sqlite
     public native class Statement
     {
         /**
-         * Called when the stepAsync() progresses.
+         * Number of Virtual Machine Instructions to wait for between 
+         * between each call to onStatementProgress. Setting this to < 1 
+         * will disable the progress handler. The default value is 1.
+         */
+        public static native var statementProgressVMIWait:int;
+
+        /**
+         * Called at intervals during the stepAsync() query processing.
          */
         public native var onStatementProgress:StatementProgress;
 
         /**
-         * Called when the stepAsync() completes.
+         * Called when stepAsync() completes the query processing.
          */
         public native var onStatementComplete:StatementComplete;
 
@@ -330,18 +345,9 @@ package loom.sqlite
 
         /**
          * Asynchronous function that advances the statement to the next result in the query.
-         *  @return ResultCode Result of the step. Common values of this are:
-                               ResultCode.SQLITE_ROW indicates that there is valid data.
-                               ResultCode.SQLITE_DONE indicates that the end of the statement has been reached.
-                               ResultCode.SQLITE_MISUSE indicates invalid data in the query.
+         *  @return Boolean Whether or not the step process was successfully kicked off.
          */
-//TODO: Make actual asynchronous functionality. 
-//      Currently just calls step() followed by either the onStatementProgress or onStatementComplete delegates
-//BEN QUESTION: How should the functionality of the Result ROW/DONE be handled here?  
-//              Should onStatementProgress be called when the result is ROW, and onStatementComplete c
-//              alled when the result is DONE? What about errors / other codes like MISUSE? 
-//              Should we make a "onStatementError" or something that is called then?
-        public native function stepAsync():void;
+        public native function stepAsync():Boolean;
  
         /**
          * Retrieves the name of the specified column in the current row of the query.

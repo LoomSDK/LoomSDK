@@ -20,15 +20,21 @@
 
 #include "platform/CCFileUtils.h"
 #include "loom/script/loomscript.h"
+#include "loom/script/runtime/lsRuntime.h"
 #include "loom/common/core/log.h"
 #include "loom/script/native/lsNativeDelegate.h"
 #include "loom/vendor/sqlite3/sqlite3.h"
+#include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utByteArray.h"
 #include "loom/common/utils/utString.h"
+#include "loom/common/platform/platformThread.h"
+#include "loom/script/native/core/system/lmJSON.h"
+
 
 lmDefineLogGroup(gSQLiteGroup, "loom.sqlite", 1, LoomLogInfo);
 
 using namespace LS;
+
 
 
 //forward declaration of Statement
@@ -41,17 +47,26 @@ class Connection
 protected:
     utString databaseName;
     utString databaseFullPath;
-    sqlite3 *dbHandle;
 
 public:
     LOOM_STATICDELEGATE(OnImportComplete);
 
-    static Connection *open(const char *database, const char *path, int flags);
-    static void backgroundImport(const char *database, const char *path, utByteArray *data);
+    sqlite3 *dbHandle;
+
+    static bool backgroundImportInProgress;
+    static MutexHandle backgroundImportMutex;
+    static const char *backgroundImportDatabase;
+    static JSON *backgroundImportData;
+
+    static Connection *open(const char *database, int flags);
+    static bool backgroundImport(const char *database, JSON *data);
     static const char *getVersion();
+    static void backgroundImportDone(int result);
+    static int __stdcall backgroundImportBody(void *param);
 
     Statement *prepare(const char *query);
     const char* getDBName() { return databaseName.c_str(); }
+
 
 
     int getErrorCode()
@@ -79,7 +94,7 @@ public:
         {
             lmLogError(gSQLiteGroup, "RowID found in getlastInsertRowId the SQLite database %s is larger than a 32 bit integer! The return value will not be as expected!", getDBName());
         }
-        return (int)rowid64;
+        return (int)(rowid64 & 0x00000000ffffffff);
     }
 
     int close()
@@ -99,19 +114,32 @@ public:
 //SQLite Statement binding for Loomscript
 class Statement
 {
-private:
-    Connection *parentDB;
-
 public:
     LOOM_DELEGATE(OnStatementProgress);
     LOOM_DELEGATE(OnStatementComplete);
 
+    bool asyncStepInProgress;
+    MutexHandle stepAsyncMutex;
+    Connection *parentDB;
     sqlite3_stmt *statementHandle;
+
+    static int statementProgressVMIWait;
+    static int stepAsyncProgress(void *param);
+    static int __stdcall stepAsyncBody(void *param);
 
 
     Statement(Connection *c)
     {
         parentDB = c;
+        asyncStepInProgress = false;
+
+        //create our mutex now 
+        stepAsyncMutex = loom_mutex_create();
+    }
+
+    ~Statement()
+    {
+        loom_mutex_destroy(stepAsyncMutex);
     }
 
     int getParameterCount()
@@ -204,28 +232,24 @@ public:
         return result;
     }
 
-    void stepAsync(lua_State *L)
+    bool stepAsync()
     {
-//TODO: create threaded step functionality
-//TEMP: call normal blocking step() for now
-        int result = step();
+        if(asyncStepInProgress)
+        {
+            lmLogError(gSQLiteGroup, "Attempting to run multiple stepAsync calls on the same statement for database: %s", parentDB->getDBName());
+            return false;
+        }
 
-//TEMP: call the progress or complete delegates immmediately for testing
-        if(result == SQLITE_ROW)
-        {
-            _OnStatementProgressDelegate.invoke();
-        }
-        else if(result == SQLITE_DONE)
-        {
-            lualoom_pushnative<Statement>(L, this);
-            _OnStatementCompleteDelegate.incArgCount();
-            _OnStatementCompleteDelegate.invoke();
-            lua_pop(L, 1);
-        }
-        else
-        {
-//TODO: Should we have an additiona _OnStatementErrorDelegate to call here?
-        }
+        //set up the progress handler
+        sqlite3_progress_handler(parentDB->dbHandle, 
+                                    Statement::statementProgressVMIWait, 
+                                    Statement::stepAsyncProgress, 
+                                    this);
+
+        //start up the stepAsync thread
+        asyncStepInProgress = true;
+        loom_thread_start(Statement::stepAsyncBody, (void *)this);    
+        return true;
     }
 
     const char *columnName(int col)
@@ -293,8 +317,50 @@ public:
 
 
 
-//**Connection** external function / variable initialisation
+
+//---Statement--- external function initialisation
+int Statement::statementProgressVMIWait = 1;
+
+int Statement::stepAsyncProgress(void *param)
+{
+    //get the statement
+    Statement *s = (Statement *)param;
+
+    //call our progress delegate
+    s->_OnStatementProgressDelegate.invoke();    
+}
+
+int __stdcall Statement::stepAsyncBody(void *param)
+{
+    //get the statement
+    Statement *s = (Statement *)param;
+
+    //call the internal SQLite step function, then yield the thread
+    int result = sqlite3_step(s->statementHandle); 
+
+    //NOTE: shouldn't need to yield the thread here as the thread will die now anyways...
+    // loom_thread_yield();
+
+    //fire our completion delegate with the result
+    s->_OnStatementCompleteDelegate.pushArgument(result);
+    s->_OnStatementCompleteDelegate.invoke();
+
+    //we're done now, so need to turn off our processing flag
+    loom_mutex_lock(s->stepAsyncMutex);
+    s->asyncStepInProgress = false;
+    loom_mutex_unlock(s->stepAsyncMutex);
+
+    return 0;
+}
+
+
+
+//---Connection--- external function / variable initialisation
 NativeDelegate Connection::_OnImportCompleteDelegate;
+bool Connection::backgroundImportInProgress = false;
+MutexHandle Connection::backgroundImportMutex = loom_mutex_create();;
+const char *Connection::backgroundImportDatabase = NULL;
+JSON *Connection::backgroundImportData = NULL;
 
 Statement *Connection::prepare(const char *query)
 {
@@ -309,7 +375,7 @@ Statement *Connection::prepare(const char *query)
     return s;
 }
 
-Connection *Connection::open(const char *database, const char *path, int flags)
+Connection *Connection::open(const char *database, int flags)
 {
     Connection *c;
 
@@ -323,20 +389,18 @@ Connection *Connection::open(const char *database, const char *path, int flags)
     //create the connection
     c = new Connection();
     c->databaseName = utString(database);
-    
-    //prep the database path
-    if((path == NULL) || (path[0] == '\0'))
+
+    //if we find a path separator in the database name, we assume that it contains a valid path already
+    if(strchr(database, '/') || strchr(database, '\\'))
     {
-        //prefix the system writable path in front of the database name
-        c->databaseFullPath = utString(cocos2d::CCFileUtils::sharedFileUtils()->getWriteablePath().c_str());
+        c->databaseFullPath = c->databaseName;
     }
     else
     {
-        //assume that the user specified a valid system writeable path!!!
-        c->databaseFullPath = utString(path);
+        //no separator, so we need to prefix the system writable path in front of the database name
+        c->databaseFullPath = utString(cocos2d::CCFileUtils::sharedFileUtils()->getWriteablePath().c_str()) + c->databaseName;
     }
-    c->databaseFullPath += c->databaseName;
-
+    
     //open the SQLite DB
     int res = sqlite3_open_v2(c->databaseFullPath.c_str(), &c->dbHandle, flags, 0);
     if(res != SQLITE_OK)
@@ -346,12 +410,23 @@ Connection *Connection::open(const char *database, const char *path, int flags)
     return c;
 }
 
-void Connection::backgroundImport(const char *database, const char *path, utByteArray *data)
+bool Connection::backgroundImport(const char *database, JSON *data)
 {
-//TODO: create threaded open and update of the given database
+    if(Connection::backgroundImportInProgress)
+    {
+        lmLogError(gSQLiteGroup, "Attempting to run multiple backgroundImport calls on the same database: %s", database);
+        return false;
+    }
 
-//TEMP: call the completion delegate immmediately for testing
-    _OnImportCompleteDelegate.invoke();
+    //store values to be used in the thread
+    Connection::backgroundImportDatabase = database;
+    Connection::backgroundImportData = data;
+
+    //start up the backgroundImport thread
+    Connection::backgroundImportInProgress = true;
+    loom_thread_start(Connection::backgroundImportBody, NULL);    
+    return true;
+
 }
 
 const char* Connection::getVersion()
@@ -359,6 +434,118 @@ const char* Connection::getVersion()
     return sqlite3_libversion();
 }
 
+void Connection::backgroundImportDone(int result)
+{    
+    //fire our completion delegate
+    Connection::_OnImportCompleteDelegate.pushArgument(result);
+    Connection::_OnImportCompleteDelegate.invoke();
+
+    //we're done now, so need to turn off our processing flag
+    loom_mutex_lock(Connection::backgroundImportMutex);
+    Connection::backgroundImportInProgress = false;
+    loom_mutex_unlock(Connection::backgroundImportMutex);
+}
+
+int __stdcall Connection::backgroundImportBody(void *param)
+{
+    int i;
+    int arraySize;
+    const char *database;
+    JSON *data;
+    JSON *dataArray;
+    JSON *valueObject;
+    Connection *c;
+    const char *tableName;
+    const char *valueKey;
+    utString query;
+
+
+    //get the database name and JSON data
+    database = Connection::backgroundImportDatabase;
+    data = Connection::backgroundImportData;
+
+//BEN QUESTION: Do we need to handle CREATE of a database as well? 
+//    Or will backgroundImport only be used on already created DBs?
+
+    //open the database for read/write
+    c = Connection::open(database, SQLITE_OPEN_READWRITE);
+    if((c == NULL) || (c->getErrorCode() != SQLITE_OK))
+    {
+        if(c != NULL)
+        {
+            c->close();
+        }
+        Connection::backgroundImportDone(c->getErrorCode());        
+        return 0;
+    }
+    //NOTE: shouldn't need to yield the thread here as the thread will die now anyways...
+    // loom_thread_yield();
+
+
+////////////////////////////////////////////////
+//
+//BEN QUESTION: Does this functionality seem to be what you want?
+//
+    //pull out the JSON data to use in the query
+    //NOTE: this expects the JSON to be formatted as a single key:array[object,object,...] like:
+    //      { "table_name": [ {"column": value}, ... ] }
+    tableName = data->getObjectFirstKey();
+    dataArray = data->getArray(tableName);
+    arraySize = dataArray->getArrayCount();
+
+    //create the INSERT query statement to be something like "INSERT into my_table values(?,?,?)"
+    query = utString("INSERT into ") + utString(tableName) + utString(" values (");
+    for(i=0;i<arraySize;i++)
+    {
+        if(i != 0)
+        {
+            query += utString(",");
+        }
+        query += utString("?");
+    }
+    query += utString(")");
+
+    //create the Statement to bind the data to
+    Statement *s = c->prepare(query.c_str());
+    if(c->getErrorCode() != SQLITE_OK)
+    {
+        c->close();
+        Connection::backgroundImportDone(c->getErrorCode());        
+        return 0;        
+    }
+
+    //go through the data array and bind all of the values to the statement
+    for(i=0;i<arraySize;i++)
+    {
+        valueObject = dataArray->getArrayObject(i);
+        valueKey = valueObject->getObjectFirstKey();
+        switch(valueObject->getObjectJSONType(valueKey))
+        {
+            case JSON_STRING:
+                s->bindString(i + 1, valueObject->getString(valueKey));
+                break;
+            case JSON_INTEGER:
+                s->bindInt(i + 1, valueObject->getInteger(valueKey));
+                break;
+            case JSON_REAL:
+                s->bindDouble(i + 1, valueObject->getFloat(valueKey));
+                break;
+            case JSON_TRUE:
+            case JSON_FALSE:
+                s->bindInt(i + 1, (valueObject->getBoolean(valueKey) ? 1 : 0));
+                break;
+        }
+    }
+    s->step();
+    s->finalize();
+////////////////////////////////////////////////////////////
+
+    //done, so close the connection now
+    c->close();
+    Connection::backgroundImportDone(SQLITE_OK);        
+
+    return 0;
+}
 
 
 //Loomscript binding registations for Connection and Statement
@@ -390,6 +577,7 @@ static int registerLoomSQLiteStatement(lua_State *L)
     beginPackage(L, "loom.sqlite")
       .beginClass<Statement>("Statement")
 
+        .addStaticVar("statementProgressVMIWait", &Statement::statementProgressVMIWait)
         .addVarAccessor("onStatementProgress", &Statement::getOnStatementProgressDelegate)
         .addVarAccessor("onStatementComplete", &Statement::getOnStatementCompleteDelegate)
 
