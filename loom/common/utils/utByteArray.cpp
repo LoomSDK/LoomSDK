@@ -23,6 +23,10 @@
 #include "utByteArray.h"
 #include "utStreams.h"
 
+// When uncompressing with an unknown uncompressed size
+// the buffer is resized if it's not big enough.
+// This defines the maximum number of bytes the buffer
+// can be enlarged by to avoid resizing the buffer too much.
 #define BUFFER_DELTA_MAX 10*1024*1024
 
 void utByteArray::clear()
@@ -113,6 +117,8 @@ void utByteArray::uncompress(int uncompressedSize, int initialSize)
         return;
     }
     
+    // Inflate while status is Z_OK, which means that
+    // inflation is still in progress, but needs more space.
     while (true) {
         ret = inflate(&stream, Z_NO_FLUSH);
         if (ret == Z_OK) {
