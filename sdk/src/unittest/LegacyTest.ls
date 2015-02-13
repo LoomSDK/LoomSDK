@@ -21,6 +21,10 @@ limitations under the License.
 package unittest
 {
 
+/**
+ * This class is used for backward compatibility with previous tests.
+ * Do not use this class for new tests if at all possible.
+ */
 public class LegacyTest
 {
     public static var verbose:Boolean = true;

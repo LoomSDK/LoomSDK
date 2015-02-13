@@ -68,16 +68,19 @@ package tests {
         
         [Test] function testCompare() {
             Assert.compare(123, 123);
+            Assert.compare("abc", "abc");
             if (testFailures) Assert.compare(123, 456);
         }
         
         [Test] function testEqual() {
             Assert.equal(789, 789);
+            Assert.equal("test", "test");
             if (testFailures) Assert.equal(789, 123);
         }
         
         [Test] function testNotEqual() {
             Assert.notEqual(123, 456);
+            Assert.notEqual("test", "nono");
             if (testFailures) Assert.compare(123, 123);
         }
         
@@ -118,12 +121,14 @@ package tests {
         [Test] function testGreater() {
             Assert.greater(2, 0);
             Assert.greater(2, 1);
+            Assert.greater("b", "a");
             if (testFailures) Assert.greater(1, 2);
         }
         
         [Test] function testLess() {
             Assert.less(0, 2);
             Assert.less(1, 2);
+            Assert.less("abc", "def");
             if (testFailures) Assert.less(2, 1);
         }
         
@@ -131,6 +136,8 @@ package tests {
             Assert.greaterOrEqual(2, 0);
             Assert.greaterOrEqual(2, 1);
             Assert.greaterOrEqual(2, 2);
+            Assert.greaterOrEqual("f", "e");
+            Assert.greaterOrEqual("a", "a");
             if (testFailures) Assert.greaterOrEqual(1, 2);
         }
         
@@ -138,6 +145,8 @@ package tests {
             Assert.lessOrEqual(0, 2);
             Assert.lessOrEqual(1, 2);
             Assert.lessOrEqual(2, 2);
+            Assert.lessOrEqual("g", "h");
+            Assert.lessOrEqual("g", "g");
             if (testFailures) Assert.lessOrEqual(2, 1);
         }
         
