@@ -201,6 +201,7 @@ public:
     {
         void *bytes;
         int size;
+        int result;
 
         if(!value || !value->getSize())
         {
@@ -214,7 +215,7 @@ public:
         }
 
         //bind the blob to the statement
-        int result = sqlite3_bind_blob(statementHandle, index, (const void *)bytes, size, SQLITE_TRANSIENT); 
+        result = sqlite3_bind_blob(statementHandle, index, (const void *)bytes, size, SQLITE_TRANSIENT); 
         if(result != SQLITE_OK)
         {
             lmLogError(gSQLiteGroup, "Error calling bindBytes for database: %s with Result Code: %i", parentDB->getDBName(), result);
@@ -279,13 +280,15 @@ public:
 
     utByteArray *columnBytes(int col)
     {
+        int size;
+
         //get the blob from the column
         void *blob = (void *)sqlite3_column_blob(statementHandle, col);
         if(blob == NULL)
         {
             return NULL;
         }
-        int size = sqlite3_column_bytes(statementHandle, col);
+        size = sqlite3_column_bytes(statementHandle, col);
 
         //valid blob so allocate byte array for it
         utByteArray *bytes = new utByteArray();
@@ -332,11 +335,14 @@ int Statement::stepAsyncProgress(void *param)
 
 int __stdcall Statement::stepAsyncBody(void *param)
 {
+    int result;
+    Statement *s;
+
     //get the statement
-    Statement *s = (Statement *)param;
+    s = (Statement *)param;
 
     //call the internal SQLite step function, then yield the thread
-    int result = sqlite3_step(s->statementHandle); 
+    result = sqlite3_step(s->statementHandle); 
 
     //NOTE: shouldn't need to yield the thread here as the thread will die now anyways...
     // loom_thread_yield();
@@ -364,10 +370,12 @@ JSON *Connection::backgroundImportData = NULL;
 
 Statement *Connection::prepare(const char *query)
 {
-    Statement *s = new Statement(this);
+    int res;
+    Statement *s;
 
     //prepare the database with the query provided
-    int res = sqlite3_prepare_v2(dbHandle, query, -1, &s->statementHandle, NULL);
+    s = new Statement(this);
+    res = sqlite3_prepare_v2(dbHandle, query, -1, &s->statementHandle, NULL);
     if(res != SQLITE_OK)
     {
         lmLogError(gSQLiteGroup, "Error preparing the SQLite database: %s with message: %s", getDBName(), getErrorMessage());
@@ -378,6 +386,7 @@ Statement *Connection::prepare(const char *query)
 Connection *Connection::open(const char *database, int flags)
 {
     Connection *c;
+    int res;
 
     //check for valid database name
     if((database == NULL) || (database[0] == '\0'))
@@ -402,7 +411,7 @@ Connection *Connection::open(const char *database, int flags)
     }
     
     //open the SQLite DB
-    int res = sqlite3_open_v2(c->databaseFullPath.c_str(), &c->dbHandle, flags, 0);
+    res = sqlite3_open_v2(c->databaseFullPath.c_str(), &c->dbHandle, flags, 0);
     if(res != SQLITE_OK)
     {
         lmLogError(gSQLiteGroup, "Error opening the SQLite database file: %s with message: %s", c->databaseFullPath.c_str(), c->getErrorMessage());
@@ -426,7 +435,6 @@ bool Connection::backgroundImport(const char *database, JSON *data)
     Connection::backgroundImportInProgress = true;
     loom_thread_start(Connection::backgroundImportBody, NULL);    
     return true;
-
 }
 
 const char* Connection::getVersion()
