@@ -251,7 +251,7 @@ package
 
 		private function openConnection()
 		{
-		    connection = Connection.open("MyTestDB.db", null,  Connection.FLAG_CREATE | Connection.FLAG_READWRITE );
+		    connection = Connection.open("MyTestDB.db", Connection.FLAG_CREATE | Connection.FLAG_READWRITE );
 		}
 
 		private function prepareStatement(sqlString:String)
@@ -324,6 +324,7 @@ package
 	        	for (var i = 0; i < 3; i++) 
 	        	{
 					var button = new Button();
+                    button.isEnabled = false;
 		            button.label = "";
 		            button.width = 100;
 		            button.y = 305 + (40 * j);
@@ -334,6 +335,5 @@ package
 	        	grid.push(row);
         	}
         }
-		
 	}
 }
