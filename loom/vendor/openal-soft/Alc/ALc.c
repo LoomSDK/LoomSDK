@@ -2859,7 +2859,7 @@ static void ReleaseALC(void)
         do {
             num++;
         } while((dev=dev->next) != NULL);
-        ERR("%u device%s not closed\n", num, (num>1)?"s":"");
+        //ERR("%u device%s not closed\n", num, (num>1)?"s":"");
     }
 }
 
