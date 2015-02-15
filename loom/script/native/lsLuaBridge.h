@@ -49,7 +49,7 @@
 #define LUABRIDGE_LUABRIDGE_HEADER
 
 // undef to increase performance
-#define LUABRIDGE_DEBUG
+//#define LUABRIDGE_DEBUG
 
 #include "loom/script/common/lsError.h"
 #include "loom/script/runtime/lsLua.h"
