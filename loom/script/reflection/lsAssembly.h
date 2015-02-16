@@ -83,7 +83,7 @@ public:
     }
 
 
-    static int Assembly::loadBytes(lua_State *L);
+    static int loadBytes(lua_State *L);
 
 
     inline LSLuaState *getLuaState()
