@@ -458,7 +458,6 @@ int __stdcall Connection::backgroundImportBody(void *param)
 {
     int i, j;
     int numRows;
-    int numColumns;
     JSON *data;
     JSON *table;
     JSON *row;
