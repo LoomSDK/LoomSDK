@@ -31,9 +31,10 @@ package
 		var queryInput:TextInput;
 		var countInput:TextInput;
 		var timeLabel:Label;
-		var param1Input:TextInput;
-		var param2Input:TextInput;
-		var param3Input:TextInput;
+        var outputLabel:Label;
+        var param1Input:TextInput;
+        var param2Input:TextInput;
+        var param3Input:TextInput;
 		var loadingOverlay:Image;
 		var grid:Vector.<Vector.<Button>> =[];		
         var theme:MetalWorksMobileTheme;
@@ -65,6 +66,15 @@ package
             timeLabel.y = 270;
             timeLabel.text = "";
             stage.addChild(timeLabel);
+
+            
+            outputLabel = new Label();
+            outputLabel.width = stage.stageWidth-25;;
+            outputLabel.height = 45;
+            outputLabel.x = 12.5;
+            outputLabel.y = 440;
+            outputLabel.text = "";
+            stage.addChild(outputLabel);
 
 			createOutputGrid();
             
@@ -167,17 +177,6 @@ package
     		param3Input.text = "Soap";
         }
 
-        private function stepThroughTable():int
-        {
-        	var queryExecCount = 0;
-        	prepareStatement("SELECT surname FROM test_table WHERE name='Joe'");
-        	while (statement.step() == ResultCode.SQLITE_ROW)	
-        	{
-    			queryExecCount++;
-        	}
-        	return queryExecCount;
-        }
-
         private function startQuery()
         {
         	loadingOverlay.alpha = 0.75;
@@ -188,21 +187,23 @@ package
 
         private function runQuery()
         {
+            //Get the run count from the input box and validate it
         	var runCount = 1;
 			if (!String.isNullOrEmpty(countInput.text))
 			{
 				runCount = Number.fromString(countInput.text);
-				if (runCount == 0)
-				{
-					runCount = 1;
-					countInput.text = "1";
-				}
 			}
+            if (runCount == 0)
+            {
+                runCount = 1;
+                countInput.text = "1";
+            }
 
 			var queryString = queryInput.text;
 			var start = 0;
 			var time = 0;
 
+            //if the query is not a select, check if it is an insert so we can bind the parameters
 			if (queryString.indexOf("SELECT ") == -1)
 			{
 				start = Platform.getTime();
@@ -214,7 +215,8 @@ package
 
 					for (var i = 0; i < runCount; i++) 
 					{
-						prepareStatement(queryString);
+						if (prepareStatement(queryString) == 0)
+                            return;
 						statement.bindInt(1, param1);
 						statement.bindString(2, param2);
 						statement.bindString(3, param3);
@@ -226,14 +228,21 @@ package
 				 }
 				 else //Other SQLite functions
 				 {
-					prepareStatement(queryString);
+					if (prepareStatement(queryString)== 0)
+                            return;
 			 		statement.step();
 				 }
+
+                //select the whole table to display in our grid
+                if (prepareStatement("SELECT * FROM example_table") == 0)
+                    return;
+                displayData(); 
 			}
 			else
 			{
 				start = Platform.getTime();
-				prepareStatement(queryString);
+				if (prepareStatement(queryString)== 0)
+                    return;
 				for (var j = 0; j < runCount; j++) 
 				{
 					if (statement.step() != ResultCode.SQLITE_ROW)
@@ -254,23 +263,31 @@ package
 		    connection = Connection.open("MyTestDB.db", Connection.FLAG_CREATE | Connection.FLAG_READWRITE );
 		}
 
-		private function prepareStatement(sqlString:String)
+		private function prepareStatement(sqlString:String):int
 		{
 			statement = connection.prepare(sqlString);
 		    if(connection.errorCode != ResultCode.SQLITE_OK)
 		    {
-				trace("prepare ERROR: " + connection.errorMessage);
+				outputLabel.text = "prepare ERROR: " + connection.errorMessage;
+                trace ("prepare ERROR: " + connection.errorMessage);
+                loadingOverlay.alpha = 0;
+                clearGrid();
+                return 0;
 		    }
 		    else
 		    {
-			    trace("prepare SUCCESS!");
+			    outputLabel.text = "prepare SUCCESS!";
+                return 1;
 		    }
 		}
 
+
+        //all that follows is for display purposes only
 		private function displayData()
 		{
 			clearGrid();
 			getColumnNames();
+            statement.reset();
 			var rowCount = 1;
 			while (statement.step() == ResultCode.SQLITE_ROW && rowCount < 4)
 			{
@@ -327,7 +344,8 @@ package
                     button.isEnabled = false;
 		            button.label = "";
 		            button.width = 100;
-		            button.y = 305 + (40 * j);
+                    button.height = 30;
+		            button.y = 305 + (30 * j);
 		            button.x = button.width * i + 10;
 		            stage.addChild(button);
 		    		row.push(button);      	
