@@ -25,6 +25,7 @@
 #include "loom/script/reflection/lsAssembly.h"
 #include "loom/script/runtime/lsLuaState.h"
 #include "loom/common/core/assert.h"
+#include "loom/script/native/lsNativeInterface.h"
 
 namespace LS {
 // loaded assemblies by lua_State (utPointerHashKey)
@@ -130,6 +131,20 @@ Assembly *Assembly::loadFromString(LSLuaState *vm, const utString& source)
     return assembly;
 }
 
+int Assembly::loadBytes(lua_State *L) {
+
+    utByteArray *bytes = static_cast<utByteArray*>(lualoom_getnativepointer(L, 1, false, "system.ByteArray"));
+    
+    Assembly *assembly = LSLuaState::getExecutingVM(L)->loadExecutableAssemblyBinary(static_cast<const char*>(bytes->getDataPtr()), bytes->getSize());
+
+    lmAssert(assembly, "Error loading assembly bytes");
+
+	lualoom_pushnative(L, assembly);
+
+	assembly->freeByteCode();
+
+    return 1;
+}
 
 Assembly *Assembly::loadBinary(LSLuaState *vm, utByteArray *bytes)
 {

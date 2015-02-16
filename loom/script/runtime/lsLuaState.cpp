@@ -448,12 +448,25 @@ Assembly *LSLuaState::loadExecutableAssembly(const utString& assemblyName, bool 
         filePath += ".loom";
     }
 
-    Assembly   *assembly = NULL;
     const char *buffer   = NULL;
     long       bufferSize;
     LSMapFile(filePath.c_str(), (void **)&buffer, &bufferSize);
 
     lmAssert(buffer && bufferSize, "Error loading executable: %s, unable to map file", assemblyName.c_str());
+
+    Assembly* assembly = loadExecutableAssemblyBinary(buffer, bufferSize);
+
+	LSUnmapFile(filePath.c_str());
+
+    lmAssert(assembly, "Error loading executable: %s", assemblyName.c_str());
+
+	assembly->freeByteCode();
+	
+	return assembly;
+}
+
+Assembly *LSLuaState::loadExecutableAssemblyBinary(const char *buffer, long bufferSize) {
+    Assembly   *assembly = NULL;
 
     utByteArray headerBytes;
 
@@ -476,10 +489,6 @@ Assembly *LSLuaState::loadExecutableAssembly(const utString& assemblyName, bool 
     lmAssert(readSZ == sz, "Read size mismatch");
 
     assembly = loadAssemblyBinary(&bytes);
-
-    LSUnmapFile(filePath.c_str());
-
-    lmAssert(assembly, "Error loading executable: %s", assemblyName.c_str());
 
     return assembly;
 }
