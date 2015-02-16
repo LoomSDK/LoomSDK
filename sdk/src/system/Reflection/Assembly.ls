@@ -26,6 +26,11 @@ package system.reflection {
  */
 native class Assembly {
 
+    /**
+     * Loads an assembly from the provided bytes and returns it as an Assembly object.
+     * @param bytes The bytes to load the assembly from.
+     * @return  The new Assembly object.
+     */
     public native static function loadBytes(bytes:ByteArray):Assembly;
     
     /**
