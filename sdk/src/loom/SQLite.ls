@@ -66,46 +66,51 @@ package loom.sqlite
         /** 
          * Everything is OK.
          */
-        SQLITE_OK       = 0,
+        SQLITE_OK           = 0,
 
         /** 
          * There is an ERROR that should be handled.  More information may be 
          * available with a call to Connection.errorMessage.
          */
-        SQLITE_ERROR    = 1,
+        SQLITE_ERROR        = 1,
 
         /** 
          * The database is currently BUSY handling another process, 
          * due to a conflict with a different connection.
          */
-        SQLITE_BUSY     = 5,
+        SQLITE_BUSY         = 5,
 
         /** 
          * The database is currently LOCKED handling another process, 
          * due to a conflict with the current connection.
          */
-        SQLITE_LOCKED   = 6,
+        SQLITE_LOCKED       = 6,
+
+        /** 
+         * The previous database operation was aborted through an INTERRUPT request. 
+         */
+        SQLITE_INTERRUPT    = 9,
 
         /** 
          * The current action is a MISUSE of of the SQLite interface.
          */
-        SQLITE_MISUSE   = 21,
+        SQLITE_MISUSE       = 21,
 
         /** 
          * A supplied parameter is out of RANGE.
          */
-        SQLITE_RANGE    = 25,
+        SQLITE_RANGE        = 25,
 
         /** 
          * Returned by Statement.step() to indicate that another ROW of output.
          * is available.
          */
-        SQLITE_ROW      = 100,
+        SQLITE_ROW          = 100,
 
         /** 
          * The operation is now DONE. Mostly commonly seen returned by Statement.step().
          */
-        SQLITE_DONE     = 101
+        SQLITE_DONE         = 101
     }
 
     /** 
@@ -178,8 +183,13 @@ package loom.sqlite
          *  path location.
          *
          *  The format of the JSON data is:
-         *      { "table_name": [ {"column": value}, ... ] }
-         *  Where "table_name" is the name of the table to insert into
+         *      { "tableA": [ {"columnA": value, "columnB": value, ...}, 
+                                 {"columnA": value, "columnB": value, ...}], 
+                  "tableB": [ {"columnA": value, "columnB": value, ...}, 
+                                 {"columnA": value, "columnB": value, ...}], 
+                  ...}
+         *  Where "table*", etc. is the name of the table to insert into, 
+         *  "column*" is the column to insert "value" into
          *
          *  @param database Name of the databse to import the data into.
          *  @param data JSON data to import into the database.

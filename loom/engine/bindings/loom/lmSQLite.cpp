@@ -330,7 +330,8 @@ int Statement::stepAsyncProgress(void *param)
     Statement *s = (Statement *)param;
 
     //call our progress delegate
-    s->_OnStatementProgressDelegate.invoke();    
+    s->_OnStatementProgressDelegate.invoke();  
+    return 0;  
 }
 
 int __stdcall Statement::stepAsyncBody(void *param)
@@ -355,7 +356,6 @@ int __stdcall Statement::stepAsyncBody(void *param)
     loom_mutex_lock(s->stepAsyncMutex);
     s->asyncStepInProgress = false;
     loom_mutex_unlock(s->stepAsyncMutex);
-
     return 0;
 }
 
@@ -456,25 +456,32 @@ void Connection::backgroundImportDone(int result)
 
 int __stdcall Connection::backgroundImportBody(void *param)
 {
-    int i;
-    int arraySize;
-    const char *database;
+    int i, j;
+    int numRows;
+    int numColumns;
     JSON *data;
-    JSON *dataArray;
-    JSON *valueObject;
+    JSON *table;
+    JSON *row;
     Connection *c;
-    const char *tableName;
-    const char *valueKey;
+    Statement *s;
     utString query;
+    const char *database;
+    const char *tableName;
+    const char *columnName;
+    const char *firstColumn;
 
 
     //get the database name and JSON data
     database = Connection::backgroundImportDatabase;
     data = Connection::backgroundImportData;
 
+///////////
+///////////
 //BEN QUESTION: Do we need to handle CREATE of a database as well? 
 //    Or will backgroundImport only be used on already created DBs?
-
+///////////
+///////////
+    
     //open the database for read/write
     c = Connection::open(database, SQLITE_OPEN_READWRITE);
     if((c == NULL) || (c->getErrorCode() != SQLITE_OK))
@@ -489,64 +496,85 @@ int __stdcall Connection::backgroundImportBody(void *param)
     //NOTE: shouldn't need to yield the thread here as the thread will die now anyways...
     // loom_thread_yield();
 
-
-////////////////////////////////////////////////
-//
-//BEN QUESTION: Does this functionality seem to be what you want?
-//
     //pull out the JSON data to use in the query
-    //NOTE: this expects the JSON to be formatted as a single key:array[object,object,...] like:
-    //      { "table_name": [ {"column": value}, ... ] }
+    //NOTE: this expects the JSON to be formatted as like:
+    // { "tableA": [ {"columnA": value, "columnB": value, ...}, 
+    //              {"columnA": value, "columnB": value, ...}], 
+    //   "tableB": [ {"columnA": value, "columnB": value, ...}, 
+    //              {"columnA": value, "columnB": value, ...}], 
+    //   ...}
     tableName = data->getObjectFirstKey();
-    dataArray = data->getArray(tableName);
-    arraySize = dataArray->getArrayCount();
-
-    //create the INSERT query statement to be something like "INSERT into my_table values(?,?,?)"
-    query = utString("INSERT into ") + utString(tableName) + utString(" values (");
-    for(i=0;i<arraySize;i++)
+    while((tableName != NULL) && (tableName[0] != '\0'))
     {
-        if(i != 0)
-        {
-            query += utString(",");
+        table = data->getArray(tableName);
+        numRows = table->getArrayCount();
+
+        //create the INSERT query statement to be something like "INSERT into my_table values(?,?,?)"
+        query = utString("INSERT into ") + utString(tableName) + utString(" values (");
+
+        //we need to pre-iterate the number of rows to insert to in this table
+        row = table->getArrayObject(0);
+        columnName = row->getObjectFirstKey();
+        firstColumn = columnName;
+        while((columnName != NULL) && (columnName[0] != '\0'))
+        {        
+            if(columnName != firstColumn)
+            {
+                query += utString(",");
+            }
+            query += utString("?");
+            columnName = row->getObjectNextKey(columnName);
         }
-        query += utString("?");
-    }
-    query += utString(")");
+        query += utString(")");
 
-    //create the Statement to bind the data to
-    Statement *s = c->prepare(query.c_str());
-    if(c->getErrorCode() != SQLITE_OK)
-    {
-        c->close();
-        Connection::backgroundImportDone(c->getErrorCode());        
-        return 0;        
-    }
-
-    //go through the data array and bind all of the values to the statement
-    for(i=0;i<arraySize;i++)
-    {
-        valueObject = dataArray->getArrayObject(i);
-        valueKey = valueObject->getObjectFirstKey();
-        switch(valueObject->getObjectJSONType(valueKey))
+        //get data to insert into this table
+        for(i=0;i<numRows;i++)
         {
-            case JSON_STRING:
-                s->bindString(i + 1, valueObject->getString(valueKey));
-                break;
-            case JSON_INTEGER:
-                s->bindInt(i + 1, valueObject->getInteger(valueKey));
-                break;
-            case JSON_REAL:
-                s->bindDouble(i + 1, valueObject->getFloat(valueKey));
-                break;
-            case JSON_TRUE:
-            case JSON_FALSE:
-                s->bindInt(i + 1, (valueObject->getBoolean(valueKey) ? 1 : 0));
-                break;
+            //create the Statement to bind the data to for this row
+            s = c->prepare(query.c_str());
+            if(c->getErrorCode() != SQLITE_OK)
+            {
+                c->close();
+                Connection::backgroundImportDone(c->getErrorCode());        
+                return 0;        
+            }
+
+            //insert all items from the current row into the table
+            j = 1;
+            row = table->getArrayObject(i);
+            columnName = row->getObjectFirstKey();
+            while((columnName != NULL) && (columnName[0] != '\0'))
+            {
+                switch(row->getObjectJSONType(columnName))
+                {
+                    case JSON_STRING:
+                        s->bindString(j, row->getString(columnName));
+                        break;
+                    case JSON_INTEGER:
+                        s->bindInt(j, row->getInteger(columnName));
+                        break;
+                    case JSON_REAL:
+                        s->bindDouble(j, row->getFloat(columnName));
+                        break;
+                    case JSON_TRUE:
+                    case JSON_FALSE:
+                        s->bindInt(j, (row->getBoolean(columnName) ? 1 : 0));
+                        break;
+                }
+
+                //next column
+                j++;
+                columnName = row->getObjectNextKey(columnName);
+            }
+
+            //apply the bindings for this row
+            s->step();
+            s->finalize();
         }
+
+        //go to the next table in the JSON (if any)
+        tableName = data->getObjectNextKey(tableName);
     }
-    s->step();
-    s->finalize();
-////////////////////////////////////////////////////////////
 
     //done, so close the connection now
     c->close();
