@@ -18,34 +18,52 @@
  * ===========================================================================
  */
 
+#include "lmProcess.h"
 
 #include "loom/script/native/lsLuaBridge.h"
 
-namespace LS {
-class Process {
-public:
-    static void _exit(int exitCode)
-    {
-        exit(exitCode);
-    }
-};
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+#include <Windows.h>
+#endif
 
-
-static int registerSystemProcess(lua_State *L)
-{
-    beginPackage(L, "system")
-
-       .beginClass<Process> ("Process")
-
-       .addStaticMethod("exit", &Process::_exit)
-
-
-       .endClass()
-
-       .endPackage();
-
-    return 0;
+extern "C" {
+    void loom_appShutdown();
 }
+
+bool LS::Process::consoleAttached = false;
+void LS::Process::cleanupConsole()
+{
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+    if (consoleAttached) {
+        LRESULT res;
+        HWND hConsole = GetConsoleWindow();
+        res = PostMessage(hConsole, WM_KEYDOWN, VK_RETURN, 1);
+        res = PostMessage(hConsole, WM_KEYUP, VK_RETURN, 0xC0000001);
+    }
+#endif
+}
+void LS::Process::_exit(int exitCode)
+{
+    cleanupConsole();
+    exit(exitCode);
+}
+
+namespace LS {
+    static int registerSystemProcess(lua_State *L)
+    {
+        beginPackage(L, "system")
+
+            .beginClass<Process>("Process")
+
+            .addStaticMethod("exit", &Process::_exit)
+
+
+            .endClass()
+
+            .endPackage();
+
+        return 0;
+    }
 }
 
 void installSystemProcess()

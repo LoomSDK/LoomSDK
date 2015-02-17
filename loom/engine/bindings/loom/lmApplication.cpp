@@ -44,6 +44,8 @@ using namespace LS;
 
 #include "loom/common/config/applicationConfig.h"
 
+#include "loom/script/native/core/system/lmProcess.h"
+
 LSLuaState     *LoomApplication::rootVM      = NULL;
 bool           LoomApplication::reloadQueued = false;
 bool           LoomApplication::suppressAssetTriggeredReload = false;
@@ -59,6 +61,9 @@ lmDefineLogGroup(scriptLogGroup, "loom.script", 1, LoomLogInfo);
 
 // Define the global Loom C entrypoints.
 extern "C" {
+
+extern void loomsound_shutdown();
+
 void loom_appSetup(void)
 {
     LoomApplication::initializeCoreServices();
@@ -355,9 +360,10 @@ int LoomApplication::initializeCoreServices()
     return 0;
 }
 
-
 void LoomApplication::shutdown()
 {
+    loomsound_shutdown();
+
     platform_HTTPCleanup();
 
     // Shut down application subsystems.

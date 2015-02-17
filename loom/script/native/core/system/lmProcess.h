@@ -18,34 +18,16 @@
  * ===========================================================================
  */
 
+#ifndef _lmprocess_h
+#define _lmprocess_h
 
-#include "loom/script/native/lsLuaBridge.h"
-#include "loom/script/reflection/lsAssembly.h"
-#include "loom/script/runtime/lsLuaState.h"
-
-using namespace LS;
-
-static int registerSystemReflectionAssembly(lua_State *L)
-{
-    beginPackage(L, "system.reflection")
-
-       .beginClass<Assembly>("Assembly")
-
-       .addMethod("execute", &Assembly::execute)
-       .addMethod("getName", &Assembly::getName)
-       .addMethod("getTypeCount", &Assembly::getTypeCount)
-       .addMethod("getTypeAtIndex", &Assembly::getTypeAtIndex)
-       .addStaticLuaFunction("loadBytes", &Assembly::loadBytes)
-
-       .endClass()
-
-       .endPackage();
-
-    return 0;
+namespace LS {
+    class Process {
+    public:
+        static bool consoleAttached;
+        static void cleanupConsole();
+        static void _exit(int exitCode);
+    };
 }
 
-
-void installSystemReflectionAssembly()
-{
-    NativeInterface::registerNativeType<Assembly>(registerSystemReflectionAssembly);
-}
+#endif
