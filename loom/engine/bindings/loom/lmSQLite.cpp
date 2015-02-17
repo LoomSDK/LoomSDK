@@ -477,6 +477,7 @@ int __stdcall Connection::backgroundImportBody(void *param)
     {
         lmLogError(gSQLiteGroup, "Error parsing the JSON file during backgroundImport for database: %s", Connection::backgroundImportDatabase);
         Connection::backgroundImportDone(c->getErrorCode());        
+        delete data;
         return 0;
     }
 
@@ -489,6 +490,7 @@ int __stdcall Connection::backgroundImportBody(void *param)
             c->close();
         }
         Connection::backgroundImportDone(c->getErrorCode());        
+        delete data;
         return 0;
     }
     //NOTE: shouldn't need to yield the thread here as the thread will die now anyways...
@@ -534,6 +536,7 @@ int __stdcall Connection::backgroundImportBody(void *param)
             {
                 c->close();
                 Connection::backgroundImportDone(c->getErrorCode());        
+                delete data;
                 return 0;        
             }
 
@@ -577,6 +580,7 @@ int __stdcall Connection::backgroundImportBody(void *param)
     //done, so close the connection now
     c->close();
     Connection::backgroundImportDone(SQLITE_OK);        
+    delete data;
 
     return 0;
 }
