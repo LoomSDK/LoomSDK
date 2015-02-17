@@ -2,7 +2,7 @@
  "name" : "Main",   
  "version" : "1.0",
  "executable" : true,
- "references" : [ "System", "Loom", "Feathers"],
+ "references" : [ "System", "Loom", "Feathers", "UnitTest"],
  "outputDir" : "./bin",
  "modules" : [ {
     "name" : "Main",     
