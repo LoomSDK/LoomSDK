@@ -56,10 +56,10 @@ public:
     static bool backgroundImportInProgress;
     static MutexHandle backgroundImportMutex;
     static const char *backgroundImportDatabase;
-    static JSON *backgroundImportData;
+    static const char *backgroundImportData;
 
     static Connection *open(const char *database, int flags);
-    static bool backgroundImport(const char *database, JSON *data);
+    static bool backgroundImport(const char *database, const char *data);
     static const char *getVersion();
     static void backgroundImportDone(int result);
     static int __stdcall backgroundImportBody(void *param);
@@ -366,7 +366,7 @@ NativeDelegate Connection::_OnImportCompleteDelegate;
 bool Connection::backgroundImportInProgress = false;
 MutexHandle Connection::backgroundImportMutex = loom_mutex_create();;
 const char *Connection::backgroundImportDatabase = NULL;
-JSON *Connection::backgroundImportData = NULL;
+const char *Connection::backgroundImportData = NULL;
 
 Statement *Connection::prepare(const char *query)
 {
@@ -419,7 +419,7 @@ Connection *Connection::open(const char *database, int flags)
     return c;
 }
 
-bool Connection::backgroundImport(const char *database, JSON *data)
+bool Connection::backgroundImport(const char *database, const char *data)
 {
     if(Connection::backgroundImportInProgress)
     {
@@ -458,31 +458,30 @@ int __stdcall Connection::backgroundImportBody(void *param)
 {
     int i, j;
     int numRows;
+    bool ok;
     JSON *data;
     JSON *table;
     JSON *row;
     Connection *c;
     Statement *s;
     utString query;
-    const char *database;
     const char *tableName;
     const char *columnName;
     const char *firstColumn;
 
 
-    //get the database name and JSON data
-    database = Connection::backgroundImportDatabase;
-    data = Connection::backgroundImportData;
+    //load the JSON data
+    data = new JSON();
+    ok = data->loadString(Connection::backgroundImportData);
+    if(!ok)
+    {
+        lmLogError(gSQLiteGroup, "Error parsing the JSON file during backgroundImport for database: %s", Connection::backgroundImportDatabase);
+        Connection::backgroundImportDone(c->getErrorCode());        
+        return 0;
+    }
 
-///////////
-///////////
-//BEN QUESTION: Do we need to handle CREATE of a database as well? 
-//    Or will backgroundImport only be used on already created DBs?
-///////////
-///////////
-    
     //open the database for read/write
-    c = Connection::open(database, SQLITE_OPEN_READWRITE);
+    c = Connection::open(Connection::backgroundImportDatabase, SQLITE_OPEN_READWRITE);
     if((c == NULL) || (c->getErrorCode() != SQLITE_OK))
     {
         if(c != NULL)

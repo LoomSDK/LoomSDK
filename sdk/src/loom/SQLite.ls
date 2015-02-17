@@ -27,13 +27,6 @@ package loom.sqlite
      * Loom provides animplementation of SQLite that can be
      * used for database management across all supported platforms.
      *
-     * Example usage:
-     *      var c = Connection.open("my.db");
-     *      var stmt = c.prepare("SELECT * FROM hotel_rates WHERE cityId=? AND rateDate >= ? AND rateDate <= ?");
-     *      stmt.bindInt(1, 1); stmt.bindInt(2, 2304); stmt.bindInt(3, 2311);
-     *      while(stmt.step() == Statement.ROW) trace("Saw rate of " + stmt.columnNumber(1));
-     *      stmt.finalize();
-     *      c.close();
      */
 
     /**
@@ -148,6 +141,14 @@ package loom.sqlite
 
     /** 
      * An open session to an SQLite database file.
+     *
+     * Example usage:
+     *      var c = Connection.open("my.db");
+     *      var stmt = c.prepare("SELECT * FROM hotel_rates WHERE cityId=? AND rateDate >= ? AND rateDate <= ?");
+     *      stmt.bindInt(1, 1); stmt.bindInt(2, 2304); stmt.bindInt(3, 2311);
+     *      while(stmt.step() == Statement.ROW) trace("Saw rate of " + stmt.columnNumber(1));
+     *      stmt.finalize();
+     *      c.close();
      */
     public native class Connection
     {
@@ -182,7 +183,7 @@ package loom.sqlite
          *  filename in which case it will internally be saved to the system writeable 
          *  path location.
          *
-         *  The format of the JSON data is:
+         *  The expected format of the JSON data String is:
          *      { "tableA": [ {"columnA": value, "columnB": value, ...}, 
                                  {"columnA": value, "columnB": value, ...}], 
                   "tableB": [ {"columnA": value, "columnB": value, ...}, 
@@ -192,11 +193,11 @@ package loom.sqlite
          *  "column*" is the column to insert "value" into
          *
          *  @param database Name of the databse to import the data into.
-         *  @param data JSON data to import into the database.
+         *  @param data JSON formatted data String to import into the database.
          *  @return Boolean Whether or not the background import process was successfully kicked off.
          */
 //TODO: Change over to ByteArray or similar eventually
-        public static native function backgroundImport(database:String, data:JSON):Boolean;
+        public static native function backgroundImport(database:String, data:String):Boolean;
 
         /**
          * Checks the version of SQLite
