@@ -89,31 +89,40 @@ package
         private function initTemplateButtons()
         {
     	   	var createQueryButton = new Button();
-            createQueryButton.width = 95;
+            createQueryButton.width = 76;
             createQueryButton.height = 40;
-            createQueryButton.x = 12.5;
+            createQueryButton.x = 12;
             createQueryButton.y = 5;
             createQueryButton.label = "create";
             createQueryButton.addEventListener(Event.TRIGGERED, function(){queryInput.text = "CREATE TABLE example_table(id int, name varchar(255), surname varchar(255))";});
             stage.addChild(createQueryButton);
 
             var selectQueryButton = new Button();
-            selectQueryButton.width = 95;
+            selectQueryButton.width = 76;
             selectQueryButton.height = 40;
-            selectQueryButton.x = 112.5;
+            selectQueryButton.x = 87;
             selectQueryButton.y = 5;
             selectQueryButton.label = "select";
             selectQueryButton.addEventListener(Event.TRIGGERED, function(){queryInput.text = "SELECT * FROM example_table";});
             stage.addChild(selectQueryButton);
 
             var insertQueryButton = new Button();
-            insertQueryButton.width = 95;
+            insertQueryButton.width = 76;
             insertQueryButton.height = 40;
-            insertQueryButton.x = 212.5;
+            insertQueryButton.x = 163;
             insertQueryButton.y = 5;
             insertQueryButton.label = "insert";
             insertQueryButton.addEventListener(Event.TRIGGERED, insertTemplate);
             stage.addChild(insertQueryButton);
+
+            var dropQueryButton = new Button();
+            dropQueryButton.width = 70;
+            dropQueryButton.height = 40;
+            dropQueryButton.x = 239;
+            dropQueryButton.y = 5;
+            dropQueryButton.label = "drop";
+            dropQueryButton.addEventListener(Event.TRIGGERED, function(){queryInput.text = "DROP TABLE example_table";});
+            stage.addChild(dropQueryButton);
         }
 
         private function initInputControls()
