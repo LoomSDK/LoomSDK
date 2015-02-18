@@ -476,7 +476,7 @@ int __stdcall Connection::backgroundImportBody(void *param)
     if(!ok)
     {
         lmLogError(gSQLiteGroup, "Error parsing the JSON file during backgroundImport for database: %s", Connection::backgroundImportDatabase);
-        Connection::backgroundImportDone(c->getErrorCode());        
+        Connection::backgroundImportDone(SQLITE_ERROR);        
         delete data;
         return 0;
     }
