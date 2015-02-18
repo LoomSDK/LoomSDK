@@ -206,32 +206,32 @@ package
             //if the query is not a select, check if it is an insert so we can bind the parameters
 			if (queryString.indexOf("SELECT ") == -1)
 			{
-				start = Platform.getTime();
 				 if (queryString.indexOf("INSERT ") > -1)
 				 {
 					var param1:Number = Number.fromString(param1Input.text);
 					var param2:String = param2Input.text;
 					var param3:String = param3Input.text;
 
+                    start = Platform.getTime();
+                    if (prepareStatement(queryString) == 0)
+                        return;
+                    statement.bindInt(1, param1);
+                    statement.bindString(2, param2);
+                    statement.bindString(3, param3);
 					for (var i = 0; i < runCount; i++) 
 					{
-						if (prepareStatement(queryString) == 0)
-                            return;
-						statement.bindInt(1, param1);
-						statement.bindString(2, param2);
-						statement.bindString(3, param3);
-
-				 		statement.step();
-						statement.finalize();
+                        statement.step();
 				 	}
-					time = Platform.getTime() - start;
+                    statement.finalize();
 				 }
 				 else //Other SQLite functions
 				 {
+                    start = Platform.getTime();
 					if (prepareStatement(queryString)== 0)
-                            return;
+                        return;
 			 		statement.step();
 				 }
+                 time = Platform.getTime() - start;
 
                 //select the whole table to display in our grid
                 if (prepareStatement("SELECT * FROM example_table") == 0)
