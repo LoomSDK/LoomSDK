@@ -97,6 +97,30 @@ public:
         return (int)(rowid64 & 0x00000000ffffffff);
     }
 
+    int beginTransaction()
+    {
+        char* errorMessage;
+        int result = sqlite3_exec(dbHandle, "BEGIN TRANSACTION", NULL, NULL, &errorMessage);
+        if(result != SQLITE_OK)
+        {
+            lmLogError(gSQLiteGroup, "Error with beginTransaction for the SQLite database: %s with message: %s", getDBName(), errorMessage);
+        }
+        sqlite3_free(errorMessage);        
+        return result;
+    }
+
+    int endTransaction()
+    {
+        char* errorMessage;
+        int result = sqlite3_exec(dbHandle, "END TRANSACTION", NULL, NULL, &errorMessage);
+        if(result != SQLITE_OK)
+        {
+            lmLogError(gSQLiteGroup, "Error with endTransaction for the SQLite database: %s with message: %s", getDBName(), errorMessage);
+        }
+        sqlite3_free(errorMessage);        
+        return result;
+    }    
+
     int close()
     {
         //close the database
@@ -458,6 +482,7 @@ int __stdcall Connection::backgroundImportBody(void *param)
 {
     int i, j;
     int numRows;
+    int result;
     bool ok;
     JSON *data;
     JSON *table;
@@ -527,19 +552,29 @@ int __stdcall Connection::backgroundImportBody(void *param)
         }
         query += utString(")");
 
+        //begin the bulk grouped transaction
+        c->beginTransaction();
+        if(c->getErrorCode() != SQLITE_OK)
+        {
+            c->close();
+            Connection::backgroundImportDone(c->getErrorCode());        
+            delete data;
+            return 0;        
+        }
+
+        //create the Statement to bind the data to this table
+        s = c->prepare(query.c_str());
+        if(c->getErrorCode() != SQLITE_OK)
+        {
+            c->close();
+            Connection::backgroundImportDone(c->getErrorCode());        
+            delete data;
+            return 0;        
+        }
+
         //get data to insert into this table
         for(i=0;i<numRows;i++)
         {
-            //create the Statement to bind the data to for this row
-            s = c->prepare(query.c_str());
-            if(c->getErrorCode() != SQLITE_OK)
-            {
-                c->close();
-                Connection::backgroundImportDone(c->getErrorCode());        
-                delete data;
-                return 0;        
-            }
-
             //insert all items from the current row into the table
             j = 1;
             row = table->getArrayObject(i);
@@ -569,9 +604,27 @@ int __stdcall Connection::backgroundImportBody(void *param)
             }
 
             //apply the bindings for this row
-            s->step();
-            s->finalize();
+            result = s->step();
+            if(result != SQLITE_DONE)
+            {
+                c->close();
+                Connection::backgroundImportDone(c->getErrorCode());        
+                delete data;
+                return 0;        
+            }            
+            s->reset();
         }
+
+        //end the bulk grouped transaction
+        c->endTransaction();
+        if(c->getErrorCode() != SQLITE_OK)
+        {
+            c->close();
+            Connection::backgroundImportDone(c->getErrorCode());        
+            delete data;
+            return 0;        
+        }
+        s->finalize();
 
         //go to the next table in the JSON (if any)
         tableName = data->getObjectNextKey(tableName);
@@ -601,6 +654,8 @@ static int registerLoomSQLiteConnection(lua_State *L)
         .addMethod("__pget_errorCode", &Connection::getErrorCode)
         .addMethod("__pget_errorMessage", &Connection::getErrorMessage)
         .addMethod("__pget_lastInsertRowId", &Connection::getlastInsertRowId)
+        .addMethod("beginTransaction", &Connection::beginTransaction)
+        .addMethod("endTransaction", &Connection::endTransaction)
         .addMethod("prepare", &Connection::prepare)
         .addMethod("close", &Connection::close)
 

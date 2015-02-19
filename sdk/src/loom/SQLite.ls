@@ -80,9 +80,24 @@ package loom.sqlite
         SQLITE_LOCKED       = 6,
 
         /** 
+         * The operation was unable to allocate the MEMORY necessary to complete.
+         */
+        SQLITE_NOMEM        = 7,
+
+        /** 
          * The previous database operation was aborted through an INTERRUPT request. 
          */
         SQLITE_INTERRUPT    = 9,
+
+        /** 
+         * A write action could not complete because the operating system reported an I/O ERROR.
+         */
+        SQLITE_IOERR        = 10,
+
+        /** 
+         * A write action could not complete because the disk is FULL.
+         */
+        SQLITE_FULL         = 13,
 
         /** 
          * The current action is a MISUSE of of the SQLite interface.
@@ -247,6 +262,21 @@ package loom.sqlite
          */
         public static native function open(database:String, flags:int = FLAG_READWRITE):Connection;
  
+        /**
+         * Prepares the database for the grouping of multiple SQLite statements 
+         * to be executed together.
+         *
+         *  @return ResultCode Result of the function call.
+         */
+        public native function beginTransaction():ResultCode;
+
+        /**
+         * Ends a beginTransaction call and causes all grouped statements to be executed immediately.
+         *
+         *  @return ResultCode Result of the function call.
+         */
+        public native function endTransaction():ResultCode;
+
         /**
          * Prepares an SQL statement for processing.
          *
