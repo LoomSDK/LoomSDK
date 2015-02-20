@@ -345,7 +345,7 @@ public:
 
 
 
-//---Statement--- external function initialisation
+//---Statement--- external variable and function definitions
 int Statement::statementProgressVMIWait = 1;
 
 int Statement::stepAsyncProgress(void *param)
@@ -385,7 +385,7 @@ int __stdcall Statement::stepAsyncBody(void *param)
 
 
 
-//---Connection--- external function / variable initialisation
+//---Connection--- external variable and function definitions
 NativeDelegate Connection::_OnImportCompleteDelegate;
 bool Connection::backgroundImportInProgress = false;
 MutexHandle Connection::backgroundImportMutex = loom_mutex_create();;

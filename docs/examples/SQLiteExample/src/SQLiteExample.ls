@@ -7,10 +7,10 @@ package
     import loom2d.ui.SimpleLabel;
     import loom2d.events.Event;
 
-	import loom.sqlite.Connection;
-	import loom.sqlite.Statement;
-	import loom.sqlite.ResultCode;
-	import loom.sqlite.DataType;
+    import loom.sqlite.Connection;
+    import loom.sqlite.Statement;
+    import loom.sqlite.ResultCode;
+    import loom.sqlite.DataType;
 
     import feathers.controls.*;
     import feathers.events.FeathersEventType;
@@ -19,24 +19,24 @@ package
     import loom2d.text.TextField;   
     import loom.platform.Timer; 
     import loom2d.text.BitmapFont;
-	
-	/**
+
+    /**
      *  Simple example to demonstrate SQLite
      */
-	
+
     public class SQLiteExample extends Application
     {
-    	var connection:Connection;
-		var statement:Statement;
-		var queryInput:TextInput;
-		var countInput:TextInput;
-		var timeLabel:Label;
+        var connection:Connection;
+        var statement:Statement;
+        var queryInput:TextInput;
+        var countInput:TextInput;
+        var timeLabel:Label;
         var outputLabel:Label;
         var param1Input:TextInput;
         var param2Input:TextInput;
         var param3Input:TextInput;
-		var loadingOverlay:Image;
-		var grid:Vector.<Vector.<Button>> =[];		
+        var loadingOverlay:Image;
+        var grid:Vector.<Vector.<Button>> =[];		
         var theme:MetalWorksMobileTheme;
 
         override public function run():void
@@ -76,19 +76,19 @@ package
             outputLabel.text = "";
             stage.addChild(outputLabel);
 
-			createOutputGrid();
-            
+            createOutputGrid();
+
             loadingOverlay = new Image(Texture.fromAsset("assets/loading_bg.png"));
             loadingOverlay.alpha = 0;
             stage.addChild(loadingOverlay);
 
-			openConnection();
+            openConnection();
         }
 
        
         private function initTemplateButtons()
         {
-    	   	var createQueryButton = new Button();
+            var createQueryButton = new Button();
             createQueryButton.width = 76;
             createQueryButton.height = 40;
             createQueryButton.x = 12;
@@ -127,7 +127,7 @@ package
 
         private function initInputControls()
         {
-        	queryInput = new TextInput();
+            queryInput = new TextInput();
             queryInput.width = stage.stageWidth - 25;
             queryInput.height = 100;
             queryInput.x = 12.5;
@@ -180,46 +180,46 @@ package
 
         private function insertTemplate()
         {
-    		queryInput.text = "INSERT INTO example_table VALUES (?,?,?)";
-    		param1Input.text = "1";
-    		param2Input.text = "Joe";
-    		param3Input.text = "Soap";
+            queryInput.text = "INSERT INTO example_table VALUES (?,?,?)";
+            param1Input.text = "1";
+            param2Input.text = "Joe";
+            param3Input.text = "Soap";
         }
 
         private function startQuery()
         {
-        	loadingOverlay.alpha = 0.75;
-        	var timer = new Timer(50);
-        	timer.start();
-        	timer.onComplete = function(){runQuery();};
+            loadingOverlay.alpha = 0.75;
+            var timer = new Timer(50);
+            timer.start();
+            timer.onComplete = function(){runQuery();};
         }
 
         private function runQuery()
         {
             //Get the run count from the input box and validate it
-        	var runCount = 1;
-			if (!String.isNullOrEmpty(countInput.text))
-			{
-				runCount = Number.fromString(countInput.text);
-			}
+            var runCount = 1;
+            if (!String.isNullOrEmpty(countInput.text))
+            {
+                runCount = Number.fromString(countInput.text);
+            }
             if (runCount == 0)
             {
                 runCount = 1;
                 countInput.text = "1";
             }
 
-			var queryString = queryInput.text;
-			var start = 0;
-			var time = 0;
+            var queryString = queryInput.text;
+            var start = 0;
+            var time = 0;
 
             //if the query is not a select, check if it is an insert so we can bind the parameters
-			if (queryString.indexOf("SELECT ") == -1)
-			{
-				 if (queryString.indexOf("INSERT ") > -1)
-				 {
-					var param1:Number = Number.fromString(param1Input.text);
-					var param2:String = param2Input.text;
-					var param3:String = param3Input.text;
+            if (queryString.indexOf("SELECT ") == -1)
+            {
+                if (queryString.indexOf("INSERT ") > -1)
+                {
+                    var param1:Number = Number.fromString(param1Input.text);
+                    var param2:String = param2Input.text;
+                    var param3:String = param3Input.text;
 
                     start = Platform.getTime();
                     if (prepareStatement(queryString) == 0)
@@ -227,140 +227,144 @@ package
                     statement.bindInt(1, param1);
                     statement.bindString(2, param2);
                     statement.bindString(3, param3);
-					for (var i = 0; i < runCount; i++) 
-					{
+                    for (var i = 0; i < runCount; i++) 
+                    {
                         statement.step();
-				 	}
+                    }
                     statement.finalize();
-				 }
-				 else //Other SQLite functions
-				 {
+                }
+                else //Other SQLite functions
+                {
                     start = Platform.getTime();
-					if (prepareStatement(queryString)== 0)
+                    if (prepareStatement(queryString)== 0)
+                    {
                         return;
-			 		statement.step();
-				 }
-                 time = Platform.getTime() - start;
+                    }
+                    statement.step();
+                }
+                time = Platform.getTime() - start;
 
                 //select the whole table to display in our grid
                 if (prepareStatement("SELECT * FROM example_table") == 0)
                     return;
                 displayData(); 
-			}
-			else
-			{
-				start = Platform.getTime();
-				if (prepareStatement(queryString)== 0)
+            }
+            else
+            {
+                start = Platform.getTime();
+                if (prepareStatement(queryString)== 0)
+                {
                     return;
-				for (var j = 0; j < runCount; j++) 
-				{
-					if (statement.step() != ResultCode.SQLITE_ROW)
-					{
-						statement.reset();
-					}
-				};
-				time = Platform.getTime() - start;
-				displayData(); 
-			}
+                }
+                for (var j = 0; j < runCount; j++) 
+                {
+                    if (statement.step() != ResultCode.SQLITE_ROW)
+                    {
+                        statement.reset();
+                    }
+                }
+                time = Platform.getTime() - start;
+                displayData(); 
+            }
 
-			timeLabel.text = time + "ms";
-			loadingOverlay.alpha = 0;
+            timeLabel.text = time + "ms";
+            loadingOverlay.alpha = 0;
         }
 
-		private function openConnection()
-		{
-		    connection = Connection.open("MyTestDB.db", Connection.FLAG_CREATE | Connection.FLAG_READWRITE );
-		}
+        private function openConnection()
+        {
+            connection = Connection.open("MyTestDB.db", Connection.FLAG_CREATE | Connection.FLAG_READWRITE );
+        }
 
-		private function prepareStatement(sqlString:String):int
-		{
-			statement = connection.prepare(sqlString);
-		    if(connection.errorCode != ResultCode.SQLITE_OK)
-		    {
-				outputLabel.text = "prepare ERROR: " + connection.errorMessage;
+        private function prepareStatement(sqlString:String):int
+        {
+            statement = connection.prepare(sqlString);
+            if(connection.errorCode != ResultCode.SQLITE_OK)
+            {
+                outputLabel.text = "prepare ERROR: " + connection.errorMessage;
                 trace ("prepare ERROR: " + connection.errorMessage);
                 loadingOverlay.alpha = 0;
                 clearGrid();
                 return 0;
-		    }
-		    else
-		    {
-			    outputLabel.text = "prepare SUCCESS!";
+            }
+            else
+            {
+                outputLabel.text = "prepare SUCCESS!";
                 return 1;
-		    }
-		}
+            }
+        }
 
 
         //all that follows is for display purposes only
-		private function displayData()
-		{
-			clearGrid();
-			getColumnNames();
-            statement.reset();
-			var rowCount = 1;
-			while (statement.step() == ResultCode.SQLITE_ROW && rowCount < 4)
-			{
-				for (var i = 0; i < 3; i++) 
-				{
-					var currentColType = statement.columnType(i);
-
-					switch (currentColType)
-					{
-						case DataType.SQLITE_INTEGER 	: grid[rowCount][i].label = statement.columnInt(i).toString();
-							break;
-						case DataType.SQLITE_FLOAT 		: grid[rowCount][i].label = statement.columnDouble(i).toString();
-							break;
-						case DataType.SQLITE_TEXT 		: grid[rowCount][i].label = statement.columnString(i);
-							break;
-						case DataType.SQLITE_BLOB		: grid[rowCount][i].label = "BLOB";
-							break;
-						case DataType.SQLITE_NULL		: grid[rowCount][i].label = "";
-							break;
-					}
-				};	
-				rowCount++;
-			}
-			statement.finalize();
-		}
-
-		private function getColumnNames()
-		{
-			for (var i = 0; i < 3; i++) 
-			{
-				grid[0][i].label = statement.columnName(i) ;
-			};
-		}
-
-		private function clearGrid()
-		{
-			for (var i = 0; i < 4; i++) 
-			{
-				for (var j = 0; j < 3; j++) 
-				{
-					grid[i][j].label = "";
-				};
-			};
-		}
-
-		 private function createOutputGrid()
+        private function displayData()
         {
-        	for (var j = 0; j < 4; j++) 
-        	{
-        		var row:Vector.<Button> = [];
-	        	for (var i = 0; i < 3; i++) 
-	        	{
-					var button = new Button();
-                    button.isEnabled = false;
-		            button.label = "";
-		            button.width = 100;
-                    button.height = 30;
-		            button.y = 305 + (30 * j);
-		            button.x = button.width * i + 10;
-		            stage.addChild(button);
-		    		row.push(button);      	
-	        	}
-	        	grid.push(row);
-        	}
+            clearGrid();
+            getColumnNames();
+            statement.reset();
+            var rowCount = 1;
+            while (statement.step() == ResultCode.SQLITE_ROW && rowCount < 4)
+            {
+                for (var i = 0; i < 3; i++) 
+                {
+                    var currentColType = statement.columnType(i);
+
+                    switch (currentColType)
+                    {
+                        case DataType.SQLITE_INTEGER 	: grid[rowCount][i].label = statement.columnInt(i).toString();
+                            break;
+                        case DataType.SQLITE_FLOAT 		: grid[rowCount][i].label = statement.columnDouble(i).toString();
+                            break;
+                        case DataType.SQLITE_TEXT 		: grid[rowCount][i].label = statement.columnString(i);
+                            break;
+                        case DataType.SQLITE_BLOB		: grid[rowCount][i].label = "BLOB";
+                            break;
+                        case DataType.SQLITE_NULL		: grid[rowCount][i].label = "";
+                            break;
+                    }
+                }
+                rowCount++;
+            }
+            statement.finalize();
         }
-	}
+
+        private function getColumnNames()
+        {
+            for (var i = 0; i < 3; i++) 
+            {
+                grid[0][i].label = statement.columnName(i) ;
+            }
+        }
+
+        private function clearGrid()
+        {
+            for (var i = 0; i < 4; i++) 
+            {
+                for (var j = 0; j < 3; j++) 
+                {
+                    grid[i][j].label = "";
+                }
+            }
+        }
+
+        private function createOutputGrid()
+        {
+            for (var j = 0; j < 4; j++) 
+            {
+                var row:Vector.<Button> = [];
+                for (var i = 0; i < 3; i++) 
+                {
+                    var button = new Button();
+                    button.isEnabled = false;
+                    button.label = "";
+                    button.width = 100;
+                    button.height = 30;
+                    button.y = 305 + (30 * j);
+                    button.x = button.width * i + 10;
+                    stage.addChild(button);
+                    row.push(button);      	
+                }
+                grid.push(row);
+            }
+        }
+    }
 }

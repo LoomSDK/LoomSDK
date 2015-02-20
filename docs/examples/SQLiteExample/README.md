@@ -1,12 +1,13 @@
 title: SQLite Example
-description: A Loom Example!
+description: An example app demonstrating basic SQLite usage in Loom.
 source: src/SQLiteExample.ls
 thumbnail: images/screenshot.png
 !------
 
 ## Overview
 
-This example demonstrates SQLite
+An example app demonstrating basic SQLite usage in Loom.  You can create tables and insert/select from them given default query strings, or customize your own query strings and process any SQLite statements that you wish.  The demo also outputs the time that each of your query batches takes.
+
 
 ## Try It
 @cli_usage
