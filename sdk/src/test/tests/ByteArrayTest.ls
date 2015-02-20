@@ -408,6 +408,38 @@ package tests {
         }
         
         
+        [Test]
+        function compress() {
+            ba.clear();
+            
+            ba.writeString("aaaaaaaaaabc123123123123123");
+            ba.compress();
+            
+            Assert.compare(ba.length, ba.position, "Position of ByteArray should be set to the length after compress()");
+            
+            // zlib second header byte meaning
+            // 156 - default compression
+            // 218 - best compression
+            checkBytes(ba, [120, 156, 147, 102, 96, 96, 72, 132, 131, 164, 100, 67, 35, 99, 100, 4, 0, 124, 189, 7, 153]);
+        }
+        
+        [Test]
+        function uncompress() {
+            ba.clear();
+            // Default compression header
+            fillBytes(ba, [120, 156, 147, 102, 96, 96, 72, 132, 131, 164, 100, 67, 35, 99, 100, 4, 0, 124, 189, 7, 153]);
+            ba.uncompress();
+            Assert.compare(0, ba.position, "Position of ByteArray should be set to 0 after uncompress()");
+            Assert.compare("aaaaaaaaaabc123123123123123", ba.readString(), "Uncompressed data mismatch");
+            
+            ba.clear();
+            // Best compression header
+            fillBytes(ba, [120, 218, 147, 102, 96, 96, 72, 132, 131, 164, 100, 67, 35, 99, 100, 4, 0, 124, 189, 7, 153]);
+            ba.uncompress();
+            Assert.compare(0, ba.position, "Position of ByteArray should be set to 0 after uncompress()");
+            Assert.compare("aaaaaaaaaabc123123123123123", ba.readString(), "Uncompressed data mismatch");
+        }
+        
         private static function fillBytes(ba:ByteArray, bytes:Vector.<int>, reset:Boolean = true) {
             var pos = ba.position;
             for (var i in bytes) {
