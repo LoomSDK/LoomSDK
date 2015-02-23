@@ -26,11 +26,15 @@ package
 	
     public class SQLiteExample extends Application
     {
+        const numRows:int = 6;
+        const numColumns:int = 5;
+
     	var connection:Connection;
 		var statement:Statement;
 		var queryInput:TextInput;
 		var countInput:TextInput;
 		var timeLabel:Label;
+        var tableNameLabel:Label;
         var outputLabel:Label;
         var param1Input:TextInput;
         var param2Input:TextInput;
@@ -47,135 +51,95 @@ package
 
             stage.scaleMode = StageScaleMode.LETTERBOX;
 
+            //initialize the UI
             initTemplateButtons();
             initInputControls();
-            
-            var runQueryButton = new Button();
-            runQueryButton.width = 150;
-            runQueryButton.height = 45;
-            runQueryButton.x = 12.5;
-            runQueryButton.y = 215;
-            runQueryButton.label = "run query";
-            runQueryButton.addEventListener(Event.TRIGGERED,startQuery);
-            stage.addChild(runQueryButton);  
-
-            timeLabel = new Label();
-            timeLabel.width = 150;
-            timeLabel.height = 45;
-            timeLabel.x = 12.5;
-            timeLabel.y = 270;
-            timeLabel.text = "";
-            stage.addChild(timeLabel);
-
-            
-            outputLabel = new Label();
-            outputLabel.width = stage.stageWidth-25;;
-            outputLabel.height = 45;
-            outputLabel.x = 12.5;
-            outputLabel.y = 440;
-            outputLabel.text = "";
-            stage.addChild(outputLabel);
-
-			createOutputGrid();
+			initOutputGrid();
+            initRestOfUI();
             
             loadingOverlay = new Image(Texture.fromAsset("assets/loading_bg.png"));
             loadingOverlay.alpha = 0;
             stage.addChild(loadingOverlay);
 
+
+            //create / open connection
 			openConnection();
         }
 
-       
+        private function newLabel(width:Number, height:Number, x:Number, y:Number, text:String=""):Label
+        {
+            var label = new Label();
+            label.width = width;
+            label.height = height;
+            label.x = x;
+            label.y = y;
+            label.text = text;
+            stage.addChild(label);
+
+            return label;
+        }
+
+
+        private function newButton(width:Number, height:Number, x:Number, y:Number, label:String="", f:Function=null):Button
+        {
+            var button = new Button();
+            button.width = width;
+            button.height = height;
+            button.x = x;
+            button.y = y;
+            button.label = label;
+            button.addEventListener(Event.TRIGGERED,f);
+            stage.addChild(button);
+
+            return button;
+        }
+
+
+        private function newInputBox(width:Number, height:Number, x:Number, y:Number, prompt:String=""):TextInput
+        {
+            var inputBox = new TextInput();
+            inputBox.width = width;
+            inputBox.height = height;
+            inputBox.x = x;
+            inputBox.y = y;    
+            inputBox.prompt = prompt;
+            inputBox.maxChars = 100; 
+            inputBox.isEditable = true;  
+
+            stage.addChild(inputBox);
+
+            return inputBox;
+        }
+
+        private function initRestOfUI()
+        {
+            var runQueryButton = newButton(150, 45, 12.5, 215, "run query", startQuery);
+            timeLabel = newLabel(250, 45, 300, 225, "Query duration:");
+            tableNameLabel = newLabel(500, 55, 12.5, 275, "Table name:");
+            outputLabel = newLabel(stage.stageWidth-25, 45, 12.5, 600, "");
+        }
+
         private function initTemplateButtons()
         {
-    	   	var createQueryButton = new Button();
-            createQueryButton.width = 76;
-            createQueryButton.height = 40;
-            createQueryButton.x = 12;
-            createQueryButton.y = 5;
-            createQueryButton.label = "create";
-            createQueryButton.addEventListener(Event.TRIGGERED, function(){queryInput.text = "CREATE TABLE example_table(id int, name varchar(255), surname varchar(255))";});
-            stage.addChild(createQueryButton);
-
-            var selectQueryButton = new Button();
-            selectQueryButton.width = 76;
-            selectQueryButton.height = 40;
-            selectQueryButton.x = 87;
-            selectQueryButton.y = 5;
-            selectQueryButton.label = "select";
-            selectQueryButton.addEventListener(Event.TRIGGERED, function(){queryInput.text = "SELECT * FROM example_table";});
-            stage.addChild(selectQueryButton);
-
-            var insertQueryButton = new Button();
-            insertQueryButton.width = 76;
-            insertQueryButton.height = 40;
-            insertQueryButton.x = 163;
-            insertQueryButton.y = 5;
-            insertQueryButton.label = "insert";
-            insertQueryButton.addEventListener(Event.TRIGGERED, insertTemplate);
-            stage.addChild(insertQueryButton);
-
-            var dropQueryButton = new Button();
-            dropQueryButton.width = 70;
-            dropQueryButton.height = 40;
-            dropQueryButton.x = 239;
-            dropQueryButton.y = 5;
-            dropQueryButton.label = "drop";
-            dropQueryButton.addEventListener(Event.TRIGGERED, function(){queryInput.text = "DROP TABLE example_table";});
-            stage.addChild(dropQueryButton);
+            var createQueryButton = newButton(76, 40, 12, 5, "create", function(){queryInput.text = "CREATE TABLE example_table(id int, name varchar(255), surname varchar(255))";});
+            var selectQueryButton = newButton(76, 40, 87, 5, "select", function(){queryInput.text = "SELECT * FROM example_table";});
+            var insertQueryButton = newButton(76, 40, 163, 5, "insert",insertTemplate);
+            var dropQueryButton = newButton(76, 40, 239, 5, "drop", function(){queryInput.text = "DROP TABLE example_table";});
         }
 
         private function initInputControls()
         {
-        	queryInput = new TextInput();
-            queryInput.width = stage.stageWidth - 25;
-            queryInput.height = 100;
-            queryInput.x = 12.5;
-            queryInput.y = 50;            
-            queryInput.prompt = "SQL query";                        
-            queryInput.maxChars = 100; 
-            queryInput.isEditable = true;                                
-            stage.addChild(queryInput);
+            queryInput = newInputBox(stage.stageWidth - 25, 100, 12.5, 50, "SQL query");
 
-            param1Input = new TextInput();
-            param1Input.width = 90;
-            param1Input.height = 40;
-            param1Input.x = 12.5;
-            param1Input.y = 165;            
-            param1Input.prompt = "param1";                        
-            param1Input.maxChars = 100; 
-            param1Input.isEditable = true;                                
-            stage.addChild(param1Input);
+            param1Input = newInputBox(90, 40, 12.5, 165, "param1");
+            param2Input = newInputBox(90, 40, 107.5, 165, "param2");
+            param3Input = newInputBox(90, 40, 202.5, 165, "param3");           
+   //         param4Input = newInputBox(90, 40, 297, 165, "param4");
+   //         param5Input = newInputBox(90, 40, 392.5, 165, "param5");
+   //         param6Input = newInputBox(90, 40, 487.5, 165, "param6");
 
-            param2Input = new TextInput();
-            param2Input.width = 90;
-            param2Input.height = 40;
-            param2Input.x = 107.5;
-            param2Input.y = 165;            
-            param2Input.prompt = "param2";                        
-            param2Input.maxChars = 100; 
-            param2Input.isEditable = true;                                
-            stage.addChild(param2Input);
-
-            param3Input = new TextInput();
-            param3Input.width = 90;
-            param3Input.height = 40;
-            param3Input.x = 202.5;
-            param3Input.y = 165;            
-            param3Input.prompt = "param3";                        
-            param3Input.maxChars = 100; 
-            param3Input.isEditable = true;                                
-            stage.addChild(param3Input);
-
-            countInput = new TextInput();
-            countInput.width = 100;
-            countInput.height = 45;
-            countInput.x = 175;
-            countInput.y = 215;            
-            countInput.prompt = "run count";                        
+            countInput = newInputBox(100, 45, 175, 215, "run count");                    
             countInput.maxChars = 7; 
-            countInput.isEditable = true;                                
-            stage.addChild(countInput);
         }
 
         private function insertTemplate()
@@ -208,7 +172,7 @@ package
                 countInput.text = "1";
             }
 
-			var queryString = queryInput.text;
+			var queryString = queryInput.text.toLocaleUpperCase();
 			var start = 0;
 			var time = 0;
 
@@ -243,7 +207,7 @@ package
 				 }
 
                 //select the whole table to display in our grid
-                if (prepareStatement("SELECT * FROM example_table") == 0)
+                if (prepareStatement("SELECT * FROM EXAMPLE_TABLE", false) == 0)
                     return;
                 displayData(); 
 			}
@@ -263,7 +227,7 @@ package
 				displayData(); 
 			}
 
-			timeLabel.text = time + "ms";
+			timeLabel.text = "Query duration: " +  time + "ms";
 			loadingOverlay.alpha = 0;
         }
 
@@ -272,7 +236,7 @@ package
 		    connection = Connection.open("MyTestDB.db", Connection.FLAG_CREATE | Connection.FLAG_READWRITE );
 		}
 
-		private function prepareStatement(sqlString:String):int
+		private function prepareStatement(sqlString:String, display:Boolean=true):int
 		{
 			statement = connection.prepare(sqlString);
 		    if(connection.errorCode != ResultCode.SQLITE_OK)
@@ -285,11 +249,41 @@ package
 		    }
 		    else
 		    {
-			    outputLabel.text = "prepare SUCCESS!";
+                var outputString:String;
+
+                if (sqlString.indexOf("SELECT") > -1)
+                {
+                    outputString = "SELECT SUCCESS";
+                    tableNameLabel.text = "Table Name: " + getTableName(sqlString);
+                }
+                else  if (sqlString.indexOf("INSERT") > -1)
+                {
+                    outputString = "INSERT SUCCESS";
+                }
+                else  if (sqlString.indexOf("DROP") > -1)
+                {
+                    outputString = "TABLE DROP SUCCESS";
+                }   
+                else  if (sqlString.indexOf("CREATE") > -1)
+                {
+                    outputString = "TABLE CREATE SUCCESS";
+                }
+                else
+                    outputString = "prepare SUCCESS!";
+
+                if (display)
+                {
+			        outputLabel.text = outputString;
+                }
                 return 1;
 		    }
 		}
 
+        private function getTableName(sqlString:String):String
+        {
+            var index = sqlString.indexOf("FROM") + 5;
+            return sqlString.substr(index, sqlString.length - index);
+        }
 
         //all that follows is for display purposes only
 		private function displayData()
@@ -298,9 +292,9 @@ package
 			getColumnNames();
             statement.reset();
 			var rowCount = 1;
-			while (statement.step() == ResultCode.SQLITE_ROW && rowCount < 4)
+			while (statement.step() == ResultCode.SQLITE_ROW && rowCount < numRows)
 			{
-				for (var i = 0; i < 3; i++) 
+				for (var i = 0; i < numColumns; i++) 
 				{
 					var currentColType = statement.columnType(i);
 
@@ -325,7 +319,7 @@ package
 
 		private function getColumnNames()
 		{
-			for (var i = 0; i < 3; i++) 
+			for (var i = 0; i < numColumns; i++) 
 			{
 				grid[0][i].label = statement.columnName(i) ;
 			};
@@ -333,30 +327,24 @@ package
 
 		private function clearGrid()
 		{
-			for (var i = 0; i < 4; i++) 
+			for (var i = 0; i < numRows; i++) 
 			{
-				for (var j = 0; j < 3; j++) 
+				for (var j = 0; j < numColumns; j++) 
 				{
 					grid[i][j].label = "";
 				};
 			};
 		}
 
-		 private function createOutputGrid()
+		 private function initOutputGrid()
         {
-        	for (var j = 0; j < 4; j++) 
+        	for (var j = 0; j < numRows; j++) 
         	{
         		var row:Vector.<Button> = [];
-	        	for (var i = 0; i < 3; i++) 
+	        	for (var i = 0; i < numColumns; i++) 
 	        	{
-					var button = new Button();
+					var button = newButton(120, 30, 120 * i + 10, 305 + (30 * j));
                     button.isEnabled = false;
-		            button.label = "";
-		            button.width = 100;
-                    button.height = 30;
-		            button.y = 305 + (30 * j);
-		            button.x = button.width * i + 10;
-		            stage.addChild(button);
 		    		row.push(button);      	
 	        	}
 	        	grid.push(row);
