@@ -121,10 +121,10 @@ package
 
         private function initTemplateButtons()
         {
-            var createQueryButton = newButton(76, 40, 12, 5, "create", function(){queryInput.text = "CREATE TABLE example_table(id int, name varchar(255), surname varchar(255))";});
-            var selectQueryButton = newButton(76, 40, 87, 5, "select", function(){queryInput.text = "SELECT * FROM example_table";});
-            var insertQueryButton = newButton(76, 40, 163, 5, "insert",insertTemplate);
-            var dropQueryButton = newButton(76, 40, 239, 5, "drop", function(){queryInput.text = "DROP TABLE example_table";});
+            var createQueryButton = newButton(100, 40, 12, 5, "CREATE", function(){queryInput.text = "CREATE TABLE example_table(id int, name varchar(255), surname varchar(255))";});
+            var selectQueryButton = newButton(100, 40, 117, 5, "SELECT", function(){queryInput.text = "SELECT * FROM example_table";});
+            var insertQueryButton = newButton(100, 40, 222, 5, "INSERT",insertTemplate);
+            var dropQueryButton = newButton(100, 40, 327, 5, "DROP", function(){queryInput.text = "DROP TABLE example_table";});
         }
 
         private function initInputControls()
@@ -228,7 +228,8 @@ package
 			}
 
 			timeLabel.text = "Query duration: " +  time + "ms";
-			loadingOverlay.alpha = 0;
+			loadingOverlay.alpha = 0; 
+            
         }
 
 		private function openConnection()
@@ -241,7 +242,8 @@ package
 			statement = connection.prepare(sqlString);
 		    if(connection.errorCode != ResultCode.SQLITE_OK)
 		    {
-				outputLabel.text = "prepare ERROR: " + connection.errorMessage;
+                if (display)
+				    outputLabel.text = "prepare ERROR: " + connection.errorMessage;
                 trace ("prepare ERROR: " + connection.errorMessage);
                 loadingOverlay.alpha = 0;
                 clearGrid();
@@ -314,7 +316,7 @@ package
 				};	
 				rowCount++;
 			}
-			statement.finalize();
+			statement.finalize(); 
 		}
 
 		private function getColumnNames()
