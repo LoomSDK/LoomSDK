@@ -26,6 +26,10 @@ package system {
  */
 final class Number extends Object 
 {
+    
+    
+    public native function toString(radix:int = 10):String;
+
     /**
      *
      *  Gets a string representation of the number truncated to the specificed decimal point     
@@ -34,7 +38,7 @@ final class Number extends Object
      *  @return String representation of the number truncated to the specified decimal digits
      */
     public native function toFixed(fractionDigits:int = 0):String;
-
+    
     public static native function get MAX_VALUE():Number;
     public static native function get MIN_VALUE():Number;
     public static native function get NEGATIVE_INFINITY():Number;
@@ -47,6 +51,7 @@ final class Number extends Object
 
     /// @cond PRIVATE
 
+    private static native function _toString(radix:int = 10):String;
     private static native function _toFixed(value:Number, fractionDigits:int):String;
 
     /// @endcond

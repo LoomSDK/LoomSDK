@@ -34,6 +34,54 @@
 class LSNumber {
 public:
 
+    static int _toString(lua_State *L)
+    {
+        if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2))
+        {
+            lua_pushstring(L, "NaN");
+            return 1;
+        }
+
+        lua_Number n = lua_tonumber(L, 1);
+        int radix = (int)lua_tonumber(L, 2);
+        int radixMax = 62;
+        
+        radix = radix < 2 ? 2 : radix > radixMax ? radixMax : radix;
+
+        char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+        const int len = 66;
+        char out[len];
+        int index = len-1;
+        out[index] = '\0';
+
+        if (n == 0) {
+            out[index-1] = '0';
+            lua_pushstring(L, out);
+        }
+
+        if (n > 0) {
+            while (n) {
+                int dindex = (int) fmod(n, radix);
+                lmAssert(dindex >= 0 && dindex < radixMax, "Radix index out of bounds");
+                out[--index] = digits[dindex];
+                n /= radix;
+            }
+        } else {
+            while (n) {
+                int dindex = (int) -fmod(n, radix);
+                lmAssert(dindex >= 0 && dindex < radixMax, "Radix index out of bounds");
+                out[--index] = digits[dindex];
+                n /= radix;
+            }
+            out[--index] = '-';
+        }
+
+        lua_pushstring(L, strdup(out + index));
+
+        return 1;
+    }
+
     static int _toFixed(lua_State *L)
     {
         if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2))
@@ -110,6 +158,7 @@ static int registerSystemNumber(lua_State *L)
 
        .beginClass<LSNumber> ("Number")
 
+       .addStaticLuaFunction("_toString", &LSNumber::_toString)
        .addStaticLuaFunction("_toFixed", &LSNumber::_toFixed)
        .addStaticLuaFunction("fromString", &LSNumber::fromString)
 
