@@ -495,8 +495,15 @@ namespace :build do
       Dir.chdir("sdk") do
         sh "../artifacts/lsc LDB.build"
       end
+      
+      # build testexec
+      Dir.chdir("sdk") do
+        sh "../artifacts/lsc TestExec.build"
+      end
 
       FileUtils.cp_r("sdk/bin/LDB.loom", "artifacts")
+      FileUtils.cp_r("sdk/bin/TestExec.loom", "artifacts")
+      FileUtils.cp_r("sdk/src/testexec/loom.config", "artifacts/TestExec.config")
 
       #copy assets
       FileUtils.mkdir_p("artifacts/assets")
@@ -595,10 +602,17 @@ namespace :build do
     Dir.chdir("sdk") do
       sh "../artifacts/lsc LDB.build"
     end
+    
+    # build testexec
+    Dir.chdir("sdk") do
+      sh "../artifacts/lsc TestExec.build"
+    end
 
     # copy libs
     FileUtils.cp_r("sdk/libs", "artifacts/")
     FileUtils.cp_r("sdk/bin/LDB.loom", "artifacts")
+    FileUtils.cp_r("sdk/bin/TestExec.loom", "artifacts")
+    FileUtils.cp_r("sdk/src/testexec/loom.config", "artifacts/TestExec.config")
 
     puts "Copying to #{$OUTPUT_DIRECTORY}/windows"
 
@@ -755,10 +769,17 @@ namespace :build do
     Dir.chdir("sdk") do
       sh "../artifacts/lsc LDB.build"
     end
+    
+    # build testexec
+    Dir.chdir("sdk") do
+      sh "../artifacts/lsc TestExec.build"
+    end
 
     # copy libs
     FileUtils.cp_r("sdk/libs", "artifacts/")
     FileUtils.cp_r("sdk/bin/LDB.loom", "artifacts")
+    FileUtils.cp_r("sdk/bin/TestExec.loom", "artifacts")
+    FileUtils.cp_r("sdk/src/testexec/loom.config", "artifacts/TestExec.config")
 
     puts "Copying to #{$OUTPUT_DIRECTORY}/ubuntu"
 
@@ -1204,6 +1225,9 @@ def prepare_free_sdk
 
   # copy ldb
   FileUtils.cp_r("artifacts/LDB.loom", "pkg/sdk/bin")
+  FileUtils.mkdir_p "pkg/sdk/bin/TestExec/bin/"
+  FileUtils.cp_r("artifacts/TestExec.loom", "pkg/sdk/bin/TestExec/bin/Main.loom")
+  FileUtils.cp_r("artifacts/TestExec.config", "pkg/sdk/bin/TestExec/loom.config")
 
   # copy the assets we need from cocos...
   FileUtils.cp_r("artifacts/assets", "pkg/sdk")
