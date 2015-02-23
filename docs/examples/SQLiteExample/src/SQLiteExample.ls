@@ -150,6 +150,7 @@ package
     		param3Input.text = "Soap";
         }
 
+        //Bring up loading overlay then run query
         private function startQuery()
         {
         	loadingOverlay.alpha = 0.75;
@@ -158,6 +159,7 @@ package
         	timer.onComplete = function(){runQuery();};
         }
 
+        //Runs query, analyzes SQL string to determine SQLite function then calls relevent functions
         private function runQuery()
         {
             //Get the run count from the input box and validate it
@@ -232,11 +234,13 @@ package
             
         }
 
+        //Create connection
 		private function openConnection()
 		{
 		    connection = Connection.open("MyTestDB.db", Connection.FLAG_CREATE | Connection.FLAG_READWRITE );
 		}
 
+        //Prepare the statement, handle necessary errors and output results
 		private function prepareStatement(sqlString:String, display:Boolean=true):int
 		{
 			statement = connection.prepare(sqlString);
@@ -281,13 +285,14 @@ package
 		    }
 		}
 
+        //Get table name from SQL string
         private function getTableName(sqlString:String):String
         {
             var index = sqlString.indexOf("FROM") + 5;
             return sqlString.substr(index, sqlString.length - index);
         }
 
-        //all that follows is for display purposes only
+        //step through the results, display output
 		private function displayData()
 		{
 			clearGrid();
@@ -319,6 +324,7 @@ package
 			statement.finalize(); 
 		}
 
+        //Get column names, display in grid
 		private function getColumnNames()
 		{
 			for (var i = 0; i < numColumns; i++) 
@@ -327,6 +333,7 @@ package
 			};
 		}
 
+        //Clear output grid
 		private function clearGrid()
 		{
 			for (var i = 0; i < numRows; i++) 
@@ -338,7 +345,8 @@ package
 			};
 		}
 
-		 private function initOutputGrid()
+        //Initialize outputgrid
+		private function initOutputGrid()
         {
         	for (var j = 0; j < numRows; j++) 
         	{
