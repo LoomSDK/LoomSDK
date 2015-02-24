@@ -349,7 +349,8 @@ package com.modestmaps.core.painter
 				}
 			}*/
 			
-			if (smoothContent) {
+			// PORTNOTE: AN EMPTY TRY CATCH STATEMENT WILL CAUSE THE UILD TO SILENTLY FAIL
+			/*if (smoothContent) {
 				try {
 // TODO_AHMED: Investigate the diferences between sprites and bitmaps
 					// PORTNOTE: The sprite class (which we're using in place of the bitmap class doesn't have a smoothing member variable
@@ -359,7 +360,7 @@ package com.modestmaps.core.painter
 				catch (error:Error) {
 					// ???
 				}
-			}			
+			}*/		
 	
 			// tidy up the request monitor
 // TODO_AHMED: Do something about the missing loader class
