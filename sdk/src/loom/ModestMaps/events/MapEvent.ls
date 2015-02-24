@@ -56,7 +56,7 @@ package com.modestmaps.events
 		{
 			super(type, true, true);
 			
-			//TODO: KEVIN, double casting to be optimized
+			//TODO_KEVIN, double casting to be optimized
 			switch(type) {
 				case PANNED:
 					if (rest.length > 0 && rest[0] is Point) {

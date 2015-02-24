@@ -181,9 +181,13 @@ package com.modestmaps.core
 			else {
 				this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
 			}
-			tilePainter.addEventListener(ProgressEvent.PROGRESS, onProgress, false, 0, true);
-			tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded, false, 0, true);
-			tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading, false, 0, true);
+			//PORTNOTE TODO_KEVIN sort out ProgressEvent
+			//tilePainter.addEventListener(ProgressEvent.PROGRESS, onProgress, false, 0, true);
+			//PORTNOTE removes parameters
+			//tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded, false, 0, true);
+			//tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading, false, 0, true);
+			tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded);
+			tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading);
 			
 			this.limits = provider.outerLimits();
 			
@@ -199,15 +203,19 @@ package com.modestmaps.core
 			//PORTNOTE changed scrollRect to clipRect
 			clipRect = new Rectangle(0, 0, mapWidth, mapHeight);
 
+			//TODO_KEVIN fix broken debug class
+			/*
 			debugField = new DebugField();
 			debugField.x = mapWidth - debugField.width - 15; 
 			debugField.y = mapHeight - debugField.height - 15;
+			*/
 			
 			well = new Sprite();
 			well.name = 'well';
-			well.doubleClickEnabled = true;
-			well.mouseEnabled = true;
-			well.mouseChildren = false;
+			//PORTNOTE removed mouse stuff
+			//well.doubleClickEnabled = true;
+			//well.mouseEnabled = true;
+			//well.mouseChildren = false;
 			addChild(well);
 
 			worldMatrix = new Matrix();
@@ -238,7 +246,7 @@ package com.modestmaps.core
 			removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
 			dirty = true;
 			// force an on-render in case we were added in a render handler
-			onRender();
+			_onRender();
 		}
 		
 		private function onRemovedFromStage(event:Event):void
@@ -322,10 +330,11 @@ package com.modestmaps.core
 			dispatchEvent(event);			
 		}
 		
-		protected function onProgress(event:ProgressEvent):void
+	//	protected function onProgress(event:ProgressEvent):void TODO_KEVIN add ProgressEvent
+		protected function onProgress()
 		{
 		    // dispatch tile load progress
-			dispatchEvent(event);			
+			//dispatchEvent(event);			
 		}
 		
 		protected function onAllTilesLoaded(event:MapEvent):void
@@ -342,7 +351,9 @@ package com.modestmaps.core
 		 * (Flash Player 9, Firefox, Macbook Pro)
 		 *  
 		 */
-		protected function onRender(event:Event=null):void
+		
+		 //PORTNOTE TODO_KEVIN ask Luke about onRender and NativeDelegate, renamed onRender
+		protected function _onRender(event:Event=null):void
 		{
 			//var t:Number = getTimer();
 			
@@ -970,7 +981,7 @@ package com.modestmaps.core
 		
 		protected function onStartPanning():void
 		{
-			dispatchEvent(new MapEvent(MapEvent.START_PANNING));
+			dispatchEvent(new MapEvent(MapEvent.START_PANNING, null));
 		}
 		
 		public function donePanning():void
@@ -988,7 +999,7 @@ package com.modestmaps.core
 		
 		protected function onStopPanning():void
 		{
-			dispatchEvent(new MapEvent(MapEvent.STOP_PANNING));
+			dispatchEvent(new MapEvent(MapEvent.STOP_PANNING, null));
 		}
 		
 		public function prepareForZooming():void
@@ -1098,15 +1109,18 @@ package com.modestmaps.core
     			dirty = true;
 
     			// force this but only for onResize
-    			onRender();
+    			_onRender();
 		    }
 
 			// this makes sure the well is clickable even without tiles
 
+			//PORTNOTE TODO_KEVIN add sprite.graphics
+			/*
 			well.graphics.clear();
 			well.graphics.beginFill(0x000000, 0);
 			well.graphics.drawRect(0, 0, mapWidth, mapHeight);
 			well.graphics.endFill();
+			*/
 		}
 		
 		public function setMapProvider(provider:IMapProvider):void
@@ -1119,8 +1133,11 @@ package com.modestmaps.core
 			}
 			//PORTNOTE: TODO_KEVIN sort out ProgressEvent.PROGRESS
 			//tilePainter.addEventListener(ProgressEvent.PROGRESS, onProgress, false, 0, true);
-			tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded, false, 0, true);
-			tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading, false, 0, true);
+			//tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded, false, 0, true);
+			//tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading, false, 0, true);
+			//PORTNOTE: removed other parameters
+			tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded);
+			tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading);
 
 			// TODO: set limits independently of provider
 			this.limits = provider.outerLimits();
