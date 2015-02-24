@@ -5,7 +5,9 @@ package com.modestmaps.core.painter
 	public class TileQueue
 	{
 		// Tiles we want to load:
-		protected var queue:Array;
+		// PORTNOTE: Assuming the array is a vector of tiles
+		//protected var queue:Array;
+		protected var queue:Vector.<Tile>;
 		
 		public function TileQueue()
 		{
@@ -42,12 +44,16 @@ package com.modestmaps.core.painter
 		
 		public function sortTiles(callback:Function):void
 		{
-			queue = queue.sort(callback);
+			// PORTNOTE: The vector class implents sorting using objects like myVector.sort(Vector.CASEINSENSITIVE | Vector.DESCENDING), simply using the defualt behaviour
+			//queue = queue.sort(callback);
+			queue.sort();
 		}
 		
-		public function retainAll(tiles:Array):Array
+		// PORTNOTE: the original function returned a generic array, my assumtion is that it really wants to return an array of tiles
+		//public function retainAll(tiles:Array):Array
+		public function retainAll(tiles:Vector.<Tile>):Vector.<Tile>
 		{
-			var removed:Array = [];
+			var removed:Vector.<Tile> = [];
 			for (var i:int = queue.length-1; i >= 0; i--) {
 				var tile:Tile = queue[i] as Tile;
 				if (tiles.indexOf(tile) < 0) {

@@ -7,8 +7,10 @@ package com.modestmaps.core.painter
 	import com.modestmaps.mapproviders.IMapProvider;
 	
 	import flash.display.Bitmap;
-	import flash.display.Loader;
-	import flash.display.LoaderInfo;
+// TODO_AHMED: STUFF	
+	// PORTNOTE: 
+	//import flash.display.Loader;
+	//import flash.display.LoaderInfo;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.IOErrorEvent;
