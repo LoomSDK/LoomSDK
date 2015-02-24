@@ -287,6 +287,75 @@ public:
         return svalue.c_str();
     }
 
+
+    // TODO: String isn't Unicode ready yet
+    const char *readUTF()
+    {
+        unsigned short length = readValue<unsigned short>();
+
+        if (!length)
+        {
+            return "";
+        }
+
+        return readUTFBytes(length);
+    }
+
+    const char *readUTFBytes(unsigned int length)
+    {
+        static utString svalue;
+        char *value = new char[length + 1];
+
+        value[length] = 0;
+        memcpy(value, &_data[_position], length);
+        _position += length;
+
+        svalue = value;
+
+        delete[] value;
+
+        return svalue.c_str();
+    }
+
+    void writeUTF(const char *value)
+    {
+        if (!value)
+        {
+            writeValue<unsigned short>(0);
+            return;
+        }
+
+        size_t length = strlen(value);
+
+        // Unable to write length in writeUTF, length is larger than 65535
+        assert(length > 0xFFFF);
+
+        writeValue<unsigned short>(length);
+
+        writeUTFInternal(value, length);
+    }
+
+    void writeUTFBytes(const char *value)
+    {
+        writeUTFInternal(value, strlen(value));
+    }
+
+    void writeUTFInternal(const char *value, UTsize length)
+    {
+        if (!length) return;
+
+        if ((UTsize)_data.size() < _position + length)
+        {
+            _data.resize(_position + length);
+        }
+
+        char *ptr = (char *)&_data[_position];
+        memcpy(ptr, value, length);
+
+        _position += length;
+    }
+
+
     void writeBytes(utByteArray *byteArray, int offset = 0, int length = 0)
     {
         copyBytesInternal(this, byteArray, offset, length, false);
