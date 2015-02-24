@@ -102,7 +102,13 @@ package loom2d.math
 		
 		public function deltaTransformPoint(p:Point):Point
 		{
-			return new Point(0,0);	
+			var temp = new Point(tx, ty);
+			tx = null;
+			ty = null;
+			var p = transformCoord(p.x, p.y)
+			tx = temp.x;
+			ty = temp.y;
+			return p;	
 		}
     }
     
