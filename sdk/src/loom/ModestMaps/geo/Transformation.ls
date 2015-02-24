@@ -4,7 +4,8 @@
 
 package com.modestmaps.geo
 {
-	import flash.geom.Point;
+	//import flash.geom.Point;
+	import loom2d.math.Point;
 
 	public class Transformation
 	{

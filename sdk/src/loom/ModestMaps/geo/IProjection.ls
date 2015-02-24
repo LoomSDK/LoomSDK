@@ -4,7 +4,7 @@
 
 package com.modestmaps.geo
 { 
-	import flash.geom.Point;
+	import loom2d.math.Point;
 	import com.modestmaps.core.Coordinate;
 	import com.modestmaps.geo.Location;
 

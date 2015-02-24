@@ -7,19 +7,31 @@ package com.modestmaps.core.painter
 	import com.modestmaps.mapproviders.IMapProvider;
 	
 	import flash.display.Bitmap;
-// TODO_AHMED: STUFF	
-	// PORTNOTE: 
+	// PORTNOTE: There isn't a loader class equivalent in loom
 	//import flash.display.Loader;
 	//import flash.display.LoaderInfo;
-	import flash.events.Event;
-	import flash.events.EventDispatcher;
-	import flash.events.IOErrorEvent;
-	import flash.events.ProgressEvent;
-	import flash.events.TimerEvent;
-	import flash.net.URLRequest;
-	import flash.system.LoaderContext;
-	import flash.utils.Dictionary;
-	import flash.utils.Timer;
+	
+	//import flash.events.Event;
+	import loom2d.events.Event;
+	//import flash.events.EventDispatcher;
+	import loom2d.events.EventDispatcher;
+	
+	// PORTNOTE: There doesn't seem to be an IOErrorEvent, ProgressEvent, TimerEvent in loom. Timer is possibly update?
+	//import flash.events.IOErrorEvent;
+	//import flash.events.ProgressEvent;
+	//import flash.events.TimerEvent;
+	
+	// PORTNOTE: There isn't a url request class in loom, using http request class instead
+	//import flash.net.URLRequest;
+	import loom.HTTPRequest;
+	
+	// PORTNOTE: Loom doesn't have a loader class
+	//import flash.system.LoaderContext;
+	// PORTNOTE: Disctionaries are a native part of loomscript
+	//import flash.utils.Dictionary;
+	
+	//import flash.utils.Timer;
+	import loom.platform.Timer;
 	
 	public class TilePainter extends EventDispatcher implements ITilePainter
 	{
@@ -56,7 +68,7 @@ package com.modestmaps.core.painter
 		// they are free to check the bounds of their overlays and don't have to serve
 		// millions of 404s
 		protected var layersNeeded:Object = {};
-		protected var loaderTiles:Dictionary = new Dictionary(true);
+		protected var loaderTiles:Dictionary = new Dictionary.<Tile>;
 	
 		// open requests
 		protected var openRequests:Array = [];
@@ -272,7 +284,7 @@ package com.modestmaps.core.painter
 			else if (previousOpenRequests > 0)
 			{
 				// TODO: a custom event for load progress rather than overloading bytesloaded?
-				dispatchEvent(new ProgressEvent(ProgressEvent.PROGRESS, false, false, previousOpenRequests - openRequests.length, previousOpenRequests))
+				dispatchEvent(new ProgressEvent(ProgressEvent.PROGRESS, false, false, previousOpenRequests - openRequests.length, previousOpenRequests));
 	
 			    // if we're finished...
 			    if (openRequests.length == 0)

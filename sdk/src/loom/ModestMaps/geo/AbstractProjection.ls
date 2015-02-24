@@ -4,7 +4,7 @@
 
 package com.modestmaps.geo
 {
-	import flash.geom.Point;
+	import loom2d.math.Point;
 	import com.modestmaps.core.Coordinate;
 	import com.modestmaps.geo.Location;
 	import com.modestmaps.geo.Transformation;
@@ -42,7 +42,8 @@ package com.modestmaps.geo
 	    protected function rawProject(point:Point):Point
 	    {
 	        throw new Error("Abstract method not implemented by subclass.");
-	        return null;
+			// PORTNOTE: can't return null for a struct like a point
+	        return Point.ZERO;
 	    }
 	    
 	   /**
@@ -51,7 +52,8 @@ package com.modestmaps.geo
 	    protected function rawUnproject(point:Point):Point
 	    {
 	        throw new Error("Abstract method not implemented by subclass.");
-	        return null;
+			// PORTNOTE: can't return null for a struct like a point
+	        return Point.ZERO;
 	    }
 	    
 	   /**
