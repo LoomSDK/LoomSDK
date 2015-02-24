@@ -100,17 +100,9 @@ package loom2d.math
         
         public native function toString():String;
 		
-		public function transformPoint(p:Point):Point
-		{
-			return new Point(0,0);	
-		}
 		public function deltaTransformPoint(p:Point):Point
 		{
 			return new Point(0,0);	
-		}
-		public function clone():Matrix
-		{
-			return new Matrix();
 		}
     }
     

@@ -352,7 +352,7 @@ package com.modestmaps.core
 		 *  
 		 */
 		
-		 //PORTNOTE TODO_KEVIN ask Luke about onRender and NativeDelegate, renamed onRender
+		 //PORTNOTE TODO_KEVIN ask LUKE about onRender and NativeDelegate, renamed onRender
 		protected function _onRender(event:Event=null):void
 		{
 			//var t:Number = getTimer();
@@ -852,7 +852,9 @@ package com.modestmaps.core
 		protected function get invertedMatrix():Matrix
 		{
 			if (!_invertedMatrix) {
-				_invertedMatrix = worldMatrix.clone();
+				//PORTNOTE replaced matrix.clone with .copyFrom
+				//_invertedMatrix = worldMatrix.clone();
+				_invertedMatrix.copyFrom(worldMatrix);				
 				_invertedMatrix.invert();
 				_invertedMatrix.scale(scale/tileWidth, scale/tileHeight);
 			}
@@ -891,7 +893,8 @@ package com.modestmaps.core
 		public function get topLeftCoordinate():Coordinate
 		{
 			if (!_topLeftCoordinate) {
-				var tl:Point = invertedMatrix.transformPoint(new Point());
+				var tl:Point = invertedMatrix.transformCoord(0,0);
+				
 				_topLeftCoordinate = new Coordinate(tl.y, tl.x, zoomLevel);			
 			}
 			return _topLeftCoordinate;
@@ -900,7 +903,7 @@ package com.modestmaps.core
 		public function get bottomRightCoordinate():Coordinate
 		{
 			if (!_bottomRightCoordinate) {
-				var br:Point = invertedMatrix.transformPoint(new Point(mapWidth, mapHeight));
+				var br:Point = invertedMatrix.transformCoord(mapWidth, mapHeight);
 				_bottomRightCoordinate = new Coordinate(br.y, br.x, zoomLevel);			
 			}
 			return _bottomRightCoordinate;
@@ -909,7 +912,7 @@ package com.modestmaps.core
 		public function get topRightCoordinate():Coordinate
 		{
 			if (!_topRightCoordinate) {
-				var tr:Point = invertedMatrix.transformPoint(new Point(mapWidth,0));
+				var br:Point = invertedMatrix.transformCoord(mapWidth, 0);
 				_topRightCoordinate = new Coordinate(tr.y, tr.x, zoomLevel);			
 			}
 			return _topRightCoordinate;
@@ -918,7 +921,7 @@ package com.modestmaps.core
 		public function get bottomLeftCoordinate():Coordinate
 		{
 			if (!_bottomLeftCoordinate) {
-				var bl:Point = invertedMatrix.transformPoint(new Point(0, mapHeight));
+				var bl:Point = invertedMatrix.transformCoord(0, mapHeight);
 				_bottomLeftCoordinate = new Coordinate(bl.y, bl.x, zoomLevel);			
 			}
 			return _bottomLeftCoordinate;
@@ -927,7 +930,7 @@ package com.modestmaps.core
 		public function get centerCoordinate():Coordinate
 		{
 			if (!_centerCoordinate) {
-				var c:Point = invertedMatrix.transformPoint(new Point(mapWidth/2, mapHeight/2));
+				var c:Point = invertedMatrix.transformCoord(mapWidth/2, mapHeight/2);
 				_centerCoordinate = new Coordinate(c.y, c.x, zoomLevel);
 			} 
 			return _centerCoordinate; 			
@@ -940,7 +943,7 @@ package com.modestmaps.core
 			var zoomedColumn:Number = coord.column * zoomFactor;
 			var zoomedRow:Number = coord.row * zoomFactor;
 						
-			var screenPoint:Point = worldMatrix.transformPoint(new Point(zoomedColumn, zoomedRow));
+			var screenPoint:Point = worldMatrix.transformCoord(zoomedColumn, zoomedRow);
 
 			if (context && context != this)
             {
@@ -959,7 +962,7 @@ package com.modestmaps.core
     			point = this.globalToLocal(point);
             }
 			
-			var p:Point = invertedMatrix.transformPoint(point);
+			var p:Point = invertedMatrix.transformCoord(point.x, point.y);
 			return new Coordinate(p.y, p.x, zoomLevel);
 		}
 		
@@ -1202,17 +1205,20 @@ package com.modestmaps.core
 
 			// then make sure we haven't gone too far...
 			
-			var inverse:Matrix = matrix.clone();
+			//var inverse:Matrix = matrix.clone();
+			var inverse:Matrix = new Matrix;
+			inverse.copyFrom(worldMatrix);
+			
 			inverse.invert();
 			inverse.scale(matrixScale/tileWidth, matrixScale/tileHeight);
 			
 			// zoom topLeft and bottomRight coords to 0
 			// so that they can be compared against minTx etc.
 			
-			var topLeftPoint:Point = inverse.transformPoint(new Point());
+			var topLeftPoint:Point = inverse.transformCoord(0,0);
 			var topLeft:Coordinate = new Coordinate(topLeftPoint.y, topLeftPoint.x, matrixZoomLevel).zoomTo(0);
 
-			var bottomRightPoint:Point = inverse.transformPoint(new Point(mapWidth, mapHeight));
+			var bottomRightPoint:Point = inverse.transformCoord(mapWidth, mapHeight);
 			var bottomRight:Coordinate = new Coordinate(bottomRightPoint.y, bottomRightPoint.x, matrixZoomLevel).zoomTo(0);
 			
 			// apply horizontal constraints
@@ -1319,7 +1325,10 @@ package com.modestmaps.core
 
 		public function getMatrix():Matrix
 		{
-			return worldMatrix.clone();
+			//return worldMatrix.clone();
+			var m = new Matrix();
+			m.copyFrom(worldMatrix);
+			return m;
 		}
 
 		public function setMatrix(m:Matrix):void
