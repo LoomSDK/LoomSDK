@@ -4,9 +4,15 @@
 
 package com.modestmaps.events
 {
-	import flash.events.Event;
+	//import flash.events.Event;
+	import loom2d.events.Event;
+	
 	import com.modestmaps.geo.Location;
-    import flash.display.DisplayObject;	        public class MarkerEvent extends Event
+	
+    //import flash.display.DisplayObject;	
+	import loom2d.display.DisplayObject;
+    
+    public class MarkerEvent extends Event
 	{
 		// these are prefixed marker to avoid conflicts with MouseEvent
 	    public static const MARKER_ROLL_OVER:String = 'markerRollOver';

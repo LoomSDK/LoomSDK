@@ -4,11 +4,14 @@
 
 package com.modestmaps.events
 {
-	import com.modestmaps.core.MapExtent;
+	import com.modestmaps.core.*;
 	import com.modestmaps.mapproviders.IMapProvider;
 	
-	import flash.events.Event;
-	import flash.geom.Point;
+	//import flash.events.Event;
+	import loom2d.events.Event;
+	
+	//import flash.geom.Point;
+	import loom2d.math.Point;
 
 	public class MapEvent extends Event
 	{
@@ -53,46 +56,48 @@ package com.modestmaps.events
 		{
 			super(type, true, true);
 			
+			//TODO: KEVIN, double casting to be optimized
 			switch(type) {
 				case PANNED:
 					if (rest.length > 0 && rest[0] is Point) {
-						panDelta = rest[0];
+						panDelta = rest[0] as Point;
 					}
 					break;
 				case ZOOMED_BY:
 					if (rest.length > 0 && rest[0] is Number) {
-						zoomDelta = rest[0];
+						zoomDelta = rest[0] as Number;
 					}
 					break;
 				case EXTENT_CHANGED:
 	    			if (rest.length > 0 && rest[0] is MapExtent) {
-	    				newExtent = rest[0];
+	    				newExtent = rest[0] as MapExtent;
 	    			}
 					break;	    	    
 				case START_ZOOMING:
 				case STOP_ZOOMING:
 					if (rest.length > 0 && rest[0] is Number) {
-						zoomLevel = rest[0];
+						zoomLevel = rest[0] as Number;
 					}
 					break;					
 	    		case RESIZED:
-	    			if (rest.length > 0 && rest[0] is Array) {
-	    				newSize = rest[0];
+					//PORTNOTE: Array -> Vector.<Tile>
+	    			if (rest.length > 0 && rest[0] is Vector.<Tile>) {
+	    				newSize = rest[0] as Vector.<Tile>;
 	    			}
-					break	    	    
+					break;	    	    
 				case COPYRIGHT_CHANGED:
 	    			if (rest.length > 0 && rest[0] is String) {
-	    				newCopyright = rest[0];
+	    				newCopyright = rest[0] as String;
 	    			}
 					break;	    	    
 				case BEGIN_EXTENT_CHANGE:
 	    			if (rest.length > 0 && rest[0] is MapExtent) {
-	    				oldExtent = rest[0];
+	    				oldExtent = rest[0] as MapExtent;
 	    			}
 					break;	    	    
 				case MAP_PROVIDER_CHANGED:
 	    			if (rest.length > 0 && rest[0] is IMapProvider) {
-	    				newMapProvider = rest[0];
+	    				newMapProvider = rest[0] as IMapProvider;
 	    			}
 			}
 			
@@ -100,7 +105,8 @@ package com.modestmaps.events
 		
 		override public function clone():Event
 		{
-			return new MapEvent(this.type);
+			//PORTNOTE: added null as parameter
+			return new MapEvent(this.type, null);
 		}
 	}
 }
