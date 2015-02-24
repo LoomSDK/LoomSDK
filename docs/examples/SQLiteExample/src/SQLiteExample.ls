@@ -26,8 +26,8 @@ package
 	
     public class SQLiteExample extends Application
     {
-        const numRows:int = 6;
-        const numColumns:int = 5;
+        const numRows:int = 9;
+        const numColumns:int = 8;
 
     	var connection:Connection;
 		var statement:Statement;
@@ -41,6 +41,7 @@ package
         var param3Input:TextInput;
 		var loadingOverlay:Image;
 		var grid:Vector.<Vector.<Button>> =[];		
+        var paramInputs:Vector.<TextInput> = [];
         var theme:MetalWorksMobileTheme;
 
         override public function run():void
@@ -58,12 +59,18 @@ package
             initRestOfUI();
             
             loadingOverlay = new Image(Texture.fromAsset("assets/loading_bg.png"));
+            loadingOverlay.scale = 2;
             loadingOverlay.alpha = 0;
             stage.addChild(loadingOverlay);
 
 
             //create / open connection
 			openConnection();
+
+            //select the whole table to display in our grid
+            if (prepareStatement("SELECT * FROM EXAMPLE_TABLE", false) == 0)
+                return;
+            displayData(); 
         }
 
         private function newLabel(width:Number, height:Number, x:Number, y:Number, text:String=""):Label
@@ -114,40 +121,41 @@ package
         private function initRestOfUI()
         {
             var runQueryButton = newButton(150, 45, 12.5, 215, "run query", startQuery);
-            timeLabel = newLabel(250, 45, 300, 225, "Query duration:");
+            timeLabel = newLabel(250, 45, 300, 230, "Query duration:");
             tableNameLabel = newLabel(500, 55, 12.5, 275, "Table name:");
             outputLabel = newLabel(stage.stageWidth-25, 45, 12.5, 600, "");
         }
 
         private function initTemplateButtons()
         {
-            var createQueryButton = newButton(100, 40, 12, 5, "CREATE", function(){queryInput.text = "CREATE TABLE example_table(id int, name varchar(255), surname varchar(255))";});
+            var createQueryButton = newButton(100, 40, 12, 5, "CREATE", function(){queryInput.text = "CREATE TABLE example_table(id varchar(255), name varchar(255), surname varchar(255))";});
             var selectQueryButton = newButton(100, 40, 117, 5, "SELECT", function(){queryInput.text = "SELECT * FROM example_table";});
             var insertQueryButton = newButton(100, 40, 222, 5, "INSERT",insertTemplate);
             var dropQueryButton = newButton(100, 40, 327, 5, "DROP", function(){queryInput.text = "DROP TABLE example_table";});
+            var clearQueryButton = newButton(100, 40, stage.stageWidth-112.5, 5, "CLEAR", function(){queryInput.text = "";});
         }
 
         private function initInputControls()
         {
             queryInput = newInputBox(stage.stageWidth - 25, 100, 12.5, 50, "SQL query");
+            queryInput.maxChars = 300;
 
-            param1Input = newInputBox(90, 40, 12.5, 165, "param1");
-            param2Input = newInputBox(90, 40, 107.5, 165, "param2");
-            param3Input = newInputBox(90, 40, 202.5, 165, "param3");           
-   //         param4Input = newInputBox(90, 40, 297, 165, "param4");
-   //         param5Input = newInputBox(90, 40, 392.5, 165, "param5");
-   //         param6Input = newInputBox(90, 40, 487.5, 165, "param6");
+            for (var i = 0; i<numColumns;i++)
+            {
+                var paramInput = newInputBox(114, 40, 12.5 + 117 * i, 165, "param" + (i+1).toString());
+                paramInputs.push(paramInput);
+            }
 
-            countInput = newInputBox(100, 45, 175, 215, "run count");                    
+            countInput = newInputBox(100, 40, 175, 220, "run count");                    
             countInput.maxChars = 7; 
         }
 
         private function insertTemplate()
         {
     		queryInput.text = "INSERT INTO example_table VALUES (?,?,?)";
-    		param1Input.text = "1";
-    		param2Input.text = "Joe";
-    		param3Input.text = "Soap";
+    		paramInputs[0].text = "1";
+    		paramInputs[1].text = "Joe";
+    		paramInputs[2].text = "Soap";
         }
 
         //Bring up loading overlay then run query
@@ -184,17 +192,17 @@ package
 				start = Platform.getTime();
 				 if (queryString.indexOf("INSERT ") > -1)
 				 {
-					var param1:Number = Number.fromString(param1Input.text);
-					var param2:String = param2Input.text;
-					var param3:String = param3Input.text;
+                    var paramCount = queryString.split("?").length;
 
 					for (var i = 0; i < runCount; i++) 
 					{
 						if (prepareStatement(queryString) == 0)
                             return;
-						statement.bindInt(1, param1);
-						statement.bindString(2, param2);
-						statement.bindString(3, param3);
+
+                        for (var l = 1; l <= paramCount; l++)
+                        {
+                            statement.bindString(l, paramInputs[l-1].text);
+                        }
 
 				 		statement.step();
 						statement.finalize();
@@ -244,42 +252,41 @@ package
 		private function prepareStatement(sqlString:String, display:Boolean=true):int
 		{
 			statement = connection.prepare(sqlString);
+
+            var sqlType:String = "PREPARE";
+
+            if (sqlString.indexOf("SELECT") > -1)
+            {
+                sqlType = "SELECT";
+                tableNameLabel.text = "Table Name: " + getTableName(sqlString);
+            }
+            else  if (sqlString.indexOf("INSERT") > -1)
+            {
+                sqlType = "INSERT";
+            }
+            else  if (sqlString.indexOf("DROP") > -1)
+            {
+                sqlType = "TABLE DROP";
+            }   
+            else  if (sqlString.indexOf("CREATE") > -1)
+            {
+                sqlType = "TABLE CREATE";
+            }
+
+
 		    if(connection.errorCode != ResultCode.SQLITE_OK)
 		    {
                 if (display)
-				    outputLabel.text = "prepare ERROR: " + connection.errorMessage;
-                trace ("prepare ERROR: " + connection.errorMessage);
+				    outputLabel.text = sqlType + " ERROR: " + connection.errorMessage;
                 loadingOverlay.alpha = 0;
                 clearGrid();
                 return 0;
 		    }
 		    else
 		    {
-                var outputString:String;
-
-                if (sqlString.indexOf("SELECT") > -1)
-                {
-                    outputString = "SELECT SUCCESS";
-                    tableNameLabel.text = "Table Name: " + getTableName(sqlString);
-                }
-                else  if (sqlString.indexOf("INSERT") > -1)
-                {
-                    outputString = "INSERT SUCCESS";
-                }
-                else  if (sqlString.indexOf("DROP") > -1)
-                {
-                    outputString = "TABLE DROP SUCCESS";
-                }   
-                else  if (sqlString.indexOf("CREATE") > -1)
-                {
-                    outputString = "TABLE CREATE SUCCESS";
-                }
-                else
-                    outputString = "prepare SUCCESS!";
-
                 if (display)
                 {
-			        outputLabel.text = outputString;
+			        outputLabel.text = sqlType + " SUCCESS";
                 }
                 return 1;
 		    }
@@ -353,7 +360,7 @@ package
         		var row:Vector.<Button> = [];
 	        	for (var i = 0; i < numColumns; i++) 
 	        	{
-					var button = newButton(120, 30, 120 * i + 10, 305 + (30 * j));
+					var button = newButton(117, 30, 117 * i + 10, 305 + (30 * j));
                     button.isEnabled = false;
 		    		row.push(button);      	
 	        	}
