@@ -5,10 +5,14 @@ package com.modestmaps.overlays
 	import com.modestmaps.events.MapEvent;
 	import com.modestmaps.geo.Location;
 	
-	import flash.display.Sprite;
-	import flash.events.Event;
-	import flash.geom.Point;
-	import flash.geom.Rectangle;	
+	//import flash.display.Sprite;
+	//import flash.events.Event;
+	//import flash.geom.Point;
+	//import flash.geom.Rectangle;	
+	import loom2d.display.Sprite;
+	import loom2d.events.Event;
+	import loom2d.math.Point;
+	import loom2d.math.Rectangle;
 
 	/** 
 	 * Polyline clip for rendering Polyline instances on your map.
