@@ -17,14 +17,16 @@ package com.modestmaps.core.painter
 		protected static const MAX_NEW_TILES:int = 256;
 		
 		protected var pool:Array = [];
-		protected var tileClass:Class;
+		// PORTNOTE: loom doesn't have a class called Class, using object instead
+		//protected var tileClass:Class;
+		protected var tileClass:Object;
 		
-		public function TilePool(tileClass:Class)
+		public function TilePool(tileClass:Object)
 		{
 			this.tileClass = tileClass;
 		}
 	
-		public function setTileClass(tileClass:Class):void
+		public function setTileClass(tileClass:Object):void
 		{
 			this.tileClass = tileClass;
 			pool = [];
@@ -34,7 +36,9 @@ package com.modestmaps.core.painter
 		{
 	    	if (pool.length < MIN_POOL_SIZE) {
 	    		while (pool.length < MAX_NEW_TILES) {
-	    			pool.push(new tileClass(0,0,0));
+// TODO_AHMED: Find out why the class Class is used instead of interfaces or abstract inherticance
+	    			//pool.push(new tileClass(0,0,0));
+					pool.push(new tileClass());
 	    		}
 	    	}						
 			var tile:Tile = pool.pop() as Tile;

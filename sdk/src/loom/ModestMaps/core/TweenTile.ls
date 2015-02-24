@@ -5,7 +5,10 @@
 
 package com.modestmaps.core
 {
-	import gs.TweenLite;
+	// PORTNOTE: Replacing gstween with the looms tweening engine to avoid unneccessary porting effort
+	//import gs.TweenLite;
+	import loom2d.animation.Tween;
+	import loom2d.animation.Transitions;
 	
 	public class TweenTile extends Tile
 	{
@@ -20,7 +23,7 @@ package com.modestmaps.core
 		{
 			// *** don't *** kill the tweens when hiding
 			// it seems there's a harmless bug where hide might get called after show
-			// if there's a tween running it will correct it though :)
+			// if there's a tween running it will correct it though :) <-- PORTNOTE: related to gs tween
 			//TweenLite.killTweensOf(this);
 			this.alpha = 0;
 		}
@@ -28,19 +31,21 @@ package com.modestmaps.core
 		override public function show():void 
 		{
 			if (alpha < 1) {
-				TweenLite.to(this, FADE_TIME, { alpha: 1 });
+				//TweenLite.to(this, FADE_TIME, { alpha: 1 });
+				var tween:Tween = new Tween(this, FADE_TIME, Transitions.LINEAR);
+				tween.animate("alpha", 1);
 			}
 		}		
 
 		override public function showNow():void 
 		{
-			TweenLite.killTweensOf(this);
+			//TweenLite.killTweensOf(this);
 			this.alpha = 1;
 		}		
 
 		override public function destroy():void 
 		{
-			TweenLite.killTweensOf(this);
+			//TweenLite.killTweensOf(this);
 			super.destroy();
 		}		
 				
