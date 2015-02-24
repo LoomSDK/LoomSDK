@@ -912,7 +912,7 @@ package com.modestmaps.core
 		public function get topRightCoordinate():Coordinate
 		{
 			if (!_topRightCoordinate) {
-				var br:Point = invertedMatrix.transformCoord(mapWidth, 0);
+				var tr:Point = invertedMatrix.transformCoord(mapWidth, 0);
 				_topRightCoordinate = new Coordinate(tr.y, tr.x, zoomLevel);			
 			}
 			return _topRightCoordinate;
