@@ -342,6 +342,20 @@ public native class Type extends MemberInfo {
     public native function getAssembly():Assembly;
     
     /**
+     *  Gets the Base Parent Type that the Type belongs to.
+     *
+     *  @return The Type's Base Parent Type.
+     */
+    public native function getParent():Type;
+    
+    /**
+     *  Gets the number of Interfaces's associated with the Type.
+     *
+     *  @return Number of Interfaces's in the Type.
+     */
+    public native function getInterfaceCount():int;
+
+    /**
      *  Gets the number of FieldInfo's associated with the Type and its inherited Fields.
      *
      *  @return Number of FieldInfo's in the Type.
@@ -362,6 +376,14 @@ public native class Type extends MemberInfo {
      */
     public native function getPropertyInfoCount():int;
     
+    /**
+     *  Gets the Interface Type associated with the specified index.
+     *
+     *  @param index Index of associated Type.
+     *  @return Type of the associated Interface.
+     */
+    public native function getInterface(index:int):Type;
+
     /**
      *  Gets the FieldInfo associated with the specified index.
      *
