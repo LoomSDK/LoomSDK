@@ -675,7 +675,8 @@ package com.modestmaps.core
 			}
 			
 			// hugs http://www.senocular.com/flash/tutorials/transformmatrix/
-			var px:Point = worldMatrix.deltaTransformPoint(new Point(0, 1));
+			//PORTNOTE TODO_KEVIN deltaTransformPoint
+			var px:Point = worldMatrix.transformCoord(0, 1);
 			var tileAngleDegrees:Number = ((180/Math.PI) * Math.atan2(px.y, px.x) - 90);
 			
  			// apply the sorted depths, position all the tiles and also keep recentlySeen updated:

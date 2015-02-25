@@ -546,7 +546,10 @@ package com.modestmaps
         public function getRotation():Number
         {
         	var m:Matrix = grid.getMatrix();
-    		var px:Point = m.deltaTransformPoint(new Point(0, 1));
+    		//var px:Point = m.deltaTransformPoint(new Point(0, 1));
+			//TODO_KEVIN deltaTransformPOint
+    		var px:Point = m.transformCoord(0, 1);
+			
 			return Math.atan2(px.y, px.x);
         }
         

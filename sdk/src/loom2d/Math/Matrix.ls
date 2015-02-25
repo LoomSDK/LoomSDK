@@ -100,6 +100,7 @@ package loom2d.math
         
         public native function toString():String;
 		
+		/* TODO_KEVIN this broke LOOM
 		public function deltaTransformPoint(p:Point):Point
 		{
 			var temp = new Point(tx, ty);
@@ -110,6 +111,7 @@ package loom2d.math
 			ty = temp.y;
 			return point;	
 		}
+		*/
     }
     
 }
