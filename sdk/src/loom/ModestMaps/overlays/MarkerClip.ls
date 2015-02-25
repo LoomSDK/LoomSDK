@@ -6,16 +6,21 @@ package com.modestmaps.overlays
 	import com.modestmaps.events.MarkerEvent;
 	import com.modestmaps.geo.Location;
 	import com.modestmaps.mapproviders.IMapProvider;
+	import loom2d.core.TouchMarker;
 	
-	import flash.display.DisplayObject;
-	import flash.display.Sprite;
-	import flash.events.Event;
-	import flash.events.MouseEvent;
-	import flash.geom.Point;
-	import flash.utils.Dictionary;
-	import flash.utils.clearTimeout;
-	import flash.utils.setTimeout;
-	
+	import loom2d.display.DisplayObject;
+	import loom2d.display.Sprite;
+	import loom2d.events.Event;
+	// PORTNOTE: Using touch events in place of mouse events because loom is missing them
+	//import flash.events.MouseEvent;
+	import loom2d.events.TouchEvent;
+	import loom2d.math.Point;
+	// PORTNOTE: Dictionary is a built in variable type in loomscript
+	//import flash.utils.Dictionary;
+	// PORTNOTE: loom doesn't contain matching classes for clearTimeout and setTimeout
+	//import flash.utils.clearTimeout;
+	//import flash.utils.setTimeout;
+
     [Event(name="markerRollOver",    type="com.modestmaps.events.MarkerEvent")]
     [Event(name="markerRollOut",     type="com.modestmaps.events.MarkerEvent")]
     [Event(name="markerClick",       type="com.modestmaps.events.MarkerEvent")]
@@ -27,10 +32,18 @@ package com.modestmaps.overlays
 	    
 	    protected var drawCoord:Coordinate;
 	    
-	    protected var locations:Dictionary = new Dictionary();
-	    protected var coordinates:Dictionary = new Dictionary();
-	    protected var markers:Array = []; // all markers
-	    protected var markersByName:Object = {};
+		// PORTNOTE: This seems to be used as a dictionary of type displayobject and location 
+	    //protected var locations:Dictionary = new Dictionary();
+	    protected var locations:Dictionary.<DisplayObject, Location>;
+	    // PORTNOTE: This seems to be used as a dictionary of displayobject and coordinate
+		//protected var coordinates:Dictionary = new Dictionary();
+	    protected var coordinates:Dictionary.<DisplayObject, Coordinate>;
+		// PORTNOTE: This seems to be used as an array of display objects
+	    //protected var markers:Array = []; // all markers
+	    protected var markers:Vector.<DisplayObject>; // all markers
+	    // PORTNOTE: This seems to be used as a dictionary of string and displayobject
+		//protected var markersByName:Object = {};
+	    protected var markersByName:Dictionary.<String, DisplayObject>;
 
         /** enable this if you want intermediate zooming steps to
          * stretch your graphics instead of reprojecting the points
@@ -76,15 +89,21 @@ package com.modestmaps.overlays
 	    {
 	    	// client code can listen to mouse events on this clip
 	    	// to get all events bubbled up from the markers
-	    	buttonMode = false;
-	    	mouseEnabled = false;
-	    	mouseChildren = true;
+			// PORTNOTE: There isn;t any support for mouse related stuff in loom
+// TODO_AHMED: Investigate the missing mouse stuff in relation to touch controls
+	    	//buttonMode = false;
+	    	//mouseEnabled = false;
+	    	//mouseChildren = true;
 	    		    	
 	    	this.map = map;
-	    	this.x = map.getWidth() / 2;
-	    	this.y = map.getHeight() / 2;
+// TODO_AHMED: Reimplement these lines when map class is complete
+	    	/*this.x = map.getWidth() / 2;
+	    	this.y = map.getHeight() / 2;*/
 	    	
-	    	previousGeometry = map.getMapProvider().geometry();
+			this.x = 50;
+			this.y = 50;
+// TODO_AHMED: Reimplement this when map class is complete
+	    	//previousGeometry = map.getMapProvider().geometry();
 
 			map.addEventListener(MapEvent.START_ZOOMING, onMapStartZooming);
 	        map.addEventListener(MapEvent.STOP_ZOOMING, onMapStopZooming);
@@ -98,9 +117,10 @@ package com.modestmaps.overlays
 	        map.addEventListener(MapEvent.MAP_PROVIDER_CHANGED, onMapProviderChanged);
 
 			// these were previously in Map, but now MarkerEvents bubble it makes more sense to have them here
-			addEventListener( MouseEvent.CLICK, onMarkerClick );
+// TODO_AHMED: Find repacements for mouseevents
+			/*addEventListener( MouseEvent.CLICK, onMarkerClick );
 			addEventListener( MouseEvent.ROLL_OVER, onMarkerRollOver, true );		
-			addEventListener( MouseEvent.ROLL_OUT, onMarkerRollOut, true );	
+			addEventListener( MouseEvent.ROLL_OUT, onMarkerRollOut, true );*/	
 
 	        addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
         }
@@ -144,7 +164,8 @@ package com.modestmaps.overlays
 	        if (markers.indexOf(marker) == -1)
 	        {
     	        locations[marker] = location.clone();
-    	        coordinates[marker] = map.getMapProvider().locationCoordinate(location);
+// TODO_AHMED: Reimplement next line when map class is complete
+    	        //coordinates[marker] = map.getMapProvider().locationCoordinate(location);
     	        markersByName[marker.name] = marker;
     	        markers.push(marker);
     	        
@@ -179,7 +200,8 @@ package com.modestmaps.overlays
 	    public function setMarkerLocation(marker:DisplayObject, location:Location):void
 	    {
 	        locations[marker] = new Location(location.lat, location.lon);
-	        coordinates[marker] = map.getMapProvider().locationCoordinate(location);
+// TODO_AHMED: Reimplement the next line when map class is complete
+	        //coordinates[marker] = map.getMapProvider().locationCoordinate(location);
 	        sortMarkers();
 	        dirty = true;
 	    }
@@ -202,9 +224,13 @@ package com.modestmaps.overlays
 	    	if (index >= 0) {
 	    		markers.splice(index,1);
 	    	}
-	    	delete locations[marker];
-	    	delete coordinates[marker];
-	    	delete markersByName[marker.name];
+			// PORTNOTE: Delete keyword isn't implemented in loomscript
+	    	//delete locations[marker];
+	    	//delete coordinates[marker];
+	    	//delete markersByName[marker.name];
+			locations.deleteKey(marker);
+			coordinates.deleteKey(marker);
+			markersByName.deleteKey(marker.name);
 	    }
 
 		// removeAllMarkers was implemented on trunk
@@ -224,7 +250,8 @@ package com.modestmaps.overlays
 	    		return;
 	    	}
 	    	
-	    	var center:Coordinate = map.grid.centerCoordinate;
+// TODO_AHMED: Reimplement when map class is complete
+	    	/*var center:Coordinate = map.grid.centerCoordinate;
 	    	
 	    	if (center.equalTo(drawCoord)) {
 	    		dirty = false;
@@ -234,7 +261,7 @@ package com.modestmaps.overlays
 	    	drawCoord = center.copy();
 	    	
 	    	this.x = map.getWidth() / 2;
-	    	this.y = map.getHeight() / 2;	    	
+	    	this.y = map.getHeight() / 2;*/	    	
 	    	
 	        if (scaleZoom) {
 	            scaleX = scaleY = 1.0;
@@ -257,11 +284,12 @@ package com.modestmaps.overlays
 	      * provider.locationCoordinate(location) will return a different coordinate */
 	    public function resetCoordinates():void
 	    {
-	    	var provider:IMapProvider = map.getMapProvider();
+// TODO_AHMED: Reimplement when map class is complete
+	    	/*var provider:IMapProvider = map.getMapProvider();
 	    	// I wish Array.map didn't require three parameters!
 	    	for each (var marker:DisplayObject in markers) {
 				coordinates[marker] = provider.locationCoordinate(locations[marker]);
-	    	}
+	    	}*/
 	    	dirty = true;
 	    }
 	    
@@ -272,10 +300,11 @@ package com.modestmaps.overlays
         	// use a timer so we don't do this every single frame, otherwise
         	// sorting markers and applying depths pretty much doubles the 
         	// time to run updateClips 
-         	if (sortTimer) {
+// TODO_AHMED: Do something about the missing clearTimeout and setTimeout classes
+         	/*if (sortTimer) {
         		clearTimeout(sortTimer);
         	}
-        	sortTimer = setTimeout(sortMarkers, 50, updateOrder);
+        	sortTimer = setTimeout(sortMarkers, 50, updateOrder);*/
      	}	    
 	    
 	    public function sortMarkers(updateOrder:Boolean=false):void
@@ -283,7 +312,10 @@ package com.modestmaps.overlays
 			// only sort if we have a function:	        
             if (updateOrder && markerSortFunction != null)
 	        {
-	            markers = markers.sort(markerSortFunction, Array.NUMERIC);
+				// PORTNOTE: Using loomscript's built in array sorting instead
+	            //markers = markers.sort(markerSortFunction, Array.NUMERIC);
+// TODO_AHMED: Make sure the marker sorting works correctly
+	            markers.sort(markerSortFunction);
 	        }
 	        // apply depths to maintain the order things were added in
 	        var index:uint = 0;
@@ -305,7 +337,8 @@ package com.modestmaps.overlays
 		    	// this method previously used the location of the marker
 		    	// but map.locationPoint hands off to grid to grid.coordinatePoint
 		    	// in the end so we may as well cache the first step
-		        var point:Point = map.grid.coordinatePoint(coordinates[marker], this);
+// TODO_AHMED: Reimplement this when the map class is complete
+		        /*var point:Point = map.grid.coordinatePoint(coordinates[marker], this);
 	            marker.x = snapToPixels ? Math.round(point.x) : point.x;
 	            marker.y = snapToPixels ? Math.round(point.y) : point.y;
 
@@ -326,7 +359,7 @@ package com.modestmaps.overlays
     	            removeChild(marker);
     	            // only need to sort if we've added something
     	            return false;
-    	        }
+    	        }*/
             }
             
             return false;            
@@ -342,9 +375,10 @@ package com.modestmaps.overlays
 	    protected function onMapPanned(event:MapEvent):void
 	    {
 	    	if (drawCoord) {
-		        var p:Point = map.grid.coordinatePoint(drawCoord);
+// TODO_AHMED: Reimplement this when the map class is complete
+		        /*var p:Point = map.grid.coordinatePoint(drawCoord);
 		        this.x = p.x;
-	    	    this.y = p.y;
+	    	    this.y = p.y;*/
 	    	}
 	    	else {
 	    		dirty = true;
@@ -353,8 +387,11 @@ package com.modestmaps.overlays
 	    
 	    protected function onMapZoomedBy(event:MapEvent):void
 	    {
-	    	if (autoCache) cacheAsBitmap = false;
-	        if (scaleZoom && drawCoord) {
+			// PORTNOTE: cacheAsBitmap is a flash sprite function
+// TODO_AHMED: Potential performance boost here
+	    	//if (autoCache) cacheAsBitmap = false;
+// TODO:AHMED: Reimplement when map class is complete
+	        /*if (scaleZoom && drawCoord) {
 	        	if (Math.abs(map.grid.zoomLevel - drawCoord.zoom) < zoomTolerance) {
     	        	scaleX = scaleY = Math.pow(2, map.grid.zoomLevel - drawCoord.zoom);
     	     	}
@@ -364,25 +401,28 @@ package com.modestmaps.overlays
 	        }
 	        else { 
 		        dirty = true;
-	        }
+	        }*/
 	    }
 
 	    protected function onMapStartPanning(event:MapEvent):void
 	    {
 	    	// optimistically, we set this to true in case we're just moving
-		    if (autoCache) cacheAsBitmap = true;
+			// PORTNOTE: cacheAsBitmap is a flash sprite member variable
+		    //if (autoCache) cacheAsBitmap = true;
 	    }
 	    
 	    protected function onMapStartZooming(event:MapEvent):void
 	    {
 	    	// overrule onMapStartPanning if there's scaling involved
-	        if (autoCache) cacheAsBitmap = false;
+			// PORTNOTE: cacheAsBitmap is a flash sprite member variable
+	        //if (autoCache) cacheAsBitmap = false;
 	    }
 	    
 	    protected function onMapStopPanning(event:MapEvent):void
 	    {
 	    	// tidy up
-	    	if (autoCache) cacheAsBitmap = false;
+			// PORTNOTE: cacheAsBitmap is a flash sprite member variable
+	    	//if (autoCache) cacheAsBitmap = false;
 		    dirty = true;
 	    }
 	    
@@ -393,8 +433,9 @@ package com.modestmaps.overlays
 	    
 	    protected function onMapResized(event:MapEvent):void
 	    {
-	        x = map.getWidth() / 2;
-	        y = map.getHeight() / 2;
+// TODO_AHMED: Reimplement when map class is complete
+	        /*x = map.getWidth() / 2;
+	        y = map.getHeight() / 2;*/
 	        dirty = true;
 	        updateClips(); // force redraw because flash seems stingy about it
 	    }
@@ -402,12 +443,13 @@ package com.modestmaps.overlays
 	    
 	    protected function onMapProviderChanged(event:MapEvent):void
 	    {
-	    	var mapProvider:IMapProvider = map.getMapProvider();	
+// TODO_AHMED: Reimplement when map class is comlete
+	    	/*var mapProvider:IMapProvider = map.getMapProvider();	
 	    	if (mapProvider.geometry() != previousGeometry)
 			{
 	        	resetCoordinates();
 	        	previousGeometry = mapProvider.geometry();
-	        }
+	        }*/
 	    }
 	    
 	    ///// Invalidations...
@@ -416,7 +458,9 @@ package com.modestmaps.overlays
 		{
 			_dirty = d;
 			if (d) {
-				if (stage) stage.invalidate();
+				// PORTNOTE: The stage class doesn't seem to have an invalidate function
+// TODO_AHMED: Reimplement when the map class is complete
+				//if (stage) stage.invalidate();
 			}
 		}
 		
@@ -434,7 +478,8 @@ package com.modestmaps.overlays
 	    *
 	    * @see com.modestmaps.events.MarkerEvent.MARKER_CLICK
 	    */
-	    protected function onMarkerClick(event:MouseEvent):void
+// TODO_AHMED: Do something about the missing mouse event
+	    protected function onMarkerClick(event:TouchEvent):void
         {
         	var marker:DisplayObject = event.target as DisplayObject;
         	var location:Location = getMarkerLocation( marker );
@@ -448,7 +493,8 @@ package com.modestmaps.overlays
 	    *
 	    * @see com.modestmaps.events.MarkerEvent.MARKER_ROLL_OVER
 	    */
-        protected function onMarkerRollOver(event:MouseEvent):void
+// TODO_AHMED: Do something about the missing mouse event
+        protected function onMarkerRollOver(event:TouchEvent):void
         {
         	var marker:DisplayObject = event.target as DisplayObject;
         	var location:Location = getMarkerLocation( marker );
@@ -462,7 +508,8 @@ package com.modestmaps.overlays
 	    *
 	    * @see com.modestmaps.events.MarkerEvent.MARKER_ROLL_OUT
 	    */
-        protected function onMarkerRollOut(event:MouseEvent):void
+// TODO_AHMED: Do something about the missing mouse event
+        protected function onMarkerRollOut(event:TouchEvent):void
         {
             var marker:DisplayObject = event.target as DisplayObject;
             var location:Location = getMarkerLocation( marker );
