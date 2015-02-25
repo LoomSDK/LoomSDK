@@ -1,4 +1,4 @@
-﻿/**
+/**
  * vim:et sts=4 sw=4 cindent:
  * @ignore
  *
@@ -32,14 +32,22 @@ package com.modestmaps
 	import com.modestmaps.mapproviders.microsoft.MicrosoftProvider;
 	import com.modestmaps.overlays.MarkerClip;
 	
-	import flash.display.DisplayObject;
-	import flash.display.Sprite;
-	import flash.events.Event;
-	import flash.events.MouseEvent;
-	import flash.geom.Matrix;
-	import flash.geom.Point;
-	import flash.geom.Rectangle;
-	import flash.utils.getTimer;
+	//import flash.display.DisplayObject;
+	import loom2d.display.DisplayObject;
+	//import flash.display.Sprite;
+	import loom2d.display.Sprite;
+	//import flash.events.Event;
+	import loom2d.events.Event;
+	//import flash.events.MouseEvent;
+	import loom2d.events.TouchEvent;
+	//import flash.geom.Matrix;
+	import loom2d.math.Matrix;
+	//import flash.geom.Point;
+	import loom2d.math.Point;
+	//import flash.geom.Rectangle;
+	import loom2d.math.Rectangle;
+	//import flash.utils.getTimer;
+	import loom.gameframework.TimeManager;
 	
     [Event(name="startZooming",      type="com.modestmaps.events.MapEvent")]
     [Event(name="stopZooming",       type="com.modestmaps.events.MapEvent")]
@@ -299,7 +307,7 @@ package com.modestmaps
 	    *
 	    * @return   Array of center and zoom: [center location, zoom number].
 	    */
-	    public function getCenterZoom():Array
+	    public function getCenterZoom():Vector.<Object>
 	    {
 	        return [ mapProvider.coordinateLocation(grid.centerCoordinate), grid.zoomLevel ];
 	    }
@@ -355,7 +363,7 @@ package com.modestmaps
 	    *
 	    * @return   Array of [width, height].
 	    */
-	    public function getSize():/*Number*/Array
+	    public function getSize():Vector.<Number> /*Number*/
 	    {
 	        var size:/*Number*/Array = [mapWidth, mapHeight];
 	        return size;
@@ -490,19 +498,22 @@ package com.modestmaps
 	    }
 
 		/** zoom in, keeping the requested point in the same place */
-        public function zoomInAbout(targetPoint:Point=null, duration:Number=-1):void
+		//PORTNOTE removing null default from point
+        public function zoomInAbout(targetPoint:Point, duration:Number=-1):void
         {
             zoomByAbout(1, targetPoint, duration);
         }
 
 		/** zoom out, keeping the requested point in the same place */
-        public function zoomOutAbout(targetPoint:Point=null, duration:Number=-1):void
+		//PORTNOTE removing null default from point
+        public function zoomOutAbout(targetPoint:Point, duration:Number=-1):void
         {
             zoomByAbout(-1, targetPoint, duration);
         }
         
 		/** zoom in or out by zoomDelta, keeping the requested point in the same place */
-        public function zoomByAbout(zoomDelta:Number, targetPoint:Point=null, duration:Number=-1):void
+		//PORTNOTE removing null default from point
+        public function zoomByAbout(zoomDelta:Number, targetPoint:Point, duration:Number=-1):void
         {
             if (!targetPoint) targetPoint = new Point(mapWidth/2, mapHeight/2);        	
         	
@@ -538,14 +549,15 @@ package com.modestmaps
         }
         
 		/** rotate to angle (radians), keeping the requested point in the same place */
-        public function setRotation(angle:Number, targetPoint:Point=null):void
+		//PORTNOTE removing null default from point		
+        public function setRotation(angle:Number, targetPoint:Point):void
         {
         	var rotation:Number = getRotation();
 			rotateByAbout(angle - rotation, targetPoint);        	
         }
         
-		/** rotate by angle (radians), keeping the requested point in the same place */
-        public function rotateByAbout(angle:Number, targetPoint:Point=null):void
+		//PORTNOTE removing null default from point		
+        public function rotateByAbout(angle:Number, targetPoint:Point):void
         {
             if (!targetPoint) targetPoint = new Point(mapWidth/2, mapHeight/2);        	
         	
@@ -565,19 +577,22 @@ package com.modestmaps
         }        
 	    
 		/** zoom in and put the given location in the center of the screen, or optionally at the given targetPoint */
-		public function panAndZoomIn(location:Location, targetPoint:Point=null):void
+		//PORTNOTE removing null default from points
+		public function panAndZoomIn(location:Location, targetPoint:Point):void
 		{
 			panAndZoomBy(2, location, targetPoint);
 		}
 
 		/** zoom out and put the given location in the center of the screen, or optionally at the given targetPoint */		
-        public function panAndZoomOut(location:Location, targetPoint:Point=null):void
+		//PORTNOTE removing null default from points
+        public function panAndZoomOut(location:Location, targetPoint:Point):void
         {
 			panAndZoomBy(0.5, location, targetPoint);
         }
 
-		/** zoom in or out by sc, moving the given location to the requested target */        
-        public function panAndZoomBy(sc:Number, location:Location, targetPoint:Point=null, duration:Number=-1):void
+		/** zoom in or out by sc, moving the given location to the requested target */ 
+		//PORTNOTE removing null default from points
+        public function panAndZoomBy(sc:Number, location:Location, targetPoint:Point, duration:Number=-1):void
         {
             if (!targetPoint) targetPoint = new Point(mapWidth/2, mapHeight/2);
             
@@ -689,7 +704,7 @@ package com.modestmaps
 	    }
 	    
 		public function removeAllMarkers():void {
-			markerClip.removeAllMarkers()
+			markerClip.removeAllMarkers();
 		}
 		
 	   /**
@@ -721,6 +736,7 @@ package com.modestmaps
 	     	}
 	    }
 
+		/* PORTNOTE removed double click functionality, TODO_KEVIN
 		override public function set doubleClickEnabled(enabled:Boolean):void
 		{
 			super.doubleClickEnabled = enabled;
@@ -729,12 +745,12 @@ package com.modestmaps
 			trace("\tmap.addEventListener(MouseEvent.DOUBLE_CLICK, map.onDoubleClick);");
 		}
 
-        /** pans and zooms in on double clicked location */
+        // pans and zooms in on double clicked location
         public function onDoubleClick(event:MouseEvent):void
         {
         	if (!__draggable) return;
         	
-            var p:Point = grid.globalToLocal(new Point(event.stageX, event.stageY));
+            var p:Point = grid.globalToLocal(new Point( event.stageX, event.stageY));
             if (event.shiftKey) {
             	if (grid.zoomLevel > grid.minZoom) {
             		zoomOutAbout(p);
@@ -754,8 +770,10 @@ package com.modestmaps
             		panBy(mapWidth/2 - p.x, mapHeight/2 - p.y);
             	}
             }
-        }        
-
+        }    
+		*/
+		
+		/* //PORTNOTE removed mouseWheelEvent TODO_KEVIN 
 		private var previousWheelEvent:Number = 0;
 		private var minMouseWheelInterval:Number = 100;
 		
@@ -771,6 +789,7 @@ package com.modestmaps
 				previousWheelEvent = getTimer(); 
 			}
 		}
+		*/
 		
 	}
 }
