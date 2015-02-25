@@ -259,6 +259,10 @@ static int loom_asset_textRecognizer(const char *extension)
     {
         return LATText;
     }
+    if (!strcasecmp(extension, "plist"))
+    {
+        return LATText;
+    }
     if (!strcasecmp(extension, "fnt"))
     {
         return LATText;

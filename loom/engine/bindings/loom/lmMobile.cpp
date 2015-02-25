@@ -51,13 +51,21 @@ private:
         _OnOpenedViaCustomURLDelegate.invoke();
     }
 
+    /// Event handler; this is called by the C mobile API when the app is launched via a remote notification
+    static void openedViaRemoteNotification()
+    {
+        ///Convert to delegate calls.
+        _OnOpenedViaRemoteNotificationDelegate.invoke();
+    }
+
 public:
     LOOM_STATICDELEGATE(OnSensorTripleChanged);
     LOOM_STATICDELEGATE(OnOpenedViaCustomURL);
+    LOOM_STATICDELEGATE(OnOpenedViaRemoteNotification);
 
     static void initialize()
     {
-        platform_mobileInitialize(sensorTripleChanged, openedViaCustomURL);
+        platform_mobileInitialize(sensorTripleChanged, openedViaCustomURL, openedViaRemoteNotification);
     }
     static void vibrate()
     {
@@ -75,9 +83,17 @@ public:
     {
         return platform_wasOpenedViaCustomURL();
     }       
+    static bool wasOpenedViaRemoteNotification()
+    {
+        return platform_wasOpenedViaRemoteNotification();
+    }       
     static const char *getOpenURLQueryData(const char *queryKey)
     {
         return platform_getOpenURLQueryData(queryKey);
+    }       
+    static const char *getRemoteNotificationData(const char *key)
+    {
+        return platform_getRemoteNotificationData(key);
     }       
     static bool isSensorSupported(int sensor)
     {
@@ -138,6 +154,7 @@ public:
 
 NativeDelegate Mobile::_OnSensorTripleChangedDelegate;
 NativeDelegate Mobile::_OnOpenedViaCustomURLDelegate;
+NativeDelegate Mobile::_OnOpenedViaRemoteNotificationDelegate;
 
 
 static int registerLoomMobile(lua_State *L)
@@ -151,7 +168,9 @@ static int registerLoomMobile(lua_State *L)
             .addStaticMethod("allowScreenSleep", &Mobile::allowScreenSleep)
             .addStaticMethod("shareText", &Mobile::shareText)
             .addStaticMethod("wasOpenedViaCustomURL", &Mobile::wasOpenedViaCustomURL)
+            .addStaticMethod("wasOpenedViaRemoteNotification", &Mobile::wasOpenedViaRemoteNotification)
             .addStaticMethod("getOpenURLQueryData", &Mobile::getOpenURLQueryData)
+            .addStaticMethod("getRemoteNotificationData", &Mobile::getRemoteNotificationData)
             .addStaticMethod("isSensorSupported", &Mobile::isSensorSupported)
             .addStaticMethod("isSensorEnabled", &Mobile::isSensorEnabled)
             .addStaticMethod("hasSensorReceivedData", &Mobile::hasSensorReceivedData)
@@ -159,6 +178,7 @@ static int registerLoomMobile(lua_State *L)
             .addStaticMethod("disableSensor", &Mobile::disableSensor)
             .addStaticProperty("onSensorTripleChanged", &Mobile::getOnSensorTripleChangedDelegate)
             .addStaticProperty("onOpenedViaCustomURL", &Mobile::getOnOpenedViaCustomURLDelegate)
+            .addStaticProperty("onOpenedViaRemoteNotification", &Mobile::getOnOpenedViaRemoteNotificationDelegate)
 
         .endClass()
 

@@ -11,7 +11,7 @@ Loom's design goal is to keep you on the fast development path as much as possib
 
 Developing in LoomScript, using Loom CLI to deploy, run, and develop with live reload, is the fastest and cheapest path. Work here is the most malleable - that is, changes here to code and assets are very cheap, taking little time or effort.
 
-However, LoomScript may not be suitable for all tasks, and at times, it may be desirable to avoid Loom CLI in favor of an IDE such as XCode or Visual Studio for debugging, profiling, or more convenient (but still relatively cumbersome) native development. 
+However, LoomScript may not be suitable for all tasks, and at times, it may be desirable to avoid Loom CLI in favor of an IDE such as XCode or Visual Studio for debugging, profiling, or more convenient (but still relatively cumbersome) native development.
 
 In these situations, you can use the Loom Native SDK and work directly with Loom's C++ implementation. Of course, C++ development is not as agile as working in script. But if you need better insight into a crash, or want to fix a bug or extend Loom for your app with a new feature, it's worth the effort. We recommend exposing new features or SDKs in LoomScript so that the bulk of integration and development work can be done with less setup and faster iteration times.
 
@@ -28,7 +28,7 @@ On top of this, live the system libraries - like 2d rendering, sound playback, a
 
 ### Loom's Execution Model
 
-Loom execution starts on the native side when the application is launched. Loom's standard entry point, `loom_appStart`, is called from the platform-specific entry point. The native subsystems like logging, assets, and rendering are initialized using values in `loom.config` (see section later in this chapter for details). LoomScript is initialized last when the main assembly (`Main.loom`) is loaded. From there, either a static `main` function (if present) or the application class is created; this is usually a subclass you created based on `Application`. 
+Loom execution starts on the native side when the application is launched. Loom's standard entry point, `loom_appStart`, is called from the platform-specific entry point. The native subsystems like logging, assets, and rendering are initialized using values in `loom.config` (see section later in this chapter for details). LoomScript is initialized last when the main assembly (`Main.loom`) is loaded. From there, either a static `main` function (if present) or the application class is created; this is usually a subclass you created based on `Application`.
 
 If an application class is present, then the application class constructor is run, initializing key classes like `Stage`, `InputManager`, 'Juggler', and `TimeManager`, along with any user logic. Often, a lot of startup assets are loaded at this time although, to make the app more responsive, initialization may be deferred. (`TimeManager.callLater` will run code at the start of the next frame and is a useful tool for deferring startup code.)
 
@@ -44,18 +44,18 @@ Be aware that mobile operating systems do not promise to keep inactive applicati
 
 Loom is designed to focus you on your app. To that end, Loom CLI deals with creating a Loom project and running it across multiple platforms:
 
-~~~ text
+~~~console
 # Create a new project called MyApp
-loom new MyApp    
+$ loom new MyApp
 
 # Go into the newly created folder containing the project.
-cd MyApp/
+$ cd MyApp/
 
 # Run the newly created app on iOS, Android, and OS X
-# with live code reload. (Note: you may need to use 
+# with live code reload. (Note: you may need to use
 # loom ios provision to set a .mobileprovision for the
 # project.)
-loom run --ios --android --desktop
+$ loom run --ios --android --desktop
 ~~~
 
 At this point, while the app is running on multiple devices, you can freely modify art and code and see changes show up on device in just a few seconds.
@@ -65,36 +65,36 @@ You may need to modify the Loom C++ source code in order to fix a bug or add a f
 
 If you have a copy of the Loom native source ([available online](http://theengine.co/downloads)), building is as simple as:
 
-~~~ text
+~~~console
 # Build SDK for all available platforms and deploy it locally as "dev"
-rake deploy:sdk
+$ rake deploy:sdk
 
 # You can also do this to name your SDK something other than dev.
-rake deploy:sdk[mySDKVersion]
+$ rake deploy:sdk[mySDKVersion]
 ~~~
 
 This will trigger CMake for all available build targets, generate docs, and produce a packaged SDK on the local system called `dev` (by default). Then you can go to a Loom project and run:
 
-~~~ text
-loom use dev
+~~~console
+$ loom use dev
 ~~~
 
 Now you're running against the Loom SDK you just built! If you `rake deploy:sdk` again, your changes will take effect without having to run loom use.
 
-~~~ text
+~~~console
 # Some other useful commands:
 
-rake         # List all available build commands!
+$ rake                 # List all available build commands!
 
-rake deploy:free_sdk # Just build the desktop binaries.
+$ rake deploy:free_sdk # Just build the desktop binaries.
 
-rake update:sdk  # Only recompile and package scripts.
+$ rake update:sdk      # Only recompile and package scripts.
 
-rake build:osx   # Only compile one platform (replace 
-                # osx with other platforms).
+$ rake build:osx       # Only compile one platform (replace
+                       # osx with other platforms).
 
-rake generate:docs # Generate docs into the docs/ folder.
+$ rake generate:docs   # Generate docs into the docs/ folder.
 
-rake utility:run # Run the default demo app. Useful for 
-                # getting things set up for debugging.
+$ rake utility:run     # Run the default demo app. Useful for
+                       # getting things set up for debugging.
 ~~~

@@ -8,20 +8,23 @@ Each LoomScript project contains a file in the root project directory called 'lo
 
 To set a property in your loom.config, you can either modify your file directly, or use the 'loom config' command like so:
 
-~~~
-loom config propertyName value
+~~~console
+$ loom config propertyName value
+=> "value"
 ~~~
 
 To set nested properties, use dot(.) syntax:
 
-~~~
-loom config nested.property.name value
+~~~console
+$ loom config nested.property.name value
+=> "value"
 ~~~
 
 To add a global config value (such as an iOS signing identity), use the --global flag:
 
-~~~
-loom config --global globalPropertyName value
+~~~console
+$ loom config --global globalPropertyName value
+=> "value"
 ~~~
 
 ## Built-In Configuration Properties
@@ -65,7 +68,7 @@ The Loom SDK includes a lightweight logging framework. All log output is associa
 
 You can set the logging settings for a particular group like so:
 
-~~~
+~~~json
 {
     "log": {
         "group.name": {

@@ -713,6 +713,7 @@ static EAGLView *view = 0;
 
 - (void)onUIKeyboardNotification:(NSNotification *)notif;
 {
+    float keyboardHeight = 0.0f;
     NSString * type = notif.name;
     
     NSDictionary* info = [notif userInfo];
@@ -727,7 +728,8 @@ static EAGLView *view = 0;
     CGSize viewSize = self.frame.size;
     CGFloat tmp;
     
-    switch ([[UIApplication sharedApplication] statusBarOrientation])
+    UIInterfaceOrientation statusBarOrientation = [[UIApplication sharedApplication] statusBarOrientation];
+    switch (statusBarOrientation)
     {
         case UIInterfaceOrientationPortrait:
             begin.origin.y = viewSize.height - begin.origin.y - begin.size.height;
@@ -803,7 +805,21 @@ static EAGLView *view = 0;
         caretRect_.origin.y = viewSize.height - (caretRect_.origin.y + caretRect_.size.height + [UIFont smallSystemFontSize]);
         caretRect_.size.height = 0;
 
-        LoomApplication::fireGenericEvent("keyboardResize", [[NSString stringWithFormat:@"%f", ((float)end.size.height) * [[UIScreen mainScreen] scale]] UTF8String]);
+        keyboardHeight = (float)end.size.height;
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000        
+        //in iOS8, all sizes are relative to portrait, so we have to use the WIDTH not HEIGHT 
+        //for the keyboard size when it is is Lanscape :/
+        if((statusBarOrientation == UIInterfaceOrientationLandscapeLeft) || 
+            (statusBarOrientation == UIInterfaceOrientationLandscapeRight))
+        {
+            if ([[UIScreen mainScreen] respondsToSelector:@selector(fixedCoordinateSpace)])
+            {
+                keyboardHeight = (float)end.size.width;
+            }
+        }
+#endif
+        keyboardHeight *= [[UIScreen mainScreen] scale];
+        LoomApplication::fireGenericEvent("keyboardResize", [[NSString stringWithFormat:@"%f", keyboardHeight] UTF8String]);
     }
     else if (UIKeyboardWillHideNotification == type)
     {

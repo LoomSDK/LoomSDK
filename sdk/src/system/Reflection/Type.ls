@@ -337,24 +337,53 @@ public native class Type extends MemberInfo {
     /**
      *  Gets the Assembly that the Type belongs to.
      *
-     *  @return The Type%s Assembly.
+     *  @return The Type's Assembly.
      */
     public native function getAssembly():Assembly;
     
     /**
-     *  Gets the number of FieldInfo%s associated with the Type and its inherited Fields.
+     *  Gets the Base Parent Type that the Type belongs to.
      *
-     *  @return Number of FieldInfo%s in the Type.
+     *  @return The Type's Base Parent Type.
      */
-    public native function getFieldInfoCount():int;
+    public native function getParent():Type;
+    
+    /**
+     *  Gets the number of Interfaces's associated with the Type.
+     *
+     *  @return Number of Interfaces's in the Type.
+     */
+    public native function getInterfaceCount():int;
 
     /**
-     *  Gets the number of PropertyInfo%s associated with the Type and its inherited Properties.
+     *  Gets the number of FieldInfo's associated with the Type and its inherited Fields.
      *
-     *  @return Number of PropertyInfo%s in the Type.
+     *  @return Number of FieldInfo's in the Type.
+     */
+    public native function getFieldInfoCount():int;
+    
+    /**
+     *  Gets the number of MethodInfo's associated with the Type and its inherited Methods.
+     *
+     *  @return Number of MethodInfo's in the Type.
+     */
+    public native function getMethodInfoCount():int;
+
+    /**
+     *  Gets the number of PropertyInfo's associated with the Type and its inherited Properties.
+     *
+     *  @return Number of PropertyInfo's in the Type.
      */
     public native function getPropertyInfoCount():int;
     
+    /**
+     *  Gets the Interface Type associated with the specified index.
+     *
+     *  @param index Index of associated Type.
+     *  @return Type of the associated Interface.
+     */
+    public native function getInterface(index:int):Type;
+
     /**
      *  Gets the FieldInfo associated with the specified index.
      *
@@ -362,14 +391,14 @@ public native class Type extends MemberInfo {
      *  @return Instance of the associated FieldInfo.
      */
     public native function getFieldInfo(index:int):FieldInfo;
-
+    
     /**
-     *  Gets the MethodInfo associated with the specified name.
+     *  Gets the MethodInfo associated with the specified index.
      *
-     *  @param name Name of the MethodInfo.
-     *  @return Instance of the associated FieldInfo, null if the method name does not exist.
+     *  @param index Index of associated MethodInfo.
+     *  @return Instance of the associated MethodInfo.
      */
-    public native function getMethodInfo(name:String):MethodInfo;
+    public native function getMethodInfo(index:int):MethodInfo;
 
     /**
      *  Gets the PropertyInfo associated with the specified index.
@@ -386,6 +415,14 @@ public native class Type extends MemberInfo {
      *  @return FieldInfo that matches to the name, null if the FieldInfo does not exist.
      */
     public native function getFieldInfoByName(name:String):FieldInfo;
+
+    /**
+     *  Gets the MethodInfo associated with the specified name.
+     *
+     *  @param name Name of the MethodInfo.
+     *  @return Instance of the associated FieldInfo, null if the method name does not exist.
+     */
+    public native function getMethodInfoByName(name:String):MethodInfo;
 
     /**
      *  Gets a PropertyInfo by its name.

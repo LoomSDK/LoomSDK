@@ -21,7 +21,7 @@ package feathers.controls
 
     import loom2d.events.Event;
     import loom2d.events.KeyboardEvent;
-    
+
     import loom2d.Loom2D;
 
     /**
@@ -70,24 +70,25 @@ package feathers.controls
      * ~~~as3
      * var list:GroupedList = new GroupedList();
      * list.dataProvider = new HierarchicalCollection(
-     * {
-     *     header: "A",
-     *     children:
-     *     [
-     *         { text: "Aardvark" },
-     *         { text: "Alligator" }
-     *     ]
-     * },
-     * {
-     *     header: "B",
-     *     children:
-     *     [
-     *         { text: "Baboon" }
-     *     ]
-     * });
+     *    ⇥{
+     *    ⇥   ⇥header: "A",
+     *    ⇥   ⇥children:
+     *    ⇥   ⇥[
+     *    ⇥   ⇥   ⇥{ text: "Aardvark" },
+     *    ⇥   ⇥   ⇥{ text: "Alligator" }
+     *    ⇥   ⇥]
+     *    ⇥},
+     *    ⇥{
+     *    ⇥   ⇥header: "B",
+     *    ⇥   ⇥children:
+     *    ⇥   ⇥[
+     *    ⇥   ⇥   ⇥{ text: "Baboon" }
+     *    ⇥   ⇥]
+     *    ⇥}
+     * );
      * list.addEventListener( Event.CHANGE, list_changeHandler );
      * this.addChild( list );
-         * ~~~
+     * ~~~
      *
      * @see http://wiki.starling-framework.org/feathers/grouped-list
      */
@@ -348,21 +349,22 @@ package feathers.controls
          *
          * ~~~as3
          * list.dataProvider = new HierarchicalCollection(
-         * {
-         *     header: "A",
-         *     children:
-         *     [
-         *         { text: "Aardvark" },
-         *         { text: "Alligator" }
-         *     ]
-         * },
-         * {
-         *     header: "B",
-         *     children:
-         *     [
-         *         { text: "Baboon" }
-         *     ]
-         * });
+         *    ⇥{
+         *    ⇥   ⇥header: "A",
+         *    ⇥   ⇥children:
+         *    ⇥   ⇥[
+         *    ⇥   ⇥   ⇥{ text: "Aardvark" },
+         *    ⇥   ⇥   ⇥{ text: "Alligator" }
+         *    ⇥   ⇥]
+         *    ⇥},
+         *    ⇥{
+         *    ⇥   ⇥header: "B",
+         *    ⇥   ⇥children:
+         *    ⇥   ⇥[
+         *    ⇥   ⇥   ⇥{ text: "Baboon" }
+         *    ⇥   ⇥]
+         *    ⇥}
+         * );
          * ~~~
          *
          * By default, a `HierarchicalCollection` accepts an
@@ -427,7 +429,7 @@ package feathers.controls
          * The following example disables selection:
          *
          * ~~~as3
-          * list.isSelectable = false;
+         * list.isSelectable = false;
          * ~~~
          */
         public function get isSelectable():Boolean
@@ -465,12 +467,10 @@ package feathers.controls
          * requests the selected group index and selected item index:
          *
          * ~~~as3
-         * function list_changeHandler( event:Event ):void
-         * {
-         *     var list:List = List(event.currentTarget);
-         *     var groupIndex:int = list.selectedGroupIndex;
-         *     var itemIndex:int = list.selectedItemIndex;
-         *
+         * function list_changeHandler( event:Event ):void {
+         *    ⇥var list:List = List(event.currentTarget);
+         *    ⇥var groupIndex:int = list.selectedGroupIndex;
+         *    ⇥var itemIndex:int = list.selectedItemIndex;
          * }
          * list.addEventListener( Event.CHANGE, list_changeHandler );
          * ~~~
@@ -495,12 +495,10 @@ package feathers.controls
          * requests the selected group index and selected item index:
          *
          * ~~~as3
-         * function list_changeHandler( event:Event ):void
-         * {
-         *     var list:List = List(event.currentTarget);
-         *     var groupIndex:int = list.selectedGroupIndex;
-         *     var itemIndex:int = list.selectedItemIndex;
-         *
+         * function list_changeHandler( event:Event ):void {
+         *    ⇥var list:List = List(event.currentTarget);
+         *    ⇥var groupIndex:int = list.selectedGroupIndex;
+         *    ⇥var itemIndex:int = list.selectedItemIndex;
          * }
          * list.addEventListener( Event.CHANGE, list_changeHandler );
          * ~~~
@@ -519,11 +517,9 @@ package feathers.controls
          * requests the selected item:
          *
          * ~~~as3
-         * function list_changeHandler( event:Event ):void
-         * {
-         *     var list:List = List(event.currentTarget);
-         *     var selectedItem:Object = list.selectedItem;
-         *
+         * function list_changeHandler( event:Event ):void {
+         *    ⇥var list:List = List(event.currentTarget);
+         *    ⇥var selectedItem:Object = list.selectedItem;
          * }
          * list.addEventListener( Event.CHANGE, list_changeHandler );
          * ~~~
@@ -620,11 +616,10 @@ package feathers.controls
          * The following example provides a factory for the item renderer:
          *
          * ~~~as3
-         * list.itemRendererFactory = function():IGroupedListItemRenderer
-         * {
-         *     var renderer:CustomItemRendererClass = new CustomItemRendererClass();
-         *     renderer.backgroundSkin = new Quad( 10, 10, 0xff0000 );
-         *     return renderer;
+         * list.itemRendererFactory = function():IGroupedListItemRenderer {
+         *    ⇥var renderer:CustomItemRendererClass = new CustomItemRendererClass();
+         *    ⇥renderer.backgroundSkin = new Quad( 10, 10, 0xff0000 );
+         *    ⇥return renderer;
          * };
          * ~~~
          *
@@ -859,11 +854,10 @@ package feathers.controls
          * used for the first item in a group:
          *
          * ~~~as3
-         * list.firstItemRendererFactory = function():IGroupedListItemRenderer
-         * {
-         *     var renderer:CustomItemRendererClass = new CustomItemRendererClass();
-         *     renderer.backgroundSkin = new Quad( 10, 10, 0xff0000 );
-         *     return renderer;
+         * list.firstItemRendererFactory = function():IGroupedListItemRenderer {
+         *    ⇥var renderer:CustomItemRendererClass = new CustomItemRendererClass();
+         *    ⇥renderer.backgroundSkin = new Quad( 10, 10, 0xff0000 );
+         *    ⇥return renderer;
          * };
          * ~~~
          *
@@ -1003,11 +997,10 @@ package feathers.controls
          * used for the last item in a group:
          *
          * ~~~as3
-         * list.firstItemRendererFactory = function():IGroupedListItemRenderer
-         * {
-         *     var renderer:CustomItemRendererClass = new CustomItemRendererClass();
-         *     renderer.backgroundSkin = new Quad( 10, 10, 0xff0000 );
-         *     return renderer;
+         * list.firstItemRendererFactory = function():IGroupedListItemRenderer {
+         *    ⇥var renderer:CustomItemRendererClass = new CustomItemRendererClass();
+         *    ⇥renderer.backgroundSkin = new Quad( 10, 10, 0xff0000 );
+         *    ⇥return renderer;
          * };
          * ~~~
          *
@@ -1147,11 +1140,10 @@ package feathers.controls
          * used for when only one item appears in a group:
          *
          * ~~~as3
-         * list.firstItemRendererFactory = function():IGroupedListItemRenderer
-         * {
-         *     var renderer:CustomItemRendererClass = new CustomItemRendererClass();
-         *     renderer.backgroundSkin = new Quad( 10, 10, 0xff0000 );
-         *     return renderer;
+         * list.firstItemRendererFactory = function():IGroupedListItemRenderer {
+         *    ⇥var renderer:CustomItemRendererClass = new CustomItemRendererClass();
+         *    ⇥renderer.backgroundSkin = new Quad( 10, 10, 0xff0000 );
+         *    ⇥return renderer;
          * };
          * ~~~
          *
@@ -1287,11 +1279,10 @@ package feathers.controls
          * The following example provides a factory for the header renderer:
          *
          * ~~~as3
-         * list.itemRendererFactory = function():IGroupedListHeaderOrFooterRenderer
-         * {
-         *     var renderer:CustomHeaderRendererClass = new CustomHeaderRendererClass();
-         *     renderer.backgroundSkin = new Quad( 10, 10, 0xff0000 );
-         *     return renderer;
+         * list.itemRendererFactory = function():IGroupedListHeaderOrFooterRenderer {
+         *    ⇥var renderer:CustomHeaderRendererClass = new CustomHeaderRendererClass();
+         *    ⇥renderer.backgroundSkin = new Quad( 10, 10, 0xff0000 );
+         *    ⇥return renderer;
          * };
          * ~~~
          *
@@ -1372,7 +1363,11 @@ package feathers.controls
          * different skins than the default style:
          *
          * ~~~as3
-         * setInitializerForClass( DefaultGroupedListHeaderOrFooterRenderer, customHeaderRendererInitializer, "my-custom-header-renderer-name");
+         * setInitializerForClass(
+         *    ⇥DefaultGroupedListHeaderOrFooterRenderer,
+         *    ⇥customHeaderRendererInitializer,
+         *    ⇥"my-custom-header-renderer-name"
+         * );
          * ~~~
          *
          * @see feathers.core.FeathersControl#nameList
@@ -1516,11 +1511,10 @@ package feathers.controls
          * The following example provides a factory for the footer renderer:
          *
          * ~~~as3
-         * list.itemRendererFactory = function():IGroupedListHeaderOrFooterRenderer
-         * {
-         *     var renderer:CustomFooterRendererClass = new CustomFooterRendererClass();
-         *     renderer.backgroundSkin = new Quad( 10, 10, 0xff0000 );
-         *     return renderer;
+         * list.itemRendererFactory = function():IGroupedListHeaderOrFooterRenderer {
+         *    ⇥var renderer:CustomFooterRendererClass = new CustomFooterRendererClass();
+         *    ⇥renderer.backgroundSkin = new Quad( 10, 10, 0xff0000 );
+         *    ⇥return renderer;
          * };
          * ~~~
          *
@@ -1601,7 +1595,11 @@ package feathers.controls
          * different skins than the default style:
          *
          * ~~~as3
-         * setInitializerForClass( DefaultGroupedListHeaderOrFooterRenderer, customFooterRendererInitializer, "my-custom-footer-renderer-name");
+         * setInitializerForClass(
+         *    ⇥DefaultGroupedListHeaderOrFooterRenderer,
+         *    ⇥customFooterRendererInitializer,
+         *    ⇥"my-custom-footer-renderer-name"
+         * );
          * ~~~
          *
          *
@@ -1695,7 +1693,7 @@ package feathers.controls
          * words, a header is optional, and a group may not have one.
          *
          * All of the header fields and functions, ordered by priority:
-         * 
+         *
          *     1. `headerFunction`
          *     2. `headerField`
 
@@ -1740,7 +1738,7 @@ package feathers.controls
          * `function( item:Object ):Object`
          *
          * All of the header fields and functions, ordered by priority:
-         * 
+         *
          *     1. `headerFunction`
          *     2. `headerField`
 
@@ -1748,9 +1746,8 @@ package feathers.controls
          * The following example sets the header function:
          *
          * ~~~as3
-         * list.headerFunction = function( group:Object ):Object
-         * {
-         *    return group.header;
+         * list.headerFunction = function( group:Object ):Object {
+         *    ⇥return group.header;
          * };
          * ~~~
          *
@@ -1786,7 +1783,7 @@ package feathers.controls
          * words, a footer is optional, and a group may not have one.
          *
          * All of the footer fields and functions, ordered by priority:
-         * 
+         *
          *     1. `footerFunction`
          *     2. `footerField`
 
@@ -1831,7 +1828,7 @@ package feathers.controls
          * `function( item:Object ):Object`
          *
          * All of the footer fields and functions, ordered by priority:
-         * 
+         *
          *     1. `footerFunction`
          *     2. `footerField`
 
@@ -1839,9 +1836,8 @@ package feathers.controls
          * The following example sets the footer function:
          *
          * ~~~as3
-         * list.footerFunction = function( group:Object ):Object
-         * {
-         *    return group.footer;
+         * list.footerFunction = function( group:Object ):Object {
+         *    ⇥return group.footer;
          * };
          * ~~~
          *
@@ -1961,7 +1957,7 @@ package feathers.controls
         public function groupToHeaderData(group:Object):Object
         {
             var groupAsDictionary:Dictionary.<String, Object> = group as Dictionary.<String, Object>;
-            
+
             if(this._headerFunction != null)
             {
                 return this._headerFunction.call(null, group);

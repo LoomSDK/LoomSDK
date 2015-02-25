@@ -44,6 +44,11 @@ package system
     public native var length:Number;
     
     /**
+     * Get the number of bytes left until the end of the byte array.
+     */
+    public native function get bytesAvailable():int;
+    
+    /**
      * Set the current position of the byte array.
      */
     public native function set position(value:int);
@@ -154,11 +159,26 @@ package system
     
     /**
      *  Reads a UTF-8 string from the byte stream. 
-     *  The string is assumed to be prefixed with an unsigned short indicating the length in bytes.
+     *  The string is assumed to be prefixed with an unsigned int indicating the length in bytes.
      *
      *  @return UTF-8 encoded String.
      */
     public native function readString():String;
+    
+    /**
+     *  Reads a UTF-8 string from the byte stream. 
+     *  The string is assumed to be prefixed with an unsigned short indicating the length in bytes.
+     *
+     *  @return UTF-8 encoded String.
+     */
+    public native function readUTF():String;
+    
+    /**
+     *  Reads a length amount of UTF-8 string bytes from the byte stream. 
+     *
+     *  @return UTF-8 encoded String.
+     */
+    public native function readUTFBytes(length:uint):String;
     
     /**
      *  Reads an unsigned 16-bit integer from the byte stream.
@@ -256,18 +276,42 @@ package system
     
     /**
      *  Writes a UTF-8 string to the byte stream. 
-     *  The length of the UTF-8 string in bytes is written first, as a 16-bit integer, 
+     *  The length of the UTF-8 string in bytes is written first, as a 32-bit integer, 
      *  followed by the bytes representing the characters of the string
      *
      *  @param value The string value to be written.
      */
     public native function writeString(value:String):void;
 
-    /*
-     * Uncompress zlib compressed data, if uncompressed size is specified
-     * the resulting uncompressed data must match it or will resize the byte array
-     * to zero.  If not specified, maxBuffer size will be used and ByteArray will
-     * be truncated to the actual size of the data.
+    /**
+     *  Writes a UTF-8 string to the byte stream. 
+     *  The length of the UTF-8 string in bytes is written first, as a 16-bit integer, 
+     *  followed by the bytes representing the characters of the string
+     *
+     *  @param value The string value to be written.
+     */
+    public native function writeUTF(value:String):void;
+    
+    /**
+     *  Writes a UTF-8 string to the byte stream. 
+     *  This function only writes the bytes representing the characters of the string.
+     *
+     *  @param value The string value to be written.
+     */
+    public native function writeUTFBytes(value:String):void;
+    
+    /**
+     * Compress the ByteArray data with the zlib compression algorithm.
+     * The ByteArray gets resized to the compressed size of the data.
+     */
+    public native function compress():void;
+    
+    /**
+     * Uncompress zlib or gzip compressed data. uncompressedSize is equivalent to
+     * initialSize due to legacy code. If not specified, initialSize will be used
+     * and ByteArray will be truncated to the actual size of the data. If the
+     * uncompressed data size doesn't fit in initialSize bytes, the buffer gets
+     * resized until it does.
      */
     public native function uncompress(uncompressedSize:int = 0, maxBuffer:int = 262144):void;
         

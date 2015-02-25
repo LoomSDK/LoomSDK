@@ -1,22 +1,22 @@
 /*
- * ===========================================================================
- * Loom SDK
- * Copyright 2011, 2012, 2013
- * The Game Engine Company, LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ===========================================================================
- */
+* ===========================================================================
+* Loom SDK
+* Copyright 2011, 2012, 2013
+* The Game Engine Company, LLC
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+* ===========================================================================
+*/
 
 #include "loom/script/common/lsLog.h"
 #include "loom/script/loomscript.h"
@@ -111,7 +111,7 @@ void NativeTypeBase::checkBridge(MemberInfo *info)
             if (!checkBridgeTable(L, info, bridgeConstKey, key))
             {
                 LSError("Type %s defines native member %s, but no equivalent native member was found.",
-                        fullName.c_str(), info->getName());
+                    fullName.c_str(), info->getName());
             }
         }
     }
@@ -124,10 +124,10 @@ void NativeTypeBase::validate(Type *type)
 {
     utArray<MemberInfo *> members;
     MemberTypes           mtypes;
-    mtypes.property    = true;
-    mtypes.field       = true;
+    mtypes.property = true;
+    mtypes.field = true;
     mtypes.constructor = true;
-    mtypes.method      = true;
+    mtypes.method = true;
     type->findMembers(mtypes, members);
 
     lua_State *L = type->getAssembly()->getLuaState()->VM();
@@ -193,7 +193,7 @@ void NativeInterface::resolveScriptType(Type *type)
 
 
 int NativeInterface::getManagedObectCount(const char *classPath,
-                                          LSLuaState *ls)
+    LSLuaState *ls)
 {
     Type *type = ls->getType(classPath);
 
@@ -265,13 +265,13 @@ void NativeInterface::dumpManagedNatives(lua_State *L)
     for (UTsize i = 0; i < count.size(); i++)
     {
         Type *type = (Type *)count.keyAt(i).key();
-        int  v     = count.at(i);
+        int  v = count.at(i);
 
         LSLog(LSLogInfo, "%s : %i", type->getFullName().c_str(), v);
     }
 }
 
-void NativeInterface::managedPointerReleased(void* entry, int version) 
+void NativeInterface::managedPointerReleased(void* entry, int version)
 {
     lua_State **statePtr = handleEntryToLuaState.get(entry);
     if (!statePtr)
@@ -304,7 +304,7 @@ void NativeInterface::managedPointerReleased(void* entry, int version)
 
         lua_newtable(L);
 
-        int clearTableIdx  = tidx + 1;
+        int clearTableIdx = tidx + 1;
         int numClearValues = 0;
 
         lua_pushnil(L); /* first key */
@@ -373,21 +373,21 @@ void *lualoom_getnativepointer(lua_State *L, int index, bool replaceIndex, const
 {
     index = lua_absindex(L, index);
 
-    lmAssert(!lua_isnil(L, index), "Interal Error: lua_getnativepointer() passes null value for type %s", typecheck ? typecheck : "Undefined");
-    lmAssert(lua_istable(L, index), "Interal Error: lua_getnativepointer() received non-table for type %s", typecheck ? typecheck : "Undefined");
+    lmAssert(!lua_isnil(L, index), "Internal Error: lua_getnativepointer() passes null value for type %s", typecheck ? typecheck : "Undefined");
+    lmAssert(lua_istable(L, index), "Internal Error: lua_getnativepointer() received non-table for type %s", typecheck ? typecheck : "Undefined");
 
     if (typecheck)
     {
         lua_rawgeti(L, index, LSINDEXTYPE);
         Type *type = (Type *)lua_topointer(L, -1);
-        lmAssert(type, "Interal Error: Unable to get valid Type* from native instance table");
-        lmAssert(type->getFullName() == typecheck, "Interal Error: Type mismatch in lua_getnativepointer().  Expected %s, received %s", typecheck, type->getFullName().c_str());
+        lmAssert(type, "Internal Error: Unable to get valid Type* from native instance table");
+        lmAssert(type->getFullName() == typecheck, "Internal Error: Type mismatch in lua_getnativepointer().  Expected %s, received %s", typecheck, type->getFullName().c_str());
         lua_pop(L, 1);
     }
 
     lua_rawgeti(L, index, LSINDEXNATIVE);
 
-    lmAssert(lua_isuserdata(L, -1), "Interal Error: lua_getpointer() native index is not a userdata");
+    lmAssert(lua_isuserdata(L, -1), "Internal Error: lua_getpointer() native index is not a userdata");
 
     int _index = -1;
     if (replaceIndex)
@@ -397,9 +397,9 @@ void *lualoom_getnativepointer(lua_State *L, int index, bool replaceIndex, const
     }
 
     LS::Detail::Userdata *p = (Detail::Userdata *)lua_topointer(L, _index);
-    lmAssert(p, "Interal Error: lua_getpointer() invalid pointer on lua stack");
+    lmAssert(p, "Internal Error: lua_getpointer() invalid pointer on lua stack");
     void *pointer = p->getPointer();
-    lmAssert(pointer, "Interal Error: lua_getpointer() unable to get pointer from Userdata");
+    lmAssert(pointer, "Internal Error: lua_getpointer() unable to get pointer from Userdata");
 
     if (!replaceIndex)
     {
@@ -490,7 +490,7 @@ void lualoom_downcastnativeinstance(lua_State *L, int instanceIdx, Type *fromTyp
 
 Type *lualoom_gettype(lua_State *L, const utString& fullPath)
 {
-    LSLuaState *ls   = LSLuaState::getLuaState(L);
+    LSLuaState *ls = LSLuaState::getLuaState(L);
     Type       *type = ls->getType(fullPath.c_str());
 
     lmAssert(type, "ls_gettype() unable to get type: %s", fullPath.c_str());

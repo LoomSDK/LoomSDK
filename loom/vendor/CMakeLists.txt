@@ -7,11 +7,114 @@ project(LoomVendor)
 include_directories(
     ${LOOM_INCLUDE_FOLDERS}
     telemetry-01052012/include
-    chipmunk-physics/include/chipmunk
     jemalloc-3.4.0/include
     openal-soft/include
     openal-soft/OpenAL32/Include
     minimp3
+    .
+)
+
+set(BOX2D_SRC
+
+    box2d/Collision/b2BroadPhase.cpp
+    box2d/Collision/b2CollideCircle.cpp
+    box2d/Collision/b2CollideEdge.cpp
+    box2d/Collision/b2CollidePolygon.cpp
+    box2d/Collision/b2Collision.cpp
+    box2d/Collision/b2Distance.cpp
+    box2d/Collision/b2DynamicTree.cpp
+    box2d/Collision/b2TimeOfImpact.cpp
+    box2d/Collision/Shapes/b2CircleShape.cpp
+    box2d/Collision/Shapes/b2EdgeShape.cpp
+    box2d/Collision/Shapes/b2ChainShape.cpp
+    box2d/Collision/Shapes/b2PolygonShape.cpp
+    box2d/Common/b2BlockAllocator.cpp
+    box2d/Common/b2Draw.cpp
+    box2d/Common/b2Math.cpp
+    box2d/Common/b2Settings.cpp
+    box2d/Common/b2StackAllocator.cpp
+    box2d/Common/b2Timer.cpp
+    box2d/Dynamics/b2Body.cpp
+    box2d/Dynamics/b2ContactManager.cpp
+    box2d/Dynamics/b2Fixture.cpp
+    box2d/Dynamics/b2Island.cpp
+    box2d/Dynamics/b2World.cpp
+    box2d/Dynamics/b2WorldCallbacks.cpp
+    box2d/Dynamics/Contacts/b2CircleContact.cpp
+    box2d/Dynamics/Contacts/b2Contact.cpp
+    box2d/Dynamics/Contacts/b2ContactSolver.cpp
+    box2d/Dynamics/Contacts/b2PolygonAndCircleContact.cpp
+    box2d/Dynamics/Contacts/b2EdgeAndCircleContact.cpp
+    box2d/Dynamics/Contacts/b2EdgeAndPolygonContact.cpp
+    box2d/Dynamics/Contacts/b2ChainAndCircleContact.cpp
+    box2d/Dynamics/Contacts/b2ChainAndPolygonContact.cpp
+    box2d/Dynamics/Contacts/b2PolygonContact.cpp
+    box2d/Dynamics/Joints/b2DistanceJoint.cpp
+    box2d/Dynamics/Joints/b2FrictionJoint.cpp
+    box2d/Dynamics/Joints/b2GearJoint.cpp
+    box2d/Dynamics/Joints/b2Joint.cpp
+    box2d/Dynamics/Joints/b2MotorJoint.cpp
+    box2d/Dynamics/Joints/b2MouseJoint.cpp
+    box2d/Dynamics/Joints/b2PrismaticJoint.cpp
+    box2d/Dynamics/Joints/b2PulleyJoint.cpp
+    box2d/Dynamics/Joints/b2RevoluteJoint.cpp
+    box2d/Dynamics/Joints/b2RopeJoint.cpp
+    box2d/Dynamics/Joints/b2WeldJoint.cpp
+    box2d/Dynamics/Joints/b2WheelJoint.cpp
+    box2d/Rope/b2Rope.cpp
+
+)
+
+set(BOX2D_HDR
+
+    box2d/Collision/b2BroadPhase.h
+    box2d/Collision/b2Collision.h
+    box2d/Collision/b2Distance.h
+    box2d/Collision/b2DynamicTree.h
+    box2d/Collision/b2TimeOfImpact.h
+    box2d/Collision/Shapes/b2CircleShape.h
+    box2d/Collision/Shapes/b2EdgeShape.h
+    box2d/Collision/Shapes/b2ChainShape.h
+    box2d/Collision/Shapes/b2PolygonShape.h
+    box2d/Collision/Shapes/b2Shape.h
+    box2d/Common/b2BlockAllocator.h
+    box2d/Common/b2Draw.h
+    box2d/Common/b2GrowableStack.h
+    box2d/Common/b2Math.h
+    box2d/Common/b2Settings.h
+    box2d/Common/b2StackAllocator.h
+    box2d/Common/b2Timer.h
+    box2d/Dynamics/b2Body.h
+    box2d/Dynamics/b2ContactManager.h
+    box2d/Dynamics/b2Fixture.h
+    box2d/Dynamics/b2Island.h
+    box2d/Dynamics/b2TimeStep.h
+    box2d/Dynamics/b2World.h
+    box2d/Dynamics/b2WorldCallbacks.h
+    box2d/Dynamics/Contacts/b2CircleContact.h
+    box2d/Dynamics/Contacts/b2Contact.h
+    box2d/Dynamics/Contacts/b2ContactSolver.h
+    box2d/Dynamics/Contacts/b2PolygonAndCircleContact.h
+    box2d/Dynamics/Contacts/b2EdgeAndCircleContact.h
+    box2d/Dynamics/Contacts/b2EdgeAndPolygonContact.h
+    box2d/Dynamics/Contacts/b2ChainAndCircleContact.h
+    box2d/Dynamics/Contacts/b2ChainAndPolygonContact.h
+    box2d/Dynamics/Contacts/b2PolygonContact.h
+    box2d/Dynamics/Joints/b2DistanceJoint.h
+    box2d/Dynamics/Joints/b2FrictionJoint.h
+    box2d/Dynamics/Joints/b2GearJoint.h
+    box2d/Dynamics/Joints/b2Joint.h
+    box2d/Dynamics/Joints/b2MotorJoint.h
+    box2d/Dynamics/Joints/b2MouseJoint.h
+    box2d/Dynamics/Joints/b2PrismaticJoint.h
+    box2d/Dynamics/Joints/b2PulleyJoint.h
+    box2d/Dynamics/Joints/b2RevoluteJoint.h
+    box2d/Dynamics/Joints/b2RopeJoint.h
+    box2d/Dynamics/Joints/b2WeldJoint.h
+    box2d/Dynamics/Joints/b2WheelJoint.h
+    box2d/Rope/b2Rope.h
+    box2d/Box2D.h
+
 )
 
 add_definitions(-DCURL_STATICLIB)
@@ -251,75 +354,6 @@ set (LIBCURL_HDR
     libcurl/src/urldata.h
     libcurl/src/warnless.h
     libcurl/src/wildcard.h
-
-)
-
-
-set (CHIPMUNK_SRC
-
-    chipmunk-physics/src/chipmunk.c
-    chipmunk-physics/src/cpArbiter.c
-    chipmunk-physics/src/cpArray.c
-    chipmunk-physics/src/cpBB.c
-    chipmunk-physics/src/cpBBTree.c
-    chipmunk-physics/src/cpBody.c
-    chipmunk-physics/src/cpCollision.c
-    chipmunk-physics/src/cpHashSet.c
-    chipmunk-physics/src/cpPolyShape.c
-    chipmunk-physics/src/cpShape.c
-    chipmunk-physics/src/cpSpace.c
-    chipmunk-physics/src/cpSpaceComponent.c
-    chipmunk-physics/src/cpSpaceHash.c
-    chipmunk-physics/src/cpSpaceQuery.c
-    chipmunk-physics/src/cpSpaceStep.c
-    chipmunk-physics/src/cpSpatialIndex.c
-    chipmunk-physics/src/cpSweep1D.c
-    chipmunk-physics/src/cpVect.c
-    
-    chipmunk-physics/src/constraints/cpConstraint.c
-    chipmunk-physics/src/constraints/cpDampedRotarySpring.c
-    chipmunk-physics/src/constraints/cpDampedSpring.c
-    chipmunk-physics/src/constraints/cpGearJoint.c
-    chipmunk-physics/src/constraints/cpGrooveJoint.c
-    chipmunk-physics/src/constraints/cpPinJoint.c
-    chipmunk-physics/src/constraints/cpPivotJoint.c
-    chipmunk-physics/src/constraints/cpRatchetJoint.c
-    chipmunk-physics/src/constraints/cpRotaryLimitJoint.c
-    chipmunk-physics/src/constraints/cpSimpleMotor.c
-    chipmunk-physics/src/constraints/cpSlideJoint.c
-
-)
-
-set (CHIPMUNK_HDR
-
-    chipmunk-physics/src/prime.h
-    
-    chipmunk-physics/include/chipmunk/chipmunk.h
-    chipmunk-physics/include/chipmunk/chipmunk_ffi.h
-    chipmunk-physics/include/chipmunk/chipmunk_private.h
-    chipmunk-physics/include/chipmunk/chipmunk_types.h
-    chipmunk-physics/include/chipmunk/chipmunk_unsafe.h
-    chipmunk-physics/include/chipmunk/cpArbiter.h
-    chipmunk-physics/include/chipmunk/cpBB.h
-    chipmunk-physics/include/chipmunk/cpBody.h
-    chipmunk-physics/include/chipmunk/cpPolyShape.h
-    chipmunk-physics/include/chipmunk/cpShape.h
-    chipmunk-physics/include/chipmunk/cpSpace.h
-    chipmunk-physics/include/chipmunk/cpSpatialIndex.h
-    chipmunk-physics/include/chipmunk/cpVect.h
-    
-    chipmunk-physics/include/chipmunk/constraints/cpConstraint.h
-    chipmunk-physics/include/chipmunk/constraints/cpDampedRotarySpring.h
-    chipmunk-physics/include/chipmunk/constraints/cpDampedSpring.h
-    chipmunk-physics/include/chipmunk/constraints/cpGearJoint.h
-    chipmunk-physics/include/chipmunk/constraints/cpGrooveJoint.h
-    chipmunk-physics/include/chipmunk/constraints/cpPinJoint.h
-    chipmunk-physics/include/chipmunk/constraints/cpPivotJoint.h
-    chipmunk-physics/include/chipmunk/constraints/cpRatchetJoint.h
-    chipmunk-physics/include/chipmunk/constraints/cpRotaryLimitJoint.h
-    chipmunk-physics/include/chipmunk/constraints/cpSimpleMotor.h
-    chipmunk-physics/include/chipmunk/constraints/cpSlideJoint.h
-    chipmunk-physics/include/chipmunk/constraints/util.h
 
 )
 
@@ -601,7 +635,9 @@ set(ZLIB_SRC
     zlib/source/zutil.c
 )
 
-set(SQLITE3_SRC sqlite3/sqlite3.c)
+set(SQLITE3_SRC 
+    sqlite3/sqlite3.c
+)
 
 set( JHEADEXIF_SRC jheadexif/exif.c jheadexif/jhead.c jheadexif/jpgfile.c jheadexif/easyexif.cpp)
     
@@ -640,21 +676,22 @@ else()
 endif()
 
 
-SET_SOURCE_FILES_PROPERTIES( ${CHIPMUNK_SRC} PROPERTIES LANGUAGE CXX)
+SET_SOURCE_FILES_PROPERTIES( PROPERTIES LANGUAGE CXX)
 
-set (ALL_FILES 
+set (ALL_FILES
+    ${BOX2D_HDR} ${BOX2D_SRC}
     ${JHEADEXIF_SRC}
     ${SEATEST_HDR} ${SEATEST_SRC} 
     ${STB_HDR} ${STB_SRC} 
     ${JPGD_HDR} ${JPGD_SRC} 
     ${JANSSON_HDR} ${JANSSON_SRC} 
-    ${CHIPMUNK_HDR} ${CHIPMUNK_SRC} 
     ${LUA_HDR} ${LUA_SRC} 
     ${GLEW_HDR} ${GLEW_SRC}
     ${GELDREICH_HDR} ${GELDREICH_SRC}
     ${JEMALLOC_SRC}
     ${OPENALSOFT_SRC}
     ${MINIMP3_SRC}
+    ${SQLITE3_SRC}
 )
 
 if (MSVC)
@@ -673,7 +710,6 @@ endif()
 if (APPLE)
     list (APPEND ALL_FILES 
         ${SMSLIB_HDR} ${SMSLIB_SRC} 
-        ${SQLITE3_SRC}
     )
 endif()
 

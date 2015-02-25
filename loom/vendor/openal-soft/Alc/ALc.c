@@ -2859,7 +2859,10 @@ static void ReleaseALC(void)
         do {
             num++;
         } while((dev=dev->next) != NULL);
-        ERR("%u device%s not closed\n", num, (num>1)?"s":"");
+        // Disabled warning on force quit (leaving open devices)
+        // Otherwise the message interferes with console handling
+        // on Windows.
+        //ERR("%u device%s not closed\n", num, (num>1)?"s":"");
     }
 }
 

@@ -56,16 +56,15 @@ package system {
  *  var v:Vector.<String> = [ 'a', 'b', 'c' ];
  *
  *  for (var i:Number = 0; i < v.length; i++) {
- *      trace('v[' + i +'] =', v[i]);
+ *     ⇥trace('v[' + i +'] =', v[i]);
  *  }
  *
- *  for (var n:Number in v)
- *  {
- *      trace('v[' +n +'] =', v[n]);
+ *  for (var n:Number in v) {
+ *     ⇥trace('v[' +n +'] =', v[n]);
  *  }
  *
  *  for each(var s:String in v) {
- *      trace(s);
+ *     ⇥trace(s);
  *  }
  *  ```
  *
@@ -77,6 +76,8 @@ package system {
  */
 final class Vector
 {
+    
+    private static var visited = new Vector.<Object>();
 
     /**
      *  Adds one or more elements to the end of the Vector and returns the
@@ -106,7 +107,10 @@ final class Vector
     {
         var vlen = length;
         var returnString = "";
-
+        
+        Debug.assert(visited.indexOf(this) == -1, "Circular reference detected while joining the Vector");
+        visited.push(this);
+        
         for (var i:Number = 0; i < vlen; i++) {
 
             returnString += this[i].toString();
@@ -115,6 +119,8 @@ final class Vector
 
         }
 
+        visited.remove(this);
+        
         return returnString;
     }
 
@@ -366,7 +372,7 @@ final class Vector
         return this;
 
     }
-    
+
     /**
      *  Shuffles the elements of the Vector in place by randomly reordering them.
      *
@@ -392,7 +398,7 @@ final class Vector
         return this;
     }
 
-    
+
     /**
      *  Freezes the length of the Vector to the current length, optimizing Vector operations.
      */

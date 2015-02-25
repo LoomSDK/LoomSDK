@@ -55,25 +55,3 @@ function makeListItem( name, depth ) {
 function makeLink( link ) {
     return $( '<a href="' + link + '"><span class="block-link"></span></a>' );
 }
-
-/*-----------------------------
--------- SHOW SIDEBAR ---------
------------------------------*/
-
-var sidebar = $( '#sidebar' );
-
-var sidebarDelay;
-
-// Show sidebar on mouseover.
-sidebar.mouseover( function() {
-    clearTimeout( sidebarDelay );
-    sidebar.removeClass( 'sidebar--hidden' );
-} );
-
-// Hide sidebar on mouseout, after a brief delay.
-sidebar.mouseout( function() {
-    clearTimeout( sidebarDelay );
-    sidebarDelay = setTimeout( function() {
-    sidebar.addClass( 'sidebar--hidden' );
-    }, 10 );
-} );

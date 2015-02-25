@@ -840,15 +840,18 @@ Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
     }
     
     sBytes = NULL;
-    if (stringBuffer)
+    
+	if (stringBuffer)
     {
         lmFree(NULL, (void*)stringBuffer);
-    }
-    stringBuffer = NULL;
-    stringPool.clear();
+		stringBuffer = NULL;
+	}
+    
+	stringPool.clear();
     references.clear();
     types.clear();
-    vm = NULL;
+    
+	vm = NULL;
 
     return assembly;
 }

@@ -743,7 +743,7 @@ void BinWriter::writeExecutable(const char *path, json_t *sjson)
     for (UTsize i = 0; i < binWriters.size(); i++)
     {
         BinWriter *bref = binWriters.at(i);
-        bref->bytes.writeBytes(&bytes);
+        bytes.writeBytes(&bref->bytes);
     }
 
     int dataLength = bytes.getPosition();

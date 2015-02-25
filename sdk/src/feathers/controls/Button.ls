@@ -194,7 +194,7 @@ package feathers.controls
          * @see feathers.core.IFeathersControl#nameList
          */
         public static const ALTERNATE_NAME_FORWARD_BUTTON:String = "feathers-forward-button";
-        
+
         /**
          * Identifier for the button's up state. Can be used for styling purposes.
          *
@@ -203,7 +203,7 @@ package feathers.controls
          * @see #stateToLabelPropertiesFunction
          */
         public static const STATE_UP:String = "up";
-        
+
         /**
          * Identifier for the button's down state. Can be used for styling purposes.
          *
@@ -221,7 +221,7 @@ package feathers.controls
          * @see #stateToLabelPropertiesFunction
          */
         public static const STATE_HOVER:String = "hover";
-        
+
         /**
          * Identifier for the button's disabled state. Can be used for styling purposes.
          *
@@ -230,28 +230,28 @@ package feathers.controls
          * @see #stateToLabelPropertiesFunction
          */
         public static const STATE_DISABLED:String = "disabled";
-        
+
         /**
          * The icon will be positioned above the label.
          *
          * @see #iconPosition
          */
         public static const ICON_POSITION_TOP:String = "top";
-        
+
         /**
          * The icon will be positioned to the right of the label.
          *
          * @see #iconPosition
          */
         public static const ICON_POSITION_RIGHT:String = "right";
-        
+
         /**
          * The icon will be positioned below the label.
          *
          * @see #iconPosition
          */
         public static const ICON_POSITION_BOTTOM:String = "bottom";
-        
+
         /**
          * The icon will be positioned to the left of the label.
          *
@@ -269,7 +269,7 @@ package feathers.controls
          * @see #iconOffsetY
          */
         public static const ICON_POSITION_MANUAL:String = "manual";
-        
+
         /**
          * The icon will be positioned to the left the label, and the bottom of
          * the icon will be aligned to the baseline of the label text.
@@ -277,7 +277,7 @@ package feathers.controls
          * @see #iconPosition
          */
         public static const ICON_POSITION_LEFT_BASELINE:String = "leftBaseline";
-        
+
         /**
          * The icon will be positioned to the right the label, and the bottom of
          * the icon will be aligned to the baseline of the label text.
@@ -285,47 +285,47 @@ package feathers.controls
          * @see #iconPosition
          */
         public static const ICON_POSITION_RIGHT_BASELINE:String = "rightBaseline";
-        
+
         /**
          * The icon and label will be aligned horizontally to the left edge of the button.
          *
          * @see #horizontalAlign
          */
         public static const HORIZONTAL_ALIGN_LEFT:String = "left";
-        
+
         /**
          * The icon and label will be aligned horizontally to the center of the button.
          *
          * @see #horizontalAlign
          */
         public static const HORIZONTAL_ALIGN_CENTER:String = "center";
-        
+
         /**
          * The icon and label will be aligned horizontally to the right edge of the button.
          *
          * @see #horizontalAlign
          */
         public static const HORIZONTAL_ALIGN_RIGHT:String = "right";
-        
+
         /**
          * The icon and label will be aligned vertically to the top edge of the button.
          */
         public static const VERTICAL_ALIGN_TOP:String = "top";
-        
+
         /**
          * The icon and label will be aligned vertically to the middle of the button.
          *
          * @see #verticalAlign
          */
         public static const VERTICAL_ALIGN_MIDDLE:String = "middle";
-        
+
         /**
          * The icon and label will be aligned vertically to the bottom edge of the button.
          *
          * @see #verticalAlign
          */
         public static const VERTICAL_ALIGN_BOTTOM:String = "bottom";
-        
+
         /**
          * Constructor
          */
@@ -345,22 +345,22 @@ package feathers.controls
          * @see feathers.core.IFeathersControl#nameList
          */
         protected var labelName:String = DEFAULT_CHILD_NAME_LABEL;
-        
+
         /**
          * The text renderer for the button's label.
          */
         protected var labelTextRenderer:ITextRenderer;
-        
+
         /**
          * @private
          */
         protected var currentSkin:DisplayObject;
-        
+
         /**
          * @private
          */
         protected var currentIcon:DisplayObject;
-        
+
         /**
          * @private
          */
@@ -370,7 +370,7 @@ package feathers.controls
          * @private
          */
         protected var _isHoverSupported:Boolean = false;
-        
+
         /**
          * @private
          */
@@ -409,12 +409,12 @@ package feathers.controls
                 this.touchable = true;
             }
         }
-        
+
         /**
          * @private
          */
         protected var _currentState:String = STATE_UP;
-        
+
         /**
          * @private
          */
@@ -422,7 +422,7 @@ package feathers.controls
         {
             return this._currentState;
         }
-        
+
         /**
          * @private
          */
@@ -439,12 +439,12 @@ package feathers.controls
             this._currentState = value;
             this.invalidate(INVALIDATION_FLAG_STATE);
         }
-        
+
         /**
          * @private
          */
         protected var _label:String = null;
-        
+
         /**
          * The text displayed on the button.
          *
@@ -458,7 +458,7 @@ package feathers.controls
         {
             return this._label;
         }
-        
+
         /**
          * @private
          */
@@ -471,12 +471,12 @@ package feathers.controls
             this._label = value;
             this.invalidate(INVALIDATION_FLAG_DATA);
         }
-        
+
         /**
          * @private
          */
         protected var _isToggle:Boolean = false;
-        
+
         /**
          * Determines if the button may be selected or unselected when clicked.
          *
@@ -494,7 +494,7 @@ package feathers.controls
         {
             return this._isToggle;
         }
-        
+
         /**
          * @private
          */
@@ -502,12 +502,12 @@ package feathers.controls
         {
             this._isToggle = value;
         }
-        
+
         /**
          * @private
          */
         protected var _isSelected:Boolean = false;
-        
+
         /**
          * Indicates if the button is selected or not. The button may be
          * selected programmatically, even if `isToggle` is `false`,
@@ -521,14 +521,14 @@ package feathers.controls
          * button.isToggle = true;
          * button.isSelected = true;
          * ~~~
-         * 
+         *
          * @see #isToggle
          */
         public function get isSelected():Boolean
         {
             return this._isSelected;
         }
-        
+
         /**
          * @private
          */
@@ -542,7 +542,7 @@ package feathers.controls
             this.invalidate(INVALIDATION_FLAG_SELECTED);
             this.dispatchEventWith(Event.CHANGE);
         }
-        
+
         /**
          * @private
          */
@@ -565,7 +565,7 @@ package feathers.controls
         {
             return this._iconPosition;
         }
-        
+
         /**
          * @private
          */
@@ -578,17 +578,17 @@ package feathers.controls
             this._iconPosition = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * @private
          */
         protected var _gap:Number = 0;
-        
+
         /**
          * The space, in pixels, between the icon and the label. Applies to
          * either horizontal or vertical spacing, depending on the value of
          * `iconPosition`.
-         * 
+         *
          * If `gap` is set to `Number.POSITIVE_INFINITY`,
          * the label and icon will be positioned as far apart as possible. In
          * other words, they will be positioned at the edges of the button,
@@ -602,14 +602,14 @@ package feathers.controls
          * button.defaultIcon = new Image( texture );
          * button.gap = 50;
          * ~~~
-         * 
+         *
          * @see #iconPosition
          */
         public function get gap():Number
         {
             return this._gap;
         }
-        
+
         /**
          * @private
          */
@@ -622,7 +622,7 @@ package feathers.controls
             this._gap = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * @private
          */
@@ -643,7 +643,7 @@ package feathers.controls
         {
             return this._horizontalAlign;
         }
-        
+
         /**
          * @private
          */
@@ -656,7 +656,7 @@ package feathers.controls
             this._horizontalAlign = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * @private
          */
@@ -677,7 +677,7 @@ package feathers.controls
         {
             return _verticalAlign;
         }
-        
+
         /**
          * @private
          */
@@ -987,7 +987,7 @@ package feathers.controls
             this._iconOffsetY = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * Determines if a pressed button should remain in the down state if a
          * touch moves outside of the button's bounds. Useful for controls like
@@ -1122,7 +1122,7 @@ package feathers.controls
          * Chooses an appropriate skin based on the state and the selection.
          */
         protected var _skinSelector:StateWithToggleValueSelector = new StateWithToggleValueSelector();
-        
+
         /**
          * The skin used when no other skin is defined for the current state.
          * Intended for use when multiple states should use the same skin.
@@ -1149,7 +1149,7 @@ package feathers.controls
         {
             return DisplayObject(this._skinSelector.defaultValue);
         }
-        
+
         /**
          * @private
          */
@@ -1162,7 +1162,7 @@ package feathers.controls
             this._skinSelector.defaultValue = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * The skin used when no other skin is defined for the current state
          * when the button is selected. Has a higher priority than
@@ -1175,7 +1175,7 @@ package feathers.controls
          * ~~~as3
          * button.defaultSelectedSkin = new Image( texture );
          * ~~~
-         * 
+         *
          * @see #defaultSkin
          * @see #selectedUpSkin
          * @see #selectedDownSkin
@@ -1186,7 +1186,7 @@ package feathers.controls
         {
             return DisplayObject(this._skinSelector.defaultSelectedValue);
         }
-        
+
         /**
          * @private
          */
@@ -1199,7 +1199,7 @@ package feathers.controls
             this._skinSelector.defaultSelectedValue = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * The skin used for the button's up state. If `null`, then
          * `defaultSkin` is used instead.
@@ -1209,7 +1209,7 @@ package feathers.controls
          * ~~~as3
          * button.upSkin = new Image( texture );
          * ~~~
-         * 
+         *
          * @see #defaultSkin
          * @see #selectedUpSkin
          */
@@ -1217,7 +1217,7 @@ package feathers.controls
         {
             return DisplayObject(this._skinSelector.getValueForState(STATE_UP, false));
         }
-        
+
         /**
          * @private
          */
@@ -1230,7 +1230,7 @@ package feathers.controls
             this._skinSelector.setValueForState(value, STATE_UP, false);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * The skin used for the button's down state. If `null`, then
          * `defaultSkin` is used instead.
@@ -1240,7 +1240,7 @@ package feathers.controls
          * ~~~as3
          * button.downSkin = new Image( texture );
          * ~~~
-         * 
+         *
          * @see #defaultSkin
          * @see #selectedDownSkin
          */
@@ -1248,7 +1248,7 @@ package feathers.controls
         {
             return DisplayObject(this._skinSelector.getValueForState(STATE_DOWN, false));
         }
-        
+
         /**
          * @private
          */
@@ -1292,7 +1292,7 @@ package feathers.controls
             this._skinSelector.setValueForState(value, STATE_HOVER, false);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * The skin used for the button's disabled state. If `null`,
          * then `defaultSkin` is used instead.
@@ -1302,7 +1302,7 @@ package feathers.controls
          * ~~~as3
          * button.disabledSkin = new Image( texture );
          * ~~~
-         * 
+         *
          * @see #defaultSkin
          * @see #selectedDisabledSkin
          */
@@ -1310,7 +1310,7 @@ package feathers.controls
         {
             return DisplayObject(this._skinSelector.getValueForState(STATE_DISABLED, false));
         }
-        
+
         /**
          * @private
          */
@@ -1323,7 +1323,7 @@ package feathers.controls
             this._skinSelector.setValueForState(value, STATE_DISABLED, false);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * The skin used for the button's up state when the button is selected.
          * If `null`, then `defaultSelectedSkin` is used
@@ -1335,7 +1335,7 @@ package feathers.controls
          * ~~~as3
          * button.selectedUpSkin = new Image( texture );
          * ~~~
-         * 
+         *
          * @see #defaultSkin
          * @see #defaultSelectedSkin
          */
@@ -1343,7 +1343,7 @@ package feathers.controls
         {
             return DisplayObject(this._skinSelector.getValueForState(STATE_UP, true));
         }
-        
+
         /**
          * @private
          */
@@ -1356,7 +1356,7 @@ package feathers.controls
             this._skinSelector.setValueForState(value, STATE_UP, true);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * The skin used for the button's down state when the button is
          * selected. If `null`, then `defaultSelectedSkin`
@@ -1368,7 +1368,7 @@ package feathers.controls
          * ~~~as3
          * button.selectedDownSkin = new Image( texture );
          * ~~~
-         * 
+         *
          * @see #defaultSkin
          * @see #defaultSelectedSkin
          */
@@ -1376,7 +1376,7 @@ package feathers.controls
         {
             return DisplayObject(this._skinSelector.getValueForState(STATE_DOWN, true));
         }
-        
+
         /**
          * @private
          */
@@ -1478,9 +1478,8 @@ package feathers.controls
          * label text renderer:
          *
          * ~~~as3
-         * button.labelFactory = function():ITextRenderer
-         * {
-         *     return new TextFieldTextRenderer();
+         * button.labelFactory = function():ITextRenderer {
+         *    ⇥return new TextFieldTextRenderer();
          * }
          * ~~~
          *
@@ -1506,12 +1505,12 @@ package feathers.controls
             this._labelFactory = value;
             this.invalidate(INVALIDATION_FLAG_TEXT_RENDERER);
         }
-        
+
         /**
          * @private
          */
         protected var _labelPropertiesSelector:StateWithToggleValueSelector = new StateWithToggleValueSelector();
-        
+
         /**
          * The default label properties are a set of key/value pairs to be
          * passed down to the button's label text renderer, and it is used when
@@ -1543,7 +1542,7 @@ package feathers.controls
                 this._labelPropertiesSelector.defaultValue = new Dictionary.<String, Object>();
             return this._labelPropertiesSelector.defaultValue as Dictionary.<String, Object>;
         }
-        
+
         /**
          * @private
          */
@@ -1552,7 +1551,7 @@ package feathers.controls
             this._labelPropertiesSelector.defaultValue = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * A set of key/value pairs to be passed down ot the button's label
          * text renderer when the button is in the up state. If `null`,
@@ -1580,7 +1579,7 @@ package feathers.controls
         {
             return this._labelPropertiesSelector.getValueForState(STATE_UP, false) as Dictionary.<String, Object>;
         }
-        
+
         /**
          * @private
          */
@@ -1589,7 +1588,7 @@ package feathers.controls
             this._labelPropertiesSelector.setValueForState(value, STATE_UP, false);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * A set of key/value pairs to be passed down ot the button's label
          * text renderer when the button is in the down state. If `null`,
@@ -1619,7 +1618,7 @@ package feathers.controls
             if ( !returnValue ) downLabelProperties = returnValue = {};
             return returnValue;
         }
-        
+
         /**
          * @private
          */
@@ -1665,7 +1664,7 @@ package feathers.controls
             this._labelPropertiesSelector.setValueForState(value, STATE_HOVER, false);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * A set of key/value pairs to be passed down ot the button's label
          * text renderer when the button is in the disabled state. If `null`,
@@ -1695,7 +1694,7 @@ package feathers.controls
                 this._labelPropertiesSelector.setValueForState(new Dictionary.<String, Object>, STATE_DISABLED, false);
             return this._labelPropertiesSelector.getValueForState(STATE_DISABLED, false) as Dictionary.<String, Object>;
         }
-        
+
         /**
          * @private
          */
@@ -1704,7 +1703,7 @@ package feathers.controls
             this._labelPropertiesSelector.setValueForState(value, STATE_DISABLED, false);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * The default selected label properties are a set of key/value pairs to
          * be passed down ot the button's label text renderer, and it is used
@@ -1737,7 +1736,7 @@ package feathers.controls
                 this._labelPropertiesSelector.defaultSelectedValue = new Dictionary.<String, Object>();
             return this._labelPropertiesSelector.defaultSelectedValue as Dictionary.<String, Object>;
         }
-        
+
         /**
          * @private
          */
@@ -1746,7 +1745,7 @@ package feathers.controls
             this._labelPropertiesSelector.defaultSelectedValue = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * A set of key/value pairs to be passed down ot the button's label
          * text renderer when the button is in the up state and is selected. If
@@ -1779,7 +1778,7 @@ package feathers.controls
                 this._labelPropertiesSelector.setValueForState(new Dictionary.<String, Object>, STATE_UP, true);
             return this._labelPropertiesSelector.getValueForState(STATE_UP, true) as Dictionary.<String, Object>;
         }
-        
+
         /**
          * @private
          */
@@ -1788,7 +1787,7 @@ package feathers.controls
             this._labelPropertiesSelector.setValueForState(value, STATE_UP, true);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * A set of key/value pairs to be passed down ot the button's label
          * text renderer when the button is in the down state and is selected.
@@ -1821,7 +1820,7 @@ package feathers.controls
                 this._labelPropertiesSelector.setValueForState(new Dictionary.<String, Object>, STATE_DOWN, true);
             return this._labelPropertiesSelector.getValueForState(STATE_DOWN, true) as Dictionary.<String, Object>;
         }
-        
+
         /**
          * @private
          */
@@ -1914,12 +1913,12 @@ package feathers.controls
             this._labelPropertiesSelector.setValueForState(value, STATE_DISABLED, true);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * @private
          */
         protected var _iconSelector:StateWithToggleValueSelector = new StateWithToggleValueSelector();
-        
+
         /**
          * The icon used when no other icon is defined for the current state.
          * Intended for use when multiple states should use the same icon.
@@ -1946,7 +1945,7 @@ package feathers.controls
         {
             return DisplayObject(this._iconSelector.defaultValue);
         }
-        
+
         /**
          * @private
          */
@@ -1959,7 +1958,7 @@ package feathers.controls
             this._iconSelector.defaultValue = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * The icon used when no other icon is defined for the current state
          * when the button is selected. Has a higher priority than
@@ -1972,7 +1971,7 @@ package feathers.controls
          * ~~~as3
          * button.defaultSelectedIcon = new Image( texture );
          * ~~~
-         * 
+         *
          * @see #defaultIcon
          * @see #selectedUpIcon
          * @see #selectedDownIcon
@@ -1983,7 +1982,7 @@ package feathers.controls
         {
             return DisplayObject(this._iconSelector.defaultSelectedValue);
         }
-        
+
         /**
          * @private
          */
@@ -1996,7 +1995,7 @@ package feathers.controls
             this._iconSelector.defaultSelectedValue = value;
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * The icon used for the button's up state. If `null`, then
          * `defaultIcon` is used instead.
@@ -2006,7 +2005,7 @@ package feathers.controls
          * ~~~as3
          * button.upIcon = new Image( texture );
          * ~~~
-         * 
+         *
          * @see #defaultIcon
          * @see #selectedUpIcon
          */
@@ -2014,7 +2013,7 @@ package feathers.controls
         {
             return DisplayObject(this._iconSelector.getValueForState(STATE_UP, false));
         }
-        
+
         /**
          * @private
          */
@@ -2027,7 +2026,7 @@ package feathers.controls
             this._iconSelector.setValueForState(value, STATE_UP, false);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * The icon used for the button's down state. If `null`, then
          * `defaultIcon` is used instead.
@@ -2037,7 +2036,7 @@ package feathers.controls
          * ~~~as3
          * button.downIcon = new Image( texture );
          * ~~~
-         * 
+         *
          * @see #defaultIcon
          * @see #selectedDownIcon
          */
@@ -2045,7 +2044,7 @@ package feathers.controls
         {
             return DisplayObject(this._iconSelector.getValueForState(STATE_DOWN, false));
         }
-        
+
         /**
          * @private
          */
@@ -2089,7 +2088,7 @@ package feathers.controls
             this._iconSelector.setValueForState(value, STATE_HOVER, false);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * The icon used for the button's disabled state. If `null`, then
          * `defaultIcon` is used instead.
@@ -2099,7 +2098,7 @@ package feathers.controls
          * ~~~as3
          * button.disabledIcon = new Image( texture );
          * ~~~
-         * 
+         *
          * @see #defaultIcon
          * @see #selectedDisabledIcon
          */
@@ -2107,7 +2106,7 @@ package feathers.controls
         {
             return DisplayObject(this._iconSelector.getValueForState(STATE_DISABLED, false));
         }
-        
+
         /**
          * @private
          */
@@ -2120,7 +2119,7 @@ package feathers.controls
             this._iconSelector.setValueForState(value, STATE_DISABLED, false);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * The icon used for the button's up state when the button is
          * selected. If `null`, then `defaultSelectedIcon`
@@ -2132,7 +2131,7 @@ package feathers.controls
          * ~~~as3
          * button.selectedUpIcon = new Image( texture );
          * ~~~
-         * 
+         *
          * @see #defaultIcon
          * @see #defaultSelectedIcon
          */
@@ -2140,7 +2139,7 @@ package feathers.controls
         {
             return DisplayObject(this._iconSelector.getValueForState(STATE_UP, true));
         }
-        
+
         /**
          * @private
          */
@@ -2153,7 +2152,7 @@ package feathers.controls
             this._iconSelector.setValueForState(value, STATE_UP, true);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * The icon used for the button's down state when the button is
          * selected. If `null`, then `defaultSelectedIcon`
@@ -2165,7 +2164,7 @@ package feathers.controls
          * ~~~as3
          * button.selectedDownIcon = new Image( texture );
          * ~~~
-         * 
+         *
          * @see #defaultIcon
          * @see #defaultSelectedIcon
          */
@@ -2173,7 +2172,7 @@ package feathers.controls
         {
             return DisplayObject(this._iconSelector.getValueForState(STATE_DOWN, true));
         }
-        
+
         /**
          * @private
          */
@@ -2252,12 +2251,12 @@ package feathers.controls
             this._iconSelector.setValueForState(value, STATE_DISABLED, true);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-        
+
         /**
          * @private
          */
         protected var _autoFlatten:Boolean = false;
-        
+
         /**
          * Determines if the button should automatically call `flatten()`
          * after it finishes drawing. In some cases, this will improve
@@ -2273,7 +2272,7 @@ package feathers.controls
         {
             return this._autoFlatten;
         }
-        
+
         /**
          * @private
          */
@@ -2290,7 +2289,7 @@ package feathers.controls
                 this.flatten();
             }
         }
-        
+
         /**
          * @private
          */
@@ -2308,7 +2307,7 @@ package feathers.controls
             {
                 this.createLabel();
             }
-            
+
             if(textRendererInvalid || dataInvalid)
             {
                 this.refreshLabelData();
@@ -2326,12 +2325,12 @@ package feathers.controls
             }
 
             sizeInvalid = this.autoSizeIfNeeded() || sizeInvalid;
-            
+
             if(stylesInvalid || stateInvalid || selectedInvalid || sizeInvalid)
             {
                 this.scaleSkin();
             }
-            
+
             if(textRendererInvalid || stylesInvalid || stateInvalid || selectedInvalid || dataInvalid || sizeInvalid)
             {
                 this.layoutContent();
@@ -2341,7 +2340,7 @@ package feathers.controls
             {
                 this.refreshFocusIndicator();
             }
-            
+
             if(this._autoFlatten)
             {
                 this.unflatten();
@@ -2513,7 +2512,7 @@ package feathers.controls
                 this._originalSkinHeight = this.currentSkin.height;
             }
         }
-        
+
         /**
          * @private
          */
@@ -2540,7 +2539,7 @@ package feathers.controls
                 }
             }
         }
-        
+
         /**
          * @private
          */
@@ -2560,7 +2559,7 @@ package feathers.controls
             if(properties)
                 Dictionary.mapToObject(properties, displayLabelRenderer);
         }
-        
+
         /**
          * @private
          */
@@ -2581,7 +2580,7 @@ package feathers.controls
                 this.currentSkin.height = this.actualHeight;
             }
         }
-        
+
         /**
          * @private
          */
@@ -2658,7 +2657,7 @@ package feathers.controls
                 this.labelTextRenderer.maxWidth = calculatedWidth - this._paddingLeft - this._paddingRight;
             }
         }
-        
+
         /**
          * @private
          */
@@ -2689,7 +2688,7 @@ package feathers.controls
                 displayObject.y = this._paddingTop + (this.actualHeight - this._paddingTop - this._paddingBottom - displayObject.height) / 2;
             }
         }
-        
+
         /**
          * @private
          */
@@ -2775,7 +2774,7 @@ package feathers.controls
                     this.currentIcon.x = this.labelTextRenderer.x - this._gap - this.currentIcon.width;
                 }
             }
-            
+
             if(this._iconPosition == ICON_POSITION_LEFT || this._iconPosition == ICON_POSITION_RIGHT)
             {
                 if(this._verticalAlign == VERTICAL_ALIGN_TOP)
@@ -2840,7 +2839,7 @@ package feathers.controls
             this._touchPointID = -1;
             this.currentState = this._isEnabled ? STATE_UP : STATE_DISABLED;
         }
-        
+
         /**
          * @private
          */
@@ -2955,7 +2954,7 @@ package feathers.controls
                 return;
             }
             this._touchPointID = int.MAX_VALUE;
-            this.currentState = STATE_DOWN; 
+            this.currentState = STATE_DOWN;
         }
 
         /**
