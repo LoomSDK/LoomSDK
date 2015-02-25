@@ -105,10 +105,10 @@ package loom2d.math
 			var temp = new Point(tx, ty);
 			tx = 0;
 			ty = 0;
-			var p = transformCoord(p.x, p.y)
+			var point = transformCoord(p.x, p.y);
 			tx = temp.x;
 			ty = temp.y;
-			return p;	
+			return point;	
 		}
     }
     
