@@ -4,7 +4,9 @@ package com.modestmaps.mapproviders.microsoft
 	import com.modestmaps.core.Coordinate;
 	import com.modestmaps.mapproviders.AbstractMapProvider;
 	import com.modestmaps.mapproviders.IMapProvider;
-	import com.modestmaps.util.BinaryUtil;
+	
+	//PORTNOTE functions not supported
+	//import com.modestmaps.util.BinaryUtil;
 	
 	/**
 	 * @author tom
@@ -21,17 +23,17 @@ package com.modestmaps.mapproviders.microsoft
 
 		public static var serverSalt:int = int(Math.random() * 4);
 
-		protected const urlStart:Object = {
+		protected const urlStart:Dictionary.<String, String> = {
 			AERIAL: "http://a",
 			ROAD:   "http://r",
 			HYBRID: "http://h"
 		};
-		protected const urlMiddle:Object = {
+		protected const urlMiddle:Dictionary.<String, String> = {
 			AERIAL: ".ortho.tiles.virtualearth.net/tiles/a",
 			ROAD:   ".ortho.tiles.virtualearth.net/tiles/r",
 			HYBRID: ".ortho.tiles.virtualearth.net/tiles/h"
-		}
-		protected const urlEnd:Object = {
+		};
+		protected const urlEnd:Dictionary.<String, String> = {
 			AERIAL: ".jpeg?g=90",
 			ROAD:   ".png?g=90",
 			HYBRID: ".jpeg?g=90"
@@ -57,6 +59,8 @@ package com.modestmaps.mapproviders.microsoft
 		
 		protected function getZoomString(coord:Coordinate):String
 		{
+			//PORTNOTE TODO_KEVIN add binary/decimal conversion support
+			/*
 	        var sourceCoord:Coordinate = sourceCoordinate(coord);
 		    
 			// convert row + col to zoom string
@@ -75,6 +79,8 @@ package com.modestmaps.mapproviders.microsoft
 			}
 			
 			return zoomString; 
+			*/
+			return "not_supported";
 		}
 	
 		public function toString():String
@@ -82,7 +88,7 @@ package com.modestmaps.mapproviders.microsoft
 			return "MICROSOFT_"+type;
 		}
 		
-		public function getTileUrls(coord:Coordinate):Array
+		public function getTileUrls(coord:Coordinate):Vector.<String>
 		{
 			if (coord.row < 0 || coord.row >= Math.pow(2, coord.zoom)) {
 				return null;
