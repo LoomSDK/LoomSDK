@@ -120,8 +120,8 @@ package com.modestmaps
 
 			// if rest was passed in from super constructor in a subclass,
 			// it will be an array...
-			if (rest && rest.length > 0 && rest[0] is Array) {
-				rest = rest[0];
+			if (rest && rest.length > 0 && rest[0] is Vector.<Object>) {
+				rest = rest[0] as Vector.<Object>;
 			}
 			// (doing that is OK because none of the arguments we're expecting are Arrays)
 			
@@ -140,16 +140,16 @@ package com.modestmaps
          		var l1:Location = mapProvider.coordinateLocation(mapProvider.outerLimits()[0]);
         		var l2:Location = mapProvider.coordinateLocation(mapProvider.outerLimits()[1]);
 
-				if (!isNaN(l1.lat) && Math.abs(l1.lat) != Infinity) {
+				if (!isNaN(l1.lat) && Math.abs(l1.lat) != Number.POSITIVE_INFINITY) {
 					extent.north = l1.lat;
 				}        		
-				if (!isNaN(l2.lat) && Math.abs(l2.lat) != Infinity) {
+				if (!isNaN(l2.lat) && Math.abs(l2.lat) != Number.POSITIVE_INFINITY) {
 					extent.south = l2.lat;
 				}        		
-				if (!isNaN(l1.lon) && Math.abs(l1.lon) != Infinity) {
+				if (!isNaN(l1.lon) && Math.abs(l1.lon) != Number.POSITIVE_INFINITY) {
 					extent.west = l1.lon;
 				}        		
-				if (!isNaN(l2.lon) && Math.abs(l2.lon) != Infinity) {
+				if (!isNaN(l2.lon) && Math.abs(l2.lon) != Number.POSITIVE_INFINITY) {
 					extent.east = l2.lon;
 				}
 
@@ -230,7 +230,7 @@ package com.modestmaps
 			return locationsCoordinate([ extent.northWest, extent.southEast ]);
 		}
                 
-		public function locationsCoordinate(locations:Array, fitWidth:Number=0, fitHeight:Number=0):Coordinate
+		public function locationsCoordinate(locations:Vector.<Location>, fitWidth:Number=0, fitHeight:Number=0):Coordinate
 		{
 			if (!fitWidth) fitWidth = mapWidth;
 			if (!fitHeight) fitHeight = mapHeight;
@@ -350,7 +350,9 @@ package com.modestmaps
     	        mapHeight = h;
     
     	        // mask out out of bounds marker remnants
-    	        scrollRect = new Rectangle(0,0,mapWidth,mapHeight);
+    	       // scrollRect = new Rectangle(0, 0, mapWidth, mapHeight); //PORTNOTE replaced scollRect with clipRect
+    	        clipRect = new Rectangle(0,0,mapWidth,mapHeight);
+				
             	
             	grid.resizeTo(new Point(mapWidth, mapHeight));
             	
@@ -431,7 +433,7 @@ package com.modestmaps
 	        }
 	        
         	// among other things this will notify the marker clip that its cached coordinates are invalid
-	        dispatchEvent(new MapEvent(MapEvent.MAP_PROVIDER_CHANGED, newProvider));
+	        dispatchEvent(new MapEvent(MapEvent.MAP_PROVIDER_CHANGED, [newProvider]));
 	    }
 	    
 	   /**
@@ -515,7 +517,7 @@ package com.modestmaps
 		//PORTNOTE removing null default from point
         public function zoomByAbout(zoomDelta:Number, targetPoint:Point, duration:Number=-1):void
         {
-            if (!targetPoint) targetPoint = new Point(mapWidth/2, mapHeight/2);        	
+//            if (!targetPoint) targetPoint = new Point(mapWidth/2, mapHeight/2);        	
         	
          	if (grid.zoomLevel + zoomDelta < grid.minZoom) {
         		zoomDelta = grid.minZoom - grid.zoomLevel;        		
@@ -559,7 +561,7 @@ package com.modestmaps
 		//PORTNOTE removing null default from point		
         public function rotateByAbout(angle:Number, targetPoint:Point):void
         {
-            if (!targetPoint) targetPoint = new Point(mapWidth/2, mapHeight/2);        	
+          //  if (!targetPoint) targetPoint = new Point(mapWidth/2, mapHeight/2);        	
         	
 			grid.prepareForZooming();
 			grid.prepareForPanning();
@@ -594,7 +596,7 @@ package com.modestmaps
 		//PORTNOTE removing null default from points
         public function panAndZoomBy(sc:Number, location:Location, targetPoint:Point, duration:Number=-1):void
         {
-            if (!targetPoint) targetPoint = new Point(mapWidth/2, mapHeight/2);
+            //if (!targetPoint) targetPoint = new Point(mapWidth/2, mapHeight/2);
             
 			var p:Point = locationPoint(location);
 			
@@ -719,7 +721,7 @@ package com.modestmaps
 	    protected function onExtentChanged(event:Event=null):void
 	    {
 	    	if (hasEventListener(MapEvent.EXTENT_CHANGED)) {
-		        dispatchEvent(new MapEvent(MapEvent.EXTENT_CHANGED, getExtent()));
+		        dispatchEvent(new MapEvent(MapEvent.EXTENT_CHANGED, [getExtent()]));
 		    }
 	    }
 
@@ -732,7 +734,7 @@ package com.modestmaps
 	    protected function onExtentChanging():void
 	    {
 	    	if (hasEventListener(MapEvent.BEGIN_EXTENT_CHANGE)) {
-	        	dispatchEvent(new MapEvent(MapEvent.BEGIN_EXTENT_CHANGE, getExtent()));
+	        	dispatchEvent(new MapEvent(MapEvent.BEGIN_EXTENT_CHANGE, [getExtent()]));
 	     	}
 	    }
 
