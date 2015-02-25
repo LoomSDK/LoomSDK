@@ -97,13 +97,10 @@ package com.modestmaps.overlays
 	    		    	
 	    	this.map = map;
 // TODO_AHMED: Reimplement these lines when map class is complete
-	    	/*this.x = map.getWidth() / 2;
-	    	this.y = map.getHeight() / 2;*/
-	    	
-			this.x = 50;
-			this.y = 50;
+	    	this.x = map.getWidth() / 2;
+	    	this.y = map.getHeight() / 2;
 // TODO_AHMED: Reimplement this when map class is complete
-	    	//previousGeometry = map.getMapProvider().geometry();
+	    	previousGeometry = map.getMapProvider().geometry();
 
 			map.addEventListener(MapEvent.START_ZOOMING, onMapStartZooming);
 	        map.addEventListener(MapEvent.STOP_ZOOMING, onMapStopZooming);
@@ -165,7 +162,7 @@ package com.modestmaps.overlays
 	        {
     	        locations[marker] = location.clone();
 // TODO_AHMED: Reimplement next line when map class is complete
-    	        //coordinates[marker] = map.getMapProvider().locationCoordinate(location);
+    	        coordinates[marker] = map.getMapProvider().locationCoordinate(location);
     	        markersByName[marker.name] = marker;
     	        markers.push(marker);
     	        
@@ -201,7 +198,7 @@ package com.modestmaps.overlays
 	    {
 	        locations[marker] = new Location(location.lat, location.lon);
 // TODO_AHMED: Reimplement the next line when map class is complete
-	        //coordinates[marker] = map.getMapProvider().locationCoordinate(location);
+	        coordinates[marker] = map.getMapProvider().locationCoordinate(location);
 	        sortMarkers();
 	        dirty = true;
 	    }
@@ -251,7 +248,7 @@ package com.modestmaps.overlays
 	    	}
 	    	
 // TODO_AHMED: Reimplement when map class is complete
-	    	/*var center:Coordinate = map.grid.centerCoordinate;
+	    	var center:Coordinate = map.grid.centerCoordinate;
 	    	
 	    	if (center.equalTo(drawCoord)) {
 	    		dirty = false;
@@ -261,7 +258,7 @@ package com.modestmaps.overlays
 	    	drawCoord = center.copy();
 	    	
 	    	this.x = map.getWidth() / 2;
-	    	this.y = map.getHeight() / 2;*/	    	
+	    	this.y = map.getHeight() / 2;    	
 	    	
 	        if (scaleZoom) {
 	            scaleX = scaleY = 1.0;
@@ -285,11 +282,11 @@ package com.modestmaps.overlays
 	    public function resetCoordinates():void
 	    {
 // TODO_AHMED: Reimplement when map class is complete
-	    	/*var provider:IMapProvider = map.getMapProvider();
+	    	var provider:IMapProvider = map.getMapProvider();
 	    	// I wish Array.map didn't require three parameters!
 	    	for each (var marker:DisplayObject in markers) {
 				coordinates[marker] = provider.locationCoordinate(locations[marker]);
-	    	}*/
+	    	}
 	    	dirty = true;
 	    }
 	    
@@ -338,7 +335,7 @@ package com.modestmaps.overlays
 		    	// but map.locationPoint hands off to grid to grid.coordinatePoint
 		    	// in the end so we may as well cache the first step
 // TODO_AHMED: Reimplement this when the map class is complete
-		        /*var point:Point = map.grid.coordinatePoint(coordinates[marker], this);
+		        var point:Point = map.grid.coordinatePoint(coordinates[marker], this);
 	            marker.x = snapToPixels ? Math.round(point.x) : point.x;
 	            marker.y = snapToPixels ? Math.round(point.y) : point.y;
 
@@ -359,7 +356,7 @@ package com.modestmaps.overlays
     	            removeChild(marker);
     	            // only need to sort if we've added something
     	            return false;
-    	        }*/
+    	        }
             }
             
             return false;            
@@ -376,9 +373,9 @@ package com.modestmaps.overlays
 	    {
 	    	if (drawCoord) {
 // TODO_AHMED: Reimplement this when the map class is complete
-		        /*var p:Point = map.grid.coordinatePoint(drawCoord);
+		        var p:Point = map.grid.coordinatePoint(drawCoord);
 		        this.x = p.x;
-	    	    this.y = p.y;*/
+	    	    this.y = p.y;
 	    	}
 	    	else {
 	    		dirty = true;
@@ -391,7 +388,7 @@ package com.modestmaps.overlays
 // TODO_AHMED: Potential performance boost here
 	    	//if (autoCache) cacheAsBitmap = false;
 // TODO:AHMED: Reimplement when map class is complete
-	        /*if (scaleZoom && drawCoord) {
+	        if (scaleZoom && drawCoord) {
 	        	if (Math.abs(map.grid.zoomLevel - drawCoord.zoom) < zoomTolerance) {
     	        	scaleX = scaleY = Math.pow(2, map.grid.zoomLevel - drawCoord.zoom);
     	     	}
@@ -401,7 +398,7 @@ package com.modestmaps.overlays
 	        }
 	        else { 
 		        dirty = true;
-	        }*/
+	        }
 	    }
 
 	    protected function onMapStartPanning(event:MapEvent):void
@@ -434,8 +431,8 @@ package com.modestmaps.overlays
 	    protected function onMapResized(event:MapEvent):void
 	    {
 // TODO_AHMED: Reimplement when map class is complete
-	        /*x = map.getWidth() / 2;
-	        y = map.getHeight() / 2;*/
+	        x = map.getWidth() / 2;
+	        y = map.getHeight() / 2;
 	        dirty = true;
 	        updateClips(); // force redraw because flash seems stingy about it
 	    }
@@ -444,24 +441,25 @@ package com.modestmaps.overlays
 	    protected function onMapProviderChanged(event:MapEvent):void
 	    {
 // TODO_AHMED: Reimplement when map class is comlete
-	    	/*var mapProvider:IMapProvider = map.getMapProvider();	
+	    	var mapProvider:IMapProvider = map.getMapProvider();	
 	    	if (mapProvider.geometry() != previousGeometry)
 			{
 	        	resetCoordinates();
 	        	previousGeometry = mapProvider.geometry();
-	        }*/
+	        }
 	    }
 	    
 	    ///// Invalidations...
 	    
 		protected function set dirty(d:Boolean):void
 		{
-			_dirty = d;
+			// PORTNOTE: The stage class doesn't seem to have an invalidate function, seems to be very flash specific judging by the docs
+			// http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/display/Stage.html
+
+			/*_dirty = d;
 			if (d) {
-				// PORTNOTE: The stage class doesn't seem to have an invalidate function
-// TODO_AHMED: Reimplement when the map class is complete
 				//if (stage) stage.invalidate();
-			}
+			}*/
 		}
 		
 		protected function get dirty():Boolean
