@@ -8,13 +8,19 @@
 
 #include <SDL.h>
 
+#include "loom/graphics/gfxGraphics.h"
+#include "loom/engine/loom2d/l2dStage.h"
+
 #define WINDOW_WIDTH    640
 #define WINDOW_HEIGHT   480
 
-extern void loom_appSetup();
-extern void loom_appShutdown();
-extern void loom_tick();
-extern void supplyEmbeddedAssets();
+extern "C"
+{
+    void loom_appSetup();
+    void loom_appShutdown();
+    void loom_tick();
+    void supplyEmbeddedAssets();
+};
 
 SDL_GLContext context;
 SDL_Window *window = NULL;
@@ -24,6 +30,9 @@ int done = 0;
 void loop()
 {
     SDL_Event event;
+
+    // Get the stage as it will receive most events.
+    Loom2D::Stage *stage = Loom2D::Stage::smMainStage;
     
     /* Check for events */
     while (SDL_PollEvent(&event))
@@ -32,11 +41,39 @@ void loop()
         {
             done = 1;
         }
-
-        if(event.type == SDL_KEYDOWN)
+        else if(event.type == SDL_KEYDOWN)
         {
             // Handle a key!
-            printf("Someone hit a key\n");
+            stage->_KeyDownDelegate.pushArgument(event.key.keysym.scancode);
+            stage->_KeyDownDelegate.pushArgument(event.key.keysym.sym);
+            stage->_KeyDownDelegate.pushArgument(event.key.keysym.mod);
+            stage->_KeyDownDelegate.invoke();
+
+        }
+        else if(event.type == SDL_KEYUP)
+        {
+            stage->_KeyUpDelegate.pushArgument(event.key.keysym.scancode);
+            stage->_KeyUpDelegate.pushArgument(event.key.keysym.sym);
+            stage->_KeyUpDelegate.pushArgument(event.key.keysym.mod);
+            stage->_KeyUpDelegate.invoke();
+        }
+        else if(event.type == SDL_MOUSEBUTTONDOWN)
+        {
+
+        }
+        else if(event.type == SDL_MOUSEBUTTONUP)
+        {
+
+
+        }
+        else if(event.type == SDL_MOUSEMOTION)
+        {
+
+        }
+
+        if(event.type == SDL_MOUSEMOTION)
+        {
+            printf("Mouse was moved.");
         }
         
         if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED)
@@ -49,7 +86,6 @@ void loop()
     
     /* Tick and render Loom. */
     loom_tick();
-
     
     /* Update the screen! */
     SDL_GL_SwapWindow(window);
