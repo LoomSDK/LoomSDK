@@ -156,7 +156,12 @@ package loom2d.textures
             return tex;
         }
         
-        /** Creates a texture object from bitmap bytes. */
+        /** Creates a texture object from compressed image bytes.
+         * 
+         *  The supported image types are JPEG (baseline), PNG (8-bit),
+         *  TGA, BMP (non-1bpp, non-RLE), PSD (composited only), GIF,
+         *  HDR (radiance rgbE), PIC (Softimage).
+         */
         public static function fromBytes(bytes:ByteArray):Texture
         {
             var textureInfo = Texture2D.initFromBytes(bytes);

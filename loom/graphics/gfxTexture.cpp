@@ -97,8 +97,12 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 
     if (!tinfo->reload || (tinfo->width != width) || (tinfo->height != height))
     {
-        lmLog(gGFXTextureLogGroup, "Create texture for %s", tinfo->texturePath.c_str());
-
+        if (tinfo->texturePath.empty()) {
+            lmLog(gGFXTextureLogGroup, "Create texture for bytes");
+        } else {
+            lmLog(gGFXTextureLogGroup, "Create texture for %s", tinfo->texturePath.c_str());
+        }
+        
         if (tinfo->reload)
         {
             bgfx::destroyTexture(tinfo->handle);
@@ -121,7 +125,12 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     }
     else
     {
-        lmLog(gGFXTextureLogGroup, "Updating texture %s", tinfo->texturePath.c_str());
+        if (tinfo->texturePath.empty()) {
+            lmLog(gGFXTextureLogGroup, "Updating texture from bytes");
+        }
+        else {
+            lmLog(gGFXTextureLogGroup, "Updating texture %s", tinfo->texturePath.c_str());
+        }
         bgfx::updateTexture2D(tinfo->handle, 0, 0, 0, width, height, mem);
 
         tinfo->width  = width;
