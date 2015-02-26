@@ -57,30 +57,54 @@ void loop()
             stage->_KeyUpDelegate.pushArgument(event.key.keysym.mod);
             stage->_KeyUpDelegate.invoke();
         }
+/* On Mac, these are from the touchpad.
+        else if(event.type == SDL_FINGERMOTION)
+        {
+            stage->_TouchBeganDelegate.pushArgument((int)event.tfinger.touchId);
+            stage->_TouchBeganDelegate.pushArgument(event.tfinger.x);
+            stage->_TouchBeganDelegate.pushArgument(event.tfinger.y);
+            stage->_TouchBeganDelegate.invoke();
+        }
+        else if(event.type == SDL_FINGERUP)
+        {
+            stage->_TouchEndedDelegate.pushArgument((int)event.tfinger.touchId);
+            stage->_TouchEndedDelegate.pushArgument(event.tfinger.x);
+            stage->_TouchEndedDelegate.pushArgument(event.tfinger.y);
+            stage->_TouchEndedDelegate.invoke();
+        }
+        else if(event.type == SDL_FINGERMOTION)
+        {
+            stage->_TouchMovedDelegate.pushArgument((int)event.tfinger.touchId);
+            stage->_TouchMovedDelegate.pushArgument(event.tfinger.x);
+            stage->_TouchMovedDelegate.pushArgument(event.tfinger.y);
+            stage->_TouchMovedDelegate.invoke();
+        }*/
         else if(event.type == SDL_MOUSEBUTTONDOWN)
         {
-
+            stage->_TouchBeganDelegate.pushArgument((int)event.motion.which);
+            stage->_TouchBeganDelegate.pushArgument(event.motion.x);
+            stage->_TouchBeganDelegate.pushArgument(event.motion.y);
+            stage->_TouchBeganDelegate.invoke();
         }
         else if(event.type == SDL_MOUSEBUTTONUP)
         {
-
-
+            stage->_TouchEndedDelegate.pushArgument((int)event.motion.which);
+            stage->_TouchEndedDelegate.pushArgument(event.motion.x);
+            stage->_TouchEndedDelegate.pushArgument(event.motion.y);
+            stage->_TouchEndedDelegate.invoke();
         }
         else if(event.type == SDL_MOUSEMOTION)
         {
-
+            stage->_TouchMovedDelegate.pushArgument((int)event.motion.which);
+            stage->_TouchMovedDelegate.pushArgument(event.motion.x);
+            stage->_TouchMovedDelegate.pushArgument(event.motion.y);
+            stage->_TouchMovedDelegate.invoke();
         }
-
-        if(event.type == SDL_MOUSEMOTION)
+        else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED)
         {
-            printf("Mouse was moved.");
-        }
-        
-        if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED)
-        {
-            printf("Window %d resized to %dx%d\n",
-                   event.window.windowID, event.window.data1,
-                   event.window.data2);
+            stage->_SizeChangeDelegate.pushArgument(event.window.data1);
+            stage->_SizeChangeDelegate.pushArgument(event.window.data2);
+            stage->_SizeChangeDelegate.invoke();
         }
     }
     

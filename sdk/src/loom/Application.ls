@@ -47,9 +47,6 @@ package loom
     import loom2d.core.TouchProcessor;
     import loom2d.native.Loom2DNative;
 
-    //import loom2d.display.Cocos2D;
-//    import loom2d.display.CCLayer;
-
     /**
      * Simple delegate called by Application on the start of the first frame.
      *
@@ -115,14 +112,15 @@ package loom
             Loom2D.stage = theStage;
             Stage.onRenderStage += onCocosFrame;
 
+            theStage.onAccelerate += accelerated;
+
             // This enables touch/mouse input.
-            touchProcessor = new TouchProcessor(stage/*, layer*/);
+            touchProcessor = new TouchProcessor(stage);
 
             // Used to adjust delay for starting the splash screen animation.
             var startDelay = 1.0;
 
             // LOOM-1752: Disabling splash screen until this issue is resolved
-
             if (false)
             {
 

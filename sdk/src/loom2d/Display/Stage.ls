@@ -82,23 +82,23 @@ package loom2d.display
         private var mEnterFrameEvent:EnterFrameEvent = new EnterFrameEvent(Event.ENTER_FRAME, 0.0);
         private var mScaleMode:StageScaleMode = StageScaleMode.NONE;
 
-        protected native var onTouchBegan:TouchDelegate;
-        protected native var onTouchMoved:TouchDelegate;
-        protected native var onTouchEnded:TouchDelegate;
-        protected native var onTouchCancelled:TouchDelegate;
+        public native var onTouchBegan:TouchDelegate;
+        public native var onTouchMoved:TouchDelegate;
+        public native var onTouchEnded:TouchDelegate;
+        public native var onTouchCancelled:TouchDelegate;
 
-        protected native var onKeyUp:KeyDelegate;
-        protected native var onKeyDown:KeyDelegate;
+        public native var onKeyUp:KeyDelegate;
+        public native var onKeyDown:KeyDelegate;
 
-        protected native var onMenuKey:HardwareKeyDelegate;
-        protected native var onBackKey:HardwareKeyDelegate;
+        public native var onMenuKey:HardwareKeyDelegate;
+        public native var onBackKey:HardwareKeyDelegate;
 
-        protected native var onScrollWheelYMoved:ScrollWheelDelegate;
+        public native var onScrollWheelYMoved:ScrollWheelDelegate;
 
-        protected native var onAccelerate:AccelerationDelegate;
+        public native var onAccelerate:AccelerationDelegate;
 
-        protected native var onOrientationChange:OrientationChangeDelegate;
-        protected native var onSizeChange:SizeChangeDelegate;
+        public native var onOrientationChange:OrientationChangeDelegate;
+        public native var onSizeChange:SizeChangeDelegate;
 
         /**
          * When true, dump the current FPS via trace() every second.
@@ -127,6 +127,9 @@ package loom2d.display
             // Handle key event dispatch.
             onKeyDown += onKeyDownHandler;
             onKeyUp += onKeyUpHandler;
+
+            // Application's TouchProcessor handles touch/mouse input.
+
             //layer.onKeyBackClicked += onKeyBackClicked;
 
             //layer.onScrollWheelYMoved += onScrollWheel;
