@@ -30,12 +30,16 @@ package loom2d.math
         public native function get maxY():Number;
         
         public native function get top():Number;
+        public native function set top(value:float);
 
         public native function get bottom ():Number;
+        public native function set bottom (value:float);
         
         public native function get left():Number;
+        public native function set left(value:float);
         
         public native function get right():Number;
+        public native function set right(value:float);
        
         /**
          * If p is outside of the rectangle's current bounds, expand it to include p.
