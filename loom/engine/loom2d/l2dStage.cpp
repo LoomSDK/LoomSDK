@@ -24,18 +24,21 @@
 
 namespace Loom2D
 {
+Stage *Stage::smMainStage = NULL;
 NativeDelegate Stage::_RenderStageDelegate;
 
-float Stage::mtxProjection[16];
-float Stage::mtxModelView[16];
+Stage::Stage()
+{
+    smMainStage = this;
+}
+
+Stage::~Stage()
+{
+    smMainStage = NULL;
+}
 
 void Stage::render(lua_State *L)
 {
-    // set the stages view, will be used when clearing, etc
-    //GFX::Graphics::setView(_view);
-
-    GFX::Graphics::setViewTransform(mtxModelView, mtxProjection);
-
     GFX::Graphics::beginFrame();
 
     updateLocalTransform();

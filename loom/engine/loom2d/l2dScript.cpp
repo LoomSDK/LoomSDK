@@ -218,7 +218,22 @@ static int registerLoom2D(lua_State *L)
        .deriveClass<Stage, DisplayObjectContainer>("Stage")
        .addConstructor<void (*)(void)>()
        .addMethod("render", &Stage::render)
-       .addStaticProperty("onRenderStage", &Stage::getRenderStageDelegate)
+       .addVarAccessor("onTouchBegan", &Stage::getTouchBeganDelegate)
+       .addVarAccessor("onTouchMoved", &Stage::getTouchMovedDelegate)
+       .addVarAccessor("onTouchEnded", &Stage::getTouchEndedDelegate)
+       .addVarAccessor("onTouchCancelled", &Stage::getTouchCancelledDelegate)
+       .addVarAccessor("onKeyUp", &Stage::getKeyUpDelegate)
+       .addVarAccessor("onKeyDown", &Stage::getKeyDownDelegate)
+       .addVarAccessor("onMenuKey", &Stage::getMenuKeyDelegate)
+       .addVarAccessor("onBackKey", &Stage::getBackKeyDelegate)
+       .addVarAccessor("onScrollWheelYMoved", &Stage::getScrollWheelYMovedDelegate)
+       .addVarAccessor("onAccelerate", &Stage::getAccelerateDelegate)
+
+       .addVarAccessor("onOrientationChange", &Stage::getOrientationChangeDelegate)
+       .addVarAccessor("onSizeChange", &Stage::getSizeChangeDelegate)
+
+        .addStaticProperty("onRenderStage", &Stage::getRenderStageDelegate)
+
        .endClass()
 
     // Sprite

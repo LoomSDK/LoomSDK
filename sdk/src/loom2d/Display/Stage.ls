@@ -11,9 +11,8 @@
 package loom2d.display
 {    
     
-    //import loom2d.display.Cocos2D;
-    //import loom2d.display.CCLayer;
-    
+    import loom.platform.LoomKeyModifier;
+
     import loom2d.events.EnterFrameEvent;
     import loom2d.events.ResizeEvent;
     import loom2d.events.Event;
@@ -46,6 +45,15 @@ package loom2d.display
         FILL
     }
 
+    delegate KeyDelegate(scancode:int, virtualKey:int, modifiers:int);
+    delegate HardwareKeyDelegate();
+    delegate TouchDelegate(touchId:int, x:int, y:int);
+    delegate ScrollWheelDelegate(yDelta:int);
+    delegate AccelerationDelegate(x:Number, y:Number, z:Number);
+
+    delegate OrientationChangeDelegate(newOrientation:int);
+    delegate SizeChangeDelegate(newWidth:int, newHeight:int);
+
     /** A Stage represents the root of the display tree.  
      *  Only objects that are direct or indirect children of the stage will be rendered.
      * 
@@ -74,6 +82,24 @@ package loom2d.display
         private var mEnterFrameEvent:EnterFrameEvent = new EnterFrameEvent(Event.ENTER_FRAME, 0.0);
         private var mScaleMode:StageScaleMode = StageScaleMode.NONE;
 
+        protected native var onTouchBegan:TouchDelegate;
+        protected native var onTouchMoved:TouchDelegate;
+        protected native var onTouchEnded:TouchDelegate;
+        protected native var onTouchCancelled:TouchDelegate;
+
+        protected native var onKeyUp:KeyDelegate;
+        protected native var onKeyDown:KeyDelegate;
+
+        protected native var onMenuKey:HardwareKeyDelegate;
+        protected native var onBackKey:HardwareKeyDelegate;
+
+        protected native var onScrollWheelYMoved:ScrollWheelDelegate;
+
+        protected native var onAccelerate:AccelerationDelegate;
+
+        protected native var onOrientationChange:OrientationChangeDelegate;
+        protected native var onSizeChange:SizeChangeDelegate;
+
         /**
          * When true, dump the current FPS via trace() every second.
          *
@@ -99,8 +125,8 @@ package loom2d.display
             mColor = color;
             
             // Handle key event dispatch.
-            //layer.onKeyDown += onKeyDown;
-            //layer.onKeyUp += onKeyUp;
+            onKeyDown += onKeyDownHandler;
+            onKeyUp += onKeyUpHandler;
             //layer.onKeyBackClicked += onKeyBackClicked;
 
             //layer.onScrollWheelYMoved += onScrollWheel;
@@ -115,22 +141,32 @@ package loom2d.display
                 Graphics.setDebug( Graphics.DEBUG_STATS );*/
         }
 
-        protected function onKeyDown(key:int):void
+        protected function onKeyDownHandler(scancode:int, virtualKey:int, modifiers:int):void
         {
-            broadcastEvent(new KeyboardEvent(KeyboardEvent.KEY_DOWN, 0, key));
+            broadcastEvent(
+                new KeyboardEvent(
+                    KeyboardEvent.KEY_DOWN, scancode, virtualKey, 0, 
+                    (modifiers | LoomKeyModifier.CTRL) != 0,
+                    (modifiers | LoomKeyModifier.ALT) != 0,
+                    (modifiers | LoomKeyModifier.SHIFT) != 0));
         }
 
-        protected function onKeyUp(key:int):void
+        protected function onKeyUpHandler(scancode:int, virtualKey:int, modifiers:int):void
         {
-            broadcastEvent(new KeyboardEvent(KeyboardEvent.KEY_UP, 0, key));
+            broadcastEvent(
+                new KeyboardEvent(
+                    KeyboardEvent.KEY_UP, scancode, virtualKey, 0, 
+                    (modifiers | LoomKeyModifier.CTRL) != 0,
+                    (modifiers | LoomKeyModifier.ALT) != 0,
+                    (modifiers | LoomKeyModifier.SHIFT) != 0 ));
         }
 
-        protected function onScrollWheel(delta:Number)
+        protected function onScrollWheelHandler(delta:Number)
         {
             broadcastEvent(new ScrollWheelEvent(ScrollWheelEvent.SCROLLWHEEL, delta));   
         }
 
-        protected function onKeyBackClicked()
+        protected function onKeyBackClickedHandler()
         {
             broadcastEvent(new KeyboardEvent(KeyboardEvent.BACK_PRESSED, 0, LoomKey.BUTTON_BACK));
         }

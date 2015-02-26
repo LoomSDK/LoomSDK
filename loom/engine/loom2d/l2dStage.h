@@ -26,28 +26,54 @@ namespace Loom2D
 {
 class Stage : public DisplayObjectContainer
 {
-    // projection matrix for Stage
-    static float mtxProjection[16];
-    // model view matrix for Stage
-    static float mtxModelView[16];
-
 public:
 
-    LOOM_STATICDELEGATE(RenderStage);
+    Stage();
+    ~Stage();
 
+    static Stage *smMainStage;
+
+    // Rendering interface.
     static void invokeRenderStage()
     {
         _RenderStageDelegate.invoke();
     }
 
+    LOOM_STATICDELEGATE(RenderStage);
+
     static int renderStage(lua_State *L);
 
-    static void setViewTransform(float *view, float *projection)
-    {
-        memcpy(mtxProjection, projection, sizeof(float) * 16);
-        memcpy(mtxModelView, view, sizeof(float) * 16);
-    }
-
     void render(lua_State *L);
+
+    // Interface for window state.
+    LOOM_DELEGATE(OrientationChange);
+    LOOM_DELEGATE(SizeChange);
+
+    void setWindowTitle(const char *title);
+    const char *getWindowTitle();
+
+    int getOrientation();
+
+    int getWidth();
+    int getHeight();
+
+    void resize(int width, int height);
+
+    void toggleFullscreen();
+    bool isFullScreen();
+
+    // Interface for input events.
+    LOOM_DELEGATE(TouchBegan);
+    LOOM_DELEGATE(TouchMoved);
+    LOOM_DELEGATE(TouchEnded);
+    LOOM_DELEGATE(TouchCancelled);
+    LOOM_DELEGATE(KeyBackClicked);
+    LOOM_DELEGATE(KeyMenuClicked);
+    LOOM_DELEGATE(KeyUp);
+    LOOM_DELEGATE(KeyDown);
+    LOOM_DELEGATE(MenuKey);
+    LOOM_DELEGATE(BackKey);
+    LOOM_DELEGATE(ScrollWheelYMoved);
+    LOOM_DELEGATE(Accelerate);
 };
 }
