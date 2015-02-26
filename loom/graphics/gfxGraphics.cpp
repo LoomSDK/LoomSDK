@@ -39,9 +39,6 @@ bool Graphics::sInitialized = false;
 // start with context loss as flagged so resources are created
 bool Graphics::sContextLost = true;
 
-//void *Graphics::sPlatformData[3] = { NULL, NULL, NULL };
-
-
 int Graphics::sWidth     = 0;
 int Graphics::sHeight    = 0;
 uint32_t Graphics::sFlags    = 0xFFFFFFFF;
@@ -84,22 +81,8 @@ return SDL_SetError("Couldn't load GL function %s: %s\n", #func, SDL_GetError())
         return 0;
     }
 
-    /*static void APIENTRY gldebughandler(GLenum source,
-                                       GLenum type,
-                                       GLuint id,
-                                       GLenum severity,
-                                       GLsizei length,
-                                       const GLchar *message,
-                                       void *userParam)
-    {
-
-    }*/
-
 void Graphics::initialize()
 {
-    // when using internal bgfx context management
-//    initializePlatform();
-    
     LoadContext(&_context);
 
     //context()->glDebugMessageCallback(gldebughandler, 0);
@@ -161,13 +144,6 @@ void Graphics::reset(int width, int height, uint32_t flags)
     sFlags = flags;
 }
 
-
-void Graphics::setViewTransform(float *view, float *proj)
-{
-    //bgfx::setViewTransform(sView, view, proj);
-}
-
-
 void Graphics::beginFrame()
 {
     if (!sInitialized)
@@ -177,12 +153,16 @@ void Graphics::beginFrame()
 
     sCurrentFrame++;
 
-//    context()->glViewport(0, 0, sWidth, sHeight);
-
-    //lmLog(gGFXLogGroup, "View Rect %i %i", sWidth, sHeight);
+    // Issue clear.
+    Graphics::context()->glClearColor(
+                                      float((sFillColor >> 0) & 0xFF) / 255.0f,
+                                      float((sFillColor >> 8) & 0xFF) / 255.0f + 0.5f,
+                                      float((sFillColor >> 16) & 0xFF) / 255.0f,
+                                      float((sFillColor >> 24) & 0xFF) / 255.0f
+                                      );
+    Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     QuadRenderer::beginFrame();
-
 }
 
 

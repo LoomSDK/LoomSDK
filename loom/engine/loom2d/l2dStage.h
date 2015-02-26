@@ -26,6 +26,9 @@ namespace Loom2D
 {
 class Stage : public DisplayObjectContainer
 {
+protected:
+
+    int _nativeWidth, _nativeHeight;
 public:
 
     Stage();
@@ -49,13 +52,30 @@ public:
     LOOM_DELEGATE(OrientationChange);
     LOOM_DELEGATE(SizeChange);
 
+    void setNativeSize(int width, int height)
+    {
+        _nativeWidth = width;
+        _nativeHeight = height;
+
+        _SizeChangeDelegate.pushArgument(width);
+        _SizeChangeDelegate.pushArgument(height);
+        _SizeChangeDelegate.invoke();
+    }
+
     void setWindowTitle(const char *title);
     const char *getWindowTitle();
 
     int getOrientation();
 
-    int getWidth();
-    int getHeight();
+    int getWidth()
+    {
+        return _nativeWidth;
+    }
+
+    int getHeight()
+    {
+        return _nativeHeight;
+    }
 
     void resize(int width, int height);
 

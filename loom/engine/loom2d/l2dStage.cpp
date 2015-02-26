@@ -30,6 +30,8 @@ NativeDelegate Stage::_RenderStageDelegate;
 Stage::Stage()
 {
     smMainStage = this;
+    _nativeWidth = 64; // Non-zero dummy values to avoid div by zero.
+    _nativeHeight = 64;
 }
 
 Stage::~Stage()
@@ -39,6 +41,7 @@ Stage::~Stage()
 
 void Stage::render(lua_State *L)
 {
+    GFX::Graphics::setNativeSize(_nativeWidth, _nativeHeight);
     GFX::Graphics::beginFrame();
 
     updateLocalTransform();

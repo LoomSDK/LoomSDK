@@ -69,6 +69,12 @@ public:
 
     static inline uint32_t getCurrentFrame() { return sCurrentFrame; }
 
+    static inline void setNativeSize(int width, int height)
+    {
+        sWidth = width;
+        sHeight = height;
+    }
+    
     static inline int getWidth() { return sWidth; }
     static inline int getHeight() { return sHeight; }
 

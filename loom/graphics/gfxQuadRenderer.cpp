@@ -45,6 +45,7 @@ static unsigned int sProgram_posAttribLoc;
 static unsigned int sProgram_posColorLoc;
 static unsigned int sProgram_posTexCoordLoc;
 static unsigned int sProgram_texUniform;
+static unsigned int sProgram_screenSize;
 
 static unsigned int sIndexBufferHandle;
 
@@ -125,9 +126,9 @@ void QuadRenderer::submit()
 
 
         // Set up texture state.
-//        Graphics::context()->glD
         Graphics::context()->glActiveTexture(GL_TEXTURE0);
         Graphics::context()->glUniform1i(sProgram_texUniform, 0);
+        Graphics::context()->glUniform4f(sProgram_screenSize, (float)Graphics::getWidth(), (float)Graphics::getHeight(), 0.f, 0.f);
         Graphics::context()->glBindTexture(GL_TEXTURE_2D, Texture::sTextureInfos[currentTexture].handle);
         Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -144,8 +145,8 @@ void QuadRenderer::submit()
         Graphics::context()->glDrawElements(GL_TRIANGLES,
                                             quadCount * 6, GL_UNSIGNED_SHORT,
                                             (void*)(currentIndexBufferIdx*sizeof(unsigned short)));
-        int e;
-        if((e = glGetError()) != 0) printf("%x\n", e);
+        //int e;
+        //if((e = glGetError()) != 0) printf("%x\n", e);
 
         // Reset GL state.
         Graphics::context()->glBindTexture(GL_TEXTURE_2D, 0);
@@ -248,17 +249,6 @@ void QuadRenderer::beginFrame()
 
     numFrameSubmit = 0;
 
-    // Issue clear.
-    int fillColor = Graphics::getFillColor();
-
-    Graphics::context()->glClearColor(
-                                      float((fillColor >> 0) & 0xFF) / 255.0f,
-                                      float((fillColor >> 8) & 0xFF) / 255.0f + 0.5f,
-                                      float((fillColor >> 16) & 0xFF) / 255.0f,
-                                      float((fillColor >> 24) & 0xFF) / 255.0f
-                                      );
-    Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     // Fudge something to render with.
 /*    VertexPosColorTex v[4];
     v[0].x =  0.5; v[0].y =  0.5; v[0].z = 0.5;
@@ -304,9 +294,10 @@ void QuadRenderer::initializeGraphicsResources()
     "attribute vec2 a_texcoord0;\n"
     "varying vec2 v_texcoord0;\n"
     "varying vec4 v_color0;\n"
+    "uniform vec4 screenSize;\n"
     "void main()\n"
     "{\n"
-    "    gl_Position = a_position / vec4(1024.0 / 2.0, -768.0 / 2.0, 1.0, 1.0) + vec4(-1, 1, 0.0, 0.0);\n"
+    "    gl_Position = a_position / vec4(screenSize.x / 2.0, -screenSize.y / 2.0, 1.0, 1.0) + vec4(-1, 1, 0.0, 0.0);\n"
     "    v_color0 = a_color0;\n"
     "    v_texcoord0 = a_texcoord0;\n"
     "}\n";
@@ -344,6 +335,7 @@ void QuadRenderer::initializeGraphicsResources()
     sProgram_posColorLoc = Graphics::context()->glGetAttribLocation(quadProg, "a_color0");
     sProgram_posTexCoordLoc = Graphics::context()->glGetAttribLocation(quadProg, "a_texcoord0");
     sProgram_texUniform = Graphics::context()->glGetUniformLocation(quadProg, "u_texture");
+    sProgram_screenSize = Graphics::context()->glGetUniformLocation(quadProg, "screenSize");
 
     // Save program for later!
     sProgramPosColorTex = sProgramPosTex = quadProg;
