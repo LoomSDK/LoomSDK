@@ -89,6 +89,12 @@ package loom.graphics
          * as a Texture2D.
          */
         public static native function initFromAsset(path:string):TextureInfo;
+        
+        /**
+         * Create a new TextureInfo instance describing the requested asset loaded
+         * as a Texture2D from the provided ByteArray.
+         */
+        public static native function initFromBytes(bytes:ByteArray):TextureInfo;
 
         /**
          * Given the native id from a TextureInfo, dispose the specified texture. This
