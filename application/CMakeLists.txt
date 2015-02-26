@@ -201,6 +201,7 @@ if (APPLE)
 
           "-L/usr/local/lib"
           "-lSDL2"
+          "-lz"
 
           )
 
