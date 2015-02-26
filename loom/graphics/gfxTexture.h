@@ -21,7 +21,10 @@
 #pragma once
 
 #include "loom/graphics/internal/bgfx/include/bgfx.h"
+#include "loom/common/assets/assets.h"
+#include "loom/common/assets/assetsImage.h"
 #include "loom/common/utils/utString.h"
+#include "loom/common/utils/utByteArray.h"
 #include "loom/script/native/lsNativeDelegate.h"
 
 namespace GFX
@@ -119,6 +122,8 @@ private:
 
     static void handleAssetNotification(void *payload, const char *name);
 
+    static void loadImageAsset(loom_asset_image_t *lat, TextureID id);
+
 public:
 
     inline static TextureInfo *getTextureInfo(const char *path)
@@ -166,6 +171,7 @@ public:
     static TextureInfo *load(uint8_t *data, uint16_t width, uint16_t height, TextureID id = -1);
 
     static TextureInfo *initFromAssetManager(const char *path);
+    static TextureInfo *initFromBytes(utByteArray *bytes);
 
     static void dispose(TextureID id);
 

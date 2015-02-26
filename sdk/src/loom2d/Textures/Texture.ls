@@ -156,6 +156,23 @@ package loom2d.textures
             return tex;
         }
         
+        /** Creates a texture object from bitmap bytes. */
+        public static function fromBytes(bytes:ByteArray):Texture
+        {
+            var textureInfo = Texture2D.initFromBytes(bytes);
+            if(textureInfo == null)
+            {
+                Console.print("WARNING: Unable to load texture from bytes"); 
+                return null;
+            }
+            
+            // And set up the concrete texture.
+            var tex:ConcreteTexture = new ConcreteTexture("", textureInfo.width, textureInfo.height);
+            tex.mFrame = new Rectangle(0, 0, textureInfo.width, textureInfo.height);
+            tex.setTextureInfo(textureInfo);
+            return tex;
+        }
+        
         /** Creates a texture that contains a region (in pixels) of another texture. The new
          *  texture will reference the base texture; no data is duplicated. */
         public static function fromTexture(texture:Texture, region:Rectangle=null, frame:Rectangle=null):Texture

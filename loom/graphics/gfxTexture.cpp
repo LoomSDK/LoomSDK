@@ -20,8 +20,6 @@
 
 #include "bgfx.h"
 
-#include "loom/common/assets/assets.h"
-#include "loom/common/assets/assetsImage.h"
 #include "loom/common/core/assert.h"
 #include "loom/common/core/allocator.h"
 #include "loom/common/core/log.h"
@@ -253,6 +251,39 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
     return tinfo;
 }
 
+TextureInfo *Texture::initFromBytes(utByteArray *bytes)
+{
+    TextureInfo *tinfo = NULL;
+
+    // Get a new texture ID.
+    TextureID id = getAvailableTextureID();
+    if (id == TEXTUREINVALID)
+    {
+        lmLog(gGFXTextureLogGroup, "No available texture id for image bytes");
+        return NULL;
+    }
+
+    // Initialize it.
+    tinfo = &sTextureInfos[id];
+    tinfo->handle.idx = MARKEDTEXTURE;    // mark in use, but not yet loaded
+
+    LoomAssetCleanupCallback dtor = NULL;
+    loom_asset_image_t *lat = static_cast<loom_asset_image_t*>(loom_asset_imageDeserializer(bytes->getDataPtr(), bytes->getSize(), &dtor));
+
+    if (lat == NULL) {
+        lmLog(gGFXTextureLogGroup, "Unable to load image bytes");
+        return NULL;
+    }
+
+    // Great, stuff real bits!
+    lmLog(gGFXTextureLogGroup, "loaded image bytes - %i x %i at id %i", lat->width, lat->height, id);
+
+    loadImageAsset(lat, id);
+
+    dtor(lat);
+
+    return tinfo;
+}
 
 void Texture::loadCheckerBoard(TextureID id)
 {
@@ -306,23 +337,34 @@ void Texture::handleAssetNotification(void *payload, const char *name)
     // Great, stuff real bits!
     lmLog(gGFXTextureLogGroup, "loaded %s - %i x %i at id %i", name, lat->width, lat->height, id);
 
+    loadImageAsset(lat, id);
+
+    // Release lock on the asset.
+    loom_asset_unlock(name);
+    
+    // Once we load it we don't need it any more.
+    loom_asset_flush(name);
+}
+
+void Texture::loadImageAsset(loom_asset_image_t *lat, TextureID id)
+{
     // See if it's over 2048 - if so, downsize to fit.
-    const int          maxSize     = 2048;
-    void               *localBits  = lat->bits;
-    const bgfx::Memory *localMem   = NULL;
-    int                localWidth  = lat->width;
+    const int          maxSize = 2048;
+    void               *localBits = lat->bits;
+    const bgfx::Memory *localMem = NULL;
+    int                localWidth = lat->width;
     int                localHeight = lat->height;
     while (localWidth > maxSize || localHeight > maxSize)
     {
         // Allocate new bits.
         int oldWidth = localWidth, oldHeight = localHeight;
-        localWidth  = localWidth >> 1;
+        localWidth = localWidth >> 1;
         localHeight = localHeight >> 1;
         void *oldBits = localBits;
 
         // This will be freed automatically. This will be inefficient for huge bitmaps but it's
         // only around for one frame.
-        localMem  = bgfx::alloc(localWidth * localHeight * 4);
+        localMem = bgfx::alloc(localWidth * localHeight * 4);
         localBits = localMem->data;
 
         lmLog(gGFXTextureLogGroup, "   - Too big! Downsampling to %dx%d", localWidth, localHeight);
@@ -332,14 +374,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
 
     // Perform the actual load.
     load((uint8_t *)localBits, (uint16_t)localWidth, (uint16_t)localHeight, id);
-
-    // Release lock on the asset.
-    loom_asset_unlock(name);
-    
-    // Once we load it we don't need it any more.
-    loom_asset_flush(name);
 }
-
 
 void Texture::reset()
 {
@@ -383,11 +418,13 @@ void Texture::dispose(TextureID id)
 
     //TODO: LOOM-1653, we really shouldn't be holding a copy of the texture data in the
     // asset system until we dispose
-    loom_asset_unsubscribe(tinfo->texturePath.c_str(), handleAssetNotification, (void *)id);
-    loom_asset_flush(tinfo->texturePath.c_str());
+    if (!tinfo->texturePath.empty()) {
+        loom_asset_unsubscribe(tinfo->texturePath.c_str(), handleAssetNotification, (void *)id);
+        loom_asset_flush(tinfo->texturePath.c_str());
 
-    // Reset the hash, too
-    sTexturePathLookup.erase(tinfo->texturePath);
+        // Reset the hash, too
+        sTexturePathLookup.erase(tinfo->texturePath);
+    }
 
     // And erase backing state.
     bgfx::destroyTexture(tinfo->handle);
