@@ -132,7 +132,7 @@ package loom2d.display
 
             //layer.onKeyBackClicked += onKeyBackClicked;
 
-            //layer.onScrollWheelYMoved += onScrollWheel;
+            onScrollWheelYMoved += onScrollWheelHandler;
 
             // Note the stage.
             Loom2D.stage = this;

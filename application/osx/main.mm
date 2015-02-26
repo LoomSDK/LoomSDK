@@ -41,7 +41,12 @@ void loop()
         {
             done = 1;
         }
-        else if(event.type == SDL_KEYDOWN)
+
+        // Bail on the rest if no stage!
+        if(!stage)
+            continue;
+
+        if(event.type == SDL_KEYDOWN)
         {
             // Handle a key!
             stage->_KeyDownDelegate.pushArgument(event.key.keysym.scancode);
@@ -99,6 +104,12 @@ void loop()
             stage->_TouchMovedDelegate.pushArgument(event.motion.x);
             stage->_TouchMovedDelegate.pushArgument(event.motion.y);
             stage->_TouchMovedDelegate.invoke();
+        }
+        else if(event.type == SDL_MOUSEWHEEL)
+        {
+            stage->_ScrollWheelYMovedDelegate.pushArgument(event.wheel.y * (event.wheel.direction == SDL_MOUSEWHEEL_NORMAL ? 1 : -1));
+            stage->_ScrollWheelYMovedDelegate.invoke();
+
         }
         else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED)
         {
