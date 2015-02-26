@@ -10,6 +10,7 @@
 
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/engine/loom2d/l2dStage.h"
+#include "loom/common/config/applicationConfig.h"
 
 #define WINDOW_WIDTH    640
 #define WINDOW_HEIGHT   480
@@ -111,11 +112,9 @@ void loop()
             stage->_ScrollWheelYMovedDelegate.invoke();
 
         }
-        else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED)
+        else if (event.type == SDL_WINDOWEVENT && (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED))
         {
-            stage->_SizeChangeDelegate.pushArgument(event.window.data1);
-            stage->_SizeChangeDelegate.pushArgument(event.window.data2);
-            stage->_SizeChangeDelegate.invoke();
+            stage->setNativeSize(event.window.data1, event.window.data2);
         }
     }
     
@@ -129,33 +128,41 @@ void loop()
 int
 main(int argc, char *argv[])
 {
-    
     /* Enable standard application logging */
     SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
     
     if ((window = SDL_CreateWindow(
-                        "Loom", 0, 0,
-                        WINDOW_WIDTH,
-                        WINDOW_HEIGHT,
-                        SDL_WINDOW_RESIZABLE
+                        "Loom", 
+                        0, 0,
+                        100,
+                        100,
+                        SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL
                         | SDL_WINDOW_ALLOW_HIGHDPI)) == NULL)
     {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateWindow(): %s\n", SDL_GetError());
         exit(0);
     }
-    
+
     context = SDL_GL_CreateContext(window);
     if (!context) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_GL_CreateContext(): %s\n", SDL_GetError());
         exit(2);
     }
-    
-    
+
+    // Initialize Loom!
+    loom_appSetup();    
+    supplyEmbeddedAssets();
+
+    // And show the window with proper settings.
+    SDL_SetWindowTitle(window, LoomApplicationConfig::displayTitle().c_str());
+    SDL_SetWindowSize(window, LoomApplicationConfig::displayWidth(), LoomApplicationConfig::displayHeight());
+    SDL_ShowWindow(window);
+
+    if(Loom2D::Stage::smMainStage != NULL)
+        Loom2D::Stage::smMainStage->setNativeSize(LoomApplicationConfig::displayWidth(), LoomApplicationConfig::displayHeight());
+
     /* Main render loop */
     done = 0;
-    
-    loom_appSetup();
-    
-    supplyEmbeddedAssets();
     
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(loop, 0, 1);

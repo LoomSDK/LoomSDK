@@ -34,7 +34,6 @@ package loom2d.core
         private static const MULTITAP_DISTANCE:Number = 25;
         
         private var mStage:Stage;
-        //private var mRootLayer:CCLayer;
         private var mElapsedTime:Number;
         private var mTouchMarker:TouchMarker;
         
@@ -72,7 +71,7 @@ package loom2d.core
 
         protected function handleTouchBegan(id:int, x:Number, y:Number):void
         {
-            // translate to stage space            
+            // translate to stage space
             x-=mStage.x;
             y-=mStage.y;
             x/=mStage.scaleX;
@@ -83,11 +82,16 @@ package loom2d.core
 
         protected function handleTouchMoved(id:int, x:Number, y:Number):void
         {
+            trace("move @ " + x + ", " + y);
+
             // translate to stage space            
             x-=mStage.x;
             y-=mStage.y;
             x/=mStage.scaleX;
             y/=mStage.scaleY;
+
+            trace("POSTmove @ " + x + ", " + y);
+
             enqueue(id, TouchPhase.MOVED, x, y);
         }
 

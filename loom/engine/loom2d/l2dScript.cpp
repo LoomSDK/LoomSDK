@@ -218,6 +218,10 @@ static int registerLoom2D(lua_State *L)
        .deriveClass<Stage, DisplayObjectContainer>("Stage")
        .addConstructor<void (*)(void)>()
        .addMethod("render", &Stage::render)
+
+       .addMethod("__pget_nativeStageWidth", &Stage::getWidth)
+       .addMethod("__pget_nativeStageHeight", &Stage::getHeight)
+
        .addVarAccessor("onTouchBegan", &Stage::getTouchBeganDelegate)
        .addVarAccessor("onTouchMoved", &Stage::getTouchMovedDelegate)
        .addVarAccessor("onTouchEnded", &Stage::getTouchEndedDelegate)

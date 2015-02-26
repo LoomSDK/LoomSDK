@@ -76,8 +76,8 @@ package loom2d.display
     [Native(managed)]      
     public native class Stage extends DisplayObjectContainer
     {
-        private var mWidth:int, mCocosWidth:int;
-        private var mHeight:int, mCocosHeight:int;
+        private var mWidth:int;
+        private var mHeight:int;
         private var mColor:uint;
         private var mEnterFrameEvent:EnterFrameEvent = new EnterFrameEvent(Event.ENTER_FRAME, 0.0);
         private var mScaleMode:StageScaleMode = StageScaleMode.NONE;
@@ -120,6 +120,10 @@ package loom2d.display
         /** @private */
         public function Stage(width:int, height:int, color:uint=0)
         {
+            // Note the stage.
+            Loom2D.stage = this;
+
+            // Note down useful information.
             mWidth = width;
             mHeight = height;
             mColor = color;
@@ -128,14 +132,12 @@ package loom2d.display
             onKeyDown += onKeyDownHandler;
             onKeyUp += onKeyUpHandler;
 
+            onSizeChange += onSizeChangeHandler;
+
             // Application's TouchProcessor handles touch/mouse input.
-
-            //layer.onKeyBackClicked += onKeyBackClicked;
-
             onScrollWheelYMoved += onScrollWheelHandler;
 
-            // Note the stage.
-            Loom2D.stage = this;
+            //layer.onKeyBackClicked += onKeyBackClicked;
 
             // Show stats specified in config file
             /*if ( Cocos2D.configStats == Cocos2D.STATS_REPORT_FPS )
@@ -174,20 +176,16 @@ package loom2d.display
             broadcastEvent(new KeyboardEvent(KeyboardEvent.BACK_PRESSED, 0, LoomKey.BUTTON_BACK));
         }
 
+        protected function onSizeChangeHandler(newWidth:int, newHeight:int)
+        {            
+            invalidateScale();
+            
+            dispatchEvent(new ResizeEvent(Event.RESIZE, mWidth, mHeight, false));            
+        }
+
         /** @inheritDoc */
         public function advanceTime(passedTime:Number):void
         {
-            // Check to see if we are resizing.
-            /*if(mCocosWidth != Cocos2D.getDisplayWidth() || mCocosHeight != Cocos2D.getDisplayHeight())
-            {
-                mCocosWidth = Cocos2D.getDisplayWidth();
-                mCocosHeight = Cocos2D.getDisplayHeight();
-                
-                invalidateScale();
-                
-                dispatchEvent(new ResizeEvent(Event.RESIZE, mWidth, mHeight, false));
-            }*/
-
             // TODO: LOOM-1364
             // disabling frame enter event, until it can be optimized
             // it is currently taking 12-15ms/frame on iPad2
@@ -206,7 +204,6 @@ package loom2d.display
             }
 
             fpsCount++;
-
         }
 
         /** @inheritDoc */
@@ -265,18 +262,10 @@ package loom2d.display
         public function set stageHeight(value:int):void { mHeight = value; invalidateScale(); }
         
         /** Height of the native display in pixels. */
-        public function get nativeStageHeight():int
-        {
-            return 1024;
-            //return Cocos2D.getDisplayHeight();
-        }
+        public native function get nativeStageHeight():int;
 
         /** Width of the native display in pixels. */
-        public function get nativeStageWidth():int
-        {
-            return 768;
-            //return Cocos2D.getDisplayWidth();
-        }
+        public native function get nativeStageWidth():int;
 
         /** Set the scaling behavior of the stage as the application is resized. */
         public function set scaleMode(value:StageScaleMode):void
@@ -314,9 +303,10 @@ package loom2d.display
         }
         
         protected function invalidateScale():void
-        {            
-            /*var scaledWidth = Cocos2D.getDisplayWidth()/stageWidth;
-            var scaledHeight = Cocos2D.getDisplayHeight()/stageHeight;
+        {
+            trace("scale " + nativeStageWidth + "x" + nativeStageHeight + " mode = " + scaleMode);
+            var scaledWidth = nativeStageWidth / stageWidth;
+            var scaledHeight = nativeStageHeight / stageHeight;
 
             switch(scaleMode)
             {
@@ -325,8 +315,8 @@ package loom2d.display
                     scaleX = scaleY = 1;
                     x = 0;
                     y = 0;
-                    mWidth = Cocos2D.getDisplayWidth();
-                    mHeight = Cocos2D.getDisplayHeight();
+                    mWidth = nativeStageWidth;
+                    mHeight = nativeStageHeight;
 
                     break;
 
@@ -337,13 +327,13 @@ package loom2d.display
                         scaleX = scaledWidth;
                         scaleY = scaledWidth;
                         x = 0;
-                        y = (Cocos2D.getDisplayHeight()/2) - (stageHeight/2)*scaledWidth;
+                        y = (nativeStageHeight/2) - (stageHeight/2)*scaledWidth;
                     }
                     else 
                     {
                         scaleX = scaledHeight;
                         scaleY = scaledHeight;
-                        x = (Cocos2D.getDisplayWidth()/2) - (stageWidth/2)*scaledHeight;
+                        x = (nativeStageWidth/2) - (stageWidth/2)*scaledHeight;
                         y = 0;
                     }
 
@@ -355,17 +345,17 @@ package loom2d.display
                     {
                         scaleX = scaleY = scaledWidth;
                         x = 0;
-                        y = (Cocos2D.getDisplayHeight()/2) - (stageHeight/2)*scaledWidth;
+                        y = (nativeStageHeight/2) - (stageHeight/2)*scaledWidth;
                     }
                     else 
                     {
                         scaleX = scaleY = scaledHeight;
-                        x = (Cocos2D.getDisplayWidth()/2) - (stageWidth/2)*scaledHeight;
+                        x = (nativeStageWidth/2) - (stageWidth/2)*scaledHeight;
                         y = 0;
                     }
 
                     break;
-            } */
+            }
         }    
     }
 }
