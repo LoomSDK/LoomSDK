@@ -122,8 +122,8 @@ public class KeyframeMold
         dest1 :String, dest2 :String) :void {
         const extracted :JSON = o.getArray(source);
         if (extracted == null) return;
-        destObj.getType().getFieldInfoByName(dest1).setValue(destObj, extracted.getArrayFloat(0));
-        destObj.getType().getFieldInfoByName(dest2).setValue(destObj, extracted.getArrayFloat(1));
+        destObj.getType().getFieldInfoByName(dest1).setValue(destObj, extracted.getArrayNumber(0));
+        destObj.getType().getFieldInfoByName(dest2).setValue(destObj, extracted.getArrayNumber(1));
     }
 
     protected static function extractField(o :JSON, destObj :Object, field :String) :void {
