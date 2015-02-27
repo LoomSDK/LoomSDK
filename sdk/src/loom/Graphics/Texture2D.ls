@@ -125,6 +125,12 @@ package loom.graphics
          * asset loaded as a Texture2D.
          */
         public static native function initFromAsset(path:string):TextureInfo;
+        
+        /**
+         * Create a new TextureInfo instance describing the requested asset loaded
+         * as a Texture2D from the provided ByteArray.
+         */
+        public static native function initFromBytes(bytes:ByteArray):TextureInfo;
 
         /**
          * Non-blocking function to create a new TextureInfo instance describing the requested 

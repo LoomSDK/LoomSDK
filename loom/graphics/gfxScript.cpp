@@ -316,6 +316,7 @@ static int registerLoomGraphics(lua_State *L)
     beginPackage(L, "loom.graphics")
 
        .beginClass<Texture> ("Texture2D")
+       .addStaticMethod("initFromBytes", &Texture::initFromBytes)
        .addStaticMethod("initFromAsset", &Texture::initFromAssetManager)
        .addStaticMethod("initFromAssetAsync", &Texture::initFromAssetManagerAsync)
        .addStaticMethod("dispose", &Texture::dispose)
