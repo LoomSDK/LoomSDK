@@ -214,6 +214,7 @@ native class JSON {
      * @param field The key name of the JSON object to get the value of and the field name on the Object to set the value on.
      */
     public function applyField(o:Object, field:String) {
+        if (getObjectJSONType(field) == JSONType.JSON_NULL) return;
         var info:FieldInfo = o.getType().getFieldInfoByName(field);
         switch (info.getTypeInfo().getFullName()) {
             case "system.Boolean": info.setValue(o, getBoolean(field)); break;
@@ -384,6 +385,13 @@ native class JSON {
      */
     public native function getFloat(key:String):float;
 
+    /** For a JSON Object, retrieves the number value (64-bit Float or 32-bit Integer) associated with the provided key.
+     *
+     *  @param key Identifies the number to be retrieved
+     *  @see #setFloat()
+     */
+    public native function getNumber(key:String):Number;
+
     /**
      *  For a JSON Object, retrieves the String value associated with the provided key.
      *
@@ -465,6 +473,16 @@ native class JSON {
      */
     public native function setFloat(key:String, value:Number):void;
 
+    /** For a JSON Object, associates a 64-bit Float value with the provided key.
+     *
+     *  This value can be later retrieved with `getNumber(key)`.
+     *
+     *  @param key Identifier for the Number
+     *  @param value Number to be associated with the key
+     *  @see #getNumber()
+     */
+    public native function setNumber(key:String, value:Number):void;
+
     /** For a JSON Object, associates a Boolean value with the provided key.
      *
      *  This value can be later retrieved with `getBoolean(key)`.
@@ -541,6 +559,12 @@ native class JSON {
      */
     public native function getArrayFloat(index:int):Number;
 
+    /** For a JSON Array, retrieves a Number (64-bit Float or 32-bit Integer) value at the provided index.
+     *
+     *  @param index Identifies the item in the Array to be retrieved as a Number
+     */
+    public native function getArrayNumber(index:int):Number;
+
     /** For a JSON Array, retrieves a String value at the provided index.
      *
      *  @param index Identifies the item in the Array to be retrieved as a String
@@ -588,6 +612,16 @@ native class JSON {
      *  @see #getArrayFloat()
      */
     public native function setArrayFloat(index:int, value:Number):void;
+
+    /** For a JSON Array, associates a Number (64-bit Float) value with the provided index.
+     *
+     *  This value can be later retrieved with `getArrayNumber(index)`.
+     *
+     *  @param index Array position to receive the Number
+     *  @param value Number to be set at the index
+     *  @see #getArrayNumber()
+     */
+    public native function setArrayNumber(index:int, value:Number):void;
 
     /** For a JSON Array, associates a String value with the provided index.
      *

@@ -224,6 +224,33 @@ void JSON::setFloat(const char *key, float value)
     json_object_set(_json, key, json_real(value));
 }
 
+double JSON::getNumber(const char *key)
+{
+    if (!_json)
+    {
+        return 0;
+    }
+
+    json_t *jreal = json_object_get(_json, key);
+
+    if (!jreal)
+    {
+        return 0;
+    }
+
+    return (double)json_number_value(jreal);
+}
+
+void JSON::setNumber(const char *key, double value)
+{
+    if (!_json)
+    {
+        return;
+    }
+
+    json_object_set(_json, key, json_real(value));
+}
+
 bool JSON::getBoolean(const char *key)
 {
     if (!_json)
@@ -491,6 +518,35 @@ void JSON::setArrayFloat(int index, float value)
     json_array_set(_json, index, json_real(value));
 }
 
+double JSON::getArrayNumber(int index)
+{
+    if (!isArray())
+    {
+        return 0.f;
+    }
+
+    json_t *jobject = json_array_get(_json, index);
+
+    if (!jobject || !json_is_number(jobject))
+    {
+        return 0.f;
+    }
+
+    return (double)json_number_value(jobject);
+}
+
+void JSON::setArrayNumber(int index, double value)
+{
+    if (!isArray())
+    {
+        return;
+    }
+
+    expandArray(index + 1);
+
+    json_array_set(_json, index, json_real(value));
+}
+
 const char *JSON::getArrayString(int index)
 {
     if (!isArray())
@@ -618,6 +674,8 @@ static int registerSystemJSON(lua_State *L)
        .addMethod("setInteger", &JSON::setInteger)
        .addMethod("getFloat", &JSON::getFloat)
        .addMethod("setFloat", &JSON::setFloat)
+       .addMethod("getNumber", &JSON::getNumber)
+       .addMethod("setNumber", &JSON::setNumber)
        .addMethod("getString", &JSON::getString)
        .addMethod("setString", &JSON::setString)
        .addMethod("getBoolean", &JSON::getBoolean)
@@ -642,6 +700,9 @@ static int registerSystemJSON(lua_State *L)
 
        .addMethod("getArrayFloat", &JSON::getArrayFloat)
        .addMethod("setArrayFloat", &JSON::setArrayFloat)
+
+       .addMethod("getArrayNumber", &JSON::getArrayNumber)
+       .addMethod("setArrayNumber", &JSON::setArrayNumber)
 
        .addMethod("getArrayString", &JSON::getArrayString)
        .addMethod("setArrayString", &JSON::setArrayString)

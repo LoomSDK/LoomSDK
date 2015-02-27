@@ -47,11 +47,14 @@ public:
     int getJSONType();
     int getObjectJSONType(const char *key);
     int getArrayJSONType(int index);
+
     const char *getLongLongAsString(const char *key);
     int getInteger(const char *key);
     void setInteger(const char *key, int value);
     double getFloat(const char *key);
     void setFloat(const char *key, float value);
+    double getNumber(const char *key);
+    void setNumber(const char *key, double value);
     bool getBoolean(const char *key);
     void setBoolean(const char *key, bool value);
     const char *getString(const char *key);
@@ -75,6 +78,8 @@ public:
     void setArrayInteger(int index, int value);
     float getArrayFloat(int index);
     void setArrayFloat(int index, float value);
+    double getArrayNumber(int index);
+    void setArrayNumber(int index, double value);
     const char *getArrayString(int index);
     void setArrayString(int index, const char *value);
     JSON *getArrayObject(int index);
