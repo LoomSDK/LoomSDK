@@ -71,7 +71,8 @@ native class JSON {
     }
     
     /**
-     * Traverses through the object's fields and builds a JSON tree
+     * Traverses through the object's fields and builds a JSON string
+     * from the hierarchy.
      * @param o The Object to traverse using the Reflection API.
      * @return  The JSON tree string built from the fields of the object.
      */
@@ -378,7 +379,8 @@ native class JSON {
      */
     public native function getInteger(key:String):int;
 
-    /** For a JSON Object, retrieves the 64-bit Float value associated with the provided key.
+    /** For a JSON Object, retrieves the Number associated with the provided key.
+     *  Alias of getNumber so it converts integers to floats instead of returning 0.
      *
      *  @param key Identifies the number to be retrieved
      *  @see #setFloat()
@@ -553,7 +555,8 @@ native class JSON {
      */
     public native function getArrayInteger(index:int):int;
 
-    /** For a JSON Array, retrieves a 64-bit Float value at the provided index.
+    /** For a JSON Array, retrieves a Number value at the provided index.
+     *  Alias of getNumber so it converts integers to floats instead of returning 0.
      *
      *  @param index Identifies the item in the Array to be retrieved as a Float
      */

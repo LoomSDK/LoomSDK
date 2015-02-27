@@ -76,7 +76,7 @@ public:
     void setArrayBoolean(int index, bool value);
     int getArrayInteger(int index);
     void setArrayInteger(int index, int value);
-    float getArrayFloat(int index);
+    double getArrayFloat(int index);
     void setArrayFloat(int index, float value);
     double getArrayNumber(int index);
     void setArrayNumber(int index, double value);

@@ -197,21 +197,13 @@ void JSON::setInteger(const char *key, int value)
     json_object_set(_json, key, json_integer(value));
 }
 
+// getFloat is an alias of getNumber to avoid mistakes,
+// since a lot of the time the floating point is
+// not explicitly written for integral values,
+// making json_real_value return 0
 double JSON::getFloat(const char *key)
 {
-    if (!_json)
-    {
-        return 0;
-    }
-
-    json_t *jreal = json_object_get(_json, key);
-
-    if (!jreal)
-    {
-        return 0;
-    }
-
-    return (double)json_real_value(jreal);
+    return getNumber(key);
 }
 
 void JSON::setFloat(const char *key, float value)
@@ -489,21 +481,10 @@ void JSON::setArrayInteger(int index, int value)
     json_array_set(_json, index, json_integer(value));
 }
 
-float JSON::getArrayFloat(int index)
+// alias of getArrayNumber, see getFloat for explanation
+double JSON::getArrayFloat(int index)
 {
-    if (!isArray())
-    {
-        return 0.f;
-    }
-
-    json_t *jobject = json_array_get(_json, index);
-
-    if (!jobject || !json_is_real(jobject))
-    {
-        return 0.f;
-    }
-
-    return (float)json_real_value(jobject);
+    return getArrayNumber(index);
 }
 
 void JSON::setArrayFloat(int index, float value)
