@@ -317,6 +317,7 @@ static int registerLoomGraphics(lua_State *L)
 
        .beginClass<Texture> ("Texture2D")
        .addStaticMethod("initFromAsset", &Texture::initFromAssetManager)
+       .addStaticMethod("initFromAssetAsync", &Texture::initFromAssetManagerAsync)
        .addStaticMethod("dispose", &Texture::dispose)
        .addStaticMethod("scaleImageOnDisk", &scaleImageOnDisk)
        .addStaticMethod("pollScaling", &pollScaling)
@@ -338,6 +339,8 @@ static int registerLoomGraphics(lua_State *L)
        .addVar("wrapV", &TextureInfo::wrapV)
        .addVar("id", &TextureInfo::id)
        .addVarAccessor("update", &TextureInfo::getUpdateDelegate)
+       .addVarAccessor("asyncLoadComplete", &TextureInfo::getAsyncLoadCompleteDelegate)
+       .addProperty("handleID", &TextureInfo::getHandleID)
        .endClass()
 
        .endPackage();

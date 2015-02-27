@@ -22,6 +22,8 @@ package loom2d.textures
     import loom2d.utils.VertexData;
 
     delegate TextureUpdateDelegate();
+    delegate TextureAsyncLoadCompleteDelegate(tex:Texture);
+
 
     /** A texture stores the information that represents an image. It cannot be added to the
      *  display list directly; instead it has to be mapped onto a display object. In Loom, 
@@ -92,6 +94,9 @@ package loom2d.textures
         /** helper object */
         private static var sOrigin:Point = new Point();
 
+        /** 
+         * Information for the texture from the loaded Texture2D Asset. 
+         */
         public var textureInfo:TextureInfo;
 
         /**
@@ -99,6 +104,12 @@ package loom2d.textures
          */
         public var update:TextureUpdateDelegate;
         
+        /**
+         * For asynchonously loaded Textures, fired when the texture has completed loading its data.
+         */
+        public var asyncLoadComplete:TextureAsyncLoadCompleteDelegate;
+        
+
         /** @private */
         public function Texture()
         {
@@ -135,7 +146,15 @@ package loom2d.textures
         
         protected static var assetPathCache = new Dictionary.<String, Texture>();
 
-        /** Creates a texture object from a bitmap. */
+        /** Checks the handle ID of the textureInfo to see if the texture is valid and ready for use. */
+        public function isTextureValid():Boolean
+        {
+            return ((textureInfo == null) || 
+                    (textureInfo.handleID == TextureInfo.HANDLE_INVALID) ||
+                    (textureInfo.handleID == TextureInfo.HANDLE_LOADING)) ? false : true;
+        }
+
+        /** Blocking function that creates a texture object from a bitmap on disk. */
         public static function fromAsset(path:String):Texture
         {
             if(assetPathCache[path])
@@ -155,6 +174,37 @@ package loom2d.textures
             assetPathCache[path] = tex;
             return tex;
         }
+    
+
+        /** Non-blocking function that creates a texture object from a bitmap file on disk. */
+        public static function fromAssetAsync(path:String, cb:TextureAsyncLoadCompleteDelegate):Texture
+        {
+            //if already cached, just return that texture without calling the CB
+            if(assetPathCache[path])
+            {
+                return assetPathCache[path];
+            }
+
+            //kick off the async load and return our holding texture
+            var textureInfo = Texture2D.initFromAssetAsync(path);
+            if(textureInfo == null)
+            {
+                Console.print("WARNING: Unable to load texture from asset: " + path); 
+                return null;
+            }
+
+            //create the ConcreteTexture, but don't fill it out fully as we don't have all of the TextureInfo yet!
+            var tex:ConcreteTexture = new ConcreteTexture(path, -1, -1);
+            tex.textureInfo = textureInfo;
+            assetPathCache[path] = tex;
+
+            //set up delgates to be called
+            tex.asyncLoadComplete = cb;
+            textureInfo.asyncLoadComplete += tex.onAsyncLoadComplete;
+
+            return tex;
+        }
+
         
         /** Creates a texture that contains a region (in pixels) of another texture. The new
          *  texture will reference the base texture; no data is duplicated. */
@@ -238,6 +288,33 @@ package loom2d.textures
                 }
             }            
         }
+
+
+        /** Delegate that is called to finalize the initialization of an asynchronously loaded texture */
+        private function onAsyncLoadComplete():void
+        {
+            //remove ourselves from the delegate
+            textureInfo.asyncLoadComplete -= onAsyncLoadComplete;
+
+            //check for errors
+            if(!isTextureValid())
+            {
+                Console.print("WARNING: Unable to asynchronnously load texture from asset"); 
+                return;
+            }
+
+            // Complete the filling in of our ConcreateTexture data
+            root.setDimensions(textureInfo.width, textureInfo.height);
+            mFrame = new Rectangle(0, 0, textureInfo.width, textureInfo.height);
+            root.setTextureInfo(textureInfo);
+
+            //call our assigned load complete callback
+            if(asyncLoadComplete != null)
+            {
+                asyncLoadComplete(this);
+                asyncLoadComplete = null;
+            }
+        }        
 
 
         /** 

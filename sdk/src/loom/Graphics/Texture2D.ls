@@ -26,10 +26,27 @@ package loom.graphics
     delegate TextureInfoUpdateDelegate(newWidth:int, newHeight:int);
 
     /**
+     * For asynchronous loads, this is called when a TextureInfo's backing texture 
+     * has completed loading.
+     */
+    delegate TextureInfoAsyncLoadCompleteDelegate();
+
+    /**
      * Representation of native low level texture.
      */
     public native class TextureInfo
     {
+        /**
+         * Texture handle is currently busy loading and should not be used.
+         */
+        public static const HANDLE_LOADING:int    = 0xfffe;
+
+        /**
+         * Texture handle is invalid and should not be used.
+         */
+        public static const HANDLE_INVALID:int    = 0xffff;
+
+
         /**
          * Width of the texture in pixels.
          */
@@ -67,6 +84,17 @@ package loom.graphics
          * Fired when the texture is reloaded due to the backing asset changing.
          */
         public native var update:TextureInfoUpdateDelegate;
+
+        /**
+         * For asynchronous loads, this is fired when the texture has completed loading.
+         */
+        public native var asyncLoadComplete:TextureInfoAsyncLoadCompleteDelegate;
+
+        /**
+         * Gets the native handle ID of the texture. Can be checked against HANDLE_LOADING 
+         * or HANDLE_INVALID to see if it has been properly initialized yet.
+         */
+        public native function get handleID():int;
     }
 
     /**
@@ -80,15 +108,33 @@ package loom.graphics
     delegate ResampleEventDelegate(path:String, progress:Number);
 
     /**
+     * Used in conjunction with Texture2D.initFromAssetAsync to pass through the loaded 
+     * texture data once it has completed the asynchronous loading process.
+     *
+     * @param texInfo The newly created TextureInfo object for the loaded texture.
+     */
+    delegate AsyncLoadCompleteDelegate(texInfo:TextureInfo);
+
+    /**
      * Interface for managing native texture state.
      */
     public static class Texture2D
     {
         /**
-         * Create a new TextureInfo instance describing the requested asset loaded
-         * as a Texture2D.
+         * Blocking function to create a new TextureInfo instance describing the requested
+         * asset loaded as a Texture2D.
          */
         public static native function initFromAsset(path:string):TextureInfo;
+
+        /**
+         * Non-blocking function to create a new TextureInfo instance describing the requested 
+         * asset loaded as a Texture2D.
+
+         * @param path Parth of the texture asset to load.
+         * @return TextureInfo Reserved texture information structure that is not filled with 
+         * usable texture data yet (will be once its 'asyncLoadComplete' has been called).
+         */
+        public static native function initFromAssetAsync(path:string):TextureInfo;
 
         /**
          * Given the native id from a TextureInfo, dispose the specified texture. This

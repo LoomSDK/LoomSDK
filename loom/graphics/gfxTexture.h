@@ -23,6 +23,7 @@
 #include "loom/graphics/internal/bgfx/include/bgfx.h"
 #include "loom/common/utils/utString.h"
 #include "loom/script/native/lsNativeDelegate.h"
+#include "loom/common/platform/platformThread.h"
 
 namespace GFX
 {
@@ -62,10 +63,21 @@ struct TextureInfo
     utString                 texturePath;
 
     LS::NativeDelegate       updateDelegate;
+    LS::NativeDelegate       asyncLoadCompleteDelegate;
 
     const LS::NativeDelegate *getUpdateDelegate() const
     {
         return &updateDelegate;
+    }
+
+    const LS::NativeDelegate *getAsyncLoadCompleteDelegate() const
+    {
+        return &asyncLoadCompleteDelegate;
+    }
+
+    int getHandleID() const
+    {
+        return (int)handle.idx;
     }
 
     void                     reset()
@@ -89,6 +101,8 @@ private:
 
     static utHashTable<utFastStringHash, TextureID> sTexturePathLookup;
     static bool sTextureAssetNofificationsEnabled;
+    static MutexHandle sTexInfoLock;
+
 
     // simple linear TextureID -> TextureHandle
     static TextureInfo sTextureInfos[MAXTEXTURES];
@@ -97,6 +111,7 @@ private:
     {
         TextureID id;
 
+        loom_mutex_lock(sTexInfoLock);
         for (id = 0; id < MAXTEXTURES; id++)
         {
             if (sTextureInfos[id].handle.idx == bgfx::invalidHandle)
@@ -104,6 +119,7 @@ private:
                 break;
             }
         }
+        loom_mutex_unlock(sTexInfoLock);
 
         if (id == MAXTEXTURES)
         {
@@ -145,12 +161,13 @@ public:
             return NULL;
         }
 
+        loom_mutex_lock(sTexInfoLock);
         TextureInfo *tinfo = &sTextureInfos[id];
-
         if (tinfo->handle.idx == bgfx::invalidHandle)
         {
-            return NULL;
+            tinfo = NULL;
         }
+        loom_mutex_unlock(sTexInfoLock);
 
         return tinfo;
     }
@@ -166,6 +183,8 @@ public:
     static TextureInfo *load(uint8_t *data, uint16_t width, uint16_t height, TextureID id = -1);
 
     static TextureInfo *initFromAssetManager(const char *path);
+    static TextureInfo *initFromAssetManagerAsync(const char *path);
+    static int __stdcall loadTextureAsync_body(void *param);
 
     static void dispose(TextureID id);
 
