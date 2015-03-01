@@ -7,37 +7,24 @@ package com.modestmaps.core
 	import com.modestmaps.mapproviders.IMapProvider;
 	import loom2d.events.Touch;
 	
-	//import flash.display.DisplayObject;
 	import loom2d.display.DisplayObject;
-	//import flash.display.Sprite;
 	import loom2d.display.Sprite;
-	//import flash.events.Event;
 	import loom2d.events.Event;
-	//import flash.events.MouseEvent;
 	import loom2d.events.TouchEvent;
 	
 	//PORTNOTE: need loom2d.events.ProgressEvent
 	//import flash.events.ProgressEvent;	
 	
-	//import flash.geom.Matrix;
 	import loom2d.math.Matrix;
-	//import flash.geom.Point;
 	import loom2d.math.Point;
-	//import flash.geom.Rectangle;
 	import loom2d.math.Rectangle;
-	//import flash.text.TextField;
 	import loom2d.text.TextField;
 	
 	//import flash.utils.getTimer; //PORTNOTE: no direct import for flash.utils.getTimer
 	import loom.gameframework.TimeManager;
 
 	public class TileGrid extends Sprite
-	{
-		// OPTIONS
-		///////////////////////////////
-		
-		// TODO: split these out into a TileGridOptions class and allow mass setting/getting?
-		
+	{		
 		protected static const DEFAULT_MAX_PARENT_SEARCH:int = 5;
 		protected static const DEFAULT_MAX_PARENT_LOAD:int = 0; // enable this to load lower zoom tiles first
 		protected static const DEFAULT_MAX_CHILD_SEARCH:int = 1;
@@ -166,14 +153,11 @@ package com.modestmaps.core
 		
 		public function TileGrid(w:Number, h:Number, draggable:Boolean, provider:IMapProvider)
 		{
-			//TODO_KEVIN find alternative for doubleClickEnabled
+			trace("The tile grid constructor was called!");
+//TODO_KEVIN find alternative for doubleClickEnabled
 			//doubleClickEnabled = true;
 			
-			//this.map = map;
 			this.draggable = draggable;
-
-			// don't call set map provider here, because it triggers a redraw and we're not ready for that
-			//this.provider = provider;
 			
 			if (provider is ITilePainterOverride) {
 				this.tilePainter = ITilePainterOverride(provider).getTilePainter();
@@ -200,6 +184,7 @@ package com.modestmaps.core
 			
 			this.mapWidth = w;
 			this.mapHeight = h;
+			
 			//PORTNOTE changed scrollRect to clipRect
 			clipRect = new Rectangle(0, 0, mapWidth, mapHeight);
 
@@ -356,6 +341,8 @@ package com.modestmaps.core
 		protected function _onRender(event:Event=null):void
 		{
 			//var t:Number = getTimer();
+			
+			trace("Render Event Happened");
 			
 			if (!dirty || !stage) {
 				//trace(getTimer() - t, "ms in", provider);		
@@ -765,7 +752,8 @@ package com.modestmaps.core
 			return tile;
 		}
 
-		private static const zoomLetter:Array = "abcdefghijklmnopqrstuvwxyz".split('');
+// TODO_AHMED: Initialse the zoomLetter array
+		private var zoomLetter:Vector.<String>;// = "abcdefghijklmnopqrstuvwxyz".split('');
 						
 		/** zoom is translated into a letter so that keys can easily be sorted (alphanumerically) by zoom level */
 		private function tileKey(col:int, row:int, zoom:int):String
@@ -796,8 +784,9 @@ package com.modestmaps.core
 		private function childKeys(col:int, row:int, zoom:int, childZoom:int):Vector.<String>
 		{
  			var scaleFactor:Number = Math.pow(2, zoom-childZoom); // one zoom in = 0.5
- 			var rowColSpan:int = Math.pow(2, childZoom-zoom); // one zoom in = 2, two = 4
- 			var keys:Array = [];
+ 			var rowColSpan:int = Math.pow(2, childZoom - zoom); // one zoom in = 2, two = 4
+			// PORTNOTE: Assuming the keys here are strings
+ 			var keys:Vector.<String> = [];
  			for (var ccol:int = col/scaleFactor; ccol < (col/scaleFactor)+rowColSpan; ccol++) {
  				for (var crow:int = row/scaleFactor; crow < (row/scaleFactor)+rowColSpan; crow++) {
  					keys.push(tileKey(ccol, crow, childZoom));

@@ -32,7 +32,8 @@ package com.modestmaps.geo
 	    */
 	    public function toString():String
 	    {
-	        throw new Error("Abstract method not implemented by subclass.");
+			// PORTNOTE: Throw not yet supported in loomscript
+	        //throw new Error("Abstract method not implemented by subclass.");
 	        return null;
 	    }
 	    
@@ -41,7 +42,8 @@ package com.modestmaps.geo
 	    */
 	    protected function rawProject(point:Point):Point
 	    {
-	        throw new Error("Abstract method not implemented by subclass.");
+			// PORTNOTE: Throw not yet supported in loomscript
+	        //throw new Error("Abstract method not implemented by subclass.");
 			// PORTNOTE: can't return null for a struct like a point
 	        return Point.ZERO;
 	    }
@@ -51,7 +53,8 @@ package com.modestmaps.geo
 	    */
 	    protected function rawUnproject(point:Point):Point
 	    {
-	        throw new Error("Abstract method not implemented by subclass.");
+			// PORTNOTE: throw not yet supported in loomscipt
+	        //throw new Error("Abstract method not implemented by subclass.");
 			// PORTNOTE: can't return null for a struct like a point
 	        return Point.ZERO;
 	    }

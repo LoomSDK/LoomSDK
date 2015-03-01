@@ -109,14 +109,15 @@ package com.modestmaps
 	        this.mapProvider = mapProvider;
 
 			// initialize the grid (so point/location/coordinate functions should be valid after this)
+// CRASH
 			grid = new TileGrid(width, height, draggable, mapProvider);
-			grid.addEventListener(Event.CHANGE, onExtentChanged);
-	        addChild(grid);
+			//grid.addEventListener(Event.CHANGE, onExtentChanged);
+	        //addChild(grid);
 
-	        setSize(width, height);
-	        
-			markerClip = new MarkerClip(this);
-			addChild(markerClip);
+	        //setSize(width, height);
+// CRASH
+			//markerClip = new MarkerClip(this);
+			//addChild(markerClip);
 
 			// if rest was passed in from super constructor in a subclass,
 			// it will be an array...
@@ -152,8 +153,8 @@ package com.modestmaps
 				if (!isNaN(l2.lon) && Math.abs(l2.lon) != Number.POSITIVE_INFINITY) {
 					extent.east = l2.lon;
 				}
-
-        		setExtent(extent);
+// CRASH
+        	//	setExtent(extent);
         	}
         	
         	//addChild(grid.debugField);
@@ -293,9 +294,10 @@ package com.modestmaps
 	    {
 	        var extent:MapExtent = new MapExtent();
 	        
-	        if(!mapProvider) {
-	        	throw new Error("WHOAH, no mapProvider in getExtent!");
-	        }
+			// PORTNOTE: Throw not yet supported in loomscript
+	        //if(!mapProvider) {
+	        //	throw new Error("WHOAH, no mapProvider in getExtent!");
+	        //}
 	
 	        extent.northWest = mapProvider.coordinateLocation(grid.topLeftCoordinate);
 	        extent.southEast = mapProvider.coordinateLocation(grid.bottomRightCoordinate);
@@ -367,7 +369,7 @@ package com.modestmaps
 	    */
 	    public function getSize():Vector.<Number> /*Number*/
 	    {
-	        var size:/*Number*/Array = [mapWidth, mapHeight];
+	        var size:/*Number*/Vector.<Number> = [mapWidth, mapHeight];
 	        return size;
 	    }
 	    

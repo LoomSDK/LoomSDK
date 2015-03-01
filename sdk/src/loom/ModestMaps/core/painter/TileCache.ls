@@ -43,7 +43,9 @@ package com.modestmaps.core.painter
 			return alreadySeen[key] is Tile;
 		}
 		
-		public function retainKeys(keys:Array):void
+		// PORTNOTE: Assuming the keys here are an array of string
+		//public function retainKeys(keys:Array):void
+		public function retainKeys(keys:Vector.<String>):void
 		{
 			for (var key:String in alreadySeen) {
 				if (keys.indexOf(key) < 0) {

@@ -6,6 +6,7 @@ package com.modestmaps.events
 {
 	import com.modestmaps.core.*;
 	import com.modestmaps.mapproviders.IMapProvider;
+	import feathers.controls.NumericStepper;
 	
 	//import flash.events.Event;
 	import loom2d.events.Event;
@@ -32,7 +33,9 @@ package com.modestmaps.events
 		public var panDelta:Point;
 	    
 	    public static const RESIZED:String = 'resized';
-	    public var newSize:Array;
+		// PORTNOTE: Assuming this is an array of number
+	    //public var newSize:Array;
+	    public var newSize:Vector.<Number>;
 	    	    
 	    public static const COPYRIGHT_CHANGED:String = 'copyrightChanged';
 	    public var newCopyright:String;

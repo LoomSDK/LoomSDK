@@ -7,12 +7,16 @@ package com.modestmaps.overlays
 	import com.modestmaps.geo.Location;
 	import com.modestmaps.mapproviders.IMapProvider;
 	
-	import flash.display.BitmapData;
-	import flash.display.LineScaleMode;
-	import flash.display.Sprite;
-	import flash.events.Event;
-	import flash.geom.Matrix;
-	import flash.geom.Point;
+	// PORTNOTE: No bitmap or linescalemode equivalent in loom
+	//import flash.display.BitmapData;
+	//import flash.display.LineScaleMode;
+	import loom2d.display.Sprite;
+	//import flash.events.Event;
+	import loom2d.events.Event;
+	//import flash.geom.Matrix;
+	import loom2d.math.Matrix;
+	//import flash.geom.Point;
+	import loom2d.math.Point;
 
 	public class PolygonMarker extends Sprite implements Redrawable
 	{
@@ -32,7 +36,7 @@ package com.modestmaps.overlays
 		public var lineColor:uint = 0xffffff;
 		public var lineAlpha:Number = 1;
 		public var linePixelHinting:Boolean = false;
-		public var lineScaleMode:String = LineScaleMode.NONE;
+		//public var lineScaleMode:String = LineScaleMode.NONE;
 		public var lineCaps:String = null;
 		public var lineJoints:String = null; 
 		public var lineMiterLimit:Number = 3; 		
@@ -44,7 +48,7 @@ package com.modestmaps.overlays
 		public var fillAlpha:Number = 0.2;
 		
 		public var bitmapFill:Boolean = false;
-		public var bitmapData:BitmapData = null;
+		//public var bitmapData:BitmapData = null;
 		public var bitmapMatrix:Matrix = null;
 		public var bitmapRepeat:Boolean = false;
 		public var bitmapSmooth:Boolean = false;

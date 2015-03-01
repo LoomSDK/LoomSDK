@@ -21,7 +21,9 @@ package com.modestmaps.overlays
 	public class Polyline
 	{
 		public var id:String;
-		public var locationsArray:Array;
+		// Portnote: assuming this is an array of Number
+		//public var locationsArray:Array;
+		public var locationsArray:Vector.<Number>;
 		public var lineThickness:Number;
 		public var lineColor:Number;
 		public var lineAlpha:Number;
@@ -32,7 +34,8 @@ package com.modestmaps.overlays
 		public var miterLimit:Number;
 			
 		public function Polyline(id:String, 
-								 locationsArray:Array,
+								 //locationsArray:Array,
+								 locationsArray:Vector.<Number>,
 								 lineThickness:Number=3, 
 								 lineColor:Number=0xFF0000, 
 								 lineAlpha:Number=1, 

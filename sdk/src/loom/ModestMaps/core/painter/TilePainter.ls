@@ -75,7 +75,9 @@ package com.modestmaps.core.painter
 		protected var loaderTiles:Dictionary = new Dictionary.<Tile>;
 	
 		// open requests
-		protected var openRequests:Array = [];
+		// PORTNOTE: Assuming this is an array of string
+		//protected var openRequests:Array = [];
+		protected var openRequests:Vector.<String> = [];
 	
 		// keeping track for dispatching MapEvent.ALL_TILES_LOADED and MapEvent.BEGIN_TILE_LOADING
 		protected var previousOpenRequests:int = 0;
@@ -83,7 +85,9 @@ package com.modestmaps.core.painter
 		// loader cache is shared across map instances, hence this is static for the time being	
 		// PORTNOTE: loaderCache seems to be used as a dictionary of string, object...
 		protected static var loaderCache:Dictionary.<String, Object>;
-		protected static var cachedUrls:Array = [];
+		// PORTNOTE: assuming this is an array of string
+		//protected static var cachedUrls:Array = [];
+		protected static var cachedUrls:Vector.<String> = [];
 
 		public function TilePainter(tileGrid:TileGrid, provider:IMapProvider, queueFunction:Function)
 		{
@@ -131,7 +135,9 @@ package com.modestmaps.core.painter
 			return tileCache.getTile(key);
 		}
 		
-		public function retainKeysInCache(recentlySeen:Array):void
+		// PORTNOTE: Assuming recentlySeen is an array of string
+		//public function retainKeysInCache(recentlySeen:Array):void
+		public function retainKeysInCache(recentlySeen:Vector.<String>):void
 		{
 			tileCache.retainKeys(recentlySeen); 			
 		}
@@ -140,7 +146,8 @@ package com.modestmaps.core.painter
 		{
 			var tile:Tile = tilePool.getTile(coord.column, coord.row, coord.zoom);
 			tile.name = key;
-			var urls:Array = provider.getTileUrls(coord);
+			// PORTNOTE: assuming urls is an array of string
+			var urls:Vector.<String> = provider.getTileUrls(coord);
 			if (urls && urls.length > 0) {
 				// keep a local copy of the URLs so we don't have to call this twice:
 				layersNeeded[tile.name] = urls;

@@ -1,6 +1,8 @@
 package com.modestmaps.core.painter
 {
 	import com.modestmaps.core.Tile;
+	// PORTNOTE: Using getType() in place of Class
+	import system.reflection.Type;
 	
 	/** 
 	 *  This post http://lab.polygonal.de/2008/06/18/using-object-pools/
@@ -16,19 +18,21 @@ package com.modestmaps.core.painter
 		protected static const MIN_POOL_SIZE:int = 256;
 		protected static const MAX_NEW_TILES:int = 256;
 		
-		protected var pool:Array = [];
+		// PORTNOTE: Assuming this is an array of tiles
+		//protected var pool:Array = [];
+		protected var pool:Vector.<Tile> = [];
 		// PORTNOTE: loom doesn't have a class called Class, using object instead
 		//protected var tileClass:Class;
-		protected var tileClass:Object;
+		protected var tileClass:Type;
 		
 		public function TilePool(tileClass:Object)
 		{
-			this.tileClass = tileClass;
+			this.tileClass = tileClass.getType();
 		}
 	
 		public function setTileClass(tileClass:Object):void
 		{
-			this.tileClass = tileClass;
+			this.tileClass = tileClass.getType();
 			pool = [];
 		}
 	

@@ -156,7 +156,7 @@ package com.modestmaps.core
 		 * @return a new MapExtent from the given string */
 		public static function fromString(str:String):MapExtent
 		{
-			var parts:Array = str.split("/\s*,\s*/");
+			var parts:Vector.<String> = str.split("/\s*,\s*/");
 			return new MapExtent(parts[0] as Number,
 								 parts[1] as Number,
 								 parts[2] as Number,
@@ -196,8 +196,9 @@ package com.modestmaps.core
 			return new MapExtent(location.lat, location.lat, location.lon, location.lon);
 		}
 		
-		
-		public static function fromLocationProperties(objects:Array, locationProp:String='location'):MapExtent
+		// PORTNOTE: Assuming that objects is an array of locations
+		//public static function fromLocationProperties(objects:Array, locationProp:String='location'):MapExtent
+		public static function fromLocationProperties(objects:Vector.<Location>, locationProp:String='location'):MapExtent
 		{
 			// PORTNOTE: changed obj from object to a dictionary
 			return fromLocations(objects.map(

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * vim:et sts=4 sw=4 cindent:
  * @ignore
  *
@@ -14,12 +14,17 @@ package com.modestmaps
 	import com.modestmaps.core.TweenTile;
 	import com.modestmaps.geo.Location;
 	import com.modestmaps.mapproviders.IMapProvider;
+// TODO_AHMED: Find a way around the mouseevent
+	//import flash.events.MouseEvent;
+	import loom2d.events.Event;
+	import loom2d.math.Matrix;
+	import loom2d.math.Point;
 	
-	import flash.events.MouseEvent;
-	import flash.geom.Matrix;
-	import flash.geom.Point;
-	
-	import gs.TweenLite;
+	// PORTNOTE: Using the build in tweening instead of the gs tween library
+	//import gs.TweenLite;
+	import loom2d.Loom2D;
+	import loom2d.animation.Tween;
+	import loom2d.animation.Transitions;
 	
     public class TweenMap extends Map
 	{
@@ -54,7 +59,7 @@ package com.modestmaps
 	    public function TweenMap(width:Number=320, height:Number=240, draggable:Boolean=true, provider:IMapProvider=null, ... rest)
 	    {
 	    	super(width, height, draggable, provider, rest);
-	    	grid.setTileClass(TweenTile);
+	    	//grid.setTileClass(TweenTile);
         }
 
 	   /** Pan by px and py, in panDuration (used by panLeft, panRight, panUp and panDown) */
@@ -62,14 +67,19 @@ package com.modestmaps
 	    {
 	    	if (!grid.panning && !grid.zooming) {
 		    	grid.prepareForPanning();
-	    	    TweenLite.to(grid, panDuration, { tx: grid.tx+px, ty: grid.ty+py, onComplete: grid.donePanning, ease: panEase });
+	    	    //TweenLite.to(grid, panDuration, { tx: grid.tx+px, ty: grid.ty+py, onComplete: grid.donePanning, ease: panEase });
+				var tween:Tween = new Tween(grid, panDuration, Transitions.EASE_IN);
+				tween.animate("tx", grid.tx + px);
+				tween.animate("ty", grid.ty + py);
+				tween.onComplete += grid.donePanning();
+				Loom2D.juggler.add(tween);
 	    	}
 	    }      
 		    
 	    /** default easing function for panUp, panDown, panLeft, panRight, etc. */
 		protected static function quadraticEaseOut(t:Number, b:Number, c:Number, d:Number):Number
 		{
-			return -c * (t /= d) * (t - 2) + b;
+			return -c * (t / d) * (t - 2) + b;
 		}
 		
 		protected var enforceToRestore:Boolean = false;
@@ -83,7 +93,7 @@ package com.modestmaps
 
 			grid.enforceBoundsOnMatrix(m);
 			
-			TweenLite.to(grid, duration, { a: m.a, b: m.b, c: m.c, d: m.d, tx: m.tx, ty: m.ty, onComplete: panAndZoomComplete });			
+			Loom2D.juggler.tween(grid, duration, { "a": m.a, "b": m.b, "c": m.c, "d": m.d, "tx": m.tx, "ty": m.ty, "onComplete": panAndZoomComplete });				
 		}
 
 		/** call grid.donePanning() and grid.doneZooming(), used by tweenExtent, 
@@ -97,10 +107,12 @@ package com.modestmaps
 		}		
 		
 		/** zoom in or out by sc, moving the given location to the requested target (or map center, if omitted) */        
-        override public function panAndZoomBy(sc:Number, location:Location, targetPoint:Point=null, duration:Number=-1):void
+        override public function panAndZoomBy(sc:Number, location:Location, targetPoint:Point=Point.ZERO, duration:Number=-1):void
         {
             if (duration < 0) duration = panAndZoomDuration;
-            if (!targetPoint) targetPoint = new Point(mapWidth/2, mapHeight/2);        	
+			// PORTNOTE: A point is a struct in loom, so checking for null-ness won't work
+// TODO_AHMED: Check if the point.zero doesn't do bad things
+            if (targetPoint == Point.ZERO) targetPoint = new Point(mapWidth/2, mapHeight/2);        	
         	
 			var p:Point = locationPoint(location);
 			
@@ -128,10 +140,12 @@ package com.modestmaps
         }
 
 		/** zoom in or out by zoomDelta, keeping the requested point in the same place */        
-        override public function zoomByAbout(zoomDelta:Number, targetPoint:Point=null, duration:Number=-1):void
+        override public function zoomByAbout(zoomDelta:Number, targetPoint:Point=Point.ZERO, duration:Number=-1):void
         {
             if (duration < 0) duration = panAndZoomDuration;
-            if (!targetPoint) targetPoint = new Point(mapWidth/2, mapHeight/2);        	
+			// PORTNOTE: A point is a struct in loom, so checking for null-ness won't work
+// TODO_AHMED: Check if the point.zero doesn't do bad things
+            if (targetPoint == Point.ZERO) targetPoint = new Point(mapWidth/2, mapHeight/2);        	
 
 			var constrainedDelta:Number = zoomDelta;
 
@@ -197,11 +211,18 @@ package com.modestmaps
 	    		var pan:Point = centerPoint.subtract(p);
 
 	    		// grid.prepareForPanning();
-	    		TweenLite.to(grid, panDuration, {ty: grid.ty + pan.y,
+	    		/*TweenLite.to(grid, panDuration, {ty: grid.ty + pan.y,
 	    		                                 tx: grid.tx + pan.x,
 	    		                                 ease: panEase,
 	    		                                 onStart: grid.prepareForPanning,
-	    		                                 onComplete: grid.donePanning});
+	    		                                 onComplete: grid.donePanning});*/
+												 
+				Loom2D.juggler.tween(grid, panDuration, {"ty": grid.ty + pan.y,
+														 "tx": grid.tx + pan.x,
+														 "ease": panEase,
+														 "onStart": grid.prepareForPanning,
+														 "onComplete": grid.donePanning});
+					
 	    	}
 			else
 			{
@@ -219,11 +240,16 @@ package com.modestmaps
 		{
     		var pan:Point = new Point(mapWidth/2, mapHeight/2).subtract(locationPoint(location,grid));
     		// grid.prepareForPanning();
-    		TweenLite.to(grid, duration, { ty: grid.ty + pan.y,
+    		/*TweenLite.to(grid, duration, { ty: grid.ty + pan.y,
     		                               tx: grid.tx + pan.x,
     		                               ease: easing,
     		                               onStart: grid.prepareForPanning,
-    		                               onComplete: grid.donePanning });
+    		                               onComplete: grid.donePanning } );*/
+			Loom2D.juggler.tween(grid, duration, { "ty": grid.ty + pan.y,
+												   "tx": grid.tx + pan.x,
+												   "ease": easing,
+												   "onStart": grid.prepareForPanning,
+											       "onComplete": grid.donePanning });
 		}
 		
 	    // keeping it DRY, as they say    
@@ -235,10 +261,14 @@ package com.modestmaps
 		    	var target:Number = (dir < 0) ? Math.floor(grid.zoomLevel + dir) : Math.ceil(grid.zoomLevel + dir);
 		    	target = Math.max(grid.minZoom, Math.min(grid.maxZoom, target));
 
-		    	TweenLite.to(grid, zoomDuration, { zoomLevel: target,
+		    	/*TweenLite.to(grid, zoomDuration, { zoomLevel: target,
 		    	                                   onStart: grid.prepareForZooming,
 		    	                                   onComplete: grid.doneZooming,
-		    	                                   ease: zoomEase });
+		    	                                   ease: zoomEase } );*/
+				Loom2D.juggler.tween(grid, zoomDuration, { "zoomLevel": target,
+														   "onStart": grid.prepareForZooming,
+														   "onComplete": grid.doneZooming,
+														   "ease": zoomEase });
 		    }
 	    }
 
@@ -247,14 +277,17 @@ package com.modestmaps
          *
          * @see http://blog.pixelbreaker.com/flash/swfmacmousewheel/ for Mac mouse wheel support  
          */
-        override public function onMouseWheel(event:MouseEvent):void
+// TODO_AHMED: fix the missing MouseEvent class
+        //override public function onMouseWheel(event:MouseEvent):void
+        override public function onMouseWheel(event:Event):void
         {       	
         	if (!__draggable || grid.panning) return;
 
-			TweenLite.killTweensOf(grid);
-			TweenLite.killDelayedCallsTo(doneMouseWheeling);
+			//TweenLite.killTweensOf(grid);
+			//TweenLite.killDelayedCallsTo(doneMouseWheeling);
 
-            if (event.delta < 0) {
+// TODO_AHMED: Consider using the touch delta here instead
+            /*if (event.delta < 0) {
             	var sc:Number;
             	if (grid.zoomLevel > grid.minZoom) {
 	        		mouseWheelingOut = true;
@@ -268,12 +301,12 @@ package com.modestmaps
 	        		mouseWheelingOut = false;            		
 					sc = Math.min(2.0, 1.0+event.delta/20.0);				
 	            }
-            }
+            }*/
 
             /* trace('scale', sc);
 			trace('delta', event.delta);
             trace('mouseWheelingIn', mouseWheelingIn);
-            trace('mouseWheelingOut', mouseWheelingOut); */
+            trace('mouseWheelingOut', mouseWheelingOut); 
             
             if (sc) {
 	            var p:Point = grid.globalToLocal(new Point(event.stageX, event.stageY));        	
@@ -286,13 +319,16 @@ package com.modestmaps
             
             TweenLite.delayedCall(0.1, doneMouseWheeling);
             
-            event.updateAfterEvent();
+// TODO_AHMED: investigate the updateAfterEvent thing
+            event.updateAfterEvent();*/
             
         }
         
         protected function doneMouseWheeling():void
         {
-            var p:Point = grid.globalToLocal(new Point(stage.mouseX, stage.mouseY));
+// TODO_AHMED: FIX THE MOUSE PLEASE!!!!!
+            //var p:Point = grid.globalToLocal(new Point(stage.mouseX, stage.mouseY));
+            var p:Point = Point.ZERO;
         	if (mouseWheelingIn) { 
         		zoomByAbout(Math.ceil(grid.zoomLevel) - grid.zoomLevel, p, 0.15); // round off to whole value up
         	}
@@ -308,4 +344,3 @@ package com.modestmaps
         
 	}
 }
-
