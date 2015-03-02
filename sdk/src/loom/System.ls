@@ -8,5 +8,7 @@ package loom
         public native function cmd(path:String):Void;
 
         public native var onData:NativeDelegate;
+
+        public native var onFinish:NativeDelegate;
     }
 }

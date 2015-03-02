@@ -16,7 +16,6 @@ protected:
 		System* self = (System*)param;
 		while (!feof(self->pipe)) {
 			if (fgets(self->buffer, 128, self->pipe) != NULL)//Think about increasing buffer size
-				//result += buffer;
 			{
 				self->_OnDataDelegate.pushArgument(self->buffer);
 				self->_OnDataDelegate.invoke();
@@ -24,17 +23,19 @@ protected:
 		}
 
 		_pclose(self->pipe);
+		// After the pipe is close, invoke the onFinish delegate
+		self->_OnFinishDelegate.invoke();
 
 		return 0;
 	}
 
 public:
 	LOOM_DELEGATE(OnData);
+	LOOM_DELEGATE(OnFinish);
 
 	void cmd(const char *command)
 	{
 		pipe = _popen(command, "r");
-		//if (!pipe) return "ERROR";
 		loom_thread_start(getData, this);
 	}
 };
@@ -51,6 +52,8 @@ static int registerLoomSystem(lua_State* L)
 		.addMethod("cmd", &System::cmd)
 
 		.addVarAccessor("onData", &System::getOnDataDelegate)
+
+		.addVarAccessor("onFinish", &System::getOnFinishDelegate)
 
 		.endClass()
 
