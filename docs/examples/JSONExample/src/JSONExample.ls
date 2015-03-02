@@ -131,20 +131,23 @@ package
             
             
             // Circular reference tests
+            // Commented due to it failing an assertion,
+            // uncomment to try it. Both Vector and Object
+            // indirect circular references should be detected.
+            /*
+            var oa = { };
+            var ob = { "circular": oa };
+            oa["circular"] = ob;
+            var va:Vector.<Object> = [];
+            var vb:Vector.<Object> = [va];
+            va.push(vb);
             
-            //var a = { };
-            //var b = { "circular": a };
-            //a["circular"] = b;
-            //var a:Vector.<Object> = [];
-            //var b:Vector.<Object> = [a];
-            //a.push(b);
-            //trace(""+a);
+            json.setValue("infiniteObject", oa);
+            json.setValue("infiniteVector", va);
             
-            //json.setValue("infinite", a);
-            
-            //trace(json.serialize());
-            //return;
-            
+            trace(json.serialize());
+            return;
+            //*/
             
             json.setValue("index", 5);
             json.setValue("duration", 5);
