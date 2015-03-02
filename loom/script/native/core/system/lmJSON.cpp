@@ -26,28 +26,46 @@ JSON::JSON() : _json(NULL), _root(false)
 {
 }
 
-JSON::~JSON()
-{
+bool JSON::clear() {
     if (_json)
     {
         if (_root)
         {
             json_decref(_json);
+            _root = false;
         }
         _json = NULL;
+        return true;
     }
+    return false;
+}
+
+JSON::~JSON()
+{
+    clear();
+}
+
+bool JSON::initObject() {
+    clear();
+
+    _json = json_object();
+    if (_json) _root = true;
+
+    return _json == NULL ? false : true;
+}
+
+bool JSON::initArray() {
+    clear();
+
+    _json = json_array();
+    if (_json) _root = true;
+
+    return _json == NULL ? false : true;
 }
 
 bool JSON::loadString(const char *json)
 {
-    if (_json)
-    {
-        if (_root)
-        {
-            json_decref(_json);
-        }
-        _json = NULL;
-    }
+    clear();
 
     _json = json_loads(json, JSON_DISABLE_EOF_CHECK, &_error);
 
@@ -66,10 +84,7 @@ bool JSON::loadString(const char *json)
         _errorMsg = "";
     }
 
-    if (_json)
-    {
-        _root = true;
-    }
+    if (_json) _root = true;
 
     return _json == NULL ? false : true;
 }
@@ -182,7 +197,26 @@ void JSON::setInteger(const char *key, int value)
     json_object_set(_json, key, json_integer(value));
 }
 
+// getFloat is an alias of getNumber to avoid mistakes,
+// since a lot of the time the floating point is
+// not explicitly written for integral values,
+// making json_real_value return 0
 double JSON::getFloat(const char *key)
+{
+    return getNumber(key);
+}
+
+void JSON::setFloat(const char *key, float value)
+{
+    if (!_json)
+    {
+        return;
+    }
+
+    json_object_set(_json, key, json_real(value));
+}
+
+double JSON::getNumber(const char *key)
 {
     if (!_json)
     {
@@ -196,10 +230,10 @@ double JSON::getFloat(const char *key)
         return 0;
     }
 
-    return (double)json_real_value(jreal);
+    return (double)json_number_value(jreal);
 }
 
-void JSON::setFloat(const char *key, float value)
+void JSON::setNumber(const char *key, double value)
 {
     if (!_json)
     {
@@ -447,7 +481,25 @@ void JSON::setArrayInteger(int index, int value)
     json_array_set(_json, index, json_integer(value));
 }
 
-float JSON::getArrayFloat(int index)
+// alias of getArrayNumber, see getFloat for explanation
+double JSON::getArrayFloat(int index)
+{
+    return getArrayNumber(index);
+}
+
+void JSON::setArrayFloat(int index, float value)
+{
+    if (!isArray())
+    {
+        return;
+    }
+
+    expandArray(index + 1);
+
+    json_array_set(_json, index, json_real(value));
+}
+
+double JSON::getArrayNumber(int index)
 {
     if (!isArray())
     {
@@ -456,15 +508,15 @@ float JSON::getArrayFloat(int index)
 
     json_t *jobject = json_array_get(_json, index);
 
-    if (!jobject || !json_is_real(jobject))
+    if (!jobject || !json_is_number(jobject))
     {
         return 0.f;
     }
 
-    return (float)json_real_value(jobject);
+    return (double)json_number_value(jobject);
 }
 
-void JSON::setArrayFloat(int index, float value)
+void JSON::setArrayNumber(int index, double value)
 {
     if (!isArray())
     {
@@ -588,6 +640,8 @@ static int registerSystemJSON(lua_State *L)
 
        .beginClass<JSON> ("JSON")
        .addConstructor<void (*)(void)>()
+       .addMethod("initObject", &JSON::initObject)
+       .addMethod("initArray", &JSON::initArray)
        .addMethod("loadString", &JSON::loadString)
        .addMethod("serialize", &JSON::serialize)
 
@@ -601,6 +655,8 @@ static int registerSystemJSON(lua_State *L)
        .addMethod("setInteger", &JSON::setInteger)
        .addMethod("getFloat", &JSON::getFloat)
        .addMethod("setFloat", &JSON::setFloat)
+       .addMethod("getNumber", &JSON::getNumber)
+       .addMethod("setNumber", &JSON::setNumber)
        .addMethod("getString", &JSON::getString)
        .addMethod("setString", &JSON::setString)
        .addMethod("getBoolean", &JSON::getBoolean)
@@ -626,6 +682,9 @@ static int registerSystemJSON(lua_State *L)
        .addMethod("getArrayFloat", &JSON::getArrayFloat)
        .addMethod("setArrayFloat", &JSON::setArrayFloat)
 
+       .addMethod("getArrayNumber", &JSON::getArrayNumber)
+       .addMethod("setArrayNumber", &JSON::setArrayNumber)
+
        .addMethod("getArrayString", &JSON::getArrayString)
        .addMethod("setArrayString", &JSON::setArrayString)
 
@@ -645,5 +704,5 @@ static int registerSystemJSON(lua_State *L)
 
 void installSystemJSON()
 {
-    NativeInterface::registerNativeType<JSON>(registerSystemJSON);
+    NativeInterface::registerManagedNativeType<JSON>(registerSystemJSON);
 }
