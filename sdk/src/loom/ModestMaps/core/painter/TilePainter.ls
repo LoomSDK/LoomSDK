@@ -269,9 +269,8 @@ package com.modestmaps.core.painter
 				}*/
 			}
 			else if (urls && urls.length == 0) {
-// TODO_AHMED: uncomment the references to tile grid once it's finished
-				//tileGrid.tilePainted(tile);
-				//tileCache.putTile(tile);
+				tileGrid.tilePainted(tile);
+				tileCache.putTile(tile);
 				//delete layersNeeded[tile.name];
 				layersNeeded.deleteKey(tile.name);
 			}			
@@ -286,13 +285,13 @@ package com.modestmaps.core.painter
 			if (openRequests.length < maxOpenRequests && tileQueue.length > 0) {
 	
 				// prune queue for tiles that aren't visible
-// TODO_AHMED: uncomment the references to tileGrid once it's done
-				/*var removedTiles:Array = tileQueue.retainAll(tileGrid.getVisibleTiles());
+				// PORTNOTE: Assuming this is an array of tiles
+				var removedTiles:Vector.<Tile> = tileQueue.retainAll(tileGrid.getVisibleTiles());
 				
 				// keep layersNeeded tidy:
 				for each (var removedTile:Tile in removedTiles) {
 					this.cancelPainting(removedTile);
-				}*/
+				}
 				
 				// note that queue is not the same as visible tiles, because things 
 				// that have already been loaded are also in visible tiles. if we

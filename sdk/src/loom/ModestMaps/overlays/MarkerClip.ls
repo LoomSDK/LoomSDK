@@ -96,10 +96,8 @@ package com.modestmaps.overlays
 	    	//mouseChildren = true;
 	    		    	
 	    	this.map = map;
-// TODO_AHMED: Reimplement these lines when map class is complete
 	    	this.x = map.getWidth() / 2;
 	    	this.y = map.getHeight() / 2;
-// TODO_AHMED: Reimplement this when map class is complete
 	    	previousGeometry = map.getMapProvider().geometry();
 
 			map.addEventListener(MapEvent.START_ZOOMING, onMapStartZooming);
@@ -161,7 +159,6 @@ package com.modestmaps.overlays
 	        if (markers.indexOf(marker) == -1)
 	        {
     	        locations[marker] = location.clone();
-// TODO_AHMED: Reimplement next line when map class is complete
     	        coordinates[marker] = map.getMapProvider().locationCoordinate(location);
     	        markersByName[marker.name] = marker;
     	        markers.push(marker);
@@ -197,7 +194,6 @@ package com.modestmaps.overlays
 	    public function setMarkerLocation(marker:DisplayObject, location:Location):void
 	    {
 	        locations[marker] = new Location(location.lat, location.lon);
-// TODO_AHMED: Reimplement the next line when map class is complete
 	        coordinates[marker] = map.getMapProvider().locationCoordinate(location);
 	        sortMarkers();
 	        dirty = true;
@@ -247,7 +243,6 @@ package com.modestmaps.overlays
 	    		return;
 	    	}
 	    	
-// TODO_AHMED: Reimplement when map class is complete
 	    	var center:Coordinate = map.grid.centerCoordinate;
 	    	
 	    	if (center.equalTo(drawCoord)) {
@@ -281,7 +276,6 @@ package com.modestmaps.overlays
 	      * provider.locationCoordinate(location) will return a different coordinate */
 	    public function resetCoordinates():void
 	    {
-// TODO_AHMED: Reimplement when map class is complete
 	    	var provider:IMapProvider = map.getMapProvider();
 	    	// I wish Array.map didn't require three parameters!
 	    	for each (var marker:DisplayObject in markers) {
@@ -334,7 +328,6 @@ package com.modestmaps.overlays
 		    	// this method previously used the location of the marker
 		    	// but map.locationPoint hands off to grid to grid.coordinatePoint
 		    	// in the end so we may as well cache the first step
-// TODO_AHMED: Reimplement this when the map class is complete
 		        var point:Point = map.grid.coordinatePoint(coordinates[marker], this);
 	            marker.x = snapToPixels ? Math.round(point.x) : point.x;
 	            marker.y = snapToPixels ? Math.round(point.y) : point.y;
@@ -372,7 +365,6 @@ package com.modestmaps.overlays
 	    protected function onMapPanned(event:MapEvent):void
 	    {
 	    	if (drawCoord) {
-// TODO_AHMED: Reimplement this when the map class is complete
 		        var p:Point = map.grid.coordinatePoint(drawCoord);
 		        this.x = p.x;
 	    	    this.y = p.y;
@@ -430,7 +422,6 @@ package com.modestmaps.overlays
 	    
 	    protected function onMapResized(event:MapEvent):void
 	    {
-// TODO_AHMED: Reimplement when map class is complete
 	        x = map.getWidth() / 2;
 	        y = map.getHeight() / 2;
 	        dirty = true;
@@ -440,7 +431,6 @@ package com.modestmaps.overlays
 	    
 	    protected function onMapProviderChanged(event:MapEvent):void
 	    {
-// TODO_AHMED: Reimplement when map class is comlete
 	    	var mapProvider:IMapProvider = map.getMapProvider();	
 	    	if (mapProvider.geometry() != previousGeometry)
 			{
