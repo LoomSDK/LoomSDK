@@ -33,12 +33,6 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/sqlite3
     ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios/FacebookSDK.framework/Headers
     ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios/Parse.framework/Headers
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/cocoa
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/include
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/kazmath/include
-    ${CMAKE_SOURCE_DIR}/loom/engine/CocosDenshion/include
     )
 
 # Allow Admob and/or Facebook to be built into the SDK?
@@ -79,38 +73,41 @@ endif()
 
 if (MSVC) 
 
-add_definitions(-DCURL_STATICLIB)
+    add_definitions(-DCURL_STATICLIB)
 
-set (LOOM_INCLUDE_FOLDERS
-    ${LOOM_INCLUDE_FOLDERS}
-
+    set (LOOM_INCLUDE_FOLDERS ${LOOM_INCLUDE_FOLDERS}
     link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/Include)    
     ${CMAKE_SOURCE_DIR}/loom/vendor/zlib/include
-    ${CMAKE_SOURCE_DIR}/loom/vendor/libcurl/include
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/win32 )
+    ${CMAKE_SOURCE_DIR}/loom/vendor/libcurl/include )
+
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+      set(VC_LIB_PATH_SUFFIX lib/x64)
+    else()
+      set(VC_LIB_PATH_SUFFIX lib/x86)
+    endif()
+
+    link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/SDL2-2.0.3/${VC_LIB_PATH_SUFFIX})
 
     link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/Lib/x86)
+
+    include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/SDL2-2.0.3/include)
 
     # move this?
     add_definitions(-DLOOM_DISABLE_JEMALLOC -D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
     
     # MSVC compatibility stuffs
-    include_directories( ${CMAKE_SOURCE_DIR}/loom/graphics/internal/bx/include/compat/msvc )
     include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-3.4.0/include/msvc_compat )
-
 
     set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_windows/lua51.lib )
 
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_HAS_EXCEPTIONS=0 -DWIN32 -D_WINDOWS -DWin32 -DFREEGLUT_STATIC -DFREEGLUT_LIB_PRAGMAS=0 -DGLEW_STATIC)
-
-    link_directories ( ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/third_party/win32/libraries )
 
     # Warnings as errors
     add_definitions (/wd4819)
 
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /WX /arch:SSE2")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /WX /arch:SSE2")    
-    #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMT")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:msvcrt.lib")
     
     STRING(REPLACE "/GX" "" CMAKE_CXX_FLAGS_INIT ${CMAKE_CXX_FLAGS_INIT})
     STRING(REPLACE "/GX" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})

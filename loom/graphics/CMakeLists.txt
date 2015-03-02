@@ -2,8 +2,7 @@
 # Debugging support
 # add_definitions(-DBGFX_CONFIG_DEBUG=1)
 
-set ( GRAPHICS_SRC gfxGraphics.cpp gfxQuadRenderer.cpp gfxShaders.cpp gfxTexture.cpp gfxScript.cpp)
-
+set ( GRAPHICS_SRC gfxGraphics.cpp gfxQuadRenderer.cpp gfxTexture.cpp gfxScript.cpp)
 
 if (NOT ANDROID)
     include_directories( ${LOOMBGFX_INCLUDE_DIR}/glext )
@@ -41,9 +40,7 @@ if(ANDROID)
 endif()    
 
 if (MSVC)
-        # add_definitions(-DBGFX_CONFIG_RENDERER_OPENGL=1)
-        set ( BGFX_SRC ${BGFX_SRC} ${LOOMBGFX_SOURCE_DIR}/renderer_d3d9.cpp )
-        set ( GRAPHICS_SRC ${GRAPHICS_SRC} gfxGraphicsWindows.cpp )
+        include_directories( ${LOOM_INCLUDE_FOLDERS} )
 endif()
 
 if (LINUX)

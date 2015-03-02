@@ -18,8 +18,9 @@
  * ===========================================================================
  */
 
-//#include "bgfx.h"
-//#include "SDL_opengl.h"
+#include <math.h>
+#define HAVE_M_PI
+
 #include <SDL.h>
 
 #include "loom/common/platform/platform.h"

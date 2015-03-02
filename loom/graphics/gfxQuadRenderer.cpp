@@ -18,6 +18,9 @@
  * ===========================================================================
  */
 
+#include <math.h>
+#define HAVE_M_PI
+
 #include <string.h>
 #include <stdint.h>
 
@@ -28,7 +31,6 @@
 
 #include "loom/common/core/assert.h"
 #include "loom/graphics/gfxGraphics.h"
-#include "loom/graphics/gfxShaders.h"
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/graphics/gfxMath.h"
 

@@ -9,18 +9,17 @@ project(${APPLICATION_NAME})
 include_directories( ${LOOM_INCLUDE_FOLDERS}  "/usr/local/include/SDL2" )
 
 set (APPLICATION_SRC
-    common/AppDelegate.cpp
+    common/core.cpp
     common/embeddedAssets.cpp
 )
 
 set (APPLICATION_HDR
-    common/AppDelegate.h
+    common/core.h
 )
 
 if (MSVC)
     set (APPLICATION_SRC
       ${APPLICATION_SRC}
-      windows/main.cpp
     )
 
 endif()
@@ -247,7 +246,6 @@ if (APPLE)
     
 elseif(MSVC)	
 
-
     target_link_libraries(${PROJECT_NAME} 
        LoomVendor
        LoomCommon
@@ -255,6 +253,7 @@ elseif(MSVC)
        LoomGraphics
        LoomCore
        "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "WSOCK32" "Ws2_32" 
+       "SDL2" "SDL2main"
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)

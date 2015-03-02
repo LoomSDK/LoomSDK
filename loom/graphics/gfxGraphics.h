@@ -28,10 +28,9 @@
 namespace GFX
 {
 
-    
     typedef struct GL_Context
     {
-#define SDL_PROC(ret, func, params) ret (*func) params;
+#define SDL_PROC(ret, func, params) ret (__stdcall *func) params;
 #include "gfxGLES2EntryPoints.h"
 #undef SDL_PROC
     } GL_Context;

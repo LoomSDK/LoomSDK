@@ -126,19 +126,7 @@ set (ENGINE_HDR
 )
 
 if(MSVC)
-set (ENGINE_SRC
-
-    ${ENGINE_SRC}
-    
-    cocos2dx/platform/win32/CCAccelerometer.cpp
-    cocos2dx/platform/win32/CCApplication.cpp
-    cocos2dx/platform/win32/CCCommon.cpp
-    cocos2dx/platform/win32/CCEGLView.cpp
-    cocos2dx/platform/win32/CCFileUtils.cpp
-    cocos2dx/platform/win32/CCImage.cpp
-    cocos2dx/platform/win32/CCStdC.cpp
-   
-)
+set (ENGINE_SRC ${ENGINE_SRC})
 endif()
 
 
