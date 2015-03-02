@@ -144,9 +144,17 @@ public:
 
     inline void skew(float xSkew, float ySkew)
     {
-        Matrix skewMatrix(1, tan(ySkew), tan(xSkew), 1);
+        float sinX = sin(xSkew);
+        float cosX = cos(xSkew);
+        float sinY = sin(ySkew);
+        float cosY = cos(ySkew);
 
-        concat(&skewMatrix);
+        setTo(a * cosY - b * sinX,
+              a * sinY + b * cosX,
+              c * cosY - d * sinX,
+              c * sinY + d * cosX,
+              tx * cosY - ty * sinX,
+              tx * sinY + ty * cosX);
     }
 
     inline void rotate(float angle)

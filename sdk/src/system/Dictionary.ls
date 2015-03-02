@@ -51,18 +51,17 @@ package system {
  *
  *  ```as3
  *  var d:Dictionary.<String, Number> = {
- *      'one' : 1,
- *      'two' : 2,
- *      'three' : 3,
+ *     ⇥'one' : 1,
+ *     ⇥'two' : 2,
+ *     ⇥'three' : 3,
  *  };
  *
  *  for (var key:String in d) {
- *      trace('d["' +key +'"] =', d[key]);
+ *     ⇥trace('d["' +key +'"] =', d[key]);
  *  }
  *
- *  for each(var val:Number in d)
- *  {
- *      trace(val);
+ *  for each(var val:Number in d) {
+ *     ⇥trace(val);
  *  }
  *  ```
  */

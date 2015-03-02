@@ -181,7 +181,7 @@ package org.robotlegs.base
 				injector.unmap(payloadClass, named);
 			}
 			
-			command.getType().getMethodInfo("execute").invoke(command, null);
+			command.getType().getMethodInfoByName("execute").invoke(command, null);
 		}
 		
 		/**
@@ -215,7 +215,7 @@ package org.robotlegs.base
 		{
 			if (!verifiedCommandClasses[commandClass])
 			{
-				if(commandClass.getType().getMethodInfo("execute") != null)
+				if(commandClass.getType().getMethodInfoByName("execute") != null)
 					verifiedCommandClasses[commandClass] = 1;
 
 				if (!verifiedCommandClasses[commandClass])

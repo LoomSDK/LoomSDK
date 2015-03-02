@@ -141,6 +141,11 @@ public:
 
         return false;
     }
+    
+    static int getCallStackInfo(lua_State *L)
+    {
+        return getCallStack(L, ASSERT_EVENT);
+    }
 
     // retrieve a Vector of callstack info, or nil in the case of an invalid stack
     static int getCallStack(lua_State *L, EventType eventType)
@@ -944,6 +949,7 @@ int registerSystemDebug(lua_State *L)
        .addStaticLuaFunction("assert", &Debug::loomAssert)
        .addStaticLuaFunction("setDebugHook", &Debug::setDebugHook)
        .addStaticLuaFunction("getLocals", &Debug::getLocals)
+       .addStaticLuaFunction("getCallStack", &Debug::getCallStackInfo)
 
        .addStaticLuaFunction("getBreakpoints", &Debug::getBreakpoints)
 

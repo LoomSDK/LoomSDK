@@ -12,7 +12,7 @@ If you hit enter, you can send commands to games or to the console itself. Note 
 
 Log output from the console looks like the following:
 
-~~~ text
+~~~console
 [loom.asset] Starting file watcher thread...
 ~~~
 
@@ -20,7 +20,7 @@ The part in square brackets ("[loom.asset]") is the log group with which this lo
 
 Log output from the game looks like this:
 
-~~~ text
+~~~console
 [asset.protocol] LOG: loading assets/PolyUI.png
 ~~~
 
@@ -45,8 +45,8 @@ Local commands start with a . (period) and are run locally, in the loom console 
 You can add more commands by registering them with the `ConsoleCommandManager`:
 
 ~~~as3
-	var commandManager = Application.group.getManager(ConsoleCommandManager);
+    var commandManager = Application.group.getManager(ConsoleCommandManager);
     commandManager.registerCommand("myCommand", function():void {
-    	trace("You ran my command!");
+        trace("You ran my command!");
     });
 ~~~

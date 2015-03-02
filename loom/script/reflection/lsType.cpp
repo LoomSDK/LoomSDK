@@ -472,7 +472,45 @@ FieldInfo *Type::getFieldInfo(int index)
 }
 
 
-MethodInfo *Type::getMethodInfo(const utString& name)
+
+
+MethodInfo *Type::getMethodInfo(int index)
+{
+    if (methodMembersValid == false)
+    {
+        MemberTypes types;
+        types.method = true;
+        findMembers(types, methodMembers, true);
+        methodMembersValid = true;
+    }
+
+    if ((index < 0) || (index >= (int)methodMembers.size()))
+    {
+        LSError("Bad method info index");
+    }
+
+    return (MethodInfo *)methodMembers[index];
+}
+
+int Type::getMethodInfoCount()
+{
+    // Cache the result.
+    if (methodInfoCount != -1)
+    {
+        return methodInfoCount;
+    }
+
+    MemberTypes types;
+    types.method = true;
+    utArray<MemberInfo *> members;
+
+    findMembers(types, members, true);
+
+    methodInfoCount = (int)members.size();
+    return methodInfoCount;
+}
+
+MethodInfo *Type::findMethodInfoByName(const utString& name)
 {
     MemberInfo *minfo = findMember(name.c_str());
 

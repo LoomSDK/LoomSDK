@@ -32,7 +32,6 @@ IF EXIST "%programfiles(x86)%\Microsoft Visual Studio 10.0\VC" (
   call "%programfiles(x86)%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
   GOTO YAY
 )
-
 echo Your version of Visual Studio is not currently supported.
 rem EXIT /B 1
 EXIT

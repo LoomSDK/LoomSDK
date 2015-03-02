@@ -317,6 +317,7 @@ static int registerLoomGraphics(lua_State *L)
 
        .beginClass<Texture> ("Texture2D")
        .addStaticMethod("initFromAsset", &Texture::initFromAssetManager)
+       .addStaticMethod("initFromBytes", &Texture::initFromBytes)
        .addStaticMethod("dispose", &Texture::dispose)
        .addStaticMethod("scaleImageOnDisk", &scaleImageOnDisk)
        .addStaticMethod("pollScaling", &pollScaling)

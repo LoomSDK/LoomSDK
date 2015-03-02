@@ -2,7 +2,7 @@ require 'rubygems'
 require 'rbconfig'
 
 puts "== Executing as '#{ENV['USER']}' =="
- 
+
 ###############################
 # BUILD CONFIGURATION VARIABLES
 ###############################
@@ -29,6 +29,10 @@ else
   $targetIOSSDK="6.0"
 end
 
+def flag_enabled?(flag)
+  flag.to_i == 1 || flag == 'true'
+end
+
 # If 1, then we link against LuaJIT. If 0, we use classic Lua VM.
 $doBuildJIT=1
 
@@ -40,10 +44,6 @@ $doBuildFacebook=1
 # Disabled by default, set environment variable 'LOOM_BUILD_DOCS'
 $buildDocs = ENV['LOOM_BUILD_DOCS'] == "1" || ENV['LOOM_BUILD_DOCS'] == "true"
 
-######################################
-# END OF BUILD CONFIGURATION VARIABLES
-######################################
-
 def version_outdated?(current, required)
   (Gem::Version.new(current.dup) < Gem::Version.new(required.dup))
 end
@@ -52,8 +52,11 @@ end
 $RUBY_REQUIRED_VERSION = '1.8.7'
 ruby_err = "LoomSDK requires ruby version #{$RUBY_REQUIRED_VERSION} or newer.\nPlease go to https://www.ruby-lang.org/en/downloads/ and install the latest version."
 abort(ruby_err) if version_outdated?(RUBY_VERSION, $RUBY_REQUIRED_VERSION)
-puts "LoomSDK Rakefile running on Ruby version #{RUBY_VERSION}"
 
+# Loom SDK version
+$LOOM_VERSION = File.new("VERSION").read.chomp
+
+# Host operating system check
 include RbConfig
 
 case CONFIG['host_os']
@@ -75,28 +78,19 @@ end
 def installed?(tool)
   cmd = "which #{tool}" unless ($LOOM_HOST_OS == 'windows')
   cmd = "where #{tool} > nul 2>&1" if ($LOOM_HOST_OS == 'windows')
-  system(cmd)
+  %x(#{cmd})
   return ($? == 0)
 end
 
 $CMAKE_REQUIRED_VERSION = ($LOOM_HOST_OS == "linux") ? '2.8.7' : '2.8.9'
 cmake_err = "LoomSDK requires CMake version #{$CMAKE_REQUIRED_VERSION} or above.\nPlease go to http://www.cmake.org/ and install the latest version."
 abort(cmake_err) if (!installed?('cmake') || version_outdated?(cmake_version, $CMAKE_REQUIRED_VERSION))
-puts "Running CMake version #{cmake_version}"
 
 # For matz's sake just include rubyzip directly.
 path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'libs'))
-puts "Adding #{path} to $LOAD_PATH to use local rubyzip."
 $LOAD_PATH << path
 require 'zip'
 require 'zip/file'
-
-# Report configuration variables and validate them.
-puts "*** Using JIT? = #{$doBuildJIT}"
-puts "*** Build Type = #{$buildTarget}"
-puts "*** AndroidSDK = #{$targetAndroidSDK} AndroidBuildType = #{$targetAndroidBuildType}"
-puts "*** iOS SDK Version = #{$targetIOSSDK}"
-puts "*** Build Loom Docs = #{$buildDocs}"
 
 # $buildDebugDefine will trigger the LOOM_DEBUG define if this is a Debug build target
 if $buildTarget == "Debug"
@@ -109,52 +103,30 @@ end
 $buildAdMobDefine = "-DLOOM_BUILD_ADMOB=#{$doBuildAdmob}"
 $buildFacebookDefine = "-DLOOM_BUILD_FACEBOOK=#{$doBuildFacebook}"
 
-
 # How many cores should we use to build?
 if $LOOM_HOST_OS == 'darwin'
   $numCores = Integer(`sysctl hw.ncpu | awk '{print $2}'`)
 elsif $LOOM_HOST_OS == 'windows'
   $numCores = ENV['NUMBER_OF_PROCESSORS']
-else 
+else
   $numCores = Integer(`cat /proc/cpuinfo | grep processor | wc -l`)
 end
-puts "*** Building with #{$numCores} cores."
 
 # Windows specific checks and settings
+WINDOWS_PROCARCH_BITS = '32'
+WINDOWS_ISX64 = '0'
+WINDOWS_ANDROID_PREBUILT_DIR = 'windows'
+proc_arch = ''
+
 if $LOOM_HOST_OS == 'windows'
   # This gets the true architecture of the machine, not the target architecture of the currently executing binary (that is what %PROCESSOR_ARCHITECTURE% returns)
-  # Note: Original check of this seemed way over complicated; just default to 32 and then search for 64 instead! 
   # => Valid values seem to only be "AMD64", "IA64", or "x86"
   proc_arch = `reg query "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\Environment" /v PROCESSOR_ARCHITECTURE`
-  if proc_arch.empty? || proc_arch.index("64").nil?
-    WINDOWS_PROCARCH_BITS = "32"
-  else
-    WINDOWS_PROCARCH_BITS = "64"
+  if proc_arch =~ /\.*64/
+    WINDOWS_PROCARCH_BITS = '64'
+    WINDOWS_ISX64 = '1'
+    WINDOWS_ANDROID_PREBUILT_DIR = 'windows-x86_64'
   end
-  
-  # Is this a 32 or a 64 bit OS?
-  if WINDOWS_PROCARCH_BITS == "64"
-    puts "*** Windows x64"
-    puts "*** Detected 64 Bit Windows PROCESSOR_ARCHITECTURE: #{proc_arch}"
-    WINDOWS_ISX64 = "1"
-    WINDOWS_ANDROID_PREBUILT_DIR = "windows-x86_64"
-  else
-    puts "*** Windows x86"
-    puts "*** Detected 32 Bit Windows PROCESSOR_ARCHITECTURE: #{proc_arch}"
-    WINDOWS_PROCARCH_BITS = "32"
-	WINDOWS_ISX64 = "0"
-    WINDOWS_ANDROID_PREBUILT_DIR = "windows"
-  end
-  #Dir.chdir("build") do
-  #  sh "call windowsBuildHelper.bat"
-  #end
-else
-  # Some sensible defaults...
-  WINDOWS_PROCARCH_BITS = "32"
-  WINDOWS_ISX64 = "0"
-  WINDOWS_ANDROID_PREBUILT_DIR = "windows"
-  puts "*** Non-Windows Platform"
-  puts "*** Defaulting to 32 Bit Windows PROCESSOR_ARCHITECTURE"
 end
 
 # Determine the APK name.
@@ -167,24 +139,37 @@ else
 end
 
 $OUTPUT_DIRECTORY = "artifacts"
-$LOOM_VERSION = File.new("VERSION").read
 
 require 'rake/clean'
 require 'rake/packagetask'
 require 'pathname'
 require 'shellwords'
 
-if $LOOM_HOST_OS == 'windows' 
+if $LOOM_HOST_OS == 'windows'
     $LSC_BINARY = "artifacts\\lsc.exe"
 else
     $LSC_BINARY = "artifacts/lsc"
 end
 
-if $LOOM_HOST_OS == 'windows' 
+if $LOOM_HOST_OS == 'windows'
     $SHADERC_BINARY = "artifacts\\shaderc.exe"
 else
     $SHADERC_BINARY = "artifacts/shaderc"
 end
+
+# Report build configuration values
+puts ''
+puts "LoomSDK (#{$LOOM_VERSION}) Rakefile running on Ruby v#{RUBY_VERSION}"
+puts "  CMake version: #{cmake_version}"
+puts "  Build type: #{$buildTarget}"
+puts "  Using JIT? #{flag_enabled?($doBuildJIT)} | Building AdMob? #{flag_enabled?($doBuildAdmob)} | Building FacebookSDK? #{flag_enabled?($doBuildFacebook)}"
+puts "  Detected Windows #{WINDOWS_PROCARCH_BITS} Bit PROCESSOR_ARCHITECTURE: '#{proc_arch}'" if $LOOM_HOST_OS == 'windows'
+puts "  Detected Non-Windows Platform" unless $LOOM_HOST_OS == 'windows'
+puts "  Building with #{$numCores} cores."
+puts "  AndroidSDK: #{$targetAndroidSDK} | AndroidBuildType: #{$targetAndroidBuildType} | Target APK: #{$targetAPKName}"
+puts "  iOS SDK version: #{$targetIOSSDK}"
+puts "  Building Loom docs? #{$buildDocs}"
+puts ''
 
 #############
 # BUILD TASKS
@@ -193,14 +178,21 @@ end
 # Don't use clean defaults, they will nuke things we don't want!
 CLEAN.replace(["cmake_android", "cmake_osx", "cmake_ios", "cmake_msvc", "cmake_ubuntu", "build/lua_*/**", "application/android/bin", "application/ouya/bin"])
 CLEAN.include ["build/**/lib/**", "artifacts/**"]
-CLOBBER.include ["**/*.loom",$OUTPUT_DIRECTORY]
-CLOBBER.include ["**/*.loomlib",$OUTPUT_DIRECTORY]
+CLOBBER.include ["**/*.loom", $OUTPUT_DIRECTORY]
+CLOBBER.include ["**/*.loomlib", $OUTPUT_DIRECTORY]
+
+Rake::TaskManager.record_task_metadata = true # this must be outside default task and before all tasks
+task :list_targets do
+  Rake.application.options.show_tasks = :tasks
+  Rake.application.options.show_task_pattern = //
+  Rake.application.display_tasks_and_comments()
+end
 
 task :default => :list_targets
 
 task :clobber, :force do |t, args|
   args.with_defaults( :force => false )
-  
+
   puts args[:force]
   # forcing
   if args[:force] == "force"
@@ -224,7 +216,7 @@ namespace :generate do
 
   desc "Generate XCode projects for OS X"
   task :xcode_osx do
-    FileUtils.mkdir_p("cmake_osx")    
+    FileUtils.mkdir_p("cmake_osx")
     Dir.chdir("cmake_osx") do
       sh "cmake ../ -G Xcode -DLOOM_BUILD_JIT=#{$doBuildJIT} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
     end
@@ -256,7 +248,7 @@ namespace :generate do
 
   desc "Generate Makefiles for Ubuntu"
   task :makefiles_ubuntu do
-    FileUtils.mkdir_p("cmake_ubuntu")    
+    FileUtils.mkdir_p("cmake_ubuntu")
     Dir.chdir("cmake_ubuntu") do
       sh "cmake ../ -G \"Unix Makefiles\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
     end
@@ -273,23 +265,7 @@ namespace :generate do
       FileUtils.mkdir_p "artifacts/docs"
       FileUtils.cp_r "docs/output/.", "artifacts/docs/"
     else
-      puts "Skipping docs due to env.BUILD_LOOM_DOCS being false."
-    end
-  end
-
-  desc "Tests API docs for a class"
-  task :test_docs, [:class] do |t, args|
-
-    puts "===== Running Test Docs #{args[:class]} ====="
-
-    puts "===== Compiling Core Scripts ====="
-    Dir.chdir("sdk") do
-      sh "../artifacts/lsc Main.build"
-    end
-
-    puts "===== Generating Docs ====="
-    Dir.chdir("docs") do
-      ruby "main.rb test #{args[:class]}"
+      puts "Skipping docs since LOOM_BUILD_DOCS is not set."
     end
   end
 
@@ -315,13 +291,14 @@ namespace :docs do
 
     puts "===== Recreating the docs ====="
     Dir.chdir("docs") do
+      ENV['LOOM_VERSION'] = $LOOM_VERSION unless ENV['LOOM_VERSION']
       load "./main.rb"
     end
     FileUtils.mkdir_p "artifacts/docs"
     FileUtils.cp_r "docs/output/.", "artifacts/docs/"
   end
 
-  desc "Opens the docs in a web browser"
+  desc "Opens the current docs in a web browser"
   task :open => $DOCS_INDEX do
     case $LOOM_HOST_OS
     when 'windows'
@@ -404,19 +381,19 @@ namespace :utility do
       puts "===== Running #{args[:name]} ====="
       expandedArtifactsPath = File.expand_path($OUTPUT_DIRECTORY)
       if $LOOM_HOST_OS == 'darwin'
-        Rake::Task["build:osx"].invoke        
-        Rake::Task["utility:compileScripts"].invoke        
+        Rake::Task["build:osx"].invoke
+        Rake::Task["utility:compileScripts"].invoke
         FileUtils.cp_r("./sdk/libs", "./docs/examples/#{args[:name]}")
-        FileUtils.mkdir_p("./docs/examples/#{args[:name]}/bin") 
+        FileUtils.mkdir_p("./docs/examples/#{args[:name]}/bin")
         Dir.chdir("docs/examples/#{args[:name]}") do
           sh "#{expandedArtifactsPath}/lsc"
           sh "#{expandedArtifactsPath}/osx/LoomDemo.app/Contents/MacOS/LoomDemo"
         end
       else
-        Rake::Task["build:windows"].invoke        
-        Rake::Task["utility:compileScripts"].invoke        
+        Rake::Task["build:windows"].invoke
+        Rake::Task["utility:compileScripts"].invoke
         FileUtils.cp_r("./sdk/libs", "./docs/examples/#{args[:name]}")
-        FileUtils.mkdir_p("./docs/examples/#{args[:name]}/bin") 
+        FileUtils.mkdir_p("./docs/examples/#{args[:name]}/bin")
         Dir.chdir("docs/examples/#{args[:name]}") do
           sh "#{expandedArtifactsPath}/lsc.exe"
           sh "#{expandedArtifactsPath}/windows/LoomDemo.exe"
@@ -430,7 +407,7 @@ namespace :utility do
     puts "===== Launching Application ====="
 
   if $LOOM_HOST_OS == 'darwin'
-  
+
     appPath = Dir.glob("artifacts/osx/*.app")[0]
     appPrefix = get_app_prefix(appPath)
 
@@ -439,15 +416,15 @@ namespace :utility do
       sh "./Contents/MacOS/#{appPrefix}"
     end
   else
-    
+
     #Run it under Windows
     Dir.chdir("artifacts/windows") do
       sh "LoomDemo.exe"
     end
   end
-  
+
   end
-  
+
   desc "Run app under GDB on OSX"
   task :debug => ['build:osx'] do
     puts "===== Launching Application ====="
@@ -464,7 +441,7 @@ namespace :utility do
 end
 
 namespace :build do
-  
+
   desc "Build Everything"
   task :all do
     puts "building all"
@@ -494,7 +471,7 @@ namespace :build do
     end
     FileUtils.cp("tools/fruitstrap/fruitstrap", "artifacts")
   end
-  
+
   desc "Builds OS X"
   task :osx => ['build/luajit_x86/lib/libluajit-5.1.a'] do
 
@@ -502,15 +479,15 @@ namespace :build do
     if $LOOM_HOST_OS != 'windows'
 
       puts "== Building OS X =="
-      FileUtils.mkdir_p("cmake_osx")    
+      FileUtils.mkdir_p("cmake_osx")
       Dir.chdir("cmake_osx") do
         sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
         sh "xcodebuild -configuration #{$buildTarget}"
       end
-      
+
       # copy asset agent
       FileUtils.cp("cmake_osx/tools/assetAgent/#{$buildTarget}/libassetAgent.so", "artifacts")
-      
+
       # copy libs
       FileUtils.cp_r("sdk/libs", "artifacts/")
 
@@ -518,8 +495,15 @@ namespace :build do
       Dir.chdir("sdk") do
         sh "../artifacts/lsc LDB.build"
       end
+      
+      # build testexec
+      Dir.chdir("sdk") do
+        sh "../artifacts/lsc TestExec.build"
+      end
 
       FileUtils.cp_r("sdk/bin/LDB.loom", "artifacts")
+      FileUtils.cp_r("sdk/bin/TestExec.loom", "artifacts")
+      FileUtils.cp_r("sdk/src/testexec/loom.config", "artifacts/TestExec.config")
 
       #copy assets
       FileUtils.mkdir_p("artifacts/assets")
@@ -561,24 +545,28 @@ namespace :build do
         args.with_defaults(:sign_as => "iPhone Developer")
       end
       puts "*** Signing Identity = #{args.sign_as}"
-      
+
       FileUtils.mkdir_p("cmake_ios")
 
       # TODO: Find a way to resolve resources in xcode for ios.
       Dir.chdir("cmake_ios") do
         sh "cmake ../ -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -G Xcode"
-        sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\""
+        sdkroot="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS#{$targetIOSSDK}.sdk"
+        sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\" CODE_SIGN_RESOURCE_RULES_PATH=#{sdkroot}/ResourceRules.plist"
       end
 
-      # TODO When we clean this up... we should have get_app_prefix return and object with, appPath, 
+      # TODO When we clean this up... we should have get_app_prefix return and object with, appPath,
       # appNameMatch, appName and appPrefix
-      
+
       # Find the .app in the build folder.
       appPath = Dir.glob("cmake_ios/application/#{$buildTarget}-iphoneos/*.app")[0]
       puts "Application path found: #{appPath}"
       appNameMatch = /\/(\w*\.app)$/.match(appPath)
       appName = appNameMatch[0]
-      puts "Application name found: #{appName}"  
+      puts "Application name found: #{appName}"
+
+      # Use fruitstrap's plist.
+      sh "cp tools/fruitstrap/ResourceRules.plist #{appPath}/ResourceRules.plist"
 
       # Make it ito an IPA!
       full_output_path = Pathname.new("#{$OUTPUT_DIRECTORY}/ios").realpath
@@ -590,7 +578,7 @@ namespace :build do
       sh package_command
 
       # if Debug build, copy over the dSYM too
-      if $buildTarget == "Debug" 
+      if $buildTarget == "Debug"
         dsymPath = Dir.glob("cmake_ios/application/#{$buildTarget}-iphoneos/*.dSYM")[0]
         puts "dSYM path found: #{dsymPath}"
         FileUtils.cp_r(dsymPath, full_output_path)
@@ -599,7 +587,7 @@ namespace :build do
   end
 
   desc "Builds Windows"
-  task :windows => ['build\luajit_windows\lua51.lib'] do  
+  task :windows => ['build\luajit_windows\lua51.lib'] do
     puts "== Building Windows =="
 
     FileUtils.mkdir_p("cmake_msvc")
@@ -607,23 +595,30 @@ namespace :build do
       sh "../build/win-cmake.bat #{$doBuildJIT} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\""
       sh "msbuild LoomEngine.sln /p:Configuration=#{$buildTarget}"
     end
-    
+
     Rake::Task["utility:compileScripts"].invoke
 
     # build ldb
     Dir.chdir("sdk") do
       sh "../artifacts/lsc LDB.build"
     end
+    
+    # build testexec
+    Dir.chdir("sdk") do
+      sh "../artifacts/lsc TestExec.build"
+    end
 
     # copy libs
     FileUtils.cp_r("sdk/libs", "artifacts/")
     FileUtils.cp_r("sdk/bin/LDB.loom", "artifacts")
+    FileUtils.cp_r("sdk/bin/TestExec.loom", "artifacts")
+    FileUtils.cp_r("sdk/src/testexec/loom.config", "artifacts/TestExec.config")
 
     puts "Copying to #{$OUTPUT_DIRECTORY}/windows"
-    
+
     FileUtils.cp_r('./sdk/bin', './artifacts/windows')
     FileUtils.cp_r('./sdk/assets', './artifacts/windows')
-    
+
     #copy assets
     FileUtils.mkdir_p("artifacts/assets")
   end
@@ -650,16 +645,16 @@ namespace :build do
       Dir.chdir("loom/engine/cocos2dx/platform/android/java") do
         sh "android update project --name Cocos2DLib --subprojects --target #{api_id} --path ."
       end
-      
+
       Dir.chdir("application/android") do
         sh "android update project --name LoomDemo --subprojects --target #{api_id} --path ."
       end
-      
+
       FileUtils.mkdir_p "application/android/assets"
       FileUtils.mkdir_p "application/android/assets/assets"
       FileUtils.mkdir_p "application/android/assets/bin"
       FileUtils.mkdir_p "application/android/assets/libs"
-      
+
       sh "xcopy /Y /I sdk\\bin\\*.loom application\\android\\assets\\bin"
       sh "xcopy /Y /I sdk\\assets\\*.* application\\android\\assets\\assets"
 
@@ -667,11 +662,11 @@ namespace :build do
       Dir.chdir("application/android") do
         sh "ant.bat #{$targetAndroidBuildType}"
       end
-      
+
       # Copy APKs to artifacts.
       FileUtils.mkdir_p "artifacts/android"
       sh "echo f | xcopy /F /Y application\\android\\bin\\#{$targetAPKName} #{$OUTPUT_DIRECTORY}\\android\\LoomDemo.apk"
-      
+
       FileUtils.cp_r("tools/apktool/apktool.jar", "artifacts/")
     else
       # OSX / LINUX
@@ -680,7 +675,7 @@ namespace :build do
         sh "cmake -DCMAKE_TOOLCHAIN_FILE=../build/cmake/loom.android.toolchain.cmake #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} .."
         sh "make -j#{$numCores}"
       end
-      
+
       api_id = get_android_api_id($targetAndroidSDK)
 
       Dir.chdir("loom/vendor/facebook/android") do
@@ -692,25 +687,25 @@ namespace :build do
         puts "*** Building against AndroidSDK " + $targetAndroidSDK
         sh "android update project --name Cocos2DLib --subprojects --target #{api_id} --path ."
       end
-      
+
       Dir.chdir("application/android") do
         puts "*** Building against AndroidSDK " + $targetAndroidSDK
         sh "android update project --name LoomDemo --subprojects --target #{api_id} --path ."
       end
-      
+
       FileUtils.mkdir_p "application/android/assets"
       FileUtils.mkdir_p "application/android/assets/assets"
       FileUtils.mkdir_p "application/android/assets/bin"
       FileUtils.mkdir_p "application/android/assets/libs"
-      
+
       sh "cp sdk/bin/*.loom application/android/assets/bin"
       sh "cp sdk/assets/*.* application/android/assets/assets"
-      
+
       # TODO: LOOM-1070 can we build for release or does this have signing issues?
       Dir.chdir("application/android") do
         sh "ant #{$targetAndroidBuildType}"
       end
-      
+
       # Copy APKs to artifacts.
       FileUtils.mkdir_p "artifacts/android"
       sh "cp application/android/bin/#{$targetAPKName} #{$OUTPUT_DIRECTORY}/android/LoomDemo.apk"
@@ -727,7 +722,7 @@ namespace :build do
       puts "== Building OUYA =="
 
       ouyaAndroidSDK = "android-16"
-          
+
       Dir.chdir("application/ouya") do
         puts "*** Building against AndroidSDK " + ouyaAndroidSDK
         api_id = get_android_api_id(ouyaAndroidSDK)
@@ -742,10 +737,10 @@ namespace :build do
       FileUtils.mkdir_p "application/ouya/libs/armeabi-v7a"
 
       sh "cp application/android/libs/armeabi-v7a/* application/ouya/libs/armeabi-v7a"
-      
+
       sh "cp sdk/bin/*.loom application/ouya/assets/bin"
       sh "cp sdk/assets/*.* application/ouya/assets/assets"
-      
+
       # TODO: LOOM-1070 can we build for release or does this have signing issues?
       Dir.chdir("application/ouya") do
         sh "ant #{$targetAndroidBuildType}"
@@ -762,36 +757,43 @@ namespace :build do
   desc "Builds Ubuntu Linux"
   task :ubuntu => ['build/luajit_x86/lib/libluajit-5.1.a'] do
     puts "== Building Ubuntu =="
-    FileUtils.mkdir_p("cmake_ubuntu")    
+    FileUtils.mkdir_p("cmake_ubuntu")
     Dir.chdir("cmake_ubuntu") do
       sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -G \"Unix Makefiles\" -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
       sh "make -j#{$numCores}"
     end
-    
+
     Rake::Task["utility:compileScripts"].invoke
 
     # build ldb
     Dir.chdir("sdk") do
       sh "../artifacts/lsc LDB.build"
     end
+    
+    # build testexec
+    Dir.chdir("sdk") do
+      sh "../artifacts/lsc TestExec.build"
+    end
 
     # copy libs
     FileUtils.cp_r("sdk/libs", "artifacts/")
     FileUtils.cp_r("sdk/bin/LDB.loom", "artifacts")
+    FileUtils.cp_r("sdk/bin/TestExec.loom", "artifacts")
+    FileUtils.cp_r("sdk/src/testexec/loom.config", "artifacts/TestExec.config")
 
     puts "Copying to #{$OUTPUT_DIRECTORY}/ubuntu"
-    
+
     FileUtils.cp_r('./sdk/bin', './artifacts/ubuntu')
     FileUtils.cp_r('./sdk/assets', './artifacts/ubuntu')
 
     # copy asset agent
     FileUtils.cp("cmake_ubuntu/tools/assetAgent/libassetAgent.so", "artifacts/libassetAgent.so")
-    
+
     #copy assets
     FileUtils.mkdir_p("artifacts/assets")
 
   end
-  
+
   desc "Populate git version information"
   task :get_git_details do
     git_rev_long = `git rev-parse HEAD`
@@ -803,13 +805,8 @@ namespace :build do
 
 end
 
-task :list_targets do
-  puts "Listing all rake targets:"
-  system("rake -T")
-end
-
-file 'build/luajit_x86/lib/libluajit-5.1.a' do 
-    rootFolder = Dir.pwd 
+file 'build/luajit_x86/lib/libluajit-5.1.a' do
+    rootFolder = Dir.pwd
     lua_jit_dir = File.join(rootFolder, "build", "luajit_x86")
     puts "building LuaJIT x86"
     Dir.chdir("loom/vendor/luajit") do
@@ -820,23 +817,23 @@ file 'build/luajit_x86/lib/libluajit-5.1.a' do
       else
         sh "make CC=\"gcc -m32\" PREFIX\"=#{lua_jit_dir.shellescape}\" -j#{$numCores}"
       end
-      
+
       sh "make CC=\"gcc -m32\" install PREFIX=\"#{lua_jit_dir.shellescape}\""
     end
-end  
+end
 
-file 'build/luajit_android/lib/libluajit-5.1.a' do 
+file 'build/luajit_android/lib/libluajit-5.1.a' do
 
     if $LOOM_HOST_OS == "windows"
 
       puts "installing LuaJIT Android on Windows"
       FileUtils.cp_r("loom/vendor/luajit_windows_android/luajit_android", "build")
-      
+
       #TODO: LOOM-1634 https://theengineco.atlassian.net/browse/LOOM-1634
       #LuaJIT android build on Windows is currently extremely problematic.  It does build with dwimperl gcc in path, however building from
       #vanilla NDK does not work due to a combination of NDK make/gcc and magic flags.  In the meantime, we use this prebuilt LuaJIT android
       #build which the Rakefile copies into the proper location instead of building Android luaJIT on Windows
-      
+
       #puts "building LuaJIT Android on Windows"
       #NDK = "#{ENV['ANDROID_NDK']}"
       #if (!NDK or NDK == "")
@@ -846,7 +843,7 @@ file 'build/luajit_android/lib/libluajit-5.1.a' do
       #luajit_android_dir = File.join(rootFolder, "build", "luajit_android")
       #Dir.chdir("loom/vendor/luajit") do
       #    sh "#{NDK}\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make -f Makefile.win32 clean"
-      #    ENV['NDKABI']= "9" 
+      #    ENV['NDKABI']= "9"
       #    ENV['NDKVER']= NDK + "\\toolchains\\arm-linux-androideabi-4.6"
       #    ENV['NDKP'] = ENV['NDKVER'] + "\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\arm-linux-androideabi-"
       #    ENV['NDKF'] = "--sysroot " + NDK + "\\platforms\\android-" + ENV['NDKABI'] + "\\arch-arm"
@@ -863,32 +860,32 @@ file 'build/luajit_android/lib/libluajit-5.1.a' do
       luajit_android_dir = File.join(rootFolder, "build", "luajit_android")
       Dir.chdir("loom/vendor/luajit") do
           sh "make clean"
-          ENV['NDKABI']= "9" 
+          ENV['NDKABI']= "9"
           ENV['NDKVER']= NDK + "/toolchains/arm-linux-androideabi-4.6"
           ENV['NDKP'] = ENV['NDKVER'] + "/prebuilt/darwin-x86/bin/arm-linux-androideabi-"
           ENV['NDKF'] = "--sysroot " + NDK + "/platforms/android-" + ENV['NDKABI'] + "/arch-arm"
           sh "make install -j#{$numCores} HOST_CC=\"gcc -m32\" CROSS=" + ENV['NDKP'] + " TARGET_FLAGS=\"" + ENV['NDKF']+"\" TARGET=arm TARGET_SYS=Linux PREFIX=\"#{luajit_android_dir.shellescape}\""
       end
-    end 
+    end
 end
 
-file 'build/luajit_ios/lib/libluajit-5.1.a' do 
+file 'build/luajit_ios/lib/libluajit-5.1.a' do
 
   if $LOOM_HOST_OS != "windows"
     puts "building LuaJIT iOS"
 
     check_ios_sdk_version! $targetIOSSDK
-    
+
     ISDK="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer"
     ISDKVER="iPhoneOS#{$targetIOSSDK}.sdk"
     ISDKP=ISDK + "/usr/bin/"
     ISDKF="-arch armv7 -isysroot " + ISDK + "/SDKs/" + ISDKVER
-    
+
     ENV['ISDK'] = ISDK
     ENV['ISDKVER'] = ISDKVER
     ENV['ISDKP'] = ISDKP
     ENV['ISDKF'] = ISDKF
-    
+
     rootFolder = Dir.pwd
     luajit_ios_dir = File.join(rootFolder, "build", "luajit_ios")
     Dir.chdir("loom/vendor/luajit") do
@@ -897,15 +894,15 @@ file 'build/luajit_ios/lib/libluajit-5.1.a' do
               sh "make install -j#{$numCores} HOST_CC=\"gcc -m32 -arch i386\" TARGET_FLAGS=\"" + ISDKF + "\" TARGET=arm TARGET_SYS=iOS PREFIX=\"#{luajit_ios_dir.shellescape}\""
         else
               sh "make install -j#{$numCores} HOST_CC=\"gcc -m32 -arch i386\" CROSS=" + ISDKP + " TARGET_FLAGS=\"" + ISDKF + "\" TARGET=arm TARGET_SYS=iOS PREFIX=\"#{luajit_ios_dir.shellescape}\""
-        end            
+        end
     end
   end
 end
 
-file 'build\luajit_windows\lua51.lib' do 
+file 'build\luajit_windows\lua51.lib' do
 
     puts "building LuaJIT Win32"
-    
+
     Dir.chdir("loom/vendor/luajit/src") do
         sh "msvcbuild.bat release static"
     end
@@ -996,7 +993,7 @@ namespace :package do
 
     Zip::File.open("nativesdk.zip", 'w') do |zipfile|
       Dir["**/**"].each do |file|
-        
+
         do_omit = false
         omit_files.each do |omitted|
           if file.include? omitted
@@ -1047,13 +1044,13 @@ namespace :package do
       # ============================================================= iOS
       # put together a folder to zip up
       FileUtils.mkdir_p "pkg/sdk/bin/ios"
-      
+
       # add the ios app bundle
       FileUtils.cp_r("artifacts/ios/LoomDemo.app", "pkg/sdk/bin/ios")
       if $buildTarget == "Debug"
         FileUtils.cp_r("artifacts/ios/LoomDemo.app.dSYM", "pkg/sdk/bin/ios")
       end
-      
+
       # Strip out the bundled assets and binaries
       FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/assets"
       FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/bin"
@@ -1062,7 +1059,7 @@ namespace :package do
       # ============================================================= Ouya
       # decompile the ouya apk
       decompile_apk("application/ouya/bin/#{$targetAPKName}","pkg/sdk/bin/ouya")
-      
+
       # Strip out the bundled assets and binaries
       FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/assets"
       FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/bin"
@@ -1100,7 +1097,7 @@ namespace :package do
     end
     FileUtils.rm_rf "pkg/sdk"
     puts "Packaged to pkg/loomsdk.zip"
-    
+
   end
 
   desc "Packages the free version of the SDK"
@@ -1121,7 +1118,7 @@ namespace :package do
 
     FileUtils.rm_rf "pkg/sdk"
     puts "Packaged to pkg/loomsdk.zip"
-    
+
   end
 
 end
@@ -1184,7 +1181,7 @@ def prepare_free_sdk
 
   #copy the docs in
   FileUtils.cp_r("artifacts/docs","pkg/sdk") if File.exists? "artifacts/docs"
-  
+
   #copy the minimum cli version
   FileUtils.cp("MIN_CLI_VERSION", "pkg/sdk")
 
@@ -1228,6 +1225,9 @@ def prepare_free_sdk
 
   # copy ldb
   FileUtils.cp_r("artifacts/LDB.loom", "pkg/sdk/bin")
+  FileUtils.mkdir_p "pkg/sdk/bin/TestExec/bin/"
+  FileUtils.cp_r("artifacts/TestExec.loom", "pkg/sdk/bin/TestExec/bin/Main.loom")
+  FileUtils.cp_r("artifacts/TestExec.config", "pkg/sdk/bin/TestExec/loom.config")
 
   # copy the assets we need from cocos...
   FileUtils.cp_r("artifacts/assets", "pkg/sdk")

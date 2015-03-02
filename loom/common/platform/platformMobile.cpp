@@ -68,7 +68,9 @@ const char *platform_getSelectedDolbyAudioProfile()
 ///Null Mobile class for all non-Mobile platforms
 
 ///initializes the data for the Mobile class for this platform
-void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB, OpenedViaCustomURLCallback customURLCB)
+void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB, 
+                                OpenedViaCustomURLCallback customURLCB,
+                                OpenedViaRemoteNotificationCallback remoteNotificationCB)
 {
 }
 
@@ -94,8 +96,21 @@ bool platform_wasOpenedViaCustomURL()
     return false;
 }
 
+///returns if the application was launched via a Remote Notification
+bool platform_wasOpenedViaRemoteNotification()
+{
+    return false;
+}
+
 ///gets the the specified query key data from any custom scheme URL path that the application was launched with, or "" if not found
 const char *platform_getOpenURLQueryData(const char *queryKey)
+{
+    return "";
+}
+
+///gets the the data associated with the specified key from any potential custom payload attached to a 
+///Remote Notification that the application was launched with, or "" if not found
+const char *platform_getRemoteNotificationData(const char *key)
 {
     return "";
 }

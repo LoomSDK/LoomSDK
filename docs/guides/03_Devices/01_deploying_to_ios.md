@@ -23,8 +23,8 @@ Before you can deploy your app to iOS, you will need the following:
 0. Install Xcode from the [Mac App Store][xcode-app]
 0. You can verify that the command line tools are installed by looking for their package receipts:
 
-```bash
-pkgutil --pkg-info=com.apple.pkg.* --regexp | grep CL
+```console
+$ pkgutil --pkg-info=com.apple.pkg.* --regexp | grep CL
 ```
 
 * You should see one of the following:
@@ -89,13 +89,13 @@ Register at https://developer.apple.com/register/
 
 Once you have your certificate downloaded and installed, open your command prompt, navigate to your project directory, and run the following command to point to your certificate, making sure to replace `<signing-identity>` with your own identity, e.g. `iPhone Developer: John Doe (XXXX)`:
 
-```bash
+```console
 $ loom config ios_signing_identity "<signing-identity>"
 ```
 
 Next, point your project at your Mobile Provision with the following command, making sure to substitute the path to your app's .mobileProvision file for `<path-to-provision>`.
 
-```bash
+```console
 $ loom ios provision "<path-to-provision>"
 ```
 
@@ -103,7 +103,7 @@ $ loom ios provision "<path-to-provision>"
 
 To run your app on iOS, type the following at your command prompt:
 
-```bash
+```console
 $ loom run --ios
 ```
 
@@ -121,15 +121,15 @@ If you run into issues that prevent Loom from deploying to your device, here are
 
 **Are you using the right codesign?** If you run into the error, `object file format unrecognized, invalid, or unsuitable`, setting the `CODESIGN_ALLOCATE` environment variable like so may fix your issue (see http://loomsdk.com/forums/troubleshooting-and-issues/topics/ios-deploy-troubleshooting-megathread-did-you-reinstall-your-certs):
 
-```bash
-export CODESIGN_ALLOCATE="/Applications/Xcode.app/Contents/Developer/usr/bin/codesign_allocate"
+```console
+$ export CODESIGN_ALLOCATE="/Applications/Xcode.app/Contents/Developer/usr/bin/codesign_allocate"
 ```
 
 **Have you rebooted the device and desktop?** Simple, quick, easy, and fixes stuff way more often than we'd want to admit. Sometimes the iOS/Xcode deploy pipeline just gets clogged and a quick reboot fixes it.
 
 **"ambiguous" developer error** This happens if you have more than one developer certificate. You can specify the one you want Loom to use by the following command:
 
-```bash
+```console
 $ loom config --global ios_signing_identity "iPhone Developer: John Doe (XXXX)"
 ```
 
