@@ -95,6 +95,11 @@ package loom.graphics
          * or HANDLE_INVALID to see if it has been properly initialized yet.
          */
         public native function get handleID():int;
+
+        /**
+         * Gets the path that the backing asset was loaded from.
+         */
+        public native function get path():String;
     }
 
     /**

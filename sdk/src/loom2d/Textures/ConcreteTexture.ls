@@ -71,8 +71,11 @@ package loom2d.textures
         {
             //if (mBase) mBase.dispose();
             //restoreOnLostContext(null); // removes event listener & data reference 
-            textureInfo.update -= onUpdate;
-            textureInfo.asyncLoadComplete = null;
+            if(textureInfo)
+            {
+                textureInfo.update -= onUpdate;
+                textureInfo.asyncLoadComplete = null;
+            }
             super.dispose();
         }
         

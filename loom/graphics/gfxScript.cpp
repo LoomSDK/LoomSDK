@@ -342,6 +342,7 @@ static int registerLoomGraphics(lua_State *L)
        .addVarAccessor("update", &TextureInfo::getUpdateDelegate)
        .addVarAccessor("asyncLoadComplete", &TextureInfo::getAsyncLoadCompleteDelegate)
        .addProperty("handleID", &TextureInfo::getHandleID)
+       .addProperty("path", &TextureInfo::getTexturePath)
        .endClass()
 
        .endPackage();

@@ -47,6 +47,7 @@ typedef int   TextureID;
 #define TEXTUREINFO_WRAP_MIRROR     1
 #define TEXTUREINFO_WRAP_CLAMP      2
 
+
 struct TextureInfo
 {
     TextureID                id;
@@ -60,6 +61,7 @@ struct TextureInfo
     int                      wrapV;
 
     bool                     reload;
+    bool                     asyncDispose;
 
     bgfx::TextureHandle      handle;
 
@@ -78,22 +80,30 @@ struct TextureInfo
         return &asyncLoadCompleteDelegate;
     }
 
-    int getHandleID() const
-    {
-        return (int)handle.idx;
-    }
+    int getHandleID() const { return (int)handle.idx; }
+    const char* getTexturePath() const { return texturePath.c_str(); }
 
     void                     reset()
     {
-        width       = height = 0;
-        smoothing   = TEXTUREINFO_SMOOTHING_NONE;
-        wrapU       = TEXTUREINFO_WRAP_CLAMP;
-        wrapV       = TEXTUREINFO_WRAP_CLAMP;
-        reload      = false;
-        handle.idx  = bgfx::invalidHandle;
-        texturePath = "";
+        width        = height = 0;
+        smoothing    = TEXTUREINFO_SMOOTHING_NONE;
+        wrapU        = TEXTUREINFO_WRAP_CLAMP;
+        wrapV        = TEXTUREINFO_WRAP_CLAMP;
+        reload       = false;
+        asyncDispose = false;
+        handle.idx   = bgfx::invalidHandle;
+        texturePath  = "";
     }
 };
+
+
+struct AsyncLoadNote
+{
+    int             id;
+    utString        path;
+    TextureInfo     *tinfo;
+};
+
 
 class Texture
 {
@@ -105,6 +115,9 @@ private:
     static utHashTable<utFastStringHash, TextureID> sTexturePathLookup;
     static bool sTextureAssetNofificationsEnabled;
     static MutexHandle sTexInfoLock;
+    static MutexHandle sAsyncQueueMutex;
+    static bool sAsyncThreadRunning;
+    static utList<AsyncLoadNote> sAsyncQueue;
 
 
     // simple linear TextureID -> TextureHandle

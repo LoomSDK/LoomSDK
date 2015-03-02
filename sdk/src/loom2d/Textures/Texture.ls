@@ -321,7 +321,7 @@ package loom2d.textures
             //check for errors
             if(!isTextureValid())
             {
-                Console.print("WARNING: Unable to asynchronnously load texture from asset"); 
+                Console.print("WARNING: Unable to asynchronously load texture from asset"); 
                 return;
             }
 
