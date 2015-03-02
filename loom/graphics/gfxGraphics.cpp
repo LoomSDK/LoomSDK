@@ -33,26 +33,25 @@
 
 namespace GFX
 {
-lmDefineLogGroup(gGFXLogGroup, "GFX", 1, LoomLogInfo);
+    lmDefineLogGroup(gGFXLogGroup, "GFX", 1, LoomLogInfo);
 
-bool Graphics::sInitialized = false;
+    bool Graphics::sInitialized = false;
 
-// start with context loss as flagged so resources are created
-bool Graphics::sContextLost = true;
+    // start with context loss as flagged so resources are created
+    bool Graphics::sContextLost = true;
 
-int Graphics::sWidth     = 0;
-int Graphics::sHeight    = 0;
-uint32_t Graphics::sFlags    = 0xFFFFFFFF;
-int Graphics::sFillColor = 0x000000FF;
-int Graphics::sView      = 0;
+    int Graphics::sWidth      = 0;
+    int Graphics::sHeight     = 0;
+    uint32_t Graphics::sFlags = 0xFFFFFFFF;
+    int Graphics::sFillColor  = 0x000000FF;
+    int Graphics::sView       = 0;
 
-uint32_t Graphics::sCurrentFrame = 0;
+    uint32_t Graphics::sCurrentFrame = 0;
 
-char Graphics::pendingScreenshot[1024] = { 0, };
+    char Graphics::pendingScreenshot[1024] = { 0, };
 
-extern SDL_GLContext context;
-GL_Context Graphics::_context;
-
+    extern SDL_GLContext context;
+    GL_Context Graphics::_context;
     
     static int LoadContext(GL_Context * data)
     {
@@ -122,7 +121,7 @@ void Graphics::reset(int width, int height, uint32_t flags)
 
     // if we're experiencing a context loss we must reset regardless
     if (sContextLost)
-    {   
+    {
         //bgfx::reset(width, height, flags);
         QuadRenderer::reset();
         Texture::reset();        
@@ -154,6 +153,8 @@ void Graphics::beginFrame()
 
     sCurrentFrame++;
 
+    Graphics::context()->glViewport(0, 0, Graphics::getWidth(), Graphics::getHeight());
+
     // Issue clear.
     Graphics::context()->glClearColor(
                                       float((sFillColor >> 0) & 0xFF) / 255.0f,
@@ -162,6 +163,8 @@ void Graphics::beginFrame()
                                       float((sFillColor >> 24) & 0xFF) / 255.0f
                                       );
     Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
 
     QuadRenderer::beginFrame();
 }

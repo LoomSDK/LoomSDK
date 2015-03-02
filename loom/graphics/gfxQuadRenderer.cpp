@@ -111,7 +111,7 @@ void QuadRenderer::submit()
         Graphics::context()->glEnableVertexAttribArray(sProgram_posAttribLoc);
         Graphics::context()->glEnableVertexAttribArray(sProgram_posColorLoc);
         Graphics::context()->glEnableVertexAttribArray(sProgram_posTexCoordLoc);
-       // printf("saw err %d", Graphics::context()->glGetError());
+        // printf("saw err %d", Graphics::context()->glGetError());
 
         Graphics::context()->glVertexAttribPointer(sProgram_posAttribLoc,
                                                    3, GL_FLOAT, false,
@@ -125,7 +125,6 @@ void QuadRenderer::submit()
                                                    2, GL_FLOAT, false,
                                                    sizeof(VertexPosColorTex), (void*)offsetof(VertexPosColorTex, u));
         //printf("saw err %d", Graphics::context()->glGetError());
-
 
         // Set up texture state.
         Graphics::context()->glActiveTexture(GL_TEXTURE0);

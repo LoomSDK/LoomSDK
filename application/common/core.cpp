@@ -111,11 +111,11 @@ void loop()
             //stage->_ScrollWheelYMovedDelegate.pushArgument(event.wheel.y * (event.wheel.direction == SDL_MOUSEWHEEL_NORMAL ? 1 : -1));
             stage->_ScrollWheelYMovedDelegate.pushArgument(event.wheel.y);
             stage->_ScrollWheelYMovedDelegate.invoke();
-
         }
         else if (event.type == SDL_WINDOWEVENT && (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED))
         {
             stage->setNativeSize(event.window.data1, event.window.data2);
+            GFX::Graphics::setNativeSize(event.window.data1, event.window.data2);
         }
     }
     
@@ -157,6 +157,7 @@ main(int argc, char *argv[])
     // And show the window with proper settings.
     SDL_SetWindowTitle(window, LoomApplicationConfig::displayTitle().c_str());
     SDL_SetWindowSize(window, LoomApplicationConfig::displayWidth(), LoomApplicationConfig::displayHeight());
+    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_ShowWindow(window);
 
     if(Loom2D::Stage::smMainStage != NULL)
