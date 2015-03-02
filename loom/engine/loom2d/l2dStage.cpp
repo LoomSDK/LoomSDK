@@ -21,17 +21,20 @@
 
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/engine/loom2d/l2dStage.h"
+#include "loom/common/config/applicationConfig.h"
+
+extern SDL_Window *gSDLWindow;
 
 namespace Loom2D
 {
+
 Stage *Stage::smMainStage = NULL;
 NativeDelegate Stage::_RenderStageDelegate;
 
 Stage::Stage()
 {
     smMainStage = this;
-    _nativeWidth = 64; // Non-zero dummy values to avoid div by zero.
-    _nativeHeight = 64;
+    sdlWindow = gSDLWindow;
 }
 
 Stage::~Stage()
@@ -41,7 +44,7 @@ Stage::~Stage()
 
 void Stage::render(lua_State *L)
 {
-    GFX::Graphics::setNativeSize(_nativeWidth, _nativeHeight);
+    GFX::Graphics::setNativeSize(getWidth(), getHeight());
     GFX::Graphics::beginFrame();
 
     updateLocalTransform();
@@ -57,5 +60,8 @@ void Stage::render(lua_State *L)
     lua_pop(L, 1);
 
     GFX::Graphics::endFrame();
+
+    /* Update the screen! */
+    SDL_GL_SwapWindow(sdlWindow);
 }
 }

@@ -20,15 +20,16 @@
 
 #pragma once
 
+#include <SDL.h>
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 
 namespace Loom2D
 {
+
 class Stage : public DisplayObjectContainer
 {
 protected:
 
-    int _nativeWidth, _nativeHeight;
 public:
 
     Stage();
@@ -36,8 +37,11 @@ public:
 
     static Stage *smMainStage;
 
+    // The SDL window we're working with.
+    SDL_Window *sdlWindow;
+
     // Rendering interface.
-    static void invokeRenderStage()
+    void invokeRenderStage()
     {
         _RenderStageDelegate.invoke();
     }
@@ -52,11 +56,8 @@ public:
     LOOM_DELEGATE(OrientationChange);
     LOOM_DELEGATE(SizeChange);
 
-    void setNativeSize(int width, int height)
+    void noteNativeSize(int width, int height)
     {
-        _nativeWidth = width;
-        _nativeHeight = height;
-
         _SizeChangeDelegate.pushArgument(width);
         _SizeChangeDelegate.pushArgument(height);
         _SizeChangeDelegate.invoke();
@@ -69,15 +70,23 @@ public:
 
     int getWidth()
     {
-        return _nativeWidth;
+        int w = -1, h = -1;
+        SDL_GetWindowSize(sdlWindow, &w, &h);
+        return w;
     }
 
     int getHeight()
     {
-        return _nativeHeight;
+        int w = -1, h = -1;
+        SDL_GetWindowSize(sdlWindow, &w, &h);
+        return h;
     }
 
-    void resize(int width, int height);
+    void resize(int width, int height)
+    {
+        SDL_SetWindowSize(sdlWindow, width, height);
+        noteNativeSize(width, height);
+    }
 
     void toggleFullscreen();
     bool isFullScreen();

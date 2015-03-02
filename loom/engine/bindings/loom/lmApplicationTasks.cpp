@@ -68,7 +68,8 @@ void loom_tick()
 
     lualoom_gc_update(LoomApplication::getRootVM()->VM());
 
-    Loom2D::Stage::invokeRenderStage();
+    if(Loom2D::Stage::smMainStage)
+        Loom2D::Stage::smMainStage->invokeRenderStage();
 
     finishProfilerBlock(&p);
 }
