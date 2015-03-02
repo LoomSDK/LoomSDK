@@ -157,10 +157,10 @@ void Graphics::beginFrame()
 
     // Issue clear.
     Graphics::context()->glClearColor(
-                                      float((sFillColor >> 0) & 0xFF) / 255.0f,
-                                      float((sFillColor >> 8) & 0xFF) / 255.0f + 0.5f,
+                                      float((sFillColor >> 8) & 0xFF) / 255.0f,
                                       float((sFillColor >> 16) & 0xFF) / 255.0f,
-                                      float((sFillColor >> 24) & 0xFF) / 255.0f
+                                      float((sFillColor >> 24) & 0xFF) / 255.0f,
+                                      float((sFillColor >> 0) & 0xFF) / 255.0f
                                       );
     Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
