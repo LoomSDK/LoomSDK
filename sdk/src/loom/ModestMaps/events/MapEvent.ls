@@ -107,8 +107,7 @@ package com.modestmaps.events
 		
 		override public function clone():Event
 		{
-			//PORTNOTE: added null as parameter
-			return new MapEvent(this.type, null);
+			return new MapEvent(this.type, []);
 		}
 	}
 }

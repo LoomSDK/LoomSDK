@@ -139,7 +139,7 @@ package com.modestmaps.core.painter
 			if (urls && urls.length > 0) {
 				// keep a local copy of the URLs so we don't have to call this twice:
 				layersNeeded[tile.name] = urls;
-				tileQueue.pushSingle(tile);
+				tileQueue.push(tile);
 			}
 			else {
 				// trace("no urls needed for that tile", tempCoord);
@@ -258,9 +258,7 @@ package com.modestmaps.core.painter
 	
 		/** called by the onEnterFrame handler to manage the tileQueue
 		 *  usual operation is extremely quick, ~1ms or so */
-// TODO_AHMED: Do something about the missing timer event
-		//private function processQueue(event:TimerEvent=null):void
-		private function processQueue():void
+		private function processQueue(timer:Timer):void
 		{
 			if (openRequests.length < maxOpenRequests && tileQueue.length > 0) {
 	
@@ -293,7 +291,7 @@ package com.modestmaps.core.painter
 			// these events take care of that for you...
 			if (previousOpenRequests == 0 && openRequests.length > 0) {
 // PORTNOTE: Map events seem to require two arguments, the second being called "rest..." passing null for now.
-				dispatchEvent(new MapEvent(MapEvent.BEGIN_TILE_LOADING));
+				dispatchEvent(new MapEvent(MapEvent.BEGIN_TILE_LOADING, []));
 			}
 			else if (previousOpenRequests > 0)
 			{
@@ -305,7 +303,7 @@ package com.modestmaps.core.painter
 			    if (openRequests.length == 0)
 			    {
 // PORTNOTE: Map events seem to require two arguments, the second being called "rest..." passing null for now.
-			    	dispatchEvent(new MapEvent(MapEvent.ALL_TILES_LOADED));
+			    	dispatchEvent(new MapEvent(MapEvent.ALL_TILES_LOADED, []));
 				}
 			}
 			

@@ -43,7 +43,7 @@ package com.modestmaps.core.painter
 		public function sortTiles(callback:Function):void
 		{
 //TODO_24: test that this sorts as expected...            
-			queue = queue.sort(callback);
+			queue = queue.sort(callback) as Vector.<Tile>;
 		}
 		
 		public function retainAll(tiles:Vector.<Tile>):Vector.<Tile>

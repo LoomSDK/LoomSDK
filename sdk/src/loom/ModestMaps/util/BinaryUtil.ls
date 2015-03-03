@@ -40,7 +40,7 @@ package com.modestmaps.util
             //add preceeding digits if necessary
 			if (result.length < 32) 
             {
-                String padding = (negative) ? PADDING_1 : PADDING_0;
+                var padding:String = (negative) ? PADDING_1 : PADDING_0;
                 result = padding.slice(result.length)+result;
 			}
 			return result;

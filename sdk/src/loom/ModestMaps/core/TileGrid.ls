@@ -289,8 +289,7 @@ package com.modestmaps.core
 		protected function onRendered():void
 		{
 			// listen out for this if you want to be sure map is in its final state before reprojecting markers etc.
-			//PORTNOTE: added null as parameter
-			dispatchEvent(new MapEvent(MapEvent.RENDERED, null));
+			dispatchEvent(new MapEvent(MapEvent.RENDERED, []));
 		}
 		
 		protected function onPanned():void
@@ -977,7 +976,7 @@ package com.modestmaps.core
 		
 		protected function onStartPanning():void
 		{
-			dispatchEvent(new MapEvent(MapEvent.START_PANNING, null));
+			dispatchEvent(new MapEvent(MapEvent.START_PANNING, []));
 		}
 		
 		public function donePanning():void
@@ -995,7 +994,7 @@ package com.modestmaps.core
 		
 		protected function onStopPanning():void
 		{
-			dispatchEvent(new MapEvent(MapEvent.STOP_PANNING, null));
+			dispatchEvent(new MapEvent(MapEvent.STOP_PANNING, []));
 		}
 		
 		public function prepareForZooming():void
