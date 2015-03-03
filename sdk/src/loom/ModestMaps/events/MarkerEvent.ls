@@ -4,13 +4,10 @@
 
 package com.modestmaps.events
 {
-	//import flash.events.Event;
 	import loom2d.events.Event;
-	
-	import com.modestmaps.geo.Location;
-	
-    //import flash.display.DisplayObject;	
-	import loom2d.display.DisplayObject;
+    import loom2d.display.DisplayObject;
+    
+	import com.modestmaps.geo.Location;	
     
     public class MarkerEvent extends Event
 	{

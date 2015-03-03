@@ -7,10 +7,8 @@ package com.modestmaps.events
 	import com.modestmaps.core.*;
 	import com.modestmaps.mapproviders.IMapProvider;
 	
-	//import flash.events.Event;
 	import loom2d.events.Event;
 	
-	//import flash.geom.Point;
 	import loom2d.math.Point;
 
 	public class MapEvent extends Event
@@ -32,9 +30,7 @@ package com.modestmaps.events
 		public var panDelta:Point;
 	    
 	    public static const RESIZED:String = 'resized';
-		// PORTNOTE: Assuming this is an array of number
-	    //public var newSize:Array;
-	    public var newSize:Vector.<Tile>;
+	    public var newSize:Vector.<Number>;
 	    	    
 	    public static const COPYRIGHT_CHANGED:String = 'copyrightChanged';
 	    public var newCopyright:String;
@@ -58,7 +54,6 @@ package com.modestmaps.events
 		{
 			super(type, true, true);
 			
-			//TODO_KEVIN, double casting to be optimized
 			switch(type) {
 				case PANNED:
 					if (rest.length > 0 && rest[0] is Point) {
@@ -82,8 +77,7 @@ package com.modestmaps.events
 					}
 					break;					
 	    		case RESIZED:
-					//PORTNOTE: Array -> Vector.<Tile>
-	    			if (rest.length > 0 && rest[0] is Vector.<Tile>) {
+	    			if (rest.length > 0 && rest[0] is Vector.<Number>) {
 	    				newSize = rest[0] as Vector.<Number>;
 	    			}
 					break;	    	    

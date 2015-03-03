@@ -17,9 +17,10 @@ package com.modestmaps.geo
 	
 		public static function fromString(str:String, lonlat:Boolean=false):Location
 		{
-			var parts = str.split("/\s*,\s*/");
+//TODO_24: Make sure this split works without the original \s regular expression stuff
+			var parts:Vector.<String> = str.split(",");
 			if (lonlat) parts = parts.reverse();
-			return new Location(parts[0] as Number, parts[1] as Number);
+			return new Location(parts[0].toNumber(), parts[1].toNumber());
 		}
 
 	    public function Location(lat:Number, lon:Number)
@@ -51,10 +52,11 @@ package com.modestmaps.geo
             return loc;
         }
 
-// TODO_AHMED: Removed argument from toString presicion:Number which was used by
-	    override public function toString():String
+	    public function toString():String
 	    {
-	        return [lat.toFixed(5), lon.toFixed(5)].join(',');
+            //NOTE_24: Unable to have precision as a parameter for the override on Object toString() so hardcoding it instead
+            var precision:int = 5;
+	        return [lat.toFixed(precision), lon.toFixed(precision)].join(',');
 	    }
 	}
 }

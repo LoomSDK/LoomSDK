@@ -23,6 +23,7 @@ package com.modestmaps.core
 		{
 			init(column, row, zoom);
 			
+//LUKE_SAYS: Might not be needed            
 			// otherwise you'll get seams between tiles :(
 			// PORTNOTE: cacheAsBitmap isn't a part of loom, it's an optimisation function for flash for mobile.
 			//this.cacheAsBitmap = false;
@@ -55,6 +56,7 @@ package com.modestmaps.core
 	    		//	}
 	    		}
 			
+//LUKE_SAYS: Might not be needed            
 // TODO_AHMED: find equiuvalents to graphics class
 	    	//graphics.clear();
 	    }        
@@ -87,6 +89,7 @@ package com.modestmaps.core
 		    var size:uint = 32;
 		    var padding:uint = 4;
 		    var weight:uint = 4;
+//LUKE_SAYS: Might not be needed            
 //TODO_AHMED: Find equivalents for graphics class
 		    /*with (graphics)
 			{

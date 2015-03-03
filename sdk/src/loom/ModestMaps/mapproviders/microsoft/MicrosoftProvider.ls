@@ -59,7 +59,7 @@ package com.modestmaps.mapproviders.microsoft
 		{
 	        var sourceCoord:Coordinate = sourceCoordinate(coord);
 		    
-//TODO_24: check that these -ve slice() params are infact valid...
+//TODO_24: check that these -ve zoom slice() params are in fact valid...
 			// convert row + col to zoom string
 			// padded with zeroes so we end up with zoom digits after slicing:
 			var rowBinaryString:String = BinaryUtil.convertToBinary(sourceCoord.row);

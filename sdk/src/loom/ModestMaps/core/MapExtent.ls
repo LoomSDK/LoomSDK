@@ -120,30 +120,22 @@ package com.modestmaps.core
 
         public function getRect():Rectangle
         {
-            var rect:Rectangle = new Rectangle(Math.min(east, west), Math.min(north, south));
-			
-			// TODO: Investigate the purpose of the right bottom setting here. right is defined in the docs as the sum of x and width, if width
-			// is set to zero it stands to reason that the right property would simply equal x
-            //rect.right = Math.max(east, west);
-            //rect.bottom = Math.max(north, south);
-            return rect;
+            var left:Number = Math.min(east, west);
+            var top:Number = Math.min(north, south);
+            var width:Number = Math.max(east, west) - left;
+            var height:Number = Math.max(north, south) - top;
+            return new Rectangle(left, top, width, height); 
         }
         
         public function contains(location:Location):Boolean
         {
             return getRect().contains(location.lon, location.lat);
         }
-        
-		private function containsRect(rect1:Rectangle, rect2:Rectangle)
-		{
-			
-		}
-		
-        //public function containsExtent(extent:MapExtent):Boolean
-        //{
-			// PORTNOTE: no containsRect function exists, using loom2d.math.Rectangle.contains() instead 
-        //    return getRect().contains(extent.getRect());
-        //}
+        		
+        public function containsExtent(extent:MapExtent):Boolean
+        {
+            return Rectangle.intersects(getRect(), extent.getRect());
+        }
 
 		/** @return "north, south, east, west" */
 		public function toString():String
@@ -156,11 +148,12 @@ package com.modestmaps.core
 		 * @return a new MapExtent from the given string */
 		public static function fromString(str:String):MapExtent
 		{
-			var parts:Vector.<String> = str.split("/\s*,\s*/");
-			return new MapExtent(parts[0] as Number,
-								 parts[1] as Number,
-								 parts[2] as Number,
-								 parts[3] as Number);
+//TODO_24: Make sure this split works without the original \s regular expression stuff         
+			var parts:Vector.<String> = str.split(",");
+			return new MapExtent(parts[0].toNumber(),
+								 parts[1].toNumber(),
+								 parts[2].toNumber(),
+								 parts[3].toNumber());
 		}
 
         /** calculate the north/south/east/west extremes of the given array of locations */
@@ -196,13 +189,10 @@ package com.modestmaps.core
 			return new MapExtent(location.lat, location.lat, location.lon, location.lon);
 		}
 		
-		// PORTNOTE: Assuming that objects is an array of locations
-		//public static function fromLocationProperties(objects:Array, locationProp:String='location'):MapExtent
-		public static function fromLocationProperties(objects:Vector.<Location>, locationProp:String='location'):MapExtent
+		public static function fromLocationProperties(objects:Vector.<Dictionary.<String, Location>>, locationProp:String='location'):MapExtent
 		{
-			// PORTNOTE: changed obj from object to a dictionary
 			return fromLocations(objects.map(
-				function(obj:Dictionary.<String, Location>, ...rest):Location 
+				function(obj:Dictionary.<String, Location>, index:Number, vector:Vector):Location 
 				{ 
 					return obj[locationProp] as Location; 
 				} 
