@@ -37,22 +37,33 @@ class TestJSON extends LegacyTest
             
         }
         
+		// getValue() should succeed wherever specific getters do
         var code:int = json.getInteger("code");
+		var varCode:int = json.getValue("code") as int;
         
         log(json.getBoolean("booleanvalue"));
+		log(json.getValue("booleanvalue"));
                 
         var message = json.getObject("message");
+		var varMessage = json.getValue("message") as JSON;
         
         var user = message.getObject("user");
+		var varUser = varMessage.getValue("user") as JSON;
         
         log(user.getString("id"));
+		log(user.getValue("id"));
         
         var leaderboard = message.getArray("leaderboard");
+		var varLeaderboard = message.getValue("leaderboard") as JSON;
+		
+		log(leaderboard.getArrayCount());
+		log(leaderboard.length);
         
         for (var i = 0; i < leaderboard.getArrayCount(); i++)
             log(leaderboard.getArrayInteger(i));
 
         assert(user.getFloat("score") == 1.1);
+		assert(user.getValue("score") as Number == 1.1);
 
         // Test JSON setting non-sequential array indexes
 
@@ -116,7 +127,11 @@ class TestJSON extends LegacyTest
     var EXPECTED_TEST_RESULT:String = 
 "
 true
+true
 502adb10793251463f000000
+502adb10793251463f000000
+5
+5
 1
 2
 4

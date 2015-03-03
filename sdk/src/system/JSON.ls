@@ -268,6 +268,58 @@ native class JSON {
         
         visited.remove(o);
     }
+	
+	/**
+	 * General function that gets the value of the Key provided
+	 * @param key The key to be queried
+	 * @return May return null, a Boolean, a String, a Number, a JSON Object, or a JSON Array
+	 */
+	public function getValue(key:String):Object {
+		var valueType:JSONType = getJSONTypeWithKey(key);
+		
+		if (valueType == -1) return null;// Error case
+		
+		switch (valueType) {
+			case JSONType.JSON_NULL: return null;
+			case JSONType.JSON_ARRAY: return getArray(key);
+			case JSONType.JSON_OBJECT: return getObject(key);
+			case JSONType.JSON_INTEGER: // Fall through
+			case JSONType.JSON_REAL: return getNumber(key);
+			case JSONType.JSON_STRING: return getString(key);
+			case JSONType.JSON_TRUE: return true;
+			case JSONType.JSON_FALSE: return false;
+			default: Debug.assert(true, "Invalid JSONType of " + valueType);
+		}
+		
+		return null;// Should never get here
+	}
+	
+	/**
+	 * General function that gets the value of the index provided in Json Arrays
+	 * @param index The index to be queried
+	 * @return May return null, a Boolean, a String, a Number, a JSON Object, or a JSON Array
+	 */
+	public function getArrayValue(index:int):Object {
+		var valueType:JSONType = getJSONTypeWithIndex(index);
+		
+		if (valueType == -1) return null;// Error case
+		
+		switch (valueType) {
+			case JSONType.JSON_NULL: return null;
+			case JSONType.JSON_ARRAY: return getArrayArray(index);
+			case JSONType.JSON_OBJECT: return getArrayObject(index);
+			case JSONType.JSON_INTEGER: // Fall through
+			case JSONType.JSON_REAL: return getArrayNumber(index);
+			case JSONType.JSON_STRING: return getArrayString(index);
+			case JSONType.JSON_TRUE: return true;
+			case JSONType.JSON_FALSE: return false;
+			default: Debug.assert(true, "Invalid JSONType of " + valueType);
+		}
+		
+		return null;// Should never get here
+	}
+	
+	
     
     /**
      * Sets the value of key to the JSON array created from the provided Vector using fromVector.
@@ -539,9 +591,18 @@ native class JSON {
 
     /** For a JSON Array, retrieves the number of items.
      *
-     *  @return The number of items, 0 if object is not a JSON Array.
+     *  @return The number of items, -1 if object is not a JSON Array.
      */
     public native function getArrayCount():int;
+	
+	/**
+	 * Property that retrieves the number of items in a JSON Array, wraps getArrayCount()
+	 * 
+	 * @see #getArrayCount()
+	 */
+	public function get length():int {
+		return getArrayCount();
+	}
 
     /** For a JSON Array, retrieves a Boolean value at the provided index.
      *
