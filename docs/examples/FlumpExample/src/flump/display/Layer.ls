@@ -32,7 +32,7 @@ class Layer
         for (var ii :int = 0; ii < _keyframes.length && lastItem == null; ii++) {
             lastItem = _keyframes[ii].ref;
         }
-        trace("LAYER", _name, _numFrames, lastItem);
+        
         if (!flipbook && lastItem == null) {
             // The layer is empty.
             _currentDisplay = new Sprite();
@@ -46,23 +46,18 @@ class Layer
                 var kf :KeyframeMold = _keyframes[ii];
                 var display :DisplayObject = null;
                 if (ii > 0 && _keyframes[ii - 1].ref == kf.ref) {
-                    trace("#1");
                     display = _displays[ii - 1];
                 } else if (kf.ref == null) {
-                    trace("#2");
                     display = new Sprite();
                 } else {
-                    trace("#3");
                     display = library.createDisplayObject(kf.ref);
                 }
-                trace("kf", ii, display);
                 _displays[ii] = display;
                 display.visible = false;
                 _movie.addChild(display);
             }
             _currentDisplay = _displays[0];
             _currentDisplay.visible = true;
-            trace("cd", _currentDisplay);
         }
 
         _currentDisplay.name = _name;

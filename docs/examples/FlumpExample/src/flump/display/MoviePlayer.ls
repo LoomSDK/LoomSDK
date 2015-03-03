@@ -98,9 +98,7 @@ public class MoviePlayer
                     prev.next = next;
                 } else {
                     // If prev was null, node is the head of the list
-                    if (_head != node) {
-                        Debug.assert("Movie list is broken, somehow");
-                    }
+                    Debug.assert(_head == node, "Movie list is broken, somehow");
                     _head = next;
                 }
 

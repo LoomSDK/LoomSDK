@@ -30,7 +30,6 @@ public class LibraryMold
         mold.textureFormat = o.getString("textureFormat"); if (mold.textureFormat == null || mold.textureFormat == "") mold.textureFormat = "png";
         mold.isNamespaced = o.getBoolean("isNamespaced"); // default false
         
-        trace("Library", mold.frameRate, mold.md5, mold.textureFormat, mold.isNamespaced);
         for each (var movie :JSON in Flump.requireVector(o, "movies")) mold.movies.push(MovieMold.fromJSON(movie));
         for each (var tg :JSON in Flump.requireVector(o, "textureGroups")) mold.textureGroups.push(TextureGroupMold.fromJSON(tg));
         return mold;

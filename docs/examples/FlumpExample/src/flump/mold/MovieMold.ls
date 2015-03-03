@@ -18,7 +18,6 @@ public class MovieMold
         const mold :MovieMold = new MovieMold();
         mold.id = Flump.requireString(o, "id");
         var ol:Vector.<JSON> = Flump.requireVector(o, "layers");
-        trace("Movie", mold.id);
         for each (var layer :JSON in ol) mold.layers.push(LayerMold.fromJSON(layer));
         return mold;
     }

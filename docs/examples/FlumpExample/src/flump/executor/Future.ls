@@ -15,6 +15,7 @@ public class Future
     /** @private */
     public function Future (onCompleted :Function=null) {
         _onCompleted = onCompleted;
+        reset();
     }
 
     /** Dispatches the result if the future completes successfully. */
@@ -45,9 +46,7 @@ public class Future
     public function get result ():Object { return _result; }
 
     function onSuccess (...result) :void {
-        if (_result != null) {
-            Debug.assert("already completed");
-        }
+        Debug.assert(_result == NO_RESULT, "already completed");
         if (result.length > 0) _result = result[0];
         _state = STATE_SUCCEEDED;
         succeeded(_result);
@@ -55,9 +54,7 @@ public class Future
     }
 
     function onFailure (error :Object) :void {
-        if (_result != null) {
-            Debug.assert("already completed");
-        }
+        Debug.assert(_result == NO_RESULT, "already completed");
         _result = error;
         _state = STATE_FAILED;
         failed(error);
@@ -76,9 +73,14 @@ public class Future
         if (_onCompleted != null) _onCompleted(this);
         _onCompleted = null;// Allow Executor to be GC'd if the Future is hanging around
     }
+    
+    public function reset() :void {
+       _state = 0;
+       _result = NO_RESULT;
+    }
 
-    protected var _state :int = 0;
-    protected var _result :Object = NO_RESULT;
+    protected var _state :int;
+    protected var _result :Object;
     
     protected var _onCancel :Function;
     protected var _onCompletion :Function;

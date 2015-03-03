@@ -77,7 +77,7 @@ public class Executor implements IAnimatable
      * in the order of submission as running functions complete.</p>
      */
     public function submit (f :Function) :Future {
-        if (_shutdown) Debug.assert("Submission to a shutdown executor!");
+        Debug.assert(!_shutdown, "Submission to a shutdown executor!");
         const future :FutureTask = new FutureTask(onCompleted);
         _toRun.push(new ToRun(future, f));
         if (!juggling) {
@@ -133,7 +133,8 @@ public class Executor implements IAnimatable
                 removed = true;
             }
         }
-        if (!removed) Debug.assert("Unknown future completed? " + f);
+        
+        Debug.assert(removed, "Unknown future completed? " + f);
         // Only dispatch terminated if it was set when this future completed. If it's set as
         // part of this dispatch, it'll dispatch in the shutdown call
         completed(f);

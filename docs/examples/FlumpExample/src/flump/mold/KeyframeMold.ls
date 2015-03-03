@@ -59,7 +59,6 @@ public class KeyframeMold
         extractField(o, mold, "ease");
         extractField(o, mold, "tweened");
         extractField(o, mold, "label");
-        //trace("Keyframe", mold.index, mold.duration, mold.ref, mold.x, mold.y, mold.scaleX, mold.scaleY, mold.skewX, mold.skewY, mold.pivotX, mold.pivotY, mold.alpha, mold.visible, mold.ease, mold.tweened, mold.label);
         return mold;
     }
 

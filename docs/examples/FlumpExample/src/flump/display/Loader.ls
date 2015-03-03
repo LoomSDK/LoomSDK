@@ -7,6 +7,8 @@ import deng.fzip.FZip;
 import deng.fzip.FZipErrorEvent;
 import deng.fzip.FZipEvent;
 import deng.fzip.FZipFile;
+import loom.LoomBinaryAsset;
+import loom.platform.Timer;
 import loom2d.Loom2D;
 
 import loom2d.events.Event;
@@ -35,30 +37,38 @@ class Loader {
             Loom2D.contentScaleFactor);
         _libLoader = libLoader;
         _toLoad = toLoad;
+        
+        _zip.addEventListener(Event.COMPLETE, onZipLoadingComplete);
+        _zip.addEventListener(FZipEvent.FILE_LOADED, onFileLoaded);
     }
 
     public function load (future :FutureTask) :void {
         _future = future;
-
-        _zip.addEventListener(Event.COMPLETE, onZipLoadingComplete);
-        //_zip.addEventListener(IOErrorEvent.IO_ERROR, _future.fail);
+        
+        _zip.removeEventListeners(FZipErrorEvent.PARSE_ERROR);
         _zip.addEventListener(FZipErrorEvent.PARSE_ERROR, _future.fail);
-        _zip.addEventListener(FZipEvent.FILE_LOADED, onFileLoaded);
-        //_zip.addEventListener(ProgressEvent.PROGRESS, _future.monitoredCallback(onProgress));
-
-        //if (_toLoad is String) _zip.load(new URLRequest(String(_toLoad)));
-        //else
         
-        if (!(_toLoad is ByteArray)) Debug.assert("Non-ByteArray loading not supported");
-        
-        trace("LOAD "+_toLoad);
-        
-        _zip.loadBytes(ByteArray(_toLoad));
+        if (_toLoad is String) loadLiveFile(String(_toLoad));
+        else if (_toLoad is ByteArray) {
+            reset();
+            _zip.loadBytes(ByteArray(_toLoad));
+        }
+        else Debug.assert(false, "Unsupported Flump Loader type");
     }
-
-    //protected function onProgress (e :ProgressEvent) :void {
-        //_libLoader.urlLoadProgressed.emit(e);
-    //}
+    
+    protected function loadLiveFile(path:String) {
+        persistent = true;
+        var asset:LoomBinaryAsset = LoomBinaryAsset.create(path);
+        asset.updateDelegate += onLiveLoaded;
+        asset.load();
+    }
+    
+    protected function onLiveLoaded(path:String, contents:ByteArray):void {
+        trace("Loaded "+path+" ("+contents.length+" bytes)");
+        reset();
+        _zip.loadBytes(contents);
+    }
+    
 
     protected function onFileLoaded (e :FZipEvent) :void {
         const loaded :FZipFile = _zip.removeFileAt(_zip.getFileCount() - 1);
@@ -74,10 +84,7 @@ class Loader {
             _libLoader.atfAtlasLoaded({name: name, bytes: loaded.content});
         } else if (name == LibraryLoader.VERSION_LOCATION) {
             const zipVersion :String = loaded.content.readUTFBytes(loaded.content.length);
-            if (zipVersion != LibraryLoader.VERSION) {
-                Debug.assert("Zip is version " + zipVersion + " but the code needs " +
-                    LibraryLoader.VERSION);
-            }
+            Debug.assert(zipVersion == LibraryLoader.VERSION, "Zip is version " + zipVersion + " but the code needs " + LibraryLoader.VERSION);
             _versionChecked = true;
         } else if (name == LibraryLoader.MD5_LOCATION ) { // Nothing to verify
         } else {
@@ -86,12 +93,11 @@ class Loader {
     }
 
     protected function onZipLoadingComplete (..._) :void {
-        _zip = null;
-        if (_lib == null) Debug.assert(LibraryLoader.LIBRARY_LOCATION + " missing from zip");
-        if (!_versionChecked) Debug.assert(LibraryLoader.VERSION_LOCATION + " missing from zip");
+        if (!persistent) _zip = null;
+        Debug.assert(_lib != null, LibraryLoader.LIBRARY_LOCATION + " missing from zip");
+        Debug.assert(_versionChecked, LibraryLoader.VERSION_LOCATION + " missing from zip");
         //const loader :ImageLoader = _lib.textureFormat == "atf" ? null : new ImageLoader();
-        _pngLoaders.terminated += onPngLoadingComplete;
-
+        
         // Determine the scale factor we want to use
         var textureGroup :TextureGroupMold = _lib.bestTextureGroupForScaleFactor(_scaleFactor);
         if (textureGroup != null) {
@@ -104,25 +110,26 @@ class Loader {
             if (_atlasBytes.hasOwnProperty(leftover)) {
                 ByteArray(_atlasBytes[leftover]).clear();
                 _atlasBytes.deleteKey(leftover);
-                //delete (_atlasBytes[leftover]);
             }
         }
-        trace("HERE!");
-        _pngLoaders.shutdown();
+        onPngLoadingComplete();
     }
 
     protected function loadAtlas ( atlas :AtlasMold) :void {
         const bytes :ByteArray = _atlasBytes[atlas.file];
         _atlasBytes.deleteKey(atlas.file);
-        //delete _atlasBytes[atlas.file];
-        if (bytes == null) {
-            Debug.assert("Expected an atlas '" + atlas.file + "', but it wasn't in the zip");
-        }
+        Debug.assert(bytes != null, "Expected an atlas '" + atlas.file + "', but it wasn't in the zip");
         
         bytes.position = 0; // reset the read head
         var scale :Number = atlas.scaleFactor;
         
-        baseTextureLoaded(Texture.fromBytes(bytes), atlas);
+        Debug.assert(_lib.textureFormat != "atf", "ATF image format not supported");
+        
+        var tex:Texture = Texture.fromBytes(bytes);
+        _libLoader.pngAtlasLoaded( { atlas: atlas, image: tex } ); 
+        baseTextureLoaded(tex, atlas);
+        
+        bytes.clear();
         
         /*
         if (_lib.textureFormat == "atf") {
@@ -158,7 +165,7 @@ class Loader {
         for each (var atlasTexture :AtlasTextureMold in atlas.textures) {
             var bounds :Rectangle = atlasTexture.bounds;
             var offset :Point = atlasTexture.origin;
-
+            
             // Starling expects subtexture bounds to be unscaled
             if (scale != 1) {
                 bounds = bounds.clone();
@@ -166,13 +173,12 @@ class Loader {
                 bounds.y /= scale;
                 bounds.width /= scale;
                 bounds.height /= scale;
-
+                
                 offset = offset.clone();
                 offset.x /= scale;
                 offset.y /= scale;
             }
-
-            trace("BASE TEXTURE LOADED", atlasTexture.symbol, atlasTexture, baseTexture, bounds, offset);
+            
             _creators[atlasTexture.symbol] = _libLoader.creatorFactory.createImageCreator(
                 atlasTexture,
                 Texture.fromTexture(baseTexture, bounds),
@@ -181,7 +187,7 @@ class Loader {
         }
     }
 
-    protected function onPngLoadingComplete (e:Executor) :void {
+    protected function onPngLoadingComplete () :void {
         for each (var movie :MovieMold in _lib.movies) {
             movie.fillLabels();
             _creators[movie.id] = _libLoader.creatorFactory.createMovieCreator(
@@ -193,9 +199,25 @@ class Loader {
     protected function onPngLoadingFailed (e :Object) :void {
         if (_future.isComplete) return;
         _future.fail(e);
-        _pngLoaders.shutdownNow();
+    }
+    
+    protected function reset() {
+        _zip.close();
+        _lib = null;
+        _future.reset();
+        
+        _versionChecked = false;
+        
+        for each (var tex:Texture in _baseTextures) {
+            tex.dispose();
+        }
+        _baseTextures.clear();
+        
+        _creators.clear();
+        _atlasBytes.clear();
     }
 
+    protected var persistent:Boolean = false;
     protected var _toLoad :Object;
     protected var _scaleFactor :Number;
     protected var _libLoader :LibraryLoader;
@@ -206,9 +228,8 @@ class Loader {
     protected var _lib :LibraryMold;
 
     protected const _baseTextures :Vector.<Texture> = new <Texture>[];
-    protected const _creators = new Dictionary.<String, SymbolCreator>();//<name, ImageCreator/MovieCreator>
-    protected const _atlasBytes = new Dictionary.<String, ByteArray>();//<String name, ByteArray>
-    protected const _pngLoaders :Executor = new Executor(1);
+    protected const _creators = new Dictionary.<String, SymbolCreator>();
+    protected const _atlasBytes = new Dictionary.<String, ByteArray>();
 
     protected static const PNG :String = ".png";
     protected static const ATF :String = ".atf";

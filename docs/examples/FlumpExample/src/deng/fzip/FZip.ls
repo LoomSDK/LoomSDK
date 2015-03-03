@@ -164,7 +164,7 @@ package deng.fzip
 		 * of the URLRequest object passed are null, Flash Player throws 
 		 * a null pointer error.
 		 */		
-		/*
+        /*
 		public function load(request:URLRequest):void {
 			if(!urlStream && parseFunc == parseIdle) {
 				urlStream = new URLStream();
@@ -176,7 +176,6 @@ package deng.fzip
 				urlStream.load(request);
 			}
 		}
-		*/
 		
 		/**
 		 * Loads a ZIP archive from a ByteArray.
@@ -347,7 +346,7 @@ package deng.fzip
 			if(filesDict == null) {
 				filesDict = new Dictionary();
 			} else if(filesDict[name]) {
-				Debug.assert("File already exists: " + name + ". Please remove first.");
+				Debug.assert(false, "File already exists: " + name + ". Please remove first.");
 			}
 			var file:FZipFile = new FZipFile();
 			file.filename = name;
@@ -379,7 +378,7 @@ package deng.fzip
 			if(filesDict == null) {
 				filesDict = new Dictionary();
 			} else if(filesDict[name]) {
-				Debug.assert("File already exists: " + name + ". Please remove first.");
+				Debug.assert(false, "File already exists: " + name + ". Please remove first.");
 			}
 			var file:FZipFile = new FZipFile();
 			file.filename = name;
@@ -432,7 +431,6 @@ package deng.fzip
 		protected function parseSignature(stream:ByteArray):Boolean {
 			if(stream.bytesAvailable >= 4) {
 				var sig:uint = stream.readUnsignedInt();
-                //trace(String.format("%d %08x", stream.bytesAvailable, sig));
 				switch(sig) {
 					case SIG_LOCAL_FILE_HEADER:
 						parseFunc = parseLocalfile;
@@ -450,7 +448,7 @@ package deng.fzip
 						parseFunc = parseIdle;
 						break;
 					default:
-						Debug.assert("Unknown record signature: " + sig);
+						Debug.assert(false, "Unknown record signature: " + sig);
 						break;
 				}
 				return true;

@@ -62,13 +62,11 @@ public class LibraryLoader
      * Library. If it fails, the Future's onFail will fire with the Error that caused the
      * loading failure.
      */
-    /*
     public static function fromURL (url :String, executor :Executor=null,
         scaleFactor :Number=-1) :Future {
         return new LibraryLoader().setExecutor(executor).setScaleFactor(scaleFactor)
             .loadURL(url);
     }
-    */
 
     /**
      * Dispatched when a ProgressEvent is received on a URL load of a Zip archive.

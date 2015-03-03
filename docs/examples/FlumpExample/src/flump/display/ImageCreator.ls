@@ -20,7 +20,6 @@ public class ImageCreator
     }
 
     public function create (library :Library) :DisplayObject {
-        trace("IMAGE CREATE", library, origin, symbol, texture.width);
         const image :Image = new Image(texture);
         image.pivotX = origin.x;
         image.pivotY = origin.y;

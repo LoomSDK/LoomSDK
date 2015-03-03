@@ -16,7 +16,6 @@ public class LayerMold
         const mold :LayerMold = new LayerMold();
         mold.name = Flump.requireString(o, "name");
         mold.flipbook = o.getBoolean("flipbook");
-        trace("Layer", mold.name, mold.flipbook);
         for each (var kf :JSON in Flump.requireVector(o, "keyframes")) {
             mold.keyframes.push(KeyframeMold.fromJSON(kf));
         }

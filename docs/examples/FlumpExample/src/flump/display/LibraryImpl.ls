@@ -18,14 +18,14 @@ class LibraryImpl implements Library {
 
     public function createImage (symbol :String) :Image {
         const disp :DisplayObject = createDisplayObject(symbol);
-        if (disp is Movie) Debug.assert(symbol + " is not an Image");
+        Debug.assert(!(disp is Movie), symbol + " is not an Image");
         return Image(disp);
     }
 
     public function getImageTexture (symbol :String) :Texture {
         checkNotDisposed();
         var creator :SymbolCreator = requireSymbolCreator(symbol);
-        if (!(creator is ImageCreator)) Debug.assert(symbol + " is not an Image");
+        Debug.assert(creator is ImageCreator, symbol + " is not an Image");
         return ImageCreator(creator).texture;
     }
 
@@ -53,7 +53,6 @@ class LibraryImpl implements Library {
 
     public function createDisplayObject (name :String) :DisplayObject {
         checkNotDisposed();
-        trace("CREATE DISPLAY OBJECT", name, requireSymbolCreator(name));
         return requireSymbolCreator(name).create(this);
     }
 
@@ -68,14 +67,12 @@ class LibraryImpl implements Library {
 
     protected function requireSymbolCreator (name :String) :SymbolCreator {
         var creator :SymbolCreator = _creators[name];
-        if (creator == null) Debug.assert("No such id '" + name + "'");
+        Debug.assert(creator != null, "No such id '" + name + "'");
         return creator;
     }
 
     protected function checkNotDisposed () :void {
-        if (_baseTextures == null) {
-            Debug.assert("This Library has been disposed");
-        }
+        Debug.assert(_baseTextures != null, "This Library has been disposed");
     }
 
     protected var _creators :Dictionary.<String, SymbolCreator>;

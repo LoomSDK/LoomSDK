@@ -252,9 +252,9 @@ package deng.fzip
 			isCompressed = false;
 			if(value != null && value.length > 0) {
 				if(charset == "utf-8") {
-					_content.writeString(value);
+					_content.writeUTFBytes(value);
 				} else {
-					Debug.assert("Unsupported charset: "+charset);
+					_content.writeUTFBytes(value);
 				}
 				_crc32 = ChecksumUtil.CRC32(_content);
 				_hasAdler32 = false;
@@ -321,9 +321,9 @@ package deng.fzip
 			var ba:ByteArray = new ByteArray();
 			//ba.endian = Endian.LITTLE_ENDIAN;
 			if (_filenameEncoding == "utf-8") {
-				ba.writeString(_filename);
+				ba.writeUTFBytes(_filename);
 			} else {
-				Debug.assert("Unsupported charset: "+_filenameEncoding);
+				ba.writeUTFBytes(_filename);
 			}
 			var filenameSize:uint = ba.position;
 			// Prep extra fields
@@ -351,9 +351,9 @@ package deng.fzip
 			// Prep comment (currently unused)
 			if(centralDir && _comment.length > 0) {
 				if (_filenameEncoding == "utf-8") {
-					ba.writeString(_comment);
+					ba.writeUTFBytes(_comment);
 				} else {
-                    Debug.assert("Unsupported charset: "+_filenameEncoding);
+                    ba.writeUTFBytes(_comment);
 				}
 			}
 			var commentSize:uint = ba.position - filenameSize - extrafieldsSize;
@@ -511,15 +511,12 @@ package deng.fzip
 			} else {
                 // TODO: Add readMultiByte
                 _filename = data.readUTFBytes(_sizeFilename);
-				//Debug.assert("Unsupported charset: "+_filenameEncoding);
 			}
             var bytesLeft:uint = _sizeExtra;
 			while(bytesLeft > 4) {
 				var headerId:uint = data.readUnsignedShort();
 				var dataSize:uint = data.readUnsignedShort();
-				if (dataSize > bytesLeft) {
-                    Debug.assert("Parse error in file " + _filename + ": Extra field data size too big.");
-				}
+                Debug.assert(dataSize <= bytesLeft, "Parse error in file " + _filename + ": Extra field data size too big.");
 				if(headerId == 0xdada && dataSize == 4) {
 					_adler32 = data.readUnsignedInt();
 					_hasAdler32 = true;
@@ -539,7 +536,6 @@ package deng.fzip
 		 * @private
 		 */		
 		public function parseContent(data:ByteArray):void {
-            trace(HAS_UNCOMPRESS, HAS_INFLATE, _hasAdler32, _compressionMethod, _encrypted);
 			if(_compressionMethod == COMPRESSION_DEFLATED && !_encrypted) {
 				if(HAS_UNCOMPRESS || HAS_INFLATE) {
 					// Adobe Air supports inflate decompression.
@@ -566,14 +562,14 @@ package deng.fzip
 					_content.writeUnsignedByte((_adler32 >> 8) & 0xFF);
 					_content.writeUnsignedByte((_adler32 >> 0) & 0xFF);
 				} else {
-					Debug.assert("Adler32 checksum not found.");
+					Debug.assert(false, "Adler32 checksum not found.");
 				}
 				isCompressed = true;
 			} else if(_compressionMethod == COMPRESSION_NONE) {
 				data.readBytes(_content, 0, _sizeCompressed);
 				isCompressed = false;
 			} else {
-				Debug.assert("Compression method " + _compressionMethod + " is not supported.");
+				Debug.assert(false, "Compression method " + _compressionMethod + " is not supported.");
 			}
 			_content.position = 0;
 		}
@@ -610,7 +606,6 @@ package deng.fzip
 		 */		
 		protected function uncompress():void {
 			if(isCompressed && _content.length > 0) {
-                trace(isCompressed, _content.length);
 				_content.position = 0;
 				if(HAS_INFLATE) {
 					//_content.inflate();

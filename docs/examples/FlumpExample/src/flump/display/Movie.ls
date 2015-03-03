@@ -58,7 +58,6 @@ public class Movie extends Sprite
         } else {
             _layers = new Vector.<Layer>(src.layers.length);
             for (var ii :int = 0; ii < _layers.length; ii++) {
-                trace("layer", ii);
                 _layers[ii] = createLayer(this, src.layers[ii], library, /*flipbook=*/false);
                 _numFrames = Math.max(src.layers[ii].frames, _numFrames);
             }
@@ -172,7 +171,7 @@ public class Movie extends Sprite
 
     /** Advances the playhead by the give number of seconds. From IAnimatable. */
     public function advanceTime (dt :Number) :void {
-        if (dt < 0) Debug.assert("Invalid time [dt=" + dt + "]");
+        Debug.assert(dt >= 0, "Invalid time [dt=" + dt + "]");
         if (_skipAdvanceTime) { _skipAdvanceTime = false; return; }
         if (_state == STOPPED) return;
 
@@ -252,12 +251,10 @@ public class Movie extends Sprite
     /** @private */
     protected function extractFrame (position :Object) :int {
         if (position is int) return int(position);
-        if (!(position is String)) Debug.assert("Movie position must be an int frame or String label");
+        Debug.assert(position is String, "Movie position must be an int frame or String label");
         const label :String = String(position);
         var frame :int = getFrameForLabel(label);
-        if (frame < 0) {
-            Debug.assert("No such label '" + label + "'");
-        }
+        Debug.assert(frame >= 0, "No such label '" + label + "'");
         return frame;
     }
 
@@ -280,10 +277,7 @@ public class Movie extends Sprite
      * for updates that are the result of a "goTo" call.
      */
     protected function updateFrame (newFrame :int, dt :Number) :void {
-        if (newFrame < 0 || newFrame >= _numFrames) {
-            Debug.assert("Invalid frame [frame=" + newFrame,
-                " validRange=0-" + (_numFrames - 1) + "]");
-        }
+        Debug.assert(newFrame >= 0 && newFrame < _numFrames, "Invalid frame [frame=" + newFrame + " validRange=0-" + (_numFrames - 1) + "]");
 
         if (_isUpdatingFrame) {
             _pendingFrame = newFrame;

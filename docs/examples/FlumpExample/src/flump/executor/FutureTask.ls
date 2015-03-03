@@ -28,7 +28,6 @@ public class FutureTask extends Future
      * error thrown by the Function.
      */
     public function succeedAfter(thisObj:Object, f :Function, ...args) :void {
-        trace("succeedAfter", f, args);
         applyMonitored(thisObj, f, args);
         if (!isComplete) succeed();
     }
@@ -37,21 +36,18 @@ public class FutureTask extends Future
      * Call a function. Fail with any error thrown by the function, otherwise
      * no state change.
      */
-    public function monitor (thisObj:Object, f :Function, ...args) :void { 
-            trace("monitor", f, args); applyMonitored(thisObj, f, args); }
+    public function monitor (thisObj:Object, f :Function, ...args) :void { applyMonitored(thisObj, f, args); }
 
     /** Returns a callback Function that behaves like #monitor */
     public function monitoredCallback (thisObj:Object, callback :Function, activeCallback :Boolean=true) :Function {
         return function (...args) :void {
             if (activeCallback && isComplete) return;
-            trace("monitoredCallback", callback, args);
             applyMonitored(thisObj, callback, args);
         };
     }
 
     protected function applyMonitored(thisObj:Object, monitored :Function, args :Vector.<Object>) :void {
         //try {
-        trace("applyMonitored", monitored, args);
         monitored.apply(thisObj, args);
         //} catch (e :Error) {
             //if (this.isComplete) {
