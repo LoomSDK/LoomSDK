@@ -42,7 +42,9 @@ package com.modestmaps.core.painter
 	    		while (pool.length < MAX_NEW_TILES) {
 // TODO_AHMED: Find out why the class Class is used instead of interfaces or abstract inherticance
 	    			//pool.push(new tileClass(0,0,0));
-					pool.push(new tileClass());
+// TODO_AHMED: Find a way to use reflection to call a constructor with arguments
+					//pool.push(new tileClass());
+					pool.push(new Tile(0, 0, 0));
 	    		}
 	    	}						
 			var tile:Tile = pool.pop() as Tile;

@@ -71,7 +71,7 @@ package com.modestmaps.core.painter
 		// millions of 404s
 		// PORTNOTE: This appears to be a dictionary when used...
 		//protected var layersNeeded:Object = {};
-		protected var layersNeeded:Dictionary.<String, Object>;
+		protected var layersNeeded:Dictionary.<String, Object> = new Dictionary.<String, Object>();
 		protected var loaderTiles:Dictionary = new Dictionary.<Tile>;
 	
 		// open requests

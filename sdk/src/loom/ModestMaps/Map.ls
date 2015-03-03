@@ -109,13 +109,11 @@ package com.modestmaps
 	        this.mapProvider = mapProvider;
 
 			// initialize the grid (so point/location/coordinate functions should be valid after this)
-// CRASH
 			grid = new TileGrid(width, height, draggable, mapProvider);
-			//grid.addEventListener(Event.CHANGE, onExtentChanged);
-	        //addChild(grid);
+			grid.addEventListener(Event.CHANGE, onExtentChanged);
+	        addChild(grid);
 
-	        //setSize(width, height);
-// CRASH
+	        setSize(width, height);
 			//markerClip = new MarkerClip(this);
 			//addChild(markerClip);
 

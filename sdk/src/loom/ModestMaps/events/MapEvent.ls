@@ -6,7 +6,6 @@ package com.modestmaps.events
 {
 	import com.modestmaps.core.*;
 	import com.modestmaps.mapproviders.IMapProvider;
-	//import feathers.controls.NumericStepper;
 	
 	//import flash.events.Event;
 	import loom2d.events.Event;
