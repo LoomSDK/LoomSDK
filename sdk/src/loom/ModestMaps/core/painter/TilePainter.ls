@@ -29,10 +29,7 @@ package com.modestmaps.core.painter
 	
 	// PORTNOTE: Loom doesn't have a loader class
 	//import flash.system.LoaderContext;
-	// PORTNOTE: Disctionaries are a native part of loomscript
-	//import flash.utils.Dictionary;
 	
-	//import flash.utils.Timer;
 	import loom.platform.Timer;
 	
 	public class TilePainter extends EventDispatcher implements ITilePainter
@@ -69,15 +66,13 @@ package com.modestmaps.core.painter
 		// TODO: document this in IMapProvider, so that provider implementers know
 		// they are free to check the bounds of their overlays and don't have to serve
 		// millions of 404s
-		// PORTNOTE: This appears to be a dictionary when used...
-		//protected var layersNeeded:Object = {};
-		protected var layersNeeded:Dictionary.<String, Object>;
-		protected var loaderTiles:Dictionary = new Dictionary.<Tile>;
+		protected var layersNeeded:Dictionary.<String, Vector.<String>> = {};
+//TODO_AHMED: Decide what to do about the missing loader class
+		// protected var loaderTiles:Dictionary = new Dictionary.<Loader, Tile>;
 	
 		// open requests
-		// PORTNOTE: Assuming this is an array of string
-		//protected var openRequests:Array = [];
-		protected var openRequests:Vector.<String> = [];
+//TODO_AHMED: openRequests should be Vector.<Loader>... set to <Object> just to compile
+		protected var openRequests:Vector.<Object> = [];
 	
 		// keeping track for dispatching MapEvent.ALL_TILES_LOADED and MapEvent.BEGIN_TILE_LOADING
 		protected var previousOpenRequests:int = 0;
@@ -85,13 +80,10 @@ package com.modestmaps.core.painter
 		// loader cache is shared across map instances, hence this is static for the time being	
 		// PORTNOTE: loaderCache seems to be used as a dictionary of string, object...
 		protected static var loaderCache:Dictionary.<String, Object>;
-		// PORTNOTE: assuming this is an array of string
-		//protected static var cachedUrls:Array = [];
 		protected static var cachedUrls:Vector.<String> = [];
 
 		public function TilePainter(tileGrid:TileGrid, provider:IMapProvider, queueFunction:Function)
 		{
-			// PORTNOTE: The super class doesn't seem to have an argument
 			super();
 			
 			this.tileGrid = tileGrid;
@@ -103,11 +95,9 @@ package com.modestmaps.core.painter
 			this.tilePool = new TilePool(Tile);
 			this.tileCache = new TileCache(tilePool);
 			queueTimer = new Timer(200);
-// TODO_AHMED: Do something about the missing TimerEvent
-			//queueTimer.addEventListener(TimerEvent.TIMER, processQueue);		
-			
-			// TODO: this used to be called onAddedToStage, is this bad?
-			//queueTimer.start();
+//TODO: test that this is functioning as expected            
+            queueTimer.onComplete = processQueue;
+			queueTimer.start();
 		}
 
 		/** The classes themselves serve as factories!
@@ -116,13 +106,12 @@ package com.modestmaps.core.painter
 		 * 
 		 * @see http://norvig.com/design-patterns/img013.gif  
 		 */ 
-		// PORTNOTE: There isn't a class called Class in loomscript, using object instead
-		//public function setTileClass(tileClass:Class):void
-		public function setTileClass(tileClass:Object):void
-		{
-			// assign the new class, which creates a new pool array
-			tilePool.setTileClass(tileClass);
-		}
+//NOTE_24: tileClass only used to support Tile and TweenTile, the latter of which we don't need ATM         
+		// public function setTileClass(tileClass:Class):void
+		// {
+		// 	// assign the new class, which creates a new pool array
+		// 	tilePool.setTileClass(tileClass);
+		// }
 		
 		public function setMapProvider(provider:IMapProvider):void
 		{
@@ -135,8 +124,6 @@ package com.modestmaps.core.painter
 			return tileCache.getTile(key);
 		}
 		
-		// PORTNOTE: Assuming recentlySeen is an array of string
-		//public function retainKeysInCache(recentlySeen:Array):void
 		public function retainKeysInCache(recentlySeen:Vector.<String>):void
 		{
 			tileCache.retainKeys(recentlySeen); 			
@@ -146,12 +133,11 @@ package com.modestmaps.core.painter
 		{
 			var tile:Tile = tilePool.getTile(coord.column, coord.row, coord.zoom);
 			tile.name = key;
-			// PORTNOTE: assuming urls is an array of string
 			var urls:Vector.<String> = provider.getTileUrls(coord);
 			if (urls && urls.length > 0) {
 				// keep a local copy of the URLs so we don't have to call this twice:
 				layersNeeded[tile.name] = urls;
-				tileQueue.push(tile);
+				tileQueue.pushSingle(tile);
 			}
 			else {
 				// trace("no urls needed for that tile", tempCoord);
@@ -182,7 +168,6 @@ package com.modestmaps.core.painter
 			if (!tileCache.containsKey(tile.name)) {
 				tilePool.returnTile(tile);
 			}
-			//delete layersNeeded[tile.name];
 			layersNeeded.deleteKey(tile.name);
 		}
 		
@@ -197,7 +182,7 @@ package com.modestmaps.core.painter
 			/*for each (var loader:Loader in openRequests) {
 				var tile:Tile = loaderTiles[loader] as Tile;
 				loaderTiles[loader] = null;
-				delete loaderTiles[loader];
+				loaderTiles.deleteKey(loader);
 				if (!tileCache.containsKey(tile.name)) {
 					tilePool.returnTile(tile);
 				}
@@ -210,15 +195,12 @@ package com.modestmaps.core.painter
 				catch (error:Error) {
 					// close often doesn't work, no biggie
 				}
-			}*/
-			
-			openRequests = [];
-			
-			for (var key:String in layersNeeded) {
-				//delete layersNeeded[key];
-				layersNeeded.deleteKey(key);
 			}
-			layersNeeded = {};
+            openRequests.clear();
+            */
+			
+			
+			layersNeeded.clear();
 			
 			tileQueue.clear();
 					
@@ -228,11 +210,8 @@ package com.modestmaps.core.painter
 		private function loadNextURLForTile(tile:Tile):void
 		{
 			// TODO: add urls to Tile?
-			// PORTNOTE: Assuming that urls is an array of strings
 			var urls:Vector.<String> = layersNeeded[tile.name] as Vector.<String>;
 			if (urls && urls.length > 0) {
-				// PORTNOTE: loomscript doesn't support * syntax
-				//var url:* = urls.shift();
 				var url = urls.shift();
 				if (cacheLoaders && (url is String) && loaderCache[url]) {
 					// PORTNOTE: Using sprites in place of bitmaps
@@ -271,7 +250,6 @@ package com.modestmaps.core.painter
 			else if (urls && urls.length == 0) {
 				tileGrid.tilePainted(tile);
 				tileCache.putTile(tile);
-				//delete layersNeeded[tile.name];
 				layersNeeded.deleteKey(tile.name);
 			}			
 		}	
@@ -280,12 +258,11 @@ package com.modestmaps.core.painter
 		 *  usual operation is extremely quick, ~1ms or so */
 // TODO_AHMED: Do something about the missing timer event
 		//private function processQueue(event:TimerEvent=null):void
-		private function processQueue(event:Event=null):void
+		private function processQueue():void
 		{
 			if (openRequests.length < maxOpenRequests && tileQueue.length > 0) {
 	
 				// prune queue for tiles that aren't visible
-				// PORTNOTE: Assuming this is an array of tiles
 				var removedTiles:Vector.<Tile> = tileQueue.retainAll(tileGrid.getVisibleTiles());
 				
 				// keep layersNeeded tidy:
@@ -313,9 +290,8 @@ package com.modestmaps.core.painter
 			// you might want to wait for tiles to load before displaying other data, interface elements, etc.
 			// these events take care of that for you...
 			if (previousOpenRequests == 0 && openRequests.length > 0) {
-				//dispatchEvent(new MapEvent(MapEvent.BEGIN_TILE_LOADING));
-				// PORTNOTE: Map events seem to require two arguments, the second being called "rest..." passing null for now.
-				dispatchEvent(new MapEvent(MapEvent.BEGIN_TILE_LOADING, null));
+// PORTNOTE: Map events seem to require two arguments, the second being called "rest..." passing null for now.
+				dispatchEvent(new MapEvent(MapEvent.BEGIN_TILE_LOADING));
 			}
 			else if (previousOpenRequests > 0)
 			{
@@ -326,9 +302,8 @@ package com.modestmaps.core.painter
 			    // if we're finished...
 			    if (openRequests.length == 0)
 			    {
-					// PORTNOTE: Map events seem to require two arguments, the second being called "rest..." passing null for now.
-			    	//dispatchEvent(new MapEvent(MapEvent.ALL_TILES_LOADED));
-			    	dispatchEvent(new MapEvent(MapEvent.ALL_TILES_LOADED, null));
+// PORTNOTE: Map events seem to require two arguments, the second being called "rest..." passing null for now.
+			    	dispatchEvent(new MapEvent(MapEvent.ALL_TILES_LOADED));
 				}
 			}
 			
@@ -398,7 +373,7 @@ package com.modestmaps.core.painter
 				var loader:Loader = openRequests[i] as Loader;
 				if (loader.contentLoaderInfo == loaderInfo) {
 					openRequests.splice(i,1);
-					delete layersNeeded[loader.name];
+					layersNeeded.deleteKey(loader.name);
 					var tile:Tile = loaderTiles[loader] as Tile;
 					if (tile) {
 						tile.paintError(provider.tileWidth, provider.tileHeight);

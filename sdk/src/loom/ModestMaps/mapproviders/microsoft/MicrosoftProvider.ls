@@ -4,9 +4,7 @@ package com.modestmaps.mapproviders.microsoft
 	import com.modestmaps.core.Coordinate;
 	import com.modestmaps.mapproviders.AbstractMapProvider;
 	import com.modestmaps.mapproviders.IMapProvider;
-	
-	//PORTNOTE functions not supported
-	//import com.modestmaps.util.BinaryUtil;
+	import com.modestmaps.util.BinaryUtil;
 	
 	/**
 	 * @author tom
@@ -59,10 +57,9 @@ package com.modestmaps.mapproviders.microsoft
 		
 		protected function getZoomString(coord:Coordinate):String
 		{
-			//PORTNOTE TODO_KEVIN add binary/decimal conversion support
-			/*
 	        var sourceCoord:Coordinate = sourceCoordinate(coord);
 		    
+//TODO_24: check that these -ve slice() params are infact valid...
 			// convert row + col to zoom string
 			// padded with zeroes so we end up with zoom digits after slicing:
 			var rowBinaryString:String = BinaryUtil.convertToBinary(sourceCoord.row);
@@ -79,8 +76,6 @@ package com.modestmaps.mapproviders.microsoft
 			}
 			
 			return zoomString; 
-			*/
-			return "not_supported";
 		}
 	
 		public function toString():String

@@ -17,15 +17,7 @@ package com.modestmaps.core.painter
 		
 		public function get size():int
 		{
-			var alreadySeenCount:int = 0;
-			// PORTNOTE: loomscript doesn't seem to support dynamic typing in a foreach loop from as3
-			//for (var key:* in alreadySeen) {
-			//	alreadySeenCount++;
-			//}
-			for (var key in alreadySeen) {
-				alreadySeenCount++;
-			}
-			return alreadySeenCount;		
+            return alreadySeen.length;
 		}
 		
 		public function putTile(tile:Tile):void
@@ -43,15 +35,11 @@ package com.modestmaps.core.painter
 			return alreadySeen[key] is Tile;
 		}
 		
-		// PORTNOTE: Assuming the keys here are an array of string
-		//public function retainKeys(keys:Array):void
 		public function retainKeys(keys:Vector.<String>):void
 		{
 			for (var key:String in alreadySeen) {
 				if (keys.indexOf(key) < 0) {
 					tilePool.returnTile(alreadySeen[key] as Tile);
-					// PORTNOTE: loomscript doesn't seem to implement the delete keyword
-					//delete alreadySeen[key];
 					alreadySeen.deleteKey(key);
 				}
 			}		
@@ -61,11 +49,8 @@ package com.modestmaps.core.painter
 		{
 			for (var key:String in alreadySeen) {
 				tilePool.returnTile(alreadySeen[key] as Tile);
-				// PORTNOTE: loomscript doesn't seem to implement the delete keyword
-				//delete alreadySeen[key];
-				alreadySeen.deleteKey(key);
 			}
-			alreadySeen = new Dictionary.<String, Tile>();		
+			alreadySeen.clear();		
 		}
 	}
 }
