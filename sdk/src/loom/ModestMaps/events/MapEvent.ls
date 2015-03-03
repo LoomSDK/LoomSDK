@@ -34,7 +34,7 @@ package com.modestmaps.events
 	    public static const RESIZED:String = 'resized';
 		// PORTNOTE: Assuming this is an array of number
 	    //public var newSize:Array;
-	    public var newSize:Vector.<Number>;
+	    public var newSize:Vector.<Tile>;
 	    	    
 	    public static const COPYRIGHT_CHANGED:String = 'copyrightChanged';
 	    public var newCopyright:String;
@@ -84,7 +84,7 @@ package com.modestmaps.events
 	    		case RESIZED:
 					//PORTNOTE: Array -> Vector.<Tile>
 	    			if (rest.length > 0 && rest[0] is Vector.<Tile>) {
-	    				newSize = rest[0] as Vector.<Tile>;
+	    				newSize = rest[0] as Vector.<Number>;
 	    			}
 					break;	    	    
 				case COPYRIGHT_CHANGED:

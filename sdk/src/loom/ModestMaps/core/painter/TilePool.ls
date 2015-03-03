@@ -1,8 +1,6 @@
 package com.modestmaps.core.painter
 {
 	import com.modestmaps.core.Tile;
-	// PORTNOTE: Using getType() in place of Class
-	import system.reflection.Type;
 	
 	/** 
 	 *  This post http://lab.polygonal.de/2008/06/18/using-object-pools/
@@ -21,29 +19,25 @@ package com.modestmaps.core.painter
 		// PORTNOTE: Assuming this is an array of tiles
 		//protected var pool:Array = [];
 		protected var pool:Vector.<Tile> = [];
-		// PORTNOTE: loom doesn't have a class called Class, using object instead
+		// PORTNOTE: loom doesn't have a class called Class, using Tile instead
 		//protected var tileClass:Class;
-		protected var tileClass:Type;
 		
-		public function TilePool(tileClass:Object)
+		public function TilePool()
 		{
-			this.tileClass = tileClass.getType();
+			
 		}
 	
-		public function setTileClass(tileClass:Object):void
+		// Because we're assuming tileClass is a Tile, there's no need for this function. Clearing the pool might still be important though...
+		//public function setTileClass(tileClass:Object):void
+		/*public function setTileClass():void
 		{
-			this.tileClass = tileClass.getType();
 			pool = [];
-		}
+		}*/
 	
 		public function getTile(column:int, row:int, zoom:int):Tile
 		{
 	    	if (pool.length < MIN_POOL_SIZE) {
 	    		while (pool.length < MAX_NEW_TILES) {
-// TODO_AHMED: Find out why the class Class is used instead of interfaces or abstract inherticance
-	    			//pool.push(new tileClass(0,0,0));
-// TODO_AHMED: Find a way to use reflection to call a constructor with arguments
-					//pool.push(new tileClass());
 					pool.push(new Tile(0, 0, 0));
 	    		}
 	    	}						

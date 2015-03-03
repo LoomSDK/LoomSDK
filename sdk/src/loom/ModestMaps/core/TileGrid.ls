@@ -346,7 +346,7 @@ package com.modestmaps.core
 		{
 			//var t:Number = getTimer();
 			
-			trace("Render Event Happened");
+			trace("Render Event Happened in TileGrid");
 			
 			if (!dirty || !stage) {
 				//trace(getTimer() - t, "ms in", provider);		

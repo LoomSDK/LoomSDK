@@ -100,7 +100,9 @@ package com.modestmaps.core.painter
 	
 			// TODO: pass all these into the constructor so they can be shared, swapped out or overridden
 			this.tileQueue = new TileQueue();
-			this.tilePool = new TilePool(Tile);
+			// PORTNOTE: Tilepool used to take a class type as an argument, this was changed because it only used the class Tile anyway
+			//this.tilePool = new TilePool(Tile);
+			this.tilePool = new TilePool();
 			this.tileCache = new TileCache(tilePool);
 			queueTimer = new Timer(200);
 // TODO_AHMED: Do something about the missing TimerEvent
@@ -116,13 +118,13 @@ package com.modestmaps.core.painter
 		 * 
 		 * @see http://norvig.com/design-patterns/img013.gif  
 		 */ 
-		// PORTNOTE: There isn't a class called Class in loomscript, using object instead
+		// PORTNOTE: Ignoring setTileClass functions for now
 		//public function setTileClass(tileClass:Class):void
-		public function setTileClass(tileClass:Object):void
+		/*public function setTileClass(tileClass:Object):void
 		{
 			// assign the new class, which creates a new pool array
 			tilePool.setTileClass(tileClass);
-		}
+		}*/
 		
 		public function setMapProvider(provider:IMapProvider):void
 		{
