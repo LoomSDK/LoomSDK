@@ -59,6 +59,7 @@ package com.modestmaps
 	    public function TweenMap(width:Number=320, height:Number=240, draggable:Boolean=true, provider:IMapProvider=null, ... rest)
 	    {
 	    	super(width, height, draggable, provider, rest);
+//NOTE_24: tileClass only used to support Tile and TweenTile, the latter of which we don't need ATM         
 	    	//grid.setTileClass(TweenTile);
         }
 

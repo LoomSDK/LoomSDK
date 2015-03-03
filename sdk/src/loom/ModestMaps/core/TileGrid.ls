@@ -151,6 +151,10 @@ package com.modestmaps.core
 		// setting to true will dispatch a CHANGE event which Map will convert to an EXTENT_CHANGED for us
 		protected var matrixChanged:Boolean = false;
 		
+		// PORTNOTE: changing the way zoomLetter is initialising to avoid crashes
+		//private var zoomLetter:Vector.<String>;// = "abcdefghijklmnopqrstuvwxyz".split('');
+		private var zoomLetter:Vector.<String> = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
+		
 		public function TileGrid(w:Number, h:Number, draggable:Boolean, provider:IMapProvider)
 		{
 			trace("The tile grid constructor was called!");
@@ -257,17 +261,17 @@ package com.modestmaps.core
 		 * @see http://norvig.com/design-patterns/img013.gif  
 		 */ 
 		
-		//POSTNOTE: replaced Class with Object
 		//public function setTileClass(tileClass:Class):void
-		public function setTileClass(tileClass:Object):void
-		{
-			// first get rid of everything, which passes tiles back to the pool
-			clearEverything();
-			// then assign the new class, which creates a new pool array
+//NOTE_24: tileClass only used to support Tile and TweenTile, the latter of which we don't need ATM         
+		// public function setTileClass(tileClass:Class):void
+		// {
+		// 	// first get rid of everything, which passes tiles back to the pool
+		// 	clearEverything();
+		// 	// then assign the new class, which creates a new pool array
 			
-			//TODO_KEVIN fix tilePainter.setTileClass(tileClass) when implemented
-			//tilePainter.setTileClass(tileClass);
-		}
+		// 	//TODO_KEVIN fix tilePainter.setTileClass(tileClass) when implemented
+		// 	//tilePainter.setTileClass(tileClass);
+		// }
 		
 		/** processes the tileQueue and optionally outputs stats into debugField */
 		protected function onEnterFrame(event:Event=null):void
@@ -342,7 +346,7 @@ package com.modestmaps.core
 		{
 			//var t:Number = getTimer();
 			
-			trace("Render Event Happened");
+			trace("Render Event Happened in TileGrid");
 			
 			if (!dirty || !stage) {
 				//trace(getTimer() - t, "ms in", provider);		
@@ -644,11 +648,11 @@ package com.modestmaps.core
  			// for positioning tile according to current transform, based on current tile zoom
 			
  			//var scaleFactors:Array = new Array(maxZoom + 1);
- 			var scaleFactors:Vector.<Number> = [];
+ 			var scaleFactors:Vector.<Number> = new Vector.<Number>(maxZoom + 1);
 			
 			// scales to compensate for zoom differences between current grid zoom level				
  			//var tileScales:Array = new Array(maxZoom + 1);
- 			var tileScales:Vector.<Number> = [];
+ 			var tileScales:Vector.<Number> = new Vector.<Number>(maxZoom + 1);
 			
 			for (var z:int = 0; z <= maxZoom; z++) {
 				scaleFactors[z] = Math.pow(2.0, currentTileZoom - z);
@@ -751,9 +755,6 @@ package com.modestmaps.core
 			}
 			return tile;
 		}
-
-// TODO_AHMED: Initialse the zoomLetter array
-		private var zoomLetter:Vector.<String>;// = "abcdefghijklmnopqrstuvwxyz".split('');
 						
 		/** zoom is translated into a letter so that keys can easily be sorted (alphanumerically) by zoom level */
 		private function tileKey(col:int, row:int, zoom:int):String
@@ -844,7 +845,9 @@ package com.modestmaps.core
 			if (!_invertedMatrix) {
 				//PORTNOTE replaced matrix.clone with .copyFrom
 				//_invertedMatrix = worldMatrix.clone();
-				_invertedMatrix.copyFrom(worldMatrix);				
+				//_invertedMatrix.copyFrom(worldMatrix);
+				// PORTNOTE: Matrix.copyFrom seems to not work
+				_invertedMatrix = new Matrix(worldMatrix.a, worldMatrix.b, worldMatrix.c, worldMatrix.d, worldMatrix.tx, worldMatrix.ty);
 				_invertedMatrix.invert();
 				_invertedMatrix.scale(scale/tileWidth, scale/tileHeight);
 			}

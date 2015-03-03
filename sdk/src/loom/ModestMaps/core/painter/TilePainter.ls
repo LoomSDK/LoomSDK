@@ -92,7 +92,9 @@ package com.modestmaps.core.painter
 	
 			// TODO: pass all these into the constructor so they can be shared, swapped out or overridden
 			this.tileQueue = new TileQueue();
-			this.tilePool = new TilePool(Tile);
+			// PORTNOTE: Tilepool used to take a class type as an argument, this was changed because it only used the class Tile anyway
+			//this.tilePool = new TilePool(Tile);
+			this.tilePool = new TilePool();
 			this.tileCache = new TileCache(tilePool);
 			queueTimer = new Timer(200);
 //TODO: test that this is functioning as expected            
