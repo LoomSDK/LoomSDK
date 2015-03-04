@@ -10,8 +10,6 @@ package com.modestmaps.core
 	//import flash.display.Loader;
 	import loom2d.display.Sprite;
 	
-	import loom2d.display.Quad; 
-	import com.modestmaps.Map;
 	
 	public class Tile extends Sprite
 	{		
@@ -30,18 +28,11 @@ package com.modestmaps.core
 			// otherwise you'll get seams between tiles :(
 			// PORTNOTE: cacheAsBitmap isn't a part of loom, it's an optimisation function for flash for mobile.
 			//this.cacheAsBitmap = false;
-						
-			var quad = new Quad(128, 128, 0xFF00FF00);
-            quad.center();
-            quad.x = 240;
-            quad.y = 120;
-			
-            Map.MapStage.addChild(quad);
 			
 			count++;
 		} 
 		
-		/** override this in a subclass and call grid.setTileClass if you want to draw on your tiles */
+		/** override this in a subclass and call grid.setTileCreator if you want to draw on your tiles */
 	    public function init(column:int, row:int, zoom:int):void
 	    {
 			this.zoom = zoom;
@@ -84,8 +75,7 @@ package com.modestmaps.core
 		public function show():void 
 		{
 			this.alpha = 1.0;
-			// if you want to do something when the tile is ready then override 
-			// this method and override Map.createTile to use your subclass 
+			// if you want to do something when the tile is ready then override this method
 		}
 		
 		public function hide():void
