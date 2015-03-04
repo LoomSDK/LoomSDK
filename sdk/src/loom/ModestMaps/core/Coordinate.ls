@@ -37,6 +37,7 @@ package com.modestmaps.core
 	    
 	    public function zoomTo(destination:Number):Coordinate
 	    {
+//TODO_24: 1 << ((destination - zoom) - 1) will be more optimal
 	        return new Coordinate(row * Math.pow(2, destination - zoom),
 	                              column * Math.pow(2, destination - zoom),
 	                              destination);
@@ -44,6 +45,7 @@ package com.modestmaps.core
 	    
 	    public function zoomBy(distance:Number):Coordinate
 	    {
+//TODO_24: 1 << (distance - 1) will be more optimal
 	        return new Coordinate(row * Math.pow(2, distance),
 	                              column * Math.pow(2, distance),
 	                              zoom + distance);

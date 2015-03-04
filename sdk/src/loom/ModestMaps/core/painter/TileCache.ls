@@ -32,6 +32,7 @@ package com.modestmaps.core.painter
 		
 		public function containsKey(key:String):Boolean
 		{
+//NOTE_24: if alreadySeen[key] is null, will this pass? Should maybe be return alreadySeen[key] != null; ?      
 			return alreadySeen[key] is Tile;
 		}
 		

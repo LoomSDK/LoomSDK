@@ -298,7 +298,7 @@ package com.modestmaps
 	    */
 	    public function getExtent():MapExtent
 	    {
-	        var extent:MapExtent = new MapExtent();
+	        var extent:MapExtent = new MapExtent(0, 0, 0, 0);
 	        
 			// PORTNOTE: Throw not yet supported in loomscript
 	        //if(!mapProvider) {

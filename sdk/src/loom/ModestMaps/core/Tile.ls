@@ -5,10 +5,10 @@
 
 package com.modestmaps.core
 {
-	//import flash.display.Bitmap;
 	import loom2d.display.DisplayObject;
 	//import flash.display.Loader;
-	import loom2d.display.Sprite;
+    import loom2d.display.Sprite;
+	import loom2d.display.Image;
 	
 	
 	public class Tile extends Sprite
@@ -47,7 +47,7 @@ package com.modestmaps.core
 	    	while (numChildren > 0) {
 	    		var child:DisplayObject = removeChildAt(0);
 				
-				// PORTNOTE: not a part of loom, hope we don't have to use it!
+//LUKE_SAYS: I think we can just destroy the child images...
 	    		//if (child is Loader) {
 	    		//	try {
 	    		//		Loader(child).unload();
@@ -57,8 +57,7 @@ package com.modestmaps.core
 	    		//	}
 	    		}
 			
-//LUKE_SAYS: Might not be needed            
-// TODO_AHMED: find equiuvalents to graphics class
+//LUKE_SAYS: Might not need to do anything here at all...
 	    	//graphics.clear();
 	    }        
 		
@@ -89,8 +88,7 @@ package com.modestmaps.core
 		    var size:uint = 32;
 		    var padding:uint = 4;
 		    var weight:uint = 4;
-//LUKE_SAYS: Might not be needed            
-//TODO_AHMED: Find equivalents for graphics class
+//LUKE_SAYS: Might not be needed.... this just paints some design on the tile, so rather just add a custom image instead
 		    /*with (graphics)
 			{
 				clear();		        

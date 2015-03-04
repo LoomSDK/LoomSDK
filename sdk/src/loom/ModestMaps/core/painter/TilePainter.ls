@@ -5,17 +5,14 @@ package com.modestmaps.core.painter
 	import com.modestmaps.core.TileGrid;
 	import com.modestmaps.events.MapEvent;
 	import com.modestmaps.mapproviders.IMapProvider;
-	import loom2d.display.Sprite;
+	import loom2d.display.Image;
+    import loom2d.textures.Texture;
 	
-	// PORTNOTE: No bitmap class
-	//import flash.display.Bitmap;
 	// PORTNOTE: There isn't a loader class equivalent in loom
 	//import flash.display.Loader;
 	//import flash.display.LoaderInfo;
 	
-	//import flash.events.Event;
 	import loom2d.events.Event;
-	//import flash.events.EventDispatcher;
 	import loom2d.events.EventDispatcher;
 	
 	// PORTNOTE: There doesn't seem to be an IOErrorEvent, ProgressEvent, TimerEvent in loom. Timer is possibly update?
@@ -78,7 +75,6 @@ package com.modestmaps.core.painter
 		protected var previousOpenRequests:int = 0;
 
 		// loader cache is shared across map instances, hence this is static for the time being	
-		// PORTNOTE: loaderCache seems to be used as a dictionary of string, object...
 		protected static var loaderCache:Dictionary.<String, Object>;
 		protected static var cachedUrls:Vector.<String> = [];
 
@@ -95,8 +91,10 @@ package com.modestmaps.core.painter
 			this.tilePool = new TilePool(CreateTile);
 			this.tileCache = new TileCache(tilePool);
 			queueTimer = new Timer(200);
+
 //TODO: test that this is functioning as expected            
             queueTimer.onComplete = processQueue;
+
 			queueTimer.start();
 		}
 
@@ -204,7 +202,6 @@ package com.modestmaps.core.painter
             openRequests.clear();
             */
 			
-			
 			layersNeeded.clear();
 			
 			tileQueue.clear();
@@ -219,12 +216,12 @@ package com.modestmaps.core.painter
 			if (urls && urls.length > 0) {
 				var url = urls.shift();
 				if (cacheLoaders && (url is String) && loaderCache[url]) {
-					// PORTNOTE: Using sprites in place of bitmaps
+//LUKE_SAYS: We'll want to use Image / Texture instead of Bitmap and then set the bitmap.texture
 					//var original:Bitmap = loaderCache[url] as Bitmap;
 					//var bitmap:Bitmap = new Bitmap(original.bitmapData); 
-					var original:Sprite = loaderCache[url] as Sprite;
+					var tex:Texture = loaderCache[url] as Texture;
 // TODO_AHMED: Find out whether this copy is legit or not
-					var bitmap:Sprite = original;
+					var bitmap:Image = new Image(tex);
 					
 					tile.addChild(bitmap);
 					loadNextURLForTile(tile);
@@ -293,7 +290,6 @@ package com.modestmaps.core.painter
 			// you might want to wait for tiles to load before displaying other data, interface elements, etc.
 			// these events take care of that for you...
 			if (previousOpenRequests == 0 && openRequests.length > 0) {
-// PORTNOTE: Map events seem to require two arguments, the second being called "rest..." passing null for now.
 				dispatchEvent(new MapEvent(MapEvent.BEGIN_TILE_LOADING, []));
 			}
 			else if (previousOpenRequests > 0)
@@ -305,7 +301,6 @@ package com.modestmaps.core.painter
 			    // if we're finished...
 			    if (openRequests.length == 0)
 			    {
-// PORTNOTE: Map events seem to require two arguments, the second being called "rest..." passing null for now.
 			    	dispatchEvent(new MapEvent(MapEvent.ALL_TILES_LOADED, []));
 				}
 			}
@@ -336,7 +331,6 @@ package com.modestmaps.core.painter
 			// PORTNOTE: AN EMPTY TRY CATCH STATEMENT WILL CAUSE THE UILD TO SILENTLY FAIL
 			/*if (smoothContent) {
 				try {
-// TODO_AHMED: Investigate the diferences between sprites and bitmaps
 					// PORTNOTE: The sprite class (which we're using in place of the bitmap class doesn't have a smoothing member variable
 					//var smoothContent:Bitmap = loader.content as Bitmap;
 					//smoothContent.smoothing = true;

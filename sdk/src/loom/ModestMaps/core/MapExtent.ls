@@ -20,7 +20,7 @@ package com.modestmaps.core
 		 *  @param s the southern latitude
 		 *  @param e the eastern-most longitude
 		 *  @param w the westest longitude */
-		public function MapExtent(n:Number=0, s:Number=0, e:Number=0, w:Number=0)
+		public function MapExtent(n:Number, s:Number, e:Number, w:Number)
 		{
 			north = Math.max(n, s);
 			south = Math.min(n, s);
@@ -134,7 +134,7 @@ package com.modestmaps.core
         		
         public function containsExtent(extent:MapExtent):Boolean
         {
-            return Rectangle.intersects(getRect(), extent.getRect());
+            return getRect().containsRect(extent.getRect());
         }
 
 		/** @return "north, south, east, west" */
@@ -148,7 +148,7 @@ package com.modestmaps.core
 		 * @return a new MapExtent from the given string */
 		public static function fromString(str:String):MapExtent
 		{
-//TODO_24: Make sure this split works without the original \s regular expression stuff         
+//TODO_24: Make sure this split works without the original \s regular expression stuff that ignores spaces      
 			var parts:Vector.<String> = str.split(",");
 			return new MapExtent(parts[0].toNumber(),
 								 parts[1].toNumber(),
@@ -159,7 +159,7 @@ package com.modestmaps.core
         /** calculate the north/south/east/west extremes of the given array of locations */
 		public static function fromLocations(locations:Vector.<Location>):MapExtent
 		{
-			if (!locations || locations.length == 0) return new MapExtent();
+			if (!locations || locations.length == 0) return new MapExtent(0, 0, 0, 0);
 
 			var extent:MapExtent;
 			
@@ -178,7 +178,7 @@ package com.modestmaps.core
 			}
 			
 			if (!extent) {
-				extent = new MapExtent();				
+				extent = new MapExtent(0, 0, 0, 0);
 			}
 			
 			return extent;

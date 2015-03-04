@@ -36,42 +36,21 @@ package
 		public function CustomTile(column:int, row:int, zoom:int)
 		{
 			super(column, row, zoom);
-//TEST CODE!!!
-            var quad = new Quad(4, 4, 0xFF00FF00);
-            quad.center();
-            quad.x = Random.randRangeInt(0, Map.MapStage.stageWidth);
-            quad.y = Random.randRangeInt(0, Map.MapStage.stageHeight);
-            
-            Map.MapStage.addChild(quad);            
 		}
 
 		override public function init(column:int, row:int, zoom:int):void
 		{
 			super.init(column, row, zoom);
 			
-			// var sprite = new Image(Texture.fromAsset("assets/bg.png"));
-			
-			// sprite.width = 32;
-			// sprite.height = 32;
-			
-			//stage.addChild(sprite);
-			
-			// Insert image here
-			/*graphics.clear();
-			graphics.beginFill(0xffffff);
-			graphics.drawRect(0,0,32,32);
-			graphics.endFill();
-			
-			var r:int = Math.random() * 255;
-			var g:int = Math.random() * 255;
-			var b:int = Math.random() * 255;
-
-			var c:int = 0xff000000 | r << 16 | g << 8 | b;
-			
-			graphics.beginFill(c);
-			graphics.drawCircle(16,16,8);
-			graphics.endFill();*/
-		}
+//TEST CODE!!!
+            var bitmap:Image = new Image();            
+            bitmap.center();
+            bitmap.scaleX = 0.05;
+            bitmap.scaleY = 0.05;
+            bitmap.x = Random.randRangeInt(0, Map.MapStage.stageWidth);
+            bitmap.y = Random.randRangeInt(0, Map.MapStage.stageHeight);
+            addChild(bitmap);         
+        }   
 	}
 
     class CustomMap extends Map
