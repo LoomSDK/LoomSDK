@@ -113,7 +113,7 @@ protected:
 
     static void handleAssetNotification(void *payload, const char *path);
 
-    utByteArray *contents = NULL;
+    utByteArray *contents;
     utString path;
 
 public:
@@ -128,7 +128,7 @@ public:
 LoomBinaryAsset *LoomBinaryAsset::create(const char *path)
 {
     LoomBinaryAsset *lta = new LoomBinaryAsset();
-
+    lta->contents = NULL;
     lta->path = path;
     return lta;
 }
