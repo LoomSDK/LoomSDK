@@ -8,8 +8,7 @@ package com.modestmaps.core.painter
 	
 	public interface ITilePainter extends EventDispatcher
 	{
-//NOTE_24: tileClass only used to support Tile and TweenTile, the latter of which we don't need ATM         
-		//function setTileClass(tileClass:Class):void
+		function setTileCreator(tileCreator:Function):void
 		function setMapProvider(provider:IMapProvider):void
 		function getTileFromCache(key:String):Tile
 		function retainKeysInCache(recentlySeen:Vector.<String>):void

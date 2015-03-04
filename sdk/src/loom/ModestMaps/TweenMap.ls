@@ -60,13 +60,10 @@ package com.modestmaps
 	    public function TweenMap(width:Number=320, height:Number=240, draggable:Boolean=true, provider:IMapProvider=null, mapStage:Stage=null, ... rest)
 	    {
 	    	super(width, height, draggable, provider, mapStage, rest);
-//NOTE_24: tileClass only used to support Tile and TweenTile, the latter of which we don't need ATM         
-	    	//grid.setTileClass(TweenTile);
-			
-			// PORTNOTE: Used to get around the custom tile thing
-			tileCreatorFunc = CreateTweenTile;
+	    	grid.setTileCreator(CreateTweenTile);
         }
-		
+
+        /* Custom Tile creator factor function for this map type */
 		protected function CreateTweenTile():TweenTile
 		{
 			return new TweenTile(0, 0, 0);

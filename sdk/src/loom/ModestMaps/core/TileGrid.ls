@@ -154,10 +154,8 @@ package com.modestmaps.core
 		// PORTNOTE: changing the way zoomLetter is initialising to avoid crashes
 		//private var zoomLetter:Vector.<String>;// = "abcdefghijklmnopqrstuvwxyz".split('');
 		private var zoomLetter:Vector.<String> = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
-		
-		protected var tileCreateFunc:Function;
-		
-		public function TileGrid(w:Number, h:Number, draggable:Boolean, provider:IMapProvider, tileFunction:Function)
+				
+		public function TileGrid(w:Number, h:Number, draggable:Boolean, provider:IMapProvider)
 		{
 			trace("The tile grid constructor was called!");
 //TODO_KEVIN find alternative for doubleClickEnabled
@@ -169,7 +167,7 @@ package com.modestmaps.core
 				this.tilePainter = ITilePainterOverride(provider).getTilePainter();
 			}
 			else {
-				this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare, tileFunction);
+				this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
 			}
 			//PORTNOTE TODO_KEVIN sort out ProgressEvent
 			//tilePainter.addEventListener(ProgressEvent.PROGRESS, onProgress, false, 0, true);
@@ -212,8 +210,6 @@ package com.modestmaps.core
 			worldMatrix = new Matrix();
 			
 			addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);	
-			
-			tileCreateFunc = tileFunction;
 		}
 		
 		/**
@@ -260,22 +256,18 @@ package com.modestmaps.core
 
 		/** The classes themselves serve as factories!
 		 * 
-		 * @param tileClass e.g. Tile, TweenTile, etc.
+		 * @param tileCreator Function that will instantiate and return a Tile object e.g. Tile, TweenTile, etc.
 		 * 
 		 * @see http://norvig.com/design-patterns/img013.gif  
 		 */ 
 		
-		//public function setTileClass(tileClass:Class):void
-//NOTE_24: tileClass only used to support Tile and TweenTile, the latter of which we don't need ATM         
-		// public function setTileClass(tileClass:Class):void
-		// {
-		// 	// first get rid of everything, which passes tiles back to the pool
-		// 	clearEverything();
-		// 	// then assign the new class, which creates a new pool array
-			
-		// 	//TODO_KEVIN fix tilePainter.setTileClass(tileClass) when implemented
-		// 	//tilePainter.setTileClass(tileClass);
-		// }
+		public function setTileCreator(tileCreator:Function):void
+		{
+			// first get rid of everything, which passes tiles back to the pool
+			clearEverything();
+			// then assign the new class, which creates a new pool array
+			tilePainter.setTileCreator(tileCreator);
+		}
 		
 		/** processes the tileQueue and optionally outputs stats into debugField */
 		protected function onEnterFrame(event:Event=null):void
@@ -1128,7 +1120,7 @@ package com.modestmaps.core
 				this.tilePainter = ITilePainterOverride(provider).getTilePainter();
 			}
 			else {
-				this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare, tileCreateFunc);
+				this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
 			}
 			//PORTNOTE: TODO_KEVIN sort out ProgressEvent.PROGRESS
 			//tilePainter.addEventListener(ProgressEvent.PROGRESS, onProgress, false, 0, true);

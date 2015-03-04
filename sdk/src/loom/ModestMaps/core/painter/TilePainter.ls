@@ -82,7 +82,7 @@ package com.modestmaps.core.painter
 		protected static var loaderCache:Dictionary.<String, Object>;
 		protected static var cachedUrls:Vector.<String> = [];
 
-		public function TilePainter(tileGrid:TileGrid, provider:IMapProvider, queueFunction:Function, tileFunction:Function)
+		public function TilePainter(tileGrid:TileGrid, provider:IMapProvider, queueFunction:Function)
 		{
 			super();
 			
@@ -92,9 +92,7 @@ package com.modestmaps.core.painter
 	
 			// TODO: pass all these into the constructor so they can be shared, swapped out or overridden
 			this.tileQueue = new TileQueue();
-			// PORTNOTE: Tilepool used to take a class type as an argument, this was changed because it only used the class Tile anyway
-			//this.tilePool = new TilePool(Tile);
-			this.tilePool = new TilePool(tileFunction);
+			this.tilePool = new TilePool(CreateTile);
 			this.tileCache = new TileCache(tilePool);
 			queueTimer = new Timer(200);
 //TODO: test that this is functioning as expected            
@@ -102,18 +100,23 @@ package com.modestmaps.core.painter
 			queueTimer.start();
 		}
 
+        /* The default Tile creation function used by the TilePool */
+        protected function CreateTile():Tile
+        {
+            return new Tile(0, 0, 0);
+        }        
+
 		/** The classes themselves serve as factories!
 		 * 
-		 * @param tileClass e.g. Tile, TweenTile, etc.
+         * @param tileCreator Function that will instantiate and return a Tile object e.g. Tile, TweenTile, etc.
 		 * 
 		 * @see http://norvig.com/design-patterns/img013.gif  
 		 */ 
-//NOTE_24: tileClass only used to support Tile and TweenTile, the latter of which we don't need ATM         
-		// public function setTileClass(tileClass:Class):void
-		// {
-		// 	// assign the new class, which creates a new pool array
-		// 	tilePool.setTileClass(tileClass);
-		// }
+		public function setTileCreator(tileCreator:Function):void
+		{
+			// assign the new class, which creates a new pool array
+			tilePool.setTileCreator(tileCreator);
+		}
 		
 		public function setMapProvider(provider:IMapProvider):void
 		{

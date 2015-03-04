@@ -72,8 +72,6 @@ package com.modestmaps
 	    protected var mapHeight:Number;
 	    protected var __draggable:Boolean = true;
 	
-		protected var tileCreatorFunc:Function;
-		
 	    /** das grid */
 	    public var grid:TileGrid;
 	
@@ -119,12 +117,9 @@ package com.modestmaps
 			// don't call setMapProvider here
 			// the extent calculations are all squirrely
 	        this.mapProvider = mapProvider;
-
-			// PORTNOTE: Using function pointers in place as3 Class
-			tileCreatorFunc = CreateTile;
 			
 			// initialize the grid (so point/location/coordinate functions should be valid after this)
-			grid = new TileGrid(width, height, draggable, mapProvider, tileCreatorFunc);
+			grid = new TileGrid(width, height, draggable, mapProvider);
 			grid.addEventListener(Event.CHANGE, onExtentChanged);
 	        addChild(grid);
 
@@ -172,11 +167,6 @@ package com.modestmaps
         	
         	//addChild(grid.debugField);
         }
-        
-        protected function CreateTile():Tile
-		{
-			return new Tile(0, 0, 0);
-		}
 
         /**
 	    * Based on an array of locations, determine appropriate map
