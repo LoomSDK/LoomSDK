@@ -24,8 +24,8 @@ package com.modestmaps.mapproviders
 	
 	public class AbstractMapProvider
 	{		
-		protected static const MIN_ZOOM:int = 1;
-		protected static const MAX_ZOOM:int = 20;
+		public static const MIN_ZOOM:int = 1;
+		public static const MAX_ZOOM:int = 20;
 		
 		protected var __projection:IProjection;
 		
@@ -36,7 +36,7 @@ package com.modestmaps.mapproviders
 		/*
 		 * Abstract constructor, should not be instantiated directly.
 		 */
-		public function AbstractMapProvider(minZoom:int=MIN_ZOOM, maxZoom:int=MAX_ZOOM)
+		public function AbstractMapProvider(minZoom:int, maxZoom:int)
 		{
 		    // see: http://modestmaps.mapstraction.com/trac/wiki/TileCoordinateComparisons#TileGeolocations
 		    var t:Transformation = new Transformation(1.068070779e7, 0, 3.355443185e7,
@@ -82,7 +82,7 @@ package com.modestmaps.mapproviders
 	    * Get top left outer-zoom limit and bottom right inner-zoom limits,
 	    * as Coordinates in a two element array.
 	    */
-	    public function outerLimits():Vector.<Number>/*Coordinate*/
+	    public function outerLimits():Vector.<Coordinate>/*Coordinate*/
 	    {
 	        return [ __topLeftOutLimit.copy(), __bottomRightInLimit.copy() ];
 	    }

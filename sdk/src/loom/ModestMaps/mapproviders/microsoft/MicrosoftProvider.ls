@@ -40,7 +40,7 @@ package com.modestmaps.mapproviders.microsoft
 		protected var type:String;
 		protected var hillShading:Boolean;
 		
-		public function MicrosoftProvider(type:String=ROAD, hillShading:Boolean=true, minZoom:int=MIN_ZOOM, maxZoom:int=MAX_ZOOM)
+		public function MicrosoftProvider(type:String, hillShading:Boolean, minZoom:int, maxZoom:int)
 		{
 		    super(minZoom, maxZoom);
 		    

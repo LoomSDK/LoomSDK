@@ -106,7 +106,7 @@ package com.modestmaps
 			if (!mapProvider) 
 			{
 				trace("No map provider set in the map! Defaulting to Microsoft");
-				mapProvider = new MicrosoftProvider(MicrosoftProvider.ROAD);
+				mapProvider = new MicrosoftProvider(MicrosoftProvider.ROAD, true, MicrosoftProvider.MIN_ZOOM, MicrosoftProvider.MAX_ZOOM);
 			}
 			
 			MapStage = mapStage;

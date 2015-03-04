@@ -471,7 +471,7 @@ package com.modestmaps.overlays
         {
         	var marker:DisplayObject = event.target as DisplayObject;
         	var location:Location = getMarkerLocation( marker );
-        	dispatchEvent( new MarkerEvent( MarkerEvent.MARKER_CLICK, marker, location, true) );
+        	dispatchEvent( new MarkerEvent( MarkerEvent.MARKER_CLICK, marker, location, true, false) );
         }
         
 		/**
@@ -486,7 +486,7 @@ package com.modestmaps.overlays
         {
         	var marker:DisplayObject = event.target as DisplayObject;
         	var location:Location = getMarkerLocation( marker );
-        	dispatchEvent( new MarkerEvent( MarkerEvent.MARKER_ROLL_OVER, marker, location, true) );
+        	dispatchEvent( new MarkerEvent( MarkerEvent.MARKER_ROLL_OVER, marker, location, true, false) );
         }
         
         /**
@@ -501,7 +501,7 @@ package com.modestmaps.overlays
         {
             var marker:DisplayObject = event.target as DisplayObject;
             var location:Location = getMarkerLocation( marker );
-        	dispatchEvent( new MarkerEvent( MarkerEvent.MARKER_ROLL_OUT, marker, location, true) );
+        	dispatchEvent( new MarkerEvent( MarkerEvent.MARKER_ROLL_OUT, marker, location, true, false) );
         }		
 	}
 	

@@ -70,6 +70,11 @@ package
 
 	class BlankProvider extends AbstractMapProvider implements IMapProvider
 	{
+        public BlankProvider(MIN_ZOOM, MAX_ZOOM)
+        {
+            super();
+        }
+
 		public function getTileUrls(coord:Coordinate):Vector.<String>
 		{
 			return [];

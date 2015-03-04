@@ -6,7 +6,6 @@ package com.modestmaps.events
 {
 	import loom2d.events.Event;
     import loom2d.display.DisplayObject;
-    
 	import com.modestmaps.geo.Location;	
     
     public class MarkerEvent extends Event
@@ -19,7 +18,7 @@ package com.modestmaps.events
 		protected var _marker:DisplayObject;
 		protected var _location:Location;
 		
-		public function MarkerEvent(type:String, marker:DisplayObject, location:Location, bubbles:Boolean=true, cancelable:Boolean=false)
+		public function MarkerEvent(type:String, marker:DisplayObject, location:Location, bubbles:Boolean, cancelable:Boolean)
 		{
 			super(type, bubbles, cancelable);
 			_marker = marker;
