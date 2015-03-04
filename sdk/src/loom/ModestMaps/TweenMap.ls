@@ -61,7 +61,15 @@ package com.modestmaps
 	    	super(width, height, draggable, provider, rest);
 //NOTE_24: tileClass only used to support Tile and TweenTile, the latter of which we don't need ATM         
 	    	//grid.setTileClass(TweenTile);
+			
+			// PORTNOTE: Used to get around the custom tile thing
+			tileCreatorFunc = CreateTweenTile;
         }
+		
+		protected function CreateTweenTile():TweenTile
+		{
+			return new TweenTile(0, 0, 0);
+		}
 
 	   /** Pan by px and py, in panDuration (used by panLeft, panRight, panUp and panDown) */
 	    override public function panBy(px:Number, py:Number):void

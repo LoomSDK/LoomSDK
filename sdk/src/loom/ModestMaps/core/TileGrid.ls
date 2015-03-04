@@ -155,7 +155,9 @@ package com.modestmaps.core
 		//private var zoomLetter:Vector.<String>;// = "abcdefghijklmnopqrstuvwxyz".split('');
 		private var zoomLetter:Vector.<String> = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
 		
-		public function TileGrid(w:Number, h:Number, draggable:Boolean, provider:IMapProvider)
+		protected var tileCreateFunc:Function;
+		
+		public function TileGrid(w:Number, h:Number, draggable:Boolean, provider:IMapProvider, tileFunction:Function)
 		{
 			trace("The tile grid constructor was called!");
 //TODO_KEVIN find alternative for doubleClickEnabled
@@ -167,7 +169,7 @@ package com.modestmaps.core
 				this.tilePainter = ITilePainterOverride(provider).getTilePainter();
 			}
 			else {
-				this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
+				this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare, tileFunction);
 			}
 			//PORTNOTE TODO_KEVIN sort out ProgressEvent
 			//tilePainter.addEventListener(ProgressEvent.PROGRESS, onProgress, false, 0, true);
@@ -209,7 +211,9 @@ package com.modestmaps.core
 
 			worldMatrix = new Matrix();
 			
-			addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);			
+			addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);	
+			
+			tileCreateFunc = tileFunction;
 		}
 		
 		/**
@@ -1124,7 +1128,7 @@ package com.modestmaps.core
 				this.tilePainter = ITilePainterOverride(provider).getTilePainter();
 			}
 			else {
-				this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
+				this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare, tileCreateFunc);
 			}
 			//PORTNOTE: TODO_KEVIN sort out ProgressEvent.PROGRESS
 			//tilePainter.addEventListener(ProgressEvent.PROGRESS, onProgress, false, 0, true);

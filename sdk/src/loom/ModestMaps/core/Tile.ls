@@ -28,6 +28,8 @@ package com.modestmaps.core
 			// PORTNOTE: cacheAsBitmap isn't a part of loom, it's an optimisation function for flash for mobile.
 			//this.cacheAsBitmap = false;
 			
+			trace("TILE CONSTRUCTOR WAS CALLED");
+			
 			count++;
 		} 
 		

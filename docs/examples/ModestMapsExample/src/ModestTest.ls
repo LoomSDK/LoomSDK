@@ -16,14 +16,11 @@ package
     {
         override public function run():void
         {
-            // Comment out this line to turn off automatic scaling.
             stage.scaleMode = StageScaleMode.LETTERBOX;
-			            
-			// make a draggable TweenMap so that we have smooth zooming and panning animation
-			// use our blank provider, defined below:
-			var map = new TweenMap(stage.stageWidth, stage.stageHeight, true, new BlankProvider());
-			//map.addEventListener(MouseEvent.DOUBLE_CLICK, map.onDoubleClick);
-			stage.addChild(map);			
+						
+			var map = new Map(stage.stageWidth, stage.stageHeight, true, new BlankProvider());
+
+			stage.addChild(map);
         }
     }
 	
@@ -38,6 +35,7 @@ package
 		public function CustomTile(column:int, row:int, zoom:int)
 		{
 			super(column, row, zoom);
+			trace("CUSTOM TILE CONSTRUCTOR WAS CALLED!!!");
 		}
 
 		override public function init(column:int, row:int, zoom:int):void
@@ -49,7 +47,7 @@ package
 			sprite.width = 32;
 			sprite.height = 32;
 			
-			stage.addChild(sprite);
+			//stage.addChild(sprite);
 			
 			// Insert image here
 			/*graphics.clear();

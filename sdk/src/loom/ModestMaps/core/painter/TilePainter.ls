@@ -82,7 +82,7 @@ package com.modestmaps.core.painter
 		protected static var loaderCache:Dictionary.<String, Object>;
 		protected static var cachedUrls:Vector.<String> = [];
 
-		public function TilePainter(tileGrid:TileGrid, provider:IMapProvider, queueFunction:Function)
+		public function TilePainter(tileGrid:TileGrid, provider:IMapProvider, queueFunction:Function, tileFunction:Function)
 		{
 			super();
 			
@@ -94,7 +94,7 @@ package com.modestmaps.core.painter
 			this.tileQueue = new TileQueue();
 			// PORTNOTE: Tilepool used to take a class type as an argument, this was changed because it only used the class Tile anyway
 			//this.tilePool = new TilePool(Tile);
-			this.tilePool = new TilePool();
+			this.tilePool = new TilePool(tileFunction);
 			this.tileCache = new TileCache(tilePool);
 			queueTimer = new Timer(200);
 //TODO: test that this is functioning as expected            

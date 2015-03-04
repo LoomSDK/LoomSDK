@@ -16,12 +16,16 @@ package com.modestmaps.core.painter
 		protected static const MIN_POOL_SIZE:int = 256;
 		protected static const MAX_NEW_TILES:int = 256;
 		
+		protected var tileCreatorFunc:Function;
+		
 		protected var pool:Vector.<Tile> = [];
 //NOTE_24: tileClass only used to support Tile and TweenTile, the latter of which we don't need ATM         
 		//protected var tileClass:Class;
 		
-		public function TilePool()
+		public function TilePool(tileCreatorFunction:Function)
 		{
+			tileCreatorFunc = tileCreatorFunction;
+			tileCreatorFunc();
 		}
 	
 //NOTE_24: tileClass only used to support Tile and TweenTile, the latter of which we don't need ATM         

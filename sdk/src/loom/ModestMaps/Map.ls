@@ -71,6 +71,8 @@ package com.modestmaps
 	    protected var mapHeight:Number;
 	    protected var __draggable:Boolean = true;
 	
+		protected var tileCreatorFunc:Function;
+		
 	    /** das grid */
 	    public var grid:TileGrid;
 	
@@ -99,8 +101,12 @@ package com.modestmaps
 	    */
 	    public function Map(width:Number=320, height:Number=240, draggable:Boolean=true, mapProvider:IMapProvider=null, ... rest)
 	    {
-			if (!mapProvider) mapProvider = new MicrosoftProvider(MicrosoftProvider.ROAD);
-
+			if (!mapProvider) 
+			{
+				trace("No map provider set in the map! Defaulting to Microsoft");
+				mapProvider = new MicrosoftProvider(MicrosoftProvider.ROAD);
+			}
+			
 			// TODO getter/setter for this that disables interaction in TileGrid
 			__draggable = draggable;
 
@@ -108,8 +114,11 @@ package com.modestmaps
 			// the extent calculations are all squirrely
 	        this.mapProvider = mapProvider;
 
+			// PORTNOTE: Using function pointers in place as3 Class
+			tileCreatorFunc = CreateTile;
+			
 			// initialize the grid (so point/location/coordinate functions should be valid after this)
-			grid = new TileGrid(width, height, draggable, mapProvider);
+			grid = new TileGrid(width, height, draggable, mapProvider, tileCreatorFunc);
 			grid.addEventListener(Event.CHANGE, onExtentChanged);
 	        addChild(grid);
 
@@ -151,14 +160,17 @@ package com.modestmaps
 				if (!isNaN(l2.lon) && Math.abs(l2.lon) != Number.POSITIVE_INFINITY) {
 					extent.east = l2.lon;
 				}
-// CRASH
-        	//	setExtent(extent);
+				
+        		setExtent(extent);
         	}
         	
         	//addChild(grid.debugField);
         }
         
-        
+        protected function CreateTile():Tile
+		{
+			return new Tile(0, 0, 0);
+		}
 
         /**
 	    * Based on an array of locations, determine appropriate map
@@ -546,8 +558,8 @@ package com.modestmaps
         public function getRotation():Number
         {
         	var m:Matrix = grid.getMatrix();
+//TODO_KEVIN deltaTransformPOint
     		//var px:Point = m.deltaTransformPoint(new Point(0, 1));
-			//TODO_KEVIN deltaTransformPOint
     		var px:Point = m.transformCoord(0, 1);
 			
 			return Math.atan2(px.y, px.x);
