@@ -31,6 +31,7 @@ package com.modestmaps
 	import com.modestmaps.mapproviders.IMapProvider;
 	import com.modestmaps.mapproviders.microsoft.MicrosoftProvider;
 	import com.modestmaps.overlays.MarkerClip;
+	import loom2d.display.Stage;
 	
 	//import flash.display.DisplayObject;
 	import loom2d.display.DisplayObject;
@@ -86,6 +87,9 @@ package com.modestmaps
 		 * @default 0.333333333  
 		 */
 		public var panFraction:Number = 0.333333333;
+
+// TODO_AHMED: Place this somewhere better
+		public static var MapStage:Stage;
 		
         /**
 	    * Initialize the map: set properties, add a tile grid, draw it.
@@ -99,13 +103,15 @@ package com.modestmaps
 	    *
 	    * @see com.modestmaps.core.TileGrid
 	    */
-	    public function Map(width:Number=320, height:Number=240, draggable:Boolean=true, mapProvider:IMapProvider=null, ... rest)
+	    public function Map(width:Number=320, height:Number=240, draggable:Boolean=true, mapProvider:IMapProvider=null, mapStage:Stage=null, ... rest)
 	    {
 			if (!mapProvider) 
 			{
 				trace("No map provider set in the map! Defaulting to Microsoft");
 				mapProvider = new MicrosoftProvider(MicrosoftProvider.ROAD);
 			}
+			
+			MapStage = mapStage;
 			
 			// TODO getter/setter for this that disables interaction in TileGrid
 			__draggable = draggable;

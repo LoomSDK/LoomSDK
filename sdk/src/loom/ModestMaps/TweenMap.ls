@@ -14,6 +14,7 @@ package com.modestmaps
 	import com.modestmaps.core.TweenTile;
 	import com.modestmaps.geo.Location;
 	import com.modestmaps.mapproviders.IMapProvider;
+	import loom2d.display.Stage;
 // TODO_AHMED: Find a way around the mouseevent
 	//import flash.events.MouseEvent;
 	import loom2d.events.Event;
@@ -56,9 +57,9 @@ package com.modestmaps
 	    *
 	    * @see com.modestmaps.core.TileGrid
 	    */
-	    public function TweenMap(width:Number=320, height:Number=240, draggable:Boolean=true, provider:IMapProvider=null, ... rest)
+	    public function TweenMap(width:Number=320, height:Number=240, draggable:Boolean=true, provider:IMapProvider=null, mapStage:Stage=null, ... rest)
 	    {
-	    	super(width, height, draggable, provider, rest);
+	    	super(width, height, draggable, provider, mapStage, rest);
 //NOTE_24: tileClass only used to support Tile and TweenTile, the latter of which we don't need ATM         
 	    	//grid.setTileClass(TweenTile);
 			

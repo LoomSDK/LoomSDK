@@ -10,6 +10,9 @@ package com.modestmaps.core
 	//import flash.display.Loader;
 	import loom2d.display.Sprite;
 	
+	import loom2d.display.Quad; 
+	import com.modestmaps.Map;
+	
 	public class Tile extends Sprite
 	{		
 		public static var count:int = 0;
@@ -27,8 +30,13 @@ package com.modestmaps.core
 			// otherwise you'll get seams between tiles :(
 			// PORTNOTE: cacheAsBitmap isn't a part of loom, it's an optimisation function for flash for mobile.
 			//this.cacheAsBitmap = false;
+						
+			var quad = new Quad(128, 128, 0xFF00FF00);
+            quad.center();
+            quad.x = 240;
+            quad.y = 120;
 			
-			trace("TILE CONSTRUCTOR WAS CALLED");
+            Map.MapStage.addChild(quad);
 			
 			count++;
 		} 
