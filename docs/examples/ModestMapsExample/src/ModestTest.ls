@@ -18,7 +18,7 @@ package
         {
             stage.scaleMode = StageScaleMode.LETTERBOX;
 						
-			var map = new Map(stage.stageWidth, stage.stageHeight, true, new BlankProvider());
+			var map = new Map(stage.stageWidth, stage.stageHeight, true, new BlankProvider(), stage);
 
 			stage.addChild(map);
         }
