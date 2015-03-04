@@ -176,6 +176,18 @@ public:
     }
 
     /**
+     * Returns true if both the top/left and bottom/right points are inside the bounds of this rectangle.
+     */
+    inline bool containsRect(Rectangle rect)
+    {
+        if ((rect.x > (x + width)) || (rect.x < x)) { return false; }
+        else if ((rect.y > (y + height)) || (rect.y < y)) { return false; }
+        else if (((rect.x + rect.width) > (x + width)) || ((rect.x + rect.width) < x)) { return false; }
+        else if (((rect.y + rect.height) > (y + height)) || ((rect.y + rect.height) < y)) { return false; }
+        return true;
+    }
+
+    /**
      * Returns true if x, y is inside the bounds of this rectangle.
      */
     int contains(lua_State *L)

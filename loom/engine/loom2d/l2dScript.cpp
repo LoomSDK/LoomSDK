@@ -141,6 +141,7 @@ static int registerLoom2D(lua_State *L)
 
        .addLuaFunction("expandByPoint", &Rectangle::expandByPoint)
        .addLuaFunction("containsPoint", &Rectangle::containsPoint)
+       .addMethod("containsRect", &Rectangle::containsRect)
        .addLuaFunction("contains", &Rectangle::contains)
 
        .addMethod("setTo", &Rectangle::setTo)
