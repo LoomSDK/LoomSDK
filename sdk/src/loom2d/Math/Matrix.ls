@@ -53,6 +53,15 @@ package loom2d.math
         public native function transformCoord(x:Number, y:Number):Point;
 
         /**
+         * Same as transformCoord, but the translation tx/ty of the matrix are not applied.
+         * @param   x X coordinate to transform.
+         * @param   y Y coordinate to transform.
+         * @param   outPoint If provided, this point is reused rather than allocating a new one.
+         * @return  A Point containing the transformed point (x, y).
+         */
+        public native function deltaTransformCoord(x:Number, y:Number):Point;
+
+        /**
          * Calculate the determinant of this matrix.
          */
         public native function determinant():Number;
@@ -99,19 +108,6 @@ package loom2d.math
         public native function translate(dx:Number, dy:Number):void;
         
         public native function toString():String;
-		
-		/* TODO_KEVIN this broke LOOM
-		public function deltaTransformPoint(p:Point):Point
-		{
-			var temp = new Point(tx, ty);
-			tx = 0;
-			ty = 0;
-			var point = transformCoord(p.x, p.y);
-			tx = temp.x;
-			ty = temp.y;
-			return point;	
-		}
-		*/
     }
     
 }
