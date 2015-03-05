@@ -19,9 +19,6 @@ package com.modestmaps.core
 	import loom2d.math.Rectangle;
 	import loom2d.text.TextField;
 	
-	//import flash.utils.getTimer; //PORTNOTE: no direct import for flash.utils.getTimer
-	import loom.gameframework.TimeManager;
-
 	public class TileGrid extends Sprite
 	{		
 //TODO_24: test these consts out to see if any need tweaking for a mobile app vs. online AS3..        

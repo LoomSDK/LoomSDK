@@ -10,7 +10,7 @@ package com.modestmaps.mapproviders
 	public interface IMapProvider
 	{
 		/**
-		 * @return an array of Strings urls (or URLRequests) for the images needed for this tile coordinate.
+		 * @return an array of Strings urls (or HTTPRequest) for the images needed for this tile coordinate.
 		 */ 
 	    function getTileUrls(coord:Coordinate):Vector.<String>;
 	    	    

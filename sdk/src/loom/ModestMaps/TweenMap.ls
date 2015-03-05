@@ -21,11 +21,9 @@ package com.modestmaps
 	import loom2d.math.Matrix;
 	import loom2d.math.Point;
 	
-	// PORTNOTE: Using the build in tweening instead of the gs tween library
-	//import gs.TweenLite;
-	import loom2d.Loom2D;
-	import loom2d.animation.Tween;
-	import loom2d.animation.Transitions;
+    import loom2d.Loom2D;
+    import loom2d.animation.Tween;
+    import loom2d.animation.Transitions;
 	
     public class TweenMap extends Map
 	{
@@ -58,7 +56,7 @@ package com.modestmaps
 	    *
 	    * @see com.modestmaps.core.TileGrid
 	    */
-	    public function TweenMap(width:Number=320, height:Number=240, draggable:Boolean=true, provider:IMapProvider=null, mapStage:Stage=null, ... rest)
+	    public function TweenMap(width:Number, height:Number, draggable:Boolean, provider:IMapProvider, mapStage:Stage, ... rest)
 	    {
 	    	super(width, height, draggable, provider, mapStage, rest);
 	    	grid.setTileCreator(CreateTweenTile);
@@ -75,12 +73,10 @@ package com.modestmaps
 	    {
 	    	if (!grid.panning && !grid.zooming) {
 		    	grid.prepareForPanning();
-	    	    //TweenLite.to(grid, panDuration, { tx: grid.tx+px, ty: grid.ty+py, onComplete: grid.donePanning, ease: panEase });
-				var tween:Tween = new Tween(grid, panDuration, Transitions.EASE_IN);
-				tween.animate("tx", grid.tx + px);
-				tween.animate("ty", grid.ty + py);
-				tween.onComplete += grid.donePanning();
-				Loom2D.juggler.add(tween);
+                Loom2D.juggler.tween(grid, panDuration, {"ty": grid.ty + py,
+                                                         "tx": grid.tx + px,
+                                                         "transitionFunc": panEase,
+                                                         "onComplete": grid.donePanning});
 	    	}
 	    }      
 		    
@@ -100,8 +96,13 @@ package com.modestmaps
 			grid.enforceBoundsEnabled = false;
 
 			grid.enforceBoundsOnMatrix(m);
-			
-			Loom2D.juggler.tween(grid, duration, { "a": m.a, "b": m.b, "c": m.c, "d": m.d, "tx": m.tx, "ty": m.ty, "onComplete": panAndZoomComplete });				
+			Loom2D.juggler.tween(grid, duration, { "a": m.a, 
+                                                    "b": m.b, 
+                                                    "c": m.c, 
+                                                    "d": m.d, 
+                                                    "tx": m.tx, 
+                                                    "ty": m.ty, 
+                                                    "onComplete": panAndZoomComplete });				
 		}
 
 		/** call grid.donePanning() and grid.doneZooming(), used by tweenExtent, 
@@ -115,12 +116,9 @@ package com.modestmaps
 		}		
 		
 		/** zoom in or out by sc, moving the given location to the requested target (or map center, if omitted) */        
-        override public function panAndZoomBy(sc:Number, location:Location, targetPoint:Point=Point.ZERO, duration:Number=-1):void
+        override public function panAndZoomBy(sc:Number, location:Location, targetPoint:Point, duration:Number=-1):void
         {
             if (duration < 0) duration = panAndZoomDuration;
-			// PORTNOTE: A point is a struct in loom, so checking for null-ness won't work
-// TODO_AHMED: Check if the point.zero doesn't do bad things
-            if (targetPoint == Point.ZERO) targetPoint = new Point(mapWidth/2, mapHeight/2);        	
         	
 			var p:Point = locationPoint(location);
 			
@@ -148,12 +146,9 @@ package com.modestmaps
         }
 
 		/** zoom in or out by zoomDelta, keeping the requested point in the same place */        
-        override public function zoomByAbout(zoomDelta:Number, targetPoint:Point=Point.ZERO, duration:Number=-1):void
+        override public function zoomByAbout(zoomDelta:Number, targetPoint:Point, duration:Number=-1):void
         {
             if (duration < 0) duration = panAndZoomDuration;
-			// PORTNOTE: A point is a struct in loom, so checking for null-ness won't work
-// TODO_AHMED: Check if the point.zero doesn't do bad things
-            if (targetPoint == Point.ZERO) targetPoint = new Point(mapWidth/2, mapHeight/2);        	
 
 			var constrainedDelta:Number = zoomDelta;
 
@@ -218,16 +213,9 @@ package com.modestmaps
 	     		var centerPoint:Point = new Point(mapWidth / 2, mapHeight / 2);
 	    		var pan:Point = centerPoint.subtract(p);
 
-	    		// grid.prepareForPanning();
-	    		/*TweenLite.to(grid, panDuration, {ty: grid.ty + pan.y,
-	    		                                 tx: grid.tx + pan.x,
-	    		                                 ease: panEase,
-	    		                                 onStart: grid.prepareForPanning,
-	    		                                 onComplete: grid.donePanning});*/
-												 
 				Loom2D.juggler.tween(grid, panDuration, {"ty": grid.ty + pan.y,
 														 "tx": grid.tx + pan.x,
-														 "ease": panEase,
+														 "transitionFunc": panEase,
 														 "onStart": grid.prepareForPanning,
 														 "onComplete": grid.donePanning});
 					
@@ -247,15 +235,9 @@ package com.modestmaps
 		public function tweenTo(location:Location, duration:Number, easing:Function=null):void
 		{
     		var pan:Point = new Point(mapWidth/2, mapHeight/2).subtract(locationPoint(location,grid));
-    		// grid.prepareForPanning();
-    		/*TweenLite.to(grid, duration, { ty: grid.ty + pan.y,
-    		                               tx: grid.tx + pan.x,
-    		                               ease: easing,
-    		                               onStart: grid.prepareForPanning,
-    		                               onComplete: grid.donePanning } );*/
 			Loom2D.juggler.tween(grid, duration, { "ty": grid.ty + pan.y,
 												   "tx": grid.tx + pan.x,
-												   "ease": easing,
+												   "transitionFunc": easing,
 												   "onStart": grid.prepareForPanning,
 											       "onComplete": grid.donePanning });
 		}
@@ -269,14 +251,10 @@ package com.modestmaps
 		    	var target:Number = (dir < 0) ? Math.floor(grid.zoomLevel + dir) : Math.ceil(grid.zoomLevel + dir);
 		    	target = Math.max(grid.minZoom, Math.min(grid.maxZoom, target));
 
-		    	/*TweenLite.to(grid, zoomDuration, { zoomLevel: target,
-		    	                                   onStart: grid.prepareForZooming,
-		    	                                   onComplete: grid.doneZooming,
-		    	                                   ease: zoomEase } );*/
 				Loom2D.juggler.tween(grid, zoomDuration, { "zoomLevel": target,
 														   "onStart": grid.prepareForZooming,
 														   "onComplete": grid.doneZooming,
-														   "ease": zoomEase });
+														   "transitionFunc": zoomEase });
 		    }
 	    }
 

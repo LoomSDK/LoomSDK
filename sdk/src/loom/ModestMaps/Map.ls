@@ -79,7 +79,7 @@ package com.modestmaps
 		 */
 		public var panFraction:Number = 0.333333333;
 
-// TODO_AHMED: Place this somewhere better
+        //NOTE_24: Added a static Stage because Actionscript Sprites all have their parent stage, whereas Loom does not
 		public static var MapStage:Stage;
 		
         /**
@@ -94,14 +94,15 @@ package com.modestmaps
 	    *
 	    * @see com.modestmaps.core.TileGrid
 	    */
-	    public function Map(width:Number=320, height:Number=240, draggable:Boolean=true, mapProvider:IMapProvider=null, mapStage:Stage=null, ... rest)
+	    public function Map(width:Number, height:Number, draggable:Boolean, mapProvider:IMapProvider, mapStage:Stage, ... rest)
 	    {
 			if (!mapProvider) 
 			{
-				trace("No map provider set in the map! Defaulting to Microsoft");
+				trace("No map provider specified for the map. Defaulting to Microsoft");
 				mapProvider = new MicrosoftProvider(MicrosoftProvider.ROAD, true, MicrosoftProvider.MIN_ZOOM, MicrosoftProvider.MAX_ZOOM);
 			}
 			
+            //save that static Stage
 			MapStage = mapStage;
 			
 			// TODO getter/setter for this that disables interaction in TileGrid
@@ -117,6 +118,8 @@ package com.modestmaps
 	        addChild(grid);
 
 	        setSize(width, height);
+
+//TODO_24: not adding the MarkerClip just yet until other things start working...            
 			//markerClip = new MarkerClip(this);
 			//addChild(markerClip);
 
@@ -293,10 +296,9 @@ package com.modestmaps
 	    {
 	        var extent:MapExtent = new MapExtent(0, 0, 0, 0);
 	        
-			// PORTNOTE: Throw not yet supported in loomscript
-	        //if(!mapProvider) {
-	        //	throw new Error("WHOAH, no mapProvider in getExtent!");
-	        //}
+	        if(!mapProvider) {
+	        	throw new Error("WHOAH, no mapProvider in getExtent!");
+	        }
 	
 	        extent.northWest = mapProvider.coordinateLocation(grid.topLeftCoordinate);
 	        extent.southEast = mapProvider.coordinateLocation(grid.bottomRightCoordinate);
@@ -351,10 +353,8 @@ package com.modestmaps
     	        mapHeight = h;
     
     	        // mask out out of bounds marker remnants
-    	       // scrollRect = new Rectangle(0, 0, mapWidth, mapHeight); //PORTNOTE replaced scollRect with clipRect
     	        clipRect = new Rectangle(0,0,mapWidth,mapHeight);
 				
-            	
             	grid.resizeTo(new Point(mapWidth, mapHeight));
             	
     	        dispatchEvent(new MapEvent(MapEvent.RESIZED, this.getSize()));
@@ -501,25 +501,20 @@ package com.modestmaps
 	    }
 
 		/** zoom in, keeping the requested point in the same place */
-		//PORTNOTE removing null default from point
         public function zoomInAbout(targetPoint:Point, duration:Number=-1):void
         {
             zoomByAbout(1, targetPoint, duration);
         }
 
 		/** zoom out, keeping the requested point in the same place */
-		//PORTNOTE removing null default from point
         public function zoomOutAbout(targetPoint:Point, duration:Number=-1):void
         {
             zoomByAbout(-1, targetPoint, duration);
         }
         
 		/** zoom in or out by zoomDelta, keeping the requested point in the same place */
-		//PORTNOTE removing null default from point
         public function zoomByAbout(zoomDelta:Number, targetPoint:Point, duration:Number=-1):void
         {
-//            if (!targetPoint) targetPoint = new Point(mapWidth/2, mapHeight/2);        	
-        	
          	if (grid.zoomLevel + zoomDelta < grid.minZoom) {
         		zoomDelta = grid.minZoom - grid.zoomLevel;        		
         	}
@@ -552,18 +547,14 @@ package com.modestmaps
         }
         
 		/** rotate to angle (radians), keeping the requested point in the same place */
-		//PORTNOTE removing null default from point		
         public function setRotation(angle:Number, targetPoint:Point):void
         {
         	var rotation:Number = getRotation();
 			rotateByAbout(angle - rotation, targetPoint);        	
         }
         
-		//PORTNOTE removing null default from point		
         public function rotateByAbout(angle:Number, targetPoint:Point):void
         {
-          //  if (!targetPoint) targetPoint = new Point(mapWidth/2, mapHeight/2);        	
-        	
 			grid.prepareForZooming();
 			grid.prepareForPanning();
 			
@@ -580,25 +571,20 @@ package com.modestmaps
         }        
 	    
 		/** zoom in and put the given location in the center of the screen, or optionally at the given targetPoint */
-		//PORTNOTE removing null default from points
 		public function panAndZoomIn(location:Location, targetPoint:Point):void
 		{
 			panAndZoomBy(2, location, targetPoint);
 		}
 
 		/** zoom out and put the given location in the center of the screen, or optionally at the given targetPoint */		
-		//PORTNOTE removing null default from points
         public function panAndZoomOut(location:Location, targetPoint:Point):void
         {
 			panAndZoomBy(0.5, location, targetPoint);
         }
 
 		/** zoom in or out by sc, moving the given location to the requested target */ 
-		//PORTNOTE removing null default from points
         public function panAndZoomBy(sc:Number, location:Location, targetPoint:Point, duration:Number=-1):void
         {
-            //if (!targetPoint) targetPoint = new Point(mapWidth/2, mapHeight/2);
-            
 			var p:Point = locationPoint(location);
 			
 			grid.prepareForZooming();

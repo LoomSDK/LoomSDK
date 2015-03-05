@@ -82,7 +82,7 @@ package com.modestmaps.mapproviders
 	    * Get top left outer-zoom limit and bottom right inner-zoom limits,
 	    * as Coordinates in a two element array.
 	    */
-	    public function outerLimits():Vector.<Coordinate>/*Coordinate*/
+	    public function outerLimits():Vector.<Coordinate>
 	    {
 	        return [ __topLeftOutLimit.copy(), __bottomRightInLimit.copy() ];
 	    }

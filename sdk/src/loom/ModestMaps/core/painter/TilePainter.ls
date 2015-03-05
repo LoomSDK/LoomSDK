@@ -8,7 +8,6 @@ package com.modestmaps.core.painter
 	import loom2d.display.Image;
     import loom2d.textures.Texture;
 	
-	// PORTNOTE: There isn't a loader class equivalent in loom
 //LUKE_SAYS: Loader is used for remote async bitmap (texture) loads; we'll use the upcoming Texture.fromAsyncAsset() to replace that
 	//import flash.display.Loader;
 	//import flash.display.LoaderInfo;
@@ -20,8 +19,6 @@ package com.modestmaps.core.painter
 //LUKE_SAYS: ProgressEvent seems to be tied directly to the Loader class in order to track bytes loaded in the grid/painter. Can likely ignore...            
 	//import flash.events.ProgressEvent;
 	
-	// PORTNOTE: There isn't a url request class in loom, using http request class instead
-	//import flash.net.URLRequest;
 	import loom.HTTPRequest;
 	import loom.platform.Timer;
 
@@ -234,10 +231,10 @@ package com.modestmaps.core.painter
 					try {
 						if (cacheLoaders || smoothContent) {
 							// check crossdomain permissions on tiles if we plan to access their bitmap content
-							tileLoader.load((url is URLRequest) ? url : new URLRequest(url), new LoaderContext(true));
+							tileLoader.load((url is HTTPRequest) ? url : new HTTPRequest(url), new LoaderContext(true));
 						}
 						else {
-							tileLoader.load((url is URLRequest) ? url : new URLRequest(url));
+							tileLoader.load((url is HTTPRequest) ? url : new HTTPRequest(url));
 						}
 						tileLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoadEnd, false, 0, true);
 						openRequests.push(tileLoader);
