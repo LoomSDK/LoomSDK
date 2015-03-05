@@ -161,7 +161,7 @@ package loom2d.animation
          * ~~~
          *
          */
-        public function tween(target:Object, time:Number, properties:Dictionary.<String, Object>):void
+        public function tween(target:Object, time:Number, properties:Dictionary.<String, Object>):Tween
         {
             var _tween:Tween = Tween.fromPool(target, time);
 
@@ -179,6 +179,7 @@ package loom2d.animation
 
             _tween.addEventListener(Event.REMOVE_FROM_JUGGLER, onPooledTweenComplete);
             add(_tween);
+            return _tween;
         }
 
         private function onPooledTweenComplete(event:Event):void
