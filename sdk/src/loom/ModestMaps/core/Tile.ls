@@ -23,12 +23,7 @@ package com.modestmaps.core
 		public function Tile(column:int, row:int, zoom:int)
 		{
 			init(column, row, zoom);
-			
-//LUKE_SAYS: Might not be needed            
-			// otherwise you'll get seams between tiles :(
-			// PORTNOTE: cacheAsBitmap isn't a part of loom, it's an optimisation function for flash for mobile.
-			//this.cacheAsBitmap = false;
-			
+						
 			count++;
 		} 
 		
@@ -47,7 +42,7 @@ package com.modestmaps.core
 	    	while (numChildren > 0) {
 	    		var child:DisplayObject = removeChildAt(0);
 				
-//LUKE_SAYS: I think we can just destroy the child images...
+//LUKE_SAYS: I think we can just destroy the child images/textures...
 	    		//if (child is Loader) {
 	    		//	try {
 	    		//		Loader(child).unload();
@@ -121,8 +116,5 @@ package com.modestmaps.core
 		        endFill();
 		    };*/	
 		}
-		
-		
 	}
-
 }

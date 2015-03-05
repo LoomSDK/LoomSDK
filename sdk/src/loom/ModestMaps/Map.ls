@@ -33,21 +33,14 @@ package com.modestmaps
 	import com.modestmaps.overlays.MarkerClip;
 	import loom2d.display.Stage;
 	
-	//import flash.display.DisplayObject;
 	import loom2d.display.DisplayObject;
-	//import flash.display.Sprite;
 	import loom2d.display.Sprite;
-	//import flash.events.Event;
 	import loom2d.events.Event;
+//TODO_24: Do we want/need to enable mouse wheen support for the map? Loom doesn't support it atm :(
 	//import flash.events.MouseEvent;
-	import loom2d.events.TouchEvent;
-	//import flash.geom.Matrix;
 	import loom2d.math.Matrix;
-	//import flash.geom.Point;
 	import loom2d.math.Point;
-	//import flash.geom.Rectangle;
 	import loom2d.math.Rectangle;
-	//import flash.utils.getTimer;
 	import loom.gameframework.TimeManager;
 	
     [Event(name="startZooming",      type="com.modestmaps.events.MapEvent")]
@@ -554,10 +547,7 @@ package com.modestmaps
         public function getRotation():Number
         {
         	var m:Matrix = grid.getMatrix();
-//TODO_KEVIN deltaTransformPOint
-    		//var px:Point = m.deltaTransformPoint(new Point(0, 1));
-    		var px:Point = m.transformCoord(0, 1);
-			
+    		var px:Point = m.deltaTransformCoord(0, 1);
 			return Math.atan2(px.y, px.x);
         }
         
@@ -749,61 +739,53 @@ package com.modestmaps
 	     	}
 	    }
 
-		/* PORTNOTE removed double click functionality, TODO_KEVIN
-		override public function set doubleClickEnabled(enabled:Boolean):void
-		{
-			super.doubleClickEnabled = enabled;
-			trace("doubleClickEnabled on Map is no longer necessary!"); 
-			trace("\tto enable useful defaults, use:");
-			trace("\tmap.addEventListener(MouseEvent.DOUBLE_CLICK, map.onDoubleClick);");
-		}
 
+//TODO_24: Do we want/need to enable double click/tap support for the map? Loom doesn't support it atm :(
         // pans and zooms in on double clicked location
-        public function onDoubleClick(event:MouseEvent):void
-        {
-        	if (!__draggable) return;
+        // public function onDoubleClick(event:MouseEvent):void
+        // {
+        // 	if (!__draggable) return;
         	
-            var p:Point = grid.globalToLocal(new Point( event.stageX, event.stageY));
-            if (event.shiftKey) {
-            	if (grid.zoomLevel > grid.minZoom) {
-            		zoomOutAbout(p);
-            	}
-            	else {
-            		panBy(mapWidth/2 - p.x, mapHeight/2 - p.y);
-            	}
-            }
-            else if (event.ctrlKey) {
-            	panAndZoomIn(pointLocation(p));
-            }
-            else {
-            	if (grid.zoomLevel < grid.maxZoom) {
-	            	zoomInAbout(p);
-	            }
-            	else {
-            		panBy(mapWidth/2 - p.x, mapHeight/2 - p.y);
-            	}
-            }
-        }    
-		*/
+        //     var p:Point = grid.globalToLocal(new Point( event.stageX, event.stageY));
+        //     if (event.shiftKey) {
+        //     	if (grid.zoomLevel > grid.minZoom) {
+        //     		zoomOutAbout(p);
+        //     	}
+        //     	else {
+        //     		panBy(mapWidth/2 - p.x, mapHeight/2 - p.y);
+        //     	}
+        //     }
+        //     else if (event.ctrlKey) {
+        //     	panAndZoomIn(pointLocation(p));
+        //     }
+        //     else {
+        //     	if (grid.zoomLevel < grid.maxZoom) {
+	    //        	zoomInAbout(p);
+	    //        }
+        //     	else {
+        //     		panBy(mapWidth/2 - p.x, mapHeight/2 - p.y);
+        //     	}
+        //     }
+        // }    
 		
-		/* //PORTNOTE removed mouseWheelEvent TODO_KEVIN 
-		private var previousWheelEvent:Number = 0;
-		private var minMouseWheelInterval:Number = 100;
 		
-		public function onMouseWheel(event:MouseEvent):void
-		{
-			if (getTimer() - previousWheelEvent > minMouseWheelInterval) {
-				if (event.delta > 0) {
-					zoomInAbout(new Point(mouseX, mouseY), 0);
-				}
-				else if (event.delta < 0) {
-					zoomOutAbout(new Point(mouseX, mouseY), 0);
-				}
-				previousWheelEvent = getTimer(); 
-			}
-		}
-		*/
+
+//TODO_24: Do we want/need to enable mouse wheen support for the map? Loom doesn't support it atm :(
+		// private var previousWheelEvent:Number = 0;
+		// private var minMouseWheelInterval:Number = 100;
 		
+		// public function onMouseWheel(event:MouseEvent):void
+		// {
+		// 	if (getTimer() - previousWheelEvent > minMouseWheelInterval) {
+		// 		if (event.delta > 0) {
+		// 			zoomInAbout(new Point(mouseX, mouseY), 0);
+		// 		}
+		// 		else if (event.delta < 0) {
+		// 			zoomOutAbout(new Point(mouseX, mouseY), 0);
+		// 		}
+		// 		previousWheelEvent = getTimer(); 
+		// 	}
+		// }
 	}
 }
 

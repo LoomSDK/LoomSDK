@@ -5,14 +5,13 @@ package com.modestmaps.core
 	import com.modestmaps.core.painter.TilePainter;
 	import com.modestmaps.events.MapEvent;
 	import com.modestmaps.mapproviders.IMapProvider;
-	import loom2d.events.Touch;
 	
 	import loom2d.display.DisplayObject;
 	import loom2d.display.Sprite;
 	import loom2d.events.Event;
 	import loom2d.events.TouchEvent;
 	
-	//PORTNOTE: need loom2d.events.ProgressEvent
+//LUKE_SAYS: ProgressEvent seems to be tied directly to the Loader class in order to track bytes loaded in the grid/painter. Can likely ignore...            
 	//import flash.events.ProgressEvent;	
 	
 	import loom2d.math.Matrix;
@@ -25,10 +24,11 @@ package com.modestmaps.core
 
 	public class TileGrid extends Sprite
 	{		
+//TODO_24: test these consts out to see if any need tweaking for a mobile app vs. online AS3..        
 		protected static const DEFAULT_MAX_PARENT_SEARCH:int = 5;
 		protected static const DEFAULT_MAX_PARENT_LOAD:int = 0; // enable this to load lower zoom tiles first
 		protected static const DEFAULT_MAX_CHILD_SEARCH:int = 1;
-		protected static const DEFAULT_MAX_TILES_TO_KEEP:int = 256; // 256*256*4bytes = 0.25MB ... so 256 tiles is 64MB of memory, minimum!
+		protected static const DEFAULT_MAX_TILES_TO_KEEP:int = 64;//256; // 256*256*4bytes = 0.25MB ... so 256 tiles is 16MB of memory, minimum!
 		protected static const DEFAULT_TILE_BUFFER:int = 1;
 		protected static const DEFAULT_ENFORCE_BOUNDS:Boolean = true;
 		protected static const DEFAULT_ROUND_POSITIONS:Boolean = true;
@@ -117,8 +117,9 @@ package com.modestmaps.core
 		// number of tiles we're failing to show
 		protected var blankCount:int = 0;
 
-		// a textfield with lots of stats
-		public var debugField:DebugField;
+//NOTE_24: not porting DebugField for now at least...
+		// // a textfield with lots of stats
+		// public var debugField:DebugField;
 		
 		// what zoom level of tiles is 'correct'?
 		protected var _currentTileZoom:int; 
@@ -151,16 +152,10 @@ package com.modestmaps.core
 		// setting to true will dispatch a CHANGE event which Map will convert to an EXTENT_CHANGED for us
 		protected var matrixChanged:Boolean = false;
 		
-		// PORTNOTE: changing the way zoomLetter is initialising to avoid crashes
-		//private var zoomLetter:Vector.<String>;// = "abcdefghijklmnopqrstuvwxyz".split('');
 		private var zoomLetter:Vector.<String> = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
 				
 		public function TileGrid(w:Number, h:Number, draggable:Boolean, provider:IMapProvider)
 		{
-			trace("The tile grid constructor was called!");
-//TODO_KEVIN find alternative for doubleClickEnabled
-			//doubleClickEnabled = true;
-			
 			this.draggable = draggable;
 			
 			if (provider is ITilePainterOverride) {
@@ -169,11 +164,8 @@ package com.modestmaps.core
 			else {
 				this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
 			}
-			//PORTNOTE TODO_KEVIN sort out ProgressEvent
+//LUKE_SAYS: ProgressEvent seems to be tied directly to the Loader class in order to track bytes loaded in the grid/painter. Can likely ignore...            
 			//tilePainter.addEventListener(ProgressEvent.PROGRESS, onProgress, false, 0, true);
-			//PORTNOTE removes parameters
-			//tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded, false, 0, true);
-			//tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading, false, 0, true);
 			tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded);
 			tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading);
 			
@@ -187,24 +179,16 @@ package com.modestmaps.core
 			calculateBounds();
 			
 			this.mapWidth = w;
-			this.mapHeight = h;
-			
-			//PORTNOTE changed scrollRect to clipRect
+			this.mapHeight = h;			
 			clipRect = new Rectangle(0, 0, mapWidth, mapHeight);
 
-			//TODO_KEVIN fix broken debug class
-			/*
-			debugField = new DebugField();
-			debugField.x = mapWidth - debugField.width - 15; 
-			debugField.y = mapHeight - debugField.height - 15;
-			*/
+//NOTE_24: not porting DebugField for now at least...
+			// debugField = new DebugField();
+			// debugField.x = mapWidth - debugField.width - 15; 
+			// debugField.y = mapHeight - debugField.height - 15;
 			
 			well = new Sprite();
 			well.name = 'well';
-			//PORTNOTE removed mouse stuff
-			//well.doubleClickEnabled = true;
-			//well.mouseEnabled = true;
-			//well.mouseChildren = false;
 			addChild(well);
 
 			worldMatrix = new Matrix();
@@ -225,12 +209,13 @@ package com.modestmaps.core
 		private function onAddedToStage(event:Event):void
 		{
 			if (draggable) {
-				//addEventListener(MouseEvent.MOUSE_DOWN, mousePressed, true);
-				addEventListener(TouchEvent.TOUCH, mousePressed);		
+//TODO_24: add basic touch input support                
+//				addEventListener(MouseEvent.MOUSE_DOWN, mousePressed, true);
 			}
-			//PORTNOTE: TODO_KEVIN Missing Event.RENDER
-			//addEventListener(Event.RENDER, onRender);
-			addEventListener(Event.ENTER_FRAME, onEnterFrame);
+            onRender += _onRender;
+
+//NOTE_24: not porting DebugField for now at least...
+			// addEventListener(Event.ENTER_FRAME, onEnterFrame);
 			addEventListener(Event.REMOVED_FROM_STAGE, onRemovedFromStage);
 			removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
 			dirty = true;
@@ -240,14 +225,15 @@ package com.modestmaps.core
 		
 		private function onRemovedFromStage(event:Event):void
 		{
-			//if (hasEventListener(MouseEvent.MOUSE_DOWN)) {
-			if (hasEventListener(TouchEvent.TOUCH)) {
-				//removeEventListener(MouseEvent.MOUSE_DOWN, mousePressed, true);
-				removeEventListener(TouchEvent.TOUCH, mousePressed);
-			}
-			//PORTNOTE: TODO_KEVIN Missing Event.RENDER
-			//removeEventListener(Event.RENDER, onRender);
-			removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+//TODO_24: add basic touch input support                
+//			if (hasEventListener(MouseEvent.MOUSE_DOWN)) {
+//				removeEventListener(MouseEvent.MOUSE_DOWN, mousePressed, true);
+//			}
+            onRender -= _onRender;
+
+//NOTE_24: not porting DebugField for now at least...
+			// removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+
 			// FIXME: should we still do this, in TilePainter?
 			//queueTimer.stop();
 			removeEventListener(Event.REMOVED_FROM_STAGE, onRemovedFromStage);
@@ -269,19 +255,17 @@ package com.modestmaps.core
 			tilePainter.setTileCreator(tileCreator);
 		}
 		
-		/** processes the tileQueue and optionally outputs stats into debugField */
-		protected function onEnterFrame(event:Event=null):void
-		{
-			//POSTNOTE: this debug is completely broken
-			/*
-			if (debugField.parent) {
-				debugField.update(this, blankCount, recentlySeen.length, tilePainter);
-				debugField.x = mapWidth - debugField.width - 15; 
-				debugField.y = mapHeight - debugField.height - 15;
-			}
-			*/
-		}
-		
+//NOTE_24: not porting DebugField for now at least...
+		// /** processes the tileQueue and optionally outputs stats into debugField */
+		// protected function onEnterFrame(event:Event=null):void
+		// {
+		// 	if (debugField.parent) {
+		// 		debugField.update(this, blankCount, recentlySeen.length, tilePainter);
+		// 		debugField.x = mapWidth - debugField.width - 15; 
+		// 		debugField.y = mapHeight - debugField.height - 15;
+		// 	}
+		// }
+
 		protected function onRendered():void
 		{
 			// listen out for this if you want to be sure map is in its final state before reprojecting markers etc.
@@ -314,12 +298,12 @@ package com.modestmaps.core
 			dispatchEvent(event);			
 		}
 		
-	//	protected function onProgress(event:ProgressEvent):void TODO_KEVIN add ProgressEvent
-		protected function onProgress()
-		{
-		    // dispatch tile load progress
-			//dispatchEvent(event);			
-		}
+//LUKE_SAYS: ProgressEvent seems to be tied directly to the Loader class in order to track bytes loaded in the grid/painter. Can likely ignore...            
+        // protected function onProgress(event:ProgressEvent):void
+        // {
+        //     // dispatch tile load progress
+        //     dispatchEvent(event);			
+        // }
 		
 		protected function onAllTilesLoaded(event:MapEvent):void
 		{
@@ -336,8 +320,7 @@ package com.modestmaps.core
 		 *  
 		 */
 		
-		 //PORTNOTE TODO_KEVIN ask LUKE about onRender and NativeDelegate, renamed onRender
-		protected function _onRender(event:Event=null):void
+		protected function _onRender():void
 		{
 			//var t:Number = getTimer();
 			
@@ -634,21 +617,15 @@ package com.modestmaps.core
 		{
  			// sort children by difference from current zoom level
  			// this means current is on top, +1 and -1 are next, then +2 and -2, etc.
-			
-			//PORTNOTE: Not sure if the two below are equivalent
-			//visibleTiles.sort(distanceFromCurrentZoomCompare, Array.DESCENDING);
+
+//TODO_24: check that sort + reverse is the same as a DESCENDING sort... optimally, the sort function should be changed to order differently			
 			visibleTiles.sort(distanceFromCurrentZoomCompare);
 			visibleTiles.reverse();
 				
- 			// for positioning tile according to current transform, based on current tile zoom
-			
- 			//var scaleFactors:Array = new Array(maxZoom + 1);
- 			var scaleFactors:Vector.<Number> = new Vector.<Number>(maxZoom + 1);
-			
+ 			// for positioning tile according to current transform, based on current tile zoom			
+ 			var scaleFactors:Vector.<Number> = new Vector.<Number>(maxZoom + 1);			
 			// scales to compensate for zoom differences between current grid zoom level				
- 			//var tileScales:Array = new Array(maxZoom + 1);
- 			var tileScales:Vector.<Number> = new Vector.<Number>(maxZoom + 1);
-			
+ 			var tileScales:Vector.<Number> = new Vector.<Number>(maxZoom + 1);			
 			for (var z:int = 0; z <= maxZoom; z++) {
 				scaleFactors[z] = Math.pow(2.0, currentTileZoom - z);
 				// round up to the nearest pixel to avoid seams between zoom levels
@@ -661,8 +638,7 @@ package com.modestmaps.core
 			}
 			
 			// hugs http://www.senocular.com/flash/tutorials/transformmatrix/
-			//PORTNOTE TODO_KEVIN deltaTransformPoint
-			var px:Point = worldMatrix.transformCoord(0, 1);
+            var px:Point = worldMatrix.deltaTransformCoord(0, 1);
 			var tileAngleDegrees:Number = ((180/Math.PI) * Math.atan2(px.y, px.x) - 90);
 			
  			// apply the sorted depths, position all the tiles and also keep recentlySeen updated:
@@ -781,7 +757,6 @@ package com.modestmaps.core
 		{
  			var scaleFactor:Number = Math.pow(2, zoom-childZoom); // one zoom in = 0.5
  			var rowColSpan:int = Math.pow(2, childZoom - zoom); // one zoom in = 2, two = 4
-			// PORTNOTE: Assuming the keys here are strings
  			var keys:Vector.<String> = [];
  			for (var ccol:int = col/scaleFactor; ccol < (col/scaleFactor)+rowColSpan; ccol++) {
  				for (var crow:int = row/scaleFactor; crow < (row/scaleFactor)+rowColSpan; crow++) {
@@ -791,46 +766,42 @@ package com.modestmaps.core
  			return keys;
 		}
 						
-		//public function mousePressed(event:MouseEvent):void
-		public function mousePressed(event:TouchEvent):void
-		{
-			prepareForPanning(true);
-			//PORTNOTE: TODO_KEVIN implement 'mouse' events
-			//pmouse = new Point(event.stageX, event.stageY);
-			//stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseDragged);
-			//stage.addEventListener(MouseEvent.MOUSE_UP, mouseReleased);
-			//stage.addEventListener(Event.MOUSE_LEAVE, mouseReleased);
-		}
+//TODO_24: add basic touch input support                
+		// public function mousePressed(event:MouseEvent):void
+		// {
+		// 	prepareForPanning(true);
+		// 	pmouse = new Point(event.stageX, event.stageY);
+		// 	stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseDragged);
+		// 	stage.addEventListener(MouseEvent.MOUSE_UP, mouseReleased);
+		// 	stage.addEventListener(Event.MOUSE_LEAVE, mouseReleased);
+		// }
 
-		public function mouseReleased(event:Event):void
-		{
-			//PORTNOTE: TODO_KEVIN implement 'mouse' events
-			//stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseDragged);
-			//stage.removeEventListener(MouseEvent.MOUSE_UP, mouseReleased);
-			//stage.removeEventListener(Event.MOUSE_LEAVE, mouseReleased);
-			donePanning();
-			dirty = true;
-			//if (event is MouseEvent) {
-			//	MouseEvent(event).updateAfterEvent();
-			//}
-			//else if (event.type == Event.MOUSE_LEAVE) {
-			//	onRender();
-			//}
-		}
+		// public function mouseReleased(event:Event):void
+		// {
+		// 	stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseDragged);
+		// 	stage.removeEventListener(MouseEvent.MOUSE_UP, mouseReleased);
+		// 	stage.removeEventListener(Event.MOUSE_LEAVE, mouseReleased);
+		// 	donePanning();
+		// 	dirty = true;
+		// 	if (event is MouseEvent) {
+		// 		MouseEvent(event).updateAfterEvent();
+		// 	}
+		// 	else if (event.type == Event.MOUSE_LEAVE) {
+				// onRender();
+		// 	}
+		// }
 
-		//public function mouseDragged(event:MouseEvent):void
-		public function mouseDragged(event:Touch):void
-		{
-			//var mousePoint:Point = new Point(event.stageX, event.stageY);
-			var mousePoint:Point = new Point(event.globalX, event.globalY);
+		// public function mouseDragged(event:MouseEvent):void
+		// {
+		// 	//var mousePoint:Point = new Point(event.stageX, event.stageY);
+		// 	var mousePoint:Point = new Point(event.globalX, event.globalY);
 			
-			tx += mousePoint.x - pmouse.x;
-			ty += mousePoint.y - pmouse.y;
-			pmouse = mousePoint;
-			dirty = true;
-			//POSTNOTE: TODO_KEVIN implement TouchEvent.updateAfterEvent()
-			//event.updateAfterEvent();
-		}	
+		// 	tx += mousePoint.x - pmouse.x;
+		// 	ty += mousePoint.y - pmouse.y;
+		// 	pmouse = mousePoint;
+		// 	dirty = true;
+		// 	event.updateAfterEvent();
+		// }	
 
 		// today is all about lazy evaluation
 		// this gets set to null by 'dirty = true'
@@ -838,11 +809,8 @@ package com.modestmaps.core
 		protected function get invertedMatrix():Matrix
 		{
 			if (!_invertedMatrix) {
-				//PORTNOTE replaced matrix.clone with .copyFrom
-				//_invertedMatrix = worldMatrix.clone();
-				//_invertedMatrix.copyFrom(worldMatrix);
-				// PORTNOTE: Matrix.copyFrom seems to not work
-				_invertedMatrix = new Matrix(worldMatrix.a, worldMatrix.b, worldMatrix.c, worldMatrix.d, worldMatrix.tx, worldMatrix.ty);
+                _invertedMatrix = new Matrix();
+                _invertedMatrix.copyFrom(worldMatrix);
 				_invertedMatrix.invert();
 				_invertedMatrix.scale(scale/tileWidth, scale/tileHeight);
 			}
@@ -960,10 +928,10 @@ package com.modestmaps.core
 				donePanning();
 			}
 			if (!dragging && draggable) {
-				//PORTNOTE: TODO_KEVIN implement mouse events
-			//	if (hasEventListener(MouseEvent.MOUSE_DOWN)) {
-			//		removeEventListener(MouseEvent.MOUSE_DOWN, mousePressed, true);
-			//	}
+//TODO_24: add basic touch input support                
+				// if (hasEventListener(MouseEvent.MOUSE_DOWN)) {
+				// 	removeEventListener(MouseEvent.MOUSE_DOWN, mousePressed, true);
+				// }
 			}
 			startPan = centerCoordinate.copy();
 			panning = true;
@@ -978,7 +946,7 @@ package com.modestmaps.core
 		public function donePanning():void
 		{
 			if (draggable) {
-				//PORTNOTE: TODO_KEVIN implement mouse events
+//TODO_24: add basic touch input support                
 				//if (!hasEventListener(MouseEvent.MOUSE_DOWN)) {
 				//	addEventListener(MouseEvent.MOUSE_DOWN, mousePressed, true);
 				//}
@@ -1090,12 +1058,11 @@ package com.modestmaps.core
 		    	
     			mapWidth = p.x;
     			mapHeight = p.y;
-				//PORTNOTE changed scrollRect to clipRect
     	        clipRect = new Rectangle(0, 0, mapWidth, mapHeight);
 
-				//PORTNOTE: KEVIN_TODO fix broken debug class
-				//debugField.x = mapWidth - debugField.width - 15; 
-				//debugField.y = mapHeight - debugField.height - 15;
+//NOTE_24: not porting DebugField for now at least...
+				// debugField.x = mapWidth - debugField.width - 15; 
+				// debugField.y = mapHeight - debugField.height - 15;
     			
     			dirty = true;
 
@@ -1103,15 +1070,12 @@ package com.modestmaps.core
     			_onRender();
 		    }
 
-			// this makes sure the well is clickable even without tiles
-
-			//PORTNOTE TODO_KEVIN add sprite.graphics
-			/*
-			well.graphics.clear();
-			well.graphics.beginFill(0x000000, 0);
-			well.graphics.drawRect(0, 0, mapWidth, mapHeight);
-			well.graphics.endFill();
-			*/
+//LUKE_SAYS: this seems to draw black behind the tilegrid (ie. clear's the well where the tiles sit on top of)... not needed?
+            // this makes sure the well is clickable even without tiles
+			// well.graphics.clear();
+			// well.graphics.beginFill(0x000000, 0);
+			// well.graphics.drawRect(0, 0, mapWidth, mapHeight);
+			// well.graphics.endFill();
 		}
 		
 		public function setMapProvider(provider:IMapProvider):void
@@ -1122,11 +1086,8 @@ package com.modestmaps.core
 			else {
 				this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
 			}
-			//PORTNOTE: TODO_KEVIN sort out ProgressEvent.PROGRESS
+//LUKE_SAYS: ProgressEvent seems to be tied directly to the Loader class in order to track bytes loaded in the grid/painter. Can likely ignore...            
 			//tilePainter.addEventListener(ProgressEvent.PROGRESS, onProgress, false, 0, true);
-			//tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded, false, 0, true);
-			//tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading, false, 0, true);
-			//PORTNOTE: removed other parameters
 			tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded);
 			tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading);
 
@@ -1192,11 +1153,8 @@ package com.modestmaps.core
 			}
 
 			// then make sure we haven't gone too far...
-			
-			//var inverse:Matrix = matrix.clone();
-			var inverse:Matrix = new Matrix;
-			inverse.copyFrom(worldMatrix);
-			
+            var inverse:Matrix = new Matrix();
+            inverse.copyFrom(worldMatrix);			
 			inverse.invert();
 			inverse.scale(matrixScale/tileWidth, matrixScale/tileHeight);
 			
@@ -1294,8 +1252,8 @@ package com.modestmaps.core
 		{
 			_dirty = d;
 			if (d) {
-				//PORTNOTE TODO_KEVIN add stage.invalidate()
-				//if (stage) stage.invalidate();
+//LUKE_SAYS: probably don't need this. It's used to tell Flash to redraw, but Loom always draws every frame whatever is there                
+                //if (stage) stage.invalidate();
 				
 				_invertedMatrix = null;
 				_topLeftCoordinate = null;
@@ -1313,10 +1271,9 @@ package com.modestmaps.core
 
 		public function getMatrix():Matrix
 		{
-			//return worldMatrix.clone();
-			var m = new Matrix();
-			m.copyFrom(worldMatrix);
-			return m;
+            var m:Matrix = new Matrix();
+            m.copyFrom(worldMatrix);
+            return m;
 		}
 
 		public function setMatrix(m:Matrix):void
@@ -1384,77 +1341,68 @@ package com.modestmaps.core
 								
 	}
 	
-	import com.modestmaps.core.Tile;
 
-	//PORTNOTE: need a loom2d.text.TextFormat
-	//import flash.text.TextFormat;
 
-	//PORTNOTE: now System.totalMemory
-	//import flash.system.System;
+//NOTE_24: not porting DebugField for now at least...
+	// import com.modestmaps.core.Tile;
+	// import flash.text.TextFormat;
+	// import flash.system.System;
 
-	class DebugField extends TextField
-	{
-		// for stats:
-		//protected var lastFrameTime:Number;
-		protected var timeManager:TimeManager;
-		protected var fps:Number = 30;	
+	// class DebugField extends TextField
+	// {
+	// 	// for stats:
+	// 	protected var lastFrameTime:Number;
+	// 	protected var fps:Number = 30;	
 
-		public function DebugField():void
-		{
-			//POSTNOTE: properties missing 
-			/*
-			defaultTextFormat = new TextFormat(null, 12, 0x000000, false);
-			backgroundColor = 0xffffff;
-			background = true;
-			text = "messages";
-			name = 'debugField';
-			mouseEnabled = false;
-			selectable = false;
-			multiline = true;
-			wordWrap = false;
+	// 	public function DebugField():void
+	// 	{
+	// 		defaultTextFormat = new TextFormat(null, 12, 0x000000, false);
+	// 		backgroundColor = 0xffffff;
+	// 		background = true;
+	// 		text = "messages";
+	// 		name = 'debugField';
+	// 		mouseEnabled = false;
+	// 		selectable = false;
+	// 		multiline = true;
+	// 		wordWrap = false;
 			
-			//lastFrameTime = getTimer();
-			timeManager = new TimeManager();
-			*/
-		}
+	// 		lastFrameTime = getTimer();
+	// 	}
 		
-		public function update(grid:TileGrid, blankCount:int, recentCount:int, tilePainter:ITilePainter):void
-		{
-			// for stats...
-			//var frameDuration:Number = getTimer() - lastFrameTime;
-			//lastFrameTime = getTimer();
-			var frameDuration:Number = timeManager.deltaTime;
+	// 	public function update(grid:TileGrid, blankCount:int, recentCount:int, tilePainter:ITilePainter):void
+	// 	{
+	// 		// for stats...
+	// 		var frameDuration:Number = getTimer() - lastFrameTime;
 			
+ //            lastFrameTime = getTimer();
 			
-			
-			fps = (0.9 * fps) + (0.1 * (1000.0/frameDuration));
+	// 		fps = (0.9 * fps) + (0.1 * (1000.0/frameDuration));
 
-			var well:Sprite = grid.getChildByName('well') as Sprite;
+	// 		var well:Sprite = grid.getChildByName('well') as Sprite;
 
-			// report stats:
-			var tileChildren:int = 0;
-			for (var i:int = 0; i < well.numChildren; i++) {
-				tileChildren += Tile(well.getChildAt(i)).numChildren;
-			}
-			/*  
-			this.text = "tx: " + grid.tx.toFixed(3)
-					+ "\nty: " + grid.ty.toFixed(3)
-					+ "\nsc: " + grid.scale.toFixed(4)
-					+ "\nfps: " + fps.toFixed(0)
-					+ "\ncurrent child count: " + well.numChildren
-					+ "\ncurrent child of tile count: " + tileChildren
-					+ "\nvisible tile count: " + grid.getVisibleTiles().length
-					+ "\nblank count: " + blankCount
-					+ "\nrecently used tiles: " + recentCount
-					+ "\ntiles created: " + Tile.count
-					+ "\nqueue length: " + tilePainter.getQueueCount()
-					+ "\nrequests: " + tilePainter.getRequestCount()
-					+ "\nfinished (cached) tiles: " + tilePainter.getCacheSize()
-					+ "\ncachedLoaders: " + tilePainter.getLoaderCacheCount();
-				//	+ "\nmemory: " + (System.totalMemory/1048576).toFixed(1) + "MB"; 
-			width = textWidth+8;
-			height = textHeight+4;
-			*/
-		}	
-	}
+	// 		// report stats:
+	// 		var tileChildren:int = 0;
+	// 		for (var i:int = 0; i < well.numChildren; i++) {
+	// 			tileChildren += Tile(well.getChildAt(i)).numChildren;
+	// 		}
+			
+	// 		this.text = "tx: " + grid.tx.toFixed(3)
+	// 				+ "\nty: " + grid.ty.toFixed(3)
+	// 				+ "\nsc: " + grid.scale.toFixed(4)
+	// 				+ "\nfps: " + fps.toFixed(0)
+	// 				+ "\ncurrent child count: " + well.numChildren
+	// 				+ "\ncurrent child of tile count: " + tileChildren
+	// 				+ "\nvisible tile count: " + grid.getVisibleTiles().length
+	// 				+ "\nblank count: " + blankCount
+	// 				+ "\nrecently used tiles: " + recentCount
+	// 				+ "\ntiles created: " + Tile.count
+	// 				+ "\nqueue length: " + tilePainter.getQueueCount()
+	// 				+ "\nrequests: " + tilePainter.getRequestCount()
+	// 				+ "\nfinished (cached) tiles: " + tilePainter.getCacheSize()
+	// 				+ "\ncachedLoaders: " + tilePainter.getLoaderCacheCount();
+	// 			//	+ "\nmemory: " + (System.totalMemory/1048576).toFixed(1) + "MB"; 
+	// 		width = textWidth+8;
+	// 		height = textHeight+4;
+	// 	}	
+	// }
 }

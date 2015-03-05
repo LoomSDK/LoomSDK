@@ -89,11 +89,6 @@ package com.modestmaps.overlays
 	    {
 	    	// client code can listen to mouse events on this clip
 	    	// to get all events bubbled up from the markers
-			// PORTNOTE: There isn;t any support for mouse related stuff in loom
-// TODO_AHMED: Investigate the missing mouse stuff in relation to touch controls
-	    	//buttonMode = false;
-	    	//mouseEnabled = false;
-	    	//mouseChildren = true;
 	    		    	
 	    	this.map = map;
 	    	this.x = map.getWidth() / 2;

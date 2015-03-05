@@ -25,7 +25,11 @@ package
         {
             stage.scaleMode = StageScaleMode.LETTERBOX;
 						
-			var map = new CustomMap(stage.stageWidth, stage.stageHeight, true, new BlankProvider(), stage);
+			var map = new CustomMap(stage.stageWidth, 
+                                    stage.stageHeight, 
+                                    true, 
+                                    new BlankProvider(AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM), 
+                                    stage);
 
 			stage.addChild(map);
         }
@@ -70,9 +74,9 @@ package
 
 	class BlankProvider extends AbstractMapProvider implements IMapProvider
 	{
-        public BlankProvider(MIN_ZOOM, MAX_ZOOM)
+        public function BlankProvider(minZoom:int, maxZoom:int)
         {
-            super();
+            super(minZoom, maxZoom);
         }
 
 		public function getTileUrls(coord:Coordinate):Vector.<String>

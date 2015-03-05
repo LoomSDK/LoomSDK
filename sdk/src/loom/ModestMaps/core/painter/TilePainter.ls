@@ -9,31 +9,29 @@ package com.modestmaps.core.painter
     import loom2d.textures.Texture;
 	
 	// PORTNOTE: There isn't a loader class equivalent in loom
+//LUKE_SAYS: Loader is used for remote async bitmap (texture) loads; we'll use the upcoming Texture.fromAsyncAsset() to replace that
 	//import flash.display.Loader;
 	//import flash.display.LoaderInfo;
+    //import flash.system.LoaderContext;
 	
 	import loom2d.events.Event;
 	import loom2d.events.EventDispatcher;
 	
-	// PORTNOTE: There doesn't seem to be an IOErrorEvent, ProgressEvent, TimerEvent in loom. Timer is possibly update?
-	//import flash.events.IOErrorEvent;
+//LUKE_SAYS: ProgressEvent seems to be tied directly to the Loader class in order to track bytes loaded in the grid/painter. Can likely ignore...            
 	//import flash.events.ProgressEvent;
-	//import flash.events.TimerEvent;
 	
 	// PORTNOTE: There isn't a url request class in loom, using http request class instead
 	//import flash.net.URLRequest;
 	import loom.HTTPRequest;
-	
-	// PORTNOTE: Loom doesn't have a loader class
-	//import flash.system.LoaderContext;
-	
 	import loom.platform.Timer;
+
 	
 	public class TilePainter extends EventDispatcher implements ITilePainter
 	{
+//TODO_24: see if we have access to the bitmap data so we can Cache and Smooth!!!        
 		protected static const DEFAULT_CACHE_LOADERS:Boolean = false;  // !!! only enable this if you have crossdomain permissions to access Loader content
 		protected static const DEFAULT_SMOOTH_CONTENT:Boolean = false; // !!! only enable this if you have crossdomain permissions to access Loader content
-		protected static const DEFAULT_MAX_LOADER_CACHE_SIZE:int = 0;  // !!! suggest 256 or so
+		protected static const DEFAULT_MAX_LOADER_CACHE_SIZE:int = 256;  // !!! suggest 256 or so
 		protected static const DEFAULT_MAX_OPEN_REQUESTS:int = 4;      // TODO: should this be split into max-new-requests-per-frame, too?
 
 		///////////// BEGIN OPTIONS
@@ -64,11 +62,12 @@ package com.modestmaps.core.painter
 		// they are free to check the bounds of their overlays and don't have to serve
 		// millions of 404s
 		protected var layersNeeded:Dictionary.<String, Vector.<String>> = {};
-//TODO_AHMED: Decide what to do about the missing loader class
+//LUKE_SAYS: Loader is used for remote async bitmap (texture) loads; we'll use the upcoming Texture.fromAsyncAsset() to replace that
 		// protected var loaderTiles:Dictionary = new Dictionary.<Loader, Tile>;
 	
 		// open requests
-//TODO_AHMED: openRequests should be Vector.<Loader>... set to <Object> just to compile
+//LUKE_SAYS: Loader is used for remote async bitmap (texture) loads; we'll use the upcoming Texture.fromAsyncAsset() to replace that
+//TODO_24: openRequests should be Vector.<Loader>... set to <Object> just to compile
 		protected var openRequests:Vector.<Object> = [];
 	
 		// keeping track for dispatching MapEvent.ALL_TILES_LOADED and MapEvent.BEGIN_TILE_LOADING
@@ -95,6 +94,7 @@ package com.modestmaps.core.painter
 //TODO: test that this is functioning as expected            
             queueTimer.onComplete = processQueue;
 
+            // TODO: this used to be called onAddedToStage, is this bad?
 			queueTimer.start();
 		}
 
@@ -159,7 +159,7 @@ package com.modestmaps.core.painter
 			if (tileQueue.contains(tile)) {
 				tileQueue.remove(tile);
 			}
-//TODO_AHMED: Decide what to do about the missing loader class
+//LUKE_SAYS: Loader is used for remote async bitmap (texture) loads; we'll use the upcoming Texture.fromAsyncAsset() to replace that
 			/*
 			for (var i:int = openRequests.length - 1; i >= 0; i--) {
 				var loader:Loader = openRequests[i] as Loader;
@@ -181,7 +181,7 @@ package com.modestmaps.core.painter
 	
 		public function reset():void
 		{
-// TODO_AHMED: Figure out what to do about the loader class
+//LUKE_SAYS: Loader is used for remote async bitmap (texture) loads; we'll use the upcoming Texture.fromAsyncAsset() to replace that
 			/*for each (var loader:Loader in openRequests) {
 				var tile:Tile = loaderTiles[loader] as Tile;
 				loaderTiles[loader] = null;
@@ -192,7 +192,6 @@ package com.modestmaps.core.painter
 				try {
 					// la la I can't hear you
 					loader.contentLoaderInfo.removeEventListener(Event.COMPLETE, onLoadEnd);
-					loader.contentLoaderInfo.removeEventListener(IOErrorEvent.IO_ERROR, onLoadError);
 					loader.close();
 				}
 				catch (error:Error) {
@@ -220,13 +219,13 @@ package com.modestmaps.core.painter
 					//var original:Bitmap = loaderCache[url] as Bitmap;
 					//var bitmap:Bitmap = new Bitmap(original.bitmapData); 
 					var tex:Texture = loaderCache[url] as Texture;
-// TODO_AHMED: Find out whether this copy is legit or not
+// TODO_24: Original code did a clone of the bitmap... why? needed?
 					var bitmap:Image = new Image(tex);
 					
 					tile.addChild(bitmap);
 					loadNextURLForTile(tile);
 				}
-// TODO_AHMED: Do something about the loader class!!!
+//LUKE_SAYS: Loader is used for remote async bitmap (texture) loads; we'll use the upcoming Texture.fromAsyncAsset() to replace that
 				/*else {
 					//trace("requesting", url);
 					var tileLoader:Loader = new Loader();
@@ -241,7 +240,6 @@ package com.modestmaps.core.painter
 							tileLoader.load((url is URLRequest) ? url : new URLRequest(url));
 						}
 						tileLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoadEnd, false, 0, true);
-						tileLoader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, onLoadError, false, 0, true);
 						openRequests.push(tileLoader);
 					}
 					catch(error:Error) {
@@ -294,8 +292,8 @@ package com.modestmaps.core.painter
 			}
 			else if (previousOpenRequests > 0)
 			{
+//LUKE_SAYS: ProgressEvent seems to be tied directly to the Loader class in order to track bytes loaded in the grid/painter. Can likely ignore...            
 				// TODO: a custom event for load progress rather than overloading bytesloaded?
-// TODO_AHMED: Do something about the missing progressevent
 				//dispatchEvent(new ProgressEvent(ProgressEvent.PROGRESS, false, false, previousOpenRequests - openRequests.length, previousOpenRequests));
 	
 			    // if we're finished...
@@ -310,7 +308,7 @@ package com.modestmaps.core.painter
 	
 		private function onLoadEnd(event:Event):void
 		{
-// TODO_AHMED: Do something about the missing loader class
+//LUKE_SAYS: Loader is used for remote async bitmap (texture) loads; we'll use the upcoming Texture.fromAsyncAsset() to replace that
 			/*var loader:Loader = (event.target as LoaderInfo).loader;
 			
 			if (cacheLoaders && !loaderCache[loader.contentLoaderInfo.url]) {
@@ -327,21 +325,16 @@ package com.modestmaps.core.painter
 					// ???
 				}
 			}*/
-			
-			// PORTNOTE: AN EMPTY TRY CATCH STATEMENT WILL CAUSE THE UILD TO SILENTLY FAIL
-			/*if (smoothContent) {
-				try {
-					// PORTNOTE: The sprite class (which we're using in place of the bitmap class doesn't have a smoothing member variable
-					//var smoothContent:Bitmap = loader.content as Bitmap;
-					//smoothContent.smoothing = true;
-				}
-				catch (error:Error) {
-					// ???
-				}
-			}*/		
+
+//LUKE_SAYS: use Texture.smoothing = BINLEAR;			
+			//if (smoothContent) {
+            //        var smoothContent:Bitmap = loader.content as Bitmap;
+            //        smoothContent.smoothing = true;
+			//}		
 	
 			// tidy up the request monitor
-// TODO_AHMED: Do something about the missing loader class
+//LUKE_SAYS: Loader is used for remote async bitmap (texture) loads; we'll use the upcoming Texture.fromAsyncAsset() to replace that
+            // TODO: this used to be called onAddedToStage, is this bad?
 			/*var index:int = openRequests.indexOf(loader);
 			if (index >= 0) {
 				openRequests.splice(index,1);
@@ -359,27 +352,6 @@ package com.modestmaps.core.painter
 			
 			loaderTiles[loader] = null;
 			delete loaderTiles[loader];*/
-		}
-
-// TODO_AHMED: Do something about the missing IOErrorEvent
-		private function onLoadError(event:Event):void
-		{
-// TODO_AHMED: Do somthing about the missing laoder class
-			/*var loaderInfo:LoaderInfo = event.target as LoaderInfo;
-			for (var i:int = openRequests.length-1; i >= 0; i--) {
-				var loader:Loader = openRequests[i] as Loader;
-				if (loader.contentLoaderInfo == loaderInfo) {
-					openRequests.splice(i,1);
-					layersNeeded.deleteKey(loader.name);
-					var tile:Tile = loaderTiles[loader] as Tile;
-					if (tile) {
-						tile.paintError(provider.tileWidth, provider.tileHeight);
-						tileGrid.tilePainted(tile);
-						loaderTiles[loader] = null;
-						delete loaderTiles[loader];
-					}				
-				}
-			}*/
 		}
 		
 		public function getLoaderCacheCount():int
