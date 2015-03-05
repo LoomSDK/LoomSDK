@@ -22,6 +22,7 @@
 #define __ls_nativedelegate_h
 
 #include "loom/common/utils/utTypes.h"
+#include "loom/common/utils/utByteArray.h"
 #include "loom/script/runtime/lsLua.h"
 
 namespace LS {
@@ -106,6 +107,7 @@ public:
     // No conditional checks are required, NativeDelegate deals with all that for
     // you.
     void pushArgument(const char *value) const;
+    void pushArgument(utByteArray *value) const;
     void pushArgument(int value) const;
     void pushArgument(float value) const;
     void pushArgument(double value) const;
