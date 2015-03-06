@@ -94,7 +94,9 @@ package
         {
             //attempt async load!
             _startTime = Platform.getTime();
-            var newTex:Texture = Texture.fromAssetAsync(_texBase + _curImage + ".png", asyncLoadCompleteCB);
+            var texToLoad:String = _texBase + _curImage + ".png";
+            trace("AsyncImageExample::requestAsyncTex: " + texToLoad);       
+            var newTex:Texture = Texture.fromAssetAsync(texToLoad, asyncLoadCompleteCB);
             if(newTex.isTextureValid())
             {
                 setTexture(newTex, USING_CACHED);

@@ -106,6 +106,8 @@ package loom2d.textures
         
         /**
          * For asynchonously loaded Textures, fired when the texture has completed loading its data.
+         * Note that if texture.dispose() is called before the async load has completed, the texture
+         * will be destroyed and 'asyncLoadComplete' will NOT get called.
          */
         public var asyncLoadComplete:TextureAsyncLoadCompleteDelegate;
         

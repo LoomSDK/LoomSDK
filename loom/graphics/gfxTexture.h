@@ -117,7 +117,8 @@ private:
     static MutexHandle sTexInfoLock;
     static MutexHandle sAsyncQueueMutex;
     static bool sAsyncThreadRunning;
-    static utList<AsyncLoadNote> sAsyncQueue;
+    static utList<AsyncLoadNote> sAsyncLoadQueue;
+    static utList<AsyncLoadNote> sAsyncCreateQueue;
 
 
     // simple linear TextureID -> TextureHandle
@@ -144,6 +145,33 @@ private:
 
         return id;
     }
+
+
+    static TextureInfo *getAvailableTextureInfo(const char *path)
+    {
+        TextureID id;
+        TextureInfo *tinfo = NULL;
+
+        loom_mutex_lock(sTexInfoLock);
+        for (id = 0; id < MAXTEXTURES; id++)
+        {
+            if (sTextureInfos[id].handle.idx == bgfx::invalidHandle)
+            {
+                // Initialize it.
+                tinfo = &sTextureInfos[id];
+                tinfo->handle.idx = MARKEDTEXTURE;    // mark in use, but not yet loaded
+                if(path != NULL)
+                {
+                    tinfo->texturePath = path;
+                    sTexturePathLookup.insert(path, id);
+                }
+                break;
+            }
+        }
+        loom_mutex_unlock(sTexInfoLock);
+        return tinfo;
+    }
+
 
     static void loadCheckerBoard(TextureID id);
 
@@ -196,6 +224,7 @@ public:
     }
 
     static void reset();
+    static void tick();
 
     // This method accepts rgba data.
     static TextureInfo *load(uint8_t *data, uint16_t width, uint16_t height, TextureID id = -1);

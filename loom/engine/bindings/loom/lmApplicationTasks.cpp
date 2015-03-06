@@ -25,6 +25,7 @@
 #include "loom/script/native/lsNativeDelegate.h"
 #include "lmApplication.h"
 #include "loom/common/config/applicationConfig.h"
+#include "loom/graphics/gfxTexture.h"
 
 extern "C"
 {
@@ -64,6 +65,8 @@ void loom_tick()
     loom_asset_pump();
 
     platform_HTTPUpdate();
+
+    GFX::Texture::tick();
 
     lualoom_gc_update(LoomApplication::getRootVM()->VM());
 
