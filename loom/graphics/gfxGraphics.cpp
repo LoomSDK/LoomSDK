@@ -28,6 +28,7 @@
 
 #include "loom/graphics/gfxTexture.h"
 #include "loom/graphics/gfxQuadRenderer.h"
+#include "loom/graphics/gfxVectorRenderer.h"
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxMath.h"
 
@@ -93,6 +94,8 @@ void Graphics::initialize()
     // initialize the static QuadRenderer initialize
     QuadRenderer::initialize();
 
+    VectorRenderer::initialize();
+
     sInitialized = true;
 
     ///   BGFX_DEBUG_STATS - Display internal statistics.
@@ -124,6 +127,7 @@ void Graphics::reset(int width, int height, uint32_t flags)
     {
         //bgfx::reset(width, height, flags);
         QuadRenderer::reset();
+        VectorRenderer::reset();
         Texture::reset();        
     }
     else
@@ -162,17 +166,19 @@ void Graphics::beginFrame()
                                       float((sFillColor >> 24) & 0xFF) / 255.0f,
                                       float((sFillColor >> 0) & 0xFF) / 255.0f
                                       );
-    Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 
     QuadRenderer::beginFrame();
+    VectorRenderer::setSize(sWidth, sHeight);
+    //VectorRenderer::beginFrame();
 }
 
 
 void Graphics::endFrame()
 {
     QuadRenderer::endFrame();
+    //VectorRenderer::endFrame();
 
     if(pendingScreenshot[0] != 0)
     {
@@ -193,6 +199,7 @@ void Graphics::handleContextLoss()
 
     // make sure the QuadRenderer resources are freed before we shutdown bgfx
     QuadRenderer::destroyGraphicsResources();
+    VectorRenderer::destroyGraphicsResources();
 
     lmLog(gGFXLogGroup, "Handle context loss: Init");
 

@@ -2,7 +2,14 @@
 # Debugging support
 # add_definitions(-DBGFX_CONFIG_DEBUG=1)
 
-set ( GRAPHICS_SRC gfxGraphics.cpp gfxQuadRenderer.cpp gfxTexture.cpp gfxScript.cpp)
+set ( GRAPHICS_SRC gfxGraphics.cpp gfxQuadRenderer.cpp gfxTexture.cpp gfxScript.cpp gfxVectorRenderer.cpp gfxVectorGraphics.cpp)
+set (LOOM_VENDOR ${CMAKE_CURRENT_SOURCE_DIR}/../vendor)
+set (NANOVG ${LOOM_VENDOR}/nanovg/src)
+set (NANOSVG ${LOOM_VENDOR}/nanosvg/src)
+
+include_directories( ${NANOVG} ${NANOSVG} )
+
+set ( NANOVG_SRC ${NANOVG}/nanovg.c )
 
 if (NOT ANDROID)
     include_directories( ${LOOMBGFX_INCLUDE_DIR}/glext )
@@ -57,7 +64,7 @@ if (FLASH)
 
 endif()
 
-add_library( LoomGraphics ${GRAPHICS_SRC} )
+add_library( LoomGraphics ${NANOVG_SRC} ${GRAPHICS_SRC} )
 target_link_libraries(LoomGraphics LoomVendor )
 
 

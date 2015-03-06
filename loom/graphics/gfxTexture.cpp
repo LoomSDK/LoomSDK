@@ -18,8 +18,6 @@
  * ===========================================================================
  */
 
-#include <SDL_opengl.h>
-
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
 #include "loom/common/core/assert.h"

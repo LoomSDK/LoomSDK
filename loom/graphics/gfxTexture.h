@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <SDL_opengl.h>
+#include <SDL_opengles2.h>
 #include "loom/common/utils/utString.h"
 #include "loom/script/native/lsNativeDelegate.h"
 

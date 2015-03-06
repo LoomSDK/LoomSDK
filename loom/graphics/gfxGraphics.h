@@ -21,7 +21,8 @@
 #pragma once
 
 #include <SDL.h>
-#include <SDL_opengl.h>
+#include <SDL_opengles2.h>
+
 #include <stdint.h>
 #include "loom/common/core/assert.h"
 

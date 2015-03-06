@@ -126,7 +126,7 @@ package loom2d.display
             // Note down useful information.
             mWidth = width;
             mHeight = height;
-            mColor = color;
+            this.color = color;
             
             // Handle key event dispatch.
             onKeyDown += onKeyDownHandler;
@@ -248,7 +248,7 @@ package loom2d.display
             // Update the background. Add alpha to the color.
             var swizzleColor = (value << 8) | 0xFF;
 
-            Graphics.setFillColor(swizzleColor);
+            loom.graphics.Graphics.setFillColor(swizzleColor);
         }
         
         /** The width of the stage coordinate system. Change it to scale its contents relative

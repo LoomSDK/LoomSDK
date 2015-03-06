@@ -28,6 +28,7 @@
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/engine/loom2d/l2dSprite.h"
+#include "loom/engine/loom2d/l2dShape.h"
 #include "loom/engine/loom2d/l2dQuad.h"
 #include "loom/engine/loom2d/l2dImage.h"
 #include "loom/engine/loom2d/l2dQuadBatch.h"
@@ -245,6 +246,55 @@ static int registerLoom2D(lua_State *L)
        .addConstructor<void (*)(void)>()
        .endClass()
 
+    // TextFormat
+       .beginClass<GFX::VectorTextFormat>("TextFormat")
+       .addConstructor<void(*)(void)>()
+       .addStaticMethod("load", &GFX::VectorTextFormat::load)
+       .addProperty("font", &GFX::VectorTextFormat::getFont, &GFX::VectorTextFormat::setFont)
+       .addProperty("color", &GFX::VectorTextFormat::getColor, &GFX::VectorTextFormat::setColor)
+       .addProperty("size", &GFX::VectorTextFormat::getSize, &GFX::VectorTextFormat::setSize)
+       .addProperty("align", &GFX::VectorTextFormat::getAlign, &GFX::VectorTextFormat::setAlign)
+       .addProperty("letterSpacing", &GFX::VectorTextFormat::getLetterSpacing, &GFX::VectorTextFormat::setLetterSpacing)
+       .addProperty("lineHeight", &GFX::VectorTextFormat::getLineHeight, &GFX::VectorTextFormat::setLineHeight)
+       .endClass()
+
+    // SVG
+       .beginClass<GFX::VectorSVG>("SVG")
+       .addConstructor<void(*)(void)>()
+       .addMethod("loadFile", &GFX::VectorSVG::loadFile)
+       .addMethod("loadString", &GFX::VectorSVG::loadString)
+       .endClass()
+
+    // Shape
+       .deriveClass<Shape, DisplayObject>("Shape")
+       .addConstructor<void(*)(void)>()
+       .addMethod("__pget_graphics", &Shape::getGraphics)
+       .endClass()
+
+    // Graphics
+       .beginClass<GFX::VectorGraphics>("Graphics")
+       .addMethod("clear", &GFX::VectorGraphics::clear)
+       .addMethod("lineStyle", &GFX::VectorGraphics::lineStyle)
+       .addMethod("textFormat", &GFX::VectorGraphics::textFormat)
+       .addMethod("beginFill", &GFX::VectorGraphics::beginFill)
+       .addMethod("endFill", &GFX::VectorGraphics::endFill)
+       .addMethod("moveTo", &GFX::VectorGraphics::moveTo)
+       .addMethod("lineTo", &GFX::VectorGraphics::lineTo)
+       .addMethod("curveTo", &GFX::VectorGraphics::curveTo)
+       .addMethod("cubicCurveTo", &GFX::VectorGraphics::cubicCurveTo)
+       .addMethod("arcTo", &GFX::VectorGraphics::arcTo)
+       .addMethod("drawCircle", &GFX::VectorGraphics::drawCircle)
+       .addMethod("drawEllipse", &GFX::VectorGraphics::drawEllipse)
+       .addMethod("drawRect", &GFX::VectorGraphics::drawRect)
+       .addMethod("drawRoundRect", &GFX::VectorGraphics::drawRoundRect)
+       .addMethod("drawRoundRectComplex", &GFX::VectorGraphics::drawRoundRectComplex)
+       .addMethod("drawArc", &GFX::VectorGraphics::drawArc)
+       .addMethod("drawTextLabel", &GFX::VectorGraphics::drawTextLabel)
+       .addMethod("drawTextBox", &GFX::VectorGraphics::drawTextBox)
+       .addMethod("drawSVG", &GFX::VectorGraphics::drawSVG)
+       .addMethod("getBounds", &GFX::VectorGraphics::getBounds)
+       .endClass()
+
     // Quad
        .deriveClass<Quad, DisplayObject>("Quad")
        .addConstructor<void (*)(void)>()
@@ -283,11 +333,16 @@ void installLoom2D()
     LOOM_DECLARE_NATIVETYPE(Loom2D::Rectangle, Loom2D::registerLoom2D);
     LOOM_DECLARE_NATIVETYPE(Loom2D::Matrix, Loom2D::registerLoom2D);
 
+    LOOM_DECLARE_NATIVETYPE(GFX::VectorTextFormat, Loom2D::registerLoom2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorSVG, Loom2D::registerLoom2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorGraphics, Loom2D::registerLoom2D);
+
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::EventDispatcher, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::DisplayObject, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::DisplayObjectContainer, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Stage, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Sprite, Loom2D::registerLoom2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Shape, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Image, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Quad, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::QuadBatch, Loom2D::registerLoom2D);

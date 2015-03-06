@@ -6,11 +6,11 @@
 #include <emscripten/emscripten.h>
 #endif
 
-#include <SDL.h>
-
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/common/config/applicationConfig.h"
+
+#include <SDL.h>
 
 extern "C"
 {
@@ -123,8 +123,14 @@ void loop()
 int
 main(int argc, char *argv[])
 {
+    SDL_Init(SDL_INIT_EVERYTHING);
+
     /* Enable standard application logging */
     SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
+
+    int stencilSize = 1;
+    int ret = SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilSize);
+    lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
 
     // Set up SDL window.
     if ((gSDLWindow = SDL_CreateWindow(

@@ -105,10 +105,18 @@ package loom
 
             // initialize the native subsystem
             Loom2DNative.initialize();
-
+            
+            var config = new JSON();
+            config.loadString(loomConfigJSON);
+            
+            var display = config.getObject("display");
+            var configWidth = display.getInteger("width");
+            var configHeight = display.getInteger("height");
+            var configColor = Number.fromString("0x"+display.getString("color"));
+            
             // create the stage using the initial display size as specified by loom.config
             //theStage = new Stage(/*layer,*/ Cocos2D.getConfigDisplayWidth(), Cocos2D.getConfigDisplayHeight(), 0x000000);
-            theStage = new Stage(1024, 768, 0x0);
+            theStage = new Stage(configWidth, configHeight, configColor);
             Loom2D.stage = theStage;
             Stage.onRenderStage += onCocosFrame;
 
@@ -136,8 +144,8 @@ package loom
                     var splashLowerTexture = Texture.fromTexture(splashTexture, new Rectangle(0, 125, 264, 52));
 
                     // Position everything on the  stage in its own container.
-                    var realStageHeight = 1024; //Cocos2D.getDisplayHeight();
-                    var realStageWidth = 768; //Cocos2D.getDisplayWidth();
+                    var realStageHeight = configHeight;
+                    var realStageWidth = configWidth;
 
                     splashContainer = new Sprite();
 
@@ -464,7 +472,7 @@ package loom
         public static native function getBootAssembly():String;
         
         /**
-         * Access to the çopy of loom.config embedded in the application.
+         * Access to the copy of loom.config embedded in the application.
          */
         public static native var loomConfigJSON:String;
         
