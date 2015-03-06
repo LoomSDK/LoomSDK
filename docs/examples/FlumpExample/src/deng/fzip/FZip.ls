@@ -111,7 +111,6 @@ package deng.fzip
 		protected var filesList:Vector.<Object>;
 		protected var filesDict:Dictionary;
 
-		//protected var urlStream:URLStream;
 		protected var charEncoding:String;
 		protected var parseFunc:Function;
 		protected var currentFile:FZipFile;
@@ -153,37 +152,13 @@ package deng.fzip
 		public function get active():Boolean {
 			return (parseFunc != parseIdle);
 		}
-
-		/**
-		 * Begins downloading the ZIP archive specified by the request
-		 * parameter.
-		 * 
-		 * @param request A URLRequest object specifying the URL of a ZIP archive
-		 * to download. 
-		 * If the value of this parameter or the URLRequest.url property 
-		 * of the URLRequest object passed are null, Flash Player throws 
-		 * a null pointer error.
-		 */		
-        /*
-		public function load(request:URLRequest):void {
-			if(!urlStream && parseFunc == parseIdle) {
-				urlStream = new URLStream();
-				urlStream.endian = Endian.LITTLE_ENDIAN;
-				addEventHandlers();
-				filesList = [];
-				filesDict = new Dictionary();
-				parseFunc = parseSignature;
-				urlStream.load(request);
-			}
-		}
-		
+        
 		/**
 		 * Loads a ZIP archive from a ByteArray.
 		 *
 		 * @param bytes The ByteArray containing the ZIP archive
 		 */
 		public function loadBytes(bytes:ByteArray):void {
-			//if (!urlStream && parseFunc == parseIdle) {
             Debug.assert(bytes != null);
 			if (parseFunc == parseIdle) {
 				filesList = [];
@@ -198,22 +173,6 @@ package deng.fzip
 					dispatchEvent(new FZipErrorEvent(FZipErrorEvent.PARSE_ERROR, "EOF"));
 				}
 			}
-		}
-
-		/**
-		 * Immediately closes the stream and cancels the download operation.
-		 * Files contained in the ZIP archive being loaded stay accessible
-		 * through the getFileAt() and getFileByName() methods.
-		 */		
-		public function close():void {
-			/*
-			if(urlStream) {
-				parseFunc = parseIdle;
-				removeEventHandlers();
-				urlStream.close();
-				urlStream = null;
-			}
-			*/
 		}
 
 		/**
@@ -568,28 +527,6 @@ package deng.fzip
 		/**
 		 * @private
 		 */		
-		/*
-		protected function progressHandler(evt:Event):void {
-			dispatchEvent(evt.clone());
-			try {
-				if(parse(urlStream)) {
-					close();
-					dispatchEvent(new Event(Event.COMPLETE));
-				}
-			} catch(e:Error) {
-				close();
-				if(hasEventListener(FZipErrorEvent.PARSE_ERROR)) {
-					dispatchEvent(new FZipErrorEvent(FZipErrorEvent.PARSE_ERROR, e.message));
-				} else {
-					throw(e);
-				}
-			}
-		}
-		*/
-		
-		/**
-		 * @private
-		 */		
 		protected function defaultHandler(evt:Event):void {
 			dispatchEvent(evt.clone());
 		}
@@ -598,36 +535,8 @@ package deng.fzip
 		 * @private
 		 */		
 		protected function defaultErrorHandler(evt:Event):void {
-			close();
 			dispatchEvent(evt.clone());
 		}
 		
-		/**
-		 * @private
-		 */		
-		/*
-		protected function addEventHandlers():void {
-			urlStream.addEventListener(Event.COMPLETE, defaultHandler);
-			urlStream.addEventListener(Event.OPEN, defaultHandler);
-			urlStream.addEventListener(HTTPStatusEvent.HTTP_STATUS, defaultHandler);
-			urlStream.addEventListener(IOErrorEvent.IO_ERROR, defaultErrorHandler);
-			urlStream.addEventListener(SecurityErrorEvent.SECURITY_ERROR, defaultErrorHandler);
-			urlStream.addEventListener(ProgressEvent.PROGRESS, progressHandler);
-		}
-		*/
-		
-		/**
-		 * @private
-		 */		
-		/*
-		protected function removeEventHandlers():void {
-			urlStream.removeEventListener(Event.COMPLETE, defaultHandler);
-			urlStream.removeEventListener(Event.OPEN, defaultHandler);
-			urlStream.removeEventListener(HTTPStatusEvent.HTTP_STATUS, defaultHandler);
-			urlStream.removeEventListener(IOErrorEvent.IO_ERROR, defaultErrorHandler);
-			urlStream.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, defaultErrorHandler);
-			urlStream.removeEventListener(ProgressEvent.PROGRESS, progressHandler);
-		}
-		*/
 	}
 }

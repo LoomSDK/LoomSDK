@@ -74,12 +74,6 @@ public class KeyframeMold
     }
 
     public function toJSON (_:Object) :Object {
-        /*
-        var json :Object = {
-            index: index,
-            duration: duration
-        };
-        */
         var json:JSON = new JSON();
         json.setInteger("index", index);
         json.setInteger("duration", duration);

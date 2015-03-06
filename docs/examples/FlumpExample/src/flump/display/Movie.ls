@@ -227,12 +227,6 @@ public class Movie extends Sprite
         // if no contents exist, simply include this movie's position in the bounds
         if (resultRect.width == 0 && resultRect.height == 0) {
             resultRect.setTo(_s_helperPoint.x, _s_helperPoint.y, 0, 0);
-            /*
-            getTransformationMatrix(targetSpace, IDENTITY_MATRIX);
-            MatrixUtil.transformCoords(IDENTITY_MATRIX, 0.0, 0.0, _s_helperPoint);
-            resultRect.setTo(_s_helperPoint.x, _s_helperPoint.y, 0, 0);
-            */
-            // TODO fix
         }
 
         return resultRect;

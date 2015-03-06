@@ -1,40 +1,25 @@
 package flump {
- 
-public class Flump {
-    
-    /** @private */
-    /*
-    public static function require (o :JSON, field :String) :Object {
-        if (!o.hasOwnProperty(field)) throw new Error("Required field '" + field + "' not present in " + o.serialize());
-        return result;
-    }
-    */
-    
-    static public function requireString(o:JSON, field:String):String {
-        return o.getString(field);
-    }
-    
-    static public function requireVector(o:JSON, field:String):Vector.<JSON> {
-        var a:JSON = o.getArray(field);
-        var n = a.getArrayCount();
-        var v = new Vector.<JSON>();
-        for (var i = 0; i < n; i++) {
-            v.push(a.getArrayObject(i));
+     
+    public class Flump {
+        
+        static public function requireString(o:JSON, field:String):String {
+            return o.getString(field);
         }
-        return v;
+        
+        static public function requireVector(o:JSON, field:String):Vector.<JSON> {
+            var a:JSON = o.getArray(field);
+            var n = a.getArrayCount();
+            var v = new Vector.<JSON>();
+            for (var i = 0; i < n; i++) {
+                v.push(a.getArrayObject(i));
+            }
+            return v;
+        }
+        
+        static public function requireNumber(o:JSON, field:String):Number {
+            return o.getNumber(field);
+        }
+        
     }
-    
-    static public function requireNumber(o:JSON, field:String):Number {
-        return o.getNumber(field);
-    }
-    
-    /** @private */
-    /*
-    public static function optional (o :JSON, field :String, defaultValue :Object) :Object {
-        return (o.hasOwnProperty(field) ? o[field] : defaultValue);
-    }
-    */
-    
-}
     
 }

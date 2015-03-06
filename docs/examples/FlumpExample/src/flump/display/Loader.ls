@@ -130,31 +130,6 @@ class Loader {
         baseTextureLoaded(tex, atlas);
         
         bytes.clear();
-        
-        /*
-        if (_lib.textureFormat == "atf") {
-            baseTextureLoaded(Texture.fromAtfData(bytes, scale, _libLoader.generateMipMaps), atlas);
-            if (!Starling.handleLostContext) {
-                ByteArray(bytes).clear();
-            }
-        } else {
-            const atlasFuture :Future = loader.loadFromBytes(bytes, _pngLoaders);
-            atlasFuture.failed.connect(onPngLoadingFailed);
-            atlasFuture.succeeded.connect(function (img :LoadedImage) :void {
-                _libLoader.pngAtlasLoaded.emit({atlas: atlas, image: img});
-                baseTextureLoaded(Texture.fromBitmapData(
-                    img.bitmapData,
-                    _libLoader.generateMipMaps,
-                    false,  // optimizeForRenderToTexture
-                    scale), atlas);
-                if (!Starling.handleLostContext) {
-                    img.bitmapData.dispose();
-                }
-                ByteArray(bytes).clear();
-            });
-
-        }
-        */
     }
 
     protected function baseTextureLoaded (baseTexture :Texture, atlas :AtlasMold) :void {
@@ -202,7 +177,6 @@ class Loader {
     }
     
     protected function reset() {
-        _zip.close();
         _lib = null;
         _future.reset();
         

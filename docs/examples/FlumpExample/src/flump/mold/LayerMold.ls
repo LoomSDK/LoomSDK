@@ -35,12 +35,6 @@ public class LayerMold
     }
 
     public function toJSON (_:Object) :JSON {
-        /*
-        var json :Object = {
-            name: name,
-            keyframes: keyframes
-        };
-        */
         var json = new JSON();
         json.setString("name", name);
         json.setArray("keyframes", JSON.parse(JSON.stringify(keyframes)));

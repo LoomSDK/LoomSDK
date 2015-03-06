@@ -66,12 +66,6 @@ public class MovieMold
     }
 
     public function toJSON (_:Object) :JSON {
-        /*
-        const json :Object = {
-            id: id,
-            layers: layers
-        };
-        */
         var json = new JSON();
         json.setString("id", id);
         json.setArray("layers", JSON.parse(JSON.stringify(layers)));
