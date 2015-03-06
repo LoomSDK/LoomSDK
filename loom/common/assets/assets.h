@@ -100,6 +100,7 @@ enum LoomAssetType
     LATText         = LOOM_FOURCC('T', 'X', 'T', 1),
     LATMesh         = LOOM_FOURCC('M', 'S', 'H', 1),
     LATScript       = LOOM_FOURCC('L', 'O', 'O', 'M'),
+    LATBinary       = LOOM_FOURCC('B', 'I', 'N', 1),
     LAT_FORCE_DWORD = 0xFFFFFFFF
 };
 
