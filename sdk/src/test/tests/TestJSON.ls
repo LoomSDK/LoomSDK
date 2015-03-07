@@ -37,33 +37,33 @@ class TestJSON extends LegacyTest
             
         }
         
-		// getValue() should succeed wherever specific getters do
+        // getValue() should succeed wherever specific getters do
         var code:int = json.getInteger("code");
-		var varCode:int = json.getValue("code") as int;
+        var varCode:int = json.getValue("code") as int;
         
         log(json.getBoolean("booleanvalue"));
-		log(json.getValue("booleanvalue"));
+        log(json.getValue("booleanvalue"));
                 
         var message = json.getObject("message");
-		var varMessage = json.getValue("message") as JSON;
+        var varMessage = json.getValue("message") as JSON;
         
         var user = message.getObject("user");
-		var varUser = varMessage.getValue("user") as JSON;
+        var varUser = varMessage.getValue("user") as JSON;
         
         log(user.getString("id"));
-		log(user.getValue("id"));
+        log(user.getValue("id"));
         
         var leaderboard = message.getArray("leaderboard");
-		var varLeaderboard = message.getValue("leaderboard") as JSON;
-		
-		log(leaderboard.getArrayCount());
-		log(leaderboard.length);
+        var varLeaderboard = message.getValue("leaderboard") as JSON;
+        
+        log(leaderboard.getArrayCount());
+        log(leaderboard.length);
         
         for (var i = 0; i < leaderboard.getArrayCount(); i++)
             log(leaderboard.getArrayInteger(i));
 
         assert(user.getFloat("score") == 1.1);
-		assert(user.getValue("score") as Number == 1.1);
+        assert(user.getValue("score") as Number == 1.1);
 
         // Test JSON setting non-sequential array indexes
 
@@ -115,44 +115,44 @@ class TestJSON extends LegacyTest
 
         assert( jsonTypeArray.getObjectJSONType("InvalidKey") == JSONType.JSON_NULL );
         assert( jsonTypeArray.getArrayJSONType(100) == JSONType.JSON_NULL );
-		
-		// Test JSON getDictionary() and getVector() functionality
-		var jsonDictionary:Dictionary = jsonTypeObject.getDictionary();
-		
-		assert (jsonTypeObject.getVector() == null);
-		
-		assert (jsonDictionary["JSON_INTEGER"].getType().getFullName() == "system.Number");
-		assert (jsonDictionary["JSON_INTEGER"] == -1);
-		assert (jsonDictionary["JSON_INTEGER"].getType().getFullName() == "system.Number");
-		assert (jsonDictionary["JSON_REAL"] == 0.2);
-		assert (jsonDictionary["JSON_ARRAY"].getType().getFullName() == "system.JSON");
-		assert (jsonDictionary["JSON_OBJECT"].getType().getFullName() == "system.JSON");
-		assert (jsonDictionary["JSON_FALSE"].getType().getFullName() == "system.Boolean");
-		assert (jsonDictionary["JSON_FALSE"] == false);
-		assert (jsonDictionary["JSON_TRUE"].getType().getFullName() == "system.Boolean");
-		assert (jsonDictionary["JSON_TRUE"] == true);
-		assert (jsonDictionary["JSON_STRING"].getType().getFullName() == "system.String");
-		assert (jsonDictionary["JSON_STRING"] == "string");
-		assert (jsonDictionary["JSON_NULL"] == null);
-		
-		var jsonVector:Vector = jsonTypeArray.getVector();
-		
-		assert (jsonTypeArray.getDictionary() == null);
-		
-		assert (jsonVector[0].getType().getFullName() == "system.Number");
-		assert (jsonVector[0] == 1);
-		assert (jsonVector[1].getType().getFullName() == "system.Number");
-		assert (jsonVector[1] == 0.2);
-		assert (jsonVector[2].getType().getFullName() == "system.JSON");
-		assert (jsonVector[3].getType().getFullName() == "system.JSON");
-		assert (jsonVector[4].getType().getFullName() == "system.Boolean");
-		assert (jsonVector[4] == false);
-		assert (jsonVector[5].getType().getFullName() == "system.Boolean");
-		assert (jsonVector[5] == true);
-		assert (jsonVector[6].getType().getFullName() == "system.String");
-		assert (jsonVector[6] == "string");
-		assert (jsonVector[7] == null);
-		
+        
+        // Test JSON getDictionary() and getVector() functionality
+        var jsonDictionary:Dictionary = jsonTypeObject.getDictionary();
+        
+        assert (jsonTypeObject.getVector() == null);
+        
+        assert (jsonDictionary["JSON_INTEGER"].getType().getFullName() == "system.Number");
+        assert (jsonDictionary["JSON_INTEGER"] == -1);
+        assert (jsonDictionary["JSON_INTEGER"].getType().getFullName() == "system.Number");
+        assert (jsonDictionary["JSON_REAL"] == 0.2);
+        assert (jsonDictionary["JSON_ARRAY"].getType().getFullName() == "system.JSON");
+        assert (jsonDictionary["JSON_OBJECT"].getType().getFullName() == "system.JSON");
+        assert (jsonDictionary["JSON_FALSE"].getType().getFullName() == "system.Boolean");
+        assert (jsonDictionary["JSON_FALSE"] == false);
+        assert (jsonDictionary["JSON_TRUE"].getType().getFullName() == "system.Boolean");
+        assert (jsonDictionary["JSON_TRUE"] == true);
+        assert (jsonDictionary["JSON_STRING"].getType().getFullName() == "system.String");
+        assert (jsonDictionary["JSON_STRING"] == "string");
+        assert (jsonDictionary["JSON_NULL"] == null);
+        
+        var jsonVector:Vector = jsonTypeArray.getVector();
+        
+        assert (jsonTypeArray.getDictionary() == null);
+        
+        assert (jsonVector[0].getType().getFullName() == "system.Number");
+        assert (jsonVector[0] == 1);
+        assert (jsonVector[1].getType().getFullName() == "system.Number");
+        assert (jsonVector[1] == 0.2);
+        assert (jsonVector[2].getType().getFullName() == "system.JSON");
+        assert (jsonVector[3].getType().getFullName() == "system.JSON");
+        assert (jsonVector[4].getType().getFullName() == "system.Boolean");
+        assert (jsonVector[4] == false);
+        assert (jsonVector[5].getType().getFullName() == "system.Boolean");
+        assert (jsonVector[5] == true);
+        assert (jsonVector[6].getType().getFullName() == "system.String");
+        assert (jsonVector[6] == "string");
+        assert (jsonVector[7] == null);
+        
     }
     
     function TestJSON()
