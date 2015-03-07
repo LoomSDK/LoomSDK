@@ -24,7 +24,8 @@ package system {
 
 
 /**
- *   Types supported by the Loom JSON parser
+ * Types supported by the Loom JSON parser
+ * 
  */
 enum JSONType
 {
@@ -40,8 +41,16 @@ enum JSONType
 
 /**
  *  Provides utilities for parsing data in JavaScript Object Notation (JSON) format.
+ * 
+ *  There are two types of JSON: JSON Objects and JSON Arrays. JSON Objects are analogous to Loom Dictionaries in
+ *  that they consist of key / value pairs, where all the keys are strings. JSON Arrays are analogous to Vectors in
+ *  that they contain data ordered by indexes. It is important when dealing with JSON to understand the difference between
+ *  these two types. If there is a situation where the type of JSON being dealt with is unknown, the `getJSONType()` function
+ *  can be used and will return a JSONType enum describing what kind of JSON is being dealt with. The `isArray()` function
+ *  can also be used to the same effect, returning true if the JSON is an array and false otherwise. Attempting to use the
+ *  functions intended for Objects on Arrays or vice versa will result in failure.
  *
- *  Populate the JSON data structure by calling `loadString()`.
+ *  Before the JSON data structure can be used, `loadString()` must be called to populate the structure with data.
  *  Dump the JSON data structure by calling `serialize()`.
  *
  *  In order to return strongly typed values from the data structure, every data type has its own getter and setter.
@@ -51,6 +60,8 @@ enum JSONType
  *  * `getArrayBoolean(index)`, `setArrayBoolean(index, value)`
  *
  *  @see http://www.json.org/
+ *  @see #getJSONType()
+ *  @see isArray()
  *  @see #loadString()
  *  @see #serialize()
  */
@@ -60,9 +71,12 @@ native class JSON {
     private static var visited = new Vector.<Object>();
     
     /**
-     * Convenience function parsing a JSON string and returning a JSON object.
+     * Convenience function will parse a JSON string and return a JSON object. This is functionally the
+     * same as creating initializing a new JSON Loom object and loading a string into it, but this function
+     * will assert "JSON failed to load" if the call to `loadString` fails.
+     *
      * @param json  The JSON string to be parsed.
-     * @return  The JSON object parsed from the string.
+     * @return The JSON object parsed from the string.
      */
     public static function parse(json:String):JSON {
         var j = new JSON();
@@ -71,10 +85,14 @@ native class JSON {
     }
     
     /**
-     * Traverses through the object's fields and builds a JSON string
-     * from the hierarchy.
-     * @param o The Object to traverse using the Reflection API.
-     * @return  The JSON tree string built from the fields of the object.
+     * Traverses through the object's fields and builds a JSON string from the hierarchy. If a
+     * dictionary is the object, or is included as part of the object, it must use a data type that
+     * can be converted into a string as its key identifier.
+     * 
+     * @param o The object from which a JSON string will be made.
+     * @param visited This object is not intended to be used. It is used internally to prevent eternal
+     * recursive looping.
+     * @return The JSON tree string built from the fields of the object.
      */
     public static function stringify(o:Object, visited:Vector.<Object> = null):String {
         if (o == null) return "null";
