@@ -115,6 +115,44 @@ class TestJSON extends LegacyTest
 
         assert( jsonTypeArray.getObjectJSONType("InvalidKey") == JSONType.JSON_NULL );
         assert( jsonTypeArray.getArrayJSONType(100) == JSONType.JSON_NULL );
+		
+		// Test JSON getDictionary() and getVector() functionality
+		var jsonDictionary:Dictionary = jsonTypeObject.getDictionary();
+		
+		assert (jsonTypeObject.getVector() == null);
+		
+		assert (jsonDictionary["JSON_INTEGER"].getType().getFullName() == "system.Number");
+		assert (jsonDictionary["JSON_INTEGER"] == -1);
+		assert (jsonDictionary["JSON_INTEGER"].getType().getFullName() == "system.Number");
+		assert (jsonDictionary["JSON_REAL"] == 0.2);
+		assert (jsonDictionary["JSON_ARRAY"].getType().getFullName() == "system.JSON");
+		assert (jsonDictionary["JSON_OBJECT"].getType().getFullName() == "system.JSON");
+		assert (jsonDictionary["JSON_FALSE"].getType().getFullName() == "system.Boolean");
+		assert (jsonDictionary["JSON_FALSE"] == false);
+		assert (jsonDictionary["JSON_TRUE"].getType().getFullName() == "system.Boolean");
+		assert (jsonDictionary["JSON_TRUE"] == true);
+		assert (jsonDictionary["JSON_STRING"].getType().getFullName() == "system.String");
+		assert (jsonDictionary["JSON_STRING"] == "string");
+		assert (jsonDictionary["JSON_NULL"] == null);
+		
+		var jsonVector:Vector = jsonTypeArray.getVector();
+		
+		assert (jsonTypeArray.getDictionary() == null);
+		
+		assert (jsonVector[0].getType().getFullName() == "system.Number");
+		assert (jsonVector[0] == 1);
+		assert (jsonVector[1].getType().getFullName() == "system.Number");
+		assert (jsonVector[1] == 0.2);
+		assert (jsonVector[2].getType().getFullName() == "system.JSON");
+		assert (jsonVector[3].getType().getFullName() == "system.JSON");
+		assert (jsonVector[4].getType().getFullName() == "system.Boolean");
+		assert (jsonVector[4] == false);
+		assert (jsonVector[5].getType().getFullName() == "system.Boolean");
+		assert (jsonVector[5] == true);
+		assert (jsonVector[6].getType().getFullName() == "system.String");
+		assert (jsonVector[6] == "string");
+		assert (jsonVector[7] == null);
+		
     }
     
     function TestJSON()
