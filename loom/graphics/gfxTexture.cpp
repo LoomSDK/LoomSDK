@@ -345,11 +345,23 @@ int __stdcall Texture::loadTextureAsync_body(void *param)
         //make sure we weren't disposed in the meantime... if so, just skip!
         loom_mutex_lock(Texture::sTexInfoLock);
         bool alreadyDisposed = threadNote.tinfo->asyncDispose;
-        loom_mutex_unlock(Texture::sTexInfoLock);
-        if(!alreadyDisposed)
+        if(alreadyDisposed)
         {
-            //the all important texture path!
+            //invalidate the TextureInfo and make it available for use again
+            if (!threadNote.tinfo->texturePath.empty()) 
+            {
+                sTexturePathLookup.erase(threadNote.tinfo->texturePath);
+            }
+            threadNote.tinfo->reset();
+            loom_mutex_unlock(Texture::sTexInfoLock);
 
+            //prep for below
+            loom_mutex_lock(Texture::sAsyncQueueMutex);
+        }
+        else
+        {
+            loom_mutex_unlock(Texture::sTexInfoLock);
+            
             // Load async since we're in a background thread.
             lmLog(gGFXTextureLogGroup, "loading %s async...", path);
             loom_asset_preload(path);
@@ -360,12 +372,9 @@ int __stdcall Texture::loadTextureAsync_body(void *param)
                 loom_thread_yield();
             }
             loom_asset_unlock(path);
-        }
 
-        loom_mutex_lock(Texture::sAsyncQueueMutex);
-        if(!alreadyDisposed)
-        {
             //add to the CreateQueue that happens in the main thread because bgfx cannot create textures from side threads
+            loom_mutex_lock(Texture::sAsyncQueueMutex);
             lmLog(gGFXTextureLogGroup, "Adding async loaded texture to CreateQueue: %s", path);
             sAsyncCreateQueue.push_back(threadNote);            
         }
