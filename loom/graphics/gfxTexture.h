@@ -117,6 +117,7 @@ private:
     static MutexHandle sTexInfoLock;
     static MutexHandle sAsyncQueueMutex;
     static bool sAsyncThreadRunning;
+    static int sAsyncTextureCreateDelay;
     static utList<AsyncLoadNote> sAsyncLoadQueue;
     static utList<AsyncLoadNote> sAsyncCreateQueue;
 

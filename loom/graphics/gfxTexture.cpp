@@ -38,6 +38,7 @@ namespace GFX
 
 utList<AsyncLoadNote> Texture::sAsyncLoadQueue;
 utList<AsyncLoadNote> Texture::sAsyncCreateQueue;
+int Texture::sAsyncTextureCreateDelay = 0;
 bool Texture::sAsyncThreadRunning = false;
 MutexHandle Texture::sAsyncQueueMutex = NULL;
 MutexHandle Texture::sTexInfoLock = NULL;
@@ -58,40 +59,44 @@ void Texture::initialize()
     Texture::sAsyncQueueMutex = loom_mutex_create();
 }
 
-
 void Texture::tick()
 {
     //process any textures queued up for creation inside of the async load thread
-    loom_mutex_lock(Texture::sAsyncQueueMutex);
-    if(!Texture::sAsyncCreateQueue.empty())
+    //only process a new texture after so much time has elapsed so that we don't bog the main thread down
+    if(--Texture::sAsyncTextureCreateDelay <= 0)
     {
-        //get the note containing the information for this texture
-        AsyncLoadNote threadNote = Texture::sAsyncCreateQueue.front();
-        Texture::sAsyncCreateQueue.pop_front();
-        loom_mutex_unlock(Texture::sAsyncQueueMutex);
-
-        //handleAssetNotification does the actual creation of the texture data immediately below when '1' is specified
-        lmLog(gGFXTextureLogGroup, "Creating async loaded texture: %s", threadNote.path.c_str());
-        loom_asset_subscribe(threadNote.path.c_str(), Texture::handleAssetNotification, (void *)threadNote.id, 1);
-
-        //were we disposed while we were busy loading?
-        loom_mutex_lock(Texture::sTexInfoLock);
-        int disposeID = (!threadNote.tinfo->asyncDispose) ? -1 : threadNote.tinfo->id;
-        loom_mutex_unlock(Texture::sTexInfoLock);
-        if(disposeID != -1)
+        Texture::sAsyncTextureCreateDelay = 20;
+        loom_mutex_lock(Texture::sAsyncQueueMutex);
+        if(!Texture::sAsyncCreateQueue.empty())
         {
-            //dispose!
-            Texture::dispose(disposeID);
+            //get the note containing the information for this texture
+            AsyncLoadNote threadNote = Texture::sAsyncCreateQueue.front();
+            Texture::sAsyncCreateQueue.pop_front();
+            loom_mutex_unlock(Texture::sAsyncQueueMutex);
+
+            //handleAssetNotification does the actual creation of the texture data immediately below when '1' is specified
+            lmLog(gGFXTextureLogGroup, "Creating async loaded texture: %s", threadNote.path.c_str());
+            loom_asset_subscribe(threadNote.path.c_str(), Texture::handleAssetNotification, (void *)threadNote.id, 1);
+
+            //were we disposed while we were busy loading?
+            loom_mutex_lock(Texture::sTexInfoLock);
+            int disposeID = (!threadNote.tinfo->asyncDispose) ? -1 : threadNote.tinfo->id;
+            loom_mutex_unlock(Texture::sTexInfoLock);
+            if(disposeID != -1)
+            {
+                //dispose!
+                Texture::dispose(disposeID);
+            }
+            else
+            {
+                //Fire the async load complete delegate... not if we were destroyed while loading though
+                threadNote.tinfo->asyncLoadCompleteDelegate.invoke();
+            }    
         }
         else
         {
-            //Fire the async load complete delegate... not if we were destroyed while loading though
-            threadNote.tinfo->asyncLoadCompleteDelegate.invoke();
-        }    
-    }
-    else
-    {
-        loom_mutex_unlock(Texture::sAsyncQueueMutex);
+            loom_mutex_unlock(Texture::sAsyncQueueMutex);
+        }
     }
 }
 
