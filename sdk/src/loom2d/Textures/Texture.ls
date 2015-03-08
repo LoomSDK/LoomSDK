@@ -9,7 +9,8 @@
 // =================================================================================================
 
 package loom2d.textures
-{    
+{
+    import loom.HTTPRequest;
     import loom.graphics.Texture2D;
     import loom.graphics.TextureInfo;
 
@@ -148,6 +149,13 @@ package loom2d.textures
         
         protected static var assetPathCache = new Dictionary.<String, Texture>();
 
+        /** vector of supported image type extensions, as defined by the asset system */
+        protected static var supportedImageTypes:Vector.<String> = [".jpg", ".jpeg", ".bmp", ".png", ".psd", ".pic", ".tga", ".gif"];
+
+        /** vector to store HTTPRequests for HTTP texture loads so that they don't get GCed */
+        protected static const httpRequests:Vector.<HTTPRequest> = [];
+
+
         /** Checks the handle ID of the textureInfo to see if the texture is valid and ready for use. */
         public function isTextureValid():Boolean
         {
@@ -177,7 +185,6 @@ package loom2d.textures
             return tex;
         }
     
-
         /** Non-blocking function that creates a texture object from a bitmap file on disk. */
         public static function fromAssetAsync(path:String, cb:TextureAsyncLoadCompleteDelegate):Texture
         {
@@ -207,7 +214,74 @@ package loom2d.textures
             return tex;
         }
 
-        
+//NOTE: non-caching version not working because HTTPRequest needs to be able to return a ByteArray    
+        /** Non-blocking function that creates a texture object from a remote bitmap file via HTTP. */
+        public static function fromHTTP(url:String, 
+                                        // cache:Boolean, 
+                                        onSuccess:TextureAsyncLoadCompleteDelegate, 
+                                        onFailure:Function):Texture
+        {
+            //turn the url into an MD5 so we have a nice small but unique filename to save to disk
+            url = url.toLowerCase();
+            var urlmd5:String = url.toMD5();
+
+            //if already cached, just return that texture without calling the CB
+            if(assetPathCache[urlmd5])
+            {
+                return assetPathCache[urlmd5];
+            }
+
+            //check if we're online
+            if(!HTTPRequest.isConnected())
+            {
+                Console.print("WARNING: Not connected to a network so unable to load texture from url: " + url); 
+                return null;
+            }
+
+            //make sure that the image requested is one of our supported image types!
+            var ext:String = null;
+            for(var i=0;i<supportedImageTypes.length;i++)
+            {
+                if(url.indexOf(supportedImageTypes[i]) != -1)
+                {
+                    ext = supportedImageTypes[i];
+                    break;
+                }
+            }
+            if(ext == null)
+            {
+                Console.print("WARNING: Unsuppported image format requested at url: " + url); 
+                return null;
+            }
+
+            //build the local cache folder path and create it on disk if it doesn't exist yet
+            var cacheFile:String = null;
+            var writePath:String = Path.normalizePath(Path.getWritablePath() + "/TextureCache");
+            if(!Path.dirExists(writePath))
+            {
+                Path.makeDir(writePath);
+            }
+            cacheFile = Path.normalizePath(writePath + "/" + urlmd5) + ext;
+
+            // check of file already cached locally
+            if (File.fileExists(cacheFile))
+            {
+                //file already downloaded previously, so queue up an async load of it right now
+                Console.print("HTTP requested texture found cached on local disk already; using it instead: " + cacheFile); 
+                return Texture.fromAssetAsync(cacheFile, onSuccess);
+            }
+
+            //create the ConcreteTexture, but don't fill it out fully as we don't have all of the TextureInfo yet!
+            var tex:ConcreteTexture = new ConcreteTexture(urlmd5, -1, -1);
+            assetPathCache[urlmd5] = tex;
+
+//TODO: Support non-file-caching as well
+            //create and fire off the HTTPRequest
+            sendHTTPTextureRequest(url, cacheFile, tex, onSuccess, onFailure);//, cache);
+
+            return tex;
+        }
+
         /** Creates a texture object from compressed image bytes.
          * 
          *  The supported image types are JPEG (baseline), PNG (8-bit),
@@ -338,7 +412,104 @@ package loom2d.textures
                 asyncLoadComplete(this);
                 asyncLoadComplete = null;
             }
-        }        
+        }       
+
+
+        /** Helper function that handles HTTP Texture Requests and the onSuccess/onFailure delegates */
+        private static function sendHTTPTextureRequest(url:String, 
+                                                        cacheFile:String, 
+                                                        tex:ConcreteTexture,
+                                                        onSuccess:TextureAsyncLoadCompleteDelegate, 
+                                                        onFailure:Function):void
+        {
+            //create the HTTPRequest to obtain the texture data remotely
+            var req:HTTPRequest = new HTTPRequest(url);
+            req.method = "GET";
+            req.cacheFileName = cacheFile;
+
+            //setup onSuccess
+            var success:Function = function(result:String):void
+            {
+                Console.print("Successfull download of HTTP texture from url: " + url); 
+
+                //remove reference to the request so it can now be GCed
+                httpRequests.remove(req);
+
+                //if we cached the file, we can just pass it to the async loader!
+                var textureInfo:TextureInfo = null;
+                if(cacheFile != null)
+                {
+                    //kick off the async load and return our holding texture
+                    textureInfo = Texture2D.initFromAssetAsync(cacheFile);
+                    if(textureInfo == null)
+                    {
+                        Console.print("WARNING: Unable to load HTTP texture from cached file: " + cacheFile); 
+                    }
+                }
+//NOTE: non-caching ByteArray code not working because the String that HTTPRequest returns will end on null terminator, which image data could contain!              
+//                 else
+//                 {
+// Console.print("----create byte array: LEN: " + result.length);
+
+//                     //not cached so we need to create a ByteArray and pass that through to be deserialized
+//                     var textureBytes:ByteArray = new ByteArray();
+//                     textureBytes.writeUTFBytes(result);
+
+// Console.print("----initFromBytes");
+// //TODO: make async!!!
+// //textureInfo = Texture2D.initFromBytesAsync(textureBytes);
+// textureInfo = Texture2D.initFromBytes(textureBytes);
+//                     if(textureInfo == null)
+//                     {
+//                         Console.print("WARNING: Unable to load texture from bytes given data from url: " + url); 
+//                     }
+//                 }
+
+                //unable to create our textureInfo so we failed
+                if(textureInfo == null)
+                {
+                    //dispose the texture and call the failure delegate
+                    tex.dispose();
+                    if(onFailure != null)
+                    {
+                        onFailure();
+                    }
+                    return;
+                }
+
+                //register the textureInfo and async complete CB
+                tex.textureInfo = textureInfo;
+                tex.asyncLoadComplete = onSuccess;
+                textureInfo.asyncLoadComplete += tex.onAsyncLoadComplete;
+// //TEMP until Texture2D.initFromBytesAsync() exists
+// if(cacheFile == null)
+// {
+//     onAsyncLoadComplete();
+// }
+            };
+            req.onSuccess += success;
+
+            //setup onFailure
+            var fail:Function = function(result:String):void
+            {
+                Console.print("ERROR: Failed download of HTTP texture from url: " + url);
+
+                //remove reference to the request so it can now be GCed
+                httpRequests.remove(req);
+
+                //dispose the texture and call the failure delegate
+                tex.dispose();
+                if(onFailure != null)
+                {
+                    onFailure();
+                }
+            };       
+            req.onFailure += fail;
+
+            //cache the HTTPRequest object so that it isn't GCed then send it
+            httpRequests.pushSingle(req);
+            req.send();
+        }
 
 
         /** 
