@@ -25,9 +25,9 @@ package com.modestmaps.core
 		protected static const DEFAULT_MAX_PARENT_SEARCH:int = 5;
 		protected static const DEFAULT_MAX_PARENT_LOAD:int = 0; // enable this to load lower zoom tiles first
 		protected static const DEFAULT_MAX_CHILD_SEARCH:int = 1;
-		protected static const DEFAULT_MAX_TILES_TO_KEEP:int = 64;//256; // 256*256*4bytes = 0.25MB ... so 256 tiles is 16MB of memory, minimum!
+		protected static const DEFAULT_MAX_TILES_TO_KEEP:int = 32;//256; // 256*256*4bytes = 0.25MB ... so 256 tiles is 16MB of memory, minimum!
 		protected static const DEFAULT_TILE_BUFFER:int = 1;
-		protected static const DEFAULT_ENFORCE_BOUNDS:Boolean = true;
+		protected static const DEFAULT_ENFORCE_BOUNDS:Boolean = false;
 		protected static const DEFAULT_ROUND_POSITIONS:Boolean = true;
 		protected static const DEFAULT_ROUND_SCALES:Boolean = true;
 
@@ -317,11 +317,14 @@ package com.modestmaps.core
 		 *  
 		 */
 		
+// TODO_AHMED: Remove the next line when done testing
+// NOTE_PERF: added populated flag so that the map only gets populated once (search for if (!populated)), adds a massive performance boost
+		var populated:Boolean = false; 
 		protected function _onRender():void
 		{
 			//var t:Number = getTimer();
 			
-			trace("Render Event Happened in TileGrid");
+			//trace(well.numChildren);
 			
 			if (!dirty || !stage) {
 				//trace(getTimer() - t, "ms in", provider);		
@@ -378,7 +381,11 @@ package com.modestmaps.core
 
 			// loop over all tiles and find parent or child tiles from cache to compensate for unloaded tiles:
 			
-			repopulateVisibleTiles(minCol, maxCol, minRow, maxRow);
+			if (!populated)
+			{
+				repopulateVisibleTiles(minCol, maxCol, minRow, maxRow);
+				populated = true;
+			}
 			
 			// move visible tiles to the end of recentlySeen if we're done loading them
 			// the 'least recently seen' tiles will be removed from the tileCache below
@@ -459,6 +466,12 @@ package com.modestmaps.core
 			var searchedParentKeys:Dictionary.<String, Boolean> = {};
 		
 			// loop over currently visible tiles
+//NOTE_PERF: Making less rows and columns dramatically increases the preformance, unlikely to be directly related to draw calls
+//TODO_24: Stop force setting columns and rows to return to default behaviour
+			minCol = -2;
+			maxCol = 2;
+			minRow = -2;
+			maxRow = 2;
 			for (var col:int = minCol; col <= maxCol; col++) {
 				for (var row:int = minRow; row <= maxRow; row++) {
 					
@@ -636,13 +649,14 @@ package com.modestmaps.core
 			
 			// hugs http://www.senocular.com/flash/tutorials/transformmatrix/
             var px:Point = worldMatrix.deltaTransformCoord(0, 1);
-			var tileAngleDegrees:Number = ((180/Math.PI) * Math.atan2(px.y, px.x) - 90);
+			var tileAngleDegrees:Number = (Math.atan2(px.y, px.x) - Math.degToRad(90));
 			
  			// apply the sorted depths, position all the tiles and also keep recentlySeen updated:
 			for each (var tile:Tile in visibleTiles) {
 			
 				// if we set them all to numChildren-1, descending, they should end up correctly sorted
-				well.setChildIndex(tile, well.numChildren-1);
+// NOTE_PERF: Commenting out the next line gave a big boost to performance, it's related to the tile pooling
+				//well.setChildIndex(tile, well.numChildren-1);
 
 				tile.scaleX = tile.scaleY = tileScales[tile.zoom];
 
@@ -708,7 +722,7 @@ package com.modestmaps.core
 		
 		// for use in requestLoad
 		private var tempCoord:Coordinate = new Coordinate(0,0,0);
-
+		
 		/** create a tile and add it to the queue - WARNING: this is buggy for the current zoom level, it's only used for parent zooms when maxParentLoad is > 0 */ 
 		private function requestLoad(col:int, row:int, zoom:int):Tile
 		{
@@ -1122,9 +1136,10 @@ package com.modestmaps.core
 			
 			tl = tl.zoomTo(0);
 			br = br.zoomTo(0);
-
+			
 			minTx = tl.column * tileWidth;
 			maxTx = br.column * tileWidth;
+
 			minTy = tl.row * tileHeight;
 			maxTy = br.row * tileHeight;
 		}
