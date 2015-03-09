@@ -135,8 +135,13 @@ package loom2d.textures
 
             // Remove from the cache.
             if(this is ConcreteTexture)
-                assetPathCache[(this as ConcreteTexture).assetPath] = null;
-            
+            {
+                var path = (this as ConcreteTexture).assetPath;
+                if(path != null)
+                {
+                    assetPathCache[path] = null;
+                }
+            }
         }
 
         public function get nativeID():int
@@ -282,15 +287,25 @@ package loom2d.textures
             return tex;
         }
 
-        /** Creates a texture object from compressed image bytes.
+        /** Creates a texture object from compressed image bytes.  An optional unique name string 
+         *  can be supplied if you wish the resulting image to be cacheable, otherwise null can be specified.
          * 
          *  The supported image types are JPEG (baseline), PNG (8-bit),
          *  TGA, BMP (non-1bpp, non-RLE), PSD (composited only), GIF,
          *  HDR (radiance rgbE), PIC (Softimage).
          */
-        public static function fromBytes(bytes:ByteArray):Texture
+        public static function fromBytes(bytes:ByteArray, uniqueName:String=null):Texture
         {
-            var textureInfo = Texture2D.initFromBytes(bytes);
+            //if already cached, just return that texture without calling the CB
+            if(!String.isNullOrEmpty(uniqueName))
+            {        
+                if(assetPathCache[uniqueName])
+                {
+                    return assetPathCache[uniqueName];
+                }
+            }
+
+            var textureInfo = Texture2D.initFromBytes(bytes, uniqueName);
             if(textureInfo == null)
             {
                 Console.print("WARNING: Unable to load texture from bytes"); 
@@ -298,9 +313,13 @@ package loom2d.textures
             }
             
             // And set up the concrete texture.
-            var tex:ConcreteTexture = new ConcreteTexture("", textureInfo.width, textureInfo.height);
+            var tex:ConcreteTexture = new ConcreteTexture(uniqueName, textureInfo.width, textureInfo.height);
             tex.mFrame = new Rectangle(0, 0, textureInfo.width, textureInfo.height);
             tex.setTextureInfo(textureInfo);
+            if(!String.isNullOrEmpty(uniqueName))
+            {        
+                assetPathCache[uniqueName] = tex;
+            }
             return tex;
         }
         

@@ -303,10 +303,30 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
     return tinfo;
 }
 
-TextureInfo *Texture::initFromBytes(utByteArray *bytes)
+
+TextureInfo *Texture::initFromBytes(utByteArray *bytes, const char *name)
 {
+    TextureInfo *tinfo = NULL;
+    name = (name && !name[0]) ? NULL : name;
+    if(name)
+    {
+        //check if this texture already has a TextureInfo reserved for it
+        loom_mutex_lock(Texture::sTexInfoLock);
+        TextureID   *pid   = sTexturePathLookup.get(name);
+        tinfo = (pid && ((*pid >= 0) && (*pid < MAXTEXTURES))) ? &sTextureInfos[*pid] : NULL;
+        if(tinfo && (tinfo->handle.idx == bgfx::invalidHandle))
+        {
+            tinfo = NULL;
+        }
+        loom_mutex_unlock(Texture::sTexInfoLock);
+        if(pid)
+        {
+            return tinfo;
+        }
+    }
+
     // Get a new texture info
-    TextureInfo *tinfo = getAvailableTextureInfo(NULL);
+    tinfo = getAvailableTextureInfo(name);
     if(tinfo == NULL)
     {
         lmLog(gGFXTextureLogGroup, "No available texture id for image bytes");

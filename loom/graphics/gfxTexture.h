@@ -230,8 +230,8 @@ public:
     // This method accepts rgba data.
     static TextureInfo *load(uint8_t *data, uint16_t width, uint16_t height, TextureID id = -1);
 
-    static TextureInfo *initFromBytes(utByteArray *bytes);
     static TextureInfo *initFromAssetManager(const char *path);
+    static TextureInfo *initFromBytes(utByteArray *bytes, const char *name);
     static TextureInfo *initFromAssetManagerAsync(const char *path);
     static int __stdcall loadTextureAsync_body(void *param);
 

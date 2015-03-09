@@ -133,9 +133,11 @@ package loom.graphics
         
         /**
          * Create a new TextureInfo instance describing the requested asset loaded
-         * as a Texture2D from the provided ByteArray.
+         * as a Texture2D from the provided ByteArray.  On optional unique name can
+         * be specified if you wish the texture to take advantage of caching, otherwise
+         * null can be specified.
          */
-        public static native function initFromBytes(bytes:ByteArray):TextureInfo;
+        public static native function initFromBytes(bytes:ByteArray, uniqueName:String=null):TextureInfo;
 
         /**
          * Non-blocking function to create a new TextureInfo instance describing the requested 
