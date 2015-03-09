@@ -209,9 +209,9 @@ void platform_HTTPUpdate()
 
                 // notify the callback if we are successful
                 if (http_code < 400)
-                    userData->callback(userData->payload, LOOM_HTTP_SUCCESS, userData->chunk->memory);
+                    userData->callback(userData->payload, LOOM_HTTP_SUCCESS, result);
                 else
-                    userData->callback(userData->payload, LOOM_HTTP_ERROR, userData->chunk->memory);
+                    userData->callback(userData->payload, LOOM_HTTP_ERROR, result);
 
                 if(userData->base64)
                    lmFree(NULL, (void*)result);
