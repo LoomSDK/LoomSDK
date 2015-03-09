@@ -20,8 +20,7 @@
 
 #pragma once
 
-#include <SDL_opengles2.h>
-#include "loom/common/core/assert.h"
+#include "loom/graphics/gfxGraphics.h"
 
 namespace Loom2D
 {

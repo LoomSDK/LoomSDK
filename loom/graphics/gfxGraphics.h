@@ -21,7 +21,12 @@
 #pragma once
 
 #include <SDL.h>
-#include <SDL_opengles2.h>
+
+#ifdef LOOM_OPENGLES2
+#include "SDL_opengles2.h"
+#else
+#include "SDL_opengl.h"
+#endif
 
 #include <stdint.h>
 #include "loom/common/core/assert.h"
@@ -31,7 +36,12 @@ namespace GFX
 
     typedef struct GL_Context
     {
+#ifdef _WIN32
 #define SDL_PROC(ret, func, params) ret (__stdcall *func) params;
+#else
+#define SDL_PROC(ret, func, params) ret (*func) params;
+#endif
+
 #include "gfxGLES2EntryPoints.h"
 #undef SDL_PROC
     } GL_Context;

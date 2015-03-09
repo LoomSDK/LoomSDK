@@ -56,7 +56,7 @@ if (APPLE)
           ios/Default.png
           ios/Default@2x.png
           ios/Default-568h@2x.png
-          ios/main.m
+          ios/main.mm
           ios/AppController.mm
           ios/RootViewController.mm
         )
@@ -74,7 +74,7 @@ if (APPLE)
           ${APPLICATION_SRC}
           osx/Application.icns
           osx/Info.plist
-          osx/main.m
+          osx/main.mm
           osx/en.lproj/MainMenu.xib
         )
 
