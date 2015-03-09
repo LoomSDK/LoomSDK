@@ -18,6 +18,8 @@
 #ifndef NANOVG_GL_H
 #define NANOVG_GL_H
 
+// Regexp to rewrite gl calls: ([\s\(])(gl(?!nvg)[A-Z]\w+)
+// Substitution: $1LGL->$2
 #define LGL GFX::Graphics::context()
 
 #ifdef __cplusplus
