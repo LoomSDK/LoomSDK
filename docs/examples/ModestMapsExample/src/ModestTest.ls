@@ -51,7 +51,9 @@ package
 			this.stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
         }
 		
-		var touchMidpoint:Point; 
+		var touchStartingMidpoint:Point; 
+		var canRotate:Boolean = true;
+		var isRotating:Boolean = false;
 		
 		function onTouch(event:TouchEvent)
 		{			
@@ -70,26 +72,43 @@ package
 				// If we've just started a multitouch, store the midpoint of the touches
 				if (touches[1].phase == TouchPhase.BEGAN)
 				{
-					touchMidpoint = new Point((touch1.getLocation(stage).x + touch2.getLocation(stage).x)/2 , (touch1.getLocation(stage).y + touch2.getLocation(stage).y)/2);
+					touchStartingMidpoint = new Point((touch1.getLocation(stage).x + touch2.getLocation(stage).x) / 2 , (touch1.getLocation(stage).y + touch2.getLocation(stage).y) / 2);
+					canRotate = true;
+					isRotating = false;
 				}
 				
-				var prevAngle:Number = Math.atan2(touch2.getPreviousLocation(stage).y, touch2.getPreviousLocation(stage).x) - Math.atan2(touch1.getPreviousLocation(stage).y, touch1.getPreviousLocation(stage).x);
-				var curAngle:Number = Math.atan2(touch2.getLocation(stage).y, touch2.getLocation(stage).x) - Math.atan2(touch1.getLocation(stage).y, touch1.getLocation(stage).x);
+				// Bigger is more sensitive
+				var zoomSensitivity:Number = 0.005;
+				var rotationSensitivity = 2;
 				
-				var angleDifference:Number = Math.radToDeg( Math.abs(prevAngle - curAngle) );
+				var prevAngle:Number = Math.atan2(touch2.getPreviousLocation(stage).y - touch1.getPreviousLocation(stage).y, touch2.getPreviousLocation(stage).x - touch1.getPreviousLocation(stage).x);
+				var curAngle:Number = Math.atan2(touch2.getLocation(stage).y - touch1.getLocation(stage).y, touch2.getLocation(stage).x - touch1.getLocation(stage).x);
+				var angleDelta:Number = Math.radToDeg( Math.abs(prevAngle - curAngle) );
 				
-				// If the angle between our fingers is less than a threshold value, it makes sense that the user must want to zoom instead of rotate
-				if (angleDifference < 1)
+				var prevDist = Math.sqrt(Math.pow((touch2.previousGlobalX - touch1.previousGlobalX), 2) + Math.pow((touch2.previousGlobalY - touch1.previousGlobalY), 2));
+				var curDist = Math.sqrt(Math.pow((touch2.globalX - touch1.globalX), 2) + Math.pow((touch2.globalY - touch1.globalY), 2)); 
+				var zoomDelta = curDist - prevDist;
+				
+				touchStartingMidpoint = new Point((touch1.getLocation(stage).x + touch2.getLocation(stage).x) / 2 , (touch1.getLocation(stage).y + touch2.getLocation(stage).y) / 2);
+
+				if (Math.abs(zoomDelta) > 3.2)
 				{
-					var prevDist = Math.sqrt(Math.pow((touch2.previousGlobalX - touch1.previousGlobalX), 2) + Math.pow((touch2.previousGlobalY - touch1.previousGlobalY), 2));
-					var curDist = Math.sqrt(Math.pow((touch2.globalX - touch1.globalX), 2) + Math.pow((touch2.globalY - touch1.globalY), 2));
-					
-					map.zoomByAbout((curDist - prevDist) / 150, touchMidpoint);
+					map.zoomByAbout(zoomDelta * zoomSensitivity, touchStartingMidpoint);
+					// If we start zooming we don't want to rotate, unless we were already rotating
+					if (!isRotating)
+					{
+						canRotate = false;
+					}
 				}
-				else
+				
+				if (canRotate && Math.abs(angleDelta) > 0.1)
 				{
-					map.rotateByAbout((curAngle - prevAngle) * 5, touchMidpoint);
+					map.rotateByAbout((curAngle - prevAngle) * rotationSensitivity, touchStartingMidpoint);
+					isRotating = true;
 				}
+				
+				// We always want to pan the map
+			    map.panBy((touch1.getMovement(stage).x + touch2.getMovement(stage).x)/2, (touch1.getMovement(stage).y + touch2.getMovement(stage).y)/2);
 			}
 		}
 		
