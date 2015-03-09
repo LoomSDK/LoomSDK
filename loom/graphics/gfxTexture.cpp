@@ -61,6 +61,8 @@ void Texture::initialize()
 
 void Texture::tick()
 {
+    int startTime;
+
     //process any textures queued up for creation inside of the async load thread
     //only process a new texture after so much time has elapsed so that we don't bog the main thread down
     if(--Texture::sAsyncTextureCreateDelay <= 0)
@@ -75,12 +77,24 @@ void Texture::tick()
             loom_mutex_unlock(Texture::sAsyncQueueMutex);
 
             //handleAssetNotification does the actual creation of the texture data immediately below when '1' is specified
-            lmLog(gGFXTextureLogGroup, "Creating async loaded texture: %s", threadNote.path.c_str());
-            loom_asset_subscribe(threadNote.path.c_str(), Texture::handleAssetNotification, (void *)threadNote.id, 1);
+            startTime = platform_getMilliseconds();
+            if(!threadNote.path.empty())
+            {
+                //Texture is an Asset, so Create via handleAssetNotification
+                loom_asset_subscribe(threadNote.path.c_str(), Texture::handleAssetNotification, (void *)threadNote.id, 1);
+                lmLog(gGFXTextureLogGroup, "Async loaded texture '%s' took %i ms to create", threadNote.path.c_str(), platform_getMilliseconds() - startTime);
+            }
+            else
+            {
+                //Texture is just a byte stream, so load the deserialized image data now
+                loadImageAsset(threadNote.imageAsset, threadNote.id);
+                threadNote.iaCleanup(threadNote.imageAsset);
+                lmLog(gGFXTextureLogGroup, "Async loaded byte texture took %i ms to create", platform_getMilliseconds() - startTime);
+            }
 
             //were we disposed while we were busy loading?
             loom_mutex_lock(Texture::sTexInfoLock);
-            int disposeID = (!threadNote.tinfo->asyncDispose) ? -1 : threadNote.tinfo->id;
+            int disposeID = (!threadNote.tinfo->asyncDispose) ? -1 : threadNote.id;
             loom_mutex_unlock(Texture::sTexInfoLock);
             if(disposeID != -1)
             {
@@ -355,17 +369,20 @@ TextureInfo *Texture::initFromBytes(utByteArray *bytes, const char *name)
 
 int __stdcall Texture::loadTextureAsync_body(void *param)
 {
+    bool addToQueue;
     const char *path = NULL;
 
     //remain in a loop here so long as we have notes to process
     while(true)
     {
+        addToQueue = true;
+
         //get the front of the async texture queue to process
         loom_mutex_lock(Texture::sAsyncQueueMutex);
         AsyncLoadNote threadNote = Texture::sAsyncLoadQueue.front();
         Texture::sAsyncLoadQueue.pop_front();
         loom_mutex_unlock(Texture::sAsyncQueueMutex);
-        path = threadNote.path.c_str();
+        path = (!threadNote.path.empty()) ? threadNote.path.c_str() : NULL;
 
         //make sure we weren't disposed in the meantime... if so, just skip!
         loom_mutex_lock(Texture::sTexInfoLock);
@@ -387,21 +404,40 @@ int __stdcall Texture::loadTextureAsync_body(void *param)
         {
             loom_mutex_unlock(Texture::sTexInfoLock);
             
-            // Load async since we're in a background thread.
-            lmLog(gGFXTextureLogGroup, "loading %s async...", path);
-            loom_asset_preload(path);
-            loom_thread_yield();
-            loom_asset_image *lai = NULL;
-            while((lai = (loom_asset_image *)loom_asset_lock(path, LATImage, 0)) == NULL)
+            //handle Asset vs ByteArray texture load
+            if(path)
             {
+                // Load async since we're in a background thread.
+                lmLog(gGFXTextureLogGroup, "loading %s async...", path);
+                loom_asset_preload(path);
                 loom_thread_yield();
+                loom_asset_image *lai = NULL;
+                while((lai = (loom_asset_image *)loom_asset_lock(path, LATImage, 0)) == NULL)
+                {
+                    loom_thread_yield();
+                }
+                loom_asset_unlock(path);
             }
-            loom_asset_unlock(path);
+            else
+            {
+                //deserialize the image data from bytes
+                threadNote.imageAsset = static_cast<loom_asset_image_t*>(loom_asset_imageDeserializer(threadNote.bytes->getDataPtr(), 
+                                                                                                        threadNote.bytes->getSize(), 
+                                                                                                        &threadNote.iaCleanup));
+                if (threadNote.imageAsset == NULL) 
+                {
+                    lmLog(gGFXTextureLogGroup, "ERROR: Unable to deserialize image bytes!");
+                    addToQueue = false;
+                }
+            }
 
             //add to the CreateQueue that happens in the main thread because bgfx cannot create textures from side threads
             loom_mutex_lock(Texture::sAsyncQueueMutex);
-            lmLog(gGFXTextureLogGroup, "Adding async loaded texture to CreateQueue: %s", path);
-            sAsyncCreateQueue.push_back(threadNote);            
+            if(addToQueue)
+            {
+                lmLog(gGFXTextureLogGroup, "Adding async loaded texture to CreateQueue: %s", ((path) ? path : "Byte Texture"));
+                sAsyncCreateQueue.push_back(threadNote);            
+            }
         }
 
         //do we have any more items to process?
@@ -435,14 +471,14 @@ TextureInfo * Texture::initFromAssetManagerAsync(const char *path)
     loom_mutex_lock(Texture::sTexInfoLock);
     TextureID   *pid   = sTexturePathLookup.get(path);
     TextureInfo *tinfo = (pid && ((*pid >= 0) && (*pid < MAXTEXTURES))) ? &sTextureInfos[*pid] : NULL;
-    if(!tinfo || (tinfo->handle.idx == bgfx::invalidHandle))
+    if(pid && (!tinfo || (tinfo->handle.idx == bgfx::invalidHandle)))
     {
         lmLogError(gGFXTextureLogGroup, "Invalid Texture ID or Handle returned in initFromAssetManagerAsync() for texture: %s", path);
         tinfo = NULL;
     }
     if(pid)
     {
-        if(tinfo->asyncDispose)
+        if(tinfo && tinfo->asyncDispose)
         {
             lmLog(gGFXTextureLogGroup, "Returning a TextureInfo that was flagged for disposal during initFromAssetManagerAsync() for texture: %s", path);
             tinfo->asyncDispose = false;
@@ -458,6 +494,7 @@ TextureInfo * Texture::initFromAssetManagerAsync(const char *path)
     {
          //build up temp struct to pass over to the aysnc load thread
         AsyncLoadNote threadNote;
+        memset(&threadNote, 0, sizeof(AsyncLoadNote));
         threadNote.id = tinfo->id;
         threadNote.path = path;
         threadNote.tinfo = tinfo;
@@ -476,6 +513,66 @@ TextureInfo * Texture::initFromAssetManagerAsync(const char *path)
     else
     {
         lmLog(gGFXTextureLogGroup, "No available texture id for %s", path);
+    }
+    return tinfo;
+}
+
+
+TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name)
+{
+    TextureInfo *tinfo = NULL;
+    name = (name && !name[0]) ? NULL : name;
+    if(name)
+    {
+        //check if this texture already has a TextureInfo reserved for it
+        //NOTE: shouldn't really happen... there is a check for this in LS that returns early there!    
+        loom_mutex_lock(Texture::sTexInfoLock);
+        TextureID   *pid   = sTexturePathLookup.get(name);
+        TextureInfo *tinfo = (pid && ((*pid >= 0) && (*pid < MAXTEXTURES))) ? &sTextureInfos[*pid] : NULL;
+        if(pid && (!tinfo || (tinfo->handle.idx == bgfx::invalidHandle)))
+        {
+            lmLogError(gGFXTextureLogGroup, "Invalid Texture ID or Handle returned in initFromBytesAsync() for texture: %s", name);
+            tinfo = NULL;
+        }
+        if(pid)
+        {
+            if(tinfo && tinfo->asyncDispose)
+            {
+                lmLog(gGFXTextureLogGroup, "Returning a TextureInfo that was flagged for disposal during initFromBytesAsync() for texture: %s", name);
+                tinfo->asyncDispose = false;
+            }
+            loom_mutex_unlock(Texture::sTexInfoLock);
+            return tinfo;
+        }
+        loom_mutex_unlock(Texture::sTexInfoLock);
+    }
+
+    // Get a new texture info
+    tinfo = getAvailableTextureInfo(name);
+    if(tinfo != NULL)
+    {
+         //build up temp struct to pass over to the aysnc load thread
+        AsyncLoadNote threadNote;
+        memset(&threadNote, 0, sizeof(AsyncLoadNote));
+        threadNote.id = tinfo->id;
+        threadNote.path = "";
+        threadNote.tinfo = tinfo;
+        threadNote.bytes = bytes;
+
+        //add this texture to async queue
+        loom_mutex_lock(Texture::sAsyncQueueMutex);
+        sAsyncLoadQueue.push_back(threadNote);
+        if(!Texture::sAsyncThreadRunning)
+        {
+            //only kick the async thread if it isn't already running
+            Texture::sAsyncThreadRunning = true;
+            loom_thread_start(Texture::loadTextureAsync_body, NULL);
+        }
+        loom_mutex_unlock(Texture::sAsyncQueueMutex); 
+    }
+    else
+    {
+        lmLog(gGFXTextureLogGroup, "No available texture id for image bytes");
     }
     return tinfo;
 }

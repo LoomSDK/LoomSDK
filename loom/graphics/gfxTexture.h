@@ -99,9 +99,13 @@ struct TextureInfo
 
 struct AsyncLoadNote
 {
-    int             id;
-    utString        path;
-    TextureInfo     *tinfo;
+    int                         id;
+    utString                    path;
+    TextureInfo                 *tinfo;
+    utByteArray                 *bytes;
+    loom_asset_image_t          *imageAsset;
+    LoomAssetCleanupCallback    iaCleanup;
+
 };
 
 
@@ -232,6 +236,7 @@ public:
 
     static TextureInfo *initFromAssetManager(const char *path);
     static TextureInfo *initFromBytes(utByteArray *bytes, const char *name);
+    static TextureInfo *initFromBytesAsync(utByteArray *bytes, const char *name);
     static TextureInfo *initFromAssetManagerAsync(const char *path);
     static int __stdcall loadTextureAsync_body(void *param);
 

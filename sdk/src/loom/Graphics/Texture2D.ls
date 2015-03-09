@@ -132,8 +132,8 @@ package loom.graphics
         public static native function initFromAsset(path:string):TextureInfo;
         
         /**
-         * Create a new TextureInfo instance describing the requested asset loaded
-         * as a Texture2D from the provided ByteArray.  On optional unique name can
+         * Blocking function used to create a new TextureInfo instance describing the requested 
+         * asset loaded as a Texture2D from the provided ByteArray.  On optional unique name can
          * be specified if you wish the texture to take advantage of caching, otherwise
          * null can be specified.
          */
@@ -148,6 +148,14 @@ package loom.graphics
          * usable texture data yet (will be once its 'asyncLoadComplete' has been called).
          */
         public static native function initFromAssetAsync(path:string):TextureInfo;
+
+        /**
+         * Non-blocking function used to create a new TextureInfo instance describing the requested 
+         * asset loaded as a Texture2D from the provided ByteArray.  On optional unique name can
+         * be specified if you wish the texture to take advantage of caching, otherwise
+         * null can be specified.
+         */
+        public static native function initFromBytesAsync(bytes:ByteArray, uniqueName:String=null):TextureInfo;
 
         /**
          * Given the native id from a TextureInfo, dispose the specified texture. This
