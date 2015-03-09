@@ -10,6 +10,7 @@
 
 package loom2d.textures
 {
+    import system.utils.Base64;
     import loom.HTTPRequest;
     import loom.graphics.Texture2D;
     import loom.graphics.TextureInfo;
@@ -219,12 +220,11 @@ package loom2d.textures
             return tex;
         }
 
-//NOTE: non-caching version not working because HTTPRequest needs to be able to return a ByteArray    
         /** Non-blocking function that creates a texture object from a remote bitmap file via HTTP. */
         public static function fromHTTP(url:String, 
-                                        // cache:Boolean, 
                                         onSuccess:TextureAsyncLoadCompleteDelegate, 
-                                        onFailure:Function):Texture
+                                        onFailure:Function,
+                                        cache:Boolean):Texture
         {
             //turn the url into an MD5 so we have a nice small but unique filename to save to disk
             url = url.toLowerCase();
@@ -280,9 +280,8 @@ package loom2d.textures
             var tex:ConcreteTexture = new ConcreteTexture(urlmd5, -1, -1);
             assetPathCache[urlmd5] = tex;
 
-//TODO: Support non-file-caching as well
             //create and fire off the HTTPRequest
-            sendHTTPTextureRequest(url, cacheFile, tex, onSuccess, onFailure);//, cache);
+            sendHTTPTextureRequest(url, urlmd5, cacheFile, tex, onSuccess, onFailure, cache);
 
             return tex;
         }
@@ -436,15 +435,18 @@ package loom2d.textures
 
         /** Helper function that handles HTTP Texture Requests and the onSuccess/onFailure delegates */
         private static function sendHTTPTextureRequest(url:String, 
+                                                        urlmd5:String,
                                                         cacheFile:String, 
                                                         tex:ConcreteTexture,
                                                         onSuccess:TextureAsyncLoadCompleteDelegate, 
-                                                        onFailure:Function):void
+                                                        onFailure:Function,
+                                                        cache:Boolean):void
         {
             //create the HTTPRequest to obtain the texture data remotely
             var req:HTTPRequest = new HTTPRequest(url);
             req.method = "GET";
-            req.cacheFileName = cacheFile;
+            req.cacheFileName = (cache) ? cacheFile : null;
+            req.encodeResponse = !cache;
 
             //setup onSuccess
             var success:Function = function(result:String):void
@@ -454,9 +456,9 @@ package loom2d.textures
                 //remove reference to the request so it can now be GCed
                 httpRequests.remove(req);
 
-                //if we cached the file, we can just pass it to the async loader!
+                //cached or non-cached
                 var textureInfo:TextureInfo = null;
-                if(cacheFile != null)
+                if(cache)
                 {
                     //kick off the async load and return our holding texture
                     textureInfo = Texture2D.initFromAssetAsync(cacheFile);
@@ -465,24 +467,19 @@ package loom2d.textures
                         Console.print("WARNING: Unable to load HTTP texture from cached file: " + cacheFile); 
                     }
                 }
-//NOTE: non-caching ByteArray code not working because the String that HTTPRequest returns will end on null terminator, which image data could contain!              
-//                 else
-//                 {
-// Console.print("----create byte array: LEN: " + result.length);
+                else
+                {
+                    //convert the string from Base64 encoded to a ByteArray
+                    var texBytes:ByteArray = new ByteArray();
+                    Base64.decode(result, texBytes);
 
-//                     //not cached so we need to create a ByteArray and pass that through to be deserialized
-//                     var textureBytes:ByteArray = new ByteArray();
-//                     textureBytes.writeUTFBytes(result);
-
-// Console.print("----initFromBytes");
-// //TODO: make async!!!
-// //textureInfo = Texture2D.initFromBytesAsync(textureBytes);
-// textureInfo = Texture2D.initFromBytes(textureBytes);
-//                     if(textureInfo == null)
-//                     {
-//                         Console.print("WARNING: Unable to load texture from bytes given data from url: " + url); 
-//                     }
-//                 }
+                    //load the bytes Async
+                    textureInfo = Texture2D.initFromBytesAsync(texBytes, urlmd5);
+                    if(textureInfo == null)
+                    {
+                        Console.print("WARNING: Unable to load texture from bytes given data from url: " + url); 
+                    }                    
+                }
 
                 //unable to create our textureInfo so we failed
                 if(textureInfo == null)
@@ -500,13 +497,9 @@ package loom2d.textures
                 tex.textureInfo = textureInfo;
                 tex.asyncLoadComplete = onSuccess;
                 textureInfo.asyncLoadComplete += tex.onAsyncLoadComplete;
-// //TEMP until Texture2D.initFromBytesAsync() exists
-// if(cacheFile == null)
-// {
-//     onAsyncLoadComplete();
-// }
             };
             req.onSuccess += success;
+
 
             //setup onFailure
             var fail:Function = function(result:String):void
