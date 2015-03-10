@@ -436,7 +436,16 @@ int __stdcall Texture::loadTextureAsync_body(void *param)
             if(addToQueue)
             {
                 lmLog(gGFXTextureLogGroup, "Adding async loaded texture to CreateQueue: %s", ((path) ? path : "Byte Texture"));
-                sAsyncCreateQueue.push_back(threadNote);            
+
+                //add to the front of the queue if high priority, otherwise, FIFO
+                if(threadNote.priority)
+                {
+                    sAsyncCreateQueue.push_front(threadNote);
+                }
+                else
+                {
+                    sAsyncCreateQueue.push_back(threadNote);
+                }
             }
         }
 
@@ -458,7 +467,7 @@ int __stdcall Texture::loadTextureAsync_body(void *param)
 }
 
 
-TextureInfo * Texture::initFromAssetManagerAsync(const char *path)
+TextureInfo * Texture::initFromAssetManagerAsync(const char *path, bool highPriority)
 {
     if (!path || !path[0])
     {
@@ -498,10 +507,20 @@ TextureInfo * Texture::initFromAssetManagerAsync(const char *path)
         threadNote.id = tinfo->id;
         threadNote.path = path;
         threadNote.tinfo = tinfo;
+        threadNote.priority = highPriority;
 
         //add this texture to async queue
         loom_mutex_lock(Texture::sAsyncQueueMutex);
-        sAsyncLoadQueue.push_back(threadNote);
+
+        //add to the front of the queue if high priority, otherwise, FIFO
+        if(highPriority)
+        {
+            sAsyncLoadQueue.push_front(threadNote);
+        }
+        else
+        {
+            sAsyncLoadQueue.push_back(threadNote);
+        }
         if(!Texture::sAsyncThreadRunning)
         {
             //only kick the async thread if it isn't already running
@@ -518,7 +537,7 @@ TextureInfo * Texture::initFromAssetManagerAsync(const char *path)
 }
 
 
-TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name)
+TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name, bool highPriority)
 {
     TextureInfo *tinfo = NULL;
     name = (name && !name[0]) ? NULL : name;
@@ -558,10 +577,20 @@ TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name)
         threadNote.path = "";
         threadNote.tinfo = tinfo;
         threadNote.bytes = bytes;
+        threadNote.priority = highPriority;
 
         //add this texture to async queue
         loom_mutex_lock(Texture::sAsyncQueueMutex);
-        sAsyncLoadQueue.push_back(threadNote);
+
+        //add to the front of the queue if high priority, otherwise, FIFO
+        if(highPriority)
+        {
+            sAsyncLoadQueue.push_front(threadNote);
+        }
+        else
+        {
+            sAsyncLoadQueue.push_back(threadNote);
+        }
         if(!Texture::sAsyncThreadRunning)
         {
             //only kick the async thread if it isn't already running

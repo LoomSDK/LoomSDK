@@ -144,10 +144,12 @@ package loom.graphics
          * asset loaded as a Texture2D.
 
          * @param path Parth of the texture asset to load.
+         * @param highPriority Whether or not this request should jump the queue to the front, 
+         * otherwise it will slot in at the back.
          * @return TextureInfo Reserved texture information structure that is not filled with 
          * usable texture data yet (will be once its 'asyncLoadComplete' has been called).
          */
-        public static native function initFromAssetAsync(path:string):TextureInfo;
+        public static native function initFromAssetAsync(path:string, highPriority:Boolean=false):TextureInfo;
 
         /**
          * Non-blocking function used to create a new TextureInfo instance describing the requested 
@@ -155,7 +157,7 @@ package loom.graphics
          * be specified if you wish the texture to take advantage of caching, otherwise
          * null can be specified.
          */
-        public static native function initFromBytesAsync(bytes:ByteArray, uniqueName:String=null):TextureInfo;
+        public static native function initFromBytesAsync(bytes:ByteArray, uniqueName:String=null, highPriority:Boolean=false):TextureInfo;
 
         /**
          * Given the native id from a TextureInfo, dispose the specified texture. This

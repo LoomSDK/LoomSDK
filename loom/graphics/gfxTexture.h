@@ -100,6 +100,7 @@ struct TextureInfo
 struct AsyncLoadNote
 {
     int                         id;
+    bool                        priority;
     utString                    path;
     TextureInfo                 *tinfo;
     utByteArray                 *bytes;
@@ -236,8 +237,8 @@ public:
 
     static TextureInfo *initFromAssetManager(const char *path);
     static TextureInfo *initFromBytes(utByteArray *bytes, const char *name);
-    static TextureInfo *initFromBytesAsync(utByteArray *bytes, const char *name);
-    static TextureInfo *initFromAssetManagerAsync(const char *path);
+    static TextureInfo *initFromBytesAsync(utByteArray *bytes, const char *name, bool highPriorty);
+    static TextureInfo *initFromAssetManagerAsync(const char *path, bool highPriorty);
     static int __stdcall loadTextureAsync_body(void *param);
 
     static void dispose(TextureID id);

@@ -112,6 +112,11 @@ package loom2d.textures
          * will be destroyed and 'asyncLoadComplete' will NOT get called.
          */
         public var asyncLoadComplete:TextureAsyncLoadCompleteDelegate;
+
+        /*
+         * Indicates that we which to stop the current HTTP load request of this texture ASAP.
+         */
+        protected var mCancelHTTP:Boolean;
         
 
         /** @private */
@@ -192,7 +197,7 @@ package loom2d.textures
         }
     
         /** Non-blocking function that creates a texture object from a bitmap file on disk. */
-        public static function fromAssetAsync(path:String, cb:TextureAsyncLoadCompleteDelegate):Texture
+        public static function fromAssetAsync(path:String, cb:TextureAsyncLoadCompleteDelegate, highPriority:Boolean=false):Texture
         {
             //if already cached, just return that texture without calling the CB
             if(assetPathCache[path])
@@ -201,7 +206,7 @@ package loom2d.textures
             }
 
             //kick off the async load and return our holding texture
-            var textureInfo = Texture2D.initFromAssetAsync(path);
+            var textureInfo = Texture2D.initFromAssetAsync(path, highPriority);
             if(textureInfo == null)
             {
                 Console.print("WARNING: Unable to load texture from asset: " + path); 
@@ -224,7 +229,8 @@ package loom2d.textures
         public static function fromHTTP(url:String, 
                                         onSuccess:TextureAsyncLoadCompleteDelegate, 
                                         onFailure:Function,
-                                        cache:Boolean):Texture
+                                        cache:Boolean=true, 
+                                        highPriority:Boolean=false):Texture
         {
             //turn the url into an MD5 so we have a nice small but unique filename to save to disk
             url = url.toLowerCase();
@@ -281,7 +287,7 @@ package loom2d.textures
             assetPathCache[urlmd5] = tex;
 
             //create and fire off the HTTPRequest
-            sendHTTPTextureRequest(url, urlmd5, cacheFile, tex, onSuccess, onFailure, cache);
+            sendHTTPTextureRequest(url, urlmd5, cacheFile, tex, onSuccess, onFailure, cache, highPriority);
 
             return tex;
         }
@@ -440,7 +446,8 @@ package loom2d.textures
                                                         tex:ConcreteTexture,
                                                         onSuccess:TextureAsyncLoadCompleteDelegate, 
                                                         onFailure:Function,
-                                                        cache:Boolean):void
+                                                        cache:Boolean,
+                                                        highPriority:Boolean):void
         {
             //create the HTTPRequest to obtain the texture data remotely
             var req:HTTPRequest = new HTTPRequest(url);
@@ -451,45 +458,60 @@ package loom2d.textures
             //setup onSuccess
             var success:Function = function(result:String):void
             {
+                var textureInfo:TextureInfo = null;
                 Console.print("Successfull download of HTTP texture from url: " + url); 
 
                 //remove reference to the request so it can now be GCed
                 httpRequests.remove(req);
 
-                //cached or non-cached
-                var textureInfo:TextureInfo = null;
-                if(cache)
+                //were we cancelled while off busy with the HTTP?
+                if(tex.mCancelHTTP)
                 {
-                    //kick off the async load and return our holding texture
-                    textureInfo = Texture2D.initFromAssetAsync(cacheFile);
-                    if(textureInfo == null)
+Console.print("---HTTP CANCELLED: " + cacheFile); 
+
+                    if(cache && File.fileExists(cacheFile))
                     {
-                        Console.print("WARNING: Unable to load HTTP texture from cached file: " + cacheFile); 
+                        //delete the cached file if this was a cached HTTP load
+                        Console.print("Deleting cached HTTP requested texture as its load was cancelled: " + cacheFile); 
+                        File.removeFile(cacheFile);
                     }
                 }
                 else
                 {
-                    //convert the string from Base64 encoded to a ByteArray
-                    var texBytes:ByteArray = new ByteArray();
-                    Base64.decode(result, texBytes);
-
-                    //load the bytes Async
-                    textureInfo = Texture2D.initFromBytesAsync(texBytes, urlmd5);
-                    if(textureInfo == null)
+                    //cached or non-cached
+                    if(cache)
                     {
-                        Console.print("WARNING: Unable to load texture from bytes given data from url: " + url); 
-                    }                    
+                        //kick off the async load and return our holding texture
+                        textureInfo = Texture2D.initFromAssetAsync(cacheFile, highPriority);
+                        if(textureInfo == null)
+                        {
+                            Console.print("WARNING: Unable to load HTTP texture from cached file: " + cacheFile); 
+                        }
+                    }
+                    else
+                    {
+                        //convert the string from Base64 encoded to a ByteArray
+                        var texBytes:ByteArray = new ByteArray();
+                        Base64.decode(result, texBytes);
+
+                        //load the bytes Async
+                        textureInfo = Texture2D.initFromBytesAsync(texBytes, urlmd5, highPriority);
+                        if(textureInfo == null)
+                        {
+                            Console.print("WARNING: Unable to load texture from bytes given data from url: " + url); 
+                        }                    
+                    }
                 }
 
                 //unable to create our textureInfo so we failed
                 if(textureInfo == null)
                 {
-                    //dispose the texture and call the failure delegate
-                    tex.dispose();
-                    if(onFailure != null)
+                    //dispose the texture and call the failure delegate (don't call onFailure if the load was cancelled)
+                    if((onFailure != null) && (!tex.mCancelHTTP))
                     {
                         onFailure();
                     }
+                    tex.dispose();
                     return;
                 }
 
@@ -510,11 +532,11 @@ package loom2d.textures
                 httpRequests.remove(req);
 
                 //dispose the texture and call the failure delegate
-                tex.dispose();
                 if(onFailure != null)
                 {
                     onFailure();
                 }
+                tex.dispose();
             };       
             req.onFailure += fail;
 
@@ -523,6 +545,11 @@ package loom2d.textures
             req.send();
         }
 
+        /** Called to indicate that an HTTP texture load via fromHTTP() should be 
+          * cancelled at the 1st possible opportunity.  NOTE that this will also dipose
+          * the Texture returned by fromHTTP(), so consider it invalid after calling this.
+          */
+        public function cancelHTTPRequest():void { mCancelHTTP = true; }
 
         /** 
           *  Indicates if the texture do smooth filtering when it is scaled (BILINEAR) or just choose the nearest pixel (NONE)
