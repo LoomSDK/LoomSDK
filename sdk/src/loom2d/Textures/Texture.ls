@@ -467,8 +467,6 @@ package loom2d.textures
                 //were we cancelled while off busy with the HTTP?
                 if(tex.mCancelHTTP)
                 {
-Console.print("---HTTP CANCELLED: " + cacheFile); 
-
                     if(cache && File.fileExists(cacheFile))
                     {
                         //delete the cached file if this was a cached HTTP load
