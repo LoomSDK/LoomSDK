@@ -2,6 +2,7 @@ package
 {
 
     import loom.Application;    
+    import loom.platform.Timer;    
     import loom.gameframework.LoomGroup;    
     import loom.gameframework.TimeManager;    
     import loom2d.display.Stage;
@@ -11,6 +12,8 @@ package
     import loom2d.events.TouchPhase;    
     import loom2d.display.StageScaleMode;
     import loom2d.display.Image;   
+    import loom2d.display.AsyncImage;   
+    import loom2d.display.MovieClip;    
     import loom2d.textures.Texture;
     import loom2d.textures.ConcreteTexture;
     import loom2d.ui.SimpleLabel;
@@ -31,18 +34,19 @@ package
         private const ERROR:String          = "ERROR Loading Texture (Touch to Retry)";
         private const HTTP_FAIL             = "FAILED HTTP LOAD (Touch to Retry)";
 
-        private var _sprite:Image;
+        private var _sprite:AsyncImage;
         private var _label:SimpleLabel;
         private var _name:SimpleLabel;
         private var _priorityLabel:SimpleLabel;
         private var _texBase:String;
 
         private var _curImage:int = 0;
-        private var _origTex:Texture;
+        private var _lastTexture:Texture;
         private var _newTex:Texture;
         private var _startTime:int;
         private var _go:Boolean = false;
         private var _priority:Boolean = false;
+        private var _requestTimer:Timer = null;
         private var _httpTextureURLs:Vector.<String> = null;
 
         private static var _textureCache:Dictionary.<Texture, int> = new Dictionary.<Texture, int>();
@@ -53,8 +57,7 @@ package
             _texBase = texPath;
         
             //image
-            _sprite = new Image(AsyncImageExample.DefaultTex);
-            _origTex = _sprite.texture;
+            _sprite = new AsyncImage(AsyncImageExample.LoadingAnim, null, 256, 256);
             _sprite.center();
             _sprite.x = x + _sprite.width / 2;
             _sprite.y = y + _sprite.height / 2;
@@ -75,7 +78,7 @@ package
             _name.x = _sprite.x - (stage.stageWidth / 8);
             _name.y = _sprite.y - ((_sprite.height / 2) + 56);
             _name.scale = 0.25;            
-            _name.text = _origTex.textureInfo.path;
+            _name.text = "...";
             _name.touchable = false;
             stage.addChild(_name);
 
@@ -99,12 +102,24 @@ package
             _priorityLabel.text = (_priority) ? "High Priority" : "Low Priority";
             stage.addChild(_priorityLabel);
 
-
             //listen to touch events
             _sprite.addEventListener(TouchEvent.TOUCH, onTouch);
 
             //request Flickr image URLS
             AsyncImageExample.requestFlickrImageURLs(NUM_IMAGES, flickrImagesStore);
+
+            //start up the cache
+            _lastTexture = _sprite.texture;          
+            if(_textureCache[_lastTexture] == null)
+            {
+                //start at 1 because we never want this texture to be destroyed...
+                _textureCache[_lastTexture] = 1;
+            }
+            _textureCache[_lastTexture]++;  
+
+            //timer to delay the auto-loads 
+            _requestTimer = new Timer(500);
+            _requestTimer.onComplete += requestAsyncTex;            
         }
 
 
@@ -119,33 +134,29 @@ package
 
 
         //sets the new texture for our image
-        private function setTexture(tex:Texture, text:String):void
+        private function updateTexture(tex:Texture, text:String):void
         {
             //add new texture to the cache
-            if(_textureCache[tex] == null)
+            if(tex != _lastTexture)
             {
-                _textureCache[tex] = 0;
-            }
-            _textureCache[tex]++;
-
-            //dispose old tex?
-            if((_sprite.texture != null) && (_sprite.texture != AsyncImageExample.DefaultTex))
-            {
-                _textureCache[_sprite.texture]--;
-                if(_textureCache[_sprite.texture] == 0)
+                if(_textureCache[tex] == null)
                 {
-                    _textureCache.deleteKey(_sprite.texture);
-                    _sprite.texture.dispose();
+                    _textureCache[tex] = 0;
                 }
+                _textureCache[tex]++;
+
+                //dispose old tex?
+                if(_lastTexture != null)
+                {
+                    _textureCache[_lastTexture]--;
+                    if(_textureCache[_lastTexture] == 0)
+                    {
+                        _textureCache.deleteKey(_lastTexture);
+                        _lastTexture.dispose();
+                    }
+                }
+                _lastTexture = tex;
             }
-
-            //scale to base image size 
-            _sprite.scaleX = _sprite.width / tex.width;
-            _sprite.scaleY = _sprite.height / tex.height;
-
-            //set texture
-            _sprite.texture = tex;
-            _sprite.center();
 
             //update labels
             _label.text = text;
@@ -154,7 +165,7 @@ package
 
 
         //requests a new async texture load
-        private function requestAsyncTex():void
+        private function requestAsyncTex(timer:Timer=null):void
         {
             var texToLoad:String = null;         
 
@@ -163,13 +174,13 @@ package
             {
                 //load from HTTP
                 texToLoad = _httpTextureURLs[_curImage];
-                _newTex = Texture.fromHTTP(texToLoad, asyncLoadCompleteCB, httpLoadFailureCB, false, _priority);
+                _newTex = _sprite.loadTextureFromHTTP(texToLoad, asyncLoadCompleteCB, httpLoadFailureCB, false, _priority);
             }
             else
             {
                 //load from disk
                 texToLoad = _texBase + _curImage + ".png";
-                _newTex = Texture.fromAssetAsync(texToLoad, asyncLoadCompleteCB, _priority);                
+                _newTex = _sprite.loadTextureFromAsset(texToLoad, asyncLoadCompleteCB, _priority);                
             }
 
             //wrap image
@@ -177,7 +188,7 @@ package
             {
                 _curImage = 0;
 
-                //repopulate the image list
+                //repopulate the Flickr image list
                 AsyncImageExample.requestFlickrImageURLs(NUM_IMAGES, flickrImagesStore);
             }  
 
@@ -190,7 +201,7 @@ package
             {
                 if(_newTex.isTextureValid())
                 {
-                    setTexture(_newTex, USING_CACHED);
+                    updateTexture(_newTex, USING_CACHED);
                     _go = false;
                 }
                 else
@@ -205,12 +216,12 @@ package
         //called when a texture completes async loading
         private function asyncLoadCompleteCB(texture:Texture):void
         {
-            setTexture(texture, LOADED + ": " + (Platform.getTime() - _startTime) + "ms");
+            updateTexture(texture, LOADED + ": " + (Platform.getTime() - _startTime) + "ms");
 
             //again!
             if(_go)
             {
-                requestAsyncTex();
+                _requestTimer.start();
             }
         }
 
@@ -233,6 +244,12 @@ package
                 if(_go)
                 {
                     requestAsyncTex();
+                }
+                else
+                {
+                    _sprite.cancelHTTPLoad();
+                    _label.text = NOT_LOADED;
+                    _requestTimer.stop();
                 }
             }
         }            
@@ -258,7 +275,7 @@ package
         private var _loadTypeLabel:SimpleLabel;
 
         public static var LoadFromHTTP:Boolean = false;
-        public static var DefaultTex:Texture = null;
+        public static var LoadingAnim:MovieClip = null;
         static private var _httpRequestCache:Vector.<HTTPRequest> = [];
 
 
@@ -266,8 +283,8 @@ package
         {
             stage.scaleMode = StageScaleMode.LETTERBOX;
 
-            //load permanent default texture
-            DefaultTex = Texture.fromAsset("assets/default.png");
+            //create permanent loading movieclip to use
+            LoadingAnim = MovieClip.fromSpritesheet("assets/loadanim.png", 60, 60, 30, 5, 12);
 
             //bouncing poly so we can feel the performance
             _polySprite = new Image(Texture.fromAsset("assets/logo.png"));
