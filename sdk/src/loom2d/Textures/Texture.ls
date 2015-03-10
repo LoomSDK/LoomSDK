@@ -229,7 +229,7 @@ package loom2d.textures
         public static function fromHTTP(url:String, 
                                         onSuccess:TextureAsyncLoadCompleteDelegate, 
                                         onFailure:Function,
-                                        cache:Boolean=true, 
+                                        cacheOnDisk:Boolean=true, 
                                         highPriority:Boolean=false):Texture
         {
             //turn the url into an MD5 so we have a nice small but unique filename to save to disk
@@ -287,8 +287,7 @@ package loom2d.textures
             assetPathCache[urlmd5] = tex;
 
             //create and fire off the HTTPRequest
-            sendHTTPTextureRequest(url, urlmd5, cacheFile, tex, onSuccess, onFailure, cache, highPriority);
-
+            sendHTTPTextureRequest(url, urlmd5, cacheFile, tex, onSuccess, onFailure, cacheOnDisk, highPriority);
             return tex;
         }
 
@@ -446,14 +445,14 @@ package loom2d.textures
                                                         tex:ConcreteTexture,
                                                         onSuccess:TextureAsyncLoadCompleteDelegate, 
                                                         onFailure:Function,
-                                                        cache:Boolean,
+                                                        cacheOnDisk:Boolean,
                                                         highPriority:Boolean):void
         {
             //create the HTTPRequest to obtain the texture data remotely
             var req:HTTPRequest = new HTTPRequest(url);
             req.method = "GET";
-            req.cacheFileName = (cache) ? cacheFile : null;
-            req.encodeResponse = !cache;
+            req.cacheFileName = (cacheOnDisk) ? cacheFile : null;
+            req.encodeResponse = !cacheOnDisk;
 
             //setup onSuccess
             var success:Function = function(result:String):void
@@ -467,7 +466,7 @@ package loom2d.textures
                 //were we cancelled while off busy with the HTTP?
                 if(tex.mCancelHTTP)
                 {
-                    if(cache && File.fileExists(cacheFile))
+                    if(cacheOnDisk && File.fileExists(cacheFile))
                     {
                         //delete the cached file if this was a cached HTTP load
                         Console.print("Deleting cached HTTP requested texture as its load was cancelled: " + cacheFile); 
@@ -477,7 +476,7 @@ package loom2d.textures
                 else
                 {
                     //cached or non-cached
-                    if(cache)
+                    if(cacheOnDisk)
                     {
                         //kick off the async load and return our holding texture
                         textureInfo = Texture2D.initFromAssetAsync(cacheFile, highPriority);
