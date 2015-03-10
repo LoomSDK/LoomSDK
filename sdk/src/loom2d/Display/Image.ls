@@ -79,14 +79,20 @@ package loom2d.display
             var frame:Rectangle = texture.frameReadOnly;
             var width:Number  = frame ? frame.width  : texture.width;
             var height:Number = frame ? frame.height : texture.height;
-            
+
+            setSize(width, height);
+        }
+
+        /** Manually set the size of the image to a specified width and height */
+        public function setSize(width:Number, height:Number):void
+        {
             mVertexData.setPosition(0, 0.0,   0.0);
             mVertexData.setPosition(1, width, 0.0);
             mVertexData.setPosition(2, 0.0,   height);
             mVertexData.setPosition(3, width, height); 
             
             onVertexDataChanged();
-        }
+        }        
         
         /** Sets the texture coordinates of a vertex. Coordinates are in the range [0, 1]. */
         public function setTexCoords(vertexID:int, coords:Point):void
