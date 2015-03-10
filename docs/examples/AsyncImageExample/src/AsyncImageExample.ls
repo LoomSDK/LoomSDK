@@ -34,12 +34,15 @@ package
         private var _sprite:Image;
         private var _label:SimpleLabel;
         private var _name:SimpleLabel;
+        private var _priorityLabel:SimpleLabel;
         private var _texBase:String;
 
         private var _curImage:int = 0;
         private var _origTex:Texture;
+        private var _newTex:Texture;
         private var _startTime:int;
         private var _go:Boolean = false;
+        private var _priority:Boolean = false;
         private var _httpTextureURLs:Vector.<String> = null;
 
         private static var _textureCache:Dictionary.<Texture, int> = new Dictionary.<Texture, int>();
@@ -70,11 +73,32 @@ package
             //name
             _name = new SimpleLabel("assets/fonts/Curse-hd.fnt", stage.stageWidth, 256);            
             _name.x = _sprite.x - (stage.stageWidth / 8);
-            _name.y = _sprite.y - (_sprite.height / 2 + 80);
+            _name.y = _sprite.y - ((_sprite.height / 2) + 56);
             _name.scale = 0.25;            
             _name.text = _origTex.textureInfo.path;
             _name.touchable = false;
             stage.addChild(_name);
+
+            //priority button & label
+            var priorityButton:SimpleButton = new SimpleButton();
+            priorityButton.scaleX = 0.4;
+            priorityButton.scaleY = 0.2;
+            priorityButton.center();
+            priorityButton.x = _sprite.x - (priorityButton.width / 2);
+            priorityButton.y = _sprite.y - ((_sprite.height + priorityButton.width) / 2) - 48;
+            priorityButton.upImage = "assets/up.png";
+            priorityButton.downImage = "assets/down.png";
+            priorityButton.onClick +=  function() { _priority = !_priority; _priorityLabel.text = (_priority) ? "High Priority" : "Low Priority";};
+            stage.addChild(priorityButton);
+
+            _priorityLabel = new SimpleLabel("assets/fonts/Curse-hd.fnt", 256, 64);            
+            _priorityLabel.x = priorityButton.x - 8;
+            _priorityLabel.y = priorityButton.y;
+            _priorityLabel.scale = 0.25;
+            _priorityLabel.touchable = false;
+            _priorityLabel.text = (_priority) ? "High Priority" : "Low Priority";
+            stage.addChild(_priorityLabel);
+
 
             //listen to touch events
             _sprite.addEventListener(TouchEvent.TOUCH, onTouch);
@@ -133,20 +157,19 @@ package
         private function requestAsyncTex():void
         {
             var texToLoad:String = null;         
-            var newTex:Texture = null;   
 
             _startTime = Platform.getTime();
             if(AsyncImageExample.LoadFromHTTP && (_httpTextureURLs != null))
             {
                 //load from HTTP
                 texToLoad = _httpTextureURLs[_curImage];
-                newTex = Texture.fromHTTP(texToLoad, asyncLoadCompleteCB, httpLoadFailureCB, false);
+                _newTex = Texture.fromHTTP(texToLoad, asyncLoadCompleteCB, httpLoadFailureCB, false, _priority);
             }
             else
             {
                 //load from disk
                 texToLoad = _texBase + _curImage + ".png";
-                newTex = Texture.fromAssetAsync(texToLoad, asyncLoadCompleteCB);                
+                _newTex = Texture.fromAssetAsync(texToLoad, asyncLoadCompleteCB, _priority);                
             }
 
             //wrap image
@@ -158,16 +181,16 @@ package
                 AsyncImageExample.requestFlickrImageURLs(NUM_IMAGES, flickrImagesStore);
             }  
 
-            if(newTex == null)
+            if(_newTex == null)
             {
                 _label.text = ERROR;
                 _go = false;
             }
             else
             {
-                if(newTex.isTextureValid())
+                if(_newTex.isTextureValid())
                 {
-                    setTexture(newTex, USING_CACHED);
+                    setTexture(_newTex, USING_CACHED);
                     _go = false;
                 }
                 else
@@ -232,7 +255,6 @@ package
         private var _polySprite:Image;
         private var _polySpeed:Point = new Point(200, 200);
 
-        private var _loadTypeButton:SimpleButton;
         private var _loadTypeLabel:SimpleLabel;
 
         public static var LoadFromHTTP:Boolean = false;
@@ -256,20 +278,20 @@ package
             stage.addChild(_polySprite);    
 
             //button & label to toggle the load type with
-            _loadTypeButton = new SimpleButton();
-            _loadTypeButton.scaleX = 0.8;
-            _loadTypeButton.scaleY = 0.4;
-            _loadTypeButton.center();
-            _loadTypeButton.x = (stage.stageWidth - _loadTypeButton.width) / 2;
-            _loadTypeButton.y = stage.stageHeight - _loadTypeButton.height - 64;
-            _loadTypeButton.upImage = "assets/up.png";
-            _loadTypeButton.downImage = "assets/down.png";
-            _loadTypeButton.onClick +=  function() { LoadFromHTTP = !LoadFromHTTP; _loadTypeLabel.text = (LoadFromHTTP) ? "HTTP Load" : "Asset Load";};
-            stage.addChild(_loadTypeButton);
+            var typeButton:SimpleButton = new SimpleButton();
+            typeButton.scaleX = 0.8;
+            typeButton.scaleY = 0.4;
+            typeButton.center();
+            typeButton.x = (stage.stageWidth - typeButton.width) / 2;
+            typeButton.y = stage.stageHeight - typeButton.height - 64;
+            typeButton.upImage = "assets/up.png";
+            typeButton.downImage = "assets/down.png";
+            typeButton.onClick +=  function() { LoadFromHTTP = !LoadFromHTTP; _loadTypeLabel.text = (LoadFromHTTP) ? "HTTP Load" : "Asset Load";};
+            stage.addChild(typeButton);
 
             _loadTypeLabel = new SimpleLabel("assets/fonts/Curse-hd.fnt", 256, 64);            
-            _loadTypeLabel.x = _loadTypeButton.x - 16;
-            _loadTypeLabel.y = _loadTypeButton.y;
+            _loadTypeLabel.x = typeButton.x - 16;
+            _loadTypeLabel.y = typeButton.y;
             _loadTypeLabel.scale = 0.5;
             _loadTypeLabel.touchable = false;
             _loadTypeLabel.text = (LoadFromHTTP) ? "HTTP Load" : "Asset Load";
@@ -359,25 +381,40 @@ package
         static public function requestFlickrImageURLs(count:int, func:Function)
         {
             var perPage = count + "";
-            var request:HTTPRequest = new HTTPRequest("https://api.flickr.com/services/rest/?method=flickr.photos.getRecent&api_key=b24b3f28e764fe0b41d38b7ed4cc64d1&per_page=" + perPage + "&page=1&format=json&nojsoncallback=1");
+            var apiKey = "cd563a32f84911cc06cab523db607bae";
+            var request:HTTPRequest = new HTTPRequest("https://api.flickr.com/services/rest/?method=flickr.photos.getRecent&api_key=" + apiKey + "&per_page=" + perPage + "&page=1&format=json&nojsoncallback=1");
             request.method = "GET";
             request.onSuccess += function(str:String)
                                  {
                                     _httpRequestCache.remove(request);
-                                    var imageUrls:Vector.<String> = [];
+                                    var imageUrls:Vector.<String> = null;
                                     var json = new JSON();
                                     json.loadString(str);
 
-                                    var photos:JSON = json.getObject("photos").getArray("photo");
-                                    for (var i = 0; i < photos.getArrayCount(); i++)
+                                    var photosObj:JSON = json.getObject("photos");
+                                    if(photosObj != null)
+                                    {                                    
+                                        var photos:JSON = photosObj.getArray("photo");
+                                        if(photos)
+                                        {
+                                            imageUrls = new Vector.<String>();
+                                            for (var i = 0; i < photos.getArrayCount(); i++)
+                                            {
+                                                var photo:JSON = photos.getArrayObject(i);
+                                                var farmId = photo.getInteger("farm");
+                                                var serverId = photo.getString("server");
+                                                var id = photo.getString("id");
+                                                var secret = photo.getString("secret");
+                                                var url = "https://farm" + farmId + ".staticflickr.com/" + serverId + "/" + id + "_" + secret + ".jpg";
+                                                imageUrls.pushSingle(url);
+                                            }
+                                        }
+                                    }
+                                    else
                                     {
-                                        var photo:JSON = photos.getArrayObject(i);
-                                        var farmId = photo.getInteger("farm");
-                                        var serverId = photo.getString("server");
-                                        var id = photo.getString("id");
-                                        var secret = photo.getString("secret");
-                                        var url = "https://farm" + farmId + ".staticflickr.com/" + serverId + "/" + id + "_" + secret + ".jpg";
-                                        imageUrls.pushSingle(url);
+                                        var errorCode:int = json.getInteger("code");
+                                        var errorMessage:String = json.getString("message");
+                                        trace("ERROR! Flickr API call failed with code: " + errorCode + " and message: " + errorMessage);
                                     }
                                     func(imageUrls);
                                  };
