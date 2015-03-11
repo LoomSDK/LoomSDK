@@ -9,7 +9,10 @@ package com.modestmaps.core
 	import loom2d.display.DisplayObject;
 	import loom2d.display.Sprite;
 	import loom2d.events.Event;
-	import loom2d.events.TouchEvent;
+	
+	import loom2d.events.Touch;
+    import loom2d.events.TouchEvent;
+	import loom2d.events.TouchPhase;
 	
 //LUKE_SAYS: ProgressEvent seems to be tied directly to the Loader class in order to track bytes loaded in the grid/painter. Can likely ignore...            
 	//import flash.events.ProgressEvent;	
@@ -131,9 +134,6 @@ package com.modestmaps.core
 		protected var startPan:Coordinate;
 		public var panning:Boolean;
 		
-		// previous mouse position when dragging 
-		protected var pmouse:Point;
-		
 		// for zoom events
 		protected var startZoom:Number = -1;
 		public var zooming:Boolean;
@@ -206,8 +206,7 @@ package com.modestmaps.core
 		private function onAddedToStage(event:Event):void
 		{
 			if (draggable) {
-//TODO_24: add basic touch input support                
-//				addEventListener(MouseEvent.MOUSE_DOWN, mousePressed, true);
+				addEventListener(TouchEvent.TOUCH, mousePressed);
 			}
             onRender += _onRender;
 
@@ -222,10 +221,9 @@ package com.modestmaps.core
 		
 		private function onRemovedFromStage(event:Event):void
 		{
-//TODO_24: add basic touch input support                
-//			if (hasEventListener(MouseEvent.MOUSE_DOWN)) {
-//				removeEventListener(MouseEvent.MOUSE_DOWN, mousePressed, true);
-//			}
+			if (hasEventListener(TouchEvent.TOUCH)) {
+				removeEventListener(TouchEvent.TOUCH, mousePressed);
+			}
             onRender -= _onRender;
 
 //NOTE_24: not porting DebugField for now at least...
@@ -777,42 +775,31 @@ package com.modestmaps.core
  			return keys;
 		}
 						
-//TODO_24: add basic touch input support                
-		// public function mousePressed(event:MouseEvent):void
-		// {
-		// 	prepareForPanning(true);
-		// 	pmouse = new Point(event.stageX, event.stageY);
-		// 	stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseDragged);
-		// 	stage.addEventListener(MouseEvent.MOUSE_UP, mouseReleased);
-		// 	stage.addEventListener(Event.MOUSE_LEAVE, mouseReleased);
-		// }
-
-		// public function mouseReleased(event:Event):void
-		// {
-		// 	stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseDragged);
-		// 	stage.removeEventListener(MouseEvent.MOUSE_UP, mouseReleased);
-		// 	stage.removeEventListener(Event.MOUSE_LEAVE, mouseReleased);
-		// 	donePanning();
-		// 	dirty = true;
-		// 	if (event is MouseEvent) {
-		// 		MouseEvent(event).updateAfterEvent();
-		// 	}
-		// 	else if (event.type == Event.MOUSE_LEAVE) {
-				// onRender();
-		// 	}
-		// }
-
-		// public function mouseDragged(event:MouseEvent):void
-		// {
-		// 	//var mousePoint:Point = new Point(event.stageX, event.stageY);
-		// 	var mousePoint:Point = new Point(event.globalX, event.globalY);
+		public function mousePressed(event:TouchEvent):void
+		{
+			prepareForPanning(true);
+		 	
+			var touches = event.getTouches(stage);			
 			
-		// 	tx += mousePoint.x - pmouse.x;
-		// 	ty += mousePoint.y - pmouse.y;
-		// 	pmouse = mousePoint;
-		// 	dirty = true;
-		// 	event.updateAfterEvent();
-		// }	
+			if (touches[0].phase == TouchPhase.MOVED)
+				mouseDragged(touches[0].getMovement(stage));
+			
+			if (touches[0].phase == TouchPhase.ENDED)
+				mouseReleased();			
+		}
+
+		public function mouseReleased():void
+		{
+		 	donePanning();
+		 	dirty = true;
+		}
+
+		public function mouseDragged(deltaPos:Point):void
+		{			
+		 	tx += deltaPos.x;
+		 	ty += deltaPos.y;
+		 	dirty = true;
+		}	
 
 		// today is all about lazy evaluation
 		// this gets set to null by 'dirty = true'

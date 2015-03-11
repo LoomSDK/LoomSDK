@@ -5,6 +5,7 @@ package
     import com.modestmaps.core.Coordinate;
     import com.modestmaps.mapproviders.IMapProvider;
     import com.modestmaps.mapproviders.AbstractMapProvider; 
+	import com.modestmaps.mapproviders.microsoft.MicrosoftProvider;
 	import feathers.controls.NumericStepper;
 	import loom2d.math.Point;
 
@@ -28,6 +29,7 @@ package
 	import loom2d.events.TouchPhase;
 	
 	import loom.graphics.Graphics;
+	
 
     public class ModestTest extends Application
     {		
@@ -50,6 +52,14 @@ package
 			doubleTouchInput = new TwoInputTouch(stage);
 			doubleTouchInput.OnDoubleTouchEvent += onDoubleTouch;
 			doubleTouchInput.OnDoubleTouchEndEvent += onDoubleTouchEnd;
+			
+			//var microsoftMap:MicrosoftProvider = new MicrosoftProvider("AERIAL", true, 1, 50);
+			
+			//for (var i:Number = 0; i < 10; i++)
+			//{
+			//	var urls = microsoftMap.getTileUrls(new Coordinate(i, 1, 20));
+			//	trace(urls);
+			//}
 			
 			stage.addEventListener(TouchEvent.TOUCH, onSingleTouch);
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
@@ -135,7 +145,7 @@ package
 //TEST CODE!!!
 			if (!initialised)
 			{
-				var bitmap:Image = new Image(Texture.fromAsset("assets/logo.png"));            
+				var bitmap:Image = new Image();            
 				bitmap.center();
 				bitmap.scaleX = 0.3;
 				bitmap.scaleY = 0.3;
