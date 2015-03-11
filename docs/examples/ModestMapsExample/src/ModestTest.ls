@@ -5,6 +5,7 @@ package
     import com.modestmaps.core.Coordinate;
     import com.modestmaps.mapproviders.IMapProvider;
     import com.modestmaps.mapproviders.AbstractMapProvider; 
+	import feathers.controls.NumericStepper;
 	import loom2d.math.Point;
 
 
@@ -31,8 +32,7 @@ package
     public class ModestTest extends Application
     {		
 		var map:CustomMap;
-		
-		public var panSensitivity = 1;
+		var doubleTouchInput:TwoInputTouch;
 		
         override public function run():void
         {
@@ -47,68 +47,53 @@ package
 
 			stage.addChild(map);
 		
-			this.stage.addEventListener(TouchEvent.TOUCH, onTouch);
-			this.stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
+			doubleTouchInput = new TwoInputTouch(stage);
+			doubleTouchInput.OnDoubleTouchEvent += onDoubleTouch;
+			doubleTouchInput.OnDoubleTouchEndEvent += onDoubleTouchEnd;
+			
+			stage.addEventListener(TouchEvent.TOUCH, onSingleTouch);
+			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
         }
 		
-		var touchStartingMidpoint:Point; 
 		var canRotate:Boolean = true;
 		var isRotating:Boolean = false;
 		
-		function onTouch(event:TouchEvent)
-		{			
+		function onDoubleTouchEnd()
+		{
+			canRotate = true;
+			isRotating = false;
+		}
+		
+		function onDoubleTouch(touch1:Point, touch2:Point)
+		{
+			if (Math.abs(doubleTouchInput.getZoomDelta()) > 3.2)
+			{
+				map.zoomByAbout(doubleTouchInput.getZoomDelta() * doubleTouchInput.rotationSensitivity, doubleTouchInput.getTouchMidPoint());
+				// If we start zooming we don't want to rotate, unless we were already rotating
+				if (!isRotating)
+				{
+					canRotate = false;
+				}
+			}
+			
+			if (canRotate && Math.abs(doubleTouchInput.getAngleDelta()) > 0.1)
+			{
+				map.rotateByAbout(doubleTouchInput.getAngleDelta() * doubleTouchInput.zoomSensitivity, doubleTouchInput.getTouchMidPoint());
+				isRotating = true;
+			}
+			
+			// We always want to pan the map
+			map.panBy(doubleTouchInput.getTouchMidPointDelta().x, doubleTouchInput.getTouchMidPointDelta().y);
+		}
+		
+		function onSingleTouch(event:TouchEvent)
+		{		
 			var touches = event.getTouches(stage);
 			
-			if (touches.length < 2) // Panning
+			if (touches.length < 2) // Single fincger pan
 			{
 				var touch:Touch = event.getTouch(stage);
 				map.panBy(touch.getMovement(stage).x, touch.getMovement(stage).y);
-			}
-			else // Zoom or rotation
-			{
-				var touch1:Touch = touches[0];
-				var touch2:Touch = touches[1];
-				
-				// If we've just started a multitouch, store the midpoint of the touches
-				if (touches[1].phase == TouchPhase.BEGAN)
-				{
-					touchStartingMidpoint = new Point((touch1.getLocation(stage).x + touch2.getLocation(stage).x) / 2 , (touch1.getLocation(stage).y + touch2.getLocation(stage).y) / 2);
-					canRotate = true;
-					isRotating = false;
-				}
-				
-				// Bigger is more sensitive
-				var zoomSensitivity:Number = 0.005;
-				var rotationSensitivity = 2;
-				
-				var prevAngle:Number = Math.atan2(touch2.getPreviousLocation(stage).y - touch1.getPreviousLocation(stage).y, touch2.getPreviousLocation(stage).x - touch1.getPreviousLocation(stage).x);
-				var curAngle:Number = Math.atan2(touch2.getLocation(stage).y - touch1.getLocation(stage).y, touch2.getLocation(stage).x - touch1.getLocation(stage).x);
-				var angleDelta:Number = Math.radToDeg( Math.abs(prevAngle - curAngle) );
-				
-				var prevDist = Math.sqrt(Math.pow((touch2.previousGlobalX - touch1.previousGlobalX), 2) + Math.pow((touch2.previousGlobalY - touch1.previousGlobalY), 2));
-				var curDist = Math.sqrt(Math.pow((touch2.globalX - touch1.globalX), 2) + Math.pow((touch2.globalY - touch1.globalY), 2)); 
-				var zoomDelta = curDist - prevDist;
-				
-				touchStartingMidpoint = new Point((touch1.getLocation(stage).x + touch2.getLocation(stage).x) / 2 , (touch1.getLocation(stage).y + touch2.getLocation(stage).y) / 2);
-
-				if (Math.abs(zoomDelta) > 3.2)
-				{
-					map.zoomByAbout(zoomDelta * zoomSensitivity, touchStartingMidpoint);
-					// If we start zooming we don't want to rotate, unless we were already rotating
-					if (!isRotating)
-					{
-						canRotate = false;
-					}
-				}
-				
-				if (canRotate && Math.abs(angleDelta) > 0.1)
-				{
-					map.rotateByAbout((curAngle - prevAngle) * rotationSensitivity, touchStartingMidpoint);
-					isRotating = true;
-				}
-				
-				// We always want to pan the map
-			    map.panBy((touch1.getMovement(stage).x + touch2.getMovement(stage).x)/2, (touch1.getMovement(stage).y + touch2.getMovement(stage).y)/2);
 			}
 		}
 		
