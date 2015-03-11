@@ -105,6 +105,10 @@ static int registerSystemReflectionType(lua_State *L)
        .addMethod("isStruct", &Type::isStruct)
 
        .addMethod("getAssembly", &Type::getAssembly)
+       .addMethod("getParent", &Type::getBaseType)
+
+       .addMethod("getInterfaceCount", &Type::getNumInterfaces)
+       .addMethod("getInterface", &Type::getInterface)
 
        .addMethod("getFieldInfoCount", &Type::getFieldInfoCount)
        .addMethod("getFieldInfo", &Type::getFieldInfo)

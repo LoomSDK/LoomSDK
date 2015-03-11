@@ -159,11 +159,26 @@ package system
     
     /**
      *  Reads a UTF-8 string from the byte stream. 
-     *  The string is assumed to be prefixed with an unsigned short indicating the length in bytes.
+     *  The string is assumed to be prefixed with an unsigned int indicating the length in bytes.
      *
      *  @return UTF-8 encoded String.
      */
     public native function readString():String;
+    
+    /**
+     *  Reads a UTF-8 string from the byte stream. 
+     *  The string is assumed to be prefixed with an unsigned short indicating the length in bytes.
+     *
+     *  @return UTF-8 encoded String.
+     */
+    public native function readUTF():String;
+    
+    /**
+     *  Reads a length amount of UTF-8 string bytes from the byte stream. 
+     *
+     *  @return UTF-8 encoded String.
+     */
+    public native function readUTFBytes(length:uint):String;
     
     /**
      *  Reads an unsigned 16-bit integer from the byte stream.
@@ -261,13 +276,30 @@ package system
     
     /**
      *  Writes a UTF-8 string to the byte stream. 
-     *  The length of the UTF-8 string in bytes is written first, as a 16-bit integer, 
+     *  The length of the UTF-8 string in bytes is written first, as a 32-bit integer, 
      *  followed by the bytes representing the characters of the string
      *
      *  @param value The string value to be written.
      */
     public native function writeString(value:String):void;
 
+    /**
+     *  Writes a UTF-8 string to the byte stream. 
+     *  The length of the UTF-8 string in bytes is written first, as a 16-bit integer, 
+     *  followed by the bytes representing the characters of the string
+     *
+     *  @param value The string value to be written.
+     */
+    public native function writeUTF(value:String):void;
+    
+    /**
+     *  Writes a UTF-8 string to the byte stream. 
+     *  This function only writes the bytes representing the characters of the string.
+     *
+     *  @param value The string value to be written.
+     */
+    public native function writeUTFBytes(value:String):void;
+    
     /**
      * Compress the ByteArray data with the zlib compression algorithm.
      * The ByteArray gets resized to the compressed size of the data.

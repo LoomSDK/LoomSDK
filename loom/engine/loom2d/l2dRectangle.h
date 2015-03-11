@@ -109,9 +109,20 @@ public:
         return y;
     }
 
+    inline void setTop(float top)
+    {
+        height += y - top;
+        y = top;
+    }
+
     inline float getBottom() const
     {
         return y + height;
+    }
+
+    inline void setBottom(float bottom)
+    {
+        height = bottom - y;
     }
 
     inline float getLeft() const
@@ -119,9 +130,20 @@ public:
         return x;
     }
 
+    inline void setLeft(float left)
+    {
+        width += x - left;
+        x = left;
+    }
+
     inline float getRight() const
     {
         return x + width;
+    }
+
+    inline void setRight(float right)
+    {
+        width = right - x;
     }
 
     /**

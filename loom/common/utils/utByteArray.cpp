@@ -87,6 +87,7 @@ void utByteArray::compress()
 
     _data = dest._data;
     resize(destSize);
+    _position = destSize;
 }
 
 void utByteArray::uncompress(int uncompressedSize, int initialSize)
@@ -145,4 +146,5 @@ void utByteArray::uncompress(int uncompressedSize, int initialSize)
  
     _data = dest._data;
     resize(sz);
+    _position = 0;
 }

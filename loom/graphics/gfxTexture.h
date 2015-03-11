@@ -21,8 +21,12 @@
 #pragma once
 
 #include "loom/graphics/internal/bgfx/include/bgfx.h"
+#include "loom/common/assets/assets.h"
+#include "loom/common/assets/assetsImage.h"
 #include "loom/common/utils/utString.h"
+#include "loom/common/utils/utByteArray.h"
 #include "loom/script/native/lsNativeDelegate.h"
+#include "loom/common/platform/platformThread.h"
 
 namespace GFX
 {
@@ -43,6 +47,7 @@ typedef int   TextureID;
 #define TEXTUREINFO_WRAP_MIRROR     1
 #define TEXTUREINFO_WRAP_CLAMP      2
 
+
 struct TextureInfo
 {
     TextureID                id;
@@ -56,29 +61,54 @@ struct TextureInfo
     int                      wrapV;
 
     bool                     reload;
+    bool                     asyncDispose;
 
     bgfx::TextureHandle      handle;
 
     utString                 texturePath;
 
     LS::NativeDelegate       updateDelegate;
+    LS::NativeDelegate       asyncLoadCompleteDelegate;
 
     const LS::NativeDelegate *getUpdateDelegate() const
     {
         return &updateDelegate;
     }
 
+    const LS::NativeDelegate *getAsyncLoadCompleteDelegate() const
+    {
+        return &asyncLoadCompleteDelegate;
+    }
+
+    int getHandleID() const { return (int)handle.idx; }
+    const char* getTexturePath() const { return texturePath.c_str(); }
+
     void                     reset()
     {
-        width       = height = 0;
-        smoothing   = TEXTUREINFO_SMOOTHING_NONE;
-        wrapU       = TEXTUREINFO_WRAP_CLAMP;
-        wrapV       = TEXTUREINFO_WRAP_CLAMP;
-        reload      = false;
-        handle.idx  = bgfx::invalidHandle;
-        texturePath = "";
+        width        = height = 0;
+        smoothing    = TEXTUREINFO_SMOOTHING_NONE;
+        wrapU        = TEXTUREINFO_WRAP_CLAMP;
+        wrapV        = TEXTUREINFO_WRAP_CLAMP;
+        reload       = false;
+        asyncDispose = false;
+        handle.idx   = bgfx::invalidHandle;
+        texturePath  = "";
     }
 };
+
+
+struct AsyncLoadNote
+{
+    int                         id;
+    bool                        priority;
+    utString                    path;
+    TextureInfo                 *tinfo;
+    utByteArray                 *bytes;
+    loom_asset_image_t          *imageAsset;
+    LoomAssetCleanupCallback    iaCleanup;
+
+};
+
 
 class Texture
 {
@@ -89,6 +119,13 @@ private:
 
     static utHashTable<utFastStringHash, TextureID> sTexturePathLookup;
     static bool sTextureAssetNofificationsEnabled;
+    static MutexHandle sTexInfoLock;
+    static MutexHandle sAsyncQueueMutex;
+    static bool sAsyncThreadRunning;
+    static int sAsyncTextureCreateDelay;
+    static utList<AsyncLoadNote> sAsyncLoadQueue;
+    static utList<AsyncLoadNote> sAsyncCreateQueue;
+
 
     // simple linear TextureID -> TextureHandle
     static TextureInfo sTextureInfos[MAXTEXTURES];
@@ -97,6 +134,7 @@ private:
     {
         TextureID id;
 
+        loom_mutex_lock(sTexInfoLock);
         for (id = 0; id < MAXTEXTURES; id++)
         {
             if (sTextureInfos[id].handle.idx == bgfx::invalidHandle)
@@ -104,6 +142,7 @@ private:
                 break;
             }
         }
+        loom_mutex_unlock(sTexInfoLock);
 
         if (id == MAXTEXTURES)
         {
@@ -113,11 +152,40 @@ private:
         return id;
     }
 
+
+    static TextureInfo *getAvailableTextureInfo(const char *path)
+    {
+        TextureID id;
+        TextureInfo *tinfo = NULL;
+
+        loom_mutex_lock(sTexInfoLock);
+        for (id = 0; id < MAXTEXTURES; id++)
+        {
+            if (sTextureInfos[id].handle.idx == bgfx::invalidHandle)
+            {
+                // Initialize it.
+                tinfo = &sTextureInfos[id];
+                tinfo->handle.idx = MARKEDTEXTURE;    // mark in use, but not yet loaded
+                if(path != NULL)
+                {
+                    tinfo->texturePath = path;
+                    sTexturePathLookup.insert(path, id);
+                }
+                break;
+            }
+        }
+        loom_mutex_unlock(sTexInfoLock);
+        return tinfo;
+    }
+
+
     static void loadCheckerBoard(TextureID id);
 
     static void initialize();
 
     static void handleAssetNotification(void *payload, const char *name);
+
+    static void loadImageAsset(loom_asset_image_t *lat, TextureID id);
 
 public:
 
@@ -145,12 +213,13 @@ public:
             return NULL;
         }
 
+        loom_mutex_lock(sTexInfoLock);
         TextureInfo *tinfo = &sTextureInfos[id];
-
         if (tinfo->handle.idx == bgfx::invalidHandle)
         {
-            return NULL;
+            tinfo = NULL;
         }
+        loom_mutex_unlock(sTexInfoLock);
 
         return tinfo;
     }
@@ -161,11 +230,16 @@ public:
     }
 
     static void reset();
+    static void tick();
 
     // This method accepts rgba data.
     static TextureInfo *load(uint8_t *data, uint16_t width, uint16_t height, TextureID id = -1);
 
     static TextureInfo *initFromAssetManager(const char *path);
+    static TextureInfo *initFromBytes(utByteArray *bytes, const char *name);
+    static TextureInfo *initFromBytesAsync(utByteArray *bytes, const char *name, bool highPriorty);
+    static TextureInfo *initFromAssetManagerAsync(const char *path, bool highPriorty);
+    static int __stdcall loadTextureAsync_body(void *param);
 
     static void dispose(TextureID id);
 

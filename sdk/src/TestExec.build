@@ -1,0 +1,12 @@
+{
+ "name" : "TestExec",   
+ "version" : "1.0",
+ "executable" : true,
+ "references" : [ "System", "Loom", "UnitTest" ],
+ "outputDir" : "./bin/",
+ "modules" : [ {
+    "name" : "TestExec",     
+    "version": "1.0",
+    "sourcePath": ["testexec"]
+    } ]
+}

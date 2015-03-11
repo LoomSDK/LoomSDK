@@ -31,11 +31,18 @@ package loom2d.textures
          *  mip-mapping, and if the channels contain premultiplied alpha values. */
         public function ConcreteTexture(path:String, width:Number, height:Number)
         {
+            textureInfo = null;
             mAssetPath = path;
             mScale = 1.0; // scale <= 0 ? 1.0 : scale;
             mWidth = width;
             mHeight = height;
             mPremultipliedAlpha = false;
+        }
+
+        public function setDimensions(width:Number, height:Number):void
+        {
+            mWidth = width;
+            mHeight = height;            
         }
         
         public function setTextureInfo(ti:TextureInfo):void
@@ -47,9 +54,8 @@ package loom2d.textures
                 textureInfo.smoothing = mSmoothing;
                 textureInfo.wrapU = mWrapU;
                 textureInfo.wrapV = mWrapV;
+                textureInfo.update += onUpdate;
             }
-
-            textureInfo.update += onUpdate;
         }
 
         private function onUpdate(width:Number, height:Number):void
@@ -65,7 +71,11 @@ package loom2d.textures
         {
             //if (mBase) mBase.dispose();
             //restoreOnLostContext(null); // removes event listener & data reference 
-            textureInfo.update -= onUpdate;
+            if(textureInfo)
+            {
+                textureInfo.update -= onUpdate;
+                textureInfo.asyncLoadComplete = null;
+            }
             super.dispose();
         }
         

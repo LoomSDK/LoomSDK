@@ -76,6 +76,14 @@ package loom2d.events
             mData = data;
         }
         
+        /**
+         * Clones the event object with the same arguments and returns the duplicate.
+         * @return The duplicate event object that was cloned.
+         */
+        public function clone():Event {
+            return new Event(mType, mBubbles, mData);
+        }
+        
         /** Prevents listeners at the next bubble stage from receiving the event. */
         public function stopPropagation():void
         {
