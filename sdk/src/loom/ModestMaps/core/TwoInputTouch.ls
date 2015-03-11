@@ -1,4 +1,4 @@
-package
+package com.modestmaps.core
 {
 	import loom2d.display.DisplayObject;
 	import loom2d.display.Stage;
@@ -24,8 +24,8 @@ package
 		public var OnDoubleTouchEvent:DoubleTouchCallback;
 		public var OnDoubleTouchEndEvent:OnDoubleTouchEnd;
 		
-		public var zoomSensitivity:Number = 0.005;
-		public var rotationSensitivity:Number = 0.01;
+		public var zoomSensitivity:Number = 0.006;
+		public var rotationSensitivity:Number = 0.03;
 		
 		// Returns the change in angle between the current frame and the previous frame in degrees
 		public function getAngleDelta():Number
