@@ -783,8 +783,9 @@ package com.modestmaps.core
  			return keys;
 		}
 				
-		// If we're doing a double touch we don't want the map to pan twice
-		var doubleTouchActive = false;
+		var doubleTouchActive = false;	// If we're doing a double touch we don't want the map to pan twice
+		var canProcessDoubleTap = true;	// We don't want a double tap event to fire over two consective frames, so we introduce a lock on when it can happen
+		var doubleTapZoomedIn = false; 	// Used to track what the double tap should do. i.e Should double tapping zoom in or out?
 		public function mousePressed(event:TouchEvent):void
 		{
 			prepareForPanning(true);
@@ -795,7 +796,29 @@ package com.modestmaps.core
 				mouseDragged(touches[0].getMovement(stage));
 			
 			if (touches[0].phase == TouchPhase.ENDED)
-				mouseReleased();			
+				mouseReleased();
+	
+			// Reset our ability to process taps when the tap counter resets
+			if (touches[0].tapCount == 1)
+				canProcessDoubleTap = true;
+				
+			if (touches[0].tapCount == 2 && canProcessDoubleTap)
+			{
+				if (doubleTapZoomedIn)
+				{
+					trace("ZOOM OUT");
+					
+					doubleTapZoomedIn = false;
+					canProcessDoubleTap = false;
+				}
+				else
+				{
+					trace("ZOOM IN");
+					
+					doubleTapZoomedIn = true;
+					canProcessDoubleTap = false;
+				}
+			}
 		}
 
 		public function mouseReleased():void
