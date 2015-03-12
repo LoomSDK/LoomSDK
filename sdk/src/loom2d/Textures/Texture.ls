@@ -25,7 +25,7 @@ package loom2d.textures
 
     delegate TextureUpdateDelegate();
     delegate TextureAsyncLoadCompleteDelegate(tex:Texture);
-
+    delegate TextureHTTPFailDelegate(tex:Texture);
 
     /** A texture stores the information that represents an image. It cannot be added to the
      *  display list directly; instead it has to be mapped onto a display object. In Loom, 
@@ -228,7 +228,7 @@ package loom2d.textures
         /** Non-blocking function that creates a texture object from a remote bitmap file via HTTP. */
         public static function fromHTTP(url:String, 
                                         onSuccess:TextureAsyncLoadCompleteDelegate, 
-                                        onFailure:Function,
+                                        onFailure:TextureHTTPFailDelegate,
                                         cacheOnDisk:Boolean=true, 
                                         highPriority:Boolean=false):Texture
         {
@@ -417,6 +417,13 @@ package loom2d.textures
             //remove ourselves from the delegate
             textureInfo.asyncLoadComplete -= onAsyncLoadComplete;
 
+            //if the HTTP request was cancelled after it completed, but prior to the async load completion, we need to dispose of it now
+            if(mCancelHTTP)
+            {
+                dispose();
+                return;
+            }
+
             //check for errors
             if(!isTextureValid())
             {
@@ -444,7 +451,7 @@ package loom2d.textures
                                                         cacheFile:String, 
                                                         tex:ConcreteTexture,
                                                         onSuccess:TextureAsyncLoadCompleteDelegate, 
-                                                        onFailure:Function,
+                                                        onFailure:TextureHTTPFailDelegate,
                                                         cacheOnDisk:Boolean,
                                                         highPriority:Boolean):void
         {
@@ -506,7 +513,7 @@ package loom2d.textures
                     //dispose the texture and call the failure delegate (don't call onFailure if the load was cancelled)
                     if((onFailure != null) && (!tex.mCancelHTTP))
                     {
-                        onFailure();
+                        onFailure(tex);
                     }
                     tex.dispose();
                     return;
@@ -531,7 +538,7 @@ package loom2d.textures
                 //dispose the texture and call the failure delegate
                 if(onFailure != null)
                 {
-                    onFailure();
+                    onFailure(tex);
                 }
                 tex.dispose();
             };       

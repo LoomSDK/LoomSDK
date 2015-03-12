@@ -227,7 +227,7 @@ package
 
 
         //called on HTTP texture load failure
-        private function httpLoadFailureCB():void
+        private function httpLoadFailureCB(texture:Texture):void
         {
             trace("Failed to load texture via HTTP...");
             _label.text = HTTP_FAIL;
