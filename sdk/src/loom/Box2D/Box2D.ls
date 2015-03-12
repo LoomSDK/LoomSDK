@@ -781,10 +781,34 @@ package loom.box2d
     }
 
     [Native(managed)]
+    final public native class Contact
+    {
+        //public native function getManifold():Manifold;
+        //public native function getWorldManifold():Manifold;
+        public native function isTouching():Boolean;
+        public native function setEnabled(flag:Boolean):void;
+        public native function isEnabled():Boolean;
+        public native function getNext():Contact;
+        public native function getFixtureA():Fixture;
+        public native function getChildIndexA():int;
+        public native function getFixtureB():Fixture;
+        public native function getChildIndexB():int;
+        public native function setFriction(friction:Number):void;
+        public native function getFriction():Number;
+        public native function resetFriction():void;
+        public native function setRestitution(restitution:Number):void;
+        public native function getRestitution():Number;
+        public native function resetRestitution():void;
+        public native function setTangentSpeed(speed:Number):void;
+        public native function getTangentSpeed():Number;
+        //public native function evaluate():void;
+    }
+
+    [Native(managed)]
     final public native class ContactEdge
     {
-        public native var other:ContactEdge;
-        public native var contact:ContactEdge;
+        public native var other:Body;
+        public native var contact:Contact;
         public native var prev:ContactEdge;
         public native var next:ContactEdge;
     }
