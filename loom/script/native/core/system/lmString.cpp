@@ -373,6 +373,15 @@ public:
             endIndex = svalueLength - (-(endIndex + 1));
         }
 
+        if (startIndex < 0)
+        {
+            startIndex = svalueLength + startIndex;
+            if(startIndex < 0)
+            {
+                startIndex = 0;
+            }
+        }
+
         if (startIndex >= svalueLength)
         {
             lua_pushstring(L, "");
