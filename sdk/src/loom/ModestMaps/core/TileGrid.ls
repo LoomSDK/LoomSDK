@@ -9,8 +9,12 @@ package com.modestmaps.core
 	import loom2d.display.DisplayObject;
 	import loom2d.display.Sprite;
 	import loom2d.events.Event;
-	import loom2d.events.TouchEvent;
-		
+	
+	import loom2d.events.Touch;
+    import loom2d.events.TouchEvent;
+	import loom2d.events.TouchPhase;
+	import com.modestmaps.core.TwoInputTouch;
+	
 	import loom2d.math.Matrix;
 	import loom2d.math.Point;
 	import loom2d.math.Rectangle;
@@ -128,9 +132,6 @@ package com.modestmaps.core
 		protected var startPan:Coordinate;
 		public var panning:Boolean;
 		
-		// previous mouse position when dragging 
-		protected var pmouse:Point;
-		
 		// for zoom events
 		protected var startZoom:Number = -1;
 		public var zooming:Boolean;
@@ -146,8 +147,10 @@ package com.modestmaps.core
 		// setting to true will dispatch a CHANGE event which Map will convert to an EXTENT_CHANGED for us
 		protected var matrixChanged:Boolean = false;
 		
-		private var zoomLetter:Vector.<String> = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
-				
+		private var zoomLetter:Vector.<String> = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
+		// Making the doubleTouchInput public so that the sensitivity can be set and additional callbacks can be made
+		public var doubleTouchInput:TwoInputTouch;
+		
 		public function TileGrid(w:Number, h:Number, draggable:Boolean, provider:IMapProvider)
 		{
 			this.draggable = draggable;
@@ -201,9 +204,9 @@ package com.modestmaps.core
 		private function onAddedToStage(event:Event):void
 		{
 			if (draggable) {
-//TODO_24: add basic touch input support                
-//				addEventListener(MouseEvent.MOUSE_DOWN, mousePressed, true);
+				addEventListener(TouchEvent.TOUCH, mousePressed);
 			}
+			
             onRender += _onRender;
 
             //NOTE: not porting DebugField for now at least...
@@ -213,14 +216,17 @@ package com.modestmaps.core
 			dirty = true;
 			// force an on-render in case we were added in a render handler
 			_onRender();
+						
+			doubleTouchInput = new TwoInputTouch(stage);
+			doubleTouchInput.OnDoubleTouchEvent += onDoubleTouch;
+			doubleTouchInput.OnDoubleTouchEndEvent += onDoubleTouchEnd;
 		}
 		
 		private function onRemovedFromStage(event:Event):void
 		{
-//TODO_24: add basic touch input support                
-//			if (hasEventListener(MouseEvent.MOUSE_DOWN)) {
-//				removeEventListener(MouseEvent.MOUSE_DOWN, mousePressed, true);
-//			}
+			if (hasEventListener(TouchEvent.TOUCH)) {
+				removeEventListener(TouchEvent.TOUCH, mousePressed);
+			}
             onRender -= _onRender;
 
             //NOTE: not porting DebugField for now at least...
@@ -756,43 +762,141 @@ if (!populated)
  			}
  			return keys;
 		}
-						
-//TODO_24: add basic touch input support                
-		// public function mousePressed(event:MouseEvent):void
-		// {
-		// 	prepareForPanning(true);
-		// 	pmouse = new Point(event.stageX, event.stageY);
-		// 	stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseDragged);
-		// 	stage.addEventListener(MouseEvent.MOUSE_UP, mouseReleased);
-		// 	stage.addEventListener(Event.MOUSE_LEAVE, mouseReleased);
-		// }
-
-		// public function mouseReleased(event:Event):void
-		// {
-		// 	stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseDragged);
-		// 	stage.removeEventListener(MouseEvent.MOUSE_UP, mouseReleased);
-		// 	stage.removeEventListener(Event.MOUSE_LEAVE, mouseReleased);
-		// 	donePanning();
-		// 	dirty = true;
-		// 	if (event is MouseEvent) {
-		// 		MouseEvent(event).updateAfterEvent();
-		// 	}
-		// 	else if (event.type == Event.MOUSE_LEAVE) {
-				// onRender();
-		// 	}
-		// }
-
-		// public function mouseDragged(event:MouseEvent):void
-		// {
-		// 	//var mousePoint:Point = new Point(event.stageX, event.stageY);
-		// 	var mousePoint:Point = new Point(event.globalX, event.globalY);
+				
+		var doubleTouchActive = false;	// If we're doing a double touch we don't want the map to pan twice
+		var canProcessDoubleTap = true;	// We don't want a double tap event to fire over two consective frames, so we introduce a lock on when it can happen
+		var doubleTapZoomedIn = false; 	// Used to track what the double tap should do. i.e Should double tapping zoom in or out?
+		public function mousePressed(event:TouchEvent):void
+		{
+			prepareForPanning(true);
+		 	
+			var touches = event.getTouches(stage);			
 			
-		// 	tx += mousePoint.x - pmouse.x;
-		// 	ty += mousePoint.y - pmouse.y;
-		// 	pmouse = mousePoint;
-		// 	dirty = true;
-		// 	event.updateAfterEvent();
-		// }	
+			if (touches[0].phase == TouchPhase.MOVED && !doubleTouchActive)
+				mouseDragged(touches[0].getMovement(stage));
+			
+			if (touches[0].phase == TouchPhase.ENDED)
+				mouseReleased();
+	
+			// Reset our ability to process taps when the tap counter resets
+			if (touches[0].tapCount == 1)
+				canProcessDoubleTap = true;
+				
+			if (touches[0].tapCount == 2 && canProcessDoubleTap)
+			{
+				if (doubleTapZoomedIn)
+				{
+trace("ZOOM OUT");
+//map.zoomByAbout(-0.05, new Point(0, 0));
+					
+					doubleTapZoomedIn = false;
+					canProcessDoubleTap = false;
+				}
+				else
+				{
+trace("ZOOM IN");
+//map.zoomByAbout(-0.05, new Point(0, 0));
+					
+					doubleTapZoomedIn = true;
+					canProcessDoubleTap = false;
+				}
+			}
+		}
+
+		public function mouseReleased():void
+		{
+		 	donePanning();
+		 	dirty = true;
+		}
+
+		public function mouseDragged(deltaPos:Point):void
+		{			
+		 	tx += deltaPos.x;
+		 	ty += deltaPos.y;
+		 	dirty = true;
+		}
+		
+		// Two touch controls
+		var canRotate:Boolean = true;
+		var isRotating:Boolean = false;
+		
+		function onDoubleTouchEnd()
+		{
+			canRotate = true;
+			isRotating = false;
+			doubleTouchActive = false;
+			accumulatedZoomValue = 0;
+		}
+		
+		var accumulatedZoomValue:Number = 0;
+		function onDoubleTouch(touch1:Point, touch2:Point)
+		{
+			doubleTouchActive = true;
+			
+			accumulatedZoomValue += doubleTouchInput.getZoomDelta();
+			if (Math.abs(accumulatedZoomValue) > 3.6)
+			{
+				// This is basically the code in the body of map.zoomByAbout()
+// TODO_AHMED: Consider moving this code into Map?
+				var zoomDelta:Number = doubleTouchInput.getZoomDelta() * doubleTouchInput.zoomSensitivity;
+				var targetPoint:Point = doubleTouchInput.getTouchMidPoint();
+				
+				if (zoomLevel + zoomDelta < minZoom) {
+					zoomDelta = minZoom - zoomLevel;        		
+				}
+				else if (zoomLevel + zoomDelta > maxZoom) {
+					zoomDelta = maxZoom - zoomLevel; 
+				} 
+				
+				var sc:Number = Math.pow(2, zoomDelta);
+				
+				prepareForZooming();
+				prepareForPanning();
+				
+				var m:Matrix = getMatrix();
+				
+				m.translate(-targetPoint.x, -targetPoint.y);
+				m.scale(sc, sc);
+				m.translate(targetPoint.x, targetPoint.y);       	
+				
+				setMatrix(m);
+
+				doneZooming();
+				donePanning();
+				
+				// If we start zooming we don't want to rotate, unless we were already rotating
+				if (!isRotating)
+				{
+					canRotate = false;
+				}
+			}
+			
+			if (canRotate && Math.abs(doubleTouchInput.getAngleDelta()) > 0.1)
+			{
+// TODO_AHMED: This is basically the code in map.rotateByAbout(), consider moving into the map class?
+				var angle:Number = doubleTouchInput.getAngleDelta() * doubleTouchInput.rotationSensitivity;
+				targetPoint = doubleTouchInput.getTouchMidPoint();
+				
+				prepareForZooming();
+				prepareForPanning();
+				
+				m = getMatrix();
+				
+				m.translate(-targetPoint.x, -targetPoint.y);
+				m.rotate(angle);
+				m.translate(targetPoint.x, targetPoint.y);       	
+				
+				setMatrix(m);
+
+				doneZooming();
+				donePanning();
+				
+				isRotating = true;
+			}
+			
+			// We always want to pan the map around the center of our fingers
+			mouseDragged(doubleTouchInput.getTouchMidPointDelta());
+		}
 
 		// today is all about lazy evaluation
 		// this gets set to null by 'dirty = true'
