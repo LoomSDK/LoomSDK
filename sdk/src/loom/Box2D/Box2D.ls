@@ -398,6 +398,8 @@ package loom.box2d
          * Get the angular velocity in radians per second.
          */
         public native function getAngularVelocity():Number;
+
+        public native function getContactList():ContactEdge;
         
         /**
          * Apply a force at a world point. If the force is not
@@ -776,6 +778,15 @@ package loom.box2d
          * @return The anchor point.
          */
         public native function anchorPointForShape(shapeName:String):Vec2;
+    }
+
+    [Native(managed)]
+    final public native class ContactEdge
+    {
+        public native var other:ContactEdge;
+        public native var contact:ContactEdge;
+        public native var prev:ContactEdge;
+        public native var next:ContactEdge;
     }
 
 }
