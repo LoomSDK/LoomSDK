@@ -785,31 +785,108 @@ package loom.box2d
     {
         //public native function getManifold():Manifold;
         //public native function getWorldManifold():Manifold;
+
+        /** 
+         * Is this contact touching another body?
+         * @return Whether this contact is touching another body
+         */
         public native function isTouching():Boolean;
+        /** 
+         * Enable/disable this contact. This can be used inside the pre-solve
+         * contact listener. The contact is only disabled for the current
+         * time step (or sub-step in continuous collisions).
+         * @param flag The enabled state to set.
+         */
         public native function setEnabled(flag:Boolean):void;
+        /** 
+         * Has this contact been disabled?
+         * @return Whether this contact is enabeled.
+         */
         public native function isEnabled():Boolean;
+        /** 
+         * Get the next contact in the world's contact list.
+         * @return A reference to the next Contact.
+         */
         public native function getNext():Contact;
+        /** 
+         * Get fixture A in this contact.
+         * @return A reference to fixture A.
+         */
         public native function getFixtureA():Fixture;
+        /** 
+         * Get the child primitive index for fixture A.
+         * @return The child primitive index of fixture A.
+         */
         public native function getChildIndexA():int;
+        /** 
+         * Get fixture B in this contact.
+         * @return A reference to fixture B.
+         */
         public native function getFixtureB():Fixture;
+        /** 
+         * Get the child primitive index for fixture B.
+         * @return The child primitive index of fixture B.
+         */
         public native function getChildIndexB():int;
+        /** 
+         * Override the default friction mixture. You can call this in b2ContactListener::PreSolve.
+         * This value persists until set or reset.
+         * @param friction The new friction value to apply.
+         */
         public native function setFriction(friction:Number):void;
+        /** 
+         * Get the friction
+         */
         public native function getFriction():Number;
+        /** 
+         * Reset the friction mixture to the default value.
+         */
         public native function resetFriction():void;
+        /** 
+         * Override the default restitution mixture. You can call this in b2ContactListener::PreSolve.
+         * This value persists until set or reset.
+         * @param friction The new restitution value to apply.
+         */
         public native function setRestitution(restitution:Number):void;
-        public native function getRestitution():Number;
+        /** 
+         * Get the restitution
+         */
+        public native function getRestitution():Number; 
+        /** 
+         * Reset the restitution to the default value.
+         */
         public native function resetRestitution():void;
+        /** 
+         * Set the desired tangent speed for a conveyor belt behavior. In meters per second.
+         * @param speed The new tangent speed value.
+         */
         public native function setTangentSpeed(speed:Number):void;
+        /** 
+         * Get the desired tangent speed. In meters per second.
+         */
         public native function getTangentSpeed():Number;
+
         //public native function evaluate():void;
     }
 
     [Native(managed)]
     final public native class ContactEdge
     {
+        /** 
+         * Provides quick access to the other body attached.
+         */
         public native var other:Body;
+        /** 
+         * The contact
+         */
         public native var contact:Contact;
+        /** 
+         * The previous contact edge in the body's contact list
+         */
         public native var prev:ContactEdge;
+        /** 
+         * The next contact edge in the body's contact list
+         */
         public native var next:ContactEdge;
     }
 
