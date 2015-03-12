@@ -24,8 +24,9 @@ package com.modestmaps.core
 		public var OnDoubleTouchEvent:DoubleTouchCallback;
 		public var OnDoubleTouchEndEvent:OnDoubleTouchEnd;
 		
-		public var zoomSensitivity:Number = 0.006;
-		public var rotationSensitivity:Number = 0.03;
+		// Higher is more sensitive
+		public var zoomSensitivity:Number = 0.005;
+		public var rotationSensitivity:Number = 0.02;
 		
 		// Returns the change in angle between the current frame and the previous frame in degrees
 		public function getAngleDelta():Number

@@ -516,28 +516,7 @@ package com.modestmaps
 		/** zoom in or out by zoomDelta, keeping the requested point in the same place */
         public function zoomByAbout(zoomDelta:Number, targetPoint:Point, duration:Number=-1):void
         {
-         	if (grid.zoomLevel + zoomDelta < grid.minZoom) {
-        		zoomDelta = grid.minZoom - grid.zoomLevel;        		
-        	}
-        	else if (grid.zoomLevel + zoomDelta > grid.maxZoom) {
-        		zoomDelta = grid.maxZoom - grid.zoomLevel; 
-        	} 
-        	
-        	var sc:Number = Math.pow(2, zoomDelta);
-			
-			grid.prepareForZooming();
-			grid.prepareForPanning();
-			
-			var m:Matrix = grid.getMatrix();
-			
-			m.translate(-targetPoint.x, -targetPoint.y);
-			m.scale(sc, sc);
-			m.translate(targetPoint.x, targetPoint.y);       	
-        	
-        	grid.setMatrix(m);
-
-			grid.doneZooming();
-			grid.donePanning();
+         	grid.zoomByAbout(zoomDelta, targetPoint, duration);
         }
         
         public function getRotation():Number
@@ -556,19 +535,7 @@ package com.modestmaps
         
         public function rotateByAbout(angle:Number, targetPoint:Point):void
         {
-			grid.prepareForZooming();
-			grid.prepareForPanning();
-			
-			var m:Matrix = grid.getMatrix();
-			
-			m.translate(-targetPoint.x, -targetPoint.y);
-			m.rotate(angle);
-			m.translate(targetPoint.x, targetPoint.y);       	
-        	
-        	grid.setMatrix(m);
-
-			grid.doneZooming();
-			grid.donePanning();
+			grid.rotateByAbout(angle, targetPoint);
         }        
 	    
 		/** zoom in and put the given location in the center of the screen, or optionally at the given targetPoint */

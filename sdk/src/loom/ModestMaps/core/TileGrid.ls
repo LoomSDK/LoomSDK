@@ -766,6 +766,7 @@ if (!populated)
 		var doubleTouchActive = false;	// If we're doing a double touch we don't want the map to pan twice
 		var canProcessDoubleTap = true;	// We don't want a double tap event to fire over two consective frames, so we introduce a lock on when it can happen
 		var doubleTapZoomedIn = false; 	// Used to track what the double tap should do. i.e Should double tapping zoom in or out?
+		var doubleTapZoomAmount = 1; // The amount to zoom in on a double tap
 		public function mousePressed(event:TouchEvent):void
 		{
 			prepareForPanning(true);
@@ -786,16 +787,14 @@ if (!populated)
 			{
 				if (doubleTapZoomedIn)
 				{
-trace("ZOOM OUT");
-//map.zoomByAbout(-0.05, new Point(0, 0));
+					zoomByAbout(-doubleTapZoomAmount, touches[0].getLocation(stage));
 					
 					doubleTapZoomedIn = false;
 					canProcessDoubleTap = false;
 				}
 				else
 				{
-trace("ZOOM IN");
-//map.zoomByAbout(-0.05, new Point(0, 0));
+					zoomByAbout(doubleTapZoomAmount, touches[0].getLocation(stage));
 					
 					doubleTapZoomedIn = true;
 					canProcessDoubleTap = false;
@@ -828,41 +827,59 @@ trace("ZOOM IN");
 			accumulatedZoomValue = 0;
 		}
 		
+		/** zoom in or out by zoomDelta, keeping the requested point in the same place */
+        public function zoomByAbout(zoomDelta:Number, targetPoint:Point, duration:Number=-1):void
+        {
+         	if (zoomLevel + zoomDelta < minZoom) {
+        		zoomDelta = minZoom - zoomLevel;        		
+        	}
+        	else if (zoomLevel + zoomDelta > maxZoom) {
+        		zoomDelta = maxZoom - zoomLevel; 
+        	} 
+        	
+        	var sc:Number = Math.pow(2, zoomDelta);
+			
+			prepareForZooming();
+			prepareForPanning();
+			
+			var m:Matrix = getMatrix();
+			
+			m.translate(-targetPoint.x, -targetPoint.y);
+			m.scale(sc, sc);
+			m.translate(targetPoint.x, targetPoint.y);       	
+        	
+        	setMatrix(m);
+
+			doneZooming();
+			donePanning();
+        }
+		
+		 public function rotateByAbout(angle:Number, targetPoint:Point):void
+        {
+			prepareForZooming();
+			prepareForPanning();
+			
+			var m:Matrix = getMatrix();
+			
+			m.translate(-targetPoint.x, -targetPoint.y);
+			m.rotate(angle);
+			m.translate(targetPoint.x, targetPoint.y);       	
+        	
+        	setMatrix(m);
+
+			doneZooming();
+			donePanning();
+        } 
+		
 		var accumulatedZoomValue:Number = 0;
 		function onDoubleTouch(touch1:Point, touch2:Point)
 		{
 			doubleTouchActive = true;
 			
 			accumulatedZoomValue += doubleTouchInput.getZoomDelta();
-			if (Math.abs(accumulatedZoomValue) > 3.6)
-			{
-				// This is basically the code in the body of map.zoomByAbout()
-// TODO_AHMED: Consider moving this code into Map?
-				var zoomDelta:Number = doubleTouchInput.getZoomDelta() * doubleTouchInput.zoomSensitivity;
-				var targetPoint:Point = doubleTouchInput.getTouchMidPoint();
-				
-				if (zoomLevel + zoomDelta < minZoom) {
-					zoomDelta = minZoom - zoomLevel;        		
-				}
-				else if (zoomLevel + zoomDelta > maxZoom) {
-					zoomDelta = maxZoom - zoomLevel; 
-				} 
-				
-				var sc:Number = Math.pow(2, zoomDelta);
-				
-				prepareForZooming();
-				prepareForPanning();
-				
-				var m:Matrix = getMatrix();
-				
-				m.translate(-targetPoint.x, -targetPoint.y);
-				m.scale(sc, sc);
-				m.translate(targetPoint.x, targetPoint.y);       	
-				
-				setMatrix(m);
-
-				doneZooming();
-				donePanning();
+			if (Math.abs(accumulatedZoomValue) > 2.4)
+			{				
+				zoomByAbout(doubleTouchInput.getZoomDelta() * doubleTouchInput.zoomSensitivity, doubleTouchInput.getTouchMidPoint());
 				
 				// If we start zooming we don't want to rotate, unless we were already rotating
 				if (!isRotating)
@@ -872,25 +889,8 @@ trace("ZOOM IN");
 			}
 			
 			if (canRotate && Math.abs(doubleTouchInput.getAngleDelta()) > 0.1)
-			{
-// TODO_AHMED: This is basically the code in map.rotateByAbout(), consider moving into the map class?
-				var angle:Number = doubleTouchInput.getAngleDelta() * doubleTouchInput.rotationSensitivity;
-				targetPoint = doubleTouchInput.getTouchMidPoint();
-				
-				prepareForZooming();
-				prepareForPanning();
-				
-				m = getMatrix();
-				
-				m.translate(-targetPoint.x, -targetPoint.y);
-				m.rotate(angle);
-				m.translate(targetPoint.x, targetPoint.y);       	
-				
-				setMatrix(m);
-
-				doneZooming();
-				donePanning();
-				
+			{				
+				rotateByAbout(doubleTouchInput.getAngleDelta() * doubleTouchInput.rotationSensitivity, doubleTouchInput.getTouchMidPoint());
 				isRotating = true;
 			}
 			
