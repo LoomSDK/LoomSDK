@@ -5,9 +5,9 @@ package
     import com.modestmaps.core.Coordinate;
     import com.modestmaps.mapproviders.IMapProvider;
     import com.modestmaps.mapproviders.AbstractMapProvider; 
+    import com.modestmaps.mapproviders.microsoft.MicrosoftProvider; 
 	import feathers.controls.NumericStepper;
 	import loom2d.math.Point;
-
 
     import loom.Application;
 
@@ -29,21 +29,24 @@ package
 	
 	import loom.graphics.Graphics;
 
+
+
     public class ModestTest extends Application
     {		
-		var map:CustomMap;
+		var map:Map;
 		var doubleTouchInput:TwoInputTouch;
 		
         override public function run():void
         {
-			//Graphics.setDebug(Graphics.DEBUG_STATS);
+			Graphics.setDebug(Graphics.DEBUG_STATS);
             stage.scaleMode = StageScaleMode.LETTERBOX;
 						
-			map = new CustomMap(stage.stageWidth, 
+			map = new Map(stage.stageWidth, 
 								stage.stageHeight, 
 								true, 
-								new BlankProvider(AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM), 
-								stage);
+								new MicrosoftProvider(MicrosoftProvider.ROAD, true, MicrosoftProvider.MIN_ZOOM, MicrosoftProvider.MAX_ZOOM),
+								stage,
+                                null);
 
 			stage.addChild(map);
 		
@@ -118,84 +121,4 @@ package
 				map.rotateByAbout(-0.05, new Point(stage.width/2, stage.height/2));
         }
     }
-	
-	class CustomTile extends Tile
-	{
-		private var initialised:Boolean = false;
-		public function CustomTile(column:int, row:int, zoom:int)
-		{
-			super(column, row, zoom);
-		}
-
-		override public function init(column:int, row:int, zoom:int):void
-		{
-			//trace("INIT WAS CALLED");
-			super.init(column, row, zoom);
-			
-//TEST CODE!!!
-			if (!initialised)
-			{
-				var bitmap:Image = new Image(Texture.fromAsset("assets/logo.png"));            
-				bitmap.center();
-				bitmap.scaleX = 0.3;
-				bitmap.scaleY = 0.3;
-				//bitmap.x = Random.randRangeInt(0, Map.MapStage.stageWidth);
-				//bitmap.y = Random.randRangeInt(0, Map.MapStage.stageHeight);
-				//bitmap.x = 0;
-				//bitmap.y = 0;
-				addChild(bitmap);   
-				
-				var label = new SimpleLabel("assets/Curse-hd.fnt");
-				label.text = Random.randRangeInt(0, 10) as String;
-				label.scale = 0.25;
-				label.center();
-				addChild(label);
-				
-				//initialised = true;
-			}
-        }   
-	}
-
-    class CustomMap extends Map
-    {
-        public function CustomMap(width:Number, height:Number, draggable:Boolean, provider:IMapProvider, mapStage:Stage=null, ... rest)
-        {
-            super(width, height, draggable, provider, mapStage, rest);
-            grid.setTileCreator(CreateCustomTile);
-        }
-
-        /* Custom Tile creator factor function for this map type */
-        protected function CreateCustomTile():CustomTile
-        {
-            return new CustomTile(0, 0, 0);
-        }
-    }    
-
-	class BlankProvider extends AbstractMapProvider implements IMapProvider
-	{
-        public function BlankProvider(minZoom:int, maxZoom:int)
-        {
-            super(minZoom, maxZoom);
-        }
-
-		public function getTileUrls(coord:Coordinate):Vector.<String>
-		{
-			return [];
-		}
-		
-		public function toString():String
-		{
-			return "BLANK_PROVIDER";
-		}
-		
-		override public function get tileWidth():Number
-		{
-			return 32;
-		}
-
-		override public function get tileHeight():Number
-		{
-			return 32;
-		}
-	}
 }

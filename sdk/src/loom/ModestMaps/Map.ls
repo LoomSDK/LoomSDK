@@ -161,6 +161,7 @@ package com.modestmaps
         		setExtent(extent);
         	}
         	
+            //NOTE: not porting DebugField for now at least...
         	//addChild(grid.debugField);
         }
 

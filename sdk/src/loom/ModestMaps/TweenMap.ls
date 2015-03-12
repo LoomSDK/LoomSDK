@@ -29,12 +29,12 @@ package com.modestmaps
 	{
 
 		/** easing function used for panLeft, panRight, panUp, panDown */
-		public var panEase:Function = quadraticEaseOut;
+		public var panEase:Function = Transitions.getTransition(Transitions.EASE_OUT);
 		/** time to pan using panLeft, panRight, panUp, panDown */
 		public var panDuration:Number = 0.5;
 
 		/** easing function used for zoomIn, zoomOut */
-		public var zoomEase:Function = quadraticEaseOut;
+		public var zoomEase:Function = Transitions.getTransition(Transitions.EASE_OUT);
 		/** time to zoom using zoomIn, zoomOut */
 		public var zoomDuration:Number = 0.2;
 
@@ -79,13 +79,7 @@ package com.modestmaps
                                                          "onComplete": grid.donePanning});
 	    	}
 	    }      
-		    
-	    /** default easing function for panUp, panDown, panLeft, panRight, etc. */
-		protected static function quadraticEaseOut(t:Number, b:Number, c:Number, d:Number):Number
-		{
-			return -c * (t / d) * (t - 2) + b;
-		}
-		
+		    		
 		protected var enforceToRestore:Boolean = false;
 		
 		public function tweenToMatrix(m:Matrix, duration:Number):void

@@ -24,10 +24,7 @@ package com.modestmaps.core.painter
 	
 		public function remove(tile:Tile):void
 		{
-			var index:int = queue.indexOf(tile); 
-			if (index >= 0) { 
-				queue.splice(index, 1);
-			}
+			queue.remove(tile); 
 		}
 		
 		public function push(tile:Tile):void
@@ -42,7 +39,6 @@ package com.modestmaps.core.painter
 		
 		public function sortTiles(callback:Function):void
 		{
-//TODO_24: test that this sorts as expected...            
 			queue = queue.sort(callback) as Vector.<Tile>;
 		}
 		

@@ -59,7 +59,6 @@ package com.modestmaps.mapproviders.microsoft
 		{
 	        var sourceCoord:Coordinate = sourceCoordinate(coord);
 		    
-//TODO_24: check that these -ve zoom slice() params are in fact valid...
 			// convert row + col to zoom string
 			// padded with zeroes so we end up with zoom digits after slicing:
 			var rowBinaryString:String = BinaryUtil.convertToBinary(sourceCoord.row);
@@ -71,10 +70,10 @@ package com.modestmaps.mapproviders.microsoft
 			// generate zoom string by combining strings
 			var zoomString : String = "";
 	
-			for(var i:Number = 0; i < sourceCoord.zoom; i += 1) {
+			for(var i:Number = 0; i < sourceCoord.zoom; i++) {
 				zoomString += BinaryUtil.convertToDecimal(rowBinaryString.charAt( i ) + colBinaryString.charAt( i ));
 			}
-			
+
 			return zoomString; 
 		}
 	
@@ -92,6 +91,5 @@ package com.modestmaps.mapproviders.microsoft
 			var server:int = Math.abs(serverSalt + coord.row + coord.column + coord.zoom) % 4;
 			return [ urlStart[type] + server + urlMiddle[type] + getZoomString(coord) + urlEnd[type] ];
 		}
-	
 	}
 }

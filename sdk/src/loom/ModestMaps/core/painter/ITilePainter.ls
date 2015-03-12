@@ -17,7 +17,6 @@ package com.modestmaps.core.painter
 		function cancelPainting(tile:Tile):void
 		function isPainting(tile:Tile):Boolean
 		function reset():void
-		function getLoaderCacheCount():int
 		function getQueueCount():int
 		function getRequestCount():int
 		function getCacheSize():int		

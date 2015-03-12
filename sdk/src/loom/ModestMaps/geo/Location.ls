@@ -17,7 +17,6 @@ package com.modestmaps.geo
 	
 		public static function fromString(str:String, lonlat:Boolean=false):Location
 		{
-//TODO_24: Make sure this split works without the original \s regular expression stuff
 			var parts:Vector.<String> = str.split(",");
 			if (lonlat) parts = parts.reverse();
 			return new Location(parts[0].toNumber(), parts[1].toNumber());

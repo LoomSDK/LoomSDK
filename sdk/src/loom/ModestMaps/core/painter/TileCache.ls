@@ -27,20 +27,19 @@ package com.modestmaps.core.painter
 		
 		public function getTile(key:String):Tile
 		{
-			return alreadySeen[key] as Tile;
+			return alreadySeen[key];
 		}
 		
 		public function containsKey(key:String):Boolean
 		{
-//NOTE_24: if alreadySeen[key] is null, will this pass? Should maybe be return alreadySeen[key] != null; ?      
-			return alreadySeen[key] is Tile;
+			return (alreadySeen[key] != null);
 		}
 		
 		public function retainKeys(keys:Vector.<String>):void
 		{
 			for (var key:String in alreadySeen) {
 				if (keys.indexOf(key) < 0) {
-					tilePool.returnTile(alreadySeen[key] as Tile);
+					tilePool.returnTile(alreadySeen[key]);
 					alreadySeen.deleteKey(key);
 				}
 			}		
@@ -49,7 +48,7 @@ package com.modestmaps.core.painter
 		public function clear():void
 		{
 			for (var key:String in alreadySeen) {
-				tilePool.returnTile(alreadySeen[key] as Tile);
+				tilePool.returnTile(alreadySeen[key]);
 			}
 			alreadySeen.clear();		
 		}

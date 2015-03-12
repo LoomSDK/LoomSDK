@@ -148,7 +148,6 @@ package com.modestmaps.core
 		 * @return a new MapExtent from the given string */
 		public static function fromString(str:String):MapExtent
 		{
-//TODO_24: Make sure this split works without the original \s regular expression stuff that ignores spaces      
 			var parts:Vector.<String> = str.split(",");
 			return new MapExtent(parts[0].toNumber(),
 								 parts[1].toNumber(),

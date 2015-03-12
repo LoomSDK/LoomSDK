@@ -6,9 +6,9 @@
 package com.modestmaps.core
 {
 	import loom2d.display.DisplayObject;
-	//import flash.display.Loader;
     import loom2d.display.Sprite;
-	import loom2d.display.Image;
+    import loom2d.display.Image;
+	import loom2d.textures.Texture;
 	
 	
 	public class Tile extends Sprite
@@ -19,7 +19,11 @@ package com.modestmaps.core
 		public var zoom:int;
 		public var row:int;
 		public var column:int;
+
+        protected var requestedTextures:Vector.<Texture> = [];
+        protected var assignedTextures:Vector.<Texture> = [];
 				
+
 		public function Tile(column:int, row:int, zoom:int)
 		{
 			init(column, row, zoom);
@@ -39,22 +43,56 @@ package com.modestmaps.core
 		/** once TileGrid is done with a tile, it will call destroy and possibly reuse it later */
 	    public function destroy():void
 	    {
+return;            
+//TODO_24: not working!!! If this happens, our updates of new tile image requests seem to stop... :/            
 	    	while (numChildren > 0) {
 	    		var child:DisplayObject = removeChildAt(0);
 				
-//LUKE_SAYS: I think we can just destroy the child images/textures...
-	    		//if (child is Loader) {
-	    		//	try {
-	    		//		Loader(child).unload();
-	    		//	}
-	    		//	catch (error:Error) {
-	    				// meh
-	    		//	}
-	    		}
-			
-//LUKE_SAYS: Might not need to do anything here at all...
-	    	//graphics.clear();
-	    }        
+                //dispose the image data
+                if(child is Image)
+                {
+                    child.dispose();
+                }
+            }
+
+            //clean up all textures
+            var i:int;
+            for(i=0;i<requestedTextures.length;i++)
+            {
+                requestedTextures[i].cancelHTTPRequest();
+            }
+            for(i=0;i<assignedTextures.length;i++)
+            {
+//TODO_24: Need a ref counter to be safe... static for all tiles as it seems sometimes tiles share textures?... :/                
+                assignedTextures[i].dispose();
+            }
+            assignedTextures.clear();
+            requestedTextures.clear();
+	    }
+
+        public function requestTexture(texture:Texture):void
+        {
+            //store texture in a vector so we can track all of them
+            requestedTextures.pushSingle(texture);
+        }
+
+        public function assignTexture(texture:Texture):void
+        {
+            //create an image for the newly loaded texture and add it to the tile
+            var img:Image = new Image(texture);                    
+            addChild(img);
+
+            //make sure it's not in our requested list still
+            requestedTextures.remove(texture);
+
+            //store texture in a vector so we can track all of them
+            assignedTextures.pushSingle(texture);
+        }
+
+        public function isUsingTexture(texture:Texture):Boolean
+        {
+            return (assignedTextures.contains(texture) || requestedTextures.contains(texture)) ? true : false;
+        }
 		
 		public function isShowing():Boolean
 		{

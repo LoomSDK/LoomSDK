@@ -15,25 +15,27 @@ package com.modestmaps.util
 		 * NB:- don't use int.toString(2) here because it 
 		 * doesn't do what we want with negative numbers - which is
 		 * wrap around and pad with 1's.
+         *
+         * NOTE: Due to Loom not having unsigned int values, this will 
+         * only work correctly for number with values up to up to 2147483647
 		 */
 		public static function convertToBinary(numberToConvert:int):String 
 		{
-//TODO_24: Test that this works!!!
             var negative:Boolean = false;       
             if(numberToConvert < 0)
             {
                 //we want to wrap -ve values around as if we were casting to uint, so 2s comp FTW!
-                numberToConvert += (1 << 31);
+                numberToConvert += (1 << 30);
                 negative = true;
             }
 
             //convert to a binary string
             var remainder:int;
-            var result:String = null;
+            var result:String = "";
             while (numberToConvert > 0)
             {
-                remainder = numberToConvert % 2;
-                numberToConvert /= 2;
+                remainder = int(numberToConvert % 2);
+                numberToConvert = int(numberToConvert / 2);
                 result = remainder.toString() + result;
             }
 
@@ -48,7 +50,6 @@ package com.modestmaps.util
 		
 		public static function convertToDecimal(binaryRepresentation:String):int
 		{
-//TODO_24: Test that this works!!!
             var decimalValue:int = 0;   
             var bitIndex:int = 0;
             var index:int = binaryRepresentation.length;
@@ -67,7 +68,7 @@ package com.modestmaps.util
                 else
                 {
                     //2 comp FTW!
-                    decimalValue -= (1 << 31);
+                    decimalValue -= (1 << 30);
                 }
             }
 

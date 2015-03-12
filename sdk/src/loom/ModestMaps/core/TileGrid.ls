@@ -10,10 +10,7 @@ package com.modestmaps.core
 	import loom2d.display.Sprite;
 	import loom2d.events.Event;
 	import loom2d.events.TouchEvent;
-	
-//LUKE_SAYS: ProgressEvent seems to be tied directly to the Loader class in order to track bytes loaded in the grid/painter. Can likely ignore...            
-	//import flash.events.ProgressEvent;	
-	
+		
 	import loom2d.math.Matrix;
 	import loom2d.math.Point;
 	import loom2d.math.Rectangle;
@@ -25,7 +22,7 @@ package com.modestmaps.core
 		protected static const DEFAULT_MAX_PARENT_SEARCH:int = 5;
 		protected static const DEFAULT_MAX_PARENT_LOAD:int = 0; // enable this to load lower zoom tiles first
 		protected static const DEFAULT_MAX_CHILD_SEARCH:int = 1;
-		protected static const DEFAULT_MAX_TILES_TO_KEEP:int = 32;//256; // 256*256*4bytes = 0.25MB ... so 256 tiles is 16MB of memory, minimum!
+		protected static const DEFAULT_MAX_TILES_TO_KEEP:int = 256; // 256*256*4bytes = 0.25MB ... so 256 tiles is 64MB of memory, minimum!
 		protected static const DEFAULT_TILE_BUFFER:int = 1;
 		protected static const DEFAULT_ENFORCE_BOUNDS:Boolean = false;
 		protected static const DEFAULT_ROUND_POSITIONS:Boolean = true;
@@ -114,7 +111,7 @@ package com.modestmaps.core
 		// number of tiles we're failing to show
 		protected var blankCount:int = 0;
 
-//NOTE_24: not porting DebugField for now at least...
+        //NOTE: not porting DebugField for now at least...
 		// // a textfield with lots of stats
 		// public var debugField:DebugField;
 		
@@ -161,8 +158,6 @@ package com.modestmaps.core
 			else {
 				this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
 			}
-//LUKE_SAYS: ProgressEvent seems to be tied directly to the Loader class in order to track bytes loaded in the grid/painter. Can likely ignore...            
-			//tilePainter.addEventListener(ProgressEvent.PROGRESS, onProgress, false, 0, true);
 			tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded);
 			tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading);
 			
@@ -179,7 +174,7 @@ package com.modestmaps.core
 			this.mapHeight = h;			
 			clipRect = new Rectangle(0, 0, mapWidth, mapHeight);
 
-//NOTE_24: not porting DebugField for now at least...
+            //NOTE: not porting DebugField for now at least...
 			// debugField = new DebugField();
 			// debugField.x = mapWidth - debugField.width - 15; 
 			// debugField.y = mapHeight - debugField.height - 15;
@@ -211,7 +206,7 @@ package com.modestmaps.core
 			}
             onRender += _onRender;
 
-//NOTE_24: not porting DebugField for now at least...
+            //NOTE: not porting DebugField for now at least...
 			// addEventListener(Event.ENTER_FRAME, onEnterFrame);
 			addEventListener(Event.REMOVED_FROM_STAGE, onRemovedFromStage);
 			removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
@@ -228,7 +223,7 @@ package com.modestmaps.core
 //			}
             onRender -= _onRender;
 
-//NOTE_24: not porting DebugField for now at least...
+            //NOTE: not porting DebugField for now at least...
 			// removeEventListener(Event.ENTER_FRAME, onEnterFrame);
 
 			// FIXME: should we still do this, in TilePainter?
@@ -252,7 +247,7 @@ package com.modestmaps.core
 			tilePainter.setTileCreator(tileCreator);
 		}
 		
-//NOTE_24: not porting DebugField for now at least...
+        //NOTE: not porting DebugField for now at least...
 		// /** processes the tileQueue and optionally outputs stats into debugField */
 		// protected function onEnterFrame(event:Event=null):void
 		// {
@@ -294,14 +289,7 @@ package com.modestmaps.core
 		{
 			dispatchEvent(event);			
 		}
-		
-//LUKE_SAYS: ProgressEvent seems to be tied directly to the Loader class in order to track bytes loaded in the grid/painter. Can likely ignore...            
-        // protected function onProgress(event:ProgressEvent):void
-        // {
-        //     // dispatch tile load progress
-        //     dispatchEvent(event);			
-        // }
-		
+				
 		protected function onAllTilesLoaded(event:MapEvent):void
 		{
 			dispatchEvent(event);
@@ -317,9 +305,8 @@ package com.modestmaps.core
 		 *  
 		 */
 		
-// TODO_AHMED: Remove the next line when done testing
-// NOTE_PERF: added populated flag so that the map only gets populated once (search for if (!populated)), adds a massive performance boost
-		var populated:Boolean = false; 
+//PERF_24: added populated flag so that the map only gets populated once (search for if (!populated)), adds a massive performance boost
+var populated:Boolean = false; 
 		protected function _onRender():void
 		{
 			//var t:Number = getTimer();
@@ -379,22 +366,20 @@ package com.modestmaps.core
 			var minRow:int = Math.floor(Math.min(tlC.row,brC.row,trC.row,blC.row)) - tileBuffer;
 			var maxRow:int = Math.floor(Math.max(tlC.row,brC.row,trC.row,blC.row)) + tileBuffer;
 
-			// loop over all tiles and find parent or child tiles from cache to compensate for unloaded tiles:
 			
-			if (!populated)
+//PERF_24: added populated flag so that the map only gets populated once (search for if (!populated)), adds a massive performance boost
+if (!populated)
 			{
+                // loop over all tiles and find parent or child tiles from cache to compensate for unloaded tiles:
 				repopulateVisibleTiles(minCol, maxCol, minRow, maxRow);
-				populated = true;
+//populated = true;
 			}
 			
 			// move visible tiles to the end of recentlySeen if we're done loading them
 			// the 'least recently seen' tiles will be removed from the tileCache below
 			for each (var visibleTile:Tile in visibleTiles) {
 				if (tilePainter.isPainted(visibleTile)) {
-					var ri:int = recentlySeen.indexOf(visibleTile.name); 
-					if (ri >= 0) {
-						recentlySeen.splice(ri, 1);
-					}
+					recentlySeen.remove(visibleTile.name); 
 					recentlySeen.push(visibleTile.name);
 				}
 			}
@@ -466,12 +451,6 @@ package com.modestmaps.core
 			var searchedParentKeys:Dictionary.<String, Boolean> = {};
 		
 			// loop over currently visible tiles
-//NOTE_PERF: Making less rows and columns dramatically increases the preformance, unlikely to be directly related to draw calls
-//TODO_24: Stop force setting columns and rows to return to default behaviour
-			minCol = -2;
-			maxCol = 2;
-			minRow = -2;
-			maxRow = 2;
 			for (var col:int = minCol; col <= maxCol; col++) {
 				for (var row:int = minRow; row <= maxRow; row++) {
 					
@@ -628,7 +607,8 @@ package com.modestmaps.core
  			// sort children by difference from current zoom level
  			// this means current is on top, +1 and -1 are next, then +2 and -2, etc.
 
-//TODO_24: check that sort + reverse is the same as a DESCENDING sort... optimally, the sort function should be changed to order differently			
+//TODO_24: check that sort + reverse is the same as a DESCENDING sort... 
+//          optimally, the sort function should be changed to order differently instead!!!
 			visibleTiles.sort(distanceFromCurrentZoomCompare);
 			visibleTiles.reverse();
 				
@@ -655,8 +635,8 @@ package com.modestmaps.core
 			for each (var tile:Tile in visibleTiles) {
 			
 				// if we set them all to numChildren-1, descending, they should end up correctly sorted
-// NOTE_PERF: Commenting out the next line gave a big boost to performance, it's related to the tile pooling
-				//well.setChildIndex(tile, well.numChildren-1);
+//PERF_24: This is slow because it does Vector splicing likely!!! why do this!??!! depth sorting??? needed every frame??>
+				well.setChildIndex(tile, well.numChildren-1);
 
 				tile.scaleX = tile.scaleY = tileScales[tile.zoom];
 
@@ -1071,7 +1051,7 @@ package com.modestmaps.core
     			mapHeight = p.y;
     	        clipRect = new Rectangle(0, 0, mapWidth, mapHeight);
 
-//NOTE_24: not porting DebugField for now at least...
+                //NOTE: not porting DebugField for now at least...
 				// debugField.x = mapWidth - debugField.width - 15; 
 				// debugField.y = mapHeight - debugField.height - 15;
     			
@@ -1080,13 +1060,6 @@ package com.modestmaps.core
     			// force this but only for onResize
     			_onRender();
 		    }
-
-//LUKE_SAYS: this seems to draw black behind the tilegrid (ie. clear's the well where the tiles sit on top of)... not needed?
-            // this makes sure the well is clickable even without tiles
-			// well.graphics.clear();
-			// well.graphics.beginFill(0x000000, 0);
-			// well.graphics.drawRect(0, 0, mapWidth, mapHeight);
-			// well.graphics.endFill();
 		}
 		
 		public function setMapProvider(provider:IMapProvider):void
@@ -1097,8 +1070,6 @@ package com.modestmaps.core
 			else {
 				this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
 			}
-//LUKE_SAYS: ProgressEvent seems to be tied directly to the Loader class in order to track bytes loaded in the grid/painter. Can likely ignore...            
-			//tilePainter.addEventListener(ProgressEvent.PROGRESS, onProgress, false, 0, true);
 			tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded);
 			tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading);
 
@@ -1264,9 +1235,6 @@ package com.modestmaps.core
 		{
 			_dirty = d;
 			if (d) {
-//LUKE_SAYS: probably don't need this. It's used to tell Flash to redraw, but Loom always draws every frame whatever is there                
-                //if (stage) stage.invalidate();
-				
 				_invertedMatrix = null;
 				_topLeftCoordinate = null;
 				_bottomRightCoordinate = null;
@@ -1355,7 +1323,7 @@ package com.modestmaps.core
 	
 
 
-//NOTE_24: not porting DebugField for now at least...
+    //NOTE: not porting DebugField for now at least...
 	// import com.modestmaps.core.Tile;
 	// import flash.text.TextFormat;
 	// import flash.system.System;
@@ -1411,7 +1379,6 @@ package com.modestmaps.core
 	// 				+ "\nqueue length: " + tilePainter.getQueueCount()
 	// 				+ "\nrequests: " + tilePainter.getRequestCount()
 	// 				+ "\nfinished (cached) tiles: " + tilePainter.getCacheSize()
-	// 				+ "\ncachedLoaders: " + tilePainter.getLoaderCacheCount();
 	// 			//	+ "\nmemory: " + (System.totalMemory/1048576).toFixed(1) + "MB"; 
 	// 		width = textWidth+8;
 	// 		height = textHeight+4;
