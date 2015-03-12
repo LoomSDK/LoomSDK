@@ -262,6 +262,8 @@ trace("---requesting image url: ", url);
 			}
             else
             {
+//TODO_24: could happen if a cancelPainting on a tile is called, or reset, 
+//before this texture has finished loading I think... make sure it's handled properly!           
 trace("---BAD!!! SHOULD NEVER GET HERE!!?!?!");
                 texture.dispose();                
             }
