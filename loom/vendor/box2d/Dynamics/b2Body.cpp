@@ -603,10 +603,7 @@ bool b2Body::SetContactEnabled(bool enabledState, int contactIndex)
 				edge->contact->SetEnabled(enabledState);
 				return true;  
 			}
-			else
-			{
-				return false;
-			}
+			return false;
 		}
 
 		edge = edge->next;
@@ -626,19 +623,9 @@ bool b2Body::IsContactEnabled(int contactIndex)
 		{
 			if (edge->contact != NULL)
 			{
-				if (edge->contact->IsEnabled())
-				{
-					return true;  
-				}
-				else
-				{
-					return false;
-				}
+				return edge->contact->IsEnabled();
 			}
-			else
-			{
-				return false;
-			}
+			return false;
 		}
 
 		edge = edge->next;
@@ -660,10 +647,7 @@ b2Fixture* b2Body::GetContactFixtureA(int contactIndex)
 			{
 				return edge->contact->GetFixtureA();
 			}
-			else
-			{
-				return NULL;
-			}
+			return NULL;
 		}
 
 		edge = edge->next;
@@ -685,16 +669,13 @@ int32 b2Body::GetContactChildIndexA(int contactIndex)
 			{
 				return edge->contact->GetChildIndexA();
 			}
-			else
-			{
-				return NULL;
-			}
+			return 0;
 		}
 
 		edge = edge->next;
 	}
 
-	return NULL; 
+	return 0; 
 }
 
 b2Fixture* b2Body::GetContactFixtureB(int contactIndex)
@@ -710,10 +691,7 @@ b2Fixture* b2Body::GetContactFixtureB(int contactIndex)
 			{
 				return edge->contact->GetFixtureB();
 			}
-			else
-			{
-				return NULL;
-			}
+			return NULL;
 		}
 
 		edge = edge->next;
@@ -735,16 +713,13 @@ int32 b2Body::GetContactChildIndexB(int contactIndex)
 			{
 				return edge->contact->GetChildIndexB();
 			}
-			else
-			{
-				return NULL;
-			}
+			return 0;
 		}
 
 		edge = edge->next;
 	}
 
-	return NULL; 
+	return 0; 
 }
 
 float32 b2Body::GetContactFriction(int contactIndex)
@@ -760,16 +735,13 @@ float32 b2Body::GetContactFriction(int contactIndex)
 			{
 				return edge->contact->GetFriction();
 			}
-			else
-			{
-				return NULL;
-			}
+			return 0.0f;
 		}
 
 		edge = edge->next;
 	}
 
-	return NULL; 
+	return 0.0f; 
 }
 
 bool b2Body::SetContactFriction(int contactIndex, float32 friction)
@@ -784,11 +756,9 @@ bool b2Body::SetContactFriction(int contactIndex, float32 friction)
 			if (edge->contact != NULL)
 			{
 				edge->contact->SetFriction(friction);
+				return true;
 			}
-			else
-			{
-				return false;
-			}
+			return false;
 		}
 
 		edge = edge->next;
@@ -809,11 +779,9 @@ bool b2Body::ResetContactFriction(int contactIndex)
 			if (edge->contact != NULL)
 			{
 				edge->contact->ResetFriction();
+				return true;
 			}
-			else
-			{
-				return false;
-			}
+			return false;
 		}
 
 		edge = edge->next;
@@ -835,16 +803,13 @@ float32 b2Body::GetContactRestitution(int contactIndex)
 			{
 				return edge->contact->GetRestitution();
 			}
-			else
-			{
-				return NULL;
-			}
+			return 0.0f;
 		}
 
 		edge = edge->next;
 	}
 
-	return NULL; 
+	return 0.0f; 
 }
 
 bool b2Body::SetContactRestitution(int contactIndex, float32 Restitution)
@@ -860,10 +825,7 @@ bool b2Body::SetContactRestitution(int contactIndex, float32 Restitution)
 			{
 				edge->contact->SetRestitution(Restitution);
 			}
-			else
-			{
-				return false;
-			}
+			return false;
 		}
 
 		edge = edge->next;
@@ -884,11 +846,9 @@ bool b2Body::ResetContactRestitution(int contactIndex)
 			if (edge->contact != NULL)
 			{
 				edge->contact->ResetRestitution();
+				return true;
 			}
-			else
-			{
-				return false;
-			}
+			return false;
 		}
 
 		edge = edge->next;
@@ -910,16 +870,13 @@ float32 b2Body::GetContactTangentSpeed(int contactIndex)
 			{
 				return edge->contact->GetTangentSpeed();
 			}
-			else
-			{
-				return NULL;
-			}
+			return 0.0f;
 		}
 
 		edge = edge->next;
 	}
 
-	return NULL; 
+	return 0.0f; 
 }
 
 bool b2Body::SetContactTangentSpeed(int contactIndex, float32 speed)
@@ -934,11 +891,9 @@ bool b2Body::SetContactTangentSpeed(int contactIndex, float32 speed)
 			if (edge->contact != NULL)
 			{
 				edge->contact->SetTangentSpeed(speed);
+				return true;
 			}
-			else
-			{
-				return false;
-			}
+			return false;
 		}
 
 		edge = edge->next;
