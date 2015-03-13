@@ -40,7 +40,7 @@ package loom.modestmaps.core.painter
         // they are free to check the bounds of their overlays and don't have to serve
         // millions of 404s
         protected var layersNeeded:Dictionary.<String, Vector.<String>> = {};
-        protected var loaderTiles:Dictionary.<Texture, Tile> = {};
+        protected var loaderTiles:Dictionary.<Texture, Vector.<Tile>> = {};
     
         // open requests
         protected var openRequests:Vector.<Texture> = [];
@@ -136,7 +136,14 @@ package loom.modestmaps.core.painter
             for (var i:int = openRequests.length - 1; i >= 0; i--) {
                 var texture:Texture = openRequests[i];
                 if (tile.isUsingTexture(texture)) {
-                    loaderTiles.deleteKey(texture);
+                    if(loaderTiles[texture] != null)
+                    {
+                        loaderTiles[texture].remove(tile);
+                        if(loaderTiles[texture].length == 0)
+                        {
+                            loaderTiles.deleteKey(texture);
+                        }
+                    }
                     openRequests.remove(texture);
                 }
             }
@@ -154,10 +161,15 @@ package loom.modestmaps.core.painter
         public function reset():void
         {
             for each (var texture:Texture in openRequests) {
-                var tile:Tile = loaderTiles[texture];
-                loaderTiles.deleteKey(texture);
-                if (!tileCache.containsKey(tile.name)) {
-                    tilePool.returnTile(tile);
+                if(loaderTiles[texture] != null)
+                {
+                    var tileList:Vector.<Tile> = loaderTiles[texture];
+                    for each (var tile:Tile in tileList) {
+                        if (!tileCache.containsKey(tile.name)) {
+                            tilePool.returnTile(tile);
+                        }
+                    }
+                    loaderTiles.deleteKey(texture);
                 }
             }
             openRequests.clear();
@@ -182,22 +194,27 @@ package loom.modestmaps.core.painter
                 if(texture == null)
                 {
                     tile.paintError();
+                    return;
                 }
-//TODO_24: Issue if an already requested texture is returned here... need to track differently!                
-else if(texture.isTextureValid())// || openRequests.contains(texture))
+
+                //is texture loaded and ready to go?
+                if(texture.isTextureValid())
                 {
-                    var image:Image = tile.assignTexture(texture);
-//                     if(!texture.isTextureValid())
-//                     {
-// trace("----set size!!!");                        
-//                         image.setSize(tileGrid.tileWidth, tileGrid.tileHeight);
-//                     }
+                    tile.assignTexture(texture);
                     loadNextURLForTile(tile);
                 }
                 else
                 {
+                    //need to wait for the texture to finish loading, so put into the request queue
                     tile.requestTexture(texture);
-                    loaderTiles[texture] = tile;
+                    if(loaderTiles[texture] == null)
+                    {
+                        loaderTiles[texture] = [tile];
+                    }
+                    else
+                    {
+                        loaderTiles[texture].pushSingle(tile);
+                    }
                     openRequests.pushSingle(texture);
                 }
             }
@@ -262,30 +279,42 @@ else if(texture.isTextureValid())// || openRequests.contains(texture))
             // TODO: this used to be called onAddedToStage, is this bad?
             openRequests.remove(texture);
 
-            var tile:Tile = loaderTiles[texture];
-            if (tile) { 
-                //add the texture to the tile
-                tile.assignTexture(texture);
-                loadNextURLForTile(tile);
+            //check this texture against all possible tiles that may have requested it
+            var assignedToTile:Boolean = false;
+            if(loaderTiles[texture] != null)
+            {
+                var tileList:Vector.<Tile> = loaderTiles[texture];
+                for each (var tile:Tile in tileList) {
+                    //add the texture to the tile
+                    assignedToTile = true;
+                    tile.assignTexture(texture);
+                    loadNextURLForTile(tile);
+                }
                 loaderTiles.deleteKey(texture);
             }
-            else
+
+            if(!assignedToTile)
             {
                 //will get here if reset() or cancelPainting() on a tile is called before the requested 
                 //texture has finished loading I think... make sure it's handled properly!           
-//TODO_24: Need a texture ref counter as there are cases when the same texture can be used for multiple tiles...
                 texture.dispose();
             }
         }
 
         private function onLoadFail(texture:Texture):void
         {
+            // tidy up the request monitor
             openRequests.remove(texture);
 
-            var tile:Tile = loaderTiles[texture];
-            if (tile) { 
-                Console.print("ERROR: Failed to load map tile texture via HTTP for tile: " + tile.name);
-                tile.paintError();
+            //check this texture against all possible tiles that may have requested it
+            if(loaderTiles[texture] != null)
+            {
+                var tileList:Vector.<Tile> = loaderTiles[texture];
+                for each (var tile:Tile in tileList) {
+                    Console.print("ERROR: Failed to load map tile texture via HTTP for tile: " + tile.name);
+                    tile.paintError();
+                    tile.removeRequestedTexture(texture);
+                }
                 loaderTiles.deleteKey(texture);
             }
 

@@ -90,6 +90,11 @@ package loom.modestmaps.core
             return img;
         }
 
+        public function removeRequestedTexture(texture:Texture):void
+        {
+            requestedTextures.remove(texture);
+        }
+
         public function isUsingTexture(texture:Texture):Boolean
         {
             return (assignedTextures.contains(texture) || requestedTextures.contains(texture)) ? true : false;
