@@ -2,7 +2,7 @@ package
 {
 
     import loom.Application;
-	import loom.platform.Timer;
+    import loom.platform.Timer;
 
     import system.platform.Platform;
     import loom2d.display.StageScaleMode;    
@@ -14,7 +14,11 @@ package
 
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
-    import loom2d.events.TouchPhase;  
+    import loom2d.events.TouchPhase; 
+    
+    import loom2d.events.Event;
+    import loom2d.events.KeyboardEvent;
+    import loom.platform.LoomKey;
 
     import loom.gameframework.LoomGroup;
     import loom.gameframework.TimeManager;
@@ -52,6 +56,18 @@ package
         var bodyScale:Number = 1;
 
         var world:World;
+        
+        var movingPlatform:Body;
+        var floor:Body;
+        // We'll set this to either 1 or -1 to make the platform move left or right when it reaches the bounds of the screen
+        var platformMovementDirection = 1;
+        var player:Body;
+        var playerCanJump:Boolean = false;
+        var doJump:Boolean = false;
+        var playerJumpingForce:Number = -20;
+        var playerMovementSpeed:Number = 5;
+        var maxPlayerMovementSpeed:Number = 10;
+        var currentPlayerMovementSpeed:Vec2 = new Vec2(0, 0);
 
         public function onFrame():void
         {
@@ -59,8 +75,40 @@ package
                 return;
 
             world.step(tickRate, velocityIterations, positionIterations);
+         
+            var timeManager = (LoomGroup.rootGroup.getManager(TimeManager) as TimeManager);
+            
+            // Move the platform move from side to side
+            //movingPlatform.setTransform(new Vec2(movingPlatform.getPosition().x + 5 * platformMovementDirection * timeManager.deltaTime, movingPlatform.getPosition().y), 0);
+            movingPlatform.setLinearVelocity(new Vec2(5 * platformMovementDirection, 0));
+            
+            if (movingPlatform.getPosition().x * ptmRatio + Box2DPhysicsGameObject(movingPlatform.getUserData()).sprite.width/2 > stage.stageWidth 
+                || movingPlatform.getPosition().x * ptmRatio - Box2DPhysicsGameObject(movingPlatform.getUserData()).sprite.width/2 < 0)
+            {
+                platformMovementDirection *= -1;
+                movingPlatform.setLinearVelocity(new Vec2(5 * platformMovementDirection, 0));
+            }
+            
+            // Move the player, capping the maximum horizontal speed to 10m/s
+            player.applyForceToCenter(new Vec2(currentPlayerMovementSpeed.x / timeManager.deltaTime * 10, player.getLinearVelocity().y), true);
+            if (player.getLinearVelocity().x < -maxPlayerMovementSpeed) 
+            {
+                player.setLinearVelocity(new Vec2( -maxPlayerMovementSpeed, player.getLinearVelocity().y));
+            }
+            if (player.getLinearVelocity().x > maxPlayerMovementSpeed)
+            {
+                player.setLinearVelocity(new Vec2(maxPlayerMovementSpeed, player.getLinearVelocity().y));
+            }
+            
+            // If the player falls off of the bottom of the screen, reposition them
+            if (player.getPosition().y * ptmRatio + Box2DPhysicsGameObject(player.getUserData()).sprite.height/ ptmRatio > stage.stageHeight)
+            {
+                player.setTransform(new Vec2(stage.stageWidth/ptmRatio * 0.5, stage.stageHeight/ptmRatio * 0.6), 0);
+                player.setLinearVelocity(new Vec2(0, 0));
+            }
             
             var b:Body = world.getBodyList();
+            
             while (b)
             {
                 var pgo = b.getUserData() as Box2DPhysicsGameObject;
@@ -79,7 +127,62 @@ package
                     world.destroyBody(b);
                 }
                 
+                // Visualise if we've hit the player
+                if (b.isContacting(player))
+                {
+                    pgo.sprite.r = 255; pgo.sprite.g = 0; pgo.sprite.b = 0; 
+                }
+                else
+                {
+                    pgo.sprite.r = 255; pgo.sprite.g = 255; pgo.sprite.b = 255; 
+                }
+                
+                // If we've collided with the player from above, let the player jump again
+                if (b.isContacting(player) && player.getPosition().y < b.getPosition().y)
+                {   
+                    // Check if we're meant to jump
+                    if (doJump)
+                    {
+                        player.applyForceToCenter(new Vec2(0, playerJumpingForce / timeManager.deltaTime), true);
+                        playerCanJump = false;
+                        doJump = false;
+                    }
+                    else
+                    {
+                        playerCanJump = true;   
+                    }
+                }
+                
                 b = b.getNext();
+            }
+            
+        }
+        
+        public function onKeyDown(e:KeyboardEvent)
+        {
+            var timeManager = (LoomGroup.rootGroup.getManager(TimeManager) as TimeManager);
+            
+            if (e.keyCode == LoomKey.W && playerCanJump)
+            {
+                doJump = true;
+            }
+            
+            if (e.keyCode == LoomKey.D)
+            {
+                currentPlayerMovementSpeed = new Vec2(playerMovementSpeed  * timeManager.deltaTime, 0);
+            }
+            
+            if (e.keyCode == LoomKey.A)
+            {
+                currentPlayerMovementSpeed = new Vec2(-playerMovementSpeed  * timeManager.deltaTime, 0);
+            }
+        }
+        
+        public function onKeyUp(e:KeyboardEvent)
+        {
+            if (e.keyCode == LoomKey.D || e.keyCode == LoomKey.A)
+            {
+                currentPlayerMovementSpeed.x = 0;
             }
         }
 
@@ -190,7 +293,7 @@ package
             // find a random shape
             var body:Body;
             var rnd:Number = Math.random();
-			
+            
             if (rnd<0.333)
                 body = createBox(world, BodyType.DYNAMIC, new Vec2(px, py), 0, new Vec2(Math.random()*2+0.25, Math.random()*2+0.25), "assets/square.png", dens, fric, rest);
             else if (rnd>0.666)
@@ -201,7 +304,7 @@ package
                 // we're using a negative scale.y because Physics Editor uses a positive up coordinate system for Y while Loom has Y increasing downwards
                 body = loadBody(world, BodyType.DYNAMIC, new Vec2(px, py), 0, new Vec2(64/ptmRatio, 62/ptmRatio), new Vec2(1 * scale, -1 * scale), "assets/star.png", "assets/star.box2d-generic.plist", "star");
             }
-			
+            
             if (!body)
                 return;
 
@@ -216,10 +319,9 @@ package
 
         override public function run():void
         {
-
             stage.scaleMode = StageScaleMode.NONE;
-			
-			var bg = new Image(Texture.fromAsset("assets/bg.png"));
+            
+            var bg = new Image(Texture.fromAsset("assets/bg.png"));
             bg.x = 0;
             bg.y = 0;
             bg.width = stage.nativeStageWidth;
@@ -241,9 +343,9 @@ package
             var mWidth:Number = stage.stageWidth/ptmRatio;
             var mHeight:Number = stage.stageHeight/ptmRatio;
 
-            // create a ceiling and a floor (center, bottom) and two side walls (rotated CCW & CW by 90 degrees)
+            // create a ceiling and a floor (center, bottom) and two side walls (rotated CCW & CW by 90 degrees)            
             createBox(world, BodyType.STATIC, new Vec2(mWidth * 0.5, mHeight * 0.05), 0, new Vec2(mWidth * 0.75, mHeight * 0.05), "assets/rect.png", 1, 0.6, 0.3);
-            createBox(world, BodyType.STATIC, new Vec2(mWidth * 0.5, mHeight * 0.95), 0, new Vec2(mWidth * 0.75, mHeight * 0.05), "assets/rect.png", 1, 0.6, 0.3);
+            floor = createBox(world, BodyType.STATIC, new Vec2(mWidth * 0.5, mHeight * 0.95), 0, new Vec2(mWidth * 0.75, mHeight * 0.05), "assets/rect.png", 1, 0.6, 0.3);
             createBox(world, BodyType.STATIC, new Vec2(mWidth * 0.05, mHeight * 0.5), Math.PI/2, new Vec2(mHeight * 0.5, mHeight * 0.05), "assets/rect.png", 1, 0.6, 0.3);
             createBox(world, BodyType.STATIC, new Vec2(mWidth * 0.95, mHeight * 0.5), 3*Math.PI/2, new Vec2(mHeight * 0.5, mHeight * 0.05), "assets/rect.png", 1, 0.6, 0.3);
 
@@ -251,14 +353,30 @@ package
             createBox(world, BodyType.STATIC, new Vec2(mWidth * 0.25, mHeight * 0.35), Math.PI/6, new Vec2(mWidth * 0.25, mHeight * 0.025), "assets/rect.png", 1, 0.6, 0.3);
             createBox(world, BodyType.STATIC, new Vec2(mWidth * 0.75, mHeight * 0.35), -Math.PI/6, new Vec2(mWidth * 0.25, mHeight * 0.025), "assets/rect.png", 1, 0.6, 0.3);
 
-
+            // create a platform to jump on
+            movingPlatform = createBox(world, BodyType.KINEMATIC, new Vec2(mWidth * 0.5, mHeight * 0.75), 0, new Vec2(mWidth * 0.1, mHeight * 0.05), "assets/rect.png", 1, 0.6, 0.3);
+            
+            // create a test player
+            player = createCircle(world, BodyType.DYNAMIC, new Vec2(mWidth * 0.5, mHeight * 0.6), 0, 0.8, "assets/logo.png", 1, 0.6, 0);
+            // Make sure our player can't rotate or sleep
+            player.setFixedRotation(true);
+            player.setSleepingAllowed(false);
+            
+            // Make the player's sprite slightly larger for better game feel
+            var playerSprite = Box2DPhysicsGameObject(player.getUserData()).sprite;
+            playerSprite.width *= 1.3;
+            playerSprite.height *= 1.3;
+            
             // listen for touch and generate a new shape on touch
             stage.addEventListener( TouchEvent.TOUCH, function(e:TouchEvent)
             {
                 var touch = e.getTouch(stage, TouchPhase.BEGAN);
                 if (touch && simulationEnabled)
                     createRandomShape(touch.globalX/ptmRatio, touch.globalY/ptmRatio);
-            });            
+            }); 
+            
+            stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+            stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
 
             // set up tick rate and iterations
             var timeManager = (LoomGroup.rootGroup.getManager(TimeManager) as TimeManager);
@@ -266,17 +384,6 @@ package
 
             // enable the simulation so that onFrame handles physics stepping
             simulationEnabled = true;
-			
-			var timer = new Timer(500);
-			timer.onComplete += spawn;
-			timer.start();
         }
-		
-		private function spawn(timer:Timer):void {
-			createRandomShape(500/ptmRatio, 100/ptmRatio);
-			timer.start();
-		}
-		
-
     }
 }
