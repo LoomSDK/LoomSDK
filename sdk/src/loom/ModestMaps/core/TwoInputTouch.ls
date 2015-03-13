@@ -1,4 +1,4 @@
-package com.modestmaps.core
+package loom.modestmaps.core
 {
     import loom2d.display.DisplayObject;
     import loom2d.display.Stage;

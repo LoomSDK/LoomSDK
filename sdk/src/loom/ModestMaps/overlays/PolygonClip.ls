@@ -1,6 +1,6 @@
-package com.modestmaps.overlays
+package loom.modestmaps.overlays
 {
-    import com.modestmaps.Map;
+    import loom.modestmaps.Map;
     
     import loom2d.display.DisplayObject;
     import loom2d.math.Rectangle;

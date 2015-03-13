@@ -2,13 +2,13 @@
  * $Id$
  */
 
-package com.modestmaps.geo
+package loom.modestmaps.geo
 {
     import loom2d.math.Point;
-    import com.modestmaps.core.Coordinate;
-    import com.modestmaps.geo.Location;
-    import com.modestmaps.geo.Transformation;
-    import com.modestmaps.geo.IProjection;
+    import loom.modestmaps.core.Coordinate;
+    import loom.modestmaps.geo.Location;
+    import loom.modestmaps.geo.Transformation;
+    import loom.modestmaps.geo.IProjection;
      
     public class AbstractProjection implements IProjection
     {

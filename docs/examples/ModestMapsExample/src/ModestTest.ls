@@ -4,10 +4,10 @@ package
     import loom2d.display.Stage;
     import loom2d.display.StageScaleMode;
 
-    import com.modestmaps.Map;
-    import com.modestmaps.mapproviders.AbstractMapProvider;
-    import com.modestmaps.mapproviders.OpenStreetMapProvider; 
-    import com.modestmaps.mapproviders.microsoft.MicrosoftRoadMapProvider; 
+    import loom.modestmaps.Map;
+    import loom.modestmaps.mapproviders.AbstractMapProvider;
+    import loom.modestmaps.mapproviders.OpenStreetMapProvider; 
+    import loom.modestmaps.mapproviders.microsoft.MicrosoftRoadMapProvider; 
     
     import loom2d.events.KeyboardEvent;
     import loom.platform.LoomKey;
@@ -44,14 +44,14 @@ package
         {   
             var keycode = event.keyCode;
 
+            //always zoom at the center of the screen
+            var zoomPoint:Point = new Point(stage.stageWidth / 2, stage.stageHeight / 2);
+
+            //process zooming
             if (keycode == LoomKey.Q)
-                map.zoomByAbout(0.05, new Point(0, 0));
+                map.zoomByAbout(0.05, zoomPoint);
             if (keycode == LoomKey.E)
-                map.zoomByAbout( -0.05, new Point(stage.width/2, stage.height/2));
-            if (keycode == LoomKey.R)
-                map.rotateByAbout(0.05, new Point(stage.width/2, stage.height/2));
-            if (keycode == LoomKey.T)
-                map.rotateByAbout(-0.05, new Point(stage.width/2, stage.height/2));
+                map.zoomByAbout( -0.05, zoomPoint);
         }
     }
 }

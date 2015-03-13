@@ -1,5 +1,5 @@
 
-package com.modestmaps.mapproviders.microsoft
+package loom.modestmaps.mapproviders.microsoft
 {
     /**
      * @author darren

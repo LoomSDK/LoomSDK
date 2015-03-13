@@ -2,10 +2,10 @@
  * $Id$
  */
 
-package com.modestmaps.events
+package loom.modestmaps.events
 {
-    import com.modestmaps.core.*;
-    import com.modestmaps.mapproviders.IMapProvider;
+    import loom.modestmaps.core.*;
+    import loom.modestmaps.mapproviders.IMapProvider;
     
     import loom2d.events.Event;
     

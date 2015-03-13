@@ -2,11 +2,12 @@
  * $Id$
  */
 
-package com.modestmaps.events
+package loom.modestmaps.events
 {
+    import loom.modestmaps.geo.Location; 
+    
     import loom2d.events.Event;
     import loom2d.display.DisplayObject;
-    import com.modestmaps.geo.Location; 
     
     public class MarkerEvent extends Event
     {

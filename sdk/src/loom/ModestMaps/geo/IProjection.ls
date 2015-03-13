@@ -2,11 +2,11 @@
  * $Id$
  */
 
-package com.modestmaps.geo
+package loom.modestmaps.geo
 { 
     import loom2d.math.Point;
-    import com.modestmaps.core.Coordinate;
-    import com.modestmaps.geo.Location;
+    import loom.modestmaps.core.Coordinate;
+    import loom.modestmaps.geo.Location;
 
     public interface IProjection
     {

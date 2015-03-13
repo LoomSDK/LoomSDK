@@ -2,7 +2,7 @@
  * $Id$
  */
 
-package com.modestmaps.geo
+package loom.modestmaps.geo
 {
     public class Location
     {

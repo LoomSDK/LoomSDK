@@ -1,10 +1,10 @@
-package com.modestmaps.core.painter
+package loom.modestmaps.core.painter
 {
-    import com.modestmaps.core.Coordinate;
-    import com.modestmaps.core.Tile;
-    import com.modestmaps.core.TileGrid;
-    import com.modestmaps.events.MapEvent;
-    import com.modestmaps.mapproviders.IMapProvider;
+    import loom.modestmaps.core.Coordinate;
+    import loom.modestmaps.core.Tile;
+    import loom.modestmaps.core.TileGrid;
+    import loom.modestmaps.events.MapEvent;
+    import loom.modestmaps.mapproviders.IMapProvider;
     import loom2d.display.AsyncImage;
     import loom2d.textures.Texture;
     import loom2d.textures.TextureSmoothing;

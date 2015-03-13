@@ -1,4 +1,4 @@
-package com.modestmaps.core.painter
+package loom.modestmaps.core.painter
 {
     public interface ITilePainterOverride
     {

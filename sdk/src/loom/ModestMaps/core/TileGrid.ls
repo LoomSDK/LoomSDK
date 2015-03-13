@@ -1,10 +1,11 @@
-package com.modestmaps.core 
+package loom.modestmaps.core 
 {
-    import com.modestmaps.core.painter.ITilePainter;
-    import com.modestmaps.core.painter.ITilePainterOverride;
-    import com.modestmaps.core.painter.TilePainter;
-    import com.modestmaps.events.MapEvent;
-    import com.modestmaps.mapproviders.IMapProvider;
+    import loom.modestmaps.core.painter.ITilePainter;
+    import loom.modestmaps.core.painter.ITilePainterOverride;
+    import loom.modestmaps.core.painter.TilePainter;
+    import loom.modestmaps.events.MapEvent;
+    import loom.modestmaps.mapproviders.IMapProvider;
+    import loom.modestmaps.core.TwoInputTouch;
     
     import loom2d.display.DisplayObject;
     import loom2d.display.Sprite;
@@ -13,7 +14,6 @@ package com.modestmaps.core
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
     import loom2d.events.TouchPhase;
-    import com.modestmaps.core.TwoInputTouch;
     
     import loom2d.math.Matrix;
     import loom2d.math.Point;
@@ -774,6 +774,7 @@ if (!populated)
             prepareForPanning(true);
             
             var touches = event.getTouches(stage);          
+trace(touches[0].getLocation(stage).toString());            
             
             if (touches[0].phase == TouchPhase.MOVED && !doubleTouchActive)
                 mouseDragged(touches[0].getMovement(stage));
@@ -1419,7 +1420,7 @@ if (!populated)
 
 
     //NOTE_TEC: not porting DebugField for now at least...
-    // import com.modestmaps.core.Tile;
+    // import loom.modestmaps.core.Tile;
     // import flash.text.TextFormat;
     // import flash.system.System;
 

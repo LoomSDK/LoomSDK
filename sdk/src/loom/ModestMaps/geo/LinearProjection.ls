@@ -2,11 +2,11 @@
  * $Id$
  */
 
-package com.modestmaps.geo
+package loom.modestmaps.geo
 {
     import loom2d.math.Point;
-    import com.modestmaps.geo.Transformation;
-    import com.modestmaps.geo.AbstractProjection; 
+    import loom.modestmaps.geo.Transformation;
+    import loom.modestmaps.geo.AbstractProjection; 
      
     public class LinearProjection extends AbstractProjection
     {

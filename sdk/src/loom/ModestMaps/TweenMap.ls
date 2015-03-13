@@ -4,16 +4,16 @@
  *
  * @author tom
  *
- * com.modestmaps.TweenMap adds smooth animated panning and zooming to the basic Map class
+ * loom.modestmaps.TweenMap adds smooth animated panning and zooming to the basic Map class
  *
  */
-package com.modestmaps
+package loom.modestmaps
 {
-    import com.modestmaps.core.Coordinate;
-    import com.modestmaps.core.MapExtent;
-    import com.modestmaps.core.TweenTile;
-    import com.modestmaps.geo.Location;
-    import com.modestmaps.mapproviders.IMapProvider;
+    import loom.modestmaps.core.Coordinate;
+    import loom.modestmaps.core.MapExtent;
+    import loom.modestmaps.core.TweenTile;
+    import loom.modestmaps.geo.Location;
+    import loom.modestmaps.mapproviders.IMapProvider;
     import loom2d.display.Stage;
     import loom2d.events.Event;
     import loom2d.math.Matrix;
@@ -52,7 +52,7 @@ package com.modestmaps
         * @param    Whether the map can be dragged or not.
         * @param    Desired map provider, e.g. Blue Marble.
         *
-        * @see com.modestmaps.core.TileGrid
+        * @see loom.modestmaps.core.TileGrid
         */
         public function TweenMap(width:Number, height:Number, draggable:Boolean, provider:IMapProvider, mapStage:Stage, ... rest)
         {
@@ -192,9 +192,9 @@ package com.modestmaps
          * if you really want to animate to a location that's currently off screen.
          * But no promises! 
          * 
-         * @see com.modestmaps.TweenMap#panDuration
-         * @see com.modestmaps.TweenMap#panEase
-         * @see com.modestmaps.TweenMap#tweenTo
+         * @see loom.modestmaps.TweenMap#panDuration
+         * @see loom.modestmaps.TweenMap#panEase
+         * @see loom.modestmaps.TweenMap#tweenTo
          */
         public function panTo(location:Location, forceAnimate:Boolean=false):void
         {
@@ -222,7 +222,7 @@ package com.modestmaps
          * Animate to put the given location in the middle of the map.
          * Use setCenter or setCenterZoom for big jumps, or panTo for pre-defined animation.
          * 
-         * @see com.modestmaps.Map#panTo
+         * @see loom.modestmaps.Map#panTo
          */
         public function tweenTo(location:Location, duration:Number, easing:Function=null):void
         {

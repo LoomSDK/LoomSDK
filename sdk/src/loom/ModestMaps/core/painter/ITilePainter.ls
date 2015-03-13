@@ -1,8 +1,8 @@
-package com.modestmaps.core.painter
+package loom.modestmaps.core.painter
 {
-    import com.modestmaps.core.Coordinate;
-    import com.modestmaps.core.Tile;
-    import com.modestmaps.mapproviders.IMapProvider;
+    import loom.modestmaps.core.Coordinate;
+    import loom.modestmaps.core.Tile;
+    import loom.modestmaps.mapproviders.IMapProvider;
     
     import loom2d.events.EventDispatcher;
     

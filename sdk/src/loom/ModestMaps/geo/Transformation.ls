@@ -2,7 +2,7 @@
  * $Id$
  */
 
-package com.modestmaps.geo
+package loom.modestmaps.geo
 {
     //import flash.geom.Point;
     import loom2d.math.Point;

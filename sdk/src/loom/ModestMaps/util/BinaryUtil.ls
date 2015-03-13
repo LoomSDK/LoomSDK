@@ -2,7 +2,7 @@
  * @author darren
  * $Id$
  */
-package com.modestmaps.util
+package loom.modestmaps.util
 {
     public class BinaryUtil 
     {

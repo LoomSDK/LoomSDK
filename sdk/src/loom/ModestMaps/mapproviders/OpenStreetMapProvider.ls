@@ -4,9 +4,9 @@
  * @author migurski
  * $Id$
  */
-package com.modestmaps.mapproviders
+package loom.modestmaps.mapproviders
 { 
-    import com.modestmaps.core.Coordinate;
+    import loom.modestmaps.core.Coordinate;
     
     public class OpenStreetMapProvider
         extends AbstractMapProvider

@@ -3,7 +3,7 @@
  * $Id$
  */
 
-package com.modestmaps.core
+package loom.modestmaps.core
 {
     import loom2d.Loom2D;
     import loom2d.animation.Transitions;

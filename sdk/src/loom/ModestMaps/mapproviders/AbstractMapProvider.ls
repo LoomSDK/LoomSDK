@@ -14,13 +14,13 @@
  *              graphic imagery.
  */
 
-package com.modestmaps.mapproviders
+package loom.modestmaps.mapproviders
 {
-    import com.modestmaps.core.Coordinate;
-    import com.modestmaps.geo.IProjection;
-    import com.modestmaps.geo.Location;
-    import com.modestmaps.geo.MercatorProjection;
-    import com.modestmaps.geo.Transformation;
+    import loom.modestmaps.core.Coordinate;
+    import loom.modestmaps.geo.IProjection;
+    import loom.modestmaps.geo.Location;
+    import loom.modestmaps.geo.MercatorProjection;
+    import loom.modestmaps.geo.Transformation;
     
     public class AbstractMapProvider
     {       

@@ -2,10 +2,10 @@
  * $Id$
  */
 
-package com.modestmaps.mapproviders
+package loom.modestmaps.mapproviders
 {
-    import com.modestmaps.core.Coordinate;
-    import com.modestmaps.geo.Location;
+    import loom.modestmaps.core.Coordinate;
+    import loom.modestmaps.geo.Location;
      
     public interface IMapProvider
     {

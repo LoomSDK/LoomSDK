@@ -1,6 +1,6 @@
-package com.modestmaps.core.painter
+package loom.modestmaps.core.painter
 {
-    import com.modestmaps.core.Tile;
+    import loom.modestmaps.core.Tile;
     
     public class TileQueue
     {

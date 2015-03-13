@@ -1,4 +1,4 @@
-package com.modestmaps.overlays
+package loom.modestmaps.overlays
 {
     import loom2d.events.Event;
     

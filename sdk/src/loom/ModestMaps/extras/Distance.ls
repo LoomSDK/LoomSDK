@@ -1,6 +1,6 @@
-package com.modestmaps.extras
+package loom.modestmaps.extras
 {
-    import com.modestmaps.geo.Location;
+    import loom.modestmaps.geo.Location;
     
     public class Distance
     {

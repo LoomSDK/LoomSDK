@@ -1,11 +1,11 @@
-package com.modestmaps.overlays
+package loom.modestmaps.overlays
 {
-    import com.modestmaps.Map;
-    import com.modestmaps.core.Coordinate;
-    import com.modestmaps.events.MapEvent;
-    import com.modestmaps.events.MarkerEvent;
-    import com.modestmaps.geo.Location;
-    import com.modestmaps.mapproviders.IMapProvider;
+    import loom.modestmaps.Map;
+    import loom.modestmaps.core.Coordinate;
+    import loom.modestmaps.events.MapEvent;
+    import loom.modestmaps.events.MarkerEvent;
+    import loom.modestmaps.geo.Location;
+    import loom.modestmaps.mapproviders.IMapProvider;
 
     import loom.platform.Timer;
     import loom2d.display.DisplayObject;
@@ -16,9 +16,9 @@ package com.modestmaps.overlays
     import loom2d.math.Point;
 
 
-    [Event(name="markerRollOver",    type="com.modestmaps.events.MarkerEvent")]
-    [Event(name="markerRollOut",     type="com.modestmaps.events.MarkerEvent")]
-    [Event(name="markerClick",       type="com.modestmaps.events.MarkerEvent")]
+    [Event(name="markerRollOver",    type="loom.modestmaps.events.MarkerEvent")]
+    [Event(name="markerRollOut",     type="loom.modestmaps.events.MarkerEvent")]
+    [Event(name="markerClick",       type="loom.modestmaps.events.MarkerEvent")]
     public class MarkerClip extends Sprite
     {
         public static const DEFAULT_ZOOM_TOLERANCE:int = 4;
@@ -428,7 +428,7 @@ package com.modestmaps.overlays
         * 
         * The MarkerEvent includes a reference to the marker and its location.
         *
-        * @see com.modestmaps.events.MarkerEvent.MARKER_CLICK
+        * @see loom.modestmaps.events.MarkerEvent.MARKER_CLICK
         */
 //TODO_24: add basic mouse/touch functionality            
         // protected function onMarkerClick(event:MouseEvent):void
@@ -443,7 +443,7 @@ package com.modestmaps.overlays
         * 
         * The MarkerEvent includes a reference to the marker and its location.
         *
-        * @see com.modestmaps.events.MarkerEvent.MARKER_ROLL_OVER
+        * @see loom.modestmaps.events.MarkerEvent.MARKER_ROLL_OVER
         */
 //TODO_24: ROLL_OVER / ROLL_OUT are like mouse_enter and mouse_exit... no equivalent Loom support atm :(
         // protected function onMarkerRollOver(event:MouseEvent):void
@@ -458,7 +458,7 @@ package com.modestmaps.overlays
         * 
         * The MarkerEvent includes a reference to the marker and its location.
         *
-        * @see com.modestmaps.events.MarkerEvent.MARKER_ROLL_OUT
+        * @see loom.modestmaps.events.MarkerEvent.MARKER_ROLL_OUT
         */
 //TODO_24: ROLL_OVER / ROLL_OUT are like mouse_enter and mouse_exit... no equivalent Loom support atm :(
         // protected function onMarkerRollOut(event:MouseEvent):void

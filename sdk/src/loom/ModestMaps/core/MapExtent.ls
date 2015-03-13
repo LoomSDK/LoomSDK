@@ -2,9 +2,9 @@
  * $Id$
  */
 
-package com.modestmaps.core
+package loom.modestmaps.core
 {
-    import com.modestmaps.geo.Location;
+    import loom.modestmaps.geo.Location;
     
     import loom2d.math.Rectangle;
     

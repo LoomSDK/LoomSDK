@@ -1,10 +1,10 @@
 
-package com.modestmaps.mapproviders.microsoft
+package loom.modestmaps.mapproviders.microsoft
 {
-    import com.modestmaps.core.Coordinate;
-    import com.modestmaps.mapproviders.AbstractMapProvider;
-    import com.modestmaps.mapproviders.IMapProvider;
-    import com.modestmaps.util.BinaryUtil;
+    import loom.modestmaps.core.Coordinate;
+    import loom.modestmaps.mapproviders.AbstractMapProvider;
+    import loom.modestmaps.mapproviders.IMapProvider;
+    import loom.modestmaps.util.BinaryUtil;
     
     /**
      * @author tom

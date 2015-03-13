@@ -6,7 +6,7 @@
  * @author darren
  * @author tom
  *
- * com.modestmaps.Map is the base class and interface for Modest Maps.
+ * loom.modestmaps.Map is the base class and interface for Modest Maps.
  *
  * @description Map is the base class and interface for Modest Maps.
  *              Correctly attaching an instance of this Sprite subclass 
@@ -14,23 +14,23 @@
  *              handlers must be added separately.
  *
  * @usage <code>
- *          import com.modestmaps.Map;
- *          import com.modestmaps.geo.Location;
- *          import com.modestmaps.mapproviders.BlueMarbleMapProvider;
+ *          import loom.modestmaps.Map;
+ *          import loom.modestmaps.geo.Location;
+ *          import loom.modestmaps.mapproviders.BlueMarbleMapProvider;
  *          ...
  *          var map:Map = new Map(640, 480, true, new BlueMarbleMapProvider());
  *          addChild(map);
  *        </code>
  *
  */
-package com.modestmaps
+package loom.modestmaps
 {
-    import com.modestmaps.core.*;
-    import com.modestmaps.events.*;
-    import com.modestmaps.geo.*;
-    import com.modestmaps.mapproviders.IMapProvider;
-    import com.modestmaps.mapproviders.microsoft.MicrosoftProvider;
-    import com.modestmaps.overlays.MarkerClip;
+    import loom.modestmaps.core.*;
+    import loom.modestmaps.events.*;
+    import loom.modestmaps.geo.*;
+    import loom.modestmaps.mapproviders.IMapProvider;
+    import loom.modestmaps.mapproviders.microsoft.MicrosoftProvider;
+    import loom.modestmaps.overlays.MarkerClip;
     import loom2d.display.Stage;
     
     import loom2d.display.DisplayObject;
@@ -41,22 +41,22 @@ package com.modestmaps
     import loom2d.math.Rectangle;
     import loom.gameframework.TimeManager;
     
-    [Event(name="startZooming",      type="com.modestmaps.events.MapEvent")]
-    [Event(name="stopZooming",       type="com.modestmaps.events.MapEvent")]
-    [Event(name="zoomedBy",          type="com.modestmaps.events.MapEvent")]
-    [Event(name="startPanning",      type="com.modestmaps.events.MapEvent")]
-    [Event(name="stopPanning",       type="com.modestmaps.events.MapEvent")]
-    [Event(name="panned",            type="com.modestmaps.events.MapEvent")]
-    [Event(name="resized",           type="com.modestmaps.events.MapEvent")]
-    [Event(name="mapProviderChanged",type="com.modestmaps.events.MapEvent")]
-    [Event(name="beginExtentChange", type="com.modestmaps.events.MapEvent")]
-    [Event(name="extentChanged",     type="com.modestmaps.events.MapEvent")]
-    [Event(name="beginTileLoading",  type="com.modestmaps.events.MapEvent")]
-    [Event(name="allTilesLoaded",    type="com.modestmaps.events.MapEvent")]
-    [Event(name="rendered",          type="com.modestmaps.events.MapEvent")]
-    [Event(name="markerRollOver",    type="com.modestmaps.events.MarkerEvent")]
-    [Event(name="markerRollOut",     type="com.modestmaps.events.MarkerEvent")]
-    [Event(name="markerClick",       type="com.modestmaps.events.MarkerEvent")]
+    [Event(name="startZooming",      type="loom.modestmaps.events.MapEvent")]
+    [Event(name="stopZooming",       type="loom.modestmaps.events.MapEvent")]
+    [Event(name="zoomedBy",          type="loom.modestmaps.events.MapEvent")]
+    [Event(name="startPanning",      type="loom.modestmaps.events.MapEvent")]
+    [Event(name="stopPanning",       type="loom.modestmaps.events.MapEvent")]
+    [Event(name="panned",            type="loom.modestmaps.events.MapEvent")]
+    [Event(name="resized",           type="loom.modestmaps.events.MapEvent")]
+    [Event(name="mapProviderChanged",type="loom.modestmaps.events.MapEvent")]
+    [Event(name="beginExtentChange", type="loom.modestmaps.events.MapEvent")]
+    [Event(name="extentChanged",     type="loom.modestmaps.events.MapEvent")]
+    [Event(name="beginTileLoading",  type="loom.modestmaps.events.MapEvent")]
+    [Event(name="allTilesLoaded",    type="loom.modestmaps.events.MapEvent")]
+    [Event(name="rendered",          type="loom.modestmaps.events.MapEvent")]
+    [Event(name="markerRollOver",    type="loom.modestmaps.events.MarkerEvent")]
+    [Event(name="markerRollOut",     type="loom.modestmaps.events.MarkerEvent")]
+    [Event(name="markerClick",       type="loom.modestmaps.events.MarkerEvent")]
     public class Map extends Sprite
     {
         protected var mapWidth:Number;
@@ -90,7 +90,7 @@ package com.modestmaps
         * @param    Desired map provider, e.g. Blue Marble.
         * @param    Either a MapExtent or a Location and zoom (comma separated)
         *
-        * @see com.modestmaps.core.TileGrid
+        * @see loom.modestmaps.core.TileGrid
         */
         public function Map(width:Number, height:Number, draggable:Boolean, mapProvider:IMapProvider, mapStage:Stage, ... rest)
         {
@@ -172,8 +172,8 @@ package com.modestmaps
         *
         * @param extent the minimum area to fit inside the map view
         *
-        * @see com.modestmaps.Map#calculateMapExtent
-        * @see com.modestmaps.core.TileGrid#resetTiles
+        * @see loom.modestmaps.Map#calculateMapExtent
+        * @see loom.modestmaps.core.TileGrid#resetTiles
         */
         public function setExtent(extent:MapExtent):void
         {
@@ -192,8 +192,8 @@ package com.modestmaps
         * @param    Location of center.
         * @param    Desired zoom level.
         *
-        * @see com.modestmaps.Map#calculateMapExtent
-        * @see com.modestmaps.core.TileGrid#resetTiles
+        * @see loom.modestmaps.Map#calculateMapExtent
+        * @see loom.modestmaps.core.TileGrid#resetTiles
         */
         public function setCenterZoom(location:Location, zoom:Number):void
         {
@@ -216,8 +216,8 @@ package com.modestmaps
          *
          * @param    Desired zoom level.
          *
-         * @see com.modestmaps.Map#calculateMapExtent
-         * @see com.modestmaps.core.TileGrid#resetTiles
+         * @see loom.modestmaps.Map#calculateMapExtent
+         * @see loom.modestmaps.core.TileGrid#resetTiles
          */
         public function setZoom(zoom:Number):void
         {
@@ -342,7 +342,7 @@ package com.modestmaps
         * @param w New map width.
         * @param h New map height.
         *
-        * @see com.modestmaps.events.MapEvent.RESIZED
+        * @see loom.modestmaps.events.MapEvent.RESIZED
         */
         public function setSize(w:Number, h:Number):void
         {
@@ -398,7 +398,7 @@ package com.modestmaps
         *
         * @return   Map provider.
         *
-        * @see com.modestmaps.mapproviders.IMapProvider
+        * @see loom.modestmaps.mapproviders.IMapProvider
         */
         public function getMapProvider():IMapProvider
         {
@@ -410,7 +410,7 @@ package com.modestmaps
         *
         * @param   Map provider.
         *
-        * @see com.modestmaps.mapproviders.IMapProvider
+        * @see loom.modestmaps.mapproviders.IMapProvider
         */
 //TODO_24: Test that we can swap poviders on the fly OK        
         public function setMapProvider(newProvider:IMapProvider):void
@@ -668,9 +668,9 @@ package com.modestmaps
         * The MapEvent includes the new extent.
         * 
         * TODO: dispatch this on resize?
-        * TODO: should we move Map to com.modestmaps.core so that this could be made internal instead of public?
+        * TODO: should we move Map to loom.modestmaps.core so that this could be made internal instead of public?
         *
-        * @see com.modestmaps.events.MapEvent.EXTENT_CHANGED
+        * @see loom.modestmaps.events.MapEvent.EXTENT_CHANGED
         */
         protected function onExtentChanged(event:Event=null):void
         {
@@ -683,7 +683,7 @@ package com.modestmaps
         * Dispatches MapEvent.BEGIN_EXTENT_CHANGE when the map is about to be resized.
         * The MapEvent includes the current.
         *
-        * @see com.modestmaps.events.MapEvent.BEGIN_EXTENT_CHANGE
+        * @see loom.modestmaps.events.MapEvent.BEGIN_EXTENT_CHANGE
         */
         protected function onExtentChanging():void
         {

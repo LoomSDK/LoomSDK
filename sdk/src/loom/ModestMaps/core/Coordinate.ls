@@ -2,7 +2,7 @@
  * $Id$
  */
 
-package com.modestmaps.core
+package loom.modestmaps.core
 {
     public class Coordinate extends Object
     {

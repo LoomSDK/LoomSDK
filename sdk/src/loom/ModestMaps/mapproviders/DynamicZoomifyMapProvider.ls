@@ -1,9 +1,9 @@
-package com.modestmaps.mapproviders
+package loom.modestmaps.mapproviders
 {
-    import com.modestmaps.geo.LinearProjection;
-    import com.modestmaps.geo.Location;
-    import com.modestmaps.geo.MercatorProjection;
-    import com.modestmaps.geo.Transformation;
+    import loom.modestmaps.geo.LinearProjection;
+    import loom.modestmaps.geo.Location;
+    import loom.modestmaps.geo.MercatorProjection;
+    import loom.modestmaps.geo.Transformation;
     
     import loom2d.math.Point;
     
