@@ -399,7 +399,22 @@ package loom.box2d
          */
         public native function getAngularVelocity():Number;
 
-        public native function getContactList():ContactEdge;
+        /**
+         * Get the number of bodies that this body is in contact with this 
+         */
+        public native function getNumContacts():int;
+
+        /**
+         * Check if this body is in contact with another body
+         * @param other The body to check against.
+         */
+        public native function isContacting(other:Body):Boolean;
+
+        /**
+         * Check if this body is touching a contact
+         * @param other The contact to check against
+         */
+        public native function isTouchingContact(other:Contact):Boolean;
         
         /**
          * Apply a force at a world point. If the force is not
@@ -514,6 +529,14 @@ package loom.box2d
          * @see loom.box2d.BodyDef
          */
         public native function setLinearDamping(linearDamping:Number):void;
+
+        /**
+         * Enable/Disable a contact that this body in touching at a specified index
+         * @param enabledState Enable/Disable state for the contact.
+         * @param contactIndex The index of the contact you want to modify.
+         * @return If the state change was successful.
+         */
+        public native function setContactEnabled(enabledState:Boolean, contactIndex:int):Boolean;
         
         /**
          * Get the angular damping of the body.
@@ -559,6 +582,13 @@ package loom.box2d
          * Get the sleeping state of the body.
          */
         public native function isSleepingAllowed():Boolean;
+
+        /**
+         * Checks if a specified contact is enabled
+         * @param contact The contact to check against.
+         * @return True if the contact is enabled. False if it isn't enabled or not found.
+         */
+        public native function isContactEnabled(contact:Contact):Boolean;
         
         /**
          * Set the sleep state of the body. A sleeping body has very low CPU cost.

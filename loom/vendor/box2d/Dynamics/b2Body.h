@@ -284,6 +284,9 @@ public:
 	/// Get the linear damping of the body.
 	float32 GetLinearDamping() const;
 
+	/// Get the number of bodies this body is in contact with
+	int GetNumContacts();
+
 	/// Set the linear damping of the body.
 	void SetLinearDamping(float32 linearDamping);
 
@@ -352,6 +355,12 @@ public:
 	/// Does this body have fixed rotation?
 	bool IsFixedRotation() const;
 
+	/// Is this body in contact with another body?
+	bool IsContacting(const b2Body* other);
+
+	/// Is this body touching another contact?
+	bool IsTouchingContact(const b2Contact* other);
+
 	/// Get the list of all fixtures attached to this body.
 	b2Fixture* GetFixtureList();
 	const b2Fixture* GetFixtureList() const;
@@ -375,6 +384,12 @@ public:
 
 	/// Set the user data. Use this to store your application specific data.
 	void SetUserData(void* data);
+
+	/// Enable/Disable a contact in this body
+	bool SetContactEnabled(bool enabledState, int contactIndex);
+
+	/// Is the specified contact enabled?
+	bool IsContactEnabled(const b2Contact* contact);
 
 	/// Get the parent world of this body.
 	b2World* GetWorld();

@@ -484,17 +484,6 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
 
-        .beginClass<b2ContactEdge>("ContactEdge")
-
-            .addConstructor <void (*)(void) >()
-
-            .addVar("other", &b2ContactEdge::other)
-            .addVar("contact", &b2ContactEdge::contact)
-            .addVar("prev", &b2ContactEdge::prev)
-            .addVar("next", &b2ContactEdge::next)
-
-        .endClass() 
-
         .beginClass<b2Body>("Body")
 
             .addMethod("createFixture", (b2Fixture* (b2Body::*)(const b2FixtureDef*))&b2Body::CreateFixture)
@@ -545,13 +534,17 @@ static int registerLoomBox2D(lua_State *L)
             .addMethod("isFixedRotation", &b2Body::IsFixedRotation)
             //.addMethod("getFixtureList", &b2Body::GetFixtureList)
             //.addMethod("getJointList", &b2Body::GetJointList)
-            .addMethod("getContactList", (b2ContactEdge* (b2Body::*)())&b2Body::GetContactList)
             .addMethod("getNext", (b2Body* (b2Body::*)())&b2Body::GetNext)
             //.addMethod("getUserData", &b2Body::GetUserData)
             //.addMethod("setUserData", &b2Body::SetUserData)
             .addMethod("getWorld", (b2World* (b2Body::*)())&b2Body::GetWorld)
             .addMethod("dump", &b2Body::Dump)
-
+// TODO_AHMED: PUT CONTACTLIST AND CONTACT STUFF HERE
+            .addMethod("isContacting", &b2Body::IsContacting)
+            .addMethod("getNumContacts", &b2Body::GetNumContacts)
+            .addMethod("isTouchingContact", &b2Body::IsTouchingContact)
+            .addMethod("setContactEnabled", &b2Body::SetContactEnabled)
+            .addMethod("isContactEnabled", &b2Body::IsContactEnabled)
         .endClass()
 
         .beginClass<b2Joint>("Joint")
