@@ -598,6 +598,13 @@ package loom.box2d
         public native function bodyToContactIndex(body:Body):int;
 
         /**
+         * Checks if a contact index correaltes to a body
+         * @param body The index to check
+         * @return The body at that index if found, null otherwise
+         */
+        public native function contactIndexToBody(contactIndex:int):Body;
+
+        /**
          * Get fixture A of a specific contact
          * @param contactIndex The index of the contact to check
          * @return Fixture A if found, null otherwise.

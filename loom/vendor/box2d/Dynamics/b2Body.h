@@ -388,6 +388,9 @@ public:
 	/// Get the contact index of a specific body, return -1 if the body isn't actually colliding with this body
 	int BodyToContactIndex(const b2Body* body);
 
+	/// Get the body related to a specific contactIndex. Returns null if not found
+	b2Body* ContactIndexToBody(int contactIndex);
+
 	/// Enable/Disable a contact in this body
 	bool SetContactEnabled(bool enabledState, int contactIndex);
 

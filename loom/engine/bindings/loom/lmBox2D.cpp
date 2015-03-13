@@ -460,6 +460,7 @@ static int registerLoomBox2D(lua_State *L)
         .endClass()
         */
 
+// TODO_AHMED: Remove this when done with testing
         .beginClass<b2Contact>("Contact")
 
             //.addMethod("getManifold", (b2Manifold* (b2Contact::*)())&b2Contact::GetManifold)
@@ -483,6 +484,17 @@ static int registerLoomBox2D(lua_State *L)
             //.addMethod("evaluate", &b2Contact::Evaluate)
 
         .endClass()
+
+        .beginClass<b2ContactEdge>("ContactEdge")
+
+            .addConstructor <void (*)(void) >()
+
+            .addVar("other", &b2ContactEdge::other)
+            .addVar("contact", &b2ContactEdge::contact)
+            .addVar("prev", &b2ContactEdge::prev)
+            .addVar("next", &b2ContactEdge::next)
+
+        .endClass() 
 
         .beginClass<b2Body>("Body")
 
@@ -535,21 +547,20 @@ static int registerLoomBox2D(lua_State *L)
             //.addMethod("getFixtureList", &b2Body::GetFixtureList)
             //.addMethod("getJointList", &b2Body::GetJointList)
             .addMethod("getNext", (b2Body* (b2Body::*)())&b2Body::GetNext)
-            //.addMethod("getUserData", &b2Body::GetUserData)
-            //.addMethod("setUserData", &b2Body::SetUserData)
             .addMethod("getWorld", (b2World* (b2Body::*)())&b2Body::GetWorld)
             .addMethod("dump", &b2Body::Dump)
-// NOTE: Loom can't pass b2dContact or b2dContactEdge classes back to loomscript becuase of how they are handled so
-// we're adding direct accessors into the body class
+            // NOTE: Loom can't pass b2dContact or b2dContactEdge classes back to loomscript becuase of how they are handled so
+            // we're adding direct accessors into the body class
             .addMethod("bodyToContactIndex", &b2Body::BodyToContactIndex)
+            .addMethod("contactIndexToBody", &b2Body::ContactIndexToBody)
             .addMethod("isContacting", &b2Body::IsContacting)
             .addMethod("getNumContacts", &b2Body::GetNumContacts)
             .addMethod("isTouchingContact", &b2Body::IsTouchingContact)
             .addMethod("setContactEnabled", &b2Body::SetContactEnabled)
             .addMethod("isContactEnabled", &b2Body::IsContactEnabled)
-            .addMethod("getContactFixtureA", (b2Fixture* (b2Body::*)())&b2Body::GetContactFixtureA)
+            .addMethod("getContactFixtureA", (b2Fixture* (b2Body::*)(int contactIndex)) &b2Body::GetContactFixtureA)
             .addMethod("getContactChildIndexA", &b2Body::GetContactChildIndexA)
-            .addMethod("getContactFixtureB", (b2Fixture* (b2Body::*)())&b2Body::GetContactFixtureB)
+            .addMethod("getContactFixtureB", (b2Fixture* (b2Body::*)(int contactIndex)) &b2Body::GetContactFixtureB)
             .addMethod("getContactChildIndexB", &b2Body::GetContactChildIndexB)
             .addMethod("setContactFriction", &b2Body::SetContactFriction)
             .addMethod("getContactFriction", &b2Body::GetContactFriction)

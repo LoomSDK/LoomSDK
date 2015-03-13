@@ -520,7 +520,6 @@ void b2Body::SetFixedRotation(bool flag)
     ResetMassData();
 }
 
-// TODO_AHMED: Comment 
 int b2Body::BodyToContactIndex(const b2Body* body)
 {
     b2ContactEdge* edge = m_contactList;
@@ -538,6 +537,25 @@ int b2Body::BodyToContactIndex(const b2Body* body)
     }
 
     return -1;    
+}
+
+b2Body* b2Body::ContactIndexToBody(int contactIndex)
+{
+    b2ContactEdge* edge = m_contactList;
+    int bodyContactIndex = 0;
+
+    while (edge)
+    {
+        if (bodyContactIndex == contactIndex)
+        {
+            return edge->other;
+        }
+
+        edge = edge->next;
+        bodyContactIndex++;
+    }
+
+    return NULL;    
 }
 
 bool b2Body::IsContacting(const b2Body* other)
