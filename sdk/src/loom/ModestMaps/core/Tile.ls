@@ -21,7 +21,9 @@ package loom.modestmaps.core
         public var column:int;
 
         protected var assignedTextures:Vector.<Texture> = [];
-                
+
+        protected static var textureRefs:Dictionary.<Texture, int> = {};
+
 
         public function Tile(column:int, row:int, zoom:int)
         {
@@ -43,10 +45,16 @@ package loom.modestmaps.core
         public function destroy():void
         {
             //clean up all textures
-            for(i=0;i<assignedTextures.length;i++)
+            for(var i=0;i<assignedTextures.length;i++)
             {
-//TODO_24: Need a texture ref counter as there are cases when the same texture can be used for multiple tiles...
-                assignedTextures[i].dispose();
+                //texture ref counter
+                var tex:Texture = assignedTextures[i];
+                textureRefs[tex]--;
+                if(textureRefs[tex] == 0)
+                {
+                    tex.dispose();
+                    textureRefs.deleteKey(tex);
+                }
             }
             assignedTextures.clear();
 
@@ -65,10 +73,15 @@ package loom.modestmaps.core
         public function assignTexture(texture:Texture):Image
         {
             //create an image for the newly loaded texture and add it to the tile
-//TODO_24: Need a texture ref counter as there are cases when the same texture can be used for multiple tiles...
             var img:Image = new Image(texture);                    
             addChild(img);
 
+            //texture ref counter
+            if(textureRefs[texture] == null)
+            {
+                textureRefs[texture] = 0;
+            }
+            textureRefs[texture]++;
 
             //store texture in a vector so we can track all of them
             assignedTextures.pushSingle(texture);
