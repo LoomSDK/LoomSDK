@@ -385,11 +385,52 @@ public:
 	/// Set the user data. Use this to store your application specific data.
 	void SetUserData(void* data);
 
+	/// Get the contact index of a specific body, return -1 if the body isn't actually colliding with this body
+	int BodyToContactIndex(const b2Body* body);
+
 	/// Enable/Disable a contact in this body
 	bool SetContactEnabled(bool enabledState, int contactIndex);
 
 	/// Is the specified contact enabled?
-	bool IsContactEnabled(const b2Contact* contact);
+	bool IsContactEnabled(int contactIndex);
+
+	/// Get Fixture A of a specified contact index
+	b2Fixture* GetContactFixtureA(int contactIndex);
+
+	/// Get the child primitive index for fixture A.
+	int32 GetContactChildIndexA(int contactIndex);
+
+	/// Get Fixture B of a specified contact index
+	b2Fixture* GetContactFixtureB(int contactIndex);
+	
+	/// Get the child primitive index for fixture B.
+	int32 GetContactChildIndexB(int contactIndex);
+
+	/// Override the default friction mixture. You can call this in b2ContactListener::PreSolve.
+	/// This value persists until set or reset. 
+	bool SetContactFriction(int contactIndex, float32 friction);
+
+	/// Get the friction.
+	float32 GetContactFriction(int contactIndex);
+
+	/// Reset the friction of the specified contact to it's default value
+	bool ResetContactFriction(int contactIndex);
+
+	/// Override the default Restitution mixture. You can call this in b2ContactListener::PreSolve.
+	/// This value persists until set or reset. 
+	bool SetContactRestitution(int contactIndex, float32 Restitution);
+
+	/// Get the Restitution.
+	float32 GetContactRestitution(int contactIndex);
+
+	/// Reset the Restitution of the specified contact to it's default value
+	bool ResetContactRestitution(int contactIndex);
+
+	/// Set the desired tangent speed for a conveyor belt behavior. In meters per second.
+	bool SetContactTangentSpeed(int contactIndex, float32 speed);
+
+	/// Get the tangent speed. In meters per second.
+	float32 GetContactTangentSpeed(int contactIndex);
 
 	/// Get the parent world of this body.
 	b2World* GetWorld();

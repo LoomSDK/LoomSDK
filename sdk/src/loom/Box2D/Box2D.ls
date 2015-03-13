@@ -588,8 +588,98 @@ package loom.box2d
          * @param contact The contact to check against.
          * @return True if the contact is enabled. False if it isn't enabled or not found.
          */
-        public native function isContactEnabled(contact:Contact):Boolean;
+        public native function isContactEnabled(contactIndex:int):Boolean;
+
+        /**
+         * Checks if a body is in the contacts of this body.
+         * @param body The body to check against.
+         * @return The index the of the body if found, -1 otherwise
+         */
+        public native function bodyToContactIndex(body:Body):int;
+
+        /**
+         * Get fixture A of a specific contact
+         * @param contactIndex The index of the contact to check
+         * @return Fixture A if found, null otherwise.
+         */
+        public native function getContactFixtureA(contactIndex:int):Fixture;
+
+        /*
+         * Get the child primitive index for fixture A.
+         * @param contactIndex The index of the contact to check
+         * @return The primitive index if found, null otherwise
+         */   
+        public native function getContactChildIndexA(contactIndex:int):int;
+
+        /**
+         * Get fixture B of a specific contact
+         * @param contactIndex The index of the contact to check
+         * @return Fixture B if found, null otherwise.
+         */
+        public native function getContactFixtureB(contactIndex:int):Fixture;
         
+        /*
+         * Get the child primitive index for fixture B.
+         * @param contactIndex The index of the contact to check
+         * @return The primitive index if found, null otherwise
+         */  
+        public native function getContactChildIndexB(contactIndex:int):int;
+
+        /*
+         * Get the friction of a specified contact.
+         * @param contactIndex The index of the contact to check
+         * @return The friction value.
+         */  
+        public native function getContactFriction(contactIndex:int):Number;
+
+        /*
+         * Override the friction of a specified contact. Will only change again if set to another value or if resetContactFrication is called()
+         * @param contactIndex The index of the contact to check
+         * @return True if the contact was found and it's friction set, false otherwise.
+         */  
+        public native function setContactFriction(contactIndex:int, friction:Number):Boolean;
+
+        /*
+         * Reset the friction value of a specified contact to its default value.
+         * @param contactIndex The index of the contact to check
+         * @return True if the contact was found and it's friction set, false otherwise.
+         */  
+        public native function resetContactFriction(contactIndex:int):Boolean;
+
+        /*
+         * Get the restitution of a specified contact.
+         * @param contactIndex The index of the contact to check
+         * @return The friction value.
+         */  
+        public native function getContactRestitution(contactIndex:int):Number;
+
+        /*
+         * Override the restitution of a specified contact. Will only change again if set to another value or if resetContactFrication is called()
+         * @param contactIndex The index of the contact to check
+         * @return True if the contact was found and it's restitution set, false otherwise.
+         */  
+        public native function setContactRestitution(contactIndex:int, restitution:Number):Boolean;
+
+        /*
+         * Reset the restitution value of a specified contact to its default value.
+         * @param contactIndex The index of the contact to check
+         * @return True if the contact was found and it's restitution set, false otherwise.
+         */  
+        public native function resetContactRestitution(contactIndex:int):Boolean;
+        
+        /*
+         * Get the tangential speed of a specified contact, in meters per second.
+         * @param contactIndex The index of the contact to check
+         * @return The tangential speed value, in meters per second.
+         */  
+        public native function getContactTangentSpeed(contactIndex:int):Number;
+
+        /*
+         * Set the tangential speed of a specified contact in meters per second.
+         * @return True if the contact was found and it's TangentSpeed set, false otherwise.
+         */  
+        public native function setContactTangentSpeed(contactIndex:int, restitution:Number):Boolean;
+
         /**
          * Set the sleep state of the body. A sleeping body has very low CPU cost.
          * @param flag Set to true to wake the body, false to put it to sleep.

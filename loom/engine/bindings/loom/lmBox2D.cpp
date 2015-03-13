@@ -464,14 +464,14 @@ static int registerLoomBox2D(lua_State *L)
 
             //.addMethod("getManifold", (b2Manifold* (b2Contact::*)())&b2Contact::GetManifold)
             //.addMethod("getWorldManifold", (b2Manifold* (b2Contact::*)())&b2Contact::GetWorldManifold)
-            .addMethod("isTouching", &b2Contact::IsTouching)
-            .addMethod("setEnabled", &b2Contact::SetEnabled)
-            .addMethod("isEnabled", &b2Contact::IsEnabled)
-            .addMethod("getNext", (b2Contact* (b2Contact::*)())&b2Contact::GetNext)
-            .addMethod("getFixtureA", (b2Fixture* (b2Contact::*)())&b2Contact::GetFixtureA)
-            .addMethod("getChildIndexA", &b2Contact::GetChildIndexA)
-            .addMethod("getFixtureB", (b2Fixture* (b2Contact::*)())&b2Contact::GetFixtureB)
-            .addMethod("getChildIndexB", &b2Contact::GetChildIndexB)
+            .addMethod("isTouching", &b2Contact::IsTouching) //
+            .addMethod("setEnabled", &b2Contact::SetEnabled) //
+            .addMethod("isEnabled", &b2Contact::IsEnabled) //
+            .addMethod("getNext", (b2Contact* (b2Contact::*)())&b2Contact::GetNext) //X
+            .addMethod("getFixtureA", (b2Fixture* (b2Contact::*)())&b2Contact::GetFixtureA)//
+            .addMethod("getChildIndexA", &b2Contact::GetChildIndexA)//
+            .addMethod("getFixtureB", (b2Fixture* (b2Contact::*)())&b2Contact::GetFixtureB)//
+            .addMethod("getChildIndexB", &b2Contact::GetChildIndexB)//
             .addMethod("setFriction", &b2Contact::SetFriction)
             .addMethod("getFriction", &b2Contact::GetFriction)
             .addMethod("resetFriction", &b2Contact::ResetFriction)
@@ -539,12 +539,26 @@ static int registerLoomBox2D(lua_State *L)
             //.addMethod("setUserData", &b2Body::SetUserData)
             .addMethod("getWorld", (b2World* (b2Body::*)())&b2Body::GetWorld)
             .addMethod("dump", &b2Body::Dump)
-// TODO_AHMED: PUT CONTACTLIST AND CONTACT STUFF HERE
+// NOTE: Loom can't pass b2dContact or b2dContactEdge classes back to loomscript becuase of how they are handled so
+// we're adding direct accessors into the body class
+            .addMethod("bodyToContactIndex", &b2Body::BodyToContactIndex)
             .addMethod("isContacting", &b2Body::IsContacting)
             .addMethod("getNumContacts", &b2Body::GetNumContacts)
             .addMethod("isTouchingContact", &b2Body::IsTouchingContact)
             .addMethod("setContactEnabled", &b2Body::SetContactEnabled)
             .addMethod("isContactEnabled", &b2Body::IsContactEnabled)
+            .addMethod("getContactFixtureA", (b2Fixture* (b2Body::*)())&b2Body::GetContactFixtureA)
+            .addMethod("getContactChildIndexA", &b2Body::GetContactChildIndexA)
+            .addMethod("getContactFixtureB", (b2Fixture* (b2Body::*)())&b2Body::GetContactFixtureB)
+            .addMethod("getContactChildIndexB", &b2Body::GetContactChildIndexB)
+            .addMethod("setContactFriction", &b2Body::SetContactFriction)
+            .addMethod("getContactFriction", &b2Body::GetContactFriction)
+            .addMethod("resetContactFriction", &b2Body::ResetContactFriction)
+            .addMethod("setContactRestitution", &b2Body::SetContactRestitution)
+            .addMethod("getContactRestitution", &b2Body::GetContactRestitution)
+            .addMethod("resetContactRestitution", &b2Body::ResetContactRestitution)
+            .addMethod("setContactTangentSpeed", &b2Body::SetContactTangentSpeed)
+            .addMethod("getContactTangentSpeed", &b2Body::GetContactTangentSpeed)
         .endClass()
 
         .beginClass<b2Joint>("Joint")
@@ -557,8 +571,6 @@ static int registerLoomBox2D(lua_State *L)
             .addMethod("getReactionForce", &b2Joint::GetReactionForce)
             .addMethod("getReactionTorque", &b2Joint::GetReactionTorque)
             .addMethod("getNext", (b2Joint* (b2Joint::*)())&b2Joint::GetNext)
-            //.addMethod("getUserData", &b2Joint::GetUserData)
-            //.addMethod("setUserData", &b2Joint::SetUserData)
             .addMethod("isActive", &b2Joint::IsActive)
             .addMethod("getCollideConnected", &b2Joint::GetCollideConnected)
             .addMethod("dump", &b2Joint::Dump)
