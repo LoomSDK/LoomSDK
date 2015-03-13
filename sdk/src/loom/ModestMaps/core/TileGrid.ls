@@ -22,7 +22,7 @@ package loom.modestmaps.core
     
     public class TileGrid extends Sprite
     {       
-//TODO_24: test these consts out to see if any need tweaking for a mobile app vs. online AS3..        
+        //TODO_TEC: test these consts out to see if any need tweaking for a mobile app vs. online AS3..        
         protected static const DEFAULT_MAX_PARENT_SEARCH:int = 5;
         protected static const DEFAULT_MAX_PARENT_LOAD:int = 0; // enable this to load lower zoom tiles first
         protected static const DEFAULT_MAX_CHILD_SEARCH:int = 1;
@@ -309,10 +309,7 @@ package loom.modestmaps.core
          * from my recent testing, TileGrid.onRender takes < 5ms most of the time, and rarely >10ms
          * (Flash Player 9, Firefox, Macbook Pro)
          *  
-         */
-        
-//PERF_24: added populated flag so that the map only gets populated once (search for if (!populated)), adds a massive performance boost
-var populated:Boolean = false; 
+         */        
         protected function _onRender():void
         {
             //var t:Number = getTimer();
@@ -373,13 +370,8 @@ var populated:Boolean = false;
             var maxRow:int = Math.floor(Math.max(tlC.row,brC.row,trC.row,blC.row)) + tileBuffer;
 
             
-//PERF_24: added populated flag so that the map only gets populated once (search for if (!populated)), adds a massive performance boost
-if (!populated)
-            {
-                // loop over all tiles and find parent or child tiles from cache to compensate for unloaded tiles:
-                repopulateVisibleTiles(minCol, maxCol, minRow, maxRow);
-//populated = true;
-            }
+            // loop over all tiles and find parent or child tiles from cache to compensate for unloaded tiles:
+            repopulateVisibleTiles(minCol, maxCol, minRow, maxRow);
             
             // move visible tiles to the end of recentlySeen if we're done loading them
             // the 'least recently seen' tiles will be removed from the tileCache below
@@ -447,6 +439,7 @@ if (!populated)
          * loops over given cols and rows and adds tiles to visibleTiles array and the well
          * using child or parent tiles to compensate for tiles not yet available in the tileCache
          */
+//PERF_24: repopulateVisibleTiles is CPU intensive... need to look at and optimize
         private function repopulateVisibleTiles(minCol:int, maxCol:int, minRow:int, maxRow:int):void
         {
             visibleTiles = []; 
@@ -763,7 +756,6 @@ if (!populated)
                 
         var doubleTouchActive = false;  // If we're doing a double touch we don't want the map to pan twice
         var canProcessDoubleTap = true; // We don't want a double tap event to fire over two consective frames, so we introduce a lock on when it can happen
-        var doubleTapZoomedIn = false;  // Used to track what the double tap should do. i.e Should double tapping zoom in or out?
         var doubleTapZoomAmount = 1; // The amount to zoom in on a double tap
         public function touchEventProcess(event:TouchEvent):void
         {
@@ -783,20 +775,7 @@ if (!populated)
                 
             if (touches[0].tapCount == 2 && canProcessDoubleTap)
             {
-                if (doubleTapZoomedIn)
-                {
-                    zoomByAbout(-doubleTapZoomAmount, touches[0].getLocation(stage));
-                    
-                    doubleTapZoomedIn = false;
-                    canProcessDoubleTap = false;
-                }
-                else
-                {
-                    zoomByAbout(doubleTapZoomAmount, touches[0].getLocation(stage));
-                    
-                    doubleTapZoomedIn = true;
-                    canProcessDoubleTap = false;
-                }
+                zoomByAbout(doubleTapZoomAmount, touches[0].getLocation(stage));
             }
         }
 

@@ -53,7 +53,7 @@ package loom.modestmaps.geo
 
         public function toString():String
         {
-            //NOTE_24: Unable to have precision as a parameter for the override on Object toString() so hardcoding it instead
+            //NOTE_TEC: Unable to have precision as a parameter for the override on Object toString() so hardcoding it instead
             var precision:int = 5;
             return [lat.toFixed(precision), lon.toFixed(precision)].join(',');
         }

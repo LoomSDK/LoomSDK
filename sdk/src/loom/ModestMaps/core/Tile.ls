@@ -43,8 +43,21 @@ package loom.modestmaps.core
         /** once TileGrid is done with a tile, it will call destroy and possibly reuse it later */
         public function destroy():void
         {
-return;            
-//TODO_24: not working!!! If this happens, our updates of new tile image requests seem to stop... :/            
+            //clean up all textures
+            var i:int;
+            for(i=0;i<requestedTextures.length;i++)
+            {
+                requestedTextures[i].cancelHTTPRequest();
+            }
+            for(i=0;i<assignedTextures.length;i++)
+            {
+//TODO_24: Need a texture ref counter as there are cases when the same texture can be used for multiple tiles...
+                assignedTextures[i].dispose();
+            }
+            assignedTextures.clear();
+            requestedTextures.clear();
+
+            //dispose all child Images
             while (numChildren > 0) {
                 var child:DisplayObject = removeChildAt(0);
                 
@@ -54,20 +67,6 @@ return;
                     child.dispose();
                 }
             }
-
-            //clean up all textures
-            var i:int;
-            for(i=0;i<requestedTextures.length;i++)
-            {
-                requestedTextures[i].cancelHTTPRequest();
-            }
-            for(i=0;i<assignedTextures.length;i++)
-            {
-//TODO_24: Need a ref counter to be safe... static for all tiles as it seems sometimes tiles share textures?... :/                
-                assignedTextures[i].dispose();
-            }
-            assignedTextures.clear();
-            requestedTextures.clear();
         }
 
         public function requestTexture(texture:Texture):void
@@ -76,9 +75,10 @@ return;
             requestedTextures.pushSingle(texture);
         }
 
-        public function assignTexture(texture:Texture):void
+        public function assignTexture(texture:Texture):Image
         {
             //create an image for the newly loaded texture and add it to the tile
+//TODO_24: Need a texture ref counter as there are cases when the same texture can be used for multiple tiles...
             var img:Image = new Image(texture);                    
             addChild(img);
 
@@ -87,6 +87,7 @@ return;
 
             //store texture in a vector so we can track all of them
             assignedTextures.pushSingle(texture);
+            return img;
         }
 
         public function isUsingTexture(texture:Texture):Boolean
@@ -117,12 +118,13 @@ return;
         
         public function paintError(w:Number=256, h:Number=256):void
         {
-            // length of 'X' side, padding from edge, weight of 'X' symbol
-            var size:uint = 32;
-            var padding:uint = 4;
-            var weight:uint = 4;
+            //TODO_TEC: Show an error visually for this tile... display an X texture or something?
+            trace("ERROR setting a texture for this tile!");
+        }
 
-//TODO_24: Show an error visually for this tile... display an X texture or something?
+        public function toString():String
+        {
+            return "(" + column + ", " + row + ", " + zoom + ")";
         }
     }
 }

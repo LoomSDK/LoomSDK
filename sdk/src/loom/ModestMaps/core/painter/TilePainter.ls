@@ -5,7 +5,7 @@ package loom.modestmaps.core.painter
     import loom.modestmaps.core.TileGrid;
     import loom.modestmaps.events.MapEvent;
     import loom.modestmaps.mapproviders.IMapProvider;
-    import loom2d.display.AsyncImage;
+    import loom2d.display.Image;
     import loom2d.textures.Texture;
     import loom2d.textures.TextureSmoothing;
         
@@ -137,6 +137,7 @@ package loom.modestmaps.core.painter
                 var texture:Texture = openRequests[i];
                 if (tile.isUsingTexture(texture)) {
                     loaderTiles.deleteKey(texture);
+                    openRequests.remove(texture);
                 }
             }
             if (!tileCache.containsKey(tile.name)) {
@@ -167,28 +168,34 @@ package loom.modestmaps.core.painter
     
         private function loadNextURLForTile(tile:Tile):void
         {
-//TODO_24: seems like not all URLs are loaded / or are assigned to the right tiles, etc.... 
-//at start, we see 6 images for 8 tiles, but there are 10 HTTP requests and 2 cached textues used...            
             // TODO: add urls to Tile?
             var urls:Vector.<String> = layersNeeded[tile.name] as Vector.<String>;
             if (urls && urls.length > 0) {
                 var url = urls.shift();
 
                 //request the texture via HTTP
+//TODO_24: we're unable to click on empty BG of the painter where there are no Images... 
+//should we always have an Image(null) on a tile by default?
+//image.setSize(tileGrid.tileWidth, tileGrid.tileHeight); ??
+
                 var texture:Texture = Texture.fromHTTP(url, onLoadEnd, onLoadFail, false, false);
                 if(texture == null)
                 {
                     tile.paintError();
                 }
-                else if(texture.isTextureValid())
+//TODO_24: Issue if an already requested texture is returned here... need to track differently!                
+else if(texture.isTextureValid())// || openRequests.contains(texture))
                 {
-trace("---image url already cached: ", url);
-                    tile.assignTexture(texture);
+                    var image:Image = tile.assignTexture(texture);
+//                     if(!texture.isTextureValid())
+//                     {
+// trace("----set size!!!");                        
+//                         image.setSize(tileGrid.tileWidth, tileGrid.tileHeight);
+//                     }
                     loadNextURLForTile(tile);
                 }
                 else
                 {
-trace("---requesting image url: ", url);
                     tile.requestTexture(texture);
                     loaderTiles[texture] = tile;
                     openRequests.pushSingle(texture);
@@ -264,22 +271,26 @@ trace("---requesting image url: ", url);
             }
             else
             {
-//TODO_24: could happen if a cancelPainting on a tile is called, or reset, 
-//before this texture has finished loading I think... make sure it's handled properly!           
-trace("---BAD!!! SHOULD NEVER GET HERE!!?!?!");
-                texture.dispose();                
+                //will get here if reset() or cancelPainting() on a tile is called before the requested 
+                //texture has finished loading I think... make sure it's handled properly!           
+//TODO_24: Need a texture ref counter as there are cases when the same texture can be used for multiple tiles...
+                texture.dispose();
             }
         }
 
         private function onLoadFail(texture:Texture):void
         {
-trace("---onLoadFail");
+            openRequests.remove(texture);
+
             var tile:Tile = loaderTiles[texture];
             if (tile) { 
                 Console.print("ERROR: Failed to load map tile texture via HTTP for tile: " + tile.name);
                 tile.paintError();
                 loaderTiles.deleteKey(texture);
             }
+
+            //NOTE_TEC: Do we want to try to reload it somehow? Or just let it be an 'error' and let 
+            //it auto-request when the tile is flagged as dirty again after scrolling/zooming?
         }
         
         public function getQueueCount():int

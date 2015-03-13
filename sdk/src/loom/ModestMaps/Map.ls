@@ -77,7 +77,7 @@ package loom.modestmaps
          */
         public var panFraction:Number = 0.333333333;
 
-        //NOTE_24: Added a static Stage because Actionscript Sprites all have their parent stage, whereas Loom does not
+        //NOTE_TEC: Added a static Stage because Actionscript Sprites all have their parent stage, whereas Loom does not
         public static var MapStage:Stage;
         
         /**
@@ -411,7 +411,6 @@ package loom.modestmaps
         *
         * @see loom.modestmaps.mapproviders.IMapProvider
         */
-//TODO_24: Test that we can swap poviders on the fly OK        
         public function setMapProvider(newProvider:IMapProvider):void
         {
             var previousGeometry:String;
