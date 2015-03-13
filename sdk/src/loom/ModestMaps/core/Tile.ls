@@ -20,7 +20,6 @@ package loom.modestmaps.core
         public var row:int;
         public var column:int;
 
-        protected var requestedTextures:Vector.<Texture> = [];
         protected var assignedTextures:Vector.<Texture> = [];
                 
 
@@ -44,18 +43,12 @@ package loom.modestmaps.core
         public function destroy():void
         {
             //clean up all textures
-            var i:int;
-            for(i=0;i<requestedTextures.length;i++)
-            {
-                requestedTextures[i].cancelHTTPRequest();
-            }
             for(i=0;i<assignedTextures.length;i++)
             {
 //TODO_24: Need a texture ref counter as there are cases when the same texture can be used for multiple tiles...
                 assignedTextures[i].dispose();
             }
             assignedTextures.clear();
-            requestedTextures.clear();
 
             //dispose all child Images
             while (numChildren > 0) {
@@ -69,12 +62,6 @@ package loom.modestmaps.core
             }
         }
 
-        public function requestTexture(texture:Texture):void
-        {
-            //store texture in a vector so we can track all of them
-            requestedTextures.pushSingle(texture);
-        }
-
         public function assignTexture(texture:Texture):Image
         {
             //create an image for the newly loaded texture and add it to the tile
@@ -82,22 +69,10 @@ package loom.modestmaps.core
             var img:Image = new Image(texture);                    
             addChild(img);
 
-            //make sure it's not in our requested list still
-            requestedTextures.remove(texture);
 
             //store texture in a vector so we can track all of them
             assignedTextures.pushSingle(texture);
             return img;
-        }
-
-        public function removeRequestedTexture(texture:Texture):void
-        {
-            requestedTextures.remove(texture);
-        }
-
-        public function isUsingTexture(texture:Texture):Boolean
-        {
-            return (assignedTextures.contains(texture) || requestedTextures.contains(texture)) ? true : false;
         }
         
         public function isShowing():Boolean

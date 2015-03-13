@@ -135,16 +135,16 @@ package loom.modestmaps.core.painter
 
             for (var i:int = openRequests.length - 1; i >= 0; i--) {
                 var texture:Texture = openRequests[i];
-                if (tile.isUsingTexture(texture)) {
-                    if(loaderTiles[texture] != null)
+                if(loaderTiles[texture] != null)
+                {
+                    loaderTiles[texture].remove(tile);
+                    if(loaderTiles[texture].length == 0)
                     {
-                        loaderTiles[texture].remove(tile);
-                        if(loaderTiles[texture].length == 0)
-                        {
-                            loaderTiles.deleteKey(texture);
-                        }
+                        //only detel refs to this texture if nothing else is using it
+                        loaderTiles.deleteKey(texture);
+                        openRequests.remove(texture);
+                        texture.cancelHTTPRequest();
                     }
-                    openRequests.remove(texture);
                 }
             }
             if (!tileCache.containsKey(tile.name)) {
@@ -161,6 +161,7 @@ package loom.modestmaps.core.painter
         public function reset():void
         {
             for each (var texture:Texture in openRequests) {
+                texture.cancelHTTPRequest();
                 if(loaderTiles[texture] != null)
                 {
                     var tileList:Vector.<Tile> = loaderTiles[texture];
@@ -186,10 +187,6 @@ package loom.modestmaps.core.painter
                 var url = urls.shift();
 
                 //request the texture via HTTP
-//TODO_24: we're unable to click on empty BG of the painter where there are no Images... 
-//should we always have an Image(null) on a tile by default?
-//image.setSize(tileGrid.tileWidth, tileGrid.tileHeight); ??
-
                 var texture:Texture = Texture.fromHTTP(url, onLoadEnd, onLoadFail, false, false);
                 if(texture == null)
                 {
@@ -206,7 +203,6 @@ package loom.modestmaps.core.painter
                 else
                 {
                     //need to wait for the texture to finish loading, so put into the request queue
-                    tile.requestTexture(texture);
                     if(loaderTiles[texture] == null)
                     {
                         loaderTiles[texture] = [tile];
@@ -216,6 +212,9 @@ package loom.modestmaps.core.painter
                         loaderTiles[texture].pushSingle(tile);
                     }
                     openRequests.pushSingle(texture);
+
+//TODO_24: we're unable to click on empty BG of the painter where there are no Images... 
+//should we always have an Image(null) on a tile by default?
                 }
             }
             else if (urls && urls.length == 0) {
@@ -313,7 +312,6 @@ package loom.modestmaps.core.painter
                 for each (var tile:Tile in tileList) {
                     Console.print("ERROR: Failed to load map tile texture via HTTP for tile: " + tile.name);
                     tile.paintError();
-                    tile.removeRequestedTexture(texture);
                 }
                 loaderTiles.deleteKey(texture);
             }
