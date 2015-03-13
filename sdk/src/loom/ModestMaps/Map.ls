@@ -117,9 +117,8 @@ package loom.modestmaps
 
             setSize(width, height);
 
-//TODO_24: not adding the MarkerClip just yet until other things start working...            
-            //markerClip = new MarkerClip(this);
-            //addChild(markerClip);
+            markerClip = new MarkerClip(this);
+            addChild(markerClip);
 
             // if rest was passed in from super constructor in a subclass,
             // it will be an array...

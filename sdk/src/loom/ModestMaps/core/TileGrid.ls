@@ -204,7 +204,7 @@ package loom.modestmaps.core
         private function onAddedToStage(event:Event):void
         {
             if (draggable) {
-                addEventListener(TouchEvent.TOUCH, mousePressed);
+                addEventListener(TouchEvent.TOUCH, touchEventProcess);
             }
             
             onRender += _onRender;
@@ -225,7 +225,7 @@ package loom.modestmaps.core
         private function onRemovedFromStage(event:Event):void
         {
             if (hasEventListener(TouchEvent.TOUCH)) {
-                removeEventListener(TouchEvent.TOUCH, mousePressed);
+                removeEventListener(TouchEvent.TOUCH, touchEventProcess);
             }
             onRender -= _onRender;
 
@@ -614,11 +614,7 @@ if (!populated)
         {
             // sort children by difference from current zoom level
             // this means current is on top, +1 and -1 are next, then +2 and -2, etc.
-
-//TODO_24: check that sort + reverse is the same as a DESCENDING sort... 
-//          optimally, the sort function should be changed to order differently instead!!!
             visibleTiles.sort(distanceFromCurrentZoomCompare);
-            visibleTiles.reverse();
                 
             // for positioning tile according to current transform, based on current tile zoom          
             var scaleFactors:Vector.<Number> = new Vector.<Number>(maxZoom + 1);            
@@ -675,18 +671,18 @@ if (!populated)
             return Math.abs(t1.zoom-currentTileZoom) < Math.abs(t2.zoom-currentTileZoom) ? -1 : 1;
         }
         
-        // for sorting arrays of tiles by distance from currentZoom     
+        // for sorting arrays of tiles by distance from currentZoom in a DESCENDING fashion
         private function distanceFromCurrentZoomCompare(t1:Tile, t2:Tile):int
         {
             var d1:int = Math.abs(t1.zoom-currentTileZoom);
             var d2:int = Math.abs(t2.zoom-currentTileZoom);
-            return d1 < d2 ? -1 : d1 > d2 ? 1 : zoomCompare(t2, t1); // t2, t1 so that big tiles are on top of small 
+            return d1 < d2 ? 1 : d1 > d2 ? -1 : zoomCompare(t2, t1); // t2, t1 so that big tiles are on top of small 
         }
 
         // for when tiles have same difference in zoom in distanceFromCurrentZoomCompare        
         private static function zoomCompare(t1:Tile, t2:Tile):int
         {
-            return t1.zoom == t2.zoom ? 0 : t1.zoom > t2.zoom ? 1 : -1; 
+            return t1.zoom == t2.zoom ? 0 : t1.zoom > t2.zoom ? -1 : 1; 
         }
 
         // makes sure that if a tile with the given key exists in the cache
@@ -769,18 +765,17 @@ if (!populated)
         var canProcessDoubleTap = true; // We don't want a double tap event to fire over two consective frames, so we introduce a lock on when it can happen
         var doubleTapZoomedIn = false;  // Used to track what the double tap should do. i.e Should double tapping zoom in or out?
         var doubleTapZoomAmount = 1; // The amount to zoom in on a double tap
-        public function mousePressed(event:TouchEvent):void
+        public function touchEventProcess(event:TouchEvent):void
         {
             prepareForPanning(true);
             
             var touches = event.getTouches(stage);          
-trace(touches[0].getLocation(stage).toString());            
             
             if (touches[0].phase == TouchPhase.MOVED && !doubleTouchActive)
                 mouseDragged(touches[0].getMovement(stage));
             
             if (touches[0].phase == TouchPhase.ENDED)
-                mouseReleased();
+                mouseReleased(event);
     
             // Reset our ability to process taps when the tap counter resets
             if (touches[0].tapCount == 1)
@@ -805,7 +800,7 @@ trace(touches[0].getLocation(stage).toString());
             }
         }
 
-        public function mouseReleased():void
+        public function mouseReleased(event:TouchEvent):void
         {
             donePanning();
             dirty = true;

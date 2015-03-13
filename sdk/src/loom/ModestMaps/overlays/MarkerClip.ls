@@ -11,8 +11,9 @@ package loom.modestmaps.overlays
     import loom2d.display.DisplayObject;
     import loom2d.display.Sprite;
     import loom2d.events.Event;
-//TODO_24: add basic mouse/touch functionality            
-    //import flash.events.MouseEvent;
+    import loom2d.events.Touch;
+    import loom2d.events.TouchEvent;
+    import loom2d.events.TouchPhase;
     import loom2d.math.Point;
 
 
@@ -78,8 +79,7 @@ package loom.modestmaps.overlays
             // to get all events bubbled up from the markers
                         
             this.map = map;
-            this.x = map.getWidth() / 2;
-            this.y = map.getHeight() / 2;
+            setPos(map.getWidth() / 2, map.getHeight() / 2);
             previousGeometry = map.getMapProvider().geometry();
 
             map.addEventListener(MapEvent.STOP_ZOOMING, onMapStopZooming);
@@ -92,10 +92,9 @@ package loom.modestmaps.overlays
             map.addEventListener(MapEvent.MAP_PROVIDER_CHANGED, onMapProviderChanged);
 
             // these were previously in Map, but now MarkerEvents bubble it makes more sense to have them here
-//TODO_24: add basic mouse/touch functionality            
-            // addEventListener( MouseEvent.CLICK, onMarkerClick );
+            addEventListener( TouchEvent.TOUCH, touchEventProcess );
 
-//TODO_24: ROLL_OVER / ROLL_OUT are like mouse_enter and mouse_exit... no equivalent Loom support atm :(
+            //NOTE_TEC: ROLL_OVER / ROLL_OUT are like mouse_enter and mouse_exit... no equivalent Loom support atm
             // addEventListener( MouseEvent.ROLL_OVER, onMarkerRollOver, true );        
             // addEventListener( MouseEvent.ROLL_OUT, onMarkerRollOut, true );
 
@@ -107,15 +106,10 @@ package loom.modestmaps.overlays
             return markers.length;
         }
         
-//TODO_24: next 2 setters crash???        
-        override public function set x(value:Number):void
+        public function setPos(px:Number, py:Number):void
         {
-            super.x = snapToPixels ? Math.round(value) : value;
-        }
-        
-        override public function set y(value:Number):void
-        {
-            super.y = snapToPixels ? Math.round(value) : value;
+            x = snapToPixels ? Math.round(px) : px;
+            y = snapToPixels ? Math.round(py) : py;
         }
         
         protected function onAddedToStage(event:Event):void
@@ -232,8 +226,7 @@ package loom.modestmaps.overlays
             
             drawCoord = center.copy();
             
-            this.x = map.getWidth() / 2;
-            this.y = map.getHeight() / 2;       
+            setPos(map.getWidth() / 2, map.getHeight() / 2);
             
             if (scaleZoom) {
                 scaleX = scaleY = 1.0;
@@ -272,7 +265,6 @@ package loom.modestmaps.overlays
             // use a timer so we don't do this every single frame, otherwise
             // sorting markers and applying depths pretty much doubles the 
             // time to run updateClips 
-//TODO_24: test that our new Timer functionality works as expected            
             if (sortTimer) {
                 sortTimer.reset();
             }
@@ -292,7 +284,6 @@ package loom.modestmaps.overlays
             // only sort if we have a function:         
             if (sortUpdateOrder && markerSortFunction != null)
             {
-//TODO_24: Make sure the marker sorting works correctly
                 markers.sort(markerSortFunction);
             }
             // apply depths to maintain the order things were added in
@@ -353,8 +344,7 @@ package loom.modestmaps.overlays
         {
             if (drawCoord) {
                 var p:Point = map.grid.coordinatePoint(drawCoord);
-                this.x = p.x;
-                this.y = p.y;
+                setPos(p.x, p.y);
             }
             else {
                 dirty = true;
@@ -388,8 +378,7 @@ package loom.modestmaps.overlays
         
         protected function onMapResized(event:MapEvent):void
         {
-            x = map.getWidth() / 2;
-            y = map.getHeight() / 2;
+            setPos(map.getWidth() / 2, map.getHeight() / 2);
             dirty = true;
             updateClips(); // force redraw because flash seems stingy about it
         }
@@ -410,10 +399,6 @@ package loom.modestmaps.overlays
         protected function set dirty(d:Boolean):void
         {
             _dirty = d;
-//LUKE_SAYS: probably don't need this. It's used to tell Flash to redraw, but Loom always draws every frame whatever is there
-            // if (d) {
-            //  if (stage) stage.invalidate();
-            // }
         }
         
         protected function get dirty():Boolean
@@ -430,14 +415,20 @@ package loom.modestmaps.overlays
         *
         * @see loom.modestmaps.events.MarkerEvent.MARKER_CLICK
         */
-//TODO_24: add basic mouse/touch functionality            
-        // protected function onMarkerClick(event:MouseEvent):void
-     //    {
-     //     var marker:DisplayObject = event.target as DisplayObject;
-     //     var location:Location = getMarkerLocation( marker );
-     //     dispatchEvent( new MarkerEvent( MarkerEvent.MARKER_CLICK, marker, location, true, false) );
-     //    }
+        protected function touchEventProcess(event:TouchEvent):void
+        {
+            var touches = event.getTouches(this);
+
+            //check for a click event
+            if((touches[0].phase == TouchPhase.ENDED) && touches[0].clicked)
+            {
+                var marker:DisplayObject = event.target as DisplayObject;
+                var location:Location = getMarkerLocation( marker );
+                dispatchEvent( new MarkerEvent( MarkerEvent.MARKER_CLICK, marker, location, true, false) );
+            }
+        }
         
+        //NOTE_TEC: ROLL_OVER / ROLL_OUT are like mouse_enter and mouse_exit... no equivalent Loom support atm
         /**
         * Dispatches MarkerEvent.ROLL_OVER
         * 
@@ -445,7 +436,6 @@ package loom.modestmaps.overlays
         *
         * @see loom.modestmaps.events.MarkerEvent.MARKER_ROLL_OVER
         */
-//TODO_24: ROLL_OVER / ROLL_OUT are like mouse_enter and mouse_exit... no equivalent Loom support atm :(
         // protected function onMarkerRollOver(event:MouseEvent):void
         // {
         //  var marker:DisplayObject = event.target as DisplayObject;
@@ -460,7 +450,6 @@ package loom.modestmaps.overlays
         *
         * @see loom.modestmaps.events.MarkerEvent.MARKER_ROLL_OUT
         */
-//TODO_24: ROLL_OVER / ROLL_OUT are like mouse_enter and mouse_exit... no equivalent Loom support atm :(
         // protected function onMarkerRollOut(event:MouseEvent):void
         // {
         //     var marker:DisplayObject = event.target as DisplayObject;
