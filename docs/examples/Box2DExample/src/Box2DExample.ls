@@ -59,6 +59,7 @@ package
         
         var movingPlatform:Body;
         var floor:Body;
+        
         // We'll set this to either 1 or -1 to make the platform move left or right when it reaches the bounds of the screen
         var platformMovementDirection = 1;
         var player:Body;

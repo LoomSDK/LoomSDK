@@ -355,12 +355,6 @@ public:
 	/// Does this body have fixed rotation?
 	bool IsFixedRotation() const;
 
-	/// Is this body in contact with another body?
-	bool IsContacting(const b2Body* other);
-
-	/// Is this body touching another contact?
-	bool IsTouchingContact(const b2Contact* other);
-
 	/// Get the list of all fixtures attached to this body.
 	b2Fixture* GetFixtureList();
 	const b2Fixture* GetFixtureList() const;
@@ -384,6 +378,16 @@ public:
 
 	/// Set the user data. Use this to store your application specific data.
 	void SetUserData(void* data);
+
+    /// Get the parent world of this body.
+    b2World* GetWorld();
+    const b2World* GetWorld() const;
+
+    /// Dump this body to a log file
+    void Dump();
+
+    /// Is this body in contact with another body?
+    bool IsContacting(const b2Body* other);
 
 	/// Get the contact index of a specific body, return -1 if the body isn't actually colliding with this body
 	int BodyToContactIndex(const b2Body* body);
@@ -434,13 +438,6 @@ public:
 
 	/// Get the tangent speed. In meters per second.
 	float32 GetContactTangentSpeed(int contactIndex);
-
-	/// Get the parent world of this body.
-	b2World* GetWorld();
-	const b2World* GetWorld() const;
-
-	/// Dump this body to a log file
-	void Dump();
 
 private:
 

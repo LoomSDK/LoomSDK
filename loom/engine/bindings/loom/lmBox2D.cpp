@@ -460,41 +460,6 @@ static int registerLoomBox2D(lua_State *L)
         .endClass()
         */
 
-// TODO_AHMED: Remove this when done with testing
-        .beginClass<b2Contact>("Contact")
-
-            //.addMethod("getManifold", (b2Manifold* (b2Contact::*)())&b2Contact::GetManifold)
-            //.addMethod("getWorldManifold", (b2Manifold* (b2Contact::*)())&b2Contact::GetWorldManifold)
-            .addMethod("isTouching", &b2Contact::IsTouching) //
-            .addMethod("setEnabled", &b2Contact::SetEnabled) //
-            .addMethod("isEnabled", &b2Contact::IsEnabled) //
-            .addMethod("getNext", (b2Contact* (b2Contact::*)())&b2Contact::GetNext) //X
-            .addMethod("getFixtureA", (b2Fixture* (b2Contact::*)())&b2Contact::GetFixtureA)//
-            .addMethod("getChildIndexA", &b2Contact::GetChildIndexA)//
-            .addMethod("getFixtureB", (b2Fixture* (b2Contact::*)())&b2Contact::GetFixtureB)//
-            .addMethod("getChildIndexB", &b2Contact::GetChildIndexB)//
-            .addMethod("setFriction", &b2Contact::SetFriction)
-            .addMethod("getFriction", &b2Contact::GetFriction)
-            .addMethod("resetFriction", &b2Contact::ResetFriction)
-            .addMethod("setRestitution", &b2Contact::SetRestitution)
-            .addMethod("getRestitution", &b2Contact::GetRestitution)
-            .addMethod("resetRestitution", &b2Contact::ResetRestitution)
-            .addMethod("setTangentSpeed", &b2Contact::SetTangentSpeed)
-            .addMethod("getTangentSpeed", &b2Contact::GetTangentSpeed)
-            //.addMethod("evaluate", &b2Contact::Evaluate)
-
-        .endClass()
-
-        .beginClass<b2ContactEdge>("ContactEdge")
-
-            .addConstructor <void (*)(void) >()
-
-            .addVar("other", &b2ContactEdge::other)
-            .addVar("contact", &b2ContactEdge::contact)
-            .addVar("prev", &b2ContactEdge::prev)
-            .addVar("next", &b2ContactEdge::next)
-
-        .endClass() 
 
         .beginClass<b2Body>("Body")
 
@@ -555,7 +520,6 @@ static int registerLoomBox2D(lua_State *L)
             .addMethod("contactIndexToBody", &b2Body::ContactIndexToBody)
             .addMethod("isContacting", &b2Body::IsContacting)
             .addMethod("getNumContacts", &b2Body::GetNumContacts)
-            .addMethod("isTouchingContact", &b2Body::IsTouchingContact)
             .addMethod("setContactEnabled", &b2Body::SetContactEnabled)
             .addMethod("isContactEnabled", &b2Body::IsContactEnabled)
             .addMethod("getContactFixtureA", (b2Fixture* (b2Body::*)(int contactIndex)) &b2Body::GetContactFixtureA)
