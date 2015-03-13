@@ -284,9 +284,6 @@ public:
 	/// Get the linear damping of the body.
 	float32 GetLinearDamping() const;
 
-	/// Get the number of bodies this body is in contact with
-	int GetNumContacts();
-
 	/// Set the linear damping of the body.
 	void SetLinearDamping(float32 linearDamping);
 
@@ -379,15 +376,18 @@ public:
 	/// Set the user data. Use this to store your application specific data.
 	void SetUserData(void* data);
 
-    /// Get the parent world of this body.
-    b2World* GetWorld();
-    const b2World* GetWorld() const;
+	/// Get the parent world of this body.
+	b2World* GetWorld();
+	const b2World* GetWorld() const;
 
-    /// Dump this body to a log file
-    void Dump();
+	/// Dump this body to a log file
+	void Dump();
 
-    /// Is this body in contact with another body?
-    bool IsContacting(const b2Body* other);
+	/// Get the number of bodies this body is in contact with
+	int GetNumContacts();
+
+	/// Is this body in contact with another body?
+	bool IsContacting(const b2Body* other);
 
 	/// Get the contact index of a specific body, return -1 if the body isn't actually colliding with this body
 	int BodyToContactIndex(const b2Body* body);
