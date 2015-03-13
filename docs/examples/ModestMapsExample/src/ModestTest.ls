@@ -5,7 +5,9 @@ package
     import loom2d.display.StageScaleMode;
 
     import com.modestmaps.Map;
-    import com.modestmaps.mapproviders.microsoft.MicrosoftProvider; 
+    import com.modestmaps.mapproviders.AbstractMapProvider;
+    import com.modestmaps.mapproviders.OpenStreetMapProvider; 
+    import com.modestmaps.mapproviders.microsoft.MicrosoftRoadMapProvider; 
 	
 	import loom2d.events.KeyboardEvent;
     import loom.platform.LoomKey;
@@ -26,21 +28,22 @@ package
 			map = new Map(stage.stageWidth, 
 								stage.stageHeight, 
 								true, 
-								new MicrosoftProvider(MicrosoftProvider.ROAD, true, MicrosoftProvider.MIN_ZOOM, MicrosoftProvider.MAX_ZOOM),
+                                new MicrosoftRoadMapProvider(true, AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM),
+								//new OpenStreetMapProvider(AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM),
 								stage,
                                 null);
 
 			stage.addChild(map);
 			
 
-            //TEST
+//TEST CODE!!!
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
         }
 		
 
 
 
-        //TEST
+//TEST CODE
         function keyDownHandler(event:KeyboardEvent):void
         {   
             var keycode = event.keyCode;

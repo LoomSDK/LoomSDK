@@ -19,6 +19,8 @@ package com.modestmaps.core.painter
 	public class TilePainter extends EventDispatcher implements ITilePainter
 	{
 		///////////// BEGIN OPTIONS
+        /** number of ms between calls to process the loading queue */
+        private static const PROCESS_QUEUE_INTERVAL:int = 200;
 		
 		/** how many Loaders are allowed to be open at once? */
 		public static var maxOpenRequests:int = 4;    // TODO: should this be split into max-new-requests-per-frame, too?
@@ -59,9 +61,9 @@ package com.modestmaps.core.painter
 			this.tilePool = new TilePool(CreateTile);
 			this.tileCache = new TileCache(tilePool);
 
-            //NOTE: Seems like the original MMaps code (before the AS3 port) was calling 'processQueue' 
+            //NOTE_TEC: Seems like the original MMaps code (before the AS3 port) was calling 'processQueue' 
             //      on the ENTER_FRAME event, not every 200ms... good/bad?
-			queueTimer = new Timer(200);
+			queueTimer = new Timer(PROCESS_QUEUE_INTERVAL);
             queueTimer.onComplete = processQueue;
             queueTimer.repeats = true;
 

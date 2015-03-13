@@ -15,8 +15,6 @@ package com.modestmaps
 	import com.modestmaps.geo.Location;
 	import com.modestmaps.mapproviders.IMapProvider;
 	import loom2d.display.Stage;
-//TODO_24: Do we want/need to enable mouse support for the map? Loom doesn't support it atm :(
-	//import flash.events.MouseEvent;
 	import loom2d.events.Event;
 	import loom2d.math.Matrix;
 	import loom2d.math.Point;
@@ -41,7 +39,7 @@ package com.modestmaps
 		/** time to pan and zoom using, uh, panAndZoom */
 		public var panAndZoomDuration:Number = 0.3;
 
-//TODO_24: Do we want/need to enable mouse wheen support for the map? Loom doesn't support it atm :(
+        //NOTE_TEC: Loom doesn't support MouseWheel input at this time
 		// protected var mouseWheelingIn:Boolean = false;
 		// protected var mouseWheelingOut:Boolean = false;
 
@@ -252,73 +250,69 @@ package com.modestmaps
 		    }
 	    }
 
+        //NOTE_TEC: Loom doesn't support MouseWheel input at this time
         /** 
          * Zooms in or out of mouse-wheeled location, rounded off to nearest whole zoom level when zooming ends.
          *
          * @see http://blog.pixelbreaker.com/flash/swfmacmousewheel/ for Mac mouse wheel support  
          */
         //override public function onMouseWheel(event:MouseEvent):void
-//TODO_24: Do we want/need to enable mouse wheen support for the map? Loom doesn't support it atm :(
-   //      override public function onMouseWheel(event:Event):void
-   //      {       	
-   //      	if (!__draggable || grid.panning) return;
+        /*
+         override public function onMouseWheel(event:Event):void
+         {       	
+         	if (!__draggable || grid.panning) return;
 
-			// TweenLite.killTweensOf(grid);
-			// TweenLite.killDelayedCallsTo(doneMouseWheeling);
+            TweenLite.killTweensOf(grid);
+            TweenLite.killDelayedCallsTo(doneMouseWheeling);
 
-   //          if (event.delta < 0) {
-   //          	var sc:Number;
-   //          	if (grid.zoomLevel > grid.minZoom) {
-	  //       		mouseWheelingOut = true;
-	  //       		mouseWheelingIn = false;
-			// 		sc = Math.max(0.5, 1.0+event.delta/20.0);
-   //          	}
-   //          }
-   //          else if (event.delta > 0) {
-   //          	if (grid.zoomLevel < grid.maxZoom) {
-   //          		mouseWheelingIn = true;
-	  //       		mouseWheelingOut = false;            		
-			// 		sc = Math.min(2.0, 1.0+event.delta/20.0);				
-	  //           }
-   //          }*/
+             if (event.delta < 0) {
+             	var sc:Number;
+             	if (grid.zoomLevel > grid.minZoom) {
+          		mouseWheelingOut = true;
+          		mouseWheelingIn = false;
+    		sc = Math.max(0.5, 1.0+event.delta/20.0);
+             	}
+             }
+             else if (event.delta > 0) {
+             	if (grid.zoomLevel < grid.maxZoom) {
+             		mouseWheelingIn = true;
+          		mouseWheelingOut = false;            		
+    		sc = Math.min(2.0, 1.0+event.delta/20.0);				
+              }
+             }
 
-   //          /* trace('scale', sc);
-			// trace('delta', event.delta);
-   //          trace('mouseWheelingIn', mouseWheelingIn);
-   //          trace('mouseWheelingOut', mouseWheelingOut); */
-            
-   //          if (sc) {
-	  //           var p:Point = grid.globalToLocal(new Point(event.stageX, event.stageY));        	
-			// 	var m:Matrix = grid.getMatrix();
-			// 	m.translate(-p.x, -p.y);
-			// 	m.scale(sc, sc);
-			// 	m.translate(p.x, p.y);
-			// 	grid.setMatrix(m);            	
-   //          }
-            
-   //          TweenLite.delayedCall(0.1, doneMouseWheeling);
-            
-   //          event.updateAfterEvent();
-            
-   //      }
-        
-//TODO_24: Do we want/need to enable mouse wheen support for the map? Loom doesn't support it atm :(
-        // protected function doneMouseWheeling():void
-        // {
-        //     var p:Point = grid.globalToLocal(new Point(stage.mouseX, stage.mouseY));
-        //     var p:Point = Point.ZERO;
-        // 	if (mouseWheelingIn) { 
-        // 		zoomByAbout(Math.ceil(grid.zoomLevel) - grid.zoomLevel, p, 0.15); // round off to whole value up
-        // 	}
-        // 	else if (mouseWheelingOut) { 
-	       //  	zoomByAbout(Math.floor(grid.zoomLevel) - grid.zoomLevel, p, 0.15); // round off to whole value down
-        // 	}
-        // 	else {
-        // 		zoomByAbout(Math.round(grid.zoomLevel) - grid.zoomLevel, p, 0.15); // round off to whole value down
-        // 	}
-        // 	mouseWheelingOut = false;
-        // 	mouseWheelingIn = false;
-        // }
-        
+
+             if (sc) {
+                var p:Point = grid.globalToLocal(new Point(event.stageX, event.stageY));        	
+            	var m:Matrix = grid.getMatrix();
+            	m.translate(-p.x, -p.y);
+            	m.scale(sc, sc);
+            	m.translate(p.x, p.y);
+            	grid.setMatrix(m);            	
+             }
+
+             TweenLite.delayedCall(0.1, doneMouseWheeling);
+
+             event.updateAfterEvent();
+
+         }
+
+        protected function doneMouseWheeling():void
+        {
+            var p:Point = grid.globalToLocal(new Point(stage.mouseX, stage.mouseY));
+            var p:Point = Point.ZERO;
+        	if (mouseWheelingIn) { 
+        		zoomByAbout(Math.ceil(grid.zoomLevel) - grid.zoomLevel, p, 0.15); // round off to whole value up
+        	}
+        	else if (mouseWheelingOut) { 
+         	zoomByAbout(Math.floor(grid.zoomLevel) - grid.zoomLevel, p, 0.15); // round off to whole value down
+        	}
+        	else {
+        		zoomByAbout(Math.round(grid.zoomLevel) - grid.zoomLevel, p, 0.15); // round off to whole value down
+        	}
+        	mouseWheelingOut = false;
+        	mouseWheelingIn = false;
+        }
+        */ 
 	}
 }

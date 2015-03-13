@@ -107,6 +107,7 @@ package com.modestmaps.overlays
         	return markers.length;
         }
         
+//TODO_24: next 2 setters crash???        
         override public function set x(value:Number):void
         {
             super.x = snapToPixels ? Math.round(value) : value;

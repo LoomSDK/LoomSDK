@@ -1,6 +1,5 @@
 package com.modestmaps.mapproviders
 {
-
 	import com.modestmaps.core.Coordinate;
 	
 	/**
@@ -11,11 +10,11 @@ package com.modestmaps.mapproviders
 	public class AbstractZoomifyMapProvider extends AbstractMapProvider implements IMapProvider
 	{
 	    private var __baseDirectory:String;
-	    private var __groups:/*Coordinate*/Array;
+	    private var __groups:Vector.<Coordinate>;
 	
 	    public function AbstractZoomifyMapProvider()
         {
-            super();
+            super(MIN_ZOOM, MAX_ZOOM);
 	        
 	       /*
 	        * Example sub-class constructor:
@@ -92,7 +91,7 @@ package com.modestmaps.mapproviders
 	                
 	                    // zoomify groups tiles into folders of 256 each
 	                    if(i % 256 == 0)
-	                        __groups.push(c.copy());
+	                        __groups.pushSingle(c.copy());
 	                    
 	                    i += 1;
 	                }
@@ -114,7 +113,7 @@ package com.modestmaps.mapproviders
 	        return -1;
 	    }
 	
-	    public function getTileUrls(coord:Coordinate):Array
+	    public function getTileUrls(coord:Coordinate):Vector.<String>
 	    {
 	        return [ __baseDirectory+'TileGroup'+coordinateGroup(coord)+'/'+(coord.zoom)+'-'+(coord.column)+'-'+(coord.row)+'.jpg' ];
 	    }

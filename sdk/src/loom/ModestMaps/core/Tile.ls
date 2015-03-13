@@ -121,38 +121,8 @@ return;
 		    var size:uint = 32;
 		    var padding:uint = 4;
 		    var weight:uint = 4;
-//LUKE_SAYS: Might not be needed.... this just paints some design on the tile, so rather just add a custom image instead
-		    /*with (graphics)
-			{
-				clear();		        
-			
-				beginFill(0x808080);
-				drawRect(0, 0, w, h);
 
-		        moveTo(0, 0);
-		        beginFill(0x444444, 1);
-		        lineTo(size, 0);
-		        lineTo(size, size);
-		        lineTo(0, size);
-		        lineTo(0, 0);
-		        endFill();
-		        
-		        moveTo(weight+padding, padding);
-		        beginFill(0x888888, 1);
-		        lineTo(padding, weight+padding);
-		        lineTo(size-weight-padding, size-padding);
-		        lineTo(size-padding, size-weight-padding);
-		        lineTo(weight+padding, padding);
-		        endFill();
-		        
-		        moveTo(size-weight-padding, padding);
-		        beginFill(0x888888, 1);
-		        lineTo(size-padding, weight+padding);
-		        lineTo(weight+padding, size-padding);
-		        lineTo(padding, size-weight-padding);
-		        lineTo(size-weight-padding, padding);
-		        endFill();
-		    };*/	
+//TODO_24: Show an error visually for this tile... display an X texture or something?
 		}
 	}
 }

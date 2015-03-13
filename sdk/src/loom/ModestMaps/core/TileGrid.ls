@@ -115,7 +115,7 @@ package com.modestmaps.core
 		// number of tiles we're failing to show
 		protected var blankCount:int = 0;
 
-        //NOTE: not porting DebugField for now at least...
+        //NOTE_TEC: not porting DebugField for now at least...
 		// // a textfield with lots of stats
 		// public var debugField:DebugField;
 		
@@ -177,7 +177,7 @@ package com.modestmaps.core
 			this.mapHeight = h;			
 			clipRect = new Rectangle(0, 0, mapWidth, mapHeight);
 
-            //NOTE: not porting DebugField for now at least...
+            //NOTE_TEC: not porting DebugField for now at least...
 			// debugField = new DebugField();
 			// debugField.x = mapWidth - debugField.width - 15; 
 			// debugField.y = mapHeight - debugField.height - 15;
@@ -209,7 +209,7 @@ package com.modestmaps.core
 			
             onRender += _onRender;
 
-            //NOTE: not porting DebugField for now at least...
+            //NOTE_TEC: not porting DebugField for now at least...
 			// addEventListener(Event.ENTER_FRAME, onEnterFrame);
 			addEventListener(Event.REMOVED_FROM_STAGE, onRemovedFromStage);
 			removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
@@ -253,7 +253,7 @@ package com.modestmaps.core
 			tilePainter.setTileCreator(tileCreator);
 		}
 		
-        //NOTE: not porting DebugField for now at least...
+        //NOTE_TEC: not porting DebugField for now at least...
 		// /** processes the tileQueue and optionally outputs stats into debugField */
 		// protected function onEnterFrame(event:Event=null):void
 		// {
@@ -414,12 +414,14 @@ if (!populated)
  			if (recentlySeen.length > maxRecentlySeen) {
 
  				// can we sort so that biggest zoom levels get removed first, without removing currently visible tiles?
-/* 				var visibleKeys:Array = recentlySeen.slice(recentlySeen.length - visibleTiles.length, recentlySeen.length);
+                /*
+ 				var visibleKeys:Array = recentlySeen.slice(recentlySeen.length - visibleTiles.length, recentlySeen.length);
 
 				// take a look at everything else
 				recentlySeen = recentlySeen.slice(0, recentlySeen.length - visibleTiles.length);
 				recentlySeen = recentlySeen.sort(Array.DESCENDING);
-				recentlySeen = recentlySeen.concat(visibleKeys); */
+				recentlySeen = recentlySeen.concat(visibleKeys); 
+                */
 				
  				// throw away keys at the beginning of recentlySeen
 				recentlySeen = recentlySeen.slice(recentlySeen.length - maxRecentlySeen, recentlySeen.length);
@@ -1022,12 +1024,6 @@ if (!populated)
 			if (panning) {
 				donePanning();
 			}
-			if (!dragging && draggable) {
-//TODO_24: add basic touch input support                
-				// if (hasEventListener(MouseEvent.MOUSE_DOWN)) {
-				// 	removeEventListener(MouseEvent.MOUSE_DOWN, mousePressed, true);
-				// }
-			}
 			startPan = centerCoordinate.copy();
 			panning = true;
 			onStartPanning();
@@ -1040,12 +1036,6 @@ if (!populated)
 		
 		public function donePanning():void
 		{
-			if (draggable) {
-//TODO_24: add basic touch input support                
-				//if (!hasEventListener(MouseEvent.MOUSE_DOWN)) {
-				//	addEventListener(MouseEvent.MOUSE_DOWN, mousePressed, true);
-				//}
-			}
 			startPan = null;
 			panning = false;
 			onStopPanning();
@@ -1155,7 +1145,7 @@ if (!populated)
     			mapHeight = p.y;
     	        clipRect = new Rectangle(0, 0, mapWidth, mapHeight);
 
-                //NOTE: not porting DebugField for now at least...
+                //NOTE_TEC: not porting DebugField for now at least...
 				// debugField.x = mapWidth - debugField.width - 15; 
 				// debugField.y = mapHeight - debugField.height - 15;
     			
@@ -1306,7 +1296,8 @@ if (!populated)
 			
 			var touched:Boolean = enforceBoundsOnMatrix(worldMatrix);
 
-/* 			this is potentially the way to wrap the x position
+            /* 			
+            this is potentially the way to wrap the x position
 			but all the tiles flash and the values aren't quite right
 			so wrapping the matrix needs more work :(
 			
@@ -1427,7 +1418,7 @@ if (!populated)
 	
 
 
-    //NOTE: not porting DebugField for now at least...
+    //NOTE_TEC: not porting DebugField for now at least...
 	// import com.modestmaps.core.Tile;
 	// import flash.text.TextFormat;
 	// import flash.system.System;

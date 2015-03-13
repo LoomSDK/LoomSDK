@@ -2,8 +2,8 @@ package com.modestmaps.overlays
 {
 	import com.modestmaps.Map;
 	
-	import flash.display.DisplayObject;
-	import flash.geom.Rectangle;
+	import loom2d.display.DisplayObject;
+	import loom2d.math.Rectangle;
 
 	/** 
 	 *  PolygonClip extends MarkerClip to take the bounds of the marker into account when showing/hiding,
@@ -21,13 +21,13 @@ package com.modestmaps.overlays
 		{
 			super(map);
 			this.scaleZoom = true;
-			this.markerSortFunction = null
+			this.markerSortFunction = null;
 		}
 
 		override protected function markerInBounds(marker:DisplayObject, w:Number, h:Number):Boolean
 		{
    			var rect:Rectangle = new Rectangle(-w, -h, w*3, h*3);
-			return rect.intersects(marker.getBounds(map));
+			return Rectangle.intersects(rect, marker.getBounds(map));
 		}
 		
 		override public function updateClip(marker:DisplayObject):Boolean

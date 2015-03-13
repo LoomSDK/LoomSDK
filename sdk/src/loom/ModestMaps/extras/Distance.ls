@@ -26,22 +26,15 @@ package com.modestmaps.extras
          * */
         public static function approxDistance(start:Location, end:Location, r:Number=R_METERS):Number 
         {
-            
-			var a1:Number = radians(start.lat);
-			var b1:Number = radians(start.lon);
-			var a2:Number = radians(end.lat);
-			var b2:Number = radians(end.lon);
+			var a1:Number = Math.degToRad(start.lat);
+			var b1:Number = Math.degToRad(start.lon);
+			var a2:Number = Math.degToRad(end.lat);
+			var b2:Number = Math.degToRad(end.lon);
 
-            var d:Number;
-            with(Math) {
-                d = acos(cos(a1)*cos(b1)*cos(a2)*cos(b2) + cos(a1)*sin(b1)*cos(a2)*sin(b2) + sin(a1)*sin(a2)) * r;
-            }
+            var d:Number = Math.acos(Math.cos(a1)*Math.cos(b1)*Math.cos(a2)*Math.cos(b2) + 
+                           Math.cos(a1)*Math.sin(b1)*Math.cos(a2)*Math.sin(b2) + 
+                           Math.sin(a1)*Math.sin(a2)) * r;;
             return d;
         }        
-
-        private static function radians(degrees:Number):Number
-        {
-            return degrees * Math.PI / 180.0;
-        }
     }
 }

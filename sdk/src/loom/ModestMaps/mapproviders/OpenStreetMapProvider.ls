@@ -22,7 +22,7 @@ package com.modestmaps.mapproviders
 	        return "OPEN_STREET_MAP";
 	    }
 	
-	    public function getTileUrls(coord:Coordinate):Array
+	    public function getTileUrls(coord:Coordinate):Vector.<String>
 	    {
 	        var sourceCoord:Coordinate = sourceCoordinate(coord);
 	        if (sourceCoord.row < 0 || sourceCoord.row >= Math.pow(2, coord.zoom)) {

@@ -36,8 +36,6 @@ package com.modestmaps
 	import loom2d.display.DisplayObject;
 	import loom2d.display.Sprite;
 	import loom2d.events.Event;
-//TODO_24: Do we want/need to enable mouse wheen support for the map? Loom doesn't support it atm :(
-	//import flash.events.MouseEvent;
 	import loom2d.math.Matrix;
 	import loom2d.math.Point;
 	import loom2d.math.Rectangle;
@@ -414,6 +412,7 @@ package com.modestmaps
 	    *
 	    * @see com.modestmaps.mapproviders.IMapProvider
 	    */
+//TODO_24: Test that we can swap poviders on the fly OK        
 	    public function setMapProvider(newProvider:IMapProvider):void
 	    {
 	        var previousGeometry:String;
@@ -694,37 +693,8 @@ package com.modestmaps
 	    }
 
 
-//TODO_24: Do we want/need to enable double click/tap support for the map? Loom doesn't support it atm :(
-        // pans and zooms in on double clicked location
-        // public function onDoubleClick(event:MouseEvent):void
-        // {
-        // 	if (!__draggable) return;
-        	
-        //     var p:Point = grid.globalToLocal(new Point( event.stageX, event.stageY));
-        //     if (event.shiftKey) {
-        //     	if (grid.zoomLevel > grid.minZoom) {
-        //     		zoomOutAbout(p);
-        //     	}
-        //     	else {
-        //     		panBy(mapWidth/2 - p.x, mapHeight/2 - p.y);
-        //     	}
-        //     }
-        //     else if (event.ctrlKey) {
-        //     	panAndZoomIn(pointLocation(p));
-        //     }
-        //     else {
-        //     	if (grid.zoomLevel < grid.maxZoom) {
-	    //        	zoomInAbout(p);
-	    //        }
-        //     	else {
-        //     		panBy(mapWidth/2 - p.x, mapHeight/2 - p.y);
-        //     	}
-        //     }
-        // }    
-		
-		
 
-//TODO_24: Do we want/need to enable mouse wheen support for the map? Loom doesn't support it atm :(
+        //NOTE_TEC: Loom doesn't support MouseWheel input at this time
 		// private var previousWheelEvent:Number = 0;
 		// private var minMouseWheelInterval:Number = 100;
 		

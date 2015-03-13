@@ -7,7 +7,7 @@ package com.modestmaps.mapproviders.microsoft
 	 */
 	public class MicrosoftAerialMapProvider extends MicrosoftProvider
 	{
-		public function MicrosoftAerialMapProvider(minZoom:int=MIN_ZOOM, maxZoom:int=MAX_ZOOM)
+		public function MicrosoftAerialMapProvider(minZoom:int, maxZoom:int)
 		{
 			super(AERIAL, true, minZoom, maxZoom);
 		}

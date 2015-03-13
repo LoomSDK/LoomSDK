@@ -6,7 +6,7 @@ package com.modestmaps.mapproviders.microsoft
 	 */
 	public class MicrosoftHybridMapProvider extends MicrosoftProvider
 	{
-		public function MicrosoftHybridMapProvider(minZoom:int=MIN_ZOOM, maxZoom:int=MAX_ZOOM)
+		public function MicrosoftHybridMapProvider(minZoom:int, maxZoom:int)
 		{
 			super(HYBRID, true, minZoom, maxZoom);
 		}
