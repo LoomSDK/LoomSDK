@@ -16,7 +16,7 @@ package
 
 
 
-    /** Simple applicaiton that demonstrates how to use Modest Maps to show a digital map provider */
+    /** Simple application that demonstrates how to use Modest Maps to show a digital map provider */
     public class ModestMapExample extends Application
     {       
         var map:Map;
