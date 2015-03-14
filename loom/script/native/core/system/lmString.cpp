@@ -373,6 +373,8 @@ public:
             endIndex = svalueLength - (-(endIndex + 1));
         }
 
+        //if a -ve startIndex is provided, it means that we need to slice 
+        //that many characters from the end of the string
         if (startIndex < 0)
         {
             startIndex = svalueLength + startIndex;
