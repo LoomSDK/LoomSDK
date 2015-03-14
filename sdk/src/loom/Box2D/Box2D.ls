@@ -651,6 +651,12 @@ package loom.box2d
         /**
          * Check if this body is in contact with another body
          * @param other The body to check against.
+         * @param contactFlags Used to specify a more finer grain contact status between the bodies.
+         *        Default value is IS_ENABLED | IS_TOUCHING. 
+                  Possible flags are:
+                    IS_ENABLED:  Specify if you want to only consider the contact if it is enabled.
+                    IS_TOUCHING: Specify if you want to only consider contacts that are touching, 
+                                    and not just an AABB overlap.
          */
         public native function isContacting(other:Body, 
                                             contactFlags:int=ContactFlags.IS_ENABLED|ContactFlags.IS_TOUCHING):Boolean;
