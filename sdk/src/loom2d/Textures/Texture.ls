@@ -432,7 +432,6 @@ package loom2d.textures
             }
 
             // Complete the filling in of our ConcreateTexture data
-            root.setDimensions(textureInfo.width, textureInfo.height);
             mFrame = new Rectangle(0, 0, textureInfo.width, textureInfo.height);
             root.setTextureInfo(textureInfo);
 

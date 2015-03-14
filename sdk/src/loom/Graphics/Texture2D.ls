@@ -133,7 +133,7 @@ package loom.graphics
         
         /**
          * Blocking function used to create a new TextureInfo instance describing the requested 
-         * asset loaded as a Texture2D from the provided ByteArray.  On optional unique name can
+         * asset loaded as a Texture2D from the provided ByteArray.  An optional unique name can
          * be specified if you wish the texture to take advantage of caching, otherwise
          * null can be specified.
          */
@@ -143,7 +143,7 @@ package loom.graphics
          * Non-blocking function to create a new TextureInfo instance describing the requested 
          * asset loaded as a Texture2D.
 
-         * @param path Parth of the texture asset to load.
+         * @param path Path of the texture asset to load.
          * @param highPriority Whether or not this request should jump the queue to the front, 
          * otherwise it will slot in at the back.
          * @return TextureInfo Reserved texture information structure that is not filled with 

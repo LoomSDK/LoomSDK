@@ -10,7 +10,7 @@
 
 package loom2d.display
 {
-    import loom2d.Loom2D;
+    import loom2d.animation.Juggler;    
     import system.errors.IllegalOperationError;
     import loom.sound.SimpleAudioEngine;
     
@@ -65,6 +65,7 @@ package loom2d.display
          * @param totalNumCells Total number of cells in the spritesheet
          * @param numColumns Number of columns of cells in the spritesheet
          * @param fps Frames per second rate at which the MovieClip must play at
+         * @param juggler Juggler to add the MovieClip to if desired
          * @return The newly created MovieClip object
          */
         static public function fromSpritesheet(texturePath:String, 
@@ -72,7 +73,8 @@ package loom2d.display
                                                 cellHeight:int, 
                                                 totalNumCells:int, 
                                                 numColumns:int,
-                                                fps:int):MovieClip
+                                                fps:int,
+                                                juggler:Juggler=null):MovieClip
         {
             // Create textures from the spritesheet
             var sheet:Texture = Texture.fromAsset(texturePath);
@@ -92,7 +94,10 @@ package loom2d.display
             
             //create the Movie Clip and add it to the Juggler so it can be animated
             var clip = new MovieClip(frames, fps);
-            Loom2D.juggler.add(clip);
+            if(juggler != null)
+            {
+                juggler.add(clip);
+            }
             return clip;
         }   
 
