@@ -23,36 +23,7 @@ package
             bg.height = stage.stageHeight;
             stage.addChild(bg);
 
-            // Create textures from the spritesheet. This can also be loaded
-            // from a spritesheet, which will do the same thing but 
-            var sheet = Texture.fromAsset("assets/spritesheet.png");
-
-            // The dimensions of each tile in the spritesheet.
-            var spriteWidth:int = 60, spriteHeight:int = 60;
-
-            // How many total sprites?
-            var spriteCount:int = 30;
-
-            // How many sprites in a row?
-            var spriteRowCount:int = 5;
-
-            // Generate frames based on the above parameters.
-            var frames = new Vector.<Texture>();
-            for(var i:int; i<spriteCount; i++)
-            {
-                var spriteX:int = i % spriteRowCount;
-                var spriteY:int = Math.floor(i / spriteRowCount);
-
-                frames.push(Texture.fromTexture(sheet, 
-                    new Rectangle(spriteX * spriteWidth, 
-                                  spriteY * spriteHeight,
-                                  spriteWidth, spriteHeight)));
-
-            }
-            
-            // Set up the MovieClip.
-            var clip = new MovieClip(frames, 12);
-            Loom2D.juggler.add(clip);
+            var clip = MovieClip.fromSpritesheet("assets/spritesheet.png", 60, 60, 30, 5, 12);
             clip.play();
             clip.center();
             clip.x = stage.stageWidth / 2;
