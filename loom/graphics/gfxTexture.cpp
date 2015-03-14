@@ -35,16 +35,28 @@ loom_allocator_t *gGFXTextureAllocator = NULL;
 namespace GFX
 {
 
-
-utList<AsyncLoadNote> Texture::sAsyncLoadQueue;
-utList<AsyncLoadNote> Texture::sAsyncCreateQueue;
-int Texture::sAsyncTextureCreateDelay = 0;
-bool Texture::sAsyncThreadRunning = false;
-MutexHandle Texture::sAsyncQueueMutex = NULL;
-MutexHandle Texture::sTexInfoLock = NULL;
 TextureInfo Texture::sTextureInfos[MAXTEXTURES];
 utHashTable<utFastStringHash, TextureID> Texture::sTexturePathLookup;
 bool Texture::sTextureAssetNofificationsEnabled = true;
+
+//queue of textures to load in the async loading thread
+utList<AsyncLoadNote> Texture::sAsyncLoadQueue;
+
+//queue of loaded texture data to be created back in the main thread
+utList<AsyncLoadNote> Texture::sAsyncCreateQueue;
+
+//current frame delay counter used to space out texture creation between frames
+int Texture::sAsyncTextureCreateDelay = 0;
+
+//flag indicating if the async loading thread is currently running
+bool Texture::sAsyncThreadRunning = false;
+
+//mutex used for locking sAsyncLoadQueue and sAsyncCreateQueue between threads
+MutexHandle Texture::sAsyncQueueMutex = NULL;
+
+//mutex used for locking sTextureInfos and sTexturePathLookup between threads
+MutexHandle Texture::sTexInfoLock = NULL;
+
 
 void Texture::initialize()
 {
