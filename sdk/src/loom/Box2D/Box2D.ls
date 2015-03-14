@@ -51,6 +51,14 @@ package loom.box2d
         DYNAMIC
     };    
     
+
+    /** Enumeration of flags used for checking for contacting status. */
+   enum ContactFlags {
+        IS_TOUCHING = 0x0002,
+        IS_ENABLED  = 0x004
+    };    
+
+
     /**
      * Vector in 2-dimensional space.
      */
@@ -644,7 +652,8 @@ package loom.box2d
          * Check if this body is in contact with another body
          * @param other The body to check against.
          */
-        public native function isContacting(other:Body):Boolean;
+        public native function isContacting(other:Body, 
+                                            contactFlags:int=ContactFlags.IS_ENABLED|ContactFlags.IS_TOUCHING):Boolean;
 
         /**
          * Enable/Disable a contact that this body in touching at a specified index

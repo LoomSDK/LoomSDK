@@ -558,14 +558,28 @@ b2Body* b2Body::ContactIndexToBody(int contactIndex)
 	return NULL;    
 }
 
-bool b2Body::IsContacting(const b2Body* other)
+bool b2Body::IsContacting(const b2Body* other, int contactFlags)
 {
 	b2ContactEdge* edge = m_contactList;
 	while (edge)
 	{
 		if (edge->other == other)
 		{
-			return true;
+			b2Contact *contact = edge->contact;
+			if(contact != NULL)
+			{
+				bool isContacting = true;
+				if(contactFlags & b2Contact::e_touchingFlag)
+				{
+					isContacting &= contact->IsTouching();
+				}
+				if(contactFlags & b2Contact::e_enabledFlag)
+				{
+					isContacting &= contact->IsEnabled();
+				}
+				return isContacting;
+			}
+			return false;
 		}
 
 		edge = edge->next;
@@ -607,7 +621,7 @@ bool b2Body::SetContactEnabled(bool enabledState, int contactIndex)
 		}
 
 		edge = edge->next;
-        currentContactIndex++;
+		currentContactIndex++;
 	}
 
 	return false;        
@@ -630,7 +644,7 @@ bool b2Body::IsContactEnabled(int contactIndex)
 		}
 
 		edge = edge->next;
-        currentContactIndex++;
+		currentContactIndex++;
 	}
 
 	return false;     
@@ -653,7 +667,7 @@ b2Fixture* b2Body::GetContactFixtureA(int contactIndex)
 		}
 
 		edge = edge->next;
-        currentContactIndex++;
+		currentContactIndex++;
 	}
 
 	return NULL; 
@@ -676,7 +690,7 @@ int32 b2Body::GetContactChildIndexA(int contactIndex)
 		}
 
 		edge = edge->next;
-        currentContactIndex++;
+		currentContactIndex++;
 	}
 
 	return 0; 
@@ -699,7 +713,7 @@ b2Fixture* b2Body::GetContactFixtureB(int contactIndex)
 		}
 
 		edge = edge->next;
-        currentContactIndex++;
+		currentContactIndex++;
 	}
 
 	return NULL; 
@@ -722,7 +736,7 @@ int32 b2Body::GetContactChildIndexB(int contactIndex)
 		}
 
 		edge = edge->next;
-        currentContactIndex++;
+		currentContactIndex++;
 	}
 
 	return 0; 
@@ -745,7 +759,7 @@ float32 b2Body::GetContactFriction(int contactIndex)
 		}
 
 		edge = edge->next;
-        currentContactIndex++;
+		currentContactIndex++;
 	}
 
 	return 0.0f; 
@@ -769,7 +783,7 @@ bool b2Body::SetContactFriction(int contactIndex, float32 friction)
 		}
 
 		edge = edge->next;
-        currentContactIndex++;
+		currentContactIndex++;
 	}
 
 	return false; 
@@ -793,7 +807,7 @@ bool b2Body::ResetContactFriction(int contactIndex)
 		}
 
 		edge = edge->next;
-        currentContactIndex++;
+		currentContactIndex++;
 	}
 
 	return false; 
@@ -816,7 +830,7 @@ float32 b2Body::GetContactRestitution(int contactIndex)
 		}
 
 		edge = edge->next;
-        currentContactIndex++;
+		currentContactIndex++;
 	}
 
 	return 0.0f; 
@@ -839,7 +853,7 @@ bool b2Body::SetContactRestitution(int contactIndex, float32 Restitution)
 		}
 
 		edge = edge->next;
-        currentContactIndex++;
+		currentContactIndex++;
 	}
 
 	return false; 
@@ -863,7 +877,7 @@ bool b2Body::ResetContactRestitution(int contactIndex)
 		}
 
 		edge = edge->next;
-        currentContactIndex++;
+		currentContactIndex++;
 	}
 
 	return false; 
@@ -886,7 +900,7 @@ float32 b2Body::GetContactTangentSpeed(int contactIndex)
 		}
 
 		edge = edge->next;
-        currentContactIndex++;
+		currentContactIndex++;
 	}
 
 	return 0.0f; 
@@ -910,7 +924,7 @@ bool b2Body::SetContactTangentSpeed(int contactIndex, float32 speed)
 		}
 
 		edge = edge->next;
-        currentContactIndex++;
+		currentContactIndex++;
 	}
 
 	return false; 

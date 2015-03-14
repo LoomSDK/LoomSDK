@@ -387,7 +387,7 @@ public:
 	int GetNumContacts();
 
 	/// Is this body in contact with another body?
-	bool IsContacting(const b2Body* other);
+	bool IsContacting(const b2Body* other, int contactFlags);
 
 	/// Get the contact index of a specific body, return -1 if the body isn't actually colliding with this body
 	int BodyToContactIndex(const b2Body* body);
