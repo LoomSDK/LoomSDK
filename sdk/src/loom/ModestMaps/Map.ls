@@ -33,9 +33,11 @@ package loom.modestmaps
     import loom.modestmaps.overlays.MarkerClip;
     import loom2d.display.Stage;
     
+    import system.platform.Platform;    
     import loom2d.display.DisplayObject;
     import loom2d.display.Sprite;
     import loom2d.events.Event;
+    import loom2d.events.ScrollWheelEvent;    
     import loom2d.math.Matrix;
     import loom2d.math.Point;
     import loom2d.math.Rectangle;
@@ -109,6 +111,9 @@ package loom.modestmaps
             // don't call setMapProvider here
             // the extent calculations are all squirrely
             this.mapProvider = mapProvider;
+
+            //add mousewheel scrolling support
+            addEventListener(ScrollWheelEvent.SCROLLWHEEL, onMouseWheel);
             
             // initialize the grid (so point/location/coordinate functions should be valid after this)
             grid = new TileGrid(width, height, draggable, mapProvider);
@@ -691,23 +696,23 @@ package loom.modestmaps
         }
 
 
-
-        //NOTE_TEC: Loom doesn't support MouseWheel input at this time
-        // private var previousWheelEvent:Number = 0;
-        // private var minMouseWheelInterval:Number = 100;
-        
-        // public function onMouseWheel(event:MouseEvent):void
-        // {
-        //  if (getTimer() - previousWheelEvent > minMouseWheelInterval) {
-        //      if (event.delta > 0) {
-        //          zoomInAbout(new Point(mouseX, mouseY), 0);
-        //      }
-        //      else if (event.delta < 0) {
-        //          zoomOutAbout(new Point(mouseX, mouseY), 0);
-        //      }
-        //      previousWheelEvent = getTimer(); 
-        //  }
-        // }
+        private var previousWheelEvent:Number = 0;
+        private var minMouseWheelInterval:Number = 100;
+        private function onMouseWheel(event:ScrollWheelEvent):void
+        {
+            //NOTE_TEC: Loom ScrollWheelEvent doesn't provide a mouseXY, so we'll just zoom by the screen center
+            //var zoomPoint:Point = new Point(mouseX, mouseY);
+            var zoomPoint:Point = new Point(stage.stageWidth / 2, stage.stageHeight / 2);
+            if (Platform.getTime() - previousWheelEvent > minMouseWheelInterval) {
+                if (event.delta > 0) {
+                    zoomInAbout(zoomPoint, 0);
+                }
+                else if (event.delta < 0) {
+                    zoomOutAbout(zoomPoint, 0);
+                }
+                previousWheelEvent = Platform.getTime(); 
+            }
+        }        
     }
 }
 

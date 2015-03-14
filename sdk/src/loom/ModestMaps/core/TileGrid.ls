@@ -803,6 +803,52 @@ package loom.modestmaps.core
             doubleTouchActive = false;
             accumulatedZoomValue = 0;
         }
+
+        
+        public function rotateByAbout(angle:Number, targetPoint:Point):void
+        {
+            prepareForZooming();
+            prepareForPanning();
+            
+            var m:Matrix = getMatrix();
+            
+            m.translate(-targetPoint.x, -targetPoint.y);
+            m.rotate(angle);
+            m.translate(targetPoint.x, targetPoint.y);          
+            
+            setMatrix(m);
+
+            doneZooming();
+            donePanning();
+        } 
+
+        
+        private var accumulatedZoomValue:Number = 0;
+        function onDoubleTouch(touch1:Point, touch2:Point)
+        {
+            doubleTouchActive = true;
+            
+            accumulatedZoomValue += doubleTouchInput.getZoomDelta();
+            if (Math.abs(accumulatedZoomValue) > 2.4)
+            {               
+                zoomByAbout(doubleTouchInput.getZoomDelta() * doubleTouchInput.zoomSensitivity, doubleTouchInput.getTouchMidPoint());
+                
+                // If we start zooming we don't want to rotate, unless we were already rotating
+                if (!isRotating)
+                {
+                    canRotate = false;
+                }
+            }
+            
+            if (canRotate && Math.abs(doubleTouchInput.getAngleDelta()) > 0.1)
+            {               
+                rotateByAbout(doubleTouchInput.getAngleDelta() * doubleTouchInput.rotationSensitivity, doubleTouchInput.getTouchMidPoint());
+                isRotating = true;
+            }
+            
+            // We always want to pan the map around the center of our fingers
+            mouseDragged(doubleTouchInput.getTouchMidPointDelta());
+        }
         
         /** zoom in or out by zoomDelta, keeping the requested point in the same place */
         public function zoomByAbout(zoomDelta:Number, targetPoint:Point, duration:Number=-1):void
@@ -829,51 +875,7 @@ package loom.modestmaps.core
 
             doneZooming();
             donePanning();
-        }
-        
-         public function rotateByAbout(angle:Number, targetPoint:Point):void
-        {
-            prepareForZooming();
-            prepareForPanning();
-            
-            var m:Matrix = getMatrix();
-            
-            m.translate(-targetPoint.x, -targetPoint.y);
-            m.rotate(angle);
-            m.translate(targetPoint.x, targetPoint.y);          
-            
-            setMatrix(m);
-
-            doneZooming();
-            donePanning();
-        } 
-        
-        var accumulatedZoomValue:Number = 0;
-        function onDoubleTouch(touch1:Point, touch2:Point)
-        {
-            doubleTouchActive = true;
-            
-            accumulatedZoomValue += doubleTouchInput.getZoomDelta();
-            if (Math.abs(accumulatedZoomValue) > 2.4)
-            {               
-                zoomByAbout(doubleTouchInput.getZoomDelta() * doubleTouchInput.zoomSensitivity, doubleTouchInput.getTouchMidPoint());
-                
-                // If we start zooming we don't want to rotate, unless we were already rotating
-                if (!isRotating)
-                {
-                    canRotate = false;
-                }
-            }
-            
-            if (canRotate && Math.abs(doubleTouchInput.getAngleDelta()) > 0.1)
-            {               
-                rotateByAbout(doubleTouchInput.getAngleDelta() * doubleTouchInput.rotationSensitivity, doubleTouchInput.getTouchMidPoint());
-                isRotating = true;
-            }
-            
-            // We always want to pan the map around the center of our fingers
-            mouseDragged(doubleTouchInput.getTouchMidPointDelta());
-        }
+        }        
 
         // today is all about lazy evaluation
         // this gets set to null by 'dirty = true'

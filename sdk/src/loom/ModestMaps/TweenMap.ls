@@ -22,7 +22,11 @@ package loom.modestmaps
     import loom2d.Loom2D;
     import loom2d.animation.Tween;
     import loom2d.animation.Transitions;
+    import loom2d.animation.DelayedCall;
     
+    import loom2d.events.ScrollWheelEvent;    
+
+
     public class TweenMap extends Map
     {
 
@@ -38,10 +42,9 @@ package loom.modestmaps
 
         /** time to pan and zoom using, uh, panAndZoom */
         public var panAndZoomDuration:Number = 0.3;
-
-        //NOTE_TEC: Loom doesn't support MouseWheel input at this time
-        // protected var mouseWheelingIn:Boolean = false;
-        // protected var mouseWheelingOut:Boolean = false;
+        
+        protected var mouseWheelingIn:Boolean = false;
+        protected var mouseWheelingOut:Boolean = false;
 
         /*
         * Initialize the map: set properties, add a tile grid, draw it.
@@ -250,57 +253,58 @@ package loom.modestmaps
             }
         }
 
-        //NOTE_TEC: Loom doesn't support MouseWheel input at this time
+        private var _delayedMouseDone:DelayedCall = null;
+
         /** 
          * Zooms in or out of mouse-wheeled location, rounded off to nearest whole zoom level when zooming ends.
          *
          * @see http://blog.pixelbreaker.com/flash/swfmacmousewheel/ for Mac mouse wheel support  
          */
-        //override public function onMouseWheel(event:MouseEvent):void
-        /*
-         override public function onMouseWheel(event:Event):void
+         override public function onMouseWheel(event:ScrollWheelEvent):void
          {          
             if (!__draggable || grid.panning) return;
 
-            TweenLite.killTweensOf(grid);
-            TweenLite.killDelayedCallsTo(doneMouseWheeling);
+            Loom2D.juggler.removeTweens(grid);
+            if(_delayedMouseDone != null)
+            {
+                Loom2D.juggler.remove(_delayedMouseDone);
+            }
 
-             if (event.delta < 0) {
-                var sc:Number;
+            var sc:Number = 0;
+            if (event.delta < 0) {
                 if (grid.zoomLevel > grid.minZoom) {
-                mouseWheelingOut = true;
-                mouseWheelingIn = false;
-            sc = Math.max(0.5, 1.0+event.delta/20.0);
+                    mouseWheelingOut = true;
+                    mouseWheelingIn = false;
+                    sc = Math.max(0.5, 1.0+event.delta/20.0);
                 }
-             }
-             else if (event.delta > 0) {
+            }
+            else if (event.delta > 0) {
                 if (grid.zoomLevel < grid.maxZoom) {
                     mouseWheelingIn = true;
-                mouseWheelingOut = false;                   
-            sc = Math.min(2.0, 1.0+event.delta/20.0);               
-              }
-             }
+                    mouseWheelingOut = false;                   
+                    sc = Math.min(2.0, 1.0+event.delta/20.0);               
+                }
+            }
 
-
-             if (sc) {
-                var p:Point = grid.globalToLocal(new Point(event.stageX, event.stageY));            
+            if (sc) {
+                //NOTE_TEC: Loom ScrollWheelEvent doesn't provide a mouseXY, so we'll just zoom by the screen center
+                //var p:Point = grid.globalToLocal(new Point(event.stageX, event.stageY));            
+                var p:Point = grid.globalToLocal(new Point(stage.stageWidth / 2, stage.stageHeight / 2));            
                 var m:Matrix = grid.getMatrix();
                 m.translate(-p.x, -p.y);
                 m.scale(sc, sc);
                 m.translate(p.x, p.y);
                 grid.setMatrix(m);              
-             }
+            }
 
-             TweenLite.delayedCall(0.1, doneMouseWheeling);
-
-             event.updateAfterEvent();
-
-         }
+            _delayedMouseDone = Loom2D.juggler.delayCall(doneMouseWheeling, 0.1);
+        }
 
         protected function doneMouseWheeling():void
         {
-            var p:Point = grid.globalToLocal(new Point(stage.mouseX, stage.mouseY));
-            var p:Point = Point.ZERO;
+            //NOTE_TEC: Loom ScrollWheelEvent doesn't provide a mouseXY, so we'll just zoom by the screen center
+            //var p:Point = grid.globalToLocal(new Point(stage.mouseX, stage.mouseY));
+            var p:Point = grid.globalToLocal(new Point(stage.stageWidth / 2, stage.stageHeight / 2));
             if (mouseWheelingIn) { 
                 zoomByAbout(Math.ceil(grid.zoomLevel) - grid.zoomLevel, p, 0.15); // round off to whole value up
             }
@@ -312,7 +316,7 @@ package loom.modestmaps
             }
             mouseWheelingOut = false;
             mouseWheelingIn = false;
+            _delayedMouseDone = null;
         }
-        */ 
     }
 }
