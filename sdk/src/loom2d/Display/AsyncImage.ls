@@ -128,6 +128,9 @@ package loom2d.display
             _asyncTexture = Texture.fromHTTP(url, onAsyncLoadComplete, onHTTPLoadFail, cacheOnDisk, highPriority);
             if(_asyncTexture == null)
             {
+                //assign the error texture if one was given, otherwise go back to the 1st frame of the loading animation
+                texture = (_errorTexture != null) ? _errorTexture : _loadingFrame0;
+                _textureStatus = TEXTURE_NOTLOADED;
                 return null;
             }
 
@@ -146,6 +149,7 @@ package loom2d.display
             {
                 //just update our texture now
                 texture = _asyncTexture;
+                _textureStatus = TEXTURE_LOADED;
             }            
 
             return _asyncTexture;
@@ -171,6 +175,8 @@ package loom2d.display
             _asyncTexture = Texture.fromAssetAsync(path, onAsyncLoadComplete, highPriority);
             if(_asyncTexture == null)
             {
+                //assign the error texture if one was given, otherwise go back to the 1st frame of the loading animation
+                texture = (_errorTexture != null) ? _errorTexture : _loadingFrame0;
                 return null;
             }
 
@@ -189,6 +195,7 @@ package loom2d.display
             {
                 //just update our texture now
                 texture = _asyncTexture;
+                _textureStatus = TEXTURE_LOADED;
             }            
 
             return _asyncTexture;

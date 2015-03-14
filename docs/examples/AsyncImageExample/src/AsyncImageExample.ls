@@ -5,6 +5,7 @@ package
     import loom.platform.Timer;    
     import loom.gameframework.LoomGroup;    
     import loom.gameframework.TimeManager;    
+    import loom2d.Loom2D;    
     import loom2d.display.Stage;
     import loom2d.math.Point;
     import loom2d.events.Touch;
@@ -30,7 +31,7 @@ package
         private const LOADING_DISK:String   = "Loading from Disk...";
         private const LOADING_HTTP:String   = "Loading from HTTP...";
         private const LOADED:String         = "Load Completed";
-        private const USING_CACHED:String   = "Cached Texture (Touch to Start)";
+        private const USING_CACHED:String   = "Using Cached Texture";
         private const ERROR:String          = "ERROR Loading Texture (Touch to Retry)";
         private const HTTP_FAIL             = "FAILED HTTP LOAD (Touch to Retry)";
 
@@ -192,23 +193,23 @@ package
                 AsyncImageExample.requestFlickrImageURLs(NUM_IMAGES, flickrImagesStore);
             }  
 
-            if(_newTex == null)
+            if(_sprite.loadStatus == AsyncImage.TEXTURE_NOTLOADED)
             {
                 _label.text = ERROR;
                 _go = false;
             }
+            else if(_sprite.loadStatus == AsyncImage.TEXTURE_LOADED)
+            {
+                updateTexture(_newTex, USING_CACHED);
+                if(_go)
+                {
+                    _requestTimer.start();
+                }
+            }
             else
             {
-                if(_newTex.isTextureValid())
-                {
-                    updateTexture(_newTex, USING_CACHED);
-                    _go = false;
-                }
-                else
-                {
-                    //note that we've started async loading...
-                    _label.text = (AsyncImageExample.LoadFromHTTP) ? LOADING_HTTP : LOADING_DISK;
-                }
+                //note that we've started async loading...
+                _label.text = (AsyncImageExample.LoadFromHTTP) ? LOADING_HTTP : LOADING_DISK;
             }
         }
 
@@ -284,7 +285,7 @@ package
             stage.scaleMode = StageScaleMode.LETTERBOX;
 
             //create permanent loading movieclip to use
-            LoadingAnim = MovieClip.fromSpritesheet("assets/loadanim.png", 60, 60, 30, 5, 12);
+            LoadingAnim = MovieClip.fromSpritesheet("assets/loadanim.png", 60, 60, 30, 5, 12, Loom2D.juggler);
 
             //bouncing poly so we can feel the performance
             _polySprite = new Image(Texture.fromAsset("assets/logo.png"));

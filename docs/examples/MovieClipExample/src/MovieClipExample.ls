@@ -23,7 +23,7 @@ package
             bg.height = stage.stageHeight;
             stage.addChild(bg);
 
-            var clip = MovieClip.fromSpritesheet("assets/spritesheet.png", 60, 60, 30, 5, 12);
+            var clip = MovieClip.fromSpritesheet("assets/spritesheet.png", 60, 60, 30, 5, 12, Loom2D.juggler);
             clip.play();
             clip.center();
             clip.x = stage.stageWidth / 2;

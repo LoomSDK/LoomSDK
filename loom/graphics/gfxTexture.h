@@ -61,6 +61,10 @@ struct TextureInfo
     int                      wrapV;
 
     bool                     reload;
+
+    //this flag will be set if a TextureInfo was requested to be disposed but it is still 
+    //busy in the async loading thread as it can only be disposed from the main thread once \
+    //its async processing is complete
     bool                     asyncDispose;
 
     bgfx::TextureHandle      handle;
@@ -152,6 +156,28 @@ private:
         return id;
     }
 
+    static TextureInfo *getTextureInfoFromPath(const char *path, 
+                                                TextureID **pid, 
+                                                bool checkHandle = true, 
+                                                bool clearDispose = true)
+    {
+        loom_mutex_lock(Texture::sTexInfoLock);
+        TextureID   *texID = sTexturePathLookup.get(path);
+        TextureInfo *tinfo = (texID && ((*texID >= 0) && (*texID < MAXTEXTURES))) ? &sTextureInfos[*texID] : NULL;
+        if(checkHandle && (tinfo && (tinfo->handle.idx == bgfx::invalidHandle)))
+        {
+            tinfo = NULL;
+        }
+        if(clearDispose && (tinfo != NULL))
+        {
+            //need to disable the async dispose flag if we're going to continue using it
+            tinfo->asyncDispose = false;
+        }
+        loom_mutex_unlock(Texture::sTexInfoLock);
+        
+        *pid = texID;
+        return tinfo;
+    }
 
     static TextureInfo *getAvailableTextureInfo(const char *path)
     {
