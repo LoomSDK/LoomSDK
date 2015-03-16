@@ -51,6 +51,14 @@ package loom.box2d
         DYNAMIC
     };    
     
+
+    /** Enumeration of flags used for checking for contacting status. */
+   enum ContactFlags {
+        IS_TOUCHING = 0x0002,
+        IS_ENABLED  = 0x004
+    };    
+
+
     /**
      * Vector in 2-dimensional space.
      */
@@ -398,7 +406,7 @@ package loom.box2d
          * Get the angular velocity in radians per second.
          */
         public native function getAngularVelocity():Number;
-        
+
         /**
          * Apply a force at a world point. If the force is not
          * applied at the center of mass, it will generate a torque and
@@ -557,7 +565,7 @@ package loom.box2d
          * Get the sleeping state of the body.
          */
         public native function isSleepingAllowed():Boolean;
-        
+
         /**
          * Set the sleep state of the body. A sleeping body has very low CPU cost.
          * @param flag Set to true to wake the body, false to put it to sleep.
@@ -634,6 +642,136 @@ package loom.box2d
          * Set the user data for the body.
          */
         public function setUserData(data:Object):void { userData = data; };
+
+        /**
+         * Get the number of bodies that this body is in contact with this 
+         */
+        public native function getNumContacts():int;
+
+        /**
+         * Check if this body is in contact with another body
+         * @param other The body to check against.
+         * @param contactFlags Used to specify a more finer grain contact status between the bodies.
+         *        Default value is IS_ENABLED | IS_TOUCHING. 
+                  Possible flags are:
+                    IS_ENABLED:  Specify if you want to only consider the contact if it is enabled.
+                    IS_TOUCHING: Specify if you want to only consider contacts that are touching, 
+                                    and not just an AABB overlap.
+         */
+        public native function isContacting(other:Body, 
+                                            contactFlags:int=ContactFlags.IS_ENABLED|ContactFlags.IS_TOUCHING):Boolean;
+
+        /**
+         * Enable/Disable a contact that this body in touching at a specified index
+         * @param enabledState Enable/Disable state for the contact.
+         * @param contactIndex The index of the contact you want to modify.
+         * @return If the state change was successful.
+         */
+        public native function setContactEnabled(enabledState:Boolean, contactIndex:int):Boolean;
+
+        /**
+         * Checks if a specified contact is enabled
+         * @param contact The contact to check against.
+         * @return True if the contact is enabled. False if it isn't enabled or not found.
+         */
+        public native function isContactEnabled(contactIndex:int):Boolean;
+
+        /**
+         * Checks if a body is in the contacts of this body.
+         * @param body The body to check against.
+         * @return The index the of the body if found, -1 otherwise
+         */
+        public native function bodyToContactIndex(body:Body):int;
+
+        /**
+         * Checks if a contact index correaltes to a body
+         * @param body The index to check
+         * @return The body at that index if found, null otherwise
+         */
+        public native function contactIndexToBody(contactIndex:int):Body;
+
+        /**
+         * Get fixture A of a specific contact
+         * @param contactIndex The index of the contact to check
+         * @return Fixture A if found, null otherwise.
+         */
+        public native function getContactFixtureA(contactIndex:int):Fixture;
+
+        /*
+         * Get the child primitive index for fixture A.
+         * @param contactIndex The index of the contact to check
+         * @return The primitive index if found, null otherwise
+         */   
+        public native function getContactChildIndexA(contactIndex:int):int;
+
+        /**
+         * Get fixture B of a specific contact
+         * @param contactIndex The index of the contact to check
+         * @return Fixture B if found, null otherwise.
+         */
+        public native function getContactFixtureB(contactIndex:int):Fixture;
+        
+        /*
+         * Get the child primitive index for fixture B.
+         * @param contactIndex The index of the contact to check
+         * @return The primitive index if found, null otherwise
+         */  
+        public native function getContactChildIndexB(contactIndex:int):int;
+
+        /*
+         * Get the friction of a specified contact.
+         * @param contactIndex The index of the contact to check
+         * @return The friction value.
+         */  
+        public native function getContactFriction(contactIndex:int):Number;
+
+        /*
+         * Override the friction of a specified contact. Will only change again if set to another value or if resetContactFrication is called()
+         * @param contactIndex The index of the contact to check
+         * @return True if the contact was found and it's friction set, false otherwise.
+         */  
+        public native function setContactFriction(contactIndex:int, friction:Number):Boolean;
+
+        /*
+         * Reset the friction value of a specified contact to its default value.
+         * @param contactIndex The index of the contact to check
+         * @return True if the contact was found and it's friction set, false otherwise.
+         */  
+        public native function resetContactFriction(contactIndex:int):Boolean;
+
+        /*
+         * Get the restitution of a specified contact.
+         * @param contactIndex The index of the contact to check
+         * @return The friction value.
+         */  
+        public native function getContactRestitution(contactIndex:int):Number;
+
+        /*
+         * Override the restitution of a specified contact. Will only change again if set to another value or if resetContactFrication is called()
+         * @param contactIndex The index of the contact to check
+         * @return True if the contact was found and it's restitution set, false otherwise.
+         */  
+        public native function setContactRestitution(contactIndex:int, restitution:Number):Boolean;
+
+        /*
+         * Reset the restitution value of a specified contact to its default value.
+         * @param contactIndex The index of the contact to check
+         * @return True if the contact was found and it's restitution set, false otherwise.
+         */  
+        public native function resetContactRestitution(contactIndex:int):Boolean;
+        
+        /*
+         * Get the tangential speed of a specified contact, in meters per second.
+         * @param contactIndex The index of the contact to check
+         * @return The tangential speed value, in meters per second.
+         */  
+        public native function getContactTangentSpeed(contactIndex:int):Number;
+
+        /*
+         * Set the tangential speed of a specified contact in meters per second.
+         * @return True if the contact was found and it's TangentSpeed set, false otherwise.
+         */  
+        public native function setContactTangentSpeed(contactIndex:int, restitution:Number):Boolean;
     }
     
     /**
@@ -777,5 +915,4 @@ package loom.box2d
          */
         public native function anchorPointForShape(shapeName:String):Vec2;
     }
-
 }
