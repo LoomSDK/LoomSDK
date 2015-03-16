@@ -21,7 +21,7 @@ limitations under the License.
 package loom.platform
 {
     /**
-     * Specifier for the type of keyboard to show.
+     * Specifier for the type of native keyboard to show.
      * 
      * @see IMEDelegate.attachWithIME
      */
@@ -57,7 +57,7 @@ package loom.platform
      * Helper to communicate with Loom's IME API.
      *
      * Accepting fully international text input is complex; this class
-     * hooks into the platform APIs for text input to allow
+     * hooks into the native platform APIs for text input to allow
      * bringing up on-screen input methods, and communicates via 
      * delegates any text that the user composes.
      *
@@ -68,92 +68,86 @@ package loom.platform
      *
      * Each text input area should have its own instance of this class.
      */
-    //[Native(managed)]     
-    public  class IMEDelegate
+    [Native(managed)]     
+    public native class IMEDelegate
     {
         /**
          * Set this to false if you don't want to allow an IME method to be 
          * attached. True by default.
          */
-        public var canAttachWithIME:Boolean;
+        public native var canAttachWithIME:Boolean;
 
         /**
          * Set this to false if you don't want to allow an IME method to be 
          * detached. True by default.
          */
-        public var canDetachWithIME:Boolean;
+        public native var canDetachWithIME:Boolean;
 
         /**
          * Update this with your text field's content from time to time; it is
-         * used if the input method needs to display the text.
+         * used if the native input method needs to display the text.
          */
-        public var contentText:String;
+        public native var contentText:String;
 
         /**
          * Called once we've attached an IME. No parameters.
          */
-        public var onDidAttachWithIME:NativeDelegate;
+        public native var onDidAttachWithIME:NativeDelegate;
 
         /**
          * Called once we've detached an IME. No parameters.
          */
-        public var onDidDetachWithIME:NativeDelegate;
+        public native var onDidDetachWithIME:NativeDelegate;
 
         /**
          * Called as text input becomes available. Is passed a String 
          * containing the new text, and an int with the length in bytes.
          */
-        public var onInsertText:NativeDelegate; // String, int
+        public native var onInsertText:NativeDelegate; // String, int
 
         /**
          * Called when delete is fired; this indicates you should delete one
          * character to the left. No parameters.
          */
-        public var onDeleteBackward:NativeDelegate;
+        public native var onDeleteBackward:NativeDelegate;
 
         /**
          * Indicates the on-screen keyboard is becoming visible. No
          * parameters.
          */
-        public var onKeyboardWillShow:NativeDelegate;
+        public native var onKeyboardWillShow:NativeDelegate;
         
         /**
          * Indicates the on-screen keyboard has become visible. No
          * parameters. (iOS Only)
          */
-        public var onKeyboardDidShow:NativeDelegate;
+        public native var onKeyboardDidShow:NativeDelegate;
 
         /**
          * Indicates the on-screen keyboard is becoming invisible. No
          * parameters.
          */
-        public var onKeyboardWillHide:NativeDelegate;
+        public native var onKeyboardWillHide:NativeDelegate;
 
         /**
          * Indicates the on-screen keyboard has become invisible. No
          * parameters. (iOS Only)
          */
-        public var onKeyboardDidHide:NativeDelegate;
+        public native var onKeyboardDidHide:NativeDelegate;
 
         /**
-         * Called to trigger the IME. Returns false if the IME was not
+         * Called to trigger the native IME. Returns false if the IME was not
          * triggered.
          *
          * @param type The type of keyboard to show. @see LoomKeyboardType
          */
-        public function attachWithIME(type:LoomKeyboardType=0):Boolean
-        {
-        return false;
-        }
+        public native function attachWithIME(type:LoomKeyboardType=0):Boolean;
 
         /**
-         * Called to remove the IME. Returns false if the IME was not
+         * Called to remove the native IME. Returns false if the IME was not
          * removed.
          */
-        public function detachWithIME():Boolean
-        {
-        return false;
-        }
+        public native function detachWithIME():Boolean;
 
     }
 }

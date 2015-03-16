@@ -82,7 +82,7 @@ package loom2d.core
 
         protected function handleTouchMoved(id:int, x:Number, y:Number):void
         {
-            trace("move @ " + x + ", " + y);
+            //trace("move @ " + x + ", " + y);
 
             // translate to stage space            
             x-=mStage.x;
@@ -90,7 +90,7 @@ package loom2d.core
             x/=mStage.scaleX;
             y/=mStage.scaleY;
 
-            trace("POSTmove @ " + x + ", " + y);
+            //trace("POSTmove @ " + x + ", " + y);
 
             enqueue(id, TouchPhase.MOVED, x, y);
         }

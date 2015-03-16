@@ -143,8 +143,8 @@ void VectorGraphics::lineStyle(float thickness, unsigned int color, float alpha,
 }
 
 void VectorGraphics::textFormat(VectorTextFormat format) {
-	ensureTextFormat();
-	queue->push_back(new VectorTextFormatData(new VectorTextFormat(format)));
+    textFormatDirty = true;
+    queue->push_back(new VectorTextFormatData(new VectorTextFormat(format)));
 }
 
 void VectorGraphics::beginFill(unsigned int color, float alpha) {
@@ -221,17 +221,29 @@ void VectorGraphics::drawArc(float x, float y, float radius, float angleFrom, fl
 	inflateBounds(x+radius, y+radius);
 }
 
-void VectorGraphics::drawTextLabel(float x, float y, utString text) {
-	ensureTextFormat();
-	queue->push_back(new VectorText(x, y, NAN, new utString(text)));
-	inflateBounds(x, y);
+void VectorGraphics::drawTextLine(float x, float y, utString text) {
+    ensureTextFormat();
+    queue->push_back(new VectorText(x, y, NAN, new utString(text)));
+    inflateBounds(x, y);
 }
 
 void VectorGraphics::drawTextBox(float x, float y, float width, utString text) {
-	ensureTextFormat();
-	queue->push_back(new VectorText(x, y, width, new utString(text)));
-	inflateBounds(x, y);
-	inflateBounds(x+width, y);
+    ensureTextFormat();
+    queue->push_back(new VectorText(x, y, width, new utString(text)));
+    inflateBounds(x, y);
+    inflateBounds(x + width, y);
+}
+
+Loom2D::Rectangle VectorGraphics::textLineBounds(VectorTextFormat format, float x, float y, utString text) {
+    return VectorRenderer::textLineBounds(&format, x, y, &text);
+}
+
+float VectorGraphics::textLineAdvance(VectorTextFormat format, float x, float y, utString text) {
+    return VectorRenderer::textLineAdvance(&format, x, y, &text);
+}
+
+Loom2D::Rectangle VectorGraphics::textBoxBounds(VectorTextFormat format, float x, float y, float width, utString text) {
+    return VectorRenderer::textBoxBounds(&format, x, y, width, &text);
 }
 
 void VectorGraphics::ensureTextFormat() {
@@ -343,7 +355,7 @@ void VectorFill::render(VectorGraphics* g) {
 
 void VectorText::render(VectorGraphics* g) {
 	if (isnan(width)) {
-		VectorRenderer::textLabel(x, y, text);
+		VectorRenderer::textLine(x, y, text);
 	} else {
 		VectorRenderer::textBox(x, y, width, text);
 	}

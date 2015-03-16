@@ -249,69 +249,7 @@ static int registerCCUserDefault(lua_State *L)
     return 0;
 }
 
-class IMEDelegate
-{
-public:
-    
-    IMEDelegate()
-    {
-        _canAttachWithIME = false;
-        _canDetachWithIME = false;
-        contentText = "[null]";
-    }
-    
-    bool _canAttachWithIME, _canDetachWithIME;
-    const char *contentText;
-    
-    LOOM_DELEGATE(DidAttachWithIME);
-    LOOM_DELEGATE(DidDetachWithIME);
-    LOOM_DELEGATE(InsertText);
-    LOOM_DELEGATE(DeleteBackward);
-    LOOM_DELEGATE(KeyboardWillShow);
-    LOOM_DELEGATE(KeyboardDidShow);
-    LOOM_DELEGATE(KeyboardWillHide);
-    LOOM_DELEGATE(KeyboardDidHide);
-
-    bool attachWithIME(int type = 0) { return true; }
-    bool detachWithIME() { return false; }
-    
-};
-
-
-static int registerCCLoomScriptIMEDelegate(lua_State *L)
-{
-    beginPackage(L, "loom.platform")
-    
-    .beginClass<IMEDelegate>("IMEDelegate")
-    
-    .addConstructor<void (*)(void)>()
-    
-    .addVar("canAttachWithIME", &IMEDelegate::_canAttachWithIME)
-    .addVar("canDetachWithIME", &IMEDelegate::_canDetachWithIME)
-    .addVar("contentText", &IMEDelegate::contentText)
-    
-    .addVarAccessor("onDidAttachWithIME", &IMEDelegate::getDidAttachWithIMEDelegate)
-    .addVarAccessor("onDidDetachWithIME", &IMEDelegate::getDidDetachWithIMEDelegate)
-    .addVarAccessor("onInsertText", &IMEDelegate::getInsertTextDelegate)
-    .addVarAccessor("onDeleteBackward", &IMEDelegate::getDeleteBackwardDelegate)
-    .addVarAccessor("onKeyboardWillShow", &IMEDelegate::getKeyboardWillShowDelegate)
-    .addVarAccessor("onKeyboardDidShow", &IMEDelegate::getKeyboardDidShowDelegate)
-    .addVarAccessor("onKeyboardWillHide", &IMEDelegate::getKeyboardWillHideDelegate)
-    .addVarAccessor("onKeyboardDidHide", &IMEDelegate::getKeyboardDidHideDelegate)
-    
-    .addMethod("attachWithIME", &IMEDelegate::attachWithIME)
-    .addMethod("detachWithIME", &IMEDelegate::detachWithIME)
-    
-    .endClass()
-    
-    .endPackage();
-
-    return 0;
-}
-
-
 void installPackage()
 {
     LOOM_DECLARE_MANAGEDNATIVETYPE(DummyDefaults, registerCCUserDefault);
-    LOOM_DECLARE_MANAGEDNATIVETYPE(IMEDelegate, registerCCLoomScriptIMEDelegate);
 }

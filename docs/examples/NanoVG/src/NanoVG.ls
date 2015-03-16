@@ -16,6 +16,8 @@ package
     import loom2d.events.TouchPhase;
     import loom2d.Loom2D;
     import loom2d.math.Rectangle;
+    import loom2d.text.BitmapFont;
+    import loom2d.text.TextField;
     import loom2d.textures.Texture;
     import loom2d.ui.SimpleLabel;
     import system.Void;
@@ -23,10 +25,13 @@ package
     public class NanoVG extends Application
     {
         private var g:Graphics;
+        
         override public function run():void
         {
             // Comment out this line to turn off automatic scaling.
             stage.scaleMode = StageScaleMode.LETTERBOX;
+            //stage.scaleMode = StageScaleMode.NONE;
+            stage.color = 0xE1E1E1;
             
             var q:Quad;
             //*
@@ -137,19 +142,19 @@ package
             g.moveTo(  0,   0); g.arcTo(  0,  25, 25, 25, 25);
             
             // Draw text
-            g.drawTextLabel(220, 0, "hello");
+            g.drawTextLine(220, 0, "hello");
             
             var format = new TextFormat();
             
             format.color = 0xA60000;
             format.size = 30;
             g.textFormat(format);
-            g.drawTextLabel(220, 2, "world");
+            g.drawTextLine(220, 2, "world");
             
             format.color = 0xFF5959;
             format.size = 14;
             format.lineHeight = 1;
-            format.align = TextAlign.CENTER | TextAlign.TOP;
+            format.align = TextAlign.CENTER | TextAlign.BASELINE;
             g.textFormat(format);
             g.moveTo(300, 0); g.lineTo(400, 0);
             g.drawTextBox(300, 0, 100, "The five boxing wizards jump quickly.");
@@ -162,13 +167,13 @@ package
             g.moveTo(330, 50); g.lineTo(400, 50);
             g.drawTextBox(330, 50, 70, "The five boxing wizards jump quickly.");
             
-            TextFormat.load("lobster", "font/Lobster-Regular.ttf");
+            TextFormat.load("lobster", "assets/Lobster-Regular.ttf");
             format.font = "lobster";
             format.color = 0xFF4848;
             format.size = 30;
             format.align = TextAlign.TOP | TextAlign.LEFT;
             g.textFormat(format);
-            g.drawTextLabel(225, 25, "Lobster");
+            g.drawTextLine(225, 25, "Lobster");
             
             // Mixed line and shape rendering
             g.moveTo(100, 0);
@@ -285,7 +290,7 @@ package
             //g.lineTo(100, 0);
             //g.drawRect(0, 0, 10, 10);
             //g.textFormat(format);
-            //g.drawTextLabel(0, 0, "hello");
+            //g.drawTextLine(0, 0, "hello");
             //g.textFormat(format);
             //g.drawRect(0, 0, 10, 10);
             //g.moveTo(0, 0);

@@ -21,6 +21,7 @@
 #pragma once
 
 #include "loom/graphics/gfxTexture.h"
+#include "loom/engine/loom2d/l2dRectangle.h"
 #include <math.h>
 struct NSVGimage;
 
@@ -194,8 +195,12 @@ public:
 	static void roundRectComplex(float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomLeftRadius, float bottomRightRadius);
 	static void arc(float x, float y, float radius, float angleFrom, float angleTo, VectorWinding::Enum direction);
 
-	static void textLabel(float x, float y, utString* string);
-	static void textBox(float x, float y, float width, utString* string);
+    static void textLine(float x, float y, utString* string);
+    static void textBox(float x, float y, float width, utString* string);
+
+    static Loom2D::Rectangle textLineBounds(VectorTextFormat* format, float x, float y, utString* string);
+    static float textLineAdvance(VectorTextFormat* format, float x, float y, utString* string);
+    static Loom2D::Rectangle textBoxBounds(VectorTextFormat* format, float x, float y, float width, utString* string);
 
 	static void svg(float x, float y, float scale, VectorSVG* image);
 

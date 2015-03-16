@@ -87,7 +87,8 @@ package
         {
             EmbeddedAssets.initialize();
 
-            new MetalWorksMobileTheme();
+            new MetalWorksMobileVectorTheme();
+            //new MetalWorksMobileTheme();
             
             this._navigator = new ScreenNavigator();
             this.content = this._navigator;

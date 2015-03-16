@@ -35,6 +35,8 @@ set (ENGINE_SRC
     bindings/loom/lmTeak.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
     
+    bindings/sdl/lmSDL.cpp
+    
     physics/lsPhysics.cpp
     physics/lsPhysicsPackage.cpp
 

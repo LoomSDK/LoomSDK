@@ -6,9 +6,12 @@
 #include <emscripten/emscripten.h>
 #endif
 
+#include "loom/engine/bindings/sdl/lmSDL.h"
+
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/common/config/applicationConfig.h"
+#include "loom/common/core/log.h"
 
 #include <SDL.h>
 
@@ -22,6 +25,8 @@ extern "C"
 
 SDL_Window *gSDLWindow = NULL;
 SDL_GLContext gContext;
+
+lmDefineLogGroup(coreLogGroup, "loom.core", 1, LoomLogInfo);
 
 static int done = 0;
 
@@ -46,12 +51,18 @@ void loop()
 
         if(event.type == SDL_KEYDOWN)
         {
+            SDL_Keysym key = event.key.keysym;
             // Handle a key!
-            stage->_KeyDownDelegate.pushArgument(event.key.keysym.scancode);
-            stage->_KeyDownDelegate.pushArgument(event.key.keysym.sym);
-            stage->_KeyDownDelegate.pushArgument(event.key.keysym.mod);
+            stage->_KeyDownDelegate.pushArgument(key.scancode);
+            stage->_KeyDownDelegate.pushArgument(key.sym);
+            stage->_KeyDownDelegate.pushArgument(key.mod);
             stage->_KeyDownDelegate.invoke();
-
+            if (SDL_IsTextInputActive() && key.mod == KMOD_NONE && key.sym == SDLK_BACKSPACE) IMEDelegateDispatcher::shared()->dispatchDeleteBackward();
+            if (key.mod & KMOD_CTRL && key.sym == SDLK_v) {
+                char* clipboard = SDL_GetClipboardText();
+                IMEDelegateDispatcher::shared()->dispatchInsertText(clipboard, strlen(clipboard));
+                SDL_free(clipboard);
+            }
         }
         else if(event.type == SDL_KEYUP)
         {
@@ -114,6 +125,13 @@ void loop()
             stage->noteNativeSize(event.window.data1, event.window.data2);
             GFX::Graphics::setNativeSize(event.window.data1, event.window.data2);
         }
+        else if (event.type == SDL_TEXTINPUT)
+        {
+            IMEDelegateDispatcher::shared()->dispatchInsertText(event.text.text, strlen(event.text.text));
+        }
+        else if (event.type == SDL_TEXTEDITING)
+        {
+        }
     }
     
     /* Tick and render Loom. */
@@ -156,6 +174,8 @@ main(int argc, char *argv[])
     SDL_SetWindowSize(gSDLWindow, LoomApplicationConfig::displayWidth(), LoomApplicationConfig::displayHeight());
     SDL_SetWindowPosition(gSDLWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     SDL_ShowWindow(gSDLWindow);
+
+    SDL_StopTextInput();
 
     // Initialize Loom!
     loom_appSetup();    

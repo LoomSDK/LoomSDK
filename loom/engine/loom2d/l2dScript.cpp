@@ -276,6 +276,9 @@ static int registerLoom2D(lua_State *L)
        .addMethod("clear", &GFX::VectorGraphics::clear)
        .addMethod("lineStyle", &GFX::VectorGraphics::lineStyle)
        .addMethod("textFormat", &GFX::VectorGraphics::textFormat)
+       .addMethod("textLineBounds", &GFX::VectorGraphics::textLineBounds)
+       .addMethod("textLineAdvance", &GFX::VectorGraphics::textLineAdvance)
+       .addMethod("textBoxBounds", &GFX::VectorGraphics::textBoxBounds)
        .addMethod("beginFill", &GFX::VectorGraphics::beginFill)
        .addMethod("endFill", &GFX::VectorGraphics::endFill)
        .addMethod("moveTo", &GFX::VectorGraphics::moveTo)
@@ -289,7 +292,7 @@ static int registerLoom2D(lua_State *L)
        .addMethod("drawRoundRect", &GFX::VectorGraphics::drawRoundRect)
        .addMethod("drawRoundRectComplex", &GFX::VectorGraphics::drawRoundRectComplex)
        .addMethod("drawArc", &GFX::VectorGraphics::drawArc)
-       .addMethod("drawTextLabel", &GFX::VectorGraphics::drawTextLabel)
+       .addMethod("drawTextLine", &GFX::VectorGraphics::drawTextLine)
        .addMethod("drawTextBox", &GFX::VectorGraphics::drawTextBox)
        .addMethod("drawSVG", &GFX::VectorGraphics::drawSVG)
        .addMethod("getBounds", &GFX::VectorGraphics::getBounds)
@@ -333,7 +336,7 @@ void installLoom2D()
     LOOM_DECLARE_NATIVETYPE(Loom2D::Rectangle, Loom2D::registerLoom2D);
     LOOM_DECLARE_NATIVETYPE(Loom2D::Matrix, Loom2D::registerLoom2D);
 
-    LOOM_DECLARE_NATIVETYPE(GFX::VectorTextFormat, Loom2D::registerLoom2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorTextFormat, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorSVG, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorGraphics, Loom2D::registerLoom2D);
 

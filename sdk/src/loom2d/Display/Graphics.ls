@@ -43,8 +43,14 @@ package loom2d.display
         BASELINE = 64,
     };
     
+    [Native(managed)] 
     public native class TextFormat
     {
+        function TextFormat(font:String = null, size:Number = NaN, color:Number = NaN, bold:Object = null) {
+            if (font != null) this.font = font;
+            if (!isNaN(size)) this.size = size;
+            if (!isNaN(color)) this.color = color;
+        }
         public native function set font(value:String);
         public native function get font():String;
         public native function set color(value:int);
@@ -78,6 +84,9 @@ package loom2d.display
         public native function clear():void;
         public native function lineStyle(thickness:Number = NaN, color:uint = 0x00000000, alpha:Number = 1, pixelHinting:Boolean = false, scaleMode:String = "", caps:String = "round", joints:String = "round", miterLimit:Number = 0):void;
         public native function textFormat(format:TextFormat):void;
+        public native function textLineBounds(format:TextFormat, x:Number, y:Number, text:String):Rectangle;
+        public native function textLineAdvance(format:TextFormat, x:Number, y:Number, text:String):float;
+        public native function textBoxBounds(format:TextFormat, x:Number, y:Number, width:Number, text:String):Rectangle;
         public native function beginFill(color:uint = 0x00000000, alpha:Number = 1):void;
         public native function endFill():void;
         public native function moveTo(x:Number, y:Number):void;
@@ -91,7 +100,7 @@ package loom2d.display
         public native function drawRoundRect(x:Number, y:Number, width:Number, height:Number, ellipseWidth:Number, ellipseHeight:Number):void;
         public native function drawRoundRectComplex(x:Number, y:Number, width:Number, height:Number, topLeftRadius:Number, topRightRadius:Number, bottomLeftRadius:Number, bottomRightRadius:Number):void;
         public native function drawArc(x:Number, y:Number, radius:Number, angleFrom:Number, angleTo:Number, direction:int):void;
-        public native function drawTextLabel(x:Number, y:Number, text:String):void;
+        public native function drawTextLine(x:Number, y:Number, text:String):void;
         public native function drawTextBox(x:Number, y:Number, width:Number, text:String):void;
         public native function drawSVG(x:Number, y:Number, scale:Number, svg:SVG):void;
         public native function getBounds():Rectangle;

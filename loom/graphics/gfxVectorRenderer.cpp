@@ -287,14 +287,52 @@ void VectorRenderer::arc(float x, float y, float radius, float angleFrom, float 
 }
 
 
-void VectorRenderer::textLabel(float x, float y, utString* string) {
-	nvgText(nvg, x, y, string->c_str(), NULL);
+void VectorRenderer::textLine(float x, float y, utString* string) {
+    nvgText(nvg, x, y, string->c_str(), NULL);
 }
 
 void VectorRenderer::textBox(float x, float y, float width, utString* string) {
-	nvgTextBox(nvg, x, y, width, string->c_str(), NULL);
+    nvgTextBox(nvg, x, y, width, string->c_str(), NULL);
 }
 
+Loom2D::Rectangle VectorRenderer::textLineBounds(VectorTextFormat* format, float x, float y, utString* string) {
+    float* bounds = new float[4];
+    nvgSave(nvg);
+    nvgReset(nvg);
+    textFormat(format);
+    nvgTextBounds(nvg, x, y, string->c_str(), NULL, bounds);
+    nvgRestore(nvg);
+    float xmin = bounds[0];
+    float ymin = bounds[1];
+    float xmax = bounds[2];
+    float ymax = bounds[3];
+    delete bounds;
+    return Loom2D::Rectangle(xmin, ymin, xmax-xmin, ymax-ymin);
+}
+
+float VectorRenderer::textLineAdvance(VectorTextFormat* format, float x, float y, utString* string) {
+    nvgSave(nvg);
+    nvgReset(nvg);
+    textFormat(format);
+    float advance = nvgTextBounds(nvg, x, y, string->c_str(), NULL, NULL);
+    nvgRestore(nvg);
+    return advance;
+}
+
+Loom2D::Rectangle VectorRenderer::textBoxBounds(VectorTextFormat* format, float x, float y, float width, utString* string) {
+    float* bounds = new float[4];
+    nvgSave(nvg);
+    nvgReset(nvg);
+    textFormat(format);
+    nvgTextBoxBounds(nvg, x, y, width, string->c_str(), NULL, bounds);
+    nvgRestore(nvg);
+    float xmin = bounds[0];
+    float ymin = bounds[1];
+    float xmax = bounds[2];
+    float ymax = bounds[3];
+    delete bounds;
+    return Loom2D::Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
+}
 
 void VectorRenderer::svg(float x, float y, float scale, VectorSVG* image) {
 	image->render(x, y, scale);
@@ -321,9 +359,13 @@ void VectorRenderer::initializeGraphicsResources()
     nvg = nvgCreateGL2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
 #endif
     lmAssert(nvg != NULL, "Unable to init nanovg");
-	nvgCreateFont(nvg, "sans", "font/droidsans.ttf");
-	//nvgCreateFont(nvg, "sans", "font/Roboto - Regular.ttf");
-	//nvgCreateFont(nvg, "sans", "font/OpenSans-Regular.ttf");
+    //nvgCreateFont(nvg, "sans", "assets/droidsans.ttf");
+    nvgCreateFont(nvg, "sans", "assets/SourceSansPro-Regular.ttf");
+    //nvgCreateFont(nvg, "sans", "assets/unifont-7.0.06.ttf");
+    //nvgCreateFont(nvg, "sans", "assets/keifont.ttf");
+    //nvgCreateFont(nvg, "sans", "assets/mikachanALL.ttf");
+    //nvgCreateFont(nvg, "sans", "assets/Roboto - Regular.ttf");
+	//nvgCreateFont(nvg, "sans", "assets/OpenSans-Regular.ttf");
 
 	
 

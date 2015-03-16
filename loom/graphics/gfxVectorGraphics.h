@@ -215,8 +215,12 @@ public:
 	void drawRoundRectComplex(float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomLeftRadius, float bottomRightRadius);
 	void drawArc(float x, float y, float radius, float angleFrom, float angleTo, int direction);
 
-	void drawTextLabel(float x, float y, utString text);
+	void drawTextLine(float x, float y, utString text);
 	void drawTextBox(float x, float y, float width, utString text);
+
+    Loom2D::Rectangle textLineBounds(GFX::VectorTextFormat format, float x, float y, utString text);
+    float textLineAdvance(GFX::VectorTextFormat format, float x, float y, utString text);
+    Loom2D::Rectangle textBoxBounds(GFX::VectorTextFormat format, float x, float y, float width, utString text);
 
 	void drawSVG(float x, float y, float scale, GFX::VectorSVG* svg);
 };
