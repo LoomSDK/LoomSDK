@@ -16,6 +16,9 @@
 // 3. This notice may not be removed or altered from any source distribution.
 //
 
+#include <loom/common/core/log.h>
+lmDefineLogGroup(gNanoVG, "nanovg", 1, LoomLogInfo);
+
 #include <stdio.h>
 #include <math.h>
 #include "nanovg.h"
@@ -2368,6 +2371,16 @@ float nvgText(NVGcontext* ctx, float x, float y, const char* string, const char*
 
 	fonsTextIterInit(ctx->fs, &iter, x*scale, y*scale, string, end);
 	prevIter = iter;
+    //if (strcmp(string, "Disabled Button") == 0) lmLog(gNanoVG, "##### BEGIN TEXT #####");
+    /*
+    if (strcmp(string, "Disabled Button") == 0) {
+        float lineh;
+        float ascender;
+        float descender;
+        nvgTextMetrics(ctx, &ascender, &descender, &lineh);
+        lmLog(gNanoVG, "as");
+    }
+    */
 	while (fonsTextIterNext(ctx->fs, &iter, &q)) {
 		float c[4*2];
 		if (iter.prevGlyphIndex == -1) { // can not retrieve glyph?
@@ -2382,14 +2395,17 @@ float nvgText(NVGcontext* ctx, float x, float y, const char* string, const char*
 			if (iter.prevGlyphIndex == -1) // still can not find glyph?
 				break;
 		}
-		prevIter = iter;
-		// Transform corners.
+        prevIter = iter;
+        //if (strcmp(string, "Disabled Button") == 0) lmLog(gNanoVG, "%f %f %f %f", q.x0*invscale, q.y0*invscale, q.x1*invscale, q.y1*invscale);
+        //if (strcmp(string, "Disabled Button") == 0) lmLog(gNanoVG, "b %f %f %f %f %f %f %f %f", q.x0*invscale, q.y0*invscale, q.x1*invscale, q.y0*invscale, q.x1*invscale, q.y1*invscale, q.x0*invscale, q.y1*invscale);
+        // Transform corners.
 		nvgTransformPoint(&c[0],&c[1], state->xform, q.x0*invscale, q.y0*invscale);
 		nvgTransformPoint(&c[2],&c[3], state->xform, q.x1*invscale, q.y0*invscale);
 		nvgTransformPoint(&c[4],&c[5], state->xform, q.x1*invscale, q.y1*invscale);
 		nvgTransformPoint(&c[6],&c[7], state->xform, q.x0*invscale, q.y1*invscale);
 		// Create triangles
-		if (nverts+6 <= cverts) {
+        if (nverts + 6 <= cverts) {
+            //if (strcmp(string, "Disabled Button") == 0) lmLog(gNanoVG, "a %f %f %f %f %f %f %f %f", c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
 			nvg__vset(&verts[nverts], c[0], c[1], q.s0, q.t0); nverts++;
 			nvg__vset(&verts[nverts], c[4], c[5], q.s1, q.t1); nverts++;
 			nvg__vset(&verts[nverts], c[2], c[3], q.s1, q.t0); nverts++;

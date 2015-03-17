@@ -22,7 +22,7 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
  */
-package 
+package feathers.themes
 {
     import feathers.controls.Button;
     import feathers.controls.ButtonGroup;
@@ -42,6 +42,8 @@ package
     import feathers.controls.Radio;
     import feathers.controls.Screen;
     import feathers.controls.ScrollContainer;
+    import feathers.text.VectorTextRenderer;
+    import feathers.text.VectorTextEditor;
     import loom2d.display.TextFormat;
 //    import feathers.controls.ScrollText;
     import feathers.controls.SimpleScrollBar;
@@ -307,7 +309,7 @@ package
             }
 
             this.scale = scaledDPI / this._originalDPI;
-
+            
             FeathersControl.defaultTextRendererFactory = textRendererFactory;
             FeathersControl.defaultTextEditorFactory = textEditorFactory;
 

@@ -19,7 +19,29 @@ package loom2d.display
         /** Helper objects. */
         private static var sHelperPoint:Point = new Point();
         
-        public function Shape() {}
+        protected var _clipRect:Rectangle = null;
+        
+        
+        public function Shape() { }
+        
+        public native function setClipRect(x:system.Number, y:system.Number, width:system.Number, height:system.Number);
+        public function get clipRect():Rectangle
+        {
+            return _clipRect;
+        }
+        public function set clipRect(value:Rectangle)
+        {            
+            if(value)
+            {
+                _clipRect = value.clone();
+                setClipRect(value.x, value.y, value.width, value.height);
+            }
+            else
+            {
+                _clipRect = null;
+                setClipRect(0,0,0,0);
+            }
+        }
         
         public native function get graphics():Graphics;
         

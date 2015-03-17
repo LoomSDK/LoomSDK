@@ -110,6 +110,16 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
         GFX::Graphics::context()->glGenTextures(1, &tinfo->handle);
         GFX::Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo->handle);
         GFX::Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        switch (tinfo->smoothing)
+        {
+        case TEXTUREINFO_SMOOTHING_NONE:
+            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NONE);
+            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NONE);
+        default:
+            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            break;
+        }
 
         
         tinfo->width  = width;
@@ -132,6 +142,16 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 //        bgfx::updateTexture2D(tinfo->handle, 0, 0, 0, width, height, mem);
         GFX::Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo->handle);
         GFX::Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        switch (tinfo->smoothing)
+        {
+        case TEXTUREINFO_SMOOTHING_NONE:
+            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NONE);
+            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NONE);
+        default:
+            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            break;
+        }
 
         tinfo->width  = width;
         tinfo->height = height;

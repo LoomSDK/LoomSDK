@@ -313,11 +313,12 @@ package feathers.text
 
         public function validate():void
         {
+            _shape.setClipRect(0, 0, width, height);
             super.validate();
             
             var tmp:String = processDisplayText(_text);
             var advance:Number = g.textLineAdvance(_textFormat, 0, 0, tmp);
-            trace("advance", advance);
+            //trace("advance", advance);
             //var bounds:Rectangle = g.textBoxBounds(_textFormat, 0, 0, isNaN(this.explicitWidth) ? Number.MAX_VALUE : this.explicitWidth, tmp);
             
             // Just show a centered caret if we have no bounds.

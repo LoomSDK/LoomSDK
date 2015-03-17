@@ -45,6 +45,11 @@ public:
 		delete graphics;
 	}
 
+    void setClipRect(int x, int y, int w, int h)
+    {
+        graphics->setClipRect(x, y, w, h);
+    }
+
     void render(lua_State *L);
 
     static void initialize(lua_State *L)

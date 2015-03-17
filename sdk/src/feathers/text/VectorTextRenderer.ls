@@ -1,4 +1,5 @@
-package feathers.text {
+package feathers.text
+{
     import feathers.core.FeathersControl;
     import feathers.core.ITextRenderer;
     import loom2d.display.Graphics;
@@ -44,7 +45,6 @@ package feathers.text {
         {
             _text = value;
             invalidate();
-            //trace("hello", value);
         }
 
         public function set textFormat(value:TextFormat):void
@@ -75,13 +75,15 @@ package feathers.text {
             var tmp:String = processDisplayText(_text);
             g.clear();
             _textFormat.align = TextAlign.MIDDLE;
+            //_textFormat.align = TextAlign.BOTTOM;
             g.textFormat(_textFormat);
             //g.drawTextBox(0, 0, width+1, tmp);
             g.drawTextLine(0, height/2, tmp);
+            //g.drawTextLine(0, height, tmp);
             //g.lineStyle(1, 0xFF0000);
+            //g.drawRect(0, 0, width, height); 
             //g.moveTo(0, 0);
             //g.lineTo(width, height);
-            //g.drawRect(0, 0, width, height); 
         }
         
         protected function measureText():Point

@@ -18,7 +18,24 @@
 * ===========================================================================
 */
 
+#include "SDL.h"
 #include "loom/engine/loom2d/l2dRectangle.h"
+
+class Window
+{
+protected:
+    static Window* mainWindow;
+    SDL_Window* sdlWindow;
+    bool initializing = true;
+
+public:
+    Window(SDL_Window* window);
+    static void setMain(Window* window);
+    static Window* getMain();
+    void updateFromConfig();
+    void show();
+    void hide();
+};
 
 typedef struct
 {

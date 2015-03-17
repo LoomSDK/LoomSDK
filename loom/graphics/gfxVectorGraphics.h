@@ -183,15 +183,19 @@ public:
 	float boundT;
 	float boundR;
 	float boundB;
-	float scale;
+    float scale;
+    int clipX, clipY, clipWidth, clipHeight;
 
 	VectorGraphics() {
-		queue = new utArray<VectorData*>();
+        queue = new utArray<VectorData*>();
+        clipX = clipY = clipWidth = clipHeight = 0;
 		clear();
 	}
 
 	bool isStyleVisible();
 	void flushPath();
+
+    void setClipRect(int x, int y, int w, int h);
 	void render(Loom2D::Matrix* transform);
 
 	void clear();

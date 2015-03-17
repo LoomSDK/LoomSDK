@@ -160,9 +160,12 @@ public:
 	static void beginFrame();
 	static void endFrame();
 
-	static void preDraw(float a, float b, float c, float d, float e, float f);
+    static void preDraw(float a, float b, float c, float d, float e, float f);
 	static void postDraw();
 	
+    static void setClipRect(int x, int y, int w, int h);
+    static void resetClipRect();
+
 	static void clearPath();
 	static void renderStroke();
 	static void renderFill();

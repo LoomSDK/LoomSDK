@@ -304,7 +304,6 @@ package loom2d.display
         
         protected function invalidateScale():void
         {
-            trace("scale " + nativeStageWidth + "x" + nativeStageHeight + " mode = " + scaleMode);
             var scaledWidth = nativeStageWidth / stageWidth;
             var scaledHeight = nativeStageHeight / stageHeight;
 

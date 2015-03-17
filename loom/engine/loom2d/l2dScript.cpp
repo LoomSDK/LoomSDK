@@ -268,6 +268,7 @@ static int registerLoom2D(lua_State *L)
     // Shape
        .deriveClass<Shape, DisplayObject>("Shape")
        .addConstructor<void(*)(void)>()
+       .addMethod("setClipRect", &Shape::setClipRect)
        .addMethod("__pget_graphics", &Shape::getGraphics)
        .endClass()
 

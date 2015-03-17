@@ -274,7 +274,33 @@ void VectorGraphics::drawSVG(float x, float y, float scale, VectorSVG* svg) {
         RENDERING
 *************************/
 
+void VectorGraphics::render(Loom2D::Matrix* transform) {
+    QuadRenderer::submit();
 
+    VectorRenderer::beginFrame();
+    VectorRenderer::preDraw(transform->a, transform->b, transform->c, transform->d, transform->tx, transform->ty);
+
+    scale = sqrt(transform->a*transform->a + transform->b*transform->b + transform->c*transform->c + transform->d*transform->d);
+
+    bool clipping = clipWidth != 0 || clipHeight != 0;
+    if (clipping) VectorRenderer::setClipRect(clipX, clipY, clipWidth, clipHeight);
+
+    resetStyle();
+
+    flushPath();
+
+    utArray<VectorData*>::Iterator it = queue->iterator();
+    while (it.hasMoreElements()) {
+        VectorData* d = it.getNext();
+        d->render(this);
+    }
+    flushPath();
+
+    if (clipping) VectorRenderer::resetClipRect();
+
+    VectorRenderer::postDraw();
+    VectorRenderer::endFrame();
+}
 
 void VectorPath::render(VectorGraphics* g) {
 	int ci = 0;
@@ -379,27 +405,12 @@ void VectorSVGData::render(VectorGraphics* g) {
         MISC
 ********************/
 
-void VectorGraphics::render(Loom2D::Matrix* transform) {
-	QuadRenderer::submit();
 
-	VectorRenderer::beginFrame();
-	VectorRenderer::preDraw(transform->a, transform->b, transform->c, transform->d, transform->tx, transform->ty);
-	
-	scale = sqrt(transform->a*transform->a + transform->b*transform->b + transform->c*transform->c + transform->d*transform->d);
-
-	resetStyle();
-
-	flushPath();
-
-	utArray<VectorData*>::Iterator it = queue->iterator();
-	while (it.hasMoreElements()) {
-		VectorData* d = it.getNext();
-		d->render(this);
-	}
-	flushPath();
-
-	VectorRenderer::postDraw();
-	VectorRenderer::endFrame();
+void VectorGraphics::setClipRect(int x, int y, int w, int h) {
+    clipX = x;
+    clipY = y;
+    clipWidth = w;
+    clipHeight = h;
 }
 
 void VectorLineStyle::reset() {

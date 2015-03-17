@@ -38,6 +38,8 @@ using namespace LS;
 #include "loom/script/common/lsLog.h"
 #include "loom/script/common/lsFile.h"
 
+#include "loom/engine/bindings/sdl/lmSDL.h"
+
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformHttp.h"
 #include "loom/common/platform/platformAdMob.h"
@@ -138,6 +140,8 @@ void LoomApplication::execMainAssembly()
     Assembly *mainAssembly = rootVM->loadExecutableAssembly(bootAssembly);
 
     LoomApplicationConfig::parseApplicationConfig(mainAssembly->getLoomConfig());
+
+    Window::getMain()->updateFromConfig();
 
     // Wait for asset agent if appropriate.
     if (LoomApplicationConfig::waitForAssetAgent() > 0)

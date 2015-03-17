@@ -22,8 +22,42 @@
 #include "lmSDL.h"
 #include "loom/script/native/lsNativeDelegate.h"
 #include "loom/common/core/log.h"
+#include "loom/common/config/applicationConfig.h"
 
 lmDefineLogGroup(sdlLogGroup, "loom.engine.bindings", 1, LoomLogInfo);
+
+Window* Window::mainWindow = NULL;
+
+Window::Window(SDL_Window* window) {
+    sdlWindow = window;
+}
+
+void Window::setMain(Window* window) {
+    mainWindow = window;
+}
+
+Window* Window::getMain() {
+    lmAssert(mainWindow != NULL, "Main Window was not set before getting");
+    return mainWindow;
+}
+
+void Window::updateFromConfig() {
+    SDL_SetWindowTitle(sdlWindow, LoomApplicationConfig::displayTitle().c_str());
+    SDL_SetWindowSize(sdlWindow, LoomApplicationConfig::displayWidth(), LoomApplicationConfig::displayHeight());
+    if (initializing) {
+        initializing = false;
+        show();
+    }
+}
+
+void Window::show() {
+    SDL_ShowWindow(sdlWindow);
+}
+
+void Window::hide() {
+    SDL_HideWindow(sdlWindow);
+}
+
 
 IMEDelegateDispatcher* IMEDelegateDispatcher::shared() {
     static IMEDelegateDispatcher instance;

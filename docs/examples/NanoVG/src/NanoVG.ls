@@ -86,7 +86,6 @@ package
             gfx.lineTo(50, 100);
             */
             
-            
             var x = 0, y = 0;
             var b:Rectangle;
             
@@ -140,6 +139,8 @@ package
             g.moveTo(100, 100); g.arcTo(100,  75, 75, 75, 25);
             g.moveTo(100,   0); g.arcTo(100,  25, 75, 25, 25);
             g.moveTo(  0,   0); g.arcTo(  0,  25, 25, 25, 25);
+            
+            TextFormat.load("sans", "assets/SourceSansPro-Regular.ttf");
             
             // Draw text
             g.drawTextLine(220, 0, "hello");

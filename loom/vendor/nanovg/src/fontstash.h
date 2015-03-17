@@ -16,6 +16,9 @@
 // 3. This notice may not be removed or altered from any source distribution.
 //
 
+#include <loom/common/core/log.h>
+lmDefineLogGroup(gFons, "fons", 1, LoomLogInfo);
+
 #ifndef FONS_H
 #define FONS_H
 
@@ -1131,8 +1134,10 @@ static void fons__getQuad(FONScontext* stash, FONSfont* font,
 	y1 = (float)(glyph->y1-1);
 
 	if (stash->params.flags & FONS_ZERO_TOPLEFT) {
-		rx = (float)(int)(*x + xoff);
-		ry = (float)(int)(*y + yoff);
+		rx = floorf(*x + xoff);
+		ry = floorf(*y + yoff);
+
+        //lmLog(gFons, "tl %f %f", rx, ry);
 
 		q->x0 = rx;
 		q->y0 = ry;
@@ -1144,8 +1149,10 @@ static void fons__getQuad(FONScontext* stash, FONSfont* font,
 		q->s1 = x1 * stash->itw;
 		q->t1 = y1 * stash->ith;
 	} else {
-		rx = (float)(int)(*x + xoff);
-		ry = (float)(int)(*y - yoff);
+        rx = floorf(*x + xoff);
+        ry = floorf(*y - yoff);
+
+        //lmLog(gFons, "ot %f %f", rx, ry);
 
 		q->x0 = rx;
 		q->y0 = ry;

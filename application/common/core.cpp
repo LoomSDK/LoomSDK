@@ -10,7 +10,6 @@
 
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/engine/loom2d/l2dStage.h"
-#include "loom/common/config/applicationConfig.h"
 #include "loom/common/core/log.h"
 
 #include <SDL.h>
@@ -24,6 +23,7 @@ extern "C"
 };
 
 SDL_Window *gSDLWindow = NULL;
+Window *gWindow = NULL;
 SDL_GLContext gContext;
 
 lmDefineLogGroup(coreLogGroup, "loom.core", 1, LoomLogInfo);
@@ -57,6 +57,7 @@ void loop()
             stage->_KeyDownDelegate.pushArgument(key.sym);
             stage->_KeyDownDelegate.pushArgument(key.mod);
             stage->_KeyDownDelegate.invoke();
+            //lmLog(coreLogGroup, "keydown %d %d", key.sym, SDLK_BACKSPACE);
             if (SDL_IsTextInputActive() && key.mod == KMOD_NONE && key.sym == SDLK_BACKSPACE) IMEDelegateDispatcher::shared()->dispatchDeleteBackward();
             if (key.mod & KMOD_CTRL && key.sym == SDLK_v) {
                 char* clipboard = SDL_GetClipboardText();
@@ -127,10 +128,12 @@ void loop()
         }
         else if (event.type == SDL_TEXTINPUT)
         {
+            //lmLog(coreLogGroup, "SDL_TEXTINPUT %s", event.text.text);
             IMEDelegateDispatcher::shared()->dispatchInsertText(event.text.text, strlen(event.text.text));
         }
         else if (event.type == SDL_TEXTEDITING)
         {
+            //lmLog(coreLogGroup, "SDL_TEXTEDITING %s %d %d", event.edit.text, event.edit.start, event.edit.length);
         }
     }
     
@@ -162,6 +165,8 @@ main(int argc, char *argv[])
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateWindow(): %s\n", SDL_GetError());
         exit(0);
     }
+    gWindow = new Window(gSDLWindow);
+    Window::setMain(gWindow);
 
     gContext = SDL_GL_CreateContext(gSDLWindow);
     if (!gContext) {
@@ -169,11 +174,10 @@ main(int argc, char *argv[])
         exit(2);
     }
 
+    SDL_GL_SetSwapInterval(-1);
+
     // And show the window with proper settings.
-    SDL_SetWindowTitle(gSDLWindow, LoomApplicationConfig::displayTitle().c_str());
-    SDL_SetWindowSize(gSDLWindow, LoomApplicationConfig::displayWidth(), LoomApplicationConfig::displayHeight());
     SDL_SetWindowPosition(gSDLWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-    SDL_ShowWindow(gSDLWindow);
 
     SDL_StopTextInput();
 

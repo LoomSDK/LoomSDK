@@ -20,6 +20,7 @@ limitations under the License.
 
 package loom 
 {
+    import system.platform.Platform;
     import system.reflection.Assembly;
     import system.application.BaseApplication;
     
@@ -63,6 +64,7 @@ package loom
     public class Application extends BaseApplication implements ITicked, IAnimated
     {
         private var splashContainer:Sprite;
+        private var lastTime:Number = 0;
 
         /**
          * Starting point for your game's code.
@@ -80,6 +82,8 @@ package loom
 
             // register onReload with DebuggerClient
             DebuggerClient.reloaded += onReload;
+            
+            lastTime = Platform.getTime();
 
             // set up the default layer for the cocos2d game
             /*layer.autorelease();
@@ -314,10 +318,14 @@ package loom
          */
         private function onCocosFrame():void
         {
-            touchProcessor.advanceTime(1.0 / 60.0);
-            Loom2D.juggler.advanceTime(1.0 / 60.0);
-            theStage.advanceTime(1.0 / 60.0);
+            var time = Platform.getTime();
+            var delta = (time-lastTime)/1000;
+            //trace(delta);
+            touchProcessor.advanceTime(delta);
+            Loom2D.juggler.advanceTime(delta);
+            theStage.advanceTime(delta);
             theStage.render();
+            lastTime = time;
         }
 
         protected function onAssetStreamCountChange(quantity:int):void

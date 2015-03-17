@@ -163,6 +163,14 @@ void VectorRenderer::endFrame()
 	nvgEndFrame(nvg);
 }
 
+void VectorRenderer::setClipRect(int x, int y, int w, int h) {
+    nvgScissor(nvg, (float) x, (float) y, (float) w, (float) h);
+}
+void VectorRenderer::resetClipRect() {
+    nvgResetScissor(nvg);
+}
+
+
 void VectorRenderer::clearPath() {
 	nvgBeginPath(nvg);
 }
@@ -360,7 +368,7 @@ void VectorRenderer::initializeGraphicsResources()
 #endif
     lmAssert(nvg != NULL, "Unable to init nanovg");
     //nvgCreateFont(nvg, "sans", "assets/droidsans.ttf");
-    nvgCreateFont(nvg, "sans", "assets/SourceSansPro-Regular.ttf");
+    //nvgCreateFont(nvg, "sans", "assets/SourceSansPro-Regular.ttf");
     //nvgCreateFont(nvg, "sans", "assets/unifont-7.0.06.ttf");
     //nvgCreateFont(nvg, "sans", "assets/keifont.ttf");
     //nvgCreateFont(nvg, "sans", "assets/mikachanALL.ttf");
