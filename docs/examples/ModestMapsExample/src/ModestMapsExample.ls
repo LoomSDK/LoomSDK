@@ -47,7 +47,7 @@ package
 			
 			map.addEventListener(TouchEvent.TOUCH, touchHandler);
 			
-			timer = new Timer(200);
+			timer = new Timer(1000);
             timer.onComplete = function()
              {
              	map.putMarker(location, NewPin()); 
@@ -70,6 +70,11 @@ package
 			}
 			touch = event.getTouch(stage, TouchPhase.MOVED); //user hold and move (for panning etc)
 			if (touch)
+			{
+				timer.stop();
+			}
+			var touches = event.getTouches(stage);
+			if (touches.length > 1)
 			{
 				timer.stop();
 			}
