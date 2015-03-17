@@ -207,12 +207,12 @@ package loom.modestmaps.core.painter
                     if(loaderTiles[texture] == null)
                     {
                         loaderTiles[texture] = [tile];
+                        openRequests.pushSingle(texture);
                     }
                     else
                     {
                         loaderTiles[texture].pushSingle(tile);
                     }
-                    openRequests.pushSingle(texture);
 
 //TODO_24: we're unable to click on empty BG of the painter where there are no Images... 
 //should we always have an Image(null) on a tile by default?
