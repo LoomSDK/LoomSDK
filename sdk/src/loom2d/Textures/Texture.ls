@@ -425,15 +425,16 @@ package loom2d.textures
             }
 
             //check for errors
-            if(!isTextureValid())
+            if(isTextureValid())
+            {
+                // Complete the filling in of our ConcreateTexture data
+                mFrame = new Rectangle(0, 0, textureInfo.width, textureInfo.height);
+                root.setTextureInfo(textureInfo);
+            }
+            else
             {
                 Console.print("WARNING: Unable to asynchronously load texture from asset"); 
-                return;
             }
-
-            // Complete the filling in of our ConcreateTexture data
-            mFrame = new Rectangle(0, 0, textureInfo.width, textureInfo.height);
-            root.setTextureInfo(textureInfo);
 
             //call our assigned load complete callback
             if(asyncLoadComplete != null)
