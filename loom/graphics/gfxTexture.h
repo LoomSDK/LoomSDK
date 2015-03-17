@@ -61,6 +61,10 @@ struct TextureInfo
     int                      wrapV;
 
     bool                     reload;
+
+    //this flag will be set if a TextureInfo was requested to be disposed but it is still 
+    //busy in the async loading thread as it can only be disposed from the main thread once \
+    //its async processing is complete
     bool                     asyncDispose;
 
     bgfx::TextureHandle      handle;
@@ -97,16 +101,18 @@ struct TextureInfo
 };
 
 
+//struct to hold the data that needs to be transferred between threads for async texture loading and creation
 struct AsyncLoadNote
 {
     int                         id;
     bool                        priority;
     utString                    path;
     TextureInfo                 *tinfo;
+
+    //the following are only used for async loading of pure byte data
     utByteArray                 *bytes;
     loom_asset_image_t          *imageAsset;
     LoomAssetCleanupCallback    iaCleanup;
-
 };
 
 
@@ -119,16 +125,29 @@ private:
 
     static utHashTable<utFastStringHash, TextureID> sTexturePathLookup;
     static bool sTextureAssetNofificationsEnabled;
-    static MutexHandle sTexInfoLock;
-    static MutexHandle sAsyncQueueMutex;
-    static bool sAsyncThreadRunning;
-    static int sAsyncTextureCreateDelay;
-    static utList<AsyncLoadNote> sAsyncLoadQueue;
-    static utList<AsyncLoadNote> sAsyncCreateQueue;
-
 
     // simple linear TextureID -> TextureHandle
     static TextureInfo sTextureInfos[MAXTEXTURES];
+
+    //queue of textures to load in the async loading thread
+    static utList<AsyncLoadNote> sAsyncLoadQueue;
+
+    //queue of loaded texture data to be created back in the main thread
+    static utList<AsyncLoadNote> sAsyncCreateQueue;
+
+    //current frame delay counter used to space out texture creation between frames
+    static int sAsyncTextureCreateDelay;
+
+    //flag indicating if the async loading thread is currently running
+    static bool sAsyncThreadRunning;
+
+    //mutex used for locking sAsyncLoadQueue and sAsyncCreateQueue between threads
+    static MutexHandle sAsyncQueueMutex;
+
+    //mutex used for locking sTextureInfos and sTexturePathLookup between threads
+    static MutexHandle sTexInfoLock;
+
+
 
     static TextureID getAvailableTextureID()
     {
@@ -152,6 +171,28 @@ private:
         return id;
     }
 
+    static TextureInfo *getTextureInfoFromPath(const char *path, 
+                                                TextureID **pid, 
+                                                bool checkHandle = true, 
+                                                bool clearDispose = true)
+    {
+        loom_mutex_lock(Texture::sTexInfoLock);
+        TextureID   *texID = sTexturePathLookup.get(path);
+        TextureInfo *tinfo = (texID && ((*texID >= 0) && (*texID < MAXTEXTURES))) ? &sTextureInfos[*texID] : NULL;
+        if(checkHandle && (tinfo && (tinfo->handle.idx == bgfx::invalidHandle)))
+        {
+            tinfo = NULL;
+        }
+        if(clearDispose && (tinfo != NULL))
+        {
+            //need to disable the async dispose flag if we're going to continue using it
+            tinfo->asyncDispose = false;
+        }
+        loom_mutex_unlock(Texture::sTexInfoLock);
+        
+        *pid = texID;
+        return tinfo;
+    }
 
     static TextureInfo *getAvailableTextureInfo(const char *path)
     {

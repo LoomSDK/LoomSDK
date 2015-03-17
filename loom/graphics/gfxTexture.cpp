@@ -35,16 +35,28 @@ loom_allocator_t *gGFXTextureAllocator = NULL;
 namespace GFX
 {
 
-
-utList<AsyncLoadNote> Texture::sAsyncLoadQueue;
-utList<AsyncLoadNote> Texture::sAsyncCreateQueue;
-int Texture::sAsyncTextureCreateDelay = 0;
-bool Texture::sAsyncThreadRunning = false;
-MutexHandle Texture::sAsyncQueueMutex = NULL;
-MutexHandle Texture::sTexInfoLock = NULL;
 TextureInfo Texture::sTextureInfos[MAXTEXTURES];
 utHashTable<utFastStringHash, TextureID> Texture::sTexturePathLookup;
 bool Texture::sTextureAssetNofificationsEnabled = true;
+
+//queue of textures to load in the async loading thread
+utList<AsyncLoadNote> Texture::sAsyncLoadQueue;
+
+//queue of loaded texture data to be created back in the main thread
+utList<AsyncLoadNote> Texture::sAsyncCreateQueue;
+
+//current frame delay counter used to space out texture creation between frames
+int Texture::sAsyncTextureCreateDelay = 0;
+
+//flag indicating if the async loading thread is currently running
+bool Texture::sAsyncThreadRunning = false;
+
+//mutex used for locking sAsyncLoadQueue and sAsyncCreateQueue between threads
+MutexHandle Texture::sAsyncQueueMutex = NULL;
+
+//mutex used for locking sTextureInfos and sTexturePathLookup between threads
+MutexHandle Texture::sTexInfoLock = NULL;
+
 
 void Texture::initialize()
 {
@@ -279,15 +291,9 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
     }
 
     //check if this texture already has a TextureInfo reserved for it
-    loom_mutex_lock(Texture::sTexInfoLock);
-    TextureID   *pid   = sTexturePathLookup.get(path);
-    TextureInfo *tinfo = (pid && ((*pid >= 0) && (*pid < MAXTEXTURES))) ? &sTextureInfos[*pid] : NULL;
-    if(tinfo && (tinfo->handle.idx == bgfx::invalidHandle))
-    {
-        tinfo = NULL;
-    }
-    loom_mutex_unlock(Texture::sTexInfoLock);
-    if(pid)
+    TextureID *texID;
+    TextureInfo *tinfo = getTextureInfoFromPath(path, &texID);
+    if(texID)
     {
         return tinfo;
     }
@@ -325,15 +331,9 @@ TextureInfo *Texture::initFromBytes(utByteArray *bytes, const char *name)
     if(name)
     {
         //check if this texture already has a TextureInfo reserved for it
-        loom_mutex_lock(Texture::sTexInfoLock);
-        TextureID   *pid   = sTexturePathLookup.get(name);
-        tinfo = (pid && ((*pid >= 0) && (*pid < MAXTEXTURES))) ? &sTextureInfos[*pid] : NULL;
-        if(tinfo && (tinfo->handle.idx == bgfx::invalidHandle))
-        {
-            tinfo = NULL;
-        }
-        loom_mutex_unlock(Texture::sTexInfoLock);
-        if(pid)
+        TextureID *texID;
+        TextureInfo *tinfo = getTextureInfoFromPath(name, &texID);
+        if(texID)
         {
             return tinfo;
         }
@@ -477,25 +477,12 @@ TextureInfo * Texture::initFromAssetManagerAsync(const char *path, bool highPrio
 
     //check if this texture already has a TextureInfo reserved for it
     //NOTE: shouldn't really happen... there is a check for this in LS that returns early there!    
-    loom_mutex_lock(Texture::sTexInfoLock);
-    TextureID   *pid   = sTexturePathLookup.get(path);
-    TextureInfo *tinfo = (pid && ((*pid >= 0) && (*pid < MAXTEXTURES))) ? &sTextureInfos[*pid] : NULL;
-    if(pid && (!tinfo || (tinfo->handle.idx == bgfx::invalidHandle)))
+    TextureID   *texID;
+    TextureInfo *tinfo = getTextureInfoFromPath(path, &texID);
+    if(texID)
     {
-        lmLogError(gGFXTextureLogGroup, "Invalid Texture ID or Handle returned in initFromAssetManagerAsync() for texture: %s", path);
-        tinfo = NULL;
-    }
-    if(pid)
-    {
-        if(tinfo && tinfo->asyncDispose)
-        {
-            lmLog(gGFXTextureLogGroup, "Returning a TextureInfo that was flagged for disposal during initFromAssetManagerAsync() for texture: %s", path);
-            tinfo->asyncDispose = false;
-        }
-        loom_mutex_unlock(Texture::sTexInfoLock);
         return tinfo;
     }
-    loom_mutex_unlock(Texture::sTexInfoLock);
 
     // Get a new texture info
     tinfo = getAvailableTextureInfo(path);

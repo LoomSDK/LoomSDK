@@ -39,12 +39,6 @@ package loom2d.textures
             mPremultipliedAlpha = false;
         }
 
-        public function setDimensions(width:Number, height:Number):void
-        {
-            mWidth = width;
-            mHeight = height;            
-        }
-        
         public function setTextureInfo(ti:TextureInfo):void
         {
             textureInfo = ti;
@@ -55,6 +49,10 @@ package loom2d.textures
                 textureInfo.wrapU = mWrapU;
                 textureInfo.wrapV = mWrapV;
                 textureInfo.update += onUpdate;
+
+                //set here for cases where the TI is being set post-async-load
+                mWidth = textureInfo.width;
+                mHeight = textureInfo.height;            
             }
         }
 

@@ -13,6 +13,7 @@ package loom2d.display
     import loom2d.Loom2D;
     import loom2d.textures.Texture;
     import loom2d.textures.TextureAsyncLoadCompleteDelegate;
+    import loom2d.textures.TextureHTTPFailDelegate;
     import loom2d.animation.IAnimatable;
     import loom2d.display.MovieClip;
 
@@ -37,7 +38,7 @@ package loom2d.display
         private var _asyncTexture:Texture;
         private var _loadingFrame0:Texture;
         private var _userAsyncLoadComplete:TextureAsyncLoadCompleteDelegate;
-        private var _userHTTPLoadFail:Function;
+        private var _userHTTPLoadFail:TextureHTTPFailDelegate;
         private var _textureStatus:int;
 
 
@@ -118,7 +119,7 @@ package loom2d.display
          */
         public function loadTextureFromHTTP(url:String, 
                                             asyncLoadCompleteCB:TextureAsyncLoadCompleteDelegate, 
-                                            httpLoadFailCB:Function, 
+                                            httpLoadFailCB:TextureHTTPFailDelegate, 
                                             cacheOnDisk:Boolean, 
                                             highPriority:Boolean):Texture
         {
@@ -128,6 +129,9 @@ package loom2d.display
             _asyncTexture = Texture.fromHTTP(url, onAsyncLoadComplete, onHTTPLoadFail, cacheOnDisk, highPriority);
             if(_asyncTexture == null)
             {
+                //assign the error texture if one was given, otherwise go back to the 1st frame of the loading animation
+                texture = (_errorTexture != null) ? _errorTexture : _loadingFrame0;
+                _textureStatus = TEXTURE_NOTLOADED;
                 return null;
             }
 
@@ -146,6 +150,7 @@ package loom2d.display
             {
                 //just update our texture now
                 texture = _asyncTexture;
+                _textureStatus = TEXTURE_LOADED;
             }            
 
             return _asyncTexture;
@@ -171,6 +176,8 @@ package loom2d.display
             _asyncTexture = Texture.fromAssetAsync(path, onAsyncLoadComplete, highPriority);
             if(_asyncTexture == null)
             {
+                //assign the error texture if one was given, otherwise go back to the 1st frame of the loading animation
+                texture = (_errorTexture != null) ? _errorTexture : _loadingFrame0;
                 return null;
             }
 
@@ -189,6 +196,7 @@ package loom2d.display
             {
                 //just update our texture now
                 texture = _asyncTexture;
+                _textureStatus = TEXTURE_LOADED;
             }            
 
             return _asyncTexture;
@@ -224,7 +232,7 @@ package loom2d.display
 
 
         /** The internal callback that is triggered in cases where the HTTP loading of the texture fails. */
-        private function onHTTPLoadFail():void
+        private function onHTTPLoadFail(tex:Texture):void
         {
             //flag no longer loading
             _textureStatus = TEXTURE_NOTLOADED;
@@ -235,7 +243,7 @@ package loom2d.display
             //call user callback
             if(_userHTTPLoadFail != null)
             {
-                _userHTTPLoadFail();
+                _userHTTPLoadFail(tex);
             }
         }
 

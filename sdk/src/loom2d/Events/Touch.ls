@@ -41,6 +41,7 @@ package loom2d.events
         private var mPreviousGlobalX:Number;
         private var mPreviousGlobalY:Number;
         private var mTapCount:int;
+        private var mClicked:Boolean;
         private var mPhase:String;
         private var mTarget:DisplayObject;
         private var mTimestamp:Number;
@@ -61,6 +62,7 @@ package loom2d.events
             mGlobalX = mPreviousGlobalX = globalX;
             mGlobalY = mPreviousGlobalY = globalY;
             mTapCount = 0;
+            mClicked = false;
             mPhase = phase;
             mTarget = target;
             mPressure = mWidth = mHeight = 1.0;
@@ -115,6 +117,7 @@ package loom2d.events
             dupe.mPreviousGlobalX = mPreviousGlobalX;
             dupe.mPreviousGlobalY = mPreviousGlobalY;
             dupe.mTapCount = mTapCount;
+            dupe.mClicked = mClicked;
             dupe.mTimestamp = mTimestamp;
             dupe.mPressure = mPressure;
             dupe.mWidth = mWidth;
@@ -165,6 +168,10 @@ package loom2d.events
         /** The number of taps the finger made in a short amount of time. Use this to detect 
          *  double-taps / double-clicks, etc. */ 
         public function get tapCount():int { return mTapCount; }
+        
+        /** If there was a tap/release at the same location made in a short amount of time. 
+         * Use this to detect a single click event, generally checked during TouchPhase.ENDED. */ 
+        public function get clicked():Boolean { return mClicked; }
         
         /** The current phase the touch is in. @see TouchPhase */
         public function get phase():String { return mPhase; }
@@ -231,6 +238,9 @@ package loom2d.events
         
         /** @private */
         public function setTapCount(value:int):void { mTapCount = value; }
+        
+        /** @private */
+        public function setClick(value:Boolean):void { mClicked = value; }
         
         /** @private */
         public function setTimestamp(value:Number):void { mTimestamp = value; }
