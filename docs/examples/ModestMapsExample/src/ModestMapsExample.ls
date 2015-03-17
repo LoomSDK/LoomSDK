@@ -103,17 +103,6 @@ package
                 var newProvider:IMapProvider = (map.getMapProvider() == msProvider) ? osmProvider : msProvider;
                 map.setMapProvider(newProvider);
             }
-			
-			if (keycode == LoomKey.B)
-			{
-				map.removeMarker("pin1");
-			}
-			
-			if (keycode == LoomKey.V)
-			{
-				var pin:Image = map.getMarker("pin1") as Image;
-				trace (pin);
-			}
         }
     }
 }
