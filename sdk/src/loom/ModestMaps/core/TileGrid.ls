@@ -22,47 +22,40 @@ package loom.modestmaps.core
     
     public class TileGrid extends Sprite
     {       
-        //TODO_TEC: test these consts out to see if any need tweaking for a mobile app vs. online AS3..        
-        protected static const DEFAULT_MAX_PARENT_SEARCH:int = 5;
-        protected static const DEFAULT_MAX_PARENT_LOAD:int = 0; // enable this to load lower zoom tiles first
-        protected static const DEFAULT_MAX_CHILD_SEARCH:int = 1;
-        protected static const DEFAULT_MAX_TILES_TO_KEEP:int = 256; // 256*256*4bytes = 0.25MB ... so 256 tiles is 64MB of memory, minimum!
-        protected static const DEFAULT_TILE_BUFFER:int = 1;
-        protected static const DEFAULT_ENFORCE_BOUNDS:Boolean = false;
-        protected static const DEFAULT_ROUND_POSITIONS:Boolean = true;
-        protected static const DEFAULT_ROUND_SCALES:Boolean = true;
+        public static const DEFAULT_ENFORCE_BOUNDS:Boolean = false;
+        public static const DEFAULT_ROUND_POSITIONS:Boolean = true;
+        public static const DEFAULT_ROUND_SCALES:Boolean = true;
 
         /** if we don't have a tile at currentZoom, onRender will look for tiles up to 5 levels out.
          *  set this to 0 if you only want the current zoom level's tiles
          *  WARNING: tiles will get scaled up A LOT for this, but maybe it beats blank tiles? */ 
-        public var maxParentSearch:int = DEFAULT_MAX_PARENT_SEARCH;
+        public static var MaxParentSearch:int = 5;
         /** if we don't have a tile at currentZoom, onRender will look for tiles up to one levels further in.
          *  set this to 0 if you only want the current zoom level's tiles
          *  WARNING: bad, bad nasty recursion possibilities really soon if you go much above 1
          *  - it works, but you probably don't want to change this number :) */
-        public var maxChildSearch:int = DEFAULT_MAX_CHILD_SEARCH;
+        public static var MaxChildSearch:int = 1;
 
-        /** if maxParentSearch is enabled, setting maxParentLoad to between 1 and maxParentSearch
+        /** if MaxParentSearch is enabled, setting MaxParentLoad to between 1 and MaxParentSearch
          *   will make requests for lower zoom levels first */
-        public var maxParentLoad:int = DEFAULT_MAX_PARENT_LOAD;
+        public static var MaxParentLoad:int = 0;
 
-        /** this is the maximum size of tileCache (visible tiles will also be kept in the cache) */     
-        public var maxTilesToKeep:int = DEFAULT_MAX_TILES_TO_KEEP;
+        /** this is the maximum size of tileCache (visible tiles will also be kept in the cache).  
+         *  the larger this is, the more texture memory will be needed to store the loaded images. */     
+        public static var MaxTilesToKeep:int = 128;// 256*256*4bytes = 0.25MB ... so 128 tiles is 32MB of memory, minimum!
         
-        // 0 or 1, really: 2 will load *lots* of extra tiles
-        public var tileBuffer:int = DEFAULT_TILE_BUFFER;
+        /** 0 or 1, really: 2 will load *lots* of extra tiles */
+        public static var TileBuffer:int = 1;
         
         /** set this to true to enable enforcing of map bounds from the map provider's limits */
-        public var enforceBoundsEnabled:Boolean = DEFAULT_ENFORCE_BOUNDS;
-        
-        /** set this to false, along with roundScalesEnabled, if you need a map to stay 'fixed' in place as it changes size */
-        public var roundPositionsEnabled:Boolean = DEFAULT_ROUND_POSITIONS;
-        
-        /** set this to false, along with roundPositionsEnabled, if you need a map to stay 'fixed' in place as it changes size */
-        public var roundScalesEnabled:Boolean = DEFAULT_ROUND_SCALES;
+        public static var EnforceBoundsEnabled:Boolean = false;
+                
+        /** set this to false, along with RoundScalesEnabled, if you need a map to stay 'fixed' in place as it changes size */
+        public static var RoundPositionsEnabled:Boolean = true;
+                
+        /** set this to false, along with RoundPositionsEnabled, if you need a map to stay 'fixed' in place as it changes size */
+        public static var RoundScalesEnabled:Boolean = true;
 
-        ///////////////////////////////
-        // END OPTIONS
 
         // TILE_WIDTH and TILE_HEIGHT are now tileWidth and tileHeight
         // this was needed for the NASA DailyPlanetProvider which has 512x512px tiles
@@ -159,7 +152,7 @@ package loom.modestmaps.core
                 this.tilePainter = ITilePainterOverride(provider).getTilePainter();
             }
             else {
-                this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
+                this.tilePainter = new TilePainter(this, provider, MaxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
             }
             tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded);
             tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading);
@@ -364,10 +357,10 @@ package loom.modestmaps.core
             // TODO: investigate giving a directional bias to TILE_BUFFER when panning quickly
             // NB:- I'm pretty sure these calculations are accurate enough that using 
             //      Math.ceil for the maxCols will load one column too many -- Tom
-            var minCol:int = Math.floor(Math.min(tlC.column,brC.column,trC.column,blC.column)) - tileBuffer;
-            var maxCol:int = Math.floor(Math.max(tlC.column,brC.column,trC.column,blC.column)) + tileBuffer;
-            var minRow:int = Math.floor(Math.min(tlC.row,brC.row,trC.row,blC.row)) - tileBuffer;
-            var maxRow:int = Math.floor(Math.max(tlC.row,brC.row,trC.row,blC.row)) + tileBuffer;
+            var minCol:int = Math.floor(Math.min(tlC.column,brC.column,trC.column,blC.column)) - TileBuffer;
+            var maxCol:int = Math.floor(Math.max(tlC.column,brC.column,trC.column,blC.column)) + TileBuffer;
+            var minRow:int = Math.floor(Math.min(tlC.row,brC.row,trC.row,blC.row)) - TileBuffer;
+            var maxRow:int = Math.floor(Math.max(tlC.row,brC.row,trC.row,blC.row)) + TileBuffer;
 
             
             // loop over all tiles and find parent or child tiles from cache to compensate for unloaded tiles:
@@ -400,7 +393,7 @@ package loom.modestmaps.core
 
             // all the visible tiles will be at the end of recentlySeen
             // let's make sure we keep them around:
-            var maxRecentlySeen:int = Math.max(visibleTiles.length, maxTilesToKeep);
+            var maxRecentlySeen:int = Math.max(visibleTiles.length, MaxTilesToKeep);
             
             // prune cache of already seen tiles if it's getting too big:
             if (recentlySeen.length > maxRecentlySeen) {
@@ -497,14 +490,14 @@ package loom.modestmaps.core
                         if (currentTileZoom > previousTileZoom) {
                             
                             // if it still doesn't have enough images yet, or it's fading in, try a double size parent instead
-                            if (maxParentSearch > 0 && currentTileZoom > minZoom) {
+                            if (MaxParentSearch > 0 && currentTileZoom > minZoom) {
                                 var firstParentKey:String = parentKey(col, row, currentTileZoom, currentTileZoom-1);
                                 if (!searchedParentKeys[firstParentKey]) {
                                     searchedParentKeys[firstParentKey] = true;
                                     if (ensureVisible(firstParentKey)) {
                                         foundParent = true;
                                     }
-                                    if (!foundParent && (currentTileZoom - 1 < maxParentLoad)) {
+                                    if (!foundParent && (currentTileZoom - 1 < MaxParentLoad)) {
                                         //trace("requesting parent tile at zoom", pzoom);
                                         var firstParentCoord:Vector.<int> = parentCoord(col, row, currentTileZoom, currentTileZoom-1);
                                         visibleTiles.push(requestLoad(firstParentCoord[0], firstParentCoord[1], currentTileZoom-1));
@@ -519,8 +512,8 @@ package loom.modestmaps.core
                             // and therefore we might want to reuse 'smaller' tiles
                             
                             // if it doesn't have an image yet, see if we can make it from smaller images
-                            if (!foundParent && maxChildSearch > 0 && currentTileZoom < maxZoom) {
-                                for (var czoom:int = currentTileZoom+1; czoom <= Math.min(maxZoom, currentTileZoom+maxChildSearch); czoom++) {
+                            if (!foundParent && MaxChildSearch > 0 && currentTileZoom < maxZoom) {
+                                for (var czoom:int = currentTileZoom+1; czoom <= Math.min(maxZoom, currentTileZoom+MaxChildSearch); czoom++) {
                                     var ckeys:Vector.<String> = childKeys(col, row, currentTileZoom, czoom);
                                     for each (var ckey:String in ckeys) {
                                         if (ensureVisible(ckey)) {
@@ -537,7 +530,7 @@ package loom.modestmaps.core
                         var stillNeedsAnImage:Boolean = !foundParent && foundChildren < 4;                  
     
                         // if it still doesn't have an image yet, try more parent zooms
-                        if (stillNeedsAnImage && maxParentSearch > 1 && currentTileZoom > minZoom) {
+                        if (stillNeedsAnImage && MaxParentSearch > 1 && currentTileZoom > minZoom) {
 
                             var startZoomSearch:int = currentTileZoom - 1;
                             
@@ -546,7 +539,7 @@ package loom.modestmaps.core
                                 startZoomSearch -= 1;
                             }
                             
-                            var endZoomSearch:int = Math.max(minZoom, currentTileZoom-maxParentSearch);
+                            var endZoomSearch:int = Math.max(minZoom, currentTileZoom-MaxParentSearch);
                             
                             for (var pzoom:int = startZoomSearch; pzoom >= endZoomSearch; pzoom--) {
                                 var pkey:String = parentKey(col, row, currentTileZoom, pzoom);
@@ -556,7 +549,7 @@ package loom.modestmaps.core
                                         stillNeedsAnImage = false;
                                         break;
                                     }
-                                    if (currentTileZoom - pzoom < maxParentLoad) {
+                                    if (currentTileZoom - pzoom < MaxParentLoad) {
                                         //trace("requesting parent tile at zoom", pzoom);
                                         var pcoord:Vector.<int> = parentCoord(col, row, currentTileZoom, pzoom);
                                         visibleTiles.push(requestLoad(pcoord[0], pcoord[1], pzoom));
@@ -585,7 +578,7 @@ package loom.modestmaps.core
         // TODO: do this with events instead?
         public function tilePainted(tile:Tile):void
         {           
-            if (currentTileZoom-tile.zoom <= maxParentLoad) {
+            if (currentTileZoom-tile.zoom <= MaxParentLoad) {
                 tile.show();
             }
             else {
@@ -616,7 +609,7 @@ package loom.modestmaps.core
             for (var z:int = 0; z <= maxZoom; z++) {
                 scaleFactors[z] = Math.pow(2.0, currentTileZoom - z);
                 // round up to the nearest pixel to avoid seams between zoom levels
-                if (roundScalesEnabled) {
+                if (RoundScalesEnabled) {
                     tileScales[z] = Math.ceil(Math.pow(2, zoomLevel-z) * tileWidth) / tileWidth; 
                 }
                 else {
@@ -637,7 +630,9 @@ package loom.modestmaps.core
 
                 tile.scaleX = tile.scaleY = tileScales[tile.zoom];
 
-                var pt:Point = coordinatePoint(new Coordinate(tile.row, tile.column, tile.zoom));
+                // rounding can also helps the rare seams not fixed by rounding the tile scale, 
+                // but makes slow zooming uglier: 
+                var pt:Point = coordinatePoint(new Coordinate(tile.row, tile.column, tile.zoom), null, (!zooming && RoundPositionsEnabled));
                 tile.x = pt.x;
                 tile.y = pt.y;
                 
@@ -700,7 +695,7 @@ package loom.modestmaps.core
         // for use in requestLoad
         private var tempCoord:Coordinate = new Coordinate(0,0,0);
         
-        /** create a tile and add it to the queue - WARNING: this is buggy for the current zoom level, it's only used for parent zooms when maxParentLoad is > 0 */ 
+        /** create a tile and add it to the queue - WARNING: this is buggy for the current zoom level, it's only used for parent zooms when MaxParentLoad is > 0 */ 
         private function requestLoad(col:int, row:int, zoom:int):Tile
         {
             var key:String = tileKey(col, row, zoom);           
@@ -730,7 +725,7 @@ package loom.modestmaps.core
             return tileKey(pcol,prow,parentZoom);           
         }
 
-        // used when maxParentLoad is > 0
+        // used when MaxParentLoad is > 0
         // TODO: check that this does the right thing with negative row/col?
         private function parentCoord(col:int, row:int, zoom:int, parentZoom:int):Vector.<int>
         {
@@ -966,12 +961,18 @@ package loom.modestmaps.core
             return _centerCoordinate;           
         }
         
-        public function coordinatePoint(coord:Coordinate, context:DisplayObject=null):Point
+        public function coordinatePoint(coord:Coordinate, context:DisplayObject=null, shouldRound:Boolean=false):Point
         {
             // this is basically the same as coord.zoomTo, but doesn't make a new Coordinate:
             var zoomFactor:Number = Math.pow(2, zoomLevel - coord.zoom) * tileWidth/scale;
             var zoomedColumn:Number = coord.column * zoomFactor;
             var zoomedRow:Number = coord.row * zoomFactor;
+            // round, not floor, because the latter causes artifacts at lower zoom levels :(
+            if(shouldRound)
+            {
+                zoomedColumn = Math.round(zoomedColumn);
+                zoomedRow = Math.round(zoomedRow);
+            }
                         
             var screenPoint:Point = worldMatrix.transformCoord(zoomedColumn, zoomedRow);
 
@@ -1139,7 +1140,7 @@ package loom.modestmaps.core
                 this.tilePainter = ITilePainterOverride(provider).getTilePainter();
             }
             else {
-                this.tilePainter = new TilePainter(this, provider, maxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
+                this.tilePainter = new TilePainter(this, provider, MaxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
             }
             tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded);
             tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading);
@@ -1267,7 +1268,7 @@ package loom.modestmaps.core
          *  doesn't use scale/zoomLevel setters to correct values otherwise we'd get stuck in a loop! */
         protected function enforceBounds():Boolean
         {
-            if (!enforceBoundsEnabled) {
+            if (!EnforceBoundsEnabled) {
                 return false;
             }
             
