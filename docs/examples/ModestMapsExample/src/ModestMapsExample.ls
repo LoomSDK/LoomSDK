@@ -9,7 +9,7 @@ package
     import loom.modestmaps.mapproviders.OpenStreetMapProvider;
     import loom.modestmaps.mapproviders.BlueMarbleMapProvider;
     import loom.modestmaps.overlays.ImageMarker;
-    
+
     import loom.platform.LoomKey;
     import loom.platform.Timer;
     import loom2d.display.Image;
@@ -28,8 +28,11 @@ package
         private var _pinCount:int = 0;
         private var _markerHoldTimer:Timer;
         private var _markerLoc:Location;
+        private var _markerTouchStart:Point;
+        private var _markerTouchCur:Point;
         
         private const PinHoldTime:int = 700;
+        private const PinTouchBias:int = 4;
 
 
 
@@ -58,7 +61,13 @@ package
             //marker placement logic
             _map.addEventListener(TouchEvent.TOUCH, touchHandler);          
             _markerHoldTimer = new Timer(PinHoldTime);
-            _markerHoldTimer.onComplete = function() { _map.putMarker(_markerLoc, newPin()); };
+            _markerHoldTimer.onComplete = function() 
+            { 
+                if(Point.distance(_markerTouchStart, _markerTouchCur) < PinTouchBias)
+                {
+                    _map.putMarker(_markerLoc, newPin()); 
+                }
+            };
         }
         
 
@@ -66,7 +75,7 @@ package
         private function newPin():ImageMarker
         {
             var pin = new ImageMarker(_map, "pin" + _pinCount++, Texture.fromAsset("assets/pin.png"));
-            pin.scale = 0.1;
+            pin.scale = 0.2;
             return pin;
         }
 
@@ -112,9 +121,9 @@ package
         //touch handler
         private function touchHandler(event:TouchEvent):void
         {
-            //if more than 1 touch point, we need to stop the timer
+            //if more than 1 touch point, or a touch end was found, we need to stop the timer
             var touches = event.getTouches(stage);
-            if (touches.length > 1)
+            if ((touches.length > 1) || event.getTouch(stage, TouchPhase.ENDED))
             {
                 _markerHoldTimer.stop();
                 return;
@@ -124,15 +133,21 @@ package
             var touch = event.getTouch(_map, TouchPhase.BEGAN);
             if (touch)
             {
-                var touchPos = new Point(touch.globalX, touch.globalY);     
+                var touchPos = touch.getLocation(stage);     
                 _markerLoc = _map.pointLocation(touchPos);
                 _markerHoldTimer.start();
+                _markerTouchStart = touchPos;
+                _markerTouchCur = touchPos;
             }
-            else if(event.getTouch(stage, TouchPhase.ENDED) || event.getTouch(stage, TouchPhase.MOVED))
+            else
             {
-                //any over movement, we cancel the timer
-                _markerHoldTimer.stop();
-            }
+                //track moving
+                touch = event.getTouch(stage, TouchPhase.MOVED);
+                if(touch)
+                {
+                    _markerTouchCur = touch.getLocation(stage);
+                }
+            }            
         }        
     }
 }
