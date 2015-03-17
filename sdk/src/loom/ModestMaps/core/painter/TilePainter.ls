@@ -234,7 +234,7 @@ package loom.modestmaps.core.painter
                 // prune queue for tiles that aren't visible
                 var removedTiles:Vector.<Tile> = tileQueue.retainAll(tileGrid.getVisibleTiles());
                 
-//TODO_TEC: removedTiles is always empty, so we are never doing early removals of tiles 
+//TODO_24: removedTiles is always empty, so we are never doing early removals of tiles 
 //that may have been queued up for URL requests but should be removed early due to no longer being visible                
                 // keep layersNeeded tidy:
                 for each (var removedTile:Tile in removedTiles) {
