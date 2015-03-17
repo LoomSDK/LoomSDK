@@ -22,10 +22,6 @@ package loom.modestmaps.core
     
     public class TileGrid extends Sprite
     {       
-        public static const DEFAULT_ENFORCE_BOUNDS:Boolean = false;
-        public static const DEFAULT_ROUND_POSITIONS:Boolean = true;
-        public static const DEFAULT_ROUND_SCALES:Boolean = true;
-
         /** if we don't have a tile at currentZoom, onRender will look for tiles up to 5 levels out.
          *  set this to 0 if you only want the current zoom level's tiles
          *  WARNING: tiles will get scaled up A LOT for this, but maybe it beats blank tiles? */ 
