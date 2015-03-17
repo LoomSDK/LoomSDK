@@ -18,28 +18,29 @@ package
     /** Simple application that demonstrates how to use Modest Maps to show a digital map provider */
     public class ModestMapExample extends Application
     {       
-        var map:Map;
-        var msProvider:MicrosoftRoadMapProvider;
-        var osmProvider:OpenStreetMapProvider;
-		var bmProvider:BlueMarbleMapProvider; // CRASH, ERROR: Failed download of HTTP texture from url: http://s3.amazonaws.com/com.modestmaps.bluemarble/1-r0-c0.jpg putting the url in a browser works though :/ 
+        var _map:Map;
+        var _mapProviders:Vector.<IMapProvider> = [];
+        var _provider:int = 0;
 		
+
         override public function run():void
         {
             stage.scaleMode = StageScaleMode.LETTERBOX;
                         
             //create some providers
-            msProvider = new MicrosoftRoadMapProvider(true, AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM);
-            osmProvider = new OpenStreetMapProvider(AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM);
-			bmProvider = new BlueMarbleMapProvider(AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM);
+            _mapProviders.pushSingle(new MicrosoftRoadMapProvider(true, AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM));
+            _mapProviders.pushSingle(new OpenStreetMapProvider(AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM));
+			_mapProviders.pushSingle(new BlueMarbleMapProvider(AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM));
 
-            map = new Map(stage.stageWidth, 
+            //creat the map with our default provider
+            _map = new Map(stage.stageWidth, 
                                 stage.stageHeight, 
                                 true, 
-                                msProvider,
+                                _mapProviders[_provider],
                                 stage,
                                 null);
 
-            stage.addChild(map);
+            stage.addChild(_map);
             
             //simle keyboard controls
             stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
@@ -56,15 +57,31 @@ package
 
             //process zooming
             if (keycode == LoomKey.PADEQUAL_SIGN)
-                map.zoomByAbout(0.05, zoomPoint);
+                _map.zoomByAbout(0.05, zoomPoint);
             if (keycode == LoomKey.HYPHEN)
-                map.zoomByAbout( -0.05, zoomPoint);
+                _map.zoomByAbout( -0.05, zoomPoint);
 
             //switch map provider!
-            if(keycode == LoomKey.M)
+            if(keycode == LoomKey.OPEN_BRACKET)
             {
-                var newProvider:IMapProvider = (map.getMapProvider() == msProvider) ? osmProvider : msProvider;
-                map.setMapProvider(newProvider);
+                _provider--;
+                if(_provider < 0)
+                {
+                    _provider = _mapProviders.length - 1;
+                }
+            }
+            else if(keycode == LoomKey.CLOSE_BRACKET)
+            {
+                _provider++;
+                if(_provider >= _mapProviders.length)
+                {
+                    _provider = 0;
+                }
+            }
+            var newProvider:IMapProvider = _mapProviders[_provider];
+            if(newProvider != _map.getMapProvider())
+            {
+                _map.setMapProvider(newProvider);
             }
         }
     }

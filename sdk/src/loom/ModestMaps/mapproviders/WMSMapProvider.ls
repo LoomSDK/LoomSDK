@@ -8,7 +8,6 @@ package loom.modestmaps.mapproviders
     import loom.modestmaps.geo.Location;
     import loom.modestmaps.geo.Transformation;
     
-    //import flash.net.URLVariables;
     
     public class WMSMapProvider extends AbstractMapProvider implements IMapProvider
     {
@@ -17,23 +16,23 @@ package loom.modestmaps.mapproviders
         public static const EPSG_900913:String = "EPSG:900913";
 
         public static const DEFAULT_PARAMS:Dictionary.<String, String> = {
-            LAYERS: '0,1',
-            FORMAT: 'image/png',
-            VERSION: '1.1.1',
-            SERVICE: 'WMS',
-            REQUEST: 'GetMap',
-            SRS: 'EPSG:4326',
-            WIDTH: '256',
-            HEIGHT: '256'
+            'LAYERS': '0,1',
+            'FORMAT': 'image/png',
+            'VERSION': '1.1.1',
+            'SERVICE': 'WMS',
+            'REQUEST': 'GetMap',
+            'SRS': 'EPSG:4326',
+            'WIDTH': '256',
+            'HEIGHT': '256'
         };
 
         private var serverUrl:String;
-		// This seems to be used as a dictionary of string and object
-        //private var wmsParams:Object;
-        private var wmsParams:Dictionary.<String, Object>;
+        private var wmsParams:Dictionary.<String, String>;
         private var wms:String;                     
         
-        public function WMSMapProvider(serverURL:String, wmsParams:Dictionary.<String, Object>=null)
+
+
+        public function WMSMapProvider(serverURL:String, wmsParams:Dictionary.<String, String>)
         {
             super(MIN_ZOOM, MAX_ZOOM);
             
@@ -41,15 +40,8 @@ package loom.modestmaps.mapproviders
             
             this.serverUrl = serverURL;
             this.wmsParams = wmsParams;
-            
-			// Next line is pretty flash specific, will probably come back to bite http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/net/URLVariables.html
-            //var data:URLVariables = new URLVariables();
-            //for (var param:String in wmsParams) {
-            //       data[param] = wmsParams[param];
-            // }
-			
-            //this.wms = "?" + data.toString();
-            
+            this.wms = "?" + createURLencodedString(wmsParams);
+           
             if (wmsParams['SRS'] == EPSG_4326) {
                 var t:Transformation = new Transformation(166886.05360752725, 0, 524288, 0, -166886.05360752725, 524288);
                 __projection = new LinearProjection(20, t);                 
@@ -111,5 +103,40 @@ package loom.modestmaps.mapproviders
         {
             return "WMS";
         }
+
+        private function replace(str:String, oldStr:String, newStr:String):String
+        {
+            var res:String = "";
+            var splitStr:Vector.<String> = str.split(oldStr);
+            for (var i=0;i<splitStr.length-1;i++)
+            {
+                res += (splitStr[i] + newStr);
+            }
+            res += splitStr[i];
+            return res;
+        }
+
+        private function encodeUriComponent(str:String):String
+        {
+            var res:String = replace(str, "&", "%26");
+            res = replace(res, " ","%20");
+            return res;
+        }
+
+        private function createURLencodedString(hash:Dictionary.<String, String>):String
+        {
+            var first:Boolean = true;
+            var uri:String = "";
+            for (var key:String in hash) 
+            {
+                if(!first)
+                {
+                    uri += "&";
+                    first = false;                  
+                }
+                uri += encodeUriComponent(key) + "=" + encodeUriComponent(hash[key]);
+            }
+            return uri;
+        }        
     }
 }
