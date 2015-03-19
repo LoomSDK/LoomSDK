@@ -157,7 +157,7 @@ package loom2d.display
         public native function set name(value:String);
         public native function get name():String;
 		
-		/** This is used if you wish to have a display object with zero alpha still respond to hit tests **/
+		/** This can be used if you wish to have a DisplayObject with zero alpha still respond to hit tests */
 		public function set ignoreHitTestAlpha(value:Boolean) { _ignoreHitTestAlpha = value; }
         public function get ignoreHitTestAlpha():Boolean { return _ignoreHitTestAlpha; };
 

@@ -142,13 +142,11 @@ package loom.modestmaps.core
         // Making the doubleTouchInput public so that the sensitivity can be set and additional callbacks can be made
         public var doubleTouchInput:TwoInputTouch;
         
-		var bgTouchArea:Image;
+		protected var bgTouchArea:Image;
+
 		
         public function TileGrid(w:Number, h:Number, draggable:Boolean, provider:IMapProvider)
         {
-			
-
-			
             this.draggable = draggable;
             
             if (provider is ITilePainterOverride) {
@@ -181,8 +179,6 @@ package loom.modestmaps.core
 			//empty tiles (while they are still loading)
 			// NOTE_TEC: This is so that you can have user input on tiles that are yet to load
             bgTouchArea = new Image();
-			trace(mapHeight);
-			trace(mapHeight);
             bgTouchArea.setSize(mapWidth, mapHeight);
             bgTouchArea.color = 0x00000000;
             bgTouchArea.alpha = 0;
@@ -1136,6 +1132,7 @@ package loom.modestmaps.core
                 mapWidth = p.x;
                 mapHeight = p.y;
                 clipRect = new Rectangle(0, 0, mapWidth, mapHeight);
+                bgTouchArea.setSize(mapWidth, mapHeight);
 
                 //NOTE_TEC: not porting DebugField for now at least...
                 // debugField.x = mapWidth - debugField.width - 15; 

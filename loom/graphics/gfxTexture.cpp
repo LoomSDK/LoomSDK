@@ -118,7 +118,10 @@ void Texture::tick()
             threadNote.tinfo->asyncLoadCompleteDelegate.invoke();
         }    
     }
-    loom_mutex_unlock(Texture::sAsyncQueueMutex);
+    else
+    {
+        loom_mutex_unlock(Texture::sAsyncQueueMutex);
+    }
 }
 
 
