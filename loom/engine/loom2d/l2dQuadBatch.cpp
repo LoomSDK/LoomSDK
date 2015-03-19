@@ -51,7 +51,7 @@ void QuadBatch::render(lua_State *L)
     {
         return;
     }
-    renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
+    renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : UINT16_MAX;
     GFX::Graphics::setClipRect(renderState.cachedClipRect);
 
     //set blend mode based to be unique or that of our parent

@@ -55,7 +55,7 @@ void Stage::render(lua_State *L)
     lualoom_pushnative<Stage>(L, this);
 
     renderState.alpha          = alpha;
-    renderState.cachedClipRect = (unsigned short)-1;
+    renderState.cachedClipRect = UINT16_MAX;
     renderState.blendMode      = blendMode;
 
 

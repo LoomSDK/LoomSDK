@@ -1077,6 +1077,11 @@ namespace bgfx
 			m_state.m_scissor = _cache;
 		}
 
+        uint16_t getScissor()
+        {
+            return m_state.m_scissor;
+        }
+
 		uint32_t setTransform(const void* _mtx, uint16_t _num)
 		{
 			m_state.m_matrix = m_matrixCache.add(_mtx, _num);

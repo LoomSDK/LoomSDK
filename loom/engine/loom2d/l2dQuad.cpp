@@ -121,7 +121,7 @@ void Quad::render(lua_State *L)
     Matrix mtx;
     getTargetTransformationMatrix(NULL, &mtx);
 
-    renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
+    renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : UINT16_MAX;
     renderState.blendMode = (blendMode == BlendMode::AUTO && parent) ? parent->renderState.blendMode : blendMode;
     int64_t blendFunc = BlendMode::BlendFunction(renderState.blendMode);
 
