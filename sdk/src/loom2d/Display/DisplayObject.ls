@@ -80,7 +80,7 @@ package loom2d.display
     [Native(managed)]
     public native class DisplayObject extends EventDispatcher implements ILMLNode
     {
-
+		protected var _ignoreHitTestAlpha:Boolean;
         protected var _styleSheet:StyleSheet;
         protected var _styleName:String;
         protected var _styleApplicator:IStyleApplicator;
@@ -156,6 +156,10 @@ package loom2d.display
          *  display object containers. */
         public native function set name(value:String);
         public native function get name():String;
+		
+		/** This is used if you wish to have a display object with zero alpha still respond to hit tests **/
+		public function set ignoreHitTestAlpha(value:Boolean) { _ignoreHitTestAlpha = value; }
+        public function get ignoreHitTestAlpha():Boolean { return _ignoreHitTestAlpha; };
 
         // cached parent so that we don't marshal a managed instance every property access
         private var parentCached:DisplayObjectContainer;
@@ -299,7 +303,7 @@ package loom2d.display
          *  'scaleX' and 'scaleY' values are not zero, and its 'visible' property is enabled.) */
         public function get hasVisibleArea():Boolean
         {
-            return (alpha > 0.0) && visible && (scaleX != 0.0) && (scaleY != 0.0);
+            return (ignoreHitTestAlpha || alpha > 0.0) && visible && (scaleX != 0.0) && (scaleY != 0.0);
         }
 
         // internal methods
