@@ -81,6 +81,15 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
         return;
     }
 
+    renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
+    renderState.clampAlpha();
+    
+    // if render state has 0.0 alpha, quad batch is invisible so don't render at all and get out of here now!
+    if(renderState.alpha == 0.0f)
+    {
+        return;
+    }
+
     // containers can set a new view to render into, but we must restore the
     // current view after, so take a snapshot
     int viewRestore = GFX::Graphics::getView();
@@ -91,8 +100,6 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
         GFX::Graphics::setView(_view);
     }
 
-    renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
-    renderState.clampAlpha();
     renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
     renderState.blendMode = (parent && blendMode == BlendMode::AUTO) ? parent->renderState.blendMode : blendMode;
 

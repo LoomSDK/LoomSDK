@@ -43,7 +43,7 @@ void QuadBatch::render(lua_State *L)
     }
 
     // apply the parent alpha
-    renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
+    renderState.alpha = parent ? parent->renderState.alpha * alpha : alpha;
     renderState.clampAlpha();
 
     // if render state has 0.0 alpha, quad batch is invisible so don't render at all and get out of here now!
