@@ -62,7 +62,7 @@ package loom
         /**
          *  Cancels an HTTPRequest with index
          */
-        public native function cancel(index:int);
+        public native function cancel();
 
         /**
          *  Called when the HTTPRequest is successful. Passes the response from the HTTP server.

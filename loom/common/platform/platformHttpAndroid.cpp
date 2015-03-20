@@ -62,7 +62,7 @@ void Java_co_theengine_loomdemo_LoomHTTP_onFailure(JNIEnv *env, jobject thiz, js
 }
 }
 
-int platform_HTTPSend(const char *url, const char *method, void *callback, void *payload,
+int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback callback, void *payload,
                        const char *body, int bodyLength, utHashTable<utHashedString, utString>& headers,
                        const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects)
 {

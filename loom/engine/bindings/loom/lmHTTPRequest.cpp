@@ -106,9 +106,9 @@ public:
         }
     }
 
-    void cancel(int index)
+    void cancel()
     {
-        bool cancelled =  platform_HTTPCancel(index);
+        bool cancelled =  platform_HTTPCancel(id);
         if (cancelled)
         {
           _OnFailureDelegate.pushArgument("Operation cancelled by user");
@@ -124,7 +124,7 @@ public:
     /**
      * Calls the native delegate, this should be used internally only
      */
-    void respond(void *payload, loom_HTTPCallbackType type, const char *data)
+    static void respond(void *payload, loom_HTTPCallbackType type, const char *data)
     {
         HTTPRequest *request = (HTTPRequest *)payload;
 
@@ -133,13 +133,13 @@ public:
         case LOOM_HTTP_SUCCESS:
             request->_OnSuccessDelegate.pushArgument(data);
             request->_OnSuccessDelegate.invoke();
-            platform_HTTPComplete(id);
+            platform_HTTPComplete(request->id);
             break;
 
         case LOOM_HTTP_ERROR:
             request->_OnFailureDelegate.pushArgument(data);
             request->_OnFailureDelegate.invoke();
-            platform_HTTPComplete(id);
+            platform_HTTPComplete(request->id);
             break;
 
         default:

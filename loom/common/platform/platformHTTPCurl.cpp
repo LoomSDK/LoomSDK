@@ -56,7 +56,7 @@ typedef struct
     loom_HTTPChunk    *chunk;
 
     // the callback to call when a http callback has finished/failed
-    void (*callback)(void *payload, loom_HTTPCallbackType type, const char *data);
+    loom_HTTPCallback callback;
 
     // the payload to be passed to the callback
     void              *payload;
@@ -247,7 +247,7 @@ bool platform_HTTPIsConnected()
 }
 
 
-int platform_HTTPSend(const char *url, const char *method, void callback(void *payload, loom_HTTPCallbackType type, const char *data), void *payload,
+int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback callback, void *payload,
                        const char *body, int bodyLength, utHashTable<utHashedString, utString>& headers,
                        const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects)
 {

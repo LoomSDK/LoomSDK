@@ -140,7 +140,7 @@ limitations under the License.
 /**
  * Performs an asychronous http request
  */
-int platform_HTTPSend(const char *url, const char* method, void *callback, void *payload, 
+int platform_HTTPSend(const char *url, const char* method, loom_HTTPCallback callback, void *payload, 
     const char *body, int bodyLength, utHashTable<utHashedString, utString> &headers, 
     const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects)
 {
