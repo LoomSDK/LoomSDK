@@ -62,7 +62,7 @@ void Java_co_theengine_loomdemo_LoomHTTP_onFailure(JNIEnv *env, jobject thiz, js
 }
 }
 
-void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback callback, void *payload,
+int platform_HTTPSend(const char *url, const char *method, void *callback, void *payload,
                        const char *body, int bodyLength, utHashTable<utHashedString, utString>& headers,
                        const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects)
 {
@@ -109,6 +109,8 @@ void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback ca
     sendMethodInfo.getEnv()->DeleteLocalRef(reqMethod);
     sendMethodInfo.getEnv()->DeleteLocalRef(reqBody);
     sendMethodInfo.getEnv()->DeleteLocalRef(reqResponseCacheFile);
+
+    return 0; //TODO_KEVIN
 }
 
 
@@ -141,4 +143,17 @@ void platform_HTTPUpdate()
 {
     // stub for android
 }
+
+bool platform_HTTPCancel(int index)
+{
+    return false;
+    //TODO_KEVIN
+}
+
+void platform_HTTPComplete(int i)
+{
+    //TODO_KEVIN
+    //curlHandles[i] = NULL;
+}
+
 #endif

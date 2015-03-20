@@ -60,6 +60,11 @@ package loom
         public native function send();
 
         /**
+         *  Cancels an HTTPRequest with index
+         */
+        public native function cancel(index:int);
+
+        /**
          *  Called when the HTTPRequest is successful. Passes the response from the HTTP server.
          */
         public native var onSuccess:NativeDelegate;

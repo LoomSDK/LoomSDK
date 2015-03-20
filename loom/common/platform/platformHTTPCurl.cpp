@@ -34,6 +34,7 @@
 #include "loom/common/utils/utBase64.h"
 
 static CURLM *gMultiHandle;
+static CURL *curlHandles[1024];
 static int   gHandleCount;
 static bool  gHTTPInitialized;
 
@@ -55,7 +56,7 @@ typedef struct
     loom_HTTPChunk    *chunk;
 
     // the callback to call when a http callback has finished/failed
-    loom_HTTPCallback callback;
+    void (*callback)(void *payload, loom_HTTPCallbackType type, const char *data);
 
     // the payload to be passed to the callback
     void              *payload;
@@ -222,6 +223,7 @@ void platform_HTTPUpdate()
                 userData->callback(userData->payload, LOOM_HTTP_ERROR, curl_easy_strerror(message->data.result));
             }
 
+
             // clean up any userdata.
             loom_HTTPCleanupUserData(userData);
 
@@ -245,7 +247,7 @@ bool platform_HTTPIsConnected()
 }
 
 
-void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback callback, void *payload,
+int platform_HTTPSend(const char *url, const char *method, void callback(void *payload, loom_HTTPCallbackType type, const char *data), void *payload,
                        const char *body, int bodyLength, utHashTable<utHashedString, utString>& headers,
                        const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects)
 {
@@ -319,12 +321,38 @@ void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback ca
     else // call error
     {
         callback(payload, LOOM_HTTP_ERROR, "Error: Unknown HTTP Method.");
-        return;
+        return -1;
     }
 
     // add to the multi interface
     curl_multi_add_handle(gMultiHandle, curlHandle);
+
+    int index = 0;
+    while (curlHandles[0] != NULL)
+    {
+        index++;
+    }
+    curlHandles[index] = curlHandle;
+    return index;
 }
+
+bool platform_HTTPCancel(int i)
+{
+    if (curlHandles[i] == NULL)
+    {
+        return false;
+    }
+    curl_multi_remove_handle(gMultiHandle, curlHandles[i]);
+    curl_easy_cleanup(curlHandles[i]);
+    curlHandles[i] = NULL;
+    return true;
+}
+
+void platform_HTTPComplete(int i)
+{
+    curlHandles[i] = NULL;
+}
+
 #endif
 #endif //LOOMSCRIPT_STANDALONE
 

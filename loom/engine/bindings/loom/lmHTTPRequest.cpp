@@ -40,6 +40,8 @@ public:
 
     utHashTable<utHashedString, utString> header;
 
+    int id;
+
     LOOM_DELEGATE(OnSuccess);
     LOOM_DELEGATE(OnFailure);
 
@@ -90,17 +92,27 @@ public:
             if (bodyBytes != NULL)
             {
                 // Send with body as byte array.
-                platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
+                id = platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
                                   (const char *)bodyBytes->getInternalArray()->ptr(), bodyBytes->getSize(), header,
                                   (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
             }
             else
             {
                 // Send with body as string.
-                platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
+                id = platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
                                   (const char *)body.c_str(), body.length(), header,
                                   (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
             }
+        }
+    }
+
+    void cancel(int index)
+    {
+        bool cancelled =  platform_HTTPCancel(index);
+        if (cancelled)
+        {
+          _OnFailureDelegate.pushArgument("Operation cancelled by user");
+          _OnFailureDelegate.invoke();
         }
     }
 
@@ -112,7 +124,7 @@ public:
     /**
      * Calls the native delegate, this should be used internally only
      */
-    static void respond(void *payload, loom_HTTPCallbackType type, const char *data)
+    void respond(void *payload, loom_HTTPCallbackType type, const char *data)
     {
         HTTPRequest *request = (HTTPRequest *)payload;
 
@@ -121,11 +133,13 @@ public:
         case LOOM_HTTP_SUCCESS:
             request->_OnSuccessDelegate.pushArgument(data);
             request->_OnSuccessDelegate.invoke();
+            platform_HTTPComplete(id);
             break;
 
         case LOOM_HTTP_ERROR:
             request->_OnFailureDelegate.pushArgument(data);
             request->_OnFailureDelegate.invoke();
+            platform_HTTPComplete(id);
             break;
 
         default:
@@ -143,6 +157,7 @@ static int registerLoomHTTPRequest(lua_State *L)
        .addMethod("setHeaderField", &HTTPRequest::setHeaderField)
        .addMethod("getHeaderField", &HTTPRequest::getHeaderField)
        .addMethod("send", &HTTPRequest::send)
+       .addMethod("cancel", &HTTPRequest::cancel)
        .addStaticMethod("isConnected", &HTTPRequest::isConnected)
        .addVar("method", &HTTPRequest::method)
        .addVar("body", &HTTPRequest::body)

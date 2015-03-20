@@ -140,7 +140,7 @@ limitations under the License.
 /**
  * Performs an asychronous http request
  */
-void platform_HTTPSend(const char *url, const char* method, loom_HTTPCallback callback, void *payload, 
+int platform_HTTPSend(const char *url, const char* method, void *callback, void *payload, 
     const char *body, int bodyLength, utHashTable<utHashedString, utString> &headers, 
     const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects)
 {
@@ -174,6 +174,8 @@ void platform_HTTPSend(const char *url, const char* method, loom_HTTPCallback ca
     // NSURLConnected maintains a strong ref to the delegate while
     // it is being used, so this is completely legit
     [[NSURLConnection alloc] initWithRequest:request delegate:delegate];
+
+    return 0; //TODO_KEVIN
 }
 
 bool platform_HTTPIsConnected()
@@ -195,4 +197,16 @@ void platform_HTTPCleanup()
 void platform_HTTPUpdate()
 {
     // stub on OSX/iOS
+}
+
+bool platform_HTTPCancel(int index)
+{
+    return false;
+    //TODO_KEVIN
+}
+
+void platform_HTTPComplete(int i)
+{
+    //TODO_KEVIN
+    //curlHandles[i] = NULL;
 }
