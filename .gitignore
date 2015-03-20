@@ -100,3 +100,5 @@ loom/vendor/luajit/libluajit64.a
 loom/vendor/luajit/libluajit32.a
 output
 gems
+loom/engine/SDL2/platform/android/java/bin/
+loom/engine/SDL2/platform/android/java/gen/

@@ -10,8 +10,6 @@ import android.util.Log;
 import android.provider.Settings.System;
 import android.net.Uri;
 
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
-
 
 
 /**
@@ -29,6 +27,7 @@ public class LoomMobile
 
     ///vars
     private static Activity     _context;
+    private static Activity     activity;
     private static Vibrator     _vibrator;
     private static boolean      _canVibrate;
     private static Uri          _customURI = null;
@@ -39,6 +38,7 @@ public class LoomMobile
     public static void onCreate(Activity ctx)
     {
         _context = ctx;
+        activity = LoomAdMob.activity;
 
         //vibration initialization
         _canVibrate = false;
@@ -80,7 +80,8 @@ public class LoomMobile
             else
             {
                 //notify that we've launched via a custom URL
-                Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+                // TODO: does this require queueEvent?
+                activity.runOnUiThread(new Runnable() 
                 {
                     @Override
                     public void run() 

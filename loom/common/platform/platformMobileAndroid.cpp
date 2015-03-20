@@ -20,8 +20,6 @@
 
 #include "loom/common/platform/platform.h"
 
-#define LOOM_PLATFORM LOOM_PLATFORM_ANDROID
-
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
 
 #include <jni.h>

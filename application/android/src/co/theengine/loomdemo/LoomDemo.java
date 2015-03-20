@@ -23,11 +23,6 @@ THE SOFTWARE.
  ****************************************************************************/
 package co.theengine.loomdemo;
 
-import org.cocos2dx.lib.Cocos2dxActivity;
-import org.cocos2dx.lib.Cocos2dxEditText;
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
-import org.cocos2dx.lib.Cocos2dxRenderer;
-
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -62,13 +57,11 @@ import co.theengine.loomdemo.billing.LoomStore;
 
 import com.dolby.DolbyAudio;
 
+import org.libsdl.app.SDLActivity;
 
-public class LoomDemo extends Cocos2dxActivity {
-
-    private Cocos2dxGLSurfaceView mGLView;
+public class LoomDemo extends SDLActivity {
 
     public static LoomDemo instance = null;
-
 
     public static String getMetadataString(Context context, String key) 
     {

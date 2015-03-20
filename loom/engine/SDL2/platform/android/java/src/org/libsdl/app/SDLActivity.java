@@ -526,6 +526,10 @@ public class SDLActivity extends Activity {
         return SDLActivity.mSurface.getNativeSurface();
     }
 
+    public static SDLSurface getSurface() {
+        return SDLActivity.mSurface;
+    }
+
     // Audio
 
     /**
