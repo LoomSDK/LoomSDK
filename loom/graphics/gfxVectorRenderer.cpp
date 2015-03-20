@@ -31,7 +31,7 @@
 
 #include "nanovg.h"
 
-#ifdef LOOM_OPENGLES2
+#ifdef LOOM_RENDERER_OPENGLES2
 #define NANOVG_GLES2_IMPLEMENTATION
 #else
 #define NANOVG_GL2_IMPLEMENTATION
@@ -350,7 +350,7 @@ void VectorRenderer::svg(float x, float y, float scale, VectorSVG* image) {
 void VectorRenderer::destroyGraphicsResources()
 {
 	if (nvg != NULL) {
-#ifdef LOOM_OPENGLES2
+#ifdef LOOM_RENDERER_OPENGLES2
 		nvgDeleteGLES2(nvg);
 #else
         nvgDeleteGL2(nvg);
@@ -361,7 +361,7 @@ void VectorRenderer::destroyGraphicsResources()
 
 void VectorRenderer::initializeGraphicsResources()
 {
-#ifdef LOOM_OPENGLES2
+#ifdef LOOM_RENDERER_OPENGLES2
     nvg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
 #else
     nvg = nvgCreateGL2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);

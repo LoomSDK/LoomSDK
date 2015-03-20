@@ -33,8 +33,8 @@ end
 $doBuildJIT=1
 
 # Whether or not to include Admob and/or Facebook in the build... for Great Apple Compliance!
-$doBuildAdmob=1
-$doBuildFacebook=1
+$doBuildAdmob=0
+$doBuildFacebook=0
 
 # Allow disabling Loom doc generation, as it can be very slow.
 # Disabled by default, set environment variable 'LOOM_BUILD_DOCS'
@@ -664,9 +664,9 @@ namespace :build do
         sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
       end
 
-      Dir.chdir("loom/engine/cocos2dx/platform/android/java") do
+      Dir.chdir("loom/engine/SDL2/platform/android/java") do
         puts "*** Building against AndroidSDK " + $targetAndroidSDK
-        sh "android update project --name Cocos2DLib --subprojects --target #{api_id} --path ."
+        sh "android update project --name SDL2Lib --subprojects --target #{api_id} --path ."
       end
       
       Dir.chdir("application/android") do

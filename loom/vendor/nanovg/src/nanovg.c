@@ -16,8 +16,8 @@
 // 3. This notice may not be removed or altered from any source distribution.
 //
 
-#include <loom/common/core/log.h>
-lmDefineLogGroup(gNanoVG, "nanovg", 1, LoomLogInfo);
+//#include <loom/common/core/log.h>
+//lmDefineLogGroup(gNanoVG, "nanovg", 1, LoomLogInfo);
 
 #include <stdio.h>
 #include <math.h>

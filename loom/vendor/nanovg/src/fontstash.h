@@ -16,8 +16,8 @@
 // 3. This notice may not be removed or altered from any source distribution.
 //
 
-#include <loom/common/core/log.h>
-lmDefineLogGroup(gFons, "fons", 1, LoomLogInfo);
+//#include <loom/common/core/log.h>
+//lmDefineLogGroup(gFons, "fons", 1, LoomLogInfo);
 
 #ifndef FONS_H
 #define FONS_H

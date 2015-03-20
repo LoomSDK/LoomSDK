@@ -280,6 +280,7 @@ elseif(ANDROID)
        LoomScript
        LoomCore
        "GLESv2" "EGL" "dl" "log" "android"
+       "${LOOM_SDL2_LIB}"
     )
     
     get_target_property(ANDROID_SO ${PROJECT_NAME} LOCATION)

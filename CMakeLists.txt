@@ -194,6 +194,8 @@ if (ANDROID)
 
     include (loom.android.toolchain)
     
+    include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/SDL2-2.0.3/include)
+    
     set (LOOM_INCLUDE_FOLDERS
     ${LOOM_INCLUDE_FOLDERS}
     ${CMAKE_SOURCE_DIR}/loom/vendor/glew-1.7.0/include
@@ -204,8 +206,10 @@ if (ANDROID)
     add_definitions(-DLUAJIT_OS=LUAJIT_OS_LINUX)
     add_definitions(-DLUAJIT_TARGET=LUAJIT_ARCH_ARM -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE)
     add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_INT64__)
+    add_definitions(-DLOOM_RENDERER_OPENGLES2)
     
     set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_android/lib/libluajit-5.1)
+    set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/SDL2/libs/armeabi/libSDL2.a)
     
 
 endif()

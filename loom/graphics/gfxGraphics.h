@@ -22,7 +22,7 @@
 
 #include <SDL.h>
 
-#ifdef LOOM_OPENGLES2
+#ifdef LOOM_RENDERER_OPENGLES2
 #include "SDL_opengles2.h"
 #else
 #include "SDL_opengl.h"

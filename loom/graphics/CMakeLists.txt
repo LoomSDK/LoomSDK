@@ -11,10 +11,6 @@ include_directories( ${NANOVG} ${NANOSVG} )
 
 set ( NANOVG_SRC ${NANOVG}/nanovg.c )
 
-if (NOT ANDROID)
-    include_directories( ${LOOMBGFX_INCLUDE_DIR}/glext )
-endif()
-
 if(APPLE)
 
     add_definitions( -U__STRICT_ANSI__ -Wfatal-errors -Wunused-value )
@@ -41,9 +37,8 @@ endif()
 
 if(ANDROID)
         add_definitions ( -std=c++0x )
-        add_definitions( -DBGFX_CONFIG_RENDERER_OPENGLES2=1 )    
-        set ( BGFX_SRC ${BGFX_SRC} ${LOOMBGFX_SOURCE_DIR}/renderer_gl.cpp ${LOOMBGFX_SOURCE_DIR}/glcontext_external.cpp )
-        set ( GRAPHICS_SRC ${GRAPHICS_SRC} gfxGraphicsAndroid.cpp )
+        add_definitions( -DLOOM_RENDERER_OPENGLES2=1 )
+        include_directories( ${LOOM_INCLUDE_FOLDERS} )
 endif()    
 
 if (MSVC)

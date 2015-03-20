@@ -86,20 +86,6 @@ if(ANDROID)
 set (ENGINE_SRC
 
     ${ENGINE_SRC}
-
-    cocos2dx/platform/android/CCAccelerometer.cpp
-    cocos2dx/platform/android/CCApplication.cpp
-    cocos2dx/platform/android/CCCommon.cpp
-    cocos2dx/platform/android/CCEGLView.cpp
-    cocos2dx/platform/android/CCFileUtils.cpp
-    cocos2dx/platform/android/CCImage.cpp
-    cocos2dx/platform/android/platformMain.cpp
-    cocos2dx/platform/android/jni/IMEJni.cpp
-    cocos2dx/platform/android/jni/JniHelper.cpp
-    cocos2dx/platform/android/jni/MessageJni.cpp
-    cocos2dx/platform/android/jni/SensorJni.cpp
-    cocos2dx/platform/android/jni/SystemInfoJni.cpp
-    cocos2dx/platform/android/jni/TouchesJni.cpp
         
 )
 endif(ANDROID)
