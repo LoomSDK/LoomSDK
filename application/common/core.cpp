@@ -11,6 +11,7 @@
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/common/core/log.h"
+#include "loom/common/platform/platform.h"
 
 #include <SDL.h>
 
@@ -72,30 +73,32 @@ void loop()
             stage->_KeyUpDelegate.pushArgument(event.key.keysym.mod);
             stage->_KeyUpDelegate.invoke();
         }
-/* On Mac, these are from the touchpad.
-        else if(event.type == SDL_FINGERMOTION)
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+        else if(event.type == SDL_FINGERDOWN)
         {
-            stage->_TouchBeganDelegate.pushArgument((int)event.tfinger.touchId);
-            stage->_TouchBeganDelegate.pushArgument(event.tfinger.x);
-            stage->_TouchBeganDelegate.pushArgument(event.tfinger.y);
+            stage->_TouchBeganDelegate.pushArgument((int)event.tfinger.fingerId);
+            stage->_TouchBeganDelegate.pushArgument(event.tfinger.x*stage->stageWidth);
+            stage->_TouchBeganDelegate.pushArgument(event.tfinger.y*stage->stageHeight);
             stage->_TouchBeganDelegate.invoke();
         }
         else if(event.type == SDL_FINGERUP)
         {
-            stage->_TouchEndedDelegate.pushArgument((int)event.tfinger.touchId);
-            stage->_TouchEndedDelegate.pushArgument(event.tfinger.x);
-            stage->_TouchEndedDelegate.pushArgument(event.tfinger.y);
+            stage->_TouchEndedDelegate.pushArgument((int)event.tfinger.fingerId);
+            stage->_TouchEndedDelegate.pushArgument(event.tfinger.x*stage->stageWidth);
+            stage->_TouchEndedDelegate.pushArgument(event.tfinger.y*stage->stageHeight);
             stage->_TouchEndedDelegate.invoke();
         }
         else if(event.type == SDL_FINGERMOTION)
         {
-            stage->_TouchMovedDelegate.pushArgument((int)event.tfinger.touchId);
-            stage->_TouchMovedDelegate.pushArgument(event.tfinger.x);
-            stage->_TouchMovedDelegate.pushArgument(event.tfinger.y);
+            stage->_TouchMovedDelegate.pushArgument((int)event.tfinger.fingerId);
+            stage->_TouchMovedDelegate.pushArgument(event.tfinger.x*stage->stageWidth);
+            stage->_TouchMovedDelegate.pushArgument(event.tfinger.y*stage->stageHeight);
             stage->_TouchMovedDelegate.invoke();
-        }*/
+        }
+#else
         else if(event.type == SDL_MOUSEBUTTONDOWN)
         {
+            //lmLogInfo(coreLogGroup, "began %d %d %d", event.motion.which, event.motion.x, event.motion.y);
             stage->_TouchBeganDelegate.pushArgument((int)event.motion.which);
             stage->_TouchBeganDelegate.pushArgument(event.motion.x);
             stage->_TouchBeganDelegate.pushArgument(event.motion.y);
@@ -103,6 +106,7 @@ void loop()
         }
         else if(event.type == SDL_MOUSEBUTTONUP)
         {
+            //lmLogInfo(coreLogGroup, "ended %d %d %d", event.motion.which, event.motion.x, event.motion.y);
             stage->_TouchEndedDelegate.pushArgument((int)event.motion.which);
             stage->_TouchEndedDelegate.pushArgument(event.motion.x);
             stage->_TouchEndedDelegate.pushArgument(event.motion.y);
@@ -110,11 +114,13 @@ void loop()
         }
         else if(event.type == SDL_MOUSEMOTION)
         {
+            //lmLogInfo(coreLogGroup, "moved %d %d %d", event.motion.which, event.motion.x, event.motion.y);
             stage->_TouchMovedDelegate.pushArgument((int)event.motion.which);
             stage->_TouchMovedDelegate.pushArgument(event.motion.x);
             stage->_TouchMovedDelegate.pushArgument(event.motion.y);
             stage->_TouchMovedDelegate.invoke();
         }
+#endif
         else if(event.type == SDL_MOUSEWHEEL)
         {
             //stage->_ScrollWheelYMovedDelegate.pushArgument(event.wheel.y * (event.wheel.direction == SDL_MOUSEWHEEL_NORMAL ? 1 : -1));
@@ -199,3 +205,104 @@ main(int argc, char *argv[])
     exit(0);
     return 0; /* to prevent compiler warning */
 }
+
+
+/*
+SDL_android_main.c, placed in the public domain by Sam Lantinga  3/13/14
+*/
+#ifdef __ANDROID__
+
+/* Include the SDL main definition header */
+#include "SDL_main.h"
+
+/*******************************************************************************
+Functions called by JNI
+*******************************************************************************/
+#include <jni.h>
+
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
+
+void loom_set_javavm(void *vm);
+
+/* Called before SDL_main() to initialize JNI bindings in SDL library */
+extern "C" {
+
+    extern void SDL_Android_Init(JNIEnv* env, jclass cls);
+    extern JavaVM* SDL_AndroidGetJavaVM();
+    void loom_setAssetManager(AAssetManager *am);
+
+    void Java_co_theengine_loomdemo_LoomDemo_nativeSetPaths(JNIEnv* env, jobject thiz, jstring apkPath, jobject am)
+    {
+        const char *str = env->GetStringUTFChars(apkPath, NULL);
+        //cocos2d::CCFileUtils::sharedFileUtils()->setResourcePath(str);
+        env->ReleaseStringUTFChars(apkPath, str);
+        loom_setAssetManager(AAssetManager_fromJava(env, am));
+    }
+
+    /* Start up the SDL app */
+    int Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jclass cls, jobject array)
+    {
+        int i;
+        int argc;
+        int status;
+
+        /* This interface could expand with ABI negotiation, callbacks, etc. */
+        SDL_Android_Init(env, cls);
+
+        loom_set_javavm((void *)SDL_AndroidGetJavaVM());
+
+
+        SDL_SetMainReady();
+
+        /* Prepare the arguments. */
+
+        int len = env->GetArrayLength(static_cast<jarray>(array));
+        char* argv[1 + len + 1];
+        argc = 0;
+        /* Use the name "app_process" so PHYSFS_platformCalcBaseDir() works.
+        https://bitbucket.org/MartinFelis/love-android-sdl2/issue/23/release-build-crash-on-start
+        */
+        argv[argc++] = SDL_strdup("app_process");
+        for (i = 0; i < len; ++i) {
+            const char* utf;
+            char* arg = NULL;
+            jstring string = static_cast<jstring>(env->GetObjectArrayElement(static_cast<jobjectArray>(array), i));
+            if (string) {
+                utf = env->GetStringUTFChars(string, 0);
+                if (utf) {
+                    arg = SDL_strdup(utf);
+                    env->ReleaseStringUTFChars(string, utf);
+                }
+                env->DeleteLocalRef(string);
+            }
+            if (!arg) {
+                arg = SDL_strdup("");
+            }
+            argv[argc++] = arg;
+        }
+        argv[argc] = NULL;
+
+
+        /* Run the application. */
+
+        status = SDL_main(argc, argv);
+
+        /* Release the arguments. */
+
+        for (i = 0; i < argc; ++i) {
+            SDL_free(argv[i]);
+        }
+
+        /* Do not issue an exit or the whole application will terminate instead of just the SDL thread */
+        /* exit(status); */
+
+        return status;
+    }
+}
+
+
+#endif /* __ANDROID__ */
+
+
+/* vi: set ts=4 sw=4 expandtab: */

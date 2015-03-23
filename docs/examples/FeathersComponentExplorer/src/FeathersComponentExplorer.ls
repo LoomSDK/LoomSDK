@@ -2,6 +2,7 @@ package
 {
     import loom.Application;
     import loom2d.display.TextFormat;
+    import system.platform.Platform;
     
     import feathers.events.FeathersEventType;
     import feathers.motion.transitions.ScreenSlidingStackTransitionManager;
@@ -89,6 +90,7 @@ package
         {
             EmbeddedAssets.initialize();
             
+            DeviceCapabilities.dpi = Platform.getDPI();
             TextFormat.load("sans", "assets/SourceSansPro-Regular.ttf");
             //TextFormat.load("sans", "assets/keifont.ttf");
             new MetalWorksMobileVectorTheme();

@@ -25,7 +25,7 @@ import android.view.KeyEvent;
 import android.graphics.Color;
 
 import org.libsdl.app.SDLActivity;
-import org.libsdl.app.SDLActivity.SDLSurface;
+//import org.libsdl.app.SDLSurface;
 
 /**
  * Java Class that exposes Android fullscreen video playback

@@ -623,8 +623,8 @@ namespace :build do
         sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
       end
 
-      Dir.chdir("loom/engine/cocos2dx/platform/android/java") do
-        sh "android update project --name Cocos2DLib --subprojects --target #{api_id} --path ."
+      Dir.chdir("loom/engine/SDL2/platform/android/java") do
+        sh "android update project --name SDL2 --subprojects --target #{api_id} --path ."
       end
       
       Dir.chdir("application/android") do
@@ -641,7 +641,7 @@ namespace :build do
 
       # TODO: LOOM-1070 can we build for release or does this have signing issues?
       Dir.chdir("application/android") do
-        sh "ant.bat #{$targetAndroidBuildType}"
+        sh "ant.bat clean #{$targetAndroidBuildType}"
       end
       
       # Copy APKs to artifacts.

@@ -23,6 +23,7 @@
 #include "loom/script/native/lsNativeDelegate.h"
 #include "loom/common/core/log.h"
 #include "loom/common/config/applicationConfig.h"
+#include "loom/engine/loom2d/l2dStage.h"
 
 lmDefineLogGroup(sdlLogGroup, "loom.engine.bindings", 1, LoomLogInfo);
 
@@ -30,6 +31,7 @@ Window* Window::mainWindow = NULL;
 
 Window::Window(SDL_Window* window) {
     sdlWindow = window;
+    initializing = true;
 }
 
 void Window::setMain(Window* window) {
@@ -43,7 +45,10 @@ Window* Window::getMain() {
 
 void Window::updateFromConfig() {
     SDL_SetWindowTitle(sdlWindow, LoomApplicationConfig::displayTitle().c_str());
-    SDL_SetWindowSize(sdlWindow, LoomApplicationConfig::displayWidth(), LoomApplicationConfig::displayHeight());
+    int width = LoomApplicationConfig::displayWidth();
+    int height = LoomApplicationConfig::displayHeight();
+    SDL_SetWindowSize(sdlWindow, width, height);
+    if (Loom2D::Stage::smMainStage != NULL) Loom2D::Stage::smMainStage->noteNativeSize(width, height);
     if (initializing) {
         initializing = false;
         show();

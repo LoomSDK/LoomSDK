@@ -20,11 +20,14 @@ package
     import loom2d.text.TextField;
     import loom2d.textures.Texture;
     import loom2d.ui.SimpleLabel;
+    import system.platform.Platform;
     import system.Void;
 
     public class NanoVG extends Application
     {
         private var g:Graphics;
+        
+        var sg:Shape;
         
         override public function run():void
         {
@@ -45,7 +48,7 @@ package
             //q = new Quad(400, 300, 0xBDC5F9); q.x = 10; q.y = 10; stage.addChild(q);
             q = new Quad(460, 300, 0xF3F3F3); q.x = 10; q.y = 10; stage.addChild(q);
             
-            var sg = new Shape();
+            sg = new Shape();
             sg.x = 50;
             sg.y = 50;
             stage.addChild(sg);
@@ -402,8 +405,8 @@ package
             g.clear();
             g.lineStyle(1, 0xFFFFFF, 0.1);
             var n = 5000;
-            var w = 460-g.x*2;
-            var h = 300-g.y*2;
+            var w = 460-sg.x*2;
+            var h = 300-sg.y*2;
             
             var t = Loom2D.juggler.elapsedTime;
             
@@ -427,8 +430,8 @@ package
             g.clear();
             g.lineStyle(1, 0xFFFFFF, 0.1);
             var n = 200;
-            var w = 460-g.x*2;
-            var h = 300-g.y*2;
+            var w = 460-sg.x*2;
+            var h = 300-sg.y*2;
             
             var t = Loom2D.juggler.elapsedTime;
             
@@ -441,10 +444,12 @@ package
             var a = 0;
             var b = n;
             
+            var spiral = (Math.sin(t*0.01)+1)*0.5*50;
+            
             g.moveTo(cx, cy);
             for (var i:int = a; i < b; i++) {
                 var r = i/(n-1)*500;
-                var ang = (i/(n-1)*50+t*0.5) * Math.TWOPI;
+                var ang = (i/(n-1)*spiral+t*0.5) * Math.TWOPI;
                 g.lineStyle(3 + 1*Math.sin(1000*i/(n-1)*Math.TWOPI + t*50), hsvToRgb((i/n*360*3 + t*200)%360, 1, 1), 1);
                 g.lineTo(cx+Math.cos(ang)*r, cy+Math.sin(ang)*r);
             }

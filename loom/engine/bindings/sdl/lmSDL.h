@@ -26,7 +26,7 @@ class Window
 protected:
     static Window* mainWindow;
     SDL_Window* sdlWindow;
-    bool initializing = true;
+    bool initializing;
 
 public:
     Window(SDL_Window* window);

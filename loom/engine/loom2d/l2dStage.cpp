@@ -35,6 +35,8 @@ Stage::Stage()
 {
     smMainStage = this;
     sdlWindow = gSDLWindow;
+    SDL_GetWindowSize(sdlWindow, &stageWidth, &stageHeight);
+    noteNativeSize(stageWidth, stageHeight);
 }
 
 Stage::~Stage()

@@ -39,6 +39,8 @@ public:
 
     // The SDL window we're working with.
     SDL_Window *sdlWindow;
+    int stageWidth;
+    int stageHeight;
 
     // Rendering interface.
     void invokeRenderStage()
@@ -58,6 +60,8 @@ public:
 
     void noteNativeSize(int width, int height)
     {
+        stageWidth = width;
+        stageHeight = height;
         _SizeChangeDelegate.pushArgument(width);
         _SizeChangeDelegate.pushArgument(height);
         _SizeChangeDelegate.invoke();
@@ -70,16 +74,12 @@ public:
 
     int getWidth()
     {
-        int w = -1, h = -1;
-        SDL_GetWindowSize(sdlWindow, &w, &h);
-        return w;
+        return stageWidth;
     }
 
     int getHeight()
     {
-        int w = -1, h = -1;
-        SDL_GetWindowSize(sdlWindow, &w, &h);
-        return h;
+        return stageHeight;
     }
 
     void resize(int width, int height)

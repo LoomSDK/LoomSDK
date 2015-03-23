@@ -102,3 +102,4 @@ output
 gems
 loom/engine/SDL2/platform/android/java/bin/
 loom/engine/SDL2/platform/android/java/gen/
+loom/engine/SDL2/platform/android/java/local.properties

@@ -68,112 +68,14 @@ static void rgbaToBgra(uint8_t *_data, uint32_t _width, uint32_t _height)
     }
 }
 
-
-TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, TextureID id)
-{
-    if (id == -1)
-    {
-        id = getAvailableTextureID();
-
-        if (id == TEXTUREINVALID)
-        {
-            return NULL;
-        }
-    }
-
-    if ((id < 0) || (id >= MAXTEXTURES))
-    {
-        return NULL;
-    }
-
-    TextureInfo *tinfo = &sTextureInfos[id];
-
-    // Make a copy of the texture so we can swizzle it safely. No need to
-    // free memory, this will be freed at end of frame by bgfx.
-//    const bgfx::Memory *mem = bgfx::alloc(width * height * 4);
-//    memcpy(mem->data, data, width * height * 4);
-
-    // Do the swizzle for D3D9 - see LOOM-1713 for details on this.
-    //rgbaToBgra(mem->data, width, height);
-
-    if (!tinfo->reload || (tinfo->width != width) || (tinfo->height != height))
-    {
-        lmLog(gGFXTextureLogGroup, "Create texture for %s", tinfo->texturePath.c_str());
-
-        if (tinfo->reload)
-        {
-//            bgfx::destroyTexture(tinfo->handle);
-            GFX::Graphics::context()->glDeleteTextures(1, &tinfo->handle);
-        }
-
-//        tinfo->handle = bgfx::createTexture2D(width, height, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_NONE, mem);
-        GFX::Graphics::context()->glGenTextures(1, &tinfo->handle);
-        GFX::Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo->handle);
-        GFX::Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        switch (tinfo->smoothing)
-        {
-        case TEXTUREINFO_SMOOTHING_NONE:
-            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NONE);
-            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NONE);
-        default:
-            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            break;
-        }
-
-        
-        tinfo->width  = width;
-        tinfo->height = height;
-
-        if (tinfo->reload)
-        {
-            // Fire the delegate.
-            tinfo->updateDelegate.pushArgument(width);
-            tinfo->updateDelegate.pushArgument(height);
-            tinfo->updateDelegate.invoke();
-        }
-
-        // mark that next time we will be reloading
-        tinfo->reload = true;
-    }
-    else
-    {
-        lmLog(gGFXTextureLogGroup, "Updating texture %s", tinfo->texturePath.c_str());
-//        bgfx::updateTexture2D(tinfo->handle, 0, 0, 0, width, height, mem);
-        GFX::Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo->handle);
-        GFX::Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        switch (tinfo->smoothing)
-        {
-        case TEXTUREINFO_SMOOTHING_NONE:
-            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NONE);
-            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NONE);
-        default:
-            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            GFX::Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            break;
-        }
-
-        tinfo->width  = width;
-        tinfo->height = height;
-
-        // Fire the delegate.
-        tinfo->updateDelegate.pushArgument(width);
-        tinfo->updateDelegate.pushArgument(height);
-        tinfo->updateDelegate.invoke();
-    }
-
-    return tinfo;
-}
-
-
 // Courtesy of Torque via MIT license.
 void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWidth)
 {
-    const unsigned char *src   = (const unsigned char *)srcMip;
-    unsigned char       *dst   = (unsigned char *)mip;
-    int                 stride = srcHeight != 1 ? (srcWidth) * 4 : 0;
+    const unsigned char *src = (const unsigned char *)srcMip;
+    unsigned char       *dst = (unsigned char *)mip;
+    int                 stride = srcHeight != 1 ? (srcWidth)* 4 : 0;
 
-    int width  = srcWidth >> 1;
+    int width = srcWidth >> 1;
     int height = srcHeight >> 1;
 
     if (width == 0)
@@ -198,7 +100,7 @@ void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWi
                 *dst++ = (int(*src) + int(src[4]) + int(src[stride]) + int(src[stride + 4]) + 2) >> 2;
                 src++;
                 *dst++ = (int(*src) + int(src[4]) + int(src[stride]) + int(src[stride + 4]) + 2) >> 2;
-                src   += 5;
+                src += 5;
             }
             src += stride;    // skip
         }
@@ -214,11 +116,126 @@ void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWi
             *dst++ = (int(*src) + int(src[stride]) + 1) >> 1;
             src++;
             *dst++ = (int(*src) + int(src[stride]) + 1) >> 1;
-            src   += 5;
+            src += 5;
 
             src += stride;    // skip
         }
     }
+}
+
+TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, TextureID id)
+{
+    if (id == -1)
+    {
+        id = getAvailableTextureID();
+
+        if (id == TEXTUREINVALID)
+        {
+            return NULL;
+        }
+    }
+
+    if ((id < 0) || (id >= MAXTEXTURES))
+    {
+        return NULL;
+    }
+
+    TextureInfo &tinfo = sTextureInfos[id];
+
+    // Make a copy of the texture so we can swizzle it safely. No need to
+    // free memory, this will be freed at end of frame by bgfx.
+    //    const bgfx::Memory *mem = bgfx::alloc(width * height * 4);
+    //    memcpy(mem->data, data, width * height * 4);
+
+    // Do the swizzle for D3D9 - see LOOM-1713 for details on this.
+    //rgbaToBgra(mem->data, width, height);
+
+    bool newTexture = !tinfo.reload || (tinfo.width != width) || (tinfo.height != height);
+
+    if (newTexture)
+    {
+        lmLog(gGFXTextureLogGroup, "Create texture for %s", tinfo.texturePath.c_str());
+    }
+    else
+    {
+        lmLog(gGFXTextureLogGroup, "Updating texture %s", tinfo.texturePath.c_str());
+    }
+
+
+    if (tinfo.reload)
+    {
+        Graphics::context()->glDeleteTextures(1, &tinfo.handle);
+    }
+
+    if (newTexture) Graphics::context()->glGenTextures(1, &tinfo.handle);
+
+    lmLogInfo(gGFXTextureLogGroup, "Create > %u", tinfo.handle);
+
+    Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
+
+    lmLogInfo(gGFXTextureLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
+
+    Graphics::context()->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    lmLogInfo(gGFXTextureLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
+
+    /*
+    Graphics::context()->glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    Graphics::context()->glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+    Graphics::context()->glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+    */
+    Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    /*
+    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    */
+    //lmLogInfo(gGFXTextureLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
+
+    //*
+    uint8_t *mipData = data;
+    int mipWidth = width;
+    int mipHeight = height;
+    int mipLevel = 1;
+    //uint64_t time = GetTimeMs64();
+    while (mipWidth > 1 || mipHeight > 1)
+    {
+        // Allocate new bits.
+        int prevWidth = mipWidth, prevHeight = mipHeight;
+        mipWidth >>= 1; mipWidth = mipWidth < 1 ? 1 : mipWidth;
+        mipHeight >>= 1; mipHeight = mipHeight < 1 ? 1 : mipHeight;
+
+        uint8_t *prevData = mipData;
+        mipData = static_cast<uint8_t*>(lmAlloc(NULL, mipWidth * mipHeight * 4));
+
+        bitmapExtrudeRGBA_c(prevData, mipData, prevHeight, prevWidth);
+        if (prevData != data) lmFree(NULL, prevData);
+
+        Graphics::context()->glTexImage2D(GL_TEXTURE_2D, mipLevel, GL_RGBA, mipWidth, mipHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mipData);
+
+        mipLevel++;
+    }
+    if (mipData != data) lmFree(NULL, mipData);
+
+    //lmLogInfo(gGFXTextureLogGroup, "Generated mipmaps in %d ms", Graphics::context()->glGetError());
+    //*/
+
+    tinfo.width  = width;
+    tinfo.height = height;
+
+    if (tinfo.reload)
+    {
+        // Fire the delegate.
+        tinfo.updateDelegate.pushArgument(width);
+        tinfo.updateDelegate.pushArgument(height);
+        tinfo.updateDelegate.invoke();
+    }
+
+    // mark that next time we will be reloading
+    tinfo.reload = true;
+
+    return &tinfo;
 }
 
 

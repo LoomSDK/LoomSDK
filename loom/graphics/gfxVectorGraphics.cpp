@@ -143,7 +143,7 @@ void VectorGraphics::lineStyle(float thickness, unsigned int color, float alpha,
 }
 
 void VectorGraphics::textFormat(VectorTextFormat format) {
-    textFormatDirty = true;
+    ensureTextFormat();
     queue->push_back(new VectorTextFormatData(new VectorTextFormat(format)));
 }
 
