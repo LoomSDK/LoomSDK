@@ -114,6 +114,11 @@ package loom2d.textures
         public var asyncLoadComplete:TextureAsyncLoadCompleteDelegate;
 
         /*
+         * Tracks the HTTPRequest object being used to load this Texture if it was via HTTP.
+         */
+        protected var httpRequest:HTTPRequest;
+
+        /*
          * Indicates that we which to stop the current HTTP load request of this texture ASAP.
          */
         protected var mCancelHTTP:Boolean;
@@ -162,9 +167,6 @@ package loom2d.textures
 
         /** vector of supported image type extensions, as defined by the asset system */
         protected static var supportedImageTypes:Vector.<String> = [".jpg", ".jpeg", ".bmp", ".png", ".psd", ".pic", ".tga", ".gif"];
-
-        /** vector to store HTTPRequests for HTTP texture loads so that they don't get GCed */
-        protected static const httpRequests:Vector.<HTTPRequest> = [];
 
 
         /** Checks the handle ID of the textureInfo to see if the texture is valid and ready for use. */
@@ -464,10 +466,10 @@ package loom2d.textures
             var success:Function = function(result:String):void
             {
                 var textureInfo:TextureInfo = null;
-                Console.print("Successfull download of HTTP texture from url: " + url); 
+                //Console.print("Successfull download of HTTP texture from url: " + url); 
 
                 //remove reference to the request so it can now be GCed
-                httpRequests.remove(req);
+                tex.httpRequest = null;
 
                 //were we cancelled while off busy with the HTTP?
                 if(tex.mCancelHTTP)
@@ -529,13 +531,13 @@ package loom2d.textures
             //setup onFailure
             var fail:Function = function(result:String):void
             {
-                Console.print("ERROR: Failed download of HTTP texture from url: " + url);
+                //Console.print("ERROR: Failed download of HTTP texture from url: " + url);
 
                 //remove reference to the request so it can now be GCed
-                httpRequests.remove(req);
+                tex.httpRequest = null;
 
-                //dispose the texture and call the failure delegate
-                if(onFailure != null)
+                //dispose the texture and call the failure delegate (don't call onFailure if the load was cancelled)
+                if((onFailure != null) && (!tex.mCancelHTTP))
                 {
                     onFailure(tex);
                 }
@@ -543,16 +545,23 @@ package loom2d.textures
             };       
             req.onFailure += fail;
 
-            //cache the HTTPRequest object so that it isn't GCed then send it
-            httpRequests.pushSingle(req);
-            req.send();
+            //store and fire off the HTTP request now
+            tex.httpRequest = req;
+            tex.httpRequest.send();
         }
 
         /** Called to indicate that an HTTP texture load via fromHTTP() should be 
           * cancelled at the 1st possible opportunity.  NOTE that this will also dipose
           * the Texture returned by fromHTTP(), so consider it invalid after calling this.
           */
-        public function cancelHTTPRequest():void { mCancelHTTP = true; }
+        public function cancelHTTPRequest():void 
+        { 
+            if(httpRequest != null)
+            {
+                httpRequest.cancel();
+            }
+            mCancelHTTP = true;
+        }
 
         /** 
           *  Indicates if the texture do smooth filtering when it is scaled (BILINEAR) or just choose the nearest pixel (NONE)
