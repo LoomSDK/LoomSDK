@@ -80,8 +80,9 @@ public:
         }
     }
 
-    void send()
+    bool send()
     {
+        id = -1;
         if (url == "")
         {
             _OnFailureDelegate.pushArgument("Error: Empty URL");
@@ -104,6 +105,7 @@ public:
                                   (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
             }
         }
+        return (id == -1) ? false : true;
     }
 
     void cancel()
@@ -111,7 +113,7 @@ public:
         bool cancelled =  platform_HTTPCancel(id);
         if (cancelled)
         {
-          _OnFailureDelegate.pushArgument("Operation cancelled by user");
+          _OnFailureDelegate.pushArgument("Request cancelled by user.");
           _OnFailureDelegate.invoke();
         }
     }
