@@ -328,7 +328,7 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
     curl_multi_add_handle(gMultiHandle, curlHandle);
 
     int index = 0;
-    while (curlHandles[0] != NULL)
+    while (curlHandles[index] != NULL)
     {
         index++;
     }

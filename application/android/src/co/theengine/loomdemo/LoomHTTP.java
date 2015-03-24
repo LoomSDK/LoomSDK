@@ -29,11 +29,19 @@ import android.util.Log;
 public class LoomHTTP 
 {
     private static final String TAG = "LoomHTTP";
+    private static AsyncHttpClient[] clients = new AsyncHttpClient[1024];
     
-    public static void send(final String url, String httpMethod, final long callback, final long payload, byte[] body, final String responseCacheFile, final boolean base64EncodeResponseData, boolean followRedirects)
+    public static int send(final String url, String httpMethod, final long callback, final long payload, byte[] body, final String responseCacheFile, final boolean base64EncodeResponseData, boolean followRedirects)
     {
         final Activity activity = LoomAdMob.activity;
         AsyncHttpClient client = new AsyncHttpClient();
+        //store client
+        int index = 0;
+        while (clients[index] != null)
+        {
+            index++;
+        }
+        clients[index] = client;
 
         String[] allowedTypes = new String[] { 
             ".*" // Match anything.
@@ -61,7 +69,8 @@ public class LoomHTTP
 
             @Override
 
-            public void onSuccess(byte[] binaryData) {
+            public void onSuccess(byte[] binaryData) 
+            {
 
                 if (responseCacheFile != null && responseCacheFile.length() > 0)
                 {
@@ -104,11 +113,11 @@ public class LoomHTTP
                         LoomHTTP.onSuccess(rfResponse, callback, payload);
                     }
                 });
-
             }
 
             @Override
-            public void onFailure(Throwable error, byte[] binaryData) {
+            public void onFailure(Throwable error, byte[] binaryData) 
+            {
 
                 String content;
 
@@ -129,7 +138,8 @@ public class LoomHTTP
             } 
 
             @Override
-            public void onFailure(Throwable error, String content) {
+            public void onFailure(Throwable error, String content) 
+            {
 
                 final String fContent = content;
 
@@ -160,7 +170,8 @@ public class LoomHTTP
                 Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
                 {
                     @Override
-                    public void run() {
+                    public void run() 
+                    {
                         onFailure("Error: Unknown HTTP Method", callback, payload);
                     }
                 });
@@ -181,7 +192,27 @@ public class LoomHTTP
         
         // clear the headers after each send();
         headers.clear();
-    
+        return index;
+    }
+
+    /**
+     *  Cancels a client
+     */
+    public static boolean cancel(int index)
+    {
+        if (clients[index] == null)
+            return false;
+       // clients[index].cancelAllRequests(true);
+        clients[index].cancelRequests(LoomAdMob.activity, true);
+        return true;
+    }
+
+    /**
+    *  Remove client at index from array
+    */
+    public static void removeClient(int index)
+    {
+       clients[index] = null;
     }
 
     /**
