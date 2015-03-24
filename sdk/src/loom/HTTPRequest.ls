@@ -56,11 +56,12 @@ package loom
 
         /**
          *  Sends the HTTPRequest along. Will immediately call `onFailure` if the url field is null.
+         *  @return Whether or not the call was successful.
          */
-        public native function send();
+        public native function send():Boolean;
 
         /**
-         *  Cancels an HTTPRequest with index
+         *  Cancels an in progress HTTPRequest.
          */
         public native function cancel();
 
@@ -70,7 +71,8 @@ package loom
         public native var onSuccess:NativeDelegate;
         
         /**
-         *  Called when the HTTPRequest is unsuccessful. Passes the an Error message (this can differ between plaforms).
+         *  Called when the HTTPRequest is unsuccessful or cancelled. 
+         *  Passes the an Error message (this can differ between plaforms).
          */
         public native var onFailure:NativeDelegate;
 

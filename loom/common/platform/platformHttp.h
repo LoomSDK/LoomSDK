@@ -25,6 +25,10 @@
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utString.h"
 
+//Maximum number of in progress HTTP requests allowed by the system
+#define MAX_CONCURRENT_HTTP_REQUESTS    128   
+
+
 /**
  * The platform abstraction for Loom's HTTP support.
  *
@@ -59,11 +63,15 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
                        const char *body, int bodyLength, utHashTable<utHashedString, utString>& headers,
                        const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects);
 
-//TODO_KEVIN add desc
+/**
+ *  Cancels an in progress HTTP request that was started via platform_HTTPSend().
+ */
 bool platform_HTTPCancel(int index);
 
-//TODO_KEVIN add desc
-void platform_HTTPComplete(int i);
+/**
+ *  Marks an HTTP request as completed.
+ */
+void platform_HTTPComplete(int index);
 
 /**
  *  Returns true if the device is connected to a network.

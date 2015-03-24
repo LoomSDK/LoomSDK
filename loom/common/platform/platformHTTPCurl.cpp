@@ -33,8 +33,9 @@
 #include "loom/common/platform/platformFile.h"
 #include "loom/common/utils/utBase64.h"
 
+
 static CURLM *gMultiHandle;
-static CURL *curlHandles[1024];
+static CURL *curlHandles[MAX_CONCURRENT_HTTP_REQUESTS];
 static int   gHandleCount;
 static bool  gHTTPInitialized;
 
@@ -253,6 +254,15 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
 {
     assert(gHTTPInitialized);
 
+    //get an empty slot for our handle to use
+    int index = 0;
+    while ((curlHandles[index++] != NULL) && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {}
+    if(index == MAX_CONCURRENT_HTTP_REQUESTS)
+    {
+        return -1;
+    }
+    curlHandles[index] = curlHandle;
+
     // initialize our curl handle
     CURL *curlHandle = curl_easy_init();
 
@@ -327,30 +337,28 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
     // add to the multi interface
     curl_multi_add_handle(gMultiHandle, curlHandle);
 
-    int index = 0;
-    while (curlHandles[index] != NULL)
-    {
-        index++;
-    }
-    curlHandles[index] = curlHandle;
     return index;
 }
 
-bool platform_HTTPCancel(int i)
+bool platform_HTTPCancel(int index)
 {
-    if (curlHandles[i] == NULL)
+    if ((index == -1) || (curlHandles[index] == NULL))
     {
         return false;
     }
-    curl_multi_remove_handle(gMultiHandle, curlHandles[i]);
-    curl_easy_cleanup(curlHandles[i]);
-    curlHandles[i] = NULL;
+    curl_multi_remove_handle(gMultiHandle, curlHandles[index]);
+    curl_easy_cleanup(curlHandles[index]);
+    platform_HTTPComplete(index);
     return true;
 }
 
-void platform_HTTPComplete(int i)
+void platform_HTTPComplete(int index)
 {
-    curlHandles[i] = NULL;
+    if(index != -1)
+    {
+        curlHandles[index] = NULL;
+        index = -1;
+    }
 }
 
 #endif
