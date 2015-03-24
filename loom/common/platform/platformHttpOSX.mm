@@ -137,6 +137,8 @@ limitations under the License.
 
 @end
 
+//not exactly sure how to define this
+static NSURLConnection[] *connections = new NSURLConnection[1024];
 /**
  * Performs an asychronous http request
  */
@@ -173,9 +175,16 @@ int platform_HTTPSend(const char *url, const char* method, loom_HTTPCallback cal
     
     // NSURLConnected maintains a strong ref to the delegate while
     // it is being used, so this is completely legit
-    [[NSURLConnection alloc] initWithRequest:request delegate:delegate];
+    NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:delegate];
 
-    return 0; //TODO_KEVIN
+    int index = 0;
+    while (connections[index] != NULL)
+    {
+        index++;
+    }
+    connections[index] = connection;
+
+    return index;
 }
 
 bool platform_HTTPIsConnected()
@@ -201,12 +210,16 @@ void platform_HTTPUpdate()
 
 bool platform_HTTPCancel(int index)
 {
-    return false;
-    //TODO_KEVIN
+    if (connections[index] == NULL)
+    {
+        return false;
+    }
+    connections[index].cancel();
+    connections[index] == NULL;
+    return true;
 }
 
-void platform_HTTPComplete(int i)
+void platform_HTTPComplete(int index)
 {
-    //TODO_KEVIN
-    //curlHandles[i] = NULL;
+    connections[index] = NULL;
 }

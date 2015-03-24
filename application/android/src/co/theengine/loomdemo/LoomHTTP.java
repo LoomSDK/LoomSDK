@@ -65,7 +65,8 @@ public class LoomHTTP
         }
         final File savedFile = trySaveFile;
 
-        BinaryHttpResponseHandler handler = new BinaryHttpResponseHandler(allowedTypes) {
+        BinaryHttpResponseHandler handler = new BinaryHttpResponseHandler(allowedTypes) 
+        {
 
             @Override
 
@@ -201,9 +202,13 @@ public class LoomHTTP
     public static boolean cancel(int index)
     {
         if (clients[index] == null)
+        {
             return false;
-       // clients[index].cancelAllRequests(true);
+        }
+        //clients[index].cancelAllRequests(true);
+        //This doesnt seem to be working
         clients[index].cancelRequests(LoomAdMob.activity, true);
+        clients[index] = null;
         return true;
     }
 
