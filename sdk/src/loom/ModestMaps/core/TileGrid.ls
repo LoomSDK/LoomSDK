@@ -390,6 +390,7 @@ package loom.modestmaps.core
             // (loop backwards so removal doesn't change i)
             for (var i:int = well.numChildren-1; i >= 0; i--) {
                 var wellTile:Tile = well.getChildAt(i) as Tile;
+				
                 if (visibleTiles.indexOf(wellTile) < 0) {
                     well.removeChild(wellTile);
                     wellTile.hide();
@@ -401,6 +402,7 @@ package loom.modestmaps.core
             // and x and y make sense in pixels relative to tlC.column and tlC.row (topleft)
             positionTiles(tlC.column, tlC.row);
 
+// TODO_AHMED: THIS IS DEFITELY RELATED TO THE COMMENTED OUT BLOCK OF CODE BELOW
             // all the visible tiles will be at the end of recentlySeen
             // let's make sure we keep them around:
             var maxRecentlySeen:int = Math.max(visibleTiles.length, MaxTilesToKeep);
@@ -408,6 +410,7 @@ package loom.modestmaps.core
             // prune cache of already seen tiles if it's getting too big:
             if (recentlySeen.length > maxRecentlySeen) {
 
+// TODO_AHMED: Investigate the original function of this commented out block of code
                 // can we sort so that biggest zoom levels get removed first, without removing currently visible tiles?
                 /*
                 var visibleKeys:Array = recentlySeen.slice(recentlySeen.length - visibleTiles.length, recentlySeen.length);
@@ -457,13 +460,12 @@ package loom.modestmaps.core
             // loop over currently visible tiles
             for (var col:int = minCol; col <= maxCol; col++) {
                 for (var row:int = minRow; row <= maxRow; row++) {
-                    
                     // create a string key for this tile
                     var key:String = tileKey(col, row, currentTileZoom);
                     
                     // see if we already have this tile
                     var tile:Tile = well.getChildByName(key) as Tile;
-                                        
+                                     
                     // create it if not, and add it to the load queue
                     if (!tile) {
                         tile = tilePainter.getTileFromCache(key);
@@ -478,9 +480,16 @@ package loom.modestmaps.core
                         }
                         well.addChild(tile);
                     }
+					
+// TODO_AHMED: This is the same as disabling tiles as soon as they leave the screen
+					// Attempting a different approach to checking whether a tile is visible or not
+					//if (!Rectangle.intersects(new Rectangle(0, 0, stage.width, stage.height), new Rectangle(tile.x, tile.y, tileWidth, tileHeight)))
+					//{
+					//	continue;	
+					//}
                     
                     visibleTiles.push(tile);
-                    
+					
                     var tileReady:Boolean = tile.isShowing() && !tilePainter.isPainting(tile);
                     
                     //
@@ -636,6 +645,7 @@ package loom.modestmaps.core
             
                 // if we set them all to numChildren-1, descending, they should end up correctly sorted
 //PERF_24: This is slow because it does Vector splicing likely!!! why do this!??!! depth sorting??? needed every frame??>
+//TODO_AHMED: The next line will crash the program if children are repeatedly pruned from the well using intersection tests, null checks don't fix this! INVESTIGATE
                 well.setChildIndex(tile, well.numChildren-1);
 
                 tile.scaleX = tile.scaleY = tileScales[tile.zoom];

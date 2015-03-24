@@ -19,15 +19,14 @@ package loom.modestmaps.core.painter
     public class TilePainter extends EventDispatcher implements ITilePainter
     {
         /** number of ms between calls to process the loading queue */
-        public static var ProcessQueueInterval:int = 200;
+        public static var ProcessQueueInterval:int = 20;
         
         /** how many Loaders are allowed to be open at once? */
-        public static var MaxOpenRequests:int = 4;    // TODO: should this be split into max-new-requests-per-frame, too?            
+        public static var MaxOpenRequests:int = 8;    // TODO: should this be split into max-new-requests-per-frame, too?            
 
         /** should downloaded map tile images remain cached on disk? Warning: this could take up a lot of space! */
         public static var CacheTilesOnDisk:Boolean = false;
 
-    
         protected var provider:IMapProvider;    
         protected var tileGrid:TileGrid;
         protected var tileQueue:TileQueue;
