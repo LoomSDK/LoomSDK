@@ -141,7 +141,7 @@ package loom.modestmaps.core.painter
                     loaderTiles[texture].remove(tile);
                     if(loaderTiles[texture].length == 0)
                     {
-                        //only delete refs to this texture if nothing else is using it
+                        //only delete refs to this texture if no other tiles are trying to load it atm
                         loaderTiles.deleteKey(texture);
                         openRequests.remove(texture);
                         texture.cancelHTTPRequest();
