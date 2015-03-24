@@ -150,6 +150,7 @@ void platform_HTTPInit()
     gMultiHandle     = curl_multi_init();
     gHandleCount     = 0;
     gHTTPInitialized = true;
+    memset(curlHandles, 0, sizeof(CURL *) * MAX_CONCURRENT_HTTP_REQUESTS);
 }
 
 

@@ -29,19 +29,36 @@ import android.util.Log;
 public class LoomHTTP 
 {
     private static final String TAG = "LoomHTTP";
-    private static AsyncHttpClient[] clients = new AsyncHttpClient[1024];
+    private static final int MAX_CONCURRENT_HTTP_REQUESTS = 128;
+
+    private static Activity             _context;
+    private static AsyncHttpClient[]    clients = new AsyncHttpClient[MAX_CONCURRENT_HTTP_REQUESTS];
     
+
+    /** Initializes the HTTP clients */
+    public static void onCreate(Activity ctx)
+    {
+        //store context for later use
+        _context = ctx;
+
+        //make sure client array is initialized to null
+        for(int i=0;i<MAX_CONCURRENT_HTTP_REQUESTS;i++)
+        {
+            clients[i] = null;
+        }
+    }
+
+
     public static int send(final String url, String httpMethod, final long callback, final long payload, byte[] body, final String responseCacheFile, final boolean base64EncodeResponseData, boolean followRedirects)
     {
-        final Activity activity = LoomAdMob.activity;
-        AsyncHttpClient client = new AsyncHttpClient();
-        //store client
+        //find and store client
         int index = 0;
-        while (clients[index++] != null && (index < 128)) {}
-        if(index == 128)
+        while (clients[index++] != null && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {}
+        if(index == MAX_CONCURRENT_HTTP_REQUESTS)
         {
             return -1;
         }
+        AsyncHttpClient client = new AsyncHttpClient();
         clients[index] = client;
 
         String[] allowedTypes = new String[] { 
@@ -120,7 +137,6 @@ public class LoomHTTP
             @Override
             public void onFailure(Throwable error, byte[] binaryData) 
             {
-
                 String content;
 
                 if (base64EncodeResponseData)
@@ -142,7 +158,6 @@ public class LoomHTTP
             @Override
             public void onFailure(Throwable error, String content) 
             {
-
                 final String fContent = content;
 
                 Log.d("LoomHTTP", "Failed request with message: " + content);
@@ -160,12 +175,12 @@ public class LoomHTTP
         {
             if(httpMethod.equals("GET"))
             {
-                client.get(url, handler);
+                client.get(_context, url, handler);
             }
             else if(httpMethod.equals("POST"))
             {
                 ByteArrayEntity bodyEntity = new ByteArrayEntity(body);
-                client.post(null, url, bodyEntity, headers.get("Content-Type"), handler);
+                client.post(_context, url, bodyEntity, headers.get("Content-Type"), handler);
             }
             else
             {
@@ -198,7 +213,7 @@ public class LoomHTTP
     }
 
     /**
-     *  Cancels a client
+     *  Cancels a client request
      */
     public static boolean cancel(int index)
     {
@@ -206,19 +221,17 @@ public class LoomHTTP
         {
             return false;
         }
-        //clients[index].cancelAllRequests(true);
-        //This doesnt seem to be working
-        clients[index].cancelRequests(LoomAdMob.activity, true);
+        clients[index].cancelRequests(_context, true);
         removeClient(index);
         return true;
     }
 
     /**
-    *  Remove client at index from array
+    *  Remove client request at index from array
     */
     public static void removeClient(int index)
     {
-       if(index != -1)
+        if(index != -1)
         {
             clients[index] = null;
         }
@@ -238,7 +251,7 @@ public class LoomHTTP
         boolean haveConnectedWifi = false;
         boolean haveConnectedMobile = false;
 
-        ConnectivityManager cm = (ConnectivityManager) LoomAdMob.activity.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = (ConnectivityManager)_context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo[] netInfo = cm.getAllNetworkInfo();
         for (NetworkInfo ni : netInfo) {
             if (ni.getTypeName().equalsIgnoreCase("WIFI"))

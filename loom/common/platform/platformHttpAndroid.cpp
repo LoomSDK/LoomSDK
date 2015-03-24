@@ -104,8 +104,7 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
     sendMethodInfo.getEnv()->SetByteArrayRegion(reqBody, 0, bodyLength, (jbyte *)body);
 
     jstring reqResponseCacheFile = sendMethodInfo.getEnv()->NewStringUTF(responseCacheFile);
-    jint index = -1;
-    index = sendMethodInfo.getEnv()->CallStaticIntMethod(sendMethodInfo.classID, sendMethodInfo.methodID, reqURL, reqMethod, (jlong)callback, (jlong)payload, reqBody, reqResponseCacheFile, (jboolean)base64EncodeResponseData, (jboolean)followRedirects);
+    jint index = sendMethodInfo.getEnv()->CallStaticIntMethod(sendMethodInfo.classID, sendMethodInfo.methodID, reqURL, reqMethod, (jlong)callback, (jlong)payload, reqBody, reqResponseCacheFile, (jboolean)base64EncodeResponseData, (jboolean)followRedirects);
     sendMethodInfo.getEnv()->DeleteLocalRef(reqURL);
     sendMethodInfo.getEnv()->DeleteLocalRef(reqMethod);
     sendMethodInfo.getEnv()->DeleteLocalRef(reqBody);
@@ -152,9 +151,7 @@ bool platform_HTTPCancel(int index)
                                  "co/theengine/loomdemo/LoomHTTP",
                                  "cancel",
                                  "(I)Z");
-    jint jindex = (jint)index;
-    jboolean result = cancelMethodInfo.getEnv()->CallStaticBooleanMethod(cancelMethodInfo.classID, cancelMethodInfo.methodID, jindex);
-    return result;
+    return (jboolean)cancelMethodInfo.getEnv()->CallStaticBooleanMethod(cancelMethodInfo.classID, cancelMethodInfo.methodID, (jint)index);
 }
 
 void platform_HTTPComplete(int index)
@@ -164,8 +161,7 @@ void platform_HTTPComplete(int index)
                                  "co/theengine/loomdemo/LoomHTTP",
                                  "removeClient",
                                  "(I)V");
-    jint jindex = (jint)index;
-    removeClientMethodInfo.getEnv()->CallStaticVoidMethod(removeClientMethodInfo.classID, removeClientMethodInfo.methodID, jindex);
+    removeClientMethodInfo.getEnv()->CallStaticVoidMethod(removeClientMethodInfo.classID, removeClientMethodInfo.methodID, (jint)index);
 }
 
 #endif

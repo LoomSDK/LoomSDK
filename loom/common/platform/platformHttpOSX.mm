@@ -23,6 +23,10 @@ limitations under the License.
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utString.h"
 
+
+//not exactly sure how to define this
+static NSURLConnection *connections[MAX_CONCURRENT_HTTP_REQUESTS];
+
 /**
  *  Delegate implementation with support for calling the specified C callback
  */
@@ -137,8 +141,7 @@ limitations under the License.
 
 @end
 
-//not exactly sure how to define this
-static NSURLConnection[] *connections = new NSURLConnection[1024];
+
 /**
  * Performs an asychronous http request
  */
@@ -182,9 +185,7 @@ int platform_HTTPSend(const char *url, const char* method, loom_HTTPCallback cal
     
     // NSURLConnected maintains a strong ref to the delegate while
     // it is being used, so this is completely legit
-    NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:delegate];
-
-    connections[index] = connection;
+    connections[index] = [[NSURLConnection alloc] initWithRequest:request delegate:delegate];
     return index;
 }
 
@@ -196,7 +197,8 @@ bool platform_HTTPIsConnected()
 
 void platform_HTTPInit()
 {
-    // stub on OSX/iOS
+    //clear the connections to all start at null
+    memset(connections, 0, sizeof(NSURLConnection *) * MAX_CONCURRENT_HTTP_REQUESTS);
 }
 
 void platform_HTTPCleanup()
@@ -215,8 +217,8 @@ bool platform_HTTPCancel(int index)
     {
         return false;
     }
-    connections[index].cancel();
-    connections[index] == NULL;
+    [connections[index] cancel];
+    platform_HTTPComplete(index);
     return true;
 }
 
@@ -224,6 +226,7 @@ void platform_HTTPComplete(int index)
 {
     if (index != -1)
     {
+        [connections[index] release];
         connections[index] = NULL;
     }
 }

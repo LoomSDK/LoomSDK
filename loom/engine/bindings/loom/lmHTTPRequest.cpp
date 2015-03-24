@@ -116,6 +116,7 @@ public:
           _OnFailureDelegate.pushArgument("Request cancelled by user.");
           _OnFailureDelegate.invoke();
         }
+        id = -1;
     }
 
     static bool isConnected()
@@ -136,12 +137,14 @@ public:
             request->_OnSuccessDelegate.pushArgument(data);
             request->_OnSuccessDelegate.invoke();
             platform_HTTPComplete(request->id);
+            request->id = -1;
             break;
 
         case LOOM_HTTP_ERROR:
             request->_OnFailureDelegate.pushArgument(data);
             request->_OnFailureDelegate.invoke();
             platform_HTTPComplete(request->id);
+            request->id = -1;
             break;
 
         default:
