@@ -37,9 +37,10 @@ public class LoomHTTP
         AsyncHttpClient client = new AsyncHttpClient();
         //store client
         int index = 0;
-        while (clients[index] != null)
+        while (clients[index++] != null && (index < 128)) {}
+        if(index == 128)
         {
-            index++;
+            return -1;
         }
         clients[index] = client;
 
@@ -201,14 +202,14 @@ public class LoomHTTP
      */
     public static boolean cancel(int index)
     {
-        if (clients[index] == null)
+        if ((index == -1) || clients[index] == null)
         {
             return false;
         }
         //clients[index].cancelAllRequests(true);
         //This doesnt seem to be working
         clients[index].cancelRequests(LoomAdMob.activity, true);
-        clients[index] = null;
+        removeClient(index);
         return true;
     }
 
@@ -217,7 +218,10 @@ public class LoomHTTP
     */
     public static void removeClient(int index)
     {
-       clients[index] = null;
+       if(index != -1)
+        {
+            clients[index] = null;
+        }
     }
 
     /**

@@ -261,10 +261,10 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
     {
         return -1;
     }
-    curlHandles[index] = curlHandle;
 
     // initialize our curl handle
     CURL *curlHandle = curl_easy_init();
+    curlHandles[index] = curlHandle;
 
     curl_slist *headersList = NULL;
 
@@ -357,7 +357,6 @@ void platform_HTTPComplete(int index)
     if(index != -1)
     {
         curlHandles[index] = NULL;
-        index = -1;
     }
 }
 

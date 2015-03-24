@@ -146,6 +146,13 @@ int platform_HTTPSend(const char *url, const char* method, loom_HTTPCallback cal
     const char *body, int bodyLength, utHashTable<utHashedString, utString> &headers, 
     const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects)
 {
+    int index = 0;
+    while ((connections[index++] != NULL) && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {}
+    if(index == MAX_CONCURRENT_HTTP_REQUESTS)
+    {
+        return -1;
+    }
+    
     NSString *urlString = [NSString stringWithUTF8String:url];
     NSURL*urlObject = [NSURL URLWithString:urlString];
     
@@ -177,13 +184,7 @@ int platform_HTTPSend(const char *url, const char* method, loom_HTTPCallback cal
     // it is being used, so this is completely legit
     NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:delegate];
 
-    int index = 0;
-    while (connections[index] != NULL)
-    {
-        index++;
-    }
     connections[index] = connection;
-
     return index;
 }
 
@@ -210,7 +211,7 @@ void platform_HTTPUpdate()
 
 bool platform_HTTPCancel(int index)
 {
-    if (connections[index] == NULL)
+    if ((index == -1) || connections[index] == NULL)
     {
         return false;
     }
@@ -221,5 +222,8 @@ bool platform_HTTPCancel(int index)
 
 void platform_HTTPComplete(int index)
 {
-    connections[index] = NULL;
+    if (index != -1)
+    {
+        connections[index] = NULL;
+    }
 }

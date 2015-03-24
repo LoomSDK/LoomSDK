@@ -104,7 +104,8 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
     sendMethodInfo.getEnv()->SetByteArrayRegion(reqBody, 0, bodyLength, (jbyte *)body);
 
     jstring reqResponseCacheFile = sendMethodInfo.getEnv()->NewStringUTF(responseCacheFile);
-    jint index = sendMethodInfo.getEnv()->CallStaticIntMethod(sendMethodInfo.classID, sendMethodInfo.methodID, reqURL, reqMethod, (jlong)callback, (jlong)payload, reqBody, reqResponseCacheFile, (jboolean)base64EncodeResponseData, (jboolean)followRedirects);
+    jint index = -1;
+    index = sendMethodInfo.getEnv()->CallStaticIntMethod(sendMethodInfo.classID, sendMethodInfo.methodID, reqURL, reqMethod, (jlong)callback, (jlong)payload, reqBody, reqResponseCacheFile, (jboolean)base64EncodeResponseData, (jboolean)followRedirects);
     sendMethodInfo.getEnv()->DeleteLocalRef(reqURL);
     sendMethodInfo.getEnv()->DeleteLocalRef(reqMethod);
     sendMethodInfo.getEnv()->DeleteLocalRef(reqBody);
