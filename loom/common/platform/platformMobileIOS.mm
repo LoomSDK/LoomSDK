@@ -26,6 +26,7 @@ limitations under the License.
 #import <Foundation/Foundation.h>
 #import <Foundation/NSSet.h>
 #import <UIKit/UIKit.h>
+#import <CoreLocation/CoreLocation.h>
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformMobile.h"
@@ -33,6 +34,113 @@ limitations under the License.
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
 #include "loom/vendor/jansson/jansson.h"
+
+
+//interface for PlatformMobileiOS
+@interface PlatformMobileiOS : NSObject <CLLocationManagerDelegate>
+
+//properties
+@property (nonatomic, retain) CLLocationManager *locationManager;
+@property (nonatomic, retain) CLLocation *latestLocation;
+
+//methods
+-(void)initialize;
+-(void)startTracking:(int)minDist;
+-(void)stopTracking;
+-(NSString *)getLocation;
+
+@end
+
+
+//implementation of PlatformMobileiOS
+@implementation PlatformMobileiOS
+
+//methods
+- (NSString *)initialize {
+    self.locationManager = nil;
+
+    //check authorization status
+    CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
+    if ((authStatus == kCLAuthorizationStatusDenied) || (authStatus == kCLAuthorizationStatusRestricted))
+    {
+        NSLog(@"WARNING: Location services are blocked by the user and cannot be used.");
+        return;
+    }
+
+    //create the location manager
+    self.locationManager = [[CLLocationManager alloc] init];
+    self.locationManager.delegate = self;
+    self.locationManager.desiredAccuracy = kCLLocationAccuracyBest;
+}
+
+-(void)startTracking:(int)minDist{
+    if ([CLLocationManager locationServicesEnabled] == NO)
+    {
+        NSLog(@"WARNING: Location Tracking cannot be started because Location Services are disabled on this device.");
+        return;
+    }
+
+    //make sure that the location manager has been created
+    if(self.locationManager == nil)
+    {
+        //don't need to warn again as it would have already warned at initialization time
+        return;
+    }
+
+    //reqeust authorization?
+    if ([CLLocationManager authorizationStatus] == kCLAuthorizationStatusNotDetermined)
+    {
+        NSLog(@"Requesting Location Services Authorization...");
+        //iOS8 specifics to request in use authorization... weeee!!!!!
+        if ([self.locationManager respondsToSelector:@selector(requestWhenInUseAuthorization)]) 
+        {
+            // Sending a message to avoid compile time error
+            [[UIApplication sharedApplication] sendAction:@selector(requestWhenInUseAuthorization)
+                                                to:self.locationManager
+                                                from:self
+                                                forEvent:nil];
+        }        
+    }
+
+    //set the distance filter and request for location updates
+    self.locationManager.distanceFilter = minDist;
+    [self.locationManager startUpdatingLocation];
+}
+
+-(void)stopTracking{    
+    [self.locationManager stopUpdatingLocation];
+}
+
+- (NSString *)getLocation {
+    NSString *locString = nil;
+    if(self.latestLocation != nil)
+    {
+        locString = [NSString stringWithFormat:@"%f %f", self.latestLocation.coordinate.latitude, 
+                                                         self.latestLocation.coordinate.longitude];
+    }
+    return locString;
+}
+
+
+//CLLocationManagerDelegate interfaces
+//iOS5-
+- (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation 
+                                                        fromLocation:(CLLocation *)oldLocation{
+    self.latestLocation = newLocation;
+}
+
+//iOS6+
+-(void) locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations{
+    self.latestLocation = [locations lastObject];
+}
+
+-(void) locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error{   
+    NSLog(@"ERROR: Failed to update the current Location with error: %@", error.description);
+    self.latestLocation = nil;
+}
+
+@end
+
 
 static SensorTripleChangedCallback gTripleChangedCallback = NULL;
 static OpenedViaCustomURLCallback gOpenedViaCustomURLCallback = NULL;
@@ -42,6 +150,8 @@ BOOL gOpenedWithCustomURL = NO;
 BOOL gOpenedWithRemoteNotification = NO;
 NSMutableDictionary *gOpenUrlQueryStringDictionary = nil;
 NSDictionary *gRemoteNotificationPayloadDictionary = nil;
+PlatformMobileiOS *mobileiOS;
+
 
 
 static UIViewController* getParentViewController()
@@ -80,7 +190,11 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
 {
     gTripleChangedCallback = sensorTripleChangedCB;    
     gOpenedViaCustomURLCallback = customURLCB;    
-    gOpenedViaRemoteNotificationCallback = remoteNotificationCB;    
+    gOpenedViaRemoteNotificationCallback = remoteNotificationCB;   
+
+    //create the PlatformMobileiOS interface
+    mobileiOS = [[PlatformMobileiOS alloc] init];
+    [mobileiOS initialize];
 }
 
 ///tells the device to do a short vibration, if supported by the hardware
@@ -104,24 +218,37 @@ void platform_allowScreenSleep(bool sleep)
     }
 }
 
-
-//TODO:
 ///enables location tracking for this device
 void platform_startLocationTracking(int minDist, int minTime)
 {
+    //NOTE: minTime isn't supported on iOS
+    [mobileiOS startTracking:minDist];
 }
 
 ///disables location tracking for this device
 void platform_stopLocationTracking()
 {
+    [mobileiOS stopTracking];
 }
 
 ///returns the device's location using GPS and/or NETWORK signals
 const char *platform_getLocation()
 {
-    return "";
-}
+    static char locationStatic[1024];
+    const char *cString;
+    locationStatic[0] = '\0';
 
+    //get the location as a string    
+    NSString *locString = [mobileiOS getLocation];
+    if(locString != nil)
+    {
+        //convert it to char array and store it in the static to return
+        cString = [locString cStringUsingEncoding:NSUTF8StringEncoding];    
+        strcpy(locationStatic, cString);
+    }
+    return locationStatic;
+
+}
 
 ///shares the specfied text via other applications on the device (ie. Twitter, Facebook)
 bool platform_shareText(const char *subject, const char *text)
