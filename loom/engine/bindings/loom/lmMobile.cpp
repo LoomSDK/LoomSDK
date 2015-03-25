@@ -75,6 +75,18 @@ public:
     {
         platform_allowScreenSleep(sleep);
     }
+    static void startLocationTracking(int minDist, int minTime)
+    {
+        platform_startLocationTracking(minDist, minTime);
+    }
+    static void stopLocationTracking()
+    {
+        platform_stopLocationTracking();
+    }
+    static const char *getLocation()
+    {
+        return platform_getLocation();
+    }
     static bool shareText(const char *subject, const char *text)
     {
         return platform_shareText(subject, text);
@@ -166,6 +178,9 @@ static int registerLoomMobile(lua_State *L)
 
             .addStaticMethod("vibrate", &Mobile::vibrate)
             .addStaticMethod("allowScreenSleep", &Mobile::allowScreenSleep)
+            .addStaticMethod("startLocationTracking", &Mobile::startLocationTracking)
+            .addStaticMethod("stopLocationTracking", &Mobile::stopLocationTracking)
+            .addStaticMethod("getLocation", &Mobile::getLocation)
             .addStaticMethod("shareText", &Mobile::shareText)
             .addStaticMethod("wasOpenedViaCustomURL", &Mobile::wasOpenedViaCustomURL)
             .addStaticMethod("wasOpenedViaRemoteNotification", &Mobile::wasOpenedViaRemoteNotification)

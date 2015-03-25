@@ -76,6 +76,9 @@ void Java_co_theengine_loomdemo_LoomMobile_onOpenedViaRemoteNotification(JNIEnv 
 
 static loomJniMethodInfo gVibrate;
 static loomJniMethodInfo gAllowScreenSleep;
+static loomJniMethodInfo gStartLocationTracking;
+static loomJniMethodInfo gStopLocationTracking;
+static loomJniMethodInfo gGetLocation;
 static loomJniMethodInfo gShareText;
 static loomJniMethodInfo gIsSensorSupported;
 static loomJniMethodInfo gDidCustomURLOpen;
@@ -118,6 +121,18 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
                                  "co/theengine/loomdemo/LoomMobile",
                                  "allowScreenSleep",
                                  "(Z)V");
+    LoomJni::getStaticMethodInfo(gStartLocationTracking,
+                                 "co/theengine/loomdemo/LoomMobile",
+                                 "startLocationTracking",
+                                 "(II)V");
+    LoomJni::getStaticMethodInfo(gStopLocationTracking,
+                                 "co/theengine/loomdemo/LoomMobile",
+                                 "stopLocationTracking",
+                                 "()V");
+    LoomJni::getStaticMethodInfo(gGetLocation,
+                                 "co/theengine/loomdemo/LoomMobile",
+                                 "getLocation",
+                                 "()Ljava/lang/String;");
     LoomJni::getStaticMethodInfo(gShareText,
                                  "co/theengine/loomdemo/LoomMobile",
                                  "shareText",
@@ -199,6 +214,37 @@ void platform_allowScreenSleep(bool sleep)
     gAllowScreenSleep.getEnv()->CallStaticVoidMethod(gAllowScreenSleep.classID, 
                                                 gAllowScreenSleep.methodID, 
                                                 (jboolean)sleep);    
+}
+
+///enables location tracking for this device
+void platform_startLocationTracking(int minDist, int minTime)
+{
+    gStartLocationTracking.getEnv()->CallStaticVoidMethod(gStartLocationTracking.classID, 
+                                                            gStartLocationTracking.methodID, 
+                                                            (jint)minDist,
+                                                            (jint)minTime);    
+}
+
+///disables location tracking for this device
+void platform_stopLocationTracking()
+{
+    gStopLocationTracking.getEnv()->CallStaticVoidMethod(gStopLocationTracking.classID, gStopLocationTracking.methodID);    
+}
+
+///returns the device's location using GPS and/or NETWORK signals
+const char *platform_getLocation()
+{
+    jstring result = (jstring)gGetLocation.getEnv()->CallStaticObjectMethod(gGetLocation.classID, gGetLocation.methodID);
+    if(result == NULL)
+    {
+        return "";
+    }
+
+    ///convert jstring result into const char* for us to return
+    cocos2d::CCString *locationString = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
+    locationString->autorelease();
+    gGetLocation.getEnv()->DeleteLocalRef(result);
+    return locationString->m_sString.c_str();
 }
 
 ///shares the specfied text via other applications on the device (ie. Twitter, Facebook)
