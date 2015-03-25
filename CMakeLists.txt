@@ -67,6 +67,21 @@ if (LOOM_IS_DEBUG EQUAL 1)
     add_definitions(-DLOOM_DEBUG)
 endif()
 
+
+#--------------------------------------
+# SDL
+#--------------------------------------
+
+include_directories( ${CMAKE_BINARY_DIR}/loom/vendor/sdl2/include)
+include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
+
+set(LIBC ON CACHE BOOL "Enable system libraries")
+set(SDL_STATIC ON CACHE BOOL "Enable static linking")
+set(SDL_SHARED OFF CACHE BOOL "Enable dynamic linking")
+set(FORCE_STATIC_VCRT ON CACHE BOOL "Force /MT for static linking")
+
+add_subdirectory(loom/vendor/sdl2)
+
 #--------------------------------------
 # Windows
 #--------------------------------------
@@ -76,7 +91,7 @@ if (MSVC)
     add_definitions(-DCURL_STATICLIB)
 
     set (LOOM_INCLUDE_FOLDERS ${LOOM_INCLUDE_FOLDERS}
-    link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/Include)    
+    
     ${CMAKE_SOURCE_DIR}/loom/vendor/zlib/include
     ${CMAKE_SOURCE_DIR}/loom/vendor/libcurl/include )
 
@@ -86,12 +101,10 @@ if (MSVC)
       set(VC_LIB_PATH_SUFFIX lib/x86)
     endif()
 
-    link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/SDL2-2.0.3/${VC_LIB_PATH_SUFFIX})
+    link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/Include)    
+    link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/${VC_LIB_PATH_SUFFIX})
 
-    link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/Lib/x86)
-
-    include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/SDL2-2.0.3/include)
-
+    
     # move this?
     add_definitions(-DLOOM_DISABLE_JEMALLOC -D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
     
@@ -194,7 +207,7 @@ if (ANDROID)
 
     include (loom.android.toolchain)
     
-    include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/SDL2-2.0.3/include)
+    include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/SDL2/include)
     
     set (LOOM_INCLUDE_FOLDERS
     ${LOOM_INCLUDE_FOLDERS}

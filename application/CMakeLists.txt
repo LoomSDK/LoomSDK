@@ -6,7 +6,7 @@ endif()
 
 project(${APPLICATION_NAME})
 
-include_directories( ${LOOM_INCLUDE_FOLDERS}  "/usr/local/include/SDL2" )
+include_directories( ${LOOM_INCLUDE_FOLDERS} )
 
 set (APPLICATION_SRC
     common/core.cpp
@@ -253,7 +253,7 @@ elseif(MSVC)
        LoomGraphics
        LoomCore
        "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "WSOCK32" "Ws2_32" 
-       "SDL2" "SDL2main"
+       "SDL2-static" "SDL2main"
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)
