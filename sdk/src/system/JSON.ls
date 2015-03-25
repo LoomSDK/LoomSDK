@@ -179,7 +179,8 @@ native class JSON {
     }
     
     /**
-     * Escapes characters to make the string JSON compatible.
+     * Escapes characters to make the provided string JSON compatible. Specifically, it will replace `"` with `\\\"`,
+     * `\\` with `\\\\`, `\r` with `\\r`, `\n` with `\\n`, and `\t` with `\\t`.
      * @param s The unescaped string.
      * @return  The escaped string.
      */
@@ -200,9 +201,12 @@ native class JSON {
     }
     
     /**
-     * Creates a JSON object from the given Dictionary mapping keys to values. setValue is used to get the JSON representation of every Object.
+     * Creates a JSON object from the given Dictionary mapping keys to values. The setValue function is the primary force behind the conversion,
+     * see setValue for limitations and additional information.
      * @param d The Dictionary mapping Strings to Objects to source from.
      * @return  The JSON object having equivalent keys and values.
+     * 
+     * @see #setValue()
      */
     public static function fromDictionary(d:Dictionary.<String, Object>):JSON {
         var o = new JSON();
@@ -214,9 +218,12 @@ native class JSON {
     }
     
     /**
-     * Creates a JSON array from the given Vector of objects. setArrayValue is used to get the JSON representation of every Object.
+     * Creates a JSON array from the given Vector of objects. The setArrayValue function is the primary force behind the conversion,
+     * see setArrayValue for limitations and additional information.
      * @param v The Vector containing Objects to source from.
      * @return  The JSON array containing equivalent values to the Vector.
+     * 
+     * @see #setArrayValue()
      */
     public static function fromVector(v:Vector.<Object>):JSON {
         var a = new JSON();
@@ -244,7 +251,8 @@ native class JSON {
     }
     
     /**
-     * General function that sets the value of the key based on the type of object.
+     * General function that sets the value of the key based on the type of object. Allowed datatypes are `system.Boolean`, `system.Number`,
+     * `system.String`, `system.Vector`, and `system.Dictionary`.
      * @param key   The key name to set the value on.
      * @param o The value to set on the JSON object.
      */
@@ -266,7 +274,8 @@ native class JSON {
     }
     
     /**
-     * General function that sets the value of the array index based on the type of object.
+     * General function that sets the value of the array index based on the type of object. Allowed datatypes are `system.Boolean`, `system.Number`,
+     * `system.String`, `system.Vector`, and `system.Dictionary`.
      * @param index The array index to set on the JSON array.
      * @param o The value to set on the JSON array.
      */
