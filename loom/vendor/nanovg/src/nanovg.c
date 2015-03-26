@@ -708,35 +708,41 @@ void nvgFillPaint(NVGcontext* ctx, NVGpaint paint)
 
 int nvgCreateImage(NVGcontext* ctx, const char* filename, int imageFlags)
 {
+    /*
     int w, h, n, image;
     w = h = n = 0;
 	unsigned char* img;
-	//stbi_set_unpremultiply_on_load(1);
-	//stbi_convert_iphone_png_to_rgb(1);
-	//img = stbi_load(filename, &w, &h, &n, 4);
+	stbi_set_unpremultiply_on_load(1);
+	stbi_convert_iphone_png_to_rgb(1);
+	img = stbi_load(filename, &w, &h, &n, 4);
     n = 0;
     img = NULL;
 	if (img == NULL) {
-//		printf("Failed to load %s - %s\n", filename, stbi_failure_reason());
+		printf("Failed to load %s - %s\n", filename, stbi_failure_reason());
 		return 0;
 	}
 	image = nvgCreateImageRGBA(ctx, w, h, imageFlags, img);
 	stbi_image_free(img);
 	return image;
+    */
+    return 0;
 }
 
 int nvgCreateImageMem(NVGcontext* ctx, int imageFlags, unsigned char* data, int ndata)
 {
+    /*
 	int w, h, n, image;
     w = h = n = 0;
-    unsigned char* img = NULL;//stbi_load_from_memory(data, ndata, &w, &h, &n, 4);
+    unsigned char* img = stbi_load_from_memory(data, ndata, &w, &h, &n, 4);
 	if (img == NULL) {
-//		printf("Failed to load %s - %s\n", filename, stbi_failure_reason());
+		printf("Failed to load %s - %s\n", filename, stbi_failure_reason());
 		return 0;
 	}
 	image = nvgCreateImageRGBA(ctx, w, h, imageFlags, img);
 	stbi_image_free(img);
 	return image;
+    */
+    return 0;
 }
 
 int nvgCreateImageRGBA(NVGcontext* ctx, int w, int h, int imageFlags, const unsigned char* data)
