@@ -349,7 +349,9 @@ void QuadRenderer::initializeGraphicsResources()
     GLchar *vertShaderPtr = &vertShaderSrc[0];
 
     char fragShaderSrc[] =
+#if LOOM_RENDERER_OPENGLES2      
         "precision mediump float;\n"
+#endif
         "uniform sampler2D u_texture;\n"
         "varying vec2 v_texcoord0;\n"
         "void main()\n"
@@ -360,7 +362,9 @@ void QuadRenderer::initializeGraphicsResources()
     GLchar *fragShaderPtr = &fragShaderSrc[0];
 
     char fragShaderColorSrc[] =
+#if LOOM_RENDERER_OPENGLES2      
         "precision mediump float;\n"
+#endif
         "uniform sampler2D u_texture;\n"
         "varying vec2 v_texcoord0;\n"
         "varying vec4 v_color0\n;"
