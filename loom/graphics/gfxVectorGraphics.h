@@ -177,8 +177,8 @@ public:
 	VectorPath *lastPath;
 	VectorLineStyle currentLineStyle;
 	VectorFill currentFill;
-	bool pathDirty = false;
-	bool textFormatDirty = false;
+	bool pathDirty;
+	bool textFormatDirty;
 	float boundL;
 	float boundT;
 	float boundR;

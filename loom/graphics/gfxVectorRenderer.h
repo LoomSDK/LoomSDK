@@ -116,15 +116,15 @@ public:
 
 class VectorSVG {
 protected:
-	utString* path = NULL;
+	utString* path;
 	utString units;
 	float dpi;
-	NSVGimage* image = NULL;
+	NSVGimage* image;
 	void reset(bool reloaded = false);
 	void parse(const char* input, const char* units, float dpi);
 public:
-	float width = 0.f;
-	float height = 0.f;
+	float width;
+	float height;
 
 	VectorSVG();
 	~VectorSVG();

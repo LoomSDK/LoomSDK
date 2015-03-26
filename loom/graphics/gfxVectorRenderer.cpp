@@ -405,7 +405,11 @@ void VectorTextFormat::load(utString fontName, utString filePath) {
 }
 
 
-VectorSVG::VectorSVG() {}
+VectorSVG::VectorSVG() {
+    path = NULL;
+    image = NULL;
+    width = height = 0.0f;
+}
 VectorSVG::~VectorSVG() {
 	reset();
 }
