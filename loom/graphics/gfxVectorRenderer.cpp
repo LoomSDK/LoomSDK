@@ -26,6 +26,7 @@
 #include "loom/common/core/assert.h"
 #include "loom/common/assets/assets.h"
 
+#include "loom/graphics/gfxMath.h"
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxVectorRenderer.h"
 

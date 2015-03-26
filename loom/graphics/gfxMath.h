@@ -17,19 +17,28 @@
 #include <math.h>
 #include <string.h>
 
+#if WIN32
 #if _MSC_VER < 1800
 
-inline float fmin(float _a, float _b)
-{
-    return _a < _b ? _a : _b;
-}
+    #define isnan(x) _isnanf(x)
+    #define INFINITY HUGE_VAL
+    #ifndef NAN
+        static const unsigned long __nan[2] = {0xffffffff, 0x7fffffff};
+        #define NAN (*(const float *) __nan)
+    #endif
+
+    inline float fminf(float _a, float _b)
+    {
+        return _a < _b ? _a : _b;
+    }
 
 
-inline float fmax(float _a, float _b)
-{
-    return _a > _b ? _a : _b;
-}
+    inline float fmaxf(float _a, float _b)
+    {
+        return _a > _b ? _a : _b;
+    }
 
+#endif
 #endif
 
 inline float flerp(float _a, float _b, float _t)

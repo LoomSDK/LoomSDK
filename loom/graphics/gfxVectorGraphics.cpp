@@ -18,6 +18,7 @@
  * ===========================================================================
  */
 
+#include "loom/graphics/gfxMath.h"
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/graphics/gfxVectorGraphics.h"
 

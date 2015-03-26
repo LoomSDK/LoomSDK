@@ -20,9 +20,9 @@
 
 #pragma once
 
+#include <math.h>
 #include "loom/graphics/gfxTexture.h"
 #include "loom/engine/loom2d/l2dRectangle.h"
-#include <math.h>
 struct NSVGimage;
 
 namespace GFX
