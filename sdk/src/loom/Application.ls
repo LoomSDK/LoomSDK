@@ -64,7 +64,7 @@ package loom
     public class Application extends BaseApplication implements ITicked, IAnimated
     {
         private var splashContainer:Sprite;
-        private var lastTime:Number = 0;
+        private var frameLastPlatformTime:Number = 0;
 
         /**
          * Starting point for your game's code.
@@ -83,7 +83,7 @@ package loom
             // register onReload with DebuggerClient
             DebuggerClient.reloaded += onReload;
             
-            lastTime = Platform.getTime();
+            frameLastPlatformTime = Platform.getTime();
 
             // set up the default layer for the cocos2d game
             /*layer.autorelease();
@@ -319,13 +319,13 @@ package loom
         private function onCocosFrame():void
         {
             var time = Platform.getTime();
-            var delta = (time-lastTime)/1000;
+            var delta = (time-frameLastPlatformTime)/1000;
             //trace(delta);
             touchProcessor.advanceTime(delta);
             Loom2D.juggler.advanceTime(delta);
             theStage.advanceTime(delta);
             theStage.render();
-            lastTime = time;
+            frameLastPlatformTime = time;
         }
 
         protected function onAssetStreamCountChange(quantity:int):void

@@ -84,29 +84,31 @@ public:
 		ALIGN_BASELINE = 1 << 6, // Default, align text vertically to baseline. 
 	};
 
-	static void load(utString fontName, utString filePath);
+    static void load(utString fontName, utString filePath);
 
-	const char* font = "";
+    VectorTextFormat();
+
+	const char* font;
 	inline const char* getFont() const { return font; }
 	void setFont(const char* t) { font = t; }
 
-	int color = -1;
+	int color;
 	inline int getColor() const { return color; }
 	void setColor(int t) { color = t; }
 
-	float size = NAN;
+	float size;
 	inline float getSize() const { return size; }
 	void setSize(float t) { size = t; }
 
-	int align = -1;
+	int align;
 	inline int getAlign() const { return align; }
 	void setAlign(int t) { align = t; }
 
-	float letterSpacing = NAN;
+	float letterSpacing;
 	inline float getLetterSpacing() const { return letterSpacing; }
 	void setLetterSpacing(float t) { letterSpacing = t; }
 
-	float lineHeight = NAN;
+	float lineHeight;
 	inline float getLineHeight() const { return lineHeight; }
 	void setLineHeight(float t) { lineHeight = t; }
 

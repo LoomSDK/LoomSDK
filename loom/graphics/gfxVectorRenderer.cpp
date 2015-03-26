@@ -389,6 +389,16 @@ VectorFont::VectorFont(utString fontName, utString filePath) {
 	this->id = nvgCreateFont(nvg, fontName.c_str(), filePath.c_str());
 }
 */
+
+VectorTextFormat::VectorTextFormat() {
+    font = "";
+    color = -1;
+    size = NAN;
+    align = -1;
+    letterSpacing = NAN;
+    lineHeight = NAN;
+}
+
 void VectorTextFormat::load(utString fontName, utString filePath) {
     void* bytes = loom_asset_lock(filePath.c_str(), LATText, 1);
     nvgCreateFontMem(nvg, fontName.c_str(), static_cast<unsigned char*>(bytes), 0, 0);
