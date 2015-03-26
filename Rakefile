@@ -446,9 +446,11 @@ namespace :build do
     puts "building all"
     Rake::Task["build:desktop"].invoke
     Rake::Task["build:android"].invoke
-    Rake::Task["build:ouya"].invoke
+	# TODO: add back Ouya support
+    #Rake::Task["build:ouya"].invoke
     if $LOOM_HOST_OS == 'darwin'
-      Rake::Task["build:ios"].invoke
+		# TODO: add back iOS support
+		#Rake::Task["build:ios"].invoke
     end
   end
 
@@ -1030,7 +1032,9 @@ namespace :package do
     FileUtils.rm_rf "pkg/sdk/bin/android"
 
     # iOS and Ouya are currently not supported under Windows
-    if $LOOM_HOST_OS != "windows"
+    #if $LOOM_HOST_OS != "windows"
+	# TODO: add back Ouya/iOS support
+	if false
       # copy tools
       FileUtils.cp_r("artifacts/fruitstrap", "pkg/sdk/tools")
 
