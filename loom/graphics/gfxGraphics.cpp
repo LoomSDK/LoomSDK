@@ -18,19 +18,17 @@
  * ===========================================================================
  */
 
-#include <math.h>
-#define HAVE_M_PI
-
-#include <SDL.h>
+//#include <math.h>
+//#define HAVE_M_PI
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/core/log.h"
 
+#include "loom/graphics/gfxMath.h"
+#include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxTexture.h"
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/graphics/gfxVectorRenderer.h"
-#include "loom/graphics/gfxGraphics.h"
-#include "loom/graphics/gfxMath.h"
 
 namespace GFX
 {
@@ -65,7 +63,8 @@ namespace GFX
 #endif
         
 #if defined __SDL_NOGETPROCADDR__
-#define SDL_PROC(ret,func,params) data->func=func;
+// TODO: remove cast and figure out constness
+#define SDL_PROC(ret,func,params) data->func = (ret(*)params)func;
 #else
 #define SDL_PROC(ret,func,params) \
 do { \

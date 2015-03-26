@@ -72,15 +72,19 @@ endif()
 # SDL
 #--------------------------------------
 
-include_directories( ${CMAKE_BINARY_DIR}/loom/vendor/sdl2/include)
-include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
+if (MSVC)
+	# Used for generated config include
+	include_directories( ${CMAKE_BINARY_DIR}/loom/vendor/sdl2/include)
+	include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
+	
+	# Set initial options via cmake cache
+	set(LIBC ON CACHE BOOL "Enable system libraries")
+	set(SDL_STATIC ON CACHE BOOL "Enable static linking")
+	set(SDL_SHARED OFF CACHE BOOL "Enable dynamic linking")
+	set(FORCE_STATIC_VCRT ON CACHE BOOL "Force /MT for static linking")
 
-set(LIBC ON CACHE BOOL "Enable system libraries")
-set(SDL_STATIC ON CACHE BOOL "Enable static linking")
-set(SDL_SHARED OFF CACHE BOOL "Enable dynamic linking")
-set(FORCE_STATIC_VCRT ON CACHE BOOL "Force /MT for static linking")
-
-add_subdirectory(loom/vendor/sdl2)
+	add_subdirectory(loom/vendor/sdl2)
+endif()
 
 #--------------------------------------
 # Windows
@@ -206,9 +210,9 @@ endif(APPLE)
 if (ANDROID) 
 
     include (loom.android.toolchain)
-    
-    include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/SDL2/include)
-    
+	
+	include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
+	
     set (LOOM_INCLUDE_FOLDERS
     ${LOOM_INCLUDE_FOLDERS}
     ${CMAKE_SOURCE_DIR}/loom/vendor/glew-1.7.0/include
@@ -222,7 +226,7 @@ if (ANDROID)
     add_definitions(-DLOOM_RENDERER_OPENGLES2)
     
     set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_android/lib/libluajit-5.1)
-    set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/SDL2/libs/armeabi/libSDL2.a)
+    set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/libs/armeabi/libSDL2.a)
     
 
 endif()

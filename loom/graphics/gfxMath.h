@@ -9,6 +9,11 @@
 #define __FPU_MATH_H__
 
 #define _USE_MATH_DEFINES
+
+#ifdef M_PI
+#error M_PI already defined, try including gfxMath before gfxGraphics or SDL
+#endif
+
 #include <math.h>
 #include <string.h>
 

@@ -229,7 +229,6 @@ void loom_set_javavm(void *vm);
 extern "C" {
 
     extern void SDL_Android_Init(JNIEnv* env, jclass cls);
-    extern JavaVM* SDL_AndroidGetJavaVM();
     void loom_setAssetManager(AAssetManager *am);
 
     void Java_co_theengine_loomdemo_LoomDemo_nativeSetPaths(JNIEnv* env, jobject thiz, jstring apkPath, jobject am)
@@ -250,8 +249,10 @@ extern "C" {
         /* This interface could expand with ABI negotiation, callbacks, etc. */
         SDL_Android_Init(env, cls);
 
-        loom_set_javavm((void *)SDL_AndroidGetJavaVM());
+        JavaVM *jvm;
+        env->GetJavaVM(&jvm);
 
+        loom_set_javavm((void *) jvm);
 
         SDL_SetMainReady();
 

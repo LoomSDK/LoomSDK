@@ -607,7 +607,21 @@ namespace :build do
   desc "Builds Android APK"
   task :android => ['build/luajit_android/lib/libluajit-5.1.a', 'utility:compileScripts'] do
     puts "== Building Android =="
-
+	
+	# Build SDL for Android if it's missing
+	sdlLibPath = "build/sdl2/libs/armeabi"
+	if not File.exist?("#{sdlLibPath}/libSDL2.a")
+		puts "Building SDL2 for Android using ndk-build"
+		sdlSrcPath = "loom/vendor/sdl2"
+		Dir.chdir(sdlSrcPath) do
+			sh "ndk-build SDL2_static NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk APP_PLATFORM=android-13" 
+		end
+		FileUtils.mkdir_p sdlLibPath
+		sh "cp #{sdlSrcPath}/obj/local/armeabi/libSDL2.a #{sdlLibPath}/libSDL2.a"
+	else
+		puts "Found SDL2 libSDL2.a in #{sdlLibPath} - skipping build"
+	end
+	
     if $LOOM_HOST_OS == "windows"
       # WINDOWS
       FileUtils.mkdir_p("cmake_android")
@@ -623,7 +637,7 @@ namespace :build do
         sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
       end
 
-      Dir.chdir("loom/engine/SDL2/platform/android/java") do
+      Dir.chdir("loom/engine/sdl2/platform/android/java") do
         sh "android update project --name SDL2 --subprojects --target #{api_id} --path ."
       end
       
@@ -664,7 +678,7 @@ namespace :build do
         sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
       end
 
-      Dir.chdir("loom/engine/SDL2/platform/android/java") do
+      Dir.chdir("loom/engine/sdl2/platform/android/java") do
         puts "*** Building against AndroidSDK " + $targetAndroidSDK
         sh "android update project --name SDL2Lib --subprojects --target #{api_id} --path ."
       end
