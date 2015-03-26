@@ -859,7 +859,7 @@ file 'build/luajit_android/lib/libluajit-5.1.a' do
           sh "make clean"
           ENV['NDKABI']= "9" 
           ENV['NDKVER']= NDK + "/toolchains/arm-linux-androideabi-4.6"
-          ENV['NDKP'] = ENV['NDKVER'] + "/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-"
+          ENV['NDKP'] = ENV['NDKVER'] + "/prebuilt/darwin-x86/bin/arm-linux-androideabi-"
           ENV['NDKF'] = "--sysroot " + NDK + "/platforms/android-" + ENV['NDKABI'] + "/arch-arm"
           sh "make install -j#{$numCores} HOST_CC=\"gcc -m32\" CROSS=" + ENV['NDKP'] + " TARGET_FLAGS=\"" + ENV['NDKF']+"\" TARGET=arm TARGET_SYS=Linux PREFIX=\"#{luajit_android_dir.shellescape}\""
       end
