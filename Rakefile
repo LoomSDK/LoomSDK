@@ -446,11 +446,9 @@ namespace :build do
     puts "building all"
     Rake::Task["build:desktop"].invoke
     Rake::Task["build:android"].invoke
-	# TODO: add back Ouya support
-    #Rake::Task["build:ouya"].invoke
+    Rake::Task["build:ouya"].invoke
     if $LOOM_HOST_OS == 'darwin'
-		# TODO: add back iOS support
-		#Rake::Task["build:ios"].invoke
+		Rake::Task["build:ios"].invoke
     end
   end
 
@@ -510,7 +508,9 @@ namespace :build do
   task :ios, [:sign_as] => ['build/luajit_ios/lib/libluajit-5.1.a', 'utility:compileScripts', 'build:fruitstrap'] do |t, args|
 
     # iOS build is currently not supported under Windows
-    if $LOOM_HOST_OS != 'windows'
+    #if $LOOM_HOST_OS != 'windows'
+	# TODO: add back iOS support
+	if false	
 
       puts "== Building iOS =="
 
@@ -715,7 +715,9 @@ namespace :build do
   task :ouya => ['build:android'] do
 
     # Ouya build is currently not supported under Windows
-    if $LOOM_HOST_OS != 'windows'
+    #if $LOOM_HOST_OS != 'windows'
+	# TODO: add back Ouya support
+	if false
       puts "== Building OUYA =="
 
       ouyaAndroidSDK = "android-16"
@@ -857,7 +859,7 @@ file 'build/luajit_android/lib/libluajit-5.1.a' do
           sh "make clean"
           ENV['NDKABI']= "9" 
           ENV['NDKVER']= NDK + "/toolchains/arm-linux-androideabi-4.6"
-          ENV['NDKP'] = ENV['NDKVER'] + "/prebuilt/darwin-x86/bin/arm-linux-androideabi-"
+          ENV['NDKP'] = ENV['NDKVER'] + "/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-"
           ENV['NDKF'] = "--sysroot " + NDK + "/platforms/android-" + ENV['NDKABI'] + "/arch-arm"
           sh "make install -j#{$numCores} HOST_CC=\"gcc -m32\" CROSS=" + ENV['NDKP'] + " TARGET_FLAGS=\"" + ENV['NDKF']+"\" TARGET=arm TARGET_SYS=Linux PREFIX=\"#{luajit_android_dir.shellescape}\""
       end
