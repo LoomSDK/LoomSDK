@@ -199,9 +199,10 @@ if (APPLE)
           "-framework CoreAudio"
 
           "-L/usr/local/lib"
-          "-lSDL2"
           "-lz"
-
+		  
+          "SDL2-static" "SDL2main"
+		  
           )
 
         # Use our own Info.plist.
