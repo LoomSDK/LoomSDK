@@ -755,6 +755,10 @@ namespace :build do
 
   desc "Builds Ubuntu Linux"
   task :ubuntu => ['build/luajit_x86/lib/libluajit-5.1.a'] do
+    puts "== Skipped Ubuntu =="
+	
+    if false
+	
     puts "== Building Ubuntu =="
     FileUtils.mkdir_p("cmake_ubuntu")    
     Dir.chdir("cmake_ubuntu") do
@@ -784,6 +788,8 @@ namespace :build do
     #copy assets
     FileUtils.mkdir_p("artifacts/assets")
 
+	end
+	
   end
   
   desc "Populate git version information"
