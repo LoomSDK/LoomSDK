@@ -81,6 +81,15 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
         return;
     }
 
+    renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
+    renderState.clampAlpha();
+    
+    // if render state has 0.0 alpha, quad batch is invisible so don't render at all and get out of here now!
+    if(renderState.alpha == 0.0f)
+    {
+        return;
+    }
+
     // containers can set a new view to render into, but we must restore the
     // current view after, so take a snapshot
     int viewRestore = GFX::Graphics::getView();
@@ -91,9 +100,7 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
         GFX::Graphics::setView(_view);
     }
 
-    renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
-    renderState.clampAlpha();
-    renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
+    renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : UINT16_MAX;
     renderState.blendMode = (parent && blendMode == BlendMode::AUTO) ? parent->renderState.blendMode : blendMode;
 
     int docidx = lua_gettop(L);
@@ -112,7 +119,10 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
     }
 
     // Is there a cliprect? If so, set it.
-    if ((clipX != 0) || (clipY != 0) || (clipWidth != 0) || (clipHeight != 0))
+    int x1, y1, x2, y2;
+    int cachedClipRect;
+    bool useClipRect = ((clipX != 0) || (clipY != 0) || (clipWidth != 0) || (clipHeight != 0)) ? true : false;
+    if (useClipRect)
     {
         GFX::QuadRenderer::submit();
 
@@ -125,12 +135,13 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
 
         getTargetTransformationMatrix(NULL, &res);
 
-        int x1 = (int) ((float)clipX * res.a + res.tx) ;
-        int y1 = (int) ((float)clipY * res.d + res.ty);
-        int x2 = (int) ((float)clipWidth * res.a);
-        int y2 = (int) ((float)clipHeight * res.d);
+        x1 = (int) ((float)clipX * res.a + res.tx) ;
+        y1 = (int) ((float)clipY * res.d + res.ty);
+        x2 = (int) ((float)clipWidth * res.a);
+        y2 = (int) ((float)clipHeight * res.d);
 
         renderState.cachedClipRect = GFX::Graphics::setClipRect(x1, y1, x2, y2);
+        cachedClipRect = renderState.cachedClipRect;        
     }
     else
     {
@@ -183,8 +194,14 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
     lua_settop(L, docidx);
 
     // Restore clip state.
-    if ((clipX != 0) || (clipY != 0) || (clipWidth != 0) || (clipHeight != 0))
+    if (useClipRect)
     {
+        //rendering children may have reset the cliprect that we expect, so check and set again if necessary
+        if(GFX::Graphics::getClipRect() != cachedClipRect)
+        {        
+            renderState.cachedClipRect = GFX::Graphics::setClipRect(x1, y1, x2, y2);
+            GFX::Graphics::setClipRect(renderState.cachedClipRect);
+        }
         GFX::QuadRenderer::submit();
         GFX::Graphics::clearClipRect();
     }

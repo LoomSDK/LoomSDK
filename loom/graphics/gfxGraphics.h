@@ -90,6 +90,9 @@ public:
     static int setClipRect(int x, int y, int width, int height);
     static void setClipRect(int cached);
 
+    // Get the currently set clip rect ID
+    static int getClipRect();
+
     // Render with no cliprect.
     static void clearClipRect();
 

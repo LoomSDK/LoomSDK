@@ -1419,6 +1419,11 @@ namespace bgfx
 		s_ctx.m_submit->setScissor(_cache);
 	}
 
+    uint16_t getScissor()
+    {
+        return s_ctx.m_submit->getScissor();
+    }
+
 	uint32_t setTransform(const void* _mtx, uint16_t _num)
 	{
 		BGFX_CHECK_MAIN_THREAD();

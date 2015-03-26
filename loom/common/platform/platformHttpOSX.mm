@@ -23,6 +23,10 @@ limitations under the License.
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utString.h"
 
+
+//not exactly sure how to define this
+static NSURLConnection *connections[MAX_CONCURRENT_HTTP_REQUESTS];
+
 /**
  *  Delegate implementation with support for calling the specified C callback
  */
@@ -137,13 +141,21 @@ limitations under the License.
 
 @end
 
+
 /**
  * Performs an asychronous http request
  */
-void platform_HTTPSend(const char *url, const char* method, loom_HTTPCallback callback, void *payload, 
+int platform_HTTPSend(const char *url, const char* method, loom_HTTPCallback callback, void *payload, 
     const char *body, int bodyLength, utHashTable<utHashedString, utString> &headers, 
     const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects)
 {
+    int index = 0;
+    while ((connections[index++] != NULL) && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {}
+    if(index == MAX_CONCURRENT_HTTP_REQUESTS)
+    {
+        return -1;
+    }
+    
     NSString *urlString = [NSString stringWithUTF8String:url];
     NSURL*urlObject = [NSURL URLWithString:urlString];
     
@@ -173,7 +185,8 @@ void platform_HTTPSend(const char *url, const char* method, loom_HTTPCallback ca
     
     // NSURLConnected maintains a strong ref to the delegate while
     // it is being used, so this is completely legit
-    [[NSURLConnection alloc] initWithRequest:request delegate:delegate];
+    connections[index] = [[NSURLConnection alloc] initWithRequest:request delegate:delegate];
+    return index;
 }
 
 bool platform_HTTPIsConnected()
@@ -184,7 +197,8 @@ bool platform_HTTPIsConnected()
 
 void platform_HTTPInit()
 {
-    // stub on OSX/iOS
+    //clear the connections to all start at null
+    memset(connections, 0, sizeof(NSURLConnection *) * MAX_CONCURRENT_HTTP_REQUESTS);
 }
 
 void platform_HTTPCleanup()
@@ -195,4 +209,24 @@ void platform_HTTPCleanup()
 void platform_HTTPUpdate()
 {
     // stub on OSX/iOS
+}
+
+bool platform_HTTPCancel(int index)
+{
+    if ((index == -1) || connections[index] == NULL)
+    {
+        return false;
+    }
+    [connections[index] cancel];
+    platform_HTTPComplete(index);
+    return true;
+}
+
+void platform_HTTPComplete(int index)
+{
+    if (index != -1)
+    {
+        [connections[index] release];
+        connections[index] = NULL;
+    }
 }

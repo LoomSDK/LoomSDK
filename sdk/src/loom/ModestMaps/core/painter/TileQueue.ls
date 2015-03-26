@@ -48,7 +48,7 @@ package loom.modestmaps.core.painter
             for (var i:int = queue.length-1; i >= 0; i--) {
                 var tile:Tile = queue[i] as Tile;
                 if (tiles.indexOf(tile) < 0) {
-                    removed.push(tile);
+                    removed.pushSingle(tile);
                     queue.splice(i,1);
                 } 
             }

@@ -231,6 +231,12 @@ void Graphics::setClipRect(int cached)
 }
 
 
+int Graphics::getClipRect()
+{
+    return bgfx::getScissor();
+}
+
+
 void Graphics::clearClipRect()
 {
     bgfx::setScissor();

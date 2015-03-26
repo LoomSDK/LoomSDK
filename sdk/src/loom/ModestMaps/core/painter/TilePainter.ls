@@ -15,18 +15,18 @@ package loom.modestmaps.core.painter
     import loom.HTTPRequest;
     import loom.platform.Timer;
 
-    
+
     public class TilePainter extends EventDispatcher implements ITilePainter
     {
-        ///////////// BEGIN OPTIONS
         /** number of ms between calls to process the loading queue */
-        private static const PROCESS_QUEUE_INTERVAL:int = 200;
+        public static var ProcessQueueInterval:int = 20;
         
         /** how many Loaders are allowed to be open at once? */
-        public static var maxOpenRequests:int = 4;    // TODO: should this be split into max-new-requests-per-frame, too?
-                
-        ///////////// END OPTIONS
-    
+        public static var MaxOpenRequests:int = 8;    // TODO: should this be split into max-new-requests-per-frame, too?            
+
+        /** should downloaded map tile images remain cached on disk? Warning: this could take up a lot of space! */
+        public static var CacheTilesOnDisk:Boolean = false;
+
         protected var provider:IMapProvider;    
         protected var tileGrid:TileGrid;
         protected var tileQueue:TileQueue;
@@ -63,7 +63,7 @@ package loom.modestmaps.core.painter
 
             //NOTE_TEC: Seems like the original MMaps code (before the AS3 port) was calling 'processQueue' 
             //      on the ENTER_FRAME event, not every 200ms... good/bad?
-            queueTimer = new Timer(PROCESS_QUEUE_INTERVAL);
+            queueTimer = new Timer(ProcessQueueInterval);
             queueTimer.onComplete = processQueue;
             queueTimer.repeats = true;
 
@@ -140,7 +140,7 @@ package loom.modestmaps.core.painter
                     loaderTiles[texture].remove(tile);
                     if(loaderTiles[texture].length == 0)
                     {
-                        //only detel refs to this texture if nothing else is using it
+                        //only delete refs to this texture if no other tiles are trying to load it atm
                         loaderTiles.deleteKey(texture);
                         openRequests.remove(texture);
                         texture.cancelHTTPRequest();
@@ -187,7 +187,7 @@ package loom.modestmaps.core.painter
                 var url = urls.shift();
 
                 //request the texture via HTTP
-                var texture:Texture = Texture.fromHTTP(url, onLoadEnd, onLoadFail, false, false);
+                var texture:Texture = Texture.fromHTTP(url, onLoadEnd, onLoadFail, CacheTilesOnDisk, false);
                 if(texture == null)
                 {
                     tile.paintError();
@@ -206,12 +206,12 @@ package loom.modestmaps.core.painter
                     if(loaderTiles[texture] == null)
                     {
                         loaderTiles[texture] = [tile];
+                        openRequests.pushSingle(texture);
                     }
                     else
                     {
                         loaderTiles[texture].pushSingle(tile);
                     }
-                    openRequests.pushSingle(texture);
 
 //TODO_24: we're unable to click on empty BG of the painter where there are no Images... 
 //should we always have an Image(null) on a tile by default?
@@ -228,11 +228,13 @@ package loom.modestmaps.core.painter
          *  usual operation is extremely quick, ~1ms or so */
         private function processQueue(timer:Timer):void
         {
-            if (openRequests.length < maxOpenRequests && tileQueue.length > 0) {
+            if (openRequests.length < MaxOpenRequests && tileQueue.length > 0) {
     
                 // prune queue for tiles that aren't visible
                 var removedTiles:Vector.<Tile> = tileQueue.retainAll(tileGrid.getVisibleTiles());
                 
+//TODO_24: removedTiles is always empty, so we are never doing early removals of tiles 
+//that may have been queued up for URL requests but should be removed early due to no longer being visible                
                 // keep layersNeeded tidy:
                 for each (var removedTile:Tile in removedTiles) {
                     this.cancelPainting(removedTile);
@@ -246,7 +248,7 @@ package loom.modestmaps.core.painter
                 tileQueue.sortTiles(queueFunction);
     
                 // process the queue
-                while (openRequests.length < maxOpenRequests && tileQueue.length > 0) {
+                while (openRequests.length < MaxOpenRequests && tileQueue.length > 0) {
                     var tile:Tile = tileQueue.shift();
                     // if it's still on the stage:
                     if (tile.parent) {
@@ -254,7 +256,7 @@ package loom.modestmaps.core.painter
                     }
                 }
             }
-    
+
             // you might want to wait for tiles to load before displaying other data, interface elements, etc.
             // these events take care of that for you...
             if (previousOpenRequests == 0 && openRequests.length > 0) {

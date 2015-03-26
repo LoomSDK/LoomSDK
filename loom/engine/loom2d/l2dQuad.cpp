@@ -108,14 +108,20 @@ void Quad::render(lua_State *L)
         return;
     }
 
-    updateLocalTransform();
+    renderState.alpha = parent ? parent->renderState.alpha * alpha : alpha;
+    renderState.clampAlpha();
+    
+    // if render state has 0.0 alpha, quad batch is invisible so don't render at all and get out of here now!
+    if(renderState.alpha == 0.0f)
+    {
+        return;
+    }
 
+    updateLocalTransform();
     Matrix mtx;
     getTargetTransformationMatrix(NULL, &mtx);
 
-    renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
-    renderState.clampAlpha();
-    renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
+    renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : UINT16_MAX;
     renderState.blendMode = (blendMode == BlendMode::AUTO && parent) ? parent->renderState.blendMode : blendMode;
     int64_t blendFunc = BlendMode::BlendFunction(renderState.blendMode);
 

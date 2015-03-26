@@ -135,9 +135,6 @@ private:
     //queue of loaded texture data to be created back in the main thread
     static utList<AsyncLoadNote> sAsyncCreateQueue;
 
-    //current frame delay counter used to space out texture creation between frames
-    static int sAsyncTextureCreateDelay;
-
     //flag indicating if the async loading thread is currently running
     static bool sAsyncThreadRunning;
 
