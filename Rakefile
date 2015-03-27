@@ -80,6 +80,7 @@ def installed?(tool)
 end
 
 def writeStub(platform)
+  FileUtils.mkdir_p("artifacts")
   File.open("artifacts/README.#{platform.downcase}", "w") {|f| f.write("#{platform} is not supported right now.")}
 end
 
