@@ -519,8 +519,11 @@ namespace :build do
     sh "touch artifacts/fruitstrap"
     sh "mkdir -p artifacts/ios/LoomDemo.app"
     sh "mkdir -p artifacts/ios/LoomDemo.app/assets"
+    sh "touch artifacts/ios/LoomDemo.app/assets/tmp"
     sh "mkdir -p artifacts/ios/LoomDemo.app/bin"
+    sh "touch artifacts/ios/LoomDemo.app/bin/tmp"
     sh "mkdir -p artifacts/ios/LoomDemo.app/lib"
+    sh "touch artifacts/ios/LoomDemo.app/lib/tmp"
 
 	if false	
 
@@ -731,7 +734,7 @@ namespace :build do
 
       FileUtils.mkdir_p "artifacts/ouya"
       sh "touch #{$OUTPUT_DIRECTORY}/ouya/LoomDemo.apk"
-      
+
 	# TODO: add back Ouya support
 	if false
       puts "== Building OUYA =="
