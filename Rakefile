@@ -765,10 +765,10 @@ namespace :build do
     writeStub("Ubuntu")
 
     sh "mkdir -p artifacts/ubuntu"
-    sh "cat BROKEN > ./artifacts/ubuntu/ldb"
-    sh "cat BROKEN > ./artifacts/ubuntu/lsc"
-    sh "cat BROKEN > ./artifacts/ubuntu/loomexec"
-    sh "cat BROKEN > ./artifacts/ubuntu/libassetAgent"
+    sh "echo BROKEN > ./artifacts/ubuntu/ldb"
+    sh "echo BROKEN > ./artifacts/ubuntu/lsc"
+    sh "echo BROKEN > ./artifacts/ubuntu/loomexec"
+    sh "echo BROKEN > ./artifacts/ubuntu/libassetAgent"
 
     if false
 	
