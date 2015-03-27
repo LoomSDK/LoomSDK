@@ -764,11 +764,11 @@ namespace :build do
 
     writeStub("Ubuntu")
 
-    sh "mkdir -p artifacts/ubuntu"
-    sh "echo BROKEN > ./artifacts/ubuntu/ldb"
-    sh "echo BROKEN > ./artifacts/ubuntu/lsc"
-    sh "echo BROKEN > ./artifacts/ubuntu/loomexec"
-    sh "echo BROKEN > ./artifacts/ubuntu/libassetAgent"
+    sh "mkdir -p artifacts/"
+    sh "echo BROKEN > ./artifacts/ldb"
+    sh "echo BROKEN > ./artifacts/lsc"
+    sh "echo BROKEN > ./artifacts/loomexec"
+    sh "echo BROKEN > ./artifacts/libassetAgent"
 
     if false
 	
