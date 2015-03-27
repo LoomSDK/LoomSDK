@@ -515,6 +515,13 @@ namespace :build do
     # iOS build is currently not supported under Windows
     #if $LOOM_HOST_OS != 'windows'
 	# TODO: add back iOS support
+
+    sh "touch artifacts/fruitstrap"
+    sh "mkdir -p artifacts/ios/LoomDemo.app"
+    sh "mkdir -p artifacts/ios/LoomDemo.app/assets"
+    sh "mkdir -p artifacts/ios/LoomDemo.app/bin"
+    sh "mkdir -p artifacts/ios/LoomDemo.app/lib"
+
 	if false	
 
       puts "== Building iOS =="
@@ -721,6 +728,10 @@ namespace :build do
     writeStub("Ouya")
     # Ouya build is currently not supported under Windows
     #if $LOOM_HOST_OS != 'windows'
+
+      FileUtils.mkdir_p "artifacts/ouya"
+      sh "touch #{$OUTPUT_DIRECTORY}/ouya/LoomDemo.apk"
+      
 	# TODO: add back Ouya support
 	if false
       puts "== Building OUYA =="
