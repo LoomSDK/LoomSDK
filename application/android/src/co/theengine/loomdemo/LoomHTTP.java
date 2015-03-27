@@ -53,7 +53,7 @@ public class LoomHTTP
     {
         //find and store client
         int index = 0;
-        while (clients[index++] != null && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {}
+        while (clients[index] != null && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {index++;}
         if(index == MAX_CONCURRENT_HTTP_REQUESTS)
         {
             return -1;
@@ -205,7 +205,6 @@ public class LoomHTTP
                 }
             });
         }
-
         
         // clear the headers after each send();
         headers.clear();
@@ -222,14 +221,13 @@ public class LoomHTTP
             return false;
         }
         clients[index].cancelRequests(_context, true);
-        removeClient(index);
         return true;
     }
 
     /**
     *  Remove client request at index from array
     */
-    public static void removeClient(int index)
+    public static void complete(int index)
     {
         if(index != -1)
         {

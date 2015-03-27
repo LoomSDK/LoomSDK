@@ -104,13 +104,21 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
     sendMethodInfo.getEnv()->SetByteArrayRegion(reqBody, 0, bodyLength, (jbyte *)body);
 
     jstring reqResponseCacheFile = sendMethodInfo.getEnv()->NewStringUTF(responseCacheFile);
-    jint index = sendMethodInfo.getEnv()->CallStaticIntMethod(sendMethodInfo.classID, sendMethodInfo.methodID, reqURL, reqMethod, (jlong)callback, (jlong)payload, reqBody, reqResponseCacheFile, (jboolean)base64EncodeResponseData, (jboolean)followRedirects);
+    jint index = (jint)sendMethodInfo.getEnv()->CallStaticIntMethod(sendMethodInfo.classID, 
+                                                                    sendMethodInfo.methodID, 
+                                                                    reqURL, 
+                                                                    reqMethod, 
+                                                                    (jlong)callback, 
+                                                                    (jlong)payload, 
+                                                                    reqBody, 
+                                                                    reqResponseCacheFile, 
+                                                                    (jboolean)base64EncodeResponseData, 
+                                                                    (jboolean)followRedirects);
     sendMethodInfo.getEnv()->DeleteLocalRef(reqURL);
     sendMethodInfo.getEnv()->DeleteLocalRef(reqMethod);
     sendMethodInfo.getEnv()->DeleteLocalRef(reqBody);
     sendMethodInfo.getEnv()->DeleteLocalRef(reqResponseCacheFile);
-
-    return index; //TODO_KEVIN
+    return index;
 }
 
 
@@ -156,12 +164,12 @@ bool platform_HTTPCancel(int index)
 
 void platform_HTTPComplete(int index)
 {
-    loomJniMethodInfo removeClientMethodInfo;
-    LoomJni::getStaticMethodInfo(removeClientMethodInfo,
+    loomJniMethodInfo completeMethodInfo;
+    LoomJni::getStaticMethodInfo(completeMethodInfo,
                                  "co/theengine/loomdemo/LoomHTTP",
-                                 "removeClient",
+                                 "complete",
                                  "(I)V");
-    removeClientMethodInfo.getEnv()->CallStaticVoidMethod(removeClientMethodInfo.classID, removeClientMethodInfo.methodID, (jint)index);
+    completeMethodInfo.getEnv()->CallStaticVoidMethod(completeMethodInfo.classID, completeMethodInfo.methodID, (jint)index);
 }
 
 #endif
