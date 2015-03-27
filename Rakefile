@@ -79,6 +79,10 @@ def installed?(tool)
   return ($? == 0)
 end
 
+def writeStub(platform)
+  File.open("artifacts/README.#{platform.downcase}", "w") {|f| f.write("#{platform} is not supported right now.")}
+end
+
 $CMAKE_REQUIRED_VERSION = ($LOOM_HOST_OS == "linux") ? '2.8.7' : '2.8.9'
 cmake_err = "LoomSDK requires CMake version #{$CMAKE_REQUIRED_VERSION} or above.\nPlease go to http://www.cmake.org/ and install the latest version."
 abort(cmake_err) if (!installed?('cmake') || version_outdated?(cmake_version, $CMAKE_REQUIRED_VERSION))
@@ -506,7 +510,7 @@ namespace :build do
 
   desc "Builds iOS"
   task :ios, [:sign_as] => ['build/luajit_ios/lib/libluajit-5.1.a', 'utility:compileScripts', 'build:fruitstrap'] do |t, args|
-
+    writeStub("iOS")
     # iOS build is currently not supported under Windows
     #if $LOOM_HOST_OS != 'windows'
 	# TODO: add back iOS support
@@ -713,7 +717,7 @@ namespace :build do
 
   desc "Builds OUYA APK" #TODO: add Ouya build scripts under windows
   task :ouya => ['build:android'] do
-
+    writeStub("Ouya")
     # Ouya build is currently not supported under Windows
     #if $LOOM_HOST_OS != 'windows'
 	# TODO: add back Ouya support
@@ -756,7 +760,7 @@ namespace :build do
   desc "Builds Ubuntu Linux"
   task :ubuntu => ['build/luajit_x86/lib/libluajit-5.1.a'] do
     puts "== Skipped Ubuntu =="
-	
+    writeStub("Ubuntu")
     if false
 	
     puts "== Building Ubuntu =="
