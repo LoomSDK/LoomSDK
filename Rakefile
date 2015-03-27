@@ -761,7 +761,15 @@ namespace :build do
   desc "Builds Ubuntu Linux"
   task :ubuntu => ['build/luajit_x86/lib/libluajit-5.1.a'] do
     puts "== Skipped Ubuntu =="
+
     writeStub("Ubuntu")
+
+    sh "mkdir -p artifacts/ubuntu"
+    sh "touch artifacts/ubuntu/ldb"
+    sh "touch artifacts/ubuntu/lsc"
+    sh "touch artifacts/ubuntu/loomexec"
+    sh "touch artifacts/ubuntu/libassetAgent"
+
     if false
 	
     puts "== Building Ubuntu =="
