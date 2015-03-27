@@ -765,6 +765,7 @@ namespace :build do
     writeStub("Ubuntu")
 
     sh "mkdir -p artifacts/"
+    sh "echo BROKEN > ./artifacts/ubuntu/LoomDemo"
     sh "echo BROKEN > ./artifacts/ldb"
     sh "echo BROKEN > ./artifacts/lsc"
     sh "echo BROKEN > ./artifacts/loomexec"
