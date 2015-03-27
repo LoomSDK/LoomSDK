@@ -113,7 +113,14 @@
 #cmakedefine HAVE_STRTOUL 1
 #cmakedefine HAVE__I64TOA 1
 #cmakedefine HAVE__UI64TOA 1
+#if !defined(_MSC_VER) || _MSC_VER >= 1800 
 #cmakedefine HAVE_STRTOLL 1
+#cmakedefine HAVE_COPYSIGN 1
+#cmakedefine HAVE_SCALBN 1
+#else
+#cmakedefine HAVE__COPYSIGN 1
+#cmakedefine HAVE__SCALB 1
+#endif
 #cmakedefine HAVE_STRTOULL 1
 #cmakedefine HAVE_STRTOD 1
 #cmakedefine HAVE_ATOI 1
@@ -132,14 +139,12 @@
 #cmakedefine HAVE_ACOS 1
 #cmakedefine HAVE_ASIN 1
 #cmakedefine HAVE_CEIL 1
-#cmakedefine HAVE_COPYSIGN 1
 #cmakedefine HAVE_COS 1
 #cmakedefine HAVE_COSF 1
 #cmakedefine HAVE_FABS 1
 #cmakedefine HAVE_FLOOR 1
 #cmakedefine HAVE_LOG 1
 #cmakedefine HAVE_POW 1
-#cmakedefine HAVE_SCALBN 1
 #cmakedefine HAVE_SIN 1
 #cmakedefine HAVE_SINF 1
 #cmakedefine HAVE_SQRT 1
