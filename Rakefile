@@ -768,7 +768,7 @@ namespace :build do
     sh "echo BROKEN > ./artifacts/ldb"
     sh "echo BROKEN > ./artifacts/lsc"
     sh "echo BROKEN > ./artifacts/loomexec"
-    sh "echo BROKEN > ./artifacts/libassetAgent"
+    sh "echo BROKEN > ./artifacts/libassetAgent.so"
 
     if false
 	
