@@ -83,7 +83,7 @@ if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS))
 	set(SDL_SHARED OFF CACHE BOOL "Enable dynamic linking")
 	set(FORCE_STATIC_VCRT ON CACHE BOOL "Force /MT for static linking")
 	set(DIRECTX OFF CACHE BOOL "Enable DirectX on Windows")
-
+	
 	add_subdirectory(loom/vendor/sdl2)
 endif()
 
@@ -106,8 +106,8 @@ if (MSVC)
       set(VC_LIB_PATH_SUFFIX lib/x86)
     endif()
 
-    #link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/Include)    
-    #link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/${VC_LIB_PATH_SUFFIX})
+    link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/Include)    
+    link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/${VC_LIB_PATH_SUFFIX})
 
     
     # move this?
