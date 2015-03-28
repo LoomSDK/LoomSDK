@@ -85,7 +85,8 @@ public:
     void resize(int width, int height)
     {
         SDL_SetWindowSize(sdlWindow, width, height);
-        noteNativeSize(width, height);
+        SDL_GL_GetDrawableSize(sdlWindow, &stageWidth, &stageHeight);
+        noteNativeSize(stageWidth, stageHeight);
     }
 
     void toggleFullscreen();

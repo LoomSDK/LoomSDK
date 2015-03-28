@@ -129,8 +129,10 @@ void loop()
         }
         else if (event.type == SDL_WINDOWEVENT && (event.window.event == SDL_WINDOWEVENT_RESIZED || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED))
         {
-            stage->noteNativeSize(event.window.data1, event.window.data2);
-            GFX::Graphics::setNativeSize(event.window.data1, event.window.data2);
+            int winWidth = event.window.data1, winHeight = event.window.data2;
+            SDL_GL_GetDrawableSize(gSDLWindow, &winWidth, &winHeight);
+            stage->noteNativeSize(winWidth, winHeight);
+            GFX::Graphics::setNativeSize(winWidth, winHeight);
         }
         else if (event.type == SDL_TEXTINPUT)
         {
@@ -165,8 +167,8 @@ main(int argc, char *argv[])
         0, 0,
         100,
         100,
-        SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL
-        | SDL_WINDOW_ALLOW_HIGHDPI)) == NULL)
+        SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN 
+        | SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI)) == NULL)
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateWindow(): %s\n", SDL_GetError());
         exit(0);
