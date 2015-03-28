@@ -92,6 +92,17 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
     parse = [[ParseAPIiOS alloc] init];
     [parse initialize];
 #endif
+
+    // Store potential Remote Notification Dictionary in iOS6 and lower (iOS7+ will call the notification fetchCompletionHandler on notification launching)
+    if([[UIDevice currentDevice].systemVersion floatValue] < 7.0)
+    {
+        NSDictionary *rnPayload = launchOptions[UIApplicationLaunchOptionsRemoteNotificationKey];
+        if((rnPayload != nil) && ([rnPayload count]))
+        {
+            [self application:application didReceiveRemoteNotification:rnPayload];
+        }
+    }
+
     cocos2d::CCApplication::sharedApplication().run();
     
     return YES;
@@ -213,10 +224,11 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
     /// Parse Push Notifications
     if(parse)
     {
-        NSLog(@"---------Registered Parse for Remote Notifiations");
+        NSLog(@"---------Registered Parse for Remote Notifications");
         [parse registerForRemoteNotifications: deviceToken];
     }
 }
+
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
 {
     /// Parse Push Notifications
@@ -228,12 +240,28 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
         [parse failedToRegister: error];        
     }
 }
+
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
+    ///just pass this on through to the fetchCompletionHandler as this function happens in iOS6- and the other in iOS7+
+    [self application:application didReceiveRemoteNotification:userInfo fetchCompletionHandler:nil];
+}
+
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))handler {
+    // Store potential Remote Notification Dictionary
+    gRemoteNotificationPayloadDictionary = [[NSDictionary alloc] initWithDictionary:userInfo];
+    ios_RemoteNotificationOpen();
+
+    /// Parse Push Notifications registration
     if(parse)
     {
-        /// Parse Push Notifications
         NSLog(@"---------Received Remote Notification: sending through to Parse");
         [parse receivedRemoteNotification: userInfo];        
+    }
+
+    //notify the handler that we're done now
+    if(handler != nil)
+    {
+        handler(UIBackgroundFetchResultNoData);
     }
 }
 

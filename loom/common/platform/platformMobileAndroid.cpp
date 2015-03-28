@@ -35,6 +35,7 @@ lmDefineLogGroup(gAndroidMobileLogGroup, "loom.mobile.android", 1, 0);
 
 static SensorTripleChangedCallback gTripleChangedCallback = NULL;
 static OpenedViaCustomURLCallback gOpenedViaCustomURLCallback = NULL;
+static OpenedViaRemoteNotificationCallback gOpenedViaRemoteNotificationCallback = NULL;
 
 
 extern "C"
@@ -62,6 +63,13 @@ void Java_co_theengine_loomdemo_LoomMobile_onOpenedViaCustomURL(JNIEnv *env, job
         gOpenedViaCustomURLCallback();
     }
 }
+void Java_co_theengine_loomdemo_LoomMobile_onOpenedViaRemoteNotification(JNIEnv *env, jobject thiz)
+{
+    if (gOpenedViaRemoteNotificationCallback)
+    {
+        gOpenedViaRemoteNotificationCallback();
+    }
+}
 }
 
 
@@ -70,7 +78,9 @@ static loomJniMethodInfo gAllowScreenSleep;
 static loomJniMethodInfo gShareText;
 static loomJniMethodInfo gIsSensorSupported;
 static loomJniMethodInfo gDidCustomURLOpen;
+static loomJniMethodInfo gDidRemoteNotificationOpen;
 static loomJniMethodInfo gGetCustomSchemeData;
+static loomJniMethodInfo gGetRemoteNotificationData;
 static loomJniMethodInfo gIsSensorEnabled;
 static loomJniMethodInfo gHasSensorReceivedData;
 static loomJniMethodInfo gEnableSensor;
@@ -86,12 +96,15 @@ static loomJniMethodInfo gGetSelectedDolbyAudioProfile;
 
 
 ///initializes the data for the Mobile class for Android
-void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB, OpenedViaCustomURLCallback customURLCB)
+void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB, 
+                                OpenedViaCustomURLCallback customURLCB,
+                                OpenedViaRemoteNotificationCallback remoteNotificationCB)
 {
     lmLog(gAndroidMobileLogGroup, "INIT ***** MOBILE ***** ANDROID ****");
 
     gTripleChangedCallback = sensorTripleChangedCB;    
     gOpenedViaCustomURLCallback = customURLCB;    
+    gOpenedViaRemoteNotificationCallback = remoteNotificationCB;    
 
 
     ///Bind to JNI entry points.
@@ -112,9 +125,17 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
                                  "co/theengine/loomdemo/LoomMobile",
                                  "openedWithCustomScheme",
                                  "()Z");
+    LoomJni::getStaticMethodInfo(gDidRemoteNotificationOpen,
+                                 "co/theengine/loomdemo/LoomMobile",
+                                 "openedWithRemoteNotification",
+                                 "()Z");
     LoomJni::getStaticMethodInfo(gGetCustomSchemeData,
                                  "co/theengine/loomdemo/LoomMobile",
                                  "getCustomSchemeQueryData",
+                                 "(Ljava/lang/String;)Ljava/lang/String;");
+    LoomJni::getStaticMethodInfo(gGetRemoteNotificationData,
+                                 "co/theengine/loomdemo/LoomMobile",
+                                 "getRemoteNotificationData",
                                  "(Ljava/lang/String;)Ljava/lang/String;");
     LoomJni::getStaticMethodInfo(gIsSensorSupported,
                                  "co/theengine/loomdemo/LoomSensors",
@@ -201,6 +222,13 @@ bool platform_wasOpenedViaCustomURL()
     return (bool)result;
 }
 
+///returns if the application was launched via a Remote Notification
+bool platform_wasOpenedViaRemoteNotification()
+{
+    jboolean result = gDidRemoteNotificationOpen.getEnv()->CallStaticBooleanMethod(gDidRemoteNotificationOpen.classID, gDidRemoteNotificationOpen.methodID);    
+    return (bool)result;
+}
+
 ///gets the the specified query key data from any custom scheme URL path that the application was launched with, or "" if not found
 const char *platform_getOpenURLQueryData(const char *queryKey)
 {
@@ -218,6 +246,25 @@ const char *platform_getOpenURLQueryData(const char *queryKey)
     utString *queryData = new utString(LoomJni::jstring2string(result).c_str());
     gGetCustomSchemeData.getEnv()->DeleteLocalRef(jQuery);
     return queryData->c_str();
+}
+
+///gets the the data associated with the specified key from any potential custom payload attached to a 
+///Remote Notification that the application was launched with, or "" if not found
+const char *platform_getRemoteNotificationData(const char *key)
+{
+    jstring jQuery = gGetRemoteNotificationData.getEnv()->NewStringUTF(key);
+    jstring result = (jstring)gGetRemoteNotificationData.getEnv()->CallStaticObjectMethod(gGetRemoteNotificationData.classID, 
+                                                                                gGetRemoteNotificationData.methodID,
+                                                                                jQuery);
+    if(result == NULL)
+    {
+        return "";
+    }
+    ///convert jstring result into const char* for us to return
+    cocos2d::CCString *queryData = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
+    queryData->autorelease();
+    gGetRemoteNotificationData.getEnv()->DeleteLocalRef(jQuery);
+    return queryData->m_sString.c_str();
 }
 
 ///checks if a given sensor is supported on this hardware

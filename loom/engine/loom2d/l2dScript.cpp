@@ -114,6 +114,7 @@ static int registerLoom2D(lua_State *L)
        .addMethod("rotate", &Matrix::rotate)
 
        .addLuaFunction("transformCoord", &Matrix::transformCoord)
+       .addLuaFunction("deltaTransformCoord", &Matrix::deltaTransformCoord)
        .addLuaFunction("setTo", &Matrix::setTo)
        .addLuaFunction("copyFrom", &Matrix::copyFrom)
 
@@ -135,13 +136,14 @@ static int registerLoom2D(lua_State *L)
        .addMethod("__pget_minY", &Rectangle::getMinY)
        .addMethod("__pget_maxY", &Rectangle::getMaxY)
 
-       .addMethod("__pget_top", &Rectangle::getTop)
-       .addMethod("__pget_bottom", &Rectangle::getBottom)
-       .addMethod("__pget_left", &Rectangle::getLeft)
-       .addMethod("__pget_right", &Rectangle::getRight)
+       .addProperty("top", &Rectangle::getTop, &Rectangle::setTop)
+       .addProperty("bottom", &Rectangle::getBottom, &Rectangle::setBottom)
+       .addProperty("left", &Rectangle::getLeft, &Rectangle::setLeft)
+       .addProperty("right", &Rectangle::getRight, &Rectangle::setRight)
 
        .addLuaFunction("expandByPoint", &Rectangle::expandByPoint)
        .addLuaFunction("containsPoint", &Rectangle::containsPoint)
+       .addMethod("containsRect", &Rectangle::containsRect)
        .addLuaFunction("contains", &Rectangle::contains)
 
        .addMethod("setTo", &Rectangle::setTo)

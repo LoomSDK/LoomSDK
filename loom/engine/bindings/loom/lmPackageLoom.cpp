@@ -21,7 +21,7 @@
 void installLoomApplication();
 void installPackageCocos2DX();
 void installLoomAssets();
-void installPackageLoomPhysics();
+void installLoomBox2D();
 void installLoomPropertyManager();
 void installLoomWebView();
 void installLoomAdMobAd();
@@ -36,6 +36,7 @@ void installLoom2D();
 void installPackageLoomSound();
 void installLoomFacebook();
 void installLoomTeak();
+void installLoomSQLite();
 
 void installPackageLoom()
 {
@@ -44,7 +45,7 @@ void installPackageLoom()
     installLoomAdMobAd();
     installLoomHTTPRequest();
     installLoomAssets();
-    installPackageLoomPhysics();
+    installLoomBox2D();
     installLoomPropertyManager();
     installLoomNativeStore();
     installLoomVideo();
@@ -52,6 +53,7 @@ void installPackageLoom()
     installLoomFacebook();
     installLoomTeak();
     installLoomParse();
+    installLoomSQLite();
     installPackageLoomSound();
 
     // Should be its own package for maximum correctness.

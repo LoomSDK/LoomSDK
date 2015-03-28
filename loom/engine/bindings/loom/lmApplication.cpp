@@ -47,6 +47,7 @@ using namespace LS;
 #include "loom/common/config/applicationConfig.h"
 
 #include "loom/graphics/gfxGraphics.h"
+#include "loom/script/native/core/system/lmProcess.h"
 
 LSLuaState     *LoomApplication::rootVM      = NULL;
 bool           LoomApplication::reloadQueued = false;
@@ -63,6 +64,9 @@ lmDefineLogGroup(scriptLogGroup, "loom.script", 1, LoomLogInfo);
 
 // Define the global Loom C entrypoints.
 extern "C" {
+
+extern void loomsound_shutdown();
+
 void loom_appSetup(void)
 {
     LoomApplication::initializeCoreServices();
@@ -75,6 +79,7 @@ void loom_appShutdown(void)
     LoomApplication::shutdown();
 }
 
+extern void loomsound_reset();
 
 // container for external package functions
 typedef void (*FunctionRegisterPackage)(void);
@@ -207,6 +212,8 @@ void LoomApplication::reloadMainAssembly()
     platform_webViewDestroyAll();
     // cleanup ads
     platform_adMobDestroyAll();
+
+    loomsound_reset();
 
     const NativeDelegate *onReload = rootVM->getOnReloadDelegate();
     onReload->invoke();
@@ -359,9 +366,10 @@ int LoomApplication::initializeCoreServices()
     return 0;
 }
 
-
 void LoomApplication::shutdown()
 {
+    loomsound_shutdown();
+
     platform_HTTPCleanup();
 
     // Shut down application subsystems.

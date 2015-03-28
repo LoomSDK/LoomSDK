@@ -109,9 +109,20 @@ public:
         return y;
     }
 
+    inline void setTop(float top)
+    {
+        height += y - top;
+        y = top;
+    }
+
     inline float getBottom() const
     {
         return y + height;
+    }
+
+    inline void setBottom(float bottom)
+    {
+        height = bottom - y;
     }
 
     inline float getLeft() const
@@ -119,9 +130,20 @@ public:
         return x;
     }
 
+    inline void setLeft(float left)
+    {
+        width += x - left;
+        x = left;
+    }
+
     inline float getRight() const
     {
         return x + width;
+    }
+
+    inline void setRight(float right)
+    {
+        width = right - x;
     }
 
     /**
@@ -173,6 +195,18 @@ public:
         lua_pushboolean(L, result ? 1 : 0);
 
         return 1;
+    }
+
+    /**
+     * Returns true if both the top/left and bottom/right points are inside the bounds of this rectangle.
+     */
+    inline bool containsRect(Rectangle rect)
+    {
+        if ((rect.x > (x + width)) || (rect.x < x)) { return false; }
+        else if ((rect.y > (y + height)) || (rect.y < y)) { return false; }
+        else if (((rect.x + rect.width) > (x + width)) || ((rect.x + rect.width) < x)) { return false; }
+        else if (((rect.y + rect.height) > (y + height)) || ((rect.y + rect.height) < y)) { return false; }
+        return true;
     }
 
     /**

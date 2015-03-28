@@ -18,582 +18,621 @@
  * ===========================================================================
  */
 
-#include "loom/script/native/lsLuaBridge.h"
-#include "loom/script/reflection/lsType.h"
-#include "loom/script/runtime/lsRuntime.h"
-#include "jansson.h"
+#include "loom/script/native/core/system/lmJSON.h"
 
 using namespace LS;
 
-class JSON {
-    // The native _json object
-    json_t *_json;
+JSON::JSON() : _json(NULL), _root(false)
+{
+}
 
-    // JSON error codes
-    json_error_t _error;
-    utString     _errorMsg;
-    bool         _root;
-
-public:
-
-    JSON() :
-        _json(NULL), _root(false)
+bool JSON::clear() {
+    if (_json)
     {
+        if (_root)
+        {
+            json_decref(_json);
+            _root = false;
+        }
+        _json = NULL;
+        return true;
+    }
+    return false;
+}
+
+JSON::~JSON()
+{
+    clear();
+}
+
+bool JSON::initObject() {
+    clear();
+
+    _json = json_object();
+    if (_json) _root = true;
+
+    return _json == NULL ? false : true;
+}
+
+bool JSON::initArray() {
+    clear();
+
+    _json = json_array();
+    if (_json) _root = true;
+
+    return _json == NULL ? false : true;
+}
+
+bool JSON::loadString(const char *json)
+{
+    clear();
+
+    _json = json_loads(json, JSON_DISABLE_EOF_CHECK, &_error);
+
+    if (!_json)
+    {
+        char message[1024];
+        snprintf(message, 1024,
+                 "JSON Error: Line %i Column %i Position %i, %s (Source: %s)",
+                 _error.line, _error.column, _error.position, _error.text,
+                 _error.source);
+
+        _errorMsg = message;
+    }
+    else
+    {
+        _errorMsg = "";
     }
 
-    ~JSON()
+    if (_json) _root = true;
+
+    return _json == NULL ? false : true;
+}
+
+const char *JSON::serialize()
+{
+    if (!_json)
     {
-        if (_json)
-        {
-            if (_root)
-            {
-                json_decref(_json);
-            }
-            _json = NULL;
-        }
+        return NULL;
     }
+    return json_dumps(_json, JSON_SORT_KEYS);
+}
 
-    bool loadString(const char *json)
+const char *JSON::getError()
+{
+    return _errorMsg.c_str();
+}
+
+int JSON::getJSONType()
+{
+    if (!_json)
     {
-        if (_json)
-        {
-            if (_root)
-            {
-                json_decref(_json);
-            }
-            _json = NULL;
-        }
-
-        _json = json_loads(json, JSON_DISABLE_EOF_CHECK, &_error);
-
-        if (!_json)
-        {
-            char message[1024];
-            snprintf(message, 1024,
-                     "JSON Error: Line %i Column %i Position %i, %s (Source: %s)",
-                     _error.line, _error.column, _error.position, _error.text,
-                     _error.source);
-
-            _errorMsg = message;
-        }
-        else
-        {
-            _errorMsg = "";
-        }
-
-        if (_json)
-        {
-            _root = true;
-        }
-
-        return _json == NULL ? false : true;
+        return JSON_NULL;
     }
+    return json_typeof(_json);
+}
 
-    const char *serialize()
+int JSON::getObjectJSONType(const char *key)
+{
+    if (!_json || isArray())
     {
-        if (!_json)
-        {
-            return NULL;
-        }
-        return json_dumps(_json, JSON_SORT_KEYS);
-    }
-
-    const char *getError()
-    {
-        return _errorMsg.c_str();
-    }
-
-    int getJSONType()
-    {
-        if (!_json)
-        {
-            return JSON_NULL;
-        }
-        return json_typeof(_json);
-    }
-    
-    int getObjectJSONType(const char *key)
-    {
-        if (!_json || isArray())
-        {
-            return JSON_NULL;
-        }
-        
-        json_t *jobject = json_object_get(_json, key);
-        
-        if (!jobject)
-        {
-            return JSON_NULL;
-        }
-        
-        return json_typeof(jobject);
+        return JSON_NULL;
     }
     
-    int getArrayJSONType(int index)
+    json_t *jobject = json_object_get(_json, key);
+    
+    if (!jobject)
     {
-        if (!isArray())
-        {
-            return JSON_NULL;
-        }
-        
-        json_t *jobject = json_array_get(_json, index);
-        
-        if (!jobject)
-        {
-            return JSON_NULL;
-        }
-        
-        return json_typeof(jobject);
+        return JSON_NULL;
     }
     
-    const char *getLongLongAsString(const char *key)
+    return json_typeof(jobject);
+}
+
+int JSON::getArrayJSONType(int index)
+{
+    if (!isArray())
     {
-        if (!_json)
-        {
-            return "";
-        }
-
-        json_t *jllu = json_object_get(_json, key);
-
-        if (!jllu)
-        {
-            return "";
-        }
-
-        //create static char buffer to return to Loomscript (it makes a copy of this, so it will not be overwritten)
-        //NOTE: the longest string length of an unsigned long long is 20 characters (0 to 18446744073709551615) + null terminator
-        static char buffer[32];
-        memset(buffer, 0x00, 32);
-        unsigned long long val = (unsigned long long)json_integer_value(jllu);
-        sprintf(buffer, "%llu", val);
-
-        return buffer;
-    }    
-
-    int getInteger(const char *key)
+        return JSON_NULL;
+    }
+    
+    json_t *jobject = json_array_get(_json, index);
+    
+    if (!jobject)
     {
-        if (!_json)
-        {
-            return 0;
-        }
+        return JSON_NULL;
+    }
+    
+    return json_typeof(jobject);
+}
 
-        json_t *jint = json_object_get(_json, key);
-
-        if (!jint)
-        {
-            return 0;
-        }
-
-        return (int)json_integer_value(jint);
+const char *JSON::getLongLongAsString(const char *key)
+{
+    if (!_json)
+    {
+        return "";
     }
 
-    void setInteger(const char *key, int value)
-    {
-        if (!_json)
-        {
-            return;
-        }
+    json_t *jllu = json_object_get(_json, key);
 
-        json_object_set(_json, key, json_integer(value));
+    if (!jllu)
+    {
+        return "";
     }
 
-    double getFloat(const char *key)
+    //create static char buffer to return to Loomscript (it makes a copy of this, so it will not be overwritten)
+    //NOTE: the longest string length of an unsigned long long is 20 characters (0 to 18446744073709551615) + null terminator
+    static char buffer[32];
+    memset(buffer, 0x00, 32);
+    unsigned long long val = (unsigned long long)json_integer_value(jllu);
+    sprintf(buffer, "%llu", val);
+
+    return buffer;
+}    
+
+int JSON::getInteger(const char *key)
+{
+    if (!_json)
     {
-        if (!_json)
-        {
-            return 0;
-        }
-
-        json_t *jreal = json_object_get(_json, key);
-
-        if (!jreal)
-        {
-            return 0;
-        }
-
-        return (double)json_real_value(jreal);
+        return 0;
     }
 
-    void setFloat(const char *key, float value)
-    {
-        if (!_json)
-        {
-            return;
-        }
+    json_t *jint = json_object_get(_json, key);
 
-        json_object_set(_json, key, json_real(value));
+    if (!jint)
+    {
+        return 0;
     }
 
-    bool getBoolean(const char *key)
+    return (int)json_integer_value(jint);
+}
+
+void JSON::setInteger(const char *key, int value)
+{
+    if (!_json)
     {
-        if (!_json)
-        {
-            return false;
-        }
-
-        json_t *jbool = json_object_get(_json, key);
-
-        if (!jbool || !json_is_boolean(jbool))
-        {
-            return false;
-        }
-
-        return json_is_true(jbool);
+        return;
     }
 
-    void setBoolean(const char *key, bool value)
-    {
-        if (!_json)
-        {
-            return;
-        }
+    json_object_set(_json, key, json_integer(value));
+}
 
-        json_object_set(_json, key, value ? json_true() : json_false());
+// getFloat is an alias of getNumber to avoid mistakes,
+// since a lot of the time the floating point is
+// not explicitly written for integral values,
+// making json_real_value return 0
+double JSON::getFloat(const char *key)
+{
+    return getNumber(key);
+}
+
+void JSON::setFloat(const char *key, float value)
+{
+    if (!_json)
+    {
+        return;
     }
 
-    const char *getString(const char *key)
+    json_object_set(_json, key, json_real(value));
+}
+
+double JSON::getNumber(const char *key)
+{
+    if (!_json)
     {
-        if (!_json)
-        {
-            return "";
-        }
-
-        json_t *jstring = json_object_get(_json, key);
-
-        if (!jstring)
-        {
-            return "";
-        }
-
-        return json_string_value(jstring);
+        return 0;
     }
 
-    void setString(const char *key, const char *value)
-    {
-        if (!_json)
-        {
-            return;
-        }
+    json_t *jreal = json_object_get(_json, key);
 
-        json_object_set(_json, key, json_string(value));
+    if (!jreal)
+    {
+        return 0;
     }
 
-    // Objects
-    JSON *getObject(const char *key)
+    return (double)json_number_value(jreal);
+}
+
+void JSON::setNumber(const char *key, double value)
+{
+    if (!_json)
     {
-        if (!_json)
-        {
-            return NULL;
-        }
-
-        json_t *jobject = json_object_get(_json, key);
-
-        if (!jobject || !json_is_object(jobject))
-        {
-            return NULL;
-        }
-
-        JSON *jin = new JSON();
-        json_incref(jobject);
-        jin->_json = jobject;
-
-        return jin;
+        return;
     }
 
-    void setObject(const char *key, JSON *object)
-    {
-        if (!_json || !object || !object->_json || !json_is_object(object->_json))
-        {
-            return;
-        }
+    json_object_set(_json, key, json_real(value));
+}
 
-        json_object_set(_json, key, object->_json);
+bool JSON::getBoolean(const char *key)
+{
+    if (!_json)
+    {
+        return false;
     }
 
-    bool isObject()
-    {
-        if (!_json)
-        {
-            return false;
-        }
+    json_t *jbool = json_object_get(_json, key);
 
-        return json_is_object(_json);
+    if (!jbool || !json_is_boolean(jbool))
+    {
+        return false;
     }
 
-    const char *getObjectFirstKey()
+    return json_is_true(jbool);
+}
+
+void JSON::setBoolean(const char *key, bool value)
+{
+    if (!_json)
     {
-        if (!_json)
-        {
-            return "";
-        }
-
-        void *iter = json_object_iter(_json);
-        if (!iter)
-        {
-            return "";
-        }
-
-        return json_object_iter_key(iter);
+        return;
     }
 
-    const char *getObjectNextKey(const char *key)
+    json_object_set(_json, key, value ? json_true() : json_false());
+}
+
+const char *JSON::getString(const char *key)
+{
+    if (!_json)
     {
-        if (!_json)
-        {
-            return "";
-        }
-
-        void *iter = json_object_iter_next(_json, json_object_iter_at(_json, key));
-        if (!iter)
-        {
-            return "";
-        }
-
-        return json_object_iter_key(iter);
+        return "";
     }
 
-    // Arrays
-    JSON *getArray(const char *key)
+    json_t *jstring = json_object_get(_json, key);
+
+    if (!jstring)
     {
-        if (!_json)
-        {
-            return NULL;
-        }
-
-        json_t *jarray = json_object_get(_json, key);
-
-        if (!jarray || !json_is_array(jarray))
-        {
-            return NULL;
-        }
-
-        JSON *jin = new JSON();
-        json_incref(jarray);
-        jin->_json = jarray;
-
-        return jin;
+        return "";
     }
 
-    void setArray(const char *key, JSON *object)
-    {
-        if (!object || !object->_json || !json_is_array(object->_json))
-        {
-            return;
-        }
+    return json_string_value(jstring);
+}
 
-        json_object_set(_json, key, object->_json);
+void JSON::setString(const char *key, const char *value)
+{
+    if (!_json)
+    {
+        return;
     }
 
-    bool isArray()
-    {
-        if (!_json)
-        {
-            return false;
-        }
+    json_object_set(_json, key, json_string(value));
+}
 
-        return json_is_array(_json);
+// Objects
+JSON *JSON::getObject(const char *key)
+{
+    if (!_json)
+    {
+        return NULL;
     }
 
-    int getArrayCount()
-    {
-        if (!isArray())
-        {
-            return 0;
-        }
+    json_t *jobject = json_object_get(_json, key);
 
-        return (int)json_array_size(_json);
+    if (!jobject || !json_is_object(jobject))
+    {
+        return NULL;
     }
 
-    bool getArrayBoolean(int index)
+    JSON *jin = new JSON();
+    json_incref(jobject);
+    jin->_json = jobject;
+
+    return jin;
+}
+
+void JSON::setObject(const char *key, JSON *object)
+{
+    if (!_json || !object || !object->_json || !json_is_object(object->_json))
     {
-        if (!isArray())
-        {
-            return false;
-        }
-
-        json_t *jobject = json_array_get(_json, index);
-
-        if (!jobject || !json_is_boolean(jobject))
-        {
-            return false;
-        }
-
-        return json_is_true(jobject);
+        return;
     }
 
-    void setArrayBoolean(int index, bool value)
+    json_object_set(_json, key, object->_json);
+}
+
+bool JSON::isObject()
+{
+    if (!_json)
     {
-        if (!isArray())
-        {
-            return;
-        }
-
-        expandArray(index + 1);
-
-        json_array_set(_json, index, value ? json_true() : json_false());
+        return false;
     }
 
-    int getArrayInteger(int index)
+    return json_is_object(_json);
+}
+
+const char *JSON::getObjectFirstKey()
+{
+    if (!_json)
     {
-        if (!isArray())
-        {
-            return 0;
-        }
-
-        json_t *jobject = json_array_get(_json, index);
-
-        if (!jobject || !json_is_integer(jobject))
-        {
-            return 0;
-        }
-
-        return (int)json_integer_value(jobject);
+        return "";
     }
 
-    void setArrayInteger(int index, int value)
+    void *iter = json_object_iter(_json);
+    if (!iter)
     {
-        if (!isArray())
-        {
-            return;
-        }
-
-        expandArray(index + 1);
-
-        json_array_set(_json, index, json_integer(value));
+        return "";
     }
 
-    float getArrayFloat(int index)
+    return json_object_iter_key(iter);
+}
+
+const char *JSON::getObjectNextKey(const char *key)
+{
+    if (!_json)
     {
-        if (!isArray())
-        {
-            return 0.f;
-        }
-
-        json_t *jobject = json_array_get(_json, index);
-
-        if (!jobject || !json_is_real(jobject))
-        {
-            return 0.f;
-        }
-
-        return (float)json_real_value(jobject);
+        return "";
     }
 
-    void setArrayFloat(int index, float value)
+    void *iter = json_object_iter_next(_json, json_object_iter_at(_json, key));
+    if (!iter)
     {
-        if (!isArray())
-        {
-            return;
-        }
-
-        expandArray(index + 1);
-
-        json_array_set(_json, index, json_real(value));
+        return "";
     }
 
-    const char *getArrayString(int index)
+    return json_object_iter_key(iter);
+}
+
+// Arrays
+JSON *JSON::getArray(const char *key)
+{
+    if (!_json)
     {
-        if (!isArray())
-        {
-            return "";
-        }
-
-        json_t *jobject = json_array_get(_json, index);
-
-        if (!jobject || !json_is_string(jobject))
-        {
-            return "";
-        }
-
-        return json_string_value(jobject);
+        return NULL;
     }
 
-    void setArrayString(int index, const char *value)
+    json_t *jarray = json_object_get(_json, key);
+
+    if (!jarray || !json_is_array(jarray))
     {
-        if (!isArray())
-        {
-            return;
-        }
-
-        expandArray(index + 1);
-
-        json_array_set(_json, index, json_string(value));
+        return NULL;
     }
 
-    JSON *getArrayObject(int index)
+    JSON *jin = new JSON();
+    json_incref(jarray);
+    jin->_json = jarray;
+
+    return jin;
+}
+
+void JSON::setArray(const char *key, JSON *object)
+{
+    if (!object || !object->_json || !json_is_array(object->_json))
     {
-        if (!isArray())
-        {
-            return NULL;
-        }
-
-        json_t *object = json_array_get(_json, index);
-
-        if (!object || !json_is_object(object))
-        {
-            return NULL;
-        }
-
-        JSON *jin = new JSON();
-        json_incref(object);
-        jin->_json = object;
-        return jin;
+        return;
     }
 
-    void setArrayObject(int index, JSON *value)
+    json_object_set(_json, key, object->_json);
+}
+
+bool JSON::isArray()
+{
+    if (!_json)
     {
-        if (!isArray() || !value || !value->_json || !json_is_object(value->_json))
-        {
-            return;
-        }
-
-        expandArray(index + 1);
-
-        json_array_set(_json, index, value->_json);
+        return false;
     }
 
-    JSON *getArrayArray(int index)
+    return json_is_array(_json);
+}
+
+int JSON::getArrayCount()
+{
+    if (!isArray())
     {
-        if (!isArray())
-        {
-            return NULL;
-        }
-
-        json_t *object = json_array_get(_json, index);
-
-        if (!object || !json_is_array(object))
-        {
-            return NULL;
-        }
-
-        JSON *jin = new JSON();
-        json_incref(object);
-        jin->_json = object;
-        return jin;
+        return -1;
     }
 
-    void setArrayArray(int index, JSON *value)
+    return (int)json_array_size(_json);
+}
+
+bool JSON::getArrayBoolean(int index)
+{
+    if (!isArray())
     {
-        if (!isArray() || !value || !value->_json || !json_is_array(value->_json))
-        {
-            return;
-        }
-
-        expandArray(index + 1);
-
-        json_array_set(_json, index, value->_json);
+        return false;
     }
 
-    void expandArray(int desiredLength)
-    {
-        if (!isArray())
-        {
-            return;
-        }
+    json_t *jobject = json_array_get(_json, index);
 
-        while ((int)json_array_size(_json) < desiredLength) { json_array_append_new(_json, json_null()); }
+    if (!jobject || !json_is_boolean(jobject))
+    {
+        return false;
     }
-};
+
+    return json_is_true(jobject);
+}
+
+void JSON::setArrayBoolean(int index, bool value)
+{
+    if (!isArray())
+    {
+        return;
+    }
+
+    expandArray(index + 1);
+
+    json_array_set(_json, index, value ? json_true() : json_false());
+}
+
+int JSON::getArrayInteger(int index)
+{
+    if (!isArray())
+    {
+        return 0;
+    }
+
+    json_t *jobject = json_array_get(_json, index);
+
+    if (!jobject || !json_is_integer(jobject))
+    {
+        return 0;
+    }
+
+    return (int)json_integer_value(jobject);
+}
+
+void JSON::setArrayInteger(int index, int value)
+{
+    if (!isArray())
+    {
+        return;
+    }
+
+    expandArray(index + 1);
+
+    json_array_set(_json, index, json_integer(value));
+}
+
+// alias of getArrayNumber, see getFloat for explanation
+double JSON::getArrayFloat(int index)
+{
+    return getArrayNumber(index);
+}
+
+void JSON::setArrayFloat(int index, float value)
+{
+    if (!isArray())
+    {
+        return;
+    }
+
+    expandArray(index + 1);
+
+    json_array_set(_json, index, json_real(value));
+}
+
+double JSON::getArrayNumber(int index)
+{
+    if (!isArray())
+    {
+        return 0.f;
+    }
+
+    json_t *jobject = json_array_get(_json, index);
+
+    if (!jobject || !json_is_number(jobject))
+    {
+        return 0.f;
+    }
+
+    return (double)json_number_value(jobject);
+}
+
+void JSON::setArrayNumber(int index, double value)
+{
+    if (!isArray())
+    {
+        return;
+    }
+
+    expandArray(index + 1);
+
+    json_array_set(_json, index, json_real(value));
+}
+
+const char *JSON::getArrayString(int index)
+{
+    if (!isArray())
+    {
+        return "";
+    }
+
+    json_t *jobject = json_array_get(_json, index);
+
+    if (!jobject || !json_is_string(jobject))
+    {
+        return "";
+    }
+
+    return json_string_value(jobject);
+}
+
+void JSON::setArrayString(int index, const char *value)
+{
+    if (!isArray())
+    {
+        return;
+    }
+
+    expandArray(index + 1);
+
+    json_array_set(_json, index, json_string(value));
+}
+
+JSON *JSON::getArrayObject(int index)
+{
+    if (!isArray())
+    {
+        return NULL;
+    }
+
+    json_t *object = json_array_get(_json, index);
+
+    if (!object || !json_is_object(object))
+    {
+        return NULL;
+    }
+
+    JSON *jin = new JSON();
+    json_incref(object);
+    jin->_json = object;
+    return jin;
+}
+
+void JSON::setArrayObject(int index, JSON *value)
+{
+    if (!isArray() || !value || !value->_json || !json_is_object(value->_json))
+    {
+        return;
+    }
+
+    expandArray(index + 1);
+
+    json_array_set(_json, index, value->_json);
+}
+
+JSON *JSON::getArrayArray(int index)
+{
+    if (!isArray())
+    {
+        return NULL;
+    }
+
+    json_t *object = json_array_get(_json, index);
+
+    if (!object || !json_is_array(object))
+    {
+        return NULL;
+    }
+
+    JSON *jin = new JSON();
+    json_incref(object);
+    jin->_json = object;
+    return jin;
+}
+
+void JSON::setArrayArray(int index, JSON *value)
+{
+    if (!isArray() || !value || !value->_json || !json_is_array(value->_json))
+    {
+        return;
+    }
+
+    expandArray(index + 1);
+
+    json_array_set(_json, index, value->_json);
+}
+
+void JSON::expandArray(int desiredLength)
+{
+    if (!isArray())
+    {
+        return;
+    }
+
+    while ((int)json_array_size(_json) < desiredLength) { json_array_append_new(_json, json_null()); }
+}
+
+
+
 
 static int registerSystemJSON(lua_State *L)
 {
@@ -601,6 +640,8 @@ static int registerSystemJSON(lua_State *L)
 
        .beginClass<JSON> ("JSON")
        .addConstructor<void (*)(void)>()
+       .addMethod("initObject", &JSON::initObject)
+       .addMethod("initArray", &JSON::initArray)
        .addMethod("loadString", &JSON::loadString)
        .addMethod("serialize", &JSON::serialize)
 
@@ -608,12 +649,14 @@ static int registerSystemJSON(lua_State *L)
        .addMethod("getJSONType", &JSON::getJSONType)
        .addMethod("getObjectJSONType", &JSON::getObjectJSONType)
        .addMethod("getArrayJSONType", &JSON::getArrayJSONType)
-
+	   
        .addMethod("getLongLongAsString", &JSON::getLongLongAsString)
        .addMethod("getInteger", &JSON::getInteger)
        .addMethod("setInteger", &JSON::setInteger)
        .addMethod("getFloat", &JSON::getFloat)
        .addMethod("setFloat", &JSON::setFloat)
+       .addMethod("getNumber", &JSON::getNumber)
+       .addMethod("setNumber", &JSON::setNumber)
        .addMethod("getString", &JSON::getString)
        .addMethod("setString", &JSON::setString)
        .addMethod("getBoolean", &JSON::getBoolean)
@@ -639,6 +682,9 @@ static int registerSystemJSON(lua_State *L)
        .addMethod("getArrayFloat", &JSON::getArrayFloat)
        .addMethod("setArrayFloat", &JSON::setArrayFloat)
 
+       .addMethod("getArrayNumber", &JSON::getArrayNumber)
+       .addMethod("setArrayNumber", &JSON::setArrayNumber)
+
        .addMethod("getArrayString", &JSON::getArrayString)
        .addMethod("setArrayString", &JSON::setArrayString)
 
@@ -658,5 +704,5 @@ static int registerSystemJSON(lua_State *L)
 
 void installSystemJSON()
 {
-    NativeInterface::registerNativeType<JSON>(registerSystemJSON);
+    NativeInterface::registerManagedNativeType<JSON>(registerSystemJSON);
 }

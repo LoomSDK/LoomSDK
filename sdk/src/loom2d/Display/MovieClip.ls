@@ -10,12 +10,14 @@
 
 package loom2d.display
 {
+    import loom2d.animation.Juggler;    
     import system.errors.IllegalOperationError;
     import loom.sound.SimpleAudioEngine;
     
     import loom2d.animation.IAnimatable;
     import loom2d.events.Event;
     import loom2d.textures.Texture;
+    import loom2d.math.Rectangle;
     
     /** Dispatched whenever the movie has displayed its last frame. */
     [Event(name="complete", type="loom2d.events.Event")]
@@ -54,6 +56,52 @@ package loom2d.display
         private var mLoop:Boolean;
         private var mPlaying:Boolean;
         
+
+        /** Static wrapper to help create a new MovieClip from a texture spritesheet path and some parameters.
+         *  
+         * @param texturePath Asset path for the texture spritesheet containing the frames to use
+         * @param cellWidth Width of each individual cell of animation
+         * @param cellHeight Height of each individual cell of animation
+         * @param totalNumCells Total number of cells in the spritesheet
+         * @param numColumns Number of columns of cells in the spritesheet
+         * @param fps Frames per second rate at which the MovieClip must play at
+         * @param juggler Juggler to add the MovieClip to if desired
+         * @return The newly created MovieClip object
+         */
+        static public function fromSpritesheet(texturePath:String, 
+                                                cellWidth:int, 
+                                                cellHeight:int, 
+                                                totalNumCells:int, 
+                                                numColumns:int,
+                                                fps:int,
+                                                juggler:Juggler=null):MovieClip
+        {
+            // Create textures from the spritesheet
+            var sheet:Texture = Texture.fromAsset(texturePath);
+
+            // Generate frames based on the sheet parameters
+            var frames:Vector.<Texture> = new Vector.<Texture>();
+            for(var i:int; i<totalNumCells; i++)
+            {
+                var spriteX:int = i % numColumns;
+                var spriteY:int = Math.floor(i / numColumns);
+
+                frames.push(Texture.fromTexture(sheet, new Rectangle(spriteX * cellWidth, 
+                                                                     spriteY * cellHeight,
+                                                                     cellWidth, 
+                                                                     cellHeight)));
+            }
+            
+            //create the Movie Clip and add it to the Juggler so it can be animated
+            var clip = new MovieClip(frames, fps);
+            if(juggler != null)
+            {
+                juggler.add(clip);
+            }
+            return clip;
+        }   
+
+
         /** Creates a movie clip from the provided textures and with the specified default framerate.
          *  The movie will have the size of the first frame. */  
         public function MovieClip(textures:Vector.<Texture>, fps:Number=12)

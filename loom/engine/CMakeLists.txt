@@ -25,6 +25,7 @@ set (ENGINE_SRC
     bindings/loom/lmApplicationTasks.cpp
     bindings/loom/lmWebView.cpp
     bindings/loom/lmAdMob.cpp
+    bindings/loom/lmBox2D.cpp
     bindings/loom/lmHTTPRequest.cpp
     bindings/loom/lmStore.cpp
     bindings/loom/lmVideo.cpp
@@ -33,13 +34,11 @@ set (ENGINE_SRC
     bindings/loom/lmPackageLoom.cpp
     bindings/loom/lmFacebook.cpp
     bindings/loom/lmTeak.cpp
+    bindings/loom/lmSQLite.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
     
     bindings/sdl/lmSDL.cpp
     
-    physics/lsPhysics.cpp
-    physics/lsPhysicsPackage.cpp
-
     sound/lsSound.cpp
     sound/lsSoundPackage.cpp
 )
