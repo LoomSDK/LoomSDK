@@ -266,13 +266,13 @@ package
             var body:Body = world.createBody(bodyDef);
 
             // reference the global shape cache
-            var shapeCache:ShapeCache = ShapeCache.sharedShapeCache();
+            //var shapeCache:ShapeCache = ShapeCache.sharedShapeCache();
 
             // load the shape into the shape cache
-            shapeCache.addShapesWithFile(plistPath, scale, ptmRatio);
+            //shapeCache.addShapesWithFile(plistPath, scale, ptmRatio);
 
             // add the fixtures to the body
-            shapeCache.addFixturesToBody(body, shapeName);
+            //shapeCache.addFixturesToBody(body, shapeName);
 
             // create a game object for the body
             var goBody:Box2DPhysicsGameObject = createGameObject(body, position, rotation, new Vec2(Math.abs(dimensions.x * scale.x), Math.abs(dimensions.y * scale.y)), imagePath);
