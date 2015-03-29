@@ -265,7 +265,7 @@ const char *platform_getRemoteNotificationData(const char *key)
     utString *queryData = new utString(LoomJni::jstring2string(result).c_str());
     //queryData->autorelease();
     gGetRemoteNotificationData.getEnv()->DeleteLocalRef(jQuery);
-    return queryData->m_sString.c_str();
+    return queryData->c_str();
 }
 
 ///checks if a given sensor is supported on this hardware
