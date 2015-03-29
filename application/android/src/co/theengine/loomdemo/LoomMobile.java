@@ -237,10 +237,10 @@ public class LoomMobile
             _remoteNotificationData = new JSONObject(message);
 
             //fire off the notification delegate if we have a mainView, otherwise delay it until onCreate
-            if(SDLActivity.getContext() != null)
+            if(((Activity)SDLActivity.getContext()) != null)
             {
                 //notify that we've launched via a remote notification launch
-                SDLActivity.getContext().runOnUiThread(new Runnable() 
+                ((Activity)SDLActivity.getContext()).runOnUiThread(new Runnable() 
                 {
                     @Override
                     public void run() 
