@@ -81,6 +81,8 @@ package loom.platform
       SPACEBAR = 44,
 
       MINUS = 45,
+      HYPHEN = 45,
+      
       EQUALS = 46,
       LEFTBRACKET = 47,
       RIGHTBRACKET = 48,
@@ -196,6 +198,7 @@ package loom.platform
                    *   not a physical key - but some Mac keyboards
                    *   do have a power key. */
       KP_EQUALS = 103,
+      PADEQUAL_SIGN = 103,
       F13 = 104,
       F14 = 105,
       F15 = 106,
