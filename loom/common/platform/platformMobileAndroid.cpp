@@ -261,8 +261,9 @@ const char *platform_getRemoteNotificationData(const char *key)
         return "";
     }
     ///convert jstring result into const char* for us to return
-    cocos2d::CCString *queryData = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
-    queryData->autorelease();
+    //cocos2d::CCString *queryData = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
+    utString *queryData = new utString(LoomJni::jstring2string(result).c_str());
+    //queryData->autorelease();
     gGetRemoteNotificationData.getEnv()->DeleteLocalRef(jQuery);
     return queryData->m_sString.c_str();
 }
