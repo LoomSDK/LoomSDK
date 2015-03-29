@@ -162,9 +162,7 @@ main(int argc, char *argv[])
 #ifdef WIN32
     // When on windows, do some workarounds so our console window
     // behaves properly.
-    char*  arg;
-    int    index;
-
+    
     // put the program name into argv[0]
     char filename[_MAX_PATH];
     GetModuleFileNameA(NULL, filename, _MAX_PATH);
