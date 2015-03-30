@@ -80,7 +80,7 @@ void loop()
             stage->_KeyUpDelegate.pushArgument(event.key.keysym.mod);
             stage->_KeyUpDelegate.invoke();
         }
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+#if LOOM_PLATFORM_TOUCH
         else if(event.type == SDL_FINGERDOWN)
         {
             stage->_TouchBeganDelegate.pushArgument((int)event.tfinger.fingerId);
@@ -215,11 +215,20 @@ main(int argc, char *argv[])
 
     /* Enable standard application logging */
     SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
-
-    int stencilSize = 1;
-    int ret = SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilSize);
+    
+    int ret;
+    
+#if LOOM_RENDERER_OPENGLES2
+    ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
-
+    ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
+#endif
+    
+    int stencilSize = 1;
+    ret = SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilSize);
+    lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
+    
     // Set up SDL window.
     if ((gSDLWindow = SDL_CreateWindow(
         "Loom",
@@ -241,7 +250,11 @@ main(int argc, char *argv[])
         exit(2);
     }
 
-    SDL_GL_SetSwapInterval(-1);
+    ret = SDL_GL_SetSwapInterval(-1);
+    if (ret != 0) {
+        lmLog(coreLogGroup, "Late swap tearing not supported, using vsync");
+        SDL_GL_SetSwapInterval(1);
+    }
 
     // And show the window with proper settings.
     SDL_SetWindowPosition(gSDLWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);

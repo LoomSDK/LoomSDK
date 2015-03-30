@@ -70,6 +70,8 @@ public:
     static void reset(int width, int height, uint32_t flags = 0);
 
     static void shutdown();
+    
+    static bool queryExtension(char *extName);
 
     static void beginFrame();
 

@@ -40,6 +40,7 @@ namespace GFX
 TextureInfo Texture::sTextureInfos[MAXTEXTURES];
 utHashTable<utFastStringHash, TextureID> Texture::sTexturePathLookup;
 bool Texture::sTextureAssetNofificationsEnabled = true;
+bool Texture::supportsFullNPOT;
 
 //queue of textures to load in the async loading thread
 utList<AsyncLoadNote> Texture::sAsyncLoadQueue;
@@ -71,6 +72,13 @@ void Texture::initialize()
     }
     Texture::sTexInfoLock = loom_mutex_create();
     Texture::sAsyncQueueMutex = loom_mutex_create();
+
+#if LOOM_RENDERER_OPENGLES2
+    Texture::supportsFullNPOT = Graphics::queryExtension("GL_ARB_texture_non_power_of_two") || Graphics::queryExtension("GL_OES_texture_npot");
+#else
+    Texture::supportsFullNPOT = true;
+#endif
+
 }
 
 void Texture::tick()
@@ -244,15 +252,13 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 
     if (newTexture) Graphics::context()->glGenTextures(1, &tinfo.handle);
 
-    lmLogDebug(gGFXTextureLogGroup, "Create > %u", tinfo.handle);
+    lmLog(gGFXTextureLogGroup, "Create > %u", tinfo.handle);
+
+    //lmLog(gGFXTextureLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
 
     Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
 
-    lmLogDebug(gGFXTextureLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
-
     Graphics::context()->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    lmLogDebug(gGFXTextureLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
 
     /*
     Graphics::context()->glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -268,36 +274,44 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     */
     //lmLogInfo(gGFXTextureLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
 
-    //*
-    uint8_t *mipData = data;
-    int mipWidth = width;
-    int mipHeight = height;
-    int mipLevel = 1;
-    //uint64_t time = GetTimeMs64();
-    while (mipWidth > 1 || mipHeight > 1)
+    tinfo.width  = width;
+    tinfo.height = height;
+
+    if (supportsFullNPOT || tinfo.isPowerOfTwo())
     {
-        // Allocate new bits.
-        int prevWidth = mipWidth, prevHeight = mipHeight;
-        mipWidth >>= 1; mipWidth = mipWidth < 1 ? 1 : mipWidth;
-        mipHeight >>= 1; mipHeight = mipHeight < 1 ? 1 : mipHeight;
+        tinfo.clampOnly = false;
+        tinfo.mipmaps = true;
+        uint8_t *mipData = data;
+        int mipWidth = width;
+        int mipHeight = height;
+        int mipLevel = 1;
+        //uint64_t time = GetTimeMs64();
+        while (mipWidth > 1 || mipHeight > 1)
+        {
+            // Allocate new bits.
+            int prevWidth = mipWidth, prevHeight = mipHeight;
+            mipWidth >>= 1; mipWidth = mipWidth < 1 ? 1 : mipWidth;
+            mipHeight >>= 1; mipHeight = mipHeight < 1 ? 1 : mipHeight;
 
-        uint8_t *prevData = mipData;
-        mipData = static_cast<uint8_t*>(lmAlloc(NULL, mipWidth * mipHeight * 4));
+            uint8_t *prevData = mipData;
+            mipData = static_cast<uint8_t*>(lmAlloc(NULL, mipWidth * mipHeight * 4));
 
-        bitmapExtrudeRGBA_c(prevData, mipData, prevHeight, prevWidth);
-        if (prevData != data) lmFree(NULL, prevData);
+            bitmapExtrudeRGBA_c(prevData, mipData, prevHeight, prevWidth);
+            if (prevData != data) lmFree(NULL, prevData);
 
-        Graphics::context()->glTexImage2D(GL_TEXTURE_2D, mipLevel, GL_RGBA, mipWidth, mipHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mipData);
+            Graphics::context()->glTexImage2D(GL_TEXTURE_2D, mipLevel, GL_RGBA, mipWidth, mipHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mipData);
 
-        mipLevel++;
+            mipLevel++;
+        }
+        if (mipData != data) lmFree(NULL, mipData);
+    } else {
+        tinfo.clampOnly = true;
+        tinfo.mipmaps = false;
+        lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size")
     }
-    if (mipData != data) lmFree(NULL, mipData);
 
     //lmLogInfo(gGFXTextureLogGroup, "Generated mipmaps in %d ms", Graphics::context()->glGetError());
     //*/
-
-    tinfo.width  = width;
-    tinfo.height = height;
 
     if (tinfo.reload)
     {

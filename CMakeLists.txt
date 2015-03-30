@@ -187,6 +187,11 @@ if(APPLE)
         set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
         
         set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_ios/lib/libluajit-5.1.a)
+        set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/ios/libSDL2.a)
+        
+        add_definitions(-DLOOM_RENDERER_OPENGLES2)
+
+        include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
 
         list(APPEND LOOM_INCLUDE_FOLDERS ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/ios )
 
@@ -226,7 +231,7 @@ if (ANDROID)
     add_definitions(-DLOOM_RENDERER_OPENGLES2)
     
     set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_android/lib/libluajit-5.1)
-    set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/libs/armeabi/libSDL2.a)
+    set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/android/armeabi/libSDL2.a)
     
 
 endif()

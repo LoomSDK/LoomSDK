@@ -132,6 +132,11 @@ void QuadRenderer::submit()
 
         Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
 
+        if (tinfo.clampOnly) {
+            tinfo.wrapU = TEXTUREINFO_WRAP_CLAMP;
+            tinfo.wrapV = TEXTUREINFO_WRAP_CLAMP;
+        }
+
         switch (tinfo.wrapU)
         {
             case TEXTUREINFO_WRAP_CLAMP:
@@ -164,11 +169,11 @@ void QuadRenderer::submit()
         switch (tinfo.smoothing)
         {
             case TEXTUREINFO_SMOOTHING_NONE:
-                Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+                Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, tinfo.mipmaps ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
                 Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                 break;
             case TEXTUREINFO_SMOOTHING_BILINEAR:
-                Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, tinfo.mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
                 Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 break;
             default:
@@ -325,11 +330,16 @@ void QuadRenderer::initializeGraphicsResources()
 {
     lmLogInfo(gGFXQuadRendererLogGroup, "Initializing Graphics Resources");
 
+    //lmLogInfo(gGFXQuadRendererLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
+
     // Create the quad shader.
     GLuint vertShader      = Graphics::context()->glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragShader      = Graphics::context()->glCreateShader(GL_FRAGMENT_SHADER);
+    
+    //GLuint fragShader      = Graphics::context()->glCreateShader(GL_FRAGMENT_SHADER);
     GLuint fragShaderColor = Graphics::context()->glCreateShader(GL_FRAGMENT_SHADER);
+    
     GLuint quadProg        = Graphics::context()->glCreateProgram();
+    
     GLuint quadProgColor   = Graphics::context()->glCreateProgram();
 
     char vertShaderSrc[] =
@@ -348,18 +358,8 @@ void QuadRenderer::initializeGraphicsResources()
     const int vertShaderLen = sizeof(vertShaderSrc);
     GLchar *vertShaderPtr = &vertShaderSrc[0];
 
-    char fragShaderSrc[] =
-#if LOOM_RENDERER_OPENGLES2      
-        "precision mediump float;\n"
-#endif
-        "uniform sampler2D u_texture;\n"
-        "varying vec2 v_texcoord0;\n"
-        "void main()\n"
-        "{\n"
-        "    gl_FragColor = texture2D(u_texture, v_texcoord0);\n"
-        "}\n";
-    const int fragShaderLen = sizeof(fragShaderSrc);
-    GLchar *fragShaderPtr = &fragShaderSrc[0];
+    /*
+    */
 
     char fragShaderColorSrc[] =
 #if LOOM_RENDERER_OPENGLES2      
@@ -374,7 +374,7 @@ void QuadRenderer::initializeGraphicsResources()
         "}\n";
     const int fragShaderColorLen = sizeof(fragShaderColorSrc);
     GLchar *fragShaderColorPtr = &fragShaderColorSrc[0];
-
+    
     Graphics::context()->glShaderSource(vertShader, 1, &vertShaderPtr, &vertShaderLen);
     Graphics::context()->glCompileShader(vertShader);
     char error[4096];
@@ -382,25 +382,11 @@ void QuadRenderer::initializeGraphicsResources()
     Graphics::context()->glGetShaderInfoLog(vertShader, 4096, &outLen, error);
 
     lmLogInfo(gGFXQuadRendererLogGroup, "Program info log %s", error);
-
-    Graphics::context()->glShaderSource(fragShader, 1, &fragShaderPtr, &fragShaderLen);
-    Graphics::context()->glCompileShader(fragShader);
-    Graphics::context()->glGetShaderInfoLog(fragShader, 4096, &outLen, error);
-
-    lmLogInfo(gGFXQuadRendererLogGroup, "Program info log %s", error);
-
+    
     Graphics::context()->glShaderSource(fragShaderColor, 1, &fragShaderColorPtr, &fragShaderColorLen);
     Graphics::context()->glCompileShader(fragShaderColor);
     Graphics::context()->glGetShaderInfoLog(fragShaderColor, 4096, &outLen, error);
-
-    lmLogInfo(gGFXQuadRendererLogGroup, "Program info log %s", error);
-
-
-    Graphics::context()->glAttachShader(quadProg, fragShader);
-    Graphics::context()->glAttachShader(quadProg, vertShader);
-    Graphics::context()->glLinkProgram(quadProg);
-    Graphics::context()->glGetProgramInfoLog(quadProg, 4096, &outLen, error);
-
+    
     lmLogInfo(gGFXQuadRendererLogGroup, "Program info log %s", error);
 
     Graphics::context()->glAttachShader(quadProgColor, fragShaderColor);
@@ -409,6 +395,34 @@ void QuadRenderer::initializeGraphicsResources()
     Graphics::context()->glGetProgramInfoLog(quadProgColor, 4096, &outLen, error);
 
     lmLogInfo(gGFXQuadRendererLogGroup, "Program info log %s", error);
+    
+    /*
+    char fragShaderSrc[] =
+#if LOOM_RENDERER_OPENGLES2      
+        "precision mediump float;\n"
+#endif
+        "uniform sampler2D u_texture;\n"
+        "varying vec2 v_texcoord0;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_FragColor = texture2D(u_texture, v_texcoord0);\n"
+        "}\n";
+    const int fragShaderLen = sizeof(fragShaderSrc);
+    GLchar *fragShaderPtr = &fragShaderSrc[0];
+
+    Graphics::context()->glShaderSource(fragShader, 1, &fragShaderPtr, &fragShaderLen);
+    Graphics::context()->glCompileShader(fragShader);
+    Graphics::context()->glGetShaderInfoLog(fragShader, 4096, &outLen, error);
+
+    lmLogInfo(gGFXQuadRendererLogGroup, "Program info log %s", error);
+    
+    Graphics::context()->glAttachShader(quadProg, fragShader);
+    Graphics::context()->glAttachShader(quadProg, vertShader);
+    Graphics::context()->glLinkProgram(quadProg);
+    Graphics::context()->glGetProgramInfoLog(quadProg, 4096, &outLen, error);
+
+    lmLogInfo(gGFXQuadRendererLogGroup, "Program info log %s", error);
+    */
 
     // Get attributes and uniforms.
     sProgram_posAttribLoc = Graphics::context()->glGetAttribLocation(quadProgColor, "a_position");

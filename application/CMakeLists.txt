@@ -56,9 +56,9 @@ if (APPLE)
           ios/Default.png
           ios/Default@2x.png
           ios/Default-568h@2x.png
-          ios/main.mm
-          ios/AppController.mm
-          ios/RootViewController.mm
+          #ios/main.mm
+          #ios/AppController.mm
+          #ios/RootViewController.mm
         )
         
         SET_SOURCE_FILES_PROPERTIES(ios/Default-iphone.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
@@ -74,7 +74,7 @@ if (APPLE)
           ${APPLICATION_SRC}
           osx/Application.icns
           osx/Info.plist
-          osx/main.mm
+          #osx/main.mm
           osx/en.lproj/MainMenu.xib
         )
 
@@ -164,6 +164,8 @@ if (APPLE)
 
           "-ObjC"
           "-lc++"
+
+          "${LOOM_SDL2_LIB}"
           )
 
 

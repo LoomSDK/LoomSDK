@@ -49,25 +49,6 @@ if (APPLE)
 
         ${ENGINE_SRC}
         
-        cocos2dx/platform/ios/AccelerometerDelegateWrapper.mm
-        cocos2dx/platform/ios/CCAccelerometer.mm
-        cocos2dx/platform/ios/CCApplication.mm
-        cocos2dx/platform/ios/CCCommon.mm
-        cocos2dx/platform/ios/CCDirectorCaller.mm
-        cocos2dx/platform/ios/CCEGLView.mm
-        cocos2dx/platform/ios/CCES2Renderer.mm
-        cocos2dx/platform/ios/CCFileUtils.mm
-        cocos2dx/platform/ios/CCImage.mm
-        cocos2dx/platform/ios/CCThread.mm
-        cocos2dx/platform/ios/EAGLView.mm
-        
-        cocos2dx/platform/ios/FontLabel/FontLabel.m
-        cocos2dx/platform/ios/FontLabel/FontLabelStringDrawing.m
-        cocos2dx/platform/ios/FontLabel/FontManager.m
-        cocos2dx/platform/ios/FontLabel/ZAttributedString.m
-        cocos2dx/platform/ios/FontLabel/ZFont.m
-        
-        cocos2dx/platform/ios/Simulation/AccelerometerSimulation.m
     )
 
     else()

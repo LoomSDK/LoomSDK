@@ -495,10 +495,6 @@ namespace :build do
 
   desc "Builds iOS"
   task :ios, [:sign_as] => ['build/luajit_ios/lib/libluajit-5.1.a', 'utility:compileScripts', 'build:fruitstrap'] do |t, args|
-    writeStub("iOS")
-    # iOS build is currently not supported under Windows
-    #if $LOOM_HOST_OS != 'windows'
-	# TODO: add back iOS support
 
     sh "touch artifacts/fruitstrap"
     sh "mkdir -p artifacts/ios/LoomDemo.app"
@@ -509,8 +505,9 @@ namespace :build do
     sh "mkdir -p artifacts/ios/LoomDemo.app/lib"
     sh "touch artifacts/ios/LoomDemo.app/lib/tmp"
 
-	if false	
-
+    
+    # iOS build is currently not supported under Windows
+    if $LOOM_HOST_OS != 'windows'
       puts "== Building iOS =="
 
       check_ios_sdk_version! $targetIOSSDK
@@ -540,6 +537,20 @@ namespace :build do
       puts "*** Signing Identity = #{args.sign_as}"
 
       FileUtils.mkdir_p("cmake_ios")
+
+      # Build SDL for iOS if it's missing
+      sdlLibPath = "build/sdl2/ios/"
+      if not File.exist?("#{sdlLibPath}/libSDL2.a")
+        puts "Building SDL2 for iOS using xcodebuild"
+        sdlProjPath = "loom/vendor/sdl2/Xcode-iOS/SDL/"
+        Dir.chdir(sdlProjPath) do
+          sh "xcodebuild" 
+        end
+        FileUtils.mkdir_p sdlLibPath
+        sh "cp #{sdlProjPath}/build/Release-iphoneos/libSDL2.a #{sdlLibPath}/libSDL2.a"
+      else
+        puts "Found SDL2 libSDL2.a in #{sdlLibPath} - skipping build"
+      end
 
       # TODO: Find a way to resolve resources in xcode for ios.
       Dir.chdir("cmake_ios") do
@@ -619,20 +630,20 @@ namespace :build do
   desc "Builds Android APK"
   task :android => ['build/luajit_android/lib/libluajit-5.1.a', 'utility:compileScripts'] do
     puts "== Building Android =="
-	
-	# Build SDL for Android if it's missing
-	sdlLibPath = "build/sdl2/libs/armeabi"
-	if not File.exist?("#{sdlLibPath}/libSDL2.a")
-		puts "Building SDL2 for Android using ndk-build"
-		sdlSrcPath = "loom/vendor/sdl2"
-		Dir.chdir(sdlSrcPath) do
-			sh "ndk-build SDL2_static NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk APP_PLATFORM=android-13" 
-		end
-		FileUtils.mkdir_p sdlLibPath
-		sh "cp #{sdlSrcPath}/obj/local/armeabi/libSDL2.a #{sdlLibPath}/libSDL2.a"
-	else
-		puts "Found SDL2 libSDL2.a in #{sdlLibPath} - skipping build"
-	end
+
+    # Build SDL for Android if it's missing
+    sdlLibPath = "build/sdl2/android/armeabi"
+    if not File.exist?("#{sdlLibPath}/libSDL2.a")
+      puts "Building SDL2 for Android using ndk-build"
+      sdlSrcPath = "loom/vendor/sdl2"
+      Dir.chdir(sdlSrcPath) do
+        sh "ndk-build SDL2_static NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk APP_PLATFORM=android-13" 
+      end
+      FileUtils.mkdir_p sdlLibPath
+      sh "cp #{sdlSrcPath}/obj/local/armeabi/libSDL2.a #{sdlLibPath}/libSDL2.a"
+    else
+      puts "Found SDL2 libSDL2.a in #{sdlLibPath} - skipping build"
+    end
 	
     if $LOOM_HOST_OS == "windows"
       # WINDOWS
@@ -1065,9 +1076,7 @@ namespace :package do
     FileUtils.rm_rf "pkg/sdk/bin/android"
 
     # iOS and Ouya are currently not supported under Windows
-    #if $LOOM_HOST_OS != "windows"
-	# TODO: add back Ouya/iOS support
-	if false
+    if $LOOM_HOST_OS != "windows"
       # copy tools
       FileUtils.cp_r("artifacts/fruitstrap", "pkg/sdk/tools")
 
@@ -1086,15 +1095,17 @@ namespace :package do
       FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/bin"
       FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/libs"
 
+    # TODO: add back Ouya support
+    #if false
       # ============================================================= Ouya
       # decompile the ouya apk
-      decompile_apk("application/ouya/bin/#{$targetAPKName}","pkg/sdk/bin/ouya")
+      #decompile_apk("application/ouya/bin/#{$targetAPKName}","pkg/sdk/bin/ouya")
 
       # Strip out the bundled assets and binaries
-      FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/assets"
-      FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/bin"
-      FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/libs"
-      FileUtils.rm_rf "pkg/sdk/bin/ouya/META-INF"
+      #FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/assets"
+      #FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/bin"
+      #FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/libs"
+      #FileUtils.rm_rf "pkg/sdk/bin/ouya/META-INF"
 
     end
 

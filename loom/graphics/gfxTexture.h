@@ -47,7 +47,6 @@ typedef int   TextureID;
 #define TEXTUREINFO_WRAP_MIRROR     1
 #define TEXTUREINFO_WRAP_CLAMP      2
 
-
 struct TextureInfo
 {
     TextureID                id;
@@ -59,6 +58,9 @@ struct TextureInfo
     int                      smoothing;
     int                      wrapU;
     int                      wrapV;
+
+    bool                     clampOnly;
+    bool                     mipmaps;
 
     bool                     reload;
 
@@ -87,6 +89,17 @@ struct TextureInfo
     {
         return (int)handle; 
     }
+
+    inline bool isPowerOfTwo() const
+    {
+        return intIsPOT(width) && intIsPOT(height);
+    }
+
+    inline bool intIsPOT(unsigned int x) const
+    {
+        return (!(x & (x - 1)) && x);
+    }
+
 
     const char* getTexturePath() const 
     { 
@@ -135,6 +148,7 @@ private:
 
     static utHashTable<utFastStringHash, TextureID> sTexturePathLookup;
     static bool sTextureAssetNofificationsEnabled;
+    static bool supportsFullNPOT;
 
     // simple linear TextureID -> TextureHandle
     static TextureInfo sTextureInfos[MAXTEXTURES];
