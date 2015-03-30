@@ -71,6 +71,8 @@ int               QuadRenderer::vertexCount;
 int QuadRenderer::currentIndexBufferIdx;
 
 TextureID QuadRenderer::currentTexture;
+
+// Number of quads pending submission
 int       QuadRenderer::quadCount;
 
 int QuadRenderer::numFrameSubmit;
@@ -104,10 +106,17 @@ void QuadRenderer::submit()
 
         // Upload vertex data.
         Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, vertexBuffers[currentVertexBufferIdx]);
+
+        // This commented block seems better for performance, but it's actually a lot slower on iOS.
+        // Instead we just update the entire buffer, which seems to run fine.
+        // A better solution would be having a triple buffered glMapBuffer approach.
+        /*
         Graphics::context()->glBufferSubData(GL_ARRAY_BUFFER,
                                              (vertexCount - quadCount * 4) * sizeof(VertexPosColorTex),
                                              quadCount * 4 * sizeof(VertexPosColorTex),
                                              &vertexData[currentVertexBufferIdx][vertexCount - quadCount*4] );
+        */
+        Graphics::context()->glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(VertexPosColorTex), &vertexData[currentVertexBufferIdx][0], GL_STATIC_DRAW);
 
         Graphics::context()->glEnableVertexAttribArray(sProgram_posAttribLoc);
         Graphics::context()->glEnableVertexAttribArray(sProgram_posColorLoc);
