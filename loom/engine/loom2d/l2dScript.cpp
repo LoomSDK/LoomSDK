@@ -113,6 +113,7 @@ static int registerLoom2D(lua_State *L)
        .addMethod("rotate", &Matrix::rotate)
 
        .addLuaFunction("transformCoord", &Matrix::transformCoord)
+       .addLuaFunction("deltaTransformCoord", &Matrix::deltaTransformCoord)
        .addLuaFunction("setTo", &Matrix::setTo)
        .addLuaFunction("copyFrom", &Matrix::copyFrom)
 
@@ -141,6 +142,7 @@ static int registerLoom2D(lua_State *L)
 
        .addLuaFunction("expandByPoint", &Rectangle::expandByPoint)
        .addLuaFunction("containsPoint", &Rectangle::containsPoint)
+       .addMethod("containsRect", &Rectangle::containsRect)
        .addLuaFunction("contains", &Rectangle::contains)
 
        .addMethod("setTo", &Rectangle::setTo)

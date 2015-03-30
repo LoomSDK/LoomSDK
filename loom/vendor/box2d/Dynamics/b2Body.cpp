@@ -520,6 +520,416 @@ void b2Body::SetFixedRotation(bool flag)
 	ResetMassData();
 }
 
+int b2Body::BodyToContactIndex(const b2Body* body)
+{
+	b2ContactEdge* edge = m_contactList;
+	int bodyContactIndex = 0;
+
+	while (edge)
+	{
+		if (edge->other == body)
+		{
+			return bodyContactIndex;
+		}
+
+		edge = edge->next;
+		bodyContactIndex++;
+	}
+
+	return -1;    
+}
+
+b2Body* b2Body::ContactIndexToBody(int contactIndex)
+{
+	b2ContactEdge* edge = m_contactList;
+	int bodyContactIndex = 0;
+
+	while (edge)
+	{
+		if (bodyContactIndex == contactIndex)
+		{
+			return edge->other;
+		}
+
+		edge = edge->next;
+		bodyContactIndex++;
+	}
+
+	return NULL;    
+}
+
+bool b2Body::IsContacting(const b2Body* other, int contactFlags)
+{
+	b2ContactEdge* edge = m_contactList;
+	while (edge)
+	{
+		if (edge->other == other)
+		{
+			b2Contact *contact = edge->contact;
+			if(contact != NULL)
+			{
+				bool isContacting = true;
+				if(contactFlags & b2Contact::e_touchingFlag)
+				{
+					isContacting &= contact->IsTouching();
+				}
+				if(contactFlags & b2Contact::e_enabledFlag)
+				{
+					isContacting &= contact->IsEnabled();
+				}
+				return isContacting;
+			}
+			return false;
+		}
+
+		edge = edge->next;
+	}
+
+	return false;
+}
+
+int b2Body::GetNumContacts()
+{
+	int totalContacts = 0;
+
+	b2ContactEdge* edge = m_contactList;
+	while (edge)
+	{
+		totalContacts++;
+		edge = edge->next;
+	}
+
+	return totalContacts;   
+}
+
+
+bool b2Body::SetContactEnabled(bool enabledState, int contactIndex)
+{
+	b2ContactEdge* edge = m_contactList;
+	int currentContactIndex = 0;
+
+	while (edge)
+	{
+		if (contactIndex == currentContactIndex)
+		{
+			if (edge->contact != NULL)
+			{
+				edge->contact->SetEnabled(enabledState);
+				return true;  
+			}
+			return false;
+		}
+
+		edge = edge->next;
+		currentContactIndex++;
+	}
+
+	return false;        
+}
+
+bool b2Body::IsContactEnabled(int contactIndex)
+{
+	b2ContactEdge* edge = m_contactList;
+	int currentContactIndex = 0;
+
+	while (edge)
+	{
+		if (contactIndex == currentContactIndex)
+		{
+			if (edge->contact != NULL)
+			{
+				return edge->contact->IsEnabled();
+			}
+			return false;
+		}
+
+		edge = edge->next;
+		currentContactIndex++;
+	}
+
+	return false;     
+}
+
+b2Fixture* b2Body::GetContactFixtureA(int contactIndex)
+{
+	b2ContactEdge* edge = m_contactList;
+	int currentContactIndex = 0;
+
+	while (edge)
+	{
+		if (contactIndex == currentContactIndex)
+		{
+			if (edge->contact != NULL)
+			{
+				return edge->contact->GetFixtureA();
+			}
+			return NULL;
+		}
+
+		edge = edge->next;
+		currentContactIndex++;
+	}
+
+	return NULL; 
+}
+
+int32 b2Body::GetContactChildIndexA(int contactIndex)
+{
+	b2ContactEdge* edge = m_contactList;
+	int currentContactIndex = 0;
+
+	while (edge)
+	{
+		if (contactIndex == currentContactIndex)
+		{
+			if (edge->contact != NULL)
+			{
+				return edge->contact->GetChildIndexA();
+			}
+			return 0;
+		}
+
+		edge = edge->next;
+		currentContactIndex++;
+	}
+
+	return 0; 
+}
+
+b2Fixture* b2Body::GetContactFixtureB(int contactIndex)
+{
+	b2ContactEdge* edge = m_contactList;
+	int currentContactIndex = 0;
+
+	while (edge)
+	{
+		if (contactIndex == currentContactIndex)
+		{
+			if (edge->contact != NULL)
+			{
+				return edge->contact->GetFixtureB();
+			}
+			return NULL;
+		}
+
+		edge = edge->next;
+		currentContactIndex++;
+	}
+
+	return NULL; 
+}
+
+int32 b2Body::GetContactChildIndexB(int contactIndex)
+{
+	b2ContactEdge* edge = m_contactList;
+	int currentContactIndex = 0;
+
+	while (edge)
+	{
+		if (contactIndex == currentContactIndex)
+		{
+			if (edge->contact != NULL)
+			{
+				return edge->contact->GetChildIndexB();
+			}
+			return 0;
+		}
+
+		edge = edge->next;
+		currentContactIndex++;
+	}
+
+	return 0; 
+}
+
+float32 b2Body::GetContactFriction(int contactIndex)
+{
+	b2ContactEdge* edge = m_contactList;
+	int currentContactIndex = 0;
+
+	while (edge)
+	{
+		if (contactIndex == currentContactIndex)
+		{
+			if (edge->contact != NULL)
+			{
+				return edge->contact->GetFriction();
+			}
+			return 0.0f;
+		}
+
+		edge = edge->next;
+		currentContactIndex++;
+	}
+
+	return 0.0f; 
+}
+
+bool b2Body::SetContactFriction(int contactIndex, float32 friction)
+{
+	b2ContactEdge* edge = m_contactList;
+	int currentContactIndex = 0;
+
+	while (edge)
+	{
+		if (contactIndex == currentContactIndex)
+		{
+			if (edge->contact != NULL)
+			{
+				edge->contact->SetFriction(friction);
+				return true;
+			}
+			return false;
+		}
+
+		edge = edge->next;
+		currentContactIndex++;
+	}
+
+	return false; 
+}
+
+bool b2Body::ResetContactFriction(int contactIndex)
+{
+	b2ContactEdge* edge = m_contactList;
+	int currentContactIndex = 0;
+
+	while (edge)
+	{
+		if (contactIndex == currentContactIndex)
+		{
+			if (edge->contact != NULL)
+			{
+				edge->contact->ResetFriction();
+				return true;
+			}
+			return false;
+		}
+
+		edge = edge->next;
+		currentContactIndex++;
+	}
+
+	return false; 
+}
+
+float32 b2Body::GetContactRestitution(int contactIndex)
+{
+	b2ContactEdge* edge = m_contactList;
+	int currentContactIndex = 0;
+
+	while (edge)
+	{
+		if (contactIndex == currentContactIndex)
+		{
+			if (edge->contact != NULL)
+			{
+				return edge->contact->GetRestitution();
+			}
+			return 0.0f;
+		}
+
+		edge = edge->next;
+		currentContactIndex++;
+	}
+
+	return 0.0f; 
+}
+
+bool b2Body::SetContactRestitution(int contactIndex, float32 Restitution)
+{
+	b2ContactEdge* edge = m_contactList;
+	int currentContactIndex = 0;
+
+	while (edge)
+	{
+		if (contactIndex == currentContactIndex)
+		{
+			if (edge->contact != NULL)
+			{
+				edge->contact->SetRestitution(Restitution);
+			}
+			return false;
+		}
+
+		edge = edge->next;
+		currentContactIndex++;
+	}
+
+	return false; 
+}
+
+bool b2Body::ResetContactRestitution(int contactIndex)
+{
+	b2ContactEdge* edge = m_contactList;
+	int currentContactIndex = 0;
+
+	while (edge)
+	{
+		if (contactIndex == currentContactIndex)
+		{
+			if (edge->contact != NULL)
+			{
+				edge->contact->ResetRestitution();
+				return true;
+			}
+			return false;
+		}
+
+		edge = edge->next;
+		currentContactIndex++;
+	}
+
+	return false; 
+}
+
+float32 b2Body::GetContactTangentSpeed(int contactIndex)
+{
+	b2ContactEdge* edge = m_contactList;
+	int currentContactIndex = 0;
+
+	while (edge)
+	{
+		if (contactIndex == currentContactIndex)
+		{
+			if (edge->contact != NULL)
+			{
+				return edge->contact->GetTangentSpeed();
+			}
+			return 0.0f;
+		}
+
+		edge = edge->next;
+		currentContactIndex++;
+	}
+
+	return 0.0f; 
+}
+
+bool b2Body::SetContactTangentSpeed(int contactIndex, float32 speed)
+{
+	b2ContactEdge* edge = m_contactList;
+	int currentContactIndex = 0;
+
+	while (edge)
+	{
+		if (contactIndex == currentContactIndex)
+		{
+			if (edge->contact != NULL)
+			{
+				edge->contact->SetTangentSpeed(speed);
+				return true;
+			}
+			return false;
+		}
+
+		edge = edge->next;
+		currentContactIndex++;
+	}
+
+	return false; 
+}
+
 void b2Body::Dump()
 {
 	int32 bodyIndex = m_islandIndex;

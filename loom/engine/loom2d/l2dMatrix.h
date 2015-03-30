@@ -276,6 +276,23 @@ public:
         return 1;
     }
 
+    int deltaTransformCoord(lua_State *L)
+    {
+        float x = (float)lua_tonumber(L, 2);
+        float y = (float)lua_tonumber(L, 3);
+
+        // get the helper point
+        lua_pushnumber(L, sHelperPointOrdinal);
+        lua_gettable(L, 1);
+
+        lua_pushnumber(L, a * x + c * y);
+        lua_rawseti(L, 4, (int)Point::xOrdinal);
+        lua_pushnumber(L, b * x + d * y);
+        lua_rawseti(L, 4, (int)Point::yOrdinal);
+
+        return 1;
+    }
+
     inline void copyFrom(const Matrix *other)
     {
         a  = other->a;

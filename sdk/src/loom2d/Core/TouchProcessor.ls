@@ -254,6 +254,9 @@ package loom2d.core
             
             if (data.phase == TouchPhase.BEGAN)
                 processTap(touch);
+
+            if(data.phase == TouchPhase.ENDED)
+                processRelease(touch);
         }
         
         private function onKey(event:KeyboardEvent):void
@@ -322,6 +325,25 @@ package loom2d.core
             }
             
             mLastTaps.push(touch.clone());
+        }
+
+        private function processRelease(touch:Touch):void
+        {
+            //track a Click event, which would be a touch down/up in quick succession at the same location
+            var wasTapNearby:Boolean = false;
+            var minSqDist:Number = MULTITAP_DISTANCE * MULTITAP_DISTANCE;
+            for each (var tap:Touch in mLastTaps)
+            {
+                var sqDist:Number = Math.pow(tap.globalX - touch.globalX, 2) +
+                                    Math.pow(tap.globalY - touch.globalY, 2);
+                if (sqDist <= minSqDist)
+                {
+                    wasTapNearby = true;
+                    break;
+                }
+            }
+            
+            touch.setClick(wasTapNearby);
         }
         
         private function addCurrentTouch(touch:Touch):void

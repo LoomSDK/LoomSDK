@@ -20,12 +20,13 @@
 
 #include "loom/common/assets/assets.h"
 #include "loom/common/utils/utString.h"
+#include "loom/common/utils/utByteArray.h"
 #include "loom/common/core/log.h"
 #include "loom/script/loomscript.h"
 
-lmDefineLogGroup(gLoomTextAssetGroup, "loom.textAsset", 1, LoomLogInfo);
-
 using namespace LS;
+
+lmDefineLogGroup(gLoomTextAssetGroup, "loom.textAsset", 1, LoomLogInfo);
 
 class LoomTextAsset
 {
@@ -97,6 +98,84 @@ const char *LoomTextAsset::getContents()
 
 
 const NativeDelegate *LoomTextAsset::getUpdateDelegate() const
+{
+    return &updateDelegate;
+}
+
+//-----------------------------------------------------------------------------
+
+lmDefineLogGroup(gLoomBinaryAssetGroup, "loom.binaryAsset", 1, LoomLogInfo);
+
+class LoomBinaryAsset
+{
+protected:
+    NativeDelegate updateDelegate;
+
+    static void handleAssetNotification(void *payload, const char *path);
+
+    utByteArray *contents;
+    utString path;
+
+public:
+    static LoomBinaryAsset *create(const char *path);
+
+    void load();
+
+    utByteArray* getContents();
+    const NativeDelegate *getUpdateDelegate() const;
+};
+
+LoomBinaryAsset *LoomBinaryAsset::create(const char *path)
+{
+    LoomBinaryAsset *lta = new LoomBinaryAsset();
+    lta->contents = NULL;
+    lta->path = path;
+    return lta;
+}
+
+
+void LoomBinaryAsset::load()
+{
+    // Print a warning if user calls load with no delegates, as this
+    // introduces a race condition.
+    if (updateDelegate.getCount() == 0)
+    {
+        lmLog(gLoomBinaryAssetGroup, "Warning: calling LoomBinaryAsset::load for asset '%s' without anything added to its delegate! You are likely to miss asset updates/state.", path.c_str());
+    }
+
+    // Force it to load.
+    loom_asset_lock(path.c_str(), LATBinary, 1);
+    loom_asset_unlock(path.c_str());
+
+    // And subscribe for updates.
+    loom_asset_subscribe(path.c_str(), &LoomBinaryAsset::handleAssetNotification, (void *)this, 1);
+}
+
+
+void LoomBinaryAsset::handleAssetNotification(void *payload, const char *path)
+{
+    LoomBinaryAsset *assetThis = (LoomBinaryAsset *)payload;
+
+    // Grab the asset so we can use it.
+    utByteArray *bytes = (utByteArray*) loom_asset_lock(path, LATBinary, 1);
+
+    assetThis->contents = bytes;
+    loom_asset_unlock(path);
+
+    // Trigger the update delegate.
+    assetThis->updateDelegate.pushArgument(assetThis->path.c_str());
+    assetThis->updateDelegate.pushArgument(assetThis->contents);
+    assetThis->updateDelegate.invoke();
+}
+
+
+utByteArray* LoomBinaryAsset::getContents()
+{
+    return contents;
+}
+
+
+const NativeDelegate *LoomBinaryAsset::getUpdateDelegate() const
 {
     return &updateDelegate;
 }
@@ -173,6 +252,26 @@ static int registerLoomTextAsset(lua_State *L)
 }
 
 
+static int registerLoomBinaryAsset(lua_State *L)
+{
+    beginPackage(L, "loom")
+
+        .beginClass<LoomBinaryAsset>("LoomBinaryAsset")
+
+        .addStaticMethod("create", &LoomBinaryAsset::create)
+
+        .addMethod("getContents", &LoomBinaryAsset::getContents)
+        .addMethod("load", &LoomBinaryAsset::load)
+        .addVarAccessor("updateDelegate", &LoomBinaryAsset::getUpdateDelegate)
+
+        .endClass()
+
+        .endPackage();
+
+    return 0;
+}
+
+
 static int registerLoomAssetManager(lua_State *L)
 {
     beginPackage(L, "loom")
@@ -197,5 +296,6 @@ static int registerLoomAssetManager(lua_State *L)
 void installLoomAssets()
 {
     LOOM_DECLARE_NATIVETYPE(LoomTextAsset, registerLoomTextAsset);
+    LOOM_DECLARE_NATIVETYPE(LoomBinaryAsset, registerLoomBinaryAsset);
     LOOM_DECLARE_NATIVETYPE(LoomAssetManager, registerLoomAssetManager);
 }

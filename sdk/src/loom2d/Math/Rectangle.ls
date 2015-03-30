@@ -51,7 +51,15 @@ package loom2d.math
          */
         public native function containsPoint(p:Point):Boolean;
         
+        /**
+         * Returns true if x and y is inside the bounds of this rectangle.
+         */
         public native function contains(_x:Number, _y:Number):Boolean;
+        
+        /**
+         * Returns true if rect is entirely inside of this rectangle is inside the bounds of this rectangle.
+         */
+        public native function containsRect(rect:Rectangle):Boolean;
 
         /**
          * Assign the x,y,width,height of this rectangle.
@@ -75,7 +83,7 @@ package loom2d.math
             if (rect1.bottom < rect2.top) return false; // 1 is above 2
             if (rect1.top > rect2.bottom) return false; // 1 is below 2
             return true;
-        }        
+        }
     }
     
 }
