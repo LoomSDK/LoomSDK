@@ -106,3 +106,4 @@ loom/engine/SDL2/platform/android/java/local.properties
 loom/vendor/sdl2/Xcode-iOS/SDL/build
 loom/vendor/sdl2/Xcode-iOS/SDL/SDL.xcodeproj/xcuserdata
 loom/vendor/sdl2/Xcode-iOS/SDL/SDL.xcodeproj/project.xcworkspace/xcuserdata
+loom/engine/sdl2/platform/android/java/build.xml
