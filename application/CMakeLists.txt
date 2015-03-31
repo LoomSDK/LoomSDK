@@ -56,7 +56,7 @@ if (APPLE)
           ios/Default.png
           ios/Default@2x.png
           ios/Default-568h@2x.png
-          #ios/main.mm
+          # TODO: reimplement parts of these
           #ios/AppController.mm
           #ios/RootViewController.mm
         )
