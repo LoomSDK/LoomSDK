@@ -20,34 +20,90 @@
 
 #pragma once
 
+#include <SDL.h>
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 
 namespace Loom2D
 {
+
 class Stage : public DisplayObjectContainer
 {
-    // projection matrix for Stage
-    static float mtxProjection[16];
-    // model view matrix for Stage
-    static float mtxModelView[16];
+protected:
 
 public:
 
-    LOOM_STATICDELEGATE(RenderStage);
+    Stage();
+    ~Stage();
 
-    static void invokeRenderStage()
+    static Stage *smMainStage;
+
+    // The SDL window we're working with.
+    SDL_Window *sdlWindow;
+    int stageWidth;
+    int stageHeight;
+
+    // Rendering interface.
+    void invokeRenderStage()
     {
         _RenderStageDelegate.invoke();
     }
 
+    LOOM_STATICDELEGATE(RenderStage);
+
     static int renderStage(lua_State *L);
 
-    static void setViewTransform(float *view, float *projection)
+    void render(lua_State *L);
+
+    // Interface for window state.
+    LOOM_DELEGATE(OrientationChange);
+    LOOM_DELEGATE(SizeChange);
+
+    void noteNativeSize(int width, int height)
     {
-        memcpy(mtxProjection, projection, sizeof(float) * 16);
-        memcpy(mtxModelView, view, sizeof(float) * 16);
+        stageWidth = width;
+        stageHeight = height;
+        _SizeChangeDelegate.pushArgument(width);
+        _SizeChangeDelegate.pushArgument(height);
+        _SizeChangeDelegate.invoke();
     }
 
-    void render(lua_State *L);
+    void setWindowTitle(const char *title);
+    const char *getWindowTitle();
+
+    int getOrientation();
+
+    int getWidth()
+    {
+        return stageWidth;
+    }
+
+    int getHeight()
+    {
+        return stageHeight;
+    }
+
+    void resize(int width, int height)
+    {
+        SDL_SetWindowSize(sdlWindow, width, height);
+        SDL_GL_GetDrawableSize(sdlWindow, &stageWidth, &stageHeight);
+        noteNativeSize(stageWidth, stageHeight);
+    }
+
+    void toggleFullscreen();
+    bool isFullScreen();
+
+    // Interface for input events.
+    LOOM_DELEGATE(TouchBegan);
+    LOOM_DELEGATE(TouchMoved);
+    LOOM_DELEGATE(TouchEnded);
+    LOOM_DELEGATE(TouchCancelled);
+    LOOM_DELEGATE(KeyBackClicked);
+    LOOM_DELEGATE(KeyMenuClicked);
+    LOOM_DELEGATE(KeyUp);
+    LOOM_DELEGATE(KeyDown);
+    LOOM_DELEGATE(MenuKey);
+    LOOM_DELEGATE(BackKey);
+    LOOM_DELEGATE(ScrollWheelYMoved);
+    LOOM_DELEGATE(Accelerate);
 };
 }

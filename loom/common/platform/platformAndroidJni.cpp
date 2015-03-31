@@ -53,6 +53,12 @@ static bool getEnv(JNIEnv **env)
 
     do
     {
+        if (LOOMJAVAVM == NULL)
+        {
+            lmLog(jniLogGroup, "Missing LOOMJAVAVM (== NULL)");
+            break;
+        }
+
         if (LOOMJAVAVM->GetEnv((void **)env, JNI_VERSION_1_4) != JNI_OK)
         {
             lmLog(jniLogGroup, "Failed to get the environment using GetEnv()");
@@ -258,8 +264,8 @@ const char *LoomJni::getPackageName()
     loomJniMethodInfo t;
 
     if (getStaticMethodInfo(t,
-                            "org/cocos2dx/lib/Cocos2dxActivity",
-                            "getCocos2dxPackageName",
+                            "co/theengine/loomdemo/LoomDemo",
+                            "getActivityPackageName",
                             "()Ljava/lang/String;"))
     {
         jstring str = (jstring)t.getEnv()->CallStaticObjectMethod(t.classID, t.methodID);

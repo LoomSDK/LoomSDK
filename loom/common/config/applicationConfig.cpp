@@ -37,6 +37,9 @@ utString LoomApplicationConfig::_applicationId = "unknown_app_id";
 int      LoomApplicationConfig::_waitForDebugger = false;
 utString LoomApplicationConfig::_debuggerHost;
 int      LoomApplicationConfig::_debuggerPort;
+utString LoomApplicationConfig::_displayTitle = "Loom";
+int      LoomApplicationConfig::_displayWidth = 640;
+int      LoomApplicationConfig::_displayHeight = 480;
 
 // little helpers that do conversion
 static bool _jsonParseBool(const char *key, json_t *value)
@@ -216,6 +219,24 @@ void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
     if (json_t *dp = json_object_get(json, "debuggerPort"))
     {
         _debuggerPort = _jsonParseInt("debuggerPort", dp);
+    }
+
+    if (json_t *displayBlock = json_object_get(json, "display"))
+    {
+        if(json_t *dTitle = json_object_get(displayBlock, "title"))
+        {
+            _displayTitle = json_string_value(dTitle);
+        }
+
+        if(json_t *dWidth = json_object_get(displayBlock, "width"))
+        {
+            _displayWidth = _jsonParseInt("width", dWidth);
+        }
+
+        if(json_t *dHeight = json_object_get(displayBlock, "height"))
+        {
+            _displayHeight = _jsonParseInt("height", dHeight);
+        }
     }
 
     json_delete(json);

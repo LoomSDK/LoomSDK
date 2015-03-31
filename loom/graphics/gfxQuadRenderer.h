@@ -47,12 +47,12 @@ class QuadRenderer
 
 private:
 
-    static bgfx::DynamicVertexBufferHandle vertexBuffers[MAXVERTEXBUFFERS];
+    static unsigned int vertexBuffers[MAXVERTEXBUFFERS];
 
-    static VertexPosColorTex* vertexData[MAXVERTEXBUFFERS];
+    static VertexPosColorTex *vertexData[MAXVERTEXBUFFERS];
     static void* vertexDataMemory;
 
-    static int               maxVertexIdx[MAXVERTEXBUFFERS];
+    static int maxVertexIdx[MAXVERTEXBUFFERS];
 
     static int numVertexBuffers;
 
@@ -76,6 +76,8 @@ private:
     // reset the quad renderer, on loss of context etc
     static void reset();
 
+    static void _initializeNextVertexBuffer();
+
 
 public:
 
@@ -85,8 +87,8 @@ public:
 
     static void endFrame();
 
-    static VertexPosColorTex *getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted, uint64_t blendFunc);
+    static VertexPosColorTex *getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted, uint32_t srcBlend, uint32_t dstBlend);
 
-    static void batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices, uint64_t blendFunc);
+    static void batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices, uint32_t srcBlend, uint32_t dstBlend);
 };
 }

@@ -73,5 +73,10 @@ package loom2d.events
         
         /** Indicates whether the Shift key modifier is active (true) or inactive (false). */
         public function get shiftKey():Boolean { return mShiftKey; }
+
+        public function toString():String
+        {
+            return "[KeyboardEvent charCode=" + charCode + " keyCode=" + keyCode + " keyLocation=" + keyLocation + " altKey=" + altKey + " ctrlKey=" + ctrlKey + " shiftKey=" + shiftKey +"]";
+        }
     }
 }

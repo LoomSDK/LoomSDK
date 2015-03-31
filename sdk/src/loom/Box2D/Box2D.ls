@@ -886,33 +886,33 @@ package loom.box2d
         public native function dump():void;
     }
     
-    [Native(managed)]
-    final public native class ShapeCache
-    {
-        public static native function sharedShapeCache():ShapeCache;
-        
-        public native function reset():void;
-
-        /**
-         * Add fixture data to the specified body.
-         * @param body The body to add the fixtures to.
-         * @param shapeName Name of the shape.
-         */
-        public native function addFixturesToBody(body:Body, shapeName:String):void;
-        
-        /**
-         * Adds shapes to the shape cache from a plist file.
-         * @param plistPath The path of the plist file to load.
-         * @param vertexScale The scale vector used for the shapes. Useful to flip the Y axis.
-         * @param ptm The pixels-to-meters ratio used for the shapes.
-         */
-        public native function addShapesWithFile(plistPath:String, vertexScale:Vec2, ptm:Number = 0):void;
-        
-        /**
-         * Returns the anchor point of the given shape.
-         * @param shapeName The name of the shape to get the anchor point for.
-         * @return The anchor point.
-         */
-        public native function anchorPointForShape(shapeName:String):Vec2;
-    }
+//    [Native(managed)]
+//    final public native class ShapeCache
+//    {
+//        public static native function sharedShapeCache():ShapeCache;
+        //
+//        public native function reset():void;
+//
+//        /**
+//         * Add fixture data to the specified body.
+//         * @param body The body to add the fixtures to.
+//         * @param shapeName Name of the shape.
+//         */
+//        public native function addFixturesToBody(body:Body, shapeName:String):void;
+        //
+//        /**
+//         * Adds shapes to the shape cache from a plist file.
+//         * @param plistPath The path of the plist file to load.
+//         * @param vertexScale The scale vector used for the shapes. Useful to flip the Y axis.
+//         * @param ptm The pixels-to-meters ratio used for the shapes.
+//         */
+//        public native function addShapesWithFile(plistPath:String, vertexScale:Vec2, ptm:Number = 0):void;
+        //
+//        /**
+//         * Returns the anchor point of the given shape.
+//         * @param shapeName The name of the shape to get the anchor point for.
+//         * @return The anchor point.
+//         */
+//        public native function anchorPointForShape(shapeName:String):Vec2;
+//    }
 }

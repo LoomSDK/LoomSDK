@@ -46,6 +46,10 @@ class LoomApplicationConfig
 
     static bool     _wants51Audio;
 
+    static utString _displayTitle;
+    static int      _displayWidth;
+    static int      _displayHeight;
+
 public:
 
     static void parseApplicationConfig(const utString& jsonString);
@@ -109,6 +113,21 @@ public:
     static const bool wants51Audio()
     {
         return _wants51Audio;
+    }
+
+    static const utString& displayTitle()
+    {
+        return _displayTitle;
+    }
+
+    static const int displayWidth()
+    {
+        return _displayWidth;
+    }
+
+    static const int displayHeight()
+    {
+        return _displayHeight;
     }
 };
 #endif

@@ -31,6 +31,8 @@ extern "C" {
 }
 
 bool LS::Process::consoleAttached = false;
+int LS::Process::rubyProcessId = -1;
+
 void LS::Process::cleanupConsole()
 {
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32

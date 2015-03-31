@@ -18,13 +18,15 @@
  * ===========================================================================
  */
 
-#include "bgfx.h"
+#include "loom/common/assets/assets.h"
+#include "loom/common/assets/assetsImage.h"
 
 #include "loom/common/core/assert.h"
 #include "loom/common/core/allocator.h"
 #include "loom/common/core/log.h"
 #include "loom/common/utils/utTypes.h"
 
+#include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxTexture.h"
 
 #include "loom/common/platform/platformTime.h"
@@ -38,6 +40,7 @@ namespace GFX
 TextureInfo Texture::sTextureInfos[MAXTEXTURES];
 utHashTable<utFastStringHash, TextureID> Texture::sTexturePathLookup;
 bool Texture::sTextureAssetNofificationsEnabled = true;
+bool Texture::supportsFullNPOT;
 
 //queue of textures to load in the async loading thread
 utList<AsyncLoadNote> Texture::sAsyncLoadQueue;
@@ -62,13 +65,20 @@ void Texture::initialize()
 {
     for (int i = 0; i < MAXTEXTURES; i++)
     {
-        sTextureInfos[i].id           = i;
-        sTextureInfos[i].reload       = false;
+        sTextureInfos[i].id         = i;
+        sTextureInfos[i].reload     = false;
         sTextureInfos[i].asyncDispose = false;
-        sTextureInfos[i].handle.idx   = bgfx::invalidHandle;
+        sTextureInfos[i].handle     = -1;
     }
     Texture::sTexInfoLock = loom_mutex_create();
     Texture::sAsyncQueueMutex = loom_mutex_create();
+
+#if LOOM_RENDERER_OPENGLES2
+    Texture::supportsFullNPOT = Graphics::queryExtension("GL_ARB_texture_non_power_of_two") || Graphics::queryExtension("GL_OES_texture_npot");
+#else
+    Texture::supportsFullNPOT = true;
+#endif
+
 }
 
 void Texture::tick()
@@ -146,95 +156,14 @@ static void rgbaToBgra(uint8_t *_data, uint32_t _width, uint32_t _height)
 }
 
 
-TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, TextureID id)
-{
-    if (id == -1)
-    {
-        id = getAvailableTextureID();
-
-        if (id == TEXTUREINVALID)
-        {
-            return NULL;
-        }
-    }
-
-    if ((id < 0) || (id >= MAXTEXTURES))
-    {
-        return NULL;
-    }
-
-    // Make a copy of the texture so we can swizzle it safely. No need to
-    // free memory, this will be freed at end of frame by bgfx.
-    const bgfx::Memory *mem = bgfx::alloc(width * height * 4);
-    memcpy(mem->data, data, width * height * 4);
-
-    // Do the swizzle for D3D9 - see LOOM-1713 for details on this.
-    rgbaToBgra(mem->data, width, height);
-
-    loom_mutex_lock(Texture::sTexInfoLock);
-    TextureInfo *tinfo = &sTextureInfos[id];
-    if (!tinfo->reload || (tinfo->width != width) || (tinfo->height != height))
-    {
-        if (tinfo->texturePath.empty()) {
-            lmLog(gGFXTextureLogGroup, "Create texture for bytes");
-        } else {
-            lmLog(gGFXTextureLogGroup, "Create texture for %s", tinfo->texturePath.c_str());
-        }
-        
-        if (tinfo->reload)
-        {
-            bgfx::destroyTexture(tinfo->handle);
-        }
-
-        tinfo->handle = bgfx::createTexture2D(width, height, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_NONE, mem);
-        tinfo->width  = width;
-        tinfo->height = height;
-
-        if (tinfo->reload)
-        {
-            // Fire the delegate.
-            tinfo->updateDelegate.pushArgument(width);
-            tinfo->updateDelegate.pushArgument(height);
-            tinfo->updateDelegate.invoke();
-        }
-
-        // mark that next time we will be reloading
-        tinfo->reload = true;
-    }
-    else
-    {
-        if (tinfo->texturePath.empty()) {
-            lmLog(gGFXTextureLogGroup, "Updating texture from bytes");
-        }
-        else {
-            lmLog(gGFXTextureLogGroup, "Updating texture %s", tinfo->texturePath.c_str());
-        }
-
-        bgfx::updateTexture2D(tinfo->handle, 0, 0, 0, width, height, mem);
-
-        tinfo->width  = width;
-        tinfo->height = height;
-
-        // Fire the delegate.
-        tinfo->updateDelegate.pushArgument(width);
-        tinfo->updateDelegate.pushArgument(height);
-        tinfo->updateDelegate.invoke();
-    }
-
-    loom_mutex_unlock(Texture::sTexInfoLock);
-
-    return tinfo;
-}
-
-
 // Courtesy of Torque via MIT license.
 void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWidth)
 {
-    const unsigned char *src   = (const unsigned char *)srcMip;
-    unsigned char       *dst   = (unsigned char *)mip;
-    int                 stride = srcHeight != 1 ? (srcWidth) * 4 : 0;
+    const unsigned char *src = (const unsigned char *)srcMip;
+    unsigned char       *dst = (unsigned char *)mip;
+    int                 stride = srcHeight != 1 ? (srcWidth)* 4 : 0;
 
-    int width  = srcWidth >> 1;
+    int width = srcWidth >> 1;
     int height = srcHeight >> 1;
 
     if (width == 0)
@@ -259,7 +188,7 @@ void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWi
                 *dst++ = (int(*src) + int(src[4]) + int(src[stride]) + int(src[stride + 4]) + 2) >> 2;
                 src++;
                 *dst++ = (int(*src) + int(src[4]) + int(src[stride]) + int(src[stride + 4]) + 2) >> 2;
-                src   += 5;
+                src += 5;
             }
             src += stride;    // skip
         }
@@ -275,13 +204,130 @@ void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWi
             *dst++ = (int(*src) + int(src[stride]) + 1) >> 1;
             src++;
             *dst++ = (int(*src) + int(src[stride]) + 1) >> 1;
-            src   += 5;
+            src += 5;
 
             src += stride;    // skip
         }
     }
 }
 
+
+TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, TextureID id)
+{
+    if (id == -1)
+    {
+        id = getAvailableTextureID();
+
+        if (id == TEXTUREINVALID)
+        {
+            return NULL;
+        }
+    }
+
+    if ((id < 0) || (id >= MAXTEXTURES))
+    {
+        return NULL;
+    }
+
+    loom_mutex_lock(Texture::sTexInfoLock);
+
+    TextureInfo &tinfo = sTextureInfos[id];
+
+    bool newTexture = !tinfo.reload || (tinfo.width != width) || (tinfo.height != height);
+
+    if (newTexture)
+    {
+        lmLog(gGFXTextureLogGroup, "Create texture for %s", tinfo.texturePath.c_str());
+    }
+    else
+    {
+        lmLog(gGFXTextureLogGroup, "Updating texture %s", tinfo.texturePath.c_str());
+    }
+
+
+    if (tinfo.reload)
+    {
+        Graphics::context()->glDeleteTextures(1, &tinfo.handle);
+    }
+
+    if (newTexture) Graphics::context()->glGenTextures(1, &tinfo.handle);
+
+    lmLog(gGFXTextureLogGroup, "Create > %u", tinfo.handle);
+
+    //lmLog(gGFXTextureLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
+
+    Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
+
+    Graphics::context()->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    /*
+    Graphics::context()->glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    Graphics::context()->glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+    Graphics::context()->glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+    */
+    Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    /*
+    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    */
+    //lmLogInfo(gGFXTextureLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
+
+    tinfo.width  = width;
+    tinfo.height = height;
+
+    if (supportsFullNPOT || tinfo.isPowerOfTwo())
+    {
+        tinfo.clampOnly = false;
+        tinfo.mipmaps = true;
+        uint8_t *mipData = data;
+        int mipWidth = width;
+        int mipHeight = height;
+        int mipLevel = 1;
+        //uint64_t time = GetTimeMs64();
+        while (mipWidth > 1 || mipHeight > 1)
+        {
+            // Allocate new bits.
+            int prevWidth = mipWidth, prevHeight = mipHeight;
+            mipWidth >>= 1; mipWidth = mipWidth < 1 ? 1 : mipWidth;
+            mipHeight >>= 1; mipHeight = mipHeight < 1 ? 1 : mipHeight;
+
+            uint8_t *prevData = mipData;
+            mipData = static_cast<uint8_t*>(lmAlloc(NULL, mipWidth * mipHeight * 4));
+
+            bitmapExtrudeRGBA_c(prevData, mipData, prevHeight, prevWidth);
+            if (prevData != data) lmFree(NULL, prevData);
+
+            Graphics::context()->glTexImage2D(GL_TEXTURE_2D, mipLevel, GL_RGBA, mipWidth, mipHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mipData);
+
+            mipLevel++;
+        }
+        if (mipData != data) lmFree(NULL, mipData);
+    } else {
+        tinfo.clampOnly = true;
+        tinfo.mipmaps = false;
+        lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size")
+    }
+
+    //lmLogInfo(gGFXTextureLogGroup, "Generated mipmaps in %d ms", Graphics::context()->glGetError());
+    //*/
+
+    if (tinfo.reload)
+    {
+        // Fire the delegate.
+        tinfo.updateDelegate.pushArgument(width);
+        tinfo.updateDelegate.pushArgument(height);
+        tinfo.updateDelegate.invoke();
+    }
+
+    // mark that next time we will be reloading
+    tinfo.reload = true;
+
+    loom_mutex_unlock(Texture::sTexInfoLock);
+
+    return &tinfo;
+}
 
 TextureInfo *Texture::initFromAssetManager(const char *path)
 {
@@ -294,9 +340,7 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
     TextureID *texID;
     TextureInfo *tinfo = getTextureInfoFromPath(path, &texID);
     if(texID)
-    {
         return tinfo;
-    }
 
     // Force it to load.
     if(loom_asset_lock(path, LATImage, 1) == NULL)
@@ -535,7 +579,7 @@ TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name, b
         loom_mutex_lock(Texture::sTexInfoLock);
         TextureID   *pid   = sTexturePathLookup.get(name);
         TextureInfo *tinfo = (pid && ((*pid >= 0) && (*pid < MAXTEXTURES))) ? &sTextureInfos[*pid] : NULL;
-        if(pid && (!tinfo || (tinfo->handle.idx == bgfx::invalidHandle)))
+        if(pid && (!tinfo || (tinfo->handle == -1)))
         {
             lmLogError(gGFXTextureLogGroup, "Invalid Texture ID or Handle returned in initFromBytesAsync() for texture: %s", name);
             tinfo = NULL;
@@ -622,7 +666,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
         lmLogError(gGFXTextureLogGroup, "Attempting to load texture while notifications are disabled '%s', using debug checkerboard.", name);        
         loadCheckerBoard(id);
         return;
-    }    
+    }
 
     // Get the image via the asset manager.    
     loom_asset_image_t *lat = (loom_asset_image_t *)loom_asset_lock(name, LATImage, 0);
@@ -658,10 +702,10 @@ void Texture::handleAssetNotification(void *payload, const char *name)
 void Texture::loadImageAsset(loom_asset_image_t *lat, TextureID id)
 {
     // See if it's over 2048 - if so, downsize to fit.
-    const int          maxSize = 2048;
-    void               *localBits = lat->bits;
-    const bgfx::Memory *localMem = NULL;
-    int                localWidth = lat->width;
+    const int          maxSize     = 2048;
+    void               *localBits  = lat->bits;
+    void               *localMem   = NULL;
+    int                localWidth  = lat->width;
     int                localHeight = lat->height;
     while (localWidth > maxSize || localHeight > maxSize)
     {
@@ -673,8 +717,7 @@ void Texture::loadImageAsset(loom_asset_image_t *lat, TextureID id)
 
         // This will be freed automatically. This will be inefficient for huge bitmaps but it's
         // only around for one frame.
-        localMem = bgfx::alloc(localWidth * localHeight * 4);
-        localBits = localMem->data;
+        localBits = lmAlloc(NULL, localWidth * localHeight * 4);
 
         lmLog(gGFXTextureLogGroup, "   - Too big! Downsampling to %dx%d", localWidth, localHeight);
 
@@ -683,6 +726,9 @@ void Texture::loadImageAsset(loom_asset_image_t *lat, TextureID id)
 
     // Perform the actual load.
     load((uint8_t *)localBits, (uint16_t)localWidth, (uint16_t)localHeight, id);
+
+// TODO: Memory leak due to resize loop.
+//    lmFree(NULL, localBits);
 }
 
 void Texture::reset()
@@ -693,15 +739,15 @@ void Texture::reset()
         TextureInfo *tinfo = &sTextureInfos[i];
 
         // Ignore invalid entries.
-        if (tinfo->handle.idx != bgfx::invalidHandle)
+        if (sTextureInfos[i].handle == -1)
         {
             const char *path = tinfo->texturePath.c_str();
             lmLog(gGFXTextureLogGroup, "Reloading texture for path %s", path);
 
-            //bgfx::destroyTexture(tinfo->handle);
-            tinfo->handle.idx = bgfx::invalidHandle;
-            tinfo->reload = false;
-            tinfo->asyncDispose = false;
+            Graphics::context()->glDeleteTextures(1, &tinfo->handle);
+            tinfo->handle     = -1;
+            tinfo->reload     = false;
+
             loom_mutex_unlock(Texture::sTexInfoLock);
 
             //force it to be loaded from disk
@@ -730,11 +776,11 @@ void Texture::dispose(TextureID id)
     TextureInfo *tinfo = &sTextureInfos[id];
 
     // If the texture isn't valid ignore it.
-    if (tinfo->handle.idx != bgfx::invalidHandle)
+    if (tinfo->handle == -1)
     {
         //if texture is still loading or is inside of the loading queue, we can't dispose of it now, 
         //but need to flag it for disposal in the thread
-        if(tinfo->handle.idx == MARKEDTEXTURE)
+        if(tinfo->handle == MARKEDTEXTURE)
         {
             sTextureInfos[id].asyncDispose = true;
             loom_mutex_unlock(Texture::sTexInfoLock);
@@ -752,7 +798,7 @@ void Texture::dispose(TextureID id)
         }
 
         // And erase backing state.
-        bgfx::destroyTexture(tinfo->handle);
+        Graphics::context()->glDeleteTextures(1, &tinfo->handle);
         tinfo->reset();
     }
     loom_mutex_unlock(Texture::sTexInfoLock);
