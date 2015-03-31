@@ -25,6 +25,7 @@
 #include "loom/script/native/lsNativeDelegate.h"
 #include "lmApplication.h"
 #include "loom/common/config/applicationConfig.h"
+#include "loom/engine/loom2d/l2dStage.h"
 #include "loom/graphics/gfxTexture.h"
 
 extern "C"
@@ -69,6 +70,9 @@ void loom_tick()
     GFX::Texture::tick();
 
     lualoom_gc_update(LoomApplication::getRootVM()->VM());
+
+    if(Loom2D::Stage::smMainStage)
+        Loom2D::Stage::smMainStage->invokeRenderStage();
 
     finishProfilerBlock(&p);
 }

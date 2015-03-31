@@ -20,35 +20,34 @@
 
 
 #include "loom/graphics/gfxGraphics.h"
-#include "loom/graphics/internal/bgfx/include/bgfx.h"
 #include "loom/engine/loom2d/l2dStage.h"
+#include "loom/common/config/applicationConfig.h"
+
+extern SDL_Window *gSDLWindow;
 
 namespace Loom2D
 {
+
+Stage *Stage::smMainStage = NULL;
 NativeDelegate Stage::_RenderStageDelegate;
 
-float Stage::mtxProjection[16];
-float Stage::mtxModelView[16];
+Stage::Stage()
+{
+    smMainStage = this;
+    sdlWindow = gSDLWindow;
+    SDL_GL_GetDrawableSize(sdlWindow, &stageWidth, &stageHeight);
+    noteNativeSize(stageWidth, stageHeight);
+}
+
+Stage::~Stage()
+{
+    smMainStage = NULL;
+}
 
 void Stage::render(lua_State *L)
 {
-    // set the stages view, will be used when clearing, etc
-    GFX::Graphics::setView(_view);
-
-    GFX::Graphics::setViewTransform(mtxModelView, mtxProjection);
-
+    GFX::Graphics::setNativeSize(getWidth(), getHeight());
     GFX::Graphics::beginFrame();
-
-    // only clear the stage if it is at view 0
-    if (_view == 0)
-    {
-        bgfx::setViewClear(_view
-                           , BGFX_CLEAR_COLOR_BIT | BGFX_CLEAR_DEPTH_BIT
-                           , GFX::Graphics::getFillColor()
-                           , 1.0f
-                           , 0
-                           );
-    }
 
     updateLocalTransform();
 
@@ -58,11 +57,13 @@ void Stage::render(lua_State *L)
     renderState.cachedClipRect = (unsigned short)-1;
     renderState.blendMode      = blendMode;
 
-
     renderChildren(L);
 
     lua_pop(L, 1);
 
     GFX::Graphics::endFrame();
+
+    /* Update the screen! */
+    SDL_GL_SwapWindow(sdlWindow);
 }
 }

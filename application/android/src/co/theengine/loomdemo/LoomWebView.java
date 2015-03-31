@@ -12,8 +12,6 @@ import android.webkit.WebViewClient;
 import android.webkit.WebChromeClient;
 import android.widget.RelativeLayout;
 
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
-
 /**
  *	Java class that manages WebView instances. This maps directly to the platformWebView C API
  */
@@ -28,7 +26,8 @@ public class LoomWebView {
         final long fPayload = payload;
         final int fType = type;
 
-        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
+        // TODO: does this require queueEvent?
+        activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 nativeCallback(fData, fCallback, fPayload, fType);

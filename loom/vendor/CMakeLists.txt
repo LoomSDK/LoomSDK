@@ -11,6 +11,8 @@ include_directories(
     openal-soft/include
     openal-soft/OpenAL32/Include
     minimp3
+    nanosvg/src
+    nanovg/src
     .
 )
 
@@ -640,9 +642,19 @@ set(SQLITE3_SRC
 )
 
 set( JHEADEXIF_SRC jheadexif/exif.c jheadexif/jhead.c jheadexif/jpgfile.c jheadexif/easyexif.cpp)
-    
 
+set (NANOVG_HDR
+  nanovg/src/fontstash.h
+  nanovg/src/nanovg.h
+  nanovg/src/nanovg_lm_gl.h
+  nanovg/src/nanovg_lm_gl_utils.h
+)
+set (NANOVG_SRC nanovg/src/nanovg.c)
 
+set (NANOSVG_HDR
+  nanosvg/src/nanosvg.h
+  nanosvg/src/nanosvgrast.h
+)
 
 if (MSVC)
 
@@ -691,6 +703,8 @@ set (ALL_FILES
     ${JEMALLOC_SRC}
     ${OPENALSOFT_SRC}
     ${MINIMP3_SRC}
+    ${NANOVG_HDR} ${NANOVG_SRC}
+    ${NANOSVG_HDR}
     ${SQLITE3_SRC}
 )
 

@@ -23,11 +23,6 @@ THE SOFTWARE.
  ****************************************************************************/
 package co.theengine.loomdemo;
 
-import org.cocos2dx.lib.Cocos2dxActivity;
-import org.cocos2dx.lib.Cocos2dxEditText;
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
-import org.cocos2dx.lib.Cocos2dxRenderer;
-
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -35,10 +30,13 @@ import android.content.res.AssetManager;
 import android.content.pm.ConfigurationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
+import android.view.Display;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.View;
@@ -57,19 +55,49 @@ import java.io.IOException;
 
 import android.net.Uri;
 import android.os.Environment;
-
 import co.theengine.loomdemo.billing.LoomStore;
 
 import com.dolby.DolbyAudio;
 
+import org.libsdl.app.SDLActivity;
 
-public class LoomDemo extends Cocos2dxActivity {
-
-    private Cocos2dxGLSurfaceView mGLView;
-
+public class LoomDemo extends SDLActivity {
+	
     public static LoomDemo instance = null;
-
-
+    
+    private static String packageName;
+    
+    public static String getActivityPackageName()
+    {
+    	return packageName;
+    }
+    
+    public static int getProfile() {
+        //Determine screen size
+        if ((getContext().getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_LARGE) {     
+            return 3;
+        }
+        else if ((getContext().getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_NORMAL) {     
+            return 2;
+        } 
+        else if ((getContext().getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_SMALL) {     
+            return 1;
+        }
+        else {
+            return 0;
+        }
+    }
+    
+    public static float getDPI() 
+    {
+        // Return approximate DPI.
+        DisplayMetrics metrics = new DisplayMetrics();
+        WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+        display.getMetrics(metrics);
+        return metrics.densityDpi;
+    }
+    
     public static String getMetadataString(Context context, String key) 
     {
         String metaString = null;
@@ -120,7 +148,8 @@ public class LoomDemo extends Cocos2dxActivity {
         final String fType = type;
         final String fPayload = payload;
 
-        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
+        // TODO: does this need queueEvent?
+        instance.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 internalTriggerGenericEvent(fType, fPayload);
@@ -129,6 +158,7 @@ public class LoomDemo extends Cocos2dxActivity {
     }
 
     private static native void internalTriggerGenericEvent(String type, String payload);
+    public native void nativeSetPaths(String apkPath, AssetManager assetManager);
 
     public static void handleGenericEvent(String type, String payload)
     {
@@ -234,6 +264,23 @@ public class LoomDemo extends Cocos2dxActivity {
     {
         instance = this;
 
+        // get the packageName, it's used to set the resource path
+        packageName = getApplication().getPackageName();
+        
+        System.loadLibrary("LoomDemo");
+        
+        String apkFilePath = "";
+        ApplicationInfo appInfo = null;
+        PackageManager packMgmr = getApplication().getPackageManager();
+        try {
+            appInfo = packMgmr.getApplicationInfo(packageName, 0);
+        } catch (NameNotFoundException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Unable to locate assets, aborting...");
+        }
+        apkFilePath = appInfo.sourceDir;
+        nativeSetPaths(apkFilePath, getAssets());
+        
         super.onCreate(savedInstanceState);
 
         if (!detectOpenGLES20())
@@ -242,11 +289,7 @@ public class LoomDemo extends Cocos2dxActivity {
             finish();
             return;
         }
-
-        // get the packageName, it's used to set the resource path
-        String packageName = getApplication().getPackageName();
-        super.setPackageName(packageName);
-
+        
         // FrameLayout
         ViewGroup.LayoutParams framelayout_params = new ViewGroup.LayoutParams(
                                                             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -258,30 +301,21 @@ public class LoomDemo extends Cocos2dxActivity {
         ViewGroup.LayoutParams edittext_layout_params = new ViewGroup.LayoutParams(
                                                                 ViewGroup.LayoutParams.MATCH_PARENT,
                                                                 ViewGroup.LayoutParams.WRAP_CONTENT);
-        Cocos2dxEditText edittext = new Cocos2dxEditText(this);
-        edittext.setLayoutParams(edittext_layout_params);
+        //Cocos2dxEditText edittext = new Cocos2dxEditText(this);
+        //edittext.setLayoutParams(edittext_layout_params);
 
         ViewGroup webViewGroup = new RelativeLayout(this);
 
         // ...add to FrameLayout
-        framelayout.addView(edittext);
+        //framelayout.addView(edittext);
 
         // Make sure we control volume properly.
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
-        // Cocos2dxGLSurfaceView
-        mGLView = new Cocos2dxGLSurfaceView(this);
-
-        // ...add to FrameLayout
-        framelayout.addView(mGLView);
         framelayout.addView(webViewGroup);
 
-        mGLView.setEGLContextClientVersion(2);
-        mGLView.setCocos2dxRenderer(new Cocos2dxRenderer());
-        mGLView.setTextField(edittext);
-
         // Set framelayout as the content view
-        setContentView(framelayout);
+        //setContentView(framelayout);
 
         // give the webview class our layout
         LoomWebView.setRootLayout(webViewGroup);
@@ -352,10 +386,13 @@ public class LoomDemo extends Cocos2dxActivity {
     {
         super.onConfigurationChanged(newConfig);
 
+        // TODO: reimplement
+        /*
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE)
             nativeSetOrientation("landscape");
         else
             nativeSetOrientation("portrait");
+        */
     }
 
     @Override
@@ -378,14 +415,10 @@ public class LoomDemo extends Cocos2dxActivity {
         LoomSensors.onPause();
         LoomVideo.onPause();
         super.onPause();
-        mGLView.onPause();
     }
 
     @Override
     protected void onResume() {
-        //NOTE: mGLView needs to resume 1st so that it can inform NativeDelegates of any possible change in Thread IDs
-        mGLView.onResume();
-
         LoomSensors.onResume();
         LoomVideo.onResume();
         super.onResume();
@@ -414,9 +447,4 @@ public class LoomDemo extends Cocos2dxActivity {
         return (info.reqGlEsVersion >= 0x20000);
     }
 
-    static 
-    {
-        // Initialize our native library.
-        System.loadLibrary("LoomDemo");
-    }
 }

@@ -61,7 +61,7 @@ public:
     // will render into
     int _view;
 
-    inline int getView() const
+/*    inline int getView() const
     {
         return _view;
     }
@@ -69,7 +69,7 @@ public:
     inline void setView(int value)
     {
         _view = value;
-    }
+    } */
 
     int clipX, clipY, clipWidth, clipHeight;
 

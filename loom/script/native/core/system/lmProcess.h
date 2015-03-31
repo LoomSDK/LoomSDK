@@ -27,6 +27,8 @@ namespace LS {
         static bool consoleAttached;
         static void cleanupConsole();
         static void _exit(int exitCode);
+
+        static int rubyProcessId;
     };
 }
 

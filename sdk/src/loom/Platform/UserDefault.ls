@@ -28,72 +28,90 @@ package loom.platform
     * 
     * It supports the following base types: bool, int, float, double, string
     */
-   [Native(managed)]
-   public native class UserDefault
+   public class UserDefault
    {
       /**
       Get bool value by key, if the key doesn't exist, a default value will return.
       You can set the default value, or it is false.
        */
-      public native function getBoolForKey(key:String, def:Boolean = false):Boolean;
+      public function getBoolForKey(key:String, def:Boolean = false):Boolean
+      {
+      return false;
+      }
       
       /**
       Get integer value by key, if the key doesn't exist, a default value will return.
       You can set the default value, or it is 0.
        */
-      public native function getIntegerForKey(key:String, def:int = 0):int;
+      public function getIntegerForKey(key:String, def:int = 0):int
+      {
+      return 0;
+      }
 
       /**
       Get float value by key, if the key doesn't exist, a default value will return.
       You can set the default value, or it is 0.0f.
       */
-      public native function getFloatForKey(key:String, def:Number = 0):Number;
+      public function getFloatForKey(key:String, def:Number = 0):Number
+      {
+       return 0;
+      }
 
       /**
       Get double value by key, if the key doesn't exist, a default value will return.
       You can set the default value, or it is 0.0.
       */
-      public native function getStringForKey(key:String, def:String = ""):String;
+      public function getStringForKey(key:String, def:String = ""):String
+      {
+      return "";
+      }
 
       /**
       Get double value by key, if the key doesn't exist, a default value will return.
       You can set the default value, or it is 0.0.
       */
-      public native function getDoubleForKey(key:String, def:Number = 0):Number;
+      public function getDoubleForKey(key:String, def:Number = 0):Number
+      {
+      return 0;
+      }
 
       /**
       Set bool value by key.
       */
-      public native function setBoolForKey(key:String, value:Boolean);
+      public function setBoolForKey(key:String, value:Boolean) {}
 
       /**
       Set integer value by key.
       */
-      public native function setIntegerForKey(key:String, value:int);
+      public function setIntegerForKey(key:String, value:int) {}
 
       /**
       Set float value by key.
       */
-      public native function setFloatForKey(key:String, value:Number);
+      public function setFloatForKey(key:String, value:Number) {}
 
       /**
       Set string value by key.
       */
-      public native function setStringForKey(key:String, value:String);
+      public function setStringForKey(key:String, value:String) {}
 
       /**
       Set double value by key.
       */
-      public native function setDoubleForKey(key:String, value:Number);
+      public function setDoubleForKey(key:String, value:Number) {}
 
       /** 
       Get the singleton instance of UserDefault.
       */
-      public static native function sharedUserDefault():UserDefault;
+      public static function sharedUserDefault():UserDefault
+      {
+      return new UserDefault();
+      }
 
       /**
       Removed the shared user defaults from the filesystem
       */
-      public static native function purgeSharedUserDefault();
+      public static function purgeSharedUserDefault()
+      {}
    }
 }
