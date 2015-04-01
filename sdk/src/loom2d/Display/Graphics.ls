@@ -85,7 +85,7 @@ package loom2d.display
         public native function get lineHeight():float;
         
         /**
-         * Load a font from a given path and register it under the specified name.
+         * Load a TTF font from a given path and register it under the specified name.
          */
         public native static function load(fontName:String, filePath:String);
     }
