@@ -3,7 +3,10 @@ package loom2d.display
     import loom2d.math.Rectangle;
     
     /**
-     * Text alignment constants used by the Graphics class.
+     * Text alignment flags used by the Graphics class.
+     *
+     * You may combine flags with the bitwise OR operator to specify
+     * vertical and horizontal alignment, ie, LEFT | TOP.
      */
     public enum TextAlign {
         // Horizontal align
@@ -35,12 +38,16 @@ package loom2d.display
     
     [Native(managed)] 
     /**
-     * Describe the format of some text for the Graphics class.
+     * Describe the format of some text for the Graphics class. Pass
+     * to Graphics.textFormat() to specify the active format.
      */
     public native class TextFormat
     {
         /**
          * Describe a font format by specifying font name, indicating size, color, and if it's bolded.
+         *
+         * If you don't specify a property, it remains unspecified and doesn't alter render state when the
+         * format is passed via textFormat().
          */
         function TextFormat(font:String = null, size:Number = NaN, color:Number = NaN, bold:Object = null) {
             if (font != null) this.font = font;
@@ -49,7 +56,8 @@ package loom2d.display
         }
         
         /**
-         * What font should we use with this text format?
+         * What font should we use with this text format? The name is one previously
+         * passed to TextFormat.load().
          */
         public native function set font(value:String);
         public native function get font():String;
@@ -61,7 +69,7 @@ package loom2d.display
         public native function get color():int;
         
         /**
-         * Size of text in points.
+         * Size of text in pixels.
          */
         public native function set size(value:float);
         public native function get size():float;
@@ -92,7 +100,7 @@ package loom2d.display
     
     [Native(managed)]
     /**
-     * Utility class to load SVG vectors from a file or string. Draw with the Graphics class.
+     * Utility class to load SVG vectors from a file or string. Draw with Graphics.drawSVG().
      */
     public native class SVG
     {
@@ -133,12 +141,13 @@ package loom2d.display
         public native function textLineBounds(format:TextFormat, x:Number, y:Number, text:String):Rectangle;
         
         /**
-         * Determine how far a given string will move to the right.
+         * Determine the logical width of the passed strings. This can vary from bounds and is
+         * usually used for positioning text.
          */
         public native function textLineAdvance(format:TextFormat, x:Number, y:Number, text:String):float;
         
         /**
-         * Detrmine the bounds of a text box drawn with the provided bounds and format.
+         * Determine the bounds of a text box drawn with the provided position, line width and format.
          */
         public native function textBoxBounds(format:TextFormat, x:Number, y:Number, width:Number, text:String):Rectangle;
         
@@ -200,7 +209,7 @@ package loom2d.display
         public native function drawRoundRectComplex(x:Number, y:Number, width:Number, height:Number, topLeftRadius:Number, topRightRadius:Number, bottomLeftRadius:Number, bottomRightRadius:Number):void;
         
         /**
-         * Creates new circle arc shaped sub-path. The arc center is at cx,cy, the arc radius is r, and the arc is drawn from angle a0 to a1, and swept in direction dir (NVG_CCW, or NVG_CW). Angles are specified in radians.
+         * Creates new circle arc shaped sub-path. The arc center is at x,y, the arc radius is radius, and the arc is drawn from angle angleFrom to angleTo, and swept in direction dir (NVG_CCW, or NVG_CW). Angles are specified in radians.
          */
         public native function drawArc(x:Number, y:Number, radius:Number, angleFrom:Number, angleTo:Number, direction:int):void;
         
@@ -223,6 +232,5 @@ package loom2d.display
          * Get the current bounds of the graphics drawn by this instance.
          */
         public native function getBounds():Rectangle;
-
     }
 }
