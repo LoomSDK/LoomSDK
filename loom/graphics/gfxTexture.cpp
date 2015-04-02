@@ -155,6 +155,71 @@ static void rgbaToBgra(uint8_t *_data, uint32_t _width, uint32_t _height)
     }
 }
 
+void downsampleNearest(uint32_t *src, uint32_t *dst, int srcWidth, int srcHeight)
+{
+    int width = srcWidth >> 1; if (width < 1) width = 1;
+    int height = srcHeight >> 1; if (height < 1) height = 1;
+    // If it's not 1px high, the stride is the next even width in bytes (even width offsets shift in src for odd widths)
+    int stride = srcHeight > 1 ? (srcWidth + (srcWidth & 1)) : 0;
+
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            *dst = *src;
+            dst += 1;
+            src += 2;
+        }
+        src += stride;
+    }
+}
+
+void downsampleAverage(uint32_t *src, uint32_t *dst, int srcWidth, int srcHeight)
+{
+    int width = srcWidth >> 1; if (width < 1) width = 1;
+    int height = srcHeight >> 1; if (height < 1) height = 1;
+    // If it's not 1px high, the stride is the next even width in bytes (even width offsets shift in src for odd widths)
+    int stride = srcHeight > 1 ? (srcWidth + (srcWidth & 1)) : 0;
+
+    // Process all pixels up to the last line
+    for (int y = 0; y < height-1; y++)
+    {
+        // Process all pixels up to the last column
+        for (int x = 0; x < width-1; x++)
+        {
+            *dst =
+                // Divide by 4 and mask invading bits
+                ((src[0] >> 2) & 0x3f3f3f3f) +
+                ((src[1] >> 2) & 0x3f3f3f3f) +
+                ((src[stride] >> 2) & 0x3f3f3f3f) +
+                ((src[1+stride] >> 2) & 0x3f3f3f3f);
+
+            dst += 1;
+            src += 2;
+        }
+        // Process the column by just averaging vertically
+        *dst =
+            // Divide by 2 and mask invading bits
+            ((src[0] >> 1) & 0x7f7f7f7f) +
+            ((src[stride] >> 1) & 0x7f7f7f7f);
+        dst += 1;
+        src += 2;
+
+        src += stride;
+    }
+    // Process the last line by just averaging horizontally
+    for (int x = 0; x < width-1; x++)
+    {
+        *dst =
+            // Divide by 2 and mask invading bits
+            ((src[0] >> 1) & 0x7f7f7f7f) +
+            ((src[1] >> 1) & 0x7f7f7f7f);
+        dst += 1;
+        src += 2;
+    }
+    // Process the last pixel (bottom right)
+    *dst = *src;
+}
 
 // Courtesy of Torque via MIT license.
 void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWidth)
@@ -281,7 +346,7 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     {
         tinfo.clampOnly = false;
         tinfo.mipmaps = true;
-        uint8_t *mipData = data;
+        uint32_t *mipData = (uint32_t*) data;
         int mipWidth = width;
         int mipHeight = height;
         int mipLevel = 1;
@@ -293,17 +358,19 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
             mipWidth >>= 1; mipWidth = mipWidth < 1 ? 1 : mipWidth;
             mipHeight >>= 1; mipHeight = mipHeight < 1 ? 1 : mipHeight;
 
-            uint8_t *prevData = mipData;
-            mipData = static_cast<uint8_t*>(lmAlloc(NULL, mipWidth * mipHeight * 4));
+            uint32_t *prevData = mipData;
+            mipData = static_cast<uint32_t*>(lmAlloc(NULL, mipWidth * mipHeight * 4));
 
-            bitmapExtrudeRGBA_c(prevData, mipData, prevHeight, prevWidth);
-            if (prevData != data) lmFree(NULL, prevData);
+            //bitmapExtrudeRGBA_c(prevData, mipData, prevHeight, prevWidth);
+            //downsampleNearest(prevData, mipData, prevWidth, prevHeight);
+            downsampleAverage(prevData, mipData, prevWidth, prevHeight);
+            if (prevData != (uint32_t*) data) lmFree(NULL, prevData);
 
             Graphics::context()->glTexImage2D(GL_TEXTURE_2D, mipLevel, GL_RGBA, mipWidth, mipHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mipData);
 
             mipLevel++;
         }
-        if (mipData != data) lmFree(NULL, mipData);
+        if (mipData != (uint32_t*) data) lmFree(NULL, mipData);
     } else {
         tinfo.clampOnly = true;
         tinfo.mipmaps = false;
