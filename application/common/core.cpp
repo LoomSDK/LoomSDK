@@ -31,7 +31,6 @@ extern "C"
 };
 
 SDL_Window *gSDLWindow = NULL;
-Window *gWindow = NULL;
 SDL_GLContext gContext;
 
 lmDefineLogGroup(coreLogGroup, "loom.core", 1, LoomLogInfo);
@@ -213,10 +212,10 @@ main(int argc, char *argv[])
 
     SDL_Init(SDL_INIT_EVERYTHING);
 
+    int ret;
+
     /* Enable standard application logging */
     SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
-    
-    int ret;
     
 #if LOOM_RENDERER_OPENGLES2
     ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
@@ -241,8 +240,6 @@ main(int argc, char *argv[])
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateWindow(): %s\n", SDL_GetError());
         exit(0);
     }
-    gWindow = new Window(gSDLWindow);
-    Window::setMain(gWindow);
 
     gContext = SDL_GL_CreateContext(gSDLWindow);
     if (!gContext) {
@@ -308,6 +305,14 @@ extern "C" {
 
     extern void SDL_Android_Init(JNIEnv* env, jclass cls);
     void loom_setAssetManager(AAssetManager *am);
+
+    void Java_co_theengine_loomdemo_LoomDemo_nativeSetOrientation(JNIEnv* env, jobject thiz, jstring orientation)
+    {
+        if (Loom2D::Stage::smMainStage == NULL) return;
+        const char *str = env->GetStringUTFChars(orientation, NULL);
+        Loom2D::Stage::smMainStage->setOrientation(str);
+        env->ReleaseStringUTFChars(orientation, str);
+    }
 
     void Java_co_theengine_loomdemo_LoomDemo_nativeSetPaths(JNIEnv* env, jobject thiz, jstring apkPath, jobject am)
     {

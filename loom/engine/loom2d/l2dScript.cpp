@@ -225,6 +225,8 @@ static int registerLoom2D(lua_State *L)
        .addMethod("__pget_nativeStageWidth", &Stage::getWidth)
        .addMethod("__pget_nativeStageHeight", &Stage::getHeight)
 
+       .addProperty("orientation", &Stage::getOrientation, &Stage::setOrientation)
+
        .addVarAccessor("onTouchBegan", &Stage::getTouchBeganDelegate)
        .addVarAccessor("onTouchMoved", &Stage::getTouchMovedDelegate)
        .addVarAccessor("onTouchEnded", &Stage::getTouchEndedDelegate)

@@ -39,6 +39,7 @@ using namespace LS;
 #include "loom/script/common/lsFile.h"
 
 #include "loom/engine/bindings/sdl/lmSDL.h"
+#include "loom/engine/loom2d/l2dStage.h"
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformHttp.h"
@@ -146,7 +147,7 @@ void LoomApplication::execMainAssembly()
 
     LoomApplicationConfig::parseApplicationConfig(mainAssembly->getLoomConfig());
 
-    Window::getMain()->updateFromConfig();
+    Loom2D::Stage::updateFromConfig();
 
     // Wait for asset agent if appropriate.
     if (LoomApplicationConfig::waitForAssetAgent() > 0)

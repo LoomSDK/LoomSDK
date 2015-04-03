@@ -49,8 +49,12 @@ class LoomApplicationConfig
     static utString _displayTitle;
     static int      _displayWidth;
     static int      _displayHeight;
+    static utString _displayOrientation;
 
 public:
+
+    static const utString OrientationLandscape;
+    static const utString OrientationPortrait;
 
     static void parseApplicationConfig(const utString& jsonString);
 
@@ -129,5 +133,7 @@ public:
     {
         return _displayHeight;
     }
+
+    static const utString& displayOrientation();
 };
 #endif

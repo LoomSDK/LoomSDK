@@ -37,10 +37,14 @@ public:
 
     static Stage *smMainStage;
 
+    static bool sizeDirty;
+    static bool visDirty;
+
     // The SDL window we're working with.
     SDL_Window *sdlWindow;
     int stageWidth;
     int stageHeight;
+    utString orientation;
 
     // Rendering interface.
     void invokeRenderStage()
@@ -67,10 +71,36 @@ public:
         _SizeChangeDelegate.invoke();
     }
 
+    static void updateFromConfig();
+    void show();
+    void hide();
+
     void setWindowTitle(const char *title);
     const char *getWindowTitle();
 
-    int getOrientation();
+    inline const char* getOrientation() const
+    {
+        return orientation.c_str();
+    }
+    inline void setOrientation(const char* orient)
+    {
+        orientation = orient;
+        if (strcmp(orientation.c_str(), "portrait") == 0) {
+            SDL_SetHint(SDL_HINT_ORIENTATIONS, "Portrait");
+        }
+        else if (strcmp(orientation.c_str(), "landscape") == 0)
+        {
+            SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+        }
+        else if (strcmp(orientation.c_str(), "auto") == 0)
+        {
+            SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight Portrait");
+        }
+        else
+        {
+            lmAssert(false, "Unknown orientation value: %s", orientation.c_str());
+        }
+    }
 
     int getWidth()
     {
