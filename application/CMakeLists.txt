@@ -9,18 +9,17 @@ project(${APPLICATION_NAME})
 include_directories( ${LOOM_INCLUDE_FOLDERS} )
 
 set (APPLICATION_SRC
-    common/AppDelegate.cpp
+    common/core.cpp
     common/embeddedAssets.cpp
 )
 
 set (APPLICATION_HDR
-    common/AppDelegate.h
+    common/core.h
 )
 
 if (MSVC)
     set (APPLICATION_SRC
       ${APPLICATION_SRC}
-      windows/main.cpp
     )
 
 endif()
@@ -57,9 +56,9 @@ if (APPLE)
           ios/Default.png
           ios/Default@2x.png
           ios/Default-568h@2x.png
-          ios/main.m
-          ios/AppController.mm
-          ios/RootViewController.mm
+          # TODO: reimplement parts of these
+          #ios/AppController.mm
+          #ios/RootViewController.mm
         )
         
         SET_SOURCE_FILES_PROPERTIES(ios/Default-iphone.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
@@ -75,8 +74,7 @@ if (APPLE)
           ${APPLICATION_SRC}
           osx/Application.icns
           osx/Info.plist
-          osx/main.m
-          osx/AppController.mm
+          #osx/main.mm
           osx/en.lproj/MainMenu.xib
         )
 
@@ -166,6 +164,8 @@ if (APPLE)
 
           "-ObjC"
           "-lc++"
+
+          "${LOOM_SDL2_LIB}"
           )
 
 
@@ -199,6 +199,12 @@ if (APPLE)
           "-framework AudioToolbox"
           "-framework AudioUnit"
           "-framework CoreAudio"
+
+          "-L/usr/local/lib"
+          "-lz"
+		  
+          "SDL2-static" "SDL2main"
+		  
           )
 
         # Use our own Info.plist.
@@ -243,7 +249,6 @@ if (APPLE)
     
 elseif(MSVC)	
 
-
     target_link_libraries(${PROJECT_NAME} 
        LoomVendor
        LoomCommon
@@ -251,6 +256,7 @@ elseif(MSVC)
        LoomGraphics
        LoomCore
        "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "WSOCK32" "Ws2_32" 
+       "SDL2-static" "SDL2main"
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)
@@ -277,6 +283,7 @@ elseif(ANDROID)
        LoomScript
        LoomCore
        "GLESv2" "EGL" "dl" "log" "android"
+       "${LOOM_SDL2_LIB}"
     )
     
     get_target_property(ANDROID_SO ${PROJECT_NAME} LOCATION)

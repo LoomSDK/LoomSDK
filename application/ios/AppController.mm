@@ -24,8 +24,8 @@
 #import <UIKit/UIKit.h>
 #import "AssetsLibrary/AssetsLibrary.h"
 #import "AppController.h"
-#import "cocos2d.h"
-#import "EAGLView.h"
+//#import "cocos2d.h"
+//#import "EAGLView.h"
 #import "../common/AppDelegate.h"
 
 #import "RootViewController.h"
@@ -54,6 +54,7 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
 
     // Add the view controller's view to the window and display.
     window = [[UIWindow alloc] initWithFrame: [[UIScreen mainScreen] bounds]];
+    /*
     EAGLView *glView = [EAGLView viewWithFrame: [window bounds]
                                         pixelFormat: kEAGLColorFormatRGBA8
                                         depthFormat: GL_DEPTH_COMPONENT16
@@ -61,7 +62,8 @@ static void handleGenericEvent(void *userData, const char *type, const char *pay
                                          sharegroup: nil
                                       multiSampling: NO
                                     numberOfSamples: 0];
-    
+    */
+     
     // Use RootViewController manage EAGLView 
     viewController = [[RootViewController alloc] initWithNibName:nil bundle:nil];
     viewController.wantsFullScreenLayout = YES;

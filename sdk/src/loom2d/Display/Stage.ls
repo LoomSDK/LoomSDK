@@ -11,9 +11,8 @@
 package loom2d.display
 {    
     
-    import loom2d.display.Cocos2D;
-    import loom2d.display.CCLayer;
-    
+    import loom.platform.LoomKeyModifier;
+
     import loom2d.events.EnterFrameEvent;
     import loom2d.events.ResizeEvent;
     import loom2d.events.Event;
@@ -46,6 +45,15 @@ package loom2d.display
         FILL
     }
 
+    delegate KeyDelegate(scancode:int, virtualKey:int, modifiers:int);
+    delegate HardwareKeyDelegate();
+    delegate TouchDelegate(touchId:int, x:int, y:int);
+    delegate ScrollWheelDelegate(yDelta:int);
+    delegate AccelerationDelegate(x:Number, y:Number, z:Number);
+
+    delegate OrientationChangeDelegate(newOrientation:int);
+    delegate SizeChangeDelegate(newWidth:int, newHeight:int);
+
     /** A Stage represents the root of the display tree.  
      *  Only objects that are direct or indirect children of the stage will be rendered.
      * 
@@ -68,11 +76,29 @@ package loom2d.display
     [Native(managed)]      
     public native class Stage extends DisplayObjectContainer
     {
-        private var mWidth:int, mCocosWidth:int;
-        private var mHeight:int, mCocosHeight:int;
+        private var mWidth:int;
+        private var mHeight:int;
         private var mColor:uint;
         private var mEnterFrameEvent:EnterFrameEvent = new EnterFrameEvent(Event.ENTER_FRAME, 0.0);
         private var mScaleMode:StageScaleMode = StageScaleMode.NONE;
+
+        public native var onTouchBegan:TouchDelegate;
+        public native var onTouchMoved:TouchDelegate;
+        public native var onTouchEnded:TouchDelegate;
+        public native var onTouchCancelled:TouchDelegate;
+
+        public native var onKeyUp:KeyDelegate;
+        public native var onKeyDown:KeyDelegate;
+
+        public native var onMenuKey:HardwareKeyDelegate;
+        public native var onBackKey:HardwareKeyDelegate;
+
+        public native var onScrollWheelYMoved:ScrollWheelDelegate;
+
+        public native var onAccelerate:AccelerationDelegate;
+
+        public native var onOrientationChange:OrientationChangeDelegate;
+        public native var onSizeChange:SizeChangeDelegate;
 
         /**
          * When true, dump the current FPS via trace() every second.
@@ -92,63 +118,74 @@ package loom2d.display
         private static var lastFpsTime = -1;
         
         /** @private */
-        public function Stage(layer:CCLayer, width:int, height:int, color:uint=0)
+        public function Stage(width:int, height:int, color:uint=0)
         {
-            mWidth = width;
-            mHeight = height;
-            mColor = color;
-            
-            // Handle key event dispatch.
-            layer.onKeyDown += onKeyDown;
-            layer.onKeyUp += onKeyUp;
-            layer.onKeyBackClicked += onKeyBackClicked;
-
-            layer.onScrollWheelYMoved += onScrollWheel;
-
             // Note the stage.
             Loom2D.stage = this;
 
+            // Note down useful information.
+            mWidth = width;
+            mHeight = height;
+            this.color = color;
+            
+            // Handle key event dispatch.
+            onKeyDown += onKeyDownHandler;
+            onKeyUp += onKeyUpHandler;
+
+            onSizeChange += onSizeChangeHandler;
+
+            // Application's TouchProcessor handles touch/mouse input.
+            onScrollWheelYMoved += onScrollWheelHandler;
+
+            //layer.onKeyBackClicked += onKeyBackClicked;
+
             // Show stats specified in config file
-            if ( Cocos2D.configStats == Cocos2D.STATS_REPORT_FPS )
+            /*if ( Cocos2D.configStats == Cocos2D.STATS_REPORT_FPS )
                 reportFps = true;
             else if ( Cocos2D.configStats == Cocos2D.STATS_SHOW_DEBUG_OVERLAY )
-                Graphics.setDebug( Graphics.DEBUG_STATS );
+                Graphics.setDebug( Graphics.DEBUG_STATS );*/
         }
 
-        protected function onKeyDown(key:int):void
+        protected function onKeyDownHandler(scancode:int, virtualKey:int, modifiers:int):void
         {
-            broadcastEvent(new KeyboardEvent(KeyboardEvent.KEY_DOWN, 0, key));
+            broadcastEvent(
+                new KeyboardEvent(
+                    KeyboardEvent.KEY_DOWN, scancode, virtualKey, 0, 
+                    (modifiers | LoomKeyModifier.CTRL) != 0,
+                    (modifiers | LoomKeyModifier.ALT) != 0,
+                    (modifiers | LoomKeyModifier.SHIFT) != 0));
         }
 
-        protected function onKeyUp(key:int):void
+        protected function onKeyUpHandler(scancode:int, virtualKey:int, modifiers:int):void
         {
-            broadcastEvent(new KeyboardEvent(KeyboardEvent.KEY_UP, 0, key));
+            broadcastEvent(
+                new KeyboardEvent(
+                    KeyboardEvent.KEY_UP, scancode, virtualKey, 0, 
+                    (modifiers | LoomKeyModifier.CTRL) != 0,
+                    (modifiers | LoomKeyModifier.ALT) != 0,
+                    (modifiers | LoomKeyModifier.SHIFT) != 0 ));
         }
 
-        protected function onScrollWheel(delta:Number)
+        protected function onScrollWheelHandler(delta:Number)
         {
             broadcastEvent(new ScrollWheelEvent(ScrollWheelEvent.SCROLLWHEEL, delta));   
         }
 
-        protected function onKeyBackClicked()
+        protected function onKeyBackClickedHandler()
         {
             broadcastEvent(new KeyboardEvent(KeyboardEvent.BACK_PRESSED, 0, LoomKey.BUTTON_BACK));
+        }
+
+        protected function onSizeChangeHandler(newWidth:int, newHeight:int)
+        {            
+            invalidateScale();
+            
+            dispatchEvent(new ResizeEvent(Event.RESIZE, mWidth, mHeight, false));            
         }
 
         /** @inheritDoc */
         public function advanceTime(passedTime:Number):void
         {
-            // Check to see if we are resizing.
-            if(mCocosWidth != Cocos2D.getDisplayWidth() || mCocosHeight != Cocos2D.getDisplayHeight())
-            {
-                mCocosWidth = Cocos2D.getDisplayWidth();
-                mCocosHeight = Cocos2D.getDisplayHeight();
-                
-                invalidateScale();
-                
-                dispatchEvent(new ResizeEvent(Event.RESIZE, mWidth, mHeight, false));
-            }
-
             // TODO: LOOM-1364
             // disabling frame enter event, until it can be optimized
             // it is currently taking 12-15ms/frame on iPad2
@@ -167,7 +204,6 @@ package loom2d.display
             }
 
             fpsCount++;
-
         }
 
         /** @inheritDoc */
@@ -212,7 +248,7 @@ package loom2d.display
             // Update the background. Add alpha to the color.
             var swizzleColor = (value << 8) | 0xFF;
 
-            Graphics.setFillColor(swizzleColor);
+            loom.graphics.Graphics.setFillColor(swizzleColor);
         }
         
         /** The width of the stage coordinate system. Change it to scale its contents relative
@@ -226,16 +262,10 @@ package loom2d.display
         public function set stageHeight(value:int):void { mHeight = value; invalidateScale(); }
         
         /** Height of the native display in pixels. */
-        public function get nativeStageHeight():int
-        {
-            return Cocos2D.getDisplayHeight();
-        }
+        public native function get nativeStageHeight():int;
 
         /** Width of the native display in pixels. */
-        public function get nativeStageWidth():int
-        {
-            return Cocos2D.getDisplayWidth();
-        }
+        public native function get nativeStageWidth():int;
 
         /** Set the scaling behavior of the stage as the application is resized. */
         public function set scaleMode(value:StageScaleMode):void
@@ -273,9 +303,9 @@ package loom2d.display
         }
         
         protected function invalidateScale():void
-        {            
-            var scaledWidth = Cocos2D.getDisplayWidth()/stageWidth;
-            var scaledHeight = Cocos2D.getDisplayHeight()/stageHeight;
+        {
+            var scaledWidth = nativeStageWidth / stageWidth;
+            var scaledHeight = nativeStageHeight / stageHeight;
 
             switch(scaleMode)
             {
@@ -284,8 +314,8 @@ package loom2d.display
                     scaleX = scaleY = 1;
                     x = 0;
                     y = 0;
-                    mWidth = Cocos2D.getDisplayWidth();
-                    mHeight = Cocos2D.getDisplayHeight();
+                    mWidth = nativeStageWidth;
+                    mHeight = nativeStageHeight;
 
                     break;
 
@@ -296,13 +326,13 @@ package loom2d.display
                         scaleX = scaledWidth;
                         scaleY = scaledWidth;
                         x = 0;
-                        y = (Cocos2D.getDisplayHeight()/2) - (stageHeight/2)*scaledWidth;
+                        y = (nativeStageHeight/2) - (stageHeight/2)*scaledWidth;
                     }
                     else 
                     {
                         scaleX = scaledHeight;
                         scaleY = scaledHeight;
-                        x = (Cocos2D.getDisplayWidth()/2) - (stageWidth/2)*scaledHeight;
+                        x = (nativeStageWidth/2) - (stageWidth/2)*scaledHeight;
                         y = 0;
                     }
 
@@ -314,12 +344,12 @@ package loom2d.display
                     {
                         scaleX = scaleY = scaledWidth;
                         x = 0;
-                        y = (Cocos2D.getDisplayHeight()/2) - (stageHeight/2)*scaledWidth;
+                        y = (nativeStageHeight/2) - (stageHeight/2)*scaledWidth;
                     }
                     else 
                     {
                         scaleX = scaleY = scaledHeight;
-                        x = (Cocos2D.getDisplayWidth()/2) - (stageWidth/2)*scaledHeight;
+                        x = (nativeStageWidth/2) - (stageWidth/2)*scaledHeight;
                         y = 0;
                     }
 
@@ -327,236 +357,4 @@ package loom2d.display
             }
         }    
     }
-
-
-
-    [Deprecated(msg="Consider using loom2d.Stage instead.")]
-    /**
-     * Internal bindings left over from Cocos2D X days. 
-     *
-     * @private
-     */
-    public class Cocos2D
-    {
-        public static const ORIENTATION_PORTRAIT:String = "portrait";
-        public static const ORIENTATION_LANDSCAPE:String = "landscape";
-        public static const ORIENTATION_AUTO:String = "auto";
-
-        public static const STATS_REPORT_FPS:int = 1;
-        public static const STATS_SHOW_DEBUG_OVERLAY:int = 2;
-
-        public static function initializeFromConfig()
-        {
-            //trace("initializing config");
-
-            var json = new JSON(); 
-            Debug.assert(json.loadString(Application.loomConfigJSON));
-            var display = json.getObject("display");
-            var width = display.getInteger("width");
-            var height = display.getInteger("height");
-            var title = display.getString("title");
-            configStats = display.getInteger("stats");
-            var orientation = display.getString("orientation");
-
-            // set the orientation to landscape by default
-            if(orientation != ORIENTATION_PORTRAIT &&
-            orientation != ORIENTATION_LANDSCAPE &&
-            orientation != ORIENTATION_AUTO)
-            {
-                orientation = ORIENTATION_LANDSCAPE;
-            }
-
-            // store off the configs width/height as we 
-            // use this to set the initial dimensions when
-            // using scaling mode
-            configDisplayWidth = width;
-            configDisplayHeight = height;
-
-            initialize();
-
-            setDisplayInfo(width, height, title);
-            setDisplayOrientation(orientation);
-        }
-
-        public static function initialize()
-        {
-            // register to be told about VM reload 
-            VM.getExecutingVM().onReload += onReload;
-        }
-
-        private static function onReload() 
-        {
-            cleanup();
-        }
-
-        /**
-        * Gets the loom.config display width
-        */
-        public static function getConfigDisplayWidth():int
-        {
-            return configDisplayWidth;
-        }
-
-        /**
-        * Gets the loom.config display height
-        */
-        public static function getConfigDisplayHeight():int
-        {
-            return configDisplayHeight;
-        }         
-
-        public static native function shutdown():void;
-
-        /**
-        * Returns the current orientation of the device.
-        * 
-        * The orientation is either ORIENTATION_PORTRAIT or ORIENTATION_LANDSCAPE.
-        * To read the value set in the loom.config file, use getDisplayOrientation()
-        */
-        public static native function getOrientation():String;
-
-        /**
-        * Call to toggle fullscreen mode.
-        */
-        public static native function toggleFullscreen():void;
-
-        public static native function getDisplayWidth():int;
-        public static native function getDisplayCaption():String;
-        public static native function getDisplayHeight():int;
-        public static native function getDisplayOrientation():String;
-        public static native function addLayer(layer:CCLayer);
-        public static native function removeLayer(layer:CCLayer, cleanup:Boolean=true);
-
-        // whether or not to render stats, such as fps
-        public static native function setDisplayStats(enabled:Boolean);
-        public static native function getDisplayStats():Boolean;
-
-        public static native var onDisplayStatsChanged:NativeDelegate;
-        public static native var onOrientationChanged:NativeDelegate;
-
-        /**
-        * Called when the display size changes.
-        *
-        * Two parameters, width and height in pixels as integers.
-        */
-        public static native var onDisplaySizeChanged:NativeDelegate;
-
-        /** 
-        * Display height and width as specified in the loom.config
-        */
-        public static var configDisplayWidth:int;
-        public static var configDisplayHeight:int;
-
-        public static var configStats:int;
-
-        private static native function setDisplayOrientation(orientation:String);
-        private static native function setDisplayCaption(caption:String);
-        private static native function setDisplayWidth(width:int);
-        private static native function setDisplayHeight(height:int); 
-        private static native function cleanup();
-
-        private static function setDisplayInfo(width:int, height:int, caption:String) 
-        {
-            setDisplayCaption(caption);
-
-            setDisplayWidth(width);
-            setDisplayHeight(height);
-            //trace("SIZE " + width + "x" + height);
-
-            // On some platforms, setting width/height has no effect. For 
-            // instance, Mac and Windows may resize the window but this is
-            // meaningless on mobile. So we check the actual resolution
-            // and re-set it after we tried setting to the new values in 
-            // order to properly propagate the actual surface size everywhere.
-            var readbackWidth = getDisplayWidth();
-            var readbackHeight = getDisplayHeight();
-
-            if(readbackWidth != 0 && readbackHeight != 0)
-            {
-                setDisplayWidth(readbackWidth);
-                setDisplayHeight(readbackHeight);
-            }
-        }
-    }    
-
-   [Native(managed)]
-   /**
-   * Remnant of bindings to Cocos2DX - propagates touch/keyboard events.
-   * @private
-   */
-   public native class CCLayer
-   {
-      public native function autorelease():void;
-
-      public native function init():Boolean;
-
-      /** create one layer */
-      public native static function create():CCLayer;
-      public native static function rootLayer():CCLayer;
-
-      /** If isTouchEnabled, this method is called onEnter. Override it to change the
-      way CCLayer receives touch events.
-      ( Default: CCTouchDispatcher::sharedDispatcher()->addStandardDelegate(this,0); )
-      Example:
-      void CCLayer::registerWithTouchDispatcher()
-      {
-      CCTouchDispatcher::sharedDispatcher()->addTargetedDelegate(this,INT_MIN+1,true);
-      }
-      @since v0.8.0
-      */
-      public native function registerWithTouchDispatcher():void;
-      /** Register script touch events handler */
-      //public native function registerScriptTouchHandler(nHandler:int, bIsMultiTouches:Boolean, nPriority:int, bSwallowsTouches:Boolean):void;
-      
-      /** Unregister script touch events handler */
-      //public native function unregisterScriptTouchHandler():void;
-
-      /** whether or not it will receive Touch events.
-      You can enable / disable touch events with this property.
-      Only the touches of this node will be affected. This "method" is not propagated to it's children.
-      @since v0.8.1
-      */
-      public native function isTouchEnabled():Boolean;
-      public native function setTouchEnabled(value:Boolean):void;
-
-      /** whether or not it will receive Accelerometer events
-      You can enable / disable accelerometer events with this property.
-      @since v0.8.1
-      */
-      public native function isAccelerometerEnabled():Boolean;
-      public native function setAccelerometerEnabled(value:Boolean):void;
-
-      /** whether or not it will receive keypad events
-      You can enable / disable accelerometer events with this property.
-      it's new in cocos2d-x
-      */
-      public native function isKeypadEnabled():Boolean;
-      public native function setKeypadEnabled(value:Boolean):void;
-
-      public native function isScrollWheelEnabled():Boolean;
-      public native function setScrollWheelEnabled(value:Boolean):void;
-
-      public native var onTouchBegan:NativeDelegate;
-      public native var onTouchMoved:NativeDelegate;
-      public native var onTouchEnded:NativeDelegate;
-      public native var onTouchCancelled:NativeDelegate;
-      public native var onKeyBackClicked:NativeDelegate;
-      public native var onKeyMenuClicked:NativeDelegate;
-      public native var onScrollWheelYMoved:NativeDelegate;
-      public native var onAccelerate:NativeDelegate;
-
-      /**
-       * Called when a key is depressed; if isKeypadEnabled is true.
-       *
-       * One parameter, the key code being considered.
-       */
-      public native var onKeyDown:NativeDelegate;
-
-      /**
-       * Called when a key is released; if isKeypadEnabled is true.
-       *
-       * One parameter, the key code being considered.
-       */
-      public native var onKeyUp:NativeDelegate;
-   }    
 }

@@ -18,6 +18,7 @@
  * ===========================================================================
  */
 
+#if 0
 #include "seatest.h"
 #include "platform/platform.h"
 
@@ -37,3 +38,4 @@ SEATEST_SUITE(allTests)
     SEATEST_SUITE_ENTRY(logging);
     SEATEST_SUITE_ENTRY(assets);
 }
+#endif 

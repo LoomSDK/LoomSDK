@@ -61,12 +61,12 @@ namespace :package do
     FileUtils.rm_rf "pkg/sdk/bin/android/META-INF"
 
     #ouya
-    decompile_apk("artifacts/ouya/ouya/LoomDemo.apk","pkg/sdk/bin/ouya")
+    # decompile_apk("artifacts/ouya/ouya/LoomDemo.apk","pkg/sdk/bin/ouya")
     # Strip out the bundled assets and binaries
-    FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/assets"
-    FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/bin"
-    FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/libs"
-    FileUtils.rm_rf "pkg/sdk/bin/ouya/META-INF"
+    # FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/assets"
+    # FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/bin"
+    # FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/libs"
+    # FileUtils.rm_rf "pkg/sdk/bin/ouya/META-INF"
 
     Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|
       Dir["pkg/sdk/**/**"].each do |file|

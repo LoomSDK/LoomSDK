@@ -26,6 +26,8 @@
 #ifndef __ANDROID_JNI_H__
 #define __ANDROID_JNI_H__
 
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+
 #include "loom/common/core/assert.h"
 #include "loom/common/core/log.h"
 #include "loom/common/platform/platform.h"
@@ -58,3 +60,5 @@ private:
 
 #define LOOMJAVAVM    LoomJni::getJavaVM()
 #endif // __ANDROID_JNI_H__
+
+#endif

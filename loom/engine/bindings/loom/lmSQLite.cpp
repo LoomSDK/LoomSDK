@@ -18,7 +18,6 @@
  * ===========================================================================
  */
 
-#include "platform/CCFileUtils.h"
 #include "loom/script/loomscript.h"
 #include "loom/script/runtime/lsRuntime.h"
 #include "loom/common/core/log.h"
@@ -29,17 +28,14 @@
 #include "loom/common/utils/utString.h"
 #include "loom/common/platform/platformThread.h"
 #include "loom/script/native/core/system/lmJSON.h"
-
+#include "loom/common/platform/platformFile.h"
 
 lmDefineLogGroup(gSQLiteGroup, "loom.sqlite", 1, LoomLogInfo);
 
 using namespace LS;
 
-
-
 //forward declaration of Statement
 class Statement;
-
 
 //SQLite Connection binding for Loomscript
 class Connection
@@ -431,7 +427,7 @@ Connection *Connection::open(const char *database, int flags)
     else
     {
         //no separator, so we need to prefix the system writable path in front of the database name
-        c->databaseFullPath = utString(cocos2d::CCFileUtils::sharedFileUtils()->getWriteablePath().c_str()) + c->databaseName;
+        c->databaseFullPath = utString(platform_getWritablePath()) + c->databaseName;
     }
     
     //open the SQLite DB

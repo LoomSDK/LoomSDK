@@ -20,11 +20,32 @@
 
 #pragma once
 
+#include <SDL.h>
+
+#ifdef LOOM_RENDERER_OPENGLES2
+#include "SDL_opengles2.h"
+#else
+#include "SDL_opengl.h"
+#endif
+
 #include <stdint.h>
 #include "loom/common/core/assert.h"
 
 namespace GFX
 {
+
+    typedef struct GL_Context
+    {
+#ifdef _WIN32
+#define SDL_PROC(ret, func, params) ret (__stdcall *func) params;
+#else
+#define SDL_PROC(ret, func, params) ret (*func) params;
+#endif
+
+#include "gfxGLES2EntryPoints.h"
+#undef SDL_PROC
+    } GL_Context;
+
 
 /** 
   *  Graphics subsystem class in charge of initializing bgfx graphics and handling context loss
@@ -33,6 +54,11 @@ class Graphics
 {
 
 public:
+    
+    static GL_Context *context()
+    {
+        return &_context;
+    }
 
     static void initialize();
 
@@ -44,6 +70,8 @@ public:
     static void reset(int width, int height, uint32_t flags = 0);
 
     static void shutdown();
+    
+    static bool queryExtension(char *extName);
 
     static void beginFrame();
 
@@ -53,30 +81,16 @@ public:
 
     static inline uint32_t getCurrentFrame() { return sCurrentFrame; }
 
+    static inline void setNativeSize(int width, int height)
+    {
+        sWidth = width;
+        sHeight = height;
+    }
+    
     static inline int getWidth() { return sWidth; }
     static inline int getHeight() { return sHeight; }
 
     static void setViewTransform(float *view, float *proj);
-
-    // sets the current view for drawing operations
-    static inline void setView(int view)
-    {
-        sView = view;
-    }
-
-    static inline int getView()
-    {
-        return sView;
-    }
-
-    // bgfx uses void* for internal GL context creation, this will likely be
-    // factored out to external platform code, but for now a necessary evil
-    static void setPlatformData(void *data1, void *data2 = NULL, void *data3 = NULL)
-    {
-        sPlatformData[0] = data1;
-        sPlatformData[1] = data2;
-        sPlatformData[2] = data3;
-    }
 
     static void setDebug(int flags);
     static void screenshot(const char *path);
@@ -89,9 +103,6 @@ public:
     // before every bgfx::submit call.
     static int setClipRect(int x, int y, int width, int height);
     static void setClipRect(int cached);
-
-    // Get the currently set clip rect ID
-    static int getClipRect();
 
     // Render with no cliprect.
     static void clearClipRect();
@@ -125,13 +136,15 @@ private:
     static uint32_t sCurrentFrame;
 
     // Opaque platform data, such as HWND
-    static void *sPlatformData[3];
+//    static void *sPlatformData[3];
 
     // Internal method used to initialize platform data 
-    static void initializePlatform();
+//    static void initializePlatform();
 
     // If set, at next opportunity we will store a screenshot to this path and clear it.
     static char pendingScreenshot[1024];
+    
+    static GL_Context _context;
 
 };
 }

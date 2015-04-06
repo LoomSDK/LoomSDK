@@ -25,7 +25,6 @@
 #include <jni.h>
 #include "platformAndroidJni.h"
 
-#include "loom/engine/cocos2dx/cocoa/CCString.h"
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
 #include "loom/common/platform/platformMobile.h"
@@ -242,10 +241,11 @@ const char *platform_getOpenURLQueryData(const char *queryKey)
         return "";
     }
     ///convert jstring result into const char* for us to return
-    cocos2d::CCString *queryData = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
-    queryData->autorelease();
+    //cocos2d::CCString *queryData = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
+    //queryData->autorelease();
+    utString *queryData = new utString(LoomJni::jstring2string(result).c_str());
     gGetCustomSchemeData.getEnv()->DeleteLocalRef(jQuery);
-    return queryData->m_sString.c_str();
+    return queryData->c_str();
 }
 
 ///gets the the data associated with the specified key from any potential custom payload attached to a 
@@ -261,10 +261,11 @@ const char *platform_getRemoteNotificationData(const char *key)
         return "";
     }
     ///convert jstring result into const char* for us to return
-    cocos2d::CCString *queryData = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
-    queryData->autorelease();
+    //cocos2d::CCString *queryData = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
+    utString *queryData = new utString(LoomJni::jstring2string(result).c_str());
+    //queryData->autorelease();
     gGetRemoteNotificationData.getEnv()->DeleteLocalRef(jQuery);
-    return queryData->m_sString.c_str();
+    return queryData->c_str();
 }
 
 ///checks if a given sensor is supported on this hardware
@@ -367,10 +368,11 @@ const char *platform_getSelectedDolbyAudioProfile()
                                                                                         gGetSelectedDolbyAudioProfile.methodID);
 
     ///convert jstring result into const char* for us to return
-    cocos2d::CCString *profileName = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
-    profileName->autorelease();
+    //cocos2d::CCString *profileName = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
+    //profileName->autorelease();
+    utString *profileName = new utString(LoomJni::jstring2string(result).c_str());
     gGetSelectedDolbyAudioProfile.getEnv()->DeleteLocalRef(result);
-    return profileName->m_sString.c_str();
+    return profileName->c_str();
 }
 
 #endif

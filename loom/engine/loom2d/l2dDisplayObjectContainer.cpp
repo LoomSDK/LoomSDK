@@ -92,13 +92,13 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
 
     // containers can set a new view to render into, but we must restore the
     // current view after, so take a snapshot
-    int viewRestore = GFX::Graphics::getView();
+/*    int viewRestore = GFX::Graphics::getView();
 
     // set the current view we will be rendering into.
     if (viewRestore != _view)
     {
         GFX::Graphics::setView(_view);
-    }
+    } */
 
     renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : UINT16_MAX;
     renderState.blendMode = (parent && blendMode == BlendMode::AUTO) ? parent->renderState.blendMode : blendMode;
@@ -207,9 +207,9 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
     }
 
     // restore view
-    if (viewRestore != _view)
+/*    if (viewRestore != _view)
     {
         GFX::Graphics::setView(viewRestore);
-    }
+    }*/
 }
 }

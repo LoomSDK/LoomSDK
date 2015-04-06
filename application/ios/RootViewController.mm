@@ -24,7 +24,7 @@
  ****************************************************************************/
 
 #import "RootViewController.h"
-#import "loom/engine/cocos2dx/loom/CCLoomCocos2D.h"
+//#import "loom/engine/cocos2dx/loom/CCLoomCocos2D.h"
 #import <Foundation/Foundation.h>
 
 @implementation RootViewController
@@ -52,6 +52,8 @@
 }
  
 */
+
+/*
 // Override to allow orientations other than the default portrait orientation.
 // This method is deprecated on ios6
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
@@ -104,6 +106,6 @@
 - (void)dealloc {
     [super dealloc];
 }
-
+*/
 
 @end

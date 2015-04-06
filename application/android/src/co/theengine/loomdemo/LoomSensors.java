@@ -14,8 +14,6 @@ import android.view.WindowManager;
 import android.graphics.Matrix;
 import android.util.Log;
 
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
-
 
 
 
@@ -328,6 +326,7 @@ public class LoomSensors
     private static final String             TAG = "Loom Sensors";
 
     private static Context                  _context;
+    private static Activity                 activity;
     private static SensorManager            _sensorManager;
     private static int                      _naturalRotation;
     private static AndroidSensor[]          _sensorList;
@@ -338,6 +337,7 @@ public class LoomSensors
     public static void onCreate(Activity context)
     {
         _context = context;
+        activity = LoomAdMob.activity;
 
         //store sensor manager
         _sensorManager = (SensorManager)_context.getSystemService(Context.SENSOR_SERVICE);
@@ -468,7 +468,8 @@ public class LoomSensors
         final float fZ = z;
 
         ///make sure to call the delegate in the main thread
-        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+        // TODO: does this require queueEvent?
+        activity.runOnUiThread(new Runnable() 
         {
             @Override
             public void run() 
@@ -486,7 +487,8 @@ public class LoomSensors
         final float fZ = z;
 
         ///make sure to call the delegate in the main thread
-        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+        // TODO: does this require queueEvent?
+        activity.runOnUiThread(new Runnable() 
         {
             @Override
             public void run() 

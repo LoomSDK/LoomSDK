@@ -30,6 +30,7 @@ void installLoomNativeStore();
 void installLoomVideo();
 void installLoomMobile();
 void installLoomParse();
+void installPackageSDL();
 void installLoomGraphics();
 void installLoom2D();
 void installPackageLoomSound();
@@ -56,7 +57,8 @@ void installPackageLoom()
     installPackageLoomSound();
 
     // Should be its own package for maximum correctness.
-    installPackageCocos2DX();
+    //installPackageCocos2DX();
+    installPackageSDL();
 
     installLoomGraphics();
     installLoom2D();

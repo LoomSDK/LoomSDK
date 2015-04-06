@@ -9,22 +9,53 @@
 #define __FPU_MATH_H__
 
 #define _USE_MATH_DEFINES
+
+#ifdef M_PI
+#error M_PI already defined, try including gfxMath before gfxGraphics or SDL
+#endif
+
 #include <math.h>
 #include <string.h>
 
+#if WIN32
 #if _MSC_VER < 1800
+    
+#define INFINITY (float) HUGE_VAL
+#ifndef NAN
+    static const unsigned long __nan[2] = {0xffffffff, 0x7fffffff};
+    #define NAN (*(const float *) __nan)
+#endif
+    
+typedef unsigned __int64 uint64;
+    
+inline int isinf(double x)
+{
+    union { uint64 u; double f; } ieee754;
+    ieee754.f = x;
+    return ( (unsigned)(ieee754.u >> 32) & 0x7fffffff ) == 0x7ff00000 &&
+        ( (unsigned)ieee754.u == 0 );
+}
 
-inline float fmin(float _a, float _b)
+inline int isnan(double x)
+{
+    union { uint64 u; double f; } ieee754;
+    ieee754.f = x;
+    return ( (unsigned)(ieee754.u >> 32) & 0x7fffffff ) +
+        ( (unsigned)ieee754.u != 0 ) > 0x7ff00000;
+}
+
+inline float fminf(float _a, float _b)
 {
     return _a < _b ? _a : _b;
 }
 
 
-inline float fmax(float _a, float _b)
+inline float fmaxf(float _a, float _b)
 {
     return _a > _b ? _a : _b;
 }
 
+#endif
 #endif
 
 inline float flerp(float _a, float _b, float _t)
