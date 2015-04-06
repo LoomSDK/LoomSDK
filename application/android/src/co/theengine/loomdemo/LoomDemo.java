@@ -159,6 +159,7 @@ public class LoomDemo extends SDLActivity {
 
     private static native void internalTriggerGenericEvent(String type, String payload);
     public native void nativeSetPaths(String apkPath, AssetManager assetManager);
+    public native void nativeSetOrientation(String orientation);
 
     public static void handleGenericEvent(String type, String payload)
     {
@@ -386,13 +387,10 @@ public class LoomDemo extends SDLActivity {
     {
         super.onConfigurationChanged(newConfig);
 
-        // TODO: reimplement
-        /*
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE)
             nativeSetOrientation("landscape");
         else
             nativeSetOrientation("portrait");
-        */
     }
 
     @Override

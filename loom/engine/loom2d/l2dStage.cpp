@@ -22,6 +22,9 @@
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/common/config/applicationConfig.h"
+#include "loom/common/core/log.h"
+
+lmDefineLogGroup(gStageLogGroup, "Stage", 1, LoomLogInfo);
 
 extern SDL_Window *gSDLWindow;
 
@@ -30,11 +33,14 @@ namespace Loom2D
 
 Stage *Stage::smMainStage = NULL;
 NativeDelegate Stage::_RenderStageDelegate;
+bool Stage::sizeDirty = true;
+bool Stage::visDirty = true;
 
 Stage::Stage()
 {
     smMainStage = this;
     sdlWindow = gSDLWindow;
+    updateFromConfig();
     SDL_GL_GetDrawableSize(sdlWindow, &stageWidth, &stageHeight);
     noteNativeSize(stageWidth, stageHeight);
 }
@@ -42,6 +48,35 @@ Stage::Stage()
 Stage::~Stage()
 {
     smMainStage = NULL;
+}
+
+void Stage::updateFromConfig()
+{
+    SDL_Window *sdlWindow = gSDLWindow;
+    SDL_SetWindowTitle(sdlWindow, LoomApplicationConfig::displayTitle().c_str());
+    if (smMainStage != NULL) {
+        smMainStage->setOrientation(LoomApplicationConfig::displayOrientation().c_str());
+    }
+    if (sizeDirty) {
+        int width = LoomApplicationConfig::displayWidth();
+        int height = LoomApplicationConfig::displayHeight();
+        SDL_SetWindowSize(sdlWindow, width, height);
+        sizeDirty = false;
+    }
+    if (visDirty && smMainStage != NULL) {
+        smMainStage->show();
+        visDirty = false;
+    }
+}
+
+void Stage::show()
+{
+    SDL_ShowWindow(sdlWindow);
+}
+
+void Stage::hide()
+{
+    SDL_HideWindow(sdlWindow);
 }
 
 void Stage::render(lua_State *L)
