@@ -38,6 +38,7 @@ bool Stage::visDirty = true;
 
 Stage::Stage()
 {
+    pendingResize = true;
     smMainStage = this;
     sdlWindow = gSDLWindow;
     updateFromConfig();
@@ -54,19 +55,41 @@ void Stage::updateFromConfig()
 {
     SDL_Window *sdlWindow = gSDLWindow;
     SDL_SetWindowTitle(sdlWindow, LoomApplicationConfig::displayTitle().c_str());
-    if (smMainStage != NULL) {
+    
+    if (smMainStage != NULL) 
+    {
         smMainStage->setOrientation(LoomApplicationConfig::displayOrientation().c_str());
     }
-    if (sizeDirty) {
+    
+    if (sizeDirty) 
+    {
         int width = LoomApplicationConfig::displayWidth();
         int height = LoomApplicationConfig::displayHeight();
         SDL_SetWindowSize(sdlWindow, width, height);
         sizeDirty = false;
     }
-    if (visDirty && smMainStage != NULL) {
+    
+    if (visDirty && smMainStage != NULL) 
+    {
         smMainStage->show();
         visDirty = false;
     }
+}
+
+void Stage::firePendingResizeEvent()
+{
+    // Fire a resize event.
+    if(smMainStage && pendingResize)
+    {
+        // Fire a resize event. We do this at startup so apps can size them
+        // selves properly before first render.
+        int winWidth, winHeight;
+        SDL_GetWindowSize(gSDLWindow, &winWidth, &winHeight);
+        SDL_GL_GetDrawableSize(gSDLWindow, &winWidth, &winHeight);
+        smMainStage->noteNativeSize(winWidth, winHeight);
+        GFX::Graphics::setNativeSize(winWidth, winHeight);
+        pendingResize = false;
+    }        
 }
 
 void Stage::show()

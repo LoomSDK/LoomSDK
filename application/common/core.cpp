@@ -35,7 +35,6 @@ SDL_GLContext gContext;
 
 lmDefineLogGroup(coreLogGroup, "loom.core", 1, LoomLogInfo);
 
-static bool gPendingResizeEvent = true;
 static int gLoomExecutionDone = 0;
 
 void loop()
@@ -44,19 +43,6 @@ void loop()
 
     // Get the stage as it will receive most events.
     Loom2D::Stage *stage = Loom2D::Stage::smMainStage;
-
-    if(gPendingResizeEvent && stage)
-    {
-        // Fire a resize event. We do this at startup so apps can size them
-        // selves properly before first render.
-        int winWidth, winHeight;
-        SDL_GetWindowSize(gSDLWindow, &winWidth, &winHeight);
-        SDL_GL_GetDrawableSize(gSDLWindow, &winWidth, &winHeight);
-        stage->noteNativeSize(winWidth, winHeight);
-        GFX::Graphics::setNativeSize(winWidth, winHeight);
-
-        gPendingResizeEvent = false;
-    }
 
     /* Check for events */
     while (SDL_PollEvent(&event))
@@ -194,7 +180,7 @@ void loop()
             //lmLog(coreLogGroup, "SDL_TEXTEDITING %s %d %d", event.edit.text, event.edit.start, event.edit.length);
         }
     }
-    
+
     /* Tick and render Loom. */
     loom_tick();
 }
