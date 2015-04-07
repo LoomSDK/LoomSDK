@@ -45,6 +45,7 @@ public:
     int stageWidth;
     int stageHeight;
     utString orientation;
+    bool pendingResize;
 
     // Rendering interface.
     void invokeRenderStage()
@@ -61,6 +62,8 @@ public:
     // Interface for window state.
     LOOM_DELEGATE(OrientationChange);
     LOOM_DELEGATE(SizeChange);
+
+    void firePendingResizeEvent();
 
     void noteNativeSize(int width, int height)
     {

@@ -209,6 +209,8 @@ package loom2d.display
         /** @inheritDoc */
         public override native function render();
 
+        public native function firePendingResizeEvent();
+
         /** Returns the object that is found topmost beneath a point in stage coordinates, or  
          *  the stage itself if nothing else is found. */
         public override function hitTest(localPoint:Point, forTouch:Boolean=false):DisplayObject
