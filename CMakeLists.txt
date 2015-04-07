@@ -72,7 +72,7 @@ endif()
 # SDL
 #--------------------------------------
 
-if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS))
+if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS) OR LINUX)
 	# Used for generated config include
 	include_directories( ${CMAKE_BINARY_DIR}/loom/vendor/sdl2/include)
 	include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
@@ -84,6 +84,8 @@ if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS))
 	set(FORCE_STATIC_VCRT ON CACHE BOOL "Force /MT for static linking")
 	set(DIRECTX OFF CACHE BOOL "Enable DirectX on Windows")
 	
+    set(VIDEO_X11 OFF CACHE BOOL "Disable X11")
+
 	add_subdirectory(loom/vendor/sdl2)
 endif()
 
@@ -243,15 +245,22 @@ endif()
 if (LINUX)
 
     set (LOOM_INCLUDE_FOLDERS
-    ${LOOM_INCLUDE_FOLDERS}
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/linux
-    ${CMAKE_SOURCE_DIR}/loom/vendor/glew-1.7.0/include )
+        ${LOOM_INCLUDE_FOLDERS}
+        ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/linux
+        ${CMAKE_SOURCE_DIR}/loom/vendor/glew-1.7.0/include 
+        /opt/vc/include)
 
     add_definitions(-DLOOM_DISABLE_JEMALLOC -DLOOM_LINUX_BUILD -DLINUX -DHAVE_CXA_DEMANGLE -DNPERFORMANCE -DNTELEMETRY)
+    
+    add_definitions(-DLOOM_RENDERER_OPENGLES2)
 
     add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
 
-    set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_x86/lib/libluajit-5.1.a)
+    # set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_x86/lib/libluajit-5.1.a)
+    # set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_android/lib/libluajit-5.1)
+
+    set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_linux_arm/lib/libluajit-5.1.a)
+    set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/android/armeabi/libSDL2.a)
     
 endif()
 

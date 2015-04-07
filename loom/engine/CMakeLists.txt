@@ -73,18 +73,6 @@ endif(ANDROID)
 
 if(LINUX)
 
-set (ENGINE_SRC
-
-    ${ENGINE_SRC}
-
-    cocos2dx/platform/linux/CCApplication.cpp
-    cocos2dx/platform/linux/CCCommon.cpp
-    cocos2dx/platform/linux/CCEGLView.cpp
-    cocos2dx/platform/linux/CCFileUtils.cpp
-    cocos2dx/platform/linux/CCImage.cpp
-    cocos2dx/platform/linux/CCStdC.cpp
-
-)
 endif(LINUX)
 
 
@@ -129,7 +117,7 @@ if (LINUX)
     if (LOOM_BUILD_JIT EQUAL 1)
     
         target_link_libraries(${PROJECT_NAME} 
-        -L"${CMAKE_SOURCE_DIR}/build/luajit_x86/lib"
+        -L"${CMAKE_SOURCE_DIR}/build/luajit_linux_arm/lib"
         -lluajit-5.1
         )
     

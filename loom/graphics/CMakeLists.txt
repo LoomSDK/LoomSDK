@@ -43,14 +43,12 @@ if(ANDROID)
 endif()    
 
 if (MSVC)
-        include_directories( ${LOOM_INCLUDE_FOLDERS} )
+    include_directories( ${LOOM_INCLUDE_FOLDERS} )
 endif()
 
 if (LINUX)
+    include_directories( ${LOOM_INCLUDE_FOLDERS} )
     add_definitions ( -std=c++0x )
-    set ( BGFX_SRC ${BGFX_SRC} ${LOOMBGFX_SOURCE_DIR}/renderer_gl.cpp ${LOOMBGFX_SOURCE_DIR}/glcontext_external.cpp )
-    set ( GRAPHICS_SRC ${GRAPHICS_SRC} gfxGraphicsAndroid.cpp )
-
 endif()
 
 if (FLASH)

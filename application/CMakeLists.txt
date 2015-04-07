@@ -27,7 +27,6 @@ endif()
 if (LINUX)
     set (APPLICATION_SRC
       ${APPLICATION_SRC}
-      linux/main.cpp
     )
 endif()
 
@@ -303,12 +302,14 @@ elseif(ANDROID)
 elseif(LINUX)
 
     target_link_libraries(${PROJECT_NAME}
+       "-L/opt/vc/lib"
+       -lGLESv2 -lEGL -lpthread -lm
        LoomVendor
        LoomCommon
        LoomScript
        LoomGraphics
        LoomCore
-       -lGL -lGLEW -lGLU -lglfw -lcurl
+       "SDL2-static" "SDL2main"
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)

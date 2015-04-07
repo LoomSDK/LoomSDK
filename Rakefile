@@ -159,6 +159,7 @@ end
 # Report build configuration values
 puts ''
 puts "LoomSDK (#{$LOOM_VERSION}) Rakefile running on Ruby v#{RUBY_VERSION}"
+puts "  OS: #{$LOOM_HOST_OS}"
 puts "  CMake version: #{cmake_version}"
 puts "  Build type: #{$buildTarget}"
 puts "  Using JIT? #{flag_enabled?($doBuildJIT)} | Building AdMob? #{flag_enabled?($doBuildAdmob)} | Building FacebookSDK? #{flag_enabled?($doBuildFacebook)}"
@@ -441,7 +442,7 @@ namespace :build do
     elsif $LOOM_HOST_OS == 'darwin'
       Rake::Task["build:osx"].invoke
     else
-      Rake::Task["build:ubuntu"].invoke
+      Rake::Task["build:pi"].invoke
     end
   end
 
@@ -778,6 +779,46 @@ namespace :build do
     end
   end
 
+  desc "Build for Raspberry Pi"
+  task :pi => ['build/luajit_linux_arm/lib/libluajit-5.1.a'] do
+
+    puts "== Building Ubuntu =="
+    FileUtils.mkdir_p("cmake_pi")
+    Dir.chdir("cmake_pi") do
+      sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -G \"Unix Makefiles\" -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
+      sh "make -j#{$numCores}"
+    end
+
+    Rake::Task["utility:compileScripts"].invoke
+
+    # build ldb
+    Dir.chdir("sdk") do
+      sh "../artifacts/lsc LDB.build"
+    end
+    
+    # build testexec
+    Dir.chdir("sdk") do
+      sh "../artifacts/lsc TestExec.build"
+    end
+
+    # copy libs
+    FileUtils.cp_r("sdk/libs", "artifacts/")
+    FileUtils.cp_r("sdk/bin/LDB.loom", "artifacts")
+    FileUtils.cp_r("sdk/bin/TestExec.loom", "artifacts")
+    FileUtils.cp_r("sdk/src/testexec/loom.config", "artifacts/TestExec.config")
+
+    puts "Copying to #{$OUTPUT_DIRECTORY}/pi"
+
+    FileUtils.cp_r('./sdk/bin', './artifacts/pi')
+    FileUtils.cp_r('./sdk/assets', './artifacts/pi')
+
+    # copy asset agent
+    FileUtils.cp("cmake_pi/tools/assetAgent/libassetAgent.so", "artifacts/libassetAgent.so")
+
+    #copy assets
+    FileUtils.mkdir_p("artifacts/assets")
+  end
+
   desc "Builds Ubuntu Linux"
   task :ubuntu => ['build/luajit_x86/lib/libluajit-5.1.a'] do
     puts "== Skipped Ubuntu =="
@@ -858,6 +899,17 @@ file 'build/luajit_x86/lib/libluajit-5.1.a' do
       end
 
       sh "make CC=\"gcc -m32\" install PREFIX=\"#{lua_jit_dir.shellescape}\""
+    end
+end
+
+file 'build/luajit_linux_arm/lib/libluajit-5.1.a' do
+    rootFolder = Dir.pwd
+    lua_jit_dir = File.join(rootFolder, "build", "luajit_linux_arm")
+    puts "building LuaJIT ARM"
+    Dir.chdir("loom/vendor/luajit") do
+      sh "make clean"
+      sh "make CC=\"gcc\" PREFIX\"=#{lua_jit_dir.shellescape}\" -j#{$numCores}"
+      sh "make CC=\"gcc\" install PREFIX=\"#{lua_jit_dir.shellescape}\""
     end
 end
 
