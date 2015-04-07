@@ -103,6 +103,8 @@ public:
         {
             lmAssert(false, "Unknown orientation value: %s", orientation.c_str());
         }
+        _OrientationChangeDelegate.pushArgument(orientation.c_str());
+        _OrientationChangeDelegate.invoke();
     }
 
     int getWidth()

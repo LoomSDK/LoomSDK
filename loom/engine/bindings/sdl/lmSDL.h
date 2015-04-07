@@ -45,6 +45,7 @@ public:
     void remove(IMEDelegate* id);
     void dispatchInsertText(const char *text, int len);
     void dispatchDeleteBackward();
+    void dispatchShowComposition(const char *text, int len, int start, int length);
 };
 
 class IMEDelegate
@@ -55,6 +56,7 @@ public:
     LOOM_DELEGATE(DidDetachWithIME);
     LOOM_DELEGATE(InsertText);
     LOOM_DELEGATE(DeleteBackward);
+    LOOM_DELEGATE(ShowComposition);
     LOOM_DELEGATE(KeyboardWillShow);
     LOOM_DELEGATE(KeyboardDidShow);
     LOOM_DELEGATE(KeyboardWillHide);
@@ -72,6 +74,7 @@ public:
 
     virtual void insertText(const char *text, int len);
     virtual void deleteBackward();
+    virtual void showComposition(const char *text, int len, int start, int length);
 
     virtual const char *getContentText();
 
@@ -80,6 +83,7 @@ public:
     virtual void keyboardWillHide(IMEKeyboardNotificationInfo& info);
     virtual void keyboardDidHide(IMEKeyboardNotificationInfo& info);
 
+    void setTextInputRect(Loom2D::Rectangle rect);
     bool attachWithIME(int type = 0);
     bool detachWithIME();
 };

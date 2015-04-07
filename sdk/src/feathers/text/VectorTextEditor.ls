@@ -1,9 +1,11 @@
 package feathers.text
 {
+    import feathers.text.VectorTextRenderer;
     import loom.Application;
     import loom.ApplicationEvents;    
     import loom.platform.IMEDelegate;
     import loom.platform.LoomKeyboardType;
+    import loom2d.animation.Transitions;
     import loom2d.display.TextAlign;
     import loom2d.Loom2D;
     import loom2d.display.Quad;
@@ -30,7 +32,11 @@ package feathers.text
         protected var _caretQuad:Quad = new Quad(2, 16, 0x000000);
         protected var _hasIMEFocus:Boolean = false;
         protected var _cursorDelayedCall:DelayedCall;
+        
+        protected var cursorBlinkDelay = 0.7;
 
+        protected var composition:String = "";
+        
         // the stage is scrolled when bringing up IME text entry and the text editor is obscured
         // this is the Y value of the scroll 
         private var _stageTargetY:Number = 0;
@@ -45,23 +51,24 @@ package feathers.text
             imeDelegate = new IMEDelegate();
             imeDelegate.onInsertText += handleInsert;
             imeDelegate.onDeleteBackward += handleDeleteBackward;
+            imeDelegate.onShowComposition += handleShowComposition;
             _caretQuad.addEventListener( Event.ADDED_TO_STAGE, onCursorAddedToStage );
             _caretQuad.addEventListener( Event.REMOVED_FROM_STAGE, onCursorRemovedFromStage );
-            _cursorDelayedCall = new DelayedCall( toggleCursorVisibility, 0.7 );
+            _cursorDelayedCall = new DelayedCall( toggleCursorVisibility, cursorBlinkDelay );
             _cursorDelayedCall.repeatCount = 0;
-
+            
             // Listen in on application events as we're interested in keyboard size changes
             // to clear focus if user closes the OS keyboard (this works on iOS and Android)
             Application.event += onAppEvent;
-            
         }
-
+        
         public function dispose():void
         {
             imeDelegate.onInsertText -= handleInsert;
-            imeDelegate.onDeleteBackward -= handleDeleteBackward;        
-            Application.event -= onAppEvent;    
-
+            imeDelegate.onDeleteBackward -= handleDeleteBackward;
+            imeDelegate.onShowComposition -= handleShowComposition;
+            Application.event -= onAppEvent;
+            
             // if we're the current editor, make sure we clear the reference            
             if (_currentEditor == this)
                 _currentEditor = null;
@@ -72,20 +79,19 @@ package feathers.text
             if (type == ApplicationEvents.KEYBOARD_RESIZE)
             {            
                 var stage = Loom2D.stage;
-
+                
                 var resize = int(payload);
-
+                
                 // if we're closing the IME text entry box, undo the stage shift
                 if (resize == 0)
                 {
                     // ensure that the stage scroll is reset and clear our frame listener
-                    stage.y = 0;
                     _stageTargetY = 0;
-                    stage.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
-
-                    // if we're the current editor AND we have focus, clear it
+                    Loom2D.juggler.tween(stage, 0.3, { y: _stageTargetY, transition: Transitions.EASE_IN_OUT } );
+                    
+                    // if we're the current editor AND we have focus, clear it after no change for a certain amount of time
                     if (_currentEditor == this && _hasIMEFocus)
-                    {                        
+                    {
                         clearFocus();
                         _currentEditor = null;
                     }
@@ -94,23 +100,22 @@ package feathers.text
                 {                        
 
                     // resize is in device points, so we need to scale by stageHeight
-                    var scale = stage.nativeStageHeight / stage.stageHeight;
+                    var scale = stage.stageHeight / stage.nativeStageHeight;
                     resize = (resize) * scale;
 
                     // find the bounds of the text edit field, used to test if 
                     // we're obscured or not (and thus need to scroll)
                     var bounds = getBounds(stage);
-
+                    
+                    var safeZone = 16;
+                    
                     // detect whether we need to scroll
-                    if ((stage.height - bounds.bottom) < (resize + 16))
+                    if ((stage.stageHeight - bounds.bottom) < (resize + safeZone))
                     {
                         // we need to scroll!  We do this with some animation
                         // so the user's eye can follow what is happening
-                        stage.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
-                        _stageTargetY = (-resize) + (stage.height - bounds.bottom);
-
-                        // 16 pixel "safe zone"
-                        _stageTargetY -= height + 16; 
+                        _stageTargetY = (stage.stageHeight - resize - bounds.bottom - safeZone) / scale;
+                        Loom2D.juggler.tween(stage, 0.2, { y: _stageTargetY, transition: Transitions.EASE_OUT } );
                     }
 
                     // and mark us as the current editor
@@ -121,36 +126,7 @@ package feathers.text
             }            
 
         }
-
-        protected function enterFrameHandler(event:Event):void
-        {
-            if (!_hasIMEFocus)
-                return;
-            
-            var stage = Loom2D.stage;
-
-            // if we're animating a stage scroll, do so
-            if (stage.y != _stageTargetY)
-            {
-                var frameEvent = event as EnterFrameEvent;
-
-                var delta =  stage.y - _stageTargetY;
-                var delta2 = delta * frameEvent.passedTime * 10;
-
-                // if the delta is too big or too small, clamp
-                if (delta2 > delta || delta < 2)
-                    delta2 = delta;
-
-                stage.y -= delta2;
-            }
-            else
-            {
-                // we don't need to listen anymore so save some frame bandwidth
-                stage.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
-            }
-
-        }
-
+        
         protected function handleInsert(inText:String, length:int):void
         {
             if(!_isEditable)
@@ -163,6 +139,16 @@ package feathers.text
             }
 
             text += inText;
+            
+            updateInput();
+        }
+        
+        private function updateInput() {
+            var tl = localToGlobal(new Point(0, 0));
+            var br = localToGlobal(new Point(width, height));
+            imeDelegate.setTextInputRect(new Rectangle(tl.x, tl.y, br.x-tl.x, br.y-tl.y));
+            _caretQuad.visible = true;
+            _cursorDelayedCall.advanceTime(-_cursorDelayedCall.currentTime);
         }
 
         protected function handleDeleteBackward():void
@@ -182,6 +168,15 @@ package feathers.text
                 }
                 text = text.substr(0, newTextLen);            
             }
+            
+            updateInput();
+        }
+        
+        protected function handleShowComposition(inText:String, len:int, start:int, length:int):void
+        {
+            composition = inText && inText.length > 0 ? inText : "";
+            invalidate();
+            updateInput();
         }
 
         public function set text(v:String):void
@@ -215,6 +210,8 @@ package feathers.text
 
         protected function processDisplayText(input:String):String
         {
+            input += composition;
+            
             if(displayAsPassword)
             {
                 var s:String = "";
@@ -288,10 +285,11 @@ package feathers.text
             if(!_hasIMEFocus)
             {
                 //trace("Attaching IME");
+                updateInput();
                 imeDelegate.attachWithIME( _keyboardType );
                 addChild(_caretQuad);
                 _hasIMEFocus = true;
-                dispatchEventWith(FeathersEventType.FOCUS_IN);              
+                dispatchEventWith(FeathersEventType.FOCUS_IN);
             }
         }
 
@@ -303,7 +301,7 @@ package feathers.text
                 imeDelegate.detachWithIME();
                 _hasIMEFocus = false;
                 removeChild( _caretQuad, false );
-                dispatchEventWith(FeathersEventType.FOCUS_OUT);             
+                dispatchEventWith(FeathersEventType.FOCUS_OUT);
            }
         }
 
