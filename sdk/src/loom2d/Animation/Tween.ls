@@ -261,8 +261,7 @@ package loom2d.animation
             {
                 var ratio:Number = value / remainingTime;
                 if (mCurrentTime > 0 && !isComplete)
-                    mCurrentTime = (mCurrentTime / mTo
-talTime) * (mTotalTime * ratio);
+                    mCurrentTime = (mCurrentTime / mTotalTime) * (mTotalTime * ratio);
 
                 mTotalTime *= ratio / mRepeatCount;
             }
