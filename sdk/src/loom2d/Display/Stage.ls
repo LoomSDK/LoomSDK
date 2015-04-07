@@ -291,7 +291,7 @@ package loom2d.display
 
         protected function dump_r(indent:String, obj:DisplayObject):void
         {
-            trace(indent + obj.toString() + " (visible=" + obj.visible + " " + obj.x.toFixed(2) + "," + obj.y.toFixed(2) + " " + obj.width.toFixed(2) + "x" + obj.height.toFixed(2) + ")");
+            trace(indent + obj.toString() + " (visible=" + obj.visible + " " + obj.x.toFixed(2) + "," + obj.y.toFixed(2) + " " + obj.width.toFixed(2) + "x" + obj.height.toFixed(2) + ") - " + obj.name);
             if(obj as DisplayObjectContainer)
             {
                 var objDOC:DisplayObjectContainer = obj as DisplayObjectContainer;

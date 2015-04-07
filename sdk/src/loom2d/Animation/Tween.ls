@@ -241,9 +241,31 @@ package loom2d.animation
         }
 
         /** Indicates if the tween is finished. */
-        public function get isComplete():Boolean
+        public function get isComplete():Boolean 
+        { 
+            return mCurrentTime >= (mTotalTime * mRepeatCount); 
+        }
+        
+        /** The remaining time before the tween finishes. */
+        public function get remainingTime():Number
+        { 
+            return (mTotalTime * mRepeatCount) - mCurrentTime;
+        }
+        public function set remainingTime(value:Number):void 
         {
-            return mCurrentTime >= mTotalTime && mRepeatCount == 1;
+            if (remainingTime <= 0)
+            {
+                mTotalTime = value / mRepeatCount;
+            }
+            else
+            {
+                var ratio:Number = value / remainingTime;
+                if (mCurrentTime > 0 && !isComplete)
+                    mCurrentTime = (mCurrentTime / mTo
+talTime) * (mTotalTime * ratio);
+
+                mTotalTime *= ratio / mRepeatCount;
+            }
         }
 
         /** The target object that is animated. */
