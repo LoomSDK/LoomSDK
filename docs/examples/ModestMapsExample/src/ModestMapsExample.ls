@@ -83,19 +83,20 @@ package
         //keyboard handler
         private function keyDownHandler(event:KeyboardEvent):void
         {   
-            var keycode = event.keyCode;
+//TEMP: keyCode is ending up in charCode after SDL2 changes :/
+            var keycode = event.charCode;
 
             //always zoom at the center of the screen
             var zoomPoint:Point = new Point(stage.stageWidth / 2, stage.stageHeight / 2);
 
             //process zooming
-            if (keycode == LoomKey.PADEQUAL_SIGN)
+            if (keycode == LoomKey.EQUALS)
                 _map.zoomByAbout(0.05, zoomPoint);
             if (keycode == LoomKey.HYPHEN)
                 _map.zoomByAbout( -0.05, zoomPoint);
 
             //switch map provider!
-            if(keycode == LoomKey.OPEN_BRACKET)
+            if(keycode == LoomKey.LEFTBRACKET)
             {
                 _provider--;
                 if(_provider < 0)
@@ -103,7 +104,7 @@ package
                     _provider = _mapProviders.length - 1;
                 }
             }
-            else if(keycode == LoomKey.CLOSE_BRACKET)
+            else if(keycode == LoomKey.RIGHTBRACKET)
             {
                 _provider++;
                 if(_provider >= _mapProviders.length)

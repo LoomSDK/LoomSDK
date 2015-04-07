@@ -103,6 +103,7 @@ public:
     // before every bgfx::submit call.
     static int setClipRect(int x, int y, int width, int height);
     static void setClipRect(int cached);
+    static int getClipRect();
 
     // Render with no cliprect.
     static void clearClipRect();
