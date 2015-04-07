@@ -35,7 +35,8 @@ SDL_GLContext gContext;
 
 lmDefineLogGroup(coreLogGroup, "loom.core", 1, LoomLogInfo);
 
-static int done = 0;
+static bool gPendingResizeEvent = true;
+static int gLoomExecutionDone = 0;
 
 void loop()
 {
@@ -43,18 +44,60 @@ void loop()
 
     // Get the stage as it will receive most events.
     Loom2D::Stage *stage = Loom2D::Stage::smMainStage;
-    
+
+    if(gPendingResizeEvent && stage)
+    {
+        // Fire a resize event. We do this at startup so apps can size them
+        // selves properly before first render.
+        int winWidth, winHeight;
+        SDL_GetWindowSize(gSDLWindow, &winWidth, &winHeight);
+        SDL_GL_GetDrawableSize(gSDLWindow, &winWidth, &winHeight);
+        stage->noteNativeSize(winWidth, winHeight);
+        GFX::Graphics::setNativeSize(winWidth, winHeight);
+
+        gPendingResizeEvent = false;
+    }
+
     /* Check for events */
     while (SDL_PollEvent(&event))
     {
         if (event.type == SDL_QUIT)
         {
-            done = 1;
+            // Terminate execution.
+            gLoomExecutionDone = 1;
+            continue;
         }
 
         // Bail on the rest if no stage!
         if(!stage)
             continue;
+
+        // Adjust coordinates for mouse events to work proprly on high dpi screens.
+        if(event.type == SDL_MOUSEMOTION 
+            || event.type == SDL_MOUSEBUTTONDOWN 
+            || event.type == SDL_MOUSEBUTTONUP)
+        {
+            if (SDL_GetWindowFlags(gSDLWindow) & SDL_WINDOW_ALLOW_HIGHDPI)
+            {
+                // We work in drawable space but OS gives us these events in 
+                // window coords - so scale. Usually it's an integer scale.
+                int winW, winH;
+                SDL_GetWindowSize(gSDLWindow, &winW, &winH);
+                int drawableW, drawableH;
+                SDL_GL_GetDrawableSize(gSDLWindow, &drawableW, &drawableH);
+
+                if(event.type == SDL_MOUSEMOTION)
+                {
+                    event.motion.x *= drawableW / winW;
+                    event.motion.y *= drawableH / winH;
+                }
+                else
+                {
+                    event.button.x *= drawableW / winW;
+                    event.button.y *= drawableH / winH;
+                }
+            }            
+        }
 
         if(event.type == SDL_KEYDOWN)
         {
@@ -105,17 +148,18 @@ void loop()
         else if(event.type == SDL_MOUSEBUTTONDOWN)
         {
             //lmLogInfo(coreLogGroup, "began %d %d %d", event.motion.which, event.motion.x, event.motion.y);
-            stage->_TouchBeganDelegate.pushArgument((int)event.motion.which);
-            stage->_TouchBeganDelegate.pushArgument(event.motion.x);
-            stage->_TouchBeganDelegate.pushArgument(event.motion.y);
+
+            stage->_TouchBeganDelegate.pushArgument((int)event.button.which);
+            stage->_TouchBeganDelegate.pushArgument(event.button.x);
+            stage->_TouchBeganDelegate.pushArgument(event.button.y);
             stage->_TouchBeganDelegate.invoke();
         }
         else if(event.type == SDL_MOUSEBUTTONUP)
         {
             //lmLogInfo(coreLogGroup, "ended %d %d %d", event.motion.which, event.motion.x, event.motion.y);
-            stage->_TouchEndedDelegate.pushArgument((int)event.motion.which);
-            stage->_TouchEndedDelegate.pushArgument(event.motion.x);
-            stage->_TouchEndedDelegate.pushArgument(event.motion.y);
+            stage->_TouchEndedDelegate.pushArgument((int)event.button.which);
+            stage->_TouchEndedDelegate.pushArgument(event.button.x);
+            stage->_TouchEndedDelegate.pushArgument(event.button.y);
             stage->_TouchEndedDelegate.invoke();
         }
         else if(event.type == SDL_MOUSEMOTION)
@@ -263,12 +307,12 @@ main(int argc, char *argv[])
     supplyEmbeddedAssets();
 
     /* Main render loop */
-    done = 0;
+    gLoomExecutionDone = 0;
     
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(loop, 0, 1);
 #else
-    while (!done) loop();
+    while (!gLoomExecutionDone) loop();
 #endif
     
     loom_appShutdown();
