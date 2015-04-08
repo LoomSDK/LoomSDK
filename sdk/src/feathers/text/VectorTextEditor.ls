@@ -19,6 +19,8 @@ package feathers.text
     import feathers.core.ITextEditor;
     import feathers.events.FeathersEventType;    
     import feathers.text.TextFormatAlign;
+    import system.platform.Platform;
+    import system.platform.PlatformType;
 
     public class VectorTextEditor extends VectorTextRenderer implements ITextEditor
     {
@@ -58,7 +60,7 @@ package feathers.text
             _cursorDelayedCall.repeatCount = 0;
             
             // Listen in on application events as we're interested in keyboard size changes
-            // to clear focus if user closes the OS keyboard (this works on iOS and Android)
+            // to clear focus if user closes the OS keyboard (this works on Android at least)
             Application.event += onAppEvent;
         }
         
@@ -144,15 +146,19 @@ package feathers.text
         }
         
         private function updateInput() {
-            var tl = localToGlobal(new Point(0, 0));
-            var br = localToGlobal(new Point(width, height));
-            var rw = stage.nativeStageWidth/stage.stageWidth;
-            var rh = stage.nativeStageHeight/stage.stageHeight;
-            tl.x *= rw;
-            tl.y *= rh;
-            br.x *= rw;
-            br.y *= rh;
-            imeDelegate.setTextInputRect(new Rectangle(tl.x, tl.y, br.x-tl.x, br.y-tl.y));
+            // Use our improved implementation on Android for
+            // the keyboard shift, use SDL implementation on others
+            if (Platform.getPlatform() != PlatformType.ANDROID) {
+                var tl = localToGlobal(new Point(0, 0));
+                var br = localToGlobal(new Point(width, height));
+                var rw = stage.nativeStageWidth/stage.stageWidth;
+                var rh = stage.nativeStageHeight/stage.stageHeight;
+                tl.x *= rw;
+                tl.y *= rh;
+                br.x *= rw;
+                br.y *= rh;
+                imeDelegate.setTextInputRect(new Rectangle(tl.x, tl.y, br.x-tl.x, br.y-tl.y));
+            }
             _caretQuad.visible = true;
             _cursorDelayedCall.advanceTime(-_cursorDelayedCall.currentTime);
         }
