@@ -27,43 +27,6 @@
 
 lmDefineLogGroup(sdlLogGroup, "loom.engine.bindings", 1, LoomLogInfo);
 
-Window* Window::mainWindow = NULL;
-
-Window::Window(SDL_Window* window) {
-    sdlWindow = window;
-    initializing = true;
-}
-
-void Window::setMain(Window* window) {
-    mainWindow = window;
-}
-
-Window* Window::getMain() {
-    lmAssert(mainWindow != NULL, "Main Window was not set before getting");
-    return mainWindow;
-}
-
-void Window::updateFromConfig() {
-    SDL_SetWindowTitle(sdlWindow, LoomApplicationConfig::displayTitle().c_str());
-    int width = LoomApplicationConfig::displayWidth();
-    int height = LoomApplicationConfig::displayHeight();
-    SDL_SetWindowSize(sdlWindow, width, height);
-    if (Loom2D::Stage::smMainStage != NULL) Loom2D::Stage::smMainStage->noteNativeSize(width, height);
-    if (initializing) {
-        initializing = false;
-        show();
-    }
-}
-
-void Window::show() {
-    SDL_ShowWindow(sdlWindow);
-}
-
-void Window::hide() {
-    SDL_HideWindow(sdlWindow);
-}
-
-
 IMEDelegateDispatcher* IMEDelegateDispatcher::shared() {
     static IMEDelegateDispatcher instance;
     return &instance;

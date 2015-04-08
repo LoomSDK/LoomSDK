@@ -321,6 +321,7 @@ package loom
             var time = Platform.getTime();
             var delta = (time-frameLastPlatformTime)/1000;
             //trace(delta);
+            theStage.firePendingResizeEvent();
             touchProcessor.advanceTime(delta);
             Loom2D.juggler.advanceTime(delta);
             theStage.advanceTime(delta);

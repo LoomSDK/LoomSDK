@@ -229,6 +229,22 @@ package loom2d.math
             tempPoint.y = len * Math.sin(angle);
             return tempPoint;
         }
+        
+        /**
+         * Returns the determinant between p1 and p2, as though they were Vectors
+         */
+        public static function det(p1:Point, p2:Point):Number
+        {
+            return (p1.x * p2.y) - (p1.y * p2.x);
+        }
+
+        /**
+         * Returns the angle between p1 and p2, as though they were Vectors
+         */
+        public static function angle(p1:Point, p2:Point):Number
+        {
+            return Math.atan2(det(p1,p2), dot(p1,p2));
+        }
 
         /**
          * Private return point for operations.

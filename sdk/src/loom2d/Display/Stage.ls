@@ -150,7 +150,7 @@ package loom2d.display
         {
             broadcastEvent(
                 new KeyboardEvent(
-                    KeyboardEvent.KEY_DOWN, scancode, virtualKey, 0, 
+                    KeyboardEvent.KEY_DOWN, virtualKey, scancode, 0, 
                     (modifiers | LoomKeyModifier.CTRL) != 0,
                     (modifiers | LoomKeyModifier.ALT) != 0,
                     (modifiers | LoomKeyModifier.SHIFT) != 0));
@@ -160,7 +160,7 @@ package loom2d.display
         {
             broadcastEvent(
                 new KeyboardEvent(
-                    KeyboardEvent.KEY_UP, scancode, virtualKey, 0, 
+                    KeyboardEvent.KEY_UP, virtualKey, scancode, 0, 
                     (modifiers | LoomKeyModifier.CTRL) != 0,
                     (modifiers | LoomKeyModifier.ALT) != 0,
                     (modifiers | LoomKeyModifier.SHIFT) != 0 ));
@@ -208,6 +208,8 @@ package loom2d.display
 
         /** @inheritDoc */
         public override native function render();
+
+        public native function firePendingResizeEvent();
 
         /** Returns the object that is found topmost beneath a point in stage coordinates, or  
          *  the stage itself if nothing else is found. */
@@ -291,7 +293,7 @@ package loom2d.display
 
         protected function dump_r(indent:String, obj:DisplayObject):void
         {
-            trace(indent + obj.toString() + " (visible=" + obj.visible + " " + obj.x.toFixed(2) + "," + obj.y.toFixed(2) + " " + obj.width.toFixed(2) + "x" + obj.height.toFixed(2) + ")");
+            trace(indent + obj.toString() + " (visible=" + obj.visible + " " + obj.x.toFixed(2) + "," + obj.y.toFixed(2) + " " + obj.width.toFixed(2) + "x" + obj.height.toFixed(2) + ") - " + obj.name);
             if(obj as DisplayObjectContainer)
             {
                 var objDOC:DisplayObjectContainer = obj as DisplayObjectContainer;

@@ -26,6 +26,9 @@
 
 lmDefineLogGroup(gLoomApplicationConfigLogGroup, "script.LoomApplicationConfig", 1, LoomLogInfo);
 
+const utString LoomApplicationConfig::OrientationLandscape = "landscape";
+const utString LoomApplicationConfig::OrientationPortrait = "portrait";
+
 utString LoomApplicationConfig::configJSON;
 int      LoomApplicationConfig::_waitForAssetAgent = false;
 utString LoomApplicationConfig::assetHost;
@@ -40,6 +43,7 @@ int      LoomApplicationConfig::_debuggerPort;
 utString LoomApplicationConfig::_displayTitle = "Loom";
 int      LoomApplicationConfig::_displayWidth = 640;
 int      LoomApplicationConfig::_displayHeight = 480;
+utString LoomApplicationConfig::_displayOrientation = "auto";
 
 // little helpers that do conversion
 static bool _jsonParseBool(const char *key, json_t *value)
@@ -116,6 +120,12 @@ static int _jsonParseInt(const char *key, json_t *value)
     lmLog(gLoomApplicationConfigLogGroup, "WARNING: unknown json int conversion in config for key %s", key);
 
     return 0;
+}
+
+const utString& LoomApplicationConfig::displayOrientation()
+{
+    lmLog(gLoomApplicationConfigLogGroup, "displayOrientation %s", _displayOrientation.c_str());
+    return _displayOrientation;
 }
 
 
@@ -233,9 +243,14 @@ void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
             _displayWidth = _jsonParseInt("width", dWidth);
         }
 
-        if(json_t *dHeight = json_object_get(displayBlock, "height"))
+        if (json_t *dHeight = json_object_get(displayBlock, "height"))
         {
             _displayHeight = _jsonParseInt("height", dHeight);
+        }
+
+        if (json_t *dOrientation = json_object_get(displayBlock, "orientation"))
+        {
+            _displayOrientation = json_string_value(dOrientation);
         }
     }
 
