@@ -133,6 +133,12 @@ package feathers.controls
          * @private
          */
         protected var _text:String = "";
+        
+        /**
+         * @private
+         * Par of a Workaround fix that specially prevents editing when not in focus
+         */
+        private var _localIsEditable:Boolean = false;
 
         /**
          * The text displayed by the text input. The text input dispatches
@@ -1085,7 +1091,7 @@ package feathers.controls
             this.textEditor.displayAsPassword = this._displayAsPassword;
             this.textEditor.maxChars = this._maxChars;
             this.textEditor.restrict = this._restrict;
-            this.textEditor.isEditable = this._isEditable;
+            this.textEditor.isEditable = (this._isEditable && this._localIsEditable);
             this.textEditor.keyboardType = this._keyboardType;
             
             const displayTextEditor:DisplayObject = DisplayObject(this.textEditor);
@@ -1343,6 +1349,8 @@ package feathers.controls
         protected function textEditor_focusInHandler(event:Event):void
         {
             this._textEditorHasFocus = true;
+            this._localIsEditable = true; // Workaround Hack
+            this.refreshTextEditorProperties(); // Workaround Hack
             this._touchPointID = -1;
             this.invalidate(INVALIDATION_FLAG_STATE);
             if(this._focusManager)
@@ -1361,6 +1369,8 @@ package feathers.controls
         protected function textEditor_focusOutHandler(event:Event):void
         {
             this._textEditorHasFocus = false;
+            this._localIsEditable = false; // Workaround Hack
+            this.refreshTextEditorProperties(); // Workaround Hack
             this.invalidate(INVALIDATION_FLAG_STATE);
             if(this._focusManager)
             {
