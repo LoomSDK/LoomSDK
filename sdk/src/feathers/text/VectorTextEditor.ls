@@ -146,6 +146,12 @@ package feathers.text
         private function updateInput() {
             var tl = localToGlobal(new Point(0, 0));
             var br = localToGlobal(new Point(width, height));
+            var rw = stage.nativeStageWidth/stage.stageWidth;
+            var rh = stage.nativeStageHeight/stage.stageHeight;
+            tl.x *= rw;
+            tl.y *= rh;
+            br.x *= rw;
+            br.y *= rh;
             imeDelegate.setTextInputRect(new Rectangle(tl.x, tl.y, br.x-tl.x, br.y-tl.y));
             _caretQuad.visible = true;
             _cursorDelayedCall.advanceTime(-_cursorDelayedCall.currentTime);
