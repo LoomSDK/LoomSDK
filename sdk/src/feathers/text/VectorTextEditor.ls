@@ -32,8 +32,8 @@ package feathers.text
         protected var _isEditable:Boolean = true;
         protected var _keyboardType:LoomKeyboardType = 0;
         protected var _caretQuad:Quad = new Quad(2, 16, 0x000000);
-        protected var _hasIMEFocus:Boolean = false;
         protected var _cursorDelayedCall:DelayedCall;
+        protected var _keyboardSafeZone = 16;
         
         protected var cursorBlinkDelay = 0.7;
 
@@ -46,7 +46,15 @@ package feathers.text
         // tracks the current bitmap font editor, this is important as there may be a number
         // of editors on the screen and the user can switch between them by selecting them
         // which can cause timing issues as the IME keyboard opens/closes to deal with selection
-        private static var _currentEditor:VectorTextEditor = null;
+        protected static var _currentEditor:VectorTextEditor = null;
+        protected static var _pendingEditor:VectorTextEditor = null;
+        
+        protected static const KEYBOARD_CLOSED = 0;
+        protected static const KEYBOARD_CLOSING = 1;
+        protected static const KEYBOARD_OPENING = 2;
+        protected static const KEYBOARD_OPENED = 3;
+        
+        protected static var _keyboardState = KEYBOARD_CLOSED;
 
         public function VectorTextEditor()
         {
@@ -87,56 +95,80 @@ package feathers.text
                 // if we're closing the IME text entry box, undo the stage shift
                 if (resize == 0)
                 {
-                    // ensure that the stage scroll is reset and clear our frame listener
-                    _stageTargetY = 0;
-                    Loom2D.juggler.tween(stage, 0.3, { y: _stageTargetY, transition: Transitions.EASE_IN_OUT } );
+                    var closed = false;
+                    if (_keyboardState == KEYBOARD_CLOSING && (_pendingEditor == null || _pendingEditor == this)) {
+                        panStage();
+                        closed = true;
+                        _keyboardState = KEYBOARD_CLOSED;
+                    }
                     
-                    // if we're the current editor AND we have focus, clear it after no change for a certain amount of time
-                    if (_currentEditor == this && _hasIMEFocus)
+                    // if we're the current editor AND we have focus, clear it
+                    if (_currentEditor == this)
                     {
+                        //trace("Native keyboard closed, clearing focus");
+                        panStage();
                         clearFocus();
-                        _currentEditor = null;
+                        _keyboardState = KEYBOARD_CLOSED;
+                    }
+
+                    if (closed && _pendingEditor) {
+                        var editor = _pendingEditor;
+                        _pendingEditor = null;
+                        editor.setFocus();
                     }
                 }
-                else if (_hasIMEFocus)
-                {                        
+                else if (_currentEditor == this)
+                {
+                    _keyboardState = KEYBOARD_OPENED;
 
                     // resize is in device points, so we need to scale by stageHeight
                     var scale = stage.stageHeight / stage.nativeStageHeight;
                     resize = (resize) * scale;
-
+                    
                     // find the bounds of the text edit field, used to test if 
                     // we're obscured or not (and thus need to scroll)
                     var bounds = getBounds(stage);
                     
-                    var safeZone = 16;
-                    
                     // detect whether we need to scroll
-                    if ((stage.stageHeight - bounds.bottom) < (resize + safeZone))
+                    if ((stage.stageHeight - bounds.bottom) < (resize + _keyboardSafeZone))
                     {
                         // we need to scroll!  We do this with some animation
                         // so the user's eye can follow what is happening
-                        _stageTargetY = (stage.stageHeight - resize - bounds.bottom - safeZone) / scale;
-                        Loom2D.juggler.tween(stage, 0.2, { y: _stageTargetY, transition: Transitions.EASE_OUT } );
+                        panStage(bounds, resize, scale);
+                    } else {
+                        panStage();
                     }
-
-                    // and mark us as the current editor
-                    _currentEditor = this;
-
                 }
                  
-            }            
-
+            }
+        }
+        
+        protected function panStage(bounds:Rectangle = null, keyboardSize:Number = 0, scale:Number = 1)
+        {
+            if (bounds) {
+                //trace("Panning stage to field");
+                _stageTargetY = (stage.stageHeight - keyboardSize - bounds.bottom - _keyboardSafeZone) / scale;
+                Loom2D.juggler.removeTweens(stage);
+                Loom2D.juggler.tween(stage, 0.2, { y: _stageTargetY, transition: Transitions.EASE_OUT } );
+            } else {
+                //trace("Panning stage to origin");
+                _stageTargetY = 0;
+                Loom2D.juggler.removeTweens(stage);
+                Loom2D.juggler.tween(stage, 0.3, { y: _stageTargetY, transition: Transitions.EASE_IN_OUT } );
+            }
         }
         
         protected function handleInsert(inText:String, length:int):void
         {
+            if(_currentEditor != this) return;
+            
             if(!_isEditable)
                 return;
 
             if(inText == "\n")
             {
                 // We only support single line text input for now.
+                trace("Line break detected, clearing focus");
                 clearFocus();
             }
 
@@ -145,26 +177,10 @@ package feathers.text
             updateInput();
         }
         
-        private function updateInput() {
-            // Use our improved implementation on Android for
-            // the keyboard shift, use SDL implementation on others
-            if (Platform.getPlatform() != PlatformType.ANDROID) {
-                var tl = localToGlobal(new Point(0, 0));
-                var br = localToGlobal(new Point(width, height));
-                var rw = stage.nativeStageWidth/stage.stageWidth;
-                var rh = stage.nativeStageHeight/stage.stageHeight;
-                tl.x *= rw;
-                tl.y *= rh;
-                br.x *= rw;
-                br.y *= rh;
-                imeDelegate.setTextInputRect(new Rectangle(tl.x, tl.y, br.x-tl.x, br.y-tl.y));
-            }
-            _caretQuad.visible = true;
-            _cursorDelayedCall.advanceTime(-_cursorDelayedCall.currentTime);
-        }
-
         protected function handleDeleteBackward():void
         {
+            if(_currentEditor != this) return;
+            
             if(!_isEditable)
                 return;
 
@@ -186,9 +202,30 @@ package feathers.text
         
         protected function handleShowComposition(inText:String, len:int, start:int, length:int):void
         {
+            if(_currentEditor != this) return;
+            
             composition = inText && inText.length > 0 ? inText : "";
             invalidate();
             updateInput();
+        }
+        
+        
+        private function updateInput() {
+            // Use our improved implementation on Android for
+            // the keyboard shift, use SDL implementation on others
+            if (Platform.getPlatform() != PlatformType.ANDROID) {
+                var tl = localToGlobal(new Point(0, 0));
+                var br = localToGlobal(new Point(width, height));
+                var rw = stage.nativeStageWidth/stage.stageWidth;
+                var rh = stage.nativeStageHeight/stage.stageHeight;
+                tl.x *= rw;
+                tl.y *= rh;
+                br.x *= rw;
+                br.y *= rh;
+                imeDelegate.setTextInputRect(new Rectangle(tl.x, tl.y, br.x-tl.x, br.y-tl.y));
+            }
+            _caretQuad.visible = true;
+            _cursorDelayedCall.advanceTime(-_cursorDelayedCall.currentTime);
         }
 
         public function set text(v:String):void
@@ -294,27 +331,34 @@ package feathers.text
 
         public function setFocus():void
         {
-            if(!_hasIMEFocus)
-            {
-                //trace("Attaching IME");
-                updateInput();
-                imeDelegate.attachWithIME( _keyboardType );
-                addChild(_caretQuad);
-                _hasIMEFocus = true;
-                dispatchEventWith(FeathersEventType.FOCUS_IN);
+            if(_currentEditor != null) return;
+            if(_currentEditor == this) return;
+            if (_keyboardState == KEYBOARD_CLOSING) {
+                //trace("Pending focus due to keyboard closing");
+                _pendingEditor = this;
+                return;
             }
+            //trace("Attaching IME");
+            updateInput();
+            addChild(_caretQuad);
+            _currentEditor = this;
+            dispatchEventWith(FeathersEventType.FOCUS_IN);
+            _keyboardState = KEYBOARD_OPENING;
+            imeDelegate.attachWithIME( _keyboardType );
         }
 
         public function clearFocus():void
         {
-            if(_hasIMEFocus)
-            {
-                //trace("Detaching IME");
-                imeDelegate.detachWithIME();
-                _hasIMEFocus = false;
-                removeChild( _caretQuad, false );
-                dispatchEventWith(FeathersEventType.FOCUS_OUT);
-           }
+            if (_currentEditor != this) return;
+            //trace("Detaching IME");
+            _currentEditor = null;
+            removeChild( _caretQuad, false );
+            if (_keyboardState == KEYBOARD_OPENED) {
+                _keyboardState = KEYBOARD_CLOSING;
+                //trace("Keyboard closing");
+            }
+            imeDelegate.detachWithIME();
+            dispatchEventWith(FeathersEventType.FOCUS_OUT);
         }
 
         public function selectRange(startIndex:int, endIndex:int):void
