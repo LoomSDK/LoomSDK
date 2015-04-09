@@ -154,7 +154,7 @@ package loom2d.display
         {
             broadcastEvent(
                 new KeyboardEvent(
-                    KeyboardEvent.KEY_DOWN, scancode, virtualKey, 0, 
+                    KeyboardEvent.KEY_DOWN, virtualKey, scancode, 0, 
                     (modifiers | LoomKeyModifier.CTRL) != 0,
                     (modifiers | LoomKeyModifier.ALT) != 0,
                     (modifiers | LoomKeyModifier.SHIFT) != 0));
@@ -164,7 +164,7 @@ package loom2d.display
         {
             broadcastEvent(
                 new KeyboardEvent(
-                    KeyboardEvent.KEY_UP, scancode, virtualKey, 0, 
+                    KeyboardEvent.KEY_UP, virtualKey, scancode, 0, 
                     (modifiers | LoomKeyModifier.CTRL) != 0,
                     (modifiers | LoomKeyModifier.ALT) != 0,
                     (modifiers | LoomKeyModifier.SHIFT) != 0 ));
