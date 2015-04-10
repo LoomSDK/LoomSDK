@@ -31,17 +31,17 @@ package feathers.text
             addChild(_shape);
         }
         
-        function get baseline():Number
+        public function get baseline():Number
         {
             return _textFormat.lineHeight;
         }
 
-        function get text():String
+        public function get text():String
         {
             return _text;
         }
         
-        function set text(value:String)
+        public function set text(value:String)
         {
             _text = value;
             invalidate();
