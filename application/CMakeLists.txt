@@ -310,6 +310,8 @@ elseif(LINUX)
        LoomGraphics
        LoomCore
        "SDL2-static" "SDL2main"
+       -lpthread
+       -L/opt/vc/lib -lbcm_host
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)

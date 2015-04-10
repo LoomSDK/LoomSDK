@@ -217,16 +217,16 @@ main(int argc, char *argv[])
     /* Enable standard application logging */
     SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
     
-#if LOOM_RENDERER_OPENGLES2
+//#if LOOM_RENDERER_OPENGLES2
     ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
+    //lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
     ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
-#endif
+    //lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
+//#endif
     
     int stencilSize = 1;
     ret = SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilSize);
-    lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
+    //lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
     
     // Set up SDL window.
     if ((gSDLWindow = SDL_CreateWindow(

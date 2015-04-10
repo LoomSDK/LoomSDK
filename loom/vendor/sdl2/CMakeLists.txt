@@ -167,8 +167,8 @@ endif()
 
 # Those are used for pkg-config and friends, so that the SDL2.pc, sdl2-config,
 # etc. are created correctly.
-set(SDL_LIBS "-lSDL2")
-set(SDL_CFLAGS "")
+set(SDL_LIBS "-lSDL2 -L/opt/vc/lib -lbcm_host")
+set(SDL_CFLAGS "-I/opt/vc/include/")
 
 if(CYGWIN)
   # We build SDL on cygwin without the UNIX emulation layer
@@ -186,7 +186,7 @@ endif()
 
 add_definitions(-DUSING_GENERATED_CONFIG_H)
 # General includes
-include_directories(${SDL2_BINARY_DIR}/include ${SDL2_SOURCE_DIR}/include)
+include_directories(${SDL2_BINARY_DIR}/include ${SDL2_SOURCE_DIR}/include /opt/vc/include/  /opt/vc/include/interface/vcos/pthreads /opt/vc/include/interface/vmcs_host/linux/)
 
 set(SDL_SUBSYSTEMS
     Atomic Audio Video Render Events Joystick Haptic Power Threads Timers
@@ -237,6 +237,7 @@ set_option(INPUT_TSLIB         "Use the Touchscreen library for input" ${UNIX_SY
 set_option(VIDEO_X11           "Use X11 video driver" ${UNIX_SYS})
 set_option(VIDEO_WAYLAND       "Use Wayland video driver" OFF) #${UNIX_SYS})
 set_option(VIDEO_MIR           "Use Mir video driver" OFF) #${UNIX_SYS})
+set_option(VIDEO_RPI           "Use Raspberry PI video driver" OFF) #${UNIX_SYS})
 dep_option(X11_SHARED          "Dynamically load X11 support" ON "VIDEO_X11" OFF)
 set(SDL_X11_OPTIONS Xcursor Xinerama XInput Xrandr Xscrnsaver XShape Xvm)
 foreach(_SUB ${SDL_X11_OPTIONS})
@@ -618,7 +619,13 @@ if(SDL_DLOPEN)
 endif()
 
 set(SDL_VIDEO_DRIVER_RPI 1)
+set(SDL_VIDEO_OPENGL_EGL 1)
+set(SDL_VIDEO_OPENGL_ES2 1)
+set(SDL_VIDEO_OPENGLES 1)
 set(HAVE_VIDEO_RPI 1)
+set(HAVE_VIDEO_OPENGL_ES2 1)
+set(HAVE_VIDEO_OPENGL_EGL 1)
+set(HAVE_VIDEO_OPENGLES 1)
 file(GLOB VIDEO_RPI_SOURCES ${SDL2_SOURCE_DIR}/src/video/raspberry/*.c)
 set(SOURCE_FILES ${SOURCE_FILES} ${VIDEO_RPI_SOURCES})
 

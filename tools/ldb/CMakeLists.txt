@@ -57,10 +57,9 @@ endif(MSVC)
 
 if (LOOM_BUILD_JIT EQUAL 1)
     target_link_libraries(ldb ${LOOM_LUAJIT_LIB} -lpthread)
-
-    if (LINUX)
-        target_link_libraries(${PROJECT_NAME} -ldl)
-    endif()
     
 endif()
 
+if (LINUX)
+    target_link_libraries(${PROJECT_NAME} -ldl -lpthread)
+endif()

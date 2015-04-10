@@ -260,6 +260,10 @@ if (LINUX)
 
     set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_linux_arm/lib/libluajit-5.1.a)
     set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/android/armeabi/libSDL2.a)
+
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -fPIC -gdwarf-3")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -fPIC -gdwarf-3")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard -fPIC -gdwarf-3")
     
 endif()
 
