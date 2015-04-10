@@ -51,7 +51,7 @@ package loom2d.display
     delegate ScrollWheelDelegate(yDelta:int);
     delegate AccelerationDelegate(x:Number, y:Number, z:Number);
 
-    delegate OrientationChangeDelegate(newOrientation:String);
+    delegate OrientationChangeDelegate(newOrientation:int);
     delegate SizeChangeDelegate(newWidth:int, newHeight:int);
 
     /** A Stage represents the root of the display tree.  
@@ -76,10 +76,6 @@ package loom2d.display
     [Native(managed)]      
     public native class Stage extends DisplayObjectContainer
     {
-        public static const ORIENTATION_LANDSCAPE = "landscape";
-        public static const ORIENTATION_PORTRAIT = "portrait";
-        public static const ORIENTATION_AUTO = "auto";
-        
         private var mWidth:int;
         private var mHeight:int;
         private var mColor:uint;
