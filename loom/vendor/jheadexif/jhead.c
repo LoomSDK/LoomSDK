@@ -11,6 +11,8 @@
 //
 // by Matthias Wandel   www.sentex.net/~mwandel
 //--------------------------------------------------------------------------
+
+
 #ifdef _WIN32
     #include <io.h>
 #endif
@@ -24,6 +26,16 @@
 // This #define turns on features that are too very specific to 
 // how I organize my photos.  Best to ignore everything inside #ifdef MATTHIAS
 //#define MATTHIAS
+
+//--------------------------------------------------------------------------
+// Set file time as exif time.
+//--------------------------------------------------------------------------
+void FileTimeAsString(char * TimeStr)
+{
+    struct tm ts;
+    ts = *localtime(&ImageInfo.FileDateTime);
+    strftime(TimeStr, 20, "%Y:%m:%d %H:%M:%S", &ts);
+}
 
 
 // Bitmasks for DoModify:
@@ -130,7 +142,7 @@ void ErrNonfatal(const char * msg, int a1, int a2)
     fprintf(stderr, "\n");
 } 
 
-
+#if 0
 //--------------------------------------------------------------------------
 // Invoke an editor for editing a string.
 //--------------------------------------------------------------------------
@@ -763,15 +775,6 @@ static int RegenerateThumbnail(const char * FileName)
     }
 }
 
-//--------------------------------------------------------------------------
-// Set file time as exif time.
-//--------------------------------------------------------------------------
-void FileTimeAsString(char * TimeStr)
-{
-    struct tm ts;
-    ts = *localtime(&ImageInfo.FileDateTime);
-    strftime(TimeStr, 20, "%Y:%m:%d %H:%M:%S", &ts);
-}
 
 //--------------------------------------------------------------------------
 // Do selected operations to one file at a time.
@@ -1698,3 +1701,4 @@ int main (int argc, char **argv)
 }
 */
 
+#endif

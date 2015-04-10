@@ -246,7 +246,6 @@ if (LINUX)
 
     set (LOOM_INCLUDE_FOLDERS
         ${LOOM_INCLUDE_FOLDERS}
-        ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/linux
         ${CMAKE_SOURCE_DIR}/loom/vendor/glew-1.7.0/include 
         /opt/vc/include)
 

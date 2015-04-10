@@ -6,6 +6,7 @@
 //
 // Matthias Wandel
 //--------------------------------------------------------------------------
+
 #include "jhead.h"
 
 // Storage for simplified info extracted from file.

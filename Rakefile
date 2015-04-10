@@ -8,7 +8,7 @@ puts "== Executing as '#{ENV['USER']}' =="
 ###############################
 
 # Specify the build target - Debug, Release, RelMinSize, RelWithDebug
-$buildTarget="Release" # "Debug"
+$buildTarget="Debug" # "Debug"
 
 # the sdk_version name that will be generated when this sdk is deployed (default = "dev")
 $targetSDKVersion = "dev"
