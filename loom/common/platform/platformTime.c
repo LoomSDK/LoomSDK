@@ -91,20 +91,25 @@ void loom_destroyTimer(loom_precision_timer_t timer)
 
 #include <windows.h>
 
+static DWORD gEpochStart;
+
 void platform_timeInitialize()
 {
     int r = timeBeginPeriod(1);
 
     assert(r == TIMERR_NOERROR);
+
+    gEpochStart = timeGetTime();
 }
 
 
 int platform_getMilliseconds()
 {
-    // TODO: Do better than this.
-    return timeGetTime();
+    // Since both are unsigned (DWORD) this should work through
+    // time rollover, but the 32-bit signed int return type
+    // limits it to a bit over 2 weeks before it overflows
+    return timeGetTime() - gEpochStart;
 }
-
 
 typedef struct loom_win32_precisionTimer_t
 {
