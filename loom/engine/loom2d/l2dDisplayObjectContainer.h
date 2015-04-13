@@ -42,7 +42,8 @@ public:
         type       = typeDisplayObjectContainer;
         _depthSort = false;
         _view      = 0;
-        clipX      = clipY = clipWidth = clipHeight = 0;
+        clipX      = clipY = 0;
+        clipWidth  = clipHeight = -1;
     }
 
     bool _depthSort;

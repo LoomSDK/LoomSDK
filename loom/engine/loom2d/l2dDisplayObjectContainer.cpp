@@ -112,7 +112,7 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
     }
 
     // Is there a cliprect? If so, set it.
-    if ((clipX != 0) || (clipY != 0) || (clipWidth != 0) || (clipHeight != 0))
+    if (clipWidth != -1 && clipHeight != -1)
     {
         GFX::QuadRenderer::submit();
 
