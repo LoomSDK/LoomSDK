@@ -11,12 +11,12 @@
 #include <fcntl.h>
 #endif
 
-#include "loom/engine/bindings/sdl/lmSDL.h"
-
-#include "loom/graphics/gfxGraphics.h"
 #include "loom/engine/loom2d/l2dStage.h"
+#include "loom/graphics/gfxGraphics.h"
 #include "loom/common/core/log.h"
 #include "loom/common/platform/platform.h"
+
+#include "loom/engine/bindings/sdl/lmSDL.h"
 
 #include "loom/script/native/core/system/lmProcess.h"
 

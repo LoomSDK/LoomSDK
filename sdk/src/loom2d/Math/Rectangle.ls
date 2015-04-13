@@ -65,6 +65,12 @@ package loom2d.math
          * Assign the x,y,width,height of this rectangle.
          */
         public native function setTo(_x:Number, _y:Number, _width:Number, _height:Number):void;
+        
+        /**
+         * Clip the rectangle with the provided rectangle.
+         * The rectangle is changed contain only the intersection between it and the provided rectangle.
+         */
+        public native function clip(cx:Number, cy:Number, cwidth:Number, cheight:Number):void;
 
         public native function toString():String;
         

@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "loom/graphics/gfxMath.h"
 #include "loom/engine/loom2d/l2dPoint.h"
 
 namespace Loom2D
@@ -225,6 +226,14 @@ public:
         lua_pushboolean(L, result ? 1 : 0);
 
         return 1;
+    }
+
+    void clip(float cx, float cy, float cwidth, float cheight)
+    {
+        width  = fmaxf(0.f, fminf(cwidth,  fminf(width,  fminf(x + width  - cx, cx + cwidth  - x))));
+        height = fmaxf(0.f, fminf(cheight, fminf(height, fminf(y + height - cy, cy + cheight - y))));
+        x = fmaxf(x, cx);
+        y = fmaxf(y, cy);
     }
 
     /**

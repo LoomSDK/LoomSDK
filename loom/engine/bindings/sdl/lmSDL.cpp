@@ -18,12 +18,12 @@
 * ===========================================================================
 */
 
-#include <SDL.h>
-#include "lmSDL.h"
+#include "loom/engine/loom2d/l2dStage.h"
 #include "loom/script/native/lsNativeDelegate.h"
 #include "loom/common/core/log.h"
 #include "loom/common/config/applicationConfig.h"
-#include "loom/engine/loom2d/l2dStage.h"
+#include <SDL.h>
+#include "lmSDL.h"
 
 lmDefineLogGroup(sdlLogGroup, "loom.engine.bindings", 1, LoomLogInfo);
 
