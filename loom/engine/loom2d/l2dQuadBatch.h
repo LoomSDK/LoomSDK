@@ -20,12 +20,12 @@
 
 #pragma once
 
-#include "loom/graphics/gfxQuadRenderer.h"
+#include "loom/engine/loom2d/l2dRectangle.h"
 #include "loom/engine/loom2d/l2dDisplayObject.h"
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 #include "loom/engine/loom2d/l2dQuad.h"
 #include "loom/engine/loom2d/l2dImage.h"
-#include "loom/engine/loom2d/l2dRectangle.h"
+#include "loom/graphics/gfxQuadRenderer.h"
 
 namespace Loom2D
 {

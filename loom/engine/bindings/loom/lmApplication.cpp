@@ -38,7 +38,6 @@ using namespace LS;
 #include "loom/script/common/lsLog.h"
 #include "loom/script/common/lsFile.h"
 
-#include "loom/engine/bindings/sdl/lmSDL.h"
 #include "loom/engine/loom2d/l2dStage.h"
 
 #include "loom/common/platform/platform.h"
@@ -49,6 +48,8 @@ using namespace LS;
 
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/script/native/core/system/lmProcess.h"
+
+#include "loom/engine/bindings/sdl/lmSDL.h"
 
 LSLuaState     *LoomApplication::rootVM      = NULL;
 bool           LoomApplication::reloadQueued = false;
