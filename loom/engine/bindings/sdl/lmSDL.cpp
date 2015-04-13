@@ -56,6 +56,14 @@ void IMEDelegateDispatcher::dispatchDeleteBackward() {
     }
 }
 
+void IMEDelegateDispatcher::dispatchShowComposition(const char *text, int len, int start, int length) {
+    utArray<IMEDelegate*>::Iterator it = delegates.iterator();
+    while (it.hasMoreElements()) {
+        IMEDelegate* d = it.getNext();
+        d->showComposition(text, len, start, length);
+    }
+}
+
 
 IMEDelegate::IMEDelegate()
     : canDetachWithIME(true)
@@ -92,6 +100,15 @@ void IMEDelegate::deleteBackward()
     _DeleteBackwardDelegate.invoke();
 }
 
+void IMEDelegate::showComposition(const char *text, int len, int start, int length)
+{
+    _ShowCompositionDelegate.pushArgument(text);
+    _ShowCompositionDelegate.pushArgument(len);
+    _ShowCompositionDelegate.pushArgument(start);
+    _ShowCompositionDelegate.pushArgument(length);
+    _ShowCompositionDelegate.invoke();
+}
+
 const char *IMEDelegate::getContentText()
 {
     return contentText.c_str();
@@ -117,6 +134,14 @@ void IMEDelegate::keyboardDidHide(IMEKeyboardNotificationInfo& info)
     _KeyboardDidHideDelegate.invoke();
 }
 
+void IMEDelegate::setTextInputRect(Loom2D::Rectangle rect) {
+    SDL_Rect r;
+    r.x = (int) rect.x;
+    r.y = (int) rect.y;
+    r.w = (int) rect.width;
+    r.h = (int) rect.height;
+    SDL_SetTextInputRect(&r);
+};
 bool IMEDelegate::attachWithIME(int type) { 
     SDL_StartTextInput();
     return true;
@@ -143,11 +168,13 @@ static int registerIMEDelegate(lua_State *L)
         .addVarAccessor("onDidDetachWithIME", &IMEDelegate::getDidDetachWithIMEDelegate)
         .addVarAccessor("onInsertText", &IMEDelegate::getInsertTextDelegate)
         .addVarAccessor("onDeleteBackward", &IMEDelegate::getDeleteBackwardDelegate)
+        .addVarAccessor("onShowComposition", &IMEDelegate::getShowCompositionDelegate)
         .addVarAccessor("onKeyboardWillShow", &IMEDelegate::getKeyboardWillShowDelegate)
         .addVarAccessor("onKeyboardDidShow", &IMEDelegate::getKeyboardDidShowDelegate)
         .addVarAccessor("onKeyboardWillHide", &IMEDelegate::getKeyboardWillHideDelegate)
         .addVarAccessor("onKeyboardDidHide", &IMEDelegate::getKeyboardDidHideDelegate)
 
+        .addMethod("setTextInputRect", &IMEDelegate::setTextInputRect)
         .addMethod("attachWithIME", &IMEDelegate::attachWithIME)
         .addMethod("detachWithIME", &IMEDelegate::detachWithIME)
 

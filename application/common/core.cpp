@@ -172,12 +172,11 @@ void loop()
         }
         else if (event.type == SDL_TEXTINPUT)
         {
-            //lmLog(coreLogGroup, "SDL_TEXTINPUT %s", event.text.text);
             IMEDelegateDispatcher::shared()->dispatchInsertText(event.text.text, strlen(event.text.text));
         }
         else if (event.type == SDL_TEXTEDITING)
         {
-            //lmLog(coreLogGroup, "SDL_TEXTEDITING %s %d %d", event.edit.text, event.edit.start, event.edit.length);
+            IMEDelegateDispatcher::shared()->dispatchShowComposition(event.text.text, strlen(event.text.text), event.edit.start, event.edit.length);
         }
     }
 
