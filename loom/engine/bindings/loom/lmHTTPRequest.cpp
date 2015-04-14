@@ -120,7 +120,7 @@ public:
     }
 
     //only called internally to notfiy that the HTTPRequest has completed now
-    bool complete()
+    void complete()
     {
         platform_HTTPComplete(id);
         id = -1;        

@@ -250,7 +250,7 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
 
     //get an empty slot for our handle to use
     int index = 0;
-    while ((curlHandles[index != NULL) && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {index++;}
+    while ((curlHandles[index] != NULL) && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {index++;}
     if(index == MAX_CONCURRENT_HTTP_REQUESTS)
     {
         return -1;
