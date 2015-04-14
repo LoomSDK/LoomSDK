@@ -175,22 +175,22 @@ package loom.modestmaps.core
             // debugField = new DebugField();
             // debugField.x = mapWidth - debugField.width - 15; 
             // debugField.y = mapHeight - debugField.height - 15;
-            
-			//empty tiles (while they are still loading)
-			// NOTE_TEC: This is so that you can have user input on tiles that are yet to load
+
+            //empty tiles (while they are still loading)
+            // NOTE_TEC: This is so that you can have user input on tiles that are yet to load
             bgTouchArea = new Image();
             bgTouchArea.setSize(mapWidth, mapHeight);
             bgTouchArea.color = 0x00000000;
             bgTouchArea.alpha = 0;
-			bgTouchArea.ignoreHitTestAlpha = true;
+            bgTouchArea.ignoreHitTestAlpha = true;
             addChild(bgTouchArea);
-						
+            			
             well = new Sprite();
             well.name = 'well';
             addChild(well);
 
             worldMatrix = new Matrix();
-            
+
             addEventListener(Event.ADDED_TO_STAGE, onAddedToStage); 
         }
         
@@ -402,7 +402,6 @@ package loom.modestmaps.core
             // and x and y make sense in pixels relative to tlC.column and tlC.row (topleft)
             positionTiles(tlC.column, tlC.row);
 
-// TODO_AHMED: THIS IS DEFITELY RELATED TO THE COMMENTED OUT BLOCK OF CODE BELOW
             // all the visible tiles will be at the end of recentlySeen
             // let's make sure we keep them around:
             var maxRecentlySeen:int = Math.max(visibleTiles.length, MaxTilesToKeep);
@@ -410,7 +409,6 @@ package loom.modestmaps.core
             // prune cache of already seen tiles if it's getting too big:
             if (recentlySeen.length > maxRecentlySeen) {
 
-// TODO_AHMED: Investigate the original function of this commented out block of code
                 // can we sort so that biggest zoom levels get removed first, without removing currently visible tiles?
                 /*
                 var visibleKeys:Array = recentlySeen.slice(recentlySeen.length - visibleTiles.length, recentlySeen.length);
@@ -480,14 +478,7 @@ package loom.modestmaps.core
                         }
                         well.addChild(tile);
                     }
-					
-// TODO_AHMED: This is the same as disabling tiles as soon as they leave the screen
-					// Attempting a different approach to checking whether a tile is visible or not
-					//if (!Rectangle.intersects(new Rectangle(0, 0, stage.width, stage.height), new Rectangle(tile.x, tile.y, tileWidth, tileHeight)))
-					//{
-					//	continue;	
-					//}
-                    
+					                    
                     visibleTiles.push(tile);
 					
                     var tileReady:Boolean = tile.isShowing() && !tilePainter.isPainting(tile);
