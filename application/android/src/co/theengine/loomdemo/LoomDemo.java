@@ -38,6 +38,7 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.view.Display;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
@@ -159,6 +160,7 @@ public class LoomDemo extends SDLActivity {
 
     private static native void internalTriggerGenericEvent(String type, String payload);
     public native void nativeSetPaths(String apkPath, AssetManager assetManager);
+    public native void nativeSetOrientation(String orientation);
 
     public static void handleGenericEvent(String type, String payload)
     {
@@ -259,6 +261,7 @@ public class LoomDemo extends SDLActivity {
     }
 
     private boolean keyboardHidden = true;
+    private boolean keyboardIgnoreNextZero = false;
 
     protected void onCreate(Bundle savedInstanceState) 
     {
@@ -347,39 +350,41 @@ public class LoomDemo extends SDLActivity {
 
         // Listen for IME-initiated resizes.
         // Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
-        final View activityRootView = framelayout;
+        final View activityRootView = getWindow().getDecorView().findViewById(android.R.id.content);
         Log.d("Loom", "Registering for global layout listener!");
-        activityRootView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() 
+        activityRootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() 
         {
-            @Override
             public void onGlobalLayout() 
             {
                 final Rect r = new Rect();
                 activityRootView.getWindowVisibleDisplayFrame(r);
                 final int heightDiff = activityRootView.getRootView().getHeight() - (r.bottom - r.top);
-
+                
                 // Convert the dps to pixels
                 final float scale = activityRootView.getContext().getResources().getDisplayMetrics().density;
                 final float scaledThreshold = (int) (100 * scale + 0.5f);
-
+                
                 if (heightDiff > scaledThreshold)
                 {
                     // ignore if not hidden as this is probably an autocomplete bar coming up
-                    if (keyboardHidden)
-                    {
-                        keyboardHidden = false;
-                        triggerGenericEvent("keyboardResize", "" + heightDiff);
-                    }
+                    keyboardHidden = false;
+                    triggerGenericEvent("keyboardResize", "" + heightDiff);
                 }
                 else
                 {
-                    if (keyboardHidden)
-                        return;
-
-                    keyboardHidden = true;
-                    // this matches iOS behavior
-                    triggerGenericEvent("keyboardResize", "0");
+                	// We need to ignore the first zero after orientation as Android
+                	// seems to report a layout change after orientation
+                	// first without a keyboard (heightDiff == 0) and then with the keyboard (> 0)
+                	// which would close our keyboard after orientation.
+                	// So we just ignore the first layout change and count on the next ones.
+                    if (!keyboardHidden && !keyboardIgnoreNextZero) {
+                        keyboardHidden = true;
+                        // this matches iOS behavior
+                        triggerGenericEvent("keyboardResize", ""+0);
+                    }
                 }
+                
+                keyboardIgnoreNextZero = false;
              }
         });     
     }
@@ -388,14 +393,13 @@ public class LoomDemo extends SDLActivity {
     public void onConfigurationChanged(Configuration newConfig) 
     {
         super.onConfigurationChanged(newConfig);
-
-        // TODO: reimplement
-        /*
+        
+        keyboardIgnoreNextZero = true;
+        
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE)
             nativeSetOrientation("landscape");
         else
             nativeSetOrientation("portrait");
-        */
     }
 
     @Override

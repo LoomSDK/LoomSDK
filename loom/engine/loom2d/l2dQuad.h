@@ -21,9 +21,9 @@
 #pragma once
 
 #include "loom/common/core/assert.h"
-#include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/engine/loom2d/l2dDisplayObject.h"
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
+#include "loom/graphics/gfxQuadRenderer.h"
 
 namespace Loom2D
 {

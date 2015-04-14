@@ -43,7 +43,7 @@ void QuadBatch::render(lua_State *L)
     }
 
     // apply the parent alpha
-    renderState.alpha = parent ? parent->renderState.alpha * alpha : alpha;
+    renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
     renderState.clampAlpha();
 
     // if render state has 0.0 alpha, quad batch is invisible so don't render at all and get out of here now!
@@ -51,8 +51,9 @@ void QuadBatch::render(lua_State *L)
     {
         return;
     }
-    renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : UINT16_MAX;
-    GFX::Graphics::setClipRect(renderState.cachedClipRect);
+
+    renderState.clipRect = parent ? parent->renderState.clipRect : Loom2D::Rectangle(0, 0, -1, -1);
+    if (renderState.isClipping()) GFX::Graphics::setClipRect((int)renderState.clipRect.x, (int)renderState.clipRect.y, (int)renderState.clipRect.width, (int)renderState.clipRect.height);
 
     //set blend mode based to be unique or that of our parent
     renderState.blendMode = (blendMode == BlendMode::AUTO && parent) ? parent->renderState.blendMode : blendMode;

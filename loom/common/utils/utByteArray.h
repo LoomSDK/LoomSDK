@@ -328,7 +328,7 @@ public:
         size_t length = strlen(value);
 
         // Unable to write length in writeUTF, length is larger than 65535
-        assert(length > 0xFFFF);
+        assert(length < 0xFFFF);
 
         writeValue<unsigned short>(length);
 

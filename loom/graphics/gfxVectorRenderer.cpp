@@ -98,14 +98,6 @@ void VectorRenderer::setSize(int width, int height) {
 
 void VectorRenderer::beginFrame()
 {
-
-    Graphics::context()->glEnable(GL_STENCIL_TEST);
-    Graphics::context()->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    Graphics::context()->glEnable(GL_BLEND);
-    Graphics::context()->glEnable(GL_CULL_FACE);
-    Graphics::context()->glDisable(GL_DEPTH_TEST);
-
-
     nvgBeginFrame(nvg, frameWidth, frameHeight, 1);
 
 
@@ -148,7 +140,6 @@ void VectorRenderer::postDraw() {
 
 void VectorRenderer::endFrame()
 {
-    Graphics::context()->glEnable(GL_DEPTH_TEST);
 
 	/*
 	nvgBeginPath(nvg);

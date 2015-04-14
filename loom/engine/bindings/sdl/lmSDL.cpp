@@ -18,51 +18,14 @@
 * ===========================================================================
 */
 
-#include <SDL.h>
-#include "lmSDL.h"
+#include "loom/engine/loom2d/l2dStage.h"
 #include "loom/script/native/lsNativeDelegate.h"
 #include "loom/common/core/log.h"
 #include "loom/common/config/applicationConfig.h"
-#include "loom/engine/loom2d/l2dStage.h"
+#include <SDL.h>
+#include "lmSDL.h"
 
 lmDefineLogGroup(sdlLogGroup, "loom.engine.bindings", 1, LoomLogInfo);
-
-Window* Window::mainWindow = NULL;
-
-Window::Window(SDL_Window* window) {
-    sdlWindow = window;
-    initializing = true;
-}
-
-void Window::setMain(Window* window) {
-    mainWindow = window;
-}
-
-Window* Window::getMain() {
-    lmAssert(mainWindow != NULL, "Main Window was not set before getting");
-    return mainWindow;
-}
-
-void Window::updateFromConfig() {
-    SDL_SetWindowTitle(sdlWindow, LoomApplicationConfig::displayTitle().c_str());
-    int width = LoomApplicationConfig::displayWidth();
-    int height = LoomApplicationConfig::displayHeight();
-    SDL_SetWindowSize(sdlWindow, width, height);
-    if (Loom2D::Stage::smMainStage != NULL) Loom2D::Stage::smMainStage->noteNativeSize(width, height);
-    if (initializing) {
-        initializing = false;
-        show();
-    }
-}
-
-void Window::show() {
-    SDL_ShowWindow(sdlWindow);
-}
-
-void Window::hide() {
-    SDL_HideWindow(sdlWindow);
-}
-
 
 IMEDelegateDispatcher* IMEDelegateDispatcher::shared() {
     static IMEDelegateDispatcher instance;
@@ -90,6 +53,14 @@ void IMEDelegateDispatcher::dispatchDeleteBackward() {
     while (it.hasMoreElements()) {
         IMEDelegate* d = it.getNext();
         d->deleteBackward();
+    }
+}
+
+void IMEDelegateDispatcher::dispatchShowComposition(const char *text, int len, int start, int length) {
+    utArray<IMEDelegate*>::Iterator it = delegates.iterator();
+    while (it.hasMoreElements()) {
+        IMEDelegate* d = it.getNext();
+        d->showComposition(text, len, start, length);
     }
 }
 
@@ -129,6 +100,15 @@ void IMEDelegate::deleteBackward()
     _DeleteBackwardDelegate.invoke();
 }
 
+void IMEDelegate::showComposition(const char *text, int len, int start, int length)
+{
+    _ShowCompositionDelegate.pushArgument(text);
+    _ShowCompositionDelegate.pushArgument(len);
+    _ShowCompositionDelegate.pushArgument(start);
+    _ShowCompositionDelegate.pushArgument(length);
+    _ShowCompositionDelegate.invoke();
+}
+
 const char *IMEDelegate::getContentText()
 {
     return contentText.c_str();
@@ -154,6 +134,14 @@ void IMEDelegate::keyboardDidHide(IMEKeyboardNotificationInfo& info)
     _KeyboardDidHideDelegate.invoke();
 }
 
+void IMEDelegate::setTextInputRect(Loom2D::Rectangle rect) {
+    SDL_Rect r;
+    r.x = (int) rect.x;
+    r.y = (int) rect.y;
+    r.w = (int) rect.width;
+    r.h = (int) rect.height;
+    SDL_SetTextInputRect(&r);
+};
 bool IMEDelegate::attachWithIME(int type) { 
     SDL_StartTextInput();
     return true;
@@ -180,11 +168,13 @@ static int registerIMEDelegate(lua_State *L)
         .addVarAccessor("onDidDetachWithIME", &IMEDelegate::getDidDetachWithIMEDelegate)
         .addVarAccessor("onInsertText", &IMEDelegate::getInsertTextDelegate)
         .addVarAccessor("onDeleteBackward", &IMEDelegate::getDeleteBackwardDelegate)
+        .addVarAccessor("onShowComposition", &IMEDelegate::getShowCompositionDelegate)
         .addVarAccessor("onKeyboardWillShow", &IMEDelegate::getKeyboardWillShowDelegate)
         .addVarAccessor("onKeyboardDidShow", &IMEDelegate::getKeyboardDidShowDelegate)
         .addVarAccessor("onKeyboardWillHide", &IMEDelegate::getKeyboardWillHideDelegate)
         .addVarAccessor("onKeyboardDidHide", &IMEDelegate::getKeyboardDidHideDelegate)
 
+        .addMethod("setTextInputRect", &IMEDelegate::setTextInputRect)
         .addMethod("attachWithIME", &IMEDelegate::attachWithIME)
         .addMethod("detachWithIME", &IMEDelegate::detachWithIME)
 

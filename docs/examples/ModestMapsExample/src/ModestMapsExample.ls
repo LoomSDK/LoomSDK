@@ -83,8 +83,7 @@ package
         //keyboard handler
         private function keyDownHandler(event:KeyboardEvent):void
         {   
-//TEMP: keyCode is ending up in charCode after SDL2 changes :/
-            var keycode = event.charCode;
+            var keycode = event.keyCode;
 
             //always zoom at the center of the screen
             var zoomPoint:Point = new Point(stage.stageWidth / 2, stage.stageHeight / 2);

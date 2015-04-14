@@ -263,11 +263,8 @@ int Graphics::getFillColor()
     return sFillColor;
 }
 
-
-int Graphics::setClipRect(int x, int y, int width, int height)
+void Graphics::setClipRect(int x, int y, int width, int height)
 {
-    // Make sure the cliprect is always in positive coords; some arguments
-    // are unsigned so passing negative will break rendering.
     if (x < 0)
     {
         width += x;
@@ -280,26 +277,13 @@ int Graphics::setClipRect(int x, int y, int width, int height)
         y       = 0;
     }
 
-    context()->glScissor(x, y, width, height);
-    return -1; //bgfx::setScissor(x, y, width, height);
+    context()->glEnable(GL_SCISSOR_TEST);
+    context()->glScissor(x, sHeight-height-y, width, height);
 }
-
-
-void Graphics::setClipRect(int cached)
-{
-    //bgfx::setScissor(cached);
-}
-
-
-int Graphics::getClipRect()
-{
-    return -1; //bgfx::getScissor();
-}
-
 
 void Graphics::clearClipRect()
 {
-    context()->glScissor(0, 0, sWidth, sHeight);
-    //bgfx::setScissor();
+    context()->glDisable(GL_SCISSOR_TEST);
 }
+
 }

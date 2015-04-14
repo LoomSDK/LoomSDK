@@ -147,6 +147,7 @@ static int registerLoom2D(lua_State *L)
        .addLuaFunction("contains", &Rectangle::contains)
 
        .addMethod("setTo", &Rectangle::setTo)
+       .addMethod("clip", &Rectangle::clip)
 
        .addMethod("clone", &Rectangle::clone)
 
@@ -220,10 +221,14 @@ static int registerLoom2D(lua_State *L)
     // Stage
        .deriveClass<Stage, DisplayObjectContainer>("Stage")
        .addConstructor<void (*)(void)>()
+
        .addMethod("render", &Stage::render)
+       .addMethod("firePendingResizeEvent", &Stage::firePendingResizeEvent)
 
        .addMethod("__pget_nativeStageWidth", &Stage::getWidth)
        .addMethod("__pget_nativeStageHeight", &Stage::getHeight)
+
+       .addProperty("orientation", &Stage::getOrientation, &Stage::setOrientation)
 
        .addVarAccessor("onTouchBegan", &Stage::getTouchBeganDelegate)
        .addVarAccessor("onTouchMoved", &Stage::getTouchMovedDelegate)

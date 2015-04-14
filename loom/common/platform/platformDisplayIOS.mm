@@ -32,13 +32,11 @@ limitations under the License.
 
 static UIWindow* window;
 
-//#include "loom/engine/cocos2dx/platform/ios/EAGLView.h"
-//#include "RootViewController.h"
-//#include "loom/engine/cocos2dx/platform/ios/CCApplication.h"
+#include "RootViewController.h"
 
 extern void display_init();
 
-//RootViewController *viewController = NULL;
+RootViewController *viewController = NULL;
 
 display_profile display_getProfile()
 {

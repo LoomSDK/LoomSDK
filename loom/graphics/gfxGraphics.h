@@ -97,15 +97,11 @@ public:
     static void setFillColor(int color);
     static int getFillColor();
 
-    // Set the clip rect and return an ID referencing it that is valid
-    // for the current frame. This can be used in the other setClipRect
-    // overload to save on setup overhead. Note you must set the cliprect
-    // before every bgfx::submit call.
-    static int setClipRect(int x, int y, int width, int height);
-    static void setClipRect(int cached);
-    static int getClipRect();
 
-    // Render with no cliprect.
+    // Set a clip rect specified by the provided parameters
+    static void setClipRect(int x, int y, int width, int height);
+
+    // Reset clip rect
     static void clearClipRect();
 
 private:

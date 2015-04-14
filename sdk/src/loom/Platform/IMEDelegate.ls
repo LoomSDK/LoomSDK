@@ -20,6 +20,7 @@ limitations under the License.
 
 package loom.platform
 {
+    import loom2d.math.Rectangle;
     /**
      * Specifier for the type of native keyboard to show.
      * 
@@ -110,6 +111,10 @@ package loom.platform
          * character to the left. No parameters.
          */
         public native var onDeleteBackward:NativeDelegate;
+        
+        /**
+         */
+        public native var onShowComposition:NativeDelegate;
 
         /**
          * Indicates the on-screen keyboard is becoming visible. No
@@ -134,6 +139,10 @@ package loom.platform
          * parameters. (iOS Only)
          */
         public native var onKeyboardDidHide:NativeDelegate;
+        
+        /**
+         */
+        public native function setTextInputRect(rect:Rectangle);
 
         /**
          * Called to trigger the native IME. Returns false if the IME was not
