@@ -75,7 +75,6 @@ package
         private function newPin():ImageMarker
         {
             var pin = new ImageMarker(_map, "pin" + _pinCount++, Texture.fromAsset("assets/pin.png"));
-            pin.scale = 0.2;
             return pin;
         }
 
