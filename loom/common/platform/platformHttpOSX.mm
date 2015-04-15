@@ -24,9 +24,6 @@ limitations under the License.
 #include "loom/common/utils/utString.h"
 
 
-//not exactly sure how to define this
-static NSURLConnection *connections[MAX_CONCURRENT_HTTP_REQUESTS];
-
 /**
  *  Delegate implementation with support for calling the specified C callback
  */
@@ -34,6 +31,7 @@ static NSURLConnection *connections[MAX_CONCURRENT_HTTP_REQUESTS];
 {
     loom_HTTPCallback callback;
     void *payload;
+    NSURLConnection *connection;
     bool allowRedirect;
     const char *cacheToFile;
     bool base64EncodeResponse;
@@ -41,13 +39,25 @@ static NSURLConnection *connections[MAX_CONCURRENT_HTTP_REQUESTS];
     bool statusCodeFail;
 }
 
--(id)initWithCallback:(loom_HTTPCallback)cb payload:(void *)pl allowRedirect:(bool)ar cacheToFile:(const char *)cf base64EncodeResponse:(bool)b64;
+-(id)initWithCallback:(loom_HTTPCallback)cb 
+    request:(NSMutableURLRequest*)req 
+    payload:(void *)pl 
+    allowRedirect:(bool)ar 
+    cacheToFile:(const char *)cf 
+    base64EncodeResponse:(bool)b64;
+-(void)cancel;
+-(void)complete;
 
 @end
 
 @implementation LMURLConnectionDelegate
 
--(id)initWithCallback:(loom_HTTPCallback)cb payload:(void *)pl allowRedirect:(bool)ar cacheToFile:(const char *)cf base64EncodeResponse:(bool)b64 
+-(id)initWithCallback:(loom_HTTPCallback)cb
+    request:(NSMutableURLRequest*)req 
+    payload:(void *)pl 
+    allowRedirect:(bool)ar 
+    cacheToFile:(const char *)cf 
+    base64EncodeResponse:(bool)b64 
 {
     self = [self init];
     
@@ -56,11 +66,26 @@ static NSURLConnection *connections[MAX_CONCURRENT_HTTP_REQUESTS];
     allowRedirect = ar;
     cacheToFile = cf;
     base64EncodeResponse = b64;
-    
+
     receivedData = [NSMutableData alloc];
     [receivedData setLength:0];
+
+    //create the connection with ourselves as the delegate
+    connection = [[NSURLConnection alloc] initWithRequest:req delegate:self];
     
     return self;
+}
+
+-(void)cancel
+{
+    [connection cancel];
+}
+
+-(void)complete
+{
+    [connection release];
+    [receivedData release];
+    receivedData = nil;
 }
 
 -(NSURLRequest *)connection:(NSURLConnection *)connection
@@ -129,17 +154,19 @@ static NSURLConnection *connections[MAX_CONCURRENT_HTTP_REQUESTS];
         callback(payload, LOOM_HTTP_ERROR, [response cStringUsingEncoding:NSUTF8StringEncoding]);
     else
         callback(payload, LOOM_HTTP_SUCCESS, [response cStringUsingEncoding:NSUTF8StringEncoding]);
-
-    [receivedData release];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
-    [receivedData release];
     callback(payload, LOOM_HTTP_ERROR, [[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding]);
 }
 
 @end
+
+
+//array of HTTP Connections
+static LMURLConnectionDelegate *connections[MAX_CONCURRENT_HTTP_REQUESTS];
+
 
 
 /**
@@ -150,7 +177,7 @@ int platform_HTTPSend(const char *url, const char* method, loom_HTTPCallback cal
     const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects)
 {
     int index = 0;
-    while ((connections[index++] != NULL) && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {}
+    while ((connections[index] != NULL) && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {index++;}
     if(index == MAX_CONCURRENT_HTTP_REQUESTS)
     {
         return -1;
@@ -181,11 +208,12 @@ int platform_HTTPSend(const char *url, const char* method, loom_HTTPCallback cal
         headersIterator.next();
     }
     
-    LMURLConnectionDelegate *delegate = [[LMURLConnectionDelegate alloc] initWithCallback:callback payload:payload allowRedirect:followRedirects cacheToFile:responseCacheFile base64EncodeResponse:base64EncodeResponseData];
-    
-    // NSURLConnected maintains a strong ref to the delegate while
-    // it is being used, so this is completely legit
-    connections[index] = [[NSURLConnection alloc] initWithRequest:request delegate:delegate];
+    connections[index] = [[LMURLConnectionDelegate alloc] initWithCallback:callback
+                                                            request:request 
+                                                            payload:payload 
+                                                            allowRedirect:followRedirects 
+                                                            cacheToFile:responseCacheFile 
+                                                            base64EncodeResponse:base64EncodeResponseData];
     return index;
 }
 
@@ -217,8 +245,8 @@ bool platform_HTTPCancel(int index)
     {
         return false;
     }
+
     [connections[index] cancel];
-    platform_HTTPComplete(index);
     return true;
 }
 
@@ -226,6 +254,7 @@ void platform_HTTPComplete(int index)
 {
     if (index != -1)
     {
+        [connections[index] complete];
         [connections[index] release];
         connections[index] = NULL;
     }

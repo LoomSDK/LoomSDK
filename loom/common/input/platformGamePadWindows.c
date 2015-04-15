@@ -94,6 +94,7 @@ static int input_privateGamepadButton_Int(InputGamepad *gamepad,
 static int input_privateGamepadHat_Int(InputGamepad *gamepad, int hat, int value);
 
 /* Taken from Wine - Thanks! */
+/*
 DIOBJECTDATAFORMAT dfDIJoystick2[] =
 {
     { &GUID_XAxis,  DIJOFS_X,                 DIDFT_OPTIONAL | DIDFT_AXIS | DIDFT_ANYINSTANCE,   0 },
@@ -273,14 +274,16 @@ const DIDATAFORMAT c_dfDIJoystick2 =
     _arraysize(dfDIJoystick2),
     dfDIJoystick2
 };
+*/
 
+/*
 HRESULT
 WIN_CoInitialize(void)
 {
     const HRESULT hr = CoInitialize(NULL);
 
-    /* S_FALSE means success, but someone else already initialized. */
-    /* You still need to call CoUninitialize in this case! */
+    // S_FALSE means success, but someone else already initialized.
+    // You still need to call CoUninitialize in this case!
     if (hr == S_FALSE)
     {
         return S_OK;
@@ -295,7 +298,7 @@ WIN_CoUninitialize(void)
 {
     CoUninitialize();
 }
-
+*/
 
 /* Convert a DirectInput return code to a text message */
 static void
@@ -318,7 +321,8 @@ input_sysGamepadInit(void)
 
     SYS_NumJoysticks = 0;
 
-    result = WIN_CoInitialize();
+    //result = WIN_CoInitialize();
+    result = E_FAIL;
     if (FAILED(result))
     {
         SetDIerror("CoInitialize", result);
@@ -454,9 +458,13 @@ input_sysGamepadOpen(InputGamepad *gamepad)
     }
 
     /* Use the extended data structure: DIJOYSTATE2. */
-    result =
-        IDirectInputDevice2_SetDataFormat(gamepad->hwdata->InputDevice,
-                                          &c_dfDIJoystick2);
+    
+    // TODO: fix
+    //result =
+    //    IDirectInputDevice2_SetDataFormat(gamepad->hwdata->InputDevice,
+    //                                      &c_dfDIJoystick2);
+    
+    result = E_FAIL;
     if (FAILED(result))
     {
         SetDIerror("IDirectInputDevice2::SetDataFormat", result);
@@ -965,6 +973,8 @@ input_sysGamepadClose(InputGamepad *gamepad)
 void
 input_sysGamepadQuit(void)
 {
+    // TODO: fix
+    /*
     int i;
 
     for (i = 0; i < _arraysize(SYS_JoystickNames); ++i) {
@@ -973,6 +983,7 @@ input_sysGamepadQuit(void)
             SYS_JoystickNames[i] = NULL;
         }
     }
+    */
 
     if (dinput != NULL)
     {
@@ -982,7 +993,8 @@ input_sysGamepadQuit(void)
 
     if (coinitialized)
     {
-        WIN_CoUninitialize();
+        // TODO: fix
+        //WIN_CoUninitialize();
         coinitialized = 0;
     }
 }

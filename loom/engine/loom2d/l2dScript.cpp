@@ -28,6 +28,7 @@
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/engine/loom2d/l2dSprite.h"
+#include "loom/engine/loom2d/l2dShape.h"
 #include "loom/engine/loom2d/l2dQuad.h"
 #include "loom/engine/loom2d/l2dImage.h"
 #include "loom/engine/loom2d/l2dQuadBatch.h"
@@ -146,6 +147,7 @@ static int registerLoom2D(lua_State *L)
        .addLuaFunction("contains", &Rectangle::contains)
 
        .addMethod("setTo", &Rectangle::setTo)
+       .addMethod("clip", &Rectangle::clip)
 
        .addMethod("clone", &Rectangle::clone)
 
@@ -212,20 +214,96 @@ static int registerLoom2D(lua_State *L)
        .deriveClass<DisplayObjectContainer, DisplayObject>("DisplayObjectContainer")
        .addConstructor<void (*)(void)>()
        .addProperty("depthSort", &DisplayObjectContainer::getDepthSort, &DisplayObjectContainer::setDepthSort)
-       .addProperty("view", &DisplayObjectContainer::getView, &DisplayObjectContainer::setView)
+       //.addProperty("view", &DisplayObjectContainer::getView, &DisplayObjectContainer::setView)
        .addMethod("setClipRect", &DisplayObjectContainer::setClipRect)
        .endClass()
 
     // Stage
        .deriveClass<Stage, DisplayObjectContainer>("Stage")
        .addConstructor<void (*)(void)>()
+
        .addMethod("render", &Stage::render)
-       .addStaticProperty("onRenderStage", &Stage::getRenderStageDelegate)
+       .addMethod("firePendingResizeEvent", &Stage::firePendingResizeEvent)
+
+       .addMethod("__pget_nativeStageWidth", &Stage::getWidth)
+       .addMethod("__pget_nativeStageHeight", &Stage::getHeight)
+
+       .addProperty("orientation", &Stage::getOrientation, &Stage::setOrientation)
+
+       .addVarAccessor("onTouchBegan", &Stage::getTouchBeganDelegate)
+       .addVarAccessor("onTouchMoved", &Stage::getTouchMovedDelegate)
+       .addVarAccessor("onTouchEnded", &Stage::getTouchEndedDelegate)
+       .addVarAccessor("onTouchCancelled", &Stage::getTouchCancelledDelegate)
+       .addVarAccessor("onKeyUp", &Stage::getKeyUpDelegate)
+       .addVarAccessor("onKeyDown", &Stage::getKeyDownDelegate)
+       .addVarAccessor("onMenuKey", &Stage::getMenuKeyDelegate)
+       .addVarAccessor("onBackKey", &Stage::getBackKeyDelegate)
+       .addVarAccessor("onScrollWheelYMoved", &Stage::getScrollWheelYMovedDelegate)
+       .addVarAccessor("onAccelerate", &Stage::getAccelerateDelegate)
+
+       .addVarAccessor("onOrientationChange", &Stage::getOrientationChangeDelegate)
+       .addVarAccessor("onSizeChange", &Stage::getSizeChangeDelegate)
+
+        .addStaticProperty("onRenderStage", &Stage::getRenderStageDelegate)
+
        .endClass()
 
     // Sprite
        .deriveClass<Sprite, DisplayObjectContainer>("Sprite")
        .addConstructor<void (*)(void)>()
+       .endClass()
+
+    // TextFormat
+       .beginClass<GFX::VectorTextFormat>("TextFormat")
+       .addConstructor<void(*)(void)>()
+       .addStaticMethod("load", &GFX::VectorTextFormat::load)
+       .addProperty("font", &GFX::VectorTextFormat::getFont, &GFX::VectorTextFormat::setFont)
+       .addProperty("color", &GFX::VectorTextFormat::getColor, &GFX::VectorTextFormat::setColor)
+       .addProperty("size", &GFX::VectorTextFormat::getSize, &GFX::VectorTextFormat::setSize)
+       .addProperty("align", &GFX::VectorTextFormat::getAlign, &GFX::VectorTextFormat::setAlign)
+       .addProperty("letterSpacing", &GFX::VectorTextFormat::getLetterSpacing, &GFX::VectorTextFormat::setLetterSpacing)
+       .addProperty("lineHeight", &GFX::VectorTextFormat::getLineHeight, &GFX::VectorTextFormat::setLineHeight)
+       .endClass()
+
+    // SVG
+       .beginClass<GFX::VectorSVG>("SVG")
+       .addConstructor<void(*)(void)>()
+       .addMethod("loadFile", &GFX::VectorSVG::loadFile)
+       .addMethod("loadString", &GFX::VectorSVG::loadString)
+       .endClass()
+
+    // Shape
+       .deriveClass<Shape, DisplayObject>("Shape")
+       .addConstructor<void(*)(void)>()
+       .addMethod("setClipRect", &Shape::setClipRect)
+       .addMethod("__pget_graphics", &Shape::getGraphics)
+       .endClass()
+
+    // Graphics
+       .beginClass<GFX::VectorGraphics>("Graphics")
+       .addMethod("clear", &GFX::VectorGraphics::clear)
+       .addMethod("lineStyle", &GFX::VectorGraphics::lineStyle)
+       .addMethod("textFormat", &GFX::VectorGraphics::textFormat)
+       .addMethod("textLineBounds", &GFX::VectorGraphics::textLineBounds)
+       .addMethod("textLineAdvance", &GFX::VectorGraphics::textLineAdvance)
+       .addMethod("textBoxBounds", &GFX::VectorGraphics::textBoxBounds)
+       .addMethod("beginFill", &GFX::VectorGraphics::beginFill)
+       .addMethod("endFill", &GFX::VectorGraphics::endFill)
+       .addMethod("moveTo", &GFX::VectorGraphics::moveTo)
+       .addMethod("lineTo", &GFX::VectorGraphics::lineTo)
+       .addMethod("curveTo", &GFX::VectorGraphics::curveTo)
+       .addMethod("cubicCurveTo", &GFX::VectorGraphics::cubicCurveTo)
+       .addMethod("arcTo", &GFX::VectorGraphics::arcTo)
+       .addMethod("drawCircle", &GFX::VectorGraphics::drawCircle)
+       .addMethod("drawEllipse", &GFX::VectorGraphics::drawEllipse)
+       .addMethod("drawRect", &GFX::VectorGraphics::drawRect)
+       .addMethod("drawRoundRect", &GFX::VectorGraphics::drawRoundRect)
+       .addMethod("drawRoundRectComplex", &GFX::VectorGraphics::drawRoundRectComplex)
+       .addMethod("drawArc", &GFX::VectorGraphics::drawArc)
+       .addMethod("drawTextLine", &GFX::VectorGraphics::drawTextLine)
+       .addMethod("drawTextBox", &GFX::VectorGraphics::drawTextBox)
+       .addMethod("drawSVG", &GFX::VectorGraphics::drawSVG)
+       .addMethod("getBounds", &GFX::VectorGraphics::getBounds)
        .endClass()
 
     // Quad
@@ -266,11 +344,16 @@ void installLoom2D()
     LOOM_DECLARE_NATIVETYPE(Loom2D::Rectangle, Loom2D::registerLoom2D);
     LOOM_DECLARE_NATIVETYPE(Loom2D::Matrix, Loom2D::registerLoom2D);
 
+    LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorTextFormat, Loom2D::registerLoom2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorSVG, Loom2D::registerLoom2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorGraphics, Loom2D::registerLoom2D);
+
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::EventDispatcher, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::DisplayObject, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::DisplayObjectContainer, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Stage, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Sprite, Loom2D::registerLoom2D);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Shape, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Image, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::Quad, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(Loom2D::QuadBatch, Loom2D::registerLoom2D);

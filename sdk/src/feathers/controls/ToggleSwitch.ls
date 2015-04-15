@@ -1391,7 +1391,8 @@ package feathers.controls
             {
                 FeathersControl(this.offTextRenderer).clipRect = new Rectangle();
             }
-            this.addChildAt(DisplayObject(this.offTextRenderer), index);
+            // TODO: receives irrelevant touch events, fix and add back in
+            //this.addChildAt(DisplayObject(this.offTextRenderer), index);
 
             this.onTextRenderer = ITextRenderer(factory.call());
             this.onTextRenderer.nameList.add(this.onLabelName);
@@ -1399,7 +1400,7 @@ package feathers.controls
             {
                 FeathersControl(this.onTextRenderer).clipRect = new Rectangle();
             }
-            this.addChildAt(DisplayObject(this.onTextRenderer), index);
+            //this.addChildAt(DisplayObject(this.onTextRenderer), index);
         }
 
         /**

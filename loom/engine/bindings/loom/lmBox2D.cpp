@@ -60,20 +60,16 @@
 #include "loom/script/loomscript.h"
 #include "loom/script/native/lsNativeDelegate.h"
 #include "loom/vendor/box2d/Box2D.h"
-#include "cocoa/CCNS.h"
-#include "cocoa/CCObject.h"
-#include "cocoa/CCArray.h"
-#include "cocoa/CCDictionary.h"
-#include "platform/CCFileUtils.h"
 #include <map>
 
 using namespace LS;
-using namespace cocos2d;
 
 lmDefineLogGroup(gBox2DLogGroup, "Loom.Box2D", 1, 0);
 
 class BodyDef;
 class b2Body;
+
+#if 0
 
 class b2ShapeCache {
 public:
@@ -290,6 +286,8 @@ void b2ShapeCache::addShapesWithFile(const std::string &plist, b2Vec2 vertexScal
     }
 
 }
+
+#endif
 
 static int registerLoomBox2D(lua_State *L)
 {
@@ -584,7 +582,7 @@ static int registerLoomBox2D(lua_State *L)
 
         .endClass()
     
-        .beginClass<b2ShapeCache>("ShapeCache")
+/*        .beginClass<b2ShapeCache>("ShapeCache")
 
             .addStaticMethod("sharedShapeCache", &b2ShapeCache::sharedB2ShapeCache)
 
@@ -593,7 +591,7 @@ static int registerLoomBox2D(lua_State *L)
             .addMethod("addShapesWithFile", &b2ShapeCache::addShapesWithFile)
             .addMethod("anchorPointForShape", &b2ShapeCache::anchorPointForShape)
 
-        .endClass()
+        .endClass() */
 
     .endPackage();
 
@@ -617,5 +615,5 @@ void installLoomBox2D()
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2Body, registerLoomBox2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2Joint, registerLoomBox2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(b2World, registerLoomBox2D);
-    LOOM_DECLARE_MANAGEDNATIVETYPE(b2ShapeCache, registerLoomBox2D);
+    //LOOM_DECLARE_MANAGEDNATIVETYPE(b2ShapeCache, registerLoomBox2D);
 }

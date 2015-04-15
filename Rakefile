@@ -37,8 +37,8 @@ end
 $doBuildJIT=1
 
 # Whether or not to include Admob and/or Facebook in the build... for Great Apple Compliance!
-$doBuildAdmob=1
-$doBuildFacebook=1
+$doBuildAdmob=0
+$doBuildFacebook=0
 
 # Allow disabling Loom doc generation, as it can be very slow.
 # Disabled by default, set environment variable 'LOOM_BUILD_DOCS'
@@ -80,6 +80,11 @@ def installed?(tool)
   cmd = "where #{tool} > nul 2>&1" if ($LOOM_HOST_OS == 'windows')
   %x(#{cmd})
   return ($? == 0)
+end
+
+def writeStub(platform)
+  FileUtils.mkdir_p("artifacts")
+  File.open("artifacts/README.#{platform.downcase}", "w") {|f| f.write("#{platform} is not supported right now.")}
 end
 
 $CMAKE_REQUIRED_VERSION = ($LOOM_HOST_OS == "linux") ? '2.8.7' : '2.8.9'
@@ -149,12 +154,6 @@ if $LOOM_HOST_OS == 'windows'
     $LSC_BINARY = "artifacts\\lsc.exe"
 else
     $LSC_BINARY = "artifacts/lsc"
-end
-
-if $LOOM_HOST_OS == 'windows'
-    $SHADERC_BINARY = "artifacts\\shaderc.exe"
-else
-    $SHADERC_BINARY = "artifacts/shaderc"
 end
 
 # Report build configuration values
@@ -323,29 +322,11 @@ namespace :utility do
     puts " *** lsc built!"
   end
 
-  desc "Builds shaderc if it doesn't exist"
-  file $SHADERC_BINARY do
-    Rake::Task['build:desktop'].invoke
-    puts " *** shaderc built!"
-  end
-
   desc "Compile scripts and report any errors."
   task :compileScripts => $LSC_BINARY do
     puts "===== Compiling Core Scripts ====="
     Dir.chdir("sdk") do
       sh "../artifacts/lsc Main.build"
-    end
-  end
-
-  desc "Compile new version of shaders for the current platform."
-  task :compileShaders => $SHADERC_BINARY do
-    puts "===== Compiling Shaders ====="
-    Dir.chdir("sdk/shaders") do
-      if $LOOM_HOST_OS == 'windows'
-        sh "buildShaders.bat"
-      else
-        sh "sh buildShaders.sh"
-      end
     end
   end
 
@@ -449,7 +430,7 @@ namespace :build do
     Rake::Task["build:android"].invoke
     Rake::Task["build:ouya"].invoke
     if $LOOM_HOST_OS == 'darwin'
-      Rake::Task["build:ios"].invoke
+		Rake::Task["build:ios"].invoke
     end
   end
 
@@ -515,9 +496,18 @@ namespace :build do
   desc "Builds iOS"
   task :ios, [:sign_as] => ['build/luajit_ios/lib/libluajit-5.1.a', 'utility:compileScripts', 'build:fruitstrap'] do |t, args|
 
+    sh "touch artifacts/fruitstrap"
+    sh "mkdir -p artifacts/ios/LoomDemo.app"
+    sh "mkdir -p artifacts/ios/LoomDemo.app/assets"
+    sh "touch artifacts/ios/LoomDemo.app/assets/tmp"
+    sh "mkdir -p artifacts/ios/LoomDemo.app/bin"
+    sh "touch artifacts/ios/LoomDemo.app/bin/tmp"
+    sh "mkdir -p artifacts/ios/LoomDemo.app/lib"
+    sh "touch artifacts/ios/LoomDemo.app/lib/tmp"
+
+    
     # iOS build is currently not supported under Windows
     if $LOOM_HOST_OS != 'windows'
-
       puts "== Building iOS =="
 
       check_ios_sdk_version! $targetIOSSDK
@@ -547,6 +537,20 @@ namespace :build do
       puts "*** Signing Identity = #{args.sign_as}"
 
       FileUtils.mkdir_p("cmake_ios")
+
+      # Build SDL for iOS if it's missing
+      sdlLibPath = "build/sdl2/ios/"
+      if not File.exist?("#{sdlLibPath}/libSDL2.a")
+        puts "Building SDL2 for iOS using xcodebuild"
+        sdlProjPath = "loom/vendor/sdl2/Xcode-iOS/SDL/"
+        Dir.chdir(sdlProjPath) do
+          sh "xcodebuild" 
+        end
+        FileUtils.mkdir_p sdlLibPath
+        sh "cp #{sdlProjPath}/build/Release-iphoneos/libSDL2.a #{sdlLibPath}/libSDL2.a"
+      else
+        puts "Found SDL2 libSDL2.a in #{sdlLibPath} - skipping build"
+      end
 
       # TODO: Find a way to resolve resources in xcode for ios.
       Dir.chdir("cmake_ios") do
@@ -627,6 +631,20 @@ namespace :build do
   task :android => ['build/luajit_android/lib/libluajit-5.1.a', 'utility:compileScripts'] do
     puts "== Building Android =="
 
+    # Build SDL for Android if it's missing
+    sdlLibPath = "build/sdl2/android/armeabi"
+    if not File.exist?("#{sdlLibPath}/libSDL2.a")
+      puts "Building SDL2 for Android using ndk-build"
+      sdlSrcPath = "loom/vendor/sdl2"
+      Dir.chdir(sdlSrcPath) do
+        sh "ndk-build SDL2_static NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk APP_PLATFORM=android-13" 
+      end
+      FileUtils.mkdir_p sdlLibPath
+      sh "cp #{sdlSrcPath}/obj/local/armeabi/libSDL2.a #{sdlLibPath}/libSDL2.a"
+    else
+      puts "Found SDL2 libSDL2.a in #{sdlLibPath} - skipping build"
+    end
+	
     if $LOOM_HOST_OS == "windows"
       # WINDOWS
       FileUtils.mkdir_p("cmake_android")
@@ -642,8 +660,8 @@ namespace :build do
         sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
       end
 
-      Dir.chdir("loom/engine/cocos2dx/platform/android/java") do
-        sh "android update project --name Cocos2DLib --subprojects --target #{api_id} --path ."
+      Dir.chdir("loom/engine/sdl2/platform/android/java") do
+        sh "android update project --name SDL2 --subprojects --target #{api_id} --path ."
       end
 
       Dir.chdir("application/android") do
@@ -660,7 +678,7 @@ namespace :build do
 
       # TODO: LOOM-1070 can we build for release or does this have signing issues?
       Dir.chdir("application/android") do
-        sh "ant.bat #{$targetAndroidBuildType}"
+        sh "ant.bat clean #{$targetAndroidBuildType}"
       end
 
       # Copy APKs to artifacts.
@@ -683,9 +701,9 @@ namespace :build do
         sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
       end
 
-      Dir.chdir("loom/engine/cocos2dx/platform/android/java") do
+      Dir.chdir("loom/engine/sdl2/platform/android/java") do
         puts "*** Building against AndroidSDK " + $targetAndroidSDK
-        sh "android update project --name Cocos2DLib --subprojects --target #{api_id} --path ."
+        sh "android update project --name SDL2Lib --subprojects --target #{api_id} --path ."
       end
 
       Dir.chdir("application/android") do
@@ -716,9 +734,15 @@ namespace :build do
 
   desc "Builds OUYA APK" #TODO: add Ouya build scripts under windows
   task :ouya => ['build:android'] do
-
+    writeStub("Ouya")
     # Ouya build is currently not supported under Windows
-    if $LOOM_HOST_OS != 'windows'
+    #if $LOOM_HOST_OS != 'windows'
+
+      FileUtils.mkdir_p "artifacts/ouya"
+      sh "touch #{$OUTPUT_DIRECTORY}/ouya/LoomDemo.apk"
+
+	# TODO: add back Ouya support
+	if false
       puts "== Building OUYA =="
 
       ouyaAndroidSDK = "android-16"
@@ -756,6 +780,19 @@ namespace :build do
 
   desc "Builds Ubuntu Linux"
   task :ubuntu => ['build/luajit_x86/lib/libluajit-5.1.a'] do
+    puts "== Skipped Ubuntu =="
+
+    writeStub("Ubuntu")
+
+    sh "mkdir -p artifacts/"
+    sh "echo BROKEN > ./artifacts/ubuntu/LoomDemo"
+    sh "echo BROKEN > ./artifacts/ldb"
+    sh "echo BROKEN > ./artifacts/lsc"
+    sh "echo BROKEN > ./artifacts/loomexec"
+    sh "echo BROKEN > ./artifacts/libassetAgent.so"
+
+    if false
+	
     puts "== Building Ubuntu =="
     FileUtils.mkdir_p("cmake_ubuntu")
     Dir.chdir("cmake_ubuntu") do
@@ -792,6 +829,8 @@ namespace :build do
     #copy assets
     FileUtils.mkdir_p("artifacts/assets")
 
+	end
+	
   end
 
   desc "Populate git version information"
@@ -861,8 +900,22 @@ file 'build/luajit_android/lib/libluajit-5.1.a' do
       Dir.chdir("loom/vendor/luajit") do
           sh "make clean"
           ENV['NDKABI']= "9"
-          ENV['NDKVER']= NDK + "/toolchains/arm-linux-androideabi-4.6"
-          ENV['NDKP'] = ENV['NDKVER'] + "/prebuilt/darwin-x86/bin/arm-linux-androideabi-"
+          archs = ["x86", "x86_64"]
+          ndkver = NDK + "/toolchains/arm-linux-androideabi-4.6"
+          found = false
+          for arch in archs
+            ndkplat = ndkver + "/prebuilt/darwin-#{arch}"
+            if File.exists?(ndkplat)
+              puts "Android platform dir found: #{ndkplat}"
+              found = true
+              break
+            end
+          end
+          if (!found)
+            raise "Android platform directory not found."
+          end
+          ENV['NDKVER']= ndkver
+          ENV['NDKP'] = ndkplat + "/bin/arm-linux-androideabi-"
           ENV['NDKF'] = "--sysroot " + NDK + "/platforms/android-" + ENV['NDKABI'] + "/arch-arm"
           sh "make install -j#{$numCores} HOST_CC=\"gcc -m32\" CROSS=" + ENV['NDKP'] + " TARGET_FLAGS=\"" + ENV['NDKF']+"\" TARGET=arm TARGET_SYS=Linux PREFIX=\"#{luajit_android_dir.shellescape}\""
       end
@@ -1056,15 +1109,17 @@ namespace :package do
       FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/bin"
       FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/libs"
 
+    # TODO: add back Ouya support
+    #if false
       # ============================================================= Ouya
       # decompile the ouya apk
-      decompile_apk("application/ouya/bin/#{$targetAPKName}","pkg/sdk/bin/ouya")
+      #decompile_apk("application/ouya/bin/#{$targetAPKName}","pkg/sdk/bin/ouya")
 
       # Strip out the bundled assets and binaries
-      FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/assets"
-      FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/bin"
-      FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/libs"
-      FileUtils.rm_rf "pkg/sdk/bin/ouya/META-INF"
+      #FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/assets"
+      #FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/bin"
+      #FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/libs"
+      #FileUtils.rm_rf "pkg/sdk/bin/ouya/META-INF"
 
     end
 

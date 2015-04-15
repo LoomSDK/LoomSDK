@@ -110,14 +110,21 @@ public:
 
     void cancel()
     {
-        bool cancelled =  platform_HTTPCancel(id);
+        bool cancelled = platform_HTTPCancel(id);
         if (cancelled)
         {
-          _OnFailureDelegate.pushArgument("Request cancelled by user.");
-          _OnFailureDelegate.invoke();
+            _OnFailureDelegate.pushArgument("Request cancelled by user.");
+            _OnFailureDelegate.invoke();
+            complete();
         }
-        id = -1;
     }
+
+    //only called internally to notfiy that the HTTPRequest has completed now
+    void complete()
+    {
+        platform_HTTPComplete(id);
+        id = -1;        
+    }    
 
     static bool isConnected()
     {
@@ -136,15 +143,13 @@ public:
         case LOOM_HTTP_SUCCESS:
             request->_OnSuccessDelegate.pushArgument(data);
             request->_OnSuccessDelegate.invoke();
-            platform_HTTPComplete(request->id);
-            request->id = -1;
+            request->complete();
             break;
 
         case LOOM_HTTP_ERROR:
             request->_OnFailureDelegate.pushArgument(data);
             request->_OnFailureDelegate.invoke();
-            platform_HTTPComplete(request->id);
-            request->id = -1;
+            request->complete();
             break;
 
         default:

@@ -43,7 +43,7 @@ void QuadBatch::render(lua_State *L)
     }
 
     // apply the parent alpha
-    renderState.alpha = parent ? parent->renderState.alpha * alpha : alpha;
+    renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
     renderState.clampAlpha();
 
     // if render state has 0.0 alpha, quad batch is invisible so don't render at all and get out of here now!
@@ -51,12 +51,15 @@ void QuadBatch::render(lua_State *L)
     {
         return;
     }
-    renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : UINT16_MAX;
-    GFX::Graphics::setClipRect(renderState.cachedClipRect);
+
+    renderState.clipRect = parent ? parent->renderState.clipRect : Loom2D::Rectangle(0, 0, -1, -1);
+    if (renderState.isClipping()) GFX::Graphics::setClipRect((int)renderState.clipRect.x, (int)renderState.clipRect.y, (int)renderState.clipRect.width, (int)renderState.clipRect.height);
 
     //set blend mode based to be unique or that of our parent
     renderState.blendMode = (blendMode == BlendMode::AUTO && parent) ? parent->renderState.blendMode : blendMode;
-    int64_t blendFunc = BlendMode::BlendFunction(renderState.blendMode);
+
+    unsigned int blendSrc, blendDst;
+    BlendMode::BlendFunction(renderState.blendMode, blendSrc, blendDst);
 
     // update and get our transformation matrix
     updateLocalTransform();
@@ -68,11 +71,11 @@ void QuadBatch::render(lua_State *L)
     bool isIdentity = mtx.isIdentity();
     if((renderState.alpha == 1.0f) && isIdentity)
     {
-        GFX::QuadRenderer::batch(nativeTextureID, quadData, 4 * numQuads, blendFunc);
+        GFX::QuadRenderer::batch(nativeTextureID, quadData, 4 * numQuads, blendSrc, blendDst);
         return;
     }
 
-    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 4 * numQuads, true, blendFunc);
+    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 4 * numQuads, true, blendSrc, blendDst);
     if (!v)
     {
         return;

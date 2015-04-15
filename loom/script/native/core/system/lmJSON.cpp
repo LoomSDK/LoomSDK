@@ -417,7 +417,7 @@ int JSON::getArrayCount()
 {
     if (!isArray())
     {
-        return 0;
+        return -1;
     }
 
     return (int)json_array_size(_json);
@@ -649,7 +649,7 @@ static int registerSystemJSON(lua_State *L)
        .addMethod("getJSONType", &JSON::getJSONType)
        .addMethod("getObjectJSONType", &JSON::getObjectJSONType)
        .addMethod("getArrayJSONType", &JSON::getArrayJSONType)
-
+	   
        .addMethod("getLongLongAsString", &JSON::getLongLongAsString)
        .addMethod("getInteger", &JSON::getInteger)
        .addMethod("setInteger", &JSON::setInteger)

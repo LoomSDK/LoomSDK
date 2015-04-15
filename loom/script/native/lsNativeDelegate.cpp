@@ -205,7 +205,7 @@ struct NativeDelegateCallNote
         unsigned int strLen = readInt();
         char *str = (char*)malloc(strLen + 1);
         readBytes(str, strLen);
-        str[strLen - 1] = 0;
+        str[strLen] = 0;
         return str;
     }
 

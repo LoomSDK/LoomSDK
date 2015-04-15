@@ -21,8 +21,6 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
-
 /**
  * Provides Store functionality for Loom apps.
  * 
@@ -399,8 +397,8 @@ public class LoomStore
     {
         final int fType = type;
         final String fData = data;
-
-        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
+        // TODO: does this require queueEvent?
+        _activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 nativeCallback(fType, fData);

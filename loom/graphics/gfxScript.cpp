@@ -18,6 +18,9 @@
  * ===========================================================================
  */
 
+#include <math.h>
+#define HAVE_M_PI
+
 #include "loom/script/loomscript.h"
 
 #include "loom/common/core/log.h"

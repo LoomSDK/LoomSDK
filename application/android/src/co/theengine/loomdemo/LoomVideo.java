@@ -14,6 +14,7 @@ import android.widget.MediaController;
 import android.view.ViewGroup;
 import android.view.MotionEvent;
 import android.view.View.OnTouchListener;
+import android.view.SurfaceView;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -23,9 +24,8 @@ import android.view.View;
 import android.view.KeyEvent;
 import android.graphics.Color;
 
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
-
-
+import org.libsdl.app.SDLActivity;
+//import org.libsdl.app.SDLSurface;
 
 /**
  * Java Class that exposes Android fullscreen video playback
@@ -348,7 +348,8 @@ public class LoomVideo
         _rootView.setBackgroundColor(Color.TRANSPARENT);
 
         ///give focus back to the main surface view after we have removed the video view 
-        Cocos2dxGLSurfaceView.mainView.requestFocus();
+        // TODO: reimplement
+        //SDLActivity.getSurface().requestFocus();
     }
 
 
@@ -397,7 +398,8 @@ public class LoomVideo
         final int fType = type;
         final String fData = data;
 
-        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+        // TODO: does this require queueEvent?
+        _context.runOnUiThread(new Runnable() 
         {
             @Override
             public void run() 

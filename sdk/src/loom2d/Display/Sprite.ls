@@ -26,7 +26,7 @@ package loom2d.display
             else
             {
                 _clipRect = null;
-                setClipRect(0,0,0,0);
+                setClipRect(0,0,-1,-1);
             }
         }
 

@@ -16,10 +16,10 @@ import android.location.Location;
 import android.location.LocationListener;  
 import android.location.LocationManager; 
 
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 import org.json.JSONObject;
 import org.json.JSONException;
 
+import org.libsdl.app.SDLActivity;
 
 /**
  * Java Class that exposes miscellaneous Android mobile platform support
@@ -171,7 +171,8 @@ public class LoomMobile
             else
             {
                 //notify that we've launched via a custom URL
-                Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+                // TODO: does this require queueEvent?
+                _context.runOnUiThread(new Runnable() 
                 {
                     @Override
                     public void run() 
@@ -369,10 +370,11 @@ public class LoomMobile
             _remoteNotificationData = new JSONObject(message);
 
             //fire off the notification delegate if we have a mainView, otherwise delay it until onCreate
-            if(Cocos2dxGLSurfaceView.mainView != null)
+            if(((Activity)SDLActivity.getContext()) != null)
             {
                 //notify that we've launched via a remote notification launch
-                Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+                // TODO: does this require queueEvent?
+                ((Activity)SDLActivity.getContext()).runOnUiThread(new Runnable() 
                 {
                     @Override
                     public void run() 

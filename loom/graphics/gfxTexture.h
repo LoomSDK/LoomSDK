@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "loom/graphics/internal/bgfx/include/bgfx.h"
+#include "loom/graphics/gfxGraphics.h"
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
 #include "loom/common/utils/utString.h"
@@ -47,7 +47,6 @@ typedef int   TextureID;
 #define TEXTUREINFO_WRAP_MIRROR     1
 #define TEXTUREINFO_WRAP_CLAMP      2
 
-
 struct TextureInfo
 {
     TextureID                id;
@@ -60,14 +59,16 @@ struct TextureInfo
     int                      wrapU;
     int                      wrapV;
 
+    bool                     clampOnly;
+    bool                     mipmaps;
+
     bool                     reload;
 
     //this flag will be set if a TextureInfo was requested to be disposed but it is still 
     //busy in the async loading thread as it can only be disposed from the main thread once \
     //its async processing is complete
     bool                     asyncDispose;
-
-    bgfx::TextureHandle      handle;
+    GLuint                   handle;
 
     utString                 texturePath;
 
@@ -84,19 +85,41 @@ struct TextureInfo
         return &asyncLoadCompleteDelegate;
     }
 
-    int getHandleID() const { return (int)handle.idx; }
-    const char* getTexturePath() const { return texturePath.c_str(); }
-
-    void                     reset()
+    int getHandleID() const 
     {
-        width        = height = 0;
-        smoothing    = TEXTUREINFO_SMOOTHING_NONE;
-        wrapU        = TEXTUREINFO_WRAP_CLAMP;
-        wrapV        = TEXTUREINFO_WRAP_CLAMP;
-        reload       = false;
+        return (int)handle; 
+    }
+
+    inline bool isPowerOfTwo() const
+    {
+        return intIsPOT(width) && intIsPOT(height);
+    }
+
+    inline bool intIsPOT(unsigned int x) const
+    {
+        return (!(x & (x - 1)) && x);
+    }
+
+
+    const char* getTexturePath() const 
+    { 
+        return texturePath.c_str(); 
+    }
+
+    TextureInfo()
+    {
+        reset();
+    }
+    void reset()
+    {
+        width       = height = 0;
+        smoothing   = TEXTUREINFO_SMOOTHING_NONE;
+        wrapU       = TEXTUREINFO_WRAP_CLAMP;
+        wrapV       = TEXTUREINFO_WRAP_CLAMP;
+        reload      = false;
         asyncDispose = false;
-        handle.idx   = bgfx::invalidHandle;
-        texturePath  = "";
+        handle      = -1;
+        texturePath = "";
     }
 };
 
@@ -125,6 +148,7 @@ private:
 
     static utHashTable<utFastStringHash, TextureID> sTexturePathLookup;
     static bool sTextureAssetNofificationsEnabled;
+    static bool supportsFullNPOT;
 
     // simple linear TextureID -> TextureHandle
     static TextureInfo sTextureInfos[MAXTEXTURES];
@@ -144,8 +168,6 @@ private:
     //mutex used for locking sTextureInfos and sTexturePathLookup between threads
     static MutexHandle sTexInfoLock;
 
-
-
     static TextureID getAvailableTextureID()
     {
         TextureID id;
@@ -153,7 +175,7 @@ private:
         loom_mutex_lock(sTexInfoLock);
         for (id = 0; id < MAXTEXTURES; id++)
         {
-            if (sTextureInfos[id].handle.idx == bgfx::invalidHandle)
+            if (sTextureInfos[id].handle == -1)
             {
                 break;
             }
@@ -176,7 +198,7 @@ private:
         loom_mutex_lock(Texture::sTexInfoLock);
         TextureID   *texID = sTexturePathLookup.get(path);
         TextureInfo *tinfo = (texID && ((*texID >= 0) && (*texID < MAXTEXTURES))) ? &sTextureInfos[*texID] : NULL;
-        if(checkHandle && (tinfo && (tinfo->handle.idx == bgfx::invalidHandle)))
+        if(checkHandle && (tinfo && (tinfo->handle == -1)))
         {
             tinfo = NULL;
         }
@@ -199,11 +221,11 @@ private:
         loom_mutex_lock(sTexInfoLock);
         for (id = 0; id < MAXTEXTURES; id++)
         {
-            if (sTextureInfos[id].handle.idx == bgfx::invalidHandle)
+            if (sTextureInfos[id].handle == -1)
             {
                 // Initialize it.
                 tinfo = &sTextureInfos[id];
-                tinfo->handle.idx = MARKEDTEXTURE;    // mark in use, but not yet loaded
+                tinfo->handle = MARKEDTEXTURE;    // mark in use, but not yet loaded
                 if(path != NULL)
                 {
                     tinfo->texturePath = path;
@@ -253,7 +275,8 @@ public:
 
         loom_mutex_lock(sTexInfoLock);
         TextureInfo *tinfo = &sTextureInfos[id];
-        if (tinfo->handle.idx == bgfx::invalidHandle)
+
+        if (tinfo->handle == -1)
         {
             tinfo = NULL;
         }

@@ -19,8 +19,6 @@ import java.io.UnsupportedEncodingException;
 
 import org.apache.http.entity.ByteArrayEntity;
 
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
-
 import android.util.Log;
 
 /**
@@ -51,9 +49,11 @@ public class LoomHTTP
 
     public static int send(final String url, String httpMethod, final long callback, final long payload, byte[] body, final String responseCacheFile, final boolean base64EncodeResponseData, boolean followRedirects)
     {
+        final Activity activity = _context;
+
         //find and store client
         int index = 0;
-        while (clients[index++] != null && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {}
+        while (clients[index] != null && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {index++;}
         if(index == MAX_CONCURRENT_HTTP_REQUESTS)
         {
             return -1;
@@ -125,7 +125,8 @@ public class LoomHTTP
 
                 final String rfResponse = fResponse;
 
-                Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
+                // TODO: does this require queueEvent?
+                activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         // Log.d(TAG, "Main view thread submitting '" + rfResponse + "'' from queue!");
@@ -162,7 +163,8 @@ public class LoomHTTP
 
                 Log.d("LoomHTTP", "Failed request with message: " + content);
 
-                Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
+                // TODO: does this require queueEvent?
+                activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         LoomHTTP.onFailure(fContent, callback, payload);
@@ -184,7 +186,8 @@ public class LoomHTTP
             }
             else
             {
-                Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+                // TODO: does this require queueEvent?
+                activity.runOnUiThread(new Runnable() 
                 {
                     @Override
                     public void run() 
@@ -197,7 +200,8 @@ public class LoomHTTP
         catch(Exception e)
         {
             Log.d("LoomHTTP", "Failed to make request due to: " + e.toString());
-            Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+            // TODO: does this require queueEvent?
+            activity.runOnUiThread(new Runnable() 
             {
                 @Override
                 public void run() {
@@ -205,7 +209,6 @@ public class LoomHTTP
                 }
             });
         }
-
         
         // clear the headers after each send();
         headers.clear();
@@ -222,14 +225,13 @@ public class LoomHTTP
             return false;
         }
         clients[index].cancelRequests(_context, true);
-        removeClient(index);
         return true;
     }
 
     /**
     *  Remove client request at index from array
     */
-    public static void removeClient(int index)
+    public static void complete(int index)
     {
         if(index != -1)
         {

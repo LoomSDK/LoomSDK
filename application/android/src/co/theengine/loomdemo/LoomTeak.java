@@ -1,13 +1,12 @@
 package co.theengine.loomdemo;
 
+import android.app.Activity;
 import android.util.Log;
 import android.os.Bundle;
 import android.content.Intent;
 import android.content.Context;
 
 import com.CarrotInc.Carrot.Carrot;
-
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 
 
 public class LoomTeak 
@@ -17,10 +16,12 @@ public class LoomTeak
 
     static Carrot mTeak = null;
 
+    protected static Activity activity;
 
 
     public static void onCreate(LoomDemo loomDemo, String facebookAppId) 
     {
+        activity = LoomAdMob.activity;
         if(mTeak == null) 
         {
             String teakKey = LoomDemo.getMetadataString(loomDemo, TEAK_SECRET_KEY);
@@ -36,7 +37,8 @@ public class LoomTeak
                     public void authenticationStatusChanged(int authStatus) 
                     {
                         final int _authStatus = authStatus;
-                        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+                        // TODO: does this require queueEvent?
+                        activity.runOnUiThread(new Runnable() 
                         {
                             @Override
                             public void run() 

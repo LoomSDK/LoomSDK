@@ -24,7 +24,8 @@ package system {
 
 
 /**
- *   Types supported by the Loom JSON parser
+ * Types supported by the Loom JSON parser
+ * 
  */
 enum JSONType
 {
@@ -40,8 +41,16 @@ enum JSONType
 
 /**
  *  Provides utilities for parsing data in JavaScript Object Notation (JSON) format.
+ * 
+ *  There are two types of JSON: JSON Objects and JSON Arrays. JSON Objects are analogous to Loom Dictionaries in
+ *  that they consist of key / value pairs, where all the keys are strings. JSON Arrays are analogous to Vectors in
+ *  that they contain data ordered by indexes. It is important when dealing with JSON to understand the difference between
+ *  these two types. If there is a situation where the type of JSON being dealt with is unknown, the `getJSONType()` function
+ *  can be used and will return a JSONType enum describing what kind of JSON is being dealt with. The `isArray()` function
+ *  can also be used to the same effect, returning true if the JSON is an array and false otherwise. Attempting to use the
+ *  functions intended for Objects on Arrays or vice versa will result in failure.
  *
- *  Populate the JSON data structure by calling `loadString()`.
+ *  Before the JSON data structure can be used, `loadString()` must be called to populate the structure with data.
  *  Dump the JSON data structure by calling `serialize()`.
  *
  *  In order to return strongly typed values from the data structure, every data type has its own getter and setter.
@@ -51,6 +60,8 @@ enum JSONType
  *  * `getArrayBoolean(index)`, `setArrayBoolean(index, value)`
  *
  *  @see http://www.json.org/
+ *  @see #getJSONType()
+ *  @see isArray()
  *  @see #loadString()
  *  @see #serialize()
  */
@@ -60,9 +71,12 @@ native class JSON {
     private static var visited = new Vector.<Object>();
     
     /**
-     * Convenience function parsing a JSON string and returning a JSON object.
+     * Convenience function will parse a JSON string and return a JSON object. This is functionally the
+     * same as creating initializing a new JSON Loom object and loading a string into it, but this function
+     * will assert "JSON failed to load" if the call to `loadString` fails.
+     *
      * @param json  The JSON string to be parsed.
-     * @return  The JSON object parsed from the string.
+     * @return The JSON object parsed from the string.
      */
     public static function parse(json:String):JSON {
         var j = new JSON();
@@ -71,10 +85,14 @@ native class JSON {
     }
     
     /**
-     * Traverses through the object's fields and builds a JSON string
-     * from the hierarchy.
-     * @param o The Object to traverse using the Reflection API.
-     * @return  The JSON tree string built from the fields of the object.
+     * Traverses through the object's fields and builds a JSON string from the hierarchy. If a
+     * dictionary is the object, or is included as part of the object, it must use a data type that
+     * can be converted into a string as its key identifier.
+     * 
+     * @param o The object from which a JSON string will be made.
+     * @param visited This object is not intended to be used. It is used internally to prevent eternal
+     * recursive looping.
+     * @return The JSON tree string built from the fields of the object.
      */
     public static function stringify(o:Object, visited:Vector.<Object> = null):String {
         if (o == null) return "null";
@@ -161,7 +179,8 @@ native class JSON {
     }
     
     /**
-     * Escapes characters to make the string JSON compatible.
+     * Escapes characters to make the provided string JSON compatible. Specifically, it will replace `"` with `\\\"`,
+     * `\\` with `\\\\`, `\r` with `\\r`, `\n` with `\\n`, and `\t` with `\\t`.
      * @param s The unescaped string.
      * @return  The escaped string.
      */
@@ -182,9 +201,12 @@ native class JSON {
     }
     
     /**
-     * Creates a JSON object from the given Dictionary mapping keys to values. setValue is used to get the JSON representation of every Object.
+     * Creates a JSON object from the given Dictionary mapping keys to values. The setValue function is the primary force behind the conversion,
+     * see setValue for limitations and additional information.
      * @param d The Dictionary mapping Strings to Objects to source from.
      * @return  The JSON object having equivalent keys and values.
+     * 
+     * @see #setValue()
      */
     public static function fromDictionary(d:Dictionary.<String, Object>):JSON {
         var o = new JSON();
@@ -196,9 +218,12 @@ native class JSON {
     }
     
     /**
-     * Creates a JSON array from the given Vector of objects. setArrayValue is used to get the JSON representation of every Object.
+     * Creates a JSON array from the given Vector of objects. The setArrayValue function is the primary force behind the conversion,
+     * see setArrayValue for limitations and additional information.
      * @param v The Vector containing Objects to source from.
      * @return  The JSON array containing equivalent values to the Vector.
+     * 
+     * @see #setArrayValue()
      */
     public static function fromVector(v:Vector.<Object>):JSON {
         var a = new JSON();
@@ -226,7 +251,8 @@ native class JSON {
     }
     
     /**
-     * General function that sets the value of the key based on the type of object.
+     * General function that sets the value of the key based on the type of object. Allowed datatypes are `system.Boolean`, `system.Number`,
+     * `system.String`, `system.Vector`, and `system.Dictionary`.
      * @param key   The key name to set the value on.
      * @param o The value to set on the JSON object.
      */
@@ -248,7 +274,8 @@ native class JSON {
     }
     
     /**
-     * General function that sets the value of the array index based on the type of object.
+     * General function that sets the value of the array index based on the type of object. Allowed datatypes are `system.Boolean`, `system.Number`,
+     * `system.String`, `system.Vector`, and `system.Dictionary`.
      * @param index The array index to set on the JSON array.
      * @param o The value to set on the JSON array.
      */
@@ -268,6 +295,58 @@ native class JSON {
         
         visited.remove(o);
     }
+    
+    /**
+     * General function that gets the value of the Key provided
+     * @param key The key to be queried
+     * @return May return null, a Boolean, a String, a Number, a JSON Object, or a JSON Array
+     */
+    public function getValue(key:String):Object {
+        var valueType:JSONType = getObjectJSONType(key);
+        
+        if (valueType == -1) return null;// Error case
+        
+        switch (valueType) {
+            case JSONType.JSON_NULL: return null;
+            case JSONType.JSON_ARRAY: return getArray(key);
+            case JSONType.JSON_OBJECT: return getObject(key);
+            case JSONType.JSON_INTEGER: // Fall through
+            case JSONType.JSON_REAL: return getNumber(key);
+            case JSONType.JSON_STRING: return getString(key);
+            case JSONType.JSON_TRUE: return true;
+            case JSONType.JSON_FALSE: return false;
+            default: Debug.assert(true, "Invalid JSONType of " + valueType);
+        }
+        
+        return null;// Should never get here
+    }
+    
+    /**
+     * General function that gets the value of the index provided in Json Arrays
+     * @param index The index to be queried
+     * @return May return null, a Boolean, a String, a Number, a JSON Object, or a JSON Array
+     */
+    public function getArrayValue(index:int):Object {
+        var valueType:JSONType = getArrayJSONType(index);
+        
+        if (valueType == -1) return null;// Error case
+        
+        switch (valueType) {
+            case JSONType.JSON_NULL: return null;
+            case JSONType.JSON_ARRAY: return getArrayArray(index);
+            case JSONType.JSON_OBJECT: return getArrayObject(index);
+            case JSONType.JSON_INTEGER: // Fall through
+            case JSONType.JSON_REAL: return getArrayNumber(index);
+            case JSONType.JSON_STRING: return getArrayString(index);
+            case JSONType.JSON_TRUE: return true;
+            case JSONType.JSON_FALSE: return false;
+            default: Debug.assert(true, "Invalid JSONType of " + valueType);
+        }
+        
+        return null;// Should never get here
+    }
+    
+    
     
     /**
      * Sets the value of key to the JSON array created from the provided Vector using fromVector.
@@ -444,6 +523,127 @@ native class JSON {
      *  @see #getArrayObject()
      */
     public native function getArray(key:String):JSON;
+    
+    /**
+     * Create a Loom friendly dictionary from this JSON object. Note that if there are
+     * any JSON Objects or JSON Arrays nested within this object then thay will not be recursively converted.
+     * 
+     * @return A Loom friendly dictionary that contains all the data of this JSON object. This dicionary
+     * can contain Numbers, Strings, Booleans, JSON Arrays, and JSON Objects. Will return NULL if this JSON object
+     * is empty or is a JSON Array.
+     */
+    public function getDictionary():Dictionary {
+        
+        // Return null if this JSON object is null or an array
+        if (this.getJSONType() == JSONType.JSON_NULL || this.getJSONType() == JSONType.JSON_ARRAY) return null;
+        
+        var dict:Dictionary = new Dictionary();
+        var key:String = this.getObjectFirstKey();
+        
+        while (key) {
+            
+            // Determine what type of data we are dealing with so we can get it properly
+            var dataType:JSONType = this.getObjectJSONType(key);
+            
+            switch (dataType)
+            {
+            case JSONType.JSON_NULL:
+                dict[key] = null;
+                break;
+                
+            case JSONType.JSON_INTEGER:
+            case JSONType.JSON_REAL:
+                dict[key] = this.getNumber(key);
+                break;
+                
+            case JSONType.JSON_STRING:
+                dict[key] = this.getString(key);
+                break;
+                
+            case JSONType.JSON_TRUE:
+                dict[key] = true;
+                break;
+                
+            case JSONType.JSON_FALSE:
+                dict[key] = false;
+                break;
+                
+            case JSONType.JSON_OBJECT:
+                dict[key] = this.getObject(key);
+                break;
+                
+            case JSONType.JSON_ARRAY:
+                dict[key] = this.getArray(key);
+                break;
+                
+            default:
+                Debug.assert(true, "Uknown JSON Type of " + dataType + " encountered!");
+            }
+            
+            key = this.getObjectNextKey(key);
+        }
+        
+        return dict;
+    }
+    
+    /**
+     * Create a Loom friendly vector from this JSON array. Note that if there are
+     * any JSON Objects or JSON Arrays nested within this array then thay will not be recursively converted.
+     * 
+     * @return A Loom friendly vector that contains all the data of this JSON array. This vector
+     * can contain Numbers, Strings, Booleans, JSON Arrays, and JSON Objects. Will return NULL if this JSON arrat
+     * is empty or is a JSON object.
+     */
+    public function getVector():Vector {
+        
+        // Return null if this JSON object is null or an array
+        if (this.getJSONType() == JSONType.JSON_NULL || this.getJSONType() == JSONType.JSON_OBJECT) return null;
+        
+        var vect:Vector = new Vector();
+        
+        for (var i:int = 0; i < this.getArrayCount(); i++) {
+            
+            // Determine what type of data we are dealing with so we can get it properly
+            var dataType:JSONType = this.getArrayJSONType(i);
+            
+            switch (dataType)
+            {
+            case JSONType.JSON_NULL:
+                vect.push(null);
+                break;
+                
+            case JSONType.JSON_INTEGER:
+            case JSONType.JSON_REAL:
+                vect.push(this.getArrayNumber(i));
+                break;
+                
+            case JSONType.JSON_STRING:
+                vect.push(this.getArrayString(i));
+                break;
+                
+            case JSONType.JSON_TRUE:
+                vect.push(true);
+                break;
+                
+            case JSONType.JSON_FALSE:
+                vect.push(false);
+                break;
+                
+            case JSONType.JSON_OBJECT:
+                vect.push(this.getArrayObject(i));
+                break;
+                
+            case JSONType.JSON_ARRAY:
+                vect.push(this.getArrayArray(i));
+                break;
+                
+            default:
+                Debug.assert(true, "Uknown JSON Type of " + dataType + " encountered!");
+            }
+        }
+        
+        return vect;
+    }
 
     /** For a JSON Object, associates an Integer value with the provided key.
      *
@@ -539,9 +739,18 @@ native class JSON {
 
     /** For a JSON Array, retrieves the number of items.
      *
-     *  @return The number of items, 0 if object is not a JSON Array.
+     *  @return The number of items, -1 if object is not a JSON Array.
      */
     public native function getArrayCount():int;
+    
+    /**
+     * Property that retrieves the number of items in a JSON Array, wraps getArrayCount()
+     * 
+     * @see #getArrayCount()
+     */
+    public function get length():int {
+        return getArrayCount();
+    }
 
     /** For a JSON Array, retrieves a Boolean value at the provided index.
      *
