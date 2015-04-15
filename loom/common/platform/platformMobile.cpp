@@ -79,6 +79,22 @@ void platform_vibrate()
 {
 }
 
+///enables location tracking for this device
+void platform_startLocationTracking(int minDist, int minTime)
+{
+}
+
+///disables location tracking for this device
+void platform_stopLocationTracking()
+{
+}
+
+///returns the device's location using GPS and/or NETWORK signals
+const char *platform_getLocation()
+{
+    return "";
+}
+
 ///sets whether or not to use the system screen sleep timeout
 void platform_allowScreenSleep(bool sleep)
 {

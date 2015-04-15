@@ -97,6 +97,7 @@ public:
     static void setFillColor(int color);
     static int getFillColor();
 
+
     // Set a clip rect specified by the provided parameters
     static void setClipRect(int x, int y, int width, int height);
 

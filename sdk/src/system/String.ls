@@ -152,11 +152,18 @@ package system {
     public native function toBoolean():Boolean;
     
     /**
-     *  Safetly evaluate the String to an MD5 encoded string value.
+     *  Safely evaluate the String to an MD5 encoded string value.
      *
      *  @return The MD5 String value evaluated from the String.
      */
     public native function toMD5():String;
+    
+    /**
+     *  Safely evaluate the String to a SHA2 256 encoded string value.
+     *
+     *  @return The SHA2 String value evaluated from the String.
+     */
+    public native function toSHA2():String;
     
     /**
      *  Splits a String object into an array of substrings by dividing it wherever the specified delimiter parameter occurs.
@@ -309,6 +316,7 @@ package system {
     private static native function _toNumber(value:String):Number;
     private static native function _toBoolean(value:String):Boolean;
     private static native function _toMD5(value:String):String;
+    private static native function _toSHA2(value:String):String;
     private static native function _find(value:String, pattern:String):Vector.<String>;
     
     }
