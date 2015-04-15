@@ -11,8 +11,6 @@ import android.widget.RelativeLayout;
 
 import com.google.ads.*;
 
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
-
 /**
  *  Java class that manages Admob instances. This maps directly to the platformAdMob C API
  */
@@ -26,8 +24,10 @@ public class LoomAdMob {
         final long fCallback = callback;
         final long fPayload  = payload;
         final int fType = type;
-
-        Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
+        
+        final Activity activity = LoomAdMob.activity;
+        // TODO: does this require queueEvent?
+        activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 nativeCallback(fData, fCallback, fPayload, fType);

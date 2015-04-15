@@ -14,18 +14,17 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width">
 
-        <link rel="stylesheet" href="<%= @relative_base_path %>/css/class-page.css">
         <link rel="stylesheet" href="<%= @relative_base_path %>/css/pygments.css">
-        <link rel="stylesheet" href="<%= @relative_base_path %>/css/all-pages.css">
+        <link rel="stylesheet" href="<%= @relative_base_path %>/css/pages.css">
         <link rel="stylesheet" href="<%= @relative_base_path %>/css/jquery-ui-1.10.3.custom.css" />
-        <link type="text/css" rel="stylesheet" href="<%= @relative_base_path %>/css/jquery.dropdown.css" />
+        <link rel="stylesheet" href="<%= @relative_base_path %>/css/jquery.dropdown.css" />
     </head>
     <body>
 
         <div id="top">&nbsp;</div>
         <%= render "templates/header" %>
-          
-        <%= render "templates/sidebar"%>  
+
+        <%= render "templates/sidebar"%>
 
         <!-- Page. -->
         <div class="page">
@@ -40,7 +39,7 @@
 
                     <!-- Class name. -->
                     <h1><%= @doc.data[:name] %></h1>
-                    
+
                     <% unless @doc.deprecated_message.nil? %>
                       <div class="panel panel-danger">
                         <div class="panel-heading">Deprecation Warning</div>
@@ -54,7 +53,7 @@
                         <br>
                         <%= path_links %>
                     </p>
-                    
+
                     <%= render "templates/metadata" %>
 
                 </header><!-- End content header. -->
@@ -88,13 +87,13 @@
                 <%= render "templates/constants" %>
 
                 <%= render "templates/functions" %>
-                
+
                 <%= render "templates/classes/events" %>
 
             </div><!-- End content. -->
 
         </div><!-- End page. -->
 
-        <%= render "templates/javascript_includes" %>    
+        <%= render "templates/javascript_includes" %>
     </body>
 </html>

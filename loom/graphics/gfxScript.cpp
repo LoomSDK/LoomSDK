@@ -18,6 +18,9 @@
  * ===========================================================================
  */
 
+#include <math.h>
+#define HAVE_M_PI
+
 #include "loom/script/loomscript.h"
 
 #include "loom/common/core/log.h"
@@ -317,6 +320,9 @@ static int registerLoomGraphics(lua_State *L)
 
        .beginClass<Texture> ("Texture2D")
        .addStaticMethod("initFromAsset", &Texture::initFromAssetManager)
+       .addStaticMethod("initFromBytes", &Texture::initFromBytes)
+       .addStaticMethod("initFromAssetAsync", &Texture::initFromAssetManagerAsync)
+       .addStaticMethod("initFromBytesAsync", &Texture::initFromBytesAsync)
        .addStaticMethod("dispose", &Texture::dispose)
        .addStaticMethod("scaleImageOnDisk", &scaleImageOnDisk)
        .addStaticMethod("pollScaling", &pollScaling)
@@ -338,6 +344,9 @@ static int registerLoomGraphics(lua_State *L)
        .addVar("wrapV", &TextureInfo::wrapV)
        .addVar("id", &TextureInfo::id)
        .addVarAccessor("update", &TextureInfo::getUpdateDelegate)
+       .addVarAccessor("asyncLoadComplete", &TextureInfo::getAsyncLoadCompleteDelegate)
+       .addProperty("handleID", &TextureInfo::getHandleID)
+       .addProperty("path", &TextureInfo::getTexturePath)
        .endClass()
 
        .endPackage();

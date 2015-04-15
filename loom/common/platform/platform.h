@@ -75,6 +75,8 @@
 #define LOOM_PLATFORM_IS_APPLE    0
 #endif
 
+#define LOOM_PLATFORM_TOUCH LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_IOS
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -20,11 +20,11 @@ project(LoomEngine)
 
 set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/loom/vendor
     ${CMAKE_SOURCE_DIR}/loom/vendor/seatest
     ${CMAKE_SOURCE_DIR}/loom/vendor/stb
     ${CMAKE_SOURCE_DIR}/loom/vendor/minimp3
     ${CMAKE_SOURCE_DIR}/loom/vendor/smslib
-    ${CMAKE_SOURCE_DIR}/loom/vendor/chipmunk-physics/include
     ${CMAKE_SOURCE_DIR}/loom/vendor/geldreich
     ${CMAKE_SOURCE_DIR}/loom/vendor/jansson
     ${CMAKE_SOURCE_DIR}/loom/vendor/admob/include
@@ -33,12 +33,6 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/sqlite3
     ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios/FacebookSDK.framework/Headers
     ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios/Parse.framework/Headers
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/cocoa
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/include
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/kazmath/include
-    ${CMAKE_SOURCE_DIR}/loom/engine/CocosDenshion/include
     )
 
 # Allow Admob and/or Facebook to be built into the SDK?
@@ -73,44 +67,65 @@ if (LOOM_IS_DEBUG EQUAL 1)
     add_definitions(-DLOOM_DEBUG)
 endif()
 
+
+#--------------------------------------
+# SDL
+#--------------------------------------
+
+if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS))
+	# Used for generated config include
+	include_directories( ${CMAKE_BINARY_DIR}/loom/vendor/sdl2/include)
+	include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
+	
+	# Set initial options via cmake cache
+	set(LIBC ON CACHE BOOL "Enable system libraries")
+	set(SDL_STATIC ON CACHE BOOL "Enable static linking")
+	set(SDL_SHARED OFF CACHE BOOL "Enable dynamic linking")
+	set(FORCE_STATIC_VCRT ON CACHE BOOL "Force /MT for static linking")
+	set(DIRECTX OFF CACHE BOOL "Enable DirectX on Windows")
+	
+	add_subdirectory(loom/vendor/sdl2)
+endif()
+
 #--------------------------------------
 # Windows
 #--------------------------------------
 
 if (MSVC) 
 
-add_definitions(-DCURL_STATICLIB)
+    add_definitions(-DCURL_STATICLIB)
 
-set (LOOM_INCLUDE_FOLDERS
-    ${LOOM_INCLUDE_FOLDERS}
+    set (LOOM_INCLUDE_FOLDERS ${LOOM_INCLUDE_FOLDERS}
+    
+    ${CMAKE_SOURCE_DIR}/loom/vendor/zlib/include
+    ${CMAKE_SOURCE_DIR}/loom/vendor/libcurl/include )
+
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+      set(VC_LIB_PATH_SUFFIX lib/x64)
+    else()
+      set(VC_LIB_PATH_SUFFIX lib/x86)
+    endif()
 
     link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/Include)    
-    ${CMAKE_SOURCE_DIR}/loom/vendor/zlib/include
-    ${CMAKE_SOURCE_DIR}/loom/vendor/libcurl/include
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/win32 )
+    link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/${VC_LIB_PATH_SUFFIX})
 
-    link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/Lib/x86)
-
+    
     # move this?
     add_definitions(-DLOOM_DISABLE_JEMALLOC -D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
     
     # MSVC compatibility stuffs
-    include_directories( ${CMAKE_SOURCE_DIR}/loom/graphics/internal/bx/include/compat/msvc )
     include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-3.4.0/include/msvc_compat )
-
 
     set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_windows/lua51.lib )
 
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_HAS_EXCEPTIONS=0 -DWIN32 -D_WINDOWS -DWin32 -DFREEGLUT_STATIC -DFREEGLUT_LIB_PRAGMAS=0 -DGLEW_STATIC)
-
-    link_directories ( ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/third_party/win32/libraries )
 
     # Warnings as errors
     add_definitions (/wd4819)
 
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /WX /arch:SSE2")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /WX /arch:SSE2")    
-    #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMT")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:msvcrt.lib")
     
     STRING(REPLACE "/GX" "" CMAKE_CXX_FLAGS_INIT ${CMAKE_CXX_FLAGS_INIT})
     STRING(REPLACE "/GX" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
@@ -172,19 +187,23 @@ if(APPLE)
         set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
         
         set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_ios/lib/libluajit-5.1.a)
+        set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/ios/libSDL2.a)
+        
+        add_definitions(-DLOOM_RENDERER_OPENGLES2)
+
+        include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
 
         list(APPEND LOOM_INCLUDE_FOLDERS ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/ios )
 
     else()
 
-        set(CMAKE_EXE_LINKER_FLAGS "-framework Carbon -framework IOKit -framework Foundation -lz -framework QuartzCore -lxml2")
+        set(CMAKE_EXE_LINKER_FLAGS "-framework Carbon -framework IOKit -framework Foundation -lz -framework QuartzCore -lxml2 -L/usr/local/lib")
 
         set(CMAKE_OSX_ARCHITECTURES "i386")
         set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
 
         set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_x86/lib/libluajit-5.1.a)
-        list(APPEND LOOM_INCLUDE_FOLDERS ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/mac )
-
+        
     endif()
 
 endif(APPLE)
@@ -196,7 +215,9 @@ endif(APPLE)
 if (ANDROID) 
 
     include (loom.android.toolchain)
-    
+	
+    include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
+	
     set (LOOM_INCLUDE_FOLDERS
     ${LOOM_INCLUDE_FOLDERS}
     ${CMAKE_SOURCE_DIR}/loom/vendor/glew-1.7.0/include
@@ -207,8 +228,10 @@ if (ANDROID)
     add_definitions(-DLUAJIT_OS=LUAJIT_OS_LINUX)
     add_definitions(-DLUAJIT_TARGET=LUAJIT_ARCH_ARM -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE)
     add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_INT64__)
+    add_definitions(-DLOOM_RENDERER_OPENGLES2)
     
     set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_android/lib/libluajit-5.1)
+    set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/android/armeabi/libSDL2.a)
     
 
 endif()

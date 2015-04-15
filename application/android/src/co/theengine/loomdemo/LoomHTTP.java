@@ -19,8 +19,6 @@ import java.io.UnsupportedEncodingException;
 
 import org.apache.http.entity.ByteArrayEntity;
 
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
-
 import android.util.Log;
 
 /**
@@ -97,7 +95,8 @@ public class LoomHTTP
 
                 final String rfResponse = fResponse;
 
-                Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
+                // TODO: does this require queueEvent?
+                activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         // Log.d(TAG, "Main view thread submitting '" + rfResponse + "'' from queue!");
@@ -135,7 +134,8 @@ public class LoomHTTP
 
                 Log.d("LoomHTTP", "Failed request with message: " + content);
 
-                Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() {
+                // TODO: does this require queueEvent?
+                activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         LoomHTTP.onFailure(fContent, callback, payload);
@@ -157,7 +157,8 @@ public class LoomHTTP
             }
             else
             {
-                Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+                // TODO: does this require queueEvent?
+                activity.runOnUiThread(new Runnable() 
                 {
                     @Override
                     public void run() {
@@ -169,7 +170,8 @@ public class LoomHTTP
         catch(Exception e)
         {
             Log.d("LoomHTTP", "Failed to make request due to: " + e.toString());
-            Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+            // TODO: does this require queueEvent?
+            activity.runOnUiThread(new Runnable() 
             {
                 @Override
                 public void run() {

@@ -21,6 +21,7 @@
 
 #include "loom/script/native/lsLuaBridge.h"
 #include "loom/script/reflection/lsAssembly.h"
+#include "loom/script/runtime/lsLuaState.h"
 
 using namespace LS;
 
@@ -34,6 +35,7 @@ static int registerSystemReflectionAssembly(lua_State *L)
        .addMethod("getName", &Assembly::getName)
        .addMethod("getTypeCount", &Assembly::getTypeCount)
        .addMethod("getTypeAtIndex", &Assembly::getTypeAtIndex)
+       .addStaticLuaFunction("loadBytes", &Assembly::loadBytes)
 
        .endClass()
 

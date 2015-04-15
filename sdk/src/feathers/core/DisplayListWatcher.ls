@@ -22,7 +22,7 @@ package feathers.core
      *
      * ~~~as3
      * setInitializerForClass(Button, buttonInitializer);
-         * ~~~
+     * ~~~
      *
      * However, initializers are not called for subclasses. If a
      * `Check` is added to the display list (`Check`
@@ -36,7 +36,7 @@ package feathers.core
      * ~~~as3
      * setInitializerForClass(Button, buttonInitializer);
      * setInitializerForClass(Check, buttonInitializer);
-         * ~~~
+     * ~~~
      *
      * In this case, `Button` and `Check` will trigger
      * the `buttonInitializer()` function, but `Radio`
@@ -48,7 +48,7 @@ package feathers.core
      *
      * ~~~as3
      * setInitializerForClassAndSubclasses(Button, buttonInitializer);
-         * ~~~
+     * ~~~
      *
      * In this case, `Button`, `Check`, `Radio`
      * and every other subclass of `Button` (including any subclasses
@@ -67,7 +67,7 @@ package feathers.core
             this.root = topLevelContainer;
             this.root.addEventListener(Event.ADDED, addedHandler);
         }
-        
+
         /**
          * The minimum base class required before the AddedWatcher will check
          * to see if a particular display object has any initializers.
@@ -232,7 +232,7 @@ package feathers.core
             }
             return false;
         }
-        
+
         /**
          * Sets the initializer for a specific class.
          */
@@ -264,7 +264,7 @@ package feathers.core
             }
             this._initializerSuperTypeMap[type] = initializer;
         }
-        
+
         /**
          * If an initializer exists for a specific class, it will be returned.
          */
@@ -289,7 +289,7 @@ package feathers.core
         {
             return this._initializerSuperTypeMap[type];
         }
-        
+
         /**
          * If an initializer exists for a specific class, it will be removed
          * completely.
@@ -328,7 +328,7 @@ package feathers.core
                 this._initializerSuperTypes.splice(index, 1);
             }
         }
-        
+
         /**
          * @private
          */
@@ -397,7 +397,7 @@ package feathers.core
             if(targetAsRequiredBaseClass)
             {
                 //trace(" - passed base class ");
-                const isInitialized:Boolean = this._initializeOnce 
+                const isInitialized:Boolean = this._initializeOnce
                     && this.initializedObjects[targetAsRequiredBaseClass];
 
                 if(!isInitialized)
@@ -431,7 +431,7 @@ package feathers.core
 
             //trace("DONE");
         }
-        
+
         /**
          * @private
          */

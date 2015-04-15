@@ -38,8 +38,6 @@ import android.util.Log;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
-
 
 
 // Loom.Facebook API
@@ -242,7 +240,8 @@ public class LoomFacebook
     		            public void onComplete(Bundle values, FacebookException error) 
                         {
                             final boolean fSuccess = (error == null) ? true : false;
-                            Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+                            // TODO: does this require queueEvent?
+                            activity.runOnUiThread(new Runnable() 
                             {
                                 @Override
                                 public void run() 
@@ -346,7 +345,8 @@ public class LoomFacebook
             }
 
             final int fErrorCode = errorCode;
-			Cocos2dxGLSurfaceView.mainView.queueEvent(new Runnable() 
+            // TODO: does this require queueEvent?
+			activity.runOnUiThread(new Runnable() 
             {
 				@Override
 				public void run() 

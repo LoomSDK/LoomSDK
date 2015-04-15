@@ -19,50 +19,109 @@
  */
 
 
-#include "loom/graphics/gfxGraphics.h"
-#include "loom/graphics/internal/bgfx/include/bgfx.h"
 #include "loom/engine/loom2d/l2dStage.h"
+#include "loom/graphics/gfxGraphics.h"
+#include "loom/common/config/applicationConfig.h"
+#include "loom/common/core/log.h"
+
+lmDefineLogGroup(gStageLogGroup, "Stage", 1, LoomLogInfo);
+
+extern SDL_Window *gSDLWindow;
 
 namespace Loom2D
 {
-NativeDelegate Stage::_RenderStageDelegate;
 
-float Stage::mtxProjection[16];
-float Stage::mtxModelView[16];
+Stage *Stage::smMainStage = NULL;
+NativeDelegate Stage::_RenderStageDelegate;
+bool Stage::sizeDirty = true;
+bool Stage::visDirty = true;
+
+Stage::Stage()
+{
+    pendingResize = true;
+    smMainStage = this;
+    sdlWindow = gSDLWindow;
+    updateFromConfig();
+    SDL_GL_GetDrawableSize(sdlWindow, &stageWidth, &stageHeight);
+    noteNativeSize(stageWidth, stageHeight);
+}
+
+Stage::~Stage()
+{
+    smMainStage = NULL;
+}
+
+void Stage::updateFromConfig()
+{
+    SDL_Window *sdlWindow = gSDLWindow;
+    SDL_SetWindowTitle(sdlWindow, LoomApplicationConfig::displayTitle().c_str());
+    
+    if (smMainStage != NULL) 
+    {
+        smMainStage->setOrientation(LoomApplicationConfig::displayOrientation().c_str());
+    }
+    
+    if (sizeDirty) 
+    {
+        int width = LoomApplicationConfig::displayWidth();
+        int height = LoomApplicationConfig::displayHeight();
+        SDL_SetWindowSize(sdlWindow, width, height);
+        sizeDirty = false;
+    }
+    
+    if (visDirty && smMainStage != NULL) 
+    {
+        smMainStage->show();
+        visDirty = false;
+    }
+}
+
+void Stage::firePendingResizeEvent()
+{
+    // Fire a resize event.
+    if(smMainStage && pendingResize)
+    {
+        // Fire a resize event. We do this at startup so apps can size them
+        // selves properly before first render.
+        int winWidth, winHeight;
+        SDL_GetWindowSize(gSDLWindow, &winWidth, &winHeight);
+        SDL_GL_GetDrawableSize(gSDLWindow, &winWidth, &winHeight);
+        smMainStage->noteNativeSize(winWidth, winHeight);
+        GFX::Graphics::setNativeSize(winWidth, winHeight);
+        pendingResize = false;
+    }        
+}
+
+void Stage::show()
+{
+    SDL_ShowWindow(sdlWindow);
+}
+
+void Stage::hide()
+{
+    SDL_HideWindow(sdlWindow);
+}
 
 void Stage::render(lua_State *L)
 {
-    // set the stages view, will be used when clearing, etc
-    GFX::Graphics::setView(_view);
-
-    GFX::Graphics::setViewTransform(mtxModelView, mtxProjection);
-
+    GFX::Graphics::setNativeSize(getWidth(), getHeight());
     GFX::Graphics::beginFrame();
-
-    // only clear the stage if it is at view 0
-    if (_view == 0)
-    {
-        bgfx::setViewClear(_view
-                           , BGFX_CLEAR_COLOR_BIT | BGFX_CLEAR_DEPTH_BIT
-                           , GFX::Graphics::getFillColor()
-                           , 1.0f
-                           , 0
-                           );
-    }
 
     updateLocalTransform();
 
     lualoom_pushnative<Stage>(L, this);
 
     renderState.alpha          = alpha;
-    renderState.cachedClipRect = (unsigned short)-1;
+    renderState.clipRect       = Loom2D::Rectangle(0, 0, -1, -1);
     renderState.blendMode      = blendMode;
-
 
     renderChildren(L);
 
     lua_pop(L, 1);
 
     GFX::Graphics::endFrame();
+
+    /* Update the screen! */
+    SDL_GL_SwapWindow(sdlWindow);
 }
 }

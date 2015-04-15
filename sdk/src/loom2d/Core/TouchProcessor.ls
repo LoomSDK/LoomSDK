@@ -10,7 +10,7 @@
 
 package loom2d.core
 {
-    import loom2d.display.CCLayer;
+    //import loom2d.display.CCLayer;
     import loom.Application;
 
     import loom2d.math.Point;
@@ -34,7 +34,6 @@ package loom2d.core
         private static const MULTITAP_DISTANCE:Number = 25;
         
         private var mStage:Stage;
-        private var mRootLayer:CCLayer;
         private var mElapsedTime:Number;
         private var mTouchMarker:TouchMarker;
         
@@ -51,19 +50,18 @@ package loom2d.core
         private static var sProcessedTouchIDs:Vector.<int> = new Vector.<int>[];
         private static var sHoveringTouchData:Vector.<TouchProcessorNote> = new Vector.<TouchProcessorNote>[];
         
-        public function TouchProcessor(stage:Stage, rootLayer:CCLayer)
+        public function TouchProcessor(stage:Stage)
         {
             mStage = stage;
-            mRootLayer = rootLayer;
             mElapsedTime = 0.0;
             mCurrentTouches = new Vector.<Touch>[];
             mQueue = new TouchQueue();
             mLastTaps = new Vector.<Touch>[];
             
-            mRootLayer.onTouchBegan += handleTouchBegan;
-            mRootLayer.onTouchMoved += handleTouchMoved;
-            mRootLayer.onTouchEnded += handleTouchEnded;
-            mRootLayer.onTouchCancelled += handleTouchEnded;
+            mStage.onTouchBegan += handleTouchBegan;
+            mStage.onTouchMoved += handleTouchMoved;
+            mStage.onTouchEnded += handleTouchEnded;
+            mStage.onTouchCancelled += handleTouchEnded;
 
             mStage.addEventListener(KeyboardEvent.KEY_UP, onKey);
             mStage.addEventListener(KeyboardEvent.KEY_DOWN, onKey);
@@ -73,7 +71,7 @@ package loom2d.core
 
         protected function handleTouchBegan(id:int, x:Number, y:Number):void
         {
-            // translate to stage space            
+            // translate to stage space
             x-=mStage.x;
             y-=mStage.y;
             x/=mStage.scaleX;
@@ -84,11 +82,16 @@ package loom2d.core
 
         protected function handleTouchMoved(id:int, x:Number, y:Number):void
         {
+            //trace("move @ " + x + ", " + y);
+
             // translate to stage space            
             x-=mStage.x;
             y-=mStage.y;
             x/=mStage.scaleX;
             y/=mStage.scaleY;
+
+            //trace("POSTmove @ " + x + ", " + y);
+
             enqueue(id, TouchPhase.MOVED, x, y);
         }
 
@@ -254,6 +257,9 @@ package loom2d.core
             
             if (data.phase == TouchPhase.BEGAN)
                 processTap(touch);
+
+            if(data.phase == TouchPhase.ENDED)
+                processRelease(touch);
         }
         
         private function onKey(event:KeyboardEvent):void
@@ -322,6 +328,25 @@ package loom2d.core
             }
             
             mLastTaps.push(touch.clone());
+        }
+
+        private function processRelease(touch:Touch):void
+        {
+            //track a Click event, which would be a touch down/up in quick succession at the same location
+            var wasTapNearby:Boolean = false;
+            var minSqDist:Number = MULTITAP_DISTANCE * MULTITAP_DISTANCE;
+            for each (var tap:Touch in mLastTaps)
+            {
+                var sqDist:Number = Math.pow(tap.globalX - touch.globalX, 2) +
+                                    Math.pow(tap.globalY - touch.globalY, 2);
+                if (sqDist <= minSqDist)
+                {
+                    wasTapNearby = true;
+                    break;
+                }
+            }
+            
+            touch.setClick(wasTapNearby);
         }
         
         private function addCurrentTouch(touch:Touch):void

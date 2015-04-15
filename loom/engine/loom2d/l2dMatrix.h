@@ -144,9 +144,17 @@ public:
 
     inline void skew(float xSkew, float ySkew)
     {
-        Matrix skewMatrix(1, tan(ySkew), tan(xSkew), 1);
+        float sinX = sin(xSkew);
+        float cosX = cos(xSkew);
+        float sinY = sin(ySkew);
+        float cosY = cos(ySkew);
 
-        concat(&skewMatrix);
+        setTo(a * cosY - b * sinX,
+              a * sinY + b * cosX,
+              c * cosY - d * sinX,
+              c * sinY + d * cosX,
+              tx * cosY - ty * sinX,
+              tx * sinY + ty * cosX);
     }
 
     inline void rotate(float angle)
@@ -263,6 +271,29 @@ public:
         lua_pushnumber(L, a * x + c * y + tx);
         lua_rawseti(L, 4, (int)Point::xOrdinal);
         lua_pushnumber(L, b * x + d * y + ty);
+        lua_rawseti(L, 4, (int)Point::yOrdinal);
+
+        return 1;
+    }
+
+    void transformCoordInternal(float x, float y, float *rx, float *ry)
+    {
+        *rx = a*x + c*y + tx;
+        *ry = b*x + d*y + ty;
+    }
+
+    int deltaTransformCoord(lua_State *L)
+    {
+        float x = (float)lua_tonumber(L, 2);
+        float y = (float)lua_tonumber(L, 3);
+
+        // get the helper point
+        lua_pushnumber(L, sHelperPointOrdinal);
+        lua_gettable(L, 1);
+
+        lua_pushnumber(L, a * x + c * y);
+        lua_rawseti(L, 4, (int)Point::xOrdinal);
+        lua_pushnumber(L, b * x + d * y);
         lua_rawseti(L, 4, (int)Point::yOrdinal);
 
         return 1;

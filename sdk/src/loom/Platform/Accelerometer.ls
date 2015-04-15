@@ -38,7 +38,8 @@ package loom.platform
         [Deprecated(msg="Use isSupported instead")]
         public static function get enabled():Boolean
         {        
-            return Application.internalLayer.isAccelerometerEnabled();
+            //return Application.internalLayer.isAccelerometerEnabled();
+            return false;
         }
 
         /**
@@ -46,7 +47,7 @@ package loom.platform
         */
         public static function set enabled(value:Boolean):void
         {
-            Application.internalLayer.setAccelerometerEnabled(value);
+            //Application.internalLayer.setAccelerometerEnabled(value);
         }
 
         /**

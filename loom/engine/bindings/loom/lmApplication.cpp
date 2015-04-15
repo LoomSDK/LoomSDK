@@ -38,11 +38,18 @@ using namespace LS;
 #include "loom/script/common/lsLog.h"
 #include "loom/script/common/lsFile.h"
 
+#include "loom/engine/loom2d/l2dStage.h"
+
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformHttp.h"
 #include "loom/common/platform/platformAdMob.h"
 
 #include "loom/common/config/applicationConfig.h"
+
+#include "loom/graphics/gfxGraphics.h"
+#include "loom/script/native/core/system/lmProcess.h"
+
+#include "loom/engine/bindings/sdl/lmSDL.h"
 
 LSLuaState     *LoomApplication::rootVM      = NULL;
 bool           LoomApplication::reloadQueued = false;
@@ -59,9 +66,13 @@ lmDefineLogGroup(scriptLogGroup, "loom.script", 1, LoomLogInfo);
 
 // Define the global Loom C entrypoints.
 extern "C" {
+
+extern void loomsound_shutdown();
+
 void loom_appSetup(void)
 {
     LoomApplication::initializeCoreServices();
+    GFX::Graphics::initialize();
 }
 
 
@@ -70,6 +81,7 @@ void loom_appShutdown(void)
     LoomApplication::shutdown();
 }
 
+extern void loomsound_reset();
 
 // container for external package functions
 typedef void (*FunctionRegisterPackage)(void);
@@ -136,6 +148,8 @@ void LoomApplication::execMainAssembly()
 
     LoomApplicationConfig::parseApplicationConfig(mainAssembly->getLoomConfig());
 
+    Loom2D::Stage::updateFromConfig();
+
     // Wait for asset agent if appropriate.
     if (LoomApplicationConfig::waitForAssetAgent() > 0)
     {
@@ -200,6 +214,8 @@ void LoomApplication::reloadMainAssembly()
     platform_webViewDestroyAll();
     // cleanup ads
     platform_adMobDestroyAll();
+
+    loomsound_reset();
 
     const NativeDelegate *onReload = rootVM->getOnReloadDelegate();
     onReload->invoke();
@@ -352,9 +368,10 @@ int LoomApplication::initializeCoreServices()
     return 0;
 }
 
-
 void LoomApplication::shutdown()
 {
+    loomsound_shutdown();
+
     platform_HTTPCleanup();
 
     // Shut down application subsystems.

@@ -1,10 +1,10 @@
-package loom2d.display 
+package loom2d.display
 {
     import loom2d.Loom2D;
-    
+
     import loom2d.events.Event;
     import loom2d.events.EventDispatcher;
-    
+
     import loom.css.IStyle;
     import loom.lml.ILMLNode;
     import loom.css.StyleSheet;
@@ -16,63 +16,65 @@ package loom2d.display
     import loom2d.math.Matrix;
 
     /**
-     *  The DisplayObject class is the base class for all objects that are rendered on the 
+     *  The DisplayObject class is the base class for all objects that are rendered on the
      *  screen.
-     *  
-     *  **The Display Tree** 
-     *  
+     *
+     *  **The Display Tree**
+     *
      *  In Starling, all displayable objects are organized in a display tree. Only objects that
-     *  are part of the display tree will be displayed (rendered). 
-     *   
+     *  are part of the display tree will be displayed (rendered).
+     *
      *  The display tree consists of leaf nodes (Image, Quad) that will be rendered directly to
      *  the screen, and of container nodes (subclasses of "DisplayObjectContainer", like "Sprite").
      *  A container is simply a display object that has child nodes - which can, again, be either
-     *  leaf nodes or other containers. 
-     *  
+     *  leaf nodes or other containers.
+     *
      *  At the base of the display tree, there is the Stage, which is a container, too. When you
      *  use Application as the base class for your Loom application, a Stage instance is automatically
      *  created for you.
-     *  
+     *
      *  A display object has properties that define its position in relation to its parent
-     *  (x, y), as well as its rotation and scaling factors (scaleX, scaleY). Use the 
-     *  `alpha` and `visible` properties to make an object translucent or 
+     *  (x, y), as well as its rotation and scaling factors (scaleX, scaleY). Use the
+     *  `alpha` and `visible` properties to make an object translucent or
      *  invisible.
-     *  
+     *
      *  Every display object may be the target of touch events. If you don't want an object to be
      *  touchable, you can disable the "touchable" property. When it's disabled, neither the object
      *  nor its children will receive any more touch events.
-     *    
+     *
      *  **Transforming coordinates**
-     *  
+     *
      *  Within the display tree, each object has its own local coordinate system. If you rotate
-     *  a container, you rotate that coordinate system - and thus all the children of the 
+     *  a container, you rotate that coordinate system - and thus all the children of the
      *  container.
-     *  
-     *  Sometimes you need to know where a certain point lies relative to another coordinate 
-     *  system. That's the purpose of the method `getTransformationMatrix`. It will  
-     *  create a matrix that represents the transformation of a point in one coordinate system to 
-     *  another. 
-     *  
+     *
+     *  Sometimes you need to know where a certain point lies relative to another coordinate
+     *  system. That's the purpose of the method `getTransformationMatrix`. It will
+     *  create a matrix that represents the transformation of a point in one coordinate system to
+     *  another.
+     *
      *  **Subclassing**
-     *  
-     *  Since DisplayObject is an abstract class, you cannot instantiate it directly, but have 
-     *  to use one of its subclasses instead. There are already a lot of them available, and most 
-     *  of the time they will suffice. 
-     *  
+     *
+     *  Since DisplayObject is an abstract class, you cannot instantiate it directly, but have
+     *  to use one of its subclasses instead. There are already a lot of them available, and most
+     *  of the time they will suffice.
+     *
      *  However, you can create custom subclasses as well. That way, you can create an object
-     *  with a custom render function. You will need to implement the following methods when you 
+     *  with a custom render function. You will need to implement the following methods when you
      *  subclass DisplayObject:
-     *  
-     *      - `function render(support:RenderSupport, parentAlpha:Number):void`
-     *      - `function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle`
-     *  
+     *
+     * ~~~as3
+     * function render(support:RenderSupport, parentAlpha:Number):void
+     * function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
+     * ~~~
+     *
      *  Have a look at the Quad class for a sample implementation of the 'getBounds' method.
      *  Currently, this implementation is backed by Cocos2DX - but in an upcoming release we will
-     *  move to a more direct rendering API. 
-     * 
+     *  move to a more direct rendering API.
+     *
      *  @see DisplayObjectContainer
      *  @see Sprite
-     *  @see Stage 
+     *  @see Stage
      */
 
     [Native(managed)]
@@ -127,8 +129,8 @@ package loom2d.display
         public native function set skewY(value:float);
         public native function get skewY():float;
 
-        /** The rotation of the object in radians, (In Loom2D, all angles are measured 
-         *  in radians.) */        
+        /** The rotation of the object in radians, (In Loom2D, all angles are measured
+         *  in radians.) */
         public native function set rotation(value:float);
         public native function get rotation():float;
 
@@ -136,9 +138,9 @@ package loom2d.display
         public native function set alpha(value:float);
         public native function get alpha():float;
 
-        /** The blend mode determines how the object is blended with the objects underneath. 
+        /** The blend mode determines how the object is blended with the objects underneath.
          *   @default BlendMode.AUTO
-         *   @see loom2d.display.BlendMode */ 
+         *   @see loom2d.display.BlendMode */
         public native function set blendMode(value:BlendMode);
         public native function get blendMode():BlendMode;
 
@@ -150,10 +152,10 @@ package loom2d.display
         public native function set touchable(value:Boolean);
         public native function get touchable():Boolean;
 
-        /** The name of the display object (default: null). Used by 'getChildByName()' of 
+        /** The name of the display object (default: null). Used by 'getChildByName()' of
          *  display object containers. */
         public native function set name(value:String);
-        public native function get name():String;        
+        public native function get name():String;
 
         // cached parent so that we don't marshal a managed instance every property access
         private var parentCached:DisplayObjectContainer;
@@ -181,32 +183,31 @@ package loom2d.display
         // TODO: once we move children of DisplayObjectContainer to native code
         // look at flowing valid to children
         protected native function set valid(value:Boolean);
-        protected native function get valid():Boolean;     
+        protected native function get valid():Boolean;
 
-        /* classes which derive directly from DisplayObject can specify a 
+        /**
+         * Classes which derive directly from DisplayObject can specify a
          * custom render method to call by adding it to this delegate
          * Example:
          *
          * ~~~as3
-         *  public native class MyRenderer extends DisplayObject
-         *  {
-         *      public function MyRenderer()
-         *      {   
-         *          // register our custom render method
-         *          customRender += render;
-         *      }
+         * public native class MyRenderer extends DisplayObject {
+         *    ⇥public function MyRenderer() {
+         *    ⇥   ⇥// register our custom render method
+         *    ⇥   ⇥customRender += render;
+         *    ⇥}
          *
-         *      // renderer implemented in native code for
-         *      // full access to bgfx, etc
-         *      private native function render();
-         *   }
+         *    ⇥// renderer implemented in native code for
+         *    ⇥// full access to bgfx, etc
+         *    ⇥private native function render();
+         * }
          * ~~~
-         * 
-         */  
+         *
+         */
         protected native var customRender:NativeDelegate;
 
         /* delegate that can be set up to be called prior to normal DisplayObject rendering */
-        protected native var onRender:NativeDelegate;        
+        protected native var onRender:NativeDelegate;
 
         protected var mUseHandCursor:Boolean;
 
@@ -233,12 +234,12 @@ package loom2d.display
         {
             if (!valid)
                 validate();
-                
+
             pivotX = width / scaleX / 2;
             pivotY = height / scaleY / 2;
         }
-                 
-        /** Disposes all resources of the display object. 
+
+        /** Disposes all resources of the display object.
           * GPU buffers are released, event listeners are removed, filters are disposed. */
         public function dispose():void
         {
@@ -246,46 +247,46 @@ package loom2d.display
             removeEventListeners();
             Loom2D.juggler.delayCall( deleteNative, 0.01 );
         }
-        
+
         /** Removes the object from its parent, if it has one. */
         public function removeFromParent(dispose:Boolean=false):void
         {
             if (parent) parent.removeChild(this, dispose);
         }
-        
-        
-        /** Returns a rectangle that completely encloses the object as it appears in another 
-         *  coordinate system. If you pass a 'resultRectangle', the result will be stored in this 
-         *  rectangle instead of creating a new object. */ 
+
+
+        /** Returns a rectangle that completely encloses the object as it appears in another
+         *  coordinate system. If you pass a 'resultRectangle', the result will be stored in this
+         *  rectangle instead of creating a new object. */
         public function getBounds(targetSpace:DisplayObject, resultRect:Rectangle=null):Rectangle
         {
             //throw new AbstractMethodError("Method needs to be implemented in subclass");
             Debug.assert(false, "Method needs to be implemented in subclass " + getTypeName() + " " + name );
             return null;
         }
-        
-        /** Returns the object that is found topmost beneath a point in local coordinates, or nil if 
+
+        /** Returns the object that is found topmost beneath a point in local coordinates, or nil if
          *  the test fails. If "forTouch" is true, untouchable and invisible objects will cause
          *  the test to fail. */
         public function hitTest(localPoint:Point, forTouch:Boolean=false):DisplayObject
         {
             // on a touch test, invisible or untouchable objects cause the test to fail
             if (forTouch && (!visible || !touchable)) return null;
-           
+
             if(!hasVisibleArea) return null;
 
             // otherwise, check bounding box
             if (getBounds(this, sHelperRect).containsPoint(localPoint)) return this;
             else return null;
         }
-        
+
         /** Transforms a point from the local coordinate system to global (stage) coordinates.*/
         public function localToGlobal(localPoint:Point):Point
         {
             getTargetTransformationMatrix(base, sHelperMatrix);
             return sHelperMatrix.transformCoord(localPoint.x, localPoint.y);
         }
-        
+
         /** Transforms a point from global (stage) coordinates to the local coordinate system. */
         public function globalToLocal(globalPoint:Point):Point
         {
@@ -293,88 +294,88 @@ package loom2d.display
             sHelperMatrix.invert();
             return sHelperMatrix.transformCoord(globalPoint.x, globalPoint.y);
         }
-        
-        /** Indicates if an object occupies any visible area. (Which is the case when its 'alpha', 
+
+        /** Indicates if an object occupies any visible area. (Which is the case when its 'alpha',
          *  'scaleX' and 'scaleY' values are not zero, and its 'visible' property is enabled.) */
         public function get hasVisibleArea():Boolean
         {
             return (alpha > 0.0) && visible && (scaleX != 0.0) && (scaleY != 0.0);
         }
-        
+
         // internal methods
-        
+
         /** @private */
-        public function setParent(value:DisplayObjectContainer):void 
+        public function setParent(value:DisplayObjectContainer):void
         {
             // check for a recursion
             var ancestor:DisplayObject = value;
             while (ancestor != this && ancestor != null)
                 ancestor = ancestor.parent;
-                
+
             Debug.assert(ancestor != this, "An object cannot be added as a child to itself or one " +
                                         "of its children (or children's children, etc.)");
-            
-            parent = value; 
+
+            parent = value;
         }
-        
+
         // helpers
-                        
+
         // properties
- 
+
         /** The transformation matrix of the object relative to its parent.
-         * 
-         *  If you assign a custom transformation matrix, Starling will try to figure out  
+         *
+         *  If you assign a custom transformation matrix, Starling will try to figure out
          *  suitable values for `x, y, scaleX, scaleY,` and `rotation`.
-         *  However, if the matrix was created in a different way, this might not be possible. 
-         *  In that case, Starling will apply the matrix, but not update the corresponding 
+         *  However, if the matrix was created in a different way, this might not be possible.
+         *  In that case, Starling will apply the matrix, but not update the corresponding
          *  properties.
-         * 
+         *
          *  @returns CAUTION: not a copy, but the actual object! */
 
-        public native function get transformationMatrix():Matrix;        
+        public native function get transformationMatrix():Matrix;
         public native function set transformationMatrix(matrix:Matrix):void;
-        
-        /** Indicates if the mouse cursor should transform into a hand while it's over the sprite. 
+
+        /** Indicates if the mouse cursor should transform into a hand while it's over the sprite.
          *  @default false */
 /*        public function get useHandCursor():Boolean { return mUseHandCursor; }
         public function set useHandCursor(value:Boolean):void
         {
             if (value == mUseHandCursor) return;
             mUseHandCursor = value;
-            
+
             if (mUseHandCursor)
                 addEventListener(TouchEvent.TOUCH, onTouch);
             else
                 removeEventListener(TouchEvent.TOUCH, onTouch);
         }
-        
+
         private function onTouch(event:TouchEvent):void
         {
             Mouse.cursor = event.interactsWith(this) ? MouseCursor.BUTTON : MouseCursor.AUTO;
         } */
-        
+
         /** The bounds of the object relative to the local coordinates of the parent. */
         public function get bounds():Rectangle
         {
             return getBounds(parent);
         }
-        
+
         /** The width of the object in pixels. */
         public function get width():Number { return getBounds(parent, sHelperRect).width; }
         public function set width(value:Number):void
         {
             // this method calls 'this.scaleX' instead of changing mScaleX directly.
             // that way, subclasses reacting on size changes need to override only the scaleX method.
-            
+
             scaleX = 1.0;
             var actualWidth:Number = width;
             if (actualWidth != 0.0) scaleX = value / actualWidth;
         }
-        
+
         /** The height of the object in pixels. */
-        public function get height():Number 
-        { 
-            return getBounds(parent, sHelperRect).height; 
+        public function get height():Number
+        {
+            return getBounds(parent, sHelperRect).height;
         }
 
         public function set height(value:Number):void
@@ -383,23 +384,23 @@ package loom2d.display
             var actualHeight:Number = height;
             if (actualHeight != 0.0) scaleY = value / actualHeight;
         }
-                    
+
         /** General scale factor. '1' means no scale, negative values flip the object. Use this
          *  when setting scaleX/scaleY explicitly is too verbose. */
         public native function set scale(value:Number):void;
 
         // gets the average of scaleX and scaleY
         public native function get scale():Number;
-        
-                
-        /** The filter that is attached to the display object. The starling.filters 
-         *  package contains several classes that define specific filters you can use. 
-         *  Beware that you should NOT use the same filter on more than one object (for 
-         *  performance reasons). */ 
+
+
+        /** The filter that is attached to the display object. The starling.filters
+         *  package contains several classes that define specific filters you can use.
+         *  Beware that you should NOT use the same filter on more than one object (for
+         *  performance reasons). */
         /*public function get filter():FragmentFilter { return mFilter; }
         public function set filter(value:FragmentFilter):void { mFilter = value; } */
-        
-        
+
+
         /** The topmost object in the display tree the object is part of. */
         public function get base():DisplayObject
         {
@@ -407,8 +408,8 @@ package loom2d.display
             while (currentObject.parent) currentObject = currentObject.parent;
             return currentObject;
         }
-        
-        /** The root object the display object is connected to (ie: an instance of the class 
+
+        /** The root object the display object is connected to (ie: an instance of the class
          *  that was passed to the Starling constructor), or null if the object is not connected
          *  to the stage. */
         public function get root():DisplayObject
@@ -419,14 +420,14 @@ package loom2d.display
                 if (currentObject.parent is Stage) return currentObject;
                 else currentObject = currentObject.parent;
             }
-            
+
             return null;
         }
-        
-        /** The stage the display object is connected to, or null if it is not connected 
+
+        /** The stage the display object is connected to, or null if it is not connected
          *  to the stage. */
         public function get stage():Stage { return this.base as Stage; }
-        
+
         /**
          * Handle LML node initialization.
          * @param   id
@@ -452,14 +453,14 @@ package loom2d.display
         {
             return _styleName;
         }
-    
+
         public function set styleName(value:String):void
         {
             _styleName = value;
             if(_styleSheet)
                 applyStyle(_styleSheet);
         }
-            
+
         /**
          * Helper function to apply a StyleSheet to this instance.
          * @param   styleSheet Style sheet to apply.
@@ -469,7 +470,7 @@ package loom2d.display
             _styleSheet = styleSheet;
 
             var styleString = this.getType().getFullName();
-            
+
             if(_styleName)
                 styleString += " #" + _styleName;
 
@@ -478,7 +479,7 @@ package loom2d.display
 
             // lookup styles based on stylename
             var style = _styleSheet.getStyle(styleString);
-            
+
             // apply style
             styleApplicator.applyStyle(this, style);
         }

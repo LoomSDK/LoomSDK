@@ -20,14 +20,9 @@ package
         private var blendModeLabel:SimpleLabel;
         private var polySprite:Image;
         private var polySpeed:Point = new Point(100, 100);
-        private var _lastFrameTime:Number = 0.0;
-
 
         override public function run():void
         {
-            var timeManager:TimeManager = LoomGroup.rootGroup.getManager(TimeManager) as TimeManager;
-            _lastFrameTime = timeManager.platformTime;
-
             // Comment out this line to turn off automatic scaling.
             stage.scaleMode = StageScaleMode.LETTERBOX;
 
@@ -43,7 +38,7 @@ package
             bg.addEventListener(TouchEvent.TOUCH, cycleBlendMode);
             stage.addChild(bg);
             
-            //static sprite
+            //static sprites
             var bgSprite:Image = new Image(Texture.fromAsset("assets/logo.png"));
             bgSprite.center();
             bgSprite.x = stage.stageWidth / 2;
@@ -51,6 +46,20 @@ package
             bgSprite.touchable = false;
             bgSprite.blendMode = BlendMode.ERASE;
             stage.addChild(bgSprite);
+            var bgSpriteLeft:Image = new Image(Texture.fromAsset("assets/logo.png"));
+            bgSpriteLeft.center();
+            bgSpriteLeft.x = stage.stageWidth / 2 - 150;
+            bgSpriteLeft.y = stage.stageHeight / 2 + 100;
+            bgSpriteLeft.touchable = false;
+            bgSpriteLeft.blendMode = BlendMode.ERASE;
+            stage.addChild(bgSpriteLeft);
+            var bgSpriteRight:Image = new Image(Texture.fromAsset("assets/logo.png"));
+            bgSpriteRight.center();
+            bgSpriteRight.x = stage.stageWidth / 2 + 150;
+            bgSpriteRight.y = stage.stageHeight / 2 + 100;
+            bgSpriteRight.touchable = false;
+            bgSpriteRight.blendMode = BlendMode.ERASE;
+            stage.addChild(bgSpriteRight);
 
             //moving sprite
             polySprite = new Image(Texture.fromAsset("assets/logo.png"));
@@ -87,8 +96,7 @@ package
         {
             ///update the app DT
             var timeManager:TimeManager = LoomGroup.rootGroup.getManager(TimeManager) as TimeManager;
-            var dt:Number = (timeManager.platformTime - _lastFrameTime) / 1000;
-            _lastFrameTime = timeManager.platformTime;
+            var dt:Number = timeManager.deltaTime;
 
             //bounce poly around the screen
             polySprite.x += polySpeed.x * dt;

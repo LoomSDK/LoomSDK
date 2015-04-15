@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "loom/graphics/gfxMath.h"
 #include "loom/engine/loom2d/l2dPoint.h"
 
 namespace Loom2D
@@ -109,9 +110,20 @@ public:
         return y;
     }
 
+    inline void setTop(float top)
+    {
+        height += y - top;
+        y = top;
+    }
+
     inline float getBottom() const
     {
         return y + height;
+    }
+
+    inline void setBottom(float bottom)
+    {
+        height = bottom - y;
     }
 
     inline float getLeft() const
@@ -119,9 +131,20 @@ public:
         return x;
     }
 
+    inline void setLeft(float left)
+    {
+        width += x - left;
+        x = left;
+    }
+
     inline float getRight() const
     {
         return x + width;
+    }
+
+    inline void setRight(float right)
+    {
+        width = right - x;
     }
 
     /**
@@ -176,6 +199,18 @@ public:
     }
 
     /**
+     * Returns true if both the top/left and bottom/right points are inside the bounds of this rectangle.
+     */
+    inline bool containsRect(Rectangle rect)
+    {
+        if ((rect.x > (x + width)) || (rect.x < x)) { return false; }
+        else if ((rect.y > (y + height)) || (rect.y < y)) { return false; }
+        else if (((rect.x + rect.width) > (x + width)) || ((rect.x + rect.width) < x)) { return false; }
+        else if (((rect.y + rect.height) > (y + height)) || ((rect.y + rect.height) < y)) { return false; }
+        return true;
+    }
+
+    /**
      * Returns true if x, y is inside the bounds of this rectangle.
      */
     int contains(lua_State *L)
@@ -191,6 +226,14 @@ public:
         lua_pushboolean(L, result ? 1 : 0);
 
         return 1;
+    }
+
+    void clip(float cx, float cy, float cwidth, float cheight)
+    {
+        width  = fmaxf(0.f, fminf(cwidth,  fminf(width,  fminf(x + width  - cx, cx + cwidth  - x))));
+        height = fmaxf(0.f, fminf(cheight, fminf(height, fminf(y + height - cy, cy + cheight - y))));
+        x = fmaxf(x, cx);
+        y = fmaxf(y, cy);
     }
 
     /**

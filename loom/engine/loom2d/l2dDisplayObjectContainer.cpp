@@ -21,12 +21,12 @@
 #include "loom/script/loomscript.h"
 #include "loom/script/runtime/lsRuntime.h"
 
-#include "loom/graphics/gfxGraphics.h"
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 #include "loom/engine/loom2d/l2dSprite.h"
 #include "loom/engine/loom2d/l2dImage.h"
 #include "loom/engine/loom2d/l2dQuadBatch.h"
 #include "loom/engine/loom2d/l2dBlendMode.h"
+#include "loom/graphics/gfxGraphics.h"
 
 
 namespace Loom2D
@@ -83,17 +83,17 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
 
     // containers can set a new view to render into, but we must restore the
     // current view after, so take a snapshot
-    int viewRestore = GFX::Graphics::getView();
+/*    int viewRestore = GFX::Graphics::getView();
 
     // set the current view we will be rendering into.
     if (viewRestore != _view)
     {
         GFX::Graphics::setView(_view);
-    }
+    } */
 
     renderState.alpha          = parent ? parent->renderState.alpha * alpha : alpha;
     renderState.clampAlpha();
-    renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
+    renderState.clipRect = parent ? parent->renderState.clipRect : Loom2D::Rectangle(0, 0, -1, -1);
     renderState.blendMode = (parent && blendMode == BlendMode::AUTO) ? parent->renderState.blendMode : blendMode;
 
     int docidx = lua_gettop(L);
@@ -112,30 +112,26 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
     }
 
     // Is there a cliprect? If so, set it.
-    if ((clipX != 0) || (clipY != 0) || (clipWidth != 0) || (clipHeight != 0))
+    if (clipWidth != -1 && clipHeight != -1)
     {
         GFX::QuadRenderer::submit();
 
-        Matrix        res;
-        DisplayObject *stage = this;
-        while (stage->parent)
-        {
-            stage = stage->parent;
-        }
-
+        Matrix    res;
+        Rectangle clipBounds = Rectangle((float)clipX, (float)clipY, (float)clipWidth, (float)clipHeight);
+        Rectangle clipResult;
         getTargetTransformationMatrix(NULL, &res);
+        transformBounds(&res, &clipBounds, &clipResult);
 
-        int x1 = (int) ((float)clipX * res.a + res.tx) ;
-        int y1 = (int) ((float)clipY * res.d + res.ty);
-        int x2 = (int) ((float)clipWidth * res.a);
-        int y2 = (int) ((float)clipHeight * res.d);
+        if (!renderState.isClipping()) {
+            renderState.clipRect = Rectangle(clipResult);
+        }
+        else
+        {
+            renderState.clipRect.clip(clipResult.x, clipResult.y, clipResult.width, clipResult.height);
+        }
+    }
 
-        renderState.cachedClipRect = GFX::Graphics::setClipRect(x1, y1, x2, y2);
-    }
-    else
-    {
-        GFX::Graphics::setClipRect(renderState.cachedClipRect);
-    }
+    if (renderState.isClipping()) GFX::Graphics::setClipRect((int)renderState.clipRect.x, (int)renderState.clipRect.y, (int)renderState.clipRect.width, (int)renderState.clipRect.height);
 
     for (int i = 0; i < numChildren; i++)
     {
@@ -183,16 +179,16 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
     lua_settop(L, docidx);
 
     // Restore clip state.
-    if ((clipX != 0) || (clipY != 0) || (clipWidth != 0) || (clipHeight != 0))
+    if (renderState.isClipping() && (!parent || !parent->renderState.isClipping()))
     {
         GFX::QuadRenderer::submit();
         GFX::Graphics::clearClipRect();
     }
 
     // restore view
-    if (viewRestore != _view)
+/*    if (viewRestore != _view)
     {
         GFX::Graphics::setView(viewRestore);
-    }
+    }*/
 }
 }

@@ -59,8 +59,8 @@ package loom2d.display
         public native function get depthSort():Boolean;
 
         /** View controls which indexed view the container's children will be drawn into */
-        public native function set view(value:int);
-        public native function get view():int;
+        //public native function set view(value:int);
+        //public native function get view():int;
 
         /**
          * Native implementation for clip rect functionality; this passes the 
@@ -363,7 +363,7 @@ package loom2d.display
             // The event listeners might modify the display tree, which could make the loop crash. 
             // Thus, we collect them in a list and iterate over that list instead.
             // And since another listener could call this method internally, we have to take 
-            // care that the static helper vector does not get currupted.
+            // care that the static helper vector does not get corrupted.
             
             var fromIndex:int = sBroadcastListeners.length;
             getChildEventListeners(this, event.type, sBroadcastListeners);

@@ -20,6 +20,7 @@ limitations under the License.
 
 package loom 
 {
+    import system.platform.Platform;
     import system.reflection.Assembly;
     import system.application.BaseApplication;
     
@@ -47,9 +48,6 @@ package loom
     import loom2d.core.TouchProcessor;
     import loom2d.native.Loom2DNative;
 
-    import loom2d.display.Cocos2D;
-    import loom2d.display.CCLayer;
-
     /**
      * Simple delegate called by Application on the start of the first frame.
      *
@@ -66,6 +64,7 @@ package loom
     public class Application extends BaseApplication implements ITicked, IAnimated
     {
         private var splashContainer:Sprite;
+        private var frameLastPlatformTime:Number = 0;
 
         /**
          * Starting point for your game's code.
@@ -83,16 +82,18 @@ package loom
 
             // register onReload with DebuggerClient
             DebuggerClient.reloaded += onReload;
+            
+            frameLastPlatformTime = Platform.getTime();
 
             // set up the default layer for the cocos2d game
-            layer.autorelease();
+            /*layer.autorelease();
             layer.setKeypadEnabled(true);
             layer.setScrollWheelEnabled(true);
             layer.setAccelerometerEnabled(true);
             layer.onAccelerate += accelerated;
 
-            Cocos2D.addLayer(layer);
-            group.registerManager(layer);
+            Cocos2D.addLayer(layer); */
+            //group.registerManager(layer);
 
             // TODO: LOOM-1521 Resurrent feedback layer with Loom2D
             // create our feedback layer for asset agent transfers
@@ -100,28 +101,38 @@ package loom
             // Listen for asset stream activity and give visual feedback.
             LoomAssetManager.pendingCountChange += onAssetStreamCountChange;
 
-            var displayStats = Cocos2D.getDisplayStats();
-            Cocos2D.onDisplayStatsChanged += onDisplayStatsChanged;
+            //var displayStats = Cocos2D.getDisplayStats();
+            //Cocos2D.onDisplayStatsChanged += onDisplayStatsChanged;
 
             // Only show the feedback layer when the fps stats are shown.
             //feedbackLayer.setVisible(displayStats);
 
             // initialize the native subsystem
             Loom2DNative.initialize();
-
+            
+            var config = new JSON();
+            config.loadString(loomConfigJSON);
+            
+            var display = config.getObject("display");
+            var configWidth = display.getInteger("width");
+            var configHeight = display.getInteger("height");
+            var configColor = Number.fromString("0x"+display.getString("color"));
+            
             // create the stage using the initial display size as specified by loom.config
-            theStage = new Stage(layer, Cocos2D.getConfigDisplayWidth(), Cocos2D.getConfigDisplayHeight(), 0x000000);
+            //theStage = new Stage(/*layer,*/ Cocos2D.getConfigDisplayWidth(), Cocos2D.getConfigDisplayHeight(), 0x000000);
+            theStage = new Stage(configWidth, configHeight, configColor);
             Loom2D.stage = theStage;
             Stage.onRenderStage += onCocosFrame;
 
+            theStage.onAccelerate += accelerated;
+
             // This enables touch/mouse input.
-            touchProcessor = new TouchProcessor(stage, layer);
+            touchProcessor = new TouchProcessor(stage);
 
             // Used to adjust delay for starting the splash screen animation.
             var startDelay = 1.0;
 
             // LOOM-1752: Disabling splash screen until this issue is resolved
-
             if (false)
             {
 
@@ -137,8 +148,8 @@ package loom
                     var splashLowerTexture = Texture.fromTexture(splashTexture, new Rectangle(0, 125, 264, 52));
 
                     // Position everything on the  stage in its own container.
-                    var realStageHeight = Cocos2D.getDisplayHeight();
-                    var realStageWidth = Cocos2D.getDisplayWidth();
+                    var realStageHeight = configHeight;
+                    var realStageWidth = configWidth;
 
                     splashContainer = new Sprite();
 
@@ -307,10 +318,15 @@ package loom
          */
         private function onCocosFrame():void
         {
-            touchProcessor.advanceTime(1.0 / 60.0);
-            Loom2D.juggler.advanceTime(1.0 / 60.0);
-            theStage.advanceTime(1.0 / 60.0);
+            var time = Platform.getTime();
+            var delta = (time-frameLastPlatformTime)/1000;
+            //trace(delta);
+            theStage.firePendingResizeEvent();
+            touchProcessor.advanceTime(delta);
+            Loom2D.juggler.advanceTime(delta);
+            theStage.advanceTime(delta);
             theStage.render();
+            frameLastPlatformTime = time;
         }
 
         protected function onAssetStreamCountChange(quantity:int):void
@@ -346,7 +362,7 @@ package loom
         private function initialize()
         {
             // we're using Cocos2D for some low level platform stuff, so initialize it
-            Cocos2D.initializeFromConfig();
+            //Cocos2D.initializeFromConfig();
             
             // we would like to get ticks please
             ticks+=tick;
@@ -375,7 +391,7 @@ package loom
          */
         public static var onStart:OnStart;
 
-        private var layer:CCLayer = new CCLayer();
+        //private var layer:CCLayer = new CCLayer();
 
         protected var lastSeenQuantity:Number = 0;
 
@@ -389,11 +405,11 @@ package loom
          * Access to the internal layer
          * (Warning: This is an internal method and WILL BE deprecated in the future).
          */
-        public static function get internalLayer():CCLayer
+        /*public static function get internalLayer():CCLayer
         {
             Debug.assert(theApplication, "Application must exist before getting the internalLayer");
             return theApplication.layer;
-        }
+        }*/
 
         /*
          * Internal delegate callback for native accelerometer event, forwards to the 
@@ -465,7 +481,7 @@ package loom
         public static native function getBootAssembly():String;
         
         /**
-         * Access to the çopy of loom.config embedded in the application.
+         * Access to the copy of loom.config embedded in the application.
          */
         public static native var loomConfigJSON:String;
         

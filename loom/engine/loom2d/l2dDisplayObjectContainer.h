@@ -42,7 +42,8 @@ public:
         type       = typeDisplayObjectContainer;
         _depthSort = false;
         _view      = 0;
-        clipX      = clipY = clipWidth = clipHeight = 0;
+        clipX      = clipY = 0;
+        clipWidth  = clipHeight = -1;
     }
 
     bool _depthSort;
@@ -61,7 +62,7 @@ public:
     // will render into
     int _view;
 
-    inline int getView() const
+/*    inline int getView() const
     {
         return _view;
     }
@@ -69,7 +70,7 @@ public:
     inline void setView(int value)
     {
         _view = value;
-    }
+    } */
 
     int clipX, clipY, clipWidth, clipHeight;
 

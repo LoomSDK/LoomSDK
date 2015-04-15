@@ -52,10 +52,10 @@ struct NativeDelegateCallNote
 
     // Storage for serialized parameters.
     unsigned char *data;
-    int ndata;
+    unsigned int ndata;
 
     // Current offset in data for read or write.
-    int offset;
+    unsigned int offset;
 
     NativeDelegateCallNote(const NativeDelegate *target)
     {
@@ -86,7 +86,7 @@ struct NativeDelegateCallNote
 
     // Make sure we have enough room to write freeBytes, and grow the buffer
     // if we don't.
-    void ensureBuffer(int freeBytes)
+    void ensureBuffer(unsigned int freeBytes)
     {
         // Nop if enough free space.
         if(offset+freeBytes<ndata)
@@ -101,6 +101,13 @@ struct NativeDelegateCallNote
         ensureBuffer(1);
         data[offset] = value;
         offset++;
+    }
+
+    void writeBytes(const char* value, UTsize size)
+    {
+        ensureBuffer(size);
+        memcpy(data + sizeof(unsigned char)*offset, value, size);
+        offset += size;
     }
 
     void writeInt(unsigned int value)
@@ -126,9 +133,16 @@ struct NativeDelegateCallNote
 
     void writeString(const char *value)
     {
-        writeInt(strlen(value));
-        for(unsigned int i=0; i<strlen(value); i++)
-            writeByte(value[i]);
+        size_t size = strlen(value);
+        writeInt(size);
+        writeBytes(value, size);
+    }
+
+    void writeByteArray(utByteArray *value)
+    {
+        UTsize size = value->getSize();
+        writeInt(size);
+        writeBytes((const char*) value->getDataPtr(), size);
     }
 
     void writeBool(bool value)
@@ -148,8 +162,14 @@ struct NativeDelegateCallNote
     {
         //assert(offset + 1 < ndata);
         unsigned char v = data[offset];
-        offset ++;
+        offset++;
         return v;
+    }
+    
+    void readBytes(const char* value, UTsize size)
+    {
+        memcpy((void*) value, data + sizeof(unsigned char)*offset, size);
+        offset += size;
     }
 
     unsigned int readInt()
@@ -182,12 +202,21 @@ struct NativeDelegateCallNote
     // Don't forget to free()
     char *readString()
     {
-        int strLen = readInt();
-        char *str = (char*)malloc(strLen+1);
-        memset(str, 0, strLen+1);
-        for(int i=0; i<strLen; i++)
-            str[i] = readByte();
+        unsigned int strLen = readInt();
+        char *str = (char*)malloc(strLen + 1);
+        readBytes(str, strLen);
+        str[strLen] = 0;
         return str;
+    }
+
+    // Don't forget to free()
+    utByteArray *readByteArray()
+    {
+        UTsize size = readInt();
+        utByteArray *bytes = new utByteArray();
+        bytes->reserve(size);
+        readBytes((const char*) bytes->getDataPtr(), size);
+        return bytes;
     }
 
     bool readBool()
@@ -204,6 +233,7 @@ enum
     MSG_PushFloat,
     MSG_PushDouble,
     MSG_PushString,
+    MSG_PushByteArray,
     MSG_PushBool,
     MSG_Invoke,
 };
@@ -286,6 +316,7 @@ void NativeDelegate::executeDeferredCalls(lua_State *L)
             unsigned char actionType = ndcn->readByte();
             bool done = false;
             char *str = NULL;
+            utByteArray *bytes;
             switch(actionType)
             {
                 case MSG_Nop:
@@ -296,7 +327,13 @@ void NativeDelegate::executeDeferredCalls(lua_State *L)
                     str = ndcn->readString();
                     theDelegate->pushArgument(str);
                     free(str);
-                break;
+                    break;
+
+                case MSG_PushByteArray:
+                    bytes = ndcn->readByteArray();
+                    theDelegate->pushArgument(bytes);
+                    free(bytes);
+                    break;
 
                 case MSG_PushDouble:
                     theDelegate->pushArgument(ndcn->readDouble());
@@ -456,9 +493,10 @@ NativeDelegateCallNote *NativeDelegate::prepCallbackNote() const
     return _activeNote;
 }
 
+
 void NativeDelegate::pushArgument(const char *value) const
 {
-    if(NativeDelegateCallNote *ndcn = prepCallbackNote())
+    if (NativeDelegateCallNote *ndcn = prepCallbackNote())
     {
         ndcn->writeByte(MSG_PushString);
         ndcn->writeString(value);
@@ -469,6 +507,22 @@ void NativeDelegate::pushArgument(const char *value) const
         return;
 
     lua_pushstring(L, value);
+    _argumentCount++;
+}
+
+void NativeDelegate::pushArgument(utByteArray *value) const
+{
+    if(NativeDelegateCallNote *ndcn = prepCallbackNote())
+    {
+        ndcn->writeByte(MSG_PushByteArray);
+        ndcn->writeByteArray(value);
+        return;
+    }
+
+    if (!L)
+        return;
+
+    lualoom_pushnative<utByteArray>(L, value);
     _argumentCount++;
 }
 

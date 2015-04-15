@@ -22,7 +22,7 @@ package feathers.controls
     import loom2d.events.TouchEvent;
     import loom2d.events.TouchPhase;
     import loom2d.events.KeyboardEvent;
-    
+
     import loom.platform.LoomKey;
 
     /**
@@ -47,14 +47,13 @@ package feathers.controls
      * ~~~as3
      * button.addEventListener( Event.TRIGGERED, button_triggeredHandler );
      *
-     * function button_triggeredHandler( event:Event ):void
-     * {
-     *     var label:Label = new Label();
-     *     label.text = "Hello World!";
-     *     var button:Button = Button( event.currentTarget );
-     *     Callout.show( label, button );
+     * function button_triggeredHandler( event:Event ):void {
+     *    ⇥var label:Label = new Label();
+     *    ⇥label.text = "Hello World!";
+     *    ⇥var button:Button = Button( event.currentTarget );
+     *    ⇥Callout.show( label, button );
      * }
-         * ~~~
+     * ~~~
      *
      * @see http://wiki.starling-framework.org/feathers/callout
      */
@@ -230,11 +229,10 @@ package feathers.controls
          * The following example shows how to create a custom callout factory:
          *
          * ~~~as3
-         * Callout.calloutFactory = function():Callout
-         * {
-         *     var callout:Callout = new Callout();
-         *     //set properties here!
-         *     return callout;
+         * Callout.calloutFactory = function():Callout {
+         *    ⇥var callout:Callout = new Callout();
+         *    ⇥//set properties here!
+         *    ⇥return callout;
          * };
          * ~~~
          *
@@ -257,11 +255,10 @@ package feathers.controls
          * a custom overlay:
          *
          * ~~~as3
-         * Callout.calloutOverlayFactory = function():Quad
-         * {
-         *     var quad:Quad = new Quad(10, 10, 0x000000);
-         *     quad.alpha = 0.75;
-         *     return quad;
+         * Callout.calloutOverlayFactory = function():Quad {
+         *    ⇥var quad:Quad = new Quad(10, 10, 0x000000);
+         *    ⇥quad.alpha = 0.75;
+         *    ⇥return quad;
          * };
          * ~~~
          *
@@ -284,12 +281,11 @@ package feathers.controls
          * ~~~as3
          * button.addEventListener( Event.TRIGGERED, button_triggeredHandler );
          *
-         * function button_triggeredHandler( event:Event ):void
-         * {
-         *     var label:Label = new Label();
-         *     label.text = "Hello World!";
-         *     var button:Button = Button( event.currentTarget );
-         *     Callout.show( label, button );
+         * function button_triggeredHandler( event:Event ):void {
+         *    ⇥var label:Label = new Label();
+         *    ⇥label.text = "Hello World!";
+         *    ⇥var button:Button = Button( event.currentTarget );
+         *    ⇥Callout.show( label, button );
          * }
          * ~~~
          */
@@ -572,7 +568,7 @@ package feathers.controls
                 DIRECTION_TO_FUNCTION[DIRECTION_VERTICAL] = positionAboveOrBelowOrigin;
                 DIRECTION_TO_FUNCTION[DIRECTION_HORIZONTAL] = positionToLeftOrRightOfOrigin;
             }
-                            
+
             this.addEventListener(Event.ADDED_TO_STAGE, callout_addedToStageHandler);
         }
 
@@ -1740,7 +1736,7 @@ package feathers.controls
             const yPosition:Number = (this._topArrowSkin &&  this._arrowPosition == ARROW_POSITION_TOP) ? this._topArrowSkin.height + this._topArrowGap : 0;
             const widthOffset:Number = (this._rightArrowSkin && this._arrowPosition == ARROW_POSITION_RIGHT) ? this._rightArrowSkin.width + this._rightArrowGap : 0;
             const heightOffset:Number = (this._bottomArrowSkin && this._arrowPosition == ARROW_POSITION_BOTTOM) ? this._bottomArrowSkin.height + this._bottomArrowGap : 0;
-            
+
             this._backgroundSkin.x = xPosition;
             this._backgroundSkin.y = yPosition;
             this._backgroundSkin.width = this.actualWidth - xPosition - widthOffset;
@@ -1794,10 +1790,10 @@ package feathers.controls
             }
             this._origin.getBounds(Loom2D.stage, HELPER_RECT);
             const hasGlobalBounds:Boolean = this._lastGlobalBoundsOfOrigin != null;
-            
+
             var lastBoundsEqualsHelper:Boolean = hasGlobalBounds && _lastGlobalBoundsOfOrigin.x == HELPER_RECT.x && _lastGlobalBoundsOfOrigin.y == HELPER_RECT.y &&
                 _lastGlobalBoundsOfOrigin.width == HELPER_RECT.width && _lastGlobalBoundsOfOrigin.height == HELPER_RECT.height;
-            
+
             if(!hasGlobalBounds || !lastBoundsEqualsHelper)
             {
                 if(!hasGlobalBounds)

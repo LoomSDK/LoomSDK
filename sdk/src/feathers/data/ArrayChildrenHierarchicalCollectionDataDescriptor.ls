@@ -14,29 +14,29 @@ package feathers.data
      *
      * The basic structure of the data source takes the following form. The
      * root must always be an Array.
-     * 
-     * ~~~json
+     *
+     * ~~~as3
      * [
-     *     {
-     *         text: "Branch 1",
-     *         children:
-     *         [
-     *             { text: "Child 1-1" },
-     *             { text: "Child 1-2" }
-     *         ]
-     *     },
-     *     {
-     *         text: "Branch 2",
-     *         children:
-     *         [
-     *             { text: "Child 2-1" },
-     *             { text: "Child 2-2" },
-     *             { text: "Child 2-3" }
-     *         ]
-     *     }
+     *    ⇥{
+     *    ⇥   ⇥text: "Branch 1",
+     *    ⇥   ⇥children:
+     *    ⇥   ⇥[
+     *    ⇥   ⇥   ⇥{ text: "Child 1-1" },
+     *    ⇥   ⇥   ⇥{ text: "Child 1-2" }
+     *    ⇥   ⇥]
+     *    ⇥},
+     *    ⇥{
+     *    ⇥   ⇥text: "Branch 2",
+     *    ⇥   ⇥children:
+     *    ⇥   ⇥[
+     *    ⇥   ⇥   ⇥{ text: "Child 2-1" },
+     *    ⇥   ⇥   ⇥{ text: "Child 2-2" },
+     *    ⇥   ⇥   ⇥{ text: "Child 2-3" }
+     *    ⇥   ⇥]
+     *    ⇥}
      * ]
      * ~~~
-     * 
+     *
      */
     public class ArrayChildrenHierarchicalCollectionDataDescriptor implements IHierarchicalCollectionDataDescriptor
     {
@@ -58,9 +58,9 @@ package feathers.data
         public function getLength(data:Object, ...rest:Vector.<Object>):int
         {
             var branch:Vector.<Object> = data as Vector.<Object>;
-            
+
             const indexCount:int = rest.getType() == Vector ? rest.length : 0;
-            
+
             for(var i:int = 0; i < indexCount; i++)
             {
                 var index:int = rest[i] as int;

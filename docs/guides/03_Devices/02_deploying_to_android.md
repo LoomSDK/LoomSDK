@@ -2,10 +2,10 @@ title: Deploying To Android
 description: An overview of building, running, and deploying your app on Android.
 !------
 
-Loom makes it easy to deploy to Android devices, just type the following in your command prompt:
+Loom makes it easy to deploy to Android devices, just type the following at your command prompt:
 
-~~~
-loom run --android
+~~~console
+$ loom run --android
 ~~~
 
 ## Deploying to Android
@@ -14,7 +14,11 @@ Android is pretty smooth. Loom will automatically download and install the appro
 
 To produce an Android APK ready for release, run `loom android release`. This process will produce a Google Play Store-ready APK, signed with your release certificate.  If you do not specifiy a release keystore via command arguments, and a default keystore does not exist, the CLI will ask you for a password and create one for you. Be sure to back this file up and remember your password, as you will need it to sign all future releases of your app.
 
-To view command line options for releasing Android builds, type `loom android --help` in your console.
+To view command line options for releasing Android builds, type the following in your console:
+
+~~~console
+$ loom android --help
+~~~
 
 `loom android log` is useful to debug mysterious app crashes. (It's the same as `adb logcat` but uses the Android SDK that Loom installed for you, so it's more likely to work.)
 

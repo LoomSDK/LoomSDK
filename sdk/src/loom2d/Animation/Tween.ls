@@ -14,38 +14,38 @@ package loom2d.animation
     import loom2d.events.Event;
     import loom2d.events.EventDispatcher;
 
-    /** A Tween animates numeric properties of objects. It uses different transition functions 
+    /** A Tween animates numeric properties of objects. It uses different transition functions
      *  to give the animations various styles.
-     *  
-     *  The primary use of this class is to do standard animations like movement, fading, 
+     *
+     *  The primary use of this class is to do standard animations like movement, fading,
      *  rotation, etc. But there are no limits on what to animate; as long as the property you want
-     *  to animate is numeric (`int, uint, Number`), the tween can handle it. For a list 
-     *  of available Transition types, look at the "Transitions" class. 
-     *  
-     *  Here is an example of a tween that moves an object to the right, rotates it, and 
+     *  to animate is numeric (`int, uint, Number`), the tween can handle it. For a list
+     *  of available Transition types, look at the "Transitions" class.
+     *
+     *  Here is an example of a tween that moves an object to the right, rotates it, and
      *  fades it out:
-     *  
+     *
      *  ~~~as3
      *  var tween:Tween = new Tween(object, 2.0, Transitions.EASE_IN_OUT);
      *  tween.animate("x", object.x + 50);
      *  tween.animate("rotation", deg2rad(45));
      *  tween.fadeTo(0);    // equivalent to 'animate("alpha", 0)'
      *  Loom2D.juggler.add(tween);
-     *  ~~~ 
-     *  
-     *  Note that the object is added to a juggler at the end of this sample. That's because a 
-     *  tween will only be executed if its "advanceTime" method is executed regularly - the 
+     *  ~~~
+     *
+     *  Note that the object is added to a juggler at the end of this sample. That's because a
+     *  tween will only be executed if its "advanceTime" method is executed regularly - the
      *  juggler will do that for you, and will remove the tween when it is finished.
-     *  
+     *
      *  @see Juggler
      *  @see Transitions
-     */ 
+     */
     public class Tween extends EventDispatcher implements IAnimatable
     {
         private var mTarget:Object;
         private var mTransitionFunc:Function;
         private var mTransitionName:String;
-        
+
         private var mProperties:Vector.<String>;
         private var mStartValues:Vector.<Number>;
         private var mEndValues:Vector.<Number>;
@@ -53,13 +53,13 @@ package loom2d.animation
         private var mOnStart:Function;
         private var mOnUpdate:Function;
         private var mOnRepeat:Function;
-        private var mOnComplete:Function;  
-        
+        private var mOnComplete:Function;
+
         private var mOnStartArgs:Vector.<Object>;
         private var mOnUpdateArgs:Vector.<Object>;
         private var mOnRepeatArgs:Vector.<Object>;
         private var mOnCompleteArgs:Vector.<Object>;
-        
+
         private var mTotalTime:Number;
         private var mCurrentTime:Number;
         private var mProgress:Number;
@@ -70,20 +70,20 @@ package loom2d.animation
         private var mRepeatDelay:Number;
         private var mReverse:Boolean;
         private var mCurrentCycle:int;
-        
+
         /** Creates a tween with a target, duration (in seconds) and a transition function.
          *  @param target the object that you want to animate
          *  @param time the duration of the Tween
          *  @param transition can be either a String (e.g. one of the constants defined in the
-         *         Transitions class) or a function. Look up the 'Transitions' class for a   
-         *         documentation about the required function signature. */ 
-        public function Tween(target:Object, time:Number, transition:Object="linear")        
+         *         Transitions class) or a function. Look up the 'Transitions' class for a
+         *         documentation about the required function signature. */
+        public function Tween(target:Object, time:Number, transition:Object="linear")
         {
              reset(target, time, transition);
         }
 
-        /** Resets a minimal number of the tween values so that it can be started again. 
-        *   Useful for manual restarts of a Tween where you don't have access to the original values. 
+        /** Resets a minimal number of the tween values so that it can be started again.
+        *   Useful for manual restarts of a Tween where you don't have access to the original values.
         */
         public function resetSoft():void
         {
@@ -105,52 +105,52 @@ package loom2d.animation
             mRoundToInt = mReverse = false;
             mRepeatCount = 1;
             mCurrentCycle = -1;
-            
+
             if (transition is String)
                 this.transition = transition as String;
             else if (transition is Function)
                 this.transitionFunc = transition as Function;
-            else 
+            else
                 throw new ArgumentError("Transition must be either a string or a function");
-            
+
             if (mProperties)  mProperties.length  = 0; else mProperties  = new <String>[];
             if (mStartValues) mStartValues.length = 0; else mStartValues = new <Number>[];
             if (mEndValues)   mEndValues.length   = 0; else mEndValues   = new <Number>[];
-            
+
             return this;
         }
-        
+
         /** Animates the property of the target to a certain value. You can call this method multiple
          *  times on one tween. */
         public function animate(property:String, endValue:Number):void
         {
             if (mTarget == null) return; // tweening null just does nothing.
-                   
+
             mProperties.push(property);
             mStartValues.push(Number.NaN);
             mEndValues.push(endValue);
         }
-        
+
         /** Animates the 'scaleX' and 'scaleY' properties of an object simultaneously. */
         public function scaleTo(factor:Number):void
         {
             animate("scaleX", factor);
             animate("scaleY", factor);
         }
-        
+
         /** Animates the 'x' and 'y' properties of an object simultaneously. */
         public function moveTo(x:Number, y:Number):void
         {
             animate("x", x);
             animate("y", y);
         }
-        
-        /** Animates the 'alpha' property of an object to a certain target value. */ 
+
+        /** Animates the 'alpha' property of an object to a certain target value. */
         public function fadeTo(alpha:Number):void
         {
             animate("alpha", alpha);
         }
-        
+
         /** @inheritDoc */
         public function advanceTime(time:Number):void
         {
@@ -159,16 +159,16 @@ package loom2d.animation
             // than erroring with a "touched managed native" error.
             if(mTarget == null || mTarget.nativeDeleted())
                 return;
-                
+
             if (time == 0 || (mRepeatCount == 1 && mCurrentTime == mTotalTime)) return;
-            
+
             var i:int;
             var previousTime:Number = mCurrentTime;
             var restTime:Number = mTotalTime - mCurrentTime;
             var carryOverTime:Number = time > restTime ? time - restTime : 0.0;
-            
+
             mCurrentTime = Math.min2(mTotalTime, mCurrentTime + time);
-            
+
             if (mCurrentTime <= 0) return; // the delay is not over yet
 
             if (mCurrentCycle < 0 && previousTime <= 0 && mCurrentTime > 0)
@@ -184,22 +184,22 @@ package loom2d.animation
 
             var t = mTarget.getType();
             for (i=0; i<numProperties; ++i)
-            {                
-                if (isNaN(mStartValues[i])) 
+            {
+                if (isNaN(mStartValues[i]))
                     mStartValues[i] = t.getFieldOrPropertyValueByName(mTarget, mProperties[i]) as Number;
-                
+
                 var startValue:Number = mStartValues[i];
                 var endValue:Number = mEndValues[i];
                 var delta:Number = endValue - startValue;
                 var currentValue:Number = startValue + mProgress * delta;
-                
+
                 if (mRoundToInt) currentValue = Math.round(currentValue);
                 t.setFieldOrPropertyValueByName(mTarget, mProperties[i], currentValue);
             }
 
-            if (mOnUpdate != null) 
+            if (mOnUpdate != null)
                 mOnUpdate.apply(null, mOnUpdateArgs);
-            
+
             if (previousTime < mTotalTime && mCurrentTime >= mTotalTime)
             {
                 if (mRepeatCount == 0 || mRepeatCount > 1)
@@ -214,7 +214,7 @@ package loom2d.animation
                     // save callback & args: they might be changed through an event listener
                     var onComplete:Function = mOnComplete;
                     var onCompleteArgs:Vector.<Object> = mOnCompleteArgs;
-                    
+
                     // in the 'onComplete' callback, people might want to call "tween.reset" and
                     // add it to another juggler; so this event has to be dispatched *before*
                     // executing 'onComplete'.
@@ -222,44 +222,65 @@ package loom2d.animation
                     if (onComplete != null) onComplete.apply(null, onCompleteArgs);
                 }
             }
-            
+
             if (carryOverTime)
                 advanceTime(carryOverTime);
         }
-        
-        /** The end value a certain property is animated to. Throws an ArgumentError if the 
+
+        /** The end value a certain property is animated to. Throws an ArgumentError if the
          *  property is not being animated. */
         public function getEndValue(property:String):Number
         {
             var index:int = mProperties.indexOf(property);
             if (index == -1)
-            { 
+            {
                 throw new ArgumentError("The property '" + property + "' is not animated");
             }
-            else 
+            else
                 return mEndValues[index];
         }
-        
+
         /** Indicates if the tween is finished. */
         public function get isComplete():Boolean 
         { 
-            return mCurrentTime >= mTotalTime && mRepeatCount == 1; 
-        }        
+            return mCurrentTime >= (mTotalTime * mRepeatCount); 
+        }
         
+        /** The remaining time before the tween finishes. */
+        public function get remainingTime():Number
+        { 
+            return (mTotalTime * mRepeatCount) - mCurrentTime;
+        }
+        public function set remainingTime(value:Number):void 
+        {
+            if (remainingTime <= 0)
+            {
+                mTotalTime = value / mRepeatCount;
+            }
+            else
+            {
+                var ratio:Number = value / remainingTime;
+                if (mCurrentTime > 0 && !isComplete)
+                    mCurrentTime = (mCurrentTime / mTotalTime) * (mTotalTime * ratio);
+
+                mTotalTime *= ratio / mRepeatCount;
+            }
+        }
+
         /** The target object that is animated. */
         public function get target():Object { return mTarget; }
-        
+
         /** The transition method used for the animation. @see Transitions */
         public function get transition():String { return mTransitionName; }
-        public function set transition(value:String):void 
-        { 
+        public function set transition(value:String):void
+        {
             mTransitionName = value;
             mTransitionFunc = Transitions.getTransition(value);
-            
+
             if (mTransitionFunc == null)
                 throw new ArgumentError("Invalid transiton: " + value);
         }
-        
+
         /** The actual transition function used for the animation. */
         public function get transitionFunc():Function { return mTransitionFunc; }
         public function set transitionFunc(value:Function):void
@@ -267,92 +288,92 @@ package loom2d.animation
             mTransitionName = "custom";
             mTransitionFunc = value;
         }
-        
+
         /** The total time the tween will take per repetition (in seconds). */
         public function get totalTime():Number { return mTotalTime; }
-        
+
         /** The time that has passed since the tween was created. */
         public function get currentTime():Number { return mCurrentTime; }
-        
+
         /** The current progress between 0 and 1, as calculated by the transition function. */
-        public function get progress():Number { return mProgress; } 
-        
+        public function get progress():Number { return mProgress; }
+
         /** The delay before the tween is started. @default 0 */
         public function get delay():Number { return mDelay; }
-        public function set delay(value:Number):void 
-        { 
+        public function set delay(value:Number):void
+        {
             mCurrentTime = mCurrentTime + mDelay - value;
             mDelay = value;
         }
-        
-        /** The number of times the tween will be executed. 
+
+        /** The number of times the tween will be executed.
          *  Set to '0' to tween indefinitely. @default 1 */
         public function get repeatCount():int { return mRepeatCount; }
         public function set repeatCount(value:int):void { mRepeatCount = value; }
-        
+
         /** The amount of time to wait between repeat cycles, in seconds. @default 0 */
         public function get repeatDelay():Number { return mRepeatDelay; }
         public function set repeatDelay(value:Number):void { mRepeatDelay = value; }
-        
-        /** Indicates if the tween should be reversed when it is repeating. If enabled, 
+
+        /** Indicates if the tween should be reversed when it is repeating. If enabled,
          *  every second repetition will be reversed. @default false */
         public function get reverse():Boolean { return mReverse; }
         public function set reverse(value:Boolean):void { mReverse = value; }
-        
+
         /** Indicates if the numeric values should be cast to Integers. @default false */
         public function get roundToInt():Boolean { return mRoundToInt; }
-        public function set roundToInt(value:Boolean):void { mRoundToInt = value; }        
-        
+        public function set roundToInt(value:Boolean):void { mRoundToInt = value; }
+
         /** A function that will be called when the tween starts (after a possible delay). */
         public function get onStart():Function { return mOnStart; }
         public function set onStart(value:Function):void { mOnStart = value; }
-        
+
         /** A function that will be called each time the tween is advanced. */
         public function get onUpdate():Function { return mOnUpdate; }
         public function set onUpdate(value:Function):void { mOnUpdate = value; }
-        
+
         /** A function that will be called each time the tween finishes one repetition
          *  (except the last, which will trigger 'onComplete'). */
         public function get onRepeat():Function { return mOnRepeat; }
         public function set onRepeat(value:Function):void { mOnRepeat = value; }
-        
+
         /** A function that will be called when the tween is complete. */
         public function get onComplete():Function { return mOnComplete; }
         public function set onComplete(value:Function):void { mOnComplete = value; }
-        
+
         /** The arguments that will be passed to the 'onStart' function. */
         public function get onStartArgs():Vector.<Object> { return mOnStartArgs; }
         public function set onStartArgs(value:Vector.<Object>):void { mOnStartArgs = value; }
-        
+
         /** The arguments that will be passed to the 'onUpdate' function. */
         public function get onUpdateArgs():Vector.<Object> { return mOnUpdateArgs; }
         public function set onUpdateArgs(value:Vector.<Object>):void { mOnUpdateArgs = value; }
-        
+
         /** The arguments that will be passed to the 'onRepeat' function. */
         public function get onRepeatArgs():Vector.<Object> { return mOnRepeatArgs; }
         public function set onRepeatArgs(value:Vector.<Object>):void { mOnRepeatArgs = value; }
-        
+
         /** The arguments that will be passed to the 'onComplete' function. */
         public function get onCompleteArgs():Vector.<Object> { return mOnCompleteArgs; }
         public function set onCompleteArgs(value:Vector.<Object>):void { mOnCompleteArgs = value; }
-        
-        /** Another tween that will be started (i.e. added to the same juggler) as soon as 
+
+        /** Another tween that will be started (i.e. added to the same juggler) as soon as
          *  this tween is completed. */
         public function get nextTween():Tween { return mNextTween; }
         public function set nextTween(value:Tween):void { mNextTween = value; }
-        
+
         // tween pooling
-        
+
         private static var sTweenPool:Vector.<Tween> = new <Tween>[];
-        
+
         /** @private */
-        public static function fromPool(target:Object, time:Number, 
+        public static function fromPool(target:Object, time:Number,
                                                    transition:Object="linear"):Tween
         {
             if (sTweenPool.length) return sTweenPool.pop().reset(target, time, transition);
             else return new Tween(target, time, transition);
         }
-        
+
         /** @private */
         public static function toPool(tween:Tween):void
         {

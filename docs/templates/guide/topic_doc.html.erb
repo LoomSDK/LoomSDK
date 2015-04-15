@@ -7,7 +7,7 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width">
 
-        <link rel="stylesheet" href="<%= @relative_base_path %>/css/package-page.css">
+        <link rel="stylesheet" href="<%= @relative_base_path %>/css/pages.css">
         <link rel="stylesheet" href="<%= @relative_base_path %>/css/pygments.css">
         <link type="text/css" rel="stylesheet" href="<%= @relative_base_path %>/css/jquery.dropdown.css" />
     </head>
@@ -34,15 +34,15 @@
 
                 <!-- Content header. -->
                 <header class="content-header">
-                    
+
                     <% if @doc.path == "" %>
                       <h1>Guides</h1>
                     <% else %>
-                    
+
                       <h1><%= @doc.path.split("_").last %></h1>
-                      
+
                     <% end %>
-                    <p>  
+                    <p>
                         <% if @doc.sub_topics.any? %>
                           <span class="is-light">subtopics</span>
                           <% @doc.sub_topics.sort.each do |key, topic_doc| %>
@@ -50,11 +50,11 @@
                           <% end %>
                         <% end %>
                     </p>
-                    
+
                 </header><!-- End content header. -->
-                
+
                 <%= render 'templates/guide/guide_overview' %>
-                
+
             </div><!-- End content. -->
 
         </div><!-- End page. -->

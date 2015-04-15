@@ -177,6 +177,7 @@ public:
      * Loads an Executable Binary assembly into the VM, once loaded the assembly may be executed
      */
     Assembly *loadExecutableAssembly(const utString& assemblyName, bool absPath = false);
+    Assembly *loadExecutableAssemblyBinary(const char *buffer, long bufferSize);
 
     // get all types loaded for a given package
     void getPackageTypes(const utString& packageName, utArray<Type *>& types);

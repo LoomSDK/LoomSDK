@@ -33,6 +33,7 @@
 #include "loom/common/platform/platformNetwork.h"
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utString.h"
+#include "loom/common/utils/utByteArray.h"
 #include "loom/common/utils/fourcc.h"
 
 #include "loom/common/assets/assets.h"
@@ -259,6 +260,10 @@ static int loom_asset_textRecognizer(const char *extension)
     {
         return LATText;
     }
+    if (!strcasecmp(extension, "plist"))
+    {
+        return LATText;
+    }
     if (!strcasecmp(extension, "fnt"))
     {
         return LATText;
@@ -283,6 +288,30 @@ static void *loom_asset_textDeserializer(void *ptr, size_t size, LoomAssetCleanu
     *(((unsigned char *)data) + size) = 0;
 
     return data;
+}
+
+
+// Recognize binary file types by their extension.
+static int loom_asset_binaryRecognizer(const char *extension)
+{
+    if (!strcasecmp(extension, "zip"))
+    {
+        return LATBinary;
+    }
+    return 0;
+}
+
+static void loom_asset_binaryDtor(void *bytes)
+{
+    delete (utByteArray*)bytes;
+}
+
+static void *loom_asset_binaryDeserializer(void *ptr, size_t size, LoomAssetCleanupCallback *dtor)
+{
+    utByteArray *bytes = new utByteArray();
+    bytes->allocateAndCopy(ptr, size);
+    *dtor = loom_asset_binaryDtor;
+    return bytes;
 }
 
 
@@ -332,6 +361,7 @@ void loom_asset_initialize(const char *rootUri)
 
     // And set up some default asset types.
     loom_asset_registerType(LATText, loom_asset_textDeserializer, loom_asset_textRecognizer);
+    loom_asset_registerType(LATBinary, loom_asset_binaryDeserializer, loom_asset_binaryRecognizer);
 
     loom_asset_registerImageAsset();
     loom_asset_registerSoundAsset();
