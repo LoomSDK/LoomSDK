@@ -51,8 +51,9 @@ void QuadBatch::render(lua_State *L)
     {
         return;
     }
-    renderState.cachedClipRect = parent ? parent->renderState.cachedClipRect : (unsigned short)-1;
-    GFX::Graphics::setClipRect(renderState.cachedClipRect);
+
+    renderState.clipRect = parent ? parent->renderState.clipRect : Loom2D::Rectangle(0, 0, -1, -1);
+    if (renderState.isClipping()) GFX::Graphics::setClipRect((int)renderState.clipRect.x, (int)renderState.clipRect.y, (int)renderState.clipRect.width, (int)renderState.clipRect.height);
 
     //set blend mode based to be unique or that of our parent
     renderState.blendMode = (blendMode == BlendMode::AUTO && parent) ? parent->renderState.blendMode : blendMode;

@@ -19,8 +19,8 @@
  */
 
 
-#include "loom/graphics/gfxGraphics.h"
 #include "loom/engine/loom2d/l2dStage.h"
+#include "loom/graphics/gfxGraphics.h"
 #include "loom/common/config/applicationConfig.h"
 #include "loom/common/core/log.h"
 
@@ -112,7 +112,7 @@ void Stage::render(lua_State *L)
     lualoom_pushnative<Stage>(L, this);
 
     renderState.alpha          = alpha;
-    renderState.cachedClipRect = (unsigned short)-1;
+    renderState.clipRect       = Loom2D::Rectangle(0, 0, -1, -1);
     renderState.blendMode      = blendMode;
 
     renderChildren(L);
