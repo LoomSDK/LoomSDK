@@ -65,7 +65,7 @@ struct NativeDelegateCallNote
 
         // Start with enough buffer space we won't need to realloc in most cases.
         ndata = 512; 
-        data = (unsigned char*)malloc(ndata);
+        data = (unsigned char*)lmAlloc(NULL, ndata);
         offset = 0;
     }
 
@@ -92,8 +92,12 @@ struct NativeDelegateCallNote
         if(offset+freeBytes<ndata)
             return;
 
-        ndata *= 2; // Pow 2 growth factor - dumb but effective.
+        ndata = offset + freeBytes; // Resize to requested size
+        ndata += ndata / 2; // Allocate 0.5x more
+        if (ndata < 4096) ndata = 4096;
+
         data = (unsigned char*)lmRealloc(NULL, data, ndata);
+
     }
 
     void writeByte(unsigned char value)
