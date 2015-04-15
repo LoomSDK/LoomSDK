@@ -96,6 +96,10 @@ void LSLuaState::open()
     luaopen_math(L);
     luaL_openlibs(L);
 
+    // TODO: turn this back on when it doesn't fail on the testWhile unit test
+    // update luajit and test again
+    luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_OFF);
+
     // open the lua debug library
     luaopen_debug(L);
 
