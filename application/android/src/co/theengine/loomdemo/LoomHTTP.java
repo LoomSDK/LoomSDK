@@ -49,6 +49,8 @@ public class LoomHTTP
 
     public static int send(final String url, String httpMethod, final long callback, final long payload, byte[] body, final String responseCacheFile, final boolean base64EncodeResponseData, boolean followRedirects)
     {
+        final Activity activity = _context;
+
         //find and store client
         int index = 0;
         while (clients[index] != null && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {index++;}
