@@ -49,6 +49,15 @@ void platform_vibrate();
 ///sets whether or not to use the system screen sleep timeout
 void platform_allowScreenSleep(bool sleep);
 
+///enables location tracking for this device
+void platform_startLocationTracking(int minDist, int minTime);
+
+///disables location tracking for this device
+void platform_stopLocationTracking();
+
+///returns the device's location using GPS and/or NETWORK signals
+const char *platform_getLocation();
+
 ///shares the specfied text via other applications on the device (ie. Twitter, Facebook)
 bool platform_shareText(const char *subject, const char *text);
 

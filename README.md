@@ -49,5 +49,5 @@ Once successfuly compiled and deployed, change directory to your project and iss
 **loom use dev**
 
 You'll now be developing with your custom Loom build!
-
+ 
 For more information, please see the individual Readme files for platform specific setup instructions.

@@ -187,7 +187,7 @@ package loom.modestmaps
             grid.resetTiles(locationsCoordinate( [ extent.northWest, extent.southEast ] ));
             onExtentChanged();
         }
-        
+
        /**
         * Based on a location and zoom level, determine appropriate initial
         * tile coordinate and point using calculateMapCenter(), and inform

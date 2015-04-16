@@ -333,6 +333,9 @@ public class LoomDemo extends SDLActivity {
         // Hook up the store.
         LoomStore.bind(this);
 
+        ///Create HTTP class
+        LoomHTTP.onCreate(this);
+
         ///Create Video View for our layout
         LoomVideo.onCreate(webViewGroup);
 
