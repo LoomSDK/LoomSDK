@@ -276,6 +276,12 @@ public:
         return 1;
     }
 
+    void transformCoordInternal(float x, float y, float *rx, float *ry)
+    {
+        *rx = a*x + c*y + tx;
+        *ry = b*x + d*y + ty;
+    }
+
     int deltaTransformCoord(lua_State *L)
     {
         float x = (float)lua_tonumber(L, 2);

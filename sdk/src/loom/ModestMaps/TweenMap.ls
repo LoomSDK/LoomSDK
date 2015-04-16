@@ -13,6 +13,7 @@ package loom.modestmaps
     import loom.modestmaps.core.MapExtent;
     import loom.modestmaps.core.TweenTile;
     import loom.modestmaps.geo.Location;
+    import loom.modestmaps.core.TileGrid;
     import loom.modestmaps.mapproviders.IMapProvider;
     import loom2d.display.Stage;
     import loom2d.events.Event;
@@ -87,8 +88,8 @@ package loom.modestmaps
         {
             grid.prepareForZooming();
             grid.prepareForPanning();
-            enforceToRestore = grid.enforceBoundsEnabled;
-            grid.enforceBoundsEnabled = false;
+            enforceToRestore = TileGrid.EnforceBoundsEnabled;
+            TileGrid.EnforceBoundsEnabled = false;
 
             grid.enforceBoundsOnMatrix(m);
             Loom2D.juggler.tween(grid, duration, { "a": m.a, 
@@ -104,7 +105,7 @@ package loom.modestmaps
          *  panAndZoomBy and zoomByAbout as a TweenLite onComplete function */
         protected function panAndZoomComplete():void
         {
-            grid.enforceBoundsEnabled = enforceToRestore;
+            TileGrid.EnforceBoundsEnabled = enforceToRestore;
             
             grid.donePanning();
             grid.doneZooming();

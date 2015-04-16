@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <SDL.h>
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
+#include <SDL.h>
 
 namespace Loom2D
 {

@@ -42,7 +42,8 @@ package loom.modestmaps.mapproviders.microsoft
         
         public function MicrosoftProvider(type:String, hillShading:Boolean, minZoom:int, maxZoom:int)
         {
-            super(minZoom, maxZoom);
+            //NOTE_TEC: clamp at 19 as any higher will request PNGs that use a format that Loom does not support
+            super(minZoom, Math.min(19, maxZoom));
             
             this.type = type;
             this.hillShading = hillShading;

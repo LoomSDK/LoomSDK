@@ -20,11 +20,12 @@
 
 #pragma once
 
-#include <math.h>
+#include "loom/engine/loom2d/l2dRectangle.h"
 #include "loom/engine/loom2d/l2dMatrix.h"
 #include "loom/engine/loom2d/l2dEventDispatcher.h"
 #include "loom/engine/loom2d/l2dBlendMode.h"
 #include "loom/script/native/lsNativeDelegate.h"
+#include <math.h>
 
 namespace Loom2D
 {
@@ -35,12 +36,17 @@ class DisplayObjectContainer;
 struct RenderState
 {
     float alpha;
-    int   cachedClipRect;
+    // Clipping is disabled when width equals -1
+    Loom2D::Rectangle clipRect;
     int   blendMode;
     void clampAlpha()
     {
         if(alpha < 0.f) alpha = 0.f;
         if(alpha > 1.f) alpha = 1.f;
+    }
+    inline bool isClipping()
+    {
+        return clipRect.width != -1.f;
     }
 };
 
@@ -309,6 +315,46 @@ public:
      *  to another. If you pass a 'resultMatrix', the result will be stored in this matrix
      *  instead of creating a new object. */
     void getTargetTransformationMatrix(DisplayObject *targetSpace, Matrix *resultMatrix);
+
+
+    static void transformBounds(Matrix *transform, Rectangle *bounds, Rectangle *resultRect) {
+        lmAssert(transform != NULL, "Transform is null");
+        lmAssert(bounds != NULL, "Bounds are null");
+        lmAssert(resultRect != NULL, "Result rect is null");
+
+        float rx, ry;
+        float minx, miny, maxx, maxy;
+
+        transform->transformCoordInternal(bounds->getLeft(), bounds->getTop(), &rx, &ry);
+        minx = rx;
+        maxx = rx;
+        miny = ry;
+        maxy = ry;
+
+        transform->transformCoordInternal(bounds->getLeft(), bounds->getBottom(), &rx, &ry);
+        if (minx > rx) minx = rx;
+        if (maxx < rx) maxx = rx;
+        if (miny > ry) miny = ry;
+        if (maxy < ry) maxy = ry;
+
+        transform->transformCoordInternal(bounds->getRight(), bounds->getTop(), &rx, &ry);
+        if (minx > rx) minx = rx;
+        if (maxx < rx) maxx = rx;
+        if (miny > ry) miny = ry;
+        if (maxy < ry) maxy = ry;
+
+        transform->transformCoordInternal(bounds->getRight(), bounds->getBottom(), &rx, &ry);
+        if (minx > rx) minx = rx;
+        if (maxx < rx) maxx = rx;
+        if (miny > ry) miny = ry;
+        if (maxy < ry) maxy = ry;
+
+        resultRect->x = minx;
+        resultRect->y = miny;
+        resultRect->width = maxx-minx;
+        resultRect->height = maxy-miny;
+    }
+
 
     // fast path accessors for DisplayObject properties
 

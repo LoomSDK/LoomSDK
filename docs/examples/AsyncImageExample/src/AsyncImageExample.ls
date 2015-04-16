@@ -160,8 +160,8 @@ package
             }
 
             //update labels
-            _label.text = text;
-            _name.text = (tex as ConcreteTexture).assetPath;
+            AsyncImageExample.setLabel(_label, text);
+            AsyncImageExample.setLabel(_name, (tex as ConcreteTexture).assetPath);
         }
 
 
@@ -195,7 +195,7 @@ package
 
             if(_sprite.loadStatus == AsyncImage.TEXTURE_NOTLOADED)
             {
-                _label.text = ERROR;
+                AsyncImageExample.setLabel(_label, ERROR);
                 _go = false;
             }
             else if(_sprite.loadStatus == AsyncImage.TEXTURE_LOADED)
@@ -209,7 +209,7 @@ package
             else
             {
                 //note that we've started async loading...
-                _label.text = (AsyncImageExample.LoadFromHTTP) ? LOADING_HTTP : LOADING_DISK;
+                AsyncImageExample.setLabel(_label, (AsyncImageExample.LoadFromHTTP) ? LOADING_HTTP : LOADING_DISK);
             }
         }
 
@@ -231,7 +231,7 @@ package
         private function httpLoadFailureCB(texture:Texture):void
         {
             trace("Failed to load texture via HTTP...");
-            _label.text = HTTP_FAIL;
+            AsyncImageExample.setLabel(_label, HTTP_FAIL);
         }        
 
 
@@ -249,7 +249,7 @@ package
                 else
                 {
                     _sprite.cancelHTTPLoad();
-                    _label.text = NOT_LOADED;
+                    AsyncImageExample.setLabel(_label, NOT_LOADED);
                     _requestTimer.stop();
                 }
             }
@@ -273,8 +273,7 @@ package
         private var _polySprite:Image;
         private var _polySpeed:Point = new Point(200, 200);
 
-        private var _loadTypeLabel:SimpleLabel;
-
+        private static var UpdateLabels:Boolean = false;
         public static var LoadFromHTTP:Boolean = false;
         public static var LoadingAnim:MovieClip = null;
         static private var _httpRequestCache:Vector.<HTTPRequest> = [];
@@ -296,24 +295,54 @@ package
             stage.addChild(_polySprite);    
 
             //button & label to toggle the load type with
+            var loadTypeLabel:SimpleLabel = new SimpleLabel("assets/fonts/Curse-hd.fnt", 256, 64);            
             var typeButton:SimpleButton = new SimpleButton();
             typeButton.scaleX = 0.8;
             typeButton.scaleY = 0.4;
             typeButton.center();
-            typeButton.x = (stage.stageWidth - typeButton.width) / 2;
-            typeButton.y = stage.stageHeight - typeButton.height - 64;
+            typeButton.x = (stage.stageWidth - typeButton.width) / 2 - typeButton.width;
+            typeButton.y = stage.stageHeight - typeButton.height - 48;
             typeButton.upImage = "assets/up.png";
             typeButton.downImage = "assets/down.png";
-            typeButton.onClick +=  function() { LoadFromHTTP = !LoadFromHTTP; _loadTypeLabel.text = (LoadFromHTTP) ? "HTTP Load" : "Asset Load";};
+            typeButton.onClick +=  function() { LoadFromHTTP = !LoadFromHTTP; loadTypeLabel.text = (LoadFromHTTP) ? "HTTP Load" : "Asset Load";};
             stage.addChild(typeButton);
 
-            _loadTypeLabel = new SimpleLabel("assets/fonts/Curse-hd.fnt", 256, 64);            
-            _loadTypeLabel.x = typeButton.x - 16;
-            _loadTypeLabel.y = typeButton.y;
-            _loadTypeLabel.scale = 0.5;
-            _loadTypeLabel.touchable = false;
-            _loadTypeLabel.text = (LoadFromHTTP) ? "HTTP Load" : "Asset Load";
-            stage.addChild(_loadTypeLabel);
+            loadTypeLabel.x = typeButton.x - 16;
+            loadTypeLabel.y = typeButton.y;
+            loadTypeLabel.scale = 0.5;
+            loadTypeLabel.touchable = false;
+            loadTypeLabel.text = (LoadFromHTTP) ? "HTTP Load" : "Asset Load";
+            stage.addChild(loadTypeLabel);
+
+
+            //button & label to toggle label updates
+            var labelUpdateLabel:SimpleLabel = new SimpleLabel("assets/fonts/Curse-hd.fnt", 256, 64);            
+            var labelButton:SimpleButton = new SimpleButton();
+            labelButton.scaleX = 0.8;
+            labelButton.scaleY = 0.4;
+            labelButton.center();
+            labelButton.x = (stage.stageWidth - labelButton.width) / 2 + labelButton.width;
+            labelButton.y = stage.stageHeight - labelButton.height - 48;
+            labelButton.upImage = "assets/up.png";
+            labelButton.downImage = "assets/down.png";
+            labelButton.onClick +=  function() { UpdateLabels = !UpdateLabels; labelUpdateLabel.text = (UpdateLabels) ? "Stop Label Updates" : "Update Labels";};
+            stage.addChild(labelButton);
+
+            labelUpdateLabel.x = labelButton.x - 16;
+            labelUpdateLabel.y = labelButton.y;
+            labelUpdateLabel.scale = 0.5;
+            labelUpdateLabel.touchable = false;
+            labelUpdateLabel.text = (UpdateLabels) ? "Stop Label Updates" : "Update Labels";
+            stage.addChild(labelUpdateLabel);            
+
+            var labelUpdateHeader:SimpleLabel = new SimpleLabel("assets/fonts/Curse-hd.fnt");
+            labelUpdateHeader.x = stage.stageWidth / 2 - 208;
+            labelUpdateHeader.y = labelUpdateLabel.y - 64;
+            labelUpdateHeader.scale = 0.25;
+            labelUpdateHeader.touchable = false;
+            labelUpdateHeader.text = "(Updating Labels will generate garbage and cause slowdowns)";
+            stage.addChild(labelUpdateHeader);            
+
 
             //add FPS output to the app
             _fps = new SimpleLabel("assets/fonts/Curse-hd.fnt", 256, 64);            
@@ -346,7 +375,7 @@ package
                 _lastUpdate = currentTime;
                 _numTicks = 0;
 
-                _fps.text = "fps: " + dt.toString();
+                AsyncImageExample.setLabel(_fps, "fps: " + dt.toString());
             }
 
             //update our bouncing poly
@@ -392,6 +421,13 @@ package
                 _polySprite.y *= -1;
                 _polySpeed.y *= -1.0;
             }
+        }
+
+
+        //wrapper for setting label text
+        static public function setLabel(label:SimpleLabel, str:String):void
+        {
+            label.text = (UpdateLabels) ? str : " ";
         }
 
 

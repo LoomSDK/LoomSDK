@@ -119,8 +119,8 @@ package loom.platform
          * the AndroidManifest.xml file.
          *
          * 2) If you are using Loom CLI and you wish to not include VIBRATE permissions
-         * in your App, you can disable them by specifying "uses_vibrate": "false" in your
-         * loom.config file.
+         * in your Android App, you can disable them by specifying "uses_vibrate": "false" 
+         * in your loom.config file.
          */
         public static native function vibrate():void;
 
@@ -132,6 +132,41 @@ package loom.platform
          *          false to disable device sleeping completely
          */
         public static native function allowScreenSleep(sleep:Boolean):void;
+
+        /**
+         * Enables Location tracking on this device. Must be called prior to any calls
+         * of 'getLocation()'.
+         *
+         *  @param minDist The minimum distance (in meters) that the device must move
+         *          before the Location is updated internally.
+         *  @param minTime The minimum time that must elapse (in milliseconds) before
+         *          before the Location is updated internally (only supported on Android).
+         */
+        public static native function startLocationTracking(minDist:int=10, minTime:int=10000):void;
+
+        /**
+         * Disables Location tracking on this device.
+         */
+        public static native function stopLocationTracking():void;
+
+        /**
+         * Returns the device's Latitude/Longitude Location using GPS and/or NETWORK signals.
+         *
+         *  @return The Latitude and Longitude of the Location as two Numbers separated 
+         *          by a space, or an empty string if no valid Location can be found.
+         *          ie. "40.748440 -73.984559" or ""
+         *
+         * NOTES: 
+         *
+         * 1) If you are not using Loom CLI and you wish to use getLocation() on Android, 
+         * you will manually need to add the "android.permission.ACCESS_FINE_LOCATION" and / or
+         * "android.permission.ACCESS_COARSE_LOCATION" permission to the AndroidManifest.xml file.
+         *
+         * 2) If you are using Loom CLI and you wish to not include LOCATION permissions
+         * in your Android App, you can disable them by specifying "uses_location": "false" in your
+         * loom.config file.
+         */
+        public static native function getLocation():String;
 
         /**
          * Shares the specified text to other applications (ie. Twitter, Facebook, Email) 

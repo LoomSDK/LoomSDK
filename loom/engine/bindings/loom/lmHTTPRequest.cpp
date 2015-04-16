@@ -40,6 +40,8 @@ public:
 
     utHashTable<utHashedString, utString> header;
 
+    int id;
+
     LOOM_DELEGATE(OnSuccess);
     LOOM_DELEGATE(OnFailure);
 
@@ -78,8 +80,9 @@ public:
         }
     }
 
-    void send()
+    bool send()
     {
+        id = -1;
         if (url == "")
         {
             _OnFailureDelegate.pushArgument("Error: Empty URL");
@@ -90,19 +93,38 @@ public:
             if (bodyBytes != NULL)
             {
                 // Send with body as byte array.
-                platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
+                id = platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
                                   (const char *)bodyBytes->getInternalArray()->ptr(), bodyBytes->getSize(), header,
                                   (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
             }
             else
             {
                 // Send with body as string.
-                platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
+                id = platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
                                   (const char *)body.c_str(), body.length(), header,
                                   (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
             }
         }
+        return (id == -1) ? false : true;
     }
+
+    void cancel()
+    {
+        bool cancelled = platform_HTTPCancel(id);
+        if (cancelled)
+        {
+            _OnFailureDelegate.pushArgument("Request cancelled by user.");
+            _OnFailureDelegate.invoke();
+            complete();
+        }
+    }
+
+    //only called internally to notfiy that the HTTPRequest has completed now
+    void complete()
+    {
+        platform_HTTPComplete(id);
+        id = -1;        
+    }    
 
     static bool isConnected()
     {
@@ -121,11 +143,13 @@ public:
         case LOOM_HTTP_SUCCESS:
             request->_OnSuccessDelegate.pushArgument(data);
             request->_OnSuccessDelegate.invoke();
+            request->complete();
             break;
 
         case LOOM_HTTP_ERROR:
             request->_OnFailureDelegate.pushArgument(data);
             request->_OnFailureDelegate.invoke();
+            request->complete();
             break;
 
         default:
@@ -143,6 +167,7 @@ static int registerLoomHTTPRequest(lua_State *L)
        .addMethod("setHeaderField", &HTTPRequest::setHeaderField)
        .addMethod("getHeaderField", &HTTPRequest::getHeaderField)
        .addMethod("send", &HTTPRequest::send)
+       .addMethod("cancel", &HTTPRequest::cancel)
        .addStaticMethod("isConnected", &HTTPRequest::isConnected)
        .addVar("method", &HTTPRequest::method)
        .addVar("body", &HTTPRequest::body)
