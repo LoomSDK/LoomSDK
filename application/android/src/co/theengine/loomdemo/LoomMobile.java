@@ -7,9 +7,14 @@ import android.os.Environment;
 import android.os.Vibrator;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.provider.Settings.System;
 import android.net.Uri;
+
+import android.location.Location;  
+import android.location.LocationListener;  
+import android.location.LocationManager; 
 
 import org.json.JSONObject;
 import org.json.JSONException;
@@ -31,13 +36,83 @@ public class LoomMobile
     private static final String        TAG = "LoomMobile";
 
     ///vars
-    private static Activity     _context;
-    private static Activity     activity;
-    private static Vibrator     _vibrator;
-    private static boolean      _canVibrate;
-    private static Uri          _customURI = null;
-    private static JSONObject   _remoteNotificationData = null;
-    private static boolean      _delayedRemoteNotificationDelegate = false;
+    private static Activity         _context;
+    private static Vibrator         _vibrator;
+    private static boolean          _canVibrate;
+    private static Uri              _customURI = null;
+    private static JSONObject       _remoteNotificationData = null;
+    private static boolean          _delayedRemoteNotificationDelegate = false;
+
+    private static LocationTracker  _gpsLocation;
+    private static LocationTracker  _netLocation;
+
+
+
+    ///internal location listener wrapper class
+    public static class LocationTracker implements LocationListener 
+    {
+        private boolean             _isRunning;
+        private LocationManager     _locationManager;
+        private String              _locationProvider;
+        private Location            _lastLocation;
+
+
+        public LocationTracker(Context context, String managerType) 
+        {
+            _locationManager = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
+            _locationProvider = managerType;
+            _lastLocation = null;
+            _isRunning = false;
+        }
+
+
+        //start updates for this location tracker
+        public void startTracking(int minUpdateDistance, int minUpdateInterval)
+        {
+            if(!_isRunning)
+            {
+                _isRunning = true;
+                _locationManager.requestLocationUpdates(_locationProvider, minUpdateInterval, minUpdateDistance, this, Looper.getMainLooper());
+                _lastLocation = null;
+            }
+        }
+
+
+        //stop updates for this location tracker
+        public void stopTracking()
+        {
+            if(_isRunning)
+            {
+                _locationManager.removeUpdates(this);
+                _isRunning = false;
+            }
+        }
+
+
+        //returns the last tracked location. can be null.
+        public Location getLocation()
+        {
+            return (_lastLocation != null) ? _lastLocation : _locationManager.getLastKnownLocation(_locationProvider);
+        }
+
+
+        //track any change of location
+        public void onLocationChanged(Location newLoc)
+        {
+            _lastLocation = newLoc;
+        }
+
+
+        //invalidate the last location when we have been disabled
+        public void onProviderDisabled(String arg0)
+        {
+            _lastLocation = null;
+        }
+
+        //stub functions for the LocationListener interface
+        public void onProviderEnabled(String arg0) {}
+        public void onStatusChanged(String arg0, int arg1, Bundle arg2) {}
+    }
 
 
 
@@ -45,7 +120,6 @@ public class LoomMobile
     public static void onCreate(Activity ctx)
     {
         _context = ctx;
-        activity = LoomAdMob.activity;
 
         //vibration initialization
         _canVibrate = false;
@@ -73,6 +147,16 @@ public class LoomMobile
         }
         Log.d(TAG, "Vibration supported: " + _canVibrate);
 
+        //prep up our location tracking
+        _gpsLocation = null;
+        _netLocation = null;
+        if(LoomDemo.checkPermission(ctx, "android.permission.ACCESS_FINE_LOCATION") ||
+            LoomDemo.checkPermission(ctx, "android.permission.ACCESS_COARSE_LOCATION"))
+        {
+            _gpsLocation = new LocationTracker(_context, LocationManager.GPS_PROVIDER);
+            _netLocation = new LocationTracker(_context, LocationManager.NETWORK_PROVIDER);
+        }
+
         //see if we have a custom intent scheme URI to snag now for Querying later on
         Intent intent = ctx.getIntent();        
         _customURI = (intent != null) ? intent.getData() : null;
@@ -88,7 +172,7 @@ public class LoomMobile
             {
                 //notify that we've launched via a custom URL
                 // TODO: does this require queueEvent?
-                activity.runOnUiThread(new Runnable() 
+                _context.runOnUiThread(new Runnable() 
                 {
                     @Override
                     public void run() 
@@ -140,6 +224,7 @@ public class LoomMobile
         });
     }      
 
+
     ///tells the device to do a short vibration, if supported by the hardware
     public static void vibrate()
     {
@@ -158,6 +243,54 @@ public class LoomMobile
         {
             _vibrator.cancel();
         }        
+    }
+
+
+    //starts location tracking
+    public static void startLocationTracking(int minDist, int minTime)
+    {
+        if(_gpsLocation != null)
+        {
+            _gpsLocation.startTracking(minDist, minTime);
+        }
+        if(_netLocation != null)
+        {
+            _netLocation.startTracking(minDist, minTime);
+        }
+    }
+
+
+    //stops location tracking
+    public static void stopLocationTracking()
+    {
+        if(_gpsLocation != null)
+        {
+            _gpsLocation.stopTracking();
+        }
+        if(_netLocation != null)
+        {
+            _netLocation.stopTracking();
+        }
+    }
+
+
+    //returns the latitude and longitude (as two floating point values separated by a space)
+    //of the mobile device as a string, or null if no valid location can be found
+    public static String getLocation()
+    {
+        String locString = null;
+
+        //prefer GPS location to NETWORK location
+        Location loc = (_gpsLocation != null) ? _gpsLocation.getLocation() : null;
+        if(loc == null)
+        {
+            loc = (_netLocation != null) ? _netLocation.getLocation() : null;
+        }
+        if(loc != null)
+        {
+            locString = loc.getLatitude() + " " + loc.getLongitude();
+        }
+        return locString;
     }
 
 
@@ -240,6 +373,7 @@ public class LoomMobile
             if(((Activity)SDLActivity.getContext()) != null)
             {
                 //notify that we've launched via a remote notification launch
+                // TODO: does this require queueEvent?
                 ((Activity)SDLActivity.getContext()).runOnUiThread(new Runnable() 
                 {
                     @Override

@@ -33,7 +33,9 @@
 #include "loom/common/platform/platformFile.h"
 #include "loom/common/utils/utBase64.h"
 
+
 static CURLM *gMultiHandle;
+static CURL *curlHandles[MAX_CONCURRENT_HTTP_REQUESTS];
 static int   gHandleCount;
 static bool  gHTTPInitialized;
 
@@ -148,6 +150,7 @@ void platform_HTTPInit()
     gMultiHandle     = curl_multi_init();
     gHandleCount     = 0;
     gHTTPInitialized = true;
+    memset(curlHandles, 0, sizeof(CURL *) * MAX_CONCURRENT_HTTP_REQUESTS);
 }
 
 
@@ -224,12 +227,6 @@ void platform_HTTPUpdate()
 
             // clean up any userdata.
             loom_HTTPCleanupUserData(userData);
-
-            // remove the handle from the multi
-            curl_multi_remove_handle(gMultiHandle, handle);
-
-            // and clean it up
-            curl_easy_cleanup(handle);
         }
 
         // go to the next message
@@ -245,11 +242,19 @@ bool platform_HTTPIsConnected()
 }
 
 
-void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback callback, void *payload,
+int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback callback, void *payload,
                        const char *body, int bodyLength, utHashTable<utHashedString, utString>& headers,
                        const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects)
 {
     assert(gHTTPInitialized);
+
+    //get an empty slot for our handle to use
+    int index = 0;
+    while ((curlHandles[index] != NULL) && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {index++;}
+    if(index == MAX_CONCURRENT_HTTP_REQUESTS)
+    {
+        return -1;
+    }
 
     // initialize our curl handle
     CURL *curlHandle = curl_easy_init();
@@ -319,12 +324,31 @@ void platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback ca
     else // call error
     {
         callback(payload, LOOM_HTTP_ERROR, "Error: Unknown HTTP Method.");
-        return;
+        return -1;
     }
 
     // add to the multi interface
     curl_multi_add_handle(gMultiHandle, curlHandle);
+    curlHandles[index] = curlHandle;
+
+    return index;
 }
+
+bool platform_HTTPCancel(int index)
+{
+    return ((index == -1) || (curlHandles[index] == NULL)) ? false : true;
+}
+
+void platform_HTTPComplete(int index)
+{
+    if(index != -1)
+    {
+        curl_multi_remove_handle(gMultiHandle, curlHandles[index]);
+        curl_easy_cleanup(curlHandles[index]);
+        curlHandles[index] = NULL;
+    }
+}
+
 #endif
 #endif //LOOMSCRIPT_STANDALONE
 

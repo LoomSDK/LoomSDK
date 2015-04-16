@@ -281,7 +281,6 @@ void Graphics::setClipRect(int x, int y, int width, int height)
     context()->glScissor(x, sHeight-height-y, width, height);
 }
 
-
 void Graphics::clearClipRect()
 {
     context()->glDisable(GL_SCISSOR_TEST);
