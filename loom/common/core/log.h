@@ -67,8 +67,11 @@ so you should use &format when calling this function
 */
 char* loom_log_getArgs(va_list args, const char **format);
 
-#define lmLogArgs(buff, format) \
-    va_list args; \
+/**
+ * Helper to pass and log arguments. Requires a va_list instanced
+ * passed as first parameter.
+ */
+#define lmLogArgs(args, buff, format) \
     va_start(args, format); \
     buff = loom_log_getArgs(args, &format); \
     va_end(args); \
