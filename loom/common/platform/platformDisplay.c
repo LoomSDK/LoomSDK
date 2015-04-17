@@ -78,7 +78,8 @@ int platform_debugOut(const char *out, ...)
     */
 
     char* buff;
-    lmLogArgs(buff, out);
+    va_list args;
+    lmLogArgs(args, buff, out);
 
     // Put a new line in so windows displays this junk right.
     len           = (int)strlen(buff);
@@ -110,7 +111,8 @@ int platform_error(const char *out, ...)
     */
 
     char* buff;
-    lmLogArgs(buff, out);
+    va_list args;
+    lmLogArgs(args, buff, out);
     
     OutputDebugStringA(buff);
 
@@ -153,7 +155,8 @@ int platform_debugOut(const char *out, ...)
     */
 
     char* buff;
-    lmLogArgs(buff, out);
+    va_list args;
+    lmLogArgs(args, buff, out);
 
     // Put a new line in so windows displays this junk right.
     len           = strlen(buff);
@@ -175,7 +178,8 @@ int platform_debugOut(const char *out, ...)
 int platform_error(const char *out, ...)
 {
     char* buff;
-    lmLogArgs(buff, out);
+    va_list args;
+    lmLogArgs(args, buff, out);
 
     // Try to output/log error with re-entrancy guard.
     static int pesafety = 0;
