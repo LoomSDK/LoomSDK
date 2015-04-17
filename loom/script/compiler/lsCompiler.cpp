@@ -390,7 +390,7 @@ void LSCompiler::compileAssembly(BuildInfo *buildInfo)
 
             ab->writeToFile(jsonFileName);
 
-			log("Symbols Generated: %s", jsonFileName.c_str());
+            log("Symbols Generated: %s", jsonFileName.c_str());
         }
 
         // finally link the root assembly
@@ -404,7 +404,7 @@ void LSCompiler::compileAssembly(BuildInfo *buildInfo)
 
         if (outputDir.length())
         {
-			jsonFileName = outputDir + platform_getFolderDelimiter() + compiler->buildInfo->getAssemblyName() + ext;
+            jsonFileName = outputDir + platform_getFolderDelimiter() + compiler->buildInfo->getAssemblyName() + ext;
         }
         else
         {
@@ -429,7 +429,7 @@ BuildInfo *LSCompiler::loadBuildFile(const utString& cref)
     for (UTsize i = 0; i < sourcePath.size(); i++)
     {
         utString path = sourcePath.at(i);
-		path += platform_getFolderDelimiter();
+        path += platform_getFolderDelimiter();
         path += cref;
         if (!strstr(cref.c_str(), ".build"))
         {
@@ -535,7 +535,7 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
     for (UTsize i = 0; i < rootBuildDependencies.size(); i++)
     {
         BuildInfo *buildInfo     = rootBuildDependencies.at(i);
-		utString  assemblySource = buildInfo->getOutputDir() + platform_getFolderDelimiter() + buildInfo->getAssemblyName() + ".loomlib";
+        utString  assemblySource = buildInfo->getOutputDir() + platform_getFolderDelimiter() + buildInfo->getAssemblyName() + ".loomlib";
 
         utArray<unsigned char> rarray;
         lmAssert(utFileStream::tryReadToArray(assemblySource, rarray), "Unable to load library assembly %s", assemblySource.c_str());
@@ -694,7 +694,8 @@ void LSCompiler::log(const char *format, ...)
     */
 
     char* buff;
-    lmLogArgs(buff, format);
+    va_list args;
+    lmLogArgs(args, buff, format);
     lmLog(compilerLogGroup, "%s", buff);
     free(buff);
 }
@@ -715,7 +716,8 @@ void LSCompiler::logVerbose(const char *format, ...)
     va_end(args);
     */
     char* buff;
-    lmLogArgs(buff, format);
+    va_list args;
+    lmLogArgs(args, buff, format);
     lmLog(compilerVerboseLogGroup, "%s", buff);
     free(buff);
 }
