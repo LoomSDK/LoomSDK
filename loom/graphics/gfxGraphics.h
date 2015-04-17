@@ -63,13 +63,13 @@ namespace GFX
 #if GFX_OPENGL_CHECK
 
 #define GFX_PREFIX gfx_internal_
-#define GFX_PREFIX_CALL_INTERNAL_CONCAT(prefix, func, args) prefix ## func ## args
+#define GFX_PREFIX_CALL_INTERNAL_CONCAT(prefix, func, args) prefix ## func args
 #define GFX_PREFIX_CALL_INTERNAL(prefix, func, args) GFX_PREFIX_CALL_INTERNAL_CONCAT(prefix, func, args)
 #define GFX_PREFIX_CALL(func, args) GFX_PREFIX_CALL_INTERNAL(GFX_PREFIX, func, args)
 
 #define GFX_PROC_BEGIN(ret, func, params) \
         ret (GFX_CALL *GFX_PREFIX_CALL(func,)) params; \
-        ret func ## params {
+        ret func params {
 
 #ifdef _WIN32
 #define GFX_PROC_BREAK __debugbreak();
@@ -89,8 +89,8 @@ namespace GFX
                     case GL_INVALID_ENUM: errorName = "GL_INVALID_ENUM"; break; \
                     case GL_INVALID_VALUE: errorName = "GL_INVALID_VALUE"; break; \
                     case GL_INVALID_OPERATION: errorName = "GL_INVALID_OPERATION"; break; \
-                    case GL_STACK_OVERFLOW: errorName = "GL_STACK_OVERFLOW"; break; \
-                    case GL_STACK_UNDERFLOW: errorName = "GL_STACK_UNDERFLOW"; break; \
+                    case 0x0503 /* GL_STACK_OVERFLOW */: errorName = "GL_STACK_OVERFLOW"; break; \
+                    case 0x0504 /* GL_STACK_UNDERFLOW */: errorName = "GL_STACK_UNDERFLOW"; break; \
                     case GL_INVALID_FRAMEBUFFER_OPERATION: errorName = "GL_INVALID_FRAMEBUFFER_OPERATION"; break; \
                     default: errorName = "Unknown error"; \
                 } \
