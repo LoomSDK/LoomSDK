@@ -69,6 +69,8 @@ struct TextureInfo
     //its async processing is complete
     bool                     asyncDispose;
     GLuint                   handle;
+    bool                     renderTarget;
+    GLuint                   framebuffer;
 
     utString                 texturePath;
 
@@ -120,6 +122,8 @@ struct TextureInfo
         asyncDispose = false;
         handle      = -1;
         texturePath = "";
+        renderTarget = false;
+        //framebuffer = NULL;
     }
 };
 
@@ -300,6 +304,7 @@ public:
     static TextureInfo *initFromBytes(utByteArray *bytes, const char *name);
     static TextureInfo *initFromBytesAsync(utByteArray *bytes, const char *name, bool highPriorty);
     static TextureInfo *initFromAssetManagerAsync(const char *path, bool highPriorty);
+    static TextureInfo *initRenderTexture();
     static int __stdcall loadTextureAsync_body(void *param);
 
     static void dispose(TextureID id);

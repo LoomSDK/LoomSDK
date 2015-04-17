@@ -52,6 +52,7 @@ namespace GFX
     extern SDL_GLContext context;
     GL_Context Graphics::_context;
     
+
     static int LoadContext(GL_Context * data)
     {
 #if SDL_VIDEO_DRIVER_UIKIT
@@ -61,25 +62,36 @@ namespace GFX
 #elif SDL_VIDEO_DRIVER_PANDORA
 #define __SDL_NOGETPROCADDR__
 #endif
-        
+
+#if GFX_OPENGL_CHECK
+#define GFX_OPENGL_FUNC(func) gfx_internal_ ## func
+#else
+#define GFX_OPENGL_FUNC(func) func
+#endif
+
 #if defined __SDL_NOGETPROCADDR__
 // TODO: remove cast and figure out constness
-#define SDL_PROC(ret,func,params) data->func = (ret(*)params)func;
+#define GFX_PROC(ret,func,params,args) data->GFX_OPENGL_FUNC(func) = (ret(*)params)func;
+#define GFX_PROC_VOID(func, params, args) GFX_PROC(void, func, params, args)
 #else
-#define SDL_PROC(ret,func,params) \
+#define GFX_PROC(ret,func,params,args) \
 do { \
-void **tmp = (void**)&data->func; \
-*tmp = SDL_GL_GetProcAddress(#func); \
-if ( ! data->func ) { \
-return SDL_SetError("Couldn't load GL function %s: %s\n", #func, SDL_GetError()); \
-} \
+    void **tmp = (void**)&data->GFX_OPENGL_FUNC(func); \
+    *tmp = SDL_GL_GetProcAddress(#func); \
+    if ( ! data->GFX_OPENGL_FUNC(func) ) { \
+        return SDL_SetError("Couldn't load GL function %s: %s\n", #func, SDL_GetError()); \
+    } \
 } while ( 0 );
+#define GFX_PROC_VOID(func, params, args) GFX_PROC(void, func, params, args)
 #endif /* _SDL_NOGETPROCADDR_ */
         
 #include "gfxGLES2EntryPoints.h"
-#undef SDL_PROC
+#undef GFX_PROC
+#undef GFX_PROC_VOID
+
         return 0;
     }
+
 
 void Graphics::initialize()
 {

@@ -159,6 +159,9 @@ package loom.graphics
          */
         public static native function initFromBytesAsync(bytes:ByteArray, uniqueName:String=null, highPriority:Boolean=false):TextureInfo;
 
+        
+        public static native function initRenderTexture():TextureInfo;
+        
         /**
          * Given the native id from a TextureInfo, dispose the specified texture. This
          * frees the GPU backing store and unloads the texture from memory.

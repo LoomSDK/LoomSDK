@@ -20,6 +20,12 @@
 
 #pragma once
 
+#define GFX_DEBUG 1
+
+#ifdef GFX_DEBUG
+#define GFX_OPENGL_CHECK 1
+#endif
+
 #include <SDL.h>
 
 #ifdef LOOM_RENDERER_OPENGLES2
@@ -29,21 +35,93 @@
 #endif
 
 #include <stdint.h>
+
 #include "loom/common/core/assert.h"
+#include "loom/common/core/log.h"
+namespace GFX {
+    lmDeclareLogGroup(gGFXLogGroup);
+}
+
+#ifdef GFX_OPENGL_CHECK
+#ifdef _WIN32
+#include <intrin.h>
+#endif
+#endif
 
 namespace GFX
 {
 
     typedef struct GL_Context
     {
+
 #ifdef _WIN32
-#define SDL_PROC(ret, func, params) ret (__stdcall *func) params;
+#define GFX_CALL __stdcall
 #else
-#define SDL_PROC(ret, func, params) ret (*func) params;
+#define GFX_CALL
+#endif
+
+#if GFX_OPENGL_CHECK
+
+#define GFX_PREFIX gfx_internal_
+#define GFX_PREFIX_CALL_INTERNAL_CONCAT(prefix, func, args) prefix ## func ## args
+#define GFX_PREFIX_CALL_INTERNAL(prefix, func, args) GFX_PREFIX_CALL_INTERNAL_CONCAT(prefix, func, args)
+#define GFX_PREFIX_CALL(func, args) GFX_PREFIX_CALL_INTERNAL(GFX_PREFIX, func, args)
+
+#define GFX_PROC_BEGIN(ret, func, params) \
+        ret (GFX_CALL *GFX_PREFIX_CALL(func,)) params; \
+        ret func ## params {
+
+#ifdef _WIN32
+#define GFX_PROC_BREAK __debugbreak();
+#else
+#define GFX_PROC_BREAK
+#endif
+
+#define GFX_PROC_MID(func) \
+        GLenum error = GFX_PREFIX_CALL(glGetError, ()); \
+        switch (error) { \
+            case GL_NO_ERROR: break; \
+            case GL_OUT_OF_MEMORY: lmLogWarn(gGFXLogGroup, "OpenGL reported to be out of memory"); break; \
+            case 0x0507 /* GL_CONTEXT_LOST in OpenGL 4.5 */: lmLogWarn(gGFXLogGroup, "OpenGL reported context loss"); break; \
+            default: \
+                const char* errorName; \
+                switch (error) { \
+                    case GL_INVALID_ENUM: errorName = "GL_INVALID_ENUM"; break; \
+                    case GL_INVALID_VALUE: errorName = "GL_INVALID_VALUE"; break; \
+                    case GL_INVALID_OPERATION: errorName = "GL_INVALID_OPERATION"; break; \
+                    case GL_STACK_OVERFLOW: errorName = "GL_STACK_OVERFLOW"; break; \
+                    case GL_STACK_UNDERFLOW: errorName = "GL_STACK_UNDERFLOW"; break; \
+                    case GL_INVALID_FRAMEBUFFER_OPERATION: errorName = "GL_INVALID_FRAMEBUFFER_OPERATION"; break; \
+                    default: errorName = "Unknown error"; \
+                } \
+                lmLogError(gGFXLogGroup, "OpenGL error: %s (0x%04x)", errorName, error); \
+                GFX_PROC_BREAK \
+                lmAssert(error, "OpenGL error, see above for details."); \
+        } \
+
+#define GFX_PROC_VOID(func, params, args) \
+        GFX_PROC_BEGIN(void, func, params) \
+            GFX_PREFIX_CALL(func, args); \
+            GFX_PROC_MID(func) \
+        }
+
+#define GFX_PROC(ret, func, params, args) \
+        GFX_PROC_BEGIN(ret, func, params) \
+            ret returnValue = GFX_PREFIX_CALL(func, args); \
+            GFX_PROC_MID(func) \
+            return returnValue; \
+        }
+
+#else
+
+#define GFX_PROC(ret, func, params, args) ret (GFX_CALL *func) params;
+#define GFX_PROC_VOID(func, params, args) GFX_PROC(void, func, params, args)
+
 #endif
 
 #include "gfxGLES2EntryPoints.h"
-#undef SDL_PROC
+#undef GFX_PROC
+#undef GFX_PROC_VOID
     } GL_Context;
 
 

@@ -313,7 +313,14 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
         Graphics::context()->glDeleteTextures(1, &tinfo.handle);
     }
 
-    if (newTexture) Graphics::context()->glGenTextures(1, &tinfo.handle);
+    if (newTexture) {
+        Graphics::context()->glGenTextures(1, &tinfo.handle);
+        if (tinfo.renderTarget) {
+            //tinfo.framebuffer = new FrameBuffer();
+            Graphics::context()->glGenFramebuffers(1, &tinfo.framebuffer);
+            Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo.framebuffer);
+        }
+    }
 
     lmLog(gGFXTextureLogGroup, "Create > %u", tinfo.handle);
 
@@ -348,7 +355,7 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
         int mipWidth = width;
         int mipHeight = height;
         int mipLevel = 1;
-        //uint64_t time = GetTimeMs64();
+        int time = platform_getMilliseconds();
         while (mipWidth > 1 || mipHeight > 1)
         {
             // Allocate new bits.
@@ -368,6 +375,7 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 
             mipLevel++;
         }
+        lmLogInfo(gGFXTextureLogGroup, "Generated mipmaps in %d ms", platform_getMilliseconds() - time);
         if (mipData != (uint32_t*) data) lmFree(NULL, mipData);
     } else {
         tinfo.clampOnly = true;
@@ -377,6 +385,59 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 
     //lmLogInfo(gGFXTextureLogGroup, "Generated mipmaps in %d ms", Graphics::context()->glGetError());
     //*/
+
+    if (tinfo.renderTarget)
+    {
+        //Graphics::context()->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tinfo.handle, 0);
+        //GLenum buffers[1] = { GL_COLOR_ATTACHMENT0 };
+        //Graphics::context()->glFramebufferTexture2D
+        //tinfo.framebuffer->AttachTexture(GL_TEXTURE_2D, tinfo.handle, GL_COLOR_ATTACHMENT0);
+        //tinfo.framebuffer->IsValid();
+        Graphics::context()->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tinfo.handle, 0);
+
+        bool isOK = false;
+
+        GLenum status;
+        status = Graphics::context()->glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        switch (status) {
+        case GL_FRAMEBUFFER_COMPLETE: // Everything's OK
+            isOK = true;
+            break;
+            /*
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tGL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT\n");
+            isOK = false;
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tGL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT\n");
+            isOK = false;
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tGL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT\n");
+            isOK = false;
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_FORMATS:
+            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tGL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT\n");
+            isOK = false;
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tGL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT\n");
+            isOK = false;
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tGL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT\n");
+            isOK = false;
+            break;
+        case GL_FRAMEBUFFER_UNSUPPORTED:
+            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tGL_FRAMEBUFFER_UNSUPPORTED_EXT\n");
+            isOK = false;
+            break;
+            */
+        default:
+            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tUnknown ERROR\n");
+            isOK = false;
+        }
+    }
 
     if (tinfo.reload)
     {
@@ -392,6 +453,23 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     loom_mutex_unlock(Texture::sTexInfoLock);
 
     return &tinfo;
+}
+
+TextureInfo *Texture::initRenderTexture()
+{
+    // Get a new texture info
+    TextureInfo *tinfo = getAvailableTextureInfo(NULL);
+    if (tinfo != NULL)
+    {
+        TextureID id = tinfo->id;
+        tinfo->renderTarget = true;
+        loadCheckerBoard(id);
+    }
+    else
+    {
+        lmLog(gGFXTextureLogGroup, "No available texture id for render texture");
+    }
+    return tinfo;
 }
 
 TextureInfo *Texture::initFromAssetManager(const char *path)

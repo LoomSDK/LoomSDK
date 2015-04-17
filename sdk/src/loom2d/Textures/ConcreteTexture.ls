@@ -29,7 +29,7 @@ package loom2d.textures
         
         /** Creates a ConcreteTexture object from a TextureBase, storing information about size,
          *  mip-mapping, and if the channels contain premultiplied alpha values. */
-        public function ConcreteTexture(path:String, width:Number, height:Number)
+        public function ConcreteTexture(path:String, width:Number, height:Number, optimizeForRenderToTexture:Boolean = false)
         {
             textureInfo = null;
             mAssetPath = path;
@@ -37,6 +37,7 @@ package loom2d.textures
             mWidth = width;
             mHeight = height;
             mPremultipliedAlpha = false;
+            mOptimizedForRenderTexture = optimizedForRenderTexture;
         }
 
         public function setTextureInfo(ti:TextureInfo):void
