@@ -161,7 +161,9 @@ char* loom_log_getArgs(va_list args, const char **format) {
 void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format, ...)
 {
     loom_log_listenerEntry_t *listener = listenerHead;
-
+    char* buff;
+    va_list args;
+    
     // sometimes we're not using the lmLog macros, so enforce good behavior.
     if (!group->enabled)
     {
@@ -200,8 +202,7 @@ void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format,
     va_end(args);
     //*/
 
-    char* buff;
-    lmLogArgs(buff, format);
+    lmLogArgs(args, buff, format);
 
     // Walk the listeners and output.
     while (listener)
