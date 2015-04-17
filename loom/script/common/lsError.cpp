@@ -44,7 +44,8 @@ void LSError(const char *format, ...)
     */
 
     char* buff;
-    lmLogArgs(buff, format);
+    va_list args;
+    lmLogArgs(args, buff, format);
     LSLog(LSLogError, "%s", buff);
     free(buff);
 
@@ -68,7 +69,8 @@ void LSWarning(const char *format, ...)
     */
 
     char* buff;
-    lmLogArgs(buff, format);
+    va_list args;
+    lmLogArgs(args, buff, format);
 
     LSLog(LSLogWarn, "%s", buff);
 
