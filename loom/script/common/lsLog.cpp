@@ -56,12 +56,15 @@ void LSLogSetLevel(LSLogLevel level)
 
 void LSLog(LSLogLevel level, const char *format, ...)
 {
+    char* buff;
+    va_list args;
+
     if (level < logLevel)
     {
         return;
     }
-    char* buff;
-    lmLogArgs(buff, format);
+
+    lmLogArgs(args, buff, format);
 
     /*
     va_list args;
