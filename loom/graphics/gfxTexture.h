@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "loom/engine/loom2d/l2dDisplayObject.h"
+
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
@@ -304,8 +306,10 @@ public:
     static TextureInfo *initFromBytes(utByteArray *bytes, const char *name);
     static TextureInfo *initFromBytesAsync(utByteArray *bytes, const char *name, bool highPriorty);
     static TextureInfo *initFromAssetManagerAsync(const char *path, bool highPriorty);
-    static TextureInfo *initRenderTexture();
+	static TextureInfo *initRenderTexture(int width, int height);
     static int __stdcall loadTextureAsync_body(void *param);
+
+    static int render(lua_State *L);
 
     static void dispose(TextureID id);
 

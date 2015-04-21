@@ -77,7 +77,7 @@ package loom2d.textures
      */ 
     public class Texture
     {
-        protected var mFrame:Rectangle;
+        public var mFrame:Rectangle;
 
         /**
          * See @TextureSmoothing for modes
@@ -385,7 +385,11 @@ package loom2d.textures
             var concreteTexture:ConcreteTexture = new ConcreteTexture("", actualWidth, actualHeight, optimizeForRenderToTexture);
             // TODO: reimplement?
             //concreteTexture.onRestore = concreteTexture.clear;
-
+            concreteTexture.mFrame = new Rectangle(0, 0, actualWidth, actualHeight);
+            concreteTexture.setTextureInfo(Texture2D.initRenderTexture(actualWidth, actualHeight));
+            
+            trace("concrete", concreteTexture.textureInfo.id);
+            
             if (actualWidth - origWidth < 0.001 && actualHeight - origHeight < 0.001)
                 return concreteTexture;
             else

@@ -45,7 +45,7 @@ static unsigned int sProgram_posAttribLoc;
 static unsigned int sProgram_posColorLoc;
 static unsigned int sProgram_posTexCoordLoc;
 static unsigned int sProgram_texUniform;
-static unsigned int sProgram_screenSize;
+static unsigned int sProgram_mvp;
 
 static unsigned int sIndexBufferHandle;
 
@@ -137,7 +137,7 @@ void QuadRenderer::submit()
         // Set up texture state.
         Graphics::context()->glActiveTexture(GL_TEXTURE0);
         Graphics::context()->glUniform1i(sProgram_texUniform, 0);
-        Graphics::context()->glUniform4f(sProgram_screenSize, (float)Graphics::getWidth(), (float)Graphics::getHeight(), 0.f, 0.f);
+        Graphics::context()->glUniformMatrix4fv(sProgram_mvp, 1, GL_FALSE, Graphics::getMVP());
 
         Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
 
@@ -175,6 +175,7 @@ void QuadRenderer::submit()
                 lmAssert(false, "Unsupported wrapV: %d", tinfo.wrapV);
         }
         //*/
+
         switch (tinfo.smoothing)
         {
             case TEXTUREINFO_SMOOTHING_NONE:
@@ -341,7 +342,7 @@ void QuadRenderer::initializeGraphicsResources()
 
     //lmLogInfo(gGFXQuadRendererLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
 
-    // Create the quad shader.
+    // Create the quad 1.
     GLuint vertShader      = Graphics::context()->glCreateShader(GL_VERTEX_SHADER);
     
     //GLuint fragShader      = Graphics::context()->glCreateShader(GL_FRAGMENT_SHADER);
@@ -357,10 +358,10 @@ void QuadRenderer::initializeGraphicsResources()
     "attribute vec2 a_texcoord0;\n"
     "varying vec2 v_texcoord0;\n"
     "varying vec4 v_color0;\n"
-    "uniform vec4 screenSize;\n"
+    "uniform mat4 u_mvp;\n"
     "void main()\n"
     "{\n"
-    "    gl_Position = a_position / vec4(screenSize.x / 2.0, -screenSize.y / 2.0, 1.0, 1.0) + vec4(-1, 1, 0.0, 0.0);\n"
+	"    gl_Position = u_mvp * a_position;\n"
     "    v_color0 = a_color0;\n"
     "    v_texcoord0 = a_texcoord0;\n"
     "}\n";
@@ -386,24 +387,16 @@ void QuadRenderer::initializeGraphicsResources()
     
     Graphics::context()->glShaderSource(vertShader, 1, &vertShaderPtr, &vertShaderLen);
     Graphics::context()->glCompileShader(vertShader);
-    char error[4096];
-    GLsizei outLen = 0;
-    Graphics::context()->glGetShaderInfoLog(vertShader, 4096, &outLen, error);
-
-    lmLogInfo(gGFXQuadRendererLogGroup, "Program info log %s", error);
+	GFX_SHADER_CHECK(vertShader);
     
     Graphics::context()->glShaderSource(fragShaderColor, 1, &fragShaderColorPtr, &fragShaderColorLen);
     Graphics::context()->glCompileShader(fragShaderColor);
-    Graphics::context()->glGetShaderInfoLog(fragShaderColor, 4096, &outLen, error);
-    
-    lmLogInfo(gGFXQuadRendererLogGroup, "Program info log %s", error);
+	GFX_SHADER_CHECK(fragShaderColor);
 
     Graphics::context()->glAttachShader(quadProgColor, fragShaderColor);
     Graphics::context()->glAttachShader(quadProgColor, vertShader);
     Graphics::context()->glLinkProgram(quadProgColor);
-    Graphics::context()->glGetProgramInfoLog(quadProgColor, 4096, &outLen, error);
-
-    lmLogInfo(gGFXQuadRendererLogGroup, "Program info log %s", error);
+	GFX_PROGRAM_CHECK(quadProgColor);
     
     /*
     char fragShaderSrc[] =
@@ -438,7 +431,7 @@ void QuadRenderer::initializeGraphicsResources()
     sProgram_posColorLoc = Graphics::context()->glGetAttribLocation(quadProgColor, "a_color0");
     sProgram_posTexCoordLoc = Graphics::context()->glGetAttribLocation(quadProgColor, "a_texcoord0");
     sProgram_texUniform = Graphics::context()->glGetUniformLocation(quadProgColor, "u_texture");
-    sProgram_screenSize = Graphics::context()->glGetUniformLocation(quadProgColor, "screenSize");
+    sProgram_mvp = Graphics::context()->glGetUniformLocation(quadProgColor, "u_mvp");
 
     // Save program for later!
     sProgramPosColorTex = sProgramPosTex = quadProgColor;

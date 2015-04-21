@@ -20,6 +20,7 @@ limitations under the License.
 
 package loom.graphics
 {
+    import loom2d.display.DisplayObject;
     /**
      * Called when a TextureInfo's backing texture is updated with new dimensions.
      */
@@ -160,7 +161,11 @@ package loom.graphics
         public static native function initFromBytesAsync(bytes:ByteArray, uniqueName:String=null, highPriority:Boolean=false):TextureInfo;
 
         
-        public static native function initRenderTexture():TextureInfo;
+        public static native function initRenderTexture(width:int, height:int):TextureInfo;
+        
+        /**
+         */
+        public static native function render(nativeID:int, object:DisplayObject);
         
         /**
          * Given the native id from a TextureInfo, dispose the specified texture. This

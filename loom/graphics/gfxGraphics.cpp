@@ -24,6 +24,8 @@
 #include "loom/common/platform/platform.h"
 #include "loom/common/core/log.h"
 
+#include "loom/engine/loom2d/l2dMatrix.h"
+
 #include "loom/graphics/gfxMath.h"
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxTexture.h"
@@ -41,12 +43,34 @@ namespace GFX
 
     int Graphics::sWidth      = 0;
     int Graphics::sHeight     = 0;
-    uint32_t Graphics::sFlags = 0xFFFFFFFF;
+    uint32_t Graphics::sFlags = 0x00000000;
     int Graphics::sFillColor  = 0x000000FF;
     int Graphics::sView       = 0;
 
-    uint32_t Graphics::sCurrentFrame = 0;
-
+	uint32_t Graphics::sCurrentFrame = 0;
+	/*
+	float Graphics::sMVP[9] = {
+		1.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f
+	};
+	*/
+	float Graphics::sMVP[16] = {
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	};
+	/*
+	float Graphics::sMVPInverted[16] = {
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	};
+	*/
+	float* Graphics::sCurrentModelViewProjection = NULL;
+	
     char Graphics::pendingScreenshot[1024] = { 0, };
 
     extern SDL_GLContext context;
@@ -137,9 +161,9 @@ void Graphics::reset(int width, int height, uint32_t flags)
     if (sContextLost)
     {
         //bgfx::reset(width, height, flags);
-        QuadRenderer::reset();
-        VectorRenderer::reset();
-        Texture::reset();        
+        //QuadRenderer::reset();
+        //VectorRenderer::reset();
+        //Texture::reset();        
     }
     else
     {
@@ -152,6 +176,18 @@ void Graphics::reset(int width, int height, uint32_t flags)
 
     // clear context loss state
     sContextLost = false;
+
+	Loom2D::Matrix mvp;
+	mvp.scale(2.0f / width, 2.0f / height);
+	mvp.translate(-1.0f, -1.0f);
+	//mvp.copyToMatrix4(sMVPInverted);
+	// Inverted is normal due to OpenGL origin being bottom left
+	if (!(flags & FLAG_INVERTED)) {
+		mvp.scale(1.0f, -1.0f);
+	}
+	mvp.copyToMatrix4(sMVP);
+	
+	sCurrentModelViewProjection = sMVP;
 
     // cache current values
     sWidth  = width;
@@ -198,19 +234,21 @@ void Graphics::beginFrame()
         return;
     }
 
-    sCurrentFrame++;
+	sCurrentFrame++;
+
+	Graphics::reset(sWidth, sHeight, sFlags);
 
     Graphics::context()->glViewport(0, 0, Graphics::getWidth(), Graphics::getHeight());
 
-    // Issue clear.
-    Graphics::context()->glClearColor(
-                                      float((sFillColor >> 8) & 0xFF) / 255.0f,
-                                      float((sFillColor >> 16) & 0xFF) / 255.0f,
-                                      float((sFillColor >> 24) & 0xFF) / 255.0f,
-                                      float((sFillColor >> 0) & 0xFF) / 255.0f
-                                      );
-    Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
+	if (!(sFlags & FLAG_NOCLEAR)) {
+		Graphics::context()->glClearColor(
+										  float((sFillColor >> 24) & 0xFF) / 255.0f,
+										  float((sFillColor >> 16) & 0xFF) / 255.0f,
+										  float((sFillColor >> 8) & 0xFF) / 255.0f,
+										  float((sFillColor >> 0) & 0xFF) / 255.0f
+										  );
+		Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	}
 
     QuadRenderer::beginFrame();
     VectorRenderer::setSize(sWidth, sHeight);

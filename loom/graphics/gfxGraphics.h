@@ -50,7 +50,6 @@ namespace GFX {
 
 namespace GFX
 {
-
     typedef struct GL_Context
     {
 
@@ -72,9 +71,9 @@ namespace GFX
         ret func params {
 
 #ifdef _WIN32
-#define GFX_PROC_BREAK __debugbreak();
+#define GFX_DEBUG_BREAK __debugbreak();
 #else
-#define GFX_PROC_BREAK
+#define GFX_DEBUG_BREAK
 #endif
 
 #define GFX_PROC_MID(func) \
@@ -95,7 +94,7 @@ namespace GFX
                     default: errorName = "Unknown error"; \
                 } \
                 lmLogError(gGFXLogGroup, "OpenGL error: %s (0x%04x)", errorName, error); \
-                GFX_PROC_BREAK \
+                GFX_DEBUG_BREAK \
                 lmAssert(error, "OpenGL error, see above for details."); \
         } \
 
@@ -132,7 +131,10 @@ class Graphics
 {
 
 public:
-    
+
+	static const uint32_t FLAG_INVERTED = 1 << 0;
+	static const uint32_t FLAG_NOCLEAR  = 1 << 1;
+
     static GL_Context *context()
     {
         return &_context;
@@ -165,8 +167,19 @@ public:
         sHeight = height;
     }
     
-    static inline int getWidth() { return sWidth; }
-    static inline int getHeight() { return sHeight; }
+	static inline int getWidth() { return sWidth; }
+	static inline int getHeight() { return sHeight; }
+	static inline uint32_t getFlags() { return sFlags; }
+	static inline void setFlags(uint32_t flags) { sFlags = flags; }
+	static inline float* getMVP() {
+#if GFX_OPENGL_CHECK
+		if (sCurrentModelViewProjection == NULL) {
+			lmLogError(gGFXLogGroup, "Transformation matrix is NULL, did you call Graphics::reset?");
+			GFX_DEBUG_BREAK
+		}
+#endif
+		return sCurrentModelViewProjection;
+	}
 
     static void setViewTransform(float *view, float *proj);
 
@@ -210,6 +223,11 @@ private:
     // The current frame counter
     static uint32_t sCurrentFrame;
 
+	//static float sMVP[9];
+	static float sMVP[16];
+	//static float sMVPInverted[16];
+	static float* sCurrentModelViewProjection;
+
     // Opaque platform data, such as HWND
 //    static void *sPlatformData[3];
 
@@ -222,4 +240,72 @@ private:
     static GL_Context _context;
 
 };
+
+#ifdef GFX_OPENGL_CHECK
+
+#define GFX_SHADER_CHECK(shader) \
+do { \
+		GLint status; \
+		GFX::Graphics::context()->glGetShaderiv(shader, GL_COMPILE_STATUS, &status); \
+		\
+		int infoLen; \
+		GFX::Graphics::context()->glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen); \
+		GLchar* info = NULL; \
+		if (infoLen > 1) { \
+			info = (GLchar*) lmAlloc(NULL, infoLen); \
+			GFX::Graphics::context()->glGetShaderInfoLog(vertShader, infoLen, NULL, info); \
+		} \
+		if (status == GL_TRUE) { \
+			if (info != NULL) { \
+				lmLogInfo(gGFXLogGroup, "OpenGL shader name %d info: %s", shader, info); \
+			} else { \
+				lmLogInfo(gGFXLogGroup, "OpenGL shader name %d compilation successful", shader); \
+			} \
+		} else { \
+			if (info != NULL) { \
+				lmLogError(gGFXLogGroup, "OpenGL shader name %d error: %s", shader, info); \
+			} else { \
+				lmLogError(gGFXLogGroup, "OpenGL shader name %d error: No additional information provided.", shader); \
+			} \
+			GFX_DEBUG_BREAK \
+		} \
+		if (info != NULL) lmFree(NULL, info); \
+} while (0); \
+
+#define GFX_PROGRAM_CHECK(program) \
+do { \
+		GLint status; \
+		GFX::Graphics::context()->glGetProgramiv(program, GL_LINK_STATUS, &status); \
+		\
+		int infoLen; \
+		GFX::Graphics::context()->glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLen); \
+		GLchar* info = NULL; \
+		if (infoLen > 1) { \
+			info = (GLchar*) lmAlloc(NULL, infoLen); \
+			GFX::Graphics::context()->glGetProgramInfoLog(vertShader, infoLen, NULL, info); \
+		} \
+		if (status == GL_TRUE) { \
+			if (info != NULL) { \
+				lmLogInfo(gGFXLogGroup, "OpenGL program name %d info: %s", program, info); \
+			} else { \
+				lmLogInfo(gGFXLogGroup, "OpenGL program name %d linking successful", program); \
+			} \
+		} else { \
+			if (info != NULL) { \
+				lmLogError(gGFXLogGroup, "OpenGL program name %d error: %s", program, info); \
+			} else { \
+				lmLogError(gGFXLogGroup, "OpenGL program name %d error: No additional information provided.", program); \
+			} \
+			GFX_DEBUG_BREAK \
+		} \
+		if (info != NULL) lmFree(NULL, info); \
+} while (0); \
+
+#else
+
+#define GFX_SHADER_CHECK
+#define GFX_PROGRAM_CHECK
+
+#endif
+
 }

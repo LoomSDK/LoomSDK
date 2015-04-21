@@ -125,10 +125,15 @@ package loom2d.textures
             
             super(mActiveTexture, new Rectangle(0, 0, width, height), true);
             
+            setTextureInfo(mActiveTexture.textureInfo);
+            
             var rootWidth:Number  = mActiveTexture.root.width;
             var rootHeight:Number = mActiveTexture.root.height;
             
             mIsPersistent = persistent;
+            
+            trace("mActiveTexture", mActiveTexture.nativeID, nativeID, textureInfo);
+            
             //mSupport = new RenderSupport();
             //mSupport.setProjectionMatrix(0, 0, rootWidth, rootHeight, width, height);
             
@@ -193,6 +198,7 @@ package loom2d.textures
         
         private function render(object:DisplayObject, matrix:Matrix=null, alpha:Number=1.0):void
         {
+            
             //var filter:FragmentFilter = object.filter;
             //var mask:DisplayObject = object.mask;
 //

@@ -18,6 +18,10 @@
  * ===========================================================================
  */
 
+#include "loom/engine/loom2d/l2dStage.h"
+
+#include "loom/graphics/gfxTexture.h"
+
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
 
@@ -27,7 +31,8 @@
 #include "loom/common/utils/utTypes.h"
 
 #include "loom/graphics/gfxGraphics.h"
-#include "loom/graphics/gfxTexture.h"
+#include "loom/graphics/gfxQuadRenderer.h"
+
 
 #include "loom/common/platform/platformTime.h"
 
@@ -318,7 +323,6 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
         if (tinfo.renderTarget) {
             //tinfo.framebuffer = new FrameBuffer();
             Graphics::context()->glGenFramebuffers(1, &tinfo.framebuffer);
-            Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo.framebuffer);
         }
     }
 
@@ -347,7 +351,7 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     tinfo.width  = width;
     tinfo.height = height;
 
-    if (supportsFullNPOT || tinfo.isPowerOfTwo())
+    if (!tinfo.renderTarget && (supportsFullNPOT || tinfo.isPowerOfTwo()))
     {
         tinfo.clampOnly = false;
         tinfo.mipmaps = true;
@@ -380,19 +384,26 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     } else {
         tinfo.clampOnly = true;
         tinfo.mipmaps = false;
-        lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size")
+		if (!supportsFullNPOT) lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size")
     }
 
     //lmLogInfo(gGFXTextureLogGroup, "Generated mipmaps in %d ms", Graphics::context()->glGetError());
     //*/
 
-    if (tinfo.renderTarget)
+    if (newTexture && tinfo.renderTarget)
     {
+		Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
         //Graphics::context()->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tinfo.handle, 0);
         //GLenum buffers[1] = { GL_COLOR_ATTACHMENT0 };
         //Graphics::context()->glFramebufferTexture2D
         //tinfo.framebuffer->AttachTexture(GL_TEXTURE_2D, tinfo.handle, GL_COLOR_ATTACHMENT0);
         //tinfo.framebuffer->IsValid();
+
+        Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo.framebuffer);
         Graphics::context()->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tinfo.handle, 0);
 
         bool isOK = false;
@@ -437,6 +448,8 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
             lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tUnknown ERROR\n");
             isOK = false;
         }
+
+        Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     if (tinfo.reload)
@@ -455,7 +468,7 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     return &tinfo;
 }
 
-TextureInfo *Texture::initRenderTexture()
+TextureInfo *Texture::initRenderTexture(int width, int height)
 {
     // Get a new texture info
     TextureInfo *tinfo = getAvailableTextureInfo(NULL);
@@ -463,7 +476,8 @@ TextureInfo *Texture::initRenderTexture()
     {
         TextureID id = tinfo->id;
         tinfo->renderTarget = true;
-        loadCheckerBoard(id);
+        lmLog(gGFXTextureLogGroup, "renderTarget %d", id);
+        load(NULL, width, height, id);
     }
     else
     {
@@ -900,6 +914,57 @@ void Texture::reset()
     }
 }
 
+
+int Texture::render(lua_State *L)
+{
+    TextureID id = lua_tointeger(L, 1);
+    Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, 2);
+
+    //lmLogInfo(gGFXTextureLogGroup, "render %d", id);
+
+    if ((id < 0) || (id >= MAXTEXTURES))
+    {
+        return 0;
+    }
+
+    loom_mutex_lock(Texture::sTexInfoLock);
+    TextureInfo *tinfo = &sTextureInfos[id];
+
+    if (tinfo->handle != -1)
+    {
+        lmAssert(tinfo->renderTarget, "Error rendering to texture, texture is not a render buffer: %d", id);
+        QuadRenderer::submit();
+        Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo->framebuffer);
+        
+		// Save state
+		Loom2D::DisplayObjectContainer *parent = object->parent;
+		uint32_t flags = Graphics::getFlags();
+
+		// Setup state
+		object->parent = NULL;
+		Graphics::setFlags(Graphics::FLAG_INVERTED | Graphics::FLAG_NOCLEAR);
+        
+		Graphics::context()->glDisable(GL_DEPTH_TEST);
+		Graphics::context()->glDepthMask(GL_FALSE);
+
+		//Graphics::setNativeSize(Loom2D::Stage::smMainStage->getWidth(), Loom2D::Stage::smMainStage->getHeight());
+        Graphics::setNativeSize(tinfo->width, tinfo->height);
+        Graphics::beginFrame();
+        object->validate(L, lua_gettop(L));
+        object->render(L);
+        Graphics::endFrame();
+
+		// Restore state
+        object->parent = parent;
+		Graphics::setFlags(flags);
+		
+		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    loom_mutex_unlock(Texture::sTexInfoLock);
+
+    return 0;
+}
 
 void Texture::dispose(TextureID id)
 {
