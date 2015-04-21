@@ -26,8 +26,12 @@ package
     public class NanoVG extends Application
     {
         private var g:Graphics;
+        private var s:Graphics;
+        private var d:Graphics;
         
         var sg:Shape;
+        var q:Quad;
+        var logo:Image;
         
         override public function run():void
         {
@@ -36,7 +40,6 @@ package
             //stage.scaleMode = StageScaleMode.NONE;
             stage.color = 0xE1E1E1;
             
-            var q:Quad;
             //*
             /*
             q = new Quad(200, 200, 0xBDC5F9); q.x = 10; q.y = 10; stage.addChild(q);
@@ -65,8 +68,8 @@ package
             stage.addChild(sd);
             
             g = sg.graphics;
-            var s:Graphics = ss.graphics;
-            var d:Graphics = sd.graphics;
+            s = ss.graphics;
+            d = sd.graphics;
             
             //gfx.moveTo(0, 0);
             //gfx.lineTo(50, 0);
@@ -102,7 +105,16 @@ package
             // SVG
             var svg = new SVG();
             svg.loadFile("assets/nano.svg");
-            g.drawSVG(220, 60, 0.2, svg);
+            g.drawSVG(svg, 220, 60, 0.2);
+            
+            var svgLines = new SVG();
+            // Icon made by Freepik from www.flaticon.com
+            //svgLines.loadFile("assets/emoticon85.svg");
+            svgLines.loadFile("assets/Hand_left.svg");
+            
+            var ln = 6;
+            var lv:Vector.<Number> = [0.5, 1, 1.5, 2, 3, 4];
+            for (var li = 0; li < ln; li++) g.drawSVG(svgLines, 220, 95+li*5, 0.2, lv[li]);
             
             //sg.pivotX = 220; sg.pivotY = 30; sg.scale *= 5;
             //return;
@@ -426,14 +438,26 @@ package
             }
             //*/
             
+            // Swirly spiral screen
             /*
             g.clear();
+            s.clear();
+            d.clear();
+            
+            //var sans = new TextFormat("sans", 60, 0xfe5552);
+            //sans.align = TextAlign.CENTER;
+            //g.textFormat(sans);
+            //g.drawTextLine(stage.stageWidth/2-sg.x, 50, "LOOMSDK");
+            
             g.lineStyle(1, 0xFFFFFF, 0.1);
-            var n = 200;
+            //var n = 200;
+            var n = 400;
             var w = 460-sg.x*2;
             var h = 300-sg.y*2;
             
-            var t = Loom2D.juggler.elapsedTime;
+            //var t = Loom2D.juggler.elapsedTime;
+            //var t = (Math.cos(Loom2D.juggler.elapsedTime*Math.PI*2/10-Math.PI))/2*10;
+            var t = 3;
             
             var cx = w / 2;
             var cy = h / 2;
@@ -444,15 +468,42 @@ package
             var a = 0;
             var b = n;
             
-            var spiral = (Math.sin(t*0.01)+1)*0.5*50;
+            //var spiral = (Math.sin(t*0.01)+1)*0.5*80;
+            //var spiral = (Math.sin(t*0.02)+1)*0.5*140;
+            //var spiral = 1.61803398875;
+            var spiral = 1.61803398875;
+            
+            //var rot = Loom2D.juggler.elapsedTime/spiral;
+            var rot = (Math.cos(Loom2D.juggler.elapsedTime*Math.PI*2/2-Math.PI))/2*2/spiral;
+            
+            var sa = 0.01;
+            var sb = 0.05;
             
             g.moveTo(cx, cy);
             for (var i:int = a; i < b; i++) {
                 var r = i/(n-1)*500;
-                var ang = (i/(n-1)*spiral+t*0.5) * Math.TWOPI;
-                g.lineStyle(3 + 1*Math.sin(1000*i/(n-1)*Math.TWOPI + t*50), hsvToRgb((i/n*360*3 + t*200)%360, 1, 1), 1);
+                //var ang = (i/(n-1)*spiral+t*0.5+rot) * Math.TWOPI;
+                var ang = spiral*i+rot*i/n;
+                //var ang = 1/sb*Math.log(r/sa)+rot;
+                g.lineStyle(3 + 1*Math.sin(1000*i/(n-1)*Math.TWOPI + t*50), hsvToRgb((i/n*360*3 + t*200)%360, 0.8, 1), 1);
                 g.lineTo(cx+Math.cos(ang)*r, cy+Math.sin(ang)*r);
             }
+            //*/
+            
+            /*
+            g.clear();
+            s.clear();
+            d.clear();
+            
+            var sans = new TextFormat("sans", 60, 0xfe5552);
+            sans.align = TextAlign.CENTER;
+            g.textFormat(sans);
+            g.drawTextLine(stage.stageWidth/2-sg.x, 50, "(\\/) (°,,°) (\\/)");
+            
+            var lobster = new TextFormat("lobster", 60, 0xfe5552);
+            lobster.align = TextAlign.CENTER;
+            g.textFormat(lobster);
+            g.drawTextLine(stage.stageWidth/2-sg.x, 170, "Why not Zoidberg?");
             //*/
         }
         

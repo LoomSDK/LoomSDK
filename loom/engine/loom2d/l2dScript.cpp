@@ -267,7 +267,9 @@ static int registerLoom2D(lua_State *L)
 
     // SVG
        .beginClass<GFX::VectorSVG>("SVG")
-       .addConstructor<void(*)(void)>()
+	   .addConstructor<void(*)(void)>()
+	   .addVarAccessor("width", &GFX::VectorSVG::getWidth)
+	   .addVarAccessor("height", &GFX::VectorSVG::getHeight)
        .addMethod("loadFile", &GFX::VectorSVG::loadFile)
        .addMethod("loadString", &GFX::VectorSVG::loadString)
        .endClass()

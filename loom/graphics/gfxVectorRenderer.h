@@ -120,11 +120,12 @@ protected:
 	utString units;
 	float dpi;
 	NSVGimage* image;
+
 	void reset(bool reloaded = false);
 	void parse(const char* input, const char* units, float dpi);
 public:
-	float width;
-	float height;
+	float getWidth() const;
+	float getHeight() const;
 
 	VectorSVG();
 	~VectorSVG();
@@ -132,7 +133,7 @@ public:
 	void reload();
 	void loadFile(utString path, utString units = utString("px"), float dpi = 96.0f);
 	void loadString(utString svg, utString units = utString("px"), float dpi = 96.0f);
-	void render(float x, float y, float scale);
+	void render(float x, float y, float scale, float lineThickness);
 };
 
 class VectorRenderer
@@ -207,7 +208,7 @@ public:
     static float textLineAdvance(VectorTextFormat* format, float x, float y, utString* string);
     static Loom2D::Rectangle textBoxBounds(VectorTextFormat* format, float x, float y, float width, utString* string);
 
-	static void svg(float x, float y, float scale, VectorSVG* image);
+	static void svg(VectorSVG* image, float x, float y, float scale, float lineThickness);
 
 	static float* getBounds();
 

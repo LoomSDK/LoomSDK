@@ -260,11 +260,11 @@ void VectorGraphics::ensureTextFormat() {
 	}
 }
 
-void VectorGraphics::drawSVG(float x, float y, float scale, VectorSVG* svg) {
-	queue->push_back(new VectorSVGData(x, y, scale, svg));
+void VectorGraphics::drawSVG(VectorSVG* svg, float x, float y, float scale, float lineThickness) {
+	queue->push_back(new VectorSVGData(svg, x, y, scale, lineThickness));
 	restartPath();
 	inflateBounds(x, y);
-	inflateBounds(x+svg->width*scale, y+svg->height*scale);
+	inflateBounds(x+svg->getWidth()*scale, y+svg->getHeight()*scale);
 }
 
 
@@ -397,7 +397,7 @@ VectorTextFormatData::~VectorTextFormatData() {
 
 void VectorSVGData::render(VectorGraphics* g) {
 	g->flushPath();
-	VectorRenderer::svg(x, y, scale, image);
+	VectorRenderer::svg(image, x, y, scale, lineThickness);
 }
 
 

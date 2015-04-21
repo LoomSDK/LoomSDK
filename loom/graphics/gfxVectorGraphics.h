@@ -154,8 +154,9 @@ public:
 	float x;
 	float y;
 	float scale;
+	float lineThickness;
 	GFX::VectorSVG* image;
-	VectorSVGData(float x, float y, float scale, GFX::VectorSVG* image) : x(x), y(y), scale(scale), image(image) {};
+	VectorSVGData(GFX::VectorSVG* image, float x, float y, float scale = 1.0f, float lineThickness = 1.0f) : image(image), x(x), y(y), scale(scale), lineThickness(lineThickness) {};
 	virtual void render(VectorGraphics* g);
 };
 
@@ -226,7 +227,7 @@ public:
     float textLineAdvance(GFX::VectorTextFormat format, float x, float y, utString text);
     Loom2D::Rectangle textBoxBounds(GFX::VectorTextFormat format, float x, float y, float width, utString text);
 
-	void drawSVG(float x, float y, float scale, GFX::VectorSVG* svg);
+	void drawSVG(GFX::VectorSVG* svg, float x, float y, float scale, float lineThickness);
 };
 
 

@@ -104,6 +104,8 @@ package loom2d.display
      */
     public native class SVG
     {
+        public native var width:Number;
+        public native var height:Number;
         public native function loadFile(path:String, units:String = "px", dpi:Number = 96);
         public native function loadString(svg:String, units:String = "px", dpi:Number = 96);
     }
@@ -224,9 +226,9 @@ package loom2d.display
         public native function drawTextBox(x:Number, y:Number, width:Number, text:String):void;
         
         /**
-         * Draw an SVG at the given center point.
+         * Draw an SVG at the given point.
          */
-        public native function drawSVG(x:Number, y:Number, scale:Number, svg:SVG):void;
+        public native function drawSVG(svg:SVG, x:Number, y:Number, scale:Number = 1, lineThickness:Number = 1):void;
         
         /**
          * Get the current bounds of the graphics drawn by this instance.
