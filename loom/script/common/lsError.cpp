@@ -31,19 +31,6 @@
 namespace LS {
 void LSError(const char *format, ...)
 {
-    /*
-    char    buff[2048];
-    va_list args;
-
-    va_start(args, format);
-#ifdef _MSC_VER
-    vsprintf_s(buff, 2046, format, args);
-#else
-    vsnprintf(buff, 2046, format, args);
-#endif
-    va_end(args);
-    */
-
     char* buff;
     va_list args;
     lmLogArgs(args, buff, format);
@@ -59,9 +46,7 @@ void LSWarning(const char *format, ...)
     char* buff;
     va_list args;
     lmLogArgs(args, buff, format);
-
     LSLog(LSLogWarn, "%s", buff);
-
     lmFree(NULL, buff);
 }
 }
