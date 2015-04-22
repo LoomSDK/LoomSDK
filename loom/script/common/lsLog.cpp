@@ -66,25 +66,6 @@ void LSLog(LSLogLevel level, const char *format, ...)
 
     lmLogArgs(args, buff, format);
 
-    /*
-    va_list args;
-    va_start(args, format);
-    int count = _vscprintf(format, args);
-    char* buff = (char*)malloc(count+2);
-    vsprintf_s(buff, count+1, format, args);
-    va_end(args);
-    */
-
-    /*
-    char    buff[2048];
-    #ifdef _MSC_VER
-    vsprintf_s(buff, 2046, format, args);
-    #else
-    vsnprintf(buff, 2046, format, args);
-    #endif
-    va_end(args); va_start(args, format);
-    //*/
-
     if (externLog)
     {
         int elevel;
@@ -113,7 +94,7 @@ void LSLog(LSLogLevel level, const char *format, ...)
         printf("%s\n", buff);
     }
 
-    free(buff);
+    lmFree(NULL, buff);
 
 }
 }

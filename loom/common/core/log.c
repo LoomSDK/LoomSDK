@@ -147,9 +147,10 @@ int _vscprintf(const char *format, va_list pargs)
 }
 #endif
 
+// Don't forget to lmFree the returned buff
 char* loom_log_getArgs(va_list args, const char **format) {
     int count = _vscprintf(*format, args);
-    char* buff = (char*)malloc(count + 2);
+    char* buff = (char*)lmAlloc(NULL, count + 2);
     #if LOOM_COMPILER == LOOM_COMPILER_MSVC
         vsprintf_s(buff, count + 1, *format, args);
     #else
@@ -175,33 +176,6 @@ void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format,
         return;
     }
 
-    /*
-    va_list args;
-    char    buff[3000];
-    va_start(args, format);
-#if LOOM_COMPILER == LOOM_COMPILER_MSVC
-    vsprintf_s(buff, 2998, format, args);
-#else
-    vsnprintf(buff, 2998, format, args);
-#endif
-    va_end(args);
-    //*/
-    
-    //char* buff = loom_log_getArgs(&format);
-
-    /*
-    va_list args;
-    va_start(args, format);
-    int count = 3000;
-    char* buff = (char*)malloc(count + 2);
-#if LOOM_COMPILER == LOOM_COMPILER_MSVC
-    vsprintf_s(buff, count + 1, format, args);
-#else
-    vsnprintf(buff, count, format, args);
-#endif
-    va_end(args);
-    //*/
-
     lmLogArgs(args, buff, format);
 
     // Walk the listeners and output.
@@ -211,7 +185,7 @@ void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format,
         listener = listener->next;
     }
 
-    free(buff);
+    lmFree(NULL, buff);
 
 }
 

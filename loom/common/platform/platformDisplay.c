@@ -27,6 +27,7 @@
 #include <stdarg.h>
 #endif
 
+#include "loom/common/core/allocator.h"
 #include "loom/common/platform/platformDisplay.h"
 #include "loom/common/platform/platformThread.h"
 #include "loom/common/platform/platformTime.h" // Needed to generate fake accelerometer data
@@ -69,14 +70,6 @@ int platform_debugOut(const char *out, ...)
 {
     int  len;
 
-    /*
-    char buff[2048];
-    va_list args;
-    va_start(args, out);
-    vsprintf_s(buff, 2046, out, args);
-    va_end(args);
-    */
-
     char* buff;
     va_list args;
     lmLogArgs(args, buff, out);
@@ -92,7 +85,7 @@ int platform_debugOut(const char *out, ...)
     // Make it show in console, too.
     fputs(buff, stdout);
 
-    free(buff);
+    lmFree(NULL, buff);
 
     return 0;
 }
@@ -101,14 +94,6 @@ int platform_debugOut(const char *out, ...)
 int platform_error(const char *out, ...)
 {
     static int pesafety = 0;
-
-    /*
-    va_list    args;
-    char       buff[2048];
-    va_start(args, out);
-    vsprintf_s(buff, 2046, out, args);
-    va_end(args);
-    */
 
     char* buff;
     va_list args;
@@ -124,7 +109,7 @@ int platform_error(const char *out, ...)
         pesafety = 0;
     }
 
-    free(buff);
+    lmFree(NULL, buff);
 
     return 0;
 }
@@ -146,14 +131,6 @@ int platform_debugOut(const char *out, ...)
 {
     int  len;
 
-    /*
-    va_list args;
-    char buff[2048];
-    va_start(args, out);
-    vsnprintf(buff, 2046, out, args);
-    va_end(args);
-    */
-
     char* buff;
     va_list args;
     lmLogArgs(args, buff, out);
@@ -169,7 +146,7 @@ int platform_debugOut(const char *out, ...)
     ios_debugOut("%s", buff);
 #endif
 
-    free(buff);
+    lmFree(NULL, buff);
 
     return 0;
 }
@@ -190,7 +167,7 @@ int platform_error(const char *out, ...)
         pesafety = 0;
     }
 
-    free(buff);
+    lmFree(buff);
 
     return 0;
 }

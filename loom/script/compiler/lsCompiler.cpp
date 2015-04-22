@@ -680,46 +680,21 @@ void LSCompiler::setSDKBuild(const utString& lscPath)
 
 void LSCompiler::log(const char *format, ...)
 {
-    /*
-    char    buff[2048];
-    va_list args;
-
-    va_start(args, format);
-#ifdef _MSC_VER
-    vsprintf_s(buff, 2046, format, args);
-#else
-    vsnprintf(buff, 2046, format, args);
-#endif
-    va_end(args);
-    */
-
     char* buff;
     va_list args;
     lmLogArgs(args, buff, format);
     lmLog(compilerLogGroup, "%s", buff);
-    free(buff);
+    lmFree(NULL, buff);
 }
 
 
 void LSCompiler::logVerbose(const char *format, ...)
 {
-    /*
-    char    buff[2048];
-    va_list args;
-
-    va_start(args, format);
-#ifdef _MSC_VER
-    vsprintf_s(buff, 2046, format, args);
-#else
-    vsnprintf(buff, 2046, format, args);
-#endif
-    va_end(args);
-    */
     char* buff;
     va_list args;
     lmLogArgs(args, buff, format);
     lmLog(compilerVerboseLogGroup, "%s", buff);
-    free(buff);
+    lmFree(NULL, buff);
 }
 
 
