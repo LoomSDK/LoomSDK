@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "loom/script/loomscript.h"
 
 namespace LS {
 static FunctionLog externLog = 0;
@@ -53,23 +54,17 @@ void LSLogSetLevel(LSLogLevel level)
     logLevel = level;
 }
 
-
 void LSLog(LSLogLevel level, const char *format, ...)
 {
+    char* buff;
+    va_list args;
+
     if (level < logLevel)
     {
         return;
     }
 
-    char    buff[2048];
-    va_list args;
-    va_start(args, format);
-#ifdef _MSC_VER
-    vsprintf_s(buff, 2046, format, args);
-#else
-    vsnprintf(buff, 2046, format, args);
-#endif
-    va_end(args);
+    lmLogArgs(args, buff, format);
 
     if (externLog)
     {
@@ -95,9 +90,11 @@ void LSLog(LSLogLevel level, const char *format, ...)
         }
 
         externLog(externExtra, elevel, "%s", buff);
-        return;
+    } else {
+        printf("%s\n", buff);
     }
 
-    printf("%s\n", buff);
+    lmFree(NULL, buff);
+
 }
 }
