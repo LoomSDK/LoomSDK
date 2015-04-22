@@ -834,7 +834,7 @@ void Texture::dispose(TextureID id)
     TextureInfo *tinfo = &sTextureInfos[id];
 
     // If the texture isn't valid ignore it.
-    if (tinfo->handle == -1)
+    if (tinfo->handle != -1)
     {
         //if texture is still loading or is inside of the loading queue, we can't dispose of it now, 
         //but need to flag it for disposal in the thread
