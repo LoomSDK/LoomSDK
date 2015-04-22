@@ -20,6 +20,7 @@
 
 #include "lsError.h"
 #include "lsLog.h"
+#include "loom/common/core/allocator.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -30,18 +31,11 @@
 namespace LS {
 void LSError(const char *format, ...)
 {
-    char    buff[2048];
+    char* buff;
     va_list args;
-
-    va_start(args, format);
-#ifdef _MSC_VER
-    vsprintf_s(buff, 2046, format, args);
-#else
-    vsnprintf(buff, 2046, format, args);
-#endif
-    va_end(args);
-
+    lmLogArgs(args, buff, format);
     LSLog(LSLogError, "%s", buff);
+    lmFree(NULL, buff);
 
     exit(EXIT_FAILURE);
 }
@@ -49,17 +43,10 @@ void LSError(const char *format, ...)
 
 void LSWarning(const char *format, ...)
 {
-    char    buff[2048];
+    char* buff;
     va_list args;
-
-    va_start(args, format);
-#ifdef _MSC_VER
-    vsprintf_s(buff, 2046, format, args);
-#else
-    vsnprintf(buff, 2046, format, args);
-#endif
-    va_end(args);
-
+    lmLogArgs(args, buff, format);
     LSLog(LSLogWarn, "%s", buff);
+    lmFree(NULL, buff);
 }
 }

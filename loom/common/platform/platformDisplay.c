@@ -27,6 +27,7 @@
 #include <stdarg.h>
 #endif
 
+#include "loom/common/core/allocator.h"
 #include "loom/common/platform/platformDisplay.h"
 #include "loom/common/platform/platformThread.h"
 #include "loom/common/platform/platformTime.h" // Needed to generate fake accelerometer data
@@ -67,14 +68,11 @@ void accelerometerUpdate()
 
 int platform_debugOut(const char *out, ...)
 {
-    char buff[2048];
     int  len;
 
+    char* buff;
     va_list args;
-
-    va_start(args, out);
-    vsprintf_s(buff, 2046, out, args);
-    va_end(args);
+    lmLogArgs(args, buff, out);
 
     // Put a new line in so windows displays this junk right.
     len           = (int)strlen(buff);
@@ -87,6 +85,8 @@ int platform_debugOut(const char *out, ...)
     // Make it show in console, too.
     fputs(buff, stdout);
 
+    lmFree(NULL, buff);
+
     return 0;
 }
 
@@ -94,13 +94,11 @@ int platform_debugOut(const char *out, ...)
 int platform_error(const char *out, ...)
 {
     static int pesafety = 0;
-    char       buff[2048];
-    va_list    args;
 
-    va_start(args, out);
-    vsprintf_s(buff, 2046, out, args);
-    va_end(args);
-
+    char* buff;
+    va_list args;
+    lmLogArgs(args, buff, out);
+    
     OutputDebugStringA(buff);
 
     // Try to output/log error. Add a guard to avid infinite logging.
@@ -110,6 +108,8 @@ int platform_error(const char *out, ...)
         lmLogError(gPlatformErrorLogGroup, "%s", buff);
         pesafety = 0;
     }
+
+    lmFree(NULL, buff);
 
     return 0;
 }
@@ -129,14 +129,11 @@ int ios_debugOut(const char *__restrict format, ...);
 
 int platform_debugOut(const char *out, ...)
 {
-    char buff[2048];
     int  len;
 
+    char* buff;
     va_list args;
-
-    va_start(args, out);
-    vsnprintf(buff, 2046, out, args);
-    va_end(args);
+    lmLogArgs(args, buff, out);
 
     // Put a new line in so windows displays this junk right.
     len           = strlen(buff);
@@ -149,19 +146,17 @@ int platform_debugOut(const char *out, ...)
     ios_debugOut("%s", buff);
 #endif
 
+    lmFree(NULL, buff);
+
     return 0;
 }
 
 
 int platform_error(const char *out, ...)
 {
-    // TODO: Does this need to be smarter, or stripped in release builds?
-    char    buff[4096];
+    char* buff;
     va_list args;
-
-    va_start(args, out);
-    vsnprintf(buff, 4094, out, args);
-    va_end(args);
+    lmLogArgs(args, buff, out);
 
     // Try to output/log error with re-entrancy guard.
     static int pesafety = 0;
@@ -171,6 +166,8 @@ int platform_error(const char *out, ...)
         lmLogError(gPlatformErrorLogGroup, "%s", buff);
         pesafety = 0;
     }
+
+    lmFree(NULL, buff);
 
     return 0;
 }

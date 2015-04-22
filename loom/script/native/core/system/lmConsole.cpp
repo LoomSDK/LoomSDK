@@ -79,13 +79,8 @@ int Console::print(lua_State *L)
         }
     }
 
-    length = strlen(toprint.c_str());
-    char buff[2048];
-    memset(buff, 0, 2048);
-    memcpy(buff, toprint.c_str(), length > 2000 ? 2000 : length);
-
     // print to log
-    LSLog(LSLogError, "%s", buff);
+    LSLog(LSLogError, "%s", toprint.c_str());
 
     return 0;
 }
