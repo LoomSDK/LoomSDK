@@ -167,7 +167,7 @@ int platform_error(const char *out, ...)
         pesafety = 0;
     }
 
-    lmFree(buff);
+    lmFree(NULL, buff);
 
     return 0;
 }
