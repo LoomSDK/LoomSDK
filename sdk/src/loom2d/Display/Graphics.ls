@@ -108,6 +108,17 @@ package loom2d.display
         public native function loadString(svg:String, units:String = "px", dpi:Number = 96);
     }
     
+    /**
+     * 
+     */
+    public native class GlyphPosition
+    {
+        public var offset:int;
+        public var x:Number;
+        public var min:Number;
+        public var max:Number;
+    }
+    
     [Native(managed)]
     /**
      * Draw GPU accelerated vector graphics. Used in conjunction with the Shape class.
@@ -139,6 +150,8 @@ package loom2d.display
          * Get the bounds of a given string as it would be drawn with specified format.
          */
         public native function textLineBounds(format:TextFormat, x:Number, y:Number, text:String):Rectangle;
+        
+        public native function textLineGlyphPositions(format:TextFormat, x:Number, y:Number, text:String):Vector.<GlyphPosition>;
         
         /**
          * Determine the logical width of the passed strings. This can vary from bounds and is

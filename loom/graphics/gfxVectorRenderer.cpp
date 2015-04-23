@@ -310,6 +310,34 @@ Loom2D::Rectangle VectorRenderer::textLineBounds(VectorTextFormat* format, float
     return Loom2D::Rectangle(xmin, ymin, xmax-xmin, ymax-ymin);
 }
 
+utArray<VectorGlyphPosition> VectorRenderer::textLineGlyphPositions(VectorTextFormat* format, float x, float y, utString* string) {
+    const size_t len = string->length();
+    const char* str = string->c_str();
+    NVGglyphPosition *positions = new NVGglyphPosition[len];
+    
+    nvgSave(nvg);
+    nvgReset(nvg);
+    textFormat(format);
+    int glyphNum = nvgTextGlyphPositions(nvg, x, y, str, NULL, positions, len);
+    nvgRestore(nvg);
+
+    utArray<VectorGlyphPosition> glyphPositions;
+    glyphPositions.resize(glyphNum);
+
+    for (int i = 0; i < glyphNum; i++) {
+        VectorGlyphPosition &p = glyphPositions[i];
+        NVGglyphPosition &np = positions[i];
+        p.offset = (int) (np.str - str);
+        p.x = np.x;
+        p.min = np.minx;
+        p.max = np.maxx;
+    }
+
+    delete positions;
+
+    return glyphPositions;
+}
+
 float VectorRenderer::textLineAdvance(VectorTextFormat* format, float x, float y, utString* string) {
     nvgSave(nvg);
     nvgReset(nvg);

@@ -265,6 +265,14 @@ static int registerLoom2D(lua_State *L)
        .addProperty("lineHeight", &GFX::VectorTextFormat::getLineHeight, &GFX::VectorTextFormat::setLineHeight)
        .endClass()
 
+    // GlyphPosition
+       .beginClass<GFX::VectorGlyphPosition>("GlyphPosition")
+       .addVar("offset", &GFX::VectorGlyphPosition::offset)
+       .addVar("x", &GFX::VectorGlyphPosition::x)
+       .addVar("min", &GFX::VectorGlyphPosition::min)
+       .addVar("max", &GFX::VectorGlyphPosition::max)
+       .endClass()
+
     // SVG
        .beginClass<GFX::VectorSVG>("SVG")
        .addConstructor<void(*)(void)>()
@@ -285,6 +293,7 @@ static int registerLoom2D(lua_State *L)
        .addMethod("lineStyle", &GFX::VectorGraphics::lineStyle)
        .addMethod("textFormat", &GFX::VectorGraphics::textFormat)
        .addMethod("textLineBounds", &GFX::VectorGraphics::textLineBounds)
+       .addMethod("textLineGlyphPositions", &GFX::VectorGraphics::textLineGlyphPositions)
        .addMethod("textLineAdvance", &GFX::VectorGraphics::textLineAdvance)
        .addMethod("textBoxBounds", &GFX::VectorGraphics::textBoxBounds)
        .addMethod("beginFill", &GFX::VectorGraphics::beginFill)
@@ -343,6 +352,8 @@ void installLoom2D()
 
     LOOM_DECLARE_NATIVETYPE(Loom2D::Rectangle, Loom2D::registerLoom2D);
     LOOM_DECLARE_NATIVETYPE(Loom2D::Matrix, Loom2D::registerLoom2D);
+
+    LOOM_DECLARE_NATIVETYPE(GFX::VectorGlyphPosition, Loom2D::registerLoom2D);
 
     LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorTextFormat, Loom2D::registerLoom2D);
     LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::VectorSVG, Loom2D::registerLoom2D);

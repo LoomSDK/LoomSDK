@@ -239,6 +239,10 @@ Loom2D::Rectangle VectorGraphics::textLineBounds(VectorTextFormat format, float 
     return VectorRenderer::textLineBounds(&format, x, y, &text);
 }
 
+utArray<VectorGlyphPosition> VectorGraphics::textLineGlyphPositions(GFX::VectorTextFormat format, float x, float y, utString text) {
+    return VectorRenderer::textLineGlyphPositions(&format, x, y, &text);
+}
+
 float VectorGraphics::textLineAdvance(VectorTextFormat format, float x, float y, utString text) {
     return VectorRenderer::textLineAdvance(&format, x, y, &text);
 }
@@ -276,6 +280,8 @@ void VectorGraphics::drawSVG(float x, float y, float scale, VectorSVG* svg) {
 *************************/
 
 void VectorGraphics::render(Loom2D::Matrix* transform) {
+    if (queue->size() == 0) return;
+
     QuadRenderer::submit();
 
     VectorRenderer::beginFrame();

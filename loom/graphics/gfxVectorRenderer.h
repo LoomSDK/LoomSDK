@@ -58,6 +58,13 @@ struct VectorWinding {
 	};
 };
 
+struct VectorGlyphPosition {
+    int offset;
+    float x;
+    float min;
+    float max;
+};
+
 /*
 class VectorFont {
 protected:
@@ -205,6 +212,7 @@ public:
 
     static Loom2D::Rectangle textLineBounds(VectorTextFormat* format, float x, float y, utString* string);
     static float textLineAdvance(VectorTextFormat* format, float x, float y, utString* string);
+    static utArray<VectorGlyphPosition> textLineGlyphPositions(GFX::VectorTextFormat* format, float x, float y, utString* text);
     static Loom2D::Rectangle textBoxBounds(VectorTextFormat* format, float x, float y, float width, utString* string);
 
 	static void svg(float x, float y, float scale, VectorSVG* image);
