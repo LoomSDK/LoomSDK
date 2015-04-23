@@ -40,57 +40,32 @@ package
             //stage.scaleMode = StageScaleMode.NONE;
             stage.color = 0xE1E1E1;
             
-            //*
-            /*
-            q = new Quad(200, 200, 0xBDC5F9); q.x = 10; q.y = 10; stage.addChild(q);
-            q = new Quad(200, 200, 0xA8B1F7); q.x = 40; q.y = 40; stage.addChild(q);
-            q = new Quad(200, 200, 0x8A98F4); q.x = 80; q.y = 80; stage.addChild(q);
-            q = new Quad(200, 200, 0x596CF0); q.x = 120; q.y = 120; stage.addChild(q);
-            */
-            
-            //q = new Quad(400, 300, 0xBDC5F9); q.x = 10; q.y = 10; stage.addChild(q);
+            // Background
             q = new Quad(460, 300, 0xF3F3F3); q.x = 10; q.y = 10; stage.addChild(q);
             
+            // Most of the test shapes
             sg = new Shape();
             sg.x = 50;
             sg.y = 50;
             stage.addChild(sg);
             
+            // Scaled shape
             var ss = new Shape();
             ss.x = 50;
             ss.y = 50;
             ss.scale = 10;
             stage.addChild(ss);
             
+            // Bounds
             var sd = new Shape();
             sd.x = 50;
             sd.y = 50;
             stage.addChild(sd);
             
+            // Store references to Graphics objects for easier use
             g = sg.graphics;
             s = ss.graphics;
             d = sd.graphics;
-            
-            //gfx.moveTo(0, 0);
-            //gfx.lineTo(50, 0);
-            //gfx.lineTo(0, 50);
-            //gfx.clear();
-            //gfx.moveTo(0, 0);
-            //gfx.lineTo(50, -50);
-            //gfx.cubicCurveTo(0, 0, 20, 20, 50, 50);
-            /*
-            gfx.moveTo(10, 40);
-            gfx.lineTo(40, 40);
-            gfx.drawCircle(40, 40, 20);
-            gfx.lineTo(40, 80);
-            
-            gfx.lineStyle(10, 0xF1AD0E, 1);
-            gfx.moveTo(50, 50);
-            gfx.lineTo(100, 50);
-            gfx.lineStyle(20, 0x0B0BF4, 0.5);
-            gfx.lineTo(100, 100);
-            gfx.lineTo(50, 100);
-            */
             
             var x = 0, y = 0;
             var b:Rectangle;
@@ -101,17 +76,18 @@ package
             g.endFill();
             g.clear();
             
-            
             // SVG
             var svg = new SVG();
             svg.loadFile("assets/nano.svg");
             g.drawSVG(svg, 220, 60, 0.2);
             
-            var svgLines = new SVG();
-            // Icon made by Freepik from www.flaticon.com
-            //svgLines.loadFile("assets/emoticon85.svg");
-            svgLines.loadFile("assets/Hand_left.svg");
+            // SVG Loom Logo
+            g.drawSVG(SVG.fromFile("assets/loom_vector_logo_mod.svg"), 290, 112, 0.45);
             
+            // Hand by Cy21 from Wikimedia Commons
+            var svgLines = SVG.fromFile("assets/Hand_left.svg");
+            
+            // Draw hands with various line thickness multipliers
             var ln = 6;
             var lv:Vector.<Number> = [0.5, 1, 1.5, 2, 3, 4];
             for (var li = 0; li < ln; li++) g.drawSVG(svgLines, 220, 95+li*5, 0.2, lv[li]);
@@ -157,16 +133,17 @@ package
             
             TextFormat.load("sans", "assets/SourceSansPro-Regular.ttf");
             
-            // Draw text
+            // Simple text with default format
             g.drawTextLine(220, 0, "hello");
             
+            // Custom text format
             var format = new TextFormat();
-            
             format.color = 0xA60000;
             format.size = 30;
             g.textFormat(format);
             g.drawTextLine(220, 2, "world");
             
+            // Text alignment
             format.color = 0xFF5959;
             format.size = 14;
             format.lineHeight = 1;
@@ -175,6 +152,7 @@ package
             g.moveTo(300, 0); g.lineTo(400, 0);
             g.drawTextBox(300, 0, 100, "The five boxing wizards jump quickly.");
             
+            // Text wrapping
             format.color = 0x2F66F9;
             format.size = 10;
             g.textFormat(format);
@@ -183,6 +161,7 @@ package
             g.moveTo(330, 50); g.lineTo(400, 50);
             g.drawTextBox(330, 50, 70, "The five boxing wizards jump quickly.");
             
+            // Custom different font
             TextFormat.load("lobster", "assets/Lobster-Regular.ttf");
             format.font = "lobster";
             format.color = 0xFF4848;
@@ -190,6 +169,15 @@ package
             format.align = TextAlign.TOP | TextAlign.LEFT;
             g.textFormat(format);
             g.drawTextLine(225, 25, "Lobster");
+            
+            // Non-scaled vs. scaled text
+            format.size = 30;
+            g.textFormat(format);
+            g.drawTextLine(80, 200, "Non-scaled");
+            
+            format.size /= ss.scale;
+            s.textFormat(format);
+            s.drawTextLine((80+115)/ss.scale, 200/ss.scale, "Scaled");
             
             // Mixed line and shape rendering
             g.moveTo(100, 0);
@@ -205,11 +193,12 @@ package
             g.cubicCurveTo(50-5, 50-5+1/3*10, 50+5, 50-5+2/3*10, 50, 50+5);
             g.cubicCurveTo(50-5, 50-5+2/3*10, 50+5, 50-5+1/3*10, 50, 50-5);
             
+            
             // Cap styles
             g.lineStyle(10, 0x000000, 1, false, "", "round", "round", 0);  g.moveTo(05, 110); g.lineTo(25, 110);
             g.lineStyle(10, 0x000000, 1, false, "", "square", "round", 0); g.moveTo(40, 110); g.lineTo(60, 110);
             g.lineStyle(10, 0x000000, 1, false, "", "none", "round", 0);   g.moveTo(75, 110); g.lineTo(95, 110);
-            
+            // Skeleton
             g.lineStyle(01, 0xDADADA, 1, false, "", "round", "round", 0);  g.moveTo(05, 110); g.lineTo(25, 110);
             g.lineStyle(01, 0xDADADA, 1, false, "", "square", "round", 0); g.moveTo(40, 110); g.lineTo(60, 110);
             g.lineStyle(01, 0xDADADA, 1, false, "", "none", "round", 0);   g.moveTo(75, 110); g.lineTo(95, 110);
@@ -218,7 +207,7 @@ package
             g.lineStyle(10, 0x000000, 1, false, "", "none", "round", 0);  g.moveTo(05, 130); g.lineTo(25, 130); g.lineTo(05, 150);
             g.lineStyle(10, 0x000000, 1, false, "", "none", "bevel", 0);  g.moveTo(40, 130); g.lineTo(60, 130); g.lineTo(40, 150);
             g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(75, 130); g.lineTo(95, 130); g.lineTo(75, 150);
-            
+            // Skeleton
             g.lineStyle(01, 0xDADADA, 1, false, "", "none", "round", 0);  g.moveTo(05, 130); g.lineTo(25, 130); g.lineTo(05, 150);
             g.lineStyle(01, 0xDADADA, 1, false, "", "none", "bevel", 0);  g.moveTo(40, 130); g.lineTo(60, 130); g.lineTo(40, 150);
             g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(75, 130); g.lineTo(95, 130); g.lineTo(75, 150);
@@ -227,26 +216,15 @@ package
             g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(05, 170); g.lineTo(25, 170); g.lineTo(05, 175);
             g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185);
             g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190);
-            
             // Skeleton
             g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(05, 170); g.lineTo(25, 170); g.lineTo(05, 175);
             g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185);
             g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190);
             
-            
-            // Miter joint angles
-            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(05, 170); g.lineTo(25, 170); g.lineTo(05, 175);
-            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185);
-            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190);
-            
-            // Skeleton
-            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(05, 170); g.lineTo(25, 170); g.lineTo(05, 175);
-            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185);
-            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190);
             
             // Line scale mode
             s.lineStyle(1, 0x000000, 1, false, "normal"); s.moveTo(0.5, 21); s.lineTo(2.5, 21); s.lineTo(0.5, 21);
-            s.lineStyle(1, 0x000000, 1, false, "none");   s.moveTo(4, 21); s.lineTo(6, 21); s.lineTo(4, 21);
+            s.lineStyle(1, 0x000000, 1, false, "none");   s.moveTo(4, 21);   s.lineTo(6, 21);   s.lineTo(4, 21);
             
             // Various line styles
             g.lineStyle(0, 0x0000FF, 1); g.moveTo(110, y); g.lineTo(210, y); y += 10;
@@ -297,81 +275,8 @@ package
             g.drawRect(110, y, 100, 10);
             y += 12;
             
+            // Draw bounds of shapes in g to d
             b = sg.getBounds(sg); trace(b); d.lineStyle(1, 0x00FF00); d.drawRect(b.x-2, b.y-2, b.width+4, b.height+4);
-            
-            //g.clear();
-            //g.beginFill(0xFF0000);
-            //g.lineStyle(1, 0xFF0000);
-            //g.moveTo(0, 0);
-            //g.lineTo(100, 0);
-            //g.drawRect(0, 0, 10, 10);
-            //g.textFormat(format);
-            //g.drawTextLine(0, 0, "hello");
-            //g.textFormat(format);
-            //g.drawRect(0, 0, 10, 10);
-            //g.moveTo(0, 0);
-            //g.lineTo(100, 0);
-            //g.endFill();
-            
-            stage.addEventListener(ScrollWheelEvent.SCROLLWHEEL, onScroll);
-            
-            /*
-            
-            g.clear();
-            g.lineStyle(10, 0x000000, 0.05);
-            var n = 100;
-            var w = 460-g.x*2;
-            var h = 300-g.y*2;
-            
-            var t = 0;
-            
-            var cx = w / 2;
-            var cy = h / 2;
-            var r = 130;
-            
-            g.moveTo(cx, cy);
-            
-            for (var it:int = 0; it < 1; it++) {
-                for (var i:int = 0; i < n; i++) {
-                    var a:Number = t + i / (n-1) * Math.TWOPI * (1000 + Math.cos(t*0.000001)*10);
-                    var b:Number = t + i / (n-1) * Math.TWOPI * (1000 + Math.sin(t*0.00001)*10);
-                    //var l:Number = Math.sqrt(a*a + b*b);
-                    //a /= l;
-                    //b /= l;
-                    //g.lineTo(0+i/(n-1)*w, h/2+Math.sin(a)*h/2);
-                    g.lineTo(cx+Math.cos(a)*r, cy+Math.sin(b)*r);
-                }
-                t += 1/60;
-            }
-            
-            //*/
-            
-            /*
-            g.clear();
-            g.lineStyle(1, 0xFFFFFF, 0.1);
-            var n = 4000;
-            var w = 460-g.x*2;
-            var h = 300-g.y*2;
-            
-            var t = Loom2D.juggler.elapsedTime;
-            
-            var cx = w / 2;
-            var cy = h / 2;
-            
-            g.moveTo(cx, cy);
-            for (var i:int = 0; i < n; i++) {
-                var r = i/(n-1)*120;
-                var a = (i/(n-1)*30+t*0.02) * Math.TWOPI;
-                g.lineTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r);
-            }
-            */
-            
-            //stage.addEventListener(TouchEvent.TOUCH, onTouch);
-            
-        }
-        
-        private function onScroll(e:ScrollWheelEvent):void {
-            //g.scale *= 1-0.1*e.delta;
         }
         
         private function onTouch(e:TouchEvent):void 
@@ -400,7 +305,9 @@ package
         
         override public function onFrame() 
         {
-            /*
+            //////////////////////////////////////////////////////////////
+            //  Animate a curve and draw some basic shapes every frame  //
+            /* // Comment this line to enable
             var t = Loom2D.juggler.elapsedTime;
             g.clear();
             g.lineStyle(1, 0xBD55F4, 1);
@@ -413,10 +320,14 @@ package
             return super.onFrame();
             //*/
             
-            /*
+            
+            
+            ///////////////////////////
+            //  Animated line waves  //
+            /* // Comment this line to enable
             g.clear();
-            g.lineStyle(1, 0xFFFFFF, 0.1);
-            var n = 5000;
+            g.lineStyle(1, 0x000000, 1);
+            var n = 500;
             var w = 460-sg.x*2;
             var h = 300-sg.y*2;
             
@@ -424,30 +335,27 @@ package
             
             var cx = w / 2;
             var cy = h / 2;
-            var r = 130;
+            var r = 100;
             
             g.moveTo(cx, cy);
             for (var i:int = 0; i < n; i++) {
                 var a:Number = t + i / (n-1) * Math.TWOPI * (1000 + Math.cos(t*0.000001)*10);
                 var b:Number = t + i / (n-1) * Math.TWOPI * (1000 + Math.sin(t*0.00001)*10);
-                //var l:Number = Math.sqrt(a*a + b*b);
-                //a /= l;
-                //b /= l;
-                //g.lineTo(0+i/(n-1)*w, h/2+Math.sin(a)*h/2);
-                g.lineTo(cx+Math.cos(a)*r, cy+Math.sin(b)*r);
+                // Horizontal wave
+                g.lineTo(0+i/(n-1)*w, h/2+Math.sin(a)*h/2);
+                // Vertical wave
+                //g.lineTo(cx+Math.cos(a)*r, cy+Math.sin(b)*r);
             }
             //*/
             
-            // Swirly spiral screen
-            /*
+            
+            
+            ////////////////////////////
+            //  Swirly spiral screen  //
+            /* // Comment this line to enable
             g.clear();
             s.clear();
             d.clear();
-            
-            //var sans = new TextFormat("sans", 60, 0xfe5552);
-            //sans.align = TextAlign.CENTER;
-            //g.textFormat(sans);
-            //g.drawTextLine(stage.stageWidth/2-sg.x, 50, "LOOMSDK");
             
             g.lineStyle(1, 0xFFFFFF, 0.1);
             //var n = 200;
@@ -455,6 +363,7 @@ package
             var w = 460-sg.x*2;
             var h = 300-sg.y*2;
             
+            // Different initial color times
             //var t = Loom2D.juggler.elapsedTime;
             //var t = (Math.cos(Loom2D.juggler.elapsedTime*Math.PI*2/10-Math.PI))/2*10;
             var t = 3;
@@ -462,19 +371,20 @@ package
             var cx = w / 2;
             var cy = h / 2;
             
+            // Different begin and end lines, used in conjunction with non-constant time above
             //var a = Math.floor((0.25+0.25*Math.sin(t*1.1+Math.PI/2))*n);
             //var b = Math.floor((0.75+0.25*Math.sin(t*1.3-Math.PI/2))*n);
-            
             var a = 0;
             var b = n;
             
+            // Different spiral types, more interesting when used in conjunction with non-constant time
             //var spiral = (Math.sin(t*0.01)+1)*0.5*80;
             //var spiral = (Math.sin(t*0.02)+1)*0.5*140;
-            //var spiral = 1.61803398875;
             var spiral = 1.61803398875;
             
-            //var rot = Loom2D.juggler.elapsedTime/spiral;
-            var rot = (Math.cos(Loom2D.juggler.elapsedTime*Math.PI*2/2-Math.PI))/2*2/spiral;
+            // Rotation type (constant or wiggly)
+            var rot = Loom2D.juggler.elapsedTime/spiral*10;
+            //var rot = (Math.cos(Loom2D.juggler.elapsedTime*Math.PI*2/2-Math.PI))/2*2/spiral;
             
             var sa = 0.01;
             var sb = 0.05;
@@ -490,7 +400,10 @@ package
             }
             //*/
             
-            /*
+            
+            /////////////////////////
+            //  Why not Zoidberg?  //
+            /* // Comment this line to enable
             g.clear();
             s.clear();
             d.clear();

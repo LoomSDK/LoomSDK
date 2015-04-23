@@ -425,7 +425,7 @@ void VectorSVG::loadFile(utString path, utString units, float dpi) {
 }
 void VectorSVG::onReload(void *payload, const char *name) {
 	VectorSVG* svg = static_cast<VectorSVG*>(payload);
-	lmAssert(strncmp(svg->path->c_str(), name, svg->path->size()) == 0, "expected svg path and reloaded path mismatch");
+	lmAssert(strncmp(svg->path->c_str(), name, svg->path->size()) == 0, "expected svg path and reloaded path mismatch: %s %s", svg->path->c_str(), name);
 	svg->reload();
 }
 void VectorSVG::reload() {
