@@ -42,6 +42,9 @@ package feathers.text
         protected var _isEditable:Boolean = true;
         protected var _keyboardType:LoomKeyboardType = 0;
         
+        protected var _startIndex:int = 0;
+        protected var _endIndex:int = 0;
+        
         /** The rectangle display used for rendering the caret. */
         protected var _caretQuad:Quad = new Quad(2, 16, 0x000000);
         
@@ -219,15 +222,24 @@ package feathers.text
             
             if(!_isEditable)
                 return;
-
+            
             if(inText == "\n")
             {
                 // We only support single line text input for now.
                 trace("Line break detected, clearing focus");
                 clearFocus();
             }
-
-            text += inText;
+            
+            if (caretIndex == text.length) {
+                text += inText;
+                caretIndex = text.length;
+            } else if (caretIndex == 0) {
+                text = inText + text;
+            } else {
+                text = text.substring(0, caretIndex) + inText + text.substring(caretIndex);
+                caretIndex += inText.length;
+            }
+            
             
             updateInput();
         }
@@ -326,6 +338,10 @@ package feathers.text
 
             super.text = v;
             _imeDelegate.contentText = v;
+            caretIndex = v.length;
+            
+            g.textLineGlyphPositions(textFormat, 0, 0, v);
+            
             invalidate();
             dispatchEvent(new Event(Event.CHANGE));
         }
@@ -482,6 +498,15 @@ package feathers.text
             dispatchEventWith(FeathersEventType.FOCUS_OUT);
         }
         
+        public function get caretIndex():int {
+            return _endIndex;
+        }
+        
+        public function set caretIndex(index:int) {
+            _startIndex = _endIndex;
+            invalidate();
+        }
+        
         /**
          * Currently unsupported.
          * Sets the range of selected characters.
@@ -491,6 +516,10 @@ package feathers.text
          */
         public function selectRange(startIndex:int, endIndex:int):void
         {
+            if (startIndex < 0) startIndex = 0;
+            if (endIndex > text.length) endIndex = text.length;
+            _startIndex = startIndex;
+            _endIndex = endIndex;
         }
         
         /**
@@ -501,33 +530,29 @@ package feathers.text
             _shape.setClipRect(0, 0, width, height);
             super.validate();
             
-            var tmp:String = processDisplayText(_text);
-            var advance:Number = g.textLineAdvance(_textFormat, 0, 0, tmp);
+            //var tmp:String = processDisplayText(_text);
+            //var advance:Number = g.textLineAdvance(_textFormat, 0, 0, tmp);
             //trace("advance", advance);
             //var bounds:Rectangle = g.textBoxBounds(_textFormat, 0, 0, isNaN(this.explicitWidth) ? Number.MAX_VALUE : this.explicitWidth, tmp);
             
-            // Just show a centered caret if we have no bounds.
-            if(advance >= 0)
+            _caretQuad.x = caretIndex*4;
+            
+            // Position based on alignment.
+            /*
+            switch(_textFormat.align)
             {
-                _caretQuad.x = advance;
+                case TextAlign.LEFT:
+                    _caretQuad.x = 3;
+                    break;
+                case TextAlign.CENTER:
+                    _caretQuad.x = explicitWidth / 2;
+                    break;
+                case TextAlign.RIGHT:
+                    _caretQuad.x = explicitWidth - 3;
+                    break;
             }
-            else
-            {
-                // Position based on alignment.
-                switch(_textFormat.align)
-                {
-                    case TextAlign.LEFT:
-                        _caretQuad.x = 3;
-                        break;
-                    case TextAlign.CENTER:
-                        _caretQuad.x = explicitWidth / 2;
-                        break;
-                    case TextAlign.RIGHT:
-                        _caretQuad.x = explicitWidth - 3;
-                        break;
-                }
-            }
-
+            */
+            
             var caretHeight:Number = _textFormat.size != NaN ? _textFormat.size : _textFormat.lineHeight; 
             _caretQuad.width = 2;
             _caretQuad.height = caretHeight;
