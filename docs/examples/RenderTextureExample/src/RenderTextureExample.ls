@@ -3,13 +3,18 @@ package
     import loom.Application;
     import loom.graphics.Texture2D;
     import loom.graphics.TextureInfo;
+    import loom2d.display.Graphics;
+    import loom2d.display.Shape;
+    import loom2d.display.Sprite;
     import loom2d.display.StageScaleMode;
     import loom2d.display.Image;
     import loom2d.Loom2D;
+    import loom2d.math.Matrix;
     import loom2d.math.Rectangle;
     import loom2d.textures.ConcreteTexture;
     import loom2d.textures.RenderTexture;
     import loom2d.textures.Texture;
+    import loom2d.textures.TextureSmoothing;
     import loom2d.ui.SimpleLabel;
     import system.platform.Platform;
     import system.Void;
@@ -40,20 +45,47 @@ package
             //tex.mFrame = new Rectangle(0, 0, textureInfo.width, textureInfo.height);
             //tex.setTextureInfo(textureInfo);
             
-            tex = new RenderTexture(512, 512, true, 1, "bgra", false);
+            var outlines = new Shape();
+            var g:Graphics = outlines.graphics;
+            g.lineStyle(1, 0x53C109);
+            
+            tex = new RenderTexture(200, 200, true, 1, "bgra", false);
             
             image = new Image(tex);
-            //image.x = 10;
-            //image.y = 10;
+            image.x = 50;
+            image.y = 50;
             stage.addChild(image);
             
-            logo = new Image(Texture.fromAsset("assets/logo.png"));
-            logo.center();
+            g.drawRect(image.x, image.y, tex.width, tex.height);
             
-            //logo.x = 200;
+            var container = new Sprite();
+            
+            var logoTex = Texture.fromAsset("assets/logo.png");
+            //logoTex.smoothing = TextureSmoothing.NONE;
+            logo = new Image(logoTex);
+            
+            container.x = 80;
+            container.y = 80;
+            container.scale = 0.7;
+            
+            logo.x = 20;
+            logo.y = 20;
+            
+            container.addChild(logo);
+            
             //stage.addChild(logo);
             
+            tex.draw(container);
+            g.drawRect(image.x+container.x+logo.x*container.scale, image.y+container.y+logo.y*container.scale, logo.width*container.scale, logo.height*container.scale);
             
+            var m = new Matrix();
+            m.scale(0.5, 0.5);
+            m.translate(30, 10);
+            
+            tex.draw(container, m);
+            g.drawRect(image.x+logo.x*0.5+30, image.y+logo.y*0.5+10, logo.width*0.5, logo.height*0.5);
+            
+            stage.addChild(outlines);
             
             //stage.addChild(logo);
             
@@ -62,7 +94,7 @@ package
         }
         
         override public function onTick() {
-            
+            /*
             for (var b:int = 0; b < 200; b++) {
                 var radius = 256;
                 var angle = t*0.5*Math.TWOPI;
@@ -94,7 +126,7 @@ package
                 }
                 
             }
-            
+            */
             return super.onTick();
         }
         

@@ -10,6 +10,7 @@
 
 package loom2d.textures
 {
+    import loom.graphics.Texture2D;
     import loom2d.Loom2D;
     import loom2d.math.Matrix;
     import loom2d.math.Rectangle;
@@ -175,10 +176,10 @@ package loom2d.textures
         public function draw(object:DisplayObject, matrix:Matrix=null, alpha:Number=1.0,
                              antiAliasing:int=0):void
         {
-            //if (object == null) return;
-            //
+            if (object == null) return;
+            
             //if (mDrawing)
-                //render(object, matrix, alpha);
+                render(object, matrix, alpha);
             //else
                 //renderBundled(render, object, matrix, alpha, antiAliasing);
         }
@@ -214,7 +215,9 @@ package loom2d.textures
             //if (filter) filter.render(object, mSupport, alpha);
             //else        
             //object.render(mSupport, alpha);
-//
+            
+            Texture2D.render(nativeID, object, matrix, alpha);
+            
             //if (mask)   mSupport.popMask();
         }
         

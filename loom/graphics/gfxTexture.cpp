@@ -917,8 +917,10 @@ void Texture::reset()
 
 int Texture::render(lua_State *L)
 {
-    TextureID id = lua_tointeger(L, 1);
-    Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, 2);
+	TextureID id = lua_tointeger(L, 1);
+	Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, 2);
+	Loom2D::Matrix *matrix = lua_isnil(L, 3) ? NULL : (Loom2D::Matrix*) lualoom_getnativepointer(L, 3);
+	float alpha = (float) lua_tonumber(L, 4);
 
     //lmLogInfo(gGFXTextureLogGroup, "render %d", id);
 
@@ -933,31 +935,45 @@ int Texture::render(lua_State *L)
     if (tinfo->handle != -1)
     {
         lmAssert(tinfo->renderTarget, "Error rendering to texture, texture is not a render buffer: %d", id);
-        QuadRenderer::submit();
-        Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo->framebuffer);
-        
-		// Save state
+
+		// Set our texture-bound framebuffer
+		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo->framebuffer);
+
+		// Save and setup state
+		QuadRenderer::submit();
+
+		// Update positions and buffers early
+		// since we can't wait for rendering to begin
+		object->validate(L, 2);
+
 		Loom2D::DisplayObjectContainer *parent = object->parent;
-		uint32_t flags = Graphics::getFlags();
-
-		// Setup state
 		object->parent = NULL;
-		Graphics::setFlags(Graphics::FLAG_INVERTED | Graphics::FLAG_NOCLEAR);
-        
-		Graphics::context()->glDisable(GL_DEPTH_TEST);
-		Graphics::context()->glDepthMask(GL_FALSE);
 
-		//Graphics::setNativeSize(Loom2D::Stage::smMainStage->getWidth(), Loom2D::Stage::smMainStage->getHeight());
+		uint32_t flags = Graphics::getFlags();
+		Graphics::setFlags(Graphics::FLAG_INVERTED | Graphics::FLAG_NOCLEAR);
+
+		Loom2D::Matrix transformMatrix;
+		if (matrix != NULL)
+		{
+			object->updateLocalTransform();
+			transformMatrix.copyFrom(&object->transformMatrix);
+			object->transformMatrix.copyFrom(matrix);
+		}
+
+		// Setup stage and framing
         Graphics::setNativeSize(tinfo->width, tinfo->height);
         Graphics::beginFrame();
-        object->validate(L, lua_gettop(L));
+
+		// Render 
         object->render(L);
         Graphics::endFrame();
 
 		// Restore state
         object->parent = parent;
 		Graphics::setFlags(flags);
+		if (matrix != NULL) object->transformMatrix.copyFrom(&transformMatrix);
 		
+		// Reset to screen framebuffer
 		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
