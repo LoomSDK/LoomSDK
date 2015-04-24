@@ -21,6 +21,7 @@
 #pragma once
 
 #include "loom/engine/loom2d/l2dDisplayObject.h"
+#include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 #include "loom/graphics/gfxVectorGraphics.h"
 
 namespace Loom2D

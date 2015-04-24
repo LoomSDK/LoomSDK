@@ -2,8 +2,10 @@ package
 {
     import loom.Application;
     import loom2d.display.DisplayObjectContainer;
+    import loom2d.display.Graphics;
     import loom2d.display.Image;
     import loom2d.display.Quad;
+    import loom2d.display.Shape;
     import loom2d.display.Sprite;
     import loom2d.display.StageScaleMode;
     import loom2d.Loom2D;
@@ -26,6 +28,10 @@ package
         override public function run():void
         {
             stage.scaleMode = StageScaleMode.LETTERBOX;
+         
+            // Square size
+            var w = 350;
+            var h = 350;
             
             // Background label
             var label = new SimpleLabel("assets/fonts/Curse-hd.fnt", 320, 60);
@@ -33,10 +39,6 @@ package
             label.x = stage.stageWidth/2 - 320/2;
             label.y = stage.stageHeight - 140;
             stage.addChild(label);
-            
-            // Square size
-            var w = 350;
-            var h = 350;
             
             var a = getSquare(stage, 0xFFFFFF, 10, 10, w-20, h-20);
             
@@ -85,13 +87,32 @@ package
             comparison.x = w;
             stage.addChild(comparison);
             
-            // Setuo logos
+            var shapeContainer = new Sprite();
+            shapeContainer.y = h;
+            shapeContainer.clipRect = new Rectangle(10, 10, 80, 40);
+            stage.addChild(shapeContainer);
+            
+            var shapeQuad = new Quad(100, 100, 0xE8E8E8);
+            shapeQuad.y = 10;
+            shapeContainer.addChild(shapeQuad);
+            
+            var shape = new Shape();
+            shapeContainer.addChild(shape);
+            shape.y = 10;
+            shape.clipRect = new Rectangle(5, 0, 90, 50);
+            
+            var g:Graphics = shape.graphics;
+            
+            g.beginFill(0x57CB0A);
+            g.drawCircle(50, 50, 50);
+            
+            // Setup logos
             logoTexture = Texture.fromAsset("assets/logo.png");
             var n = 10;
             for (var i = 0; i < n; i++) {
                 var logo = new Sprite();
                 logo.x = 20+i/(n-1)*(stage.stageWidth-logoTexture.width-40);
-                logo.y = 10+h;
+                logo.y = 10+60+h;
                 logo.addChild(new Image(logoTexture));
                 stage.addChild(logo);
                 logos.push(logo);
@@ -130,7 +151,6 @@ package
                 // This is the important bit!
                 logo.clipRect = new Rectangle(logo.width/2-size/2+p.x, logo.height/2-size/2+p.y, size, size);
             }
-            
             
             // Animated Rectangle.clip() test
             // Requires g to be a Graphics instance of a displayed Shape

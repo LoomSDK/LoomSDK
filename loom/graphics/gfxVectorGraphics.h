@@ -189,7 +189,8 @@ public:
 
 	VectorGraphics() {
         queue = new utArray<VectorData*>();
-        clipX = clipY = clipWidth = clipHeight = 0;
+        clipX = clipY = 0;
+		clipWidth = clipHeight = -1;
 		clear();
 	}
 
@@ -197,7 +198,7 @@ public:
 	void flushPath();
 
     void setClipRect(int x, int y, int w, int h);
-	void render(Loom2D::Matrix* transform);
+	void render(Loom2D::RenderState* renderState, Loom2D::Matrix* transform);
 
 	void clear();
 	void lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit);

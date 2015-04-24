@@ -898,6 +898,21 @@ void nvgScissor(NVGcontext* ctx, float x, float y, float w, float h)
 	state->scissor.extent[1] = h*0.5f;
 }
 
+void nvgScissorScreen(NVGcontext* ctx, float x, float y, float w, float h)
+{
+	NVGstate* state = nvg__getState(ctx);
+
+	w = nvg__maxf(0.0f, w);
+	h = nvg__maxf(0.0f, h);
+
+	nvgTransformIdentity(state->scissor.xform);
+	state->scissor.xform[4] = x + w*0.5f;
+	state->scissor.xform[5] = y + h*0.5f;
+	
+	state->scissor.extent[0] = w*0.5f;
+	state->scissor.extent[1] = h*0.5f;
+}
+
 static void nvg__isectRects(float* dst,
 							float ax, float ay, float aw, float ah,
 							float bx, float by, float bw, float bh)

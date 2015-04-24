@@ -28,12 +28,22 @@ Type *Shape::typeShape = NULL;
 
 void Shape::render(lua_State *L)
 {
+	renderState.alpha = parent ? parent->renderState.alpha * alpha : alpha;
+	renderState.clampAlpha();
+	if (renderState.alpha == 0.0f)
+	{
+		return;
+	}
+
 	updateLocalTransform();
 
 	Matrix transform;
 	getTargetTransformationMatrix(NULL, &transform);
 
-	graphics->render(&transform);
+	renderState.clipRect = parent ? parent->renderState.clipRect : Loom2D::Rectangle(0, 0, -1, -1);
+	renderState.blendMode = (blendMode == BlendMode::AUTO && parent) ? parent->renderState.blendMode : blendMode;
+
+	graphics->render(&renderState, &transform);
 }
 
 }
