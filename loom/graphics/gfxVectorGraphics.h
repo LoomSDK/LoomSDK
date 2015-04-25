@@ -21,6 +21,8 @@
 #pragma once
 
 #include "loom/graphics/gfxVectorRenderer.h"
+#include "loom/engine/loom2d/l2dDisplayObject.h"
+#include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 #include "loom/engine/loom2d/l2dMatrix.h"
 #include "loom/engine/loom2d/l2dRectangle.h"
 
@@ -156,7 +158,7 @@ public:
 	float scale;
 	float lineThickness;
 	GFX::VectorSVG* image;
-	VectorSVGData(GFX::VectorSVG* image, float x, float y, float scale = 1.0f, float lineThickness = 1.0f) : image(image), x(x), y(y), scale(scale), lineThickness(lineThickness) {};
+	VectorSVGData(GFX::VectorSVG* image, float x, float y, float scale = 1.0f, float lineThickness = 1.0f) : x(x), y(y), scale(scale), lineThickness(lineThickness), image(image) {};
 	virtual void render(VectorGraphics* g);
 };
 
