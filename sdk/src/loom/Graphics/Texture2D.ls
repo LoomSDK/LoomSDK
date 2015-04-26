@@ -162,7 +162,9 @@ package loom.graphics
         public static native function initFromBytesAsync(bytes:ByteArray, uniqueName:String=null, highPriority:Boolean=false):TextureInfo;
 
         
-        public static native function initRenderTexture(width:int, height:int):TextureInfo;
+        public static native function initEmptyTexture(width:int, height:int):TextureInfo;
+        
+        public static native function clear(nativeID:int, color:uint = 0x000000, alpha:Number = 0);
         
         /**
          */

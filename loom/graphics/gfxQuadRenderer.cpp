@@ -88,7 +88,7 @@ void QuadRenderer::submit()
 
     numFrameSubmit++;
 
-    TextureInfo &tinfo = Texture::sTextureInfos[currentTexture];
+	TextureInfo &tinfo = Texture::sTextureInfos[currentTexture & TEXTURE_ID_MASK];
 
     if (tinfo.handle != -1)
     {
@@ -195,16 +195,12 @@ void QuadRenderer::submit()
         Graphics::context()->glEnable(GL_BLEND);
         Graphics::context()->glBlendFuncSeparate(sSrcBlend, sDstBlend, sSrcBlend, sDstBlend);
 
-        //lmLogInfo(gGFXQuadRendererLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
-
         // And bind indices and draw.
         Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndexBufferHandle);
         Graphics::context()->glDrawElements(GL_TRIANGLES,
                                             quadCount * 6, GL_UNSIGNED_SHORT,
                                             (void*)(currentIndexBufferIdx*sizeof(unsigned short)));
-        //int e;
-        //if((e = glGetError()) != 0) printf("%x\n", e);
-
+		
         // Reset GL state.
         Graphics::context()->glBindTexture(GL_TEXTURE_2D, 0);
         Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -231,7 +227,8 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
     }
 
     lmAssert(!(numVertices % 4), "numVertices % 4 != 0");
-
+	lmAssert(texture == Texture::getTextureInfo(texture)->id, "Texture ID signature mismatch, you might be trying to draw a disposed texture");
+	
     if (((currentTexture != TEXTUREINVALID) && (currentTexture != texture))
         || (sTinted != tinted) || (srcBlend != sSrcBlend) || ( dstBlend != sDstBlend))
     {

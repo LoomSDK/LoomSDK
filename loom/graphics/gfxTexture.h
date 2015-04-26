@@ -35,7 +35,9 @@ namespace GFX
 typedef int   TextureID;
 
 #define TEXTUREINVALID    -1
-#define MAXTEXTURES       4096
+#define TEXTURE_ID_BITS   12
+#define TEXTURE_ID_MASK   (1 << TEXTURE_ID_BITS) - 1
+#define MAXTEXTURES       1 << TEXTURE_ID_BITS
 
 // loading textures are marked
 #define MARKEDTEXTURE     65534
@@ -123,9 +125,10 @@ struct TextureInfo
         reload      = false;
         asyncDispose = false;
         handle      = -1;
+		id          += MAXTEXTURES;
         texturePath = "";
         renderTarget = false;
-        //framebuffer = NULL;
+        framebuffer = -1;
     }
 };
 
@@ -273,16 +276,15 @@ public:
     }
 
     inline static TextureInfo *getTextureInfo(TextureID id)
-    {
-        if ((id < 0) || (id >= MAXTEXTURES))
-        {
-            return NULL;
-        }
+	{
+		TextureID index = id & TEXTURE_ID_MASK;
+		lmAssert(index >= 0 && index < MAXTEXTURES, "Texture index is out of range: %d", index);
 
         loom_mutex_lock(sTexInfoLock);
-        TextureInfo *tinfo = &sTextureInfos[id];
+        TextureInfo *tinfo = &sTextureInfos[index];
 
-        if (tinfo->handle == -1)
+		// Check if it has a handle and if it's not outdated
+        if (tinfo->handle == -1 || tinfo->id != id)
         {
             tinfo = NULL;
         }
@@ -306,10 +308,11 @@ public:
     static TextureInfo *initFromBytes(utByteArray *bytes, const char *name);
     static TextureInfo *initFromBytesAsync(utByteArray *bytes, const char *name, bool highPriorty);
     static TextureInfo *initFromAssetManagerAsync(const char *path, bool highPriorty);
-	static TextureInfo *initRenderTexture(int width, int height);
+	static TextureInfo *initEmptyTexture(int width, int height);
     static int __stdcall loadTextureAsync_body(void *param);
 
-    static int render(lua_State *L);
+	static void clear(TextureID id, int color, float alpha);
+	static int render(lua_State *L);
 
     static void dispose(TextureID id);
 

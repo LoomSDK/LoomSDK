@@ -69,7 +69,7 @@ package loom2d.textures
         /** Disposes the parent texture if this texture owns it. */
         public override function dispose():void
         {
-            textureInfo -= onUpdate;
+            textureInfo.update -= onUpdate;
             if (mOwnsParent) mParent.dispose();
             super.dispose();
         }

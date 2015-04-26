@@ -278,6 +278,7 @@ package loom2d.textures
             //mSupport.renderTarget = mActiveTexture;
             //mSupport.clear(rgb, alpha);
             //mSupport.renderTarget = previousRenderTarget;
+            Texture2D.clear(nativeID, rgb, alpha);
             mBufferReady = true;
         }
         

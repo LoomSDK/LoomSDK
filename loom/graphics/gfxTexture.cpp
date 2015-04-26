@@ -282,6 +282,8 @@ void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWi
 
 TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, TextureID id)
 {
+	id &= TEXTURE_ID_MASK;
+
     if (id == -1)
     {
         id = getAvailableTextureID();
@@ -468,7 +470,7 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     return &tinfo;
 }
 
-TextureInfo *Texture::initRenderTexture(int width, int height)
+TextureInfo *Texture::initEmptyTexture(int width, int height)
 {
     // Get a new texture info
     TextureInfo *tinfo = getAvailableTextureInfo(NULL);
@@ -809,7 +811,8 @@ void Texture::loadCheckerBoard(TextureID id)
 
 void Texture::handleAssetNotification(void *payload, const char *name)
 {
-    TextureID id = (TextureID)payload;
+	TextureID id = (TextureID)payload;
+	id &= TEXTURE_ID_MASK;
 
     if (!sTextureAssetNofificationsEnabled)
     {
@@ -914,6 +917,34 @@ void Texture::reset()
     }
 }
 
+void Texture::clear(TextureID id, int color, float alpha)
+{
+	loom_mutex_lock(Texture::sTexInfoLock);
+	id &= TEXTURE_ID_MASK;
+	TextureInfo *tinfo = &sTextureInfos[id];
+
+	if (tinfo->handle != -1)
+	{
+		lmAssert(tinfo->renderTarget, "Error rendering to texture, texture is not a render buffer: %d", id);
+
+		// Set our texture-bound framebuffer
+		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo->framebuffer);
+
+		Graphics::context()->glClearColor(
+			float((color >> 16) & 0xFF) / 255.0f,
+			float((color >> 8) & 0xFF) / 255.0f,
+			float((color >> 0) & 0xFF) / 255.0f,
+			alpha
+		);
+		Graphics::context()->glClear(GL_COLOR_BUFFER_BIT);
+
+		// Reset to screen framebuffer
+		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+
+	loom_mutex_unlock(Texture::sTexInfoLock);
+}
 
 int Texture::render(lua_State *L)
 {
@@ -923,6 +954,8 @@ int Texture::render(lua_State *L)
 	float alpha = (float) lua_tonumber(L, 4);
 
     //lmLogInfo(gGFXTextureLogGroup, "render %d", id);
+
+	id &= TEXTURE_ID_MASK;
 
     if ((id < 0) || (id >= MAXTEXTURES))
     {
@@ -944,7 +977,7 @@ int Texture::render(lua_State *L)
 
 		// Update positions and buffers early
 		// since we can't wait for rendering to begin
-		object->validate(L, 2);
+		object->validate(L, 2); // The 2 here is the index of the object on the stack
 
 		Loom2D::DisplayObjectContainer *parent = object->parent;
 		object->parent = NULL;
@@ -960,6 +993,9 @@ int Texture::render(lua_State *L)
 			object->transformMatrix.copyFrom(matrix);
 		}
 
+		float objectAlpha = object->alpha;
+		object->alpha = objectAlpha*alpha;
+
 		// Setup stage and framing
         Graphics::setNativeSize(tinfo->width, tinfo->height);
         Graphics::beginFrame();
@@ -972,6 +1008,7 @@ int Texture::render(lua_State *L)
         object->parent = parent;
 		Graphics::setFlags(flags);
 		if (matrix != NULL) object->transformMatrix.copyFrom(&transformMatrix);
+		object->alpha = objectAlpha;
 		
 		// Reset to screen framebuffer
 		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -984,6 +1021,8 @@ int Texture::render(lua_State *L)
 
 void Texture::dispose(TextureID id)
 {
+	id &= TEXTURE_ID_MASK;
+
     if ((id < 0) || (id >= MAXTEXTURES))
     {
         return;
@@ -993,7 +1032,7 @@ void Texture::dispose(TextureID id)
     TextureInfo *tinfo = &sTextureInfos[id];
 
     // If the texture isn't valid ignore it.
-    if (tinfo->handle == -1)
+    if (tinfo->handle != -1)
     {
         //if texture is still loading or is inside of the loading queue, we can't dispose of it now, 
         //but need to flag it for disposal in the thread
@@ -1014,7 +1053,11 @@ void Texture::dispose(TextureID id)
             sTexturePathLookup.erase(tinfo->texturePath);
         }
 
-        // And erase backing state.
+		if (tinfo->renderTarget) {
+			Graphics::context()->glDeleteFramebuffers(1, &tinfo->framebuffer);
+		}
+
+		// And erase backing state.
         Graphics::context()->glDeleteTextures(1, &tinfo->handle);
         tinfo->reset();
     }

@@ -21,9 +21,13 @@ package
 
     public class RenderTextureExample extends Application
     {
-        private var logo:loom2d.display.Image;
-        private var image:loom2d.display.Image;
-        private var tex:RenderTexture;
+        private var outlines:Shape;
+        private var container:Sprite;
+        private var logo:Image;
+        private var image:Image;
+        private var renderTexture:RenderTexture;
+        private var roll:RenderTexture;
+        private var rollDisplay:Image;
         
         private var gt:Number = 0;
         private var t:Number = 0;
@@ -39,100 +43,107 @@ package
             bg.height = stage.stageHeight;
             stage.addChild(bg);
             
-            //var textureInfo:TextureInfo = Texture2D.initRenderTexture();
+            outlines = new Shape();
             
-            //var tex:ConcreteTexture = new ConcreteTexture("", textureInfo.width, textureInfo.height);
-            //tex.mFrame = new Rectangle(0, 0, textureInfo.width, textureInfo.height);
-            //tex.setTextureInfo(textureInfo);
+            renderTexture = new RenderTexture(200, 200);
             
-            var outlines = new Shape();
-            var g:Graphics = outlines.graphics;
-            g.lineStyle(1, 0x53C109);
+            image = new Image(renderTexture);
+            image.x = 10;
+            image.y = 10;
             
-            tex = new RenderTexture(200, 200, true, 1, "bgra", false);
-            
-            image = new Image(tex);
-            image.x = 50;
-            image.y = 50;
-            stage.addChild(image);
-            
-            g.drawRect(image.x, image.y, tex.width, tex.height);
-            
-            var container = new Sprite();
+            container = new Sprite();
             
             var logoTex = Texture.fromAsset("assets/logo.png");
-            //logoTex.smoothing = TextureSmoothing.NONE;
             logo = new Image(logoTex);
+            logo.center();
+            logo.alpha = 0.8;
             
-            container.x = 80;
+            container.x = 85;
             container.y = 80;
             container.scale = 0.7;
             
-            logo.x = 20;
-            logo.y = 20;
+            logo.x = 25;
+            logo.y = 70;
             
             container.addChild(logo);
             
-            //stage.addChild(logo);
-            
-            tex.draw(container);
-            g.drawRect(image.x+container.x+logo.x*container.scale, image.y+container.y+logo.y*container.scale, logo.width*container.scale, logo.height*container.scale);
-            
-            var m = new Matrix();
-            m.scale(0.5, 0.5);
-            m.translate(30, 10);
-            
-            tex.draw(container, m);
-            g.drawRect(image.x+logo.x*0.5+30, image.y+logo.y*0.5+10, logo.width*0.5, logo.height*0.5);
-            
+            stage.addChild(image);
             stage.addChild(outlines);
             
-            //stage.addChild(logo);
+            draw();
             
-            //var rt = Texture
-
+            roll = new RenderTexture(stage.stageWidth, 110);
+            
+            rollDisplay = new Image(roll);
+            rollDisplay.y = stage.stageHeight-roll.height;
+            stage.addChild(rollDisplay);
+        }
+        
+        function draw() {
+            renderTexture.clear();
+            
+            // Outlines of bounds
+            var g:Graphics = outlines.graphics;
+            g.clear();
+            g.lineStyle(1, 0x53C109);
+            
+            var m = new Matrix();
+            
+            // Setup background matrix
+            m.translate(-logo.width/2, -logo.height/2);
+            m.scale(4, 4);
+            m.translate(renderTexture.width/2, renderTexture.height/2);
+            
+            // Draw background
+            renderTexture.draw(logo, m);
+            g.drawRect(image.x, image.y, renderTexture.width, renderTexture.height);
+            
+            // No matrix default draw
+            renderTexture.draw(container);
+            g.drawRect(image.x+container.x+(logo.x-logo.width/2)*container.scale, image.y+container.y+(logo.y-logo.height/2)*container.scale, logo.width*container.scale, logo.height*container.scale);
+            
+            // Smaller matrix
+            m.identity();
+            m.scale(0.5, 0.5);
+            m.translate(55, 20);
+            
+            renderTexture.draw(container, m);
+            g.drawRect(image.x+(logo.x-logo.width/2)*0.5+55, image.y+(logo.y-logo.height/2)*0.5+20, logo.width*0.5, logo.height*0.5);
+            
+            // Offset Poly with different alpha
+            m.translate(65, 0);
+            renderTexture.draw(container, m, 0.5);
+            g.drawRect(image.x+(logo.x-logo.width/2)*0.5+120, image.y+(logo.y-logo.height/2)*0.5+20, logo.width*0.5, logo.height*0.5);
+            
         }
         
         override public function onTick() {
-            /*
-            for (var b:int = 0; b < 200; b++) {
+            // Uncomment to draw every frame
+            //draw();
+            
+            ///*
+            roll.clear();
+            t = 0;
+            gt += 1/60;
+            logo.x = 0;
+            
+            while (logo.x-logo.width/2 < roll.width) {
                 var radius = 256;
                 var angle = t*0.5*Math.TWOPI;
                 
-                //logo.x = radius+Math.cos(angle)*radius;
-                //logo.y = radius+Math.sin(angle*0.97)*radius;
+                logo.x = t*0.4*roll.width;
+                //logo.x = t*20*roll.width;
+                logo.y = roll.height*0.5;
                 
-                logo.x = t*0.1*tex.width;
+                logo.rotation = t*Math.sin(gt*0.1*Math.TWOPI)*3+(Math.sin(t*0.3)*0.5)*0.07;
                 
-                //logo.x = tex.width*0.5;
-                logo.y = tex.height*0.5;
+                logo.scale = (Math.sin(t*0.3*Math.TWOPI+Math.sin(gt*0.03*Math.TWOPI)*10)*0.5+0.5)*0.8+0.2;
                 
-                
-                logo.rotation = t*Math.sin(gt*0.2*Math.TWOPI)*3+(Math.sin(t*0.3)*0.5)*0.07;
-                
-                logo.scale = (Math.sin(t*0.1*Math.TWOPI+Math.sin(gt*0.3*Math.TWOPI)*10)*0.5+0.5)*0.8+0.2;
-                
-                //logo.x = 20;
-                //logo.y = 20;
-                
-                Texture2D.render(tex.nativeID, logo);
+                roll.draw(logo);
                 
                 t += 1/60;
-            
-                if (logo.x > tex.width) {
-                    t = 0;
-                    gt += 1/60;
-                    logo.x = 0;
-                }
-                
             }
-            */
-            return super.onTick();
-        }
-        
-        override public function onFrame() {
-            
-            return super.onFrame();
+            //*/
         }
     }
 }

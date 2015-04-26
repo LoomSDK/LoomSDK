@@ -383,12 +383,8 @@ package loom2d.textures
             //}
             
             var concreteTexture:ConcreteTexture = new ConcreteTexture("", actualWidth, actualHeight, optimizeForRenderToTexture);
-            // TODO: reimplement?
-            //concreteTexture.onRestore = concreteTexture.clear;
             concreteTexture.mFrame = new Rectangle(0, 0, actualWidth, actualHeight);
-            concreteTexture.setTextureInfo(Texture2D.initRenderTexture(actualWidth, actualHeight));
-            
-            trace("concrete", concreteTexture.textureInfo.id);
+            concreteTexture.setTextureInfo(Texture2D.initEmptyTexture(actualWidth, actualHeight));
             
             if (actualWidth - origWidth < 0.001 && actualHeight - origHeight < 0.001)
                 return concreteTexture;
