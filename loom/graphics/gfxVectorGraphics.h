@@ -186,12 +186,12 @@ public:
 	float boundT;
 	float boundR;
 	float boundB;
-    float scale;
-    int clipX, clipY, clipWidth, clipHeight;
+	float scale;
+	int clipX, clipY, clipWidth, clipHeight;
 
 	VectorGraphics() {
-        queue = new utArray<VectorData*>();
-        clipX = clipY = 0;
+		queue = new utArray<VectorData*>();
+		clipX = clipY = 0;
 		clipWidth = clipHeight = -1;
 		clear();
 	}
@@ -226,9 +226,9 @@ public:
 	void drawTextLine(float x, float y, utString text);
 	void drawTextBox(float x, float y, float width, utString text);
 
-    Loom2D::Rectangle textLineBounds(GFX::VectorTextFormat format, float x, float y, utString text);
-    float textLineAdvance(GFX::VectorTextFormat format, float x, float y, utString text);
-    Loom2D::Rectangle textBoxBounds(GFX::VectorTextFormat format, float x, float y, float width, utString text);
+	Loom2D::Rectangle textLineBounds(GFX::VectorTextFormat format, float x, float y, utString text);
+	float textLineAdvance(GFX::VectorTextFormat format, float x, float y, utString text);
+	Loom2D::Rectangle textBoxBounds(GFX::VectorTextFormat format, float x, float y, float width, utString text);
 
 	void drawSVG(GFX::VectorSVG* svg, float x, float y, float scale, float lineThickness);
 };
