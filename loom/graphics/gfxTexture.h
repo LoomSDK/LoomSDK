@@ -20,8 +20,6 @@
 
 #pragma once
 
-#include "loom/engine/loom2d/l2dDisplayObject.h"
-
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
@@ -157,7 +155,9 @@ private:
 
     static utHashTable<utFastStringHash, TextureID> sTexturePathLookup;
     static bool sTextureAssetNofificationsEnabled;
-    static bool supportsFullNPOT;
+	static bool supportsFullNPOT;
+	static TextureID currentRenderTexture;
+	static uint32_t previousRenderFlags;
 
     // simple linear TextureID -> TextureHandle
     static TextureInfo sTextureInfos[MAXTEXTURES];
@@ -312,6 +312,8 @@ public:
     static int __stdcall loadTextureAsync_body(void *param);
 
 	static void clear(TextureID id, int color, float alpha);
+
+	static void setRenderTarget(TextureID id = -1);
 	static int render(lua_State *L);
 
     static void dispose(TextureID id);

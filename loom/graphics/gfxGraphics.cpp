@@ -24,9 +24,11 @@
 #include "loom/common/platform/platform.h"
 #include "loom/common/core/log.h"
 
-#include "loom/engine/loom2d/l2dMatrix.h"
-
 #include "loom/graphics/gfxMath.h"
+
+#include "loom/engine/loom2d/l2dDisplayObject.h"
+
+#include "loom/engine/loom2d/l2dMatrix.h"
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxTexture.h"
 #include "loom/graphics/gfxQuadRenderer.h"
@@ -268,6 +270,41 @@ void Graphics::endFrame()
     }
 }
 
+int Graphics::render(lua_State *L)
+{
+	Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, 1);
+	Loom2D::Matrix *matrix = lua_isnil(L, 2) ? NULL : (Loom2D::Matrix*) lualoom_getnativepointer(L, 2);
+	float alpha = (float)lua_tonumber(L, 3);
+
+	// Update positions and buffers early
+	// since we can't wait for rendering to begin
+	object->validate(L, 1); // The 1 here is the index of the object on the stack
+
+	// Save and setup state
+	Loom2D::DisplayObjectContainer *prevParent = object->parent;
+	object->parent = NULL;
+
+	Loom2D::Matrix prevTransformMatrix;
+	if (matrix != NULL)
+	{
+		object->updateLocalTransform();
+		prevTransformMatrix.copyFrom(&object->transformMatrix);
+		object->transformMatrix.copyFrom(matrix);
+	}
+
+	float prevAlpha = object->alpha;
+	object->alpha = prevAlpha*alpha;
+
+	// Render 
+	object->render(L);
+
+	// Restore state
+	object->parent = prevParent;
+	if (matrix != NULL) object->transformMatrix.copyFrom(&prevTransformMatrix);
+	object->alpha = prevAlpha;
+
+	return 0;
+}
 
 static int _scount = 0;
 void Graphics::handleContextLoss()

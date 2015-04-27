@@ -25,9 +25,14 @@ package
         private var container:Sprite;
         private var logo:Image;
         private var image:Image;
+        
         private var renderTexture:RenderTexture;
+        
         private var roll:RenderTexture;
         private var rollDisplay:Image;
+        
+        private var persistent:RenderTexture;
+        private var persistentDisplay:Image;
         
         private var gt:Number = 0;
         private var t:Number = 0;
@@ -56,14 +61,10 @@ package
             var logoTex = Texture.fromAsset("assets/logo.png");
             logo = new Image(logoTex);
             logo.center();
-            logo.alpha = 0.8;
             
             container.x = 85;
             container.y = 80;
             container.scale = 0.7;
-            
-            logo.x = 25;
-            logo.y = 70;
             
             container.addChild(logo);
             
@@ -72,15 +73,27 @@ package
             
             draw();
             
-            roll = new RenderTexture(stage.stageWidth, 110);
+            roll = new RenderTexture(stage.stageWidth, 110, false);
             
             rollDisplay = new Image(roll);
             rollDisplay.y = stage.stageHeight-roll.height;
             stage.addChild(rollDisplay);
+            
+            persistent = new RenderTexture(renderTexture.width, renderTexture.height, true);
+            persistentDisplay = new Image(persistent);
+            persistentDisplay.x = image.x+renderTexture.width+10;
+            persistentDisplay.y = image.y;
+            stage.addChild(persistentDisplay);
         }
         
         function draw() {
             renderTexture.clear();
+            
+            logo.x = 25;
+            logo.y = 70;
+            logo.alpha = 0.8;
+            logo.rotation = 0;
+            logo.scale = 1;
             
             // Outlines of bounds
             var g:Graphics = outlines.graphics;
@@ -115,24 +128,38 @@ package
             renderTexture.draw(container, m, 0.5);
             g.drawRect(image.x+(logo.x-logo.width/2)*0.5+120, image.y+(logo.y-logo.height/2)*0.5+20, logo.width*0.5, logo.height*0.5);
             
+            
+            m.identity();
+            m.scale(0.25, 0.25);
+            m.translate(12.5, renderTexture.height-30);
+            
+            renderTexture.drawBundled(function() {
+                for (var i:int = 0; i < 10; i++) {
+                    renderTexture.draw(container, m);
+                    m.translate((renderTexture.width-container.width*0.25)/10, 0);
+                }
+            });
         }
         
         override public function onTick() {
-            // Uncomment to draw every frame
+            // Uncomment to draw the static test every frame
             //draw();
             
             ///*
-            roll.clear();
+            
+            // Draw a funky evolving shape
             t = 0;
-            gt += 1/60;
             logo.x = 0;
+            logo.alpha = 1;
+            
+            roll.drawBundledLock();
             
             while (logo.x-logo.width/2 < roll.width) {
                 var radius = 256;
                 var angle = t*0.5*Math.TWOPI;
                 
-                logo.x = t*0.4*roll.width;
-                //logo.x = t*20*roll.width;
+                logo.x = t*0.3*roll.width;
+                //logo.x = t*3*roll.width;
                 logo.y = roll.height*0.5;
                 
                 logo.rotation = t*Math.sin(gt*0.1*Math.TWOPI)*3+(Math.sin(t*0.3)*0.5)*0.07;
@@ -143,6 +170,18 @@ package
                 
                 t += 1/60;
             }
+            
+            roll.drawBundledUnlock();
+            
+            // Draw into a persistent buffer
+            logo.x = Math.random()*persistent.width;
+            logo.y = Math.random()*persistent.height;
+            logo.rotation = Math.random()*Math.TWOPI;
+            logo.scale = 0.2+0.8*(1-Math.exp(-Math.pow(Math.random(), 10)))*2;
+            persistent.draw(logo);
+            
+            gt += 1/60;
+            
             //*/
         }
     }

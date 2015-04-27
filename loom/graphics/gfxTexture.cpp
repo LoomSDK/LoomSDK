@@ -18,8 +18,6 @@
  * ===========================================================================
  */
 
-#include "loom/engine/loom2d/l2dStage.h"
-
 #include "loom/graphics/gfxTexture.h"
 
 #include "loom/common/assets/assets.h"
@@ -47,6 +45,8 @@ TextureInfo Texture::sTextureInfos[MAXTEXTURES];
 utHashTable<utFastStringHash, TextureID> Texture::sTexturePathLookup;
 bool Texture::sTextureAssetNofificationsEnabled = true;
 bool Texture::supportsFullNPOT;
+TextureID Texture::currentRenderTexture = -1;
+uint32_t Texture::previousRenderFlags = -1;
 
 //queue of textures to load in the async loading thread
 utList<AsyncLoadNote> Texture::sAsyncLoadQueue;
@@ -307,11 +307,11 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 
     if (newTexture)
     {
-        lmLog(gGFXTextureLogGroup, "Create texture for %s", tinfo.texturePath.c_str());
+		lmLog(gGFXTextureLogGroup, "Creating texture #%d for %s", id, tinfo.renderTarget ? "framebuffer" : tinfo.texturePath.c_str());
     }
     else
     {
-        lmLog(gGFXTextureLogGroup, "Updating texture %s", tinfo.texturePath.c_str());
+        lmLog(gGFXTextureLogGroup, "Updating texture #%d %s", id, tinfo.texturePath.c_str());
     }
 
 
@@ -323,33 +323,16 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     if (newTexture) {
         Graphics::context()->glGenTextures(1, &tinfo.handle);
         if (tinfo.renderTarget) {
-            //tinfo.framebuffer = new FrameBuffer();
             Graphics::context()->glGenFramebuffers(1, &tinfo.framebuffer);
         }
     }
-
-    lmLog(gGFXTextureLogGroup, "Create > %u", tinfo.handle);
-
-    //lmLog(gGFXTextureLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
 
     Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
 
     Graphics::context()->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    /*
-    Graphics::context()->glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    Graphics::context()->glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-    Graphics::context()->glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
-    */
     Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    /*
-    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    */
-    //lmLogInfo(gGFXTextureLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
-
+    
     tinfo.width  = width;
     tinfo.height = height;
 
@@ -389,67 +372,38 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 		if (!supportsFullNPOT) lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size")
     }
 
-    //lmLogInfo(gGFXTextureLogGroup, "Generated mipmaps in %d ms", Graphics::context()->glGetError());
-    //*/
-
     if (newTexture && tinfo.renderTarget)
     {
-		Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-        //Graphics::context()->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tinfo.handle, 0);
-        //GLenum buffers[1] = { GL_COLOR_ATTACHMENT0 };
-        //Graphics::context()->glFramebufferTexture2D
-        //tinfo.framebuffer->AttachTexture(GL_TEXTURE_2D, tinfo.handle, GL_COLOR_ATTACHMENT0);
-        //tinfo.framebuffer->IsValid();
-
         Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo.framebuffer);
         Graphics::context()->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tinfo.handle, 0);
 
-        bool isOK = false;
-
+#if GFX_OPENGL_CHECK
         GLenum status;
         status = Graphics::context()->glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        switch (status) {
-        case GL_FRAMEBUFFER_COMPLETE: // Everything's OK
-            isOK = true;
-            break;
-            /*
-        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tGL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT\n");
-            isOK = false;
-            break;
-        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tGL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT\n");
-            isOK = false;
-            break;
-        case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tGL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT\n");
-            isOK = false;
-            break;
-        case GL_FRAMEBUFFER_INCOMPLETE_FORMATS:
-            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tGL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT\n");
-            isOK = false;
-            break;
-        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tGL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT\n");
-            isOK = false;
-            break;
-        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tGL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT\n");
-            isOK = false;
-            break;
-        case GL_FRAMEBUFFER_UNSUPPORTED:
-            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tGL_FRAMEBUFFER_UNSUPPORTED_EXT\n");
-            isOK = false;
-            break;
-            */
-        default:
-            lmLogWarn(gGFXTextureLogGroup, "glift::CheckFramebufferStatus() ERROR:\n\tUnknown ERROR\n");
-            isOK = false;
+        switch (status)
+		{
+			case GL_FRAMEBUFFER_COMPLETE:
+				lmLogInfo(gGFXTextureLogGroup, "Texture framebuffer #%d initialized", tinfo.framebuffer);
+				break;
+			default:
+				const char* errorName;
+				switch (status) {
+					case GL_INVALID_ENUM: errorName = "GL_INVALID_ENUM"; break;
+					case GL_FRAMEBUFFER_UNDEFINED: errorName = "GL_FRAMEBUFFER_UNDEFINED"; break;
+					case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: errorName = "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"; break;
+					case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: errorName = "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT"; break;
+					case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: errorName = "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"; break;
+					case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: errorName = "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER"; break;
+					case GL_FRAMEBUFFER_UNSUPPORTED: errorName = "GL_FRAMEBUFFER_UNSUPPORTED"; break;
+					case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: errorName = "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"; break;
+					case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS: errorName = "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"; break;
+					default: errorName = "Unknown error";
+				}
+				lmLogError(gGFXLogGroup, "Framebuffer error: %s (0x%04x)", errorName, status);
+				GFX_DEBUG_BREAK
+				lmAssert(status, "OpenGL error, see above for details.");
         }
+#endif
 
         Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
@@ -478,7 +432,6 @@ TextureInfo *Texture::initEmptyTexture(int width, int height)
     {
         TextureID id = tinfo->id;
         tinfo->renderTarget = true;
-        lmLog(gGFXTextureLogGroup, "renderTarget %d", id);
         load(NULL, width, height, id);
     }
     else
@@ -514,7 +467,7 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
     if(tinfo != NULL)
     {
         // allocate the texture handle/id
-        lmLog(gGFXTextureLogGroup, "loading %s", path);
+        lmLog(gGFXTextureLogGroup, "Loading %s", path);
 
         // Now subscribe and let us load for reals.
         loom_asset_subscribe(path, Texture::handleAssetNotification, (void *)tinfo->id, 1);        
@@ -560,7 +513,7 @@ TextureInfo *Texture::initFromBytes(utByteArray *bytes, const char *name)
     }
 
     // Great, stuff real bits!
-    lmLog(gGFXTextureLogGroup, "loaded image bytes - %i x %i at id %i", lat->width, lat->height, tinfo->id);
+    lmLog(gGFXTextureLogGroup, "Loaded image bytes - %i x %i at id %i", lat->width, lat->height, tinfo->id);
 
     loadImageAsset(lat, tinfo->id);
 
@@ -841,7 +794,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
     }
 
     // Great, stuff real bits!
-    lmLog(gGFXTextureLogGroup, "loaded %s - %i x %i at id %i", name, lat->width, lat->height, id);
+    lmLog(gGFXTextureLogGroup, "Loaded %s - %i x %i at id %i", name, lat->width, lat->height, id);
 
     loadImageAsset(lat, id);
 
@@ -919,104 +872,70 @@ void Texture::reset()
 
 void Texture::clear(TextureID id, int color, float alpha)
 {
-	loom_mutex_lock(Texture::sTexInfoLock);
-	id &= TEXTURE_ID_MASK;
-	TextureInfo *tinfo = &sTextureInfos[id];
+	bool current = currentRenderTexture == id;
 
-	if (tinfo->handle != -1)
+	TextureID prevRenderTexture = currentRenderTexture;
+	
+	setRenderTarget(id);
+
+	Graphics::context()->glClearColor(
+		float((color >> 16) & 0xFF) / 255.0f,
+		float((color >> 8) & 0xFF) / 255.0f,
+		float((color >> 0) & 0xFF) / 255.0f,
+		alpha
+	);
+	Graphics::context()->glClear(GL_COLOR_BUFFER_BIT);
+
+	setRenderTarget(prevRenderTexture);
+}
+
+void Texture::setRenderTarget(TextureID id)
+{
+	if (id != -1)
 	{
+		if (currentRenderTexture == id) return;
+		setRenderTarget(-1);
+		lmAssert(currentRenderTexture == -1, "Internal setRenderTarget error, render already in progress");
+
+		currentRenderTexture = id;
+
+		id &= TEXTURE_ID_MASK;
+		lmAssert(id >= 0 && id < MAXTEXTURES, "Texture index out of bounds");
+
+		loom_mutex_lock(Texture::sTexInfoLock);
+
+		TextureInfo *tinfo = &sTextureInfos[id];
+		lmAssert(tinfo->handle != -1, "Texture handle invalid");
 		lmAssert(tinfo->renderTarget, "Error rendering to texture, texture is not a render buffer: %d", id);
 
 		// Set our texture-bound framebuffer
 		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo->framebuffer);
 
-		Graphics::context()->glClearColor(
-			float((color >> 16) & 0xFF) / 255.0f,
-			float((color >> 8) & 0xFF) / 255.0f,
-			float((color >> 0) & 0xFF) / 255.0f,
-			alpha
-		);
-		Graphics::context()->glClear(GL_COLOR_BUFFER_BIT);
-
-		// Reset to screen framebuffer
-		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
-
-
-	loom_mutex_unlock(Texture::sTexInfoLock);
-}
-
-int Texture::render(lua_State *L)
-{
-	TextureID id = lua_tointeger(L, 1);
-	Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, 2);
-	Loom2D::Matrix *matrix = lua_isnil(L, 3) ? NULL : (Loom2D::Matrix*) lualoom_getnativepointer(L, 3);
-	float alpha = (float) lua_tonumber(L, 4);
-
-    //lmLogInfo(gGFXTextureLogGroup, "render %d", id);
-
-	id &= TEXTURE_ID_MASK;
-
-    if ((id < 0) || (id >= MAXTEXTURES))
-    {
-        return 0;
-    }
-
-    loom_mutex_lock(Texture::sTexInfoLock);
-    TextureInfo *tinfo = &sTextureInfos[id];
-
-    if (tinfo->handle != -1)
-    {
-        lmAssert(tinfo->renderTarget, "Error rendering to texture, texture is not a render buffer: %d", id);
-
-		// Set our texture-bound framebuffer
-		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo->framebuffer);
-
-		// Save and setup state
+		// Flush pending quads
 		QuadRenderer::submit();
 
-		// Update positions and buffers early
-		// since we can't wait for rendering to begin
-		object->validate(L, 2); // The 2 here is the index of the object on the stack
-
-		Loom2D::DisplayObjectContainer *parent = object->parent;
-		object->parent = NULL;
-
-		uint32_t flags = Graphics::getFlags();
+		// Save and setup state
+		previousRenderFlags = Graphics::getFlags();
 		Graphics::setFlags(Graphics::FLAG_INVERTED | Graphics::FLAG_NOCLEAR);
 
-		Loom2D::Matrix transformMatrix;
-		if (matrix != NULL)
-		{
-			object->updateLocalTransform();
-			transformMatrix.copyFrom(&object->transformMatrix);
-			object->transformMatrix.copyFrom(matrix);
-		}
-
-		float objectAlpha = object->alpha;
-		object->alpha = objectAlpha*alpha;
-
 		// Setup stage and framing
-        Graphics::setNativeSize(tinfo->width, tinfo->height);
-        Graphics::beginFrame();
+		Graphics::setNativeSize(tinfo->width, tinfo->height);
+		Graphics::beginFrame();
 
-		// Render 
-        object->render(L);
-        Graphics::endFrame();
+		loom_mutex_unlock(Texture::sTexInfoLock);
+	}
+	else if (currentRenderTexture != -1)
+	{
+		Graphics::endFrame();
 
-		// Restore state
-        object->parent = parent;
-		Graphics::setFlags(flags);
-		if (matrix != NULL) object->transformMatrix.copyFrom(&transformMatrix);
-		object->alpha = objectAlpha;
-		
+		Graphics::setFlags(previousRenderFlags);
+
 		// Reset to screen framebuffer
 		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
 
-    loom_mutex_unlock(Texture::sTexInfoLock);
-
-    return 0;
+		currentRenderTexture = -1;
+		previousRenderFlags = -1;
+	}
 }
 
 void Texture::dispose(TextureID id)

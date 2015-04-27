@@ -20,11 +20,9 @@
 
 #pragma once
 
-#define GFX_DEBUG 1
+#define GFX_DEBUG 0
 
-#ifdef GFX_DEBUG
-#define GFX_OPENGL_CHECK 1
-#endif
+#define GFX_OPENGL_CHECK GFX_DEBUG
 
 #include <SDL.h>
 
@@ -38,11 +36,13 @@
 
 #include "loom/common/core/assert.h"
 #include "loom/common/core/log.h"
+#include "lj_obj.h"
+
 namespace GFX {
     lmDeclareLogGroup(gGFXLogGroup);
 }
 
-#ifdef GFX_OPENGL_CHECK
+#if GFX_OPENGL_CHECK
 #ifdef _WIN32
 #include <intrin.h>
 #endif
@@ -157,6 +157,8 @@ public:
 
     static void endFrame();
 
+	static int render(lua_State *L);
+
     static void handleContextLoss();
 
     static inline uint32_t getCurrentFrame() { return sCurrentFrame; }
@@ -241,7 +243,7 @@ private:
 
 };
 
-#ifdef GFX_OPENGL_CHECK
+#if GFX_OPENGL_CHECK
 
 #define GFX_SHADER_CHECK(shader) \
 do { \

@@ -10,6 +10,7 @@
 
 package loom2d.textures
 {
+    import loom.graphics.Graphics;
     import loom.graphics.Texture2D;
     import loom2d.Loom2D;
     import loom2d.math.Matrix;
@@ -62,7 +63,6 @@ package loom2d.textures
      */
     public class RenderTexture extends SubTexture
     {
-        private const CONTEXT_POT_SUPPORT_KEY:String = "RenderTexture.supportsNonPotDimensions";
         private const PMA:Boolean = true;
         
         private var mActiveTexture:Texture;
@@ -81,15 +81,10 @@ package loom2d.textures
          *  the default double buffering approach. That's faster and requires less memory, but is
          *  not supported on all hardware.
          *
-         *  <p>You can safely enable this property on all iOS and Desktop systems. On Android,
-         *  it's recommended to enable it only on reasonably modern hardware, e.g. only when
-         *  at least one of the 'Standard' profiles is supported.</p>
-         *
-         *  <p>Beware: this feature requires at least Flash/AIR version 15.</p>
-         *
-         *  @default false
+         *  // TODO: fix this if needed
+         *  @default true
          */
-        public static var optimizePersistentBuffers:Boolean = false;
+        public static var optimizePersistentBuffers:Boolean = true;
 
         /** Creates a new RenderTexture with a certain size (in points). If the texture is
          *  persistent, the contents of the texture remains intact after each draw call, allowing
@@ -102,27 +97,12 @@ package loom2d.textures
         public function RenderTexture(width:int, height:int, persistent:Boolean=true,
                                       scale:Number=-1, format:String="bgra", repeat:Boolean=false)
         {
-            // TODO: when Adobe has fixed this bug on the iPad 1 (see 'supportsNonPotDimensions'),
-            //       we can remove 'legalWidth/Height' and just pass on the original values.
-            //
-            // [Workaround]
-
             if (scale <= 0) scale = Loom2D.contentScaleFactor;
-
+            
             var legalWidth:Number  = width;
             var legalHeight:Number = height;
-
-            if (!supportsNonPotDimensions)
-            {
-                //legalWidth  = getNextPowerOfTwo(width  * scale) / scale;
-                //legalHeight = getNextPowerOfTwo(height * scale) / scale;
-            }
-
-            // [/Workaround]
-
+            
             mActiveTexture = Texture.empty(legalWidth, legalHeight, PMA, false, true, scale, format, repeat);
-            //
-            //mActiveTexture.root.onRestore = mActiveTexture.root.clear;
             
             super(mActiveTexture, new Rectangle(0, 0, width, height), true);
             
@@ -133,30 +113,22 @@ package loom2d.textures
             
             mIsPersistent = persistent;
             
-            trace("mActiveTexture", mActiveTexture.nativeID, nativeID, textureInfo);
-            
-            //mSupport = new RenderSupport();
-            //mSupport.setProjectionMatrix(0, 0, rootWidth, rootHeight, width, height);
-            
-            //if (persistent && (!optimizePersistentBuffers || !supportsRelaxedTargetClearRequirement))
-            //{
-                //mBufferTexture = Texture.empty(legalWidth, legalHeight, PMA, false, true, scale, format, repeat);
-                //mBufferTexture.root.onRestore = mBufferTexture.root.clear;
-                //mHelperImage = new Image(mBufferTexture);
-                //mHelperImage.smoothing = TextureSmoothing.NONE; // solves some antialias-issues
-            //}
+            if (persistent && !optimizePersistentBuffers) {
+                mBufferTexture = Texture.empty(legalWidth, legalHeight, PMA, false, true, scale, format, repeat);
+                mBufferTexture.smoothing = TextureSmoothing.NONE;
+                mHelperImage = new Image(mBufferTexture);
+            }
         }
         
         /** @inheritDoc */
         public override function dispose():void
         {
-            //mSupport.dispose();
             mActiveTexture.dispose();
             
             if (isDoubleBuffered)
             {
-                //mBufferTexture.dispose();
-                //mHelperImage.dispose();
+                mBufferTexture.dispose();
+                mHelperImage.dispose();
             }
             
             super.dispose();
@@ -170,65 +142,67 @@ package loom2d.textures
          *                      properties for position, scale, and rotation. If it is not null,
          *                      the object will be drawn in the orientation depicted by the matrix.
          *  @param alpha        The object's alpha value will be multiplied with this value.
-         *  @param antiAliasing Only supported beginning with AIR 13, and only on Desktop.
-         *                      Values range from 0 (no antialiasing) to 4 (best quality).
          */
-        public function draw(object:DisplayObject, matrix:Matrix=null, alpha:Number=1.0,
-                             antiAliasing:int=0):void
+        public function draw(object:DisplayObject, matrix:Matrix=null, alpha:Number=1.0):void
         {
             if (object == null) return;
             
-            //if (mDrawing)
+            if (mDrawing)
                 render(object, matrix, alpha);
-            //else
-                //renderBundled(render, object, matrix, alpha, antiAliasing);
+            else
+                renderBundled(render, object, matrix, alpha);
         }
         
         /** Bundles several calls to <code>draw</code> together in a block. This avoids buffer 
          *  switches and allows you to draw multiple objects into a non-persistent texture.
-         *  Note that the 'antiAliasing' setting provided here overrides those provided in
-         *  individual 'draw' calls.
          *  
-         *  @param drawingBlock  a callback with the form: <pre>function():void;</pre>
-         *  @param antiAliasing  Only supported beginning with AIR 13, and only on Desktop.
-         *                       Values range from 0 (no antialiasing) to 4 (best quality). */
-        public function drawBundled(drawingBlock:Function, antiAliasing:int=0):void
+         *  @param drawingBlock  a callback with the form: <pre>function():void;</pre> */
+        public function drawBundled(drawingBlock:Function):void
         {
-            renderBundled(drawingBlock, null, null, 1.0, antiAliasing);
+            renderBundled(drawingBlock, null, null, 1.0);
+        }
+        
+        /** For finer control over bundled drawing. Locks the texture so that any future draw
+         *  calls will render to the texture. Call <code>drawBundledUnlock</code> when you are
+         *  done drawing to switch back to regular rendering.
+         *  <code>drawBundled</code> uses this function internally.
+         */
+        public function drawBundledLock():void
+        {
+            Texture2D.setRenderTarget(mActiveTexture.nativeID);
+            
+            if (isDoubleBuffered || !isPersistent || !mBufferReady)
+                Texture2D.clear(mActiveTexture.nativeID);
+                
+            // draw buffer
+            if (isDoubleBuffered && mBufferReady)
+                Graphics.render(mHelperImage);
+            else
+                mBufferReady = true;
+                
+            mDrawing = true;
+        }
+        
+        /** For finer control over bundled drawing. Unlocks the texture and allows for regular
+         *  rendering to resume. Call <code>drawBundledLock</code> before calling this function
+         *  to first lock the texture.
+         *  <code>drawBundled</code> uses this function internally.
+         */
+        public function drawBundledUnlock():void
+        {
+            mDrawing = false;
+            
+            Texture2D.setRenderTarget(-1);
         }
         
         private function render(object:DisplayObject, matrix:Matrix=null, alpha:Number=1.0):void
         {
-            
-            //var filter:FragmentFilter = object.filter;
-            //var mask:DisplayObject = object.mask;
-//
-            //mSupport.loadIdentity();
-            //mSupport.blendMode = object.blendMode == BlendMode.AUTO ?
-                //BlendMode.NORMAL : object.blendMode;
-//
-            //if (matrix) mSupport.prependMatrix(matrix);
-            //else        mSupport.transformMatrix(object);
-//
-            //if (mask)   mSupport.pushMask(mask);
-
-            //if (filter) filter.render(object, mSupport, alpha);
-            //else        
-            //object.render(mSupport, alpha);
-            
-            Texture2D.render(nativeID, object, matrix, alpha);
-            
-            //if (mask)   mSupport.popMask();
+            Graphics.render(object, matrix, alpha);
         }
         
         private function renderBundled(renderBlock:Function, object:DisplayObject=null,
-                                       matrix:Matrix=null, alpha:Number=1.0,
-                                       antiAliasing:int=0):void
+                                       matrix:Matrix=null, alpha:Number=1.0):void
         {
-            //var context:Context3D = Starling.context;
-            //if (context == null) throw new MissingContextError();
-            //if (!Starling.current.contextValid) return;
-            
             // switch buffers
             if (isDoubleBuffered)
             {
@@ -238,56 +212,23 @@ package loom2d.textures
                 mHelperImage.texture = mBufferTexture;
             }
             
-            // limit drawing to relevant area
-            sClipRect.setTo(0, 0, mActiveTexture.width, mActiveTexture.height);
-
-            //mSupport.pushClipRect(sClipRect);
-            //mSupport.setRenderTarget(mActiveTexture, antiAliasing);
+            drawBundledLock();
             
-            //if (isDoubleBuffered || !isPersistent || !mBufferReady)
-                //mSupport.clear();
-
-            // draw buffer
-            //if (isDoubleBuffered && mBufferReady)
-                //mHelperImage.render(mSupport, 1.0);
-            //else
-                //mBufferReady = true;
+            Loom2D.execute(renderBlock, object, matrix, alpha);
             
-            //try
-            //{
-                //mDrawing = true;
-                //execute(renderBlock, object, matrix, alpha);
-            //}
-            //finally
-            //{
-                //mDrawing = false;
-                //mSupport.finishQuadBatch();
-                //mSupport.nextFrame();
-                //mSupport.renderTarget = null;
-                //mSupport.popClipRect();
-            //}
+            drawBundledUnlock();
         }
         
         /** Clears the render texture with a certain color and alpha value. Call without any
          *  arguments to restore full transparency. */
         public function clear(rgb:uint=0, alpha:Number=0.0):void
         {
-            //if (!Starling.current.contextValid) return;
-            //var previousRenderTarget:Texture = mSupport.renderTarget;
-
-            //mSupport.renderTarget = mActiveTexture;
-            //mSupport.clear(rgb, alpha);
-            //mSupport.renderTarget = previousRenderTarget;
-            Texture2D.clear(nativeID, rgb, alpha);
+            Texture2D.clear(mActiveTexture.nativeID, rgb, alpha);
             mBufferReady = true;
         }
         
-        /** On the iPad 1 (and maybe other hardware?) clearing a non-POT RectangleTexture causes
-         *  an error in the next "createVertexBuffer" call. Thus, we're forced to make this
-         *  really ... elegant check here. */
         private function get supportsNonPotDimensions():Boolean
         {
-            // TODO: implement?
             return true;
         }
 
