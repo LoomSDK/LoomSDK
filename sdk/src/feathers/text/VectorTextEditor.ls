@@ -499,35 +499,20 @@ package feathers.text
         public function validate():void
         {
             _shape.setClipRect(0, 0, width, height);
-            super.validate();
             
             var tmp:String = processDisplayText(_text);
             var advance:Number = g.textLineAdvance(_textFormat, 0, 0, tmp);
-            //trace("advance", advance);
-            //var bounds:Rectangle = g.textBoxBounds(_textFormat, 0, 0, isNaN(this.explicitWidth) ? Number.MAX_VALUE : this.explicitWidth, tmp);
             
-            // Just show a centered caret if we have no bounds.
-            if(advance >= 0)
-            {
+            if (advance >= width) {
+                _caretQuad.x = width;
+                _offset = width-advance;
+            } else {
                 _caretQuad.x = advance;
+                _offset = 0;
             }
-            else
-            {
-                // Position based on alignment.
-                switch(_textFormat.align)
-                {
-                    case TextAlign.LEFT:
-                        _caretQuad.x = 3;
-                        break;
-                    case TextAlign.CENTER:
-                        _caretQuad.x = explicitWidth / 2;
-                        break;
-                    case TextAlign.RIGHT:
-                        _caretQuad.x = explicitWidth - 3;
-                        break;
-                }
-            }
-
+            
+            super.validate();
+            
             var caretHeight:Number = _textFormat.size != NaN ? _textFormat.size : _textFormat.lineHeight; 
             _caretQuad.width = 2;
             _caretQuad.height = caretHeight;

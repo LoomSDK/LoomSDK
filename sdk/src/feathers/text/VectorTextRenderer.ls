@@ -22,6 +22,8 @@ package feathers.text
         protected var _text:String = "";
         protected var _shape:Shape;
         
+        protected var _offset:Number = 0;
+        
         public function VectorTextRenderer()
         {
             super();
@@ -78,7 +80,7 @@ package feathers.text
             //_textFormat.align = TextAlign.BOTTOM;
             g.textFormat(_textFormat);
             //g.drawTextBox(0, 0, width+1, tmp);
-            g.drawTextLine(0, height/2, tmp);
+            g.drawTextLine(_offset, height/2, tmp);
             //g.drawTextLine(0, height, tmp);
             //g.lineStyle(1, 0xFF0000);
             //g.drawRect(0, 0, width, height); 
