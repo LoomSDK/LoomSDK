@@ -9,21 +9,27 @@ class System
 {
 protected:
 	FILE* pipe;
-	char buffer[128];
+	char buffer[1024];
 
 	static int __stdcall getData(void *param)
 	{
 		System* self = (System*)param;
 		while (!feof(self->pipe)) {
-			if (fgets(self->buffer, 128, self->pipe) != NULL)//Think about increasing buffer size
+			if (fgets(self->buffer, 1024, self->pipe) != NULL)//Think about increasing buffer size
 			{
+				// Remove a new line character at the end, if there is a new line present
+				int bufLength = strlen(self->buffer);
+				if (self->buffer[bufLength - 1] == 10)
+					self->buffer[bufLength - 1] = 0;
+
 				self->_OnDataDelegate.pushArgument(self->buffer);
 				self->_OnDataDelegate.invoke();
 			}
 		}
 
 		_pclose(self->pipe);
-		// After the pipe is close, invoke the onFinish delegate
+
+		// After the pipe is closed, invoke the onFinish delegate
 		self->_OnFinishDelegate.invoke();
 
 		return 0;
