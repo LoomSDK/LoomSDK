@@ -153,6 +153,7 @@ package
             logo.x = 0;
             logo.alpha = 1;
             
+            // Begin drawing into the `roll` texture
             roll.drawBundledLock();
             
             while (logo.x-logo.width/2 < roll.width) {
@@ -172,6 +173,7 @@ package
                 t += 1/60;
             }
             
+            // End drawing into the texture
             roll.drawBundledUnlock();
             
             // Draw into a persistent buffer
@@ -182,9 +184,11 @@ package
             logo.rotation = Math.random()*Math.TWOPI;
             // Random scale with a bias towards smaller ones
             logo.scale = 0.2+0.8*(1-Math.exp(-Math.pow(Math.random(), 10)))*2;
-            // Alternate between
+            // Alternate between drawing and erasing
             logo.blendMode = gt%3 < 2 ? BlendMode.NORMAL : BlendMode.ERASE;
             persistent.draw(logo);
+            
+            // Restore blendmode
             logo.blendMode = BlendMode.NORMAL;
             
             gt += 1/60;
