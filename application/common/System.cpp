@@ -49,11 +49,11 @@ public:
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 		pipe = _popen(command, "r");
 #elif LOOM_PLATFORM == LOOM_PLATFORM_OSX
-        pipe = popen(command, "r");
+		pipe = popen(command, "r");
 #else
-        pipe = NULL;
+		pipe = NULL;
 #endif
-        loom_thread_start(getData, this);
+		loom_thread_start(getData, this);
 	}
 };
 
@@ -62,7 +62,7 @@ static int registerLoomSystem(lua_State* L)
 {
 	beginPackage(L, "loom")
 
-		.beginClass<System>("System")
+		.beginClass<System>("natSystem")
 
 		.addConstructor <void(*)(void) >()
 
