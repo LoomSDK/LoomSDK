@@ -275,16 +275,33 @@ void VectorGraphics::drawSVG(VectorSVG* svg, float x, float y, float scale, floa
         RENDERING
 *************************/
 
-void VectorGraphics::render(Loom2D::Matrix* transform) {
+void VectorGraphics::render(Loom2D::RenderState* renderStatePointer, Loom2D::Matrix* transform) {
     QuadRenderer::submit();
+
+    Loom2D::RenderState &renderState = *renderStatePointer;
 
     VectorRenderer::beginFrame();
     VectorRenderer::preDraw(transform->a, transform->b, transform->c, transform->d, transform->tx, transform->ty);
 
     scale = sqrt(transform->a*transform->a + transform->b*transform->b + transform->c*transform->c + transform->d*transform->d);
 
-    bool clipping = clipWidth != 0 || clipHeight != 0;
-    if (clipping) VectorRenderer::setClipRect(clipX, clipY, clipWidth, clipHeight);
+    if (clipWidth != -1 && clipHeight != -1)
+    {
+        Loom2D::Matrix    res;
+        Loom2D::Rectangle clipBounds = Loom2D::Rectangle((float)clipX, (float)clipY, (float)clipWidth, (float)clipHeight);
+        Loom2D::Rectangle clipResult;
+        Loom2D::DisplayObject::transformBounds(transform, &clipBounds, &clipResult);
+        
+        if (!renderState.isClipping()) {
+            renderState.clipRect = Loom2D::Rectangle(clipResult);
+        }
+        else
+        {
+            renderState.clipRect.clip(clipResult.x, clipResult.y, clipResult.width, clipResult.height);
+        }
+    }
+
+    if (renderState.isClipping()) VectorRenderer::setClipRect((int)renderState.clipRect.x, (int)renderState.clipRect.y, (int)renderState.clipRect.width, (int)renderState.clipRect.height);
 
     resetStyle();
 
@@ -297,7 +314,9 @@ void VectorGraphics::render(Loom2D::Matrix* transform) {
     }
     flushPath();
 
-    if (clipping) VectorRenderer::resetClipRect();
+    if (renderState.isClipping()) {
+        VectorRenderer::resetClipRect();
+    }
 
     VectorRenderer::postDraw();
     VectorRenderer::endFrame();

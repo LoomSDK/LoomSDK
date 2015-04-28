@@ -156,7 +156,7 @@ void VectorRenderer::endFrame()
 }
 
 void VectorRenderer::setClipRect(int x, int y, int w, int h) {
-    nvgScissor(nvg, (float) x, (float) y, (float) w, (float) h);
+    nvgScissorScreen(nvg, (float) x, (float) y, (float) w, (float) h);
 }
 void VectorRenderer::resetClipRect() {
     nvgResetScissor(nvg);
