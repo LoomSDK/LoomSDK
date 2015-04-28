@@ -26,9 +26,14 @@ protected:
 				self->_OnDataDelegate.invoke();
 			}
 		}
-
+        
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 		_pclose(self->pipe);
-
+#elif LOOM_PLATFORM == LOOM_PLATFORM_OSX
+        pclose(self->pipe);
+#else
+        // Do nothing, there is no pipe to close!
+#endif
 		// After the pipe is closed, invoke the onFinish delegate
 		self->_OnFinishDelegate.invoke();
 
@@ -41,8 +46,14 @@ public:
 
 	void cmd(const char *command)
 	{
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 		pipe = _popen(command, "r");
-		loom_thread_start(getData, this);
+#elif LOOM_PLATFORM == LOOM_PLATFORM_OSX
+        pipe = popen(command, "r");
+#else
+        pipe = NULL;
+#endif
+        loom_thread_start(getData, this);
 	}
 };
 
