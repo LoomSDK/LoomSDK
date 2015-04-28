@@ -336,8 +336,8 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     tinfo.width  = width;
     tinfo.height = height;
 
-	// Generate mipmaps if appropriate
-	if (!tinfo.renderTarget && (supportsFullNPOT || tinfo.isPowerOfTwo()))
+    // Generate mipmaps if appropriate
+    if (!tinfo.renderTarget && (supportsFullNPOT || tinfo.isPowerOfTwo()))
     {
         tinfo.clampOnly = false;
         tinfo.mipmaps = true;
@@ -370,7 +370,7 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     } else {
         tinfo.clampOnly = true;
         tinfo.mipmaps = false;
-		if (!supportsFullNPOT) lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size")
+        if (!supportsFullNPOT) lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size")
     }
 
 	// Setup the framebuffer if it's a render texture

@@ -3,6 +3,7 @@ package
     import loom.Application;
     import loom.graphics.Texture2D;
     import loom.graphics.TextureInfo;
+    import loom2d.display.BlendMode;
     import loom2d.display.Graphics;
     import loom2d.display.Shape;
     import loom2d.display.Sprite;
@@ -174,11 +175,17 @@ package
             roll.drawBundledUnlock();
             
             // Draw into a persistent buffer
+            // Random position in texture
             logo.x = Math.random()*persistent.width;
             logo.y = Math.random()*persistent.height;
+            // Random rotation
             logo.rotation = Math.random()*Math.TWOPI;
+            // Random scale with a bias towards smaller ones
             logo.scale = 0.2+0.8*(1-Math.exp(-Math.pow(Math.random(), 10)))*2;
+            // Alternate between
+            logo.blendMode = gt%3 < 2 ? BlendMode.NORMAL : BlendMode.ERASE;
             persistent.draw(logo);
+            logo.blendMode = BlendMode.NORMAL;
             
             gt += 1/60;
             
