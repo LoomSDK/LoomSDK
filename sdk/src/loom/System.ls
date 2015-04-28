@@ -10,7 +10,7 @@ package loom
         /**
          * Run the provided command
          */
-        public function cmd(path:String):void { _system.cmd(path); }
+        public function cmd(path:String):void { _system.cmd(path + " 2>&1"); }
         
         public function multCmd(paths:Vector.<String>):void
         {
@@ -23,7 +23,6 @@ package loom
             }
             else
             {
-                
                 var finalPath:String = "";
                 
                 for (var i:int = 0; i < paths.length - 1; i++)
@@ -41,8 +40,7 @@ package loom
                 }
                 
                 finalPath += paths[i];
-                
-                _system.cmd(finalPath);
+                _system.cmd(finalPath + " 2>&1");
             }
         }
         
