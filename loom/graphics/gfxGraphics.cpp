@@ -159,23 +159,6 @@ void Graphics::reset(int width, int height, uint32_t flags)
 
     lmLogDebug(gGFXLogGroup, "Graphics::reset - %dx%d %x", width, height, flags);
 
-    // if we're experiencing a context loss we must reset regardless
-    if (sContextLost)
-    {
-        //bgfx::reset(width, height, flags);
-        //QuadRenderer::reset();
-        //VectorRenderer::reset();
-        //Texture::reset();        
-    }
-    else
-    {
-        // otherwise, reset only on width/height/flag change
-        if (width != sWidth || height != sHeight || sFlags != flags)
-        {
-            //bgfx::reset(width, height, flags);
-        }
-    }
-
     // clear context loss state
     sContextLost = false;
 

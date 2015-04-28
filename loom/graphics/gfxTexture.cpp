@@ -336,7 +336,8 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     tinfo.width  = width;
     tinfo.height = height;
 
-    if (!tinfo.renderTarget && (supportsFullNPOT || tinfo.isPowerOfTwo()))
+	// Generate mipmaps if appropriate
+	if (!tinfo.renderTarget && (supportsFullNPOT || tinfo.isPowerOfTwo()))
     {
         tinfo.clampOnly = false;
         tinfo.mipmaps = true;
@@ -372,38 +373,13 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 		if (!supportsFullNPOT) lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size")
     }
 
+	// Setup the framebuffer if it's a render texture
     if (newTexture && tinfo.renderTarget)
     {
         Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo.framebuffer);
         Graphics::context()->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tinfo.handle, 0);
 
-#if GFX_OPENGL_CHECK
-        GLenum status;
-        status = Graphics::context()->glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        switch (status)
-		{
-			case GL_FRAMEBUFFER_COMPLETE:
-				lmLogInfo(gGFXTextureLogGroup, "Texture framebuffer #%d initialized", tinfo.framebuffer);
-				break;
-			default:
-				const char* errorName;
-				switch (status) {
-					case GL_INVALID_ENUM: errorName = "GL_INVALID_ENUM"; break;
-					case GL_FRAMEBUFFER_UNDEFINED: errorName = "GL_FRAMEBUFFER_UNDEFINED"; break;
-					case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: errorName = "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"; break;
-					case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: errorName = "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT"; break;
-					case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: errorName = "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"; break;
-					case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: errorName = "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER"; break;
-					case GL_FRAMEBUFFER_UNSUPPORTED: errorName = "GL_FRAMEBUFFER_UNSUPPORTED"; break;
-					case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: errorName = "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"; break;
-					case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS: errorName = "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"; break;
-					default: errorName = "Unknown error";
-				}
-				lmLogError(gGFXLogGroup, "Framebuffer error: %s (0x%04x)", errorName, status);
-				GFX_DEBUG_BREAK
-				lmAssert(status, "OpenGL error, see above for details.");
-        }
-#endif
+		GFX_FRAMEBUFFER_CHECK(tinfo.framebuffer);
 
         Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
@@ -899,12 +875,14 @@ void Texture::setRenderTarget(TextureID id)
 
 		currentRenderTexture = id;
 
-		id &= TEXTURE_ID_MASK;
-		lmAssert(id >= 0 && id < MAXTEXTURES, "Texture index out of bounds");
+		TextureID index = id & TEXTURE_ID_MASK;
 
 		loom_mutex_lock(Texture::sTexInfoLock);
 
-		TextureInfo *tinfo = &sTextureInfos[id];
+		lmAssert(index >= 0 && index < MAXTEXTURES, "Texture index out of bounds");
+		TextureInfo *tinfo = &sTextureInfos[index];
+
+		lmAssert(tinfo->id == id, "Texture ID signature mismatch, you might be trying to draw a disposed texture");
 		lmAssert(tinfo->handle != -1, "Texture handle invalid");
 		lmAssert(tinfo->renderTarget, "Error rendering to texture, texture is not a render buffer: %d", id);
 

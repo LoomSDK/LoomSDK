@@ -20,8 +20,13 @@
 
 #pragma once
 
+// Set to 1 to enable additional graphics debugging output and checks
 #define GFX_DEBUG 0
 
+// This flag enables extensive OpenGL checks including checking
+// the OpenGL error state after every call. This can have a big
+// impact on performance, so it's best used only while debugging.
+// Follows GFX_DEBUG by default.
 #define GFX_OPENGL_CHECK GFX_DEBUG
 
 #include <SDL.h>
@@ -303,10 +308,40 @@ do { \
 		if (info != NULL) lmFree(NULL, info); \
 } while (0); \
 
+#define GFX_FRAMEBUFFER_CHECK(framebuffer) \
+do { \
+	GLenum status; \
+	status = GFX::Graphics::context()->glCheckFramebufferStatus(GL_FRAMEBUFFER); \
+	switch (status) \
+	{ \
+		case GL_FRAMEBUFFER_COMPLETE: \
+			lmLogInfo(gGFXLogGroup, "Texture framebuffer #%d initialized", framebuffer); \
+			break; \
+		default: \
+			const char* errorName; \
+			switch (status) { \
+				case GL_INVALID_ENUM: errorName = "GL_INVALID_ENUM"; break; \
+				case GL_FRAMEBUFFER_UNDEFINED: errorName = "GL_FRAMEBUFFER_UNDEFINED"; break; \
+				case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: errorName = "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"; break; \
+				case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: errorName = "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT"; break; \
+				case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: errorName = "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"; break; \
+				case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: errorName = "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER"; break; \
+				case GL_FRAMEBUFFER_UNSUPPORTED: errorName = "GL_FRAMEBUFFER_UNSUPPORTED"; break; \
+				case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: errorName = "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"; break; \
+				case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS: errorName = "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"; break; \
+				default: errorName = "Unknown error"; \
+			} \
+			lmLogError(gGFXLogGroup, "Framebuffer #%d error: %s (0x%04x)", framebuffer, errorName, status); \
+			GFX_DEBUG_BREAK \
+			lmAssert(status, "OpenGL error, see above for details."); \
+	} \
+} while (0); \
+
 #else
 
 #define GFX_SHADER_CHECK
 #define GFX_PROGRAM_CHECK
+#define GFX_FRAMEBUFFER_CHECK
 
 #endif
 

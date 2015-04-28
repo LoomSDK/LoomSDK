@@ -365,23 +365,9 @@ package loom2d.textures
             var origHeight:Number = height * scale;
             var useRectTexture:Boolean = true;
 
-            //if (useRectTexture)
-            //{
-                actualWidth  = Math.ceil(origWidth  - 0.000000001); // avoid floating point errors
-                actualHeight = Math.ceil(origHeight - 0.000000001);
+            actualWidth  = Math.ceil(origWidth  - 0.000000001); // avoid floating point errors
+            actualHeight = Math.ceil(origHeight - 0.000000001);
                 
-                // Rectangle Textures are supported beginning with AIR 3.8. By calling the new
-                // methods only through those lookups, we stay compatible with older SDKs.
-                //nativeTexture = context["createRectangleTexture"](actualWidth, actualHeight, format, optimizeForRenderToTexture);
-            //}
-            //else
-            //{
-                //actualWidth  = getNextPowerOfTwo(origWidth);
-                //actualHeight = getNextPowerOfTwo(origHeight);
-                
-                //nativeTexture = context.createTexture(actualWidth, actualHeight, format, optimizeForRenderToTexture);
-            //}
-            
             var concreteTexture:ConcreteTexture = new ConcreteTexture("", actualWidth, actualHeight, optimizeForRenderToTexture);
             concreteTexture.mFrame = new Rectangle(0, 0, actualWidth, actualHeight);
             concreteTexture.setTextureInfo(Texture2D.initEmptyTexture(actualWidth, actualHeight));

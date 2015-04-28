@@ -339,7 +339,7 @@ void QuadRenderer::initializeGraphicsResources()
 
     //lmLogInfo(gGFXQuadRendererLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
 
-    // Create the quad 1.
+    // Create the quad shader.
     GLuint vertShader      = Graphics::context()->glCreateShader(GL_VERTEX_SHADER);
     
     //GLuint fragShader      = Graphics::context()->glCreateShader(GL_FRAGMENT_SHADER);

@@ -51,6 +51,11 @@ typedef int   TextureID;
 
 struct TextureInfo
 {
+    // This number uniquely identifies the texture.
+    // The last TEXTURE_ID_BITS represent the index into the `sTextureInfos` array.
+    // The remaining bits represent the version or check bits used to determine
+    // if some part of the program is trying to operate on a texture that has
+    // been recycled, since the version increments every time the texture is recycled.
     TextureID                id;
 
     // todo: format
@@ -116,17 +121,18 @@ struct TextureInfo
     }
     void reset()
     {
-        width       = height = 0;
-        smoothing   = TEXTUREINFO_SMOOTHING_NONE;
-        wrapU       = TEXTUREINFO_WRAP_CLAMP;
-        wrapV       = TEXTUREINFO_WRAP_CLAMP;
-        reload      = false;
+        width        = height = 0;
+        smoothing    = TEXTUREINFO_SMOOTHING_NONE;
+        wrapU        = TEXTUREINFO_WRAP_CLAMP;
+        wrapV        = TEXTUREINFO_WRAP_CLAMP;
+        reload       = false;
         asyncDispose = false;
-        handle      = -1;
+        handle       = -1;
+		// This increments the check bits / version by 1
 		id          += MAXTEXTURES;
-        texturePath = "";
+        texturePath  = "";
         renderTarget = false;
-        framebuffer = -1;
+        framebuffer  = -1;
     }
 };
 

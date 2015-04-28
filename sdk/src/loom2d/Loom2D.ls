@@ -28,7 +28,9 @@ package loom2d
 		 * unit corresponds to.
 		 */
 		public static var contentScaleFactor:Number = 1;
-		
+
+		/** Executes a function with the specified arguments. If the argument count does not match
+		 *  the function, the argument list is cropped / filled up with `null` values. */
 		public static function execute(func:Function, ...args):void
 		{
 			if (func != null)
