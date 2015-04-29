@@ -233,7 +233,8 @@ package loom2d.display
         }
 
 
-        /** center the DisplayObject's pivot point using the width and height */
+        /** Center the DisplayObject's pivot point using the width and height. This centers this 
+        object about its own origin based on its width and height. */
         public function center():void
         {
             if (!valid)
