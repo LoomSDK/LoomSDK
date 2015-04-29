@@ -84,6 +84,21 @@ void Texture::initialize()
 
 }
 
+void Texture::shutdown()
+{
+    lmLogInfo(gGFXTextureLogGroup, "Texture shutdown");
+    loom_mutex_lock(Texture::sTexInfoLock);
+    for (int i = 0; i < MAXTEXTURES; i++)
+    {
+        TextureInfo *tinfo = &sTextureInfos[i];
+        
+        if (tinfo->handle != -1)
+        {
+            Texture::dispose(tinfo->id);
+        }
+    }
+    loom_mutex_unlock(Texture::sTexInfoLock);
+}
 
 void Texture::tick()
 {
@@ -282,9 +297,7 @@ void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWi
 
 TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, TextureID id)
 {
-	id &= TEXTURE_ID_MASK;
-
-    if (id == -1)
+	if (id == -1)
     {
         id = getAvailableTextureID();
 
@@ -294,24 +307,18 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
         }
     }
 
-    if ((id < 0) || (id >= MAXTEXTURES))
-    {
-        return NULL;
-    }
-
     loom_mutex_lock(Texture::sTexInfoLock);
-
-    TextureInfo &tinfo = sTextureInfos[id];
+    TextureInfo &tinfo = *Texture::getTextureInfo(id);
 
     bool newTexture = !tinfo.reload || (tinfo.width != width) || (tinfo.height != height);
 
     if (newTexture)
     {
-		lmLog(gGFXTextureLogGroup, "Creating texture #%d for %s", id, tinfo.renderTarget ? "framebuffer" : tinfo.texturePath.c_str());
+		lmLog(gGFXTextureLogGroup, "Creating texture #%d.%d for %s", Texture::getIndex(id), Texture::getVersion(id), tinfo.renderTarget ? "framebuffer" : tinfo.texturePath.c_str());
     }
     else
     {
-        lmLog(gGFXTextureLogGroup, "Updating texture #%d %s", id, tinfo.texturePath.c_str());
+        lmLog(gGFXTextureLogGroup, "Updating texture #%d.%d from %s", Texture::getIndex(id), Texture::getVersion(id), tinfo.texturePath.c_str());
     }
 
 
@@ -659,7 +666,7 @@ TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name, b
         //NOTE: shouldn't really happen... there is a check for this in LS that returns early there!    
         loom_mutex_lock(Texture::sTexInfoLock);
         TextureID   *pid   = sTexturePathLookup.get(name);
-        TextureInfo *tinfo = (pid && ((*pid >= 0) && (*pid < MAXTEXTURES))) ? &sTextureInfos[*pid] : NULL;
+        TextureInfo *tinfo = Texture::getTextureInfo(pid);
         if(pid && (!tinfo || (tinfo->handle == -1)))
         {
             lmLogError(gGFXTextureLogGroup, "Invalid Texture ID or Handle returned in initFromBytesAsync() for texture: %s", name);
@@ -741,7 +748,6 @@ void Texture::loadCheckerBoard(TextureID id)
 void Texture::handleAssetNotification(void *payload, const char *name)
 {
 	TextureID id = (TextureID)payload;
-	id &= TEXTURE_ID_MASK;
 
     if (!sTextureAssetNofificationsEnabled)
     {
@@ -757,7 +763,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
     if (!lat)
     {
         loom_mutex_lock(Texture::sTexInfoLock);
-        bool reload = sTextureInfos[id].reload;
+        bool reload = Texture::getTextureInfo(id)->reload;
         loom_mutex_unlock(Texture::sTexInfoLock);
         if(reload)
             return;
@@ -770,7 +776,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
     }
 
     // Great, stuff real bits!
-    lmLog(gGFXTextureLogGroup, "Loaded %s - %i x %i at id %i", name, lat->width, lat->height, id);
+    lmLog(gGFXTextureLogGroup, "Loaded #%d.%d from %s - %i x %i", Texture::getIndex(id), Texture::getVersion(id), name, lat->width, lat->height, id);
 
     loadImageAsset(lat, id);
 
@@ -821,22 +827,21 @@ void Texture::reset()
         TextureInfo *tinfo = &sTextureInfos[i];
 
         // Ignore invalid entries.
-        if (sTextureInfos[i].handle == -1)
+        if (tinfo->handle != -1)
         {
             const char *path = tinfo->texturePath.c_str();
             lmLog(gGFXTextureLogGroup, "Reloading texture for path %s", path);
 
-            Graphics::context()->glDeleteTextures(1, &tinfo->handle);
-            tinfo->handle     = -1;
+            Texture::dispose(tinfo->id);
             tinfo->reload     = false;
 
             loom_mutex_unlock(Texture::sTexInfoLock);
 
-            //force it to be loaded from disk
+            // Force it to be loaded from disk
             loom_asset_lock(path, LATImage, 1);
             loom_asset_unlock(path);
 
-            //do actual texture creation/update
+            // Do actual texture creation/update
             handleAssetNotification((void *)tinfo->id, path);
         }
         else
@@ -875,14 +880,10 @@ void Texture::setRenderTarget(TextureID id)
 
 		currentRenderTexture = id;
 
-		TextureID index = id & TEXTURE_ID_MASK;
-
 		loom_mutex_lock(Texture::sTexInfoLock);
 
-		lmAssert(index >= 0 && index < MAXTEXTURES, "Texture index out of bounds");
-		TextureInfo *tinfo = &sTextureInfos[index];
+		TextureInfo *tinfo = Texture::getTextureInfo(id);
 
-		lmAssert(tinfo->id == id, "Texture ID signature mismatch, you might be trying to draw a disposed texture");
 		lmAssert(tinfo->handle != -1, "Texture handle invalid");
 		lmAssert(tinfo->renderTarget, "Error rendering to texture, texture is not a render buffer: %d", id);
 
@@ -918,24 +919,17 @@ void Texture::setRenderTarget(TextureID id)
 
 void Texture::dispose(TextureID id)
 {
-	id &= TEXTURE_ID_MASK;
-
-    if ((id < 0) || (id >= MAXTEXTURES))
-    {
-        return;
-    }
-
     loom_mutex_lock(Texture::sTexInfoLock);
-    TextureInfo *tinfo = &sTextureInfos[id];
+    TextureInfo *tinfo = Texture::getTextureInfo(id);
 
     // If the texture isn't valid ignore it.
-    if (tinfo->handle != -1)
+    if (tinfo && tinfo->handle != -1)
     {
         //if texture is still loading or is inside of the loading queue, we can't dispose of it now, 
         //but need to flag it for disposal in the thread
         if(tinfo->handle == MARKEDTEXTURE)
         {
-            sTextureInfos[id].asyncDispose = true;
+            tinfo->asyncDispose = true;
             loom_mutex_unlock(Texture::sTexInfoLock);
             return;
         }
@@ -958,6 +952,8 @@ void Texture::dispose(TextureID id)
         Graphics::context()->glDeleteTextures(1, &tinfo->handle);
         tinfo->reset();
     }
+
     loom_mutex_unlock(Texture::sTexInfoLock);
 }
+
 }

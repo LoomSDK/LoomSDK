@@ -210,9 +210,9 @@ private:
                                                 bool checkHandle = true, 
                                                 bool clearDispose = true)
     {
-        loom_mutex_lock(Texture::sTexInfoLock);
         TextureID   *texID = sTexturePathLookup.get(path);
-        TextureInfo *tinfo = (texID && ((*texID >= 0) && (*texID < MAXTEXTURES))) ? &sTextureInfos[*texID] : NULL;
+        loom_mutex_lock(Texture::sTexInfoLock);
+        TextureInfo *tinfo = Texture::getTextureInfo(texID);
         if(checkHandle && (tinfo && (tinfo->handle == -1)))
         {
             tinfo = NULL;
@@ -258,6 +258,8 @@ private:
 
     static void initialize();
 
+    static void shutdown();
+
     static void handleAssetNotification(void *payload, const char *name);
 
     static void loadImageAsset(loom_asset_image_t *lat, TextureID id);
@@ -281,15 +283,20 @@ public:
         return NULL;
     }
 
+    inline static TextureInfo *getTextureInfo(TextureID* id)
+    {
+        return id ? getTextureInfo(*id) : NULL;
+    }
+
     inline static TextureInfo *getTextureInfo(TextureID id)
 	{
-		TextureID index = id & TEXTURE_ID_MASK;
-		lmAssert(index >= 0 && index < MAXTEXTURES, "Texture index is out of range: %d", index);
+        TextureID index = id & TEXTURE_ID_MASK;
+        lmAssert(index >= 0 && index < MAXTEXTURES, "Texture index is out of range: %d", index);
 
         loom_mutex_lock(sTexInfoLock);
         TextureInfo *tinfo = &sTextureInfos[index];
 
-		// Check if it has a handle and if it's not outdated
+        // Check if it has a handle and if it's not outdated
         if (tinfo->handle == -1 || tinfo->id != id)
         {
             tinfo = NULL;
@@ -297,6 +304,16 @@ public:
         loom_mutex_unlock(sTexInfoLock);
 
         return tinfo;
+    }
+
+    inline static int getIndex(TextureID id)
+    {
+        return id & TEXTURE_ID_MASK;
+    }
+
+    inline static int getVersion(TextureID id)
+    {
+        return id >> TEXTURE_ID_BITS;
     }
 
     inline static void enableAssetNotifications(bool value)

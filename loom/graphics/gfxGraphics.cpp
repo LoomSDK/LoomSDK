@@ -134,24 +134,12 @@ void Graphics::initialize()
     VectorRenderer::initialize();
 
     sInitialized = true;
-
-    ///   BGFX_DEBUG_STATS - Display internal statistics.
-    ///
-    ///   BGFX_DEBUG_TEXT - Display debug text.
-    ///
-    ///   BGFX_DEBUG_WIREFRAME - Wireframe rendering. All rendering
-    ///     primitives will be rendered as lines.
-    ///
-
-    // bgfx::setDebug(BGFX_DEBUG_STATS | BGFX_DEBUG_TEXT);
 }
-
 
 void Graphics::shutdown()
 {
-//    bgfx::shutdown();
+    Texture::shutdown();
 }
-
 
 void Graphics::reset(int width, int height, uint32_t flags)
 {

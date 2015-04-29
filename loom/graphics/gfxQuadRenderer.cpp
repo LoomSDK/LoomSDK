@@ -88,7 +88,7 @@ void QuadRenderer::submit()
 
     numFrameSubmit++;
 
-	TextureInfo &tinfo = Texture::sTextureInfos[currentTexture & TEXTURE_ID_MASK];
+    TextureInfo &tinfo = *Texture::getTextureInfo(currentTexture);
 
     if (tinfo.handle != -1)
     {
@@ -226,9 +226,13 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
         return NULL;
     }
 
+#ifndef LOOM_NDEBUG
+    loom_mutex_lock(Texture::sTexInfoLock);
     lmAssert(!(numVertices % 4), "numVertices % 4 != 0");
-	lmAssert(texture == Texture::getTextureInfo(texture)->id, "Texture ID signature mismatch, you might be trying to draw a disposed texture");
-	
+    lmAssert(texture == Texture::getTextureInfo(texture)->id, "Texture ID signature mismatch, you might be trying to draw a disposed texture");
+    loom_mutex_unlock(Texture::sTexInfoLock);
+#endif
+
     if (((currentTexture != TEXTUREINVALID) && (currentTexture != texture))
         || (sTinted != tinted) || (srcBlend != sSrcBlend) || ( dstBlend != sDstBlend))
     {
@@ -261,6 +265,7 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
     }
 
     VertexPosColorTex *returnPtr = currentVertexPtr;
+    if (!returnPtr) return NULL;
 
     sTinted = tinted;
     sSrcBlend = srcBlend;
@@ -336,8 +341,6 @@ void QuadRenderer::_initializeNextVertexBuffer()
 void QuadRenderer::initializeGraphicsResources()
 {
     lmLogInfo(gGFXQuadRendererLogGroup, "Initializing Graphics Resources");
-
-    //lmLogInfo(gGFXQuadRendererLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
 
     // Create the quad shader.
     GLuint vertShader      = Graphics::context()->glCreateShader(GL_VERTEX_SHADER);
