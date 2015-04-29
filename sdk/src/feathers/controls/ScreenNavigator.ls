@@ -497,7 +497,7 @@ package feathers.controls
          */
         public function getScreen(id:String):ScreenNavigatorItem
         {
-            if(this._screens[id] == null)
+            if(this._screens[id] != null)
             {
                 return ScreenNavigatorItem(this._screens[id]);
             }
