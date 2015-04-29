@@ -21,6 +21,8 @@
 #pragma once
 
 #include "loom/graphics/gfxVectorRenderer.h"
+#include "loom/engine/loom2d/l2dDisplayObject.h"
+#include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 #include "loom/engine/loom2d/l2dMatrix.h"
 #include "loom/engine/loom2d/l2dRectangle.h"
 
@@ -154,8 +156,9 @@ public:
 	float x;
 	float y;
 	float scale;
+	float lineThickness;
 	GFX::VectorSVG* image;
-	VectorSVGData(float x, float y, float scale, GFX::VectorSVG* image) : x(x), y(y), scale(scale), image(image) {};
+	VectorSVGData(GFX::VectorSVG* image, float x, float y, float scale = 1.0f, float lineThickness = 1.0f) : x(x), y(y), scale(scale), lineThickness(lineThickness), image(image) {};
 	virtual void render(VectorGraphics* g);
 };
 
@@ -183,12 +186,13 @@ public:
 	float boundT;
 	float boundR;
 	float boundB;
-    float scale;
-    int clipX, clipY, clipWidth, clipHeight;
+	float scale;
+	int clipX, clipY, clipWidth, clipHeight;
 
 	VectorGraphics() {
-        queue = new utArray<VectorData*>();
-        clipX = clipY = clipWidth = clipHeight = 0;
+		queue = new utArray<VectorData*>();
+		clipX = clipY = 0;
+		clipWidth = clipHeight = -1;
 		clear();
 	}
 
@@ -196,7 +200,7 @@ public:
 	void flushPath();
 
     void setClipRect(int x, int y, int w, int h);
-	void render(Loom2D::Matrix* transform);
+	void render(Loom2D::RenderState* renderState, Loom2D::Matrix* transform);
 
 	void clear();
 	void lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit);
@@ -222,11 +226,11 @@ public:
 	void drawTextLine(float x, float y, utString text);
 	void drawTextBox(float x, float y, float width, utString text);
 
-    Loom2D::Rectangle textLineBounds(GFX::VectorTextFormat format, float x, float y, utString text);
-    float textLineAdvance(GFX::VectorTextFormat format, float x, float y, utString text);
-    Loom2D::Rectangle textBoxBounds(GFX::VectorTextFormat format, float x, float y, float width, utString text);
+	Loom2D::Rectangle textLineBounds(GFX::VectorTextFormat format, float x, float y, utString text);
+	float textLineAdvance(GFX::VectorTextFormat format, float x, float y, utString text);
+	Loom2D::Rectangle textBoxBounds(GFX::VectorTextFormat format, float x, float y, float width, utString text);
 
-	void drawSVG(float x, float y, float scale, GFX::VectorSVG* svg);
+	void drawSVG(GFX::VectorSVG* svg, float x, float y, float scale, float lineThickness);
 };
 
 

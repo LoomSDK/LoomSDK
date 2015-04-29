@@ -612,12 +612,9 @@ package loom.modestmaps.core
             // this means current is on top, +1 and -1 are next, then +2 and -2, etc.
             visibleTiles.sort(distanceFromCurrentZoomCompare);
                 
-            // for positioning tile according to current transform, based on current tile zoom          
-            var scaleFactors:Vector.<Number> = new Vector.<Number>(maxZoom + 1);            
             // scales to compensate for zoom differences between current grid zoom level                
             var tileScales:Vector.<Number> = new Vector.<Number>(maxZoom + 1);          
             for (var z:int = 0; z <= maxZoom; z++) {
-                scaleFactors[z] = Math.pow(2.0, currentTileZoom - z);
                 // round up to the nearest pixel to avoid seams between zoom levels
                 if (RoundScalesEnabled) {
                     tileScales[z] = Math.ceil(Math.pow(2, zoomLevel-z) * tileWidth) / tileWidth; 
@@ -978,14 +975,24 @@ package loom.modestmaps.core
             var zoomFactor:Number = Math.pow(2, zoomLevel - coord.zoom) * tileWidth/scale;
             var zoomedColumn:Number = coord.column * zoomFactor;
             var zoomedRow:Number = coord.row * zoomFactor;
+            //NOTE_TEC: This was brought in from the JS version of MMaps as it wasn't present in the AS3 port... 
+            //          but it breaks things as the column/row values actually need to be fractional in 
+            //          the AS3 version with quite large mantissa values!!!
             // round, not floor, because the latter causes artifacts at lower zoom levels :(
-            if(shouldRound)
-            {
-                zoomedColumn = Math.round(zoomedColumn);
-                zoomedRow = Math.round(zoomedRow);
-            }
+            //if(shouldRound)
+            //{
+            //    zoomedColumn = Math.round(zoomedColumn);
+            //    zoomedRow = Math.round(zoomedRow);
+            //}
                         
             var screenPoint:Point = worldMatrix.transformCoord(zoomedColumn, zoomedRow);
+
+            //NOTE_TEC: Added this to help a bit with zooming when zoomFactor hits <=0.001953125
+            if(shouldRound)
+            {
+                screenPoint.x = Math.round(screenPoint.x);
+                screenPoint.y = Math.round(screenPoint.y);
+            }
 
             if (context && context != this)
             {

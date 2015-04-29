@@ -374,6 +374,9 @@ NVGpaint nvgImagePattern(NVGcontext* ctx, float ox, float oy, float ex, float ey
 // The scissor rectangle is transformed by the current transform.
 void nvgScissor(NVGcontext* ctx, float x, float y, float w, float h);
 
+// Sets the current scissor rectangle in screen coordinates.
+void nvgScissorScreen(NVGcontext* ctx, float x, float y, float w, float h);
+
 // Intersects current scissor rectangle with the specified rectangle.
 // The scissor rectangle is transformed by the current transform.
 // Note: in case the rotation of previous scissor rect differs from

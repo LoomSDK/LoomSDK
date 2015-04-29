@@ -9,7 +9,7 @@
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,6 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include "loom/common/platform/platform.h"
 #include "loom/common/core/log.h"
@@ -136,13 +135,36 @@ void loom_log_removeListener(loom_logListener_t listener, void *payload)
     lmAssert(0, "Could not find listener to remove.");
 }
 
+#ifndef _MSC_VER
+int _vscprintf(const char *format, va_list pargs)
+{
+    int retval;
+    va_list argcopy;
+    va_copy(argcopy, pargs);
+    retval = vsnprintf(NULL, 0, format, argcopy);
+    va_end(argcopy);
+    return retval;
+}
+#endif
+
+// Don't forget to lmFree the returned buff
+char* loom_log_getArgs(va_list args, const char **format) {
+    int count = _vscprintf(*format, args);
+    char* buff = (char*)lmAlloc(NULL, count + 2);
+    #if LOOM_COMPILER == LOOM_COMPILER_MSVC
+        vsprintf_s(buff, count + 1, *format, args);
+    #else
+        vsnprintf(buff, count + 1, *format, args);
+    #endif
+    return buff;
+}
 
 void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format, ...)
 {
-    char    buff[2048];
-    va_list args;
     loom_log_listenerEntry_t *listener = listenerHead;
-
+    char* buff;
+    va_list args;
+    
     // sometimes we're not using the lmLog macros, so enforce good behavior.
     if (!group->enabled)
     {
@@ -154,13 +176,7 @@ void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format,
         return;
     }
 
-    va_start(args, format);
-#if LOOM_COMPILER == LOOM_COMPILER_MSVC
-    vsprintf_s(buff, 2046, format, args);
-#else
-    vsnprintf(buff, 2046, format, args);
-#endif
-    va_end(args);
+    lmLogArgs(args, buff, format);
 
     // Walk the listeners and output.
     while (listener)
@@ -168,6 +184,9 @@ void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format,
         listener->callback(listener->payload, group, level, buff);
         listener = listener->next;
     }
+
+    lmFree(NULL, buff);
+
 }
 
 

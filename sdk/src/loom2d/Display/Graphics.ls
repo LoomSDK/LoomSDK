@@ -100,12 +100,83 @@ package loom2d.display
     
     [Native(managed)]
     /**
-     * Utility class to load SVG vectors from a file or string. Draw with Graphics.drawSVG().
+     * SVG vector image that can be loaded from a file or string. Draw with `Graphics.drawSVG()`.
      */
     public native class SVG
     {
+        /**
+         * Get the width of the displayed SVG in pixels before any transformations.
+         */
+        public native function get width():Number;
+        
+        /**
+         * Get the height of the displayed SVG in pixels before any transformations.
+         */
+        public native function get height():Number;
+        
+        
+        /**
+         * Load a file containing the SVG layout and replace the current SVG contents with it.
+         * 
+         * @see `fromFile`
+         * @param path  The path of the SVG asset.
+         * @param units The unit to interpret the values in.
+         *              The supported values are `px`, `pt`, `pc`, `mm`, `cm`, `in`, `%`, `em`, `ex`.
+         *              Use `px` for direct interpretation.
+         *              Use one of the other units along with `dpi` to scale the image accordingly.
+         * @param dpi   Dots per inch of the SVG image. Used for proper scaling units other than `px`.
+         */
         public native function loadFile(path:String, units:String = "px", dpi:Number = 96);
+        
+        /**
+         * Load an SVG image asset from the file system and return it as an SVG object.
+         * This is the static factory for convenient loading through the use of `loadFile`.
+         * 
+         * @see `loadFile`
+         * @param path  The path of the SVG asset.
+         * @param units The unit to interpret the values in.
+         *              The supported values are `px`, `pt`, `pc`, `mm`, `cm`, `in`, `%`, `em`, `ex`.
+         *              Use `px` for direct interpretation.
+         *              Use one of the other units along with `dpi` to scale the image accordingly.
+         * @param dpi   Dots per inch of the SVG image. Used for proper scaling units other than `px`.
+         */
+        public static function fromFile(path:String, units:String = "px", dpi:Number = 96):SVG {
+            var svg = new SVG(); svg.loadFile(path, units, dpi); return svg;
+        }
+        
+        /**
+         * Load an SVG layout from a string and replace the current SVG contents with it.
+         * Use `loadFile` when loading a file asset to enable support for live reloading.
+         * 
+         * @see `fromString`
+         * @see `loadFile`
+         * @param path  The path of the SVG asset.
+         * @param units The unit to interpret the values in.
+         *              The supported values are `px`, `pt`, `pc`, `mm`, `cm`, `in`, `%`, `em`, `ex`.
+         *              Use `px` for direct interpretation.
+         *              Use one of the other units along with `dpi` to scale the image accordingly.
+         * @param dpi   Dots per inch of the SVG image. Used for proper scaling units other than `px`.
+         */
         public native function loadString(svg:String, units:String = "px", dpi:Number = 96);
+        
+        
+        /**
+         * Load an SVG layout from a string and return it as an SVG object.
+         * This is the static factory for convenient loading through the use of `loadString`.
+         * Use `fromFile` when loading a file asset to enable support for live reloading.
+         * 
+         * @see `loadString`
+         * @see `fromFile`
+         * @param path  The path of the SVG asset.
+         * @param units The unit to interpret the values in.
+         *              The supported values are `px`, `pt`, `pc`, `mm`, `cm`, `in`, `%`, `em`, `ex`.
+         *              Use `px` for direct interpretation.
+         *              Use one of the other units along with `dpi` to scale the image accordingly.
+         * @param dpi   Dots per inch of the SVG image. Used for proper scaling units other than `px`.
+         */
+        public static function fromString(path:String, units:String = "px", dpi:Number = 96):SVG {
+            var svg = new SVG(); svg.loadString(path, units, dpi); return svg;
+        }
     }
     
     [Native(managed)]
@@ -206,6 +277,9 @@ package loom2d.display
          */
         public native function drawRoundRect(x:Number, y:Number, width:Number, height:Number, ellipseWidth:Number, ellipseHeight:Number):void;
         
+        /**
+         * Creates new rounded rectangle shaped sub-path with individually controllable corner radiuses.
+         */
         public native function drawRoundRectComplex(x:Number, y:Number, width:Number, height:Number, topLeftRadius:Number, topRightRadius:Number, bottomLeftRadius:Number, bottomRightRadius:Number):void;
         
         /**
@@ -224,9 +298,17 @@ package loom2d.display
         public native function drawTextBox(x:Number, y:Number, width:Number, text:String):void;
         
         /**
-         * Draw an SVG at the given center point.
+         * Draw an SVG at the provided position with the provided scale and line thickness multiplier.
+         * The SVG is drawn with the top left corner placed at the provided position and then scaled according to the provided scale.
+         * 
+         * @param svg           The SVG to draw.
+         * @param x             The x position coordinate.
+         * @param x             The y position coordinate.
+         * @param scale         The scale multiplier of the SVG image.
+         * @param lineThickness A multiplier for the stroke thickness of the drawn lines.
+         *                      For example, setting this to 2 will double the width of all the drawn lines.
          */
-        public native function drawSVG(x:Number, y:Number, scale:Number, svg:SVG):void;
+        public native function drawSVG(svg:SVG, x:Number = 0, y:Number = 0, scale:Number = 1, lineThickness:Number = 1):void;
         
         /**
          * Get the current bounds of the graphics drawn by this instance.

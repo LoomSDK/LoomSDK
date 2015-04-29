@@ -100,7 +100,7 @@ package loom2d.textures
         /** 
          * Information for the texture from the loaded Texture2D Asset. 
          */
-        public var textureInfo:TextureInfo;
+        protected var textureInfo:TextureInfo;
 
         /**
          * Fired when the texture's state has updated.
@@ -147,7 +147,7 @@ package loom2d.textures
             {
                 Texture2D.dispose(textureInfo.id);    
             }
-            
+
             textureInfo = null;
 
             // Remove from the cache.
@@ -164,7 +164,9 @@ package loom2d.textures
         public function get nativeID():int
         {
             if (!textureInfo)
+            {
                 return -1;
+            }
 
             return textureInfo.id;
         }
@@ -515,7 +517,7 @@ package loom2d.textures
             //setup onSuccess
             var success:Function = function(result:String):void
             {
-                var textureInfo:TextureInfo = null;
+                var tInfo:TextureInfo = null;
                 //Console.print("Successfull download of HTTP texture from url: " + url); 
 
                 //remove reference to the request so it can now be GCed
@@ -537,8 +539,8 @@ package loom2d.textures
                     if(cacheOnDisk)
                     {
                         //kick off the async load and return our holding texture
-                        textureInfo = Texture2D.initFromAssetAsync(cacheFile, highPriority);
-                        if(textureInfo == null)
+                        tInfo = Texture2D.initFromAssetAsync(cacheFile, highPriority);
+                        if(tInfo == null)
                         {
                             Console.print("WARNING: Unable to load HTTP texture from cached file: " + cacheFile); 
                         }
@@ -550,8 +552,8 @@ package loom2d.textures
                         Base64.decode(result, texBytes);
 
                         //load the bytes Async
-                        textureInfo = Texture2D.initFromBytesAsync(texBytes, urlsha2, highPriority);
-                        if(textureInfo == null)
+                        tInfo = Texture2D.initFromBytesAsync(texBytes, urlsha2, highPriority);
+                        if(tInfo == null)
                         {
                             Console.print("WARNING: Unable to load texture from bytes given data from url: " + url); 
                         }                    
@@ -559,8 +561,8 @@ package loom2d.textures
                 }
 
                 //unable to create our textureInfo so we failed
-                if(textureInfo == null)
-                {
+                if(tInfo == null)
+                {                  
                     //dispose the texture and call the failure delegate (don't call onFailure if the load was cancelled)
                     if((tex.httpLoadFail != null) && (!tex.mCancelHTTP))
                     {
@@ -571,9 +573,9 @@ package loom2d.textures
                 }
 
                 //register the textureInfo and async complete CB
-                tex.textureInfo = textureInfo;
+                tex.textureInfo = tInfo;
                 tex.asyncLoadComplete = onSuccess;
-                textureInfo.asyncLoadComplete += tex.onAsyncLoadComplete;
+                tInfo.asyncLoadComplete += tex.onAsyncLoadComplete;
             };
             req.onSuccess += success;
 

@@ -156,7 +156,7 @@ void VectorRenderer::endFrame()
 }
 
 void VectorRenderer::setClipRect(int x, int y, int w, int h) {
-    nvgScissor(nvg, (float) x, (float) y, (float) w, (float) h);
+    nvgScissorScreen(nvg, (float) x, (float) y, (float) w, (float) h);
 }
 void VectorRenderer::resetClipRect() {
     nvgResetScissor(nvg);
@@ -334,8 +334,8 @@ Loom2D::Rectangle VectorRenderer::textBoxBounds(VectorTextFormat* format, float 
     return Loom2D::Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
 }
 
-void VectorRenderer::svg(float x, float y, float scale, VectorSVG* image) {
-	image->render(x, y, scale);
+void VectorRenderer::svg(VectorSVG* image, float x, float y, float scale, float lineThickness) {
+	image->render(x, y, scale, lineThickness);
 }
 
 
@@ -400,7 +400,6 @@ void VectorTextFormat::load(utString fontName, utString filePath) {
 VectorSVG::VectorSVG() {
     path = NULL;
     image = NULL;
-    width = height = 0.0f;
 }
 VectorSVG::~VectorSVG() {
 	reset();
@@ -415,7 +414,6 @@ void VectorSVG::reset(bool reloaded) {
 		nsvgDelete(image);
 		image = NULL;
 	}
-	width = height = 0;
 }
 void VectorSVG::loadFile(utString path, utString units, float dpi) {
 	reset();
@@ -427,7 +425,7 @@ void VectorSVG::loadFile(utString path, utString units, float dpi) {
 }
 void VectorSVG::onReload(void *payload, const char *name) {
 	VectorSVG* svg = static_cast<VectorSVG*>(payload);
-	lmAssert(strncmp(svg->path->c_str(), name, svg->path->size()) == 0, "expected svg path and reloaded path mismatch");
+	lmAssert(strncmp(svg->path->c_str(), name, svg->path->size()) == 0, "expected svg path and reloaded path mismatch: %s %s", svg->path->c_str(), name);
 	svg->reload();
 }
 void VectorSVG::reload() {
@@ -448,10 +446,14 @@ void VectorSVG::parse(const char* svg, const char* units, float dpi) {
 		image = NULL;
 		return;
 	}
-	width = image->width;
-	height = image->height;
 }
-void VectorSVG::render(float x, float y, float scale) {
+float VectorSVG::getWidth() const {
+	return image == NULL ? 0.0f : image->width;
+}
+float VectorSVG::getHeight() const {
+	return image == NULL ? 0.0f : image->height;
+}
+void VectorSVG::render(float x, float y, float scale, float lineThickness) {
 	if (image == NULL) return;
 	nvgSave(nvg);
 	nvgTranslate(nvg, x, y);
@@ -472,7 +474,7 @@ void VectorSVG::render(float x, float y, float scale) {
 		switch (stroke->type) {
 			case NSVG_PAINT_COLOR:
 				VectorRenderer::strokeColor32(stroke->color, shape->opacity);
-				VectorRenderer::strokeWidth(1);
+				VectorRenderer::strokeWidth(lineThickness*shape->strokeWidth);
 				hasStroke = true;
 			default: break;
 		}

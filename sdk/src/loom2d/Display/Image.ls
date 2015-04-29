@@ -132,19 +132,20 @@ package loom2d.display
                     mTexture.update -= onTextureUpdate;
 
                 mTexture = value;
-
                 if(mTexture)
+                {
                     mTexture.update += onTextureUpdate;
-
-                if (mTexture)
-                    nativeTextureID = mTexture.nativeID;
                     
-                mVertexData.setPremultipliedAlpha(mTexture.premultipliedAlpha);
-                mVertexDataCache.setPremultipliedAlpha(mTexture.premultipliedAlpha, false);
-                onVertexDataChanged();
-
-                readjustSize();
+                    mVertexData.setPremultipliedAlpha(mTexture.premultipliedAlpha);
+                    mVertexDataCache.setPremultipliedAlpha(mTexture.premultipliedAlpha, false);
+                    onVertexDataChanged();
+                    readjustSize();
+                }
             }
+
+            //always set this as there may have been a valid Texture assigned that wasn't initialized natively yet
+            if (mTexture)
+                nativeTextureID = mTexture.nativeID;
         }
 
         protected function onTextureUpdate():void
