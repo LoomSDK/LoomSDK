@@ -297,7 +297,7 @@ void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWi
 
 TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, TextureID id)
 {
-	if (id == -1)
+    if (id == -1)
     {
         id = getAvailableTextureID();
 
