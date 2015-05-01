@@ -20,6 +20,8 @@ limitations under the License.
 
 package loom.graphics
 {
+    import loom2d.display.DisplayObject;
+    import loom2d.math.Matrix;
     /**
      * Control global graphics subsystem behavior.
      */
@@ -56,6 +58,17 @@ package loom.graphics
          */
         public static native function setDebug(flags:int):void;
 
+        /** Render the object immediately with transform and alpha parameters.
+         *  Used internally for rendering to a texture.
+         * 
+         *  @param object       The object to draw.
+         *  @param matrix       If 'matrix' is null, the object will be drawn adhering its 
+         *                      properties for position, scale, and rotation. If it is not null,
+         *                      the object will be drawn in the orientation depicted by the matrix.
+         *  @param alpha        The object's alpha value will be multiplied with this value.
+         */
+        public static native function render(object:DisplayObject, matrix:Matrix = null, alpha:Number = 1);
+        
         /** 
          * Set the background color for the graphics viewport, in RGBA.
          */

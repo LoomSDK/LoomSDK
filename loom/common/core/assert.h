@@ -69,6 +69,7 @@ void loom_fireAssertCallback();
         strcpy(lmAssertBuf + strlen(lmAssertBuf), errmsg);                             /* Append our message to the end of our format string. */  \
         strcpy(lmAssertBuf + strlen(lmAssertBuf), "\n");                               /* Append a new line to the end for good measure. */       \
         platform_error(lmAssertBuf, __FILE__, __LINE__, __VA_ARGS__);                                                                             \
+        __debugbreak();                                                                                                                           \
         loom_fireAssertCallback();                                                                                                                \
         abort();                                                                                                                                  \
     }

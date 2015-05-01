@@ -18,6 +18,8 @@
  * ===========================================================================
  */
 
+#include "loom/graphics/gfxTexture.h"
+
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
 
@@ -27,7 +29,8 @@
 #include "loom/common/utils/utTypes.h"
 
 #include "loom/graphics/gfxGraphics.h"
-#include "loom/graphics/gfxTexture.h"
+#include "loom/graphics/gfxQuadRenderer.h"
+
 
 #include "loom/common/platform/platformTime.h"
 
@@ -42,6 +45,8 @@ TextureInfo Texture::sTextureInfos[MAXTEXTURES];
 utHashTable<utFastStringHash, TextureID> Texture::sTexturePathLookup;
 bool Texture::sTextureAssetNofificationsEnabled = true;
 bool Texture::supportsFullNPOT;
+TextureID Texture::currentRenderTexture = -1;
+uint32_t Texture::previousRenderFlags = -1;
 
 //queue of textures to load in the async loading thread
 utList<AsyncLoadNote> Texture::sAsyncLoadQueue;
@@ -79,6 +84,21 @@ void Texture::initialize()
 
 }
 
+void Texture::shutdown()
+{
+    lmLogInfo(gGFXTextureLogGroup, "Texture shutdown");
+    loom_mutex_lock(Texture::sTexInfoLock);
+    for (int i = 0; i < MAXTEXTURES; i++)
+    {
+        TextureInfo *tinfo = &sTextureInfos[i];
+        
+        if (tinfo->handle != -1)
+        {
+            Texture::dispose(tinfo->id);
+        }
+    }
+    loom_mutex_unlock(Texture::sTexInfoLock);
+}
 
 void Texture::tick()
 {
@@ -287,24 +307,18 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
         }
     }
 
-    if ((id < 0) || (id >= MAXTEXTURES))
-    {
-        return NULL;
-    }
-
     loom_mutex_lock(Texture::sTexInfoLock);
-
-    TextureInfo &tinfo = sTextureInfos[id];
+    TextureInfo &tinfo = *Texture::getTextureInfo(id);
 
     bool newTexture = !tinfo.reload || (tinfo.width != width) || (tinfo.height != height);
 
     if (newTexture)
     {
-        lmLog(gGFXTextureLogGroup, "Create texture for %s", tinfo.texturePath.c_str());
+		lmLog(gGFXTextureLogGroup, "Creating texture #%d.%d for %s", Texture::getIndex(id), Texture::getVersion(id), tinfo.renderTarget ? "framebuffer" : tinfo.texturePath.c_str());
     }
     else
     {
-        lmLog(gGFXTextureLogGroup, "Updating texture %s", tinfo.texturePath.c_str());
+        lmLog(gGFXTextureLogGroup, "Updating texture #%d.%d from %s", Texture::getIndex(id), Texture::getVersion(id), tinfo.texturePath.c_str());
     }
 
 
@@ -313,34 +327,24 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
         Graphics::context()->glDeleteTextures(1, &tinfo.handle);
     }
 
-    if (newTexture) Graphics::context()->glGenTextures(1, &tinfo.handle);
-
-    lmLog(gGFXTextureLogGroup, "Create > %u", tinfo.handle);
-
-    //lmLog(gGFXTextureLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
+    if (newTexture) {
+        Graphics::context()->glGenTextures(1, &tinfo.handle);
+        if (tinfo.renderTarget) {
+            Graphics::context()->glGenFramebuffers(1, &tinfo.framebuffer);
+        }
+    }
 
     Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
 
     Graphics::context()->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    /*
-    Graphics::context()->glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    Graphics::context()->glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-    Graphics::context()->glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
-    */
     Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    /*
-    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    Graphics::context()->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    */
-    //lmLogInfo(gGFXTextureLogGroup, "OpenGL error %d", Graphics::context()->glGetError());
-
+    
     tinfo.width  = width;
     tinfo.height = height;
 
-    if (supportsFullNPOT || tinfo.isPowerOfTwo())
+    // Generate mipmaps if appropriate
+    if (!tinfo.renderTarget && (supportsFullNPOT || tinfo.isPowerOfTwo()))
     {
         tinfo.clampOnly = false;
         tinfo.mipmaps = true;
@@ -348,7 +352,7 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
         int mipWidth = width;
         int mipHeight = height;
         int mipLevel = 1;
-        //uint64_t time = GetTimeMs64();
+        int time = platform_getMilliseconds();
         while (mipWidth > 1 || mipHeight > 1)
         {
             // Allocate new bits.
@@ -368,15 +372,24 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 
             mipLevel++;
         }
+        lmLogInfo(gGFXTextureLogGroup, "Generated mipmaps in %d ms", platform_getMilliseconds() - time);
         if (mipData != (uint32_t*) data) lmFree(NULL, mipData);
     } else {
         tinfo.clampOnly = true;
         tinfo.mipmaps = false;
-        lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size")
+        if (!supportsFullNPOT) lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size")
     }
 
-    //lmLogInfo(gGFXTextureLogGroup, "Generated mipmaps in %d ms", Graphics::context()->glGetError());
-    //*/
+	// Setup the framebuffer if it's a render texture
+    if (newTexture && tinfo.renderTarget)
+    {
+        Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo.framebuffer);
+        Graphics::context()->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tinfo.handle, 0);
+
+		GFX_FRAMEBUFFER_CHECK(tinfo.framebuffer);
+
+        Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 
     if (tinfo.reload)
     {
@@ -392,6 +405,23 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     loom_mutex_unlock(Texture::sTexInfoLock);
 
     return &tinfo;
+}
+
+TextureInfo *Texture::initEmptyTexture(int width, int height)
+{
+    // Get a new texture info
+    TextureInfo *tinfo = getAvailableTextureInfo(NULL);
+    if (tinfo != NULL)
+    {
+        TextureID id = tinfo->id;
+        tinfo->renderTarget = true;
+        load(NULL, width, height, id);
+    }
+    else
+    {
+        lmLog(gGFXTextureLogGroup, "No available texture id for render texture");
+    }
+    return tinfo;
 }
 
 TextureInfo *Texture::initFromAssetManager(const char *path)
@@ -420,7 +450,7 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
     if(tinfo != NULL)
     {
         // allocate the texture handle/id
-        lmLog(gGFXTextureLogGroup, "loading %s", path);
+        lmLog(gGFXTextureLogGroup, "Loading %s", path);
 
         // Now subscribe and let us load for reals.
         loom_asset_subscribe(path, Texture::handleAssetNotification, (void *)tinfo->id, 1);        
@@ -466,7 +496,7 @@ TextureInfo *Texture::initFromBytes(utByteArray *bytes, const char *name)
     }
 
     // Great, stuff real bits!
-    lmLog(gGFXTextureLogGroup, "loaded image bytes - %i x %i at id %i", lat->width, lat->height, tinfo->id);
+    lmLog(gGFXTextureLogGroup, "Loaded image bytes - %i x %i at id %i", lat->width, lat->height, tinfo->id);
 
     loadImageAsset(lat, tinfo->id);
 
@@ -636,7 +666,7 @@ TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name, b
         //NOTE: shouldn't really happen... there is a check for this in LS that returns early there!    
         loom_mutex_lock(Texture::sTexInfoLock);
         TextureID   *pid   = sTexturePathLookup.get(name);
-        TextureInfo *tinfo = (pid && ((*pid >= 0) && (*pid < MAXTEXTURES))) ? &sTextureInfos[*pid] : NULL;
+        TextureInfo *tinfo = Texture::getTextureInfo(pid);
         if(pid && (!tinfo || (tinfo->handle == -1)))
         {
             lmLogError(gGFXTextureLogGroup, "Invalid Texture ID or Handle returned in initFromBytesAsync() for texture: %s", name);
@@ -717,7 +747,7 @@ void Texture::loadCheckerBoard(TextureID id)
 
 void Texture::handleAssetNotification(void *payload, const char *name)
 {
-    TextureID id = (TextureID)payload;
+	TextureID id = (TextureID)payload;
 
     if (!sTextureAssetNofificationsEnabled)
     {
@@ -733,7 +763,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
     if (!lat)
     {
         loom_mutex_lock(Texture::sTexInfoLock);
-        bool reload = sTextureInfos[id].reload;
+        bool reload = Texture::getTextureInfo(id)->reload;
         loom_mutex_unlock(Texture::sTexInfoLock);
         if(reload)
             return;
@@ -746,7 +776,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
     }
 
     // Great, stuff real bits!
-    lmLog(gGFXTextureLogGroup, "loaded %s - %i x %i at id %i", name, lat->width, lat->height, id);
+    lmLog(gGFXTextureLogGroup, "Loaded #%d.%d from %s - %i x %i", Texture::getIndex(id), Texture::getVersion(id), name, lat->width, lat->height, id);
 
     loadImageAsset(lat, id);
 
@@ -797,22 +827,21 @@ void Texture::reset()
         TextureInfo *tinfo = &sTextureInfos[i];
 
         // Ignore invalid entries.
-        if (sTextureInfos[i].handle == -1)
+        if (tinfo->handle != -1)
         {
             const char *path = tinfo->texturePath.c_str();
             lmLog(gGFXTextureLogGroup, "Reloading texture for path %s", path);
 
-            Graphics::context()->glDeleteTextures(1, &tinfo->handle);
-            tinfo->handle     = -1;
+            Texture::dispose(tinfo->id);
             tinfo->reload     = false;
 
             loom_mutex_unlock(Texture::sTexInfoLock);
 
-            //force it to be loaded from disk
+            // Force it to be loaded from disk
             loom_asset_lock(path, LATImage, 1);
             loom_asset_unlock(path);
 
-            //do actual texture creation/update
+            // Do actual texture creation/update
             handleAssetNotification((void *)tinfo->id, path);
         }
         else
@@ -822,25 +851,85 @@ void Texture::reset()
     }
 }
 
+void Texture::clear(TextureID id, int color, float alpha)
+{
+	bool current = currentRenderTexture == id;
+
+	TextureID prevRenderTexture = currentRenderTexture;
+	
+	setRenderTarget(id);
+
+	Graphics::context()->glClearColor(
+		float((color >> 16) & 0xFF) / 255.0f,
+		float((color >> 8) & 0xFF) / 255.0f,
+		float((color >> 0) & 0xFF) / 255.0f,
+		alpha
+	);
+	Graphics::context()->glClear(GL_COLOR_BUFFER_BIT);
+
+	setRenderTarget(prevRenderTexture);
+}
+
+void Texture::setRenderTarget(TextureID id)
+{
+	if (id != -1)
+	{
+		if (currentRenderTexture == id) return;
+		setRenderTarget(-1);
+		lmAssert(currentRenderTexture == -1, "Internal setRenderTarget error, render already in progress");
+
+		currentRenderTexture = id;
+
+		loom_mutex_lock(Texture::sTexInfoLock);
+
+		TextureInfo *tinfo = Texture::getTextureInfo(id);
+
+		lmAssert(tinfo->handle != -1, "Texture handle invalid");
+		lmAssert(tinfo->renderTarget, "Error rendering to texture, texture is not a render buffer: %d", id);
+
+		// Set our texture-bound framebuffer
+		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo->framebuffer);
+
+		// Flush pending quads
+		QuadRenderer::submit();
+
+		// Save and setup state
+		previousRenderFlags = Graphics::getFlags();
+		Graphics::setFlags(Graphics::FLAG_INVERTED | Graphics::FLAG_NOCLEAR);
+
+		// Setup stage and framing
+		Graphics::setNativeSize(tinfo->width, tinfo->height);
+		Graphics::beginFrame();
+
+		loom_mutex_unlock(Texture::sTexInfoLock);
+	}
+	else if (currentRenderTexture != -1)
+	{
+		Graphics::endFrame();
+
+		Graphics::setFlags(previousRenderFlags);
+
+		// Reset to screen framebuffer
+		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		currentRenderTexture = -1;
+		previousRenderFlags = -1;
+	}
+}
 
 void Texture::dispose(TextureID id)
 {
-    if ((id < 0) || (id >= MAXTEXTURES))
-    {
-        return;
-    }
-
     loom_mutex_lock(Texture::sTexInfoLock);
-    TextureInfo *tinfo = &sTextureInfos[id];
+    TextureInfo *tinfo = Texture::getTextureInfo(id);
 
     // If the texture isn't valid ignore it.
-    if (tinfo->handle != -1)
+    if (tinfo && tinfo->handle != -1)
     {
         //if texture is still loading or is inside of the loading queue, we can't dispose of it now, 
         //but need to flag it for disposal in the thread
         if(tinfo->handle == MARKEDTEXTURE)
         {
-            sTextureInfos[id].asyncDispose = true;
+            tinfo->asyncDispose = true;
             loom_mutex_unlock(Texture::sTexInfoLock);
             return;
         }
@@ -855,10 +944,16 @@ void Texture::dispose(TextureID id)
             sTexturePathLookup.erase(tinfo->texturePath);
         }
 
-        // And erase backing state.
+		if (tinfo->renderTarget) {
+			Graphics::context()->glDeleteFramebuffers(1, &tinfo->framebuffer);
+		}
+
+		// And erase backing state.
         Graphics::context()->glDeleteTextures(1, &tinfo->handle);
         tinfo->reset();
     }
+
     loom_mutex_unlock(Texture::sTexInfoLock);
 }
+
 }

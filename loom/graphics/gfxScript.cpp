@@ -18,8 +18,7 @@
  * ===========================================================================
  */
 
-#include <math.h>
-#define HAVE_M_PI
+#include "loom/graphics/gfxMath.h"
 
 #include "loom/script/loomscript.h"
 
@@ -323,13 +322,17 @@ static int registerLoomGraphics(lua_State *L)
        .addStaticMethod("initFromBytes", &Texture::initFromBytes)
        .addStaticMethod("initFromAssetAsync", &Texture::initFromAssetManagerAsync)
        .addStaticMethod("initFromBytesAsync", &Texture::initFromBytesAsync)
+	   .addStaticMethod("initEmptyTexture", &Texture::initEmptyTexture)
+	   .addStaticMethod("clear", &Texture::clear)
+	   .addStaticMethod("setRenderTarget", &Texture::setRenderTarget)
        .addStaticMethod("dispose", &Texture::dispose)
        .addStaticMethod("scaleImageOnDisk", &scaleImageOnDisk)
        .addStaticMethod("pollScaling", &pollScaling)
        .addStaticProperty("imageScaleProgress", &getImageScaleProgressDelegate)
        .endClass()
 
-       .beginClass<Graphics> ("Graphics")
+	   .beginClass<Graphics>("Graphics")
+	   .addStaticLuaFunction("render", &Graphics::render)
        .addStaticMethod("handleContextLoss", &Graphics::handleContextLoss)
        .addStaticMethod("screenshot", &Graphics::screenshot)
        .addStaticMethod("setDebug", &Graphics::setDebug)

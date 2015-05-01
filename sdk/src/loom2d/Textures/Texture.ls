@@ -10,6 +10,7 @@
 
 package loom2d.textures
 {
+    import loom2d.Loom2D;
     import system.utils.Base64;
     import loom.HTTPRequest;
     import loom.graphics.Texture2D;
@@ -76,7 +77,7 @@ package loom2d.textures
      */ 
     public class Texture
     {
-        protected var mFrame:Rectangle;
+        public var mFrame:Rectangle;
 
         /**
          * See @TextureSmoothing for modes
@@ -335,6 +336,48 @@ package loom2d.textures
                 assetPathCache[uniqueName] = tex;
             }
             return tex;
+        }
+        
+        /** Creates an empty texture of a certain size.
+         *  Beware that the texture can only be used after you either upload some color data
+         *  ("texture.root.upload...") or clear the texture ("texture.root.clear()").
+         *
+         *  @param width   in points; number of pixels depends on scale parameter
+         *  @param height  in points; number of pixels depends on scale parameter
+         *  @param premultipliedAlpha  the PMA format you will use the texture with. If you will
+         *                 use the texture for bitmap data, use "true"; for ATF data, use "false".
+         *  @param mipMapping  indicates if mipmaps should be used for this texture. When you upload
+         *                 bitmap data, this decides if mipmaps will be created; when you upload ATF
+         *                 data, this decides if mipmaps inside the ATF file will be displayed.
+         *  @param optimizeForRenderToTexture  indicates if this texture will be used as render target
+         *  @param scale   if you omit this parameter, 'Starling.contentScaleFactor' will be used.
+         *  @param format  the context3D texture format to use. Pass one of the packed or
+         *                 compressed formats to save memory (at the price of reduced image quality).
+         *  @param repeat  the repeat mode of the texture. Only useful for power-of-two textures.
+         */
+        public static function empty(width:Number, height:Number, premultipliedAlpha:Boolean=true,
+                                     mipMapping:Boolean=true, optimizeForRenderToTexture:Boolean=false,
+                                     scale:Number=-1, format:String="bgra", repeat:Boolean=false):Texture
+        {
+            if (scale <= 0) scale = Loom2D.contentScaleFactor;
+
+            var actualWidth:int, actualHeight:int;
+            
+            var origWidth:Number  = width  * scale;
+            var origHeight:Number = height * scale;
+            var useRectTexture:Boolean = true;
+
+            actualWidth  = Math.ceil(origWidth  - 0.000000001); // avoid floating point errors
+            actualHeight = Math.ceil(origHeight - 0.000000001);
+                
+            var concreteTexture:ConcreteTexture = new ConcreteTexture("", actualWidth, actualHeight, optimizeForRenderToTexture);
+            concreteTexture.mFrame = new Rectangle(0, 0, actualWidth, actualHeight);
+            concreteTexture.setTextureInfo(Texture2D.initEmptyTexture(actualWidth, actualHeight));
+            
+            if (actualWidth - origWidth < 0.001 && actualHeight - origHeight < 0.001)
+                return concreteTexture;
+            else
+                return new SubTexture(concreteTexture, new Rectangle(0, 0, width, height), true);
         }
         
         /** Creates a texture that contains a region (in pixels) of another texture. The new

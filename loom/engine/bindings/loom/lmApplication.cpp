@@ -217,6 +217,8 @@ void LoomApplication::reloadMainAssembly()
 
     loomsound_reset();
 
+    GFX::Graphics::shutdown();
+
     const NativeDelegate *onReload = rootVM->getOnReloadDelegate();
     onReload->invoke();
 

@@ -25,6 +25,10 @@
 #include "loom/common/core/log.h"
 
 #include "loom/graphics/gfxMath.h"
+
+#include "loom/engine/loom2d/l2dDisplayObject.h"
+
+#include "loom/engine/loom2d/l2dMatrix.h"
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxTexture.h"
 #include "loom/graphics/gfxQuadRenderer.h"
@@ -41,17 +45,40 @@ namespace GFX
 
     int Graphics::sWidth      = 0;
     int Graphics::sHeight     = 0;
-    uint32_t Graphics::sFlags = 0xFFFFFFFF;
+    uint32_t Graphics::sFlags = 0x00000000;
     int Graphics::sFillColor  = 0x000000FF;
     int Graphics::sView       = 0;
 
-    uint32_t Graphics::sCurrentFrame = 0;
-
+	uint32_t Graphics::sCurrentFrame = 0;
+	/*
+	float Graphics::sMVP[9] = {
+		1.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f
+	};
+	*/
+	float Graphics::sMVP[16] = {
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	};
+	/*
+	float Graphics::sMVPInverted[16] = {
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	};
+	*/
+	float* Graphics::sCurrentModelViewProjection = NULL;
+	
     char Graphics::pendingScreenshot[1024] = { 0, };
 
     extern SDL_GLContext context;
     GL_Context Graphics::_context;
     
+
     static int LoadContext(GL_Context * data)
     {
 #if SDL_VIDEO_DRIVER_UIKIT
@@ -61,25 +88,36 @@ namespace GFX
 #elif SDL_VIDEO_DRIVER_PANDORA
 #define __SDL_NOGETPROCADDR__
 #endif
-        
+
+#if GFX_OPENGL_CHECK
+#define GFX_OPENGL_FUNC(func) gfx_internal_ ## func
+#else
+#define GFX_OPENGL_FUNC(func) func
+#endif
+
 #if defined __SDL_NOGETPROCADDR__
 // TODO: remove cast and figure out constness
-#define SDL_PROC(ret,func,params) data->func = (ret(*)params)func;
+#define GFX_PROC(ret,func,params,args) data->GFX_OPENGL_FUNC(func) = (ret(*)params)func;
+#define GFX_PROC_VOID(func, params, args) GFX_PROC(void, func, params, args)
 #else
-#define SDL_PROC(ret,func,params) \
+#define GFX_PROC(ret,func,params,args) \
 do { \
-void **tmp = (void**)&data->func; \
-*tmp = SDL_GL_GetProcAddress(#func); \
-if ( ! data->func ) { \
-return SDL_SetError("Couldn't load GL function %s: %s\n", #func, SDL_GetError()); \
-} \
+    void **tmp = (void**)&data->GFX_OPENGL_FUNC(func); \
+    *tmp = SDL_GL_GetProcAddress(#func); \
+    if ( ! data->GFX_OPENGL_FUNC(func) ) { \
+        return SDL_SetError("Couldn't load GL function %s: %s\n", #func, SDL_GetError()); \
+    } \
 } while ( 0 );
+#define GFX_PROC_VOID(func, params, args) GFX_PROC(void, func, params, args)
 #endif /* _SDL_NOGETPROCADDR_ */
         
 #include "gfxGLES2EntryPoints.h"
-#undef SDL_PROC
+#undef GFX_PROC
+#undef GFX_PROC_VOID
+
         return 0;
     }
+
 
 void Graphics::initialize()
 {
@@ -96,24 +134,12 @@ void Graphics::initialize()
     VectorRenderer::initialize();
 
     sInitialized = true;
-
-    ///   BGFX_DEBUG_STATS - Display internal statistics.
-    ///
-    ///   BGFX_DEBUG_TEXT - Display debug text.
-    ///
-    ///   BGFX_DEBUG_WIREFRAME - Wireframe rendering. All rendering
-    ///     primitives will be rendered as lines.
-    ///
-
-    // bgfx::setDebug(BGFX_DEBUG_STATS | BGFX_DEBUG_TEXT);
 }
-
 
 void Graphics::shutdown()
 {
-//    bgfx::shutdown();
+    Texture::shutdown();
 }
-
 
 void Graphics::reset(int width, int height, uint32_t flags)
 {
@@ -121,25 +147,20 @@ void Graphics::reset(int width, int height, uint32_t flags)
 
     lmLogDebug(gGFXLogGroup, "Graphics::reset - %dx%d %x", width, height, flags);
 
-    // if we're experiencing a context loss we must reset regardless
-    if (sContextLost)
-    {
-        //bgfx::reset(width, height, flags);
-        QuadRenderer::reset();
-        VectorRenderer::reset();
-        Texture::reset();        
-    }
-    else
-    {
-        // otherwise, reset only on width/height/flag change
-        if (width != sWidth || height != sHeight || sFlags != flags)
-        {
-            //bgfx::reset(width, height, flags);
-        }
-    }
-
     // clear context loss state
     sContextLost = false;
+
+	Loom2D::Matrix mvp;
+	mvp.scale(2.0f / width, 2.0f / height);
+	mvp.translate(-1.0f, -1.0f);
+	//mvp.copyToMatrix4(sMVPInverted);
+	// Inverted is normal due to OpenGL origin being bottom left
+	if (!(flags & FLAG_INVERTED)) {
+		mvp.scale(1.0f, -1.0f);
+	}
+	mvp.copyToMatrix4(sMVP);
+	
+	sCurrentModelViewProjection = sMVP;
 
     // cache current values
     sWidth  = width;
@@ -186,19 +207,21 @@ void Graphics::beginFrame()
         return;
     }
 
-    sCurrentFrame++;
+	sCurrentFrame++;
+
+	Graphics::reset(sWidth, sHeight, sFlags);
 
     Graphics::context()->glViewport(0, 0, Graphics::getWidth(), Graphics::getHeight());
 
-    // Issue clear.
-    Graphics::context()->glClearColor(
-                                      float((sFillColor >> 8) & 0xFF) / 255.0f,
-                                      float((sFillColor >> 16) & 0xFF) / 255.0f,
-                                      float((sFillColor >> 24) & 0xFF) / 255.0f,
-                                      float((sFillColor >> 0) & 0xFF) / 255.0f
-                                      );
-    Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
+	if (!(sFlags & FLAG_NOCLEAR)) {
+		Graphics::context()->glClearColor(
+										  float((sFillColor >> 24) & 0xFF) / 255.0f,
+										  float((sFillColor >> 16) & 0xFF) / 255.0f,
+										  float((sFillColor >> 8) & 0xFF) / 255.0f,
+										  float((sFillColor >> 0) & 0xFF) / 255.0f
+										  );
+		Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	}
 
     QuadRenderer::beginFrame();
     VectorRenderer::setSize(sWidth, sHeight);
@@ -218,6 +241,41 @@ void Graphics::endFrame()
     }
 }
 
+int Graphics::render(lua_State *L)
+{
+	Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, 1);
+	Loom2D::Matrix *matrix = lua_isnil(L, 2) ? NULL : (Loom2D::Matrix*) lualoom_getnativepointer(L, 2);
+	float alpha = (float)lua_tonumber(L, 3);
+
+	// Update positions and buffers early
+	// since we can't wait for rendering to begin
+	object->validate(L, 1); // The 1 here is the index of the object on the stack
+
+	// Save and setup state
+	Loom2D::DisplayObjectContainer *prevParent = object->parent;
+	object->parent = NULL;
+
+	Loom2D::Matrix prevTransformMatrix;
+	if (matrix != NULL)
+	{
+		object->updateLocalTransform();
+		prevTransformMatrix.copyFrom(&object->transformMatrix);
+		object->transformMatrix.copyFrom(matrix);
+	}
+
+	float prevAlpha = object->alpha;
+	object->alpha = prevAlpha*alpha;
+
+	// Render 
+	object->render(L);
+
+	// Restore state
+	object->parent = prevParent;
+	if (matrix != NULL) object->transformMatrix.copyFrom(&prevTransformMatrix);
+	object->alpha = prevAlpha;
+
+	return 0;
+}
 
 static int _scount = 0;
 void Graphics::handleContextLoss()
