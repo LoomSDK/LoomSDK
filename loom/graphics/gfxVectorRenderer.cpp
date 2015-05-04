@@ -353,10 +353,18 @@ void VectorRenderer::destroyGraphicsResources()
 
 void VectorRenderer::initializeGraphicsResources()
 {
+    int flags = 0;
+
+#if GFX_OPENGL_CHECK
+    flags |= NVG_DEBUG;
+#endif
+
+    flags |= NVG_ANTIALIAS | NVG_STENCIL_STROKES;
+
 #ifdef LOOM_RENDERER_OPENGLES2
-    nvg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+    nvg = nvgCreateGLES2(flags);
 #else
-    nvg = nvgCreateGL2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+    nvg = nvgCreateGL2(flags);
 #endif
     lmAssert(nvg != NULL, "Unable to init nanovg");
     //nvgCreateFont(nvg, "sans", "assets/droidsans.ttf");

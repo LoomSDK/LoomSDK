@@ -630,7 +630,7 @@ enum { // languageID for STBTT_PLATFORM_ID_MAC
 static int stbtt__isfont(const stbtt_uint8 *font)
 {
    // check the version number
-   if (stbtt_tag(font, "1"))   return 1; // TrueType 1
+   if (font[0] == '1')            return 1; // TrueType 1
    if (stbtt_tag(font, "typ1"))   return 1; // TrueType with type 1 font -- we don't support this!
    if (stbtt_tag(font, "OTTO"))   return 1; // OpenType with CFF
    if (stbtt_tag4(font, 0,1,0,0)) return 1; // OpenType 1.0
