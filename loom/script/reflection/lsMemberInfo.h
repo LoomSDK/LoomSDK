@@ -26,6 +26,7 @@
 #include "loom/common/core/assert.h"
 #include "loom/common/utils/utString.h"
 #include "loom/common/utils/utTypes.h"
+#include "loom/common/core/allocator.h"
 
 namespace LS {
 class Object;
@@ -138,6 +139,10 @@ public:
 class TemplateInfo {
 public:
     TemplateInfo() : type(NULL)
+    {
+    }
+
+    ~TemplateInfo()
     {
     }
 
@@ -267,10 +272,10 @@ public:
 
             for (UTsize j = 0; j < metaInfoList->size(); j++)
             {
-                delete metaInfoList->at(j);
+                lmDelete(NULL, metaInfoList->at(j));
             }
 
-            delete metaInfoList;
+            lmDelete(NULL, metaInfoList);
         }
     }
 
@@ -366,8 +371,7 @@ public:
 
     void setTemplateInfo(TemplateInfo *_templateInfo)
     {
-        templateInfo.type  = _templateInfo->type;
-        templateInfo.types = _templateInfo->types;
+        templateInfo = TemplateInfo(*_templateInfo);
     }
 
     // get the first meta info with this name
@@ -408,8 +412,8 @@ public:
         }
         else
         {
-            utList<MetaInfo *> *metaList = new utList<MetaInfo *>;
-            mi       = new MetaInfo;
+            utList<MetaInfo *> *metaList = lmNew(NULL) utList<MetaInfo *>;
+            mi       = lmNew(NULL) MetaInfo;
             mi->name = name;
             metaList->push_back(mi);
             metaInfo.insert(name, metaList);
@@ -430,7 +434,7 @@ public:
 
         if (idx == UT_NPOS)
         {
-            metaList = new utList<MetaInfo *>;
+            metaList = lmNew(NULL) utList<MetaInfo *>;
             metaInfo.insert(name, metaList);
         }
         else
@@ -438,7 +442,7 @@ public:
             metaList = metaInfo.at(idx);
         }
 
-        MetaInfo *mi = new MetaInfo;
+        MetaInfo *mi = lmNew(NULL) MetaInfo;
 
         mi->name = name;
 
@@ -482,5 +486,6 @@ public:
         return fullMemberName.c_str();
     }
 };
+
 }
 #endif

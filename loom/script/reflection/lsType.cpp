@@ -27,8 +27,10 @@
 
 #include "loom/script/runtime/lsLuaState.h"
 
-
 namespace LS {
+
+int Type::typeNum = 0;
+
 Assembly *Type::getAssembly()
 {
     assert(module);
@@ -38,6 +40,8 @@ Assembly *Type::getAssembly()
 
 void Type::addMember(MemberInfo *member)
 {
+    LOOM_ALLOCATOR_VERIFY(member);
+
     member->declaringType = this;
     members.push_back(member);
 
@@ -100,13 +104,13 @@ void Type::freeByteCode()
 
     if (bcStaticInitializer)
     {
-        delete bcStaticInitializer;
+        lmDelete(NULL, bcStaticInitializer);
         bcStaticInitializer = NULL;
     }
 
     if (bcInstanceInitializer)
     {
-        delete bcInstanceInitializer;
+        lmDelete(NULL, bcInstanceInitializer);
         bcInstanceInitializer = NULL;
     }
 }

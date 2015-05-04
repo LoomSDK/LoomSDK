@@ -18,6 +18,7 @@
  * ===========================================================================
  */
 
+#define LUA_USE_ASSERT 1
 
 #include "zlib.h"
 
@@ -68,6 +69,7 @@ static char               _tracemessage[2048];
 static void *lsLuaAlloc(void *ud, void *ptr, size_t osize, size_t nsize)
 {
     (void)ud;  (void)osize;  /* not used */
+    
     if (nsize == 0 && ptr) 
     {
         lmFree(NULL, ptr);
@@ -75,7 +77,7 @@ static void *lsLuaAlloc(void *ud, void *ptr, size_t osize, size_t nsize)
     }
     else
     {
-        if(osize == 0)
+        if (osize == 0)
             return lmAlloc(NULL, nsize);
         else
             return lmRealloc(NULL, ptr, nsize);
@@ -87,6 +89,7 @@ void LSLuaState::open()
     assert(!L);
 
     L = lua_newstate(lsLuaAlloc, NULL);
+    //L = luaL_newstate();
     //L = lua_open();
     toLuaState.insert(L, this);
 
@@ -96,9 +99,11 @@ void LSLuaState::open()
     luaopen_math(L);
     luaL_openlibs(L);
 
+#ifdef LUAJIT_MODE_MASK
     // TODO: turn this back on when it doesn't fail on the testWhile unit test
     // update luajit and test again
     luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_OFF);
+#endif
 
     // open the lua debug library
     luaopen_debug(L);
@@ -172,8 +177,7 @@ void LSLuaState::close()
 
     for (UTsize i = 0; i < assemblies.size(); i++)
     {
-        assemblies.at(i)->close();
-        delete assemblies.at(i);
+        lmDelete(NULL, assemblies.at(i));
     }
 
     NativeInterface::shutdownLuaState(L);
@@ -271,7 +275,9 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
     lua_setfield(L, -2, assembly->getName().c_str());
     lua_pop(L, 1);
 
-    assembly->ordinalTypes = new Type *[types.size() + 1];
+    lmAssert(assembly->ordinalTypes == NULL, "Assembly types cache error, ordinalTypes already exists");
+
+    assembly->ordinalTypes = lmNew(NULL) Type *[types.size() + 1];
 
     for (UTsize j = 0; j < types.size(); j++)
     {
@@ -477,9 +483,9 @@ Assembly *LSLuaState::loadExecutableAssemblyBinary(const char *buffer, long buff
     headerBytes.allocateAndCopy((void *)buffer, sizeof(unsigned int) * 4);
 
     // we need to decompress
-    lmAssert(headerBytes.readUnsignedInt() == LOOM_BINARY_ID, "binary id mismatch");
-    lmAssert(headerBytes.readUnsignedInt() == LOOM_BINARY_VERSION_MAJOR, "major version mismatch");
-    lmAssert(headerBytes.readUnsignedInt() == LOOM_BINARY_VERSION_MINOR, "minor version mismatch");
+    lmCheck(headerBytes.readUnsignedInt() == LOOM_BINARY_ID, "binary id mismatch");
+    lmCheck(headerBytes.readUnsignedInt() == LOOM_BINARY_VERSION_MAJOR, "major version mismatch");
+    lmCheck(headerBytes.readUnsignedInt() == LOOM_BINARY_VERSION_MINOR, "minor version mismatch");
     unsigned int sz = headerBytes.readUnsignedInt();
 
     utByteArray bytes;
@@ -489,8 +495,8 @@ Assembly *LSLuaState::loadExecutableAssemblyBinary(const char *buffer, long buff
 
     int ok = uncompress((Bytef *)bytes.getDataPtr(), (uLongf *)&readSZ, (const Bytef *)((unsigned char *)buffer + sizeof(unsigned int) * 4), (uLong)sz);
 
-    lmAssert(ok == Z_OK, "problem uncompressing executable assembly");
-    lmAssert(readSZ == sz, "Read size mismatch");
+    lmCheck(ok == Z_OK, "problem uncompressing executable assembly");
+    lmCheck(readSZ == sz, "Read size mismatch");
 
     assembly = loadAssemblyBinary(&bytes);
 

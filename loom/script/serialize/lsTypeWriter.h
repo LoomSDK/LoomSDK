@@ -70,6 +70,18 @@ public:
         typeID(0), constructor(NULL)
     {
     }
+    ~TypeWriter()
+    {
+        for (UTsize i = 0; i < metaInfo.size(); i++)
+        {
+            utList<MetaInfo*> *metaList = metaInfo.at(i);
+            for (UTsize j = 0; j < metaList->size(); j++)
+            {
+                lmDelete(NULL, metaList->at(i));
+            }
+            lmDelete(NULL, metaList);
+        }
+    }
 
     void setTypeName(const utString& typeName)
     {
@@ -166,7 +178,7 @@ public:
 
         if (idx == UT_NPOS)
         {
-            metaList = new utList<MetaInfo *>;
+            metaList = lmNew(NULL) utList<MetaInfo *>;
             metaInfo.insert(name, metaList);
         }
         else
@@ -174,7 +186,7 @@ public:
             metaList = metaInfo.at(idx);
         }
 
-        MetaInfo *mi = new MetaInfo;
+        MetaInfo *mi = lmNew(NULL) MetaInfo;
 
         mi->name = name;
 

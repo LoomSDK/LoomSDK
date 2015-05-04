@@ -186,8 +186,7 @@ void BinReader::readMethodBase(MethodBase *mbase)
 
     if (bytes->readBoolean())
     {
-        TemplateInfo *templateInfo = readTemplateTypes();
-        mbase->setTemplateInfo(templateInfo);
+        mbase->setTemplateInfo(readTemplateTypes());
     }
 
     // parameters
@@ -442,8 +441,7 @@ FieldInfo *BinReader::readField(Type *type)
 
     if (bytes->readBoolean())
     {
-        TemplateInfo *tinfo = readTemplateTypes();
-        field->setTemplateInfo(tinfo);
+        field->setTemplateInfo(readTemplateTypes());
     }
 
     return field;

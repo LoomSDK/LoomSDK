@@ -296,17 +296,16 @@ void VectorRenderer::textBox(float x, float y, float width, utString* string) {
 }
 
 Loom2D::Rectangle VectorRenderer::textLineBounds(VectorTextFormat* format, float x, float y, utString* string) {
-    float* bounds = new float[4];
+    float bounds[4];
     nvgSave(nvg);
     nvgReset(nvg);
     textFormat(format);
-    nvgTextBounds(nvg, x, y, string->c_str(), NULL, bounds);
+    nvgTextBounds(nvg, x, y, string->c_str(), NULL, &bounds[0]);
     nvgRestore(nvg);
     float xmin = bounds[0];
     float ymin = bounds[1];
     float xmax = bounds[2];
     float ymax = bounds[3];
-    delete bounds;
     return Loom2D::Rectangle(xmin, ymin, xmax-xmin, ymax-ymin);
 }
 
@@ -320,7 +319,7 @@ float VectorRenderer::textLineAdvance(VectorTextFormat* format, float x, float y
 }
 
 Loom2D::Rectangle VectorRenderer::textBoxBounds(VectorTextFormat* format, float x, float y, float width, utString* string) {
-    float* bounds = new float[4];
+    float bounds[4];
     nvgSave(nvg);
     nvgReset(nvg);
     textFormat(format);
@@ -330,7 +329,6 @@ Loom2D::Rectangle VectorRenderer::textBoxBounds(VectorTextFormat* format, float 
     float ymin = bounds[1];
     float xmax = bounds[2];
     float ymax = bounds[3];
-    delete bounds;
     return Loom2D::Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
 }
 
@@ -405,11 +403,11 @@ VectorSVG::~VectorSVG() {
 	reset();
 }
 void VectorSVG::reset(bool reloaded) {
-	if (!reloaded && path != NULL) {
-		loom_asset_unsubscribe(path->c_str(), onReload, this);
-		delete path;
-		path = NULL;
-	}
+    if (path != NULL) {
+        if (!reloaded) loom_asset_unsubscribe(path->c_str(), onReload, this);
+        lmDelete(NULL, path);
+        path = NULL;
+    }
 	if (image != NULL) {
 		nsvgDelete(image);
 		image = NULL;
@@ -419,7 +417,7 @@ void VectorSVG::loadFile(utString path, utString units, float dpi) {
 	reset();
 	this->units = utString(path);
 	this->dpi = dpi;
-	this->path = new utString(path);
+	this->path = lmNew(NULL) utString(path);
 	reload();
 	loom_asset_subscribe(path.c_str(), onReload, this, false);
 }

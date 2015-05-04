@@ -249,13 +249,13 @@ void PropertyInfoBuilder::initialize(PropertyLiteral *literal)
 
     if (propertyLiteral->getter)
     {
-        getterBuilder = new MethodInfoBuilder();
+        getterBuilder = lmNew(NULL) MethodInfoBuilder();
         getterBuilder->initialize(propertyLiteral->getter);
     }
 
     if (propertyLiteral->setter)
     {
-        setterBuilder = new MethodInfoBuilder();
+        setterBuilder = lmNew(NULL) MethodInfoBuilder();
         setterBuilder->initialize(propertyLiteral->setter);
     }
 
@@ -358,7 +358,7 @@ void MethodBaseBuilder::initialize(MethodBaseWriter *writer,
         {
             VariableDeclaration *vd = function->parameters->at(i);
 
-            ParameterInfoBuilder *pib = new ParameterInfoBuilder();
+            ParameterInfoBuilder *pib = lmNew(NULL) ParameterInfoBuilder();
 
             if (function->defaultArguments[i])
             {
@@ -706,7 +706,7 @@ void TypeBuilder::initialize(ClassDeclaration *cls)
 
     if (cls->constructor)
     {
-        constructorBuilder = new ConstructorInfoBuilder();
+        constructorBuilder = lmNew(NULL) ConstructorInfoBuilder();
         constructorBuilder->initialize(cls->constructor);
 
         // hook writer
@@ -717,7 +717,7 @@ void TypeBuilder::initialize(ClassDeclaration *cls)
     {
         FunctionLiteral *function = cls->functionDecls.at(i);
 
-        MethodInfoBuilder *mib = new MethodInfoBuilder();
+        MethodInfoBuilder *mib = lmNew(NULL)  MethodInfoBuilder();
         mib->initialize(function);
         methodBuilders.push_back(mib);
 
@@ -728,7 +728,7 @@ void TypeBuilder::initialize(ClassDeclaration *cls)
     for (UTsize i = 0; i < cls->varDecls.size(); i++)
     {
         VariableDeclaration *vd  = cls->varDecls.at(i);
-        FieldInfoBuilder    *fib = new FieldInfoBuilder();
+        FieldInfoBuilder    *fib = lmNew(NULL)  FieldInfoBuilder();
         fib->initialize(vd);
         fieldBuilders.push_back(fib);
 
@@ -740,7 +740,7 @@ void TypeBuilder::initialize(ClassDeclaration *cls)
     for (UTsize i = 0; i < cls->properties.size(); i++)
     {
         PropertyLiteral     *plit = cls->properties.at(i);
-        PropertyInfoBuilder *pib  = new PropertyInfoBuilder();
+        PropertyInfoBuilder *pib = lmNew(NULL)  PropertyInfoBuilder();
         pib->initialize(plit);
         propertyBuilders.push_back(pib);
         writer.addPropertyInfoWriter(&pib->writer);

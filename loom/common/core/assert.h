@@ -49,20 +49,25 @@ void loom_fireAssertCallback();
 };
 #endif
 
-#ifdef LOOM_NDEBUG
+#if !LOOM_DEBUG
 
 #define lmSafeAssert(condition, errmsg)
 #define lmAssert(condition, errmsg, ...)
 
 #else
 
+#define lmSafeAssert lmSafeCheck
+#define lmAssert lmCheck
+
+#endif
+
 // Use lmSafeAssert when we are in modules that might not be able to handle malloc() and strcpy()
-#define lmSafeAssert(condition, errmsg) \
+#define lmSafeCheck(condition, errmsg) \
     if (!(condition)) { platform_error("Assert failed [%s@%d] (" # condition "): %s", __FILE__, __LINE__, (errmsg)); abort(); }
 
 // Use lmAssert when we can afford to use varargs
 #if LOOM_COMPILER == LOOM_COMPILER_MSVC
-#define lmAssert(condition, errmsg, ...)                                                                                                          \
+#define lmCheck(condition, errmsg, ...)                                                                                                          \
     if (!(condition)) {                                                                                                                           \
         char *lmAssertBuf = (char *)malloc(strlen(errmsg) + strlen(# condition) + 32); /* Allocate our buffer with 32 bytes of breathing room. */ \
         strcpy(lmAssertBuf, "Assert failed [%s@%d] (" # condition "): ");              /* Begin with our standard "assert failed" prefix. */      \
@@ -74,7 +79,7 @@ void loom_fireAssertCallback();
         abort();                                                                                                                                  \
     }
 #else
-#define lmAssert(condition, errmsg, args ...)                                                                                                     \
+#define lmCheck(condition, errmsg, args ...)                                                                                                     \
     if (!(condition)) {                                                                                                                           \
         char *lmAssertBuf = (char *)malloc(strlen(errmsg) + strlen(# condition) + 32); /* Allocate our buffer with 32 bytes of breathing room. */ \
         strcpy(lmAssertBuf, "Assert failed [%s@%d] (" # condition "): \n");            /* Begin with our standard "assert failed" prefix. */      \
@@ -85,5 +90,5 @@ void loom_fireAssertCallback();
         abort();                                                                                                                                  \
     }
 #endif
-#endif
+
 #endif

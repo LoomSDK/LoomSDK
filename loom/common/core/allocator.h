@@ -76,6 +76,63 @@
  *
  */
 
+#define LOOM_ALLOCATOR_CHECK 1
+#define LOOM_ALLOCATOR_CHECK_MAXPATH 128-4-2
+#define LOOM_ALLOCATOR_CHECK_SIG 0xCACACACA
+
+#if !LOOM_ALLOCATOR_CHECK
+
+#define LOOM_ALLOCATOR_CHECK_RESIZE(size)
+#define LOOM_ALLOCATOR_CHECK_VERIFY(ptr, file, line)
+#define LOOM_ALLOCATOR_CHECK_INJECT(size, ptr, file, line)
+#define LOOM_ALLOCATOR_VERIFY(ptr)
+
+#else
+
+#include <stdint.h>
+#include "loom/common/core/assert.h"
+
+typedef struct loom_alloc_header loom_alloc_header_t;
+struct loom_alloc_header
+{
+    char file[LOOM_ALLOCATOR_CHECK_MAXPATH];
+    uint16_t line;
+    uint32_t sig;
+};
+
+#define LOOM_ALLOCATOR_CHECK_RESIZE(size) do { \
+    size += sizeof(loom_alloc_header_t); \
+} while (0); \
+
+#define LOOM_ALLOCATOR_CHECK_PTR(ptr, file, line) do { \
+    loom_alloc_header_t *header = (loom_alloc_header_t*)ptr; \
+    lmCheck(header->sig == LOOM_ALLOCATOR_CHECK_SIG, "Allocator verification internal check failed, expected 0x%08lX got 0x%08lX\nDeallocation was at %s@%d", LOOM_ALLOCATOR_CHECK_SIG, header->sig, file, line); \
+} while (0); \
+
+#define LOOM_ALLOCATOR_CHECK_VERIFY(ptr, file, line) do { \
+    if (ptr == NULL) break; \
+    ptr = (void*) ((loom_alloc_header_t*)ptr - 1); \
+    LOOM_ALLOCATOR_CHECK_PTR(ptr, file, line) \
+} while (0); \
+
+#define LOOM_ALLOCATOR_CHECK_INJECT(size, ptr, file, line) do { \
+    if (ptr == NULL) break; \
+    loom_alloc_header_t *header = (loom_alloc_header_t*)ptr; \
+    strncpy(header->file, file, sizeof(header->file) - 1); \
+    header->file[sizeof(header->file) - 1] = 0; \
+    header->line = line; \
+    header->sig = LOOM_ALLOCATOR_CHECK_SIG; \
+    ((loom_alloc_header_t*)ptr) += 1; \
+} while (0); \
+
+#define LOOM_ALLOCATOR_VERIFY(ptr) do { \
+    if (ptr == NULL) break; \
+    LOOM_ALLOCATOR_CHECK_PTR(((loom_alloc_header_t*) ptr - 1), __FILE__, __LINE__) \
+} while (0); \
+
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif

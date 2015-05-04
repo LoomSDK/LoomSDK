@@ -69,11 +69,6 @@ private:
 
     Type **ordinalTypes;
 
-    /*
-     * Closes the assembly, cleaning up associated hashes and Types
-     */
-    void close();
-
 public:
 
 
@@ -82,6 +77,10 @@ public:
     {
     }
 
+    /*
+    * Closes the assembly, cleaning up associated hashes and Types
+    */
+    ~Assembly();
 
     static int loadBytes(lua_State *L);
 

@@ -21,7 +21,7 @@
 #pragma once
 
 // Set to 1 to enable additional graphics debugging output and checks
-#define GFX_DEBUG 0
+#define GFX_DEBUG 1
 
 // This flag enables extensive OpenGL checks including checking
 // the OpenGL error state after every call. This can have a big
@@ -41,7 +41,7 @@
 
 #include "loom/common/core/assert.h"
 #include "loom/common/core/log.h"
-#include "lj_obj.h"
+#include "lua.h"
 
 namespace GFX {
     lmDeclareLogGroup(gGFXLogGroup);

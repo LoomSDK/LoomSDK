@@ -86,7 +86,7 @@ void MethodReader::deserializeMethodBase(MethodBase *base, json_t *json)
     {
         json_t *p = json_array_get(parray, i);
 
-        ParameterInfo *param = new ParameterInfo();
+        ParameterInfo *param = lmNew(NULL) ParameterInfo();
 
         param->position = (int)i;
 
@@ -201,7 +201,7 @@ void MethodReader::deserializeMethodBase(MethodBase *base, json_t *json)
 MethodInfo *MethodReader::deserializeMethodInfo(Type   *declaringType,
                                                 json_t *json)
 {
-    MethodInfo *mi = new MethodInfo();
+    MethodInfo *mi = lmNew(NULL) MethodInfo();
 
     mi->memberType.method = true;
 
@@ -230,7 +230,7 @@ MethodInfo *MethodReader::deserializeMethodInfo(Type   *declaringType,
 ConstructorInfo *MethodReader::deserializeConstructorInfo(Type   *declaringType,
                                                           json_t *json)
 {
-    ConstructorInfo *mi = new ConstructorInfo();
+    ConstructorInfo *mi = lmNew(NULL) ConstructorInfo();
 
     mi->memberType.constructor = true;
 
