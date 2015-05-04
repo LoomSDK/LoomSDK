@@ -31,7 +31,6 @@ package loom2d.display
         private var mTexture:Texture;
         private var mVertexDataCache:VertexData;
         private var mVertexDataCacheInvalid:Boolean;
-        private var _textureFile:String = null;
         
         public function Image(_texture:Texture = null):void
         {
@@ -193,7 +192,7 @@ package loom2d.display
 
         public function toString():String
         {
-            return "[" + getTypeName() + " " + _textureFile + "]";
+            return "[" + getTypeName() + " " + (!mTexture ? "untextured" : mTexture.assetPath == "" ? "buffer" : mTexture.assetPath) + "]";
         }
     }
     

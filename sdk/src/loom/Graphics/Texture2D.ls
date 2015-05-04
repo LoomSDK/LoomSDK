@@ -20,6 +20,8 @@ limitations under the License.
 
 package loom.graphics
 {
+    import loom2d.display.DisplayObject;
+    import loom2d.math.Matrix;
     /**
      * Called when a TextureInfo's backing texture is updated with new dimensions.
      */
@@ -159,6 +161,19 @@ package loom.graphics
          */
         public static native function initFromBytesAsync(bytes:ByteArray, uniqueName:String=null, highPriority:Boolean=false):TextureInfo;
 
+        
+        public static native function initEmptyTexture(width:int, height:int):TextureInfo;
+        
+        public static native function clear(nativeID:int, color:uint = 0x000000, alpha:Number = 0);
+        
+        /**
+         * Set the specified native texture id as the new render target.
+         * 
+         * @param nativeID The native texture id to set as the new render target.
+         *                 When finished, call this function again with -1 to complete the rendering.
+         */
+        public static native function setRenderTarget(nativeID:int = -1);
+        
         /**
          * Given the native id from a TextureInfo, dispose the specified texture. This
          * frees the GPU backing store and unloads the texture from memory.

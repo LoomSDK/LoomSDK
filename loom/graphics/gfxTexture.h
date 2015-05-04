@@ -33,7 +33,9 @@ namespace GFX
 typedef int   TextureID;
 
 #define TEXTUREINVALID    -1
-#define MAXTEXTURES       4096
+#define TEXTURE_ID_BITS   12
+#define TEXTURE_ID_MASK   (1 << TEXTURE_ID_BITS) - 1
+#define MAXTEXTURES       1 << TEXTURE_ID_BITS
 
 // loading textures are marked
 #define MARKEDTEXTURE     65534
@@ -49,6 +51,11 @@ typedef int   TextureID;
 
 struct TextureInfo
 {
+    // This number uniquely identifies the texture.
+    // The last TEXTURE_ID_BITS represent the index into the `sTextureInfos` array.
+    // The remaining bits represent the version or check bits used to determine
+    // if some part of the program is trying to operate on a texture that has
+    // been recycled, since the version increments every time the texture is recycled.
     TextureID                id;
 
     // todo: format
@@ -69,6 +76,8 @@ struct TextureInfo
     //its async processing is complete
     bool                     asyncDispose;
     GLuint                   handle;
+    bool                     renderTarget;
+    GLuint                   framebuffer;
 
     utString                 texturePath;
 
@@ -112,14 +121,18 @@ struct TextureInfo
     }
     void reset()
     {
-        width       = height = 0;
-        smoothing   = TEXTUREINFO_SMOOTHING_NONE;
-        wrapU       = TEXTUREINFO_WRAP_CLAMP;
-        wrapV       = TEXTUREINFO_WRAP_CLAMP;
-        reload      = false;
+        width        = height = 0;
+        smoothing    = TEXTUREINFO_SMOOTHING_NONE;
+        wrapU        = TEXTUREINFO_WRAP_CLAMP;
+        wrapV        = TEXTUREINFO_WRAP_CLAMP;
+        reload       = false;
         asyncDispose = false;
-        handle      = -1;
-        texturePath = "";
+        handle       = -1;
+		// This increments the check bits / version by 1
+		id          += MAXTEXTURES;
+        texturePath  = "";
+        renderTarget = false;
+        framebuffer  = -1;
     }
 };
 
@@ -148,7 +161,9 @@ private:
 
     static utHashTable<utFastStringHash, TextureID> sTexturePathLookup;
     static bool sTextureAssetNofificationsEnabled;
-    static bool supportsFullNPOT;
+	static bool supportsFullNPOT;
+	static TextureID currentRenderTexture;
+	static uint32_t previousRenderFlags;
 
     // simple linear TextureID -> TextureHandle
     static TextureInfo sTextureInfos[MAXTEXTURES];
@@ -195,9 +210,9 @@ private:
                                                 bool checkHandle = true, 
                                                 bool clearDispose = true)
     {
-        loom_mutex_lock(Texture::sTexInfoLock);
         TextureID   *texID = sTexturePathLookup.get(path);
-        TextureInfo *tinfo = (texID && ((*texID >= 0) && (*texID < MAXTEXTURES))) ? &sTextureInfos[*texID] : NULL;
+        loom_mutex_lock(Texture::sTexInfoLock);
+        TextureInfo *tinfo = Texture::getTextureInfo(texID);
         if(checkHandle && (tinfo && (tinfo->handle == -1)))
         {
             tinfo = NULL;
@@ -243,6 +258,8 @@ private:
 
     static void initialize();
 
+    static void shutdown();
+
     static void handleAssetNotification(void *payload, const char *name);
 
     static void loadImageAsset(loom_asset_image_t *lat, TextureID id);
@@ -266,23 +283,37 @@ public:
         return NULL;
     }
 
-    inline static TextureInfo *getTextureInfo(TextureID id)
+    inline static TextureInfo *getTextureInfo(TextureID* id)
     {
-        if ((id < 0) || (id >= MAXTEXTURES))
-        {
-            return NULL;
-        }
+        return id ? getTextureInfo(*id) : NULL;
+    }
+
+    inline static TextureInfo *getTextureInfo(TextureID id)
+	{
+        TextureID index = id & TEXTURE_ID_MASK;
+        lmAssert(index >= 0 && index < MAXTEXTURES, "Texture index is out of range: %d", index);
 
         loom_mutex_lock(sTexInfoLock);
-        TextureInfo *tinfo = &sTextureInfos[id];
+        TextureInfo *tinfo = &sTextureInfos[index];
 
-        if (tinfo->handle == -1)
+        // Check if it has a handle and if it's not outdated
+        if (tinfo->handle == -1 || tinfo->id != id)
         {
             tinfo = NULL;
         }
         loom_mutex_unlock(sTexInfoLock);
 
         return tinfo;
+    }
+
+    inline static int getIndex(TextureID id)
+    {
+        return id & TEXTURE_ID_MASK;
+    }
+
+    inline static int getVersion(TextureID id)
+    {
+        return id >> TEXTURE_ID_BITS;
     }
 
     inline static void enableAssetNotifications(bool value)
@@ -300,7 +331,13 @@ public:
     static TextureInfo *initFromBytes(utByteArray *bytes, const char *name);
     static TextureInfo *initFromBytesAsync(utByteArray *bytes, const char *name, bool highPriorty);
     static TextureInfo *initFromAssetManagerAsync(const char *path, bool highPriorty);
+	static TextureInfo *initEmptyTexture(int width, int height);
     static int __stdcall loadTextureAsync_body(void *param);
+
+	static void clear(TextureID id, int color, float alpha);
+
+	static void setRenderTarget(TextureID id = -1);
+	static int render(lua_State *L);
 
     static void dispose(TextureID id);
 

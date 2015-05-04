@@ -334,7 +334,40 @@ public:
         tx = other->tx;
         ty = other->ty;
         return 0;
-    }
+	}
+
+	void copyToMatrix3(float* values)
+	{
+		values[0] = a;
+		values[1] = b;
+		values[2] = 0;
+		values[3] = c;
+		values[4] = d;
+		values[5] = 0;
+		values[6] = tx;
+		values[7] = ty;
+		values[8] = 1;
+	}
+
+	void copyToMatrix4(float* values)
+	{
+		values[0] = a;
+		values[1] = b;
+		values[2] = 0;
+		values[3] = 0;
+		values[4] = c;
+		values[5] = d;
+		values[6] = 0;
+		values[7] = 0;
+		values[8] = 0;
+		values[9] = 0;
+		values[10] = 0;
+		values[11] = 0;
+		values[12] = tx;
+		values[13] = ty;
+		values[14] = 0;
+		values[15] = 1;
+	}
 
     const char *toString()
     {
