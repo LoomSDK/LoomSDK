@@ -29,8 +29,6 @@
 
 namespace LS {
 
-int Type::typeNum = 0;
-
 Assembly *Type::getAssembly()
 {
     assert(module);

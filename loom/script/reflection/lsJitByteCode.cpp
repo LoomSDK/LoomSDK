@@ -185,6 +185,7 @@ ByteCode *ByteCode::encode64(const utArray<unsigned char>& bc)
     byteCode->bc64 = buffer.ptr();
 
 
+
     /*
      * ByteCode* check = decode64(byteCode->bc64);
      *

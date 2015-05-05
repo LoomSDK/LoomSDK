@@ -122,7 +122,7 @@ struct loom_alloc_header
     header->file[sizeof(header->file) - 1] = 0; \
     header->line = line; \
     header->sig = LOOM_ALLOCATOR_CHECK_SIG; \
-    ((loom_alloc_header_t*)ptr) += 1; \
+    ptr = header + 1; \
 } while (0); \
 
 #define LOOM_ALLOCATOR_VERIFY(ptr) do { \

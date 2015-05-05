@@ -140,15 +140,39 @@ class TemplateInfo {
 public:
     TemplateInfo() : type(NULL)
     {
+        refs = 0;
     }
 
     ~TemplateInfo()
     {
+        lmAssert(refs == 0, "Destructing a template info with %d remaining references", refs);
+    }
+
+    void addReference()
+    {
+        refs++;
+        for (UTsize i = 0; i < types.size(); i++)
+        {
+            types.at(i)->addReference();
+        }
+    }
+    
+    void removeReference()
+    {
+        refs--;
+        for (UTsize i = 0; i < types.size(); i++)
+        {
+            types.at(i)->removeReference();
+        }
+        if (refs <= 0) lmDelete(NULL, this);
     }
 
     Type                    *type;
     utString                fullTypeName;
     utArray<TemplateInfo *> types;
+
+    // Reference counter for TemplateInfo
+    int refs;
 
     // if we have types, we're a templated type
     bool isTemplate()
@@ -243,7 +267,7 @@ protected:
 
     Type *type;
 
-    TemplateInfo templateInfo;
+    TemplateInfo *templateInfo;
 
     utHashTable<utHashedString, utList<MetaInfo *> *> metaInfo;
 
@@ -260,12 +284,13 @@ protected:
 public:
 
     MemberInfo() :
-        declaringType(NULL), reflectedType(NULL), type(NULL), ordinal(0), lineNumber(0)
+        declaringType(NULL), reflectedType(NULL), type(NULL), ordinal(0), lineNumber(0), templateInfo(NULL)
     {
     }
 
     virtual ~MemberInfo()
     {
+        if (templateInfo) templateInfo->removeReference();
         for (UTsize i = 0; i < metaInfo.size(); i++)
         {
             utList<MetaInfo *> *metaInfoList = metaInfo.at(i);
@@ -361,17 +386,19 @@ public:
 
     Type *getTemplateType()
     {
-        return templateInfo.type;
+        return templateInfo ? templateInfo->type : NULL;
     }
 
     TemplateInfo *getTemplateInfo()
     {
-        return &templateInfo;
+        return templateInfo;
     }
 
     void setTemplateInfo(TemplateInfo *_templateInfo)
     {
-        templateInfo = TemplateInfo(*_templateInfo);
+        if (templateInfo) templateInfo->removeReference();
+        templateInfo = _templateInfo;
+        if (templateInfo) templateInfo->addReference();
     }
 
     // get the first meta info with this name

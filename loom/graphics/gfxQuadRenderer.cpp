@@ -226,7 +226,7 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
         return NULL;
     }
 
-#if !LOOM_DEBUG
+#ifdef LOOM_DEBUG
     loom_mutex_lock(Texture::sTexInfoLock);
     lmAssert(!(numVertices % 4), "numVertices % 4 != 0");
     lmAssert(texture == Texture::getTextureInfo(texture)->id, "Texture ID signature mismatch, you might be trying to draw a disposed texture");

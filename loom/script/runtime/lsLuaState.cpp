@@ -277,7 +277,8 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
 
     lmAssert(assembly->ordinalTypes == NULL, "Assembly types cache error, ordinalTypes already exists");
 
-    assembly->ordinalTypes = lmNew(NULL) Type *[types.size() + 1];
+    assembly->ordinalTypes = lmNew(NULL) utArray<Type*>();
+    assembly->ordinalTypes->resize(types.size() + 1);
 
     for (UTsize j = 0; j < types.size(); j++)
     {
@@ -287,7 +288,7 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
 
         lmAssert(type->getTypeID() > 0 && type->getTypeID() <= (LSTYPEID)types.size(), "LSLuaState::cacheAssemblyTypes TypeID out of range");
 
-        assembly->ordinalTypes[type->getTypeID()] = type;
+        assembly->ordinalTypes->ptr()[type->getTypeID()] = type;
 
         const char *typeName = type->getFullName().c_str();
 

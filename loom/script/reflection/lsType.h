@@ -626,7 +626,9 @@ public:
 
     void setBCStaticInitializer(ByteCode *bc)
     {
-        lmAssert(bcStaticInitializer == NULL, "Ref not NULL");
+        //lmAssert(!bc->getByteCode().empty(), "Ref is NULL");
+        //lmAssert(bcStaticInitializer == NULL, "Ref not NULL");
+        if (bcStaticInitializer != NULL) lmDelete(NULL, bcStaticInitializer);
         bcStaticInitializer = bc;
     }
 
@@ -637,7 +639,8 @@ public:
 
     void setBCInstanceInitializer(ByteCode *bc)
     {
-        lmAssert(bcInstanceInitializer == NULL, "Ref not NULL");
+        //lmAssert(bcInstanceInitializer == NULL, "Ref not NULL");
+        if (bcInstanceInitializer != NULL) lmDelete(NULL, bcInstanceInitializer);
         bcInstanceInitializer = bc;
     }
 

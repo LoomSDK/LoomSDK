@@ -49,7 +49,7 @@ void loom_fireAssertCallback();
 };
 #endif
 
-#if !LOOM_DEBUG
+#ifndef LOOM_DEBUG
 
 #define lmSafeAssert(condition, errmsg)
 #define lmAssert(condition, errmsg, ...)

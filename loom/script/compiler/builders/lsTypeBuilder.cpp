@@ -211,7 +211,7 @@ void PropertyInfoBuilder::injectTypes(Assembly *assembly)
 
     TemplateInfo *templateInfo = propertyLiteral->memberInfo->getTemplateInfo();
 
-    if (templateInfo->type)
+    if (templateInfo)
     {
         writer.setTemplateTypeInfo(templateInfo);
     }
