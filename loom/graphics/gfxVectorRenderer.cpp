@@ -402,16 +402,22 @@ VectorSVG::VectorSVG() {
 VectorSVG::~VectorSVG() {
 	reset();
 }
-void VectorSVG::reset(bool reloaded) {
+void VectorSVG::reset() {
+    resetInfo();
+    resetImage();
+}
+void VectorSVG::resetInfo() {
     if (path != NULL) {
-        if (!reloaded) loom_asset_unsubscribe(path->c_str(), onReload, this);
+        loom_asset_unsubscribe(path->c_str(), onReload, this);
         lmDelete(NULL, path);
         path = NULL;
     }
-	if (image != NULL) {
-		nsvgDelete(image);
-		image = NULL;
-	}
+}
+void VectorSVG::resetImage() {
+    if (image != NULL) {
+        nsvgDelete(image);
+        image = NULL;
+    }
 }
 void VectorSVG::loadFile(utString path, utString units, float dpi) {
 	reset();
@@ -427,7 +433,7 @@ void VectorSVG::onReload(void *payload, const char *name) {
 	svg->reload();
 }
 void VectorSVG::reload() {
-	reset(true);
+    resetImage();
 	char* data = static_cast<char*>(loom_asset_lock(path->c_str(), LATText, true));
 	parse(data, units.c_str(), dpi);
 	loom_asset_unlock(path->c_str());
@@ -437,9 +443,7 @@ void VectorSVG::loadString(utString svg, utString units, float dpi) {
 	parse(svg.c_str(), units.c_str(), dpi);
 }
 void VectorSVG::parse(const char* svg, const char* units, float dpi) {
-	char* copy = strdup(svg);
-	image = nsvgParse(copy, units, dpi);
-	delete copy;
+	image = nsvgParse((char*) svg, units, dpi);
 	if (image->shapes == NULL) {
 		image = NULL;
 		return;
