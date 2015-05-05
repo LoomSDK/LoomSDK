@@ -88,6 +88,7 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
 
         headersIterator.next();
     }
+    addHeaderMethodInfo.getEnv()->DeleteLocalRef(addHeaderMethodInfo.classID);
 
     // get the method info for loomhttp::send
     loomJniMethodInfo sendMethodInfo;
@@ -118,6 +119,7 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
     sendMethodInfo.getEnv()->DeleteLocalRef(reqMethod);
     sendMethodInfo.getEnv()->DeleteLocalRef(reqBody);
     sendMethodInfo.getEnv()->DeleteLocalRef(reqResponseCacheFile);
+    sendMethodInfo.getEnv()->DeleteLocalRef(sendMethodInfo.classID);
     return index;
 }
 
@@ -130,6 +132,7 @@ bool platform_HTTPIsConnected()
                                  "isConnected",
                                  "()Z");
     jboolean result = isConnectedMethodInfo.getEnv()->CallStaticBooleanMethod(isConnectedMethodInfo.classID, isConnectedMethodInfo.methodID);
+    isConnectedMethodInfo.getEnv()->DeleteLocalRef(isConnectedMethodInfo.classID);
 
     return (bool)result;
 }
@@ -159,7 +162,9 @@ bool platform_HTTPCancel(int index)
                                  "co/theengine/loomdemo/LoomHTTP",
                                  "cancel",
                                  "(I)Z");
-    return (jboolean)cancelMethodInfo.getEnv()->CallStaticBooleanMethod(cancelMethodInfo.classID, cancelMethodInfo.methodID, (jint)index);
+    jboolean ret = cancelMethodInfo.getEnv()->CallStaticBooleanMethod(cancelMethodInfo.classID, cancelMethodInfo.methodID, (jint)index);
+    cancelMethodInfo.getEnv()->DeleteLocalRef(cancelMethodInfo.classID);
+    return ret;
 }
 
 void platform_HTTPComplete(int index)
@@ -170,6 +175,7 @@ void platform_HTTPComplete(int index)
                                  "complete",
                                  "(I)V");
     completeMethodInfo.getEnv()->CallStaticVoidMethod(completeMethodInfo.classID, completeMethodInfo.methodID, (jint)index);
+    completeMethodInfo.getEnv()->DeleteLocalRef(completeMethodInfo.classID);
 }
 
 #endif
