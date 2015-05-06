@@ -300,7 +300,7 @@ Loom2D::Rectangle VectorRenderer::textLineBounds(VectorTextFormat* format, float
     nvgSave(nvg);
     nvgReset(nvg);
     textFormat(format);
-    nvgTextBounds(nvg, x, y, string->c_str(), NULL, &bounds[0]);
+    nvgTextBounds(nvg, x, y, string->c_str(), NULL, bounds);
     nvgRestore(nvg);
     float xmin = bounds[0];
     float ymin = bounds[1];

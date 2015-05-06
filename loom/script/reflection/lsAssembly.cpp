@@ -37,12 +37,7 @@ utHashTable<utPointerHashKey, Assembly *> Assembly::typeAssemblyLookup;
 void Assembly::registerModule(Module *module)
 {
     module->setAssembly(this);
-    utHashedString hash = utHashedString(module->getName());
-    lmAssert(modules.get(hash) == NULL, "Module already registered: %s", module->getName().c_str());
-    modules.insert(hash, module);
-    UTsize s = modules.size();
-    Module** a = modules.get(utHashedString("System"));
-    Module** b = modules.get(utHashedString("Loom"));
+    modules.insert(utHashedString(module->getName()), module);
 }
 
 

@@ -320,6 +320,7 @@ do { \
 		default: \
 			const char* errorName; \
 			switch (status) { \
+                /* We can check with literal values here because they are a part of OpenGL spec (but not defined as constants in every version). */ \
 				case GL_INVALID_ENUM: errorName = "GL_INVALID_ENUM"; break; \
 				case 0x8219 /* GL_FRAMEBUFFER_UNDEFINED */: errorName = "GL_FRAMEBUFFER_UNDEFINED"; break; \
 				case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: errorName = "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"; break; \

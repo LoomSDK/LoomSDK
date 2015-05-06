@@ -783,7 +783,7 @@ Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
         Reference *ref = lmNew(NULL) Reference;
         ref->name     = readPoolString();
 
-        lmAssert(ref->name[0] != 0, "Reference name is empty, try recompiling the executable");
+        lmAssert(ref->name[0] != 0, "Assembly reference name is empty, try recompiling the .loom executable");
 
         ref->length   = sBytes->readInt();
         ref->position = sBytes->readInt();

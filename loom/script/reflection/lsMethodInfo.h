@@ -258,10 +258,7 @@ public:
 
     void freeByteCode()
     {
-        if (byteCode) {
-            lmDelete(NULL, this->byteCode);
-            this->byteCode = NULL;
-        }
+        lmSafeDelete(NULL, this->byteCode);
     }
 
     // module the method is defined in

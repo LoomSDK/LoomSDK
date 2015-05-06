@@ -164,7 +164,8 @@ public:
         {
             types.at(i)->removeReference();
         }
-        if (refs <= 0) lmDelete(NULL, this);
+        if (refs == 0) lmDelete(NULL, this);
+        lmAssert(refs >= 0, "Template info was removed more times than it should've been, refs < 0");
     }
 
     Type                    *type;

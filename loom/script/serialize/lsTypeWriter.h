@@ -70,6 +70,7 @@ public:
         typeID(0), constructor(NULL)
     {
     }
+
     ~TypeWriter()
     {
         for (UTsize i = 0; i < metaInfo.size(); i++)
