@@ -24,6 +24,12 @@
 #include <string.h>
 #include "loom/common/platform/platform.h"
 
+#ifndef LOOM_ASSERT
+// We should have release and debug builds, until then lmAsserts stay
+// #define LOOM_ASSERT LOOM_DEBUG
+#define LOOM_ASSERT 1
+#endif
+
 // TODO: Handle include directories correctly for Android so that this isn't needed.
 //  The problem is that our assert.h replaces the standard lib assert.h through a naming
 //  conflict that is caused by us adding engine/src/core as an include directory.
@@ -49,7 +55,8 @@ void loom_fireAssertCallback();
 };
 #endif
 
-#ifndef LOOM_DEBUG
+
+#if !LOOM_ASSERT
 
 #define lmSafeAssert(condition, errmsg)
 #define lmAssert(condition, errmsg, ...)

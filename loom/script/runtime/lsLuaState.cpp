@@ -18,8 +18,6 @@
  * ===========================================================================
  */
 
-#define LUA_USE_ASSERT 1
-
 #include "zlib.h"
 
 #include "loom/common/core/allocator.h"

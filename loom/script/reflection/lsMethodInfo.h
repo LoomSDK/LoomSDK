@@ -247,7 +247,6 @@ public:
 
     void setByteCode(ByteCode *bc)
     {
-        //lmAssert(this->byteCode == NULL, "Bytecode is not NULL");
         freeByteCode();
         this->byteCode = bc;
     }

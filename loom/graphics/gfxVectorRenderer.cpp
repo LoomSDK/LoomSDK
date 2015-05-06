@@ -433,7 +433,7 @@ void VectorSVG::onReload(void *payload, const char *name) {
 	svg->reload();
 }
 void VectorSVG::reload() {
-    resetImage();
+	resetImage();
 	char* data = static_cast<char*>(loom_asset_lock(path->c_str(), LATText, true));
 	parse(data, units.c_str(), dpi);
 	loom_asset_unlock(path->c_str());

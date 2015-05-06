@@ -21,7 +21,7 @@
 #pragma once
 
 // Set to 1 to enable additional graphics debugging output and checks
-#define GFX_DEBUG 1
+#define GFX_DEBUG 0
 
 // This flag enables extensive OpenGL checks including checking
 // the OpenGL error state after every call. This can have a big
