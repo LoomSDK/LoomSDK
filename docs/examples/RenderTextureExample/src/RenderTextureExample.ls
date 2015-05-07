@@ -19,7 +19,10 @@ package
     import loom2d.ui.SimpleLabel;
     import system.platform.Platform;
     import system.Void;
-
+    
+    /**
+     * Shows example usage of the render texture API.
+     */
     public class RenderTextureExample extends Application
     {
         private var outlines:Shape;
@@ -50,9 +53,12 @@ package
             stage.addChild(bg);
             
             outlines = new Shape();
-            
+           
+            // Create an empty, transparent render texture
+            // that is 200px wide and 200px high
             renderTexture = new RenderTexture(200, 200);
             
+            // Create an image that will display the render texture
             image = new Image(renderTexture);
             image.x = 10;
             image.y = 10;
@@ -74,12 +80,14 @@ package
             
             draw();
             
+            // The bottom roll texture
             roll = new RenderTexture(stage.stageWidth, 110, false);
             
             rollDisplay = new Image(roll);
             rollDisplay.y = stage.stageHeight-roll.height;
             stage.addChild(rollDisplay);
             
+            // The right persistent drawing texture
             persistent = new RenderTexture(renderTexture.width, renderTexture.height, true);
             persistentDisplay = new Image(persistent);
             persistentDisplay.x = image.x+renderTexture.width+10;
@@ -88,8 +96,13 @@ package
         }
         
         function draw() {
+            // Clear the texture in case the function
+            // is called multiple times.
             renderTexture.clear();
             
+            // Set the logo state we want to work from
+            // This is needed in case we change logo elsewhere
+            // (e.g. in a loop below)
             logo.x = 25;
             logo.y = 70;
             logo.alpha = 0.8;
@@ -121,6 +134,7 @@ package
             m.scale(0.5, 0.5);
             m.translate(55, 20);
             
+            // Draw the container using the provided `m` transform matrix
             renderTexture.draw(container, m);
             g.drawRect(image.x+(logo.x-logo.width/2)*0.5+55, image.y+(logo.y-logo.height/2)*0.5+20, logo.width*0.5, logo.height*0.5);
             
@@ -154,6 +168,9 @@ package
             logo.alpha = 1;
             
             // Begin drawing into the `roll` texture
+            // This will set `roll` to be the current render
+            // texture, so the only valid `draw` calls
+            // will be the ones made on the `roll` texture.
             roll.drawBundledLock();
             
             while (logo.x-logo.width/2 < roll.width) {
@@ -174,6 +191,8 @@ package
             }
             
             // End drawing into the texture
+            // This submits all the batched `draw` calls
+            // to the GPU and draws them into the `roll` texture.
             roll.drawBundledUnlock();
             
             // Draw into a persistent buffer
