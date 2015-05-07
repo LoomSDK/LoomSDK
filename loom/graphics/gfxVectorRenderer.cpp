@@ -74,8 +74,10 @@ lmDefineLogGroup(gGFXVectorRendererLogGroup, "GFXVectorRenderer", 1, LoomLogInfo
 NVGcontext *nvg = NULL;
 static int font;
 
+utHashTable<utHashedString, utString> VectorTextFormat::loadedFonts;
 int VectorRenderer::frameWidth = 0;
 int VectorRenderer::frameHeight = 0;
+uint8_t VectorRenderer::quality = VectorRenderer::QUALITY_ANTIALIAS | VectorRenderer::QUALITY_STENCIL_STROKES;
 
 //*
 void drawLabel(struct NVGcontext* vg, const char* text, float x, float y, float w, float h)
@@ -347,26 +349,34 @@ void VectorRenderer::destroyGraphicsResources()
 #else
         nvgDeleteGL2(nvg);
 #endif
+        nvg = NULL;
 	}
 }
 
 
 void VectorRenderer::initializeGraphicsResources()
 {
-    int flags = 0;
+    destroyGraphicsResources();
 
+    int flags = 0;
+    
+    if (quality & QUALITY_ANTIALIAS) flags |= NVG_ANTIALIAS;
+    if (quality & QUALITY_STENCIL_STROKES)   flags |= NVG_STENCIL_STROKES;
+    
 #if GFX_OPENGL_CHECK
     flags |= NVG_DEBUG;
 #endif
-
-    flags |= NVG_ANTIALIAS | NVG_STENCIL_STROKES;
 
 #ifdef LOOM_RENDERER_OPENGLES2
     nvg = nvgCreateGLES2(flags);
 #else
     nvg = nvgCreateGL2(flags);
 #endif
+
     lmAssert(nvg != NULL, "Unable to init nanovg");
+    
+    VectorTextFormat::restoreLoaded();
+    
     //nvgCreateFont(nvg, "sans", "assets/droidsans.ttf");
     //nvgCreateFont(nvg, "sans", "assets/SourceSansPro-Regular.ttf");
     //nvgCreateFont(nvg, "sans", "assets/unifont-7.0.06.ttf");
@@ -399,9 +409,19 @@ VectorTextFormat::VectorTextFormat() {
     lineHeight = NAN;
 }
 
+void VectorTextFormat::restoreLoaded() {
+    utHashTableIterator<utHashTable<utHashedString, utString>> it = loadedFonts.iterator();
+    while (it.hasMoreElements()) {
+        utHashEntry<utHashedString, utString> s = it.getNext();
+        load(s.second, s.first.str());
+    }
+}
+
 void VectorTextFormat::load(utString fontName, utString filePath) {
+    loadedFonts.insert(utHashedString(filePath), utString(fontName));
     void* bytes = loom_asset_lock(filePath.c_str(), LATText, 1);
     nvgCreateFontMem(nvg, fontName.c_str(), static_cast<unsigned char*>(bytes), 0, 0);
+    loom_asset_unlock(filePath.c_str());
 }
 
 

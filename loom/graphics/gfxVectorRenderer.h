@@ -71,6 +71,9 @@ public:
 */
 
 class VectorTextFormat {
+protected:
+    static utHashTable<utHashedString, utString> loadedFonts;
+
 public:
 	enum TextAlign {
 		// Horizontal align
@@ -84,6 +87,10 @@ public:
 		ALIGN_BASELINE = 1 << 6, // Default, align text vertically to baseline. 
 	};
 
+    // Restore all the previously loaded fonts (on NVG context loss / quality change)
+    static void restoreLoaded();
+
+    // Load a font with the specified font name and path
     static void load(utString fontName, utString filePath);
 
     VectorTextFormat();
@@ -141,17 +148,17 @@ class VectorRenderer
     friend class Graphics;
 
 private:
-
-    // initial initialization
     static void initialize();
 
     static void initializeGraphicsResources();
     static void destroyGraphicsResources();
 
-    // reset the quad renderer, on loss of context etc
-    static void reset();
-
 public:
+    static const uint8_t QUALITY_ANTIALIAS       = 1 << 0;
+    static const uint8_t QUALITY_STENCIL_STROKES = 1 << 1;
+    static uint8_t quality;
+
+    static void reset();
 
 	static int frameWidth;
 	static int frameHeight;
