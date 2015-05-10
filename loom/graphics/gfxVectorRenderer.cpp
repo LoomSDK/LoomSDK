@@ -410,7 +410,7 @@ VectorTextFormat::VectorTextFormat() {
 }
 
 void VectorTextFormat::restoreLoaded() {
-    utHashTableIterator<utHashTable<utHashedString, utString>> it = loadedFonts.iterator();
+    utHashTableIterator< utHashTable<utHashedString, utString> > it = loadedFonts.iterator();
     while (it.hasMoreElements()) {
         utHashEntry<utHashedString, utString> s = it.getNext();
         load(s.second, s.first.str());
