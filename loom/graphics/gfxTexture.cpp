@@ -391,6 +391,8 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
         Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
+    validate(id);
+
     if (tinfo.reload)
     {
         // Fire the delegate.
@@ -819,6 +821,23 @@ void Texture::loadImageAsset(loom_asset_image_t *lat, TextureID id)
 //    lmFree(NULL, localBits);
 }
 
+void Texture::validate()
+{
+    for (int i = 0; i < MAXTEXTURES; i++)
+    {
+        loom_mutex_lock(Texture::sTexInfoLock);
+        TextureInfo *tinfo = &sTextureInfos[i];
+
+        // Ignore invalid entries
+        if (tinfo->handle != -1 && tinfo->renderTarget)
+        {
+            Texture::validate(tinfo->id);
+        }
+
+        loom_mutex_unlock(Texture::sTexInfoLock);
+    }
+}
+
 void Texture::reset()
 {
     for (int i = 0; i < MAXTEXTURES; i++)
@@ -868,6 +887,24 @@ void Texture::clear(TextureID id, int color, float alpha)
 	Graphics::context()->glClear(GL_COLOR_BUFFER_BIT);
 
 	setRenderTarget(prevRenderTexture);
+}
+
+void Texture::validate(TextureID id)
+{
+    loom_mutex_lock(Texture::sTexInfoLock);
+    TextureInfo *tinfo = Texture::getTextureInfo(id);
+    if (tinfo->renderTarget && tinfo->renderbuffer == -1 && Graphics::getStencilRequired()) {
+        Graphics::context()->glGenRenderbuffers(1, &tinfo->renderbuffer);
+        Graphics::context()->glBindRenderbuffer(GL_RENDERBUFFER, tinfo->renderbuffer);
+        Graphics::context()->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, tinfo->width, tinfo->height);
+        Graphics::context()->glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+        Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo->framebuffer);
+        Graphics::context()->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, tinfo->renderbuffer);
+        Graphics::context()->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, tinfo->renderbuffer);
+        Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+    loom_mutex_unlock(Texture::sTexInfoLock);
 }
 
 void Texture::setRenderTarget(TextureID id)
@@ -946,6 +983,7 @@ void Texture::dispose(TextureID id)
 
 		if (tinfo->renderTarget) {
 			Graphics::context()->glDeleteFramebuffers(1, &tinfo->framebuffer);
+            if (tinfo->renderbuffer != -1) Graphics::context()->glDeleteRenderbuffers(1, &tinfo->renderbuffer);
 		}
 
 		// And erase backing state.

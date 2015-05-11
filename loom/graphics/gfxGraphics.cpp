@@ -315,6 +315,11 @@ void Graphics::setFillColor(int color)
     sFillColor = color;
 }
 
+// NanoVG requires stencil buffer for fills, so this is always true for now
+bool Graphics::getStencilRequired()
+{
+    return true || (VectorRenderer::quality & VectorRenderer::QUALITY_STENCIL_STROKES) > 0;
+}
 
 int Graphics::getFillColor()
 {

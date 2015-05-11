@@ -137,8 +137,8 @@ class Graphics
 
 public:
 
-	static const uint32_t FLAG_INVERTED = 1 << 0;
-	static const uint32_t FLAG_NOCLEAR  = 1 << 1;
+    static const uint32_t FLAG_INVERTED = 1 << 0;
+    static const uint32_t FLAG_NOCLEAR  = 1 << 1;
 
     static GL_Context *context()
     {
@@ -178,6 +178,7 @@ public:
 	static inline int getHeight() { return sHeight; }
 	static inline uint32_t getFlags() { return sFlags; }
 	static inline void setFlags(uint32_t flags) { sFlags = flags; }
+	static bool getStencilRequired();
 	static inline float* getMVP() {
 #if GFX_OPENGL_CHECK
 		if (sCurrentModelViewProjection == NULL) {

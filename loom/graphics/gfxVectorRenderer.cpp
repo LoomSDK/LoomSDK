@@ -361,7 +361,7 @@ void VectorRenderer::initializeGraphicsResources()
     int flags = 0;
     
     if (quality & QUALITY_ANTIALIAS) flags |= NVG_ANTIALIAS;
-    if (quality & QUALITY_STENCIL_STROKES)   flags |= NVG_STENCIL_STROKES;
+    if (quality & QUALITY_STENCIL_STROKES) flags |= NVG_STENCIL_STROKES;
     
 #if GFX_OPENGL_CHECK
     flags |= NVG_DEBUG;
