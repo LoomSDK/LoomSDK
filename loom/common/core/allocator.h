@@ -76,6 +76,85 @@
  *
  */
 
+/**
+ * This check enables allocation debugging with metainfo injection and verification.
+ * It is useful tracking down allocations allocated by `lmNew` and not freed by `lmFree`.
+ *
+ * If you enable this check, all `lmAlloc`, `lmCalloc`, `lmFree` and `lmRealloc` calls
+ * get augmented with metainfo at allocation time and verified at free time.
+ * `lmNew`, `lmDelete` and related also use the above calls under the hood,
+ * so they are covered as well.
+ * The outside API remains the same as the pointers get shifted accordingly.
+ *
+ * DEBUGGING TIPS
+ * You can get an insight into an augmented pointer by offsetting it by and casting it to
+ * `loom_alloc_header*` e.g. `((loom_alloc_header*) pointer - 1)`. This is especially useful
+ * as an expression in the watch window of an IDE. If you see garbage in the `file` field,
+ * it was most likely not allocated by the mentioned allocation functions.
+ * 
+ * Otherwise you should be able to see the file and line it was allocated on as well as
+ * the signature, which is checked and should equal `LOOM_ALLOCATOR_CHECK_SIG`.
+ * If the path is cut off, you can increase `LOOM_ALLOCATOR_CHECK_MAXPATH`.
+ *
+ * You can also add manual pointer checks by using `LOOM_ALLOCATOR_VERIFY(pointer)`.
+ */
+#define LOOM_ALLOCATOR_CHECK 0
+#define LOOM_ALLOCATOR_CHECK_MAXPATH 128-4-2
+#define LOOM_ALLOCATOR_CHECK_SIG 0xCACACACA
+
+#if !LOOM_ALLOCATOR_CHECK
+
+#define LOOM_ALLOCATOR_CHECK_RESIZE(size)
+#define LOOM_ALLOCATOR_CHECK_VERIFY(ptr, file, line)
+#define LOOM_ALLOCATOR_CHECK_INJECT(size, ptr, file, line)
+#define LOOM_ALLOCATOR_VERIFY(ptr)
+
+#else
+
+#include <stdint.h>
+#include "loom/common/core/assert.h"
+
+typedef struct loom_alloc_header loom_alloc_header_t;
+struct loom_alloc_header
+{
+    char file[LOOM_ALLOCATOR_CHECK_MAXPATH];
+    uint16_t line;
+    uint32_t sig;
+};
+
+#define LOOM_ALLOCATOR_CHECK_RESIZE(size) do { \
+    size += sizeof(loom_alloc_header_t); \
+} while (0); \
+
+#define LOOM_ALLOCATOR_CHECK_PTR(ptr, file, line) do { \
+    loom_alloc_header_t *header = (loom_alloc_header_t*)ptr; \
+    lmCheck(header->sig == LOOM_ALLOCATOR_CHECK_SIG, "Allocator verification internal check failed, expected 0x%08lX got 0x%08lX\nDeallocation was at %s@%d", LOOM_ALLOCATOR_CHECK_SIG, header->sig, file, line); \
+} while (0); \
+
+#define LOOM_ALLOCATOR_CHECK_VERIFY(ptr, file, line) do { \
+    if (ptr == NULL) break; \
+    ptr = (void*) ((loom_alloc_header_t*)ptr - 1); \
+    LOOM_ALLOCATOR_CHECK_PTR(ptr, file, line) \
+} while (0); \
+
+#define LOOM_ALLOCATOR_CHECK_INJECT(size, ptr, file, line) do { \
+    if (ptr == NULL) break; \
+    loom_alloc_header_t *header = (loom_alloc_header_t*)ptr; \
+    strncpy(header->file, file, sizeof(header->file) - 1); \
+    header->file[sizeof(header->file) - 1] = 0; \
+    header->line = line; \
+    header->sig = LOOM_ALLOCATOR_CHECK_SIG; \
+    ptr = header + 1; \
+} while (0); \
+
+#define LOOM_ALLOCATOR_VERIFY(ptr) do { \
+    if (ptr == NULL) break; \
+    LOOM_ALLOCATOR_CHECK_PTR(((loom_alloc_header_t*) ptr - 1), __FILE__, __LINE__) \
+} while (0); \
+
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif

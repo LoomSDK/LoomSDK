@@ -41,7 +41,7 @@
 
 #include "loom/common/core/assert.h"
 #include "loom/common/core/log.h"
-#include "lj_obj.h"
+#include "lua.h"
 
 namespace GFX {
     lmDeclareLogGroup(gGFXLogGroup);
@@ -321,15 +321,16 @@ do { \
 		default: \
 			const char* errorName; \
 			switch (status) { \
+                /* We can check with literal values here because they are a part of OpenGL spec (but not defined as constants in every version). */ \
 				case GL_INVALID_ENUM: errorName = "GL_INVALID_ENUM"; break; \
-				case GL_FRAMEBUFFER_UNDEFINED: errorName = "GL_FRAMEBUFFER_UNDEFINED"; break; \
+				case 0x8219 /* GL_FRAMEBUFFER_UNDEFINED */: errorName = "GL_FRAMEBUFFER_UNDEFINED"; break; \
 				case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: errorName = "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"; break; \
 				case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: errorName = "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT"; break; \
-				case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: errorName = "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"; break; \
-				case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: errorName = "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER"; break; \
+				case 0x8CDB /* GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER */: errorName = "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"; break; \
+				case 0x8CDC /* GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER */: errorName = "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER"; break; \
 				case GL_FRAMEBUFFER_UNSUPPORTED: errorName = "GL_FRAMEBUFFER_UNSUPPORTED"; break; \
-				case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: errorName = "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"; break; \
-				case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS: errorName = "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"; break; \
+				case 0x8D56 /* GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE */: errorName = "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"; break; \
+				case 0x8DA8 /* GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS */: errorName = "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"; break; \
 				default: errorName = "Unknown error"; \
 			} \
 			lmLogError(gGFXLogGroup, "Framebuffer #%d error: %s (0x%04x)", framebuffer, errorName, status); \

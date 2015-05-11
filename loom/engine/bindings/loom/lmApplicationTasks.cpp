@@ -33,10 +33,14 @@ extern "C"
 
 void loom_tick()
 {
+    LSLuaState *vm = NULL;
+
+    vm = LoomApplication::getReloadQueued() ? NULL : LoomApplication::getRootVM();
+
     // Mark the main thread for NativeDelegates. On some platforms this
     // may change so we remark every frame.
     NativeDelegate::markMainThread();
-    NativeDelegate::executeDeferredCalls(LoomApplication::getRootVM()->VM());
+    if (vm) NativeDelegate::executeDeferredCalls(vm->VM());
 
     performance_tick();
 
@@ -48,7 +52,6 @@ void loom_tick()
     }
     else
     {
-        LSLuaState *vm = LoomApplication::getRootVM();
         if (vm)
         {
             // https://theengineco.atlassian.net/browse/LOOM-468
@@ -69,7 +72,7 @@ void loom_tick()
 
     GFX::Texture::tick();
 
-    lualoom_gc_update(LoomApplication::getRootVM()->VM());
+    if (vm) lualoom_gc_update(vm->VM());
 
     if(Loom2D::Stage::smMainStage)
         Loom2D::Stage::smMainStage->invokeRenderStage();

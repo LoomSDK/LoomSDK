@@ -298,7 +298,7 @@ void VectorRenderer::textBox(float x, float y, float width, utString* string) {
 }
 
 Loom2D::Rectangle VectorRenderer::textLineBounds(VectorTextFormat* format, float x, float y, utString* string) {
-    float* bounds = new float[4];
+    float bounds[4];
     nvgSave(nvg);
     nvgReset(nvg);
     textFormat(format);
@@ -308,7 +308,6 @@ Loom2D::Rectangle VectorRenderer::textLineBounds(VectorTextFormat* format, float
     float ymin = bounds[1];
     float xmax = bounds[2];
     float ymax = bounds[3];
-    delete bounds;
     return Loom2D::Rectangle(xmin, ymin, xmax-xmin, ymax-ymin);
 }
 
@@ -322,7 +321,7 @@ float VectorRenderer::textLineAdvance(VectorTextFormat* format, float x, float y
 }
 
 Loom2D::Rectangle VectorRenderer::textBoxBounds(VectorTextFormat* format, float x, float y, float width, utString* string) {
-    float* bounds = new float[4];
+    float bounds[4];
     nvgSave(nvg);
     nvgReset(nvg);
     textFormat(format);
@@ -332,7 +331,6 @@ Loom2D::Rectangle VectorRenderer::textBoxBounds(VectorTextFormat* format, float 
     float ymin = bounds[1];
     float xmax = bounds[2];
     float ymax = bounds[3];
-    delete bounds;
     return Loom2D::Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
 }
 
@@ -432,22 +430,28 @@ VectorSVG::VectorSVG() {
 VectorSVG::~VectorSVG() {
 	reset();
 }
-void VectorSVG::reset(bool reloaded) {
-	if (!reloaded && path != NULL) {
-		loom_asset_unsubscribe(path->c_str(), onReload, this);
-		delete path;
-		path = NULL;
-	}
-	if (image != NULL) {
-		nsvgDelete(image);
-		image = NULL;
-	}
+void VectorSVG::reset() {
+    resetInfo();
+    resetImage();
+}
+void VectorSVG::resetInfo() {
+    if (path != NULL) {
+        loom_asset_unsubscribe(path->c_str(), onReload, this);
+        lmDelete(NULL, path);
+        path = NULL;
+    }
+}
+void VectorSVG::resetImage() {
+    if (image != NULL) {
+        nsvgDelete(image);
+        image = NULL;
+    }
 }
 void VectorSVG::loadFile(utString path, utString units, float dpi) {
 	reset();
 	this->units = utString(path);
 	this->dpi = dpi;
-	this->path = new utString(path);
+	this->path = lmNew(NULL) utString(path);
 	reload();
 	loom_asset_subscribe(path.c_str(), onReload, this, false);
 }
@@ -457,7 +461,7 @@ void VectorSVG::onReload(void *payload, const char *name) {
 	svg->reload();
 }
 void VectorSVG::reload() {
-	reset(true);
+	resetImage();
 	char* data = static_cast<char*>(loom_asset_lock(path->c_str(), LATText, true));
 	parse(data, units.c_str(), dpi);
 	loom_asset_unlock(path->c_str());
@@ -467,9 +471,7 @@ void VectorSVG::loadString(utString svg, utString units, float dpi) {
 	parse(svg.c_str(), units.c_str(), dpi);
 }
 void VectorSVG::parse(const char* svg, const char* units, float dpi) {
-	char* copy = strdup(svg);
-	image = nsvgParse(copy, units, dpi);
-	delete copy;
+	image = nsvgParse((char*) svg, units, dpi);
 	if (image->shapes == NULL) {
 		image = NULL;
 		return;
