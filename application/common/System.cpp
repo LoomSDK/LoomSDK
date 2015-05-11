@@ -7,26 +7,59 @@
 
 class System
 {
+private:
+	static void zeroBuffer(char *buff)
+	{
+		unsigned int stringLength = strlen(buff);
+
+		// We are using an unsigned int, so we can expect the value to roll over once we are finished with the loop
+		for (unsigned int i = stringLength - 1; i >= 0 && i < stringLength; i--)
+		{
+			buff[i] = 0;
+		}
+	}
+
 protected:
+	static const int BUFFER_LENGTH = 1024;
 	FILE* pipe;
-	char buffer[1024];
+	char buffer[BUFFER_LENGTH];
 
 	static int __stdcall getData(void *param)
 	{
 		System* self = (System*)param;
-		while (!feof(self->pipe)) {
-			if (fgets(self->buffer, 1024, self->pipe) != NULL)//Think about increasing buffer size
-			{
-				// Remove a new line character at the end, if there is a new line present
-				int bufLength = strlen(self->buffer);
-				if (self->buffer[bufLength - 1] == 10)
-					self->buffer[bufLength - 1] = 0;
 
+		// Zero out the buffer
+		zeroBuffer(self->buffer);
+
+		while (true/*!feof(self->pipe)*/) 
+		{
+			// Get the next character!
+			int recievedChar = fgetc(self->pipe);
+
+			// If getting the last character set the EOF flag, break out of the loop immedietly
+			if (feof(self->pipe)) break;
+
+			// Make sure we are getting actual characters
+			if (recievedChar < 0) continue;
+
+			if (recievedChar != 10 && recievedChar != 13)
+			{
+				// The recieved character is not a new line character, and we have room for it. Add it to the buffer
+				self->buffer[strlen(self->buffer)] = static_cast<char>(recievedChar);
+			}
+			
+			if (recievedChar == 10 || recievedChar == 13 || strlen(self->buffer) >= BUFFER_LENGTH)
+			{
+				// Either we hit a new line, or the buffer is full. send back the data!
 				self->_OnDataDelegate.pushArgument(self->buffer);
 				self->_OnDataDelegate.invoke();
+
+				// Zero out the buffer to prepare for the next packet of data
+				zeroBuffer(self->buffer);
 			}
 		}
         
+		// The Loop finished, which means we hit an EOF (The pipe is finished giving back data) close it!
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 		_pclose(self->pipe);
 #elif LOOM_PLATFORM == LOOM_PLATFORM_OSX
@@ -41,6 +74,7 @@ protected:
 	}
 
 public:
+
 	LOOM_DELEGATE(OnData);
 	LOOM_DELEGATE(OnFinish);
 
