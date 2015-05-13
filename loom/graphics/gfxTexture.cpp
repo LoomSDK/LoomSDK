@@ -385,14 +385,14 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     {
         Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo.framebuffer);
         Graphics::context()->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tinfo.handle, 0);
-
+        
 		GFX_FRAMEBUFFER_CHECK(tinfo.framebuffer);
-
-        Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        
+        Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, Graphics::getBackFramebuffer());
     }
-
+    
     validate(id);
-
+    
     if (tinfo.reload)
     {
         // Fire the delegate.
@@ -894,15 +894,26 @@ void Texture::validate(TextureID id)
     loom_mutex_lock(Texture::sTexInfoLock);
     TextureInfo *tinfo = Texture::getTextureInfo(id);
     if (tinfo->renderTarget && tinfo->renderbuffer == -1 && Graphics::getStencilRequired()) {
+        int prevFramebuffer;
+        int prevRenderbuffer;
+        Graphics::context()->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFramebuffer);
+        Graphics::context()->glGetIntegerv(GL_RENDERBUFFER_BINDING, &prevRenderbuffer);
+        
         Graphics::context()->glGenRenderbuffers(1, &tinfo->renderbuffer);
         Graphics::context()->glBindRenderbuffer(GL_RENDERBUFFER, tinfo->renderbuffer);
+#if LOOM_RENDERER_OPENGLES2
+        Graphics::context()->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, tinfo->width, tinfo->height);
+#else
         Graphics::context()->glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, tinfo->width, tinfo->height);
-        Graphics::context()->glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
+#endif
+        lmAssert(tinfo->renderbuffer > 0, "Invalid renderbuffer");
+        lmAssert(tinfo->framebuffer > 0, "Invalid framebuffer");
         Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo->framebuffer);
         Graphics::context()->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, tinfo->renderbuffer);
         Graphics::context()->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, tinfo->renderbuffer);
-        Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        GFX_FRAMEBUFFER_CHECK(tinfo->framebuffer);
+        Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, prevFramebuffer);
+        Graphics::context()->glBindRenderbuffer(GL_RENDERBUFFER, prevRenderbuffer);
     }
     loom_mutex_unlock(Texture::sTexInfoLock);
 }
@@ -947,7 +958,7 @@ void Texture::setRenderTarget(TextureID id)
 		Graphics::setFlags(previousRenderFlags);
 
 		// Reset to screen framebuffer
-		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, Graphics::getBackFramebuffer());
 
 		currentRenderTexture = -1;
 		previousRenderFlags = -1;
