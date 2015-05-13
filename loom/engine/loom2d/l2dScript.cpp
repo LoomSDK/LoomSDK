@@ -283,6 +283,7 @@ static int registerLoom2D(lua_State *L)
 
     // Graphics
        .beginClass<GFX::VectorGraphics>("Graphics")
+       .addConstructor<void(*)(void)>()
        .addMethod("clear", &GFX::VectorGraphics::clear)
        .addMethod("lineStyle", &GFX::VectorGraphics::lineStyle)
        .addMethod("textFormat", &GFX::VectorGraphics::textFormat)
