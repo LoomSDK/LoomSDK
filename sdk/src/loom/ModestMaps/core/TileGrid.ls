@@ -111,7 +111,7 @@ package loom.modestmaps.core
         // public var debugField:DebugField;
         
         // what zoom level of tiles is 'correct'?
-        protected var _currentTileZoom:int; 
+        protected var currentTileZoom:int; 
         // so we know if we're going in or out
         protected var previousTileZoom:int;     
         
@@ -208,6 +208,10 @@ package loom.modestmaps.core
         {
             if (draggable) {
                 addEventListener(TouchEvent.TOUCH, touchEventProcess);
+
+                doubleTouchInput = new TwoInputTouch(stage);
+                doubleTouchInput.OnDoubleTouchEvent += onDoubleTouch;
+                doubleTouchInput.OnDoubleTouchEndEvent += onDoubleTouchEnd;
             }
             
             onRender += _onRender;
@@ -219,16 +223,18 @@ package loom.modestmaps.core
             dirty = true;
             // force an on-render in case we were added in a render handler
             _onRender();
-                        
-            doubleTouchInput = new TwoInputTouch(stage);
-            doubleTouchInput.OnDoubleTouchEvent += onDoubleTouch;
-            doubleTouchInput.OnDoubleTouchEndEvent += onDoubleTouchEnd;
         }
         
         private function onRemovedFromStage(event:Event):void
         {
             if (hasEventListener(TouchEvent.TOUCH)) {
                 removeEventListener(TouchEvent.TOUCH, touchEventProcess);
+            }
+            if(doubleTouchInput)
+            {
+                doubleTouchInput.OnDoubleTouchEvent -= onDoubleTouch;
+                doubleTouchInput.OnDoubleTouchEndEvent -= onDoubleTouchEnd;
+                doubleTouchInput = null;
             }
             onRender -= _onRender;
 
@@ -275,15 +281,16 @@ package loom.modestmaps.core
         
         protected function onPanned():void
         {
-            var pt:Point = coordinatePoint(startPan);
-            dispatchEvent(new MapEvent(MapEvent.PANNED, [pt.subtract(new Point(mapWidth/2, mapHeight/2))]));            
+            calcCoordinatePoint(startPan);
+            dispatchEvent(new MapEvent(MapEvent.PANNED, [CoordinatePoint.x - mapWidth/2, CoordinatePoint.y - mapHeight/2]));
         }
         
         protected function onZoomed():void
         {
-            var zoomEvent:MapEvent = new MapEvent(MapEvent.ZOOMED_BY, [zoomLevel-startZoom]);
+            var zl = zoomLevel;
+            var zoomEvent:MapEvent = new MapEvent(MapEvent.ZOOMED_BY, [zl-startZoom]);
             // this might also be useful
-            zoomEvent.zoomLevel = zoomLevel;
+            zoomEvent.zoomLevel = zl;
             dispatchEvent(zoomEvent);           
         }
         
@@ -354,7 +361,7 @@ package loom.modestmaps.core
             }
             
             // this is the level of tiles we'll be loading:
-            _currentTileZoom = newZoom;
+            currentTileZoom = newZoom;
         
             // find start and end columns for the visible tiles, at current tile zoom
             // we project all four corners to take account of potential rotation in worldMatrix
@@ -445,7 +452,7 @@ package loom.modestmaps.core
          */
 //PERF_24: repopulateVisibleTiles is CPU intensive... need to look at and optimize
         private function repopulateVisibleTiles(minCol:int, maxCol:int, minRow:int, maxRow:int):void
-        {
+        {            
             visibleTiles = []; 
             
             blankCount = 0; // keep count of how many tiles we missed?
@@ -509,8 +516,8 @@ package loom.modestmaps.core
                                     }
                                     if (!foundParent && (currentTileZoom - 1 < MaxParentLoad)) {
                                         //trace("requesting parent tile at zoom", pzoom);
-                                        var firstParentCoord:Vector.<int> = parentCoord(col, row, currentTileZoom, currentTileZoom-1);
-                                        visibleTiles.push(requestLoad(firstParentCoord[0], firstParentCoord[1], currentTileZoom-1));
+                                        parentCoord(col, row, currentTileZoom, currentTileZoom-1);
+                                        visibleTiles.push(requestLoad(ParentCoordCol, ParentCoordRow, currentTileZoom-1));
                                     }                                   
                                 }
                             }
@@ -524,13 +531,13 @@ package loom.modestmaps.core
                             // if it doesn't have an image yet, see if we can make it from smaller images
                             if (!foundParent && MaxChildSearch > 0 && currentTileZoom < maxZoom) {
                                 for (var czoom:int = currentTileZoom+1; czoom <= Math.min(maxZoom, currentTileZoom+MaxChildSearch); czoom++) {
-                                    var ckeys:Vector.<String> = childKeys(col, row, currentTileZoom, czoom);
-                                    for each (var ckey:String in ckeys) {
+                                    childKeys(col, row, currentTileZoom, czoom);
+                                    for each (var ckey:String in ChildKeysVec) {
                                         if (ensureVisible(ckey)) {
                                             foundChildren++;
                                         }
-                                    } // ckeys
-                                    if (foundChildren == ckeys.length) {
+                                    } // ChildKeysVec
+                                    if (foundChildren == ChildKeysVec.length) {
                                         break;
                                     } 
                                 } // czoom
@@ -561,8 +568,8 @@ package loom.modestmaps.core
                                     }
                                     if (currentTileZoom - pzoom < MaxParentLoad) {
                                         //trace("requesting parent tile at zoom", pzoom);
-                                        var pcoord:Vector.<int> = parentCoord(col, row, currentTileZoom, pzoom);
-                                        visibleTiles.push(requestLoad(pcoord[0], pcoord[1], pzoom));
+                                        parentCoord(col, row, currentTileZoom, pzoom);
+                                        visibleTiles.push(requestLoad(ParentCoordCol, ParentCoordRow, pzoom));
                                     }
                                 }
                                 else {
@@ -612,15 +619,17 @@ package loom.modestmaps.core
             // this means current is on top, +1 and -1 are next, then +2 and -2, etc.
             visibleTiles.sort(distanceFromCurrentZoomCompare);
                 
-            // scales to compensate for zoom differences between current grid zoom level                
-            var tileScales:Vector.<Number> = new Vector.<Number>(maxZoom + 1);          
+            // scales to compensate for zoom differences between current grid zoom level                            
+            var zl:Number = zoomLevel;
+            var invTileWidth:Number = 1.0 / tileWidth;
             for (var z:int = 0; z <= maxZoom; z++) {
+                var tileScale = Math.pow(2, zl-z);
                 // round up to the nearest pixel to avoid seams between zoom levels
                 if (RoundScalesEnabled) {
-                    tileScales[z] = Math.ceil(Math.pow(2, zoomLevel-z) * tileWidth) / tileWidth; 
+                    _tileScales[z] = Math.ceil(tileScale * tileWidth) * invTileWidth; 
                 }
                 else {
-                    tileScales[z] = Math.pow(2, zoomLevel-z);
+                    _tileScales[z] = tileScale;
                 }
             }
             
@@ -631,18 +640,16 @@ package loom.modestmaps.core
             // apply the sorted depths, position all the tiles and also keep recentlySeen updated:
             for each (var tile:Tile in visibleTiles) {
             
-                // if we set them all to numChildren-1, descending, they should end up correctly sorted
-//PERF_24: This is slow because it does Vector splicing likely!!! why do this!??!! depth sorting??? needed every frame??>
-//TODO_AHMED: The next line will crash the program if children are repeatedly pruned from the well using intersection tests, null checks don't fix this! INVESTIGATE
-                well.setChildIndex(tile, well.numChildren-1);
+                // if we set them all to the last child, descending, they should end up correctly sorted
+                well.moveChildLast(tile);
 
-                tile.scaleX = tile.scaleY = tileScales[tile.zoom];
+                tile.scaleX = tile.scaleY = _tileScales[tile.zoom];
 
                 // rounding can also helps the rare seams not fixed by rounding the tile scale, 
                 // but makes slow zooming uglier: 
-                var pt:Point = coordinatePoint(new Coordinate(tile.row, tile.column, tile.zoom), null, (!zooming && RoundPositionsEnabled));
-                tile.x = pt.x;
-                tile.y = pt.y;
+                calcCoordinatePointRCZ(tile.row, tile.column, tile.zoom, null, (!zooming && RoundPositionsEnabled));
+                tile.x = CoordinatePoint.x;
+                tile.y = CoordinatePoint.y;
                 
                 tile.rotation = tileAngleDegrees;               
             }
@@ -727,34 +734,54 @@ package loom.modestmaps.core
         // TODO: check that this does the right thing with negative row/col?
         private function parentKey(col:int, row:int, zoom:int, parentZoom:int):String
         {
-            var scaleFactor:Number = Math.pow(2.0, zoom-parentZoom);
-            var pcol:int = Math.floor(Number(col) / scaleFactor); 
-            var prow:int = Math.floor(Number(row) / scaleFactor);
+            //NOTE_TEC: zoomDiff should always be +ve
+            var zoomDiff:int = zoom - parentZoom;
+            if(zoomDiff <= 0)
+            {
+                return tileKey(col, row, zoom);
+            }
+            var invScaleFactor:Number = 1.0 / (1 << zoomDiff);
+            var pcol:int = Math.floor(Number(col) * invScaleFactor); 
+            var prow:int = Math.floor(Number(row) * invScaleFactor);
             return tileKey(pcol,prow,parentZoom);           
         }
 
         // used when MaxParentLoad is > 0
         // TODO: check that this does the right thing with negative row/col?
-        private function parentCoord(col:int, row:int, zoom:int, parentZoom:int):Vector.<int>
+        private var ParentCoordCol:int;
+        private var ParentCoordRow:int;
+        //NOTE_TEC: Removed Vector<> creation for return to save garbage generation
+        private function parentCoord(col:int, row:int, zoom:int, parentZoom:int):void
         {
-            var scaleFactor:Number = Math.pow(2.0, zoom-parentZoom);
-            var pcol:int = Math.floor(Number(col) / scaleFactor); 
-            var prow:int = Math.floor(Number(row) / scaleFactor);
-            return [ pcol, prow ];          
+            //NOTE_TEC: zoomDiff should always be +ve
+            var zoomDiff:int = zoom - parentZoom;
+            if(zoomDiff <= 0)
+            {
+                ParentCoordCol = col;
+                ParentCoordRow = row;
+            }
+            var invScaleFactor:Number = 1.0 / (1 << zoomDiff);
+            var pcol:int = Math.floor(Number(col) * invScaleFactor); 
+            var prow:int = Math.floor(Number(row) * invScaleFactor);
+            ParentCoordCol = pcol;
+            ParentCoordRow = prow;
         }       
         
         // TODO: check that this does the right thing with negative row/col?
-        private function childKeys(col:int, row:int, zoom:int, childZoom:int):Vector.<String>
+        //NOTE_TEC: Removed Vector<> creation for return to save garbage generation
+        private var ChildKeysVec:Vector.<String> = new Vector.<String>();
+        private function childKeys(col:int, row:int, zoom:int, childZoom:int):void
         {
-            var scaleFactor:Number = Math.pow(2, zoom-childZoom); // one zoom in = 0.5
+            ChildKeysVec.clear();
+            var invScaleFactor:Number = 1.0 / Math.pow(2, zoom-childZoom); // one zoom in = 0.5
             var rowColSpan:int = Math.pow(2, childZoom - zoom); // one zoom in = 2, two = 4
-            var keys:Vector.<String> = [];
-            for (var ccol:int = col/scaleFactor; ccol < (col/scaleFactor)+rowColSpan; ccol++) {
-                for (var crow:int = row/scaleFactor; crow < (row/scaleFactor)+rowColSpan; crow++) {
-                    keys.push(tileKey(ccol, crow, childZoom));
+            var colScale:int = col*invScaleFactor;
+            var rowScale:int = row*invScaleFactor;
+            for (var ccol:int = colScale; ccol < colScale+rowColSpan; ccol++) {
+                for (var crow:int = rowScale; crow < rowScale+rowColSpan; crow++) {
+                    ChildKeysVec.push(tileKey(ccol, crow, childZoom));
                 }
             }
-            return keys;
         }
                 
         var doubleTouchActive = false;  // If we're doing a double touch we don't want the map to pan twice
@@ -856,11 +883,12 @@ package loom.modestmaps.core
         /** zoom in or out by zoomDelta, keeping the requested point in the same place */
         public function zoomByAbout(zoomDelta:Number, targetPoint:Point, duration:Number=-1):void
         {
-            if (zoomLevel + zoomDelta < minZoom) {
-                zoomDelta = minZoom - zoomLevel;                
+            var zl:Number = zoomLevel;
+            if (zl + zoomDelta < minZoom) {
+                zoomDelta = minZoom - zl;                
             }
-            else if (zoomLevel + zoomDelta > maxZoom) {
-                zoomDelta = maxZoom - zoomLevel; 
+            else if (zl + zoomDelta > maxZoom) {
+                zoomDelta = maxZoom - zl; 
             } 
             
             var sc:Number = Math.pow(2, zoomDelta);
@@ -916,11 +944,6 @@ package loom.modestmaps.core
             return _tileHeight;
         }
 
-        /** read-only, this is the level of tiles we'll be loading first */
-        public function get currentTileZoom():Number
-        {
-            return _currentTileZoom;
-        }
 
 
         public function get topLeftCoordinate():Coordinate
@@ -969,12 +992,18 @@ package loom.modestmaps.core
             return _centerCoordinate;           
         }
         
-        public function coordinatePoint(coord:Coordinate, context:DisplayObject=null, shouldRound:Boolean=false):Point
+        //NOTE_TEC: Removed Point usage here as it was generating too much garbage as Points are structs in Loom
+        public var CoordinatePoint:Point;
+        public function calcCoordinatePoint(coord:Coordinate, context:DisplayObject=null, shouldRound:Boolean=false):void
         {
+            calcCoordinatePointRCZ(coord.row, coord.column, coord.zoom, context, shouldRound);
+        }
+        public function calcCoordinatePointRCZ(row:Number, col:Number, zoom:Number, context:DisplayObject=null, shouldRound:Boolean=false):void
+        {            
             // this is basically the same as coord.zoomTo, but doesn't make a new Coordinate:
-            var zoomFactor:Number = Math.pow(2, zoomLevel - coord.zoom) * tileWidth/scale;
-            var zoomedColumn:Number = coord.column * zoomFactor;
-            var zoomedRow:Number = coord.row * zoomFactor;
+            var zoomFactor:Number = Math.pow(2, zoomLevel - zoom) * tileWidth/scale;
+            var zoomedColumn:Number = col * zoomFactor;
+            var zoomedRow:Number = row * zoomFactor;
             //NOTE_TEC: This was brought in from the JS version of MMaps as it wasn't present in the AS3 port... 
             //          but it breaks things as the column/row values actually need to be fractional in 
             //          the AS3 version with quite large mantissa values!!!
@@ -985,22 +1014,20 @@ package loom.modestmaps.core
             //    zoomedRow = Math.round(zoomedRow);
             //}
                         
-            var screenPoint:Point = worldMatrix.transformCoord(zoomedColumn, zoomedRow);
+            CoordinatePoint = worldMatrix.transformCoord(zoomedColumn, zoomedRow);
 
             //NOTE_TEC: Added this to help a bit with zooming when zoomFactor hits <=0.001953125
             if(shouldRound)
             {
-                screenPoint.x = Math.round(screenPoint.x);
-                screenPoint.y = Math.round(screenPoint.y);
+                CoordinatePoint.x = Math.round(CoordinatePoint.x);
+                CoordinatePoint.y = Math.round(CoordinatePoint.y);
             }
 
             if (context && context != this)
             {
-                screenPoint = this.parent.localToGlobal(screenPoint);
-                screenPoint = context.globalToLocal(screenPoint);
+                CoordinatePoint = this.parent.localToGlobal(CoordinatePoint);
+                CoordinatePoint = context.globalToLocal(CoordinatePoint);
             }
-
-            return screenPoint; 
         }
         
         public function pointCoordinate(point:Point, context:DisplayObject=null):Coordinate
@@ -1085,9 +1112,10 @@ package loom.modestmaps.core
             dirty = true;
         }
 
+        private var InvLN2:Number = 1.0 / Math.LN2;
         public function get zoomLevel():Number
         {
-            return Math.log(scale) / Math.LN2;
+            return Math.log(scale) * InvLN2;
         }
 
         public function set zoomLevel(n:Number):void
@@ -1188,6 +1216,7 @@ package loom.modestmaps.core
             dirty = true;
         }
 
+        private var _tileScales:Vector.<Number> = [];
         protected function calculateBounds():void
         {
             var tl:Coordinate = limits[0] as Coordinate;
@@ -1196,6 +1225,9 @@ package loom.modestmaps.core
             _maxZoom = Math.max(tl.zoom, br.zoom);  
             _minZoom = Math.min(tl.zoom, br.zoom);
             
+            //pre-create this work vector whenever _maxZoom changes
+            _tileScales = new Vector.<Number>(_maxZoom + 1);          
+
             tl = tl.zoomTo(0);
             br = br.zoomTo(0);
             
@@ -1215,7 +1247,7 @@ package loom.modestmaps.core
             // first check that we're not zoomed in too close...
             
             var matrixScale:Number = Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b);
-            var matrixZoomLevel:Number = Math.log(matrixScale) / Math.LN2;          
+            var matrixZoomLevel:Number = Math.log(matrixScale) * InvLN2;
 
             if (matrixZoomLevel < minZoom || matrixZoomLevel > maxZoom) {
                 var oldScale:Number = matrixScale; 

@@ -235,6 +235,22 @@ package loom2d.display
             mChildren.splice(oldIndex, 1);
             mChildren.splice(index, 0, child);
         }
+
+        /** Moves a child to be the last object in the container. */
+        public function moveChildLast(child:DisplayObject):void
+        {
+            var oldIndex:int = getChildIndex(child);
+            if (oldIndex == -1)
+            {
+                throw new ArgumentError("Not a child of this container");
+                return;
+            }
+
+            //remove the child and push it to the back of the container
+            child = mChildren[oldIndex];                                        
+            mChildren.remove(child);
+            mChildren.pushSingle(child);
+        }
         
         /** Swaps the indexes of two children. */
         public function swapChildren(child1:DisplayObject, child2:DisplayObject):void

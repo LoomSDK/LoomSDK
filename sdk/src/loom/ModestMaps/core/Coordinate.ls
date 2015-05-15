@@ -14,7 +14,7 @@ package loom.modestmaps.core
         {
             this.row = row;
             this.column = column;
-            this.zoom = zoom;
+            this.zoom = zoom;            
         }
         
         public function toString():String
@@ -37,16 +37,14 @@ package loom.modestmaps.core
         
         public function zoomTo(destination:Number):Coordinate
         {
-            return new Coordinate(row * Math.pow(2, destination - zoom),
-                                  column * Math.pow(2, destination - zoom),
-                                  destination);
+            var zoomPow:Number = Math.pow(2, destination - zoom);
+            return new Coordinate(row * zoomPow, column * zoomPow, destination);
         }
         
         public function zoomBy(distance:Number):Coordinate
         {
-            return new Coordinate(row * Math.pow(2, distance),
-                                  column * Math.pow(2, distance),
-                                  zoom + distance);
+            var zoomPow:Number = Math.pow(2, distance);
+            return new Coordinate(row * zoomPow, column * zoomPow, zoom + distance);
         }
         
         public function isRowEdge():Boolean

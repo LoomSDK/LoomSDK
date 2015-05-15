@@ -306,9 +306,9 @@ package loom.modestmaps.overlays
                 // this method previously used the location of the marker
                 // but map.locationPoint hands off to grid to grid.coordinatePoint
                 // in the end so we may as well cache the first step
-                var point:Point = map.grid.coordinatePoint(coordinates[marker], this);
-                marker.x = snapToPixels ? Math.round(point.x) : point.x;
-                marker.y = snapToPixels ? Math.round(point.y) : point.y;
+                map.grid.calcCoordinatePoint(coordinates[marker], this);
+                marker.x = snapToPixels ? Math.round(map.grid.CoordinatePoint.x) : map.grid.CoordinatePoint.x;
+                marker.y = snapToPixels ? Math.round(map.grid.CoordinatePoint.y) : map.grid.CoordinatePoint.y;
 
                 var w:Number = map.getWidth() * 2;
                 var h:Number = map.getHeight() * 2;
@@ -343,8 +343,8 @@ package loom.modestmaps.overlays
         protected function onMapPanned(event:MapEvent):void
         {
             if (drawCoord) {
-                var p:Point = map.grid.coordinatePoint(drawCoord);
-                setPos(p.x, p.y);
+                map.grid.calcCoordinatePoint(drawCoord);
+                setPos(map.grid.CoordinatePoint.x, map.grid.CoordinatePoint.y);
             }
             else {
                 dirty = true;

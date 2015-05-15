@@ -85,7 +85,7 @@ package loom.modestmaps.mapproviders.microsoft
         
         public function getTileUrls(coord:Coordinate):Vector.<String>
         {
-            if (coord.row < 0 || coord.row >= Math.pow(2, coord.zoom)) {
+            if (coord.row < 0 || coord.row >= (1 << coord.zoom)) {
                 return null;
             }
             // this is so that requests will be consistent in this session, rather than totally random

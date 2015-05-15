@@ -212,9 +212,6 @@ package loom.modestmaps.core.painter
                     {
                         loaderTiles[texture].pushSingle(tile);
                     }
-
-//TODO_24: we're unable to click on empty BG of the painter where there are no Images... 
-//should we always have an Image(null) on a tile by default?
                 }
             }
             else if (urls && urls.length == 0) {
@@ -233,8 +230,7 @@ package loom.modestmaps.core.painter
                 // prune queue for tiles that aren't visible
                 var removedTiles:Vector.<Tile> = tileQueue.retainAll(tileGrid.getVisibleTiles());
                 
-//TODO_24: removedTiles is always empty, so we are never doing early removals of tiles 
-//that may have been queued up for URL requests but should be removed early due to no longer being visible                
+                //NOTE_TEC: removedTiles is always empty... being cleaned up earlier? Bug or just dumb code?
                 // keep layersNeeded tidy:
                 for each (var removedTile:Tile in removedTiles) {
                     this.cancelPainting(removedTile);

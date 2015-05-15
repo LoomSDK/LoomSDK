@@ -56,8 +56,9 @@ package loom.modestmaps.events
             
             switch(type) {
                 case PANNED:
-                    if (rest.length > 0 && rest[0] is Point) {
-                        panDelta = rest[0] as Point;
+                    if (rest.length == 2 && rest[0] is Number && rest[1] is Number) {
+                        panDelta.x = rest[0] as Number;
+                        panDelta.y = rest[1] as Number;
                     }
                     break;
                 case ZOOMED_BY:

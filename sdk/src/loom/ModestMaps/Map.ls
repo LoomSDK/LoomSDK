@@ -448,10 +448,10 @@ package loom.modestmaps
         *
         * @return   Matching point.
         */
-        public function locationPoint(location:Location, context:DisplayObject=null):Point
+        public function calcLocationPoint(location:Location, context:DisplayObject=null):void
         {
             var coord:Coordinate = mapProvider.locationCoordinate(location);
-            return grid.coordinatePoint(coord, context);
+            grid.calcCoordinatePoint(coord, context);
         }
         
        /**
@@ -555,14 +555,14 @@ package loom.modestmaps
         /** zoom in or out by sc, moving the given location to the requested target */ 
         public function panAndZoomBy(sc:Number, location:Location, targetPoint:Point, duration:Number=-1):void
         {
-            var p:Point = locationPoint(location);
+            calcLocationPoint(location);
             
             grid.prepareForZooming();
             grid.prepareForPanning();
             
             var m:Matrix = grid.getMatrix();
             
-            m.translate(-p.x, -p.y);
+            m.translate(-grid.CoordinatePoint.x, -grid.CoordinatePoint.y);
             m.scale(sc, sc);
             m.translate(targetPoint.x, targetPoint.y);
             

@@ -116,7 +116,7 @@ package loom.modestmaps
         {
             if (duration < 0) duration = panAndZoomDuration;
             
-            var p:Point = locationPoint(location);
+            calcLocationPoint(location);
             
             var constrainedDelta:Number = Math.log(sc) / Math.LN2;
 
@@ -134,7 +134,7 @@ package loom.modestmaps
             
             var m:Matrix = grid.getMatrix();
             
-            m.translate(-p.x, -p.y);
+            m.translate(-grid.CoordinatePoint.x, -grid.CoordinatePoint.y);
             m.scale(sc, sc);
             m.translate(targetPoint.x, targetPoint.y);
             
@@ -178,11 +178,11 @@ package loom.modestmaps
 
             var sc:Number = Math.pow(2, coord.zoom-grid.zoomLevel);
             
-            var p:Point = grid.coordinatePoint(coord, grid);
+            grid.calcCoordinatePoint(coord, grid);
             
             var m:Matrix = grid.getMatrix();
             
-            m.translate(-p.x, -p.y);
+            m.translate(-grid.CoordinatePoint.x, -grid.CoordinatePoint.y);
             m.scale(sc, sc);
             m.translate(mapWidth/2, mapHeight/2);
             
@@ -202,15 +202,16 @@ package loom.modestmaps
          */
         public function panTo(location:Location, forceAnimate:Boolean=false):void
         {
-            var p:Point = locationPoint(location, grid);
+            calcLocationPoint(location, grid);
+            var px = grid.CoordinatePoint.x;
+            var py = grid.CoordinatePoint.y;
 
-            if (forceAnimate || (p.x >= 0 && p.x <= mapWidth && p.y >= 0 && p.y <= mapHeight))
+            if (forceAnimate || (px >= 0 && px <= mapWidth && py >= 0 && py <= mapHeight))
             {
-                var centerPoint:Point = new Point(mapWidth / 2, mapHeight / 2);
-                var pan:Point = centerPoint.subtract(p);
-
-                Loom2D.juggler.tween(grid, panDuration, {"ty": grid.ty + pan.y,
-                                                         "tx": grid.tx + pan.x,
+                var panX:Number = (mapWidth / 2) - px;
+                var panY:Number = (mapHeight / 2) - py;
+                Loom2D.juggler.tween(grid, panDuration, {"ty": grid.ty + panY,
+                                                         "tx": grid.tx + panX,
                                                          "transitionFunc": panEase,
                                                          "onStart": grid.prepareForPanning,
                                                          "onComplete": grid.donePanning});
@@ -230,9 +231,11 @@ package loom.modestmaps
          */
         public function tweenTo(location:Location, duration:Number, easing:Function=null):void
         {
-            var pan:Point = new Point(mapWidth/2, mapHeight/2).subtract(locationPoint(location,grid));
-            Loom2D.juggler.tween(grid, duration, { "ty": grid.ty + pan.y,
-                                                   "tx": grid.tx + pan.x,
+            calcLocationPoint(location, grid);
+            var panX:Number = (mapWidth / 2) - grid.CoordinatePoint.x;
+            var panY:Number = (mapHeight / 2) - grid.CoordinatePoint.y;
+            Loom2D.juggler.tween(grid, duration, { "ty": grid.ty + panY,
+                                                   "tx": grid.tx + panX,
                                                    "transitionFunc": easing,
                                                    "onStart": grid.prepareForPanning,
                                                    "onComplete": grid.donePanning });
