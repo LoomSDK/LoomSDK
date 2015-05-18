@@ -506,11 +506,11 @@ static S32 rootDataCompare(const void *s1, const void *s2)
 
 static int suppressedEntries;
 
-static void LoomProfilerEntryDumpRecurse(LoomProfilerEntry *data, char *buffer, U32 bufferLen, F64 totalTime)
+static void LoomProfilerEntryDumpRecurse(LoomProfilerEntry *data, char *buffer, U32 bufferLen, F64 totalTime, float threshold)
 {
     float tm = (float)(data->mRoot == NULL ? 100.0 : 100.0 * data->mTotalTime / totalTime);
 
-    if (tm < 0.1f)
+    if (tm < threshold)
     {
         suppressedEntries++;
     }
@@ -555,7 +555,7 @@ static void LoomProfilerEntryDumpRecurse(LoomProfilerEntry *data, char *buffer, 
     {
         if (list->mInvokeCount)
         {
-            LoomProfilerEntryDumpRecurse(list, buffer, bufferLen + 2, totalTime);
+            LoomProfilerEntryDumpRecurse(list, buffer, bufferLen + 2, totalTime, threshold);
         }
         list = list->mNextSibling;
     }
@@ -594,10 +594,12 @@ void LoomProfiler::dump()
 
     suppressedEntries = 0;
 
+    float threshold = 0.1f;
+
     for (U32 i = 0; i < rootVector.size(); i++)
     {
         float tm = (float)(100.0 * (rootVector[i]->mTotalTime - rootVector[i]->mSubTime) / totalTime);
-        if (tm >= 0.1f)
+        if (tm >= threshold)
         {
             lmLogError(gProfilerLogGroup, "%7.3f %7.3f %8d %s",
                        100.0 * (rootVector[i]->mTotalTime - rootVector[i]->mSubTime) / totalTime,
@@ -614,7 +616,7 @@ void LoomProfiler::dump()
         rootVector[i]->mTotalTime        = 0;
         rootVector[i]->mSubTime          = 0;
     }
-    lmLogError(gProfilerLogGroup, "Suppressed %i items with < 0.1%% of measured time.", suppressedEntries);
+    lmLogError(gProfilerLogGroup, "Suppressed %i items with < %.1f%% of measured time.", suppressedEntries, threshold);
     lmLogError(gProfilerLogGroup, "");
     lmLogError(gProfilerLogGroup, "Ordered by stack trace total time -");
     lmLogError(gProfilerLogGroup, "%% Time  %% NSTime  Invoke #  Name");
@@ -624,8 +626,8 @@ void LoomProfiler::dump()
     char depthBuffer[MaxStackDepth * 2 + 1];
     depthBuffer[0]    = 0;
     suppressedEntries = 0;
-    LoomProfilerEntryDumpRecurse(mCurrentLoomProfilerEntry, depthBuffer, 0, totalTime);
-    lmLogError(gProfilerLogGroup, "Suppressed %i items with < 0.1%% of measured time.", suppressedEntries);
+    LoomProfilerEntryDumpRecurse(mCurrentLoomProfilerEntry, depthBuffer, 0, totalTime, threshold);
+    lmLogError(gProfilerLogGroup, "Suppressed %i items with < %.1f%% of measured time.", suppressedEntries, threshold);
 
     mEnabled = enableSave;
     mStackDepth--;

@@ -30,6 +30,8 @@
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxVectorRenderer.h"
 
+#include "loom/script/runtime/lsProfiler.h"
+
 #include "nanovg.h"
 
 #ifdef LOOM_RENDERER_OPENGLES2
@@ -100,6 +102,8 @@ void VectorRenderer::setSize(int width, int height) {
 
 void VectorRenderer::beginFrame()
 {
+    LOOM_PROFILE_SCOPE(vectorBegin);
+
     nvgBeginFrame(nvg, frameWidth, frameHeight, 1);
 
 
@@ -115,6 +119,8 @@ void VectorRenderer::beginFrame()
 }
 
 void VectorRenderer::preDraw(float a, float b, float c, float d, float e, float f) {
+	LOOM_PROFILE_SCOPE(vectorPreDraw);
+
 	nvgSave(nvg);
 	nvgTransform(nvg, a, b, c, d, e, f);
 	
@@ -123,6 +129,8 @@ void VectorRenderer::preDraw(float a, float b, float c, float d, float e, float 
 }
 
 void VectorRenderer::postDraw() {
+	LOOM_PROFILE_SCOPE(vectorPostDraw);
+
 	/*
 	nvgBeginPath(nvg);
 	nvgStrokeColor(nvg, nvgRGBAf(0, 1, 0, 1));
@@ -142,6 +150,7 @@ void VectorRenderer::postDraw() {
 
 void VectorRenderer::endFrame()
 {
+    LOOM_PROFILE_SCOPE(vectorEnd);
 
 	/*
 	nvgBeginPath(nvg);
@@ -354,6 +363,7 @@ void VectorRenderer::destroyGraphicsResources()
 
 void VectorRenderer::initializeGraphicsResources()
 {
+    LOOM_PROFILE_SCOPE(vectorInit);
     destroyGraphicsResources();
 
     int flags = 0;
@@ -484,6 +494,8 @@ float VectorSVG::getHeight() const {
 	return image == NULL ? 0.0f : image->height;
 }
 void VectorSVG::render(float x, float y, float scale, float lineThickness) {
+	LOOM_PROFILE_SCOPE(vectorRenderSVG);
+
 	if (image == NULL) return;
 	nvgSave(nvg);
 	nvgTranslate(nvg, x, y);
@@ -533,6 +545,7 @@ void VectorSVG::render(float x, float y, float scale, float lineThickness) {
 
 void VectorRenderer::reset()
 {
+	LOOM_PROFILE_SCOPE(vectorReset);
 	destroyGraphicsResources();
 	initializeGraphicsResources();
 }

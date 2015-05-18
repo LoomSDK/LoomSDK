@@ -31,6 +31,7 @@
 #include "loom/graphics/gfxMath.h"
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxQuadRenderer.h"
+#include "loom/script/runtime/lsProfiler.h"
 
 #include "stdio.h"
 
@@ -81,6 +82,8 @@ static loom_allocator_t *gQuadMemoryAllocator = NULL;
 
 void QuadRenderer::submit()
 {
+    LOOM_PROFILE_SCOPE(quadSubmit);
+
     if (quadCount <= 0)
     {
         return;
@@ -221,6 +224,8 @@ void QuadRenderer::submit()
 
 VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted, uint32_t srcBlend, uint32_t dstBlend)
 {
+    LOOM_PROFILE_SCOPE(quadGetVertices);
+
     if (!numVertices || (texture < 0) || (numVertices > MAXBATCHQUADS * 4))
     {
         return NULL;
@@ -286,6 +291,8 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
 
 void QuadRenderer::batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices, uint32_t srcBlend, uint32_t dstBlend)
 {
+    LOOM_PROFILE_SCOPE(quadBatch);
+
     VertexPosColorTex *verticePtr = getQuadVertices(texture, numVertices, true, srcBlend, dstBlend);
 
     if (!verticePtr)
@@ -297,6 +304,8 @@ void QuadRenderer::batch(TextureID texture, VertexPosColorTex *vertices, uint16_
 
 void QuadRenderer::beginFrame()
 {
+    LOOM_PROFILE_SCOPE(quadBegin);
+
     currentIndexBufferIdx  = 0;
     currentVertexBufferIdx = 0;
     vertexCount            = 0;
@@ -320,6 +329,7 @@ void QuadRenderer::beginFrame()
 
 void QuadRenderer::endFrame()
 {
+    LOOM_PROFILE_SCOPE(quadEnd);
     submit();
 }
 
@@ -340,6 +350,8 @@ void QuadRenderer::_initializeNextVertexBuffer()
 
 void QuadRenderer::initializeGraphicsResources()
 {
+    LOOM_PROFILE_SCOPE(quadInit);
+
     lmLogInfo(gGFXQuadRendererLogGroup, "Initializing Graphics Resources");
 
     // Create the quad shader.
@@ -471,6 +483,7 @@ void QuadRenderer::initializeGraphicsResources()
 
 void QuadRenderer::reset()
 {
+    LOOM_PROFILE_SCOPE(quadReset);
     destroyGraphicsResources();
     initializeGraphicsResources();
 }
