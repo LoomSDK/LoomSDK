@@ -29,7 +29,7 @@ namespace LS {
 PropertyInfo *PropertyInfoReader::deserializePropertyInfo(Type   *declaringType,
                                                           json_t *json)
 {
-    PropertyInfo *pi = new PropertyInfo();
+    PropertyInfo *pi = lmNew(NULL) PropertyInfo();
 
     MemberInfoReader::deserialize(pi, json);
 

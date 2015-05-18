@@ -26,12 +26,12 @@ PropertyInfo::~PropertyInfo()
 {
     if (getter && ownGetter)
     {
-        delete getter;
+        lmDelete(NULL, getter);
     }
 
     if (setter && ownSetter)
     {
-        delete setter;
+        lmDelete(NULL, setter);
     }
 }
 

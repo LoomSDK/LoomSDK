@@ -66,7 +66,7 @@ Assembly *Assembly::getAssembly(Type *type)
 
 Assembly *Assembly::create(LSLuaState *vm, const utString& name)
 {
-    Assembly *a = new Assembly();
+    Assembly *a = lmNew(NULL) Assembly();
 
     a->vm   = vm;
     a->name = name;
@@ -81,7 +81,7 @@ Assembly *Assembly::create(LSLuaState *vm, const utString& name)
     }
     else
     {
-        lookup = new utHashTable<utHashedString, Assembly *>();
+        lookup = lmNew(NULL) utHashTable<utHashedString, Assembly *>();
         assemblies.insert(vm, lookup);
     }
 
@@ -320,7 +320,7 @@ void Assembly::getLoadedAssemblies(LSLuaState *vm, utList<Assembly *>& oassembli
 }
 
 
-void Assembly::close()
+Assembly::~Assembly()
 {
     utArray<Type *> types;
     getTypes(types);
@@ -328,9 +328,34 @@ void Assembly::close()
     for (UTsize i = 0; i < types.size(); i++)
     {
         typeAssemblyLookup.remove(types.at(i));
-        lmFree(NULL,  types.at(i));
+        lmDelete(NULL, types.at(i));
     }
 
-    assemblies.remove(vm);
+    // Modules are needed to retrieve types so destroy them after
+    for (UTsize i = 0; i < modules.size(); i++)
+    {
+        lmDelete(NULL, modules.at(i));
+    }
+    modules.clear();
+
+    // Remove assembly from lookup
+    utHashTable<utHashedString, Assembly *> *lookup;
+    UTsize idx;
+    
+    idx = assemblies.find(vm);
+    lmAssert(idx != UT_NPOS, "VM not found in assemblies hash table");
+    lookup = assemblies.at(idx);
+    
+    lmAssert(lookup->find(name) != UT_NPOS, "Assembly not found in assembly lookup: %s", name.c_str());
+    lookup->remove(name);
+
+    // Destroy lookup if empty
+    if (lookup->size() == 0) {
+        assemblies.remove(vm);
+        lmDelete(NULL, lookup);
+    }
+
+    lmDelete(NULL, ordinalTypes);
+
 }
 }

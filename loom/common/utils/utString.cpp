@@ -50,10 +50,11 @@ static char* malloc_never_null(const size_t b) {
 
 static char *strdup_never_null(const char *s)
 {
-    const size_t len = strlen(s) + 1;
+    const size_t len = (s == NULL ? 0 : strlen(s)) + 1;
     char         *p  = malloc_never_null(len);
 
-    memcpy(p, s, len);
+    if (len > 1) memcpy(p, s, len);
+    p[len-1] = 0;
     return p;
 }
 

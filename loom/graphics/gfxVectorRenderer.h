@@ -126,9 +126,12 @@ protected:
 	utString* path;
 	utString units;
 	float dpi;
+
 	NSVGimage* image;
 
-	void reset(bool reloaded = false);
+	void reset();
+	void resetInfo();
+	void resetImage();
 	void parse(const char* input, const char* units, float dpi);
 public:
 	float getWidth() const;

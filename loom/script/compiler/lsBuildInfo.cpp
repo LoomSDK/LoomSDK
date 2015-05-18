@@ -91,7 +91,7 @@ void ModuleBuildInfo::loadSourceFile(const utString& filename, utString& code)
 
         code = buffer;
 
-        delete buffer;
+        delete[] buffer;
 
         fs.close();
     }

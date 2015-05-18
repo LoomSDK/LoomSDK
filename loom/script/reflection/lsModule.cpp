@@ -25,7 +25,7 @@
 namespace LS {
 Module *Module::create(Assembly *assembly, const utString& name)
 {
-    Module *m = new Module();
+    Module *m = lmNew(NULL) Module();
 
     m->name = name;
 
