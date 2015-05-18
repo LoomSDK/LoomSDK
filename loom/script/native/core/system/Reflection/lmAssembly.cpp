@@ -32,6 +32,7 @@ static int registerSystemReflectionAssembly(lua_State *L)
        .beginClass<Assembly>("Assembly")
 
        .addMethod("execute", &Assembly::execute)
+       .addLuaFunction("run", &Assembly::run)
        .addMethod("getName", &Assembly::getName)
        .addMethod("getTypeCount", &Assembly::getTypeCount)
        .addMethod("getTypeAtIndex", &Assembly::getTypeAtIndex)

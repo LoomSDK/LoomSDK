@@ -143,6 +143,7 @@ public:
     }
 
     void execute();
+    int run(lua_State* L);
 
     void connectToDebugger(const char *host, int port);
 

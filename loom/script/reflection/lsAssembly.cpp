@@ -269,6 +269,32 @@ void Assembly::execute()
     method->invoke(NULL, 0);
 }
 
+int Assembly::run(lua_State *L)
+{
+    //LSLuaState* rootVM = LSLuaState::getExecutingVM(L);
+    LSLuaState* rootVM = getLuaState();
+
+    // look for a class derived from LoomApplication in the main assembly
+
+    utArray<Type *> types;
+    getTypes(types);
+    for (UTsize i = 0; i < types.size(); i++)
+    {
+        Type *appType = types.at(i);
+        Type *base = appType->getBaseType();
+        if (base && base->getFullName() == "loom.Application")
+        {
+            int top = lua_gettop(rootVM->VM());
+            lsr_createinstance(rootVM->VM(), appType);
+            lualoom_getmember(rootVM->VM(), -1, "initialize");
+            lua_call(rootVM->VM(), 0, 0);
+            lua_settop(rootVM->VM(), top);
+        }
+    }
+    
+    return 0;
+}
+
 
 void Assembly::connectToDebugger(const char *host, int port)
 {

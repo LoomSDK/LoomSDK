@@ -38,6 +38,8 @@ native class Assembly {
      *  Will throw an error if the assembly does not have a main() function.
      */
     public native function execute();
+    
+    public native function run();
 
     /**
      *  Gets the name of the assembly.

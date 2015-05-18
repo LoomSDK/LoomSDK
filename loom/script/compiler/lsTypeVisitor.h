@@ -569,7 +569,7 @@ public:
             }
             else
             {
-                error("unable to resolve type for identifier %s", istring.c_str());
+                error("Unable to resolve type for identifier %s", istring.c_str());
                 return identifier;
             }
         }
@@ -637,7 +637,7 @@ public:
 
             if (!vd->type)
             {
-                error("unable to resolve variable declaration type");
+                error("Unable to resolve variable declaration type");
                 return vd;
             }
         }
@@ -986,7 +986,7 @@ public:
 
                        if (!right->type->castToType(vd->templateInfo->types[0]->type))
                         {
-                            error("unable to cast %s to %s for Dictionary index", right->type->getFullName().c_str(), vd->templateInfo->types[0]->type->getFullName().c_str());
+                            error("Unable to cast %s to %s for Dictionary index", right->type->getFullName().c_str(), vd->templateInfo->types[0]->type->getFullName().c_str());
                             return p;
                         }
  
