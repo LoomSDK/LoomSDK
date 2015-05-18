@@ -4,6 +4,7 @@ package
     import loom2d.display.Graphics;
     import loom2d.display.Quad;
     import loom2d.display.Shape;
+    import loom2d.display.Stage;
     import loom2d.display.StageScaleMode;
     import loom2d.display.Image;
     import loom2d.display.SVG;
@@ -277,13 +278,35 @@ package
             
             // Draw bounds of shapes in g to d
             b = sg.getBounds(sg); trace(b); d.lineStyle(1, 0x00FF00); d.drawRect(b.x-2, b.y-2, b.width+4, b.height+4);
+            
+            // Add touch listener
+            stage.addEventListener(TouchEvent.TOUCH, onTouch);
         }
         
+        /**
+         * Touch to cycle over different vector rendering qualities
+         */
         private function onTouch(e:TouchEvent):void 
         {
             var t:Touch = e.getTouch(stage, TouchPhase.BEGAN);
             if (!t) return;
-            g.lineTo(t.globalX, t.globalY);
+            switch (stage.vectorQuality) {
+                case Stage.VECTOR_QUALITY_ANTIALIAS | Stage.VECTOR_QUALITY_STENCIL_STROKES:
+                    stage.vectorQuality = Stage.VECTOR_QUALITY_ANTIALIAS;
+                    trace("Vector quality set to ANTIALIAS");
+                    break;
+                case Stage.VECTOR_QUALITY_ANTIALIAS:
+                    stage.vectorQuality = Stage.VECTOR_QUALITY_STENCIL_STROKES;
+                    trace("Vector quality set to STENCIL");
+                    break;
+                case Stage.VECTOR_QUALITY_STENCIL_STROKES:
+                    stage.vectorQuality = Stage.VECTOR_QUALITY_NONE;
+                    trace("Vector quality set to NONE");
+                    break;
+                default:
+                    stage.vectorQuality = Stage.VECTOR_QUALITY_ANTIALIAS | Stage.VECTOR_QUALITY_STENCIL_STROKES;
+                    trace("Vector quality set to ANTIALIAS and STENCIL");
+            }
         }
         
         private function hsvToRgb(h:Number, s:Number, v:Number):uint {

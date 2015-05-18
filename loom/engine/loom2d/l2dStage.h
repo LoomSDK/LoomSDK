@@ -21,6 +21,7 @@
 #pragma once
 
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
+#include "loom/graphics/gfxVectorRenderer.h"
 #include <SDL.h>
 
 namespace Loom2D
@@ -102,6 +103,19 @@ public:
         else
         {
             lmAssert(false, "Unknown orientation value: %s", orientation.c_str());
+        }
+    }
+
+    inline int getVectorQuality() const
+    {
+        return GFX::VectorRenderer::quality;
+    }
+    inline void setVectorQuality(int vectorQuality)
+    {
+        if (vectorQuality != GFX::VectorRenderer::quality)
+        {
+            GFX::VectorRenderer::quality = vectorQuality;
+            GFX::VectorRenderer::reset();
         }
     }
 

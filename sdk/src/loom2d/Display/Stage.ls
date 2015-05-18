@@ -76,6 +76,24 @@ package loom2d.display
     [Native(managed)]      
     public native class Stage extends DisplayObjectContainer
     {
+        /**
+         * `Stage.vectorQuality` constant representing no flags (0).
+         */
+        public static const VECTOR_QUALITY_NONE              = 0;
+        
+        /**
+         * `Stage.vectorQuality` constant defining the vector antialiasing status.
+         * 
+         * Vector antialiasing adjusts the geometry to include antialiasing.
+         */
+        public static const VECTOR_QUALITY_ANTIALIAS         = 1 << 0;
+        
+        /**
+         * Uses the stencil buffer to render strokes. This provides better quality rendering for overlapping strokes
+         * and overlapping shapes. If you aren't relying on specific overlapping behavior, you can omit this flag for better performance.
+         */
+        public static const VECTOR_QUALITY_STENCIL_STROKES   = 1 << 1;
+        
         private var mWidth:int;
         private var mHeight:int;
         private var mColor:uint;
@@ -262,6 +280,17 @@ package loom2d.display
          *  to the application viewport. */
         public function get stageHeight():int { return mHeight; }
         public function set stageHeight(value:int):void { mHeight = value; invalidateScale(); }
+        
+        /**
+         * The quality of vector rendering.
+         * 
+         * @see Stage.VECTOR_QUALITY_ANTIALIAS
+         * @see Stage.VECTOR_QUALITY_STENCIL
+         * @return Returns the bitfield of flags. Test with the & (bitwise AND) operator,
+         *         e.g. `if (Stage.vectorQuality & VECTOR_QUALITY_ANTIALIAS) { trace("Vector antialiasing enabled!"); }`
+         */
+        public native function get vectorQuality():int;
+        public native function set vectorQuality(flags:int):void;
         
         /** Height of the native display in pixels. */
         public native function get nativeStageHeight():int;

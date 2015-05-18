@@ -230,6 +230,8 @@ static int registerLoom2D(lua_State *L)
 
        .addProperty("orientation", &Stage::getOrientation, &Stage::setOrientation)
 
+       .addProperty("vectorQuality", &Stage::getVectorQuality, &Stage::setVectorQuality)
+
        .addVarAccessor("onTouchBegan", &Stage::getTouchBeganDelegate)
        .addVarAccessor("onTouchMoved", &Stage::getTouchMovedDelegate)
        .addVarAccessor("onTouchEnded", &Stage::getTouchEndedDelegate)
@@ -244,7 +246,7 @@ static int registerLoom2D(lua_State *L)
        .addVarAccessor("onOrientationChange", &Stage::getOrientationChangeDelegate)
        .addVarAccessor("onSizeChange", &Stage::getSizeChangeDelegate)
 
-        .addStaticProperty("onRenderStage", &Stage::getRenderStageDelegate)
+       .addStaticProperty("onRenderStage", &Stage::getRenderStageDelegate)
 
        .endClass()
 
