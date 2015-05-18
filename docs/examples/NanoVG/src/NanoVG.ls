@@ -41,6 +41,9 @@ package
             //stage.scaleMode = StageScaleMode.NONE;
             stage.color = 0xE1E1E1;
             
+            // This should crash with a nice explanation
+            //new Graphics();
+            
             // Background
             q = new Quad(460, 300, 0xF3F3F3); q.x = 10; q.y = 10; stage.addChild(q);
             
