@@ -134,6 +134,8 @@ void Graphics::initialize()
 
     VectorRenderer::initialize();
     
+    // Required on iOS (at least), because the back framebuffer might not be 0
+    // as it appears to be on other platforms
     Graphics::context()->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &sBackFramebuffer);
 
     sInitialized = true;
