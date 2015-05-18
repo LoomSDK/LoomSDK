@@ -265,7 +265,7 @@ package loom
         /**
          * Get the active instance of the stage.
          */
-        protected function get stage():Stage
+        public function get stage():Stage
         {
             return theStage;
         }
@@ -273,7 +273,7 @@ package loom
         /**
          * Get the active instance of the application.
          */
-        protected function get application():Application
+        public static function get application():Application
         {
             return theApplication;
         }
@@ -398,7 +398,7 @@ package loom
         private var theStage:Stage;
         private static var theApplication:Application;
 
-        private var touchProcessor:TouchProcessor;
+        public var touchProcessor:TouchProcessor;
         private static var initialTick:Boolean = true;    
 
         /**

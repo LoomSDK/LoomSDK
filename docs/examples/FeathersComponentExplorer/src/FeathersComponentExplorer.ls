@@ -3,6 +3,7 @@ package
     import loom.Application;
     import loom2d.display.TextFormat;
     import system.platform.Platform;
+    import unittest.TestRunner;
     
     import feathers.events.FeathersEventType;
     import feathers.motion.transitions.ScreenSlidingStackTransitionManager;
@@ -80,6 +81,10 @@ package
         {
             super();
             this.addEventListener(FeathersEventType.INITIALIZE, initializeHandler);
+            this.addEventListener(FeathersEventType.INITIALIZE, function() {
+               var test = new FeathersTest();
+               test.run();
+            });
         }
 
         private var _navigator:ScreenNavigator;

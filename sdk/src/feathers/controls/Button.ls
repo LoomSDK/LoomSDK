@@ -10,6 +10,7 @@ package feathers.controls
     import feathers.core.FeathersControl;
     import feathers.core.IFeathersControl;
     import feathers.core.IFocusDisplayObject;
+    import feathers.core.ILabel;
     import feathers.core.ITextRenderer;
     import feathers.core.IToggle;
     import feathers.events.FeathersEventType;
@@ -59,7 +60,7 @@ package feathers.controls
      *
      * @see http://wiki.starling-framework.org/feathers/button
      */
-    public class Button extends FeathersControl implements IToggle, IFocusDisplayObject
+    public class Button extends FeathersControl implements IToggle, ILabel, IFocusDisplayObject
     {
         /**
          * @private
@@ -1455,7 +1456,7 @@ package feathers.controls
             this._skinSelector.setValueForState(value, STATE_DISABLED, true);
             this.invalidate(INVALIDATION_FLAG_STYLES);
         }
-
+        
         /**
          * @private
          */
@@ -2851,6 +2852,9 @@ package feathers.controls
             }
 
             const touches:Vector.<Touch> = event.getTouches(this, null, HELPER_TOUCHES_VECTOR);
+            
+            trace("TOUCHING", touches);
+            
             if(touches.length == 0)
             {
                 //end of hover

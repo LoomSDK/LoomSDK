@@ -431,7 +431,9 @@ public native class Type extends MemberInfo {
      *  @return PropertyInfo that matches to the name, null if the PropertyInfo does not exist.
      */
     public native function getPropertyInfoByName(name:String):PropertyInfo;
-
+    
+    public native function isDerivedFrom(type:Type):Boolean;
+    
     /**
      *  Gets a list of all FieldInfo and PropertyInfo names on the Type.
      *
@@ -526,7 +528,7 @@ public native class Type extends MemberInfo {
             return true;
         return false;
     }
-
+    
     /**
      *  Gets a Type by its fully qualified name.
      *

@@ -125,6 +125,8 @@ static int registerSystemReflectionType(lua_State *L)
        .addMethod("getPropertyInfoByName", &Type::findPropertyInfoByName)
        .addMethod("getMethodInfoByName", &Type::findMethodInfoByName)
 
+       .addMethod("isDerivedFrom", &Type::isDerivedFrom)
+
        .endClass()
 
 

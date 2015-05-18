@@ -43,6 +43,12 @@ package unittest {
          * Internal list of results, gets returned and reset when popResults is called.
          */
         private static var asserts = new Vector.<AssertResult>();
+        private static var assertStack = new Vector.<Vector.<AssertResult>>();
+        
+        static public function pushResults() {
+            assertStack.push(asserts);
+            asserts = new Vector.<AssertResult>();
+        }
         
         /**
          * Return all the results since the last time this function was called.
@@ -50,7 +56,7 @@ package unittest {
          */
         static public function popResults():Vector.<AssertResult> {
             var results = asserts;
-            asserts = new Vector.<AssertResult>();
+            asserts = assertStack.length > 0 ? assertStack.pop() : new Vector.<AssertResult>();
             return results;
         }
         
