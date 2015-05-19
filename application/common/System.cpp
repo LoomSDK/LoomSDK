@@ -7,21 +7,8 @@
 
 class System
 {
-private:
-	static void zeroBuffer(char *buff)
-	{
-		unsigned int stringLength = strlen(buff);
-
-		// We are using an unsigned int, so we can expect the value to roll over once we are finished with the loop
-		for (unsigned int i = stringLength - 1; i >= 0 && i < stringLength; i--)
-		{
-			buff[i] = 0;
-		}
-	}
-
 protected:
 	static const int BUFFER_LENGTH = 1024;
-	int id;
 	FILE* pipe;
 	char buffer[BUFFER_LENGTH];
 
@@ -30,34 +17,34 @@ protected:
 		System* self = (System*)param;
 
 		// Zero out the buffer
-		zeroBuffer(self->buffer);
+		memset(self->buffer, 0, BUFFER_LENGTH);
 
-		while (true/*!feof(self->pipe)*/) 
+		while (true) 
 		{
 			// Get the next character!
-			int recievedChar = fgetc(self->pipe);
+			int receivedChar = fgetc(self->pipe);
 
 			// If getting the last character set the EOF flag, break out of the loop immedietly
 			if (feof(self->pipe)) break;
 
 			// Make sure we are getting actual characters
-			if (recievedChar < 0) continue;
+			if (receivedChar < 0) continue;
 
-			if (recievedChar != 10 && recievedChar != 13)
+			if (receivedChar != 10 && receivedChar != 13)
 			{
-				// The recieved character is not a new line character, and we have room for it. Add it to the buffer
-				self->buffer[strlen(self->buffer)] = static_cast<char>(recievedChar);
+				// The received character is not a new line character, and we have room for it. Add it to the buffer
+
+				self->buffer[strlen(self->buffer)] = static_cast<char>(receivedChar);
 			}
 			
-			if (recievedChar == 10 || recievedChar == 13 || strlen(self->buffer) >= BUFFER_LENGTH)
+			if (receivedChar == 10 || receivedChar == 13 || strlen(self->buffer) >= BUFFER_LENGTH)
 			{
 				// Either we hit a new line, or the buffer is full. send back the data!
 				self->_OnDataDelegate.pushArgument(self->buffer);
-				self->_OnDataDelegate.pushArgument(self->id);
 				self->_OnDataDelegate.invoke();
 
 				// Zero out the buffer to prepare for the next packet of data
-				zeroBuffer(self->buffer);
+				memset(self->buffer, 0, BUFFER_LENGTH);
 			}
 		}
         
@@ -70,7 +57,6 @@ protected:
         // Do nothing, there is no pipe to close!
 #endif
 		// After the pipe is closed, invoke the onFinish delegate
-		self->_OnFinishDelegate.pushArgument(self->id);
 		self->_OnFinishDelegate.invoke();
 
 		return 0;
@@ -81,14 +67,14 @@ public:
 	LOOM_DELEGATE(OnData);
 	LOOM_DELEGATE(OnFinish);
 
-	System(int i)
+	void run(const char *command)
 	{
-		// Set the ID at construction
-		id = i;
-	}
+		// Copy our parameter into a char* so we can edit it
+		//char *c = strdup(command);
 
-	void cmd(const char *command)
-	{
+		// Get data from STDOUT and STDERR
+		//strcat(c, " 2>&1");
+
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 		pipe = _popen(command, "r");
 #elif LOOM_PLATFORM == LOOM_PLATFORM_OSX
@@ -113,11 +99,6 @@ public:
 #endif
 		}
 	}
-
-	int getId()
-	{
-		return id;
-	}
 };
 
 
@@ -125,15 +106,13 @@ static int registerLoomSystem(lua_State* L)
 {
 	beginPackage(L, "loom")
 
-		.beginClass<System>("natSystem")
+		.beginClass<System>("System")
 
-		.addConstructor <void(*)(int) >()
+		.addConstructor <void(*)(void) >()
 
-		.addMethod("cmd", &System::cmd)
+		.addMethod("run", &System::run)
 
 		.addMethod("close", &System::close)
-
-		.addMethod("getId", &System::getId)
 
 		.addVarAccessor("onData", &System::getOnDataDelegate)
 
@@ -148,5 +127,5 @@ static int registerLoomSystem(lua_State* L)
 
 void installLoomSystem()
 {
-	LOOM_DECLARE_NATIVETYPE(System, registerLoomSystem);
+	LOOM_DECLARE_MANAGEDNATIVETYPE(System, registerLoomSystem);
 }
