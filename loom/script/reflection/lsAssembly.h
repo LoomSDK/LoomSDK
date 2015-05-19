@@ -67,12 +67,7 @@ private:
     // the assemblies we reference
     utArray<utString> references;
 
-    Type **ordinalTypes;
-
-    /*
-     * Closes the assembly, cleaning up associated hashes and Types
-     */
-    void close();
+    utArray<Type*> *ordinalTypes;
 
 public:
 
@@ -82,6 +77,10 @@ public:
     {
     }
 
+    /*
+    * Closes the assembly, cleaning up associated hashes and Types
+    */
+    ~Assembly();
 
     static int loadBytes(lua_State *L);
 
@@ -113,7 +112,7 @@ public:
     inline Type *getTypeByOrdinal(LSTYPEID typeID)
     {
         lmAssert(typeID > 0 && typeID <= (LSTYPEID)types.size(), "Assembly::getTypeByOrdinal - Assembly %s typeID out of range %i (%i)", name.c_str(), typeID, (int)types.size());
-        return ordinalTypes[typeID];
+        return ordinalTypes->at(typeID);
     }
 
     void getTypes(utArray<Type *>& types);

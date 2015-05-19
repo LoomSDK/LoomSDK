@@ -148,22 +148,22 @@ public:
     {
         for (UTsize i = 0; i < members.size(); i++)
         {
-            lmFree(NULL, members.at(i));
+            lmDelete(NULL, members.at(i));
         }
         
         if (bcStaticInitializer)
         {
-            lmFree(NULL, bcStaticInitializer);
+            lmDelete(NULL, bcStaticInitializer);
         }
 
         if (bcInstanceInitializer)
         {
-            lmFree(NULL, bcInstanceInitializer);
+            lmDelete(NULL, bcInstanceInitializer);
         }
 
         if (memberInfoOrdinalLookup)
         {
-            lmFree(NULL, memberInfoOrdinalLookup);
+            lmDelete(NULL, memberInfoOrdinalLookup);
         }
     }
 
@@ -626,6 +626,7 @@ public:
 
     void setBCStaticInitializer(ByteCode *bc)
     {
+        if (bcStaticInitializer != NULL) lmDelete(NULL, bcStaticInitializer);
         bcStaticInitializer = bc;
     }
 
@@ -636,6 +637,7 @@ public:
 
     void setBCInstanceInitializer(ByteCode *bc)
     {
+        if (bcInstanceInitializer != NULL) lmDelete(NULL, bcInstanceInitializer);
         bcInstanceInitializer = bc;
     }
 

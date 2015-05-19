@@ -186,8 +186,7 @@ void BinReader::readMethodBase(MethodBase *mbase)
 
     if (bytes->readBoolean())
     {
-        TemplateInfo *templateInfo = readTemplateTypes();
-        mbase->setTemplateInfo(templateInfo);
+        mbase->setTemplateInfo(readTemplateTypes());
     }
 
     // parameters
@@ -442,8 +441,7 @@ FieldInfo *BinReader::readField(Type *type)
 
     if (bytes->readBoolean())
     {
-        TemplateInfo *tinfo = readTemplateTypes();
-        field->setTemplateInfo(tinfo);
+        field->setTemplateInfo(readTemplateTypes());
     }
 
     return field;
@@ -784,6 +782,9 @@ Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
     {
         Reference *ref = lmNew(NULL) Reference;
         ref->name     = readPoolString();
+
+        lmAssert(ref->name[0] != 0, "Assembly reference name is empty, try recompiling the .loom executable");
+
         ref->length   = sBytes->readInt();
         ref->position = sBytes->readInt();
         ref->loaded   = false;

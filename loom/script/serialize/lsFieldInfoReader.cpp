@@ -28,7 +28,7 @@ namespace LS {
 FieldInfo *FieldInfoReader::deserializeFieldInfo(Type   *declaringType,
                                                  json_t *json)
 {
-    FieldInfo *fi = new FieldInfo();
+    FieldInfo *fi = lmNew(NULL) FieldInfo();
 
     MemberInfoReader::deserialize(fi, json);
 

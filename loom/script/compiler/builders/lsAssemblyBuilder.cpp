@@ -78,7 +78,7 @@ void AssemblyBuilder::initialize(BuildInfo *buildInfo)
     {
         ModuleBuildInfo *mbi = buildInfo->getModule(i);
 
-        ModuleBuilder *mbuilder = new ModuleBuilder();
+        ModuleBuilder *mbuilder = lmNew(NULL) ModuleBuilder();
         mbuilder->initialize(this, mbi);
 
         writer.addModuleWriter(&mbuilder->writer);
@@ -90,7 +90,7 @@ void AssemblyBuilder::initialize(BuildInfo *buildInfo)
 
 AssemblyBuilder *AssemblyBuilder::create(BuildInfo *buildInfo)
 {
-    AssemblyBuilder *ab = new AssemblyBuilder();
+    AssemblyBuilder *ab = lmNew(NULL) AssemblyBuilder();
 
     ab->initialize(buildInfo);
     ab->build();

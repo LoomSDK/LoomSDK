@@ -70,7 +70,7 @@ public:
             return NULL;
         }
 
-        TemplateInfo *out = new TemplateInfo;
+        TemplateInfo *out = lmNew(NULL) TemplateInfo;
 
         out->type = type;
 

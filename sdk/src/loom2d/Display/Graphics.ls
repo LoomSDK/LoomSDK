@@ -189,6 +189,7 @@ package loom2d.display
     {
         public function Graphics()
         {
+            Debug.assert(false, "You cannot instantiate a Graphics object. Create a Shape using `var shape = new Shape()` and use its `shape.graphics` object instead.");
         }
         
         /**

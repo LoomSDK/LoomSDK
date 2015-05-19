@@ -24,6 +24,12 @@
 #include <string.h>
 #include "loom/common/platform/platform.h"
 
+#ifndef LOOM_ASSERT
+// We should have release and debug builds, until then lmAsserts stay
+// #define LOOM_ASSERT LOOM_DEBUG
+#define LOOM_ASSERT 1
+#endif
+
 // TODO: Handle include directories correctly for Android so that this isn't needed.
 //  The problem is that our assert.h replaces the standard lib assert.h through a naming
 //  conflict that is caused by us adding engine/src/core as an include directory.
@@ -49,20 +55,26 @@ void loom_fireAssertCallback();
 };
 #endif
 
-#ifdef LOOM_NDEBUG
+
+#if !LOOM_ASSERT
 
 #define lmSafeAssert(condition, errmsg)
 #define lmAssert(condition, errmsg, ...)
 
 #else
 
+#define lmSafeAssert lmSafeCheck
+#define lmAssert lmCheck
+
+#endif
+
 // Use lmSafeAssert when we are in modules that might not be able to handle malloc() and strcpy()
-#define lmSafeAssert(condition, errmsg) \
+#define lmSafeCheck(condition, errmsg) \
     if (!(condition)) { platform_error("Assert failed [%s@%d] (" # condition "): %s", __FILE__, __LINE__, (errmsg)); abort(); }
 
 // Use lmAssert when we can afford to use varargs
 #if LOOM_COMPILER == LOOM_COMPILER_MSVC
-#define lmAssert(condition, errmsg, ...)                                                                                                          \
+#define lmCheck(condition, errmsg, ...)                                                                                                          \
     if (!(condition)) {                                                                                                                           \
         char *lmAssertBuf = (char *)malloc(strlen(errmsg) + strlen(# condition) + 32); /* Allocate our buffer with 32 bytes of breathing room. */ \
         strcpy(lmAssertBuf, "Assert failed [%s@%d] (" # condition "): ");              /* Begin with our standard "assert failed" prefix. */      \
@@ -74,7 +86,7 @@ void loom_fireAssertCallback();
         abort();                                                                                                                                  \
     }
 #else
-#define lmAssert(condition, errmsg, args ...)                                                                                                     \
+#define lmCheck(condition, errmsg, args ...)                                                                                                     \
     if (!(condition)) {                                                                                                                           \
         char *lmAssertBuf = (char *)malloc(strlen(errmsg) + strlen(# condition) + 32); /* Allocate our buffer with 32 bytes of breathing room. */ \
         strcpy(lmAssertBuf, "Assert failed [%s@%d] (" # condition "): \n");            /* Begin with our standard "assert failed" prefix. */      \
@@ -85,5 +97,5 @@ void loom_fireAssertCallback();
         abort();                                                                                                                                  \
     }
 #endif
-#endif
+
 #endif
