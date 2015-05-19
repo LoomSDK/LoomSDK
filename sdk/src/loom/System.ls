@@ -5,7 +5,20 @@ package loom
     
     public class System
     {
-        private var _system:natSystem = new natSystem();
+        private var _system:natSystem;
+        
+        /**
+         * Constructor
+         * 
+         * The constructor takes an optional ID, that can be used to distinguish multiple system objects
+         * using the special cmdWithId delegate.
+         * 
+         * @param id The Id to be given to this system object. Defaults to -1.
+         */
+        public function System(id:int = -1)
+        {
+            _system = new natSystem(id);
+        }
         
         /**
          * Run the provided command and get feedback from that command. The feedback will be returned using the onData
@@ -93,11 +106,23 @@ package loom
          * @param val The function to be removed from the onFinish function.
          */
         public function removeOnFinish(val:Function):void { _system.onFinish -= val; }
+        
+        /**
+         * This system's ID. The ID is set in the constructor.
+         */
+        public function get id():int
+        {
+            return _system.getId();
+        }
     }
     
-    private native class natSystem
+    final private native class natSystem
     {
+        public native function natSystem(i:int):void;
+        
         public native function cmd(path:String):Void;
+        
+        public native function getId():Number;
         
         public native var onData:NativeDelegate;
 

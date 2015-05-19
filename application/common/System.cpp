@@ -21,6 +21,7 @@ private:
 
 protected:
 	static const int BUFFER_LENGTH = 1024;
+	int id;
 	FILE* pipe;
 	char buffer[BUFFER_LENGTH];
 
@@ -52,6 +53,7 @@ protected:
 			{
 				// Either we hit a new line, or the buffer is full. send back the data!
 				self->_OnDataDelegate.pushArgument(self->buffer);
+				self->_OnDataDelegate.pushArgument(self->id);
 				self->_OnDataDelegate.invoke();
 
 				// Zero out the buffer to prepare for the next packet of data
@@ -68,6 +70,7 @@ protected:
         // Do nothing, there is no pipe to close!
 #endif
 		// After the pipe is closed, invoke the onFinish delegate
+		self->_OnFinishDelegate.pushArgument(self->id);
 		self->_OnFinishDelegate.invoke();
 
 		return 0;
@@ -77,6 +80,12 @@ public:
 
 	LOOM_DELEGATE(OnData);
 	LOOM_DELEGATE(OnFinish);
+
+	System(int i)
+	{
+		// Set the ID at construction
+		id = i;
+	}
 
 	void cmd(const char *command)
 	{
@@ -89,6 +98,26 @@ public:
 #endif
 		loom_thread_start(getData, this);
 	}
+
+	void close()
+	{
+		// Close the pipe manually!
+		if (pipe != NULL)
+		{
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+			_pclose(pipe);
+#elif LOOM_PLATFORM == LOOM_PLATFORM_OSX
+			pclose(pipe);
+#else
+			// Do nothing, there is no pipe to close!
+#endif
+		}
+	}
+
+	int getId()
+	{
+		return id;
+	}
 };
 
 
@@ -98,9 +127,13 @@ static int registerLoomSystem(lua_State* L)
 
 		.beginClass<System>("natSystem")
 
-		.addConstructor <void(*)(void) >()
+		.addConstructor <void(*)(int) >()
 
 		.addMethod("cmd", &System::cmd)
+
+		.addMethod("close", &System::close)
+
+		.addMethod("getId", &System::getId)
 
 		.addVarAccessor("onData", &System::getOnDataDelegate)
 
