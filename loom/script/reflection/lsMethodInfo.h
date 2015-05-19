@@ -134,10 +134,7 @@ public:
 
     ~MethodBase()
     {
-        if (byteCode)
-        {
-            delete byteCode;
-        }
+        freeByteCode();
     }
 
     bool isAbstract();
@@ -250,6 +247,7 @@ public:
 
     void setByteCode(ByteCode *bc)
     {
+        freeByteCode();
         this->byteCode = bc;
     }
 
@@ -260,8 +258,7 @@ public:
 
     void freeByteCode()
     {
-        if(byteCode)
-            byteCode->clear();
+        lmSafeDelete(NULL, this->byteCode);
     }
 
     // module the method is defined in

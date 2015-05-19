@@ -252,7 +252,6 @@ void VectorGraphics::ensureTextFormat() {
 		textFormatDirty = true;
 		// Default text format
 		VectorTextFormat* format = new VectorTextFormat();
-		//format->font = "sans";
 		format->color = 0x000000;
 		format->size = 12;
 		format->align = VectorTextFormat::ALIGN_TOP | VectorTextFormat::ALIGN_LEFT;

@@ -479,7 +479,7 @@ void BinWriter::writeClass(json_t *jclass)
 
 void BinWriter::writeType(json_t *jtype)
 {
-    TypeIndex *tindex = new TypeIndex;
+    TypeIndex *tindex = lmNew(NULL) TypeIndex;
 
     typeIndexes.push_back(tindex);
 
@@ -643,7 +643,7 @@ void BinWriter::writeAssembly(json_t *json)
         {
             lmAssert(jbinary, "Error with linked assembly %s, missing binary section", refname);
             utString  refjson  = (const char *)utBase64::decode64(json_string_value(jbinary)).getData().ptr();
-            BinWriter *bwriter = new BinWriter;
+            BinWriter *bwriter = lmNew(NULL) BinWriter;
             bwriter->writeAssembly(refjson.c_str(), refjson.length());
         }
     }
@@ -672,7 +672,7 @@ void BinWriter::writeExecutable(const char *path, json_t *sjson)
     // reserve 32 megs
     bytes.reserve(1024 * 1024 * 32);
 
-    BinWriter *bexec = new BinWriter();
+    BinWriter *bexec = lmNew(NULL) BinWriter();
     bexec->writeAssembly(sjson);
 
     // write string pool

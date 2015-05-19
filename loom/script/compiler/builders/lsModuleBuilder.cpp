@@ -69,7 +69,7 @@ void ModuleBuilder::initialize(AssemblyBuilder *assemblyBuilder, ModuleBuildInfo
         {
             ClassDeclaration *cls = cunit->classDecls.at(j);
 
-            TypeBuilder *typeBuilder = new TypeBuilder(assemblyBuilder);
+            TypeBuilder *typeBuilder = lmNew(NULL) TypeBuilder(assemblyBuilder);
             typeBuilder->initialize(cls);
             typeBuilders.push_back(typeBuilder);
 

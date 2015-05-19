@@ -122,10 +122,10 @@ typedef struct CodeState
 #define bcemit_AD(fs, o, a, d)        BC::emitINS(fs, BCINS_AD(o, a, d))
 #define bcemit_AJ(fs, o, a, j)        BC::emitINS(fs, BCINS_AJ(o, a, j))
 
-#define checklimit(fs, v, l, m)       if ((v) >= (l)) lmAssert(0, m)
-#define checklimitgt(fs, v, l, m)     if ((v) > (l)) lmAssert(0, m)
+#define checklimit(fs, v, l, m)       lmAssert((v) < (l), m)
+#define checklimitgt(fs, v, l, m)     lmAssert((v) <= (l), m)
 #define checkcond(cs, c, em)         \
-    { if (!(c)) { lmAssert(0, em); } \
+    { lmAssert(c, em); \
     }
 
 #define var_get(cs, fs, i)            ((cs)->vstack[(fs)->varmap[(i)]])

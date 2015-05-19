@@ -49,6 +49,8 @@ using namespace LS;
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/script/native/core/system/lmProcess.h"
 
+#include "loom/script/serialize/lsBinReader.h"
+
 #include "loom/engine/bindings/sdl/lmSDL.h"
 
 LSLuaState     *LoomApplication::rootVM      = NULL;
@@ -140,6 +142,7 @@ int LoomApplication::initializeTypes()
 
 void LoomApplication::execMainAssembly()
 {
+    lmAssert(!rootVM, "VM already running");
     rootVM = new LSLuaState();
     rootVM->open();
 
@@ -208,6 +211,8 @@ void LoomApplication::execMainAssembly()
 
 void LoomApplication::reloadMainAssembly()
 {
+    if (!rootVM || !rootVM->VM()) return;
+
     lmLog(applicationLogGroup, "Reloading main assembly: %s", getBootAssembly());
 
     // cleanup webviews

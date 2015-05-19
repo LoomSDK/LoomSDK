@@ -77,7 +77,7 @@ public:
 
         if (idx == UT_NPOS)
         {
-            metaList = new utList<MetaInfo *>;
+            metaList = lmNew(NULL) utList<MetaInfo *>;
             metaInfo.insert(name, metaList);
         }
         else
@@ -85,7 +85,7 @@ public:
             metaList = metaInfo.at(idx);
         }
 
-        MetaInfo *mi = new MetaInfo;
+        MetaInfo *mi = lmNew(NULL) MetaInfo;
 
         mi->name = name;
 

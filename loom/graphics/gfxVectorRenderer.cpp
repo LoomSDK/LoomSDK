@@ -74,8 +74,10 @@ lmDefineLogGroup(gGFXVectorRendererLogGroup, "GFXVectorRenderer", 1, LoomLogInfo
 NVGcontext *nvg = NULL;
 static int font;
 
+utHashTable<utHashedString, utString> VectorTextFormat::loadedFonts;
 int VectorRenderer::frameWidth = 0;
 int VectorRenderer::frameHeight = 0;
+uint8_t VectorRenderer::quality = VectorRenderer::QUALITY_ANTIALIAS | VectorRenderer::QUALITY_STENCIL_STROKES;
 
 //*
 void drawLabel(struct NVGcontext* vg, const char* text, float x, float y, float w, float h)
@@ -296,7 +298,7 @@ void VectorRenderer::textBox(float x, float y, float width, utString* string) {
 }
 
 Loom2D::Rectangle VectorRenderer::textLineBounds(VectorTextFormat* format, float x, float y, utString* string) {
-    float* bounds = new float[4];
+    float bounds[4];
     nvgSave(nvg);
     nvgReset(nvg);
     textFormat(format);
@@ -306,7 +308,6 @@ Loom2D::Rectangle VectorRenderer::textLineBounds(VectorTextFormat* format, float
     float ymin = bounds[1];
     float xmax = bounds[2];
     float ymax = bounds[3];
-    delete bounds;
     return Loom2D::Rectangle(xmin, ymin, xmax-xmin, ymax-ymin);
 }
 
@@ -320,7 +321,7 @@ float VectorRenderer::textLineAdvance(VectorTextFormat* format, float x, float y
 }
 
 Loom2D::Rectangle VectorRenderer::textBoxBounds(VectorTextFormat* format, float x, float y, float width, utString* string) {
-    float* bounds = new float[4];
+    float bounds[4];
     nvgSave(nvg);
     nvgReset(nvg);
     textFormat(format);
@@ -330,7 +331,6 @@ Loom2D::Rectangle VectorRenderer::textBoxBounds(VectorTextFormat* format, float 
     float ymin = bounds[1];
     float xmax = bounds[2];
     float ymax = bounds[3];
-    delete bounds;
     return Loom2D::Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
 }
 
@@ -347,18 +347,34 @@ void VectorRenderer::destroyGraphicsResources()
 #else
         nvgDeleteGL2(nvg);
 #endif
+        nvg = NULL;
 	}
 }
 
 
 void VectorRenderer::initializeGraphicsResources()
 {
-#ifdef LOOM_RENDERER_OPENGLES2
-    nvg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
-#else
-    nvg = nvgCreateGL2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+    destroyGraphicsResources();
+
+    int flags = 0;
+    
+    if (quality & QUALITY_ANTIALIAS) flags |= NVG_ANTIALIAS;
+    if (quality & QUALITY_STENCIL_STROKES)   flags |= NVG_STENCIL_STROKES;
+    
+#if GFX_OPENGL_CHECK
+    flags |= NVG_DEBUG;
 #endif
+
+#ifdef LOOM_RENDERER_OPENGLES2
+    nvg = nvgCreateGLES2(flags);
+#else
+    nvg = nvgCreateGL2(flags);
+#endif
+
     lmAssert(nvg != NULL, "Unable to init nanovg");
+    
+    VectorTextFormat::restoreLoaded();
+    
     //nvgCreateFont(nvg, "sans", "assets/droidsans.ttf");
     //nvgCreateFont(nvg, "sans", "assets/SourceSansPro-Regular.ttf");
     //nvgCreateFont(nvg, "sans", "assets/unifont-7.0.06.ttf");
@@ -391,9 +407,19 @@ VectorTextFormat::VectorTextFormat() {
     lineHeight = NAN;
 }
 
+void VectorTextFormat::restoreLoaded() {
+    utHashTableIterator< utHashTable<utHashedString, utString> > it = loadedFonts.iterator();
+    while (it.hasMoreElements()) {
+        utHashEntry<utHashedString, utString> s = it.getNext();
+        load(s.second, s.first.str());
+    }
+}
+
 void VectorTextFormat::load(utString fontName, utString filePath) {
+    loadedFonts.insert(utHashedString(filePath), utString(fontName));
     void* bytes = loom_asset_lock(filePath.c_str(), LATText, 1);
     nvgCreateFontMem(nvg, fontName.c_str(), static_cast<unsigned char*>(bytes), 0, 0);
+    loom_asset_unlock(filePath.c_str());
 }
 
 
@@ -404,22 +430,28 @@ VectorSVG::VectorSVG() {
 VectorSVG::~VectorSVG() {
 	reset();
 }
-void VectorSVG::reset(bool reloaded) {
-	if (!reloaded && path != NULL) {
-		loom_asset_unsubscribe(path->c_str(), onReload, this);
-		delete path;
-		path = NULL;
-	}
-	if (image != NULL) {
-		nsvgDelete(image);
-		image = NULL;
-	}
+void VectorSVG::reset() {
+    resetInfo();
+    resetImage();
+}
+void VectorSVG::resetInfo() {
+    if (path != NULL) {
+        loom_asset_unsubscribe(path->c_str(), onReload, this);
+        lmDelete(NULL, path);
+        path = NULL;
+    }
+}
+void VectorSVG::resetImage() {
+    if (image != NULL) {
+        nsvgDelete(image);
+        image = NULL;
+    }
 }
 void VectorSVG::loadFile(utString path, utString units, float dpi) {
 	reset();
 	this->units = utString(path);
 	this->dpi = dpi;
-	this->path = new utString(path);
+	this->path = lmNew(NULL) utString(path);
 	reload();
 	loom_asset_subscribe(path.c_str(), onReload, this, false);
 }
@@ -429,7 +461,7 @@ void VectorSVG::onReload(void *payload, const char *name) {
 	svg->reload();
 }
 void VectorSVG::reload() {
-	reset(true);
+	resetImage();
 	char* data = static_cast<char*>(loom_asset_lock(path->c_str(), LATText, true));
 	parse(data, units.c_str(), dpi);
 	loom_asset_unlock(path->c_str());
@@ -439,9 +471,7 @@ void VectorSVG::loadString(utString svg, utString units, float dpi) {
 	parse(svg.c_str(), units.c_str(), dpi);
 }
 void VectorSVG::parse(const char* svg, const char* units, float dpi) {
-	char* copy = strdup(svg);
-	image = nsvgParse(copy, units, dpi);
-	delete copy;
+	image = nsvgParse((char*) svg, units, dpi);
 	if (image->shapes == NULL) {
 		image = NULL;
 		return;
