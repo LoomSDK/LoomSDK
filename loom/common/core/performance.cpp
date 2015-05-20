@@ -190,6 +190,13 @@ U32 endHighResolutionTimer(U32 time[2])
 #else // Assume *nix.
 
 #include <time.h>
+
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+#define WHICH_CLOCK CLOCK_MONOTONIC
+#else
+#define WHICH_CLOCK CLOCK_REALTIME 
+#endif
+
 struct timespec dawn;
 
 static long long timespecDeltaNs(struct timespec *then, struct timespec *now)
@@ -197,7 +204,7 @@ static long long timespecDeltaNs(struct timespec *then, struct timespec *now)
     long long deltaSec  = now->tv_sec - then->tv_sec;
     long long deltaNSec = now->tv_nsec - then->tv_nsec;
 
-    long long deltaNSecTotal = deltaSec * 1000 * 1000 + deltaNSec;
+    long long deltaNSecTotal = deltaSec * 1000 * 1000 * 1000 + deltaNSec;
 
     return deltaNSecTotal;
 }
@@ -207,9 +214,10 @@ void startHighResolutionTimer(U32 timeStore[2])
 {
     timespec now;
 
-    clock_gettime(CLOCK_REALTIME, &now); // Works on Linux
+    clock_gettime(WHICH_CLOCK, &now); // Works on Linux
 
     lmAssert(sizeof(long long) == 8, "Bad size!");
+
     *(long long *)timeStore = timespecDeltaNs(&dawn, &now);
 }
 
@@ -218,15 +226,20 @@ F64 endHighResolutionTimer(U32 timeStore[2])
 {
     timespec now;
 
-    clock_gettime(CLOCK_REALTIME, &now); // Works on Linux
+    clock_gettime(WHICH_CLOCK, &now); // Works on Linux
 
     lmAssert(sizeof(long long) == 8, "Bad size!");
-    return timespecDeltaNs(&dawn, &now) - *(long long *)timeStore;
+    long long t = timespecDeltaNs(&dawn, &now) - *(long long *)timeStore;
+    return t;
 }
 #endif
 
 LoomProfiler::LoomProfiler()
 {
+#if !defined(LOOM_PLATFORM_IS_APPLE) && LOOM_PLATFORM != LOOM_PLATFORM_WIN32
+   clock_gettime(WHICH_CLOCK, &dawn); // Works on Linux
+#endif
+
    mMaxStackDepth = MaxStackDepth;
    mCurrentHash = 0;
 
