@@ -289,6 +289,8 @@ package system {
     /**
      *  Regex pattern matching using Lua regex rules. 
      *
+     *  Note that without captures (the () syntax) you will get zero results.
+     *
      *  @see http://lua-users.org/wiki/PatternsTutorial    
      *  
      *  @param pattern The Regex pattern.
