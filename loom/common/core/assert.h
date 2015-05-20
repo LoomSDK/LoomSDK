@@ -25,6 +25,8 @@
 #include "loom/common/platform/platform.h"
 
 #ifndef LOOM_ASSERT
+// Disable to strip out all of the lmAssert calls
+// Use lmCheck if you don't want an assertion to be removed
 // We should have release and debug builds, until then lmAsserts stay
 // #define LOOM_ASSERT LOOM_DEBUG
 #define LOOM_ASSERT 1
@@ -68,11 +70,14 @@ void loom_fireAssertCallback();
 
 #endif
 
-// Use lmSafeAssert when we are in modules that might not be able to handle malloc() and strcpy()
+// Use lmSafeAssert/Check when we are in modules that might not be able to handle malloc() and strcpy()
 #define lmSafeCheck(condition, errmsg) \
     if (!(condition)) { platform_error("Assert failed [%s@%d] (" # condition "): %s", __FILE__, __LINE__, (errmsg)); abort(); }
 
-// Use lmAssert when we can afford to use varargs
+// Use lmAssert/Check when we can afford to use varargs
+// Use lmCheck when it's an important check that mustn't be stripped out
+// Use lmAssert when the check is just a sanity check and stripping it out
+// will not have any side effects
 #if LOOM_COMPILER == LOOM_COMPILER_MSVC
 #define lmCheck(condition, errmsg, ...)                                                                                                          \
     if (!(condition)) {                                                                                                                           \

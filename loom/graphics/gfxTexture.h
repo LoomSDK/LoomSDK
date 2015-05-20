@@ -78,6 +78,7 @@ struct TextureInfo
     GLuint                   handle;
     bool                     renderTarget;
     GLuint                   framebuffer;
+    GLuint                   renderbuffer;
 
     utString                 texturePath;
 
@@ -133,6 +134,7 @@ struct TextureInfo
         texturePath  = "";
         renderTarget = false;
         framebuffer  = -1;
+        renderbuffer = -1;
     }
 };
 
@@ -323,6 +325,8 @@ public:
 
     static void reset();
     static void tick();
+    static void validate();
+    static void validate(TextureID id);
 
     // This method accepts rgba data.
     static TextureInfo *load(uint8_t *data, uint16_t width, uint16_t height, TextureID id = -1);

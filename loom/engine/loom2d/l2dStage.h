@@ -114,8 +114,13 @@ public:
     {
         if (vectorQuality != GFX::VectorRenderer::quality)
         {
+            int prevQuality = GFX::VectorRenderer::quality;
             GFX::VectorRenderer::quality = vectorQuality;
             GFX::VectorRenderer::reset();
+            // If a stencil buffer is required, update textures so they can be converted
+            if (!(prevQuality & GFX::VectorRenderer::QUALITY_STENCIL_STROKES) && (vectorQuality & GFX::VectorRenderer::QUALITY_STENCIL_STROKES)) {
+                GFX::Texture::validate();
+            }
         }
     }
 

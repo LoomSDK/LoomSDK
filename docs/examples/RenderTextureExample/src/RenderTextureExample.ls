@@ -7,8 +7,12 @@ package
     import loom2d.display.Graphics;
     import loom2d.display.Shape;
     import loom2d.display.Sprite;
+    import loom2d.display.Stage;
     import loom2d.display.StageScaleMode;
     import loom2d.display.Image;
+    import loom2d.events.Touch;
+    import loom2d.events.TouchEvent;
+    import loom2d.events.TouchPhase;
     import loom2d.Loom2D;
     import loom2d.math.Matrix;
     import loom2d.math.Rectangle;
@@ -28,6 +32,7 @@ package
         private var outlines:Shape;
         private var container:Sprite;
         private var logo:Image;
+        private var shape:Shape;
         private var image:Image;
         
         private var renderTexture:RenderTexture;
@@ -69,6 +74,8 @@ package
             logo = new Image(logoTex);
             logo.center();
             
+            shape = new Shape();
+            
             container.x = 85;
             container.y = 80;
             container.scale = 0.7;
@@ -93,6 +100,30 @@ package
             persistentDisplay.x = image.x+renderTexture.width+10;
             persistentDisplay.y = image.y;
             stage.addChild(persistentDisplay);
+            
+            stage.addEventListener(TouchEvent.TOUCH, onTouch);
+        }
+        
+        private function onTouch(e:TouchEvent):void {
+            var t:Touch = e.getTouch(stage, TouchPhase.BEGAN);
+            if (!t) return;
+            switch (stage.vectorQuality) {
+                case Stage.VECTOR_QUALITY_ANTIALIAS | Stage.VECTOR_QUALITY_STENCIL_STROKES:
+                    stage.vectorQuality = Stage.VECTOR_QUALITY_ANTIALIAS;
+                    trace("Vector quality set to ANTIALIAS");
+                    break;
+                case Stage.VECTOR_QUALITY_ANTIALIAS:
+                    stage.vectorQuality = Stage.VECTOR_QUALITY_STENCIL_STROKES;
+                    trace("Vector quality set to STENCIL");
+                    break;
+                case Stage.VECTOR_QUALITY_STENCIL_STROKES:
+                    stage.vectorQuality = Stage.VECTOR_QUALITY_NONE;
+                    trace("Vector quality set to NONE");
+                    break;
+                default:
+                    stage.vectorQuality = Stage.VECTOR_QUALITY_ANTIALIAS | Stage.VECTOR_QUALITY_STENCIL_STROKES;
+                    trace("Vector quality set to ANTIALIAS and STENCIL");
+            }
         }
         
         function draw() {
@@ -206,6 +237,12 @@ package
             // Alternate between drawing and erasing
             logo.blendMode = gt%3 < 2 ? BlendMode.NORMAL : BlendMode.ERASE;
             persistent.draw(logo);
+            
+            var g = shape.graphics;
+            g.clear();
+            g.beginFill(Math.random()*0xFFFFFF);
+            g.drawCircle(Math.random()*persistent.width, Math.random()*persistent.height, 10);
+            persistent.draw(shape);
             
             // Restore blendmode
             logo.blendMode = BlendMode.NORMAL;
