@@ -22,6 +22,8 @@
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/graphics/gfxVectorGraphics.h"
 
+#include "loom/script/runtime/lsProfiler.h"
+
 namespace GFX
 {
 
@@ -275,6 +277,8 @@ void VectorGraphics::drawSVG(VectorSVG* svg, float x, float y, float scale, floa
 *************************/
 
 void VectorGraphics::render(Loom2D::RenderState* renderStatePointer, Loom2D::Matrix* transform) {
+    LOOM_PROFILE_SCOPE(vectorRender);
+
     QuadRenderer::submit();
 
     Loom2D::RenderState &renderState = *renderStatePointer;
@@ -306,12 +310,14 @@ void VectorGraphics::render(Loom2D::RenderState* renderStatePointer, Loom2D::Mat
 
     flushPath();
 
+    LOOM_PROFILE_START(vectorRenderData);
     utArray<VectorData*>::Iterator it = queue->iterator();
     while (it.hasMoreElements()) {
         VectorData* d = it.getNext();
         d->render(this);
     }
     flushPath();
+    LOOM_PROFILE_END(vectorRenderData);
 
     if (renderState.isClipping()) {
         VectorRenderer::resetClipRect();
