@@ -53,7 +53,48 @@ package loom2d.display
 
     delegate OrientationChangeDelegate(newOrientation:int);
     delegate SizeChangeDelegate(newWidth:int, newHeight:int);
-
+    
+    public class D {
+        private static var HELPER_POINT:Point = new Point();
+        private static var HELPER_MATRIX:Matrix = new Matrix();
+        
+        //public static function line(x1:Number, y1:Number, x2:Number, y2:Number) {
+            //
+        //}
+        
+        public static function get enabled():Boolean { return Loom2D.stage.overlayEnabled; }
+        public static function set enabled(v:Boolean) { Loom2D.stage.overlayEnabled = v; }
+        
+        public static function clear() {
+            Loom2D.stage.overlayShape.graphics.clear();
+            Loom2D.stage.overlayShape.graphics.lineStyle(1, 0x00FF00, 1);
+        }
+        public static function rect(d:DisplayObject, x:Number = 0, y:Number = 0, width:Number = -1, height:Number = -1) {
+            //trace("rect");
+            //var t = d;
+            //var i = 0;
+            //while (t != null) {
+                //trace(i, t.x, t.y, t.scaleX, t.scaleY);
+                //t = t.parent;
+                //i++;
+            //}
+            
+            d.getTargetTransformationMatrix(d.stage, HELPER_MATRIX);
+            HELPER_POINT = HELPER_MATRIX.transformCoord(x, y);
+            var x1 = HELPER_POINT.x;
+            var y1 = HELPER_POINT.y;
+            if (width < 0) width = d.width;
+            if (height < 0) height = d.height;
+            HELPER_POINT = HELPER_MATRIX.transformCoord(x+width, y+height);
+            var x2 = HELPER_POINT.x;
+            var y2 = HELPER_POINT.y;
+            
+            //trace(x, y, width, height, x1, y1, x2, y2);
+            
+            Loom2D.stage.overlayShape.graphics.drawRect(x1, y1, x2-x1, y2-y1);
+        }
+    }
+    
     /** A Stage represents the root of the display tree.  
      *  Only objects that are direct or indirect children of the stage will be rendered.
      * 
@@ -81,7 +122,10 @@ package loom2d.display
         private var mColor:uint;
         private var mEnterFrameEvent:EnterFrameEvent = new EnterFrameEvent(Event.ENTER_FRAME, 0.0);
         private var mScaleMode:StageScaleMode = StageScaleMode.NONE;
-
+        
+        public native var overlayEnabled:Boolean;
+        public native var overlayShape:Shape;
+        
         public native var onTouchBegan:TouchDelegate;
         public native var onTouchMoved:TouchDelegate;
         public native var onTouchEnded:TouchDelegate;

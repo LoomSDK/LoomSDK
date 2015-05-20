@@ -1,6 +1,8 @@
 package
 {
+    import feathers.core.FocusManager;
     import loom.Application;
+    import loom.platform.Timer;
     import loom2d.display.TextFormat;
     import system.platform.Platform;
     import unittest.TestRunner;
@@ -77,14 +79,22 @@ package
             "showToggles": TOGGLES
         };
         
+        var delayed:Timer;
+        
         public function Main()
         {
             super();
             this.addEventListener(FeathersEventType.INITIALIZE, initializeHandler);
-            this.addEventListener(FeathersEventType.INITIALIZE, function() {
+            delayed = new Timer(200);
+            delayed.onComplete += function() {
                var test = new FeathersTest();
                test.run();
-            });
+            };
+            delayed.start();
+            //this.addEventListener(FeathersEventType.INITIALIZE, function() {
+               //var test = new FeathersTest();
+               //test.run();
+            //});
         }
 
         private var _navigator:ScreenNavigator;
@@ -100,6 +110,7 @@ package
             //TextFormat.load("sans", "assets/keifont.ttf");
             new MetalWorksMobileVectorTheme();
             //new MetalWorksMobileTheme();
+            FocusManager.defaultIsEnabled = true;
             
             this._navigator = new ScreenNavigator();
             this.content = this._navigator;
@@ -109,6 +120,8 @@ package
                 complete: MAIN_MENU,
                 showSettings: BUTTON_SETTINGS
             }));
+            
+            trace(this._navigator.getScreen(BUTTON).screen.getType().getFullName());
 
             this._navigator.addScreen(BUTTON_GROUP, new ScreenNavigatorItem(ButtonGroupScreen,
             {

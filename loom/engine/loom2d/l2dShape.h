@@ -29,21 +29,28 @@ namespace Loom2D
 
 class Shape : public DisplayObject
 {
+    bool ownsGraphics;
+
 public:
 
     static Type *typeShape;
 
-	GFX::VectorGraphics* graphics;
+    GFX::VectorGraphics* graphics;
 	inline GFX::VectorGraphics* getGraphics() const { return graphics; }
-	void setGraphics(GFX::VectorGraphics* g) {}
+	void setGraphics(GFX::VectorGraphics* g) {
+        if (ownsGraphics) lmDelete(NULL, graphics);
+        graphics = g;
+        ownsGraphics = false;
+    }
 
 	Shape()
 	{
 		type = typeShape;
-		graphics = new GFX::VectorGraphics();
+		graphics = lmNew(NULL) GFX::VectorGraphics();
+        ownsGraphics = true;
 	}
 	~Shape() {
-		delete graphics;
+        setGraphics(NULL);
 	}
 
     void setClipRect(int x, int y, int w, int h)

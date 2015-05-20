@@ -495,7 +495,8 @@ public:
     {
         lua_getglobal(L, "string");
         lua_getfield(L, -1, "find");
-
+        const char* a = lua_tostring(L, 1);
+        const char* b = lua_tostring(L, 2);
         int top = lua_gettop(L);
         lua_pushvalue(L, 1);
         lua_pushvalue(L, 2);
@@ -503,6 +504,15 @@ public:
 
         int retIdx = lua_gettop(L);
         int nret   = (retIdx - top) + 1;
+
+        lua_Number na = lua_tonumber(L, 1);
+        lua_Number nb = lua_tonumber(L, 2);
+        lua_Integer ia = lua_tointeger(L, 1);
+        lua_Integer ib = lua_tointeger(L, 2);
+
+        bool isnil = lua_isnil(L, 1);
+        bool isnil2 = lua_isnil(L, 2);
+        bool isnil3 = lua_isnil(L, 3);
 
         // skip the found number indexes
         retIdx = top + 2;

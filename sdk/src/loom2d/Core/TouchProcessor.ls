@@ -252,7 +252,6 @@ package loom2d.core
                 processTouchHelperPoint.x = data.globalX;
                 processTouchHelperPoint.y = data.globalY;
                 var hitResult = mStage.hitTest(processTouchHelperPoint, true);
-                trace(data, data.touchID, data.globalX, data.globalY, hitResult);
                 touch.setTarget(hitResult);
             }
             

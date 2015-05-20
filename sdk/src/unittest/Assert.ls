@@ -21,7 +21,28 @@ package unittest {
          */
         public var info = "";
         
-        public function AssertResult() {}
+        public function AssertResult() { }
+        
+        public function getRelevantLine():String {
+            if (!callStack) return "";
+            for (var i:int = Assert.CALL_STACK_SKIP; i < callStack.length; i++) {
+                var info:CallStackInfo = callStack[i];
+                if (info.source.indexOf("unittest") != -1) continue;
+                return info.source+"("+info.line+")";
+            }
+            return "";
+        }
+        
+        public function toString():String {
+            var r = "[AssertResult";
+            if (this == Assert.RESULT_SUCCESS) return r + " success]";
+            if (message) r += " message='"+message+"'";
+            r += " info='"+info+"'";
+            
+            if (callStack && callStack.length > 1) r += " file='"+getRelevantLine()+"'";
+            r += "]";
+            return r;
+        }
     }
     
     public class Assert {
@@ -30,7 +51,7 @@ package unittest {
          * Defines how many calls are skipped from the top of the stack,
          * to avoid from internal Assert calls showing up in every result.
          */
-        private static const CALL_STACK_SKIP = 2; // +1
+        public static const CALL_STACK_SKIP = 2; // +1
         
         /**
          * Successful assert results aren't saved individually as you usually

@@ -2852,9 +2852,6 @@ package feathers.controls
             }
 
             const touches:Vector.<Touch> = event.getTouches(this, null, HELPER_TOUCHES_VECTOR);
-            
-            trace("TOUCHING", touches);
-            
             if(touches.length == 0)
             {
                 //end of hover

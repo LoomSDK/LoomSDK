@@ -38,6 +38,8 @@ bool Stage::visDirty = true;
 
 Stage::Stage()
 {
+    overlayEnabled = false;
+    overlayShape.graphics->lineStyle(1.0f, 0x00FF00, 1, false, "", "", "", 0);
     pendingResize = true;
     smMainStage = this;
     sdlWindow = gSDLWindow;
@@ -116,6 +118,10 @@ void Stage::render(lua_State *L)
     renderState.blendMode      = blendMode;
 
     renderChildren(L);
+
+    if (overlayEnabled) {
+        overlayShape.render(L);
+    }
 
     lua_pop(L, 1);
 

@@ -168,83 +168,86 @@ static int registerLoom2D(lua_State *L)
 
     beginPackage(L, "loom2d.display")
 
-    // DisplayObject
-       .deriveClass<DisplayObject, EventDispatcher>("DisplayObject")
+        // DisplayObject
+        .deriveClass<DisplayObject, EventDispatcher>("DisplayObject")
 
-       .addConstructor<void (*)(void)>()
+        .addConstructor<void(*)(void)>()
 
-    // fast path properties
-       .addProperty("x", &DisplayObject::getX, &DisplayObject::setX)
-       .addProperty("y", &DisplayObject::getY, &DisplayObject::setY)
-       .addProperty("scaleX", &DisplayObject::getScaleX, &DisplayObject::setScaleX)
-       .addProperty("scaleY", &DisplayObject::getScaleY, &DisplayObject::setScaleY)
-       .addProperty("pivotX", &DisplayObject::getPivotX, &DisplayObject::setPivotX)
-       .addProperty("pivotY", &DisplayObject::getPivotY, &DisplayObject::setPivotY)
-       .addProperty("skewX", &DisplayObject::getSkewX, &DisplayObject::setSkewX)
-       .addProperty("skewY", &DisplayObject::getSkewY, &DisplayObject::setSkewY)
-       .addProperty("rotation", &DisplayObject::getRotation, &DisplayObject::setRotation)
-       .addProperty("alpha", &DisplayObject::getAlpha, &DisplayObject::setAlpha)
-       .addProperty("blendMode", &DisplayObject::getBlendMode, &DisplayObject::setBlendMode)
+        // fast path properties
+        .addProperty("x", &DisplayObject::getX, &DisplayObject::setX)
+        .addProperty("y", &DisplayObject::getY, &DisplayObject::setY)
+        .addProperty("scaleX", &DisplayObject::getScaleX, &DisplayObject::setScaleX)
+        .addProperty("scaleY", &DisplayObject::getScaleY, &DisplayObject::setScaleY)
+        .addProperty("pivotX", &DisplayObject::getPivotX, &DisplayObject::setPivotX)
+        .addProperty("pivotY", &DisplayObject::getPivotY, &DisplayObject::setPivotY)
+        .addProperty("skewX", &DisplayObject::getSkewX, &DisplayObject::setSkewX)
+        .addProperty("skewY", &DisplayObject::getSkewY, &DisplayObject::setSkewY)
+        .addProperty("rotation", &DisplayObject::getRotation, &DisplayObject::setRotation)
+        .addProperty("alpha", &DisplayObject::getAlpha, &DisplayObject::setAlpha)
+        .addProperty("blendMode", &DisplayObject::getBlendMode, &DisplayObject::setBlendMode)
 
-       .addProperty("name", &DisplayObject::getName, &DisplayObject::setName)
+        .addProperty("name", &DisplayObject::getName, &DisplayObject::setName)
 
-       .addProperty("visible", &DisplayObject::getVisible, &DisplayObject::setVisible)
-       .addProperty("touchable", &DisplayObject::getTouchable, &DisplayObject::setTouchable)
+        .addProperty("visible", &DisplayObject::getVisible, &DisplayObject::setVisible)
+        .addProperty("touchable", &DisplayObject::getTouchable, &DisplayObject::setTouchable)
 
-       .addProperty("depth", &DisplayObject::getDepth, &DisplayObject::setDepth)
+        .addProperty("depth", &DisplayObject::getDepth, &DisplayObject::setDepth)
 
-       .addProperty("valid", &DisplayObject::getValid, &DisplayObject::setValid)
+        .addProperty("valid", &DisplayObject::getValid, &DisplayObject::setValid)
 
-       .addMethod("__pset__parent", &DisplayObject::setParent)
+        .addMethod("__pset__parent", &DisplayObject::setParent)
 
-       .addLuaFunction("__pget_transformationMatrix", &DisplayObject::getTransformationMatrix)
-       .addLuaFunction("__pset_transformationMatrix", &DisplayObject::setTransformationMatrix)
+        .addLuaFunction("__pget_transformationMatrix", &DisplayObject::getTransformationMatrix)
+        .addLuaFunction("__pset_transformationMatrix", &DisplayObject::setTransformationMatrix)
 
-       .addMethod("__pset_scale", &DisplayObject::setScale)
-       .addMethod("__pget_scale", &DisplayObject::getScale)
+        .addMethod("__pset_scale", &DisplayObject::setScale)
+        .addMethod("__pget_scale", &DisplayObject::getScale)
 
-       .addMethod("getTargetTransformationMatrix", &DisplayObject::getTargetTransformationMatrix)
+        .addMethod("getTargetTransformationMatrix", &DisplayObject::getTargetTransformationMatrix)
 
-       .addVarAccessor("customRender", &DisplayObject::getCustomRenderDelegate)
-       .addVarAccessor("onRender", &DisplayObject::getOnRenderDelegate)
+        .addVarAccessor("customRender", &DisplayObject::getCustomRenderDelegate)
+        .addVarAccessor("onRender", &DisplayObject::getOnRenderDelegate)
 
-       .endClass()
+        .endClass()
 
-    // DisplayObjectContainer
-       .deriveClass<DisplayObjectContainer, DisplayObject>("DisplayObjectContainer")
-       .addConstructor<void (*)(void)>()
-       .addProperty("depthSort", &DisplayObjectContainer::getDepthSort, &DisplayObjectContainer::setDepthSort)
-       //.addProperty("view", &DisplayObjectContainer::getView, &DisplayObjectContainer::setView)
-       .addMethod("setClipRect", &DisplayObjectContainer::setClipRect)
-       .endClass()
+        // DisplayObjectContainer
+        .deriveClass<DisplayObjectContainer, DisplayObject>("DisplayObjectContainer")
+        .addConstructor<void(*)(void)>()
+        .addProperty("depthSort", &DisplayObjectContainer::getDepthSort, &DisplayObjectContainer::setDepthSort)
+        //.addProperty("view", &DisplayObjectContainer::getView, &DisplayObjectContainer::setView)
+        .addMethod("setClipRect", &DisplayObjectContainer::setClipRect)
+        .endClass()
 
-    // Stage
-       .deriveClass<Stage, DisplayObjectContainer>("Stage")
-       .addConstructor<void (*)(void)>()
+        // Stage
+        .deriveClass<Stage, DisplayObjectContainer>("Stage")
+        .addConstructor<void(*)(void)>()
 
-       .addMethod("render", &Stage::render)
-       .addMethod("firePendingResizeEvent", &Stage::firePendingResizeEvent)
+        .addMethod("render", &Stage::render)
+        .addMethod("firePendingResizeEvent", &Stage::firePendingResizeEvent)
 
-       .addMethod("__pget_nativeStageWidth", &Stage::getWidth)
-       .addMethod("__pget_nativeStageHeight", &Stage::getHeight)
+        .addMethod("__pget_nativeStageWidth", &Stage::getWidth)
+        .addMethod("__pget_nativeStageHeight", &Stage::getHeight)
 
-       .addProperty("orientation", &Stage::getOrientation, &Stage::setOrientation)
+        .addProperty("orientation", &Stage::getOrientation, &Stage::setOrientation)
 
-       .addVarAccessor("onTouchBegan", &Stage::getTouchBeganDelegate)
-       .addVarAccessor("onTouchMoved", &Stage::getTouchMovedDelegate)
-       .addVarAccessor("onTouchEnded", &Stage::getTouchEndedDelegate)
-       .addVarAccessor("onTouchCancelled", &Stage::getTouchCancelledDelegate)
-       .addVarAccessor("onKeyUp", &Stage::getKeyUpDelegate)
-       .addVarAccessor("onKeyDown", &Stage::getKeyDownDelegate)
-       .addVarAccessor("onMenuKey", &Stage::getMenuKeyDelegate)
-       .addVarAccessor("onBackKey", &Stage::getBackKeyDelegate)
-       .addVarAccessor("onScrollWheelYMoved", &Stage::getScrollWheelYMovedDelegate)
-       .addVarAccessor("onAccelerate", &Stage::getAccelerateDelegate)
+        .addVarAccessor("onTouchBegan", &Stage::getTouchBeganDelegate)
+        .addVarAccessor("onTouchMoved", &Stage::getTouchMovedDelegate)
+        .addVarAccessor("onTouchEnded", &Stage::getTouchEndedDelegate)
+        .addVarAccessor("onTouchCancelled", &Stage::getTouchCancelledDelegate)
+        .addVarAccessor("onKeyUp", &Stage::getKeyUpDelegate)
+        .addVarAccessor("onKeyDown", &Stage::getKeyDownDelegate)
+        .addVarAccessor("onMenuKey", &Stage::getMenuKeyDelegate)
+        .addVarAccessor("onBackKey", &Stage::getBackKeyDelegate)
+        .addVarAccessor("onScrollWheelYMoved", &Stage::getScrollWheelYMovedDelegate)
+        .addVarAccessor("onAccelerate", &Stage::getAccelerateDelegate)
 
-       .addVarAccessor("onOrientationChange", &Stage::getOrientationChangeDelegate)
-       .addVarAccessor("onSizeChange", &Stage::getSizeChangeDelegate)
+        .addVarAccessor("onOrientationChange", &Stage::getOrientationChangeDelegate)
+        .addVarAccessor("onSizeChange", &Stage::getSizeChangeDelegate)
 
-        .addStaticProperty("onRenderStage", &Stage::getRenderStageDelegate)
+        .addVar("overlayEnabled", &Stage::overlayEnabled)
+        .addVarAccessor("overlayShape", &Stage::getOverlayShape)
+
+       .addStaticProperty("onRenderStage", &Stage::getRenderStageDelegate)
 
        .endClass()
 

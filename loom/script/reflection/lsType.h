@@ -426,7 +426,7 @@ public:
      */
     inline bool isDerivedFrom(Type *baseType)
     {
-        Type *t = this->baseType;
+        Type *t = this;
 
         while (t)
         {

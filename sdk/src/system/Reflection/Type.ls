@@ -434,6 +434,8 @@ public native class Type extends MemberInfo {
     
     public native function isDerivedFrom(type:Type):Boolean;
     
+    public native function implementsInterface(inter:Type):Boolean;
+    
     /**
      *  Gets a list of all FieldInfo and PropertyInfo names on the Type.
      *

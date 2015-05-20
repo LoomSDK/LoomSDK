@@ -127,6 +127,8 @@ static int registerSystemReflectionType(lua_State *L)
 
        .addMethod("isDerivedFrom", &Type::isDerivedFrom)
 
+       .addMethod("implementsInterface", &Type::implementsInterface)
+
        .endClass()
 
 

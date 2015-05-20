@@ -21,6 +21,7 @@
 #pragma once
 
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
+#include "loom/engine/loom2d/l2dShape.h"
 #include <SDL.h>
 
 namespace Loom2D
@@ -46,6 +47,10 @@ public:
     int stageHeight;
     utString orientation;
     bool pendingResize;
+
+    bool overlayEnabled;
+    Shape overlayShape;
+    const Shape* getOverlayShape() const { return &overlayShape; }
 
     // Rendering interface.
     void invokeRenderStage()
