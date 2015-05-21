@@ -29,6 +29,14 @@
 // Follows GFX_DEBUG by default.
 #define GFX_OPENGL_CHECK GFX_DEBUG
 
+// Turn this off to disable checking all OpenGL calls
+// but keep checking shaders, framebuffers and others.
+#define GFX_CALL_CHECK GFX_OPENGL_CHECK
+
+// Print all the OpenGL calls as they happen (a lot of overhead)
+#define GFX_CALL_PRINT 0
+
+
 #include <SDL.h>
 
 #ifdef LOOM_RENDERER_OPENGLES2
@@ -60,28 +68,35 @@ namespace GFX
 
 #ifdef _WIN32
 #define GFX_CALL __stdcall
+#define GFX_DEBUG_BREAK __debugbreak();
 #else
 #define GFX_CALL
+#define GFX_DEBUG_BREAK
 #endif
 
-#if GFX_OPENGL_CHECK
+
+#if GFX_CALL_CHECK
 
 #define GFX_PREFIX gfx_internal_
 #define GFX_PREFIX_CALL_INTERNAL_CONCAT(prefix, func, args) prefix ## func args
 #define GFX_PREFIX_CALL_INTERNAL(prefix, func, args) GFX_PREFIX_CALL_INTERNAL_CONCAT(prefix, func, args)
 #define GFX_PREFIX_CALL(func, args) GFX_PREFIX_CALL_INTERNAL(GFX_PREFIX, func, args)
 
+#if GFX_CALL_PRINT
+#define GFX_PROC_PRINT(func, params, args) \
+        lmLogInfo(gGFXLogGroup, "OpenGL call: %s", #func);
+#else
+#define GFX_PROC_PRINT(func, params, args)
+#endif
+
 #define GFX_PROC_BEGIN(ret, func, params) \
         ret (GFX_CALL *GFX_PREFIX_CALL(func,)) params; \
         ret func params {
 
-#ifdef _WIN32
-#define GFX_DEBUG_BREAK __debugbreak();
-#else
-#define GFX_DEBUG_BREAK
-#endif
 
-#define GFX_PROC_MID(func) \
+
+#define GFX_PROC_MID(func, params, args) \
+        GFX_PROC_PRINT(func, params, args) \
         GLenum error = GFX_PREFIX_CALL(glGetError, ()); \
         switch (error) { \
             case GL_NO_ERROR: break; \
@@ -98,7 +113,7 @@ namespace GFX
                     case GL_INVALID_FRAMEBUFFER_OPERATION: errorName = "GL_INVALID_FRAMEBUFFER_OPERATION"; break; \
                     default: errorName = "Unknown error"; \
                 } \
-                lmLogError(gGFXLogGroup, "OpenGL error: %s (0x%04x)", errorName, error); \
+                lmLogError(gGFXLogGroup, "OpenGL error at %s: %s (0x%04x)", #func, errorName, error); \
                 GFX_DEBUG_BREAK \
                 lmAssert(error, "OpenGL error, see above for details."); \
         } \
@@ -106,13 +121,13 @@ namespace GFX
 #define GFX_PROC_VOID(func, params, args) \
         GFX_PROC_BEGIN(void, func, params) \
             GFX_PREFIX_CALL(func, args); \
-            GFX_PROC_MID(func) \
+            GFX_PROC_MID(func, params, args) \
         }
 
 #define GFX_PROC(ret, func, params, args) \
         GFX_PROC_BEGIN(ret, func, params) \
             ret returnValue = GFX_PREFIX_CALL(func, args); \
-            GFX_PROC_MID(func) \
+            GFX_PROC_MID(func, params, args) \
             return returnValue; \
         }
 
@@ -137,8 +152,8 @@ class Graphics
 
 public:
 
-	static const uint32_t FLAG_INVERTED = 1 << 0;
-	static const uint32_t FLAG_NOCLEAR  = 1 << 1;
+    static const uint32_t FLAG_INVERTED = 1 << 0;
+    static const uint32_t FLAG_NOCLEAR  = 1 << 1;
 
     static GL_Context *context()
     {
@@ -178,6 +193,7 @@ public:
 	static inline int getHeight() { return sHeight; }
 	static inline uint32_t getFlags() { return sFlags; }
 	static inline void setFlags(uint32_t flags) { sFlags = flags; }
+	static bool getStencilRequired();
 	static inline float* getMVP() {
 #if GFX_OPENGL_CHECK
 		if (sCurrentModelViewProjection == NULL) {
@@ -195,6 +211,7 @@ public:
     static void setFillColor(int color);
     static int getFillColor();
 
+    static int getBackFramebuffer() { return sBackFramebuffer; }
 
     // Set a clip rect specified by the provided parameters
     static void setClipRect(int x, int y, int width, int height);
@@ -229,6 +246,8 @@ private:
 
     // The current frame counter
     static uint32_t sCurrentFrame;
+    
+    static int sBackFramebuffer;
 
 	//static float sMVP[9];
 	static float sMVP[16];
@@ -315,7 +334,7 @@ do { \
 	switch (status) \
 	{ \
 		case GL_FRAMEBUFFER_COMPLETE: \
-			lmLogInfo(gGFXLogGroup, "Texture framebuffer #%d initialized", framebuffer); \
+			lmLogInfo(gGFXLogGroup, "Texture framebuffer #%d valid", framebuffer); \
 			break; \
 		default: \
 			const char* errorName; \

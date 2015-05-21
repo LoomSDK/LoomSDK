@@ -190,6 +190,13 @@ U32 endHighResolutionTimer(U32 time[2])
 #else // Assume *nix.
 
 #include <time.h>
+
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+#define WHICH_CLOCK CLOCK_MONOTONIC
+#else
+#define WHICH_CLOCK CLOCK_REALTIME 
+#endif
+
 struct timespec dawn;
 
 static long long timespecDeltaNs(struct timespec *then, struct timespec *now)
@@ -197,7 +204,7 @@ static long long timespecDeltaNs(struct timespec *then, struct timespec *now)
     long long deltaSec  = now->tv_sec - then->tv_sec;
     long long deltaNSec = now->tv_nsec - then->tv_nsec;
 
-    long long deltaNSecTotal = deltaSec * 1000 * 1000 + deltaNSec;
+    long long deltaNSecTotal = deltaSec * 1000 * 1000 * 1000 + deltaNSec;
 
     return deltaNSecTotal;
 }
@@ -207,9 +214,10 @@ void startHighResolutionTimer(U32 timeStore[2])
 {
     timespec now;
 
-    clock_gettime(CLOCK_REALTIME, &now); // Works on Linux
+    clock_gettime(WHICH_CLOCK, &now); // Works on Linux
 
     lmAssert(sizeof(long long) == 8, "Bad size!");
+
     *(long long *)timeStore = timespecDeltaNs(&dawn, &now);
 }
 
@@ -218,15 +226,20 @@ F64 endHighResolutionTimer(U32 timeStore[2])
 {
     timespec now;
 
-    clock_gettime(CLOCK_REALTIME, &now); // Works on Linux
+    clock_gettime(WHICH_CLOCK, &now); // Works on Linux
 
     lmAssert(sizeof(long long) == 8, "Bad size!");
-    return timespecDeltaNs(&dawn, &now) - *(long long *)timeStore;
+    long long t = timespecDeltaNs(&dawn, &now) - *(long long *)timeStore;
+    return t;
 }
 #endif
 
 LoomProfiler::LoomProfiler()
 {
+#if !defined(LOOM_PLATFORM_IS_APPLE) && LOOM_PLATFORM != LOOM_PLATFORM_WIN32
+   clock_gettime(WHICH_CLOCK, &dawn); // Works on Linux
+#endif
+
    mMaxStackDepth = MaxStackDepth;
    mCurrentHash = 0;
 
@@ -506,11 +519,11 @@ static S32 rootDataCompare(const void *s1, const void *s2)
 
 static int suppressedEntries;
 
-static void LoomProfilerEntryDumpRecurse(LoomProfilerEntry *data, char *buffer, U32 bufferLen, F64 totalTime)
+static void LoomProfilerEntryDumpRecurse(LoomProfilerEntry *data, char *buffer, U32 bufferLen, F64 totalTime, float threshold)
 {
     float tm = (float)(data->mRoot == NULL ? 100.0 : 100.0 * data->mTotalTime / totalTime);
 
-    if (tm < 0.1f)
+    if (tm < threshold)
     {
         suppressedEntries++;
     }
@@ -555,7 +568,7 @@ static void LoomProfilerEntryDumpRecurse(LoomProfilerEntry *data, char *buffer, 
     {
         if (list->mInvokeCount)
         {
-            LoomProfilerEntryDumpRecurse(list, buffer, bufferLen + 2, totalTime);
+            LoomProfilerEntryDumpRecurse(list, buffer, bufferLen + 2, totalTime, threshold);
         }
         list = list->mNextSibling;
     }
@@ -594,10 +607,12 @@ void LoomProfiler::dump()
 
     suppressedEntries = 0;
 
+    float threshold = 0.1f;
+
     for (U32 i = 0; i < rootVector.size(); i++)
     {
         float tm = (float)(100.0 * (rootVector[i]->mTotalTime - rootVector[i]->mSubTime) / totalTime);
-        if (tm >= 0.1f)
+        if (tm >= threshold)
         {
             lmLogError(gProfilerLogGroup, "%7.3f %7.3f %8d %s",
                        100.0 * (rootVector[i]->mTotalTime - rootVector[i]->mSubTime) / totalTime,
@@ -614,7 +629,7 @@ void LoomProfiler::dump()
         rootVector[i]->mTotalTime        = 0;
         rootVector[i]->mSubTime          = 0;
     }
-    lmLogError(gProfilerLogGroup, "Suppressed %i items with < 0.1%% of measured time.", suppressedEntries);
+    lmLogError(gProfilerLogGroup, "Suppressed %i items with < %.1f%% of measured time.", suppressedEntries, threshold);
     lmLogError(gProfilerLogGroup, "");
     lmLogError(gProfilerLogGroup, "Ordered by stack trace total time -");
     lmLogError(gProfilerLogGroup, "%% Time  %% NSTime  Invoke #  Name");
@@ -624,8 +639,8 @@ void LoomProfiler::dump()
     char depthBuffer[MaxStackDepth * 2 + 1];
     depthBuffer[0]    = 0;
     suppressedEntries = 0;
-    LoomProfilerEntryDumpRecurse(mCurrentLoomProfilerEntry, depthBuffer, 0, totalTime);
-    lmLogError(gProfilerLogGroup, "Suppressed %i items with < 0.1%% of measured time.", suppressedEntries);
+    LoomProfilerEntryDumpRecurse(mCurrentLoomProfilerEntry, depthBuffer, 0, totalTime, threshold);
+    lmLogError(gProfilerLogGroup, "Suppressed %i items with < %.1f%% of measured time.", suppressedEntries, threshold);
 
     mEnabled = enableSave;
     mStackDepth--;

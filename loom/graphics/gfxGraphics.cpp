@@ -48,6 +48,7 @@ namespace GFX
     uint32_t Graphics::sFlags = 0x00000000;
     int Graphics::sFillColor  = 0x000000FF;
     int Graphics::sView       = 0;
+    int Graphics::sBackFramebuffer = -1;
 
 	uint32_t Graphics::sCurrentFrame = 0;
 	/*
@@ -89,7 +90,7 @@ namespace GFX
 #define __SDL_NOGETPROCADDR__
 #endif
 
-#if GFX_OPENGL_CHECK
+#if GFX_CALL_CHECK
 #define GFX_OPENGL_FUNC(func) gfx_internal_ ## func
 #else
 #define GFX_OPENGL_FUNC(func) func
@@ -132,6 +133,10 @@ void Graphics::initialize()
     QuadRenderer::initialize();
 
     VectorRenderer::initialize();
+    
+    // Required on iOS (at least), because the back framebuffer might not be 0
+    // as it appears to be on other platforms
+    Graphics::context()->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &sBackFramebuffer);
 
     sInitialized = true;
 }
@@ -208,9 +213,9 @@ void Graphics::beginFrame()
     }
 
 	sCurrentFrame++;
-
+    
 	Graphics::reset(sWidth, sHeight, sFlags);
-
+    
     Graphics::context()->glViewport(0, 0, Graphics::getWidth(), Graphics::getHeight());
 
 	if (!(sFlags & FLAG_NOCLEAR)) {
@@ -315,6 +320,11 @@ void Graphics::setFillColor(int color)
     sFillColor = color;
 }
 
+// NanoVG requires stencil buffer for fills, so this is always true for now
+bool Graphics::getStencilRequired()
+{
+    return true || (VectorRenderer::quality & VectorRenderer::QUALITY_STENCIL_STROKES) > 0;
+}
 
 int Graphics::getFillColor()
 {

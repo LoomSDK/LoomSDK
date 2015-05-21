@@ -127,7 +127,8 @@ package loom
             //theStage = new Stage(/*layer,*/ Cocos2D.getConfigDisplayWidth(), Cocos2D.getConfigDisplayHeight(), 0x000000);
             theStage = new Stage(configWidth, configHeight, configColor);
             Loom2D.stage = theStage;
-            Stage.onRenderStage += onCocosFrame;
+
+            Stage.onRenderStage += onInternalFrame;
             
             if (assetDebugEnabled) {
                 assetDebugOverlay = new Shape();
@@ -326,7 +327,7 @@ package loom
         /**
          * Internal function to let the Stage update whenever we render.
          */
-        private function onCocosFrame():void
+        private function onInternalFrame():void
         {
             var time = Platform.getTime();
             var delta = (time-frameLastPlatformTime)/1000;

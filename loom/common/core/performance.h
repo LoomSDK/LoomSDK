@@ -214,7 +214,7 @@ public:
 
 #define LOOM_PROFILE_SCOPE(name)                          \
     static LoomProfilerRoot pdata ## name ## obj(# name); \
-    ScopedProfiler scopedProfiler ## name ## obj(&pdata ## name ## obj);
+    LoomScopedProfiler scopedProfiler ## name ## obj(&pdata ## name ## obj);
 };
 #endif
 #endif
