@@ -5,6 +5,8 @@
 
 package loom.modestmaps.core
 {
+    import loom.modestmaps.core.TileGrid;
+
     import loom2d.display.DisplayObject;
     import loom2d.display.Sprite;
     import loom2d.display.Image;
@@ -20,16 +22,19 @@ package loom.modestmaps.core
         public var row:int;
         public var column:int;
         public var inWell:Boolean;
+        public var isVisible:Boolean;
 
         protected var assignedTextures:Vector.<Texture> = [];
 
         protected static var textureRefs:Dictionary.<Texture, int> = {};
+        protected static var imagePool:Vector.<Image> = null;
 
 
         public function Tile(column:int, row:int, zoom:int)
         {
             init(column, row, zoom);
             inWell = false;
+            isVisible = false;
             count++;
         } 
         
@@ -39,7 +44,8 @@ package loom.modestmaps.core
             this.zoom = zoom;
             this.row = row;
             this.column = column;  
-            inWell = false;         
+            inWell = false;
+            isVisible = false;
             hide();
         }        
 
@@ -67,15 +73,26 @@ package loom.modestmaps.core
                 //dispose the image data
                 if(child is Image)
                 {
-                    child.dispose();
+                    imagePool.pushSingle(child as Image);
                 }
             }
         }
 
         public function assignTexture(texture:Texture):Image
         {
+            //create the pool if we need to
+            if((imagePool == null) || (imagePool.length == 0))
+            {
+                imagePool = new Vector.<Image>(TileGrid.MaxTilesToKeep * 2);
+                for(var i=0;i<imagePool.length;i++)
+                {
+                    imagePool[i] = new Image(null);
+                }
+            }
+            
             //create an image for the newly loaded texture and add it to the tile
-            var img:Image = new Image(texture);                    
+            var img:Image = imagePool.pop();
+            img.texture = texture;              
             addChild(img);
 
             //texture ref counter

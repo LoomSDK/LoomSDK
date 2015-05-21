@@ -328,23 +328,7 @@ package loom.modestmaps.core
                 return;
             }
 
-            var boundsEnforced:Boolean = enforceBounds();
-            
-            if (zooming || panning) {
-                if (panning) {
-                    onPanned();
-                }   
-                if (zooming) {
-                    onZoomed();
-                }
-            }
-            else if (boundsEnforced) {
-                onChanged();
-            }
-            else if (matrixChanged) {
-                matrixChanged = false;
-                onChanged();
-            }
+            processChange();
             
             // what zoom level of tiles should we be loading, taking into account min/max zoom?
             // (0 when scale == 1, 1 when scale == 2, 2 when scale == 4, etc.)
@@ -359,79 +343,20 @@ package loom.modestmaps.core
             // this is the level of tiles we'll be loading:
             currentTileZoom = newZoom;
         
-            // find start and end columns for the visible tiles, at current tile zoom
-            // we project all four corners to take account of potential rotation in worldMatrix
-            var tlC:Coordinate = topLeftCoordinate.zoomTo(currentTileZoom);
-            var brC:Coordinate = bottomRightCoordinate.zoomTo(currentTileZoom);
-            var trC:Coordinate = topRightCoordinate.zoomTo(currentTileZoom);
-            var blC:Coordinate = bottomLeftCoordinate.zoomTo(currentTileZoom);
-            
-            // optionally pad it out a little bit more with a tile buffer
-            // TODO: investigate giving a directional bias to TILE_BUFFER when panning quickly
-            // NB:- I'm pretty sure these calculations are accurate enough that using 
-            //      Math.ceil for the maxCols will load one column too many -- Tom
-            var minCol:int = Math.floor(Math.min(tlC.column,brC.column,trC.column,blC.column)) - TileBuffer;
-            var maxCol:int = Math.floor(Math.max(tlC.column,brC.column,trC.column,blC.column)) + TileBuffer;
-            var minRow:int = Math.floor(Math.min(tlC.row,brC.row,trC.row,blC.row)) - TileBuffer;
-            var maxRow:int = Math.floor(Math.max(tlC.row,brC.row,trC.row,blC.row)) + TileBuffer;
-            
-            // loop over all tiles and find parent or child tiles from cache to compensate for unloaded tiles:
-            repopulateVisibleTiles(minCol, maxCol, minRow, maxRow);
-            
-            // move visible tiles to the end of recentlySeen if we're done loading them
-            // the 'least recently seen' tiles will be removed from the tileCache below
-            for each (var visibleTile:Tile in visibleTiles) {
-                if (tilePainter.isPainted(visibleTile)) {
-                    recentlySeen.remove(visibleTile.name); 
-                    recentlySeen.pushSingle(visibleTile.name);
-                }
-            }
+            //figure out the visible tiles
+            determineVisibleTiles();
 
-//TODO_24: better way to do this...
-            // prune tiles from the well if they shouldn't be there (not currently in visibleTiles)
-            // TODO: unless they're fading in or out?
-            // (loop backwards so removal doesn't change i)
-            for (var i:int = well.numChildren-1; i >= 0; i--) {
-                var wellTile:Tile = well.getChildAt(i) as Tile;
-                
-                if (visibleTiles.indexOf(wellTile) < 0) {
-                    well.removeChild(wellTile);
-                    wellTiles[wellTile.name] = null;
-                    wellTile.inWell = false;
-                    wellTile.hide();
-                    tilePainter.cancelPainting(wellTile);
-                }
-            }
+            // loop over all tiles and find parent or child tiles from cache to compensate for unloaded tiles:
+            repopulateVisibleTiles(MinColRow.x, MaxColRow.x, MinColRow.y, MaxColRow.y);
+            
+            //remove unused tiles
+            pruneTiles();
 
             // position tiles such that currentZoom is approximately scale 1
             // and x and y make sense in pixels relative to tlC.column and tlC.row (topleft)
-            positionTiles(tlC.column, tlC.row);
-
-            // all the visible tiles will be at the end of recentlySeen
-            // let's make sure we keep them around:
-            var maxRecentlySeen:int = Math.max(visibleTiles.length, MaxTilesToKeep);
+            positionTiles(TopLeftColRow.x, TopLeftColRow.y);
             
-            // prune cache of already seen tiles if it's getting too big:
-            if (recentlySeen.length > maxRecentlySeen) {
-
-                // can we sort so that biggest zoom levels get removed first, without removing currently visible tiles?
-                /*
-                var visibleKeys:Array = recentlySeen.slice(recentlySeen.length - visibleTiles.length, recentlySeen.length);
-
-                // take a look at everything else
-                recentlySeen = recentlySeen.slice(0, recentlySeen.length - visibleTiles.length);
-                recentlySeen = recentlySeen.sort(Array.DESCENDING);
-                recentlySeen = recentlySeen.concat(visibleKeys); 
-                */
-                
-                // throw away keys at the beginning of recentlySeen
-                recentlySeen = recentlySeen.slice(recentlySeen.length - maxRecentlySeen, recentlySeen.length);
-                
-                // loop over our internal tile cache 
-                // and throw out tiles not in recentlySeen
-                tilePainter.retainKeysInCache(recentlySeen);
-            }
-            
+//TODO_24: don't need coord objects, just col and row per        
             // update centerRow and centerCol for sorting the tileQueue in processQueue()
             var center:Coordinate = centerCoordinate.zoomTo(currentTileZoom);
             centerRow = center.row;
@@ -443,7 +368,94 @@ package loom.modestmaps.core
                         
             //trace(getTimer() - t, "ms in", provider);         
         }
+
+        private function processChange():void
+        {
+            var boundsEnforced:Boolean = enforceBounds();            
+            if (zooming || panning) {
+                if (panning) {
+                    onPanned();
+                }   
+                if (zooming) {
+                    onZoomed();
+                }
+            }
+            else if (boundsEnforced) {
+                onChanged();
+            }
+            else if (matrixChanged) {
+                matrixChanged = false;
+                onChanged();
+            }            
+        }
                 
+
+        private var MinColRow:Point;
+        private var MaxColRow:Point;
+        private var TopLeftColRow:Point;
+//TODO_24: coordinate getters are terrible here... native the whole thing?      
+        private function determineVisibleTiles():void
+        {
+            // find start and end columns for the visible tiles, at current tile zoom
+            // we project all four corners to take account of potential rotation in worldMatrix
+            topLeftCoordinate.zoomToInPlace(currentTileZoom);
+            bottomRightCoordinate.zoomToInPlace(currentTileZoom);
+            topRightCoordinate.zoomToInPlace(currentTileZoom);
+            bottomLeftCoordinate.zoomToInPlace(currentTileZoom);
+            TopLeftColRow.x = topLeftCoordinate.zoomToCol;
+            TopLeftColRow.y = topLeftCoordinate.zoomToRow;
+            
+            // optionally pad it out a little bit more with a tile buffer
+            // TODO: investigate giving a directional bias to TILE_BUFFER when panning quickly
+            // NB:- I'm pretty sure these calculations are accurate enough that using 
+            //      Math.ceil for the maxCols will load one column too many -- Tom         
+            MinColRow.x = Math.floor(minCoord(topLeftCoordinate.zoomToCol, 
+                                                bottomRightCoordinate.zoomToCol,
+                                                topRightCoordinate.zoomToCol,
+                                                bottomLeftCoordinate.zoomToCol)) - TileBuffer;
+            MaxColRow.x = Math.floor(maxCoord(topLeftCoordinate.zoomToCol,
+                                                bottomRightCoordinate.zoomToCol,
+                                                topRightCoordinate.zoomToCol,
+                                                bottomLeftCoordinate.zoomToCol)) + TileBuffer;
+            MinColRow.y = Math.floor(minCoord(topLeftCoordinate.zoomToRow,
+                                                bottomRightCoordinate.zoomToRow,
+                                                topRightCoordinate.zoomToRow,
+                                                bottomLeftCoordinate.zoomToRow)) - TileBuffer;
+            MaxColRow.y = Math.floor(maxCoord(topLeftCoordinate.zoomToRow,
+                                                bottomRightCoordinate.zoomToRow,
+                                                topRightCoordinate.zoomToRow,
+                                                bottomLeftCoordinate.zoomToRow)) + TileBuffer;
+        }
+
+        private function minCoord(a:Number, b:Number, c:Number, d:Number):Number
+        {
+            if(a < b)
+            {
+                if(a < c) { return (a < d) ? a : d; }
+                else { return (c < d) ? c : d; }
+            }
+            else
+            {
+                if(b < c) { return (b < d) ? b : d; }
+                else { return (c < d) ? c : d; }
+            }
+        }
+
+        private function maxCoord(a:Number, b:Number, c:Number, d:Number):Number
+        {
+            if(a > b)
+            {
+                if(a > c) { return (a > d) ? a : d; }
+                else { return (c > d) ? c : d; }
+            }
+            else
+            {
+                if(b > c) { return (b > d) ? b : d; }
+                else { return (c > d) ? c : d; }
+            }
+        }
+
+
         /**
          * loops over given cols and rows and adds tiles to visibleTiles array and the well
          * using child or parent tiles to compensate for tiles not yet available in the tileCache
@@ -451,7 +463,11 @@ package loom.modestmaps.core
         var WorkCoord:Coordinate = new Coordinate(0,0,0);
         var searchedParentKeys:Dictionary.<String, Boolean> = {};
         private function repopulateVisibleTiles(minCol:int, maxCol:int, minRow:int, maxRow:int):void
-        {            
+        {   
+            //reset the visible tile flags
+            for each (var vizTile:Tile in visibleTiles) {
+                vizTile.isVisible = false;
+            }                         
             visibleTiles.clear(); 
             searchedParentKeys.clear();
             blankCount = 0; // keep count of how many tiles we missed?
@@ -483,6 +499,7 @@ package loom.modestmaps.core
                     }
                                         
                     visibleTiles.pushSingle(tile);
+                    tile.isVisible = true;
                     
                     var tileReady:Boolean = tile.isShowing() && !tilePainter.isPainting(tile);
                     
@@ -586,6 +603,60 @@ package loom.modestmaps.core
             
         } // repopulateVisibleTiles
         
+
+        private function pruneTiles():void
+        {
+            // move visible tiles to the end of recentlySeen if we're done loading them
+            // the 'least recently seen' tiles will be removed from the tileCache below
+            for each (var visibleTile:Tile in visibleTiles) {
+                if (tilePainter.isPainted(visibleTile)) {
+                    recentlySeen.remove(visibleTile.name); 
+                    recentlySeen.pushSingle(visibleTile.name);
+                }
+            }
+
+            // prune tiles from the well if they shouldn't be there (not currently in visibleTiles)
+            // TODO: unless they're fading in or out?
+            // (loop backwards so removal doesn't change i)
+            for (var i:int = well.numChildren-1; i >= 0; i--) {
+                var wellTile:Tile = well.getChildAt(i) as Tile;
+                
+                if (!wellTile.isVisible) {
+                    well.removeChild(wellTile);
+                    wellTiles[wellTile.name] = null;
+                    wellTile.inWell = false;
+                    wellTile.hide();
+                    tilePainter.cancelPainting(wellTile);
+                }
+            }
+
+            // all the visible tiles will be at the end of recentlySeen
+            // let's make sure we keep them around:
+            var maxRecentlySeen:int = Math.max(visibleTiles.length, MaxTilesToKeep);
+            
+            // prune cache of already seen tiles if it's getting too big:
+            if (recentlySeen.length > maxRecentlySeen) {
+
+                // can we sort so that biggest zoom levels get removed first, without removing currently visible tiles?
+                /*
+                var visibleKeys:Array = recentlySeen.slice(recentlySeen.length - visibleTiles.length, recentlySeen.length);
+
+                // take a look at everything else
+                recentlySeen = recentlySeen.slice(0, recentlySeen.length - visibleTiles.length);
+                recentlySeen = recentlySeen.sort(Array.DESCENDING);
+                recentlySeen = recentlySeen.concat(visibleKeys); 
+                */
+                
+                // throw away keys at the beginning of recentlySeen
+                recentlySeen = recentlySeen.slice(recentlySeen.length - maxRecentlySeen, recentlySeen.length);
+                
+                // loop over our internal tile cache 
+                // and throw out tiles not in recentlySeen
+                tilePainter.retainKeysInCache(recentlySeen);
+            }
+        }
+
+
         // TODO: do this with events instead?
         public function tilePainted(tile:Tile):void
         {           
@@ -697,9 +768,10 @@ package loom.modestmaps.core
                     tile.inWell = true;
                     tilePainted(tile);
                 }
-                if (visibleTiles.indexOf(tile) < 0) {
-//TODO_24: tile.isVisible?                    
+
+                if (!tile.isVisible) {
                     visibleTiles.pushSingle(tile); // don't get rid of it yet!
+                    tile.isVisible = true;
                 }
                 return tile;
             }
@@ -722,11 +794,12 @@ package loom.modestmaps.core
                 wellTiles[key] = tile;
                 tile.inWell = true;
             }
+            tile.isVisible = true;
             return tile;
         }
 
         
-//TODO_24: native? set native helper vars?   
+//TODO_24: native? set native helper vars?   #2
         //NOTE_TEC: Removed Vector<> creation for return to save garbage generation
         private var ParentCoordCol:int;
         private var ParentCoordRow:int;
@@ -984,7 +1057,7 @@ package loom.modestmaps.core
         {
             calcCoordinatePointRCZ(coord.row, coord.column, coord.zoom, context, shouldRound);
         }
-//TODO_24: native        
+//TODO_24: native HI PRI!!!   
         public function calcCoordinatePointRCZ(row:Number, col:Number, zoom:Number, context:DisplayObject=null, shouldRound:Boolean=false):void
         {            
             // this is basically the same as coord.zoomTo, but doesn't make a new Coordinate:
