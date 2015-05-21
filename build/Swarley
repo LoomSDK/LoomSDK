@@ -303,5 +303,5 @@ namespace :post do
 end
 
 def decompile_apk (file, destination)
-  sh "java -jar artifacts/android/apktool.jar d -f #{file} #{destination}"
+  sh "java -jar artifacts/android/apktool.jar d -f #{file} -o #{destination}"
 end

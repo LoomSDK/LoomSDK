@@ -1180,7 +1180,7 @@ end
 
 def decompile_apk (file, destination)
   puts "Decompiling APK #{file} to #{destination}..."
-  sh "java -jar tools/apktool/apktool.jar d -f #{file} #{destination}"
+  sh "java -jar tools/apktool/apktool.jar d -f #{file} -o #{destination}"
 end
 
 def require_dependencies
