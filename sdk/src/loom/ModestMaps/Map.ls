@@ -360,20 +360,10 @@ package loom.modestmaps
                 
                 grid.resizeTo(new Point(mapWidth, mapHeight));
                 
-                dispatchEvent(new MapEvent(MapEvent.RESIZED, this.getSize()));
+                dispatchEvent(MapEvent.Resized(mapWidth, mapHeight));
             }           
         }
     
-       /**
-        * Get map size.
-        *
-        * @return   Array of [width, height].
-        */
-        public function getSize():Vector.<Number> /*Number*/
-        {
-            var size:/*Number*/Vector.<Number> = [mapWidth, mapHeight];
-            return size;
-        }
         
         public function get size():Point
         {
@@ -437,7 +427,7 @@ package loom.modestmaps
             }
             
             // among other things this will notify the marker clip that its cached coordinates are invalid
-            dispatchEvent(new MapEvent(MapEvent.MAP_PROVIDER_CHANGED, [newProvider]));
+            dispatchEvent(MapEvent.MapProviderChanged(newProvider));
         }
         
        /**
@@ -678,7 +668,7 @@ package loom.modestmaps
         protected function onExtentChanged(event:Event=null):void
         {
             if (hasEventListener(MapEvent.EXTENT_CHANGED)) {
-                dispatchEvent(new MapEvent(MapEvent.EXTENT_CHANGED, [getExtent()]));
+                dispatchEvent(MapEvent.ExtentChanged(getExtent()));
             }
         }
 
@@ -691,7 +681,7 @@ package loom.modestmaps
         protected function onExtentChanging():void
         {
             if (hasEventListener(MapEvent.BEGIN_EXTENT_CHANGE)) {
-                dispatchEvent(new MapEvent(MapEvent.BEGIN_EXTENT_CHANGE, [getExtent()]));
+                dispatchEvent(MapEvent.BeginExtentChange(getExtent()));
             }
         }
 

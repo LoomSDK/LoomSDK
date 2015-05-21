@@ -30,7 +30,7 @@ package loom.modestmaps.events
         public var panDelta:Point;
         
         public static const RESIZED:String = 'resized';
-        public var newSize:Vector.<Number>;
+        public var newSize:Point;
                 
         public static const COPYRIGHT_CHANGED:String = 'copyrightChanged';
         public var newCopyright:String;
@@ -50,59 +50,82 @@ package loom.modestmaps.events
         /** listen out for this if you want to be sure map is in its final state before reprojecting markers etc. */
         public static const RENDERED:String = 'rendered';
 
-        public function MapEvent(type:String, ...rest)
+        public function MapEvent(type:String)
         {
-            super(type, true, true);
-            
-            switch(type) {
-                case PANNED:
-                    if (rest.length == 2 && rest[0] is Number && rest[1] is Number) {
-                        panDelta.x = rest[0] as Number;
-                        panDelta.y = rest[1] as Number;
-                    }
-                    break;
-                case ZOOMED_BY:
-                    if (rest.length > 0 && rest[0] is Number) {
-                        zoomDelta = rest[0] as Number;
-                    }
-                    break;
-                case EXTENT_CHANGED:
-                    if (rest.length > 0 && rest[0] is MapExtent) {
-                        newExtent = rest[0] as MapExtent;
-                    }
-                    break;              
-                case START_ZOOMING:
-                case STOP_ZOOMING:
-                    if (rest.length > 0 && rest[0] is Number) {
-                        zoomLevel = rest[0] as Number;
-                    }
-                    break;                  
-                case RESIZED:
-                    if (rest.length > 0 && rest[0] is Vector.<Number>) {
-                        newSize = rest[0] as Vector.<Number>;
-                    }
-                    break;              
-                case COPYRIGHT_CHANGED:
-                    if (rest.length > 0 && rest[0] is String) {
-                        newCopyright = rest[0] as String;
-                    }
-                    break;              
-                case BEGIN_EXTENT_CHANGE:
-                    if (rest.length > 0 && rest[0] is MapExtent) {
-                        oldExtent = rest[0] as MapExtent;
-                    }
-                    break;              
-                case MAP_PROVIDER_CHANGED:
-                    if (rest.length > 0 && rest[0] is IMapProvider) {
-                        newMapProvider = rest[0] as IMapProvider;
-                    }
-            }
-            
+            super(type, true);
+        }
+
+
+        public static function Panned(px:Number, py:Number) : MapEvent
+        {
+            var mEvent:MapEvent = new MapEvent(PANNED);
+            mEvent.panDelta.x = px;
+            mEvent.panDelta.y = py;
+            return mEvent;
+        }
+
+        public static function ZoomedBy(zPrev:Number, zNew:Number) : MapEvent
+        {
+            var mEvent:MapEvent = new MapEvent(ZOOMED_BY);
+            mEvent.zoomDelta = zNew - zPrev;
+            mEvent.zoomLevel = zNew;
+            return mEvent;
+        }
+
+        public static function BeginExtentChange(extent:MapExtent) : MapEvent
+        {
+            var mEvent:MapEvent = new MapEvent(BEGIN_EXTENT_CHANGE);
+            mEvent.oldExtent = extent;
+            return mEvent;
+        }
+
+        public static function ExtentChanged(extent:MapExtent) : MapEvent
+        {
+            var mEvent:MapEvent = new MapEvent(EXTENT_CHANGED);
+            mEvent.newExtent = extent;
+            return mEvent;
+        }
+
+        public static function StartZooming(z:Number) : MapEvent
+        {
+            var mEvent:MapEvent = new MapEvent(START_ZOOMING);
+            mEvent.zoomLevel = z;
+            return mEvent;
+        }
+
+        public static function StopZooming(zPrev:Number, zNew:Number) : MapEvent
+        {
+            var mEvent:MapEvent = new MapEvent(STOP_ZOOMING);
+            mEvent.zoomDelta = zNew - zPrev;
+            mEvent.zoomLevel = zNew;
+            return mEvent;
+        }
+
+        public static function Resized(sx:Number, sy:Number) : MapEvent
+        {
+            var mEvent:MapEvent = new MapEvent(RESIZED);
+            mEvent.newSize.x = sx;
+            mEvent.newSize.y = sy;
+            return mEvent;
+        }
+
+        public static function CopyrightChanged(copyright:String) : MapEvent
+        {
+            var mEvent:MapEvent = new MapEvent(COPYRIGHT_CHANGED);
+            mEvent.newCopyright = copyright;
+            return mEvent;
+        }
+
+        public static function MapProviderChanged(provider:IMapProvider) : MapEvent
+        {
+            var mEvent:MapEvent = new MapEvent(MAP_PROVIDER_CHANGED);
+            mEvent.newMapProvider = provider;
+            return mEvent;
         }
         
         override public function clone():Event
         {
-            return new MapEvent(this.type, []);
+            return new MapEvent(this.type);
         }
     }
 }

@@ -256,14 +256,14 @@ package loom.modestmaps.core.painter
             // you might want to wait for tiles to load before displaying other data, interface elements, etc.
             // these events take care of that for you...
             if (previousOpenRequests == 0 && openRequests.length > 0) {
-                dispatchEvent(new MapEvent(MapEvent.BEGIN_TILE_LOADING, []));
+                dispatchEvent(new MapEvent(MapEvent.BEGIN_TILE_LOADING));
             }
             else if (previousOpenRequests > 0)
             {
                 // if we're finished...
                 if (openRequests.length == 0)
                 {
-                    dispatchEvent(new MapEvent(MapEvent.ALL_TILES_LOADED, []));
+                    dispatchEvent(new MapEvent(MapEvent.ALL_TILES_LOADED));
                 }
             }
             

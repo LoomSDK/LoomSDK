@@ -19,6 +19,7 @@ package loom.modestmaps.core
         public var zoom:int;
         public var row:int;
         public var column:int;
+        public var inWell:Boolean;
 
         protected var assignedTextures:Vector.<Texture> = [];
 
@@ -28,7 +29,7 @@ package loom.modestmaps.core
         public function Tile(column:int, row:int, zoom:int)
         {
             init(column, row, zoom);
-                        
+            inWell = false;
             count++;
         } 
         
@@ -37,7 +38,8 @@ package loom.modestmaps.core
         {
             this.zoom = zoom;
             this.row = row;
-            this.column = column;           
+            this.column = column;  
+            inWell = false;         
             hide();
         }        
 

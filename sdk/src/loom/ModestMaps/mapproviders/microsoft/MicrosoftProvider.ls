@@ -56,6 +56,7 @@ package loom.modestmaps.mapproviders.microsoft
             __topLeftOutLimit.zoomTo(1);
         }
         
+//TODO_24: Native        
         protected function getZoomString(coord:Coordinate):String
         {
             var sourceCoord:Coordinate = sourceCoordinate(coord);
