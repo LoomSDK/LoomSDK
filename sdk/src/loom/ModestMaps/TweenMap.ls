@@ -9,6 +9,7 @@
  */
 package loom.modestmaps
 {
+    import loom.modestmaps.ModestMaps;
     import loom.modestmaps.core.Coordinate;
     import loom.modestmaps.core.MapExtent;
     import loom.modestmaps.core.TweenTile;
@@ -134,7 +135,7 @@ package loom.modestmaps
             
             var m:Matrix = grid.getMatrix();
             
-            m.translate(-grid.CoordinatePoint.x, -grid.CoordinatePoint.y);
+            m.translate(-ModestMaps.LastCoordinateX, -ModestMaps.LastCoordinateY);
             m.scale(sc, sc);
             m.translate(targetPoint.x, targetPoint.y);
             
@@ -182,7 +183,7 @@ package loom.modestmaps
             
             var m:Matrix = grid.getMatrix();
             
-            m.translate(-grid.CoordinatePoint.x, -grid.CoordinatePoint.y);
+            m.translate(-ModestMaps.LastCoordinateX, -ModestMaps.LastCoordinateY);
             m.scale(sc, sc);
             m.translate(mapWidth/2, mapHeight/2);
             
@@ -203,8 +204,8 @@ package loom.modestmaps
         public function panTo(location:Location, forceAnimate:Boolean=false):void
         {
             calcLocationPoint(location, grid);
-            var px = grid.CoordinatePoint.x;
-            var py = grid.CoordinatePoint.y;
+            var px = ModestMaps.LastCoordinateX;
+            var py = ModestMaps.LastCoordinateY;
 
             if (forceAnimate || (px >= 0 && px <= mapWidth && py >= 0 && py <= mapHeight))
             {
@@ -232,8 +233,8 @@ package loom.modestmaps
         public function tweenTo(location:Location, duration:Number, easing:Function=null):void
         {
             calcLocationPoint(location, grid);
-            var panX:Number = (mapWidth / 2) - grid.CoordinatePoint.x;
-            var panY:Number = (mapHeight / 2) - grid.CoordinatePoint.y;
+            var panX:Number = (mapWidth / 2) - ModestMaps.LastCoordinateX;
+            var panY:Number = (mapHeight / 2) - ModestMaps.LastCoordinateY;
             Loom2D.juggler.tween(grid, duration, { "ty": grid.ty + panY,
                                                    "tx": grid.tx + panX,
                                                    "transitionFunc": easing,

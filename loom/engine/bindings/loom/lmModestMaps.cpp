@@ -24,8 +24,14 @@
 #include "loom/script/runtime/lsRuntime.h"
 #include "loom/common/utils/utString.h"
 
+#include "loom/graphics/gfxMath.h"
+#include "loom/engine/loom2d/l2dDisplayObject.h"
+#include "loom/engine/loom2d/l2dMatrix.h"
+
 
 using namespace LS;
+using namespace Loom2D;
+
 
 
 /// Script bindings to the native ModestMaps API.
@@ -34,6 +40,12 @@ using namespace LS;
 class ModestMaps
 {
 public:
+    static float lastCoordinateX;
+    static float lastCoordinateY;
+    static int parentLoadCol;
+    static int parentLoadRow;
+    static int parentLoadZoom;
+
 
     static utString tileKey(int col, int row, int zoom)
     {
@@ -41,8 +53,88 @@ public:
         sprintf(key, "%c:%i:%i", (char)(((int)'a')+zoom), col, row);
         return utString(key);
     }
+ 
+    static utString prepParentLoad(int col, int row, int zoom, int parentZoom)
+    {
+        //NOTE_TEC: zoomDiff should always be +ve
+        int zoomDiff = zoom - parentZoom;
+        if(zoomDiff <= 0)
+        {
+            parentLoadCol = col;
+            parentLoadRow = row;
+            parentLoadZoom = zoom;
+        }
+        else
+        {
+            float invScaleFactor = 1.0f / (float)(1 << zoomDiff);
+            parentLoadCol = floor((float)col * invScaleFactor); 
+            parentLoadRow = floor((float)row * invScaleFactor);
+            parentLoadZoom = parentZoom;
+        }
+        return tileKey(parentLoadCol, parentLoadRow, parentLoadZoom);
+    }
 
+    static void setLastCoordinate(float col,
+                                    float row,
+                                    float zoom,
+                                    float zoomLevel,
+                                    float invTileWidth,
+                                    Matrix *worldMatrix,
+                                    DisplayObject *context,
+                                    DisplayObject *object)
+    {
+        // this is basically the same as coord.zoomTo, but doesn't make a new Coordinate:
+        float zoomFactor = pow(2, zoomLevel - zoom) * invTileWidth;
+        float zoomedColumn = col * zoomFactor;
+        float zoomedRow = row * zoomFactor;
+                    
+        worldMatrix->transformCoordInternal(zoomedColumn, zoomedRow, &lastCoordinateX, &lastCoordinateY);
+
+        //transform into correct space if necessary
+        if ((context != NULL) && (context != object))
+        {
+            localToGlobal((DisplayObject *)(object->parent), &lastCoordinateX, &lastCoordinateY);
+            globalToLocal(context, &lastCoordinateX, &lastCoordinateY);
+        }
+    } 
+
+
+
+
+private:
+    static void localToGlobal(DisplayObject *obj, float *x, float *y)
+    {
+        //find the base of the object to start
+        DisplayObject *base = obj;
+        while (base->parent) { base = (DisplayObject *)base->parent; }
+
+        //get the matrix and transform!
+        Matrix mtx;
+        obj->getTargetTransformationMatrix(base, &mtx);
+        mtx.transformCoordInternal(*x, *y, x, y);
+    }
+
+
+    static void globalToLocal(DisplayObject *obj, float *x, float *y)
+    {
+        //find the base of the object to start
+        DisplayObject *base = obj;
+        while (base->parent) { base = (DisplayObject *)base->parent; }
+
+        //get the matrix and transform!
+        Matrix mtx;
+        obj->getTargetTransformationMatrix(base, &mtx);
+        mtx.invert();
+        mtx.transformCoordInternal(*x, *y, x, y);
+    }
 };
+
+float ModestMaps::lastCoordinateX = 0.0f;
+float ModestMaps::lastCoordinateY = 0.0f;
+int ModestMaps::parentLoadCol = 0;
+int ModestMaps::parentLoadRow = 0;
+int ModestMaps::parentLoadZoom = 0;
+
 
 
 
@@ -53,7 +145,15 @@ static int registerLoomModestMaps(lua_State *L)
 
         .beginClass<ModestMaps>("ModestMaps")
 
+            .addStaticVar("LastCoordinateX", &ModestMaps::lastCoordinateX)
+            .addStaticVar("LastCoordinateY", &ModestMaps::lastCoordinateY)
+            .addStaticVar("ParentLoadCol", &ModestMaps::parentLoadCol)
+            .addStaticVar("ParentLoadRow", &ModestMaps::parentLoadRow)
+            .addStaticVar("ParentLoadZoom", &ModestMaps::parentLoadZoom)
+
             .addStaticMethod("tileKey", &ModestMaps::tileKey)
+            .addStaticMethod("prepParentLoad", &ModestMaps::prepParentLoad)
+            .addStaticMethod("setLastCoordinate", &ModestMaps::setLastCoordinate)
 
         .endClass()
 

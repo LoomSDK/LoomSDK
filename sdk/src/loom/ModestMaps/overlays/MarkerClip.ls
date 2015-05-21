@@ -1,5 +1,6 @@
 package loom.modestmaps.overlays
 {
+    import loom.modestmaps.ModestMaps;
     import loom.modestmaps.Map;
     import loom.modestmaps.core.Coordinate;
     import loom.modestmaps.events.MapEvent;
@@ -307,8 +308,8 @@ package loom.modestmaps.overlays
                 // but map.locationPoint hands off to grid to grid.coordinatePoint
                 // in the end so we may as well cache the first step
                 map.grid.calcCoordinatePoint(coordinates[marker], this);
-                marker.x = snapToPixels ? Math.round(map.grid.CoordinatePoint.x) : map.grid.CoordinatePoint.x;
-                marker.y = snapToPixels ? Math.round(map.grid.CoordinatePoint.y) : map.grid.CoordinatePoint.y;
+                marker.x = snapToPixels ? Math.round(ModestMaps.LastCoordinateX) : ModestMaps.LastCoordinateX;
+                marker.y = snapToPixels ? Math.round(ModestMaps.LastCoordinateY) : ModestMaps.LastCoordinateY;
 
                 var w:Number = map.getWidth() * 2;
                 var h:Number = map.getHeight() * 2;
@@ -344,7 +345,7 @@ package loom.modestmaps.overlays
         {
             if (drawCoord) {
                 map.grid.calcCoordinatePoint(drawCoord);
-                setPos(map.grid.CoordinatePoint.x, map.grid.CoordinatePoint.y);
+                setPos(ModestMaps.LastCoordinateX, ModestMaps.LastCoordinateY);
             }
             else {
                 dirty = true;

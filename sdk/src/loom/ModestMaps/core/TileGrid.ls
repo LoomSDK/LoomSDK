@@ -282,7 +282,7 @@ package loom.modestmaps.core
         protected function onPanned():void
         {
             calcCoordinatePoint(startPan);
-            dispatchEvent(MapEvent.Panned(CoordinatePoint.x - mapWidth/2, CoordinatePoint.y - mapHeight/2));
+            dispatchEvent(MapEvent.Panned(ModestMaps.LastCoordinateX - mapWidth/2, ModestMaps.LastCoordinateY - mapHeight/2));
         }
         
         protected function onZoomed():void
@@ -356,11 +356,10 @@ package loom.modestmaps.core
             // and x and y make sense in pixels relative to tlC.column and tlC.row (topleft)
             positionTiles(TopLeftColRow.x, TopLeftColRow.y);
             
-//TODO_24: don't need coord objects, just col and row per        
             // update centerRow and centerCol for sorting the tileQueue in processQueue()
-            var center:Coordinate = centerCoordinate.zoomTo(currentTileZoom);
-            centerRow = center.row;
-            centerColumn = center.column;
+            centerCoordinate.zoomToInPlace(currentTileZoom);
+            centerColumn = centerCoordinate.zoomToCol;
+            centerRow = centerCoordinate.zoomToRow;
 
             onRendered();
 
@@ -464,6 +463,7 @@ package loom.modestmaps.core
         var searchedParentKeys:Dictionary.<String, Boolean> = {};
         private function repopulateVisibleTiles(minCol:int, maxCol:int, minRow:int, maxRow:int):void
         {   
+//TODO_24: break up into sub functions for better profiling breakdown            
             //reset the visible tile flags
             for each (var vizTile:Tile in visibleTiles) {
                 vizTile.isVisible = false;
@@ -521,7 +521,7 @@ package loom.modestmaps.core
                             
                             // if it still doesn't have enough images yet, or it's fading in, try a double size parent instead
                             if (MaxParentSearch > 0 && currentTileZoom > minZoom) {
-                                var firstParentKey:String = prepParentTile(col, row, currentTileZoom, currentTileZoom-1);
+                                var firstParentKey:String = ModestMaps.prepParentLoad(col, row, currentTileZoom, currentTileZoom-1);
                                 if (!searchedParentKeys[firstParentKey]) {
                                     searchedParentKeys[firstParentKey] = true;
                                     if (ensureVisible(firstParentKey)) {
@@ -571,7 +571,7 @@ package loom.modestmaps.core
                             var endZoomSearch:int = Math.max(minZoom, currentTileZoom-MaxParentSearch);
                             
                             for (var pzoom:int = startZoomSearch; pzoom >= endZoomSearch; pzoom--) {
-                                var pkey:String = prepParentTile(col, row, currentTileZoom, pzoom);
+                                var pkey:String = ModestMaps.prepParentLoad(col, row, currentTileZoom, pzoom);
                                 if (!searchedParentKeys[pkey]) {
                                     searchedParentKeys[pkey] = true;
                                     if (ensureVisible(pkey)) {                              
@@ -619,10 +619,10 @@ package loom.modestmaps.core
             // TODO: unless they're fading in or out?
             // (loop backwards so removal doesn't change i)
             for (var i:int = well.numChildren-1; i >= 0; i--) {
-                var wellTile:Tile = well.getChildAt(i) as Tile;
+                var wellTile:Tile = well.getChildAtUnsafe(i) as Tile;
                 
                 if (!wellTile.isVisible) {
-                    well.removeChild(wellTile);
+                    well.removeChildAt(i);
                     wellTiles[wellTile.name] = null;
                     wellTile.inWell = false;
                     wellTile.hide();
@@ -710,14 +710,21 @@ package loom.modestmaps.core
                 // if we set them all to the last child, descending, they should end up correctly sorted
                 well.moveChildLast(tile);
 
-//_TODO_24: native all below here
+//_TODO_24: native all below here... need to return scale, x, y, rot... doable?
                 tile.scaleX = tile.scaleY = _tileScales[tile.zoom];
 
                 // rounding can also helps the rare seams not fixed by rounding the tile scale, 
                 // but makes slow zooming uglier: 
-                calcCoordinatePointRCZ(tile.row, tile.column, tile.zoom, null, (!zooming && RoundPositionsEnabled));
-                tile.x = CoordinatePoint.x;
-                tile.y = CoordinatePoint.y;                
+                ModestMaps.setLastCoordinate(tile.column, 
+                                                tile.row, 
+                                                tile.zoom, 
+                                                zoomLevel,
+                                                tileWidth/scale,
+                                                worldMatrix,
+                                                null, 
+                                                null);
+                tile.x = ModestMaps.LastCoordinateX;
+                tile.y = ModestMaps.LastCoordinateY;                
                 tile.rotation = tileAngleDegrees;               
             }
         }
@@ -778,7 +785,7 @@ package loom.modestmaps.core
             return null;
         }
         
-        // for use in requestLoad
+        // for use in requestParentLoad
         private var tempCoord:Coordinate = new Coordinate(0,0,0);
         
         /** create a tile and add it to the queue - WARNING: this is buggy for the current zoom level, it's only used for parent zooms when MaxParentLoad is > 0 */ 
@@ -786,9 +793,9 @@ package loom.modestmaps.core
         {
             var tile:Tile = wellTiles[key];
             if (!tile) {
-                tempCoord.row = ParentCoordRow;
-                tempCoord.column = ParentCoordCol;
-                tempCoord.zoom = ParentCoordZoom;
+                tempCoord.column = ModestMaps.ParentLoadCol;
+                tempCoord.row = ModestMaps.ParentLoadRow;
+                tempCoord.zoom = ModestMaps.ParentLoadZoom;
                 tile = tilePainter.createAndPopulateTile(tempCoord, key);
                 well.addChild(tile);
                 wellTiles[key] = tile;
@@ -799,31 +806,6 @@ package loom.modestmaps.core
         }
 
         
-//TODO_24: native? set native helper vars?   #2
-        //NOTE_TEC: Removed Vector<> creation for return to save garbage generation
-        private var ParentCoordCol:int;
-        private var ParentCoordRow:int;
-        private var ParentCoordZoom:int;
-        // TODO: check that this does the right thing with negative row/col?
-        private function prepParentTile(col:int, row:int, zoom:int, parentZoom:int):String
-        {
-            //NOTE_TEC: zoomDiff should always be +ve
-            var zoomDiff:int = zoom - parentZoom;
-            if(zoomDiff <= 0)
-            {
-                ParentCoordCol = col;
-                ParentCoordRow = row;
-                ParentCoordZoom = zoom;
-            }
-            else
-            {
-                var invScaleFactor:Number = 1.0 / (1 << zoomDiff);
-                ParentCoordCol = Math.floor(Number(col) * invScaleFactor); 
-                ParentCoordRow = Math.floor(Number(row) * invScaleFactor);
-                ParentCoordZoom = parentZoom;
-            }
-            return ModestMaps.tileKey(ParentCoordCol, ParentCoordRow, ParentCoordZoom);
-        }
 
         
         // TODO: check that this does the right thing with negative row/col?
@@ -1052,42 +1034,16 @@ package loom.modestmaps.core
         }
         
         //NOTE_TEC: Removed Point usage here as it was generating too much garbage as Points are structs in Loom
-        public var CoordinatePoint:Point;
-        public function calcCoordinatePoint(coord:Coordinate, context:DisplayObject=null, shouldRound:Boolean=false):void
+        public function calcCoordinatePoint(coord:Coordinate, context:DisplayObject=null):void
         {
-            calcCoordinatePointRCZ(coord.row, coord.column, coord.zoom, context, shouldRound);
-        }
-//TODO_24: native HI PRI!!!   
-        public function calcCoordinatePointRCZ(row:Number, col:Number, zoom:Number, context:DisplayObject=null, shouldRound:Boolean=false):void
-        {            
-            // this is basically the same as coord.zoomTo, but doesn't make a new Coordinate:
-            var zoomFactor:Number = Math.pow(2, zoomLevel - zoom) * tileWidth/scale;
-            var zoomedColumn:Number = col * zoomFactor;
-            var zoomedRow:Number = row * zoomFactor;
-            //NOTE_TEC: This was brought in from the JS version of MMaps as it wasn't present in the AS3 port... 
-            //          but it breaks things as the column/row values actually need to be fractional in 
-            //          the AS3 version with quite large mantissa values!!!
-            // round, not floor, because the latter causes artifacts at lower zoom levels :(
-            //if(shouldRound)
-            //{
-            //    zoomedColumn = Math.round(zoomedColumn);
-            //    zoomedRow = Math.round(zoomedRow);
-            //}
-                        
-            CoordinatePoint = worldMatrix.transformCoord(zoomedColumn, zoomedRow);
-
-            //NOTE_TEC: Added this to help a bit with zooming when zoomFactor hits <=0.001953125
-            if(shouldRound)
-            {
-                CoordinatePoint.x = Math.round(CoordinatePoint.x);
-                CoordinatePoint.y = Math.round(CoordinatePoint.y);
-            }
-
-            if (context && context != this)
-            {
-                CoordinatePoint = this.parent.localToGlobal(CoordinatePoint);
-                CoordinatePoint = context.globalToLocal(CoordinatePoint);
-            }
+            ModestMaps.setLastCoordinate(coord.column, 
+                                            coord.row, 
+                                            coord.zoom, 
+                                            zoomLevel,
+                                            tileWidth/scale,
+                                            worldMatrix,
+                                            context, 
+                                            this);
         }
         
         public function pointCoordinate(point:Point, context:DisplayObject=null):Coordinate
@@ -1264,9 +1220,9 @@ package loom.modestmaps.core
         protected function clearEverything(event:Event=null):void
         {
             while (well.numChildren > 0) {
-                var tile:Tile = well.getChildAt(0) as Tile;
+                var tile:Tile = well.getChildAtUnsafe(0) as Tile;
                 tile.inWell = false;
-                well.removeChild(tile);
+                well.removeChildAt(0);
             }
             wellTiles.clear();
 

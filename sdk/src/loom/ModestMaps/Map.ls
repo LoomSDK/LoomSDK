@@ -25,6 +25,7 @@
  */
 package loom.modestmaps
 {
+    import loom.modestmaps.ModestMaps;    
     import loom.modestmaps.core.*;
     import loom.modestmaps.events.*;
     import loom.modestmaps.geo.*;
@@ -552,7 +553,7 @@ package loom.modestmaps
             
             var m:Matrix = grid.getMatrix();
             
-            m.translate(-grid.CoordinatePoint.x, -grid.CoordinatePoint.y);
+            m.translate(-ModestMaps.LastCoordinateX, -ModestMaps.LastCoordinateY);
             m.scale(sc, sc);
             m.translate(targetPoint.x, targetPoint.y);
             

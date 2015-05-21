@@ -201,11 +201,19 @@ package loom2d.display
             if (index >= 0 && index < numChildren)
                 return mChildren[index];
             else
-			{
+            {
                 //throw new RangeError("Invalid child index");
-				Debug.assert(false, "Invalid child index");
-				return null;
-			}
+                Debug.assert(false, "Invalid child index");
+                return null;
+            }
+        }
+        
+        /** Returns a child object at a certain index without doing bounds checks.
+         * For optimized use in cases where you are 100% about the index validity.
+         */
+        public function getChildAtUnsafe(index:int):DisplayObject
+        {
+            return mChildren[index];
         }
         
         /** Returns a child object with a certain name (non-recursively). */
