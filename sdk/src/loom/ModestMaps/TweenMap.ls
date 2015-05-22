@@ -249,7 +249,7 @@ package loom.modestmaps
             if (!grid.panning)
             {
                 var target:Number = (dir < 0) ? Math.floor(grid.zoomLevel + dir) : Math.ceil(grid.zoomLevel + dir);
-                target = Math.max(grid.minZoom, Math.min(grid.maxZoom, target));
+                target = Math.max2(grid.minZoom, Math.min2(grid.maxZoom, target));
 
                 Loom2D.juggler.tween(grid, zoomDuration, { "zoomLevel": target,
                                                            "onStart": grid.prepareForZooming,
@@ -280,14 +280,14 @@ package loom.modestmaps
                 if (grid.zoomLevel > grid.minZoom) {
                     mouseWheelingOut = true;
                     mouseWheelingIn = false;
-                    sc = Math.max(0.5, 1.0+event.delta/20.0);
+                    sc = Math.max2(0.5, 1.0+event.delta/20.0);
                 }
             }
             else if (event.delta > 0) {
                 if (grid.zoomLevel < grid.maxZoom) {
                     mouseWheelingIn = true;
                     mouseWheelingOut = false;                   
-                    sc = Math.min(2.0, 1.0+event.delta/20.0);               
+                    sc = Math.min2(2.0, 1.0+event.delta/20.0);               
                 }
             }
 

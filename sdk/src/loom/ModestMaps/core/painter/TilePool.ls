@@ -34,7 +34,7 @@ package loom.modestmaps.core.painter
         {
             if (pool.length < MIN_POOL_SIZE) {
                 while (pool.length < MAX_NEW_TILES) {
-                    pool.push(tileCreatorFunc());
+                    pool.pushSingle(tileCreatorFunc());
                 }
             }                       
             var tile:Tile = pool.pop() as Tile;
@@ -45,7 +45,7 @@ package loom.modestmaps.core.painter
         public function returnTile(tile:Tile):void
         {
             tile.destroy();
-            pool.push(tile);
+            pool.pushSingle(tile);
         }
         
     }

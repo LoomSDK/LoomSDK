@@ -90,7 +90,7 @@ package loom.modestmaps.geo
             return new Coordinate(point.y, point.x, zoom);
         }
         
-//TODO_24: native        
+//TODO_24: native?       
        /**
         * @return untransformed and unprojected location for a coordinate.
         */

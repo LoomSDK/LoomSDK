@@ -207,7 +207,7 @@ package loom.modestmaps
             }
             else {
                 onExtentChanging();
-                zoom = Math.min(Math.max(zoom, grid.minZoom), grid.maxZoom);
+                zoom = Math.min2(Math.max2(zoom, grid.minZoom), grid.maxZoom);
                 // tell grid what the rock is cooking
                 grid.resetTiles(mapProvider.locationCoordinate(location).zoomTo(zoom));
                 onExtentChanged();
@@ -228,7 +228,7 @@ package loom.modestmaps
         {
             if (zoom != grid.zoomLevel) {
                 // TODO: if grid enforces this in enforceBounds, do we need to do it here too?
-                grid.zoomLevel = Math.min(Math.max(zoom, grid.minZoom), grid.maxZoom);
+                grid.zoomLevel = Math.min2(Math.max2(zoom, grid.minZoom), grid.maxZoom);
             }
         }
 
@@ -249,12 +249,12 @@ package loom.modestmaps
             for (var i:int = 1; i < locations.length; i++)
             {
                 var coordinate:Coordinate = mapProvider.locationCoordinate(locations[i].normalize());
-                TL.row = Math.min(TL.row, coordinate.row);
-                TL.column = Math.min(TL.column, coordinate.column);
-                TL.zoom = Math.min(TL.zoom, coordinate.zoom);
-                BR.row = Math.max(BR.row, coordinate.row);
-                BR.column = Math.max(BR.column, coordinate.column);
-                BR.zoom = Math.max(BR.zoom, coordinate.zoom);
+                TL.row = Math.min2(TL.row, coordinate.row);
+                TL.column = Math.min2(TL.column, coordinate.column);
+                TL.zoom = Math.min2(TL.zoom, coordinate.zoom);
+                BR.row = Math.max2(BR.row, coordinate.row);
+                BR.column = Math.max2(BR.column, coordinate.column);
+                BR.zoom = Math.max2(BR.zoom, coordinate.zoom);
             }
             
             // multiplication factor between horizontal span and map width
@@ -277,9 +277,9 @@ package loom.modestmaps
             
             // initial zoom to fit extent vertically and horizontally
             // additionally, make sure it's not outside the boundaries set by provider limits
-            var initZoom:Number = Math.min(hPossibleZoom, vPossibleZoom);
-            initZoom = Math.min(initZoom, mapProvider.outerLimits()[1].zoom);
-            initZoom = Math.max(initZoom, mapProvider.outerLimits()[0].zoom);
+            var initZoom:Number = Math.min2(hPossibleZoom, vPossibleZoom);
+            initZoom = Math.min2(initZoom, mapProvider.outerLimits()[1].zoom);
+            initZoom = Math.max2(initZoom, mapProvider.outerLimits()[0].zoom);
     
             // coordinate of extent center
             var centerRow:Number = (TL.row + BR.row) / 2;
@@ -618,7 +618,7 @@ package loom.modestmaps
         {
             if (!grid.panning) {
                 var target:Number = dir < 0 ? Math.floor(grid.zoomLevel+dir) : Math.ceil(grid.zoomLevel+dir);
-                grid.zoomLevel = Math.min(Math.max(grid.minZoom, target), grid.maxZoom);
+                grid.zoomLevel = Math.min2(Math.max2(grid.minZoom, target), grid.maxZoom);
             }
         } 
         

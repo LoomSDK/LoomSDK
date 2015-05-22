@@ -293,7 +293,7 @@ package loom.modestmaps.overlays
             {
                 if (contains(marker))
                 {
-                    setChildIndex(marker, Math.min(index, numChildren - 1));
+                    setChildIndex(marker, Math.min2(index, numChildren - 1));
                     index++;
                 }
             }
