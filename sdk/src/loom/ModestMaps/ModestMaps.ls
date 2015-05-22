@@ -63,5 +63,10 @@ package loom.modestmaps
                                                         mat:Matrix, 
                                                         context:DisplayObject,
                                                         object:DisplayObject):void;
+
+        /**
+         * Gets the Microsoft Map Provider compatible zoom string.
+         */
+        public static native function getMSProviderZoomString(col:Number, row:Number, zoom:Number):String;
     }
 }

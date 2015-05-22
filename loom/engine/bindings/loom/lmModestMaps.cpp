@@ -22,7 +22,6 @@
 #include "loom/common/core/assert.h"
 #include "loom/script/loomscript.h"
 #include "loom/script/runtime/lsRuntime.h"
-#include "loom/common/utils/utString.h"
 
 #include "loom/graphics/gfxMath.h"
 #include "loom/engine/loom2d/l2dDisplayObject.h"
@@ -47,14 +46,14 @@ public:
     static int parentLoadZoom;
 
 
-    static utString tileKey(int col, int row, int zoom)
+    static const char *tileKey(int col, int row, int zoom)
     {
         char key[256];
         sprintf(key, "%c:%i:%i", (char)(((int)'a')+zoom), col, row);
-        return utString(key);
+        return (const char *)key;
     }
  
-    static utString prepParentLoad(int col, int row, int zoom, int parentZoom)
+    static const char *prepParentLoad(int col, int row, int zoom, int parentZoom)
     {
         //NOTE_TEC: zoomDiff should always be +ve
         int zoomDiff = zoom - parentZoom;
@@ -98,10 +97,48 @@ public:
         }
     } 
 
+ 
+    static const char *getMSProviderZoomString(float col, float row, int zoom)
+    {
+        // we don't wrap rows here because the map/grid should be enforcing outerLimits :)
+        float zoomExp = pow(2, zoom);
+        float wrappedColumn = fmod(col, zoomExp);
+        while (wrappedColumn < 0)
+        {
+            wrappedColumn += zoomExp;
+        }
+        col = wrappedColumn;
+        
+        // convert row + col to zoom string
+        // padded with zeroes so we end up with zoom digits after slicing:
+        convertToBinary(row, _rowBinaryString);
+        convertToBinary(col, _colBinaryString);
+
+        // generate zoom string
+        int rowOffset = strlen(_rowBinaryString) - zoom;
+        int colOffset = strlen(_colBinaryString) - zoom;
+        char *zoomString = (char *)malloc(sizeof(char) * (zoom + 1));
+        for(int i = 0; i < zoom; i++) 
+        {
+            //proces the row and col bits to build up the zoom string; values of 0,1,2,3
+            char value = _colBinaryString[i + colOffset];
+            if(_rowBinaryString[i + rowOffset] == '1')
+            {
+                value = (value == '1') ? '3' : '2';
+            }
+            zoomString[i] = value;
+        }
+        zoomString[zoom] = '\0';
+        return (const char *)zoomString; 
+    }
 
 
 
 private:
+    static char _rowBinaryString[33];
+    static char _colBinaryString[33];
+
+
     static void localToGlobal(DisplayObject *obj, float *x, float *y)
     {
         //find the base of the object to start
@@ -127,6 +164,40 @@ private:
         mtx.invert();
         mtx.transformCoordInternal(*x, *y, x, y);
     }
+
+    /** 
+     * @return 32 digit binary representation of numberToConvert
+     *  
+     * NOTE: Due to Loom Script not having unsigned int values, this will 
+     * only work correctly for number with values up to up to 2147483647
+     */
+    static void convertToBinary(int numberToConvert, char *binString) 
+    {
+        bool negative = false;       
+        if(numberToConvert < 0)
+        {
+            //we want to wrap -ve values around as if we were casting to uint, so 2s comp FTW!
+            numberToConvert += (1 << 30);
+            negative = true;
+        }
+
+        //convert to a binary string
+        binString[32] = '\0';
+        int numBits = 32;
+        int remainder;
+        while (numberToConvert > 0)
+        {
+            remainder = (int)(numberToConvert % 2);
+            numberToConvert = (int)(numberToConvert / 2);
+            binString[--numBits] = (remainder == 0) ? '0' : '1';
+        }
+
+        //add preceeding digits if necessary
+        if (numBits > 0) 
+        {
+            memset(binString, (negative) ? '1' : '0', numBits);
+        }
+    }    
 };
 
 float ModestMaps::lastCoordinateX = 0.0f;
@@ -134,6 +205,8 @@ float ModestMaps::lastCoordinateY = 0.0f;
 int ModestMaps::parentLoadCol = 0;
 int ModestMaps::parentLoadRow = 0;
 int ModestMaps::parentLoadZoom = 0;
+char ModestMaps::_rowBinaryString[33];
+char ModestMaps::_colBinaryString[33];
 
 
 
@@ -154,6 +227,7 @@ static int registerLoomModestMaps(lua_State *L)
             .addStaticMethod("tileKey", &ModestMaps::tileKey)
             .addStaticMethod("prepParentLoad", &ModestMaps::prepParentLoad)
             .addStaticMethod("setLastCoordinate", &ModestMaps::setLastCoordinate)
+            .addStaticMethod("getMSProviderZoomString", &ModestMaps::getMSProviderZoomString)
 
         .endClass()
 
