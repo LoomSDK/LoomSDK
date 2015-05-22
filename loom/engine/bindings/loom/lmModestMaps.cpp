@@ -44,6 +44,17 @@ public:
     static int parentLoadCol;
     static int parentLoadRow;
     static int parentLoadZoom;
+    static float gridZoom;
+    static float gridTLx;
+    static float gridTLy;
+    static float gridBRx;
+    static float gridBRy;
+    static float gridTRx;
+    static float gridTRy;
+    static float gridBLx;
+    static float gridBLy;
+    static float gridCx;
+    static float gridCy;
 
 
     static const char *tileKey(int col, int row, int zoom)
@@ -96,6 +107,27 @@ public:
             globalToLocal(context, &lastCoordinateX, &lastCoordinateY);
         }
     } 
+
+
+    static void setGridCoordinates(Matrix *invMatrix, float mapWidth, float mapHeight, float mapScale)
+    {
+        const float LN2 = 0.6931471805599453f;
+        gridZoom = log(mapScale) / LN2;
+        invMatrix->transformCoordInternal(0.0f, 0.0f, &gridTLy, &gridTLx);
+        invMatrix->transformCoordInternal(mapWidth, mapHeight, &gridBRy, &gridBRx);
+        invMatrix->transformCoordInternal(mapWidth, 0.0f, &gridTRy, &gridTRx);
+        invMatrix->transformCoordInternal(0.0f, mapHeight, &gridBLy, &gridBLx);
+        invMatrix->transformCoordInternal(mapWidth * 0.5f, mapHeight * 0.5f, &gridCy, &gridCx);
+    }
+
+
+    static Matrix *getGridInverseMatrix(Matrix *worldMatrix, float tileWidth, float tileHeight, float mapScale)
+    {
+        Matrix *invMatrix = new Matrix();
+        invMatrix->invertOther(worldMatrix);
+        invMatrix->scale(mapScale / tileWidth, mapScale / tileHeight);
+        return invMatrix;
+    }
 
  
     static const char *getMSProviderZoomString(float col, float row, int zoom)
@@ -205,6 +237,17 @@ float ModestMaps::lastCoordinateY = 0.0f;
 int ModestMaps::parentLoadCol = 0;
 int ModestMaps::parentLoadRow = 0;
 int ModestMaps::parentLoadZoom = 0;
+float ModestMaps::gridZoom = 0.0f;
+float ModestMaps::gridTLx = 0.0f;
+float ModestMaps::gridTLy = 0.0f;
+float ModestMaps::gridBRx = 0.0f;
+float ModestMaps::gridBRy = 0.0f;
+float ModestMaps::gridTRx = 0.0f;
+float ModestMaps::gridTRy = 0.0f;
+float ModestMaps::gridBLx = 0.0f;
+float ModestMaps::gridBLy = 0.0f;
+float ModestMaps::gridCx = 0.0f;
+float ModestMaps::gridCy = 0.0f;
 char ModestMaps::_rowBinaryString[33];
 char ModestMaps::_colBinaryString[33];
 
@@ -223,10 +266,23 @@ static int registerLoomModestMaps(lua_State *L)
             .addStaticVar("ParentLoadCol", &ModestMaps::parentLoadCol)
             .addStaticVar("ParentLoadRow", &ModestMaps::parentLoadRow)
             .addStaticVar("ParentLoadZoom", &ModestMaps::parentLoadZoom)
+            .addStaticVar("GridZoom", &ModestMaps::gridZoom)
+            .addStaticVar("GridTLx", &ModestMaps::gridTLx)
+            .addStaticVar("GridTLy", &ModestMaps::gridTLy)
+            .addStaticVar("GridBRx", &ModestMaps::gridBRx)
+            .addStaticVar("GridBRy", &ModestMaps::gridBRy)
+            .addStaticVar("GridTRx", &ModestMaps::gridTRx)
+            .addStaticVar("GridTRy", &ModestMaps::gridTRy)
+            .addStaticVar("GridBLx", &ModestMaps::gridBLx)
+            .addStaticVar("GridBLy", &ModestMaps::gridBLy)
+            .addStaticVar("GridCx", &ModestMaps::gridCx)
+            .addStaticVar("GridCy", &ModestMaps::gridCy)
 
             .addStaticMethod("tileKey", &ModestMaps::tileKey)
             .addStaticMethod("prepParentLoad", &ModestMaps::prepParentLoad)
             .addStaticMethod("setLastCoordinate", &ModestMaps::setLastCoordinate)
+            .addStaticMethod("setGridCoordinates", &ModestMaps::setGridCoordinates)
+            .addStaticMethod("getGridInverseMatrix", &ModestMaps::getGridInverseMatrix)
             .addStaticMethod("getMSProviderZoomString", &ModestMaps::getMSProviderZoomString)
 
         .endClass()

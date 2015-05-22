@@ -22,6 +22,13 @@ package loom.modestmaps.core
             this.zoom = zoom;            
         }
         
+        public function setVals(row:Number, column:Number, zoom:Number):void
+        {
+            this.row = row;
+            this.column = column;
+            this.zoom = zoom;            
+        }
+        
         public function toString():String
         {
             return '(' + row + ',' + column + ' @' + zoom + ')';

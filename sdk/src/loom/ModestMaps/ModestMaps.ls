@@ -37,6 +37,18 @@ package loom.modestmaps
         public static native var ParentLoadCol:int;
         public static native var ParentLoadRow:int;
         public static native var ParentLoadZoom:int;
+        public static native var GridZoom:Number;
+        public static native var GridTLx:Number;
+        public static native var GridTLy:Number;
+        public static native var GridBRx:Number;
+        public static native var GridBRy:Number;
+        public static native var GridTRx:Number;
+        public static native var GridTRy:Number;
+        public static native var GridBLx:Number;
+        public static native var GridBLy:Number;
+        public static native var GridCx:Number;
+        public static native var GridCy:Number;
+
 
         /**
          * Returns the key for the tile given it's coordinates
@@ -53,7 +65,7 @@ package loom.modestmaps
         public static native function prepParentLoad(col:int, row:int, zoom:int, parentZoom:int):String;
 
         /**
-         * Preps the LastCoordinate helper vars for use
+         * Preps the LastCoordinate helper vars for use.
          */
         public static native function setLastCoordinate(col:Number, 
                                                         row:Number, 
@@ -63,6 +75,20 @@ package loom.modestmaps
                                                         mat:Matrix, 
                                                         context:DisplayObject,
                                                         object:DisplayObject):void;
+        /**
+         * Preps the Grid helper vars for use.
+         */
+        public static native function setGridCoordinates(invMatrix:Matrix,
+                                                            mapWidth:int, 
+                                                            mapHeight:int, 
+                                                            mapScale:Number):void;
+        /**
+         * Calculates and returns the inverse matrix for the TileGrid.
+         */
+        public static native function getGridInverseMatrix(worldMatrix:Matrix,
+                                                            tileWidth:int, 
+                                                            tileHeight:int, 
+                                                            mapScale:Number):Matrix;
 
         /**
          * Gets the Microsoft Map Provider compatible zoom string.
