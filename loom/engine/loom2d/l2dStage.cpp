@@ -130,9 +130,9 @@ void Stage::render(lua_State *L)
     LOOM_PROFILE_END(stageRenderEnd);
 
 
-    LOOM_PROFILE_START(stageRenderSwap);
+    LOOM_PROFILE_START(waitForVSync);
     /* Update the screen! */
     SDL_GL_SwapWindow(sdlWindow);
-    LOOM_PROFILE_END(stageRenderSwap);
+    LOOM_PROFILE_END(waitForVSync);
 }
 }
