@@ -29,16 +29,6 @@ package loom2d.display
                 setClipRect(0,0,-1,-1);
             }
         }
-
-        public function flatten():void
-        {
-            Debug.assert(false, "Not yet implemented.");
-        }
-
-        public function unflatten():void
-        {
-            Debug.assert(false, "Not yet implemented.");            
-        }
     }
     
 }

@@ -27,6 +27,8 @@
 #include "loom/script/native/lsNativeDelegate.h"
 #include <math.h>
 
+
+
 namespace Loom2D
 {
 class DisplayObjectContainer;
@@ -122,11 +124,13 @@ public:
 
     RenderState renderState;
 
+    DisplayObject *flattenImage;
+
 public:
 
     static Type       *typeDisplayObject;
     static lua_Number _transformationMatrixOrdinal;
-
+    
     static void initialize(lua_State *L)
     {
         typeDisplayObject = LSLuaState::getLuaState(L)->getType("loom2d.display.DisplayObject");
@@ -151,6 +155,7 @@ public:
         valid          = false;
         type           = NULL;
         imageOrDerived = false;
+        //this->flattenImage   = NULL;
     }
 
     DisplayObject()

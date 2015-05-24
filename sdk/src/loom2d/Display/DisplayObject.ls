@@ -1,6 +1,11 @@
 package loom2d.display
 {
+    import loom.graphics.Graphics;
+    import loom.graphics.Texture2D;
+    import loom.graphics.TextureInfo;
     import loom2d.Loom2D;
+    import loom2d.textures.RenderTexture;
+    import loom2d.textures.Texture;
 
     import loom2d.events.Event;
     import loom2d.events.EventDispatcher;
@@ -84,6 +89,9 @@ package loom2d.display
         protected var _styleSheet:StyleSheet;
         protected var _styleName:String;
         protected var _styleApplicator:IStyleApplicator;
+        protected var _flattenCanvas:RenderTexture = null;
+        protected var _flattenMatrix:Matrix = null;
+        protected native var _flattenImage:Image = null;
 
         protected function get styleApplicator():IStyleApplicator
         {
@@ -179,6 +187,39 @@ package loom2d.display
             _parent = value;
             parentCached = value;
         }
+        
+        public function flatten() {
+            var targetWidth:int = Loom2D.stage.stageWidth;
+            var targetHeight:int = Loom2D.stage.stageHeight;
+            
+            if (_flattenCanvas && (_flattenCanvas.width != targetWidth || _flattenCanvas.height != targetHeight)) {
+                unflatten();
+            }
+            if (!_flattenCanvas) {
+                _flattenCanvas = new RenderTexture(targetWidth, targetHeight, true);
+                _flattenImage = new Image(_flattenCanvas);
+                _flattenImage.x = -x;
+                _flattenImage.y = -y;
+                //_flattenImage.transformationMatrix = transformationMatrix;
+                //_flattenImage.transformationMatrix.copyFrom(transformationMatrix);
+                //_flattenImage.transformationMatrix.invert();
+            }
+            var img = _flattenImage;
+            _flattenImage = null;
+            Texture2D.setRenderTarget(_flattenCanvas.nativeID);
+            Texture2D.clear(_flattenCanvas.nativeID);
+            loom.graphics.Graphics.render(this, null, 1);
+            Texture2D.setRenderTarget(-1);
+            _flattenImage = img;
+        }
+        
+        public function unflatten() {
+            if (!_flattenCanvas) return;
+            _flattenCanvas.dispose();
+            _flattenCanvas = null;
+            _flattenImage = null;
+        }
+        
 
         /** If depth sorting is enabled on parent, this will be used to establish draw order. */
         public native function set depth(value:float);

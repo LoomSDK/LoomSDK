@@ -27,6 +27,9 @@ namespace Loom2D
 Type       *DisplayObject::typeDisplayObject;
 lua_Number DisplayObject::_transformationMatrixOrdinal;
 
+
+
+
 /** Creates a matrix that represents the transformation from the local coordinate system
  *  to another. If you pass a 'resultMatrix', the result will be stored in this matrix
  *  instead of creating a new object. */

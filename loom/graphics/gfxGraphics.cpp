@@ -160,7 +160,7 @@ void Graphics::reset(int width, int height, uint32_t flags)
 	mvp.translate(-1.0f, -1.0f);
 	//mvp.copyToMatrix4(sMVPInverted);
 	// Inverted is normal due to OpenGL origin being bottom left
-	if (!(flags & FLAG_INVERTED)) {
+    if (!(flags & FLAG_INVERTED)) {
 		mvp.scale(1.0f, -1.0f);
 	}
 	mvp.copyToMatrix4(sMVP);
@@ -248,9 +248,9 @@ void Graphics::endFrame()
 
 int Graphics::render(lua_State *L)
 {
-	Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, 1);
-	Loom2D::Matrix *matrix = lua_isnil(L, 2) ? NULL : (Loom2D::Matrix*) lualoom_getnativepointer(L, 2);
-	float alpha = (float)lua_tonumber(L, 3);
+	Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, -3);
+	Loom2D::Matrix *matrix = lua_isnil(L, 2) ? NULL : (Loom2D::Matrix*) lualoom_getnativepointer(L, -2);
+	float alpha = (float)lua_tonumber(L, -1);
 
 	// Update positions and buffers early
 	// since we can't wait for rendering to begin

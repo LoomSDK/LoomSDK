@@ -197,6 +197,8 @@ static int registerLoom2D(lua_State *L)
 
        .addMethod("__pset__parent", &DisplayObject::setParent)
 
+       .addVar("_flattenImage", &DisplayObject::flattenImage)
+
        .addLuaFunction("__pget_transformationMatrix", &DisplayObject::getTransformationMatrix)
        .addLuaFunction("__pset_transformationMatrix", &DisplayObject::setTransformationMatrix)
 

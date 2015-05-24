@@ -166,6 +166,8 @@ package loom.graphics
         
         public static native function clear(nativeID:int, color:uint = 0x000000, alpha:Number = 0);
         
+        public static native function getRenderTarget():int;
+        
         /**
          * Set the specified native texture id as the new render target.
          * 

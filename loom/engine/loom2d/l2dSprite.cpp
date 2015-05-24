@@ -28,6 +28,15 @@ void Sprite::render(lua_State *L)
 {
     updateLocalTransform();
 
+    if (flattenImage) {
+        flattenImage->parent = this;
+        lualoom_pushnative<DisplayObject>(L, flattenImage);
+        flattenImage->validate(L, -1);
+        lua_pop(L, 1);
+        flattenImage->render(L);
+        return;
+    }
+
     lualoom_pushnative<Sprite>(L, this);
     renderChildren(L);
     lua_pop(L, 1);

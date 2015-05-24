@@ -874,9 +874,12 @@ void Texture::clear(TextureID id, int color, float alpha)
 {
 	bool current = currentRenderTexture == id;
 
-	TextureID prevRenderTexture = currentRenderTexture;
-	
-	setRenderTarget(id);
+    TextureID prevRenderTexture;
+
+    if (!current) {
+        prevRenderTexture = currentRenderTexture;
+        setRenderTarget(id);
+    }
 
 	Graphics::context()->glClearColor(
 		float((color >> 16) & 0xFF) / 255.0f,
@@ -886,7 +889,7 @@ void Texture::clear(TextureID id, int color, float alpha)
 	);
 	Graphics::context()->glClear(GL_COLOR_BUFFER_BIT);
 
-	setRenderTarget(prevRenderTexture);
+	if (!current) setRenderTarget(prevRenderTexture);
 }
 
 void Texture::validate(TextureID id)
@@ -918,6 +921,11 @@ void Texture::validate(TextureID id)
     loom_mutex_unlock(Texture::sTexInfoLock);
 }
 
+TextureID Texture::getRenderTarget()
+{
+    return currentRenderTexture;
+}
+
 void Texture::setRenderTarget(TextureID id)
 {
 	if (id != -1)
@@ -942,9 +950,9 @@ void Texture::setRenderTarget(TextureID id)
 		QuadRenderer::submit();
 
 		// Save and setup state
-		previousRenderFlags = Graphics::getFlags();
-		Graphics::setFlags(Graphics::FLAG_INVERTED | Graphics::FLAG_NOCLEAR);
-
+        previousRenderFlags = Graphics::getFlags();
+        Graphics::setFlags(Graphics::FLAG_INVERTED | Graphics::FLAG_NOCLEAR);
+        
 		// Setup stage and framing
 		Graphics::setNativeSize(tinfo->width, tinfo->height);
 		Graphics::beginFrame();

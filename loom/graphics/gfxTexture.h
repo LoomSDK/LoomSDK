@@ -340,6 +340,7 @@ public:
 
 	static void clear(TextureID id, int color, float alpha);
 
+    static TextureID getRenderTarget();
 	static void setRenderTarget(TextureID id = -1);
 	static int render(lua_State *L);
 

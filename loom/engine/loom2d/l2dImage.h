@@ -21,7 +21,6 @@
 #pragma once
 
 #include "loom/engine/loom2d/l2dQuad.h"
-#include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 
 namespace Loom2D
 {
