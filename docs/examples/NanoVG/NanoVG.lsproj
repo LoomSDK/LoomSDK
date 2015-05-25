@@ -12,6 +12,7 @@
     <movie minorVersion="0" />
     <movie platform="Loom" />
     <movie background="#FFFFFF" />
+    <movie preferredSDK="dev;;" />
   </output>
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>

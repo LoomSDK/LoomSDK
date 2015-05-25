@@ -76,10 +76,12 @@ typedef struct
 
 static void loom_HTTPCleanupUserData(loom_HTTPUserData *data)
 {
+    if (!data->chunk) return;
     lmFree(NULL, data->chunk->memory);
     curl_slist_free_all(data->headers);
     lmDelete(NULL, data->chunk);
     lmDelete(NULL, data);
+    data->chunk = NULL;
 }
 
 

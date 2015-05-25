@@ -59,7 +59,7 @@ public:
 
     static const char *tileKey(int col, int row, int zoom)
     {
-        char key[256];
+        static char key[256];
         sprintf(key, "%c:%i:%i", (char)(((int)'a')+zoom), col, row);
         return (const char *)key;
     }
@@ -77,8 +77,8 @@ public:
         else
         {
             float invScaleFactor = 1.0f / (float)(1 << zoomDiff);
-            parentLoadCol = floor((float)col * invScaleFactor); 
-            parentLoadRow = floor((float)row * invScaleFactor);
+            parentLoadCol = (int) floor((float)col * invScaleFactor); 
+            parentLoadRow = (int) floor((float)row * invScaleFactor);
             parentLoadZoom = parentZoom;
         }
         return tileKey(parentLoadCol, parentLoadRow, parentLoadZoom);
@@ -133,7 +133,7 @@ public:
     static const char *getMSProviderZoomString(float col, float row, int zoom)
     {
         // we don't wrap rows here because the map/grid should be enforcing outerLimits :)
-        float zoomExp = pow(2, zoom);
+        float zoomExp = pow(2.0f, zoom);
         float wrappedColumn = fmod(col, zoomExp);
         while (wrappedColumn < 0)
         {
@@ -143,8 +143,8 @@ public:
         
         // convert row + col to zoom string
         // padded with zeroes so we end up with zoom digits after slicing:
-        convertToBinary(row, _rowBinaryString);
-        convertToBinary(col, _colBinaryString);
+        convertToBinary((int) row, _rowBinaryString);
+        convertToBinary((int) col, _colBinaryString);
 
         // generate zoom string
         int rowOffset = strlen(_rowBinaryString) - zoom;

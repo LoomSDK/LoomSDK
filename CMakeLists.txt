@@ -28,7 +28,7 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/geldreich
     ${CMAKE_SOURCE_DIR}/loom/vendor/jansson
     ${CMAKE_SOURCE_DIR}/loom/vendor/admob/include
-    ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-3.4.0/include
+    ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc/include
     ${CMAKE_SOURCE_DIR}/loom/vendor/teak/ios/Carrot.framework/Headers
     ${CMAKE_SOURCE_DIR}/loom/vendor/sqlite3
     ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios/FacebookSDK.framework/Headers
@@ -114,7 +114,7 @@ if (MSVC)
     add_definitions(-DLOOM_DISABLE_JEMALLOC -D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
     
     # MSVC compatibility stuffs
-    include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-3.4.0/include/msvc_compat )
+    include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc/include/msvc_compat )
 
     set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_windows/lua51.lib )
 

@@ -184,9 +184,16 @@ void loop()
     loom_tick();
 }
 
+
+
+#include <crtdbg.h>
+
 int
 main(int argc, char *argv[])
 {
+
+    //_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF | _CRTDBG_CHECK_ALWAYS_DF);
+
 #ifdef WIN32
     // When on windows, do some workarounds so our console window
     // behaves properly.

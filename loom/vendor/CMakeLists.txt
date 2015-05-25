@@ -7,7 +7,7 @@ project(LoomVendor)
 include_directories(
     ${LOOM_INCLUDE_FOLDERS}
     telemetry-01052012/include
-    jemalloc-3.4.0/include
+    jemalloc/include
     openal-soft/include
     openal-soft/OpenAL32/Include
     minimp3
@@ -520,7 +520,7 @@ set (GELDREICH_SRC
 )
 
 
-set (JEMALLOC_ROOT jemalloc-3.4.0)
+set (JEMALLOC_ROOT jemalloc)
 
 set (JEMALLOC_SRC
     ${JEMALLOC_ROOT}/src/arena.c

@@ -1,0 +1,11 @@
+diff a/sdk/src/feathers/controls/Button.ls b/sdk/src/feathers/controls/Button.ls	(rejected hunks)
+@@ -2852,6 +2852,9 @@
+             }
+ 
+             const touches:Vector.<Touch> = event.getTouches(this, null, HELPER_TOUCHES_VECTOR);
++            
++            trace("TOUCHING", touches);
++            
+             if(touches.length == 0)
+             {
+                 //end of hover

@@ -158,6 +158,8 @@ struct LoomProfilerRoot
     LoomProfilerRoot        *mNextRoot;
     F64                     mTotalTime;
     F64                     mSubTime;
+    F64                     mMaxTime;
+    F64                     mMinTime;
     U32                     mTotalInvokeCount;
     bool                    mEnabled;
 
@@ -188,6 +190,8 @@ struct LoomProfilerEntry
     U32               mStartTime[2];
     F64               mTotalTime;
     F64               mSubTime;
+    F64               mMaxTime;
+    F64               mMinTime;
 };
 
 

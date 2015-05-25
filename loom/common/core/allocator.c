@@ -34,7 +34,7 @@
 // fore/back.
 #define LOOM_ALLOCATOR_ALIGNMENT    16
 
-#define USE_JEMALLOC 1
+#define USE_JEMALLOC 0
  
 static loom_allocator_t gGlobalHeap;
 static int              heap_allocated = 0;
