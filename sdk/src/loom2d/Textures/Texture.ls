@@ -284,7 +284,7 @@ package loom2d.textures
             }
             cacheFile = Path.normalizePath(writePath + "/" + urlsha2) + ext;
 
-            // check of file already cached locally
+            // check if file already cached locally
             if (File.fileExists(cacheFile))
             {
                 //file already downloaded previously, so queue up an async load of it right now

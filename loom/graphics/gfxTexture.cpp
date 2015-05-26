@@ -66,6 +66,28 @@ MutexHandle Texture::sAsyncQueueMutex = NULL;
 //mutex used for locking sTextureInfos and sTexturePathLookup between threads
 MutexHandle Texture::sTexInfoLock = NULL;
 
+static utArray<GLuint> gGLTextureHandlePool;
+
+static GLuint popGLTextureHandle()
+{
+    if (gGLTextureHandlePool.size() == 0)
+    {
+        // None left - allocate a new chunk of IDs.
+        gGLTextureHandlePool.resize(1024);
+        Graphics::context()->glGenTextures(1024, gGLTextureHandlePool.ptr());
+    }
+
+    // And pop the one.
+    GLuint last = gGLTextureHandlePool.back();
+    gGLTextureHandlePool.pop_back();
+    return last;
+}
+
+static void storeGLTextureHandle(GLuint id)
+{
+    // Push front - it's a little slower but saves us from recycling IDs inappropriately.
+    gGLTextureHandlePool.push_front(id);
+}
 
 void Texture::initialize()
 {
@@ -301,21 +323,44 @@ void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWi
     }
 }
 
+TextureInfo *Texture::getTextureInfo(TextureID id)
+{
+    LOOM_PROFILE_SCOPE(getTextureInfo);
+
+    TextureID index = id & TEXTURE_ID_MASK;
+    lmAssert(index >= 0 && index < MAXTEXTURES, "Texture index is out of range: %d", index);
+
+    loom_mutex_lock(sTexInfoLock);
+    TextureInfo *tinfo = &sTextureInfos[index];
+
+    // Check if it has a handle and if it's not outdated
+    if (tinfo->handle == -1 || tinfo->id != id)
+    {
+        tinfo = NULL;
+    }
+    loom_mutex_unlock(sTexInfoLock);
+
+    return tinfo;
+}
+
 
 TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, TextureID id)
 {
     LOOM_PROFILE_SCOPE(textureLoad);
+
     if (id == -1)
     {
         id = getAvailableTextureID();
-
         if (id == TEXTUREINVALID)
         {
             return NULL;
         }
     }
 
+    LOOM_PROFILE_START(textureLoad_lock);
     loom_mutex_lock(Texture::sTexInfoLock);
+    LOOM_PROFILE_END(textureLoad_lock);
+
     TextureInfo &tinfo = *Texture::getTextureInfo(id);
 
     bool newTexture = !tinfo.reload || (tinfo.width != width) || (tinfo.height != height);
@@ -332,28 +377,38 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 
     if (tinfo.reload)
     {
-        Graphics::context()->glDeleteTextures(1, &tinfo.handle);
+        LOOM_PROFILE_START(textureLoad_delete);
+        storeGLTextureHandle(tinfo.handle);
+        //Graphics::context()->glDeleteTextures(1, &tinfo.handle);
+        LOOM_PROFILE_END(textureLoad_delete);
     }
 
     if (newTexture) {
-        Graphics::context()->glGenTextures(1, &tinfo.handle);
+        LOOM_PROFILE_START(textureLoad_gentex);
+        //Graphics::context()->glGenTextures(1, &tinfo.handle);
+        tinfo.handle = popGLTextureHandle();
         if (tinfo.renderTarget) {
             Graphics::context()->glGenFramebuffers(1, &tinfo.framebuffer);
         }
+        LOOM_PROFILE_END(textureLoad_gentex);
     }
 
+
+    LOOM_PROFILE_START(textureLoad_upload);
     Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
 
     Graphics::context()->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    
+    LOOM_PROFILE_END(textureLoad_upload);
+
     tinfo.width  = width;
     tinfo.height = height;
 
     // Generate mipmaps if appropriate
     if (!tinfo.renderTarget && (supportsFullNPOT || tinfo.isPowerOfTwo()))
     {
+        LOOM_PROFILE_START(textureLoad_mips);
         tinfo.clampOnly = false;
         tinfo.mipmaps = true;
         uint32_t *mipData = (uint32_t*) data;
@@ -371,42 +426,51 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
             uint32_t *prevData = mipData;
             mipData = static_cast<uint32_t*>(lmAlloc(NULL, mipWidth * mipHeight * 4));
 
-            //bitmapExtrudeRGBA_c(prevData, mipData, prevHeight, prevWidth);
-            //downsampleNearest(prevData, mipData, prevWidth, prevHeight);
             downsampleAverage(prevData, mipData, prevWidth, prevHeight);
-            if (prevData != (uint32_t*) data) lmFree(NULL, prevData);
+
+            if (prevData != (uint32_t*) data) lmSafeFree(NULL, prevData);
 
             Graphics::context()->glTexImage2D(GL_TEXTURE_2D, mipLevel, GL_RGBA, mipWidth, mipHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mipData);
 
             mipLevel++;
         }
         if (verbose) lmLogInfo(gGFXTextureLogGroup, "Generated mipmaps in %d ms", platform_getMilliseconds() - time);
-        if (mipData != (uint32_t*) data) lmFree(NULL, mipData);
-    } else {
+        if (mipData != (uint32_t*) data) lmSafeFree(NULL, mipData);
+        LOOM_PROFILE_END(textureLoad_mips);
+    }
+    else 
+    {
         tinfo.clampOnly = true;
         tinfo.mipmaps = false;
-        if (!supportsFullNPOT) lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size")
+        if (!supportsFullNPOT) 
+            lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size.")
     }
 
 	// Setup the framebuffer if it's a render texture
     if (newTexture && tinfo.renderTarget)
     {
+        LOOM_PROFILE_START(textureload_rtsetup);
         Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo.framebuffer);
         Graphics::context()->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tinfo.handle, 0);
         
 		GFX_FRAMEBUFFER_CHECK(tinfo.framebuffer);
         
         Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, Graphics::getBackFramebuffer());
+        LOOM_PROFILE_END(textureload_rtsetup);
     }
     
     validate(id);
     
     if (tinfo.reload)
     {
+        LOOM_PROFILE_START(textureLoad_delegate);
+
         // Fire the delegate.
         tinfo.updateDelegate.pushArgument(width);
         tinfo.updateDelegate.pushArgument(height);
         tinfo.updateDelegate.invoke();
+
+        LOOM_PROFILE_END(textureLoad_delegate);
     }
 
     // mark that next time we will be reloading
@@ -910,7 +974,8 @@ void Texture::clear(TextureID id, int color, float alpha)
 
 void Texture::validate(TextureID id)
 {
-    LOOM_PROFILE_SCOPE(textureValidate);
+    LOOM_PROFILE_START(textureValidate);
+
     loom_mutex_lock(Texture::sTexInfoLock);
     TextureInfo *tinfo = Texture::getTextureInfo(id);
     if (tinfo->renderTarget && tinfo->renderbuffer == -1 && Graphics::getStencilRequired()) {
@@ -936,6 +1001,8 @@ void Texture::validate(TextureID id)
         Graphics::context()->glBindRenderbuffer(GL_RENDERBUFFER, prevRenderbuffer);
     }
     loom_mutex_unlock(Texture::sTexInfoLock);
+
+    LOOM_PROFILE_END(textureValidate);
 }
 
 void Texture::setRenderTarget(TextureID id)
@@ -1019,7 +1086,7 @@ void Texture::dispose(TextureID id)
             if (tinfo->renderbuffer != -1) Graphics::context()->glDeleteRenderbuffers(1, &tinfo->renderbuffer);
 		}
 
-		// And erase backing state.
+		// And erase backing state. We'll generate more IDs if we need to.
         Graphics::context()->glDeleteTextures(1, &tinfo->handle);
         tinfo->reset();
     }

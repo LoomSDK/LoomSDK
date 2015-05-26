@@ -279,7 +279,7 @@ package loom.modestmaps.core
         protected function onRendered():void
         {
             // listen out for this if you want to be sure map is in its final state before reprojecting markers etc.
-            dispatchEvent(new MapEvent(MapEvent.RENDERED));
+            //dispatchEvent(new MapEvent(MapEvent.RENDERED));
         }
         
         protected function onPanned():void
@@ -313,6 +313,8 @@ package loom.modestmaps.core
             // request redraw to take parent and child tiles off the stage if we haven't already
             dirty = true;           
         }
+
+        protected var deferVisibility:int = 0;
         
         /** 
          * figures out from worldMatrix which tiles we should be showing, adds them to the stage, adds them to the tileQueue if needed, etc.
@@ -348,14 +350,22 @@ package loom.modestmaps.core
             // this is the level of tiles we'll be loading:
             currentTileZoom = newZoom;
         
-            //figure out the visible tiles
-            determineVisibleTiles();
+            deferVisibility++;
 
-            // loop over all tiles and find parent or child tiles from cache to compensate for unloaded tiles:
-            repopulateVisibleTiles(MinColRow.x, MaxColRow.x, MinColRow.y, MaxColRow.y);
-            
-            //remove unused tiles
-            pruneTiles();
+            if(deferVisibility > 3)
+            {
+                //figure out the visible tiles
+                determineVisibleTiles();
+
+                // loop over all tiles and find parent or child tiles from cache to compensate for unloaded tiles:
+                repopulateVisibleTiles(MinColRow.x, MaxColRow.x, MinColRow.y, MaxColRow.y);
+                
+                //remove unused tiles
+                pruneTiles();
+
+                // Reset counter.
+                deferVisibility = 0;                
+            }
 
             // position tiles such that currentZoom is approximately scale 1
             // and x and y make sense in pixels relative to tlC.column and tlC.row (topleft)
@@ -472,6 +482,7 @@ package loom.modestmaps.core
         }
 
         var WorkCoord:Coordinate = new Coordinate(0,0,0);
+
         private function rvtProcessTile(col:int, row:int):Tile
         {
             // create a string key for this tile
@@ -490,11 +501,11 @@ package loom.modestmaps.core
                 else {
                     tile.show();
                 }
-                well.addChild(tile);
+                well.addChild(tile, false);
                 wellTiles[key] = tile;
                 tile.inWell = true;
             }
-                                
+
             visibleTiles.pushSingle(tile);
             tile.isVisible = true;    
             
@@ -509,12 +520,14 @@ package loom.modestmaps.core
             var foundChildren:int = 0;
             searchedParentKeys.clear();
 
-            if (currentTileZoom > previousTileZoom) {
-                
+            if (currentTileZoom > previousTileZoom) 
+            {
                 // if it still doesn't have enough images yet, or it's fading in, try a double size parent instead
-                if (MaxParentSearch > 0 && currentTileZoom > minZoom) {
+                if (MaxParentSearch > 0 && currentTileZoom > minZoom) 
+                {
                     var firstParentKey:String = ModestMaps.prepParentLoad(col, row, currentTileZoom, currentTileZoom-1);
-                    if (!searchedParentKeys[firstParentKey]) {
+                    if (!searchedParentKeys[firstParentKey])
+                     {
                         searchedParentKeys[firstParentKey] = true;
                         if (ensureVisible(firstParentKey)) {
                             foundParent = true;
@@ -526,23 +539,29 @@ package loom.modestmaps.core
                     }
                 }
             }
-            else {                 
+            else 
+            {
                 // currentZoom <= previousZoom, so we're zooming out
                 // and therefore we might want to reuse 'smaller' tiles
                 
                 // if it doesn't have an image yet, see if we can make it from smaller images
-                if (!foundParent && MaxChildSearch > 0 && currentTileZoom < maxZoom) {
-                    for (var czoom:int = currentTileZoom+1; czoom <= Math.min2(maxZoom, currentTileZoom+MaxChildSearch); czoom++) {
+                if (!foundParent && MaxChildSearch > 0 && currentTileZoom < maxZoom) 
+                {
+                    for (var czoom:int = currentTileZoom+1; czoom <= Math.min2(maxZoom, currentTileZoom+MaxChildSearch); czoom++) 
+                    {
                         childKeys(col, row, currentTileZoom, czoom);
-                        for each (var ckey:String in ChildKeysVec) {
-                            if (ensureVisible(ckey)) {
+                        for each (var ckey:String in ChildKeysVec) 
+                        {
+                            if (ensureVisible(ckey))
+                            {
                                 foundChildren++;
                             }
-                        } // ChildKeysVec
+                        }
+
                         if (foundChildren == ChildKeysVec.length) {
                             break;
                         } 
-                    } // czoom
+                    }
                 }
             }
 
@@ -587,8 +606,10 @@ package loom.modestmaps.core
             rvtStart();
 
             // loop over currently visible tiles
-            for (var col:int = minCol; col <= maxCol; col++) {
-                for (var row:int = minRow; row <= maxRow; row++) {
+            for (var col:int = minCol; col <= maxCol; col++) 
+            {
+                for (var row:int = minRow; row <= maxRow; row++) 
+                {
                     var tile:Tile = rvtProcessTile(col, row);
                     
                     // if the tile isn't ready yet, we're going to reuse a parent tile
@@ -612,7 +633,10 @@ package loom.modestmaps.core
         {
             // move visible tiles to the end of recentlySeen if we're done loading them
             // the 'least recently seen' tiles will be removed from the tileCache below
-            for each (var visibleTile:Tile in visibleTiles) {
+            for(var j=0; j<visibleTiles.length; j++)
+            {
+                var visibleTile:Tile = visibleTiles[j];
+
                 if (tilePainter.isPainted(visibleTile)) {
                     recentlySeen.remove(visibleTile.name); 
                     recentlySeen.pushSingle(visibleTile.name);
@@ -885,7 +909,7 @@ package loom.modestmaps.core
             prepareForZooming();
             prepareForPanning();
             
-            var m:Matrix = getMatrix();
+            var m:Matrix = worldMatrix; //getMatrix();
             
             m.translate(-targetPoint.x, -targetPoint.y);
             m.rotate(angle);
@@ -1077,7 +1101,7 @@ package loom.modestmaps.core
         
         protected function onStartPanning():void
         {
-            dispatchEvent(new MapEvent(MapEvent.START_PANNING));
+            //dispatchEvent(new MapEvent(MapEvent.START_PANNING));
         }
         
         public function donePanning():void
@@ -1089,7 +1113,7 @@ package loom.modestmaps.core
         
         protected function onStopPanning():void
         {
-            dispatchEvent(new MapEvent(MapEvent.STOP_PANNING));
+            //dispatchEvent(new MapEvent(MapEvent.STOP_PANNING));
         }
         
         public function prepareForZooming():void
@@ -1105,7 +1129,7 @@ package loom.modestmaps.core
         
         protected function onStartZooming():void
         {
-            dispatchEvent(MapEvent.StartZooming(startZoom));
+            //dispatchEvent(MapEvent.StartZooming(startZoom));
         }
                         
         public function doneZooming():void
@@ -1117,7 +1141,7 @@ package loom.modestmaps.core
 
         protected function onStopZooming():void
         {
-            dispatchEvent(MapEvent.StopZooming(startZoom, zoomLevel));
+            //dispatchEvent(MapEvent.StopZooming(startZoom, zoomLevel));
         }
 
         public function resetTiles(coord:Coordinate):void
@@ -1389,6 +1413,7 @@ package loom.modestmaps.core
         {
             return _dirty;
         }
+
 
         public function getMatrix():Matrix
         {

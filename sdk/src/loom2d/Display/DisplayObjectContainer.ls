@@ -98,14 +98,14 @@ package loom2d.display
         // child management
         
         /** Adds a child to the container. It will be at the frontmost position. */
-        public function addChild(child:DisplayObject):DisplayObject
+        public function addChild(child:DisplayObject, fireEvents:Boolean = true):DisplayObject
         {
-            addChildAt(child, numChildren);
+            addChildAt(child, numChildren, fireEvents);
             return child;
         }
         
         /** Adds a child to the container at a certain index. */
-        public function addChildAt(child:DisplayObject, index:int):DisplayObject
+        public function addChildAt(child:DisplayObject, index:int, fireEvents:Boolean = true):DisplayObject
         {
 			Debug.assert(child, "No child specified.");
 			
@@ -120,9 +120,10 @@ package loom2d.display
                 else                      mChildren.splice(index, 0, child);
                 
                 child.setParent(this);
-                child.dispatchEventWith(Event.ADDED, true);
+                if(fireEvents)
+                    child.dispatchEventWith(Event.ADDED, true);
                 
-                if (stage)
+                if (stage && fireEvents)
                 {
                     var container:DisplayObjectContainer = child as DisplayObjectContainer;
                     if (container) container.broadcastEventWith(Event.ADDED_TO_STAGE);
@@ -146,29 +147,31 @@ package loom2d.display
         
         /** Removes a child from the container. If the object is not a child, nothing happens. 
          *  If requested, the child will be disposed right away. */
-        public function removeChild(child:DisplayObject, dispose:Boolean=false):DisplayObject
+        public function removeChild(child:DisplayObject, dispose:Boolean=false, fireEvents:Boolean = true):DisplayObject
         {
             var childIndex:int = getChildIndex(child);
-            if (childIndex != -1) removeChildAt(childIndex, dispose);
+            if (childIndex != -1) removeChildAt(childIndex, dispose, fireEvents);
             return child;
         }
         
         /** Removes a child at a certain index. Children above the child will move down. If
          *  requested, the child will be disposed right away. */
-        public function removeChildAt(index:int, dispose:Boolean=false):DisplayObject
+        public function removeChildAt(index:int, dispose:Boolean=false, fireEvents:Boolean = true):DisplayObject
         {
             if (index >= 0 && index < numChildren)
             {
                 var child:DisplayObject = mChildren[index];
-                child.dispatchEventWith(Event.REMOVED, true);
                 
-                if (stage)
+                if(fireEvents)
+                    child.dispatchEventWith(Event.REMOVED, true);
+                
+                if (stage && fireEvents)
                 {
                     var container:DisplayObjectContainer = child as DisplayObjectContainer;
                     if (container) container.broadcastEventWith(Event.REMOVED_FROM_STAGE);
                     else           child.dispatchEventWith(Event.REMOVED_FROM_STAGE);
                 }
-                                
+                
                 child.setParent(null);
                 index = mChildren.indexOf(child); // index might have changed by event handler
                 if (index >= 0) mChildren.remove(child);
@@ -240,14 +243,35 @@ package loom2d.display
             
             if (oldIndex == -1) throw new ArgumentError("Not a child of this container");
             
-            mChildren.splice(oldIndex, 1);
-            mChildren.splice(index, 0, child);
+            if(index < 0 || index >= mChildren.length) throw new ArgumentError("index out of bounds.");
+
+            // Do nothing for same index.
+            if(oldIndex == index)
+                return; 
+
+            if(oldIndex < index)
+            {
+                // Moving an item early in the array towards end of array.
+                for(var i=oldIndex; i<index; i++)
+                    mChildren[i] = mChildren[i + 1];
+                mChildren[index] = child;
+            }
+            else
+            {
+                // Moving an item late in the array towards beginning of array.
+                for(var j=oldIndex; j>=index; j--)
+                    mChildren[j] = mChildren[j - 1];
+                mChildren[index] = child;
+            }
+
+            //mChildren.splice(oldIndex, 1);
+            //mChildren.splice(index, 0, child);
         }
 
         /** Moves a child to be the last object in the container. */
         public function moveChildLast(child:DisplayObject):void
         {
-            var oldIndex:int = getChildIndex(child);
+            var oldIndex:int = mChildren.indexOf(child);
             if (oldIndex == -1)
             {
                 throw new ArgumentError("Not a child of this container");
@@ -255,7 +279,6 @@ package loom2d.display
             }
 
             //remove the child and push it to the back of the container
-            child = mChildren[oldIndex];                                        
             mChildren.remove(child);
             mChildren.pushSingle(child);
         }

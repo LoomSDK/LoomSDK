@@ -291,24 +291,8 @@ public:
         return id ? getTextureInfo(*id) : NULL;
     }
 
-    inline static TextureInfo *getTextureInfo(TextureID id)
-	{
-        TextureID index = id & TEXTURE_ID_MASK;
-        lmAssert(index >= 0 && index < MAXTEXTURES, "Texture index is out of range: %d", index);
-
-        loom_mutex_lock(sTexInfoLock);
-        TextureInfo *tinfo = &sTextureInfos[index];
-
-        // Check if it has a handle and if it's not outdated
-        if (tinfo->handle == -1 || tinfo->id != id)
-        {
-            tinfo = NULL;
-        }
-        loom_mutex_unlock(sTexInfoLock);
-
-        return tinfo;
-    }
-
+    static TextureInfo *getTextureInfo(TextureID id);
+	
     inline static int getIndex(TextureID id)
     {
         return id & TEXTURE_ID_MASK;

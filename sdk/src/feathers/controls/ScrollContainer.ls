@@ -280,25 +280,25 @@ package feathers.controls
         /**
          * @private
          */
-        override public function addChildAt(child:DisplayObject, index:int):DisplayObject
+        override public function addChildAt(child:DisplayObject, index:int, fireEvents:Boolean = true):DisplayObject
         {
             if(!this.displayListBypassEnabled)
             {
-                return super.addChildAt(child, index);
+                return super.addChildAt(child, index, fireEvents);
             }
-            return DisplayObjectContainer(this.viewPort).addChildAt(child, index);
+            return DisplayObjectContainer(this.viewPort).addChildAt(child, index, fireEvents);
         }
 
         /**
          * @private
          */
-        override public function removeChildAt(index:int, dispose:Boolean = false):DisplayObject
+        override public function removeChildAt(index:int, dispose:Boolean = false, fireEvents:Boolean = true):DisplayObject
         {
             if(!this.displayListBypassEnabled)
             {
-                return super.removeChildAt(index, dispose);
+                return super.removeChildAt(index, dispose, fireEvents);
             }
-            return DisplayObjectContainer(this.viewPort).removeChildAt(index, dispose);
+            return DisplayObjectContainer(this.viewPort).removeChildAt(index, dispose, fireEvents);
         }
 
         /**

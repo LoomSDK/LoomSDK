@@ -80,7 +80,7 @@ public:
         if (delta > 8 && gcBackOff <= 0)
         {        
             // run a gc step at size "16", which is roughly 64k
-            // this is a relatively aggressive incrememnt though
+            // this is a relatively aggressive increment though
             // use a full collection if you want to immediately flush the gc
             lua_gc(L, LUA_GCSTEP, gcIncrementSize);
 
