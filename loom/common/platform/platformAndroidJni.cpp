@@ -264,9 +264,9 @@ const char *LoomJni::getPackageName()
     loomJniMethodInfo t;
 
     if (getStaticMethodInfo(t,
-                            "co/theengine/loomdemo/LoomDemo",
-                            "getActivityPackageName",
-                            "()Ljava/lang/String;"))
+        "co/theengine/loomdemo/LoomDemo",
+        "getActivityPackageName",
+        "()Ljava/lang/String;"))
     {
         jstring str = (jstring)t.getEnv()->CallStaticObjectMethod(t.classID, t.methodID);
         t.getEnv()->DeleteLocalRef(t.classID);
@@ -276,6 +276,30 @@ const char *LoomJni::getPackageName()
         lmLog(jniLogGroup, "package name %s", packageName.c_str());
 
         return packageName.c_str();
+    }
+
+    return 0;
+}
+
+const char *LoomJni::getWritablePath()
+{
+    static utString writablePath;
+
+    loomJniMethodInfo t;
+
+    if (getStaticMethodInfo(t,
+        "co/theengine/loomdemo/LoomDemo",
+        "getActivityWritablePath",
+        "()Ljava/lang/String;"))
+    {
+        jstring str = (jstring)t.getEnv()->CallStaticObjectMethod(t.classID, t.methodID);
+        t.getEnv()->DeleteLocalRef(t.classID);
+        writablePath = jstring2string(str);
+        t.getEnv()->DeleteLocalRef(str);
+
+        lmLog(jniLogGroup, "writable path %s", writablePath.c_str());
+
+        return writablePath.c_str();
     }
 
     return 0;
