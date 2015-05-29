@@ -427,7 +427,7 @@ Connection *Connection::open(const char *database, int flags)
     else
     {
         //no separator, so we need to prefix the system writable path in front of the database name
-        c->databaseFullPath = utString(platform_getWritablePath()) + c->databaseName;
+        c->databaseFullPath = utString(platform_getWritablePath()) + utString(platform_getFolderDelimiter()) + c->databaseName;
     }
     
     //open the SQLite DB

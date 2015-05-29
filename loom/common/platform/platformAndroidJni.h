@@ -53,6 +53,7 @@ public:
     static bool getMethodInfo(loomJniMethodInfo& methodinfo, const char *className, const char *methodName, const char *paramCode);
     static utString jstring2string(jstring str);
     static const char *getPackageName();
+    static const char *getWritablePath();
 
 private:
     static JavaVM *m_psJavaVM;

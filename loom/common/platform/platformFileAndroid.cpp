@@ -47,24 +47,7 @@ const char *platform_getWritablePath()
         return path.c_str();
     }
 
-    const char *tmp = LoomJni::getPackageName();
-
-    if (!tmp)
-    {
-        return "";
-    }
-
-    // the path is: /data/data/ + package name
-    path = "/data/data/";
-
-    if (tmp)
-    {
-        path += tmp;
-    }
-    else
-    {
-        return "";
-    }
+    path = LoomJni::getWritablePath();
 
     return path.c_str();
 }
