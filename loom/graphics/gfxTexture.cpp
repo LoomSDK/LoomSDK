@@ -31,6 +31,8 @@
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxQuadRenderer.h"
 
+#include "loom/script/runtime/lsProfiler.h"
+
 
 #include "loom/common/platform/platformTime.h"
 
@@ -47,6 +49,7 @@ bool Texture::sTextureAssetNofificationsEnabled = true;
 bool Texture::supportsFullNPOT;
 TextureID Texture::currentRenderTexture = -1;
 uint32_t Texture::previousRenderFlags = -1;
+bool Texture::verbose = false;
 
 //queue of textures to load in the async loading thread
 utList<AsyncLoadNote> Texture::sAsyncLoadQueue;
@@ -63,6 +66,28 @@ MutexHandle Texture::sAsyncQueueMutex = NULL;
 //mutex used for locking sTextureInfos and sTexturePathLookup between threads
 MutexHandle Texture::sTexInfoLock = NULL;
 
+static utArray<GLuint> gGLTextureHandlePool;
+
+static GLuint popGLTextureHandle()
+{
+    if (gGLTextureHandlePool.size() == 0)
+    {
+        // None left - allocate a new chunk of IDs.
+        gGLTextureHandlePool.resize(TEXTURE_GEN_BATCH);
+        Graphics::context()->glGenTextures(TEXTURE_GEN_BATCH, gGLTextureHandlePool.ptr());
+    }
+
+    // And pop the one.
+    GLuint last = gGLTextureHandlePool.back();
+    gGLTextureHandlePool.pop_back();
+    return last;
+}
+
+static void storeGLTextureHandle(GLuint id)
+{
+    // Push front - it's a little slower but saves us from recycling IDs inappropriately.
+    gGLTextureHandlePool.push_front(id);
+}
 
 void Texture::initialize()
 {
@@ -86,7 +111,7 @@ void Texture::initialize()
 
 void Texture::shutdown()
 {
-    lmLogInfo(gGFXTextureLogGroup, "Texture shutdown");
+    if (verbose) lmLogInfo(gGFXTextureLogGroup, "Texture shutdown");
     loom_mutex_lock(Texture::sTexInfoLock);
     for (int i = 0; i < MAXTEXTURES; i++)
     {
@@ -102,6 +127,8 @@ void Texture::shutdown()
 
 void Texture::tick()
 {
+    LOOM_PROFILE_SCOPE(textureTick);
+
     int startTime;
 
     //process any textures queued up for creation inside of the async load thread
@@ -120,7 +147,7 @@ void Texture::tick()
         {
             //Texture is an Asset, so Create via handleAssetNotification
             loom_asset_subscribe(threadNote.path.c_str(), Texture::handleAssetNotification, (void *)threadNote.id, 1);
-            lmLog(gGFXTextureLogGroup, "Async loaded texture '%s' took %i ms to create", threadNote.path.c_str(), platform_getMilliseconds() - startTime);
+            if (verbose) lmLog(gGFXTextureLogGroup, "Async loaded texture '%s' took %i ms to create", threadNote.path.c_str(), platform_getMilliseconds() - startTime);
         }
         else
         {
@@ -129,7 +156,7 @@ void Texture::tick()
             {
                 loadImageAsset(threadNote.imageAsset, threadNote.id);
                 threadNote.iaCleanup(threadNote.imageAsset);
-                lmLog(gGFXTextureLogGroup, "Async loaded byte texture took %i ms to create", platform_getMilliseconds() - startTime);
+                if (verbose) lmLog(gGFXTextureLogGroup, "Async loaded byte texture took %i ms to create", platform_getMilliseconds() - startTime);
             }
         }
 
@@ -175,6 +202,7 @@ static void rgbaToBgra(uint8_t *_data, uint32_t _width, uint32_t _height)
 
 void downsampleNearest(uint32_t *src, uint32_t *dst, int srcWidth, int srcHeight)
 {
+    LOOM_PROFILE_SCOPE(textureDownsampleNearest);
     int width = srcWidth >> 1; if (width < 1) width = 1;
     int height = srcHeight >> 1; if (height < 1) height = 1;
     // If it's not 1px high, the stride is the next even width in bytes (even width offsets shift in src for odd widths)
@@ -194,6 +222,7 @@ void downsampleNearest(uint32_t *src, uint32_t *dst, int srcWidth, int srcHeight
 
 void downsampleAverage(uint32_t *src, uint32_t *dst, int srcWidth, int srcHeight)
 {
+    LOOM_PROFILE_SCOPE(textureDownsampleAverage);
     int width = srcWidth >> 1; if (width < 1) width = 1;
     int height = srcHeight >> 1; if (height < 1) height = 1;
     // If it's not 1px high, the stride is the next even width in bytes (even width offsets shift in src for odd widths)
@@ -294,58 +323,92 @@ void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWi
     }
 }
 
+TextureInfo *Texture::getTextureInfo(TextureID id)
+{
+    LOOM_PROFILE_SCOPE(textureGetInfo);
+
+    TextureID index = id & TEXTURE_ID_MASK;
+    lmAssert(index >= 0 && index < MAXTEXTURES, "Texture index is out of range: %d", index);
+
+    loom_mutex_lock(sTexInfoLock);
+    TextureInfo *tinfo = &sTextureInfos[index];
+
+    // Check if it has a handle and if it's not outdated
+    if (tinfo->handle == -1 || tinfo->id != id)
+    {
+        tinfo = NULL;
+    }
+    loom_mutex_unlock(sTexInfoLock);
+
+    return tinfo;
+}
+
 
 TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, TextureID id)
 {
+    LOOM_PROFILE_SCOPE(textureLoad);
+
     if (id == -1)
     {
         id = getAvailableTextureID();
-
         if (id == TEXTUREINVALID)
         {
             return NULL;
         }
     }
 
+    LOOM_PROFILE_START(textureLoadMutex);
     loom_mutex_lock(Texture::sTexInfoLock);
+    LOOM_PROFILE_END(textureLoadMutex);
+
     TextureInfo &tinfo = *Texture::getTextureInfo(id);
 
     bool newTexture = !tinfo.reload || (tinfo.width != width) || (tinfo.height != height);
 
     if (newTexture)
     {
-		lmLog(gGFXTextureLogGroup, "Creating texture #%d.%d for %s", Texture::getIndex(id), Texture::getVersion(id), tinfo.renderTarget ? "framebuffer" : tinfo.texturePath.c_str());
+        if (verbose) lmLog(gGFXTextureLogGroup, "Creating texture #%d.%d for %s", Texture::getIndex(id), Texture::getVersion(id), tinfo.renderTarget ? "framebuffer" : tinfo.texturePath.c_str());
     }
     else
     {
-        lmLog(gGFXTextureLogGroup, "Updating texture #%d.%d from %s", Texture::getIndex(id), Texture::getVersion(id), tinfo.texturePath.c_str());
+        if (verbose) lmLog(gGFXTextureLogGroup, "Updating texture #%d.%d from %s", Texture::getIndex(id), Texture::getVersion(id), tinfo.texturePath.c_str());
     }
 
 
     if (tinfo.reload)
     {
-        Graphics::context()->glDeleteTextures(1, &tinfo.handle);
+        LOOM_PROFILE_START(textureLoadDelete);
+        storeGLTextureHandle(tinfo.handle);
+        //Graphics::context()->glDeleteTextures(1, &tinfo.handle);
+        LOOM_PROFILE_END(textureLoadDelete);
     }
 
     if (newTexture) {
-        Graphics::context()->glGenTextures(1, &tinfo.handle);
+        LOOM_PROFILE_START(textureLoadGenerate);
+        //Graphics::context()->glGenTextures(1, &tinfo.handle);
+        tinfo.handle = popGLTextureHandle();
         if (tinfo.renderTarget) {
             Graphics::context()->glGenFramebuffers(1, &tinfo.framebuffer);
         }
+        LOOM_PROFILE_END(textureLoadGenerate);
     }
 
+
+    LOOM_PROFILE_START(textureLoadUpload);
     Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
 
     Graphics::context()->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    
+    LOOM_PROFILE_END(textureLoadUpload);
+
     tinfo.width  = width;
     tinfo.height = height;
 
     // Generate mipmaps if appropriate
     if (!tinfo.renderTarget && (supportsFullNPOT || tinfo.isPowerOfTwo()))
     {
+        LOOM_PROFILE_START(textureLoadMipmap);
         tinfo.clampOnly = false;
         tinfo.mipmaps = true;
         uint32_t *mipData = (uint32_t*) data;
@@ -363,42 +426,51 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
             uint32_t *prevData = mipData;
             mipData = static_cast<uint32_t*>(lmAlloc(NULL, mipWidth * mipHeight * 4));
 
-            //bitmapExtrudeRGBA_c(prevData, mipData, prevHeight, prevWidth);
-            //downsampleNearest(prevData, mipData, prevWidth, prevHeight);
             downsampleAverage(prevData, mipData, prevWidth, prevHeight);
-            if (prevData != (uint32_t*) data) lmFree(NULL, prevData);
+
+            if (prevData != (uint32_t*) data) lmSafeFree(NULL, prevData);
 
             Graphics::context()->glTexImage2D(GL_TEXTURE_2D, mipLevel, GL_RGBA, mipWidth, mipHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mipData);
 
             mipLevel++;
         }
-        lmLogInfo(gGFXTextureLogGroup, "Generated mipmaps in %d ms", platform_getMilliseconds() - time);
-        if (mipData != (uint32_t*) data) lmFree(NULL, mipData);
-    } else {
+        if (verbose) lmLogInfo(gGFXTextureLogGroup, "Generated mipmaps in %d ms", platform_getMilliseconds() - time);
+        if (mipData != (uint32_t*) data) lmSafeFree(NULL, mipData);
+        LOOM_PROFILE_END(textureLoadMipmap);
+    }
+    else 
+    {
         tinfo.clampOnly = true;
         tinfo.mipmaps = false;
-        if (!supportsFullNPOT) lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size")
+        if (!supportsFullNPOT) 
+            lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size.")
     }
 
 	// Setup the framebuffer if it's a render texture
     if (newTexture && tinfo.renderTarget)
     {
+        LOOM_PROFILE_START(textureLoadFramebuffer);
         Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo.framebuffer);
         Graphics::context()->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tinfo.handle, 0);
         
 		GFX_FRAMEBUFFER_CHECK(tinfo.framebuffer);
         
         Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, Graphics::getBackFramebuffer());
+        LOOM_PROFILE_END(textureLoadFramebuffer);
     }
     
     validate(id);
     
     if (tinfo.reload)
     {
+        LOOM_PROFILE_START(textureLoadDelegate);
+
         // Fire the delegate.
         tinfo.updateDelegate.pushArgument(width);
         tinfo.updateDelegate.pushArgument(height);
         tinfo.updateDelegate.invoke();
+
+        LOOM_PROFILE_END(textureLoadDelegate);
     }
 
     // mark that next time we will be reloading
@@ -411,6 +483,7 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 
 TextureInfo *Texture::initEmptyTexture(int width, int height)
 {
+    LOOM_PROFILE_SCOPE(textureNewEmpty);
     // Get a new texture info
     TextureInfo *tinfo = getAvailableTextureInfo(NULL);
     if (tinfo != NULL)
@@ -421,7 +494,7 @@ TextureInfo *Texture::initEmptyTexture(int width, int height)
     }
     else
     {
-        lmLog(gGFXTextureLogGroup, "No available texture id for render texture");
+        lmLogError(gGFXTextureLogGroup, "No available texture id for render texture");
     }
     return tinfo;
 }
@@ -432,6 +505,7 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
     {
         return NULL;
     }
+    LOOM_PROFILE_SCOPE(textureNewAssetManager);
 
     //check if this texture already has a TextureInfo reserved for it
     TextureID *texID;
@@ -452,14 +526,14 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
     if(tinfo != NULL)
     {
         // allocate the texture handle/id
-        lmLog(gGFXTextureLogGroup, "Loading %s", path);
+        if (verbose) lmLog(gGFXTextureLogGroup, "Loading %s", path);
 
         // Now subscribe and let us load for reals.
         loom_asset_subscribe(path, Texture::handleAssetNotification, (void *)tinfo->id, 1);        
     }
     else
     {
-        lmLog(gGFXTextureLogGroup, "No available texture id for %s", path);
+        lmLogError(gGFXTextureLogGroup, "No available texture id for %s", path);
     }
     return tinfo;
 }
@@ -467,6 +541,7 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
 
 TextureInfo *Texture::initFromBytes(utByteArray *bytes, const char *name)
 {
+    LOOM_PROFILE_SCOPE(textureNewBytes);
     TextureInfo *tinfo = NULL;
     name = (name && !name[0]) ? NULL : name;
     if(name)
@@ -498,7 +573,7 @@ TextureInfo *Texture::initFromBytes(utByteArray *bytes, const char *name)
     }
 
     // Great, stuff real bits!
-    lmLog(gGFXTextureLogGroup, "Loaded image bytes - %i x %i at id %i", lat->width, lat->height, tinfo->id);
+    if (verbose) lmLog(gGFXTextureLogGroup, "Loaded image bytes - %i x %i at id %i", lat->width, lat->height, tinfo->id);
 
     loadImageAsset(lat, tinfo->id);
 
@@ -546,7 +621,7 @@ int __stdcall Texture::loadTextureAsync_body(void *param)
             if(path)
             {
                 // Load async since we're in a background thread.
-                lmLog(gGFXTextureLogGroup, "loading %s async...", path);
+                if (verbose) lmLog(gGFXTextureLogGroup, "Loading %s async...", path);
                 loom_asset_preload(path);
                 loom_thread_yield();
                 loom_asset_image *lai = NULL;
@@ -570,7 +645,7 @@ int __stdcall Texture::loadTextureAsync_body(void *param)
 
             //add to the CreateQueue that happens in the main thread because bgfx cannot create textures from side threads
             loom_mutex_lock(Texture::sAsyncQueueMutex);
-            lmLog(gGFXTextureLogGroup, "Adding async loaded texture to CreateQueue: %s", ((path) ? path : "Byte Texture"));
+            if (verbose) lmLog(gGFXTextureLogGroup, "Adding async loaded texture to CreateQueue: %s", ((path) ? path : "Byte Texture"));
 
             //add to the front of the queue if high priority, otherwise, FIFO
             if(threadNote.priority)
@@ -608,6 +683,8 @@ TextureInfo * Texture::initFromAssetManagerAsync(const char *path, bool highPrio
         lmLogError(gGFXTextureLogGroup, "Empty Path specified for initFromAssetManagerAsync()");
         return NULL;
     }
+
+    LOOM_PROFILE_SCOPE(textureNewAssetManagerAsync);
 
     //check if this texture already has a TextureInfo reserved for it
     //NOTE: shouldn't really happen... there is a check for this in LS that returns early there!    
@@ -652,7 +729,7 @@ TextureInfo * Texture::initFromAssetManagerAsync(const char *path, bool highPrio
     }
     else
     {
-        lmLog(gGFXTextureLogGroup, "No available texture id for %s", path);
+        lmLogError(gGFXTextureLogGroup, "No available texture id for %s", path);
     }
     return tinfo;
 }
@@ -660,6 +737,7 @@ TextureInfo * Texture::initFromAssetManagerAsync(const char *path, bool highPrio
 
 TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name, bool highPriority)
 {
+    LOOM_PROFILE_SCOPE(textureNewBytesAsync);
     TextureInfo *tinfo = NULL;
     name = (name && !name[0]) ? NULL : name;
     if(name)
@@ -678,7 +756,7 @@ TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name, b
         {
             if(tinfo && tinfo->asyncDispose)
             {
-                lmLog(gGFXTextureLogGroup, "Returning a TextureInfo that was flagged for disposal during initFromBytesAsync() for texture: %s", name);
+                if (verbose) lmLog(gGFXTextureLogGroup, "Returning a TextureInfo that was flagged for disposal during initFromBytesAsync() for texture: %s", name);
                 tinfo->asyncDispose = false;
             }
             loom_mutex_unlock(Texture::sTexInfoLock);
@@ -722,7 +800,7 @@ TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name, b
     }
     else
     {
-        lmLog(gGFXTextureLogGroup, "No available texture id for image bytes");
+        lmLogError(gGFXTextureLogGroup, "No available texture id for image bytes");
     }
     return tinfo;
 }
@@ -730,6 +808,8 @@ TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name, b
 
 void Texture::loadCheckerBoard(TextureID id)
 {
+    LOOM_PROFILE_SCOPE(textureNewCheckerboard);
+
     const int checkerboardSize = 128, checkSize = 8;        
 
     int *checkerboard = (int*)lmAlloc(gGFXTextureAllocator, checkerboardSize*checkerboardSize*4);
@@ -778,7 +858,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
     }
 
     // Great, stuff real bits!
-    lmLog(gGFXTextureLogGroup, "Loaded #%d.%d from %s - %i x %i", Texture::getIndex(id), Texture::getVersion(id), name, lat->width, lat->height, id);
+    if (verbose) lmLog(gGFXTextureLogGroup, "Loaded #%d.%d from %s - %i x %i", Texture::getIndex(id), Texture::getVersion(id), name, lat->width, lat->height, id);
 
     loadImageAsset(lat, id);
 
@@ -823,6 +903,7 @@ void Texture::loadImageAsset(loom_asset_image_t *lat, TextureID id)
 
 void Texture::validate()
 {
+    LOOM_PROFILE_SCOPE(textureValidateAll);
     for (int i = 0; i < MAXTEXTURES; i++)
     {
         loom_mutex_lock(Texture::sTexInfoLock);
@@ -840,6 +921,7 @@ void Texture::validate()
 
 void Texture::reset()
 {
+    LOOM_PROFILE_SCOPE(textureReset);
     for (int i = 0; i < MAXTEXTURES; i++)
     {
         loom_mutex_lock(Texture::sTexInfoLock);
@@ -872,6 +954,7 @@ void Texture::reset()
 
 void Texture::clear(TextureID id, int color, float alpha)
 {
+    LOOM_PROFILE_SCOPE(textureClear);
 	bool current = currentRenderTexture == id;
 
 	TextureID prevRenderTexture = currentRenderTexture;
@@ -891,6 +974,8 @@ void Texture::clear(TextureID id, int color, float alpha)
 
 void Texture::validate(TextureID id)
 {
+    LOOM_PROFILE_START(textureValidate);
+
     loom_mutex_lock(Texture::sTexInfoLock);
     TextureInfo *tinfo = Texture::getTextureInfo(id);
     if (tinfo->renderTarget && tinfo->renderbuffer == -1 && Graphics::getStencilRequired()) {
@@ -916,10 +1001,13 @@ void Texture::validate(TextureID id)
         Graphics::context()->glBindRenderbuffer(GL_RENDERBUFFER, prevRenderbuffer);
     }
     loom_mutex_unlock(Texture::sTexInfoLock);
+
+    LOOM_PROFILE_END(textureValidate);
 }
 
 void Texture::setRenderTarget(TextureID id)
 {
+    LOOM_PROFILE_SCOPE(textureSetRenderTarget);
 	if (id != -1)
 	{
 		if (currentRenderTexture == id) return;
@@ -967,6 +1055,7 @@ void Texture::setRenderTarget(TextureID id)
 
 void Texture::dispose(TextureID id)
 {
+    LOOM_PROFILE_SCOPE(textureDispose);
     loom_mutex_lock(Texture::sTexInfoLock);
     TextureInfo *tinfo = Texture::getTextureInfo(id);
 
@@ -997,7 +1086,7 @@ void Texture::dispose(TextureID id)
             if (tinfo->renderbuffer != -1) Graphics::context()->glDeleteRenderbuffers(1, &tinfo->renderbuffer);
 		}
 
-		// And erase backing state.
+		// And erase backing state. We'll generate more IDs if we need to.
         Graphics::context()->glDeleteTextures(1, &tinfo->handle);
         tinfo->reset();
     }

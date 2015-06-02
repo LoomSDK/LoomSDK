@@ -37,6 +37,8 @@ typedef int   TextureID;
 #define TEXTURE_ID_MASK   (1 << TEXTURE_ID_BITS) - 1
 #define MAXTEXTURES       1 << TEXTURE_ID_BITS
 
+#define TEXTURE_GEN_BATCH 16
+
 // loading textures are marked
 #define MARKEDTEXTURE     65534
 
@@ -166,6 +168,7 @@ private:
 	static bool supportsFullNPOT;
 	static TextureID currentRenderTexture;
 	static uint32_t previousRenderFlags;
+    static bool verbose;
 
     // simple linear TextureID -> TextureHandle
     static TextureInfo sTextureInfos[MAXTEXTURES];
@@ -290,24 +293,8 @@ public:
         return id ? getTextureInfo(*id) : NULL;
     }
 
-    inline static TextureInfo *getTextureInfo(TextureID id)
-	{
-        TextureID index = id & TEXTURE_ID_MASK;
-        lmAssert(index >= 0 && index < MAXTEXTURES, "Texture index is out of range: %d", index);
-
-        loom_mutex_lock(sTexInfoLock);
-        TextureInfo *tinfo = &sTextureInfos[index];
-
-        // Check if it has a handle and if it's not outdated
-        if (tinfo->handle == -1 || tinfo->id != id)
-        {
-            tinfo = NULL;
-        }
-        loom_mutex_unlock(sTexInfoLock);
-
-        return tinfo;
-    }
-
+    static TextureInfo *getTextureInfo(TextureID id);
+	
     inline static int getIndex(TextureID id)
     {
         return id & TEXTURE_ID_MASK;

@@ -35,6 +35,15 @@ package loom.modestmaps.core.painter
             return (alreadySeen[key] != null);
         }
         
+        public function returnKey(key:String):Tile
+        {
+            var tile = alreadySeen[key];
+            if (!tile) return null;
+            tilePool.returnTile(tile);
+            alreadySeen.deleteKey(key);
+            return tile;
+        }
+        
         public function retainKeys(keys:Vector.<String>):void
         {
             for (var key:String in alreadySeen) {

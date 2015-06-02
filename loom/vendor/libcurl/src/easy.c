@@ -248,11 +248,11 @@ CURLcode curl_global_init(long flags)
     return CURLE_OK;
 
   /* Setup the default memory functions here (again) */
-  Curl_cmalloc = (curl_malloc_callback)je_malloc;
-  Curl_cfree = (curl_free_callback)je_free;
-  Curl_crealloc = (curl_realloc_callback)je_realloc;
+  Curl_cmalloc = (curl_malloc_callback)malloc;
+  Curl_cfree = (curl_free_callback)free;
+  Curl_crealloc = (curl_realloc_callback)realloc;
   Curl_cstrdup = (curl_strdup_callback)curlx_strdup_hack;
-  Curl_ccalloc = (curl_calloc_callback)je_calloc;
+  Curl_ccalloc = (curl_calloc_callback)calloc;
 
   if(flags & CURL_GLOBAL_SSL)
     if(!Curl_ssl_init()) {

@@ -23,6 +23,7 @@ package loom.modestmaps.core
         public var column:int;
         public var inWell:Boolean;
         public var isVisible:Boolean;
+        public var lastRepop:int;
 
         protected var assignedTextures:Vector.<Texture> = [];
 
@@ -33,7 +34,11 @@ package loom.modestmaps.core
         public function Tile(column:int, row:int, zoom:int)
         {
             init(column, row, zoom);
-        } 
+        }
+        
+        public function updateRepop() {
+            lastRepop = Platform.getTime();
+        }
         
         /** override this in a subclass and call grid.setTileCreator if you want to draw on your tiles */
         public function init(column:int, row:int, zoom:int):void
@@ -89,7 +94,7 @@ package loom.modestmaps.core
             
             //create an image for the newly loaded texture and add it to the tile
             var img:Image = imagePool.pop();
-            img.texture = texture;              
+            img.texture = texture;
             addChild(img, false);
 
             //texture ref counter

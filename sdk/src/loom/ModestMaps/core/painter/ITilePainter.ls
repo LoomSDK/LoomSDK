@@ -13,7 +13,7 @@ package loom.modestmaps.core.painter
         function setTileCreator(tileCreator:Function):void
         function setMapProvider(provider:IMapProvider):void
         function getTileFromCache(key:String):Tile
-        function retainKeysInCache(recentlySeen:Vector.<String>):void
+        function returnKey(key:String):void
         function createAndPopulateTile(coord:Coordinate, key:String):Tile
         function isPainted(tile:Tile):Boolean
         function cancelPainting(tile:Tile):void

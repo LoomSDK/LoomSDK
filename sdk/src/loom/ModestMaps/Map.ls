@@ -688,6 +688,7 @@ package loom.modestmaps
         protected function onExtentChanged(event:Event=null):void
         {
             onExtentChange(MapState.STOPPED, getExtent());
+            //}
         }
 
        /**
@@ -699,6 +700,7 @@ package loom.modestmaps
         protected function onExtentChanging():void
         {
             onExtentChange(MapState.STARTED, getExtent());
+            //}
         }
 
 

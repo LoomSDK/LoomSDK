@@ -14,8 +14,10 @@ package loom.modestmaps.core
     import loom.modestmaps.events.MapEvent;
     import loom.modestmaps.mapproviders.IMapProvider;
     import loom.modestmaps.core.TwoInputTouch;
+    import loom2d.animation.IAnimatable;
     import loom2d.display.Image;
     import loom2d.display.Quad;
+    import loom2d.Loom2D;
     
     import loom2d.display.DisplayObject;
     import loom2d.display.Sprite;
@@ -30,7 +32,7 @@ package loom.modestmaps.core
     import loom2d.math.Rectangle;
     import loom2d.text.TextField;
     
-    public class TileGrid extends Sprite
+    public class TileGrid extends Sprite implements IAnimatable
     {       
         /** if we don't have a tile at currentZoom, onRender will look for tiles up to 5 levels out.
          *  set this to 0 if you only want the current zoom level's tiles
@@ -62,7 +64,7 @@ package loom.modestmaps.core
         /** set this to false, along with RoundPositionsEnabled, if you need a map to stay 'fixed' in place as it changes size */
         public static var RoundScalesEnabled:Boolean = true;
 
-
+        
         // TILE_WIDTH and TILE_HEIGHT are now tileWidth and tileHeight
         // this was needed for the NASA DailyPlanetProvider which has 512x512px tiles
         // public static const TILE_WIDTH:Number = 256;
@@ -108,7 +110,8 @@ package loom.modestmaps.core
         protected var limits:Vector.<Coordinate>;
         
         // keys we've recently seen
-        protected var recentlySeen:Vector.<String> = [];
+        protected var recentlySeen:Vector.<Tile> = [];
+        protected var recentlySeenIndex:int = 0;
         
         // currently visible tiles
         protected var visibleTiles:Vector.<Tile> = [];
@@ -141,22 +144,31 @@ package loom.modestmaps.core
 
         // setting this.dirty = true will request an Event.RENDER
         protected var _dirty:Boolean;
+        
+        private var positionDirty:Boolean;
 
         // setting to true will dispatch a CHANGE event which Map will convert to an EXTENT_CHANGED for us
         protected var matrixChanged:Boolean = false;
         
-        private var zoomLetter:Vector.<String> = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
         // Making the doubleTouchInput public so that the sensitivity can be set and additional callbacks can be made
         public var doubleTouchInput:TwoInputTouch;
         
         protected var bgTouchArea:Image;
         
+        protected var repopCount:int = -1;
+        protected var repopCounter:int;
+        protected var repopCol:int = -1;
+        protected var repopRow:int = -1;
+        protected var repopMinCol:int = -1;
+        protected var repopMaxCol:int = -1;
+        protected var repopMinRow:int = -1;
+        protected var repopMaxRow:int = -1;
+
         public var onPan:MapPan;
         public var onZoom:MapZoom;
         public var onChange:MapChange;
         public var onMapRender:MapChange;
         public var onTileLoad:MapTileLoad;
-        
         
         public function TileGrid(w:Number, h:Number, draggable:Boolean, provider:IMapProvider)
         {
@@ -196,7 +208,7 @@ package loom.modestmaps.core
             bgTouchArea.alpha = 0;
             bgTouchArea.ignoreHitTestAlpha = true;
             addChild(bgTouchArea);
-                        
+            
             well = new Sprite();
             well.name = 'well';
             well.depthSort = true;
@@ -228,6 +240,7 @@ package loom.modestmaps.core
             }
             
             onRender += _onRender;
+            Loom2D.juggler.add(this);
 
             //NOTE_TEC: not porting DebugField for now at least...
             // addEventListener(Event.ENTER_FRAME, onEnterFrame);
@@ -250,6 +263,7 @@ package loom.modestmaps.core
                 doubleTouchInput = null;
             }
             onRender -= _onRender;
+            Loom2D.juggler.remove(this);
 
             //NOTE: not porting DebugField for now at least...
             // removeEventListener(Event.ENTER_FRAME, onEnterFrame);
@@ -296,11 +310,12 @@ package loom.modestmaps.core
         {
             calcCoordinatePoint(startPan);
             onPan(MapState.CHANGED, ModestMaps.LastCoordinateX - mapWidth/2, ModestMaps.LastCoordinateY - mapHeight/2);
+            //dispatchEvent(MapEvent.Panned(ModestMaps.LastCoordinateX - mapWidth/2, ModestMaps.LastCoordinateY - mapHeight/2));
         }
         
         protected function onZoomed():void
         {
-            onZoom(MapState.CHANGED, zoomLevel, zoomLevel-startZoom);     
+            onZoom(MapState.CHANGED, zoomLevel, zoomLevel-startZoom);
         }
         
         protected function onChanged():void
@@ -370,12 +385,9 @@ package loom.modestmaps.core
             // loop over all tiles and find parent or child tiles from cache to compensate for unloaded tiles:
             repopulateVisibleTiles(MinColRow.x, MaxColRow.x, MinColRow.y, MaxColRow.y);
             
-            //remove unused tiles
-            pruneTiles();
-
             // position tiles such that currentZoom is approximately scale 1
             // and x and y make sense in pixels relative to tlC.column and tlC.row (topleft)
-            positionTiles(TopLeftColRow.x, TopLeftColRow.y);
+            positionDirty = true;
             
             // update centerRow and centerCol for sorting the tileQueue in processQueue()
             centerCoordinate.zoomToInPlace(currentTileZoom);
@@ -406,9 +418,9 @@ package loom.modestmaps.core
             else if (matrixChanged) {
                 matrixChanged = false;
                 onChanged();
-            }
-            }
-            
+            }            
+        }
+                
 
         private var MinColRow:Point;
         private var MaxColRow:Point;
@@ -428,7 +440,7 @@ package loom.modestmaps.core
             // optionally pad it out a little bit more with a tile buffer
             // TODO: investigate giving a directional bias to TILE_BUFFER when panning quickly
             // NB:- I'm pretty sure these calculations are accurate enough that using 
-            //      Math.ceil for the maxCols will load one column too many -- Tom
+            //      Math.ceil for the maxCols will load one column too many -- Tom         
             MinColRow.x = Math.floor(minCoord(_topLeftCoordinate.zoomToCol, 
                                                 _bottomRightCoordinate.zoomToCol,
                                                 _topRightCoordinate.zoomToCol,
@@ -476,14 +488,12 @@ package loom.modestmaps.core
                 else { return (c > d) ? c : d; }
             }
         }
-
-
         private function rvtStart():void
         {
             //reset the visible tile flags
-            var len = visibleTiles.length;
+            var len = recentlySeen.length;
             for (var i = 0; i < len; i++) {
-                var tile = visibleTiles[i];
+                var tile = recentlySeen[i];
                 tile.isVisible = false;
             }
             
@@ -492,10 +502,7 @@ package loom.modestmaps.core
         
         private function rvtEnd():void
         {
-            //remove unused tiles
-            pruneTiles();
-        
-            positionTiles(TopLeftColRow.x, TopLeftColRow.y);
+            positionDirty = true;
         }
 
         var WorkCoord:Coordinate = new Coordinate(0,0,0);
@@ -508,13 +515,12 @@ package loom.modestmaps.core
             // see if we already have this tile
             var tile:Tile = wellTiles[key];
             
-            
             // create it if not, and add it to the load queue
             if (!tile && add) {
                 tile = tilePainter.getTileFromCache(key);
                 if (!tile) {
                     WorkCoord.setVals(row, col, currentTileZoom);
-                    tile = tilePainter.createAndPopulateTile(WorkCoord, key);
+                    tile = tilePainter.createAndPopulateTile(WorkCoord, key); 
                 }
                 else {
                     tile.show();
@@ -527,6 +533,7 @@ package loom.modestmaps.core
                     visibleTiles.pushSingle(tile);
                 }
                 tile.isVisible = true;
+                tile.updateRepop();
             }
             
             return tile;        
@@ -625,10 +632,73 @@ package loom.modestmaps.core
             //prep/clear data
             rvtStart();
          
+            //// loop over currently visible tiles
+            //for (var col:int = minCol; col <= maxCol; col++) {
+                //for (var row:int = minRow; row <= maxRow; row++) {
+                    //var tile:Tile = rvtProcessTile(col, row);
+                    //
+                    //// if the tile isn't ready yet, we're going to reuse a parent tile
+                    //// if there isn't a parent tile, and we're zooming out, we'll reuse child tiles
+                    //// if we don't get all 4 child tiles, we'll look at more parent levels
+                    ////
+                    //// yes, this is quite involved, but it should be fast enough because most of the loops
+                    //// don't get hit most of the time
+                    ////
+                    //
+                    //var tileReady:Boolean = tile.isShowing() && !tilePainter.isPainting(tile);
+                    //if (!tileReady) {
+                        //rvtMakeTileReady(col, row);
+                    //}
+                //}
+            //}
+            //
+            //pruneTiles();
+            //
+            //return;
+            
+            /*
+            for (var i:int = well.numChildren-1; i >= 0; i--) {
+                var wellTile:Tile = well.getChildAtUnsafe(i) as Tile;
+                wellTile.isPending = false;
+            }
+            */
+            
+            repopulateVisibleTilesPending(minCol, maxCol, minRow, maxRow);
+            
+            if (repopCol < minCol) repopCol = minCol;
+            if (repopCol > maxCol) repopCol = maxCol;
+            if (repopRow < minRow) repopRow = minRow;
+            if (repopRow > maxRow) repopRow = maxRow;
+            repopMinCol = minCol;
+            repopMaxCol = maxCol;
+            repopMinRow = minRow;
+            repopMaxRow = maxRow;
+            
+            //repopCol = minCol;
+            //repopRow = minRow;
+            
+            //if (repopCount == -1) Loom2D.juggler.add(this);
+            
+            repopCounter = 0;
+            repopCount = (maxCol-minCol+1)*(maxRow-minRow+1);
+            
+            //trace("repop", minCol, repopCol, maxCol, minRow, repopRow, maxRow, repopCount);
+            
+            repopulateVisibleTilesFrame();
+            
             // loop over currently visible tiles
+            //for (var col:int = minCol; col <= maxCol; col++) 
+            //{
+                //for (var row:int = minRow; row <= maxRow; row++) 
+                //{
+                //}
+            //}            
+        }
+        
+        private function repopulateVisibleTilesPending(minCol:int, maxCol:int, minRow:int, maxRow:int) {
             for (var col:int = minCol; col <= maxCol; col++) {
                 for (var row:int = minRow; row <= maxRow; row++) {
-                    var tile:Tile = rvtProcessTile(col, row, currentTileZoom);
+                    var tile:Tile = rvtProcessTile(col, row, currentTileZoom, false);
                     
                     // if the tile isn't ready yet, we're going to reuse a parent tile
                     // if there isn't a parent tile, and we're zooming out, we'll reuse child tiles
@@ -638,70 +708,124 @@ package loom.modestmaps.core
                     // don't get hit most of the time
                     //
                     
-                    var tileReady:Boolean = tile.isShowing() && !tilePainter.isPainting(tile);
-                    if (!tileReady) {
-                        rvtMakeTileReady(col, row);
+                    //var tileReady:Boolean = tile.isShowing() && !tilePainter.isPainting(tile);
+                    //if (!tileReady) {
+                        //rvtMakeTileReady(col, row);
+                    //}
+                }
+            }
+            //visibleTiles.clear();
+        }
+        
+        public function advanceTime(time:Number) {
+            if (repopCount != -1) repopulateVisibleTilesFrame();
+            pruneLeastRecent();
+            if (positionDirty) positionTiles(TopLeftColRow.x, TopLeftColRow.y);
+        }
+        
+        private function repopulateVisibleTilesFrame()
+        {
+            var time = Platform.getTime();
+            
+            var timeLimit = 3;
+            var countLimit = 1000;
+            var c:int;
+            for (c = 0; (Platform.getTime() - time) < timeLimit && c < countLimit; c++) {
+                var tile:Tile = rvtProcessTile(repopCol, repopRow, currentTileZoom);
+                
+                // if the tile isn't ready yet, we're going to reuse a parent tile
+                // if there isn't a parent tile, and we're zooming out, we'll reuse child tiles
+                // if we don't get all 4 child tiles, we'll look at more parent levels
+                //
+                // yes, this is quite involved, but it should be fast enough because most of the loops
+                // don't get hit most of the time
+                //
+                
+                var tileReady:Boolean = tile.isShowing() && !tilePainter.isPainting(tile);
+                if (!tileReady) {
+                    rvtMakeTileReady(repopCol, repopRow);
+                }
+                
+                repopCol++;
+                if (repopCol > repopMaxCol) {
+                    repopCol = repopMinCol;
+                    repopRow++;
+                    if (repopRow > repopMaxRow) {
+                        repopRow = repopMinRow;
                     }
                 }
-            }
-        }
-        
-
-        private function pruneTiles():void
-        {
-            // move visible tiles to the end of recentlySeen if we're done loading them
-            // the 'least recently seen' tiles will be removed from the tileCache below
-            for(var j=0; j<visibleTiles.length; j++)
-            {
-                var visibleTile:Tile = visibleTiles[j];
-
-                if (tilePainter.isPainted(visibleTile)) {
-                    recentlySeen.remove(visibleTile.name); 
-                    recentlySeen.pushSingle(visibleTile.name);
+                repopCounter++;
+                if (repopCounter > repopCount) {
+                    repopCount = -1;
+                    rvtEnd();
+                    break;
                 }
             }
-
-            // prune tiles from the well if they shouldn't be there (not currently in visibleTiles)
-            // TODO: unless they're fading in or out?
-            // (loop backwards so removal doesn't change i)
-            for (var i:int = well.numChildren-1; i >= 0; i--) {
-                var wellTile:Tile = well.getChildAtUnsafe(i) as Tile;
-                
-                if (!wellTile.isVisible) {
-                    well.removeChildAt(i);
-                    wellTiles[wellTile.name] = null;
-                    wellTile.inWell = false;
-                    wellTile.hide();
-                    tilePainter.cancelPainting(wellTile);
-                }
-            }
-
-            // all the visible tiles will be at the end of recentlySeen
-            // let's make sure we keep them around:
-            var maxRecentlySeen:int = Math.max2(visibleTiles.length, MaxTilesToKeep);
             
-            // prune cache of already seen tiles if it's getting too big:
-            if (recentlySeen.length > maxRecentlySeen) {
-
-                // can we sort so that biggest zoom levels get removed first, without removing currently visible tiles?
-                /*
-                var visibleKeys:Array = recentlySeen.slice(recentlySeen.length - visibleTiles.length, recentlySeen.length);
-
-                // take a look at everything else
-                recentlySeen = recentlySeen.slice(0, recentlySeen.length - visibleTiles.length);
-                recentlySeen = recentlySeen.sort(Array.DESCENDING);
-                recentlySeen = recentlySeen.concat(visibleKeys); 
-                */
-                
-                // throw away keys at the beginning of recentlySeen
-                recentlySeen = recentlySeen.slice(recentlySeen.length - maxRecentlySeen, recentlySeen.length);
-                
-                // loop over our internal tile cache 
-                // and throw out tiles not in recentlySeen
-                tilePainter.retainKeysInCache(recentlySeen);
-            }
+            time = Platform.getTime()-time;
+            
+            positionDirty = true;
         }
         
+        private function pruneLeastRecent() {
+            //return;
+            
+            //for (var m = 0; m < recentlySeen.length; m++) {
+            
+            if (tilePainter.getCacheSize() < MaxTilesToKeep) return;
+            
+            //if (recentlySeenIndex < 0) recentlySeenIndex = 0;
+            //if (recentlySeenIndex >= recentlySeen.length) recentlySeenIndex = recentlySeen.length-1;
+            //trace(tilePainter.getCacheSize(), recentlySeenIndex, recentlySeen.length);
+            //if (recentlySeenIndex < 0) return;
+            
+            var len = recentlySeen.length;
+            
+            var now = Platform.getTime();
+            var leastRecentIndex = -1;
+            var leastRecent:Tile = null;
+            var leastRecentDiff = -1;
+            var tile:Tile;
+            var iw = 0;
+            var iv = 0;
+            var ip = 0;
+            var ipd = 0;
+            for (var i:int = 0; i < len; i++) {
+                tile = recentlySeen[i];
+                if (tile.inWell) { iw++; }
+                if (tile.isVisible) { iv++; }
+                if (tilePainter.isPainting(tile)) { ip++; }
+                if (tilePainter.isPainted(tile)) { ipd++; }
+                if (tile.isVisible) continue;
+                var tileRepop = now-tile.lastRepop;
+                if (tileRepop > leastRecentDiff) {
+                    leastRecentDiff = tileRepop;
+                    leastRecent = tile;
+                    leastRecentIndex = i;
+                }
+            }
+            
+            if (!leastRecent) {
+                //trace("Least recent not found", iw, iv, ip, ipd);
+                return;
+            }
+            
+            tile = leastRecent;
+            
+            //trace(tilePainter.getCacheSize(), leastRecentIndex, leastRecentDiff, leastRecent);
+            
+            if (!tile.inWell) {
+                if (tile.inWell) wellRemove(tile);
+                tilePainter.returnKey(tile.name);
+            }
+            recentlySeen.splice(leastRecentIndex, 1);
+            
+            recentlySeenIndex++;
+            if (recentlySeenIndex >= recentlySeen.length) {
+                recentlySeenIndex = 0;
+            }
+        }
+
 
         // TODO: do this with events instead?
         public function tilePainted(tile:Tile):void
@@ -727,6 +851,7 @@ package loom.modestmaps.core
         private function positionTiles(realMinCol:Number, realMinRow:Number):void
         {
             
+            
 
             
 //TODO_24: native prep for lower down                
@@ -750,11 +875,12 @@ package loom.modestmaps.core
             var tileAngleDegrees:Number = (Math.atan2(px.y, px.x) - Math.degToRad(90));
             
             var i = 0;
-            var len = visibleTiles.length;
+            var len = well.numChildren;
+            var count = 0;
             const TILE_DEPTH_SHIFT = 16;
             // apply the sorted depths, position all the tiles and also keep recentlySeen updated:
             for (i = 0; i < len; i++) {
-                var tile:Tile = visibleTiles[i];
+                var tile:Tile = well.getChildAtUnsafe(i) as Tile;
                 
                 tile.depth = (-Math.abs(tile.zoom-currentTileZoom) << TILE_DEPTH_SHIFT) | tile.zoom;
                 
@@ -1161,7 +1287,7 @@ package loom.modestmaps.core
         {
             onZoom(MapState.STARTED, startZoom, NaN);
         }
-
+        
         
         public function doneZooming():void
         {

@@ -12,6 +12,8 @@ package loom.modestmaps.core.painter
     import loom2d.Loom2D;
     import loom2d.textures.Texture;
     import loom2d.textures.TextureSmoothing;
+    import system.Number;
+    import system.Void;
         
     import loom2d.events.Event;
     import loom2d.events.EventDispatcher;
@@ -87,6 +89,7 @@ package loom.modestmaps.core.painter
             Loom2D.juggler.remove(this);
         }
         
+        
 
         /* The default Tile creation function used by the TilePool */
         protected function CreateTile():Tile
@@ -117,13 +120,26 @@ package loom.modestmaps.core.painter
             return tileCache.getTile(key);
         }
         
+        public function returnKey(key:String):void
+        {
+            var tile = tileCache.returnKey(key);
+            if (tile) {
+                cancelPainting(tile);
+            } else {
+                trace("warn:", key, "was not in cache");
+            }
+        }
+        
+        /*
         public function retainKeysInCache(recentlySeen:Vector.<String>):void
         {
             tileCache.retainKeys(recentlySeen);
         }
+        */
         
         public function createAndPopulateTile(coord:Coordinate, key:String):Tile
         {
+            if (tileCache.containsKey(key)) trace("Key already in cache", key);
             var tile:Tile = tilePool.getTile(coord.column, coord.row, coord.zoom);
             tile.name = key;
             var urls:Vector.<String> = provider.getTileUrls(coord);
@@ -252,14 +268,7 @@ package loom.modestmaps.core.painter
         {
             if (openRequests.length < MaxOpenRequests && tileQueue.length > 0) {
     
-                // prune queue for tiles that aren't visible
-                var removedTiles:Vector.<Tile> = tileQueue.retainAll(tileGrid.getVisibleTiles());
-                
-                // keep layersNeeded tidy:
-                for each (var removedTile:Tile in removedTiles) {
-                    this.cancelPainting(removedTile);
-                }
-                
+
                 // note that queue is not the same as visible tiles, because things 
                 // that have already been loaded are also in visible tiles. if we
                 // reuse visible tiles for the queue we'll be loading the same things over and over
