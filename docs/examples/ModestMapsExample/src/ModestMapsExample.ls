@@ -17,11 +17,6 @@ package
     import loom2d.events.*;
     import loom2d.math.Point;
     import loom2d.textures.Texture;
-
-
-    import loom.gameframework.LoomGroup;    
-    import loom.gameframework.TimeManager;    
-
     
     /** Simple application that demonstrates how to use Modest Maps to show a digital map provider */
     public class ModestMapExample extends Application
@@ -74,30 +69,6 @@ package
                 }
             };
         }
-
-private var autoZoom:Boolean = false;
-private var zoomTime:Number = 3.0;
-private var lastTouches:int = 0;
-        override public function onTick():void
-        {
-            super.onTick();
-
-            if(autoZoom)
-            {
-                if(zoomTime > 0.0)
-                {
-                    var timeManager:TimeManager = LoomGroup.rootGroup.getManager(TimeManager) as TimeManager;
-                    zoomTime -= timeManager.deltaTime;
-                    var zoomPoint:Point = new Point(stage.stageWidth / 2, stage.stageHeight / 2);
-                    _map.zoomByAbout(0.05, zoomPoint);
-                }
-                else
-                {
-                    autoZoom = false;
-                    Profiler.dump();
-                }
-            }
-        }
         
 
         //make a new pin!
@@ -144,13 +115,6 @@ private var lastTouches:int = 0;
             {
                 _map.setMapProvider(newProvider);
             }
-
-if(keycode == LoomKey.BACKSPACE)
-{
-    Profiler.enable(true);
-    autoZoom = true;
-}
-
         }
 
         //touch handler
@@ -158,19 +122,11 @@ if(keycode == LoomKey.BACKSPACE)
         {
             //if more than 1 touch point, or a touch end was found, we need to stop the timer
             var touches = event.getTouches(stage);
-if((touches.length == 3) && (lastTouches != 3))
-{
-    Profiler.enable(true);
-    autoZoom = true;
-}
-lastTouches = touches.length;
-
             if ((touches.length > 1) || event.getTouch(stage, TouchPhase.ENDED))
             {
                 _markerHoldTimer.stop();
                 return;
             }
-
 
             //touch began?
             var touch = event.getTouch(_map, TouchPhase.BEGAN);
@@ -190,7 +146,7 @@ lastTouches = touches.length;
                 {
                     _markerTouchCur = touch.getLocation(stage);
                 }
-            }
+            }            
         }        
     }
 }
