@@ -26,7 +26,7 @@ package loom.modestmaps.core
         
         // Higher is more sensitive
         public var zoomSensitivity:Number = 0.005;
-        public var rotationSensitivity:Number = 0.02;
+        public var rotationSensitivity:Number = 0.005;
         
 
         

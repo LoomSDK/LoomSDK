@@ -22,6 +22,7 @@
 #include "loom/common/core/log.h"
 #include "loom/common/core/allocator.h"
 #include "loom/common/platform/platformTime.h"
+#include <math.h>
 
 loom_allocator_t *gProfilerAllocator = NULL;
 
@@ -257,6 +258,8 @@ LoomProfiler::LoomProfiler()
    mCurrentLoomProfilerEntry->mInvokeCount = 0;
    mCurrentLoomProfilerEntry->mTotalTime = 0;
    mCurrentLoomProfilerEntry->mSubTime = 0;
+   mCurrentLoomProfilerEntry->mMaxTime = 0;
+   mCurrentLoomProfilerEntry->mMinTime = INFINITY;
    mRootLoomProfilerEntry = mCurrentLoomProfilerEntry;
 
    for(U32 i = 0; i < LoomProfilerEntry::HashTableSize; i++)
@@ -307,6 +310,8 @@ void LoomProfiler::reset()
       walk->mFirstLoomProfilerEntry = 0;
       walk->mTotalTime = 0;
       walk->mSubTime = 0;
+      walk->mMaxTime = 0;
+      walk->mMinTime = INFINITY;
       walk->mTotalInvokeCount = 0;
    }
    mCurrentLoomProfilerEntry = mRootLoomProfilerEntry;
@@ -317,6 +322,8 @@ void LoomProfiler::reset()
    mCurrentLoomProfilerEntry->mInvokeCount = 0;
    mCurrentLoomProfilerEntry->mTotalTime = 0;
    mCurrentLoomProfilerEntry->mSubTime = 0;
+   mCurrentLoomProfilerEntry->mMaxTime = 0;
+   mCurrentLoomProfilerEntry->mMinTime = INFINITY;
    mCurrentLoomProfilerEntry->mSubDepth = 0;
    mCurrentLoomProfilerEntry->mLastSeenProfiler = 0;
 }
@@ -338,6 +345,8 @@ LoomProfilerRoot::LoomProfilerRoot(const char *name)
     sRootList               = this;
     mTotalTime              = 0;
     mSubTime                = 0;
+    mMaxTime                = 0;
+    mMinTime                = INFINITY;
     mTotalInvokeCount       = 0;
     mFirstLoomProfilerEntry = NULL;
     mEnabled                = true;
@@ -436,6 +445,8 @@ void LoomProfiler::hashPush(LoomProfilerRoot *root)
          nextProfiler->mInvokeCount = 0;
          nextProfiler->mTotalTime = 0;
          nextProfiler->mSubTime = 0;
+         nextProfiler->mMaxTime = 0;
+         nextProfiler->mMinTime = INFINITY;
          nextProfiler->mSubDepth = 0;
       }
    }
@@ -476,9 +487,15 @@ void LoomProfiler::hashPop(LoomProfilerRoot *expected)
 
         F64 fElapsed = endHighResolutionTimer(mCurrentLoomProfilerEntry->mStartTime);
 
+        lmAssert(fElapsed > 0, "Elapsed time is negative!");
+
         mCurrentLoomProfilerEntry->mTotalTime        += fElapsed;
         mCurrentLoomProfilerEntry->mParent->mSubTime += fElapsed; // mark it in the parent as well...
         mCurrentLoomProfilerEntry->mRoot->mTotalTime += fElapsed;
+        mCurrentLoomProfilerEntry->mMaxTime = fmax(fElapsed, mCurrentLoomProfilerEntry->mMaxTime);
+        mCurrentLoomProfilerEntry->mMinTime = fmin(fElapsed, mCurrentLoomProfilerEntry->mMinTime);
+        mCurrentLoomProfilerEntry->mRoot->mMaxTime = fmax(fElapsed, mCurrentLoomProfilerEntry->mRoot->mMaxTime);
+        mCurrentLoomProfilerEntry->mRoot->mMinTime = fmin(fElapsed, mCurrentLoomProfilerEntry->mRoot->mMinTime);
         if (mCurrentLoomProfilerEntry->mParent->mRoot)
         {
             mCurrentLoomProfilerEntry->mParent->mRoot->mSubTime += fElapsed; // mark it in the parent as well...
@@ -530,16 +547,21 @@ static void LoomProfilerEntryDumpRecurse(LoomProfilerEntry *data, char *buffer, 
     else
     {
         // dump out this one:
-        lmLogError(gProfilerLogGroup, "%7.3f %7.3f %8d %s%s",
+        lmLogError(gProfilerLogGroup, "%8.3f %8.3f %8.3f %8.3f %8.3f %8d %s%s",
                    data->mRoot == NULL ? 100.0 : 100.0 * data->mTotalTime / totalTime,
                    data->mRoot == NULL ? 100.0 : 100.0 * (data->mTotalTime - data->mSubTime) / totalTime,
+                   data->mTotalTime / (1000.0 * 1000.0 * (data->mInvokeCount > 0 ? data->mInvokeCount : 1)),
+                   data->mMaxTime / (1000.0 * 1000.0),
+                   data->mMinTime / (1000.0 * 1000.0),
                    data->mInvokeCount,
                    buffer,
                    data->mRoot ? data->mRoot->mName : "ROOT");
     }
 
-    data->mTotalTime   = 0;
-    data->mSubTime     = 0;
+    data->mTotalTime = 0;
+    data->mSubTime = 0;
+    data->mMaxTime = 0;
+    data->mMinTime = INFINITY;
     data->mInvokeCount = 0;
 
     buffer[bufferLen]     = ' ';
@@ -611,28 +633,34 @@ void LoomProfiler::dump()
 
     for (U32 i = 0; i < rootVector.size(); i++)
     {
-        float tm = (float)(100.0 * (rootVector[i]->mTotalTime - rootVector[i]->mSubTime) / totalTime);
+        LoomProfilerRoot *root = rootVector[i];
+        float tm = (float)(100.0 * (root->mTotalTime - root->mSubTime) / totalTime);
         if (tm >= threshold)
         {
-            lmLogError(gProfilerLogGroup, "%7.3f %7.3f %8d %s",
-                       100.0 * (rootVector[i]->mTotalTime - rootVector[i]->mSubTime) / totalTime,
-                       100.0 * rootVector[i]->mTotalTime / totalTime,
-                       rootVector[i]->mTotalInvokeCount,
-                       rootVector[i]->mName);
+            lmLogError(gProfilerLogGroup, "%7.3f %7.3f %8.3f %8.3f %8.3f %8d %s",
+                       100.0 * (root->mTotalTime - root->mSubTime) / totalTime,
+                       100.0 * root->mTotalTime / totalTime,
+                       root->mTotalTime / (1000.0 * 1000.0 * (root->mTotalInvokeCount > 0 ? root->mTotalInvokeCount : 1)),
+                       root->mMaxTime / (1000.0 * 1000.0),
+                       root->mMinTime / (1000.0 * 1000.0),
+                       root->mTotalInvokeCount,
+                       root->mName);
         }
         else
         {
             suppressedEntries++;
         }
 
-        rootVector[i]->mTotalInvokeCount = 0;
-        rootVector[i]->mTotalTime        = 0;
-        rootVector[i]->mSubTime          = 0;
+        root->mTotalInvokeCount = 0;
+        root->mTotalTime = 0;
+        root->mSubTime = 0;
+        root->mMaxTime = 0;
+        root->mMinTime = INFINITY;
     }
     lmLogError(gProfilerLogGroup, "Suppressed %i items with < %.1f%% of measured time.", suppressedEntries, threshold);
     lmLogError(gProfilerLogGroup, "");
     lmLogError(gProfilerLogGroup, "Ordered by stack trace total time -");
-    lmLogError(gProfilerLogGroup, "%% Time  %% NSTime  Invoke #  Name");
+    lmLogError(gProfilerLogGroup, "%% Time  %% NSTime AvgTime  MaxTime  MinTime  Invoke #  Name");
 
     mCurrentLoomProfilerEntry->mTotalTime = endHighResolutionTimer(mCurrentLoomProfilerEntry->mStartTime);
 

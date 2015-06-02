@@ -158,16 +158,16 @@ package loom2d.events
             if (sBubbleChains.length > 0)
             { 
                 chain = sBubbleChains.pop() as Vector.<EventDispatcher>;
-                chain.push(element);
+                chain.pushSingle(element);
             }
             else
             {
                 chain = new Vector.<EventDispatcher>();
-                chain.push(element);
+                chain.pushSingle(element);
             }
             
             while ((element = element.parent) != null)
-                chain.push(element);
+                chain.pushSingle(element);
 
             for (var i:int=0; i<chain.length; ++i)
             {
@@ -176,7 +176,7 @@ package loom2d.events
             }
             
             chain.length = 0;
-            sBubbleChains.push(chain);
+            sBubbleChains.pushSingle(chain);
         }
         
         /** Dispatches an event with the given parameters to all objects that have registered 

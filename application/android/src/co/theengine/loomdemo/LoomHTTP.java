@@ -246,6 +246,15 @@ public class LoomHTTP
     {
         headers.put(key, value);
     }
+    
+    public static void addHeaders(String[] kvPairs)
+    {
+        int len = kvPairs.length;
+        if ((len & 1) != 0) throw new AssertionError("Header key-value pair array does not have an even length");
+        for (int i = 0; i < len; i += 2) {
+            headers.put(kvPairs[i], kvPairs[i+1]);
+        }
+    }
 
     public static boolean isConnected()
     {

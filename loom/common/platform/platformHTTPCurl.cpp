@@ -76,9 +76,9 @@ typedef struct
 
 static void loom_HTTPCleanupUserData(loom_HTTPUserData *data)
 {
-    lmFree(NULL, data->chunk->memory);
+    lmSafeFree(NULL, data->chunk->memory);
     curl_slist_free_all(data->headers);
-    lmDelete(NULL, data->chunk);
+    lmSafeDelete(NULL, data->chunk);
     lmDelete(NULL, data);
 }
 
@@ -130,7 +130,7 @@ static char *strdup_callback(const char *str)
    if (!str)
       return NULL;
 
-   char *s = (char *)lmAlloc(NULL, strlen(str));
+   char *s = (char *)lmAlloc(NULL, strlen(str) + 1);
    strcpy(s, str);
    return s;
 }

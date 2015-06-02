@@ -222,16 +222,21 @@ public:
 
     inline void invert()
     {
-        float a  = this->a;
-        float b  = this->b;
-        float c  = this->c;
-        float d  = this->d;
-        float tx = this->tx;
-        float ty = this->ty;
+        invertOther(this);
+    }
+
+    inline void invertOther(const Matrix *other)
+    {
+        float a  = other->a;
+        float b  = other->b;
+        float c  = other->c;
+        float d  = other->d;
+        float tx = other->tx;
+        float ty = other->ty;
 
         // Cremer's rule: inverse = adjugate / determinant
         // A-1 = adj(A) / det(A)
-        float det = a * d - c * b;
+        float invDet = 1.0f / (a * d - c * b);
 
         //     [a11 a12 a13]
         // A = [a21 a22 a23]
@@ -249,10 +254,10 @@ public:
         //          [ d -c  c*ty-tx*d]
         //        = [-b  a  tx*b-a*ty]
         //          [ 0  0  a*d -c*b ]
-        this->a = d / det;
-        this->b = -b / det;
-        this->c = -c / det;
-        this->d = a / det;
+        this->a = d * invDet;
+        this->b = -b * invDet;
+        this->c = -c * invDet;
+        this->d = a * invDet;
 
         // Dart version:
         this->tx = -(this->a * tx + this->c * ty);

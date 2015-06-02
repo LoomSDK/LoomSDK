@@ -674,6 +674,21 @@ public:
         return UT_NPOS;
     }
 
+    UT_INLINE void push_front(const T& v)
+    {
+        if (m_size == m_capacity)
+        {
+            reserve(m_size == 0 ? 8 : m_size * 2);
+        }
+
+        // Shift everything down.
+        for (int i = m_size; i > 0; i--)
+            m_data[i] = m_data[i - 1];
+
+        m_data[0] = v;
+        m_size++;
+    }
+
     UT_INLINE void push_back(const T& v)
     {
         if (m_size == m_capacity)

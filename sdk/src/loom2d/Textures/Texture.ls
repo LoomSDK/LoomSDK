@@ -252,13 +252,6 @@ package loom2d.textures
                 return assetPathCache[urlsha2];
             }
 
-            //check if we're online
-            if(!HTTPRequest.isConnected())
-            {
-                Console.print("WARNING: Not connected to a network so unable to load texture from url: " + url); 
-                return null;
-            }
-
             //make sure that the image requested is one of our supported image types!
             var ext:String = null;
             for(var i=0;i<supportedImageTypes.length;i++)
@@ -284,7 +277,7 @@ package loom2d.textures
             }
             cacheFile = Path.normalizePath(writePath + "/" + urlsha2) + ext;
 
-            // check of file already cached locally
+            // check if file already cached locally
             if (File.fileExists(cacheFile))
             {
                 //file already downloaded previously, so queue up an async load of it right now
