@@ -48,10 +48,10 @@ package loom.modestmaps
     
     [Event(name="startZooming",      type="loom.modestmaps.events.MapEvent")]
     [Event(name="stopZooming",       type="loom.modestmaps.events.MapEvent")]
-    //[Event(name="zoomedBy",          type="loom.modestmaps.events.MapEvent")]
+    [Event(name="zoomedBy",          type="loom.modestmaps.events.MapEvent")]
     [Event(name="startPanning",      type="loom.modestmaps.events.MapEvent")]
     [Event(name="stopPanning",       type="loom.modestmaps.events.MapEvent")]
-    //[Event(name="panned",            type="loom.modestmaps.events.MapEvent")]
+    [Event(name="panned",            type="loom.modestmaps.events.MapEvent")]
     [Event(name="resized",           type="loom.modestmaps.events.MapEvent")]
     [Event(name="mapProviderChanged",type="loom.modestmaps.events.MapEvent")]
     [Event(name="beginExtentChange", type="loom.modestmaps.events.MapEvent")]
@@ -64,6 +64,14 @@ package loom.modestmaps
     [Event(name="markerClick",       type="loom.modestmaps.events.MarkerEvent")]
     public class Map extends Sprite
     {
+        
+        public var onZoom:MapZoom;
+        public var onPan:MapPan;
+        public var onExtentChange:MapExtentChange;
+        public var onResize:MapResize;
+        public var onProviderChange:MapProviderChange;
+        public var onMapRender:MapChange;
+        
         protected var mapWidth:Number;
         protected var mapHeight:Number;
         protected var __draggable:Boolean = true;
@@ -84,9 +92,6 @@ package loom.modestmaps
 
         //NOTE_TEC: Added a static Stage because Actionscript Sprites all have their parent stage, whereas Loom does not
         public static var MapStage:Stage;
-        
-        public var onZoom:MapZoom;
-        public var onPan:MapPan;
         
         /**
         * Initialize the map: set properties, add a tile grid, draw it.
@@ -111,8 +116,6 @@ package loom.modestmaps
             //save that static Stage
             MapStage = mapStage;
             
-            trace("Map", draggable);
-            
             // TODO getter/setter for this that disables interaction in TileGrid
             __draggable = draggable;
 
@@ -126,7 +129,8 @@ package loom.modestmaps
             // initialize the grid (so point/location/coordinate functions should be valid after this)
             grid = new TileGrid(width, height, draggable, mapProvider);
             grid.onPan += gridPan;
-            grid.addEventListener(Event.CHANGE, onExtentChanged);
+            grid.onChange += gridChange;
+            //grid.addEventListener(Event.CHANGE, onExtentChanged);
             addChild(grid);
 
             setSize(width, height);
@@ -176,10 +180,13 @@ package loom.modestmaps
             //addChild(grid.debugField);
         }
         
-        private function gridPan(deltaX:Number, deltaY:Number):void {
-            onPan(deltaX, deltaY);
-        }
         
+        private function gridPan(state:MapState, deltaX:Number, deltaY:Number):void {
+            onPan(state, deltaX, deltaY);
+        }
+        private function gridChange():void {
+            onExtentChanged();
+        }
 
         /**
         * Based on an array of locations, determine appropriate map
@@ -374,7 +381,8 @@ package loom.modestmaps
                 
                 grid.resizeTo(new Point(mapWidth, mapHeight));
                 
-                dispatchEvent(MapEvent.Resized(mapWidth, mapHeight));
+                onResize(mapWidth, mapHeight);
+                //dispatchEvent(MapEvent.Resized(mapWidth, mapHeight));
             }           
         }
     
@@ -441,7 +449,8 @@ package loom.modestmaps
             }
             
             // among other things this will notify the marker clip that its cached coordinates are invalid
-            dispatchEvent(MapEvent.MapProviderChanged(newProvider));
+            onProviderChange(newProvider);
+            //dispatchEvent(MapEvent.MapProviderChanged(newProvider));
         }
         
        /**
@@ -681,9 +690,10 @@ package loom.modestmaps
         */
         protected function onExtentChanged(event:Event=null):void
         {
-            if (hasEventListener(MapEvent.EXTENT_CHANGED)) {
-                dispatchEvent(MapEvent.ExtentChanged(getExtent()));
-            }
+            onExtentChange(MapState.STOPPED, getExtent());
+            //if (hasEventListener(MapEvent.EXTENT_CHANGED)) {
+                //dispatchEvent(MapEvent.ExtentChanged(getExtent()));
+            //}
         }
 
        /**
@@ -694,9 +704,10 @@ package loom.modestmaps
         */
         protected function onExtentChanging():void
         {
-            if (hasEventListener(MapEvent.BEGIN_EXTENT_CHANGE)) {
-                dispatchEvent(MapEvent.BeginExtentChange(getExtent()));
-            }
+            onExtentChange(MapState.STARTED, getExtent());
+            //if (hasEventListener(MapEvent.BEGIN_EXTENT_CHANGE)) {
+                //dispatchEvent(MapEvent.BeginExtentChange(getExtent()));
+            //}
         }
 
 

@@ -24,21 +24,21 @@ package loom.modestmaps.geo
         }
         
        /*
-        * Return raw projected point.
+        * Project raw point.
         * See: http://mathworld.wolfram.com/MercatorProjection.html (2)
         */
-        override protected function rawProject(point:Point):Point
+        override protected function rawProject(point:Point)
         {
-            return new Point(point.x, Math.log(Math.tan(0.25 * Math.PI + 0.5 * point.y)));
+            point.y = Math.log(Math.tan(0.25 * Math.PI + 0.5 * point.y));
         }
         
        /*
-        * Return raw unprojected point.
+        * Unproject raw point.
         * See: http://mathworld.wolfram.com/MercatorProjection.html (7)
         */
-        override protected function rawUnproject(point:Point):Point
+        override protected function rawUnproject(point:Point)
         {
-            return new Point(point.x, 2 * Math.atan(Math.pow(Math.E, point.y)) - 0.5 * Math.PI);
+            point.y = 2 * Math.atan(Math.pow(Math.E, point.y)) - 0.5 * Math.PI;
         }
     }
 }

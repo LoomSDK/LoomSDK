@@ -22,17 +22,30 @@ package loom.modestmaps.core.painter
         
         public function putTile(tile:Tile):void
         {
+            //trace("PUT", tile.name);
+            if (containsKey(tile.name)) trace("Already contains", tile.name, getTile(tile.name));
             alreadySeen[tile.name] = tile;
         }
         
         public function getTile(key:String):Tile
         {
+            //trace("GET", key);
             return alreadySeen[key];
         }
         
         public function containsKey(key:String):Boolean
         {
             return (alreadySeen[key] != null);
+        }
+        
+        public function returnKey(key:String):Tile
+        {
+            //trace("DEL", key);
+            var tile = alreadySeen[key];
+            if (!tile) return null;
+            tilePool.returnTile(tile);
+            alreadySeen.deleteKey(key);
+            return tile;
         }
         
         public function retainKeys(keys:Vector.<String>):void

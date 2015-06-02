@@ -73,8 +73,8 @@ static GLuint popGLTextureHandle()
     if (gGLTextureHandlePool.size() == 0)
     {
         // None left - allocate a new chunk of IDs.
-        gGLTextureHandlePool.resize(1024);
-        Graphics::context()->glGenTextures(1024, gGLTextureHandlePool.ptr());
+        gGLTextureHandlePool.resize(TEXTURE_GEN_BATCH);
+        Graphics::context()->glGenTextures(TEXTURE_GEN_BATCH, gGLTextureHandlePool.ptr());
     }
 
     // And pop the one.
@@ -325,7 +325,7 @@ void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWi
 
 TextureInfo *Texture::getTextureInfo(TextureID id)
 {
-    LOOM_PROFILE_SCOPE(getTextureInfo);
+    LOOM_PROFILE_SCOPE(textureGetInfo);
 
     TextureID index = id & TEXTURE_ID_MASK;
     lmAssert(index >= 0 && index < MAXTEXTURES, "Texture index is out of range: %d", index);
@@ -357,9 +357,9 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
         }
     }
 
-    LOOM_PROFILE_START(textureLoad_lock);
+    LOOM_PROFILE_START(textureLoadMutex);
     loom_mutex_lock(Texture::sTexInfoLock);
-    LOOM_PROFILE_END(textureLoad_lock);
+    LOOM_PROFILE_END(textureLoadMutex);
 
     TextureInfo &tinfo = *Texture::getTextureInfo(id);
 
@@ -377,30 +377,30 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 
     if (tinfo.reload)
     {
-        LOOM_PROFILE_START(textureLoad_delete);
+        LOOM_PROFILE_START(textureLoadDelete);
         storeGLTextureHandle(tinfo.handle);
         //Graphics::context()->glDeleteTextures(1, &tinfo.handle);
-        LOOM_PROFILE_END(textureLoad_delete);
+        LOOM_PROFILE_END(textureLoadDelete);
     }
 
     if (newTexture) {
-        LOOM_PROFILE_START(textureLoad_gentex);
+        LOOM_PROFILE_START(textureLoadGenerate);
         //Graphics::context()->glGenTextures(1, &tinfo.handle);
         tinfo.handle = popGLTextureHandle();
         if (tinfo.renderTarget) {
             Graphics::context()->glGenFramebuffers(1, &tinfo.framebuffer);
         }
-        LOOM_PROFILE_END(textureLoad_gentex);
+        LOOM_PROFILE_END(textureLoadGenerate);
     }
 
 
-    LOOM_PROFILE_START(textureLoad_upload);
+    LOOM_PROFILE_START(textureLoadUpload);
     Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
 
     Graphics::context()->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    LOOM_PROFILE_END(textureLoad_upload);
+    LOOM_PROFILE_END(textureLoadUpload);
 
     tinfo.width  = width;
     tinfo.height = height;
@@ -408,7 +408,7 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     // Generate mipmaps if appropriate
     if (!tinfo.renderTarget && (supportsFullNPOT || tinfo.isPowerOfTwo()))
     {
-        LOOM_PROFILE_START(textureLoad_mips);
+        LOOM_PROFILE_START(textureLoadMipmap);
         tinfo.clampOnly = false;
         tinfo.mipmaps = true;
         uint32_t *mipData = (uint32_t*) data;
@@ -436,7 +436,7 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
         }
         if (verbose) lmLogInfo(gGFXTextureLogGroup, "Generated mipmaps in %d ms", platform_getMilliseconds() - time);
         if (mipData != (uint32_t*) data) lmSafeFree(NULL, mipData);
-        LOOM_PROFILE_END(textureLoad_mips);
+        LOOM_PROFILE_END(textureLoadMipmap);
     }
     else 
     {
@@ -449,28 +449,28 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 	// Setup the framebuffer if it's a render texture
     if (newTexture && tinfo.renderTarget)
     {
-        LOOM_PROFILE_START(textureload_rtsetup);
+        LOOM_PROFILE_START(textureLoadFramebuffer);
         Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo.framebuffer);
         Graphics::context()->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tinfo.handle, 0);
         
 		GFX_FRAMEBUFFER_CHECK(tinfo.framebuffer);
         
         Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, Graphics::getBackFramebuffer());
-        LOOM_PROFILE_END(textureload_rtsetup);
+        LOOM_PROFILE_END(textureLoadFramebuffer);
     }
     
     validate(id);
     
     if (tinfo.reload)
     {
-        LOOM_PROFILE_START(textureLoad_delegate);
+        LOOM_PROFILE_START(textureLoadDelegate);
 
         // Fire the delegate.
         tinfo.updateDelegate.pushArgument(width);
         tinfo.updateDelegate.pushArgument(height);
         tinfo.updateDelegate.invoke();
 
-        LOOM_PROFILE_END(textureLoad_delegate);
+        LOOM_PROFILE_END(textureLoadDelegate);
     }
 
     // mark that next time we will be reloading

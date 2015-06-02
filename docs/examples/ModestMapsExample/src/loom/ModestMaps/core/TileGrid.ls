@@ -1,6 +1,10 @@
 package loom.modestmaps.core 
 {
+    import loom.modestmaps.events.MapChange;
+    import loom.modestmaps.events.MapExtentChange;
     import loom.modestmaps.events.MapPan;
+    import loom.modestmaps.events.MapState;
+    import loom.modestmaps.events.MapTileLoad;
     import loom.modestmaps.events.MapZoom;
     import loom.modestmaps.ModestMaps;
     import loom.modestmaps.Map;
@@ -10,8 +14,16 @@ package loom.modestmaps.core
     import loom.modestmaps.events.MapEvent;
     import loom.modestmaps.mapproviders.IMapProvider;
     import loom.modestmaps.core.TwoInputTouch;
+    import loom2d.animation.IAnimatable;
+    import loom2d.display.Graphics;
     import loom2d.display.Image;
     import loom2d.display.Quad;
+    import loom2d.display.Shape;
+    import loom2d.display.TextFormat;
+    import loom2d.Loom2D;
+    import system.Number;
+    import system.platform.Platform;
+    import system.Void;
     
     import loom2d.display.DisplayObject;
     import loom2d.display.Sprite;
@@ -26,7 +38,7 @@ package loom.modestmaps.core
     import loom2d.math.Rectangle;
     import loom2d.text.TextField;
     
-    public class TileGrid extends Sprite
+    public class TileGrid extends Sprite implements IAnimatable
     {       
         /** if we don't have a tile at currentZoom, onRender will look for tiles up to 5 levels out.
          *  set this to 0 if you only want the current zoom level's tiles
@@ -95,7 +107,7 @@ package loom.modestmaps.core
 
         // where the tiles live:
         protected var well:Sprite;
-        protected var wellTiles:Dictionary.<String, Tile> = {};
+        static public var wellTiles:Dictionary.<String, Tile> = {};
 
         //protected var provider:IMapProvider;
         protected var tilePainter:ITilePainter;
@@ -104,7 +116,9 @@ package loom.modestmaps.core
         protected var limits:Vector.<Coordinate>;
         
         // keys we've recently seen
-        protected var recentlySeen:Vector.<String> = [];
+        //protected var recentlySeen:Vector.<String> = [];
+        protected var recentlySeen:Vector.<Tile> = [];
+        protected var recentlySeenIndex:int = 0;
         
         // currently visible tiles
         protected var visibleTiles:Vector.<Tile> = [];
@@ -137,6 +151,8 @@ package loom.modestmaps.core
 
         // setting this.dirty = true will request an Event.RENDER
         protected var _dirty:Boolean;
+        
+        private var positionDirty:Boolean;
 
         // setting to true will dispatch a CHANGE event which Map will convert to an EXTENT_CHANGED for us
         protected var matrixChanged:Boolean = false;
@@ -145,9 +161,23 @@ package loom.modestmaps.core
         public var doubleTouchInput:TwoInputTouch;
         
         protected var bgTouchArea:Image;
+        
+        protected var repopCount:int = -1;
+        protected var repopCounter:int;
+        protected var repopCol:int = -1;
+        protected var repopRow:int = -1;
+        protected var repopMinCol:int = -1;
+        protected var repopMaxCol:int = -1;
+        protected var repopMinRow:int = -1;
+        protected var repopMaxRow:int = -1;
 
         public var onPan:MapPan;
         public var onZoom:MapZoom;
+        public var onChange:MapChange;
+        public var onMapRender:MapChange;
+        public var onTileLoad:MapTileLoad;
+        
+        public var debugOverlay:Shape = new Shape();
         
         public function TileGrid(w:Number, h:Number, draggable:Boolean, provider:IMapProvider)
         {
@@ -159,8 +189,9 @@ package loom.modestmaps.core
             else {
                 this.tilePainter = new TilePainter(this, provider, MaxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
             }
-            tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded);
-            tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading);
+            //tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded);
+            //tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading);
+            tilePainter.getOnTileLoad() += onTileLoading;
             
             this.limits = provider.outerLimits();
             
@@ -174,6 +205,8 @@ package loom.modestmaps.core
             this.mapWidth = w;
             this.mapHeight = h;         
             clipRect = new Rectangle(0, 0, mapWidth, mapHeight);
+            
+            TextFormat.load("sans", "assets/SourceSansPro-Regular.ttf");
 
             //NOTE_TEC: not porting DebugField for now at least...
             // debugField = new DebugField();
@@ -191,12 +224,16 @@ package loom.modestmaps.core
                         
             well = new Sprite();
             well.name = 'well';
+            well.depthSort = true;
             addChild(well);
 
+            addChild(debugOverlay);
+            
             worldMatrix = new Matrix();
 
             addEventListener(Event.ADDED_TO_STAGE, onAddedToStage); 
         }
+        
         
         /**
          * Get the Tile instance that corresponds to a given coordinate.
@@ -218,6 +255,7 @@ package loom.modestmaps.core
             }
             
             onRender += _onRender;
+            Loom2D.juggler.add(this);
 
             //NOTE_TEC: not porting DebugField for now at least...
             // addEventListener(Event.ENTER_FRAME, onEnterFrame);
@@ -240,6 +278,7 @@ package loom.modestmaps.core
                 doubleTouchInput = null;
             }
             onRender -= _onRender;
+            Loom2D.juggler.remove(this);
 
             //NOTE: not porting DebugField for now at least...
             // removeEventListener(Event.ENTER_FRAME, onEnterFrame);
@@ -279,19 +318,20 @@ package loom.modestmaps.core
         protected function onRendered():void
         {
             // listen out for this if you want to be sure map is in its final state before reprojecting markers etc.
+            onMapRender();
             //dispatchEvent(new MapEvent(MapEvent.RENDERED));
         }
         
         protected function onPanned():void
         {
             calcCoordinatePoint(startPan);
-            onPan(ModestMaps.LastCoordinateX - mapWidth/2, ModestMaps.LastCoordinateY - mapHeight/2);
+            onPan(MapState.CHANGED, ModestMaps.LastCoordinateX - mapWidth/2, ModestMaps.LastCoordinateY - mapHeight/2);
             //dispatchEvent(MapEvent.Panned(ModestMaps.LastCoordinateX - mapWidth/2, ModestMaps.LastCoordinateY - mapHeight/2));
         }
         
         protected function onZoomed():void
         {
-            onZoom(zoomLevel, zoomLevel-startZoom);
+            onZoom(MapState.CHANGED, zoomLevel, zoomLevel-startZoom);
             //dispatchEvent(MapEvent.ZoomedBy(startZoom, zoomLevel));           
         }
         
@@ -299,21 +339,28 @@ package loom.modestmaps.core
         {
             // doesn't bubble, unlike MapEvent
             // Map will pick this up and dispatch MapEvent.EXTENT_CHANGED for us
-            dispatchEvent(new Event(Event.CHANGE, false, false));           
+            onChange();
+            //dispatchEvent(new Event(Event.CHANGE, false, false));           
         }
+        
         
         protected function onBeginTileLoading(event:MapEvent):void
         {
             dispatchEvent(event);           
         }
-                
+
         protected function onAllTilesLoaded(event:MapEvent):void
         {
             dispatchEvent(event);
             // request redraw to take parent and child tiles off the stage if we haven't already
             dirty = true;           
         }
+        private function onTileLoading(state:MapState):void {
+            onTileLoad(state);
+            if (state == MapState.STOPPED) dirty = true;
+        }   
 
+        
         protected var deferVisibility:int = 0;
         
         /** 
@@ -349,27 +396,28 @@ package loom.modestmaps.core
             
             // this is the level of tiles we'll be loading:
             currentTileZoom = newZoom;
-        
-            deferVisibility++;
-
-            if(deferVisibility > 3)
-            {
+            
+            //trace("left", tilePainter.getCacheSize(), recentlySeen.length, wellTiles.length, visibleTiles.length, wellTiles.length);
+            
+            //deferVisibility++;
+//
+            //if(deferVisibility > 0)
+            //{
                 //figure out the visible tiles
                 determineVisibleTiles();
 
                 // loop over all tiles and find parent or child tiles from cache to compensate for unloaded tiles:
                 repopulateVisibleTiles(MinColRow.x, MaxColRow.x, MinColRow.y, MaxColRow.y);
                 
-                //remove unused tiles
-                pruneTiles();
-
                 // Reset counter.
-                deferVisibility = 0;                
-            }
+                //deferVisibility = 0;                
+            //}
 
             // position tiles such that currentZoom is approximately scale 1
             // and x and y make sense in pixels relative to tlC.column and tlC.row (topleft)
-            positionTiles(TopLeftColRow.x, TopLeftColRow.y);
+            //positionTiles(TopLeftColRow.x, TopLeftColRow.y);
+            
+            positionDirty = true;
             
             // update centerRow and centerCol for sorting the tileQueue in processQueue()
             centerCoordinate.zoomToInPlace(currentTileZoom);
@@ -475,39 +523,74 @@ package loom.modestmaps.core
         private function rvtStart():void
         {
             //reset the visible tile flags
-            for each (var vizTile:Tile in visibleTiles) {
-                vizTile.isVisible = false;
-            }                         
+            //var len = visibleTiles.length;
+            var len = recentlySeen.length;
+            for (var i = 0; i < len; i++) {
+                //var tile = visibleTiles[i];
+                var tile = recentlySeen[i];
+                tile.isVisible = false;
+            }
+            /*
+            for (var i:int = well.numChildren-1; i >= 0; i--) {
+                var wellTile:Tile = well.getChildAtUnsafe(i) as Tile;
+                wellTile.isVisible = false;
+            }
+            */
+            
             visibleTiles.clear(); 
+        }
+        
+        private function rvtEnd():void
+        {
+            //remove unused tiles
+            pruneTiles();
+            
+            positionDirty = true;
+            //positionTiles(TopLeftColRow.x, TopLeftColRow.y);
         }
 
         var WorkCoord:Coordinate = new Coordinate(0,0,0);
 
-        private function rvtProcessTile(col:int, row:int):Tile
+        private function rvtProcessTile(col:int, row:int, zoom:int, add:Boolean = true):Tile
         {
             // create a string key for this tile
-            var key:String = ModestMaps.tileKey(col, row, currentTileZoom);
+            var key:String = ModestMaps.tileKey(col, row, zoom);
             
             // see if we already have this tile
             var tile:Tile = wellTiles[key];
-                             
+            
+            if (tile && tile.name != key) {
+                trace("key mismatch, expected", key, "saw", tile.name);
+                //var act = ModestMaps.tileKey(tile.column, tile.row, tile.zoom);
+                //trace(wellTiles[act]);
+                //trace(recentlySeen.indexOf(tile));
+            }
+            
             // create it if not, and add it to the load queue
-            if (!tile) {
+            if (!tile && add) {
                 tile = tilePainter.getTileFromCache(key);
                 if (!tile) {
                     WorkCoord.setVals(row, col, currentTileZoom);
+                    var wt:Tile = wellTiles[key];
+                    if (wt && wt.column != col) trace("MISMATCH WORKCOORD", wt, WorkCoord, key);
+                    // !!!
+                    //trace(key);
                     tile = tilePainter.createAndPopulateTile(WorkCoord, key); 
+                    if (tile.name != key) trace("WTF KEYS!", tile, key);
                 }
                 else {
                     tile.show();
                 }
-                well.addChild(tile, false);
-                wellTiles[key] = tile;
-                tile.inWell = true;
+                wellAdd(tile, key);
             }
-
-            visibleTiles.pushSingle(tile);
-            tile.isVisible = true;    
+            
+            if (tile) {
+                if (add) {
+                    visibleTiles.pushSingle(tile);
+                }
+                tile.isVisible = true;
+                tile.updateRepop();
+            }
             
             return tile;        
         }
@@ -534,7 +617,8 @@ package loom.modestmaps.core
                         }
                         if (!foundParent && (currentTileZoom - 1 < MaxParentLoad)) {
                             //trace("requesting parent tile at zoom", pzoom);
-                            visibleTiles.pushSingle(requestParentLoad(firstParentKey));
+                            //visibleTiles.pushSingle(requestParentLoad(firstParentKey));
+                            requestParentLoad(firstParentKey);
                         }                                   
                     }
                 }
@@ -586,7 +670,7 @@ package loom.modestmaps.core
                         }
                         if (currentTileZoom - pzoom < MaxParentLoad) {
                             //trace("requesting parent tile at zoom", pzoom);
-                            visibleTiles.pushSingle(requestParentLoad(pkey));
+                            requestParentLoad(pkey);
                         }
                     }
                     else {
@@ -604,13 +688,74 @@ package loom.modestmaps.core
         {
             //prep/clear data
             rvtStart();
-
+         
+            //// loop over currently visible tiles
+            //for (var col:int = minCol; col <= maxCol; col++) {
+                //for (var row:int = minRow; row <= maxRow; row++) {
+                    //var tile:Tile = rvtProcessTile(col, row);
+                    //
+                    //// if the tile isn't ready yet, we're going to reuse a parent tile
+                    //// if there isn't a parent tile, and we're zooming out, we'll reuse child tiles
+                    //// if we don't get all 4 child tiles, we'll look at more parent levels
+                    ////
+                    //// yes, this is quite involved, but it should be fast enough because most of the loops
+                    //// don't get hit most of the time
+                    ////
+                    //
+                    //var tileReady:Boolean = tile.isShowing() && !tilePainter.isPainting(tile);
+                    //if (!tileReady) {
+                        //rvtMakeTileReady(col, row);
+                    //}
+                //}
+            //}
+            //
+            //pruneTiles();
+            //
+            //return;
+            
+            /*
+            for (var i:int = well.numChildren-1; i >= 0; i--) {
+                var wellTile:Tile = well.getChildAtUnsafe(i) as Tile;
+                wellTile.isPending = false;
+            }
+            */
+            
+            repopulateVisibleTilesPending(minCol, maxCol, minRow, maxRow);
+            
+            if (repopCol < minCol) repopCol = minCol;
+            if (repopCol > maxCol) repopCol = maxCol;
+            if (repopRow < minRow) repopRow = minRow;
+            if (repopRow > maxRow) repopRow = maxRow;
+            repopMinCol = minCol;
+            repopMaxCol = maxCol;
+            repopMinRow = minRow;
+            repopMaxRow = maxRow;
+            
+            //repopCol = minCol;
+            //repopRow = minRow;
+            
+            //if (repopCount == -1) Loom2D.juggler.add(this);
+            
+            repopCounter = 0;
+            repopCount = (maxCol-minCol+1)*(maxRow-minRow+1);
+            
+            //trace("repop", minCol, repopCol, maxCol, minRow, repopRow, maxRow, repopCount);
+            
+            repopulateVisibleTilesFrame();
+            
             // loop over currently visible tiles
-            for (var col:int = minCol; col <= maxCol; col++) 
-            {
-                for (var row:int = minRow; row <= maxRow; row++) 
-                {
-                    var tile:Tile = rvtProcessTile(col, row);
+            //for (var col:int = minCol; col <= maxCol; col++) 
+            //{
+                //for (var row:int = minRow; row <= maxRow; row++) 
+                //{
+                //}
+            //}            
+        }
+        
+        private function repopulateVisibleTilesPending(minCol:int, maxCol:int, minRow:int, maxRow:int) {
+            for (var col:int = minCol; col <= maxCol; col++) {
+                for (var row:int = minRow; row <= maxRow; row++) {
+                    var tile:Tile = rvtProcessTile(col, row, currentTileZoom, false);
                     
                     // if the tile isn't ready yet, we're going to reuse a parent tile
                     // if there isn't a parent tile, and we're zooming out, we'll reuse child tiles
@@ -620,29 +765,123 @@ package loom.modestmaps.core
                     // don't get hit most of the time
                     //
                     
-                    var tileReady:Boolean = tile.isShowing() && !tilePainter.isPainting(tile);
-                    if (!tileReady) {
-                        rvtMakeTileReady(col, row);
+                    //var tileReady:Boolean = tile.isShowing() && !tilePainter.isPainting(tile);
+                    //if (!tileReady) {
+                        //rvtMakeTileReady(col, row);
+                    //}
+                }
+            }
+            //visibleTiles.clear();
+        }
+        
+        public function advanceTime(time:Number) {
+            if (repopCount != -1) repopulateVisibleTilesFrame();
+            pruneLeastRecent();
+            if (positionDirty) positionTiles(TopLeftColRow.x, TopLeftColRow.y);
+        }
+        
+        private function repopulateVisibleTilesFrame()
+        {
+            deferVisibility++;
+            if (deferVisibility > 0) {
+                deferVisibility = 0;
+            } else {
+                return;
+            }
+            
+            var time = Platform.getTime();
+            
+            //var g:Graphics = debugOverlay.graphics;
+            //g.clear();
+            //g.beginFill(0x0000FF);
+            //g.textFormat(new TextFormat("sans", 40, 0x000000));
+            //g.lineStyle(1, 0x0000FF);
+            
+            //for (var m = 0; m < 1; m++) {
+            var timeLimit = 3;
+            var countLimit = 1000;
+            var c:int;
+            for (c = 0; (Platform.getTime() - time) < timeLimit && c < countLimit; c++) {
+                var tile:Tile = rvtProcessTile(repopCol, repopRow, currentTileZoom);
+                //if (repopCol != tile.column) trace(tile.column, repopCol, tile.row, repopRow);
+                
+                // if the tile isn't ready yet, we're going to reuse a parent tile
+                // if there isn't a parent tile, and we're zooming out, we'll reuse child tiles
+                // if we don't get all 4 child tiles, we'll look at more parent levels
+                //
+                // yes, this is quite involved, but it should be fast enough because most of the loops
+                // don't get hit most of the time
+                //
+                
+                var tileReady:Boolean = tile.isShowing() && !tilePainter.isPainting(tile);
+                if (!tileReady) {
+                    rvtMakeTileReady(repopCol, repopRow);
+                }
+                
+                //g.drawRect(tile.x+2, tile.y+2, tile.width-4, tile.height-4);
+                //g.drawCircle(tile.x+tile.width/2, tile.y+tile.height/2, tile.zoom);
+                
+                //ModestMaps.setLastCoordinate(tile.column, 
+                                                //tile.row, 
+                                                //tile.zoom, 
+                                                //zoomLevel,
+                                                //tileWidth/scale,
+                                                //worldMatrix,
+                                                //null, 
+                                                //null);
+                //var tx = ModestMaps.LastCoordinateX;
+                //var ty = ModestMaps.LastCoordinateY;   
+                //g.drawRect(tx, ty, 100, 40);
+                //g.drawTextLine(tx, ty, tile.column+","+tile.row);
+                //trace(tile.column, repopCol, tile.row, repopRow, tx, ty);
+                
+                repopCol++;
+                if (repopCol > repopMaxCol) {
+                    repopCol = repopMinCol;
+                    repopRow++;
+                    if (repopRow > repopMaxRow) {
+                        repopRow = repopMinRow;
                     }
                 }
-            }            
+                repopCounter++;
+                if (repopCounter > repopCount) {
+                    repopCount = -1;
+                    rvtEnd();
+                    break;
+                }
+            }
+            
+            time = Platform.getTime()-time;
+            
+            //trace("repopf", time, c, repopCounter, repopCount);
+            
+            positionDirty = true;
+            //positionTiles(TopLeftColRow.x, TopLeftColRow.y);
         }
         
 
         private function pruneTiles():void
         {
+            //pruneTilesRecent();
+            //pruneTilesWell();
+            //pruneTilesKeys();
+        }
+        
+        private function pruneTilesRecent() {
             // move visible tiles to the end of recentlySeen if we're done loading them
             // the 'least recently seen' tiles will be removed from the tileCache below
-            for(var j=0; j<visibleTiles.length; j++)
-            {
-                var visibleTile:Tile = visibleTiles[j];
-
-                if (tilePainter.isPainted(visibleTile)) {
-                    recentlySeen.remove(visibleTile.name); 
-                    recentlySeen.pushSingle(visibleTile.name);
-                }
-            }
-
+            //for(var j=0; j<visibleTiles.length; j++)
+            //{
+                //var visibleTile:Tile = visibleTiles[j];
+                //
+                //if (tilePainter.isPainted(visibleTile)) {
+                    //recentlySeen.remove(visibleTile.name); 
+                    //recentlySeen.pushSingle(visibleTile.name);
+                //}
+            //}
+        }
+        
+        private function pruneTilesWell() {
             // prune tiles from the well if they shouldn't be there (not currently in visibleTiles)
             // TODO: unless they're fading in or out?
             // (loop backwards so removal doesn't change i)
@@ -650,20 +889,18 @@ package loom.modestmaps.core
                 var wellTile:Tile = well.getChildAtUnsafe(i) as Tile;
                 
                 if (!wellTile.isVisible) {
-                    well.removeChildAt(i);
-                    wellTiles[wellTile.name] = null;
-                    wellTile.inWell = false;
-                    wellTile.hide();
-                    tilePainter.cancelPainting(wellTile);
+                    //wellRemove(i);
                 }
             }
-
+        }
+        
+        private function pruneTilesKeys() {
             // all the visible tiles will be at the end of recentlySeen
             // let's make sure we keep them around:
-            var maxRecentlySeen:int = Math.max2(visibleTiles.length, MaxTilesToKeep);
+            //var maxRecentlySeen:int = Math.max2(visibleTiles.length, MaxTilesToKeep);
             
             // prune cache of already seen tiles if it's getting too big:
-            if (recentlySeen.length > maxRecentlySeen) {
+            //if (recentlySeen.length > maxRecentlySeen) {
 
                 // can we sort so that biggest zoom levels get removed first, without removing currently visible tiles?
                 /*
@@ -676,12 +913,157 @@ package loom.modestmaps.core
                 */
                 
                 // throw away keys at the beginning of recentlySeen
-                recentlySeen = recentlySeen.slice(recentlySeen.length - maxRecentlySeen, recentlySeen.length);
+                //recentlySeen = recentlySeen.slice(recentlySeen.length - maxRecentlySeen, recentlySeen.length);
                 
                 // loop over our internal tile cache 
                 // and throw out tiles not in recentlySeen
-                tilePainter.retainKeysInCache(recentlySeen);
+                //tilePainter.retainKeysInCache(recentlySeen);
+            //}
+        }
+        
+        private function pruneLeastRecent() {
+            //return;
+            
+            //for (var m = 0; m < recentlySeen.length; m++) {
+            
+            if (tilePainter.getCacheSize() < MaxTilesToKeep) return;
+            
+            //if (recentlySeenIndex < 0) recentlySeenIndex = 0;
+            //if (recentlySeenIndex >= recentlySeen.length) recentlySeenIndex = recentlySeen.length-1;
+            //trace(tilePainter.getCacheSize(), recentlySeenIndex, recentlySeen.length);
+            //if (recentlySeenIndex < 0) return;
+            
+            var len = recentlySeen.length;
+            
+            var now = Platform.getTime();
+            var leastRecentIndex = -1;
+            var leastRecent:Tile = null;
+            var leastRecentDiff = -1;
+            var tile:Tile;
+            var iw = 0;
+            var iv = 0;
+            var ic = 0;
+            var ip = 0;
+            var ipd = 0;
+            for (var i:int = 0; i < len; i++) {
+                tile = recentlySeen[i];
+                if (tile.inWell) { iw++; }
+                if (tile.isVisible) { iv++; }
+                if (tile.counter > 0) { ic++; }
+                if (tilePainter.isPainting(tile)) { ip++; }
+                if (tilePainter.isPainted(tile)) { ipd++; }
+                if (tile.isVisible) continue;
+                var tileRepop = now-tile.lastRepop;
+                if (tileRepop > leastRecentDiff) {
+                    leastRecentDiff = tileRepop;
+                    leastRecent = tile;
+                    leastRecentIndex = i;
+                }
             }
+            
+            if (!leastRecent) {
+                //trace("Least recent not found", iw, iv, ic, ip, ipd);
+                return;
+            }
+            
+            tile = leastRecent;
+            
+            //trace(tilePainter.getCacheSize(), leastRecentIndex, leastRecentDiff, leastRecent);
+            
+            if (tile.counter >= 0) {
+                //Debug.assert(!tile.inWell, "Should not be in well " + tile.name + " " + tile.isVisible);
+                //trace("Tile", tile.name, "reserve depleted...", tilePainter.getCacheSize(), "left");
+                /// LIVE TILE KILLED HERE!
+                
+                if (tile.inWell) wellRemove(tile);
+                
+                var tc = tilePainter.getTileFromCache(tile.name);
+                if (!tc) {
+                    trace("Tile not in cache", tile.name, tile);
+                    //for each (var csi:CallStackInfo in tile.cstack) Debug.print(csi.source+" "+csi.line);
+                }
+                if (tc && tc != tile) {
+                    trace(tile, tc, tile.name, tc.name, tile.inWell, tc.inWell, tile.isVisible, tc.isVisible, tile.counter, tc.counter);
+                    //for each (var csi:CallStackInfo in Debug.getCallStack()) Debug.print(csi.source+" "+csi.line);
+                }
+                tilePainter.returnKey(tile.name);
+            } else {
+                trace("Tile removed dup", tile.name, tile, tile.inWell, tile.isVisible, tile.counter);
+            }
+            tile.counter--;
+            recentlySeen.splice(leastRecentIndex, 1);
+            
+            
+            //trace("Least recent found", leastRecentIndex, leastRecentDiff, leastRecent);
+            
+            /*
+            var tile:Tile = recentlySeen[recentlySeenIndex];
+            if (!tile.inWell && !tile.isVisible) {
+                if (tile.counter <= 0) {
+                    if (tile.counter == 0) {
+                        //Debug.assert(!tile.inWell, "Should not be in well " + tile.name + " " + tile.isVisible);
+                        //trace("Tile", tile.name, "reserve depleted...", tilePainter.getCacheSize(), "left");
+                        tilePainter.returnKey(tile.name);
+                    } else {
+                        trace("Tile", tile.name, "removed duplicate");
+                    }
+                    recentlySeen.splice(recentlySeenIndex, 1);
+                    return;
+                }
+                
+                if (tile.counter <= Tile.COUNTER_RESERVE) {
+                    tile.counter--;
+                    trace("Tile", tile.name, "reserve down to", tile.counter);
+                }
+            } else if (tile.counter <= Tile.COUNTER_RESERVE) {
+                trace("Tile", tile.name, "still active", tile.counter, tile.inWell, tile.isVisible);
+            }
+            */
+            
+            recentlySeenIndex++;
+            if (recentlySeenIndex >= recentlySeen.length) {
+                recentlySeenIndex = 0;
+            }
+            
+            //}
+            
+            /*
+            return;
+            
+            if (well.numChildren <= 0) return;
+            var cacheSize = tilePainter.getCacheSize();
+            //trace(cacheSize, MaxTilesToKeep);
+            if (cacheSize < MaxTilesToKeep) return;
+            trace("Pruning least recent...", cacheSize-MaxTilesToKeep, "to go");
+            var leastRecentIndex = -1;
+            var leastRecent:Tile = null;
+            var leastRecentTime = -1;
+            for (var i:int = 0; i < well.numChildren; i++) {
+                var wellTile:Tile = well.getChildAtUnsafe(i) as Tile;
+                if (wellTile.isVisible) continue;
+                var wellRepop = wellTile.lastRepop;
+                if (leastRecentTime < wellRepop) {
+                    leastRecentTime = wellRepop;
+                    leastRecent = wellTile;
+                }
+            }
+            
+            if (!leastRecent) {
+                //trace("Least recent missing");
+                return;
+            }
+            
+            //trace(tilePainter.getCacheSize(), leastRecent.isVisible);
+            tilePainter.returnKey(leastRecent.name);
+            
+            //well.removeChildAt(leastRecentIndex);
+            //wellTiles.deleteKey(leastRecent.name);
+            //leastRecent.inWell = false;
+            //leastRecent.hide();
+            //tilePainter.cancelPainting(leastRecent);
+            
+            //trace(tilePainter.getCacheSize());
+            */
         }
 
 
@@ -708,12 +1090,15 @@ package loom.modestmaps.core
         
         private function positionTiles(realMinCol:Number, realMinRow:Number):void
         {
+            
             // sort children by difference from current zoom level
             // this means current is on top, +1 and -1 are next, then +2 and -2, etc.
-            visibleTiles.sort(distanceFromCurrentZoomCompare);
-                
+            //visibleTiles.sort(distanceFromCurrentZoomCompare);
+            //well.sortChildren(distanceFromCurrentZoomCompare);
+            //well.sortChildren(distanceFromCurrentZoomCompare);
+            
 //TODO_24: native prep for lower down                
-            // scales to compensate for zoom differences between current grid zoom level                            
+            // scales to compensate for zoom differences between current grid zoom level
             var zl:Number = zoomLevel;
             var invTileWidth:Number = 1.0 / tileWidth;
             for (var z:int = 0; z <= maxZoom; z++) {
@@ -732,11 +1117,42 @@ package loom.modestmaps.core
             var px:Point = worldMatrix.deltaTransformCoord(0, 1);
             var tileAngleDegrees:Number = (Math.atan2(px.y, px.x) - Math.degToRad(90));
             
+            var i = 0;
+            //var len = visibleTiles.length;
+            var len = well.numChildren;
+            var count = 0;
+            const TILE_DEPTH_SHIFT = 16;
             // apply the sorted depths, position all the tiles and also keep recentlySeen updated:
-            for each (var tile:Tile in visibleTiles) {
-            
+            for (i = 0; i < len; i++) {
+                //var tile:Tile = visibleTiles[i];
+                var tile:Tile = well.getChildAtUnsafe(i) as Tile;
+                
+                //if (i < 10) trace(tile.zoom, currentTileZoom);
+                tile.depth = (-Math.abs(tile.zoom-currentTileZoom) << TILE_DEPTH_SHIFT) | tile.zoom;
+                
+                /*
+        // for sorting arrays of tiles by distance from currentZoom in a DESCENDING fashion
+        private function distanceFromCurrentZoomCompare(t1:Tile, t2:Tile):int
+        {
+            var d1:int = Math.abs(t1.zoom-currentTileZoom);
+            var d2:int = Math.abs(t2.zoom-currentTileZoom);
+            return d1 < d2 ? 1 : d1 > d2 ? -1 : zoomCompare(t2, t1); // t2, t1 so that big tiles are on top of small 
+        }
+
+        // for when tiles have same difference in zoom in distanceFromCurrentZoomCompare        
+        private static function zoomCompare(t1:Tile, t2:Tile):int
+        {
+            return t1.zoom == t2.zoom ? 0 : t1.zoom > t2.zoom ? -1 : 1; 
+        }
+                */
+        
+                //if (!well.contains(tile)) continue;
+                
+                //Debug.assert(well.contains(tile), "Well doesn't contain tile!");
+                
                 // if we set them all to the last child, descending, they should end up correctly sorted
-                well.moveChildLast(tile);
+                //well.moveChildLast(tile);
+                //well.setChildIndex(tile, count);
 
 //_TODO_24: native all below here... need to return scale, x, y, rot... doable?
                 tile.scaleX = tile.scaleY = _tileScales[tile.zoom];
@@ -754,6 +1170,11 @@ package loom.modestmaps.core
                 tile.x = ModestMaps.LastCoordinateX;
                 tile.y = ModestMaps.LastCoordinateY;                
                 tile.rotation = tileAngleDegrees;               
+                
+                //g.drawRect(tile.x+2, tile.y+2, tile.width-4, tile.height-4);
+                //g.drawCircle(tile.x+tile.width/2, tile.y+tile.height/2, tile.zoom);
+                
+                count++;
             }
         }
         
@@ -798,9 +1219,7 @@ package loom.modestmaps.core
             var tile:Tile = tilePainter.getTileFromCache(key);
             if (tile) {
                 if (!tile.inWell) {
-                    well.addChild(tile);
-                    wellTiles[key] = tile;
-                    tile.inWell = true;
+                    wellAdd(tile, key);
                     tilePainted(tile);
                 }
 
@@ -813,23 +1232,56 @@ package loom.modestmaps.core
             return null;
         }
         
+        private function wellAdd(tile:Tile, key:String)
+        {
+            //if (int(key.split(":")[1]) != tile.column) trace("KEY MISMATCH", key, tile);
+            well.addChild(tile, false);
+            //var wt = wellTiles[key];
+            //if (wt && wt.name != key) trace("WTF", wt, tile);
+            //if (tile.name != key) trace("WTF", tile, key);
+            wellTiles[key] = tile;
+            tile.inWell = true;
+            tile.counter++;
+            recentlySeen.push(tile);
+        }
+        
+        private function wellRemove(tile:Tile)
+        {
+            //trace("well remove", index);
+            //var tile = well.removeChildAt(index, false, false) as Tile;
+            well.removeChild(tile, false, false);
+            wellTiles.deleteKey(tile.name);
+            tile.inWell = false;
+            tile.hide();
+            tile.counter--;
+            tilePainter.cancelPainting(tile);
+        }
+        
         // for use in requestParentLoad
         private var tempCoord:Coordinate = new Coordinate(0,0,0);
         
         /** create a tile and add it to the queue - WARNING: this is buggy for the current zoom level, it's only used for parent zooms when MaxParentLoad is > 0 */ 
         private function requestParentLoad(key:String):Tile
         {
-            var tile:Tile = wellTiles[key];
+            //var tile:Tile = wellTiles[key];
+            /*
+            var tile:Tile = tilePainter.getTileFromCache(key);
             if (!tile) {
                 tempCoord.column = ModestMaps.ParentLoadCol;
                 tempCoord.row = ModestMaps.ParentLoadRow;
                 tempCoord.zoom = ModestMaps.ParentLoadZoom;
                 tile = tilePainter.createAndPopulateTile(tempCoord, key);
-                well.addChild(tile);
-                wellTiles[key] = tile;
-                tile.inWell = true;
+                //if (tile.name != key) trace("WTF KEYS!", tile, key);
+                wellAdd(tile, key);
             }
             tile.isVisible = true;
+            */
+            var tile:Tile;
+            //return null;
+            tile = ensureVisible(key);
+            if (!tile) {
+                tile = rvtProcessTile(ModestMaps.ParentLoadCol, ModestMaps.ParentLoadRow, ModestMaps.ParentLoadZoom);
+            }
             return tile;
         }
 
@@ -1101,6 +1553,7 @@ package loom.modestmaps.core
         
         protected function onStartPanning():void
         {
+            onPan(MapState.STARTED, 0, 0);
             //dispatchEvent(new MapEvent(MapEvent.START_PANNING));
         }
         
@@ -1113,6 +1566,7 @@ package loom.modestmaps.core
         
         protected function onStopPanning():void
         {
+            onPan(MapState.STOPPED, 0, 0);
             //dispatchEvent(new MapEvent(MapEvent.STOP_PANNING));
         }
         
@@ -1121,7 +1575,7 @@ package loom.modestmaps.core
             if (startZoom >= 0) {
                 doneZooming();
             }
-
+            
             startZoom = zoomLevel;
             zooming = true;
             onStartZooming();
@@ -1129,9 +1583,10 @@ package loom.modestmaps.core
         
         protected function onStartZooming():void
         {
+            onZoom(MapState.STARTED, startZoom, NaN);
             //dispatchEvent(MapEvent.StartZooming(startZoom));
         }
-                        
+        
         public function doneZooming():void
         {
             onStopZooming();
@@ -1141,6 +1596,7 @@ package loom.modestmaps.core
 
         protected function onStopZooming():void
         {
+            onZoom(MapState.STOPPED, zoomLevel, zoomLevel - startZoom);
             //dispatchEvent(MapEvent.StopZooming(startZoom, zoomLevel));
         }
 
@@ -1235,9 +1691,10 @@ package loom.modestmaps.core
             else {
                 this.tilePainter = new TilePainter(this, provider, MaxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
             }
-            tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded);
-            tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading);
-
+            //tilePainter.addEventListener(MapEvent.ALL_TILES_LOADED, onAllTilesLoaded);
+            //tilePainter.addEventListener(MapEvent.BEGIN_TILE_LOADING, onBeginTileLoading);
+            tilePainter.getOnTileLoad() += onTileLoading;
+            
             // TODO: set limits independently of provider
             this.limits = provider.outerLimits();
 
@@ -1252,9 +1709,7 @@ package loom.modestmaps.core
         protected function clearEverything(event:Event=null):void
         {
             while (well.numChildren > 0) {
-                var tile:Tile = well.getChildAtUnsafe(0) as Tile;
-                tile.inWell = false;
-                well.removeChildAt(0);
+                wellRemove(well.getChildAtUnsafe(well.numChildren-1) as Tile);
             }
             wellTiles.clear();
 

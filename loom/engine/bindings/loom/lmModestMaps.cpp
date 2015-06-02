@@ -22,6 +22,7 @@
 #include "loom/common/core/assert.h"
 #include "loom/script/loomscript.h"
 #include "loom/script/runtime/lsRuntime.h"
+#include "loom/script/runtime/lsProfiler.h"
 
 #include "loom/graphics/gfxMath.h"
 #include "loom/engine/loom2d/l2dDisplayObject.h"
@@ -132,7 +133,12 @@ public:
  
     static const char *getMSProviderZoomString(float col, float row, int zoom)
     {
+        LOOM_PROFILE_SCOPE(mmZoom);
         // we don't wrap rows here because the map/grid should be enforcing outerLimits :)
+
+
+        LOOM_PROFILE_START(mmZoomPre);
+
         float zoomExp = pow(2.0f, zoom);
         float wrappedColumn = fmod(col, zoomExp);
         while (wrappedColumn < 0)
@@ -146,10 +152,14 @@ public:
         convertToBinary((int) row, _rowBinaryString);
         convertToBinary((int) col, _colBinaryString);
 
+        LOOM_PROFILE_END(mmZoomPre);
+
+        LOOM_PROFILE_START(mmZoomLoop);
+
         // generate zoom string
         int rowOffset = strlen(_rowBinaryString) - zoom;
         int colOffset = strlen(_colBinaryString) - zoom;
-        char *zoomString = (char *)malloc(sizeof(char) * (zoom + 1));
+        char *zoomString = (char*)lmAlloc(NULL, sizeof(char) * (zoom + 1));
         for(int i = 0; i < zoom; i++) 
         {
             //proces the row and col bits to build up the zoom string; values of 0,1,2,3
@@ -161,6 +171,8 @@ public:
             zoomString[i] = value;
         }
         zoomString[zoom] = '\0';
+
+        LOOM_PROFILE_END(mmZoomLoop);
         return (const char *)zoomString; 
     }
 

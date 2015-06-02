@@ -145,7 +145,7 @@ private var lastTouches:int = 0;
                 _map.setMapProvider(newProvider);
             }
 
-if(keycode == LoomKey.BACKSLASH)
+if(keycode == LoomKey.BACKSPACE)
 {
     Profiler.enable(true);
     autoZoom = true;

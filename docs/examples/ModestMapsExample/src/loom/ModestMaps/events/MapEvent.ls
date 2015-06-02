@@ -11,8 +11,20 @@ package loom.modestmaps.events
     
     import loom2d.math.Point;
     
-    public delegate MapPan(deltaX:Number, deltaY:Number):Void;
-    public delegate MapZoom(level:Number, delta:Number = NaN):Void;
+    public enum MapState
+    {
+        STARTED,
+        CHANGED,
+        STOPPED,
+    }
+    
+    public delegate MapPan(state:MapState, deltaX:Number, deltaY:Number):Void;
+    public delegate MapZoom(state:MapState, level:Number, delta:Number):Void;
+    public delegate MapExtentChange(state:MapState, extent:MapExtent):Void;
+    public delegate MapChange():Void;
+    public delegate MapResize(width:Number, height:Number):Void;
+    public delegate MapProviderChange(provider:IMapProvider):Void;
+    public delegate MapTileLoad(state:MapState):Void;
 
     public class MapEvent extends Event
     {
@@ -57,7 +69,6 @@ package loom.modestmaps.events
         {
             super(type, true);
         }
-
 
         public static function Panned(px:Number, py:Number) : MapEvent
         {

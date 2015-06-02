@@ -40,19 +40,23 @@ package loom.modestmaps.geo
        /**
         * Transform a point.
         */
-        public function transform(point:Point):Point
+        public function transform(point:Point)
         {
-            return new Point(ax*point.x + bx*point.y + cx,
-                             ay*point.x + by*point.y + cy); 
+            var px = point.x;
+            var py = point.y;
+            point.x = ax*px + bx*py + cx;
+            point.y = ay*px + by*py + cy; 
         }
         
        /**
         * Inverse of transform; p = untransform(transform(p))
         */
-        public function untransform(point:Point):Point
+        public function untransform(point:Point)
         {
-            return new Point((point.x*by - point.y*bx - cx*by + cy*bx) / (ax*by - ay*bx),
-                             (point.x*ay - point.y*ax - cx*ay + cy*ax) / (bx*ay - by*ax)); 
+            var px = point.x;
+            var py = point.y;
+            point.x = (px*by - py*bx - cx*by + cy*bx) / (ax*by - ay*bx);
+            point.y = (px*ay - py*ax - cx*ay + cy*ax) / (bx*ay - by*ax); 
         }
     }
 }

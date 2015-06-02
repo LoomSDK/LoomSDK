@@ -35,8 +35,9 @@
 #define LOOM_ALLOCATOR_ALIGNMENT    16
 
 #define USE_JEMALLOC 0
- 
+
 static loom_allocator_t gGlobalHeap;
+static loom_allocator_t *gGlobalTracker;
 static int              heap_allocated = 0;
 
 
@@ -46,6 +47,7 @@ void loom_allocator_startup()
     heap_allocated = 1;
     loom_allocator_initializeHeapAllocator(&gGlobalHeap);
     gGlobalHeap.name = "Global";
+    gGlobalTracker = loom_allocator_initializeTrackerProxyAllocator(&gGlobalHeap);
 }
 
 
@@ -58,7 +60,7 @@ loom_allocator_t *loom_allocator_getGlobalHeap()
         loom_allocator_startup();
     }
 
-    return &gGlobalHeap;
+    return gGlobalTracker ? gGlobalTracker : &gGlobalHeap;
 }
 
 void *lmAlloc_inner(loom_allocator_t *allocator, size_t size, const char *file, int line)
@@ -438,14 +440,14 @@ static loom_trackingProxyAllocator_t *gTrackingProxyListHead;
 static void *loom_trackingProxyAlloc_alloc(loom_allocator_t *thiz, size_t size, const char *file, int line)
 {
     loom_trackingProxyAllocator_t       *poolState = (loom_trackingProxyAllocator_t *)thiz->userdata;
-    loom_trackingProxyAllocatorHeader_t *tpah      = NULL;
+    loom_trackingProxyAllocatorHeader_t *tpah = NULL;
 
     void *tmp = lmAlloc(thiz->parent, size + LOOM_ALLOCATOR_ALIGNMENT);
 
     loom_mutex_lock(poolState->lock);
 
     // Note size on the allocation.
-    tpah       = (loom_trackingProxyAllocatorHeader_t *)tmp;
+    tpah = (loom_trackingProxyAllocatorHeader_t *)tmp;
     tpah->size = size;
 
     // Increment counts.
@@ -458,11 +460,12 @@ static void *loom_trackingProxyAlloc_alloc(loom_allocator_t *thiz, size_t size, 
     return loom_arenaProxyAlloc_arenaPointerToUserPointer(tmp);
 }
 
-
 static void loom_trackingProxyAlloc_free(loom_allocator_t *thiz, void *ptr, const char *file, int line)
 {
     loom_trackingProxyAllocator_t       *poolState = (loom_trackingProxyAllocator_t *)thiz->userdata;
     loom_trackingProxyAllocatorHeader_t *tpah      = NULL;
+
+    if (!ptr) return;
 
     loom_mutex_lock(poolState->lock);
 
@@ -480,6 +483,44 @@ static void loom_trackingProxyAlloc_free(loom_allocator_t *thiz, void *ptr, cons
     lmFree(thiz->parent, tpah);
 
     loom_mutex_unlock(poolState->lock);
+}
+
+
+static void *loom_trackingProxyAlloc_realloc(loom_allocator_t *thiz, void *ptr, size_t size, const char *file, int line)
+{
+    void* newptr = loom_trackingProxyAlloc_alloc(thiz, size, file, line);
+    loom_trackingProxyAllocatorHeader_t *tpah = NULL;
+
+    tpah = (loom_trackingProxyAllocatorHeader_t *)loom_arenaProxyAlloc_userPointerToArenaPointer(ptr);
+
+    memcpy(newptr, ptr, tpah->size);
+
+    loom_trackingProxyAlloc_free(thiz, ptr, file, line);
+
+    return newptr;
+
+
+    /*
+    loom_trackingProxyAllocator_t       *poolState = (loom_trackingProxyAllocator_t *)thiz->userdata;
+    loom_trackingProxyAllocatorHeader_t *tpah = NULL;
+
+    void *tmp = lmRealloc(thiz->parent, ptr, size + LOOM_ALLOCATOR_ALIGNMENT);
+
+    loom_mutex_lock(poolState->lock);
+
+    // Get the header.
+    tpah = (loom_trackingProxyAllocatorHeader_t *)loom_arenaProxyAlloc_userPointerToArenaPointer(ptr);
+    tpah->size = size;
+
+    // Increment counts.
+    poolState->allocatedCount++;
+    poolState->allocatedBytes += size;
+
+    loom_mutex_unlock(poolState->lock);
+
+    // And pass back the usable region.
+    return loom_arenaProxyAlloc_arenaPointerToUserPointer(tmp);
+    */
 }
 
 
@@ -560,8 +601,9 @@ loom_allocator_t *loom_allocator_initializeTrackerProxyAllocator(loom_allocator_
     a = lmAlloc(parent, sizeof(loom_allocator_t));
     memset(a, 0, sizeof(loom_allocator_t));
     a->parent      = parent;
-    a->userdata    = state;
-    a->allocCall   = loom_trackingProxyAlloc_alloc;
+    a->userdata = state;
+    a->allocCall = loom_trackingProxyAlloc_alloc;
+    a->reallocCall = loom_trackingProxyAlloc_realloc;
     a->freeCall    = loom_trackingProxyAlloc_free;
     a->destroyCall = loom_trackingProxyAlloc_destroy;
     return a;

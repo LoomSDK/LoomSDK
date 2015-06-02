@@ -37,6 +37,8 @@ typedef int   TextureID;
 #define TEXTURE_ID_MASK   (1 << TEXTURE_ID_BITS) - 1
 #define MAXTEXTURES       1 << TEXTURE_ID_BITS
 
+#define TEXTURE_GEN_BATCH 16
+
 // loading textures are marked
 #define MARKEDTEXTURE     65534
 

@@ -6,6 +6,8 @@
 package loom.modestmaps.core
 {
     import loom.modestmaps.core.TileGrid;
+    import loom.modestmaps.ModestMaps;
+    import system.platform.Platform;
 
     import loom2d.display.DisplayObject;
     import loom2d.display.Sprite;
@@ -16,6 +18,7 @@ package loom.modestmaps.core
     public class Tile extends Sprite
     {       
         public static var count:int = 0;
+        public static const COUNTER_RESERVE = 0;
         
         // not a coordinate, because it's very important these are ints
         public var zoom:int;
@@ -23,7 +26,11 @@ package loom.modestmaps.core
         public var column:int;
         public var inWell:Boolean;
         public var isVisible:Boolean;
+        public var lastRepop:int;
+        public var counter:int;
 
+        //public var cstack:Vector.<CallStackInfo>;
+        
         protected var assignedTextures:Vector.<Texture> = [];
 
         protected static var textureRefs:Dictionary.<Texture, int> = {};
@@ -33,20 +40,28 @@ package loom.modestmaps.core
         public function Tile(column:int, row:int, zoom:int)
         {
             init(column, row, zoom);
-            inWell = false;
-            isVisible = false;
             count++;
-        } 
+        }
+        
+        public function updateRepop() {
+            lastRepop = Platform.getTime();
+        }
         
         /** override this in a subclass and call grid.setTileCreator if you want to draw on your tiles */
         public function init(column:int, row:int, zoom:int):void
         {
+            //trace("prei", ModestMaps.tileKey(column, row, zoom));
             this.zoom = zoom;
             this.row = row;
             this.column = column;  
             inWell = false;
             isVisible = false;
+            lastRepop = -1;
+            counter = COUNTER_RESERVE;
             hide();
+            //cstack = Debug.getCallStack();
+            //trace("init", ModestMaps.tileKey(column, row, zoom));
+            //for each (var csi:CallStackInfo in Debug.getCallStack()) Debug.print(csi.source+" "+csi.line);
         }        
 
         /** once TileGrid is done with a tile, it will call destroy and possibly reuse it later */
@@ -93,7 +108,7 @@ package loom.modestmaps.core
             //create an image for the newly loaded texture and add it to the tile
             var img:Image = imagePool.pop();
             img.texture = texture;              
-            addChild(img);
+            addChild(img, false);
 
             //texture ref counter
             if(textureRefs[texture] == null)

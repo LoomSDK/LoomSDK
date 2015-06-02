@@ -120,14 +120,15 @@ package loom2d.display
                 else                      mChildren.splice(index, 0, child);
                 
                 child.setParent(this);
-                if(fireEvents)
-                    child.dispatchEventWith(Event.ADDED, true);
-                
-                if (stage && fireEvents)
+                if (fireEvents)
                 {
-                    var container:DisplayObjectContainer = child as DisplayObjectContainer;
-                    if (container) container.broadcastEventWith(Event.ADDED_TO_STAGE);
-                    else           child.dispatchEventWith(Event.ADDED_TO_STAGE);
+                    child.dispatchEventWith(Event.ADDED, true);
+                    if (stage)
+                    {
+                        var container:DisplayObjectContainer = child as DisplayObjectContainer;
+                        if (container) container.broadcastEventWith(Event.ADDED_TO_STAGE);
+                        else           child.dispatchEventWith(Event.ADDED_TO_STAGE);
+                    }
                 }
 
 				// Propagate style to children.
@@ -266,6 +267,11 @@ package loom2d.display
 
             //mChildren.splice(oldIndex, 1);
             //mChildren.splice(index, 0, child);
+        }
+        
+        public function setChildrenUnsafe(ordered:Vector.<DisplayObject>)
+        {
+            mChildren = ordered;
         }
 
         /** Moves a child to be the last object in the container. */

@@ -252,13 +252,6 @@ package loom2d.textures
                 return assetPathCache[urlsha2];
             }
 
-            //check if we're online
-            if(!HTTPRequest.isConnected())
-            {
-                Console.print("WARNING: Not connected to a network so unable to load texture from url: " + url); 
-                return null;
-            }
-
             //make sure that the image requested is one of our supported image types!
             var ext:String = null;
             for(var i=0;i<supportedImageTypes.length;i++)

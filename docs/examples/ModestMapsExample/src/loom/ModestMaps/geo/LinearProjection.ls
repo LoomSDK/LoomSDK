@@ -24,19 +24,17 @@ package loom.modestmaps.geo
         }
         
        /*
-        * Return raw projected point.
+        * Raw projected point remains the same.
         */
-        override protected function rawProject(point:Point):Point
+        override protected function rawProject(point:Point)
         {
-            return new Point(point.x, point.y);
         }
         
        /*
-        * Return raw unprojected point.
+        * Raw unprojected point remains the same.
         */
-        override protected function rawUnproject(point:Point):Point
+        override protected function rawUnproject(point:Point)
         {
-            return new Point(point.x, point.y);
         }
     }
 }
