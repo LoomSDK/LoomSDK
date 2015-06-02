@@ -71,18 +71,20 @@ public class LoomHTTP
             client.addHeader(key, (String)headers.get(key));
         }
 
-        // Set up for saving to response cache file if desired.
         File trySaveFile = null;
-        try
-        {
-            trySaveFile = new File(responseCacheFile);
-        }
-        catch(Exception e)
-        {
-            Log.d(TAG, "Failed to open responseCacheFile " + responseCacheFile);
+        if (responseCacheFile != null) {
+	        // Set up for saving to response cache file if desired.
+	        try
+	        {
+	            trySaveFile = new File(responseCacheFile);
+	        }
+	        catch(Exception e)
+	        {
+	            Log.d(TAG, "Failed to open responseCacheFile " + responseCacheFile);
+	        }
         }
         final File savedFile = trySaveFile;
-
+        
         BinaryHttpResponseHandler handler = new BinaryHttpResponseHandler(allowedTypes) 
         {
 

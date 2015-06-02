@@ -122,12 +122,10 @@ public:
     }
 
 
-    static Matrix *getGridInverseMatrix(Matrix *worldMatrix, float tileWidth, float tileHeight, float mapScale)
+    static void getGridInverseMatrix(Matrix *worldMatrix, float tileWidth, float tileHeight, float mapScale, Matrix *resultMatrix)
     {
-        Matrix *invMatrix = lmNew(NULL) Matrix();
-        invMatrix->invertOther(worldMatrix);
-        invMatrix->scale(mapScale / tileWidth, mapScale / tileHeight);
-        return invMatrix;
+        resultMatrix->invertOther(worldMatrix);
+        resultMatrix->scale(mapScale / tileWidth, mapScale / tileHeight);
     }
 
  
@@ -152,7 +150,9 @@ public:
         // generate zoom string
         int rowOffset = strlen(_rowBinaryString) - zoom;
         int colOffset = strlen(_colBinaryString) - zoom;
-        char *zoomString = (char*)lmAlloc(NULL, sizeof(char) * (zoom + 1));
+        const int zoomStringLen = 256;
+        static char zoomString[zoomStringLen];
+        lmAssert(zoom + 1 < zoomStringLen, "zoom should be less than %d - 1", zoomStringLen);
         for(int i = 0; i < zoom; i++) 
         {
             //proces the row and col bits to build up the zoom string; values of 0,1,2,3
@@ -165,7 +165,7 @@ public:
         }
         zoomString[zoom] = '\0';
 
-        return (const char *)zoomString; 
+        return (const char*) zoomString;
     }
 
 

@@ -1162,7 +1162,7 @@ package loom.modestmaps.core
                 return;
             }
             _invertedMatrixDirty = false;
-            _invertedMatrix = ModestMaps.getGridInverseMatrix(worldMatrix, tileWidth, tileHeight, scale);
+            ModestMaps.getGridInverseMatrix(worldMatrix, tileWidth, tileHeight, scale, _invertedMatrix);
         }
 
         private function recalculateCoordinates():void

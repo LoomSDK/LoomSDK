@@ -67,17 +67,18 @@ static void *lsLuaAlloc(void *ud, void *ptr, size_t osize, size_t nsize)
 {
     (void)ud;  (void)osize;  /* not used */
     
-    if (nsize == 0 && ptr) 
+    if (nsize == 0) 
     {
         lmFree(NULL, ptr);
         return NULL;
     }
+    else if (ptr == NULL)
+    {
+        return lmAlloc(NULL, nsize);
+    }
     else
     {
-        if (osize == 0)
-            return lmAlloc(NULL, nsize);
-        else
-            return lmRealloc(NULL, ptr, nsize);
+        return lmRealloc(NULL, ptr, nsize);
     }
 }
 

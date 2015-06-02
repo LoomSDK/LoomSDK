@@ -378,13 +378,11 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     {
         LOOM_PROFILE_START(textureLoadDelete);
         storeGLTextureHandle(tinfo.handle);
-        //Graphics::context()->glDeleteTextures(1, &tinfo.handle);
         LOOM_PROFILE_END(textureLoadDelete);
     }
 
     if (newTexture) {
         LOOM_PROFILE_START(textureLoadGenerate);
-        //Graphics::context()->glGenTextures(1, &tinfo.handle);
         tinfo.handle = popGLTextureHandle();
         if (tinfo.renderTarget) {
             Graphics::context()->glGenFramebuffers(1, &tinfo.framebuffer);

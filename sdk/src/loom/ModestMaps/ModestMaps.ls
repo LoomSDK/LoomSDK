@@ -88,7 +88,8 @@ package loom.modestmaps
         public static native function getGridInverseMatrix(worldMatrix:Matrix,
                                                             tileWidth:int, 
                                                             tileHeight:int, 
-                                                            mapScale:Number):Matrix;
+                                                            mapScale:Number,
+                                                            resultMatrix:Matrix);
 
         /**
          * Gets the Microsoft Map Provider compatible zoom string.
