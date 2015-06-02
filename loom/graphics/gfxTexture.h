@@ -168,8 +168,7 @@ private:
 	static bool supportsFullNPOT;
 	static TextureID currentRenderTexture;
 	static uint32_t previousRenderFlags;
-    static bool verbose;
-
+    
     // simple linear TextureID -> TextureHandle
     static TextureInfo sTextureInfos[MAXTEXTURES];
 

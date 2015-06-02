@@ -49,7 +49,6 @@ bool Texture::sTextureAssetNofificationsEnabled = true;
 bool Texture::supportsFullNPOT;
 TextureID Texture::currentRenderTexture = -1;
 uint32_t Texture::previousRenderFlags = -1;
-bool Texture::verbose = false;
 
 //queue of textures to load in the async loading thread
 utList<AsyncLoadNote> Texture::sAsyncLoadQueue;
@@ -111,7 +110,7 @@ void Texture::initialize()
 
 void Texture::shutdown()
 {
-    if (verbose) lmLogInfo(gGFXTextureLogGroup, "Texture shutdown");
+    lmLogDebug(gGFXTextureLogGroup, "Texture shutdown");
     loom_mutex_lock(Texture::sTexInfoLock);
     for (int i = 0; i < MAXTEXTURES; i++)
     {
@@ -147,7 +146,7 @@ void Texture::tick()
         {
             //Texture is an Asset, so Create via handleAssetNotification
             loom_asset_subscribe(threadNote.path.c_str(), Texture::handleAssetNotification, (void *)threadNote.id, 1);
-            if (verbose) lmLog(gGFXTextureLogGroup, "Async loaded texture '%s' took %i ms to create", threadNote.path.c_str(), platform_getMilliseconds() - startTime);
+            lmLogDebug(gGFXTextureLogGroup, "Async loaded texture '%s' took %i ms to create", threadNote.path.c_str(), platform_getMilliseconds() - startTime);
         }
         else
         {
@@ -156,7 +155,7 @@ void Texture::tick()
             {
                 loadImageAsset(threadNote.imageAsset, threadNote.id);
                 threadNote.iaCleanup(threadNote.imageAsset);
-                if (verbose) lmLog(gGFXTextureLogGroup, "Async loaded byte texture took %i ms to create", platform_getMilliseconds() - startTime);
+                lmLogDebug(gGFXTextureLogGroup, "Async loaded byte texture took %i ms to create", platform_getMilliseconds() - startTime);
             }
         }
 
@@ -367,11 +366,11 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 
     if (newTexture)
     {
-        if (verbose) lmLog(gGFXTextureLogGroup, "Creating texture #%d.%d for %s", Texture::getIndex(id), Texture::getVersion(id), tinfo.renderTarget ? "framebuffer" : tinfo.texturePath.c_str());
+        lmLogDebug(gGFXTextureLogGroup, "Creating texture #%d.%d for %s", Texture::getIndex(id), Texture::getVersion(id), tinfo.renderTarget ? "framebuffer" : tinfo.texturePath.c_str());
     }
     else
     {
-        if (verbose) lmLog(gGFXTextureLogGroup, "Updating texture #%d.%d from %s", Texture::getIndex(id), Texture::getVersion(id), tinfo.texturePath.c_str());
+        lmLogDebug(gGFXTextureLogGroup, "Updating texture #%d.%d from %s", Texture::getIndex(id), Texture::getVersion(id), tinfo.texturePath.c_str());
     }
 
 
@@ -434,7 +433,7 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 
             mipLevel++;
         }
-        if (verbose) lmLogInfo(gGFXTextureLogGroup, "Generated mipmaps in %d ms", platform_getMilliseconds() - time);
+        lmLogDebug(gGFXTextureLogGroup, "Generated mipmaps in %d ms", platform_getMilliseconds() - time);
         if (mipData != (uint32_t*) data) lmSafeFree(NULL, mipData);
         LOOM_PROFILE_END(textureLoadMipmap);
     }
@@ -526,7 +525,7 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
     if(tinfo != NULL)
     {
         // allocate the texture handle/id
-        if (verbose) lmLog(gGFXTextureLogGroup, "Loading %s", path);
+        lmLogDebug(gGFXTextureLogGroup, "Loading %s", path);
 
         // Now subscribe and let us load for reals.
         loom_asset_subscribe(path, Texture::handleAssetNotification, (void *)tinfo->id, 1);        
@@ -573,7 +572,7 @@ TextureInfo *Texture::initFromBytes(utByteArray *bytes, const char *name)
     }
 
     // Great, stuff real bits!
-    if (verbose) lmLog(gGFXTextureLogGroup, "Loaded image bytes - %i x %i at id %i", lat->width, lat->height, tinfo->id);
+    lmLogDebug(gGFXTextureLogGroup, "Loaded image bytes - %i x %i at id %i", lat->width, lat->height, tinfo->id);
 
     loadImageAsset(lat, tinfo->id);
 
@@ -621,7 +620,7 @@ int __stdcall Texture::loadTextureAsync_body(void *param)
             if(path)
             {
                 // Load async since we're in a background thread.
-                if (verbose) lmLog(gGFXTextureLogGroup, "Loading %s async...", path);
+                lmLogDebug(gGFXTextureLogGroup, "Loading %s async...", path);
                 loom_asset_preload(path);
                 loom_thread_yield();
                 loom_asset_image *lai = NULL;
@@ -645,7 +644,7 @@ int __stdcall Texture::loadTextureAsync_body(void *param)
 
             //add to the CreateQueue that happens in the main thread because bgfx cannot create textures from side threads
             loom_mutex_lock(Texture::sAsyncQueueMutex);
-            if (verbose) lmLog(gGFXTextureLogGroup, "Adding async loaded texture to CreateQueue: %s", ((path) ? path : "Byte Texture"));
+            lmLogDebug(gGFXTextureLogGroup, "Adding async loaded texture to CreateQueue: %s", ((path) ? path : "Byte Texture"));
 
             //add to the front of the queue if high priority, otherwise, FIFO
             if(threadNote.priority)
@@ -756,7 +755,7 @@ TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name, b
         {
             if(tinfo && tinfo->asyncDispose)
             {
-                if (verbose) lmLog(gGFXTextureLogGroup, "Returning a TextureInfo that was flagged for disposal during initFromBytesAsync() for texture: %s", name);
+                lmLogDebug(gGFXTextureLogGroup, "Returning a TextureInfo that was flagged for disposal during initFromBytesAsync() for texture: %s", name);
                 tinfo->asyncDispose = false;
             }
             loom_mutex_unlock(Texture::sTexInfoLock);
@@ -858,7 +857,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
     }
 
     // Great, stuff real bits!
-    if (verbose) lmLog(gGFXTextureLogGroup, "Loaded #%d.%d from %s - %i x %i", Texture::getIndex(id), Texture::getVersion(id), name, lat->width, lat->height, id);
+    lmLogDebug(gGFXTextureLogGroup, "Loaded #%d.%d from %s - %i x %i", Texture::getIndex(id), Texture::getVersion(id), name, lat->width, lat->height, id);
 
     loadImageAsset(lat, id);
 

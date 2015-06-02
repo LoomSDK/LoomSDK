@@ -31,8 +31,6 @@
 
 #include "loom/common/core/allocator.h"
 
-//#include "jemalloc/jemalloc.h"
-
 const utString::size_type utString::npos = static_cast<size_t>(-1);
 
 /*

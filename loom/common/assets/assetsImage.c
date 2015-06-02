@@ -109,7 +109,7 @@ void *loom_asset_imageDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
       return 0;
    }
    
-   //lmLog(gImageAssetGroup, "Allocated %d bytes for an image!", img->width * img->height * 4);
+   lmLogDebug(gImageAssetGroup, "Allocated %d bytes for an image!", img->width * img->height * 4);
    
    return img;
 }

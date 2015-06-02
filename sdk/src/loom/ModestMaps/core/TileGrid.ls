@@ -310,7 +310,6 @@ package loom.modestmaps.core
         {
             calcCoordinatePoint(startPan);
             onPan(MapState.CHANGED, ModestMaps.LastCoordinateX - mapWidth/2, ModestMaps.LastCoordinateY - mapHeight/2);
-            //dispatchEvent(MapEvent.Panned(ModestMaps.LastCoordinateX - mapWidth/2, ModestMaps.LastCoordinateY - mapHeight/2));
         }
         
         protected function onZoomed():void

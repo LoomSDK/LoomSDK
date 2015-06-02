@@ -124,7 +124,7 @@ public:
 
     static Matrix *getGridInverseMatrix(Matrix *worldMatrix, float tileWidth, float tileHeight, float mapScale)
     {
-        Matrix *invMatrix = new Matrix();
+        Matrix *invMatrix = lmNew(NULL) Matrix();
         invMatrix->invertOther(worldMatrix);
         invMatrix->scale(mapScale / tileWidth, mapScale / tileHeight);
         return invMatrix;
@@ -135,9 +135,6 @@ public:
     {
         LOOM_PROFILE_SCOPE(mmZoom);
         // we don't wrap rows here because the map/grid should be enforcing outerLimits :)
-
-
-        LOOM_PROFILE_START(mmZoomPre);
 
         float zoomExp = pow(2.0f, zoom);
         float wrappedColumn = fmod(col, zoomExp);
@@ -151,10 +148,6 @@ public:
         // padded with zeroes so we end up with zoom digits after slicing:
         convertToBinary((int) row, _rowBinaryString);
         convertToBinary((int) col, _colBinaryString);
-
-        LOOM_PROFILE_END(mmZoomPre);
-
-        LOOM_PROFILE_START(mmZoomLoop);
 
         // generate zoom string
         int rowOffset = strlen(_rowBinaryString) - zoom;
@@ -172,7 +165,6 @@ public:
         }
         zoomString[zoom] = '\0';
 
-        LOOM_PROFILE_END(mmZoomLoop);
         return (const char *)zoomString; 
     }
 

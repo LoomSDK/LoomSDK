@@ -45,7 +45,7 @@ package loom.modestmaps.geo
         public function normalize():Location
         {
             var loc:Location = clone();
-            loc.lat = Math.max2(MIN_LAT, Math.min2(MAX_LAT, loc.lat));
+            loc.lat = Math.clamp(loc.lat, MIN_LAT, MAX_LAT);
             while (loc.lon > 180) loc.lon -= 360;
             while (loc.lon < -180) loc.lon += 360;
             return loc;

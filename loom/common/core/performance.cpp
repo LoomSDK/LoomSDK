@@ -487,7 +487,7 @@ void LoomProfiler::hashPop(LoomProfilerRoot *expected)
 
         F64 fElapsed = endHighResolutionTimer(mCurrentLoomProfilerEntry->mStartTime);
 
-        lmAssert(fElapsed > 0, "Elapsed time is negative!");
+        lmAssert(fElapsed > 0, "Elapsed time should be positive!");
 
         mCurrentLoomProfilerEntry->mTotalTime        += fElapsed;
         mCurrentLoomProfilerEntry->mParent->mSubTime += fElapsed; // mark it in the parent as well...

@@ -39,7 +39,7 @@ package loom.modestmaps.core.painter
         
         public function sortTiles(callback:Function):void
         {
-            queue.sort(callback) as Vector.<Tile>;
+            queue.sort(callback);
         }
         
         public function retainAll(tiles:Vector.<Tile>):Vector.<Tile>
@@ -49,7 +49,7 @@ package loom.modestmaps.core.painter
             var i:int = 0;
             var tile:Tile;
             for (i = 0; i < queue.length; i++) {
-                tile = queue[i] as Tile;
+                tile = queue[i];
                 if (tiles.indexOf(tile) < 0) {
                     removed.pushSingle(tile);
                 } else {
