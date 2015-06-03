@@ -22,7 +22,7 @@
 #include "loom/common/core/log.h"
 #include "loom/common/core/allocator.h"
 #include "loom/common/platform/platformTime.h"
-#include <math.h>
+#include "loom/graphics/gfxMath.h"
 
 loom_allocator_t *gProfilerAllocator = NULL;
 
