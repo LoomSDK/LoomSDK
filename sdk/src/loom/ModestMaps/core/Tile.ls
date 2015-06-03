@@ -16,7 +16,7 @@ package loom.modestmaps.core
     
     
     public class Tile extends Sprite
-    {       
+    {
         // not a coordinate, because it's very important these are ints
         public var zoom:int;
         public var row:int;
@@ -25,6 +25,7 @@ package loom.modestmaps.core
         public var isVisible:Boolean;
         public var lastRepop:int;
         public var count:int;
+        public var token:int;
 
         protected var assignedTextures:Vector.<Texture> = [];
 
