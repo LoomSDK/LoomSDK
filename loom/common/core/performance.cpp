@@ -492,10 +492,10 @@ void LoomProfiler::hashPop(LoomProfilerRoot *expected)
         mCurrentLoomProfilerEntry->mTotalTime        += fElapsed;
         mCurrentLoomProfilerEntry->mParent->mSubTime += fElapsed; // mark it in the parent as well...
         mCurrentLoomProfilerEntry->mRoot->mTotalTime += fElapsed;
-        mCurrentLoomProfilerEntry->mMaxTime = fmax(fElapsed, mCurrentLoomProfilerEntry->mMaxTime);
-        mCurrentLoomProfilerEntry->mMinTime = fmin(fElapsed, mCurrentLoomProfilerEntry->mMinTime);
-        mCurrentLoomProfilerEntry->mRoot->mMaxTime = fmax(fElapsed, mCurrentLoomProfilerEntry->mRoot->mMaxTime);
-        mCurrentLoomProfilerEntry->mRoot->mMinTime = fmin(fElapsed, mCurrentLoomProfilerEntry->mRoot->mMinTime);
+        mCurrentLoomProfilerEntry->mMaxTime = fElapsed > mCurrentLoomProfilerEntry->mMaxTime ? fElapsed : mCurrentLoomProfilerEntry->mMaxTime;
+        mCurrentLoomProfilerEntry->mMinTime = fElapsed < mCurrentLoomProfilerEntry->mMinTime ? fElapsed : mCurrentLoomProfilerEntry->mMinTime;
+        mCurrentLoomProfilerEntry->mRoot->mMaxTime = fElapsed > mCurrentLoomProfilerEntry->mRoot->mMaxTime ? fElapsed : mCurrentLoomProfilerEntry->mRoot->mMaxTime;
+        mCurrentLoomProfilerEntry->mRoot->mMinTime = fElapsed < mCurrentLoomProfilerEntry->mRoot->mMinTime ? fElapsed : mCurrentLoomProfilerEntry->mRoot->mMinTime;
         if (mCurrentLoomProfilerEntry->mParent->mRoot)
         {
             mCurrentLoomProfilerEntry->mParent->mRoot->mSubTime += fElapsed; // mark it in the parent as well...
