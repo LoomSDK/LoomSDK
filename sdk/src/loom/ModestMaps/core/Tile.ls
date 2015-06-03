@@ -26,6 +26,8 @@ package loom.modestmaps.core
         public var lastRepop:int;
         public var count:int;
         public var token:int;
+        
+        public var nextActive:Tile;
 
         protected var assignedTextures:Vector.<Texture> = [];
 
@@ -45,6 +47,7 @@ package loom.modestmaps.core
         /** override this in a subclass and call grid.setTileCreator if you want to draw on your tiles */
         public function init(column:int, row:int, zoom:int):void
         {
+            Debug.assert(!nextActive);
             this.zoom = zoom;
             this.row = row;
             this.column = column;  
