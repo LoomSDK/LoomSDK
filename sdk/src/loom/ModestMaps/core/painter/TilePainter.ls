@@ -120,7 +120,7 @@ package loom.modestmaps.core.painter
             return tileCache.getTile(key);
         }
         
-        public function returnKey(key:String):void
+        public function returnKey(key:String):Tile
         {
             var tile = tileCache.returnKey(key);
             if (tile) {
@@ -128,6 +128,7 @@ package loom.modestmaps.core.painter
             } else {
                 trace("warn:", key, "was not in cache");
             }
+            return tile;
         }
         
         /*
@@ -180,9 +181,6 @@ package loom.modestmaps.core.painter
                         texture.cancelHTTPRequest();
                     }
                 }
-            }
-            if (!tileCache.containsKey(tile.name)) {
-                tilePool.returnTile(tile);
             }
             layersNeeded.deleteKey(tile.name);
         }

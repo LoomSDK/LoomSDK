@@ -24,11 +24,12 @@ package loom.modestmaps.core
         public var inWell:Boolean;
         public var isVisible:Boolean;
         public var lastRepop:int;
+        public var count:int;
 
         protected var assignedTextures:Vector.<Texture> = [];
 
         protected static var textureRefs:Dictionary.<Texture, int> = {};
-        protected static var imagePool:Vector.<Image> = null;
+        protected static var imagePool = new Vector.<Image>();
 
 
         public function Tile(column:int, row:int, zoom:int)
@@ -48,6 +49,7 @@ package loom.modestmaps.core
             this.column = column;  
             inWell = false;
             isVisible = false;
+            count = 1;
             hide();
         }        
 
@@ -59,11 +61,15 @@ package loom.modestmaps.core
             {
                 //texture ref counter
                 var tex:Texture = assignedTextures[i];
-                textureRefs[tex]--;
-                if(textureRefs[tex] == 0)
+                var refs = textureRefs[tex];
+                refs--;
+                textureRefs[tex] = refs;
+                if(refs == 0)
                 {
                     tex.dispose();
                     textureRefs.deleteKey(tex);
+                } else if (refs < 0) {
+                    trace("Texture reference should be 0 or greater");
                 }
             }
             assignedTextures.clear();
@@ -82,27 +88,18 @@ package loom.modestmaps.core
 
         public function assignTexture(texture:Texture):Image
         {
-            //create the pool if we need to
-            if((imagePool == null) || (imagePool.length == 0))
-            {
-                imagePool = new Vector.<Image>(TileGrid.MaxTilesToKeep * 2);
-                for(var i=0;i<imagePool.length;i++)
-                {
-                    imagePool[i] = new Image(null);
-                }
-            }
+            var img:Image;
+            
+            img = imagePool.length > 0 ? imagePool.pop() : new Image();
             
             //create an image for the newly loaded texture and add it to the tile
-            var img:Image = imagePool.pop();
             img.texture = texture;
             addChild(img, false);
-
+            
             //texture ref counter
-            if(textureRefs[texture] == null)
-            {
-                textureRefs[texture] = 0;
-            }
-            textureRefs[texture]++;
+            var refs = textureRefs[texture];
+            if (!refs) refs = 0;
+            textureRefs[texture] = refs+1;
 
             //store texture in a vector so we can track all of them
             assignedTextures.pushSingle(texture);
@@ -111,23 +108,23 @@ package loom.modestmaps.core
         
         public function isShowing():Boolean
         {
-            return this.alpha == 1.0;
+            return this.visible;
         }
         
         public function showNow():void
         {
-            this.alpha = 1.0;
+            this.visible = true;
         }
         
         public function show():void 
         {
-            this.alpha = 1.0;
+            this.visible = true;
             // if you want to do something when the tile is ready then override this method
         }
         
         public function hide():void
         {
-            this.alpha = 0.0;
+            this.visible = false;
         }
         
         public function paintError(w:Number=256, h:Number=256):void

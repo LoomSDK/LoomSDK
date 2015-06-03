@@ -528,11 +528,8 @@ package loom.modestmaps.core
             }
             
             if (tile) {
-                if (add) {
-                    visibleTiles.pushSingle(tile);
-                }
-                tile.isVisible = true;
-                tile.updateRepop();
+                visibleAdd(tile, add);
+                if (add) wellAdd(tile, key);
             }
             
             return tile;        
@@ -785,16 +782,19 @@ package loom.modestmaps.core
             var leastRecent:Tile = null;
             var leastRecentDiff = -1;
             var tile:Tile;
-            var iw = 0;
-            var iv = 0;
-            var ip = 0;
-            var ipd = 0;
+            //var iw = 0;
+            //var iv = 0;
+            //var ip = 0;
+            //var ipd = 0;
             for (var i:int = 0; i < len; i++) {
                 tile = recentlySeen[i];
-                if (tile.inWell) { iw++; }
-                if (tile.isVisible) { iv++; }
-                if (tilePainter.isPainting(tile)) { ip++; }
-                if (tilePainter.isPainted(tile)) { ipd++; }
+                
+                // Diagnostics
+                //if (tile.inWell) { iw++; }
+                //if (tile.isVisible) { iv++; }
+                //if (tilePainter.isPainting(tile)) { ip++; }
+                //if (tilePainter.isPainted(tile)) { ipd++; }
+                
                 if (tile.isVisible) continue;
                 var tileRepop = now-tile.lastRepop;
                 if (tileRepop > leastRecentDiff) {
@@ -813,9 +813,12 @@ package loom.modestmaps.core
             
             //trace(tilePainter.getCacheSize(), leastRecentIndex, leastRecentDiff, leastRecent);
             
-            if (!tile.inWell) {
+            if (tile.count > 0) {
+                tile.count--;
                 if (tile.inWell) wellRemove(tile);
-                tilePainter.returnKey(tile.name);
+                if (!tilePainter.returnKey(tile.name)) trace("Key missing");
+            } else {
+                trace("Removed duplicate", tile.name, tile, tile.count, tile.inWell, tile.isVisible, tilePainter.isPainting(tile), tilePainter.isPainted(tile));
             }
             recentlySeen.splice(leastRecentIndex, 1);
             
@@ -876,10 +879,15 @@ package loom.modestmaps.core
             var i = 0;
             var len = well.numChildren;
             var count = 0;
+            var zLevel = zoomLevel;
+            var wMatrix = worldMatrix;
+            var tScale = tileWidth/scale;
             const TILE_DEPTH_SHIFT = 16;
             // apply the sorted depths, position all the tiles and also keep recentlySeen updated:
-            for (i = 0; i < len; i++) {
+            for (i = well.numChildren-1; i >= 0; i--) {
                 var tile:Tile = well.getChildAtUnsafe(i) as Tile;
+                
+                //if (!tile.isVisible) wellRemove(tile);
                 
                 tile.depth = (-Math.abs(tile.zoom-currentTileZoom) << TILE_DEPTH_SHIFT) | tile.zoom;
                 
@@ -892,9 +900,9 @@ package loom.modestmaps.core
                 ModestMaps.setLastCoordinate(tile.column, 
                                                 tile.row, 
                                                 tile.zoom, 
-                                                zoomLevel,
-                                                tileWidth/scale,
-                                                worldMatrix,
+                                                zLevel,
+                                                tScale,
+                                                wMatrix,
                                                 null, 
                                                 null);
                 tile.x = ModestMaps.LastCoordinateX;
@@ -948,10 +956,7 @@ package loom.modestmaps.core
                     tilePainted(tile);
                 }
 
-                if (!tile.isVisible) {
-                    visibleTiles.pushSingle(tile); // don't get rid of it yet!
-                    tile.isVisible = true;
-                }
+                visibleAdd(tile);
                 return tile;
             }
             return null;
@@ -959,6 +964,7 @@ package loom.modestmaps.core
         
         private function wellAdd(tile:Tile, key:String)
         {
+            if (tile.inWell) return;
             well.addChild(tile, false);
             wellTiles[key] = tile;
             tile.inWell = true;
@@ -967,11 +973,28 @@ package loom.modestmaps.core
         
         private function wellRemove(tile:Tile)
         {
+            if (!tile.inWell) return;
             well.removeChild(tile, false, false);
             wellTiles.deleteKey(tile.name);
             tile.inWell = false;
             tile.hide();
             tilePainter.cancelPainting(tile);
+        }
+        
+        private function visibleAdd(tile:Tile, addToList:Boolean = true)
+        {
+            if (tile.isVisible) return;
+            if (addToList) visibleTiles.pushSingle(tile);
+            tile.isVisible = true;
+            tile.updateRepop();
+        }
+        
+        private function visibleRemove(tile:Tile)
+        {
+            if (!tile.isVisible) return;
+            visibleTiles.remove(tile);
+            tile.isVisible = false;
+            //if (tile.inWell) wellRemove(tile);
         }
         
         // for use in requestParentLoad
