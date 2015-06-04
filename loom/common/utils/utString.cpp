@@ -28,7 +28,8 @@
 #include <string.h> // strlen
 #include <stdio.h>
 #include <stdarg.h>
-#include "jemalloc/jemalloc.h"
+
+#include "loom/common/core/allocator.h"
 
 const utString::size_type utString::npos = static_cast<size_t>(-1);
 
@@ -41,7 +42,7 @@ static char* malloc_never_null(const size_t b) {
     char *p = NULL;
 
     do {
-        p = static_cast<char*>(je_malloc(b));
+        p = static_cast<char*>(lmAlloc(NULL, b));
     } while (p == NULL);
 
     return p;
@@ -65,7 +66,7 @@ utString::utString() :
 }
 
 utString::~utString() {
-    je_free(p);
+    lmSafeFree(NULL, p);
 }
 
 
@@ -96,11 +97,10 @@ void utString::replace(char from, char to)
 void utString::fromBytes(const void *bytes, int len)
 {
     // Free old value if any.
-    if(p != NULL)
-        je_free(p);
+    lmSafeFree(NULL, p);
 
     // Copy the bytes into p.
-    p = (char*)je_malloc(len+1);
+    p = (char*)lmAlloc(NULL, len+1);
     memcpy(p, bytes, len);
 
     p[len] = 0; // Make sure we are NULL terminated.
@@ -113,7 +113,7 @@ utString& utString::operator=(const char *s)
     {
         // this should work with overlapping memory
         char *copy = strdup_never_null(s);
-        je_free(p);
+        lmSafeFree(NULL, p);
         p = copy;
     }
 
@@ -131,7 +131,7 @@ utString& utString::operator+=(const utString& s)
 {
     const size_type lenp = strlen(p);
     const size_type lens = strlen(s.p) + 1;
-    p = static_cast<char*>(je_realloc(p, lenp + lens)); // could return NULL
+    p = static_cast<char*>(lmRealloc(NULL, p, lenp + lens)); // could return NULL
     memmove(p + lenp, s.p, lens); // p and s.p MAY overlap
     return *this;
 }
@@ -161,7 +161,7 @@ bool utString::operator!=(const utString& s) const
 }
 
 void utString::clear() {
-    je_free(p);
+    lmSafeFree(NULL, p);
     p = strdup_never_null("");
 }
 
@@ -227,7 +227,7 @@ utString utString::substr(const size_type start,
         len = len_orig;
     }
 
-	je_free(s.p);
+	lmSafeFree(NULL, s.p);
     s.p = malloc_never_null(len + 1);
     memcpy(s.p, p + start, len);
     s.p[len] = '\0';
@@ -275,7 +275,7 @@ utString& utString::erase(size_type pos, size_type len)
     memmove(p + pos, p + pos + len, s);
 
     // remove unused space
-    p = static_cast<char*>(je_realloc(p, s + pos));
+    p = static_cast<char*>(lmRealloc(NULL, p, s + pos));
 
     return *this;
 }

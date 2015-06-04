@@ -22,10 +22,10 @@ package loom.modestmaps.core
          *  @param w the westest longitude */
         public function MapExtent(n:Number, s:Number, e:Number, w:Number)
         {
-            north = Math.max(n, s);
-            south = Math.min(n, s);
-            east = Math.max(e, w);
-            west = Math.min(e, w);
+            north = Math.max2(n, s);
+            south = Math.min2(n, s);
+            east = Math.max2(e, w);
+            west = Math.min2(e, w);
         }
         
         public function clone():MapExtent
@@ -36,19 +36,19 @@ package loom.modestmaps.core
         /** enlarges this extent so that the given extent is inside it */
         public function encloseExtent(extent:MapExtent):void
         {
-            north = Math.max(extent.north, north);
-            south = Math.min(extent.south, south);
-            east = Math.max(extent.east, east);
-            west = Math.min(extent.west, west);         
+            north = Math.max2(extent.north, north);
+            south = Math.min2(extent.south, south);
+            east = Math.max2(extent.east, east);
+            west = Math.min2(extent.west, west);         
         }
         
         /** enlarges this extent so that the given location is inside it */
         public function enclose(location:Location):void
         {
-            north = Math.max(location.lat, north);
-            south = Math.min(location.lat, south);
-            east = Math.max(location.lon, east);
-            west = Math.min(location.lon, west);
+            north = Math.max2(location.lat, north);
+            south = Math.min2(location.lat, south);
+            east = Math.max2(location.lon, east);
+            west = Math.min2(location.lon, west);
         }
         
         public function get northWest():Location
@@ -120,10 +120,10 @@ package loom.modestmaps.core
 
         public function getRect():Rectangle
         {
-            var left:Number = Math.min(east, west);
-            var top:Number = Math.min(north, south);
-            var width:Number = Math.max(east, west) - left;
-            var height:Number = Math.max(north, south) - top;
+            var left:Number = Math.min2(east, west);
+            var top:Number = Math.min2(north, south);
+            var width:Number = Math.max2(east, west) - left;
+            var height:Number = Math.max2(north, south) - top;
             return new Rectangle(left, top, width, height); 
         }
         

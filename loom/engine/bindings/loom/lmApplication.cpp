@@ -22,12 +22,6 @@
 
 #include "lmApplication.h"
 
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-
-#include <jni.h>
-#include "loom/common/platform/platformAndroidJni.h"
-#endif
-
 using namespace LS;
 
 #include "loom/common/core/log.h"
@@ -308,6 +302,8 @@ static void unmapScriptFile(const char *path)
 
 int LoomApplication::initializeCoreServices()
 {
+    callbacksInitialized = false;
+
     // Mark the main thread for NativeDelegates.
     NativeDelegate::markMainThread();
 
@@ -359,6 +355,8 @@ int LoomApplication::initializeCoreServices()
     loom_asset_initialize(".");
     loom_asset_setCommandCallback(dispatchCommand);
 
+    initializeCallbacks();
+
     // Initialize script hooks.
     LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogInfo, LoomLogWarn, LoomLogError);
     LS::LSFileInitialize(mapScriptFile, unmapScriptFile);
@@ -373,6 +371,22 @@ int LoomApplication::initializeCoreServices()
     suppressAssetTriggeredReload = false;
 
     return 0;
+}
+
+bool LoomApplication::callbacksInitialized = false;
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+static loomJniMethodInfo gEventCallback;
+#endif
+
+void LoomApplication::initializeCallbacks()
+{
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+    LoomJni::getStaticMethodInfo(gEventCallback,
+        "co/theengine/loomdemo/LoomDemo",
+        "handleGenericEvent",
+        "(Ljava/lang/String;Ljava/lang/String;)V");
+#endif
+    callbacksInitialized = true;
 }
 
 void LoomApplication::shutdown()
@@ -428,7 +442,7 @@ struct LoomApplicationGenericEventCallbackNote
     void                     *userData;
 };
 
-utArray<LoomApplicationGenericEventCallbackNote> gNativeGenericCallbacks;
+static utArray<LoomApplicationGenericEventCallbackNote> gNativeGenericCallbacks;
 
 void LoomApplication::fireGenericEvent(const char *type, const char *payload)
 {
@@ -439,27 +453,20 @@ void LoomApplication::fireGenericEvent(const char *type, const char *payload)
     // Also do C++ callbacks.
     for (unsigned int i = 0; i < gNativeGenericCallbacks.size(); i++)
     {
-        gNativeGenericCallbacks[i].cb(gNativeGenericCallbacks[i].userData, type, payload);
+        LoomApplicationGenericEventCallbackNote &note = gNativeGenericCallbacks[i];
+        lmAssert(note.cb, "Callback should not be null");
+        note.cb(note.userData, type, payload);
     }
 
     // And platform specific callbacks.
+    if (!callbacksInitialized) initializeCallbacks();
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-    static loomJniMethodInfo eventCallback;
-    static bool              initialized = false;
-    if (!initialized)
-    {
-        LoomJni::getStaticMethodInfo(eventCallback,
-                                     "co/theengine/loomdemo/LoomDemo",
-                                     "handleGenericEvent",
-                                     "(Ljava/lang/String;Ljava/lang/String;)V");
-        initialized = true;
-    }
-
-    jstring jType    = eventCallback.getEnv()->NewStringUTF(type);
-    jstring jPayload = eventCallback.getEnv()->NewStringUTF(payload);
-    eventCallback.getEnv()->CallStaticVoidMethod(eventCallback.classID, eventCallback.methodID, jType, jPayload);
-    eventCallback.getEnv()->DeleteLocalRef(jType);
-    eventCallback.getEnv()->DeleteLocalRef(jPayload);
+    JNIEnv *env      = gEventCallback.getEnv();
+    jstring jType    = env->NewStringUTF(type);
+    jstring jPayload = env->NewStringUTF(payload);
+    env->CallStaticVoidMethod(gEventCallback.classID, gEventCallback.methodID, jType, jPayload);
+    env->DeleteLocalRef(jType);
+    env->DeleteLocalRef(jPayload);
 #endif
 }
 

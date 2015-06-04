@@ -37,6 +37,7 @@ void installPackageLoomSound();
 void installLoomFacebook();
 void installLoomTeak();
 void installLoomSQLite();
+void installLoomModestMaps();
 
 void installPackageLoom()
 {
@@ -54,6 +55,7 @@ void installPackageLoom()
     installLoomTeak();
     installLoomParse();
     installLoomSQLite();
+    installLoomModestMaps();
     installPackageLoomSound();
 
     // Should be its own package for maximum correctness.

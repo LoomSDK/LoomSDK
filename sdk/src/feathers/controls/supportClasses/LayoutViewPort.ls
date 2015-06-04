@@ -234,7 +234,7 @@ package feathers.controls.supportClasses
             }
         }
 
-        override public function addChildAt(child:DisplayObject, index:int):DisplayObject
+        override public function addChildAt(child:DisplayObject, index:int, fireEvents:Boolean = true):DisplayObject
         {
             if(child is IFeathersControl)
             {
@@ -244,12 +244,12 @@ package feathers.controls.supportClasses
             {
                 child.addEventListener(FeathersEventType.LAYOUT_DATA_CHANGE, child_layoutDataChangeHandler);
             }
-            return super.addChildAt(child, index);
+            return super.addChildAt(child, index, fireEvents);
         }
 
-        override public function removeChildAt(index:int, dispose:Boolean = false):DisplayObject
+        override public function removeChildAt(index:int, dispose:Boolean = false, fireEvents:Boolean = true):DisplayObject
         {
-            const child:DisplayObject = super.removeChildAt(index, dispose);
+            const child:DisplayObject = super.removeChildAt(index, dispose, fireEvents);
             if(child is IFeathersControl)
             {
                 child.removeEventListener(FeathersEventType.RESIZE, child_resizeHandler);

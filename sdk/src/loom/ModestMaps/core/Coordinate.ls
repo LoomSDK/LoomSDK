@@ -9,12 +9,24 @@ package loom.modestmaps.core
         public var row:Number;
         public var column:Number;
         public var zoom:Number;
+
+        //NOTE_TEC: added to avoid unnecessary Coordinate object generation at times
+        public var zoomToRow:Number;
+        public var zoomToCol:Number;
         
+
         public function Coordinate(row:Number, column:Number, zoom:Number)
         {
             this.row = row;
             this.column = column;
-            this.zoom = zoom;
+            this.zoom = zoom;            
+        }
+        
+        public function setVals(row:Number, column:Number, zoom:Number):void
+        {
+            this.row = row;
+            this.column = column;
+            this.zoom = zoom;            
         }
         
         public function toString():String
@@ -37,16 +49,21 @@ package loom.modestmaps.core
         
         public function zoomTo(destination:Number):Coordinate
         {
-            return new Coordinate(row * Math.pow(2, destination - zoom),
-                                  column * Math.pow(2, destination - zoom),
-                                  destination);
+            var zoomPow:Number = Math.pow(2, destination - zoom);
+            return new Coordinate(row * zoomPow, column * zoomPow, destination);
+        }
+        
+        public function zoomToInPlace(destination:Number):void
+        {
+            var zoomPow:Number = Math.pow(2, destination - zoom);
+            zoomToCol = column * zoomPow;
+            zoomToRow = row * zoomPow;
         }
         
         public function zoomBy(distance:Number):Coordinate
         {
-            return new Coordinate(row * Math.pow(2, distance),
-                                  column * Math.pow(2, distance),
-                                  zoom + distance);
+            var zoomPow:Number = Math.pow(2, distance);
+            return new Coordinate(row * zoomPow, column * zoomPow, zoom + distance);
         }
         
         public function isRowEdge():Boolean

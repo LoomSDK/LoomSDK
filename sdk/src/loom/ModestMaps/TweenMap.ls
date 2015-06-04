@@ -9,6 +9,7 @@
  */
 package loom.modestmaps
 {
+    import loom.modestmaps.ModestMaps;
     import loom.modestmaps.core.Coordinate;
     import loom.modestmaps.core.MapExtent;
     import loom.modestmaps.core.TweenTile;
@@ -116,7 +117,7 @@ package loom.modestmaps
         {
             if (duration < 0) duration = panAndZoomDuration;
             
-            var p:Point = locationPoint(location);
+            calcLocationPoint(location);
             
             var constrainedDelta:Number = Math.log(sc) / Math.LN2;
 
@@ -134,7 +135,7 @@ package loom.modestmaps
             
             var m:Matrix = grid.getMatrix();
             
-            m.translate(-p.x, -p.y);
+            m.translate(-ModestMaps.LastCoordinateX, -ModestMaps.LastCoordinateY);
             m.scale(sc, sc);
             m.translate(targetPoint.x, targetPoint.y);
             
@@ -178,11 +179,11 @@ package loom.modestmaps
 
             var sc:Number = Math.pow(2, coord.zoom-grid.zoomLevel);
             
-            var p:Point = grid.coordinatePoint(coord, grid);
+            grid.calcCoordinatePoint(coord, grid);
             
             var m:Matrix = grid.getMatrix();
             
-            m.translate(-p.x, -p.y);
+            m.translate(-ModestMaps.LastCoordinateX, -ModestMaps.LastCoordinateY);
             m.scale(sc, sc);
             m.translate(mapWidth/2, mapHeight/2);
             
@@ -202,15 +203,16 @@ package loom.modestmaps
          */
         public function panTo(location:Location, forceAnimate:Boolean=false):void
         {
-            var p:Point = locationPoint(location, grid);
+            calcLocationPoint(location, grid);
+            var px = ModestMaps.LastCoordinateX;
+            var py = ModestMaps.LastCoordinateY;
 
-            if (forceAnimate || (p.x >= 0 && p.x <= mapWidth && p.y >= 0 && p.y <= mapHeight))
+            if (forceAnimate || (px >= 0 && px <= mapWidth && py >= 0 && py <= mapHeight))
             {
-                var centerPoint:Point = new Point(mapWidth / 2, mapHeight / 2);
-                var pan:Point = centerPoint.subtract(p);
-
-                Loom2D.juggler.tween(grid, panDuration, {"ty": grid.ty + pan.y,
-                                                         "tx": grid.tx + pan.x,
+                var panX:Number = (mapWidth / 2) - px;
+                var panY:Number = (mapHeight / 2) - py;
+                Loom2D.juggler.tween(grid, panDuration, {"ty": grid.ty + panY,
+                                                         "tx": grid.tx + panX,
                                                          "transitionFunc": panEase,
                                                          "onStart": grid.prepareForPanning,
                                                          "onComplete": grid.donePanning});
@@ -230,9 +232,11 @@ package loom.modestmaps
          */
         public function tweenTo(location:Location, duration:Number, easing:Function=null):void
         {
-            var pan:Point = new Point(mapWidth/2, mapHeight/2).subtract(locationPoint(location,grid));
-            Loom2D.juggler.tween(grid, duration, { "ty": grid.ty + pan.y,
-                                                   "tx": grid.tx + pan.x,
+            calcLocationPoint(location, grid);
+            var panX:Number = (mapWidth / 2) - ModestMaps.LastCoordinateX;
+            var panY:Number = (mapHeight / 2) - ModestMaps.LastCoordinateY;
+            Loom2D.juggler.tween(grid, duration, { "ty": grid.ty + panY,
+                                                   "tx": grid.tx + panX,
                                                    "transitionFunc": easing,
                                                    "onStart": grid.prepareForPanning,
                                                    "onComplete": grid.donePanning });
@@ -245,7 +249,7 @@ package loom.modestmaps
             if (!grid.panning)
             {
                 var target:Number = (dir < 0) ? Math.floor(grid.zoomLevel + dir) : Math.ceil(grid.zoomLevel + dir);
-                target = Math.max(grid.minZoom, Math.min(grid.maxZoom, target));
+                target = Math.max2(grid.minZoom, Math.min2(grid.maxZoom, target));
 
                 Loom2D.juggler.tween(grid, zoomDuration, { "zoomLevel": target,
                                                            "onStart": grid.prepareForZooming,
@@ -276,14 +280,14 @@ package loom.modestmaps
                 if (grid.zoomLevel > grid.minZoom) {
                     mouseWheelingOut = true;
                     mouseWheelingIn = false;
-                    sc = Math.max(0.5, 1.0+event.delta/20.0);
+                    sc = Math.max2(0.5, 1.0+event.delta/20.0);
                 }
             }
             else if (event.delta > 0) {
                 if (grid.zoomLevel < grid.maxZoom) {
                     mouseWheelingIn = true;
                     mouseWheelingOut = false;                   
-                    sc = Math.min(2.0, 1.0+event.delta/20.0);               
+                    sc = Math.min2(2.0, 1.0+event.delta/20.0);               
                 }
             }
 

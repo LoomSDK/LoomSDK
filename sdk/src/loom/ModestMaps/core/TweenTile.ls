@@ -23,11 +23,13 @@ package loom.modestmaps.core
             // it seems there's a harmless bug where hide might get called after show
             // if there's a tween running it will correct it though :)
             //Loom2D.juggler.removeTweens(this);
+            this.visible = false;
             this.alpha = 0;
         }
         
         override public function show():void 
         {
+            this.visible = true;
             if (alpha < 1) {
                 Loom2D.juggler.tween(this, FADE_TIME, {"alpha": 1.0, "transition": Transitions.LINEAR});   
             }

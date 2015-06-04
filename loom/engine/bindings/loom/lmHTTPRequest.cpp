@@ -20,6 +20,7 @@
 
 #include "loom/script/loomscript.h"
 #include "loom/script/native/lsNativeDelegate.h"
+#include "loom/script/runtime/lsProfiler.h"
 #include "loom/common/platform/platformHttp.h"
 #include "loom/common/utils/utByteArray.h"
 
@@ -61,6 +62,11 @@ public:
         setHeaderField("Content-Type", ctKey);
     }
 
+    ~HTTPRequest()
+    {
+        cancel();
+    }
+
     void setHeaderField(const char *key, const char *value)
     {
         header.insert(key, value);
@@ -82,6 +88,7 @@ public:
 
     bool send()
     {
+        LOOM_PROFILE_SCOPE(httpSend);
         id = -1;
         if (url == "")
         {

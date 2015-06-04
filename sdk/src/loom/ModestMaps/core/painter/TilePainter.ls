@@ -4,10 +4,16 @@ package loom.modestmaps.core.painter
     import loom.modestmaps.core.Tile;
     import loom.modestmaps.core.TileGrid;
     import loom.modestmaps.events.MapEvent;
+    import loom.modestmaps.events.MapState;
+    import loom.modestmaps.events.MapTileLoad;
     import loom.modestmaps.mapproviders.IMapProvider;
+    import loom2d.animation.IAnimatable;
     import loom2d.display.Image;
+    import loom2d.Loom2D;
     import loom2d.textures.Texture;
     import loom2d.textures.TextureSmoothing;
+    import system.Number;
+    import system.Void;
         
     import loom2d.events.Event;
     import loom2d.events.EventDispatcher;
@@ -16,10 +22,10 @@ package loom.modestmaps.core.painter
     import loom.platform.Timer;
 
 
-    public class TilePainter extends EventDispatcher implements ITilePainter
+    public class TilePainter extends EventDispatcher implements ITilePainter, IAnimatable
     {
         /** number of ms between calls to process the loading queue */
-        public static var ProcessQueueInterval:int = 20;
+        //public static var ProcessQueueInterval:int = 20;
         
         /** how many Loaders are allowed to be open at once? */
         public static var MaxOpenRequests:int = 8;    // TODO: should this be split into max-new-requests-per-frame, too?            
@@ -27,13 +33,16 @@ package loom.modestmaps.core.painter
         /** should downloaded map tile images remain cached on disk? Warning: this could take up a lot of space! */
         public static var CacheTilesOnDisk:Boolean = false;
 
+        public var onTileLoad:MapTileLoad;
+        public function getOnTileLoad():MapTileLoad { return onTileLoad; }
+        
         protected var provider:IMapProvider;    
         protected var tileGrid:TileGrid;
         protected var tileQueue:TileQueue;
         protected var tileCache:TileCache;
         protected var tilePool:TilePool;        
         protected var queueFunction:Function;
-        protected var queueTimer:Timer;
+        //protected var queueTimer:Timer;
 
         // per-tile, the array of images we're going to load, which can be empty
         // TODO: document this in IMapProvider, so that provider implementers know
@@ -62,14 +71,25 @@ package loom.modestmaps.core.painter
             this.tileCache = new TileCache(tilePool);
 
             //NOTE_TEC: Seems like the original MMaps code (before the AS3 port) was calling 'processQueue' 
-            //      on the ENTER_FRAME event, not every 200ms... good/bad?
-            queueTimer = new Timer(ProcessQueueInterval);
-            queueTimer.onComplete = processQueue;
-            queueTimer.repeats = true;
+            //      on the ENTER_FRAME event, not every 20ms... good/bad?
+            //queueTimer = new Timer(ProcessQueueInterval);
+            //queueTimer.onComplete = processQueue;
+            //queueTimer.repeats = true;
 
             // TODO: this used to be called onAddedToStage, is this bad?
-            queueTimer.start();
+            //queueTimer.start();
+            
+            enable();
         }
+        
+        private function enable(e:Event = null):void {
+            Loom2D.juggler.add(this);
+        }
+        private function disable(e:Event = null):void {
+            Loom2D.juggler.remove(this);
+        }
+        
+        
 
         /* The default Tile creation function used by the TilePool */
         protected function CreateTile():Tile
@@ -100,26 +120,47 @@ package loom.modestmaps.core.painter
             return tileCache.getTile(key);
         }
         
+        public function returnKey(key:String):Tile
+        {
+            var tile = tileCache.returnKey(key);
+            if (tile) {
+                cancelPainting(tile);
+            } else {
+                trace("warn:", key, "was not in cache");
+            }
+            return tile;
+        }
+        
+        /*
         public function retainKeysInCache(recentlySeen:Vector.<String>):void
         {
-            tileCache.retainKeys(recentlySeen);             
+            tileCache.retainKeys(recentlySeen);
         }
+        */
         
         public function createAndPopulateTile(coord:Coordinate, key:String):Tile
         {
+            if (tileCache.containsKey(key)) trace("Key already in cache", key);
             var tile:Tile = tilePool.getTile(coord.column, coord.row, coord.zoom);
             tile.name = key;
             var urls:Vector.<String> = provider.getTileUrls(coord);
             if (urls && urls.length > 0) {
                 // keep a local copy of the URLs so we don't have to call this twice:
                 layersNeeded[tile.name] = urls;
+                tile.isPainting = true;
                 tileQueue.push(tile);
             }
             else {
                 // trace("no urls needed for that tile", tempCoord);
                 tile.show();
             }
+            tileCache.putTile(tile);
             return tile;            
+        }
+        
+        public function isPainting(tile:Tile):Boolean
+        {
+            return tile.isPainting;        
         }
     
         public function isPainted(tile:Tile):Boolean
@@ -147,17 +188,10 @@ package loom.modestmaps.core.painter
                     }
                 }
             }
-            if (!tileCache.containsKey(tile.name)) {
-                tilePool.returnTile(tile);
-            }
+            tile.isPainting = false;
             layersNeeded.deleteKey(tile.name);
         }
         
-        public function isPainting(tile:Tile):Boolean
-        {
-            return layersNeeded[tile.name] == null;     
-        }
-    
         public function reset():void
         {
             for each (var texture:Texture in openRequests) {
@@ -212,38 +246,34 @@ package loom.modestmaps.core.painter
                     {
                         loaderTiles[texture].pushSingle(tile);
                     }
-
-//TODO_24: we're unable to click on empty BG of the painter where there are no Images... 
-//should we always have an Image(null) on a tile by default?
                 }
             }
             else if (urls && urls.length == 0) {
+                tile.isPainting = false;
                 tileGrid.tilePainted(tile);
-                tileCache.putTile(tile);
                 layersNeeded.deleteKey(tile.name);
             }           
-        }   
+        }
+        
+        
+        
+        /* INTERFACE loom2d.animation.IAnimatable */
+        
+        public function advanceTime(time:system.Number) {
+            processQueue();
+        }
     
         /** called by the onEnterFrame handler to manage the tileQueue
          *  usual operation is extremely quick, ~1ms or so */
-        private function processQueue(timer:Timer):void
+        private function processQueue():void
         {
             if (openRequests.length < MaxOpenRequests && tileQueue.length > 0) {
     
-                // prune queue for tiles that aren't visible
-                var removedTiles:Vector.<Tile> = tileQueue.retainAll(tileGrid.getVisibleTiles());
-                
-//TODO_24: removedTiles is always empty, so we are never doing early removals of tiles 
-//that may have been queued up for URL requests but should be removed early due to no longer being visible                
-                // keep layersNeeded tidy:
-                for each (var removedTile:Tile in removedTiles) {
-                    this.cancelPainting(removedTile);
-                }
-                
+
                 // note that queue is not the same as visible tiles, because things 
                 // that have already been loaded are also in visible tiles. if we
                 // reuse visible tiles for the queue we'll be loading the same things over and over
-    
+                
                 // sort queue by distance from 'center'
                 tileQueue.sortTiles(queueFunction);
     
@@ -260,14 +290,14 @@ package loom.modestmaps.core.painter
             // you might want to wait for tiles to load before displaying other data, interface elements, etc.
             // these events take care of that for you...
             if (previousOpenRequests == 0 && openRequests.length > 0) {
-                dispatchEvent(new MapEvent(MapEvent.BEGIN_TILE_LOADING, []));
+                onTileLoad(MapState.STARTED);
             }
             else if (previousOpenRequests > 0)
             {
                 // if we're finished...
                 if (openRequests.length == 0)
                 {
-                    dispatchEvent(new MapEvent(MapEvent.ALL_TILES_LOADED, []));
+                    onTileLoad(MapState.STOPPED);
                 }
             }
             
@@ -335,6 +365,6 @@ package loom.modestmaps.core.painter
         public function getCacheSize():int
         {
             return tileCache.size;
-        }       
+        }
     }
 }
