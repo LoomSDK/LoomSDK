@@ -147,6 +147,7 @@ package loom.modestmaps.core.painter
             if (urls && urls.length > 0) {
                 // keep a local copy of the URLs so we don't have to call this twice:
                 layersNeeded[tile.name] = urls;
+                tile.isPainting = true;
                 tileQueue.push(tile);
             }
             else {
@@ -155,6 +156,11 @@ package loom.modestmaps.core.painter
             }
             tileCache.putTile(tile);
             return tile;            
+        }
+        
+        public function isPainting(tile:Tile):Boolean
+        {
+            return tile.isPainting;        
         }
     
         public function isPainted(tile:Tile):Boolean
@@ -182,14 +188,10 @@ package loom.modestmaps.core.painter
                     }
                 }
             }
+            tile.isPainting = false;
             layersNeeded.deleteKey(tile.name);
         }
         
-        public function isPainting(tile:Tile):Boolean
-        {
-            return layersNeeded[tile.name] == null;     
-        }
-    
         public function reset():void
         {
             for each (var texture:Texture in openRequests) {
@@ -247,6 +249,7 @@ package loom.modestmaps.core.painter
                 }
             }
             else if (urls && urls.length == 0) {
+                tile.isPainting = false;
                 tileGrid.tilePainted(tile);
                 layersNeeded.deleteKey(tile.name);
             }           

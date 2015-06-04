@@ -453,7 +453,9 @@ void LoomApplication::fireGenericEvent(const char *type, const char *payload)
     // Also do C++ callbacks.
     for (unsigned int i = 0; i < gNativeGenericCallbacks.size(); i++)
     {
-        gNativeGenericCallbacks[i].cb(gNativeGenericCallbacks[i].userData, type, payload);
+        LoomApplicationGenericEventCallbackNote &note = gNativeGenericCallbacks[i];
+        lmAssert(note.cb, "Callback should not be null");
+        note.cb(note.userData, type, payload);
     }
 
     // And platform specific callbacks.

@@ -36,6 +36,7 @@ package loom.modestmaps
         public static native var LastCoordinateY:Number;
         public static native var ParentLoadCol:int;
         public static native var ParentLoadRow:int;
+        public static native var ParentLoadChild:int;
         public static native var ParentLoadZoom:int;
         public static native var GridZoom:Number;
         public static native var GridTLx:Number;

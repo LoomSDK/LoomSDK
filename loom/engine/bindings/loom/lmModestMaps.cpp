@@ -44,6 +44,7 @@ public:
     static float lastCoordinateY;
     static int parentLoadCol;
     static int parentLoadRow;
+    static int parentLoadChild;
     static int parentLoadZoom;
     static float gridZoom;
     static float gridTLx;
@@ -77,9 +78,13 @@ public:
         }
         else
         {
-            float invScaleFactor = 1.0f / (float)(1 << zoomDiff);
-            parentLoadCol = (int) floor((float)col * invScaleFactor); 
-            parentLoadRow = (int) floor((float)row * invScaleFactor);
+            int scaleFactor = 1 << zoomDiff;
+            float invScaleFactor = 1.0f / (float)scaleFactor;
+            float scaledCol = (float)col * invScaleFactor;
+            float scaledRow = (float)row * invScaleFactor;
+            parentLoadCol = (int) floor(scaledCol); 
+            parentLoadRow = (int) floor(scaledRow);
+            parentLoadChild = (int)((scaledCol - (float)parentLoadCol)*scaleFactor) + (int)((scaledRow - (float)parentLoadRow)*scaleFactor)*2;
             parentLoadZoom = parentZoom;
         }
         return tileKey(parentLoadCol, parentLoadRow, parentLoadZoom);
@@ -240,6 +245,7 @@ float ModestMaps::lastCoordinateX = 0.0f;
 float ModestMaps::lastCoordinateY = 0.0f;
 int ModestMaps::parentLoadCol = 0;
 int ModestMaps::parentLoadRow = 0;
+int ModestMaps::parentLoadChild = 0;
 int ModestMaps::parentLoadZoom = 0;
 float ModestMaps::gridZoom = 0.0f;
 float ModestMaps::gridTLx = 0.0f;
@@ -269,6 +275,7 @@ static int registerLoomModestMaps(lua_State *L)
             .addStaticVar("LastCoordinateY", &ModestMaps::lastCoordinateY)
             .addStaticVar("ParentLoadCol", &ModestMaps::parentLoadCol)
             .addStaticVar("ParentLoadRow", &ModestMaps::parentLoadRow)
+            .addStaticVar("ParentLoadChild", &ModestMaps::parentLoadChild)
             .addStaticVar("ParentLoadZoom", &ModestMaps::parentLoadZoom)
             .addStaticVar("GridZoom", &ModestMaps::gridZoom)
             .addStaticVar("GridTLx", &ModestMaps::gridTLx)

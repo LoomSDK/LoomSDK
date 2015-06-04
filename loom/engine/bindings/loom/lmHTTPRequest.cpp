@@ -62,6 +62,11 @@ public:
         setHeaderField("Content-Type", ctKey);
     }
 
+    ~HTTPRequest()
+    {
+        cancel();
+    }
+
     void setHeaderField(const char *key, const char *value)
     {
         header.insert(key, value);

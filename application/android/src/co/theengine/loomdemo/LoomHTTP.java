@@ -6,6 +6,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
 import android.util.Base64;
+import android.os.HandlerThread;
+import android.os.Handler;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.BinaryHttpResponseHandler;
@@ -31,13 +33,40 @@ public class LoomHTTP
 
     private static Activity             _context;
     private static AsyncHttpClient[]    clients = new AsyncHttpClient[MAX_CONCURRENT_HTTP_REQUESTS];
+    private static LoomUtilityThread    utilityThread;
     
+    static class LoomUtilityThread extends HandlerThread
+    {
+        private Handler mHandler = null;
+    
+        public LoomUtilityThread(String name)
+        {
+            super(name);
+            start();
+            setHandler(new Handler(getLooper()));
+        }
+    
+        public Handler getHandler() {
+            return mHandler;
+        }
+    
+        private void setHandler(Handler mHandler) {
+            this.mHandler = mHandler;
+        }
+    
+        public void post(Runnable r)
+        {
+            getHandler().post(r);
+        }
+    }
 
     /** Initializes the HTTP clients */
     public static void onCreate(Activity ctx)
     {
         //store context for later use
         _context = ctx;
+
+        utilityThread = new LoomUtilityThread("HTTP Master");
 
         //make sure client array is initialized to null
         for(int i=0;i<MAX_CONCURRENT_HTTP_REQUESTS;i++)
@@ -79,8 +108,7 @@ public class LoomHTTP
         sendTask.base64EncodeResponseData = base64EncodeResponseData;
         sendTask.followRedirects = followRedirects;
         sendTask.client = client;
-        Thread t = new Thread(sendTask);
-    	t.start();
+        utilityThread.post(sendTask);
         
     	return index;
     }

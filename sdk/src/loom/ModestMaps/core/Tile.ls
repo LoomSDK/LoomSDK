@@ -14,6 +14,118 @@ package loom.modestmaps.core
     import loom2d.display.Image;
     import loom2d.textures.Texture;
     
+    public class QuadNode {
+        public var parent:QuadNode;
+        public var child:int;
+        public var col:int;
+        public var row:int;
+        public var zoom:int;
+        public var a:QuadNode;
+        public var b:QuadNode;
+        public var c:QuadNode;
+        public var d:QuadNode;
+        
+        public var tile:Tile;
+        
+        //public var _tile:Tile;
+        //public function set tile(v:Tile) { trace(v); _tile = v; }
+        //public function get tile():Tile { return _tile; }
+        
+        public function QuadNode(parent:QuadNode, child:int, col:int, row:int, zoom:int)
+        {
+            this.parent = parent;
+            this.child = child;
+            this.col = col;
+            this.row = row;
+            this.zoom = zoom;
+        }
+        
+        /*
+        static public function classify(col:int, row:int, zoomDiff:int):int
+        {
+            var scaleFactor:int = 1 << zoomDiff;
+            var invScaleFactor = 1.0 / scaleFactor;
+            var scaledCol = col * invScaleFactor;
+            var scaledRow = row * invScaleFactor;
+            var targetCol = Math.floor(scaledCol); 
+            var targetRow = Math.floor(scaledRow);
+            trace("  ", col, row, scaledCol, scaledRow, targetCol, targetRow, Math.ceil(scaledCol - targetCol), Math.ceil(scaledRow - targetRow));
+            var targetChild = Math.ceil(scaledCol - targetCol) + Math.ceil(scaledRow - targetRow)*2;
+            return targetChild;
+        }
+        */
+        /*
+        static public function getNode(root:QuadNode, col:int, row:int, inzoom:int):QuadNode
+        {
+            var node = root;
+            //trace("getnode");
+            //trace(col, row, inzoom);
+            //trace(col, row, inzoom);
+            for (var z:int = 0; z < inzoom; z++) {
+                node.ensureChildren();
+                var child = classify(col, row, inzoom-z);
+                trace(z, child);
+                //trace("  ", col, row, inzoom-z, child);
+                switch (child) {
+                    case 0: node = node.a; break;
+                    case 1: node = node.b; break;
+                    case 2: node = node.c; break;
+                    case 3: node = node.d; break;
+                }
+            }
+            trace("getnode", col, row, inzoom, node.zoom, node.tile);
+            //Debug.assert(false);
+            return node;
+        }
+        */
+        
+        public function classify(childCol:int, childRow:int, childZoom:int):int
+        {
+            var zoomDelta = childZoom-zoom;
+            var localCol = (col + 0.5) * (1 << zoomDelta);
+            var localRow = (row + 0.5) * (1 << zoomDelta);
+            //trace("local ", localCol, localRow, zoomDelta);
+            var child = 0;
+            if (childCol >= localCol) child++;
+            if (childRow >= localRow) child += 2;
+            return child;
+        }
+        
+        static public function getNode(root:QuadNode, col:int, row:int, inzoom:int):QuadNode
+        {
+            var node = root;
+            //trace("getnode");
+            //trace(col, row, inzoom);
+            //trace(col, row, inzoom);
+            for (var z:int = 0; z < inzoom; z++) {
+                node.ensureChildren();
+                var child = node.classify(col, row, inzoom);
+                //trace(z, child);
+                //trace("  ", col, row, inzoom-z, child);
+                switch (child) {
+                    case 0: node = node.a; break;
+                    case 1: node = node.b; break;
+                    case 2: node = node.c; break;
+                    case 3: node = node.d; break;
+                }
+            }
+            //trace("getnode", col, row, inzoom, node.zoom, node.tile);
+            //Debug.assert(false);
+            return node;
+        }
+        
+        public function get aTile():Tile { return a ? a.tile : null; }
+        public function get bTile():Tile { return b ? b.tile : null; }
+        public function get cTile():Tile { return c ? c.tile : null; }
+        public function get dTile():Tile { return d ? d.tile : null; }
+        
+        private function ensureChildren() {
+            if (!a) a = new QuadNode(this, 0, col*2+0, row*2+0, zoom+1);
+            if (!b) b = new QuadNode(this, 1, col*2+1, row*2+0, zoom+1);
+            if (!c) c = new QuadNode(this, 2, col*2+0, row*2+1, zoom+1);
+            if (!d) d = new QuadNode(this, 3, col*2+1, row*2+1, zoom+1);
+        }
+    }
     
     public class Tile extends Sprite
     {
@@ -23,17 +135,26 @@ package loom.modestmaps.core
         public var column:int;
         public var inWell:Boolean;
         public var isVisible:Boolean;
+        public var isPainting:Boolean;
+        public var isCovered:Boolean;
+        public var isFiller:Boolean;
         public var lastRepop:int;
         public var count:int;
         public var token:int;
         
         public var nextActive:Tile;
-
+        public var prevActive:Tile;
+        public var nextInactive:Tile;
+        public var prevInactive:Tile;
+ 
+        public var quadNode:QuadNode;
+        
+    
         protected var assignedTextures:Vector.<Texture> = [];
 
         protected static var textureRefs:Dictionary.<Texture, int> = {};
         protected static var imagePool = new Vector.<Image>();
-
+        
 
         public function Tile(column:int, row:int, zoom:int)
         {
@@ -48,11 +169,18 @@ package loom.modestmaps.core
         public function init(column:int, row:int, zoom:int):void
         {
             Debug.assert(!nextActive);
+            Debug.assert(!nextInactive);
+            Debug.assert(!prevActive);
+            Debug.assert(!prevInactive);
             this.zoom = zoom;
             this.row = row;
             this.column = column;  
             inWell = false;
             isVisible = false;
+            isPainting = false;
+            isCovered = false;
+            isFiller = false;
+            quadNode = null;
             count = 1;
             hide();
         }        
@@ -110,7 +238,7 @@ package loom.modestmaps.core
             return img;
         }
         
-        public function isShowing():Boolean
+        public function get isShowing():Boolean
         {
             return this.visible;
         }
