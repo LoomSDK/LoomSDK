@@ -23,14 +23,7 @@
 
 package com.loopj.android.http;
 
-import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.HashSet;
-import java.util.Iterator;
-
-import javax.net.ssl.SSLException;
+import android.os.SystemClock;
 
 import org.apache.http.NoHttpResponseException;
 import org.apache.http.client.HttpRequestRetryHandler;
@@ -38,12 +31,17 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
 
-import android.os.SystemClock;
+import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.HashSet;
+
+import javax.net.ssl.SSLException;
 
 class RetryHandler implements HttpRequestRetryHandler {
-    private static final int RETRY_SLEEP_TIME_MILLIS = 1500;
-    private static HashSet<Class<?>> exceptionWhitelist = new HashSet<Class<?>>();
-    private static HashSet<Class<?>> exceptionBlacklist = new HashSet<Class<?>>();
+    private final static HashSet<Class<?>> exceptionWhitelist = new HashSet<Class<?>>();
+    private final static HashSet<Class<?>> exceptionBlacklist = new HashSet<Class<?>>();
 
     static {
         // Retry if the server dropped connection on us
@@ -60,9 +58,11 @@ class RetryHandler implements HttpRequestRetryHandler {
     }
 
     private final int maxRetries;
+    private final int retrySleepTimeMS;
 
-    public RetryHandler(int maxRetries) {
+    public RetryHandler(int maxRetries, int retrySleepTimeMS) {
         this.maxRetries = maxRetries;
+        this.retrySleepTimeMS = retrySleepTimeMS;
     }
 
     @Override
@@ -70,45 +70,53 @@ class RetryHandler implements HttpRequestRetryHandler {
         boolean retry = true;
 
         Boolean b = (Boolean) context.getAttribute(ExecutionContext.HTTP_REQ_SENT);
-        boolean sent = (b != null && b.booleanValue());
+        boolean sent = (b != null && b);
 
-        if(executionCount > maxRetries) {
+        if (executionCount > maxRetries) {
             // Do not retry if over max retry count
-            retry = false;
-        } else if (isInList(exceptionBlacklist, exception)) {
-            // immediately cancel retry if the error is blacklisted
             retry = false;
         } else if (isInList(exceptionWhitelist, exception)) {
             // immediately retry if error is whitelisted
             retry = true;
+        } else if (isInList(exceptionBlacklist, exception)) {
+            // immediately cancel retry if the error is blacklisted
+            retry = false;
         } else if (!sent) {
             // for most other errors, retry only if request hasn't been fully sent yet
             retry = true;
         }
 
-        if(retry) {
+        if (retry) {
             // resend all idempotent requests
-            HttpUriRequest currentReq = (HttpUriRequest) context.getAttribute( ExecutionContext.HTTP_REQUEST );
-            String requestType = currentReq.getMethod();
-            retry = !requestType.equals("POST");
+            HttpUriRequest currentReq = (HttpUriRequest) context.getAttribute(ExecutionContext.HTTP_REQUEST);
+            if (currentReq == null) {
+                return false;
+            }
         }
 
-        if(retry) {
-            SystemClock.sleep(RETRY_SLEEP_TIME_MILLIS);
+        if (retry) {
+            SystemClock.sleep(retrySleepTimeMS);
         } else {
             exception.printStackTrace();
         }
 
         return retry;
     }
-    
+
+    static void addClassToWhitelist(Class<?> cls) {
+        exceptionWhitelist.add(cls);
+    }
+
+    static void addClassToBlacklist(Class<?> cls) {
+        exceptionBlacklist.add(cls);
+    }
+
     protected boolean isInList(HashSet<Class<?>> list, Throwable error) {
-    	Iterator<Class<?>> itr = list.iterator();
-    	while (itr.hasNext()) {
-    		if (itr.next().isInstance(error)) {
-    			return true;
-    		}
-    	}
-    	return false;
+        for (Class<?> aList : list) {
+            if (aList.isInstance(error)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
