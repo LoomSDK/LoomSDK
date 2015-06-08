@@ -1,123 +1,101 @@
+/*
+    Android Asynchronous Http Client
+    Copyright (c) 2011 James Smith <james@loopj.com>
+    http://loopj.com
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
 package com.loopj.android.http;
 
+import android.content.Context;
+
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.HttpContext;
 
-import android.content.Context;
-import android.os.Message;
+/**
+ * Processes http requests in synchronous mode, so your caller thread will be blocked on each
+ * request
+ *
+ * @see com.loopj.android.http.AsyncHttpClient
+ */
+public class SyncHttpClient extends AsyncHttpClient {
 
-public abstract class SyncHttpClient extends AsyncHttpClient {
-	private int responseCode;
-	/*
-	 * as this is a synchronous request this is just a helping mechanism to pass
-	 * the result back to this method. Therefore the result object has to be a
-	 * field to be accessible
-	 */
-	protected String result;
-	protected AsyncHttpResponseHandler responseHandler = new AsyncHttpResponseHandler() {
+    /**
+     * Creates a new SyncHttpClient with default constructor arguments values
+     */
+    public SyncHttpClient() {
+        super(false, 80, 443);
+    }
 
-        @Override
-        void sendResponseMessage(org.apache.http.HttpResponse response) {
-			responseCode = response.getStatusLine().getStatusCode();
-			super.sendResponseMessage(response);
-		};
+    /**
+     * Creates a new SyncHttpClient.
+     *
+     * @param httpPort non-standard HTTP-only port
+     */
+    public SyncHttpClient(int httpPort) {
+        super(false, httpPort, 443);
+    }
 
-		@Override
-		protected void sendMessage(Message msg) {
-			/*
-			 * Dont use the handler and send it directly to the analysis
-			 * (because its all the same thread)
-			 */
-			handleMessage(msg);
-		}
+    /**
+     * Creates a new SyncHttpClient.
+     *
+     * @param httpPort  non-standard HTTP-only port
+     * @param httpsPort non-standard HTTPS-only port
+     */
+    public SyncHttpClient(int httpPort, int httpsPort) {
+        super(false, httpPort, httpsPort);
+    }
 
-		@Override
-		public void onSuccess(String content) {
-			result = content;
-		}
+    /**
+     * Creates new SyncHttpClient using given params
+     *
+     * @param fixNoHttpResponseException Whether to fix or not issue, by ommiting SSL verification
+     * @param httpPort                   HTTP port to be used, must be greater than 0
+     * @param httpsPort                  HTTPS port to be used, must be greater than 0
+     */
+    public SyncHttpClient(boolean fixNoHttpResponseException, int httpPort, int httpsPort) {
+        super(fixNoHttpResponseException, httpPort, httpsPort);
+    }
 
-		@Override
-		public void onFailure(Throwable error, String content) {
-			result = onRequestFailed(error, content);
-		}
-	};
+    /**
+     * Creates a new SyncHttpClient.
+     *
+     * @param schemeRegistry SchemeRegistry to be used
+     */
+    public SyncHttpClient(SchemeRegistry schemeRegistry) {
+        super(schemeRegistry);
+    }
 
-	/**
-	 * @return the response code for the last request, might be usefull
-	 *         sometimes
-	 */
-	public int getResponseCode() {
-		return responseCode;
-	}
-
-	// Private stuff
     @Override
-    protected void sendRequest(DefaultHttpClient client,
-			HttpContext httpContext, HttpUriRequest uriRequest,
-			String contentType, AsyncHttpResponseHandler responseHandler,
-			Context context) {
-		if (contentType != null) {
-			uriRequest.addHeader("Content-Type", contentType);
-		}
+    protected RequestHandle sendRequest(DefaultHttpClient client,
+                                        HttpContext httpContext, HttpUriRequest uriRequest,
+                                        String contentType, ResponseHandlerInterface responseHandler,
+                                        Context context) {
+        if (contentType != null) {
+            uriRequest.addHeader(AsyncHttpClient.HEADER_CONTENT_TYPE, contentType);
+        }
+
+        responseHandler.setUseSynchronousMode(true);
 
 		/*
-		 * will execute the request directly
-		 */
-		new AsyncHttpRequest(client, httpContext, uriRequest, responseHandler)
-				.run();
-	}
+         * will execute the request directly
+		*/
+        newAsyncHttpRequest(client, httpContext, uriRequest, contentType, responseHandler, context).run();
 
-	public abstract String onRequestFailed(Throwable error, String content);
-
-	public void delete(String url, RequestParams queryParams,
-			AsyncHttpResponseHandler responseHandler) {
-		// TODO what about query params??
-		delete(url, responseHandler);
-	}
-
-	public String get(String url, RequestParams params) {
-		this.get(url, params, responseHandler);
-		/*
-		 * the response handler will have set the result when this line is
-		 * reached
-		 */
-		return result;
-	}
-
-	public String get(String url) {
-		this.get(url, null, responseHandler);
-		return result;
-	}
-
-	public String put(String url, RequestParams params) {
-		this.put(url, params, responseHandler);
-		return result;
-	}
-
-	public String put(String url) {
-		this.put(url, null, responseHandler);
-		return result;
-	}
-
-	public String post(String url, RequestParams params) {
-		this.post(url, params, responseHandler);
-		return result;
-	}
-
-	public String post(String url) {
-		this.post(url, null, responseHandler);
-		return result;
-	}
-
-	public String delete(String url, RequestParams params) {
-		this.delete(url, params, responseHandler);
-		return result;
-	}
-
-	public String delete(String url) {
-		this.delete(url, null, responseHandler);
-		return result;
-	}
-
+        // Return a Request Handle that cannot be used to cancel the request
+        // because it is already complete by the time this returns
+        return new RequestHandle(null);
+    }
 }

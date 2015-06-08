@@ -18,11 +18,7 @@
 
 package com.loopj.android.http;
 
-import java.io.IOException;
-import java.net.ConnectException;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
+import android.util.Log;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpRequestRetryHandler;
@@ -30,131 +26,214 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.protocol.HttpContext;
 
-import android.util.Log;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.UnknownHostException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-class AsyncHttpRequest implements Runnable {
+/**
+ * Internal class, representing the HttpRequest, done in asynchronous manner
+ */
+public class AsyncHttpRequest implements Runnable {
     private final AbstractHttpClient client;
     private final HttpContext context;
     private final HttpUriRequest request;
-    private final AsyncHttpResponseHandler responseHandler;
-    private boolean isBinaryRequest;
+    private final ResponseHandlerInterface responseHandler;
     private int executionCount;
+    private final AtomicBoolean isCancelled = new AtomicBoolean();
+    private boolean cancelIsNotified;
+    private volatile boolean isFinished;
+    private boolean isRequestPreProcessed;
 
-    public AsyncHttpRequest(AbstractHttpClient client, HttpContext context, HttpUriRequest request, AsyncHttpResponseHandler responseHandler) {
-        this.client = client;
-        this.context = context;
-        this.request = request;
-        this.responseHandler = responseHandler;
-        if(responseHandler instanceof BinaryHttpResponseHandler) {
-            this.isBinaryRequest = true;
-        }
+    public AsyncHttpRequest(AbstractHttpClient client, HttpContext context, HttpUriRequest request, ResponseHandlerInterface responseHandler) {
+        this.client = Utils.notNull(client, "client");
+        this.context = Utils.notNull(context, "context");
+        this.request = Utils.notNull(request, "request");
+        this.responseHandler = Utils.notNull(responseHandler, "responseHandler");
+    }
+
+    /**
+     * This method is called once by the system when the request is about to be
+     * processed by the system. The library makes sure that a single request
+     * is pre-processed only once.
+     *
+     * Please note: pre-processing does NOT run on the main thread, and thus
+     * any UI activities that you must perform should be properly dispatched to
+     * the app's UI thread.
+     *
+     * @param request The request to pre-process
+     */
+    public void onPreProcessRequest(AsyncHttpRequest request) {
+        // default action is to do nothing...
+    }
+
+    /**
+     * This method is called once by the system when the request has been fully
+     * sent, handled and finished. The library makes sure that a single request
+     * is post-processed only once.
+     *
+     * Please note: post-processing does NOT run on the main thread, and thus
+     * any UI activities that you must perform should be properly dispatched to
+     * the app's UI thread.
+     *
+     * @param request The request to post-process
+     */
+    public void onPostProcessRequest(AsyncHttpRequest request) {
+        // default action is to do nothing...
     }
 
     @Override
     public void run() {
+        if (isCancelled()) {
+            return;
+        }
+
+        // Carry out pre-processing for this request only once.
+        if (!isRequestPreProcessed) {
+            isRequestPreProcessed = true;
+            onPreProcessRequest(this);
+        }
+
+        if (isCancelled()) {
+            return;
+        }
+
+        responseHandler.sendStartMessage();
+
+        if (isCancelled()) {
+            return;
+        }
+
         try {
-            if(responseHandler != null){
-                responseHandler.sendStartMessage();
-            }
-
             makeRequestWithRetries();
-
-            if(responseHandler != null) {
-                responseHandler.sendFinishMessage();
-            }
         } catch (IOException e) {
-            if(responseHandler != null) {
-                responseHandler.sendFinishMessage();
-                if(this.isBinaryRequest) {
-                    responseHandler.sendFailureMessage(e, (byte[]) null);
-                } else {
-                    responseHandler.sendFailureMessage(e, (String) null);
-                }
+            if (!isCancelled()) {
+                responseHandler.sendFailureMessage(0, null, null, e);
+            } else {
+                Log.e("AsyncHttpRequest", "makeRequestWithRetries returned error", e);
             }
         }
+
+        if (isCancelled()) {
+            return;
+        }
+
+        responseHandler.sendFinishMessage();
+
+        if (isCancelled()) {
+            return;
+        }
+
+        // Carry out post-processing for this request.
+        onPostProcessRequest(this);
+
+        isFinished = true;
     }
 
     private void makeRequest() throws IOException {
-        if(!Thread.currentThread().isInterrupted()) {
-        	try {
-                //Log.d("AsyncHttpRequest", "making request without retries");
-        		HttpResponse response = client.execute(request, context);
-        		if(!Thread.currentThread().isInterrupted()) {
-        			if(responseHandler != null) {
-                        //Log.d("AsyncHttpRequest", "sending success response message " + response + " to " + responseHandler.toString() + " isBinary " + isBinaryRequest);
-        				responseHandler.sendResponseMessage(response);
-                        //Log.d("AsyncHttpRequest", "Sent!");
-        			}
-        		} else{
-        			//TODO: should raise InterruptedException? this block is reached whenever the request is cancelled before its response is received
-        		}
-        	} catch (IOException e) {
-                Log.d("AsyncHttpRequest", "got error " + e.toString());
-        		if(!Thread.currentThread().isInterrupted()) {
-        			throw e;
-        		}
-        	}
+        if (isCancelled()) {
+            return;
         }
+
+        // Fixes #115
+        if (request.getURI().getScheme() == null) {
+            // subclass of IOException so processed in the caller
+            throw new MalformedURLException("No valid URI scheme was provided");
+        }
+
+        if (responseHandler instanceof RangeFileAsyncHttpResponseHandler) {
+            ((RangeFileAsyncHttpResponseHandler) responseHandler).updateRequestHeaders(request);
+        }
+
+        HttpResponse response = client.execute(request, context);
+
+        if (isCancelled()) {
+            return;
+        }
+
+        // Carry out pre-processing for this response.
+        responseHandler.onPreProcessResponse(responseHandler, response);
+
+        if (isCancelled()) {
+            return;
+        }
+
+        // The response is ready, handle it.
+        responseHandler.sendResponseMessage(response);
+
+        if (isCancelled()) {
+            return;
+        }
+
+        // Carry out post-processing for this response.
+        responseHandler.onPostProcessResponse(responseHandler, response);
     }
 
-    private String exceptionToString(Exception e)
-    {
-        StackTraceElement[] stack = e.getStackTrace();
-        String exception = e.toString() + "\n";
-        for (StackTraceElement s : stack) {
-            exception = exception + s.toString() + "\n\t\t";
-        }
-        return exception;
-    }
-
-    private void makeRequestWithRetries() throws ConnectException {
-        // This is an additional layer of retry logic lifted from droid-fu
-        // See: https://github.com/kaeppler/droid-fu/blob/master/src/main/java/com/github/droidfu/http/BetterHttpRequestBase.java
+    private void makeRequestWithRetries() throws IOException {
         boolean retry = true;
         IOException cause = null;
         HttpRequestRetryHandler retryHandler = client.getHttpRequestRetryHandler();
-        while (retry) {
-            try {
-                //Log.d("AsyncHttpRequest", "making request with retries");
-                makeRequest();
-                //Log.d("AsyncHttpRequest", "making done with retries");
-                return;
-            } catch (UnknownHostException e) {
-                Log.d("AsyncHttpRequest", "GOT UnknownHostException! " + exceptionToString(e));
-		        if(responseHandler != null) {
-		            responseHandler.sendFailureMessage(e, "can't resolve host");
-		        }
-	        	return;
-            }catch (SocketException e){
-                // Added to detect host unreachable
-                Log.d("AsyncHttpRequest", "GOT SocketException! " + exceptionToString(e));
-                if(responseHandler != null) {
-                    responseHandler.sendFailureMessage(e, "can't resolve host");
+        try {
+            while (retry) {
+                try {
+                    makeRequest();
+                    return;
+                } catch (UnknownHostException e) {
+                    // switching between WI-FI and mobile data networks can cause a retry which then results in an UnknownHostException
+                    // while the WI-FI is initialising. The retry logic will be invoked here, if this is NOT the first retry
+                    // (to assist in genuine cases of unknown host) which seems better than outright failure
+                    cause = new IOException("UnknownHostException exception: " + e.getMessage());
+                    retry = (executionCount > 0) && retryHandler.retryRequest(e, ++executionCount, context);
+                } catch (NullPointerException e) {
+                    // there's a bug in HttpClient 4.0.x that on some occasions causes
+                    // DefaultRequestExecutor to throw an NPE, see
+                    // http://code.google.com/p/android/issues/detail?id=5255
+                    cause = new IOException("NPE in HttpClient: " + e.getMessage());
+                    retry = retryHandler.retryRequest(cause, ++executionCount, context);
+                } catch (IOException e) {
+                    if (isCancelled()) {
+                        // Eating exception, as the request was cancelled
+                        return;
+                    }
+                    cause = e;
+                    retry = retryHandler.retryRequest(cause, ++executionCount, context);
                 }
-                return;
-            }catch (SocketTimeoutException e){
-                Log.d("AsyncHttpRequest", "GOT timeout! " + exceptionToString(e));
-                if(responseHandler != null) {
-                    responseHandler.sendFailureMessage(e, "socket time out");
+                if (retry) {
+                    responseHandler.sendRetryMessage(executionCount);
                 }
-                return;
-            } catch (IOException e) {
-                Log.d("AsyncHttpRequest", "GOT IOException! " + exceptionToString(e));
-                cause = e;
-                retry = retryHandler.retryRequest(cause, ++executionCount, context);
-            } catch (NullPointerException e) {
-                // there's a bug in HttpClient 4.0.x that on some occasions causes
-                // DefaultRequestExecutor to throw an NPE, see
-                // http://code.google.com/p/android/issues/detail?id=5255
-                Log.d("AsyncHttpRequest", "GOT NPE! " + exceptionToString(e));
-                cause = new IOException("NPE in HttpClient " + exceptionToString(e));
-                retry = retryHandler.retryRequest(cause, ++executionCount, context);
             }
+        } catch (Exception e) {
+            // catch anything else to ensure failure message is propagated
+            Log.e("AsyncHttpRequest", "Unhandled exception origin cause", e);
+            cause = new IOException("Unhandled exception: " + e.getMessage());
         }
 
-        // no retries left, crap out with exception
-        ConnectException ex = new ConnectException();
-        ex.initCause(cause);
-        throw ex;
+        // cleaned up to throw IOException
+        throw (cause);
+    }
+
+    public boolean isCancelled() {
+        boolean cancelled = isCancelled.get();
+        if (cancelled) {
+            sendCancelNotification();
+        }
+        return cancelled;
+    }
+
+    private synchronized void sendCancelNotification() {
+        if (!isFinished && isCancelled.get() && !cancelIsNotified) {
+            cancelIsNotified = true;
+            responseHandler.sendCancelMessage();
+        }
+    }
+
+    public boolean isDone() {
+        return isCancelled() || isFinished;
+    }
+
+    public boolean cancel(boolean mayInterruptIfRunning) {
+        isCancelled.set(true);
+        request.abort();
+        return isCancelled();
     }
 }
