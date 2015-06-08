@@ -63,9 +63,6 @@ public class LoomHTTP
     
     public static int send(final String url, String httpMethod, final long callback, final long payload, byte[] body, final String responseCacheFile, final boolean base64EncodeResponseData, boolean followRedirects)
     {
-        long t = System.nanoTime();
-        long ts = t;
-        
         SendTask st = null;
         
         int index = 0;
@@ -80,10 +77,6 @@ public class LoomHTTP
             return -1;
         }
         
-        t = System.nanoTime(); Log.d(TAG, index + " found index in "+(t - ts)*0.001+" ns"); ts = t;
-        
-        Log.d(TAG, index + " send requested");
-        
         st.busy = true;
         st.url = url;
         st.httpMethod = httpMethod;
@@ -95,16 +88,13 @@ public class LoomHTTP
         st.followRedirects = followRedirects;
         st.headers.putAll(headers);
         
-        t = System.nanoTime(); Log.d(TAG, index + " setup in "+(t - ts)*0.001+" ns"); ts = t;
-        
+        // Most of the time is spent here, up to and exceeding 1ms
         background.post(st);
         
         // clear the headers after each send();
         headers.clear();
         
-        t = System.nanoTime(); Log.d(TAG, index + " post in "+(t - ts)*0.001+" ns"); ts = t;
-        
-    	return index;
+        return index;
     }
     
     static class SendTaskThread extends HandlerThread
