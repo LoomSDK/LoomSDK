@@ -78,7 +78,7 @@ void VectorGraphics::clear() {
 	utArray<VectorData*>::Iterator it = queue->iterator();
 	while (it.hasMoreElements()) {
 		VectorData* d = it.getNext();
-		delete d;
+		lmDelete(NULL, d);
 	}
 	queue->clear();
 	/*
@@ -141,22 +141,22 @@ void VectorGraphics::lineStyle(float thickness, unsigned int color, float alpha,
 		!strcmp(t, "miter") ? VectorLineJoints::MITER :
 		VectorLineJoints::ROUND;
 
-	queue->push_back(new VectorLineStyle(thickness, color, alpha, scaleModeEnum, capsEnum, jointsEnum, miterLimit));
+	queue->push_back(lmNew(NULL) VectorLineStyle(thickness, color, alpha, scaleModeEnum, capsEnum, jointsEnum, miterLimit));
 	restartPath();
 }
 
 void VectorGraphics::textFormat(VectorTextFormat format) {
-    ensureTextFormat();
-    queue->push_back(new VectorTextFormatData(new VectorTextFormat(format)));
+	ensureTextFormat();
+	queue->push_back(lmNew(NULL) VectorTextFormatData(lmNew(NULL) VectorTextFormat(format)));
 }
 
 void VectorGraphics::beginFill(unsigned int color, float alpha) {
-	queue->push_back(new VectorFill(color, alpha));
+	queue->push_back(lmNew(NULL) VectorFill(color, alpha));
 	restartPath();
 }
 
 void VectorGraphics::endFill() {
-	queue->push_back(new VectorFill());
+	queue->push_back(lmNew(NULL) VectorFill());
 	restartPath();
 }
 
@@ -189,80 +189,80 @@ void VectorGraphics::arcTo(float controlX, float controlY, float anchorX, float 
 
 
 void VectorGraphics::drawCircle(float x, float y, float radius) {
-	addShape(new VectorShape(CIRCLE, x, y, radius));
+	addShape(lmNew(NULL) VectorShape(CIRCLE, x, y, radius));
 	inflateBounds(x-radius, y-radius);
 	inflateBounds(x+radius, y+radius);
 }
 
 void VectorGraphics::drawEllipse(float x, float y, float width, float height) {
-	addShape(new VectorShape(ELLIPSE, x, y, width, height));
+	addShape(lmNew(NULL) VectorShape(ELLIPSE, x, y, width, height));
 	inflateBounds(x, y);
 	inflateBounds(x+width, y+height);
 }
 
 void VectorGraphics::drawRect(float x, float y, float width, float height) {
-	addShape(new VectorShape(RECT, x, y, width, height));
+	addShape(lmNew(NULL) VectorShape(RECT, x, y, width, height));
 	inflateBounds(x, y);
 	inflateBounds(x+width, y+height);
 }
 
 void VectorGraphics::drawRoundRect(float x, float y, float width, float height, float ellipseWidth, float ellipseHeight) {
-	addShape(new VectorShape(ROUND_RECT, x, y, width, height, ellipseWidth, ellipseHeight));
+	addShape(lmNew(NULL) VectorShape(ROUND_RECT, x, y, width, height, ellipseWidth, ellipseHeight));
 	inflateBounds(x, y);
 	inflateBounds(x + width, y + height);
 }
 
 void VectorGraphics::drawRoundRectComplex(float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomLeftRadius, float bottomRightRadius) {
-	addShape(new VectorShape(ROUND_RECT_COMPLEX , x, y, width, height, topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius));
+	addShape(lmNew(NULL) VectorShape(ROUND_RECT_COMPLEX, x, y, width, height, topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius));
 	inflateBounds(x, y);
 	inflateBounds(x + width, y + height);
 }
 
 void VectorGraphics::drawArc(float x, float y, float radius, float angleFrom, float angleTo, int direction) {
-	addShape(new VectorShape(direction == VectorWinding::CW ? ARC_CW : ARC_CCW, x, y, radius, angleFrom, angleTo));
+	addShape(lmNew(NULL) VectorShape(direction == VectorWinding::CW ? ARC_CW : ARC_CCW, x, y, radius, angleFrom, angleTo));
 	inflateBounds(x-radius, y-radius);
 	inflateBounds(x+radius, y+radius);
 }
 
 void VectorGraphics::drawTextLine(float x, float y, utString text) {
-    ensureTextFormat();
-    queue->push_back(new VectorText(x, y, NAN, new utString(text)));
-    inflateBounds(x, y);
+	ensureTextFormat();
+	queue->push_back(lmNew(NULL) VectorText(x, y, NAN, lmNew(NULL) utString(text)));
+	inflateBounds(x, y);
 }
 
 void VectorGraphics::drawTextBox(float x, float y, float width, utString text) {
-    ensureTextFormat();
-    queue->push_back(new VectorText(x, y, width, new utString(text)));
-    inflateBounds(x, y);
-    inflateBounds(x + width, y);
+	ensureTextFormat();
+	queue->push_back(lmNew(NULL) VectorText(x, y, width, lmNew(NULL) utString(text)));
+	inflateBounds(x, y);
+	inflateBounds(x + width, y);
 }
 
 Loom2D::Rectangle VectorGraphics::textLineBounds(VectorTextFormat format, float x, float y, utString text) {
-    return VectorRenderer::textLineBounds(&format, x, y, &text);
+	return VectorRenderer::textLineBounds(&format, x, y, &text);
 }
 
 float VectorGraphics::textLineAdvance(VectorTextFormat format, float x, float y, utString text) {
-    return VectorRenderer::textLineAdvance(&format, x, y, &text);
+	return VectorRenderer::textLineAdvance(&format, x, y, &text);
 }
 
 Loom2D::Rectangle VectorGraphics::textBoxBounds(VectorTextFormat format, float x, float y, float width, utString text) {
-    return VectorRenderer::textBoxBounds(&format, x, y, width, &text);
+	return VectorRenderer::textBoxBounds(&format, x, y, width, &text);
 }
 
 void VectorGraphics::ensureTextFormat() {
 	if (!textFormatDirty) {
 		textFormatDirty = true;
 		// Default text format
-		VectorTextFormat* format = new VectorTextFormat();
+		VectorTextFormat* format = lmNew(NULL) VectorTextFormat();
 		format->color = 0x000000;
 		format->size = 12;
 		format->align = VectorTextFormat::ALIGN_TOP | VectorTextFormat::ALIGN_LEFT;
-		queue->push_back(new VectorTextFormatData(format));
+		queue->push_back(lmNew(NULL) VectorTextFormatData(format));
 	}
 }
 
 void VectorGraphics::drawSVG(VectorSVG* svg, float x, float y, float scale, float lineThickness) {
-	queue->push_back(new VectorSVGData(svg, x, y, scale, lineThickness));
+	queue->push_back(lmNew(NULL) VectorSVGData(svg, x, y, scale, lineThickness));
 	restartPath();
 	inflateBounds(x, y);
 	inflateBounds(x+svg->getWidth()*scale, y+svg->getHeight()*scale);
@@ -416,7 +416,7 @@ void VectorTextFormatData::render(VectorGraphics* g) {
 	VectorRenderer::textFormat(format);
 }
 VectorTextFormatData::~VectorTextFormatData() {
-	delete this->format;
+	lmDelete(NULL, this->format);
 }
 
 void VectorSVGData::render(VectorGraphics* g) {
@@ -465,7 +465,7 @@ VectorPath* VectorGraphics::getPath() {
 	if (path == NULL) {
 		path = queue->empty() ? NULL : dynamic_cast<VectorPath*>(queue->back());
 		if (path == NULL) {
-			path = new VectorPath();
+			path = lmNew(NULL) VectorPath();
 			path->moveTo(0, 0);
 			inflateBounds(0, 0);
 			queue->push_back(path);

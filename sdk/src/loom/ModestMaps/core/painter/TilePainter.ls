@@ -10,6 +10,7 @@ package loom.modestmaps.core.painter
     import loom2d.animation.IAnimatable;
     import loom2d.display.Image;
     import loom2d.Loom2D;
+    import loom2d.math.Point;
     import loom2d.textures.Texture;
     import loom2d.textures.TextureSmoothing;
     import system.Number;
@@ -38,17 +39,21 @@ package loom.modestmaps.core.painter
         
         protected var provider:IMapProvider;    
         protected var tileGrid:TileGrid;
-        protected var tileQueue:TileQueue;
+        //protected var tileQueue:TileQueue;
         protected var tileCache:TileCache;
         protected var tilePool:TilePool;        
         protected var queueFunction:Function;
+        
+        protected var headQueue:Tile;
+        protected var queueCount = 0;
+        
         //protected var queueTimer:Timer;
 
         // per-tile, the array of images we're going to load, which can be empty
         // TODO: document this in IMapProvider, so that provider implementers know
         // they are free to check the bounds of their overlays and don't have to serve
         // millions of 404s
-        protected var layersNeeded:Dictionary.<String, Vector.<String>> = {};
+        //protected var layersNeeded:Dictionary.<String, Vector.<String>> = {};
         protected var loaderTiles:Dictionary.<Texture, Vector.<Tile>> = {};
     
         // open requests
@@ -66,7 +71,8 @@ package loom.modestmaps.core.painter
             this.queueFunction = queueFunction;
     
             // TODO: pass all these into the constructor so they can be shared, swapped out or overridden
-            this.tileQueue = new TileQueue();
+            //this.tileQueue = new TileQueue();
+            headQueue = null;
             this.tilePool = new TilePool(CreateTile);
             this.tileCache = new TileCache(tilePool);
 
@@ -138,20 +144,46 @@ package loom.modestmaps.core.painter
         }
         */
         
+        public function queueAdd(tile:Tile) {
+            if (!headQueue) {
+                headQueue = tile;
+            } else {
+                tile.prevQueue = null;
+                tile.nextQueue = headQueue;
+                headQueue.prevQueue = tile;
+                headQueue = tile;
+            }
+            queueCount++;
+        }
+        public function queueRemove(tile:Tile) {
+            if (tile == headQueue) {
+                headQueue = tile.nextQueue;
+                if (headQueue) headQueue.prevQueue = null;
+            } else {
+                var after = tile.nextQueue;
+                var before = tile.prevQueue;
+                if (after) after.prevQueue = before;
+                before.nextQueue = after;
+            }
+            tile.nextQueue = tile.prevQueue = null;
+            queueCount--;
+        }
+        public function queueHas(tile:Tile):Boolean {
+            return tile.prevQueue || tile.nextQueue;
+        }
+        
         public function createAndPopulateTile(coord:Coordinate, key:String):Tile
         {
             if (tileCache.containsKey(key)) trace("Key already in cache", key);
             var tile:Tile = tilePool.getTile(coord.column, coord.row, coord.zoom);
             tile.name = key;
-            var urls:Vector.<String> = provider.getTileUrls(coord);
-            if (urls && urls.length > 0) {
-                // keep a local copy of the URLs so we don't have to call this twice:
-                layersNeeded[tile.name] = urls;
+            tile.urls = provider.getTileUrls(coord);
+            if (tile.urls && tile.urls.length > 0) {
+                queueAdd(tile);
                 tile.isPainting = true;
-                tileQueue.push(tile);
-            }
-            else {
-                // trace("no urls needed for that tile", tempCoord);
+                tile.loadStatus = "load "+tile.urls.length;
+            } else {
+                tile.loadStatus = "preloaded";
                 tile.show();
             }
             tileCache.putTile(tile);
@@ -165,15 +197,18 @@ package loom.modestmaps.core.painter
     
         public function isPainted(tile:Tile):Boolean
         {
-            return !layersNeeded[tile.name];        
+            return tile.isPainted;
+            //return !layersNeeded[tile.name];        
         }
         
         public function cancelPainting(tile:Tile):void
         {
-            if (tileQueue.contains(tile)) {
-                tileQueue.remove(tile);
+            if (queueHas(tile)) {
+                queueRemove(tile);
             }
-
+            
+            tile.loadStatus = "cancelled";
+            
             for (var i:int = openRequests.length - 1; i >= 0; i--) {
                 var texture:Texture = openRequests[i];
                 if(loaderTiles[texture] != null)
@@ -188,8 +223,6 @@ package loom.modestmaps.core.painter
                     }
                 }
             }
-            tile.isPainting = false;
-            layersNeeded.deleteKey(tile.name);
         }
         
         public function reset():void
@@ -208,83 +241,61 @@ package loom.modestmaps.core.painter
                 }
             }
             openRequests.clear();
-            layersNeeded.clear();
-            tileQueue.clear();
+            while (headQueue) queueRemove(headQueue);
             tileCache.clear();                  
         }
-    
-        private function loadNextURLForTile(tile:Tile):void
-        {
-            // TODO: add urls to Tile?
-            var urls:Vector.<String> = layersNeeded[tile.name] as Vector.<String>;
-            if (urls && urls.length > 0) {
-                var url = urls.shift();
-
-                //request the texture via HTTP
-                var texture:Texture = Texture.fromHTTP(url, onLoadEnd, onLoadFail, CacheTilesOnDisk, false);
-                if(texture == null)
-                {
-                    tile.paintError();
-                    return;
-                }
-
-                //is texture loaded and ready to go?
-                if(texture.isTextureValid())
-                {
-                    tile.assignTexture(texture);
-                    loadNextURLForTile(tile);
-                }
-                else
-                {
-                    //need to wait for the texture to finish loading, so put into the request queue
-                    if(loaderTiles[texture] == null)
-                    {
-                        loaderTiles[texture] = [tile];
-                        openRequests.pushSingle(texture);
-                    }
-                    else
-                    {
-                        loaderTiles[texture].pushSingle(tile);
-                    }
-                }
-            }
-            else if (urls && urls.length == 0) {
-                tile.isPainting = false;
-                tileGrid.tilePainted(tile);
-                layersNeeded.deleteKey(tile.name);
-            }           
-        }
-        
-        
         
         /* INTERFACE loom2d.animation.IAnimatable */
         
         public function advanceTime(time:system.Number) {
             processQueue();
         }
-    
+        
+        private function getHighestPriorityTile():Tile {
+            var maxP:Number = -1e9;
+            var maxTile:Tile = null;
+            var tile = headQueue;
+            //trace("priority");
+            while (tile) {
+                var p:Number = getTilePriority(tile);
+                tile.loadPriority = p;
+                if (p > maxP) {
+                    maxP = p;
+                    maxTile = tile;
+                }
+                tile = tile.nextQueue;
+            }
+            return maxTile;
+        }
+        
+        private function getTilePriority(tile:Tile):Number
+        {
+            var dc = (tile.column+0.5)-tileGrid.centerColumn;
+            var dr = (tile.row+0.5)-tileGrid.centerRow;
+            return tile.zoom*1/(1+(dc*dc+dr*dr));
+        }
+        
         /** called by the onEnterFrame handler to manage the tileQueue
          *  usual operation is extremely quick, ~1ms or so */
         private function processQueue():void
         {
-            if (openRequests.length < MaxOpenRequests && tileQueue.length > 0) {
-    
-
+            if (headQueue && openRequests.length < MaxOpenRequests) {
+                
+                
                 // note that queue is not the same as visible tiles, because things 
                 // that have already been loaded are also in visible tiles. if we
                 // reuse visible tiles for the queue we'll be loading the same things over and over
                 
                 // sort queue by distance from 'center'
-                tileQueue.sortTiles(queueFunction);
-    
+                //tileQueue.sortTiles(queueFunction);
+                
+                var tile:Tile = null;
+                
                 // process the queue
-                while (openRequests.length < MaxOpenRequests && tileQueue.length > 0) {
-                    var tile:Tile = tileQueue.shift();
-                    // if it's still on the stage:
-                    if (tile.parent) {
-                        loadNextURLForTile(tile);
-                    }
-                }
+                do {
+                    var next:Boolean = loadNextURLForTile(tile);
+                    if (next) tile = getHighestPriorityTile();
+                } while (tile && openRequests.length < MaxOpenRequests);
             }
 
             // you might want to wait for tiles to load before displaying other data, interface elements, etc.
@@ -303,13 +314,68 @@ package loom.modestmaps.core.painter
             
             previousOpenRequests = openRequests.length;
         }
-    
-        private function onLoadEnd(texture:Texture):void
+        
+        private function loadNextURLForTile(tile:Tile):Boolean
+        {
+            if (!tile) return true;
+            
+            Debug.assert(tile.isPainting, "should be painting "+tile.loadStatus);
+            
+            // TODO: add urls to Tile?
+            var urls:Vector.<String> = tile.urls as Vector.<String>;
+            if (urls && urls.length > 0) {
+                var url = urls.shift();
+                
+                // request the texture via HTTP
+                var texture:Texture = Texture.fromHTTP(url, onLoadSuccess, onLoadFail, CacheTilesOnDisk, false);
+                if (texture == null)
+                {
+                    tile.loadStatus = "error in texture init";
+                }
+                // is texture loaded and ready to go?
+                else if (texture.isTextureValid())
+                {
+                    tile.loadStatus = "texture valid";
+                    tile.assignTexture(texture);
+                }
+                else
+                {
+                    tile.loadStatus = "loading";
+                    // need to wait for the texture to finish loading, so put into the request queue
+                    if (loaderTiles[texture] == null)
+                    {
+                        loaderTiles[texture] = [tile];
+                        openRequests.pushSingle(texture);
+                    }
+                    else
+                    {
+                        loaderTiles[texture].pushSingle(tile);
+                    }
+                    tile.openRequests++;
+                }
+            }
+            
+            if (!urls || urls.length == 0) {
+                onTileDone(tile);
+                queueRemove(tile);
+                tileGrid.tilePainted(tile);
+                return true;
+            }
+            return false;
+        }
+        
+        private function onTileDone(tile:Tile) {
+            if (tile.openRequests > 0) return;
+            tile.isPainting = false;
+            tile.isPainted = true;
+        }
+        
+        private function onLoadSuccess(texture:Texture):void
         {
             // tidy up the request monitor
             // TODO: this used to be called onAddedToStage, is this bad?
             openRequests.remove(texture);
-
+            
             //check this texture against all possible tiles that may have requested it
             var assignedToTile:Boolean = false;
             if(loaderTiles[texture] != null)
@@ -317,9 +383,11 @@ package loom.modestmaps.core.painter
                 var tileList:Vector.<Tile> = loaderTiles[texture];
                 for each (var tile:Tile in tileList) {
                     //add the texture to the tile
+                    tile.openRequests--;
+                    onTileDone(tile);
+                    tile.loadStatus = "loaded";
                     assignedToTile = true;
                     tile.assignTexture(texture);
-                    loadNextURLForTile(tile);
                 }
                 loaderTiles.deleteKey(texture);
             }
@@ -342,6 +410,9 @@ package loom.modestmaps.core.painter
             {
                 var tileList:Vector.<Tile> = loaderTiles[texture];
                 for each (var tile:Tile in tileList) {
+                    tile.openRequests--;
+                    onTileDone(tile);
+                    tile.loadStatus = "failed";
                     Console.print("ERROR: Failed to load map tile texture via HTTP for tile: " + tile.name);
                     tile.paintError();
                 }
@@ -354,7 +425,7 @@ package loom.modestmaps.core.painter
         
         public function getQueueCount():int
         {
-            return tileQueue.length;
+            return queueCount;
         }
         
         public function getRequestCount():int

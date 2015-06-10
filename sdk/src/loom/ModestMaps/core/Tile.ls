@@ -136,21 +136,26 @@ package loom.modestmaps.core
         public var inWell:Boolean;
         public var isVisible:Boolean;
         public var isPainting:Boolean;
-        public var isCovered:Boolean;
-        public var isFiller:Boolean;
+        public var isPainted:Boolean;
         public var lastRepop:int;
-        public var count:int;
-        public var token:int;
         
         public var nextActive:Tile;
         public var prevActive:Tile;
         public var nextInactive:Tile;
         public var prevInactive:Tile;
- 
+        
+        public var nextQueue:Tile;
+        public var prevQueue:Tile;
+        
+        public var urls:Vector.<String>;
+        public var openRequests:int;
+        
         public var quadNode:QuadNode;
         
+        public var loadStatus:String;
+        public var loadPriority:Number;
     
-        protected var assignedTextures:Vector.<Texture> = [];
+        public var assignedTextures:Vector.<Texture> = [];
 
         protected static var textureRefs:Dictionary.<Texture, int> = {};
         protected static var imagePool = new Vector.<Image>();
@@ -172,16 +177,18 @@ package loom.modestmaps.core
             Debug.assert(!nextInactive);
             Debug.assert(!prevActive);
             Debug.assert(!prevInactive);
+            Debug.assert(!nextQueue);
+            Debug.assert(!prevQueue);
             this.zoom = zoom;
             this.row = row;
             this.column = column;  
             inWell = false;
             isVisible = false;
             isPainting = false;
-            isCovered = false;
-            isFiller = false;
+            isPainted = false;
             quadNode = null;
-            count = 1;
+            loadStatus = "";
+            openRequests = 0;
             hide();
         }        
 
@@ -208,7 +215,7 @@ package loom.modestmaps.core
 
             //dispose all child Images
             while (numChildren > 0) {
-                var child:DisplayObject = removeChildAt(0);
+                var child:DisplayObject = removeChildAt(0, false, false);
                 
                 //dispose the image data
                 if(child is Image)
@@ -262,7 +269,7 @@ package loom.modestmaps.core
         public function paintError(w:Number=256, h:Number=256):void
         {
             //TODO_TEC: Show an error visually for this tile... display an X texture or something?
-            trace("ERROR setting a texture for this tile!");
+            //trace("ERROR setting a texture for this tile!");
         }
 
         public function toString():String

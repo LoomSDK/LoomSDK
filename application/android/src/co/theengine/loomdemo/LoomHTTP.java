@@ -21,6 +21,8 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.io.StringWriter;
+import java.io.PrintWriter;
 
 import org.apache.http.Header;
 import org.apache.http.entity.ByteArrayEntity;
@@ -303,7 +305,9 @@ public class LoomHTTP
             }
             catch(Exception e)
             {
-                failure("exception caught while posting request: " + e);
+                StringWriter errors = new StringWriter();
+                e.printStackTrace(new PrintWriter(errors));
+                failure("exception caught while posting request: " + e + errors.toString());
             }
             
             Log.d(TAG, index + " send running");

@@ -270,19 +270,21 @@ package loom2d.textures
 
             //build the local cache folder path and create it on disk if it doesn't exist yet
             var cacheFile:String = null;
-            var writePath:String = Path.normalizePath(Path.getWritablePath() + "/TextureCache");
-            if(!Path.dirExists(writePath))
-            {
-                Path.makeDir(writePath);
-            }
-            cacheFile = Path.normalizePath(writePath + "/" + urlsha2) + ext;
-
-            // check if file already cached locally
-            if (File.fileExists(cacheFile))
-            {
-                //file already downloaded previously, so queue up an async load of it right now
-                Console.print("HTTP requested texture found cached on local disk already; using it instead: " + cacheFile); 
-                return Texture.fromAssetAsync(cacheFile, onSuccess);
+            if (cacheOnDisk) {
+                var writePath:String = Path.normalizePath(Path.getWritablePath() + "/TextureCache");
+                if(!Path.dirExists(writePath))
+                {
+                    Path.makeDir(writePath);
+                }
+                cacheFile = Path.normalizePath(writePath + "/" + urlsha2) + ext;
+                
+                // check if file already cached locally
+                if (File.fileExists(cacheFile))
+                {
+                    //file already downloaded previously, so queue up an async load of it right now
+                    Console.print("HTTP requested texture found cached on local disk already; using it instead: " + cacheFile); 
+                    return Texture.fromAssetAsync(cacheFile, onSuccess);
+                }
             }
 
             //create the ConcreteTexture, but don't fill it out fully as we don't have all of the TextureInfo yet!
