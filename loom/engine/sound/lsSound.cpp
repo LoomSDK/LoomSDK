@@ -116,6 +116,11 @@ public:
         buffer = 0;
         refCounter = 1;
     }
+    
+    ~OALBufferNote()
+    {
+        delete [] asset;
+    }
 };
 
 class OALBufferManager
@@ -147,8 +152,20 @@ public:
 
             if(sound)
             {
-                alBufferData(note->buffer, sound->channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, 
-                    sound->buffer, sound->bufferSize, 44100);            
+                ALenum sampleFormat;
+                if (sound->channels == 1)
+                {
+                    sampleFormat = sound->bytesPerSample == 1 ? AL_FORMAT_MONO8 : AL_FORMAT_MONO16;
+                }
+                else
+                {
+                    sampleFormat = sound->bytesPerSample == 1 ? AL_FORMAT_STEREO8 : AL_FORMAT_STEREO16;
+                }
+                alBufferData(note->buffer,
+                             sampleFormat,
+                             sound->buffer,
+                             sound->bufferSize,
+                             sound->sampleRate);
                 CHECK_OPENAL_ERROR();
             }
             else
@@ -193,6 +210,7 @@ public:
             ///delete and remove the buffer if it has no more references
             alDeleteBuffers((ALuint)1, (const ALuint*)(&note->buffer));
             buffers.remove(assetPath);
+            lmDelete(NULL, note);
         }
     }
 
@@ -547,7 +565,7 @@ void OALBufferManager::soundUpdater(void *payload, const char *name)
 
     // Update the buffer.
     alBufferData(note->buffer, sound->channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, 
-        sound->buffer, sound->bufferSize, 44100);            
+        sound->buffer, sound->bufferSize, sound->sampleRate);
     CHECK_OPENAL_ERROR();
 
     // Now restart all the sources after assigning the new buffer.
