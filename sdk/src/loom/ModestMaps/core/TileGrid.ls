@@ -952,10 +952,9 @@ package loom.modestmaps.core
             
             var busy = true;
             
-            //checkLists();
-            
             const timeLimit = 3;
             var count:int;
+            // Useful if you want to slow down pruning
             //var countLimit = 1;
             var countLimit = 1000;
             
@@ -964,7 +963,6 @@ package loom.modestmaps.core
             // Prune invisible tiles from the well
             tile = currentCovered ? currentCovered : headActive;
             // Comment out to check every frame
-            //tile = headActive;
             time = Platform.getTime();
             count = 0;
             while (pruneCheck > 0 && count < countLimit && Platform.getTime() - time < timeLimit) {
@@ -986,7 +984,6 @@ package loom.modestmaps.core
             time = Platform.getTime();
             count = 0;
             while (busy && count < countLimit && Platform.getTime()-time < timeLimit) {
-            //while (busy) {
                 busy = false;
                 
                 var leastRecent:Tile = null;
@@ -1075,19 +1072,8 @@ package loom.modestmaps.core
                     scales[z] = roundEnabled ? Math.ceil(tileScale * tileWidth) * invTileWidth : tileScale;
                 }
             }
-            
-//TODO_24: native           
+    
             // hugs http://www.senocular.com/flash/tutorials/transformmatrix/
-            
-            // Assigning to point takes 0.1ms?
-            
-            //var m = new Matrix();
-            //m.scale(tileWidth, tileWidth);
-            //m.concat(worldMatrix);
-            //m.scale(scale, scale);
-            
-            //well.transformationMatrix = m;
-            
             var px:Point = worldMatrix.deltaTransformCoord(0, 1);
             tileAngleRadians = (Math.atan2(px.y, px.x) - Math.degToRad(90));
             
@@ -1277,9 +1263,6 @@ package loom.modestmaps.core
         }
         
         public function activeAdd(tile:Tile) {
-            //Debug.assert(!tile.nextActive);
-            //Debug.assert(!tile.prevActive);
-            //checkLists();
             if (!headActive) {
                 headActive = tile;
             } else {
@@ -1290,13 +1273,8 @@ package loom.modestmaps.core
             }
             countActive++;
             pruneCheck = countActive;
-            //checkLists();
-            //if (headActive) headActive.prevActive = tile;
-            //tile.nextActive = headActive;
-            //headActive = tile;
         }
         public function activeRemove(tile:Tile) {
-            //checkLists();
             if (tile == headActive) {
                 headActive = tile.nextActive;
                 if (headActive) headActive.prevActive = null;
@@ -1308,25 +1286,8 @@ package loom.modestmaps.core
             }
             tile.nextActive = tile.prevActive = null;
             countActive--;
-            //checkLists();
-            /*
-            if (tile == headActive) {
-                headActive = tile.nextActive;
-                if (headActive) headActive.prevActive = null;
-            } else {
-                tile.prevActive.nextActive = tile.nextActive;
-                tile.prevActive = null;
-            }
-            if (tile.nextActive) {
-                tile.nextActive.prevActive = tile.prevActive;
-                tile.nextActive = null;
-            }
-            */
         }
         public function inactiveAdd(tile:Tile) {
-            //Debug.assert(!tile.nextInactive);
-            //Debug.assert(!tile.prevInactive);
-            //checkLists();
             if (!headInactive) {
                 headInactive = tile;
             } else {
@@ -1335,10 +1296,8 @@ package loom.modestmaps.core
                 headInactive.prevInactive = tile;
                 headInactive = tile;
             }
-            //checkLists();
         }
         public function inactiveRemove(tile:Tile) {
-            //checkLists();
             if (tile == headInactive) {
                 headInactive = tile.nextInactive;
                 if (headInactive) headInactive.prevInactive = null;
@@ -1349,7 +1308,6 @@ package loom.modestmaps.core
                 before.nextInactive = after;
             }
             tile.nextInactive = tile.prevInactive = null;
-            //checkLists();
         }
         
         private function wellAdd(tile:Tile)
@@ -1357,10 +1315,8 @@ package loom.modestmaps.core
             if (tile.inWell) return;
             well.addChild(tile, false);
             tile.inWell = true;
-            //tile.hide();
             
             inactiveRemove(tile);
-            //trace("well add", tile);
             activeAdd(tile);
         }
         

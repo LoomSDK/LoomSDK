@@ -303,7 +303,7 @@ static int loom_asset_binaryRecognizer(const char *extension)
 
 static void loom_asset_binaryDtor(void *bytes)
 {
-    delete (utByteArray*)bytes;
+    lmDelete(NULL, (utByteArray*)bytes);
 }
 
 static void *loom_asset_binaryDeserializer(void *ptr, size_t size, LoomAssetCleanupCallback *dtor)

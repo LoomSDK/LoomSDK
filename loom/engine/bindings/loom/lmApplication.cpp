@@ -463,7 +463,10 @@ void LoomApplication::fireGenericEvent(const char *type, const char *payload)
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
     JNIEnv *env = gEventCallback.getEnv();
-    if (env == NULL) return;
+    if (env == NULL) {
+        __android_log_print(ANDROID_LOG_WARN, "LoomJNI", "fireGenericEvent called before JNI init");
+        return;
+    }
     jstring jType    = env->NewStringUTF(type);
     jstring jPayload = env->NewStringUTF(payload);
     env->CallStaticVoidMethod(gEventCallback.classID, gEventCallback.methodID, jType, jPayload);

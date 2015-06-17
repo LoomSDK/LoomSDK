@@ -39,7 +39,6 @@ package loom.modestmaps.core.painter
         
         protected var provider:IMapProvider;    
         protected var tileGrid:TileGrid;
-        //protected var tileQueue:TileQueue;
         protected var tileCache:TileCache;
         protected var tilePool:TilePool;        
         protected var queueFunction:Function;
@@ -53,7 +52,6 @@ package loom.modestmaps.core.painter
         // TODO: document this in IMapProvider, so that provider implementers know
         // they are free to check the bounds of their overlays and don't have to serve
         // millions of 404s
-        //protected var layersNeeded:Dictionary.<String, Vector.<String>> = {};
         protected var loaderTiles:Dictionary.<Texture, Vector.<Tile>> = {};
     
         // open requests
@@ -69,21 +67,11 @@ package loom.modestmaps.core.painter
             this.tileGrid = tileGrid;
             this.provider = provider;
             this.queueFunction = queueFunction;
-    
+            
             // TODO: pass all these into the constructor so they can be shared, swapped out or overridden
-            //this.tileQueue = new TileQueue();
             headQueue = null;
             this.tilePool = new TilePool(CreateTile);
             this.tileCache = new TileCache(tilePool);
-
-            //NOTE_TEC: Seems like the original MMaps code (before the AS3 port) was calling 'processQueue' 
-            //      on the ENTER_FRAME event, not every 20ms... good/bad?
-            //queueTimer = new Timer(ProcessQueueInterval);
-            //queueTimer.onComplete = processQueue;
-            //queueTimer.repeats = true;
-
-            // TODO: this used to be called onAddedToStage, is this bad?
-            //queueTimer.start();
             
             enable();
         }
@@ -137,13 +125,10 @@ package loom.modestmaps.core.painter
             return tile;
         }
         
-        /*
-        public function retainKeysInCache(recentlySeen:Vector.<String>):void
-        {
-            tileCache.retainKeys(recentlySeen);
-        }
-        */
-        
+        /**
+         * Push the provided tile to the head of the loading queue
+         * @param tile The Tile to add.
+         */
         public function queueAdd(tile:Tile) {
             if (!headQueue) {
                 headQueue = tile;
@@ -155,6 +140,11 @@ package loom.modestmaps.core.painter
             }
             queueCount++;
         }
+        
+        /**
+         * Remove the provided tile from the loading queue.
+         * @param tile The Tile to remove.
+         */
         public function queueRemove(tile:Tile) {
             if (tile == headQueue) {
                 headQueue = tile.nextQueue;
@@ -168,6 +158,12 @@ package loom.modestmaps.core.painter
             tile.nextQueue = tile.prevQueue = null;
             queueCount--;
         }
+        
+        /**
+         * Returns true if the provided tile is in the loading queue.
+         * @param tile  The Tile to check.
+         * @return  true if tile is in queue, otherwise false
+         */
         public function queueHas(tile:Tile):Boolean {
             return tile.prevQueue || tile.nextQueue;
         }
@@ -197,8 +193,7 @@ package loom.modestmaps.core.painter
     
         public function isPainted(tile:Tile):Boolean
         {
-            return tile.isPainted;
-            //return !layersNeeded[tile.name];        
+            return tile.isPainted;        
         }
         
         public function cancelPainting(tile:Tile):void
@@ -285,9 +280,6 @@ package loom.modestmaps.core.painter
                 // note that queue is not the same as visible tiles, because things 
                 // that have already been loaded are also in visible tiles. if we
                 // reuse visible tiles for the queue we'll be loading the same things over and over
-                
-                // sort queue by distance from 'center'
-                //tileQueue.sortTiles(queueFunction);
                 
                 var tile:Tile = null;
                 

@@ -100,7 +100,7 @@ public:
                                     DisplayObject *object)
     {
         // this is basically the same as coord.zoomTo, but doesn't make a new Coordinate:
-        float zoomFactor = pow(2, zoomLevel - zoom) * invTileWidth;
+        float zoomFactor = powf(2, zoomLevel - zoom) * invTileWidth;
         float zoomedColumn = col * zoomFactor;
         float zoomedRow = row * zoomFactor;
                     
