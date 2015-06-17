@@ -14,8 +14,8 @@ package loom.modestmaps.core.painter
      */ 
     public class TilePool 
     {
-        protected static const MIN_POOL_SIZE:int = 256;
-        protected static const MAX_NEW_TILES:int = 256;
+        protected static const MIN_POOL_SIZE:int = 128;
+        protected static const MAX_NEW_TILES:int = 512;
         
         protected var pool:Vector.<Tile> = [];
         protected var tileCreatorFunc:Function;

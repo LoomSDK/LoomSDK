@@ -13,7 +13,7 @@ package loom.modestmaps.core
 
     public class TwoInputTouch extends DisplayObject
     {
-        private var _stage:Stage;
+        private var _display:DisplayObject;
         private var isTouchDown:Boolean = false;
         private var angleDelta:Number = 0;
         private var zoomDelta:Number = 0;
@@ -64,23 +64,23 @@ package loom.modestmaps.core
                 return Point.ZERO;
             }
             else
-                return new Point((touch1.getLocation(_stage).x + touch2.getLocation(_stage).x) / 2 , (touch1.getLocation(_stage).y + touch2.getLocation(_stage).y) / 2);
+                return new Point((touch1.getLocation(_display).x + touch2.getLocation(_display).x) / 2 , (touch1.getLocation(_display).y + touch2.getLocation(_display).y) / 2);
         }
         
         public function getTouchMidPointDelta():Point
         {
-            return new Point((touch1.getMovement(_stage).x + touch2.getMovement(_stage).x)/2, (touch1.getMovement(_stage).y + touch2.getMovement(_stage).y)/2);
+            return new Point((touch1.getMovement(_display).x + touch2.getMovement(_display).x)/2, (touch1.getMovement(_display).y + touch2.getMovement(_display).y)/2);
         }
         
-        function TwoInputTouch(mainStage:Stage)
+        function TwoInputTouch(display:DisplayObject)
         {
-            _stage = mainStage;
-            _stage.addEventListener(TouchEvent.TOUCH, OnTouch);
+            _display = display;
+            _display.addEventListener(TouchEvent.TOUCH, OnTouch);
         }
         
         private function OnTouch(event:TouchEvent)
         {
-            var touches = event.getTouches(_stage);
+            var touches = event.getTouches(_display);
             touchCount = touches.length;
             
             // Determine whether we're starting or stopping a touch using the first touch because it's both the first and last touch to be registered
@@ -99,8 +99,8 @@ package loom.modestmaps.core
                 touch1 = touches[0];
                 touch2 = touches[1];
                 
-                var prevAngle:Number = Math.atan2(touch2.getPreviousLocation(_stage).y - touch1.getPreviousLocation(_stage).y, touch2.getPreviousLocation(_stage).x - touch1.getPreviousLocation(_stage).x);
-                var curAngle:Number = Math.atan2(touch2.getLocation(_stage).y - touch1.getLocation(_stage).y, touch2.getLocation(_stage).x - touch1.getLocation(_stage).x);
+                var prevAngle:Number = Math.atan2(touch2.getPreviousLocation(_display).y - touch1.getPreviousLocation(_display).y, touch2.getPreviousLocation(_display).x - touch1.getPreviousLocation(_display).x);
+                var curAngle:Number = Math.atan2(touch2.getLocation(_display).y - touch1.getLocation(_display).y, touch2.getLocation(_display).x - touch1.getLocation(_display).x);
                 angleDelta = curAngle - prevAngle;
                                 
                 var prevDist = Math.sqrt(Math.pow((touch2.previousGlobalX - touch1.previousGlobalX), 2) + Math.pow((touch2.previousGlobalY - touch1.previousGlobalY), 2));
@@ -108,7 +108,7 @@ package loom.modestmaps.core
                 zoomDelta = curDist - prevDist;
                 
                 // Tell anyone who's subscribed to our delegate that a change in the delta values has occured!
-                OnDoubleTouchEvent(touch1.getLocation(_stage), touch2.getLocation(_stage));
+                OnDoubleTouchEvent(touch1.getLocation(_display), touch2.getLocation(_display));
             }   
         }
     }

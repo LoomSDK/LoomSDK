@@ -735,6 +735,7 @@ TextureInfo * Texture::initFromAssetManagerAsync(const char *path, bool highPrio
 TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name, bool highPriority)
 {
     LOOM_PROFILE_SCOPE(textureNewBytesAsync);
+    lmAssert(bytes != NULL, "bytes should not be null");
     TextureInfo *tinfo = NULL;
     name = (name && !name[0]) ? NULL : name;
     if(name)

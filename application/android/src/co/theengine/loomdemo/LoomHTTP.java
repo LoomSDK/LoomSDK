@@ -21,6 +21,8 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.io.StringWriter;
+import java.io.PrintWriter;
 
 import org.apache.http.Header;
 import org.apache.http.entity.ByteArrayEntity;
@@ -144,6 +146,8 @@ public class LoomHTTP
         public boolean busy;
         public boolean cancel;
         
+        public boolean running;
+        
         public String url;
         public String httpMethod;
         public long callback;
@@ -245,10 +249,21 @@ public class LoomHTTP
         
         SendTask() {
             headers = new Hashtable<String, String>();
+            running = false;
         }
         
         public void run()
         {
+            if (running) {
+                Log.w(TAG, index + " task already running!");
+                return;
+            }
+            if (url == null) {
+                Log.w(TAG, index + " ran uninitialized");
+                return;
+            }
+            running = true;
+            
             if (client == null) client = new AsyncHttpClient();
             
             activity = _context;
@@ -303,7 +318,9 @@ public class LoomHTTP
             }
             catch(Exception e)
             {
-                failure("exception caught while posting request: " + e);
+                StringWriter errors = new StringWriter();
+                e.printStackTrace(new PrintWriter(errors));
+                failure("exception caught while posting request: " + e + errors.toString());
             }
             
             Log.d(TAG, index + " send running");
@@ -359,6 +376,7 @@ public class LoomHTTP
         
         protected void finish()
         {
+            running = false;
             url = null;
             httpMethod = null;
             callback = -1;

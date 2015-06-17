@@ -26,7 +26,7 @@
 #include "loom/script/common/lsError.h"
 #include "loom/script/runtime/lsProfiler.h"
 #include "loom/script/reflection/lsFieldInfo.h"
-
+#include "loom/common/core/performance.h"
 
 namespace LS {
 static char _gLastAccessedMember[64];
@@ -131,6 +131,8 @@ void lualoom_newscriptinstance_internal(lua_State *L, Type *type)
 // class instance creator
 static int lsr_classcreateinstance(lua_State *L)
 {
+    LOOM_PROFILE_SCOPE(classCreate);
+
     int nargs = lua_gettop(L) - 1;
 
     // index 1 on stack is class table

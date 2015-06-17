@@ -139,6 +139,7 @@ protected:
 
 public:
 	VectorText(float x, float y, float width, utString* text) : x(x), y(y), width(width), text(text) {};
+	~VectorText() { lmDelete(NULL, text); }
 
 	virtual void render(VectorGraphics* g);
 };
