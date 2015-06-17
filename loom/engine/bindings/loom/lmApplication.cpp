@@ -460,8 +460,10 @@ void LoomApplication::fireGenericEvent(const char *type, const char *payload)
 
     // And platform specific callbacks.
     if (!callbacksInitialized) initializeCallbacks();
+
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-    JNIEnv *env      = gEventCallback.getEnv();
+    JNIEnv *env = gEventCallback.getEnv();
+    if (env == NULL) return;
     jstring jType    = env->NewStringUTF(type);
     jstring jPayload = env->NewStringUTF(payload);
     env->CallStaticVoidMethod(gEventCallback.classID, gEventCallback.methodID, jType, jPayload);

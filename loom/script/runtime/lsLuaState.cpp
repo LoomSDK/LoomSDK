@@ -86,8 +86,8 @@ void LSLuaState::open()
 {
     assert(!L);
 
-    //L = lua_newstate(lsLuaAlloc, NULL);
-    L = luaL_newstate();
+    L = lua_newstate(lsLuaAlloc, NULL);
+    //L = luaL_newstate();
     toLuaState.insert(L, this);
 
     luaopen_base(L);

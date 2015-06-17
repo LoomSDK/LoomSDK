@@ -109,6 +109,7 @@ package loom.modestmaps.core
                     case 3: node = node.d; break;
                 }
             }
+            node.ensureChildren();
             //trace("getnode", col, row, inzoom, node.zoom, node.tile);
             //Debug.assert(false);
             return node;
@@ -138,6 +139,7 @@ package loom.modestmaps.core
         public var isPainting:Boolean;
         public var isPainted:Boolean;
         public var lastRepop:int;
+        public var visToken:int;
         
         public var nextActive:Tile;
         public var prevActive:Tile;

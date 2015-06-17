@@ -146,6 +146,8 @@ public class LoomHTTP
         public boolean busy;
         public boolean cancel;
         
+        public boolean running;
+        
         public String url;
         public String httpMethod;
         public long callback;
@@ -247,10 +249,21 @@ public class LoomHTTP
         
         SendTask() {
             headers = new Hashtable<String, String>();
+            running = false;
         }
         
         public void run()
         {
+            if (running) {
+                Log.w(TAG, index + " task already running!");
+                return;
+            }
+            if (url == null) {
+                Log.w(TAG, index + " ran uninitialized");
+                return;
+            }
+            running = true;
+            
             if (client == null) client = new AsyncHttpClient();
             
             activity = _context;
@@ -363,6 +376,7 @@ public class LoomHTTP
         
         protected void finish()
         {
+            running = false;
             url = null;
             httpMethod = null;
             callback = -1;

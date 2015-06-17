@@ -262,7 +262,7 @@ public:
      */
     Rectangle *clone()
     {
-        Rectangle *copy = new Rectangle();
+        Rectangle *copy = lmNew(NULL) Rectangle();
 
         copy->x      = x;
         copy->y      = y;

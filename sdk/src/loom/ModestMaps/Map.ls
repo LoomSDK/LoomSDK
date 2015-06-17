@@ -113,6 +113,12 @@ package loom.modestmaps
                 mapProvider = new MicrosoftProvider(MicrosoftProvider.ROAD, true, MicrosoftProvider.MIN_ZOOM, MicrosoftProvider.MAX_ZOOM);
             }
             
+            // The global (down)scale based on the density
+            var densityScale = Platform.getDPI()/200;
+            
+            width /= densityScale;
+            height /= densityScale;
+            
             //save that static Stage
             MapStage = mapStage;
             
@@ -131,6 +137,15 @@ package loom.modestmaps
             grid.onPan += gridPan;
             grid.onChange += gridChange;
             addChild(grid);
+            
+            scale = densityScale;
+            
+            // Zoom out in debug mode to show out-of-viewport tiles
+            if (grid.debug) {
+                scale *= 0.25;
+                grid.x = width/2*densityScale/scale-width/2;
+                grid.y = height/2*densityScale/scale-height/2;
+            }
 
             setSize(width, height);
 
@@ -319,10 +334,8 @@ package loom.modestmaps
         {
             var extent:MapExtent = new MapExtent(0, 0, 0, 0);
             
-            if(!mapProvider) {
-                throw new Error("WHOAH, no mapProvider in getExtent!");
-            }
-    
+            Debug.assert(mapProvider, "WHOAH, no mapProvider in getExtent!");
+            
             extent.northWest = mapProvider.coordinateLocation(grid.topLeftCoordinate);
             extent.southEast = mapProvider.coordinateLocation(grid.bottomRightCoordinate);
             return extent;
@@ -708,7 +721,7 @@ package loom.modestmaps
         {
             //NOTE_TEC: Loom ScrollWheelEvent doesn't provide a mouseXY, so we'll just zoom by the screen center
             //var zoomPoint:Point = new Point(mouseX, mouseY);
-            var zoomPoint:Point = new Point(stage.stageWidth / 2, stage.stageHeight / 2);
+            var zoomPoint:Point = new Point(mapWidth / 2, mapHeight / 2);
             if (Platform.getTime() - previousWheelEvent > minMouseWheelInterval) {
                 if (event.delta > 0) {
                     zoomInAbout(zoomPoint, 0);

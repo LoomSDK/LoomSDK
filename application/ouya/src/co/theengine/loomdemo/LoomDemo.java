@@ -132,13 +132,11 @@ public class LoomDemo extends Cocos2dxActivity{
         // Thanks to http://stackoverflow.com/questions/2150078/how-to-check-visibility-of-software-keyboard-in-android
         final View activityRootView = framelayout;
         Log.d("Loom", "Registering for global layout listener!");
-        logError("keyboardResize BUTTS");
         activityRootView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() 
         {
             @Override
             public void onGlobalLayout() 
             {
-                logError("keyboardResize " + activityRootView.getHeight());
                 Log.d("Loom", "keyboardResize " + activityRootView.getHeight());
 
                 // Convert the dps to pixels
@@ -148,7 +146,6 @@ public class LoomDemo extends Cocos2dxActivity{
                 if (heightDiff > scaledThreshold)
                 {
                     // if more than 100 points, its probably a keyboard...
-                    logError("keyboardResize " + activityRootView.getHeight());
                     triggerGenericEvent("keyboardResize", "" + activityRootView.getHeight());
                 }
              }

@@ -35,16 +35,19 @@ package
         private const PinTouchBias:int = 4;
 
 
-
         override public function run():void
-        {
-            stage.scaleMode = StageScaleMode.LETTERBOX;
-                        
+        {   
+            
+            stage.scaleMode = StageScaleMode.NONE;
+            
+            // Uncomment to log framerate every second
+            //stage.reportFps = true;
+            
             //create some providers
             _mapProviders.pushSingle(new MicrosoftRoadMapProvider(true, AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM));
             _mapProviders.pushSingle(new OpenStreetMapProvider(AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM));
             _mapProviders.pushSingle(new BlueMarbleMapProvider(AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM));
-
+            
             //creat the map with our default provider
             _map = new Map(stage.stageWidth, 
                                 stage.stageHeight, 
@@ -52,7 +55,7 @@ package
                                 _mapProviders[_provider],
                                 stage,
                                 null);
-
+            
             stage.addChild(_map);
             
             //simle keyboard controls
@@ -69,7 +72,6 @@ package
                 }
             };
         }
-        
 
         //make a new pin!
         private function newPin():ImageMarker
@@ -85,7 +87,7 @@ package
             var keycode = event.keyCode;
 
             //always zoom at the center of the screen
-            var zoomPoint:Point = new Point(stage.stageWidth / 2, stage.stageHeight / 2);
+            var zoomPoint:Point = new Point(_map.getWidth() / 2, _map.getHeight() / 2);
 
             //process zooming
             if (keycode == LoomKey.EQUALS)
@@ -121,18 +123,19 @@ package
         private function touchHandler(event:TouchEvent):void
         {
             //if more than 1 touch point, or a touch end was found, we need to stop the timer
-            var touches = event.getTouches(stage);
-            if ((touches.length > 1) || event.getTouch(stage, TouchPhase.ENDED))
+            var touches = event.getTouches(_map);
+            if ((touches.length > 1) || event.getTouch(_map, TouchPhase.ENDED))
             {
                 _markerHoldTimer.stop();
                 return;
             }
 
+
             //touch began?
             var touch = event.getTouch(_map, TouchPhase.BEGAN);
             if (touch)
             {
-                var touchPos = touch.getLocation(stage);     
+                var touchPos = touch.getLocation(_map);     
                 _markerLoc = _map.pointLocation(touchPos);
                 _markerHoldTimer.start();
                 _markerTouchStart = touchPos;
@@ -141,12 +144,12 @@ package
             else
             {
                 //track moving
-                touch = event.getTouch(stage, TouchPhase.MOVED);
+                touch = event.getTouch(_map, TouchPhase.MOVED);
                 if(touch)
                 {
-                    _markerTouchCur = touch.getLocation(stage);
+                    _markerTouchCur = touch.getLocation(_map);
                 }
-            }            
+            }
         }        
     }
 }

@@ -33,6 +33,7 @@
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
 
 #include "platformAndroidJni.h"
+#include <android/log.h>
 
 static loom_logGroup_t jniLogGroup = { "jni", 1 };
 
@@ -55,19 +56,19 @@ static bool getEnv(JNIEnv **env)
     {
         if (LOOMJAVAVM == NULL)
         {
-            lmLog(jniLogGroup, "Missing LOOMJAVAVM (== NULL)");
+            __android_log_print(ANDROID_LOG_INFO, "LoomJNI", "Missing LOOMJAVAVM (== NULL)");
             break;
         }
 
         if (LOOMJAVAVM->GetEnv((void **)env, JNI_VERSION_1_4) != JNI_OK)
         {
-            lmLog(jniLogGroup, "Failed to get the environment using GetEnv()");
+            __android_log_print(ANDROID_LOG_INFO, "LoomJNI", "Failed to get the environment using GetEnv()");
             break;
         }
 
         if (LOOMJAVAVM->AttachCurrentThread(env, 0) < 0)
         {
-            lmLog(jniLogGroup, "Failed to get the environment using AttachCurrentThread()");
+            __android_log_print(ANDROID_LOG_INFO, "LoomJNI", "Failed to get the environment using AttachCurrentThread()");
             break;
         }
 
@@ -99,7 +100,8 @@ static jclass getClassID_(const char *className, JNIEnv *env)
             }
         }
 
-        ret = pEnv->FindClass(className);
+        jclass classRef = pEnv->FindClass(className);
+        ret = (jclass)env->NewGlobalRef(classRef);
         if (!ret)
         {
             lmLog(jniLogGroup, "Failed to find class of %s", className);
