@@ -467,7 +467,6 @@ void VectorSVG::loadFile(utString path, utString units, float dpi) {
 	this->units = units;
 	this->dpi = dpi;
 	this->path = lmNew(NULL) utString(path);
-	reload();
 	loom_asset_subscribe(path.c_str(), onReload, this, true);
 }
 
