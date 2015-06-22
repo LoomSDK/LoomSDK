@@ -82,9 +82,9 @@ package loom2d.core
             enqueue(id, TouchPhase.BEGAN, x, y);
         }
 
-        protected function handleTouchMoved(id:int, x:Number, y:Number):void
+        protected function handleTouchMoved(id:int, x:Number, y:Number, buttons:int):void
         {
-            //trace("move @ " + x + ", " + y);
+            //trace("move @ " + x + ", " + y + " " + buttons);
 
             // translate to stage space            
             x-=mStage.x;
@@ -94,7 +94,7 @@ package loom2d.core
 
             //trace("POSTmove @ " + x + ", " + y);
 
-            enqueue(id, TouchPhase.MOVED, x, y);
+            enqueue(id, buttons != 0 ? TouchPhase.MOVED : TouchPhase.HOVER, x, y);
         }
 
         protected function handleTouchEnded(id:int, x:Number, y:Number):void
@@ -219,7 +219,7 @@ package loom2d.core
             if (mouse == null || mouse.phase != TouchPhase.HOVER) return;
             
             // On OS X, we get mouse events from outside the stage; on Windows, we do not.
-            // This method enqueues an artifial hover point that is just outside the stage.
+            // This method enqueues an artifical hover point that is just outside the stage.
             // That way, objects listening for HOVERs over them will get notified everywhere.
             
             var offset:int = 1;
