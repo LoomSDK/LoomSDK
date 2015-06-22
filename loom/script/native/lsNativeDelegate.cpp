@@ -658,7 +658,13 @@ void NativeDelegate::invoke () const
             lua_pushvalue(L, i + 1);
         }
 
-        lua_call(L, numArgs, 1);
+        int error = lua_pcall(L, numArgs, 1, 0);
+        lmAssert(error == 0, "Lua error calling native delegate callback: %s: %s", (
+            error == LUA_ERRRUN ? "runtime error" :
+            error == LUA_ERRMEM ? "memory allocation error" :
+            error == LUA_ERRERR ? "error handler error" :
+            "unknown error"
+            ), lua_tostring(L, -1));
 
         lua_settop(L, t);
 

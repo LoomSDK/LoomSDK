@@ -151,6 +151,7 @@ public:
         valid          = false;
         type           = NULL;
         imageOrDerived = false;
+        transformDirty = false;
     }
 
     DisplayObject()

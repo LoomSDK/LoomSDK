@@ -170,7 +170,7 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
    *dtor = loom_asset_soundDtor;
    if(!sound->buffer)
    {
-      lmLogError(gSoundAssetGroup, "Image load failed due to this cryptic reason: %s", "(unknown)");
+      lmLogError(gSoundAssetGroup, "Sound load failed due to this cryptic reason: %s", "(unknown)");
       lmFree(gAssetAllocator, sound);
       return 0;
    }

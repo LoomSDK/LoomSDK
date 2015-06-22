@@ -47,6 +47,8 @@ package loom.modestmaps.mapproviders
             __topLeftOutLimit = new Coordinate(0, Number.NEGATIVE_INFINITY, minZoom);
             __bottomRightInLimit = (new Coordinate(1, Number.POSITIVE_INFINITY, 0)).zoomTo(maxZoom);
         }
+        
+        public function get supportsHighDPI():Boolean { return false; }
     
        /*
         * String signature of the current map provider's geometric behavior.
