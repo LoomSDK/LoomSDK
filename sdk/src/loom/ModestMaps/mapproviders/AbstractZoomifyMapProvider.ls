@@ -34,6 +34,8 @@ package loom.modestmaps.mapproviders
             *
             */
         }
+        
+        public function get supportsHighDPI():Boolean { return false; }
     
         public function toString():String
         {

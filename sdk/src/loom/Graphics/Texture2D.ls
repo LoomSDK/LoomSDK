@@ -64,7 +64,9 @@ package loom.graphics
          *  See @TextureSmoothing for more details
          */        
         public native var smoothing:int;
-
+        
+        public native var visible:Boolean;
+        
         /**
          *  Repeat = 0, Mirror = 1, Clamp = 2. Default is Clamp.
          *  See @TextureWrap for more details
@@ -163,6 +165,10 @@ package loom.graphics
 
         
         public static native function initEmptyTexture(width:int, height:int):TextureInfo;
+        
+        public static native function updateFromBytes(nativeID:int, bytes:ByteArray);
+        public static native function updateFromBytesAsync(nativeID:int, bytes:ByteArray, highPriority:Boolean);
+        
         
         public static native function clear(nativeID:int, color:uint = 0x000000, alpha:Number = 0);
         

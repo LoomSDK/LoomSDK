@@ -182,7 +182,8 @@ package loom2d.textures
         {
             return ((textureInfo == null) || 
                     (textureInfo.handleID == TextureInfo.HANDLE_INVALID) ||
-                    (textureInfo.handleID == TextureInfo.HANDLE_LOADING)) ? false : true;
+                    (textureInfo.handleID == TextureInfo.HANDLE_LOADING) ||
+                    (!textureInfo.visible)) ? false : true;
         }
 
         /** Blocking function that creates a texture object from a bitmap on disk. */
@@ -234,20 +235,29 @@ package loom2d.textures
 
             return tex;
         }
+        
+        public function updateFromHTTP(url:String, 
+                                        onSuccess:TextureAsyncLoadCompleteDelegate, 
+                                        onFailure:TextureHTTPFailDelegate,
+                                        cacheOnDisk:Boolean=true, 
+                                        highPriority:Boolean=false)
+        {
+            Texture.fromHTTP(url, onSuccess, onFailure, cacheOnDisk, highPriority, this);
+        }
 
         /** Non-blocking function that creates a texture object from a remote bitmap file via HTTP. */
         public static function fromHTTP(url:String, 
                                         onSuccess:TextureAsyncLoadCompleteDelegate, 
                                         onFailure:TextureHTTPFailDelegate,
                                         cacheOnDisk:Boolean=true, 
-                                        highPriority:Boolean=false):Texture
+                                        highPriority:Boolean=false,
+                                        existingTexture:Texture = null):Texture
         {
             //turn the url into an SHA2 so we have a nice small but unique filename to save to disk
-            url = url.toLowerCase();
             var urlsha2:String = url.toSHA2();
 
             //if already cached, just return that texture without calling the CB
-            if(assetPathCache[urlsha2])
+            if(!existingTexture && assetPathCache[urlsha2])
             {
                 return assetPathCache[urlsha2];
             }
@@ -283,20 +293,28 @@ package loom2d.textures
                 {
                     //file already downloaded previously, so queue up an async load of it right now
                     Console.print("HTTP requested texture found cached on local disk already; using it instead: " + cacheFile); 
+                    Debug.assert(existingTexture == null, "Texture update from file cache currently unsupported");
                     return Texture.fromAssetAsync(cacheFile, onSuccess);
                 }
             }
-
-            //create the ConcreteTexture, but don't fill it out fully as we don't have all of the TextureInfo yet!
-            var tex:ConcreteTexture = new ConcreteTexture(urlsha2, -1, -1);
-            assetPathCache[urlsha2] = tex;
+            
+            var tex:Texture = null;
+            if (existingTexture == null) {
+                //create the ConcreteTexture, but don't fill it out fully as we don't have all of the TextureInfo yet!
+                tex = new ConcreteTexture(urlsha2, -1, -1);
+                assetPathCache[urlsha2] = tex;
+            } else {
+                tex = existingTexture;
+                if (tex.textureInfo) tex.textureInfo.visible = false;
+            }
 
             //create and fire off the HTTPRequest
             tex.httpLoadFail = onFailure;
-            sendHTTPTextureRequest(url, urlsha2, cacheFile, tex, onSuccess, cacheOnDisk, highPriority);
+            sendHTTPTextureRequest(url, urlsha2, cacheFile, tex, onSuccess, cacheOnDisk, highPriority, existingTexture ? existingTexture.nativeID : -1);
             return tex;
         }
 
+        // TODO: Update supported types
         /** Creates a texture object from compressed image bytes.  An optional unique name string 
          *  can be supplied if you wish the resulting image to be cacheable, otherwise null can be specified.
          * 
@@ -462,15 +480,19 @@ package loom2d.textures
         /** Delegate that is called to finalize the initialization of an asynchronously loaded texture */
         private function onAsyncLoadComplete():void
         {
+            Debug.assert(textureInfo);
+            
             //remove ourselves from the delegate
-            textureInfo.asyncLoadComplete -= onAsyncLoadComplete;
+            if (textureInfo) textureInfo.asyncLoadComplete -= onAsyncLoadComplete;
 
             //if the HTTP request was cancelled after it completed, but prior to the async load completion, we need to dispose of it now
             if(mCancelHTTP)
             {
-                dispose();
+                if (textureInfo && textureInfo.visible) dispose();
                 return;
             }
+            
+            if (textureInfo) textureInfo.visible = true;
 
             //check for errors
             if(isTextureValid())
@@ -497,10 +519,11 @@ package loom2d.textures
         private static function sendHTTPTextureRequest(url:String, 
                                                         urlsha2:String,
                                                         cacheFile:String, 
-                                                        tex:ConcreteTexture,
+                                                        tex:Texture,
                                                         onSuccess:TextureAsyncLoadCompleteDelegate, 
                                                         cacheOnDisk:Boolean,
-                                                        highPriority:Boolean):void
+                                                        highPriority:Boolean,
+                                                        existingNativeID:int = -1):void
         {
             //create the HTTPRequest to obtain the texture data remotely
             var req:HTTPRequest = new HTTPRequest(url);
@@ -534,6 +557,7 @@ package loom2d.textures
                     if(cacheOnDisk)
                     {
                         //kick off the async load and return our holding texture
+                        Debug.assert(existingNativeID == -1, "Texture update from http request currently unsupported");
                         tInfo = Texture2D.initFromAssetAsync(cacheFile, highPriority);
                         if(tInfo == null)
                         {
@@ -547,14 +571,20 @@ package loom2d.textures
                         Base64.decode(result, texBytes);
 
                         //load the bytes Async
-                        tInfo = Texture2D.initFromBytesAsync(texBytes, urlsha2, highPriority);
-                        if(tInfo == null)
-                        {
-                            Console.print("WARNING: Unable to load texture from bytes given data from url: " + url); 
-                        }                    
+                        if (existingNativeID  == -1) {
+                            tInfo = Texture2D.initFromBytesAsync(texBytes, urlsha2, highPriority);
+                            if(tInfo == null)
+                            {
+                                Console.print("WARNING: Unable to load texture from bytes given data from url: " + url); 
+                            }
+                        } else {
+                            //Texture2D.updateFromBytes(existingNativeID, texBytes);
+                            Texture2D.updateFromBytesAsync(existingNativeID, texBytes, highPriority);
+                            tInfo = tex.textureInfo;
+                        }                 
                     }
                 }
-
+                
                 //unable to create our textureInfo so we failed
                 if(tInfo == null)
                 {                  
@@ -563,10 +593,10 @@ package loom2d.textures
                     {
                         tex.httpLoadFail(tex);
                     }
-                    tex.dispose();
+                    if (existingNativeID == -1) tex.dispose();
                     return;
                 }
-
+                
                 //register the textureInfo and async complete CB
                 tex.textureInfo = tInfo;
                 tex.asyncLoadComplete = onSuccess;
@@ -587,7 +617,7 @@ package loom2d.textures
                 {
                     tex.httpLoadFail(tex);
                 }
-                tex.dispose();
+                if (existingNativeID == -1) tex.dispose();
             };       
             req.onFailure += fail;
 

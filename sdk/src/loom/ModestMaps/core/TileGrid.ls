@@ -61,7 +61,8 @@ package loom.modestmaps.core
 
         /** this is the maximum size of tileCache (visible tiles will also be kept in the cache).  
          *  the larger this is, the more texture memory will be needed to store the loaded images. */     
-        public static var MaxTilesToKeep:int = 256;// 256*256*4bytes = 0.25MB ... so 128 tiles is 32MB of memory, minimum!
+        //public static var MaxTilesToKeep:int = 256;// 256*256*4bytes = 0.25MB ... so 128 tiles is 32MB of memory, minimum!
+        public static var MaxTilePixels:int = 256*256*256; // the maximum amount of tiles to keep represented as the number of pixels (to be tile size agnostic)
         
         /** 0 or 1, really: 2 will load *lots* of extra tiles */
         public static var TileBuffer:int = 1;
@@ -156,8 +157,8 @@ package loom.modestmaps.core
         protected var startZoom:Number = -1;
         public var zooming:Boolean;
         
-        protected var mapWidth:Number;
-        protected var mapHeight:Number;
+        protected var mapWidth:Number = NaN;
+        protected var mapHeight:Number = NaN;
         
         protected var draggable:Boolean;
 
@@ -189,44 +190,21 @@ package loom.modestmaps.core
         public var onMapRender:MapChange;
         public var onTileLoad:MapTileLoad;
         
-        protected var debugOverlay = new Shape();
+        protected var debugOverlay:Shape;
         
         public function TileGrid(w:Number, h:Number, draggable:Boolean, provider:IMapProvider)
         {
             this.draggable = draggable;
             
-            if (provider is ITilePainterOverride) {
-                this.tilePainter = ITilePainterOverride(provider).getTilePainter();
+            if (debug) {
+                debugOverlay = new Shape();
+                TextFormat.load("sans", "assets/SourceSansPro-Regular.ttf");
             }
-            else {
-                this.tilePainter = new TilePainter(this, provider, MaxParentLoad == 0 ? centerDistanceCompare : zoomThenCenterCompare);
-            }
-            tilePainter.getOnTileLoad() += onTileLoading;
             
-            this.limits = provider.outerLimits();
+            worldMatrix = new Matrix();
             
-            // but do grab tile dimensions:
-            _tileWidth = provider.tileWidth;
-            _tileHeight = provider.tileHeight;
-
-            // and calculate bounds from provider
-            calculateBounds();
-            
-            if (debug) TextFormat.load("sans", "assets/SourceSansPro-Regular.ttf");
-            
-            this.mapWidth = w;
-            this.mapHeight = h;         
-            //clipRect = new Rectangle(0, 0, mapWidth, mapHeight);
-            
-            //NOTE_TEC: not porting DebugField for now at least...
-            // debugField = new DebugField();
-            // debugField.x = mapWidth - debugField.width - 15; 
-            // debugField.y = mapHeight - debugField.height - 15;
-
-            //empty tiles (while they are still loading)
             // NOTE_TEC: This is so that you can have user input on tiles that are yet to load
             bgTouchArea = new Image();
-            bgTouchArea.setSize(mapWidth, mapHeight);
             bgTouchArea.color = 0x00000000;
             bgTouchArea.alpha = 0;
             bgTouchArea.ignoreHitTestAlpha = true;
@@ -238,9 +216,23 @@ package loom.modestmaps.core
             well.touchable = false;
             addChild(well);
             
-            addChild(debugOverlay);
-
-            worldMatrix = new Matrix();
+            setMapProvider(provider);
+            
+            if (debug) addChild(debugOverlay);
+            
+            sHelperPoint.x = w;
+            sHelperPoint.y = h;
+            resizeTo(sHelperPoint);
+            
+            // and calculate bounds from provider
+            calculateBounds();
+               
+            //clipRect = new Rectangle(0, 0, mapWidth, mapHeight);
+            
+            //NOTE_TEC: not porting DebugField for now at least...
+            // debugField = new DebugField();
+            // debugField.x = mapWidth - debugField.width - 15; 
+            // debugField.y = mapHeight - debugField.height - 15;
 
             addEventListener(Event.ADDED_TO_STAGE, onAddedToStage); 
         }
@@ -990,7 +982,7 @@ package loom.modestmaps.core
                 var leastRecentPrev:Tile = null;
                 var leastRecentDiff = -1;
                 
-                if (tilePainter.getCacheSize() >= MaxTilesToKeep) {
+                if (tilePainter.getCacheSize()*tileWidth*tileHeight >= MaxTilePixels) {
                     
                     tile = headInactive;
                     while (tile) {
@@ -1760,7 +1752,7 @@ package loom.modestmaps.core
                 dirty = true;
 
                 // force this but only for onResize
-                _onRender();
+                //_onRender();
             }
         }
         
@@ -1776,7 +1768,7 @@ package loom.modestmaps.core
             
             // TODO: set limits independently of provider
             this.limits = provider.outerLimits();
-
+            
             _tileWidth = provider.tileWidth;
             _tileHeight = provider.tileHeight;
             

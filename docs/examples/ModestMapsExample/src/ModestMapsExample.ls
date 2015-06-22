@@ -5,10 +5,12 @@ package
     import loom.modestmaps.Map;
     import loom.modestmaps.mapproviders.AbstractMapProvider;
     import loom.modestmaps.mapproviders.IMapProvider;
+    import loom.modestmaps.mapproviders.MapboxProvider;
     import loom.modestmaps.mapproviders.microsoft.MicrosoftRoadMapProvider;
     import loom.modestmaps.mapproviders.OpenStreetMapProvider;
     import loom.modestmaps.mapproviders.BlueMarbleMapProvider;
     import loom.modestmaps.overlays.ImageMarker;
+    import system.platform.File;
 
     import loom.platform.LoomKey;
     import loom.platform.Timer;
@@ -44,9 +46,10 @@ package
             //stage.reportFps = true;
             
             //create some providers
-            _mapProviders.pushSingle(new MicrosoftRoadMapProvider(true, AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM));
-            _mapProviders.pushSingle(new OpenStreetMapProvider(AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM));
-            _mapProviders.pushSingle(new BlueMarbleMapProvider(AbstractMapProvider.MIN_ZOOM, AbstractMapProvider.MAX_ZOOM));
+            _mapProviders.pushSingle(new MapboxProvider(File.loadTextFile("assets/mapbox/id.txt"), File.loadTextFile("assets/mapbox/token.txt")));
+            _mapProviders.pushSingle(new MicrosoftRoadMapProvider(true));
+            _mapProviders.pushSingle(new OpenStreetMapProvider());
+            _mapProviders.pushSingle(new BlueMarbleMapProvider());
             
             //creat the map with our default provider
             _map = new Map(stage.stageWidth, 

@@ -12,6 +12,8 @@ package loom.modestmaps.core.painter
     import loom2d.Loom2D;
     import loom2d.math.Point;
     import loom2d.textures.Texture;
+    import loom2d.textures.TextureAsyncLoadCompleteDelegate;
+    import loom2d.textures.TextureHTTPFailDelegate;
     import loom2d.textures.TextureSmoothing;
     import system.Number;
     import system.Void;
@@ -196,6 +198,28 @@ package loom.modestmaps.core.painter
             return tile.isPainted;        
         }
         
+        
+        private static var texturePool:Vector.<Texture> = new Vector.<Texture>();
+        
+        public static function getTexture(url:String, onSuccess:TextureAsyncLoadCompleteDelegate, onFailure:TextureHTTPFailDelegate, cacheOnDisk:Boolean, highPriority:Boolean):Texture
+        {
+            var texture:Texture = null;
+            if (texturePool.length > 0) {
+                texture = texturePool.pop();
+                texture.updateFromHTTP(url, onSuccess, onFailure, cacheOnDisk, highPriority);
+            } else {
+                texture = Texture.fromHTTP(url, onSuccess, onFailure, cacheOnDisk, highPriority);
+            }
+            return texture;
+        }
+        
+        public static function returnTexture(texture:Texture)
+        {
+            texturePool.push(texture);
+            //texture.dispose();
+        }
+        
+        
         public function cancelPainting(tile:Tile):void
         {
             if (queueHas(tile)) {
@@ -319,7 +343,7 @@ package loom.modestmaps.core.painter
                 var url = urls.shift();
                 
                 // request the texture via HTTP
-                var texture:Texture = Texture.fromHTTP(url, onLoadSuccess, onLoadFail, CacheTilesOnDisk, false);
+                var texture:Texture = getTexture(url, onLoadSuccess, onLoadFail, CacheTilesOnDisk, false);
                 if (texture == null)
                 {
                     tile.loadStatus = "error in texture init";
@@ -388,7 +412,7 @@ package loom.modestmaps.core.painter
             {
                 //will get here if reset() or cancelPainting() on a tile is called before the requested 
                 //texture has finished loading I think... make sure it's handled properly!           
-                texture.dispose();
+                returnTexture(texture);
             }
         }
 
