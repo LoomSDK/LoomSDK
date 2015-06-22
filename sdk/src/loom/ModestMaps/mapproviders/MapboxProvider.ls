@@ -27,7 +27,7 @@ package loom.modestmaps.mapproviders
             if (!format || format.length == 0) {
                 format = ".png";
             }
-            if (autoDPI && Platform.getDPI() > 250 || true) format = HIGH_DPI_PREFIX + format;
+            if (autoDPI && Platform.getDPI() > 250) format = HIGH_DPI_PREFIX + format;
             if (format.indexOf(HIGH_DPI_PREFIX) == 0) highDPI = true;
             this.format = format;
             super(minZoom, maxZoom);
@@ -37,7 +37,6 @@ package loom.modestmaps.mapproviders
         
         override public function get tileWidth():Number
         {
-            trace("tileWidth", highDPI);
             return highDPI ? 512 : 256;
         }
 
