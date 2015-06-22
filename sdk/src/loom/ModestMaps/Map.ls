@@ -72,6 +72,8 @@ package loom.modestmaps
         public var onProviderChange:MapProviderChange;
         public var onMapRender:MapChange;
         
+        protected var baseMapWidth:Number;
+        protected var baseMapHeight:Number;
         protected var mapWidth:Number;
         protected var mapHeight:Number;
         protected var __draggable:Boolean = true;
@@ -113,12 +115,6 @@ package loom.modestmaps
                 mapProvider = new MicrosoftProvider(MicrosoftProvider.ROAD, true, MicrosoftProvider.MIN_ZOOM, MicrosoftProvider.MAX_ZOOM);
             }
             
-            // The global (down)scale based on the density
-            var densityScale = Platform.getDPI()/200;
-            
-            width /= densityScale;
-            height /= densityScale;
-            
             //save that static Stage
             MapStage = mapStage;
             
@@ -138,17 +134,8 @@ package loom.modestmaps
             grid.onChange += gridChange;
             addChild(grid);
             
-            scale = densityScale;
-            
-            // Zoom out in debug mode to show out-of-viewport tiles
-            if (grid.debug) {
-                scale *= 0.25;
-                grid.x = width/2*densityScale/scale-width/2;
-                grid.y = height/2*densityScale/scale-height/2;
-            }
-
             setSize(width, height);
-
+            
             markerClip = new MarkerClip(this);
             addChild(markerClip);
 
@@ -193,7 +180,6 @@ package loom.modestmaps
             //NOTE: not porting DebugField for now at least...
             //addChild(grid.debugField);
         }
-        
         
         private function gridPan(state:MapState, deltaX:Number, deltaY:Number):void {
             onPan(state, deltaX, deltaY);
@@ -383,13 +369,29 @@ package loom.modestmaps
         */
         public function setSize(w:Number, h:Number):void
         {
-            if (w != mapWidth || h != mapHeight)
+            if (w != baseMapWidth || h != baseMapHeight)
             {
-                mapWidth = w;
-                mapHeight = h;
-    
-                // mask out out of bounds marker remnants
-                clipRect = new Rectangle(0,0,mapWidth,mapHeight);
+                if (w != NaN) baseMapWidth = w;
+                if (h != NaN) baseMapHeight = h;
+                
+                // The global (down)scale based on the density
+                var densityScale = mapProvider.supportsHighDPI ? 1 : Platform.getDPI()/200;
+                
+                mapWidth = baseMapWidth/densityScale;
+                mapHeight = baseMapHeight/densityScale;
+                
+                scale = densityScale;
+                
+                // Zoom out in debug mode to show out-of-viewport tiles
+                if (grid.debug) {
+                    scale *= 0.25;
+                    grid.x = mapWidth/2*densityScale/scale-mapWidth/2;
+                    grid.y = mapHeight/2*densityScale/scale-mapHeight/2;
+                } else {
+                    // mask out out of bounds marker remnants
+                    clipRect = new Rectangle(0,0,mapWidth,mapHeight);
+                }
+                
                 
                 grid.resizeTo(new Point(mapWidth, mapHeight));
                 
@@ -461,6 +463,8 @@ package loom.modestmaps
             
             // among other things this will notify the marker clip that its cached coordinates are invalid
             onProviderChange(newProvider);
+            
+            setSize(NaN, NaN);
         }
         
        /**
