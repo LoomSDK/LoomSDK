@@ -437,13 +437,16 @@ VectorSVG::VectorSVG() {
     path = NULL;
     image = NULL;
 }
+
 VectorSVG::~VectorSVG() {
 	reset();
 }
+
 void VectorSVG::reset() {
     resetInfo();
     resetImage();
 }
+
 void VectorSVG::resetInfo() {
     if (path != NULL) {
         loom_asset_unsubscribe(path->c_str(), onReload, this);
@@ -451,35 +454,41 @@ void VectorSVG::resetInfo() {
         path = NULL;
     }
 }
+
 void VectorSVG::resetImage() {
     if (image != NULL) {
         nsvgDelete(image);
         image = NULL;
     }
 }
+
 void VectorSVG::loadFile(utString path, utString units, float dpi) {
 	reset();
-	this->units = utString(path);
+	this->units = units;
 	this->dpi = dpi;
 	this->path = lmNew(NULL) utString(path);
 	reload();
-	loom_asset_subscribe(path.c_str(), onReload, this, false);
+	loom_asset_subscribe(path.c_str(), onReload, this, true);
 }
+
 void VectorSVG::onReload(void *payload, const char *name) {
 	VectorSVG* svg = static_cast<VectorSVG*>(payload);
 	lmAssert(strncmp(svg->path->c_str(), name, svg->path->size()) == 0, "expected svg path and reloaded path mismatch: %s %s", svg->path->c_str(), name);
 	svg->reload();
 }
+
 void VectorSVG::reload() {
 	resetImage();
 	char* data = static_cast<char*>(loom_asset_lock(path->c_str(), LATText, true));
 	parse(data, units.c_str(), dpi);
 	loom_asset_unlock(path->c_str());
 }
+
 void VectorSVG::loadString(utString svg, utString units, float dpi) {
 	reset();
 	parse(svg.c_str(), units.c_str(), dpi);
 }
+
 void VectorSVG::parse(const char* svg, const char* units, float dpi) {
 	image = nsvgParse((char*) svg, units, dpi);
 	if (image->shapes == NULL) {
@@ -487,6 +496,7 @@ void VectorSVG::parse(const char* svg, const char* units, float dpi) {
 		return;
 	}
 }
+
 float VectorSVG::getWidth() const {
 	return image == NULL ? 0.0f : image->width;
 }
