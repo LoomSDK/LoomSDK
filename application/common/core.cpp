@@ -58,7 +58,7 @@ void loop()
         if(!stage)
             continue;
 
-        // Adjust coordinates for mouse events to work proprly on high dpi screens.
+        // Adjust coordinates for mouse events to work properly on high dpi screens.
         if(event.type == SDL_MOUSEMOTION 
             || event.type == SDL_MOUSEBUTTONDOWN 
             || event.type == SDL_MOUSEBUTTONUP)
@@ -154,6 +154,7 @@ void loop()
             stage->_TouchMovedDelegate.pushArgument((int)event.motion.which);
             stage->_TouchMovedDelegate.pushArgument(event.motion.x);
             stage->_TouchMovedDelegate.pushArgument(event.motion.y);
+            stage->_TouchMovedDelegate.pushArgument((int)event.motion.state);
             stage->_TouchMovedDelegate.invoke();
         }
 #endif
