@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.StringWriter;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 
 import org.apache.http.Header;
 import org.apache.http.entity.ByteArrayEntity;
@@ -63,7 +64,7 @@ public class LoomHTTP
     }
 
     
-    public static int send(final String url, String httpMethod, final long callback, final long payload, byte[] body, final String responseCacheFile, final boolean base64EncodeResponseData, boolean followRedirects)
+    public static int send(final String url, String httpMethod, final long callback, final long payload, byte[] body, final String responseCacheFile, boolean followRedirects)
     {
         SendTask st = null;
         
@@ -86,7 +87,6 @@ public class LoomHTTP
         st.payload = payload;
         st.body = body;
         st.responseCacheFile = responseCacheFile;
-        st.base64EncodeResponseData = base64EncodeResponseData;
         st.followRedirects = followRedirects;
         st.headers.putAll(headers);
         
@@ -143,6 +143,9 @@ public class LoomHTTP
         
         public int index;
         
+        public long bytesWritten;
+        public long bytesTotal;
+        
         public boolean busy;
         public boolean cancel;
         
@@ -154,7 +157,6 @@ public class LoomHTTP
         public long payload;
         public byte[] body;
         public String responseCacheFile;
-        public boolean base64EncodeResponseData;
         public boolean followRedirects;
         public Hashtable<String, String> headers;
         
@@ -168,6 +170,13 @@ public class LoomHTTP
             @Override
             public String[] getAllowedContentTypes() {
                 return new String[]{".*"};
+            }
+            
+            @Override
+            public void onProgress(long written, long total) 
+            {
+                bytesWritten = written;
+                bytesTotal = total;
             }
             
             @Override
@@ -191,58 +200,22 @@ public class LoomHTTP
                     }
                 }
                 
-                final String fResponse;
-                
-                if (base64EncodeResponseData)
-                {
-                    fResponse = Base64.encodeToString(binaryData, Base64.NO_WRAP | Base64.NO_PADDING);
-                }
-                else
-                {
-                    try {
-                        fResponse = new String(binaryData, "UTF8");
-                    } catch (UnsupportedEncodingException e) {
-                        throw new AssertionError("UTF-8 is unknown");
-                    }
-                }
-                
-                success(fResponse);
+                success(binaryData);
             }
             
             @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable error)
+            public void onFailure(int statusCode, Header[] headers, byte[] binaryData, Throwable error)
             {
-                String content;
-                
-                if (errorResponse == null) {
-                    content = "";
-                } else {
-                    if (base64EncodeResponseData)
-                    {
-                        content = Base64.encodeToString(errorResponse, Base64.NO_WRAP | Base64.NO_PADDING);
-                    }
-                    else
-                    {
-                        try {
-                            content = new String(errorResponse, "UTF8");
-                        } catch (UnsupportedEncodingException e) {
-                            throw new AssertionError("UTF-8 is unknown");
-                        }
-                    }
-                }
-            
-                onFailure(statusCode, headers, content, error);
+                // TODO: return status code (probably on success too)
+                // In general we should probably just return the failure message untampered,
+                // as they're sometimes useful pages that you might want to access, parse or display.
+                failure(binaryData);
             }
             
             @Override
             public void onCancel()
             {
                 Log.i(TAG, index+" cancel response");
-            }
-            
-            public void onFailure(int statusCode, Header[] headers, String errorResponse, Throwable error) 
-            {
-                failure("request failed ("+statusCode+"): "+errorResponse);   
             }
             
         };
@@ -255,8 +228,7 @@ public class LoomHTTP
         public void run()
         {
             if (running) {
-                Log.w(TAG, index + " task already running!");
-                return;
+                Log.w(TAG, index + " task already running, overriding");
             }
             if (url == null) {
                 Log.w(TAG, index + " ran uninitialized");
@@ -328,7 +300,7 @@ public class LoomHTTP
         }
         
         
-        protected void success(final String response)
+        protected void success(final byte[] response)
         {
             Log.d(TAG, index + " send success");
             final int index = this.index;
@@ -338,9 +310,13 @@ public class LoomHTTP
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Log.d(TAG, index + " main success " + response.length() + " bytes, callback=" + callback + " payload=" + payload);
-                    LoomHTTP.onSuccess(response, callback, payload);
-                    LoomHTTP.complete(index);
+                    Log.d(TAG, index + " main success " + response.length + " bytes, callback=" + callback + " payload=" + payload);
+                    if (callback != -1 && payload != -1) {
+                        LoomHTTP.onSuccess(response, callback, payload);
+                        LoomHTTP.complete(index);
+                    } else {
+                        Log.w(TAG, index + " main invalid callback or payload, written " + bytesWritten + " total " + bytesTotal);
+                    }
                 }
             });
             finish();
@@ -348,8 +324,12 @@ public class LoomHTTP
         
         protected void failure(final String msg)
         {
+            failure(msg.getBytes(Charset.forName("UTF-8")));
+        }
+        
+        protected void failure(final byte[] response)
+        {
             Log.d(TAG, index + " send failure");
-            Log.w(TAG, "Failed to make request due to: " + msg);
             final int index = this.index;
             final long callback = this.callback;
             final long payload = this.payload;
@@ -358,7 +338,7 @@ public class LoomHTTP
             {
                 @Override
                 public void run() {
-                    LoomHTTP.onFailure("Error: "+msg, callback, payload);
+                    LoomHTTP.onFailure(response, callback, payload);
                     LoomHTTP.complete(index);
                 }
             });
@@ -371,7 +351,7 @@ public class LoomHTTP
             if (requestHandle == null) return;
             boolean success = requestHandle.cancel(true);
             Log.d(TAG, index + " cancel finished="+success);
-            if (success) finish();
+            finish();
         }
         
         protected void finish()
@@ -383,7 +363,6 @@ public class LoomHTTP
             payload = -1;
             body = null;
             responseCacheFile = null;
-            base64EncodeResponseData = false;
             followRedirects = false;
             requestHandle = null;
             savedFile = null;
@@ -455,6 +434,6 @@ public class LoomHTTP
 
     }
     
-    private static native void onSuccess(String data, long callback, long payload);
-    private static native void onFailure(String data, long callback, long payload);
+    private static native void onSuccess(byte[] data, long callback, long payload);
+    private static native void onFailure(byte[] data, long callback, long payload);
 }

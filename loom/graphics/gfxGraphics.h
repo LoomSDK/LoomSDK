@@ -36,6 +36,9 @@
 // Print all the OpenGL calls as they happen (a lot of overhead)
 #define GFX_CALL_PRINT 0
 
+// Enable profiling of all OpenGL calls
+#define GFX_CALL_PROFILE 0
+
 
 #include <SDL.h>
 
@@ -48,6 +51,7 @@
 #include <stdint.h>
 
 #include "loom/common/core/assert.h"
+#include "loom/common/core/performance.h"
 #include "loom/common/core/log.h"
 #include "lua.h"
 
@@ -89,13 +93,26 @@ namespace GFX
 #define GFX_PROC_PRINT(func, params, args)
 #endif
 
+#if GFX_CALL_PROFILE
+#define GFX_PROC_PROFILE_START(name) \
+        LOOM_PROFILE_START(name);
+
+#define GFX_PROC_PROFILE_END(name) \
+        LOOM_PROFILE_END(name);
+#else
+#define GFX_PROC_PROFILE_START(name)
+#define GFX_PROC_PROFILE_END(name)
+#endif
+
 #define GFX_PROC_BEGIN(ret, func, params) \
         ret (GFX_CALL *GFX_PREFIX_CALL(func,)) params; \
-        ret func params {
+        ret func params { \
+            GFX_PROC_PROFILE_START(func)
 
 
 
 #define GFX_PROC_MID(func, params, args) \
+        GFX_PROC_PROFILE_END(func) \
         GFX_PROC_PRINT(func, params, args) \
         GLenum error = GFX_PREFIX_CALL(glGetError, ()); \
         switch (error) { \
@@ -116,7 +133,7 @@ namespace GFX
                 lmLogError(gGFXLogGroup, "OpenGL error at %s: %s (0x%04x)", #func, errorName, error); \
                 GFX_DEBUG_BREAK \
                 lmAssert(error, "OpenGL error, see above for details."); \
-        } \
+        }
 
 #define GFX_PROC_VOID(func, params, args) \
         GFX_PROC_BEGIN(void, func, params) \

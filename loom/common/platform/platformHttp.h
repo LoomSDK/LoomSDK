@@ -19,11 +19,16 @@
  */
 
 
-#ifndef platform_platformHTTP_h
-#define platform_platformHTTP_h
-
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utString.h"
+#include "loom/common/utils/utByteArray.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef platform_platformHTTP_h
+#define platform_platformHTTP_h
 
 //Maximum number of in progress HTTP requests allowed by the system
 #define MAX_CONCURRENT_HTTP_REQUESTS    128   
@@ -50,7 +55,7 @@ typedef enum
 /**
  *  Callback type for receiving responses back from the `platform_HTTPSend` call.
  */
-typedef void (*loom_HTTPCallback)(void *payload, loom_HTTPCallbackType type, const char *data);
+typedef void (*loom_HTTPCallback)(void *payload, loom_HTTPCallbackType type, utByteArray *data);
 
 /**
  *  Call an HTTP send in one method. Other params are body and headers as they
@@ -61,7 +66,7 @@ typedef void (*loom_HTTPCallback)(void *payload, loom_HTTPCallbackType type, con
  */
 int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback callback, void *payload,
                        const char *body, int bodyLength, utHashTable<utHashedString, utString>& headers,
-                       const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects);
+                       const char *responseCacheFile, bool followRedirects);
 
 /**
  *  Cancels an in progress HTTP request that was started via platform_HTTPSend().
@@ -92,4 +97,9 @@ void platform_HTTPCleanup();
  *  Should be called in the main program loop. This calls updates on any async operations. Called internally by Loom.
  */
 void platform_HTTPUpdate();
+
+#ifdef __cplusplus
+};
+#endif
+
 #endif

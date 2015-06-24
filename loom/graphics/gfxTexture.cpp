@@ -653,8 +653,8 @@ int __stdcall Texture::loadTextureAsync_body(void *param)
             else
             {
                 //deserialize the image data from bytes
-                threadNote.imageAsset = static_cast<loom_asset_image_t*>(loom_asset_imageDeserializer(threadNote.bytes->getDataPtr(), 
-                                                                                                        threadNote.bytes->getSize(), 
+                threadNote.imageAsset = static_cast<loom_asset_image_t*>(loom_asset_imageDeserializer(threadNote.bytes.getDataPtr(), 
+                                                                                                        threadNote.bytes.getSize(), 
                                                                                                         &threadNote.iaCleanup));
                 if (threadNote.imageAsset == NULL) 
                 {
@@ -725,6 +725,7 @@ TextureInfo * Texture::initFromAssetManagerAsync(const char *path, bool highPrio
         threadNote.path = path;
         threadNote.tinfo = tinfo;
         threadNote.priority = highPriority;
+        threadNote.update = false;
 
         //add this texture to async queue
         loom_mutex_lock(Texture::sAsyncQueueMutex);
@@ -804,7 +805,7 @@ void Texture::updateFromBytesAsync(TextureID id, utByteArray *bytes, bool highPr
         threadNote.id = tinfo->id;
         threadNote.path = "";
         threadNote.tinfo = tinfo;
-        threadNote.bytes = bytes;
+        threadNote.bytes.allocateAndCopy(bytes->getDataPtr(), bytes->getSize());
         threadNote.priority = highPriority;
         threadNote.update = true;
 
@@ -903,8 +904,9 @@ TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name, b
         threadNote.id = tinfo->id;
         threadNote.path = "";
         threadNote.tinfo = tinfo;
-        threadNote.bytes = bytes;
+        threadNote.bytes.allocateAndCopy(bytes->getDataPtr(), bytes->getSize());
         threadNote.priority = highPriority;
+        threadNote.update = false;
 
         //add this texture to async queue
         loom_mutex_lock(Texture::sAsyncQueueMutex);
