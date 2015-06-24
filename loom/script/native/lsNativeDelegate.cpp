@@ -110,7 +110,7 @@ struct NativeDelegateCallNote
     void writeBytes(const char* value, UTsize size)
     {
         ensureBuffer(size);
-        memcpy(data + sizeof(unsigned char)*offset, value, size);
+        memcpy(&data[offset], value, size);
         offset += size;
     }
 
@@ -172,14 +172,14 @@ struct NativeDelegateCallNote
     
     void readBytes(const char* value, UTsize size)
     {
-        memcpy((void*) value, data + sizeof(unsigned char)*offset, size);
+        memcpy((void*) value, &data[offset], size);
         offset += size;
     }
 
     unsigned int readInt()
     {
         //assert(offset + 4 < ndata);
-        int v = 0;
+        unsigned int v = 0;
         memcpy(&v, &data[offset], sizeof(unsigned int));
         offset += 4;
         return v;
@@ -203,23 +203,24 @@ struct NativeDelegateCallNote
         return v;
     }
 
-    // Don't forget to free()
+    // Don't forget to lmFree()
     char *readString()
     {
         unsigned int strLen = readInt();
-        char *str = (char*)malloc(strLen + 1);
+        char *str = (char*)lmAlloc(NULL, strLen + 1);
         readBytes(str, strLen);
         str[strLen] = 0;
         return str;
     }
 
-    // Don't forget to free()
+    // Don't forget to lmDelete()
     utByteArray *readByteArray()
     {
+
         UTsize size = readInt();
-        utByteArray *bytes = new utByteArray();
-        bytes->reserve(size);
-        readBytes((const char*) bytes->getDataPtr(), size);
+        utByteArray *bytes = lmNew(NULL) utByteArray();
+        bytes->allocateAndCopy(&data[offset], size);
+        offset += size;
         return bytes;
     }
 
@@ -330,13 +331,14 @@ void NativeDelegate::executeDeferredCalls(lua_State *L)
                 case MSG_PushString:
                     str = ndcn->readString();
                     theDelegate->pushArgument(str);
-                    free(str);
+                    lmFree(NULL, str);
                     break;
 
                 case MSG_PushByteArray:
                     bytes = ndcn->readByteArray();
                     theDelegate->pushArgument(bytes);
-                    free(bytes);
+                    // Required to not delete for Android at this point
+                    // lmDelete(NULL, bytes);
                     break;
 
                 case MSG_PushDouble:
@@ -428,7 +430,7 @@ void NativeDelegate::registerDelegate(lua_State *L, NativeDelegate *delegate)
 
     if (!delegates)
     {
-        delegates = new utArray<NativeDelegate *>;
+        delegates = lmNew(NULL) utArray<NativeDelegate *>;
         sActiveNativeDelegates.insert(L, delegates);
     }
 
@@ -920,7 +922,7 @@ void NativeDelegate::invalidateLuaStateDelegates(lua_State *L)
         }
 
         sActiveNativeDelegates.erase(L);
-        delete delegates;
+        lmDelete(NULL, delegates);
     }
 }
 

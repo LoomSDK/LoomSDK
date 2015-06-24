@@ -152,6 +152,7 @@ package loom.modestmaps.core
         
         public var urls:Vector.<String>;
         public var openRequests:int;
+        public var lastLoad:int = -1;
         
         public var quadNode:QuadNode;
         
