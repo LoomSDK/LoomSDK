@@ -264,7 +264,7 @@ endif
 #ifeq (Windows,$(findstring Windows,$(OS))$(MSYSTEM)$(TERM))
 ifdef SystemRoot
   HOST_SYS= Windows
-  HOST_RM= del /Q
+  HOST_RM= rm -f
 else
   HOST_SYS:= $(shell uname -s)
   ifneq (,$(findstring MINGW,$(HOST_SYS)))
