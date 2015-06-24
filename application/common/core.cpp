@@ -16,6 +16,9 @@
 #include "loom/common/core/log.h"
 #include "loom/common/platform/platform.h"
 
+#include "loom/common/platform/platformTime.h"
+#include "loom/engine/loom2d/l2dPoint.h"
+
 #include "loom/engine/bindings/sdl/lmSDL.h"
 
 #include "loom/script/native/core/system/lmProcess.h"
@@ -185,13 +188,26 @@ void loop()
     loom_tick();
 }
 
+struct TestPoint {
+    float x;
+    float y;
+};
+
 int
 main(int argc, char *argv[])
 {
 #ifdef WIN32
     // When on windows, do some workarounds so our console window
     // behaves properly.
-    
+
+    /*
+    loom_precision_timer_t time = loom_startTimer();
+    for (int i = 0; i < 200000000; i++) {
+        lmNew(NULL) Loom2D::Point();
+    }
+    int dur = loom_readTimer(time);
+    */
+
     // put the program name into argv[0]
     char filename[_MAX_PATH];
     GetModuleFileNameA(NULL, filename, _MAX_PATH);
@@ -291,6 +307,8 @@ main(int argc, char *argv[])
     // Initialize Loom!
     loom_appSetup();    
     supplyEmbeddedAssets();
+
+    //lmLog(coreLogGroup, "Time init %d", dur);
 
     /* Main render loop */
     gLoomExecutionDone = 0;
