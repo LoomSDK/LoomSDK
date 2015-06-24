@@ -16,6 +16,7 @@ package loom.modestmaps.core.painter
     import loom2d.textures.TextureHTTPFailDelegate;
     import loom2d.textures.TextureSmoothing;
     import system.Number;
+    import system.platform.Platform;
     import system.Void;
         
     import loom2d.events.Event;
@@ -204,6 +205,8 @@ package loom.modestmaps.core.painter
         public static function getTexture(url:String, onSuccess:TextureAsyncLoadCompleteDelegate, onFailure:TextureHTTPFailDelegate, cacheOnDisk:Boolean, highPriority:Boolean):Texture
         {
             var texture:Texture = null;
+            // Debug trace on each new or update texture load
+            //trace(texturePool.length > 0 ? "update" : "new", url);
             if (texturePool.length > 0) {
                 texture = texturePool.pop();
                 texture.updateFromHTTP(url, onSuccess, onFailure, cacheOnDisk, highPriority);
@@ -298,6 +301,7 @@ package loom.modestmaps.core.painter
          *  usual operation is extremely quick, ~1ms or so */
         private function processQueue():void
         {
+            verifyFirstRequest();
             if (headQueue && openRequests.length < MaxOpenRequests) {
                 
                 
@@ -331,11 +335,41 @@ package loom.modestmaps.core.painter
             previousOpenRequests = openRequests.length;
         }
         
+        /**
+         * Check for hanging open requests with tiles that were timed out or otherwise removed
+         */
+        private function verifyFirstRequest() {
+            if (openRequests.length == 0) return;
+            
+            var texture:Texture = openRequests[0];
+            var valid = false;
+            
+             //check this texture against all possible tiles that may have requested it
+            if(loaderTiles[texture] != null)
+            {
+                var tileList:Vector.<Tile> = loaderTiles[texture];
+                for each (var tile:Tile in tileList) {
+                    // Debug trace hanging open request tiles
+                    //trace(tileList.length, tile.column, tile.row, tile.zoom, tile.openRequests, tile.urls.length, "W", tile.inWell, "P", tile.isPainting, tile.isPainted, "S", tile.isShowing, "V", tile.isVisible, tile.loadStatus, Platform.getTime()-tile.lastLoad);
+                    if (tile.openRequests > 0) {
+                        valid = true;
+                    }
+                }
+            }
+            
+            if (!valid) {
+                Debug.print("Invalid request texture detected, removing...");
+                onLoadFail(texture);
+            }
+        }
+        
         private function loadNextURLForTile(tile:Tile):Boolean
         {
             if (!tile) return true;
             
             Debug.assert(tile.isPainting, "should be painting "+tile.loadStatus);
+            
+            tile.lastLoad = Platform.getTime();
             
             // TODO: add urls to Tile?
             var urls:Vector.<String> = tile.urls as Vector.<String>;

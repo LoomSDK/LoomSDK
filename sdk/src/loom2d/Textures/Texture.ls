@@ -529,11 +529,10 @@ package loom2d.textures
             var req:HTTPRequest = new HTTPRequest(url);
             req.method = "GET";
             req.cacheFileName = (cacheOnDisk) ? cacheFile : null;
-            req.encodeResponse = !cacheOnDisk;
 
 
             //setup onSuccess
-            var success:Function = function(result:String):void
+            var success:Function = function(result:ByteArray):void
             {
                 var tInfo:TextureInfo = null;
                 //Console.print("Successfull download of HTTP texture from url: " + url); 
@@ -566,20 +565,17 @@ package loom2d.textures
                     }
                     else
                     {
-                        //convert the string from Base64 encoded to a ByteArray
-                        var texBytes:ByteArray = new ByteArray();
-                        Base64.decode(result, texBytes);
 
                         //load the bytes Async
                         if (existingNativeID  == -1) {
-                            tInfo = Texture2D.initFromBytesAsync(texBytes, urlsha2, highPriority);
+                            tInfo = Texture2D.initFromBytesAsync(result, urlsha2, highPriority);
                             if(tInfo == null)
                             {
                                 Console.print("WARNING: Unable to load texture from bytes given data from url: " + url); 
                             }
                         } else {
                             //Texture2D.updateFromBytes(existingNativeID, texBytes);
-                            Texture2D.updateFromBytesAsync(existingNativeID, texBytes, highPriority);
+                            Texture2D.updateFromBytesAsync(existingNativeID, result, highPriority);
                             tInfo = tex.textureInfo;
                         }                 
                     }
@@ -606,7 +602,7 @@ package loom2d.textures
 
 
             //setup onFailure
-            var fail:Function = function(result:String):void
+            var fail:Function = function(result:ByteArray):void
             {
                 //Console.print("ERROR: Failed download of HTTP texture from url: " + url);
                 //remove reference to the request so it can now be GCed

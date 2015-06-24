@@ -152,10 +152,10 @@ struct AsyncLoadNote
     utString                    path;
     TextureInfo                 *tinfo;
     //just update instead of creating a new one
-    bool                        update = false;
+    bool                        update;
 
     //the following are only used for async loading of pure byte data
-    utByteArray                 *bytes;
+    utByteArray                 bytes;
     loom_asset_image_t          *imageAsset;
     LoomAssetCleanupCallback    iaCleanup;
 };

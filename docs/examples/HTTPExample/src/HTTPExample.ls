@@ -41,13 +41,15 @@ package
             request.method = "GET";
 
             // set the success delegate
-            request.onSuccess += function(v:String) {                 
+            request.onSuccess += function(v:ByteArray) {                 
                 
-                trace("Success", v);
-
+                var str = v.readUTFBytes(v.length);
+                
+                trace("Success", str);
+                
                 // parse the returned JSON
                 var json = new JSON();
-                json.loadString(v);
+                json.loadString(str);
 
                 // set the label to our city 
                 label.text = "Hello " + json.getString("city") + "!"; 
@@ -55,10 +57,10 @@ package
             };
 
             // set the failure delegate
-            request.onFailure += function(v:String) {
+            request.onFailure += function(v:ByteArray) {
                 // darn, there was an error 
                 label.text = "Error receiving data";
-                trace("Error:", v); 
+                trace("Error:", v.readUTFBytes(v.length)); 
             };
             
 

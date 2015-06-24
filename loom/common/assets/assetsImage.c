@@ -22,6 +22,7 @@
 #include <string.h>
 #include "loom/common/core/allocator.h"
 #include "loom/common/core/log.h"
+#include "loom/common/core/assert.h"
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
 
@@ -92,6 +93,7 @@ void loom_asset_imageDtor(void *bits)
 
 void *loom_asset_imageDeserializer( void *buffer, size_t bufferLen, LoomAssetCleanupCallback *dtor )
 {
+   lmAssert(buffer != NULL, "buffer should not be null");
 
    loom_asset_image_t *img = lmAlloc(gAssetAllocator, sizeof(loom_asset_image_t));
 

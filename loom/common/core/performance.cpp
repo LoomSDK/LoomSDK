@@ -235,6 +235,12 @@ F64 endHighResolutionTimer(U32 timeStore[2])
 }
 #endif
 
+extern "C" {
+    LUA_GC_PROFILE(fullgc)
+    LUA_GC_PROFILE(step)
+}
+
+
 LoomProfiler::LoomProfiler()
 {
 #if !defined(LOOM_PLATFORM_IS_APPLE) && LOOM_PLATFORM != LOOM_PLATFORM_WIN32
@@ -625,7 +631,8 @@ void LoomProfiler::dump()
 
     lmLogError(gProfilerLogGroup, "Profiler Data Dump:");
     lmLogError(gProfilerLogGroup, "Ordered by non-sub total time -");
-    lmLogError(gProfilerLogGroup, "%%NSTime  %% Time  Invoke #  Name");
+    lmLogError(gProfilerLogGroup, "%%NSTime  %% Time  AvgTime  MaxTime  MinTime Invoke # Name");
+                                   
 
     suppressedEntries = 0;
 
@@ -660,7 +667,7 @@ void LoomProfiler::dump()
     lmLogError(gProfilerLogGroup, "Suppressed %i items with < %.1f%% of measured time.", suppressedEntries, threshold);
     lmLogError(gProfilerLogGroup, "");
     lmLogError(gProfilerLogGroup, "Ordered by stack trace total time -");
-    lmLogError(gProfilerLogGroup, "%% Time  %% NSTime AvgTime  MaxTime  MinTime  Invoke #  Name");
+    lmLogError(gProfilerLogGroup, "  %% Time %% NSTime  AvgTime  MaxTime  MinTime Invoke # Name");
 
     mCurrentLoomProfilerEntry->mTotalTime = endHighResolutionTimer(mCurrentLoomProfilerEntry->mStartTime);
 
