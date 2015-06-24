@@ -106,6 +106,8 @@ typedef int            S32;
 typedef float          F32;
 typedef double         F64;
 
+
+
 class LoomProfiler
 {
     enum
@@ -220,5 +222,33 @@ public:
     static LoomProfilerRoot pdata ## name ## obj(# name); \
     LoomScopedProfiler scopedProfiler ## name ## obj(&pdata ## name ## obj);
 };
+
+
+
+typedef void(*gLuaGC_callback)();
+typedef void*(*gLuaGC_callback_begin)();
+typedef void(*gLuaGC_callback_end)(void*);
+#define LUA_GC_SET(name) \
+    gLuaGC_callback_begin gLuaGC_ ## name ## _begin = lgc_ ## name ## _begin; \
+    gLuaGC_callback_end   gLuaGC_ ## name ## _end   = lgc_ ## name ## _end; \
+
+#define LUA_GC_PROFILE_NAME_STR(name) "luaGC_" #name
+#define LUA_GC_PROFILE_NAME(name) luaGC_ ## name
+#define LUA_GC_PROFILE_DATA_INTERNAL_CONCAT(name) pdata ## name ## obj
+#define LUA_GC_PROFILE_DATA_INTERNAL(name) LUA_GC_PROFILE_DATA_INTERNAL_CONCAT(name)
+#define LUA_GC_PROFILE_DATA(name) LUA_GC_PROFILE_DATA_INTERNAL(LUA_GC_PROFILE_NAME(name))
+
+#define LUA_GC_PROFILE(name) \
+    void* lgc_ ## name ## _begin() { \
+        static LoomProfilerRoot LUA_GC_PROFILE_DATA(name)(LUA_GC_PROFILE_NAME_STR(name)); \
+        if (gLoomProfiler) gLoomProfiler->hashPush(& LUA_GC_PROFILE_DATA(name)); \
+        return (void*)& LUA_GC_PROFILE_DATA(name); \
+    } \
+    void  lgc_ ## name ## _end(void* LUA_GC_PROFILE_DATA(name)) { \
+        if (gLoomProfiler) gLoomProfiler->hashPop((LoomProfilerRoot*) LUA_GC_PROFILE_DATA(name)); \
+    } \
+    LUA_GC_SET(name) \
+
+
 #endif
 #endif
