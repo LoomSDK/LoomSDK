@@ -203,6 +203,7 @@ static utArray<loom_asset_t *> gAssetLoadQueue;
 static utHashTable<utIntHashKey, LoomAssetDeserializeCallback> gAssetDeserializerMap;
 static utArray<LoomAssetRecognizerCallback> gRecognizerList;
 static LoomAssetCommandCallback             gCommandCallback = NULL;
+static int gShuttingDown = 0;
 
 // Asset server connection state.
 static MutexHandle          gAssetServerSocketLock    = NULL;
@@ -391,6 +392,8 @@ void loom_asset_waitForConnection(int msToWait)
 
 void loom_asset_shutdown()
 {
+    gShuttingDown = 1;
+
     loom_asset_flushAll();
 
     // Clear out our queues and maps.
@@ -845,10 +848,12 @@ void loom_asset_flush(const char *name)
 {
    // Currently we only want to do this on the main thread so piggy back on the
    // native delegate sanity check to bail if on secondary thread.
-   if(platform_getCurrentThreadId() != LS::NativeDelegate::smMainThreadID && LS::NativeDelegate::smMainThreadID != 0xBAADF00D)
+   if(platform_getCurrentThreadId() != LS::NativeDelegate::smMainThreadID
+      && LS::NativeDelegate::smMainThreadID != 0xBAADF00D)
       return;
 
    loom_mutex_lock(gAssetLock);
+
     // Delete it + unload it.
     loom_asset_t *asset = loom_asset_getAssetByName(name, 0);
 
@@ -869,7 +874,8 @@ void loom_asset_flush(const char *name)
     asset->state = loom_asset_t::Unloaded;
 
     // Fire subscribers.
-    loom_asset_notifySubscribers(asset->name.c_str());
+    if(!gShuttingDown)
+        loom_asset_notifySubscribers(asset->name.c_str());
 
     loom_mutex_unlock(gAssetLock);
 }

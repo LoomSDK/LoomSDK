@@ -123,7 +123,7 @@ public:
 
 class VectorSVG {
 protected:
-	utString* path;
+	utString path;
 	utString units;
 	float dpi;
 

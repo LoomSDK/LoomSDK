@@ -434,7 +434,6 @@ void VectorTextFormat::load(utString fontName, utString filePath) {
 
 
 VectorSVG::VectorSVG() {
-    path = NULL;
     image = NULL;
 }
 
@@ -448,10 +447,9 @@ void VectorSVG::reset() {
 }
 
 void VectorSVG::resetInfo() {
-    if (path != NULL) {
-        loom_asset_unsubscribe(path->c_str(), onReload, this);
-        lmDelete(NULL, path);
-        path = NULL;
+    if (path.empty() == false) {
+        loom_asset_unsubscribe(path.c_str(), onReload, this);
+        path.clear();
     }
 }
 
@@ -463,24 +461,29 @@ void VectorSVG::resetImage() {
 }
 
 void VectorSVG::loadFile(utString path, utString units, float dpi) {
+	lmLogError(gGFXVectorRendererLogGroup, "Loading %s", path.c_str());
 	reset();
 	this->units = units;
 	this->dpi = dpi;
-	this->path = lmNew(NULL) utString(path);
-	loom_asset_subscribe(path.c_str(), onReload, this, true);
+	this->path = path;
+	loom_asset_subscribe(this->path.c_str(), onReload, this, 1);
+
+    // Ensure we load if it wasn't present already.
+    if(!image)
+        reload();
 }
 
 void VectorSVG::onReload(void *payload, const char *name) {
 	VectorSVG* svg = static_cast<VectorSVG*>(payload);
-	lmAssert(strncmp(svg->path->c_str(), name, svg->path->size()) == 0, "expected svg path and reloaded path mismatch: %s %s", svg->path->c_str(), name);
+	lmAssert(strncmp(svg->path.c_str(), name, svg->path.size()) == 0, "expected svg path and reloaded path mismatch: %s %s", svg->path.c_str(), name);
 	svg->reload();
 }
 
 void VectorSVG::reload() {
 	resetImage();
-	char* data = static_cast<char*>(loom_asset_lock(path->c_str(), LATText, true));
+	char* data = static_cast<char*>(loom_asset_lock(path.c_str(), LATText, true));
 	parse(data, units.c_str(), dpi);
-	loom_asset_unlock(path->c_str());
+	loom_asset_unlock(path.c_str());
 }
 
 void VectorSVG::loadString(utString svg, utString units, float dpi) {
@@ -489,8 +492,15 @@ void VectorSVG::loadString(utString svg, utString units, float dpi) {
 }
 
 void VectorSVG::parse(const char* svg, const char* units, float dpi) {
-	image = nsvgParse((char*) svg, units, dpi);
-	if (image->shapes == NULL) {
+    // Parse is destructive so make a copy.
+    char *svgTemp = (char*)lmAlloc(NULL, strlen(svg));
+    memcpy(svgTemp, svg, strlen(svg) + 1);
+	image = nsvgParse((char*) svgTemp, units, dpi);
+    lmFree(NULL, svgTemp);
+	if (image->shapes == NULL) 
+	{
+		lmLogError(gGFXVectorRendererLogGroup, "Failure loading %s - no shapes.", path.c_str());
+        nsvgDelete(image);
 		image = NULL;
 		return;
 	}
@@ -506,6 +516,7 @@ void VectorSVG::render(float x, float y, float scale, float lineThickness) {
 	LOOM_PROFILE_SCOPE(vectorRenderSVG);
 
 	if (image == NULL) return;
+
 	nvgSave(nvg);
 	nvgTranslate(nvg, x, y);
 	nvgScale(nvg, scale, scale);
