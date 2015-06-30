@@ -294,7 +294,6 @@ const char *LoomJni::getWritablePath()
         "()Ljava/lang/String;"))
     {
         jstring str = (jstring)t.getEnv()->CallStaticObjectMethod(t.classID, t.methodID);
-        t.getEnv()->DeleteLocalRef(t.classID);
         writablePath = jstring2string(str);
         t.getEnv()->DeleteLocalRef(str);
 
