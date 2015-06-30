@@ -128,6 +128,7 @@ void loop()
             stage->_TouchMovedDelegate.pushArgument((int)event.tfinger.fingerId);
             stage->_TouchMovedDelegate.pushArgument(event.tfinger.x*stage->stageWidth);
             stage->_TouchMovedDelegate.pushArgument(event.tfinger.y*stage->stageHeight);
+            stage->_TouchMovedDelegate.pushArgument(0);
             stage->_TouchMovedDelegate.invoke();
         }
 #else
