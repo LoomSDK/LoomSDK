@@ -183,6 +183,7 @@ public:
 	VectorFill currentFill;
 	bool pathDirty;
 	bool textFormatDirty;
+	GFX::VectorTextFormat currentTextFormat;
 	float boundL;
 	float boundT;
 	float boundR;
