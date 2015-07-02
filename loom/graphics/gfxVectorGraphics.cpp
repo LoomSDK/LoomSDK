@@ -99,7 +99,7 @@ void VectorGraphics::clear() {
 #pragma warning(default: 4056 4756)
 }
 
-void VectorGraphics::inflateBounds(Loom2D::Rectangle r) {
+void VectorGraphics::inflateBounds(const Loom2D::Rectangle& r) {
 	boundL = fminf(r.x, boundL);
 	boundT = fminf(r.y, boundT);
 	boundR = fmaxf(r.x + r.width, boundR);
