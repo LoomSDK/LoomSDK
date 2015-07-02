@@ -27,7 +27,7 @@
 
 namespace GFX
 {
-lmDeclareLogGroup(gGFXLogGroup);
+
 
 
 
@@ -101,7 +101,6 @@ void VectorGraphics::clear() {
 }
 
 void VectorGraphics::inflateBounds(Loom2D::Rectangle r) {
-	lmLogWarn(gGFXLogGroup, "inflateBounds x:%f y:%f w:%f h%f", r.x, r.y, r.width, r.height);
 	boundL = fminf(r.x, boundL);
 	boundT = fminf(r.y, boundT);
 	boundR = fmaxf(r.x + r.width, boundR);
