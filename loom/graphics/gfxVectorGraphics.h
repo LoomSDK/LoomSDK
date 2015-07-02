@@ -173,7 +173,7 @@ protected:
 	void addShape(VectorShape *shape);
 	void restartPath();
 	void resetStyle();
-	void inflateBounds(float x, float y);
+	void inflateBounds(Loom2D::Rectangle rect);
 	void ensureTextFormat();
 
 public:
