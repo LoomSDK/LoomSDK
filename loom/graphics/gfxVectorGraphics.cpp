@@ -23,7 +23,6 @@
 #include "loom/graphics/gfxVectorGraphics.h"
 
 #include "loom/script/runtime/lsProfiler.h"
-#include "loom/common/core/log.h"
 
 namespace GFX
 {
