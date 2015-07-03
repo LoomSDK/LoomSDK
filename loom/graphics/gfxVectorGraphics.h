@@ -173,7 +173,7 @@ protected:
 	void addShape(VectorShape *shape);
 	void restartPath();
 	void resetStyle();
-	void inflateBounds(float x, float y);
+	void inflateBounds(const Loom2D::Rectangle& rect);
 	void ensureTextFormat();
 
 public:
@@ -183,6 +183,7 @@ public:
 	VectorFill currentFill;
 	bool pathDirty;
 	bool textFormatDirty;
+	GFX::VectorTextFormat currentTextFormat;
 	float boundL;
 	float boundT;
 	float boundR;
