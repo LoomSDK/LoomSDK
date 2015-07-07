@@ -260,8 +260,10 @@ package loom2d.display
             else
             {
                 // Moving an item late in the array towards beginning of array.
-                for(var j=oldIndex; j>=index; j--)
+                for (var j = oldIndex; j > index; j--)
+                {
                     mChildren[j] = mChildren[j - 1];
+                }
                 mChildren[index] = child;
             }
 
