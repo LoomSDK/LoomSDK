@@ -1,7 +1,7 @@
 package
 {
     import loom.Application;
-	import loom.platform.LoomKey;
+    import loom.platform.LoomKey;
     import loom2d.display.Graphics;
     import loom2d.display.Quad;
     import loom2d.display.Shape;
@@ -16,7 +16,7 @@ package
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
     import loom2d.events.TouchPhase;
-	import loom2d.events.KeyboardEvent;
+    import loom2d.events.KeyboardEvent;
     import loom2d.Loom2D;
     import loom2d.math.Rectangle;
     import loom2d.text.BitmapFont;
@@ -33,21 +33,21 @@ package
         private var d:Graphics;
 
         var sg:Shape;
-		var sd:Shape;
+        var sd:Shape;
         var q:Quad;
         var logo:Image;
-		
-		private function beginBounds(gfx:Graphics):void
-		{
-			gfx.clearBounds();
-		}
-		
-		private function endBounds(gfx:Graphics, s:float):void
-		{
-			var bounds = gfx.getBounds();
-			d.lineStyle(0.5, 0xFF0000);
+
+        private function beginBounds(gfx:Graphics):void
+        {
+            gfx.clearBounds();
+        }
+
+        private function endBounds(gfx:Graphics, s:float):void
+        {
+            var bounds = gfx.getBounds();
+            d.lineStyle(0.5, 0xFF0000);
             d.drawRect(bounds.x * s, bounds.y * s, bounds.width * s, bounds.height * s);
-		}
+        }
 
         override public function run():void
         {
@@ -98,12 +98,12 @@ package
             // SVG
             var svg = new SVG();
             svg.loadFile("assets/nano.svg");
-			beginBounds(g);
+            beginBounds(g);
             g.drawSVG(svg, 220, 60, 0.2);
             endBounds(g, sg.scale);
 
             // SVG Loom Logo
-			beginBounds(g);
+            beginBounds(g);
             g.drawSVG(SVG.fromFile("assets/loom_vector_logo_mod.svg"), 290, 112, 0.45);
             endBounds(g, sg.scale);
 
@@ -114,7 +114,7 @@ package
             var lv:Vector.<Number> = [0.5, 1, 1.5, 2, 3, 4];
             for (var li = 0; li < ln; li++)
             {
-				beginBounds(g);
+                beginBounds(g);
                 g.drawSVG(svgLines, 220, 95+li*5, 0.2, lv[li]);
                 endBounds(g, sg.scale);
             }
@@ -124,9 +124,9 @@ package
 
             // Fill
             g.beginFill(0x3EA80B, 1);
-			beginBounds(g);
+            beginBounds(g);
             g.drawRect(110, y, 100, 10);
-			endBounds(g, sg.scale);
+            endBounds(g, sg.scale);
             g.endFill();
             y += 20;
 
@@ -134,89 +134,89 @@ package
             g.lineStyle(1);
 
             // Implicit moveTo(0,0)
-			beginBounds(g);
+            beginBounds(g);
             g.lineTo(100, 0);
             endBounds(g, sg.scale);
 
             // Explicit moveTo
-			beginBounds(g);
+            beginBounds(g);
             g.moveTo(0, 0);
             g.lineTo(0, 100);
             endBounds(g, sg.scale);
 
             // Shape rendering
-			beginBounds(g);
+            beginBounds(g);
             g.drawCircle(50, 50, 50);
             endBounds(g, sg.scale);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.drawEllipse(50, 50, 50, 20);
             endBounds(g, sg.scale);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.drawRect(25, 25, 50, 50);
             endBounds(g, sg.scale);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.drawRoundRect(35, 35, 30, 30, 10, 15);
             endBounds(g, sg.scale);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.drawRoundRectComplex(50-2.5-5, 50-2.5-3.5, 5, 5, 4, 0, 0, 0);
             endBounds(g, sg.scale);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.drawRoundRectComplex(50-2.5-5, 50-2.5+3.5, 5, 5, 0, 0, 4, 0);
             endBounds(g, sg.scale);
 
-			beginBounds(g);
+            beginBounds(g);
             g.drawRoundRectComplex(50-2.5+5, 50-2.5-3.5, 5, 5, 0, 4, 0, 0);
             endBounds(g, sg.scale);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.drawRoundRectComplex(50-2.5+5, 50-2.5+3.5, 5, 5, 0, 0, 0, 4);
             endBounds(g, sg.scale);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.drawArc(25, 25, 23,  1.5*Math.PI, 1.0*Math.PI, 1);
             endBounds(g, sg.scale);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.drawArc(75, 25, 23, -0.5*Math.PI, 0.0*Math.PI, 2);
             endBounds(g, sg.scale);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.drawArc(25, 75, 23,  0.5*Math.PI, 1.0*Math.PI, 2);
             endBounds(g, sg.scale);
 
-			beginBounds(g);
+            beginBounds(g);
             g.drawArc(75, 75, 23,  0.5*Math.PI, 0.0*Math.PI, 1);
             endBounds(g, sg.scale);
 
             // arcTo with implicit initial moveTo after shapes
-		
-			beginBounds(g);
+
+            beginBounds(g);
             g.arcTo(  0,  75, 25, 75, 25);
             endBounds(g, sg.scale);
-			
+
             g.moveTo(100, 100);
-			beginBounds(g);
-			g.arcTo(100,  75, 75, 75, 25);
-			endBounds(g, sg.scale);
-			
-            g.moveTo(100,   0);
-			beginBounds(g);
-			g.arcTo(100,  25, 75, 25, 25);
+            beginBounds(g);
+            g.arcTo(100,  75, 75, 75, 25);
             endBounds(g, sg.scale);
-			
+
+            g.moveTo(100,   0);
+            beginBounds(g);
+            g.arcTo(100,  25, 75, 25, 25);
+            endBounds(g, sg.scale);
+
             g.moveTo(  0,   0);
-			beginBounds(g);
-			g.arcTo(  0,  25, 25, 25, 25);
-			endBounds(g, sg.scale);
+            beginBounds(g);
+            g.arcTo(  0,  25, 25, 25, 25);
+            endBounds(g, sg.scale);
 
             TextFormat.load("sans", "assets/SourceSansPro-Regular.ttf");
             // Simple text with default format
-			beginBounds(g);
+            beginBounds(g);
             g.drawTextLine(220, 0, "hello");
             endBounds(g, sg.scale);
 
@@ -225,8 +225,8 @@ package
             format.color = 0xA60000;
             format.size = 30;
             g.textFormat(format);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.drawTextLine(220, 0, "world");
             endBounds(g, sg.scale);
 
@@ -238,37 +238,37 @@ package
             g.textFormat(format);
 
             g.moveTo(300, 0);
-			
-			beginBounds(g);
-			g.lineTo(400, 0);
-			endBounds(g, sg.scale);
-			
-			beginBounds(g);
+
+            beginBounds(g);
+            g.lineTo(400, 0);
+            endBounds(g, sg.scale);
+
+            beginBounds(g);
             g.drawTextBox(300, 14, 100, "The five boxing wizards jump quickly.");
             endBounds(g, sg.scale);
 
             // Text wrapping
             format.color = 0x2F66F9;
             format.size = 10;
-			beginBounds(g);
+            beginBounds(g);
             g.textFormat(format);
-			endBounds(g, sg.scale);
-			
-            g.moveTo(300, 50); 
-			beginBounds(g);
-			g.lineTo(330, 50);
-			endBounds(g, sg.scale);
-			
-			beginBounds(g);
+            endBounds(g, sg.scale);
+
+            g.moveTo(300, 50);
+            beginBounds(g);
+            g.lineTo(330, 50);
+            endBounds(g, sg.scale);
+
+            beginBounds(g);
             g.drawTextBox(300, 64, 30, "The five boxing wizards jump quickly.");
             endBounds(g, sg.scale);
-			
+
             g.moveTo(330, 50);
-			beginBounds(g);
-			g.lineTo(400, 50);
-			endBounds(g, sg.scale);
-			
-			beginBounds(g);
+            beginBounds(g);
+            g.lineTo(400, 50);
+            endBounds(g, sg.scale);
+
+            beginBounds(g);
             g.drawTextBox(330, 64, 70, "The five boxing wizards jump quickly.");
             endBounds(g, sg.scale);
 
@@ -279,64 +279,64 @@ package
             format.size = 30;
             format.align = TextAlign.TOP | TextAlign.LEFT;
             g.textFormat(format);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.drawTextLine(225, 25, "Lobster");
             endBounds(g, sg.scale);
 
             // Non-scaled vs. scaled text
             format.size = 30;
             g.textFormat(format);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.drawTextLine(80, 200, "Non-scaled");
             endBounds(g, sg.scale);
 
             format.size /= ss.scale;
             s.textFormat(format);
-			
-			beginBounds(s);
+
+            beginBounds(s);
             s.drawTextLine((80+115)/ss.scale, 200/ss.scale, "Scaled");
-			endBounds(s, ss.scale);
+            endBounds(s, ss.scale);
 
             // Mixed line and shape rendering
             g.moveTo(100, 0);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.lineTo(100, 100);
-			endBounds(g, sg.scale);
-			
-			beginBounds(g);
+            endBounds(g, sg.scale);
+
+            beginBounds(g);
             g.drawCircle(50, 50, 40);
-			endBounds(g, sg.scale);
-			
-			beginBounds(g);
+            endBounds(g, sg.scale);
+
+            beginBounds(g);
             g.lineTo(0, 100);
-			endBounds(g, sg.scale);
+            endBounds(g, sg.scale);
 
             // Curve rendering
             g.moveTo(0, 50);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.curveTo(50, 50 - 30, 100, 50);
-			endBounds(g, sg.scale);
-			
-			beginBounds(g);
+            endBounds(g, sg.scale);
+
+            beginBounds(g);
             g.curveTo(50, 50 + 30, 0, 50);
-			endBounds(g, sg.scale);
-			
+            endBounds(g, sg.scale);
+
             g.moveTo(50, 50 - 5);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.cubicCurveTo(50 - 5, 50 - 5 + 1 / 3 * 10, 50 + 5, 50 - 5 + 2 / 3 * 10, 50, 50 + 5);
             endBounds(g, sg.scale);
-			
-			beginBounds(g);
+
+            beginBounds(g);
             g.cubicCurveTo(50-5, 50-5+2/3*10, 50+5, 50-5+1/3*10, 50, 50-5);
             endBounds(g, sg.scale);
 
-			g.moveTo(05, 110);
-			beginBounds(g);
+            g.moveTo(05, 110);
+            beginBounds(g);
             // Cap styles
             g.lineStyle(10, 0x000000, 1, false, "", "round", "round", 0);  g.moveTo(05, 110); g.lineTo(25, 110);
             g.lineStyle(10, 0x000000, 1, false, "", "square", "round", 0); g.moveTo(40, 110); g.lineTo(60, 110);
@@ -368,139 +368,139 @@ package
 
             // Line scale mode
             s.lineStyle(1, 0x000000, 1, false, "normal");
-			s.moveTo(0.5, 21);
-			
-			beginBounds(s);
-			s.lineTo(2.5, 21);
-			endBounds(s, ss.scale);
-			beginBounds(g);
-			s.lineTo(0.5, 21);
-			endBounds(s, ss.scale);
-			
+            s.moveTo(0.5, 21);
+
+            beginBounds(s);
+            s.lineTo(2.5, 21);
+            endBounds(s, ss.scale);
+            beginBounds(g);
+            s.lineTo(0.5, 21);
+            endBounds(s, ss.scale);
+
             s.lineStyle(1, 0x000000, 1, false, "none");
-			s.moveTo(4, 21);
-			
-			beginBounds(s);
-			s.lineTo(6, 21);
-			endBounds(s, ss.scale);
-			beginBounds(s);
-			s.lineTo(4, 21);
+            s.moveTo(4, 21);
+
+            beginBounds(s);
+            s.lineTo(6, 21);
+            endBounds(s, ss.scale);
+            beginBounds(s);
+            s.lineTo(4, 21);
             endBounds(s, ss.scale);
 
             // Various line styles
-			
+
             g.lineStyle(0, 0x0000FF, 1);
-			g.moveTo(110, y);
-			beginBounds(g);
-			g.lineTo(210, y);
-			endBounds(g, sg.scale);
-			y += 10;
-			
+            g.moveTo(110, y);
+            beginBounds(g);
+            g.lineTo(210, y);
+            endBounds(g, sg.scale);
+            y += 10;
+
             g.lineStyle(0.1, 0x0000FF, 1);
-			g.moveTo(110, y);
-			beginBounds(g);
-			g.lineTo(210, y);
-			endBounds(g, sg.scale);
-			y += 10;
-			
-			beginBounds(g);
+            g.moveTo(110, y);
+            beginBounds(g);
+            g.lineTo(210, y);
+            endBounds(g, sg.scale);
+            y += 10;
+
+            beginBounds(g);
             g.lineStyle(0.2, 0x0000FF, 1);
-			g.moveTo(110, y);
-			beginBounds(g);
-			g.lineTo(210, y);
-			endBounds(g, sg.scale);
-			y += 10;
-			
-            g.lineStyle(0.5, 0x0000FF, 1); 
-			g.moveTo(110, y); 
-			beginBounds(g);
-			g.lineTo(210, y); 
-			endBounds(g, sg.scale);
-			y += 10;
-			
+            g.moveTo(110, y);
+            beginBounds(g);
+            g.lineTo(210, y);
+            endBounds(g, sg.scale);
+            y += 10;
+
+            g.lineStyle(0.5, 0x0000FF, 1);
+            g.moveTo(110, y);
+            beginBounds(g);
+            g.lineTo(210, y);
+            endBounds(g, sg.scale);
+            y += 10;
+
             g.lineStyle(1, 0x0000FF, 1);
-			g.moveTo(110, y);
-			beginBounds(g);
-			g.lineTo(210, y);
-			endBounds(g, sg.scale);
-			y += 10;
-			
+            g.moveTo(110, y);
+            beginBounds(g);
+            g.lineTo(210, y);
+            endBounds(g, sg.scale);
+            y += 10;
+
             g.lineStyle(2, 0x0000FF, 1);
-			g.moveTo(110, y);
-			beginBounds(g);
-			g.lineTo(210, y);
-			endBounds(g, sg.scale);
-			y += 10;
-			
-            g.lineStyle(3, 0x0000FF, 1); 
-			g.moveTo(110, y);
-			beginBounds(g);
-			g.lineTo(210, y); 
-			endBounds(g, sg.scale);
-			y += 10;
-			
+            g.moveTo(110, y);
+            beginBounds(g);
+            g.lineTo(210, y);
+            endBounds(g, sg.scale);
+            y += 10;
+
+            g.lineStyle(3, 0x0000FF, 1);
+            g.moveTo(110, y);
+            beginBounds(g);
+            g.lineTo(210, y);
+            endBounds(g, sg.scale);
+            y += 10;
+
             g.lineStyle(4, 0x0000FF, 1);
-			g.moveTo(110, y);
-			beginBounds(g);
-			g.lineTo(210, y);
-			endBounds(g, sg.scale);
-			y += 10;
-			
+            g.moveTo(110, y);
+            beginBounds(g);
+            g.lineTo(210, y);
+            endBounds(g, sg.scale);
+            y += 10;
+
             g.lineStyle(5, 0x0000FF, 1);
-			g.moveTo(110, y);
-			beginBounds(g);
-			g.lineTo(210, y);
-			endBounds(g, sg.scale);
-			y += 10;
-			
+            g.moveTo(110, y);
+            beginBounds(g);
+            g.lineTo(210, y);
+            endBounds(g, sg.scale);
+            y += 10;
+
             g.lineStyle(8, 0x0000FF, 1);
-			g.moveTo(110, y);
-			beginBounds(g);
-			g.lineTo(210, y);
-			endBounds(g, sg.scale);
-			y += 10;
-			
+            g.moveTo(110, y);
+            beginBounds(g);
+            g.lineTo(210, y);
+            endBounds(g, sg.scale);
+            y += 10;
+
             g.lineStyle(8, 0x0000FF, 0.5);
-			g.moveTo(110, y);
-			beginBounds(g);
-			g.lineTo(210, y);
-			endBounds(g, sg.scale);
-			
-			y += 10;
+            g.moveTo(110, y);
+            beginBounds(g);
+            g.lineTo(210, y);
+            endBounds(g, sg.scale);
+
+            y += 10;
             g.lineStyle(8, 0x0000FF, 0.1);
-			g.moveTo(110, y);
-			beginBounds(g);
-			g.lineTo(210, y);
-			endBounds(g, sg.scale);
-			y += 10;
+            g.moveTo(110, y);
+            beginBounds(g);
+            g.lineTo(210, y);
+            endBounds(g, sg.scale);
+            y += 10;
 
             // Fill with linestyle
             g.lineStyle(4, 0xFFFF00, 1);
             g.beginFill(0xF40B74, 1);
-			beginBounds(g);
+            beginBounds(g);
             g.drawRect(110, y, 100, 10);
             g.endFill();
-			endBounds(g, sg.scale);
+            endBounds(g, sg.scale);
             y += 16;
 
             // Non-stroked fill after linestyle
             g.lineStyle(NaN, 0, 0);
             g.beginFill(0xC90A60, 1);
-			beginBounds(g);
+            beginBounds(g);
             g.drawRect(110, y, 100, 10);
             g.endFill();
-			endBounds(g, sg.scale);
+            endBounds(g, sg.scale);
             y += 12;
 
             // Implicit endFill
             g.beginFill(0x940746, 1);
-			beginBounds(g);
+            beginBounds(g);
             g.drawRect(110, y, 100, 10);
-			endBounds(g, sg.scale);
+            endBounds(g, sg.scale);
 
             // Add touch listener
             stage.addEventListener(TouchEvent.TOUCH, onTouch);
-			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
+            stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
         }
 
         /**
@@ -528,15 +528,15 @@ package
                     trace("Vector quality set to ANTIALIAS and STENCIL");
             }
         }
-		
-		/**
+
+        /**
          * Toggle bounds with spacebar
          */
-		function keyDownHandler(event:KeyboardEvent):void
-        {   
+        function keyDownHandler(event:KeyboardEvent):void
+        {
             var keycode = event.keyCode;
             if(keycode == LoomKey.SPACE)
-				sd.visible = !sd.visible;;
+                sd.visible = !sd.visible;;
         }
 
         private function hsvToRgb(h:Number, s:Number, v:Number):uint {
