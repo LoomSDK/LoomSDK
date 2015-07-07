@@ -244,7 +244,7 @@ package
             endBounds(g, sg.scale);
 
             beginBounds(g);
-            g.drawTextBox(300, 14, 100, "The five boxing wizards jump quickly.");
+            g.drawTextBox(300, 0, 100, "The five boxing wizards jump quickly.");
             endBounds(g, sg.scale);
 
             // Text wrapping
@@ -260,7 +260,9 @@ package
             endBounds(g, sg.scale);
 
             beginBounds(g);
-            g.drawTextBox(300, 64, 30, "The five boxing wizards jump quickly.");
+            format.align = TextAlign.CENTER | TextAlign.TOP;
+            g.textFormat(format);
+            g.drawTextBox(300, 50, 30, "The five boxing wizards jump quickly.");
             endBounds(g, sg.scale);
 
             g.moveTo(330, 50);
@@ -269,7 +271,9 @@ package
             endBounds(g, sg.scale);
 
             beginBounds(g);
-            g.drawTextBox(330, 64, 70, "The five boxing wizards jump quickly.");
+            format.align = TextAlign.CENTER | TextAlign.BOTTOM;
+            g.textFormat(format);
+            g.drawTextBox(330, 50, 70, "The five boxing wizards jump quickly.");
             endBounds(g, sg.scale);
 
             // Custom different font
