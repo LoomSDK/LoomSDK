@@ -50,6 +50,8 @@ class VectorPath : public VectorData {
 public:
 	utArray<VectorPathCommand> commands;
 	utArray<float> data;
+	float lastX;
+	float lastY;
 
 	void moveTo(float x, float y);
 	void lineTo(float x, float y);
@@ -173,7 +175,7 @@ protected:
 	void addShape(VectorShape *shape);
 	void restartPath();
 	void resetStyle();
-	void inflateBounds(float x, float y);
+	void inflateBounds(const Loom2D::Rectangle& rect);
 	void ensureTextFormat();
 
 public:
@@ -183,6 +185,7 @@ public:
 	VectorFill currentFill;
 	bool pathDirty;
 	bool textFormatDirty;
+	GFX::VectorTextFormat currentTextFormat;
 	float boundL;
 	float boundT;
 	float boundR;
@@ -204,6 +207,7 @@ public:
 	void render(Loom2D::RenderState* renderState, Loom2D::Matrix* transform);
 
 	void clear();
+	void clearBounds();
 	void lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit);
 	void textFormat(GFX::VectorTextFormat format);
 	void beginFill(unsigned int color, float alpha);

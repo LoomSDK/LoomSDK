@@ -2460,7 +2460,7 @@ void nvgTextBox(NVGcontext* ctx, float x, float y, float breakRowWidth, const ch
 
 	state->textAlign = NVG_ALIGN_LEFT | valign;
 
-    y += lineh * state->lineHeight;
+    //y += lineh * state->lineHeight;
 
 	while ((nrows = nvgTextBreakLines(ctx, string, end, breakRowWidth, rows, 2))) {
 		for (i = 0; i < nrows; i++) {

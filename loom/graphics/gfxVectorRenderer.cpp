@@ -412,7 +412,7 @@ VectorTextFormat::VectorTextFormat() {
     font = "";
     color = -1;
     size = NAN;
-    align = -1;
+    align = VectorTextFormat::ALIGN_TOP | VectorTextFormat::ALIGN_LEFT;
     letterSpacing = NAN;
     lineHeight = NAN;
 }
