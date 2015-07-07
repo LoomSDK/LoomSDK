@@ -141,12 +141,13 @@ class Injector
         var type = target.getType();
 
         // Get all potential targets from the cache.
-        var targets:Vector.<InjectionTarget> = injectionTargetCache[type];
+        var cacheKey:String = type.getName() + "!!" + tagName;
+        var targets:Vector.<InjectionTarget> = injectionTargetCache[cacheKey];
         if(!targets)
         {
             // Cache miss, create entry.
             targets = new Vector.<InjectionTarget>();
-            injectionTargetCache[type] = targets;
+            injectionTargetCache[cacheKey] = targets;
 
             // We need to create injection targets...
 
@@ -256,6 +257,9 @@ class Injector
      */
     public function setParentInjector(i:Injector):void
     {
+        if (i == this)
+            return;
+
         parent = i;
     }
 
@@ -272,7 +276,7 @@ class Injector
 
     protected var mappedValues:Dictionary.<String, Object>;
 
-    protected static var injectionTargetCache:Dictionary.<Type,Vector.<InjectionTarget> > = new Dictionary.<Type,Vector.<InjectionTarget> >();
+    protected static var injectionTargetCache:Dictionary.<String,Vector.<InjectionTarget> > = new Dictionary.<String,Vector.<InjectionTarget> >();
 
 }
 

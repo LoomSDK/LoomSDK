@@ -1,7 +1,7 @@
 /*
 ===========================================================================
 Loom SDK
-Copyright 2011, 2012, 2013 
+Copyright 2011, 2012, 2013
 The Game Engine Company, LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,7 @@ Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
-limitations under the License. 
+limitations under the License.
 ===========================================================================
 */
 
@@ -25,7 +25,7 @@ import loom.utils.Injector;
 /*
     Base class representing a Node in lml.
 */
-public class LMLNode 
+public class LMLNode
 {
     //_________________________________________________
     //  Constructor
@@ -85,7 +85,7 @@ public class LMLNode
     public var attributes:XMLAttribute;
     public var type:Type;
     public var fields:Dictionary.<String,FieldInfo> = new Dictionary.<String,FieldInfo>();
-    public var properties:Dictionary.<String,PropertyInfo> = new Dictionary.<String,PropertyInfo>(); 
+    public var properties:Dictionary.<String,PropertyInfo> = new Dictionary.<String,PropertyInfo>();
     public var owningDocument:XMLDocument;
 
     //_________________________________________________
@@ -100,7 +100,36 @@ public class LMLNode
 
         if(lmlNode)
             lmlNode.preinitializeLMLNode(id);
-    
+
+        apply(parent);
+
+        for(var i = 0; i<children.length; i++)
+        {
+            var child = children[i];
+            var lmlChild = child.construct(injector);
+
+            var lmlParent:ILMLParent = parent as ILMLParent;
+
+            if(!lmlChild)
+                continue;
+
+            if(lmlParent)
+                lmlParent.addLMLChild(child.id, lmlChild);
+            else
+                Console.print("WARNING: ", parent.getTypeName(), " must implement ILMLParent to have children in LML");
+        }
+
+        if(injector && id)
+            injector.mapValue(parent,type,id);
+
+        if(lmlNode)
+            lmlNode.initializeLMLNode(id);
+
+        return parent;
+    }
+
+    public function apply(parent:Object):void
+    {
         var attr = attributes;
         while(attr) {
 
@@ -121,30 +150,6 @@ public class LMLNode
 
             attr = attr.next;
         }
-
-        for(var i = 0; i<children.length; i++)
-        {
-            var child = children[i];
-            var lmlChild = child.construct(injector);
-
-            var lmlParent:ILMLParent = parent as ILMLParent;
-            
-            if(!lmlChild)
-                continue;
-
-            if(lmlParent)
-                lmlParent.addLMLChild(child.id, lmlChild);
-            else
-                Console.print("WARNING: ", parent.getTypeName(), " must implement ILMLParent to have children in LML");
-        }
-
-        if(injector && id)
-            injector.mapValue(parent,type,id);
-        
-        if(lmlNode)
-            lmlNode.initializeLMLNode(id);
-
-        return parent;
     }
 
     //_________________________________________________
