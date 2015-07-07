@@ -196,6 +196,11 @@ package loom2d.display
          * Clear all draw commands and return to a clean state.
          */
         public native function clear():void;
+
+        /**
+         * Resets the bounds to their default state.
+         */
+        public native function clearBounds():void;
         
         /*
          * Specify the style used for lines.
