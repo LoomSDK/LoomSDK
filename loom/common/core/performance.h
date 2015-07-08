@@ -223,7 +223,7 @@ public:
     LoomScopedProfiler scopedProfiler ## name ## obj(&pdata ## name ## obj);
 };
 
-
+#if LUA_GC_PROFILE_ENABLED
 
 typedef void(*gLuaGC_callback)();
 typedef void*(*gLuaGC_callback_begin)();
@@ -249,6 +249,18 @@ typedef void(*gLuaGC_callback_end)(void*);
     } \
     LUA_GC_SET(name) \
 
+#else
+
+// Just make sure that macros still exist, even if disabled
+#define LUA_GC_SET(name)
+#define LUA_GC_PROFILE_NAME_STR(name)
+#define LUA_GC_PROFILE_NAME(name)
+#define LUA_GC_PROFILE_DATA_INTERNAL_CONCAT(name)
+#define LUA_GC_PROFILE_DATA_INTERNAL(name)
+#define LUA_GC_PROFILE_DATA(name)
+#define LUA_GC_PROFILE(name)
+
+#endif // LUA_GC_PROFILE_ENABLED
 
 #endif
 #endif

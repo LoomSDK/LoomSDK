@@ -27,6 +27,7 @@
 #include "lj_vm.h"
 
 
+#if LUA_GC_PROFILE_ENABLED
 
 #define LUA_GC_PREFIX gLuaGC
 #define LUA_GC_GLOBAL_INTERNAL_CONCAT(prefix, name) prefix ## _ ## name
@@ -60,6 +61,18 @@ typedef void(*gLuaGC_callback_end)(void*);
 LUA_GC_RANGE(fullgc);
 LUA_GC_RANGE(step);
 
+#elseif
+
+#define LUA_GC_PREFIX
+#define LUA_GC_GLOBAL(name)
+#define LUA_GC_DEFINE(name)
+#define LUA_GC_RANGE(name)
+#define LUA_GC_CALL(name)
+#define LUA_GC_PREFIX_VAR(name)
+#define LUA_GC_BEGIN(name)
+#define LUA_GC_END(name)
+
+#endif // LUA_GC_PROFILE_ENABLED
 
 #define GCSTEPSIZE	1024u
 #define GCSWEEPMAX	40
