@@ -58,7 +58,7 @@ limitations under the License.
     allowRedirect:(bool)ar 
     cacheToFile:(const char *)cf 
     base64EncodeResponse:(bool)b64 
-{
+{		
     self = [self init];
     
     callback = cb;
@@ -151,14 +151,14 @@ limitations under the License.
         response = [[NSString alloc] initWithData:receivedData encoding:NSUTF8StringEncoding];
 
     if(statusCodeFail)
-        callback(payload, LOOM_HTTP_ERROR, [response cStringUsingEncoding:NSUTF8StringEncoding]);
+        callback(payload, LOOM_HTTP_ERROR, (utByteArray*)[response cStringUsingEncoding:NSUTF8StringEncoding]);
     else
-        callback(payload, LOOM_HTTP_SUCCESS, [response cStringUsingEncoding:NSUTF8StringEncoding]);
+        callback(payload, LOOM_HTTP_SUCCESS, (utByteArray*)[response cStringUsingEncoding:NSUTF8StringEncoding]);
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
-    callback(payload, LOOM_HTTP_ERROR, [[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding]);
+    callback(payload, LOOM_HTTP_ERROR, (utByteArray*)[[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding]);
 }
 
 @end
