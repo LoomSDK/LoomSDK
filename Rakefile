@@ -37,7 +37,7 @@ end
 $doBuildJIT=1
 
 # If 1, then LUA GC profiling code is enabled
-$doEnableLuaGcProfile=0
+$doEnableLuaGcProfile= $buildTarget == "Release" ? 0 : 1
 
 # Whether or not to include Admob and/or Facebook in the build... for Great Apple Compliance!
 $doBuildAdmob=0
