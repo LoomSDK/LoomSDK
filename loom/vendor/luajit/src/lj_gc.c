@@ -61,7 +61,7 @@ typedef void(*gLuaGC_callback_end)(void*);
 LUA_GC_RANGE(fullgc);
 LUA_GC_RANGE(step);
 
-#elseif
+#else
 
 #define LUA_GC_PREFIX
 #define LUA_GC_GLOBAL(name)
