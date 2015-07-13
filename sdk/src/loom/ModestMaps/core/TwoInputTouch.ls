@@ -82,7 +82,12 @@ package loom.modestmaps.core
         {
             var touches = event.getTouches(_display);
             touchCount = touches.length;
-            
+
+            // Make sure that there are touches in the first place
+            // Some events trigger this event like that
+            if (touchCount == 0)
+                return;
+
             // Determine whether we're starting or stopping a touch using the first touch because it's both the first and last touch to be registered
             if (touches[0].phase == TouchPhase.BEGAN)
                 isTouchDown = true;
