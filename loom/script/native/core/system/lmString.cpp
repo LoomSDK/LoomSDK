@@ -419,15 +419,32 @@ public:
             return 1;
         }
 
-        float f;
-        if (sscanf(svalue, "%f", &f) == 1)
+        if (strlen(svalue) > 2 &&  svalue[0] == '0' && svalue[1] == 'x')
         {
-            lua_pushnumber(L, f);
+			int u;
+			if (sscanf(svalue, "%x", &u) == 1)
+            {
+				lua_pushnumber(L, u);
+            }
+            else
+            {
+                // one of these two lines is the right thing to do here maybe:
+                //lua_pushnumber(L, 0); // because the string did start with a zero and hex probably expects unsigned (e.g. color)?
+                lua_pushnumber(L, -1); // to indicate to calling code there was a fallback?
+            }
         }
-        else
-        {
-            lua_pushnumber(L, -1);
-        }
+		else
+		{
+			float f;
+			if (sscanf(svalue, "%f", &f) == 1)
+			{
+				lua_pushnumber(L, f);
+			}
+			else
+			{
+				lua_pushnumber(L, -1);
+			}
+		}
 
         return 1;
     }
