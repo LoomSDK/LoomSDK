@@ -12,7 +12,7 @@ package loom.modestmaps.mapproviders
 	{
 	    public var baseURL:String;
 	    
-	    public function BlueMarbleMapProvider(minZoom:int, maxZoom:int)
+	    public function BlueMarbleMapProvider(minZoom:int = MIN_ZOOM, maxZoom:int = MAX_ZOOM)
         {
             super(minZoom, Math.min2(9, maxZoom));
             if (!baseURL) baseURL = 'http://s3.amazonaws.com/com.modestmaps.bluemarble/';

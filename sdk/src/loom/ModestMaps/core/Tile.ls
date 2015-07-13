@@ -5,6 +5,7 @@
 
 package loom.modestmaps.core
 {
+    import loom.modestmaps.core.painter.TilePainter;
     import loom.modestmaps.core.TileGrid;
     import loom.modestmaps.ModestMaps;
     import system.platform.Platform;
@@ -151,6 +152,7 @@ package loom.modestmaps.core
         
         public var urls:Vector.<String>;
         public var openRequests:int;
+        public var lastLoad:int = -1;
         
         public var quadNode:QuadNode;
         
@@ -207,7 +209,7 @@ package loom.modestmaps.core
                 textureRefs[tex] = refs;
                 if(refs == 0)
                 {
-                    tex.dispose();
+                    TilePainter.returnTexture(tex);
                     textureRefs.deleteKey(tex);
                 } else if (refs < 0) {
                     trace("Texture reference should be 0 or greater");

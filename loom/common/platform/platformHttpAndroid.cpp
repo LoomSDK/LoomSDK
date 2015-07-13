@@ -43,38 +43,44 @@ static loomJniMethodInfo jniComplete;
 
 static JNIEnv *env;
 
-void Java_co_theengine_loomdemo_LoomHTTP_onSuccess(JNIEnv *env, jobject thiz, jstring data, jlong callback, jlong payload)
+void Java_co_theengine_loomdemo_LoomHTTP_onSuccess(JNIEnv *env, jobject thiz, jbyteArray data, jlong callback, jlong payload)
 {
     loom_HTTPCallback cb          = (loom_HTTPCallback)callback;
-    int               dataLen     = env->GetStringUTFLength(data);
-    const char        *dataString = env->GetStringUTFChars(data, 0);
 
-    // Commented out below because long responses can break logging
-    //lmLog(gAndroidHTTPLogGroup, "Sending success to %x %s (%x long) %x\n", payload, strlen(dataString), dataString, dataLen, data);
+    UTsize size = env->GetArrayLength(data);
+    jboolean isCopy;
+    jbyte* native = env->GetByteArrayElements(data, &isCopy);
 
-    cb((void *)payload, LOOM_HTTP_SUCCESS, dataString);
+    utByteArray *ba = lmNew(NULL) utByteArray();
+    // TODO: no copy
+    ba->allocateAndCopy(native, size);
 
-    env->ReleaseStringUTFChars(data, dataString);
+    cb((void *)payload, LOOM_HTTP_SUCCESS, ba);
+
+    env->ReleaseByteArrayElements(data, native, JNI_ABORT);
 }
 
 
-void Java_co_theengine_loomdemo_LoomHTTP_onFailure(JNIEnv *env, jobject thiz, jstring data, jlong callback, jlong payload)
+void Java_co_theengine_loomdemo_LoomHTTP_onFailure(JNIEnv *env, jobject thiz, jbyteArray data, jlong callback, jlong payload)
 {
     loom_HTTPCallback cb          = (loom_HTTPCallback)callback;
-    const char        *dataString = env->GetStringUTFChars(data, 0);
+    
+    UTsize size = env->GetArrayLength(data);
+    jboolean isCopy;
+    jbyte* native = env->GetByteArrayElements(data, &isCopy);
 
-    // Commented out because lmLog, Android, and HTTP reponse strings don't play nice together and tend to CRASH!!!
-    // lmLog(gAndroidHTTPLogGroup, "Sending fail to %x %s\n", payload, dataString);
+    utByteArray *ba = lmNew(NULL) utByteArray();
+    // TODO: no copy
+    ba->allocateAndCopy(native, size);
 
-    cb((void *)payload, LOOM_HTTP_ERROR, dataString);
+    cb((void *)payload, LOOM_HTTP_ERROR, ba);
 
-    env->ReleaseStringUTFChars(data, dataString);
-}
+    env->ReleaseByteArrayElements(data, native, JNI_ABORT);
 }
 
 int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback callback, void *payload,
                        const char *body, int bodyLength, utHashTable<utHashedString, utString>& headers,
-                       const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects)
+                       const char *responseCacheFile, bool followRedirects)
 {
     LOOM_PROFILE_START(httpSendHeader);
     // Iterate over the header hashtable and add them on the java side
@@ -116,8 +122,7 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
                                                 (jlong)callback, 
                                                 (jlong)payload, 
                                                 reqBody, 
-                                                reqResponseCacheFile, 
-                                                (jboolean)base64EncodeResponseData, 
+                                                reqResponseCacheFile,
                                                 (jboolean)followRedirects);
     LOOM_PROFILE_END(httpSendNativeCall);
 
@@ -146,7 +151,7 @@ void platform_HTTPInit()
     LoomJni::getStaticMethodInfo(jniSend,
         "co/theengine/loomdemo/LoomHTTP",
         "send",
-        "(Ljava/lang/String;Ljava/lang/String;JJ[BLjava/lang/String;ZZ)I");
+        "(Ljava/lang/String;Ljava/lang/String;JJ[BLjava/lang/String;Z)I");
 
     LoomJni::getStaticMethodInfo(jniIsConnected,
         "co/theengine/loomdemo/LoomHTTP",
@@ -187,6 +192,8 @@ bool platform_HTTPCancel(int index)
 void platform_HTTPComplete(int index)
 {
     env->CallStaticVoidMethod(jniComplete.classID, jniComplete.methodID, (jint)index);
+}
+
 }
 
 #endif
