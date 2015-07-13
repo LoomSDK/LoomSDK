@@ -35,14 +35,6 @@ lmDefineLogGroup(gAndroidHTTPLogGroup, "http.android", 1, LoomLogInfo);
 extern "C"
 {
 
-static loomJniMethodInfo jniAddHeader;
-static loomJniMethodInfo jniSend;
-static loomJniMethodInfo jniIsConnected;
-static loomJniMethodInfo jniCancel;
-static loomJniMethodInfo jniComplete;
-
-static JNIEnv *env;
-
 void Java_co_theengine_loomdemo_LoomHTTP_onSuccess(JNIEnv *env, jobject thiz, jbyteArray data, jlong callback, jlong payload)
 {
     loom_HTTPCallback cb          = (loom_HTTPCallback)callback;
@@ -64,7 +56,7 @@ void Java_co_theengine_loomdemo_LoomHTTP_onSuccess(JNIEnv *env, jobject thiz, jb
 void Java_co_theengine_loomdemo_LoomHTTP_onFailure(JNIEnv *env, jobject thiz, jbyteArray data, jlong callback, jlong payload)
 {
     loom_HTTPCallback cb          = (loom_HTTPCallback)callback;
-    
+
     UTsize size = env->GetArrayLength(data);
     jboolean isCopy;
     jbyte* native = env->GetByteArrayElements(data, &isCopy);
@@ -83,6 +75,15 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
                        const char *responseCacheFile, bool followRedirects)
 {
     LOOM_PROFILE_START(httpSendHeader);
+
+    loomJniMethodInfo jniAddHeader;
+    LoomJni::getStaticMethodInfo(jniAddHeader,
+        "co/theengine/loomdemo/LoomHTTP",
+        "addHeader",
+        "(Ljava/lang/String;Ljava/lang/String;)V");
+
+    JNIEnv *env = jniAddHeader.getEnv();
+
     // Iterate over the header hashtable and add them on the java side
     utHashTableIterator<utHashTable<utHashedString, utString> > headersIterator(headers);
     while (headersIterator.hasMoreElements())
@@ -105,6 +106,14 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
     LOOM_PROFILE_START(httpSendNative);
     // get the method info for loomhttp::send
 
+    loomJniMethodInfo jniSend;
+    LoomJni::getStaticMethodInfo(jniSend,
+        "co/theengine/loomdemo/LoomHTTP",
+        "send",
+        "(Ljava/lang/String;Ljava/lang/String;JJ[BLjava/lang/String;Z)I");
+
+    env = jniSend.getEnv();
+
     // pass in the URL and pointers
     jstring reqURL    = env->NewStringUTF(url);
     jstring reqMethod = env->NewStringUTF(method);
@@ -113,15 +122,16 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
     env->SetByteArrayRegion(reqBody, 0, bodyLength, (jbyte *)body);
 
     jstring reqResponseCacheFile = env->NewStringUTF(responseCacheFile);
-    
+
     LOOM_PROFILE_START(httpSendNativeCall);
-    jint index = (jint)env->CallStaticIntMethod(jniSend.classID, 
-                                                jniSend.methodID, 
-                                                reqURL, 
-                                                reqMethod, 
-                                                (jlong)callback, 
-                                                (jlong)payload, 
-                                                reqBody, 
+
+    jint index = (jint)jniSend.getEnv()->CallStaticIntMethod(jniSend.classID,
+                                                jniSend.methodID,
+                                                reqURL,
+                                                reqMethod,
+                                                (jlong)callback,
+                                                (jlong)payload,
+                                                reqBody,
                                                 reqResponseCacheFile,
                                                 (jboolean)followRedirects);
     LOOM_PROFILE_END(httpSendNativeCall);
@@ -137,38 +147,19 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
 
 bool platform_HTTPIsConnected()
 {
+    loomJniMethodInfo jniIsConnected;
+    LoomJni::getStaticMethodInfo(jniIsConnected,
+        "co/theengine/loomdemo/LoomHTTP",
+        "isConnected",
+        "()Z");
+
     jboolean result = env->CallStaticBooleanMethod(jniIsConnected.classID, jniIsConnected.methodID);
     return (bool)result;
 }
 
 void platform_HTTPInit()
 {
-    LoomJni::getStaticMethodInfo(jniAddHeader,
-        "co/theengine/loomdemo/LoomHTTP",
-        "addHeader",
-        "(Ljava/lang/String;Ljava/lang/String;)V");
-
-    LoomJni::getStaticMethodInfo(jniSend,
-        "co/theengine/loomdemo/LoomHTTP",
-        "send",
-        "(Ljava/lang/String;Ljava/lang/String;JJ[BLjava/lang/String;Z)I");
-
-    LoomJni::getStaticMethodInfo(jniIsConnected,
-        "co/theengine/loomdemo/LoomHTTP",
-        "isConnected",
-        "()Z");
-
-    LoomJni::getStaticMethodInfo(jniCancel,
-        "co/theengine/loomdemo/LoomHTTP",
-        "cancel",
-        "(I)Z");
-
-    LoomJni::getStaticMethodInfo(jniComplete,
-        "co/theengine/loomdemo/LoomHTTP",
-        "complete",
-        "(I)V");
-
-    env = jniSend.getEnv();
+    // stub for android
 }
 
 
@@ -185,13 +176,25 @@ void platform_HTTPUpdate()
 
 bool platform_HTTPCancel(int index)
 {
-    jboolean ret = env->CallStaticBooleanMethod(jniCancel.classID, jniCancel.methodID, (jint)index);
+    loomJniMethodInfo jniCancel;
+    LoomJni::getStaticMethodInfo(jniCancel,
+        "co/theengine/loomdemo/LoomHTTP",
+        "cancel",
+        "(I)Z");
+
+    jboolean ret = jniCancel.getEnv()->CallStaticBooleanMethod(jniCancel.classID, jniCancel.methodID, (jint)index);
     return ret;
 }
 
 void platform_HTTPComplete(int index)
 {
-    env->CallStaticVoidMethod(jniComplete.classID, jniComplete.methodID, (jint)index);
+    loomJniMethodInfo jniComplete;
+    LoomJni::getStaticMethodInfo(jniComplete,
+        "co/theengine/loomdemo/LoomHTTP",
+        "complete",
+        "(I)V");
+
+    jniComplete.getEnv()->CallStaticVoidMethod(jniComplete.classID, jniComplete.methodID, (jint)index);
 }
 
 }
