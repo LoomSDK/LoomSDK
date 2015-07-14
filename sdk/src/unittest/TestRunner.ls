@@ -72,6 +72,7 @@ package unittest {
         public var meta:MetaInfo;
         
         public var skip:Boolean;
+        public var async:Boolean;
         
         public var report:StatusReport = new StatusReport();
         public var results:Vector.<AssertResult>;
@@ -79,8 +80,14 @@ package unittest {
         function Test() { };
         
         [UnitTestHideCall]
-        public function run():Object {
-            return method.invoke(target);
+        public function run(c:TestComplete):void {
+            if (this.async) {
+                method.invokeSingle(target, c);
+            }
+            else {
+                var ret = method.invoke(target);
+                c.done(ret);
+            }
         }
         
         public function toString():String {
@@ -120,7 +127,7 @@ package unittest {
          * @return  A TestResult containing the run TypeTests and their accumulated results.
          */
         [UnitTestHideCall]
-        public static function runAll(assembly:Assembly, shuffle:Boolean = true):TestResult {
+        public static function runAll(assembly:Assembly, shuffle:Boolean = true, complete:Function = null):TestResult {
             var result = new TestResult();
             
             result.scannedTypes = assembly.getTypeCount();
@@ -138,11 +145,15 @@ package unittest {
             
             IO.write("\n");
             
-            runTypes(result.typeTests, shuffle, result.typeReport, result.testReport, result.assertReport);
+            runTypes(result.typeTests, shuffle, result.typeReport, result.testReport, result.assertReport, function() {
+                reportTypes(result.typeTests, result.typeReport, result.testReport, result.assertReport);
+                
+                if (complete) {
+                    complete.call(null, result);
+                }
+            });
             
-            reportTypes(result.typeTests, result.typeReport, result.testReport, result.assertReport);
-            
-            return result;
+            return null;
         }
         
         /**
@@ -154,7 +165,7 @@ package unittest {
          * @param assertReport  Accumulated report on assertions.
          */
         [UnitTestHideCall]
-        public static function runTypes(typeTests:Vector.<TypeTest>, shuffle:Boolean = true, typeReport:StatusReport = null, testReport:StatusReport = null, assertReport:StatusReport = null) {
+        public static function runTypes(typeTests:Vector.<TypeTest>, shuffle:Boolean = true, typeReport:StatusReport = null, testReport:StatusReport = null, assertReport:StatusReport = null, complete:Function = null) {
             if (shuffle) typeTests.shuffle();
             
             var tests = new Vector.<Test>();
@@ -164,22 +175,30 @@ package unittest {
             
             if (typeReport) typeReport.total += typeTests.length;
             
-            for (i = 0; i < typeTests.length; i++) {
-                tt = typeTests[i];
-                tt.asserts.reset();
-                
-                // Different styles of output
-                //IO.write((tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"   "+(i+1)+" / "+typeTests.length+"\n");
-                //IO.write((i+1)+"/"+typeTests.length+"  "+(tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"\n");
-                IO.write((i+1)+"/"+typeTests.length+" "+tt.type.getFullName()+(tt.skip ? "(skipped)" : "")+"\n");
-                if (tt.skip) {
-                    if (typeReport) typeReport.skipped++;
-                    continue;
-                }
-                
-                IO.write("\n");
-                run(tt.tests, shuffle);
-                
+            runTypesRecursive(typeTests, shuffle, 0, tests, typeReport, testReport, assertReport, complete);
+        }
+        
+        private static function runTypesRecursive(typeTests:Vector.<TypeTest>, shuffle:Boolean, index:Number, tests:Vector.<Test>, typeReport:StatusReport = null, testReport:StatusReport = null, assertReport:StatusReport = null, complete:Function = null) {
+            if (index >= typeTests.length) {
+                if (typeReport) typeReport.updateFailed();
+                complete.call();
+                return;
+            }
+            var tt:TypeTest = typeTests[index];
+            tt.asserts.reset();
+            
+            // Different styles of output
+            //IO.write((tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"   "+(i+1)+" / "+typeTests.length+"\n");
+            //IO.write((i+1)+"/"+typeTests.length+"  "+(tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"\n");
+            IO.write((index+1)+"/"+typeTests.length+" "+tt.type.getFullName()+(tt.skip ? "(skipped)" : "")+"\n");
+            if (tt.skip) {
+                if (typeReport) typeReport.skipped++;
+                runTypesRecursive(typeTests, shuffle, ++index, tests, typeReport, testReport, assertReport, complete);
+                return;
+            }
+            
+            IO.write("\n");
+            run(tt.tests, shuffle, function() {
                 tt.report.reset();
                 tt.report.total = tt.tests.length;
                 for (var j = 0; j < tt.tests.length; j++) {
@@ -200,9 +219,8 @@ package unittest {
                 
                 IO.write("\n\n");
                 tests = tests.concat(tt.tests);
-            }
-            if (typeReport) typeReport.updateFailed();
-            
+                runTypesRecursive(typeTests, shuffle, ++index, tests, typeReport, testReport, assertReport, complete);
+            });
         }
         
         /**
@@ -266,9 +284,10 @@ package unittest {
          * Run all the provided tests. The tests are updated with the results.
          * @param tests The tests to run.
          * @param shuffle   If true, shuffle the tests to fail fast for tests that depend on side effects and specific execution order.
+         * @param complete Function that will be called when the operation is complete
          */
         [UnitTestHideCall]
-        public static function run(tests:Vector.<Test>, shuffle:Boolean = true) {
+        public static function run(tests:Vector.<Test>, shuffle:Boolean = true, complete:Function = null) {
             var i:int;
             var test:Test;
             
@@ -289,15 +308,28 @@ package unittest {
             
             IO.write("\n");
             
-            for (i in tests) {
-                test = tests[i];
-                IO.write(String.lpad(""+(i+1), " ", 4)+". "+String.rpad(test.name, " ", 20)+" ");
-                IO.write("   ");
-                if (test.skip) {
-                    IO.write("   skipped\n");
-                    continue;
-                }
-                var ret = test.run();
+            runRecursive(tests, 0, complete);
+        }
+        
+        /**
+         * @private
+         * 
+         * Recursive function that is used in "run()" to support async testing
+         */
+        private static function runRecursive(tests:Vector.<Test>, index:Number, complete:Function) {
+            if (index >= tests.length) {
+                complete.call();
+                return;
+            }
+            var test:Test = tests[index];
+            IO.write(String.lpad(""+(index+1), " ", 4)+". "+String.rpad(test.name, " ", 20)+" ");
+            IO.write("   ");
+            if (test.skip) {
+                IO.write("   skipped\n");
+                runRecursive(tests, ++index, complete);
+                return;
+            }
+            test.run(new TestComplete(function(ret:Object = null) {
                 var results = Assert.popResults();
                 var passed = 0;
                 for each (var result in results) {
@@ -313,7 +345,8 @@ package unittest {
                 }
                 if (ret != null) IO.write("   "+ret);
                 IO.write("\n");
-            }
+                runRecursive(tests, ++index, complete);
+            }));
         }
         
         /**
@@ -409,6 +442,13 @@ package unittest {
                     test.target = target;
                     test.method = m;
                     test.meta = meta;
+                    
+                    // Determine if the test is async
+                    if (m.getNumParameters() > 0 && m.getParameter(0).getParameterType().getFullName() == "unittest.TestComplete")
+                        test.async = true;
+                    else
+                        test.async = false;
+                    
                     tests.push(test);
                     if (!m.isStatic()) instanceTests++;
                 }
@@ -425,4 +465,64 @@ package unittest {
         
     }
     
+    /**
+     * Special class to be used when making asynchronous tests. Simply add a parameter with this type to your testing
+     * function, and call the done() function when your asynchronous test is complete
+     */
+    public class TestComplete {
+        private var doneFunction:Function;
+        private var hasBeenCalled:Boolean;
+        
+        public function TestComplete(d:Function) {
+            hasBeenCalled = false;
+            
+            doneFunction = d;
+        }
+        
+        /**
+         * Call this function when your test is complete!
+         * 
+         * @param msg An object that will be logged in the test
+         */
+        public function done(msg:Object = null):void {
+            if (hasBeenCalled) {
+                Assert.fail("ERROR: complete() called more than once for a single asynchronous test!");
+                return;
+            }
+            
+            hasBeenCalled = true;
+            doneFunction.call(null, [msg]);
+        }
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
