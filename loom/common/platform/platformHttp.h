@@ -65,7 +65,7 @@ typedef void (*loom_HTTPCallback)(void *payload, loom_HTTPCallbackType type, utB
  *
  *  @param bodyLength The length in bytes of the body; use strlen if passing a string.
  */
-#if LOOM_PLATFORM == LOOM_PLATFORM_IOS	
+#if LOOM_PLATFORM_IS_APPLE
 int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback callback, void *payload,
                       const char *body, int bodyLength, utHashTable<utHashedString, utString>& headers,
                       const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects);

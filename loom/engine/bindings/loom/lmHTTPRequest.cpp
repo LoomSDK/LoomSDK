@@ -104,16 +104,29 @@ public:
             if (bodyBytes != NULL)
             {
                 // Send with body as byte array.
+                #if LOOM_PLATFORM_IS_APPLE
+                id = platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
+                                       (const char *)bodyBytes->getInternalArray()->ptr(), bodyBytes->getSize(), header,
+                                       (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
+                #else
                 id = platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
                                   (const char *)bodyBytes->getInternalArray()->ptr(), bodyBytes->getSize(), header,
                                   (const char *)responseCacheFile.c_str(), followRedirects);
+                #endif
             }
             else
             {
                 // Send with body as string.
+                // Send with body as byte array.
+                #if LOOM_PLATFORM_IS_APPLE
                 id = platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
-                                  (const char *)body.c_str(), body.length(), header,
-                                  (const char *)responseCacheFile.c_str(), followRedirects);
+                                       (const char *)body.c_str(), body.length(), header,
+                                       (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
+                #else
+                id = platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
+                                       (const char *)body.c_str(), body.length(), header,
+                                       (const char *)responseCacheFile.c_str(), followRedirects);
+                #endif
             }
         }
         return (id == -1) ? false : true;
