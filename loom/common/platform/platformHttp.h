@@ -22,6 +22,7 @@
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utString.h"
 #include "loom/common/utils/utByteArray.h"
+#include "loom/common/platform/platform.h"
 
 #ifdef __cplusplus
 extern "C" {
