@@ -93,9 +93,11 @@ void loom_asset_imageDtor(void *bits)
 
 void *loom_asset_imageDeserializer( void *buffer, size_t bufferLen, LoomAssetCleanupCallback *dtor )
 {
+   loom_asset_image_t *img;
+
    lmAssert(buffer != NULL, "buffer should not be null");
 
-   loom_asset_image_t *img = (loom_asset_image_t*)lmAlloc(gAssetAllocator, sizeof(loom_asset_image_t));
+   img = (loom_asset_image_t*)lmAlloc(gAssetAllocator, sizeof(loom_asset_image_t));
 
     // parse any orientation info from exif format
    img->orientation = exifinfo_parse_orientation(buffer, bufferLen);
