@@ -42,7 +42,7 @@ limitations under the License.
     request:(NSMutableURLRequest*)req 
     payload:(void *)pl 
     allowRedirect:(bool)ar 
-    cacheToFile:(const char *)cf
+    cacheToFile:(const char *)c;
 -(void)cancel;
 -(void)complete;
 
