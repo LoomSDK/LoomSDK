@@ -19,6 +19,7 @@
  */
 
 #include "loom/common/platform/platform.h"
+#include "loom/common/platform/platformTime.h"
 #include "loom/vendor/seatest/seatest.h"
 
 #include <cstdlib>
@@ -34,6 +35,8 @@ int main(int argc, const char **argv)
     DWORD dwMode = SetErrorMode(SEM_NOGPFAULTERRORBOX);
     SetErrorMode(dwMode | SEM_NOGPFAULTERRORBOX);
     #endif
+
+    platform_timeInitialize();
 
     extern void __cdecl test_suite_allTests();
     seatest_set_print_callback(printf);
