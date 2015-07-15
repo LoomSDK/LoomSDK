@@ -95,124 +95,127 @@ void QuadRenderer::submit()
 
     if (tinfo.handle != -1)
     {
-        // On iPad 1, the PosColorTex shader, which multiplies texture color with
-        // vertex color, is 5x slower than PosTex, which just draws the texture
-        // unmodified. So we select the shader to use appropriately.
+        if (tinfo.visible) {
 
-        //lmLogInfo(gGFXQuadRendererLogGroup, "Handle > %u", tinfo.handle);
+            // On iPad 1, the PosColorTex shader, which multiplies texture color with
+            // vertex color, is 5x slower than PosTex, which just draws the texture
+            // unmodified. So we select the shader to use appropriately.
 
-        // Select the shader.
-        if(sTinted)
-            Graphics::context()->glUseProgram(sProgramPosColorTex);
-        else
-            Graphics::context()->glUseProgram(sProgramPosTex);
+            //lmLogInfo(gGFXQuadRendererLogGroup, "Handle > %u", tinfo.handle);
 
-        // Upload vertex data.
-        Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, vertexBuffers[currentVertexBufferIdx]);
+            // Select the shader.
+            if(sTinted)
+                Graphics::context()->glUseProgram(sProgramPosColorTex);
+            else
+                Graphics::context()->glUseProgram(sProgramPosTex);
 
-        // This commented block seems better for performance, but it's actually a lot slower on iOS.
-        // Instead we just update the entire buffer, which seems to run fine.
-        // A better solution would be having a triple buffered glMapBuffer approach.
-        /*
-        Graphics::context()->glBufferSubData(GL_ARRAY_BUFFER,
-                                             (vertexCount - quadCount * 4) * sizeof(VertexPosColorTex),
-                                             quadCount * 4 * sizeof(VertexPosColorTex),
-                                             &vertexData[currentVertexBufferIdx][vertexCount - quadCount*4] );
-        */
-        Graphics::context()->glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(VertexPosColorTex), &vertexData[currentVertexBufferIdx][0], GL_STATIC_DRAW);
+            // Upload vertex data.
+            Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, vertexBuffers[currentVertexBufferIdx]);
 
-        Graphics::context()->glEnableVertexAttribArray(sProgram_posAttribLoc);
-        Graphics::context()->glEnableVertexAttribArray(sProgram_posColorLoc);
-        Graphics::context()->glEnableVertexAttribArray(sProgram_posTexCoordLoc);
+            // This commented block seems better for performance, but it's actually a lot slower on iOS.
+            // Instead we just update the entire buffer, which seems to run fine.
+            // A better solution would be having a triple buffered glMapBuffer approach.
+            /*
+            Graphics::context()->glBufferSubData(GL_ARRAY_BUFFER,
+                                                 (vertexCount - quadCount * 4) * sizeof(VertexPosColorTex),
+                                                 quadCount * 4 * sizeof(VertexPosColorTex),
+                                                 &vertexData[currentVertexBufferIdx][vertexCount - quadCount*4] );
+            */
+            Graphics::context()->glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(VertexPosColorTex), &vertexData[currentVertexBufferIdx][0], GL_STATIC_DRAW);
+
+            Graphics::context()->glEnableVertexAttribArray(sProgram_posAttribLoc);
+            Graphics::context()->glEnableVertexAttribArray(sProgram_posColorLoc);
+            Graphics::context()->glEnableVertexAttribArray(sProgram_posTexCoordLoc);
         
-        Graphics::context()->glVertexAttribPointer(sProgram_posAttribLoc,
-                                                   3, GL_FLOAT, false,
-                                                   sizeof(VertexPosColorTex), (void*)offsetof(VertexPosColorTex, x));
+            Graphics::context()->glVertexAttribPointer(sProgram_posAttribLoc,
+                                                       3, GL_FLOAT, false,
+                                                       sizeof(VertexPosColorTex), (void*)offsetof(VertexPosColorTex, x));
 
-        Graphics::context()->glVertexAttribPointer(sProgram_posColorLoc,
-                                                   4, GL_UNSIGNED_BYTE, true,
-                                                   sizeof(VertexPosColorTex), (void*)offsetof(VertexPosColorTex, abgr));
+            Graphics::context()->glVertexAttribPointer(sProgram_posColorLoc,
+                                                       4, GL_UNSIGNED_BYTE, true,
+                                                       sizeof(VertexPosColorTex), (void*)offsetof(VertexPosColorTex, abgr));
 
-        Graphics::context()->glVertexAttribPointer(sProgram_posTexCoordLoc,
-                                                   2, GL_FLOAT, false,
-                                                   sizeof(VertexPosColorTex), (void*)offsetof(VertexPosColorTex, u));
+            Graphics::context()->glVertexAttribPointer(sProgram_posTexCoordLoc,
+                                                       2, GL_FLOAT, false,
+                                                       sizeof(VertexPosColorTex), (void*)offsetof(VertexPosColorTex, u));
         
-        // Set up texture state.
-        Graphics::context()->glActiveTexture(GL_TEXTURE0);
-        Graphics::context()->glUniform1i(sProgram_texUniform, 0);
-        Graphics::context()->glUniformMatrix4fv(sProgram_mvp, 1, GL_FALSE, Graphics::getMVP());
+            // Set up texture state.
+            Graphics::context()->glActiveTexture(GL_TEXTURE0);
+            Graphics::context()->glUniform1i(sProgram_texUniform, 0);
+            Graphics::context()->glUniformMatrix4fv(sProgram_mvp, 1, GL_FALSE, Graphics::getMVP());
 
-        Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
+            Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
 
-        if (tinfo.clampOnly) {
-            tinfo.wrapU = TEXTUREINFO_WRAP_CLAMP;
-            tinfo.wrapV = TEXTUREINFO_WRAP_CLAMP;
-        }
+            if (tinfo.clampOnly) {
+                tinfo.wrapU = TEXTUREINFO_WRAP_CLAMP;
+                tinfo.wrapV = TEXTUREINFO_WRAP_CLAMP;
+            }
 
-        switch (tinfo.wrapU)
-        {
-            case TEXTUREINFO_WRAP_CLAMP:
-                Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                break;
-            case TEXTUREINFO_WRAP_MIRROR:
-                Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-                break;
-            case TEXTUREINFO_WRAP_REPEAT:
-                Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                break;
-            default:
-                lmAssert(false, "Unsupported wrapU: %d", tinfo.wrapU);
-        }
-        switch (tinfo.wrapV)
-        {
-            case TEXTUREINFO_WRAP_CLAMP:
-                Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                break;
-            case TEXTUREINFO_WRAP_MIRROR:
-                Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-                break;
-            case TEXTUREINFO_WRAP_REPEAT:
-                Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                break;
-            default:
-                lmAssert(false, "Unsupported wrapV: %d", tinfo.wrapV);
-        }
-        //*/
+            switch (tinfo.wrapU)
+            {
+                case TEXTUREINFO_WRAP_CLAMP:
+                    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                    break;
+                case TEXTUREINFO_WRAP_MIRROR:
+                    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+                    break;
+                case TEXTUREINFO_WRAP_REPEAT:
+                    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                    break;
+                default:
+                    lmAssert(false, "Unsupported wrapU: %d", tinfo.wrapU);
+            }
+            switch (tinfo.wrapV)
+            {
+                case TEXTUREINFO_WRAP_CLAMP:
+                    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                    break;
+                case TEXTUREINFO_WRAP_MIRROR:
+                    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+                    break;
+                case TEXTUREINFO_WRAP_REPEAT:
+                    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                    break;
+                default:
+                    lmAssert(false, "Unsupported wrapV: %d", tinfo.wrapV);
+            }
+            //*/
 
-        switch (tinfo.smoothing)
-        {
-            case TEXTUREINFO_SMOOTHING_NONE:
-                Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, tinfo.mipmaps ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
-                Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                break;
-            case TEXTUREINFO_SMOOTHING_BILINEAR:
-                Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, tinfo.mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-                Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                break;
-            default:
-                lmAssert(false, "Unsupported smoothing: %d", tinfo.smoothing);
-        }
-        //*/
+            switch (tinfo.smoothing)
+            {
+                case TEXTUREINFO_SMOOTHING_NONE:
+                    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, tinfo.mipmaps ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
+                    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                    break;
+                case TEXTUREINFO_SMOOTHING_BILINEAR:
+                    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, tinfo.mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+                    Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    break;
+                default:
+                    lmAssert(false, "Unsupported smoothing: %d", tinfo.smoothing);
+            }
+            //*/
 
-        // Blend mode.
-        Graphics::context()->glEnable(GL_BLEND);
-        Graphics::context()->glBlendFuncSeparate(sSrcBlend, sDstBlend, sSrcBlend, sDstBlend);
+            // Blend mode.
+            Graphics::context()->glEnable(GL_BLEND);
+            Graphics::context()->glBlendFuncSeparate(sSrcBlend, sDstBlend, sSrcBlend, sDstBlend);
 
-        // And bind indices and draw.
-        Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndexBufferHandle);
-        Graphics::context()->glDrawElements(GL_TRIANGLES,
-                                            quadCount * 6, GL_UNSIGNED_SHORT,
-                                            (void*)(currentIndexBufferIdx*sizeof(unsigned short)));
+            // And bind indices and draw.
+            Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndexBufferHandle);
+            Graphics::context()->glDrawElements(GL_TRIANGLES,
+                                                quadCount * 6, GL_UNSIGNED_SHORT,
+                                                (void*)(currentIndexBufferIdx*sizeof(unsigned short)));
 		
-        // Reset GL state.
-        Graphics::context()->glBindTexture(GL_TEXTURE_2D, 0);
-        Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, 0);
-        Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        Graphics::context()->glUseProgram(0);
+            // Reset GL state.
+            Graphics::context()->glBindTexture(GL_TEXTURE_2D, 0);
+            Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, 0);
+            Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+            Graphics::context()->glUseProgram(0);
 
-        Graphics::context()->glDisableVertexAttribArray(sProgram_posAttribLoc);
-        Graphics::context()->glDisableVertexAttribArray(sProgram_posColorLoc);
-        Graphics::context()->glDisableVertexAttribArray(sProgram_posTexCoordLoc);
+            Graphics::context()->glDisableVertexAttribArray(sProgram_posAttribLoc);
+            Graphics::context()->glDisableVertexAttribArray(sProgram_posColorLoc);
+            Graphics::context()->glDisableVertexAttribArray(sProgram_posTexCoordLoc);
+        }
 
         // Update buffer state.
         currentIndexBufferIdx += quadCount * 6;

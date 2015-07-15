@@ -68,6 +68,8 @@ struct TextureInfo
     int                      wrapU;
     int                      wrapV;
 
+    bool                     visible;
+
     bool                     clampOnly;
     bool                     mipmaps;
 
@@ -137,6 +139,7 @@ struct TextureInfo
         renderTarget = false;
         framebuffer  = -1;
         renderbuffer = -1;
+        visible      = true;
     }
 };
 
@@ -148,9 +151,11 @@ struct AsyncLoadNote
     bool                        priority;
     utString                    path;
     TextureInfo                 *tinfo;
+    //just update instead of creating a new one
+    bool                        update;
 
     //the following are only used for async loading of pure byte data
-    utByteArray                 *bytes;
+    utByteArray                 bytes;
     loom_asset_image_t          *imageAsset;
     LoomAssetCleanupCallback    iaCleanup;
 };
@@ -267,6 +272,7 @@ private:
     static void handleAssetNotification(void *payload, const char *name);
 
     static void loadImageAsset(loom_asset_image_t *lat, TextureID id);
+    static void updateImageAsset(loom_asset_image_t *lat, TextureInfo *info);
 
 public:
 
@@ -314,6 +320,8 @@ public:
     static void validate();
     static void validate(TextureID id);
 
+    static void upload(TextureInfo &tinfo, uint8_t *data, uint16_t width, uint16_t height, int xoffset = -1, int yoffset = -1);
+
     // This method accepts rgba data.
     static TextureInfo *load(uint8_t *data, uint16_t width, uint16_t height, TextureID id = -1);
 
@@ -323,6 +331,9 @@ public:
     static TextureInfo *initFromAssetManagerAsync(const char *path, bool highPriorty);
 	static TextureInfo *initEmptyTexture(int width, int height);
     static int __stdcall loadTextureAsync_body(void *param);
+
+    static void updateFromBytes(TextureID id, utByteArray *bytes);
+    static void updateFromBytesAsync(TextureID id, utByteArray *bytes, bool highPriority);
 
 	static void clear(TextureID id, int color, float alpha);
 

@@ -153,9 +153,15 @@ void Texture::tick()
             //Texture is just a byte stream, so load the deserialized image data now
             if(threadNote.imageAsset != NULL)
             {
-                loadImageAsset(threadNote.imageAsset, threadNote.id);
-                threadNote.iaCleanup(threadNote.imageAsset);
-                lmLogDebug(gGFXTextureLogGroup, "Async loaded byte texture took %i ms to create", platform_getMilliseconds() - startTime);
+                if (threadNote.update) {
+                    updateImageAsset(threadNote.imageAsset, threadNote.tinfo);
+                    threadNote.iaCleanup(threadNote.imageAsset);
+                    lmLogDebug(gGFXTextureLogGroup, "Async loaded byte texture took %i ms to update", platform_getMilliseconds() - startTime);
+                } else {
+                    loadImageAsset(threadNote.imageAsset, threadNote.id);
+                    threadNote.iaCleanup(threadNote.imageAsset);
+                    lmLogDebug(gGFXTextureLogGroup, "Async loaded byte texture took %i ms to create", platform_getMilliseconds() - startTime);
+                }
             }
         }
 
@@ -391,57 +397,7 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     }
 
 
-    LOOM_PROFILE_START(textureLoadUpload);
-    Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
-
-    Graphics::context()->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    LOOM_PROFILE_END(textureLoadUpload);
-
-    tinfo.width  = width;
-    tinfo.height = height;
-
-    // Generate mipmaps if appropriate
-    if (!tinfo.renderTarget && (supportsFullNPOT || tinfo.isPowerOfTwo()))
-    {
-        LOOM_PROFILE_START(textureLoadMipmap);
-        tinfo.clampOnly = false;
-        tinfo.mipmaps = true;
-        uint32_t *mipData = (uint32_t*) data;
-        int mipWidth = width;
-        int mipHeight = height;
-        int mipLevel = 1;
-        int time = platform_getMilliseconds();
-        while (mipWidth > 1 || mipHeight > 1)
-        {
-            // Allocate new bits.
-            int prevWidth = mipWidth, prevHeight = mipHeight;
-            mipWidth >>= 1; mipWidth = mipWidth < 1 ? 1 : mipWidth;
-            mipHeight >>= 1; mipHeight = mipHeight < 1 ? 1 : mipHeight;
-
-            uint32_t *prevData = mipData;
-            mipData = static_cast<uint32_t*>(lmAlloc(NULL, mipWidth * mipHeight * 4));
-
-            downsampleAverage(prevData, mipData, prevWidth, prevHeight);
-
-            if (prevData != (uint32_t*) data) lmSafeFree(NULL, prevData);
-
-            Graphics::context()->glTexImage2D(GL_TEXTURE_2D, mipLevel, GL_RGBA, mipWidth, mipHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mipData);
-
-            mipLevel++;
-        }
-        lmLogDebug(gGFXTextureLogGroup, "Generated mipmaps in %d ms", platform_getMilliseconds() - time);
-        if (mipData != (uint32_t*) data) lmSafeFree(NULL, mipData);
-        LOOM_PROFILE_END(textureLoadMipmap);
-    }
-    else 
-    {
-        tinfo.clampOnly = true;
-        tinfo.mipmaps = false;
-        if (!supportsFullNPOT) 
-            lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size.")
-    }
+    upload(tinfo, data, width, height);
 
 	// Setup the framebuffer if it's a render texture
     if (newTexture && tinfo.renderTarget)
@@ -476,6 +432,72 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
     loom_mutex_unlock(Texture::sTexInfoLock);
 
     return &tinfo;
+}
+
+void Texture::upload(TextureInfo &tinfo, uint8_t *data, uint16_t width, uint16_t height, int xoffset, int yoffset)
+{
+    bool newImage = xoffset < 0 || yoffset < 0;
+    LOOM_PROFILE_START(textureLoadUpload);
+    Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
+    //Graphics::context()->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    //Graphics::context()->glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    if (newImage) {
+        tinfo.width = width;
+        tinfo.height = height;
+        Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    }
+    else
+    {
+        lmAssert(xoffset + width <= tinfo.width && yoffset + height <= tinfo.height, "Texture %d (%dx%d) update parameters invalid: x=%d, y=%d, width=%d, height=%d", tinfo.id, tinfo.width, tinfo.height, xoffset, yoffset, width, height);
+        Graphics::context()->glTexSubImage2D(GL_TEXTURE_2D, 0, xoffset, yoffset, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    }
+    LOOM_PROFILE_END(textureLoadUpload);
+
+    // Generate mipmaps if appropriate
+    if (false && !tinfo.renderTarget && (supportsFullNPOT || tinfo.isPowerOfTwo()))
+    {
+        LOOM_PROFILE_START(textureLoadMipmap);
+        tinfo.clampOnly = false;
+        tinfo.mipmaps = true;
+        uint32_t *mipData = (uint32_t*)data;
+        int mipWidth = width;
+        int mipHeight = height;
+        int mipLevel = 1;
+        int time = platform_getMilliseconds();
+        while (mipWidth > 1 || mipHeight > 1)
+        {
+            // Allocate new bits.
+            int prevWidth = mipWidth, prevHeight = mipHeight;
+            mipWidth >>= 1; mipWidth = mipWidth < 1 ? 1 : mipWidth;
+            mipHeight >>= 1; mipHeight = mipHeight < 1 ? 1 : mipHeight;
+
+            uint32_t *prevData = mipData;
+            mipData = static_cast<uint32_t*>(lmAlloc(NULL, mipWidth * mipHeight * 4));
+
+            downsampleAverage(prevData, mipData, prevWidth, prevHeight);
+
+            if (prevData != (uint32_t*)data) lmSafeFree(NULL, prevData);
+            
+            if (newImage) {
+                Graphics::context()->glTexImage2D(GL_TEXTURE_2D, mipLevel, GL_RGBA, mipWidth, mipHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mipData);
+            }
+            else {
+                Graphics::context()->glTexSubImage2D(GL_TEXTURE_2D, mipLevel, xoffset, yoffset, mipWidth, mipHeight, GL_RGBA, GL_UNSIGNED_BYTE, mipData);
+            }
+            
+            mipLevel++;
+        }
+        lmLogDebug(gGFXTextureLogGroup, "Generated mipmaps in %d ms", platform_getMilliseconds() - time);
+        if (mipData != (uint32_t*)data) lmSafeFree(NULL, mipData);
+        LOOM_PROFILE_END(textureLoadMipmap);
+    }
+    else
+    {
+        tinfo.clampOnly = true;
+        tinfo.mipmaps = false;
+        if (!supportsFullNPOT)
+            lmLogWarn(gGFXTextureLogGroup, "Non-power-of-two textures not fully supported by device, consider using a power-of-two texture size.")
+    }
 }
 
 TextureInfo *Texture::initEmptyTexture(int width, int height)
@@ -631,8 +653,8 @@ int __stdcall Texture::loadTextureAsync_body(void *param)
             else
             {
                 //deserialize the image data from bytes
-                threadNote.imageAsset = static_cast<loom_asset_image_t*>(loom_asset_imageDeserializer(threadNote.bytes->getDataPtr(), 
-                                                                                                        threadNote.bytes->getSize(), 
+                threadNote.imageAsset = static_cast<loom_asset_image_t*>(loom_asset_imageDeserializer(threadNote.bytes.getDataPtr(), 
+                                                                                                        threadNote.bytes.getSize(), 
                                                                                                         &threadNote.iaCleanup));
                 if (threadNote.imageAsset == NULL) 
                 {
@@ -703,6 +725,7 @@ TextureInfo * Texture::initFromAssetManagerAsync(const char *path, bool highPrio
         threadNote.path = path;
         threadNote.tinfo = tinfo;
         threadNote.priority = highPriority;
+        threadNote.update = false;
 
         //add this texture to async queue
         loom_mutex_lock(Texture::sAsyncQueueMutex);
@@ -731,6 +754,114 @@ TextureInfo * Texture::initFromAssetManagerAsync(const char *path, bool highPrio
     return tinfo;
 }
 
+void Texture::updateFromBytes(TextureID id, utByteArray *bytes)
+{
+    LOOM_PROFILE_SCOPE(textureUpdateBytes);
+    lmAssert(bytes != NULL, "bytes should not be null");
+
+    loom_mutex_lock(Texture::sTexInfoLock);
+    TextureInfo *tinfo = Texture::getTextureInfo(id);
+
+    if (tinfo && tinfo->handle != -1)
+    {
+        lmAssert(tinfo->handle != MARKEDTEXTURE, "Texture id %d cannot be updated as it's currently in the loading queue", id);
+        //lmAssert(!tinfo->updating, "Texture id %d should not be updating already", id);
+
+
+        //load the byte stream
+        LoomAssetCleanupCallback dtor = NULL;
+        loom_asset_image_t *lat = static_cast<loom_asset_image_t*>(loom_asset_imageDeserializer(bytes->getDataPtr(), bytes->getSize(), &dtor));
+
+        if (lat == NULL) {
+            lmLog(gGFXTextureLogGroup, "Unable to load image bytes");
+            loom_mutex_unlock(Texture::sTexInfoLock);
+            return;
+        }
+
+        lmLogDebug(gGFXTextureLogGroup, "Loaded image bytes - %i x %i at id %i", lat->width, lat->height, tinfo->id);
+
+        updateImageAsset(lat, tinfo);
+
+        dtor(lat);
+    }
+
+    loom_mutex_unlock(Texture::sTexInfoLock);
+
+}
+
+
+void Texture::updateFromBytesAsync(TextureID id, utByteArray *bytes, bool highPriority)
+{
+    LOOM_PROFILE_SCOPE(textureUpdateBytesAsync);
+    lmAssert(bytes != NULL, "bytes should not be null");
+
+    TextureInfo *tinfo = Texture::getTextureInfo(id);
+
+    if (tinfo && tinfo->handle != -1)
+    {
+        //build up temp struct to pass over to the aysnc load thread
+        AsyncLoadNote threadNote;
+        memset(&threadNote, 0, sizeof(AsyncLoadNote));
+        threadNote.id = tinfo->id;
+        threadNote.path = "";
+        threadNote.tinfo = tinfo;
+        threadNote.bytes.allocateAndCopy(bytes->getDataPtr(), bytes->getSize());
+        threadNote.priority = highPriority;
+        threadNote.update = true;
+
+        //add this texture to async queue
+        loom_mutex_lock(Texture::sAsyncQueueMutex);
+
+        //add to the front of the queue if high priority, otherwise, FIFO
+        if (highPriority)
+        {
+            sAsyncLoadQueue.push_front(threadNote);
+        }
+        else
+        {
+            sAsyncLoadQueue.push_back(threadNote);
+        }
+        if (!Texture::sAsyncThreadRunning)
+        {
+            //only kick the async thread if it isn't already running
+            Texture::sAsyncThreadRunning = true;
+            loom_thread_start(Texture::loadTextureAsync_body, NULL);
+        }
+        loom_mutex_unlock(Texture::sAsyncQueueMutex);
+    }
+    else
+    {
+        lmLogError(gGFXTextureLogGroup, "No available texture id for image bytes");
+    }
+}
+
+void Texture::updateImageAsset(loom_asset_image_t *lat, TextureInfo *tinfo)
+{
+    // See if it's over 2048 - if so, downsize to fit.
+    const int maxSize = 2048;
+    uint32_t* localBits = (uint32_t*)lat->bits;
+    int      localWidth = lat->width;
+    int      localHeight = lat->height;
+    bool downsampling = false;
+    while (localWidth > maxSize || localHeight > maxSize)
+    {
+        // Allocate new bits.
+        int oldWidth = localWidth, oldHeight = localHeight;
+        localWidth >>= 1;
+        localHeight >>= 1;
+        downsampling = true;
+    }
+
+    if (downsampling) {
+        localBits = static_cast<uint32_t*>(lmAlloc(NULL, localWidth * localWidth * 4));
+        downsampleAverage((uint32_t*)lat->bits, localBits, lat->width, lat->height);
+        lmLog(gGFXTextureLogGroup, "   - Too big! Downsampling to %dx%d", localWidth, localHeight);
+    }
+
+    upload(*tinfo, (uint8_t*) localBits, localWidth, localHeight, 0, 0);
+
+    if (downsampling) lmFree(NULL, localBits);
+}
 
 TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name, bool highPriority)
 {
@@ -773,8 +904,9 @@ TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name, b
         threadNote.id = tinfo->id;
         threadNote.path = "";
         threadNote.tinfo = tinfo;
-        threadNote.bytes = bytes;
+        threadNote.bytes.allocateAndCopy(bytes->getDataPtr(), bytes->getSize());
         threadNote.priority = highPriority;
+        threadNote.update = false;
 
         //add this texture to async queue
         loom_mutex_lock(Texture::sAsyncQueueMutex);

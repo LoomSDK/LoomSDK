@@ -70,8 +70,6 @@ typedef struct
     int               bodyLength;
     utString          url;
     utString          method;
-
-    bool              base64;
 } loom_HTTPUserData;
 
 static void loom_HTTPCleanupUserData(loom_HTTPUserData *data)
@@ -194,21 +192,9 @@ void platform_HTTPUpdate()
                     platform_writeFile(userData->cacheFile.c_str(), userData->chunk->memory, userData->chunk->size);
                 }
 
-                // Do we need to base64?
-                const char *result = NULL;
-                if (userData->base64)
-                {
-                    utArray<unsigned char> data;
-                    data.resize(userData->chunk->size);
-                    memcpy(data.ptr(), userData->chunk->memory, userData->chunk->size);
-
-                    utBase64 result64 = utBase64::encode64(data);
-                    result = strdup_callback(result64.getBase64().c_str());
-                }
-                else
-                {
-                    result = userData->chunk->memory;
-                }
+                utByteArray *result = lmNew(NULL) utByteArray();
+                // TODO: Don't copy?
+                result->allocateAndCopy(userData->chunk->memory, userData->chunk->size);
 
                 // notify the callback if we are successful
                 if (http_code < 400)
@@ -216,13 +202,14 @@ void platform_HTTPUpdate()
                 else
                     userData->callback(userData->payload, LOOM_HTTP_ERROR, result);
 
-                if(userData->base64)
-                   lmFree(NULL, (void*)result);
+                lmDelete(NULL, result);
             }
             else
             {
                 // send a failure to the callback
-                userData->callback(userData->payload, LOOM_HTTP_ERROR, curl_easy_strerror(message->data.result));
+                utByteArray *result = lmNew(NULL) utByteArray();
+                result->writeString(curl_easy_strerror(message->data.result));
+                userData->callback(userData->payload, LOOM_HTTP_ERROR, result);
             }
 
             // clean up any userdata.
@@ -244,7 +231,7 @@ bool platform_HTTPIsConnected()
 
 int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback callback, void *payload,
                        const char *body, int bodyLength, utHashTable<utHashedString, utString>& headers,
-                       const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects)
+                       const char *responseCacheFile, bool followRedirects)
 {
     assert(gHTTPInitialized);
 
@@ -273,7 +260,6 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
     userData->method     = method ? method : "";
     userData->callback   = callback;
     userData->payload    = payload;
-    userData->base64     = base64EncodeResponseData;
 
     // iterate over the utHashTable and register our headers
     utHashTableIterator<utHashTable<utHashedString, utString> > headersIterator(headers);
@@ -323,7 +309,9 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
     }
     else // call error
     {
-        callback(payload, LOOM_HTTP_ERROR, "Error: Unknown HTTP Method.");
+        utByteArray *result = lmNew(NULL) utByteArray();
+        result->writeString("Error: Unknown HTTP Method.");
+        callback(payload, LOOM_HTTP_ERROR, result);
         return -1;
     }
 

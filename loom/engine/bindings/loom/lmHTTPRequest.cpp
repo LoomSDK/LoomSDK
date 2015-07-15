@@ -26,6 +26,9 @@
 
 using namespace LS;
 
+
+lmDefineLogGroup(gHTTPRequestLogGroup, "HTTPRequest", 1, LoomLogInfo);
+
 class HTTPRequest {
 public:
 
@@ -36,7 +39,6 @@ public:
 
     utByteArray *bodyBytes;
 
-    bool        base64EncodeResponseData;
     bool        followRedirects;
 
     utHashTable<utHashedString, utString> header;
@@ -49,7 +51,6 @@ public:
     HTTPRequest(const char *urlString, const char *contentType) : method("GET"), body(""), responseCacheFile(""), bodyBytes(NULL)
     {
         url = urlString;
-        base64EncodeResponseData = false;
         followRedirects          = true;
 
         // set the Content-Type in the header
@@ -92,8 +93,9 @@ public:
         id = -1;
         if (url == "")
         {
-            _OnFailureDelegate.pushArgument("Error: Empty URL");
-            _OnFailureDelegate.invoke();
+            utByteArray *result = lmNew(NULL) utByteArray();
+            result->writeString("Error: Empty URL");
+            respond(this, LOOM_HTTP_ERROR, result);
         }
         else
         {
@@ -102,14 +104,14 @@ public:
                 // Send with body as byte array.
                 id = platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
                                   (const char *)bodyBytes->getInternalArray()->ptr(), bodyBytes->getSize(), header,
-                                  (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
+                                  (const char *)responseCacheFile.c_str(), followRedirects);
             }
             else
             {
                 // Send with body as string.
                 id = platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
                                   (const char *)body.c_str(), body.length(), header,
-                                  (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
+                                  (const char *)responseCacheFile.c_str(), followRedirects);
             }
         }
         return (id == -1) ? false : true;
@@ -120,9 +122,9 @@ public:
         bool cancelled = platform_HTTPCancel(id);
         if (cancelled)
         {
-            _OnFailureDelegate.pushArgument("Request cancelled by user.");
-            _OnFailureDelegate.invoke();
-            complete();
+            utByteArray *result = lmNew(NULL) utByteArray();
+            result->writeString("Request cancelled by user.");
+            respond(this, LOOM_HTTP_ERROR, result);
         }
     }
 
@@ -141,7 +143,7 @@ public:
     /**
      * Calls the native delegate, this should be used internally only
      */
-    static void respond(void *payload, loom_HTTPCallbackType type, const char *data)
+    static void respond(void *payload, loom_HTTPCallbackType type, utByteArray *data)
     {
         HTTPRequest *request = (HTTPRequest *)payload;
 
@@ -181,7 +183,6 @@ static int registerLoomHTTPRequest(lua_State *L)
        .addVar("bodyBytes", &HTTPRequest::bodyBytes)
        .addVar("url", &HTTPRequest::url)
        .addVar("cacheFileName", &HTTPRequest::responseCacheFile)
-       .addVar("encodeResponse", &HTTPRequest::base64EncodeResponseData)
        .addVar("followRedirects", &HTTPRequest::followRedirects)
        .addVarAccessor("onSuccess", &HTTPRequest::getOnSuccessDelegate)
        .addVarAccessor("onFailure", &HTTPRequest::getOnFailureDelegate)

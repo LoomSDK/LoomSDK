@@ -69,7 +69,6 @@ float display_getDPI()
         , "()F"))
     {
         jfloat p = (jint)t.getEnv()->CallStaticFloatMethod(t.classID, t.methodID);
-        t.getEnv()->DeleteLocalRef(t.classID);
         return p;
     }
 
