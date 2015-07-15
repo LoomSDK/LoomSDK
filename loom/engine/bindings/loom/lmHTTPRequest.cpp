@@ -39,7 +39,6 @@ public:
 
     utByteArray *bodyBytes;
 
-    bool        base64EncodeResponseData;
     bool        followRedirects;
 
     utHashTable<utHashedString, utString> header;
@@ -52,7 +51,6 @@ public:
     HTTPRequest(const char *urlString, const char *contentType) : method("GET"), body(""), responseCacheFile(""), bodyBytes(NULL)
     {
         url = urlString;
-        base64EncodeResponseData = false;
         followRedirects          = true;
 
         // set the Content-Type in the header
@@ -185,7 +183,6 @@ static int registerLoomHTTPRequest(lua_State *L)
        .addVar("bodyBytes", &HTTPRequest::bodyBytes)
        .addVar("url", &HTTPRequest::url)
        .addVar("cacheFileName", &HTTPRequest::responseCacheFile)
-       .addVar("encodeResponse", &HTTPRequest::base64EncodeResponseData)
        .addVar("followRedirects", &HTTPRequest::followRedirects)
        .addVarAccessor("onSuccess", &HTTPRequest::getOnSuccessDelegate)
        .addVarAccessor("onFailure", &HTTPRequest::getOnFailureDelegate)

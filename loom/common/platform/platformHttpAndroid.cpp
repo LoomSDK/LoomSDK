@@ -153,7 +153,7 @@ bool platform_HTTPIsConnected()
         "isConnected",
         "()Z");
 
-    jboolean result = env->CallStaticBooleanMethod(jniIsConnected.classID, jniIsConnected.methodID);
+    jboolean result = jniIsConnected.getEnv()->CallStaticBooleanMethod(jniIsConnected.classID, jniIsConnected.methodID);
     return (bool)result;
 }
 

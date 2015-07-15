@@ -97,11 +97,6 @@ package loom
         public native var url:String;
 
         /**
-         * When true, we return binary values encoded as base64.
-         */
-        public native var encodeResponse:Boolean;
-
-        /**
          * When true, follow any redirects.
          */
         public native var followRedirects:Boolean;

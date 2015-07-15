@@ -260,7 +260,6 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
     userData->method     = method ? method : "";
     userData->callback   = callback;
     userData->payload    = payload;
-    //userData->base64     = base64EncodeResponseData;
 
     // iterate over the utHashTable and register our headers
     utHashTableIterator<utHashTable<utHashedString, utString> > headersIterator(headers);
