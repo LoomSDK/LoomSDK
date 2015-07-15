@@ -15,7 +15,6 @@ if(APPLE)
 
     add_definitions( -U__STRICT_ANSI__ -Wfatal-errors -Wunused-value )
 
-
     if(LOOM_BUILD_IOS EQUAL 1)
         #set ( GRAPHICS_SRC ${GRAPHICS_SRC} gfxGraphicsIOS.mm )
         #if (LOOM_IOS_LEGACY EQUAL 1)
@@ -37,7 +36,6 @@ if(APPLE)
 endif()
 
 if(ANDROID)
-        add_definitions ( -std=c++0x )
         add_definitions( -DLOOM_RENDERER_OPENGLES2=1 )
         include_directories( ${LOOM_INCLUDE_FOLDERS} )
 endif()    
@@ -47,7 +45,6 @@ if (MSVC)
 endif()
 
 if (LINUX)
-    add_definitions ( -std=c++0x )
     set ( BGFX_SRC ${BGFX_SRC} ${LOOMBGFX_SOURCE_DIR}/renderer_gl.cpp ${LOOMBGFX_SOURCE_DIR}/glcontext_external.cpp )
     set ( GRAPHICS_SRC ${GRAPHICS_SRC} gfxGraphicsAndroid.cpp )
 
@@ -59,6 +56,8 @@ if (FLASH)
     include_directories( ${LOOMBGFX_INCLUDE_DIR}/compat/osx )
 
 endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x" )
 
 add_library( LoomGraphics ${NANOVG_SRC} ${GRAPHICS_SRC} )
 target_link_libraries(LoomGraphics LoomVendor )
