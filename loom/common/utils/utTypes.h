@@ -662,6 +662,14 @@ public:
         }
     }
 
+    void attach(void* memory, UTsize size)
+    {
+        clear(false);
+        m_data = (Pointer) memory;
+        m_capacity = size;
+        m_size = size;
+    }
+
     UTsize find(const T& v)
     {
         for (UTsize i = 0; i < m_size; i++)

@@ -398,6 +398,12 @@ public:
         _position = 0;
     }
 
+    void attach(void *memory, UTsize size)
+    {
+        _position = 0;
+        _data.attach(memory, size);
+    }
+
     /*
      * Direct access to the utByteArray's data
      */
