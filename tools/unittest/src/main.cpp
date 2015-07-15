@@ -21,6 +21,8 @@
 #include "loom/common/platform/platform.h"
 #include "loom/vendor/seatest/seatest.h"
 
+#include <cstdlib>
+
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 #include <windows.h>
 #endif
