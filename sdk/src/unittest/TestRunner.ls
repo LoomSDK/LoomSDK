@@ -183,7 +183,12 @@ package unittest {
                 }
             });
             
-            return null;
+            // If there are no async tests, we can go ahead and just return the result here (Everything will have run synchronously)
+            // Otherwise return null to help users understand that they dun goofed
+            if (foundAsync)
+                return null;
+            else
+                return result;
         }
         
         /**
