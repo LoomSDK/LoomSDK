@@ -141,7 +141,7 @@ package loom
             touchProcessor = new TouchProcessor(stage);
             
             // Seed the Random Number Generator
-            Random.setSeed(Platform.getEpochTime);
+            Random.setSeed(Platform.getEpochTime());
 
             // Used to adjust delay for starting the splash screen animation.
             var startDelay = 1.0;
