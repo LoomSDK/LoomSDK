@@ -84,6 +84,17 @@ package unittest {
         
         [UnitTestHideCall]
         public function run(c:TestComplete = null):Object {
+            
+            // Give a better error if the parameters are wrong
+            if (method.getNumParameters() > 1) {
+                Assert.fail("Error in Test " + method.getName() + ": Test has too many parameters! It should have at most 1 parameter");
+                return null;
+            }
+            else if (method.getNumParameters() == 1 && method.getParameter(0).getParameterType().getFullName() != "unittest.TestComplete") {
+                Assert.fail("Error in Test " + method.getName() + ": Test parameter must be of type 'unittest.TestComplete'");
+                return null;
+            }
+            
             if (this.async) {
                 method.invokeSingle(target, c);
                 return null;
@@ -149,7 +160,9 @@ package unittest {
         public function TestRunner() {}
         
         /**
-         * Run and report on all the tests in the specified assembly.
+         * Run and report on all the tests in the specified assembly. Synchronous and Asychronous tests are supported. In order to run a test asynchronously,
+         * simply give your test function a parameter of the type `unittest.TestComplete`, and then call the .done() function when the test is finished.
+         * See TestComplete for more details. All tests, synchronous and asynchronous are marked by the [Test] metadata.
          * @param assembly  The assembly from which to run the tests.
          *                  Use Type.getAssembly() or getType().getAssembly() for an easy way to run tests in the currently running application.
          * @param shuffle   Whether to shuffle the tests or not, defaults to true to allow for faster failure of tests that depend on side effects.
@@ -221,6 +234,11 @@ package unittest {
             runTypesCallback();
         }
         
+        /**
+         * @private
+         * 
+         * Function used in runTypes() to support async testing
+         */
         private static function runTypesCallback() {
             
             while (true) {
@@ -569,7 +587,7 @@ package unittest {
     
     /**
      * Special class to be used when making asynchronous tests. Simply add a parameter with this type to your testing
-     * function, and call the done() function when your asynchronous test is complete
+     * function, and call the done() function when your asynchronous test is complete.
      */
     public class TestComplete {
         private var doneFunction:Function;
@@ -583,7 +601,8 @@ package unittest {
         }
         
         /**
-         * Call this function when your test is complete!
+         * Function to be called when a test is completed. If this function is called more than once in a given test, an
+         * error will be Asserted.
          * 
          * @param msg An object that will be logged in the test
          */
