@@ -30,10 +30,11 @@ package {
      */
     public class AllTests {   
         public static function main() {
-            TestRunner.runAll((AllTests as Type).getAssembly(), true, function(result:TestResult) {
+            TestRunner.onComplete += function(result:TestResult) {
                 
                 Process.exit(result.typeReport.successful ? 0 : 1);
-            });
+            };
+            TestRunner.runAll((AllTests as Type).getAssembly(), true);
         }
     }
 }

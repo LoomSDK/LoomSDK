@@ -4,6 +4,8 @@ package unittest {
     import system.reflection.MethodInfo;
     import system.reflection.Type;
     
+    public delegate OnTestComplete(result:TestResult);
+    
     /**
      * Generic stats value object holding the number of
      * passed/failed/skipped events.
@@ -118,6 +120,9 @@ package unittest {
      */
     public class TestRunner {
         
+        // Delegate that is run when the tests complete
+        public static var onComplete:OnTestComplete;
+        
         // The result that will be returned when everything is done
         private static var result:TestResult;
         
@@ -151,7 +156,7 @@ package unittest {
          * @return  A TestResult containing the run TypeTests and their accumulated results.
          */
         [UnitTestHideCall]
-        public static function runAll(assembly:Assembly, shuffle:Boolean = true, complete:Function = null):TestResult {
+        public static function runAll(assembly:Assembly, shuffle:Boolean = true):TestResult {
             result = new TestResult();
             
             typeReport = result.typeReport;
@@ -177,10 +182,7 @@ package unittest {
             
             runTypes(result.typeTests, shuffle, function() {
                 reportTypes(result.typeTests, result.typeReport, result.testReport, result.assertReport);
-                
-                if (complete) {
-                    complete.call(null, result);
-                }
+                onComplete(result);
             });
             
             // If there are no async tests, we can go ahead and just return the result here (Everything will have run synchronously)
