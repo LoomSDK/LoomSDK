@@ -129,10 +129,17 @@ package unittest {
         // If there is at least one async test in the test suite
         private static var foundAsync:Boolean;
         
+        // Variables used by the run typeTest functionality
+        private static var runTypesTypeTests:Vector.<TypeTest>;
+        private static var runTypesShuffle:Boolean;
+        private static var runTypesIndex:Number;
+        private static var runTypesTests:Vector.<Test>;
+        private static var runTypesComplete:Function;
+        
         // Variables used by the run test functionality
-        public static var runTests:Vector.<Test>;
-        public static var runIndex:Number;
-        public static var runComplete:Function;
+        private static var runTests:Vector.<Test>;
+        private static var runIndex:Number;
+        private static var runComplete:Function;
         
         public function TestRunner() {}
         
@@ -198,52 +205,71 @@ package unittest {
             
             if (typeReport) typeReport.total += typeTests.length;
             
-            runTypesCallback(typeTests, shuffle, 0, tests, complete);
+            runTypesTypeTests = typeTests;
+            runTypesShuffle = shuffle;
+            runTypesIndex = 0;
+            runTypesTests = tests;
+            runTypesComplete = complete;
+            
+            runTypesCallback();
         }
         
-        private static function runTypesCallback(typeTests:Vector.<TypeTest>, shuffle:Boolean, index:Number, tests:Vector.<Test>, complete:Function = null) {
-            if (index >= typeTests.length) {
-                if (typeReport) typeReport.updateFailed();
-                complete.call();
-                return;
-            }
-            var tt:TypeTest = typeTests[index];
-            tt.asserts.reset();
+        private static function runTypesCallback() {
             
-            // Different styles of output
-            //IO.write((tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"   "+(i+1)+" / "+typeTests.length+"\n");
-            //IO.write((i+1)+"/"+typeTests.length+"  "+(tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"\n");
-            IO.write((index+1)+"/"+typeTests.length+" "+tt.type.getFullName()+(tt.skip ? "(skipped)" : "")+"\n");
-            if (tt.skip) {
-                if (typeReport) typeReport.skipped++;
-                runTypesCallback(typeTests, shuffle, ++index, tests, complete);
-                return;
-            }
-            
-            IO.write("\n");
-            run(tt.tests, shuffle, function() {
-                tt.report.reset();
-                tt.report.total = tt.tests.length;
-                for (var j = 0; j < tt.tests.length; j++) {
-                    var test:Test = tt.tests[j];
-                    if (assertReport) assertReport += test.report;
-                    tt.asserts += test.report;
-                    if (test.skip) {
-                        tt.report.skipped++;
-                        continue;
-                    }
-                    if (test.report.successful) tt.report.passed++;
+            while (true) {
+                if (runTypesIndex >= runTypesTypeTests.length) {
+                    if (typeReport) typeReport.updateFailed();
+                    runTypesComplete.call();
+                    return;
                 }
-                tt.report.updateFailed();
+                var tt:TypeTest = runTypesTypeTests[runTypesIndex];
+                tt.asserts.reset();
                 
-                if (testReport) testReport += tt.report;
+                // Different styles of output
+                //IO.write((tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"   "+(i+1)+" / "+runTypesTypeTests.length+"\n");
+                //IO.write((i+1)+"/"+runTypesTypeTests.length+"  "+(tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"\n");
+                IO.write((runTypesIndex+1)+"/"+runTypesTypeTests.length+" "+tt.type.getFullName()+(tt.skip ? "(skipped)" : "")+"\n");
+                if (tt.skip) {
+                    if (typeReport) typeReport.skipped++;
+                    runTypesIndex++;
+                    continue;
+                }
                 
-                if (tt.report.successful && typeReport) typeReport.passed++;
+                IO.write("\n");
+                var shouldBreak:Boolean = false;
                 
-                IO.write("\n\n");
-                tests = tests.concat(tt.tests);
-                runTypesCallback(typeTests, shuffle, ++index, tests, complete);
-            });
+                run(tt.tests, runTypesShuffle, function() {
+                    tt.report.reset();
+                    tt.report.total = tt.tests.length;
+                    for (var j = 0; j < tt.tests.length; j++) {
+                        var test:Test = tt.tests[j];
+                        if (assertReport) assertReport += test.report;
+                        tt.asserts += test.report;
+                        if (test.skip) {
+                            tt.report.skipped++;
+                            continue;
+                        }
+                        if (test.report.successful) tt.report.passed++;
+                    }
+                    tt.report.updateFailed();
+                    
+                    if (testReport) testReport += tt.report;
+                    
+                    if (tt.report.successful && typeReport) typeReport.passed++;
+                    
+                    IO.write("\n\n");
+                    runTypesTests = runTypesTests.concat(tt.tests);
+                    runTypesIndex++;
+                    
+                    if (tt.async) {
+                        runTypesCallback();
+                    }
+                });
+                
+                if (tt.async)
+                    break;
+            }
+            
         }
         
         /**
@@ -369,8 +395,7 @@ package unittest {
                 if (test.skip) {
                     IO.write("   skipped\n");
                     runIndex++;
-                    runCallback();
-                    return;
+                    continue;
                 }
                 
                 if (!test.async) {
