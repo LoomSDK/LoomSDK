@@ -27,8 +27,8 @@ final class Random {
 
     /**
      *  Sets the seeding for the random number generation to follow. 
-     *  If not set to something unique for the current execution, your 
-     *  application will always generate the same sequence of values.
+     *  This seed will automatically be set to the Epoch Time at application
+     *  startup (in Application._run()).
      */
     public static native function setSeed(seed:int):void;
     
