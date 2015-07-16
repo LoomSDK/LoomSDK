@@ -155,15 +155,19 @@ package loom2d.events
                 var previousTarget:EventDispatcher = target;
                 
                 // Remove chain links that are deleted natively
-                while (chain.length > 0 && chain[0].nativeDeleted())
+                for (var i:int = 0; i < chain.length; i++) 
                 {
-                    chain.pop();
+                    if (chain[0].nativeDeleted())
+                    {
+                        chain.splice(i, 1);
+                        i--;
+                    }
                 }
                 
                 if (chain.length > 0)
                     setTarget(chain[0] as EventDispatcher);
                 
-                for (var i:int=0; i<chainLength && i<chain.length; ++i)
+                for (i=0; i<chainLength && i<chain.length; ++i)
                 {
                     var chainElement:EventDispatcher = chain[i] as EventDispatcher;
                     //trace("Invoking touch event on " + chainElement + " bubbles=" + bubbles);
