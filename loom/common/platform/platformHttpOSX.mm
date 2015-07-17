@@ -107,13 +107,13 @@ limitations under the License.
     if(cacheToFile != NULL)
         [receivedData writeToFile:[NSString stringWithUTF8String:cacheToFile] atomically:YES];
 
-    NSString *response = nil;
-    response = [[NSString alloc] initWithData:receivedData encoding:NSUTF8StringEncoding];
-
+    utByteArray* bytes = new utByteArray();
+    bytes->attach(receivedData.mutableBytes, receivedData.length);
+    
     if(statusCodeFail)
-        callback(payload, LOOM_HTTP_ERROR, (utByteArray*)[response cStringUsingEncoding:NSUTF8StringEncoding]);
+        callback(payload, LOOM_HTTP_ERROR, bytes);
     else
-        callback(payload, LOOM_HTTP_SUCCESS, (utByteArray*)[response cStringUsingEncoding:NSUTF8StringEncoding]);
+        callback(payload, LOOM_HTTP_SUCCESS, bytes);
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
