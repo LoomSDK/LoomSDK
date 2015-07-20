@@ -4,6 +4,8 @@ package unittest {
     import system.reflection.MethodInfo;
     import system.reflection.Type;
     
+    public delegate OnTestComplete(result:TestResult);
+    
     /**
      * Generic stats value object holding the number of
      * passed/failed/skipped events.
@@ -51,6 +53,7 @@ package unittest {
         public var tests:Vector.<Test>;
         
         public var skip:Boolean;
+        public var async:Boolean;
         
         public var report:StatusReport = new StatusReport();
         public var asserts:StatusReport = new StatusReport();
@@ -72,6 +75,7 @@ package unittest {
         public var meta:MetaInfo;
         
         public var skip:Boolean;
+        public var async:Boolean;
         
         public var report:StatusReport = new StatusReport();
         public var results:Vector.<AssertResult>;
@@ -79,8 +83,25 @@ package unittest {
         function Test() { };
         
         [UnitTestHideCall]
-        public function run():Object {
-            return method.invoke(target);
+        public function run(c:TestComplete = null):Object {
+            
+            // Give a better error if the parameters are wrong
+            if (method.getNumParameters() > 1) {
+                Assert.fail("Error in Test " + method.getName() + ": Test has too many parameters! It should have at most 1 parameter");
+                return null;
+            }
+            else if (method.getNumParameters() == 1 && method.getParameter(0).getParameterType().getFullName() != "unittest.TestComplete") {
+                Assert.fail("Error in Test " + method.getName() + ": Test parameter must be of type 'unittest.TestComplete'");
+                return null;
+            }
+            
+            if (this.async) {
+                method.invokeSingle(target, c);
+                return null;
+            }
+            else {
+                return method.invoke(target);
+            }
         }
         
         public function toString():String {
@@ -110,10 +131,47 @@ package unittest {
      */
     public class TestRunner {
         
-        public function TestRunner() {}
+        // Delegate that is run when the tests complete
+        public static var onComplete:OnTestComplete;
+        
+        // The result that will be returned when everything is done
+        private static var result:TestResult;
+        
+        // Various reports from the result variable
+        private static var typeReport:StatusReport;
+        private static var testReport:StatusReport;
+        private static var assertReport:StatusReport;
+        
+        // If there is at least one async test in the test suite
+        private static var foundAsync:Boolean;
+        
+        // Variables used by the run typeTest functionality
+        private static var runTypesTypeTests:Vector.<TypeTest>;
+        private static var runTypesShuffle:Boolean;
+        private static var runTypesIndex:Number;
+        private static var runTypesTests:Vector.<Test>;
+        private static var runTypesComplete:Function;
+        
+        // Variables used by the run test functionality
+        private static var runTests:Vector.<Test>;
+        private static var runIndex:Number;
+        private static var runComplete:Function;
+        
+        // Property that is set when the tests are running
+        private static var _isRunning:Boolean = false;
+        
+        public function TestRunner() { }
         
         /**
-         * Run and report on all the tests in the specified assembly.
+         * If a test is currently running. Although asynchronous testing is support, only one test suite can be run at a time. It is safe to run
+         * a test suite when this flag is false.
+         */
+        public static function get isRunning():Boolean { return _isRunning; }
+        
+        /**
+         * Run and report on all the tests in the specified assembly. Synchronous and Asychronous tests are supported. In order to run a test asynchronously,
+         * simply give your test function a parameter of the type `unittest.TestComplete`, and then call the .done() function when the test is finished.
+         * See TestComplete for more details. All tests, synchronous and asynchronous are marked by the [Test] metadata.
          * @param assembly  The assembly from which to run the tests.
          *                  Use Type.getAssembly() or getType().getAssembly() for an easy way to run tests in the currently running application.
          * @param shuffle   Whether to shuffle the tests or not, defaults to true to allow for faster failure of tests that depend on side effects.
@@ -121,7 +179,22 @@ package unittest {
          */
         [UnitTestHideCall]
         public static function runAll(assembly:Assembly, shuffle:Boolean = true):TestResult {
-            var result = new TestResult();
+            
+            // If we are already running a test, error!
+            if (_isRunning) {
+                Assert.fail("ERROR: Unit tests already running");
+                return null;
+            }
+            
+            _isRunning = true;
+            
+            result = new TestResult();
+            
+            typeReport = result.typeReport;
+            testReport = result.testReport;
+            assertReport = result.assertReport;
+            
+            foundAsync = false;
             
             result.scannedTypes = assembly.getTypeCount();
             
@@ -138,11 +211,18 @@ package unittest {
             
             IO.write("\n");
             
-            runTypes(result.typeTests, shuffle, result.typeReport, result.testReport, result.assertReport);
+            runTypes(result.typeTests, shuffle, function() {
+                reportTypes(result.typeTests, result.typeReport, result.testReport, result.assertReport);
+                _isRunning = false; // The tests are done!
+                onComplete(result);
+            });
             
-            reportTypes(result.typeTests, result.typeReport, result.testReport, result.assertReport);
-            
-            return result;
+            // If there are no async tests, we can go ahead and just return the result here (Everything will have run synchronously)
+            // Otherwise return null to help users understand that they dun goofed
+            if (foundAsync)
+                return null;
+            else
+                return result;
         }
         
         /**
@@ -154,7 +234,7 @@ package unittest {
          * @param assertReport  Accumulated report on assertions.
          */
         [UnitTestHideCall]
-        public static function runTypes(typeTests:Vector.<TypeTest>, shuffle:Boolean = true, typeReport:StatusReport = null, testReport:StatusReport = null, assertReport:StatusReport = null) {
+        public static function runTypes(typeTests:Vector.<TypeTest>, shuffle:Boolean = true, complete:Function = null) {
             if (shuffle) typeTests.shuffle();
             
             var tests = new Vector.<Test>();
@@ -164,44 +244,75 @@ package unittest {
             
             if (typeReport) typeReport.total += typeTests.length;
             
-            for (i = 0; i < typeTests.length; i++) {
-                tt = typeTests[i];
+            runTypesTypeTests = typeTests;
+            runTypesShuffle = shuffle;
+            runTypesIndex = 0;
+            runTypesTests = tests;
+            runTypesComplete = complete;
+            
+            runTypesCallback();
+        }
+        
+        /**
+         * @private
+         * 
+         * Function used in runTypes() to support async testing
+         */
+        private static function runTypesCallback() {
+            
+            while (true) {
+                if (runTypesIndex >= runTypesTypeTests.length) {
+                    if (typeReport) typeReport.updateFailed();
+                    runTypesComplete.call();
+                    return;
+                }
+                var tt:TypeTest = runTypesTypeTests[runTypesIndex];
                 tt.asserts.reset();
                 
                 // Different styles of output
-                //IO.write((tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"   "+(i+1)+" / "+typeTests.length+"\n");
-                //IO.write((i+1)+"/"+typeTests.length+"  "+(tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"\n");
-                IO.write((i+1)+"/"+typeTests.length+" "+tt.type.getFullName()+(tt.skip ? "(skipped)" : "")+"\n");
+                //IO.write((tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"   "+(i+1)+" / "+runTypesTypeTests.length+"\n");
+                //IO.write((i+1)+"/"+runTypesTypeTests.length+"  "+(tt.skip ? "Skipping" : "Running")+" "+tt.type.getFullName()+"\n");
+                IO.write((runTypesIndex+1)+"/"+runTypesTypeTests.length+" "+tt.type.getFullName()+(tt.skip ? "(skipped)" : "")+"\n");
                 if (tt.skip) {
                     if (typeReport) typeReport.skipped++;
+                    runTypesIndex++;
                     continue;
                 }
                 
                 IO.write("\n");
-                run(tt.tests, shuffle);
+                var shouldBreak:Boolean = false;
                 
-                tt.report.reset();
-                tt.report.total = tt.tests.length;
-                for (var j = 0; j < tt.tests.length; j++) {
-                    var test:Test = tt.tests[j];
-                    if (assertReport) assertReport += test.report;
-                    tt.asserts += test.report;
-                    if (test.skip) {
-                        tt.report.skipped++;
-                        continue;
+                run(tt.tests, runTypesShuffle, function() {
+                    tt.report.reset();
+                    tt.report.total = tt.tests.length;
+                    for (var j = 0; j < tt.tests.length; j++) {
+                        var test:Test = tt.tests[j];
+                        if (assertReport) assertReport += test.report;
+                        tt.asserts += test.report;
+                        if (test.skip) {
+                            tt.report.skipped++;
+                            continue;
+                        }
+                        if (test.report.successful) tt.report.passed++;
                     }
-                    if (test.report.successful) tt.report.passed++;
-                }
-                tt.report.updateFailed();
+                    tt.report.updateFailed();
+                    
+                    if (testReport) testReport += tt.report;
+                    
+                    if (tt.report.successful && typeReport) typeReport.passed++;
+                    
+                    IO.write("\n\n");
+                    runTypesTests = runTypesTests.concat(tt.tests);
+                    runTypesIndex++;
+                    
+                    if (tt.async) {
+                        runTypesCallback();
+                    }
+                });
                 
-                if (testReport) testReport += tt.report;
-                
-                if (tt.report.successful && typeReport) typeReport.passed++;
-                
-                IO.write("\n\n");
-                tests = tests.concat(tt.tests);
+                if (tt.async)
+                    break;
             }
-            if (typeReport) typeReport.updateFailed();
             
         }
         
@@ -256,6 +367,18 @@ package unittest {
                     tt.type = type;
                     tt.tests = tests;
                     tt.skip = type.getMetaInfo("SkipTests") != null;
+                    
+                    // Determine if this test type contains async tests
+                    tt.async = false;
+                    if (foundAsync) { // Only need to run this loop if there is at least one async test in the entire suite so far
+                        for (var t in tests) {
+                            if (tests[t].async) {
+                                tt.async = true;
+                                break;
+                            }
+                        }
+                    }
+                    
                     typeTests.push(tt);
                 }
             }
@@ -266,9 +389,10 @@ package unittest {
          * Run all the provided tests. The tests are updated with the results.
          * @param tests The tests to run.
          * @param shuffle   If true, shuffle the tests to fail fast for tests that depend on side effects and specific execution order.
+         * @param complete Function that will be called when the operation is complete
          */
         [UnitTestHideCall]
-        public static function run(tests:Vector.<Test>, shuffle:Boolean = true) {
+        public static function run(tests:Vector.<Test>, shuffle:Boolean = true, complete:Function = null) {
             var i:int;
             var test:Test;
             
@@ -289,30 +413,76 @@ package unittest {
             
             IO.write("\n");
             
-            for (i in tests) {
-                test = tests[i];
-                IO.write(String.lpad(""+(i+1), " ", 4)+". "+String.rpad(test.name, " ", 20)+" ");
+            // Set variables
+            runTests = tests;
+            runIndex = 0;
+            runComplete = complete;
+            
+            runCallback();
+        }
+        
+        /**
+         * @private
+         * 
+         * Function that is used in "run()" to support async testing
+         */
+        private static function runCallback() {
+            
+            while (true) {
+                if (runIndex >= runTests.length) {
+                    runComplete.call();
+                    return;
+                }
+                var test:Test = runTests[runIndex];
+                IO.write(String.lpad(""+(runIndex+1), " ", 4)+". "+String.rpad(test.name, " ", 20)+" ");
                 IO.write("   ");
                 if (test.skip) {
                     IO.write("   skipped\n");
+                    runIndex++;
                     continue;
                 }
-                var ret = test.run();
-                var results = Assert.popResults();
-                var passed = 0;
-                for each (var result in results) {
-                    if (result == Assert.RESULT_SUCCESS) passed++;
+                
+                if (!test.async) {
+                    var ret:Object = test.run();
+                    runHandleTest(ret, false);
+                    runIndex++;
                 }
-                test.report.total = results.length;
-                test.report.passed = passed;
-                test.report.updateFailed();
-                IO.write(String.lpad(""+test.report.total, " ", 4) + " total " + String.lpad(""+test.report.passed, " ", 4) + " passed");
-                if (passed < results.length) {
-                    IO.write(" "+String.lpad(""+(results.length-passed), " ", 4)+" failed");
-                    test.results = results;
+                else {
+                    test.run(new TestComplete(runHandleTest));
+                    break;
                 }
-                if (ret != null) IO.write("   "+ret);
-                IO.write("\n");
+            }
+        }
+        
+        /**
+         * @private
+         * 
+         * Used as the callback for asynchronous tests, as well as in synchronous tests
+         * 
+         * @param ret
+         * @param recurse
+         */
+        private static function runHandleTest(ret:Object = null, recurse:Boolean = true) {
+            var test:Test = runTests[runIndex];
+            var results = Assert.popResults();
+            var passed = 0;
+            for each (var result in results) {
+                if (result == Assert.RESULT_SUCCESS) passed++;
+            }
+            test.report.total = results.length;
+            test.report.passed = passed;
+            test.report.updateFailed();
+            IO.write(String.lpad(""+test.report.total, " ", 4) + " total " + String.lpad(""+test.report.passed, " ", 4) + " passed");
+            if (passed < results.length) {
+                IO.write(" "+String.lpad(""+(results.length-passed), " ", 4)+" failed");
+                test.results = results;
+            }
+            if (ret != null) IO.write("   "+ret);
+            IO.write("\n");
+            
+            if (recurse) {
+                runIndex++;
+                runCallback();
             }
         }
         
@@ -409,6 +579,15 @@ package unittest {
                     test.target = target;
                     test.method = m;
                     test.meta = meta;
+                    
+                    // Determine if the test is async
+                    if (m.getNumParameters() > 0 && m.getParameter(0).getParameterType().getFullName() == "unittest.TestComplete") {
+                        foundAsync = true;
+                        test.async = true;
+                    }
+                    else
+                        test.async = false;
+                    
                     tests.push(test);
                     if (!m.isStatic()) instanceTests++;
                 }
@@ -425,4 +604,35 @@ package unittest {
         
     }
     
+    /**
+     * Special class to be used when making asynchronous tests. Simply add a parameter with this type to your testing
+     * function, and call the done() function when your asynchronous test is complete.
+     */
+    public class TestComplete {
+        private var doneFunction:Function;
+        private var hasBeenCalled:Boolean;
+        
+        
+        public function TestComplete(d:Function) {
+            hasBeenCalled = false;
+            
+            doneFunction = d;
+        }
+        
+        /**
+         * Function to be called when a test is completed. If this function is called more than once in a given test, an
+         * error will be Asserted.
+         * 
+         * @param msg An object that will be logged in the test
+         */
+        public function done(msg:Object = null):void {
+            if (hasBeenCalled) {
+                Assert.fail("ERROR: done() called more than once for a single asynchronous test!");
+                return;
+            }
+            
+            hasBeenCalled = true;
+            doneFunction.call(null, [msg]);
+        }
+    }
 }
