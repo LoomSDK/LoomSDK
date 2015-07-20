@@ -338,9 +338,6 @@ void LSProfiler::dump(lua_State *L)
     lmLog(gProfilerLogGroup, "Please note: Profiling under JIT does not include native function calls.");
     lmLog(gProfilerLogGroup, "switch to the interpreted VM in order to gather native method timings");
 #endif
-
-    // does the actual dumping
-    reset(L);
 }
 
 

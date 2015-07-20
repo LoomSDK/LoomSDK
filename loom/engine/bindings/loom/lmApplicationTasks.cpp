@@ -33,6 +33,8 @@ extern "C"
 
 void loom_tick()
 {
+    LOOM_PROFILE_START(loom_tick);
+
     LSLuaState *vm = NULL;
 
     vm = LoomApplication::getReloadQueued() ? NULL : LoomApplication::getRootVM();
@@ -80,6 +82,11 @@ void loom_tick()
         Loom2D::Stage::smMainStage->invokeRenderStage();
 
     finishProfilerBlock(&p);
+
+    LOOM_PROFILE_END(loom_tick);
+
+    LOOM_PROFILE_ZERO_CHECK()
+
 }
 }
 

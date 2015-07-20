@@ -26,6 +26,9 @@
 
 loom_allocator_t *gProfilerAllocator = NULL;
 
+// Uncomment for better stack imbalance error reporting
+//#define LOOM_PROFILE_AT_ENGINE_START 1
+
 #ifndef NPERFORMANCE
 
 #include <stdio.h>
@@ -114,7 +117,13 @@ void finishProfilerBlock(profilerBlock_t *block)
 LoomProfilerRoot    *LoomProfilerRoot::sRootList = NULL;
 LoomProfiler        *gLoomProfiler = NULL;
 static LoomProfiler aProfiler; // allocate the global profiler
-#define LOOM_PROFILE_AT_ENGINE_START    false
+
+#if (defined(LOOM_PROFILE_AT_ENGINE_START) && LOOM_PROFILE_AT_ENGINE_START) || defined(LOOM_DEBUG)
+#define LOOM_PROFILE_AT_ENGINE_START_INTERNAL true
+#else
+#define LOOM_PROFILE_AT_ENGINE_START_INTERNAL false
+#endif
+
 
 #if LOOM_PLATFORM_IS_APPLE
 
@@ -273,9 +282,9 @@ LoomProfiler::LoomProfiler()
 
    mProfileList = NULL;
 
-   mEnabled = LOOM_PROFILE_AT_ENGINE_START;   
+   mEnabled = LOOM_PROFILE_AT_ENGINE_START_INTERNAL;   
 
-   mNextEnable = LOOM_PROFILE_AT_ENGINE_START;
+   mNextEnable = LOOM_PROFILE_AT_ENGINE_START_INTERNAL;
 
    mStackDepth = 0;
    gLoomProfiler = this;
@@ -532,7 +541,7 @@ void LoomProfiler::hashZeroCheck()
     {
         lmAssert(false, "Profiler zero stack check failed: %s",
             mCurrentLoomProfilerEntry == NULL ? "[entry NULL]" :
-            mCurrentLoomProfilerEntry->mRoot == NULL ? "[entry root NULL]" :
+            mCurrentLoomProfilerEntry->mRoot == NULL ? "[entry root NULL] (try compiling as a debug build or with LOOM_PROFILE_AT_ENGINE_START enabled for more info)" :
             mCurrentLoomProfilerEntry->mRoot->mName
         );
     }
