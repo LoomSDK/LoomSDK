@@ -147,6 +147,8 @@ public:
     {
         HTTPRequest *request = (HTTPRequest *)payload;
 
+        lmAssert(data != NULL, "Response ByteArray should not be null");
+
         switch (type)
         {
         case LOOM_HTTP_SUCCESS:

@@ -74,11 +74,9 @@ struct NativeDelegateCallNote
         delegate = NULL;
         delegateKey = -1;
         
-        if(data)
-        {        
-            free(data);
-            data = NULL;
-        }
+        lmSafeFree(NULL, data);
+        data = NULL;
+        
         ndata = -1;
         
         offset = -1;
@@ -98,6 +96,7 @@ struct NativeDelegateCallNote
 
         data = (unsigned char*)lmRealloc(NULL, data, ndata);
 
+        lmAssert(data != NULL, "Reallocated data should not be NULL, freeBytes %d offset %d ndata %d", freeBytes, offset, ndata);
     }
 
     void writeByte(unsigned char value)
