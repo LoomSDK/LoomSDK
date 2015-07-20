@@ -157,7 +157,16 @@ package unittest {
         private static var runIndex:Number;
         private static var runComplete:Function;
         
-        public function TestRunner() {}
+        // Property that is set when the tests are running
+        private static var _isRunning:Boolean = false;
+        
+        public function TestRunner() { }
+        
+        /**
+         * If a test is currently running. Although asynchronous testing is support, only one test suite can be run at a time. It is safe to run
+         * a test suite when this flag is false.
+         */
+        public static function get isRunning():Boolean { return _isRunning; }
         
         /**
          * Run and report on all the tests in the specified assembly. Synchronous and Asychronous tests are supported. In order to run a test asynchronously,
@@ -170,6 +179,15 @@ package unittest {
          */
         [UnitTestHideCall]
         public static function runAll(assembly:Assembly, shuffle:Boolean = true):TestResult {
+            
+            // If we are already running a test, error!
+            if (_isRunning) {
+                Assert.fail("ERROR: Unit tests already running");
+                return null;
+            }
+            
+            _isRunning = true;
+            
             result = new TestResult();
             
             typeReport = result.typeReport;
@@ -195,6 +213,7 @@ package unittest {
             
             runTypes(result.typeTests, shuffle, function() {
                 reportTypes(result.typeTests, result.typeReport, result.testReport, result.assertReport);
+                _isRunning = false; // The tests are done!
                 onComplete(result);
             });
             
@@ -608,7 +627,7 @@ package unittest {
          */
         public function done(msg:Object = null):void {
             if (hasBeenCalled) {
-                Assert.fail("ERROR: complete() called more than once for a single asynchronous test!");
+                Assert.fail("ERROR: done() called more than once for a single asynchronous test!");
                 return;
             }
             
