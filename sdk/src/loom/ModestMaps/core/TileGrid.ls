@@ -193,6 +193,7 @@ package loom.modestmaps.core
         public var onTileLoad:MapTileLoad;
         
         protected var debugOverlay:Shape;
+        protected var hudOverlay:Shape;
         
         public function TileGrid(w:Number, h:Number, draggable:Boolean, provider:IMapProvider)
         {
@@ -200,6 +201,8 @@ package loom.modestmaps.core
             
             if (debug) {
                 debugOverlay = new Shape();
+                hudOverlay = new Shape();
+                hudOverlay.touchable = false;
                 TextFormat.load("sans", "assets/SourceSansPro-Regular.ttf");
             }
             
@@ -219,8 +222,6 @@ package loom.modestmaps.core
             addChild(well);
             
             setMapProvider(provider);
-            
-            if (debug) addChild(debugOverlay);
             
             sHelperPoint.x = w;
             sHelperPoint.y = h;
@@ -257,6 +258,11 @@ package loom.modestmaps.core
                 doubleTouchInput = new TwoInputTouch(this);
                 doubleTouchInput.OnDoubleTouchEvent += onDoubleTouch;
                 doubleTouchInput.OnDoubleTouchEndEvent += onDoubleTouchEnd;
+            }
+            
+            if (debug) {
+                Loom2D.stage.addChild(hudOverlay);
+                addChild(debugOverlay);
             }
             
             onRender += _onRender;
@@ -1087,6 +1093,8 @@ package loom.modestmaps.core
                 count++;
             }
             
+            updateHud();
+            
         }
 
 
@@ -1183,8 +1191,7 @@ package loom.modestmaps.core
                     //drawGrid(g, z, gb.minCol, gb.minRow, gb.maxCol-gb.minCol, gb.maxRow-gb.minRow);
                 //}
                 
-                g.drawTextLine(10, 10, "Active: "+countActive+" Cached: "+tilePainter.getCacheSize()+" Pruning: "+pruneCheck);
-                g.drawTextLine(10, 80, "Tile width: "+tileWidth+" Scale: "+scale+" Queued: "+tilePainter.getQueueCount()+" Requested: "+tilePainter.getRequestCount());
+                updateHud();
                 
             }
             
@@ -1256,6 +1263,60 @@ package loom.modestmaps.core
             }
             
             positionDirty = false;
+        }
+        
+        private function updateHud() {
+            if (!debug) return;
+            
+            var g:Graphics = hudOverlay.graphics;
+            
+            g.clear();
+            
+            var format = new TextFormat("sans", 30, 0x818181);
+            g.textFormat(format);
+            
+            g.drawTextLine(10, 10, "Active: "+countActive+" Cached: "+tilePainter.getCacheSize()+" Pruning: "+pruneCheck);
+            g.drawTextLine(10, 40, "Tile width: "+tileWidth+" Scale: "+scale+" Queued: "+tilePainter.getQueueCount()+" Requested: "+tilePainter.getRequestCount());
+            
+            format = new TextFormat("sans", 20, 0x818181);
+            g.textFormat(format);
+            
+            var tileW = 15;
+            var tileH = 5;
+            var timeRange = 5000;
+            var time = Platform.getTime();
+            
+            var levelCounts = new Vector.<Number>(_maxZoom + 1);
+            for (var i = 0; i < levelCounts.length; i++) {
+                g.drawTextLine(10+i*(tileW+2), 70+(i%2)*14, ""+i);
+                levelCounts[i] = 0;
+            }
+            
+            var tile:Tile;
+            
+            g.beginFill(0x41C806);
+            tile = headActive;
+            while (tile) {
+                showHudTile(g, tileW, tileH, timeRange, time, levelCounts, tile);
+                tile = tile.nextActive;
+            }
+            
+            g.beginFill(0x7D7D7D);
+            tile = headInactive;
+            while (tile) {
+                showHudTile(g, tileW, tileH, timeRange, time, levelCounts, tile);
+                tile = tile.nextInactive;
+            }
+            
+        }
+        
+        private function showHudTile(g:Graphics, tileW:Number, tileH:Number, timeRange:Number, time:Number, levelCounts:Vector.<Number>, tile:Tile) {
+            var activity:Number = 1-Math.clamp((time-tile.lastRepop)/timeRange, 0, 1);
+            var x = 10+tile.zoom*(tileW+2);
+            var y = 110+levelCounts[tile.zoom]*(tileH+2);
+            g.drawRect(x, y, 2, tileH);
+            g.drawRect(x+2, y, (tileW-2)*activity, tileH);
+            levelCounts[tile.zoom]++;
         }
         
         private function positionTile(tile:Tile) {
