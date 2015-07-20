@@ -526,6 +526,18 @@ void LoomProfiler::hashPop(LoomProfilerRoot *expected)
     }
 }
 
+void LoomProfiler::hashZeroCheck()
+{
+    if (mStackDepth != 0)
+    {
+        lmAssert(false, "Profiler zero stack check failed: %s",
+            mCurrentLoomProfilerEntry == NULL ? "[entry NULL]" :
+            mCurrentLoomProfilerEntry->mRoot == NULL ? "[entry root NULL]" :
+            mCurrentLoomProfilerEntry->mRoot->mName
+        );
+    }
+    
+}
 
 static S32 rootDataCompare(const void *s1, const void *s2)
 {
@@ -606,6 +618,8 @@ static void LoomProfilerEntryDumpRecurse(LoomProfilerEntry *data, char *buffer, 
 
 void LoomProfiler::dump()
 {
+    LOOM_PROFILE_ZERO_CHECK()
+
     bool enableSave = mEnabled;
 
     mEnabled = false;

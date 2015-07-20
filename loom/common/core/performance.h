@@ -148,6 +148,8 @@ public:
 
     /// Helper function for macro definition PROFILE_END
     void hashPop(LoomProfilerRoot *expected);
+
+    void hashZeroCheck();
 };
 
 extern LoomProfiler *gLoomProfiler;
@@ -202,6 +204,8 @@ struct LoomProfilerEntry
     if (gLoomProfiler) gLoomProfiler->hashPush(&pdata ## name ## obj)
 
 #define LOOM_PROFILE_END(name)    if (gLoomProfiler) gLoomProfiler->hashPop(&pdata ## name ## obj)
+
+#define LOOM_PROFILE_ZERO_CHECK() if (gLoomProfiler) gLoomProfiler->hashZeroCheck();
 
 class LoomScopedProfiler {
 public:
