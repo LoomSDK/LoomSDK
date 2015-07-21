@@ -1341,7 +1341,8 @@ GL_RenderReadPixels(SDL_Renderer * renderer, const SDL_Rect * rect,
     int w, h, length, rows;
     int status;
 
-    GL_ActivateRenderer(renderer);
+	// Calling GL_ActivateRenderer will reset rendering and make the screen go black! Oh no!
+    //GL_ActivateRenderer(renderer);
 
     temp_pitch = rect->w * SDL_BYTESPERPIXEL(temp_format);
     temp_pixels = SDL_malloc(rect->h * temp_pitch);

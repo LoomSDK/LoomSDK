@@ -34,6 +34,11 @@
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/graphics/gfxVectorRenderer.h"
 
+extern SDL_Window *gSDLWindow;
+extern SDL_Renderer *gSDLRenderer;
+
+extern WINGDIAPI void APIENTRY glReadPixels(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, GLvoid*);
+
 namespace GFX
 {
     lmDefineLogGroup(gGFXLogGroup, "GFX", 1, LoomLogInfo);
@@ -305,7 +310,53 @@ void Graphics::handleContextLoss()
 
 void Graphics::screenshot(const char *path)
 {
-    strcpy(pendingScreenshot, path);
+	SDL_ClearError();
+	SDL_Window* SDLWindow = gSDLWindow;
+	SDL_Renderer* SDLRenderer = gSDLRenderer;
+
+	// Create a BMP image and save it to the requested file location
+	// Original code by neilf (http://stackoverflow.com/a/20233470)
+	SDL_Surface* saveSurface = NULL;
+	SDL_Surface* infoSurface = NULL;
+	infoSurface = SDL_GetWindowSurface(SDLWindow);
+	if (infoSurface == NULL) {
+		lmLog(gGFXLogGroup, "Unable to create info surface from window for screenshot generation", SDL_GetError());
+		return;
+	}
+
+	unsigned char * pixels = new (std::nothrow) unsigned char[infoSurface->w * infoSurface->h * infoSurface->format->BytesPerPixel];
+	if (pixels == 0) {
+		lmLog(gGFXLogGroup, "Unable to allocate memory for screenshot pixel data buffer");
+		return;
+	}
+	else {
+		if (SDL_RenderReadPixels(SDLRenderer, &infoSurface->clip_rect, infoSurface->format->format, pixels, infoSurface->w * infoSurface->format->BytesPerPixel) != 0) {
+			lmLog(gGFXLogGroup, "Unable to read pixel data from SDL_Renderer object", SDL_GetError());
+			pixels = NULL;
+			return;
+		}
+		else {
+			saveSurface = SDL_CreateRGBSurfaceFrom(pixels, infoSurface->w, infoSurface->h, infoSurface->format->BitsPerPixel, infoSurface->w * infoSurface->format->BytesPerPixel, infoSurface->format->Rmask, infoSurface->format->Gmask, infoSurface->format->Bmask, infoSurface->format->Amask);
+			if (saveSurface == NULL) {
+				lmLog(gGFXLogGroup, "Unable to create SDL_Surface from renderer pixel data", SDL_GetError());
+				return;
+			}
+			int errorCode = SDL_SaveBMP(saveSurface, "screen.bmp");
+
+			if (errorCode < 0)
+			{
+				const char* errorInfo = SDL_GetError();
+				lmLog(gGFXLogGroup, "Unable to save generated BMP", SDL_GetError());
+				return;
+			}
+
+			SDL_FreeSurface(saveSurface);
+			saveSurface = NULL;
+		}
+		delete[] pixels;
+	}
+	SDL_FreeSurface(infoSurface);
+	infoSurface = NULL;
 }
 
 
