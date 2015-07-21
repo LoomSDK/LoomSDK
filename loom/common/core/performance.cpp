@@ -543,6 +543,9 @@ void LoomProfiler::hashZeroCheck()
 {
     if (mStackDepth != 0)
     {
+        // If you get this assert, it means you probably have mismatched LOOM_PROFILE_START
+        // and LOOM_PROFILE_END blocks. Enable LOOM_PROFILE_AT_ENGINE_START (see #define at top
+        // of file) to get a breakpoint on the exact mismatching LOOM_PROFILE_END.
         lmAssert(false, "Profiler zero stack check failed: %s",
             mCurrentLoomProfilerEntry == NULL ? "[entry NULL]" :
             mCurrentLoomProfilerEntry->mRoot == NULL ? "[entry root NULL] (try compiling as a debug build or with LOOM_PROFILE_AT_ENGINE_START enabled for more info)" :
