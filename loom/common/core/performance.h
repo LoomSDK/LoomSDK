@@ -32,6 +32,26 @@
 #endif // NTELEMETRY
 #endif
 
+/**
+ * Loom Performance Profiler
+ * 
+ * Loom also ships with a full featured hierarchical profiler. See the Loom docs
+ * under Guides > LoomScript > Profiling for a full discussion on how to activate and
+ * interpret the profiler. Briefly, the profiler tracks how long it takes to execute
+ * various blocks of code, how many times they are run, which blocks are run by others,
+ * and also shows the average, min, and max time spent in each block.
+ * 
+ * In terms of C++ code, three macros mark blocks. You can either explicitly mark the 
+ * beginning and end of blocks with LOOM_PROFILE_START and LOOM_PROFILE_END, or use
+ * LOOM_PROFILE_SCOPE to measure time spent in the current C++ scope starting from the
+ * point of the macro.
+ * 
+ * If LUA_GC_PROFILE_ENABLED is set to 1, then the profiler also tracks time spent in 
+ * Lua's GC.
+ *
+ * Loom integrates with RAD Telemetry. (http://www.radgametools.com/telemetry.htm)
+ */
+
 // Wrapper around our performance tracking library, which is currently
 // RAD Game Tools' Telemetry. We highly recommend this tool, however, due
 // to licensing concerns, cannot include it in the standard distro. This
