@@ -37,8 +37,6 @@
 extern SDL_Window *gSDLWindow;
 extern SDL_Renderer *gSDLRenderer;
 
-extern WINGDIAPI void APIENTRY glReadPixels(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, GLvoid*);
-
 namespace GFX
 {
     lmDefineLogGroup(gGFXLogGroup, "GFX", 1, LoomLogInfo);
@@ -251,7 +249,7 @@ void Graphics::endFrame()
 		SDL_Renderer* SDLRenderer = gSDLRenderer;
 
 		// Create a BMP image and save it to the requested file location
-		// Original code by neilf (http://stackoverflow.com/a/20233470)
+		// Original algorithm by neilf (http://stackoverflow.com/a/20233470)
 		SDL_Surface* saveSurface = NULL;
 		SDL_Surface* infoSurface = NULL;
 		infoSurface = SDL_GetWindowSurface(SDLWindow);
@@ -265,6 +263,10 @@ void Graphics::endFrame()
 			lmLog(gGFXLogGroup, "Unable to allocate memory for screenshot pixel data buffer");
 			return;
 		}
+
+		// The OpenGL method is a lot cleaner, but inverts the image (and has some problems with colors)
+		// Holding on to this just in case it's useful later
+		//Graphics::context()->glReadPixels(0, 0, infoSurface->w, infoSurface->h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
 		if (SDL_RenderReadPixels(SDLRenderer, &infoSurface->clip_rect, infoSurface->format->format, pixels, infoSurface->w * infoSurface->format->BytesPerPixel) != 0) {
 			lmLog(gGFXLogGroup, "Unable to read pixel data from SDL_Renderer object", SDL_GetError());
