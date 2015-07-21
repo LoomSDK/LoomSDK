@@ -26,7 +26,11 @@
 
 loom_allocator_t *gProfilerAllocator = NULL;
 
-// Uncomment for better stack imbalance error reporting
+// Enable the profiler from the start of execution. Enable this if you
+// want to profile application startup or are tracking down profiler stack
+// mismatch issues - when the profiler is enabled LOOM_PROFILE_START and
+// LOOM_PROFILE_END are checked to make sure an END is called for every
+// START.
 //#define LOOM_PROFILE_AT_ENGINE_START 1
 
 #ifndef NPERFORMANCE
