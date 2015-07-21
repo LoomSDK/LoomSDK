@@ -180,7 +180,8 @@ package loom2d.display
             parentCached = value;
         }
 
-        /** If depth sorting is enabled on parent, this will be used to establish draw order. Higher values are drawn closer. */
+        /** If depthSort is enabled on parent, this will be used to establish draw order. 
+            Higher values are drawn closer. Matching values have undefined order. */
         public native function set depth(value:float);
         public native function get depth():float;
 
