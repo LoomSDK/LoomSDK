@@ -247,47 +247,47 @@ void Graphics::endFrame()
 
     if(pendingScreenshot[0] != 0)
     {
-		SDL_ClearError();
-		SDL_Window* SDLWindow = gSDLWindow;
-		SDL_Renderer* SDLRenderer = gSDLRenderer;
+        SDL_ClearError();
+        SDL_Window* SDLWindow = gSDLWindow;
+        SDL_Renderer* SDLRenderer = gSDLRenderer;
 
-		// Create a BMP image and save it to the requested file location
-		// Original algorithm by neilf (http://stackoverflow.com/a/20233470)
-		SDL_Surface* saveSurface = NULL;
-		SDL_Surface* infoSurface = NULL;
-		infoSurface = SDL_GetWindowSurface(SDLWindow);
-		if (infoSurface == NULL) {
-			lmLog(gGFXLogGroup, "Unable to create info surface from window for screenshot generation", SDL_GetError());
-			return;
-		}
+        // Create a BMP image and save it to the requested file location
+        // Original algorithm by neilf (http://stackoverflow.com/a/20233470)
+        SDL_Surface* saveSurface = NULL;
+        SDL_Surface* infoSurface = NULL;
+        infoSurface = SDL_GetWindowSurface(SDLWindow);
+        if (infoSurface == NULL) {
+	        lmLog(gGFXLogGroup, "Unable to create info surface from window for screenshot generation", SDL_GetError());
+	        return;
+        }
 
         utByteArray *pixels = lmNew(NULL) utByteArray();
-		if (pixels == NULL) {
-			lmLog(gGFXLogGroup, "Unable to allocate memory for screenshot pixel data buffer");
-			return;
-		}
+        if (pixels == NULL) {
+	        lmLog(gGFXLogGroup, "Unable to allocate memory for screenshot pixel data buffer");
+	        return;
+        }
 
         const int bpp = 4;
 
         pixels->resize(infoSurface->w * infoSurface->h * bpp);
 
-		// The OpenGL method is a lot cleaner, but inverts the image
+        // The OpenGL method is a lot cleaner, but inverts the image
         // SDL just inverts the image manually, so we might want to just do that
-		// Holding on to this just in case it's useful later
-		//Graphics::context()->glReadPixels(0, 0, infoSurface->w, infoSurface->h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        // Holding on to this just in case it's useful later
+        //Graphics::context()->glReadPixels(0, 0, infoSurface->w, infoSurface->h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
         if (SDL_RenderReadPixels(SDLRenderer, &infoSurface->clip_rect, SDL_PIXELFORMAT_ABGR8888, pixels->getDataPtr(), infoSurface->w * bpp) != 0) {
-			lmLog(gGFXLogGroup, "Unable to read pixel data from SDL_Renderer object", SDL_GetError());
-			pixels = NULL;
-			return;
-		}
+	        lmLog(gGFXLogGroup, "Unable to read pixel data from SDL_Renderer object", SDL_GetError());
+	        pixels = NULL;
+	        return;
+        }
         
         stbi_write_png(pendingScreenshot, infoSurface->w, infoSurface->h, 4 /* RGBA */, pixels->getDataPtr(), infoSurface->w * bpp);
         
         lmFree(NULL, pixels);
 
-		SDL_FreeSurface(infoSurface);
-		infoSurface = NULL;
+        SDL_FreeSurface(infoSurface);
+        infoSurface = NULL;
         pendingScreenshot[0] = 0;
     }
 }
