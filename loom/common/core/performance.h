@@ -47,7 +47,7 @@
  * point of the macro.
  * 
  * If LUA_GC_PROFILE_ENABLED is set to 1, then the profiler also tracks time spent in 
- * Lua's GC.
+ * LoomScript's garbage collector.
  *
  * Loom integrates with RAD Telemetry. (http://www.radgametools.com/telemetry.htm)
  */
