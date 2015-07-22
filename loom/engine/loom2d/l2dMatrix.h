@@ -36,86 +36,86 @@ private:
 
 public:
 
-    float a;
-    float b;
-    float c;
-    float d;
+    tfloat a;
+    tfloat b;
+    tfloat c;
+    tfloat d;
 
-    float tx;
-    float ty;
+    tfloat tx;
+    tfloat ty;
 
-    Matrix(float _a = 1.0f, float _b = 0.0f, float _c = 0.0f, float _d = 1.0f, float _tx = 0.0f, float _ty = 0.0f)
+    Matrix(tfloat _a = 1.0, tfloat _b = 0.0, tfloat _c = 0.0, tfloat _d = 1.0, tfloat _tx = 0.0, tfloat _ty = 0.0)
     {
         //printf("New Matrix: %f %f %f %f %f %f\n", _a, _b, _c, _d, _tx, _ty);
         setTo(_a, _b, _c, _d, _tx, _ty);
     }
 
-    inline float get_a() const
-    {
+    inline tfloat get_a() const
+    { 
         return a;
     }
 
-    inline void set_a(float _a)
+    inline void set_a(tfloat _a)
     {
         a = _a;
     }
 
-    inline float get_b() const
+    inline tfloat get_b() const
     {
         return b;
     }
 
-    inline void set_b(float _b)
+    inline void set_b(tfloat _b)
     {
         b = _b;
     }
 
-    inline float get_c() const
+    inline tfloat get_c() const
     {
         return c;
     }
 
-    inline void set_c(float _c)
+    inline void set_c(tfloat _c)
     {
         c = _c;
     }
 
-    inline float get_d() const
+    inline tfloat get_d() const
     {
         return d;
     }
 
-    inline void set_d(float _d)
+    inline void set_d(tfloat _d)
     {
         d = _d;
     }
 
-    inline float get_tx() const
+    inline tfloat get_tx() const
     {
         return tx;
     }
 
-    inline void set_tx(float _tx)
+    inline void set_tx(tfloat _tx)
     {
         tx = _tx;
     }
 
-    inline float get_ty() const
+    inline tfloat get_ty() const
     {
         return ty;
     }
 
-    inline void set_ty(float _ty)
+    inline void set_ty(tfloat _ty)
     {
         ty = _ty;
     }
 
-    inline float determinant()
+    inline tfloat determinant()
     {
         return a * d - b * c;
     }
 
-    inline void setTo(float _a, float _b, float _c, float _d, float _tx, float _ty)
+    inline void setTo(tfloat _a, tfloat _b, tfloat _c, tfloat _d, tfloat _tx, tfloat _ty)
     {
         a  = _a;
         b  = _b;
@@ -127,12 +127,12 @@ public:
 
     inline void concat(const Matrix *m)
     {
-        float ta  = a;
-        float tb  = b;
-        float tc  = c;
-        float td  = d;
-        float ttx = tx;
-        float tty = ty;
+        tfloat ta  = a;
+        tfloat tb  = b;
+        tfloat tc  = c;
+        tfloat td  = d;
+        tfloat ttx = tx;
+        tfloat tty = ty;
 
         a  = m->a * ta + m->c * tb;
         b  = m->b * ta + m->d * tb;
@@ -142,12 +142,12 @@ public:
         ty = m->b * ttx + m->d * tty + m->ty;
     }
 
-    inline void skew(float xSkew, float ySkew)
+    inline void skew(tfloat xSkew, tfloat ySkew)
     {
-        float sinX = sin(xSkew);
-        float cosX = cos(xSkew);
-        float sinY = sin(ySkew);
-        float cosY = cos(ySkew);
+        tfloat sinX = sin(xSkew);
+        tfloat cosX = cos(xSkew);
+        tfloat sinY = sin(ySkew);
+        tfloat cosY = cos(ySkew);
 
         setTo(a * cosY - b * sinX,
               a * sinY + b * cosX,
@@ -157,22 +157,22 @@ public:
               tx * sinY + ty * cosX);
     }
 
-    inline void rotate(float angle)
+    inline void rotate(tfloat angle)
     {
         if (angle == 0.0f)
         {
             return;
         }
 
-        float _cos = cos(angle);
-        float _sin = sin(angle);
+        tfloat _cos = cos(angle);
+        tfloat _sin = sin(angle);
 
-        float ta  = a;
-        float tb  = b;
-        float tc  = c;
-        float td  = d;
-        float ttx = tx;
-        float tty = ty;
+        tfloat ta  = a;
+        tfloat tb  = b;
+        tfloat tc  = c;
+        tfloat td  = d;
+        tfloat ttx = tx;
+        tfloat tty = ty;
 
         a  = ta * _cos - tb * _sin;
         b  = ta * _sin + tb * _cos;
@@ -182,13 +182,13 @@ public:
         ty = ttx * _sin + tty * _cos;
     }
 
-    inline void translate(float dx, float dy)
+    inline void translate(tfloat dx, tfloat dy)
     {
         tx += dx;
         ty += dy;
     }
 
-    inline void scale(float sx, float sy)
+    inline void scale(tfloat sx, tfloat sy)
     {
         if (sx != 1.0f)
         {
@@ -227,16 +227,16 @@ public:
 
     inline void invertOther(const Matrix *other)
     {
-        float a  = other->a;
-        float b  = other->b;
-        float c  = other->c;
-        float d  = other->d;
-        float tx = other->tx;
-        float ty = other->ty;
+        tfloat a  = other->a;
+        tfloat b  = other->b;
+        tfloat c  = other->c;
+        tfloat d  = other->d;
+        tfloat tx = other->tx;
+        tfloat ty = other->ty;
 
         // Cremer's rule: inverse = adjugate / determinant
         // A-1 = adj(A) / det(A)
-        float invDet = 1.0f / (a * d - c * b);
+        tfloat invDet = 1.0f / (a * d - c * b);
 
         //     [a11 a12 a13]
         // A = [a21 a22 a23]
@@ -266,8 +266,8 @@ public:
 
     int transformCoord(lua_State *L)
     {
-        float x = (float)lua_tonumber(L, 2);
-        float y = (float)lua_tonumber(L, 3);
+        tfloat x = (tfloat)lua_tonumber(L, 2);
+        tfloat y = (tfloat)lua_tonumber(L, 3);
 
         // get the helper point
         lua_pushnumber(L, sHelperPointOrdinal);
@@ -281,7 +281,7 @@ public:
         return 1;
     }
 
-    void transformCoordInternal(float x, float y, float *rx, float *ry)
+    void transformCoordInternal(tfloat x, tfloat y, tfloat *rx, tfloat *ry)
     {
         *rx = a*x + c*y + tx;
         *ry = b*x + d*y + ty;
@@ -289,8 +289,8 @@ public:
 
     int deltaTransformCoord(lua_State *L)
     {
-        float x = (float)lua_tonumber(L, 2);
-        float y = (float)lua_tonumber(L, 3);
+        tfloat x = (tfloat)lua_tonumber(L, 2);
+        tfloat y = (tfloat)lua_tonumber(L, 3);
 
         // get the helper point
         lua_pushnumber(L, sHelperPointOrdinal);
@@ -317,12 +317,12 @@ public:
     // fast marshaling version
     int setTo(lua_State *L)
     {
-        a  = (float)lua_tonumber(L, 2);
-        b  = (float)lua_tonumber(L, 3);
-        c  = (float)lua_tonumber(L, 4);
-        d  = (float)lua_tonumber(L, 5);
-        tx = (float)lua_tonumber(L, 6);
-        ty = (float)lua_tonumber(L, 7);
+        a  = (tfloat)lua_tonumber(L, 2);
+        b  = (tfloat)lua_tonumber(L, 3);
+        c  = (tfloat)lua_tonumber(L, 4);
+        d  = (tfloat)lua_tonumber(L, 5);
+        tx = (tfloat)lua_tonumber(L, 6);
+        ty = (tfloat)lua_tonumber(L, 7);
         return 0;
     }
 
@@ -341,7 +341,7 @@ public:
         return 0;
 	}
 
-	void copyToMatrix3(float* values)
+	void copyToMatrix3(tfloat* values)
 	{
 		values[0] = a;
 		values[1] = b;
@@ -354,32 +354,52 @@ public:
 		values[8] = 1;
 	}
 
-	void copyToMatrix4(float* values)
-	{
-		values[0] = a;
-		values[1] = b;
-		values[2] = 0;
-		values[3] = 0;
-		values[4] = c;
-		values[5] = d;
-		values[6] = 0;
-		values[7] = 0;
-		values[8] = 0;
-		values[9] = 0;
-		values[10] = 0;
-		values[11] = 0;
-		values[12] = tx;
-		values[13] = ty;
-		values[14] = 0;
-		values[15] = 1;
-	}
+    void copyToMatrix4(tfloat* values)
+    {
+        values[0] = a;
+        values[1] = b;
+        values[2] = 0;
+        values[3] = 0;
+        values[4] = c;
+        values[5] = d;
+        values[6] = 0;
+        values[7] = 0;
+        values[8] = 0;
+        values[9] = 0;
+        values[10] = 0;
+        values[11] = 0;
+        values[12] = tx;
+        values[13] = ty;
+        values[14] = 0;
+        values[15] = 1;
+    }
+
+    void copyToMatrix4f(float* values)
+    {
+        values[0] = (float) a;
+        values[1] = (float) b;
+        values[2] = 0;
+        values[3] = 0;
+        values[4] = (float) c;
+        values[5] = (float) d;
+        values[6] = 0;
+        values[7] = 0;
+        values[8] = 0;
+        values[9] = 0;
+        values[10] = 0;
+        values[11] = 0;
+        values[12] = (float) tx;
+        values[13] = (float) ty;
+        values[14] = 0;
+        values[15] = 1;
+    }
 
     const char *toString()
     {
         static char toStringBuffer[256];
 
         snprintf(toStringBuffer, 255, "a= %.2f, b= %.2f, c= %.2f, d= %.2f, tx= %.2f, ty= %.2f",
-                 (float)a, (float)b, (float)c, (float)d, (float)tx, (float)ty);
+                 (tfloat)a, (tfloat)b, (tfloat)c, (tfloat)d, (tfloat)tx, (tfloat)ty);
 
         return toStringBuffer;
     }

@@ -112,10 +112,10 @@ void VectorGraphics::clearBounds() {
 }
 
 void VectorGraphics::inflateBounds(const Loom2D::Rectangle& r) {
-	boundL = fminf(r.x, boundL);
-	boundT = fminf(r.y, boundT);
-	boundR = fmaxf(r.x + r.width, boundR);
-	boundB = fmaxf(r.y + r.height, boundB);
+	boundL = fmin(r.x, boundL);
+	boundT = fmin(r.y, boundT);
+	boundR = fmax(r.x + r.width, boundR);
+	boundB = fmax(r.y + r.height, boundB);
 }
 
 void VectorGraphics::lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit) {
@@ -495,11 +495,11 @@ bool VectorGraphics::isStyleVisible() {
 void VectorGraphics::flushPath() {
 	bool stroke = !isnan(currentLineStyle.thickness);
 	if (stroke && pathDirty) {
-		float thicknessScale = 1.0f;
+		tfloat thicknessScale = 1.0;
 		switch (currentLineStyle.scaleMode) {
 			case VectorLineScaleMode::NONE: thicknessScale = 1/scale; break;
 		}
-		VectorRenderer::strokeWidth(currentLineStyle.thickness*thicknessScale);
+		VectorRenderer::strokeWidth((float) (currentLineStyle.thickness*thicknessScale));
 		VectorRenderer::strokeColor(currentLineStyle.color, currentLineStyle.alpha);
 		VectorRenderer::lineCaps(currentLineStyle.caps);
 		VectorRenderer::lineJoints(currentLineStyle.joints);

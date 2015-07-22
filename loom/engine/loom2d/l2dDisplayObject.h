@@ -35,7 +35,7 @@ class DisplayObjectContainer;
 // traverses down the DisplayObject hierarchy
 struct RenderState
 {
-    float alpha;
+    tfloat alpha;
     // Clipping is disabled when width equals -1
     Loom2D::Rectangle clipRect;
     int   blendMode;
@@ -57,41 +57,41 @@ public:
     bool transformDirty;
 
     /** The x coordinate of the object relative to the local coordinates of the parent. */
-    float x;
+    tfloat x;
 
     /** The y coordinate of the object relative to the local coordinates of the parent. */
-    float y;
+    tfloat y;
 
     /** The x coordinate of the object's origin in its own coordinate space (default: 0). */
-    float pivotX;
+    tfloat pivotX;
 
     /** The y coordinate of the object's origin in its own coordinate space (default: 0). */
-    float pivotY;
+    tfloat pivotY;
 
     /** The horizontal scale factor. '1' means no scale, negative values flip the object. */
-    float scaleX;
+    tfloat scaleX;
 
     /** The vertical scale factor. '1' means no scale, negative values flip the object. */
-    float scaleY;
+    tfloat scaleY;
 
     /** The horizontal skew angle in radians. */
-    float skewX;
+    tfloat skewX;
 
     /** The vertical skew angle in radians. */
-    float skewY;
+    tfloat skewY;
 
     /** The rotation of the object in radians. (In Starling, all angles are measured
      *  in radians.) */
-    float rotation;
+    tfloat rotation;
 
     /** The opacity of the object. 0 = transparent, 1 = opaque. */
-    float alpha;
+    tfloat alpha;
 
     /** The blend mode for the object. Default is BlendMode.AUTO (will inherit parent's blendMode) */
     int blendMode;
 
     /** If depth sorting is enabled on parent this will be used to establish draw order. */
-    float depth;
+    tfloat depth;
 
     /** The visibility of the object. An invisible object will be untouchable. */
     bool visible;
@@ -115,7 +115,7 @@ public:
 
     Matrix transformMatrix;
 
-    bool isEquivalent(float a, float b, float epsilon = 0.0001f)
+    bool isEquivalent(tfloat a, tfloat b, tfloat epsilon = 0.0001f)
     {
         return (a - epsilon < b) && (a + epsilon > b);
     }
@@ -209,14 +209,14 @@ public:
             }
             else
             {
-                float _cos = cos(rotation);
-                float _sin = sin(rotation);
-                float a    = scaleX * _cos;
-                float b    = scaleX * _sin;
-                float c    = scaleY * -_sin;
-                float d    = scaleY * _cos;
-                float tx   = x - pivotX * a - pivotY * c;
-                float ty   = y - pivotX * b - pivotY * d;
+                tfloat _cos = cos(rotation);
+                tfloat _sin = sin(rotation);
+                tfloat a    = scaleX * _cos;
+                tfloat b    = scaleX * _sin;
+                tfloat c    = scaleY * -_sin;
+                tfloat d    = scaleY * _cos;
+                tfloat tx   = x - pivotX * a - pivotY * c;
+                tfloat ty   = y - pivotX * b - pivotY * d;
 
                 m->setTo(a, b, c, d, tx, ty);
             }
@@ -323,8 +323,8 @@ public:
         lmAssert(bounds != NULL, "Bounds are null");
         lmAssert(resultRect != NULL, "Result rect is null");
 
-        float rx, ry;
-        float minx, miny, maxx, maxy;
+        tfloat rx, ry;
+        tfloat minx, miny, maxx, maxy;
 
         transform->transformCoordInternal(bounds->getLeft(), bounds->getTop(), &rx, &ry);
         minx = rx;
@@ -359,122 +359,122 @@ public:
 
     // fast path accessors for DisplayObject properties
 
-    inline float getX() const
+    inline tfloat getX() const
     {
         return x;
     }
 
-    inline void setX(float _x)
+    inline void setX(tfloat _x)
     {
         transformDirty = true;
         x = _x;
     }
 
-    inline float getY() const
+    inline tfloat getY() const
     {
         return y;
     }
 
-    inline void setY(float _y)
+    inline void setY(tfloat _y)
     {
         transformDirty = true;
         y = _y;
     }
 
-    inline float getPivotX() const
+    inline tfloat getPivotX() const
     {
         return pivotX;
     }
 
-    inline void setPivotX(float _pivotX)
+    inline void setPivotX(tfloat _pivotX)
     {
         transformDirty = true;
         pivotX         = _pivotX;
     }
 
-    inline float getPivotY() const
+    inline tfloat getPivotY() const
     {
         return pivotY;
     }
 
-    inline void setPivotY(float _pivotY)
+    inline void setPivotY(tfloat _pivotY)
     {
         transformDirty = true;
         pivotY         = _pivotY;
     }
 
-    inline float getScaleX() const
+    inline tfloat getScaleX() const
     {
         return scaleX;
     }
 
-    inline void setScaleX(float _scaleX)
+    inline void setScaleX(tfloat _scaleX)
     {
         transformDirty = true;
         scaleX         = _scaleX;
     }
 
-    inline float getScaleY() const
+    inline tfloat getScaleY() const
     {
         return scaleY;
     }
 
-    inline void setScaleY(float _scaleY)
+    inline void setScaleY(tfloat _scaleY)
     {
         transformDirty = true;
         scaleY         = _scaleY;
     }
 
-    inline void setScale(float _scale)
+    inline void setScale(tfloat _scale)
     {
         transformDirty = true;
         scaleX         = scaleY = _scale;
     }
 
-    inline float getScale() const
+    inline tfloat getScale() const
     {
         return (scaleX + scaleY) * .5f;
     }
 
-    inline float getSkewX() const
+    inline tfloat getSkewX() const
     {
         return skewX;
     }
 
-    inline void setSkewX(float _skewX)
+    inline void setSkewX(tfloat _skewX)
     {
         transformDirty = true;
         skewX          = _skewX;
     }
 
-    inline float getSkewY() const
+    inline tfloat getSkewY() const
     {
         return skewY;
     }
 
-    inline void setSkewY(float _skewY)
+    inline void setSkewY(tfloat _skewY)
     {
         transformDirty = true;
         skewY          = _skewY;
     }
 
-    inline float getRotation() const
+    inline tfloat getRotation() const
     {
         return rotation;
     }
 
-    inline void setRotation(float _rotation)
+    inline void setRotation(tfloat _rotation)
     {
         transformDirty = true;
         rotation       = _rotation;
     }
 
-    inline float getAlpha() const
+    inline tfloat getAlpha() const
     {
         return alpha;
     }
 
-    inline void setAlpha(float _alpha)
+    inline void setAlpha(tfloat _alpha)
     {
         alpha = _alpha;
     }
@@ -519,12 +519,12 @@ public:
         valid = _valid;
     }
 
-    inline float getDepth() const
+    inline tfloat getDepth() const
     {
         return depth;
     }
 
-    inline void setDepth(float _depth)
+    inline void setDepth(tfloat _depth)
     {
         depth = _depth;
     }

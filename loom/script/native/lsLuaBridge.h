@@ -2665,6 +2665,21 @@ public:
 };
 
 template<class MemFn>
+class CallFastSetMember<MemFn, double> : public CallFastMemberBase
+{
+public:
+    typedef typename FuncTraits<MemFn>::ClassType   CT;
+
+    MemFn mfp;
+
+    static void _call(lua_State *L, CT *_this, void *fast)
+    {
+        CallFastSetMember<MemFn, double> *_fast = (CallFastSetMember<MemFn, double> *)fast;
+        (_this->*(_fast->mfp))((double)lua_tonumber(L, 1));
+    }
+};
+
+template<class MemFn>
 class CallFastSetMember<MemFn, int> : public CallFastMemberBase
 {
 public:
@@ -2743,6 +2758,21 @@ public:
     static void _call(lua_State *L, CT *_this, void *fast)
     {
         CallFastGetMember<MemFn, float> *_fast = (CallFastGetMember<MemFn, float> *)fast;
+        lua_pushnumber(L, (_this->*(_fast->mfp))());
+    }
+};
+
+template<class MemFn>
+class CallFastGetMember<MemFn, double> : public CallFastMemberBase
+{
+public:
+    typedef typename FuncTraits<MemFn>::ClassType   CT;
+
+    MemFn mfp;
+
+    static void _call(lua_State *L, CT *_this, void *fast)
+    {
+        CallFastGetMember<MemFn, double> *_fast = (CallFastGetMember<MemFn, double> *)fast;
         lua_pushnumber(L, (_this->*(_fast->mfp))());
     }
 };
