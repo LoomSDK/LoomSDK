@@ -31,7 +31,6 @@ extern "C"
 };
 
 SDL_Window *gSDLWindow = NULL;
-SDL_Renderer *gSDLRenderer = NULL;
 SDL_GLContext gContext;
 
 lmDefineLogGroup(coreLogGroup, "loom.core", 1, LoomLogInfo);
@@ -272,13 +271,6 @@ main(int argc, char *argv[])
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateWindow(): %s\n", SDL_GetError());
         exit(0);
     }
-
-	// Renderer?
-	gSDLRenderer = SDL_CreateRenderer(gSDLWindow, -1, 0);
-	if (!gSDLRenderer) {
-		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateRenderer(): %s\n", SDL_GetError());
-		exit(2);
-	}
 
     gContext = SDL_GL_CreateContext(gSDLWindow);
     if (!gContext) {

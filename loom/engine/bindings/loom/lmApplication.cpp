@@ -358,7 +358,7 @@ int LoomApplication::initializeCoreServices()
     loom_asset_setCommandCallback(dispatchCommand);
 
     lmLog(applicationLogGroup, "   o sound");
-	loomsound_init();
+    loomsound_init();
 
     initializeCallbacks();
 

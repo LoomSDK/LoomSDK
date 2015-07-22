@@ -38,7 +38,6 @@
 #include "stb_image_write.h"
 
 extern SDL_Window *gSDLWindow;
-extern SDL_Renderer *gSDLRenderer;
 
 namespace GFX
 {
@@ -249,7 +248,6 @@ void Graphics::endFrame()
     {
         SDL_ClearError();
         SDL_Window* SDLWindow = gSDLWindow;
-        SDL_Renderer* SDLRenderer = gSDLRenderer;
 
         // Create a BMP image and save it to the requested file location
         // Original algorithm by neilf (http://stackoverflow.com/a/20233470)
@@ -272,19 +270,29 @@ void Graphics::endFrame()
         pixels->resize(infoSurface->w * infoSurface->h * bpp);
 
         // The OpenGL method is a lot cleaner, but inverts the image
-        // SDL just inverts the image manually, so we might want to just do that
-        // Holding on to this just in case it's useful later
-        //Graphics::context()->glReadPixels(0, 0, infoSurface->w, infoSurface->h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        Graphics::context()->glReadPixels(0, 0, infoSurface->w, infoSurface->h, GL_RGBA, GL_UNSIGNED_BYTE, pixels->getDataPtr());
 
-        if (SDL_RenderReadPixels(SDLRenderer, &infoSurface->clip_rect, SDL_PIXELFORMAT_ABGR8888, pixels->getDataPtr(), infoSurface->w * bpp) != 0) {
-	        lmLog(gGFXLogGroup, "Unable to read pixel data from SDL_Renderer object", SDL_GetError());
-	        pixels = NULL;
-	        return;
+        // Invert dat image
+        utByteArray *invertedPixels = lmNew(NULL) utByteArray();
+        if (invertedPixels == NULL) {
+            lmLog(gGFXLogGroup, "Unable to allocate memory for transformed pixels data buffer");
+            return;
+        }
+        invertedPixels->resize(infoSurface->w * bpp);
+
+        for (int i = infoSurface->h - 1; i >= 0; i--) {
+            invertedPixels->writeBytes(pixels, i * infoSurface->w * bpp, infoSurface->w * bpp);
         }
         
-        stbi_write_png(pendingScreenshot, infoSurface->w, infoSurface->h, 4 /* RGBA */, pixels->getDataPtr(), infoSurface->w * bpp);
+        if (stbi_write_png(pendingScreenshot, infoSurface->w, infoSurface->h, 4 /* RGBA */, invertedPixels->getDataPtr(), infoSurface->w * bpp) != 1) {
+            lmLog(gGFXLogGroup, "Unable to generate PNG");
+            lmFree(NULL, pixels);
+            lmFree(NULL, invertedPixels);
+            return;
+        }
         
         lmFree(NULL, pixels);
+        lmFree(NULL, invertedPixels);
 
         SDL_FreeSurface(infoSurface);
         infoSurface = NULL;
@@ -351,6 +359,10 @@ void Graphics::handleContextLoss()
 
 void Graphics::screenshot(const char *path)
 {
+    if (strlen(path) > 1024) {
+        lmLog(gGFXLogGroup, "Screenshot name too big! Screenshots must be 1024 characters or less");
+        return;
+    }
 	strcpy(pendingScreenshot, path);
 }
 
