@@ -33,7 +33,7 @@ package loom.graphics
         public static native function handleContextLoss():void;
 
         /**
-         * Take a screenshot and save it to the specified path (in BMP format).
+         * Take a screenshot and save it to the specified path (in PNG format).
          */
         public static native function screenshot(path:String):void;
 
