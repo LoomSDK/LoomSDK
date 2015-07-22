@@ -33,9 +33,14 @@ package system
         public static native function isEnabled():Boolean;
 
         /**
-        *  Enable or disable profiling.
+        *  Enable profiling.
         */
-        public static native function enable(value:Boolean = true);
+        public static native function enable();
+
+        /**
+        *  Disable profiling.
+        */
+        public static native function disable();
 
         /**
         *  Reset the profiling data and potentially dump the current data 

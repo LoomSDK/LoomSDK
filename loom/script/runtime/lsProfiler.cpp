@@ -213,15 +213,32 @@ MethodBase *LSProfiler::getTopMethod(lua_State *L)
 }
 
 
-void LSProfiler::enable(bool value, lua_State *L)
+void LSProfiler::enable(lua_State *L)
 {
-    if (enabled && value)
+    if (enabled)
     {
         return;
     }
 
-    enabled = value;
-    gLoomProfiler->enable(value);
+    enabled = true;
+
+    updateState(L);
+}
+
+void LSProfiler::disable(lua_State *L)
+{
+    if (!enabled)
+    {
+        return;
+    }
+
+    enabled = false;
+
+    updateState(L);
+}
+
+void LSProfiler::updateState(lua_State *L) {
+    gLoomProfiler->enable(enabled);
 
     // push pop to get the profiler enabled and on the next profiler frame
     primeProfiler();
@@ -348,7 +365,7 @@ void LSProfiler::reset(lua_State *L)
         gLoomProfiler->reset();
     }
 
-    enable(false, L);
+    disable(L);
 
     methodStack.clear();
     clearAllocations();

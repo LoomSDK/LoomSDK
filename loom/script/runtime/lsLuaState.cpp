@@ -170,7 +170,7 @@ void LSLuaState::close()
     }
 
     // ensure profiler is down
-    LSProfiler::enable(false, L);
+    LSProfiler::disable(L);
 
     for (UTsize i = 0; i < assemblies.size(); i++)
     {
