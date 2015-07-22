@@ -148,7 +148,7 @@ public:
             return 1;
         }
 
-        utByteArray *ba = new utByteArray();
+        utByteArray *ba = lmNew(NULL) utByteArray();
 
         ba->allocateAndCopy(ptr, size);
 

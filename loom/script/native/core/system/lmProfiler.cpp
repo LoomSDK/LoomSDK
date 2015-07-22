@@ -31,6 +31,7 @@ int registerSystemProfiler(lua_State *L)
 
        .beginClass<LSProfiler> ("Profiler")
        .addStaticMethod("enable", &LSProfiler::enable)
+       .addStaticMethod("disable", &LSProfiler::disable)
        .addStaticMethod("reset", &LSProfiler::reset)
        .addStaticMethod("isEnabled", &LSProfiler::isEnabled)
        .addStaticMethod("dump", &LSProfiler::dump)
