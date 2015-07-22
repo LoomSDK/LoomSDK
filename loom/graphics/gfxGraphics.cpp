@@ -363,7 +363,7 @@ void Graphics::screenshot(const char *path)
         lmLog(gGFXLogGroup, "Screenshot name too big! Screenshots must be 1024 characters or less");
         return;
     }
-	strcpy(pendingScreenshot, path);
+    strcpy(pendingScreenshot, path);
 }
 
 
