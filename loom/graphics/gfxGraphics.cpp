@@ -247,13 +247,13 @@ void Graphics::endFrame()
     if(pendingScreenshot[0] != 0)
     {
         SDL_ClearError();
-        SDL_Window* SDLWindow = gSDLWindow;
+        SDL_Window* sdlWindow = gSDLWindow;
 
-        // Create a BMP image and save it to the requested file location
-        // Original algorithm by neilf (http://stackoverflow.com/a/20233470)
+        // Create a PNG image and save it to the requested file location
+        // Original algorithm (heavily modified) by neilf (http://stackoverflow.com/a/20233470)
         SDL_Surface* saveSurface = NULL;
         SDL_Surface* infoSurface = NULL;
-        infoSurface = SDL_GetWindowSurface(SDLWindow);
+        infoSurface = SDL_GetWindowSurface(sdlWindow);
         if (infoSurface == NULL) {
 	        lmLog(gGFXLogGroup, "Unable to create info surface from window for screenshot generation", SDL_GetError());
 	        return;
