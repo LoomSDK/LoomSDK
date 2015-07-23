@@ -66,13 +66,13 @@ package loom
         public native function cancel();
 
         /**
-         *  Called when the HTTPRequest is successful. Passes the response from the HTTP server.
+         *  Called when the HTTPRequest is successful. Passes the response from the HTTP server as a ByteArray.
          */
         public native var onSuccess:NativeDelegate;
         
         /**
          *  Called when the HTTPRequest is unsuccessful or cancelled. 
-         *  Passes the an Error message (this can differ between plaforms).
+         *  Passes the an Error message (this can differ between plaforms) as a ByteArray.
          */
         public native var onFailure:NativeDelegate;
 
