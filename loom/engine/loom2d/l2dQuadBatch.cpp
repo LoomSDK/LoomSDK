@@ -91,8 +91,8 @@ void QuadBatch::render(lua_State *L)
         // only do matrix transform if the matrix is not identity
         if(!isIdentity)
         {
-            tfloat _x = mtx.a * v->x + mtx.c * v->y + mtx.tx;
-            tfloat _y = mtx.b * v->x + mtx.d * v->y + mtx.ty;
+            lmscalar _x = mtx.a * v->x + mtx.c * v->y + mtx.tx;
+            lmscalar _y = mtx.b * v->x + mtx.d * v->y + mtx.ty;
 
             v->x = (float) _x;
             v->y = (float) _y;
@@ -102,7 +102,7 @@ void QuadBatch::render(lua_State *L)
         if (renderState.alpha != 1.0f)
         {
             //TODO: LOOM-1624
-            tfloat va = ((tfloat)(v->abgr >> 24)) * renderState.alpha;
+            lmscalar va = ((lmscalar)(v->abgr >> 24)) * renderState.alpha;
             v->abgr = ((uint32_t)va << 24) | (v->abgr & 0x00FFFFFF);
         }
 

@@ -144,8 +144,8 @@ void Quad::render(lua_State *L)
         *v = *src;
         src++;
 
-        tfloat _x = mtx.a * v->x + mtx.c * v->y + mtx.tx;
-        tfloat _y = mtx.b * v->x + mtx.d * v->y + mtx.ty;
+        lmscalar _x = mtx.a * v->x + mtx.c * v->y + mtx.tx;
+        lmscalar _y = mtx.b * v->x + mtx.d * v->y + mtx.ty;
 
 // Really this is decided by DX9, which is hardcoded on windows.
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
@@ -159,7 +159,7 @@ void Quad::render(lua_State *L)
         // modulate vertex alpha by our DisplayObject alpha setting
         if (renderState.alpha != 1.0f)
         {
-            tfloat va = ((float)(v->abgr >> 24)) * renderState.alpha;
+            lmscalar va = ((float)(v->abgr >> 24)) * renderState.alpha;
             v->abgr = ((uint32_t)va << 24) | (v->abgr & 0x00FFFFFF);
         }
 

@@ -36,86 +36,86 @@ private:
 
 public:
 
-    tfloat a;
-    tfloat b;
-    tfloat c;
-    tfloat d;
+    lmscalar a;
+    lmscalar b;
+    lmscalar c;
+    lmscalar d;
 
-    tfloat tx;
-    tfloat ty;
+    lmscalar tx;
+    lmscalar ty;
 
-    Matrix(tfloat _a = 1.0, tfloat _b = 0.0, tfloat _c = 0.0, tfloat _d = 1.0, tfloat _tx = 0.0, tfloat _ty = 0.0)
+    Matrix(lmscalar _a = 1.0, lmscalar _b = 0.0, lmscalar _c = 0.0, lmscalar _d = 1.0, lmscalar _tx = 0.0, lmscalar _ty = 0.0)
     {
         //printf("New Matrix: %f %f %f %f %f %f\n", _a, _b, _c, _d, _tx, _ty);
         setTo(_a, _b, _c, _d, _tx, _ty);
     }
 
-    inline tfloat get_a() const
+    inline lmscalar get_a() const
     { 
         return a;
     }
 
-    inline void set_a(tfloat _a)
+    inline void set_a(lmscalar _a)
     {
         a = _a;
     }
 
-    inline tfloat get_b() const
+    inline lmscalar get_b() const
     {
         return b;
     }
 
-    inline void set_b(tfloat _b)
+    inline void set_b(lmscalar _b)
     {
         b = _b;
     }
 
-    inline tfloat get_c() const
+    inline lmscalar get_c() const
     {
         return c;
     }
 
-    inline void set_c(tfloat _c)
+    inline void set_c(lmscalar _c)
     {
         c = _c;
     }
 
-    inline tfloat get_d() const
+    inline lmscalar get_d() const
     {
         return d;
     }
 
-    inline void set_d(tfloat _d)
+    inline void set_d(lmscalar _d)
     {
         d = _d;
     }
 
-    inline tfloat get_tx() const
+    inline lmscalar get_tx() const
     {
         return tx;
     }
 
-    inline void set_tx(tfloat _tx)
+    inline void set_tx(lmscalar _tx)
     {
         tx = _tx;
     }
 
-    inline tfloat get_ty() const
+    inline lmscalar get_ty() const
     {
         return ty;
     }
 
-    inline void set_ty(tfloat _ty)
+    inline void set_ty(lmscalar _ty)
     {
         ty = _ty;
     }
 
-    inline tfloat determinant()
+    inline lmscalar determinant()
     {
         return a * d - b * c;
     }
 
-    inline void setTo(tfloat _a, tfloat _b, tfloat _c, tfloat _d, tfloat _tx, tfloat _ty)
+    inline void setTo(lmscalar _a, lmscalar _b, lmscalar _c, lmscalar _d, lmscalar _tx, lmscalar _ty)
     {
         a  = _a;
         b  = _b;
@@ -127,12 +127,12 @@ public:
 
     inline void concat(const Matrix *m)
     {
-        tfloat ta  = a;
-        tfloat tb  = b;
-        tfloat tc  = c;
-        tfloat td  = d;
-        tfloat ttx = tx;
-        tfloat tty = ty;
+        lmscalar ta  = a;
+        lmscalar tb  = b;
+        lmscalar tc  = c;
+        lmscalar td  = d;
+        lmscalar ttx = tx;
+        lmscalar tty = ty;
 
         a  = m->a * ta + m->c * tb;
         b  = m->b * ta + m->d * tb;
@@ -142,12 +142,12 @@ public:
         ty = m->b * ttx + m->d * tty + m->ty;
     }
 
-    inline void skew(tfloat xSkew, tfloat ySkew)
+    inline void skew(lmscalar xSkew, lmscalar ySkew)
     {
-        tfloat sinX = sin(xSkew);
-        tfloat cosX = cos(xSkew);
-        tfloat sinY = sin(ySkew);
-        tfloat cosY = cos(ySkew);
+        lmscalar sinX = sin(xSkew);
+        lmscalar cosX = cos(xSkew);
+        lmscalar sinY = sin(ySkew);
+        lmscalar cosY = cos(ySkew);
 
         setTo(a * cosY - b * sinX,
               a * sinY + b * cosX,
@@ -157,22 +157,22 @@ public:
               tx * sinY + ty * cosX);
     }
 
-    inline void rotate(tfloat angle)
+    inline void rotate(lmscalar angle)
     {
         if (angle == 0.0f)
         {
             return;
         }
 
-        tfloat _cos = cos(angle);
-        tfloat _sin = sin(angle);
+        lmscalar _cos = cos(angle);
+        lmscalar _sin = sin(angle);
 
-        tfloat ta  = a;
-        tfloat tb  = b;
-        tfloat tc  = c;
-        tfloat td  = d;
-        tfloat ttx = tx;
-        tfloat tty = ty;
+        lmscalar ta  = a;
+        lmscalar tb  = b;
+        lmscalar tc  = c;
+        lmscalar td  = d;
+        lmscalar ttx = tx;
+        lmscalar tty = ty;
 
         a  = ta * _cos - tb * _sin;
         b  = ta * _sin + tb * _cos;
@@ -182,13 +182,13 @@ public:
         ty = ttx * _sin + tty * _cos;
     }
 
-    inline void translate(tfloat dx, tfloat dy)
+    inline void translate(lmscalar dx, lmscalar dy)
     {
         tx += dx;
         ty += dy;
     }
 
-    inline void scale(tfloat sx, tfloat sy)
+    inline void scale(lmscalar sx, lmscalar sy)
     {
         if (sx != 1.0f)
         {
@@ -227,16 +227,16 @@ public:
 
     inline void invertOther(const Matrix *other)
     {
-        tfloat a  = other->a;
-        tfloat b  = other->b;
-        tfloat c  = other->c;
-        tfloat d  = other->d;
-        tfloat tx = other->tx;
-        tfloat ty = other->ty;
+        lmscalar a  = other->a;
+        lmscalar b  = other->b;
+        lmscalar c  = other->c;
+        lmscalar d  = other->d;
+        lmscalar tx = other->tx;
+        lmscalar ty = other->ty;
 
         // Cremer's rule: inverse = adjugate / determinant
         // A-1 = adj(A) / det(A)
-        tfloat invDet = 1.0f / (a * d - c * b);
+        lmscalar invDet = 1.0f / (a * d - c * b);
 
         //     [a11 a12 a13]
         // A = [a21 a22 a23]
@@ -266,8 +266,8 @@ public:
 
     int transformCoord(lua_State *L)
     {
-        tfloat x = (tfloat)lua_tonumber(L, 2);
-        tfloat y = (tfloat)lua_tonumber(L, 3);
+        lmscalar x = (lmscalar)lua_tonumber(L, 2);
+        lmscalar y = (lmscalar)lua_tonumber(L, 3);
 
         // get the helper point
         lua_pushnumber(L, sHelperPointOrdinal);
@@ -281,7 +281,7 @@ public:
         return 1;
     }
 
-    void transformCoordInternal(tfloat x, tfloat y, tfloat *rx, tfloat *ry)
+    void transformCoordInternal(lmscalar x, lmscalar y, lmscalar *rx, lmscalar *ry)
     {
         *rx = a*x + c*y + tx;
         *ry = b*x + d*y + ty;
@@ -289,8 +289,8 @@ public:
 
     int deltaTransformCoord(lua_State *L)
     {
-        tfloat x = (tfloat)lua_tonumber(L, 2);
-        tfloat y = (tfloat)lua_tonumber(L, 3);
+        lmscalar x = (lmscalar)lua_tonumber(L, 2);
+        lmscalar y = (lmscalar)lua_tonumber(L, 3);
 
         // get the helper point
         lua_pushnumber(L, sHelperPointOrdinal);
@@ -317,12 +317,12 @@ public:
     // fast marshaling version
     int setTo(lua_State *L)
     {
-        a  = (tfloat)lua_tonumber(L, 2);
-        b  = (tfloat)lua_tonumber(L, 3);
-        c  = (tfloat)lua_tonumber(L, 4);
-        d  = (tfloat)lua_tonumber(L, 5);
-        tx = (tfloat)lua_tonumber(L, 6);
-        ty = (tfloat)lua_tonumber(L, 7);
+        a  = (lmscalar)lua_tonumber(L, 2);
+        b  = (lmscalar)lua_tonumber(L, 3);
+        c  = (lmscalar)lua_tonumber(L, 4);
+        d  = (lmscalar)lua_tonumber(L, 5);
+        tx = (lmscalar)lua_tonumber(L, 6);
+        ty = (lmscalar)lua_tonumber(L, 7);
         return 0;
     }
 
@@ -341,7 +341,7 @@ public:
         return 0;
 	}
 
-	void copyToMatrix3(tfloat* values)
+	void copyToMatrix3(lmscalar* values)
 	{
 		values[0] = a;
 		values[1] = b;
@@ -354,7 +354,7 @@ public:
 		values[8] = 1;
 	}
 
-    void copyToMatrix4(tfloat* values)
+    void copyToMatrix4(lmscalar* values)
     {
         values[0] = a;
         values[1] = b;
@@ -399,7 +399,7 @@ public:
         static char toStringBuffer[256];
 
         snprintf(toStringBuffer, 255, "a= %.2f, b= %.2f, c= %.2f, d= %.2f, tx= %.2f, ty= %.2f",
-                 (tfloat)a, (tfloat)b, (tfloat)c, (tfloat)d, (tfloat)tx, (tfloat)ty);
+                 (lmscalar)a, (lmscalar)b, (lmscalar)c, (lmscalar)d, (lmscalar)tx, (lmscalar)ty);
 
         return toStringBuffer;
     }

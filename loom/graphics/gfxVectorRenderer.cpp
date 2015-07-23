@@ -118,7 +118,7 @@ void VectorRenderer::beginFrame()
     //*/
 }
 
-void VectorRenderer::preDraw(tfloat a, tfloat b, tfloat c, tfloat d, tfloat e, tfloat f) {
+void VectorRenderer::preDraw(lmscalar a, lmscalar b, lmscalar c, lmscalar d, lmscalar e, lmscalar f) {
 	LOOM_PROFILE_SCOPE(vectorPreDraw);
 
 	nvgSave(nvg);

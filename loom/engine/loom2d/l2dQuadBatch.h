@@ -120,11 +120,11 @@ public:
         Matrix mtx;
         getTargetTransformationMatrix(targetSpace, &mtx);
 
-        tfloat minx = 1000000;
-        tfloat maxx = -1000000;
+        lmscalar minx = 1000000;
+        lmscalar maxx = -1000000;
 
-        tfloat miny = 1000000;
-        tfloat maxy = -1000000;
+        lmscalar miny = 1000000;
+        lmscalar maxy = -1000000;
 
 
         // calculate bounding rect
@@ -134,8 +134,8 @@ public:
 
             for (int j = 0; j < 4; j++)
             {
-                tfloat x = mtx.a * v->x + mtx.c * v->y + mtx.tx;
-                tfloat y = mtx.b * v->x + mtx.d * v->y + mtx.ty;
+                lmscalar x = mtx.a * v->x + mtx.c * v->y + mtx.tx;
+                lmscalar y = mtx.b * v->x + mtx.d * v->y + mtx.ty;
 
                 if (x < minx)
                 {
@@ -241,8 +241,8 @@ public:
             {
                 *dst = *src;
 
-                tfloat _x = mtx->a * dst->x + mtx->c * dst->y + mtx->tx;
-                tfloat _y = mtx->b * dst->x + mtx->d * dst->y + mtx->ty;
+                lmscalar _x = mtx->a * dst->x + mtx->c * dst->y + mtx->tx;
+                lmscalar _y = mtx->b * dst->x + mtx->d * dst->y + mtx->ty;
                 dst->x = (float) _x;
                 dst->y = (float) _y;
 

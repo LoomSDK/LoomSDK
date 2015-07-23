@@ -268,7 +268,7 @@ int Graphics::render(lua_State *L)
 		object->transformMatrix.copyFrom(matrix);
 	}
 
-	tfloat prevAlpha = object->alpha;
+	lmscalar prevAlpha = object->alpha;
 	object->alpha = prevAlpha*alpha;
 
 	// Render 

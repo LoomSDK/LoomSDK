@@ -35,7 +35,7 @@ class DisplayObjectContainer;
 // traverses down the DisplayObject hierarchy
 struct RenderState
 {
-    tfloat alpha;
+    lmscalar alpha;
     // Clipping is disabled when width equals -1
     Loom2D::Rectangle clipRect;
     int   blendMode;
@@ -57,41 +57,41 @@ public:
     bool transformDirty;
 
     /** The x coordinate of the object relative to the local coordinates of the parent. */
-    tfloat x;
+    lmscalar x;
 
     /** The y coordinate of the object relative to the local coordinates of the parent. */
-    tfloat y;
+    lmscalar y;
 
     /** The x coordinate of the object's origin in its own coordinate space (default: 0). */
-    tfloat pivotX;
+    lmscalar pivotX;
 
     /** The y coordinate of the object's origin in its own coordinate space (default: 0). */
-    tfloat pivotY;
+    lmscalar pivotY;
 
     /** The horizontal scale factor. '1' means no scale, negative values flip the object. */
-    tfloat scaleX;
+    lmscalar scaleX;
 
     /** The vertical scale factor. '1' means no scale, negative values flip the object. */
-    tfloat scaleY;
+    lmscalar scaleY;
 
     /** The horizontal skew angle in radians. */
-    tfloat skewX;
+    lmscalar skewX;
 
     /** The vertical skew angle in radians. */
-    tfloat skewY;
+    lmscalar skewY;
 
     /** The rotation of the object in radians. (In Starling, all angles are measured
      *  in radians.) */
-    tfloat rotation;
+    lmscalar rotation;
 
     /** The opacity of the object. 0 = transparent, 1 = opaque. */
-    tfloat alpha;
+    lmscalar alpha;
 
     /** The blend mode for the object. Default is BlendMode.AUTO (will inherit parent's blendMode) */
     int blendMode;
 
     /** If depth sorting is enabled on parent this will be used to establish draw order. */
-    tfloat depth;
+    lmscalar depth;
 
     /** The visibility of the object. An invisible object will be untouchable. */
     bool visible;
@@ -115,7 +115,7 @@ public:
 
     Matrix transformMatrix;
 
-    bool isEquivalent(tfloat a, tfloat b, tfloat epsilon = 0.0001f)
+    bool isEquivalent(lmscalar a, lmscalar b, lmscalar epsilon = 0.0001f)
     {
         return (a - epsilon < b) && (a + epsilon > b);
     }
@@ -209,14 +209,14 @@ public:
             }
             else
             {
-                tfloat _cos = cos(rotation);
-                tfloat _sin = sin(rotation);
-                tfloat a    = scaleX * _cos;
-                tfloat b    = scaleX * _sin;
-                tfloat c    = scaleY * -_sin;
-                tfloat d    = scaleY * _cos;
-                tfloat tx   = x - pivotX * a - pivotY * c;
-                tfloat ty   = y - pivotX * b - pivotY * d;
+                lmscalar _cos = cos(rotation);
+                lmscalar _sin = sin(rotation);
+                lmscalar a    = scaleX * _cos;
+                lmscalar b    = scaleX * _sin;
+                lmscalar c    = scaleY * -_sin;
+                lmscalar d    = scaleY * _cos;
+                lmscalar tx   = x - pivotX * a - pivotY * c;
+                lmscalar ty   = y - pivotX * b - pivotY * d;
 
                 m->setTo(a, b, c, d, tx, ty);
             }
@@ -323,8 +323,8 @@ public:
         lmAssert(bounds != NULL, "Bounds are null");
         lmAssert(resultRect != NULL, "Result rect is null");
 
-        tfloat rx, ry;
-        tfloat minx, miny, maxx, maxy;
+        lmscalar rx, ry;
+        lmscalar minx, miny, maxx, maxy;
 
         transform->transformCoordInternal(bounds->getLeft(), bounds->getTop(), &rx, &ry);
         minx = rx;
@@ -359,122 +359,122 @@ public:
 
     // fast path accessors for DisplayObject properties
 
-    inline tfloat getX() const
+    inline lmscalar getX() const
     {
         return x;
     }
 
-    inline void setX(tfloat _x)
+    inline void setX(lmscalar _x)
     {
         transformDirty = true;
         x = _x;
     }
 
-    inline tfloat getY() const
+    inline lmscalar getY() const
     {
         return y;
     }
 
-    inline void setY(tfloat _y)
+    inline void setY(lmscalar _y)
     {
         transformDirty = true;
         y = _y;
     }
 
-    inline tfloat getPivotX() const
+    inline lmscalar getPivotX() const
     {
         return pivotX;
     }
 
-    inline void setPivotX(tfloat _pivotX)
+    inline void setPivotX(lmscalar _pivotX)
     {
         transformDirty = true;
         pivotX         = _pivotX;
     }
 
-    inline tfloat getPivotY() const
+    inline lmscalar getPivotY() const
     {
         return pivotY;
     }
 
-    inline void setPivotY(tfloat _pivotY)
+    inline void setPivotY(lmscalar _pivotY)
     {
         transformDirty = true;
         pivotY         = _pivotY;
     }
 
-    inline tfloat getScaleX() const
+    inline lmscalar getScaleX() const
     {
         return scaleX;
     }
 
-    inline void setScaleX(tfloat _scaleX)
+    inline void setScaleX(lmscalar _scaleX)
     {
         transformDirty = true;
         scaleX         = _scaleX;
     }
 
-    inline tfloat getScaleY() const
+    inline lmscalar getScaleY() const
     {
         return scaleY;
     }
 
-    inline void setScaleY(tfloat _scaleY)
+    inline void setScaleY(lmscalar _scaleY)
     {
         transformDirty = true;
         scaleY         = _scaleY;
     }
 
-    inline void setScale(tfloat _scale)
+    inline void setScale(lmscalar _scale)
     {
         transformDirty = true;
         scaleX         = scaleY = _scale;
     }
 
-    inline tfloat getScale() const
+    inline lmscalar getScale() const
     {
         return (scaleX + scaleY) * .5f;
     }
 
-    inline tfloat getSkewX() const
+    inline lmscalar getSkewX() const
     {
         return skewX;
     }
 
-    inline void setSkewX(tfloat _skewX)
+    inline void setSkewX(lmscalar _skewX)
     {
         transformDirty = true;
         skewX          = _skewX;
     }
 
-    inline tfloat getSkewY() const
+    inline lmscalar getSkewY() const
     {
         return skewY;
     }
 
-    inline void setSkewY(tfloat _skewY)
+    inline void setSkewY(lmscalar _skewY)
     {
         transformDirty = true;
         skewY          = _skewY;
     }
 
-    inline tfloat getRotation() const
+    inline lmscalar getRotation() const
     {
         return rotation;
     }
 
-    inline void setRotation(tfloat _rotation)
+    inline void setRotation(lmscalar _rotation)
     {
         transformDirty = true;
         rotation       = _rotation;
     }
 
-    inline tfloat getAlpha() const
+    inline lmscalar getAlpha() const
     {
         return alpha;
     }
 
-    inline void setAlpha(tfloat _alpha)
+    inline void setAlpha(lmscalar _alpha)
     {
         alpha = _alpha;
     }
@@ -519,12 +519,12 @@ public:
         valid = _valid;
     }
 
-    inline tfloat getDepth() const
+    inline lmscalar getDepth() const
     {
         return depth;
     }
 
-    inline void setDepth(tfloat _depth)
+    inline void setDepth(lmscalar _depth)
     {
         depth = _depth;
     }

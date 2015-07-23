@@ -173,7 +173,7 @@ public:
 	static void beginFrame();
 	static void endFrame();
 
-    static void preDraw(tfloat a, tfloat b, tfloat c, tfloat d, tfloat e, tfloat f);
+    static void preDraw(lmscalar a, lmscalar b, lmscalar c, lmscalar d, lmscalar e, lmscalar f);
 	static void postDraw();
 	
     static void setClipRect(int x, int y, int w, int h);

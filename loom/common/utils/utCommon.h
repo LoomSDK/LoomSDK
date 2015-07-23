@@ -25,7 +25,7 @@
 #ifndef _utCommon_h_
 #define _utCommon_h_
 
-typedef double tfloat;
+typedef double lmscalar;
 
 #include "utEndian.h"
 #include <assert.h>

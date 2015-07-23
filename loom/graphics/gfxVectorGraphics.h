@@ -186,11 +186,11 @@ public:
 	bool pathDirty;
 	bool textFormatDirty;
 	GFX::VectorTextFormat currentTextFormat;
-	tfloat boundL;
-	tfloat boundT;
-	tfloat boundR;
-	tfloat boundB;
-	tfloat scale;
+	lmscalar boundL;
+	lmscalar boundT;
+	lmscalar boundR;
+	lmscalar boundB;
+	lmscalar scale;
 	int clipX, clipY, clipWidth, clipHeight;
 
 	VectorGraphics() {
