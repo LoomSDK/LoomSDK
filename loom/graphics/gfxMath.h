@@ -17,6 +17,23 @@
 #include <math.h>
 #include <string.h>
 
+#include "loom/common/utils/utCommon.h"
+
+inline lmscalar lmMin(lmscalar a, lmscalar b)
+{
+    return a < b ? a : b;
+}
+
+inline lmscalar lmMax(lmscalar a, lmscalar b)
+{
+    return a > b ? a : b;
+}
+
+inline lmscalar lmClamp(lmscalar v, lmscalar min, lmscalar max)
+{
+    return lmMax(min, lmMin(max, v));
+}
+
 #if WIN32
 #if _MSC_VER < 1800
     

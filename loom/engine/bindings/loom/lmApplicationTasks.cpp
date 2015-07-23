@@ -47,7 +47,7 @@ void loom_tick()
     performance_tick();
 
     profilerBlock_t p = { "loom_tick", platform_getMilliseconds(), 8 };
-
+    
     if (LoomApplication::getReloadQueued())
     {
         LoomApplication::reloadMainAssembly();
@@ -84,6 +84,9 @@ void loom_tick()
     finishProfilerBlock(&p);
 
     LOOM_PROFILE_END(loom_tick);
+
+    LOOM_PROFILE_ZERO_CHECK()
+
 }
 }
 

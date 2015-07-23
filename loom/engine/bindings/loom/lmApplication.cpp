@@ -79,6 +79,8 @@ void loom_appShutdown(void)
 
 extern void loomsound_reset();
 
+extern void loomsound_init();
+
 // container for external package functions
 typedef void (*FunctionRegisterPackage)(void);
 static utArray<FunctionRegisterPackage> sExternalPackageFunctions;
@@ -352,6 +354,9 @@ int LoomApplication::initializeCoreServices()
     lmLog(applicationLogGroup, "   o assets");
     loom_asset_initialize(".");
     loom_asset_setCommandCallback(dispatchCommand);
+
+    lmLog(applicationLogGroup, "   o sound");
+    loomsound_init();
 
     // Initialize script hooks.
     LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogInfo, LoomLogWarn, LoomLogError);

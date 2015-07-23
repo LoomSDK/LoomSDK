@@ -241,7 +241,7 @@ package loom
         protected function onProfilerEnable():void 
         {
             Console.print("Enabling profiler...");
-            Profiler.enable(true);
+            Profiler.enable();
         }
 
         protected function onProfilerDump():void

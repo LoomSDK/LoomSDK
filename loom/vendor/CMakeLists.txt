@@ -489,6 +489,7 @@ endif()
 set (STB_HDR
     stb/stb_gl.h
     stb/stb_image.h
+    stb/stb_image_write.h
     stb/stb_truetype.h
 )
 
