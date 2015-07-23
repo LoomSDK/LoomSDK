@@ -69,12 +69,6 @@ package loom.modestmaps.core
         
         /** set this to true to enable enforcing of map bounds from the map provider's limits */
         public static var EnforceBoundsEnabled:Boolean = false;
-                
-        /** set this to false, along with RoundScalesEnabled, if you need a map to stay 'fixed' in place as it changes size */
-        public static var RoundPositionsEnabled:Boolean = true;
-                
-        /** set this to false, along with RoundPositionsEnabled, if you need a map to stay 'fixed' in place as it changes size */
-        public static var RoundScalesEnabled:Boolean = true;
         
         public static var KeepTopLevel:Boolean = true;
 
@@ -1111,11 +1105,12 @@ package loom.modestmaps.core
             positionTile(tile);
         }
         
-        private function drawGrid(g:Graphics, zoom:Number, gridX:Number, gridY:Number, gridWidth:Number, gridHeight:Number)
+        private function drawGrid(g:Graphics, zoom:Number, gridX:Number, gridY:Number, gridWidth:Number, gridHeight:Number, resultTopLeft:Point = Point.ZERO)
         {
             //g.drawRect(worldMatrix.tx+gridX*tileWidth, worldMatrix.ty+gridY*tileHeight, gridWidth*tileWidth, gridHeight*tileHeight);
             
-            var invZoom = _tileScales[zoom]/scale;
+            //var invZoom = _tileScales[zoom]/scale;
+            var invZoom = (Math.pow(2, zoomLevel-zoom))/scale;
             
             var sx = tileWidth*invZoom;
             var sy = tileHeight*invZoom;
@@ -1124,6 +1119,11 @@ package loom.modestmaps.core
             var tr = worldMatrix.transformCoord((gridX+gridWidth)*sx, gridY*sy);
             var bl = worldMatrix.transformCoord(gridX*sx, (gridY+gridHeight)*sy);
             var br = worldMatrix.transformCoord((gridX+gridWidth)*sx, (gridY+gridHeight)*sy);
+            
+            if (resultTopLeft != Point.ZERO) {
+                resultTopLeft.x = tl.x;
+                resultTopLeft.y = tl.y;
+            }
             
             g.moveTo(tl.x, tl.y);
             g.lineTo(tr.x, tr.y);
@@ -1135,27 +1135,6 @@ package loom.modestmaps.core
         private var lastPositionZoom = -1;
         private function positionTiles(realMinCol:Number, realMinRow:Number):void
         {
-            
-//TODO_24: native prep for lower down                
-            // scales to compensate for zoom differences between current grid zoom level
-            var zLevel = zoomLevel;
-            
-            if (lastPositionZoom != zLevel) {
-                lastPositionZoom = zLevel;
-                var invTileWidth:Number = 1.0 / tileWidth;
-                var scales = _tileScales;
-                var roundEnabled = RoundScalesEnabled;
-                for (var z:int = 0; z <= maxZoom; z++) {
-                    // zLevel-z can be negative, so pow is fine here
-                    var tileScale = Math.pow(2, zLevel-z);
-                    scales[z] = roundEnabled ? Math.ceil(tileScale * tileWidth) * invTileWidth : tileScale;
-                }
-            }
-    
-            // hugs http://www.senocular.com/flash/tutorials/transformmatrix/
-            var px:Point = worldMatrix.deltaTransformCoord(0, 1);
-            tileAngleRadians = (Math.atan2(px.y, px.x) - Math.degToRad(90));
-            
             // Visual debug init code
             if (debug) {
                 var g:Graphics = debugOverlay.graphics;
@@ -1195,10 +1174,10 @@ package loom.modestmaps.core
                 
             }
             
-            var i = 0;
-            var len = well.numChildren;
-            
             var tile:Tile = headActive;
+            
+            // Transform the well tiles based on the world matrix
+            well.transformationMatrix = worldMatrix;
             
             while (tile) {
                 
@@ -1217,7 +1196,10 @@ package loom.modestmaps.core
                     //g.lineStyle(5, Math.clamp(tile.loadPriority*0xFF, 0, 0xFF));
                     //g.lineStyle(1, Math.abs(tile.zoom-currentTileZoom) < 2 ? 0x0000FF : 0xFF0000);
                     //g.lineStyle(1, tile.inWell ? 0x0000FF : 0xFF0000);
-                    g.drawRect(tile.x+5, tile.y+5, tile.width-10, tile.height-10);
+                    //g.drawRect(tile.x+5, tile.y+5, tile.width-10, tile.height-10);
+                    
+                    drawGrid(g, tile.zoom, tile.column+0.05, tile.row+0.05, 1-0.1, 1-0.1, sHelperPoint);
+                    
                     //g.drawCircle(tile.x, tile.y, 50);
                     
                     //if (tile.quadParent && tile.quadParent.inWell) {
@@ -1228,8 +1210,11 @@ package loom.modestmaps.core
                         //g.lineTo(qp.x+qp.width*0.5, qp.y+qp.height*0.5);
                     //}
                     
-                    var tx = tile.x+tile.width*0.5-30;
-                    var ty = tile.y+tile.height*0.5;
+                    //var tx = tile.x+tile.width*0.5-30;
+                    //var ty = tile.y+tile.height*0.5;
+                    
+                    var tx = sHelperPoint.x+10;
+                    var ty = sHelperPoint.y+2;
                     g.drawTextLine(tx, ty, ""+tile); ty += 65;
                     
                     var status = "s ";
@@ -1320,45 +1305,10 @@ package loom.modestmaps.core
         }
         
         private function positionTile(tile:Tile) {
-            
-            //tile.x = tile.column;
-            //tile.y = tile.row;
-            //tile.scale = 1/tileWidth;
-            //
-            //return;
-            //
-            
-            var tAngle = tileAngleRadians;
-            var zLevel = zoomLevel;
-            var wMatrix = worldMatrix;
-            var tScale = tileWidth/scale;
-            
-            var absZoom = tile.zoom-currentTileZoom;
-            if (absZoom < 0) absZoom = -absZoom;
-            
-            if (tile.isPainted) tile.visible = true;
-            
-            tile.depth = (-absZoom << TILE_DEPTH_SHIFT) | tile.zoom;
-            
-            ///*
-//_TODO_24: native all below here... need to return scale, x, y, rot... doable?
-            tile.scaleX = tile.scaleY = _tileScales[tile.zoom];
-
-            // rounding can also helps the rare seams not fixed by rounding the tile scale, 
-            // but makes slow zooming uglier: 
-            ModestMaps.setLastCoordinate(tile.column,
-                                            tile.row, 
-                                            tile.zoom, 
-                                            zLevel,
-                                            tScale,
-                                            wMatrix,
-                                            null, 
-                                            null);
-            tile.x = ModestMaps.LastCoordinateX;
-            tile.y = ModestMaps.LastCoordinateY;
-            tile.rotation = tAngle;
-            //*/
-                
+            var sc = _tileScales[tile.zoom];
+            tile.scale = sc;
+            tile.x = tile.column*_tileWidth*sc;
+            tile.y = tile.row*_tileHeight*sc;
         }
         
         private function zoomThenCenterCompare(t1:Tile, t2:Tile):int
@@ -1966,7 +1916,7 @@ package loom.modestmaps.core
             
             //pre-create this work vector whenever _maxZoom changes
             _tileScales = new Vector.<Number>(_maxZoom + 1);
-            for (i = 0; i < _tileScales.length; i++) _tileScales[i] = 1;
+            for (i = 0; i < _tileScales.length; i++) _tileScales[i] = 1/Math.pow(2, i);
             
             _tileGridBounds = new Vector.<GridBounds>(_maxZoom + 1);
             for (i = 0; i < _tileGridBounds.length; i++) _tileGridBounds[i] = new GridBounds();

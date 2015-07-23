@@ -168,7 +168,7 @@ void Graphics::reset(int width, int height, uint32_t flags)
 	if (!(flags & FLAG_INVERTED)) {
 		mvp.scale(1.0f, -1.0f);
 	}
-	mvp.copyToMatrix4(sMVP);
+	mvp.copyToMatrix4f(sMVP);
 	
 	sCurrentModelViewProjection = sMVP;
 
@@ -322,7 +322,7 @@ int Graphics::render(lua_State *L)
 		object->transformMatrix.copyFrom(matrix);
 	}
 
-	float prevAlpha = object->alpha;
+	lmscalar prevAlpha = object->alpha;
 	object->alpha = prevAlpha*alpha;
 
 	// Render 

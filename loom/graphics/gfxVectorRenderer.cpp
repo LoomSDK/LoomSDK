@@ -118,11 +118,11 @@ void VectorRenderer::beginFrame()
     //*/
 }
 
-void VectorRenderer::preDraw(float a, float b, float c, float d, float e, float f) {
+void VectorRenderer::preDraw(lmscalar a, lmscalar b, lmscalar c, lmscalar d, lmscalar e, lmscalar f) {
 	LOOM_PROFILE_SCOPE(vectorPreDraw);
 
 	nvgSave(nvg);
-	nvgTransform(nvg, a, b, c, d, e, f);
+	nvgTransform(nvg, (float) a, (float) b, (float) c, (float) d, (float) e, (float) f);
 	
 	nvgLineCap(nvg, NVG_BUTT);
 	nvgLineJoin(nvg, NVG_ROUND);
