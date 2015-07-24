@@ -26,6 +26,13 @@
 
 loom_allocator_t *gProfilerAllocator = NULL;
 
+// Enable the profiler from the start of execution. Enable this if you
+// want to profile application startup or are tracking down profiler stack
+// mismatch issues - when the profiler is enabled LOOM_PROFILE_START and
+// LOOM_PROFILE_END are checked to make sure an END is called for every
+// START.
+//#define LOOM_PROFILE_AT_ENGINE_START 1
+
 #ifndef NPERFORMANCE
 
 #include <stdio.h>
@@ -114,7 +121,13 @@ void finishProfilerBlock(profilerBlock_t *block)
 LoomProfilerRoot    *LoomProfilerRoot::sRootList = NULL;
 LoomProfiler        *gLoomProfiler = NULL;
 static LoomProfiler aProfiler; // allocate the global profiler
-#define LOOM_PROFILE_AT_ENGINE_START    false
+
+#if (defined(LOOM_PROFILE_AT_ENGINE_START) && LOOM_PROFILE_AT_ENGINE_START) || defined(LOOM_DEBUG)
+#define LOOM_PROFILE_AT_ENGINE_START_INTERNAL true
+#else
+#define LOOM_PROFILE_AT_ENGINE_START_INTERNAL false
+#endif
+
 
 #if LOOM_PLATFORM_IS_APPLE
 
@@ -273,9 +286,9 @@ LoomProfiler::LoomProfiler()
 
    mProfileList = NULL;
 
-   mEnabled = LOOM_PROFILE_AT_ENGINE_START;   
+   mEnabled = LOOM_PROFILE_AT_ENGINE_START_INTERNAL;   
 
-   mNextEnable = LOOM_PROFILE_AT_ENGINE_START;
+   mNextEnable = LOOM_PROFILE_AT_ENGINE_START_INTERNAL;
 
    mStackDepth = 0;
    gLoomProfiler = this;
@@ -526,6 +539,21 @@ void LoomProfiler::hashPop(LoomProfilerRoot *expected)
     }
 }
 
+void LoomProfiler::hashZeroCheck()
+{
+    if (mStackDepth != 0)
+    {
+        // If you get this assert, it means you probably have mismatched LOOM_PROFILE_START
+        // and LOOM_PROFILE_END blocks. Enable LOOM_PROFILE_AT_ENGINE_START (see #define at top
+        // of file) to get a breakpoint on the exact mismatching LOOM_PROFILE_END.
+        lmAssert(false, "Profiler zero stack check failed: %s",
+            mCurrentLoomProfilerEntry == NULL ? "[entry NULL]" :
+            mCurrentLoomProfilerEntry->mRoot == NULL ? "[entry root NULL] (try compiling as a debug build or with LOOM_PROFILE_AT_ENGINE_START enabled for more info)" :
+            mCurrentLoomProfilerEntry->mRoot->mName
+        );
+    }
+    
+}
 
 static S32 rootDataCompare(const void *s1, const void *s2)
 {
@@ -606,6 +634,8 @@ static void LoomProfilerEntryDumpRecurse(LoomProfilerEntry *data, char *buffer, 
 
 void LoomProfiler::dump()
 {
+    LOOM_PROFILE_ZERO_CHECK()
+
     bool enableSave = mEnabled;
 
     mEnabled = false;

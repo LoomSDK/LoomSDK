@@ -18,23 +18,23 @@ limitations under the License.
 ===========================================================================
 */
 
-package {
+package tests {
 
-    import system.reflection.Type;
-    import unittest.Test;
-    import unittest.TestRunner;
-    import unittest.TestResult;
+    import unittest.Assert;
+    import unittest.TestComplete;
     
-    /**
-     * Runs all the tests in the current project (see the tests/ subdir) and exits with the proper error code.
-     */
-    public class AllTests {   
-        public static function main() {
-            TestRunner.onComplete += function(result:TestResult) {
-                
-                Process.exit(result.typeReport.successful ? 0 : 1);
-            };
-            TestRunner.runAll((AllTests as Type).getAssembly(), true);
+    public class AsyncTest {
+        
+        [Test]
+        private function returnTrue():Boolean {
+            Assert.equal(true, true);
+            return true;
+        }
+        
+        [Test]
+        private function parameter(p:TestComplete):void {
+            Assert.equal(true, true);
+            p.done();
         }
     }
 }

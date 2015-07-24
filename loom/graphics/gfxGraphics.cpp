@@ -34,6 +34,11 @@
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/graphics/gfxVectorRenderer.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+extern SDL_Window *gSDLWindow;
+
 namespace GFX
 {
     lmDefineLogGroup(gGFXLogGroup, "GFX", 1, LoomLogInfo);
@@ -163,7 +168,7 @@ void Graphics::reset(int width, int height, uint32_t flags)
 	if (!(flags & FLAG_INVERTED)) {
 		mvp.scale(1.0f, -1.0f);
 	}
-	mvp.copyToMatrix4(sMVP);
+	mvp.copyToMatrix4f(sMVP);
 	
 	sCurrentModelViewProjection = sMVP;
 
@@ -241,7 +246,56 @@ void Graphics::endFrame()
 
     if(pendingScreenshot[0] != 0)
     {
-        //bgfx::saveScreenShot(pendingScreenshot);
+        SDL_ClearError();
+        SDL_Window* sdlWindow = gSDLWindow;
+
+        // Create a PNG image and save it to the requested file location
+        // Original algorithm (heavily modified) by neilf (http://stackoverflow.com/a/20233470)
+        SDL_Surface* saveSurface = NULL;
+        SDL_Surface* infoSurface = NULL;
+        infoSurface = SDL_GetWindowSurface(sdlWindow);
+        if (infoSurface == NULL) {
+	        lmLog(gGFXLogGroup, "Unable to create info surface from window for screenshot generation", SDL_GetError());
+	        return;
+        }
+
+        utByteArray *pixels = lmNew(NULL) utByteArray();
+        if (pixels == NULL) {
+	        lmLog(gGFXLogGroup, "Unable to allocate memory for screenshot pixel data buffer");
+	        return;
+        }
+
+        const int bpp = 4;
+
+        pixels->resize(infoSurface->w * infoSurface->h * bpp);
+
+        // The OpenGL method is a lot cleaner, but inverts the image
+        Graphics::context()->glReadPixels(0, 0, infoSurface->w, infoSurface->h, GL_RGBA, GL_UNSIGNED_BYTE, pixels->getDataPtr());
+
+        // Invert dat image
+        utByteArray *invertedPixels = lmNew(NULL) utByteArray();
+        if (invertedPixels == NULL) {
+            lmLog(gGFXLogGroup, "Unable to allocate memory for transformed pixels data buffer");
+            return;
+        }
+        invertedPixels->resize(infoSurface->w * bpp);
+
+        for (int i = infoSurface->h - 1; i >= 0; i--) {
+            invertedPixels->writeBytes(pixels, i * infoSurface->w * bpp, infoSurface->w * bpp);
+        }
+        
+        if (stbi_write_png(pendingScreenshot, infoSurface->w, infoSurface->h, 4 /* RGBA */, invertedPixels->getDataPtr(), infoSurface->w * bpp) != 1) {
+            lmLog(gGFXLogGroup, "Unable to generate PNG");
+            lmFree(NULL, pixels);
+            lmFree(NULL, invertedPixels);
+            return;
+        }
+        
+        lmFree(NULL, pixels);
+        lmFree(NULL, invertedPixels);
+
+        SDL_FreeSurface(infoSurface);
+        infoSurface = NULL;
         pendingScreenshot[0] = 0;
     }
 }
@@ -268,7 +322,7 @@ int Graphics::render(lua_State *L)
 		object->transformMatrix.copyFrom(matrix);
 	}
 
-	float prevAlpha = object->alpha;
+	lmscalar prevAlpha = object->alpha;
 	object->alpha = prevAlpha*alpha;
 
 	// Render 
@@ -305,6 +359,10 @@ void Graphics::handleContextLoss()
 
 void Graphics::screenshot(const char *path)
 {
+    if (strlen(path) > 1024) {
+        lmLog(gGFXLogGroup, "Screenshot name too big! Screenshots must be 1024 characters or less");
+        return;
+    }
     strcpy(pendingScreenshot, path);
 }
 

@@ -177,7 +177,10 @@ public:
         }
     }
 
-    static void enable(bool value, lua_State *L);
+    static void updateState(lua_State *L);
+
+    static void enable(lua_State *L);
+    static void disable(lua_State *L);
 
     static void dumpAllocations(lua_State *L);
 

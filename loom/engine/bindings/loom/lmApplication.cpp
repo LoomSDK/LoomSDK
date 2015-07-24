@@ -79,6 +79,8 @@ void loom_appShutdown(void)
 
 extern void loomsound_reset();
 
+extern void loomsound_init();
+
 // container for external package functions
 typedef void (*FunctionRegisterPackage)(void);
 static utArray<FunctionRegisterPackage> sExternalPackageFunctions;
@@ -302,8 +304,6 @@ static void unmapScriptFile(const char *path)
 
 int LoomApplication::initializeCoreServices()
 {
-    callbacksInitialized = false;
-
     // Mark the main thread for NativeDelegates.
     NativeDelegate::markMainThread();
 
@@ -355,7 +355,8 @@ int LoomApplication::initializeCoreServices()
     loom_asset_initialize(".");
     loom_asset_setCommandCallback(dispatchCommand);
 
-    initializeCallbacks();
+    lmLog(applicationLogGroup, "   o sound");
+    loomsound_init();
 
     // Initialize script hooks.
     LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogInfo, LoomLogWarn, LoomLogError);
@@ -371,22 +372,6 @@ int LoomApplication::initializeCoreServices()
     suppressAssetTriggeredReload = false;
 
     return 0;
-}
-
-bool LoomApplication::callbacksInitialized = false;
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-static loomJniMethodInfo gEventCallback;
-#endif
-
-void LoomApplication::initializeCallbacks()
-{
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-    LoomJni::getStaticMethodInfo(gEventCallback,
-        "co/theengine/loomdemo/LoomDemo",
-        "handleGenericEvent",
-        "(Ljava/lang/String;Ljava/lang/String;)V");
-#endif
-    callbacksInitialized = true;
 }
 
 void LoomApplication::shutdown()
@@ -458,20 +443,24 @@ void LoomApplication::fireGenericEvent(const char *type, const char *payload)
         note.cb(note.userData, type, payload);
     }
 
-    // And platform specific callbacks.
-    if (!callbacksInitialized) initializeCallbacks();
-
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-    JNIEnv *env = gEventCallback.getEnv();
+    
+    loomJniMethodInfo eventCallback;
+    LoomJni::getStaticMethodInfo(eventCallback,
+        "co/theengine/loomdemo/LoomDemo",
+        "handleGenericEvent",
+        "(Ljava/lang/String;Ljava/lang/String;)V");
+    JNIEnv *env = eventCallback.getEnv();
     if (env == NULL) {
         __android_log_print(ANDROID_LOG_WARN, "LoomJNI", "fireGenericEvent called before JNI init");
         return;
     }
     jstring jType    = env->NewStringUTF(type);
     jstring jPayload = env->NewStringUTF(payload);
-    env->CallStaticVoidMethod(gEventCallback.classID, gEventCallback.methodID, jType, jPayload);
+    env->CallStaticVoidMethod(eventCallback.classID, eventCallback.methodID, jType, jPayload);
     env->DeleteLocalRef(jType);
     env->DeleteLocalRef(jPayload);
+    env->DeleteLocalRef(eventCallback.classID);
 #endif
 }
 

@@ -40,23 +40,23 @@ using namespace Loom2D;
 class ModestMaps
 {
 public:
-    static float lastCoordinateX;
-    static float lastCoordinateY;
+    static lmscalar lastCoordinateX;
+    static lmscalar lastCoordinateY;
     static int parentLoadCol;
     static int parentLoadRow;
     static int parentLoadChild;
     static int parentLoadZoom;
-    static float gridZoom;
-    static float gridTLx;
-    static float gridTLy;
-    static float gridBRx;
-    static float gridBRy;
-    static float gridTRx;
-    static float gridTRy;
-    static float gridBLx;
-    static float gridBLy;
-    static float gridCx;
-    static float gridCy;
+    static lmscalar gridZoom;
+    static lmscalar gridTLx;
+    static lmscalar gridTLy;
+    static lmscalar gridBRx;
+    static lmscalar gridBRy;
+    static lmscalar gridTRx;
+    static lmscalar gridTRy;
+    static lmscalar gridBLx;
+    static lmscalar gridBLy;
+    static lmscalar gridCx;
+    static lmscalar gridCy;
 
 
     static const char *tileKey(int col, int row, int zoom)
@@ -79,30 +79,30 @@ public:
         else
         {
             int scaleFactor = 1 << zoomDiff;
-            float invScaleFactor = 1.0f / (float)scaleFactor;
-            float scaledCol = (float)col * invScaleFactor;
-            float scaledRow = (float)row * invScaleFactor;
+            lmscalar invScaleFactor = 1.0f / (lmscalar)scaleFactor;
+            lmscalar scaledCol = (lmscalar)col * invScaleFactor;
+            lmscalar scaledRow = (lmscalar)row * invScaleFactor;
             parentLoadCol = (int) floor(scaledCol); 
             parentLoadRow = (int) floor(scaledRow);
-            parentLoadChild = (int)((scaledCol - (float)parentLoadCol)*scaleFactor) + (int)((scaledRow - (float)parentLoadRow)*scaleFactor)*2;
+            parentLoadChild = (int)((scaledCol - (lmscalar)parentLoadCol)*scaleFactor) + (int)((scaledRow - (lmscalar)parentLoadRow)*scaleFactor)*2;
             parentLoadZoom = parentZoom;
         }
         return tileKey(parentLoadCol, parentLoadRow, parentLoadZoom);
     }
 
-    static void setLastCoordinate(float col,
-                                    float row,
-                                    float zoom,
-                                    float zoomLevel,
-                                    float invTileWidth,
+    static void setLastCoordinate(lmscalar col,
+                                    lmscalar row,
+                                    lmscalar zoom,
+                                    lmscalar zoomLevel,
+                                    lmscalar invTileWidth,
                                     Matrix *worldMatrix,
                                     DisplayObject *context,
                                     DisplayObject *object)
     {
         // this is basically the same as coord.zoomTo, but doesn't make a new Coordinate:
-        float zoomFactor = powf(2, zoomLevel - zoom) * invTileWidth;
-        float zoomedColumn = col * zoomFactor;
-        float zoomedRow = row * zoomFactor;
+        lmscalar zoomFactor = pow(2, zoomLevel - zoom) * invTileWidth;
+        lmscalar zoomedColumn = col * zoomFactor;
+        lmscalar zoomedRow = row * zoomFactor;
                     
         worldMatrix->transformCoordInternal(zoomedColumn, zoomedRow, &lastCoordinateX, &lastCoordinateY);
 
@@ -115,32 +115,32 @@ public:
     } 
 
 
-    static void setGridCoordinates(Matrix *invMatrix, float mapWidth, float mapHeight, float mapScale)
+    static void setGridCoordinates(Matrix *invMatrix, lmscalar mapWidth, lmscalar mapHeight, lmscalar mapScale)
     {
-        const float LN2 = 0.6931471805599453f;
+        const lmscalar LN2 = (lmscalar) 0.6931471805599453;
         gridZoom = log(mapScale) / LN2;
-        invMatrix->transformCoordInternal(0.0f, 0.0f, &gridTLy, &gridTLx);
+        invMatrix->transformCoordInternal(0.0, 0.0, &gridTLy, &gridTLx);
         invMatrix->transformCoordInternal(mapWidth, mapHeight, &gridBRy, &gridBRx);
-        invMatrix->transformCoordInternal(mapWidth, 0.0f, &gridTRy, &gridTRx);
-        invMatrix->transformCoordInternal(0.0f, mapHeight, &gridBLy, &gridBLx);
-        invMatrix->transformCoordInternal(mapWidth * 0.5f, mapHeight * 0.5f, &gridCy, &gridCx);
+        invMatrix->transformCoordInternal(mapWidth, 0.0, &gridTRy, &gridTRx);
+        invMatrix->transformCoordInternal(0.0, mapHeight, &gridBLy, &gridBLx);
+        invMatrix->transformCoordInternal(mapWidth * (lmscalar) 0.5, mapHeight * (lmscalar) 0.5, &gridCy, &gridCx);
     }
 
 
-    static void getGridInverseMatrix(Matrix *worldMatrix, float tileWidth, float tileHeight, float mapScale, Matrix *resultMatrix)
+    static void getGridInverseMatrix(Matrix *worldMatrix, lmscalar tileWidth, lmscalar tileHeight, lmscalar mapScale, Matrix *resultMatrix)
     {
         resultMatrix->invertOther(worldMatrix);
         resultMatrix->scale(mapScale / tileWidth, mapScale / tileHeight);
     }
 
  
-    static const char *getMSProviderZoomString(float col, float row, int zoom)
+    static const char *getMSProviderZoomString(lmscalar col, lmscalar row, int zoom)
     {
         LOOM_PROFILE_SCOPE(mmZoom);
         // we don't wrap rows here because the map/grid should be enforcing outerLimits :)
 
-        float zoomExp = pow(2.0f, zoom);
-        float wrappedColumn = fmod(col, zoomExp);
+        lmscalar zoomExp = pow(2.0f, zoom);
+        lmscalar wrappedColumn = fmod(col, zoomExp);
         while (wrappedColumn < 0)
         {
             wrappedColumn += zoomExp;
@@ -180,7 +180,7 @@ private:
     static char _colBinaryString[33];
 
 
-    static void localToGlobal(DisplayObject *obj, float *x, float *y)
+    static void localToGlobal(DisplayObject *obj, lmscalar *x, lmscalar *y)
     {
         //find the base of the object to start
         DisplayObject *base = obj;
@@ -193,7 +193,7 @@ private:
     }
 
 
-    static void globalToLocal(DisplayObject *obj, float *x, float *y)
+    static void globalToLocal(DisplayObject *obj, lmscalar *x, lmscalar *y)
     {
         //find the base of the object to start
         DisplayObject *base = obj;
@@ -241,23 +241,23 @@ private:
     }    
 };
 
-float ModestMaps::lastCoordinateX = 0.0f;
-float ModestMaps::lastCoordinateY = 0.0f;
+lmscalar ModestMaps::lastCoordinateX = 0.0f;
+lmscalar ModestMaps::lastCoordinateY = 0.0f;
 int ModestMaps::parentLoadCol = 0;
 int ModestMaps::parentLoadRow = 0;
 int ModestMaps::parentLoadChild = 0;
 int ModestMaps::parentLoadZoom = 0;
-float ModestMaps::gridZoom = 0.0f;
-float ModestMaps::gridTLx = 0.0f;
-float ModestMaps::gridTLy = 0.0f;
-float ModestMaps::gridBRx = 0.0f;
-float ModestMaps::gridBRy = 0.0f;
-float ModestMaps::gridTRx = 0.0f;
-float ModestMaps::gridTRy = 0.0f;
-float ModestMaps::gridBLx = 0.0f;
-float ModestMaps::gridBLy = 0.0f;
-float ModestMaps::gridCx = 0.0f;
-float ModestMaps::gridCy = 0.0f;
+lmscalar ModestMaps::gridZoom = 0.0f;
+lmscalar ModestMaps::gridTLx = 0.0f;
+lmscalar ModestMaps::gridTLy = 0.0f;
+lmscalar ModestMaps::gridBRx = 0.0f;
+lmscalar ModestMaps::gridBRy = 0.0f;
+lmscalar ModestMaps::gridTRx = 0.0f;
+lmscalar ModestMaps::gridTRy = 0.0f;
+lmscalar ModestMaps::gridBLx = 0.0f;
+lmscalar ModestMaps::gridBLy = 0.0f;
+lmscalar ModestMaps::gridCx = 0.0f;
+lmscalar ModestMaps::gridCy = 0.0f;
 char ModestMaps::_rowBinaryString[33];
 char ModestMaps::_colBinaryString[33];
 
