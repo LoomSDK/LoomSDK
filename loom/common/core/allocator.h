@@ -283,19 +283,29 @@ inline void operator delete(void *p, loom_allocator_t *a)
     lmFree(a, p);
 }
 
-
+// Construct the type with preallocated memory (construct with no allocation)
+// Usage: loom_constructInPlace<CustomType>(preallocatedMemoryOfSufficientSize);
+#pragma warning( disable: 4345 )
 template<typename T>
 T* loom_constructInPlace(void* memory)
 {
     return new (memory)T();
 }
 
+// Destruct the type without freeing memory (calls the destructor)
 template<typename T>
 void loom_destructInPlace(T *t)
 {
+    if (t == NULL) return;
     t->~T();
 }
 
+// Constructs a new array of types of length nr using the provided allocator (or NULL for default allocator)
+// Use this or utArray instead of lmNew for constructing arrays
+// The types are constructed in order using loom_constructInPlace
+//
+// Note that this function may allocate slightly more memory than expected
+// as it has to remember the array length
 template<typename T>
 T* loom_newArray(loom_allocator_t *allocator, unsigned int nr)
 {
@@ -309,6 +319,11 @@ T* loom_newArray(loom_allocator_t *allocator, unsigned int nr)
     return (T*) arr;
 }
 
+// Deconstructs an array allocated with loom_newArray and frees the allocated memory
+// The types are destructed in reverse order using loom_destructInPlace
+//
+// This function only works with arrays allocated with loom_newArray
+// as it has to access the array length in order to destruct the types
 template<typename T>
 void loom_deleteArray(loom_allocator_t *allocator, T *arr)
 {

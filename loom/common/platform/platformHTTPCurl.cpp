@@ -335,7 +335,7 @@ void platform_HTTPComplete(int index)
 {
     if(index != -1)
     {
-        lmAssert(index >= 0 && index < MAX_CONCURRENT_HTTP_REQUESTS, "Index out of bounds: " + index);
+        lmAssert(index >= 0 && index < MAX_CONCURRENT_HTTP_REQUESTS, "Index out of bounds: %d", index);
         curl_multi_remove_handle(gMultiHandle, curlHandles[index]);
         curl_easy_cleanup(curlHandles[index]);
         curlHandles[index] = NULL;
