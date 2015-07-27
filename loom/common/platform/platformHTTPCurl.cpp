@@ -71,6 +71,7 @@ typedef struct
     utString          cacheFile;
     void              *body;
     int               bodyLength;
+    size_t            position;
     utString          url;
     utString          method;
 } loom_HTTPUserData;
@@ -108,6 +109,21 @@ static size_t write_data(void *buffer, size_t size, size_t nmemb, void *userp)
     chunk->memory[chunk->size] = 0;
 
     return actualSize;
+}
+
+/**
+* Read data being uploaded with curl
+*/
+static size_t read_data(char* buffer, size_t size, size_t nmemb, void *userp)
+{
+    size_t chunkSize = size*nmemb;
+    loom_HTTPUserData *userData = (loom_HTTPUserData*)userp;
+    size_t left = userData->bodyLength - userData->position;
+    if (left <= 0) return 0;
+    if (chunkSize > left) chunkSize = left;
+    memcpy(buffer, ((char*)userData->body) + userData->position, chunkSize);
+    userData->position += chunkSize;
+    return chunkSize;
 }
 
 // Memory management overrides for CURL.
@@ -310,6 +326,14 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
         curl_easy_setopt(curlHandle, CURLOPT_POST, 1);
         curl_easy_setopt(curlHandle, CURLOPT_POSTFIELDSIZE, userData->bodyLength);
         curl_easy_setopt(curlHandle, CURLOPT_COPYPOSTFIELDS, (const char *)userData->body);
+    }
+    else if (strcmp(method, "PUT") == 0)
+    {
+        userData->position = 0;
+        curl_easy_setopt(curlHandle, CURLOPT_READFUNCTION, read_data);
+        curl_easy_setopt(curlHandle, CURLOPT_READDATA, userData);
+        curl_easy_setopt(curlHandle, CURLOPT_UPLOAD, 1);
+        curl_easy_setopt(curlHandle, CURLOPT_INFILESIZE, userData->bodyLength);
     }
     else // call error
     {
