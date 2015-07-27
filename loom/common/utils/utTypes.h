@@ -30,6 +30,8 @@
 #include "utCommon.h"
 #include <memory.h>
 
+#include "loom/common/core/allocator.h"
+
 #include <stdlib.h> // NOTE: Added for Android compilation
 
 #define _UT_CACHE_LIMIT    999
@@ -400,7 +402,7 @@ public:
         {
             Link *temp = node;
             node = node->next;
-            delete temp;
+            lmDelete(NULL, temp);
         }
         m_first = m_last = 0;
         m_size  = 0;
@@ -408,7 +410,7 @@ public:
 
     UT_INLINE void push_back(const T& v)
     {
-        Link *link = new Link(v);
+        Link *link = lmNew(NULL) Link(v);
 
         link->prev = m_last;
         if (m_last) { m_last->next = link; }
@@ -419,7 +421,7 @@ public:
 
     UT_INLINE void push_front(const T& v)
     {
-        Link *link = new Link(v);
+        Link *link = lmNew(NULL) Link(v);
 
         link->next = m_first;
         if (m_first) { m_first->prev = link; }
@@ -496,7 +498,7 @@ public:
         if (m_first == link) { m_first = link->next; }
 
         m_size -= 1;
-        delete link;
+        lmDelete(NULL, link);
         if (m_size == 0)
         {
             clear();
@@ -644,7 +646,7 @@ public:
         {
             if (m_data)
             {
-                delete []m_data;
+                loom_deleteArray(NULL, m_data);
             }
             m_data     = 0;
             m_capacity = 0;
@@ -793,11 +795,11 @@ public:
     {
         if (m_capacity < nr)
         {
-            T *p = new T[nr];
+            T *p = loom_newArray<T>(NULL, nr);
             if (m_data != 0)
             {
                 copy(p, m_data, m_size);
-                delete []m_data;
+                loom_deleteArray(NULL, m_data);
             }
             m_data     = p;
             m_capacity = nr;
@@ -985,7 +987,7 @@ public:
 	{
 		if (m_stack != 0)
 		{
-			delete []m_stack;
+			loom_deleteArray(NULL, m_stack);
 			m_stack = 0;
 		}
 
@@ -1031,11 +1033,11 @@ public:
 	{
 		if (m_capacity < nr)
 		{
-			T *temp = new T[nr];
+			T *temp = loom_newArray<T>(NULL, nr);
 			if (m_stack)
 			{
 				copy(temp, m_stack, m_size);
-				delete []m_stack;
+				loom_deleteArray(NULL, m_stack);
 			}
 			m_stack = temp;
 			m_capacity = nr;
@@ -1333,9 +1335,9 @@ public:
             m_lastPos = UT_NPOS;
             m_cache   = 0;
 
-            delete [] m_bptr;
-            delete [] m_iptr;
-            delete [] m_nptr;
+            loom_deleteArray(NULL, m_bptr);
+            loom_deleteArray(NULL, m_iptr);
+            loom_deleteArray(NULL, m_nptr);
             m_bptr = 0;
             m_iptr = 0;
             m_nptr = 0;
@@ -1661,7 +1663,7 @@ private:
     void reserveType(ArrayType **old, UTsize nr, bool cpy = false)
     {
         UTsize    i;
-        ArrayType *nar = new ArrayType[nr];
+        ArrayType *nar = loom_newArray<ArrayType>(NULL, nr);
 
         if ((*old) != 0)
         {
@@ -1670,7 +1672,7 @@ private:
                 const ArrayType *oar = (*old);
                 for (i = 0; i < m_size; i++) { nar[i] = oar[i]; }
             }
-            delete [](*old);
+            loom_deleteArray(NULL, *old);
         }
         (*old) = nar;
     }

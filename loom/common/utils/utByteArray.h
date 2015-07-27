@@ -24,6 +24,7 @@
 //#include "core/assert.h"
 #include "utTypes.h"
 #include "utString.h"
+#include "loom/common/core/assert.h"
 
 class utByteArray {
 protected:
@@ -274,6 +275,8 @@ public:
             return "";
         }
 
+        lmAssert(_position + length <= _data.size(), "Insufficient data available for length of %d (use readStringBytes if you don't have a 16-bit integer length header)", length);
+
         char *value = new char[length + 1];
 
         value[length] = 0;
@@ -298,12 +301,15 @@ public:
             return "";
         }
 
+        lmAssert(_position + length <= _data.size(), "Insufficient data available for length of %d (use readUTFBytes if you don't have a 16-bit integer length header)", length);
+
         return readUTFBytes(length);
     }
 
     const char *readUTFBytes(unsigned int length)
     {
         static utString svalue;
+
         char *value = new char[length + 1];
 
         value[length] = 0;

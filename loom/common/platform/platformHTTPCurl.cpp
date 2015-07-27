@@ -30,9 +30,12 @@
 
 #include "curl/curl.h"
 #include "loom/common/core/allocator.h"
+#include "loom/common/core/assert.h"
+#include "loom/common/core/log.h"
 #include "loom/common/platform/platformFile.h"
 #include "loom/common/utils/utBase64.h"
 
+lmDefineLogGroup(gHTTPCurlLogGroup, "HTTPRequest", 1, LoomLogInfo);
 
 static CURLM *gMultiHandle;
 static CURL *curlHandles[MAX_CONCURRENT_HTTP_REQUESTS];
@@ -163,7 +166,8 @@ void platform_HTTPUpdate()
 {
     assert(gHTTPInitialized);
 
-    curl_multi_perform(gMultiHandle, &gHandleCount);
+    CURLMcode ret = curl_multi_perform(gMultiHandle, &gHandleCount);
+
 
     // loop over all of our infos and cleanup handles that are done
     int     messageCount = 0;
@@ -331,6 +335,7 @@ void platform_HTTPComplete(int index)
 {
     if(index != -1)
     {
+        lmAssert(index >= 0 && index < MAX_CONCURRENT_HTTP_REQUESTS, "Index out of bounds: " + index);
         curl_multi_remove_handle(gMultiHandle, curlHandles[index]);
         curl_easy_cleanup(curlHandles[index]);
         curlHandles[index] = NULL;

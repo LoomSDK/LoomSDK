@@ -285,9 +285,43 @@ inline void operator delete(void *p, loom_allocator_t *a)
 
 
 template<typename T>
+T* loom_constructInPlace(void* memory)
+{
+    return new (memory)T();
+}
+
+template<typename T>
 void loom_destructInPlace(T *t)
 {
     t->~T();
 }
+
+template<typename T>
+T* loom_newArray(loom_allocator_t *allocator, unsigned int nr)
+{
+    T* arr = (T*) lmAlloc(allocator, sizeof(unsigned int) + nr * sizeof(T));
+    *((unsigned int*)arr) = nr;
+    arr = (T*)(((unsigned int*)arr) + 1);
+    for (unsigned int i = 0; i < nr; i++)
+    {
+        loom_constructInPlace<T>((void*) &arr[i]);
+    }
+    return (T*) arr;
+}
+
+template<typename T>
+void loom_deleteArray(loom_allocator_t *allocator, T *arr)
+{
+    if (arr == NULL) return;
+    void* fullArray = (void*) (((unsigned int*)arr) - 1);
+    unsigned int nr = *((unsigned int*)fullArray);
+    while (nr > 0)
+    {
+        nr--;
+        loom_destructInPlace<T>(&arr[nr]);
+    }
+    lmFree(allocator, fullArray);
+}
+
 #endif
 #endif

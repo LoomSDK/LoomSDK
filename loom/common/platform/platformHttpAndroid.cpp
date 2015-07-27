@@ -47,9 +47,9 @@ void Java_co_theengine_loomdemo_LoomHTTP_onSuccess(JNIEnv *env, jobject thiz, jb
     // TODO: no copy
     ba->allocateAndCopy(native, size);
 
-    cb((void *)payload, LOOM_HTTP_SUCCESS, ba);
-
     env->ReleaseByteArrayElements(data, native, JNI_ABORT);
+
+    cb((void *)payload, LOOM_HTTP_SUCCESS, ba);
 }
 
 
@@ -65,9 +65,9 @@ void Java_co_theengine_loomdemo_LoomHTTP_onFailure(JNIEnv *env, jobject thiz, jb
     // TODO: no copy
     ba->allocateAndCopy(native, size);
 
-    cb((void *)payload, LOOM_HTTP_ERROR, ba);
-
     env->ReleaseByteArrayElements(data, native, JNI_ABORT);
+
+    cb((void *)payload, LOOM_HTTP_ERROR, ba);
 }
 
 int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback callback, void *payload,

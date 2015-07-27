@@ -303,6 +303,7 @@ public class LoomHTTP
         protected void success(final byte[] response)
         {
             Log.d(TAG, index + " send success");
+            if (response == null) Log.w(TAG, index + " send success response null!");
             final int index = this.index;
             final long callback = this.callback;
             final long payload = this.payload;
@@ -329,6 +330,8 @@ public class LoomHTTP
         
         protected void failure(final byte[] response)
         {
+            if (response == null) Log.w(TAG, index + " send failure response null!");
+            final byte[] binaryData = response == null ? new byte[0] : response;
             Log.d(TAG, index + " send failure");
             final int index = this.index;
             final long callback = this.callback;
@@ -338,7 +341,7 @@ public class LoomHTTP
             {
                 @Override
                 public void run() {
-                    LoomHTTP.onFailure(response, callback, payload);
+                    LoomHTTP.onFailure(binaryData, callback, payload);
                     LoomHTTP.complete(index);
                 }
             });
