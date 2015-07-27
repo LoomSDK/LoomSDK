@@ -52,6 +52,7 @@ public:
     {
         url = urlString;
         followRedirects          = true;
+        id = -1;
 
         // set the Content-Type in the header
         const char *ctKey = contentType;
@@ -65,6 +66,7 @@ public:
 
     ~HTTPRequest()
     {
+        header.clear();
         cancel();
     }
 
@@ -89,6 +91,7 @@ public:
 
     bool send()
     {
+        if (id != -1) cancel();
         LOOM_PROFILE_SCOPE(httpSend);
         id = -1;
         if (url == "")
@@ -119,6 +122,7 @@ public:
 
     void cancel()
     {
+        if (id == -1) return;
         bool cancelled = platform_HTTPCancel(id);
         if (cancelled)
         {
@@ -131,6 +135,7 @@ public:
     //only called internally to notfiy that the HTTPRequest has completed now
     void complete()
     {
+        if (id == -1) return;
         platform_HTTPComplete(id);
         id = -1;        
     }    
@@ -146,6 +151,8 @@ public:
     static void respond(void *payload, loom_HTTPCallbackType type, utByteArray *data)
     {
         HTTPRequest *request = (HTTPRequest *)payload;
+
+        lmAssert(data != NULL, "Response ByteArray should not be null");
 
         switch (type)
         {

@@ -7,7 +7,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -21,7 +21,13 @@
  * KIND, either express or implied.
  *
  ***************************************************************************/
+#include "curl_setup.h"
+
 #ifndef CURL_DISABLE_HTTP
+
+#ifdef USE_NGHTTP2
+#include <nghttp2/nghttp2.h>
+#endif
 
 extern const struct Curl_handler Curl_handler_http;
 
@@ -29,12 +35,17 @@ extern const struct Curl_handler Curl_handler_http;
 extern const struct Curl_handler Curl_handler_https;
 #endif
 
+/* Header specific functions */
 bool Curl_compareheader(const char *headerline,  /* line to check */
                         const char *header,   /* header keyword _with_ colon */
                         const char *content); /* content string to find */
 
-char *Curl_checkheaders(struct SessionHandle *data, const char *thisheader);
+char *Curl_checkheaders(const struct connectdata *conn,
+                        const char *thisheader);
+char *Curl_copy_header_value(const char *header);
 
+char *Curl_checkProxyheaders(const struct connectdata *conn,
+                             const char *thisheader);
 /* ------------------------------------------------------------------------- */
 /*
  * The add_buffer series of functions are used to build one large memory chunk
@@ -49,6 +60,7 @@ struct Curl_send_buffer {
 typedef struct Curl_send_buffer Curl_send_buffer;
 
 Curl_send_buffer *Curl_add_buffer_init(void);
+void Curl_add_buffer_free(Curl_send_buffer *buff);
 CURLcode Curl_add_bufferf(Curl_send_buffer *in, const char *fmt, ...);
 CURLcode Curl_add_buffer(Curl_send_buffer *in, const void *inptr, size_t size);
 CURLcode Curl_add_buffer_send(Curl_send_buffer *in,
@@ -60,12 +72,14 @@ CURLcode Curl_add_buffer_send(Curl_send_buffer *in,
 CURLcode Curl_add_timecondition(struct SessionHandle *data,
                                 Curl_send_buffer *buf);
 CURLcode Curl_add_custom_headers(struct connectdata *conn,
-                                   Curl_send_buffer *req_buffer);
+                                 bool is_connect,
+                                 Curl_send_buffer *req_buffer);
 
 /* protocol-specific functions set up to be called by the main engine */
 CURLcode Curl_http(struct connectdata *conn, bool *done);
 CURLcode Curl_http_done(struct connectdata *, CURLcode, bool premature);
 CURLcode Curl_http_connect(struct connectdata *conn, bool *done);
+CURLcode Curl_http_setup_conn(struct connectdata *conn);
 
 /* The following functions are defined in http_chunks.c */
 void Curl_httpchunk_init(struct connectdata *conn);
@@ -74,8 +88,8 @@ CHUNKcode Curl_httpchunk_read(struct connectdata *conn, char *datap,
 
 /* These functions are in http.c */
 void Curl_http_auth_stage(struct SessionHandle *data, int stage);
-CURLcode Curl_http_input_auth(struct connectdata *conn,
-                              int httpcode, const char *header);
+CURLcode Curl_http_input_auth(struct connectdata *conn, bool proxy,
+                              const char *auth);
 CURLcode Curl_http_auth_act(struct connectdata *conn);
 CURLcode Curl_http_perhapsrewind(struct connectdata *conn);
 
@@ -139,6 +153,69 @@ struct HTTP {
 
   void *send_buffer; /* used if the request couldn't be sent in one chunk,
                         points to an allocated send_buffer struct */
+
+#ifdef USE_NGHTTP2
+  /*********** for HTTP/2 we store stream-local data here *************/
+  int32_t stream_id; /* stream we are interested in */
+
+  bool bodystarted;
+  /* We store non-final and final response headers here, per-stream */
+  Curl_send_buffer *header_recvbuf;
+  size_t nread_header_recvbuf; /* number of bytes in header_recvbuf fed into
+                                  upper layer */
+  int status_code; /* HTTP status code */
+  const uint8_t *pausedata; /* pointer to data received in on_data_chunk */
+  size_t pauselen; /* the number of bytes left in data */
+  bool closed; /* TRUE on HTTP2 stream close */
+  uint32_t error_code; /* HTTP/2 error code */
+
+  char *mem;     /* points to a buffer in memory to store received data */
+  size_t len;    /* size of the buffer 'mem' points to */
+  size_t memlen; /* size of data copied to mem */
+
+  const uint8_t *upload_mem; /* points to a buffer to read from */
+  size_t upload_len; /* size of the buffer 'upload_mem' points to */
+  curl_off_t upload_left; /* number of bytes left to upload */
+#endif
+};
+
+typedef int (*sending)(void); /* Curl_send */
+typedef int (*recving)(void); /* Curl_recv */
+
+#ifdef USE_NGHTTP2
+/* h2 settings for this connection */
+struct h2settings {
+  uint32_t max_concurrent_streams;
+  bool enable_push;
+};
+#endif
+
+
+struct http_conn {
+#ifdef USE_NGHTTP2
+#define H2_BINSETTINGS_LEN 80
+  nghttp2_session *h2;
+  uint8_t binsettings[H2_BINSETTINGS_LEN];
+  size_t  binlen; /* length of the binsettings data */
+  sending send_underlying; /* underlying send Curl_send callback */
+  recving recv_underlying; /* underlying recv Curl_recv callback */
+  char *inbuf; /* buffer to receive data from underlying socket */
+  size_t inbuflen; /* number of bytes filled in inbuf */
+  size_t nread_inbuf; /* number of bytes read from in inbuf */
+  /* We need separate buffer for transmission and reception because we
+     may call nghttp2_session_send() after the
+     nghttp2_session_mem_recv() but mem buffer is still not full. In
+     this case, we wrongly sends the content of mem buffer if we share
+     them for both cases. */
+  int32_t pause_stream_id; /* stream ID which paused
+                              nghttp2_session_mem_recv */
+
+  /* this is a hash of all individual streams (SessionHandle structs) */
+  struct curl_hash streamsh;
+  struct h2settings settings;
+#else
+  int unused; /* prevent a compiler warning */
+#endif
 };
 
 CURLcode Curl_http_readwrite_headers(struct SessionHandle *data,

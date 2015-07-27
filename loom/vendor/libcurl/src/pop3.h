@@ -7,7 +7,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 2009 - 2013, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 2009 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -23,6 +23,7 @@
  ***************************************************************************/
 
 #include "pingpong.h"
+#include "curl_sasl.h"
 
 /****************************************************************************
  * POP3 unique setup
@@ -35,15 +36,7 @@ typedef enum {
   POP3_STARTTLS,
   POP3_UPGRADETLS,   /* asynchronously upgrade the connection to SSL/TLS
                        (multi mode only) */
-  POP3_AUTH_PLAIN,
-  POP3_AUTH_LOGIN,
-  POP3_AUTH_LOGIN_PASSWD,
-  POP3_AUTH_CRAMMD5,
-  POP3_AUTH_DIGESTMD5,
-  POP3_AUTH_DIGESTMD5_RESP,
-  POP3_AUTH_NTLM,
-  POP3_AUTH_NTLM_TYPE2MSG,
-  POP3_AUTH_FINAL,
+  POP3_AUTH,
   POP3_APOP,
   POP3_USER,
   POP3_PASS,
@@ -72,9 +65,9 @@ struct pop3_conn {
                              have been received so far */
   size_t strip;           /* Number of bytes from the start to ignore as
                              non-body */
-  unsigned int authtypes; /* Supported authentication types */
-  unsigned int authmechs; /* Accepted SASL authentication mechanisms */
-  unsigned int authused;  /* SASL auth mechanism used for the connection */
+  struct SASL sasl;       /* SASL-related storage */
+  unsigned int authtypes; /* Accepted authentication types */
+  unsigned int preftype;  /* Preferred authentication type */
   char *apoptimestamp;    /* APOP timestamp from the server greeting */
   bool tls_supported;     /* StartTLS capability supported by server */
 };
@@ -83,9 +76,13 @@ extern const struct Curl_handler Curl_handler_pop3;
 extern const struct Curl_handler Curl_handler_pop3s;
 
 /* Authentication type flags */
-#define POP3_TYPE_CLEARTEXT 0x0001
-#define POP3_TYPE_APOP      0x0002
-#define POP3_TYPE_SASL      0x0004
+#define POP3_TYPE_CLEARTEXT (1 << 0)
+#define POP3_TYPE_APOP      (1 << 1)
+#define POP3_TYPE_SASL      (1 << 2)
+
+/* Authentication type values */
+#define POP3_TYPE_NONE      0
+#define POP3_TYPE_ANY       ~0U
 
 /* This is the 5-bytes End-Of-Body marker for POP3 */
 #define POP3_EOB "\x0d\x0a\x2e\x0d\x0a"

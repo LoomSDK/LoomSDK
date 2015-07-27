@@ -47,9 +47,9 @@ void Java_co_theengine_loomdemo_LoomHTTP_onSuccess(JNIEnv *env, jobject thiz, jb
     // TODO: no copy
     ba->allocateAndCopy(native, size);
 
-    cb((void *)payload, LOOM_HTTP_SUCCESS, ba);
-
     env->ReleaseByteArrayElements(data, native, JNI_ABORT);
+
+    cb((void *)payload, LOOM_HTTP_SUCCESS, ba);
 }
 
 
@@ -65,9 +65,9 @@ void Java_co_theengine_loomdemo_LoomHTTP_onFailure(JNIEnv *env, jobject thiz, jb
     // TODO: no copy
     ba->allocateAndCopy(native, size);
 
-    cb((void *)payload, LOOM_HTTP_ERROR, ba);
-
     env->ReleaseByteArrayElements(data, native, JNI_ABORT);
+
+    cb((void *)payload, LOOM_HTTP_ERROR, ba);
 }
 
 int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback callback, void *payload,
@@ -101,6 +101,7 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
 
         headersIterator.next();
     }
+    env->DeleteLocalRef(jniAddHeader.classID);
     LOOM_PROFILE_END(httpSendHeader);
 
     LOOM_PROFILE_START(httpSendNative);
@@ -140,6 +141,7 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
     env->DeleteLocalRef(reqMethod);
     env->DeleteLocalRef(reqBody);
     env->DeleteLocalRef(reqResponseCacheFile);
+    env->DeleteLocalRef(jniSend.classID);
     LOOM_PROFILE_END(httpSendNative);
     return index;
 }
@@ -154,6 +156,7 @@ bool platform_HTTPIsConnected()
         "()Z");
 
     jboolean result = jniIsConnected.getEnv()->CallStaticBooleanMethod(jniIsConnected.classID, jniIsConnected.methodID);
+    jniIsConnected.getEnv()->DeleteLocalRef(jniIsConnected.classID);
     return (bool)result;
 }
 
@@ -183,6 +186,7 @@ bool platform_HTTPCancel(int index)
         "(I)Z");
 
     jboolean ret = jniCancel.getEnv()->CallStaticBooleanMethod(jniCancel.classID, jniCancel.methodID, (jint)index);
+    jniCancel.getEnv()->DeleteLocalRef(jniCancel.classID);
     return ret;
 }
 
@@ -195,6 +199,7 @@ void platform_HTTPComplete(int index)
         "(I)V");
 
     jniComplete.getEnv()->CallStaticVoidMethod(jniComplete.classID, jniComplete.methodID, (jint)index);
+    jniComplete.getEnv()->DeleteLocalRef(jniComplete.classID);
 }
 
 }

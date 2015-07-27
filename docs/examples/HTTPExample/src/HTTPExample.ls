@@ -13,9 +13,10 @@ package
      */
     public class HTTPExample extends Application
     {
-
         var request:HTTPRequest;
 
+        var soakTester = new SoakTester();
+        
         override public function run():void
         {
             // setup the GUI
@@ -66,8 +67,17 @@ package
 
             // send request
             trace("Sending request...");
-            request.send();            
+            request.send();
+            
+            // Run a soak (stress) test, see the SoakTester class for details and configuration
+            //soakTester.run();
 
         }
+        
+        override public function onTick() {
+            soakTester.onTick();
+            return super.onTick();
+        }
+        
     }
 }

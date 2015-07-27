@@ -99,8 +99,7 @@ static jclass getClassID_(const char *className, JNIEnv *env)
             }
         }
 
-        jclass classRef = pEnv->FindClass(className);
-        ret = (jclass)env->NewGlobalRef(classRef);
+        ret = pEnv->FindClass(className);
         if (!ret)
         {
             lmLog(jniLogGroup, "Failed to find class of %s", className);

@@ -231,7 +231,7 @@ protected:
     mutable UThash m_hash;
 
 public:
-    utHashedString() : m_key(""), m_hash(UT_NPOS) {}
+    utHashedString() : m_key(), m_hash(UT_NPOS) {}
     ~utHashedString() {}
 
     utHashedString(char *k) : m_key(k), m_hash(UT_NPOS) { hash(); }

@@ -50,7 +50,6 @@ protected:
     static bool       reloadQueued;
     static utString   bootAssembly;
     static bool       suppressAssetTriggeredReload;
-    static bool       callbacksInitialized;
 
 
     static void __handleMainAssemblyUpdate(void *payload, const char *asset);
@@ -108,7 +107,6 @@ public:
     static int initializeTypes();
     static int registerScriptTypes();
     static int initializeCoreServices();
-    static void initializeCallbacks();
     static int initialize();
     static void shutdown();
     static void execMainAssembly();

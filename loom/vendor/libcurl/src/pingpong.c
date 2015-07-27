@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2013, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -33,9 +33,8 @@
 #include "pingpong.h"
 #include "multiif.h"
 #include "non-ascii.h"
-
-#define _MPRINTF_REPLACE /* use our functions only */
-#include <curl/mprintf.h>
+#include "vtls/vtls.h"
+#include "curl_printf.h"
 
 #include "curl_memory.h"
 /* The last #include file should be: */
@@ -105,6 +104,9 @@ CURLcode Curl_pp_statemach(struct pingpong *pp, bool block)
   if(Curl_pp_moredata(pp))
     /* We are receiving and there is data in the cache so just read it */
     rc = 1;
+  else if(!pp->sendleft && Curl_ssl_data_pending(conn, FIRSTSOCKET))
+    /* We are receiving and there is data ready in the SSL library */
+    rc = 1;
   else
     rc = Curl_socket_ready(pp->sendleft?CURL_SOCKET_BAD:sock, /* reading */
                            pp->sendleft?sock:CURL_SOCKET_BAD, /* writing */
@@ -161,11 +163,11 @@ CURLcode Curl_pp_vsendf(struct pingpong *pp,
   size_t write_len;
   char *fmt_crlf;
   char *s;
-  CURLcode error;
+  CURLcode result;
   struct connectdata *conn = pp->conn;
   struct SessionHandle *data = conn->data;
 
-#if defined(HAVE_KRB4) || defined(HAVE_GSSAPI)
+#ifdef HAVE_GSSAPI
   enum protection_level data_sec = conn->data_prot;
 #endif
 
@@ -187,26 +189,26 @@ CURLcode Curl_pp_vsendf(struct pingpong *pp,
 
   Curl_pp_init(pp);
 
-  error = Curl_convert_to_network(data, s, write_len);
+  result = Curl_convert_to_network(data, s, write_len);
   /* Curl_convert_to_network calls failf if unsuccessful */
-  if(error) {
+  if(result) {
     free(s);
-    return error;
+    return result;
   }
 
-#if defined(HAVE_KRB4) || defined(HAVE_GSSAPI)
+#ifdef HAVE_GSSAPI
   conn->data_prot = PROT_CMD;
 #endif
-  error = Curl_write(conn, conn->sock[FIRSTSOCKET], s, write_len,
+  result = Curl_write(conn, conn->sock[FIRSTSOCKET], s, write_len,
                      &bytes_written);
-#if defined(HAVE_KRB4) || defined(HAVE_GSSAPI)
+#ifdef HAVE_GSSAPI
   DEBUGASSERT(data_sec > PROT_NONE && data_sec < PROT_LAST);
   conn->data_prot = data_sec;
 #endif
 
-  if(error) {
+  if(result) {
     free(s);
-    return error;
+    return result;
   }
 
   if(conn->data->set.verbose)
@@ -243,15 +245,15 @@ CURLcode Curl_pp_vsendf(struct pingpong *pp,
 CURLcode Curl_pp_sendf(struct pingpong *pp,
                        const char *fmt, ...)
 {
-  CURLcode res;
+  CURLcode result;
   va_list ap;
   va_start(ap, fmt);
 
-  res = Curl_pp_vsendf(pp, fmt, ap);
+  result = Curl_pp_vsendf(pp, fmt, ap);
 
   va_end(ap);
 
-  return res;
+  return result;
 }
 
 /*
@@ -281,8 +283,6 @@ CURLcode Curl_pp_readresp(curl_socket_t sockfd,
   /* number of bytes in the current line, so far */
   perline = (ssize_t)(ptr-pp->linestart_resp);
 
-  keepon=TRUE;
-
   while((pp->nread_resp<BUFSIZE) && (keepon && !result)) {
 
     if(pp->cache) {
@@ -301,30 +301,28 @@ CURLcode Curl_pp_readresp(curl_socket_t sockfd,
       pp->cache_size = 0; /* zero the size just in case */
     }
     else {
-      int res;
-#if defined(HAVE_KRB4) || defined(HAVE_GSSAPI)
+#ifdef HAVE_GSSAPI
       enum protection_level prot = conn->data_prot;
       conn->data_prot = PROT_CLEAR;
 #endif
       DEBUGASSERT((ptr+BUFSIZE-pp->nread_resp) <= (buf+BUFSIZE+1));
-      res = Curl_read(conn, sockfd, ptr, BUFSIZE-pp->nread_resp,
-                      &gotbytes);
-#if defined(HAVE_KRB4) || defined(HAVE_GSSAPI)
+      result = Curl_read(conn, sockfd, ptr, BUFSIZE-pp->nread_resp,
+                         &gotbytes);
+#ifdef HAVE_GSSAPI
       DEBUGASSERT(prot  > PROT_NONE && prot < PROT_LAST);
       conn->data_prot = prot;
 #endif
-      if(res == CURLE_AGAIN)
+      if(result == CURLE_AGAIN)
         return CURLE_OK; /* return */
 
-      if((res == CURLE_OK) && (gotbytes > 0))
+      if(!result && (gotbytes > 0))
         /* convert from the network encoding */
-        res = Curl_convert_from_network(data, ptr, gotbytes);
+        result = Curl_convert_from_network(data, ptr, gotbytes);
       /* Curl_convert_from_network calls failf if unsuccessful */
 
-      if(CURLE_OK != res) {
-        result = (CURLcode)res; /* Set outer result variable to this error. */
+      if(result)
+        /* Set outer result variable to this error. */
         keepon = FALSE;
-      }
     }
 
     if(!keepon)
@@ -352,7 +350,7 @@ CURLcode Curl_pp_readresp(curl_socket_t sockfd,
              the line isn't really terminated until the LF comes */
 
           /* output debug output if that is requested */
-#if defined(HAVE_KRB4) || defined(HAVE_GSSAPI)
+#ifdef HAVE_GSSAPI
           if(!conn->sec_complete)
 #endif
             if(data->set.verbose)
@@ -371,13 +369,10 @@ CURLcode Curl_pp_readresp(curl_socket_t sockfd,
 
           if(pp->endofresp(conn, pp->linestart_resp, perline, code)) {
             /* This is the end of the last line, copy the last line to the
-               start of the buffer and zero terminate, for old times sake (and
-               krb4)! */
-            char *meow;
-            int n;
-            for(meow=pp->linestart_resp, n=0; meow<ptr; meow++, n++)
-              buf[n] = *meow;
-            *meow=0; /* zero terminate */
+               start of the buffer and zero terminate, for old times sake */
+            size_t n = ptr - pp->linestart_resp;
+            memmove(buf, pp->linestart_resp, n);
+            buf[n]=0; /* zero terminate */
             keepon=FALSE;
             pp->linestart_resp = ptr+1; /* advance pointer */
             i++; /* skip this before getting out */
@@ -477,11 +472,9 @@ CURLcode Curl_pp_flushsend(struct pingpong *pp)
   /* we have a piece of a command still left to send */
   struct connectdata *conn = pp->conn;
   ssize_t written;
-  CURLcode result = CURLE_OK;
   curl_socket_t sock = conn->sock[FIRSTSOCKET];
-
-  result = Curl_write(conn, sock, pp->sendthis + pp->sendsize -
-                      pp->sendleft, pp->sendleft, &written);
+  CURLcode result = Curl_write(conn, sock, pp->sendthis + pp->sendsize -
+                               pp->sendleft, pp->sendleft, &written);
   if(result)
     return result;
 
@@ -500,10 +493,8 @@ CURLcode Curl_pp_flushsend(struct pingpong *pp)
 
 CURLcode Curl_pp_disconnect(struct pingpong *pp)
 {
-  if(pp->cache) {
-    free(pp->cache);
-    pp->cache = NULL;
-  }
+  free(pp->cache);
+  pp->cache = NULL;
   return CURLE_OK;
 }
 
