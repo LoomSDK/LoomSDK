@@ -124,10 +124,10 @@ package loom.modestmaps.core
         // keys we've recently seen
         
         protected var headActive:Tile;
-        protected var countActive = 0;
+        protected var countActive:int;
         protected var headInactive:Tile;
         
-        protected var quadRoot:QuadNode = new QuadNode(null, -1, 0, 0, 0);
+        protected var quadRoot:QuadNode;
         
         // currently visible tiles
                 
@@ -374,6 +374,10 @@ package loom.modestmaps.core
             //var t:Number = getTimer();
             
             //trace(well.numChildren);
+            
+            if (isNaN(mapWidth) || isNaN(mapHeight) || isNaN(worldMatrix.tx)) return;
+            
+            Debug.assert(!isNaN(mapWidth) && !isNaN(mapHeight));
             
             if (!dirty || !stage) {
                 //trace(getTimer() - t, "ms in", provider);     
@@ -898,6 +902,8 @@ package loom.modestmaps.core
                 var inBounds:Boolean = false;
                 var repopCol:int;
                 var repopRow:int;
+                Debug.assert(repopIndex >= 0 && !isNaN(repopWidth) && !isNaN(repopHeight), "index "+repopIndex+" w "+repopWidth+" h "+repopHeight);
+                var watchdog = 10000;
                 while (!inBounds) {
                     var inSpiralBounds = getSpiralCoordinate(repopIndex, repopWidth, repopHeight, sHelperPoint);
                     repopCol = repopMinCol+Math.floor(repopWidth/2)+sHelperPoint.x;
@@ -907,6 +913,7 @@ package loom.modestmaps.core
                     if (!inSpiralBounds) {
                         repopIndex = 0;
                     }
+                    Debug.assert(watchdog-- > 0, "Spiral search failure " + repopIndex + " " + repopWidth + " " + repopHeight + " " + repopCol + " " + repopRow);
                 }
                 var tile:Tile = rvtProcessTile(repopCol, repopRow, currentTileZoom);
                 
@@ -1848,8 +1855,8 @@ package loom.modestmaps.core
                 var dy:Number = p.y - mapHeight;
                 
                 // maintain the center point:
-                tx += dx/2;
-                ty += dy/2;
+                if (!isNaN(dx)) tx += dx/2;
+                if (!isNaN(dy)) ty += dy/2;
                 
                 mapWidth = p.x;
                 mapHeight = p.y;
@@ -1869,6 +1876,7 @@ package loom.modestmaps.core
         
         public function setMapProvider(provider:IMapProvider):void
         {
+            if (tilePainter) tilePainter.reset();
             if (provider is ITilePainterOverride) {
                 this.tilePainter = ITilePainterOverride(provider).getTilePainter();
             }
@@ -1890,15 +1898,44 @@ package loom.modestmaps.core
         
         protected function clearEverything(event:Event=null):void
         {
-            while (well.numChildren > 0) {
-                wellRemove(well.getChildAtUnsafe(well.numChildren-1) as Tile);
+            processing = false;
+            
+            mapWidth = NaN;
+            mapHeight = NaN;
+            
+            repopCount = -1;
+            repopCounter = 0;
+            repopIndex = -1;
+            repopMinCol = -1;
+            repopMaxCol = -1;
+            repopMinRow = -1;
+            repopMaxRow = -1;
+            
+            var tile:Tile;
+            var next:Tile;
+            tile = headActive;
+            while (tile) {
+                next = tile.nextActive;
+                tileRemove(tile);
+                tile = next;
             }
-
-            tilePainter.reset();
+            tile = headInactive;
+            while (tile) {
+                next = tile.nextInactive;
+                tileRemove(tile);
+                tile = next;
+            }
             
             headActive = null;
+            headInactive = null;
+            countActive = 0;
+            
+            tilePainter.reset();
+            
+            quadRoot = new QuadNode(null, -1, 0, 0, 0);
             
             dirty = true;
+            
         }
 
         private var _tileScales:Vector.<Number> = [];

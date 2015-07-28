@@ -371,8 +371,8 @@ package loom.modestmaps
         {
             if (w != baseMapWidth || h != baseMapHeight)
             {
-                if (w != NaN) baseMapWidth = w;
-                if (h != NaN) baseMapHeight = h;
+                if (!isNaN(w)) baseMapWidth = w;
+                if (!isNaN(h)) baseMapHeight = h;
                 
                 // The global (down)scale based on the density
                 var densityScale = mapProvider.supportsHighDPI ? 1 : Platform.getDPI()/200;
