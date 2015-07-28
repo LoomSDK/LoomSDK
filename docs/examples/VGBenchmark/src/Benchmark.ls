@@ -25,7 +25,9 @@ package
         SVG,
     }
 
-    // A separate class to hold const data
+    /*
+     * A separate class to hold const data
+     */
     private class Data
     {
         public static var strings:Vector.<String> = new Vector.<String>
@@ -44,6 +46,12 @@ package
         ];
     }
 
+    /*
+     * This is a benchmark app that tries to push the limits of vector graphics rendering.
+     * It should expose any bottlenecks in the rendering pipeline.
+     *
+     * For input control see onTouch method.
+     */
     public class Benchmark extends Application
     {
         private var time:TimeManager;
