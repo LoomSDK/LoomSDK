@@ -102,7 +102,6 @@ package
             //always zoom at the center of the screen
             var zoomPoint:Point = new Point(_map.getWidth() / 2, _map.getHeight() / 2);
             
-            if (keycode == LoomKey.SPACE) Graphics.screenshot("test.png");
             if (keycode == LoomKey.C) trace(_map.getCenter());
             
             if (keycode == LoomKey.S) landmarkViewer.runVolcanoShowcase();
