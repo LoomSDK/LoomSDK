@@ -95,7 +95,7 @@ public:
 
 	float thickness;
 	unsigned int color;
-	float alpha;
+	lmscalar alpha;
 	GFX::VectorLineScaleMode::Enum scaleMode;
 	GFX::VectorLineCaps::Enum caps;
 	GFX::VectorLineJoints::Enum joints;
@@ -115,7 +115,7 @@ class VectorFill : public VectorData {
 public:
 	bool active;
 	unsigned int color;
-	float alpha;
+	lmscalar alpha;
 
 	VectorFill() {
 		reset();
@@ -190,6 +190,7 @@ public:
 	lmscalar boundT;
 	lmscalar boundR;
 	lmscalar boundB;
+	lmscalar alpha;
 	lmscalar scale;
 	int clipX, clipY, clipWidth, clipHeight;
 
