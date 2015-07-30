@@ -233,7 +233,7 @@ void VectorRenderer::fillColor32(unsigned int argb, float a) {
 	fillColor(argb, a*ca);
 }
 
-void VectorRenderer::textFormat(VectorTextFormat* format) {
+void VectorRenderer::textFormat(VectorTextFormat* format, lmscalar a) {
 	if (strlen(format->font) > 0) {
 		nvgFontFace(nvg, format->font);
 	}
@@ -242,7 +242,7 @@ void VectorRenderer::textFormat(VectorTextFormat* format) {
 		float cr = ((rgb >> 16) & 0xff) / 255.0f;
 		float cg = ((rgb >> 8) & 0xff) / 255.0f;
 		float cb = ((rgb >> 0) & 0xff) / 255.0f;
-		nvgFillColor(nvg, nvgRGBAf(cr, cg, cb, 1.0));
+		nvgFillColor(nvg, nvgRGBAf(cr, cg, cb, (float) a));
 	}
 	if (!isnan(format->size)) nvgFontSize(nvg, format->size);
 	if (format->align != -1) nvgTextAlign(nvg, format->align);
@@ -310,7 +310,7 @@ Loom2D::Rectangle VectorRenderer::textLineBounds(VectorTextFormat* format, float
     float bounds[4];
     nvgSave(nvg);
     nvgReset(nvg);
-    textFormat(format);
+    textFormat(format, 1);
     nvgTextBounds(nvg, x, y, string->c_str(), NULL, bounds);
     nvgRestore(nvg);
     float xmin = bounds[0];
@@ -323,7 +323,7 @@ Loom2D::Rectangle VectorRenderer::textLineBounds(VectorTextFormat* format, float
 float VectorRenderer::textLineAdvance(VectorTextFormat* format, float x, float y, utString* string) {
     nvgSave(nvg);
     nvgReset(nvg);
-    textFormat(format);
+    textFormat(format, 1);
     float advance = nvgTextBounds(nvg, x, y, string->c_str(), NULL, NULL);
     nvgRestore(nvg);
     return advance;
@@ -333,7 +333,7 @@ Loom2D::Rectangle VectorRenderer::textBoxBounds(VectorTextFormat* format, float 
     float bounds[4];
     nvgSave(nvg);
     nvgReset(nvg);
-    textFormat(format);
+    textFormat(format, 1);
     nvgTextBoxBounds(nvg, x, y, width, string->c_str(), NULL, bounds);
     nvgRestore(nvg);
     float xmin = bounds[0];

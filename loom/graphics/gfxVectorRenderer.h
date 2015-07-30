@@ -196,7 +196,7 @@ public:
 	static void fillColor(unsigned int rgb, float a);
 	static void fillColor32(unsigned int argb, float a);
 
-	static void textFormat(VectorTextFormat* format);
+	static void textFormat(VectorTextFormat* format, lmscalar a);
 
 	static void moveTo(float x, float y);
 	static void lineTo(float x, float y);

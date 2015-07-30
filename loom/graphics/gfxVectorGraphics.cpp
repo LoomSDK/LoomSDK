@@ -294,6 +294,7 @@ void VectorGraphics::render(Loom2D::RenderState* renderStatePointer, Loom2D::Mat
     VectorRenderer::beginFrame();
     VectorRenderer::preDraw(transform->a, transform->b, transform->c, transform->d, transform->tx, transform->ty);
 
+    alpha = renderState.alpha;
     scale = sqrt(transform->a*transform->a + transform->b*transform->b + transform->c*transform->c + transform->d*transform->d);
 
     if (clipWidth != -1 && clipHeight != -1)
@@ -403,13 +404,14 @@ void VectorShape::render(VectorGraphics* g) {
 void VectorLineStyle::render(VectorGraphics* g) {
 	g->flushPath();
 	copyTo(&g->currentLineStyle);
+    g->currentLineStyle.alpha *= g->alpha;
 }
 
 void VectorFill::render(VectorGraphics* g) {
 	g->flushPath();
 	g->currentFill.active = active;
 	g->currentFill.color = color;
-	g->currentFill.alpha = alpha;
+	g->currentFill.alpha = alpha * g->alpha;
 }
 
 void VectorText::render(VectorGraphics* g) {
@@ -421,7 +423,7 @@ void VectorText::render(VectorGraphics* g) {
 }
 
 void VectorTextFormatData::render(VectorGraphics* g) {
-	VectorRenderer::textFormat(format);
+	VectorRenderer::textFormat(format, g->alpha);
 }
 VectorTextFormatData::~VectorTextFormatData() {
 	lmDelete(NULL, this->format);
@@ -500,7 +502,7 @@ void VectorGraphics::flushPath() {
 			case VectorLineScaleMode::NONE: thicknessScale = 1/scale; break;
 		}
 		VectorRenderer::strokeWidth((float) (currentLineStyle.thickness*thicknessScale));
-		VectorRenderer::strokeColor(currentLineStyle.color, currentLineStyle.alpha);
+		VectorRenderer::strokeColor(currentLineStyle.color, (float) currentLineStyle.alpha);
 		VectorRenderer::lineCaps(currentLineStyle.caps);
 		VectorRenderer::lineJoints(currentLineStyle.joints);
 		VectorRenderer::lineMiterLimit(currentLineStyle.miterLimit);
@@ -508,7 +510,7 @@ void VectorGraphics::flushPath() {
 	}
 	bool fill = currentFill.active;
 	if (fill && pathDirty) {
-		VectorRenderer::fillColor(currentFill.color, currentFill.alpha);
+		VectorRenderer::fillColor(currentFill.color, (float) currentFill.alpha);
 		VectorRenderer::renderFill();
 		currentFill.active = false;
 	}
