@@ -80,6 +80,7 @@ utHashTable<utHashedString, utString> VectorTextFormat::loadedFonts;
 int VectorRenderer::frameWidth = 0;
 int VectorRenderer::frameHeight = 0;
 uint8_t VectorRenderer::quality = VectorRenderer::QUALITY_ANTIALIAS | VectorRenderer::QUALITY_STENCIL_STROKES;
+uint8_t VectorRenderer::tessellationQuality = 6;
 
 //*
 void drawLabel(struct NVGcontext* vg, const char* text, float x, float y, float w, float h)
@@ -104,6 +105,7 @@ void VectorRenderer::beginFrame()
 {
     LOOM_PROFILE_SCOPE(vectorBegin);
 
+    nvgTessLevelMax(nvg, tessellationQuality);
     nvgBeginFrame(nvg, frameWidth, frameHeight, 1);
 
 

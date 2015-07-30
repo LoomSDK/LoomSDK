@@ -292,6 +292,14 @@ package loom2d.display
         public native function get vectorQuality():int;
         public native function set vectorQuality(flags:int):void;
         
+        /**
+         * The maximum recursion level of tessellation. Bigger values result in greater quality.
+         * Valid values are from 1 to 10 while 6 is the default. Values lower than 6 area
+         * known to cause visual errors in the rendering.
+         */
+        public native function set tessellationQuality(value:int);
+        public native function get tessellationQuality():int;
+
         /** Height of the native display in pixels. */
         public native function get nativeStageHeight():int;
 
