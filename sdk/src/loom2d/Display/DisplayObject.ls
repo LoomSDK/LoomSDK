@@ -462,7 +462,18 @@ package loom2d.display
 
         public function set styleName(value:String):void
         {
-            _styleName = value;
+            var names:Vector.<String> = value.split(" ");
+            _styleName = "";
+            for (var i = 0; i < names.length; i++)
+            {
+                var name = names[i];
+                if (name && name.length > 0)
+                {
+                    if (_styleName.length > 0)
+                        _styleName += " ";
+                    _styleName += "#" + name;
+                }
+            }
             if(_styleSheet)
                 applyStyle(_styleSheet);
         }
@@ -478,7 +489,7 @@ package loom2d.display
             var styleString = this.getType().getFullName();
 
             if(_styleName)
-                styleString += " #" + _styleName;
+                styleString += " " + _styleName;
 
             if(name)
                 styleString += " ." + name;
