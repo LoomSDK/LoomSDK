@@ -160,7 +160,7 @@ public:
     static const uint8_t QUALITY_ANTIALIAS       = 1 << 0;
     static const uint8_t QUALITY_STENCIL_STROKES = 1 << 1;
     static uint8_t quality;
-	static uint8_t tessellationQuality;
+    static uint8_t tessellationQuality;
 
     static void reset();
 

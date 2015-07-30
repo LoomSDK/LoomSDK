@@ -105,7 +105,7 @@ void VectorRenderer::beginFrame()
 {
     LOOM_PROFILE_SCOPE(vectorBegin);
 
-	nvgTessLevelMax(nvg, tessellationQuality);
+    nvgTessLevelMax(nvg, tessellationQuality);
     nvgBeginFrame(nvg, frameWidth, frameHeight, 1);
 
 
