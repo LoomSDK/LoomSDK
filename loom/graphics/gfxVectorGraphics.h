@@ -190,7 +190,7 @@ public:
 	lmscalar boundT;
 	lmscalar boundR;
 	lmscalar boundB;
-    lmscalar alpha;
+	lmscalar alpha;
 	lmscalar scale;
 	int clipX, clipY, clipWidth, clipHeight;
 
