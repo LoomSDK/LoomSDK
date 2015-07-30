@@ -9,6 +9,8 @@ package
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
     import loom2d.events.TouchPhase;
+    import loom2d.events.KeyboardEvent;
+    import loom.platform.LoomKey;
     import loom2d.Loom2D;
     import loom2d.math.Rectangle;
     import loom.gameframework.TimeManager;
@@ -182,6 +184,7 @@ package
             overlay.graphics.textFormat(overlayFormat);
 
             stage.addEventListener(TouchEvent.TOUCH, onTouch);
+            stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
 
             qualityStr = getQualityStr();
         }
@@ -198,7 +201,7 @@ package
             if (t.globalY < stage.stageHeight / 3)
             {
                 // Add new n shapes
-                 for (var i = 0; i < SHAPE_INTERVAL; i++)
+                for (var i = 0; i < SHAPE_INTERVAL; i++)
                     stage.addChildAt(generateShape(), stage.numChildren - 1);
             }
             else if (t.globalY > stage.stageHeight / 3 * 2)
@@ -206,11 +209,11 @@ package
                 // Remove first n shapes
                 for (var j = 0; j < SHAPE_INTERVAL; j++)
                     if (stage.numChildren > 1)
-                        stage.removeChildAt(0);
+                        stage.removeChildAt(stage.numChildren - 2);
                     else
                         break;
             }
-            else
+            else if (t.globalY > stage.stageHeight / 3 && t.globalY < stage.stageHeight / 3 * 2)
             {
                 // Change the rendering quality
                 switch (stage.vectorQuality) {
@@ -231,6 +234,21 @@ package
                         trace("Vector quality set to ANTIALIAS and STENCIL");
                 }
                 qualityStr = getQualityStr();
+            }
+        }
+
+        function keyDownHandler(event:KeyboardEvent):void
+        {
+            var keycode = event.keyCode;
+            if (keycode == LoomKey.UP_ARROW)
+            {
+                if (stage.tessellationQuality < 10)
+                    stage.tessellationQuality++;
+            }
+            else if (keycode == LoomKey.DOWN_ARROW)
+            {
+                if (stage.tessellationQuality > 1)
+                    stage.tessellationQuality--;
             }
         }
 
@@ -270,7 +288,7 @@ package
             overlay.graphics.drawRect(0, 0, stage.stageWidth, 14);
             overlay.graphics.endFill();
             overlay.graphics.textFormat(overlayFormat);
-            overlay.graphics.drawTextLine(0, 0, String.format("FPS: %0.1f Shapes: %d Quality: %s", 1 / avgDt, stage.numChildren - 1, qualityStr));
+            overlay.graphics.drawTextLine(0, 0, String.format("FPS: %0.1f Shapes: %d Quality: %s Tesselation max level: %d", 1 / avgDt, stage.numChildren - 1, qualityStr, stage.tessellationQuality));
         }
 
         private function getQualityStr():String

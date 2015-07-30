@@ -118,6 +118,7 @@ struct NVGcontext {
 	NVGpathCache* cache;
 	float tessTol;
 	float distTol;
+	int tessLevelMax;
 	float fringeWidth;
 	float devicePxRatio;
 	struct FONScontext* fs;
@@ -227,6 +228,7 @@ NVGcontext* nvgCreateInternal(NVGparams* params)
 	nvgReset(ctx);
 
 	nvg__setDevicePixelRatio(ctx, 1.0f);
+	ctx->tessLevelMax = 10;
 
 	if (ctx->params.renderCreate(ctx->params.userPtr) == 0) goto error;
 
@@ -618,6 +620,11 @@ void nvgGlobalAlpha(NVGcontext* ctx, float alpha)
 {
 	NVGstate* state = nvg__getState(ctx);
 	state->alpha = alpha;
+}
+
+void nvgTessLevelMax(NVGcontext* ctx, int level)
+{
+	ctx->tessLevelMax = level;
 }
 
 void nvgTransform(NVGcontext* ctx, float a, float b, float c, float d, float e, float f)
@@ -1202,7 +1209,7 @@ static void nvg__tesselateBezier(NVGcontext* ctx,
 	float x12,y12,x23,y23,x34,y34,x123,y123,x234,y234,x1234,y1234;
 	float dx,dy,d2,d3;
 	
-	if (level > 10) return;
+	if (level > ctx->tessLevelMax) return;
 
 	x12 = (x1+x2)*0.5f;
 	y12 = (y1+y2)*0.5f;

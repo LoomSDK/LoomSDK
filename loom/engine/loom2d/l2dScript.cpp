@@ -231,6 +231,7 @@ static int registerLoom2D(lua_State *L)
        .addProperty("orientation", &Stage::getOrientation, &Stage::setOrientation)
 
        .addProperty("vectorQuality", &Stage::getVectorQuality, &Stage::setVectorQuality)
+       .addProperty("tessellationQuality", &Stage::getTessellationQuality, &Stage::setTessellationQuality)
 
        .addVarAccessor("onTouchBegan", &Stage::getTouchBeganDelegate)
        .addVarAccessor("onTouchMoved", &Stage::getTouchMovedDelegate)

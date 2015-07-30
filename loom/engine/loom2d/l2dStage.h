@@ -124,6 +124,18 @@ public:
         }
     }
 
+    inline void setTessellationQuality(int value)
+    {
+        if (value < 1 || value > 10)
+            return;
+
+        GFX::VectorRenderer::tessellationQuality = value;
+    }
+    inline int getTessellationQuality() const
+    {
+        return GFX::VectorRenderer::tessellationQuality;
+    }
+
     int getWidth()
     {
         return stageWidth;

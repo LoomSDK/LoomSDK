@@ -216,6 +216,9 @@ void nvgLineJoin(NVGcontext* ctx, int join);
 // Already transparent paths will get proportionally more transparent as well.
 void nvgGlobalAlpha(NVGcontext* ctx, float alpha);
 
+// Sets the maximum recursion depth of tessellation.
+void nvgTessLevelMax(NVGcontext* ctx, int level);
+
 //
 // Transforms
 //
