@@ -868,29 +868,38 @@ file 'build/luajit_android/lib/libluajit-5.1.a' do
 
     if $LOOM_HOST_OS == "windows"
 
-      puts "installing LuaJIT Android on Windows"
-      FileUtils.cp_r("loom/vendor/luajit_windows_android/luajit_android", "build")
+      #puts "installing LuaJIT Android on Windows"
+      #FileUtils.cp_r("loom/vendor/luajit_windows_android/luajit_android", "build")
 
       #TODO: LOOM-1634 https://theengineco.atlassian.net/browse/LOOM-1634
       #LuaJIT android build on Windows is currently extremely problematic.  It does build with dwimperl gcc in path, however building from
       #vanilla NDK does not work due to a combination of NDK make/gcc and magic flags.  In the meantime, we use this prebuilt LuaJIT android
       #build which the Rakefile copies into the proper location instead of building Android luaJIT on Windows
 
-      #puts "building LuaJIT Android on Windows"
-      #NDK = "#{ENV['ANDROID_NDK']}"
-      #if (!NDK or NDK == "")
-      #    raise "\n\nPlease ensure ANDROID_NDK environment variable is set to your NDK path\n\n"
-      #end
-      #rootFolder = Dir.pwd
-      #luajit_android_dir = File.join(rootFolder, "build", "luajit_android")
-      #Dir.chdir("loom/vendor/luajit") do
-      #    sh "#{NDK}\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make -f Makefile.win32 clean"
-      #    ENV['NDKABI']= "9"
-      #    ENV['NDKVER']= NDK + "\\toolchains\\arm-linux-androideabi-4.6"
-      #    ENV['NDKP'] = ENV['NDKVER'] + "\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\arm-linux-androideabi-"
-      #    ENV['NDKF'] = "--sysroot " + NDK + "\\platforms\\android-" + ENV['NDKABI'] + "\\arch-arm"
-      #    sh "#{NDK}\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make -f Makefile.win32 install -j#{$numCores} HOST_CC=\"gcc -m32\" CROSS=" + ENV['NDKP'] + " TARGET_FLAGS=\"" + ENV['NDKF']+"\" TARGET=arm TARGET_SYS=Linux PREFIX=\"#{luajit_android_dir.shellescape}\""
-      #end
+      puts "building LuaJIT Android on Windows"
+      NDK = "#{ENV['ANDROID_NDK']}"
+      if (!NDK or NDK == "")
+          raise "\n\nPlease ensure ANDROID_NDK environment variable is set to your NDK path\n\n"
+      end
+      rootFolder = Dir.pwd
+      luajit_android_dir = File.join(rootFolder, "build", "luajit_android")
+      
+      fdMan1 = File.join(luajit_android_dir, "share", "man", "man1")
+      File.delete(fdMan1) if File.exist?(fdMan1)
+      FileUtils.mkdir_p(fdMan1)
+      
+      FileUtils.mkdir_p(File.join(luajit_android_dir, "lib", "pkgconfig"))
+      
+      Dir.chdir("loom/vendor/luajit") do
+          #sh "#{NDK}\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make -f Makefile.win32 clean"
+          ENV['NDKABI']= "14"
+          ENV['NDKVER']= NDK + "\\toolchains\\arm-linux-androideabi-4.8"
+          ENV['NDKP'] = ENV['NDKVER'] + "\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\arm-linux-androideabi-"
+          ENV['NDKF'] = "--sysroot " + NDK + "\\platforms\\android-" + ENV['NDKABI'] + "\\arch-arm"
+          ENV['NDKARCH']="-march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"
+          #sh "#{NDK}\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make -f Makefile.win32 install -j#{$numCores} HOST_CC=\"gcc -m32\" CROSS=" + ENV['NDKP'] + " TARGET_FLAGS=\"" + ENV['NDKF'] + " " + ENV['NDKARCH'] +"\" TARGET=arm TARGET_SYS=Linux PREFIX=\"#{luajit_android_dir.shellescape}\" default"
+          sh "#{NDK}/prebuilt/#{WINDOWS_ANDROID_PREBUILT_DIR}/bin/make -j#{$numCores} HOST_CC=\"gcc -m32\" CROSS=\"" + ENV['NDKP'] + "\" TARGET_FLAGS=\"" + ENV['NDKF'] + " " + ENV['NDKARCH'] + "\" TARGET_SYS=Linux PREFIX=\"#{luajit_android_dir.shellescape}\" install"
+      end
     else
     puts "building LuaJIT Android on OSX / Linux"
       # OSX / LINUX
