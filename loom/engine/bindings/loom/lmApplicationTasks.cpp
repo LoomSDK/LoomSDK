@@ -28,6 +28,8 @@
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/graphics/gfxTexture.h"
 
+lmDefineLogGroup(appTasksLogGroup, "loom.appTasks", 1, LoomLogInfo);
+
 extern "C"
 {
 
@@ -73,6 +75,28 @@ void loom_tick()
     platform_HTTPUpdate();
 
     GFX::Texture::tick();
+
+    /*
+    LOOM_PROFILE_START(allocStressAlloc);
+    const int n = 10000;
+    long total = 0;
+    void* ptrs[n];
+    int i;
+    for (i = 0; i < n; i++) {
+        int size = 1 + (rand() % 100000);
+        void* ptr = lmAlloc(NULL, size);
+        if (ptr == NULL) break;
+        total += size;
+        ptrs[i] = ptr;
+    }
+    lmLog(appTasksLogGroup, "Allocated %d out of %d total of %d", i, n, total / 1024 / 1024);
+    LOOM_PROFILE_END(allocStressAlloc);
+    LOOM_PROFILE_START(allocStressFree);
+    for (int i = 0; i < n; i++) {
+        lmFree(NULL, ptrs[i]);
+    }
+    LOOM_PROFILE_END(allocStressFree);
+    */
 
     LOOM_PROFILE_START(garbageCollection);
     if (vm) lualoom_gc_update(vm->VM());
