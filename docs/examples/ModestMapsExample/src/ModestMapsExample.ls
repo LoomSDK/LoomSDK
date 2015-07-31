@@ -68,10 +68,12 @@ package
             
             landmarkViewer = new LandmarkViewer(_map);
             landmarkViewer.loadVolcanoes("assets/volcanoes.tsv");
+            landmarkViewer.runVolcanoShowcase();
+            //landmarkViewer.profileVolcanoShowcase();
             
             
             //marker placement logic
-            _map.addEventListener(TouchEvent.TOUCH, touchHandler);          
+            _map.addEventListener(TouchEvent.TOUCH, touchHandler);
             _markerHoldTimer = new Timer(PinHoldTime);
             _markerHoldTimer.onComplete = function() 
             { 
@@ -104,7 +106,7 @@ package
             
             if (keycode == LoomKey.C) trace(_map.getCenter());
             
-            if (keycode == LoomKey.S) landmarkViewer.runVolcanoShowcase();
+            if (keycode == LoomKey.S) landmarkViewer.volcanoShowcase ? landmarkViewer.stopVolcanoShowcase() : landmarkViewer.runVolcanoShowcase();
             
             //process zooming
             if (keycode == LoomKey.EQUALS)

@@ -3,6 +3,7 @@ package
     import loom.modestmaps.extras.Distance;
     import loom.modestmaps.geo.Location;
     import loom.modestmaps.Map;
+    import loom.modestmaps.mapproviders.IMapProvider;
     import loom.modestmaps.mapproviders.MapboxProvider;
     import loom2d.display.Graphics;
     import loom2d.display.Shape;
@@ -47,6 +48,7 @@ package
             "?": "2000 or later",
             "Q": "quaternary period\n(2.588 million years ago to the present)"
         };
+        private static const PROFILE_LIMIT = 50;
         
         private var sHelperPoint:Point;
         
@@ -54,9 +56,11 @@ package
         
         private var map:Map;
         
-        private var volcanoShowcase = false;
+        public var volcanoShowcase = false;
         private var volcanoes:Vector.<Volcano>;
         private var randomVolcano:Volcano;
+        private var volcanoLimit = -1;
+        private var volcanoProfiling:Boolean = false;
 
         private var flying:Boolean = false;
         private var flyCallback:Function;
@@ -64,12 +68,15 @@ package
         private var flyPoint:Point;
         private var flySpeed:Number;
         private var flyInfo:Vector.<String>;
+        private var nextLocation = new Location(0, 0);
         private var delaying:Boolean = false;
         private var delayStartTime:int;
         
         private var overlay:Shape;
         private var debugTextFormat:TextFormat;
         private var mainTextFormat:TextFormat;
+        
+        private static const volcanoMapProvider:IMapProvider;
         
         public function LandmarkViewer(map:Map)
         {
@@ -109,19 +116,44 @@ package
                 v.lastEruption = cols[9];
                 volcanoes.push(v);
             }
+        }
+        
+        public function profileVolcanoShowcase()
+        {
+            Profiler.enable();
+            volcanoLimit = PROFILE_LIMIT;
+            volcanoProfiling = true;
             runVolcanoShowcase();
         }
         
+        
         public function runVolcanoShowcase()
         {
-            map.setMapProvider(new MapboxProvider("mapbox.satellite", File.loadTextFile("assets/mapbox/token.txt")));
+            if (!volcanoMapProvider) volcanoMapProvider = new MapboxProvider("mapbox.satellite", File.loadTextFile("assets/mapbox/token.txt"));
+            if (map.getMapProvider() != volcanoMapProvider) map.setMapProvider(volcanoMapProvider);
             map.setCenterZoom(new Location(80, 0), -5);
             
             volcanoShowcase = true;
             nextVolcano();
         }
         
+        public function stopVolcanoShowcase()
+        {
+            overlay.graphics.clear();
+            flying = false;
+            volcanoShowcase = false;
+        }
+        
         private function nextVolcano() {
+            if (volcanoProfiling) {
+                if (volcanoLimit <= 0) {
+                    volcanoProfiling = false;
+                    Profiler.dump();
+                    return;
+                }
+                volcanoLimit--;
+            }
+            
             randomVolcano = volcanoes[Math.randomRangeInt(0, volcanoes.length-1)];
             
             var info = new Vector.<String>();
@@ -162,21 +194,24 @@ package
             g.clear();
             g.textFormat(debugTextFormat);
             
-            var diag = "";
+            var debugEnabled = false;
+            var diag:String;
+            if (debugEnabled) diag = "";
             
-            var center = map.getCenterZoom();
-            var currentLocation:Location = center[0] as Location;
-            var currentZoom:Number = center[1] as Number;
+            var currentLocation:Location = map.getCenter();
+            var currentZoom:Number = map.getZoomFractional();
             var dist = Distance.haversineDistance(currentLocation, flyTarget);
             
             //trace(currentLocation, flyTarget, dist);
             
-            Debug.assert(!isNaN(currentLocation.lat), "cur loc "+currentLocation+" "+center);
-            Debug.assert(!isNaN(currentLocation.lon));
-            Debug.assert(!isNaN(flyTarget.lat));
-            Debug.assert(!isNaN(flyTarget.lon));
-            Debug.assert(!isNaN(currentZoom));
-            Debug.assert(!isNaN(dist), "dist "+dist+" "+center+" "+flyTarget);
+            if (debugEnabled) {
+                Debug.assert(!isNaN(currentLocation.lat), "cur loc "+currentLocation);
+                Debug.assert(!isNaN(currentLocation.lon));
+                Debug.assert(!isNaN(flyTarget.lat));
+                Debug.assert(!isNaN(flyTarget.lon));
+                Debug.assert(!isNaN(currentZoom));
+                Debug.assert(!isNaN(dist), "dist "+dist+" "+flyTarget);
+            }
             
             var minZoom = 2;
             var maxZoom = 13.5;
@@ -186,7 +221,7 @@ package
             
             var moveSpeedMax = 10e6;
             
-            var targetZoom = minZoom+(maxZoom-minZoom)*(1-Math.sqrt(Math.min(1, dist/zoomDist)));
+            var targetZoom = minZoom+(maxZoom-minZoom)*(1-Math.sqrt(Math.min2(1, dist/zoomDist)));
             
             var zoomDiff = targetZoom - currentZoom;
             //var zoomDiff = maxZoom - currentZoom;
@@ -201,7 +236,7 @@ package
             //var moveSpeed = Math.min(100000, dist)*20*(Math.exp(-currentZoom*0.3));
             
             var unitDistRange = 10e6;
-            var unitDist = Math.min(dist/unitDistRange, unitDistRange);
+            var unitDist = Math.min2(dist/unitDistRange, unitDistRange);
             var bump = (1-Math.cos(unitDist*Math.TWOPI))*0.5;
             
             //var moveAccel = dist*10*(1-Math.exp(-10*(currentZoom-minZoom)/maxZoom));
@@ -212,7 +247,7 @@ package
             //var zoomDampen = Math.pow(1-Math.abs(zoomDiff/zoomRange), 6);
             var zoomDampen = Math.pow(1-Math.abs(zoomDiff/zoomRange), 4);
             
-            var moveAccel = Math.min((dist-flySpeed*0.9)*20, 50e6)*zoomDampen-flySpeed;
+            var moveAccel = Math.min2((dist-flySpeed*0.9)*20, 50e6)*zoomDampen-flySpeed;
             
             //var moveAccel = bump*50e6*(1-(currentZoom-minZoom)/maxZoom);
             //var moveSpeed = bump*10e6+Math.min(1e3, dist);
@@ -223,18 +258,7 @@ package
             
             //diag += "\n" + Math.pow(zoomDiff/zoomRange, 2);
             
-            flySpeed = Math.min(moveSpeedMax, flySpeed);
-            
-            diag += "\nzoom cur:  " + currentZoom;
-            diag += "\nzoom tgt:  " + targetZoom;
-            
-            diag += "\nloc cur:  " + currentLocation;
-            diag += "\nloc tgt:  " + flyTarget;
-            
-            diag += "\ndist: " + dist;
-            diag += "\nfly speed: " + flySpeed;
-            diag += "\nzoom diff: " + Math.abs(zoomDiff/zoomRange);
-            diag += "\nzoom dampen: " + zoomDampen;
+            flySpeed = Math.min2(moveSpeedMax, flySpeed);
             
             flyPoint.x = flyTarget.lon-currentLocation.lon;
             flyPoint.y = flyTarget.lat-currentLocation.lat;
@@ -243,19 +267,35 @@ package
             flyPoint.x *= flySpeed/(111111*Math.cos(currentLocation.lat/180*Math.PI));
             flyPoint.y *= flySpeed/111111;
             
-            diag += "\nvec: " + flyPoint;
-            
             var away = Math.abs(zoomDiff)*5*0.5+dist/100*0.5;
             
-            diag += "\naway: " + away;
+            if (debugEnabled) {
+                diag += "\nzoom cur:  " + currentZoom;
+                diag += "\nzoom tgt:  " + targetZoom;
+                
+                diag += "\nloc cur:  " + currentLocation;
+                diag += "\nloc tgt:  " + flyTarget;
+                
+                diag += "\ndist: " + dist;
+                diag += "\nfly speed: " + flySpeed;
+                diag += "\nzoom diff: " + Math.abs(zoomDiff/zoomRange);
+                diag += "\nzoom dampen: " + zoomDampen;
+                
+                diag += "\nvec: " + flyPoint;
+                
+                diag += "\naway: " + away;
+            }
             
-            var nextLocation = new Location(currentLocation.lat+flyPoint.y*dt, currentLocation.lon+flyPoint.x*dt);
+            
+            nextLocation.lat = currentLocation.lat+flyPoint.y*dt;
+            nextLocation.lon = currentLocation.lon+flyPoint.x*dt;
             
             map.panAndZoomBy(1+zoomSpeed*dt, nextLocation, sHelperPoint);
             
-            Debug.assert(!isNaN(map.getCenter().lat), "Move error "+dt+" "+zoomSpeed+" "+nextLocation+" "+sHelperPoint);
-            
-            //g.drawTextBox(10, 10, NaN, diag);
+            if (debugEnabled) {
+                Debug.assert(!isNaN(map.getCenter().lat), "Move error "+dt+" "+zoomSpeed+" "+nextLocation+" "+sHelperPoint);
+                g.drawTextBox(10, 10, NaN, diag);
+            }
             
             var infoAwayDist = 40;
             
@@ -289,29 +329,7 @@ package
                 delaying = true;
                 delayStartTime = Platform.getTime();
             }
-            
-            
-            
         }
-        
-        
-        //private function zoomTo(location:Location, callback:Function = null) {
-            //zoomCallback = callback;
-            //_map.setCenter(location);
-            //zoom = true;
-        //}
-        //
-        //public function onTick()
-        //{
-            //if (zoom) {
-                //if (_map.getZoom() >= 19) {
-                    //zoom = false;
-                    //if (zoomCallback) zoomCallback();
-                //} else {
-                    //_map.zoomByAbout(0.1, new Point(_map.getWidth() / 2, _map.getHeight() / 2));
-                //}
-            //}
-        //}
         
     }
     

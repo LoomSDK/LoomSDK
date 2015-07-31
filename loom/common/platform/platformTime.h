@@ -32,7 +32,9 @@ int platform_getMilliseconds();
 
 typedef void * loom_precision_timer_t;
 loom_precision_timer_t loom_startTimer();
+void loom_resetTimer(loom_precision_timer_t timer);
 int loom_readTimer(loom_precision_timer_t timer);
+double loom_readTimerNano(loom_precision_timer_t timer);
 void loom_destroyTimer(loom_precision_timer_t timer);
 
 #ifdef __cplusplus

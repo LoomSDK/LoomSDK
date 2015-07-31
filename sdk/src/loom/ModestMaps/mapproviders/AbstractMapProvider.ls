@@ -104,6 +104,10 @@ package loom.modestmaps.mapproviders
         {
             return __projection.coordinateLocation(coordinate);
         }
+        public function coordinateLocationStatic(coordinate:Coordinate):Location
+        {
+            return __projection.coordinateLocationStatic(coordinate);
+        }
 
         public function get tileWidth():Number
         {

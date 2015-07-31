@@ -120,12 +120,16 @@ typedef struct loom_win32_precisionTimer_t
 loom_precision_timer_t loom_startTimer()
 {
     loom_win32_precisionTimer_t *t = lmAlloc(NULL, sizeof(loom_win32_precisionTimer_t));
-
-    QueryPerformanceFrequency(&t->mFrequency);
-    QueryPerformanceCounter(&t->mPerfCountCurrent);
+    loom_resetTimer(t);
     return t;
 }
 
+void loom_resetTimer(loom_precision_timer_t timer)
+{
+    loom_win32_precisionTimer_t *t = (void *)timer;
+    QueryPerformanceFrequency(&t->mFrequency);
+    QueryPerformanceCounter(&t->mPerfCountCurrent);
+}
 
 int loom_readTimer(loom_precision_timer_t timer)
 {
@@ -136,6 +140,17 @@ int loom_readTimer(loom_precision_timer_t timer)
     QueryPerformanceCounter(&endCount);
     elapsed = 1000.0 * ((double)(endCount.QuadPart - t->mPerfCountCurrent.QuadPart) / (double)t->mFrequency.QuadPart);
     return (int)elapsed;
+}
+
+double loom_readTimerNano(loom_precision_timer_t timer)
+{
+    double elapsed = 0.f;
+    loom_win32_precisionTimer_t *t = (void *)timer;
+    LARGE_INTEGER               endCount;
+
+    QueryPerformanceCounter(&endCount);
+    elapsed = 1e6 * ((double)(endCount.QuadPart - t->mPerfCountCurrent.QuadPart) / (double)t->mFrequency.QuadPart);
+    return elapsed;
 }
 
 

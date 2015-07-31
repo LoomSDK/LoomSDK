@@ -20,6 +20,7 @@
 
 
 #include "loom/engine/loom2d/l2dStage.h"
+#include "loom/engine/bindings/loom/lmApplication.h"
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/common/config/applicationConfig.h"
 #include "loom/common/core/log.h"
@@ -129,7 +130,11 @@ void Stage::render(lua_State *L)
     GFX::Graphics::endFrame();
     LOOM_PROFILE_END(stageRenderEnd);
 
-
+    LSLuaState *vm = LoomApplication::getReloadQueued() ? NULL : LoomApplication::getRootVM();
+    LOOM_PROFILE_START(garbageCollection);
+    if (vm) lualoom_gc_update(vm->VM());
+    LOOM_PROFILE_END(garbageCollection);
+    
     LOOM_PROFILE_START(waitForVSync);
     /* Update the screen! */
     SDL_GL_SwapWindow(sdlWindow);

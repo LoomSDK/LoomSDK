@@ -53,7 +53,7 @@ package loom.modestmaps.mapproviders.microsoft
             }
     
             // Microsoft don't have a zoom level 0 right now:
-            __topLeftOutLimit.zoomTo(1);
+            __topLeftOutLimit.zoomToInPlace(1);
         }
    
         public function toString():String

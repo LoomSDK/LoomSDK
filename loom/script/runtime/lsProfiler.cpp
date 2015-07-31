@@ -24,6 +24,7 @@
 #include "loom/script/loomscript.h"
 #include "loom/script/runtime/lsProfiler.h"
 #include <string.h>
+#include "SDL.h"
 
 namespace LS
 {
@@ -32,6 +33,7 @@ static utHashTable<utFastStringHash, LoomProfilerRoot *> dynamicProfilerRoots;
 bool LSProfiler::enabled = false;
 utStack<MethodBase *> LSProfiler::methodStack;
 utHashTable<utPointerHashKey, LSProfilerTypeAllocation *> LSProfiler::allocations;
+utHashTable<utPointerHashKey, MethodAllocation> *LSProfiler::sortMethods = NULL;
 
 lmDefineLogGroup(gProfilerLogGroup, "profiler", 1, LoomLogInfo);
 
@@ -352,6 +354,7 @@ void LSProfiler::dump(lua_State *L)
     gLoomProfiler->dumpToConsole();
 
 #ifdef LOOM_ENABLE_JIT
+    lmLog(gProfilerLogGroup, "");
     lmLog(gProfilerLogGroup, "Please note: Profiling under JIT does not include native function calls.");
     lmLog(gProfilerLogGroup, "switch to the interpreted VM in order to gather native method timings");
 #endif
@@ -371,7 +374,6 @@ void LSProfiler::reset(lua_State *L)
     clearAllocations();
 }
 
-
 void LSProfiler::dumpAllocations(lua_State *L)
 {
     lua_gc(L, LUA_GCCOLLECT, 0);
@@ -381,15 +383,19 @@ void LSProfiler::dumpAllocations(lua_State *L)
     lmLog(gProfilerLogGroup, "switch to the interpreted VM in order to gather native method allocation");
 #endif
 
-    lmLog(gProfilerLogGroup, "Object Allocation Dump");
-    lmLog(gProfilerLogGroup, "----------------------");
-
     utList<LSProfilerTypeAllocation *> allocs;
+    utHashTable<utPointerHashKey, MethodAllocation> methodAggr;
 
+    // Prepare for object allocation dump
     for (UTsize i = 0; i < allocations.size(); i++)
     {
-        allocs.push_back(allocations.at(i));
+        LSProfilerTypeAllocation* alloc = allocations.at(i);
+        allocs.push_back(alloc);
     }
+
+    lmLog(gProfilerLogGroup, "");
+    lmLog(gProfilerLogGroup, "Object Allocation Dump");
+    lmLog(gProfilerLogGroup, "----------------------");
 
     while (allocs.size())
     {
@@ -411,7 +417,7 @@ void LSProfiler::dumpAllocations(lua_State *L)
 
         allocs.erase(bestType);
 
-        lmLog(gProfilerLogGroup, "Alive: %i, Total: %i, Type: %s", bestType->alive, bestType->total, bestType->type->getFullName().c_str());
+        lmLog(gProfilerLogGroup, "Alive: %i (%i KiB), Total: %i (%i KiB), Type: %s", bestType->alive, bestType->memoryCurrent/1024, bestType->total, bestType->memoryTotal/1024, bestType->type->getFullName().c_str());
 
         if (bestType->anonTotal)
         {
@@ -428,8 +434,92 @@ void LSProfiler::dumpAllocations(lua_State *L)
 
             lmAssert(value1 && value2, "bad pointer on allocation");
 
-            lmLog(gProfilerLogGroup, "     Alive %i, Total %i (%s) ", (*value1), (*value2), methodBase->getFullMemberName());
+            lmLog(gProfilerLogGroup, "     Alive %i, Total %i (%s)", (*value1), (*value2), methodBase->getFullMemberName());
         }
     }
+
+    // Aggregate method allocations
+    for (UTsize i = 0; i < allocations.size(); i++)
+    {
+        LSProfilerTypeAllocation* alloc = allocations.at(i);
+        utHashTable<utPointerHashKey, int> &methodCurrent = alloc->methodCurrent;
+        utHashTable<utPointerHashKey, int> &methodTotal = alloc->methodTotal;
+        for (UTsize j = 0; j < methodCurrent.size(); j++) {
+            utPointerHashKey key = methodCurrent.keyAt(j);
+            int *current = methodCurrent.get(key);
+            lmAssert(current != NULL, "Internal hash table error");
+            int *total = methodTotal.get(key);
+            lmAssert(total != NULL, "Internal total hash table inconsistency error");
+            MethodAllocation *aggr = methodAggr.get(key);
+            if (aggr == NULL)
+            {
+                // First seen method, insert initial values
+                MethodAllocation ma;
+                ma.currentCount = *current;
+                ma.totalCount = *total;
+                ma.currentBytes = alloc->memoryCurrent;
+                ma.totalBytes = alloc->memoryTotal;
+                ma.allocations.push_back(alloc);
+                methodAggr.insert(key, ma);
+            }
+            else
+            {
+                // Method already seen, update tracked values
+                aggr->currentCount += *current;
+                aggr->totalCount += *total;
+                aggr->currentBytes += alloc->memoryCurrent;
+                aggr->totalBytes += alloc->memoryTotal;
+                aggr->allocations.push_back(alloc);
+            }
+        }
+    }
+
+    utArray<int> sortByTotal;
+    sortByTotal.resize(methodAggr.size());
+    for (UTsize i = 0; i < sortByTotal.size(); i++) sortByTotal[i] = i;
+
+    sortMethods = &methodAggr;
+    SDL_qsort((void*)sortByTotal.ptr(), sortByTotal.size(), sizeof(int), sortMethodsByTotalCount);
+    sortMethods = NULL;
+
+    lmLog(gProfilerLogGroup, "");
+    lmLog(gProfilerLogGroup, "Aggregated Method Allocation");
+    lmLog(gProfilerLogGroup, "----------------------------");
+
+    for (UTsize i = 0; i < methodAggr.size(); i++)
+    {
+        utPointerHashKey key = methodAggr.keyAt(sortByTotal[i]);
+        MethodBase *methodBase = (MethodBase *)key.key();
+        lmAssert(methodBase != NULL, "Internal aggregated method base missing");
+        MethodAllocation &ma = *methodAggr.get(key);
+        
+        lmLog(gProfilerLogGroup, "Total: %i (%i KiB), Alive: %i (%i KiB), Method: %s", ma.totalCount, ma.totalBytes/1024, ma.currentCount, ma.currentBytes/1024, methodBase->getFullMemberName());
+        
+        SDL_qsort((void*)ma.allocations.ptr(), ma.allocations.size(), sizeof(LSProfilerTypeAllocation*), sortAllocsByTotal);
+
+        for (UTsize j = 0; j < ma.allocations.size(); j++)
+        {
+            LSProfilerTypeAllocation* alloc = ma.allocations.at(j);
+            int &methodCurrent = *alloc->methodCurrent.get(key);
+            int &methodTotal = *alloc->methodTotal.get(key);
+            lmLog(gProfilerLogGroup, "     Total: %i / %i (%i kiB), Alive: %i / %i (%i KiB), Type: %s", methodTotal, alloc->total, alloc->memoryTotal / 1024, methodCurrent, alloc->alive, alloc->memoryCurrent / 1024, alloc->type->getFullName().c_str());
+        }
+    }
+
 }
+
+int LSProfiler::sortMethodsByTotalCount(const void *a, const void *b)
+{
+    int va = sortMethods->at(*(UTsize*)a).totalCount;
+    int vb = sortMethods->at(*(UTsize*)b).totalCount;
+    return va > vb ? -1 : va < vb ? 1 : 0;
+}
+
+int LSProfiler::sortAllocsByTotal(const void *a, const void *b)
+{
+    int va = ((LSProfilerTypeAllocation*)a)->total;
+    int vb = ((LSProfilerTypeAllocation*)b)->total;
+    return va > vb ? -1 : va < vb ? 1 : 0;
+}
+
 }
