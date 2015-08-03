@@ -237,6 +237,7 @@ Binding native delegates is as simple as binding any other native script. Howeve
 ~~~
 
 **LoomScript side**
+
 Adding the native delegate to your LoomScript class is also simple!
 
 ~~~{as}
