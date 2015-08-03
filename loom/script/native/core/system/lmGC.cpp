@@ -192,7 +192,7 @@ public:
             int bytesPerRun = cycleCollectedBytes / cycleRuns;
             
             // The new run limit
-            runLimit = (int)round(runLimit + (targetRuns - runLimit) * runAmortization);
+            runLimit = (int)floor(0.5 + runLimit + (targetRuns - runLimit) * runAmortization);
             
             // Limit the persistent limit based on the min and max
             updateRunLimit = runLimit < runLimitMin ? runLimitMin : runLimit > runLimitMax ? runLimitMax : runLimit;
