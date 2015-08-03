@@ -26,9 +26,17 @@ package
         public var lastEruption:String;
     }
     
+    /**
+     * This class provides some automatic testing functionality.
+     * As of time of writing it provides a volcanoe showcase as a
+     * practical example and profiling benchmark.
+     */
     public class LandmarkViewer
     {
+        /** How long (in ms) the showcase should wait on the specified point */
         private static const DELAY_TIME = 5000;
+        
+        /** The text sizes for each line of text displayed */
         private static const INFO_SIZES:Vector.<int> = [
             50,
             80,
@@ -36,6 +44,8 @@ package
             50,
             30
         ];
+        
+        /** Code to description map */
         private static const ERUPTION:Dictionary.<String, String> = {
             "D1": "2000 or later",
             "D2": "1900-1999",
@@ -48,7 +58,9 @@ package
             "?": "2000 or later",
             "Q": "quaternary period\n(2.588 million years ago to the present)"
         };
-        private static const PROFILE_LIMIT = 50;
+        
+        /** How many times the map should zoom in while profiling */
+        private static const PROFILE_LIMIT = 5;
         
         private var sHelperPoint:Point;
         
@@ -81,7 +93,6 @@ package
         public function LandmarkViewer(map:Map)
         {
             this.map = map;
-            
             
             TextFormat.load("sans", "assets/SourceSansPro-Regular.ttf");
             debugTextFormat = new TextFormat("sans", 30, 0xFFFFFF);
@@ -164,9 +175,6 @@ package
             
             var lastEruption = ERUPTION.fetch(randomVolcano.lastEruption, "unknown");
             info.push("Last eruption "+(lastEruption == "unknown" ? "is" : "was")+" "+lastEruption);
-            //info += "\n("+)";
-            
-            //trace(">"+randomVolcano.lastEruption.charCodeAt(randomVolcano.lastEruption.length-1)+"<");
             
             flyTo(new Location(randomVolcano.latitude, randomVolcano.longitude), info, onVolcanoFocus);
         }
@@ -202,8 +210,6 @@ package
             var currentZoom:Number = map.getZoomFractional();
             var dist = Distance.haversineDistance(currentLocation, flyTarget);
             
-            //trace(currentLocation, flyTarget, dist);
-            
             if (debugEnabled) {
                 Debug.assert(!isNaN(currentLocation.lat), "cur loc "+currentLocation);
                 Debug.assert(!isNaN(currentLocation.lon));
@@ -216,7 +222,6 @@ package
             var minZoom = 2;
             var maxZoom = 13.5;
             var zoomRange = maxZoom-minZoom;
-            //var zoomDist = 15e6;
             var zoomDist = 2e6;
             
             var moveSpeedMax = 10e6;
@@ -224,39 +229,17 @@ package
             var targetZoom = minZoom+(maxZoom-minZoom)*(1-Math.sqrt(Math.min2(1, dist/zoomDist)));
             
             var zoomDiff = targetZoom - currentZoom;
-            //var zoomDiff = maxZoom - currentZoom;
             
             sHelperPoint.x = map.getWidth() / 2;
             sHelperPoint.y = map.getHeight() / 2;
-            //map.panAndZoomBy(zoomDiff*0.01, interpLocation, sHelperPoint);
-            //trace(currentZoom);
+            
             var zoomSpeed = zoomDiff*0.3;
-            //var moveSpeed = 1/(1+currentZoom)*Math.min(dist, 1000)/1000;
-            //var moveSpeed = 2/Math.pow(2, currentZoom)*Math.min(dist, 100000)/100000;
-            //var moveSpeed = Math.min(100000, dist)*20*(Math.exp(-currentZoom*0.3));
-            
-            var unitDistRange = 10e6;
-            var unitDist = Math.min2(dist/unitDistRange, unitDistRange);
-            var bump = (1-Math.cos(unitDist*Math.TWOPI))*0.5;
-            
-            //var moveAccel = dist*10*(1-Math.exp(-10*(currentZoom-minZoom)/maxZoom));
-            
-            var unitZoom = (currentZoom-minZoom)/zoomRange;
-            
-            //var moveAccel = dist*2*Math.max(0.1, 1-unitZoom);
-            //var zoomDampen = Math.pow(1-Math.abs(zoomDiff/zoomRange), 6);
             var zoomDampen = Math.pow(1-Math.abs(zoomDiff/zoomRange), 4);
             
             var moveAccel = Math.min2((dist-flySpeed*0.9)*20, 50e6)*zoomDampen-flySpeed;
             
-            //var moveAccel = bump*50e6*(1-(currentZoom-minZoom)/maxZoom);
-            //var moveSpeed = bump*10e6+Math.min(1e3, dist);
-            
             flySpeed += moveAccel*dt;
             flySpeed *= 0.98;
-            //flySpeed *= Math.pow(1-unitZoom, 1);
-            
-            //diag += "\n" + Math.pow(zoomDiff/zoomRange, 2);
             
             flySpeed = Math.min2(moveSpeedMax, flySpeed);
             
@@ -264,6 +247,7 @@ package
             flyPoint.y = flyTarget.lat-currentLocation.lat;
             flyPoint.normalize(1);
             
+            // Speed in m/s to degrees/s
             flyPoint.x *= flySpeed/(111111*Math.cos(currentLocation.lat/180*Math.PI));
             flyPoint.y *= flySpeed/111111;
             
