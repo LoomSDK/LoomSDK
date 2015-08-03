@@ -33,15 +33,14 @@ class GC
 {
     static int memoryWarningLevel;
     static int lastMemoryWarningTime;
-
     static int updateRunLimit;
     static int cycleUpdates;
     static int cycleRuns;
-    static double cycleStepTime;
+    static double cycleUpdateTime;
     static double cycleMaxTime;
     static int cycleStartTime;
     static int cycleCollectedBytes;
-    static bool GC::hibernating;
+    static bool hibernating;
     static int cycleKB;
     static int lastValidBPR;
     static loom_precision_timer_t timer;
@@ -51,8 +50,9 @@ class GC
     static int runLimitMin;
     static int runLimitMax;
     static double targetGarbage;
-    static double GC::cycleMemoryGrowthWarningRatio;
+    static double cycleMemoryGrowthWarningRatio;
     static int cycleWarningExtraRunDivider;
+    static double bprValidityThreshold;
 
 public:
 
@@ -126,7 +126,7 @@ public:
             
 
         double timeDelta = loom_readTimerNano(timer);
-        cycleStepTime += timeDelta;
+        cycleUpdateTime += timeDelta;
         if (timeDelta > cycleMaxTime) cycleMaxTime = timeDelta;
         
         // Prevent the garbage collector from running on its own
@@ -169,40 +169,58 @@ public:
                 extraRuns += cycleKBDelta * 1024 / lastValidBPR / cycleWarningExtraRunDivider;
                 lmLogDebug(gGCGroup, "Warning allocating %d KiB in a single cycle, waking up with %d emergency runs", cycleKBDelta, extraRuns);
             }
+
+            // GC cycle time
             int collectionTime = platform_getMilliseconds() - cycleStartTime;
+            
+            // Run limit adjustment value easing,
+            // so far I haven't seen any benefit from it, so it's disabled with 1 for now
             double runAmortization = 1.0;
+
+            // Collected KB per second
             double cps = collectedKB * 1000 / collectionTime;
+
+            // Ratio of garbage collected against the total memory taken
             double garbageRatio = collectedKB / (memoryAfterKB + collectedKB);
-            //float targetMs = ratio * timeLimit / targetGarbage;
+            
+            // Self-correction adjustment for the number of runs based on the
+            // current garbage ratio and the target garbage ratio + extra runs
             double targetRuns = garbageRatio * runLimit / targetGarbage + extraRuns;
+
             int runsPerUpdate = cycleRuns / cycleUpdates;
-            double timePerUpdate = cycleStepTime / cycleUpdates;
+            double timePerUpdate = cycleUpdateTime / cycleUpdates;
             int bytesPerRun = cycleCollectedBytes / cycleRuns;
-            //timeLimit = (int)round(targetMs);
-            //gcMs = timeLimit < 1 ? 1 : timeLimit > 1000 ? 1000 : timeLimit;
+            
+            // The new run limit
             runLimit = (int)round(runLimit + (targetRuns - runLimit) * runAmortization);
-            /*if (hibernating)
-            {
-                runLimit *= collectionTime / 1000;
-            }*/
+            
+            // Limit the persistent limit based on the min and max
             updateRunLimit = runLimit < runLimitMin ? runLimitMin : runLimit > runLimitMax ? runLimitMax : runLimit;
-            /*if (hibernating && updateRunLimit != runLimitMin) {
-                updateRunLimit *= 2;
-            }*/
+            
+            // The system is said to be hibernating when the run limit falls below the minimum,
+            // which means that the GC cycles are long (with little to no work each update),
+            // so the entire system is slow to update and is in a sleeping state.
+            //
+            // The system can be woken up from hibernation due to rapid changes
+            // with the cycle warning described above.
             hibernating = updateRunLimit == runLimitMin;
-            if (garbageRatio > targetGarbage * 0.2) lastValidBPR = bytesPerRun;
+
+            // Only update the valid bytes per run if enough garbage
+            // was collected to make it a valid metric.
+            if (garbageRatio > targetGarbage * bprValidityThreshold) lastValidBPR = bytesPerRun;
             
             // Uncomment for GC cycle reports
             /*
-            lmLog(gGCGroup, "GC cycle: %d / %d KiB in %d ms with %d runs in %d updates %.4f ms max, %.2f KiB/s, %.2f%% garb., %d rpu, %d bpr, %.2f%% -> %.2f (%d) runs",
-                cycleCollectedBytes/1024, memoryAfterKB, collectionTime, cycleRuns, cycleUpdates, cycleMaxTime*1e-3, cps, garbageRatio * 100, runsPerUpdate, lastValidBPR, targetGarbage * 100, targetRuns, updateRunLimit
+            lmLog(gGCGroup, "Cycle: %d / %d KiB in %d ms with %d runs in %d updates %.4f ms avg %.4f ms max, %.2f KiB/s, %d rpu, %d bpr, %.2f%% garb., %.2f%% -> %.2f (%d) runs",
+                cycleCollectedBytes/1024, memoryAfterKB, collectionTime, cycleRuns, cycleUpdates, timePerUpdate*1e-3, cycleMaxTime*1e-3, cps, runsPerUpdate, lastValidBPR, garbageRatio * 100, targetGarbage * 100, targetRuns, updateRunLimit
             );
             //*/
 
+            // Reset cycle state
             cycleUpdates = 0;
             cycleRuns = 0;
             cycleCollectedBytes = 0;
-            cycleStepTime = 0;
+            cycleUpdateTime = 0;
             cycleMaxTime = 0;
             cycleStartTime = platform_getMilliseconds();
             cycleKB = memoryAfterKB;
@@ -227,27 +245,87 @@ int GC::spikeThreshold = 1;
 
 // No VM warning default
 int GC::memoryWarningLevel = 0;
+
+// The target garbage ratio to be collected each cycle.
+// The system adjusts each cycle to try to meet this garbage ratio.
 double GC::targetGarbage = 0.1;
-double GC::updateNanoLimit = 0.5e6;
+
+// The max time in nanoseconds each GC update is allowed to
+// run for.
+double GC::updateNanoLimit = 2e6;
+
+// The minimum number of runs each update.
 int GC::runLimitMin = 1;
+
+// The maximum number of runs each update.
 int GC::runLimitMax = 100000;
+
+// How much the memory has to grow from the previous
+// cycle to this one for it to be a warning and for
+// the GC to ramp up collection.
+//
+// E.g. a ratio of 0.5 means that when the memory
+// grows by 50% from the last cycle, it triggers a warning.
+// So if the memory goes from 100MB to 150MB it triggers
+// a warning and collects garbage more aggresively
+// next update.
+//
+// This applies to the non-hibernating state.
+// In hibernation, the ratio equals targetGarbage,
+// so that the system wakes up when it's time to collect.
 double GC::cycleMemoryGrowthWarningRatio = 0.5;
+
+// Determines how many runs to allocate as extra runs
+// on a cycle warning. The higher the number the fewer
+// the runs. First, the number of runs required
+// to clear all the garbage collected in the
+// warning period is calculated based on the
+// lastValidBPR and memory growth. This number is then
+// used as a divider that brings that number down, as
+// you usually don't want to use that many runs at a time.
 int GC::cycleWarningExtraRunDivider = 10;
 
 // The amount of times a single GC step is run
 // This is only the starting value, it is adjusted
-// automatically from this point onward
+// automatically from this point onward.
 int GC::updateRunLimit = 100;
 
-int GC::lastMemoryWarningTime = 0;
-int GC::cycleUpdates = 0;
-int GC::cycleRuns = 0;
-double GC::cycleStepTime = 0;
-double GC::cycleMaxTime = 0;
-int GC::cycleStartTime = 0;
-int GC::cycleCollectedBytes = 0;
-int GC::cycleKB = 0;
+// Ratio of how much garbage has to be collected
+// against the target garbage for the last
+// collected bytes per run to be considered valid.
+double GC::bprValidityThreshold = 0.2;
+
+
+// Last valid bytes per run metric, see above for details
 int GC::lastValidBPR = 0;
+
+// The last time a memory warning was issued.
+// Used to prevent memory warning spam.
+int GC::lastMemoryWarningTime = 0;
+
+// The number of updates in the current cycle
+int GC::cycleUpdates = 0;
+
+// The number of runs in the current cycle
+int GC::cycleRuns = 0;
+
+// The cumulated time taken for updates in the current cycle in nanoseconds
+double GC::cycleUpdateTime = 0;
+
+// The maximum time taken for an update in the current cycle in nanoseconds
+double GC::cycleMaxTime = 0;
+
+// The start timestamp of the cycle in milliseconds
+int GC::cycleStartTime = 0;
+
+// The number of bytes collected in the current cycle
+int GC::cycleCollectedBytes = 0;
+
+// The amount of memory taken in KB at the end of the last cycle
+int GC::cycleKB = 0;
+
+// true if the system is currently hibernating, false otherwise.
+// See above for details.
 bool GC::hibernating = false;
 
 

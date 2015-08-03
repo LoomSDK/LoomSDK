@@ -90,7 +90,8 @@ void loom_fireAssertCallback();
         __debugbreak();                                                                                                                           \
         loom_fireAssertCallback();                                                                                                                \
         abort();                                                                                                                                  \
-    } } while(0);
+    } \
+} while(0);
 #else
 #define lmCheck(condition, errmsg, args ...) do {                                                                                                 \
     if (!(condition)) {                                                                                                                           \
@@ -102,7 +103,8 @@ void loom_fireAssertCallback();
         platform_error(lmAssertBuf, __FILE__, __LINE__, ## args);                                                                                 \
         loom_fireAssertCallback();                                                                                                                \
         abort();                                                                                                                                  \
-    } while (0);
+    } \
+} while (0);
 #endif
 
 #endif

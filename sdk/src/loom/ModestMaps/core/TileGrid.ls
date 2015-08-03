@@ -1119,17 +1119,14 @@ package loom.modestmaps.core
             //checkNodes(quadRoot);
             
             var time = Platform.getTime();
-            var timeLimit = 2;
-            var iterationLimit = 100;
+            var timeLimit = 1;
+            var iterationLimit = 1000;
             var pruned = 0;
             var iterations = 0;
             
-            //trace("Pruning nodes... "+quadRoot.descendants);
             while (quadRoot.descendants > MAX_QUAD_NODES && Platform.getTime()-time < timeLimit && iterations < iterationLimit) {
-            //if (quadRoot.descendants > MAX_QUAD_NODES) {
                 var node = quadRoot;
                 var levels = 0;
-                //var path:Vector.<int> = [];
                 var retries:int = 0;
                 var nextChild:int = -1;
                 while (node && !node.isPrunable()) {
@@ -1143,7 +1140,6 @@ package loom.modestmaps.core
                     }
                     if (next) {
                         node = next;
-                        //path.push(nextChild);
                         retries = 0;
                         nextChild = -1;
                         levels++;
@@ -1157,15 +1153,13 @@ package loom.modestmaps.core
                     }
                     iterations++;
                 }
-                //trace("Path: "+path);
                 if (node) {
-                    //trace("Found prunable node "+node+" "+levels+" levels deep");
                     node.destroy();
                     pruned++;
                 }
             }
             // Uncomment to trace the quad node pruning status
-            //if (iterations > 0) trace("Pruned "+pruned+" / "+quadRoot.descendants+" nodes "+checkNodePrunable+" / "+checkNodeTotal+" prunable "+iterations+" iterations "+QuadNode.poolCount+" in pool");
+            //if (iterations > 0) trace("Pruned "+pruned+" / "+quadRoot.descendants+" nodes in "+(Platform.getTime()-time)+" ms "+checkNodePrunable+" / "+checkNodeTotal+" prunable "+iterations+" iterations "+QuadNode.poolCount+" in pool");
         }
         
         private function checkNodes(node:QuadNode) {

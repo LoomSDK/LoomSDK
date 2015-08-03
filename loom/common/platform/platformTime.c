@@ -61,12 +61,17 @@ typedef struct loom_mach_precisionTimer_t
 loom_precision_timer_t loom_startTimer()
 {
     loom_mach_precisionTimer_t *t = lmAlloc(NULL, sizeof(loom_mach_precisionTimer_t));
-
-    mach_timebase_info(&t->info);
-    t->start = mach_absolute_time();
+    loom_resetTimer(t);
     return t;
 }
 
+void loom_resetTimer(loom_precision_timer_t timer)
+{
+    loom_mach_precisionTimer_t *t = timer;
+
+    mach_timebase_info(&t->info);
+    t->start = mach_absolute_time();
+}
 
 int loom_readTimer(loom_precision_timer_t timer)
 {
@@ -76,6 +81,14 @@ int loom_readTimer(loom_precision_timer_t timer)
 
     b /= 1000 * 1000; // Convert from ns to ms.
     return b;
+}
+
+double loom_readTimerNano(loom_precision_timer_t timer)
+{
+    loom_mach_precisionTimer_t *t = timer;
+    uint64_t a = mach_absolute_time() - t->start;
+    uint64_t b = (a * t->info.numer) / t->info.denom;
+    return (double) b;
 }
 
 
@@ -166,6 +179,7 @@ void loom_destroyTimer(loom_precision_timer_t timer)
 
 #include <time.h>
 int timespecDelta(struct timespec *then, struct timespec *now);
+double timespecDeltaNano(struct timespec *then, struct timespec *now);
 
 struct timespec dawn;
 
@@ -201,11 +215,15 @@ int platform_getMilliseconds()
 loom_precision_timer_t loom_startTimer()
 {
     loom_linux_precisionTimer_t *t = lmAlloc(NULL, sizeof(loom_linux_precisionTimer_t));
-
-    clock_gettime(WHICH_CLOCK, t);
+    loom_resetTimer(t);
     return t;
 }
 
+void loom_resetTimer(loom_precision_timer_t timer)
+{
+    loom_linux_precisionTimer_t *t = (loom_linux_precisionTimer_t *)timer;
+    clock_gettime(WHICH_CLOCK, t);
+}
 
 int loom_readTimer(loom_precision_timer_t timer)
 {
@@ -217,6 +235,16 @@ int loom_readTimer(loom_precision_timer_t timer)
     return timespecDelta(t, &now);
 }
 
+double loom_readTimerNano(loom_precision_timer_t timer)
+{
+    struct timespec             now;
+    loom_linux_precisionTimer_t *t = (loom_linux_precisionTimer_t *)timer;
+
+    clock_gettime(WHICH_CLOCK, &now);
+
+    return timespecDeltaNano(t, &now);
+}
+
 
 int timespecDelta(struct timespec *then, struct timespec *now)
 {
@@ -226,6 +254,16 @@ int timespecDelta(struct timespec *then, struct timespec *now)
     long deltaMSec = deltaSec * 1000 + deltaNSec / (1000 * 1000);
 
     return (int)deltaMSec;
+}
+
+double timespecDeltaNano(struct timespec *then, struct timespec *now)
+{
+    long deltaSec  = now->tv_sec - then->tv_sec;
+    long deltaNSec = now->tv_nsec - then->tv_nsec;
+
+    long deltaMSec = deltaSec * 1000 * 1000 + deltaNSec;
+
+    return (double) deltaMSec;
 }
 
 
