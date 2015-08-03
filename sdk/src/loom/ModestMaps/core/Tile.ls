@@ -16,11 +16,19 @@ package loom.modestmaps.core
     import loom2d.textures.Texture;
     
     public class QuadNode {
-        public var parent:QuadNode;
-        public var child:int;
-        public var col:int;
-        public var row:int;
-        public var zoom:int;
+        
+        public static var pool:QuadNode;
+        public static var poolCount:int = 0;
+        public var poolNext:QuadNode = null;
+        
+        /** Only counted on the root node for now */
+        public var descendants:int = 0;
+        public var root:QuadNode = null;
+        public var parent:QuadNode = null;
+        public var child:int = -1;
+        public var col:int = 0;
+        public var row:int = 0;
+        public var zoom:int = 0;
         public var a:QuadNode;
         public var b:QuadNode;
         public var c:QuadNode;
@@ -32,13 +40,60 @@ package loom.modestmaps.core
         //public function set tile(v:Tile) { trace(v); _tile = v; }
         //public function get tile():Tile { return _tile; }
         
-        public function QuadNode(parent:QuadNode, child:int, col:int, row:int, zoom:int)
+        public function QuadNode() {}
+        
+        public function reset(root:QuadNode, parent:QuadNode, child:int, col:int, row:int, zoom:int)
         {
+            if (this.root) destroy();
+            if (root) root.descendants++;
+            this.root = root;
             this.parent = parent;
             this.child = child;
             this.col = col;
             this.row = row;
             this.zoom = zoom;
+        }
+        
+        public static function create(root:QuadNode, parent:QuadNode, child:int, col:int, row:int, zoom:int):QuadNode
+        {
+            var node:QuadNode = null;
+            if (pool) {
+                node = pool;
+                pool = pool.poolNext;
+                poolCount--;
+            }
+            if (!node) node = new QuadNode();
+            node.reset(root, parent, child, col, row, zoom);
+            return node;
+        }
+        
+        public function isPrunable():Boolean
+        {
+            return root && !a && !b && !c && !d && !tile;
+        }
+        
+        public function destroy()
+        {
+            Debug.assert(root, "Invalid node, missing root, already destroyed?");
+            Debug.assert(!a && !b && !c && !d, "Destroying a node with children currently unsupported");
+            Debug.assert(!tile, "Destroying a node with an existing tile currently unsupported");
+            root.descendants--;
+            switch (child) {
+                case 0: parent.a = null; break;
+                case 1: parent.b = null; break;
+                case 2: parent.c = null; break;
+                case 3: parent.d = null; break;
+            }
+            root = null;
+            parent = null;
+            child = -1;
+            col = -1;
+            row = -1;
+            zoom = -1;
+            
+            poolNext = pool;
+            pool = this;
+            poolCount++;
         }
         
         /*
@@ -99,7 +154,7 @@ package loom.modestmaps.core
             //trace(col, row, inzoom);
             //trace(col, row, inzoom);
             for (var z:int = 0; z < inzoom; z++) {
-                node.ensureChildren();
+                node.ensureChildren(root);
                 var child = node.classify(col, row, inzoom);
                 //trace(z, child);
                 //trace("  ", col, row, inzoom-z, child);
@@ -110,7 +165,7 @@ package loom.modestmaps.core
                     case 3: node = node.d; break;
                 }
             }
-            node.ensureChildren();
+            node.ensureChildren(root);
             //trace("getnode", col, row, inzoom, node.zoom, node.tile);
             //Debug.assert(false);
             return node;
@@ -121,11 +176,11 @@ package loom.modestmaps.core
         public function get cTile():Tile { return c ? c.tile : null; }
         public function get dTile():Tile { return d ? d.tile : null; }
         
-        private function ensureChildren() {
-            if (!a) a = new QuadNode(this, 0, col*2+0, row*2+0, zoom+1);
-            if (!b) b = new QuadNode(this, 1, col*2+1, row*2+0, zoom+1);
-            if (!c) c = new QuadNode(this, 2, col*2+0, row*2+1, zoom+1);
-            if (!d) d = new QuadNode(this, 3, col*2+1, row*2+1, zoom+1);
+        private function ensureChildren(root:QuadNode) {
+            if (!a) a = QuadNode.create(root, this, 0, col*2+0, row*2+0, zoom+1);
+            if (!b) b = QuadNode.create(root, this, 1, col*2+1, row*2+0, zoom+1);
+            if (!c) c = QuadNode.create(root, this, 2, col*2+0, row*2+1, zoom+1);
+            if (!d) d = QuadNode.create(root, this, 3, col*2+1, row*2+1, zoom+1);
         }
     }
     

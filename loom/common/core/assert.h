@@ -79,9 +79,10 @@ void loom_fireAssertCallback();
 // Use lmAssert when the check is just a sanity check and stripping it out
 // will not have any side effects
 #if LOOM_COMPILER == LOOM_COMPILER_MSVC
-#define lmCheck(condition, errmsg, ...)                                                                                                          \
+#define lmCheck(condition, errmsg, ...) do {                                                                                                      \
     if (!(condition)) {                                                                                                                           \
         char *lmAssertBuf = (char *)malloc(strlen(errmsg) + strlen(# condition) + 32); /* Allocate our buffer with 32 bytes of breathing room. */ \
+        if (lmAssertBuf == NULL) { platform_error("Assertion message allocation failed! The unformatted message follows."); lmSafeCheck(condition, errmsg); break; } \
         strcpy(lmAssertBuf, "Assert failed [%s@%d] (" # condition "): ");              /* Begin with our standard "assert failed" prefix. */      \
         strcpy(lmAssertBuf + strlen(lmAssertBuf), errmsg);                             /* Append our message to the end of our format string. */  \
         strcpy(lmAssertBuf + strlen(lmAssertBuf), "\n");                               /* Append a new line to the end for good measure. */       \
@@ -89,18 +90,21 @@ void loom_fireAssertCallback();
         __debugbreak();                                                                                                                           \
         loom_fireAssertCallback();                                                                                                                \
         abort();                                                                                                                                  \
-    }
+    } \
+} while(0);
 #else
-#define lmCheck(condition, errmsg, args ...)                                                                                                     \
+#define lmCheck(condition, errmsg, args ...) do {                                                                                                 \
     if (!(condition)) {                                                                                                                           \
         char *lmAssertBuf = (char *)malloc(strlen(errmsg) + strlen(# condition) + 32); /* Allocate our buffer with 32 bytes of breathing room. */ \
+        if (lmAssertBuf == NULL) { platform_error("Assertion message allocation failed! The unformatted message follows."); lmSafeCheck(condition, errmsg); break; } \
         strcpy(lmAssertBuf, "Assert failed [%s@%d] (" # condition "): \n");            /* Begin with our standard "assert failed" prefix. */      \
         strcpy(lmAssertBuf + strlen(lmAssertBuf), errmsg);                             /* Append our message to the end of our format string. */  \
         strcpy(lmAssertBuf + strlen(lmAssertBuf), "\n");                               /* Append a new line to the end for good measure. */       \
         platform_error(lmAssertBuf, __FILE__, __LINE__, ## args);                                                                                 \
         loom_fireAssertCallback();                                                                                                                \
         abort();                                                                                                                                  \
-    }
+    } \
+} while (0);
 #endif
 
 #endif

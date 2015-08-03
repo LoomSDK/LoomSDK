@@ -29,6 +29,7 @@ package loom.modestmaps.geo
         * Return untransformed and unprojected location for a coordinate.
         */
         function coordinateLocation(coordinate:Coordinate):Location;
+        function coordinateLocationStatic(coordinate:Coordinate):Location;
         
         function toString():String;
     }

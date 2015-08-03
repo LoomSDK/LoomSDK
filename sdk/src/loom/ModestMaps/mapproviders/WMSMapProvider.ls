@@ -85,8 +85,8 @@ package loom.modestmaps.mapproviders
 			var magicZoom:Number = Math.log(2*quadrantWidth) / Math.LN2;        	
 
 			// apply that number os a zoom, it's basically getting us tile coordinates for zoom level 25.something...
-        	bottomLeftCoord = bottomLeftCoord.zoomTo(magicZoom);
-        	topRightCoord = topRightCoord.zoomTo(magicZoom);
+        	bottomLeftCoord.zoomToInPlace(magicZoom);
+        	topRightCoord.zoomToInPlace(magicZoom);
         	
         	// flip and offset so we have correct minx,miny,maxx,maxy
         	var minx:Number = bottomLeftCoord.column - quadrantWidth;

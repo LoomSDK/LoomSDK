@@ -545,6 +545,7 @@ static int lsr_gctracker(lua_State *L)
     {
         GCTracker *gct = (GCTracker *)lua_topointer(L, 1);
         lmAssert(gct, "unable to get GCTracker");
+        LSProfiler::registerMemoryUsage(gct->type, -gct->allocated);
         LSProfiler::registerGC(gct->type, gct->methodBase);
     }
 

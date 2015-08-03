@@ -13,6 +13,8 @@ package loom.modestmaps.geo
     public class AbstractProjection implements IProjection
     {
         protected const HELPER_POINT:Point;
+        protected const HELPER_COORD:Coordinate = new Coordinate(0, 0, 0);
+        protected const HELPER_LOCATION:Location = new Location(0, 0);
         
         // linear transformation, if any.
         protected var T:Transformation;
@@ -93,11 +95,24 @@ package loom.modestmaps.geo
         */
         public function coordinateLocation(coordinate:Coordinate):Location
         {
-            coordinate = coordinate.zoomTo(zoom);
-            HELPER_POINT.x = coordinate.column;
-            HELPER_POINT.y = coordinate.row;
+            HELPER_COORD.setVals(coordinate.row, coordinate.column, coordinate.zoom);
+            HELPER_COORD.zoomToInPlace(zoom);
+            HELPER_POINT.x = HELPER_COORD.column;
+            HELPER_POINT.y = HELPER_COORD.row;
             unproject(HELPER_POINT);
             return new Location(180*HELPER_POINT.y/Math.PI, 180*HELPER_POINT.x/Math.PI);
+        }
+        
+        public function coordinateLocationStatic(coordinate:Coordinate):Location
+        {
+            HELPER_COORD.setVals(coordinate.row, coordinate.column, coordinate.zoom);
+            HELPER_COORD.zoomToInPlace(zoom);
+            HELPER_POINT.x = HELPER_COORD.column;
+            HELPER_POINT.y = HELPER_COORD.row;
+            unproject(HELPER_POINT);
+            HELPER_LOCATION.lat = 180*HELPER_POINT.y/Math.PI;
+            HELPER_LOCATION.lon = 180*HELPER_POINT.x/Math.PI;
+            return HELPER_LOCATION;
         }
     }
 }

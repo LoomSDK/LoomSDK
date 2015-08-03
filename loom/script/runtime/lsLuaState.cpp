@@ -63,10 +63,14 @@ struct stackinfo
 static utStack<stackinfo> _tracestack;
 static char               _tracemessage[2048];
 
+size_t LSLuaState::allocatedBytes = 0;
+
 static void *lsLuaAlloc(void *ud, void *ptr, size_t osize, size_t nsize)
 {
-    (void)ud;  (void)osize;  /* not used */
+    (void)ud;  /* not used */
     
+    LSLuaState::allocatedBytes += nsize - osize;
+
     if (nsize == 0) 
     {
         lmFree(NULL, ptr);
@@ -86,7 +90,7 @@ void LSLuaState::open()
 {
     assert(!L);
 
-    L = lua_newstate(lsLuaAlloc, NULL);
+    L = lua_newstate(lsLuaAlloc, this);
     //L = luaL_newstate();
     toLuaState.insert(L, this);
 
@@ -101,6 +105,9 @@ void LSLuaState::open()
     // update luajit and test again
     luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_OFF);
 #endif
+
+    // Stop the GC initially
+    lua_gc(L, LUA_GCSTOP, 0);
 
     // open the lua debug library
     luaopen_debug(L);
