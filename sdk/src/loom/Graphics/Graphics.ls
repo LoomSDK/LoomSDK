@@ -28,6 +28,15 @@ package loom.graphics
     public native class Graphics
     {
         /**
+         * Delegate that will be fired when screenshot data is gathered and ready to be consumed.
+         * The expected delegate signature is `function(byteArray):void`
+         * 
+         * See the screenshotData function for more information
+         * @see screenshotData
+         */
+        public static native var onScreenshotData:NativeDelegate;
+        
+        /**
          * Private API; simulates graphics context loss.
          */
         public static native function handleContextLoss():void;
@@ -36,6 +45,15 @@ package loom.graphics
          * Take a screenshot and save it to the specified path (in PNG format).
          */
         public static native function screenshot(path:String):void;
+        
+        /**
+         * Take a screenshot and return the raw data in the onScreenshotData delegate
+         * 
+         * This function will not return anything, instead it will trigger the graphics system to take
+         * a screenshot at the end of the current frame. Therefore, in order to get the screenshot data the
+         * onScreenshotData delegate must be used
+         */
+        public static native function screenshotData():void;
 
         /// No debug features enabled.
         public static var DEBUG_NONE 		= 0;
@@ -71,7 +89,7 @@ package loom.graphics
         
         /** 
          * Set the background color for the graphics viewport, in RGBA.
-         */
+         */ 
         public static native function setFillColor(color:int):void;
 
     }

@@ -50,6 +50,7 @@
 
 #include <stdint.h>
 
+#include "loom/script/native/lsNativeDelegate.h"
 #include "loom/common/core/assert.h"
 #include "loom/common/core/performance.h"
 #include "loom/common/core/log.h"
@@ -163,11 +164,14 @@ namespace GFX
 
 /** 
   *  Graphics subsystem class in charge of initializing bgfx graphics and handling context loss
-  */    
+  */
 class Graphics
 {
 
 public:
+    
+    // Delegate that provides screenshot data (in PNG format) when screenshotData is called
+    LOOM_STATICDELEGATE(onScreenshotData);
 
     static const uint32_t FLAG_INVERTED = 1 << 0;
     static const uint32_t FLAG_NOCLEAR  = 1 << 1;
@@ -225,6 +229,7 @@ public:
 
     static void setDebug(int flags);
     static void screenshot(const char *path);
+    static void screenshotData();
     static void setFillColor(int color);
     static int getFillColor();
 
@@ -279,6 +284,9 @@ private:
 
     // If set, at next opportunity we will store a screenshot to this path and clear it.
     static char pendingScreenshot[1024];
+
+    // If set, at the next opportunity we will get screenshot data and return it with the onScreenshotData delegate
+    static bool gettingScreenshotData;
     
     static GL_Context _context;
 

@@ -43,6 +43,8 @@ namespace GFX
 {
     lmDefineLogGroup(gGFXLogGroup, "GFX", 1, LoomLogInfo);
 
+    LS::NativeDelegate Graphics::_onScreenshotDataDelegate;
+
     bool Graphics::sInitialized = false;
 
     // start with context loss as flagged so resources are created
@@ -80,6 +82,8 @@ namespace GFX
 	float* Graphics::sCurrentModelViewProjection = NULL;
 	
     char Graphics::pendingScreenshot[1024] = { 0, };
+
+    bool Graphics::gettingScreenshotData = false;
 
     extern SDL_GLContext context;
     GL_Context Graphics::_context;
@@ -244,7 +248,7 @@ void Graphics::endFrame()
     QuadRenderer::endFrame();
     //VectorRenderer::endFrame();
 
-    if(pendingScreenshot[0] != 0)
+    if(pendingScreenshot[0] != 0 || gettingScreenshotData)
     {
         SDL_ClearError();
         SDL_Window* sdlWindow = gSDLWindow;
@@ -284,11 +288,18 @@ void Graphics::endFrame()
             invertedPixels->writeBytes(pixels, i * infoSurface->w * bpp, infoSurface->w * bpp);
         }
         
-        if (stbi_write_png(pendingScreenshot, infoSurface->w, infoSurface->h, 4 /* RGBA */, invertedPixels->getDataPtr(), infoSurface->w * bpp) != 1) {
+        // If there is a pending screenshot write, do that
+        if (pendingScreenshot[0] != 0 && stbi_write_png(pendingScreenshot, infoSurface->w, infoSurface->h, 4 /* RGBA */, invertedPixels->getDataPtr(), infoSurface->w * bpp) != 1) {
             lmLog(gGFXLogGroup, "Unable to generate PNG");
-            lmFree(NULL, pixels);
-            lmFree(NULL, invertedPixels);
-            return;
+        }
+
+        // If there is a pending data request, do that
+        if (gettingScreenshotData) {
+            utByteArray *retData = stbi_data_png(infoSurface->w, infoSurface->h, 4 /* RGBA */, invertedPixels->getDataPtr(), infoSurface->w * bpp);
+
+            // Send the delegate along
+            _onScreenshotDataDelegate.pushArgument(retData);
+            _onScreenshotDataDelegate.invoke();
         }
         
         lmFree(NULL, pixels);
@@ -297,6 +308,7 @@ void Graphics::endFrame()
         SDL_FreeSurface(infoSurface);
         infoSurface = NULL;
         pendingScreenshot[0] = 0;
+        gettingScreenshotData = false;
     }
 }
 
@@ -364,6 +376,11 @@ void Graphics::screenshot(const char *path)
         return;
     }
     strcpy(pendingScreenshot, path);
+}
+
+void Graphics::screenshotData()
+{
+    gettingScreenshotData = true;
 }
 
 
