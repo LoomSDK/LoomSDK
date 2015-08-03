@@ -72,6 +72,8 @@ package loom.modestmaps
         public var onProviderChange:MapProviderChange;
         public var onMapRender:MapChange;
         
+        private var tempExtent:MapExtent = new MapExtent(0, 0, 0, 0);
+        
         protected var baseMapWidth:Number;
         protected var baseMapHeight:Number;
         protected var mapWidth:Number;
@@ -318,13 +320,11 @@ package loom.modestmaps
         */
         public function getExtent():MapExtent
         {
-            var extent:MapExtent = new MapExtent(0, 0, 0, 0);
-            
             Debug.assert(mapProvider, "WHOAH, no mapProvider in getExtent!");
             
-            extent.northWest = mapProvider.coordinateLocation(grid.topLeftCoordinate);
-            extent.southEast = mapProvider.coordinateLocation(grid.bottomRightCoordinate);
-            return extent;
+            tempExtent.northWest = mapProvider.coordinateLocationStatic(grid.topLeftCoordinate);
+            tempExtent.southEast = mapProvider.coordinateLocationStatic(grid.bottomRightCoordinate);
+            return tempExtent;
         }
     
        /*
@@ -356,7 +356,15 @@ package loom.modestmaps
         {
             return Math.floor(grid.zoomLevel);
         }
-
+/*
+        * Return the fractional current zoom level of the map.
+        *
+        * @return   zoom number
+        */
+        public function getZoomFractional():Number
+        {
+            return grid.zoomLevel;
+        }
     
        /**
         * Set new map size, dispatch MapEvent.RESIZED. 
@@ -371,8 +379,8 @@ package loom.modestmaps
         {
             if (w != baseMapWidth || h != baseMapHeight)
             {
-                if (w != NaN) baseMapWidth = w;
-                if (h != NaN) baseMapHeight = h;
+                if (!isNaN(w)) baseMapWidth = w;
+                if (!isNaN(h)) baseMapHeight = h;
                 
                 // The global (down)scale based on the density
                 var densityScale = mapProvider.supportsHighDPI ? 1 : Platform.getDPI()/200;

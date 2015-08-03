@@ -25,6 +25,7 @@ package loom.modestmaps.mapproviders
         * @return untransformed and unprojected location for a coordinate.
         */
         function coordinateLocation(coordinate:Coordinate):Location;
+        function coordinateLocationStatic(coordinate:Coordinate):Location;
     
        /**
         * Get top left outer-zoom limit and bottom right inner-zoom limits,

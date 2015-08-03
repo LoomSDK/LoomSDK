@@ -474,6 +474,7 @@ struct GCTracker
 {
     Type       *type;
     MethodBase *methodBase;
+    int         allocated;
 };
 }
 #endif

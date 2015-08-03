@@ -38,7 +38,18 @@ struct LSProfilerTypeAllocation
 
     int                                alive;
     int                                total;
+
+    int                                memoryCurrent;
+    int                                memoryTotal;
 };
+
+typedef struct MethodAllocation {
+    int currentCount;
+    int totalCount;
+    int currentBytes;
+    int totalBytes;
+    utArray<LSProfilerTypeAllocation*> allocations;
+} MethodAllocation;
 
 class LSProfiler
 {
@@ -95,11 +106,13 @@ public:
             LSProfilerTypeAllocation *n = new LSProfilerTypeAllocation;
             allocations.insert(type, n);
 
-            n->type        = type;
-            n->total       = 1;
-            n->alive       = 1;
-            n->anonCurrent = 0;
-            n->anonTotal   = 0;
+            n->type          = type;
+            n->total         = 1;
+            n->alive         = 1;
+            n->memoryCurrent = 0;
+            n->memoryTotal   = 0;
+            n->anonCurrent   = 0;
+            n->anonTotal     = 0;
 
             if (methodBase)
             {
@@ -151,6 +164,19 @@ public:
         return methodBase;
     }
 
+    inline static void registerMemoryUsage(Type *type, int delta)
+    {
+        LSProfilerTypeAllocation **oalloc = allocations.get(type);
+
+        if (!oalloc || !*oalloc)
+        {
+            return;
+        }
+
+        (*oalloc)->memoryCurrent += delta;
+        if (delta > 0) (*oalloc)->memoryTotal += delta;
+    }
+
     inline static void registerGC(Type *type, MethodBase *methodBase)
     {
         LSProfilerTypeAllocation **oalloc = allocations.get(type);
@@ -183,6 +209,9 @@ public:
     static void disable(lua_State *L);
 
     static void dumpAllocations(lua_State *L);
+    static utHashTable<utPointerHashKey, MethodAllocation> *sortMethods;
+    static int sortMethodsByTotalCount(const void* a, const void* b);
+    static int sortAllocsByTotal(const void* a, const void* b);
 
     static void dump(lua_State *L);
 

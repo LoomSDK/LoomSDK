@@ -10,11 +10,6 @@ package loom.modestmaps.core
         public var column:Number;
         public var zoom:Number;
 
-        //NOTE_TEC: added to avoid unnecessary Coordinate object generation at times
-        public var zoomToRow:Number;
-        public var zoomToCol:Number;
-        
-
         public function Coordinate(row:Number, column:Number, zoom:Number)
         {
             this.row = row;
@@ -39,6 +34,13 @@ package loom.modestmaps.core
             return new Coordinate(row, column, zoom);
         }
         
+        public function copyFrom(coord:Coordinate)
+        {
+            row = coord.row;
+            column = coord.column;
+            zoom = coord.zoom;
+        }
+        
        /**
         * Return a new coordinate that corresponds to that of the tile containing this one
         */
@@ -56,8 +58,8 @@ package loom.modestmaps.core
         public function zoomToInPlace(destination:Number):void
         {
             var zoomPow:Number = Math.pow(2, destination - zoom);
-            zoomToCol = column * zoomPow;
-            zoomToRow = row * zoomPow;
+            column *= zoomPow;
+            row *= zoomPow;
         }
         
         public function zoomBy(distance:Number):Coordinate

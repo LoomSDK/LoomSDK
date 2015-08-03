@@ -236,13 +236,13 @@ void VectorGraphics::drawArc(float x, float y, float radius, float angleFrom, fl
 
 void VectorGraphics::drawTextLine(float x, float y, utString text) {
 	ensureTextFormat();
-	queue->push_back(lmNew(NULL) VectorText(x, y, NAN, lmNew(NULL) utString(text)));
+	queue->push_back(lmNew(NULL) VectorText(x, y, -1, lmNew(NULL) utString(text)));
 	inflateBounds(textLineBounds(currentTextFormat, x, y, text));
 }
 
 void VectorGraphics::drawTextBox(float x, float y, float width, utString text) {
 	ensureTextFormat();
-	queue->push_back(lmNew(NULL) VectorText(x, y, width, lmNew(NULL) utString(text)));
+	queue->push_back(lmNew(NULL) VectorText(x, y, width < 0 ? 0 : width, lmNew(NULL) utString(text)));
 	inflateBounds(textBoxBounds(currentTextFormat, x, y, width, text));
 }
 
@@ -415,7 +415,7 @@ void VectorFill::render(VectorGraphics* g) {
 }
 
 void VectorText::render(VectorGraphics* g) {
-	if (isnan(width)) {
+	if (width == -1) {
 		VectorRenderer::textLine(x, y, text);
 	} else {
 		VectorRenderer::textBox(x, y, width, text);

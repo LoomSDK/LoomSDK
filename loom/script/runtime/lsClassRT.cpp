@@ -139,17 +139,28 @@ static int lsr_classcreateinstance(lua_State *L)
 
     Type *type = (Type *)lua_topointer(L, lua_upvalueindex(1));
 
+    bool profiling = LSProfiler::isEnabled();
+    int memoryBeforeKB, memoryBeforeB;
+    GCTracker *gct;
+
+    if (profiling)
+    {
+        memoryBeforeKB = lua_gc(L, LUA_GCCOUNT, 0);
+        memoryBeforeB = lua_gc(L, LUA_GCCOUNTB, 0);
+    }
+
     lualoom_newscriptinstance_internal(L, type);
     int instanceIdx = lua_gettop(L);
 
-    if (LSProfiler::isEnabled())
+    if (profiling)
     {
         MethodBase *methodBase = LSProfiler::registerAllocation(type);
 
         // attach the gctracker
-        GCTracker *gct = (GCTracker *)lua_newuserdata(L, sizeof(GCTracker));
+        gct = (GCTracker *)lua_newuserdata(L, sizeof(GCTracker));
         gct->type       = type;
         gct->methodBase = methodBase;
+        gct->allocated  = 0;
         luaL_getmetatable(L, LSGCTRACKER);
         lua_setmetatable(L, -2);
         lua_rawseti(L, instanceIdx, LSINDEXGCTRACKER);
@@ -355,6 +366,18 @@ static int lsr_classcreateinstance(lua_State *L)
             t = types.pop();
         }
     }
+
+    if (profiling)
+    {
+        int memoryDeltaKB = lua_gc(L, LUA_GCCOUNT, 0) - memoryBeforeKB;
+        int memoryDeltaB = lua_gc(L, LUA_GCCOUNTB, 0) - memoryBeforeB;
+        int memoryDelta = memoryDeltaKB * 1024 + memoryDeltaB;
+        lmAssert(memoryDelta >= 0, "Unexpected garbage collection: %d bytes after creating instance (%d -> %d)", memoryDelta, memoryBeforeKB, memoryDeltaKB + memoryBeforeKB);
+        LSProfiler::registerMemoryUsage(type, memoryDelta);
+        gct->allocated += memoryDelta;
+    }
+
+
 
     // return this
     lua_pushvalue(L, instanceIdx);

@@ -10,6 +10,7 @@ package
     import loom.modestmaps.mapproviders.OpenStreetMapProvider;
     import loom.modestmaps.mapproviders.BlueMarbleMapProvider;
     import loom.modestmaps.overlays.ImageMarker;
+    import loom2d.Loom2D;
     import system.platform.File;
 
     import loom.platform.LoomKey;
@@ -35,8 +36,9 @@ package
         
         private const PinHoldTime:int = 700;
         private const PinTouchBias:int = 4;
-
-
+        
+        private var landmarkViewer:LandmarkViewer;
+        
         override public function run():void
         {   
             
@@ -64,8 +66,14 @@ package
             //simle keyboard controls
             stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
             
+            landmarkViewer = new LandmarkViewer(_map);
+            landmarkViewer.loadVolcanoes("assets/volcanoes.tsv");
+            landmarkViewer.runVolcanoShowcase();
+            //landmarkViewer.profileVolcanoShowcase();
+            
+            
             //marker placement logic
-            _map.addEventListener(TouchEvent.TOUCH, touchHandler);          
+            _map.addEventListener(TouchEvent.TOUCH, touchHandler);
             _markerHoldTimer = new Timer(PinHoldTime);
             _markerHoldTimer.onComplete = function() 
             { 
@@ -82,7 +90,11 @@ package
             var pin = new ImageMarker(_map, "pin" + _pinCount++, Texture.fromAsset("assets/pin.png"));
             return pin;
         }
-
+        
+        
+        override public function onTick() {
+            landmarkViewer.onTick();
+        }
 
         //keyboard handler
         private function keyDownHandler(event:KeyboardEvent):void
@@ -91,13 +103,19 @@ package
 
             //always zoom at the center of the screen
             var zoomPoint:Point = new Point(_map.getWidth() / 2, _map.getHeight() / 2);
-
+            
+            if (keycode == LoomKey.C) trace(_map.getCenter());
+            
+            if (keycode == LoomKey.S) landmarkViewer.volcanoShowcase ? landmarkViewer.stopVolcanoShowcase() : landmarkViewer.runVolcanoShowcase();
+            
             //process zooming
             if (keycode == LoomKey.EQUALS)
                 _map.zoomByAbout(0.05, zoomPoint);
             if (keycode == LoomKey.HYPHEN)
                 _map.zoomByAbout( -0.05, zoomPoint);
-
+            
+            var switched = false;
+            
             //switch map provider!
             if(keycode == LoomKey.LEFTBRACKET)
             {
@@ -106,6 +124,7 @@ package
                 {
                     _provider = _mapProviders.length - 1;
                 }
+                switched = true;
             }
             else if(keycode == LoomKey.RIGHTBRACKET)
             {
@@ -114,11 +133,14 @@ package
                 {
                     _provider = 0;
                 }
+                switched = true;
             }
-            var newProvider:IMapProvider = _mapProviders[_provider];
-            if(newProvider != _map.getMapProvider())
-            {
-                _map.setMapProvider(newProvider);
+            if (switched) {
+                var newProvider:IMapProvider = _mapProviders[_provider];
+                if(newProvider != _map.getMapProvider())
+                {
+                    _map.setMapProvider(newProvider);
+                }
             }
         }
 

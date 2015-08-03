@@ -608,6 +608,11 @@ public:
                     lua_pushstring(L, temp);
                     lua_rawset(L, -3);
                 }
+                else if (found != str && found - start == 0) {
+                    lua_pushnumber(L, count++);
+                    lua_pushstring(L, "");
+                    lua_rawset(L, -3);
+                }
 
                 start = found + dlen;
             }

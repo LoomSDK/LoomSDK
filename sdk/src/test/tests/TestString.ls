@@ -47,8 +47,7 @@ class TestString extends LegacyTest
     
     function test()
     {
-        
-        assert("|X|A|X|B|X|C|X|".split("|X|").length == 5);        
+        assert("|X|A|X|B|X|C|X||X|DoubleCommaOnLeft|X|".split("|X|").length == 7);        
         
         var svalue = "This is a Test!";
         

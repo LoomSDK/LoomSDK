@@ -62,7 +62,7 @@ package loom.modestmaps.core
         /** this is the maximum size of tileCache (visible tiles will also be kept in the cache).  
          *  the larger this is, the more texture memory will be needed to store the loaded images. */     
         //public static var MaxTilesToKeep:int = 256;// 256*256*4bytes = 0.25MB ... so 128 tiles is 32MB of memory, minimum!
-        public static var MaxTilePixels:int = 256*256*256; // the maximum amount of tiles to keep represented as the number of pixels (to be tile size agnostic)
+        public static var MaxTilePixels:int = 128*256*256; // the maximum amount of tiles to keep represented as the number of pixels (to be tile size agnostic)
         
         /** 0 or 1, really: 2 will load *lots* of extra tiles */
         public static var TileBuffer:int = 1;
@@ -74,6 +74,13 @@ package loom.modestmaps.core
 
         private static const TILE_DEPTH_SHIFT = 16;
         public static var TileTimeoutMs = 60000;
+        
+        static public const MAX_QUAD_NODES = 1000;
+        static private const sHelperCoord:Coordinate = new Coordinate(0, 0, 0);
+        static private const sHelperTL:Coordinate = new Coordinate(0, 0, 0);
+        static private const sHelperTR:Coordinate = new Coordinate(0, 0, 0);
+        static private const sHelperBL:Coordinate = new Coordinate(0, 0, 0);
+        static private const sHelperBR:Coordinate = new Coordinate(0, 0, 0);
         
         //public var debug = true;
         public var debug = false;
@@ -124,10 +131,10 @@ package loom.modestmaps.core
         // keys we've recently seen
         
         protected var headActive:Tile;
-        protected var countActive = 0;
+        protected var countActive:int;
         protected var headInactive:Tile;
         
-        protected var quadRoot:QuadNode = new QuadNode(null, -1, 0, 0, 0);
+        protected var quadRoot:QuadNode;
         
         // currently visible tiles
                 
@@ -375,6 +382,10 @@ package loom.modestmaps.core
             
             //trace(well.numChildren);
             
+            if (isNaN(mapWidth) || isNaN(mapHeight) || isNaN(worldMatrix.tx)) return;
+            
+            Debug.assert(!isNaN(mapWidth) && !isNaN(mapHeight));
+            
             if (!dirty || !stage) {
                 //trace(getTimer() - t, "ms in", provider);     
                 onRendered();
@@ -409,9 +420,10 @@ package loom.modestmaps.core
             invalidatePosition();
             
             // update centerRow and centerCol for sorting the tileQueue in processQueue()
-            centerCoordinate.zoomToInPlace(currentTileZoom);
-            centerColumn = centerCoordinate.zoomToCol;
-            centerRow = centerCoordinate.zoomToRow;
+            sHelperCoord.copyFrom(centerCoordinate);
+            sHelperCoord.zoomToInPlace(currentTileZoom);
+            centerColumn = sHelperCoord.column;
+            centerRow = sHelperCoord.row;
 
             onRendered();
 
@@ -449,36 +461,41 @@ package loom.modestmaps.core
             //make sure our coordinates are all up to date
             recalculateCoordinates();
 
+            sHelperTL.copyFrom(_topLeftCoordinate);
+            sHelperTR.copyFrom(_topRightCoordinate);
+            sHelperBL.copyFrom(_bottomLeftCoordinate);
+            sHelperBR.copyFrom(_bottomRightCoordinate);
+            
             // find start and end columns for the visible tiles, at current tile zoom
             // we project all four corners to take account of potential rotation in worldMatrix
-            _topLeftCoordinate.zoomToInPlace(currentTileZoom);
-            _bottomRightCoordinate.zoomToInPlace(currentTileZoom);
-            _topRightCoordinate.zoomToInPlace(currentTileZoom);
-            _bottomLeftCoordinate.zoomToInPlace(currentTileZoom);
+            sHelperTL.zoomToInPlace(currentTileZoom);
+            sHelperBR.zoomToInPlace(currentTileZoom);
+            sHelperTR.zoomToInPlace(currentTileZoom);
+            sHelperBL.zoomToInPlace(currentTileZoom);
             
             // optionally pad it out a little bit more with a tile buffer
             // TODO: investigate giving a directional bias to TILE_BUFFER when panning quickly
             // NB:- I'm pretty sure these calculations are accurate enough that using 
             //      Math.ceil for the maxCols will load one column too many -- Tom         
-            MinColRow.x = Math.floor(minCoord(_topLeftCoordinate.zoomToCol, 
-                                                _bottomRightCoordinate.zoomToCol,
-                                                _topRightCoordinate.zoomToCol,
-                                                _bottomLeftCoordinate.zoomToCol)) - TileBuffer;
-            MaxColRow.x = Math.floor(maxCoord(_topLeftCoordinate.zoomToCol,
-                                                _bottomRightCoordinate.zoomToCol,
-                                                _topRightCoordinate.zoomToCol,
-                                                _bottomLeftCoordinate.zoomToCol)) + TileBuffer;
-            MinColRow.y = Math.floor(minCoord(_topLeftCoordinate.zoomToRow,
-                                                _bottomRightCoordinate.zoomToRow,
-                                                _topRightCoordinate.zoomToRow,
-                                                _bottomLeftCoordinate.zoomToRow)) - TileBuffer;
-            MaxColRow.y = Math.floor(maxCoord(_topLeftCoordinate.zoomToRow,
-                                                _bottomRightCoordinate.zoomToRow,
-                                                _topRightCoordinate.zoomToRow,
-                                                _bottomLeftCoordinate.zoomToRow)) + TileBuffer;
+            MinColRow.x = Math.floor(minCoord(sHelperTL.column, 
+                                                sHelperBR.column,
+                                                sHelperTR.column,
+                                                sHelperBL.column)) - TileBuffer;
+            MaxColRow.x = Math.floor(maxCoord(sHelperTL.column,
+                                                sHelperBR.column,
+                                                sHelperTR.column,
+                                                sHelperBL.column)) + TileBuffer;
+            MinColRow.y = Math.floor(minCoord(sHelperTL.row,
+                                                sHelperBR.row,
+                                                sHelperTR.row,
+                                                sHelperBL.row)) - TileBuffer;
+            MaxColRow.y = Math.floor(maxCoord(sHelperTL.row,
+                                                sHelperBR.row,
+                                                sHelperTR.row,
+                                                sHelperBL.row)) + TileBuffer;
             
-            TopLeftColRow.x = _topLeftCoordinate.zoomToCol;
-            TopLeftColRow.y = _topLeftCoordinate.zoomToRow;
+            TopLeftColRow.x = sHelperTL.column;
+            TopLeftColRow.y = sHelperTL.row;
             
             clampColRow(MinColRow);
             clampColRow(MaxColRow);
@@ -838,22 +855,21 @@ package loom.modestmaps.core
             // Recompute tile grid bounds for all zoom levels
             var zoom = currentTileZoom;
             var zoomMax = maxZoom;
-            var coord = tempCoord;
+            var coord = sHelperCoord;
             var gb:GridBounds;
             for (var z:int = 0; z <= zoomMax; z++) {
                 
-                tempCoord.setVals(minRow, minCol, zoom);
-                tempCoord.zoomToInPlace(z);
-                var zMinCol = tempCoord.zoomToCol;
-                var zMinRow = tempCoord.zoomToRow;
-                tempCoord.setVals(maxRow, maxCol, zoom);
-                tempCoord.zoomToInPlace(z);
-                
                 gb = _tileGridBounds[z];
-                gb.minCol = Math.floor(zMinCol);
-                gb.minRow = Math.floor(zMinRow);
-                gb.maxCol = Math.floor(tempCoord.zoomToCol);
-                gb.maxRow = Math.floor(tempCoord.zoomToRow);
+                
+                coord.setVals(minRow, minCol, zoom);
+                coord.zoomToInPlace(z);
+                gb.minCol = Math.floor(coord.column);
+                gb.minRow = Math.floor(coord.row);
+                
+                coord.setVals(maxRow, maxCol, zoom);
+                coord.zoomToInPlace(z);
+                gb.maxCol = Math.floor(coord.column);
+                gb.maxRow = Math.floor(coord.row);
             }
             
             // Set remaining visible tiles not in current zoom
@@ -898,6 +914,8 @@ package loom.modestmaps.core
                 var inBounds:Boolean = false;
                 var repopCol:int;
                 var repopRow:int;
+                Debug.assert(repopIndex >= 0 && !isNaN(repopWidth) && !isNaN(repopHeight), "index "+repopIndex+" w "+repopWidth+" h "+repopHeight);
+                var watchdog = 10000;
                 while (!inBounds) {
                     var inSpiralBounds = getSpiralCoordinate(repopIndex, repopWidth, repopHeight, sHelperPoint);
                     repopCol = repopMinCol+Math.floor(repopWidth/2)+sHelperPoint.x;
@@ -907,6 +925,7 @@ package loom.modestmaps.core
                     if (!inSpiralBounds) {
                         repopIndex = 0;
                     }
+                    Debug.assert(watchdog-- > 0, "Spiral search failure " + repopIndex + " " + repopWidth + " " + repopHeight + " " + repopCol + " " + repopRow);
                 }
                 var tile:Tile = rvtProcessTile(repopCol, repopRow, currentTileZoom);
                 
@@ -1049,6 +1068,7 @@ package loom.modestmaps.core
             }
             currentCovered = tile;
             
+            pruneNodes();
             
             // Prune tiles not in the well from the cache
             time = Platform.getTime();
@@ -1089,6 +1109,72 @@ package loom.modestmaps.core
             
             updateHud();
             
+        }
+        
+        private var checkNodeTotal:int;
+        private var checkNodePrunable:int;
+        
+        private function pruneNodes() {
+            // Uncomment to count the amount of prunable and total nodes
+            //checkNodes(quadRoot);
+            
+            var time = Platform.getTime();
+            var timeLimit = 1;
+            var iterationLimit = 1000;
+            var pruned = 0;
+            var iterations = 0;
+            
+            while (quadRoot.descendants > MAX_QUAD_NODES && Platform.getTime()-time < timeLimit && iterations < iterationLimit) {
+                var node = quadRoot;
+                var levels = 0;
+                var retries:int = 0;
+                var nextChild:int = -1;
+                while (node && !node.isPrunable()) {
+                    if (nextChild == -1) nextChild = Math.randomRangeInt(0, 3);
+                    var next:QuadNode;
+                    switch (nextChild) {
+                        case 0: next = node.a; break;
+                        case 1: next = node.b; break;
+                        case 2: next = node.c; break;
+                        case 3: next = node.d; break;
+                    }
+                    if (next) {
+                        node = next;
+                        retries = 0;
+                        nextChild = -1;
+                        levels++;
+                    } else {
+                        retries++;
+                        if (retries >= 4) {
+                            node = null;
+                            break;
+                        }
+                        nextChild = (nextChild+1)%4;
+                    }
+                    iterations++;
+                }
+                if (node) {
+                    node.destroy();
+                    pruned++;
+                }
+            }
+            // Uncomment to trace the quad node pruning status
+            //if (iterations > 0) trace("Pruned "+pruned+" / "+quadRoot.descendants+" nodes in "+(Platform.getTime()-time)+" ms "+checkNodePrunable+" / "+checkNodeTotal+" prunable "+iterations+" iterations "+QuadNode.poolCount+" in pool");
+        }
+        
+        private function checkNodes(node:QuadNode) {
+            if (node == quadRoot) {
+                checkNodeTotal = 0;
+                checkNodePrunable = 0;
+            } else {
+                if (!node) return;
+                checkNodeTotal++;
+                if (node.isPrunable()) checkNodePrunable++;
+            }
+            checkNodes(node.a);
+            checkNodes(node.b);
+            checkNodes(node.c);
+            checkNodes(node.d);
         }
 
 
@@ -1459,9 +1545,6 @@ package loom.modestmaps.core
             tile.updateRepop();
             tile.isVisible = true;
         }
-        
-        // for use in requestParentLoad
-        private var tempCoord:Coordinate = new Coordinate(0,0,0);
         
         /** create a tile and add it to the queue - WARNING: this is buggy for the current zoom level, it's only used for parent zooms when MaxParentLoad is > 0 */ 
         private function requestParentLoad():Tile
@@ -1848,8 +1931,8 @@ package loom.modestmaps.core
                 var dy:Number = p.y - mapHeight;
                 
                 // maintain the center point:
-                tx += dx/2;
-                ty += dy/2;
+                if (!isNaN(dx)) tx += dx/2;
+                if (!isNaN(dy)) ty += dy/2;
                 
                 mapWidth = p.x;
                 mapHeight = p.y;
@@ -1869,6 +1952,7 @@ package loom.modestmaps.core
         
         public function setMapProvider(provider:IMapProvider):void
         {
+            if (tilePainter) tilePainter.reset();
             if (provider is ITilePainterOverride) {
                 this.tilePainter = ITilePainterOverride(provider).getTilePainter();
             }
@@ -1890,15 +1974,44 @@ package loom.modestmaps.core
         
         protected function clearEverything(event:Event=null):void
         {
-            while (well.numChildren > 0) {
-                wellRemove(well.getChildAtUnsafe(well.numChildren-1) as Tile);
+            processing = false;
+            
+            mapWidth = NaN;
+            mapHeight = NaN;
+            
+            repopCount = -1;
+            repopCounter = 0;
+            repopIndex = -1;
+            repopMinCol = -1;
+            repopMaxCol = -1;
+            repopMinRow = -1;
+            repopMaxRow = -1;
+            
+            var tile:Tile;
+            var next:Tile;
+            tile = headActive;
+            while (tile) {
+                next = tile.nextActive;
+                tileRemove(tile);
+                tile = next;
             }
-
-            tilePainter.reset();
+            tile = headInactive;
+            while (tile) {
+                next = tile.nextInactive;
+                tileRemove(tile);
+                tile = next;
+            }
             
             headActive = null;
+            headInactive = null;
+            countActive = 0;
+            
+            tilePainter.reset();
+            
+            quadRoot = new QuadNode();
             
             dirty = true;
+            
         }
 
         private var _tileScales:Vector.<Number> = [];
@@ -1921,8 +2034,8 @@ package loom.modestmaps.core
             _tileGridBounds = new Vector.<GridBounds>(_maxZoom + 1);
             for (i = 0; i < _tileGridBounds.length; i++) _tileGridBounds[i] = new GridBounds();
             
-            tl = tl.zoomTo(0);
-            br = br.zoomTo(0);
+            tl.zoomToInPlace(0);
+            br.zoomToInPlace(0);
             
             minTx = tl.column * tileWidth;
             maxTx = br.column * tileWidth;
@@ -1961,10 +2074,12 @@ package loom.modestmaps.core
             // so that they can be compared against minTx etc.
             
             var topLeftPoint:Point = inverse.transformCoord(0,0);
-            var topLeft:Coordinate = new Coordinate(topLeftPoint.y, topLeftPoint.x, matrixZoomLevel).zoomTo(0);
+            var topLeft:Coordinate = new Coordinate(topLeftPoint.y, topLeftPoint.x, matrixZoomLevel);
+            topLeft.zoomToInPlace(0);
 
             var bottomRightPoint:Point = inverse.transformCoord(mapWidth, mapHeight);
-            var bottomRight:Coordinate = new Coordinate(bottomRightPoint.y, bottomRightPoint.x, matrixZoomLevel).zoomTo(0);
+            var bottomRight:Coordinate = new Coordinate(bottomRightPoint.y, bottomRightPoint.x, matrixZoomLevel);
+            bottomRight.zoomToInPlace(0);
             
             // apply horizontal constraints
             

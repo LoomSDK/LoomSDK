@@ -38,8 +38,9 @@ public class LegacyTest
     {
         currentTestFailureCount ++;
 
-        if (msg)
-            currentTestErrors.pushSingle(msg);
+        var callstack = Debug.getCallStack();
+        var cinfo = callstack[2];
+        currentTestErrors.pushSingle(cinfo.source+":"+cinfo.line+" "+(msg ? msg : ""));
     }
 
     protected static function handleAssertSuccess():void
@@ -80,7 +81,12 @@ public class LegacyTest
 
     protected function fail()
     {
-        Assert.fail("Legacy test failed: "+name);
+        var msg = "";
+        msg += "Legacy test failed: "+name+" ("+currentTestFailureCount+" failures)";
+        for (var i:int = 0; i < currentTestErrors.length; i++) {
+            msg += "\n\t"+currentTestErrors[i];
+        }
+        Assert.fail(msg);
     }
 
     public function begin()

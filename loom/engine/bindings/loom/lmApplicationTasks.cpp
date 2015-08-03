@@ -74,10 +74,6 @@ void loom_tick()
 
     GFX::Texture::tick();
 
-    LOOM_PROFILE_START(garbageCollection);
-    if (vm) lualoom_gc_update(vm->VM());
-    LOOM_PROFILE_END(garbageCollection);
-
     if(Loom2D::Stage::smMainStage)
         Loom2D::Stage::smMainStage->invokeRenderStage();
 

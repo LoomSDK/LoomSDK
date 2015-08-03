@@ -659,6 +659,7 @@ void LoomProfiler::dump()
 
     qsort((void *)&rootVector[0], rootVector.size(), sizeof(LoomProfilerRoot *), rootDataCompare);
 
+    lmLogError(gProfilerLogGroup, "");
     lmLogError(gProfilerLogGroup, "Profiler Data Dump:");
     lmLogError(gProfilerLogGroup, "Ordered by non-sub total time -");
     lmLogError(gProfilerLogGroup, "%%NSTime  %% Time  AvgTime  MaxTime  MinTime Invoke # Name");
