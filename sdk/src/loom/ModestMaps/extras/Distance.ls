@@ -39,6 +39,15 @@ package loom.modestmaps.extras
             return d;
         }
         
+        /**
+         * Returns the haversine (great-circle i.e. closest) distance between two points on Earth as
+         * a sphere. The default radius is the Earth radius in meters, but you can provide a different one
+         * for different units, planets or spheres in general.
+         * @param start The first of the points on the sphere.
+         * @param end   The second of the points on the sphere.
+         * @param r     The radius of the sphere in your preferred unit.
+         * @return      The distance between the two locations in the same unit as r.
+         */
         public static function haversineDistance(start:Location, end:Location, r:Number=R_METERS):Number
         {
             var lat1:Number = Math.degToRad(start.lat);
