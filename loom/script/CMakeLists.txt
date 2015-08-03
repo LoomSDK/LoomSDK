@@ -38,14 +38,16 @@ set (SOURCE_FILES ${CPP_FILES} ${H_FILES})
 # Define target & libraries to link
 add_library (${TARGET_NAME} STATIC ${SOURCE_FILES})
 
-if (MSVC)
+if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS))
     target_link_libraries(${TARGET_NAME} "SDL2-static" "SDL2main")
+else()
+    target_link_libraries(${TARGET_NAME} "${LOOM_SDL2_LIB}" )
 endif(MSVC)
 
 if (ANDROID)
-    target_link_libraries(${TARGET_NAME} -lz LoomVendor LoomCommon "${LOOM_SDL2_LIB}" )
+    target_link_libraries(${TARGET_NAME} -lz LoomVendor LoomCommon )
 endif(ANDROID)
 
 if (LINUX)
-    target_link_libraries(${TARGET_NAME} -lz LoomVendor LoomCommon "${LOOM_SDL2_LIB}" )
+    target_link_libraries(${TARGET_NAME} -lz LoomVendor LoomCommon )
 endif(LINUX)
