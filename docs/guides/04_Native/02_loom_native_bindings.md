@@ -216,7 +216,7 @@ _delegateNameDelegate.pushArgument(stringData);
 // numberData is an int
 _delegateNameDelegate.pushArgument(numberData);
 
-// byteArrayData is a utByteArray
+// byteArrayData is a utByteArray*
 _delegateNameDelegate.pushArgument(byteArrayData);
 
 _delegateNameDelegate.invoke();
