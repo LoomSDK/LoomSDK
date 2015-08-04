@@ -25,6 +25,9 @@ package loom.graphics
     /**
      * Control global graphics subsystem behavior.
      */
+    
+    delegate ScreenshotDataDelegate(ret:ByteArray);
+    
     public native class Graphics
     {
         /**
@@ -34,7 +37,7 @@ package loom.graphics
          * See the screenshotData function for more information
          * @see screenshotData
          */
-        public static native var onScreenshotData:NativeDelegate;
+        public static native var onScreenshotData:ScreenshotDataDelegate;
         
         /**
          * Private API; simulates graphics context loss.

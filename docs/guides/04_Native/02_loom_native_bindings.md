@@ -197,7 +197,7 @@ The `LOOM_DELEGATE` macro above will do two things. First it will create private
 
 **"Calling" Delegates in C++**
 
-When a delegate is "called" in the natve C++, all of the functions that were attached to that delegate in LoomScript will be called.
+When a delegate is "called" in the native C++, all of the functions that were attached to that delegate in LoomScript will be called.
 
 ~~~cpp
 // If the delegate requires arguments, this function will add those arguments
@@ -238,10 +238,24 @@ Binding native delegates is as simple as binding any other native script. Howeve
 
 **LoomScript side**
 
-Adding the native delegate to your LoomScript class is also simple!
+Adding the native delegate to your LoomScript class is also simple.
 
 ~~~{as}
-// The delegate is ready to be used!
+// A private delegate is defined outside of the class with the expected signature
+// Make sure this signature matches the signature generated when using .pushArgument!
+delegate MyDelegate(stringData:String, numberData:Number, byteArrayData:ByteArray);
+
+public class MyClass
+{
+  // Be sure the name of this variable matches the name used when binding!
+  public native var myDelegate:MyDelegate;
+}
+~~~
+
+Alternatively, if you want to use an untyped delegate, you can define native delegates with the `NativeDelegate` class. However, this is not the preferred method of delegate definition.
+
+~~~{as}
+// The delegate is ready to be used with any signature
 public native var myDelegate:NativeDelegate;
 ~~~
 
