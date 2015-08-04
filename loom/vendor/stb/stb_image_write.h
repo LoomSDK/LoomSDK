@@ -88,6 +88,7 @@ extern int stbi_write_png(char const *filename, int w, int h, int comp, const vo
 extern int stbi_write_bmp(char const *filename, int w, int h, int comp, const void  *data);
 extern int stbi_write_tga(char const *filename, int w, int h, int comp, const void  *data);
 extern int stbi_write_hdr(char const *filename, int w, int h, int comp, const float *data);
+extern utByteArray* stbi_data_png(int x, int y, int comp, const void *data, int stride_bytes);
 
 #ifdef __cplusplus
 }
@@ -705,6 +706,18 @@ int stbi_write_png(char const *filename, int x, int y, int comp, const void *dat
    fclose(f);
    STBIW_FREE(png);
    return 1;
+}
+
+utByteArray* stbi_data_png(int x, int y, int comp, const void *data, int stride_bytes)
+{
+    int len;
+    utByteArray *retData = lmNew(NULL) utByteArray();
+    unsigned char *png = stbi_write_png_to_mem((unsigned char *)data, stride_bytes, x, y, comp, &len);
+    if (!png) return NULL;
+
+    // Convert the char data into a byte array
+    retData->allocateAndCopy(png, len);
+    return retData;
 }
 #endif // STB_IMAGE_WRITE_IMPLEMENTATION
 

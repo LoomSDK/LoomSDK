@@ -181,6 +181,84 @@ public native function addChild(child:MyClass, zOrder:int = 0, tag:int = 0):void
 
 Script side stays nice and simple.
 
+## Delegates
+
+Delegates are A powerful way to handle asynchronous processes, and are used throughout Loom. Adding your own native delegates is simple thanks to the `LOOM_DELEGATE` and `LOOM_STATICDELEGATE` macros.
+
+**Creating the Delegate in C++**
+~~~cpp
+#include "loom/script/native/lsNativeDelegate.h"
+
+// This function-like macro will generate a delegate using the name provided
+LOOM_DELEGATE(delegateName);
+~~~
+
+The `LOOM_DELEGATE` macro above will do two things. First it will create private variable named `_delegateNameDelegate` (Note that it adds `_` to the beginning, and `Delegate` to the ending of the name provided). This private variable should be used whenever accessing the delegate within the C++ code. Additionally, the `LOOM_DELEGATE` macro will create a public getter named `getdelegateNameDelegate`, adding `get` to the beginning and `Delegate` to the ending of the name provided. This public getter is used to bind the delegate to LoomScript.
+
+**"Calling" Delegates in C++**
+
+When a delegate is "called" in the native C++, all of the functions that were attached to that delegate in LoomScript will be called.
+
+~~~cpp
+// If the delegate requires arguments, this function will add those arguments
+_delegateNameDelegate.pushArgument(data);
+
+// This function "calls" the delegate!
+_delegateNameDelegate.invoke();
+~~~
+
+Each time `pushArgument` is called, a new argument will be added to the delegate with the type of the object provided to the `pushArgument` function, for example:
+
+~~~cpp
+// stringData is a C-String
+_delegateNameDelegate.pushArgument(stringData);
+
+// numberData is an int
+_delegateNameDelegate.pushArgument(numberData);
+
+// byteArrayData is a utByteArray*
+_delegateNameDelegate.pushArgument(byteArrayData);
+
+_delegateNameDelegate.invoke();
+~~~
+
+Will invoke delegate functions in LoomScript with the signature `function(String, Number, ByteArray):void`. Note that native delegates do not have to have any arguments to be invoked.
+
+**Binding Delegates**
+
+Binding native delegates is as simple as binding any other native script. However, different bindings are used for instanced and static delegates.
+
+~~~cpp
+// Binding an instanced delegate uses the addVarAccessor function
+.addVarAccessor("myDelegate", &MyClass::getdelegateNameDelegate)
+
+// Binding a static delegate uses the addStaticProperty function
+.addStaticProperty("myStaticDelegate", &MyClass::getstaticDelegateNameDelegate)
+~~~
+
+**LoomScript side**
+
+Adding the native delegate to your LoomScript class is also simple.
+
+~~~{as}
+// A private delegate is defined outside of the class with the expected signature
+// Make sure this signature matches the signature generated when using .pushArgument!
+delegate MyDelegate(stringData:String, numberData:Number, byteArrayData:ByteArray);
+
+public class MyClass
+{
+  // Be sure the name of this variable matches the name used when binding!
+  public native var myDelegate:MyDelegate;
+}
+~~~
+
+Alternatively, if you want to use an untyped delegate, you can define native delegates with the `NativeDelegate` class. However, this is not the preferred method of delegate definition.
+
+~~~{as}
+// The delegate is ready to be used with any signature
+public native var myDelegate:NativeDelegate;
+~~~
+
 ## Dealing With Enums
 Enums are fundamentally integer values. So from the binding system's perspective, you are passing integers back and forth. Of course, it's no fun typing 1, 2, 3, when you could be saying MODE_ON, MODE_OFF, MODE_AUTO. You can set up an enum in script as follows:
 
