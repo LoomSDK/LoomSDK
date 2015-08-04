@@ -22,12 +22,17 @@ package loom.graphics
 {
     import loom2d.display.DisplayObject;
     import loom2d.math.Matrix;
+    
+    /**
+     * Delegate that is called when screenshot data is ready to be delivered after calling `Graphics.screenshotData()`
+     * 
+     * @param pngData The raw PNG data (as a ByteArray)
+     */
+    delegate ScreenshotDataDelegate(pngData:ByteArray);
+    
     /**
      * Control global graphics subsystem behavior.
      */
-    
-    delegate ScreenshotDataDelegate(ret:ByteArray);
-    
     public native class Graphics
     {
         /**
