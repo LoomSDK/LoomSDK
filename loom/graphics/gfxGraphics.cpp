@@ -255,11 +255,8 @@ void Graphics::endFrame()
 
         // Create a PNG image and save it to the requested file location
         // Original algorithm (heavily modified) by neilf (http://stackoverflow.com/a/20233470)
-        SDL_Surface* saveSurface = NULL;
-        SDL_Surface* infoSurface = NULL;
-        infoSurface = SDL_GetWindowSurface(sdlWindow);
-        if (infoSurface == NULL) {
-	        lmLog(gGFXLogGroup, "Unable to create info surface from window for screenshot generation", SDL_GetError());
+        if (Graphics::sWidth == NULL || Graphics::sHeight == NULL) {
+	        lmLog(gGFXLogGroup, "", SDL_GetError());
 	        return;
         }
 
@@ -271,10 +268,11 @@ void Graphics::endFrame()
 
         const int bpp = 4;
 
-        pixels->resize(infoSurface->w * infoSurface->h * bpp);
+        pixels->resize(Graphics::sWidth * Graphics::sHeight * bpp);
 
         // The OpenGL method is a lot cleaner, but inverts the image
-        Graphics::context()->glReadPixels(0, 0, infoSurface->w, infoSurface->h, GL_RGBA, GL_UNSIGNED_BYTE, pixels->getDataPtr());
+        Graphics::context()->glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        Graphics::context()->glReadPixels(0, 0, Graphics::sWidth, Graphics::sHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels->getDataPtr());
 
         // Invert dat image
         utByteArray *invertedPixels = lmNew(NULL) utByteArray();
@@ -282,31 +280,29 @@ void Graphics::endFrame()
             lmLog(gGFXLogGroup, "Unable to allocate memory for transformed pixels data buffer");
             return;
         }
-        invertedPixels->resize(infoSurface->w * bpp);
+        invertedPixels->resize(pixels->getSize());
 
-        for (int i = infoSurface->h - 1; i >= 0; i--) {
-            invertedPixels->writeBytes(pixels, i * infoSurface->w * bpp, infoSurface->w * bpp);
+        for (int i = Graphics::sHeight - 1; i >= 0; i--) {
+            invertedPixels->writeBytes(pixels, i * Graphics::sWidth * bpp, Graphics::sWidth * bpp);
         }
         
         // If there is a pending screenshot write, do that
-        if (pendingScreenshot[0] != 0 && stbi_write_png(pendingScreenshot, infoSurface->w, infoSurface->h, 4 /* RGBA */, invertedPixels->getDataPtr(), infoSurface->w * bpp) != 1) {
+        if (pendingScreenshot[0] != 0 && stbi_write_png(pendingScreenshot, Graphics::sWidth, Graphics::sHeight, 4 /* RGBA */, invertedPixels->getDataPtr(), Graphics::sWidth * bpp) != 1) {
             lmLog(gGFXLogGroup, "Unable to generate PNG");
         }
 
         // If there is a pending data request, do that
         if (gettingScreenshotData) {
-            utByteArray *retData = stbi_data_png(infoSurface->w, infoSurface->h, 4 /* RGBA */, invertedPixels->getDataPtr(), infoSurface->w * bpp);
+            utByteArray *retData = stbi_data_png(Graphics::sWidth, Graphics::sHeight, 4 /* RGBA */, invertedPixels->getDataPtr(), Graphics::sWidth * bpp);
 
             // Send the delegate along
             _onScreenshotDataDelegate.pushArgument(retData);
             _onScreenshotDataDelegate.invoke();
         }
         
-        lmFree(NULL, pixels);
-        lmFree(NULL, invertedPixels);
+        lmDelete(NULL, pixels);
+        lmDelete(NULL, invertedPixels);
 
-        SDL_FreeSurface(infoSurface);
-        infoSurface = NULL;
         pendingScreenshot[0] = 0;
         gettingScreenshotData = false;
     }
