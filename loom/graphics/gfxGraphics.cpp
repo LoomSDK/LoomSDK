@@ -18,9 +18,6 @@
  * ===========================================================================
  */
 
-//#include <math.h>
-//#define HAVE_M_PI
-
 #include "loom/common/platform/platform.h"
 #include "loom/common/core/log.h"
 
@@ -37,60 +34,53 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+// Get a reference to the global window.
 extern SDL_Window *gSDLWindow;
 
 namespace GFX
 {
-    lmDefineLogGroup(gGFXLogGroup, "GFX", 1, LoomLogInfo);
 
-    LS::NativeDelegate Graphics::_onScreenshotDataDelegate;
+lmDefineLogGroup(gGFXLogGroup, "GFX", 1, LoomLogInfo);
 
-    bool Graphics::sInitialized = false;
+bool Graphics::sInitialized = false;
 
-    // start with context loss as flagged so resources are created
-    bool Graphics::sContextLost = true;
+// start with context loss as flagged so resources are created
+bool Graphics::sContextLost = true;
 
-    int Graphics::sWidth      = 0;
-    int Graphics::sHeight     = 0;
-    uint32_t Graphics::sFlags = 0x00000000;
-    int Graphics::sFillColor  = 0x000000FF;
-    int Graphics::sView       = 0;
-    int Graphics::sBackFramebuffer = -1;
+int Graphics::sWidth      = 0;
+int Graphics::sHeight     = 0;
+uint32_t Graphics::sFlags = 0x00000000;
+int Graphics::sFillColor  = 0x000000FF;
+int Graphics::sView       = 0;
+int Graphics::sBackFramebuffer = -1;
 
-	uint32_t Graphics::sCurrentFrame = 0;
-	/*
-	float Graphics::sMVP[9] = {
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f
-	};
-	*/
-	float Graphics::sMVP[16] = {
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f
-	};
-	/*
-	float Graphics::sMVPInverted[16] = {
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f
-	};
-	*/
-	float* Graphics::sCurrentModelViewProjection = NULL;
-	
-    char Graphics::pendingScreenshot[1024] = { 0, };
+uint32_t Graphics::sCurrentFrame = 0;
 
-    bool Graphics::gettingScreenshotData = false;
+float Graphics::sMVP[16] = {
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f
+};
 
-    extern SDL_GLContext context;
-    GL_Context Graphics::_context;
-    
+float *Graphics::sCurrentModelViewProjection = NULL;
 
-    static int LoadContext(GL_Context * data)
-    {
+char Graphics::pendingScreenshot[1024] = { 0, };
+bool Graphics::gettingScreenshotData = false;
+LS::NativeDelegate Graphics::_onScreenshotDataDelegate;
+
+extern SDL_GLContext context;
+GL_Context Graphics::_context;
+
+/**
+ * Resolve function pointers for GL calls into the GL_Context structure.
+ *
+ * This is done in an OS specific way; we might assign them directly or
+ * do a symbol lookup. The GFX_CALL_CHECK macro also lets us instrument
+ * all GL calls for debug purposes.
+ */
+static int LoadContext(GL_Context * data)
+{
 #if SDL_VIDEO_DRIVER_UIKIT
 #define __SDL_NOGETPROCADDR__
 #elif SDL_VIDEO_DRIVER_ANDROID
@@ -112,21 +102,21 @@ namespace GFX
 #else
 #define GFX_PROC(ret,func,params,args) \
 do { \
-    void **tmp = (void**)&data->GFX_OPENGL_FUNC(func); \
-    *tmp = SDL_GL_GetProcAddress(#func); \
-    if ( ! data->GFX_OPENGL_FUNC(func) ) { \
-        return SDL_SetError("Couldn't load GL function %s: %s\n", #func, SDL_GetError()); \
-    } \
+void **tmp = (void**)&data->GFX_OPENGL_FUNC(func); \
+*tmp = SDL_GL_GetProcAddress(#func); \
+if ( ! data->GFX_OPENGL_FUNC(func) ) { \
+    return SDL_SetError("Couldn't load GL function %s: %s\n", #func, SDL_GetError()); \
+} \
 } while ( 0 );
 #define GFX_PROC_VOID(func, params, args) GFX_PROC(void, func, params, args)
 #endif /* _SDL_NOGETPROCADDR_ */
-        
+    
 #include "gfxGLES2EntryPoints.h"
 #undef GFX_PROC
 #undef GFX_PROC_VOID
 
-        return 0;
-    }
+    return 0;
+}
 
 
 void Graphics::initialize()
@@ -164,17 +154,17 @@ void Graphics::reset(int width, int height, uint32_t flags)
     // clear context loss state
     sContextLost = false;
 
-	Loom2D::Matrix mvp;
-	mvp.scale(2.0f / width, 2.0f / height);
-	mvp.translate(-1.0f, -1.0f);
-	//mvp.copyToMatrix4(sMVPInverted);
-	// Inverted is normal due to OpenGL origin being bottom left
-	if (!(flags & FLAG_INVERTED)) {
-		mvp.scale(1.0f, -1.0f);
-	}
-	mvp.copyToMatrix4f(sMVP);
-	
-	sCurrentModelViewProjection = sMVP;
+    Loom2D::Matrix mvp;
+    mvp.scale(2.0f / width, 2.0f / height);
+    mvp.translate(-1.0f, -1.0f);
+
+    // Inverted is normal due to OpenGL origin being bottom left
+    if (!(flags & FLAG_INVERTED)) {
+        mvp.scale(1.0f, -1.0f);
+    }
+    mvp.copyToMatrix4f(sMVP);
+    
+    sCurrentModelViewProjection = sMVP;
 
     // cache current values
     sWidth  = width;
@@ -221,32 +211,30 @@ void Graphics::beginFrame()
         return;
     }
 
-	sCurrentFrame++;
+    sCurrentFrame++;
     
-	Graphics::reset(sWidth, sHeight, sFlags);
+    Graphics::reset(sWidth, sHeight, sFlags);
     
     Graphics::context()->glViewport(0, 0, Graphics::getWidth(), Graphics::getHeight());
 
-	if (!(sFlags & FLAG_NOCLEAR)) {
-		Graphics::context()->glClearColor(
-										  float((sFillColor >> 24) & 0xFF) / 255.0f,
-										  float((sFillColor >> 16) & 0xFF) / 255.0f,
-										  float((sFillColor >> 8) & 0xFF) / 255.0f,
-										  float((sFillColor >> 0) & 0xFF) / 255.0f
-										  );
-		Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	}
+    if (!(sFlags & FLAG_NOCLEAR)) {
+        Graphics::context()->glClearColor(
+                                          float((sFillColor >> 24) & 0xFF) / 255.0f,
+                                          float((sFillColor >> 16) & 0xFF) / 255.0f,
+                                          float((sFillColor >> 8) & 0xFF) / 255.0f,
+                                          float((sFillColor >> 0) & 0xFF) / 255.0f
+                                          );
+        Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    }
 
     QuadRenderer::beginFrame();
     VectorRenderer::setSize(sWidth, sHeight);
-    //VectorRenderer::beginFrame();
 }
 
 
 void Graphics::endFrame()
 {
     QuadRenderer::endFrame();
-    //VectorRenderer::endFrame();
 
     if(pendingScreenshot[0] != 0 || gettingScreenshotData)
     {
@@ -255,24 +243,24 @@ void Graphics::endFrame()
 
         // Create a PNG image and save it to the requested file location
         // Original algorithm (heavily modified) by neilf (http://stackoverflow.com/a/20233470)
-        if (Graphics::sWidth == NULL || Graphics::sHeight == NULL) {
-	        lmLog(gGFXLogGroup, "", SDL_GetError());
-	        return;
+        if (sWidth == NULL || sHeight == NULL) {
+            lmLog(gGFXLogGroup, "", SDL_GetError());
+            return;
         }
 
         utByteArray *pixels = lmNew(NULL) utByteArray();
         if (pixels == NULL) {
-	        lmLog(gGFXLogGroup, "Unable to allocate memory for screenshot pixel data buffer");
-	        return;
+            lmLog(gGFXLogGroup, "Unable to allocate memory for screenshot pixel data buffer");
+            return;
         }
 
         const int bpp = 4;
 
-        pixels->resize(Graphics::sWidth * Graphics::sHeight * bpp);
+        pixels->resize(sWidth * sHeight * bpp);
 
         // The OpenGL method is a lot cleaner, but inverts the image
-        Graphics::context()->glPixelStorei(GL_PACK_ALIGNMENT, 1);
-        Graphics::context()->glReadPixels(0, 0, Graphics::sWidth, Graphics::sHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels->getDataPtr());
+        context()->glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        context()->glReadPixels(0, 0, sWidth, sHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels->getDataPtr());
 
         // Invert dat image
         utByteArray *invertedPixels = lmNew(NULL) utByteArray();
@@ -282,18 +270,18 @@ void Graphics::endFrame()
         }
         invertedPixels->resize(pixels->getSize());
 
-        for (int i = Graphics::sHeight - 1; i >= 0; i--) {
-            invertedPixels->writeBytes(pixels, i * Graphics::sWidth * bpp, Graphics::sWidth * bpp);
+        for (int i = sHeight - 1; i >= 0; i--) {
+            invertedPixels->writeBytes(pixels, i * sWidth * bpp, sWidth * bpp);
         }
         
         // If there is a pending screenshot write, do that
-        if (pendingScreenshot[0] != 0 && stbi_write_png(pendingScreenshot, Graphics::sWidth, Graphics::sHeight, 4 /* RGBA */, invertedPixels->getDataPtr(), Graphics::sWidth * bpp) != 1) {
+        if (pendingScreenshot[0] != 0 && stbi_write_png(pendingScreenshot, sWidth, sHeight, 4 /* RGBA */, invertedPixels->getDataPtr(), sWidth * bpp) != 1) {
             lmLog(gGFXLogGroup, "Unable to generate PNG");
         }
 
         // If there is a pending data request, do that
         if (gettingScreenshotData) {
-            utByteArray *retData = stbi_data_png(Graphics::sWidth, Graphics::sHeight, 4 /* RGBA */, invertedPixels->getDataPtr(), Graphics::sWidth * bpp);
+            utByteArray *retData = stbi_data_png(sWidth, sHeight, 4 /* RGBA */, invertedPixels->getDataPtr(), sWidth * bpp);
 
             // Send the delegate along
             _onScreenshotDataDelegate.pushArgument(retData);
@@ -310,38 +298,38 @@ void Graphics::endFrame()
 
 int Graphics::render(lua_State *L)
 {
-	Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, 1);
-	Loom2D::Matrix *matrix = lua_isnil(L, 2) ? NULL : (Loom2D::Matrix*) lualoom_getnativepointer(L, 2);
-	float alpha = (float)lua_tonumber(L, 3);
+    Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, 1);
+    Loom2D::Matrix *matrix = lua_isnil(L, 2) ? NULL : (Loom2D::Matrix*) lualoom_getnativepointer(L, 2);
+    float alpha = (float)lua_tonumber(L, 3);
 
-	// Update positions and buffers early
-	// since we can't wait for rendering to begin
-	object->validate(L, 1); // The 1 here is the index of the object on the stack
+    // Update positions and buffers early
+    // since we can't wait for rendering to begin
+    object->validate(L, 1); // The 1 here is the index of the object on the stack
 
-	// Save and setup state
-	Loom2D::DisplayObjectContainer *prevParent = object->parent;
-	object->parent = NULL;
+    // Save and setup state
+    Loom2D::DisplayObjectContainer *prevParent = object->parent;
+    object->parent = NULL;
 
-	Loom2D::Matrix prevTransformMatrix;
-	if (matrix != NULL)
-	{
-		object->updateLocalTransform();
-		prevTransformMatrix.copyFrom(&object->transformMatrix);
-		object->transformMatrix.copyFrom(matrix);
-	}
+    Loom2D::Matrix prevTransformMatrix;
+    if (matrix != NULL)
+    {
+        object->updateLocalTransform();
+        prevTransformMatrix.copyFrom(&object->transformMatrix);
+        object->transformMatrix.copyFrom(matrix);
+    }
 
-	lmscalar prevAlpha = object->alpha;
-	object->alpha = prevAlpha*alpha;
+    lmscalar prevAlpha = object->alpha;
+    object->alpha = prevAlpha*alpha;
 
-	// Render 
-	object->render(L);
+    // Render the object.
+    object->render(L);
 
-	// Restore state
-	object->parent = prevParent;
-	if (matrix != NULL) object->transformMatrix.copyFrom(&prevTransformMatrix);
-	object->alpha = prevAlpha;
+    // Restore state
+    object->parent = prevParent;
+    if (matrix != NULL) object->transformMatrix.copyFrom(&prevTransformMatrix);
+    object->alpha = prevAlpha;
 
-	return 0;
+    return 0;
 }
 
 static int _scount = 0;
