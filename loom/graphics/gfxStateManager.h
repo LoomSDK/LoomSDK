@@ -20,7 +20,11 @@
 
 #pragma once
 
-
+/*
+ * This set of functions enables interoperability of multiple renderers that
+ * break each others GL states. It lets a renderer know if it's GL state needs
+ * to set up it's state again or not.
+ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,8 +38,23 @@ enum Graphics_GLState {
     GFX_OPENGL_STATE_MAX    = 2,
 };
 
+/*
+ * Checks if given state is still valid.
+ * Returns false if it was invalidated or another state was set.
+ */
 bool Graphics_IsGLStateValid(enum Graphics_GLState state);
+
+/*
+ * Invalidates given state. Another state might still be valid if
+ * the invalidated state was already invalid. This should be called
+ * when somehting changes that affects given state.
+ */
 void Graphics_InvalidateGLState(enum Graphics_GLState state);
+
+/*
+ * Invalidates all other states and sets the given state as valid.
+ * This should called after a GL state has been set up for given state.
+ */
 void Graphics_SetCurrentGLState(enum Graphics_GLState state);
 
 #ifdef __cplusplus
