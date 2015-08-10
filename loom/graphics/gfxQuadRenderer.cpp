@@ -40,42 +40,23 @@ namespace GFX
 {
 lmDefineLogGroup(gGFXQuadRendererLogGroup, "GFXQuadRenderer", 1, LoomLogInfo);
 
-static unsigned int sProgramPosColorTex;
-static unsigned int sProgramPosTex;
+static GLuint sProgramPosColorTex;
+static GLuint sProgramPosTex;
 
-static unsigned int sProgram_posAttribLoc;
-static unsigned int sProgram_posColorLoc;
-static unsigned int sProgram_posTexCoordLoc;
-static unsigned int sProgram_texUniform;
-static unsigned int sProgram_mvp;
-
-static unsigned int sIndexBufferHandle;
-
-static bool sTinted = true;
+static GLuint sProgram_posAttribLoc;
+static GLuint sProgram_posColorLoc;
+static GLuint sProgram_posTexCoordLoc;
+static GLuint sProgram_texUniform;
+static GLuint sProgram_mvp;
 
 unsigned int sSrcBlend = GL_SRC_ALPHA;
 unsigned int sDstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-unsigned int QuadRenderer::vertexBuffers[MAXVERTEXBUFFERS];
-
-VertexPosColorTex* QuadRenderer::vertexData[MAXVERTEXBUFFERS];
-
-void* QuadRenderer::vertexDataMemory = NULL;
-
-int QuadRenderer::maxVertexIdx[MAXVERTEXBUFFERS];
-
-int QuadRenderer::numVertexBuffers;
-
-int               QuadRenderer::currentVertexBufferIdx;
-VertexPosColorTex *QuadRenderer::currentVertexPtr;
-int               QuadRenderer::vertexCount;
-
-int QuadRenderer::currentIndexBufferIdx;
-
+GLuint QuadRenderer::indexBufferId;
+GLuint QuadRenderer::vertexBufferId;
+VertexPosColorTex* QuadRenderer::vertices;
+size_t QuadRenderer::vertexCount;
 TextureID QuadRenderer::currentTexture;
-
-// Number of quads pending submission
-int       QuadRenderer::quadCount;
 
 int QuadRenderer::numFrameSubmit;
 
@@ -85,7 +66,7 @@ void QuadRenderer::submit()
 {
     LOOM_PROFILE_SCOPE(quadSubmit);
 
-    if (quadCount <= 0)
+    if (vertexCount <= 0)
     {
         return;
     }
@@ -107,28 +88,14 @@ void QuadRenderer::submit()
             if (!Graphics_IsGLStateValid(GFX_OPENGL_STATE_QUAD))
             {
                 // Select the shader.
-                if(sTinted)
-                    Graphics::context()->glUseProgram(sProgramPosColorTex);
-                else
-                    Graphics::context()->glUseProgram(sProgramPosTex);
-            }
+                Graphics::context()->glUseProgram(sProgramPosColorTex);
 
-            // Upload vertex data.
-            Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, vertexBuffers[currentVertexBufferIdx]);
+                // Upload vertex data.
+                Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
+                Graphics::context()->glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(VertexPosColorTex), nullptr, GL_DYNAMIC_DRAW);
+                Graphics::context()->glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(VertexPosColorTex), vertices, GL_DYNAMIC_DRAW);
 
-            // This commented block seems better for performance, but it's actually a lot slower on iOS.
-            // Instead we just update the entire buffer, which seems to run fine.
-            // A better solution would be having a triple buffered glMapBuffer approach.
-            /*
-            Graphics::context()->glBufferSubData(GL_ARRAY_BUFFER,
-                                                 (vertexCount - quadCount * 4) * sizeof(VertexPosColorTex),
-                                                 quadCount * 4 * sizeof(VertexPosColorTex),
-                                                 &vertexData[currentVertexBufferIdx][vertexCount - quadCount*4] );
-            */
-            Graphics::context()->glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(VertexPosColorTex), &vertexData[currentVertexBufferIdx][0], GL_STATIC_DRAW);
 
-            if (!Graphics_IsGLStateValid(GFX_OPENGL_STATE_QUAD))
-            {
                 Graphics::context()->glEnableVertexAttribArray(sProgram_posAttribLoc);
                 Graphics::context()->glEnableVertexAttribArray(sProgram_posColorLoc);
                 Graphics::context()->glEnableVertexAttribArray(sProgram_posTexCoordLoc);
@@ -144,22 +111,18 @@ void QuadRenderer::submit()
                 Graphics::context()->glVertexAttribPointer(sProgram_posTexCoordLoc,
                                                            2, GL_FLOAT, false,
                                                            sizeof(VertexPosColorTex), (void*)offsetof(VertexPosColorTex, u));
-                                                           
+
+                // Set up texture state.
                 Graphics::context()->glActiveTexture(GL_TEXTURE0);
                 Graphics::context()->glUniform1i(sProgram_texUniform, 0);
-            }
+                Graphics::context()->glUniformMatrix4fv(sProgram_mvp, 1, GL_FALSE, Graphics::getMVP());
+                Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
 
-            // Set up texture state.
-            Graphics::context()->glUniformMatrix4fv(sProgram_mvp, 1, GL_FALSE, Graphics::getMVP());
-            Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
+                if (tinfo.clampOnly) {
+                    tinfo.wrapU = TEXTUREINFO_WRAP_CLAMP;
+                    tinfo.wrapV = TEXTUREINFO_WRAP_CLAMP;
+                }
 
-            if (tinfo.clampOnly) {
-                tinfo.wrapU = TEXTUREINFO_WRAP_CLAMP;
-                tinfo.wrapV = TEXTUREINFO_WRAP_CLAMP;
-            }
-
-            if (!Graphics_IsGLStateValid(GFX_OPENGL_STATE_QUAD))
-            {
                 switch (tinfo.wrapU)
                 {
                     case TEXTUREINFO_WRAP_CLAMP:
@@ -212,26 +175,20 @@ void QuadRenderer::submit()
             }
 
             // And bind indices and draw.
-            Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndexBufferHandle);
+            Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
             Graphics::context()->glDrawElements(GL_TRIANGLES,
-                                                quadCount * 6, GL_UNSIGNED_SHORT,
-                                                (void*)(currentIndexBufferIdx*sizeof(unsigned short)));
+                                                (GLsizei)(vertexCount / 4 * 6), GL_UNSIGNED_SHORT,
+                                                nullptr);
 
-
-			Graphics::context()->glDisableVertexAttribArray(sProgram_posAttribLoc);
-			Graphics::context()->glDisableVertexAttribArray(sProgram_posColorLoc);
-			Graphics::context()->glDisableVertexAttribArray(sProgram_posTexCoordLoc);
+            Graphics::context()->glDisableVertexAttribArray(sProgram_posAttribLoc);
+            Graphics::context()->glDisableVertexAttribArray(sProgram_posColorLoc);
+            Graphics::context()->glDisableVertexAttribArray(sProgram_posTexCoordLoc);
         }
-
-        // Update buffer state.
-        currentIndexBufferIdx += quadCount * 6;
     }
-
-    quadCount = 0;
 }
 
 
-VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted, uint32_t srcBlend, uint32_t dstBlend)
+VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t numVertices, uint32_t srcBlend, uint32_t dstBlend)
 {
     LOOM_PROFILE_SCOPE(quadGetVertices);
 
@@ -245,55 +202,32 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
     lmAssert(!(numVertices % 4), "numVertices % 4 != 0");
     lmAssert(texture == Texture::getTextureInfo(texture)->id, "Texture ID signature mismatch, you might be trying to draw a disposed texture");
     loom_mutex_unlock(Texture::sTexInfoLock);
+    lmAssert(vertices);
 #endif
 
-    if (((currentTexture != TEXTUREINVALID) && (currentTexture != texture))
-        || (sTinted != tinted) || (srcBlend != sSrcBlend) || ( dstBlend != sDstBlend))
+    if (((currentTexture != TEXTUREINVALID) && (currentTexture != texture)) ||
+        (srcBlend != sSrcBlend) ||
+        ( dstBlend != sDstBlend))
     {
         submit();
         Graphics_InvalidateGLState(GFX_OPENGL_STATE_QUAD);
+
+        vertexCount = 0;
     }
 
     if ((vertexCount + numVertices) > MAXBATCHQUADS * 4)
     {
         submit();
 
-        if (numVertexBuffers == MAXVERTEXBUFFERS)
-        {
-            return NULL;
-        }
-
-        currentVertexBufferIdx++;
-
-        if (currentVertexBufferIdx == numVertexBuffers)
-        {
-            // we need to allocate a new one
-            _initializeNextVertexBuffer();
-        }
-
-        currentIndexBufferIdx = 0;
-
-        maxVertexIdx[currentVertexBufferIdx] = 0;
-        currentVertexPtr = vertexData[currentVertexBufferIdx];
-        vertexCount      = 0;
-        quadCount        = 0;
+        vertexCount = 0;
     }
 
-    VertexPosColorTex *returnPtr = currentVertexPtr;
-    if (!returnPtr) return NULL;
-
-    sTinted = tinted;
     sSrcBlend = srcBlend;
     sDstBlend = dstBlend;
-
-    currentVertexPtr += numVertices;
-    vertexCount      += numVertices;
-
-    maxVertexIdx[currentVertexBufferIdx] = vertexCount;
-
     currentTexture = texture;
+    vertexCount += numVertices;
 
-    quadCount += numVertices / 4;
+    VertexPosColorTex *returnPtr = &vertices[vertexCount];
 
     return returnPtr;
 }
@@ -303,7 +237,7 @@ void QuadRenderer::batch(TextureID texture, VertexPosColorTex *vertices, uint16_
 {
     LOOM_PROFILE_SCOPE(quadBatch);
 
-    VertexPosColorTex *verticePtr = getQuadVertices(texture, numVertices, true, srcBlend, dstBlend);
+    VertexPosColorTex *verticePtr = getQuadVertices(texture, numVertices, srcBlend, dstBlend);
 
     if (!verticePtr)
         return;
@@ -316,24 +250,10 @@ void QuadRenderer::beginFrame()
 {
     LOOM_PROFILE_SCOPE(quadBegin);
 
-    currentIndexBufferIdx  = 0;
-    currentVertexBufferIdx = 0;
     vertexCount            = 0;
     currentTexture         = TEXTUREINVALID;
-    quadCount              = 0;
-
-    currentVertexPtr = vertexData[currentVertexBufferIdx];
-    maxVertexIdx[currentIndexBufferIdx] = 0;
 
     numFrameSubmit = 0;
-
-    // Fudge something to render with.
-/*    VertexPosColorTex v[4];
-    v[0].x =  0.5; v[0].y =  0.5; v[0].z = 0.5;
-    v[1].x =  0.5; v[1].y = -0.5; v[1].z = 0.5;
-    v[2].x = -0.5; v[2].y = -0.5; v[2].z = 0.5;
-    v[3].x = -0.5; v[3].y =  0.5; v[3].z = 0.5;
-    batch(1, &v[0], 4, 0); */
 }
 
 
@@ -347,15 +267,6 @@ void QuadRenderer::endFrame()
 void QuadRenderer::destroyGraphicsResources()
 {
     // Probably do something someday.
-}
-
-void QuadRenderer::_initializeNextVertexBuffer()
-{
-    Graphics::context()->glGenBuffers(1, &vertexBuffers[numVertexBuffers]);
-    Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, vertexBuffers[numVertexBuffers]);
-    Graphics::context()->glBufferData(GL_ARRAY_BUFFER, MAXBATCHQUADS * 4 * sizeof(VertexPosColorTex), 0, GL_STATIC_DRAW);
-    Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, 0);
-    numVertexBuffers++;
 }
 
 void QuadRenderer::initializeGraphicsResources()
@@ -383,7 +294,7 @@ void QuadRenderer::initializeGraphicsResources()
     "uniform mat4 u_mvp;\n"
     "void main()\n"
     "{\n"
-	"    gl_Position = u_mvp * a_position;\n"
+    "    gl_Position = u_mvp * a_position;\n"
     "    v_color0 = a_color0;\n"
     "    v_texcoord0 = a_texcoord0;\n"
     "}\n";
@@ -409,44 +320,16 @@ void QuadRenderer::initializeGraphicsResources()
 
     Graphics::context()->glShaderSource(vertShader, 1, &vertShaderPtr, &vertShaderLen);
     Graphics::context()->glCompileShader(vertShader);
-	GFX_SHADER_CHECK(vertShader);
+    GFX_SHADER_CHECK(vertShader);
 
     Graphics::context()->glShaderSource(fragShaderColor, 1, &fragShaderColorPtr, &fragShaderColorLen);
     Graphics::context()->glCompileShader(fragShaderColor);
-	GFX_SHADER_CHECK(fragShaderColor);
+    GFX_SHADER_CHECK(fragShaderColor);
 
     Graphics::context()->glAttachShader(quadProgColor, fragShaderColor);
     Graphics::context()->glAttachShader(quadProgColor, vertShader);
     Graphics::context()->glLinkProgram(quadProgColor);
-	GFX_PROGRAM_CHECK(quadProgColor);
-
-    /*
-    char fragShaderSrc[] =
-#if LOOM_RENDERER_OPENGLES2      
-        "precision mediump float;\n"
-#endif
-        "uniform sampler2D u_texture;\n"
-        "varying vec2 v_texcoord0;\n"
-        "void main()\n"
-        "{\n"
-        "    gl_FragColor = texture2D(u_texture, v_texcoord0);\n"
-        "}\n";
-    const int fragShaderLen = sizeof(fragShaderSrc);
-    GLchar *fragShaderPtr = &fragShaderSrc[0];
-
-    Graphics::context()->glShaderSource(fragShader, 1, &fragShaderPtr, &fragShaderLen);
-    Graphics::context()->glCompileShader(fragShader);
-    Graphics::context()->glGetShaderInfoLog(fragShader, 4096, &outLen, error);
-
-    lmLogInfo(gGFXQuadRendererLogGroup, "Program info log %s", error);
-
-    Graphics::context()->glAttachShader(quadProg, fragShader);
-    Graphics::context()->glAttachShader(quadProg, vertShader);
-    Graphics::context()->glLinkProgram(quadProg);
-    Graphics::context()->glGetProgramInfoLog(quadProg, 4096, &outLen, error);
-
-    lmLogInfo(gGFXQuadRendererLogGroup, "Program info log %s", error);
-    */
+    GFX_PROGRAM_CHECK(quadProgColor);
 
     // Get attributes and uniforms.
     sProgram_posAttribLoc = Graphics::context()->glGetAttribLocation(quadProgColor, "a_position");
@@ -459,12 +342,14 @@ void QuadRenderer::initializeGraphicsResources()
     sProgramPosColorTex = sProgramPosTex = quadProgColor;
 
     // create the single initial vertex buffer
-    numVertexBuffers = 0;
-    _initializeNextVertexBuffer();
+    Graphics::context()->glGenBuffers(1, &vertexBufferId);
+    Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
+    Graphics::context()->glBufferData(GL_ARRAY_BUFFER, MAXBATCHQUADS * 4 * sizeof(VertexPosColorTex), 0, GL_DYNAMIC_DRAW);
+    Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // create the single, reused index buffer
-    Graphics::context()->glGenBuffers(1, &sIndexBufferHandle);
-    Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndexBufferHandle);
+    Graphics::context()->glGenBuffers(1, &indexBufferId);
+    Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
     uint16_t *pIndex = (uint16_t*)lmAlloc(gQuadMemoryAllocator, sizeof(unsigned short) * 6 * MAXBATCHQUADS);
     uint16_t *pStart = pIndex;
 
@@ -479,15 +364,13 @@ void QuadRenderer::initializeGraphicsResources()
         pIndex[5] = j + 3;
     }
 
-    Graphics::context()->glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAXBATCHQUADS * 6 * sizeof(uint16_t), pStart, GL_STATIC_DRAW);
+    Graphics::context()->glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAXBATCHQUADS * 6 * sizeof(uint16_t), pStart, GL_DYNAMIC_DRAW);
     Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     lmFree(gQuadMemoryAllocator, pStart);
 
     // Create the system memory buffer for quads.
-    vertexDataMemory = lmAlloc(gQuadMemoryAllocator, MAXVERTEXBUFFERS * MAXBATCHQUADS * 4 * sizeof(VertexPosColorTex));
-    for(int i=0; i<MAXVERTEXBUFFERS; i++)
-        vertexData[i] = ((VertexPosColorTex*)vertexDataMemory) + (MAXBATCHQUADS * 4) * i;
+    vertices = static_cast<VertexPosColorTex*>(lmAlloc(gQuadMemoryAllocator, MAXBATCHQUADS * 4 * sizeof(VertexPosColorTex)));
 }
 
 
