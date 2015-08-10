@@ -108,6 +108,7 @@ extern "C" {
 #include <string.h>
 #include <math.h>
 #include "nanovg.h"
+#include "loom/graphics/gfxStateManager.h"
 
 enum GLNVGuniformLoc {
     GLNVG_LOC_VIEWSIZE,
@@ -1084,21 +1085,25 @@ static void glnvg__renderFlush(void* uptr)
     if (gl->ncalls > 0) {
 
         // Setup require GL state.
-        LGL->glUseProgram(gl->shader.prog);
+        if (!Graphics_IsGLStateValid(GFX_OPENGL_STATE_NANOVG))
+        {
+            LGL->glUseProgram(gl->shader.prog);
+            LGL->glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+            LGL->glEnable(GL_CULL_FACE);
+            LGL->glCullFace(GL_BACK);
+            LGL->glFrontFace(GL_CCW);
+            LGL->glEnable(GL_BLEND);
+            LGL->glDisable(GL_DEPTH_TEST);
+            LGL->glDisable(GL_SCISSOR_TEST);
+            LGL->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            LGL->glStencilMask(0xffffffff);
+            LGL->glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+            LGL->glStencilFunc(GL_ALWAYS, 0, 0xffffffff);
+            LGL->glActiveTexture(GL_TEXTURE0);
+            LGL->glBindTexture(GL_TEXTURE_2D, 0);
 
-        LGL->glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        LGL->glEnable(GL_CULL_FACE);
-        LGL->glCullFace(GL_BACK);
-        LGL->glFrontFace(GL_CCW);
-        LGL->glEnable(GL_BLEND);
-        LGL->glDisable(GL_DEPTH_TEST);
-        LGL->glDisable(GL_SCISSOR_TEST);
-        LGL->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        LGL->glStencilMask(0xffffffff);
-        LGL->glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-        LGL->glStencilFunc(GL_ALWAYS, 0, 0xffffffff);
-        LGL->glActiveTexture(GL_TEXTURE0);
-        LGL->glBindTexture(GL_TEXTURE_2D, 0);
+            Graphics_SetCurrentGLState(GFX_OPENGL_STATE_NANOVG);
+        }
 #if NANOVG_GL_USE_STATE_FILTER
         gl->boundTexture = 0;
         gl->stencilMask = 0xffffffff;
@@ -1149,9 +1154,6 @@ static void glnvg__renderFlush(void* uptr)
 #if defined NANOVG_GL3
         LGL->glBindVertexArray(0);
 #endif	
-        LGL->glDisable(GL_CULL_FACE);
-        LGL->glBindBuffer(GL_ARRAY_BUFFER, 0);
-        LGL->glUseProgram(0);
         glnvg__bindTexture(gl, 0);
     }
 
