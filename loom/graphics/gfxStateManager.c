@@ -20,7 +20,7 @@
 
 #include "gfxStateManager.h"
 
-bool gGLStates[GFX_OPENGL_STATE_MAX] = {true, true};
+bool gGLStates[GFX_OPENGL_STATE_MAX] = {false, false};
 
 bool Graphics_IsGLStateValid(enum Graphics_GLState state)
 {
