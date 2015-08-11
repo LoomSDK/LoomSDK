@@ -18,6 +18,7 @@ package
     import loom2d.events.TouchPhase;
     import loom2d.events.KeyboardEvent;
     import loom2d.Loom2D;
+    import loom2d.math.Matrix;
     import loom2d.math.Rectangle;
     import loom2d.text.BitmapFont;
     import loom2d.text.TextField;
@@ -60,7 +61,9 @@ package
             //new Graphics();
 
             // Background
-            q = new Quad(460, 300, 0xF3F3F3); q.x = 10; q.y = 10; stage.addChild(q);
+            var bgMargin = 10;
+            q = new Quad(stage.stageWidth-bgMargin*2, stage.stageHeight-bgMargin*2, 0xF3F3F3);
+            q.x = bgMargin; q.y = bgMargin; stage.addChild(q);
 
             // Most of the test shapes
             sg = new Shape();
@@ -88,7 +91,7 @@ package
 
             var x = 0, y = 0;
             var b:Rectangle;
-
+            
             // Fill before clearing
             g.beginFill(0xFF2424, 1);
             g.drawRect(0, y, 500, 500);
@@ -501,7 +504,63 @@ package
             beginBounds(g);
             g.drawRect(110, y, 100, 10);
             endBounds(g, sg.scale);
-
+            
+            
+            
+            // Texture fill tests
+            beginBounds(g);
+            var logoTex = Texture.fromAsset("assets/logo-small.png");
+            
+            var m = new Matrix();
+            var logoScale = 2;
+            
+            var lx = 405;
+            var ly = 0;
+            
+            // Scale it up and move so it aligns with the rects
+            m.scale(logoScale, logoScale);
+            m.translate(lx, ly);
+            
+            // Scaled width and height
+            var lw = logoScale*logoTex.width;
+            var lh = logoScale*logoTex.height;
+            
+            
+            // Non-smooth left part of logo
+            g.beginTextureFill(logoTex, m, false, false);
+            g.drawRect(lx, ly, lw*2, lh*2);
+            
+            // Smooth right part of logo
+            g.beginTextureFill(logoTex, m, false, true);
+            g.drawRect(lx+lw*0.5, ly, lw*1.5, lh*2);
+            
+            
+            // Scale down for testing repeat
+            m.translate(-lx, -ly);
+            m.scale(0.5, 0.5);
+            m.translate(lx+lw*0.25, ly);
+            
+            // Left non-smooth repeat pattern
+            g.beginTextureFill(logoTex, m, true, false);
+            g.drawRect(lx, ly+lh, lw, lh);
+            
+            // Right smooth repeat pattern
+            g.beginTextureFill(logoTex, m, true, true);
+            g.drawRect(lx+lw, ly+lh, lw, lh);
+            
+            // Rotate and offset a bit for the rotated pattern
+            m.translate(-lw*0.25, 0);
+            m.rotate(Math.PI*0.25);
+            
+            // Rotated pattern on top right
+            g.beginTextureFill(logoTex, m, true, true);
+            g.drawRect(lx+lw, ly, lw, lh);
+            
+            endBounds(g, sg.scale);
+            
+            
+            
+            
             // Add touch listener
             stage.addEventListener(TouchEvent.TOUCH, onTouch);
             stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);

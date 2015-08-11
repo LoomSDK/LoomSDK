@@ -471,6 +471,30 @@ static void glnvg__getUniforms(GLNVGshader* shader)
 #endif
 }
 
+static void glnvg__setTextureFlags(int imageFlags)
+{
+    // TODO: pixel-snap text
+    if (imageFlags & NVG_IMAGE_BILINEAR) {
+        LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, imageFlags & NVG_IMAGE_GENERATE_MIPMAPS ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+        LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+    else {
+        LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, imageFlags & NVG_IMAGE_GENERATE_MIPMAPS ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
+        LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    }
+
+    if (imageFlags & NVG_IMAGE_REPEATX)
+        LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    else
+        LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+
+    if (imageFlags & NVG_IMAGE_REPEATY)
+        LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    else
+        LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+}
+
 static int glnvg__renderCreate(void* uptr)
 {
     GLNVGcontext* gl = (GLNVGcontext*)uptr;
@@ -736,24 +760,7 @@ static int glnvg__renderCreateTexture(void* uptr, int type, int w, int h, int im
         LGL->glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, data);
 #endif
 
-    // TODO: restore filtering and pixel-snap text
-    if (imageFlags & NVG_IMAGE_GENERATE_MIPMAPS) {
-        LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    }
-    else {
-        LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    }
-    LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    if (imageFlags & NVG_IMAGE_REPEATX)
-        LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    else
-        LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-
-    if (imageFlags & NVG_IMAGE_REPEATY)
-        LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    else
-        LGL->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glnvg__setTextureFlags(imageFlags);
 
     LGL->glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 #ifndef NANOVG_GLES2
@@ -938,6 +945,7 @@ static void glnvg__setUniforms(GLNVGcontext* gl, int uniformOffset, int image)
     if (image != 0) {
         GLNVGtexture* tex = glnvg__findTexture(gl, image);
         glnvg__bindTexture(gl, tex != NULL ? tex->tex : 0);
+        glnvg__setTextureFlags(tex->flags);
         glnvg__checkError(gl, "tex paint tex");
     }
     else {
@@ -1529,6 +1537,13 @@ int nvglCreateImageFromHandle(NVGcontext* ctx, GLuint textureId, int w, int h, i
     tex->height = h;
 
     return tex->id;
+}
+
+int* nvglGetImageFlags(NVGcontext* ctx, int image)
+{
+    GLNVGcontext* gl = (GLNVGcontext*)nvgInternalParams(ctx)->userPtr;
+    GLNVGtexture* tex = glnvg__findTexture(gl, image);
+    return &tex->flags;
 }
 
 GLuint nvglImageHandle(NVGcontext* ctx, int image)
