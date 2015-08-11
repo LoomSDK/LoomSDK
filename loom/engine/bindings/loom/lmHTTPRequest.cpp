@@ -30,8 +30,12 @@ using namespace LS;
 lmDefineLogGroup(gHTTPRequestLogGroup, "HTTPRequest", 1, LoomLogInfo);
 
 class HTTPRequest {
-public:
+private:
 
+    bool requestPending;
+
+public:
+    
     utString method;
     utString body;
     utString url;
@@ -54,6 +58,8 @@ public:
         followRedirects          = true;
         id = -1;
 
+        requestPending = false;
+
         // set the Content-Type in the header
         const char *ctKey = contentType;
         if((ctKey == NULL) || (ctKey[0] == '\0'))
@@ -66,6 +72,12 @@ public:
 
     ~HTTPRequest()
     {
+        // Warn if this object is garbage collected while a requet is pending
+        if (requestPending)
+        {
+            lmLog(gHTTPRequestLogGroup, "WARNING: HTTPRequest object with url \"%s\" garbage collected before completing a pending request. Ensure references to HTTPRequest objects are maintained while requests are pending.", url.c_str())
+        }
+
         header.clear();
         cancel();
     }
@@ -116,6 +128,9 @@ public:
                                   (const char *)body.c_str(), body.length(), header,
                                   (const char *)responseCacheFile.c_str(), followRedirects);
             }
+
+            // The request has been sent!
+            requestPending = true;
         }
         return (id == -1) ? false : true;
     }
@@ -132,13 +147,19 @@ public:
         }
     }
 
+    bool isPending()
+    {
+        return requestPending;
+    }
+
     //only called internally to notfiy that the HTTPRequest has completed now
     void complete()
     {
         if (id == -1) return;
         platform_HTTPComplete(id);
-        id = -1;        
-    }    
+        id = -1;
+        requestPending = false;
+    }
 
     static bool isConnected()
     {
@@ -184,6 +205,7 @@ static int registerLoomHTTPRequest(lua_State *L)
        .addMethod("getHeaderField", &HTTPRequest::getHeaderField)
        .addMethod("send", &HTTPRequest::send)
        .addMethod("cancel", &HTTPRequest::cancel)
+       .addMethod("isPending", &HTTPRequest::isPending)
        .addStaticMethod("isConnected", &HTTPRequest::isConnected)
        .addVar("method", &HTTPRequest::method)
        .addVar("body", &HTTPRequest::body)

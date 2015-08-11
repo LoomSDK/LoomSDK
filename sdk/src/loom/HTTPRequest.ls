@@ -64,6 +64,11 @@ package loom
          *  Cancels an in progress HTTPRequest.
          */
         public native function cancel();
+        
+        /**
+         *  If a HTTPRequest is currently pending
+         */
+        public native function isPending():Boolean;
 
         /**
          *  Called when the HTTPRequest is successful. Passes the response from the HTTP server as a ByteArray.
