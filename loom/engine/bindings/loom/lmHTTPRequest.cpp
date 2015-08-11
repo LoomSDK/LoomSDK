@@ -144,6 +144,7 @@ public:
             utByteArray *result = lmNew(NULL) utByteArray();
             result->writeString("Request cancelled by user.");
             respond(this, LOOM_HTTP_ERROR, result);
+            requestPending = false;
         }
     }
 
