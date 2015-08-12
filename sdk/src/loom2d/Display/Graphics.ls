@@ -1,6 +1,8 @@
 package loom2d.display
 {
+    import loom2d.math.Matrix;
     import loom2d.math.Rectangle;
+    import loom2d.textures.Texture;
     
     /**
      * Text alignment flags used by the Graphics class.
@@ -232,6 +234,21 @@ package loom2d.display
          * Indicate we are beginning a filled shape.
          */
         public native function beginFill(color:uint = 0x00000000, alpha:Number = 1):void;
+        
+        /**
+         * Begin a textured fill with an existing Texture. Use the `matrix` parameter to control
+         * the texture transformation matrix within the fill and `repeat` and `smooth` to control
+         * how the texture gets rendered on a per-fill basis.
+         * 
+         * @param texture   The Texture to fill the shape with.
+         * @param matrix    Transformation matrix of the texture within the fill.
+         * @param repeat    Repeat the texture in all directions within the fill.
+         * @param smooth    Switch between the smooth (bilinear) and non-smooth (nearest) texture smoothing.
+         */
+        public function beginTextureFill(texture:Texture, matrix:Matrix = null, repeat:Boolean = true, smooth:Boolean = true):void {
+            beginTextureFillID(texture.nativeID, matrix, repeat, smooth);
+        }
+        protected native function beginTextureFillID(id:int, matrix:Matrix, repeat:Boolean, smooth:Boolean):void;
         
         /**
          * End drawing of a filled shape.

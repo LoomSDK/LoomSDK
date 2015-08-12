@@ -117,6 +117,11 @@ public:
 	unsigned int color;
 	lmscalar alpha;
 
+	TextureID texture;
+	Loom2D::Matrix transform;
+	bool repeat;
+	bool smooth;
+
 	VectorFill() {
 		reset();
 	}
@@ -124,9 +129,21 @@ public:
 		active = false;
 		color = 0x000000;
 		alpha = 1;
+		texture = TEXTUREINVALID;
 	}
-	VectorFill(unsigned int color, float alpha) : color(color), alpha(alpha) {
+	VectorFill(unsigned int color, float alpha) {
+		reset();
 		active = true;
+		this->color = color;
+		this->alpha = alpha;
+	};
+	VectorFill(TextureID texture, Loom2D::Matrix *transform, bool repeat, bool smooth) {
+		reset();
+		active = true;
+		this->texture = texture;
+		if (transform != NULL) this->transform.copyFrom(transform);
+		this->repeat = repeat;
+		this->smooth = smooth;
 	};
 
 	virtual void render(VectorGraphics* g);
@@ -204,7 +221,7 @@ public:
 	bool isStyleVisible();
 	void flushPath();
 
-    void setClipRect(int x, int y, int w, int h);
+	void setClipRect(int x, int y, int w, int h);
 	void render(Loom2D::RenderState* renderState, Loom2D::Matrix* transform);
 
 	void clear();
@@ -212,6 +229,7 @@ public:
 	void lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit);
 	void textFormat(GFX::VectorTextFormat format);
 	void beginFill(unsigned int color, float alpha);
+	void beginTextureFill(TextureID id, Loom2D::Matrix *matrix, bool repeat, bool smooth);
 	void endFill();
 
 	Loom2D::Rectangle getBounds();

@@ -81,6 +81,7 @@ int VectorRenderer::frameWidth = 0;
 int VectorRenderer::frameHeight = 0;
 uint8_t VectorRenderer::quality = VectorRenderer::QUALITY_ANTIALIAS | VectorRenderer::QUALITY_STENCIL_STROKES;
 uint8_t VectorRenderer::tessellationQuality = 6;
+utHashTable<utIntHashKey, int> VectorRenderer::imageLookup;
 
 //*
 void drawLabel(struct NVGcontext* vg, const char* text, float x, float y, float w, float h)
@@ -108,6 +109,7 @@ void VectorRenderer::beginFrame()
     nvgTessLevelMax(nvg, tessellationQuality);
     nvgBeginFrame(nvg, frameWidth, frameHeight, 1);
 
+    deleteImages();
 
 
     /*
@@ -235,6 +237,45 @@ void VectorRenderer::fillColor32(unsigned int argb, float a) {
 	fillColor(argb, a*ca);
 }
 
+void VectorRenderer::fillTexture(TextureID id, Loom2D::Matrix transform, bool repeat, bool smooth) {
+
+	TextureInfo *tinfo = Texture::getTextureInfo(id);
+
+	// Setup flags
+	int flags = NVG_IMAGE_NODELETE;
+	if (tinfo->mipmaps) flags |= NVG_IMAGE_GENERATE_MIPMAPS;
+	if (repeat) {
+		flags |= NVG_IMAGE_REPEATX;
+		flags |= NVG_IMAGE_REPEATY;
+	}
+	if (smooth) flags |= NVG_IMAGE_BILINEAR;
+
+	// Key based on id and flags
+	utIntHashKey key = utIntHashKey(utIntHashKey(id).hash() ^ utIntHashKey(flags).hash());
+
+	int *stored = imageLookup.get(key);
+	int nvgImage;
+	if (stored == NULL) {
+		nvgImage = nvglCreateImageFromHandle(nvg, tinfo->getHandleID(), tinfo->width, tinfo->height, flags);
+		imageLookup.insert(key, nvgImage);
+	} else {
+		nvgImage = *stored;
+	}
+
+	// Save transform
+	float xform[6];
+	nvgCurrentTransform(nvg, xform);
+	
+	// Apply fill transform
+	nvgTransform(nvg, (float)transform.a, (float)transform.b, (float)transform.c, (float)transform.d, (float)transform.tx, (float)transform.ty);
+
+	// Set paint
+	nvgFillPaint(nvg, nvgImagePattern(nvg, 0.f, 0.f, (float) tinfo->width, (float) tinfo->height, 0.f, nvgImage, 1.f));
+	
+	// Restore transform
+	nvgSetTransform(nvg, xform);
+}
+
 void VectorRenderer::textFormat(VectorTextFormat* format, lmscalar a) {
 	if (strlen(format->font) > 0) {
 		nvgFontFace(nvg, format->font);
@@ -349,16 +390,28 @@ void VectorRenderer::svg(VectorSVG* image, float x, float y, float scale, float 
 	image->render(x, y, scale, lineThickness);
 }
 
+void VectorRenderer::deleteImages()
+{
+	if (nvg != NULL)
+	{
+		for (UTsize i = 0; i < imageLookup.size(); i++) {
+			nvgDeleteImage(nvg, imageLookup.at(i));
+		}
+	}
+	imageLookup.clear();
+}
 
 void VectorRenderer::destroyGraphicsResources()
 {
+	deleteImages();
 	if (nvg != NULL) {
+
 #ifdef LOOM_RENDERER_OPENGLES2
 		nvgDeleteGLES2(nvg);
 #else
-        nvgDeleteGL2(nvg);
+		nvgDeleteGL2(nvg);
 #endif
-        nvg = NULL;
+		nvg = NULL;
 	}
 }
 

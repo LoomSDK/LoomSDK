@@ -441,6 +441,8 @@ void Texture::upload(TextureInfo &tinfo, uint8_t *data, uint16_t width, uint16_t
     Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
     //Graphics::context()->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     //Graphics::context()->glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+
     if (newImage) {
         tinfo.width = width;
         tinfo.height = height;
@@ -454,7 +456,7 @@ void Texture::upload(TextureInfo &tinfo, uint8_t *data, uint16_t width, uint16_t
     LOOM_PROFILE_END(textureLoadUpload);
 
     // Generate mipmaps if appropriate
-    if (false && !tinfo.renderTarget && (supportsFullNPOT || tinfo.isPowerOfTwo()))
+    if (!tinfo.renderTarget && (supportsFullNPOT || tinfo.isPowerOfTwo()))
     {
         LOOM_PROFILE_START(textureLoadMipmap);
         tinfo.clampOnly = false;
