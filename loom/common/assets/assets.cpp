@@ -41,6 +41,7 @@
 #include "loom/common/assets/assetsImage.h"
 #include "loom/common/assets/assetsSound.h"
 #include "loom/common/assets/assetsScript.h"
+#include "loom/common/assets/telemetry.h"
 
 #include <jansson.h>
 
@@ -57,6 +58,17 @@
 
 // This actually lives in lsAsset.cpp, but is useful to call from in the asset manager implementation.
 void loom_asset_notifyPendingCountChange();
+
+const char* LOOM_FOURCC_CHARS(unsigned int fourcc)
+{
+    static char chars[5];
+    chars[0] = fourcc & 0xFF;
+    chars[1] = (fourcc >> 8) & 0xFF;
+    chars[2] = (fourcc >> 16) & 0xFF;
+    chars[3] = (fourcc >> 24) & 0xFF;
+    chars[4] = 0;
+    return chars;
+}
 
 extern "C" 
 {
@@ -335,6 +347,18 @@ void loom_asset_logListener(void *payload, loom_logGroup_t *group, loom_logLevel
     loom_mutex_unlock(gAssetServerSocketLock);
 }
 
+// Helper function to route Loom custom output over the network.
+void loom_asset_custom(void* buffer, int length)
+{
+    loom_mutex_lock(gAssetServerSocketLock);
+
+    if (gAssetProtocolHandler)
+    {
+        gAssetProtocolHandler->sendCustom(buffer, length);
+    }
+
+    loom_mutex_unlock(gAssetServerSocketLock);
+}
 
 int loom_asset_queryPendingTransfers()
 {
@@ -702,6 +726,7 @@ static void loom_asset_serviceServer()
             gAssetProtocolHandler = lmNew(NULL) AssetProtocolHandler(gAssetServerSocket);
             gAssetProtocolHandler->registerListener(lmNew(NULL) AssetProtocolFileMessageListener());
             gAssetProtocolHandler->registerListener(lmNew(NULL) AssetProtocolCommandListener());
+            gAssetProtocolHandler->registerListener(lmNew(NULL) TelemetryListener());
         }
 
         loom_mutex_unlock(gAssetServerSocketLock);

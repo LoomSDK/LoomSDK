@@ -63,6 +63,25 @@ void NetworkBuffer::writeInt(int _value)
     curByte += 4;
 }
 
+double NetworkBuffer::readDouble()
+{
+    double r = *(double *)((char *)buffer + curByte);
+
+    r = convertLEndianToHost(r);
+
+    curByte += 8;
+    return(r);
+}
+
+
+void NetworkBuffer::writeDouble(double _value)
+{
+    _value = convertHostToLEndian(_value);
+
+    *(double *)((char *)buffer + curByte) = (_value);
+    curByte += 8;
+}
+
 
 bool NetworkBuffer::readString(char **outString, int *outLength)
 {
@@ -200,6 +219,8 @@ bool AssetProtocolHandler::readFrame()
 
     // Make sure we can peek that much data.
     bytesLength = frameLength;
+
+    /*
     loom_net_readTCPSocket(socket, bytes, &bytesLength, 1);
 
     if (bytesLength != frameLength)
@@ -207,9 +228,16 @@ bool AssetProtocolHandler::readFrame()
         lmSafeFree(NULL, bytes);
         return false;
     }
+    */
 
     // Read for real to clear out the socket.
     loom_net_readTCPSocket(socket, bytes, &bytesLength, 0);
+
+    if (bytesLength != frameLength)
+    {
+        lmSafeFree(NULL, bytes);
+        return false;
+    }
 
     // Great, we have a frame!
     buffer.setBuffer(bytes, bytesLength);
@@ -233,6 +261,7 @@ void AssetProtocolHandler::process()
     // Let everybody have a shot at it.
     AssetProtocolMessageListener *apml = listenerHead;
     bool handled = false;
+    int index = 0;
     while (apml)
     {
         if (!apml->handleMessage(fourcc, this, buffer))
@@ -245,6 +274,9 @@ void AssetProtocolHandler::process()
         handled = true;
         break;
     }
+
+    lmFree(NULL, buffer.buffer);
+    buffer.setBuffer(NULL, 0);
 
     if (!handled)
     {
@@ -390,6 +422,11 @@ void AssetProtocolHandler::sendLog(const char *log)
     loom_net_writeTCPSocket(socket, msgBuffer, sendBuffer.getCurrentPosition());
 }
 
+
+void AssetProtocolHandler::sendCustom(void* buffer, int length)
+{
+    loom_net_writeTCPSocket(socket, buffer, length);
+}
 
 void AssetProtocolHandler::sendCommand(const char *cmd)
 {

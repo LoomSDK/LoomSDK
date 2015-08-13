@@ -23,7 +23,6 @@
 #include "loom/script/runtime/lsRuntime.h"
 #include "jansson.h"
 
-
 class JSON {
     // The native _json object
     json_t *_json;

@@ -19,12 +19,30 @@
  */
 
 #include "loom/script/native/core/system/lmJSON.h"
+#include "loom/common/core/allocator.h"
 
-using namespace LS;
+static void *jsonAlloc(size_t size)
+{
+    return lmAlloc(NULL, size);
+}
+static void jsonFree(void *ptr)
+{
+    lmFree(NULL, ptr);
+}
+
+static bool initialized = false;
 
 JSON::JSON() : _json(NULL), _root(false)
 {
+    if (!initialized)
+    {
+        json_set_alloc_funcs(jsonAlloc, jsonFree);
+        initialized = true;
+    }
 }
+
+using namespace LS;
+
 
 bool JSON::clear() {
     if (_json)
@@ -194,7 +212,7 @@ void JSON::setInteger(const char *key, int value)
         return;
     }
 
-    json_object_set(_json, key, json_integer(value));
+    json_object_set_new(_json, key, json_integer(value));
 }
 
 // getFloat is an alias of getNumber to avoid mistakes,
@@ -240,7 +258,7 @@ void JSON::setNumber(const char *key, double value)
         return;
     }
 
-    json_object_set(_json, key, json_real(value));
+    json_object_set_new(_json, key, json_real(value));
 }
 
 bool JSON::getBoolean(const char *key)
@@ -267,7 +285,7 @@ void JSON::setBoolean(const char *key, bool value)
         return;
     }
 
-    json_object_set(_json, key, value ? json_true() : json_false());
+    json_object_set_new(_json, key, value ? json_true() : json_false());
 }
 
 const char *JSON::getString(const char *key)
@@ -294,7 +312,7 @@ void JSON::setString(const char *key, const char *value)
         return;
     }
 
-    json_object_set(_json, key, json_string(value));
+    json_object_set_new(_json, key, json_string(value));
 }
 
 // Objects
@@ -312,7 +330,7 @@ JSON *JSON::getObject(const char *key)
         return NULL;
     }
 
-    JSON *jin = new JSON();
+    JSON *jin = lmNew(NULL) JSON();
     json_incref(jobject);
     jin->_json = jobject;
 
@@ -386,7 +404,7 @@ JSON *JSON::getArray(const char *key)
         return NULL;
     }
 
-    JSON *jin = new JSON();
+    JSON *jin = lmNew(NULL) JSON();
     json_incref(jarray);
     jin->_json = jarray;
 
@@ -571,7 +589,7 @@ JSON *JSON::getArrayObject(int index)
         return NULL;
     }
 
-    JSON *jin = new JSON();
+    JSON *jin = lmNew(NULL) JSON();
     json_incref(object);
     jin->_json = object;
     return jin;
@@ -603,7 +621,7 @@ JSON *JSON::getArrayArray(int index)
         return NULL;
     }
 
-    JSON *jin = new JSON();
+    JSON *jin = lmNew(NULL) JSON();
     json_incref(object);
     jin->_json = object;
     return jin;

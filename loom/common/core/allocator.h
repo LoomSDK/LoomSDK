@@ -259,10 +259,6 @@ struct loom_allocator
 * operators, if you want an array use the templated vector class.
 *
 ************************************************************************/
-#define lmNew(allocator)                new(allocator, __FILE__, __LINE__)
-#define lmDelete(allocator, obj)        { loom_destructInPlace(obj); lmFree(allocator, obj); }
-#define lmSafeDelete(allocator, obj)    if (obj) { loom_destructInPlace(obj); lmFree(allocator, obj); obj = NULL; }
-#define lmSafeFree(allocator, obj)      if (obj) { lmFree(allocator, obj); obj = NULL; }
 
 #include <new>
 
@@ -282,6 +278,11 @@ inline void operator delete(void *p, loom_allocator_t *a)
 {
     lmFree(a, p);
 }
+
+#define lmNew(allocator)                new(allocator, __FILE__, __LINE__)
+#define lmDelete(allocator, obj)        { loom_destructInPlace(obj); lmFree(allocator, obj); }
+#define lmSafeDelete(allocator, obj)    if (obj) { loom_destructInPlace(obj); lmFree(allocator, obj); obj = NULL; }
+#define lmSafeFree(allocator, obj)      if (obj) { lmFree(allocator, obj); obj = NULL; }
 
 // Construct the type with preallocated memory (construct with no allocation)
 // Usage: loom_constructInPlace<CustomType>(preallocatedMemoryOfSufficientSize);
@@ -310,6 +311,7 @@ template<typename T>
 T* loom_newArray(loom_allocator_t *allocator, unsigned int nr)
 {
     T* arr = (T*) lmAlloc(allocator, sizeof(unsigned int) + nr * sizeof(T));
+    lmSafeAssert(arr, "Unable to allocate additional memory in loom_newArray");
     *((unsigned int*)arr) = nr;
     arr = (T*)(((unsigned int*)arr) + 1);
     for (unsigned int i = 0; i < nr; i++)

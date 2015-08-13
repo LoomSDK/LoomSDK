@@ -13,6 +13,7 @@ include_directories(
     minimp3
     nanosvg/src
     nanovg/src
+    civetweb/include
     .
 )
 
@@ -434,6 +435,16 @@ set (NANOSVG_HDR
   nanosvg/src/nanosvgrast.h
 )
 
+add_definitions(-DUSE_WEBSOCKET)
+
+set (CIVETWEB_HDR
+    civetweb/include/civetweb.h
+)
+
+set (CIVETWEB_SRC
+    civetweb/src/civetweb.c
+)
+
 if (MSVC)
 
     set (GLEW_HDR )
@@ -484,6 +495,7 @@ set (ALL_FILES
     ${NANOVG_HDR} ${NANOVG_SRC}
     ${NANOSVG_HDR}
     ${SQLITE3_SRC}
+    ${CIVETWEB_HDR} ${CIVETWEB_SRC} 
 )
 
 if (MSVC)

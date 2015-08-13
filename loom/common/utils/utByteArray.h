@@ -309,11 +309,12 @@ public:
     const char *readUTFBytes(unsigned int length)
     {
         static utString svalue;
-
+        
         char *value = new char[length + 1];
 
-        value[length] = 0;
         memcpy(value, &_data[_position], length);
+
+        value[length] = 0;
         _position += length;
 
         svalue = value;

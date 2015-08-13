@@ -498,7 +498,8 @@ public:
         if (m_first == link) { m_first = link->next; }
 
         m_size -= 1;
-        lmDelete(NULL, link);
+        LOOM_ALLOCATOR_VERIFY(link);
+        lmSafeDelete(NULL, link);
         if (m_size == 0)
         {
             clear();
@@ -629,10 +630,10 @@ public:
     typedef const utArrayIterator<utArray<T> >   ConstIterator;
 
 public:
-    utArray() : m_size(0), m_capacity(0), m_data(0), m_cache(0)  {}
+    utArray() : m_size(0), m_capacity(0), m_data(0), m_cache(0), m_attached(false)  {}
 
     utArray(const utArray<T>& o)
-        : m_size(o.size()), m_capacity(0), m_data(0), m_cache(0)
+        : m_size(o.size()), m_capacity(0), m_data(0), m_cache(0), m_attached(false)
     {
         reserve(m_size);
         copy(m_data, o.m_data, m_size);
@@ -642,6 +643,7 @@ public:
 
     void clear(bool useCache = false)
     {
+        detach();
         if (!useCache)
         {
             if (m_data)
@@ -670,6 +672,19 @@ public:
         m_data = (Pointer) memory;
         m_capacity = size;
         m_size = size;
+        m_attached = true;
+        m_cache = 0;
+    }
+
+    void detach()
+    {
+        if (!m_attached) return;
+        m_data = NULL;
+        m_capacity = 0;
+        m_size = 0;
+        m_cache = 0;
+        m_capacity = 0;
+        m_attached = false;
     }
 
     UTsize find(const T& v)
@@ -796,6 +811,7 @@ public:
         if (m_capacity < nr)
         {
             T *p = loom_newArray<T>(NULL, nr);
+            detach();
             if (m_data != 0)
             {
                 copy(p, m_data, m_size);
@@ -889,6 +905,7 @@ protected:
     UTsize  m_capacity;
     Pointer m_data;
     int     m_cache;
+    bool    m_attached;
 };
 
 template<typename T>

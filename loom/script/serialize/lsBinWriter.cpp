@@ -565,7 +565,7 @@ void BinWriter::writeAssembly(const char *sjson, int jsonSize)
     json_error_t jerror;
     json_t       *json = json_loadb(sjson, jsonSize, 0, &jerror);
 
-    lmAssert(json, "Error loading Assembly json: %s\n %s %i\n", jerror.source, jerror.text, jerror.line);
+    lmAssert(json, "Error loading Assembly json: %s\n %s %i\n>>>%s<<<", jerror.source, jerror.text, jerror.line, sjson);
 
     writeAssembly(json);
 }
@@ -644,6 +644,7 @@ void BinWriter::writeAssembly(json_t *json)
             lmAssert(jbinary, "Error with linked assembly %s, missing binary section", refname);
             utString  refjson  = (const char *)utBase64::decode64(json_string_value(jbinary)).getData().ptr();
             BinWriter *bwriter = lmNew(NULL) BinWriter;
+            lmAssert(refjson.length() > 0, "Refjson should not be empty! %s", json_string_value(jbinary));
             bwriter->writeAssembly(refjson.c_str(), refjson.length());
         }
     }

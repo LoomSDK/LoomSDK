@@ -118,6 +118,8 @@ void loom_asset_registerType(unsigned int type, LoomAssetDeserializeCallback des
 typedef void (*LoomAssetCommandCallback)(const char *command);
 void loom_asset_setCommandCallback(LoomAssetCommandCallback callback);
 
+void loom_asset_custom(void *buffer, int length);
+
 void loom_asset_preload(const char *name);
 
 void loom_asset_flush(const char *name);

@@ -356,6 +356,11 @@ loom_socketId_t loom_net_acceptTCPSocket(loom_socketId_t listenSocket)
 
 void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, int peek /*= 0*/)
 {
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+    int winsockErrorCode;
+#endif
+    int waiting;
+
     int tmp = *bytesToRead;
 
     if (loom_net_isSocketDead(s))
@@ -364,7 +369,47 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
         return;
     }
 
-    *bytesToRead = recv((SOCKET)s, buffer, tmp, peek == 0 ? 0 : MSG_PEEK);
+    if (peek) {
+        *bytesToRead = recv((SOCKET)s, buffer, tmp, MSG_PEEK);
+        return;
+    }
+
+    int bytesLeft = *bytesToRead;
+
+    while (bytesLeft > 0)
+    {
+        int received = recv((SOCKET)s, buffer, bytesLeft, 0);
+        if (received == -1) {
+            waiting = 0;
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+            winsockErrorCode = WSAGetLastError();
+            if (winsockErrorCode == WSAEWOULDBLOCK)
+            {
+                waiting = 1;
+            }
+#else
+            if (errno == EAGAIN)
+            {
+                waiting = 1;
+            }
+#endif
+            if (waiting)
+            {
+                lmLogWarn(netLogGroup, "Waiting for receive buffer %d / %d", *bytesToRead - bytesLeft, *bytesToRead);
+                loom_thread_sleep(5);
+                continue;
+            }
+            else
+            {
+                lmLogError(netLogGroup, "Read socket error");
+                *bytesToRead = -1;
+                return;
+            }
+        }
+        bytesLeft -= received;
+    }
+
+    lmAssert(bytesLeft == 0, "Internal recv error, read too much data? %d", bytesLeft);
 }
 
 
@@ -412,7 +457,8 @@ int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite)
             break;
         }
 
-        lmLogInfo(netLogGroup, "Write failed, trying again with socket %d buffer %x", s, buffer);
+        //lmLogInfo(netLogGroup, "Write failed, trying again with socket %d buffer %x", s, buffer);
+        //fprintf(stderr, "Write failed, trying again with socket %d buffer %x", s, buffer);
         loom_thread_sleep(5);
     }
 

@@ -56,6 +56,8 @@ protected:
 
 public:
 
+    static loom_precision_timer_t tickTimer;
+
     static NativeDelegate ticks;
     static NativeDelegate assetCommandDelegate;
     static NativeDelegate applicationDeactivated;
