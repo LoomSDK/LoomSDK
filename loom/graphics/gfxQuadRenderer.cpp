@@ -192,7 +192,7 @@ void QuadRenderer::submit()
             Graphics_SetCurrentGLState(GFX_OPENGL_STATE_QUAD);
             
             // Setting the buffer to null supposedly enables better performance because it enables the driver to do some optimizations.
-            Graphics::context()->glBufferData(GL_ARRAY_BUFFER, batchedVertexCount*sizeof(VertexPosColorTex), nullptr, GL_STREAM_DRAW);
+            Graphics::context()->glBufferData(GL_ARRAY_BUFFER, batchedVertexCount*sizeof(VertexPosColorTex), NULL, GL_STREAM_DRAW);
             Graphics::context()->glBufferData(GL_ARRAY_BUFFER, batchedVertexCount*sizeof(VertexPosColorTex), batchedVertices, GL_STREAM_DRAW);
 
             // And bind indices and draw.
