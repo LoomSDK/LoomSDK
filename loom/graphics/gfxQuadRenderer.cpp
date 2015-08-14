@@ -49,24 +49,27 @@ static GLuint sProgram_posTexCoordLoc;
 static GLuint sProgram_texUniform;
 static GLuint sProgram_mvp;
 
-unsigned int sSrcBlend = GL_SRC_ALPHA;
-unsigned int sDstBlend = GL_ONE_MINUS_SRC_ALPHA;
+static GLuint sSrcBlend = GL_SRC_ALPHA;
+static GLuint sDstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
 GLuint QuadRenderer::indexBufferId;
 GLuint QuadRenderer::vertexBufferId;
-VertexPosColorTex* QuadRenderer::vertices;
-size_t QuadRenderer::vertexCount;
+VertexPosColorTex* QuadRenderer::batchedVertices;
+size_t QuadRenderer::batchedVertexCount;
 TextureID QuadRenderer::currentTexture;
 
 int QuadRenderer::numFrameSubmit;
 
 static loom_allocator_t *gQuadMemoryAllocator = NULL;
+static bool sShaderStateValid = false;
+static bool sTextureStateValid = false;
+static bool sBlendStateValid = false;
 
 void QuadRenderer::submit()
 {
     LOOM_PROFILE_SCOPE(quadSubmit);
 
-    if (vertexCount <= 0)
+    if (batchedVertexCount <= 0)
     {
         return;
     }
@@ -87,14 +90,17 @@ void QuadRenderer::submit()
 
             if (!Graphics_IsGLStateValid(GFX_OPENGL_STATE_QUAD))
             {
+                sShaderStateValid = false;
+                sTextureStateValid = false;
+                sBlendStateValid = false;
+            }
+            
+            Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
+            
+            if (!sShaderStateValid)
+            {
                 // Select the shader.
                 Graphics::context()->glUseProgram(sProgramPosColorTex);
-
-                // Upload vertex data.
-                Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
-                Graphics::context()->glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(VertexPosColorTex), nullptr, GL_DYNAMIC_DRAW);
-                Graphics::context()->glBufferData(GL_ARRAY_BUFFER, vertexCount*sizeof(VertexPosColorTex), vertices, GL_DYNAMIC_DRAW);
-
 
                 Graphics::context()->glEnableVertexAttribArray(sProgram_posAttribLoc);
                 Graphics::context()->glEnableVertexAttribArray(sProgram_posColorLoc);
@@ -111,7 +117,11 @@ void QuadRenderer::submit()
                 Graphics::context()->glVertexAttribPointer(sProgram_posTexCoordLoc,
                                                            2, GL_FLOAT, false,
                                                            sizeof(VertexPosColorTex), (void*)offsetof(VertexPosColorTex, u));
-
+                sShaderStateValid = true;
+            }
+            
+            if (!sTextureStateValid)
+            {
                 // Set up texture state.
                 Graphics::context()->glActiveTexture(GL_TEXTURE0);
                 Graphics::context()->glUniform1i(sProgram_texUniform, 0);
@@ -166,33 +176,42 @@ void QuadRenderer::submit()
                     default:
                         lmAssert(false, "Unsupported smoothing: %d", tinfo.smoothing);
                 }
+                
+                sTextureStateValid = true;
+            }
 
+            if (!sBlendStateValid)
+            {
                 // Blend mode.
                 Graphics::context()->glEnable(GL_BLEND);
                 Graphics::context()->glBlendFuncSeparate(sSrcBlend, sDstBlend, sSrcBlend, sDstBlend);
 
-                Graphics_SetCurrentGLState(GFX_OPENGL_STATE_QUAD);
+                sBlendStateValid = true;
             }
+            
+            Graphics_SetCurrentGLState(GFX_OPENGL_STATE_QUAD);
+            
+            // Setting the buffer to null supposedly enables better performance because it enables the driver to do some optimizations.
+            Graphics::context()->glBufferData(GL_ARRAY_BUFFER, batchedVertexCount*sizeof(VertexPosColorTex), nullptr, GL_STREAM_DRAW);
+            Graphics::context()->glBufferData(GL_ARRAY_BUFFER, batchedVertexCount*sizeof(VertexPosColorTex), batchedVertices, GL_STREAM_DRAW);
 
             // And bind indices and draw.
             Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
             Graphics::context()->glDrawElements(GL_TRIANGLES,
-                                                (GLsizei)(vertexCount / 4 * 6), GL_UNSIGNED_SHORT,
+                                                (GLsizei)(batchedVertexCount / 4 * 6), GL_UNSIGNED_SHORT,
                                                 nullptr);
-
-            Graphics::context()->glDisableVertexAttribArray(sProgram_posAttribLoc);
-            Graphics::context()->glDisableVertexAttribArray(sProgram_posColorLoc);
-            Graphics::context()->glDisableVertexAttribArray(sProgram_posTexCoordLoc);
         }
     }
+    
+    batchedVertexCount = 0;
 }
 
 
-VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t numVertices, uint32_t srcBlend, uint32_t dstBlend)
+VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend)
 {
     LOOM_PROFILE_SCOPE(quadGetVertices);
 
-    if (!numVertices || (texture < 0) || (numVertices > MAXBATCHQUADS * 4))
+    if (!vertexCount || (texture < 0) || (vertexCount > MAXBATCHQUADS * 4))
     {
         return NULL;
     }
@@ -205,44 +224,51 @@ VertexPosColorTex *QuadRenderer::getQuadVertices(TextureID texture, uint16_t num
     lmAssert(vertices);
 #endif
 
-    if (((currentTexture != TEXTUREINVALID) && (currentTexture != texture)) ||
-        (srcBlend != sSrcBlend) ||
-        ( dstBlend != sDstBlend))
-    {
-        submit();
-        Graphics_InvalidateGLState(GFX_OPENGL_STATE_QUAD);
+    bool doSubmit = false;
 
-        vertexCount = 0;
+    if (currentTexture != TEXTUREINVALID && currentTexture != texture)
+    {
+        doSubmit = true;
+        sTextureStateValid = false;
+    }
+    
+    if (srcBlend != sSrcBlend ||
+        dstBlend != sDstBlend)
+    {
+        doSubmit = true;
+        sBlendStateValid = false;
     }
 
-    if ((vertexCount + numVertices) > MAXBATCHQUADS * 4)
+    if ((batchedVertexCount + vertexCount) > MAXBATCHQUADS * 4)
+    {
+        doSubmit = true;
+    }
+    
+    if (doSubmit)
     {
         submit();
-
-        vertexCount = 0;
     }
 
     sSrcBlend = srcBlend;
     sDstBlend = dstBlend;
     currentTexture = texture;
-    vertexCount += numVertices;
 
-    VertexPosColorTex *returnPtr = &vertices[vertexCount];
-
-    return returnPtr;
+    VertexPosColorTex *currentVertices = &batchedVertices[batchedVertexCount];
+    batchedVertexCount += vertexCount;
+    return currentVertices;
 }
 
 
-void QuadRenderer::batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices, uint32_t srcBlend, uint32_t dstBlend)
+void QuadRenderer::batch(VertexPosColorTex *vertices, uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend)
 {
     LOOM_PROFILE_SCOPE(quadBatch);
 
-    VertexPosColorTex *verticePtr = getQuadVertices(texture, numVertices, srcBlend, dstBlend);
+    VertexPosColorTex *vertexPtr = getQuadVertexMemory(vertexCount, texture, srcBlend, dstBlend);
 
-    if (!verticePtr)
+    if (!vertexPtr)
         return;
 
-    memcpy((void *)verticePtr, (void *)vertices, sizeof(VertexPosColorTex) * numVertices);
+    memcpy((void *)vertexPtr, (void *)vertices, sizeof(VertexPosColorTex) * vertexCount);
 }
 
 
@@ -250,7 +276,7 @@ void QuadRenderer::beginFrame()
 {
     LOOM_PROFILE_SCOPE(quadBegin);
 
-    vertexCount            = 0;
+    batchedVertexCount     = 0;
     currentTexture         = TEXTUREINVALID;
 
     numFrameSubmit = 0;
@@ -344,7 +370,7 @@ void QuadRenderer::initializeGraphicsResources()
     // create the single initial vertex buffer
     Graphics::context()->glGenBuffers(1, &vertexBufferId);
     Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
-    Graphics::context()->glBufferData(GL_ARRAY_BUFFER, MAXBATCHQUADS * 4 * sizeof(VertexPosColorTex), 0, GL_DYNAMIC_DRAW);
+    Graphics::context()->glBufferData(GL_ARRAY_BUFFER, MAXBATCHQUADS * 4 * sizeof(VertexPosColorTex), 0, GL_STREAM_DRAW);
     Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // create the single, reused index buffer
@@ -364,13 +390,13 @@ void QuadRenderer::initializeGraphicsResources()
         pIndex[5] = j + 3;
     }
 
-    Graphics::context()->glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAXBATCHQUADS * 6 * sizeof(uint16_t), pStart, GL_DYNAMIC_DRAW);
+    Graphics::context()->glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAXBATCHQUADS * 6 * sizeof(uint16_t), pStart, GL_STREAM_DRAW);
     Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     lmFree(gQuadMemoryAllocator, pStart);
 
     // Create the system memory buffer for quads.
-    vertices = static_cast<VertexPosColorTex*>(lmAlloc(gQuadMemoryAllocator, MAXBATCHQUADS * 4 * sizeof(VertexPosColorTex)));
+    batchedVertices = static_cast<VertexPosColorTex*>(lmAlloc(gQuadMemoryAllocator, MAXBATCHQUADS * 4 * sizeof(VertexPosColorTex)));
 }
 
 

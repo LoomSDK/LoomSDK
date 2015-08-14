@@ -47,8 +47,8 @@ private:
 	static GLuint vertexBufferId;
 	static GLuint indexBufferId;
 
-    static VertexPosColorTex *vertices;
-    static size_t vertexCount;
+    static VertexPosColorTex *batchedVertices;
+    static size_t batchedVertexCount;
 
     static TextureID currentTexture;
 
@@ -71,8 +71,8 @@ public:
 
     static void endFrame();
 
-    static VertexPosColorTex *getQuadVertices(TextureID texture, uint16_t numVertices, uint32_t srcBlend, uint32_t dstBlend);
+    static VertexPosColorTex *getQuadVertexMemory(uint16_t numVertices, TextureID texture, uint32_t srcBlend, uint32_t dstBlend);
 
-    static void batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices, uint32_t srcBlend, uint32_t dstBlend);
+    static void batch(VertexPosColorTex *vertices, uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend);
 };
 }
