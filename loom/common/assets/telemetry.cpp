@@ -328,7 +328,7 @@ void Telemetry::beginTickTimer(const char *name)
         stored->duplicates++;
         stored->duplicatesOnStack++;
         //sscanf_s(stored->n, "%s.%d", uniqueName, dup);
-        snprintf(uniqueName, uniqueLen - 1, "%s.%d", name, stored->duplicates+1);
+        snprintf(uniqueName, uniqueLen - 1, "%s #%d", name, stored->duplicates+1);
         uniqueName[uniqueLen - 1] = 0;
 
         key = utHashedString(uniqueName);

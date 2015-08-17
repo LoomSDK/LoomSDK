@@ -23,6 +23,7 @@
 #include "loom/script/runtime/lsLuaState.h"
 #include "loom/common/platform/platformTime.h"
 #include "loom/graphics/gfxMath.h"
+#include "loom/common/assets/telemetry.h"
 
 namespace LS {
 
@@ -212,7 +213,7 @@ public:
             // Uncomment for GC cycle reports
             /*
             lmLog(gGCGroup, "Cycle: %d / %d KiB in %d ms with %d runs in %d updates %.4f ms avg %.4f ms max, %.2f KiB/s, %d rpu, %d bpr, %.2f%% garb., %.2f%% -> %.2f (%d) runs",
-                cycleCollectedBytes/1024, memoryAfterKB, collectionTime, cycleRuns, cycleUpdates, timePerUpdate*1e-3, cycleMaxTime*1e-3, cps, runsPerUpdate, lastValidBPR, garbageRatio * 100, targetGarbage * 100, targetRuns, updateRunLimit
+                cycleCollectedBytes/1024, memoryAfterKB, collectionTime, cycleRuns, cycleUpdates, timePerUpdate*1e-6, cycleMaxTime*1e-6, cps, runsPerUpdate, lastValidBPR, garbageRatio * 100, targetGarbage * 100, targetRuns, updateRunLimit
             );
             //*/
 
@@ -226,6 +227,11 @@ public:
             cycleKB = memoryAfterKB;
 
         }
+
+        Telemetry::setTickValue("gc.cycle.updates", cycleUpdates);
+        Telemetry::setTickValue("gc.cycle.runs", cycleRuns);
+        Telemetry::setTickValue("gc.memory", (double) memoryAfterKB * 1024 + memoryAfterB);
+
 
         return 0;
 
@@ -252,7 +258,7 @@ double GC::targetGarbage = 0.1;
 
 // The max time in nanoseconds each GC update is allowed to
 // run for.
-double GC::updateNanoLimit = 2e6;
+double GC::updateNanoLimit = 2e9;
 
 // The minimum number of runs each update.
 int GC::runLimitMin = 1;

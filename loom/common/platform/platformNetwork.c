@@ -407,6 +407,7 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
             }
         }
         bytesLeft -= received;
+        buffer = (char*)buffer + received;
     }
 
     lmAssert(bytesLeft == 0, "Internal recv error, read too much data? %d", bytesLeft);

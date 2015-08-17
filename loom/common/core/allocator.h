@@ -21,6 +21,8 @@
 #ifndef _CORE_ALLOCATOR_H_
 #define _CORE_ALLOCATOR_H_
 
+#include "loom/common/core/assert.h"
+
 /**************************************************************************
  * Loom Memory Allocation API
  *
@@ -112,7 +114,6 @@
 #else
 
 #include <stdint.h>
-#include "loom/common/core/assert.h"
 
 typedef struct loom_alloc_header loom_alloc_header_t;
 struct loom_alloc_header

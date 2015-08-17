@@ -98,7 +98,7 @@ textarea {
 
 
 
-.barChart {
+.tickBars {
     font: 12px sans-serif;
 }
 
@@ -108,7 +108,7 @@ textarea {
     orientation: 20;
 }
 
-.bs-loom_tick {
+.bs-loom_tick rect {
     stroke: #D4D4D4;
     stroke-width: 1px;
     stroke-linejoin: miter;
@@ -141,9 +141,38 @@ textarea {
     display: none;
 }
 
+.x.axis g {
+    pointer-events: none;
+}
 
+.grabbable {
+    cursor: move; /* fallback if grab cursor is unsupported */
+    cursor: grab;
+    cursor: -moz-grab;
+    cursor: -webkit-grab;
+}
+.grabbable:active { 
+    cursor: grabbing;
+    cursor: -moz-grabbing;
+    cursor: -webkit-grabbing;
+}
 
+.backRect {
+    fill: transparent;
+}
 
+*.unselectable {
+   -moz-user-select: -moz-none;
+   -khtml-user-select: none;
+   -webkit-user-select: none;
+
+   /*
+     Introduced in IE 10.
+     See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
+   */
+   -ms-user-select: none;
+   user-select: none;
+}
 
 
 
