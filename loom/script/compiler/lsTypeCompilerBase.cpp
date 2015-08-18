@@ -1266,6 +1266,9 @@ void TypeCompilerBase::generateInstanceInitializer()
 
     ExpDesc ethis;
 
+    // Skip initialization code when it does nothing.
+    bool doesNothing = true;
+
     // We're solely interested in initializer expressions non static variables
     for (UTsize i = 0; i < cls->varDecls.size(); i++)
     {
@@ -1278,35 +1281,36 @@ void TypeCompilerBase::generateInstanceInitializer()
 
         if (v->type->isStruct())
         {
+            doesNothing = false;
             generateVarDeclStruct(v);
         }
         else if (v->type->isDelegate())
         {
+            doesNothing = false;
             generateVarDeclDelegate(v);
         }
-        else
+        else if (v->initializer)
         {
-            if (v->initializer)
-            {
-                ExpDesc vname;
+            doesNothing = false;
 
-                BC::initExpDesc(&vname, VKNUM, 0);
+            ExpDesc vname;
+
+            BC::initExpDesc(&vname, VKNUM, 0);
 #if LOOM_ENABLE_JIT
-                setnumV(&vname.u.nval, v->memberInfo->getOrdinal());
+            setnumV(&vname.u.nval, v->memberInfo->getOrdinal());
 #else
-                vname.u.nval = v->memberInfo->getOrdinal();
+            vname.u.nval = v->memberInfo->getOrdinal();
 #endif
 
-                BC::singleVar(cs, &ethis, "this");
+            BC::singleVar(cs, &ethis, "this");
 
-                BC::expToNextReg(fs, &ethis);
-                BC::expToNextReg(fs, &vname);
-                BC::expToVal(fs, &vname);
-                BC::indexed(fs, &ethis, &vname);
+            BC::expToNextReg(fs, &ethis);
+            BC::expToNextReg(fs, &vname);
+            BC::expToVal(fs, &vname);
+            BC::indexed(fs, &ethis, &vname);
 
-                v->initializer->visitExpression(this);
-                BC::storeVar(fs, &ethis, &v->initializer->e);
-            }
+            v->initializer->visitExpression(this);
+            BC::storeVar(fs, &ethis, &v->initializer->e);
         }
 
         fs->freereg = fs->nactvar; /* free registers */
@@ -1314,13 +1318,16 @@ void TypeCompilerBase::generateInstanceInitializer()
 
     closeCodeState(&codeState);
 
-	bool debug = cunit->buildInfo->isDebugBuild();
+    if(doesNothing == false)
+    {
+        bool debug = cunit->buildInfo->isDebugBuild();
 
 #if LOOM_ENABLE_JIT
-    cls->type->setBCInstanceInitializer(generateByteCode(codeState.proto, debug));
+        cls->type->setBCInstanceInitializer(generateByteCode(codeState.proto, debug));
 #else
-    cls->type->setBCInstanceInitializer(generateByteCode(funcState.f, debug));
+        cls->type->setBCInstanceInitializer(generateByteCode(funcState.f, debug));
 #endif
+    }
 }
 
 

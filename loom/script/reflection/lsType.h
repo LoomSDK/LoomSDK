@@ -132,6 +132,9 @@ private:
     // allocated as an array of pointers for fastest memory access
     MemberInfo **memberInfoOrdinalLookup;
 
+    bool hadInstanceInitializer;
+    bool hadStaticInstanceInitializer;
+
 public:
 
     Type() :
@@ -140,7 +143,8 @@ public:
         bcStaticInitializer(NULL), bcInstanceInitializer(NULL),
         fieldInfoCount(-1), methodInfoCount(-1), propertyInfoCount(-1),
         fieldMembersValid(false), methodMembersValid(false), propertyMembersValid(false),
-        cached(false), maxMemberOrdinal(0), memberInfoOrdinalLookup(NULL)
+        cached(false), maxMemberOrdinal(0), memberInfoOrdinalLookup(NULL),
+        hadInstanceInitializer(false), hadStaticInstanceInitializer(false)
     {
     }
 
@@ -628,6 +632,8 @@ public:
     {
         if (bcStaticInitializer != NULL) lmDelete(NULL, bcStaticInitializer);
         bcStaticInitializer = bc;
+        if(bc->getByteCode().size() != 0)
+            hadStaticInstanceInitializer = true;
     }
 
     ByteCode *getBCStaticInitializer()
@@ -639,11 +645,23 @@ public:
     {
         if (bcInstanceInitializer != NULL) lmDelete(NULL, bcInstanceInitializer);
         bcInstanceInitializer = bc;
+        if(bc->getByteCode().size() != 0)
+            hadInstanceInitializer = true;
     }
 
     ByteCode *getBCInstanceInitializer()
     {
         return bcInstanceInitializer;
+    }
+
+    bool hasInstanceInitializer() const
+    {
+        return hadInstanceInitializer;
+    }
+
+    bool hasStaticInstanceInitializer() const
+    {
+        return hadStaticInstanceInitializer;
     }
 
     Type *castToType(Type *to, bool tryReverse = false);

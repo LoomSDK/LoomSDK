@@ -44,6 +44,7 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
     instanceIdx = lua_absindex(L, instanceIdx);
 
     utStack<Type *> types;
+
     Type            *t = type;
     while (t)
     {
@@ -57,9 +58,14 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
 
     int top = lua_gettop(L);
 
-    t = types.pop();
-    while (t)
+    while (!types.empty())
     {
+        t = types.pop();
+
+        // Skip initializers that are NOPs.
+        if(!t->hasInstanceInitializer())
+            continue;
+
         lsr_getclasstable(L, t);
 
         // get the instance initializer function
@@ -76,12 +82,6 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
         }
 
         lua_settop(L, top);
-
-        t = NULL;
-        if (!types.empty())
-        {
-            t = types.pop();
-        }
     }
 }
 
@@ -263,11 +263,13 @@ static int lsr_classcreateinstance(lua_State *L)
         t = t->getBaseType();
     }
 
-    // instance intializer chain
+    if(strcmp(type->getFullName().c_str(), "loom2d.ui.SimpleLabel") == 0)
+        LSWarning("Ctor for SimpleLabel");
+
+    // instance initializer chain
     lualoom_callscriptinstanceinitializerchain_internal(L, type, instanceIdx, NULL);
 
     // call constructor chain
-
     utStack<Type *> types;
 
     t = type;
@@ -352,7 +354,7 @@ static int lsr_classcreateinstance(lua_State *L)
 
                 if (lua_pcall(L, nargs + 1, LUA_MULTRET, 0))
                 {
-                    LSError("ERROR in constructor for %s\n:%s\n", t->getFullName().c_str(), lua_tostring(L, -1));
+                    LSError("ERROR in constructor for %s:\n%s", t->getFullName().c_str(), lua_tostring(L, -1));
                 }
             }
 
@@ -1082,15 +1084,17 @@ void lsr_classinitialize(lua_State *L, Type *type)
             i == 0 ?
             type->getBCStaticInitializer() :
             type->getBCInstanceInitializer();
+
         assert(bc);
 
         if (!bc->load(LSLuaState::getLuaState(L)))
         {
-            LSError("Error loading bytecode for %s:%s",
+            LSWarning("Error loading bytecode for %s:%s",
                     type->getFullName().c_str(),
                     i == 0 ?
                     "__ls_staticinitializer" :
                     "__ls_instanceinitializer");
+            continue;
         }
 
         // set initializer env to class table
