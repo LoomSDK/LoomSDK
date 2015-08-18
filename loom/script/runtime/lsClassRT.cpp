@@ -43,7 +43,8 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
 {
     instanceIdx = lua_absindex(L, instanceIdx);
 
-    utStack<Type *> types;
+    static utStack<Type *> types;
+    int typesTop = types.size();
 
     Type            *t = type;
     while (t)
@@ -52,19 +53,18 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
         {
             break;
         }
-        types.push(t);
+        // Skip initializers that are NOPs.
+        if(t->hasInstanceInitializer())
+            types.push(t);
+
         t = t->getBaseType();
     }
 
     int top = lua_gettop(L);
 
-    while (!types.empty())
+    while (types.size() > typesTop)
     {
         t = types.pop();
-
-        // Skip initializers that are NOPs.
-        if(!t->hasInstanceInitializer())
-            continue;
 
         lsr_getclasstable(L, t);
 
@@ -76,7 +76,7 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
 
         // call with new instance as "this" local
 
-        if (lua_pcall(L, 1, LUA_MULTRET, 0))
+        if (lua_pcall(L, 1, 0, 0))
         {
             LSError("Error running instance initializer for %s\n%s\n", t->getFullName().c_str(), lua_tostring(L, -1));
         }
@@ -258,22 +258,20 @@ static int lsr_classcreateinstance(lua_State *L)
             }
 
             lua_settop(L, ntop);
+            break;
         }
 
         t = t->getBaseType();
     }
 
-    if(strcmp(type->getFullName().c_str(), "loom2d.ui.SimpleLabel") == 0)
-        LSWarning("Ctor for SimpleLabel");
-
     // instance initializer chain
     lualoom_callscriptinstanceinitializerchain_internal(L, type, instanceIdx, NULL);
 
-    // call constructor chain
-    utStack<Type *> types;
+    // call constructor chain in order from base class to leaf class.
+    static utStack<Type *> types;
+    int typesTop = types.size();
 
     t = type;
-
     while (t)
     {
         types.push(t);
@@ -282,9 +280,10 @@ static int lsr_classcreateinstance(lua_State *L)
 
     int top = lua_gettop(L);
 
-    t = types.pop();
-    while (t)
+    while (types.size() > typesTop)
     {
+        t = types.pop();
+
         ConstructorInfo *cinfo = t->getConstructor();
 
         bool cskip = t->isNative() && (cinfo && cinfo->isNative());
@@ -292,80 +291,68 @@ static int lsr_classcreateinstance(lua_State *L)
         if (cinfo && !cskip && !cinfo->defaultConstructor)
         {
             // skip if the next constructor in chain has a super call
-            bool skip = false;
-            if (!types.empty())
+            if (types.size() > typesTop)
             {
-                Type            *type = types.peek(0);
+                Type            *type = types.peek(typesTop);
                 ConstructorInfo *ci   = type->getConstructor();
                 if (ci && ci->hasSuperCall())
                 {
-                    skip = true;
+                    continue;
                 }
             }
 
-            if (!skip)
+            // if we don't specify a super call, default is to call
+            // base constructor (we do so with args passed, this right?)
+            lsr_getclasstable(L, t);
+
+            int conClsIdx = lua_gettop(L);
+
+            // get the LSMethod
+            lua_getfield(L, -1, "__ls_constructor");
+
+            assert(!lua_isnil(L, -1));
+
+            lua_pushvalue(L, instanceIdx);
+
+            for (int i = 0; i < nargs; i++)
             {
-                // if we don't specify a super call, default is to call
-                // base constructor (we do so with args passed, this right?)
+                lua_pushvalue(L, 2 + i);
+            }
 
-                lsr_getclasstable(L, t);
+            if (cinfo->getFirstDefaultParm() != -1)
+            {
+                int dargs = nargs;
 
-                int conClsIdx = lua_gettop(L);
+                int fidx = cinfo->getFirstDefaultParm();
+                lmAssert(fidx >= 0, "Got valid default parm index, then it was -1 on second read!");
 
-                // get the LSMethod
-                lua_getfield(L, -1, "__ls_constructor");
 
-                assert(!lua_isnil(L, -1));
-
-                lua_pushvalue(L, instanceIdx);
-
-                for (int i = 0; i < nargs; i++)
+                if (dargs < cinfo->getNumParameters())
                 {
-                    lua_pushvalue(L, 2 + i);
-                }
+                    lua_getfield(L, conClsIdx, "__ls_constructor__default_args");
+                    assert(!lua_isnil(L, -1));
+                    int d = lua_gettop(L);
 
-                if (cinfo->getFirstDefaultParm() != -1)
-                {
-                    int dargs = nargs;
-
-                    int fidx = cinfo->getFirstDefaultParm();
-                    lmAssert(fidx >= 0, "Got valid default parm index, then it was -1 on second read!");
-
-
-                    if (dargs < cinfo->getNumParameters())
+                    for (int i = dargs; i < cinfo->getNumParameters(); i++)
                     {
-                        lua_getfield(L, conClsIdx, "__ls_constructor__default_args");
-                        assert(!lua_isnil(L, -1));
-                        int d = lua_gettop(L);
-
-                        for (int i = dargs; i < cinfo->getNumParameters(); i++)
-                        {
-                            lua_pushnumber(L, i);
-                            lua_gettable(L, d);
-                            //LSLog(LSLogError, "Processing %d %s", i, lua_tostring(L, -1));
-                            nargs++;
-                        }
-                        //LSLog(LSLogError, "-------");
-
-                        lua_remove(L, d);
+                        lua_pushnumber(L, i);
+                        lua_gettable(L, d);
+                        //LSLog(LSLogError, "Processing %d %s", i, lua_tostring(L, -1));
+                        nargs++;
                     }
-                }
+                    //LSLog(LSLogError, "-------");
 
-
-                if (lua_pcall(L, nargs + 1, LUA_MULTRET, 0))
-                {
-                    LSError("ERROR in constructor for %s:\n%s", t->getFullName().c_str(), lua_tostring(L, -1));
+                    lua_remove(L, d);
                 }
             }
 
-            // setup top for next constructor
-            lua_settop(L, top);
-        }
+            if (lua_pcall(L, nargs + 1, 0, 0))
+            {
+                LSError("ERROR in constructor for %s:\n%s", t->getFullName().c_str(), lua_tostring(L, -1));
+            }
 
-        t = NULL;
-        if (!types.empty())
-        {
-            t = types.pop();
+            // setup stack for next constructor
+            lua_settop(L, top);
         }
     }
 
@@ -378,8 +365,6 @@ static int lsr_classcreateinstance(lua_State *L)
         LSProfiler::registerMemoryUsage(type, memoryDelta);
         gct->allocated += memoryDelta;
     }
-
-
 
     // return this
     lua_pushvalue(L, instanceIdx);
