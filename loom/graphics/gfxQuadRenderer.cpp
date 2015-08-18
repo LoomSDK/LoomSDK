@@ -117,6 +117,10 @@ void QuadRenderer::submit()
                 Graphics::context()->glVertexAttribPointer(sProgram_posTexCoordLoc,
                                                            2, GL_FLOAT, false,
                                                            sizeof(VertexPosColorTex), (void*)offsetof(VertexPosColorTex, u));
+
+                Graphics::context()->glUniform1i(sProgram_texUniform, 0);
+                Graphics::context()->glUniformMatrix4fv(sProgram_mvp, 1, GL_FALSE, Graphics::getMVP());
+
                 sShaderStateValid = true;
             }
             
@@ -124,8 +128,6 @@ void QuadRenderer::submit()
             {
                 // Set up texture state.
                 Graphics::context()->glActiveTexture(GL_TEXTURE0);
-                Graphics::context()->glUniform1i(sProgram_texUniform, 0);
-                Graphics::context()->glUniformMatrix4fv(sProgram_mvp, 1, GL_FALSE, Graphics::getMVP());
                 Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
 
                 if (tinfo.clampOnly) {
@@ -227,27 +229,24 @@ VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, Textu
     bool doSubmit = false;
 
     if (currentTexture != TEXTUREINVALID && currentTexture != texture)
-    {
         doSubmit = true;
-        sTextureStateValid = false;
-    }
-    
+
     if (srcBlend != sSrcBlend ||
         dstBlend != sDstBlend)
-    {
         doSubmit = true;
-        sBlendStateValid = false;
-    }
 
     if ((batchedVertexCount + vertexCount) > MAXBATCHQUADS * 4)
-    {
         doSubmit = true;
-    }
-    
+
     if (doSubmit)
-    {
         submit();
-    }
+
+    if (currentTexture != TEXTUREINVALID && currentTexture != texture)
+        sTextureStateValid = false;
+
+    if (srcBlend != sSrcBlend ||
+        dstBlend != sDstBlend)
+        sBlendStateValid = false;
 
     sSrcBlend = srcBlend;
     sDstBlend = dstBlend;
@@ -278,6 +277,10 @@ void QuadRenderer::beginFrame()
 
     batchedVertexCount     = 0;
     currentTexture         = TEXTUREINVALID;
+
+    sTextureStateValid = false;
+    sBlendStateValid = false;
+    sShaderStateValid = false;
 
     numFrameSubmit = 0;
 }
