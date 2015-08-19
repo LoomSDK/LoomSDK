@@ -4,7 +4,7 @@ package
     import loom.modestmaps.geo.Location;
     import loom.modestmaps.Map;
     import loom.modestmaps.mapproviders.IMapProvider;
-    import loom.modestmaps.mapproviders.MapboxProvider;
+    import loom.modestmaps.mapproviders.microsoft.MicrosoftRoadMapProvider;
     import loom2d.display.Graphics;
     import loom2d.display.Shape;
     import loom2d.display.TextAlign;
@@ -140,7 +140,7 @@ package
         
         public function runVolcanoShowcase()
         {
-            if (!volcanoMapProvider) volcanoMapProvider = new MapboxProvider("mapbox.satellite", File.loadTextFile("assets/mapbox/token.txt"));
+            if (!volcanoMapProvider) volcanoMapProvider = new MicrosoftRoadMapProvider(true);
             if (map.getMapProvider() != volcanoMapProvider) map.setMapProvider(volcanoMapProvider);
             map.setCenterZoom(new Location(80, 0), -5);
             
