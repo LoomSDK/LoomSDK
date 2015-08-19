@@ -135,6 +135,15 @@ private:
     bool hadInstanceInitializer;
     bool hadStaticInstanceInitializer;
 
+    bool _isVector, _isDictionary, _isVector_Cached, _isDictionary_Cached;
+
+    Type *nativeBaseType;
+    bool nativeBaseType_cached;
+
+    bool _isNativeMemberPure, _isNativeMemberPure_cached;
+
+    ConstructorInfo *cachedConstructor;
+
 public:
 
     Type() :
@@ -144,7 +153,11 @@ public:
         fieldInfoCount(-1), methodInfoCount(-1), propertyInfoCount(-1),
         fieldMembersValid(false), methodMembersValid(false), propertyMembersValid(false),
         cached(false), maxMemberOrdinal(0), memberInfoOrdinalLookup(NULL),
-        hadInstanceInitializer(false), hadStaticInstanceInitializer(false)
+        hadInstanceInitializer(false), hadStaticInstanceInitializer(false),
+        _isVector(false), _isDictionary(false), _isVector_Cached(false), _isDictionary_Cached(false),
+        nativeBaseType(NULL), nativeBaseType_cached(false),
+        _isNativeMemberPure(false), _isNativeMemberPure_cached(false),
+        cachedConstructor(NULL)
     {
     }
 
@@ -154,21 +167,32 @@ public:
         {
             lmDelete(NULL, members.at(i));
         }
-        
-        if (bcStaticInitializer)
+
+        lmSafeDelete(NULL, bcStaticInitializer);
+        lmSafeDelete(NULL, bcInstanceInitializer);
+        lmSafeDelete(NULL, memberInfoOrdinalLookup);
+    }
+
+    // Get the first native type in the inheritance chain (potentially this class).
+    Type *getNativeBaseType()
+    {
+        if(!nativeBaseType_cached)
         {
-            lmDelete(NULL, bcStaticInitializer);
+            Type *t = this;
+            while(t)
+            {
+                if(t->isNative())
+                {
+                    nativeBaseType = t;
+                    break;
+                }
+
+                t = t->getBaseType();
+            }
+            nativeBaseType_cached = true;
         }
 
-        if (bcInstanceInitializer)
-        {
-            lmDelete(NULL, bcInstanceInitializer);
-        }
-
-        if (memberInfoOrdinalLookup)
-        {
-            lmDelete(NULL, memberInfoOrdinalLookup);
-        }
+        return nativeBaseType;
     }
 
     void freeByteCode();
@@ -263,6 +287,18 @@ public:
     }
 
     bool isNativeMemberPure(bool ignoreStaticMembers = false);
+
+    bool isNativeMemberPure_Cached(bool ignoreStaticMembers = false)
+    {
+        lmAssert(ignoreStaticMembers == true, "isNativeMemberPure_Cached only implemented when ignoring static members.");
+        if(!_isNativeMemberPure_cached)
+        {
+            _isNativeMemberPure = isNativeMemberPure(ignoreStaticMembers);
+            _isNativeMemberPure_cached = true;
+        }
+
+        return _isNativeMemberPure;
+    }
 
     inline bool isNativeScriptExtension()
     {
@@ -612,16 +648,23 @@ public:
 
     bool isVector()
     {
-        return fullName == "system.Vector";
+        if(!_isVector_Cached)
+        {
+            _isVector = (fullName == "system.Vector");
+            _isVector_Cached = true;
+        }
+        return _isVector;
     }
 
     bool isDictionary()
     {
-        return fullName == "system.Dictionary";
+        if(!_isDictionary_Cached)
+        {
+            _isDictionary = (fullName == "system.Dictionary");
+            _isDictionary_Cached = true;
+        }
+        return _isDictionary;
     }
-
-    // Vector
-    bool hasElementType();
 
     bool isDefined(Type *attributeType, bool inherit)
     {

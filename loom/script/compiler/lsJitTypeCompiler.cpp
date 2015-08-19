@@ -228,6 +228,26 @@ void JitTypeCompiler::generateConstructor(FunctionLiteral *function,
 
     declareLocalVariables(function);
 
+    // If there is no super call in this method, add it at the start so we
+    // always fully initialize the class - otherwise we have to traverse
+    // it at runtime which is a performance overhead.
+    if(function->isConstructor
+       && function->hasSuperCall == false
+       && function->isNative == false
+       && constructor->getDeclaringType()->isPrimitive() == false)
+    {
+        // We want to insert a call to super(); if none is present. We need
+        // to pass this so it operates on the right object.
+        SuperExpression *expr = new SuperExpression();
+        expr->arguments.push_back(new ThisLiteral());
+        Statement *stmt = new ExpressionStatement(expr);
+
+        // Add it to the function, creating a statement array if needed.
+        if(function->statements == NULL)
+            function->statements = new utArray<Statement*>();
+        function->statements->push_front(stmt);
+    }
+
     visitStatementArray(function->statements);
 
     closeCodeState(&codeState);
