@@ -24,7 +24,7 @@ package
 
             var sf = new SomeFields();
 
-            while (i < 10000000)
+            while (i < 100000)
             {
                 sf.w = sf.w + sf.x + sf.y + sf.z;
                 i++;

@@ -36,7 +36,7 @@ package
 
             var start = Platform.getTime();
 
-            while (i < 10000000)
+            while (i < 100000)
             {
                 sc.doIt(i);
                 i++;
@@ -48,7 +48,7 @@ package
 
             i = 0;
 
-            while (i < 10000000)
+            while (i < 100000)
             {
                 var b = SomeCalls.staticDoIt(i);
                 i++;
