@@ -23,6 +23,8 @@
 #include <math.h>
 #include "loom/graphics/gfxTexture.h"
 #include "loom/engine/loom2d/l2dRectangle.h"
+#include "loom/engine/loom2d/l2dMatrix.h"
+#include "loom/common/utils/utTypes.h"
 struct NSVGimage;
 
 namespace GFX
@@ -151,7 +153,11 @@ class VectorRenderer
     friend class Graphics;
 
 private:
+    static utHashTable<utIntHashKey, int> imageLookup;
+
     static void initialize();
+
+    static void deleteImages();
 
     static void initializeGraphicsResources();
     static void destroyGraphicsResources();
@@ -196,6 +202,7 @@ public:
 	static void fillColor(float r, float g, float b, float a);
 	static void fillColor(unsigned int rgb, float a);
 	static void fillColor32(unsigned int argb, float a);
+	static void fillTexture(TextureID id, Loom2D::Matrix transform, bool repeat, bool smooth);
 
 	static void textFormat(VectorTextFormat* format, lmscalar a);
 

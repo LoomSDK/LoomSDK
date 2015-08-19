@@ -157,6 +157,11 @@ void VectorGraphics::beginFill(unsigned int color, float alpha) {
 	restartPath();
 }
 
+void VectorGraphics::beginTextureFill(TextureID id, Loom2D::Matrix *matrix, bool repeat, bool smooth) {
+	queue->push_back(lmNew(NULL) VectorFill(id, matrix, repeat, smooth));
+	restartPath();
+}
+
 void VectorGraphics::endFill() {
 	queue->push_back(lmNew(NULL) VectorFill());
 	restartPath();
@@ -404,7 +409,7 @@ void VectorShape::render(VectorGraphics* g) {
 void VectorLineStyle::render(VectorGraphics* g) {
 	g->flushPath();
 	copyTo(&g->currentLineStyle);
-    g->currentLineStyle.alpha *= g->alpha;
+	g->currentLineStyle.alpha *= g->alpha;
 }
 
 void VectorFill::render(VectorGraphics* g) {
@@ -412,6 +417,10 @@ void VectorFill::render(VectorGraphics* g) {
 	g->currentFill.active = active;
 	g->currentFill.color = color;
 	g->currentFill.alpha = alpha * g->alpha;
+	g->currentFill.texture = texture;
+	g->currentFill.transform = transform;
+	g->currentFill.repeat = repeat;
+	g->currentFill.smooth = smooth;
 }
 
 void VectorText::render(VectorGraphics* g) {
@@ -442,10 +451,10 @@ void VectorSVGData::render(VectorGraphics* g) {
 
 
 void VectorGraphics::setClipRect(int x, int y, int w, int h) {
-    clipX = x;
-    clipY = y;
-    clipWidth = w;
-    clipHeight = h;
+	clipX = x;
+	clipY = y;
+	clipWidth = w;
+	clipHeight = h;
 }
 
 void VectorLineStyle::reset() {
@@ -510,7 +519,11 @@ void VectorGraphics::flushPath() {
 	}
 	bool fill = currentFill.active;
 	if (fill && pathDirty) {
-		VectorRenderer::fillColor(currentFill.color, (float) currentFill.alpha);
+		if (currentFill.texture != TEXTUREINVALID) {
+			VectorRenderer::fillTexture(currentFill.texture, currentFill.transform, currentFill.repeat, currentFill.smooth);
+		} else {
+			VectorRenderer::fillColor(currentFill.color, (float)currentFill.alpha);
+		}
 		VectorRenderer::renderFill();
 		currentFill.active = false;
 	}

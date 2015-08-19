@@ -243,8 +243,8 @@ void Graphics::endFrame()
 
         // Create a PNG image and save it to the requested file location
         // Original algorithm (heavily modified) by neilf (http://stackoverflow.com/a/20233470)
-        if (sWidth == NULL || sHeight == NULL) {
-            lmLog(gGFXLogGroup, "", SDL_GetError());
+        if (sWidth == 0 || sHeight == 0) {
+            lmLog(gGFXLogGroup, "Graphics dimensions invalid %d x %d: %s", sWidth, sHeight, SDL_GetError());
             return;
         }
 

@@ -687,6 +687,13 @@ void nvgCurrentTransform(NVGcontext* ctx, float* xform)
 	memcpy(xform, state->xform, sizeof(float)*6);
 }
 
+void nvgSetTransform(NVGcontext* ctx, float* xform)
+{
+	NVGstate* state = nvg__getState(ctx);
+	if (xform == NULL) return;
+	memcpy(state->xform, xform, sizeof(float)*6);
+}
+
 void nvgStrokeColor(NVGcontext* ctx, NVGcolor color)
 {
 	NVGstate* state = nvg__getState(ctx);
