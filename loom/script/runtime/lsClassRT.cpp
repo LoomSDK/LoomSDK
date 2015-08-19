@@ -44,7 +44,7 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
     instanceIdx = lua_absindex(L, instanceIdx);
 
     static utStack<Type *> types;
-    int typesTop = types.size();
+    UTsize typesTop = types.size();
 
     Type            *t = type;
     while (t)
