@@ -1,1 +1,1 @@
-<your token here>
+Replace the contents of this file (assets/mapbox/token.txt) with your Mapbox access token!

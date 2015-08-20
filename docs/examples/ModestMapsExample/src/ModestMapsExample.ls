@@ -49,7 +49,7 @@ package
             
             //create some providers
             _mapProviders.pushSingle(new MicrosoftRoadMapProvider(true));
-            //_mapProviders.pushSingle(new MapboxProvider(File.loadTextFile("assets/mapbox/id.txt"), File.loadTextFile("assets/mapbox/token.txt")));
+            _mapProviders.pushSingle(new MapboxProvider(File.loadTextFile("assets/mapbox/id.txt"), File.loadTextFile("assets/mapbox/token.txt")));
             _mapProviders.pushSingle(new OpenStreetMapProvider());
             _mapProviders.pushSingle(new BlueMarbleMapProvider());
             
