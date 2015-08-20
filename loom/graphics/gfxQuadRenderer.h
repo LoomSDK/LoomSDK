@@ -27,12 +27,9 @@ namespace GFX
 {
 
 // Define the maximum number of Quads on a single frame
-// this defaults to 65k and can be raised by increasing
-// MAXVERTEXBUFFERS (quad batches themselves use 16 bit indices)
-
+// this defaults to 128k
 // TODO: LOOM-1833 allocate this dynamically 
 #define MAXBATCHQUADS       8192
-#define MAXVERTEXBUFFERS    8  
 
 struct VertexPosColorTex
 {
@@ -47,23 +44,13 @@ class QuadRenderer
 
 private:
 
-    static unsigned int vertexBuffers[MAXVERTEXBUFFERS];
+	static GLuint vertexBufferId;
+	static GLuint indexBufferId;
 
-    static VertexPosColorTex *vertexData[MAXVERTEXBUFFERS];
-    static void* vertexDataMemory;
-
-    static int maxVertexIdx[MAXVERTEXBUFFERS];
-
-    static int numVertexBuffers;
-
-    static int               currentVertexBufferIdx;
-    static VertexPosColorTex *currentVertexPtr;
-    static int               vertexCount;
-
-    static int currentIndexBufferIdx;
+    static VertexPosColorTex *batchedVertices;
+    static size_t batchedVertexCount;
 
     static TextureID currentTexture;
-    static int       quadCount;
 
     static int numFrameSubmit;
 
@@ -76,9 +63,6 @@ private:
     // reset the quad renderer, on loss of context etc
     static void reset();
 
-    static void _initializeNextVertexBuffer();
-
-
 public:
 
     static void submit();
@@ -87,8 +71,8 @@ public:
 
     static void endFrame();
 
-    static VertexPosColorTex *getQuadVertices(TextureID texture, uint16_t numVertices, bool tinted, uint32_t srcBlend, uint32_t dstBlend);
+    static VertexPosColorTex *getQuadVertexMemory(uint16_t numVertices, TextureID texture, uint32_t srcBlend, uint32_t dstBlend);
 
-    static void batch(TextureID texture, VertexPosColorTex *vertices, uint16_t numVertices, uint32_t srcBlend, uint32_t dstBlend);
+    static void batch(VertexPosColorTex *vertices, uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend);
 };
 }
