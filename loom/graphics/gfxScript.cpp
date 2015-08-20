@@ -26,6 +26,7 @@
 
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxTexture.h"
+#include "loom/graphics/gfxShader.h"
 
 // Includes for the resize operation.
 #include "loom/common/platform/platformThread.h"
@@ -357,6 +358,34 @@ static int registerLoomGraphics(lua_State *L)
        .addProperty("path", &TextureInfo::getTexturePath)
        .endClass()
 
+       .beginClass<Shader>("Shader")
+       .addConstructor<void(*)(void)>()
+       .addVarAccessor("onBind", &Shader::getonBindDelegate)
+       .addVarAccessor("MVP", &Shader::getMVP)
+       .addVarAccessor("textureId", &Shader::getTextureId)
+       .addMethod("load", &Shader::load)
+       .addMethod("loadFromAssets", &Shader::loadFromAssets)
+       .addMethod("bind", &Shader::bind)
+       .addMethod("getUniformLocation", &Shader::getUniformLocation)
+       .addMethod("setUniform1f", &Shader::setUniform1f)
+       .addLuaFunction("setUniform1fv", &Shader::setUniform1fv)
+       .addMethod("setUniform2f", &Shader::setUniform2f)
+       .addLuaFunction("setUniform2fv", &Shader::setUniform2fv)
+       .addMethod("setUniform3f", &Shader::setUniform3f)
+       .addLuaFunction("setUniform3fv", &Shader::setUniform3fv)
+       .addMethod("setUniform1i", &Shader::setUniform1i)
+       .addLuaFunction("setUniform1iv", &Shader::setUniform1iv)
+       .addMethod("setUniform2i", &Shader::setUniform2i)
+       .addLuaFunction("setUniform2iv", &Shader::setUniform2iv)
+       .addMethod("setUniform3i", &Shader::setUniform3i)
+       .addLuaFunction("setUniform3iv", &Shader::setUniform3iv)
+       .addMethod("setUniformMatrix3f", &Shader::setUniformMatrix3f)
+       .addLuaFunction("setUniformMatrix3fv", &Shader::setUniformMatrix3fv)
+       .addMethod("setUniformMatrix4f", &Shader::setUniformMatrix4f)
+       .addLuaFunction("setUniformMatrix4fv", &Shader::setUniformMatrix4fv)
+       .addStaticMethod("getDefaultShader", &Shader::getDefaultShader)
+       .endClass()
+
        .endPackage();
 
     return 0;
@@ -368,4 +397,5 @@ void installLoomGraphics()
     LOOM_DECLARE_NATIVETYPE(GFX::Graphics, GFX::registerLoomGraphics);
     LOOM_DECLARE_NATIVETYPE(GFX::Texture, GFX::registerLoomGraphics);
     LOOM_DECLARE_NATIVETYPE(GFX::TextureInfo, GFX::registerLoomGraphics);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::Shader, GFX::registerLoomGraphics);
 }

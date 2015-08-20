@@ -40,14 +40,7 @@ namespace GFX
 {
 lmDefineLogGroup(gGFXQuadRendererLogGroup, "GFXQuadRenderer", 1, LoomLogInfo);
 
-static GLuint sProgramPosColorTex;
-static GLuint sProgramPosTex;
-
-static GLuint sProgram_posAttribLoc;
-static GLuint sProgram_posColorLoc;
-static GLuint sProgram_posTexCoordLoc;
-static GLuint sProgram_texUniform;
-static GLuint sProgram_mvp;
+static Shader* sCurrentShader;
 
 static GLuint sSrcBlend = GL_SRC_ALPHA;
 static GLuint sDstBlend = GL_ONE_MINUS_SRC_ALPHA;
@@ -61,9 +54,9 @@ TextureID QuadRenderer::currentTexture;
 int QuadRenderer::numFrameSubmit;
 
 static loom_allocator_t *gQuadMemoryAllocator = NULL;
-static bool sShaderStateValid = false;
 static bool sTextureStateValid = false;
 static bool sBlendStateValid = false;
+static bool sShaderStateValid = false;
 
 void QuadRenderer::submit()
 {
@@ -99,27 +92,11 @@ void QuadRenderer::submit()
             
             if (!sShaderStateValid)
             {
-                // Select the shader.
-                Graphics::context()->glUseProgram(sProgramPosColorTex);
-
-                Graphics::context()->glEnableVertexAttribArray(sProgram_posAttribLoc);
-                Graphics::context()->glEnableVertexAttribArray(sProgram_posColorLoc);
-                Graphics::context()->glEnableVertexAttribArray(sProgram_posTexCoordLoc);
-            
-                Graphics::context()->glVertexAttribPointer(sProgram_posAttribLoc,
-                                                           3, GL_FLOAT, false,
-                                                           sizeof(VertexPosColorTex), (void*)offsetof(VertexPosColorTex, x));
-
-                Graphics::context()->glVertexAttribPointer(sProgram_posColorLoc,
-                                                           4, GL_UNSIGNED_BYTE, true,
-                                                           sizeof(VertexPosColorTex), (void*)offsetof(VertexPosColorTex, abgr));
-
-                Graphics::context()->glVertexAttribPointer(sProgram_posTexCoordLoc,
-                                                           2, GL_FLOAT, false,
-                                                           sizeof(VertexPosColorTex), (void*)offsetof(VertexPosColorTex, u));
-
-                Graphics::context()->glUniform1i(sProgram_texUniform, 0);
-                Graphics::context()->glUniformMatrix4fv(sProgram_mvp, 1, GL_FALSE, Graphics::getMVP());
+                Loom2D::Matrix mvp;
+                mvp.copyFromMatrix4(Graphics::getMVP());
+                sCurrentShader->setMVP(mvp);
+                sCurrentShader->setTextureId(0);
+                sCurrentShader->bind();
 
                 sShaderStateValid = true;
             }
@@ -209,11 +186,11 @@ void QuadRenderer::submit()
 }
 
 
-VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend)
+VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend, Shader *shader)
 {
     LOOM_PROFILE_SCOPE(quadGetVertices);
 
-    if (!vertexCount || (texture < 0) || (vertexCount > MAXBATCHQUADS * 4))
+    if (!vertexCount || (texture < 0) || (vertexCount > MAXBATCHQUADS * 4) || shader == nullptr)
     {
         return NULL;
     }
@@ -231,6 +208,9 @@ VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, Textu
     if (currentTexture != TEXTUREINVALID && currentTexture != texture)
         doSubmit = true;
 
+    if (sCurrentShader != NULL && *sCurrentShader != *shader)
+        doSubmit = true;
+
     if (srcBlend != sSrcBlend ||
         dstBlend != sDstBlend)
         doSubmit = true;
@@ -244,6 +224,9 @@ VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, Textu
     if (currentTexture != TEXTUREINVALID && currentTexture != texture)
         sTextureStateValid = false;
 
+    if (sCurrentShader != NULL && *sCurrentShader != *shader)
+        sShaderStateValid = false;
+
     if (srcBlend != sSrcBlend ||
         dstBlend != sDstBlend)
         sBlendStateValid = false;
@@ -251,6 +234,7 @@ VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, Textu
     sSrcBlend = srcBlend;
     sDstBlend = dstBlend;
     currentTexture = texture;
+    sCurrentShader = shader;
 
     VertexPosColorTex *currentVertices = &batchedVertices[batchedVertexCount];
     batchedVertexCount += vertexCount;
@@ -258,11 +242,11 @@ VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, Textu
 }
 
 
-void QuadRenderer::batch(VertexPosColorTex *vertices, uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend)
+void QuadRenderer::batch(VertexPosColorTex *vertices, uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend, Shader *shader)
 {
     LOOM_PROFILE_SCOPE(quadBatch);
 
-    VertexPosColorTex *vertexPtr = getQuadVertexMemory(vertexCount, texture, srcBlend, dstBlend);
+    VertexPosColorTex *vertexPtr = getQuadVertexMemory(vertexCount, texture, srcBlend, dstBlend, shader);
 
     if (!vertexPtr)
         return;
@@ -303,72 +287,6 @@ void QuadRenderer::initializeGraphicsResources()
     LOOM_PROFILE_SCOPE(quadInit);
 
     lmLogInfo(gGFXQuadRendererLogGroup, "Initializing Graphics Resources");
-
-    // Create the quad shader.
-    GLuint vertShader      = Graphics::context()->glCreateShader(GL_VERTEX_SHADER);
-
-    //GLuint fragShader      = Graphics::context()->glCreateShader(GL_FRAGMENT_SHADER);
-    GLuint fragShaderColor = Graphics::context()->glCreateShader(GL_FRAGMENT_SHADER);
-
-    GLuint quadProg        = Graphics::context()->glCreateProgram();
-
-    GLuint quadProgColor   = Graphics::context()->glCreateProgram();
-
-    char vertShaderSrc[] =
-    "attribute vec4 a_position;\n"
-    "attribute vec4 a_color0;\n"
-    "attribute vec2 a_texcoord0;\n"
-    "varying vec2 v_texcoord0;\n"
-    "varying vec4 v_color0;\n"
-    "uniform mat4 u_mvp;\n"
-    "void main()\n"
-    "{\n"
-    "    gl_Position = u_mvp * a_position;\n"
-    "    v_color0 = a_color0;\n"
-    "    v_texcoord0 = a_texcoord0;\n"
-    "}\n";
-    const int vertShaderLen = sizeof(vertShaderSrc);
-    GLchar *vertShaderPtr = &vertShaderSrc[0];
-
-    /*
-    */
-
-    char fragShaderColorSrc[] =
-#if LOOM_RENDERER_OPENGLES2      
-        "precision mediump float;\n"
-#endif
-        "uniform sampler2D u_texture;\n"
-        "varying vec2 v_texcoord0;\n"
-        "varying vec4 v_color0\n;"
-        "void main()\n"
-        "{\n"
-        "    gl_FragColor = v_color0 * texture2D(u_texture, v_texcoord0);\n"
-        "}\n";
-    const int fragShaderColorLen = sizeof(fragShaderColorSrc);
-    GLchar *fragShaderColorPtr = &fragShaderColorSrc[0];
-
-    Graphics::context()->glShaderSource(vertShader, 1, &vertShaderPtr, &vertShaderLen);
-    Graphics::context()->glCompileShader(vertShader);
-    GFX_SHADER_CHECK(vertShader);
-
-    Graphics::context()->glShaderSource(fragShaderColor, 1, &fragShaderColorPtr, &fragShaderColorLen);
-    Graphics::context()->glCompileShader(fragShaderColor);
-    GFX_SHADER_CHECK(fragShaderColor);
-
-    Graphics::context()->glAttachShader(quadProgColor, fragShaderColor);
-    Graphics::context()->glAttachShader(quadProgColor, vertShader);
-    Graphics::context()->glLinkProgram(quadProgColor);
-    GFX_PROGRAM_CHECK(quadProgColor);
-
-    // Get attributes and uniforms.
-    sProgram_posAttribLoc = Graphics::context()->glGetAttribLocation(quadProgColor, "a_position");
-    sProgram_posColorLoc = Graphics::context()->glGetAttribLocation(quadProgColor, "a_color0");
-    sProgram_posTexCoordLoc = Graphics::context()->glGetAttribLocation(quadProgColor, "a_texcoord0");
-    sProgram_texUniform = Graphics::context()->glGetUniformLocation(quadProgColor, "u_texture");
-    sProgram_mvp = Graphics::context()->glGetUniformLocation(quadProgColor, "u_mvp");
-
-    // Save program for later!
-    sProgramPosColorTex = sProgramPosTex = quadProgColor;
 
     // create the single initial vertex buffer
     Graphics::context()->glGenBuffers(1, &vertexBufferId);

@@ -101,6 +101,8 @@ enum LoomAssetType
     LATMesh         = LOOM_FOURCC('M', 'S', 'H', 1),
     LATScript       = LOOM_FOURCC('L', 'O', 'O', 'M'),
     LATBinary       = LOOM_FOURCC('B', 'I', 'N', 1),
+    LATVertexShader = LOOM_FOURCC('V', 'E', 'R', 'T'),
+    LATFragmentShader = LOOM_FOURCC('F', 'R', 'A', 'G'),
     LAT_FORCE_DWORD = 0xFFFFFFFF
 };
 

@@ -41,6 +41,7 @@
 #include "loom/common/assets/assetsImage.h"
 #include "loom/common/assets/assetsSound.h"
 #include "loom/common/assets/assetsScript.h"
+#include "loom/common/assets/assetsShader.h"
 
 #include <jansson.h>
 
@@ -367,6 +368,7 @@ void loom_asset_initialize(const char *rootUri)
     loom_asset_registerImageAsset();
     loom_asset_registerSoundAsset();
     loom_asset_registerScriptAsset();
+    loom_asset_registerShaderAsset();
 
     // Listen to log and send it if we have a connection.
     loom_log_addListener(loom_asset_logListener, NULL);

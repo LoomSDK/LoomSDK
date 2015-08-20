@@ -314,6 +314,16 @@ public:
         ty = other->ty;
     }
 
+    inline void copyFromMatrix4(const float *other)
+    {
+        a = other[0];
+        b = other[1];
+        c = other[4];
+        d = other[5];
+        tx = other[12];
+        ty = other[13];
+    }
+
     // fast marshaling version
     int setTo(lua_State *L)
     {
@@ -353,6 +363,19 @@ public:
 		values[7] = ty;
 		values[8] = 1;
 	}
+
+    void copyToMatrix3f(float* values)
+    {
+        values[0] = (float)a;
+        values[1] = (float)b;
+        values[2] = 0;
+        values[3] = (float)c;
+        values[4] = (float)d;
+        values[5] = 0;
+        values[6] = (float)tx;
+        values[7] = (float)ty;
+        values[8] = 1;
+    }
 
     void copyToMatrix4(lmscalar* values)
     {

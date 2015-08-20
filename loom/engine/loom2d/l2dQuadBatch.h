@@ -26,6 +26,7 @@
 #include "loom/engine/loom2d/l2dQuad.h"
 #include "loom/engine/loom2d/l2dImage.h"
 #include "loom/graphics/gfxQuadRenderer.h"
+#include "loom/graphics/gfxShader.h"
 
 namespace Loom2D
 {
@@ -58,6 +59,8 @@ public:
     // the native texture id used by this batch
     int nativeTextureID;
 
+    GFX::Shader *shader;
+
     // renders the QuadBatch
     void render(lua_State *L);
 
@@ -74,6 +77,7 @@ public:
         maxQuads        = 0;
         numQuads        = 0;
         nativeTextureID = -1;
+        shader = GFX::Shader::getDefaultShader();
     }
 
     ~QuadBatch()
@@ -93,6 +97,16 @@ public:
     void setNativeTextureID(int value)
     {
         nativeTextureID = value;
+    }
+
+    void setShader(GFX::Shader* sh)
+    {
+        shader = sh;
+    }
+
+    GFX::Shader* getShader() const
+    {
+        return shader;
     }
 
     // resets the quad count (but does not free memory)

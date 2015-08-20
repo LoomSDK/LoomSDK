@@ -33,6 +33,8 @@
 #include "loom/engine/loom2d/l2dImage.h"
 #include "loom/engine/loom2d/l2dQuadBatch.h"
 
+#include "loom/graphics/gfxShader.h"
+
 namespace Loom2D
 {
 class Loom2DNative
@@ -319,6 +321,8 @@ static int registerLoom2D(lua_State *L)
        .addConstructor<void (*)(void)>()
        .addProperty("nativeTextureID", &Quad::getNativeTextureID, &Quad::setNativeTextureID)
        .addProperty("nativeVertexDataInvalid", &Quad::getNativeVertexDataInvalid, &Quad::setNativeVertexDataInvalid)
+       .addMethod("getShader", &Quad::getShader)
+       .addMethod("setShader", &Quad::setShader)
        .endClass()
 
     // Image
@@ -329,6 +333,8 @@ static int registerLoom2D(lua_State *L)
     // QuadBatch
        .deriveClass<QuadBatch, DisplayObject>("QuadBatch")
        .addConstructor<void (*)(void)>()
+       .addMethod("getShader", &Quad::getShader)
+       .addMethod("setShader", &Quad::setShader)
        .addProperty("nativeTextureID", &QuadBatch::getNativeTextureID, &QuadBatch::setNativeTextureID)
        .addProperty("numQuads", &QuadBatch::getNumQuads)
        .addLuaFunction("_addQuad", &QuadBatch::_addQuad)
