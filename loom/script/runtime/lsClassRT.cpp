@@ -90,13 +90,16 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
 // any constructor, native instantiation, etc
 void lualoom_newscriptinstance_internal(lua_State *L, Type *type)
 {
-    lmAssert(type, "Internal Error: lsr_newscriptinstance_internal passes a NULL type");
+    lmAssert(type, "Internal Error: lsr_newscriptinstance_internal got a NULL type");
 
     // allocate a table with enough array and hash space to hold all of our member ordinals
     // we have to allocate enough hash nodes otherwise, upon first table set, it will rehash
     // which will shrink out table array down and then use the lua array heuristic to split between
     // array and hash, which is not a good fit as we want solely array access for member ordinals
-    lua_createtable(L, type->getMaxMemberOrdinal() + 16, type->getMaxMemberOrdinal() + 16);
+    //
+    // We chose 32 as a floor experimentally because it gave better performance than 16.
+    const int maxOrdinal = type->getMaxMemberOrdinal() > 32 ? type->getMaxMemberOrdinal() : 32;
+    lua_createtable(L, maxOrdinal, maxOrdinal);
 
     int instanceIdx = lua_gettop(L);
     lsr_getclasstable(L, type);
@@ -104,12 +107,6 @@ void lualoom_newscriptinstance_internal(lua_State *L, Type *type)
 
     lua_pushlightuserdata(L, type);
     lua_rawseti(L, instanceIdx, LSINDEXTYPE);
-
-    double uniqueId = LSLuaState::getUniqueKey();
-
-    lua_pushstring(L, "__ls_id");
-    lua_pushnumber(L, uniqueId);
-    lua_settable(L, -3);
 
     if (type->isDictionary())
     {
@@ -151,7 +148,7 @@ static int lsr_classcreateinstance(lua_State *L)
 
     // Allocate the Lua-side instance.
     lualoom_newscriptinstance_internal(L, type);
-    int instanceIdx = lua_gettop(L);
+    const int instanceIdx = lua_gettop(L);
 
     if (profiling)
     {
@@ -201,7 +198,8 @@ static int lsr_classcreateinstance(lua_State *L)
 
                 if (dargs < cinfo->getNumParameters())
                 {
-                    lsr_getclasstable(L, nt);
+                    // Get the class table and its default args.
+                    lua_rawgeti(L, instanceIdx, LSINDEXCLASS);
                     lua_getfield(L, -1, "__ls_constructor__default_args");
                     assert(!lua_isnil(L, -1));
 
@@ -258,23 +256,19 @@ static int lsr_classcreateinstance(lua_State *L)
         lua_settop(L, ntop);
     }
 
-    // instance initializer chain
-    lualoom_callscriptinstanceinitializerchain_internal(L, type, instanceIdx, NULL);
-
-    // call constructor method.
-    int top = lua_gettop(L);
+    // Call constructor method.
 
     // Get the class table for the type.
-    lsr_getclasstable(L, type);
+    lua_rawgeti(L, instanceIdx, LSINDEXCLASS);
 
-    int conClsIdx = lua_gettop(L);
+    const int conClsIdx = lua_gettop(L);
 
     // Get the LSMethod for the constructor.
     lua_getfield(L, -1, "__ls_constructor");
 
     lmAssert(!lua_isnil(L, -1), "Failed to look up constructor for type '%s' from VM");
 
-    // Pass the index.
+    // Pass the instance.
     lua_pushvalue(L, instanceIdx);
 
     // Pass any arguments we got.
@@ -289,16 +283,16 @@ static int lsr_classcreateinstance(lua_State *L)
     // Deal with default arguments.
     if (cinfo->getFirstDefaultParm() != -1)
     {
-        int dargs = nargs;
+        const int dargs = nargs;
 
-        int fidx = cinfo->getFirstDefaultParm();
+        const int fidx = cinfo->getFirstDefaultParm();
         lmAssert(fidx >= 0, "Got valid default parm index, then it was -1 on second read!");
 
         if (dargs < cinfo->getNumParameters())
         {
             lua_getfield(L, conClsIdx, "__ls_constructor__default_args");
-            assert(!lua_isnil(L, -1));
-            int d = lua_gettop(L);
+            lmAssert(!lua_isnil(L, -1), "Failed to get default constructor args for type '%s'", type->getFullName().c_str());
+            const int d = lua_gettop(L);
 
             for (int i = dargs; i < cinfo->getNumParameters(); i++)
             {
@@ -314,11 +308,8 @@ static int lsr_classcreateinstance(lua_State *L)
     // Call the script constructor.
     if (lua_pcall(L, nargs + 1, 0, 0))
     {
-        LSError("ERROR in constructor for %s:\n%s", type->getFullName().c_str(), lua_tostring(L, -1));
+        LSError("ERROR constructing instance of '%s':\n%s", type->getFullName().c_str(), lua_tostring(L, -1));
     }
-
-    // clean up stack state.
-    lua_settop(L, top);
 
     if (profiling)
     {
@@ -330,7 +321,7 @@ static int lsr_classcreateinstance(lua_State *L)
         gct->allocated += memoryDelta;
     }
 
-    // return this
+    // Return the new instance.
     lua_pushvalue(L, instanceIdx);
     return 1;
 }
@@ -474,7 +465,8 @@ void lsr_declareclass(lua_State *L, Type *type)
     // we have to allocate enough hash nodes otherwise, upon first table set, it will rehash
     // which will shrink out table array down and then use the lua array heuristic to split between
     // array and hash, which is not a good fit as we want solely array access for member ordinals
-    lua_createtable(L, type->getMaxMemberOrdinal() + 16, type->getMaxMemberOrdinal() + 16);
+    const int maxOrdinal = type->getMaxMemberOrdinal() > 32 ? type->getMaxMemberOrdinal() : 32;
+    lua_createtable(L, maxOrdinal, maxOrdinal);
 
     int clsIdx = lua_gettop(L);
 

@@ -319,11 +319,12 @@ ConstructorInfo *Type::getConstructor()
     for (UTsize i = 0; i < members.size(); i++)
     {
         MemberInfo *m = members.at(i);
-        if (m->isConstructor())
-        {
-            cachedConstructor = (ConstructorInfo *)m;
-            return (ConstructorInfo *)m;
-        }
+        if (!m->isConstructor())
+            continue;
+
+        // Store match to return faster next time.
+        cachedConstructor = (ConstructorInfo *)m;
+        return (ConstructorInfo *)m;
     }
 
     return NULL;

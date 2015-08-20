@@ -4,14 +4,27 @@ package
 
     class SimpleObject
     {
+        function SimpleObject()
+        {
+            
+        }
     }
 
     class SimpleObject2 extends SimpleObject
     {
+        function SimpleObject2()
+        {
+            
+        }
     }
 
     class SimpleObject3 extends SimpleObject2
     {
+        function SimpleObject3()
+        {
+
+        }
+
         public var x = 1.0;
         public var y = 2.0;
         public var z = 3.0;
@@ -35,7 +48,7 @@ package
                 i++;
             }
 
-            trace("Completed in ", Platform.getTime() - start, "ms");
+            trace("BenchmarkAllocation completed in ", Platform.getTime() - start, "ms");
 
         }
     }
