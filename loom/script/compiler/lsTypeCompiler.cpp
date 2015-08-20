@@ -41,35 +41,199 @@ extern "C" {
 #include "loom/script/compiler/lsTypeCompiler.h"
 #include "loom/script/reflection/lsFieldInfo.h"
 #include "loom/script/reflection/lsPropertyInfo.h"
+#include "loom/script/common/lsLog.h"
 #include "loom/script/runtime/lsRuntime.h"
 
 namespace LS {
-static int luaByteCodewriter(lua_State *L, const void *p, size_t size,
-                             void *u)
+
+static UnOpr getunopr(int op)
 {
-    UNUSED(L);
-
-    utArray<unsigned char> *bytecode = (utArray<unsigned char> *)u;
-
-    unsigned char *data = (unsigned char *)p;
-    for (size_t i = 0; i < size; i++, data++)
+    switch (op)
     {
-        bytecode->push_back(*data);
+    case '!':
+        return OPR_NOT;
+
+    case '-':
+        return OPR_MINUS;
+
+    case '~':
+        return OPR_LOOM_BITNOT;
+
+    default:
+        return OPR_NOUNOPR;
+    }
+}
+
+static BinOpr getbinopr(const Token *t)
+{
+    Tokens *tok = Tokens::getSingletonPtr();
+
+    if (t == &tok->OPERATOR_PLUS)
+    {
+        return OPR_LOOM_ADD;
     }
 
-    return 0;
+    if (t == &tok->OPERATOR_MINUS)
+    {
+        return OPR_SUB;
+    }
+
+    if (t == &tok->OPERATOR_MULTIPLY)
+    {
+        return OPR_MUL;
+    }
+
+    if (t == &tok->OPERATOR_DIVIDE)
+    {
+        return OPR_DIV;
+    }
+
+    if (t == &tok->OPERATOR_MODULO)
+    {
+        return OPR_MOD;
+    }
+
+    if (t == &tok->OPERATOR_NOTEQUAL)
+    {
+        return OPR_NE;
+    }
+
+    if (t == &tok->OPERATOR_EQUALEQUAL)
+    {
+        return OPR_EQ;
+    }
+
+    if (t == &tok->OPERATOR_LESSTHAN)
+    {
+        return OPR_LT;
+    }
+
+    if (t == &tok->OPERATOR_LESSTHANOREQUAL)
+    {
+        return OPR_LE;
+    }
+
+    if (t == &tok->OPERATOR_GREATERTHAN)
+    {
+        return OPR_GT;
+    }
+
+    if (t == &tok->OPERATOR_GREATERTHANOREQUAL)
+    {
+        return OPR_GE;
+    }
+
+    if (t == &tok->OPERATOR_LOGICALAND)
+    {
+        return OPR_AND;
+    }
+
+    if (t == &tok->OPERATOR_LOGICALOR)
+    {
+        return OPR_OR;
+    }
+
+    if (t == &tok->OPERATOR_CONCAT)
+    {
+        return OPR_CONCAT;
+    }
+
+    if (t == &tok->OPERATOR_SHIFTLEFT)
+    {
+        return OPR_LOOM_BITLSHIFT;
+    }
+
+    if (t == &tok->OPERATOR_SHIFTRIGHT)
+    {
+        return OPR_LOOM_BITRSHIFT;
+    }
+
+    if (t == &tok->OPERATOR_BITWISEAND)
+    {
+        return OPR_LOOM_BITAND;
+    }
+
+    if (t == &tok->OPERATOR_BITWISEOR)
+    {
+        return OPR_LOOM_BITOR;
+    }
+
+    if (t == &tok->OPERATOR_BITWISEXOR)
+    {
+        return OPR_LOOM_BITXOR;
+    }
+
+    /*case '^': return OPR_POW;
+     * case TK_CONCAT: return OPR_CONCAT;*/
+    return OPR_NOBINOPR;
 }
 
-
-ByteCode *TypeCompiler::generateByteCode(Proto *proto, bool debug = true)
+static BinOpr getassignmentopr(const Token *t)
 {
-    utArray<unsigned char> bc;
-    // always include debug info
-    luaU_dump(L, proto, luaByteCodewriter, &bc, debug ? 0 : 1);
-    return ByteCode::encode64(bc);
+    Tokens *tok = Tokens::getSingletonPtr();
+
+    if (t == &tok->OPERATOR_MULTIPLYASSIGNMENT)
+    {
+        return OPR_MUL;
+    }
+
+    if (t == &tok->OPERATOR_DIVIDEASSIGNMENT)
+    {
+        return OPR_DIV;
+    }
+
+    if (t == &tok->OPERATOR_PLUSASSIGNMENT)
+    {
+        return OPR_LOOM_ADD;
+    }
+
+    if (t == &tok->OPERATOR_MINUSASSIGNMENT)
+    {
+        return OPR_SUB;
+    }
+
+    if (t == &tok->OPERATOR_MODULOASSIGNMENT)
+    {
+        return OPR_MOD;
+    }
+	
+    if (t == &tok->OPERATOR_BITWISEANDASSIGNMENT)
+    {
+        return OPR_LOOM_BITAND;
+    }
+
+    if (t == &tok->OPERATOR_BITWISEORASSIGNMENT)
+    {
+        return OPR_LOOM_BITOR;
+    }
+
+    if (t == &tok->OPERATOR_BITWISEXORASSIGNMENT)
+    {
+        return OPR_LOOM_BITXOR;
+    }
+
+    if (t == &tok->OPERATOR_SHIFTLEFTASSIGNMENT)
+    {
+        return OPR_LOOM_BITLSHIFT;
+    }
+
+    if (t == &tok->OPERATOR_SHIFTRIGHTASSIGNMENT)
+    {
+        return OPR_LOOM_BITRSHIFT;
+    }
+
+    return OPR_NOBINOPR;
 }
 
 
+void TypeCompiler::compile(ClassDeclaration *classDeclaration)
+{
+    TypeCompiler compiler;
+
+    compiler.lineNumber = 0;
+    compiler.cls        = classDeclaration;
+    compiler._compile();
+}
 void TypeCompiler::initCodeState(CodeState *codeState, FuncState *funcState,
                                  const utString& source)
 {
@@ -91,76 +255,29 @@ void TypeCompiler::closeCodeState(CodeState *codeState)
     BC::closeFunction(codeState);
 }
 
-
-void TypeCompiler::enterBlock(FuncState *fs, BlockCnt *bl,
-                              lu_byte isbreakable)
+static int luaByteCodewriter(lua_State *L, const void *p, size_t size,
+                             void *u)
 {
-    bl->breaklist    = NO_JUMP;
-    bl->continuelist = NO_JUMP;
-    bl->isbreakable  = isbreakable;
-    bl->nactvar      = fs->nactvar;
-    bl->upval        = 0;
-    bl->previous     = fs->bl;
-    fs->bl           = bl;
-    lua_assert(fs->freereg == fs->nactvar);
+    UNUSED(L);
+
+    utArray<unsigned char> *bytecode = (utArray<unsigned char> *)u;
+
+    unsigned char *data = (unsigned char *)p;
+    for (size_t i = 0; i < size; i++, data++)
+    {
+        bytecode->push_back(*data);
+    }
+
+    return 0;
 }
 
 
-void TypeCompiler::block(CodeState *cs, Statement *fstat)
+ByteCode *TypeCompiler::generateByteCode(Proto *proto, bool debug = true)
 {
-    FuncState *fs = cs->fs;
-    BlockCnt  bl;
+    utArray<unsigned char> bc;
 
-    enterBlock(fs, &bl, 0);
-
-    // was chunk
-    BC::lineNumber = fstat->lineNumber;
-    fstat->visitStatement(this);
-
-    lmAssert(bl.breaklist == NO_JUMP, "Internal Compiler Error");
-    leaveBlock(fs);
-}
-
-
-void TypeCompiler::leaveBlock(FuncState *fs)
-{
-    BlockCnt *bl = fs->bl;
-
-    fs->bl = bl->previous;
-    BC::removeVars(fs->cs, bl->nactvar);
-    if (bl->upval)
-    {
-        BC::codeABC(fs, OP_CLOSE, bl->nactvar, 0, 0);
-    }
-    /* a block either controls scope or breaks (never both) */
-    lmAssert(!bl->isbreakable || !bl->upval, "Internal Compiler Error");
-    lmAssert(bl->nactvar == fs->nactvar, "Internal Compiler Error");
-    fs->freereg = fs->nactvar; /* free registers */
-    BC::patchToHere(fs, bl->breaklist);
-}
-
-
-void TypeCompiler::chunk(utArray<Statement *> *statements)
-{
-    if (!statements)
-    {
-        return;
-    }
-
-    BC::enterLevel(cs);
-
-    for (unsigned int i = 0; i < statements->size(); i++)
-    {
-        Statement *statement = statements->at(i);
-
-        BC::lineNumber = statement->lineNumber;
-
-        statement->visitStatement(this);
-
-        cs->fs->freereg = cs->fs->nactvar; /* free registers */
-    }
-
-    BC::leaveLevel(cs);
+    luaU_dump(L, proto, luaByteCodewriter, &bc, debug ? 0 : 1);
+    return ByteCode::encode64(bc);
 }
 
 
@@ -222,14 +339,14 @@ void TypeCompiler::generateMethod(FunctionLiteral *function,
 
     parList(function, !function->isStatic);
 
-    declareLocalVariables(function);
-
     // we insert a yield to account for argument passing
     if (function->isCoroutine)
     {
         ExpDesc yield;
         insertYield(&yield);
     }
+
+    declareLocalVariables(function);
 
     visitStatementArray(function->statements);
 
@@ -275,31 +392,6 @@ void TypeCompiler::generateConstructor(FunctionLiteral *function,
 }
 
 
-void TypeCompiler::compile(ClassDeclaration *classDeclaration)
-{
-    TypeCompiler compiler;
-
-    compiler.cls = classDeclaration;
-    compiler._compile();
-}
-
-
-utArray<Statement *> *TypeCompiler::visitStatementArray(
-    utArray<Statement *> *_statements)
-{
-    if (_statements != NULL)
-    {
-        utArray<Statement *>& statements = *_statements;
-
-        for (unsigned int i = 0; i < statements.size(); i++)
-        {
-            statements[i] = visitStatement(statements[i]);
-        }
-    }
-
-    return _statements;
-}
-
 
 Statement *TypeCompiler::visitStatement(Statement *statement)
 {
@@ -318,67 +410,32 @@ Statement *TypeCompiler::visitStatement(Statement *statement)
 }
 
 
-utArray<Expression *> *TypeCompiler::visitExpressionArray(
-    utArray<Expression *> *_expressions)
-{
-    if (_expressions != NULL)
-    {
-        utArray<Expression *>& expressions = *_expressions;
-
-        for (unsigned int i = 0; i < expressions.size(); i++)
-        {
-            expressions[i] = visitExpression(expressions[i]);
-        }
-    }
-
-    return _expressions;
-}
-
-
-Expression *TypeCompiler::visitExpression(Expression *expression)
-{
-    if (expression != NULL)
-    {
-        expression = expression->visitExpression(this);
-    }
-
-    return expression;
-}
-
-
-//
-// nodes
-//
-
-CompilationUnit *TypeCompiler::visit(CompilationUnit *cunit)
-{
-    return cunit;
-}
-
-
 //
 // statements
 //
 
-Statement *TypeCompiler::visit(FunctionDeclaration *declaration)
+void TypeCompiler::chunk(utArray<Statement *> *statements)
 {
-    return declaration;
+    if (!statements)
+    {
+        return;
+    }
+
+    BC::enterLevel(cs);
+
+    for (unsigned int i = 0; i < statements->size(); i++)
+    {
+        Statement *statement = statements->at(i);
+
+        BC::lineNumber = statement->lineNumber;
+
+        statement->visitStatement(this);
+
+        cs->fs->freereg = cs->fs->nactvar; /* free registers */
+    }
+
+    BC::leaveLevel(cs);
 }
-
-
-Statement *TypeCompiler::visit(PropertyDeclaration *declaration)
-{
-    return declaration;
-}
-
-
-Statement *TypeCompiler::visit(BlockStatement *statement)
-{
-    chunk(statement->statements);
-
-    return statement;
-}
-
 
 Statement *TypeCompiler::visit(BreakStatement *statement)
 {
@@ -479,20 +536,37 @@ Statement *TypeCompiler::visit(DoStatement *statement)
     return statement;
 }
 
-
-Statement *TypeCompiler::visit(EmptyStatement *statement)
+void TypeCompiler::enterBlock(FuncState *fs, BlockCnt *bl,
+                              lu_byte isbreakable)
 {
-    return statement;
+    bl->breaklist    = NO_JUMP;
+    bl->continuelist = NO_JUMP;
+    bl->isbreakable  = isbreakable;
+    bl->nactvar      = fs->nactvar;
+    bl->upval        = 0;
+    bl->previous     = fs->bl;
+    fs->bl           = bl;
+    lua_assert(fs->freereg == fs->nactvar);
 }
 
 
-Statement *TypeCompiler::visit(ExpressionStatement *statement)
+/* End a scope. */
+void TypeCompiler::leaveBlock(FuncState *fs)
 {
-    statement->expression->visitExpression(this);
+    BlockCnt *bl = fs->bl;
 
-    return statement;
+    fs->bl = bl->previous;
+    BC::removeVars(fs->cs, bl->nactvar);
+    if (bl->upval)
+    {
+        BC::codeABC(fs, OP_CLOSE, bl->nactvar, 0, 0);
+    }
+    /* a block either controls scope or breaks (never both) */
+    lmAssert(!bl->isbreakable || !bl->upval, "Internal Compiler Error");
+    lmAssert(bl->nactvar == fs->nactvar, "Internal Compiler Error");
+    fs->freereg = fs->nactvar; /* free registers */
+    BC::patchToHere(fs, bl->breaklist);
 }
-
 
 Statement *TypeCompiler::visit(ForStatement *statement)
 {
@@ -663,7 +737,7 @@ Statement *TypeCompiler::visit(ForInStatement *statement)
     else
     {
         BC::initExpDesc(&right, VKNUM, 0);
-        right.u.nval = LSINDEXDICTPAIRS;
+        setnumV(&right.u.nval, LSINDEXDICTPAIRS);
 
         BC::expToNextReg(fs, &arg);
         BC::expToNextReg(fs, &right);
@@ -789,13 +863,6 @@ Statement *TypeCompiler::visit(IfStatement *statement)
 
     return statement;
 }
-
-
-Statement *TypeCompiler::visit(LabelledStatement *statement)
-{
-    return statement;
-}
-
 
 Statement *TypeCompiler::visit(ReturnStatement *statement)
 {
@@ -969,18 +1036,20 @@ Statement *TypeCompiler::visit(SwitchStatement *statement)
     return statement;
 }
 
-
-Statement *TypeCompiler::visit(VariableStatement *statement)
+void TypeCompiler::block(CodeState *cs, Statement *fstat)
 {
-    for (unsigned int i = 0; i < statement->declarations->size(); i++)
-    {
-        VariableDeclaration *d = statement->declarations->at(i);
-        d->visitExpression(this);
-    }
+    FuncState *fs = cs->fs;
+    BlockCnt  bl;
 
-    return statement;
+    enterBlock(fs, &bl, 0);
+
+    // was chunk
+    BC::lineNumber = fstat->lineNumber;
+    fstat->visitStatement(this);
+
+    lmAssert(bl.breaklist == NO_JUMP, "Internal Compiler Error");
+    leaveBlock(fs);
 }
-
 
 Statement *TypeCompiler::visit(WhileStatement *statement)
 {
@@ -1007,104 +1076,44 @@ Statement *TypeCompiler::visit(WhileStatement *statement)
     return statement;
 }
 
-
-Statement *TypeCompiler::visit(WithStatement *statement)
-{
-    return statement;
-}
-
-
-Statement *TypeCompiler::visit(ClassDeclaration *statement)
-{
-    return statement;
-}
-
-
-Statement *TypeCompiler::visit(InterfaceDeclaration *statement)
-{
-    return statement;
-}
-
-
-Statement *TypeCompiler::visit(PackageDeclaration *statement)
-{
-    return statement;
-}
-
-
-Statement *TypeCompiler::visit(ImportStatement *statement)
-{
-    return statement;
-}
-
-
 //
 // expressions
 //
 
-Expression *TypeCompiler::visit(MultipleAssignmentExpression *expression)
+void TypeCompiler::generatePropertySet(ExpDesc *call, Expression *value,
+                                       bool visit)
 {
-    return expression;
+    FuncState *fs = cs->fs;
+
+    int line = lineNumber;
+
+    BC::expToNextReg(fs, call);
+
+    lua_assert(call->k == VNONRELOC);
+    int base = call->u.s.info; /* base register for call */
+
+    if (visit)
+    {
+        value->visitExpression(this);
+        BC::expToNextReg(fs, &value->e);
+    }
+    else
+    {
+        BC::reserveRegs(fs, 1);
+        BC::expToReg(fs, &value->e, fs->freereg - 1);
+    }
+
+    int nparams = fs->freereg - (base + 1);
+
+    lmAssert(nparams == 1, "nparams != 1");
+
+    BC::initExpDesc(call, VCALL,
+                    BC::codeABC(fs, OP_CALL, base, nparams + 1, 2));
+
+    BC::fixLine(fs, line);
+
+    fs->freereg = base + 1; /* Leave one result by default. */
 }
-
-
-static BinOpr getassignmentopr(const Token *t)
-{
-    Tokens *tok = Tokens::getSingletonPtr();
-
-    if (t == &tok->OPERATOR_MULTIPLYASSIGNMENT)
-    {
-        return OPR_MUL;
-    }
-
-    if (t == &tok->OPERATOR_DIVIDEASSIGNMENT)
-    {
-        return OPR_DIV;
-    }
-
-    if (t == &tok->OPERATOR_PLUSASSIGNMENT)
-    {
-        return OPR_LOOM_ADD;
-    }
-
-    if (t == &tok->OPERATOR_MINUSASSIGNMENT)
-    {
-        return OPR_SUB;
-    }
-
-    if (t == &tok->OPERATOR_MODULOASSIGNMENT)
-    {
-        return OPR_MOD;
-    }
-
-    if (t == &tok->OPERATOR_BITWISEANDASSIGNMENT)
-    {
-        return OPR_LOOM_BITAND;
-    }
-
-    if (t == &tok->OPERATOR_BITWISEORASSIGNMENT)
-    {
-        return OPR_LOOM_BITOR;
-    }
-
-    if (t == &tok->OPERATOR_BITWISEXORASSIGNMENT)
-    {
-        return OPR_LOOM_BITXOR;
-    }
-
-    if (t == &tok->OPERATOR_SHIFTLEFTASSIGNMENT)
-    {
-        return OPR_LOOM_BITLSHIFT;
-    }
-
-    if (t == &tok->OPERATOR_SHIFTRIGHTASSIGNMENT)
-    {
-        return OPR_LOOM_BITRSHIFT;
-    }
-
-    return OPR_NOBINOPR;
-}
-
 
 Expression *TypeCompiler::visit(AssignmentOperatorExpression *expression)
 {
@@ -1116,7 +1125,8 @@ Expression *TypeCompiler::visit(AssignmentOperatorExpression *expression)
     Expression *eleft  = expression->leftExpression;
     Expression *eright = expression->rightExpression;
 
-    lmAssert(eleft->type, "Untyped error on left expression");
+    lmAssert(eleft->type,
+             "Untyped left expression on assignment operator expression");
 
     const char *opmethod = tok->getOperatorMethodName(expression->type);
     if (opmethod)
@@ -1140,7 +1150,8 @@ Expression *TypeCompiler::visit(AssignmentOperatorExpression *expression)
             opcall = eleft->e;
 
             BC::initExpDesc(&emethod, VKNUM, 0);
-            emethod.u.nval = method->getOrdinal();
+            setnumV(&emethod.u.nval, method->getOrdinal());
+
             BC::expToNextReg(cs->fs, &opcall);
             BC::expToNextReg(cs->fs, &emethod);
             BC::expToVal(cs->fs, &emethod);
@@ -1183,111 +1194,6 @@ Expression *TypeCompiler::visit(AssignmentOperatorExpression *expression)
     }
 
     return expression;
-}
-
-
-static BinOpr getbinopr(const Token *t)
-{
-    Tokens *tok = Tokens::getSingletonPtr();
-
-    if (t == &tok->OPERATOR_PLUS)
-    {
-        return OPR_LOOM_ADD;
-    }
-
-    if (t == &tok->OPERATOR_MINUS)
-    {
-        return OPR_SUB;
-    }
-
-    if (t == &tok->OPERATOR_MULTIPLY)
-    {
-        return OPR_MUL;
-    }
-
-    if (t == &tok->OPERATOR_DIVIDE)
-    {
-        return OPR_DIV;
-    }
-
-    if (t == &tok->OPERATOR_MODULO)
-    {
-        return OPR_MOD;
-    }
-
-    if (t == &tok->OPERATOR_NOTEQUAL)
-    {
-        return OPR_NE;
-    }
-
-    if (t == &tok->OPERATOR_EQUALEQUAL)
-    {
-        return OPR_EQ;
-    }
-
-    if (t == &tok->OPERATOR_LESSTHAN)
-    {
-        return OPR_LT;
-    }
-
-    if (t == &tok->OPERATOR_LESSTHANOREQUAL)
-    {
-        return OPR_LE;
-    }
-
-    if (t == &tok->OPERATOR_GREATERTHAN)
-    {
-        return OPR_GT;
-    }
-
-    if (t == &tok->OPERATOR_GREATERTHANOREQUAL)
-    {
-        return OPR_GE;
-    }
-
-    if (t == &tok->OPERATOR_LOGICALAND)
-    {
-        return OPR_AND;
-    }
-
-    if (t == &tok->OPERATOR_LOGICALOR)
-    {
-        return OPR_OR;
-    }
-
-    if (t == &tok->OPERATOR_CONCAT)
-    {
-        return OPR_CONCAT;
-    }
-
-    if (t == &tok->OPERATOR_SHIFTLEFT)
-    {
-        return OPR_LOOM_BITLSHIFT;
-    }
-
-    if (t == &tok->OPERATOR_SHIFTRIGHT)
-    {
-        return OPR_LOOM_BITRSHIFT;
-    }
-
-    if (t == &tok->OPERATOR_BITWISEAND)
-    {
-        return OPR_LOOM_BITAND;
-    }
-
-    if (t == &tok->OPERATOR_BITWISEOR)
-    {
-        return OPR_LOOM_BITOR;
-    }
-
-    if (t == &tok->OPERATOR_BITWISEXOR)
-    {
-        return OPR_LOOM_BITXOR;
-    }
-
-    /*case '^': return OPR_POW;
-     * case TK_CONCAT: return OPR_CONCAT;*/
-    return OPR_NOBINOPR;
 }
 
 
@@ -1341,7 +1247,7 @@ Expression *TypeCompiler::visit(BinaryOperatorExpression *expression)
         (expression->op == &tok->KEYWORD_INSTANCEOF) ||
         (expression->op == &tok->KEYWORD_AS))
     {
-        lmAssert(eleft->type && eright->type, "Untype expression");
+        lmAssert(eleft->type && eright->type, "Untyped is/as/instanceof");
 
         FuncState *fs = cs->fs;
 
@@ -1403,7 +1309,6 @@ Expression *TypeCompiler::visit(BinaryOperatorExpression *expression)
         }
     }
 
-
     // If we're concat'ing arbitrary types with a string, we need to coerce them
     // to strings with Object._toString otherwise the Lua VM will error when
     // it can't concat (which has strict rules, for instance cannot concat nil)
@@ -1441,300 +1346,6 @@ Expression *TypeCompiler::visit(BinaryOperatorExpression *expression)
     return expression;
 }
 
-
-void TypeCompiler::createVarArg(ExpDesc *varg, utArray<Expression *> *arguments,
-                                int startIdx)
-{
-    char varargname[1024];
-
-    sprintf(varargname, "__ls_vararg%i", currentFunctionLiteral->curVarArgCalls++);
-    lmAssert(currentFunctionLiteral->numVarArgCalls > 0, "0 numVarArgs");
-    currentFunctionLiteral->curVarArgCalls %= currentFunctionLiteral->numVarArgCalls;
-
-    FuncState *fs = cs->fs;
-
-    int reg = fs->freereg;
-
-    ExpDesc nvector;
-    createInstance(&nvector, "system.Vector", NULL);
-
-    ExpDesc evector;
-    BC::singleVar(cs, &evector, varargname);
-    BC::storeVar(fs, &evector, &nvector);
-
-    if (!arguments || !arguments->size())
-    {
-        *varg = evector;
-        return;
-    }
-
-    // load the vector value table
-    ExpDesc vtable;
-    BC::singleVar(cs, &vtable, varargname);
-    BC::expToNextReg(fs, &vtable);
-
-    ExpDesc v;
-    BC::initExpDesc(&v, VKNUM, 0);
-    v.u.nval = LSINDEXVECTOR;
-
-    BC::expToNextReg(fs, &v);
-    BC::expToVal(fs, &v);
-    BC::indexed(fs, &vtable, &v);
-
-    BC::expToNextReg(fs, &vtable);
-
-    // store the length of the varargs vector
-    ExpDesc elength;
-    BC::initExpDesc(&elength, VKNUM, 0);
-    elength.u.nval = LSINDEXVECTORLENGTH;
-
-    BC::expToNextReg(fs, &elength);
-    BC::expToVal(fs, &elength);
-    BC::indexed(fs, &vtable, &elength);
-
-    BC::initExpDesc(&elength, VKNUM, 0);
-    elength.u.nval = arguments->size() - startIdx;
-
-    // and store
-    BC::storeVar(fs, &vtable, &elength);
-
-    utArray<Expression *> args;
-    int length = 0;
-    for (UTsize i = startIdx; i < arguments->size(); i++)
-    {
-        Expression *arg = arguments->at(i);
-
-        int restore = fs->freereg;
-
-        BC::initExpDesc(&v, VKNUM, 0);
-        v.u.nval = length;
-        BC::expToNextReg(fs, &v);
-        BC::expToVal(fs, &v);
-
-        BC::indexed(fs, &vtable, &v);
-
-        arg->visitExpression(this);
-
-        BC::storeVar(fs, &vtable, &arg->e);
-        length++;
-
-        fs->freereg = restore;
-    }
-
-    BC::singleVar(cs, &evector, varargname);
-    BC::expToNextReg(fs, &evector);
-
-    fs->freereg = reg;
-
-    BC::singleVar(cs, varg, varargname);
-}
-
-
-int TypeCompiler::expList(ExpDesc *e, utArray<Expression *> *expressions,
-                          MethodBase *methodBase)
-{
-    ParameterInfo *vararg = NULL;
-
-    if (methodBase)
-    {
-        vararg = methodBase->getVarArgParameter();
-    }
-
-    if (!expressions && !vararg)
-    {
-        return 0;
-    }
-
-    if (!expressions && vararg)
-    {
-        lmAssert(vararg->position == 0, "Internal Compiler Error");
-        createVarArg(e, NULL, vararg->position);
-        return 1;
-    }
-
-    int count = 0;
-
-    if (expressions)
-    {
-        for (unsigned int i = 0; i < expressions->size(); i++)
-        {
-            Expression *ex = expressions->at(i);
-
-            if (vararg && (vararg->position == i))
-            {
-                if (i)
-                {
-                    BC::expToNextReg(cs->fs, e);
-                }
-
-                createVarArg(e, expressions, vararg->position);
-                count++;
-                return count;
-            }
-
-            ex->visitExpression(this);
-
-            if (i != expressions->size() - 1)
-            {
-                BC::expToNextReg(cs->fs, &ex->e);
-            }
-
-            *e = ex->e;
-            count++;
-        }
-    }
-
-    if (vararg)
-    {
-        if (expressions && expressions->size())
-        {
-            BC::expToNextReg(cs->fs, e);
-        }
-
-        createVarArg(e, expressions, vararg->position);
-        count++;
-    }
-
-    return count;
-}
-
-
-void TypeCompiler::generateCall(ExpDesc *call, utArray<Expression *> *arguments,
-                                MethodBase *methodBase)
-{
-    FuncState *fs = cs->fs;
-
-    int line = lineNumber;
-
-    ParameterInfo *vararg = NULL;
-
-    if (methodBase)
-    {
-        vararg = methodBase->getVarArgParameter();
-    }
-
-    BC::expToNextReg(fs, call);
-
-    ExpDesc args;
-    args.k = VVOID;
-
-    int nparams = 0;
-
-    if ((arguments && arguments->size()) || vararg)
-    {
-        nparams = expList(&args, arguments, methodBase);
-        BC::setMultRet(fs, &args);
-    }
-
-    lua_assert(call->k == VNONRELOC);
-    int base = call->u.s.info; /* base register for call */
-
-    if (hasmultret(args.k))
-    {
-        nparams = LUA_MULTRET; /* open call */
-    }
-    else
-    {
-        if (args.k != VVOID)
-        {
-            BC::expToNextReg(fs, &args); /* close last argument */
-        }
-        nparams = fs->freereg - (base + 1);
-    }
-
-    BC::initExpDesc(call, VCALL,
-                    BC::codeABC(fs, OP_CALL, base, nparams + 1, 2));
-
-    BC::fixLine(fs, line);
-
-    fs->freereg = base + 1;
-}
-
-
-void TypeCompiler::generatePropertySet(ExpDesc *call, Expression *value,
-                                       bool visit)
-{
-    FuncState *fs = cs->fs;
-
-    int line = lineNumber;
-
-    BC::expToNextReg(fs, call);
-
-    lua_assert(call->k == VNONRELOC);
-    int base = call->u.s.info; /* base register for call */
-
-    if (visit)
-    {
-        value->visitExpression(this);
-        BC::expToNextReg(fs, &value->e);
-    }
-    else
-    {
-        BC::reserveRegs(fs, 1);
-        BC::expToReg(fs, &value->e, fs->freereg - 1);
-    }
-
-    int nparams = fs->freereg - (base + 1);
-
-    lmAssert(nparams == 1, "nparams != 1");
-
-    BC::initExpDesc(call, VCALL,
-                    BC::codeABC(fs, OP_CALL, base, nparams + 1, 2));
-
-    BC::fixLine(fs, line);
-
-    fs->freereg = base + 1;
-}
-
-
-Expression *TypeCompiler::visit(CallExpression *call)
-{
-    MethodBase *methodBase = call->methodBase;
-
-    call->function->visitExpression(this);
-
-    // check whether we're calling a methodbase
-    if (methodBase)
-    {
-        lmAssert(methodBase->isMethod(), "Non-method called");
-
-        MethodInfo *method = (MethodInfo *)methodBase;
-        generateCall(&call->function->e, call->arguments, method);
-
-        call->e = call->function->e;
-    }
-    else
-    {
-        lmAssert(call->function->type, "Untyped call");
-
-        // if we're calling a delegate we need to load up the call method
-        if (call->function->type->isDelegate())
-        {
-            MethodInfo *method = (MethodInfo *)call->function->type->findMember("call");
-            lmAssert(method, "delegate with no call method");
-
-            ExpDesc right;
-            BC::initExpDesc(&right, VKNUM, 0);
-            right.u.nval = method->getOrdinal();
-
-            BC::expToNextReg(cs->fs, &call->function->e);
-            BC::expToNextReg(cs->fs, &right);
-            BC::expToVal(cs->fs, &right);
-            BC::indexed(cs->fs, &call->function->e, &right);
-
-            generateCall(&call->function->e, call->arguments, NULL);
-            call->e = call->function->e;
-        }
-        else
-        {
-            // we're directly calling a local, instance (bound), or static method of type Function
-            generateCall(&call->function->e, call->arguments, NULL);
-            call->e = call->function->e;
-        }
-    }
-
-    return call;
-}
 
 
 Expression *TypeCompiler::visit(ConditionalExpression *conditional)
@@ -1786,74 +1397,55 @@ Expression *TypeCompiler::visit(ConditionalExpression *conditional)
     return conditional;
 }
 
-
-Expression *TypeCompiler::visit(DeleteExpression *expression)
-{
-    return expression;
-}
-
-
-Expression *TypeCompiler::visit(LogicalAndExpression *expression)
-{
-    return visit((BinaryOperatorExpression *)expression);
-}
-
-
-Expression *TypeCompiler::visit(LogicalOrExpression *expression)
-{
-    return visit((BinaryOperatorExpression *)expression);
-}
-
-
-Expression *TypeCompiler::visit(NewExpression *expression)
+void TypeCompiler::generateCall(ExpDesc *call, utArray<Expression *> *arguments,
+                                MethodBase *methodBase)
 {
     FuncState *fs = cs->fs;
 
-    Type *type = expression->function->type;
+    int line = lineNumber;
 
-    lmAssert(type, "untyped new expression");
+    ParameterInfo *vararg = NULL;
 
-    ExpDesc e;
-    createInstance(&e, type->getFullName(),
-                   expression->arguments);
-
-    if ((expression->function->astType == AST_VECTORLITERAL) || (expression->function->astType == AST_DICTIONARYLITERAL))
+    if (methodBase)
     {
-        // assign new instance
-        expression->function->e = e;
-
-        BC::expToNextReg(fs, &e);
-
-        int restore = fs->freereg;
-
-        // visit literal
-        expression->function->visitExpression(this);
-
-        fs->freereg = restore;
+        vararg = methodBase->getVarArgParameter();
     }
 
-    expression->e = e;
+    BC::expToNextReg(fs, call);
 
-    return expression;
-}
+    ExpDesc args;
+    args.k = VVOID;
 
+    int nparams = 0;
 
-static UnOpr getunopr(int op)
-{
-    switch (op)
+    if ((arguments && arguments->size()) || vararg)
     {
-    case '!':
-        return OPR_NOT;
-
-    case '-':
-        return OPR_MINUS;
-
-    case '~':
-        return OPR_LOOM_BITNOT;
-
-    default:
-        return OPR_NOUNOPR;
+        nparams = expList(&args, arguments, methodBase);
+        BC::setMultRet(fs, &args);
     }
+
+    lua_assert(call->k == VNONRELOC);
+    int base = call->u.s.info; /* base register for call */
+
+    if (hasmultret(args.k))
+    {
+        nparams = LUA_MULTRET; /* open call */
+    }
+    else
+    {
+        if (args.k != VVOID)
+        {
+            BC::expToNextReg(fs, &args); /* close last argument */
+        }
+        nparams = fs->freereg - (base + 1);
+    }
+
+    BC::initExpDesc(call, VCALL,
+                    BC::codeABC(fs, OP_CALL, base, nparams + 1, 2));
+
+    BC::fixLine(fs, line);
+
+    fs->freereg = base + 1; /* Leave one result by default. */
 }
 
 
@@ -1873,214 +1465,6 @@ Expression *TypeCompiler::visit(UnaryOperatorExpression *expression)
     return expression;
 }
 
-
-Expression *TypeCompiler::visit(VariableExpression *expression)
-{
-    for (UTsize i = 0; i < expression->declarations->size(); i++)
-    {
-        VariableDeclaration *v = expression->declarations->at(i);
-        v->visitExpression(this);
-        expression->e = v->identifier->e;
-    }
-
-    return expression;
-}
-
-
-Expression *TypeCompiler::visit(SuperExpression *expression)
-{
-    lmAssert(currentMethod, "super outside of method");
-
-    Type *type     = currentMethod->getDeclaringType();
-    Type *baseType = type->getBaseType();
-
-    //FIXME:  issue a warning
-    if (!baseType)
-    {
-        return expression;
-    }
-
-    FuncState *fs = cs->fs;
-
-    if (currentMethod->isConstructor())
-    {
-        ConstructorInfo *base = baseType->getConstructor();
-
-        //FIXME: warn if no base constructor
-        if (!base)
-        {
-            return expression;
-        }
-
-        // load up base class
-        ExpDesc eclass;
-        BC::singleVar(cs, &eclass, baseType->getFullName().c_str());
-
-        // index with the __ls_constructor
-        BC::expToNextReg(fs, &eclass);
-
-        ExpDesc fname;
-        BC::expString(cs, &fname, "__ls_constructor");
-
-        BC::expToNextReg(fs, &fname);
-        BC::expToVal(fs, &fname);
-        BC::indexed(fs, &eclass, &fname);
-
-        // call the LSMethod
-        generateCall(&eclass, &expression->arguments);
-    }
-    else
-    {
-        utString name = currentMethod->getName();
-
-        if (expression->method)
-        {
-            name = expression->method->string;
-        }
-
-        MemberInfo *mi = baseType->findMember(name.c_str());
-        //FIXME: warn
-        if (!mi)
-        {
-            return expression;
-        }
-
-        lmAssert(mi->isMethod(), "Non-method in super call");
-
-        MethodInfo *methodInfo = (MethodInfo *)mi;
-
-        // load up declaring class
-        ExpDesc eclass;
-        BC::singleVar(cs, &eclass,
-                      methodInfo->getDeclaringType()->getFullName().c_str());
-
-        BC::expToNextReg(fs, &eclass);
-
-        ExpDesc fname;
-        BC::expString(cs, &fname, name.c_str());
-
-        BC::expToNextReg(fs, &fname);
-        BC::expToVal(fs, &fname);
-        BC::indexed(fs, &eclass, &fname);
-
-        // call the LSMethod
-        generateCall(&eclass, &expression->arguments);
-
-        expression->e = eclass;
-    }
-
-    return expression;
-}
-
-
-Expression *TypeCompiler::visit(VariableDeclaration *declaration)
-{
-    FuncState *fs = cs->fs;
-
-    // local variable declaration
-    lmAssert(!declaration->classDecl, "local variable declaration belongs to a class");
-
-    ExpDesc v;
-    BC::singleVar(cs, &v, declaration->identifier->string.c_str());
-
-    Type       *dt     = declaration->type;
-    MethodInfo *method = NULL;
-    method = (MethodInfo *)dt->findMember("__op_assignment");
-
-    //TODO: assignment overload in default args?
-    if (declaration->isParameter)
-    {
-        method = NULL;
-    }
-
-    if (method)
-    {
-        if (dt->isStruct())
-        {
-            generateVarDeclStruct(declaration);
-        }
-        else if (dt->isDelegate())
-        {
-            generateVarDeclDelegate(declaration);
-        }
-        else
-        {
-            error("unexpected __op_assignment on non delegate or struct");
-        }
-
-        return declaration;
-    }
-
-    else
-    {
-        lmAssert(!dt->isDelegate() && !dt->isStruct(), "unexpected delegate/struct");
-
-        fs->freereg = fs->nactvar; /* free registers */
-        declaration->identifier->visitExpression(this);
-        declaration->initializer->visitExpression(this);
-        BC::storeVar(fs, &declaration->identifier->e,
-                     &declaration->initializer->e);
-    }
-
-    return declaration;
-}
-
-
-//
-// literals
-//
-
-Expression *TypeCompiler::visit(ThisLiteral *literal)
-{
-    BC::singleVar(cs, &literal->e, "this");
-
-    return literal;
-}
-
-
-Expression *TypeCompiler::visit(NullLiteral *literal)
-{
-    BC::initExpDesc(&literal->e, VNIL, 0);
-
-    return literal;
-}
-
-
-Expression *TypeCompiler::visit(BooleanLiteral *literal)
-{
-    if (literal->value)
-    {
-        BC::initExpDesc(&literal->e, VTRUE, 0);
-    }
-    else
-    {
-        BC::initExpDesc(&literal->e, VFALSE, 0);
-    }
-
-    return literal;
-}
-
-
-Expression *TypeCompiler::visit(NumberLiteral *literal)
-{
-    ExpDesc e;
-    BC::initExpDesc(&e, VKNUM, 0);
-
-    e.u.nval = literal->value;
-
-    literal->e = e;
-
-    return literal;
-}
-
-
-Expression *TypeCompiler::visit(ArrayLiteral *literal)
-{
-    return literal;
-}
-
-
-static int functioncount = 0;
 
 void TypeCompiler::functionBody(ExpDesc *e, FunctionLiteral *flit, int line)
 {
@@ -2110,33 +1494,39 @@ void TypeCompiler::functionBody(ExpDesc *e, FunctionLiteral *flit, int line)
 }
 
 
+static int functioncount = 0;
+
 Expression *TypeCompiler::visit(FunctionLiteral *literal)
 {
-    lmAssert(!literal->classDecl, "local function belongs to a class");
+    lmAssert(!literal->classDecl, "Local function belongs to class");
 
-    inLocalFunction++;
     FunctionLiteral *lastFunctionLiteral = currentFunctionLiteral;
     currentFunctionLiteral = literal;
+
+    inLocalFunction++;
 
     char funcname[256];
     snprintf(funcname, 250, "__ls_localfunction%i", functioncount++);
 
     ExpDesc v;
     BC::newLocalVar(cs, funcname, 0);
+
     BC::initExpDesc(&v, VLOCAL, cs->fs->freereg);
     BC::reserveRegs(cs->fs, 1);
     BC::adjustLocalVars(cs, 1);
 
     // store funcinfo
-    // setup closure info here so it is captured as upvalues, must be unique
+    // setup closure info here so it is captured as an upvalue, must be unique
     char funcinfo[256];
+
     snprintf(funcinfo, 250, "__ls_funcinfo_arginfo_%i", literal->childIndex);
 
     ExpDesc funcInfo;
     ExpDesc value;
     BC::singleVar(cs, &funcInfo, funcinfo);
+
     BC::initExpDesc(&value, VKNUM, 0);
-    value.u.nval = 0;
+    setnumV(&value.u.nval, 0);
 
     unsigned int nparams = 0;
     unsigned int varArgIdx = 0xFFFF;
@@ -2159,7 +1549,7 @@ Expression *TypeCompiler::visit(FunctionLiteral *literal)
     }
 
     // compress number of parameters and varargs info into 32 bits
-    value.u.nval = (nparams << 16) | varArgIdx;
+    setnumV(&value.u.nval, (nparams << 16) | varArgIdx);
 
     BC::storeVar(cs->fs, &funcInfo, &value);
 
@@ -2177,58 +1567,5 @@ Expression *TypeCompiler::visit(FunctionLiteral *literal)
 }
 
 
-Expression *TypeCompiler::visit(ObjectLiteral *literal)
-{
-    return literal;
-}
-
-
-Expression *TypeCompiler::visit(ObjectLiteralProperty *property)
-{
-    return property;
-}
-
-
-Expression *TypeCompiler::visit(PropertyLiteral *property)
-{
-    return property;
-}
-
-
-Expression *TypeCompiler::visit(DictionaryLiteralPair *pair)
-{
-    return pair;
-}
-
-
-Expression *TypeCompiler::visit(DictionaryLiteral *literal)
-{
-    FuncState *fs = cs->fs;
-
-    for (UTsize i = 0; i < literal->pairs.size(); i++)
-    {
-        int restore = fs->freereg;
-
-        DictionaryLiteralPair *pair = literal->pairs[i];
-
-        // comes in from NewExpression visitor
-        ExpDesc ethis = literal->e;
-
-        BC::expToNextReg(fs, &ethis);
-
-        pair->key->visitExpression(this);
-
-        BC::expToNextReg(fs, &pair->key->e);
-        BC::expToVal(fs, &pair->key->e);
-        BC::indexed(fs, &ethis, &pair->key->e);
-
-        pair->value->visitExpression(this);
-        BC::storeVar(fs, &ethis, &pair->value->e);
-
-        fs->freereg = restore;
-    }
-
-    return literal;
-}
 }
 #endif

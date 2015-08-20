@@ -20,6 +20,7 @@
 
 #ifdef LOOM_ENABLE_JIT
 
+#include "loom/common/core/assert.h"
 #include "loom/script/compiler/lsCompiler.h"
 #include "loom/script/compiler/lsCompilerLog.h"
 #include "loom/script/compiler/lsJitTypeCompiler.h"
@@ -34,6 +35,185 @@ extern "C" {
 }
 
 namespace LS {
+
+static BitOpr getassignmentbitopr(const Token *t)
+{
+    Tokens *tok = Tokens::getSingletonPtr();
+
+    if (t == &tok->OPERATOR_BITWISEANDASSIGNMENT)
+    {
+        return OPR_LOOM_BITAND;
+    }
+
+    if (t == &tok->OPERATOR_BITWISEORASSIGNMENT)
+    {
+        return OPR_LOOM_BITOR;
+    }
+
+    if (t == &tok->OPERATOR_BITWISEXORASSIGNMENT)
+    {
+        return OPR_LOOM_BITXOR;
+    }
+
+    if (t == &tok->OPERATOR_SHIFTLEFTASSIGNMENT)
+    {
+        return OPR_LOOM_BITLSHIFT;
+    }
+
+    if (t == &tok->OPERATOR_SHIFTRIGHTASSIGNMENT)
+    {
+        return OPR_LOOM_BITRSHIFT;
+    }
+
+    return OPR_NOBITOPR;
+}
+    
+static BinOpr getbinopr(const Token *t)
+{
+    Tokens *tok = Tokens::getSingletonPtr();
+
+    if (t == &tok->OPERATOR_PLUS)
+    {
+        return OPR_ADD;
+    }
+
+    if (t == &tok->OPERATOR_MINUS)
+    {
+        return OPR_SUB;
+    }
+
+    if (t == &tok->OPERATOR_MULTIPLY)
+    {
+        return OPR_MUL;
+    }
+
+    if (t == &tok->OPERATOR_DIVIDE)
+    {
+        return OPR_DIV;
+    }
+
+    if (t == &tok->OPERATOR_MODULO)
+    {
+        return OPR_MOD;
+    }
+
+    if (t == &tok->OPERATOR_NOTEQUAL)
+    {
+        return OPR_NE;
+    }
+
+    if (t == &tok->OPERATOR_EQUALEQUAL)
+    {
+        return OPR_EQ;
+    }
+
+    if (t == &tok->OPERATOR_LESSTHAN)
+    {
+        return OPR_LT;
+    }
+
+    if (t == &tok->OPERATOR_LESSTHANOREQUAL)
+    {
+        return OPR_LE;
+    }
+
+    if (t == &tok->OPERATOR_GREATERTHAN)
+    {
+        return OPR_GT;
+    }
+
+    if (t == &tok->OPERATOR_GREATERTHANOREQUAL)
+    {
+        return OPR_GE;
+    }
+
+    if (t == &tok->OPERATOR_LOGICALAND)
+    {
+        return OPR_AND;
+    }
+
+    if (t == &tok->OPERATOR_LOGICALOR)
+    {
+        return OPR_OR;
+    }
+
+    if (t == &tok->OPERATOR_CONCAT)
+    {
+        return OPR_CONCAT;
+    }
+
+    /*case '^': return OPR_POW;
+     * case TK_CONCAT: return OPR_CONCAT;*/
+    return OPR_NOBINOPR;
+}
+
+static BitOpr getbitopr(const Token *t)
+{
+    Tokens *tok = Tokens::getSingletonPtr();
+
+    if (t == &tok->OPERATOR_SHIFTLEFT)
+    {
+        return OPR_LOOM_BITLSHIFT;
+    }
+
+    if (t == &tok->OPERATOR_SHIFTRIGHT)
+    {
+        return OPR_LOOM_BITRSHIFT;
+    }
+
+    if (t == &tok->OPERATOR_BITWISEAND)
+    {
+        return OPR_LOOM_BITAND;
+    }
+
+    if (t == &tok->OPERATOR_BITWISEOR)
+    {
+        return OPR_LOOM_BITOR;
+    }
+
+    if (t == &tok->OPERATOR_BITWISEXOR)
+    {
+        return OPR_LOOM_BITXOR;
+    }
+
+    return OPR_NOBITOPR;
+}
+
+static BinOpr getassignmentopr(const Token *t)
+{
+    Tokens *tok = Tokens::getSingletonPtr();
+
+    if (t == &tok->OPERATOR_MULTIPLYASSIGNMENT)
+    {
+        return OPR_MUL;
+    }
+
+    if (t == &tok->OPERATOR_DIVIDEASSIGNMENT)
+    {
+        return OPR_DIV;
+    }
+
+    if (t == &tok->OPERATOR_PLUSASSIGNMENT)
+    {
+        return OPR_ADD;
+    }
+
+    if (t == &tok->OPERATOR_MINUSASSIGNMENT)
+    {
+        return OPR_SUB;
+    }
+
+    if (t == &tok->OPERATOR_MODULOASSIGNMENT)
+    {
+        return OPR_MOD;
+    }
+
+    // Sometimes we depend on failing to identify so warning here is inappropriate.
+    // LSWarning("Could not identify assignment operator '%s'.", t->value.str().c_str());
+
+    return OPR_NOBINOPR;
+}
+
 void JitTypeCompiler::compile(ClassDeclaration *classDeclaration)
 {
     JitTypeCompiler compiler;
@@ -42,7 +222,6 @@ void JitTypeCompiler::compile(ClassDeclaration *classDeclaration)
     compiler.cls        = classDeclaration;
     compiler._compile();
 }
-
 
 void JitTypeCompiler::initCodeState(CodeState *codeState, FuncState *funcState,
                                     const utString& source)
@@ -88,24 +267,6 @@ void JitTypeCompiler::closeCodeState(CodeState *codeState)
 
     lj_gc_check(L);
 }
-
-
-static int luaByteCodewriter(lua_State *L, const void *p, size_t size,
-                             void *u)
-{
-    UNUSED(L);
-
-    utArray<unsigned char> *bytecode = (utArray<unsigned char> *)u;
-
-    unsigned char *data = (unsigned char *)p;
-    for (size_t i = 0; i < size; i++, data++)
-    {
-        bytecode->push_back(*data);
-    }
-
-    return 0;
-}
-
 
 ByteCode *JitTypeCompiler::generateByteCode(GCproto *proto, bool debug = true)
 {
@@ -305,31 +466,15 @@ void JitTypeCompiler::generateConstructor(FunctionLiteral *function,
     currentMethod = NULL;
 }
 
-
-utArray<Statement *> *JitTypeCompiler::visitStatementArray(
-    utArray<Statement *> *_statements)
-{
-    if (_statements != NULL)
-    {
-        utArray<Statement *>& statements = *_statements;
-
-        for (unsigned int i = 0; i < statements.size(); i++)
-        {
-            statements[i] = visitStatement(statements[i]);
-        }
-    }
-
-    return _statements;
-}
-
-
 Statement *JitTypeCompiler::visitStatement(Statement *statement)
 {
     if (statement != NULL)
     {
         if (statement->lineNumber)
         {
-            lineNumber = cs->lineNumber = BC::lineNumber = statement->lineNumber;
+            lineNumber     = statement->lineNumber;
+            BC::lineNumber = statement->lineNumber;
+            cs->lineNumber = statement->lineNumber;
         }
         statement = statement->visitStatement(this);
 
@@ -345,62 +490,9 @@ Statement *JitTypeCompiler::visitStatement(Statement *statement)
 }
 
 
-utArray<Expression *> *JitTypeCompiler::visitExpressionArray(
-    utArray<Expression *> *_expressions)
-{
-    if (_expressions != NULL)
-    {
-        utArray<Expression *>& expressions = *_expressions;
-
-        for (unsigned int i = 0; i < expressions.size(); i++)
-        {
-            expressions[i] = visitExpression(expressions[i]);
-        }
-    }
-
-    return _expressions;
-}
-
-
-Expression *JitTypeCompiler::visitExpression(Expression *expression)
-{
-    if (expression != NULL)
-    {
-        expression = expression->visitExpression(this);
-    }
-
-    return expression;
-}
-
-
-//
-// nodes
-//
-
-CompilationUnit *JitTypeCompiler::visit(CompilationUnit *cunit)
-{
-    return cunit;
-}
-
-
 //
 // statements
 //
-
-Statement *JitTypeCompiler::visit(FunctionDeclaration *declaration)
-{
-    lmAssert(0, "FunctionDeclaration");
-
-    return declaration;
-}
-
-
-Statement *JitTypeCompiler::visit(PropertyDeclaration *declaration)
-{
-    lmAssert(0, "PropertyDeclaration");
-
-    return declaration;
-}
 
 
 void JitTypeCompiler::chunk(utArray<Statement *> *statements)
@@ -430,15 +522,6 @@ void JitTypeCompiler::chunk(utArray<Statement *> *statements)
 
     BC::leaveLevel(cs);
 }
-
-
-Statement *JitTypeCompiler::visit(BlockStatement *statement)
-{
-    chunk(statement->statements);
-
-    return statement;
-}
-
 
 Statement *JitTypeCompiler::visit(BreakStatement *statement)
 {
@@ -532,12 +615,7 @@ Statement *JitTypeCompiler::visit(DoStatement *statement)
 
     lua_assert(bl.breaklist == NO_JMP);
 
-    //statement->expression->visitExpression(this);
-    //ExpDesc c = statement->expression->e;
-
     int condexit = encodeCondition(statement->expression);
-
-    //int condexit = BC::cond(cs, &c);
 
     BC::jmpPatch(fs, BC::emitJmp(fs), whileinit);
 
@@ -547,21 +625,6 @@ Statement *JitTypeCompiler::visit(DoStatement *statement)
 
     return statement;
 }
-
-
-Statement *JitTypeCompiler::visit(EmptyStatement *statement)
-{
-    return statement;
-}
-
-
-Statement *JitTypeCompiler::visit(ExpressionStatement *statement)
-{
-    statement->expression->visitExpression(this);
-
-    return statement;
-}
-
 
 void JitTypeCompiler::enterBlock(FuncState *fs, FuncScope *bl,
                                  int isbreakable)
@@ -611,7 +674,6 @@ Statement *JitTypeCompiler::visit(ForStatement *statement)
     if (statement->initial)
     {
         statement->initial->visitExpression(this);
-        //BC::expToNextReg(fs, &statement->initial->e);
     }
 
     whileinit = BC::getLabel(fs);
@@ -619,9 +681,6 @@ Statement *JitTypeCompiler::visit(ForStatement *statement)
     /* condition */
     if (statement->condition)
     {
-        //statement->condition->visitExpression(this);
-        //condexit = BC::cond(cs, &statement->condition->e);
-
         condexit = encodeCondition(statement->condition);
     }
     else
@@ -669,6 +728,7 @@ Statement *JitTypeCompiler::visit(ForStatement *statement)
 Statement *JitTypeCompiler::visit(ForInStatement *statement)
 {
     FuncState *fs = cs->fs;
+    int nvars = 0;
 
     char forIteratorName[256];
 
@@ -717,19 +777,10 @@ Statement *JitTypeCompiler::visit(ForInStatement *statement)
 
     BCReg base = fs->freereg + 3;
 
-    BCLine line = lineNumber;
-
-    int nvars = 0;
+    /* create control variables */
     BC::newLocalVar(cs, "(for generator)", nvars++);
     BC::newLocalVar(cs, "(for state)", nvars++);
     BC::newLocalVar(cs, "(for control)", nvars++);
-
-    bool isVector = false;
-
-    if (statement->expression->type->getFullName() == "system.Vector")
-    {
-        isVector = true;
-    }
 
     //TODO: It would be nice to have a way to iterate pairs
     if (statement->foreach)
@@ -739,6 +790,15 @@ Statement *JitTypeCompiler::visit(ForInStatement *statement)
 
     /* create declared variables */
     BC::newLocalVar(cs, vname, nvars++);
+
+    BCLine line = lineNumber;
+
+    bool isVector = false;
+
+    if (statement->expression->type->getFullName() == "system.Vector")
+    {
+        isVector = true;
+    }
 
     ExpDesc pairs;
 
@@ -877,15 +937,6 @@ Statement *JitTypeCompiler::visit(IfStatement *statement)
     return statement;
 }
 
-
-Statement *JitTypeCompiler::visit(LabelledStatement *statement)
-{
-    lmAssert(0, "LabelledStatement");
-
-    return statement;
-}
-
-
 Statement *JitTypeCompiler::visit(ReturnStatement *statement)
 {
     FuncState *fs = cs->fs;
@@ -900,7 +951,7 @@ Statement *JitTypeCompiler::visit(ReturnStatement *statement)
     else
     {
         ExpDesc e; // Receives the _last_ expression in the list.
-        BCReg   nret = expList(&e, statement->result);
+        BCReg   nret = expList(&e, statement->result, NULL);
         if (nret == 1)
         {       // Return one result.
             if (e.k == VCALL)
@@ -1073,19 +1124,6 @@ Statement *JitTypeCompiler::visit(SwitchStatement *statement)
     return statement;
 }
 
-
-Statement *JitTypeCompiler::visit(VariableStatement *statement)
-{
-    for (unsigned int i = 0; i < statement->declarations->size(); i++)
-    {
-        VariableDeclaration *d = statement->declarations->at(i);
-        d->visitExpression(this);
-    }
-
-    return statement;
-}
-
-
 void JitTypeCompiler::block(CodeState *cs, Statement *fstat)
 {
     FuncState *fs = cs->fs;
@@ -1097,7 +1135,7 @@ void JitTypeCompiler::block(CodeState *cs, Statement *fstat)
     BC::lineNumber = fstat->lineNumber;
     fstat->visitStatement(this);
 
-    //assert(bl.breaklist == NO_JUMP);
+    lmAssert(bl.breaklist == NO_JMP, "Internal Compiler Error");
     leaveBlock(fs);
 }
 
@@ -1109,10 +1147,6 @@ Statement *JitTypeCompiler::visit(WhileStatement *statement)
     FuncScope bl;
 
     start = fs->lasttarget = fs->pc;
-
-    //statement->expression->visitExpression(this);
-
-    //condexit = BC::cond(cs, &statement->expression->e);
 
     condexit = encodeCondition(statement->expression);
 
@@ -1132,42 +1166,6 @@ Statement *JitTypeCompiler::visit(WhileStatement *statement)
 
     return statement;
 }
-
-
-Statement *JitTypeCompiler::visit(WithStatement *statement)
-{
-    lmAssert(0, "WithStatement");
-    return statement;
-}
-
-
-Statement *JitTypeCompiler::visit(ClassDeclaration *statement)
-{
-    lmAssert(0, "ClassDeclaration");
-    return statement;
-}
-
-
-Statement *JitTypeCompiler::visit(InterfaceDeclaration *statement)
-{
-    lmAssert(0, "InterfaceDeclaration");
-    return statement;
-}
-
-
-Statement *JitTypeCompiler::visit(PackageDeclaration *statement)
-{
-    lmAssert(0, "PackageDeclaration");
-    return statement;
-}
-
-
-Statement *JitTypeCompiler::visit(ImportStatement *statement)
-{
-    lmAssert(0, "ImportStatement");
-    return statement;
-}
-
 
 //
 // expressions
@@ -1200,9 +1198,6 @@ void JitTypeCompiler::generatePropertySet(ExpDesc *call, Expression *value,
 
     assert(nparams == 1);
 
-    //BC::initExpDesc(call, VCALL,
-    //        BC::codeABC(fs, OP_CALL, base, nparams + 1, 2));
-
     ExpDesc args = value->e;
 
     BCIns ins;
@@ -1224,84 +1219,12 @@ void JitTypeCompiler::generatePropertySet(ExpDesc *call, Expression *value,
     fs->freereg = base + 1; /* Leave one result by default. */
 }
 
-
-Expression *JitTypeCompiler::visit(MultipleAssignmentExpression *expression)
-{
-    lmAssert(0, "MultipleAssignmentExpression");
-    return expression;
-}
-
-
-static BinOpr getassignmentopr(const Token *t)
-{
-    Tokens *tok = Tokens::getSingletonPtr();
-
-    if (t == &tok->OPERATOR_MULTIPLYASSIGNMENT)
-    {
-        return OPR_MUL;
-    }
-
-    if (t == &tok->OPERATOR_DIVIDEASSIGNMENT)
-    {
-        return OPR_DIV;
-    }
-
-    if (t == &tok->OPERATOR_PLUSASSIGNMENT)
-    {
-        return OPR_ADD;
-    }
-
-    if (t == &tok->OPERATOR_MINUSASSIGNMENT)
-    {
-        return OPR_SUB;
-    }
-
-    if (t == &tok->OPERATOR_MODULOASSIGNMENT)
-    {
-        return OPR_MOD;
-    }
-
-    return OPR_NOBINOPR;
-}
-
-
-static BitOpr getassignmentbitopr(const Token *t)
-{
-    Tokens *tok = Tokens::getSingletonPtr();
-
-    if (t == &tok->OPERATOR_BITWISEANDASSIGNMENT)
-    {
-        return OPR_LOOM_BITAND;
-    }
-
-    if (t == &tok->OPERATOR_BITWISEORASSIGNMENT)
-    {
-        return OPR_LOOM_BITOR;
-    }
-
-    if (t == &tok->OPERATOR_BITWISEXORASSIGNMENT)
-    {
-        return OPR_LOOM_BITXOR;
-    }
-
-    if (t == &tok->OPERATOR_SHIFTLEFTASSIGNMENT)
-    {
-        return OPR_LOOM_BITLSHIFT;
-    }
-
-    if (t == &tok->OPERATOR_SHIFTRIGHTASSIGNMENT)
-    {
-        return OPR_LOOM_BITRSHIFT;
-    }
-
-    return OPR_NOBITOPR;
-}
-
-
 Expression *JitTypeCompiler::visit(AssignmentOperatorExpression *expression)
 {
     Tokens *tok = Tokens::getSingletonPtr();
     BinOpr op   = getassignmentopr(expression->type);
+
+    //lmAssert(op != OPR_NOBINOPR, "Unknown bin op on AssignentOperatorExpression");
 
     Expression *eleft  = expression->leftExpression;
     Expression *eright = expression->rightExpression;
@@ -1316,7 +1239,9 @@ Expression *JitTypeCompiler::visit(AssignmentOperatorExpression *expression)
         if (mi)
         {
             lmAssert(mi->isMethod(), "Non-method operator");
+
             MethodInfo *method = (MethodInfo *)mi;
+
             lmAssert(method->isOperator(), "Non-operator method");
 
             utArray<Expression *> args;
@@ -1419,120 +1344,6 @@ Expression *JitTypeCompiler::visit(AssignmentOperatorExpression *expression)
 
     return expression;
 }
-
-
-static BinOpr getbinopr(const Token *t)
-{
-    Tokens *tok = Tokens::getSingletonPtr();
-
-    if (t == &tok->OPERATOR_PLUS)
-    {
-        return OPR_ADD;
-    }
-
-    if (t == &tok->OPERATOR_MINUS)
-    {
-        return OPR_SUB;
-    }
-
-    if (t == &tok->OPERATOR_MULTIPLY)
-    {
-        return OPR_MUL;
-    }
-
-    if (t == &tok->OPERATOR_DIVIDE)
-    {
-        return OPR_DIV;
-    }
-
-    if (t == &tok->OPERATOR_MODULO)
-    {
-        return OPR_MOD;
-    }
-
-    if (t == &tok->OPERATOR_NOTEQUAL)
-    {
-        return OPR_NE;
-    }
-
-    if (t == &tok->OPERATOR_EQUALEQUAL)
-    {
-        return OPR_EQ;
-    }
-
-    if (t == &tok->OPERATOR_LESSTHAN)
-    {
-        return OPR_LT;
-    }
-
-    if (t == &tok->OPERATOR_LESSTHANOREQUAL)
-    {
-        return OPR_LE;
-    }
-
-    if (t == &tok->OPERATOR_GREATERTHAN)
-    {
-        return OPR_GT;
-    }
-
-    if (t == &tok->OPERATOR_GREATERTHANOREQUAL)
-    {
-        return OPR_GE;
-    }
-
-    if (t == &tok->OPERATOR_LOGICALAND)
-    {
-        return OPR_AND;
-    }
-
-    if (t == &tok->OPERATOR_LOGICALOR)
-    {
-        return OPR_OR;
-    }
-
-    if (t == &tok->OPERATOR_CONCAT)
-    {
-        return OPR_CONCAT;
-    }
-
-    /*case '^': return OPR_POW;
-     * case TK_CONCAT: return OPR_CONCAT;*/
-    return OPR_NOBINOPR;
-}
-
-
-static BitOpr getbitopr(const Token *t)
-{
-    Tokens *tok = Tokens::getSingletonPtr();
-
-    if (t == &tok->OPERATOR_SHIFTLEFT)
-    {
-        return OPR_LOOM_BITLSHIFT;
-    }
-
-    if (t == &tok->OPERATOR_SHIFTRIGHT)
-    {
-        return OPR_LOOM_BITRSHIFT;
-    }
-
-    if (t == &tok->OPERATOR_BITWISEAND)
-    {
-        return OPR_LOOM_BITAND;
-    }
-
-    if (t == &tok->OPERATOR_BITWISEOR)
-    {
-        return OPR_LOOM_BITOR;
-    }
-
-    if (t == &tok->OPERATOR_BITWISEXOR)
-    {
-        return OPR_LOOM_BITXOR;
-    }
-
-    return OPR_NOBITOPR;
-}
-
 
 const char *JitTypeCompiler::getBitOpFunctionName(BitOpr b)
 {
@@ -1757,60 +1568,6 @@ Expression *JitTypeCompiler::visit(BinaryOperatorExpression *expression)
     return expression;
 }
 
-
-Expression *JitTypeCompiler::visit(CallExpression *call)
-{
-    call->function->visitExpression(this);
-
-    MethodBase *methodBase = call->methodBase;
-
-    // check whether we're calling a methodbase
-    if (methodBase)
-    {
-        lmAssert(methodBase->isMethod(), "Non-method called");
-
-        MethodInfo *method = (MethodInfo *)methodBase;
-        generateCall(&call->function->e, call->arguments, method);
-
-        call->e = call->function->e;
-    }
-    else
-    {
-        lmAssert(call->function->type, "Untyped call");
-
-        // if we're calling a delegate we need to load up the call method
-        if (call->function->type->isDelegate())
-        {
-            MethodInfo *method = (MethodInfo *)call->function->type->findMember("call");
-
-            lmAssert(method, "delegate with no call method");
-
-            ExpDesc right;
-
-            BC::initExpDesc(&right, VKNUM, 0);
-            setnumV(&right.u.nval, method->getOrdinal());
-
-
-            BC::expToNextReg(cs->fs, &call->function->e);
-            BC::expToNextReg(cs->fs, &right);
-            BC::expToVal(cs->fs, &right);
-            BC::indexed(cs->fs, &call->function->e, &right);
-
-            generateCall(&call->function->e, call->arguments, NULL);
-            call->e = call->function->e;
-        }
-        else
-        {
-            // we're directly calling a local, instance (bound), or static method of type Function
-            generateCall(&call->function->e, call->arguments, NULL);
-            call->e = call->function->e;
-        }
-    }
-
-    return call;
-}
-
-
 Expression *JitTypeCompiler::visit(ConditionalExpression *conditional)
 {
     FuncState *fs = cs->fs;
@@ -1858,189 +1615,8 @@ Expression *JitTypeCompiler::visit(ConditionalExpression *conditional)
     return conditional;
 }
 
-
-Expression *JitTypeCompiler::visit(DeleteExpression *expression)
-{
-    lmAssert(0, "DeleteExpression");
-    return expression;
-}
-
-
-Expression *JitTypeCompiler::visit(LogicalAndExpression *expression)
-{
-    return visit((BinaryOperatorExpression *)expression);
-}
-
-
-Expression *JitTypeCompiler::visit(LogicalOrExpression *expression)
-{
-    return visit((BinaryOperatorExpression *)expression);
-}
-
-
-void JitTypeCompiler::createVarArg(ExpDesc *varg,
-                                   utArray<Expression *> *arguments, int startIdx)
-{
-    char varargname[1024];
-
-    sprintf(varargname, "__ls_vararg%i", currentFunctionLiteral->curVarArgCalls++);
-    lmAssert(currentFunctionLiteral->numVarArgCalls > 0, "0 numVarArgs");
-    currentFunctionLiteral->curVarArgCalls %= currentFunctionLiteral->numVarArgCalls;
-
-    FuncState *fs = cs->fs;
-
-    int reg = fs->freereg;
-
-    ExpDesc nvector;
-    createInstance(&nvector, "system.Vector", NULL);
-
-    ExpDesc evector;
-    BC::singleVar(cs, &evector, varargname);
-    BC::storeVar(fs, &evector, &nvector);
-
-    if (!arguments || !arguments->size())
-    {
-        *varg = evector;
-        return;
-    }
-
-    // load the vector value table
-    ExpDesc vtable;
-    BC::singleVar(cs, &vtable, varargname);
-    BC::expToNextReg(fs, &vtable);
-
-    ExpDesc v;
-    BC::initExpDesc(&v, VKNUM, 0);
-    setnumV(&v.u.nval, LSINDEXVECTOR);
-
-
-    BC::expToNextReg(fs, &v);
-    BC::expToVal(fs, &v);
-    BC::indexed(fs, &vtable, &v);
-    BC::expToNextReg(fs, &vtable);
-
-    // set the length of the varargs vector
-    ExpDesc elength;
-    BC::initExpDesc(&elength, VKNUM, 0);
-    setnumV(&elength.u.nval, LSINDEXVECTORLENGTH);
-
-    BC::expToNextReg(fs, &elength);
-    BC::expToVal(fs, &elength);
-    BC::indexed(fs, &vtable, &elength);
-
-    BC::initExpDesc(&elength, VKNUM, 0);
-
-    setnumV(&elength.u.nval, arguments->size() - startIdx);
-
-    // and store
-    BC::storeVar(fs, &vtable, &elength);
-
-    utArray<Expression *> args;
-    int length = 0;
-    for (UTsize i = startIdx; i < arguments->size(); i++)
-    {
-        Expression *arg = arguments->at(i);
-
-        int restore = fs->freereg;
-
-        BC::initExpDesc(&v, VKNUM, 0);
-        setnumV(&v.u.nval, length);
-
-        BC::expToNextReg(fs, &v);
-        BC::expToVal(fs, &v);
-
-        BC::indexed(fs, &vtable, &v);
-
-        arg->visitExpression(this);
-
-        BC::storeVar(fs, &vtable, &arg->e);
-        length++;
-
-        fs->freereg = restore;
-    }
-
-    BC::singleVar(cs, &evector, varargname);
-    BC::expToNextReg(fs, &evector);
-
-
-
-    fs->freereg = reg;
-
-    BC::singleVar(cs, varg, varargname);
-}
-
-
-int JitTypeCompiler::expList(ExpDesc *e, utArray<Expression *> *expressions,
-                             MethodBase *methodBase)
-{
-    ParameterInfo *vararg = NULL;
-
-    if (methodBase)
-    {
-        vararg = methodBase->getVarArgParameter();
-    }
-
-    if (!expressions && !vararg)
-    {
-        return 0;
-    }
-
-    if (!expressions && vararg)
-    {
-        lmAssert(vararg->position == 0, "Bad position on variable args");
-        createVarArg(e, NULL, vararg->position);
-        return 1;
-    }
-
-    int count = 0;
-
-    if (expressions)
-    {
-        for (unsigned int i = 0; i < expressions->size(); i++)
-        {
-            Expression *ex = expressions->at(i);
-
-            if (vararg && (vararg->position == i))
-            {
-                if (i)
-                {
-                    BC::expToNextReg(cs->fs, e);
-                }
-
-                createVarArg(e, expressions, vararg->position);
-                count++;
-                return count;
-            }
-
-            ex->visitExpression(this);
-
-            if (i != expressions->size() - 1)
-            {
-                BC::expToNextReg(cs->fs, &ex->e);
-            }
-
-            *e = ex->e;
-            count++;
-        }
-    }
-
-    if (vararg)
-    {
-        if (expressions && expressions->size())
-        {
-            BC::expToNextReg(cs->fs, e);
-        }
-
-        createVarArg(e, expressions, vararg->position);
-        count++;
-    }
-
-    return count;
-}
-
-
-void JitTypeCompiler::generateCall(ExpDesc *call,
-                                   utArray<Expression *> *arguments, MethodBase *methodBase)
+void JitTypeCompiler::generateCall(ExpDesc *call, utArray<Expression *> *arguments,
+                                MethodBase *methodBase)
 {
     FuncState *fs = cs->fs;
 
@@ -2073,7 +1649,7 @@ void JitTypeCompiler::generateCall(ExpDesc *call,
 
     lua_assert(call->k == VNONRELOC);
     BCIns ins;
-    BCReg base = call->u.s.info; /* Base register for call. */
+    BCReg base = call->u.s.info; /* base register for call. */
     if (args.k == VCALL)
     {
         ins = BCINS_ABC(BC_CALLM, base, 2, args.u.s.aux - base - 1);
@@ -2082,7 +1658,7 @@ void JitTypeCompiler::generateCall(ExpDesc *call,
     {
         if (args.k != VVOID)
         {
-            BC::expToNextReg(fs, &args);
+            BC::expToNextReg(fs, &args); /* close last argument */
         }
         ins = BCINS_ABC(BC_CALL, base, 2, fs->freereg - base);
     }
@@ -2091,40 +1667,6 @@ void JitTypeCompiler::generateCall(ExpDesc *call,
     fs->bcbase[fs->pc - 1].line = line;
     fs->freereg = base + 1; /* Leave one result by default. */
 }
-
-
-Expression *JitTypeCompiler::visit(NewExpression *expression)
-{
-    FuncState *fs = cs->fs;
-
-    Type *type = expression->function->type;
-
-    lmAssert(type, "Untyped new expression");
-
-    ExpDesc e;
-    createInstance(&e, type->getFullName(),
-                   expression->arguments);
-
-    if ((expression->function->astType == AST_VECTORLITERAL) || (expression->function->astType == AST_DICTIONARYLITERAL))
-    {
-        // assign new instance
-        expression->function->e = e;
-
-        BC::expToNextReg(fs, &e);
-
-        int restore = fs->freereg;
-
-        // visit literal
-        expression->function->visitExpression(this);
-
-        fs->freereg = restore;
-    }
-
-    expression->e = e;
-
-    return expression;
-}
-
 
 Expression *JitTypeCompiler::visit(UnaryOperatorExpression *expression)
 {
@@ -2182,216 +1724,6 @@ Expression *JitTypeCompiler::visit(UnaryOperatorExpression *expression)
 
     return expression;
 }
-
-
-Expression *JitTypeCompiler::visit(VariableExpression *expression)
-{
-    for (UTsize i = 0; i < expression->declarations->size(); i++)
-    {
-        VariableDeclaration *v = expression->declarations->at(i);
-        v->visitExpression(this);
-        //BC::expToNextReg(cs->fs, &v->identifier->e);
-        expression->e = v->identifier->e;
-    }
-
-    return expression;
-}
-
-
-Expression *JitTypeCompiler::visit(SuperExpression *expression)
-{
-    lmAssert(currentMethod, "Super call outside of method");
-
-    Type *type     = currentMethod->getDeclaringType();
-    Type *baseType = type->getBaseType();
-
-    //FIXME:  issue a warning
-    if (!baseType)
-    {
-        return expression;
-    }
-
-    FuncState *fs = cs->fs;
-
-    if (currentMethod->isConstructor())
-    {
-        ConstructorInfo *base = baseType->getConstructor();
-
-        //FIXME: warn if no base constructor
-        if (!base)
-        {
-            return expression;
-        }
-
-        // load up base class
-        ExpDesc eclass;
-        BC::singleVar(cs, &eclass, baseType->getFullName().c_str());
-
-        // index with the __ls_constructor
-        BC::expToNextReg(fs, &eclass);
-
-        ExpDesc fname;
-        BC::expString(cs, &fname, "__ls_constructor");
-
-        BC::expToNextReg(fs, &fname);
-        BC::expToVal(fs, &fname);
-        BC::indexed(fs, &eclass, &fname);
-
-        // call the LSMethod
-        generateCall(&eclass, &expression->arguments);
-    }
-    else
-    {
-        utString name = currentMethod->getName();
-
-        if (expression->method)
-        {
-            name = expression->method->string;
-        }
-
-        MemberInfo *mi = baseType->findMember(name.c_str());
-        //FIXME: warn
-        if (!mi)
-        {
-            return expression;
-        }
-
-        lmAssert(mi->isMethod(), "super call on non-method");
-
-        MethodInfo *methodInfo = (MethodInfo *)mi;
-
-        // load up declaring class
-        ExpDesc eclass;
-        BC::singleVar(cs, &eclass,
-                      methodInfo->getDeclaringType()->getFullName().c_str());
-
-        BC::expToNextReg(fs, &eclass);
-
-        ExpDesc fname;
-        BC::expString(cs, &fname, name.c_str());
-
-        BC::expToNextReg(fs, &fname);
-        BC::expToVal(fs, &fname);
-        BC::indexed(fs, &eclass, &fname);
-
-        // call the LSMethod
-        generateCall(&eclass, &expression->arguments);
-
-        expression->e = eclass;
-    }
-
-    return expression;
-}
-
-
-Expression *JitTypeCompiler::visit(VariableDeclaration *declaration)
-{
-    FuncState *fs = cs->fs;
-
-    // local variable declaration
-    lmAssert(!declaration->classDecl, "Local variable belongs to class");
-
-    ExpDesc v;
-    BC::singleVar(cs, &v, declaration->identifier->string.c_str());
-
-    Type       *dt     = declaration->type;
-    MethodInfo *method = NULL;
-    method = (MethodInfo *)dt->findMember("__op_assignment");
-
-    //TODO: assignment overload in default args?
-    if (declaration->isParameter)
-    {
-        method = NULL;
-    }
-
-    if (method)
-    {
-        if (dt->isStruct())
-        {
-            generateVarDeclStruct(declaration);
-        }
-        else if (dt->isDelegate())
-        {
-            generateVarDeclDelegate(declaration);
-        }
-        else
-        {
-            lmAssert(0, "unexpected __op_assignment on non delegate or struct");
-        }
-
-        return declaration;
-    }
-
-    else
-    {
-        lmAssert(!dt->isDelegate() && !dt->isStruct(),
-                 "unexpected delegate/struct");
-
-        fs->freereg = fs->nactvar; /* free registers */
-        declaration->identifier->visitExpression(this);
-        declaration->initializer->visitExpression(this);
-        BC::storeVar(fs, &declaration->identifier->e,
-                     &declaration->initializer->e);
-    }
-
-    return declaration;
-}
-
-
-//
-// literals
-//
-
-Expression *JitTypeCompiler::visit(ThisLiteral *literal)
-{
-    BC::singleVar(cs, &literal->e, "this");
-
-    return literal;
-}
-
-
-Expression *JitTypeCompiler::visit(NullLiteral *literal)
-{
-    BC::initExpDesc(&literal->e, VKNIL, 0);
-
-    return literal;
-}
-
-
-Expression *JitTypeCompiler::visit(BooleanLiteral *literal)
-{
-    if (literal->value)
-    {
-        BC::initExpDesc(&literal->e, VKTRUE, 0);
-    }
-    else
-    {
-        BC::initExpDesc(&literal->e, VKFALSE, 0);
-    }
-
-    return literal;
-}
-
-
-Expression *JitTypeCompiler::visit(NumberLiteral *literal)
-{
-    ExpDesc e;
-    BC::initExpDesc(&e, VKNUM, 0);
-
-    setnumV(&e.u.nval, literal->value);
-
-    literal->e = e;
-
-    return literal;
-}
-
-
-Expression *JitTypeCompiler::visit(ArrayLiteral *literal)
-{
-    lmAssert(0, "ArrayLiteral");
-    return literal;
-}
-
 
 void JitTypeCompiler::functionBody(ExpDesc *e, FunctionLiteral *flit,
                                    int line)
@@ -2455,7 +1787,7 @@ Expression *JitTypeCompiler::visit(FunctionLiteral *literal)
     inLocalFunction++;
 
     char funcname[256];
-    sprintf(funcname, "__ls_localfunction%i", functioncount++);
+    snprintf(funcname, 250, "__ls_localfunction%i", functioncount++);
 
     ExpDesc   v, b;
     FuncState *fs = cs->fs;
@@ -2516,61 +1848,6 @@ Expression *JitTypeCompiler::visit(FunctionLiteral *literal)
 
     return literal;
 }
-
-
-Expression *JitTypeCompiler::visit(ObjectLiteral *literal)
-{
-    lmAssert(0, "ObjectLiteral");
-    return literal;
-}
-
-
-Expression *JitTypeCompiler::visit(ObjectLiteralProperty *property)
-{
-    lmAssert(0, "ObjectLiteralProperty");
-    return property;
-}
-
-
-Expression *JitTypeCompiler::visit(PropertyLiteral *property)
-{
-    lmAssert(0, "PropertyLiteral");
-    return property;
-}
-
-
-Expression *JitTypeCompiler::visit(DictionaryLiteralPair *pair)
-{
-    return pair;
-}
-
-
-Expression *JitTypeCompiler::visit(DictionaryLiteral *literal)
-{
-    FuncState *fs = cs->fs;
-
-    for (UTsize i = 0; i < literal->pairs.size(); i++)
-    {
-        DictionaryLiteralPair *pair = literal->pairs[i];
-
-        // comes in from NewExpression visitor
-        ExpDesc ethis = literal->e;
-
-        BC::expToNextReg(fs, &ethis);
-
-        pair->key->visitExpression(this);
-
-        BC::expToNextReg(fs, &pair->key->e);
-        BC::expToVal(fs, &pair->key->e);
-        BC::indexed(fs, &ethis, &pair->key->e);
-
-        pair->value->visitExpression(this);
-        BC::storeVar(fs, &ethis, &pair->value->e);
-    }
-
-    return literal;
-}
-
 
 bool JitTypeCompiler::castBool(Expression *expr, ExpDesc *e)
 {
