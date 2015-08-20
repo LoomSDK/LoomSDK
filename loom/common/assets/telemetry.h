@@ -47,6 +47,10 @@ struct TickMetricValue : TickMetricBase
         TickMetricBase::writeJSON(json);
         json->setNumber("value", value);
     }
+    void writeJSONProperty(JSON *json, const char *name)
+    {
+        json->setNumber(name, value);
+    }
     void read(utByteArray *buffer)
     {
         TickMetricBase::read(buffer);
@@ -165,7 +169,7 @@ struct TableValues
         lmAssert(size == -1 || size == buffer->getPosition() - startPos, "Internal hash table size inconsistency: %d - %d != %d", buffer->getPosition(), startPos, size);
     }
 
-    void writeJSON(JSON *json)
+    void writeJSONArray(JSON *json)
     {
         json->initArray();
         for (UTsize i = 0; i < table.size(); i++)
@@ -176,6 +180,16 @@ struct TableValues
             jvalue.setString("name", table.keyAt(i).str().c_str());
             value.writeJSON(&jvalue);
             json->setArrayObject(value.id, &jvalue);
+        }
+    }
+
+    void writeJSONObject(JSON *json)
+    {
+        json->initObject();
+        for (UTsize i = 0; i < table.size(); i++)
+        {
+            TableValue value = table.at(i);
+            value.writeJSONProperty(json, table.keyAt(i).str().c_str());
         }
     }
 

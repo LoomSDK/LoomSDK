@@ -1,15 +1,13 @@
 /// <reference path="../../../../../typings/d3/d3.d.ts"/>
 /// <reference path="../../../../../typings/jquery/jquery.d.ts"/>
 
-//var svgValues = d3.select("body").append("svg")
-
 
 //var colors = ["#3A3232", "#D83018", "#F07848", "#FDFCCE", "#C0D8D8"];
 var colors = ["#611824", "#C12F2A", "#FF6540", "#FEDE7B", "#F7FFEE"];
 var invertGraph = true;
 
 var timeInitRange = 20e6;
-var tickInitNum = 5;
+var tickInitNum = 60;
 
 var tickOffset = 0;
 var chartOffset = 0.0;
@@ -24,12 +22,30 @@ var expectedBarWidth = 0;
 var chartWidthExtension = 0;
 var barXZoomMaxed = false;
 
+
+function initTelemetry() {
+    Telemetry.stream = new TStream();
+    Telemetry.tickValues = new TickValues(ChartCommon);
+    Telemetry.tickBars = new TickBars(ChartCommon);
+    Telemetry.stream.messageCallback = Telemetry.tickBars.handleMessage;
+    Telemetry.stream.init();
+}
+
+var Telemetry = {
+    ticks: [],
+    valueDomains: null,
+    filteredTicks: null,
+    stream: null,
+    tickValues: null,
+    tickBars: null
+};
+
 var ChartCommon = (function() {
     var t = {};
     
-    t.margin = {top: 20, right: 20, bottom: 60, left: 100};
+    t.margin = {top: 20, right: 70, bottom: 60, left: 100};
     t.width = 960 - t.margin.left - t.margin.right;
-    t.height = 1100 - t.margin.top - t.margin.bottom;
+    t.height = 700 - t.margin.top - t.margin.bottom;
     
     t.timePos = 0;
     t.timeRange = timeInitRange;
@@ -88,18 +104,31 @@ var ChartCommon = (function() {
         return text;
     }
     
+    t.filterTicks = function(axis, scale, tickSpace, tickCount) {
+        var domain = scale.domain();
+        var tickNum;
+        if (!tickSpace && !tickCount) {
+            tickSpace = 40;
+        }
+        if (tickSpace) {
+            var extent = scale.rangeExtent();
+            tickNum = (extent[1] - extent[0]) / tickSpace;
+        } else {
+            tickNum = tickCount;
+        }
+        
+        var mod = Math.floor(domain.length/tickNum)
+        var filteredDomain = domain.filter(function(d, i) {
+            if (i == 0 || i == domain.length-1) return true;
+            return !((domain.length - i) % mod);
+        });
+        axis.tickValues(filteredDomain);
+        return filteredDomain;
+    }
 
     
     return t;
 }());
-
-var Telemetry = {
-    ticks: [],
-    stream: null,
-    tickBars: null
-};
-Telemetry.stream = new TStream();
-Telemetry.tickBars = new TickBars(ChartCommon);
 
 function TStream() {
     this.pingTime = 20;
@@ -143,6 +172,258 @@ function TStream() {
         this.showStatus("Sent ping at "+Date.now());
         this.socket.send("ping");
     }
+}
+
+function TickValues(initCommon) {
+
+    var map;
+    var domains;
+    this.init = function() {
+        if (initCommon) this.updateCommon(initCommon);
+    }
+    
+    var width, height, margin, x, y;
+    this.updateCommon = function(common) {
+        
+        width = common.width;
+        height = 300;
+        margin = {
+            left: common.margin.left,
+            right: common.margin.right,
+            top: 50,
+            bottom: common.margin.bottom
+        };
+        x = common.x;
+        y = common.y;
+        
+        svgRoot
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+        
+        svg
+            .attr("transform", "translate(" + margin.left + " " + margin.top + ")")
+        
+        svgAxisX
+            .attr("transform", "translate(" + 0 + " " + 0 + ")")
+    }
+    
+    var svgRoot = d3.select("body").append("svg")
+        .attr("class", "tickValues")
+    
+    var svg = svgRoot.append("g")
+    
+    var svgLines = svg.append("g")
+    
+    var svgAxisX = svg.append("g")
+        .attr("class", "x axis unselectable")
+        
+    var axisX = d3.svg.axis()
+        .orient("top")
+    
+    function updateDomains(ticks) {
+        domains = d3.map();
+        ticks.forEach(function(tick) {
+            var tickValues = tick.values;
+            for (var key in tickValues) {
+                var domain = domains.get(key);
+                if (domain == undefined) {
+                    //domain = [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY];
+                    domain = [0, Number.NEGATIVE_INFINITY];
+                    domains.set(key, domain);
+                }
+                var value = tickValues[key];
+                if (value < domain[0]) domain[0] = value;
+                if (value > domain[1]) domain[1] = value;
+            }
+        })
+    }
+    
+    function updateValueMap(ticks) {
+        var valueMapLen = 0;
+        map = d3.map();
+        // Gather keys
+        ticks.forEach(function(tick) {
+            var tickValueMap = tick.values;
+            for (var key in tickValueMap) {
+                if (key == "tickId") continue; // Ignore IDs
+                //if (key != "gc.memory") continue; // Debug - only show memory
+                var entry = map.get(key);
+                if (entry == undefined) {
+                    entry = {
+                        name: key,
+                        values: [],
+                        //valueMin: Number.POSITIVE_INFINITY,
+                        //valueMax: Number.NEGATIVE_INFINITY,
+                        domain: domains.get(key),
+                        scale: d3.scale.linear()
+                            .range([1, 0]),
+                        axisY: d3.svg.axis()
+                            .orient("right")
+                            .ticks(2)
+                    };
+                    map.set(key, entry);
+                }
+                var value = tickValueMap[key];
+                entry.values.push([tick.id, value]);
+                /*
+                if (value < entry.valueMin) entry.valueMin = value;
+                if (value > entry.valueMax) entry.valueMax = value;
+                */
+            }
+            valueMapLen++;
+            map.forEach(function(key, entry) {
+                if (entry.values.length < valueMapLen) entry.values.push([tick.id, NaN]);
+            })
+        })
+        
+        map.forEach(function(key, entry) {
+            
+            // Discretize to powers of 2
+            var delta = entry.domain[1] - entry.domain[0];
+            var sign = delta < 0 ? -1 : 1;
+            entry.domain[1] = entry.domain[0] + Math.pow(2, Math.ceil(Math.log2(delta*sign)))*sign;
+            
+            entry.scale.domain(entry.domain)
+        })
+    }
+    
+    this.updateTicks = function() {
+        updateDomains(Telemetry.ticks);
+        
+        this.updateTickView();
+    }
+    
+    this.updateTickView = function() {
+        updateAxes();
+        
+        updateValueMap(Telemetry.filteredTicks)
+        
+        var values = map.values();
+        
+        var lines = svgLines.selectAll(".line").data(values)
+        
+        // Tick bars, new only, group inside of a bar
+        var lineGroup = lines.enter().append("g")
+            .attr("class", "line")
+        
+        lines.exit().remove()
+        
+        var halfWidth = x.rangeBand() * 0.5;
+        
+        var spacing = 0;
+        
+        var lanes = d3.scale.ordinal()
+            .domain(d3.range(values.length))
+            .rangeBands([height, 0], 0.15)
+        
+        var laneBand = lanes.rangeBand();
+        var laneHeight = laneBand;
+        
+        /*
+        var lineSplit = d3.scale.linear()
+            .domain([0, 1])
+            .range([0, height/values.length])
+        
+        var splitHeight = lineSplit(1) + spacing;
+        */
+        
+        var line = d3.svg.area()
+            .x(function(d) {
+                return x(d[0]) + halfWidth
+            })
+            .y0(laneBand)
+        
+        lineGroup.append("g")
+            .attr("class", "y axis unselectable")
+        
+        lineGroup.append("path")
+            .attr("class", "valuePath")
+        
+        lineGroup.append("text")
+            .attr("class", "valueName")
+            .style("text-anchor", "start")
+            
+        lineGroup.append("text")
+            .attr("class", "valueCurrent")
+            .style("text-anchor", "end")
+            
+        //lineGroup.append("line")
+        //    .attr("class", "valueBoundTop")
+        lineGroup.append("line")
+            .attr("class", "valueBoundBottom")
+        
+        var svgLine = svgLines.selectAll(".line")
+            .attr("transform", function(entry, index) {
+                return "translate(0 "+ lanes(index) + ")"
+            })
+        
+        svgLine.select(".y.axis").each(function(entry, index) {
+            var svgAxisY = d3.select(this).transition()
+                .attr("transform", "translate("+width+", 0)")
+                
+            entry.scale.range([laneBand, 0])
+            entry.axisY
+                .scale(entry.scale)
+                //.tickValues(entry.scale.domain.filter)
+            entry.axisY(svgAxisY)
+            entry.scale.range([1, 0])
+        })
+        
+        svgLine.select(".valueBoundBottom").transition()
+            .attr("x1", 0)
+            .attr("y1", laneBand)
+            .attr("x2", width)
+            .attr("y2", laneBand)
+        
+        svgLine.select(".valueName")
+            .attr("x", 6)
+            .attr("y", laneBand-8)
+            .text(function(entry, index) {
+                return entry.name
+            })
+            
+        svgLine.select(".valueCurrent").transition()
+            .attr("x", function(entry) {
+                return x(entry.values[entry.values.length-1][0])
+            })
+            .attr("y", function(entry) {
+                return 12+laneHeight*entry.scale(entry.values[entry.values.length-1][1])  
+            })
+            .text(function(entry) {
+                return entry.values[entry.values.length-1][1].toFixed(3)
+            })
+            
+        svgLine.select(".valuePath")
+            .attr("d", function(entry, index) {
+                return line.y1(function(d) {
+                    var v = entry.scale(d[1])
+                    return laneHeight * v;
+                })(entry.values);
+            })
+        
+    }
+    
+    function updateAxes() {
+        
+        axisX.scale(x);
+        var crowdedRatio = x.domain().length / ChartCommon.filterTicks(axisX, x).length;
+        
+        //axisY.scale(y);
+        svgAxisX.call(axisX).selectAll("text")
+            .style("text-anchor", "middle")
+            .attr("dx", "0em")
+            .attr("dy", "0em")
+            .attr("transform", function(data) {
+                var angle = ChartCommon.getBoxFitAngle(x.rangeBand()*crowdedRatio, margin.top, 5 + this.getComputedTextLength());
+                var offset = -17*Math.sin(angle*Math.PI/180);
+                var tx = offset - 3;
+                var ty = offset - 5;
+                return "translate("+tx+" "+ty+") rotate("+angle+")";
+            })
+    }
+    
+    
+    this.init();
 }
 
 function TickBars(initCommon) {
@@ -285,7 +566,14 @@ function TickBars(initCommon) {
     }
     
     function addTick(tick) {
-        ticks.push({ id: tick.values[0].value, values: tick.values, metrics: tick.ranges, visibleMetrics: null, maxLevel: 0, sectionsVisible: false });
+        ticks.push({
+            id: tick.values["tickId"],
+            values: tick.values,
+            metrics: tick.ranges,
+            visibleMetrics: null,
+            maxLevel: 0,
+            sectionsVisible: false
+        });
         updateMaxLevel(ticks[ticks.length-1]);
         sortMetrics(ticks[ticks.length-1]);
         
@@ -360,9 +648,10 @@ function TickBars(initCommon) {
         barZoomXConstrainPosition();
         
         var tickPad = chartOffset-1e-3 > chartWidthExtension ? 1 : 0;
+        console.log(chartOffset, chartWidthExtension)
         tickNum += tickPad;
         
-        x.rangeBands([-chartOffset + padding, -chartOffset + innerChartWidth + expectedBarWidth * (tickNum - tickNumF)], spacing);
+        x.rangeRoundBands([-chartOffset + padding, -chartOffset + innerChartWidth + expectedBarWidth * (tickNum - tickNumF)], spacing);
         updateMetricData();
     }
     
@@ -410,9 +699,9 @@ function TickBars(initCommon) {
         
         barZoomXConstrainScale();
         
-        ticks = ticks.slice(-60);
+        if (ticks.length > tickInitNum) ticks.splice(0, ticks.length - tickInitNum);
         
-        if (ticks.length >= 60) Telemetry.stream.socket.close();
+        if (ticks.length >= tickInitNum) Telemetry.stream.socket.close();
         
         var sliceStart = Math.max(0, tickOffset)
         var sliceEnd = Math.min(ticks.length, tickOffset + tickNum)
@@ -423,21 +712,22 @@ function TickBars(initCommon) {
         }));
         
         
-        axisX.scale(x);
+        axisX.scale(x)
         axisY.scale(y)
+        var crowdedRatio = x.domain().length / ChartCommon.filterTicks(axisX, x).length;
         svgAxisX.call(axisX).selectAll("text")
             .style("text-anchor", "middle")
             .attr("dx", "0em")
             .attr("dy", "0em")
             .attr("transform", function(data) {
-                var angle = ChartCommon.getBoxFitAngle(x.rangeBand(), margin.bottom, 15 + this.getComputedTextLength());
+                var angle = ChartCommon.getBoxFitAngle(x.rangeBand()*crowdedRatio, margin.bottom, 5 + this.getComputedTextLength());
                 var offset = 10*Math.sin(angle*Math.PI/180);
                 var tx = offset;
                 var ty = offset + 15;
                 return "translate("+tx+" "+ty+") rotate("+angle+")";
             })
         ;
-        svgAxisY.call(axisY);
+        svgAxisY.transition().call(axisY);
         
         svgAxisXBack
             .attr("width", width)
@@ -457,9 +747,9 @@ function TickBars(initCommon) {
         maxTime = invertGraph ? y.domain()[0] : y.domain()[1];
         
         
-        var prunedSlicedTicks = slicedTicks.map(cullMetrics);
+        Telemetry.filteredTicks = slicedTicks.map(cullMetrics);
         
-        var bars = svgBars.selectAll(".bar").data(prunedSlicedTicks, function(tick) {
+        var bars = svgBars.selectAll(".bar").data(Telemetry.filteredTicks, function(tick) {
             return ""+tick.id;
         })
         
@@ -662,6 +952,8 @@ function TickBars(initCommon) {
             
         })
         
+        Telemetry.tickValues.updateTicks();
+        
     }
     
     function updateTickLines() {
@@ -676,36 +968,8 @@ function TickBars(initCommon) {
     this.init();
 }
 
-function initStream() {
-    Telemetry.stream.messageCallback = Telemetry.tickBars.handleMessage;
-    Telemetry.stream.init();
-}
-
-
-
 
 $(document).ready(function () {
-    initStream();
+    initTelemetry();
 });
 
-
-
-/*
-
-    svgLine.append("rect")
-        .attr("class", "tickLine")
-        .attr("x", 0)
-        .attr("width", width)
-        .attr("height", 1)
-        */
-
-
-
-/*
-var valueHeight = 100;
-
-svgValues
-    .attr("class", "tickValues")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", valueHeight)
-*/

@@ -243,11 +243,11 @@ void Telemetry::handleMessage(utByteArray *buffer)
     {
         if (tickValues.read(buffer))
         {
-            tickValues.writeJSON(&tickValuesJSON);
+            tickValues.writeJSONObject(&tickValuesJSON);
         }
         else if (tickRanges.read(buffer))
         {
-            tickRanges.writeJSON(&tickRangesJSON);
+            tickRanges.writeJSONArray(&tickRangesJSON);
         }
         else
         {
@@ -268,7 +268,7 @@ void Telemetry::updateMetricsJSON()
     tickMetricsJSON.setString("status", "success");
 
     jdata.initObject();
-    jdata.setArray("values", &tickValuesJSON);
+    jdata.setObject("values", &tickValuesJSON);
     jdata.setArray("ranges", &tickRangesJSON);
     tickMetricsJSON.setObject("data", &jdata);
     

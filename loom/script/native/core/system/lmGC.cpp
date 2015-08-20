@@ -54,6 +54,7 @@ class GC
     static double cycleMemoryGrowthWarningRatio;
     static int cycleWarningExtraRunDivider;
     static double bprValidityThreshold;
+    static double cyclePrevGarbage;
 
 public:
 
@@ -225,11 +226,20 @@ public:
             cycleMaxTime = 0;
             cycleStartTime = platform_getMilliseconds();
             cycleKB = memoryAfterKB;
+            cyclePrevGarbage = garbageRatio;
 
         }
 
-        Telemetry::setTickValue("gc.cycle.updates", cycleUpdates);
-        Telemetry::setTickValue("gc.cycle.runs", cycleRuns);
+        Telemetry::setTickValue("gc.cycle.previous.garbage", cyclePrevGarbage);
+        Telemetry::setTickValue("gc.cycle.runs.limit", updateRunLimit);
+        Telemetry::setTickValue("gc.cycle.update.count", cycleUpdates);
+        Telemetry::setTickValue("gc.cycle.update.time.sum", cycleUpdateTime);
+        Telemetry::setTickValue("gc.cycle.update.time.max", cycleMaxTime);
+        Telemetry::setTickValue("gc.cycle.runs.sum", cycleRuns);
+        Telemetry::setTickValue("gc.cycle.collected", cycleCollectedBytes);
+        Telemetry::setTickValue("gc.cycle.previous.collectedKB", cycleKB);
+        Telemetry::setTickValue("gc.cycle.lastValidBPR", lastValidBPR);
+        Telemetry::setTickValue("gc.cycle.hibernating", hibernating ? 1 : 0);
         Telemetry::setTickValue("gc.memory", (double) memoryAfterKB * 1024 + memoryAfterB);
 
 
@@ -329,6 +339,9 @@ int GC::cycleCollectedBytes = 0;
 
 // The amount of memory taken in KB at the end of the last cycle
 int GC::cycleKB = 0;
+
+// The amount of memory taken in KB at the end of the last cycle
+double GC::cyclePrevGarbage = 0;
 
 // true if the system is currently hibernating, false otherwise.
 // See above for details.

@@ -98,8 +98,22 @@ textarea {
 
 
 
-.tickBars {
+.tickBars, .tickValues {
     font: 12px sans-serif;
+}
+
+.tickValues .line {
+    stroke: darkgray;
+    fill: #eee;
+}
+
+.tickValues text {
+    stroke: none;
+    fill: black;
+}
+
+.valueBounds, .valueBoundBottom {
+    stroke: lightgray;
 }
 
 .bs text {
