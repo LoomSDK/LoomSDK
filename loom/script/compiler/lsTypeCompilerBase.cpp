@@ -32,6 +32,15 @@ extern "C" {
 #include "lj_obj.h"
 #include "lj_bcdump.h"
 }
+
+#else 
+
+// Some shims to let us write code with LuaJIT conventions but work against classic.
+#define VKNIL VNIL
+#define VKTRUE VTRUE
+#define VKFALSE VFALSE
+#define setnumV(var, val) *(var) = val;
+
 #endif
 
 namespace LS  {

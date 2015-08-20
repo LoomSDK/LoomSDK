@@ -411,11 +411,8 @@ void JitTypeCompiler::generateConstructor(FunctionLiteral *function,
             ExpDesc vname;
 
             BC::initExpDesc(&vname, VKNUM, 0);
-#if LOOM_ENABLE_JIT
+
             setnumV(&vname.u.nval, v->memberInfo->getOrdinal());
-#else
-            vname.u.nval = v->memberInfo->getOrdinal();
-#endif
 
             ExpDesc ethis;
             BC::singleVar(cs, &ethis, "this");

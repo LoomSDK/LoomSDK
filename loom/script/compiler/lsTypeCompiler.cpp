@@ -44,6 +44,8 @@ extern "C" {
 #include "loom/script/common/lsLog.h"
 #include "loom/script/runtime/lsRuntime.h"
 
+#define setnumV(var, val) *(var) = val;
+
 namespace LS {
 
 static UnOpr getunopr(int op)
@@ -234,6 +236,7 @@ void TypeCompiler::compile(ClassDeclaration *classDeclaration)
     compiler.cls        = classDeclaration;
     compiler._compile();
 }
+
 void TypeCompiler::initCodeState(CodeState *codeState, FuncState *funcState,
                                  const utString& source)
 {
@@ -378,8 +381,71 @@ void TypeCompiler::generateConstructor(FunctionLiteral *function,
 
     parList(function, true);
 
+    // Initialize our instance variables.
+    // We're solely interested in initializer expressions for non static variables
+    for (UTsize i = 0; i < cls->varDecls.size(); i++)
+    {
+        VariableDeclaration *v = cls->varDecls.at(i);
+
+        if (v->isStatic)
+        {
+            continue;
+        }
+
+        if (v->type->isStruct())
+        {
+            generateVarDeclStruct(v);
+        }
+        else if (v->type->isDelegate())
+        {
+            generateVarDeclDelegate(v);
+        }
+        else if (v->initializer)
+        {
+            ExpDesc vname;
+
+            BC::initExpDesc(&vname, VKNUM, 0);
+
+            setnumV(&vname.u.nval, v->memberInfo->getOrdinal());
+
+            ExpDesc ethis;
+            BC::singleVar(cs, &ethis, "this");
+
+            BC::expToNextReg(&funcState, &ethis);
+            BC::expToNextReg(&funcState, &vname);
+            BC::expToVal(&funcState, &vname);
+            BC::indexed(&funcState, &ethis, &vname);
+
+            v->initializer->visitExpression(this);
+            BC::storeVar(&funcState, &ethis, &v->initializer->e);
+        }
+
+        funcState.freereg = funcState.nactvar; /* free registers */
+    }
+
     declareLocalVariables(function);
 
+    // If there is no super call in this method, add it at the start so we
+    // always fully initialize the class - otherwise we have to traverse
+    // it at runtime which is a performance overhead.
+    if(function->isConstructor
+       && function->hasSuperCall == false
+       && function->isNative == false
+       && constructor->getDeclaringType()->isPrimitive() == false)
+    {
+        // We want to insert a call to super(); if none is present. We need
+        // to pass "this" so it has an instance to operate on.
+        SuperExpression *expr = new SuperExpression();
+        expr->arguments.push_back(new ThisLiteral());
+        Statement *stmt = new ExpressionStatement(expr);
+
+        // Add it to the function, creating a statement array if needed.
+        if(function->statements == NULL)
+            function->statements = new utArray<Statement*>();
+        function->statements->push_front(stmt);
+    }
+
+    // Emit any actual constructor code!
     visitStatementArray(function->statements);
 
     closeCodeState(&codeState);
@@ -877,7 +943,7 @@ Statement *TypeCompiler::visit(ReturnStatement *statement)
     else
     {
         ExpDesc e;
-        nret = expList(&e, statement->result);
+        nret = expList(&e, statement->result, NULL);
 
         if (hasmultret(e.k))
         {
