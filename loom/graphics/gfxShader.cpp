@@ -26,6 +26,9 @@
 
 lmDefineLogGroup(gGFXShaderLogGroup, "GFXShader", 1, LoomLogInfo);
 
+static const GFX::Shader *lastBoundShader = nullptr;
+
+
 GFX::Shader* GFX::Shader::getDefaultShader()
 {
     if (defaultShader == NULL)
@@ -111,7 +114,7 @@ void GFX::Shader::load(const char* vss, const char* fss)
 
 void GFX::Shader::loadFromAssets(const char* vertexShaderPath, const char* fragmentShaderPath)
 {
-    void * vertData = loom_asset_lock(vertexShaderPath, LATVertexShader, 1);
+    void * vertData = loom_asset_lock(vertexShaderPath, LATText, 1);
     if (vertData == NULL)
     {
         lmLogWarn(gGFXShaderLogGroup, "Unable to lock the asset for shader %s", vertexShaderPath);
@@ -119,7 +122,7 @@ void GFX::Shader::loadFromAssets(const char* vertexShaderPath, const char* fragm
     }
     loom_asset_unlock(vertexShaderPath);
 
-    void * fragData = loom_asset_lock(fragmentShaderPath, LATFragmentShader, 1);
+    void * fragData = loom_asset_lock(fragmentShaderPath, LATText, 1);
     if (fragData == NULL)
     {
         lmLogWarn(gGFXShaderLogGroup, "Unable to lock the asset for shader %s", vertexShaderPath);
@@ -139,10 +142,10 @@ GLint GFX::Shader::getUniformLocation(const char* name)
     return ctx->glGetUniformLocation(programId, name);
 }
 
-#include "loom/common/platform/platformTime.h"
-
 void GFX::Shader::setUniform1f(GLint location, GLfloat v0)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     Graphics::context()->glUniform1f(location, v0);
 }
 
@@ -169,13 +172,19 @@ int GFX::Shader::setUniform1fv(lua_State *L)
 
 void GFX::Shader::setUniform2f(GLint location, GLfloat v0, GLfloat v1)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     Graphics::context()->glUniform2f(location, v0, v1);
 }
 
 int GFX::Shader::setUniform2fv(lua_State *L)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     GLint location = (GLint)lua_tonumber(L, 2);
     int length = lsr_vector_get_length(L, 3);
+
+    lmAssert(length % 2 == 0, "values size must be a multiple of 2");
 
     utArray<float> values;
 
@@ -194,19 +203,27 @@ int GFX::Shader::setUniform2fv(lua_State *L)
     // Pop location
     lua_pop(L, 2);
 
+    lmAssert(length % 2 == 0, "values size must be a multiple of 2");
+
     Graphics::context()->glUniform2fv(location, values.size(), values.ptr());
     return 0;
 }
 
 void GFX::Shader::setUniform3f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     Graphics::context()->glUniform3f(location, v0, v1, v2);
 }
 
 int GFX::Shader::setUniform3fv(lua_State *L)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     GLint location = (GLint)lua_tonumber(L, 2);
     int length = lsr_vector_get_length(L, 3);
+
+    lmAssert(length % 3 == 0, "values size must be a multiple of 3");
 
     utArray<float> values;
 
@@ -231,6 +248,8 @@ int GFX::Shader::setUniform3fv(lua_State *L)
 
 void GFX::Shader::setUniform1i(GLint location, GLint v0)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     Graphics::context()->glUniform1i(location, v0);
 }
 
@@ -262,13 +281,18 @@ int GFX::Shader::setUniform1iv(lua_State *L)
 
 void GFX::Shader::setUniform2i(GLint location, GLint v0, GLint v1)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     Graphics::context()->glUniform2i(location, v0, v1);
 }
 
 int GFX::Shader::setUniform2iv(lua_State *L)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     GLint location = (GLint)lua_tonumber(L, 2);
     int length = lsr_vector_get_length(L, 3);
+    lmAssert(length % 2 == 0, "values size must be a multiple of 2");
 
     utArray<int> values;
 
@@ -293,13 +317,19 @@ int GFX::Shader::setUniform2iv(lua_State *L)
 
 void GFX::Shader::setUniform3i(GLint location, GLint v0, GLint v1, GLint v2)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     Graphics::context()->glUniform3i(location, v0, v1, v2);
 }
 
 int GFX::Shader::setUniform3iv(lua_State *L)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     GLint location = (GLint)lua_tonumber(L, 2);
     int length = lsr_vector_get_length(L, 3);
+    lmAssert(length % 3 == 0, "values size must be a multiple of 3");
+
 
     utArray<int> values;
 
@@ -324,6 +354,8 @@ int GFX::Shader::setUniform3iv(lua_State *L)
 
 void GFX::Shader::setUniformMatrix3f(GLint location, bool transpose, Loom2D::Matrix* value)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     static float v[9] = {0, 0, 0, 0, 0, 0, 0, 0 ,0};
     value->copyToMatrix3f(v);
     Graphics::context()->glUniformMatrix3fv(location, 1, transpose, v);
@@ -331,6 +363,8 @@ void GFX::Shader::setUniformMatrix3f(GLint location, bool transpose, Loom2D::Mat
 
 int GFX::Shader::setUniformMatrix3fv(lua_State *L)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     GLint location = (GLint)lua_tonumber(L, 2);
     bool transpose = lua_toboolean(L, 3) != 0;
     int length = lsr_vector_get_length(L, 4);
@@ -362,6 +396,8 @@ int GFX::Shader::setUniformMatrix3fv(lua_State *L)
 
 void GFX::Shader::setUniformMatrix4f(GLint location, bool transpose, Loom2D::Matrix* value)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     static float v[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     value->copyToMatrix4f(v);
     Graphics::context()->glUniformMatrix4fv(location, 1, transpose, v);
@@ -369,6 +405,8 @@ void GFX::Shader::setUniformMatrix4f(GLint location, bool transpose, Loom2D::Mat
 
 int GFX::Shader::setUniformMatrix4fv(lua_State *L)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     GLint location = (GLint)lua_tonumber(L, 2);
     bool transpose = lua_toboolean(L, 3) != 0;
     int length = lsr_vector_get_length(L, 4);
@@ -428,6 +466,8 @@ void GFX::Shader::bind()
         // It would be wierd if it started using
         // the wrong shader
     }
+
+    lastBoundShader = this;
 
     GFX::GL_Context* ctx = Graphics::context();
 

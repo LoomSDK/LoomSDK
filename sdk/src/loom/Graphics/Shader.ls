@@ -25,7 +25,10 @@ package loom.graphics
 
     delegate ShaderBindDelegate();
 
-    /** Shader needs to be initialized after being created with 'load()' or 'loadFromAssets()'.
+    /**
+      * Shader allows custom GLSL shaders to be used when drawing Quads and QuadBatches.
+      *
+      * Shader needs to be initialized after being created with 'load()' or 'loadFromAssets()'.
       * When you are done using the shader, you should release the GPU resources by calling 'dispose()'.
       *
       * Every time the renderer binds the shader, 'onBind' delegte is invoked, where all needed uniforms
@@ -85,7 +88,7 @@ package loom.graphics
         public native function setUniform2f(location:Number, v0:Number, v1:Number);
 
         /**
-          * Sets an array of 'vec2' uniforms
+          * Sets an array of 'vec2' uniforms. value size must me a multiple of 2
           */
         public native function setUniform2fv(location:Number, value:Vector.<Number>);
 
@@ -95,7 +98,7 @@ package loom.graphics
         public native function setUniform3f(location:Number, v0:Number, v1:Number, v2:Number);
 
         /**
-          * Sets an array of 'vec3' uniforms
+          * Sets an array of 'vec3' uniforms. value size must me a multiple of 3
           */
         public native function setUniform3fv(location:Number, value:Vector.<Number>);
 
@@ -115,7 +118,7 @@ package loom.graphics
         public native function setUniform2i(location:Number, v0:Number, v1:Number);
 
         /**
-          * Sets one 'ivec2' uniform
+          * Sets an array of 'ivec2' uniforms. value size must me a multiple of 2
           */
         public native function setUniform2iv(location:Number, value:Vector.<Number>);
 
@@ -125,7 +128,7 @@ package loom.graphics
         public native function setUniform3i(location:Number, v0:Number, v1:Number, v2:Number);
 
         /**
-          * Sets one 'ivec3' uniform
+          * Sets and array of 'ivec3' uniforms. value size must me a multiple of 3
           */
         public native function setUniform3iv(location:Number, value:Vector.<Number>);
 

@@ -279,16 +279,6 @@ package loom2d.display
          *  affect the rendering. (Most developers don't have to care, though.) */
         public function get premultipliedAlpha():Boolean { return mVertexData.premultipliedAlpha; }
 
-        private native function getShader():Shader;
-        private native function setShader(shader:Shader):void;
-        public function get shader():Shader
-        {
-            return getShader();
-        }
-
-        public function set shader(sh:Shader):void
-        {
-            setShader(sh);
-        }
+        public native var shader:Shader;
     }
 }

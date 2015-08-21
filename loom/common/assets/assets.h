@@ -147,6 +147,8 @@ int loom_asset_subscribe(const char *name, LoomAssetChangeCallback cb, void *pay
 void loom_asset_notifySubscribers(const char *name);
 int loom_asset_unsubscribe(const char *name, LoomAssetChangeCallback cb, void *payload);
 
+void *loom_asset_textDeserializer(void *ptr, size_t size, LoomAssetCleanupCallback *dtor);
+
 #ifdef __cplusplus
 };
 #endif

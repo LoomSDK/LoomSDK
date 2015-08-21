@@ -71,17 +71,7 @@ package loom2d.display
         private native function _addQuad(quad:Quad, modelViewMatrix:Matrix);
         private native function _updateQuad(index:int, quad:Quad, modelViewMatrix:Matrix); 
 
-        private native function getShader():Shader;
-        private native function setShader(shader:Shader):void;
-        public function get shader():Shader
-        {
-            return getShader();
-        }
-
-        public function set shader(sh:Shader):void
-        {
-            setShader(sh);
-        }
+        public native var shader:Shader;
     }
 
 }

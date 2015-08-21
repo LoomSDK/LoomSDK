@@ -279,7 +279,7 @@ static int loom_asset_textRecognizer(const char *extension)
 
 
 // "Text" file types are just loaded directly as binary safe strings.
-static void *loom_asset_textDeserializer(void *ptr, size_t size, LoomAssetCleanupCallback *dtor)
+void *loom_asset_textDeserializer(void *ptr, size_t size, LoomAssetCleanupCallback *dtor)
 {
     // Blast the bits into the asset.
     void *data = lmAlloc(gAssetAllocator, size + 1);

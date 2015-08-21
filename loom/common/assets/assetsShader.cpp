@@ -52,16 +52,8 @@
      return 0;
  }
 
- void *loom_asset_shaderDeserializer(void *buffer, size_t bufferLen, LoomAssetCleanupCallback *dtor)
- {
-     // Don't do anything, just pass the raw data on
-     dtor = nullptr;
-     return buffer;
- }
-
  void loom_asset_registerShaderAsset()
  {
-     loom_asset_registerType(LATFragmentShader, loom_asset_shaderDeserializer, loom_asset_identifyShader);
-     loom_asset_registerType(LATVertexShader, loom_asset_shaderDeserializer, loom_asset_identifyShader);
+     loom_asset_registerType(LATText, loom_asset_textDeserializer, loom_asset_identifyShader);
  }
  

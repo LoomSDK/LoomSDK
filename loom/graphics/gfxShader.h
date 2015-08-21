@@ -26,6 +26,16 @@
 
 namespace GFX {
 
+/*
+ * A class to handle custom GLSL shaders. Once constructed, they must be loaded
+ * from strings or assets. After binding uniforms should be set using 'setUniform' set
+ * of methods - this can be achieved using a delegate 'onBind'.
+ *
+ * 'mvp' and 'textureId' are automatically set by the renderer before binding.
+ *
+ * By default, Quads and QuadBatches are assigned DefaultShader.
+ */
+
 class Shader
 {
 public:
