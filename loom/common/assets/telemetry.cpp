@@ -17,6 +17,7 @@
 
 lmDefineLogGroup(gTelemetryLogGroup, "lt", true, LoomLogInfo)
 
+utString Telemetry::clientRoot;
 utByteArray Telemetry::sendBuffer;
 
 JSON Telemetry::tickValuesJSON;
@@ -154,6 +155,12 @@ int StreamDataHandler(struct mg_connection * conn, int bits, char * data, size_t
     lmAssert(client->conn == conn, "Websocket connection mismatch");
     lmAssert(client->state >= 1, "Websocket invalid state");
 
+    if (strcmp(data, "ping") != 0) {
+        const char* pong = "{ \"status\": \"pong\", \"data\": null }";
+        mg_websocket_write(conn, WEBSOCKET_OPCODE_TEXT, pong, strlen(pong));
+        return 1;
+    }
+
     fprintf(stdout, "Websocket got data:\r\n");
     fwrite(data, len, 1, stdout);
     fprintf(stdout, "\r\n\r\n");
@@ -190,11 +197,16 @@ void StreamSendAll(struct mg_context *ctx, const char *msg)
     mg_unlock_context(ctx);
 }
 
+void Telemetry::setClientRoot(const char *root)
+{
+    if (root == NULL) return;
+    clientRoot = utString(root);
+}
 
 void Telemetry::startServer()
 {
     const char * options[] = {
-        "document_root", LTS_DOCUMENT_ROOT,
+        "document_root", clientRoot.length() == 0 ? LTS_DOCUMENT_ROOT : clientRoot.c_str(),
         "listening_ports", LTS_PORT,
         0
     };
@@ -207,6 +219,8 @@ void Telemetry::startServer()
 
     /* WS site for the websocket connection */
     mg_set_websocket_handler(server, "/stream", StreamConnectHandler, StreamReadyHandler, StreamDataHandler, StreamCloseHandler, 0);
+
+    lmLog(gTelemetryLogGroup, "Loom Telemetry server listening on port %s", mg_get_option(server, "listening_ports"))
 
 }
 

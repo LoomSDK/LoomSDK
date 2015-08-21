@@ -238,6 +238,8 @@ struct TableValues
 class Telemetry
 {
 protected:
+    static utString clientRoot;
+
     static utByteArray sendBuffer;
 
     static TableValues<TickMetricValue> tickValues;
@@ -271,6 +273,7 @@ public:
     static TickMetricValue* setTickValue(const char *name, double value);
 
     static void startServer();
+    static void setClientRoot(const char *root);
     static void fileChanged(const char* path);
 
 };

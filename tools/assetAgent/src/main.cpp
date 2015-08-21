@@ -828,6 +828,8 @@ void DLLEXPORT assetAgent_run(IdleCallback idleCb, LogCallback logCb, FileChange
     gLogCallback        = logCb;
     gFileChangeCallback = changeCb;
 
+    Telemetry::setClientRoot(getenv("LoomTelemetry"));
+
     Telemetry::startServer();
 
     // Set up the log callback.
