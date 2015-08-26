@@ -332,11 +332,14 @@ public:
             return true;
         }
 
+        // Check parents.
         Type *base = baseType;
         while (base)
         {
             if (base->attr.isNativeManaged)
             {
+                // Propagate flag to this item to save on subsequent iteration.
+                attr.isNativeManaged = true;
                 return true;
             }
             base = base->baseType;
