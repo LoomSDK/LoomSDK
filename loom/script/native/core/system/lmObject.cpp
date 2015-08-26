@@ -260,6 +260,9 @@ public:
     static int _nativeDeleted(lua_State *L)
     {
         lua_rawgeti(L, 1, LSINDEXDELETEDMANAGED);
+        int r = lua_toboolean(L, -1);
+        lua_pop(L, 1);
+        lua_pushboolean(L, r);
         return 1;
     }
 
