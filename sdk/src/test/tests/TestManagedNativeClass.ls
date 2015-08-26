@@ -20,7 +20,7 @@ limitations under the License.
 
 package tests {
 
-import unittest.LegacyTest;
+import unittest.Assert;
 
 [Native(managed)]
 native class MyManagedNativeClass {
@@ -46,7 +46,7 @@ native class MyManagedNativeClass {
     public static native function createdNativeInstance():MyManagedNativeClass;
     public static native function deleteNativeInstance(instance:MyManagedNativeClass);
     
-    public var scriptString = "Hello!!!";
+    public var scriptString = "Hello, ";
 
     public function testDeleteB()
     {
@@ -56,13 +56,11 @@ native class MyManagedNativeClass {
 
     public function testDeleteA()
     {
-        LegacyTest.assert(!nativeDeleted());
+        Assert.isFalse(nativeDeleted());
         testDeleteB();
-        LegacyTest.assert(this.nativeDeleted());
-    }
-    
+        Assert.isTrue(this.nativeDeleted());
+    }   
 }
-
 
 [Native(managed)]
 final native class MyChildManagedNativeClass extends MyManagedNativeClass {
@@ -74,7 +72,7 @@ final native class MyChildManagedNativeClass extends MyManagedNativeClass {
     public static native function createMyChildManagedNativeClassNativeSide():MyChildManagedNativeClass;
     public static native function createMyChildManagedNativeClassAsMyManagedNativeClass():MyManagedNativeClass;
     
-    public var scriptStringChild = "World!!!";
+    public var scriptStringChild = "World!";
 
     public function get intProperty():int
     {
@@ -85,53 +83,45 @@ final native class MyChildManagedNativeClass extends MyManagedNativeClass {
     {
         super.intProperty = value + 2;
     }
-
-    
 }
 
-class TestManagedNativeClass extends LegacyTest
+class TestManagedNativeClass
 {
     function retrieveChild(owner:MyManagedNativeClass) {
         
-        // get the child, and make sure the script value is still valid
-        // magic! 
+        // get the child, and make sure the script value is still valid magic! 
         var child = owner.getChild();
-        log(child.scriptString);
-        log((child as MyChildManagedNativeClass).scriptStringChild);
+        Assert.equal(child.scriptString, "Hello, ");
+        Assert.equal((child as MyChildManagedNativeClass).scriptStringChild, "World!");
     }
-    
+
+    [Test]
     function test()
-    {
-        
-        var i:int;
-        
+    {        
         var instance = new MyManagedNativeClass();
 
-        assert(instance.intProperty == 101);
-        
-        assert(!instance.nativeDeleted());
-        
-        log(instance.getDescString(100));
-                
-        log(instance.getDescStringBool(true));
+        Assert.equal(instance.intProperty, 101);
+        Assert.isFalse(instance.nativeDeleted());        
+        Assert.equal(instance.getDescString(100), "100 0 0.00 0.00");                
+        Assert.equal(instance.getDescStringBool(true), "true 0 0.00 0.00");
         
         var child = new MyChildManagedNativeClass();
 
         //TODO: LOOM-1427
         //https://theengineco.atlassian.net/browse/LOOM-1427    
         //assert(child.intProperty == 102);
-                
-        log(child.getDescStringChildOverride("hello"));
+        
+        Assert.equal(child.getDescStringChildOverride("hello"), "hello 1 1.00 1.00 default string");
         
         child.intField = 3000;
         child.doubleField = 10000;
         child.stringField = "goodbye";
         
-        log(child.getDescStringBool(false));
+        Assert.equal(child.getDescStringBool(false), "false 3000 1.00 10000.00 goodbye");
         
         // note this is a native field, GC isn't holding child
         instance.child = child;
-                
+        
         child = null;
         
         // call GC, though as MyChildManagedNativeClass has a managed class in it's inheritance graph
@@ -140,14 +130,14 @@ class TestManagedNativeClass extends LegacyTest
         
         retrieveChild(instance);
         
-        log(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"));
-        log(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"));
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"), 1);
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 1);
 
         instance.child.deleteNative();        
         
         instance.deleteNative();
         
-        assert(instance.nativeDeleted());
+        Assert.isTrue(instance.nativeDeleted());
         
         
         // This will raise Access deleted managed native at: src/test/TestManagedNativeClass.ls 94
@@ -156,20 +146,20 @@ class TestManagedNativeClass extends LegacyTest
         // Console.print(instance.getDescString);
         
         
-        log(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"));
-        log(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"));
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"), 0);
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 0);
         
         var instances:Vector.<MyManagedNativeClass>  = new Vector.<MyManagedNativeClass>;
+        var i:int;
         for (i = 0; i < 1000; i++) 
             instances.push(new MyManagedNativeClass);
-            
-        log(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"));
+        
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"), 1000);
         
         while(instances.length)
-            instances.shift().deleteNative();            
+            instances.shift().deleteNative();
             
-        log(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"));
-        
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"), 0);
 
         // create 1k managed natives with a mix of script and native instantiated        
         var iv:Vector.<MyManagedNativeClass> = new Vector.<MyManagedNativeClass>();
@@ -182,48 +172,47 @@ class TestManagedNativeClass extends LegacyTest
         for (i = 0; i < MyManagedNativeClass.getNumInstances(); i++) {
             
             instance = MyManagedNativeClass.getInstance(i);
-            assert(iv[i].getNativeDebugString() == instance.getNativeDebugString(), "mismatch between script help and native returned managed");
+            Assert.equal(iv[i].getNativeDebugString(), instance.getNativeDebugString(), "mismatch between script help and native returned managed");
             
         }
         
         var testi = new MyManagedNativeClass();
         testi.stringField = "This is a test";
-        assert(testi.stringField == "This is a test");
+        Assert.equal(testi.stringField, "This is a test");
         testi.deleteNative();
                 
-        Debug.assert(Metrics.getManagedObjectCount("tests.MyManagedNativeClass") == 1024, "mismatch on MyManagedNativeClass count");
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"), 1024, "mismatch on MyManagedNativeClass count");
         
         // go through and delete random instances from C++ side (note some of these instances were created in script and some in C++
         for (i = 0; i < 512; i++) {
             MyManagedNativeClass.deleteRandomInstance();
         }
         
-        Debug.assert(Metrics.getManagedObjectCount("tests.MyManagedNativeClass") == 512, "mismatch on MyManagedNativeClass count post delete");
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"), 512, "mismatch on MyManagedNativeClass count post delete");
         
         // delete the rest
         for (i = 0; i < 512; i++) {
             MyManagedNativeClass.deleteRandomInstance();
         }
         
-        Debug.assert(Metrics.getManagedObjectCount("tests.MyManagedNativeClass") == 0, "lingering MyManagedNativeClass count post delete all");        
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"), 0, "lingering MyManagedNativeClass count post delete all");        
         
         
-        assert(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass") == 0);
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 0);
         var nativeSide = MyChildManagedNativeClass.createMyChildManagedNativeClassNativeSide();
-        assert(nativeSide.stringField == "created native side");        
+        Assert.equal(nativeSide.stringField, "created native side");        
         
         // REPRO CASE FOR LOOM
-        assert(nativeSide.scriptString == "Hello!!!");
+        Assert.equal(nativeSide.scriptString, "Hello!!!");
         
-        assert(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass") == 1);
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 1);
         
         nativeSide.deleteNative();
-        
-        
+                
         var testdowncast = MyChildManagedNativeClass.createMyChildManagedNativeClassAsMyManagedNativeClass();
-        assert(testdowncast.stringField == "created by createMyChildManagedNativeClassAsMyManagedNativeClass");
-        assert(testdowncast.getType().getName() == "MyManagedNativeClass");
-        assert(testdowncast.scriptString == "Hello!!!");
+        Assert.equal(testdowncast.stringField, "created by createMyChildManagedNativeClassAsMyManagedNativeClass");
+        Assert.equal(testdowncast.getType().getName(), "MyManagedNativeClass");
+        Assert.equal(testdowncast.scriptString, "Hello!!!");
         
         // set the script var, when we downcast below, the object initializer should
         // only be called for up to and not including the current type (if it was called it would 
@@ -232,50 +221,35 @@ class TestManagedNativeClass extends LegacyTest
         
         // native side has a MyChildManagedNativeClass instance, but we don't know about it 
         // as we have't downcasted yet
-        assert(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass") == 0);        
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 0);        
         
         var downcast = testdowncast as MyChildManagedNativeClass;
         
         // once we downcast, the managed system is updated with new RTTI
-        assert(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass") == 1);        
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 1);        
         
-        assert(downcast == testdowncast);
-        assert(downcast.stringField == "created by createMyChildManagedNativeClassAsMyManagedNativeClass");
-        assert(downcast.getType().getName() == "MyChildManagedNativeClass");
-        assert(downcast.scriptString == "Happy New Year!!!");
-        assert(downcast.scriptStringChild == "World!!!");
+        Assert.equal(downcast, testdowncast);
+        Assert.equal(downcast.stringField, "created by createMyChildManagedNativeClassAsMyManagedNativeClass");
+        Assert.equal(downcast.getType().getName(), "MyChildManagedNativeClass");
+        Assert.equal(downcast.scriptString, "Happy New Year!!!");
+        Assert.equal(downcast.scriptStringChild, "World!!!");
 
         // now that we have downcast, testdowncase will automatically be promoted to better RTTI
-        assert(testdowncast.stringField == "created by createMyChildManagedNativeClassAsMyManagedNativeClass");
-        assert(testdowncast.getType().getName() == "MyChildManagedNativeClass");
-        assert(testdowncast.scriptString == "Happy New Year!!!");
+        Assert.equal(testdowncast.stringField, "created by createMyChildManagedNativeClassAsMyManagedNativeClass");
+        Assert.equal(testdowncast.getType().getName(), "MyChildManagedNativeClass");
+        Assert.equal(testdowncast.scriptString, "Happy New Year!!!");
         
         // We can delete on the original reference
         testdowncast.deleteNative();
         
         // and the backend takes care of all the messy stuff
-        assert(Metrics.getManagedObjectCount("tests.MyManagedNativeClass") == 0);
-        assert(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass") == 0);
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"), 0);
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 0);
         
         // make sure we handle deleting this in callstack
         var testDelete = new MyManagedNativeClass;
-        testDelete.testDeleteA();
-        
+        testDelete.testDeleteA();        
     }
-    
-    function TestManagedNativeClass()
-    {
-        name = "TestManagedNativeClass";   
-        expected = EXPECTED_TEST_RESULT;
-    }    
-    
-    var EXPECTED_TEST_RESULT:String = 
-"
-100 0 0.00 0.00
-true 0 0.00 0.00
-hello 1 1.00 1.00 default string
-false 3000 1.00 10000.00 goodbye
-Hello!!! World!!! 1 1 0 0 1000 0";    
 }
 
 
