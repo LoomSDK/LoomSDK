@@ -34,6 +34,7 @@ package
         // This one is typed so it's properties are accessible
         private var brightnessShader:BrightnessShader;
 
+        [Inject]
         private var time:TimeManager;
 
         override public function run():void
@@ -85,9 +86,6 @@ package
             quad.shader = invertShader;
             stage.addChild(quad);
 
-            // For FPS independent rotation
-            time = new TimeManager();
-            time.start();
         }
 
         override public function onTick()

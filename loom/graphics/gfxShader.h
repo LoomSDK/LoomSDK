@@ -23,8 +23,51 @@
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/engine/loom2d/l2dMatrix.h"
 #include "loom/script/native/lsNativeDelegate.h"
+#include "loom/common/core/allocator_stl.h"
+
+#include <map>
+#include <memory>
+#include <string>
 
 namespace GFX {
+
+class Shader
+{
+private:
+
+    static lmMap<lmString, lmWptr<Shader>> liveShaders;
+
+public:
+
+    static void addShader(const lmString& name, lmSptr<Shader> sp);
+    static lmSptr<GFX::Shader> getShader(const lmString& name);
+    static void removeShader(const lmString& name);
+
+    static void reloadCallback(void *payload, const char *name);
+
+private:
+    GLuint id;
+    GLenum type;
+    lmString name;
+
+    char* getSourceFromAsset();
+
+public:
+
+    Shader(const lmString& name, GLuint type);
+    // Disable copy constructor
+    Shader(const Shader& copy) = delete;
+    ~Shader();
+
+    GLuint getId() const;
+    lmString getName() const;
+
+    bool load(const char* source);
+    void reload();
+
+    bool validate();
+};
+
 
 /*
  * A class to handle custom GLSL shaders. Once constructed, they must be loaded
@@ -36,18 +79,21 @@ namespace GFX {
  * By default, Quads and QuadBatches are assigned DefaultShader.
  */
 
-class Shader
+class ShaderProgram
 {
 public:
 
-    static Shader* defaultShader;
-    static Shader* getDefaultShader();
+    static lmUptr<ShaderProgram> defaultShader;
+    static ShaderProgram* getDefaultShader();
 
 protected:
 
     GLuint programId;
-    GLuint vertexShaderId;
     GLuint fragmentShaderId;
+    GLuint vertexShaderId;
+
+    lmSptr<Shader> fragmentShader;
+    lmSptr<Shader> vertexShader;
 
     GLint posAttribLoc;
     GLint posColorLoc;
@@ -57,20 +103,22 @@ protected:
     GLuint textureId;
 
     // Disable copy constructor
-    Shader(const Shader& copy);
+    ShaderProgram(const ShaderProgram& copy) = delete;
 
 public:
 
-    Shader();
-    virtual ~Shader();
+    ShaderProgram();
+    virtual ~ShaderProgram();
 
-    bool operator== (const Shader& other) const;
-    bool operator!= (const Shader& other) const;
+    bool operator== (const ShaderProgram& other) const;
+    bool operator!= (const ShaderProgram& other) const;
 
     GLuint getProgramId() const;
 
     void load(const char* vertexShaderSource, const char* fragmentShaderSource);
     void loadFromAssets(const char* vertexShaderPath, const char* fragmentShaderPath);
+    void link();
+    bool validate();
 
     GLint getUniformLocation(const char* name);
     void setUniform1f(GLint location, GLfloat v0);
@@ -85,13 +133,13 @@ public:
     int setUniform2iv(lua_State *L);
     void setUniform3i(GLint location, GLint v0, GLint v1, GLint v2);
     int setUniform3iv(lua_State *L);
-    void setUniformMatrix3f(GLint location, bool transpose, Loom2D::Matrix* value);
+    void setUniformMatrix3f(GLint location, bool transpose, const Loom2D::Matrix* value);
     int setUniformMatrix3fv(lua_State *L);
-    void setUniformMatrix4f(GLint location, bool transpose, Loom2D::Matrix* value);
+    void setUniformMatrix4f(GLint location, bool transpose, const Loom2D::Matrix* value);
     int setUniformMatrix4fv(lua_State *L);
 
-    Loom2D::Matrix getMVP() const;
-    void setMVP(Loom2D::Matrix _mvp);
+    const Loom2D::Matrix& getMVP() const;
+    void setMVP(const Loom2D::Matrix& _mvp);
 
     GLuint getTextureId() const;
     void setTextureId(GLuint _id);
@@ -101,7 +149,7 @@ public:
     LOOM_DELEGATE(onBind);
 };
 
-class DefaultShader : public Shader
+class DefaultShader : public ShaderProgram
 {
 protected:
 
@@ -111,7 +159,7 @@ GLint uMVP;
 public:
     DefaultShader();
 
-    virtual void bind();
+    void bind() override;
 };
 
 }

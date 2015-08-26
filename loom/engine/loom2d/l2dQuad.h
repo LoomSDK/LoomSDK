@@ -33,7 +33,7 @@ class Quad : public DisplayObject
 public:
 
     GFX::VertexPosColorTex quadVertices[4];
-    GFX::Shader* shader;
+    GFX::ShaderProgram* shader;
 
     bool nativeVertexDataInvalid;
     bool tinted;
@@ -44,7 +44,7 @@ public:
     {
         type = typeQuad;
         tinted = false;
-        shader = GFX::Shader::getDefaultShader();
+        shader = GFX::ShaderProgram::getDefaultShader();
     }
 
     int getNativeTextureID() const
@@ -67,12 +67,12 @@ public:
         nativeVertexDataInvalid = value;
     }
 
-    void setShader(GFX::Shader* sh)
+    void setShader(GFX::ShaderProgram* sh)
     {
         shader = sh;
     }
 
-    GFX::Shader* getShader() const
+    GFX::ShaderProgram* getShader() const
     {
         return shader;
     }

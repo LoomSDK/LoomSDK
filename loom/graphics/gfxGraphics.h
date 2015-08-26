@@ -292,64 +292,6 @@ private:
 
 };
 
-#define GFX_SHADER_CHECK(shader) \
-{ \
-        GLint status; \
-        GFX::Graphics::context()->glGetShaderiv(shader, GL_COMPILE_STATUS, &status); \
-\
-        int infoLen; \
-        GFX::Graphics::context()->glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen); \
-        GLchar* info = NULL; \
-        if (infoLen > 1) { \
-            info = (GLchar*) lmAlloc(NULL, infoLen); \
-            GFX::Graphics::context()->glGetShaderInfoLog(shader, infoLen, NULL, info); \
-        } \
-        if (status == GL_TRUE) { \
-            if (info != NULL) { \
-                lmLogInfo(gGFXLogGroup, "OpenGL shader name %d info: %s", shader, info); \
-            } else { \
-                lmLogInfo(gGFXLogGroup, "OpenGL shader name %d compilation successful", shader); \
-            } \
-        } else { \
-            if (info != NULL) { \
-                lmLogError(gGFXLogGroup, "OpenGL shader name %d error: %s", shader, info); \
-            } else { \
-                lmLogError(gGFXLogGroup, "OpenGL shader name %d error: No additional information provided.", shader); \
-            } \
-            GFX_DEBUG_BREAK \
-        } \
-        if (info != NULL) lmFree(NULL, info); \
-}
-
-#define GFX_PROGRAM_CHECK(program) \
-{ \
-        GLint status; \
-        GFX::Graphics::context()->glGetProgramiv(program, GL_LINK_STATUS, &status); \
-        \
-        int infoLen; \
-        GFX::Graphics::context()->glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLen); \
-        GLchar* info = NULL; \
-        if (infoLen > 1) { \
-            info = (GLchar*) lmAlloc(NULL, infoLen); \
-            GFX::Graphics::context()->glGetProgramInfoLog(program, infoLen, NULL, info); \
-        } \
-        if (status == GL_TRUE) { \
-            if (info != NULL) { \
-                lmLogInfo(gGFXLogGroup, "OpenGL program name %d info: %s", program, info); \
-            } else { \
-                lmLogInfo(gGFXLogGroup, "OpenGL program name %d linking successful", program); \
-            } \
-        } else { \
-            if (info != NULL) { \
-                lmLogError(gGFXLogGroup, "OpenGL program name %d error: %s", program, info); \
-            } else { \
-                lmLogError(gGFXLogGroup, "OpenGL program name %d error: No additional information provided.", program); \
-            } \
-            GFX_DEBUG_BREAK \
-        } \
-        if (info != NULL) lmFree(NULL, info); \
-} \
-
 #define GFX_FRAMEBUFFER_CHECK(framebuffer) \
 { \
     GLenum status; \

@@ -40,7 +40,7 @@ namespace GFX
 {
 lmDefineLogGroup(gGFXQuadRendererLogGroup, "GFXQuadRenderer", 1, LoomLogInfo);
 
-static Shader* sCurrentShader;
+static ShaderProgram* sCurrentShader;
 
 static GLuint sSrcBlend = GL_SRC_ALPHA;
 static GLuint sDstBlend = GL_ONE_MINUS_SRC_ALPHA;
@@ -186,7 +186,7 @@ void QuadRenderer::submit()
 }
 
 
-VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend, Shader *shader)
+VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend, ShaderProgram *shader)
 {
     LOOM_PROFILE_SCOPE(quadGetVertices);
 
@@ -242,7 +242,7 @@ VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, Textu
 }
 
 
-void QuadRenderer::batch(VertexPosColorTex *vertices, uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend, Shader *shader)
+void QuadRenderer::batch(VertexPosColorTex *vertices, uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend, ShaderProgram *shader)
 {
     LOOM_PROFILE_SCOPE(quadBatch);
 

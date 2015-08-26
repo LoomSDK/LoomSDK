@@ -351,7 +351,7 @@ public:
         return 0;
 	}
 
-	void copyToMatrix3(lmscalar* values)
+	void copyToMatrix3(lmscalar* values) const
 	{
 		values[0] = a;
 		values[1] = b;
@@ -364,7 +364,7 @@ public:
 		values[8] = 1;
 	}
 
-    void copyToMatrix3f(float* values)
+    void copyToMatrix3f(float* values) const
     {
         values[0] = (float)a;
         values[1] = (float)b;
@@ -377,7 +377,7 @@ public:
         values[8] = 1;
     }
 
-    void copyToMatrix4(lmscalar* values)
+    void copyToMatrix4(lmscalar* values) const
     {
         values[0] = a;
         values[1] = b;
@@ -397,7 +397,7 @@ public:
         values[15] = 1;
     }
 
-    void copyToMatrix4f(float* values)
+    void copyToMatrix4f(float* values) const
     {
         values[0] = (float) a;
         values[1] = (float) b;

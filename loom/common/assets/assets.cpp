@@ -41,7 +41,6 @@
 #include "loom/common/assets/assetsImage.h"
 #include "loom/common/assets/assetsSound.h"
 #include "loom/common/assets/assetsScript.h"
-#include "loom/common/assets/assetsShader.h"
 
 #include <jansson.h>
 
@@ -274,6 +273,22 @@ static int loom_asset_textRecognizer(const char *extension)
     {
         return LATText;
     }
+    if (!stricmp(extension, "vert"))
+    {
+        return LATText;
+    }
+    if (!stricmp(extension, "vsh"))
+    {
+        return LATText;
+    }
+    if (!stricmp(extension, "frag"))
+    {
+        return LATText;
+    }
+    if (!stricmp(extension, "fsh"))
+    {
+        return LATText;
+    }
     return 0;
 }
 
@@ -368,7 +383,6 @@ void loom_asset_initialize(const char *rootUri)
     loom_asset_registerImageAsset();
     loom_asset_registerSoundAsset();
     loom_asset_registerScriptAsset();
-    loom_asset_registerShaderAsset();
 
     // Listen to log and send it if we have a connection.
     loom_log_addListener(loom_asset_logListener, NULL);
@@ -1106,6 +1120,8 @@ int loom_asset_unsubscribe(const char *name, LoomAssetChangeCallback cb, void *p
 
 void loom_asset_registerType(unsigned int type, LoomAssetDeserializeCallback deserializer, LoomAssetRecognizerCallback recognizer)
 {
+    lmAssert(gAssetDeserializerMap.find(type) == UT_NPOS, "Asset type already registered!");
+
     gAssetDeserializerMap.insert(type, deserializer);
     gRecognizerList.push_back(recognizer);
 }
@@ -1158,13 +1174,13 @@ void loom_asset_supply(const char *name, void *bits, int length)
         return;
     }
 
-   // Deserialize it.
+    // Deserialize it.
     LoomAssetCleanupCallback dtor = NULL;
-   void *assetBits = loom_asset_deserializeAsset(name, type, length, bits, &dtor);
+    void *assetBits = loom_asset_deserializeAsset(name, type, length, bits, &dtor);
 
-   // Instate the asset.
-   // TODO: We can save some memory by pointing directly and not making a copy.
-   asset->instate(type, assetBits, dtor);
+    // Instate the asset.
+    // TODO: We can save some memory by pointing directly and not making a copy.
+    asset->instate(type, assetBits, dtor);
 
     // Note it's supplied so we don't flush it.
     asset->isSupplied = 1;

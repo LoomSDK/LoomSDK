@@ -24,87 +24,311 @@
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/common/assets/assets.h"
 
+#include <stdlib.h>
+
 lmDefineLogGroup(gGFXShaderLogGroup, "GFXShader", 1, LoomLogInfo);
 
-static const GFX::Shader *lastBoundShader = nullptr;
+static const GFX::ShaderProgram *lastBoundShader = nullptr;
 
+lmMap<lmString, lmWptr<GFX::Shader>> GFX::Shader::liveShaders;
 
-GFX::Shader* GFX::Shader::getDefaultShader()
+// Adds a shader to the shader map. This prevents redundant shader compilation in the future.
+void GFX::Shader::addShader(const lmString& name, lmSptr<GFX::Shader> sp)
 {
-    if (defaultShader == NULL)
-    {
-        // TODO how is this properly allocated (memory managment)
-        defaultShader = new GFX::DefaultShader();
-    }
+    lmAssert(liveShaders.count(name) == 0, "Shader %s already present in shader list", name.c_str());
 
-    return defaultShader;
+    liveShaders[name] = sp;
 }
 
-GFX::Shader::Shader()
-: programId(0)
-, vertexShaderId(0)
-, fragmentShaderId(0)
+// Looks up the shader by name. If we already have a compiled shader from the same file, return that.
+lmSptr<GFX::Shader> GFX::Shader::getShader(const lmString& name)
 {
+    if (liveShaders.count(name) != 0)
+    {
+        auto weak = liveShaders[name];
 
+        // Remove from map if it's a dead reference
+        if (weak.expired())
+        {
+            liveShaders.erase(name);
+            return nullptr;
+        }
+
+        return weak.lock();
+    }
+
+    return nullptr;
+}
+
+// This only gets called from the destructor of Shader
+// It's guaranteed that the reference will be dead
+void GFX::Shader::removeShader(const lmString& name)
+{
+    if (liveShaders.count(name) != 0)
+    {
+        liveShaders.erase(name);
+    }
+}
+
+// If _name is empty, the constructor will not compile anything.
+// In that case, load() should be called.
+GFX::Shader::Shader(const lmString& _name, GLenum _type)
+: id(0)
+, type(_type)
+, name(_name)
+{
+    lmLog(gGFXShaderLogGroup, "Creating shader %s", name.c_str());
+
+    if (name.size() > 0)
+    {
+        char* source = getSourceFromAsset();
+        loom_asset_subscribe(name.c_str(), &Shader::reloadCallback, this, false);
+        load(source);
+    }
 }
 
 GFX::Shader::~Shader()
+{
+    lmLog(gGFXShaderLogGroup, "Deleting shader %s", name.c_str());
+
+    if (id != 0)
+    {
+        GFX::GL_Context* ctx = Graphics::context();
+        ctx->glDeleteShader(id);
+    }
+
+    if (name.size() > 0)
+    {
+        loom_asset_unsubscribe(name.c_str(), &Shader::reloadCallback, this);
+        Shader::removeShader(name);
+    }
+}
+
+GLuint GFX::Shader::getId() const
+{
+    return id;
+}
+
+lmString GFX::Shader::getName() const
+{
+    if (name.size() == 0)
+    {
+        // Android NDK doesn't know std::to_string
+        // Is there no other cross-platform way?
+        static char buf[20];
+        sprintf(buf, "%d", id);
+        return buf;
+    }
+    else
+    {
+        return name;
+    }
+}
+
+
+bool GFX::Shader::load(const char* source)
+{
+    lmAssert(id == 0, "Shader already loaded, clean up first");
+
+    GFX::GL_Context* ctx = Graphics::context();
+
+    id = ctx->glCreateShader(type);
+
+    const GLchar *glsource = static_cast<const GLchar*>(source);
+    const GLint length = strlen(source);
+
+    ctx->glShaderSource(id, 1, &glsource, &length);
+    Graphics::context()->glCompileShader(id);
+
+    if (!validate())
+    {
+        ctx->glDeleteShader(id);
+        id = 0;
+        return false;
+    }
+
+    return true;
+}
+
+bool GFX::Shader::validate()
+{
+    GFX::GL_Context* ctx = GFX::Graphics::context();
+
+    GLint status;
+    ctx->glGetShaderiv(id, GL_COMPILE_STATUS, &status);
+
+    int infoLen;
+    ctx->glGetShaderiv(id, GL_INFO_LOG_LENGTH, &infoLen);
+    GLchar* info = nullptr;
+    if (infoLen > 1)
+    {
+        info = (GLchar*)lmAlloc(nullptr, infoLen);
+        ctx->glGetShaderInfoLog(id, infoLen, nullptr, info);
+    }
+
+    auto name_ = getName();
+    if (status == GL_TRUE)
+    {
+        if (info != nullptr)
+        {
+            lmLogInfo(gGFXShaderLogGroup, "OpenGL shader %s info: %s", name_.c_str(), info);
+        }
+        else
+        {
+            lmLogInfo(gGFXShaderLogGroup, "OpenGL shader %s compilation successful", name_.c_str());
+        }
+    }
+    else
+    {
+        if (info != nullptr)
+        {
+            lmLogError(gGFXShaderLogGroup, "OpenGL shader %s error: %s", name_.c_str(), info);
+        }
+        else
+        {
+            lmLogError(gGFXShaderLogGroup, "OpenGL shader %s error: No additional information provided.", name_.c_str());
+        }
+
+        GFX_DEBUG_BREAK
+
+            return false;
+    }
+
+    if (info != nullptr)
+        lmFree(nullptr, info);
+
+    return true;
+}
+
+char* GFX::Shader::getSourceFromAsset()
+{
+    void * source = loom_asset_lock(name.c_str(), LATText, 1);
+    if (source == nullptr)
+    {
+        lmLogWarn(gGFXShaderLogGroup, "Unable to lock the asset for shader %s", name.c_str());
+        return nullptr;
+    }
+    loom_asset_unlock(name.c_str());
+
+    return static_cast<char*>(source);
+}
+
+void GFX::Shader::reload()
+{
+    GFX::GL_Context* ctx = Graphics::context();
+    ctx->glDeleteShader(id);
+    id = 0;
+
+    char* source = getSourceFromAsset();
+    load(source);
+
+}
+
+void GFX::Shader::reloadCallback(void *payload, const char *name)
+{
+    Shader* sp = static_cast<Shader*>(payload);
+    sp->reload();
+}
+
+GFX::ShaderProgram* GFX::ShaderProgram::getDefaultShader()
+{
+    if (defaultShader == nullptr)
+    {
+        defaultShader = lmMakeUptr<GFX::DefaultShader>();
+    }
+
+    return defaultShader.get();
+}
+
+GFX::ShaderProgram::ShaderProgram()
+: programId(0)
+{
+
+}
+
+GFX::ShaderProgram::~ShaderProgram()
 {
     if (programId == 0)
         return;
 
     GFX::GL_Context* ctx = Graphics::context();
 
-    ctx->glDetachShader(programId, vertexShaderId);
-    ctx->glDetachShader(programId, fragmentShaderId);
+    ctx->glDetachShader(programId, vertexShader->getId());
+    ctx->glDetachShader(programId, fragmentShader->getId());
+
+    vertexShader = nullptr;
+    fragmentShader = nullptr;
 
     ctx->glDeleteProgram(programId);
 }
 
-bool GFX::Shader::operator==(const GFX::Shader& other) const
+bool GFX::ShaderProgram::operator==(const GFX::ShaderProgram& other) const
 {
     return programId == other.programId;
 }
 
-bool GFX::Shader::operator!=(const GFX::Shader& other) const
+bool GFX::ShaderProgram::operator!=(const GFX::ShaderProgram& other) const
 {
     return programId != other.programId;
 }
 
-GLuint GFX::Shader::getProgramId() const
+GLuint GFX::ShaderProgram::getProgramId() const
 {
     return programId;
 }
 
-void GFX::Shader::load(const char* vss, const char* fss)
+void GFX::ShaderProgram::load(const char* vss, const char* fss)
+{
+    vertexShader = lmMakeSptr<Shader>("", GL_VERTEX_SHADER);
+    vertexShader->load(vss);
+
+    fragmentShader = lmMakeSptr<Shader>("", GL_FRAGMENT_SHADER);
+    fragmentShader->load(fss);
+
+    link();
+}
+
+void GFX::ShaderProgram::loadFromAssets(const char* vertexShaderPath, const char* fragmentShaderPath)
+{
+    vertexShader = Shader::getShader(vertexShaderPath);
+    if (vertexShader == nullptr)
+    {
+        vertexShader = lmMakeSptr<Shader>(vertexShaderPath, GL_VERTEX_SHADER);
+        Shader::addShader(vertexShaderPath, vertexShader);
+    }
+
+    fragmentShader = Shader::getShader(fragmentShaderPath);
+    if (fragmentShader == nullptr)
+    {
+        fragmentShader = lmMakeSptr<Shader>(fragmentShaderPath, GL_FRAGMENT_SHADER);
+        Shader::addShader(fragmentShaderPath, fragmentShader);
+    }
+
+    link();
+}
+
+void GFX::ShaderProgram::link()
 {
     GFX::GL_Context* ctx = Graphics::context();
 
-    vertexShaderId = ctx->glCreateShader(GL_VERTEX_SHADER);
-    fragmentShaderId = ctx->glCreateShader(GL_FRAGMENT_SHADER);
+    lmAssert(programId == 0, "Shader program already linked, clean up first!");
 
     programId = ctx->glCreateProgram();
 
-    // Store local pointers and lengths because of the GL API
-    const GLchar *vssp = static_cast<const GLchar*>(vss);
-    const GLint vssl = strlen(vss);
-    const GLchar *fssp = static_cast<const GLchar*>(fss);
-    const GLint fssl = strlen(fss);
-
-    // Compile VS and FS
-    ctx->glShaderSource(vertexShaderId, 1, &vssp, &vssl);
-    Graphics::context()->glCompileShader(vertexShaderId);
-    GFX_SHADER_CHECK(vertexShaderId);
-
-    ctx->glShaderSource(fragmentShaderId, 1, &fssp, &fssl);
-    ctx->glCompileShader(fragmentShaderId);
-    GFX_SHADER_CHECK(fragmentShaderId);
-
     // Link the program
-    ctx->glAttachShader(programId, fragmentShaderId);
-    ctx->glAttachShader(programId, vertexShaderId);
+    ctx->glAttachShader(programId, fragmentShader->getId());
+    ctx->glAttachShader(programId, vertexShader->getId());
     ctx->glLinkProgram(programId);
-    GFX_PROGRAM_CHECK(programId);
+
+    if (!validate())
+    {
+        ctx->glDeleteProgram(programId);
+        programId = 0;
+        return;
+    }
+
+    fragmentShaderId = fragmentShader->getId();
+    vertexShaderId = vertexShader->getId();
 
     // Lookup vertex attribute array locations
     posAttribLoc = Graphics::context()->glGetAttribLocation(programId, "a_position");
@@ -112,44 +336,68 @@ void GFX::Shader::load(const char* vss, const char* fss)
     posTexCoordLoc = Graphics::context()->glGetAttribLocation(programId, "a_texcoord0");
 }
 
-void GFX::Shader::loadFromAssets(const char* vertexShaderPath, const char* fragmentShaderPath)
+
+bool GFX::ShaderProgram::validate()
 {
-    void * vertData = loom_asset_lock(vertexShaderPath, LATText, 1);
-    if (vertData == NULL)
+    GLint status;
+    GFX::Graphics::context()->glGetProgramiv(programId, GL_LINK_STATUS, &status);
+
+    int infoLen;
+    GFX::Graphics::context()->glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLen);
+    GLchar* info = nullptr;
+    if (infoLen > 1)
     {
-        lmLogWarn(gGFXShaderLogGroup, "Unable to lock the asset for shader %s", vertexShaderPath);
-        return;
+        info = (GLchar*)lmAlloc(nullptr, infoLen);
+        GFX::Graphics::context()->glGetProgramInfoLog(programId, infoLen, nullptr, info);
     }
-    loom_asset_unlock(vertexShaderPath);
 
-    void * fragData = loom_asset_lock(fragmentShaderPath, LATText, 1);
-    if (fragData == NULL)
+    if (status == GL_TRUE)
     {
-        lmLogWarn(gGFXShaderLogGroup, "Unable to lock the asset for shader %s", vertexShaderPath);
-        return;
+        if (info != nullptr)
+        {
+            lmLogInfo(gGFXShaderLogGroup, "OpenGL program name %s & %s info: %s", vertexShader->getName().c_str(), fragmentShader->getName().c_str(), info);
+        }
+        else
+        {
+            lmLogInfo(gGFXShaderLogGroup, "OpenGL program name %s & %s linking successful", vertexShader->getName().c_str(), fragmentShader->getName().c_str());
+        }
     }
-    loom_asset_unlock(vertexShaderPath);
+    else
+    {
+        if (info != NULL)
+        {
+            lmLogError(gGFXShaderLogGroup, "OpenGL program name %s & %s error: %s", vertexShader->getName().c_str(), fragmentShader->getName().c_str(), info);
+        }
+        else
+        {
+            lmLogError(gGFXShaderLogGroup, "OpenGL program name %s & %s error: No additional information provided.", vertexShader->getName().c_str(), fragmentShader->getName().c_str());
+        }
 
-    const char *vert = static_cast<char *>(vertData);
-    const char *frag = static_cast<char *>(fragData);
+        GFX_DEBUG_BREAK
 
-    load(vert, frag);
+        return false;
+    }
+    if (info != NULL)
+        lmFree(NULL, info);
+
+    return true;
 }
 
-GLint GFX::Shader::getUniformLocation(const char* name)
+
+GLint GFX::ShaderProgram::getUniformLocation(const char* name)
 {
     GFX::GL_Context* ctx = Graphics::context();
     return ctx->glGetUniformLocation(programId, name);
 }
 
-void GFX::Shader::setUniform1f(GLint location, GLfloat v0)
+void GFX::ShaderProgram::setUniform1f(GLint location, GLfloat v0)
 {
     lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
 
     Graphics::context()->glUniform1f(location, v0);
 }
 
-int GFX::Shader::setUniform1fv(lua_State *L)
+int GFX::ShaderProgram::setUniform1fv(lua_State *L)
 {
     GLint location = (GLint)lua_tonumber(L, 2);
     int length = lsr_vector_get_length(L, 3);
@@ -170,14 +418,14 @@ int GFX::Shader::setUniform1fv(lua_State *L)
     return 0;
 }
 
-void GFX::Shader::setUniform2f(GLint location, GLfloat v0, GLfloat v1)
+void GFX::ShaderProgram::setUniform2f(GLint location, GLfloat v0, GLfloat v1)
 {
     lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
 
     Graphics::context()->glUniform2f(location, v0, v1);
 }
 
-int GFX::Shader::setUniform2fv(lua_State *L)
+int GFX::ShaderProgram::setUniform2fv(lua_State *L)
 {
     lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
 
@@ -209,14 +457,14 @@ int GFX::Shader::setUniform2fv(lua_State *L)
     return 0;
 }
 
-void GFX::Shader::setUniform3f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2)
+void GFX::ShaderProgram::setUniform3f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2)
 {
     lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
 
     Graphics::context()->glUniform3f(location, v0, v1, v2);
 }
 
-int GFX::Shader::setUniform3fv(lua_State *L)
+int GFX::ShaderProgram::setUniform3fv(lua_State *L)
 {
     lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
 
@@ -246,14 +494,14 @@ int GFX::Shader::setUniform3fv(lua_State *L)
     return 0;
 }
 
-void GFX::Shader::setUniform1i(GLint location, GLint v0)
+void GFX::ShaderProgram::setUniform1i(GLint location, GLint v0)
 {
     lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
 
     Graphics::context()->glUniform1i(location, v0);
 }
 
-int GFX::Shader::setUniform1iv(lua_State *L)
+int GFX::ShaderProgram::setUniform1iv(lua_State *L)
 {
     GLint location = (GLint)lua_tonumber(L, 2);
     int length = lsr_vector_get_length(L, 3);
@@ -279,14 +527,14 @@ int GFX::Shader::setUniform1iv(lua_State *L)
     return 0;
 }
 
-void GFX::Shader::setUniform2i(GLint location, GLint v0, GLint v1)
+void GFX::ShaderProgram::setUniform2i(GLint location, GLint v0, GLint v1)
 {
     lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
 
     Graphics::context()->glUniform2i(location, v0, v1);
 }
 
-int GFX::Shader::setUniform2iv(lua_State *L)
+int GFX::ShaderProgram::setUniform2iv(lua_State *L)
 {
     lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
 
@@ -315,14 +563,14 @@ int GFX::Shader::setUniform2iv(lua_State *L)
     return 0;
 }
 
-void GFX::Shader::setUniform3i(GLint location, GLint v0, GLint v1, GLint v2)
+void GFX::ShaderProgram::setUniform3i(GLint location, GLint v0, GLint v1, GLint v2)
 {
     lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
 
     Graphics::context()->glUniform3i(location, v0, v1, v2);
 }
 
-int GFX::Shader::setUniform3iv(lua_State *L)
+int GFX::ShaderProgram::setUniform3iv(lua_State *L)
 {
     lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
 
@@ -352,7 +600,7 @@ int GFX::Shader::setUniform3iv(lua_State *L)
     return 0;
 }
 
-void GFX::Shader::setUniformMatrix3f(GLint location, bool transpose, Loom2D::Matrix* value)
+void GFX::ShaderProgram::setUniformMatrix3f(GLint location, bool transpose, const Loom2D::Matrix* value)
 {
     lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
 
@@ -361,7 +609,7 @@ void GFX::Shader::setUniformMatrix3f(GLint location, bool transpose, Loom2D::Mat
     Graphics::context()->glUniformMatrix3fv(location, 1, transpose, v);
 }
 
-int GFX::Shader::setUniformMatrix3fv(lua_State *L)
+int GFX::ShaderProgram::setUniformMatrix3fv(lua_State *L)
 {
     lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
 
@@ -394,7 +642,7 @@ int GFX::Shader::setUniformMatrix3fv(lua_State *L)
     return 0;
 }
 
-void GFX::Shader::setUniformMatrix4f(GLint location, bool transpose, Loom2D::Matrix* value)
+void GFX::ShaderProgram::setUniformMatrix4f(GLint location, bool transpose, const Loom2D::Matrix* value)
 {
     lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
 
@@ -403,7 +651,7 @@ void GFX::Shader::setUniformMatrix4f(GLint location, bool transpose, Loom2D::Mat
     Graphics::context()->glUniformMatrix4fv(location, 1, transpose, v);
 }
 
-int GFX::Shader::setUniformMatrix4fv(lua_State *L)
+int GFX::ShaderProgram::setUniformMatrix4fv(lua_State *L)
 {
     lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
 
@@ -436,27 +684,27 @@ int GFX::Shader::setUniformMatrix4fv(lua_State *L)
     return 0;
 }
 
-Loom2D::Matrix GFX::Shader::getMVP() const
+const Loom2D::Matrix& GFX::ShaderProgram::getMVP() const
 {
     return mvp;
 }
 
-void GFX::Shader::setMVP(Loom2D::Matrix mat)
+void GFX::ShaderProgram::setMVP(const Loom2D::Matrix& mat)
 {
     mvp = mat;
 }
 
-GLuint GFX::Shader::getTextureId() const
+GLuint GFX::ShaderProgram::getTextureId() const
 {
     return textureId;
 }
 
-void GFX::Shader::setTextureId(GLuint id)
+void GFX::ShaderProgram::setTextureId(GLuint id)
 {
     textureId = id;
 }
 
-void GFX::Shader::bind()
+void GFX::ShaderProgram::bind()
 {
     if (programId == 0)
     {
@@ -470,6 +718,17 @@ void GFX::Shader::bind()
     lastBoundShader = this;
 
     GFX::GL_Context* ctx = Graphics::context();
+
+    if (fragmentShaderId != fragmentShader->getId() ||
+        vertexShaderId != vertexShader->getId())
+    {
+        ctx->glDetachShader(programId, fragmentShaderId);
+        ctx->glDetachShader(programId, vertexShaderId);
+        ctx->glDeleteProgram(programId);
+        programId = 0;
+
+        link();
+    }
 
     ctx->glUseProgram(programId);
 
@@ -528,7 +787,7 @@ const char * defaultFragmentShader =
 "    gl_FragColor = v_color0 * texture2D(u_texture, v_texcoord0);    \n"
 "}                                                                   \n";
 
-GFX::Shader* GFX::Shader::defaultShader = NULL;
+lmUptr<GFX::ShaderProgram> GFX::ShaderProgram::defaultShader = nullptr;
 
 GFX::DefaultShader::DefaultShader()
 {
@@ -542,7 +801,7 @@ GFX::DefaultShader::DefaultShader()
 
 void GFX::DefaultShader::bind()
 {
-    GFX::Shader::bind();
+    GFX::ShaderProgram::bind();
 
     Graphics::context()->glUniformMatrix4fv(uMVP, 1, GL_FALSE, Graphics::getMVP());
     Graphics::context()->glUniform1i(uTexture, textureId);

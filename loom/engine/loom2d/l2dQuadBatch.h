@@ -59,7 +59,7 @@ public:
     // the native texture id used by this batch
     int nativeTextureID;
 
-    GFX::Shader *shader;
+    GFX::ShaderProgram *shader;
 
     // renders the QuadBatch
     void render(lua_State *L);
@@ -77,7 +77,7 @@ public:
         maxQuads        = 0;
         numQuads        = 0;
         nativeTextureID = -1;
-        shader = GFX::Shader::getDefaultShader();
+        shader = GFX::ShaderProgram::getDefaultShader();
     }
 
     ~QuadBatch()
@@ -99,12 +99,12 @@ public:
         nativeTextureID = value;
     }
 
-    void setShader(GFX::Shader* sh)
+    void setShader(GFX::ShaderProgram* sh)
     {
         shader = sh;
     }
 
-    GFX::Shader* getShader() const
+    GFX::ShaderProgram* getShader() const
     {
         return shader;
     }
