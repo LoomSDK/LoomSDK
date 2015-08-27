@@ -98,25 +98,22 @@ class TestManagedNativeClass
     [Test]
     function testSharedInstance()
     {
-        trace("A");
         var instance = new MyChildManagedNativeClass();
         Assert.equal(instance.scriptString, "Hello, ", "Failed to initalize simple class instance member.");
 
-        trace("B");
         var child = new MyChildManagedNativeClass();
         Assert.equal(child.scriptString, "Hello, ", "Failed to initalize subclass instance members.");
         Assert.equal((child as MyChildManagedNativeClass).scriptStringChild, "World!", "Failed to initalize downcasted instance members.");
 
         instance.child = child;
         child = null;
-        trace("C");
+
         GC.fullCollect();
-        trace("D");
+
         child = instance.getChild() as MyChildManagedNativeClass;
 
         Assert.equal(child.scriptString, "Hello, ");
         Assert.equal((child as MyChildManagedNativeClass).scriptStringChild, "World!");
-        trace("E");
 
         instance.deleteNative();
         child.deleteNative();
@@ -129,7 +126,6 @@ class TestManagedNativeClass
         Assert.equal(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"), 0);
         Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 0);
 
-        trace("A");
         var testdowncast = MyChildManagedNativeClass.createMyChildManagedNativeClassAsMyManagedNativeClass();
         Assert.equal(testdowncast.stringField, "created by createMyChildManagedNativeClassAsMyManagedNativeClass");
         Assert.equal(testdowncast.getType().getName(), "MyManagedNativeClass");
@@ -138,17 +134,13 @@ class TestManagedNativeClass
         // set the script var, when we downcast below, the object initializer should
         // only be called for up to and not including the current type (if it was called it would 
         // reset this to "Hello!!!"
-        trace("B");
         testdowncast.scriptString = "Happy New Year!!!";
         
         // native side has a MyChildManagedNativeClass instance, but we don't know about it 
         // as we have't downcasted yet
         Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 0);        
-        
-        trace("C");
-        var downcast = testdowncast as MyChildManagedNativeClass;
 
-        trace("D");
+        var downcast = testdowncast as MyChildManagedNativeClass;
 
         // once we downcast, the managed system is updated with new RTTI
         Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 1);        

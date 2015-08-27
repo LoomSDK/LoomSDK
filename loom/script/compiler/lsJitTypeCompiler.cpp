@@ -433,11 +433,17 @@ void JitTypeCompiler::generateConstructor(FunctionLiteral *function,
 
     // We don't want to call super if it's a native type, as this is handled
     // at runtime.
-    bool isSuperNative = false;
-    if(constructor->getDeclaringType() != NULL
-       && constructor->getDeclaringType()->getBaseType()
-       && constructor->getDeclaringType()->getBaseType()->isNative())
-        isSuperNative = true;
+    bool skipSuper = false;
+
+    if(constructor->getDeclaringType() == NULL
+       || constructor->getDeclaringType()->getBaseType() == NULL
+       || constructor->getDeclaringType()->getBaseType()->isNativeManaged()
+       || constructor->getDeclaringType()->getBaseType()->isNative()
+       || constructor->getDeclaringType()->getBaseType()->isInterface()
+       || constructor->getDeclaringType()->getBaseType()->getFullName() == "system.Object")
+        skipSuper = true;
+
+    //printf("Considering super for %s\n", constructor->getDeclaringType()->getFullName().c_str());
 
     // If there is no super call in this method, add it at the start so we
     // always fully initialize the class - otherwise we have to traverse
@@ -445,9 +451,13 @@ void JitTypeCompiler::generateConstructor(FunctionLiteral *function,
     if(function->isConstructor
        && function->hasSuperCall == false
        && function->isNative == false
-       && !isSuperNative
+       && skipSuper == false
        && constructor->getDeclaringType()->isPrimitive() == false)
     {
+        //printf("Generating super call to %s in constructor of %s\n",
+        //       constructor->getDeclaringType()->getBaseType() ? constructor->getDeclaringType()->getBaseType()->getFullName().c_str() : "(none)",
+        //       constructor->getDeclaringType()->getFullName().c_str());
+
         // We want to insert a call to super(); if none is present. We need
         // to pass "this" so it has an instance to operate on.
         SuperExpression *expr = new SuperExpression();

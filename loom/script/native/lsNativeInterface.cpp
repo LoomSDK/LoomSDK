@@ -130,8 +130,6 @@ void NativeTypeBase::validate(Type *type)
     mtypes.method = true;
     type->findMembers(mtypes, members);
 
-    lua_State *L = type->getAssembly()->getLuaState()->VM();
-
     for (UTsize i = 0; i < members.size(); i++)
     {
         MemberInfo *info = members.at(i);
@@ -214,7 +212,11 @@ int NativeInterface::getManagedObectCount(const char *classPath,
         Type *t = (Type *)lua_topointer(L, -1);
         lua_pop(L, 1);
 
-        if (t == type)
+        lua_rawgeti(L, -1, LSINDEXDELETEDMANAGED);
+        bool isDeleted = lua_toboolean(L, -1);
+        lua_pop(L, 1);
+
+        if (t == type && !isDeleted)
         {
             count++;
         }
@@ -409,6 +411,32 @@ void *lualoom_getnativepointer(lua_State *L, int index, bool replaceIndex, const
     return pointer;
 }
 
+#if 0
+// Dump the managed table, filtering to only show two types.
+static void lualoom_dumpmanagedtable(lua_State *L, Type *filterA, Type *filterB)
+{
+    printf("----- managed table dump -----\n");
+
+    NativeTypeBase *ntbA = NativeInterface::getNativeType(filterA);
+    NativeTypeBase *ntbB = NativeInterface::getNativeType(filterB);
+
+    lua_rawgeti(L, LUA_GLOBALSINDEX, LSINDEXMANAGEDNATIVESCRIPT);
+    lua_pushnil(L);  // first key
+    while (lua_next(L, -2) != 0)
+    {
+        Detail::UserdataPtr *ud = (Detail::UserdataPtr *)lua_topointer(L, -2);
+        if(ud->m_nativeType == ntbA || ud->m_nativeType == ntbB)
+        {
+            // uses 'key' (at index -2) and 'value' (at index -1)
+            printf("%x - %s *%x\n", ud, ud->m_nativeType->getCTypeName().c_str(), ud->getPointer());
+        }
+
+        // removes 'value'; keeps 'key' for next iteration
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
+}
+#endif
 
 void lualoom_downcastnativeinstance(lua_State *L, int instanceIdx, Type *fromType, Type *toType)
 {
@@ -417,6 +445,8 @@ void lualoom_downcastnativeinstance(lua_State *L, int instanceIdx, Type *fromTyp
     lmAssert(fromType != toType, "lualoom_downcastnativeinstance - downcasting identical type %s to type %s", fromType->getFullName().c_str(), toType->getFullName().c_str());
     lmAssert(toType->isDerivedFrom(fromType), "lualoom_downcastnativeinstance - downcasting unrelated type %s to type %s", fromType->getFullName().c_str(), toType->getFullName().c_str());
     lmAssert(!toType->isInterface() && !fromType->isInterface(), "lualoom_downcastnativeinstance - downcasting interface type in cast type %s to type %s", fromType->getFullName().c_str(), toType->getFullName().c_str());
+
+    //lualoom_dumpmanagedtable(L, fromType, toType);
 
     int top = lua_gettop(L);
 
@@ -438,7 +468,7 @@ void lualoom_downcastnativeinstance(lua_State *L, int instanceIdx, Type *fromTyp
     if (managed)
     {
         // if we're managed we need to clear original userdata
-        // from managed -> script table
+        // from managed -> script table.
         lua_rawgeti(L, LUA_GLOBALSINDEX, LSINDEXMANAGEDNATIVESCRIPT);
         lua_pushvalue(L, -2);
         lua_pushnil(L);
@@ -485,6 +515,8 @@ void lualoom_downcastnativeinstance(lua_State *L, int instanceIdx, Type *fromTyp
     }
 
     lua_settop(L, top);
+
+    //lualoom_dumpmanagedtable(L, toType, fromType);
 }
 
 
@@ -501,17 +533,18 @@ Type *lualoom_gettype(lua_State *L, const utString& fullPath)
 
 void lualoom_newnativeuserdata(lua_State *L, NativeTypeBase *nativeType, void *p)
 {
+    // In-place new the user data pointer and get a reference to it.
     new (lua_newuserdata(L, sizeof(Detail::UserdataPtr))) Detail::UserdataPtr(p);
     Detail::Userdata *ud = (Detail::Userdata *)lua_topointer(L, -1);
 
     // set the user data's native type
     ud->m_nativeType = nativeType;
 
-    // look up the classes meta table by bridge key
+    // look up the class' meta table by bridge key
     lua_rawgetp(L, LUA_REGISTRYINDEX, nativeType->getBridgeClassKey());
 
     // If this goes off it means you forgot to register the class!
-    lmAssert(lua_istable(L, -1), "unable to retrieve metatable for native class %s", nativeType->getCTypeName().c_str());
+    lmAssert(lua_istable(L, -1), "Unable to retrieve metatable for native class %s", nativeType->getCTypeName().c_str());
 
     lua_setmetatable(L, -2);
 }

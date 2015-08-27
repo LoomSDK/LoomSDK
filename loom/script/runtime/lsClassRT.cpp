@@ -74,7 +74,7 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
         // this is not the constructor, which is a method
         lua_getfield(L, -1, "__ls_instanceinitializer");
 
-        printf("Running initializer for %s\n", t->getFullName().c_str());
+        //printf("Running initializer for %s\n", t->getFullName().c_str());
 
         // call initializer on new instance.
         lua_pushvalue(L, instanceIdx);
@@ -249,7 +249,7 @@ static int lsr_classcreateinstance(lua_State *L)
     Type *nt = type->getNativeBaseType();
     if(nt)
     {
-        LSLog(LSLogError, "Creating native: %s", nt->getFullName().c_str());
+        //LSLogDebug(LSLogError, "Creating native: %s", nt->getFullName().c_str());
 
         int ntop = lua_gettop(L);
         lua_getglobal(L, "__ls_nativeclasses");
