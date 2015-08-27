@@ -237,7 +237,7 @@ void VectorRenderer::fillColor32(unsigned int argb, float a) {
 	fillColor(argb, a*ca);
 }
 
-void VectorRenderer::fillTexture(TextureID id, Loom2D::Matrix transform, bool repeat, bool smooth) {
+void VectorRenderer::fillTexture(TextureID id, Loom2D::Matrix transform, bool repeat, bool smooth, float alpha) {
 
 	TextureInfo *tinfo = Texture::getTextureInfo(id);
 
@@ -270,7 +270,7 @@ void VectorRenderer::fillTexture(TextureID id, Loom2D::Matrix transform, bool re
 	nvgTransform(nvg, (float)transform.a, (float)transform.b, (float)transform.c, (float)transform.d, (float)transform.tx, (float)transform.ty);
 
 	// Set paint
-	nvgFillPaint(nvg, nvgImagePattern(nvg, 0.f, 0.f, (float) tinfo->width, (float) tinfo->height, 0.f, nvgImage, 1.f));
+	nvgFillPaint(nvg, nvgImagePattern(nvg, 0.f, 0.f, (float) tinfo->width, (float) tinfo->height, 0.f, nvgImage, alpha));
 	
 	// Restore transform
 	nvgSetTransform(nvg, xform);
@@ -386,8 +386,8 @@ Loom2D::Rectangle VectorRenderer::textBoxBounds(VectorTextFormat* format, float 
     return Loom2D::Rectangle(xmin, ymin, xmax - xmin, ymax - ymin);
 }
 
-void VectorRenderer::svg(VectorSVG* image, float x, float y, float scale, float lineThickness) {
-	image->render(x, y, scale, lineThickness);
+void VectorRenderer::svg(VectorSVG* image, float x, float y, float scale, float lineThickness, float alpha) {
+	image->render(x, y, scale, lineThickness, alpha);
 }
 
 void VectorRenderer::deleteImages()
@@ -567,7 +567,7 @@ float VectorSVG::getWidth() const {
 float VectorSVG::getHeight() const {
 	return image == NULL ? 0.0f : image->height;
 }
-void VectorSVG::render(float x, float y, float scale, float lineThickness) {
+void VectorSVG::render(float x, float y, float scale, float lineThickness, float alpha) {
 	LOOM_PROFILE_SCOPE(vectorRenderSVG);
 
 	if (image == NULL) return;
@@ -580,7 +580,7 @@ void VectorSVG::render(float x, float y, float scale, float lineThickness) {
 		bool hasFill = false;
 		switch (fill->type) {
 			case NSVG_PAINT_COLOR:
-				VectorRenderer::fillColor32(fill->color, shape->opacity);
+				VectorRenderer::fillColor32(fill->color, shape->opacity * alpha);
 				hasFill = true;
 				break;
 			case NSVG_PAINT_NONE:
@@ -590,7 +590,7 @@ void VectorSVG::render(float x, float y, float scale, float lineThickness) {
 		bool hasStroke = false;
 		switch (stroke->type) {
 			case NSVG_PAINT_COLOR:
-				VectorRenderer::strokeColor32(stroke->color, shape->opacity);
+                VectorRenderer::strokeColor32(stroke->color, shape->opacity * alpha);
 				VectorRenderer::strokeWidth(lineThickness*shape->strokeWidth);
 				hasStroke = true;
 			default: break;
