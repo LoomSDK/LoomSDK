@@ -180,6 +180,25 @@ void loop()
         {
             IMEDelegateDispatcher::shared()->dispatchShowComposition(event.text.text, strlen(event.text.text), event.edit.start, event.edit.length);
         }
+		else if (event.type == SDL_CONTROLLERAXISMOTION)
+		{
+			stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.which);
+			stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.axis);
+			stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.value);
+			stage->_ControllerAxisMovedDelegate.invoke();
+		}
+		else if (event.type == SDL_CONTROLLERBUTTONDOWN)
+		{
+			stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.which);
+			stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.button);
+			stage->_ControllerButtonDownDelegate.invoke();
+		}
+		else if (event.type == SDL_CONTROLLERBUTTONUP)
+		{
+			stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.which);
+			stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.button);
+			stage->_ControllerButtonUpDelegate.invoke();
+		}
     }
 
     /* Tick and render Loom. */

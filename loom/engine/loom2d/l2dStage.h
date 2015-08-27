@@ -169,5 +169,8 @@ public:
     LOOM_DELEGATE(BackKey);
     LOOM_DELEGATE(ScrollWheelYMoved);
     LOOM_DELEGATE(Accelerate);
+	LOOM_DELEGATE(ControllerAxisMoved);
+	LOOM_DELEGATE(ControllerButtonDown);
+	LOOM_DELEGATE(ControllerButtonUp);
 };
 }
