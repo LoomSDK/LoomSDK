@@ -96,6 +96,29 @@ class TestManagedNativeClass
     }
 
     [Test]
+    function testSharedInstance()
+    {
+        trace("A");
+        var instance = new MyChildManagedNativeClass();
+        Assert.equal(instance.scriptString, "Hello, ", "Failed to initalize simple class instance member.");
+
+        trace("B");
+        var child = new MyChildManagedNativeClass();
+        Assert.equal(child.scriptString, "Hello, ", "Failed to initalize subclass instance members.");
+        Assert.equal((child as MyChildManagedNativeClass).scriptStringChild, "World!", "Failed to initalize downcasted instance members.");
+
+        instance.child = child;
+        child = null;
+        trace("C");
+        GC.fullCollect();
+        trace("D");
+        child = instance.getChild() as MyChildManagedNativeClass;
+
+        Assert.equal(child.scriptString, "Hello, ");
+        Assert.equal((child as MyChildManagedNativeClass).scriptStringChild, "World!");
+        trace("E");
+    }
+
     function test()
     {        
         var instance = new MyManagedNativeClass();
@@ -121,12 +144,11 @@ class TestManagedNativeClass
         
         // note this is a native field, GC isn't holding child
         instance.child = child;
-        
         child = null;
         
         // call GC, though as MyChildManagedNativeClass has a managed class in it's inheritance graph
         // system will still hold onto it
-        GC.collect();
+        GC.fullCollect();
         
         retrieveChild(instance);
         

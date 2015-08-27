@@ -256,7 +256,8 @@ public:
     }
 };
 
-// Managed native classes can be inherited and extended via LoomScript.  They can also use custom allocation/pooling systems.
+// Managed native classes can be inherited and extended via LoomScript.  They
+// can also use custom allocation/pooling systems.
 
 template<class T>
 class ManagedNativeType : public NativeType<T> {
@@ -654,24 +655,16 @@ public:
         if (toType->isDerivedFrom(fromType))
         {
             NativeTypeBase *to = getNativeType(toType);
-
             if (to->functionCast(ptr))
             {
-                if (toType->isDerivedFrom(fromType))
-                {
-                    lualoom_downcastnativeinstance(L, instanceIdx, fromType, toType);
-                    lua_pushvalue(L, instanceIdx);
-                    return true;
-                }
-
-                // this is a valid cast, we must push a new native for unmanaged
-                // in the case of unmanaged to account for new class table
-                // managed native will reuse from the managed table
-                lualoom_pushnative(L, to, ptr);
+                // Handle the downcast - we may have to initialize fields.
+                lualoom_downcastnativeinstance(L, instanceIdx, fromType, toType);
+                lua_pushvalue(L, instanceIdx);
                 return true;
             }
         }
 
+        // Cast failed, return NULL.
         lua_pushnil(L);
         return false;
     }

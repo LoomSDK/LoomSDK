@@ -381,8 +381,7 @@ void TypeCompiler::generateConstructor(FunctionLiteral *function,
 
     parList(function, true);
 
-    // Initialize our instance variables.
-    // We're solely interested in initializer expressions for non static variables
+    // Initialize our non-static instance variables.
     for (UTsize i = 0; i < cls->varDecls.size(); i++)
     {
         VariableDeclaration *v = cls->varDecls.at(i);
@@ -425,12 +424,21 @@ void TypeCompiler::generateConstructor(FunctionLiteral *function,
 
     declareLocalVariables(function);
 
+    // We don't want to call super if it's a native type, as this is handled
+    // at runtime.
+    bool isSuperNative = false;
+    if(constructor->getDeclaringType() != NULL
+       && constructor->getDeclaringType()->getBaseType()
+       && constructor->getDeclaringType()->getBaseType()->isNative())
+        isSuperNative = true;
+
     // If there is no super call in this method, add it at the start so we
     // always fully initialize the class - otherwise we have to traverse
     // it at runtime which is a performance overhead.
     if(function->isConstructor
        && function->hasSuperCall == false
        && function->isNative == false
+       && !isSuperNative
        && constructor->getDeclaringType()->isPrimitive() == false)
     {
         // We want to insert a call to super(); if none is present. We need

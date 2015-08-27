@@ -41,21 +41,23 @@ void lsr_createinstance(lua_State *L, Type *type)
 
 void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *type, int instanceIdx, Type *stopAtParentType)
 {
+    // Note the Lua stack index of the instance we are initializing.
     instanceIdx = lua_absindex(L, instanceIdx);
 
     static utStack<Type *> types;
     UTsize typesTop = types.size();
 
-    Type            *t = type;
+    Type *t = type;
     while (t)
     {
+        // Skip initializers that are NOPs.
+        if(t->hasInstanceInitializer())
+            types.push(t);
+
         if (t == stopAtParentType)
         {
             break;
         }
-        // Skip initializers that are NOPs.
-        if(t->hasInstanceInitializer())
-            types.push(t);
 
         t = t->getBaseType();
     }
@@ -72,10 +74,8 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
         // this is not the constructor, which is a method
         lua_getfield(L, -1, "__ls_instanceinitializer");
 
+        // call initializer on new instance.
         lua_pushvalue(L, instanceIdx);
-
-        // call with new instance as "this" local
-
         if (lua_pcall(L, 1, 0, 0))
         {
             LSError("Error running instance initializer for %s\n%s\n", t->getFullName().c_str(), lua_tostring(L, -1));
@@ -124,6 +124,85 @@ void lualoom_newscriptinstance_internal(lua_State *L, Type *type)
     lua_setmetatable(L, instanceIdx);
 }
 
+    void PrintTable(lua_State *L);
+
+
+    static int traceback (lua_State *L) {
+        lua_getfield(L, LUA_GLOBALSINDEX, "debug");
+        lua_getfield(L, -1, "traceback");
+        lua_call(L, 0, 1);
+        fprintf(stderr, "%s\n", lua_tostring(L, -1));
+        return 1;
+    }
+
+    static void stackDump (lua_State *L, bool recursive = false) {
+
+        printf("---- stack ---- ");
+        int i;
+        int top = lua_gettop(L);
+        for (i = 1; i <= top; i++) {  /* repeat for each level */
+            int t = lua_type(L, i);
+            switch (t) {
+
+                case LUA_TSTRING:  /* strings */
+                    printf("`%s'", lua_tostring(L, i));
+                    break;
+
+                case LUA_TBOOLEAN:  /* booleans */
+                    printf(lua_toboolean(L, i) ? "true" : "false");
+                    break;
+
+                case LUA_TNUMBER:  /* numbers */
+                    printf("%g", lua_tonumber(L, i));
+                    break;
+
+                case LUA_TTABLE:
+                    if(recursive)
+                    {
+                        lua_pushvalue(L, i);
+                        PrintTable(L);
+                        break;
+                    }
+
+                default:  /* other values */
+                    printf("%s", lua_typename(L, t));
+                    break;
+
+            }
+            printf("  ");  /* put a separator */
+        }
+        printf("=================");
+    }
+
+    void PrintTable(lua_State *L)
+    {
+        printf("{\n");
+
+        lua_pushnil(L);
+
+        while(lua_next(L, -2) != 0)
+        {
+            // Get the key as a string without disturbing it.
+            lua_pushvalue(L, -2);
+            printf("   %s = ", lua_tostring(L, -1));
+            lua_pop(L, 1);
+
+            if(lua_isstring(L, -1))
+                printf("%s\n", lua_tostring(L, -1));
+            else if(lua_isnumber(L, -1))
+                printf("%f\n", lua_tonumber(L, -1));
+            else
+            {
+                printf("%s\n", lua_typename(L, lua_type(L, -1)));
+            }
+            //else if(lua_istable(L, -1))
+            //    PrintTable(L);
+
+            lua_pop(L, 1);
+        }
+
+        printf("}\n");
+    }
 
 // class instance creator
 static int lsr_classcreateinstance(lua_State *L)
@@ -1030,6 +1109,8 @@ void lsr_classinitialize(lua_State *L, Type *type)
 
         if (!bc->load(LSLuaState::getLuaState(L)))
         {
+            // We skip initializers that do nothing to save ops, so missing byte
+            // code isn't a problem.
 /*            LSWarning("Error loading bytecode for %s:%s",
                     type->getFullName().c_str(),
                     i == 0 ?
