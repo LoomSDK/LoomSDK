@@ -50,14 +50,14 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
     Type *t = type;
     while (t)
     {
-        // Skip initializers that are NOPs.
-        if(t->hasInstanceInitializer())
-            types.push(t);
-
         if (t == stopAtParentType)
         {
             break;
         }
+
+        // Skip initializers that are NOPs.
+        if(t->hasInstanceInitializer())
+            types.push(t);
 
         t = t->getBaseType();
     }
@@ -73,6 +73,8 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
         // get the instance initializer function
         // this is not the constructor, which is a method
         lua_getfield(L, -1, "__ls_instanceinitializer");
+
+        printf("Running initializer for %s\n", t->getFullName().c_str());
 
         // call initializer on new instance.
         lua_pushvalue(L, instanceIdx);
@@ -247,7 +249,7 @@ static int lsr_classcreateinstance(lua_State *L)
     Type *nt = type->getNativeBaseType();
     if(nt)
     {
-        //LSLog(LSLogError, "Creating native: %s", t->getFullName().c_str());
+        LSLog(LSLogError, "Creating native: %s", nt->getFullName().c_str());
 
         int ntop = lua_gettop(L);
         lua_getglobal(L, "__ls_nativeclasses");
@@ -335,59 +337,67 @@ static int lsr_classcreateinstance(lua_State *L)
         lua_settop(L, ntop);
     }
 
-    // Call constructor method.
-
-    // Get the class table for the type.
-    lua_rawgeti(L, instanceIdx, LSINDEXCLASS);
-
-    const int conClsIdx = lua_gettop(L);
-
-    // Get the LSMethod for the constructor.
-    lua_getfield(L, -1, "__ls_constructor");
-
-    lmAssert(!lua_isnil(L, -1), "Failed to look up constructor for type '%s' from VM");
-
-    // Pass the instance.
-    lua_pushvalue(L, instanceIdx);
-
-    // Pass any arguments we got.
-    for (int i = 0; i < nargs; i++)
+    // Call script constructor if this isn't a native class.
+    if(type->isNative() == false)
     {
-        lua_pushvalue(L, 2 + i);
-    }
+        // Get the class table for the type.
+        lua_rawgeti(L, instanceIdx, LSINDEXCLASS);
 
-    // Grab constructor info.
-    ConstructorInfo *cinfo = type->getConstructor();
+        const int conClsIdx = lua_gettop(L);
 
-    // Deal with default arguments.
-    if (cinfo->getFirstDefaultParm() != -1)
-    {
-        const int dargs = nargs;
+        // Get the LSMethod for the constructor.
+        lua_getfield(L, -1, "__ls_constructor");
 
-        const int fidx = cinfo->getFirstDefaultParm();
-        lmAssert(fidx >= 0, "Got valid default parm index, then it was -1 on second read!");
+        lmAssert(!lua_isnil(L, -1), "Failed to look up constructor for type '%s' from VM");
 
-        if (dargs < cinfo->getNumParameters())
+        // Pass the instance.
+        lua_pushvalue(L, instanceIdx);
+
+        // Pass any arguments we got.
+        for (int i = 0; i < nargs; i++)
         {
-            lua_getfield(L, conClsIdx, "__ls_constructor__default_args");
-            lmAssert(!lua_isnil(L, -1), "Failed to get default constructor args for type '%s'", type->getFullName().c_str());
-            const int d = lua_gettop(L);
+            lua_pushvalue(L, 2 + i);
+        }
 
-            for (int i = dargs; i < cinfo->getNumParameters(); i++)
+        // Grab constructor info.
+        ConstructorInfo *cinfo = type->getConstructor();
+
+        // Deal with default arguments.
+        if (cinfo->getFirstDefaultParm() != -1)
+        {
+            const int dargs = nargs;
+
+            const int fidx = cinfo->getFirstDefaultParm();
+            lmAssert(fidx >= 0, "Got valid default parm index, then it was -1 on second read!");
+
+            if (dargs < cinfo->getNumParameters())
             {
-                lua_pushnumber(L, i);
-                lua_gettable(L, d);
-                nargs++;
-            }
+                lua_getfield(L, conClsIdx, "__ls_constructor__default_args");
+                lmAssert(!lua_isnil(L, -1), "Failed to get default constructor args for type '%s'", type->getFullName().c_str());
+                const int d = lua_gettop(L);
 
-            lua_remove(L, d);
+                for (int i = dargs; i < cinfo->getNumParameters(); i++)
+                {
+                    lua_pushnumber(L, i);
+                    lua_gettable(L, d);
+                    nargs++;
+                }
+
+                lua_remove(L, d);
+            }
+        }
+        
+        // Call the script constructor.
+        if (lua_pcall(L, nargs + 1, 0, 0))
+        {
+            LSError("ERROR constructing instance of '%s':\n%s", type->getFullName().c_str(), lua_tostring(L, -1));
         }
     }
-
-    // Call the script constructor.
-    if (lua_pcall(L, nargs + 1, 0, 0))
+    else
     {
-        LSError("ERROR constructing instance of '%s':\n%s", type->getFullName().c_str(), lua_tostring(L, -1));
+        // Call the instance initializers for this new instance rather than
+        // constructors since c'tor path will cause new instances to be created.
+        lualoom_callscriptinstanceinitializerchain_internal(L, type, instanceIdx, NULL);
     }
 
     if (profiling)

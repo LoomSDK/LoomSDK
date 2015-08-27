@@ -117,8 +117,62 @@ class TestManagedNativeClass
         Assert.equal(child.scriptString, "Hello, ");
         Assert.equal((child as MyChildManagedNativeClass).scriptStringChild, "World!");
         trace("E");
+
+        instance.deleteNative();
+        child.deleteNative();
     }
 
+    [Test]
+    function testDowncast()
+    {
+        // We should be in a clean state.
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"), 0);
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 0);
+
+        trace("A");
+        var testdowncast = MyChildManagedNativeClass.createMyChildManagedNativeClassAsMyManagedNativeClass();
+        Assert.equal(testdowncast.stringField, "created by createMyChildManagedNativeClassAsMyManagedNativeClass");
+        Assert.equal(testdowncast.getType().getName(), "MyManagedNativeClass");
+        Assert.equal(testdowncast.scriptString, "Hello, ");
+        
+        // set the script var, when we downcast below, the object initializer should
+        // only be called for up to and not including the current type (if it was called it would 
+        // reset this to "Hello!!!"
+        trace("B");
+        testdowncast.scriptString = "Happy New Year!!!";
+        
+        // native side has a MyChildManagedNativeClass instance, but we don't know about it 
+        // as we have't downcasted yet
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 0);        
+        
+        trace("C");
+        var downcast = testdowncast as MyChildManagedNativeClass;
+
+        trace("D");
+
+        // once we downcast, the managed system is updated with new RTTI
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 1);        
+        
+        Assert.equal(downcast, testdowncast);
+        Assert.equal(downcast.stringField, "created by createMyChildManagedNativeClassAsMyManagedNativeClass");
+        Assert.equal(downcast.getType().getName(), "MyChildManagedNativeClass");
+        Assert.equal(downcast.scriptString, "Happy New Year!!!");
+        Assert.equal(downcast.scriptStringChild, "World!");
+
+        // now that we have downcast, testdowncase will automatically be promoted to better RTTI
+        Assert.equal(testdowncast.stringField, "created by createMyChildManagedNativeClassAsMyManagedNativeClass");
+        Assert.equal(testdowncast.getType().getName(), "MyChildManagedNativeClass");
+        Assert.equal(testdowncast.scriptString, "Happy New Year!!!");
+        
+        // We can delete on the original reference
+        testdowncast.deleteNative();
+        
+        // and the backend takes care of all the messy stuff
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"), 0);
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 0);
+    }
+
+    [Test]
     function test()
     {        
         var instance = new MyManagedNativeClass();
@@ -155,8 +209,7 @@ class TestManagedNativeClass
         Assert.equal(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"), 1);
         Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 1);
 
-        instance.child.deleteNative();        
-        
+        instance.child.deleteNative();
         instance.deleteNative();
         
         Assert.isTrue(instance.nativeDeleted());
@@ -225,7 +278,7 @@ class TestManagedNativeClass
         Assert.equal(nativeSide.stringField, "created native side");        
         
         // REPRO CASE FOR LOOM
-        Assert.equal(nativeSide.scriptString, "Hello!!!");
+        Assert.equal(nativeSide.scriptString, "Hello, ");
         
         Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 1);
         
@@ -234,7 +287,7 @@ class TestManagedNativeClass
         var testdowncast = MyChildManagedNativeClass.createMyChildManagedNativeClassAsMyManagedNativeClass();
         Assert.equal(testdowncast.stringField, "created by createMyChildManagedNativeClassAsMyManagedNativeClass");
         Assert.equal(testdowncast.getType().getName(), "MyManagedNativeClass");
-        Assert.equal(testdowncast.scriptString, "Hello!!!");
+        Assert.equal(testdowncast.scriptString, "Hello, ");
         
         // set the script var, when we downcast below, the object initializer should
         // only be called for up to and not including the current type (if it was called it would 
@@ -246,7 +299,7 @@ class TestManagedNativeClass
         Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 0);        
         
         var downcast = testdowncast as MyChildManagedNativeClass;
-        
+
         // once we downcast, the managed system is updated with new RTTI
         Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 1);        
         
@@ -254,7 +307,7 @@ class TestManagedNativeClass
         Assert.equal(downcast.stringField, "created by createMyChildManagedNativeClassAsMyManagedNativeClass");
         Assert.equal(downcast.getType().getName(), "MyChildManagedNativeClass");
         Assert.equal(downcast.scriptString, "Happy New Year!!!");
-        Assert.equal(downcast.scriptStringChild, "World!!!");
+        Assert.equal(downcast.scriptStringChild, "World!");
 
         // now that we have downcast, testdowncase will automatically be promoted to better RTTI
         Assert.equal(testdowncast.stringField, "created by createMyChildManagedNativeClassAsMyManagedNativeClass");
