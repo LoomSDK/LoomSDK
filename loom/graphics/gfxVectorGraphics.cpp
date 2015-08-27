@@ -440,7 +440,7 @@ VectorTextFormatData::~VectorTextFormatData() {
 
 void VectorSVGData::render(VectorGraphics* g) {
 	g->flushPath();
-	VectorRenderer::svg(image, x, y, scale, lineThickness);
+	VectorRenderer::svg(image, x, y, scale, lineThickness, (float)g->alpha);
 }
 
 
@@ -520,7 +520,7 @@ void VectorGraphics::flushPath() {
 	bool fill = currentFill.active;
 	if (fill && pathDirty) {
 		if (currentFill.texture != TEXTUREINVALID) {
-			VectorRenderer::fillTexture(currentFill.texture, currentFill.transform, currentFill.repeat, currentFill.smooth);
+			VectorRenderer::fillTexture(currentFill.texture, currentFill.transform, currentFill.repeat, currentFill.smooth, (float)currentFill.alpha);
 		} else {
 			VectorRenderer::fillColor(currentFill.color, (float)currentFill.alpha);
 		}
