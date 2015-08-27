@@ -58,7 +58,7 @@ echo Checking for Visual Studio 2010...
 set KEY_NAME=%KEY_BASE%10.0
 
 reg query %KEY_NAME% /v %VALUE_NAME% > NUL 2>&1
-if %ERRORLEVEL% EQU 1 GOTO EXIT
+if %ERRORLEVEL% EQU 1 GOTO FALLBACK
 
 FOR /F "usebackq skip=2 tokens=2,*" %%A IN (`REG QUERY %KEY_NAME% /v %VALUE_NAME%`) DO (
 	set ValueValue=%%B
