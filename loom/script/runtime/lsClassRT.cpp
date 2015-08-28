@@ -126,6 +126,8 @@ void lualoom_newscriptinstance_internal(lua_State *L, Type *type)
     lua_setmetatable(L, instanceIdx);
 }
 
+#if 0
+    // useful debug stuff to be cleaned up
     void PrintTable(lua_State *L);
 
 
@@ -205,6 +207,7 @@ void lualoom_newscriptinstance_internal(lua_State *L, Type *type)
 
         printf("}\n");
     }
+#endif
 
 // class instance creator
 static int lsr_classcreateinstance(lua_State *L)
@@ -1063,7 +1066,7 @@ void lsr_classinitializestatic(lua_State *L, Type *type)
     // run the static initializer
     lua_getfield(L, clsIdx, "__ls_staticinitializer");
 
-    printf("running static initializer %s\n", type->getFullName().c_str());
+    //printf("running static initializer %s\n", type->getFullName().c_str());
 
     if (lua_pcall(L, 0, LUA_MULTRET, 0))
     {
