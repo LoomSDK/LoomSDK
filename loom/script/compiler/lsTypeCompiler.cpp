@@ -430,8 +430,6 @@ void TypeCompiler::generateConstructor(FunctionLiteral *function,
 
     if(constructor->getDeclaringType() == NULL
        || constructor->getDeclaringType()->getBaseType() == NULL
-       || constructor->getDeclaringType()->getBaseType()->isNativeManaged()
-       || constructor->getDeclaringType()->getBaseType()->isNative()
        || constructor->getDeclaringType()->getBaseType()->isInterface()
        || constructor->getDeclaringType()->getBaseType()->getFullName() == "system.Object")
         skipSuper = true;

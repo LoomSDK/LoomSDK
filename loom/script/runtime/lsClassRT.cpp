@@ -50,16 +50,16 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
     Type *t = type;
     while (t)
     {
-        if (t == stopAtParentType)
-        {
-            break;
-        }
-
         // Skip initializers that are NOPs.
         if(t->hasInstanceInitializer())
             types.push(t);
 
         t = t->getBaseType();
+
+        if (t == stopAtParentType)
+        {
+            break;
+        }
     }
 
     int top = lua_gettop(L);
@@ -74,7 +74,7 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
         // this is not the constructor, which is a method
         lua_getfield(L, -1, "__ls_instanceinitializer");
 
-        //printf("Running initializer for %s\n", t->getFullName().c_str());
+        LSLog(LSLogError, "   o initializer for %s", t->getFullName().c_str());
 
         // call initializer on new instance.
         lua_pushvalue(L, instanceIdx);
@@ -217,6 +217,8 @@ static int lsr_classcreateinstance(lua_State *L)
     // index 1 on stack is class table
     Type *type = (Type *)lua_topointer(L, lua_upvalueindex(1));
 
+    LSLog(LSLogError, "Creating instance: %s", type->getFullName().c_str());
+
     const bool profiling = LSProfiler::isEnabled();
     int memoryBeforeKB, memoryBeforeB;
     GCTracker *gct;
@@ -249,7 +251,7 @@ static int lsr_classcreateinstance(lua_State *L)
     Type *nt = type->getNativeBaseType();
     if(nt)
     {
-        //LSLogDebug(LSLogError, "Creating native: %s", nt->getFullName().c_str());
+        LSLog(LSLogError, "Creating native: %s", nt->getFullName().c_str());
 
         int ntop = lua_gettop(L);
         lua_getglobal(L, "__ls_nativeclasses");
@@ -335,10 +337,14 @@ static int lsr_classcreateinstance(lua_State *L)
         }
         
         lua_settop(L, ntop);
+
+        // Call the instance initializers for this new instance rather than
+        // constructors since c'tor path will cause new instances to be created.
+        lualoom_callscriptinstanceinitializerchain_internal(L, nt, instanceIdx, NULL);
     }
 
-    // Call script constructor if this isn't a native class.
-    if(type->isNative() == false)
+    // Call script constructor.
+    if(type)
     {
         // Get the class table for the type.
         lua_rawgeti(L, instanceIdx, LSINDEXCLASS);
@@ -386,18 +392,14 @@ static int lsr_classcreateinstance(lua_State *L)
                 lua_remove(L, d);
             }
         }
-        
+
+        LSLog(LSLogError, "   o script ctor %s", type->getFullName().c_str());
+
         // Call the script constructor.
         if (lua_pcall(L, nargs + 1, 0, 0))
         {
             LSError("ERROR constructing instance of '%s':\n%s", type->getFullName().c_str(), lua_tostring(L, -1));
         }
-    }
-    else
-    {
-        // Call the instance initializers for this new instance rather than
-        // constructors since c'tor path will cause new instances to be created.
-        lualoom_callscriptinstanceinitializerchain_internal(L, type, instanceIdx, NULL);
     }
 
     if (profiling)
@@ -1053,7 +1055,7 @@ void lsr_classinitializestatic(lua_State *L, Type *type)
     // run the static initializer
     lua_getfield(L, clsIdx, "__ls_staticinitializer");
 
-    //printf("running static initializer %s\n", type->getFullName().c_str());
+    printf("running static initializer %s\n", type->getFullName().c_str());
 
     if (lua_pcall(L, 0, LUA_MULTRET, 0))
     {
