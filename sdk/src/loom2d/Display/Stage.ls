@@ -12,6 +12,7 @@ package loom2d.display
 {    
     
     import loom.platform.LoomKeyModifier;
+	import loom2d.events.GamepadEvent;
 
     import loom2d.events.EnterFrameEvent;
     import loom2d.events.ResizeEvent;
@@ -46,6 +47,8 @@ package loom2d.display
     }
 
     delegate KeyDelegate(scancode:int, virtualKey:int, modifiers:int);
+	delegate GamepadButtonDelegate(gamepad:int, button:int);
+	//delegate GamepadAxisDelegate(gamepad:int, axis:int, value:Number);
     delegate HardwareKeyDelegate();
     delegate TouchDelegate(touchId:int, x:int, y:int);
     delegate ScrollWheelDelegate(yDelta:int);
@@ -107,6 +110,10 @@ package loom2d.display
 
         public native var onKeyUp:KeyDelegate;
         public native var onKeyDown:KeyDelegate;
+		
+		public native var onGamepadButtonDown:GamepadButtonDelegate;
+		public native var onGamepadButtonUp:GamepadButtonDelegate;
+		//public native var onGamepadAxisMoved:GamepadAxisDelegate;
 
         public native var onMenuKey:HardwareKeyDelegate;
         public native var onBackKey:HardwareKeyDelegate;
@@ -149,6 +156,10 @@ package loom2d.display
             // Handle key event dispatch.
             onKeyDown += onKeyDownHandler;
             onKeyUp += onKeyUpHandler;
+			
+			onGamepadButtonDown += onGamepadButtonDownHandler;
+			onGamepadButtonUp += onGamepadButtonUpHandler;
+			//onGamepadAxisMoved += onGamepadAxisMovedHandler;
 
             onSizeChange += onSizeChangeHandler;
 
@@ -183,6 +194,21 @@ package loom2d.display
                     (modifiers | LoomKeyModifier.ALT) != 0,
                     (modifiers | LoomKeyModifier.SHIFT) != 0 ));
         }
+		
+		protected function onGamepadButtonDownHandler(gamepad:int, button:int):void
+		{
+			broadcastEvent(new GamepadEvent(GamepadEvent.BUTTON_DOWN, gamepad, button));
+		}
+		
+		protected function onGamepadButtonUpHandler(gamepad:int, button:int):void
+		{
+			broadcastEvent(new GamepadEvent(GamepadEvent.BUTTON_UP, gamepad, button));
+		}
+		
+		/*protected function onGamepadAxisMovedHandler(gamepad:int, axis:int, value:Number):void
+		{
+			broadcastEvent(new GamepadEvent(GamepadEvent.AXIS_MOTION, gamepad, -1, axis, value));
+		}*/
 
         protected function onScrollWheelHandler(delta:Number)
         {
