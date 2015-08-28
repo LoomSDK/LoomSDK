@@ -44,7 +44,18 @@ extern "C" {
 #include "loom/script/common/lsLog.h"
 #include "loom/script/runtime/lsRuntime.h"
 
+// Compatibility to keep code similar with JIT paths.
 #define setnumV(var, val) *(var) = val;
+
+// Enable this to get verbose logging about automatic super call generation.
+//#define DEBUG_CONSTRUCTORS
+
+#ifdef DEBUG_CONSTRUCTORS
+#   define CTOR_LOG(...) printf(__VA_ARGS__);
+#else
+#   define CTOR_LOG(...)
+#endif
+
 
 namespace LS {
 
@@ -436,7 +447,7 @@ void TypeCompiler::generateConstructor(FunctionLiteral *function,
        || constructor->getDeclaringType()->getBaseType()->getFullName() == "system.Object")
         skipSuper = true;
 
-    //printf("Considering super for %s\n", constructor->getDeclaringType()->getFullName().c_str());
+    CTOR_LOG("Considering super for %s\n", constructor->getDeclaringType()->getFullName().c_str());
 
     // If there is no super call in this method, add it at the start so we
     // always fully initialize the class - otherwise we have to traverse
@@ -447,9 +458,9 @@ void TypeCompiler::generateConstructor(FunctionLiteral *function,
        && skipSuper == false
        && constructor->getDeclaringType()->isPrimitive() == false)
     {
-        //printf("Generating super call to %s in constructor of %s\n",
-        //       constructor->getDeclaringType()->getBaseType() ? constructor->getDeclaringType()->getBaseType()->getFullName().c_str() : "(none)",
-        //       constructor->getDeclaringType()->getFullName().c_str());
+        CTOR_LOG("Generating super call to %s in constructor of %s\n",
+               constructor->getDeclaringType()->getBaseType() ? constructor->getDeclaringType()->getBaseType()->getFullName().c_str() : "(none)",
+               constructor->getDeclaringType()->getFullName().c_str());
 
         // We want to insert a call to super(); if none is present. We need
         // to pass "this" so it has an instance to operate on.

@@ -28,6 +28,16 @@
 #include "loom/script/reflection/lsFieldInfo.h"
 #include "loom/common/core/performance.h"
 
+// Enable this to get verbose logging about runtime constructor and initializer
+// activity.
+//#define DEBUG_CONSTRUCTORS
+
+#ifdef DEBUG_CONSTRUCTORS
+#   define CTOR_LOG(...) LSLog(__VA_ARGS__);
+#else
+#   define CTOR_LOG(...)
+#endif
+
 namespace LS {
 static char _gLastAccessedMember[64];
 char        *gLastAccessedMember = _gLastAccessedMember;
@@ -74,7 +84,7 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
         // this is not the constructor, which is a method
         lua_getfield(L, -1, "__ls_instanceinitializer");
 
-        //LSLog(LSLogError, "   o initializer for %s", t->getFullName().c_str());
+        CTOR_LOG(LSLogError, "   o initializer for %s", t->getFullName().c_str());
 
         // call initializer on new instance.
         lua_pushvalue(L, instanceIdx);
@@ -220,7 +230,7 @@ static int lsr_classcreateinstance(lua_State *L)
     // index 1 on stack is class table
     Type *type = (Type *)lua_topointer(L, lua_upvalueindex(1));
 
-    //LSLog(LSLogError, "Creating instance: %s", type->getFullName().c_str());
+    CTOR_LOG(LSLogError, "Creating instance: %s", type->getFullName().c_str());
 
     const bool profiling = LSProfiler::isEnabled();
     int memoryBeforeKB, memoryBeforeB;
@@ -254,7 +264,7 @@ static int lsr_classcreateinstance(lua_State *L)
     Type *nt = type->getNativeBaseType();
     if(nt)
     {
-        //LSLog(LSLogError, "   o creating native: %s", nt->getFullName().c_str());
+        CTOR_LOG(LSLogError, "   o creating native: %s", nt->getFullName().c_str());
 
         int ntop = lua_gettop(L);
         lua_getglobal(L, "__ls_nativeclasses");
@@ -307,7 +317,7 @@ static int lsr_classcreateinstance(lua_State *L)
             }
         }
 
-        //LSLog(LSLogError, "   o native ctor %s", type->getFullName().c_str());
+        CTOR_LOG(LSLogError, "   o native ctor %s", type->getFullName().c_str());
 
         // Call the native constructor and note the result.
         if (lua_pcall(L, _nargs, 1, 0))
@@ -319,7 +329,7 @@ static int lsr_classcreateinstance(lua_State *L)
                                     type->getFullName().c_str());
         }
 
-        //LSLog(LSLogError, "            - done");
+        CTOR_LOG(LSLogError, "            - done");
 
         lua_rawseti(L, instanceIdx, LSINDEXNATIVE);
 
@@ -401,7 +411,7 @@ static int lsr_classcreateinstance(lua_State *L)
             }
         }
 
-        //LSLog(LSLogError, "   o script ctor %s", type->getFullName().c_str());
+        CTOR_LOG(LSLogError, "   o script ctor %s", type->getFullName().c_str());
 
         // Call the script constructor.
         if (lua_pcall(L, nargs + 1, 0, 0))
@@ -409,7 +419,7 @@ static int lsr_classcreateinstance(lua_State *L)
             LSError("ERROR constructing instance of '%s':\n%s", type->getFullName().c_str(), lua_tostring(L, -1));
         }
 
-        //LSLog(LSLogError, "            - done");
+        CTOR_LOG(LSLogError, "            - done");
 
     }
 
@@ -1066,7 +1076,7 @@ void lsr_classinitializestatic(lua_State *L, Type *type)
     // run the static initializer
     lua_getfield(L, clsIdx, "__ls_staticinitializer");
 
-    //printf("running static initializer %s\n", type->getFullName().c_str());
+    CTOR_LOG(LSLogError, "running static initializer %s\n", type->getFullName().c_str());
 
     if (lua_pcall(L, 0, LUA_MULTRET, 0))
     {

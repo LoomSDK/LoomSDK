@@ -32,13 +32,15 @@ package
     }
 
     /*
-     * Benchmark for raw field access
+     * Benchmark for to test allocation of a representative script class with
+     * some inheritance.
      */
     public class BenchmarkAllocation
     {
         public function run()
         {
             trace("Running - BenchmarkAllocation");
+
             var start = Platform.getTime();
 
             var i = 0;

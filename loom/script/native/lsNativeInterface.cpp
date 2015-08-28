@@ -411,11 +411,10 @@ void *lualoom_getnativepointer(lua_State *L, int index, bool replaceIndex, const
     return pointer;
 }
 
-#if 0
-// Dump the managed table, filtering to only show two types.
+// Dump the global table of managed instances, filtering to only show two types.
 static void lualoom_dumpmanagedtable(lua_State *L, Type *filterA, Type *filterB)
 {
-    printf("----- managed table dump -----\n");
+    LSLog(LSLogError, "----- managed table dump -----\n");
 
     NativeTypeBase *ntbA = NativeInterface::getNativeType(filterA);
     NativeTypeBase *ntbB = NativeInterface::getNativeType(filterB);
@@ -428,7 +427,7 @@ static void lualoom_dumpmanagedtable(lua_State *L, Type *filterA, Type *filterB)
         if(ud->m_nativeType == ntbA || ud->m_nativeType == ntbB)
         {
             // uses 'key' (at index -2) and 'value' (at index -1)
-            printf("%x - %s *%x\n", ud, ud->m_nativeType->getCTypeName().c_str(), ud->getPointer());
+            LSLog(LSLogError, "%x - %s *%x\n", ud, ud->m_nativeType->getCTypeName().c_str(), ud->getPointer());
         }
 
         // removes 'value'; keeps 'key' for next iteration
@@ -436,7 +435,6 @@ static void lualoom_dumpmanagedtable(lua_State *L, Type *filterA, Type *filterB)
     }
     lua_pop(L, 1);
 }
-#endif
 
 void lualoom_downcastnativeinstance(lua_State *L, int instanceIdx, Type *fromType, Type *toType)
 {
@@ -446,6 +444,10 @@ void lualoom_downcastnativeinstance(lua_State *L, int instanceIdx, Type *fromTyp
     lmAssert(toType->isDerivedFrom(fromType), "lualoom_downcastnativeinstance - downcasting unrelated type %s to type %s", fromType->getFullName().c_str(), toType->getFullName().c_str());
     lmAssert(!toType->isInterface() && !fromType->isInterface(), "lualoom_downcastnativeinstance - downcasting interface type in cast type %s to type %s", fromType->getFullName().c_str(), toType->getFullName().c_str());
 
+    // This and the one at the end of the function are useful when debugging
+    // downcast issues - you can see if erroneous instances are present in the
+    // table and if the table was modified properly. It filters to only show
+    // instances matching the types we are casting from and to.
     //lualoom_dumpmanagedtable(L, fromType, toType);
 
     int top = lua_gettop(L);
