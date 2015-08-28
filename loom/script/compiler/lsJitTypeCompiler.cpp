@@ -437,9 +437,9 @@ void JitTypeCompiler::generateConstructor(FunctionLiteral *function,
 
     if(constructor->getDeclaringType() == NULL
        || constructor->getDeclaringType()->getBaseType() == NULL
-       || constructor->getDeclaringType()->getBaseType()->isNativeManaged()
-       || constructor->getDeclaringType()->getBaseType()->isNative()
        || constructor->getDeclaringType()->getBaseType()->isInterface()
+       || (constructor->getDeclaringType()->getBaseType()->getConstructor()->isNative()
+           && constructor->getDeclaringType()->getBaseType()->getFullName() != "system.BaseDelegate")
        || constructor->getDeclaringType()->getBaseType()->getFullName() == "system.Object")
         skipSuper = true;
 
