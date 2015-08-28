@@ -4,6 +4,7 @@
 #include "loom/common/assets/assets.h"
 #include "loom/common/core/log.h"
 #include "loom/common/platform/platformThread.h"
+#include "loom/common/core/performance.h"
 
 #define LTS_DOCUMENT_ROOT "./www"
 #define LTS_PORT "8073"

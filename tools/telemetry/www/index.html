@@ -12,6 +12,7 @@
 
         <link rel="stylesheet" href="css/normalize.css">
         <link rel="stylesheet" href="semantic/dist/semantic.min.css">
+        <link rel="stylesheet" href="css/latofonts.css">
         <link rel="stylesheet" href="css/main.css">
 
         <script src="js/vendor/modernizr-2.8.3.min.js"></script>
@@ -21,7 +22,7 @@
             <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
 
-        <div class="ui borderless inverted menu">
+        <div class="ui fixed inverted menu">
             <div class="ui text">
                 <div href="#" class="header item">
                     Loom Telemetry&trade;
@@ -29,40 +30,105 @@
             </div>
         </div>
         
-        <div class="ui two column stackable grid">
-            <div class="column" style="width: 20em">
-                <div class="ui basic segment">
-                    <div class="ui two top attached buttons">
-                        <button onclick="LT.startStream()" class="ui button startStream">
-                            <i class="play icon"></i>
-                            Start
-                        </button>
-                        <button onclick="LT.stopStream()" class="ui button stopStream hidden">
-                            <i class="stop icon"></i>
-                            Stop
-                        </button>
-                    </div>
-                    <div class="ui attached segment">
-                        <div class="ui bottom attached icon label">
-                            <i class="info icon"></i>
-                            <span id="streamStatus"></span>
+        <div style="padding-top: 3em; height: 100%">
+            <div class="ui attached segment pushable">
+                <div class="ui left sidebar segment visible" style="width: 300px">
+                    <div class="ui basic segment">
+                        <div class="ui two top attached buttons">
+                            <button onclick="LT.startStream()" class="ui button startStream">
+                                <i class="play icon"></i>
+                                Start
+                            </button>
+                            <button onclick="LT.stopStream()" class="ui button stopStream hidden">
+                                <i class="stop icon"></i>
+                                Stop
+                            </button>
                         </div>
-                        <div class="ui labeled input">
-                            <div class="ui label">Tick limit</div>
-                            <input id="tickLimit" value="60" type="text" style="width: 6em">
-                        </div>
-                        <div class="ui statistics">
-                            <div class="ui statistic ticks">
-                                <div class="value">-</div>
-                                <div class="label">Ticks</div>
+                        <div class="ui attached segment">
+                            <div class="ui bottom attached icon label">
+                                <i class="info icon"></i>
+                                <span id="streamStatus"></span>
+                            </div>
+                            
+                            <div class="ui items">
+                                <div class="item">
+                                    <div class="ui tiny lowercase statistics">
+                                        <div class="statistic ticks">
+                                            <div class="value">-</div>
+                                            <div class="label">Ticks</div>
+                                        </div>
+                                        <div class="statistic pingTime">
+                                            <div class="value">-</div>
+                                            <div class="label"></div>
+                                        </div>
+                                        <div class="statistic processTime">
+                                            <div class="value">-</div>
+                                            <div class="label">Data processing time</div>
+                                        </div>
+                                        <div class="statistic unprocessed">
+                                            <div class="value">-</div>
+                                            <div class="label">Unprocessed ticks</div>
+                                        </div>
+                                        <div class="statistic displayLoad">
+                                            <div class="value">-</div>
+                                            <div class="label">Display load</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="ui checkbox">
+                                        <input id="toggleValues" type="checkbox">
+                                        <label>Show tick values</label>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="ui labeled input">
+                                        <div class="ui label">Tick limit</div>
+                                        <input id="tickLimit" type="text" style="width: 6em">
+                                    </div>
+                                </div>
+                                <div id="debugOutput" class="item">
+                                    Debug output!
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <div id="tickCharts" class="pusher" style="height: 100%">
+                </div>
             </div>
-            <div class="column">
-                <div id="tickCharts"></div>
+        </div>
+        
+        <script id="tmplTimeUnit" type="x-tmpl-mustache">
+            <div class="ui small circular {{ classes }} label">{{ name }}</div>
+        </script>
+        
+        <script id="tmplTooltip" type="x-tmpl-mustache">
+                <h3 class="ui top attached header">{{name}}</h3>
+            <div class="ui attached segment">
+                <div class="ui mini lowercase statistics">
+                    <div class="statistic">
+                        <div class="value">{{{ duration }}}</div>
+                        <div class="label">Duration</div>
+                    </div>
+                    <div class="statistic">
+                        <div class="value">{{{ enter }}}</div>
+                        <div class="label">Enter time</div>
+                    </div>
+                    <div class="statistic">
+                        <div class="value">{{{ exit }}}</div>
+                        <div class="label">Exit time</div>
+                    </div>
+                    <div class="statistic">
+                        <div class="value">{{ children }}</div>
+                        <div class="label">Child{{ childrenPlural }}</div>
+                    </div>
+                </div>
             </div>
+        </script>
+
+        <div id="tooltip" class="unselectable">
+            Hmm!
         </div>
         
         <!--<table id="tickMetrics" />-->
@@ -72,6 +138,8 @@
         <script src="js/plugins.js"></script>
         <script src="semantic/dist/semantic.min.js" type="text/javascript"></script>
         <script src="js/vendor/d3.js" type="text/javascript"></script>
+        <script src="js/vendor/signals.min.js" type="text/javascript"></script>
+        <script src="js/vendor/mustache.min.js" type="text/javascript"></script>
         <script src="js/main.js"></script>
         
         <!-- Google Analytics: change UA-XXXXX-X to be your site's ID.

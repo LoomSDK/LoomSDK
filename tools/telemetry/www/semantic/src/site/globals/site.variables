@@ -1,3 +1,6 @@
 /*******************************
      User Global Variables
 *******************************/
+
+@fontName          : 'LatoWeb';
+@importGoogleFonts : false;

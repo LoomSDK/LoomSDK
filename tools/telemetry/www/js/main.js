@@ -3,21 +3,21 @@ var colors = ["#611824", "#C12F2A", "#FF6540", "#FEDE7B", "#F7FFEE"];
 var invertGraph = true;
 
 var timeInitRange = 20e6;
-var tickInitNum = 60;
+var tickInitNum = 300;
+
+var tickLimit = tickInitNum;
+var tickShowValues = false;
 
 var tickOffset = 0;
 var chartOffset = 0.0;
 var tickNum = tickInitNum;
 var tickNumF = tickInitNum;
 
-var minTime = 0;
-var maxTime = 0;
-
 var innerChartWidth = 0;
 var expectedBarWidth = 0;
 var chartWidthExtension = 0;
-var barXZoomMaxed = false;
 
+var Signal = signals.Signal;
 
 var LT = {
     startStream: function() {
@@ -29,11 +29,47 @@ var LT = {
 }
 
 function initTelemetry() {
+    var elem;
+    elem = $("#tickLimit");
+    elem.val(tickLimit);
+    elem.blur(updateTickLimit);
+    elem.keyup(function(e) {
+        // On enter
+        if (e.keyCode == 13) { updateTickLimit(); }
+    })
+    
+    elem = $("#toggleValues");
+    elem.prop("checked", tickShowValues);
+    elem.change(function() {
+        tickShowValues = $("#toggleValues").prop("checked");
+        Telemetry.tickValues.updateCommon(Telemetry.tickChart);
+        Telemetry.tickBars.updateCommon(Telemetry.tickChart);
+        Telemetry.tickChart.resize();
+    })
+    
     Telemetry.stream = new TStream();
-    Telemetry.tickValues = new TickValues(ChartCommon);
-    Telemetry.tickBars = new TickBars(ChartCommon);
-    Telemetry.stream.messageCallback = Telemetry.tickBars.handleMessage;
+    Telemetry.tickChart = new ChartCommon();
+    Telemetry.processor = new TelemetryProcessor(Telemetry.tickChart);
+    Telemetry.tickValues = new TickValues(Telemetry.tickChart);
+    Telemetry.tickBars = new TickBars(Telemetry.tickChart);
+    
+    Telemetry.tickChart.tickViewChanged.add(Telemetry.processor.updateTickView);
+    Telemetry.tickChart.tickViewChanged.add(Telemetry.tickBars.updateTickView);
+    Telemetry.tickChart.tickViewChanged.add(Telemetry.tickValues.updateTickView);
+    
+    Telemetry.stream.messageCallback = Telemetry.processor.handleMessage;
     Telemetry.stream.showStatus("Ready");
+    
+    Telemetry.stream.start();
+}
+
+function updateTickLimit() {
+    var limit = Number($("#tickLimit").val());
+    if (!isNaN(limit)) tickLimit = limit;
+}
+
+function destroyTelemetry() {
+    if (Telemetry.stream) Telemetry.stream.close();
 }
 
 var Telemetry = {
@@ -41,71 +77,203 @@ var Telemetry = {
     valueDomains: null,
     filteredTicks: null,
     stream: null,
+    processor: null,
+    tickChart: null,
     tickValues: null,
     tickBars: null,
     
-    statTicks: $(".ui.statistic.ticks .value"),
+    statTicks: $(".statistic.ticks .value"),
     //statPingTime: $(".ui.statistic.pingTime .value"),
     updateStats: function() {
         Telemetry.statTicks.text(Telemetry.ticks.length);
         //Telemetry.statPingTime.text(Telemetry.stream.pingTime+"ms");
-    }
+    },
+    
+    getTimeFromNano: function(nano) {
+        if (nano < 1e3) return nano.toFixed(2)+"ns";
+        if (nano < 1e6) return (nano * 1e-3).toFixed(2)+"\u00B5s";
+        return (nano * 1e-6).toFixed(2)+"ms";
+    },
+    
+    timeUnitLabels: {
+        milliseconds: Mustache.render(d3.select("#tmplTimeUnit").html(), { name: "ms", classes: "teal" }),
+        microseconds: Mustache.render(d3.select("#tmplTimeUnit").html(), { name: "\u00B5s", classes: "yellow" }),
+        nanoseconds: Mustache.render(d3.select("#tmplTimeUnit").html(), { name: "ns", classes: "orange" }),
+    },
+    
+    getTimeLabelFromNano: function(nano) {
+        if (nano < 1e3) return nano.toFixed(2)+Telemetry.timeUnitLabels.nanoseconds;
+        if (nano < 1e6) return (nano * 1e-3).toFixed(2)+Telemetry.timeUnitLabels.microseconds;
+        return (nano * 1e-6).toFixed(2)+Telemetry.timeUnitLabels.milliseconds;
+    },
     
 };
 
-var ChartCommon = (function() {
-    var t = {};
+function ChartCommon() {
     
-    t.margin = {top: 20, right: 70, bottom: 60, left: 80};
-    t.width = 960 - t.margin.left - t.margin.right;
-    t.height = 700 - t.margin.top - t.margin.bottom;
+    this.tickViewChanged = new Signal();
+    this.resized = new Signal();
     
-    t.timePos = 0;
-    t.timeRange = timeInitRange;
+    this.margin = {
+        top: 40,
+        right: 0,
+        rightWithValues: 340,
+        rightWithoutValues: 300,
+        bottom: 80,
+        left: 130
+    };
+    this.width = 0;
+    this.height = 0;
+    
+    this.topChartRatio = 0.3;
+    
+    this.timePos = 0;
+    this.timeRange = timeInitRange;
 
-    t.padding = 10;
-    t.spacing = 0.1;
+    this.padding = 10;
+    this.collapseSpacingWidth = 10;
+    this.collapsedSpacing = 0;
+    this.separatedSpacing = 0.1;
     
-    t.x = d3.scale.ordinal()
-        .rangeRoundBands([t.padding, t.width-t.padding*2], t.spacing);
+    this.x = d3.scale.ordinal()
     
-    t.vx = d3.scale.linear()
+    this.vx = d3.scale.linear()
         .domain([0, tickInitNum])
-        .range([0, t.width])
     
-    t.y = d3.scale.linear()
-        .range([t.height, 0])
+    this.y = d3.scale.linear()
+        
+    this.minTime = Infinity;
+    this.maxTime = -Infinity;
     
-    if (invertGraph) t.y.domain([t.timePos + t.timeRange, t.timePos]); else t.y.domain([t.timePos, t.timePos + t.timeRange]);
-
+    this.xZoom = d3.behavior.zoom()
+    this.xDirty = false;
     
-    t.chartTransition = function(transition) {
+    var ticks;
+    
+    if (invertGraph) this.y.domain([this.timePos + this.timeRange, this.timePos]); else this.y.domain([this.timePos, this.timePos + this.timeRange]);
+    
+    this.init = function() {
+        ticks = Telemetry.ticks;
+        this.xZoom.on("zoom", this.xZoomed.bind(this))
+        this.resize();
+        this.xZoom.x(this.vx)
+    }
+    
+    this.resize = function() {
+        this.margin.right = tickShowValues ? this.margin.rightWithValues : this.margin.rightWithoutValues;
+        
+        this.width = $("#tickCharts").width() - this.margin.left - this.margin.right;
+        this.height = $("#tickCharts").height() - this.margin.top - this.margin.bottom;
+        
+        //if (this.x.range().length == 0) {
+            //this.x.rangeBands([this.padding, this.width-this.padding*2], this.spacing);
+        //}
+        this.vx.range([0, this.width])
+        
+        this.xDirty = true;
+            
+        this.resized.dispatch();
+        this.updateTickView();
+    }
+    
+    this.xConstrainScale = function() {
+        var minScale = ticks.length == 0 ? Number.NEGATIVE_INFINITY : tickInitNum / ticks.length;
+        var maxScale = Number.POSITIVE_INFINITY;
+        this.xZoom.scaleExtent([minScale, maxScale]);
+    }
+    
+    this.xUpdateSize = function() {
+        var tickDomain = this.vx.domain();
+        
+        innerChartWidth = this.width - 2 * this.padding;
+        
+        tickNumF = tickDomain[1] - tickDomain[0];
+        tickNum = Math.ceil(tickNumF - 1e-6);
+        
+        this.spacing = ticks.length > 0 && innerChartWidth/tickNumF < this.collapseSpacingWidth ? this.collapsedSpacing : this.separatedSpacing;
+        
+        expectedBarWidth = innerChartWidth/(tickNumF - this.spacing + 2 * this.spacing);
+        
+        chartWidthExtension = expectedBarWidth * (tickNum - tickNumF);
+        
+        //console.log(tickDomain)
+    }
+    
+    this.xUpdatePosition = function() {
+        var tickDomain = this.vx.domain();
+        
+        tickOffset = Math.floor(tickDomain[0]);
+        chartOffset = (tickDomain[0] - tickOffset) * expectedBarWidth;
+        
+        //console.log(tickDomain, tickOffset, chartOffset)
+    }
+    
+    
+    this.xConstrainPosition = function() {
+        this.xUpdateSize();
+        
+        var trans = this.xZoom.translate();
+        var xMax = 0;
+        var xMin = -this.width/(tickNumF)*(ticks.length - tickNumF);
+        
+        var tx = trans[0];
+        var ty = trans[1];
+        
+        //console.log(tx, xMin)
+        
+        var touchingBorder = false;
+        if (tx > xMax) {
+            tx = xMax;
+            touchingBorder = true;
+        }
+        if (tx < xMin) {
+            tx = xMin - 1e-6;
+            touchingBorder = true;
+        }
+        
+        this.xZoom.translate([tx, ty]);
+        
+        this.xUpdatePosition();
+    }
+    
+    this.xUpdate = function() {
+        this.xDirty = false;
+        this.xConstrainPosition();
+        this.xConstrainScale();
+        
+        var tickPad = chartOffset-1e-3 > chartWidthExtension ? 1 : 0;
+        //console.log(chartOffset, chartWidthExtension)
+        tickNum += tickPad;
+        
+        this.x.rangeBands([-chartOffset + this.padding, -chartOffset + innerChartWidth + expectedBarWidth * (tickNum - tickNumF)], this.spacing);
+    }
+    
+    this.xZoomed = function() {
+        this.xDirty = true;
+        this.updateTickView();
+    }
+    
+    this.chartTransition = function(transition) {
         transition
             .duration(100)
             .ease(d3.ease("cubic-out"))
     }
     
-    t.textLine = function(sel, className) {
+    this.textLine = function(sel, className) {
         return sel.append("tspan")
             .attr("class", className)
             .attr("x", "0")
             .attr("dy", "1.5em")
     }
     
-    t.getBoxFitAngle = function(boxWidth, boxHeight, textLength) {
+    this.getBoxFitAngle = function(boxWidth, boxHeight, textLength) {
         if (textLength < boxWidth) return 0;
         var angle = Math.acos(Math.min(boxWidth, boxHeight)/textLength)*180/Math.PI;
         if (isNaN(angle)) angle = 90;
         return angle;
     }
     
-    t.getTimeFromNano = function(nano) {
-        if (nano < 1e3) return nano.toFixed(2)+"ns";
-        if (nano < 1e6) return (nano * 1e-3).toFixed(2)+"\u00B5s";
-        return (nano * 1e-6).toFixed(2)+"ms";
-    }
-    
-    t.updateDynamicText = function(selection, className, shouldExist, initialTransform) {
+    this.updateDynamicText = function(selection, className, shouldExist, initialTransform) {
         var text = selection.select("."+className);
         var exists = text.size() > 0;
         if (!exists && shouldExist) {
@@ -118,7 +286,8 @@ var ChartCommon = (function() {
         return text;
     }
     
-    t.filterTicks = function(axis, scale, tickSpace, tickCount) {
+    this.filterTicks = function(axis, scale, tickSpace, tickCount) {
+        
         var domain = scale.domain();
         var tickNum;
         if (!tickSpace && !tickCount) {
@@ -139,10 +308,84 @@ var ChartCommon = (function() {
         axis.tickValues(filteredDomain);
         return filteredDomain;
     }
-
     
-    return t;
-}());
+    this.updateTickView = function() {
+        this.minTime = invertGraph ? this.y.domain()[1] : this.y.domain()[0];
+        this.maxTime = invertGraph ? this.y.domain()[0] : this.y.domain()[1];
+        
+        if (this.xDirty) this.xUpdate();
+        
+        this.tickViewChanged.dispatch();
+    }
+    
+    this.updateDynamicAxis = function(svgAxis, axis) {
+        
+        this.filterTicks(axis, this.x);
+        
+        var transform;
+        switch (axis.orient()) {
+            case "bottom": transform = this.getLabelTiltTransform(axis, this.margin.bottom, 9, 0, 0, 15); break;
+            case "top":    transform = this.getLabelTiltTransform(axis, this.margin.bottom, 9, 0, 0, -15); break;
+            default: throw new Error("Axis orientation unsupported: "+axis.orient());
+        }
+        
+        axis(svgAxis)
+        //axis(svgAxis.transition().call(this.chartTransition))
+        svgAxis.selectAll("text")
+            .style("text-anchor", "middle")
+            .attr("y", 0)
+            .attr("transform", transform)
+        svgAxis.selectAll("text.label")
+            .attr("dy", 30)
+    }
+    
+    this.getLabelTiltTransform = function(axisX, height, charWidth, padding, ox, oy) {
+        var domain = this.x.domain();
+        var band = this.x.rangeBand(); 
+        
+        var crowdedRatio = domain.length / axisX.tickValues().length;
+        var longestLabel = d3.max(domain);
+        var estimatedLength = padding + charWidth*Math.LOG10E*Math.log(longestLabel);
+        
+        var angle = this.getBoxFitAngle(band*crowdedRatio, height, estimatedLength);
+        var rad = angle*Math.PI/180;
+        ox += oy*Math.sin(rad*2);
+        oy += oy*Math.sin(rad);
+        
+        var labelTransform = "translate("+ox+" "+oy+") rotate("+angle+")";
+        
+        return labelTransform;
+    }
+    
+    this.trimName = function(name, width) {
+        var split = name.split(".");
+        if (name.length <= width || split.length <= 1 || split[split.length-1].length + 3 >= name.length) {
+            return { name: name, partial: false };
+        }
+        name = split[split.length-1];
+        var fromLeft = false;
+        var left = 0;
+        var right = split.length-2;
+        var nameLeft = "";
+        var nameRight = "";
+        while (left < right && name.length + nameLeft.length + nameRight.length + split[fromLeft ? left : right].length < width) {
+            if (fromLeft) {
+                nameLeft += split[left] + ".";
+                left++;
+            } else {
+                nameRight = split[right] + "." + nameRight;
+                right--;
+            }
+            fromLeft = !fromLeft;
+        }
+        if (nameRight.length > 0) name = nameRight + name;
+        name = "&hellip;" + name;
+        if (nameLeft.length > 0) name = nameLeft.substr(0, nameLeft.length-1) + name;
+        return { name: name, partial: nameLeft.length + nameRight.length > 0 };
+    }
+    
+    this.init();
+}
 
 function TStream() {
     this.pingInterval = 2;
@@ -150,14 +393,13 @@ function TStream() {
     this.pingTime = 0;
     
     this.socket = null;
-    this.pinger = null;
+    this.pinger = -1;
     this.messageCallback = null;
     
     this.updateButtons = function() {
         var start = $(".startStream");
         var stop = $(".stopStream");
         if (this.socket != null) {
-            console.log("socket not null")
             start.addClass("hidden")
             stop.removeClass("hidden")
             if (this.socket.readyState != 1) {
@@ -166,7 +408,6 @@ function TStream() {
                 stop.removeClass("loading");
             }
         } else {
-            console.log("socket null")
             start.removeClass("hidden")
             stop.addClass("hidden")
         }
@@ -183,6 +424,7 @@ function TStream() {
         clearInterval(this.pinger);
         this.showStatus("Stopped");
     }
+    
     this.start = function() {
         this.stop();
         
@@ -191,22 +433,22 @@ function TStream() {
         
         this.showStatus("Started");
         
-        this.socket.onopen = function (e) {
+        this.socket.onopen = function streamOpen(e) {
             this.showStatus("Stream opened");
-            this.pinger = setInterval(function() { this.ping(); }.bind(this), this.pingInterval * 1000);
+            this.pinger = setInterval(function streamPing() { this.ping(); }.bind(this), this.pingInterval * 1000);
         }.bind(this);
         
-        this.socket.onclose = function (e) {
+        this.socket.onclose = function streamClose(e) {
             this.stop();
             this.showStatus("Stream closed "+(e.wasClean ? "cleanly" : "uncleanly")+" with code "+e.code+" and reason: "+e.reason);
         }.bind(this);
         
-        this.socket.onmessage = function (e) {
+        this.socket.onmessage = function streamMessage(e) {
             if (!this.messageCallback) return;
             this.messageCallback(e.data);
         }.bind(this);
         
-        this.socket.onerror = function (e) {
+        this.socket.onerror = function streamError(e) {
             this.showStatus("Stream error");
             this.socket.close();
         }.bind(this);
@@ -221,6 +463,7 @@ function TStream() {
     this.ping = function() {
         if (!this.socket || this.socket.readyState != 1) return;
         this.showStatus("Ping time: "+this.pingTime+"ms (sending...)");
+        d3.select(".statistic.pingTime .label").text("Pinging");
         this.pingStart = +new Date();
         this.socket.send("ping");
     }
@@ -228,32 +471,308 @@ function TStream() {
     this.pong = function() {
         var now = +new Date();
         this.pingTime = now - this.pingStart;
+        var sel = d3.select(".statistic.pingTime");
+        sel.select(".value").text(this.pingTime + "ms")
+        sel.select(".label").text("Ping time")
         this.showStatus("Ping time: "+this.pingTime+"ms");
     }
     
 }
 
+
+
+
+function TelemetryProcessor(initCommon) {
+    
+    this.tickAdded = new Signal();
+    
+    this.unprocessed = [];
+    this.processor = -1;
+    
+    this.timerStack = [];
+    this.totalDelta = 0;
+    
+    this.viewDirty = false;
+    this.viewUpdateTime = 0;
+    this.stepProcessed = 0;
+    
+    this.viewSkip = 0;
+    
+    this.totalDeltaHistory = [];
+    this.unprocessedHistory = [];
+    this.displayLoadHistory = [];
+    
+    this.viewSkipThreshold = 0;
+    
+    this.debug = "";
+    
+    this.init = function() {
+        if (initCommon) this.updateCommon(initCommon);
+        step.bind(this)(0);
+        resize();
+    }
+    
+    var chart;
+    var x, y, padding, width;
+    this.updateCommon = function(common) {
+        chart = common;
+        chart.resized.add(resize.bind(this))
+    }
+    function resize() {
+        var common = chart;
+        x = common.x;
+        y = common.y;
+        padding = common.padding;
+        width = common.width;
+    }
+    
+    var selProcessTime = d3.select(".statistic.processTime .value")
+    var selUnprocessed = d3.select(".statistic.unprocessed .value")
+    var selDisplayLoad = d3.select(".statistic.displayLoad .value")
+    
+    function pushTrimmed(array, length, value) {
+        array.push(value)
+        array.splice(0, array.length-length);
+    }
+    
+    function step(timestamp) {
+        //var viewSkipThreshold = (1-Math.exp(-this.unprocessed.length/20))*60; // Approach 60 skips at around 100 unprocessed
+        //this.viewSkipThreshold = this.unprocessed.length/1.5;
+        
+        this.viewUpdateTime = 0;
+        this.viewSkip++;
+        if (this.viewSkip > this.viewSkipThreshold) {
+            this.viewSkip = 0;
+            this.flushView();
+        }
+        
+        pushTrimmed(this.totalDeltaHistory, 60, this.totalDelta)
+        var totalDeltaMean = d3.mean(this.totalDeltaHistory)
+        selProcessTime.text("~" + totalDeltaMean.toFixed(2) + "ms")
+        
+        pushTrimmed(this.unprocessedHistory, 60, this.unprocessed.length)
+        selUnprocessed.text("~" + d3.mean(this.unprocessedHistory).toFixed(2))
+        
+        var viewUpdatesPerSec = 60/(1+Math.floor(this.viewSkipThreshold));
+        var viewUpdateLoad = viewUpdatesPerSec*this.viewUpdateTime/1000;
+        
+        pushTrimmed(this.displayLoadHistory, 60, viewUpdateLoad)
+        var displayLoadMean = d3.mean(this.displayLoadHistory)
+        
+        this.viewSkipThreshold = Math.max(0, this.viewSkipThreshold + (viewUpdateLoad - 1) + this.unprocessed.length/10);
+        
+        selDisplayLoad.text("~" + (displayLoadMean*100).toFixed(0) + "% " + this.viewSkipThreshold.toFixed(2))
+        
+        
+        
+        /*
+        this.debug = "Delta: " + this.totalDelta + "ms <br/>" +
+                    this.viewUpdateTime + "ms <br/>" +
+                    this.stepProcessed + "<br/>" +
+                    viewSkipThreshold + "<br/>" +
+                    this.debug;
+        
+        $("#debugOutput").html(this.debug);
+        this.debug = "";
+        */
+        
+        this.totalDelta = 0;
+        this.stepProcessed = 0;
+        
+        window.requestAnimationFrame(step.bind(this));
+    }
+    
+    this.flushView = function() {
+        if (this.viewDirty) {
+            this.viewDirty = false;
+            this.tick();
+            chart.tickViewChanged.dispatch();
+            this.viewUpdateTime = this.tock();
+        }
+    }
+    
+    this.tick = function() {
+        this.timerStack.push(+(new Date()));
+    }
+    
+    this.tock = function() {
+        var delta = (+new Date()) - this.timerStack.pop();
+        this.totalDelta += delta;
+        return delta;
+    }
+    
+    this.handleMessage = function(msg) {
+        this.tick();
+        var m = JSON.parse(msg);
+        switch (m.status) {
+            case "success":
+                this.addUnprocessed(m.data);
+                break;
+            case "pong":
+                Telemetry.stream.pong();
+                break;
+            default:
+                console.log("Result "+m.status+": "+m);
+        }
+        this.tock();
+    }.bind(this)
+    
+    this.addUnprocessed = function(json) {
+        this.unprocessed.push(json);
+        //console.log("Pushed, " + this.unprocessed.length)
+        this.processTick();
+    }
+    
+    this.processTick = function() {
+        var processed = 0;
+        var budget = 14;
+        while (this.stepProcessed == 0 || this.totalDelta < budget - this.viewUpdateTime) {
+            if (this.unprocessed.length <= 0) {
+                break;
+            }
+            this.tick();
+            var json = this.unprocessed.shift();
+            this.addTick(json);
+            this.tock();
+            processed++;
+            this.stepProcessed++;
+        }
+        
+        if (this.unprocessed.length <= 0) {
+            if (this.processor != -1) clearInterval(this.processor);
+            this.processor = -1;
+        } else {
+            if (this.processor == -1) {
+                this.processor = setInterval(function() { this.processTick(); }.bind(this), 10);
+            }
+        }
+        
+        this.debug += "Processed: " + processed + "  Pending: " + this.unprocessed.length + "<br/>";
+        
+        //console.log("Processed: " + processed + "  Pending: " + this.unprocessed.length);
+    }
+    
+    this.addTick = function(tick) {
+        this.tick();
+        this.viewDirty = true;
+        var newTick = {
+            id: tick.values["tickId"],
+            values: tick.values,
+            metrics: tick.ranges,
+            visibleMetrics: null,
+            maxLevel: 0,
+            sectionsVisible: false
+        };
+        Telemetry.ticks.push(newTick);
+        
+        if (!isNaN(tickLimit) && Telemetry.ticks.length > tickLimit) Telemetry.ticks.splice(0, Telemetry.ticks.length - tickLimit);
+        
+        updateMaxLevel(newTick);
+        sortMetrics(newTick);
+        this.tickAdded.dispatch(newTick);
+        Telemetry.updateStats();
+        this.tock();
+        
+        //if (Telemetry.ticks.length >= tickInitNum) Telemetry.stream.stop();
+    }
+    
+    function updateMaxLevel(tick) {
+        tick.maxLevel = d3.max(tick.metrics, function(metric) { return metric.level; });
+    }
+    
+    function sortMetrics(tick) {
+        tick.metrics = tick.metrics.sort(function(a, b) {
+            if (a.level < b.level) return -1;
+            if (a.level > b.level) return 1;
+            if (a.sibling < b.sibling) return -1;
+            if (a.sibling > b.sibling) return 1;
+            return 0;
+        });
+    }
+    
+    function cullMetrics(tick) {
+        var lx = x(tick.id);
+        var rx = lx + x.rangeBand();
+        
+        lx = Math.max(padding, lx);
+        rx = Math.min(width, rx);
+        
+        var visibleWidth = rx-lx;
+        
+        tick.sectionsVisible = visibleWidth > 300;
+        if (tick.sectionsVisible) {
+            var minTime = chart.minTime;
+            var maxTime = chart.maxTime;
+            tick.visibleMetrics = tick.metrics.filter(function(metric, index, metrics) {
+                if (metric.a > maxTime || metric.b < minTime) return false;
+                if (y(metric.b) - y(metric.a) < 1) return false;
+                return true;
+            })
+        } else {
+            tick.visibleMetrics = tick.metrics.length > 0 ? [tick.metrics[0]] : [];
+        }
+        return tick;
+    }
+    
+    this.updateTickView = updateTickView;
+    function updateTickView() {
+        var ticks = Telemetry.ticks;
+        
+        var sliceStart = Math.max(0, tickOffset)
+        var sliceEnd = Math.min(ticks.length, tickOffset + tickNum)
+        var slicedTicks = ticks.slice(sliceStart, sliceEnd)
+        
+        //console.log(tickOffset, tickNum, sliceStart, sliceEnd)
+        
+        x.domain(slicedTicks.map(function(tick) {
+            return tick.id;
+        }));
+        
+        Telemetry.filteredTicks = slicedTicks.map(cullMetrics);
+        
+    }
+    
+    this.init();
+}
+    
+    
+    
+    
+    
 function TickValues(initCommon) {
 
     var map;
     var domains;
+    var ticksDirty = false;
+    
     this.init = function() {
         if (initCommon) this.updateCommon(initCommon);
+        Telemetry.processor.tickAdded.add(this.onTickAdded);
+        resize();
     }
     
+    var chart;
     var width, height, margin, x, y;
+    
     this.updateCommon = function(common) {
+        chart = common;
+        chart.resized.add(resize.bind(this))
+    }
+    
+    function resize() {
+        svgRoot.style("display", tickShowValues ? "block" : "none")
         
-        width = common.width;
-        height = 300;
+        width = chart.width;
+        height = chart.height * chart.topChartRatio;
+        
         margin = {
-            left: common.margin.left,
-            right: common.margin.right,
-            top: 50,
-            bottom: common.margin.bottom
+            left: chart.margin.left,
+            right: chart.margin.right,
+            top: 70,
+            bottom: 0
         };
-        x = common.x;
-        y = common.y;
+        x = chart.x;
+        y = chart.y;
         
         svgRoot
             .attr("width", width + margin.left + margin.right)
@@ -298,6 +817,7 @@ function TickValues(initCommon) {
     }
     
     function updateValueMap(ticks) {
+        if (!domains) throw new Error("Unable to update value map with undefined domains")
         var valueMapLen = 0;
         map = d3.map();
         // Gather keys
@@ -340,20 +860,31 @@ function TickValues(initCommon) {
             // Discretize to powers of 2
             var delta = entry.domain[1] - entry.domain[0];
             var sign = delta < 0 ? -1 : 1;
-            entry.domain[1] = entry.domain[0] + Math.pow(2, Math.ceil(Math.log2(delta*sign)))*sign;
+            entry.domain[1] = entry.domain[0] + Math.pow(2, Math.ceil(Math.LOG2E*Math.log(delta*sign)))*sign;
             
             entry.scale.domain(entry.domain)
         })
     }
     
+    this.onTickAdded = function(tick) {
+        this.updateTicks();
+    }.bind(this)
+    
     this.updateTicks = function() {
+        ticksDirty = true;
+        if (!tickShowValues) return;
         updateDomains(Telemetry.ticks);
-        
-        this.updateTickView();
+        ticksDirty = false;
     }
     
     this.updateTickView = function() {
-        updateAxes();
+        console.log(tickShowValues, domains, ticksDirty)
+        if (!tickShowValues) return;
+        if (!domains && ticksDirty) this.updateTicks();
+        if (!domains) return;
+        
+        axisX.scale(x);
+        chart.updateDynamicAxis(svgAxisX, axisX);
         
         updateValueMap(Telemetry.filteredTicks)
         
@@ -417,7 +948,7 @@ function TickValues(initCommon) {
             })
         
         svgLine.select(".y.axis").each(function(entry, index) {
-            var svgAxisY = d3.select(this).transition()
+            var svgAxisY = d3.select(this).transition().call(chart.chartTransition)
                 .attr("transform", "translate("+width+", 0)")
                 
             entry.scale.range([laneBand, 0])
@@ -428,7 +959,7 @@ function TickValues(initCommon) {
             entry.scale.range([1, 0])
         })
         
-        svgLine.select(".valueBoundBottom").transition()
+        svgLine.select(".valueBoundBottom").transition().call(chart.chartTransition)
             .attr("x1", 0)
             .attr("y1", laneBand)
             .attr("x2", width)
@@ -441,7 +972,7 @@ function TickValues(initCommon) {
                 return entry.name
             })
             
-        svgLine.select(".valueCurrent").transition()
+        svgLine.select(".valueCurrent").transition().call(chart.chartTransition)
             .attr("x", function(entry) {
                 return x(entry.values[entry.values.length-1][0])
             })
@@ -460,26 +991,7 @@ function TickValues(initCommon) {
                 })(entry.values);
             })
         
-    }
-    
-    function updateAxes() {
-        
-        axisX.scale(x);
-        var crowdedRatio = x.domain().length / ChartCommon.filterTicks(axisX, x).length;
-        
-        //axisY.scale(y);
-        svgAxisX.call(axisX).selectAll("text")
-            .style("text-anchor", "middle")
-            .attr("dx", "0em")
-            .attr("dy", "0em")
-            .attr("transform", function(data) {
-                var angle = ChartCommon.getBoxFitAngle(x.rangeBand()*crowdedRatio, margin.top, 5 + this.getComputedTextLength());
-                var offset = -17*Math.sin(angle*Math.PI/180);
-                var tx = offset - 3;
-                var ty = offset - 5;
-                return "translate("+tx+" "+ty+") rotate("+angle+")";
-            })
-    }
+    }.bind(this)
     
     
     this.init();
@@ -496,18 +1008,30 @@ function TickBars(initCommon) {
             
         addTickLine(30);
         addTickLine(60);
+        
+        Telemetry.processor.tickAdded.add(this.onTickAdded);
+        
+        resize();
     }
     
+    var chart;
     var margin, width, height, x, y, vx, padding, spacing;
     this.updateCommon = function(common) {
-        margin = common.margin;
-        width = common.width;
-        height = common.height;
-        x = common.x;
-        y = common.y;
-        vx = common.vx;
-        padding = common.padding;
-        spacing = common.spacing;
+        chart = common;
+        chart.resized.add(resize.bind(this))
+        svgAxisXBack.call(chart.xZoom);
+    }
+    function resize() {
+        margin = chart.margin;
+        width = chart.width;
+        height = tickShowValues ? (chart.height - $(".tickValues").height()) : chart.height;
+        //height = chart.height * (tickShowValues ? 1 - chart.topChartRatio : 1);
+        x = chart.x;
+        y = chart.y;
+        y.range([height, 0])
+        vx = chart.vx;
+        padding = chart.padding;
+        spacing = chart.spacing;
         
         svgRoot
             .attr("width", width + margin.left + margin.right)
@@ -522,9 +1046,6 @@ function TickBars(initCommon) {
             
         svgAxisX
             .attr("transform", "translate(0," + height + ")")
-            
-        barXZoom
-            .x(vx)
             
         barYZoom
             .y(y)
@@ -563,10 +1084,7 @@ function TickBars(initCommon) {
         .attr("class", "backRect grabbable")
     
     svgAxisX.append("text")
-        .attr("x", 0)
-        .attr("y", 10)
-        .attr("dy", "0em")
-        .style("text-anchor", "end")
+        .attr("class", "label")
         .text("Tick #");
         
     svgAxisY.append("text")
@@ -577,126 +1095,34 @@ function TickBars(initCommon) {
         .style("text-anchor", "end")
         .text("Tick in nanoseconds");
     
-    
-    var barXZoom = d3.behavior.zoom()
-        .on("zoom", barZoomedX)
-    svgAxisXBack.call(barXZoom);
-        
-    var barYZoom = d3.behavior.zoom()
-        .on("zoom", barZoomedY)
-    svgBars.call(barYZoom);
-    
-    
     var tickLines = {};
     function addTickLine(fps) {
         var svgLine = svg.append("g")
-            .attr("class", "fps")
-            .attr("class", "fps" + fps)
+            .attr("class", "fps fps"+fps)
         svgLine.append("line")
             .attr("x1", 0)
-            .attr("x2", width)
             .attr("y1", 0)
             .attr("y2", 0)
             .attr("stroke-dasharray", "5,5")
             .attr("clip-path", "url(#clipContents)")
         svgLine.append("text")
-            .attr("x", width)
             .attr("y", -5)
             .style("text-anchor", "end")
             .text(
-                (1e9/fps).toFixed(2)+"ns | "+
-                (1e6/fps).toFixed(2)+"\u00B5s | "+
+                (1e9/fps).toFixed(0)+"ns | "+
+                //(1e6/fps).toFixed(0)+"\u00B5s | "+
                 (1e3/fps).toFixed(2)+"ms | "+
                 (1/fps).toFixed(2)+"s | "+
                 fps+"fps"
             );
         tickLines[fps] = { fps: fps, svg: svgLine, time: 0 };
     }
+        
+    var barYZoom = d3.behavior.zoom()
+        .on("zoom", barZoomedY)
+    svgBars.call(barYZoom);
     
-    this.handleMessage = function(msg) {
-        var m = JSON.parse(msg);
-        switch (m.status) {
-            
-            case "success":
-                addTick(m.data);
-                break;
-                
-            case "pong":
-                Telemetry.stream.pong();
-                break;
-                
-            default:
-                console.log("Result "+m.status+": "+m);
-        }
-    }
-    
-    function addTick(tick) {
-        ticks.push({
-            id: tick.values["tickId"],
-            values: tick.values,
-            metrics: tick.ranges,
-            visibleMetrics: null,
-            maxLevel: 0,
-            sectionsVisible: false
-        });
-        updateMaxLevel(ticks[ticks.length-1]);
-        sortMetrics(ticks[ticks.length-1]);
-        
-        updateMetricData();
-    }
-    
-    function barZoomXConstrainScale() {
-        var minScale = tickInitNum / ticks.length;
-        var maxScale = Number.POSITIVE_INFINITY;
-        barXZoom.scaleExtent([minScale, maxScale]);
-    }
-    
-    function barZoomXUpdateSize()
-    {
-        var tickDomain = vx.domain();
-        
-        innerChartWidth = width - 2 * padding;
-        
-        tickNumF = tickDomain[1] - tickDomain[0];
-        tickNum = Math.ceil(tickNumF - 1e-6);
-        
-        expectedBarWidth = innerChartWidth/(tickNumF - spacing + 2 * spacing);
-        
-        chartWidthExtension = expectedBarWidth * (tickNum - tickNumF);
-    }
-    
-    function barZoomXUpdatePosition() {
-        var tickDomain = vx.domain();
-        
-        tickOffset = Math.floor(tickDomain[0]);
-        chartOffset = (tickDomain[0] - tickOffset) * expectedBarWidth;
-    }
-    
-    
-    function barZoomXConstrainPosition() {
-        barZoomXUpdateSize();
-        
-        var trans = barXZoom.translate();
-        var xMax = 0;
-        var xMin = -width/(tickNumF)*(ticks.length - tickNumF);
-        
-        var tx = trans[0];
-        var ty = trans[1];
-        var touchingBorder = false;
-        if (tx > xMax) {
-            tx = xMax;
-            touchingBorder = true;
-        }
-        if (tx < xMin) {
-            tx = xMin - 1e-6;
-            touchingBorder = true;
-        }
-        
-        barXZoom.translate([tx, ty]);
-        
-        barZoomXUpdatePosition();
-    }
-    
+    /*
     function barZoomXAlignBars() {
         var trans = barXZoom.translate();
         console.log("align", trans, chartOffset);
@@ -708,92 +1134,31 @@ function TickBars(initCommon) {
         
         console.log("aligned", barXZoom.translate(), chartOffset);
     }
-    
-    function barZoomedX() {
-        barZoomXConstrainPosition();
-        
-        var tickPad = chartOffset-1e-3 > chartWidthExtension ? 1 : 0;
-        console.log(chartOffset, chartWidthExtension)
-        tickNum += tickPad;
-        
-        x.rangeRoundBands([-chartOffset + padding, -chartOffset + innerChartWidth + expectedBarWidth * (tickNum - tickNumF)], spacing);
-        updateMetricData();
-    }
+    */
     
     function barZoomedY() {
-        updateMetricData();
+        chart.updateTickView();
     }
     
-    function updateMaxLevel(tick) {
-        tick.maxLevel = d3.max(tick.metrics, function(metric) { return metric.level; });
+    this.onTickAdded = function(tick) {
+        updateTicks();
+    }.bind(this)
+    
+    function updateTicks() {
     }
     
-    function sortMetrics(tick) {
-        tick.metrics = tick.metrics.sort(function(a, b) {
-            if (a.level < b.level) return -1;
-            if (a.level > b.level) return 1;
-            if (a.sibling < b.sibling) return -1;
-            if (a.sibling > b.sibling) return 1;
-            return 0;
-        });
-    }
-    
-    function cullMetrics(tick) {
-        var lx = x(tick.id);
-        var rx = lx + x.rangeBand();
-        
-        lx = Math.max(padding, lx);
-        rx = Math.min(width, rx);
-        
-        var visibleWidth = rx-lx;
-        
-        tick.sectionsVisible = visibleWidth > 300;
-        if (tick.sectionsVisible) {
-            tick.visibleMetrics = tick.metrics.filter(function(metric, index, metrics) {
-                if (metric.a > maxTime || metric.b < minTime) return false;
-                if (y(metric.b) - y(metric.a) < 1) return false;
-                return true;
-            })
-        } else {
-            tick.visibleMetrics = tick.metrics.length > 0 ? [tick.metrics[0]] : [];
-        }
-        return tick;
-    }
-
-    function updateMetricData() {
-        
-        barZoomXConstrainScale();
-        
-        var tickLimit = Number($("#tickLimit").val());
-        if (!isNaN(tickLimit) && ticks.length > tickLimit) ticks.splice(0, ticks.length - tickLimit);
+    this.updateTickView = updateTickView;
+    function updateTickView() {
         
         //if (ticks.length >= tickInitNum) Telemetry.stream.socket.close();
         
-        var sliceStart = Math.max(0, tickOffset)
-        var sliceEnd = Math.min(ticks.length, tickOffset + tickNum)
-        var slicedTicks = ticks.slice(sliceStart, sliceEnd)
-        
-        x.domain(slicedTicks.map(function(tick) {
-            return tick.id;
-        }));
-        
-        
         axisX.scale(x)
+        chart.updateDynamicAxis(svgAxisX, axisX);
+        
         axisY.scale(y)
-        var crowdedRatio = x.domain().length / ChartCommon.filterTicks(axisX, x).length;
-        svgAxisX.call(axisX).selectAll("text")
-            .style("text-anchor", "middle")
-            .attr("dx", "0em")
-            .attr("dy", "0em")
-            .attr("transform", function(data) {
-                var angle = ChartCommon.getBoxFitAngle(x.rangeBand()*crowdedRatio, margin.bottom, 5 + this.getComputedTextLength());
-                var offset = 10*Math.sin(angle*Math.PI/180);
-                var tx = offset;
-                var ty = offset + 15;
-                return "translate("+tx+" "+ty+") rotate("+angle+")";
-            })
-        ;
-        svgAxisY.transition().call(axisY);
+        
+        //console.log(cachedNum, totalNum, ((+new Date()) - time) + "ms");
+        svgAxisY.transition().call(chart.chartTransition).call(axisY);
         
         svgAxisXBack
             .attr("width", width)
@@ -809,25 +1174,44 @@ function TickBars(initCommon) {
         var durationPoints = d3.scale.ordinal().domain(d3.range(colors.length)).rangePoints(durationRange).range();
         var colorFromDuration = d3.scale.linear().domain(durationPoints).range(colors);
         
-        minTime = invertGraph ? y.domain()[1] : y.domain()[0];
-        maxTime = invertGraph ? y.domain()[0] : y.domain()[1];
-        
-        
-        Telemetry.filteredTicks = slicedTicks.map(cullMetrics);
-        
-        var bars = svgBars.selectAll(".bar").data(Telemetry.filteredTicks, function(tick) {
-            return ""+tick.id;
-        })
+        var bars = svgBars.selectAll(".bar")
+            .data(Telemetry.filteredTicks, function(tick) {
+                return ""+tick.id;
+            })
         
         // Tick bars, new only, group inside of a bar
         bars.enter().append("g")
             .attr("class", "bar grabbable")
+            .attr("transform", function(tick, index) { return "translate(" +x(tick.id)+", 0)"; })
+            //.style("opacity", function(tick, index) { return 1; })
         
-        bars.exit().remove()
+        //bars.exit().remove()
         
+        //bars.exit()
+        //    .transition()
+        
+        // Delay removal of parent for 250.
+        bars.exit()
+            .transition().call(chart.chartTransition)
+            /*
+            .attr("transform", function(tick, index) {
+                var t = d3.transform(d3.select(this).attr("transform"))
+                var tx = t.translate[0]
+                
+                var hw = width*0.5;
+                
+                return "translate(" +(hw+(tx-hw)*1.20)+", 0)";
+            })
+            */
+            .style("opacity", 0)
+            .duration(100)
+            .remove()
+    
         // Tick bars, all
         bars
+            .transition().call(chart.chartTransition)
             .attr("transform", function(tick, index) { return "translate(" +x(tick.id)+", 0)"; })
+            .style("opacity", 1)
         
         // Tick bar sections, new
         var barSecAll = bars.selectAll(".bs")
@@ -839,15 +1223,49 @@ function TickBars(initCommon) {
         
         // Tick bar sections, new only
         var barSecNew = barSecAll.enter()
+        
         var barSecNewGroup = barSecNew.append("g")
             .attr("class", function(metric) { return "bs bs-"+metric.name; })
+            .on("mouseover", function(metric) {
+                if (metric.parent == -1) return;
+                var template = d3.select("#tmplTooltip").html()
+                var rendered = Mustache.render(template, {
+                    duration: Telemetry.getTimeLabelFromNano(metric.b - metric.a),
+                    enter:    Telemetry.getTimeLabelFromNano(metric.a),
+                    exit:     Telemetry.getTimeLabelFromNano(metric.b),
+                    name:     metric.name,
+                    children: metric.children,
+                    childrenPlural: metric.children == 1 ? "" : "ren",
+                })
+                
+                d3.select("#tooltip")
+                    .html(rendered)
+                    .style("display", "block")
+                    .transition()
+                    .style("opacity", 1)
+            })
+            .on("mousemove", function(metric) {
+                if (metric.parent == -1) return;
+                var tooltip = d3.select("#tooltip")
+                var m = d3.mouse(tooltip.node().parentNode)
+                tooltip
+                    .style("left", m[0] + "px")
+                    .style("top",  m[1] + 10 + "px")
+            })
+            .on("mouseout", function(metric) {
+                if (metric.parent == -1) return;
+                d3.select("#tooltip")
+                    .transition()
+                    .style("opacity", 0)
+                    .each("end", function() { this.style.display = "none" })
+            })
         
         var barSecRemoved = barSecAll.exit()
         barSecRemoved.remove()
         
         barSecNewGroup.append("rect")
         
-        bars.each(function(tick) {
+        bars.each(function updateBar(tick) {
             
             var metrics = tick.metrics;
             var maxLevel = tick.maxLevel;
@@ -863,16 +1281,19 @@ function TickBars(initCommon) {
             var barInfoExists = barInfo.size() > 0;
             var barInfoShouldExist = x.rangeBand() > 50;
             
+            var barIsThin = x.rangeBand() < 20;
+            bar.style("stroke", barIsThin ? "none" : null);
+        
             if (!barInfoExists && barInfoShouldExist) {
                 barInfo = bar.append("text")
                     .attr("class", "barInfo")
                     
-                barInfo.call(ChartCommon.textLine, "nanoTime")
-                barInfo.call(ChartCommon.textLine, "msTime")
+                barInfo.call(chart.textLine, "nanoTime")
+                barInfo.call(chart.textLine, "msTime")
             }
             if (barInfoExists && !barInfoShouldExist) barInfo.remove();
             
-            bar.selectAll(".bs").each(function(metric, index) {
+            bar.selectAll(".bs").each(function updateBarSection(metric, index) {
                 
                 var parent = metric.parent == -1 ? null : metrics[metric.parent]
                 if (parent && metric.sibling == 0) {
@@ -898,13 +1319,15 @@ function TickBars(initCommon) {
                 var barSec = d3.select(this);
                 
                 barSec.select("rect")
-                    .style("fill", function(metric, i) {
-                        return colorFromDuration(metric.b - metric.a);
+                    .style("fill", function updateBarSectionColor(metric, i) {
+                        var color = colorFromDuration(metric.b - metric.a);
+                        if (barIsThin) color = d3.lab(color).darker(0.15);
+                        return color;
                     })
-                    .transition().call(ChartCommon.chartTransition)
+                    .transition().call(chart.chartTransition)
                     .attr("x", sx)
-                    .attr("y", sy)
                     .attr("width", sw)
+                    .attr("y", sy)
                     .attr("height", Math.max(1, sh))
                 
                 
@@ -916,7 +1339,7 @@ function TickBars(initCommon) {
                 var bsttX = sx + sw*0.5;
                 var bsttY = sy + sh - 5;
                 var barSecText = barSec.select(".secName");
-                var barSecTextTime = ChartCommon.updateDynamicText(
+                var barSecTextTime = chart.updateDynamicText(
                     barSec,
                     "secTime",
                     tick.sectionsVisible && sh > 50,
@@ -930,7 +1353,7 @@ function TickBars(initCommon) {
                 if (!barSecTextExists && barSecTextShouldExist) {
                     barSecText = barSec.append("text")
                         .attr("class", "secName")
-                        .attr("transform", "translate(" + bstX + " " + bstY + ") rotate(0)")
+                        .attr("transform", "translate(" + bstX + " " + bstY + ")")
                 }
                 
                 if (barSecTextExists && !barSecTextShouldExist) {
@@ -946,9 +1369,9 @@ function TickBars(initCommon) {
                 
                 if (barSecTextTime.size() > 0) {
                     barSecTextTime.text(function(metric) {
-                        return ChartCommon.getTimeFromNano(metric.b-metric.a);
+                        return Telemetry.getTimeFromNano(metric.b-metric.a);
                     });
-                    barSecTextTime.transition().call(ChartCommon.chartTransition)
+                    barSecTextTime.transition().call(chart.chartTransition)
                         .attr("text-anchor", "middle")
                         .attr("transform", "translate(" + bsttX + " " + bsttY + ")")
                         .style("fill", textFill)
@@ -957,21 +1380,38 @@ function TickBars(initCommon) {
                 
                 if (barSecTextShouldExist) {
                     
+                    var textHorizontalSpace = sw-(bstX-sx)*2;
+                    var sectionName = metric.name;
+                    var charWidth = 6.85;
+                    //var charWidth = 4.5;
+                    //var charWidth = 5;
+                    var sidePadding = 10;
+                    var textEstimatedLen = charWidth * sectionName.length;
+                    var partialTrim = false;
+                    if (textEstimatedLen > textHorizontalSpace) {
+                        var trim = chart.trimName(sectionName, (textHorizontalSpace-sidePadding)/charWidth);
+                        sectionName = trim.name;
+                        textEstimatedLen = charWidth * sectionName.length;
+                        partialTrim = trim.partial;
+                    }
                     
-                    barSecText.text(function(metric) {
-                        return metric.name;
-                    });
+                    barSecText.html(sectionName);
                     
+                    // Compute the max char width and print to console
+                    /*
                     var barSecTextNode = barSecText.node();
-                    
                     var textLen = barSecTextNode ? barSecTextNode.getComputedTextLength() : 0;
+                    if (!LT.debugMetrics) LT.debugMetrics = []; LT.debugMetrics.push(textLen/sectionName.length); console.log(d3.max(LT.debugMetrics))
+                    //*/
                     
-                    var textVert = textLen > sw-(bstX-sx)*2 && textLen < sh;
+                    console.log()
+                    
+                    var textVert = !partialTrim && textEstimatedLen > textHorizontalSpace && textEstimatedLen < sh;
                     
                     var bstOOBSpaceCheck = 10;
                     var bstOOBSpacePosition = 10;
                     
-                    if (textVert) bstOOBSpaceCheck += textLen*0.5;
+                    if (textVert) bstOOBSpaceCheck += textEstimatedLen*0.5;
                     
                     var bstOOB =
                         bstY > y.range()[0] - bstOOBSpaceCheck ? 0 :
@@ -984,15 +1424,16 @@ function TickBars(initCommon) {
                     
                     bstX += textVert ? -3+sw*0.5 : 5;
                     
-                    var vertAngle = Math.acos(Math.min(sw, sh)/(textLen+40))*180/Math.PI;
+                    var vertAngle = Math.acos(Math.min(sw, sh)/(textEstimatedLen+40))*180/Math.PI;
                     if (isNaN(vertAngle)) vertAngle = 90;
                     
-                    barSecText.transition().call(ChartCommon.chartTransition)
+                    barSecText
+                        .attr("text-anchor", textVert ? "middle" : "start")
+                        .style("fill", textFill)
+                        .transition().call(chart.chartTransition)
+                        .attr("transform", "translate(" + bstX + " " + bstY + ") rotate("+(textVert ? vertAngle : 0)+")")
                         .attr("height", sh)
                         .attr("dy", (textVert ? 0 : 3))
-                        .attr("text-anchor", textVert ? "middle" : "start")
-                        .attr("transform", "translate(" + bstX + " " + bstY + ") rotate("+(textVert ? vertAngle : 0)+")")
-                        .style("fill", textFill)
                         
                         
                 }
@@ -1001,15 +1442,15 @@ function TickBars(initCommon) {
                 
             });
             
-            if (barInfoShouldExist) {
+            if (barInfoShouldExist && barMaxY != -Infinity) {
                 var barInfoLen = 0;
                 barInfoLen = Math.max(barInfoLen, barInfo.select(".nanoTime").text(barTotalDuration.toFixed(3) + " ns").node().getComputedTextLength())
                 barInfoLen = Math.max(barInfoLen, barInfo.select(".msTime").text((barTotalDuration * 1e-6).toFixed(3) + " ms").node().getComputedTextLength())
                 
                 var barInfoHeight = barInfo.node().clientHeight;
-                var barInfoAngle = ChartCommon.getBoxFitAngle(x.rangeBand(), 100, barInfoLen + 40);
+                var barInfoAngle = chart.getBoxFitAngle(x.rangeBand(), 100, barInfoLen + 40);
                 
-                barInfo.transition().call(ChartCommon.chartTransition)
+                barInfo.transition().call(chart.chartTransition)
                     .attr("width", x.rangeBand())
                     .attr("height", barInfoHeight)
                     .attr("text-anchor", "start")
@@ -1017,9 +1458,6 @@ function TickBars(initCommon) {
             }
             
         })
-        
-        //Telemetry.tickValues.updateTicks();
-        Telemetry.updateStats();
         
     }
     
@@ -1029,14 +1467,17 @@ function TickBars(initCommon) {
             tickLine.time = 1e9/tickLine.fps;
             var height = y(tickLine.time);
             tickLine.svg.attr("transform", "translate(0, " + height + ")");
+            tickLine.svg.select("line")
+                .attr("x2", width)
+            tickLine.svg.select("text")
+                .attr("x", width)
+        
         }
     }
         
     this.init();
 }
 
-
-$(document).ready(function () {
-    initTelemetry();
-});
-
+$(document).ready(function() { initTelemetry(); });
+$(document).on("beforeunload", function() { destroyTelemetry(); });
+$(window).on("resize", function() { Telemetry.tickChart.resize() })

@@ -95,13 +95,20 @@ textarea {
    Author's custom styles
    ========================================================================== */
 
-
-
-
 #tickCharts text {
     font: 12px sans-serif;
     stroke: none;
     fill: #444;
+}
+
+.ui.statistic.lowercase>.value, .ui.statistics.lowercase .statistic>.value {
+    text-transform: lowercase;
+}
+
+#tooltip {
+    position: absolute;
+    pointer-events: none;
+    display: none;
 }
 
 .tickValues .line {
@@ -119,7 +126,7 @@ textarea {
     orientation: 20;
 }
 
-.bs-loom_tick rect {
+.bar {
     stroke: #D4D4D4;
     stroke-width: 1px;
     stroke-linejoin: miter;
