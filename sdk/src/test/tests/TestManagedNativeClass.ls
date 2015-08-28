@@ -98,6 +98,10 @@ class TestManagedNativeClass
     [Test]
     function testSharedInstance()
     {
+        // We should be in a clean state.
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"), 0);
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 0);
+
         var instance = new MyChildManagedNativeClass();
         Assert.equal(instance.scriptString, "Hello, ", "Failed to initalize simple class instance member.");
 
@@ -117,6 +121,11 @@ class TestManagedNativeClass
 
         instance.deleteNative();
         child.deleteNative();
+
+        // We should be in a clean state.
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyManagedNativeClass"), 0);
+        Assert.equal(Metrics.getManagedObjectCount("tests.MyChildManagedNativeClass"), 0);
+
     }
 
     [Test]
