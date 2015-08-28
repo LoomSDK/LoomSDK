@@ -39,6 +39,93 @@
 #endif
 
 namespace LS {
+
+// Debug functions to dump Lua state.
+
+// Print table at top of lua stack.
+static void loom_debug_printTable(lua_State *L);
+
+// Call the global traceback function and print the Lua call stack. Leave it
+// at top of stack.
+static int loom_debug_traceback (lua_State *L) {
+    lua_getfield(L, LUA_GLOBALSINDEX, "debug");
+    lua_getfield(L, -1, "traceback");
+    lua_call(L, 0, 1);
+    fprintf(stderr, "%s\n", lua_tostring(L, -1));
+    return 1;
+}
+
+// Dump the lua stack.
+static void loom_debug_stackDump (lua_State *L, bool recursive = false)
+{
+    printf("---- stack ---- ");
+    int i;
+    int top = lua_gettop(L);
+    for (i = 1; i <= top; i++) {  /* repeat for each level */
+        int t = lua_type(L, i);
+        switch (t) {
+
+            case LUA_TSTRING:  /* strings */
+                printf("`%s'", lua_tostring(L, i));
+                break;
+
+            case LUA_TBOOLEAN:  /* booleans */
+                printf(lua_toboolean(L, i) ? "true" : "false");
+                break;
+
+            case LUA_TNUMBER:  /* numbers */
+                printf("%g", lua_tonumber(L, i));
+                break;
+
+            case LUA_TTABLE:
+                if(recursive)
+                {
+                    lua_pushvalue(L, i);
+                    loom_debug_printTable(L);
+                    break;
+                }
+
+            default:  /* other values */
+                printf("%s", lua_typename(L, t));
+                break;
+
+        }
+        printf("  ");  /* put a separator */
+    }
+    printf("=================");
+}
+
+static void loom_debug_printTable(lua_State *L)
+{
+    printf("{\n");
+
+    lua_pushnil(L);
+
+    while(lua_next(L, -2) != 0)
+    {
+        // Get the key as a string without disturbing it.
+        lua_pushvalue(L, -2);
+        printf("   %s = ", lua_tostring(L, -1));
+        lua_pop(L, 1);
+
+        if(lua_isstring(L, -1))
+            printf("%s\n", lua_tostring(L, -1));
+        else if(lua_isnumber(L, -1))
+            printf("%f\n", lua_tonumber(L, -1));
+        else
+        {
+            printf("%s\n", lua_typename(L, lua_type(L, -1)));
+        }
+        //else if(lua_istable(L, -1))
+        //    PrintTable(L);
+        
+        lua_pop(L, 1);
+    }
+    
+    printf("}\n");
+}
+
+// Track the last accessed members.
 static char _gLastAccessedMember[64];
 char        *gLastAccessedMember = _gLastAccessedMember;
 
@@ -47,7 +134,6 @@ void lsr_createinstance(lua_State *L, Type *type)
     lsr_getclasstable(L, type);
     lua_call(L, 0, 1);
 }
-
 
 void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *type, int instanceIdx, Type *stopAtParentType)
 {
@@ -135,89 +221,6 @@ void lualoom_newscriptinstance_internal(lua_State *L, Type *type)
 
     lua_setmetatable(L, instanceIdx);
 }
-
-#if 0
-    // useful debug stuff to be cleaned up
-    void PrintTable(lua_State *L);
-
-
-    static int traceback (lua_State *L) {
-        lua_getfield(L, LUA_GLOBALSINDEX, "debug");
-        lua_getfield(L, -1, "traceback");
-        lua_call(L, 0, 1);
-        fprintf(stderr, "%s\n", lua_tostring(L, -1));
-        return 1;
-    }
-
-    static void stackDump (lua_State *L, bool recursive = false) {
-
-        printf("---- stack ---- ");
-        int i;
-        int top = lua_gettop(L);
-        for (i = 1; i <= top; i++) {  /* repeat for each level */
-            int t = lua_type(L, i);
-            switch (t) {
-
-                case LUA_TSTRING:  /* strings */
-                    printf("`%s'", lua_tostring(L, i));
-                    break;
-
-                case LUA_TBOOLEAN:  /* booleans */
-                    printf(lua_toboolean(L, i) ? "true" : "false");
-                    break;
-
-                case LUA_TNUMBER:  /* numbers */
-                    printf("%g", lua_tonumber(L, i));
-                    break;
-
-                case LUA_TTABLE:
-                    if(recursive)
-                    {
-                        lua_pushvalue(L, i);
-                        PrintTable(L);
-                        break;
-                    }
-
-                default:  /* other values */
-                    printf("%s", lua_typename(L, t));
-                    break;
-
-            }
-            printf("  ");  /* put a separator */
-        }
-        printf("=================");
-    }
-
-    void PrintTable(lua_State *L)
-    {
-        printf("{\n");
-
-        lua_pushnil(L);
-
-        while(lua_next(L, -2) != 0)
-        {
-            // Get the key as a string without disturbing it.
-            lua_pushvalue(L, -2);
-            printf("   %s = ", lua_tostring(L, -1));
-            lua_pop(L, 1);
-
-            if(lua_isstring(L, -1))
-                printf("%s\n", lua_tostring(L, -1));
-            else if(lua_isnumber(L, -1))
-                printf("%f\n", lua_tonumber(L, -1));
-            else
-            {
-                printf("%s\n", lua_typename(L, lua_type(L, -1)));
-            }
-            //else if(lua_istable(L, -1))
-            //    PrintTable(L);
-
-            lua_pop(L, 1);
-        }
-
-        printf("}\n");
-    }
-#endif
 
 // class instance creator
 static int lsr_classcreateinstance(lua_State *L)
