@@ -38,7 +38,7 @@ public:
         time(&rawtime);
         timeinfo = localtime(&rawtime);
 
-        strftime(buffer, BUFFER_SIZE, format, timeinfo);
+        strftime(buffer, BUFFER_SIZE - 1, format, timeinfo);
         
         // The buffer must be converted into a const char* before returning
         const char *retString = buffer;

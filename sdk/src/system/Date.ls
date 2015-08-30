@@ -27,7 +27,7 @@ package system {
 native class Date {
     
     /**
-     * This function wraps the native strftime function from the ctime C++ library.
+     * This function wraps the native strftime function from the ctime C++ library, which is used to get a string representation of the current system time.
      * 
      * @param format The format string to be passed into the native strftime function. See [C++ documentation](http://www.cplusplus.com/reference/ctime/strftime/)
      * for details on formatting options.
