@@ -33,6 +33,7 @@ void installSystemDictionary();
 void installSystemFunction();
 void installSystemGC();
 void installSystemMath();
+void installSystemDate();
 void installSystemRandom();
 void installSystemObject();
 void installSystemString();
@@ -87,6 +88,7 @@ void installPackageSystem()
     installSystemFunction();
     installSystemGC();
     installSystemMath();
+    installSystemDate();
     installSystemRandom();
     installSystemVector();
     installSystemVM();
