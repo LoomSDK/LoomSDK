@@ -62,7 +62,7 @@ public:
 
     Shader(const utString& name, GLuint type);
     // Disable copy constructor
-    Shader(const Shader& copy) = delete;
+    Shader(const Shader& copy);
     ~Shader();
 
     GLuint getId() const;
@@ -110,7 +110,7 @@ protected:
     GLuint textureId;
 
     // Disable copy constructor
-    ShaderProgram(const ShaderProgram& copy) = delete;
+    ShaderProgram(const ShaderProgram& copy);
 
 public:
 
