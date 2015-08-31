@@ -32,8 +32,10 @@ extern "C"
 
 SDL_Window *gSDLWindow = NULL;
 SDL_GLContext gContext;
+
+#define MAX_CONTROLLERS 4
 SDL_GameController *controller;
-SDL_Joystick *joystick;
+SDL_Joystick *joyPool[MAX_CONTROLLERS];
 
 lmDefineLogGroup(coreLogGroup, "loom.core", 1, LoomLogInfo);
 
@@ -203,6 +205,9 @@ void loop()
 			stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.value);
 			stage->_ControllerAxisMovedDelegate.invoke();
 		}
+		else if (event.type == SDL_JOYHATMOTION) {
+			//lmLogInfo(coreLogGroup, "Controller Hat Motion %d %d %d", event.jhat.hat, event.jhat.which, event.jhat.value);
+		}
 		//lmLogInfo(coreLogGroup, "Event type %d", event.type);
     }
 
@@ -325,6 +330,7 @@ main(int argc, char *argv[])
 	SDL_JoystickEventState(SDL_ENABLE);
 
 	lmLogInfo(coreLogGroup, "Detected %d joysticks", SDL_NumJoysticks());
+	int joyIndex = 0;
 	for (int i = 0; i < SDL_NumJoysticks(); i++)
 	{
 		/*if (SDL_IsGameController(i))
@@ -343,15 +349,18 @@ main(int argc, char *argv[])
 		{
 			lmLogInfo(coreLogGroup, "Joystick %d is not a controller", 0);
 		}*/
-		joystick = SDL_JoystickOpen(i);
-		if (joystick) {
-			lmLogInfo(coreLogGroup, "Joystick opened %d", 0);
+		if (i > MAX_CONTROLLERS)
 			break;
+
+		joyPool[joyIndex] = SDL_JoystickOpen(i);
+		if (joyPool[joyIndex]) {
+			lmLogInfo(coreLogGroup, "Joystick opened %d", i);
 		}
 		else
 		{
-			lmLogInfo(coreLogGroup, "Could not open joystick %d", 0);
+			lmLogInfo(coreLogGroup, "Could not open joystick %d", i);
 		}
+		joyIndex++;
 	}
     
 #ifdef __EMSCRIPTEN__
@@ -360,7 +369,13 @@ main(int argc, char *argv[])
     while (!gLoomExecutionDone) loop();
 #endif
 	SDL_GameControllerClose(controller);
-	SDL_JoystickClose(joystick);
+	for (int i = 0; i < MAX_CONTROLLERS; i++)
+	{
+		if (joyPool[i])
+		{
+			SDL_JoystickClose(joyPool[i]);
+		}
+	}
     loom_appShutdown();
     
 #ifdef WIN32
