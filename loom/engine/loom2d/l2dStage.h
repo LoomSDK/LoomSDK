@@ -172,5 +172,6 @@ public:
 	LOOM_DELEGATE(ControllerAxisMoved);
 	LOOM_DELEGATE(ControllerButtonDown);
 	LOOM_DELEGATE(ControllerButtonUp);
+	LOOM_DELEGATE(JoystickHatMoved);
 };
 }

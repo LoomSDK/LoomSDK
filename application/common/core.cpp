@@ -207,8 +207,11 @@ void loop()
 		}
 		else if (event.type == SDL_JOYHATMOTION) {
 			//lmLogInfo(coreLogGroup, "Controller Hat Motion %d %d %d", event.jhat.hat, event.jhat.which, event.jhat.value);
+			stage->_JoystickHatMovedDelegate.pushArgument(event.jhat.which);
+			stage->_JoystickHatMovedDelegate.pushArgument(event.jhat.hat);
+			stage->_JoystickHatMovedDelegate.pushArgument(event.jhat.value);
+			stage->_JoystickHatMovedDelegate.invoke();
 		}
-		//lmLogInfo(coreLogGroup, "Event type %d", event.type);
     }
 
     /* Tick and render Loom. */

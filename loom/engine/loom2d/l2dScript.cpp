@@ -249,6 +249,7 @@ static int registerLoom2D(lua_State *L)
 	   .addVarAccessor("onControllerButtonUp", &Stage::getControllerButtonUpDelegate)
 	   .addVarAccessor("onControllerButtonDown", &Stage::getControllerButtonDownDelegate)
 	   .addVarAccessor("onControllerAxisMoved", &Stage::getControllerAxisMovedDelegate)
+	   .addVarAccessor("onJoystickHatMoved", &Stage::getJoystickHatMovedDelegate)
 
        .addVarAccessor("onOrientationChange", &Stage::getOrientationChangeDelegate)
        .addVarAccessor("onSizeChange", &Stage::getSizeChangeDelegate)
