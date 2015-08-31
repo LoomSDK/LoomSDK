@@ -166,7 +166,7 @@ GLint uMVP;
 public:
     DefaultShader();
 
-    void bind() override;
+    virtual void bind();
 };
 
 }
