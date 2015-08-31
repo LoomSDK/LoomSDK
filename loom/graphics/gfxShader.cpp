@@ -18,8 +18,6 @@
  * ===========================================================================
  */
 
-// TODO! Asset reloading?
-
 #include "loom/graphics/gfxShader.h"
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/common/assets/assets.h"
@@ -30,49 +28,61 @@ lmDefineLogGroup(gGFXShaderLogGroup, "GFXShader", 1, LoomLogInfo);
 
 static const GFX::ShaderProgram *lastBoundShader = nullptr;
 
-lmMap<lmString, lmWptr<GFX::Shader>> GFX::Shader::liveShaders;
+// A hash table of live shaders that are currently compiled on the GPU
+// Contains reference counting since we are devoid of smart pointers
+utHashTable<utCharHashKey, GFX::ShaderEntry> GFX::Shader::liveShaders;
 
-// Adds a shader to the shader map. This prevents redundant shader compilation in the future.
-void GFX::Shader::addShader(const lmString& name, lmSptr<GFX::Shader> sp)
+// Adds a shader to liveShaders or increases reference count
+void GFX::Shader::addShaderRef(const utString& name, GFX::Shader* sp)
 {
-    lmAssert(liveShaders.count(name) == 0, "Shader %s already present in shader list", name.c_str());
+    utCharHashKey key(name.c_str());
+    if (liveShaders.find(key) != UT_NPOS)
+    {
+        ShaderEntry* se = liveShaders[key];
+        se->refcount++;
+    }
+    else
+    {
+        ShaderEntry se;
+        se.ref = sp;
+        se.refcount = 1;
+        liveShaders.insert(key, se);
+    }
+}
 
-    liveShaders[name] = sp;
+// Decreases reference count and deletes the shader if there are no references left
+void GFX::Shader::removeShaderRef(const utString& name)
+{
+    utCharHashKey key(name.c_str());
+    if (liveShaders.find(key) != UT_NPOS)
+    {
+        ShaderEntry* se = liveShaders[key];
+        se->refcount--;
+
+        if (se->refcount == 0)
+        {
+            lmDelete(NULL, se->ref);
+            liveShaders.remove(key);
+        }
+    }
 }
 
 // Looks up the shader by name. If we already have a compiled shader from the same file, return that.
-lmSptr<GFX::Shader> GFX::Shader::getShader(const lmString& name)
+GFX::Shader* GFX::Shader::getShader(const utString& name)
 {
-    if (liveShaders.count(name) != 0)
+    utCharHashKey key(name.c_str());
+    if (liveShaders.find(key) != UT_NPOS)
     {
-        auto weak = liveShaders[name];
-
-        // Remove from map if it's a dead reference
-        if (weak.expired())
-        {
-            liveShaders.erase(name);
-            return nullptr;
-        }
-
-        return weak.lock();
+        ShaderEntry* se = liveShaders[key];
+        return se->ref;
     }
 
     return nullptr;
 }
 
-// This only gets called from the destructor of Shader
-// It's guaranteed that the reference will be dead
-void GFX::Shader::removeShader(const lmString& name)
-{
-    if (liveShaders.count(name) != 0)
-    {
-        liveShaders.erase(name);
-    }
-}
-
 // If _name is empty, the constructor will not compile anything.
 // In that case, load() should be called.
-GFX::Shader::Shader(const lmString& _name, GLenum _type)
+GFX::Shader::Shader(const utString& _name, GLenum _type)
 : id(0)
 , type(_type)
 , name(_name)
@@ -100,7 +110,6 @@ GFX::Shader::~Shader()
     if (name.size() > 0)
     {
         loom_asset_unsubscribe(name.c_str(), &Shader::reloadCallback, this);
-        Shader::removeShader(name);
     }
 }
 
@@ -109,7 +118,7 @@ GLuint GFX::Shader::getId() const
     return id;
 }
 
-lmString GFX::Shader::getName() const
+utString GFX::Shader::getName() const
 {
     if (name.size() == 0)
     {
@@ -123,6 +132,11 @@ lmString GFX::Shader::getName() const
     {
         return name;
     }
+}
+
+const utString& GFX::Shader::getAssetName() const
+{
+    return name;
 }
 
 
@@ -191,7 +205,7 @@ bool GFX::Shader::validate()
 
         GFX_DEBUG_BREAK
 
-            return false;
+        return false;
     }
 
     if (info != nullptr)
@@ -232,9 +246,9 @@ void GFX::Shader::reloadCallback(void *payload, const char *name)
 
 GFX::ShaderProgram* GFX::ShaderProgram::getDefaultShader()
 {
-    if (defaultShader == nullptr)
+    if (defaultShader.get() == nullptr)
     {
-        defaultShader = lmMakeUptr<GFX::DefaultShader>();
+        defaultShader.reset(lmNew(NULL) GFX::DefaultShader());
     }
 
     return defaultShader.get();
@@ -256,8 +270,8 @@ GFX::ShaderProgram::~ShaderProgram()
     ctx->glDetachShader(programId, vertexShader->getId());
     ctx->glDetachShader(programId, fragmentShader->getId());
 
-    vertexShader = nullptr;
-    fragmentShader = nullptr;
+    Shader::removeShaderRef(vertexShader->getAssetName());
+    Shader::removeShaderRef(fragmentShader->getAssetName());
 
     ctx->glDeleteProgram(programId);
 }
@@ -279,10 +293,10 @@ GLuint GFX::ShaderProgram::getProgramId() const
 
 void GFX::ShaderProgram::load(const char* vss, const char* fss)
 {
-    vertexShader = lmMakeSptr<Shader>("", GL_VERTEX_SHADER);
+    vertexShader = lmNew(NULL) Shader("", GL_VERTEX_SHADER);
     vertexShader->load(vss);
 
-    fragmentShader = lmMakeSptr<Shader>("", GL_FRAGMENT_SHADER);
+    fragmentShader = lmNew(NULL) Shader("", GL_FRAGMENT_SHADER);
     fragmentShader->load(fss);
 
     link();
@@ -293,16 +307,16 @@ void GFX::ShaderProgram::loadFromAssets(const char* vertexShaderPath, const char
     vertexShader = Shader::getShader(vertexShaderPath);
     if (vertexShader == nullptr)
     {
-        vertexShader = lmMakeSptr<Shader>(vertexShaderPath, GL_VERTEX_SHADER);
-        Shader::addShader(vertexShaderPath, vertexShader);
+        vertexShader = lmNew(NULL) Shader(vertexShaderPath, GL_VERTEX_SHADER);
     }
+    Shader::addShaderRef(vertexShaderPath, vertexShader);
 
     fragmentShader = Shader::getShader(fragmentShaderPath);
     if (fragmentShader == nullptr)
     {
-        fragmentShader = lmMakeSptr<Shader>(fragmentShaderPath, GL_FRAGMENT_SHADER);
-        Shader::addShader(fragmentShaderPath, fragmentShader);
+        fragmentShader = lmNew(NULL) Shader(fragmentShaderPath, GL_FRAGMENT_SHADER);
     }
+    Shader::addShaderRef(fragmentShaderPath, fragmentShader);
 
     link();
 }
@@ -787,7 +801,7 @@ const char * defaultFragmentShader =
 "    gl_FragColor = v_color0 * texture2D(u_texture, v_texcoord0);    \n"
 "}                                                                   \n";
 
-lmUptr<GFX::ShaderProgram> GFX::ShaderProgram::defaultShader = nullptr;
+lmAutoPtr<GFX::ShaderProgram> GFX::ShaderProgram::defaultShader;
 
 GFX::DefaultShader::DefaultShader()
 {

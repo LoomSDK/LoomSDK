@@ -23,44 +23,51 @@
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/engine/loom2d/l2dMatrix.h"
 #include "loom/script/native/lsNativeDelegate.h"
-#include "loom/common/core/allocator_stl.h"
-
-#include <map>
-#include <memory>
-#include <string>
+#include "loom/common/utils/utTypes.h"
+#include "loom/common/utils/auto_ptr.h"
 
 namespace GFX {
+
+class Shader;
+
+struct ShaderEntry
+{
+    size_t refcount;
+    Shader* ref;
+};
 
 class Shader
 {
 private:
 
-    static lmMap<lmString, lmWptr<Shader>> liveShaders;
+    static utHashTable<utCharHashKey, ShaderEntry> liveShaders;
 
 public:
 
-    static void addShader(const lmString& name, lmSptr<Shader> sp);
-    static lmSptr<GFX::Shader> getShader(const lmString& name);
-    static void removeShader(const lmString& name);
+    static void addShaderRef(const utString& name, Shader* sp);
+    static void removeShaderRef(const utString& name);
+
+    static GFX::Shader* getShader(const utString& name);
 
     static void reloadCallback(void *payload, const char *name);
 
 private:
     GLuint id;
     GLenum type;
-    lmString name;
+    utString name;
 
     char* getSourceFromAsset();
 
 public:
 
-    Shader(const lmString& name, GLuint type);
+    Shader(const utString& name, GLuint type);
     // Disable copy constructor
     Shader(const Shader& copy) = delete;
     ~Shader();
 
     GLuint getId() const;
-    lmString getName() const;
+    utString getName() const;
+    const utString& getAssetName() const;
 
     bool load(const char* source);
     void reload();
@@ -83,7 +90,7 @@ class ShaderProgram
 {
 public:
 
-    static lmUptr<ShaderProgram> defaultShader;
+    static lmAutoPtr<ShaderProgram> defaultShader;
     static ShaderProgram* getDefaultShader();
 
 protected:
@@ -92,8 +99,8 @@ protected:
     GLuint fragmentShaderId;
     GLuint vertexShaderId;
 
-    lmSptr<Shader> fragmentShader;
-    lmSptr<Shader> vertexShader;
+    Shader* fragmentShader;
+    Shader* vertexShader;
 
     GLint posAttribLoc;
     GLint posColorLoc;
