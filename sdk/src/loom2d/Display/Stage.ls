@@ -12,7 +12,6 @@ package loom2d.display
 {    
     
     import loom.platform.LoomKeyModifier;
-	import loom2d.events.GamepadEvent;
 
     import loom2d.events.EnterFrameEvent;
     import loom2d.events.ResizeEvent;
@@ -21,6 +20,7 @@ package loom2d.display
     import loom2d.events.TouchEvent;
     import loom2d.events.ScrollWheelEvent;
     import loom2d.events.EventDispatcher;
+	import loom2d.events.ControllerEvent;
     
     import loom2d.math.Point;
     import loom2d.math.Rectangle;
@@ -47,8 +47,8 @@ package loom2d.display
     }
 
     delegate KeyDelegate(scancode:int, virtualKey:int, modifiers:int);
-	delegate GamepadButtonDelegate(gamepad:int, button:int);
-	//delegate GamepadAxisDelegate(gamepad:int, axis:int, value:Number);
+	delegate ControllerButtonDelegate(controller:int, button:int);
+	delegate ControllerAxisDelegate(controller:int, axis:int, value:Number);
     delegate HardwareKeyDelegate();
     delegate TouchDelegate(touchId:int, x:int, y:int);
     delegate ScrollWheelDelegate(yDelta:int);
@@ -111,9 +111,9 @@ package loom2d.display
         public native var onKeyUp:KeyDelegate;
         public native var onKeyDown:KeyDelegate;
 		
-		public native var onGamepadButtonDown:GamepadButtonDelegate;
-		public native var onGamepadButtonUp:GamepadButtonDelegate;
-		//public native var onGamepadAxisMoved:GamepadAxisDelegate;
+		public native var onControllerButtonUp:ControllerButtonDelegate;
+		public native var onControllerButtonDown:ControllerButtonDelegate;
+		public native var onControllerAxisMoved:ControllerAxisDelegate;
 
         public native var onMenuKey:HardwareKeyDelegate;
         public native var onBackKey:HardwareKeyDelegate;
@@ -157,9 +157,9 @@ package loom2d.display
             onKeyDown += onKeyDownHandler;
             onKeyUp += onKeyUpHandler;
 			
-			onGamepadButtonDown += onGamepadButtonDownHandler;
-			onGamepadButtonUp += onGamepadButtonUpHandler;
-			//onGamepadAxisMoved += onGamepadAxisMovedHandler;
+			onControllerButtonDown += onControllerButtonDownHandler;
+			onControllerButtonUp += onControllerButtonUpHandler;
+			onControllerAxisMoved += onControllerAxisMovedHandler;
 
             onSizeChange += onSizeChangeHandler;
 
@@ -195,20 +195,21 @@ package loom2d.display
                     (modifiers | LoomKeyModifier.SHIFT) != 0 ));
         }
 		
-		protected function onGamepadButtonDownHandler(gamepad:int, button:int):void
+		protected function onControllerButtonDownHandler(controller:int, button:int):void
 		{
-			broadcastEvent(new GamepadEvent(GamepadEvent.BUTTON_DOWN, gamepad, button));
+			trace("Button down.");
+			broadcastEvent(new ControllerEvent(ControllerEvent.BUTTON_DOWN, controller, button));
 		}
 		
-		protected function onGamepadButtonUpHandler(gamepad:int, button:int):void
+		protected function onControllerButtonUpHandler(controller:int, button:int):void
 		{
-			broadcastEvent(new GamepadEvent(GamepadEvent.BUTTON_UP, gamepad, button));
+			broadcastEvent(new ControllerEvent(ControllerEvent.BUTTON_UP, controller, button));
 		}
 		
-		/*protected function onGamepadAxisMovedHandler(gamepad:int, axis:int, value:Number):void
+		protected function onControllerAxisMovedHandler(controller:int, axis:int, value:Number):void
 		{
-			broadcastEvent(new GamepadEvent(GamepadEvent.AXIS_MOTION, gamepad, -1, axis, value));
-		}*/
+			broadcastEvent(new ControllerEvent(ControllerEvent.AXIS_MOTION, controller, -1, axis, value));
+		}
 
         protected function onScrollWheelHandler(delta:Number)
         {

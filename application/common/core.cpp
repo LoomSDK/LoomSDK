@@ -32,6 +32,8 @@ extern "C"
 
 SDL_Window *gSDLWindow = NULL;
 SDL_GLContext gContext;
+SDL_GameController *controller;
+SDL_Joystick *joystick;
 
 lmDefineLogGroup(coreLogGroup, "loom.core", 1, LoomLogInfo);
 
@@ -39,7 +41,7 @@ static int gLoomExecutionDone = 0;
 
 void loop()
 {
-    SDL_Event event;
+	SDL_Event event;
 
     // Get the stage as it will receive most events.
     Loom2D::Stage *stage = Loom2D::Stage::smMainStage;
@@ -180,25 +182,28 @@ void loop()
         {
             IMEDelegateDispatcher::shared()->dispatchShowComposition(event.text.text, strlen(event.text.text), event.edit.start, event.edit.length);
         }
-		else if (event.type == SDL_CONTROLLERAXISMOTION)
+		else if (event.type == SDL_CONTROLLERBUTTONDOWN || event.type == SDL_JOYBUTTONDOWN)
+		{
+			//lmLogInfo(coreLogGroup, "Controller Button Down %d %d %d", event.cbutton.which, event.cbutton.button);
+			stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.which);
+			stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.button);
+			stage->_ControllerButtonDownDelegate.invoke();
+		}
+		else if (event.type == SDL_CONTROLLERBUTTONUP || event.type == SDL_JOYBUTTONUP)
+		{
+			//lmLogInfo(coreLogGroup, "Controller Button Up %d %d %d", event.cbutton.which, event.cbutton.button);
+			stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.which);
+			stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.button);
+			stage->_ControllerButtonUpDelegate.invoke();
+		}
+		else if (event.type == SDL_CONTROLLERAXISMOTION || event.type == SDL_JOYAXISMOTION)
 		{
 			stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.which);
 			stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.axis);
 			stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.value);
 			stage->_ControllerAxisMovedDelegate.invoke();
 		}
-		else if (event.type == SDL_CONTROLLERBUTTONDOWN)
-		{
-			stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.which);
-			stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.button);
-			stage->_ControllerButtonDownDelegate.invoke();
-		}
-		else if (event.type == SDL_CONTROLLERBUTTONUP)
-		{
-			stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.which);
-			stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.button);
-			stage->_ControllerButtonUpDelegate.invoke();
-		}
+		//lmLogInfo(coreLogGroup, "Event type %d", event.type);
     }
 
     /* Tick and render Loom. */
@@ -314,13 +319,48 @@ main(int argc, char *argv[])
 
     /* Main render loop */
     gLoomExecutionDone = 0;
+
+	/* Game Controller stuff */
+	//SDL_GameControllerEventState(SDL_ENABLE);
+	SDL_JoystickEventState(SDL_ENABLE);
+
+	lmLogInfo(coreLogGroup, "Detected %d joysticks", SDL_NumJoysticks());
+	for (int i = 0; i < SDL_NumJoysticks(); i++)
+	{
+		/*if (SDL_IsGameController(i))
+		{
+			controller = SDL_GameControllerOpen(i);
+			if (controller) {
+				lmLogInfo(coreLogGroup, "Controller opened %d", 0);
+				break;
+			}
+			else
+			{
+				lmLogInfo(coreLogGroup, "Could not open controller %d", 0);
+			}
+		}
+		else
+		{
+			lmLogInfo(coreLogGroup, "Joystick %d is not a controller", 0);
+		}*/
+		joystick = SDL_JoystickOpen(i);
+		if (joystick) {
+			lmLogInfo(coreLogGroup, "Joystick opened %d", 0);
+			break;
+		}
+		else
+		{
+			lmLogInfo(coreLogGroup, "Could not open joystick %d", 0);
+		}
+	}
     
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(loop, 0, 1);
 #else
     while (!gLoomExecutionDone) loop();
 #endif
-    
+	SDL_GameControllerClose(controller);
+	SDL_JoystickClose(joystick);
     loom_appShutdown();
     
 #ifdef WIN32
