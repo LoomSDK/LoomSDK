@@ -23,43 +23,74 @@
 
 #include "loom/common/core/allocator.h"
 
+/*
+ * Takes ownership of a pointer and frees/destroys it when it goes out of scope.
+ */
 template <typename T>
 class lmAutoPtr
 {
 private:
+    // Pointer that is held
     T* ptr;
+
+    // Do we own the pointer? Delete only of owned.
+    // Non-owned means ptr is uninitialized/null.
     bool owned;
 
+    // Disable copy constructor
+    lmAutoPtr(const lmAutoPtr& copy);
+
+    // Disable assignment operator
+    lmAutoPtr& operator=(const lmAutoPtr& other);
+
 public:
+
+    // Default constructor - sets everything to unintialized.
+    // To set a value use reset()
     lmAutoPtr()
     : ptr(0)
     , owned(false)
     {}
 
+    // A constructor that initializes to a pointer. If it's non-null, it becomes owned.
     lmAutoPtr(T* p)
     : ptr(p)
     , owned(p ? true : false)
     {}
 
+    // If the poitner is owned, the memory will be freed.
     ~lmAutoPtr()
     {
         if (owned)
             lmDelete(NULL, ptr);
     }
-    
+
+    // Assign a pointer. If there was a previous pointer owned, free it.
+    lmAutoPtr& operator=(T* p)
+    {
+        reset(p);
+        return *this;
+    }
+
+    // Get the value of the pointer.
     T* get()
     {
         return ptr;
     }
-    
+
+    // Release ownership of the pointer. The pointer value will remain the same.
     T* release()
     {
         owned = false;
         return ptr;
     }
-    
+
+    // Set the pointer. If there was a previous pointer owned, free it.
     void reset(T* p = NULL)
     {
+        if (owned)
+            lmDelete(NULL, ptr);
+
         owned = p ? true : false;
         ptr = p;
     }

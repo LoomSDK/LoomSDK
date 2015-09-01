@@ -314,6 +314,7 @@ public:
         ty = other->ty;
     }
 
+    // Expects input to be a 4x4 matrix - that is a float[4][4] array or float[16] array.
     inline void copyFromMatrix4(const float *other)
     {
         a = other[0];
@@ -351,6 +352,7 @@ public:
         return 0;
 	}
 
+    // Expects output to be a 4x4 matrix - that is a lmscalar[3][3] array or float[9] array.
 	void copyToMatrix3(lmscalar* values) const
 	{
 		values[0] = a;
@@ -364,6 +366,7 @@ public:
 		values[8] = 1;
 	}
 
+    // Expects output to be a 4x4 matrix - that is a float[3][3] array or float[9] array.
     void copyToMatrix3f(float* values) const
     {
         values[0] = (float)a;
@@ -377,6 +380,7 @@ public:
         values[8] = 1;
     }
 
+    // Expects output to be a 4x4 matrix - that is a lmscalar[4][4] array or lmscalar[16] array.
     void copyToMatrix4(lmscalar* values) const
     {
         values[0] = a;
@@ -397,6 +401,7 @@ public:
         values[15] = 1;
     }
 
+    // Expects output to be a 4x4 matrix - that is a float[4][4] array or float[16] array.
     void copyToMatrix4f(float* values) const
     {
         values[0] = (float) a;

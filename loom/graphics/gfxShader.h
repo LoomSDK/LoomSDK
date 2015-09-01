@@ -24,22 +24,30 @@
 #include "loom/engine/loom2d/l2dMatrix.h"
 #include "loom/script/native/lsNativeDelegate.h"
 #include "loom/common/utils/utTypes.h"
-#include "loom/common/utils/auto_ptr.h"
+#include "loom/common/utils/lmAutoPtr.h"
 
 namespace GFX {
 
+// Forward declaration
 class Shader;
 
+// An entry struct for our "cache". Keeps a reference count along with the Shader object.
 struct ShaderEntry
 {
     size_t refcount;
     Shader* ref;
 };
 
+/*
+ * A single shader that represents a part of ShaderProgram.
+ * It knows how to live-reload if it's loaded from an asset (an asset name has to be given in the constructor).
+ * If it is to be loaded directly from source by calling load(), name should be an enpty string.
+ */
 class Shader
 {
 private:
 
+    // A sort of "cache" where references to compiled shaders on the GPU are stored.
     static utHashTable<utCharHashKey, ShaderEntry> liveShaders;
 
 public:
@@ -156,6 +164,7 @@ public:
     LOOM_DELEGATE(onBind);
 };
 
+// A default shader that is used internally by Loom.
 class DefaultShader : public ShaderProgram
 {
 protected:
