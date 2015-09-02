@@ -358,6 +358,10 @@ namespace :utility do
       Dir.chdir("docs/examples/#{args[:name]}") do
         sh "#{expandedArtifactsPath}/lsc"
       end
+      
+      # Clean up the libs and bin folders to save tons of space.
+      FileUtils.rm_r("docs/examples/#{args[:name]}/libs")
+      FileUtils.rm_r("docs/examples/#{args[:name]}/bin")
   end
 
   desc "Run demo"
