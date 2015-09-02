@@ -271,7 +271,9 @@ namespace :generate do
         FileUtils.rm_r "#{exampleFolder}/libs", :force => true
         FileUtils.rm_r "#{exampleFolder}/src", :force => true
       end
-      
+
+      # make sure we don't accumulate junk in the artifacs/docs folder.
+      FileUtils.rm_r "artifacts/docs", :force => true
       FileUtils.mkdir_p "artifacts/docs"
       FileUtils.cp_r "docs/output/.", "artifacts/docs/"
     else
