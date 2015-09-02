@@ -213,7 +213,7 @@ int NativeInterface::getManagedObectCount(const char *classPath,
         lua_pop(L, 1);
 
         lua_rawgeti(L, -1, LSINDEXDELETEDMANAGED);
-        bool isDeleted = lua_toboolean(L, -1);
+        bool isDeleted = lua_toboolean(L, -1) != 0 ? true : false;
         lua_pop(L, 1);
 
         if (t == type && !isDeleted)
