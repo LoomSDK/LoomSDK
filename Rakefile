@@ -264,6 +264,14 @@ namespace :generate do
         load "./main.rb"
       end
 
+      # Nuke all the garbage in the examples folders.
+      Dir.glob("docs/output/examples/*/") do |exampleFolder|
+        FileUtils.rm_r "#{exampleFolder}/assets", :force => true
+        FileUtils.rm_r "#{exampleFolder}/bin", :force => true
+        FileUtils.rm_r "#{exampleFolder}/libs", :force => true
+        FileUtils.rm_r "#{exampleFolder}/src", :force => true
+      end
+      
       FileUtils.mkdir_p "artifacts/docs"
       FileUtils.cp_r "docs/output/.", "artifacts/docs/"
     else
