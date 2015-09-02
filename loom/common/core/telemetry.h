@@ -10,6 +10,8 @@
 
 typedef int TickMetricID;
 
+lmDeclareLogGroup(gTelemetryLogGroup)
+
 struct TickMetricBase
 {
     TickMetricID id;
@@ -98,29 +100,16 @@ struct TickMetricRange : TickMetricBase
 
 typedef unsigned char TableType;
 
-template <class T>
-struct TableValuesTraits
-{
-    static const TableType type;
-    static const int packedItemSize;
-};
-
-template <>
-struct TableValuesTraits<TickMetricValue>
-{
-    static const TableType type;
-    static const int packedItemSize;
-};
-
 
 template <class TableValue>
 struct TableValues
 {
     static const unsigned int HEADER_SIZE = 1 + 4; // Table type + size bytes
+    static const TableType type;
+    static const int packedItemSize;
 
-    static int sequence;
+    int sequence;
 
-    TableType getType() { return TableValuesTraits<TableValue>::type; }
     utHashTable<utHashedString, TableValue> table;
     unsigned int size;
 
@@ -139,7 +128,7 @@ struct TableValues
     }
     void writeType(utByteArray *buffer)
     {
-        buffer->writeUnsignedByte(TableValuesTraits<TableValue>::type);
+        buffer->writeUnsignedByte(TableValues<TableValue>::type);
     }
     void writeSize(utByteArray *buffer)
     {
@@ -187,7 +176,7 @@ struct TableValues
     bool read(utByteArray *buffer)
     {
         TableType type = readType(buffer);
-        if (type != TableValuesTraits<TableValue>::type)
+        if (type != TableValues<TableValue>::type)
         {
             buffer->setPosition(buffer->getPosition() - 1);
             return false;

@@ -395,7 +395,8 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
 #endif
             if (waiting)
             {
-                lmLogInfo(netLogGroup, "Waiting for receive buffer %d / %d", *bytesToRead - bytesLeft, *bytesToRead);
+                // TODO figure out a better way to do this?
+                //lmLogDebug(netLogGroup, "Waiting for receive buffer %d / %d", *bytesToRead - bytesLeft, *bytesToRead);
                 loom_thread_sleep(5);
                 continue;
             }

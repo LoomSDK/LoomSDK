@@ -42,7 +42,12 @@ protected:
         }
 
         T *ptr  = (T *)&_data[_position];
-        T value = *ptr;
+        T value;
+
+        // memcpy is necessary for some platforms as we can get
+        // an unaligned read exception (e.g. SIGBUS on Android/ARM) otherwise
+        // TODO: benchmark vs. assignment
+        memcpy(&value, ptr, sizeof(T));
 
         _position += sizeof(T);
 
@@ -62,7 +67,9 @@ protected:
         value = convertHostToLEndian(value);
 
         T *ptr = (T *)&_data[_position];
-        *ptr = value;
+        
+        // Needed for unaligned writes, see readValue for more info
+        memcpy(ptr, &value, sizeof(T));
 
         _position += sizeof(T);
     }

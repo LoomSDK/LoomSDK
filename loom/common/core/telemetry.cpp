@@ -20,15 +20,11 @@ loom_precision_timer_t Telemetry::tickTimer = loom_startTimer();
 utArray<utString> Telemetry::tickTimerStack;
 TableValues<TickMetricRange> Telemetry::tickRanges;
 
-int TableValues<TickMetricValue>::sequence;
-int TableValues<TickMetricRange>::sequence;
+template<> const TableType TableValues<TickMetricValue>::type = 1;
+template<> const int TableValues<TickMetricValue>::packedItemSize = 4 + 8;
 
-const TableType TableValuesTraits<TickMetricValue>::type = 1;
-const int TableValuesTraits<TickMetricValue>::packedItemSize = 4 + 8;
-
-const TableType TableValuesTraits<TickMetricRange>::type = 2;
-const int TableValuesTraits<TickMetricRange>::packedItemSize = 4 + 4 * 4 + 2 * 8;
-
+template<> const TableType TableValues<TickMetricRange>::type = 2;
+template<> const int TableValues<TickMetricRange>::packedItemSize = 4 + 4 * 4 + 2 * 8;
 
 void Telemetry::enable(lua_State *L)
 {
@@ -50,8 +46,6 @@ void Telemetry::beginTick()
 
     tickValues.reset();
     tickRanges.reset();
-    TableValues<TickMetricValue>::sequence = 0;
-    TableValues<TickMetricRange>::sequence = 0;
     tickTimerStack.clear();
 
     loom_resetTimer(tickTimer);
@@ -126,7 +120,7 @@ void Telemetry::beginTickTimer(const char *name)
     lmAssert(inserted, "Tick timer insertion error");
 
     int strSize = 2 + strlen(key.str().c_str());
-    tickRanges.size += strSize + TableValuesTraits<TickMetricRange>::packedItemSize;
+    tickRanges.size += strSize + TableValues<TickMetricRange>::packedItemSize;
     
     stored = tickRanges.table.get(key);
     tickTimerStack.push_back(key.str());
@@ -197,7 +191,7 @@ TickMetricValue* Telemetry::setTickValue(const char *name, double value)
         stored = &tickValues.table.at(tickValues.table.size() - 1);
 
         int strSize = 2 + strlen(name);
-        tickValues.size += strSize + TableValuesTraits<TickMetricValue>::packedItemSize;
+        tickValues.size += strSize + TableValues<TickMetricValue>::packedItemSize;
     }
     else
     {
