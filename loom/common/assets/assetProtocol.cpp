@@ -132,7 +132,7 @@ public:
             }
 
             // Display it.
-            lmLogRun(assetProtocolLogGroup, "%s", logString);
+			loom_log(&assetProtocolLogGroup, LoomLogInfo, "%s", logString);
             lmFree(NULL, logString);
 
             return true;

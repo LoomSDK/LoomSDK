@@ -63,7 +63,6 @@ extern "C" {
 #define lmLogInfo(group, format, ...)                                 if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogInfo, "[%s] " format, group.name, ## __VA_ARGS__); }
 #define lmLogError(group, format, ...)                                if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogError, "[%s] " format, group.name, ## __VA_ARGS__); }
 #define lmLogWarn(group, format, ...)                                 if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogWarn, "[%s] " format, group.name, ## __VA_ARGS__); }
-#define lmLogRun(group, format, ...)                                  if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogInfo, format, ## __VA_ARGS__); } // A special log call without displaying the log group for use in 'loom run' command
 #define lmLog    lmLogInfo // Alias for completeness.
 
 /**
