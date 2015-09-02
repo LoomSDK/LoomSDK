@@ -1088,9 +1088,12 @@ namespace :package do
 
     FileUtils.rm_rf "pkg/examples.zip"
     FileUtils.mkdir_p "pkg"
-
+    
+    # Package examples skipping bloat.
     Zip::File.open("pkg/examples.zip", 'w') do |zipfile|
       Dir["docs/examples/**/**"].each do |file|
+      	next if File.extname(file) == ".loomlib"
+      	next if File.extname(file) == ".loom"
         zipfile.add(file.sub("docs/examples/", ''),file)
       end
     end
