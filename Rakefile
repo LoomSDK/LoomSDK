@@ -844,7 +844,7 @@ namespace :build do
     puts "Long: #{git_rev_long}"
     puts "Short: #{git_rev_short}"
   end
-
+  
 end
 
 file 'build/luajit_x86/lib/libluajit-5.1.a' do
@@ -892,7 +892,7 @@ file 'build/luajit_android/lib/libluajit-5.1.a' do
       #    sh "#{NDK}\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make -f Makefile.win32 install -j#{$numCores} HOST_CC=\"gcc -m32\" CROSS=" + ENV['NDKP'] + " TARGET_FLAGS=\"" + ENV['NDKF']+"\" TARGET=arm TARGET_SYS=Linux PREFIX=\"#{luajit_android_dir.shellescape}\""
       #end
     else
-    puts "building LuaJIT Android on OSX / Linux"
+      puts "building LuaJIT Android on OSX / Linux"
       # OSX / LINUX
       NDK = ENV['ANDROID_NDK']
       if (!NDK)
