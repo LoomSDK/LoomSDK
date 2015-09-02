@@ -37,11 +37,10 @@
 #include "loom/common/utils/fourcc.h"
 
 #include "loom/common/assets/assets.h"
-#include "loom/common/assets/assetProtocol.h"
 #include "loom/common/assets/assetsImage.h"
 #include "loom/common/assets/assetsSound.h"
 #include "loom/common/assets/assetsScript.h"
-#include "loom/common/assets/telemetry.h"
+#include "loom/common/assets/telemetryServer.h"
 
 #include <jansson.h>
 

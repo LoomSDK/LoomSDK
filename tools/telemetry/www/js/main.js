@@ -3,7 +3,7 @@ var colors = ["#611824", "#C12F2A", "#FF6540", "#FEDE7B", "#F7FFEE"];
 var invertGraph = true;
 
 var timeInitRange = 20e6;
-var tickInitNum = 300;
+var tickInitNum = 60;
 
 var tickLimit = tickInitNum;
 var tickShowValues = false;
@@ -440,7 +440,7 @@ function TStream() {
         
         this.socket.onclose = function streamClose(e) {
             this.stop();
-            this.showStatus("Stream closed "+(e.wasClean ? "cleanly" : "uncleanly")+" with code "+e.code+" and reason: "+e.reason);
+            this.showStatus("Stream closed ("+(e.wasClean ? "cleanly" : "uncleanly")+")");
         }.bind(this);
         
         this.socket.onmessage = function streamMessage(e) {
@@ -561,7 +561,7 @@ function TelemetryProcessor(initCommon) {
         
         this.viewSkipThreshold = Math.max(0, this.viewSkipThreshold + (viewUpdateLoad - 1) + this.unprocessed.length/10);
         
-        selDisplayLoad.text("~" + (displayLoadMean*100).toFixed(0) + "% " + this.viewSkipThreshold.toFixed(2))
+        selDisplayLoad.text("~" + (displayLoadMean*100).toFixed(0) + "%")
         
         
         
@@ -878,7 +878,6 @@ function TickValues(initCommon) {
     }
     
     this.updateTickView = function() {
-        console.log(tickShowValues, domains, ticksDirty)
         if (!tickShowValues) return;
         if (!domains && ticksDirty) this.updateTicks();
         if (!domains) return;

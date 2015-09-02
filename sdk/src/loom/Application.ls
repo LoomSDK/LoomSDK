@@ -249,6 +249,16 @@ package loom
             Console.print("Dumping profiler...");
             Profiler.dump();
         }
+        
+        protected function onTelemetryEnable():void
+        {
+            Telemetry.enable();
+        }
+        
+        protected function onTelemetryDisable():void
+        {
+            Telemetry.disable();
+        }
 
         protected function onDumpManagedNatives():void
         {
@@ -323,6 +333,8 @@ package loom
             commandManager.registerCommand("terminate", onTerminate);
             commandManager.registerCommand("profilerEnable", onProfilerEnable);
             commandManager.registerCommand("profilerDump", onProfilerDump);
+            commandManager.registerCommand("telemetryEnable", onTelemetryEnable);
+            commandManager.registerCommand("telemetryDisable", onTelemetryDisable);
             commandManager.registerCommand("dumpManagedNatives", onDumpManagedNatives);
             group.registerManager(commandManager);
         }

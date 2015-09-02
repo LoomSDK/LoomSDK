@@ -43,6 +43,27 @@ $doEnableLuaGcProfile= $buildTarget == "Release" ? 0 : 1
 $doBuildAdmob=0
 $doBuildFacebook=0
 
+# Relative path of the telemetry client files in the SDK 
+$telemetryClient = "telemetry/www/"
+# Include these files (Ruby Dir.glob syntax)
+# If you change this, you should probably update the
+# .gitignore file in tools/telemetry/www/ so people
+# downloading the SDK can build straight away
+$telemetryClientInclude = [
+  "*.*",
+  "css/**.*",
+  "js/**.*",
+  # Semantic UI
+  "semantic/dist/**/*.*"
+]
+# Exclude these files
+# Note that simple paths from .gitignore are already
+# automatically excluded (e.g. unnecessary semantic ui files)
+$telemetryClientExclude = [
+  "semantic.json",
+  "LICENSE.txt",
+]
+
 # Allow disabling Loom doc generation, as it can be very slow.
 # Disabled by default, set environment variable 'LOOM_BUILD_DOCS'
 $buildDocs = ENV['LOOM_BUILD_DOCS'] == "1" || ENV['LOOM_BUILD_DOCS'] == "true"
@@ -1222,12 +1243,52 @@ def get_app_prefix (appPath)
     return appPrefix
 end
 
+def telemetry_client_copy(fromDir, toDir)
+  # Enumerate and store all included file paths
+  included = []
+  $telemetryClientInclude.each do |path|
+    included.concat(Dir.glob(File.join(fromDir, path)))
+  end
+  
+  # Enumerate and store all excluded file paths
+  excluded = []
+  $telemetryClientExclude.each do |path|
+    excluded.concat(Dir.glob(File.join(fromDir, path)))
+  end
+  
+  # Add .gitignore to excluded files
+  excluded.concat IO.readlines(File.join(fromDir, ".gitignore")).map { |line|
+    line.strip
+  }.select { |line|
+    line.length > 0 && !line.start_with?("#")
+  }.map { |line|
+    path = File.join(fromDir, line)
+  }
+  
+  # Only process the included files without the excluded ones
+  clientFiles = (included-excluded).select { |path| 
+    !path.start_with? *excluded
+  }
+  
+  # Copy each file to the target directory
+  clientFiles.each do |fromPath|
+    toPath = fromPath.sub(fromDir, toDir)
+    #puts "Copying #{fromPath} to #{toPath}"
+    FileUtils.mkdir_p File.dirname(toPath)
+    FileUtils.cp fromPath, toPath
+  end
+  
+  puts "Copied #{clientFiles.length} Telemetry client files (included #{included.length}, excluded #{excluded.length})"
+  
+end
+
 desc "Build the Free SDK (desktop only)"
 def prepare_free_sdk
   FileUtils.rm_rf "sdk/LoomDemo.app"
   FileUtils.rm_rf "sdk/LoomDemo.exe"
   FileUtils.rm_rf "pkg"
 
+  telemetryClientPath = File.join("pkg/sdk/", $telemetryClient)
 
   # put together a folder to zip up
   FileUtils.mkdir_p "pkg/sdk"
@@ -1236,7 +1297,11 @@ def prepare_free_sdk
   FileUtils.mkdir_p "pkg/sdk/libs"
   FileUtils.mkdir_p "pkg/sdk/assets"
   FileUtils.mkdir_p "pkg/sdk/src"
-
+  FileUtils.mkdir_p telemetryClientPath
+  
+  # copy telemetry www
+  telemetry_client_copy("tools/telemetry/www/", telemetryClientPath)
+  
   #copy the docs in
   FileUtils.cp_r("artifacts/docs","pkg/sdk") if File.exists? "artifacts/docs"
 

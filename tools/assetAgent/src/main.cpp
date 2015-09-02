@@ -33,7 +33,7 @@
 #include "loom/common/utils/utString.h"
 
 #include "loom/common/assets/assetProtocol.h"
-#include "loom/common/assets/telemetry.h"
+#include "loom/common/assets/telemetryServer.h"
 
 #include "loom/common/core/allocator.h"
 
@@ -118,6 +118,8 @@ static int          gQuitFlag           = 0;
 static ThreadHandle gCallbackLock       = NULL;
 LogCallback         gLogCallback        = NULL;
 FileChangeCallback  gFileChangeCallback = NULL;
+
+static utHashTable<utFastStringHash, utString> gOptions;
 
 // Queue for callbacks.
 enum CallbackQueueNoteType
@@ -753,7 +755,10 @@ static int socketListeningThread(void *payload)
 
         loom_mutex_lock(gActiveSocketsMutex);
         gActiveHandlers.push_back(new AssetProtocolHandler(acceptedSocket));
-        gActiveHandlers.at(gActiveHandlers.size() - 1)->registerListener(new TelemetryListener());
+
+        AssetProtocolHandler *handler = gActiveHandlers.back();
+        handler->registerListener(new TelemetryListener());
+        if (TelemetryServer::isRunning()) handler->sendCommand("telemetryEnable");
 
         // Send it all of our files.
         // postAllFiles(gActiveHandlers[gActiveHandlers.size()-1]->getId());
@@ -801,6 +806,24 @@ extern "C"
 #define DLLEXPORT
 #endif
 
+
+
+void DLLEXPORT assetAgent_set(const char *key, const char *value) {
+    utFastStringHash hash = utFastStringHash(key);
+    gOptions.set(hash, value);
+}
+
+static utString* optionGet(const char *key) {
+    utFastStringHash hash = utFastStringHash(key);
+    return gOptions.get(hash);
+}
+
+static bool optionEquals(const char *key, const char *expected) {
+    utString *value = optionGet(key);
+    if (value == NULL) return false;
+    return *value == expected;
+}
+
 void DLLEXPORT assetAgent_run(IdleCallback idleCb, LogCallback logCb, FileChangeCallback changeCb)
 {
     //void *testa = lmAlloc(NULL, 4);
@@ -827,10 +850,16 @@ void DLLEXPORT assetAgent_run(IdleCallback idleCb, LogCallback logCb, FileChange
     // Note callbacks.
     gLogCallback        = logCb;
     gFileChangeCallback = changeCb;
+    
+    
+    utString *sdkPath = optionGet("sdk");
+    if (sdkPath != NULL) TelemetryServer::setClientRootFromSDK(sdkPath->c_str());
+    const char *ltcPath = getenv("LoomTelemetry");
+    if (ltcPath != NULL) TelemetryServer::setClientRoot(ltcPath);
 
-    Telemetry::setClientRoot(getenv("LoomTelemetry"));
+    if (optionEquals("telemetry", "true")) TelemetryServer::start();
+    
 
-    Telemetry::startServer();
 
     // Set up the log callback.
     loom_log_addListener(fileWatcherLogListener, NULL);
@@ -864,7 +893,7 @@ void DLLEXPORT assetAgent_run(IdleCallback idleCb, LogCallback logCb, FileChange
             if (cqn->type == QNT_Change)
             {
                 gFileChangeCallback(cqn->text.c_str());
-                Telemetry::fileChanged(cqn->text.c_str());
+                TelemetryServer::fileChanged(cqn->text.c_str());
             }
             else if (cqn->type == QNT_Log)
             {
@@ -898,6 +927,11 @@ void DLLEXPORT assetAgent_command(const char *cmd)
     else if (strstr(cmd, ".clients") != 0)
     {
         listClients();
+    }
+    else if (strstr(cmd, ".telemetry") != 0)
+    {
+        TelemetryServer::isRunning() ? TelemetryServer::stop() : TelemetryServer::start();
+        assetAgent_command(TelemetryServer::isRunning() ? "telemetryEnable" : "telemetryDisable");
     }
     else if (cmd[0] != 0)
     {

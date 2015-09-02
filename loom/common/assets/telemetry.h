@@ -5,15 +5,8 @@
 #include "loom/common/assets/assetProtocol.h"
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utByteArray.h"
-
-#include "loom/vendor/civetweb/include/civetweb.h"
 #include "loom/script/native/core/system/lmJSON.h"
-
-class TelemetryListener : public AssetProtocolMessageListener
-{
-public:
-    virtual bool handleMessage(int fourcc, AssetProtocolHandler *handler, NetworkBuffer& buffer);
-};
+#include "loom/script/loomscript.h"
 
 typedef int TickMetricID;
 
@@ -69,8 +62,6 @@ struct TickMetricRange : TickMetricBase
 
     int duplicates;
     int duplicatesOnStack;
-    //const char *name;
-    //const char *unique;
 
     void write(utByteArray *buffer)
     {
@@ -238,7 +229,8 @@ struct TableValues
 class Telemetry
 {
 protected:
-    static utString clientRoot;
+    static bool enabled;
+    static bool pendingEnabled;
 
     static utByteArray sendBuffer;
 
@@ -250,19 +242,14 @@ protected:
 
     static int tickId;
 
-    static struct mg_callbacks callbacks;
-    static struct mg_context *server;
-
-    static JSON tickValuesJSON;
-    static JSON tickRangesJSON;
-    static JSON tickMetricsJSON;
-    static utString tickMetricsJSONString;
-
-    static void updateMetricsJSON();
-
-
 public:
-    static void handleMessage(utByteArray *buffer);
+
+    static void enable(lua_State *L = NULL);
+    static void disable(lua_State *L = NULL);
+    inline static bool isEnabled()
+    {
+        return pendingEnabled;
+    }
 
     static void beginTick();
     static void endTick();
@@ -271,10 +258,6 @@ public:
     static void endTickTimer(const char *name);
 
     static TickMetricValue* setTickValue(const char *name, double value);
-
-    static void startServer();
-    static void setClientRoot(const char *root);
-    static void fileChanged(const char* path);
 
 };
 

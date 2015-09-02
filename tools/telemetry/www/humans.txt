@@ -3,13 +3,13 @@
 
 # TEAM
 
-    <name> -- <role> -- <twitter>
+    Miha Lunar -- Client & Server Dev -- @Smily
 
 # THANKS
 
-    <name>
+    The Engine Company -- theengine.co
 
 # TECHNOLOGY COLOPHON
 
     CSS3, HTML5
-    Apache Server Configs, jQuery, Modernizr, Normalize.css
+    civetweb, d3.js, Semantic UI, jQuery, Modernizr, Normalize.css

@@ -1,30 +1,16 @@
-#include "telemetry.h"
+#include "loom/common/assets/telemetry.h"
 
-#include "loom/common/utils/fourcc.h"
 #include "loom/common/assets/assets.h"
 #include "loom/common/core/log.h"
-#include "loom/common/platform/platformThread.h"
 #include "loom/common/core/performance.h"
-
-#define LTS_DOCUMENT_ROOT "./www"
-#define LTS_PORT "8073"
-#define MAIN_URI "/"
-#define TICK_URI "/tick"
-
-#define MAX_WS_CLIENTS 5 /* just for the test: a small number that can be reached */
-                         /* a real server should use a much higher number here */
-
-
 
 lmDefineLogGroup(gTelemetryLogGroup, "lt", true, LoomLogInfo)
 
-utString Telemetry::clientRoot;
-utByteArray Telemetry::sendBuffer;
+bool Telemetry::enabled = false;
+bool Telemetry::pendingEnabled = false;
 
-JSON Telemetry::tickValuesJSON;
-JSON Telemetry::tickRangesJSON;
-JSON Telemetry::tickMetricsJSON;
-utString Telemetry::tickMetricsJSONString;
+
+utByteArray Telemetry::sendBuffer;
 
 int Telemetry::tickId = 0;
 
@@ -43,259 +29,25 @@ const int TableValuesTraits<TickMetricValue>::packedItemSize = 4 + 8;
 const TableType TableValuesTraits<TickMetricRange>::type = 2;
 const int TableValuesTraits<TickMetricRange>::packedItemSize = 4 + 4 * 4 + 2 * 8;
 
-mg_callbacks Telemetry::callbacks;
-mg_context* Telemetry::server = NULL;
 
-static MutexHandle jsonMutex = loom_mutex_create();
-
-
-static int IndexHandler(struct mg_connection *conn, void *cbdata)
+void Telemetry::enable(lua_State *L)
 {
-    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n");
-    return 1;
+    pendingEnabled = true;
 }
 
-void Telemetry::fileChanged(const char* path)
+void Telemetry::disable(lua_State *L)
 {
-    lmLog(gTelemetryLogGroup, "File changed: %s", path);
-}
-
-static int JSONHandler(struct mg_connection *conn, void *cbdata)
-{
-    JSON* json = (JSON*)cbdata;
-    lmAssert(json != NULL, "Invalid JSON object provided to the JSON handler");
-    loom_mutex_lock(jsonMutex);
-    const char* serialized = json->serialize();
-    if (serialized == NULL)
-    {
-        serialized = "{ \"status\": \"fail\", \"data\": null }";
-    }
-    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n");
-    mg_write(conn, serialized, strlen(serialized));
-    loom_mutex_unlock(jsonMutex);
-    return 1;
-}
-
-static int JSONStringHandler(struct mg_connection *conn, void *cbdata)
-{
-    utString* jsonString = (utString*)cbdata;
-    lmAssert(jsonString != NULL, "Invalid JSON object provided to the JSON handler");
-    loom_mutex_lock(jsonMutex);
-    if (jsonString->empty())
-    {
-        jsonString = &utString("{ \"status\": \"fail\", \"data\": null }");
-    }
-    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n");
-    mg_write(conn, jsonString->c_str(), jsonString->length());
-    loom_mutex_unlock(jsonMutex);
-    return 1;
-}
-
-
-static int clientGlobalID = 0;
-
-struct StreamClient {
-    int id;
-    struct mg_connection * conn;
-    int state;
-} static streamClients[MAX_WS_CLIENTS];
-
-static unsigned long cnt;
-
-
-int StreamConnectHandler(const struct mg_connection * conn, void *cbdata)
-{
-    struct mg_context *ctx = mg_get_context(conn);
-    StreamClient *client = NULL;
-    int i;
-
-    mg_lock_context(ctx);
-    for (i = 0; i < MAX_WS_CLIENTS; i++) {
-        if (streamClients[i].conn == NULL) {
-            streamClients[i].id = clientGlobalID++;
-            streamClients[i].conn = (struct mg_connection *) conn;
-            streamClients[i].state = 1;
-            mg_set_user_connection_data(conn, (void*)(streamClients + i));
-            client = &streamClients[i];
-            break;
-        }
-    }
-    mg_unlock_context(ctx);
-
-    if (client == NULL)
-    {
-        lmLog(gTelemetryLogGroup, "Stream client rejected");
-    }
-    else
-    {
-        lmLog(gTelemetryLogGroup, "Stream client #%d accepted", client->id);
-    }
-
-    return client == NULL ? 1 : 0;
-}
-
-void StreamReadyHandler(struct mg_connection * conn, void *cbdata)
-{
-    struct StreamClient *client = (StreamClient*)mg_get_user_connection_data(conn);
-
-    //const char * text = "{ \"status\": \"ready\", \"data\": null }";;
-    //mg_websocket_write(conn, WEBSOCKET_OPCODE_TEXT, text, strlen(text));
-
-    lmLog(gTelemetryLogGroup, "Stream client #%d ready", client->id);
-
-    lmAssert(client->conn == conn, "Websocket connection mismatch");
-    lmAssert(client->state == 1, "Websocket invalid state");
-
-    client->state = 2;
-}
-
-int StreamDataHandler(struct mg_connection * conn, int bits, char * data, size_t len, void *cbdata)
-{
-    struct StreamClient *client = (StreamClient*)mg_get_user_connection_data(conn);
-    
-    lmAssert(client->conn == conn, "Websocket connection mismatch");
-    lmAssert(client->state >= 1, "Websocket invalid state");
-
-    if (strcmp(data, "ping") != 0) {
-        const char* pong = "{ \"status\": \"pong\", \"data\": null }";
-        mg_websocket_write(conn, WEBSOCKET_OPCODE_TEXT, pong, strlen(pong));
-        return 1;
-    }
-
-    fprintf(stdout, "Websocket got data:\r\n");
-    fwrite(data, len, 1, stdout);
-    fprintf(stdout, "\r\n\r\n");
-
-    return 1;
-}
-
-void StreamCloseHandler(const struct mg_connection * conn, void *cbdata)
-{
-    struct StreamClient *client = (StreamClient*)mg_get_user_connection_data(conn);
-    struct mg_context *ctx = mg_get_context(conn);
-
-    lmAssert(client->conn == conn, "Websocket connection mismatch");
-    lmAssert(client->state >= 1, "Websocket invalid state");
-
-    lmLog(gTelemetryLogGroup, "Stream client #%d dropped", client->id);
-
-    mg_lock_context(ctx);
-    client->id = -1;
-    client->state = 0;
-    client->conn = NULL;
-    mg_unlock_context(ctx);
-}
-
-void StreamSendAll(struct mg_context *ctx, const char *msg)
-{
-    int i;
-    mg_lock_context(ctx);
-    for (i = 0; i < MAX_WS_CLIENTS; i++) {
-        if (streamClients[i].state == 2) {
-            mg_websocket_write(streamClients[i].conn, WEBSOCKET_OPCODE_TEXT, msg, strlen(msg));
-        }
-    }
-    mg_unlock_context(ctx);
-}
-
-void Telemetry::setClientRoot(const char *root)
-{
-    if (root == NULL) return;
-    clientRoot = utString(root);
-}
-
-void Telemetry::startServer()
-{
-    const char * options[] = {
-        "document_root", clientRoot.length() == 0 ? LTS_DOCUMENT_ROOT : clientRoot.c_str(),
-        "listening_ports", LTS_PORT,
-        0
-    };
-
-    memset(&callbacks, 0, sizeof(callbacks));
-    server = mg_start(&callbacks, 0, options);
-
-    //mg_set_request_handler(server, MAIN_URI, IndexHandler, 0);
-    mg_set_request_handler(server, TICK_URI, JSONStringHandler, &Telemetry::tickMetricsJSONString);
-
-    /* WS site for the websocket connection */
-    mg_set_websocket_handler(server, "/stream", StreamConnectHandler, StreamReadyHandler, StreamDataHandler, StreamCloseHandler, 0);
-
-    lmLog(gTelemetryLogGroup, "Loom Telemetry server listening on port %s", mg_get_option(server, "listening_ports"))
-
-}
-
-
-bool TelemetryListener::handleMessage(int fourcc, AssetProtocolHandler *handler, NetworkBuffer& netBuffer)
-{
-    switch (fourcc)
-    {
-    case LOOM_FOURCC('T', 'E', 'L', 'E'):
-
-        utByteArray buffer;
-        int curPos = netBuffer.getCurrentPosition();
-
-        buffer.attach((char*)netBuffer.buffer + curPos, netBuffer.length - curPos);
-
-        Telemetry::handleMessage(&buffer);
-
-        return true;
-
-        break;
-    }
-
-    return false;
-}
-
-void Telemetry::handleMessage(utByteArray *buffer)
-{
-    TableValues<TickMetricValue> tickValues;
-    TableValues<TickMetricRange> tickRanges;
-
-    loom_mutex_lock(jsonMutex);
-
-    while (buffer->bytesAvailable() > 0)
-    {
-        if (tickValues.read(buffer))
-        {
-            tickValues.writeJSONObject(&tickValuesJSON);
-        }
-        else if (tickRanges.read(buffer))
-        {
-            tickRanges.writeJSONArray(&tickRangesJSON);
-        }
-        else
-        {
-            lmAssert(false, "Unknown telemetry type: %d", TableValues<TickMetricValue>::readType(buffer));
-        }
-    }
-
-    updateMetricsJSON();
-
-    loom_mutex_unlock(jsonMutex);
-}
-
-void Telemetry::updateMetricsJSON()
-{
-    JSON jdata;
-
-    tickMetricsJSON.initObject();
-    tickMetricsJSON.setString("status", "success");
-
-    jdata.initObject();
-    jdata.setObject("values", &tickValuesJSON);
-    jdata.setArray("ranges", &tickRangesJSON);
-    tickMetricsJSON.setObject("data", &jdata);
-    
-    const char *serialized = tickMetricsJSON.serialize();
-    tickMetricsJSONString = serialized;
-    lmFree(NULL, (void*)serialized);
-
-    StreamSendAll(server, tickMetricsJSONString.c_str());
+    pendingEnabled = false;
 }
 
 void Telemetry::beginTick()
 {
+    if (enabled != pendingEnabled) {
+        enabled = pendingEnabled;
+        lmLog(gTelemetryLogGroup, "Telemetry %s", enabled ? "enabled" : "disabled");
+    }
+    if (!enabled) return;
+
     tickValues.reset();
     tickRanges.reset();
     TableValues<TickMetricValue>::sequence = 0;
@@ -309,6 +61,8 @@ void Telemetry::beginTick()
 
 void Telemetry::endTick()
 {
+    if (!enabled) return;
+
     lmAssert(tickTimerStack.size() == 0, "Tick timer end call missing");
 
     int sendSize = 3 * 4 + tickValues.size + tickRanges.size;
@@ -330,6 +84,8 @@ void Telemetry::endTick()
 
 void Telemetry::beginTickTimer(const char *name)
 {
+    if (!enabled) return;
+
     utHashedString key = utHashedString(name);
 
     TickMetricRange *stored = tickRanges.table.get(key);
@@ -398,7 +154,7 @@ void Telemetry::beginTickTimer(const char *name)
 
 void Telemetry::endTickTimer(const char *name)
 {
-    //lmLog(gTelemetryLogGroup, "end %s", name);
+    if (!enabled) return;
 
     double tickNano = loom_readTimerNano(tickTimer);
 
@@ -426,6 +182,8 @@ void Telemetry::endTickTimer(const char *name)
 
 TickMetricValue* Telemetry::setTickValue(const char *name, double value)
 {
+    if (!enabled) return NULL;
+
     utHashedString key = utHashedString(name);
     TickMetricValue *stored = tickValues.table.get(key);
     TickMetricValue metric;

@@ -18,6 +18,10 @@
  * ===========================================================================
  */
 
+#ifndef _SYSTEM_JSON_H
+#define _SYSTEM_JSON_H
+
+
 #include "loom/script/native/lsLuaBridge.h"
 #include "loom/script/reflection/lsType.h"
 #include "loom/script/runtime/lsRuntime.h"
@@ -87,3 +91,5 @@ public:
     void setArrayArray(int index, JSON *value);
     void expandArray(int desiredLength);
 };
+
+#endif

@@ -1532,6 +1532,15 @@ public:
         //m_bptr[m_size].~Entry();
     }
 
+    // If the key is missing, insert the key-value pair, otherwise replace the existing value
+    void set(const Key& key, const Value& val)
+    {
+        bool inserted = insert(key, val);
+        if (!inserted) {
+            *get(key) = val;
+        }
+    }
+
     bool insert(const Key& key, const Value& val)
     {
         if (find(key) != UT_NPOS)
