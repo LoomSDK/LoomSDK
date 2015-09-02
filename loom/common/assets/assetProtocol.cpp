@@ -132,7 +132,7 @@ public:
             }
 
             // Display it.
-            lmLog(assetProtocolLogGroup, "LOG: %s", logString);
+            lmLogRun(assetProtocolLogGroup, "%s", logString);
             lmFree(NULL, logString);
 
             return true;

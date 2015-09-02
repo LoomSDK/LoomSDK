@@ -64,6 +64,7 @@ extern "C" {
 #define lmLogError(group, format, ...)                                if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogError, "[%s] " format, group.name, ## __VA_ARGS__); }
 #define lmLogWarn(group, format, ...)                                 if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogWarn, "[%s] " format, group.name, ## __VA_ARGS__); }
 #define lmLog    lmLogInfo // Alias for completeness.
+#define lmLogRun(group, format, ...)                                  if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogInfo, "%s" format, "", ## __VA_ARGS__); }
 
 /**
 Get the arguments of a log function as a char*,
