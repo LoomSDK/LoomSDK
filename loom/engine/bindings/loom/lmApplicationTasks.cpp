@@ -27,7 +27,7 @@
 #include "loom/common/config/applicationConfig.h"
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/graphics/gfxTexture.h"
-#include "loom/common/assets/telemetry.h"
+#include "loom/common/core/telemetry.h"
 
 lmDefineLogGroup(gTickLogGroup, "tick", true, LoomLogInfo)
 

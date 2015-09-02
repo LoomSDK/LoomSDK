@@ -20,7 +20,7 @@
 
 
 #include "loom/script/loomscript.h"
-#include "loom/common/assets/telemetry.h"
+#include "loom/common/core/telemetry.h"
 
 using namespace LS;
 

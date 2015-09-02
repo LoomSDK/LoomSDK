@@ -20,6 +20,8 @@
 
 #include <stdio.h>
 
+#include "telemetryServer.h"
+
 #include "loom/common/platform/platformNetwork.h"
 #include "loom/common/platform/platformIO.h"
 #include "loom/common/platform/platformFile.h"
@@ -33,7 +35,6 @@
 #include "loom/common/utils/utString.h"
 
 #include "loom/common/assets/assetProtocol.h"
-#include "loom/common/assets/telemetryServer.h"
 
 #include "loom/common/core/allocator.h"
 

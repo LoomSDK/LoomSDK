@@ -1,13 +1,13 @@
 project(assetAgent)
 
-include_directories( ${LOOM_INCLUDE_FOLDERS} )
+include_directories( ${LOOM_INCLUDE_FOLDERS} include/)
 
 set (MAINDEMO_SRC
     src/main.cpp
+    src/telemetryServer.cpp
 )
 
 set (MAINDEMO_HDR
-
 )
 
 

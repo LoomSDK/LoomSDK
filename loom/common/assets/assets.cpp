@@ -40,7 +40,7 @@
 #include "loom/common/assets/assetsImage.h"
 #include "loom/common/assets/assetsSound.h"
 #include "loom/common/assets/assetsScript.h"
-#include "loom/common/assets/telemetryServer.h"
+#include "loom/common/assets/assetProtocol.h"
 
 #include <jansson.h>
 
@@ -725,7 +725,6 @@ static void loom_asset_serviceServer()
             gAssetProtocolHandler = lmNew(NULL) AssetProtocolHandler(gAssetServerSocket);
             gAssetProtocolHandler->registerListener(lmNew(NULL) AssetProtocolFileMessageListener());
             gAssetProtocolHandler->registerListener(lmNew(NULL) AssetProtocolCommandListener());
-            gAssetProtocolHandler->registerListener(lmNew(NULL) TelemetryListener());
         }
 
         loom_mutex_unlock(gAssetServerSocketLock);

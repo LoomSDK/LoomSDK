@@ -51,10 +51,10 @@ $telemetryClient = "telemetry/www/"
 # downloading the SDK can build straight away
 $telemetryClientInclude = [
   "*.*",
-  "css/**.*",
-  "js/**.*",
+  "css/**/*.*",
+  "js/**/*.*",
   # Semantic UI
-  "semantic/dist/**/*.*"
+  "semantic/dist/**/*.*",
 ]
 # Exclude these files
 # Note that simple paths from .gitignore are already
@@ -1266,8 +1266,11 @@ def telemetry_client_copy(fromDir, toDir)
   }
   
   # Only process the included files without the excluded ones
+  pathExcludedFiles = 0
   clientFiles = (included-excluded).select { |path| 
-    !path.start_with? *excluded
+    sw = path.start_with? *excluded
+    pathExcludedFiles += sw ? 1 : 0
+    !sw
   }
   
   # Copy each file to the target directory
@@ -1278,7 +1281,7 @@ def telemetry_client_copy(fromDir, toDir)
     FileUtils.cp fromPath, toPath
   end
   
-  puts "Copied #{clientFiles.length} Telemetry client files (included #{included.length}, excluded #{excluded.length})"
+  puts "Copied #{clientFiles.length} Telemetry client files (included #{included.length}, excluded #{excluded.length}, path excluded #{pathExcludedFiles})"
   
 end
 

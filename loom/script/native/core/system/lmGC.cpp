@@ -23,7 +23,7 @@
 #include "loom/script/runtime/lsLuaState.h"
 #include "loom/common/platform/platformTime.h"
 #include "loom/graphics/gfxMath.h"
-#include "loom/common/assets/telemetry.h"
+#include "loom/common/core/telemetry.h"
 
 namespace LS {
 

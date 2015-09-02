@@ -1,5 +1,6 @@
-#include "loom/common/assets/telemetry.h"
-#include "loom/common/assets/telemetryServer.h"
+#include "telemetryServer.h"
+
+#include "loom/common/core/telemetry.h"
 #include "loom/common/utils/fourcc.h"
 #include "loom/common/platform/platformThread.h"
 

@@ -1,4 +1,4 @@
-#include "loom/common/assets/telemetry.h"
+#include "loom/common/core/telemetry.h"
 
 #include "loom/common/assets/assets.h"
 #include "loom/common/core/log.h"
