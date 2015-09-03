@@ -134,7 +134,7 @@ namespace :post do
   desc "Posts the sdk to S3 and sumbit it to TEC"
   task :sdk, [:branch, :commit_sha, :build_number, :download_type, :root_url, :user, :pass, :s3_id, :s3_secret, :bucket] do |t, args|
     # Only deploy master for now.
-    next if(args[:branch] != "master")
+    if(args[:branch] != "master") next
 
     puts "-- Running in #{Dir.pwd} --"
 
@@ -263,7 +263,7 @@ namespace :post do
     end
 
     # Only deploy master for now.
-    next if(args[:branch] != "master")
+    if(args[:branch] != "master") next
 
     s3_id = args[:s3_id]
     s3_secret = args[:s3_secret]
