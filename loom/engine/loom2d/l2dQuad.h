@@ -24,6 +24,7 @@
 #include "loom/engine/loom2d/l2dDisplayObject.h"
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 #include "loom/graphics/gfxQuadRenderer.h"
+#include "loom/graphics/gfxShader.h"
 
 namespace Loom2D
 {
@@ -32,6 +33,7 @@ class Quad : public DisplayObject
 public:
 
     GFX::VertexPosColorTex quadVertices[4];
+    GFX::ShaderProgram* shader;
 
     bool nativeVertexDataInvalid;
     bool tinted;
@@ -42,6 +44,7 @@ public:
     {
         type = typeQuad;
         tinted = false;
+        shader = GFX::ShaderProgram::getDefaultShader();
     }
 
     int getNativeTextureID() const
@@ -62,6 +65,16 @@ public:
     inline void setNativeVertexDataInvalid(bool value)
     {
         nativeVertexDataInvalid = value;
+    }
+
+    void setShader(GFX::ShaderProgram* sh)
+    {
+        shader = sh;
+    }
+
+    GFX::ShaderProgram* getShader() const
+    {
+        return shader;
     }
 
     virtual void validate(lua_State *L, int index)

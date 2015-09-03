@@ -129,7 +129,7 @@ void Quad::render(lua_State *L)
 
     if (renderState.isClipping()) GFX::Graphics::setClipRect((int)renderState.clipRect.x, (int)renderState.clipRect.y, (int)renderState.clipRect.width, (int)renderState.clipRect.height);
 
-    GFX::VertexPosColorTex *v = GFX::QuadRenderer::getQuadVertexMemory(4, nativeTextureID, blendSrc, blendDst);
+    GFX::VertexPosColorTex *v = GFX::QuadRenderer::getQuadVertexMemory(4, nativeTextureID, blendSrc, blendDst, shader);
     GFX::VertexPosColorTex *src = quadVertices;
 
     if (!v)

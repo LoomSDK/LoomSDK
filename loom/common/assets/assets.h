@@ -101,6 +101,8 @@ enum LoomAssetType
     LATMesh         = LOOM_FOURCC('M', 'S', 'H', 1),
     LATScript       = LOOM_FOURCC('L', 'O', 'O', 'M'),
     LATBinary       = LOOM_FOURCC('B', 'I', 'N', 1),
+    LATVertexShader = LOOM_FOURCC('V', 'E', 'R', 'T'),
+    LATFragmentShader = LOOM_FOURCC('F', 'R', 'A', 'G'),
     LAT_FORCE_DWORD = 0xFFFFFFFF
 };
 
@@ -144,6 +146,8 @@ typedef void (*LoomAssetChangeCallback)(void *payload, const char *name);
 int loom_asset_subscribe(const char *name, LoomAssetChangeCallback cb, void *payload, int doFirstUpdate);
 void loom_asset_notifySubscribers(const char *name);
 int loom_asset_unsubscribe(const char *name, LoomAssetChangeCallback cb, void *payload);
+
+void *loom_asset_textDeserializer(void *ptr, size_t size, LoomAssetCleanupCallback *dtor);
 
 #ifdef __cplusplus
 };

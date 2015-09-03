@@ -26,6 +26,7 @@
 
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxTexture.h"
+#include "loom/graphics/gfxShader.h"
 
 // Includes for the resize operation.
 #include "loom/common/platform/platformThread.h"
@@ -357,6 +358,33 @@ static int registerLoomGraphics(lua_State *L)
        .addProperty("path", &TextureInfo::getTexturePath)
        .endClass()
 
+       .beginClass<ShaderProgram>("Shader")
+       .addConstructor<void(*)(void)>()
+       .addVarAccessor("onBind", &ShaderProgram::getonBindDelegate)
+       .addVarAccessor("MVP", &ShaderProgram::getMVP)
+       .addVarAccessor("textureId", &ShaderProgram::getTextureId)
+       .addMethod("load", &ShaderProgram::load)
+       .addMethod("loadFromAssets", &ShaderProgram::loadFromAssets)
+       .addMethod("getUniformLocation", &ShaderProgram::getUniformLocation)
+       .addMethod("setUniform1f", &ShaderProgram::setUniform1f)
+       .addLuaFunction("setUniform1fv", &ShaderProgram::setUniform1fv)
+       .addMethod("setUniform2f", &ShaderProgram::setUniform2f)
+       .addLuaFunction("setUniform2fv", &ShaderProgram::setUniform2fv)
+       .addMethod("setUniform3f", &ShaderProgram::setUniform3f)
+       .addLuaFunction("setUniform3fv", &ShaderProgram::setUniform3fv)
+       .addMethod("setUniform1i", &ShaderProgram::setUniform1i)
+       .addLuaFunction("setUniform1iv", &ShaderProgram::setUniform1iv)
+       .addMethod("setUniform2i", &ShaderProgram::setUniform2i)
+       .addLuaFunction("setUniform2iv", &ShaderProgram::setUniform2iv)
+       .addMethod("setUniform3i", &ShaderProgram::setUniform3i)
+       .addLuaFunction("setUniform3iv", &ShaderProgram::setUniform3iv)
+       .addMethod("setUniformMatrix3f", &ShaderProgram::setUniformMatrix3f)
+       .addLuaFunction("setUniformMatrix3fv", &ShaderProgram::setUniformMatrix3fv)
+       .addMethod("setUniformMatrix4f", &ShaderProgram::setUniformMatrix4f)
+       .addLuaFunction("setUniformMatrix4fv", &ShaderProgram::setUniformMatrix4fv)
+       .addStaticMethod("getDefaultShader", &ShaderProgram::getDefaultShader)
+       .endClass()
+
        .endPackage();
 
     return 0;
@@ -368,4 +396,5 @@ void installLoomGraphics()
     LOOM_DECLARE_NATIVETYPE(GFX::Graphics, GFX::registerLoomGraphics);
     LOOM_DECLARE_NATIVETYPE(GFX::Texture, GFX::registerLoomGraphics);
     LOOM_DECLARE_NATIVETYPE(GFX::TextureInfo, GFX::registerLoomGraphics);
+    LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::ShaderProgram, GFX::registerLoomGraphics);
 }

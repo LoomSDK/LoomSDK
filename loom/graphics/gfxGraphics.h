@@ -169,7 +169,7 @@ class Graphics
 {
 
 public:
-    
+
     // Delegate that provides screenshot data (in PNG format) when screenshotData is called
     LOOM_STATICDELEGATE(onScreenshotData);
 
@@ -198,7 +198,7 @@ public:
 
     static void endFrame();
 
-	static int render(lua_State *L);
+    static int render(lua_State *L);
 
     static void handleContextLoss();
 
@@ -210,20 +210,20 @@ public:
         sHeight = height;
     }
     
-	static inline int getWidth() { return sWidth; }
-	static inline int getHeight() { return sHeight; }
-	static inline uint32_t getFlags() { return sFlags; }
-	static inline void setFlags(uint32_t flags) { sFlags = flags; }
-	static bool getStencilRequired();
-	static inline float* getMVP() {
+    static inline int getWidth() { return sWidth; }
+    static inline int getHeight() { return sHeight; }
+    static inline uint32_t getFlags() { return sFlags; }
+    static inline void setFlags(uint32_t flags) { sFlags = flags; }
+    static bool getStencilRequired();
+    static inline float* getMVP() {
 #if GFX_OPENGL_CHECK
-		if (sCurrentModelViewProjection == NULL) {
-			lmLogError(gGFXLogGroup, "Transformation matrix is NULL, did you call Graphics::reset?");
-			GFX_DEBUG_BREAK
-		}
+        if (sCurrentModelViewProjection == NULL) {
+            lmLogError(gGFXLogGroup, "Transformation matrix is NULL, did you call Graphics::reset?");
+            GFX_DEBUG_BREAK
+        }
 #endif
-		return sCurrentModelViewProjection;
-	}
+        return sCurrentModelViewProjection;
+    }
 
     static void setViewTransform(float *view, float *proj);
 
@@ -268,13 +268,13 @@ private:
 
     // The current frame counter
     static uint32_t sCurrentFrame;
-    
+
     static int sBackFramebuffer;
 
-	//static float sMVP[9];
-	static float sMVP[16];
-	//static float sMVPInverted[16];
-	static float* sCurrentModelViewProjection;
+    //static float sMVP[9];
+    static float sMVP[16];
+    //static float sMVPInverted[16];
+    static float* sCurrentModelViewProjection;
 
     // Opaque platform data, such as HWND
 //    static void *sPlatformData[3];
@@ -287,107 +287,39 @@ private:
 
     // If set, at the next opportunity we will get screenshot data and return it with the onScreenshotData delegate
     static bool gettingScreenshotData;
-    
+
     static GL_Context _context;
 
 };
 
-#if GFX_OPENGL_CHECK
-
-#define GFX_SHADER_CHECK(shader) \
-do { \
-		GLint status; \
-		GFX::Graphics::context()->glGetShaderiv(shader, GL_COMPILE_STATUS, &status); \
-		\
-		int infoLen; \
-		GFX::Graphics::context()->glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen); \
-		GLchar* info = NULL; \
-		if (infoLen > 1) { \
-			info = (GLchar*) lmAlloc(NULL, infoLen); \
-			GFX::Graphics::context()->glGetShaderInfoLog(vertShader, infoLen, NULL, info); \
-		} \
-		if (status == GL_TRUE) { \
-			if (info != NULL) { \
-				lmLogInfo(gGFXLogGroup, "OpenGL shader name %d info: %s", shader, info); \
-			} else { \
-				lmLogInfo(gGFXLogGroup, "OpenGL shader name %d compilation successful", shader); \
-			} \
-		} else { \
-			if (info != NULL) { \
-				lmLogError(gGFXLogGroup, "OpenGL shader name %d error: %s", shader, info); \
-			} else { \
-				lmLogError(gGFXLogGroup, "OpenGL shader name %d error: No additional information provided.", shader); \
-			} \
-			GFX_DEBUG_BREAK \
-		} \
-		if (info != NULL) lmFree(NULL, info); \
-} while (0); \
-
-#define GFX_PROGRAM_CHECK(program) \
-do { \
-		GLint status; \
-		GFX::Graphics::context()->glGetProgramiv(program, GL_LINK_STATUS, &status); \
-		\
-		int infoLen; \
-		GFX::Graphics::context()->glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLen); \
-		GLchar* info = NULL; \
-		if (infoLen > 1) { \
-			info = (GLchar*) lmAlloc(NULL, infoLen); \
-			GFX::Graphics::context()->glGetProgramInfoLog(vertShader, infoLen, NULL, info); \
-		} \
-		if (status == GL_TRUE) { \
-			if (info != NULL) { \
-				lmLogInfo(gGFXLogGroup, "OpenGL program name %d info: %s", program, info); \
-			} else { \
-				lmLogInfo(gGFXLogGroup, "OpenGL program name %d linking successful", program); \
-			} \
-		} else { \
-			if (info != NULL) { \
-				lmLogError(gGFXLogGroup, "OpenGL program name %d error: %s", program, info); \
-			} else { \
-				lmLogError(gGFXLogGroup, "OpenGL program name %d error: No additional information provided.", program); \
-			} \
-			GFX_DEBUG_BREAK \
-		} \
-		if (info != NULL) lmFree(NULL, info); \
-} while (0); \
-
 #define GFX_FRAMEBUFFER_CHECK(framebuffer) \
-do { \
-	GLenum status; \
-	status = GFX::Graphics::context()->glCheckFramebufferStatus(GL_FRAMEBUFFER); \
-	switch (status) \
-	{ \
-		case GL_FRAMEBUFFER_COMPLETE: \
-			lmLogInfo(gGFXLogGroup, "Texture framebuffer #%d valid", framebuffer); \
-			break; \
-		default: \
-			const char* errorName; \
-			switch (status) { \
+{ \
+    GLenum status; \
+    status = GFX::Graphics::context()->glCheckFramebufferStatus(GL_FRAMEBUFFER); \
+    switch (status) \
+    { \
+        case GL_FRAMEBUFFER_COMPLETE: \
+            lmLogInfo(gGFXLogGroup, "Texture framebuffer #%d valid", framebuffer); \
+            break; \
+        default: \
+            const char* errorName; \
+            switch (status) { \
                 /* We can check with literal values here because they are a part of OpenGL spec (but not defined as constants in every version). */ \
-				case GL_INVALID_ENUM: errorName = "GL_INVALID_ENUM"; break; \
-				case 0x8219 /* GL_FRAMEBUFFER_UNDEFINED */: errorName = "GL_FRAMEBUFFER_UNDEFINED"; break; \
-				case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: errorName = "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"; break; \
-				case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: errorName = "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT"; break; \
-				case 0x8CDB /* GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER */: errorName = "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"; break; \
-				case 0x8CDC /* GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER */: errorName = "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER"; break; \
-				case GL_FRAMEBUFFER_UNSUPPORTED: errorName = "GL_FRAMEBUFFER_UNSUPPORTED"; break; \
-				case 0x8D56 /* GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE */: errorName = "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"; break; \
-				case 0x8DA8 /* GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS */: errorName = "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"; break; \
-				default: errorName = "Unknown error"; \
-			} \
-			lmLogError(gGFXLogGroup, "Framebuffer #%d error: %s (0x%04x)", framebuffer, errorName, status); \
-			GFX_DEBUG_BREAK \
-			lmAssert(status, "OpenGL error, see above for details."); \
-	} \
-} while (0); \
-
-#else
-
-#define GFX_SHADER_CHECK
-#define GFX_PROGRAM_CHECK
-#define GFX_FRAMEBUFFER_CHECK
-
-#endif
+                case GL_INVALID_ENUM: errorName = "GL_INVALID_ENUM"; break; \
+                case 0x8219 /* GL_FRAMEBUFFER_UNDEFINED */: errorName = "GL_FRAMEBUFFER_UNDEFINED"; break; \
+                case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: errorName = "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"; break; \
+                case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: errorName = "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT"; break; \
+                case 0x8CDB /* GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER */: errorName = "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"; break; \
+                case 0x8CDC /* GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER */: errorName = "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER"; break; \
+                case GL_FRAMEBUFFER_UNSUPPORTED: errorName = "GL_FRAMEBUFFER_UNSUPPORTED"; break; \
+                case 0x8D56 /* GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE */: errorName = "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"; break; \
+                case 0x8DA8 /* GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS */: errorName = "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"; break; \
+                default: errorName = "Unknown error"; \
+            } \
+            lmLogError(gGFXLogGroup, "Framebuffer #%d error: %s (0x%04x)", framebuffer, errorName, status); \
+            GFX_DEBUG_BREAK \
+            lmAssert(status, "OpenGL error, see above for details."); \
+    } \
+} \
 
 }

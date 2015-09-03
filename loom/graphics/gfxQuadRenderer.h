@@ -22,6 +22,7 @@
 
 #include <stdint.h>
 #include "loom/graphics/gfxTexture.h"
+#include "loom/graphics/gfxShader.h"
 
 namespace GFX
 {
@@ -71,8 +72,8 @@ public:
 
     static void endFrame();
 
-    static VertexPosColorTex *getQuadVertexMemory(uint16_t numVertices, TextureID texture, uint32_t srcBlend, uint32_t dstBlend);
+    static VertexPosColorTex *getQuadVertexMemory(uint16_t numVertices, TextureID texture, uint32_t srcBlend, uint32_t dstBlend, ShaderProgram *shader);
 
-    static void batch(VertexPosColorTex *vertices, uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend);
+    static void batch(VertexPosColorTex *vertices, uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend, ShaderProgram *shader);
 };
 }
