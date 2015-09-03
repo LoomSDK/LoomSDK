@@ -4,10 +4,10 @@ package
 
     class SomeFields
     {
-        public var x = 1;
-        public var y = 2;
-        public var z = 3;
-        public var w = 0;
+        public var x = 1.0;
+        public var y = 2.0;
+        public var z = 3.0;
+        public var w = 0.0;
     }
 
     /*
@@ -22,9 +22,9 @@ package
 
             var i = 0;
 
-            var sf = new SomeFields;
+            var sf = new SomeFields();
 
-            while (i < 10000000)
+            while (i < 100000)
             {
                 sf.w = sf.w + sf.x + sf.y + sf.z;
                 i++;

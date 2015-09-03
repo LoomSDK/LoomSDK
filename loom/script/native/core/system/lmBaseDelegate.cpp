@@ -136,6 +136,7 @@ static int registerSystemBaseDelegate(lua_State *L)
        .beginClass<BaseDelegate> ("BaseDelegate")
 
        .addStaticLuaFunction("BaseDelegate", &BaseDelegate::_BaseDelegate)
+       .addStaticLuaFunction("__ls_constructor", &BaseDelegate::_BaseDelegate)
        .addStaticLuaFunction("__op_assignment", &BaseDelegate::__op_assignment)
        .addStaticLuaFunction("call", &BaseDelegate::call)
        .addStaticLuaFunction("__op_plusassignment", &BaseDelegate::__op_plusassignment)
@@ -144,7 +145,7 @@ static int registerSystemBaseDelegate(lua_State *L)
 
        .endClass()
 
-       .endPackage();
+   .endPackage();
 
     return 0;
 }
