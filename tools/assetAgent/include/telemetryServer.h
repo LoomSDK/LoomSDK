@@ -2,7 +2,7 @@
 #define _ASSETS_TELEMETRYSERVER_H_
 
 #include "loom/vendor/civetweb/include/civetweb.h"
-#include "loom/script/native/core/system/lmJSON.h"
+#include "loom/common/utils/json.h"
 #include "loom/common/assets/assetProtocol.h"
 
 class TelemetryListener : public AssetProtocolMessageListener

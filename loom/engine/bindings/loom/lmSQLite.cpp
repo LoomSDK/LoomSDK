@@ -26,8 +26,8 @@
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utByteArray.h"
 #include "loom/common/utils/utString.h"
+#include "loom/common/utils/json.h"
 #include "loom/common/platform/platformThread.h"
-#include "loom/script/native/core/system/lmJSON.h"
 #include "loom/common/platform/platformFile.h"
 
 lmDefineLogGroup(gSQLiteGroup, "loom.sqlite", 1, LoomLogInfo);

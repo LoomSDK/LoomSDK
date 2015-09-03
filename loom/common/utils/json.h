@@ -21,11 +21,8 @@
 #ifndef _SYSTEM_JSON_H
 #define _SYSTEM_JSON_H
 
-
-#include "loom/script/native/lsLuaBridge.h"
-#include "loom/script/reflection/lsType.h"
-#include "loom/script/runtime/lsRuntime.h"
 #include "jansson.h"
+#include "loom/common/utils/utString.h"
 
 class JSON {
     // The native _json object

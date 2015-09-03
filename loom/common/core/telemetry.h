@@ -5,12 +5,9 @@
 #include "loom/common/assets/assetProtocol.h"
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utByteArray.h"
-#include "loom/script/native/core/system/lmJSON.h"
-#include "loom/script/loomscript.h"
+#include "loom/common/utils/json.h"
 
 typedef int TickMetricID;
-
-lmDeclareLogGroup(gTelemetryLogGroup)
 
 struct TickMetricBase
 {
@@ -233,8 +230,8 @@ protected:
 
 public:
 
-    static void enable(lua_State *L = NULL);
-    static void disable(lua_State *L = NULL);
+    static void enable();
+    static void disable();
     inline static bool isEnabled()
     {
         return pendingEnabled;

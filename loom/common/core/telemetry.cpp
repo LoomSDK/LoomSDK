@@ -3,6 +3,7 @@
 #include "loom/common/assets/assets.h"
 #include "loom/common/core/log.h"
 #include "loom/common/core/performance.h"
+#include "loom/common/utils/fourcc.h"
 
 lmDefineLogGroup(gTelemetryLogGroup, "lt", true, LoomLogInfo)
 
@@ -26,12 +27,12 @@ template<> const int TableValues<TickMetricValue>::packedItemSize = 4 + 8;
 template<> const TableType TableValues<TickMetricRange>::type = 2;
 template<> const int TableValues<TickMetricRange>::packedItemSize = 4 + 4 * 4 + 2 * 8;
 
-void Telemetry::enable(lua_State *L)
+void Telemetry::enable()
 {
     pendingEnabled = true;
 }
 
-void Telemetry::disable(lua_State *L)
+void Telemetry::disable()
 {
     pendingEnabled = false;
 }
