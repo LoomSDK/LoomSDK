@@ -50,7 +50,7 @@ public native class BitmapData
 
     // Compares two images. Returns a number between 0 and 1, where that value is
     // the ratio of equal pixels. If the size of the two images is not equal, 0 is returned.
-    public static native function compare(a:BitmapData, b:BitmapData):Number
+    public static native function compare(a:BitmapData, b:BitmapData):Number;
 
     // Returns a new object where each pixel has been substracted between a and b.
     public static native function diff(a:BitmapData, b:BitmapData):BitmapData;
