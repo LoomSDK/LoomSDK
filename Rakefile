@@ -2,7 +2,9 @@ require 'rubygems'
 require 'rbconfig'
 
 puts "== Executing as '#{ENV['USER']}' =="
+exit 1
 
+break the build 
 ###############################
 # BUILD CONFIGURATION VARIABLES
 ###############################
