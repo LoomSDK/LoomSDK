@@ -254,6 +254,16 @@ GFX::ShaderProgram* GFX::ShaderProgram::getDefaultShader()
     return defaultShader.get();
 }
 
+GFX::ShaderProgram* GFX::ShaderProgram::getTintlessDefaultShader()
+{
+    if (tintlessDefaultShader.get() == nullptr)
+    {
+        tintlessDefaultShader.reset(lmNew(NULL) GFX::TintlessDefaultShader());
+    }
+
+    return tintlessDefaultShader.get();
+}
+
 GFX::ShaderProgram::ShaderProgram()
 : programId(0)
 {
@@ -814,6 +824,38 @@ GFX::DefaultShader::DefaultShader()
 }
 
 void GFX::DefaultShader::bind()
+{
+    GFX::ShaderProgram::bind();
+
+    Graphics::context()->glUniformMatrix4fv(uMVP, 1, GL_FALSE, Graphics::getMVP());
+    Graphics::context()->glUniform1i(uTexture, textureId);
+}
+
+const char * tintlessFragmentShader =
+"                                                                    \n"
+#if LOOM_RENDERER_OPENGLES2
+"precision mediump float;                                            \n"
+#endif
+"uniform sampler2D u_texture;                                        \n"
+"varying vec2 v_texcoord0;                                           \n"
+"void main()                                                         \n"
+"{                                                                   \n"
+"    gl_FragColor = texture2D(u_texture, v_texcoord0);    \n"
+"}                                                                   \n";
+
+lmAutoPtr<GFX::ShaderProgram> GFX::ShaderProgram::tintlessDefaultShader;
+
+GFX::TintlessDefaultShader::TintlessDefaultShader()
+{
+    load(defaultVertexShader, tintlessFragmentShader);
+
+    GFX::GL_Context* ctx = Graphics::context();
+
+    uTexture = ctx->glGetUniformLocation(programId, "u_texture");
+    uMVP = ctx->glGetUniformLocation(programId, "u_mvp");
+}
+
+void GFX::TintlessDefaultShader::bind()
 {
     GFX::ShaderProgram::bind();
 
