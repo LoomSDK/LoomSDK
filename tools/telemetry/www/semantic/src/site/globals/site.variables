@@ -1,7 +1,0 @@
-/*******************************
-     User Global Variables
-*******************************/
-
-/* We want to use a local font included manually */
-@fontName          : 'LatoWeb';
-@importGoogleFonts : false;
