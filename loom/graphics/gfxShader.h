@@ -180,7 +180,7 @@ public:
     virtual void bind();
 };
 
-// Just like DefaultShader, but withot tinting.
+// Just like DefaultShader, but without tinting.
 class TintlessDefaultShader : public ShaderProgram
 {
 protected:
