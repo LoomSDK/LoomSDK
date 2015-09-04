@@ -58,17 +58,6 @@
 // This actually lives in lsAsset.cpp, but is useful to call from in the asset manager implementation.
 void loom_asset_notifyPendingCountChange();
 
-const char* LOOM_FOURCC_CHARS(unsigned int fourcc)
-{
-    static char chars[5];
-    chars[0] = fourcc & 0xFF;
-    chars[1] = (fourcc >> 8) & 0xFF;
-    chars[2] = (fourcc >> 16) & 0xFF;
-    chars[3] = (fourcc >> 24) & 0xFF;
-    chars[4] = 0;
-    return chars;
-}
-
 extern "C" 
 {
   loom_allocator_t *gAssetAllocator = NULL;

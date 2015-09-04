@@ -1,3 +1,4 @@
+// Color palette of the chart bars
 //var colors = ["#3A3232", "#D83018", "#F07848", "#FDFCCE", "#C0D8D8"];
 var colors = ["#611824", "#C12F2A", "#FF6540", "#FEDE7B", "#F7FFEE"];
 var invertGraph = true;
@@ -83,10 +84,8 @@ var Telemetry = {
     tickBars: null,
     
     statTicks: $(".statistic.ticks .value"),
-    //statPingTime: $(".ui.statistic.pingTime .value"),
     updateStats: function() {
         Telemetry.statTicks.text(Telemetry.ticks.length);
-        //Telemetry.statPingTime.text(Telemetry.stream.pingTime+"ms");
     },
     
     getTimeFromNano: function(nano) {
@@ -165,9 +164,6 @@ function ChartCommon() {
         this.width = $("#tickCharts").width() - this.margin.left - this.margin.right;
         this.height = $("#tickCharts").height() - this.margin.top - this.margin.bottom;
         
-        //if (this.x.range().length == 0) {
-            //this.x.rangeBands([this.padding, this.width-this.padding*2], this.spacing);
-        //}
         this.vx.range([0, this.width])
         
         this.xDirty = true;
@@ -195,8 +191,6 @@ function ChartCommon() {
         expectedBarWidth = innerChartWidth/(tickNumF - this.spacing + 2 * this.spacing);
         
         chartWidthExtension = expectedBarWidth * (tickNum - tickNumF);
-        
-        //console.log(tickDomain)
     }
     
     this.xUpdatePosition = function() {
@@ -204,8 +198,6 @@ function ChartCommon() {
         
         tickOffset = Math.floor(tickDomain[0]);
         chartOffset = (tickDomain[0] - tickOffset) * expectedBarWidth;
-        
-        //console.log(tickDomain, tickOffset, chartOffset)
     }
     
     
@@ -218,8 +210,6 @@ function ChartCommon() {
         
         var tx = trans[0];
         var ty = trans[1];
-        
-        //console.log(tx, xMin)
         
         var touchingBorder = false;
         if (tx > xMax) {
@@ -242,7 +232,6 @@ function ChartCommon() {
         this.xConstrainScale();
         
         var tickPad = chartOffset-1e-3 > chartWidthExtension ? 1 : 0;
-        //console.log(chartOffset, chartWidthExtension)
         tickNum += tickPad;
         
         this.x.rangeBands([-chartOffset + this.padding, -chartOffset + innerChartWidth + expectedBarWidth * (tickNum - tickNumF)], this.spacing);
@@ -330,7 +319,6 @@ function ChartCommon() {
         }
         
         axis(svgAxis)
-        //axis(svgAxis.transition().call(this.chartTransition))
         svgAxis.selectAll("text")
             .style("text-anchor", "middle")
             .attr("y", 0)
@@ -536,9 +524,6 @@ function TelemetryProcessor(initCommon) {
     }
     
     function step(timestamp) {
-        //var viewSkipThreshold = (1-Math.exp(-this.unprocessed.length/20))*60; // Approach 60 skips at around 100 unprocessed
-        //this.viewSkipThreshold = this.unprocessed.length/1.5;
-        
         this.viewUpdateTime = 0;
         this.viewSkip++;
         if (this.viewSkip > this.viewSkipThreshold) {
@@ -562,19 +547,6 @@ function TelemetryProcessor(initCommon) {
         this.viewSkipThreshold = Math.max(0, this.viewSkipThreshold + (viewUpdateLoad - 1) + this.unprocessed.length/10);
         
         selDisplayLoad.text("~" + (displayLoadMean*100).toFixed(0) + "%")
-        
-        
-        
-        /*
-        this.debug = "Delta: " + this.totalDelta + "ms <br/>" +
-                    this.viewUpdateTime + "ms <br/>" +
-                    this.stepProcessed + "<br/>" +
-                    viewSkipThreshold + "<br/>" +
-                    this.debug;
-        
-        $("#debugOutput").html(this.debug);
-        this.debug = "";
-        */
         
         this.totalDelta = 0;
         this.stepProcessed = 0;
@@ -619,7 +591,6 @@ function TelemetryProcessor(initCommon) {
     
     this.addUnprocessed = function(json) {
         this.unprocessed.push(json);
-        //console.log("Pushed, " + this.unprocessed.length)
         this.processTick();
     }
     
@@ -648,15 +619,13 @@ function TelemetryProcessor(initCommon) {
         }
         
         this.debug += "Processed: " + processed + "  Pending: " + this.unprocessed.length + "<br/>";
-        
-        //console.log("Processed: " + processed + "  Pending: " + this.unprocessed.length);
     }
     
     this.addTick = function(tick) {
         this.tick();
         this.viewDirty = true;
         var newTick = {
-            id: tick.values["tickId"],
+            id: tick.values["tick.id"],
             values: tick.values,
             metrics: tick.ranges,
             visibleMetrics: null,
@@ -672,8 +641,6 @@ function TelemetryProcessor(initCommon) {
         this.tickAdded.dispatch(newTick);
         Telemetry.updateStats();
         this.tock();
-        
-        //if (Telemetry.ticks.length >= tickInitNum) Telemetry.stream.stop();
     }
     
     function updateMaxLevel(tick) {
@@ -721,8 +688,6 @@ function TelemetryProcessor(initCommon) {
         var sliceStart = Math.max(0, tickOffset)
         var sliceEnd = Math.min(ticks.length, tickOffset + tickNum)
         var slicedTicks = ticks.slice(sliceStart, sliceEnd)
-        
-        //console.log(tickOffset, tickNum, sliceStart, sliceEnd)
         
         x.domain(slicedTicks.map(function(tick) {
             return tick.id;
@@ -805,7 +770,9 @@ function TickValues(initCommon) {
             for (var key in tickValues) {
                 var domain = domains.get(key);
                 if (domain == undefined) {
+                    // Uncomment for values that could be negative as well
                     //domain = [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY];
+                    // Axes starting with zero reduce deception
                     domain = [0, Number.NEGATIVE_INFINITY];
                     domains.set(key, domain);
                 }
@@ -824,15 +791,13 @@ function TickValues(initCommon) {
         ticks.forEach(function(tick) {
             var tickValueMap = tick.values;
             for (var key in tickValueMap) {
-                if (key == "tickId") continue; // Ignore IDs
+                if (key == "tick.id") continue; // Ignore IDs
                 //if (key != "gc.memory") continue; // Debug - only show memory
                 var entry = map.get(key);
                 if (entry == undefined) {
                     entry = {
                         name: key,
                         values: [],
-                        //valueMin: Number.POSITIVE_INFINITY,
-                        //valueMax: Number.NEGATIVE_INFINITY,
                         domain: domains.get(key),
                         scale: d3.scale.linear()
                             .range([1, 0]),
@@ -844,10 +809,6 @@ function TickValues(initCommon) {
                 }
                 var value = tickValueMap[key];
                 entry.values.push([tick.id, value]);
-                /*
-                if (value < entry.valueMin) entry.valueMin = value;
-                if (value > entry.valueMax) entry.valueMax = value;
-                */
             }
             valueMapLen++;
             map.forEach(function(key, entry) {
@@ -908,14 +869,6 @@ function TickValues(initCommon) {
         var laneBand = lanes.rangeBand();
         var laneHeight = laneBand;
         
-        /*
-        var lineSplit = d3.scale.linear()
-            .domain([0, 1])
-            .range([0, height/values.length])
-        
-        var splitHeight = lineSplit(1) + spacing;
-        */
-        
         var line = d3.svg.area()
             .x(function(d) {
                 return x(d[0]) + halfWidth
@@ -935,9 +888,7 @@ function TickValues(initCommon) {
         lineGroup.append("text")
             .attr("class", "valueCurrent")
             .style("text-anchor", "end")
-            
-        //lineGroup.append("line")
-        //    .attr("class", "valueBoundTop")
+        
         lineGroup.append("line")
             .attr("class", "valueBoundBottom")
         
@@ -953,7 +904,6 @@ function TickValues(initCommon) {
             entry.scale.range([laneBand, 0])
             entry.axisY
                 .scale(entry.scale)
-                //.tickValues(entry.scale.domain.filter)
             entry.axisY(svgAxisY)
             entry.scale.range([1, 0])
         })
@@ -1024,7 +974,6 @@ function TickBars(initCommon) {
         margin = chart.margin;
         width = chart.width;
         height = tickShowValues ? (chart.height - $(".tickValues").height()) : chart.height;
-        //height = chart.height * (tickShowValues ? 1 - chart.topChartRatio : 1);
         x = chart.x;
         y = chart.y;
         y.range([height, 0])
@@ -1121,6 +1070,9 @@ function TickBars(initCommon) {
         .on("zoom", barZoomedY)
     svgBars.call(barYZoom);
     
+    // This should be fixed and possibly added back in later
+    // The idea is that it should align the bars so they don't overlap
+    // the chart edges, which would be useful for more zoomed in views
     /*
     function barZoomXAlignBars() {
         var trans = barXZoom.translate();
@@ -1149,14 +1101,11 @@ function TickBars(initCommon) {
     this.updateTickView = updateTickView;
     function updateTickView() {
         
-        //if (ticks.length >= tickInitNum) Telemetry.stream.socket.close();
-        
         axisX.scale(x)
         chart.updateDynamicAxis(svgAxisX, axisX);
         
         axisY.scale(y)
         
-        //console.log(cachedNum, totalNum, ((+new Date()) - time) + "ms");
         svgAxisY.transition().call(chart.chartTransition).call(axisY);
         
         svgAxisXBack
@@ -1184,24 +1133,9 @@ function TickBars(initCommon) {
             .attr("transform", function(tick, index) { return "translate(" +x(tick.id)+", 0)"; })
             //.style("opacity", function(tick, index) { return 1; })
         
-        //bars.exit().remove()
-        
-        //bars.exit()
-        //    .transition()
-        
         // Delay removal of parent for 250.
         bars.exit()
             .transition().call(chart.chartTransition)
-            /*
-            .attr("transform", function(tick, index) {
-                var t = d3.transform(d3.select(this).attr("transform"))
-                var tx = t.translate[0]
-                
-                var hw = width*0.5;
-                
-                return "translate(" +(hw+(tx-hw)*1.20)+", 0)";
-            })
-            */
             .style("opacity", 0)
             .duration(100)
             .remove()
@@ -1382,8 +1316,6 @@ function TickBars(initCommon) {
                     var textHorizontalSpace = sw-(bstX-sx)*2;
                     var sectionName = metric.name;
                     var charWidth = 6.85;
-                    //var charWidth = 4.5;
-                    //var charWidth = 5;
                     var sidePadding = 10;
                     var textEstimatedLen = charWidth * sectionName.length;
                     var partialTrim = false;

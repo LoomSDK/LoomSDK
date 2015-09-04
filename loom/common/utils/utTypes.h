@@ -498,7 +498,6 @@ public:
         if (m_first == link) { m_first = link->next; }
 
         m_size -= 1;
-        LOOM_ALLOCATOR_VERIFY(link);
         lmSafeDelete(NULL, link);
         if (m_size == 0)
         {

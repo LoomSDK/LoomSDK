@@ -37,8 +37,7 @@ extern "C"
 void loom_tick()
 {
     Telemetry::beginTick();
-    //Telemetry::beginTickTimer("tickNano");
-        
+    
     LOOM_PROFILE_START(loom_tick);
 
     LSLuaState *vm = NULL;
@@ -73,30 +72,23 @@ void loom_tick()
             LoomApplication::ticks.invoke();
         }
     }
-
+    
     loom_asset_pump();
-
-    //Telemetry::beginTickTimer("http");
+    
     platform_HTTPUpdate();
-    //Telemetry::endTickTimer("http");
-
-    //Telemetry::beginTickTimer("tex");
+    
     GFX::Texture::tick();
-    //Telemetry::endTickTimer("tex");
-
+    
     LOOM_PROFILE_START(render);
     if (Loom2D::Stage::smMainStage) Loom2D::Stage::smMainStage->invokeRenderStage();
     LOOM_PROFILE_END(render);
-
-    //Telemetry::endTickTimer("render");
-
+    
     finishProfilerBlock(&p);
-
+    
     LOOM_PROFILE_END(loom_tick);
-
+    
     LOOM_PROFILE_ZERO_CHECK()
-
-    //Telemetry::endTickTimer("tickNano");
+    
     Telemetry::endTick();
 
 }

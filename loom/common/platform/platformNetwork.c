@@ -459,8 +459,6 @@ int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite)
             break;
         }
 
-        //lmLogInfo(netLogGroup, "Write failed, trying again with socket %d buffer %x", s, buffer);
-        //fprintf(stderr, "Write failed, trying again with socket %d buffer %x", s, buffer);
         loom_thread_sleep(5);
     }
 

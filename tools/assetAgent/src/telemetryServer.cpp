@@ -14,10 +14,10 @@
 
 lmDefineLogGroup(gTelemetryServerLogGroup, "lts", true, LoomLogInfo)
 
+// Server might be multithreaded, so lock our data to be sure
 static MutexHandle jsonMutex = loom_mutex_create();
-static int clientGlobalID = 0;
 
-
+// This holds the current tick as a serialized json string ready to be sent
 utString TelemetryListener::tickMetricsJSONString;
 
 mg_callbacks TelemetryServer::callbacks;
@@ -25,21 +25,24 @@ mg_context* TelemetryServer::server = NULL;
 utString TelemetryServer::clientRoot;
 
 
+// Used to assign clients a unique id
+static int clientGlobalID = 0;
 
+// Represents a single connected websockets stream client
 struct StreamClient {
     int id;
     struct mg_connection * conn;
     int state;
 } static streamClients[LTS_MAX_CLIENTS];
 
-
-
+// Called on a new connection
 static int StreamConnectHandler(const struct mg_connection * conn, void *cbdata)
 {
     struct mg_context *ctx = mg_get_context(conn);
     StreamClient *client = NULL;
     int i;
-
+    
+    // Find a free client
     mg_lock_context(ctx);
     for (i = 0; i < LTS_MAX_CLIENTS; i++) {
         if (streamClients[i].conn == NULL) {
@@ -65,6 +68,7 @@ static int StreamConnectHandler(const struct mg_connection * conn, void *cbdata)
     return client == NULL ? 1 : 0;
 }
 
+// Called when the stream client is connected and ready
 void StreamReadyHandler(struct mg_connection * conn, void *cbdata)
 {
     struct StreamClient *client = (StreamClient*)mg_get_user_connection_data(conn);
@@ -77,6 +81,7 @@ void StreamReadyHandler(struct mg_connection * conn, void *cbdata)
     client->state = 2;
 }
 
+// Called on new incoming data (this can be much nicer)
 int StreamDataHandler(struct mg_connection * conn, int bits, char * data, size_t len, void *cbdata)
 {
     struct StreamClient *client = (StreamClient*)mg_get_user_connection_data(conn);
@@ -84,12 +89,14 @@ int StreamDataHandler(struct mg_connection * conn, int bits, char * data, size_t
     lmAssert(client->conn == conn, "Websocket connection mismatch");
     lmAssert(client->state >= 1, "Websocket invalid state");
 
+    // For now only a "ping" non-json command is supported
     if (strstr(data, "ping") != NULL) {
         const char* pong = "{ \"status\": \"pong\", \"data\": null }";
         mg_websocket_write(conn, WEBSOCKET_OPCODE_TEXT, pong, strlen(pong));
         return 1;
     }
 
+    // Otherwise it just prints what it got
     fprintf(stdout, "Websocket got data:\r\n");
     fwrite(data, len, 1, stdout);
     fprintf(stdout, "\r\n\r\n");
@@ -97,6 +104,7 @@ int StreamDataHandler(struct mg_connection * conn, int bits, char * data, size_t
     return 1;
 }
 
+// Called on connection termination marking the client as free
 void StreamCloseHandler(const struct mg_connection * conn, void *cbdata)
 {
     struct StreamClient *client = (StreamClient*)mg_get_user_connection_data(conn);
@@ -114,6 +122,7 @@ void StreamCloseHandler(const struct mg_connection * conn, void *cbdata)
     mg_unlock_context(ctx);
 }
 
+// Send the provided message to all connected clients
 void StreamSendAll(struct mg_context *ctx, const char *msg)
 {
     int i;
@@ -128,7 +137,7 @@ void StreamSendAll(struct mg_context *ctx, const char *msg)
 
 
 
-
+// Replies with the provided custom data JSON (or replies with failure status on invalid JSON serialization)
 static int JSONHandler(struct mg_connection *conn, void *cbdata)
 {
     JSON* json = (JSON*)cbdata;
@@ -145,6 +154,7 @@ static int JSONHandler(struct mg_connection *conn, void *cbdata)
     return 1;
 }
 
+// Replies with the provided custom data JSON string (or replies with failure status if the string is empty)
 static int JSONStringHandler(struct mg_connection *conn, void *cbdata)
 {
     utString* jsonString = (utString*)cbdata;
@@ -161,9 +171,6 @@ static int JSONStringHandler(struct mg_connection *conn, void *cbdata)
     return 1;
 }
 
-
-
-
 void TelemetryServer::start()
 {
     if (server != NULL) return;
@@ -178,7 +185,10 @@ void TelemetryServer::start()
 
     server = mg_start(&callbacks, NULL, options);
 
+    // Set /tick as a handler that returns the main JSON string
     mg_set_request_handler(server, LTS_TICK_URI, JSONStringHandler, &TelemetryListener::tickMetricsJSONString);
+
+    // Set /stream as the websocket connection that streams all the ticks
     mg_set_websocket_handler(server, LTS_STREAM_URI, StreamConnectHandler, StreamReadyHandler, StreamDataHandler, StreamCloseHandler, NULL);
 
     lmLog(gTelemetryServerLogGroup, "Loom Telemetry server listening on port %s", mg_get_option(server, "listening_ports"));
@@ -227,6 +237,8 @@ bool TelemetryListener::handleMessage(int fourcc, AssetProtocolHandler *handler,
 
         utByteArray buffer;
         int curPos = netBuffer.getCurrentPosition();
+
+        // Attach with a utByteArray for easier reads and writes
         buffer.attach((char*)netBuffer.buffer + curPos, netBuffer.length - curPos);
 
         TableValues<TickMetricValue> tickValues;
@@ -236,6 +248,7 @@ bool TelemetryListener::handleMessage(int fourcc, AssetProtocolHandler *handler,
 
         while (buffer.bytesAvailable() > 0)
         {
+            // Try reading tables in succession (each table knows how to read itself and returns false if it can't)
             if (tickValues.read(&buffer))
             {
                 tickValues.writeJSONObject(&tickValuesJSON);
@@ -254,7 +267,7 @@ bool TelemetryListener::handleMessage(int fourcc, AssetProtocolHandler *handler,
 
         loom_mutex_unlock(jsonMutex);
 
-
+        // We have detected our telemetry message and can report it as handled
         return true;
 
         break;
@@ -263,6 +276,8 @@ bool TelemetryListener::handleMessage(int fourcc, AssetProtocolHandler *handler,
     return false;
 }
 
+// Update the main JSON object from the individual parts and serialize it
+// as a cached string ready for transmission
 void TelemetryListener::updateMetricsJSON()
 {
     JSON jdata;
@@ -279,10 +294,6 @@ void TelemetryListener::updateMetricsJSON()
     tickMetricsJSONString = serialized;
     lmFree(NULL, (void*)serialized);
 
+    // Send the newly serialized json to all clients automatically
     TelemetryServer::sendAll(tickMetricsJSONString.c_str());
-}
-
-void TelemetryServer::fileChanged(const char* path)
-{
-    lmLog(gTelemetryServerLogGroup, "File changed: %s", path);
 }

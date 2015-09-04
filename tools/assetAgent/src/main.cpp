@@ -838,9 +838,6 @@ static bool optionEquals(const char *key, const char *expected) {
 
 void DLLEXPORT assetAgent_run(IdleCallback idleCb, LogCallback logCb, FileChangeCallback changeCb)
 {
-    //void *testa = lmAlloc(NULL, 4);
-    //int* testn = lmNew(NULL) int();
-
     loom_log_initialize();
     platform_timeInitialize();
     stringtable_initialize();
@@ -905,7 +902,6 @@ void DLLEXPORT assetAgent_run(IdleCallback idleCb, LogCallback logCb, FileChange
             if (cqn->type == QNT_Change)
             {
                 gFileChangeCallback(cqn->text.c_str());
-                TelemetryServer::fileChanged(cqn->text.c_str());
             }
             else if (cqn->type == QNT_Log)
             {

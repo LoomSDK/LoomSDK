@@ -63,25 +63,6 @@ void NetworkBuffer::writeInt(int _value)
     curByte += 4;
 }
 
-double NetworkBuffer::readDouble()
-{
-    double r = *(double *)((char *)buffer + curByte);
-
-    r = convertLEndianToHost(r);
-
-    curByte += 8;
-    return(r);
-}
-
-
-void NetworkBuffer::writeDouble(double _value)
-{
-    _value = convertHostToLEndian(_value);
-
-    *(double *)((char *)buffer + curByte) = (_value);
-    curByte += 8;
-}
-
 
 bool NetworkBuffer::readString(char **outString, int *outLength)
 {

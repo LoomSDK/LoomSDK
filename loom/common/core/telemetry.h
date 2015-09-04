@@ -7,25 +7,40 @@
 #include "loom/common/utils/utByteArray.h"
 #include "loom/common/utils/json.h"
 
+// Type alias for metric IDs
 typedef int TickMetricID;
 
+// Base struct for different kinds of metrics
 struct TickMetricBase
 {
     TickMetricID id;
+    
+    // Write the metric as binary values
+    // This should be called and extended in subclasses
+    // for the values that they add
     void write(utByteArray *buffer)
     {
         buffer->writeInt(id);
     }
+
+    // Write the metric as a JSON property
+    // This should be called and extended in subclasses
+    // for the values that they add
     void writeJSON(JSON *json)
     {
         json->setInteger("id", id);
     }
+
+    // Read the metric from a binary buffer
+    // This should be called and extended in subclasses
+    // for the values that they add
     void read(utByteArray *buffer)
     {
         id = buffer->readInt();
     }
 };
 
+// Metric type containing a single floating point value
 struct TickMetricValue : TickMetricBase
 {
     double value;
@@ -50,16 +65,33 @@ struct TickMetricValue : TickMetricBase
     }
 };
 
+// Metric type containing a floating point range with additional
+// hierarchical information meant for a hierarchy of timing ranges
 struct TickMetricRange : TickMetricBase
 {
+    // The ID of the parent metric (-1 if it's a root)
     TickMetricID parent;
+
+    // Hierarchical level of the metric (how many parents it has)
     int level;
+
+    // The number of direct children of this metric (only one level deep)
     int children;
+
+    // The sequential sibling index of this metric (e.g. 2 means this is the third sibling if its parent)
     int sibling;
+
+    // First value of the range metric (e.g. start time)
     double a;
+
+    // Second value of the range metric (e.g. end time)
     double b;
 
+    // The number of additional similar metrics there are in total
+    // This is useful for e.g. counting metrics with the same name
+    // and assigning them a different name for differentiation
     int duplicates;
+    // Same as above, but meant for counting the duplicates on the stack
     int duplicatesOnStack;
 
     void write(utByteArray *buffer)
@@ -94,22 +126,27 @@ struct TickMetricRange : TickMetricBase
     }
 };
 
-
+// Type alias for the table type ID
 typedef unsigned char TableType;
 
-
+// Generic class for handling key-value tables with different values/metrics and their serialization
 template <class TableValue>
 struct TableValues
 {
     static const unsigned int HEADER_SIZE = 1 + 4; // Table type + size bytes
-    static const TableType type;
-    static const int packedItemSize;
+    static const TableType type; // Should be set to a unique value for every specialized struct (i.e. for every type used)
+    static const int packedItemSize; // Should be set to the expected packed byte size of a written TableValue item
 
+    // A sequence number useful for assigning items table-unique ids
     int sequence;
 
+    // The hash table holding the key-value pairs
     utHashTable<utHashedString, TableValue> table;
+
+    // Size of the table in bytes
     unsigned int size;
 
+    // Reset and clear the table
     void reset()
     {
         table.clear();
@@ -117,20 +154,27 @@ struct TableValues
         sequence = 0;
     }
 
+    // Write the table to a buffer including the type, size and actual key-value pairs
     void write(utByteArray *buffer)
     {
         writeType(buffer);
         writeSize(buffer);
         writeHashTable(buffer);
     }
+
+    // Write just the table type to a buffer
     void writeType(utByteArray *buffer)
     {
         buffer->writeUnsignedByte(TableValues<TableValue>::type);
     }
+
+    // Write just the table size to a buffer
     void writeSize(utByteArray *buffer)
     {
         buffer->writeUnsignedInt(size);
     }
+
+    // Write just the key-value pairs to a buffer
     void writeHashTable(utByteArray *buffer)
     {
         int startPos = buffer->getPosition() - HEADER_SIZE;
@@ -146,6 +190,7 @@ struct TableValues
         lmAssert(size == -1 || size == buffer->getPosition() - startPos, "Internal hash table size inconsistency: %d - %d != %d", buffer->getPosition(), startPos, size);
     }
 
+    // Write the table as a JSON array
     void writeJSONArray(JSON *json)
     {
         json->initArray();
@@ -160,6 +205,7 @@ struct TableValues
         }
     }
 
+    // Write the table as a JSON object
     void writeJSONObject(JSON *json)
     {
         json->initObject();
@@ -170,6 +216,7 @@ struct TableValues
         }
     }
 
+    // Read the table from the buffer, returns false if the table type doesn't match, true if the table was read successfully
     bool read(utByteArray *buffer)
     {
         TableType type = readType(buffer);
@@ -183,16 +230,19 @@ struct TableValues
         return true;
     }
 
+    // Read just the table size
     int readSize(utByteArray *buffer) const
     {
         return buffer->readUnsignedInt();
     }
 
+    // Read just the table type
     static TableType readType(utByteArray *buffer)
     {
         return buffer->readUnsignedByte();
     }
 
+    // Read just the table key-value pairs
     int readHashTable(utByteArray *buffer)
     {
         int insertedItems = 0;
@@ -212,37 +262,69 @@ struct TableValues
 
 };
 
+// App level Telemetry API for setting values / metrics and configuring the behavior
 class Telemetry
 {
 protected:
+    // true if telemetry is enabled (this can take up to a tick to update once you toggle state)
     static bool enabled;
+    // The desired state of telemetry, this is the externally visible state and takes effect on tick begin
+    // Until then `enabled` reflects the current state of the system
     static bool pendingEnabled;
 
+    // Temporary buffer used while sending the tick
     static utByteArray sendBuffer;
 
+    // Stored values of the current tick
     static TableValues<TickMetricValue> tickValues;
 
+
+    // Timer used for timing tick ranges
     static loom_precision_timer_t tickTimer;
+    
+    // Timer names began, but not ended yet
+    // Essentially a timer stack
     static utArray<utString> tickTimerStack;
+    
+    // Stored ranges of the current tick
     static TableValues<TickMetricRange> tickRanges;
 
+    // Current tick ID
     static int tickId;
 
 public:
 
+    // Enable telemetry functionality
+    // This will take effect when the next tick begins
     static void enable();
+
+    // Disable telemetry functionality
+    // This will take effect when the next tick begins
     static void disable();
+    
+    // Returns whether the telemetry is enabled or disabled
+    // Note that this can return true while the system is still
+    // transitioning states and not active yet
     inline static bool isEnabled()
     {
         return pendingEnabled;
     }
 
+    // Call at the beginning of the tick
     static void beginTick();
+
+    // Call at the end of the tick
     static void endTick();
 
+    // Begin a timer range using the specified name
     static void beginTickTimer(const char *name);
+
+    // End the timer range previously began with the specified name
     static void endTickTimer(const char *name);
 
+    // Set an arbitrary floating point value associated with the current tick and name
+    // Previously set values of the same name get overwritten
+    // To avoid name conflicts it is suggested to use namespaced names (e.g. gc.cycle.update.count)
     static TickMetricValue* setTickValue(const char *name, double value);
 
 };

@@ -35,6 +35,5 @@
      | ((unsigned int)(unsigned char)(ch1) << 8)  \
      | ((unsigned int)(unsigned char)(ch2) << 16) \
      | ((unsigned int)(unsigned char)(ch3) << 24))
-const char* LOOM_FOURCC_CHARS(unsigned int fourcc);
 #endif
 #endif
