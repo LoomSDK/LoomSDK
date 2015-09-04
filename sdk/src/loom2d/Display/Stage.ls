@@ -210,12 +210,12 @@ package loom2d.display
 		
 		protected function onControllerAxisMovedHandler(controller:int, axis:int, value:Number):void
 		{
-			broadcastEvent(new ControllerEvent(ControllerEvent.AXIS_MOTION, controller, -1, axis, value));
+			broadcastEvent(new ControllerEvent(ControllerEvent.AXIS_MOTION, controller, 0, axis, value));
 		}
 		
 		protected function onJoystickHatMovedHandler(controller:int, hat:int, value:int):void
 		{
-			broadcastEvent(new ControllerEvent(ControllerEvent.HAT_MOTION, controller, -1, -1, 0, hat, value));
+			broadcastEvent(new ControllerEvent(ControllerEvent.HAT_MOTION, controller, 0, 0, 0, hat, value));
 		}
 
         protected function onScrollWheelHandler(delta:Number)
