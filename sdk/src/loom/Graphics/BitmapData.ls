@@ -30,6 +30,18 @@ package loom.graphics
 [Native]
 public native class BitmapData
 {
+    /**
+      * Releases resources used by this object.
+      */
+    public function dispose():void
+    {
+        deleteNative();
+    }
+
+    // Saves the current data into an asset. This is meant to be used to Save
+    // the results of diff()
+    public native function save(path:String):void;
+
     // Loads the object from an asset.
     public static native function fromAsset(name:String):BitmapData;
 
@@ -38,11 +50,7 @@ public native class BitmapData
 
     // Compares two images. Returns a number between 0 and 1, where that value is
     // the ratio of equal pixels. If the size of the two images is not equal, 0 is returned.
-    public static native function compare(a:BitmapData, b:BitmapData):Number;
-
-    // Saves the current data into an asset. This is meant to be used to Save
-    // the results of diff()
-    public native function save(path:String):void;
+    public static native function compare(a:BitmapData, b:BitmapData):Number
 
     // Returns a new object where each pixel has been substracted between a and b.
     public static native function diff(a:BitmapData, b:BitmapData):BitmapData;
