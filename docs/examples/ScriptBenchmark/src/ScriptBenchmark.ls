@@ -25,7 +25,11 @@ package
                     break;
                 case 1:
                     new BenchmarkFunctionCall().run();
-                    break;    
+                    break; 
+
+                case 2:
+                    new BenchmarkAllocation().run();
+                    break;
 
                 default:
                     toRun = 0;

@@ -145,7 +145,7 @@ public:
 	void reload();
 	void loadFile(utString path, utString units = utString("px"), float dpi = 96.0f);
 	void loadString(utString svg, utString units = utString("px"), float dpi = 96.0f);
-	void render(float x, float y, float scale, float lineThickness);
+	void render(float x, float y, float scale, float lineThickness, float alpha);
 };
 
 class VectorRenderer
@@ -202,7 +202,7 @@ public:
 	static void fillColor(float r, float g, float b, float a);
 	static void fillColor(unsigned int rgb, float a);
 	static void fillColor32(unsigned int argb, float a);
-	static void fillTexture(TextureID id, Loom2D::Matrix transform, bool repeat, bool smooth);
+	static void fillTexture(TextureID id, Loom2D::Matrix transform, bool repeat, bool smooth, float alpha);
 
 	static void textFormat(VectorTextFormat* format, lmscalar a);
 
@@ -226,7 +226,7 @@ public:
     static float textLineAdvance(VectorTextFormat* format, float x, float y, utString* string);
     static Loom2D::Rectangle textBoxBounds(VectorTextFormat* format, float x, float y, float width, utString* string);
 
-	static void svg(VectorSVG* image, float x, float y, float scale, float lineThickness);
+	static void svg(VectorSVG* image, float x, float y, float scale, float lineThickness, float alpha);
 
 	static float* getBounds();
 

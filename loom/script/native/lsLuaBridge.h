@@ -1595,7 +1595,7 @@ public:
 //============================================================================
 
 /**
- *  Interface to a class poiner retrievable from a userdata.
+ *  Interface to a class pointer retrievable from a userdata.
  */
 class Userdata
 {
@@ -4048,7 +4048,7 @@ public:
 
                 ArgList<Params> args(L);
 
-                //NativeTypeBase* nativeType = NativeInterface::getNativeType<CT>();
+                NativeTypeBase* nativeType = NativeInterface::getNativeType<CT>();
 
                 ReturnType instance = FuncTraits<Func>::call(fp, args);
 

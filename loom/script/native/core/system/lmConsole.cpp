@@ -36,8 +36,9 @@ int Console::print(lua_State *L)
     lua_rawgeti(L, 1, LSINDEXVECTOR);
     int vidx = lua_gettop(L);
 
-    // the value to print (concating all objects passed)
-    utString toprint;
+    // the value to print (concatenating all objects passed)
+    char outputBuffer[2048];
+    outputBuffer[0] = 0;
 
     for (int i = 0; i < length; i++)
     {
@@ -65,22 +66,22 @@ int Console::print(lua_State *L)
         }
 
         // concat
-        toprint += s;
+        strncat(outputBuffer, s, 2047);
 
         // truncate to 2000 characters
-        if (strlen(toprint.c_str()) > 2000)
+        if (strlen(outputBuffer) > 2000)
         {
             break;
         }
 
         if (i != length - 1)
         {
-            toprint += " ";
+            strncat(outputBuffer, " ", 2047);
         }
     }
 
     // print to log
-    LSLog(LSLogError, "%s", toprint.c_str());
+    LSLog(LSLogError, "%s", outputBuffer);
 
     return 0;
 }

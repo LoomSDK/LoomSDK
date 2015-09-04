@@ -285,6 +285,16 @@ namespace :generate do
         load "./main.rb"
       end
 
+      # Nuke all the garbage in the examples folders.
+      Dir.glob("docs/output/examples/*/") do |exampleFolder|
+        FileUtils.rm_r "#{exampleFolder}/assets", :force => true
+        FileUtils.rm_r "#{exampleFolder}/bin", :force => true
+        FileUtils.rm_r "#{exampleFolder}/libs", :force => true
+        FileUtils.rm_r "#{exampleFolder}/src", :force => true
+      end
+
+      # make sure we don't accumulate junk in the artifacs/docs folder.
+      FileUtils.rm_r "artifacts/docs", :force => true
       FileUtils.mkdir_p "artifacts/docs"
       FileUtils.cp_r "docs/output/.", "artifacts/docs/"
     else
@@ -379,6 +389,10 @@ namespace :utility do
       Dir.chdir("docs/examples/#{args[:name]}") do
         sh "#{expandedArtifactsPath}/lsc"
       end
+      
+      # Clean up the libs and bin folders to save tons of space.
+      FileUtils.rm_r("docs/examples/#{args[:name]}/libs")
+      FileUtils.rm_r("docs/examples/#{args[:name]}/bin")
   end
 
   desc "Run demo"
@@ -808,7 +822,7 @@ namespace :build do
 
     writeStub("Ubuntu")
 
-    sh "mkdir -p artifacts/"
+    sh "mkdir -p artifacts/ubuntu"
     sh "echo BROKEN > ./artifacts/ubuntu/LoomDemo"
     sh "echo BROKEN > ./artifacts/ldb"
     sh "echo BROKEN > ./artifacts/lsc"
@@ -865,7 +879,7 @@ namespace :build do
     puts "Long: #{git_rev_long}"
     puts "Short: #{git_rev_short}"
   end
-
+  
 end
 
 file 'build/luajit_x86/lib/libluajit-5.1.a' do
@@ -913,7 +927,7 @@ file 'build/luajit_android/lib/libluajit-5.1.a' do
       #    sh "#{NDK}\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make -f Makefile.win32 install -j#{$numCores} HOST_CC=\"gcc -m32\" CROSS=" + ENV['NDKP'] + " TARGET_FLAGS=\"" + ENV['NDKF']+"\" TARGET=arm TARGET_SYS=Linux PREFIX=\"#{luajit_android_dir.shellescape}\""
       #end
     else
-    puts "building LuaJIT Android on OSX / Linux"
+      puts "building LuaJIT Android on OSX / Linux"
       # OSX / LINUX
       NDK = ENV['ANDROID_NDK']
       if (!NDK)
@@ -1095,9 +1109,12 @@ namespace :package do
 
     FileUtils.rm_rf "pkg/examples.zip"
     FileUtils.mkdir_p "pkg"
-
+    
+    # Package examples skipping bloat.
     Zip::File.open("pkg/examples.zip", 'w') do |zipfile|
       Dir["docs/examples/**/**"].each do |file|
+      	next if File.extname(file) == ".loomlib"
+      	next if File.extname(file) == ".loom"
         zipfile.add(file.sub("docs/examples/", ''),file)
       end
     end

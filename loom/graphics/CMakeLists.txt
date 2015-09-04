@@ -2,7 +2,7 @@
 # Debugging support
 # add_definitions(-DBGFX_CONFIG_DEBUG=1)
 
-set ( GRAPHICS_SRC gfxGraphics.cpp gfxQuadRenderer.cpp gfxTexture.cpp gfxScript.cpp gfxVectorRenderer.cpp gfxVectorGraphics.cpp gfxStateManager.c)
+set ( GRAPHICS_SRC gfxGraphics.cpp gfxQuadRenderer.cpp gfxTexture.cpp gfxScript.cpp gfxVectorRenderer.cpp gfxVectorGraphics.cpp gfxStateManager.c gfxShader.cpp)
 set (LOOM_VENDOR ${CMAKE_CURRENT_SOURCE_DIR}/../vendor)
 set (NANOVG ${LOOM_VENDOR}/nanovg/src)
 set (NANOSVG ${LOOM_VENDOR}/nanosvg/src)
@@ -56,8 +56,6 @@ if (FLASH)
     include_directories( ${LOOMBGFX_INCLUDE_DIR}/compat/osx )
 
 endif()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x" )
 
 add_library( LoomGraphics ${NANOVG_SRC} ${GRAPHICS_SRC} )
 target_link_libraries(LoomGraphics LoomVendor )

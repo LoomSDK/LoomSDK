@@ -28,7 +28,104 @@
 #include "loom/script/reflection/lsFieldInfo.h"
 #include "loom/common/core/performance.h"
 
+// Enable this to get verbose logging about runtime constructor and initializer
+// activity.
+//#define DEBUG_CONSTRUCTORS
+
+#ifdef DEBUG_CONSTRUCTORS
+#   define CTOR_LOG(...) LSLog(__VA_ARGS__);
+#else
+#   define CTOR_LOG(...)
+#endif
+
 namespace LS {
+
+// Debug functions to dump Lua state.
+
+// Print table at top of lua stack.
+static void loom_debug_printTable(lua_State *L);
+
+// Call the global traceback function and print the Lua call stack. Leave it
+// at top of stack.
+static int loom_debug_traceback (lua_State *L) {
+    lua_getfield(L, LUA_GLOBALSINDEX, "debug");
+    lua_getfield(L, -1, "traceback");
+    lua_call(L, 0, 1);
+    fprintf(stderr, "%s\n", lua_tostring(L, -1));
+    return 1;
+}
+
+// Dump the lua stack.
+static void loom_debug_stackDump (lua_State *L, bool recursive = false)
+{
+    printf("---- stack ---- ");
+    int i;
+    int top = lua_gettop(L);
+    for (i = 1; i <= top; i++) {  /* repeat for each level */
+        int t = lua_type(L, i);
+        switch (t) {
+
+            case LUA_TSTRING:  /* strings */
+                printf("`%s'", lua_tostring(L, i));
+                break;
+
+            case LUA_TBOOLEAN:  /* booleans */
+                printf(lua_toboolean(L, i) ? "true" : "false");
+                break;
+
+            case LUA_TNUMBER:  /* numbers */
+                printf("%g", lua_tonumber(L, i));
+                break;
+
+            case LUA_TTABLE:
+                if(recursive)
+                {
+                    lua_pushvalue(L, i);
+                    loom_debug_printTable(L);
+                    break;
+                }
+
+            default:  /* other values */
+                printf("%s", lua_typename(L, t));
+                break;
+
+        }
+        printf("  ");  /* put a separator */
+    }
+    printf("=================");
+}
+
+static void loom_debug_printTable(lua_State *L)
+{
+    printf("{\n");
+
+    lua_pushnil(L);
+
+    while(lua_next(L, -2) != 0)
+    {
+        // Get the key as a string without disturbing it.
+        lua_pushvalue(L, -2);
+        printf("   %s = ", lua_tostring(L, -1));
+        lua_pop(L, 1);
+
+        if(lua_isstring(L, -1))
+            printf("%s\n", lua_tostring(L, -1));
+        else if(lua_isnumber(L, -1))
+            printf("%f\n", lua_tonumber(L, -1));
+        else
+        {
+            printf("%s\n", lua_typename(L, lua_type(L, -1)));
+        }
+        //else if(lua_istable(L, -1))
+        //    PrintTable(L);
+        
+        lua_pop(L, 1);
+    }
+    
+    printf("}\n");
+}
+
+// Track the last accessed members.
 static char _gLastAccessedMember[64];
 char        *gLastAccessedMember = _gLastAccessedMember;
 
@@ -38,50 +135,51 @@ void lsr_createinstance(lua_State *L, Type *type)
     lua_call(L, 0, 1);
 }
 
-
 void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *type, int instanceIdx, Type *stopAtParentType)
 {
+    // Note the Lua stack index of the instance we are initializing.
     instanceIdx = lua_absindex(L, instanceIdx);
 
-    utStack<Type *> types;
-    Type            *t = type;
+    static utStack<Type *> types;
+    UTsize typesTop = types.size();
+
+    Type *t = type;
     while (t)
     {
+        // Skip initializers that are NOPs.
+        if(t->hasInstanceInitializer())
+            types.push(t);
+
+        t = t->getBaseType();
+
         if (t == stopAtParentType)
         {
             break;
         }
-        types.push(t);
-        t = t->getBaseType();
     }
 
     int top = lua_gettop(L);
 
-    t = types.pop();
-    while (t)
+    while (types.size() > typesTop)
     {
+        t = types.pop();
+
         lsr_getclasstable(L, t);
 
         // get the instance initializer function
         // this is not the constructor, which is a method
         lua_getfield(L, -1, "__ls_instanceinitializer");
 
+        CTOR_LOG(LSLogError, "   o initializer for %s", t->getFullName().c_str());
+
+        // call initializer on new instance.
         lua_pushvalue(L, instanceIdx);
-
-        // call with new instance as "this" local
-
-        if (lua_pcall(L, 1, LUA_MULTRET, 0))
+        if (lua_pcall(L, 1, 0, 0))
         {
             LSError("Error running instance initializer for %s\n%s\n", t->getFullName().c_str(), lua_tostring(L, -1));
         }
 
         lua_settop(L, top);
-
-        t = NULL;
-        if (!types.empty())
-        {
-            t = types.pop();
-        }
     }
 }
 
@@ -90,13 +188,16 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
 // any constructor, native instantiation, etc
 void lualoom_newscriptinstance_internal(lua_State *L, Type *type)
 {
-    lmAssert(type, "Internal Error: lsr_newscriptinstance_internal passes a NULL type");
+    lmAssert(type, "Internal Error: lsr_newscriptinstance_internal got a NULL type");
 
     // allocate a table with enough array and hash space to hold all of our member ordinals
     // we have to allocate enough hash nodes otherwise, upon first table set, it will rehash
     // which will shrink out table array down and then use the lua array heuristic to split between
     // array and hash, which is not a good fit as we want solely array access for member ordinals
-    lua_createtable(L, type->getMaxMemberOrdinal() + 16, type->getMaxMemberOrdinal() + 16);
+    //
+    // We chose 32 as a floor experimentally because it gave better performance than 16.
+    const int maxOrdinal = type->getMaxMemberOrdinal() > 32 ? type->getMaxMemberOrdinal() : 32;
+    lua_createtable(L, maxOrdinal, maxOrdinal);
 
     int instanceIdx = lua_gettop(L);
     lsr_getclasstable(L, type);
@@ -104,12 +205,6 @@ void lualoom_newscriptinstance_internal(lua_State *L, Type *type)
 
     lua_pushlightuserdata(L, type);
     lua_rawseti(L, instanceIdx, LSINDEXTYPE);
-
-    double uniqueId = LSLuaState::getUniqueKey();
-
-    lua_pushstring(L, "__ls_id");
-    lua_pushnumber(L, uniqueId);
-    lua_settable(L, -3);
 
     if (type->isDictionary())
     {
@@ -127,19 +222,20 @@ void lualoom_newscriptinstance_internal(lua_State *L, Type *type)
     lua_setmetatable(L, instanceIdx);
 }
 
-
 // class instance creator
 static int lsr_classcreateinstance(lua_State *L)
 {
     LOOM_PROFILE_SCOPE(classCreate);
 
+    // Note how many args we were called with.
     int nargs = lua_gettop(L) - 1;
 
     // index 1 on stack is class table
-
     Type *type = (Type *)lua_topointer(L, lua_upvalueindex(1));
 
-    bool profiling = LSProfiler::isEnabled();
+    CTOR_LOG(LSLogError, "Creating instance: %s", type->getFullName().c_str());
+
+    const bool profiling = LSProfiler::isEnabled();
     int memoryBeforeKB, memoryBeforeB;
     GCTracker *gct;
 
@@ -149,8 +245,9 @@ static int lsr_classcreateinstance(lua_State *L)
         memoryBeforeB = lua_gc(L, LUA_GCCOUNTB, 0);
     }
 
+    // Allocate the Lua-side instance.
     lualoom_newscriptinstance_internal(L, type);
-    int instanceIdx = lua_gettop(L);
+    const int instanceIdx = lua_gettop(L);
 
     if (profiling)
     {
@@ -166,205 +263,167 @@ static int lsr_classcreateinstance(lua_State *L)
         lua_rawseti(L, instanceIdx, LSINDEXGCTRACKER);
     }
 
-
-    Type *t = type;
-
-    bool nativeCreated = false;
-    while (t)
+    // If it has a native base type, instantiate that via C++ first.
+    Type *nt = type->getNativeBaseType();
+    if(nt)
     {
-        if (!nativeCreated && t->isNative())
+        CTOR_LOG(LSLogError, "   o creating native: %s", nt->getFullName().c_str());
+
+        int ntop = lua_gettop(L);
+        lua_getglobal(L, "__ls_nativeclasses");
+        lua_getfield(L, -1, nt->getPackageName().c_str());
+        lua_getfield(L, -1, nt->getName());
+        int _nargs = nargs;
+
+        // Prep args for calling the native constructor.
+        for (int i = 0; i < _nargs; i++)
         {
-            //LSLog(LSLogError, "Creating native: %s", t->getFullName().c_str());
-
-            nativeCreated = true;
-            int ntop = lua_gettop(L);
-            lua_getglobal(L, "__ls_nativeclasses");
-            lua_getfield(L, -1, t->getPackageName().c_str());
-            lua_getfield(L, -1, t->getName());
-            int _nargs = nargs;
-
-            for (int i = 0; i < _nargs; i++)
-            {
-                lua_pushvalue(L, 2 + i);
-            }
-
-            ConstructorInfo *cinfo = t->getConstructor();
-
-            // If we have a constructor defined and that constructor isn't the
-            // compiler default
-            if (cinfo && !cinfo->defaultConstructor)
-            {
-                // do we have default args?
-                if (cinfo->getFirstDefaultParm() != -1)
-                {
-                    int dargs = _nargs;
-
-                    int fidx = cinfo->getFirstDefaultParm();
-
-                    assert(fidx >= 0);
-
-                    if (dargs < cinfo->getNumParameters())
-                    {
-                        lsr_getclasstable(L, t);
-                        lua_getfield(L, -1, "__ls_constructor__default_args");
-                        assert(!lua_isnil(L, -1));
-
-                        // remove the class table
-                        lua_remove(L, -2);
-                        int d = lua_gettop(L);
-
-                        // add the default args to the call
-                        for (int i = dargs; i < cinfo->getNumParameters(); i++)
-                        {
-                            lua_pushnumber(L, i);
-                            lua_gettable(L, d);
-                            _nargs++;
-                        }
-
-                        // remove the default arg table
-                        lua_remove(L, d);
-                    }
-                }
-            }
-
-            if (lua_pcall(L, _nargs, 1, 0))
-            {
-                LSLuaState *ls = LSLuaState::getLuaState(L);
-
-                ls->triggerRuntimeError(
-                    "Error creating instance for native class %s\n\nPlease make sure you have a constructor defined in your native bindings\nFor example: .addConstructor <void (*)(void) >()"
-                    , type->getFullName().c_str());
-            }
-
-            lua_rawseti(L, instanceIdx, LSINDEXNATIVE);
-
-            NativeTypeBase *nativeType = NativeInterface::getNativeType(t);
-            assert(nativeType);
-
-            if (type->isNativeManaged())
-            {
-                lua_rawgeti(L, LUA_GLOBALSINDEX, LSINDEXMANAGEDNATIVESCRIPT);
-                lua_rawgeti(L, instanceIdx, LSINDEXNATIVE);
-                lua_pushvalue(L, instanceIdx);
-                lua_settable(L, -3);
-                lua_pop(L, 1);
-            }
-            else
-            {
-                if (!type->isNativeMemberPure(true))
-                {
-                    LSError("Error creating native instance for %s\nUnmanaged native class must be native pure\n", type->getFullName().c_str());
-                }
-            }
-
-            lua_settop(L, ntop);
+            lua_pushvalue(L, 2 + i);
         }
 
-        t = t->getBaseType();
+        // If we have a constructor defined and that constructor isn't the
+        // compiler default
+        ConstructorInfo *cinfo = nt->getConstructor();
+        if (cinfo && !cinfo->defaultConstructor)
+        {
+            // do we have default args?
+            if (cinfo->getFirstDefaultParm() != -1)
+            {
+                int dargs = _nargs;
+
+                int fidx = cinfo->getFirstDefaultParm();
+
+                assert(fidx >= 0);
+
+                if (dargs < cinfo->getNumParameters())
+                {
+                    // Get the class table and its default args.
+                    lua_rawgeti(L, instanceIdx, LSINDEXCLASS);
+                    lua_getfield(L, -1, "__ls_constructor__default_args");
+                    assert(!lua_isnil(L, -1));
+
+                    // remove the class table
+                    lua_remove(L, -2);
+                    int d = lua_gettop(L);
+
+                    // add the default args to the call
+                    for (int i = dargs; i < cinfo->getNumParameters(); i++)
+                    {
+                        lua_pushnumber(L, i);
+                        lua_gettable(L, d);
+                        _nargs++;
+                    }
+
+                    // remove the default arg table
+                    lua_remove(L, d);
+                }
+            }
+        }
+
+        CTOR_LOG(LSLogError, "   o native ctor %s", type->getFullName().c_str());
+
+        // Call the native constructor and note the result.
+        if (lua_pcall(L, _nargs, 1, 0))
+        {
+            LSLuaState *ls = LSLuaState::getLuaState(L);
+            ls->triggerRuntimeError("Error creating instance for native class %s\n\n"
+                                    "Please make sure you have a constructor defined in your native bindings\n"
+                                    "For example: .addConstructor <void (*)(void) >()",
+                                    type->getFullName().c_str());
+        }
+
+        CTOR_LOG(LSLogError, "            - done");
+
+        lua_rawseti(L, instanceIdx, LSINDEXNATIVE);
+
+        // Sanity check that this is a known native type.
+        assert(NativeInterface::getNativeType(nt));
+
+        if (type->isNativeManaged())
+        {
+            // Managed types get a special table.
+            lua_rawgeti(L, LUA_GLOBALSINDEX, LSINDEXMANAGEDNATIVESCRIPT);
+            lua_rawgeti(L, instanceIdx, LSINDEXNATIVE);
+            lua_pushvalue(L, instanceIdx);
+            lua_settable(L, -3);
+            lua_pop(L, 1);
+        }
+        else
+        {
+            if (!type->isNativeMemberPure_Cached(true))
+            {
+                LSError("Error creating native instance for %s\nUnmanaged native class must be native pure\n", type->getFullName().c_str());
+            }
+        }
+        
+        lua_settop(L, ntop);
+
+        // Call the instance initializers for this new instance rather than
+        // constructors since c'tor path will cause new instances to be created.
+        lualoom_callscriptinstanceinitializerchain_internal(L, nt, instanceIdx, NULL);
     }
 
-    // instance intializer chain
-    lualoom_callscriptinstanceinitializerchain_internal(L, type, instanceIdx, NULL);
-
-    // call constructor chain
-
-    utStack<Type *> types;
-
-    t = type;
-
-    while (t)
+    // Call script constructor.
+    if((type && type->getConstructor()->isNative() == false)
+       || (type && (type->isDictionary() || type->isVector())))
     {
-        types.push(t);
-        t = t->getBaseType();
-    }
+        // Get the class table for the type.
+        lua_rawgeti(L, instanceIdx, LSINDEXCLASS);
 
-    int top = lua_gettop(L);
+        const int conClsIdx = lua_gettop(L);
 
-    t = types.pop();
-    while (t)
-    {
-        ConstructorInfo *cinfo = t->getConstructor();
+        // Get the LSMethod for the constructor.
+        lua_getfield(L, -1, "__ls_constructor");
 
-        bool cskip = t->isNative() && (cinfo && cinfo->isNative());
+        lmAssert(!lua_isnil(L, -1), "Failed to look up constructor for type '%s' from VM");
 
-        if (cinfo && !cskip && !cinfo->defaultConstructor)
+        // Pass the instance.
+        lua_pushvalue(L, instanceIdx);
+
+        // Pass any arguments we got.
+        for (int i = 0; i < nargs; i++)
         {
-            // skip if the next constructor in chain has a super call
-            bool skip = false;
-            if (!types.empty())
-            {
-                Type            *type = types.peek(0);
-                ConstructorInfo *ci   = type->getConstructor();
-                if (ci && ci->hasSuperCall())
-                {
-                    skip = true;
-                }
-            }
-
-            if (!skip)
-            {
-                // if we don't specify a super call, default is to call
-                // base constructor (we do so with args passed, this right?)
-
-                lsr_getclasstable(L, t);
-
-                int conClsIdx = lua_gettop(L);
-
-                // get the LSMethod
-                lua_getfield(L, -1, "__ls_constructor");
-
-                assert(!lua_isnil(L, -1));
-
-                lua_pushvalue(L, instanceIdx);
-
-                for (int i = 0; i < nargs; i++)
-                {
-                    lua_pushvalue(L, 2 + i);
-                }
-
-                if (cinfo->getFirstDefaultParm() != -1)
-                {
-                    int dargs = nargs;
-
-                    int fidx = cinfo->getFirstDefaultParm();
-                    lmAssert(fidx >= 0, "Got valid default parm index, then it was -1 on second read!");
-
-
-                    if (dargs < cinfo->getNumParameters())
-                    {
-                        lua_getfield(L, conClsIdx, "__ls_constructor__default_args");
-                        assert(!lua_isnil(L, -1));
-                        int d = lua_gettop(L);
-
-                        for (int i = dargs; i < cinfo->getNumParameters(); i++)
-                        {
-                            lua_pushnumber(L, i);
-                            lua_gettable(L, d);
-                            //LSLog(LSLogError, "Processing %d %s", i, lua_tostring(L, -1));
-                            nargs++;
-                        }
-                        //LSLog(LSLogError, "-------");
-
-                        lua_remove(L, d);
-                    }
-                }
-
-
-                if (lua_pcall(L, nargs + 1, LUA_MULTRET, 0))
-                {
-                    LSError("ERROR in constructor for %s\n:%s\n", t->getFullName().c_str(), lua_tostring(L, -1));
-                }
-            }
-
-            // setup top for next constructor
-            lua_settop(L, top);
+            lua_pushvalue(L, 2 + i);
         }
 
-        t = NULL;
-        if (!types.empty())
+        // Grab constructor info.
+        ConstructorInfo *cinfo = type->getConstructor();
+
+        // Deal with default arguments.
+        if (cinfo->getFirstDefaultParm() != -1)
         {
-            t = types.pop();
+            const int dargs = nargs;
+
+            const int fidx = cinfo->getFirstDefaultParm();
+            lmAssert(fidx >= 0, "Got valid default parm index, then it was -1 on second read!");
+
+            if (dargs < cinfo->getNumParameters())
+            {
+                lua_getfield(L, conClsIdx, "__ls_constructor__default_args");
+                lmAssert(!lua_isnil(L, -1), "Failed to get default constructor args for type '%s'", type->getFullName().c_str());
+                const int d = lua_gettop(L);
+
+                for (int i = dargs; i < cinfo->getNumParameters(); i++)
+                {
+                    lua_pushnumber(L, i);
+                    lua_gettable(L, d);
+                    nargs++;
+                }
+
+                lua_remove(L, d);
+            }
         }
+
+        CTOR_LOG(LSLogError, "   o script ctor %s", type->getFullName().c_str());
+
+        // Call the script constructor.
+        if (lua_pcall(L, nargs + 1, 0, 0))
+        {
+            LSError("ERROR constructing instance of '%s':\n%s", type->getFullName().c_str(), lua_tostring(L, -1));
+        }
+
+        CTOR_LOG(LSLogError, "            - done");
+
     }
 
     if (profiling)
@@ -377,9 +436,7 @@ static int lsr_classcreateinstance(lua_State *L)
         gct->allocated += memoryDelta;
     }
 
-
-
-    // return this
+    // Return the new instance.
     lua_pushvalue(L, instanceIdx);
     return 1;
 }
@@ -523,7 +580,8 @@ void lsr_declareclass(lua_State *L, Type *type)
     // we have to allocate enough hash nodes otherwise, upon first table set, it will rehash
     // which will shrink out table array down and then use the lua array heuristic to split between
     // array and hash, which is not a good fit as we want solely array access for member ordinals
-    lua_createtable(L, type->getMaxMemberOrdinal() + 16, type->getMaxMemberOrdinal() + 16);
+    const int maxOrdinal = type->getMaxMemberOrdinal() > 32 ? type->getMaxMemberOrdinal() : 32;
+    lua_createtable(L, maxOrdinal, maxOrdinal);
 
     int clsIdx = lua_gettop(L);
 
@@ -1021,7 +1079,7 @@ void lsr_classinitializestatic(lua_State *L, Type *type)
     // run the static initializer
     lua_getfield(L, clsIdx, "__ls_staticinitializer");
 
-    //printf("running static initializer %s\n", type->getFullName().c_str());
+    CTOR_LOG(LSLogError, "running static initializer %s\n", type->getFullName().c_str());
 
     if (lua_pcall(L, 0, LUA_MULTRET, 0))
     {
@@ -1082,15 +1140,19 @@ void lsr_classinitialize(lua_State *L, Type *type)
             i == 0 ?
             type->getBCStaticInitializer() :
             type->getBCInstanceInitializer();
+
         assert(bc);
 
         if (!bc->load(LSLuaState::getLuaState(L)))
         {
-            LSError("Error loading bytecode for %s:%s",
+            // We skip initializers that do nothing to save ops, so missing byte
+            // code isn't a problem.
+/*            LSWarning("Error loading bytecode for %s:%s",
                     type->getFullName().c_str(),
                     i == 0 ?
                     "__ls_staticinitializer" :
-                    "__ls_instanceinitializer");
+                    "__ls_instanceinitializer"); */
+            continue;
         }
 
         // set initializer env to class table

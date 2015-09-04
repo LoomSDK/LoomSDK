@@ -313,13 +313,18 @@ MethodInfo *Type::findOperatorMethod(const utString& methodName)
 
 ConstructorInfo *Type::getConstructor()
 {
+    if(cachedConstructor)
+        return cachedConstructor;
+
     for (UTsize i = 0; i < members.size(); i++)
     {
         MemberInfo *m = members.at(i);
-        if (m->isConstructor())
-        {
-            return (ConstructorInfo *)m;
-        }
+        if (!m->isConstructor())
+            continue;
+
+        // Store match to return faster next time.
+        cachedConstructor = (ConstructorInfo *)m;
+        return (ConstructorInfo *)m;
     }
 
     return NULL;

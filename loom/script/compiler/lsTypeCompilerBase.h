@@ -81,6 +81,10 @@ protected:
     {
     }
 
+    // Bytecode output helper
+    static int luaByteCodewriter(lua_State *L, const void *p, size_t size,
+                                 void *u);
+
     virtual void _compile();
 
     virtual void initCodeState(CodeState *codeState, FuncState *funcState, const utString& source) = 0;
@@ -105,6 +109,60 @@ protected:
     Expression *visit(YieldExpression *expression);
     Expression *visit(VectorLiteral *vector);
     Expression *visit(IncrementExpression *expression);
+
+    // Visit an array of statements in order, calling visitStatement on each.
+    utArray<Statement *> *visitStatementArray(utArray<Statement *> *_statements);
+    virtual Statement *visitStatement(Statement *statement)=0;
+
+    // Helpers to visit an array of expressions.
+    utArray<Expression *> *visitExpressionArray(utArray<Expression *> *_expressions);
+    Expression *visitExpression(Expression *expression);
+
+    // Assorted common visit implementations. Most of these pass through or error
+    // as they are syntactic elements that aren't important for us.
+    CompilationUnit *visit(CompilationUnit *cunit);
+    Statement *visit(FunctionDeclaration *declaration);
+    Statement *visit(PropertyDeclaration *declaration);
+    Statement *visit(BlockStatement *statement);
+    Statement *visit(EmptyStatement *statement);
+    Statement *visit(ExpressionStatement *statement);
+    Statement *visit(LabelledStatement *statement);
+    Statement *visit(VariableStatement *statement);
+    Statement *visit(WithStatement *statement);
+    Statement *visit(ClassDeclaration *statement);
+    Statement *visit(InterfaceDeclaration *statement);
+    Statement *visit(PackageDeclaration *statement);
+    Statement *visit(ImportStatement *statement);
+    Expression *visit(MultipleAssignmentExpression *expression);
+    Expression *visit(DeleteExpression *expression);
+    Expression *visit(LogicalAndExpression *expression);
+    Expression *visit(LogicalOrExpression *expression);
+    Expression *visit(ArrayLiteral *literal);
+    Expression *visit(ObjectLiteral *literal);
+    Expression *visit(ObjectLiteralProperty *property);
+    Expression *visit(PropertyLiteral *property);
+    Expression *visit(DictionaryLiteralPair *pair);
+
+    // More substantial common visitors.
+    Expression *visit(VariableExpression *expression);
+    Expression *visit(SuperExpression *expression);
+    Expression *visit(VariableDeclaration *declaration);
+    Expression *visit(ThisLiteral *literal);
+    Expression *visit(NullLiteral *literal);
+    Expression *visit(BooleanLiteral *literal);
+    Expression *visit(NumberLiteral *literal);
+    Expression *visit(DictionaryLiteral *literal);
+    Expression *visit(CallExpression *literal);
+    Expression *visit(NewExpression *expression);
+    virtual Expression *visit(BinaryOperatorExpression *expression)=0;
+
+    // Common helpers
+    void createVarArg(ExpDesc *varg, utArray<Expression *> *arguments,
+                      int startIdx);
+    int expList(ExpDesc *e, utArray<Expression *> *expressions, MethodBase *methodBase);
+
+    // Visit a chunk of statements in order and emit bytecode for them.
+    virtual void chunk(utArray<Statement *> *statements)=0;
 
     // struct
     void setupVarDecl(ExpDesc *out, VariableDeclaration *declaration);
