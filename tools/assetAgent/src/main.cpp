@@ -51,6 +51,17 @@
 #define getcwd        _getcwd
 #endif
 
+
+// These stubs are required for LoomCommon to work without LoomScript for now
+void loom_asset_notifyPendingCountChange() {};
+namespace LS {
+    class NativeDelegate
+    {
+        public: static int smMainThreadID;
+    };
+    int NativeDelegate::smMainThreadID = 0xBAADF00D;
+}
+
 // Delay in milliseconds between checks of file system.
 const int gFileCheckInterval = 100;
 

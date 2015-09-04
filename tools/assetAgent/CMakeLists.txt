@@ -25,6 +25,8 @@ if (APPLE)
        "-framework CoreFoundation"
        "-framework Cocoa"
        "-framework OpenGL"
+       # zlib
+       "-lz"
     )
     
     set_target_properties(${PROJECT_NAME} PROPERTIES

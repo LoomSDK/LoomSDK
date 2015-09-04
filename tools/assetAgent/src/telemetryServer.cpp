@@ -84,7 +84,7 @@ int StreamDataHandler(struct mg_connection * conn, int bits, char * data, size_t
     lmAssert(client->conn == conn, "Websocket connection mismatch");
     lmAssert(client->state >= 1, "Websocket invalid state");
 
-    if (strcmp(data, "ping") != 0) {
+    if (strstr(data, "ping") != NULL) {
         const char* pong = "{ \"status\": \"pong\", \"data\": null }";
         mg_websocket_write(conn, WEBSOCKET_OPCODE_TEXT, pong, strlen(pong));
         return 1;
@@ -152,7 +152,8 @@ static int JSONStringHandler(struct mg_connection *conn, void *cbdata)
     loom_mutex_lock(jsonMutex);
     if (jsonString->empty())
     {
-        jsonString = &utString("{ \"status\": \"fail\", \"data\": null }");
+        utString fail = utString("{ \"status\": \"fail\", \"data\": null }");
+        jsonString = &fail;
     }
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n");
     mg_write(conn, jsonString->c_str(), jsonString->length());

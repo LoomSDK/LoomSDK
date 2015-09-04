@@ -220,10 +220,10 @@ VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, Textu
 
 #ifdef LOOM_DEBUG
     loom_mutex_lock(Texture::sTexInfoLock);
-    lmAssert(!(numVertices % 4), "numVertices % 4 != 0");
+    lmAssert(!(vertexCount % 4), "numVertices % 4 != 0");
     lmAssert(texture == Texture::getTextureInfo(texture)->id, "Texture ID signature mismatch, you might be trying to draw a disposed texture");
     loom_mutex_unlock(Texture::sTexInfoLock);
-    lmAssert(vertices);
+    lmAssert(batchedVertices, "batchedVertices should not be null");
 #endif
 
     bool doSubmit = false;
