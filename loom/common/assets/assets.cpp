@@ -25,6 +25,7 @@
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
 #include "loom/common/core/allocator.h"
+#include "loom/common/core/string.h"
 #include "loom/common/core/stringTable.h"
 #include "loom/common/platform/platformThread.h"
 #include "loom/common/platform/platformTime.h"
@@ -50,10 +51,6 @@
 
 #define ASSET_STREAM_HOST    LoomApplicationConfig::assetAgentHost().c_str()
 #define ASSET_STREAM_PORT    LoomApplicationConfig::assetAgentPort()
-
-#if LOOM_PLATFORM_IS_APPLE == 1 || LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-#define stricmp              strcasecmp //I feel dirty.
-#endif
 
 // This actually lives in lsAsset.cpp, but is useful to call from in the asset manager implementation.
 void loom_asset_notifyPendingCountChange();
@@ -245,31 +242,31 @@ static loom_asset_t *loom_asset_getAssetByName(const char *name, int create)
 // Recognize text file types by their extension.
 static int loom_asset_textRecognizer(const char *extension)
 {
-    if (!strcasecmp(extension, "txt"))
+    if (!stricmp(extension, "txt"))
     {
         return LATText;
     }
-    if (!strcasecmp(extension, "lml"))
+    if (!stricmp(extension, "lml"))
     {
         return LATText;
     }
-    if (!strcasecmp(extension, "css"))
+    if (!stricmp(extension, "css"))
     {
         return LATText;
     }
-    if (!strcasecmp(extension, "xml"))
+    if (!stricmp(extension, "xml"))
     {
         return LATText;
     }
-    if (!strcasecmp(extension, "plist"))
+    if (!stricmp(extension, "plist"))
     {
         return LATText;
     }
-    if (!strcasecmp(extension, "fnt"))
+    if (!stricmp(extension, "fnt"))
     {
         return LATText;
     }
-    if (!strcasecmp(extension, "tmx"))
+    if (!stricmp(extension, "tmx"))
     {
         return LATText;
     }
@@ -311,7 +308,7 @@ void *loom_asset_textDeserializer(void *ptr, size_t size, LoomAssetCleanupCallba
 // Recognize binary file types by their extension.
 static int loom_asset_binaryRecognizer(const char *extension)
 {
-    if (!strcasecmp(extension, "zip"))
+    if (!stricmp(extension, "zip"))
     {
         return LATBinary;
     }

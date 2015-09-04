@@ -22,6 +22,7 @@
 #include "loom/engine/loom2d/l2dImage.h"
 #include "loom/engine/loom2d/l2dBlendMode.h"
 #include "loom/graphics/gfxGraphics.h"
+#include "loom/graphics/gfxColor.h"
 
 namespace Loom2D
 {
@@ -63,21 +64,19 @@ void Quad::updateNativeVertexData(lua_State *L, int index)
 
             v->z = 0.0f;
 
+            GFX::Color c(0);
             lua_rawgeti(L, rawDataTable, rcounter++);
-            float r = (float)lua_tonumber(L, -1);
+            c.r = (float)lua_tonumber(L, -1);
             lua_rawgeti(L, rawDataTable, rcounter++);
-            float g = (float)lua_tonumber(L, -1);
+            c.g = (float)lua_tonumber(L, -1);
             lua_rawgeti(L, rawDataTable, rcounter++);
-            float b = (float)lua_tonumber(L, -1);
+            c.b = (float)lua_tonumber(L, -1);
             lua_rawgeti(L, rawDataTable, rcounter++);
-            float a = (float)lua_tonumber(L, -1);
+            c.a = (float)lua_tonumber(L, -1);
 
             // todo: optimize this too:
 
-            v->abgr = ((uint32_t)(a * 255) << 24) |
-                      ((uint32_t)(b * 255) << 16) |
-                      ((uint32_t)(g * 255) << 8) |
-                      ((uint32_t)(r * 255));
+            v->abgr = c.getHex();
 
             if(v->abgr != 0x00FFFFFFFF)
                 tinted = true;

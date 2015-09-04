@@ -30,6 +30,7 @@
 #include "loom/graphics/gfxTexture.h"
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/graphics/gfxVectorRenderer.h"
+#include "loom/graphics/gfxBitmapData.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -50,7 +51,7 @@ bool Graphics::sContextLost = true;
 int Graphics::sWidth      = 0;
 int Graphics::sHeight     = 0;
 uint32_t Graphics::sFlags = 0x00000000;
-int Graphics::sFillColor  = 0x000000FF;
+Color Graphics::sFillColor(0x000000FF);
 int Graphics::sView       = 0;
 int Graphics::sBackFramebuffer = -1;
 
@@ -218,12 +219,7 @@ void Graphics::beginFrame()
     Graphics::context()->glViewport(0, 0, Graphics::getWidth(), Graphics::getHeight());
 
     if (!(sFlags & FLAG_NOCLEAR)) {
-        Graphics::context()->glClearColor(
-                                          float((sFillColor >> 24) & 0xFF) / 255.0f,
-                                          float((sFillColor >> 16) & 0xFF) / 255.0f,
-                                          float((sFillColor >> 8) & 0xFF) / 255.0f,
-                                          float((sFillColor >> 0) & 0xFF) / 255.0f
-                                          );
+        Graphics::context()->glClearColor(sFillColor.r, sFillColor.g, sFillColor.b, sFillColor.a);
         Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     }
 
@@ -241,55 +237,22 @@ void Graphics::endFrame()
         SDL_ClearError();
         SDL_Window* sdlWindow = gSDLWindow;
 
-        // Create a PNG image and save it to the requested file location
-        // Original algorithm (heavily modified) by neilf (http://stackoverflow.com/a/20233470)
-        if (sWidth == 0 || sHeight == 0) {
-            lmLog(gGFXLogGroup, "Graphics dimensions invalid %d x %d: %s", sWidth, sHeight, SDL_GetError());
-            return;
-        }
+        const BitmapData* fb = BitmapData::fromFramebuffer();
 
-        utByteArray *pixels = lmNew(NULL) utByteArray();
-        if (pixels == NULL) {
-            lmLog(gGFXLogGroup, "Unable to allocate memory for screenshot pixel data buffer");
-            return;
-        }
 
-        const int bpp = 4;
-
-        pixels->resize(sWidth * sHeight * bpp);
-
-        // The OpenGL method is a lot cleaner, but inverts the image
-        context()->glPixelStorei(GL_PACK_ALIGNMENT, 1);
-        context()->glReadPixels(0, 0, sWidth, sHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels->getDataPtr());
-
-        // Invert dat image
-        utByteArray *invertedPixels = lmNew(NULL) utByteArray();
-        if (invertedPixels == NULL) {
-            lmLog(gGFXLogGroup, "Unable to allocate memory for transformed pixels data buffer");
-            return;
-        }
-        invertedPixels->resize(pixels->getSize());
-
-        for (int i = sHeight - 1; i >= 0; i--) {
-            invertedPixels->writeBytes(pixels, i * sWidth * bpp, sWidth * bpp);
-        }
-        
         // If there is a pending screenshot write, do that
-        if (pendingScreenshot[0] != 0 && stbi_write_png(pendingScreenshot, sWidth, sHeight, 4 /* RGBA */, invertedPixels->getDataPtr(), sWidth * bpp) != 1) {
-            lmLog(gGFXLogGroup, "Unable to generate PNG");
+        if (pendingScreenshot[0] != 0) {
+            fb->save(pendingScreenshot);
         }
 
         // If there is a pending data request, do that
         if (gettingScreenshotData) {
-            utByteArray *retData = stbi_data_png(sWidth, sHeight, 4 /* RGBA */, invertedPixels->getDataPtr(), sWidth * bpp);
+            utByteArray *retData = stbi_data_png(sWidth, sHeight, 4 /* RGBA */, fb->getData(), sWidth * fb->getBpp());
 
             // Send the delegate along
             _onScreenshotDataDelegate.pushArgument(retData);
             _onScreenshotDataDelegate.invoke();
         }
-        
-        lmDelete(NULL, pixels);
-        lmDelete(NULL, invertedPixels);
 
         pendingScreenshot[0] = 0;
         gettingScreenshotData = false;
@@ -374,9 +337,9 @@ void Graphics::setDebug(int flags)
 }
 
 
-void Graphics::setFillColor(int color)
+void Graphics::setFillColor(unsigned int color)
 {
-    sFillColor = color;
+    sFillColor = Color(color);
 }
 
 // NanoVG requires stencil buffer for fills, so this is always true for now
@@ -385,9 +348,9 @@ bool Graphics::getStencilRequired()
     return true || (VectorRenderer::quality & VectorRenderer::QUALITY_STENCIL_STROKES) > 0;
 }
 
-int Graphics::getFillColor()
+unsigned int Graphics::getFillColor()
 {
-    return sFillColor;
+    return sFillColor.getHex();
 }
 
 void Graphics::setClipRect(int x, int y, int width, int height)

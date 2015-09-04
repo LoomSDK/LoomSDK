@@ -22,19 +22,12 @@
 #include <string.h>
 #include "loom/common/core/allocator.h"
 #include "loom/common/core/log.h"
+#include "loom/common/core/string.h"
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsSound.h"
 
 #include "stb_vorbis.h"
 #include "minimp3.h"
-
-#ifdef _MSC_VER
-#define stricmp    _stricmp
-#endif
-
-#if LOOM_PLATFORM_IS_APPLE == 1 || ANDROID_NDK || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
-#define stricmp    strcasecmp //I feel dirty.
-#endif
 
 extern "C" loom_allocator_t *gAssetAllocator;
 static loom_logGroup_t gSoundAssetGroup = { "soundAsset", 1 };

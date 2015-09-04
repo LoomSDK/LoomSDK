@@ -56,6 +56,8 @@
 #include "loom/common/core/log.h"
 #include "lua.h"
 
+#include "loom/graphics/gfxColor.h"
+
 namespace GFX {
     lmDeclareLogGroup(gGFXLogGroup);
 }
@@ -230,8 +232,8 @@ public:
     static void setDebug(int flags);
     static void screenshot(const char *path);
     static void screenshotData();
-    static void setFillColor(int color);
-    static int getFillColor();
+    static void setFillColor(unsigned int color);
+    static unsigned int getFillColor();
 
     static int getBackFramebuffer() { return sBackFramebuffer; }
 
@@ -261,7 +263,7 @@ private:
     static uint32_t sFlags;
 
     // The current fill color used when clearing the color buffer
-    static int sFillColor;
+    static Color sFillColor;
 
     // The current view number being rendered
     static int sView;

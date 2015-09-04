@@ -27,6 +27,7 @@
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxTexture.h"
 #include "loom/graphics/gfxShader.h"
+#include "loom/graphics/gfxBitmapData.h"
 
 // Includes for the resize operation.
 #include "loom/common/platform/platformThread.h"
@@ -385,6 +386,14 @@ static int registerLoomGraphics(lua_State *L)
        .addStaticMethod("getDefaultShader", &ShaderProgram::getDefaultShader)
        .endClass()
 
+       .beginClass<BitmapData>("BitmapData")
+       .addMethod("save", &BitmapData::save)
+       .addStaticMethod("fromFramebuffer", &BitmapData::fromFramebuffer)
+       .addStaticMethod("fromAsset", &BitmapData::fromAsset)
+       .addStaticMethod("compare", &BitmapData::compare)
+       .addStaticMethod("diff", &BitmapData::diff)
+       .endClass()
+
        .endPackage();
 
     return 0;
@@ -397,4 +406,5 @@ void installLoomGraphics()
     LOOM_DECLARE_NATIVETYPE(GFX::Texture, GFX::registerLoomGraphics);
     LOOM_DECLARE_NATIVETYPE(GFX::TextureInfo, GFX::registerLoomGraphics);
     LOOM_DECLARE_MANAGEDNATIVETYPE(GFX::ShaderProgram, GFX::registerLoomGraphics);
+    LOOM_DECLARE_NATIVETYPE(GFX::BitmapData, GFX::registerLoomGraphics);
 }
