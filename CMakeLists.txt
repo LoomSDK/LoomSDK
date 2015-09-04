@@ -35,8 +35,6 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios/Parse.framework/Headers
     )
 
-add_definitions(-DLOOM_SCRIPT)
-
 # Allow Admob and/or Facebook to be built into the SDK?
 if(LOOM_BUILD_ADMOB EQUAL 1)
     add_definitions(-DLOOM_ALLOW_ADMOB)

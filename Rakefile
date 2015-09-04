@@ -1243,6 +1243,8 @@ def get_app_prefix (appPath)
     return appPrefix
 end
 
+# Selectively copy files required for the telemetry client
+# based on $telemetryClientInclude and $telemetryClientExclude
 def telemetry_client_copy(fromDir, toDir)
   # Enumerate and store all included file paths
   included = []
