@@ -565,7 +565,7 @@ void BinWriter::writeAssembly(const char *sjson, int jsonSize)
     json_error_t jerror;
     json_t       *json = json_loadb(sjson, jsonSize, 0, &jerror);
 
-    lmAssert(json, "Error loading Assembly json: %s\n %s %i\n>>>%s<<<", jerror.source, jerror.text, jerror.line, sjson);
+    lmAssert(json, "Error loading Assembly json: %s\n %s %i\n", jerror.source, jerror.text, jerror.line);
 
     writeAssembly(json);
 }

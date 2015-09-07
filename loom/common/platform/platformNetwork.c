@@ -363,6 +363,8 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
 
     int tmp = *bytesToRead;
 
+    int bytesLeft;
+
     if (loom_net_isSocketDead(s))
     {
         *bytesToRead = 0;
@@ -374,7 +376,7 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
         return;
     }
 
-    int bytesLeft = *bytesToRead;
+    bytesLeft = *bytesToRead;
 
     while (bytesLeft > 0)
     {

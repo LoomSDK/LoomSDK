@@ -32,7 +32,7 @@ protected:
     utArray<unsigned char> _data;
     UTsize _position;
 
-    void memcpyAligned(void *destination, const void *source, size_t num)
+    void memcpyUnaligned(void *destination, const void *source, size_t num)
     {
         // TODO smarter
         // Loop copying byte by byte to avoid unaligned access
@@ -57,7 +57,7 @@ protected:
         // memcpy is necessary for some platforms as we can get
         // an unaligned read exception (e.g. SIGBUS on Android/ARM) otherwise
         // TODO: benchmark vs. assignment
-        memcpyAligned(&value, ptr, sizeof(T));
+        memcpyUnaligned(&value, ptr, sizeof(T));
 
         _position += sizeof(T);
 
@@ -79,7 +79,7 @@ protected:
         T *ptr = (T *)&_data[_position];
         
         // Needed for unaligned writes, see readValue for more info
-        memcpyAligned(ptr, &value, sizeof(T));
+        memcpyUnaligned(ptr, &value, sizeof(T));
 
         _position += sizeof(T);
     }
