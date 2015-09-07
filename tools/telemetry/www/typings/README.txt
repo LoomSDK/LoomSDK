@@ -1,0 +1,1 @@
+These files contain the JavaScript -> TypeScript mapping which Visual Studio Code uses to provide code completion to JS libraries.
