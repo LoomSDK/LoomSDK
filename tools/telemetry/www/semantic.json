@@ -1,4 +1,6 @@
 {
+  "description": "This is the semantic ui configuration file used when building the semantic ui distribution files (semantic/dist/) from source (semantic/src/)",
+  
   "base": "semantic\\",
   "paths": {
     "source": {

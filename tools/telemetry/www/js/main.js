@@ -1,25 +1,72 @@
+/*
+===========================================================================
+Loom SDK
+Copyright 2011, 2012, 2013 
+The Game Engine Company, LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License. 
+===========================================================================
+*/
+
 // Color palette of the chart bars
-//var colors = ["#3A3232", "#D83018", "#F07848", "#FDFCCE", "#C0D8D8"];
 var colors = ["#611824", "#C12F2A", "#FF6540", "#FEDE7B", "#F7FFEE"];
+// Alternate color scheme
+//var colors = ["#3A3232", "#D83018", "#F07848", "#FDFCCE", "#C0D8D8"];
+
+// true if chart extends from the top to the bottom,
+// false if it extends from the bottom to the top
 var invertGraph = true;
 
+// Initial time range in nanoseconds (20e6 = 20ms)
 var timeInitRange = 20e6;
+
+// Number of ticks displayed initially
 var tickInitNum = 60;
 
+// When the number of ticks grows over this limit
+// the ticks in front get spliced out
 var tickLimit = tickInitNum;
+
+// Controls the display of tick values
 var tickShowValues = false;
 
+// Chart offset in ticks (used to scroll through ticks)
 var tickOffset = 0;
+
+// Chart offset in pixels (used for smooth scrolling)
 var chartOffset = 0.0;
+
+// Chart visible tick number
 var tickNum = tickInitNum;
+
+// Chart visible tick number in fractional ticks
 var tickNumF = tickInitNum;
 
+// Width of the chart without any additional padding on the sides
 var innerChartWidth = 0;
+
+// Precomputed expected width of the bars used before the actual
+// bar width gets computed internally by d3.js
 var expectedBarWidth = 0;
+
+// The amount the chart is wider by to allow for extra bars used while
+// smoothly scrolling through the chart
 var chartWidthExtension = 0;
 
+// Using the signals.js library
 var Signal = signals.Signal;
 
+// External interface
 var LT = {
     startStream: function() {
         Telemetry.stream.start();
@@ -29,6 +76,7 @@ var LT = {
     }
 }
 
+// Initialize controls and various managers
 function initTelemetry() {
     var elem;
     elem = $("#tickLimit");
@@ -61,9 +109,11 @@ function initTelemetry() {
     Telemetry.stream.messageCallback = Telemetry.processor.handleMessage;
     Telemetry.stream.showStatus("Ready");
     
+    // Start the stream on init
     Telemetry.stream.start();
 }
 
+// Update the tick limit from the control
 function updateTickLimit() {
     var limit = Number($("#tickLimit").val());
     if (!isNaN(limit)) tickLimit = limit;
@@ -73,6 +123,7 @@ function destroyTelemetry() {
     if (Telemetry.stream) Telemetry.stream.close();
 }
 
+// Common telemetry values
 var Telemetry = {
     ticks: [],
     valueDomains: null,
@@ -108,6 +159,7 @@ var Telemetry = {
     
 };
 
+// Common functions and values of the main chart
 function ChartCommon() {
     
     this.tickViewChanged = new Signal();
@@ -375,6 +427,7 @@ function ChartCommon() {
     this.init();
 }
 
+// Telemetry web sockets stream manager
 function TStream() {
     this.pingInterval = 2;
     this.pingStart = 0;
@@ -468,8 +521,7 @@ function TStream() {
 }
 
 
-
-
+// Receives, processes and handles the incoming tick data
 function TelemetryProcessor(initCommon) {
     
     this.tickAdded = new Signal();
@@ -672,7 +724,7 @@ function TelemetryProcessor(initCommon) {
             var maxTime = chart.maxTime;
             tick.visibleMetrics = tick.metrics.filter(function(metric, index, metrics) {
                 if (metric.a > maxTime || metric.b < minTime) return false;
-                if (y(metric.b) - y(metric.a) < 1) return false;
+                if (Math.abs(y(metric.b) - y(metric.a)) < 1) return false;
                 return true;
             })
         } else {
@@ -699,11 +751,10 @@ function TelemetryProcessor(initCommon) {
     
     this.init();
 }
-    
-    
-    
-    
-    
+
+
+
+// Represents the tick values chart
 function TickValues(initCommon) {
 
     var map;
@@ -946,6 +997,8 @@ function TickValues(initCommon) {
     this.init();
 }
 
+
+// Represents the function timings bar chart
 function TickBars(initCommon) {
     
     var ticks;
@@ -1328,14 +1381,12 @@ function TickBars(initCommon) {
                     
                     barSecText.html(sectionName);
                     
-                    // Compute the max char width and print to console
+                    // Debug code - compute the max char width and print to console
                     /*
                     var barSecTextNode = barSecText.node();
                     var textLen = barSecTextNode ? barSecTextNode.getComputedTextLength() : 0;
                     if (!LT.debugMetrics) LT.debugMetrics = []; LT.debugMetrics.push(textLen/sectionName.length); console.log(d3.max(LT.debugMetrics))
                     //*/
-                    
-                    console.log()
                     
                     var textVert = !partialTrim && textEstimatedLen > textHorizontalSpace && textEstimatedLen < sh;
                     
