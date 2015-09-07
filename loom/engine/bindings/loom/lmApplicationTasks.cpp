@@ -79,9 +79,7 @@ void loom_tick()
     
     GFX::Texture::tick();
     
-    LOOM_PROFILE_START(render);
     if (Loom2D::Stage::smMainStage) Loom2D::Stage::smMainStage->invokeRenderStage();
-    LOOM_PROFILE_END(render);
     
     finishProfilerBlock(&p);
     

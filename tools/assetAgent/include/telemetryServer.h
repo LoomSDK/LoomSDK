@@ -22,6 +22,10 @@ public:
     void updateMetricsJSON();
 };
 
+// Web server for Telemetry that can be turned on
+// or off. It serves client files from the client root
+// and provides an interface for talking with clients.
+// TelemetryListener uses this server to send metrics.
 class TelemetryServer
 {
     static struct mg_callbacks callbacks;

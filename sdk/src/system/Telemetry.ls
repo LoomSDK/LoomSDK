@@ -22,7 +22,10 @@ package system
 {
 
     /**
-     *  Telemetry gathers various metrics and timings across the system.
+     *  Telemetry gathers various metrics and timings across the system
+     *  and sends them to the Telemetry client.
+     *  
+     *  Use `.telemetry` in console to toggle Telemetry on and off.
      */
     public static class Telemetry 
     {  

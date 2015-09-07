@@ -38,7 +38,7 @@ protected:
         // Loop copying byte by byte to avoid unaligned access
         for (size_t i = 0; i < num; i++)
         {
-            memcpy((void*)(&((unsigned char*)destination)[i]), (const void*)(&((const unsigned char*)source)[i]), 1);
+            ((char*)destination)[i] = ((char*)source)[i];
         }
     }
 

@@ -124,6 +124,8 @@ public:
     void sendFile(const char *filename, void *fileBits, int fileBitsLength, int pendingFiles);
     void sendLog(const char *log);
     void sendCommand(const char *cmd);
+    
+    // Send an arbitrary custom buffer through the asset protocol
     void sendCustom(void* buffer, int length);
 };
 #endif

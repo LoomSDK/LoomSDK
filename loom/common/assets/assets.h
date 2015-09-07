@@ -120,6 +120,7 @@ void loom_asset_registerType(unsigned int type, LoomAssetDeserializeCallback des
 typedef void (*LoomAssetCommandCallback)(const char *command);
 void loom_asset_setCommandCallback(LoomAssetCommandCallback callback);
 
+// Send an arbitrary custom buffer through the asset protocol
 void loom_asset_custom(void *buffer, int length);
 
 void loom_asset_preload(const char *name);
