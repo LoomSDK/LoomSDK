@@ -18,11 +18,11 @@
  * ===========================================================================
  */
 
-#include "loom/script/native/lsLuaBridge.h"
-#include "loom/script/reflection/lsType.h"
-#include "loom/script/runtime/lsRuntime.h"
-#include "jansson.h"
+#ifndef _SYSTEM_JSON_H
+#define _SYSTEM_JSON_H
 
+#include "jansson.h"
+#include "loom/common/utils/utString.h"
 
 class JSON {
     // The native _json object
@@ -88,3 +88,5 @@ public:
     void setArrayArray(int index, JSON *value);
     void expandArray(int desiredLength);
 };
+
+#endif

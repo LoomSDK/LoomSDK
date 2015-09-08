@@ -43,6 +43,7 @@ void installSystemVM();
 void installSystemCommandLine();
 void installSystemDebug();
 void installSystemProfiler();
+void installSystemTelemetry();
 void installSystemProcess();
 void installSystemByteArray();
 void installSystemSocket();
@@ -95,6 +96,7 @@ void installPackageSystem()
     installSystemCommandLine();
     installSystemDebug();
     installSystemProfiler();
+    installSystemTelemetry();
     installSystemProcess();
     installSystemSocket();
     installSystemIO();

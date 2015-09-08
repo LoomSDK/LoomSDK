@@ -24,6 +24,8 @@
 #include "loom/common/platform/platformTime.h"
 #include "loom/graphics/gfxMath.h"
 
+#include "loom/common/core/telemetry.h"
+
 loom_allocator_t *gProfilerAllocator = NULL;
 
 // Enable the profiler from the start of execution. Enable this if you
@@ -409,6 +411,8 @@ void LoomProfiler::validate()
 
 void LoomProfiler::hashPush(LoomProfilerRoot *root)
 {
+   Telemetry::beginTickTimer(root->mName);
+
    mStackDepth++;
    lmAssert(mStackDepth <= (S32) mMaxStackDepth,
                   "Stack overflow in profiler.  You may have mismatched PROFILE_START and PROFILE_ENDs");
@@ -488,6 +492,8 @@ void LoomProfiler::enable(bool enabled)
 
 void LoomProfiler::hashPop(LoomProfilerRoot *expected)
 {
+    Telemetry::endTickTimer(expected->mName);
+
     mStackDepth--;
 
     lmAssert(mStackDepth >= 0, "Stack underflow in profiler.  You may have mismatched PROFILE_START and PROFILE_ENDs");

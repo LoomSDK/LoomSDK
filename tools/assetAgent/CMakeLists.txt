@@ -1,13 +1,21 @@
 project(assetAgent)
 
-include_directories( ${LOOM_INCLUDE_FOLDERS} )
-
-set (MAINDEMO_SRC
-    src/main.cpp
+include_directories(
+    ${LOOM_INCLUDE_FOLDERS}
+    include/
+    vendor/civetweb/include
 )
 
-set (MAINDEMO_HDR
+add_definitions(-DUSE_WEBSOCKET)
 
+set (AGENT_SRC
+    src/main.cpp
+    src/telemetryServer.cpp
+    vendor/civetweb/src/civetweb.c
+)
+
+set (AGENT_HDR
+    vendor/civetweb/include/civetweb.h
 )
 
 
@@ -16,7 +24,7 @@ set(CMAKE_OSX_ARCHITECTURES "x86_64")
 # We are generating a library for Ruby to load via FFI, and CMake says
 # this should be a MODULE not SHARED; see
 # http://stackoverflow.com/questions/4845984/difference-between-modules-and-shared-libraries
-add_library(${PROJECT_NAME} MODULE ${MAINDEMO_HDR} ${MAINDEMO_SRC})
+add_library(${PROJECT_NAME} MODULE ${AGENT_HDR} ${AGENT_SRC})
 
 if (APPLE)
     target_link_libraries(${PROJECT_NAME} 
@@ -25,6 +33,8 @@ if (APPLE)
        "-framework CoreFoundation"
        "-framework Cocoa"
        "-framework OpenGL"
+       # zlib library required by utByteArray
+       "-lz"
     )
     
     set_target_properties(${PROJECT_NAME} PROPERTIES

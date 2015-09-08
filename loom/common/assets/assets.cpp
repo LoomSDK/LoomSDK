@@ -38,10 +38,10 @@
 #include "loom/common/utils/fourcc.h"
 
 #include "loom/common/assets/assets.h"
-#include "loom/common/assets/assetProtocol.h"
 #include "loom/common/assets/assetsImage.h"
 #include "loom/common/assets/assetsSound.h"
 #include "loom/common/assets/assetsScript.h"
+#include "loom/common/assets/assetProtocol.h"
 
 #include <jansson.h>
 
@@ -348,6 +348,18 @@ void loom_asset_logListener(void *payload, loom_logGroup_t *group, loom_logLevel
     loom_mutex_unlock(gAssetServerSocketLock);
 }
 
+// Helper function to route Loom custom output over the network.
+void loom_asset_custom(void* buffer, int length)
+{
+    loom_mutex_lock(gAssetServerSocketLock);
+
+    if (gAssetProtocolHandler)
+    {
+        gAssetProtocolHandler->sendCustom(buffer, length);
+    }
+
+    loom_mutex_unlock(gAssetServerSocketLock);
+}
 
 int loom_asset_queryPendingTransfers()
 {

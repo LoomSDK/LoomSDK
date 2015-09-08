@@ -162,7 +162,7 @@ double loom_readTimerNano(loom_precision_timer_t timer)
     LARGE_INTEGER               endCount;
 
     QueryPerformanceCounter(&endCount);
-    elapsed = 1e6 * ((double)(endCount.QuadPart - t->mPerfCountCurrent.QuadPart) / (double)t->mFrequency.QuadPart);
+    elapsed = 1e9 * ((double)(endCount.QuadPart - t->mPerfCountCurrent.QuadPart) / (double)t->mFrequency.QuadPart);
     return elapsed;
 }
 
@@ -261,7 +261,7 @@ double timespecDeltaNano(struct timespec *then, struct timespec *now)
     long deltaSec  = now->tv_sec - then->tv_sec;
     long deltaNSec = now->tv_nsec - then->tv_nsec;
 
-    long deltaMSec = deltaSec * 1000 * 1000 + deltaNSec;
+    long deltaMSec = deltaSec * 1e9 + deltaNSec;
 
     return (double) deltaMSec;
 }

@@ -21,6 +21,8 @@
 #ifndef _CORE_ALLOCATOR_H_
 #define _CORE_ALLOCATOR_H_
 
+#include "loom/common/core/assert.h"
+
 /**************************************************************************
  * Loom Memory Allocation API
  *
@@ -112,7 +114,6 @@
 #else
 
 #include <stdint.h>
-#include "loom/common/core/assert.h"
 
 typedef struct loom_alloc_header loom_alloc_header_t;
 struct loom_alloc_header
@@ -310,6 +311,7 @@ template<typename T>
 T* loom_newArray(loom_allocator_t *allocator, unsigned int nr)
 {
     T* arr = (T*) lmAlloc(allocator, sizeof(unsigned int) + nr * sizeof(T));
+    lmSafeAssert(arr, "Unable to allocate additional memory in loom_newArray");
     *((unsigned int*)arr) = nr;
     arr = (T*)(((unsigned int*)arr) + 1);
     for (unsigned int i = 0; i < nr; i++)

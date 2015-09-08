@@ -23,6 +23,7 @@
 #include "loom/script/runtime/lsLuaState.h"
 #include "loom/common/platform/platformTime.h"
 #include "loom/graphics/gfxMath.h"
+#include "loom/common/core/telemetry.h"
 
 namespace LS {
 
@@ -53,6 +54,7 @@ class GC
     static double cycleMemoryGrowthWarningRatio;
     static int cycleWarningExtraRunDivider;
     static double bprValidityThreshold;
+    static double cyclePrevGarbage;
 
 public:
 
@@ -212,7 +214,7 @@ public:
             // Uncomment for GC cycle reports
             /*
             lmLog(gGCGroup, "Cycle: %d / %d KiB in %d ms with %d runs in %d updates %.4f ms avg %.4f ms max, %.2f KiB/s, %d rpu, %d bpr, %.2f%% garb., %.2f%% -> %.2f (%d) runs",
-                cycleCollectedBytes/1024, memoryAfterKB, collectionTime, cycleRuns, cycleUpdates, timePerUpdate*1e-3, cycleMaxTime*1e-3, cps, runsPerUpdate, lastValidBPR, garbageRatio * 100, targetGarbage * 100, targetRuns, updateRunLimit
+                cycleCollectedBytes/1024, memoryAfterKB, collectionTime, cycleRuns, cycleUpdates, timePerUpdate*1e-6, cycleMaxTime*1e-6, cps, runsPerUpdate, lastValidBPR, garbageRatio * 100, targetGarbage * 100, targetRuns, updateRunLimit
             );
             //*/
 
@@ -224,8 +226,22 @@ public:
             cycleMaxTime = 0;
             cycleStartTime = platform_getMilliseconds();
             cycleKB = memoryAfterKB;
+            cyclePrevGarbage = garbageRatio;
 
         }
+
+        Telemetry::setTickValue("gc.cycle.previous.garbage", cyclePrevGarbage);
+        Telemetry::setTickValue("gc.cycle.runs.limit", updateRunLimit);
+        Telemetry::setTickValue("gc.cycle.update.count", cycleUpdates);
+        Telemetry::setTickValue("gc.cycle.update.time.sum", cycleUpdateTime);
+        Telemetry::setTickValue("gc.cycle.update.time.max", cycleMaxTime);
+        Telemetry::setTickValue("gc.cycle.runs.sum", cycleRuns);
+        Telemetry::setTickValue("gc.cycle.collected", cycleCollectedBytes);
+        Telemetry::setTickValue("gc.cycle.previous.collectedKB", cycleKB);
+        Telemetry::setTickValue("gc.cycle.lastValidBPR", lastValidBPR);
+        Telemetry::setTickValue("gc.cycle.hibernating", hibernating ? 1 : 0);
+        Telemetry::setTickValue("gc.memory", (double) memoryAfterKB * 1024 + memoryAfterB);
+
 
         return 0;
 
@@ -252,7 +268,7 @@ double GC::targetGarbage = 0.1;
 
 // The max time in nanoseconds each GC update is allowed to
 // run for.
-double GC::updateNanoLimit = 2e6;
+double GC::updateNanoLimit = 2e9;
 
 // The minimum number of runs each update.
 int GC::runLimitMin = 1;
@@ -323,6 +339,9 @@ int GC::cycleCollectedBytes = 0;
 
 // The amount of memory taken in KB at the end of the last cycle
 int GC::cycleKB = 0;
+
+// The amount of memory taken in KB at the end of the last cycle
+double GC::cyclePrevGarbage = 0;
 
 // true if the system is currently hibernating, false otherwise.
 // See above for details.

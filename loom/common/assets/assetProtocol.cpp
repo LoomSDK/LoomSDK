@@ -198,18 +198,19 @@ bool AssetProtocolHandler::readFrame()
     // Allocate a buffer to store data.
     bytes = (unsigned char *)lmAlloc(NULL, frameLength);
 
-    // Make sure we can peek that much data.
     bytesLength = frameLength;
-    loom_net_readTCPSocket(socket, bytes, &bytesLength, 1);
+
+    // Wait until bytesLength bytes are ready for reading
+    // TODO This could probably be implemented better, but
+    // it doesn't break with larger frames like the previous
+    // implementation did at least.
+    loom_net_readTCPSocket(socket, bytes, &bytesLength, 0);
 
     if (bytesLength != frameLength)
     {
         lmSafeFree(NULL, bytes);
         return false;
     }
-
-    // Read for real to clear out the socket.
-    loom_net_readTCPSocket(socket, bytes, &bytesLength, 0);
 
     // Great, we have a frame!
     buffer.setBuffer(bytes, bytesLength);
@@ -245,6 +246,9 @@ void AssetProtocolHandler::process()
         handled = true;
         break;
     }
+
+    lmFree(NULL, buffer.buffer);
+    buffer.setBuffer(NULL, 0);
 
     if (!handled)
     {
@@ -390,6 +394,11 @@ void AssetProtocolHandler::sendLog(const char *log)
     loom_net_writeTCPSocket(socket, msgBuffer, sendBuffer.getCurrentPosition());
 }
 
+
+void AssetProtocolHandler::sendCustom(void* buffer, int length)
+{
+    loom_net_writeTCPSocket(socket, buffer, length);
+}
 
 void AssetProtocolHandler::sendCommand(const char *cmd)
 {

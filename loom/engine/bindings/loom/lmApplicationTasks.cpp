@@ -27,12 +27,17 @@
 #include "loom/common/config/applicationConfig.h"
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/graphics/gfxTexture.h"
+#include "loom/common/core/telemetry.h"
+
+lmDefineLogGroup(gTickLogGroup, "tick", true, LoomLogInfo)
 
 extern "C"
 {
 
 void loom_tick()
 {
+    Telemetry::beginTick();
+    
     LOOM_PROFILE_START(loom_tick);
 
     LSLuaState *vm = NULL;
@@ -67,21 +72,22 @@ void loom_tick()
             LoomApplication::ticks.invoke();
         }
     }
-
+    
     loom_asset_pump();
-
+    
     platform_HTTPUpdate();
-
+    
     GFX::Texture::tick();
-
-    if(Loom2D::Stage::smMainStage)
-        Loom2D::Stage::smMainStage->invokeRenderStage();
-
+    
+    if (Loom2D::Stage::smMainStage) Loom2D::Stage::smMainStage->invokeRenderStage();
+    
     finishProfilerBlock(&p);
-
+    
     LOOM_PROFILE_END(loom_tick);
-
+    
     LOOM_PROFILE_ZERO_CHECK()
+    
+    Telemetry::endTick();
 
 }
 }

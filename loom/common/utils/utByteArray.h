@@ -32,6 +32,16 @@ protected:
     utArray<unsigned char> _data;
     UTsize _position;
 
+    void memcpyUnaligned(void *destination, const void *source, size_t num)
+    {
+        // TODO smarter
+        // Loop copying byte by byte to avoid unaligned access
+        for (size_t i = 0; i < num; i++)
+        {
+            ((char*)destination)[i] = ((char*)source)[i];
+        }
+    }
+
     template<typename T>
     T readValue()
     {
@@ -42,7 +52,12 @@ protected:
         }
 
         T *ptr  = (T *)&_data[_position];
-        T value = *ptr;
+        T value;
+
+        // memcpy is necessary for some platforms as we can get
+        // an unaligned read exception (e.g. SIGBUS on Android/ARM) otherwise
+        // TODO: benchmark vs. assignment
+        memcpyUnaligned(&value, ptr, sizeof(T));
 
         _position += sizeof(T);
 
@@ -62,7 +77,9 @@ protected:
         value = convertHostToLEndian(value);
 
         T *ptr = (T *)&_data[_position];
-        *ptr = value;
+        
+        // Needed for unaligned writes, see readValue for more info
+        memcpyUnaligned(ptr, &value, sizeof(T));
 
         _position += sizeof(T);
     }
@@ -309,11 +326,12 @@ public:
     const char *readUTFBytes(unsigned int length)
     {
         static utString svalue;
-
+        
         char *value = new char[length + 1];
 
-        value[length] = 0;
         memcpy(value, &_data[_position], length);
+
+        value[length] = 0;
         _position += length;
 
         svalue = value;
