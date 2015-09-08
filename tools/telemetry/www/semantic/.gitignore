@@ -1,0 +1,16 @@
+# Ignore gulpfile, it's non-customizable and gets installed on semantic ui install
+gulpfile.js
+
+# Ignore all sources, except specific file(s)
+
+src/*
+!src/site/
+
+src/site/*
+!src/site/globals
+
+src/site/globals/*
+!src/site/globals/site.variables
+
+# Ignore all tasks (they can be npm installed)
+tasks
