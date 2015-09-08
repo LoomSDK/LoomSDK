@@ -30,7 +30,7 @@ namespace GFX
     {
     }
 
-    Color::Color(unsigned int color)
+    Color::Color(rgba_t color)
     {
         r = ((color & 0xFF000000) >> 24) / 255.0f;
         g = ((color & 0x00FF0000) >> 16) / 255.0f;
@@ -38,12 +38,12 @@ namespace GFX
         a = (color & 0x000000FF) / 255.0f;
     }
 
-    unsigned int Color::getHex() const
+    rgba_t Color::getHex() const
     {
-        unsigned char R = (unsigned char)(r * 255);
-        unsigned char G = (unsigned char)(g * 255);
-        unsigned char B = (unsigned char)(b * 255);
-        unsigned char A = (unsigned char)(a * 255);
+        channel_t R = (channel_t)(r * 255);
+        channel_t G = (channel_t)(g * 255);
+        channel_t B = (channel_t)(b * 255);
+        channel_t A = (channel_t)(a * 255);
         return (R << 24) + (G << 16) + (B << 8) + A;
     }
 }

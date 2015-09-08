@@ -20,8 +20,14 @@
 
 #pragma once
 
+#include <inttypes.h>
+
 namespace GFX
 {
+    // Typedefs for raw color data
+    typedef uint32_t rgba_t;
+    typedef uint8_t channel_t;
+
     /*
      * A utility struct for storing color values and converting between
      * float RGBA values and hex values
@@ -34,8 +40,8 @@ namespace GFX
         float a;
 
         Color(float R, float G, float B, float A);
-        Color(unsigned int color);
+        Color(rgba_t color);
 
-        unsigned int getHex() const;
+        rgba_t getHex() const;
     };
 }

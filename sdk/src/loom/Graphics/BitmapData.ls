@@ -20,6 +20,11 @@ limitations under the License.
 
 package loom.graphics
 {
+    import loom.graphics.TextureInfo;
+    import loom2d.textures.Texture;
+    import loom2d.textures.ConcreteTexture;
+    import loom2d.math.Rectangle;
+
 /**
  * BitmapData is an utility class for loading and comparing image data.
  *
@@ -38,9 +43,35 @@ public native class BitmapData
         deleteNative();
     }
 
-    // Saves the current data into an asset. This is meant to be used to Save
-    // the results of diff()
+    // Saves the current data into an asset. Supported file formats are BMP, PNG and TGA.
     public native function save(path:String):void;
+
+    // Sets the pixel color at the given coordinates. Colors should be a RGBA value;
+    public native function setPixel(x:Number, y:Number, color:Number):void;
+
+    // Gets the pixel color at the given coordinates. Returned value is a RGBA value;
+    public native function getPixel(x:Number, y:Number):Number;
+
+    // Creates TextureInfo that can be then used on GPU.
+    private native function createTextureInfo():TextureInfo;
+
+    // Creates a Texture that can be used to display BitmapData in Loom.
+    public function createTexture():Texture
+    {
+        var textureInfo = createTextureInfo();
+        if(textureInfo == null)
+        {
+            Console.print("WARNING: Unable to load texture from BitmapData"); 
+            return null;
+        }
+
+        // And set up the concrete texture.
+        var tex:ConcreteTexture = new ConcreteTexture(null, textureInfo.width, textureInfo.height);
+        tex.mFrame = new Rectangle(0, 0, textureInfo.width, textureInfo.height);
+        tex.setTextureInfo(textureInfo);
+
+        return tex;
+    }
 
     // Loads the object from an asset.
     public static native function fromAsset(name:String):BitmapData;

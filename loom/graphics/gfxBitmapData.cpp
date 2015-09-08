@@ -21,7 +21,6 @@
 #include "loom/graphics/gfxBitmapData.h"
 
 #include "loom/graphics/gfxGraphics.h"
-#include "loom/graphics/gfxColor.h"
 #include "loom/common/core/allocator.h"
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
@@ -91,7 +90,27 @@ namespace GFX
         lmLog(gGFXLogGroup, "Unsupported image extension in path %s.", path);
     }
 
-    const unsigned char* BitmapData::getData() const
+    void BitmapData::setPixel(size_t x, size_t y, rgba_t color)
+    {
+        if (x < 0 || x >= w ||
+            y < 0 || y >= h)
+            return;
+
+        rgba_t* pixelptr = reinterpret_cast<rgba_t*>(data);
+        pixelptr[x + y * w] = convertHostToBEndian(color);
+    }
+
+    rgba_t BitmapData::getPixel(size_t x, size_t y)
+    {
+        if (x < 0 || x >= w ||
+            y < 0 || y >= h)
+            return 0;
+
+        rgba_t* pixelptr = reinterpret_cast<rgba_t*>(data);
+        return convertHostToBEndian(pixelptr[x + y * w]);
+    }
+
+    const channel_t* BitmapData::getData() const
     {
         return data;
     }
@@ -99,6 +118,12 @@ namespace GFX
     int BitmapData::getBpp() const
     {
         return DATA_BPP;
+    }
+
+    TextureInfo* BitmapData::createTextureInfo() const
+    {
+        TextureInfo* info = Texture::getAvailableTextureInfo(NULL);
+        return Texture::load(data, w, h, info->id);
     }
 
     const BitmapData* BitmapData::fromFramebuffer()
@@ -129,7 +154,7 @@ namespace GFX
 
         for (int i = result->h - 1; i >= 0; i--)
         {
-            memcpy(result->data + (result->h - 1 - i) * result->w * DATA_BPP, (unsigned char*)tmp.getDataPtr() + i * result->w * DATA_BPP, result->w * DATA_BPP);
+            memcpy(result->data + (result->h - 1 - i) * result->w * DATA_BPP, (channel_t*)tmp.getDataPtr() + i * result->w * DATA_BPP, result->w * DATA_BPP);
         }
 
         return result;
@@ -164,8 +189,8 @@ namespace GFX
         if (a->w != b->w || a->h != b->h)
             return (lmscalar)1.0;
 
-        unsigned int* pixelptr_a = reinterpret_cast<unsigned int*>(a->data);
-        unsigned int* pixelptr_b = reinterpret_cast<unsigned int*>(b->data);
+        rgba_t* pixelptr_a = reinterpret_cast<rgba_t*>(a->data);
+        rgba_t* pixelptr_b = reinterpret_cast<rgba_t*>(b->data);
 
         for (size_t i = 0; i < a->w * a->h; i++)
         {
@@ -191,18 +216,17 @@ namespace GFX
             return NULL;
         }
 
-        unsigned int* pixelptr_a = reinterpret_cast<unsigned int*>(a->data);
-        unsigned int* pixelptr_b = reinterpret_cast<unsigned int*>(b->data);
-        unsigned int* resultptr = reinterpret_cast<unsigned int*>(result->data);
+        rgba_t* pixelptr_a = reinterpret_cast<rgba_t*>(a->data);
+        rgba_t* pixelptr_b = reinterpret_cast<rgba_t*>(b->data);
+        rgba_t* resultptr = reinterpret_cast<rgba_t*>(result->data);
 
         for (size_t i = 0; i < a->w * a->h; i++)
         {
             Color ap(convertHostToBEndian(pixelptr_a[i]));
             Color bp(convertHostToBEndian(pixelptr_b[i]));
             Color rp(fabsf(ap.r - bp.r), fabsf(ap.g - bp.g), fabsf(ap.b - bp.b), 1.0f);
-            unsigned int a = rp.getHex();
+            rgba_t a = rp.getHex();
             resultptr[i] = convertBEndianToHost(a);
-
         }
 
         return result;

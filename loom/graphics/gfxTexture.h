@@ -165,6 +165,7 @@ class Texture
 {
     friend class Graphics;
     friend class QuadRenderer;
+    friend class BitmapData;
 
 private:
 

@@ -21,6 +21,8 @@
 #pragma once
 
 #include "loom/common/utils/utCommon.h"
+#include "loom/graphics/gfxColor.h"
+#include "loom/graphics/gfxTexture.h"
 
 namespace GFX
 {
@@ -38,7 +40,7 @@ private:
     size_t w;
     size_t h;
 
-    unsigned char* data;
+    channel_t* data;
 
     // Private constructor. Use only static methods for construction.
     BitmapData(size_t width, size_t height);
@@ -47,11 +49,16 @@ public:
 
     ~BitmapData();
 
-    // Saves the loaded data to a file. This is meant for saving diffs.
+    // Saves the loaded data to a file. Supported file formats are BMP, PNG and TGA.
     void save(const char* path) const;
 
-    const unsigned char* getData() const;
+    void setPixel(size_t x, size_t y, rgba_t color);
+    rgba_t getPixel(size_t x, size_t y);
+
+    const channel_t* getData() const;
     int getBpp() const;
+
+    TextureInfo* createTextureInfo() const;
 
     // Loads data from the current framebuffer
     static const BitmapData* fromFramebuffer();
