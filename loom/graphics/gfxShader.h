@@ -100,6 +100,8 @@ public:
 
     static lmAutoPtr<ShaderProgram> defaultShader;
     static ShaderProgram* getDefaultShader();
+    static lmAutoPtr<ShaderProgram> tintlessDefaultShader;
+    static ShaderProgram* getTintlessDefaultShader();
 
 protected:
 
@@ -174,6 +176,20 @@ GLint uMVP;
 
 public:
     DefaultShader();
+
+    virtual void bind();
+};
+
+// Just like DefaultShader, but withot tinting.
+class TintlessDefaultShader : public ShaderProgram
+{
+protected:
+
+    GLint uTexture;
+    GLint uMVP;
+
+public:
+    TintlessDefaultShader();
 
     virtual void bind();
 };

@@ -71,11 +71,11 @@ void QuadBatch::render(lua_State *L)
     bool isIdentity = mtx.isIdentity();
     if((renderState.alpha == 1.0f) && isIdentity)
     {
-        GFX::QuadRenderer::batch(quadData, 4 * numQuads, nativeTextureID, blendSrc, blendDst, shader);
+        GFX::QuadRenderer::batch(quadData, 4 * numQuads, nativeTextureID, blendEnabled, blendSrc, blendDst, shader);
         return;
     }
 
-    GFX::VertexPosColorTex *v = GFX::QuadRenderer::getQuadVertexMemory(nativeTextureID, 4 * numQuads, blendSrc, blendDst, shader);
+    GFX::VertexPosColorTex *v = GFX::QuadRenderer::getQuadVertexMemory(nativeTextureID, 4 * numQuads, blendEnabled, blendSrc, blendDst, shader);
     if (!v)
     {
         return;

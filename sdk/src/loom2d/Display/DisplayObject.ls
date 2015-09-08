@@ -144,6 +144,10 @@ package loom2d.display
         public native function set blendMode(value:BlendMode);
         public native function get blendMode():BlendMode;
 
+        /** Enables or disables blending. If set to false, there will be no blending and there may be performance gains. */
+        public native function set blendEnabled(value:Boolean);
+        public native function get blendEnabled():Boolean;
+
         /** The visibility of the object, An invisible object will be untouchable. */
         public native function set visible(value:Boolean);
         public native function get visible():Boolean;

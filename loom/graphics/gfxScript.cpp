@@ -383,6 +383,7 @@ static int registerLoomGraphics(lua_State *L)
        .addMethod("setUniformMatrix4f", &ShaderProgram::setUniformMatrix4f)
        .addLuaFunction("setUniformMatrix4fv", &ShaderProgram::setUniformMatrix4fv)
        .addStaticMethod("getDefaultShader", &ShaderProgram::getDefaultShader)
+       .addStaticMethod("getTintlessDefaultShader", &ShaderProgram::getTintlessDefaultShader)
        .endClass()
 
        .endPackage();

@@ -187,6 +187,7 @@ static int registerLoom2D(lua_State *L)
        .addProperty("rotation", &DisplayObject::getRotation, &DisplayObject::setRotation)
        .addProperty("alpha", &DisplayObject::getAlpha, &DisplayObject::setAlpha)
        .addProperty("blendMode", &DisplayObject::getBlendMode, &DisplayObject::setBlendMode)
+       .addProperty("blendEnabled", &DisplayObject::getBlendEnabled, &DisplayObject::setBlendEnabled)
 
        .addProperty("name", &DisplayObject::getName, &DisplayObject::setName)
 

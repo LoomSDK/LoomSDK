@@ -158,11 +158,24 @@ package loom.graphics
         private static native function getDefaultShader():Shader;
 
         /**
+          * This is a utility function used by 'tintlessDefaultShader'.
+          */
+        private static native function getTintlessDefaultShader():Shader;
+
+        /**
           * Returns the default shader.
           */
         public static function get defaultShader():Shader
         {
             return getDefaultShader();
+        }
+
+        /**
+          * Returns the default tintless shader. Using this shader may increase performance on low-end devices.
+          */
+        public static function get tintlessDefaultShader():Shader
+        {
+            return getTintlessDefaultShader();
         }
 
         /**
