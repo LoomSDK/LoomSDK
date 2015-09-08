@@ -1,7 +1,5 @@
 {
-  "description": "This is the semantic ui configuration file used when building the semantic ui distribution files (semantic/dist/) from source (semantic/src/)",
-  
-  "base": "semantic\\",
+  "base": "semantic/",
   "paths": {
     "source": {
       "config": "src/theme.config",
@@ -10,15 +8,16 @@
       "themes": "src/themes/"
     },
     "output": {
-      "packaged": "dist\\",
-      "uncompressed": "dist\\components\\",
-      "compressed": "dist\\components\\",
-      "themes": "dist\\themes\\"
+      "packaged": "dist/",
+      "uncompressed": "dist/components/",
+      "compressed": "dist/components/",
+      "themes": "dist/themes/"
     },
     "clean": "dist/"
   },
   "permission": false,
-  "rtl": "No",
+  "rtl": false,
+  "version": "2.1.3",
   "components": [
     "reset",
     "site",
@@ -86,6 +85,5 @@
     "form",
     "state",
     "visibility"
-  ],
-  "version": "2.0.8"
+  ]
 }
