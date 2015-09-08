@@ -34,8 +34,6 @@ extern "C"
 SDL_Window *gSDLWindow = NULL;
 SDL_GLContext gContext;
 
-GameController *controller;
-
 lmDefineLogGroup(coreLogGroup, "loom.core", 1, LoomLogInfo);
 
 static int gLoomExecutionDone = 0;
@@ -212,11 +210,11 @@ void loop()
 			stage->_JoystickHatMovedDelegate.pushArgument(event.jhat.value);
 			stage->_JoystickHatMovedDelegate.invoke();
 		}
-        else if (event.type == SDL_JOYDEVICEADDED)
+        else if (event.type == SDL_JOYDEVICEADDED || event.type == SDL_CONTROLLERDEVICEADDED)
         {
             lmLogInfo(coreLogGroup, "Controller added: %s", event.cdevice.which);
         }
-        else if (event.type == SDL_JOYDEVICEREMOVED)
+        else if (event.type == SDL_JOYDEVICEREMOVED || event.type == SDL_CONTROLLERDEVICEREMOVED)
         {
             lmLogInfo(coreLogGroup, "Controller removed: %s", event.cdevice.which);
         }
@@ -338,7 +336,27 @@ main(int argc, char *argv[])
 
     /* Game Controller stuff */
     SDL_GameControllerEventState(SDL_ENABLE);
-    SDL_JoystickEventState(SDL_ENABLE);
+
+    //Adding non-existent controller mappings
+    int mappingsAdded = SDL_GameControllerAddMapping("4d6963726f736f66742050432d6a6f79,X360 Controller,platform:Windows,a:b10,b:b11,x:b12,y:b13,back:b5,start:b4,guide:b14,leftshoulder:b8,rightshoulder:b9,leftstick:b6,rightstick:b7,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:a4,righttrigger:a5,dpup:b0,dpleft:b2,dpdown:b1,dpright:b3,");
+    //int mappingsAdded = SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
+    if (mappingsAdded >= 0)
+    {
+        lmLog(coreLogGroup, "Succesfully added %d mappings", mappingsAdded);
+    }
+    else
+    {
+        lmLog(coreLogGroup, "SDL ERROR: %s", SDL_GetError());
+    }
+
+    SDL_version compiled;
+    SDL_version linked;
+
+    SDL_VERSION(&compiled);
+    SDL_GetVersion(&linked);
+
+    lmLog(coreLogGroup, "Compiled with SDL version %d.%d.%d ...", compiled.major, compiled.minor, compiled.patch);
+    lmLog(coreLogGroup, "Linking against SDL version %d.%d.%d ...", linked.major, linked.minor, linked.patch);
 
     GameController::openAll();
     

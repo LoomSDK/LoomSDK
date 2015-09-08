@@ -10,7 +10,7 @@ public:
     static void closeAll();
 
 private:
-    SDL_Joystick *gamepad;
+    SDL_GameController *gamepad;
     SDL_Haptic *haptic;
     SDL_JoystickID instance_id;
     bool is_connected;
