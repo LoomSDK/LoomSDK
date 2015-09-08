@@ -186,25 +186,6 @@ void Texture::tick()
     }
 }
 
-
-static void rgbaToBgra(uint8_t *_data, uint32_t _width, uint32_t _height)
-{
-    uint32_t dstpitch = _width * 4;
-
-    for (uint32_t yy = 0; yy < _height; ++yy)
-    {
-        uint8_t *dst = &_data[yy * dstpitch];
-
-        for (uint32_t xx = 0; xx < _width; ++xx)
-        {
-            uint8_t tmp = dst[0];
-            dst[0] = dst[2];
-            dst[2] = tmp;
-            dst   += 4;
-        }
-    }
-}
-
 void downsampleNearest(uint32_t *src, uint32_t *dst, int srcWidth, int srcHeight)
 {
     LOOM_PROFILE_SCOPE(textureDownsampleNearest);
