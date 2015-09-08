@@ -1,0 +1,15 @@
+# Advised against inclusion
+node_modules
+
+# If you include more files in the repo it's probably
+# because you want them to be packaged in the SDK as well,
+# which means you should take a look at $telemetryClientInclude
+# in the Rakefile to see if it needs an update.
+# Note that simple paths here already automatically map to what
+# is packaged into the SDK as well.
+semantic/dist/semantic.css
+semantic/dist/semantic.js
+semantic/dist/components/
+semantic/dist/themes/basic/
+semantic/dist/themes/github/
+semantic/dist/themes/default/assets/images/

@@ -1,0 +1,15 @@
+# humanstxt.org/
+# The humans responsible & technology colophon
+
+# TEAM
+
+    Miha Lunar -- Client & Server Dev -- @Smily
+
+# THANKS
+
+    The Engine Company -- theengine.co
+
+# TECHNOLOGY COLOPHON
+
+    CSS3, HTML5
+    civetweb, d3.js, Semantic UI, jQuery, HTML5 Boilerplate, Modernizr, Normalize.css
