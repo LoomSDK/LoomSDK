@@ -90,6 +90,9 @@ public:
     /** The blend mode for the object. Default is BlendMode.AUTO (will inherit parent's blendMode) */
     int blendMode;
 
+    /** Toggle blending of object. If false, blendMode will be ignored and there may be perfomance gains */
+    bool blendEnabled;
+
     /** If depth sorting is enabled on parent this will be used to establish draw order. */
     lmscalar depth;
 
@@ -145,6 +148,7 @@ public:
         rotation       = 0;
         alpha          = 1;
         blendMode      = BlendMode::AUTO;
+        blendEnabled   = true;
         visible        = touchable = true;
         name           = stringtable_insert("");
         parent         = NULL;
@@ -487,6 +491,16 @@ public:
     inline void setBlendMode(int _mode)
     {
         blendMode = _mode;
+    }
+
+    inline bool getBlendEnabled() const
+    {
+        return blendEnabled;
+    }
+
+    inline void setBlendEnabled(bool _enabled)
+    {
+        blendEnabled = _enabled;
     }
 
     inline bool getVisible() const

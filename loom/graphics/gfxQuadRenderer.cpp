@@ -44,6 +44,7 @@ static ShaderProgram* sCurrentShader;
 
 static GLuint sSrcBlend = GL_SRC_ALPHA;
 static GLuint sDstBlend = GL_ONE_MINUS_SRC_ALPHA;
+static bool sBlendEnabled = true;
 
 GLuint QuadRenderer::indexBufferId;
 GLuint QuadRenderer::vertexBufferId;
@@ -75,6 +76,8 @@ void QuadRenderer::submit()
     {
         if (tinfo.visible) {
 
+            GL_Context* ctx = Graphics::context();
+
             // On iPad 1, the PosColorTex shader, which multiplies texture color with
             // vertex color, is 5x slower than PosTex, which just draws the texture
             // unmodified. So we select the shader to use appropriately.
@@ -88,7 +91,7 @@ void QuadRenderer::submit()
                 sBlendStateValid = false;
             }
             
-            Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
+            ctx->glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
             
             if (!sShaderStateValid)
             {
@@ -104,8 +107,8 @@ void QuadRenderer::submit()
             if (!sTextureStateValid)
             {
                 // Set up texture state.
-                Graphics::context()->glActiveTexture(GL_TEXTURE0);
-                Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
+                ctx->glActiveTexture(GL_TEXTURE0);
+                ctx->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
 
                 if (tinfo.clampOnly) {
                     tinfo.wrapU = TEXTUREINFO_WRAP_CLAMP;
@@ -115,13 +118,13 @@ void QuadRenderer::submit()
                 switch (tinfo.wrapU)
                 {
                     case TEXTUREINFO_WRAP_CLAMP:
-                        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                         break;
                     case TEXTUREINFO_WRAP_MIRROR:
-                        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
                         break;
                     case TEXTUREINFO_WRAP_REPEAT:
-                        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
                         break;
                     default:
                         lmAssert(false, "Unsupported wrapU: %d", tinfo.wrapU);
@@ -129,13 +132,13 @@ void QuadRenderer::submit()
                 switch (tinfo.wrapV)
                 {
                     case TEXTUREINFO_WRAP_CLAMP:
-                        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
                         break;
                     case TEXTUREINFO_WRAP_MIRROR:
-                        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
                         break;
                     case TEXTUREINFO_WRAP_REPEAT:
-                        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
                         break;
                     default:
                         lmAssert(false, "Unsupported wrapV: %d", tinfo.wrapV);
@@ -145,12 +148,12 @@ void QuadRenderer::submit()
                 switch (tinfo.smoothing)
                 {
                     case TEXTUREINFO_SMOOTHING_NONE:
-                        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, tinfo.mipmaps ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
-                        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, tinfo.mipmaps ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
+                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                         break;
                     case TEXTUREINFO_SMOOTHING_BILINEAR:
-                        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, tinfo.mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-                        Graphics::context()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, tinfo.mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                         break;
                     default:
                         lmAssert(false, "Unsupported smoothing: %d", tinfo.smoothing);
@@ -161,9 +164,15 @@ void QuadRenderer::submit()
 
             if (!sBlendStateValid)
             {
-                // Blend mode.
-                Graphics::context()->glEnable(GL_BLEND);
-                Graphics::context()->glBlendFuncSeparate(sSrcBlend, sDstBlend, sSrcBlend, sDstBlend);
+                if (sBlendEnabled)
+                {
+                    ctx->glEnable(GL_BLEND);
+                    ctx->glBlendFuncSeparate(sSrcBlend, sDstBlend, sSrcBlend, sDstBlend);
+                }
+                else
+                {
+                    ctx->glDisable(GL_BLEND);
+                }
 
                 sBlendStateValid = true;
             }
@@ -171,12 +180,12 @@ void QuadRenderer::submit()
             Graphics_SetCurrentGLState(GFX_OPENGL_STATE_QUAD);
             
             // Setting the buffer to null supposedly enables better performance because it enables the driver to do some optimizations.
-            Graphics::context()->glBufferData(GL_ARRAY_BUFFER, batchedVertexCount*sizeof(VertexPosColorTex), NULL, GL_STREAM_DRAW);
-            Graphics::context()->glBufferData(GL_ARRAY_BUFFER, batchedVertexCount*sizeof(VertexPosColorTex), batchedVertices, GL_STREAM_DRAW);
+            ctx->glBufferData(GL_ARRAY_BUFFER, batchedVertexCount*sizeof(VertexPosColorTex), NULL, GL_STREAM_DRAW);
+            ctx->glBufferData(GL_ARRAY_BUFFER, batchedVertexCount*sizeof(VertexPosColorTex), batchedVertices, GL_STREAM_DRAW);
 
             // And bind indices and draw.
-            Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
-            Graphics::context()->glDrawElements(GL_TRIANGLES,
+            ctx->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
+            ctx->glDrawElements(GL_TRIANGLES,
                                                 (GLsizei)(batchedVertexCount / 4 * 6), GL_UNSIGNED_SHORT,
                                                 nullptr);
         }
@@ -186,7 +195,7 @@ void QuadRenderer::submit()
 }
 
 
-VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend, ShaderProgram *shader)
+VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, TextureID texture, bool blendEnabled, uint32_t srcBlend, uint32_t dstBlend, ShaderProgram *shader)
 {
     LOOM_PROFILE_SCOPE(quadGetVertices);
 
@@ -228,11 +237,13 @@ VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, Textu
         sShaderStateValid = false;
 
     if (srcBlend != sSrcBlend ||
-        dstBlend != sDstBlend)
+        dstBlend != sDstBlend ||
+        blendEnabled != sBlendEnabled)
         sBlendStateValid = false;
 
     sSrcBlend = srcBlend;
     sDstBlend = dstBlend;
+    sBlendEnabled = blendEnabled;
     currentTexture = texture;
     sCurrentShader = shader;
 
@@ -242,11 +253,11 @@ VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, Textu
 }
 
 
-void QuadRenderer::batch(VertexPosColorTex *vertices, uint16_t vertexCount, TextureID texture, uint32_t srcBlend, uint32_t dstBlend, ShaderProgram *shader)
+void QuadRenderer::batch(VertexPosColorTex *vertices, uint16_t vertexCount, TextureID texture, bool blendEnabled, uint32_t srcBlend, uint32_t dstBlend, ShaderProgram *shader)
 {
     LOOM_PROFILE_SCOPE(quadBatch);
 
-    VertexPosColorTex *vertexPtr = getQuadVertexMemory(vertexCount, texture, srcBlend, dstBlend, shader);
+    VertexPosColorTex *vertexPtr = getQuadVertexMemory(vertexCount, texture, blendEnabled, srcBlend, dstBlend, shader);
 
     if (!vertexPtr)
         return;
@@ -288,15 +299,17 @@ void QuadRenderer::initializeGraphicsResources()
 
     lmLogInfo(gGFXQuadRendererLogGroup, "Initializing Graphics Resources");
 
+    GL_Context* ctx = Graphics::context();
+
     // create the single initial vertex buffer
-    Graphics::context()->glGenBuffers(1, &vertexBufferId);
-    Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
-    Graphics::context()->glBufferData(GL_ARRAY_BUFFER, MAXBATCHQUADS * 4 * sizeof(VertexPosColorTex), 0, GL_STREAM_DRAW);
-    Graphics::context()->glBindBuffer(GL_ARRAY_BUFFER, 0);
+    ctx->glGenBuffers(1, &vertexBufferId);
+    ctx->glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
+    ctx->glBufferData(GL_ARRAY_BUFFER, MAXBATCHQUADS * 4 * sizeof(VertexPosColorTex), 0, GL_STREAM_DRAW);
+    ctx->glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // create the single, reused index buffer
-    Graphics::context()->glGenBuffers(1, &indexBufferId);
-    Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
+    ctx->glGenBuffers(1, &indexBufferId);
+    ctx->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
     uint16_t *pIndex = (uint16_t*)lmAlloc(gQuadMemoryAllocator, sizeof(unsigned short) * 6 * MAXBATCHQUADS);
     uint16_t *pStart = pIndex;
 
@@ -311,8 +324,8 @@ void QuadRenderer::initializeGraphicsResources()
         pIndex[5] = j + 3;
     }
 
-    Graphics::context()->glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAXBATCHQUADS * 6 * sizeof(uint16_t), pStart, GL_STREAM_DRAW);
-    Graphics::context()->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    ctx->glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAXBATCHQUADS * 6 * sizeof(uint16_t), pStart, GL_STREAM_DRAW);
+    ctx->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     lmFree(gQuadMemoryAllocator, pStart);
 
