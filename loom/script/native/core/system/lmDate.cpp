@@ -1,7 +1,7 @@
 /*
 * ===========================================================================
 * Loom SDK
-* Copyright 2011, 2012, 2013, 2015
+* Copyright 2011, 2012, 2013 
 * The Game Engine Company, LLC
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,6 +31,9 @@ void set ## var(int value) { timeInfo.tm_ ## tm_var = value; } \
 int get ## var ## UTC() { return timeInfoUTC.tm_ ## tm_var; } \
 void set ## var ## UTC(int value) { timeInfoUTC.tm_ ## tm_var = value; }
 
+/**
+* Native side implementation for the Loom Date class. See Date.ls script class for more detailed documentation
+*/
 class Date {
 private:
     // The buffer size when returning string data
@@ -41,7 +44,7 @@ private:
     struct tm timeInfoUTC; // Same as timeInfo, but for UTC instead of local time
 
 public:
-    // Static: Determine if the provided year is a leap year
+    // Determine if the provided year is a leap year
     static bool isLeapYear(int year)
     {
         if (year % 4 != 0)
@@ -70,6 +73,7 @@ public:
     DATE_GETTER_SETTER(Minutes, min);
     DATE_GETTER_SETTER(Month, mon);
     DATE_GETTER_SETTER(Seconds, sec);
+    #undef DATE_GETTER_SETTER
 
     // Year getters and setters must be defined seperately because of an offset
     int getYear() 
@@ -93,26 +97,20 @@ public:
 
     const char *formatTime(const char *format)
     {
-        char buffer[BUFFER_SIZE];
+        char *buffer = (char*)malloc(sizeof(char) * BUFFER_SIZE);
 
         strftime(buffer, BUFFER_SIZE - 1, format, &timeInfo);
         
-        // The buffer must be converted into a const char* before returning
-        const char *retString = buffer;
-
-        return retString;
+        return (const char*)buffer;
     }
 
     const char *formatTimeUTC(const char *format)
     {
-        char buffer[BUFFER_SIZE];
+        char *buffer = (char*)malloc(sizeof(char) * BUFFER_SIZE);
 
         strftime(buffer, BUFFER_SIZE, format, &timeInfoUTC);
 
-        // The buffer must be converted into a const char* before returning
-        const char *retString = buffer;
-
-        return retString;
+        return (const char*)buffer;
     }
 };
 
@@ -123,12 +121,12 @@ static int registerSystemDate(lua_State *L)
         .beginClass<Date>("Date")
 
         .addConstructor<void (*)(void)>()
+
+        // These methods are all defined with the DATE_GETTER_SETTER macro above
         .addMethod("getDate", &Date::getDate)
         .addMethod("setDate", &Date::setDate)
         .addMethod("getDay", &Date::getDay)
         .addMethod("setDay", &Date::setDay)
-        .addMethod("getYear", &Date::getYear)
-        .addMethod("setYear", &Date::setYear)
         .addMethod("getHours", &Date::getHours)
         .addMethod("setHours", &Date::setHours)
         .addMethod("getMinutes", &Date::getMinutes)
@@ -141,8 +139,6 @@ static int registerSystemDate(lua_State *L)
         .addMethod("setDateUTC", &Date::setDateUTC)
         .addMethod("getDayUTC", &Date::getDayUTC)
         .addMethod("setDayUTC", &Date::setDayUTC)
-        .addMethod("getYearUTC", &Date::getYearUTC)
-        .addMethod("setYearUTC", &Date::setYearUTC)
         .addMethod("getHoursUTC", &Date::getHoursUTC)
         .addMethod("setHoursUTC", &Date::setHoursUTC)
         .addMethod("getMinutesUTC", &Date::getMinutesUTC)
@@ -151,6 +147,11 @@ static int registerSystemDate(lua_State *L)
         .addMethod("setMonthUTC", &Date::setMonthUTC)
         .addMethod("getSecondsUTC", &Date::getSecondsUTC)
         .addMethod("setSecondsUTC", &Date::setSecondsUTC)
+
+        .addMethod("getYear", &Date::getYear)
+        .addMethod("setYear", &Date::setYear)
+        .addMethod("getYearUTC", &Date::getYearUTC)
+        .addMethod("setYearUTC", &Date::setYearUTC)
         .addMethod("formatTime", &Date::formatTime)
         .addMethod("formatTimeUTC", &Date::formatTimeUTC)
 
