@@ -20,7 +20,7 @@ package loom2d.display
     import loom2d.events.TouchEvent;
     import loom2d.events.ScrollWheelEvent;
     import loom2d.events.EventDispatcher;
-	import loom2d.events.ControllerEvent;
+    import loom2d.events.ControllerEvent;
     
     import loom2d.math.Point;
     import loom2d.math.Rectangle;
@@ -47,9 +47,9 @@ package loom2d.display
     }
 
     delegate KeyDelegate(scancode:int, virtualKey:int, modifiers:int);
-	delegate ControllerButtonDelegate(controller:int, button:int);
-	delegate ControllerAxisDelegate(controller:int, axis:int, value:Number);
-	delegate JoystickHatDelegate(controller:int, hat:int, value:int);
+    delegate ControllerButtonDelegate(controller:int, button:int);
+    delegate ControllerAxisDelegate(controller:int, axis:int, value:Number);
+    delegate JoystickHatDelegate(controller:int, hat:int, value:int);
     delegate HardwareKeyDelegate();
     delegate TouchDelegate(touchId:int, x:int, y:int);
     delegate ScrollWheelDelegate(yDelta:int);
@@ -111,11 +111,11 @@ package loom2d.display
 
         public native var onKeyUp:KeyDelegate;
         public native var onKeyDown:KeyDelegate;
-		
-		public native var onControllerButtonUp:ControllerButtonDelegate;
-		public native var onControllerButtonDown:ControllerButtonDelegate;
-		public native var onControllerAxisMoved:ControllerAxisDelegate;
-		public native var onJoystickHatMoved:JoystickHatDelegate;
+
+        public native var onControllerButtonUp:ControllerButtonDelegate;
+        public native var onControllerButtonDown:ControllerButtonDelegate;
+        public native var onControllerAxisMoved:ControllerAxisDelegate;
+        public native var onJoystickHatMoved:JoystickHatDelegate;
 
         public native var onMenuKey:HardwareKeyDelegate;
         public native var onBackKey:HardwareKeyDelegate;
@@ -158,11 +158,11 @@ package loom2d.display
             // Handle key event dispatch.
             onKeyDown += onKeyDownHandler;
             onKeyUp += onKeyUpHandler;
-			
-			onControllerButtonDown += onControllerButtonDownHandler;
-			onControllerButtonUp += onControllerButtonUpHandler;
-			onControllerAxisMoved += onControllerAxisMovedHandler;
-			onJoystickHatMoved += onJoystickHatMovedHandler;
+
+            onControllerButtonDown += onControllerButtonDownHandler;
+            onControllerButtonUp += onControllerButtonUpHandler;
+            onControllerAxisMoved += onControllerAxisMovedHandler;
+            onJoystickHatMoved += onJoystickHatMovedHandler;
 
             onSizeChange += onSizeChangeHandler;
 
@@ -197,26 +197,26 @@ package loom2d.display
                     (modifiers | LoomKeyModifier.ALT) != 0,
                     (modifiers | LoomKeyModifier.SHIFT) != 0 ));
         }
-		
-		protected function onControllerButtonDownHandler(controller:int, button:int):void
-		{
-			broadcastEvent(new ControllerEvent(ControllerEvent.BUTTON_DOWN, controller, button));
-		}
-		
-		protected function onControllerButtonUpHandler(controller:int, button:int):void
-		{
-			broadcastEvent(new ControllerEvent(ControllerEvent.BUTTON_UP, controller, button));
-		}
-		
-		protected function onControllerAxisMovedHandler(controller:int, axis:int, value:Number):void
-		{
-			broadcastEvent(new ControllerEvent(ControllerEvent.AXIS_MOTION, controller, 0, axis, value));
-		}
-		
-		protected function onJoystickHatMovedHandler(controller:int, hat:int, value:int):void
-		{
-			broadcastEvent(new ControllerEvent(ControllerEvent.HAT_MOTION, controller, 0, 0, 0, hat, value));
-		}
+
+        protected function onControllerButtonDownHandler(controller:int, button:int):void
+        {
+            broadcastEvent(new ControllerEvent(ControllerEvent.BUTTON_DOWN, controller, button));
+        }
+
+        protected function onControllerButtonUpHandler(controller:int, button:int):void
+        {
+            broadcastEvent(new ControllerEvent(ControllerEvent.BUTTON_UP, controller, button));
+        }
+        
+        protected function onControllerAxisMovedHandler(controller:int, axis:int, value:Number):void
+        {
+            broadcastEvent(new ControllerEvent(ControllerEvent.AXIS_MOTION, controller, 0, axis, value));
+        }
+
+        protected function onJoystickHatMovedHandler(controller:int, hat:int, value:int):void
+        {
+            broadcastEvent(new ControllerEvent(ControllerEvent.HAT_MOTION, controller, 0, 0, 0, hat, value));
+        }
 
         protected function onScrollWheelHandler(delta:Number)
         {

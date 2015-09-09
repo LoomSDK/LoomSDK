@@ -181,35 +181,35 @@ void loop()
         {
             IMEDelegateDispatcher::shared()->dispatchShowComposition(event.text.text, strlen(event.text.text), event.edit.start, event.edit.length);
         }
-		else if (event.type == SDL_CONTROLLERBUTTONDOWN || event.type == SDL_JOYBUTTONDOWN)
-		{
-			//lmLogInfo(coreLogGroup, "Controller Button Down %d %d %d", event.cbutton.which, event.cbutton.button);
-			stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.which);
-			stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.button);
-			stage->_ControllerButtonDownDelegate.invoke();
-		}
-		else if (event.type == SDL_CONTROLLERBUTTONUP || event.type == SDL_JOYBUTTONUP)
-		{
-			//lmLogInfo(coreLogGroup, "Controller Button Up %d %d %d", event.cbutton.which, event.cbutton.button);
-			stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.which);
-			stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.button);
-			stage->_ControllerButtonUpDelegate.invoke();
-		}
-		else if (event.type == SDL_CONTROLLERAXISMOTION || event.type == SDL_JOYAXISMOTION)
-		{
-			stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.which);
-			stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.axis);
-			stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.value);
-			stage->_ControllerAxisMovedDelegate.invoke();
-		}
-		else if (event.type == SDL_JOYHATMOTION)
+        else if (event.type == SDL_CONTROLLERBUTTONDOWN || event.type == SDL_JOYBUTTONDOWN)
         {
-			//lmLogInfo(coreLogGroup, "Controller Hat Motion %d %d %d", event.jhat.hat, event.jhat.which, event.jhat.value);
-			stage->_JoystickHatMovedDelegate.pushArgument(event.jhat.which);
-			stage->_JoystickHatMovedDelegate.pushArgument(event.jhat.hat);
-			stage->_JoystickHatMovedDelegate.pushArgument(event.jhat.value);
-			stage->_JoystickHatMovedDelegate.invoke();
-		}
+            //lmLogInfo(coreLogGroup, "Controller Button Down %d %d %d", event.cbutton.which, event.cbutton.button);
+            stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.which);
+            stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.button);
+            stage->_ControllerButtonDownDelegate.invoke();
+        }
+        else if (event.type == SDL_CONTROLLERBUTTONUP || event.type == SDL_JOYBUTTONUP)
+        {
+            //lmLogInfo(coreLogGroup, "Controller Button Up %d %d %d", event.cbutton.which, event.cbutton.button);
+            stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.which);
+            stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.button);
+            stage->_ControllerButtonUpDelegate.invoke();
+        }
+        else if (event.type == SDL_CONTROLLERAXISMOTION || event.type == SDL_JOYAXISMOTION)
+        {
+            stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.which);
+            stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.axis);
+            stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.value);
+            stage->_ControllerAxisMovedDelegate.invoke();
+        }
+        else if (event.type == SDL_JOYHATMOTION)
+        {
+            //lmLogInfo(coreLogGroup, "Controller Hat Motion %d %d %d", event.jhat.hat, event.jhat.which, event.jhat.value);
+            stage->_JoystickHatMovedDelegate.pushArgument(event.jhat.which);
+            stage->_JoystickHatMovedDelegate.pushArgument(event.jhat.hat);
+            stage->_JoystickHatMovedDelegate.pushArgument(event.jhat.value);
+            stage->_JoystickHatMovedDelegate.invoke();
+        }
         else if (event.type == SDL_JOYDEVICEADDED || event.type == SDL_CONTROLLERDEVICEADDED)
         {
             lmLogInfo(coreLogGroup, "Controller added: %s", event.cdevice.which);
