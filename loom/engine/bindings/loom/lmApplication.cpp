@@ -332,19 +332,6 @@ int LoomApplication::initializeCoreServices()
     lmLog(applicationLogGroup, "   o types");
     initializeTypes();
 
-#if 0
-    lmLog(applicationLogGroup, "   o tests");
-
-    // Run applicable unit tests.
-    extern void __cdecl test_suite_allTests();
-    seatest_set_print_callback(platform_debugOut);
-    if (!seatest_testrunner(0, NULL, test_suite_allTests, NULL, NULL))
-    {
-        lmLog(applicationLogGroup, "*** TESTS FAILED\n");
-        exit(1);
-    }
-#endif
-
     lmLog(applicationLogGroup, "   o network");
     loom_net_initialize();
 

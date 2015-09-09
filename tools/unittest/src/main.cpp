@@ -18,22 +18,28 @@
  * ===========================================================================
  */
 
-#include "seatest.h"
+#include "loom/common/platform/platform.h"
+#include "loom/vendor/seatest/seatest.h"
 
-// Define all the unit tests to to run.
-SEATEST_SUITE(allTests)
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+#include <windows.h>
+#endif
+
+int main(int argc, const char **argv)
 {
-    SEATEST_SUITE_ENTRY(allocatorSystem);
-    SEATEST_SUITE_ENTRY(platformThread);
-    SEATEST_SUITE_ENTRY(platformNetwork);
-    SEATEST_SUITE_ENTRY(stringTable);
-    //SEATEST_SUITE_ENTRY(typeRegistry);
-    //SEATEST_SUITE_ENTRY(handles);
-    //SEATEST_SUITE_ENTRY(tasks);
-    //SEATEST_SUITE_ENTRY(gameObject);
-    //SEATEST_SUITE_ENTRY(eventQueue);
-    //SEATEST_SUITE_ENTRY(matrix);
-    SEATEST_SUITE_ENTRY(logging);
-    SEATEST_SUITE_ENTRY(assets);
-    SEATEST_SUITE_ENTRY(lmAutoPtr);
+    #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+    // This prevents error dialogs on a failed test on Windows
+    DWORD dwMode = SetErrorMode(SEM_NOGPFAULTERRORBOX);
+    SetErrorMode(dwMode | SEM_NOGPFAULTERRORBOX);
+    #endif
+
+    extern void __cdecl test_suite_allTests();
+    seatest_set_print_callback(printf);
+    if (!seatest_testrunner(0, NULL, test_suite_allTests, NULL, NULL))
+    {
+        printf("*** TESTS FAILED ***\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return EXIT_SUCCESS;
 }
