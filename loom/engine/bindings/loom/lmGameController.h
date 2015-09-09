@@ -8,6 +8,8 @@ public:
     GameController();
     static void openAll();
     static void closeAll();
+    static int addDevice(int device);
+    static int removeDevice(int device);
 
 private:
     SDL_GameController *gamepad;

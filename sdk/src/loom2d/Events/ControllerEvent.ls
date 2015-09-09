@@ -32,28 +32,24 @@ package loom2d.events
         /** Event type for an axis being moved. */
         public static const AXIS_MOTION:String = "axisMoved";
 
-        /** Event type for hat switch being moved. */
-        public static const HAT_MOTION:String = "hatMoved";
-        
+        public static const CONTROLLER_ADDED:String = "addedController";
+        public static const CONTROLLER_REMOVED:String = "removedController";
+
         private var mControllerID:uint;
         private var mButtonID:uint;
         private var mAxisID:uint;
         private var mAxisValue:Number;
-        private var mHatID:uint;
-		private var mHatValue:uint;
         
         /** Creates a new KeyboardEvent. */
         public function ControllerEvent(type:String, controllerID:uint=0, buttonID:uint=0, 
-                                      axisID:uint=0, axisValue:Number=0, 
-                                      hatID:uint=0, hatValue:uint=0)
+                                      axisID:uint=0, axisValue:int=0)
         {
             super(type, false, controllerID);
             mControllerID = controllerID;
             mButtonID = buttonID;
             mAxisID = axisID;
-            mAxisValue = axisValue;
-            mHatID = hatID;
-            mHatValue = hatValue;
+            mAxisValue = axisValue < 0 ? -(axisValue / ( -32767)) : axisValue / 32767;
+            mAxisValue = mAxisValue > 1 ? 1 : mAxisValue < -1 ? -1 : mAxisValue;
         }
         
         /** Contains the ID of controller. */
@@ -67,16 +63,10 @@ package loom2d.events
         
         /** Contains the value of the axis. */
         public function get axisValue():Number { return mAxisValue; }
-        
-        /** Contains the id of the Hat switch. */
-        public function get hatID():int { return mHatID; }
-        
-        /** Contains the value of the Hat switch. */
-        public function get hatValue():uint { return mHatValue; }
 
         public function toString():String
         {
-            return "[ControllerEvent controllerID=" + controllerID + " buttonID=" + buttonID + " axisID=" + axisID + " axisValue=" + axisValue + " hatID=" + hatID + " hatValue=" + hatValue +"]";
+            return "[ControllerEvent controllerID=" + controllerID + " buttonID=" + buttonID + " axisID=" + axisID + " axisValue=" + axisValue + "]";
         }
     }
 }

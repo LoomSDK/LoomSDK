@@ -100,3 +100,25 @@ void GameController::closeAll()
         GameController::controllers[i].close();
     }
 }
+
+int GameController::addDevice(int device)
+{
+    if (device < MAX_CONTROLLERS)
+    {
+        GameController& gc = controllers[device];
+        gc.open(device);
+        lmLog(controllerLogGroup, "Device [%d] connected", device);
+        return device;
+    }
+    return -1;
+}
+
+int GameController::removeDevice(int device)
+{
+    int controllerIndex = getControllerIndex(device);
+    if (controllerIndex < 0) return -1;
+    GameController& gc = controllers[controllerIndex];
+    gc.close();
+    lmLog(controllerLogGroup, "Device [%d] removed", controllerIndex);
+    return controllerIndex;
+}
