@@ -1004,6 +1004,9 @@ end
 # mainly we need to make windows work
 desc "Runs all unit tests and exports results to artifacts/testResults.xml"
 task :test => ['build:desktop'] do
+   Dir.chdir("tests") do
+      sh "../tests/unittest"
+   end
    Dir.chdir("sdk") do
       sh "../artifacts/lsc --unittest --xmlfile ../artifacts/testResults.xml"
   end

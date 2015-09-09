@@ -24,7 +24,12 @@
 
 SEATEST_FIXTURE(lmAutoPtr)
 {
-    SEATEST_FIXTURE_ENTRY(allocator_basic);
+    SEATEST_FIXTURE_ENTRY(lmAutoPtr_default_constructor);
+    SEATEST_FIXTURE_ENTRY(lmAutoPtr_constructor);
+    SEATEST_FIXTURE_ENTRY(lmAutoPtr_assign);
+    SEATEST_FIXTURE_ENTRY(lmAutoPtr_get);
+    SEATEST_FIXTURE_ENTRY(lmAutoPtr_release);
+    SEATEST_FIXTURE_ENTRY(lmAutoPtr_reset);
 }
 
 SEATEST_TEST(lmAutoPtr_default_constructor)
@@ -68,7 +73,7 @@ SEATEST_TEST(lmAutoPtr_assign)
     }
 }
 
-SEATEST_TEST(allocator_get)
+SEATEST_TEST(lmAutoPtr_get)
 {
     loom_allocator_t *heapAlloc = loom_allocator_getGlobalHeap();
 

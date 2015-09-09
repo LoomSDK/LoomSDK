@@ -382,6 +382,10 @@ void loom_asset_initialize(const char *rootUri)
     //gAssetAllocator = loom_allocator_initializeTrackerProxyAllocator(loom_allocator_getGlobalHeap());
     gAssetAllocator = (loom_allocator_getGlobalHeap());
 
+    // Clear, it might have been filled up before (for unit tests)
+    gAssetLoadQueue.clear();
+    gAssetHash.clear();
+
     // Asset server connection state.
     gAssetServerSocketLock = loom_mutex_create();
 
