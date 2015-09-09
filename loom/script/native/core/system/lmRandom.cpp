@@ -22,6 +22,7 @@
 
 #include "loom/script/native/lsLuaBridge.h"
 #include "loom/common/utils/utRandom.h"
+#include "loom/common/core/allocator.h"
 
 using namespace LS;
 
@@ -88,7 +89,7 @@ public:
 
 
 // always seed to fixed value; up to the user to change the seed in script if they want a unique set
-utRandomNumberGenerator *Random::utRand = new utRandomNumberGenerator(736);
+utRandomNumberGenerator *Random::utRand = lmNew(NULL) utRandomNumberGenerator(736);
 
 
 

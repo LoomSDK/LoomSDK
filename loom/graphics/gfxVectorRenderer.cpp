@@ -32,6 +32,10 @@
 
 #include "loom/script/runtime/lsProfiler.h"
 
+#define NVG_malloc(sz) lmAlloc(NULL, sz)
+#define NVG_realloc(sz) lmRealloc(NULL, sz)
+#define NVG_free(sz) lmFree(NULL, sz)
+
 #include "nanovg.h"
 
 #ifdef LOOM_RENDERER_OPENGLES2

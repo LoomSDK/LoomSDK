@@ -230,7 +230,7 @@ public:
         // also, you should take care when calling nativeDelete from script (which will end
         // up here, as the native C++ API may have other ideas.  This should be documented
         // in the script API bindings as there is no "general case" for bound code)
-        delete (T *)p;
+        lmDelete(NULL, (T *)p);
     }
 
     virtual utString& getCTypeName()

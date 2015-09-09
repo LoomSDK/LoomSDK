@@ -1128,7 +1128,7 @@ struct Constructor<T, None>
 {
     static T *call(TypeListValues<None> const&)
     {
-        return new T;
+        return lmNew(NULL) T;
     }
 
     static T *call(void *mem, TypeListValues<None> const&)
@@ -1142,7 +1142,7 @@ struct Constructor<T, TypeList<P1> >
 {
     static T *call(const TypeListValues<TypeList<P1> >& tvl)
     {
-        return new T(tvl.hd);
+        return lmNew(NULL) T(tvl.hd);
     }
 
     static T *call(void *mem, const TypeListValues<TypeList<P1> >& tvl)
@@ -1156,7 +1156,7 @@ struct Constructor<T, TypeList<P1, TypeList<P2> > >
 {
     static T *call(const TypeListValues<TypeList<P1, TypeList<P2> > >& tvl)
     {
-        return new T(tvl.hd, tvl.tl.hd);
+        return lmNew(NULL) T(tvl.hd, tvl.tl.hd);
     }
 
     static T *call(void *mem, const TypeListValues<TypeList<P1, TypeList<P2> > >& tvl)
@@ -1171,7 +1171,7 @@ struct Constructor<T, TypeList<P1, TypeList<P2, TypeList<P3> > > >
     static T *call(const TypeListValues<TypeList<P1, TypeList<P2,
                                                               TypeList<P3> > > >& tvl)
     {
-        return new T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd);
+        return lmNew(NULL) T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd);
     }
 
     static T *call(void *mem, const TypeListValues<TypeList<P1, TypeList<P2,
@@ -1188,7 +1188,7 @@ struct Constructor<T, TypeList<P1, TypeList<P2, TypeList<P3,
     static T *call(const TypeListValues<TypeList<P1, TypeList<P2,
                                                               TypeList<P3, TypeList<P4> > > > >& tvl)
     {
-        return new T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd);
+        return lmNew(NULL) T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd);
     }
 
     static T *call(void *mem, const TypeListValues<TypeList<P1, TypeList<P2,
@@ -1206,7 +1206,7 @@ struct Constructor<T, TypeList<P1, TypeList<P2, TypeList<P3,
     static T *call(const TypeListValues<TypeList<P1, TypeList<P2,
                                                               TypeList<P3, TypeList<P4, TypeList<P5> > > > > >& tvl)
     {
-        return new T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
+        return lmNew(NULL) T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
                      tvl.tl.tl.tl.tl.hd);
     }
 
@@ -1226,7 +1226,7 @@ struct Constructor<T, TypeList<P1, TypeList<P2, TypeList<P3,
     static T *call(const TypeListValues<TypeList<P1, TypeList<P2,
                                                               TypeList<P3, TypeList<P4, TypeList<P5, TypeList<P6> > > > > > >& tvl)
     {
-        return new T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
+        return lmNew(NULL) T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
                      tvl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.hd);
     }
 
@@ -1247,7 +1247,7 @@ struct Constructor<T, TypeList<P1, TypeList<P2, TypeList<P3,
                                                               TypeList<P3, TypeList<P4, TypeList<P5, TypeList<P6,
                                                                                                               TypeList<P7> > > > > > > >& tvl)
     {
-        return new T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
+        return lmNew(NULL) T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
                      tvl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.hd,
                      tvl.tl.tl.tl.tl.tl.tl.hd);
     }
@@ -1272,7 +1272,7 @@ struct Constructor<T, TypeList<P1, TypeList<P2, TypeList<P3,
                                                               TypeList<P3, TypeList<P4, TypeList<P5, TypeList<P6,
                                                                                                               TypeList<P7, TypeList<P8> > > > > > > > >& tvl)
     {
-        return new T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
+        return lmNew(NULL) T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
                      tvl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.hd,
                      tvl.tl.tl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.tl.tl.hd);
     }
@@ -3681,7 +3681,7 @@ protected:
             }
 
             // allocate the storage for placement new (so fancy!)
-            void *storage   = (void *)new char[sizeof(T)];
+            void *storage = (void *)lmAlloc(NULL, sizeof(T));
             T    *placement = reinterpret_cast<T *> (storage);
 
             // call the constructor with args
