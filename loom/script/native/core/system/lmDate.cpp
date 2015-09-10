@@ -61,13 +61,13 @@ public:
         initialize(-1);
     }
 
-    Date(int64_t inputTime)
+    Date(double inputTime)
     {
         initialize(inputTime);
     }
 
     // Initializes the date based on a 64 bit integer representing the time
-    void initialize(int64_t inputTime)
+    void initialize(double inputTime)
     {
         time_t rawtime;
 
@@ -141,7 +141,7 @@ static int registerSystemDate(lua_State *L)
 
         .beginClass<Date>("Date")
 
-        .addConstructor<void (*)(long)>()
+        .addConstructor<void (*)(double)>()
 
         // These methods are all defined with the DATE_GETTER_SETTER macro above
         .addMethod("getDate", &Date::getDate)
