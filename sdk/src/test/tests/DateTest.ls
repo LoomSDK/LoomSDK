@@ -24,10 +24,11 @@ package tests {
     
     public class DateTest {
         
-        // It is impossible to confirm the accuracy of the dates, however, we can ensure that all values are
-        // within expected bounds
-        
         var date:Date = new Date(); // Create a new date for things to be tested against
+        
+        // This date is populated with an integer representing a specific Unix Epoch to test against. 
+        // The physical location this test is being made in is unreliable, therefore only UTC time aspects are tested
+        var knownDate:Date = new Date(1441857747);
         
         [Test]
         function dateBounds() {
@@ -108,6 +109,48 @@ package tests {
             if (date.secondsUTC < 0 || date.secondsUTC > 59) {
                 Assert.fail("Seconds UTC out of bounds! Value: " + date.secondsUTC);
             }
+        }
+        
+        [Test]
+        function dateCheck() {
+            
+            Assert.equal(knownDate.dateUTC, 10, "Date of " + knownDate.dateUTC + " did not match expected date of 10");
+        }
+        
+        [Test]
+        function dayCheck() {
+            
+            Assert.equal(knownDate.dayUTC, 4, "Day of " + knownDate.dayUTC + " did not match expected day of 4");
+        }
+        
+        [Test]
+        function yearCheck() {
+            
+            Assert.equal(knownDate.yearUTC, 2015, "Year of " + knownDate.yearUTC + " did not match expected year of 2014");
+        }
+        
+        [Test]
+        function hoursCheck() {
+            
+            Assert.equal(knownDate.hoursUTC, 4, "Hour of " + knownDate.hoursUTC + " did not match expected hour of 4");
+        }
+        
+        [Test]
+        function minutesCheck() {
+            
+            Assert.equal(knownDate.minutesUTC, 2, "Minute of " + knownDate.minutesUTC + " did not match expected minute of 2");
+        }
+        
+        [Test]
+        function monthCheck() {
+            
+            Assert.equal(knownDate.monthUTC, 8, "Month of " + knownDate.monthUTC + " did not match expected month of 8");
+        }
+        
+        [Test]
+        function secondCheck() {
+            
+            Assert.equal(knownDate.secondsUTC, 27, "Second of " + knownDate.secondsUTC + " did not match expected second of 27");
         }
     }
 }

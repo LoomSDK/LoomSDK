@@ -24,13 +24,15 @@ package system {
  * Provides native date utility.
  */
 [Native(managed)]
-native class Date {
+native final class Date {
     
     /**
-     * Typical constructor with no parameters. On creation the Date class will automatically be populated with the
-     * current date-time
+     * Constructor optionally takes an integer that represents a desired Unix-Epoch time.
+     * This time will be used when populating the object, rather than the current time.
+     * 
+     * @param inputValue Integer representing a desired Unix-Epoch time
      */
-    public native function Date();
+    public native function Date(inputValue:int = -1);
     
     // Private native getters and setters
     private native function getDate():int;

@@ -55,11 +55,32 @@ public:
             return true;
     }
 
+    // A default constructor must be defined!
     Date()
     {
+        initialize(-1);
+    }
+
+    Date(int64_t inputTime)
+    {
+        initialize(inputTime);
+    }
+
+    // Initializes the date based on a 64 bit integer representing the time
+    void initialize(int64_t inputTime)
+    {
         time_t rawtime;
-        
-        time(&rawtime);
+
+        if (inputTime >= 0)
+        {
+            // If there was an input time, set the clock to that time!
+            rawtime = (time_t)inputTime;
+        }
+        else
+        {
+            // Otherwise, get the current time
+            time(&rawtime);
+        }
 
         // Initialize tm structs
         timeInfo = *localtime(&rawtime);
@@ -120,7 +141,7 @@ static int registerSystemDate(lua_State *L)
 
         .beginClass<Date>("Date")
 
-        .addConstructor<void (*)(void)>()
+        .addConstructor<void (*)(long)>()
 
         // These methods are all defined with the DATE_GETTER_SETTER macro above
         .addMethod("getDate", &Date::getDate)
