@@ -3229,9 +3229,10 @@ void Parser::readToken(Token *token)
     else
     {
         char errormsg[1024];
-        sprintf(errormsg, "expected %s but got %s",
+        snprintf(errormsg, 1023, "expected %s but got %s",
                 token->value.str().c_str(),
                 nextToken ? nextToken->value.str().c_str() : "(unknown)");
+        errormsg[1023] = '\0';
         error(errormsg);
     }
 }
