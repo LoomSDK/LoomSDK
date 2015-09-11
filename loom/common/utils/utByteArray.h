@@ -354,7 +354,7 @@ public:
         // Unable to write length in writeUTF, length is larger than 65535
         assert(length < 0xFFFF);
 
-        writeValue<unsigned short>(length);
+        writeValue<unsigned short>((unsigned short) length);
 
         writeUTFInternal(value, length);
     }

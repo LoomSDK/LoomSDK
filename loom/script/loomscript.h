@@ -26,6 +26,7 @@
 
 #include <assert.h>
 #undef _HAS_EXCEPTIONS
+#include <exception>
 #include <typeinfo>
 
 // For unmangling typenames
