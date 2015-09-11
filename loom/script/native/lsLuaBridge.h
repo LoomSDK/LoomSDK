@@ -4050,6 +4050,9 @@ public:
                     lua_touserdata(L, lua_upvalueindex(1)));
                 assert(fp != 0);
 
+                // Get own as argument
+                bool own = lua_toboolean(L, lua_upvalueindex(3)) == 1;
+
                 ArgList<Params> args(L);
 
                 NativeTypeBase* nativeType = NativeInterface::getNativeType<CT>();
@@ -4057,7 +4060,7 @@ public:
                 ReturnType instance = FuncTraits<Func>::call(fp, args);
 
                 // push the user data on the stack
-                Detail::UserdataPtr::push<T> (L, instance, true, true);
+                Detail::UserdataPtr::push<T> (L, instance, true, own);
 
                 return 1;
             }
@@ -4072,7 +4075,7 @@ public:
 
 
         template<class FP>
-        Class<T>& addStaticConstructor(FP const fp)
+        Class<T>& addStaticConstructor(FP const fp, bool own = true)
         {
             new (lua_newuserdata(L, sizeof(fp)))FP(fp);
 
@@ -4081,12 +4084,16 @@ public:
             utArray<utString> *array = (utArray<utString> *)lua_touserdata(L, -1);
             StaticConstructorProxy<T, FP>::getStringSignature(*array);
 
-            lua_pushcclosure(L, &StaticConstructorProxy<T, FP>::call, 2);
+            // Add own as argument
+            lua_pushboolean(L, own);
+
+            lua_pushcclosure(L, &StaticConstructorProxy<T, FP>::call, 3);
             rawsetfield(L, -2, "__call");
 
-            lua_pushcfunction(L, &gcMetaMethod);
-            rawsetfield(L, -2, "__gc");
-
+            if (own) {
+                lua_pushcfunction(L, &gcMetaMethod);
+                rawsetfield(L, -2, "__gc");
+            }
 
             return *this;
         }
