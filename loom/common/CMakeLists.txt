@@ -60,6 +60,8 @@ elseif(APPLE)
     endif()
 else()
 	set (CPP_FILES ${CPP_FILES} input/platformGamePadNull.c)
+	add_definitions(-DPSAPI_VERSION=1)
+	target_link_libraries(${TARGET_NAME Psapi.lib} 
 endif()
 
 set (SOURCE_FILES ${CPP_FILES} ${H_FILES})
