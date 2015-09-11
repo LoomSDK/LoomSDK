@@ -1782,7 +1782,7 @@ private:
 
 public:
     virtual ~Userdata() {
-        if (m_nativeType && m_owner) lmSafeDelete(NULL, m_p);
+        if (m_nativeType && m_owner) m_nativeType->deletePointer(m_p, true);
     }
 
     //--------------------------------------------------------------------------

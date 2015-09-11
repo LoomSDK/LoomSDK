@@ -143,7 +143,7 @@ public:
     virtual void *getBridgeClassKey()   = 0;
     virtual void *getBridgeConstKey()   = 0;
     virtual utString& getCTypeName()    = 0;
-    virtual void deletePointer(void *p) = 0;
+    virtual void deletePointer(void *p, bool owner = false) = 0;
 
     const utString& getScriptPackage()
     {
@@ -220,11 +220,11 @@ public:
         return bridgeConstKey;
     }
 
-    void deletePointer(void *p)
+    void deletePointer(void *p, bool owner = false)
     {
-        assert(isManaged());
+        assert(isManaged() || owner);
 
-        if (isManaged()) lualoom_managedpointerreleased(p);
+        if (isManaged() && !owner) lualoom_managedpointerreleased(p);
 
         // If you get a compiler error here, note that destructor must be public!
         // also, you should take care when calling nativeDelete from script (which will end
