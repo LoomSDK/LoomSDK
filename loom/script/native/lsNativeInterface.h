@@ -50,8 +50,11 @@ void lualoom_downcastnativeinstance(lua_State *L, int instanceIdx, Type *fromTyp
 
 /*
  * Creates a new bridge user data on the stack given a native type and a void* to the instance
+ * If owner is true, the pointed instance gets deleted with `lmDelete`
+ * when the object gets garbage collected, otherwise the responsibility of instance deletion
+ * falls on the caller
  */
-void lualoom_newnativeuserdata(lua_State *L, NativeTypeBase *nativeType, void *p);
+void lualoom_newnativeuserdata(lua_State *L, NativeTypeBase *nativeType, void *p, bool owner = false);
 
 /*
  * Pushes a native pointer onto the stack, constructing
@@ -143,7 +146,7 @@ public:
     virtual void *getBridgeClassKey()   = 0;
     virtual void *getBridgeConstKey()   = 0;
     virtual utString& getCTypeName()    = 0;
-    virtual void deletePointer(void *p) = 0;
+    virtual void deletePointer(void *p, bool owner = false) = 0;
 
     const utString& getScriptPackage()
     {
@@ -220,17 +223,17 @@ public:
         return bridgeConstKey;
     }
 
-    void deletePointer(void *p)
+    void deletePointer(void *p, bool owner = false)
     {
-        assert(isManaged());
+        assert(isManaged() || owner);
 
-        lualoom_managedpointerreleased(p);
+        if (isManaged() && !owner) lualoom_managedpointerreleased(p);
 
         // If you get a compiler error here, note that destructor must be public!
         // also, you should take care when calling nativeDelete from script (which will end
         // up here, as the native C++ API may have other ideas.  This should be documented
         // in the script API bindings as there is no "general case" for bound code)
-        delete (T *)p;
+        lmDelete(NULL, (T *)p);
     }
 
     virtual utString& getCTypeName()
@@ -556,7 +559,7 @@ public:
      * Internal method to push a managed native either created in LS with new or returned from a native method call
      * lualoom_pushnative is the public interface to the functionality
      */
-    static void pushManagedNativeInternal(lua_State *L, NativeTypeBase *nativeType, void *ptr, bool inConstructor = false)
+    static void pushManagedNativeInternal(lua_State *L, NativeTypeBase *nativeType, void *ptr, bool inConstructor = false, bool owner = false)
     {
         lmAssert(nativeType->isManaged(), "pushManagedNativeInternal - pushing unmanaged native type %s", nativeType->getFullName().c_str());
 
@@ -582,7 +585,7 @@ public:
             // If we get a C++ pointer that we haven't seen before (ie. was not instantiated in script, or returned via a
             // native method, we need to wrap the managed native automatically
 
-            lualoom_newnativeuserdata(L, nativeType, ptr);
+            lualoom_newnativeuserdata(L, nativeType, ptr, owner);
             wrapManagedNative(L, nativeType, ptr, inConstructor);
             lua_pop(L, 1);
 

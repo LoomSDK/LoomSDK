@@ -27,6 +27,11 @@
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
 
+#include "loom/common/core/allocator.h"
+#define STBI_MALLOC(sz)    lmAlloc(NULL, sz)
+#define STBI_REALLOC(p,sz) lmRealloc(NULL, p, sz)
+#define STBI_FREE(p)       lmFree(NULL, p)
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 extern loom_allocator_t *gAssetAllocator;

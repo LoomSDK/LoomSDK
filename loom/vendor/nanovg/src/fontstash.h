@@ -248,6 +248,17 @@ static void fons__tmpfree(void* ptr, void* up);
 #define STBTT_free(x,u)      fons__tmpfree(x,u)
 #include "stb_truetype.h"
 
+#if (defined(FONS_malloc) && defined(FONS_free) && defined(FONS_realloc)) || \
+   !(defined(FONS_malloc) || defined(FONS_free) || defined(FONS_realloc))
+#else
+#error "Must define all or none of FONS_malloc, FONS_free, and FONS_realloc."
+#endif
+#ifndef FONS_malloc
+#define FONS_malloc(sz)    malloc(sz)
+#define FONS_realloc(p,sz) realloc(p,sz)
+#define FONS_free(p)       free(p)
+#endif
+
 struct FONSttFontImpl {
 	stbtt_fontinfo font;
 };
@@ -493,8 +504,8 @@ static unsigned int fons__decutf8(unsigned int* state, unsigned int* codep, unsi
 static void fons__deleteAtlas(FONSatlas* atlas)
 {
 	if (atlas == NULL) return;
-	if (atlas->nodes != NULL) free(atlas->nodes);
-	free(atlas);
+	if (atlas->nodes != NULL) FONS_free(atlas->nodes);
+	FONS_free(atlas);
 }
 
 static FONSatlas* fons__allocAtlas(int w, int h, int nnodes)
@@ -502,7 +513,7 @@ static FONSatlas* fons__allocAtlas(int w, int h, int nnodes)
 	FONSatlas* atlas = NULL;
 
 	// Allocate memory for the font stash.
-	atlas = (FONSatlas*)malloc(sizeof(FONSatlas));
+	atlas = (FONSatlas*)FONS_malloc(sizeof(FONSatlas));
 	if (atlas == NULL) goto error;
 	memset(atlas, 0, sizeof(FONSatlas));
 
@@ -510,7 +521,7 @@ static FONSatlas* fons__allocAtlas(int w, int h, int nnodes)
 	atlas->height = h;
 
 	// Allocate space for skyline nodes
-	atlas->nodes = (FONSatlasNode*)malloc(sizeof(FONSatlasNode) * nnodes);
+	atlas->nodes = (FONSatlasNode*)FONS_malloc(sizeof(FONSatlasNode) * nnodes);
 	if (atlas->nodes == NULL) goto error;
 	memset(atlas->nodes, 0, sizeof(FONSatlasNode) * nnodes);
 	atlas->nnodes = 0;
@@ -535,7 +546,7 @@ static int fons__atlasInsertNode(FONSatlas* atlas, int idx, int x, int y, int w)
 	// Insert node
 	if (atlas->nnodes+1 > atlas->cnodes) {
 		atlas->cnodes = atlas->cnodes == 0 ? 8 : atlas->cnodes * 2;
-		atlas->nodes = (FONSatlasNode*)realloc(atlas->nodes, sizeof(FONSatlasNode) * atlas->cnodes);
+		atlas->nodes = (FONSatlasNode*)FONS_realloc(atlas->nodes, sizeof(FONSatlasNode) * atlas->cnodes);
 		if (atlas->nodes == NULL)
 			return 0;
 	}
@@ -696,14 +707,14 @@ FONScontext* fonsCreateInternal(FONSparams* params)
 	FONScontext* stash = NULL;
 
 	// Allocate memory for the font stash.
-	stash = (FONScontext*)malloc(sizeof(FONScontext));
+	stash = (FONScontext*)FONS_malloc(sizeof(FONScontext));
 	if (stash == NULL) goto error;
 	memset(stash, 0, sizeof(FONScontext));
 
 	stash->params = *params;
 
 	// Allocate scratch buffer.
-	stash->scratch = (unsigned char*)malloc(FONS_SCRATCH_BUF_SIZE);
+	stash->scratch = (unsigned char*)FONS_malloc(FONS_SCRATCH_BUF_SIZE);
 	if (stash->scratch == NULL) goto error;
 
 	// Initialize implementation library
@@ -718,7 +729,7 @@ FONScontext* fonsCreateInternal(FONSparams* params)
 	if (stash->atlas == NULL) goto error;
 
 	// Allocate space for fonts.
-	stash->fonts = (FONSfont**)malloc(sizeof(FONSfont*) * FONS_INIT_FONTS);
+	stash->fonts = (FONSfont**)FONS_malloc(sizeof(FONSfont*) * FONS_INIT_FONTS);
 	if (stash->fonts == NULL) goto error;
 	memset(stash->fonts, 0, sizeof(FONSfont*) * FONS_INIT_FONTS);
 	stash->cfonts = FONS_INIT_FONTS;
@@ -727,7 +738,7 @@ FONScontext* fonsCreateInternal(FONSparams* params)
 	// Create texture for the cache.
 	stash->itw = 1.0f/stash->params.width;
 	stash->ith = 1.0f/stash->params.height;
-	stash->texData = (unsigned char*)malloc(stash->params.width * stash->params.height);
+	stash->texData = (unsigned char*)FONS_malloc(stash->params.width * stash->params.height);
 	if (stash->texData == NULL) goto error;
 	memset(stash->texData, 0, stash->params.width * stash->params.height);
 
@@ -820,9 +831,9 @@ void fonsClearState(FONScontext* stash)
 static void fons__freeFont(FONSfont* font)
 {
 	if (font == NULL) return;
-	if (font->glyphs) free(font->glyphs);
-	if (font->freeData && font->data) free(font->data);
-	free(font);
+	if (font->glyphs) FONS_free(font->glyphs);
+	if (font->freeData && font->data) FONS_free(font->data);
+	FONS_free(font);
 }
 
 static int fons__allocFont(FONScontext* stash)
@@ -830,15 +841,15 @@ static int fons__allocFont(FONScontext* stash)
 	FONSfont* font = NULL;
 	if (stash->nfonts+1 > stash->cfonts) {
 		stash->cfonts = stash->cfonts == 0 ? 8 : stash->cfonts * 2;
-		stash->fonts = (FONSfont**)realloc(stash->fonts, sizeof(FONSfont*) * stash->cfonts);
+		stash->fonts = (FONSfont**)FONS_realloc(stash->fonts, sizeof(FONSfont*) * stash->cfonts);
 		if (stash->fonts == NULL)
 			return -1;
 	}
-	font = (FONSfont*)malloc(sizeof(FONSfont));
+	font = (FONSfont*)FONS_malloc(sizeof(FONSfont));
 	if (font == NULL) goto error;
 	memset(font, 0, sizeof(FONSfont));
 
-	font->glyphs = (FONSglyph*)malloc(sizeof(FONSglyph) * FONS_INIT_GLYPHS);
+	font->glyphs = (FONSglyph*)FONS_malloc(sizeof(FONSglyph) * FONS_INIT_GLYPHS);
 	if (font->glyphs == NULL) goto error;
 	font->cglyphs = FONS_INIT_GLYPHS;
 	font->nglyphs = 0;
@@ -864,7 +875,7 @@ int fonsAddFont(FONScontext* stash, const char* name, const char* path)
 	fseek(fp,0,SEEK_END);
 	dataSize = (int)ftell(fp);
 	fseek(fp,0,SEEK_SET);
-	data = (unsigned char*)malloc(dataSize);
+	data = (unsigned char*)FONS_malloc(dataSize);
 	if (data == NULL) goto error;
 	fread(data, 1, dataSize, fp);
 	fclose(fp);
@@ -873,7 +884,7 @@ int fonsAddFont(FONScontext* stash, const char* name, const char* path)
 	return fonsAddFontMem(stash, name, data, dataSize, 1);
 
 error:
-	if (data) free(data);
+	if (data) FONS_free(data);
 	if (fp) fclose(fp);
 	return FONS_INVALID;
 }
@@ -936,7 +947,7 @@ static FONSglyph* fons__allocGlyph(FONSfont* font)
 {
 	if (font->nglyphs+1 > font->cglyphs) {
 		font->cglyphs = font->cglyphs == 0 ? 8 : font->cglyphs * 2;
-		font->glyphs = (FONSglyph*)realloc(font->glyphs, sizeof(FONSglyph) * font->cglyphs);
+		font->glyphs = (FONSglyph*)FONS_realloc(font->glyphs, sizeof(FONSglyph) * font->cglyphs);
 		if (font->glyphs == NULL) return NULL;
 	}
 	font->nglyphs++;
@@ -1568,10 +1579,10 @@ void fonsDeleteInternal(FONScontext* stash)
 		fons__freeFont(stash->fonts[i]);
 
 	if (stash->atlas) fons__deleteAtlas(stash->atlas);
-	if (stash->fonts) free(stash->fonts);
-	if (stash->texData) free(stash->texData);
-	if (stash->scratch) free(stash->scratch);
-	free(stash);
+	if (stash->fonts) FONS_free(stash->fonts);
+	if (stash->texData) FONS_free(stash->texData);
+	if (stash->scratch) FONS_free(stash->scratch);
+	FONS_free(stash);
 }
 
 void fonsSetErrorCallback(FONScontext* stash, void (*callback)(void* uptr, int error, int val), void* uptr)
@@ -1609,7 +1620,7 @@ int fonsExpandAtlas(FONScontext* stash, int width, int height)
 			return 0;
 	}
 	// Copy old texture data over.
-	data = (unsigned char*)malloc(width * height);
+	data = (unsigned char*)FONS_malloc(width * height);
 	if (data == NULL)
 		return 0;
 	for (i = 0; i < stash->params.height; i++) {
@@ -1622,7 +1633,7 @@ int fonsExpandAtlas(FONScontext* stash, int width, int height)
 	if (height > stash->params.height)
 		memset(&data[stash->params.height * width], 0, (height - stash->params.height) * width);
 
-	free(stash->texData);
+	FONS_free(stash->texData);
 	stash->texData = data;
 
 	// Increase atlas size
@@ -1662,7 +1673,7 @@ int fonsResetAtlas(FONScontext* stash, int width, int height)
 	fons__atlasReset(stash->atlas, width, height);
 
 	// Clear texture data.
-	stash->texData = (unsigned char*)realloc(stash->texData, width * height);
+	stash->texData = (unsigned char*)FONS_realloc(stash->texData, width * height);
 	if (stash->texData == NULL) return 0;
 	memset(stash->texData, 0, width * height);
 

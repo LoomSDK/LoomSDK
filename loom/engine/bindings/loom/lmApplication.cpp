@@ -74,6 +74,7 @@ void loom_appSetup(void)
 
 void loom_appShutdown(void)
 {
+    GFX::Graphics::shutdown();
     LoomApplication::shutdown();
 }
 
@@ -139,7 +140,7 @@ int LoomApplication::initializeTypes()
 void LoomApplication::execMainAssembly()
 {
     lmAssert(!rootVM, "VM already running");
-    rootVM = new LSLuaState();
+    rootVM = lmNew(NULL) LSLuaState();
     rootVM->open();
 
     lmLog(applicationLogGroup, "   o executing %s", bootAssembly.c_str());
@@ -227,7 +228,7 @@ void LoomApplication::reloadMainAssembly()
     NativeInterface::dumpManagedNatives(rootVM->VM());
 
     rootVM->close();
-    delete rootVM;
+    lmDelete(NULL, rootVM);
     rootVM = NULL;
 
     execMainAssembly();

@@ -231,7 +231,7 @@ static loom_asset_t *loom_asset_getAssetByName(const char *name, int create)
     {
         // Create one.
         asset       = lmNew(gAssetAllocator) loom_asset_t;
-        asset->name = strdup(name);
+        asset->name = name;
         gAssetHash.insert(key, asset);
     }
 
@@ -418,12 +418,26 @@ void loom_asset_waitForConnection(int msToWait)
     gAssetServerConnectTryInterval = 3000;
 }
 
+// Clears the asset name cache that is built up
+// through loom_asset_lock and others
+static void loom_asset_clear()
+{
+    utHashTableIterator<utHashTable<utHashedString, loom_asset_t *> > assetIterator(gAssetHash);
+    while (assetIterator.hasMoreElements())
+    {
+        utHashedString key = assetIterator.peekNextKey();
+        lmDelete(NULL, assetIterator.peekNextValue());
+        assetIterator.next();
+    }
+    gAssetHash.clear();
+}
 
 void loom_asset_shutdown()
 {
     gShuttingDown = 1;
 
     loom_asset_flushAll();
+    loom_asset_clear();
 
     // Clear out our queues and maps.
     gAssetDeserializerMap.clear();
@@ -1164,7 +1178,6 @@ void loom_asset_reloadAll()
         assetIterator.next();
     }
 }
-
 
 void loom_asset_supply(const char *name, void *bits, int length)
 {

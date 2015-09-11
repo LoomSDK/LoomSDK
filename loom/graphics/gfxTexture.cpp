@@ -57,6 +57,7 @@ utList<AsyncLoadNote> Texture::sAsyncLoadQueue;
 utList<AsyncLoadNote> Texture::sAsyncCreateQueue;
 
 //flag indicating if the async loading thread is currently running
+ThreadHandle Texture::sAsyncThread = NULL;
 bool Texture::sAsyncThreadRunning = false;
 
 //mutex used for locking sAsyncLoadQueue and sAsyncCreateQueue between threads
@@ -111,6 +112,7 @@ void Texture::initialize()
 void Texture::shutdown()
 {
     lmLogDebug(gGFXTextureLogGroup, "Texture shutdown");
+    stopAsyncThread();
     loom_mutex_lock(Texture::sTexInfoLock);
     for (int i = 0; i < MAXTEXTURES; i++)
     {
@@ -594,6 +596,12 @@ int __stdcall Texture::loadTextureAsync_body(void *param)
     {
         //get the front of the async texture queue to process
         loom_mutex_lock(Texture::sAsyncQueueMutex);
+
+        if (!Texture::sAsyncThreadRunning) {
+            loom_mutex_unlock(Texture::sAsyncQueueMutex);
+            break;
+        }
+
         AsyncLoadNote threadNote = Texture::sAsyncLoadQueue.front();
         Texture::sAsyncLoadQueue.pop_front();
         loom_mutex_unlock(Texture::sAsyncQueueMutex);
@@ -663,9 +671,9 @@ int __stdcall Texture::loadTextureAsync_body(void *param)
         //do we have any more items to process?
         if(Texture::sAsyncLoadQueue.empty())
         {
-            //flag that the async texture thread is no longer running
-            Texture::sAsyncThreadRunning = false;
             loom_mutex_unlock(Texture::sAsyncQueueMutex);
+            //flag that the async texture thread is no longer running
+            stopAsyncThread();
             break;
         }
         loom_mutex_unlock(Texture::sAsyncQueueMutex);
@@ -677,6 +685,34 @@ int __stdcall Texture::loadTextureAsync_body(void *param)
     return 0;
 }
 
+void Texture::ensureAsyncThread()
+{
+    loom_mutex_lock(Texture::sAsyncQueueMutex);
+    //only kick the async thread if it isn't already running
+    if (!sAsyncThreadRunning) {
+        if (sAsyncThread != NULL) {
+            sAsyncThreadRunning = true;
+            stopAsyncThread();
+            loom_mutex_unlock(Texture::sAsyncQueueMutex);
+            loom_thread_join(sAsyncThread);
+            sAsyncThread = NULL;
+            loom_mutex_lock(Texture::sAsyncQueueMutex);
+        }
+        sAsyncThreadRunning = true;
+        lmAssert(sAsyncThread == NULL, "Thread actually still running?");
+        sAsyncThread = loom_thread_start(Texture::loadTextureAsync_body, NULL);
+    }
+    loom_mutex_unlock(Texture::sAsyncQueueMutex);
+}
+
+void Texture::stopAsyncThread()
+{
+    loom_mutex_lock(Texture::sAsyncQueueMutex);
+    if (sAsyncThreadRunning) {
+        sAsyncThreadRunning = false;
+    }
+    loom_mutex_unlock(Texture::sAsyncQueueMutex);
+}
 
 TextureInfo * Texture::initFromAssetManagerAsync(const char *path, bool highPriority)
 {
@@ -722,13 +758,8 @@ TextureInfo * Texture::initFromAssetManagerAsync(const char *path, bool highPrio
         {
             sAsyncLoadQueue.push_back(threadNote);
         }
-        if(!Texture::sAsyncThreadRunning)
-        {
-            //only kick the async thread if it isn't already running
-            Texture::sAsyncThreadRunning = true;
-            loom_thread_start(Texture::loadTextureAsync_body, NULL);
-        }
-        loom_mutex_unlock(Texture::sAsyncQueueMutex); 
+        loom_mutex_unlock(Texture::sAsyncQueueMutex);
+        ensureAsyncThread();
     }
     else
     {
@@ -804,13 +835,8 @@ void Texture::updateFromBytesAsync(TextureID id, utByteArray *bytes, bool highPr
         {
             sAsyncLoadQueue.push_back(threadNote);
         }
-        if (!Texture::sAsyncThreadRunning)
-        {
-            //only kick the async thread if it isn't already running
-            Texture::sAsyncThreadRunning = true;
-            loom_thread_start(Texture::loadTextureAsync_body, NULL);
-        }
         loom_mutex_unlock(Texture::sAsyncQueueMutex);
+        ensureAsyncThread();
     }
     else
     {
@@ -903,13 +929,8 @@ TextureInfo *Texture::initFromBytesAsync(utByteArray *bytes, const char *name, b
         {
             sAsyncLoadQueue.push_back(threadNote);
         }
-        if(!Texture::sAsyncThreadRunning)
-        {
-            //only kick the async thread if it isn't already running
-            Texture::sAsyncThreadRunning = true;
-            loom_thread_start(Texture::loadTextureAsync_body, NULL);
-        }
-        loom_mutex_unlock(Texture::sAsyncQueueMutex); 
+        loom_mutex_unlock(Texture::sAsyncQueueMutex);
+        ensureAsyncThread();
     }
     else
     {
@@ -1035,6 +1056,7 @@ void Texture::validate()
 void Texture::reset()
 {
     LOOM_PROFILE_SCOPE(textureReset);
+    stopAsyncThread();
     for (int i = 0; i < MAXTEXTURES; i++)
     {
         loom_mutex_lock(Texture::sTexInfoLock);

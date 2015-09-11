@@ -38,6 +38,7 @@
  
 static loom_allocator_t gGlobalHeap;
 static int              heap_allocated = 0;
+static unsigned int gMemoryAllocated = 0;
 
 
 void loom_allocator_startup()
@@ -48,6 +49,9 @@ void loom_allocator_startup()
     gGlobalHeap.name = "Global";
 }
 
+unsigned int loom_allocator_getAllocatedMemory() {
+    return gMemoryAllocated;
+}
 
 loom_allocator_t *loom_allocator_getGlobalHeap()
 {

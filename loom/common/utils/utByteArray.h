@@ -292,17 +292,11 @@ public:
             return "";
         }
 
-        lmAssert(_position + length <= _data.size(), "Insufficient data available for length of %d (use readStringBytes if you don't have a 16-bit integer length header)", length);
+        lmAssert(_position + length <= _data.size(), "Insufficient data available for length of %d (use readStringBytes if you don't have a 32-bit integer length header)", length);
 
-        char *value = new char[length + 1];
-
-        value[length] = 0;
-        memcpy(value, &_data[_position], length);
+        svalue.fromBytes(&_data[_position], length);
+        
         _position += length;
-
-        svalue = value;
-
-        delete [] value;
 
         return svalue.c_str();
     }
@@ -318,7 +312,7 @@ public:
             return "";
         }
 
-        lmAssert(_position + length <= _data.size(), "Insufficient data available for length of %d (use readUTFBytes if you don't have a 16-bit integer length header)", length);
+        lmAssert(_position + length <= _data.size(), "Insufficient data available for length of %d (use readUTFBytes if you don't have a 16-bit unsigned integer length header)", length);
 
         return readUTFBytes(length);
     }
@@ -327,16 +321,9 @@ public:
     {
         static utString svalue;
         
-        char *value = new char[length + 1];
+        svalue.fromBytes(&_data[_position], length);
 
-        memcpy(value, &_data[_position], length);
-
-        value[length] = 0;
         _position += length;
-
-        svalue = value;
-
-        delete[] value;
 
         return svalue.c_str();
     }

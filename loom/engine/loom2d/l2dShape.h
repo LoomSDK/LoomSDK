@@ -40,10 +40,10 @@ public:
 	Shape()
 	{
 		type = typeShape;
-		graphics = new GFX::VectorGraphics();
+		graphics = lmNew(NULL) GFX::VectorGraphics();
 	}
 	~Shape() {
-		delete graphics;
+		lmSafeDelete(NULL, graphics);
 	}
 
     void setClipRect(int x, int y, int w, int h)

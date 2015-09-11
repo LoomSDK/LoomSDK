@@ -139,7 +139,7 @@ public:
         else
         {
             int  length = strlen(svalue);
-            char *upper = new char[length + 1];
+            char *upper = (char*)lmAlloc(NULL, length + 1);
             upper[length] = 0;
             for (int i = 0; i < length; i++)
             {
@@ -148,7 +148,7 @@ public:
 
             lua_pushstring(L, upper);
 
-            delete [] upper;
+            lmFree(NULL, upper);
         }
 
         return 1;
@@ -165,7 +165,7 @@ public:
         else
         {
             int  length = strlen(svalue);
-            char *lower = new char[length + 1];
+            char *lower = (char*)lmAlloc(NULL, length + 1);
             lower[length] = 0;
             for (int i = 0; i < length; i++)
             {
@@ -174,7 +174,7 @@ public:
 
             lua_pushstring(L, lower);
 
-            delete [] lower;
+            lmFree(NULL, lower);
         }
 
         return 1;
@@ -280,7 +280,7 @@ public:
 
         int slength = (int)strlen(svalue);
 
-        char *nvalue = new char[slength + 1];
+        char *nvalue = (char*)lmAlloc(NULL, slength + 1);
         memset(nvalue, 0, slength + 1);
 
         if ((len < 0) || (len > slength))
@@ -300,7 +300,7 @@ public:
 
         lua_pushstring(L, nvalue);
 
-        delete [] nvalue;
+        lmFree(NULL, nvalue);
 
         return 1;
     }
@@ -319,7 +319,7 @@ public:
 
         int len = strlen(svalue);
 
-        char *nbuffer = new char[len + 1];
+        char *nbuffer = (char*)lmAlloc(NULL, len + 1);
 
         if (startIndex < 0)
         {
@@ -345,7 +345,7 @@ public:
 
         lua_pushstring(L, nbuffer);
 
-        delete [] nbuffer;
+        lmFree(NULL, nbuffer);
 
         return 1;
     }
@@ -391,7 +391,7 @@ public:
             return 1;
         }
 
-        char *nvalue = new char[svalueLength + 1];
+        char *nvalue = (char*) lmAlloc(NULL, svalueLength + 1);
         memset(nvalue, 0, svalueLength + 1);
 
         for (int i = startIndex; i < endIndex; i++)
@@ -401,7 +401,7 @@ public:
 
         lua_pushstring(L, nvalue);
 
-        delete [] nvalue;
+        lmFree(NULL, nvalue);
 
         return 1;
     }

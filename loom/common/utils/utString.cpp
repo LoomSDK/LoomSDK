@@ -52,11 +52,15 @@ static char* malloc_never_null(const size_t b) {
 
 static char *strdup_never_null(const char *s)
 {
-    const size_t len = (s == NULL ? 0 : strlen(s)) + 1;
-    char         *p  = malloc_never_null(len);
+    const size_t bufferSize = (s == NULL ? 0 : strlen(s)) + 1;
+    if (bufferSize <= 1) {
+        return (char*) EMPTY_STRING;
+    }
 
-    if (len > 1) memcpy(p, s, len);
-    p[len-1] = 0;
+    char *p  = malloc_never_null(bufferSize);
+
+    memcpy(p, s, bufferSize);
+    p[bufferSize-1] = 0;
     return p;
 }
 

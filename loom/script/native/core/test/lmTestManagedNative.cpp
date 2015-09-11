@@ -67,12 +67,12 @@ public:
         MyManagedNativeClass *instance = nativeInstances.at(idx);
 
         nativeInstances.erase(idx);
-        delete instance;
+        lmDelete(NULL, instance);
     }
 
     static MyManagedNativeClass *createdNativeInstance()
     {
-        MyManagedNativeClass *instance = new MyManagedNativeClass();
+        MyManagedNativeClass *instance = lmNew(NULL) MyManagedNativeClass();
 
         instance->stringField = "I was created natively";
         return instance;
@@ -80,7 +80,7 @@ public:
 
     static void deleteNativeInstance(MyManagedNativeClass *instance)
     {
-        delete instance;
+        lmDelete(NULL, instance);
     }
 
     const char *getDescString(int number)
@@ -148,17 +148,17 @@ public:
 
     static MyChildManagedNativeClass *CreateMyChildManagedNativeClass(lua_State *L, const char *stringArg)
     {
-        return new MyChildManagedNativeClass(stringArg);
+        return lmNew(NULL) MyChildManagedNativeClass(stringArg);
     }
 
     static MyChildManagedNativeClass *createMyChildManagedNativeClassNativeSide()
     {
-        return new MyChildManagedNativeClass("created native side");
+        return lmNew(NULL) MyChildManagedNativeClass("created native side");
     }
 
     static MyManagedNativeClass *createMyChildManagedNativeClassAsMyManagedNativeClass()
     {
-        return new MyChildManagedNativeClass("created by createMyChildManagedNativeClassAsMyManagedNativeClass");
+        return lmNew(NULL) MyChildManagedNativeClass("created by createMyChildManagedNativeClassAsMyManagedNativeClass");
     }
 };
 
