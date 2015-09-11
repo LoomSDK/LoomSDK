@@ -1162,7 +1162,9 @@ void loom_asset_reloadAll()
     }
 }
 
-void loom_asset_clear()
+// Clears the asset name cache that is built up
+// through loom_asset_lock and others
+static void loom_asset_clear()
 {
     utHashTableIterator<utHashTable<utHashedString, loom_asset_t *> > assetIterator(gAssetHash);
     while (assetIterator.hasMoreElements())
