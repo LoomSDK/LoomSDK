@@ -24,6 +24,7 @@ unsigned int platform_getProcessMemory()
 #elif LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 
 #include "windows.h"
+#pragma comment( lib, "psapi.lib" )
 #include "psapi.h"
 
 unsigned int platform_getProcessMemory()
