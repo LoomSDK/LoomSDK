@@ -21,6 +21,19 @@ unsigned int platform_getProcessMemory()
 
 }
 
+#elif LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+
+#include "windows.h"
+#include "psapi.h"
+
+unsigned int platform_getProcessMemory()
+{
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+    GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
+    SIZE_T virtualMemUsedByMe = pmc.PrivateUsage;
+    return (unsigned int)virtualMemUsedByMe;
+}
+
 #else
 
 //TODO: LOOM-1842
