@@ -4073,7 +4073,11 @@ public:
             }
         };
 
-
+        /**
+         * if own is true, the constructed instance gets deleted with `lmDelete` when
+         * the object gets garbage collected
+         * if own is false, the responsibility of instance deletion falls on the caller
+         */
         template<class FP>
         Class<T>& addStaticConstructor(FP const fp, bool own = true)
         {

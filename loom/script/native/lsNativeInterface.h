@@ -50,6 +50,9 @@ void lualoom_downcastnativeinstance(lua_State *L, int instanceIdx, Type *fromTyp
 
 /*
  * Creates a new bridge user data on the stack given a native type and a void* to the instance
+ * If owner is true, the pointed instance gets deleted with `lmDelete`
+ * when the object gets garbage collected, otherwise the responsibility of instance deletion
+ * falls on the caller
  */
 void lualoom_newnativeuserdata(lua_State *L, NativeTypeBase *nativeType, void *p, bool owner = false);
 
