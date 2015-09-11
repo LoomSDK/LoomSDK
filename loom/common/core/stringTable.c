@@ -61,10 +61,11 @@ static unsigned long hash(const char *str)
 
 static stringTableEntry_t *allocEntry(const char *str)
 {
+    size_t len;
     stringTableEntry_t *entry = (stringTableEntry_t *)lmAlloc(NULL, sizeof(stringTableEntry_t));
 
     entry->next = NULL;
-    size_t len = strlen(str);
+    len = strlen(str);
     entry->string = (const char*)lmAlloc(NULL, len + 1);
     memcpy((char*)entry->string, str, len);
     ((char*)entry->string)[len] = '\0';
