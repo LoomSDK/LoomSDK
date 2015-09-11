@@ -414,6 +414,19 @@ void loom_asset_waitForConnection(int msToWait)
     gAssetServerConnectTryInterval = 3000;
 }
 
+// Clears the asset name cache that is built up
+// through loom_asset_lock and others
+static void loom_asset_clear()
+{
+    utHashTableIterator<utHashTable<utHashedString, loom_asset_t *> > assetIterator(gAssetHash);
+    while (assetIterator.hasMoreElements())
+    {
+        utHashedString key = assetIterator.peekNextKey();
+        lmDelete(NULL, assetIterator.peekNextValue());
+        assetIterator.next();
+    }
+    gAssetHash.clear();
+}
 
 void loom_asset_shutdown()
 {
@@ -1160,20 +1173,6 @@ void loom_asset_reloadAll()
         loom_asset_reload(key.str().c_str());
         assetIterator.next();
     }
-}
-
-// Clears the asset name cache that is built up
-// through loom_asset_lock and others
-static void loom_asset_clear()
-{
-    utHashTableIterator<utHashTable<utHashedString, loom_asset_t *> > assetIterator(gAssetHash);
-    while (assetIterator.hasMoreElements())
-    {
-        utHashedString key = assetIterator.peekNextKey();
-        lmDelete(NULL, assetIterator.peekNextValue());
-        assetIterator.next();
-    }
-    gAssetHash.clear();
 }
 
 void loom_asset_supply(const char *name, void *bits, int length)
