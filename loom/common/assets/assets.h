@@ -131,6 +131,8 @@ void loom_asset_flushAll();
 void loom_asset_reload(const char *name);
 void loom_asset_reloadAll();
 
+// Clears the asset name cache that is built up
+// through loom_asset_lock and others
 void loom_asset_clear();
 
 int loom_asset_isConnected();

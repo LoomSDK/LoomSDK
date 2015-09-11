@@ -188,7 +188,9 @@ void *lmRealloc_inner(loom_allocator_t *allocator, void *ptr, size_t size, const
 // Note: Loom calls this for you in most scenarios.
 void loom_allocator_startup();
 
-unsigned int loom_allocator_memory();
+// Returns the current amount of memory allocated through lmAlloc in bytes
+// NOTE: Returns 0 unless LOOM_ALLOCATOR_CHECK is enabled
+unsigned int loom_allocator_getAllocatedMemory();
 
 // Allocate a new heap allocator using the provided allocator as backing
 // store.

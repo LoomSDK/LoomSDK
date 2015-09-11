@@ -1605,7 +1605,7 @@ protected:
 public:
 
     NativeTypeBase *m_nativeType; // subclasses must also set this
-    bool m_owner;
+    bool m_owner; // if true, m_p gets deleted on Userdata instance destruction (e.g. for static constructors)
 
     //--------------------------------------------------------------------------
 
