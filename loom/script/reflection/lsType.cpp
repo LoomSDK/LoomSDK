@@ -38,7 +38,6 @@ Assembly *Type::getAssembly()
 
 void Type::addMember(MemberInfo *member)
 {
-    LOOM_ALLOCATOR_VERIFY(member);
 
     member->declaringType = this;
     members.push_back(member);

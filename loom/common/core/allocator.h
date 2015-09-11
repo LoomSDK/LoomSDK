@@ -101,7 +101,7 @@
  * You can also add manual pointer checks by using `LOOM_ALLOCATOR_VERIFY(pointer)`.
  */
 #define LOOM_ALLOCATOR_CHECK 0
-#define LOOM_ALLOCATOR_CHECK_MAXPATH 128-4-2
+#define LOOM_ALLOCATOR_CHECK_MAXPATH 128-2-4-4
 #define LOOM_ALLOCATOR_CHECK_SIG 0xCACACACA
 
 #if !LOOM_ALLOCATOR_CHECK
@@ -120,6 +120,7 @@ struct loom_alloc_header
 {
     char file[LOOM_ALLOCATOR_CHECK_MAXPATH];
     uint16_t line;
+    uint32_t size;
     uint32_t sig;
 };
 
@@ -130,6 +131,7 @@ struct loom_alloc_header
 #define LOOM_ALLOCATOR_CHECK_PTR(ptr, file, line) do { \
     loom_alloc_header_t *header = (loom_alloc_header_t*)ptr; \
     lmCheck(header->sig == LOOM_ALLOCATOR_CHECK_SIG, "Allocator verification internal check failed, expected 0x%08lX got 0x%08lX\nDeallocation was at %s@%d", LOOM_ALLOCATOR_CHECK_SIG, header->sig, file, line); \
+    gMemoryAllocated -= header->size; \
 } while (0); \
 
 #define LOOM_ALLOCATOR_CHECK_VERIFY(ptr, file, line) do { \
@@ -144,7 +146,9 @@ struct loom_alloc_header
     strncpy(header->file, file, sizeof(header->file) - 1); \
     header->file[sizeof(header->file) - 1] = 0; \
     header->line = line; \
+    header->size = size; \
     header->sig = LOOM_ALLOCATOR_CHECK_SIG; \
+    gMemoryAllocated += size; \
     ptr = header + 1; \
 } while (0); \
 
@@ -183,6 +187,8 @@ void *lmRealloc_inner(loom_allocator_t *allocator, void *ptr, size_t size, const
 //
 // Note: Loom calls this for you in most scenarios.
 void loom_allocator_startup();
+
+unsigned int loom_allocator_memory();
 
 // Allocate a new heap allocator using the provided allocator as backing
 // store.

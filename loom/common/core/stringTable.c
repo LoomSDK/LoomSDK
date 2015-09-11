@@ -64,12 +64,11 @@ static stringTableEntry_t *allocEntry(const char *str)
     stringTableEntry_t *entry = (stringTableEntry_t *)lmAlloc(NULL, sizeof(stringTableEntry_t));
 
     entry->next = NULL;
+    size_t len = strlen(str);
+    entry->string = (const char*)lmAlloc(NULL, len + 1);
+    memcpy((char*)entry->string, str, len);
+    ((char*)entry->string)[len] = '\0';
 
-#if LOOM_COMPILER != LOOM_COMPILER_MSVC
-    entry->string = (const char *)strdup(str);
-#else
-    entry->string = (const char *)_strdup(str);
-#endif
     return entry;
 }
 

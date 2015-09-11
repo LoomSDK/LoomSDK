@@ -1605,6 +1605,7 @@ protected:
 public:
 
     NativeTypeBase *m_nativeType; // subclasses must also set this
+    bool m_owner;
 
     //--------------------------------------------------------------------------
 
@@ -1780,7 +1781,9 @@ private:
     }
 
 public:
-    virtual ~Userdata() { }
+    virtual ~Userdata() {
+        if (m_nativeType && m_owner) lmSafeDelete(NULL, m_p);
+    }
 
     //--------------------------------------------------------------------------
 
@@ -1913,6 +1916,7 @@ public:
     {
         m_p          = p;
         m_nativeType = NULL;
+        m_owner      = false;
 
         // Can't construct with a null pointer!
         //
@@ -1921,13 +1925,13 @@ public:
 
 public:
 
-    static inline void push(lua_State *L, NativeTypeBase *nativeType, void *ptr, bool inConstructor)
+    static inline void push(lua_State *L, NativeTypeBase *nativeType, void *ptr, bool inConstructor, bool owner = false)
     {
         //we're managed push onto stack, possibly registering the managed native
         lua_pushnil(L);
         int top = lua_gettop(L);
 
-        NativeInterface::pushManagedNativeInternal(L, nativeType, ptr, inConstructor);
+        NativeInterface::pushManagedNativeInternal(L, nativeType, ptr, inConstructor, owner);
 
         // we actually want the native user data and not
         // the wrapped class table
@@ -1940,7 +1944,7 @@ public:
     /** Push non-const pointer to object.
      */
     template<class T>
-    static inline void push(lua_State *const L, T *const ptr, bool inConstructor = false)
+    static inline void push(lua_State *const L, T *const ptr, bool inConstructor = false, bool owner = false)
     {
         if (!ptr)
         {
@@ -1953,17 +1957,17 @@ public:
 
         if (!nativeType->isManaged())
         {
-            lualoom_newnativeuserdata((lua_State *)L, nativeType, (void *)ptr);
+            lualoom_newnativeuserdata((lua_State *)L, nativeType, (void *)ptr, owner);
             return;
         }
 
-        push((lua_State *)L, nativeType, (void *)ptr, inConstructor);
+        push((lua_State *)L, nativeType, (void *)ptr, inConstructor, owner);
     }
 
     /** Push const pointer to object.
      */
     template<class T>
-    static inline void push(lua_State *const L, T const *const ptr, bool inConstructor = false)
+    static inline void push(lua_State *const L, T const *const ptr, bool inConstructor = false, bool owner = false)
     {
         if (!ptr)
         {
@@ -1978,11 +1982,11 @@ public:
 
         if (!nativeType->isManaged())
         {
-            lualoom_newnativeuserdata((lua_State *)L, nativeType, (void *)ptr);
+            lualoom_newnativeuserdata((lua_State *)L, nativeType, (void *)ptr, owner);
             return;
         }
 
-        push((lua_State *)L, nativeType, (void *)ptr, inConstructor);
+        push((lua_State *)L, nativeType, (void *)ptr, inConstructor, owner);
     }
 };
 
@@ -4053,7 +4057,7 @@ public:
                 ReturnType instance = FuncTraits<Func>::call(fp, args);
 
                 // push the user data on the stack
-                Detail::UserdataPtr::push<T> (L, instance, true);
+                Detail::UserdataPtr::push<T> (L, instance, true, true);
 
                 return 1;
             }
@@ -4079,6 +4083,10 @@ public:
 
             lua_pushcclosure(L, &StaticConstructorProxy<T, FP>::call, 2);
             rawsetfield(L, -2, "__call");
+
+            lua_pushcfunction(L, &gcMetaMethod);
+            rawsetfield(L, -2, "__gc");
+
 
             return *this;
         }

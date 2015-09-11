@@ -533,7 +533,7 @@ Type *lualoom_gettype(lua_State *L, const utString& fullPath)
 }
 
 
-void lualoom_newnativeuserdata(lua_State *L, NativeTypeBase *nativeType, void *p)
+void lualoom_newnativeuserdata(lua_State *L, NativeTypeBase *nativeType, void *p, bool owner)
 {
     // In-place new the user data pointer and get a reference to it.
     new (lua_newuserdata(L, sizeof(Detail::UserdataPtr))) Detail::UserdataPtr(p);
@@ -541,6 +541,8 @@ void lualoom_newnativeuserdata(lua_State *L, NativeTypeBase *nativeType, void *p
 
     // set the user data's native type
     ud->m_nativeType = nativeType;
+
+    ud->m_owner = owner;
 
     // look up the class' meta table by bridge key
     lua_rawgetp(L, LUA_REGISTRYINDEX, nativeType->getBridgeClassKey());

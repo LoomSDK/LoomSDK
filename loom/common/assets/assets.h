@@ -131,6 +131,8 @@ void loom_asset_flushAll();
 void loom_asset_reload(const char *name);
 void loom_asset_reloadAll();
 
+void loom_asset_clear();
+
 int loom_asset_isConnected();
 
 int loom_asset_queryPendingTransfers();

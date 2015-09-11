@@ -184,6 +184,9 @@ private:
     //queue of loaded texture data to be created back in the main thread
     static utList<AsyncLoadNote> sAsyncCreateQueue;
 
+    // handle for the running (or soon to be terminated) thread
+    static ThreadHandle sAsyncThread;
+
     //flag indicating if the async loading thread is currently running
     static bool sAsyncThreadRunning;
 
@@ -192,6 +195,9 @@ private:
 
     //mutex used for locking sTextureInfos and sTexturePathLookup between threads
     static MutexHandle sTexInfoLock;
+
+    static void ensureAsyncThread();
+    static void stopAsyncThread();
 
     static TextureID getAvailableTextureID()
     {
