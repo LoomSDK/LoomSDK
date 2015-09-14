@@ -44,8 +44,7 @@ $ loom config --global globalPropertyName value
 | display.orientation  | [ portrait,          | The orientation of your app. Set to 'auto' for auto-orientation.  |
 |                      |   landscape,         |                                                                   |
 |                      |   auto ]             |                                                                   |
-| display.stats        | [ 0, 1, 2 ]          | Show stats. 0 = no stats, 1 = Report FPS to console,              |
-|                      |                      | 2 = Show Debug Overlay                                            |
+| display.stats        | [ 0, 1 ]             | Show stats. 0 = no stats, 1 = Report FPS to console,              |
 | display.title        |                      | The title of your app                                             |
 | display.width        |                      | The default width of your app                                     |
 | ios_signing_identity |                      | The target iOS Developer certificate to use when creating an iOS  |

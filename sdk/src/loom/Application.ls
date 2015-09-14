@@ -127,6 +127,8 @@ package loom
             //theStage = new Stage(/*layer,*/ Cocos2D.getConfigDisplayWidth(), Cocos2D.getConfigDisplayHeight(), 0x000000);
             theStage = new Stage(configWidth, configHeight, configColor);
             Loom2D.stage = theStage;
+            
+            if (display.getNumber("stats") == 1) theStage.reportFps = true;
 
             Stage.onRenderStage += onInternalFrame;
             
