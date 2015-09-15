@@ -80,6 +80,11 @@ class Platform
     Override the DPI reported by getDPI; this persists across restarts.
     */
    public native static function forceDPI(value:Number):void;
+   
+   /*!
+    Make the system sleep for the input number of milliseconds
+    */
+   public native static function sleep(sleepTime:int):void;
 
    public native static function isForcingDPI():Boolean;
 }

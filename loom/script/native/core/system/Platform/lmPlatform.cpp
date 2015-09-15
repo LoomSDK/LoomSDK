@@ -23,6 +23,7 @@
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformDisplay.h"
 #include "loom/common/platform/platformTime.h"
+#include "loom/common/platform/platformThread.h"
 
 static float _forceDPI = -1.f;
 
@@ -70,6 +71,11 @@ public:
     {
         return _forceDPI != -1.f;
     }
+
+    static void sleep(int sleepTime)
+    {
+        loom_thread_sleep(sleepTime);
+    }
 };
 
 static int registerSystemPlatform(lua_State *L)
@@ -85,6 +91,7 @@ static int registerSystemPlatform(lua_State *L)
        .addStaticMethod("getDPI", &Platform::getDPI)
        .addStaticMethod("forceDPI", &Platform::forceDPI)
        .addStaticMethod("isForcingDPI", &Platform::isForcingDPI)
+       .addStaticMethod("sleep", &Platform::sleep)
 
        .endClass()
 
