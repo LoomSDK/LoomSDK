@@ -446,10 +446,10 @@ package loom2d.display
         {
             if (_cachedStageGeneration != _globalStageGeneration) {
                 var p = this;
-                while (p.parent && !p._cachedStage) {
-                    p = p.parent;
+                while (p.parentCached && !p._cachedStage) {
+                    p = p.parentCached;
                 }
-                _cachedStage = p.parent ? p._cachedStage : p as Stage;
+                _cachedStage = p.parentCached ? p._cachedStage : p as Stage;
                 _cachedStageGeneration = _globalStageGeneration;
             }
             return _cachedStage;
