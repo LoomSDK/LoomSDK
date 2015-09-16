@@ -133,8 +133,11 @@ namespace :post do
 
   desc "Posts the sdk to S3 and sumbit it to TEC"
   task :sdk, [:branch, :commit_sha, :build_number, :download_type, :root_url, :user, :pass, :s3_id, :s3_secret, :bucket] do |t, args|
+    branch = args[:branch].split("/")[-1]
+    
     # Only deploy master for now.
-    if(args[:branch] != "master") 
+    if(branch != "master")
+      puts "Skipping SDK as #{branch} isn't master."
       next
     end
 
@@ -163,7 +166,6 @@ namespace :post do
       :secret_access_key => s3_secret
     )
 
-    branch = args[:branch].split("/")[-1]
     sha = args[:commit_sha]
     build_number = args[:build_number]
     short_sha = args[:commit_sha][0..9]
@@ -264,8 +266,11 @@ namespace :post do
       abort "Unable to find s3_docs directory"
     end
 
+    branch = args[:branch].split("/")[-1]
+    
     # Only deploy master for now.
-    if(args[:branch] != "master") 
+    if(branch != "master") 
+      puts "Skipping doc deploy as #{branch} isn't master."
       next
     end
 
@@ -286,7 +291,6 @@ namespace :post do
     s3 = AWS::S3.new
     bucket_name = 'docs.theengine.co'
 
-    branch = args[:branch].split("/")[-1]
     sha = args[:commit_sha]
     version_number = args[:version_number]
     short_sha = args[:commit_sha][0..9]
