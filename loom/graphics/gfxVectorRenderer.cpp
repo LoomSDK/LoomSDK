@@ -32,10 +32,6 @@
 
 #include "loom/script/runtime/lsProfiler.h"
 
-#define NVG_malloc(sz) lmAlloc(NULL, sz)
-#define NVG_realloc(sz) lmRealloc(NULL, sz)
-#define NVG_free(sz) lmFree(NULL, sz)
-
 #include "nanovg.h"
 
 #ifdef LOOM_RENDERER_OPENGLES2
@@ -72,6 +68,10 @@ const char * ConvertToUTF8(const wchar_t * pStr) {
 # define utf8(str)  str
 #endif
 */
+
+static void* nvgAlloc(size_t size) { return lmAlloc(NULL, size); }
+static void* nvgRealloc(void* mem, size_t size) { return lmRealloc(NULL, mem, size); }
+static void nvgFree(void* mem) { lmFree(NULL, mem); }
 
 namespace GFX
 {
@@ -632,6 +632,7 @@ void VectorRenderer::reset()
 
 void VectorRenderer::initialize()
 {
+    nvgSetAllocFunctions(nvgAlloc, nvgRealloc, nvgFree);
     initializeGraphicsResources();
 }
 
