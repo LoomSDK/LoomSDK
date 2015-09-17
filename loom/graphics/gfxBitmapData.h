@@ -37,13 +37,13 @@ namespace GFX
 class BitmapData
 {
 private:
-    size_t w;
-    size_t h;
+    unsigned int w;
+    unsigned int h;
 
     channel_t* data;
 
     // Private constructor. Use only static methods for construction.
-    BitmapData(size_t width, size_t height);
+    BitmapData(unsigned int width, unsigned int height);
 
 public:
 
@@ -52,8 +52,8 @@ public:
     // Saves the loaded data to a file. Supported file formats are BMP, PNG and TGA.
     void save(const char* path) const;
 
-    void setPixel(size_t x, size_t y, rgba_t color);
-    rgba_t getPixel(size_t x, size_t y);
+    void setPixel(unsigned int x, unsigned int y, rgba_t color);
+    rgba_t getPixel(unsigned int x, unsigned int y);
 
     const channel_t* getData() const;
     int getBpp() const;

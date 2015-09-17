@@ -36,7 +36,7 @@ const int DATA_BPP = 4;
 
 namespace GFX
 {
-    BitmapData::BitmapData(size_t width, size_t height)
+    BitmapData::BitmapData(unsigned int  width, unsigned int  height)
     : w(width)
     , h(height)
     , data((unsigned char*)lmAlloc(NULL, DATA_BPP * w * h))
@@ -90,7 +90,7 @@ namespace GFX
         lmLog(gGFXLogGroup, "Unsupported image extension in path %s.", path);
     }
 
-    void BitmapData::setPixel(size_t x, size_t y, rgba_t color)
+    void BitmapData::setPixel(unsigned int  x, unsigned int  y, rgba_t color)
     {
         if (x < 0 || x >= w ||
             y < 0 || y >= h)
@@ -100,7 +100,7 @@ namespace GFX
         pixelptr[x + y * w] = convertHostToBEndian(color);
     }
 
-    rgba_t BitmapData::getPixel(size_t x, size_t y)
+    rgba_t BitmapData::getPixel(unsigned int  x, unsigned int  y)
     {
         if (x < 0 || x >= w ||
             y < 0 || y >= h)
