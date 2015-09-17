@@ -99,7 +99,7 @@ void VectorGraphics::clear() {
 	lastPath = NULL;
 
 	pathDirty = false;
-	textFormatDirty = false;
+	currentTextFormat = VectorTextFormat::defaultFormat;
 }
 
 #pragma warning(disable: 4056 4756)
@@ -147,9 +147,8 @@ void VectorGraphics::lineStyle(float thickness, unsigned int color, float alpha,
 }
 
 void VectorGraphics::textFormat(VectorTextFormat format) {
-	ensureTextFormat();
 	queue->push_back(lmNew(NULL) VectorTextFormatData(lmNew(NULL) VectorTextFormat(format)));
-	currentTextFormat = format;
+	currentTextFormat.merge(&format);
 }
 
 void VectorGraphics::beginFill(unsigned int color, float alpha) {
@@ -240,13 +239,11 @@ void VectorGraphics::drawArc(float x, float y, float radius, float angleFrom, fl
 }
 
 void VectorGraphics::drawTextLine(float x, float y, utString text) {
-	ensureTextFormat();
 	queue->push_back(lmNew(NULL) VectorText(x, y, -1, lmNew(NULL) utString(text)));
 	inflateBounds(textLineBounds(currentTextFormat, x, y, text));
 }
 
 void VectorGraphics::drawTextBox(float x, float y, float width, utString text) {
-	ensureTextFormat();
 	queue->push_back(lmNew(NULL) VectorText(x, y, width < 0 ? 0 : width, lmNew(NULL) utString(text)));
 	inflateBounds(textBoxBounds(currentTextFormat, x, y, width, text));
 }
@@ -261,18 +258,6 @@ float VectorGraphics::textLineAdvance(VectorTextFormat format, float x, float y,
 
 Loom2D::Rectangle VectorGraphics::textBoxBounds(VectorTextFormat format, float x, float y, float width, utString text) {
 	return VectorRenderer::textBoxBounds(&format, x, y, width, &text);
-}
-
-void VectorGraphics::ensureTextFormat() {
-	if (!textFormatDirty) {
-		textFormatDirty = true;
-		// Default text format
-		VectorTextFormat* format = lmNew(NULL) VectorTextFormat();
-		format->color = 0x000000;
-		format->size = 12;
-		queue->push_back(lmNew(NULL) VectorTextFormatData(format));
-		currentTextFormat = *format;
-	}
 }
 
 void VectorGraphics::drawSVG(VectorSVG* svg, float x, float y, float scale, float lineThickness) {
@@ -424,6 +409,7 @@ void VectorFill::render(VectorGraphics* g) {
 }
 
 void VectorText::render(VectorGraphics* g) {
+	g->flushPath();
 	if (width == -1) {
 		VectorRenderer::textLine(x, y, text);
 	} else {

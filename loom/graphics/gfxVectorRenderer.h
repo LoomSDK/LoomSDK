@@ -89,17 +89,39 @@ public:
 		ALIGN_BASELINE = 1 << 6, // Default, align text vertically to baseline. 
 	};
 
+	enum FontId {
+		FONT_UNDEFINED = -1,
+		FONT_NOTFOUND = -2,
+		FONT_DEFAULTMISSING = -3,
+		FONT_DEFAULTMEMORY = -4,
+		FONT_REPORTEDERROR = -5
+	};
+
     // Restore all the previously loaded fonts (on NVG context loss / quality change)
     static void restoreLoaded();
 
     // Load a font with the specified font name and path
     static void load(utString fontName, utString filePath);
 
-    VectorTextFormat();
+	static VectorTextFormat defaultFormat;
 
-	const char* font;
-	inline const char* getFont() const { return font; }
-	void setFont(const char* t) { font = t; }
+	VectorTextFormat(int color = -1, float size = NAN) :
+		fontId(FONT_UNDEFINED),
+		font(""),
+		color(color),
+		size(size),
+		align(VectorTextFormat::ALIGN_TOP | VectorTextFormat::ALIGN_LEFT),
+		letterSpacing(NAN),
+		lineHeight(NAN)
+	{};
+
+	void merge(VectorTextFormat* source);
+	void ensureFontId();
+
+	int fontId;
+	utString font;
+	inline const char* getFont() const { return font.c_str(); }
+	void setFont(const char* t) { font = utString(t); }
 
 	int color;
 	inline int getColor() const { return color; }
@@ -158,6 +180,7 @@ private:
     static void initialize();
 
     static void deleteImages();
+    static void ensureTextFormat();
 
     static void initializeGraphicsResources();
     static void destroyGraphicsResources();
