@@ -75,6 +75,11 @@ public:
         return p;
     }
 
+    inline const char *data() const
+    {
+        return c_str();
+    }
+
     utString substr(const size_type start, size_type length = npos) const;
     char operator[](const size_type n) const;
     char at(const size_type n) const;
@@ -82,6 +87,7 @@ public:
 
     // Set this string's value from raw bytes, NULL terminating them.
     void fromBytes(const void *bytes, int length);
+    void assign(const char* bytes, int length);
 
     size_type find(char c, size_type start = 0);
 
