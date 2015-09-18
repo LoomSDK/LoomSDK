@@ -184,20 +184,24 @@ void loop()
         else if (event.type == SDL_CONTROLLERBUTTONDOWN)
         {
             //lmLogInfo(coreLogGroup, "Controller Button Down %d %d %d", event.cbutton.which, event.cbutton.button);
-            stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.which);
+            //stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.which);
+            stage->_ControllerButtonDownDelegate.pushArgument(LoomGameController::indexOfDevice(event.cbutton.which));
             stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.button);
             stage->_ControllerButtonDownDelegate.invoke();
         }
         else if (event.type == SDL_CONTROLLERBUTTONUP)
         {
             //lmLogInfo(coreLogGroup, "Controller Button Up %d %d %d", event.cbutton.which, event.cbutton.button);
-            stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.which);
+            //stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.which);
+            stage->_ControllerButtonUpDelegate.pushArgument(LoomGameController::indexOfDevice(event.cbutton.which));
             stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.button);
             stage->_ControllerButtonUpDelegate.invoke();
         }
         else if (event.type == SDL_CONTROLLERAXISMOTION)
         {
-            stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.which);
+            lmLog(coreLogGroup, "Controller [%d] triggered axis event.", LoomGameController::indexOfDevice(event.caxis.which));
+            //stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.which);
+            stage->_ControllerAxisMovedDelegate.pushArgument(LoomGameController::indexOfDevice(event.caxis.which));
             stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.axis);
             stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.value);
             stage->_ControllerAxisMovedDelegate.invoke();
@@ -205,7 +209,7 @@ void loop()
         else if (event.type == SDL_CONTROLLERDEVICEADDED)
         {
             lmLogInfo(coreLogGroup, "Controller added: %d", event.cdevice.which);
-            int addedDevice = GameController::addDevice(event.cdevice.which);
+            int addedDevice = LoomGameController::addDevice(event.cdevice.which);
             if (addedDevice != -1)
             {
                 stage->_ControllerAddedDelegate.pushArgument(addedDevice);
@@ -215,7 +219,7 @@ void loop()
         else if (event.type == SDL_CONTROLLERDEVICEREMOVED)
         {
             lmLogInfo(coreLogGroup, "Controller removed: %d", event.cdevice.which);
-            int removedDevice = GameController::removeDevice(event.cdevice.which);
+            int removedDevice = LoomGameController::removeDevice(event.cdevice.which);
             if (removedDevice != -1)
             {
                 stage->_ControllerRemovedDelegate.pushArgument(removedDevice);
@@ -343,7 +347,7 @@ main(int argc, char *argv[])
 
     //Adding non-existent controller mappings
     int mappingsAdded = SDL_GameControllerAddMapping("4d6963726f736f66742050432d6a6f79,X360 Controller,platform:Windows,a:b10,b:b11,x:b12,y:b13,back:b5,start:b4,guide:b14,leftshoulder:b8,rightshoulder:b9,leftstick:b6,rightstick:b7,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:a4,righttrigger:a5,dpup:b0,dpleft:b2,dpdown:b1,dpright:b3,");
-    //int mappingsAdded = SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
+    //int mappingsAdded = SDL_LoomGameControllerAddMappingsFromFile("LoomGameControllerdb.txt");
     if (mappingsAdded >= 0)
     {
         lmLog(coreLogGroup, "Succesfully added %d mappings", mappingsAdded);
@@ -362,7 +366,7 @@ main(int argc, char *argv[])
     lmLog(coreLogGroup, "Compiled with SDL version %d.%d.%d ...", compiled.major, compiled.minor, compiled.patch);
     lmLog(coreLogGroup, "Linking against SDL version %d.%d.%d ...", linked.major, linked.minor, linked.patch);
 
-    GameController::openAll();
+    LoomGameController::openAll();
     
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(loop, 0, 1);
@@ -370,7 +374,7 @@ main(int argc, char *argv[])
     while (!gLoomExecutionDone) loop();
 #endif
 
-    GameController::closeAll();
+    LoomGameController::closeAll();
     loom_appShutdown();
     
 #ifdef WIN32
