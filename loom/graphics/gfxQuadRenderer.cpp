@@ -70,7 +70,15 @@ void QuadRenderer::submit()
 
     numFrameSubmit++;
 
-    TextureInfo &tinfo = *Texture::getTextureInfo(currentTexture);
+    // Deal with missing textures.
+    TextureInfo *testTinfo = Texture::getTextureInfo(currentTexture);
+    if(!testTinfo)
+    {
+        batchedVertexCount = 0;
+        return;
+    }
+    
+    TextureInfo &tinfo = *testInfo;
 
     if (tinfo.handle != -1)
     {
