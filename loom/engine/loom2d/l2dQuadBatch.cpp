@@ -75,7 +75,7 @@ void QuadBatch::render(lua_State *L)
         return;
     }
 
-    GFX::VertexPosColorTex *v = GFX::QuadRenderer::getQuadVertexMemory(nativeTextureID, 4 * numQuads, blendEnabled, blendSrc, blendDst, shader);
+    GFX::VertexPosColorTex *v = GFX::QuadRenderer::getQuadVertexMemory(4 * numQuads, nativeTextureID, blendEnabled, blendSrc, blendDst, shader);
     if (!v)
     {
         return;
