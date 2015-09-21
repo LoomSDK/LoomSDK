@@ -26,6 +26,8 @@
 #include "loom/common/core/assert.h"
 #include "loom/common/assets/assets.h"
 
+#include "loom/common/platform/platformIO.h"
+
 #include "loom/graphics/gfxMath.h"
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxVectorRenderer.h"
@@ -283,25 +285,7 @@ void VectorRenderer::arc(float x, float y, float radius, float angleFrom, float 
 	nvgArc(nvg, x, y, radius, angleFrom, angleTo, direction);
 }
 
-static void readFontFile(const char *path, void* &mem, long &size)
-{
-    FILE *file = fopen(path, "rb");
-    if (!file) {
-        mem = NULL;
-        size = 0;
-        return;
-    }
-
-    fseek(file, 0L, SEEK_END);
-    size = ftell(file);
-    rewind(file);
-
-    mem = nvgAlloc(size);
-    fread(mem, size, 1, file);
-    fclose(file);
-}
-
-static void readDefaultFontFaceBytes(void* &mem, long &size)
+static bool readDefaultFontFaceBytes(void** mem, long* size)
 {
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 	// Get Windows dir
@@ -309,7 +293,7 @@ static void readDefaultFontFaceBytes(void* &mem, long &size)
 	GetWindowsDirectoryA((LPSTR)&windir, MAX_PATH);
 
 	// Load font file
-	readFontFile((utString(windir) + "\\Fonts\\arial.ttf").c_str(), mem, size);
+	return platform_mapFile((utString(windir) + "\\Fonts\\arial.ttf").c_str(), mem, size) != 0;
 
 	// Kept for future implementation of grabbing fonts by name
 	/*
@@ -326,9 +310,9 @@ static void readDefaultFontFaceBytes(void* &mem, long &size)
 	}
 	*/
 #elif LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-    readFontFile("/system/fonts/DroidSans.ttf", mem, size);
+    return platform_mapFile("/system/fonts/DroidSans.ttf", mem, size) != 0;
 #elif LOOM_PLATFORM == LOOM_PLATFORM_OSX
-    readFontFile("/Library/Fonts/Arial.ttf", mem, size);
+    return platform_mapFile("/Library/Fonts/Arial.ttf", mem, size) != 0;
 #else
 	mem = NULL;
 	size = 0;
@@ -339,8 +323,8 @@ static void loadDefaultFontFace() {
 	lmLogWarn(gGFXVectorRendererLogGroup, "Warning: TextFormat font face not specified, using predefined default system font");
 	void* mem;
 	long size;
-	readDefaultFontFaceBytes(mem, size);
-	if (size == 0) {
+	bool success = readDefaultFontFaceBytes(&mem, &size);
+	if (!success) {
 		defaultFontId = VectorTextFormat::FONT_DEFAULTMISSING;
 		return;
 	}
