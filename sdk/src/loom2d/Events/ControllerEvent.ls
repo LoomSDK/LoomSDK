@@ -1,23 +1,9 @@
-// =================================================================================================
-//
-//	Starling Framework
-//	Copyright 2011 Gamua OG. All Rights Reserved.
-//
-//	This program is free software. You can redistribute and/or modify it
-//	in accordance with the terms of the accompanying license agreement.
-//
-// =================================================================================================
-
 package loom2d.events
 {
-    /** A KeyboardEvent is dispatched in response to user input through a keyboard.
+    /** A ControllerEvent is dispatched in response to user input through a game controller.
      * 
-     *  This is Starling's version of the Flash KeyboardEvent class. It contains the same 
-     *  properties as the Flash equivalent. 
-     * 
-     *  To be notified of keyboard events, add an event listener to the Starling stage. Children
-     *  of the stage won't be notified of keybaord input. Starling has no concept of a "Focus"
-     *  like native Flash.
+     *  To be notified of game controller events, add an event listener to the stage. Children
+     *  of the stage won't be notified of game controller input.
      *  
      *  @see loom2d.display.Stage
      */  

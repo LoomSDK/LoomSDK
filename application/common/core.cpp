@@ -199,7 +199,7 @@ void loop()
         }
         else if (event.type == SDL_CONTROLLERAXISMOTION)
         {
-            lmLog(coreLogGroup, "Controller [%d] triggered axis event.", LoomGameController::indexOfDevice(event.caxis.which));
+            //lmLog(coreLogGroup, "Controller [%d] triggered axis event.", LoomGameController::indexOfDevice(event.caxis.which));
             //stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.which);
             stage->_ControllerAxisMovedDelegate.pushArgument(LoomGameController::indexOfDevice(event.caxis.which));
             stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.axis);
@@ -342,30 +342,20 @@ main(int argc, char *argv[])
     /* Main render loop */
     gLoomExecutionDone = 0;
 
-    /* Game Controller stuff */
-    SDL_GameControllerEventState(SDL_ENABLE);
-
-    //Adding non-existent controller mappings
-    int mappingsAdded = SDL_GameControllerAddMapping("4d6963726f736f66742050432d6a6f79,X360 Controller,platform:Windows,a:b10,b:b11,x:b12,y:b13,back:b5,start:b4,guide:b14,leftshoulder:b8,rightshoulder:b9,leftstick:b6,rightstick:b7,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:a4,righttrigger:a5,dpup:b0,dpleft:b2,dpdown:b1,dpright:b3,");
-    //int mappingsAdded = SDL_LoomGameControllerAddMappingsFromFile("LoomGameControllerdb.txt");
-    if (mappingsAdded >= 0)
-    {
-        lmLog(coreLogGroup, "Succesfully added %d mappings", mappingsAdded);
-    }
-    else
-    {
-        lmLog(coreLogGroup, "SDL ERROR: %s", SDL_GetError());
-    }
-
+    /* Display SDL version */
     SDL_version compiled;
     SDL_version linked;
 
     SDL_VERSION(&compiled);
     SDL_GetVersion(&linked);
 
-    lmLog(coreLogGroup, "Compiled with SDL version %d.%d.%d ...", compiled.major, compiled.minor, compiled.patch);
-    lmLog(coreLogGroup, "Linking against SDL version %d.%d.%d ...", linked.major, linked.minor, linked.patch);
+    lmLogDebug(coreLogGroup, "Compiled with SDL version %d.%d.%d and linking against SDL version %d.%d.%d ...", compiled.major, compiled.minor, compiled.patch, linked.major, linked.minor, linked.patch);
 
+    /* Game Controller */
+    // Enable controller events
+    SDL_GameControllerEventState(SDL_ENABLE);
+
+    //Open all connected game controllers
     LoomGameController::openAll();
     
 #ifdef __EMSCRIPTEN__
@@ -374,6 +364,7 @@ main(int argc, char *argv[])
     while (!gLoomExecutionDone) loop();
 #endif
 
+    //Close all opened game controllers before closing application
     LoomGameController::closeAll();
     loom_appShutdown();
     
