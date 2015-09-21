@@ -232,7 +232,7 @@ public:
 	void beginTextureFill(TextureID id, Loom2D::Matrix *matrix, bool repeat, bool smooth);
 	void endFill();
 
-	Loom2D::Rectangle getBounds();
+	Loom2D::Rectangle* getBounds();
 
 	void moveTo(float x, float y);
 	void lineTo(float x, float y);
