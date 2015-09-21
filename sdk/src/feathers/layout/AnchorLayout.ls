@@ -160,7 +160,7 @@ package feathers.layout
                 {
                     this._helperVector1.length = 0;
                     this._helperVector2.length = 0;
-                    throw new IllegalOperationError(CIRCULAR_REFERENCE_ERROR);
+                    Debug.assert(CIRCULAR_REFERENCE_ERROR);
                 }
             }
             this._helperVector1.length = 0;
@@ -508,7 +508,7 @@ package feathers.layout
                 {
                     this._helperVector1.length = 0;
                     this._helperVector2.length = 0;
-                    throw new IllegalOperationError(CIRCULAR_REFERENCE_ERROR);
+                    Debug.assert(CIRCULAR_REFERENCE_ERROR);
                 }
             }
             this._helperVector1.length = 0;

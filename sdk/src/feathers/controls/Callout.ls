@@ -294,7 +294,7 @@ package feathers.controls
         {
             if(!origin.stage)
             {
-                throw new ArgumentError("Callout origin must be added to the stage.");
+                Debug.assert("Callout origin must be added to the stage.");
             }
             var factory:Function = customCalloutFactory;
             if(factory == null)
@@ -763,7 +763,7 @@ package feathers.controls
             }
             if(value && !value.stage)
             {
-                throw new ArgumentError("Callout origin must have access to the stage.");
+                Debug.assert("Callout origin must have access to the stage.");
             }
             if(this._origin)
             {

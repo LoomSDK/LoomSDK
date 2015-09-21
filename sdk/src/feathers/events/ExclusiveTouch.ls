@@ -50,7 +50,7 @@ package feathers.events
         {
             if(!stage)
             {
-                throw new ArgumentError("Stage cannot be null.");
+                Debug.assert("Stage cannot be null.");
             }
             var object:ExclusiveTouch = ExclusiveTouch(stageToObject[stage]);
             if(object)
@@ -78,7 +78,7 @@ package feathers.events
         {
             if(!stage)
             {
-                throw new ArgumentError("Stage cannot be null.");
+                Debug.assert("Stage cannot be null.");
             }
             this._stage = stage;
         }
@@ -107,15 +107,15 @@ package feathers.events
         {
             if(!target)
             {
-                throw new ArgumentError("Target cannot be null.");
+                Debug.assert("Target cannot be null.");
             }
             if(target.stage != this._stage)
             {
-                throw new ArgumentError("Target cannot claim a touch on the selected stage because it appears on a different stage.");
+                Debug.assert("Target cannot claim a touch on the selected stage because it appears on a different stage.");
             }
             if(touchID < 0)
             {
-                throw new ArgumentError("Invalid touch. Touch ID must be >= 0.");
+                Debug.assert("Invalid touch. Touch ID must be >= 0.");
             }
             var existingTarget:DisplayObject = DisplayObject(this._claims[touchID]);
             if(existingTarget)
@@ -155,7 +155,7 @@ package feathers.events
         {
             if(touchID < 0)
             {
-                throw new ArgumentError("Invalid touch. Touch ID must be >= 0.");
+                Debug.assert("Invalid touch. Touch ID must be >= 0.");
             }
             return DisplayObject(this._claims[touchID]);
         }

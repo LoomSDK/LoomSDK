@@ -150,11 +150,11 @@ package feathers.dragDrop
             }
             if(!source)
             {
-                throw new ArgumentError("Drag source cannot be null.");
+                Debug.assert("Drag source cannot be null.");
             }
             if(!data)
             {
-                throw new ArgumentError("Drag data cannot be null.");
+                Debug.assert("Drag data cannot be null.");
             }
             _dragSource = source;
             _dragData = data;
@@ -189,7 +189,7 @@ package feathers.dragDrop
         {
             if(dropTarget != target)
             {
-                throw new ArgumentError("Drop target cannot accept a drag at this time. Acceptance may only happen after the DragDropEvent.DRAG_ENTER event is dispatched and before the DragDropEvent.DRAG_EXIT event is dispatched.");
+                Debug.assert("Drop target cannot accept a drag at this time. Acceptance may only happen after the DragDropEvent.DRAG_ENTER event is dispatched and before the DragDropEvent.DRAG_EXIT event is dispatched.");
             }
             isAccepted = true;
         }
@@ -213,7 +213,7 @@ package feathers.dragDrop
         {
             if(!isDragging)
             {
-                throw new IllegalOperationError("Drag cannot be completed because none is currently active.");
+                Debug.assert("Drag cannot be completed because none is currently active.");
             }
             if(dropTarget)
             {

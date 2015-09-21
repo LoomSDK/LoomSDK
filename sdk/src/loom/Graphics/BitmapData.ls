@@ -32,7 +32,7 @@ package loom.graphics
  * The performance of this class may not be the greatest, do not use in
  * performance critical code.
  */
-[Native]
+
 public native class BitmapData
 {
     /**

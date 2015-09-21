@@ -69,7 +69,7 @@ package feathers.controls.supportClasses
             }
             if(isNaN(value))
             {
-                throw new ArgumentError("minVisibleWidth cannot be NaN");
+                Debug.assert("minVisibleWidth cannot be NaN");
             }
             _minVisibleWidth = value;
             invalidate(INVALIDATION_FLAG_SIZE);
@@ -90,7 +90,7 @@ package feathers.controls.supportClasses
             }
             if(isNaN(value))
             {
-                throw new ArgumentError("maxVisibleWidth cannot be NaN");
+                Debug.assert("maxVisibleWidth cannot be NaN");
             }
             _maxVisibleWidth = value;
             invalidate(INVALIDATION_FLAG_SIZE);
@@ -130,7 +130,7 @@ package feathers.controls.supportClasses
             }
             if(isNaN(value))
             {
-                throw new ArgumentError("minVisibleHeight cannot be NaN");
+                Debug.assert("minVisibleHeight cannot be NaN");
             }
             _minVisibleHeight = value;
             invalidate(INVALIDATION_FLAG_SIZE);
@@ -151,7 +151,7 @@ package feathers.controls.supportClasses
             }
             if(isNaN(value))
             {
-                throw new ArgumentError("maxVisibleHeight cannot be NaN");
+                Debug.assert("maxVisibleHeight cannot be NaN");
             }
             _maxVisibleHeight = value;
             invalidate(INVALIDATION_FLAG_SIZE);
@@ -867,7 +867,7 @@ package feathers.controls.supportClasses
             }
             if((groupIndex < 0 && itemIndex >= 0) || (groupIndex >= 0 && itemIndex < 0))
             {
-                throw new ArgumentError("To deselect items, group index and item index must both be < 0.");
+                Debug.assert("To deselect items, group index and item index must both be < 0.");
             }
             _selectedGroupIndex = groupIndex;
             _selectedItemIndex = itemIndex;
@@ -2073,7 +2073,7 @@ package feathers.controls.supportClasses
             invalidateParent();
         }
 
-        private function dataProvider_addItemHandler(event:Event, indices:Array):void
+        private function dataProvider_addItemHandler(event:Event, indices:Vector.<Object>):void
         {
             const layout:IVariableVirtualLayout = _layout as IVariableVirtualLayout;
             if(!layout || !layout.hasVariableItemDimensions)
@@ -2116,7 +2116,7 @@ package feathers.controls.supportClasses
             }
         }
 
-        private function dataProvider_removeItemHandler(event:Event, indices:Array):void
+        private function dataProvider_removeItemHandler(event:Event, indices:Vector.<Object>):void
         {
             const layout:IVariableVirtualLayout = _layout as IVariableVirtualLayout;
             if(!layout || !layout.hasVariableItemDimensions)
@@ -2138,7 +2138,7 @@ package feathers.controls.supportClasses
             }
         }
 
-        private function dataProvider_replaceItemHandler(event:Event, indices:Array):void
+        private function dataProvider_replaceItemHandler(event:Event, indices:Vector.<Object>):void
         {
             const layout:IVariableVirtualLayout = _layout as IVariableVirtualLayout;
             if(!layout || !layout.hasVariableItemDimensions)
@@ -2170,7 +2170,7 @@ package feathers.controls.supportClasses
             layout.resetVariableVirtualCache();
         }
 
-        private function dataProvider_updateItemHandler(event:Event, indices:Array):void
+        private function dataProvider_updateItemHandler(event:Event, indices:Vector.<Object>):void
         {
             const groupIndex:int = indices[0] as int;
             if(indices.length > 1) //updating a whole group

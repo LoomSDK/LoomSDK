@@ -130,7 +130,7 @@ package feathers.display
         { 
             if(value == null)
             {
-                throw new ArgumentError("Texture cannot be null");
+                Debug.assert("Texture cannot be null");
             }
             if(this._texture == value)
             {

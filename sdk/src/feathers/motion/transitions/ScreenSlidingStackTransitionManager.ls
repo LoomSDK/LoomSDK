@@ -43,7 +43,7 @@ package feathers.motion.transitions
         {
             if(!navigator)
             {
-                throw new ArgumentError("ScreenNavigator cannot be null.");
+                Debug.assert("ScreenNavigator cannot be null.");
             }
             this.navigator = navigator;
             var quickStack:String;

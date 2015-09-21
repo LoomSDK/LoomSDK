@@ -558,7 +558,7 @@ package feathers.core
             }
             if(isNaN(value))
             {
-                throw new ArgumentError("minWidth cannot be NaN");
+                Debug.assert("minWidth cannot be NaN");
             }
             this._minWidth = value;
             this.invalidate(INVALIDATION_FLAG_SIZE);
@@ -592,7 +592,7 @@ package feathers.core
             }
             if(isNaN(value))
             {
-                throw new ArgumentError("minHeight cannot be NaN");
+                Debug.assert("minHeight cannot be NaN");
             }
             this._minHeight = value;
             this.invalidate(INVALIDATION_FLAG_SIZE);
@@ -626,7 +626,7 @@ package feathers.core
             }
             if(isNaN(value))
             {
-                throw new ArgumentError("maxWidth cannot be NaN");
+                Debug.assert("maxWidth cannot be NaN");
             }
             this._maxWidth = value;
             this.invalidate(INVALIDATION_FLAG_SIZE);
@@ -660,7 +660,7 @@ package feathers.core
             }
             if(isNaN(value))
             {
-                throw new ArgumentError("maxHeight cannot be NaN");
+                Debug.assert("maxHeight cannot be NaN");
             }
             this._maxHeight = value;
             this.invalidate(INVALIDATION_FLAG_SIZE);
@@ -746,7 +746,7 @@ package feathers.core
         {
             if(!(this is IFocusDisplayObject))
             {
-                throw new IllegalOperationError("Cannot pass a focus manager to a component that does not implement feathers.core.IFocusDisplayObject");
+                Debug.assert("Cannot pass a focus manager to a component that does not implement feathers.core.IFocusDisplayObject");
             }
             if(this._focusManager == value)
             {
@@ -785,7 +785,7 @@ package feathers.core
         {
             if(!(this is IFocusDisplayObject))
             {
-                throw new IllegalOperationError("Cannot enable focus on a component that does not implement feathers.core.IFocusDisplayObject");
+                Debug.assert("Cannot enable focus on a component that does not implement feathers.core.IFocusDisplayObject");
             }
             if(this._isFocusEnabled == value)
             {
@@ -814,7 +814,7 @@ package feathers.core
         {
             if(!(this is IFocusDisplayObject))
             {
-                throw new IllegalOperationError("Cannot set next tab focus on a component that does not implement feathers.core.IFocusDisplayObject");
+                Debug.assert("Cannot set next tab focus on a component that does not implement feathers.core.IFocusDisplayObject");
             }
             this._nextTabFocus = value;
         }
@@ -839,7 +839,7 @@ package feathers.core
         {
             if(!(this is IFocusDisplayObject))
             {
-                throw new IllegalOperationError("Cannot set previous tab focus on a component that does not implement feathers.core.IFocusDisplayObject");
+                Debug.assert("Cannot set previous tab focus on a component that does not implement feathers.core.IFocusDisplayObject");
             }
             this._previousTabFocus = value;
         }
@@ -874,7 +874,7 @@ package feathers.core
         {
             if(!(this is IFocusDisplayObject))
             {
-                throw new IllegalOperationError("Cannot set focus indicator skin on a component that does not implement feathers.core.IFocusDisplayObject");
+                Debug.assert("Cannot set focus indicator skin on a component that does not implement feathers.core.IFocusDisplayObject");
             }
             if(this._focusIndicatorSkin == value)
             {
@@ -1402,11 +1402,11 @@ package feathers.core
             }
             if(isNaN(width))
             {
-                throw new ArgumentError(ILLEGAL_WIDTH_ERROR);
+                Debug.assert(ILLEGAL_WIDTH_ERROR);
             }
             if(isNaN(height))
             {
-                throw new ArgumentError(ILLEGAL_HEIGHT_ERROR);
+                Debug.assert(ILLEGAL_HEIGHT_ERROR);
             }
             var resized:Boolean = false;
             if(this.actualWidth != width)
@@ -1529,7 +1529,7 @@ package feathers.core
         {
             if(!this.stage || !this._isInitialized)
             {
-                throw new IllegalOperationError("Cannot flatten this component until it is initialized and has access to the stage.");
+                Debug.assert("Cannot flatten this component until it is initialized and has access to the stage.");
             }
             this.validate();
         }

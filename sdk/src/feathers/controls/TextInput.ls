@@ -855,11 +855,11 @@ package feathers.controls
             }
             if(startIndex < 0)
             {
-                throw new RangeError("Expected start index >= 0. Received " + startIndex + ".");
+                Debug.assert("Expected start index >= 0. Received " + startIndex + ".");
             }
             if(endIndex > this._text.length)
             {
-                throw new RangeError("Expected start index > " + this._text.length + ". Received " + endIndex + ".");
+                Debug.assert("Expected start index > " + this._text.length + ". Received " + endIndex + ".");
             }
 
             if(this.textEditor)

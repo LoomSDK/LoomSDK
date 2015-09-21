@@ -203,7 +203,7 @@ package feathers.data
         /**
          * Adds an item to the collection, at the specified location.
          */
-        public function addItemAt(item:Object, index:int, ...rest:Array):void
+        public function addItemAt(item:Object, index:int, ...rest):void
         {
             rest.unshift(index);
             rest.unshift(item);
@@ -219,7 +219,7 @@ package feathers.data
          * Removes the item at the specified location from the collection and
          * returns it.
          */
-        public function removeItemAt(index:int, ...rest:Array):Object
+        public function removeItemAt(index:int, ...rest):Object
         {
             rest.unshift(index);
             rest.unshift(this._data);
@@ -239,7 +239,7 @@ package feathers.data
             if(location)
             {
                 //this is hacky. a future version probably won't use rest args.
-                const locationAsArray:Array = [];
+                const locationAsArray:Vector.<Object> = [];
                 const indexCount:int = location.length;
                 for(var i:int = 0; i < indexCount; i++)
                 {
@@ -252,7 +252,7 @@ package feathers.data
         /**
          * Replaces the item at the specified location with a new item.
          */
-        public function setItemAt(item:Object, index:int, ...rest:Array):void
+        public function setItemAt(item:Object, index:int, ...rest):void
         {
             rest.unshift(index);
             rest.unshift(item);

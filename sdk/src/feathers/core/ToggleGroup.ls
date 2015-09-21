@@ -123,7 +123,7 @@ package feathers.core
             if(value < -1 || value >= itemCount)
             {
                 // RangeError
-                throw new Error("Index " + value + " is out of range " + itemCount + " for ToggleGroup.");
+                Debug.assert("Index " + value + " is out of range " + itemCount + " for ToggleGroup.");
             }
             const hasChanged:Boolean = this._selectedIndex != value;
             this._selectedIndex = value;
@@ -155,13 +155,13 @@ package feathers.core
         {
             if(!item)
             {
-                throw new ArgumentError("IToggle passed to ToggleGroup addItem() must not be null.");
+                Debug.assert("IToggle passed to ToggleGroup addItem() must not be null.");
             }
             
             const index:int = this._items.indexOf(item);
             if(index >= 0)
             {
-                throw new IllegalOperationError("Cannot add an item to a ToggleGroup more than once.");
+                Debug.assert("Cannot add an item to a ToggleGroup more than once.");
             }
             this._items.push(item);
             if(this._selectedIndex < 0 && this._isSelectionRequired)
