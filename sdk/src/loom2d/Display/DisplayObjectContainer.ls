@@ -155,6 +155,8 @@ package loom2d.display
          *  requested, the child will be disposed right away. */
         public function removeChildAt(index:int, dispose:Boolean=false, fireEvents:Boolean = true):DisplayObject
         {
+            var numChildren:int = mChildren.length; 
+            
             if (index >= 0 && index < numChildren)
             {
                 var child:DisplayObject = mChildren[index];

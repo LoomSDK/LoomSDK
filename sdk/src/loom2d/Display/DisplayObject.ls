@@ -80,10 +80,14 @@ package loom2d.display
     [Native(managed)]
     public native class DisplayObject extends EventDispatcher implements ILMLNode
     {
+        static protected var _globalStageGeneration = 0;
+        
 		protected var _ignoreHitTestAlpha:Boolean;
         protected var _styleSheet:StyleSheet;
         protected var _styleName:String;
         protected var _styleApplicator:IStyleApplicator;
+        protected var _cachedStage:Stage = null;
+        protected var _cachedStageGeneration = -1;
 
         protected function get styleApplicator():IStyleApplicator
         {
@@ -322,6 +326,8 @@ package loom2d.display
             while (ancestor != this && ancestor != null)
                 ancestor = ancestor.parent;
 
+            _globalStageGeneration++;
+            
             Debug.assert(ancestor != this, "An object cannot be added as a child to itself or one " +
                                         "of its children (or children's children, etc.)");
 
@@ -436,7 +442,18 @@ package loom2d.display
 
         /** The stage the display object is connected to, or null if it is not connected
          *  to the stage. */
-        public function get stage():Stage { return this.base as Stage; }
+        public function get stage():Stage
+        {
+            if (_cachedStageGeneration != _globalStageGeneration) {
+                var p = this;
+                while (p.parentCached && !p._cachedStage) {
+                    p = p.parentCached;
+                }
+                _cachedStage = p.parentCached ? p._cachedStage : p as Stage;
+                _cachedStageGeneration = _globalStageGeneration;
+            }
+            return _cachedStage;
+        }
 
         /**
          * Handle LML node initialization.
