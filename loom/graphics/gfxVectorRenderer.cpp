@@ -328,9 +328,9 @@ static void loadDefaultFontFace() {
 		defaultFontId = VectorTextFormat::FONT_DEFAULTMISSING;
 		return;
 	}
-	int handle = nvgCreateFontMem(nvg, "__default", (unsigned char*)mem, size, true);
+	int handle = nvgCreateFontMem(nvg, "__default", (unsigned char*)mem, size, false);
 	if (handle == -1) {
-		nvgFree(mem);
+		platform_unmapFile(mem);
 		defaultFontId = VectorTextFormat::FONT_DEFAULTMEMORY;
 		return;
 	}
