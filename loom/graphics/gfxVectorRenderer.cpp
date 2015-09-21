@@ -327,6 +327,8 @@ static void readDefaultFontFaceBytes(void* &mem, long &size)
 	*/
 #elif LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
     readFontFile("/system/fonts/DroidSans.ttf", mem, size);
+#elif LOOM_PLATFORM == LOOM_PLATFORM_OSX
+    readFontFile("/Library/Fonts/Arial.ttf", mem, size);
 #else
 	mem = NULL;
 	size = 0;
