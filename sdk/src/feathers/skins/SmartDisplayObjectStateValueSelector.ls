@@ -158,7 +158,7 @@ package feathers.skins
             const type:Type = value.getType();
             if(this._handlers[type] == null)
             {
-                throw new ArgumentError("Handler for value type " + type + " has not been set.");
+                Debug.assert("Handler for value type " + type + " has not been set.");
             }
             super.setValueForState(value, state, isSelected);
         }
@@ -183,7 +183,7 @@ package feathers.skins
             }
             else
             {
-                throw new ArgumentError("Invalid value: " + value);
+                Debug.assert("Invalid value: " + value);
             }
 
             Debug.assert(displayObject != null, "All value functions should return non-null values. Failure for type " + value.getTypeName());

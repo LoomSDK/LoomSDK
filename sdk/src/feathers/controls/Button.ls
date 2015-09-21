@@ -434,7 +434,7 @@ package feathers.controls
             }
             if(this.stateNames.indexOf(value) < 0)
             {
-                throw new ArgumentError("Invalid state: " + value + ".");
+                Debug.assert("Invalid state: " + value + ".");
             }
             this._currentState = value;
             this.invalidate(INVALIDATION_FLAG_STATE);

@@ -845,7 +845,7 @@ package feathers.controls
             if(isNaN(value))
             {
                 //nope
-                throw new ArgumentError("horizontalScrollStep cannot be NaN.");
+                Debug.assert("horizontalScrollStep cannot be NaN.");
             }
             this.explicitHorizontalScrollStep = value;
             this.invalidate(INVALIDATION_FLAG_SCROLL);
@@ -886,7 +886,7 @@ package feathers.controls
             if(isNaN(value))
             {
                 //there isn't any recovery from this, so stop it early
-                throw new ArgumentError("horizontalScrollPosition cannot be NaN.");
+                Debug.assert("horizontalScrollPosition cannot be NaN.");
             }
             this._horizontalScrollPosition = value;
             this.invalidate(INVALIDATION_FLAG_SCROLL);
@@ -1008,7 +1008,7 @@ package feathers.controls
             if(isNaN(value))
             {
                 //nope
-                throw new ArgumentError("verticalScrollStep cannot be NaN.");
+                Debug.assert("verticalScrollStep cannot be NaN.");
             }
             this.explicitVerticalScrollStep = value;
             this.invalidate(INVALIDATION_FLAG_SCROLL);
@@ -1049,7 +1049,7 @@ package feathers.controls
             if(isNaN(value))
             {
                 //there isn't any recovery from this, so stop it early
-                throw new ArgumentError("verticalScrollPosition cannot be NaN.");
+                Debug.assert("verticalScrollPosition cannot be NaN.");
             }
             this._verticalScrollPosition = value;
             this.invalidate(INVALIDATION_FLAG_SCROLL);

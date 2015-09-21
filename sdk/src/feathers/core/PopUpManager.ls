@@ -164,7 +164,7 @@ package feathers.core
             const index:int = popUps.indexOf(popUp);
             if(index < 0)
             {
-                throw new ArgumentError("Display object is not a pop-up.");
+                Debug.assert("Display object is not a pop-up.");
             }
             popUp.removeFromParent(dispose);
         }

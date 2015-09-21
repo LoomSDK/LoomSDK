@@ -238,9 +238,9 @@ package loom2d.display
             var oldIndex:int = getChildIndex(child);
 			Debug.assert(oldIndex != -1, "Not a child of this container.");
             
-            if (oldIndex == -1) throw new ArgumentError("Not a child of this container");
+            if (oldIndex == -1) Debug.assert("Not a child of this container");
             
-            if(index < 0 || index >= mChildren.length) throw new ArgumentError("index out of bounds.");
+            if(index < 0 || index >= mChildren.length) Debug.assert("index out of bounds.");
 
             // Do nothing for same index.
             if(oldIndex == index)
@@ -278,7 +278,7 @@ package loom2d.display
             var oldIndex:int = mChildren.indexOf(child);
             if (oldIndex == -1)
             {
-                throw new ArgumentError("Not a child of this container");
+                Debug.assert("Not a child of this container");
                 return;
             }
 

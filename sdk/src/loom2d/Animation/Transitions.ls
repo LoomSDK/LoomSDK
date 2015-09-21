@@ -49,7 +49,7 @@ package loom2d.animation
         private static var sTransitions:Dictionary.<String, Function>;
         
         /** @private */
-        public function Transitions() { throw new AbstractClassError(); }
+        public function Transitions() { Debug.assert("Transitions is an abstract class, it cannot be instantiated"); }
         
         /** Returns the transition function that was registered under a certain name. */ 
         public static function getTransition(name:String):Function

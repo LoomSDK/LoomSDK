@@ -16,7 +16,7 @@ package feathers.utils
         {
             if(minimum > maximum)
             {
-                throw new ArgumentError("minimum should be smaller than maximum.");
+                Debug.assert("minimum should be smaller than maximum.");
             }
 
             if(value > maximum)

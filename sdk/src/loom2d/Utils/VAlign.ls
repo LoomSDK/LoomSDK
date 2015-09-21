@@ -16,7 +16,7 @@ package loom2d.utils
     public final class VAlign
     {
         /** @private */
-        public function VAlign() { throw new Error("Abstract class"); }
+        public function VAlign() { Debug.assert("Abstract class"); }
         
         /** Top alignment. */
         public static const TOP:String    = "top";

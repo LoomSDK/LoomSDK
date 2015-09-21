@@ -32,7 +32,7 @@ package feathers.text
             }
             if(!(_font is BitmapFont))
             {
-                throw new ArgumentError("BitmapFontTextFormat font must be a BitmapFont instance or a String representing the name of a registered bitmap font. Got: " + font);
+                Debug.assert("BitmapFontTextFormat font must be a BitmapFont instance or a String representing the name of a registered bitmap font. Got: " + font);
             }
             this.font = BitmapFont(_font);
             this.size = _size;

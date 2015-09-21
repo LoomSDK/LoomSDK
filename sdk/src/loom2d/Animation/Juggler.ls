@@ -174,7 +174,7 @@ package loom2d.animation
                 else if (target.hasOwnProperty(property))
                     _tween.animate(property, value as Number);
                 else
-                    throw new ArgumentError("Invalid property: " + property);
+                    Debug.assert("Invalid property: " + property);
             }
 
             _tween.addEventListener(Event.REMOVE_FROM_JUGGLER, onPooledTweenComplete);

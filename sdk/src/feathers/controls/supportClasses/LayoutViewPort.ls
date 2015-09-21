@@ -53,7 +53,7 @@ package feathers.controls.supportClasses
             }
             if(isNaN(value))
             {
-                throw new ArgumentError("minVisibleWidth cannot be NaN");
+                Debug.assert("minVisibleWidth cannot be NaN");
             }
             this._minVisibleWidth = value;
             this.invalidate(INVALIDATION_FLAG_SIZE);
@@ -74,7 +74,7 @@ package feathers.controls.supportClasses
             }
             if(isNaN(value))
             {
-                throw new ArgumentError("maxVisibleWidth cannot be NaN");
+                Debug.assert("maxVisibleWidth cannot be NaN");
             }
             this._maxVisibleWidth = value;
             this.invalidate(INVALIDATION_FLAG_SIZE);
@@ -112,7 +112,7 @@ package feathers.controls.supportClasses
             }
             if(isNaN(value))
             {
-                throw new ArgumentError("minVisibleHeight cannot be NaN");
+                Debug.assert("minVisibleHeight cannot be NaN");
             }
             this._minVisibleHeight = value;
             this.invalidate(INVALIDATION_FLAG_SIZE);
@@ -133,7 +133,7 @@ package feathers.controls.supportClasses
             }
             if(isNaN(value))
             {
-                throw new ArgumentError("maxVisibleHeight cannot be NaN");
+                Debug.assert("maxVisibleHeight cannot be NaN");
             }
             this._maxVisibleHeight = value;
             this.invalidate(INVALIDATION_FLAG_SIZE);

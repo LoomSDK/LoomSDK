@@ -78,7 +78,7 @@ package feathers.controls
             }
             else
             {
-                throw new IllegalOperationError("ScreenNavigatorItem \"screen\" must be a Type, a Function, or a Starling display object.");
+                Debug.assert("ScreenNavigatorItem \"screen\" must be a Type, a Function, or a Starling display object.");
             }
             
 

@@ -142,11 +142,6 @@ else
 end
 
 # Windows specific checks and settings
-WINDOWS_PROCARCH_BITS = '32'
-WINDOWS_ISX64 = '0'
-WINDOWS_ANDROID_PREBUILT_DIR = 'windows'
-proc_arch = ''
-
 if $LOOM_HOST_OS == 'windows'
   # This gets the true architecture of the machine, not the target architecture of the currently executing binary (that is what %PROCESSOR_ARCHITECTURE% returns)
   # => Valid values seem to only be "AMD64", "IA64", or "x86"
@@ -155,7 +150,13 @@ if $LOOM_HOST_OS == 'windows'
     WINDOWS_PROCARCH_BITS = '64'
     WINDOWS_ISX64 = '1'
     WINDOWS_ANDROID_PREBUILT_DIR = 'windows-x86_64'
+  else
+    WINDOWS_PROCARCH_BITS = '32'
+    WINDOWS_ISX64 = '0'
+    WINDOWS_ANDROID_PREBUILT_DIR = 'windows'
+    proc_arch = ''
   end
+
 end
 
 # Determine the APK name.

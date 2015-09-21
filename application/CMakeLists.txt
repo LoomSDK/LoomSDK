@@ -290,8 +290,8 @@ elseif(ANDROID)
         POST_BUILD
         set(ANDROID_SO_COPY_SRC, "${ANDROID_SO}")
         set(ANDROID_SO_COPY_DST, "${CMAKE_SOURCE_DIR}/application/android/libs/armeabi-v7a")
-        string(REPLACE, "/", "\", ANDROID_SO_COPY_SRC_WIN32 ${ANDROID_SO_COPY_SRC})
-        string(REPLACE, "/", "\", ANDROID_SO_COPY_DST_WIN32 ${ANDROID_SO_COPY_DST})
+        string(REPLACE "/" "\" ANDROID_SO_COPY_SRC_WIN32 ${ANDROID_SO_COPY_SRC})
+        string(REPLACE "/" "\" ANDROID_SO_COPY_DST_WIN32 ${ANDROID_SO_COPY_DST})
         if(WIN32)
           COMMAND mkdir ${ANDROID_SO_COPY_DST_WIN32}
           COMMAND xcopy /I /Y ${ANDROID_SO_COPY_SRC_WIN32} ${ANDROID_SO_COPY_DST_WIN32}
