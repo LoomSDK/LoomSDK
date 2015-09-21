@@ -283,27 +283,33 @@ void VectorRenderer::arc(float x, float y, float radius, float angleFrom, float 
 	nvgArc(nvg, x, y, radius, angleFrom, angleTo, direction);
 }
 
-static void readDefaultFontFaceBytes(void* &mem, long &size) {
+static void readFontFile(const char *path, void* &mem, long &size)
+{
+    FILE *file = fopen(path, "rb");
+    if (!file) {
+        mem = NULL;
+        size = 0;
+        return;
+    }
+
+    fseek(file, 0L, SEEK_END);
+    size = ftell(file);
+    rewind(file);
+
+    mem = nvgAlloc(size);
+    fread(mem, size, 1, file);
+    fclose(file);
+}
+
+static void readDefaultFontFaceBytes(void* &mem, long &size)
+{
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 	// Get Windows dir
 	char windir[MAX_PATH];
 	GetWindowsDirectoryA((LPSTR)&windir, MAX_PATH);
 
 	// Load font file
-	FILE *file = fopen((utString(windir) + "\\Fonts\\arial.ttf").c_str(), "rb");
-	if (!file) {
-		mem = NULL;
-		size = 0;
-		return;
-	}
-
-	fseek(file, 0L, SEEK_END);
-	size = ftell(file);
-	rewind(file);
-
-	mem = nvgAlloc(size);
-	fread(mem, size, 1, file);
-	fclose(file);
+	readFontFile((utString(windir) + "\\Fonts\\arial.ttf").c_str(), mem, size);
 
 	// Kept for future implementation of grabbing fonts by name
 	/*
@@ -319,6 +325,8 @@ static void readDefaultFontFaceBytes(void* &mem, long &size) {
 	lmLogError(gGFXVectorRendererLogGroup, "Error retrieving window information: %s", SDL_GetError());
 	}
 	*/
+#elif LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+    readFontFile("/system/fonts/DroidSans.ttf", mem, size);
 #else
 	mem = NULL;
 	size = 0;
