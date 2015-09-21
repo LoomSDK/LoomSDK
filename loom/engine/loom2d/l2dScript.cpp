@@ -67,16 +67,16 @@ bool Loom2DNative::sInitialized = false;
 
 static Matrix *StaticMatrixConstructor(lua_State *L)
 {
-    return lmNew(NULL) Matrix((float)lua_tonumber(L, 2), (float)lua_tonumber(L, 3),
-                      (float)lua_tonumber(L, 4), (float)lua_tonumber(L, 5),
-                      (float)lua_tonumber(L, 6), (float)lua_tonumber(L, 7));
+    return lmNew(NULL) Matrix((lmscalar)lua_tonumber(L, 2), (lmscalar)lua_tonumber(L, 3),
+                      (lmscalar)lua_tonumber(L, 4), (lmscalar)lua_tonumber(L, 5),
+                      (lmscalar)lua_tonumber(L, 6), (lmscalar)lua_tonumber(L, 7));
 }
 
 
 static Rectangle *StaticRectangleConstructor(lua_State *L)
 {
-    return lmNew(NULL) Rectangle((float)lua_tonumber(L, 2), (float)lua_tonumber(L, 3),
-                         (float)lua_tonumber(L, 4), (float)lua_tonumber(L, 5));
+    return lmNew(NULL) Rectangle((lmscalar)lua_tonumber(L, 2), (lmscalar)lua_tonumber(L, 3),
+                         (lmscalar)lua_tonumber(L, 4), (lmscalar)lua_tonumber(L, 5));
 }
 
 

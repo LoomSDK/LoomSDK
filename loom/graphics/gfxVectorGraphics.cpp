@@ -550,11 +550,9 @@ void VectorGraphics::resetStyle() {
 }
 
 #pragma warning(disable: 4056 4756)
-Loom2D::Rectangle VectorGraphics::getBounds() {
-	//float* bounds = VectorRenderer::getBounds();
-	//return Loom2D::Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]);
-	if (boundL == INFINITY || boundT == INFINITY || boundR == -INFINITY || boundB == -INFINITY) return Loom2D::Rectangle(0.f, 0.f, 0.f, 0.f);
-	return Loom2D::Rectangle(boundL, boundT, boundR-boundL, boundB-boundT);
+Loom2D::Rectangle* VectorGraphics::getBounds() {
+	if (boundL == INFINITY || boundT == INFINITY || boundR == -INFINITY || boundB == -INFINITY) return lmNew(NULL) Loom2D::Rectangle(0.f, 0.f, 0.f, 0.f);
+	return lmNew(NULL) Loom2D::Rectangle(boundL, boundT, boundR-boundL, boundB-boundT);
 #pragma warning(default: 4056 4756)
 }
 
