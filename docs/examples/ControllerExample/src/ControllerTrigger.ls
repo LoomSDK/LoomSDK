@@ -5,8 +5,8 @@ package
 	import loom2d.textures.Texture;
 	
 	/**
-	 * ...
-	 * @author Tadej
+	 * This is a simple gauge to visually display a value ranging from 0 to 1.
+	 * In this example it is used to represent triggers of the game controller.
 	 */
 	public class ControllerTrigger extends Sprite
 	{

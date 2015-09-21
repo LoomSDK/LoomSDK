@@ -1,13 +1,14 @@
 package 
 {
+	import loom.platform.GameController;
 	import loom2d.display.DisplayObjectContainer;
 	import loom2d.display.Image;
 	import loom2d.display.Sprite;
 	import loom2d.textures.Texture;
 	
 	/**
-	 * ...
-	 * @author Tadej
+	 * Main container for everything that is the standard game controller.
+	 * This is where all all the elements are manipulated based on the events that occur in the main class.
 	 */
 	public class ControllerDisplay extends Sprite
 	{
@@ -16,14 +17,12 @@ package
 		private var bottomLayer:Sprite = new Sprite();
 		private var buttons:Vector.<ControllerButton>;
 		private var dPad:Vector.<ControllerButton>;
-		private var axes:Vector.<ControllerAxis>;
+		private var axes:Vector.<ControllerStick>;
 		private var hat:Vector.<ControllerButton>;
 		
-		private var leftStick:ControllerAxis;
-		private var rightStick:ControllerAxis;
+		private var leftStick:ControllerStick;
+		private var rightStick:ControllerStick;
 		
-		/*private var leftTrigger:Number;
-		private var rightTrigger:Number;*/
 		private var leftTrigger:ControllerTrigger;
 		private var rightTrigger:ControllerTrigger;
 		
@@ -35,8 +34,8 @@ package
 			this.addChild(controllerImage);
 			this.addChild(topLayer);
 
-			leftStick = new ControllerAxis(ControllerAxis.BUTTON_STICK, 7, 314, 332);
-			rightStick = new ControllerAxis(ControllerAxis.BUTTON_STICK, 8, 570, 332);
+			leftStick = new ControllerStick(ControllerStick.BUTTON_STICK, 7, 314, 332);
+			rightStick = new ControllerStick(ControllerStick.BUTTON_STICK, 8, 570, 332);
 			
 			buttons = new Vector.<ControllerButton>();
 			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD, 0, 702, 252));			// 00 A
@@ -45,7 +44,7 @@ package
 			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD, 3, 702, 116));			// 03 Y
 			buttons.push(new ControllerButton(ControllerButton.BUTTON_BACK,     4, 366, 192));			// 04 Back
 			buttons.push(new ControllerButton(ControllerButton.BUTTON_GUIDE,    5, 442, 147));			// 05 Guide
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_START,	6, 524, 192));			// 06 Start
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_START,    6, 524, 192));			// 06 Start
 			buttons.push(leftStick);																	// 07 Left Stick
 			buttons.push(rightStick);																	// 08 Right Stick
 			buttons.push(new ControllerButton(ControllerButton.BUTTON_BUMPER,   9, 153,   8));			// LB
@@ -91,7 +90,6 @@ package
 					rightStick.yValue = value;
 					break;
 				case 4: //Left trigger
-					//leftTrigger = value;
 					leftTrigger.value = value;
 					break;
 				case 5: //Right trigger

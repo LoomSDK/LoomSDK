@@ -20,7 +20,7 @@ package loom2d.display
     import loom2d.events.TouchEvent;
     import loom2d.events.ScrollWheelEvent;
     import loom2d.events.EventDispatcher;
-    import loom2d.events.ControllerEvent;
+    import loom2d.events.GameControllerEvent;
     
     import loom2d.math.Point;
     import loom2d.math.Rectangle;
@@ -70,12 +70,18 @@ package loom2d.display
      *  In Loom, keyboard events are only dispatched at the stage. Add an event listener
      *  directly to the stage to be notified of keyboard events.
      * 
+     *  **Controller Events**
+     * 
+     *  In Loom, game controller events are only dispatched at the stage. Add an event listener
+     *  directly to the stage to be notified of controller events.
+     * 
      *  **Resize Events**
      * 
      *  When a Loom application is resized, the stage dispatches a `ResizeEvent`. The 
      *  event contains properties containing the updated width and height of game.
      *
      *  @see Loom.Events.KeyboardEvent
+     *  @see Loom.Events.GameControllerEvent
      *  @see Loom.Events.ResizeEvent
      */
     [Native(managed)]      
@@ -203,27 +209,27 @@ package loom2d.display
 
         protected function onControllerButtonDownHandler(controller:int, button:int):void
         {
-            broadcastEvent(new ControllerEvent(ControllerEvent.BUTTON_DOWN, controller, button));
+            broadcastEvent(new GameControllerEvent(GameControllerEvent.BUTTON_DOWN, controller, button));
         }
 
         protected function onControllerButtonUpHandler(controller:int, button:int):void
         {
-            broadcastEvent(new ControllerEvent(ControllerEvent.BUTTON_UP, controller, button));
+            broadcastEvent(new GameControllerEvent(GameControllerEvent.BUTTON_UP, controller, button));
         }
         
         protected function onControllerAxisMovedHandler(controller:int, axis:int, value:int):void
         {
-            broadcastEvent(new ControllerEvent(ControllerEvent.AXIS_MOTION, controller, 0, axis, value));
+            broadcastEvent(new GameControllerEvent(GameControllerEvent.AXIS_MOTION, controller, 0, axis, value));
         }
         
         protected function onControllerAddedHandler(controller:int):void
         {
-            broadcastEvent(new ControllerEvent(ControllerEvent.CONTROLLER_ADDED, controller));
+            broadcastEvent(new GameControllerEvent(GameControllerEvent.CONTROLLER_ADDED, controller));
         }
         
         protected function onControllerRemovedHandler(controller:int):void
         {
-            broadcastEvent(new ControllerEvent(ControllerEvent.CONTROLLER_REMOVED, controller));
+            broadcastEvent(new GameControllerEvent(GameControllerEvent.CONTROLLER_REMOVED, controller));
         }
 
         protected function onScrollWheelHandler(delta:Number)

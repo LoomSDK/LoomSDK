@@ -1,13 +1,13 @@
 package loom2d.events
 {
-    /** A ControllerEvent is dispatched in response to user input through a game controller.
+    /** A GameControllerEvent is dispatched in response to user input through a game controller.
      * 
      *  To be notified of game controller events, add an event listener to the stage. Children
      *  of the stage won't be notified of game controller input.
      *  
      *  @see loom2d.display.Stage
      */  
-    public class ControllerEvent extends Event
+    public class GameControllerEvent extends Event
     {
         /** Event type for a button that was released. */
         public static const BUTTON_UP:String = "buttonUp";
@@ -27,7 +27,7 @@ package loom2d.events
         private var mAxisValue:Number;
         
         /** Creates a new KeyboardEvent. */
-        public function ControllerEvent(type:String, controllerID:uint=0, buttonID:uint=0, 
+        public function GameControllerEvent(type:String, controllerID:uint=0, buttonID:uint=0, 
                                       axisID:uint=0, axisValue:int=0)
         {
             super(type, false, controllerID);
@@ -52,7 +52,7 @@ package loom2d.events
 
         public function toString():String
         {
-            return "[ControllerEvent controllerID=" + controllerID + " buttonID=" + buttonID + " axisID=" + axisID + " axisValue=" + axisValue + "]";
+            return "[GameControllerEvent controllerID=" + controllerID + " buttonID=" + buttonID + " axisID=" + axisID + " axisValue=" + axisValue + "]";
         }
     }
 }

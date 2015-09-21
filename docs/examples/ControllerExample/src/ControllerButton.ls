@@ -6,8 +6,8 @@ package
 	import loom2d.textures.Texture;
 	
 	/**
-	 * ...
-	 * @author Tadej
+	 * Basic button display, displays if the button is pressed.
+	 * Includes multiple button styles.
 	 */
 	public class ControllerButton extends Sprite
 	{
