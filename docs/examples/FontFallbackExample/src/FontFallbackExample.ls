@@ -17,7 +17,6 @@ package
         {
             // Comment out this line to turn off automatic scaling.
             stage.scaleMode = StageScaleMode.LETTERBOX;
-            //stage.scaleMode = StageScaleMode.NONE;
             stage.color = 0xF3F3F3;
             
             shape = new Shape();
