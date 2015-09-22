@@ -420,7 +420,7 @@ TextureInfo *Texture::load(uint8_t *data, uint16_t width, uint16_t height, Textu
 void Texture::upload(TextureInfo &tinfo, uint8_t *data, uint16_t width, uint16_t height, int xoffset, int yoffset)
 {
     bool newImage = xoffset < 0 || yoffset < 0;
-    LOOM_PROFILE_START(textureLoadUpload);
+
     Graphics::context()->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
     //Graphics::context()->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     //Graphics::context()->glPixelStorei(GL_PACK_ALIGNMENT, 1);
@@ -429,46 +429,69 @@ void Texture::upload(TextureInfo &tinfo, uint8_t *data, uint16_t width, uint16_t
     if (newImage) {
         tinfo.width = width;
         tinfo.height = height;
+        LOOM_PROFILE_START(textureLoadUploadNew);
         Graphics::context()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        LOOM_PROFILE_END(textureLoadUploadNew);
     }
     else
     {
+        LOOM_PROFILE_START(textureLoadUploadUpdate);
         lmAssert(xoffset + width <= tinfo.width && yoffset + height <= tinfo.height, "Texture %d (%dx%d) update parameters invalid: x=%d, y=%d, width=%d, height=%d", tinfo.id, tinfo.width, tinfo.height, xoffset, yoffset, width, height);
         Graphics::context()->glTexSubImage2D(GL_TEXTURE_2D, 0, xoffset, yoffset, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        LOOM_PROFILE_END(textureLoadUploadUpdate);
     }
-    LOOM_PROFILE_END(textureLoadUpload);
-
+    
     // Generate mipmaps if appropriate
     if (!tinfo.renderTarget && (supportsFullNPOT || tinfo.isPowerOfTwo()))
     {
         LOOM_PROFILE_START(textureLoadMipmap);
         tinfo.clampOnly = false;
         tinfo.mipmaps = true;
-        uint32_t *mipData = (uint32_t*)data;
+        uint32_t *mipParent = (uint32_t*)data;
+        uint32_t *mipCurrent = NULL;
+        uint32_t *mipData = NULL;
         int mipWidth = width;
         int mipHeight = height;
         int mipLevel = 1;
         int time = platform_getMilliseconds();
         while (mipWidth > 1 || mipHeight > 1)
         {
-            // Allocate new bits.
+            // Compute next size (half of previous/parent size dimensions, minimum of 1x1)
             int prevWidth = mipWidth, prevHeight = mipHeight;
             mipWidth >>= 1; mipWidth = mipWidth < 1 ? 1 : mipWidth;
             mipHeight >>= 1; mipHeight = mipHeight < 1 ? 1 : mipHeight;
 
-            uint32_t *prevData = mipData;
-            mipData = static_cast<uint32_t*>(lmAlloc(NULL, mipWidth * mipHeight * 4));
+            // Number of pixels in the current mipmap
+            int mipSize = mipWidth*mipHeight;
 
-            downsampleAverage(prevData, mipData, prevWidth, prevHeight);
+            // Allocate buffer if it doesn't exist yet, reuse for smaller mipmaps
+            if (mipData == NULL) {
+                // Allocate enough for the biggest/current mipmap and a quarter of the size of
+                // additional space used for downsizing
+                mipData = static_cast<uint32_t*>(lmAlloc(NULL, mipSize * (4 + 1)));
+                // The current mipmap bytes are the entire buffer minus the additional space
+                // at first, with the parent bytes being the full image size
+                mipCurrent = mipData;
+            }
+            // Downsample the parent mipmap into the current one
+            downsampleAverage(mipParent, mipCurrent, prevWidth, prevHeight);
 
-            if (prevData != (uint32_t*)data) lmSafeFree(NULL, prevData);
-            
             if (newImage) {
-                Graphics::context()->glTexImage2D(GL_TEXTURE_2D, mipLevel, GL_RGBA, mipWidth, mipHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mipData);
+                LOOM_PROFILE_START(textureLoadMipmapUploadNew);
+                Graphics::context()->glTexImage2D(GL_TEXTURE_2D, mipLevel, GL_RGBA, mipWidth, mipHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, mipCurrent);
+                LOOM_PROFILE_END(textureLoadMipmapUploadNew);
             }
             else {
-                Graphics::context()->glTexSubImage2D(GL_TEXTURE_2D, mipLevel, xoffset, yoffset, mipWidth, mipHeight, GL_RGBA, GL_UNSIGNED_BYTE, mipData);
+                LOOM_PROFILE_START(textureLoadMipmapUploadUpdate);
+                Graphics::context()->glTexSubImage2D(GL_TEXTURE_2D, mipLevel, xoffset, yoffset, mipWidth, mipHeight, GL_RGBA, GL_UNSIGNED_BYTE, mipCurrent);
+                LOOM_PROFILE_END(textureLoadMipmapUploadUpdate);
             }
+
+            // Set parent to the current map
+            mipParent = mipCurrent;
+            // Alternate between writing to the beginning of the buffer
+            // and the space next to the buffer already written
+            mipCurrent = mipParent == mipData ? mipData + mipSize : mipData;
             
             mipLevel++;
         }
