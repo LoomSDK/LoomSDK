@@ -184,46 +184,41 @@ void loop()
         else if (event.type == SDL_CONTROLLERBUTTONDOWN)
         {
             //lmLogInfo(coreLogGroup, "Controller Button Down %d %d %d", event.cbutton.which, event.cbutton.button);
-            //stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.which);
-            stage->_ControllerButtonDownDelegate.pushArgument(LoomGameController::indexOfDevice(event.cbutton.which));
-            stage->_ControllerButtonDownDelegate.pushArgument(event.cbutton.button);
-            stage->_ControllerButtonDownDelegate.invoke();
+            stage->_GameControllerButtonDownDelegate.pushArgument(LoomGameController::getControllerIndex(event.cbutton.which));
+            stage->_GameControllerButtonDownDelegate.pushArgument(event.cbutton.button);
+            stage->_GameControllerButtonDownDelegate.invoke();
         }
         else if (event.type == SDL_CONTROLLERBUTTONUP)
         {
             //lmLogInfo(coreLogGroup, "Controller Button Up %d %d %d", event.cbutton.which, event.cbutton.button);
-            //stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.which);
-            stage->_ControllerButtonUpDelegate.pushArgument(LoomGameController::indexOfDevice(event.cbutton.which));
-            stage->_ControllerButtonUpDelegate.pushArgument(event.cbutton.button);
-            stage->_ControllerButtonUpDelegate.invoke();
+            stage->_GameControllerButtonUpDelegate.pushArgument(LoomGameController::getControllerIndex(event.cbutton.which));
+            stage->_GameControllerButtonUpDelegate.pushArgument(event.cbutton.button);
+            stage->_GameControllerButtonUpDelegate.invoke();
         }
         else if (event.type == SDL_CONTROLLERAXISMOTION)
         {
             //lmLog(coreLogGroup, "Controller [%d] triggered axis event.", LoomGameController::indexOfDevice(event.caxis.which));
-            //stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.which);
-            stage->_ControllerAxisMovedDelegate.pushArgument(LoomGameController::indexOfDevice(event.caxis.which));
-            stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.axis);
-            stage->_ControllerAxisMovedDelegate.pushArgument(event.caxis.value);
-            stage->_ControllerAxisMovedDelegate.invoke();
+            stage->_GameControllerAxisMovedDelegate.pushArgument(LoomGameController::getControllerIndex(event.caxis.which));
+            stage->_GameControllerAxisMovedDelegate.pushArgument(event.caxis.axis);
+            stage->_GameControllerAxisMovedDelegate.pushArgument(event.caxis.value);
+            stage->_GameControllerAxisMovedDelegate.invoke();
         }
         else if (event.type == SDL_CONTROLLERDEVICEADDED)
         {
-            lmLogInfo(coreLogGroup, "Controller added: %d", event.cdevice.which);
             int addedDevice = LoomGameController::addDevice(event.cdevice.which);
             if (addedDevice != -1)
             {
-                stage->_ControllerAddedDelegate.pushArgument(addedDevice);
-                stage->_ControllerAddedDelegate.invoke();
+                stage->_GameControllerAddedDelegate.pushArgument(addedDevice);
+                stage->_GameControllerAddedDelegate.invoke();
             }
         }
         else if (event.type == SDL_CONTROLLERDEVICEREMOVED)
         {
-            lmLogInfo(coreLogGroup, "Controller removed: %d", event.cdevice.which);
             int removedDevice = LoomGameController::removeDevice(event.cdevice.which);
             if (removedDevice != -1)
             {
-                stage->_ControllerRemovedDelegate.pushArgument(removedDevice);
-                stage->_ControllerRemovedDelegate.invoke();
+                stage->_GameControllerRemovedDelegate.pushArgument(removedDevice);
+                stage->_GameControllerRemovedDelegate.invoke();
             }
         }
     }

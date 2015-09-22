@@ -1,3 +1,23 @@
+/*
+* ===========================================================================
+* Loom SDK
+* Copyright 2011, 2012, 2013
+* The Game Engine Company, LLC
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+* ===========================================================================
+*/
+
 #include <SDL.h>
 
 #include "loom/script/loomscript.h"
@@ -10,26 +30,25 @@ public:
     LoomGameController();
     static void openAll();
     static void closeAll();
-    static int addDevice(int device);
-    static int removeDevice(int device);
+    static int addDevice(int deviceID);
+    static int removeDevice(int deviceID);
     static int numDevices();
-    static int indexOfDevice(int device);
-    static bool isHaptic(int device);
-    static void stopRumble(int device);
-    static void startRumble(int device, float intensity, Uint32 ms);
+    static int getControllerIndex(SDL_JoystickID instance);
+    static bool isHaptic(int poolID);
+    static void stopRumble(int poolID);
+    static void startRumble(int poolID, float intensity, Uint32 ms);
 
     SDL_Haptic *getHaptic();
 
 private:
-    SDL_GameController *gamepad;
+    SDL_GameController *controller;
     SDL_Haptic *haptic;
     SDL_JoystickID instance_id;
     bool is_haptic;
     bool is_connected;
 
     static LoomGameController controllers[MAX_CONTROLLERS];
-    static int getControllerIndex(SDL_JoystickID instance);
 
-    void open(int device);
+    void open(int deviceID);
     void close();
 };

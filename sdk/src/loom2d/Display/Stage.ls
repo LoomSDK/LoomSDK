@@ -47,10 +47,10 @@ package loom2d.display
     }
 
     delegate KeyDelegate(scancode:int, virtualKey:int, modifiers:int);
-    delegate ControllerButtonDelegate(controller:int, button:int);
-    delegate ControllerAxisDelegate(controller:int, axis:int, value:Number);
-    delegate ControllerAddedDelegate(controller:int);
-    delegate ControllerRemovedDelegate(controller:int);
+    delegate GameControllerButtonDelegate(controller:int, button:int);
+    delegate GameControllerAxisDelegate(controller:int, axis:int, value:Number);
+    delegate GameControllerAddedDelegate(controller:int);
+    delegate GameControllerRemovedDelegate(controller:int);
     delegate HardwareKeyDelegate();
     delegate TouchDelegate(touchId:int, x:int, y:int);
     delegate ScrollWheelDelegate(yDelta:int);
@@ -119,11 +119,11 @@ package loom2d.display
         public native var onKeyUp:KeyDelegate;
         public native var onKeyDown:KeyDelegate;
 
-        public native var onControllerButtonUp:ControllerButtonDelegate;
-        public native var onControllerButtonDown:ControllerButtonDelegate;
-        public native var onControllerAxisMoved:ControllerAxisDelegate;
-        public native var onControllerAdded:ControllerAddedDelegate;
-        public native var onControllerRemoved:ControllerRemovedDelegate;
+        public native var onGameControllerButtonUp:GameControllerButtonDelegate;
+        public native var onGameControllerButtonDown:GameControllerButtonDelegate;
+        public native var onGameControllerAxisMoved:GameControllerAxisDelegate;
+        public native var onGameControllerAdded:GameControllerAddedDelegate;
+        public native var onGameControllerRemoved:GameControllerRemovedDelegate;
 
         public native var onMenuKey:HardwareKeyDelegate;
         public native var onBackKey:HardwareKeyDelegate;
@@ -167,11 +167,11 @@ package loom2d.display
             onKeyDown += onKeyDownHandler;
             onKeyUp += onKeyUpHandler;
 
-            onControllerButtonDown += onControllerButtonDownHandler;
-            onControllerButtonUp += onControllerButtonUpHandler;
-            onControllerAxisMoved += onControllerAxisMovedHandler;
-            onControllerAdded += onControllerAddedHandler;
-            onControllerRemoved += onControllerRemovedHandler;
+            onGameControllerButtonDown += onGameControllerButtonDownHandler;
+            onGameControllerButtonUp += onGameControllerButtonUpHandler;
+            onGameControllerAxisMoved += onGameControllerAxisMovedHandler;
+            onGameControllerAdded += onGameControllerAddedHandler;
+            onGameControllerRemoved += onGameControllerRemovedHandler;
 
             onSizeChange += onSizeChangeHandler;
 
@@ -207,27 +207,27 @@ package loom2d.display
                     (modifiers | LoomKeyModifier.SHIFT) != 0 ));
         }
 
-        protected function onControllerButtonDownHandler(controller:int, button:int):void
+        protected function onGameControllerButtonDownHandler(controller:int, button:int):void
         {
             broadcastEvent(new GameControllerEvent(GameControllerEvent.BUTTON_DOWN, controller, button));
         }
 
-        protected function onControllerButtonUpHandler(controller:int, button:int):void
+        protected function onGameControllerButtonUpHandler(controller:int, button:int):void
         {
             broadcastEvent(new GameControllerEvent(GameControllerEvent.BUTTON_UP, controller, button));
         }
         
-        protected function onControllerAxisMovedHandler(controller:int, axis:int, value:int):void
+        protected function onGameControllerAxisMovedHandler(controller:int, axis:int, value:int):void
         {
             broadcastEvent(new GameControllerEvent(GameControllerEvent.AXIS_MOTION, controller, 0, axis, value));
         }
         
-        protected function onControllerAddedHandler(controller:int):void
+        protected function onGameControllerAddedHandler(controller:int):void
         {
             broadcastEvent(new GameControllerEvent(GameControllerEvent.CONTROLLER_ADDED, controller));
         }
         
-        protected function onControllerRemovedHandler(controller:int):void
+        protected function onGameControllerRemovedHandler(controller:int):void
         {
             broadcastEvent(new GameControllerEvent(GameControllerEvent.CONTROLLER_REMOVED, controller));
         }

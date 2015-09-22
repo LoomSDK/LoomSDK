@@ -169,10 +169,10 @@ public:
     LOOM_DELEGATE(BackKey);
     LOOM_DELEGATE(ScrollWheelYMoved);
     LOOM_DELEGATE(Accelerate);
-    LOOM_DELEGATE(ControllerAxisMoved);
-    LOOM_DELEGATE(ControllerButtonDown);
-    LOOM_DELEGATE(ControllerButtonUp);
-    LOOM_DELEGATE(ControllerAdded);
-    LOOM_DELEGATE(ControllerRemoved);
+    LOOM_DELEGATE(GameControllerAxisMoved);
+    LOOM_DELEGATE(GameControllerButtonDown);
+    LOOM_DELEGATE(GameControllerButtonUp);
+    LOOM_DELEGATE(GameControllerAdded);
+    LOOM_DELEGATE(GameControllerRemoved);
 };
 }

@@ -18,24 +18,34 @@
 * ===========================================================================
 */
 
+/*
+* This class is used to manage game controllers using SDL.
+* It also serves as an interface between SDL and LoomSDK to allow game controller
+* manipulation through LoomScript.
+*/
+
 #include "loom/engine/bindings/loom/lmGameController.h"
+#include "loom/common/core/log.h"
 
 using namespace LS;
 
-#include "loom/common/core/log.h"
-
+/** A pool of controllers. */
 LoomGameController LoomGameController::controllers[MAX_CONTROLLERS];
 
 lmDefineLogGroup(controllerLogGroup, "loom.controller", 1, LoomLogInfo);
 
-LoomGameController::LoomGameController() {
+LoomGameController::LoomGameController()
+{
     is_connected = false;
     is_haptic = false;
-    gamepad = 0;
+    controller = 0;
     instance_id = -1;
     haptic = 0;
 }
 
+/** Opens all connected game controllers.
+*  This is usually only done at start of program.
+*  Other controllers are usually added by using SDL_CONTROLLERDEVICEADDED event. */
 void LoomGameController::openAll()
 {
     int joyIndex = 0;
@@ -45,6 +55,8 @@ void LoomGameController::openAll()
     }
 }
 
+/** Closes all opened game controllers.
+*  This is done right before ending the program. */
 void LoomGameController::closeAll()
 {
     for (int i = 0; i < MAX_CONTROLLERS; ++i)
@@ -53,26 +65,39 @@ void LoomGameController::closeAll()
     }
 }
 
-int LoomGameController::addDevice(int device)
+/** Opens a game controller from the game controller pool.
+*  This is usually used with the SDL_CONTROLLERDEVICEADDED event.
+*  Device index can be read from an SDL event using `event.cdevice.which` */
+int LoomGameController::addDevice(int deviceID)
 {
-    if (device < MAX_CONTROLLERS)
+    // Iterate through the game controller pool and open a controller if a slot is free
+    for (int i = 0; i < MAX_CONTROLLERS; ++i)
     {
-        LoomGameController& gc = controllers[device];
-        gc.open(device);
-        return device;
+        LoomGameController& gc = controllers[i];
+        if (!gc.is_connected)
+        {
+            gc.open(deviceID);
+            return i;
+        }
     }
+
     return -1;
 }
 
-int LoomGameController::removeDevice(int device)
+/** Closes a game controller in the game controller pool.
+*  This is usually used with the SDL_CONTROLLERDEVICEREMOVED event.
+*  Device index can be read from an SDL event using `event.cdevice.which` */
+int LoomGameController::removeDevice(int deviceID)
 {
-    int controllerIndex = getControllerIndex(device);
+    // We need to get device's index in the game controller pool first in order to close it.
+    int controllerIndex = getControllerIndex(deviceID);
     if (controllerIndex < 0) return -1;
     LoomGameController& gc = controllers[controllerIndex];
     gc.close();
     return controllerIndex;
 }
 
+/** Returns the number of opened game controllers. */
 int LoomGameController::numDevices()
 {
     int devices = 0;
@@ -84,45 +109,10 @@ int LoomGameController::numDevices()
     return devices;
 }
 
-int LoomGameController::indexOfDevice(int device)
-{
-    return getControllerIndex(device);
-}
-
-bool LoomGameController::isHaptic(int device)
-{
-    if (device >= 0 && device < MAX_CONTROLLERS) {
-        return LoomGameController::controllers[device].is_haptic;
-    }
-
-    return false;
-}
-
-void LoomGameController::stopRumble(int device)
-{
-    if (LoomGameController::controllers[device].is_haptic)
-        SDL_HapticRumbleStop(LoomGameController::controllers[device].getHaptic());
-}
-
-void LoomGameController::startRumble(int device, float intensity, Uint32 ms)
-{
-    if (device < 0 && device >= MAX_CONTROLLERS) return;
-
-    if (intensity > 1) intensity = 1.0f;
-    if (intensity < 0) intensity = 0.0f;
-
-    if (LoomGameController::controllers[device].is_haptic)
-        SDL_HapticRumblePlay(LoomGameController::controllers[device].getHaptic(), intensity, (ms < 0 ? SDL_HAPTIC_INFINITY : ms));
-}
-
-SDL_Haptic *LoomGameController::getHaptic()
-{
-    return haptic;
-}
-
+/** Returns the game controller's index in the game controller pool using the device's id. */
 int LoomGameController::getControllerIndex(SDL_JoystickID instance)
 {
-    for (int i = 0; i < MAX_CONTROLLERS; ++i)
+    for (int i = 0; i < MAX_CONTROLLERS; i++)
     {
         if (LoomGameController::controllers[i].is_connected && LoomGameController::controllers[i].instance_id == instance) {
             return i;
@@ -131,24 +121,71 @@ int LoomGameController::getControllerIndex(SDL_JoystickID instance)
     return -1;
 }
 
-void LoomGameController::open(int device)
+/** Returns true if device has rumble support. */
+bool LoomGameController::isHaptic(int poolID)
+{
+    if (poolID >= 0 && poolID < MAX_CONTROLLERS) {
+        return LoomGameController::controllers[poolID].is_haptic;
+    }
+
+    return false;
+}
+
+/** Stops the device's rumble effect. */
+void LoomGameController::stopRumble(int poolID)
+{
+    // Do nothing if it is not a valid controller
+    if (poolID < 0 && poolID >= MAX_CONTROLLERS && !LoomGameController::controllers[poolID].is_connected) return;
+
+    // If device is haptic, stop rumble
+    if (LoomGameController::controllers[poolID].is_haptic)
+        SDL_HapticRumbleStop(LoomGameController::controllers[poolID].getHaptic());
+}
+
+/** Starts the device's rumble effect.
+*  Intensity sets the  is a value between 0 and 1
+*  The duration of rumble is set in milliseconds. Using this */
+void LoomGameController::startRumble(int poolID, float intensity, Uint32 duration)
+{
+    // Do nothing if it is not a valid controller
+    if (poolID < 0 && poolID >= MAX_CONTROLLERS && !LoomGameController::controllers[poolID].is_connected) return;
+
+    // Force value to be strictly between 0 and 1
+    if (intensity > 1) intensity = 1.0f;
+    if (intensity < 0) intensity = 0.0f;
+
+    // If device is haptic, begin rumble
+    if (LoomGameController::controllers[poolID].is_haptic)
+        SDL_HapticRumblePlay(LoomGameController::controllers[poolID].getHaptic(), intensity, duration);
+}
+
+/** Returns the SDL_Haptic object, useful for controlling rumble effects. */
+SDL_Haptic *LoomGameController::getHaptic()
+{
+    return haptic;
+}
+
+/** Opens a game controller using device ID. */
+void LoomGameController::open(int deviceID)
 {
     // lmLogInfo(controllerLogGroup, "Opening device [%d]", device);
-    is_haptic = false;
 
-    if (SDL_IsGameController(device))
+    // Check if device is a known controller
+    if (SDL_IsGameController(deviceID))
     {
-        gamepad = SDL_GameControllerOpen(device);
-        // lmLogInfo(controllerLogGroup, "Device [%d] is a gamepad", device);
+        controller = SDL_GameControllerOpen(deviceID);
+        // lmLogInfo(controllerLogGroup, "Device [%d] is a controller", device);
     }
     else
     {
         return;
     }
 
-    gamepad = SDL_GameControllerOpen(device);
+    controller = SDL_GameControllerOpen(deviceID);
 
-    SDL_Joystick *joystick = SDL_GameControllerGetJoystick(gamepad);
+    // We need to open the controller as a joystick so we can check if it has haptic capabilities
+    // Since a SDL_GameController is an extension of SDL_Joystick, the joystick does not need to be opened or closed
+    SDL_Joystick *joystick = SDL_GameControllerGetJoystick(controller);
     instance_id = SDL_JoystickInstanceID(joystick);
     is_connected = true;
 
@@ -157,6 +194,8 @@ void LoomGameController::open(int device)
         haptic = SDL_HapticOpenFromJoystick(joystick);
         // lmLogInfo(controllerLogGroup, "Haptic Effects: %d", SDL_HapticNumEffects(haptic));
         // lmLogInfo(controllerLogGroup, "Haptic Query: %x", SDL_HapticQuery(haptic));
+
+        // Checks if rumble is supported
         if (SDL_HapticRumbleSupported(haptic))
         {
             if (SDL_HapticRumbleInit(haptic) != 0)
@@ -178,16 +217,18 @@ void LoomGameController::open(int device)
     }
 }
 
+/** Close the game controller */
 void LoomGameController::close()
 {
     if (is_connected) {
         is_connected = false;
         if (haptic) {
+            is_haptic = false;
             SDL_HapticClose(haptic);
             haptic = 0;
         }
-        SDL_GameControllerClose(gamepad);
-        gamepad = 0;
+        SDL_GameControllerClose(controller);
+        controller = 0;
     }
 }
 

@@ -25,7 +25,7 @@ package loom.platform
         /**
          * Used in startRumble method for infinite rumble duration.
          */
-        public static var RUMBLE_INFINITY:Number = -1;
+        public static var RUMBLE_INFINITY:uint = 4294967295;
         
         /**
          * Returns number of connected game controllers.
