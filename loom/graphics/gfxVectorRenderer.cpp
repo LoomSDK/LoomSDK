@@ -285,7 +285,27 @@ void VectorRenderer::arc(float x, float y, float radius, float angleFrom, float 
 	nvgArc(nvg, x, y, radius, angleFrom, angleTo, direction);
 }
 
-static bool readDefaultFontFaceBytes(void** mem, long* size)
+static bool readFontFile(const char *path, void** mem, size_t* size)
+{
+    void* mapped;
+    long mappedSize;
+
+    bool success = platform_mapFile(path, &mapped, &mappedSize) != 0;
+    
+    if (success) {
+        *mem = lmAlloc(NULL, mappedSize);
+        *size = mappedSize;
+
+        memcpy_s(*mem, (size_t)*size, mapped, mappedSize);
+
+        platform_unmapFile(mapped);
+    }
+
+    return success;
+}
+
+
+static bool readDefaultFontFaceBytes(void** mem, size_t* size)
 {
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 	// Get Windows dir
@@ -293,7 +313,7 @@ static bool readDefaultFontFaceBytes(void** mem, long* size)
 	GetWindowsDirectoryA((LPSTR)&windir, MAX_PATH);
 
 	// Load font file
-	return platform_mapFile((utString(windir) + "\\Fonts\\arial.ttf").c_str(), mem, size) != 0;
+ˇ       return readFontFile((utString(windir) + "\\Fonts\\arial.ttf").c_str(), mem, size) != 0;
 
 	// Kept for future implementation of grabbing fonts by name
 	/*
@@ -310,9 +330,9 @@ static bool readDefaultFontFaceBytes(void** mem, long* size)
 	}
 	*/
 #elif LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-    return platform_mapFile("/system/fonts/DroidSans.ttf", mem, size) != 0;
+        return readFontFile("/system/fonts/DroidSans.ttf", mem, size) != 0;
 #elif LOOM_PLATFORM == LOOM_PLATFORM_OSX
-    return platform_mapFile("/Library/Fonts/Arial.ttf", mem, size) != 0;
+        return readFontFile("/Library/Fonts/Arial.ttf", mem, size) != 0;
 #else
 	mem = NULL;
 	size = 0;
@@ -322,15 +342,15 @@ static bool readDefaultFontFaceBytes(void** mem, long* size)
 static void loadDefaultFontFace() {
 	lmLogWarn(gGFXVectorRendererLogGroup, "Warning: TextFormat font face not specified, using predefined default system font");
 	void* mem;
-	long size;
+	size_t size;
 	bool success = readDefaultFontFaceBytes(&mem, &size);
 	if (!success) {
 		defaultFontId = VectorTextFormat::FONT_DEFAULTMISSING;
 		return;
 	}
-	int handle = nvgCreateFontMem(nvg, "__default", (unsigned char*)mem, size, false);
+	int handle = nvgCreateFontMem(nvg, "__default", (unsigned char*)mem, size, true);
 	if (handle == -1) {
-		platform_unmapFile(mem);
+		lmFree(NULL, mem);
 		defaultFontId = VectorTextFormat::FONT_DEFAULTMEMORY;
 		return;
 	}
