@@ -296,7 +296,7 @@ static bool readFontFile(const char *path, void** mem, size_t* size)
         *mem = lmAlloc(NULL, mappedSize);
         *size = mappedSize;
 
-        memcpy_s(*mem, (size_t)*size, mapped, mappedSize);
+        memcpy(*mem, mapped, mappedSize);
 
         platform_unmapFile(mapped);
     }
@@ -313,7 +313,7 @@ static bool readDefaultFontFaceBytes(void** mem, size_t* size)
 	GetWindowsDirectoryA((LPSTR)&windir, MAX_PATH);
 
 	// Load font file
-ˇ       return readFontFile((utString(windir) + "\\Fonts\\arial.ttf").c_str(), mem, size) != 0;
+ˇ	return readFontFile((utString(windir) + "\\Fonts\\arial.ttf").c_str(), mem, size) != 0;
 
 	// Kept for future implementation of grabbing fonts by name
 	/*
@@ -330,9 +330,9 @@ static bool readDefaultFontFaceBytes(void** mem, size_t* size)
 	}
 	*/
 #elif LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-        return readFontFile("/system/fonts/DroidSans.ttf", mem, size) != 0;
+	return readFontFile("/system/fonts/DroidSans.ttf", mem, size) != 0;
 #elif LOOM_PLATFORM == LOOM_PLATFORM_OSX
-        return readFontFile("/Library/Fonts/Arial.ttf", mem, size) != 0;
+	return readFontFile("/Library/Fonts/Arial.ttf", mem, size) != 0;
 #else
 	mem = NULL;
 	size = 0;
