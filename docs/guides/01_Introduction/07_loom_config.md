@@ -56,6 +56,8 @@ $ loom config --global globalPropertyName value
 | sdk_version          |                      | The target SDK used to compile your app. 'latest' will point to   |
 |                      |                      | the latest stable release.                                        |
 | version              |                      | the current version number of the application                     |
+| telemetry            | [ true, false ]      | Enable or disable telemetry for the entire session. See the       |
+|                      |                      | Profiling section in the LoomScript guide for more information.   |
 | waitForAssetAgent    |                      | maximum number of milliseconds to pause execution while           |
 |                      |                      | application attempts to connect to asset agent                    |
 | waitForDebugger      |                      | number of milliseconds to wait for LoomScript debugger            |
