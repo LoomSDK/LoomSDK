@@ -109,6 +109,7 @@ package loom2d.display
         private var mHeight:int;
         private var mColor:uint;
         private var mEnterFrameEvent:EnterFrameEvent = new EnterFrameEvent(Event.ENTER_FRAME, 0.0);
+        private var mGameControllerAxisEvent:GameControllerEvent = new GameControllerEvent(GameControllerEvent.AXIS_MOTION, 0, 0, 0, 0);
         private var mScaleMode:StageScaleMode = StageScaleMode.NONE;
 
         public native var onTouchBegan:TouchDelegate;
@@ -217,9 +218,11 @@ package loom2d.display
             broadcastEvent(new GameControllerEvent(GameControllerEvent.BUTTON_UP, controller, button));
         }
         
+        // Note: Axis event is pooled - event data will be overwritten on next event
         protected function onGameControllerAxisMovedHandler(controller:int, axis:int, value:int):void
         {
-            broadcastEvent(new GameControllerEvent(GameControllerEvent.AXIS_MOTION, controller, 0, axis, value));
+            mGameControllerAxisEvent.reconstruct(GameControllerEvent.AXIS_MOTION, false, null, controller, 0, axis, value);
+            broadcastEvent(mGameControllerAxisEvent);
         }
         
         protected function onGameControllerAddedHandler(controller:int):void
