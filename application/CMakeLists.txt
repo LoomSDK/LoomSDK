@@ -223,7 +223,7 @@ if (APPLE)
         endif()
 
         # Locate the .app and process the XIB into it.
-        get_target_property(APPLICATION_BIN ${APPLICATION_NAME} LOCATION)
+        set(APPLICATION_BIN $<TARGET_FILE:${APPLICATION_NAME}>)
         get_dotapp_dir(${APPLICATION_BIN} APPLICATION_APP_LOCATION)
         add_custom_command (TARGET ${PROJECT_NAME} POST_BUILD 
                           COMMAND ${IBTOOL} --errors --warnings --notices --output-format human-readable-text 
@@ -242,7 +242,7 @@ if (APPLE)
     endif()
     
     if (LOOM_BUILD_JIT EQUAL 1)
-        target_link_libraries(${PROJECT_NAME} ${LOOM_LUAJIT_LIB})
+        target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/${LOOM_LUAJIT_LIB})
     endif()
     
 elseif(MSVC)	
@@ -258,14 +258,14 @@ elseif(MSVC)
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)
-        target_link_libraries(${PROJECT_NAME} ${LOOM_LUAJIT_LIB})
+        target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/${LOOM_LUAJIT_LIB})
     endif()
 
     if (LOOM_TELEMETRY)
         target_link_libraries(${PROJECT_NAME} "telemetry32.link" "telemetry64.link")
     endif()
 
-    get_target_property(DEMOBIN ${PROJECT_NAME} LOCATION)
+    set(DEMOBIN $<TARGET_FILE:${PROJECT_NAME}>)
      
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
@@ -284,14 +284,14 @@ elseif(ANDROID)
        "${LOOM_SDL2_LIB}"
     )
     
-    get_target_property(ANDROID_SO ${PROJECT_NAME} LOCATION)
+    set(ANDROID_SO $<TARGET_FILE:${PROJECT_NAME}>)
      
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
-        set(ANDROID_SO_COPY_SRC, "${ANDROID_SO}")
-        set(ANDROID_SO_COPY_DST, "${CMAKE_SOURCE_DIR}/application/android/libs/armeabi-v7a")
-        string(REPLACE "/" "\" ANDROID_SO_COPY_SRC_WIN32 ${ANDROID_SO_COPY_SRC})
-        string(REPLACE "/" "\" ANDROID_SO_COPY_DST_WIN32 ${ANDROID_SO_COPY_DST})
+        set(ANDROID_SO_COPY_SRC "${ANDROID_SO}")
+        set(ANDROID_SO_COPY_DST "${CMAKE_SOURCE_DIR}/application/android/libs/armeabi-v7a")
+        string(REPLACE "/" "\\" ANDROID_SO_COPY_SRC_WIN32 ${ANDROID_SO_COPY_SRC})
+        string(REPLACE "/" "\\" ANDROID_SO_COPY_DST_WIN32 ${ANDROID_SO_COPY_DST})
         if(WIN32)
           COMMAND mkdir ${ANDROID_SO_COPY_DST_WIN32}
           COMMAND xcopy /I /Y ${ANDROID_SO_COPY_SRC_WIN32} ${ANDROID_SO_COPY_DST_WIN32}
@@ -313,10 +313,10 @@ elseif(LINUX)
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)
-        target_link_libraries(${PROJECT_NAME} ${LOOM_LUAJIT_LIB} -ldl)
+        target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/${LOOM_LUAJIT_LIB} -ldl)
     endif()
     
-    get_target_property(DEMOBIN ${PROJECT_NAME} LOCATION)
+    set(DEMOBIN $<TARGET_FILE:${PROJECT_NAME}>)
      
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
