@@ -42,6 +42,8 @@ Local commands start with a . (period) and are run locally, in the loom console 
 
 *.sendall* - Send all known assets to all connected clients. This is useful for testing or if you have a client that is out of sync due to a crash.
 
+*.telemetry* - Toggle the Telemetry server on and off. See the Profiling section in the LoomScript guide for more information.
+
 You can add more commands by registering them with the `ConsoleCommandManager`:
 
 ~~~as3

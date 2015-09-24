@@ -4,7 +4,7 @@ description: How to profile Loom memory and CPU usage.
 
 Games and apps must run well to deliver acceptable experiences. When performance issues are encountered, optimization is required. The best way to improve a bad performance scenario is a simple loop: measure, optimize, repeat until performance is better. Measuring performance to identify what is slowing down your app helps you direct your development effort for maximum return - that is, fix the slowest part first!
 
-How to measure? Loom provides a rich set of proiling tools. They are simple but effective.
+How to measure? Loom provides a rich set of profiling tools. They are simple but effective.
 
 Let's begin by profiling something. First, start your application normally with:
 
@@ -35,6 +35,20 @@ $ profilerDump
 You will be rewarded with a huge amount of information on what Loom was doing while you ran the profiler. The following sections explain what this output means and how to use it.
 
 **Advanced Note:** You may drive the profiler programmatically via the `system.Profiler` API. `profilerReset` will reset all counts in the profiler.
+
+## Telemetry
+
+Loom provides a telemetry server, which streams a variety of useful timings and other metrics from the app to the Loom console. It provides a visualization of the underlying runtime systems in real-time.
+
+You can enable or disable it by typing `.telemetry` in the Loom console or by setting the `telemetry` config value to `true` (`loom config telemetry true` on the command line).
+
+If you can see that the telemetry server is running and that telemetry has been enabled in the console after running with `loom run`, you should be all set. Just open up your preferred browser at `http://localhost:8073/` and you should see the Loom Telemetry interface.
+
+The main chart displays a real-time view into the runtime ticks being executed. Scroll and drag on the x axis where the tick numbers are shown to see more or fewer ticks. Scroll on the bars themselves to resize the tick vertically and see different parts in more detail, drag it up and down to bring them into view.
+
+Zoom into a specific tick far enough to see a more detailed breakdown of the time different subsystems take. Within a single tick, the different timing sections are arranged in a hierarchy from left to right with the vertical position and size representing the start time relative to the tick and the duration of the section.
+
+The telemetry system works whether the profiler is enabled or disabled. If the profiler is disabled, it only shows the native timing blocks, if it is enabled, it shows the timings of all the LoomScript functions called as well.
 
 ## Tracking Performance
 
