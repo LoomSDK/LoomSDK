@@ -142,6 +142,17 @@ void Texture::tick()
         Texture::sAsyncCreateQueue.pop_front();
         loom_mutex_unlock(Texture::sAsyncQueueMutex);
 
+
+        loom_mutex_lock(Texture::sTexInfoLock);
+        // Last resort for texture info getting invalidated while loading (perhaps during live reload)
+        // TODO: Can we eliminate this from ever happening and turn it into an assert?
+        if (threadNote.tinfo->handle == -1) {
+            loom_mutex_unlock(Texture::sTexInfoLock);
+            threadNote.iaCleanup(threadNote.imageAsset);
+            return;
+        }
+        loom_mutex_unlock(Texture::sTexInfoLock);
+
         //handleAssetNotification does the actual creation of the texture data immediately below when '1' is specified
         startTime = platform_getMilliseconds();
         if(!threadNote.path.empty())
