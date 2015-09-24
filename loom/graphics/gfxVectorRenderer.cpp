@@ -313,7 +313,7 @@ static bool readDefaultFontFaceBytes(void** mem, size_t* size)
 	GetWindowsDirectoryA((LPSTR)&windir, MAX_PATH);
 
 	// Load font file
-ˇ	return readFontFile((utString(windir) + "\\Fonts\\arial.ttf").c_str(), mem, size) != 0;
+	return readFontFile((utString(windir) + "\\Fonts\\arial.ttf").c_str(), mem, size) != 0;
 
 	// Kept for future implementation of grabbing fonts by name
 	/*
