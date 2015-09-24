@@ -706,6 +706,7 @@ void VectorRenderer::reset()
 void VectorRenderer::initialize()
 {
     nvgSetAllocFunctions(customAlloc, customRealloc, customFree);
+    nsvgSetAllocFunctions(customAlloc, customRealloc, customFree);
     initializeGraphicsResources();
 }
 
