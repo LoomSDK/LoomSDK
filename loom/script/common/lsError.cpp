@@ -21,7 +21,6 @@
 #include "lsError.h"
 #include "lsLog.h"
 #include "loom/common/core/allocator.h"
-#include <stdint.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>

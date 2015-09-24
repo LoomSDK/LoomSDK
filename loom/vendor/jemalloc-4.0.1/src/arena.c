@@ -2292,8 +2292,15 @@ arena_palloc_large(tsd_t *tsd, arena_t *arena, size_t usize, size_t alignment,
 	miscelm = arena_run_to_miscelm(run);
 	rpages = arena_miscelm_to_rpages(miscelm);
 
+	#ifdef _MSC_VER
+	#pragma warning (push)
+	#pragma warning (disable: 4146)
+	#endif
 	leadsize = ALIGNMENT_CEILING((uintptr_t)rpages, alignment) -
-	    (uintptr_t)rpages;
+		(uintptr_t)rpages;
+	#ifdef _MSC_VER
+	#pragma warning (pop)
+	#endif
 	assert(alloc_size >= leadsize + usize);
 	trailsize = alloc_size - leadsize - usize - large_pad;
 	if (leadsize != 0) {

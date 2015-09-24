@@ -200,7 +200,7 @@ int EXIFInfo::parseFrom(const unsigned char *buf, unsigned len) {
 }
 
 int EXIFInfo::parseFrom(const string &data) {
-  return parseFrom((const unsigned char *)data.data(), data.length());
+  return parseFrom((const unsigned char *)data.data(), (unsigned int)data.length());
 }
 
 //

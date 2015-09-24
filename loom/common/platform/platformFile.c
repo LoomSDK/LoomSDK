@@ -30,8 +30,8 @@ const char *platform_getFolderDelimiter();
 const char *platform_normalizePath(const char *path)
 {
     static char npath[4096];
-    int         i;
-    int         nlen;
+    size_t      i;
+    size_t      nlen;
     char        delimiter;
 
     nlen = strlen(path);
@@ -69,7 +69,7 @@ int platform_writeFile(const char *path, void *data, int size)
         return -1;
     }
 
-    result = fwrite(data, 1, size, file);
+    result = (int)fwrite(data, 1, size, file);
 
     fclose(file);
 

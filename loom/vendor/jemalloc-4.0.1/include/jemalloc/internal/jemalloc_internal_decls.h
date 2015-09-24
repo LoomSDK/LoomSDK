@@ -29,7 +29,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
+#ifdef _MSC_VER
+#  include "msvc_compat/C99/stdint.h"
+#else
+#  include <stdint.h>
+#endif
 #include <stddef.h>
 #ifndef offsetof
 #  define offsetof(type, member)	((size_t)&(((type *)NULL)->member))

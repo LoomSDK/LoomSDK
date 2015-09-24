@@ -699,7 +699,15 @@ sa2u(size_t size, size_t alignment)
 		 *    144 | 10100000 |  32
 		 *    192 | 11000000 |  64
 		 */
+		#ifdef _MSC_VER
+		#pragma warning (push)
+		#pragma warning (disable: 4146)
+		#endif
 		usize = s2u(ALIGNMENT_CEILING(size, alignment));
+		#ifdef _MSC_VER
+		#pragma warning (pop)
+		#endif
+
 		if (usize < LARGE_MINCLASS)
 			return (usize);
 	}
@@ -930,7 +938,15 @@ ipallocztm(tsd_t *tsd, size_t usize, size_t alignment, bool zero,
 	assert(usize == sa2u(usize, alignment));
 
 	ret = arena_palloc(tsd, arena, usize, alignment, zero, tcache);
+	#ifdef _MSC_VER
+	#pragma warning (push)
+	#pragma warning (disable: 4146)
+	#endif
 	assert(ALIGNMENT_ADDR2BASE(ret, alignment) == ret);
+	#ifdef _MSC_VER
+	#pragma warning (pop)
+	#endif
+
 	if (config_stats && is_metadata && likely(ret != NULL)) {
 		arena_metadata_allocated_add(iaalloc(ret), isalloc(ret,
 		    config_prof));
@@ -950,8 +966,8 @@ JEMALLOC_ALWAYS_INLINE void *
 ipalloc(tsd_t *tsd, size_t usize, size_t alignment, bool zero)
 {
 
-	return (ipallocztm(tsd, usize, alignment, zero, tcache_get(tsd,
-	    NULL), false, NULL));
+	return (void*)(ipallocztm(tsd, usize, alignment, zero, tcache_get(tsd,
+	    false), false, NULL));
 }
 
 JEMALLOC_ALWAYS_INLINE size_t

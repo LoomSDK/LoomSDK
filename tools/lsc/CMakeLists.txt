@@ -44,7 +44,7 @@ endif(MSVC)
 
 
 if (LOOM_BUILD_JIT EQUAL 1)
-    target_link_libraries(lsc ${LOOM_LUAJIT_LIB})
+    target_link_libraries(lsc ${CMAKE_SOURCE_DIR}/${LOOM_LUAJIT_LIB})
 
     if (LINUX)
         target_link_libraries(${PROJECT_NAME} -ldl)

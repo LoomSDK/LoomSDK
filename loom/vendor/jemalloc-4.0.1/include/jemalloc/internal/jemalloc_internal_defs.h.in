@@ -32,7 +32,11 @@
  * Defined if OSAtomic*() functions are available, as provided by Darwin, and
  * documented in the atomic(3) manual page.
  */
+ #if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_LINUX
+#define JEMALLOC_OSATOMIC
+#else
 #undef JEMALLOC_OSATOMIC
+#endif
 
 /*
  * Defined if __sync_add_and_fetch(uint32_t *, uint32_t) and

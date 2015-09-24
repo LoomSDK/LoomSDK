@@ -1,3 +1,5 @@
+#include "loom/common/platform/platform.h"
+
 /******************************************************************************/
 #ifdef JEMALLOC_H_TYPES
 
@@ -130,6 +132,32 @@ bitmap_get(bitmap_t *bitmap, const bitmap_info_t *binfo, size_t bit)
 	g = bitmap[goff];
 	return (!(g & (1LU << (bit & BITMAP_GROUP_NBITS_MASK))));
 }
+
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+static int ffsl(long x)
+{
+	if(x == 0)
+		return 0;
+
+	// despite Ben's best efforts, he was no match for NDK gcc ;)
+	// this appears broken
+	// return __builtin_clz(x)+1;
+
+	// thanks, once again, to Stack Overflow
+	//http://stackoverflow.com/questions/757059/position-of-least-significant-bit-that-is-set
+
+	// find the number of trailing zeros in 32-bit
+	unsigned int v = (unsigned int) x;
+
+	static const int MultiplyDeBruijnBitPosition[32] =
+	{
+	  0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
+	  31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
+	};
+
+	return MultiplyDeBruijnBitPosition[((uint32_t)((v & -v) * 0x077CB531U)) >> 27] + 1;
+}
+#endif
 
 JEMALLOC_INLINE void
 bitmap_set(bitmap_t *bitmap, const bitmap_info_t *binfo, size_t bit)

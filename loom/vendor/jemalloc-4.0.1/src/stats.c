@@ -274,7 +274,14 @@ stats_arena_print(void (*write_cb)(void *, const char *), void *cbopaque,
 	CTL_M2_GET("stats.arenas.0.nthreads", i, &nthreads, unsigned);
 	malloc_cprintf(write_cb, cbopaque,
 	    "assigned threads: %u\n", nthreads);
+	#ifdef _MSC_VER
+	#pragma warning (push)
+	#pragma warning (disable: 4090)
+	#endif
 	CTL_M2_GET("stats.arenas.0.dss", i, &dss, const char *);
+	#ifdef _MSC_VER
+	#pragma warning (pop)
+	#endif
 	malloc_cprintf(write_cb, cbopaque, "dss allocation precedence: %s\n",
 	    dss);
 	CTL_M2_GET("stats.arenas.0.lg_dirty_mult", i, &lg_dirty_mult, ssize_t);
@@ -433,7 +440,14 @@ stats_print(void (*write_cb)(void *, const char *), void *cbopaque,
 		sssz = sizeof(ssize_t);
 		cpsz = sizeof(const char *);
 
+		#ifdef _MSC_VER
+		#pragma warning (push)
+		#pragma warning (disable: 4090)
+		#endif
 		CTL_GET("version", &cpv, const char *);
+		#ifdef _MSC_VER
+		#pragma warning (pop)
+		#endif
 		malloc_cprintf(write_cb, cbopaque, "Version: %s\n", cpv);
 		CTL_GET("config.debug", &bv, bool);
 		malloc_cprintf(write_cb, cbopaque, "Assertions %s\n",
@@ -482,11 +496,25 @@ stats_print(void (*write_cb)(void *, const char *), void *cbopaque,
 		    "Run-time option settings:\n");
 		OPT_WRITE_BOOL(abort)
 		OPT_WRITE_SIZE_T(lg_chunk)
+		#ifdef _MSC_VER
+		#pragma warning (push)
+		#pragma warning (disable: 4090)
+		#endif
 		OPT_WRITE_CHAR_P(dss)
+		#ifdef _MSC_VER
+		#pragma warning (pop)
+		#endif
 		OPT_WRITE_SIZE_T(narenas)
 		OPT_WRITE_SSIZE_T_MUTABLE(lg_dirty_mult, arenas.lg_dirty_mult)
 		OPT_WRITE_BOOL(stats_print)
+		#ifdef _MSC_VER
+		#pragma warning (push)
+		#pragma warning (disable: 4090)
+		#endif
 		OPT_WRITE_CHAR_P(junk)
+		#ifdef _MSC_VER
+		#pragma warning (pop)
+		#endif
 		OPT_WRITE_SIZE_T(quarantine)
 		OPT_WRITE_BOOL(redzone)
 		OPT_WRITE_BOOL(zero)
@@ -496,7 +524,14 @@ stats_print(void (*write_cb)(void *, const char *), void *cbopaque,
 		OPT_WRITE_BOOL(tcache)
 		OPT_WRITE_SSIZE_T(lg_tcache_max)
 		OPT_WRITE_BOOL(prof)
+		#ifdef _MSC_VER
+		#pragma warning (push)
+		#pragma warning (disable: 4090)
+		#endif
 		OPT_WRITE_CHAR_P(prof_prefix)
+		#ifdef _MSC_VER
+		#pragma warning (pop)
+		#endif
 		OPT_WRITE_BOOL_MUTABLE(prof_active, prof.active)
 		OPT_WRITE_BOOL_MUTABLE(prof_thread_active_init,
 		    prof.thread_active_init)

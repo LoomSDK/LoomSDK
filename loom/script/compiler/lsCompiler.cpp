@@ -582,7 +582,7 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
 
         if (!found)
         {
-            filter.push(j);
+            filter.push((int)j);
         }
     }
 
@@ -615,7 +615,7 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
             if (libName == "System" && embeddedSystemAssembly)
             {
                 size_t embeddedSystemAssemblyLength = strlen(embeddedSystemAssembly);
-                rarray.resize(embeddedSystemAssemblyLength + 1);
+                rarray.resize((int)(embeddedSystemAssemblyLength + 1));
                 memcpy(&rarray[0], embeddedSystemAssembly, embeddedSystemAssemblyLength + 1);
             }
             else
@@ -648,7 +648,7 @@ void LSCompiler::setSDKBuild(const utString& lscPath)
     snprintf(lsc, 2048, "%s", lscPath.c_str());
 
     // Slurp off the filename...
-    unsigned int len = strlen(lsc) - 1;
+    unsigned int len = (unsigned int)(strlen(lsc) - 1);
     while (len-- > 0)
     {
         if ((lsc[len] == '\\') || (lsc[len] == '/'))

@@ -34,7 +34,7 @@ void TypeValidatorRT::initializeConversions()
     // String conversions
     const char *_sconvert[] =
     {
-        "char const*", "char*",              "utString",
+        "char const*", "char*", "utString",
         "std::string", "cocos2d::CCString*", "cocos2d::CCString const*","std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >"
     };
 
@@ -42,7 +42,8 @@ void TypeValidatorRT::initializeConversions()
     const char *_nconvert[] =
     {
         "int",         "unsigned int", "float",          "double", "char",
-        "signed char", "short",        "unsigned short", "unsigned char"
+        "signed char", "short",        "unsigned short", "unsigned char",
+        "__int64", "unsigned __int64"
     };
 
     // Boolean conversions

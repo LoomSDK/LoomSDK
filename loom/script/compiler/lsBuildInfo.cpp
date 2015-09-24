@@ -140,7 +140,7 @@ void ModuleBuildInfo::parse(json_t *json)
     char buildPath[1024];
     strncpy(buildPath, buildInfo->getBuildFilePath().c_str(), 1024);
 
-    for (int i = strlen(buildPath) - 1; i >= 0; i--)
+    for (int i = (int)strlen(buildPath) - 1; i >= 0; i--)
     {
         if (buildPath[i] == '\\' || buildPath[i] == '/')
         {

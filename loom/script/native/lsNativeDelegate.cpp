@@ -137,14 +137,14 @@ struct NativeDelegateCallNote
     void writeString(const char *value)
     {
         size_t size = strlen(value);
-        writeInt(size);
+        writeInt((int)size);
         writeBytes(value, size);
     }
 
     void writeByteArray(utByteArray *value)
     {
         UTsize size = value->getSize();
-        writeInt(size);
+        writeInt((int)size);
         writeBytes((const char*) value->getDataPtr(), size);
     }
 

@@ -1321,7 +1321,11 @@ dnl ============================================================================
 dnl Check for C11 atomics.
 
 JE_COMPILABLE([C11 atomics], [
-#include <stdint.h>
+#ifdef _MSC_VER
+#  include "msvc_compat/C99/stdint.h"
+#else
+#  include <stdint.h>
+#endif
 #if (__STDC_VERSION__ >= 201112L) && !defined(__STDC_NO_ATOMICS__)
 #include <stdatomic.h>
 #else
@@ -1405,7 +1409,11 @@ AC_DEFUN([JE_SYNC_COMPARE_AND_SWAP_CHECK],[
   AC_CACHE_CHECK([whether to force $1-bit __sync_{add,sub}_and_fetch()],
                [je_cv_sync_compare_and_swap_$2],
                [AC_LINK_IFELSE([AC_LANG_PROGRAM([
-                                                 #include <stdint.h>
+                                                 #ifdef _MSC_VER
+                                                 #  include "msvc_compat/C99/stdint.h"
+                                                 #else
+                                                 #  include <stdint.h>
+                                                 #endif
                                                 ],
                                                 [
                                                  #ifndef __GCC_HAVE_SYNC_COMPARE_AND_SWAP_$2

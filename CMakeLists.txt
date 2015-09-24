@@ -28,7 +28,7 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/geldreich
     ${CMAKE_SOURCE_DIR}/loom/vendor/jansson
     ${CMAKE_SOURCE_DIR}/loom/vendor/admob/include
-    ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-3.4.0/include
+    ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-4.0.1/include
     ${CMAKE_SOURCE_DIR}/loom/vendor/teak/ios/Carrot.framework/Headers
     ${CMAKE_SOURCE_DIR}/loom/vendor/sqlite3
     ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios/FacebookSDK.framework/Headers
@@ -76,6 +76,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
+option (LOOM_LUAJIT_LIB "luajit library path/name" libluajit)
+
 #--------------------------------------
 # SDL
 #--------------------------------------
@@ -101,7 +103,7 @@ endif()
 
 if (MSVC) 
 
-    add_definitions(-DCURL_STATICLIB)
+    add_definitions(-DCURL_STATICLIB /wd4267 /wd4244 /wd4700 /wd4334)
 
     set (LOOM_INCLUDE_FOLDERS ${LOOM_INCLUDE_FOLDERS}
     
@@ -122,9 +124,7 @@ if (MSVC)
     add_definitions(-DLOOM_DISABLE_JEMALLOC -D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
     
     # MSVC compatibility stuffs
-    include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-3.4.0/include/msvc_compat )
-
-    set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_windows/lua51.lib )
+    include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-4.0.1/include/msvc_compat )
 
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_HAS_EXCEPTIONS=0 -DWIN32 -D_WINDOWS -DWin32 -DFREEGLUT_STATIC -DFREEGLUT_LIB_PRAGMAS=0 -DGLEW_STATIC)
 
@@ -194,7 +194,6 @@ if(APPLE)
         set(CMAKE_OSX_ARCHITECTURES "armv7")
         set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
         
-        set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_ios/lib/libluajit-5.1.a)
         set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/ios/libSDL2.a)
         
         add_definitions(-DLOOM_RENDERER_OPENGLES2)
@@ -209,8 +208,6 @@ if(APPLE)
 
         set(CMAKE_OSX_ARCHITECTURES "i386")
         set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
-
-        set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_x86/lib/libluajit-5.1.a)
         
     endif()
 
@@ -238,7 +235,6 @@ if (ANDROID)
     add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_INT64__)
     add_definitions(-DLOOM_RENDERER_OPENGLES2)
     
-    set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_android/lib/libluajit-5.1)
     set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/android/armeabi/libSDL2.a)
     
 
@@ -258,8 +254,6 @@ if (LINUX)
     add_definitions(-DLOOM_DISABLE_JEMALLOC -DLOOM_LINUX_BUILD -DLINUX -DHAVE_CXA_DEMANGLE -DNPERFORMANCE -DNTELEMETRY)
 
     add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
-
-    set (LOOM_LUAJIT_LIB ${CMAKE_SOURCE_DIR}/build/luajit_x86/lib/libluajit-5.1.a)
     
 endif()
 

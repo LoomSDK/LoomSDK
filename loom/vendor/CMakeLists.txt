@@ -7,7 +7,7 @@ project(LoomVendor)
 include_directories(
     ${LOOM_INCLUDE_FOLDERS}
     telemetry-01052012/include
-    jemalloc-3.4.0/include
+    jemalloc-4.0.1/include
     openal-soft/include
     openal-soft/OpenAL32/Include
     minimp3
@@ -298,7 +298,7 @@ set (GELDREICH_SRC
 )
 
 
-set (JEMALLOC_ROOT jemalloc-3.4.0)
+set (JEMALLOC_ROOT jemalloc-4.0.1)
 
 set (JEMALLOC_SRC
     ${JEMALLOC_ROOT}/src/arena.c
@@ -323,7 +323,7 @@ set (JEMALLOC_SRC
     ${JEMALLOC_ROOT}/src/tcache.c
     ${JEMALLOC_ROOT}/src/tsd.c
     ${JEMALLOC_ROOT}/src/util.c
-    ${JEMALLOC_ROOT}/src/zone.c
+    ${JEMALLOC_ROOT}/src/pages.c
 )
 
 set(OPENALSOFT_ROOT openal-soft)
@@ -506,4 +506,3 @@ if (APPLE)
 endif()
 
 add_library(${PROJECT_NAME} ${ALL_FILES})
-

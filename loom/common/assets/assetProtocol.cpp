@@ -378,7 +378,7 @@ void AssetProtocolHandler::sendFile(const char *path, void *fileBits, int fileBi
 
 void AssetProtocolHandler::sendLog(const char *log)
 {
-    int len = strlen(log);
+    int len = (int)strlen(log);
 
     char          msgBuffer[4096];
     NetworkBuffer sendBuffer;
@@ -402,7 +402,7 @@ void AssetProtocolHandler::sendCustom(void* buffer, int length)
 
 void AssetProtocolHandler::sendCommand(const char *cmd)
 {
-    int len = strlen(cmd);
+    int len = (int)strlen(cmd);
 
     char          msgBuffer[4096];
     NetworkBuffer sendBuffer;

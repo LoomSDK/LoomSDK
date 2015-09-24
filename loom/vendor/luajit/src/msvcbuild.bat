@@ -1,5 +1,5 @@
 @rem Script to build LuaJIT with MSVC.
-@rem Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
+@rem Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
 @rem
 @rem Either open a "Visual Studio .NET Command Prompt"
 @rem (Note that the Express Edition does not contain an x64 compiler)
@@ -14,14 +14,12 @@
 @if not defined INCLUDE goto :FAIL
 
 @setlocal
-@set LJCOMPILE=cl /nologo /c /O2 /W3 /D_CRT_SECURE_NO_DEPRECATE
+@set LJCOMPILE=cl /nologo /c /MT /O2 /W3 /D_CRT_SECURE_NO_DEPRECATE
 @set LJLINK=link /nologo
 @set LJMT=mt /nologo
-@set LJLIB=lib /nologo /nodefaultlib
+@set LJLIB=lib /nologo
 @set DASMDIR=..\dynasm
 @set DASM=%DASMDIR%\dynasm.lua
-@set LJDLLNAME=lua51.dll
-@set LJLIBNAME=lua51.lib
 @set ALL_LIB=lib_base.c lib_math.c lib_bit.c lib_string.c lib_table.c lib_io.c lib_os.c lib_package.c lib_debug.c lib_jit.c lib_ffi.c
 
 %LJCOMPILE% host\minilua.c
@@ -64,38 +62,28 @@ buildvm -m folddef -o lj_folddef.h lj_opt_fold.c
 @if errorlevel 1 goto :BAD
 
 @if "%1" neq "debug" goto :NODEBUG
-@shift
 @set LJCOMPILE=%LJCOMPILE% /Zi
 @set LJLINK=%LJLINK% /debug
 :NODEBUG
-@if "%1"=="amalg" goto :AMALGDLL
-@if "%1"=="static" goto :STATIC
-%LJCOMPILE% /MD /DLUA_BUILD_AS_DLL lj_*.c lib_*.c
+@if "%2"=="amalg" goto :AMALGDLL
+@if "%2"=="static" goto :STATIC
+%LJCOMPILE% /DLUA_BUILD_AS_DLL lj_*.c lib_*.c
 @if errorlevel 1 goto :BAD
-%LJLINK% /DLL /out:%LJDLLNAME% lj_*.obj lib_*.obj
+%LJLINK% /DLL /out:lua51.dll lj_*.obj lib_*.obj
 @if errorlevel 1 goto :BAD
 @goto :MTDLL
 :STATIC
 %LJCOMPILE% lj_*.c lib_*.c
 @if errorlevel 1 goto :BAD
-%LJLIB% /OUT:%LJLIBNAME% lj_*.obj lib_*.obj
+%LJLIB% /OUT:..\..\..\..\build\luajit-windows-x64\lua51.lib lj_*.obj lib_*.obj
 @if errorlevel 1 goto :BAD
 @goto :MTDLL
 :AMALGDLL
-%LJCOMPILE% /MD /DLUA_BUILD_AS_DLL ljamalg.c
+%LJCOMPILE% /DLUA_BUILD_AS_DLL ljamalg.c
 @if errorlevel 1 goto :BAD
-%LJLINK% /DLL /out:%LJDLLNAME% ljamalg.obj lj_vm.obj
+%LJLINK% /DLL /out:lua51.dll ljamalg.obj lj_vm.obj
 @if errorlevel 1 goto :BAD
 :MTDLL
-if exist %LJDLLNAME%.manifest^
-  %LJMT% -manifest %LJDLLNAME%.manifest -outputresource:%LJDLLNAME%;2
-
-%LJCOMPILE% luajit.c
-@if errorlevel 1 goto :BAD
-%LJLINK% /out:luajit.exe luajit.obj %LJLIBNAME%
-@if errorlevel 1 goto :BAD
-if exist luajit.exe.manifest^
-  %LJMT% -manifest luajit.exe.manifest -outputresource:luajit.exe
 
 @del *.obj *.manifest minilua.exe buildvm.exe
 @echo.

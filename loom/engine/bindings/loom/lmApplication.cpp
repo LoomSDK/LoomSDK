@@ -281,7 +281,7 @@ static int mapScriptFile(const char *path, void **outPointer,
     {
         lmLog(applicationLogGroup, "Mapped asset for script: '%s'", path);
         *outPointer = scriptAsset->bits;
-        *outSize    = scriptAsset->length;
+        *outSize    = (long)scriptAsset->length;
         resCode     = 1;
     }
 

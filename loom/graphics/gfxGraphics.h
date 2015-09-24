@@ -48,8 +48,6 @@
 #include "SDL_opengl.h"
 #endif
 
-#include <stdint.h>
-
 #include "loom/script/native/lsNativeDelegate.h"
 #include "loom/common/core/assert.h"
 #include "loom/common/core/performance.h"

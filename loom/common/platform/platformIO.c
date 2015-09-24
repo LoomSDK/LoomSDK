@@ -401,7 +401,7 @@ static void platform_walkDirectory_r(const char *path, platform_subdirectoryWalk
 
         // Great, a hit. Figure out the relative path.
         strcpy(relativePath, path);
-        l = strlen(relativePath);
+        l = (int)strlen(relativePath);
         relativePath[l]     = '/';
         relativePath[l + 1] = 0;
         strcpy(relativePath + l + 1, findData.cFileName);
@@ -460,7 +460,7 @@ static void platform_walkFiles_r(const char *path, platform_fileWalkerCallback c
 
         // Great, a hit. Figure out the relative path.
         strcpy(relativePath, path);
-        l = strlen(relativePath);
+        l = (int)strlen(relativePath);
         relativePath[l]     = '/';
         relativePath[l + 1] = 0;
         strcpy(relativePath + l + 1, findData.cFileName);

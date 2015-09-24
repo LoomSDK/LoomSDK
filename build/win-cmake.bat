@@ -1,128 +1,87 @@
 @echo off
 
-:CheckOS
-set VALUE_NAME=ShellFolder
-echo Checking architecture...
-IF EXIST "%PROGRAMFILES(X86)%" (GOTO X64) ELSE (GOTO X86)
-
-:X64
-echo Architecture is X64
-set KEY_BASE=HKLM\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\
-GOTO VS2013
-
-:X86
-echo Architecture is X86
-set KEY_BASE=HKLM\SOFTWARE\Microsoft\VisualStudio\
-GOTO VS2013
-
-
-:VS2013
-echo Checking for Visual Studio 2013...
-set KEY_NAME=%KEY_BASE%12.0
-
-reg query %KEY_NAME% /v %VALUE_NAME% > NUL 2>&1
-if %ERRORLEVEL% EQU 1 GOTO VS2012
-
-FOR /F "usebackq skip=2 tokens=2,*" %%A IN (`REG QUERY %KEY_NAME% /v %VALUE_NAME%`) DO (
-	set ValueValue=%%B
+IF EXIST "%PROGRAMFILES(X86)%" (
+	set KEY_BASE=HKLM\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\
+	set HOST_ARCH=x64
+) ELSE (
+	set KEY_BASE==HKLM\SOFTWARE\Microsoft\VisualStudio\
+	set HOST_ARCH=x86
 )
 
-if defined ValueValue (
-    cmake .. -G "Visual Studio 12" -DLOOM_BUILD_JIT=%1 -DLUA_GC_PROFILE_ENABLED=%2 -DLOOM_BUILD_NUMCORES=%3 %4 %5 %6
-) else (
-    GOTO VS2012
-)
-EXIT
+echo Host architecture is %HOST_ARCH%
 
-:VS2012
-echo Checking for Visual Studio 2012...
-set KEY_NAME=%KEY_BASE%11.0
+set VS_TARGET_VERNUM=12.0
+set VS_TARGET_VER=Visual Studio 12 2013
+call :CHECK_VS_REG
+set VS_TARGET_VERNUM=11.0
+set VS_TARGET_VER=Visual Studio 11 2012
+call :CHECK_VS_REG
+set VS_TARGET_VERNUM=10.0
+set VS_TARGET_VER=Visual Studio 10 2010
+call :CHECK_VS_REG
 
+goto FALLBACK
 
-reg query %KEY_NAME% /v %VALUE_NAME% > NUL 2>&1
-if %ERRORLEVEL% EQU 1 GOTO VS2010
+:CHECK_VS_REG
+	echo Checking for %VS_TARGET_VER%...
+	set VALUE_NAME=ShellFolder
+	set KEY_NAME="%KEY_BASE%%VS_TARGET_VERNUM%"
+	reg query %KEY_NAME% /v %VALUE_NAME% > NUL 2>&1
+	if %ERRORLEVEL% EQU 1 GOTO _END_CHECK_VS_REG
 
-FOR /F "usebackq skip=2 tokens=2,*" %%A IN (`REG QUERY %KEY_NAME% /v %VALUE_NAME%`) DO (
-	set ValueValue=%%B
-)
+	FOR /F "usebackq skip=2 tokens=2,*" %%A IN (`REG QUERY %KEY_NAME% /v %VALUE_NAME%`) DO (
+		set REG_RESULT=%%B
+	)
 
-if defined ValueValue (
-    cmake .. -G "Visual Studio 11" -DLOOM_BUILD_JIT=%1 -DLUA_GC_PROFILE_ENABLED=%2 -DLOOM_BUILD_NUMCORES=%3 %4 %5 %6
-) else (
-    GOTO VS2010
-)
-EXIT
+	if defined REG_RESULT (
+		set VS_VER=%VS_TARGET_VER%
+		goto FOUND_VS
+	)
 
-:VS2010
-echo Checking for Visual Studio 2010...
-set KEY_NAME=%KEY_BASE%10.0
-
-reg query %KEY_NAME% /v %VALUE_NAME% > NUL 2>&1
-if %ERRORLEVEL% EQU 1 GOTO FALLBACK
-
-FOR /F "usebackq skip=2 tokens=2,*" %%A IN (`REG QUERY %KEY_NAME% /v %VALUE_NAME%`) DO (
-	set ValueValue=%%B
-)
-
-if defined ValueValue (
-    cmake .. -G "Visual Studio 10" -DLOOM_BUILD_JIT=%1 -DLUA_GC_PROFILE_ENABLED=%2 -DLOOM_BUILD_NUMCORES=%3 %4 %5 %6
-) else (
-    GOTO FALLBACK
-)
-EXIT
-
-
+	:_END_CHECK_VS_REG
+goto :eof
 
 REM Try a whole bunch of potential visual studio paths and see which if any exist.
-
 :FALLBACK
 echo Could not find paths in registry, trying default paths...
-IF EXIST "%programfiles%\Microsoft Visual Studio 12.0\VC" (GOTO VS2013-X64-CMAKE) ELSE (GOTO VS2013-X86)
 
-:VS2013-X86
-IF EXIST "%programfiles(x86)%\Microsoft Visual Studio 12.0\VC" (GOTO VS2013-X86-CMAKE) ELSE (GOTO VS2012-X64)
-
-:VS2012-X64
-echo Checking for Visual Studio 2012...
-IF EXIST "%programfiles%\Microsoft Visual Studio 11.0\VC" (GOTO VS2012-X64-CMAKE) ELSE (GOTO VS2012-X86)
-
-:VS2012-X86
-IF EXIST "%programfiles(x86)%\Microsoft Visual Studio 11.0\VC" (GOTO VS2012-X86-CMAKE) ELSE (GOTO VS2010-X64)
-
-:VS2010-X64
-echo Checking for Visual Studio 2010...
-IF EXIST "%programfiles%\Microsoft Visual Studio 10.0\VC" (GOTO VS2010-X64-CMAKE) ELSE (GOTO VS2010-X86)
-
-:VS2010-X86
-IF EXIST "%programfiles(x86)%\Microsoft Visual Studio 10.0\VC" (GOTO VS2010-X86-CMAKE) ELSE (GOTO EXIT)
+IF EXIST "%programfiles%\Microsoft Visual Studio 12.0\VC" (
+	SET VS_VER=Visual Studio 12 2013
+	GOTO FOUND_VS
+)
+IF EXIST "%programfiles(x86)%\Microsoft Visual Studio 12.0\VC" (
+	SET VS_VER=Visual Studio 12 2013
+	GOTO FOUND_VS
+)
+IF EXIST "%programfiles%\Microsoft Visual Studio 11.0\VC" (
+	SET VS_VER=Visual Studio 11 2012
+	GOTO FOUND_VS
+)
+IF EXIST "%programfiles(x86)%\Microsoft Visual Studio 11.0\VC" (
+	SET VS_VER=Visual Studio 11 2012
+	GOTO FOUND_VS
+)
+IF EXIST "%programfiles%\Microsoft Visual Studio 10.0\VC" (
+	SET VS_VER=Visual Studio 10 2010
+	GOTO FOUND_VS
+)
+IF EXIST "%programfiles(x86)%\Microsoft Visual Studio 10.0\VC" (
+	SET VS_VER=Visual Studio 10 2010
+	GOTO FOUND_VS
+)
 
 :EXIT
 echo Visual Studio 2010, 2012, or 2013 not present.
 echo exiting build...
 EXIT
 
-:VS2013-X64-CMAKE
-cmake .. -G "Visual Studio 12" -DLOOM_BUILD_JIT=%1 -DLUA_GC_PROFILE_ENABLED=%2 -DLOOM_BUILD_NUMCORES=%3 %4 %5 %6
-EXIT
+:FOUND_VS
+echo Found %VS_VER%!
 
-:VS2013-X86-CMAKE
-cmake .. -G "Visual Studio 12" -DLOOM_BUILD_JIT=%1 -DLUA_GC_PROFILE_ENABLED=%2 -DLOOM_BUILD_NUMCORES=%3 %4 %5 %6
-EXIT
+if "%1" == "x64" (
+	set CMAKE_GENERATOR=%VS_VER% Win64
+) else (
+	set CMAKE_GENERATOR=%VS_VER%
+)
 
-:VS2012-X64-CMAKE
-cmake .. -G "Visual Studio 11" -DLOOM_BUILD_JIT=%1 -DLUA_GC_PROFILE_ENABLED=%2 -DLOOM_BUILD_NUMCORES=%3 %4 %5 %6
-EXIT
-
-:VS2012-X86-CMAKE
-cmake .. -G "Visual Studio 11" -DLOOM_BUILD_JIT=%1 -DLUA_GC_PROFILE_ENABLED=%2 -DLOOM_BUILD_NUMCORES=%3 %4 %5 %6
-EXIT
-
-:VS2010-X64-CMAKE
-cmake .. -G "Visual Studio 10" -DLOOM_BUILD_JIT=%1 -DLUA_GC_PROFILE_ENABLED=%2 -DLOOM_BUILD_NUMCORES=%3 %4 %5 %6
-EXIT
-
-:VS2010-X86-CMAKE
-cmake .. -G "Visual Studio 10" -DLOOM_BUILD_JIT=%1 -DLUA_GC_PROFILE_ENABLED=%2 -DLOOM_BUILD_NUMCORES=%3 %4 %5 %6
-EXIT
-
-:END
+cmake .. -G "%CMAKE_GENERATOR%" -DLOOM_BUILD_JIT=%2 -DLUA_GC_PROFILE_ENABLED=%3 -DLOOM_BUILD_NUMCORES=%4 %5 %6 %7 -DLOOM_LUAJIT_LIB=%8

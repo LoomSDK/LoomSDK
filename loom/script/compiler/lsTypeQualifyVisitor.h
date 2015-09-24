@@ -149,7 +149,7 @@ public:
 
                 snprintf(path, 1023, "%s", import->fullPath.c_str());
 
-                int len = strlen(path);
+                int len = (int)strlen(path);
 
                 for (int k = 0; k <= (int)strlen(path); k++)
                 {

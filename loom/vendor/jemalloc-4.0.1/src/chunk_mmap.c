@@ -19,8 +19,15 @@ chunk_alloc_mmap_slow(size_t size, size_t alignment, bool *zero, bool *commit)
 		pages = pages_map(NULL, alloc_size);
 		if (pages == NULL)
 			return (NULL);
+		#ifdef _MSC_VER
+		#pragma warning (push)
+		#pragma warning (disable: 4146)
+		#endif
 		leadsize = ALIGNMENT_CEILING((uintptr_t)pages, alignment) -
 		    (uintptr_t)pages;
+		#ifdef _MSC_VER
+		#pragma warning (pop)
+		#endif
 		ret = pages_trim(pages, alloc_size, leadsize, size);
 	} while (ret == NULL);
 

@@ -190,8 +190,17 @@ malloc_strtoumax(const char *restrict nptr, char **restrict endptr, int base)
 		}
 		p++;
 	}
+	#ifdef _MSC_VER
+	#pragma warning (push)
+	#pragma warning (disable: 4146)
+	#endif
+
 	if (neg)
 		ret = -ret;
+
+	#ifdef _MSC_VER
+	#pragma warning (pop)
+	#endif
 
 	if (p == ns) {
 		/* No conversion performed. */

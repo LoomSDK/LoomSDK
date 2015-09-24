@@ -96,7 +96,7 @@ ByteCode *ByteCode::decode64(const utString& code64)
     int           i, len;
 
     UTsize c       = 0;
-    UTsize counter = code64.size() + 1;
+    UTsize counter = (UTsize)code64.size() + 1;
 
     while (counter)
     {

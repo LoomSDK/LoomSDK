@@ -8,7 +8,7 @@ puts "== Executing as '#{ENV['USER']}' =="
 ###############################
 
 # Specify the build target - Debug, Release, RelMinSize, RelWithDebug
-$buildTarget="Release" # "Debug"
+$buildTarget="Debug" # "Debug"
 
 # the sdk_version name that will be generated when this sdk is deployed (default = "dev")
 $targetSDKVersion = "dev"
@@ -200,7 +200,7 @@ puts ''
 #############
 
 # Don't use clean defaults, they will nuke things we don't want!
-CLEAN.replace(["cmake_android", "cmake_osx", "cmake_ios", "cmake_msvc", "cmake_ubuntu", "build/lua_*/**", "application/android/bin", "application/ouya/bin"])
+CLEAN.replace(["cmake_android", "cmake_osx", "cmake_ios", "cmake_msvc", "cmake_msvc_x64", "cmake_ubuntu", "build/luajit-windows-x86", "build/luajit-windows-x64", "build/lua_*/**", "application/android/bin", "application/ouya/bin"])
 CLEAN.include ["build/**/lib/**", "artifacts/**"]
 CLOBBER.include ["**/*.loom", $OUTPUT_DIRECTORY]
 CLOBBER.include ["**/*.loomlib", $OUTPUT_DIRECTORY]
@@ -630,13 +630,38 @@ namespace :build do
   end
 
   desc "Builds Windows"
-  task :windows => ['build\luajit_windows\lua51.lib'] do
+  task :windows => [] do
     puts "== Building Windows =="
+
+    if $doBuildJIT == 1 then
+        FileUtils.mkdir_p("build/luajit-windows-x86")
+        Dir.chdir("build/luajit-windows-x86") do
+            sh "cmake ../../loom/vendor/luajit/ -G \"Visual Studio 12 2013\""
+            sh "msbuild ALL_BUILD.vcxproj /p:Configuration=#{$buildTarget}"
+        end
+    end
 
     FileUtils.mkdir_p("cmake_msvc")
     Dir.chdir("cmake_msvc") do
-      sh "../build/win-cmake.bat #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\""
+      sh "../build/win-cmake.bat x86 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"build/luajit-windows-x86/lua51.lib\""
       sh "msbuild LoomEngine.sln /p:Configuration=#{$buildTarget}"
+    end
+
+    if WINDOWS_ISX64 == '1' then
+
+        if $doBuildJIT == 1 then
+            FileUtils.mkdir_p("build/luajit-windows-x64")
+            Dir.chdir("build/luajit-windows-x64") do
+                sh "cmake ../../loom/vendor/luajit/ -G \"Visual Studio 12 2013 Win64\""
+                sh "msbuild ALL_BUILD.vcxproj /p:Configuration=#{$buildTarget}"
+            end
+        end
+
+        FileUtils.mkdir_p("cmake_msvc_x64")
+        Dir.chdir("cmake_msvc_x64") do
+          sh "../build/win-cmake.bat x64 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"build/luajit-windows-x64/lua51.lib\""
+          sh "msbuild LoomEngine.sln /p:Configuration=#{$buildTarget}"
+        end
     end
 
     Rake::Task["utility:compileScripts"].invoke
@@ -667,7 +692,7 @@ namespace :build do
   end
 
   desc "Builds Android APK"
-  task :android => ['build/luajit_android/lib/libluajit-5.1.a', 'utility:compileScripts'] do
+  task :android => ['utility:compileScripts'] do
     puts "== Building Android =="
 
     # Build SDL for Android if it's missing
@@ -817,7 +842,7 @@ namespace :build do
   end
 
   desc "Builds Ubuntu Linux"
-  task :ubuntu => ['build/luajit_x86/lib/libluajit-5.1.a'] do
+  task :ubuntu => [] do
     puts "== Skipped Ubuntu =="
 
     writeStub("Ubuntu")
@@ -882,123 +907,6 @@ namespace :build do
   
 end
 
-file 'build/luajit_x86/lib/libluajit-5.1.a' do
-    rootFolder = Dir.pwd
-    lua_jit_dir = File.join(rootFolder, "build", "luajit_x86")
-    puts "building LuaJIT x86"
-    Dir.chdir("loom/vendor/luajit") do
-      sh "make clean"
-
-      if $LOOM_HOST_OS == 'darwin'
-        sh "make buildOSX PREFIX\"=#{lua_jit_dir.shellescape}\" -j#{$numCores}"
-      else
-        sh "make CC=\"gcc -m32\" PREFIX\"=#{lua_jit_dir.shellescape}\" -j#{$numCores}"
-      end
-
-      sh "make CC=\"gcc -m32\" install PREFIX=\"#{lua_jit_dir.shellescape}\""
-    end
-end
-
-file 'build/luajit_android/lib/libluajit-5.1.a' do
-
-    if $LOOM_HOST_OS == "windows"
-
-      puts "installing LuaJIT Android on Windows"
-      FileUtils.cp_r("loom/vendor/luajit_windows_android/luajit_android", "build")
-
-      #TODO: LOOM-1634 https://theengineco.atlassian.net/browse/LOOM-1634
-      #LuaJIT android build on Windows is currently extremely problematic.  It does build with dwimperl gcc in path, however building from
-      #vanilla NDK does not work due to a combination of NDK make/gcc and magic flags.  In the meantime, we use this prebuilt LuaJIT android
-      #build which the Rakefile copies into the proper location instead of building Android luaJIT on Windows
-
-      #puts "building LuaJIT Android on Windows"
-      #NDK = "#{ENV['ANDROID_NDK']}"
-      #if (!NDK or NDK == "")
-      #    raise "\n\nPlease ensure ANDROID_NDK environment variable is set to your NDK path\n\n"
-      #end
-      #rootFolder = Dir.pwd
-      #luajit_android_dir = File.join(rootFolder, "build", "luajit_android")
-      #Dir.chdir("loom/vendor/luajit") do
-      #    sh "#{NDK}\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make -f Makefile.win32 clean"
-      #    ENV['NDKABI']= "9"
-      #    ENV['NDKVER']= NDK + "\\toolchains\\arm-linux-androideabi-4.6"
-      #    ENV['NDKP'] = ENV['NDKVER'] + "\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\arm-linux-androideabi-"
-      #    ENV['NDKF'] = "--sysroot " + NDK + "\\platforms\\android-" + ENV['NDKABI'] + "\\arch-arm"
-      #    sh "#{NDK}\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make -f Makefile.win32 install -j#{$numCores} HOST_CC=\"gcc -m32\" CROSS=" + ENV['NDKP'] + " TARGET_FLAGS=\"" + ENV['NDKF']+"\" TARGET=arm TARGET_SYS=Linux PREFIX=\"#{luajit_android_dir.shellescape}\""
-      #end
-    else
-      puts "building LuaJIT Android on OSX / Linux"
-      # OSX / LINUX
-      NDK = ENV['ANDROID_NDK']
-      if (!NDK)
-          raise "\n\nPlease ensure ANDROID_NDK is set to your NDK folder, ie, ANDROID_NDK=/Users/bengarney/android/android-ndk-r8e. NDK r8 series is recommended."
-      end
-      rootFolder = Dir.pwd
-      luajit_android_dir = File.join(rootFolder, "build", "luajit_android")
-      Dir.chdir("loom/vendor/luajit") do
-          sh "make clean"
-          ENV['NDKABI']= "9"
-          archs = ["x86", "x86_64"]
-          ndkver = NDK + "/toolchains/arm-linux-androideabi-4.6"
-          found = false
-          for arch in archs
-            ndkplat = ndkver + "/prebuilt/darwin-#{arch}"
-            if File.exists?(ndkplat)
-              puts "Android platform dir found: #{ndkplat}"
-              found = true
-              break
-            end
-          end
-          if (!found)
-            raise "Android platform directory not found."
-          end
-          ENV['NDKVER']= ndkver
-          ENV['NDKP'] = ndkplat + "/bin/arm-linux-androideabi-"
-          ENV['NDKF'] = "--sysroot " + NDK + "/platforms/android-" + ENV['NDKABI'] + "/arch-arm"
-          sh "make install -j#{$numCores} HOST_CC=\"gcc -m32\" CROSS=" + ENV['NDKP'] + " TARGET_FLAGS=\"" + ENV['NDKF']+"\" TARGET=arm TARGET_SYS=Linux PREFIX=\"#{luajit_android_dir.shellescape}\""
-      end
-    end
-end
-
-file 'build/luajit_ios/lib/libluajit-5.1.a' do
-
-  if $LOOM_HOST_OS != "windows"
-    puts "building LuaJIT iOS"
-
-    check_ios_sdk_version! $targetIOSSDK
-
-    ISDK="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer"
-    ISDKVER="iPhoneOS#{$targetIOSSDK}.sdk"
-    ISDKP=ISDK + "/usr/bin/"
-    ISDKF="-arch armv7 -isysroot " + ISDK + "/SDKs/" + ISDKVER
-
-    ENV['ISDK'] = ISDK
-    ENV['ISDKVER'] = ISDKVER
-    ENV['ISDKP'] = ISDKP
-    ENV['ISDKF'] = ISDKF
-
-    rootFolder = Dir.pwd
-    luajit_ios_dir = File.join(rootFolder, "build", "luajit_ios")
-    Dir.chdir("loom/vendor/luajit") do
-        sh "make clean"
-        if $targetIOSSDK >= "7.0"
-              sh "make install -j#{$numCores} HOST_CC=\"gcc -m32 -arch i386\" TARGET_FLAGS=\"" + ISDKF + "\" TARGET=arm TARGET_SYS=iOS PREFIX=\"#{luajit_ios_dir.shellescape}\""
-        else
-              sh "make install -j#{$numCores} HOST_CC=\"gcc -m32 -arch i386\" CROSS=" + ISDKP + " TARGET_FLAGS=\"" + ISDKF + "\" TARGET=arm TARGET_SYS=iOS PREFIX=\"#{luajit_ios_dir.shellescape}\""
-        end
-    end
-  end
-end
-
-file 'build\luajit_windows\lua51.lib' do
-
-    puts "building LuaJIT Win32"
-
-    Dir.chdir("loom/vendor/luajit/src") do
-        sh "msvcbuild.bat release static"
-    end
-
-end
 
 # FIXME: At some point test should just run the tests and not try to build OSX
 # mainly we need to make windows work

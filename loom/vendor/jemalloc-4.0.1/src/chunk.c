@@ -235,8 +235,15 @@ chunk_recycle(arena_t *arena, chunk_hooks_t *chunk_hooks,
 		malloc_mutex_unlock(&arena->chunks_mtx);
 		return (NULL);
 	}
+	#ifdef _MSC_VER
+	#pragma warning (push)
+	#pragma warning (disable: 4146)
+	#endif
 	leadsize = ALIGNMENT_CEILING((uintptr_t)extent_node_addr_get(node),
 	    alignment) - (uintptr_t)extent_node_addr_get(node);
+	#ifdef _MSC_VER
+	#pragma warning (pop)
+	#endif
 	assert(new_addr == NULL || leadsize == 0);
 	assert(extent_node_size_get(node) >= leadsize + size);
 	trailsize = extent_node_size_get(node) - leadsize - size;

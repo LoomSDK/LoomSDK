@@ -144,7 +144,7 @@ struct TableValues
     utHashTable<utHashedString, TableValue> table;
 
     // Size of the table in bytes
-    unsigned int size;
+    size_t size;
 
     // Reset and clear the table
     void reset()
@@ -171,7 +171,7 @@ struct TableValues
     // Write just the table size to a buffer
     void writeSize(utByteArray *buffer)
     {
-        buffer->writeUnsignedInt(size);
+        buffer->writeUnsignedInt((unsigned int)size);
     }
 
     // Write just the key-value pairs to a buffer

@@ -645,7 +645,7 @@ void BinWriter::writeAssembly(json_t *json)
             utString  refjson  = (const char *)utBase64::decode64(json_string_value(jbinary)).getData().ptr();
             BinWriter *bwriter = lmNew(NULL) BinWriter;
             lmAssert(refjson.length() > 0, "Refjson should not be empty! %s", json_string_value(jbinary));
-            bwriter->writeAssembly(refjson.c_str(), refjson.length());
+            bwriter->writeAssembly(refjson.c_str(), (int)refjson.length());
         }
     }
 
@@ -684,7 +684,7 @@ void BinWriter::writeExecutable(const char *path, json_t *sjson)
     for (UTsize i = 0; i < stringPool.size(); i++)
     {
         stringBufferSize += sizeof(int);                               // length
-        stringBufferSize += strlen(stringPool.keyAt(i).str().c_str()); // characters
+        stringBufferSize += (int)strlen(stringPool.keyAt(i).str().c_str()); // characters
     }
 
     // length of entire string buffer

@@ -72,7 +72,7 @@ set ( LUA_CPATH_DEFAULT "./?${LUA_MODULE_SUFFIX};${LUA_DIR}${LUA_CDIR}/?${LUA_MO
 
 if ( WIN32 AND NOT CYGWIN )
   # Windows systems
-  add_definitions ( -DLUA_BUILD_AS_DLL -DLUAJIT_OS=LUAJIT_OS_WINDOWS)
+  add_definitions (-DLUAJIT_OS=LUAJIT_OS_WINDOWS)
   option ( LUA_BUILD_WLUA "Build wluajit interpreter for no-console applications." ON )
   set ( LJVM_MODE peobj )
   # Paths (Double escapes needed)
@@ -303,26 +303,42 @@ set ( LJCORE_C
   ${LJLIB_C}
 )
 
-add_library ( liblua SHARED ${LJCORE_C} ${DEPS} )
-target_link_libraries ( liblua ${LIBS} )
-set_target_properties ( liblua PROPERTIES OUTPUT_NAME lua CLEAN_DIRECT_OUTPUT 1 )
+# First for the generic no-config case (e.g. with mingw)
+set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
+set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
+set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
+# Second, for multi-config builds (e.g. msvc)
+foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
+    string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
+    set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR} )
+    set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR} )
+    set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR} )
+endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
+
+if (MSVC)
+ add_definitions(/MT)
+endif(MSVC)
+
+add_library ( libluajit STATIC ${LJCORE_C} ${DEPS} )
+target_link_libraries ( libluajit ${LIBS} )
+set_target_properties ( libluajit PROPERTIES OUTPUT_NAME lua51 CLEAN_DIRECT_OUTPUT 1 )
 
 ## LuaJIT Executable
-add_executable ( luajit src/luajit.c src/luajit.rc )
-target_link_libraries ( luajit liblua )
+#add_executable ( luajit src/luajit.c src/luajit.rc )
+#target_link_libraries ( luajit libluajit )
 
 # On Windows build a no-console variant also
-if ( LUA_BUILD_WLUA )
-  add_executable ( wluajit WIN32 src/wmain.c src/luajit.c src/luajit.rc )
-  target_link_libraries ( wluajit liblua )
-  install_executable ( wluajit )
-endif ()
+#if ( LUA_BUILD_WLUA )
+#  add_executable ( wluajit WIN32 src/wmain.c src/luajit.c src/luajit.rc )
+#  target_link_libraries ( wluajit libluajit )
+#  install_executable ( wluajit )
+#endif ()
 
 ## INSTALL
-install_executable( luajit )
-install_library( liblua )
-install_header( src/lua.h src/luajit.h src/lua.hpp ${CMAKE_CURRENT_BINARY_DIR}/luaconf.h src/lualib.h src/lauxlib.h )
+#install_executable( luajit )
+#install_library( libluajit )
+#install_header( src/lua.h src/luajit.h src/lua.hpp ${CMAKE_CURRENT_BINARY_DIR}/luaconf.h src/lualib.h src/lauxlib.h )
 
-install_doc ( doc/ )
-install_foo ( etc/ )
-install_data ( COPYRIGHT README.md )
+#install_doc ( doc/ )
+#install_foo ( etc/ )
+#install_data ( COPYRIGHT README.md )

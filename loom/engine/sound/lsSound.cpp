@@ -249,9 +249,7 @@ public:
         }
 
         // We got a live one!
-        // LOOM-1839: We cannot lmNew here currently as managed natives call delete in nativeDelete
-        //Sound *s = lmNew(NULL) Sound();
-        Sound *s = new Sound(assetPath);
+        Sound *s = lmNew(NULL) Sound(assetPath);
 
         // Check the list for dead sources if we exceeded our cap.
         Sound *walk = smList;
@@ -334,7 +332,7 @@ public:
         path = NULL;
         if(assetPath != NULL)
         {
-            int strLen = strlen(assetPath) + 1;
+            int strLen = (int)strlen(assetPath) + 1;
             path = new char[strLen];
             memcpy(path, assetPath, strLen * sizeof(char));
         }

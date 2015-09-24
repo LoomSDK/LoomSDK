@@ -159,21 +159,21 @@ F64 endHighResolutionTimer(U32 timeStore[2])
 
 void startHighResolutionTimer(U32 time[2])
 {
-    //time[0] = Platform::getRealMilliseconds();
+    time[0] = platform_getMilliseconds();
 
-    __asm
-    {
-        push eax
-        push edx
-        push ecx
-        rdtsc
-        mov ecx, time
-        mov DWORD PTR [ecx], eax
-        mov DWORD PTR [ecx + 4], edx
-        pop ecx
-        pop edx
-        pop eax
-    }
+    //__asm
+    //{
+    //    push eax
+    //    push edx
+    //    push ecx
+    //    rdtsc
+    //    mov ecx, time
+    //    mov DWORD PTR [ecx], eax
+    //    mov DWORD PTR [ecx + 4], edx
+    //    pop ecx
+    //    pop edx
+    //    pop eax
+    //}
 }
 
 
@@ -181,24 +181,24 @@ U32 endHighResolutionTimer(U32 time[2])
 {
     U32 ticks;
 
-    //ticks = Platform::getRealMilliseconds() - time[0];
-    //return ticks;
+    ticks = platform_getMilliseconds() - time[0];
+    return ticks;
 
-    __asm
-    {
-        push eax
-        push edx
-        push ecx
-        //db    0fh, 31h
-        rdtsc
-        mov ecx, time
-        sub edx, DWORD PTR [ecx + 4]
-        sbb eax, DWORD PTR [ecx]
-        mov DWORD PTR ticks, eax
-        pop ecx
-        pop edx
-        pop eax
-    }
+    //__asm
+    //{
+    //    push eax
+    //    push edx
+    //    push ecx
+    //    //db    0fh, 31h
+    //    rdtsc
+    //    mov ecx, time
+    //    sub edx, DWORD PTR [ecx + 4]
+    //    sbb eax, DWORD PTR [ecx]
+    //    mov DWORD PTR ticks, eax
+    //    pop ecx
+    //    pop edx
+    //    pop eax
+    //}
     return ticks;
 }
 
@@ -512,7 +512,7 @@ void LoomProfiler::hashPop(LoomProfilerRoot *expected)
 
         F64 fElapsed = endHighResolutionTimer(mCurrentLoomProfilerEntry->mStartTime);
 
-        lmAssert(fElapsed > 0, "Elapsed time should be positive!");
+        lmAssert(fElapsed >= 0, "Elapsed time should be positive - is %f", fElapsed);
 
         mCurrentLoomProfilerEntry->mTotalTime        += fElapsed;
         mCurrentLoomProfilerEntry->mParent->mSubTime += fElapsed; // mark it in the parent as well...

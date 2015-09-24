@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include <stdint.h>
 #include "loom/graphics/gfxTexture.h"
 #include "loom/graphics/gfxShader.h"
 

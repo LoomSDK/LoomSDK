@@ -1247,7 +1247,7 @@ malloc_init_hard_recursible(void)
 
 	ncpus = malloc_ncpus();
 
-#if (!defined(JEMALLOC_MUTEX_INIT_CB) && !defined(JEMALLOC_ZONE) \
+#if (!defined(JEMALLOC_MUTEX_INIT_CB) && !defined(JEMALLOC_ZONE) && LOOM_PLATFORM != LOOM_PLATFORM_ANDROID \
     && !defined(_WIN32) && !defined(__native_client__))
 	/* LinuxThreads's pthread_atfork() allocates. */
 	if (pthread_atfork(jemalloc_prefork, jemalloc_postfork_parent,
@@ -1311,7 +1311,7 @@ static bool
 malloc_init_hard(void)
 {
 
-#if defined(_WIN32) && _WIN32_WINNT < 0x0600
+#if _MSVC
 	_init_init_lock();
 #endif
 	malloc_mutex_lock(&init_lock);

@@ -113,8 +113,6 @@
 
 #else
 
-#include <stdint.h>
-
 typedef struct loom_alloc_header loom_alloc_header_t;
 struct loom_alloc_header
 {

@@ -115,8 +115,15 @@ chunk_alloc_dss(arena_t *arena, void *new_addr, size_t size, size_t alignment,
 			 * recycled for later use.
 			 */
 			cpad = (void *)((uintptr_t)dss_max + gap_size);
+			#ifdef _MSC_VER
+			#pragma warning (push)
+			#pragma warning (disable: 4146)
+			#endif
 			ret = (void *)ALIGNMENT_CEILING((uintptr_t)dss_max,
 			    alignment);
+			#ifdef _MSC_VER
+			#pragma warning (pop)
+			#endif
 			cpad_size = (uintptr_t)ret - (uintptr_t)cpad;
 			dss_next = (void *)((uintptr_t)ret + size);
 			if ((uintptr_t)ret < (uintptr_t)dss_max ||
