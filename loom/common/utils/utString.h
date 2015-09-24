@@ -36,9 +36,12 @@
 #define utCharEq(a, b)        ((a && b) && (*a == *b) && !strcmp(a, b))
 #define utCharEqL(a, b, l)    ((a && b) && (*a == *b) && !strncmp(a, b, l))
 
+#if defined(_MSC_VER) && !defined(MSVC_DEBUG_HEAP)
+#define strdup        _strdup
+#endif
+
 #ifdef _MSC_VER
 #pragma warning(disable : 4996)
-#define strdup        _strdup
 #define strcasecmp    _stricmp
 #define stricmp       _stricmp
 #endif

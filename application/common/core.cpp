@@ -1,4 +1,15 @@
+#define MSVC_DEBUG_HEAP
+
+#ifdef MSVC_DEBUG_HEAP
+#define _CRTDBG_MAP_ALLOC
+#endif
+
 #include <stdlib.h>
+
+#ifdef MSVC_DEBUG_HEAP
+#include <crtdbg.h>
+#endif
+
 #include <stdio.h>
 #include <time.h>
 
@@ -189,6 +200,17 @@ void loop()
 int
 main(int argc, char *argv[])
 {
+#ifdef MSVC_DEBUG_HEAP
+    // Get current flag
+    int tmpFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+
+    tmpFlag |= _CRTDBG_ALLOC_MEM_DF;
+    tmpFlag |= _CRTDBG_LEAK_CHECK_DF;
+
+    // Set flag to the new value.
+    _CrtSetDbgFlag(tmpFlag);
+#endif
+
 #ifdef WIN32
     // When on windows, do some workarounds so our console window
     // behaves properly.
