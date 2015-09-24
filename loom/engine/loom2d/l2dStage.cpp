@@ -134,7 +134,11 @@ void Stage::render(lua_State *L)
     LOOM_PROFILE_START(garbageCollection);
     if (vm) lualoom_gc_update(vm->VM());
     LOOM_PROFILE_END(garbageCollection);
-    
+
+    LOOM_PROFILE_START(finishRender);
+    GFX::Graphics::context()->glFinish();
+    LOOM_PROFILE_END(finishRender);
+
     LOOM_PROFILE_START(waitForVSync);
     /* Update the screen! */
     SDL_GL_SwapWindow(sdlWindow);
