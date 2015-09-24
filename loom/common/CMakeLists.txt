@@ -20,6 +20,7 @@ if (APPLE)
             platform/platformStoreiOS.mm
             platform/platformVideoiOS.mm
             platform/platformMobileiOS.mm
+            platform/platformFontIOS.mm
             platform/EBPurchase.m
         )
         

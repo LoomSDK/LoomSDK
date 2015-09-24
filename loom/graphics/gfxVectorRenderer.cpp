@@ -27,6 +27,7 @@
 #include "loom/common/assets/assets.h"
 
 #include "loom/common/platform/platformIO.h"
+#include "loom/common/platform/platformFont.h"
 
 #include "loom/graphics/gfxMath.h"
 #include "loom/graphics/gfxGraphics.h"
@@ -333,6 +334,8 @@ static bool readDefaultFontFaceBytes(void** mem, size_t* size)
 	return readFontFile("/system/fonts/DroidSans.ttf", mem, size) != 0;
 #elif LOOM_PLATFORM == LOOM_PLATFORM_OSX
 	return readFontFile("/Library/Fonts/Arial.ttf", mem, size) != 0;
+#elif LOOM_PLATFORM == LOOM_PLATFORM_IOS
+    return (bool)platform_fontSystemFontFromName("ArialMT", mem, (unsigned int*)size);
 #else
 	mem = NULL;
 	size = 0;
