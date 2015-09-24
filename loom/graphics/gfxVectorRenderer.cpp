@@ -26,15 +26,13 @@
 #include "loom/common/core/assert.h"
 #include "loom/common/assets/assets.h"
 
+#include "loom/common/platform/platformIO.h"
+
 #include "loom/graphics/gfxMath.h"
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxVectorRenderer.h"
 
 #include "loom/script/runtime/lsProfiler.h"
-
-#define NVG_malloc(sz) lmAlloc(NULL, sz)
-#define NVG_realloc(sz) lmRealloc(NULL, sz)
-#define NVG_free(sz) lmFree(NULL, sz)
 
 #include "nanovg.h"
 
@@ -50,35 +48,25 @@
 #define NANOSVG_IMPLEMENTATION
 #include "nanosvg.h"
 
-/*
-#include <windows.h>
-#include <wchar.h>
 
-#if defined(_MSC_VER) && _MSC_VER > 1310
-// Visual C++ 2005 and later require the source files in UTF-8, and all strings 
-// to be encoded as wchar_t otherwise the strings will be converted into the 
-// local multibyte encoding and cause errors. To use a wchar_t as UTF-8, these 
-// strings then need to be convert back to UTF-8. This function is just a rough 
-// example of how to do this.
-# define utf8(str)  ConvertToUTF8(L##str)
-const char * ConvertToUTF8(const wchar_t * pStr) {
-	static char szBuf[1024];
-	WideCharToMultiByte(CP_UTF8, 0, pStr, -1, szBuf, sizeof(szBuf), NULL, NULL);
-	return szBuf;
-}
-#else
-// Visual C++ 2003 and gcc will use the string literals as is, so the files 
-// should be saved as UTF-8. gcc requires the files to not have a UTF-8 BOM.
-# define utf8(str)  str
-#endif
-*/
+static void* nvgAlloc(size_t size) { return lmAlloc(NULL, size); }
+static void* nvgRealloc(void* mem, size_t size) { return lmRealloc(NULL, mem, size); }
+static void nvgFree(void* mem) { lmFree(NULL, mem); }
+
+extern SDL_Window *gSDLWindow;
 
 namespace GFX
 {
 lmDefineLogGroup(gGFXVectorRendererLogGroup, "GFXVectorRenderer", 1, LoomLogInfo);
 
 NVGcontext *nvg = NULL;
-static int font;
+
+static VectorTextFormat currentTextFormat;
+static lmscalar currentTextFormatAlpha;
+static bool currentTextFormatApplied = false;
+static int defaultFontId = VectorTextFormat::FONT_UNDEFINED;
+
+VectorTextFormat VectorTextFormat::defaultFormat = VectorTextFormat(0x000000, 14);
 
 utHashTable<utHashedString, utString> VectorTextFormat::loadedFonts;
 int VectorRenderer::frameWidth = 0;
@@ -86,20 +74,6 @@ int VectorRenderer::frameHeight = 0;
 uint8_t VectorRenderer::quality = VectorRenderer::QUALITY_ANTIALIAS | VectorRenderer::QUALITY_STENCIL_STROKES;
 uint8_t VectorRenderer::tessellationQuality = 6;
 utHashTable<utIntHashKey, int> VectorRenderer::imageLookup;
-
-//*
-void drawLabel(struct NVGcontext* vg, const char* text, float x, float y, float w, float h)
-{
-	NVG_NOTUSED(w);
-
-	nvgFontSize(vg, 30.0f);
-	nvgFontFace(vg, "sans");
-	nvgFillColor(vg, nvgRGBA(0, 25, 25, 128));
-
-	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-	nvgText(vg, x, y + h*0.5f, text, NULL);
-}
-//*/
 
 void VectorRenderer::setSize(int width, int height) {
 	frameWidth = width;
@@ -114,7 +88,6 @@ void VectorRenderer::beginFrame()
     nvgBeginFrame(nvg, frameWidth, frameHeight, 1);
 
     deleteImages();
-
 
     /*
     nvgBeginPath(nvg);
@@ -134,24 +107,14 @@ void VectorRenderer::preDraw(lmscalar a, lmscalar b, lmscalar c, lmscalar d, lms
 	
 	nvgLineCap(nvg, NVG_BUTT);
 	nvgLineJoin(nvg, NVG_ROUND);
+
+	currentTextFormat = VectorTextFormat::defaultFormat;
+	currentTextFormatAlpha = 1;
+	currentTextFormatApplied = false;
 }
 
 void VectorRenderer::postDraw() {
 	LOOM_PROFILE_SCOPE(vectorPostDraw);
-
-	/*
-	nvgBeginPath(nvg);
-	nvgStrokeColor(nvg, nvgRGBAf(0, 1, 0, 1));
-	nvgMoveTo(nvg, 150, 150);
-	nvgLineTo(nvg, 250, 150);
-	nvgStroke(nvg);
-	
-	nvgBeginPath(nvg);
-	nvgStrokeColor(nvg, nvgRGBAf(1, 0, 0, 1));
-	nvgMoveTo(nvg, 150, 180);
-	nvgLineTo(nvg, 250, 180);
-	nvgStroke(nvg);
-	*/
 
 	nvgRestore(nvg);
 }
@@ -159,17 +122,6 @@ void VectorRenderer::postDraw() {
 void VectorRenderer::endFrame()
 {
     LOOM_PROFILE_SCOPE(vectorEnd);
-
-	/*
-	nvgBeginPath(nvg);
-	nvgFillColor(nvg, nvgRGBAf(0, 1, 1, 1));
-	nvgRect(nvg, 50, 50, 100, 100);
-	nvgFill(nvg);
-	*/
-
-	//drawLabel(nvg, utf8("Hello nanovg! Pokakaj se v hlače. あなたのズボンをうんち。便便在裤子上"), 10, 50, 280, 20);
-
-	//drawLabel(nvg, "hello!", 10, 50, 280, 20);
 
 	nvgEndFrame(nvg);
 }
@@ -227,6 +179,7 @@ void VectorRenderer::lineMiterLimit(float limit) {
 
 void VectorRenderer::fillColor(float r, float g, float b, float a) {
 	nvgFillColor(nvg, nvgRGBAf(r, g, b, a));
+	currentTextFormatApplied = false;
 }
 
 void VectorRenderer::fillColor(unsigned int rgb, float a) {
@@ -281,22 +234,10 @@ void VectorRenderer::fillTexture(TextureID id, Loom2D::Matrix transform, bool re
 }
 
 void VectorRenderer::textFormat(VectorTextFormat* format, lmscalar a) {
-	if (strlen(format->font) > 0) {
-		nvgFontFace(nvg, format->font);
-	}
-	if (format->color >= 0) {
-		unsigned int rgb = format->color;
-		float cr = ((rgb >> 16) & 0xff) / 255.0f;
-		float cg = ((rgb >> 8) & 0xff) / 255.0f;
-		float cb = ((rgb >> 0) & 0xff) / 255.0f;
-		nvgFillColor(nvg, nvgRGBAf(cr, cg, cb, (float) a));
-	}
-	if (!isnan(format->size)) nvgFontSize(nvg, format->size);
-	if (format->align != -1) nvgTextAlign(nvg, format->align);
-	if (!isnan(format->letterSpacing)) nvgTextLetterSpacing(nvg, format->letterSpacing);
-	if (!isnan(format->lineHeight)) nvgTextLineHeight(nvg, format->lineHeight);
+	currentTextFormat.merge(format);
+	currentTextFormatAlpha = a;
+	currentTextFormatApplied = false;
 }
-
 
 void VectorRenderer::moveTo(float x, float y) {
 	nvgMoveTo(nvg, x, y);
@@ -344,20 +285,145 @@ void VectorRenderer::arc(float x, float y, float radius, float angleFrom, float 
 	nvgArc(nvg, x, y, radius, angleFrom, angleTo, direction);
 }
 
+static bool readFontFile(const char *path, void** mem, size_t* size)
+{
+    void* mapped;
+    long mappedSize;
+
+    bool success = platform_mapFile(path, &mapped, &mappedSize) != 0;
+    
+    if (success) {
+        *mem = lmAlloc(NULL, mappedSize);
+        *size = mappedSize;
+
+        memcpy(*mem, mapped, mappedSize);
+
+        platform_unmapFile(mapped);
+    }
+
+    return success;
+}
+
+
+static bool readDefaultFontFaceBytes(void** mem, size_t* size)
+{
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+	// Get Windows dir
+	char windir[MAX_PATH];
+	GetWindowsDirectoryA((LPSTR)&windir, MAX_PATH);
+
+	// Load font file
+	return readFontFile((utString(windir) + "\\Fonts\\arial.ttf").c_str(), mem, size) != 0;
+
+	// Kept for future implementation of grabbing fonts by name
+	/*
+	SDL_SysWMinfo info;
+	SDL_VERSION(&info.version);
+	if (SDL_GetWindowWMInfo(gSDLWindow, &info)) {
+	HWND windowHandle = info.info.win.window;
+	HDC deviceContext = GetDC(windowHandle);
+	DWORD size = GetFontData(deviceContext, 0, 0, NULL, 0);
+	lmAssert(size != GDI_ERROR, "Font data retrieval failed: %d", GetLastError());
+	}
+	else {
+	lmLogError(gGFXVectorRendererLogGroup, "Error retrieving window information: %s", SDL_GetError());
+	}
+	*/
+#elif LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+	return readFontFile("/system/fonts/DroidSans.ttf", mem, size) != 0;
+#elif LOOM_PLATFORM == LOOM_PLATFORM_OSX
+	return readFontFile("/Library/Fonts/Arial.ttf", mem, size) != 0;
+#else
+	mem = NULL;
+	size = 0;
+#endif
+}
+
+static void loadDefaultFontFace() {
+	lmLogWarn(gGFXVectorRendererLogGroup, "Warning: TextFormat font face not specified, using predefined default system font");
+	void* mem;
+	size_t size;
+	bool success = readDefaultFontFaceBytes(&mem, &size);
+	if (!success) {
+		defaultFontId = VectorTextFormat::FONT_DEFAULTMISSING;
+		return;
+	}
+	int handle = nvgCreateFontMem(nvg, "__default", (unsigned char*)mem, size, true);
+	if (handle == -1) {
+		lmFree(NULL, mem);
+		defaultFontId = VectorTextFormat::FONT_DEFAULTMEMORY;
+		return;
+	}
+	defaultFontId = handle;
+}
+
+void VectorTextFormat::ensureFontId() {
+	if (fontId == VectorTextFormat::FONT_UNDEFINED) {
+		int id = nvgFindFont(nvg, font.c_str());
+		fontId = id >= 0 ? id : VectorTextFormat::FONT_NOTFOUND;
+	}
+
+	if (fontId == VectorTextFormat::FONT_NOTFOUND) {
+		if (defaultFontId == VectorTextFormat::FONT_UNDEFINED) loadDefaultFontFace();
+		fontId = defaultFontId;
+	}
+
+	if (fontId < 0) {
+		if (defaultFontId != VectorTextFormat::FONT_REPORTEDERROR) {
+			const char *msg;
+			switch (defaultFontId) {
+				case VectorTextFormat::FONT_DEFAULTMISSING: msg = "Missing default system font face (load error or unsupported platform)"; break;
+				case VectorTextFormat::FONT_DEFAULTMEMORY:  msg = "Unable to create default font face memory"; break;
+				default:                                    msg = "Unknown error"; break;
+			}
+			lmLogError(gGFXVectorRendererLogGroup, "TextFormat font error: %s", msg);
+			defaultFontId = VectorTextFormat::FONT_REPORTEDERROR;
+		}
+		return;
+	}
+}
+
+static void applyTextFormat(VectorTextFormat *format, lmscalar alpha) {
+	format->ensureFontId();
+
+	if (format->fontId >= 0) nvgFontFaceId(nvg, format->fontId);
+
+	if (format->color >= 0) {
+		unsigned int rgb = format->color;
+		float cr = ((rgb >> 16) & 0xff) / 255.0f;
+		float cg = ((rgb >> 8) & 0xff) / 255.0f;
+		float cb = ((rgb >> 0) & 0xff) / 255.0f;
+		nvgFillColor(nvg, nvgRGBAf(cr, cg, cb, (float)alpha));
+	}
+	if (!isnan(format->size)) nvgFontSize(nvg, format->size);
+	if (format->align != -1) nvgTextAlign(nvg, format->align);
+	if (!isnan(format->letterSpacing)) nvgTextLetterSpacing(nvg, format->letterSpacing);
+	if (!isnan(format->lineHeight)) nvgTextLineHeight(nvg, format->lineHeight);
+
+	currentTextFormatApplied = false;
+}
+
+void VectorRenderer::ensureTextFormat() {
+	if (currentTextFormatApplied) return;
+	applyTextFormat(&currentTextFormat, currentTextFormatAlpha);
+	currentTextFormatApplied = true;
+}
 
 void VectorRenderer::textLine(float x, float y, utString* string) {
-    nvgText(nvg, x, y, string->c_str(), NULL);
+	ensureTextFormat();
+	nvgText(nvg, x, y, string->c_str(), NULL);
 }
 
 void VectorRenderer::textBox(float x, float y, float width, utString* string) {
-    nvgTextBox(nvg, x, y, width, string->c_str(), NULL);
+	ensureTextFormat();
+	nvgTextBox(nvg, x, y, width, string->c_str(), NULL);
 }
 
 Loom2D::Rectangle VectorRenderer::textLineBounds(VectorTextFormat* format, float x, float y, utString* string) {
     float bounds[4];
     nvgSave(nvg);
     nvgReset(nvg);
-    textFormat(format, 1);
+    applyTextFormat(format, 1);
     nvgTextBounds(nvg, x, y, string->c_str(), NULL, bounds);
     nvgRestore(nvg);
     float xmin = bounds[0];
@@ -370,7 +436,7 @@ Loom2D::Rectangle VectorRenderer::textLineBounds(VectorTextFormat* format, float
 float VectorRenderer::textLineAdvance(VectorTextFormat* format, float x, float y, utString* string) {
     nvgSave(nvg);
     nvgReset(nvg);
-    textFormat(format, 1);
+    applyTextFormat(format, 1);
     float advance = nvgTextBounds(nvg, x, y, string->c_str(), NULL, NULL);
     nvgRestore(nvg);
     return advance;
@@ -380,7 +446,7 @@ Loom2D::Rectangle VectorRenderer::textBoxBounds(VectorTextFormat* format, float 
     float bounds[4];
     nvgSave(nvg);
     nvgReset(nvg);
-    textFormat(format, 1);
+    applyTextFormat(format, 1);
     nvgTextBoxBounds(nvg, x, y, width, string->c_str(), NULL, bounds);
     nvgRestore(nvg);
     float xmin = bounds[0];
@@ -415,6 +481,10 @@ void VectorRenderer::destroyGraphicsResources()
 #else
 		nvgDeleteGL2(nvg);
 #endif
+
+		currentTextFormatApplied = false;
+		defaultFontId = -1;
+
 		nvg = NULL;
 	}
 }
@@ -467,21 +537,13 @@ VectorFont::VectorFont(utString fontName, utString filePath) {
 }
 */
 
-VectorTextFormat::VectorTextFormat() {
-    font = "";
-    color = -1;
-    size = NAN;
-    align = VectorTextFormat::ALIGN_TOP | VectorTextFormat::ALIGN_LEFT;
-    letterSpacing = NAN;
-    lineHeight = NAN;
-}
-
 void VectorTextFormat::restoreLoaded() {
     utHashTableIterator< utHashTable<utHashedString, utString> > it = loadedFonts.iterator();
     while (it.hasMoreElements()) {
         utHashEntry<utHashedString, utString> s = it.getNext();
         load(s.second, s.first.str());
     }
+    defaultFontId = -1;
 }
 
 void VectorTextFormat::load(utString fontName, utString filePath) {
@@ -491,6 +553,17 @@ void VectorTextFormat::load(utString fontName, utString filePath) {
     loom_asset_unlock(filePath.c_str());
 }
 
+void VectorTextFormat::merge(VectorTextFormat* source) {
+	if (source->font.size() > 0) {
+		font = source->font;
+		fontId = VectorTextFormat::FONT_UNDEFINED;
+	}
+	if (source->color >= 0) color = source->color;
+	if (!isnan(source->size)) size = source->size;
+	if (source->align != -1) align = source->align;
+	if (!isnan(source->letterSpacing)) letterSpacing = source->letterSpacing;
+	if (!isnan(source->lineHeight)) lineHeight = source->lineHeight;
+}
 
 VectorSVG::VectorSVG() {
     image = NULL;
@@ -534,7 +607,7 @@ void VectorSVG::loadFile(utString path, utString units, float dpi) {
 
 void VectorSVG::onReload(void *payload, const char *name) {
 	VectorSVG* svg = static_cast<VectorSVG*>(payload);
-	lmAssert(strncmp(svg->path.c_str(), name, svg->path.size()) == 0, "expected svg path and reloaded path mismatch: %s %s", svg->path.c_str(), name);
+	lmAssert(strncmp(svg->path.c_str(), name, svg->path.size()) == 0, "Expected svg path and reloaded path mismatch: %s %s", svg->path.c_str(), name);
 	svg->reload();
 }
 
@@ -632,6 +705,7 @@ void VectorRenderer::reset()
 
 void VectorRenderer::initialize()
 {
+    nvgSetAllocFunctions(nvgAlloc, nvgRealloc, nvgFree);
     initializeGraphicsResources();
 }
 

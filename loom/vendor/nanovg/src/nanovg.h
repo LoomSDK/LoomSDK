@@ -30,6 +30,12 @@ extern "C" {
 #pragma warning(disable: 4201)  // nonstandard extension used : nameless struct/union
 #endif
 
+// Custom allocation
+typedef void *(*nvg_malloc_t)(size_t);
+typedef void *(*nvg_realloc_t)(void *, size_t);
+typedef void (*nvg_free_t)(void *);
+void nvgSetAllocFunctions(nvg_malloc_t malloc_fn, nvg_realloc_t realloc_fn, nvg_free_t free_fn);
+
 typedef struct NVGcontext NVGcontext;
 
 struct NVGcolor {

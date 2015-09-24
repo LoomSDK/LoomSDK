@@ -193,7 +193,6 @@ protected:
 	void restartPath();
 	void resetStyle();
 	void inflateBounds(const Loom2D::Rectangle& rect);
-	void ensureTextFormat();
 
 public:
 	utArray<VectorData*> *queue;
@@ -202,7 +201,7 @@ public:
 	VectorFill currentFill;
 	bool pathDirty;
 	bool textFormatDirty;
-	GFX::VectorTextFormat currentTextFormat;
+	VectorTextFormat currentTextFormat;
 	lmscalar boundL;
 	lmscalar boundT;
 	lmscalar boundR;

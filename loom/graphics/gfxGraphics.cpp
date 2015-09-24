@@ -144,6 +144,8 @@ void Graphics::initialize()
 void Graphics::shutdown()
 {
     Texture::shutdown();
+    QuadRenderer::destroyGraphicsResources();
+    VectorRenderer::destroyGraphicsResources();
 }
 
 void Graphics::reset(int width, int height, uint32_t flags)
