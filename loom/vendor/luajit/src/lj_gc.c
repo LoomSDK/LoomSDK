@@ -1,6 +1,6 @@
 /*
 ** Garbage collector.
-** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 **
 ** Major portions taken verbatim or adapted from the Lua interpreter.
 ** Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -25,54 +25,6 @@
 #endif
 #include "lj_trace.h"
 #include "lj_vm.h"
-
-
-#if LUA_GC_PROFILE_ENABLED
-
-#define LUA_GC_PREFIX gLuaGC
-#define LUA_GC_GLOBAL_INTERNAL_CONCAT(prefix, name) prefix ## _ ## name
-#define LUA_GC_GLOBAL_INTERNAL(prefix, name) LUA_GC_GLOBAL_INTERNAL_CONCAT(prefix, name)
-#define LUA_GC_GLOBAL(name) LUA_GC_GLOBAL_INTERNAL(LUA_GC_PREFIX, name)
-
-#define LUA_GC_DEFINE(name) extern LUA_GC_GLOBAL(callback) LUA_GC_GLOBAL(name)
-
-#define LUA_GC_RANGE(name) \
-    extern LUA_GC_GLOBAL(callback_begin) LUA_GC_GLOBAL(name ## _begin); \
-    extern LUA_GC_GLOBAL(callback_end)   LUA_GC_GLOBAL(name ## _end); \
-
-
-#define LUA_GC_CALL(name)  if (LUA_GC_GLOBAL(name)) LUA_GC_GLOBAL(name)();
-
-
-#define LUA_GC_PREFIX_VAR(name) profiler_data_for ## _ ## name
-
-#define LUA_GC_BEGIN(name) \
-    static void* LUA_GC_PREFIX_VAR(name); \
-    if (LUA_GC_GLOBAL(name ## _begin)) LUA_GC_PREFIX_VAR(name) = LUA_GC_GLOBAL(name ## _begin)(); \
-
-#define LUA_GC_END(name) \
-    if (LUA_GC_GLOBAL(name ## _end)) LUA_GC_GLOBAL(name ## _end)(LUA_GC_PREFIX_VAR(name));
-
-
-typedef void(*gLuaGC_callback)();
-typedef void*(*gLuaGC_callback_begin)();
-typedef void(*gLuaGC_callback_end)(void*);
-
-LUA_GC_RANGE(fullgc);
-LUA_GC_RANGE(step);
-
-#else
-
-#define LUA_GC_PREFIX
-#define LUA_GC_GLOBAL(name)
-#define LUA_GC_DEFINE(name)
-#define LUA_GC_RANGE(name)
-#define LUA_GC_CALL(name)
-#define LUA_GC_PREFIX_VAR(name)
-#define LUA_GC_BEGIN(name)
-#define LUA_GC_END(name)
-
-#endif // LUA_GC_PROFILE_ENABLED
 
 #define GCSTEPSIZE	1024u
 #define GCSWEEPMAX	40
@@ -549,6 +501,7 @@ static void gc_finalize(lua_State *L)
     setcdataV(L, &tmp, gco2cd(o));
     tv = lj_tab_set(L, ctype_ctsG(g)->finalizer, &tmp);
     if (!tvisnil(tv)) {
+      g->gc.nocdatafin = 0;
       copyTV(L, &tmp, tv);
       setnilV(tv);  /* Clear entry in finalizer table. */
       gc_call_finalizer(g, L, &tmp, o);
@@ -682,6 +635,9 @@ static size_t gc_onestep(lua_State *L)
       gc_shrink(g, L);
       if (gcref(g->gc.mmudata)) {  /* Need any finalizations? */
 	g->gc.state = GCSfinalize;
+#if LJ_HASFFI
+	g->gc.nocdatafin = 1;
+#endif
       } else {  /* Otherwise skip this phase to help the JIT. */
 	g->gc.state = GCSpause;  /* End of GC cycle. */
 	g->gc.debt = 0;
@@ -700,6 +656,9 @@ static size_t gc_onestep(lua_State *L)
 	g->gc.estimate -= GCFINALIZECOST;
       return GCFINALIZECOST;
     }
+#if LJ_HASFFI
+    if (!g->gc.nocdatafin) lj_tab_rehash(L, ctype_ctsG(g)->finalizer);
+#endif
     g->gc.state = GCSpause;  /* End of GC cycle. */
     g->gc.debt = 0;
     return 0;
@@ -712,7 +671,6 @@ static size_t gc_onestep(lua_State *L)
 /* Perform a limited amount of incremental GC steps. */
 int LJ_FASTCALL lj_gc_step(lua_State *L)
 {
-  LUA_GC_BEGIN(step)
   global_State *g = G(L);
   MSize lim;
   int32_t ostate = g->vmstate;
@@ -720,25 +678,26 @@ int LJ_FASTCALL lj_gc_step(lua_State *L)
   lim = (GCSTEPSIZE/100) * g->gc.stepmul;
   if (lim == 0)
     lim = LJ_MAX_MEM;
-  g->gc.debt += g->gc.total - g->gc.threshold;
+  if (g->gc.total > g->gc.threshold)
+    g->gc.debt += g->gc.total - g->gc.threshold;
   do {
     lim -= (MSize)gc_onestep(L);
     if (g->gc.state == GCSpause) {
       g->gc.threshold = (g->gc.estimate/100) * g->gc.pause;
       g->vmstate = ostate;
-      LUA_GC_END(step)
       return 1;  /* Finished a GC cycle. */
     }
   } while ((int32_t)lim > 0);
   if (g->gc.debt < GCSTEPSIZE) {
     g->gc.threshold = g->gc.total + GCSTEPSIZE;
+    g->vmstate = ostate;
+    return -1;
   } else {
     g->gc.debt -= GCSTEPSIZE;
     g->gc.threshold = g->gc.total;
+    g->vmstate = ostate;
+    return 0;
   }
-  g->vmstate = ostate;
-  LUA_GC_END(step)
-  return 0;
 }
 
 /* Ditto, but fix the stack top first. */
@@ -765,7 +724,6 @@ int LJ_FASTCALL lj_gc_step_jit(global_State *g, MSize steps)
 /* Perform a full GC cycle. */
 void lj_gc_fullgc(lua_State *L)
 {
-  LUA_GC_BEGIN(fullgc)
   global_State *g = G(L);
   int32_t ostate = g->vmstate;
   setvmstate(g, GC);
@@ -785,7 +743,6 @@ void lj_gc_fullgc(lua_State *L)
   do { gc_onestep(L); } while (g->gc.state != GCSpause);
   g->gc.threshold = (g->gc.estimate/100) * g->gc.pause;
   g->vmstate = ostate;
-  LUA_GC_END(fullgc)
 }
 
 /* -- Write barriers ------------------------------------------------------ */

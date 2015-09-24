@@ -2,7 +2,7 @@
 ** FOLD: Constant Folding, Algebraic Simplifications and Reassociation.
 ** ABCelim: Array Bounds Check Elimination.
 ** CSE: Common-Subexpression Elimination.
-** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lj_opt_fold_c
@@ -938,25 +938,18 @@ LJFOLDF(shortcut_conv_num_int)
 }
 
 LJFOLD(CONV CONV IRCONV_INT_NUM)  /* _INT */
+LJFOLD(CONV CONV IRCONV_U32_NUM)  /* _U32*/
 LJFOLDF(simplify_conv_int_num)
 {
   /* Fold even across PHI to avoid expensive num->int conversions in loop. */
-  if ((fleft->op2 & IRCONV_SRCMASK) == IRT_INT)
+  if ((fleft->op2 & IRCONV_SRCMASK) ==
+      ((fins->op2 & IRCONV_DSTMASK) >> IRCONV_DSH))
     return fleft->op1;
   return NEXTFOLD;
 }
 
-LJFOLD(CONV CONV IRCONV_U32_NUM)  /* _U32*/
-LJFOLDF(simplify_conv_u32_num)
-{
-  /* Fold even across PHI to avoid expensive num->int conversions in loop. */
-  if ((fleft->op2 & IRCONV_SRCMASK) == IRT_U32)
-    return fleft->op1;
-  return NEXTFOLD;
-}
-
-LJFOLD(CONV CONV IRCONV_I64_NUM)  /* _INT or _U32*/
-LJFOLD(CONV CONV IRCONV_U64_NUM)  /* _INT or _U32*/
+LJFOLD(CONV CONV IRCONV_I64_NUM)  /* _INT or _U32 */
+LJFOLD(CONV CONV IRCONV_U64_NUM)  /* _INT or _U32 */
 LJFOLDF(simplify_conv_i64_num)
 {
   PHIBARRIER(fleft);
@@ -978,13 +971,24 @@ LJFOLDF(simplify_conv_i64_num)
   return NEXTFOLD;
 }
 
-LJFOLD(CONV CONV IRCONV_INT_I64)  /* _INT */
-LJFOLD(CONV CONV IRCONV_INT_U64)  /* _INT */
+LJFOLD(CONV CONV IRCONV_INT_I64)  /* _INT or _U32 */
+LJFOLD(CONV CONV IRCONV_INT_U64)  /* _INT or _U32 */
+LJFOLD(CONV CONV IRCONV_U32_I64)  /* _INT or _U32 */
+LJFOLD(CONV CONV IRCONV_U32_U64)  /* _INT or _U32 */
 LJFOLDF(simplify_conv_int_i64)
 {
+  int src;
   PHIBARRIER(fleft);
-  if ((fleft->op2 & IRCONV_SRCMASK) == IRT_INT)
-    return fleft->op1;
+  src = (fleft->op2 & IRCONV_SRCMASK);
+  if (src == IRT_INT || src == IRT_U32) {
+    if (src == ((fins->op2 & IRCONV_DSTMASK) >> IRCONV_DSH)) {
+      return fleft->op1;
+    } else {
+      fins->op2 = ((fins->op2 & IRCONV_DSTMASK) | src);
+      fins->op1 = fleft->op1;
+      return RETRYFOLD;
+    }
+  }
   return NEXTFOLD;
 }
 
@@ -1064,14 +1068,21 @@ LJFOLD(CONV MUL IRCONV_INT_I64)
 LJFOLD(CONV ADD IRCONV_INT_U64)
 LJFOLD(CONV SUB IRCONV_INT_U64)
 LJFOLD(CONV MUL IRCONV_INT_U64)
+LJFOLD(CONV ADD IRCONV_U32_I64)
+LJFOLD(CONV SUB IRCONV_U32_I64)
+LJFOLD(CONV MUL IRCONV_U32_I64)
+LJFOLD(CONV ADD IRCONV_U32_U64)
+LJFOLD(CONV SUB IRCONV_U32_U64)
+LJFOLD(CONV MUL IRCONV_U32_U64)
 LJFOLDF(simplify_conv_narrow)
 {
   IROp op = (IROp)fleft->o;
+  IRType t = irt_type(fins->t);
   IRRef op1 = fleft->op1, op2 = fleft->op2, mode = fins->op2;
   PHIBARRIER(fleft);
   op1 = emitir(IRTI(IR_CONV), op1, mode);
   op2 = emitir(IRTI(IR_CONV), op2, mode);
-  fins->ot = IRTI(op);
+  fins->ot = IRT(op, t);
   fins->op1 = op1;
   fins->op2 = op2;
   return RETRYFOLD;
@@ -1688,7 +1699,9 @@ LJFOLDF(abc_k)
 LJFOLD(ABC any any)
 LJFOLDF(abc_invar)
 {
-  if (!irt_isint(fins->t) && J->chain[IR_LOOP])  /* Currently marked as PTR. */
+  /* Invariant ABC marked as PTR. Drop if op1 is invariant, too. */
+  if (!irt_isint(fins->t) && fins->op1 < J->chain[IR_LOOP] &&
+      !irt_isphi(IR(fins->op1)->t))
     return DROPFOLD;
   return NEXTFOLD;
 }
@@ -1808,6 +1821,7 @@ LJFOLDF(merge_eqne_snew_kgc)
 #define FOLD_SNEW_TYPE8		IRT_U8  /* Prefer unsigned loads. */
 #endif
 
+  PHIBARRIER(fleft);
   if (len <= FOLD_SNEW_MAX_LEN) {
     IROp op = (IROp)fins->o;
     IRRef strref = fleft->op1;
@@ -2168,14 +2182,16 @@ TRef LJ_FASTCALL lj_opt_fold(jit_State *J)
     if (!(J->flags & JIT_F_OPT_FOLD) && irm_kind(lj_ir_mode[fins->o]) == IRM_N)
       return lj_opt_cse(J);
 
-    /* Forwarding or CSE disabled? Emit raw IR for loads, except for SLOAD. */
-    if ((J->flags & (JIT_F_OPT_FWD|JIT_F_OPT_CSE)) !=
-		    (JIT_F_OPT_FWD|JIT_F_OPT_CSE) &&
+    /* No FOLD, forwarding or CSE? Emit raw IR for loads, except for SLOAD. */
+    if ((J->flags & (JIT_F_OPT_FOLD|JIT_F_OPT_FWD|JIT_F_OPT_CSE)) !=
+		    (JIT_F_OPT_FOLD|JIT_F_OPT_FWD|JIT_F_OPT_CSE) &&
 	irm_kind(lj_ir_mode[fins->o]) == IRM_L && fins->o != IR_SLOAD)
       return lj_ir_emit(J);
 
-    /* DSE disabled? Emit raw IR for stores. */
-    if (!(J->flags & JIT_F_OPT_DSE) && irm_kind(lj_ir_mode[fins->o]) == IRM_S)
+    /* No FOLD or DSE? Emit raw IR for stores. */
+    if ((J->flags & (JIT_F_OPT_FOLD|JIT_F_OPT_DSE)) !=
+		    (JIT_F_OPT_FOLD|JIT_F_OPT_DSE) &&
+	irm_kind(lj_ir_mode[fins->o]) == IRM_S)
       return lj_ir_emit(J);
   }
 

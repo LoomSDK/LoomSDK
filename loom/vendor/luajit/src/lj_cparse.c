@@ -1,6 +1,6 @@
 /*
 ** C declaration parser.
-** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #include "lj_obj.h"
@@ -57,12 +57,20 @@ static LJ_AINLINE int cp_iseol(CPChar c)
   return (c == '\n' || c == '\r');
 }
 
-static LJ_AINLINE CPChar cp_get(CPState *cp);
-
 /* Peek next raw character. */
 static LJ_AINLINE CPChar cp_rawpeek(CPState *cp)
 {
   return (CPChar)(uint8_t)(*cp->p);
+}
+
+static LJ_NOINLINE CPChar cp_get_bs(CPState *cp);
+
+/* Get next character. */
+static LJ_AINLINE CPChar cp_get(CPState *cp)
+{
+  cp->c = (CPChar)(uint8_t)(*cp->p++);
+  if (LJ_LIKELY(cp->c != '\\')) return cp->c;
+  return cp_get_bs(cp);
 }
 
 /* Transparently skip backslash-escaped line breaks. */
@@ -75,14 +83,6 @@ static LJ_NOINLINE CPChar cp_get_bs(CPState *cp)
   if (cp_iseol(c2) && c2 != c) cp->p++;
   cp->linenumber++;
   return cp_get(cp);
-}
-
-/* Get next character. */
-static LJ_AINLINE CPChar cp_get(CPState *cp)
-{
-  cp->c = (CPChar)(uint8_t)(*cp->p++);
-  if (LJ_LIKELY(cp->c != '\\')) return cp->c;
-  return cp_get_bs(cp);
 }
 
 /* Grow save buffer. */
@@ -1258,7 +1258,7 @@ static void cp_struct_layout(CPState *cp, CTypeID sid, CTInfo sattr)
       sinfo |= (info & (CTF_QUAL|CTF_VLA));  /* Merge pseudo-qualifiers. */
 
       /* Check for size overflow and determine alignment. */
-      if (sz >= 0x20000000u || bofs + csz < bofs) {
+      if (sz >= 0x20000000u || bofs + csz < bofs || (info & CTF_VLA)) {
 	if (!(sz == CTSIZE_INVALID && ctype_isarray(info) &&
 	      !(sinfo & CTF_UNION)))
 	  cp_err(cp, LJ_ERR_FFI_INVSIZE);
@@ -1469,43 +1469,50 @@ static CPscl cp_decl_spec(CPState *cp, CPDecl *decl, CPscl scl)
 
   for (;;) {  /* Parse basic types. */
     cp_decl_attributes(cp, decl);
+    if (cp->tok >= CTOK_FIRSTDECL && cp->tok <= CTOK_LASTDECLFLAG) {
+      uint32_t cbit;
+      if (cp->ct->size) {
+	if (sz) goto end_decl;
+	sz = cp->ct->size;
+      }
+      cbit = (1u << (cp->tok - CTOK_FIRSTDECL));
+      cds = cds | cbit | ((cbit & cds & CDF_LONG) << 1);
+      if (cp->tok >= CTOK_FIRSTSCL) {
+	if (!(scl & cbit)) cp_errmsg(cp, cp->tok, LJ_ERR_FFI_BADSCL);
+      } else if (tdef) {
+	goto end_decl;
+      }
+      cp_next(cp);
+      continue;
+    }
+    if (sz || tdef ||
+	(cds & (CDF_SHORT|CDF_LONG|CDF_SIGNED|CDF_UNSIGNED|CDF_COMPLEX)))
+      break;
     switch (cp->tok) {
     case CTOK_STRUCT:
       tdef = cp_decl_struct(cp, decl, CTINFO(CT_STRUCT, 0));
-      break;
+      continue;
     case CTOK_UNION:
       tdef = cp_decl_struct(cp, decl, CTINFO(CT_STRUCT, CTF_UNION));
-      break;
+      continue;
     case CTOK_ENUM:
       tdef = cp_decl_enum(cp, decl);
-      break;
+      continue;
     case CTOK_IDENT:
-      if (!ctype_istypedef(cp->ct->info) || sz || tdef ||
-	  (cds & (CDF_SHORT|CDF_LONG|CDF_SIGNED|CDF_UNSIGNED|CDF_COMPLEX)))
-	goto end_decl;
-      tdef = ctype_cid(cp->ct->info);  /* Get typedef. */
-      cp_next(cp);
+      if (ctype_istypedef(cp->ct->info)) {
+	tdef = ctype_cid(cp->ct->info);  /* Get typedef. */
+	cp_next(cp);
+	continue;
+      }
       break;
     case '$':
       tdef = cp->val.id;
       cp_next(cp);
-      break;
+      continue;
     default:
-      if (cp->tok >= CTOK_FIRSTDECL && cp->tok <= CTOK_LASTDECLFLAG) {
-	uint32_t cbit;
-	if (cp->ct->size) {
-	  if (sz) goto end_decl;
-	  sz = cp->ct->size;
-	}
-	cbit = (1u << (cp->tok - CTOK_FIRSTDECL));
-	cds = cds | cbit | ((cbit & cds & CDF_LONG) << 1);
-	if (cp->tok >= CTOK_FIRSTSCL && !(scl & cbit))
-	  cp_errmsg(cp, cp->tok, LJ_ERR_FFI_BADSCL);
-	cp_next(cp);
-	break;
-      }
-      goto end_decl;
+      break;
     }
+    break;
   }
 end_decl:
 

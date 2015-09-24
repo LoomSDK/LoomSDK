@@ -1,6 +1,6 @@
 /*
 ** LuaJIT VM builder: Assembler source code emitter.
-** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #include "buildvm.h"
@@ -100,7 +100,7 @@ static void emit_asm_wordreloc(BuildCtx *ctx, uint8_t *p, int n,
     fprintf(ctx->fp, "\tblx %s\n", sym);
   } else if ((ins & 0x0e000000u) == 0x0a000000u) {
     fprintf(ctx->fp, "\t%s%.2s %s\n", (ins & 0x01000000u) ? "bl" : "b",
-	    "eqnecsccmiplvsvchilsgeltgtle" + 2*(ins >> 28), sym);
+	    &"eqnecsccmiplvsvchilsgeltgtle"[2*(ins >> 28)], sym);
   } else {
     fprintf(stderr,
 	    "Error: unsupported opcode %08x for %s symbol relocation.\n",
@@ -147,10 +147,12 @@ static void emit_asm_label(BuildCtx *ctx, const char *name, int size, int isfunc
   switch (ctx->mode) {
   case BUILD_elfasm:
 #if LJ_TARGET_PS3
-    if (!strncmp(name, "lj_vm_", 6)) {
+    if (!strncmp(name, "lj_vm_", 6) &&
+	strcmp(name, ctx->beginsym) &&
+	!strstr(name, "hook")) {
       fprintf(ctx->fp,
 	"\n\t.globl %s\n"
-	"\n\t.section \".opd\",\"aw\"\n"
+	"\t.section \".opd\",\"aw\"\n"
 	"%s:\n"
 	"\t.long .%s,.TOC.@tocbase32\n"
 	"\t.size %s,8\n"
@@ -215,7 +217,11 @@ void emit_asm(BuildCtx *ctx)
   fprintf(ctx->fp, "\t.text\n");
   emit_asm_align(ctx, 4);
 
+#if LJ_TARGET_PS3
+  emit_asm_label(ctx, ctx->beginsym, ctx->codesz, 0);
+#else
   emit_asm_label(ctx, ctx->beginsym, 0, 0);
+#endif
   if (ctx->mode != BUILD_machasm)
     fprintf(ctx->fp, ".Lbegin:\n");
 

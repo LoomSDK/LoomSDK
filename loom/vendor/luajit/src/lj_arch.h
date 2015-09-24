@@ -1,6 +1,6 @@
 /*
 ** Target architecture selection.
-** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #ifndef _LJ_ARCH_H
@@ -66,11 +66,10 @@
 #define LUAJIT_OS	LUAJIT_OS_LINUX
 #elif defined(__MACH__) && defined(__APPLE__)
 #define LUAJIT_OS	LUAJIT_OS_OSX
-#elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || \
-      defined(__NetBSD__) || defined(__OpenBSD__)
+#elif (defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || \
+       defined(__NetBSD__) || defined(__OpenBSD__)) && !defined(__ORBIS__)
 #define LUAJIT_OS	LUAJIT_OS_BSD
-#elif (defined(__sun__) && defined(__svr4__)) || defined(__solaris__) || \
-      defined(__CYGWIN__)
+#elif (defined(__sun__) && defined(__svr4__)) || defined(__CYGWIN__)
 #define LUAJIT_OS	LUAJIT_OS_POSIX
 #else
 #define LUAJIT_OS	LUAJIT_OS_OTHER
@@ -103,6 +102,13 @@
 #ifdef __CELLOS_LV2__
 #define LJ_TARGET_PS3		1
 #define LJ_TARGET_CONSOLE	1
+#endif
+
+#ifdef __ORBIS__
+#define LJ_TARGET_PS4		1
+#define LJ_TARGET_CONSOLE	1
+#undef NULL
+#define NULL ((void*)0)
 #endif
 
 #if _XBOX_VER >= 200
@@ -169,7 +175,7 @@
 #define LJ_TARGET_UNIFYROT	2	/* Want only IR_BROR. */
 #define LJ_ARCH_NUMMODE		LJ_NUMMODE_DUAL
 
-#if __ARM_ARCH_7__ || __ARM_ARCH_7A__ || __ARM_ARCH_7R__
+#if __ARM_ARCH_7__ || __ARM_ARCH_7A__ || __ARM_ARCH_7R__ || __ARM_ARCH_7S__
 #define LJ_ARCH_VERSION		70
 #elif __ARM_ARCH_6T2__
 #define LJ_ARCH_VERSION		61
@@ -209,7 +215,7 @@
 #else
 #define LJ_ARCH_VERSION		0
 #endif
-#if __PPC64__ || __powerpc64__ || LJ_TARGET_XBOX360
+#if __PPC64__ || __powerpc64__ || LJ_TARGET_CONSOLE
 #define LJ_ARCH_PPC64		1
 #define LJ_ARCH_NOFFI		1
 #endif
@@ -300,7 +306,11 @@
 
 /* Check target-specific constraints. */
 #ifndef _BUILDVM_H
-#if LJ_TARGET_ARM
+#if LJ_TARGET_X64
+#if __USING_SJLJ_EXCEPTIONS__
+#error "Need a C compiler with native exception handling on x64"
+#endif
+#elif LJ_TARGET_ARM
 #if defined(__ARMEB__)
 #error "No support for big-endian ARM"
 #endif
@@ -395,7 +405,7 @@
 #endif
 
 /* Various workarounds for embedded operating systems. */
-#if (defined(__ANDROID__) && !defined(LJ_TARGET_X86ORX64)) || defined(__symbian__)
+#if (defined(__ANDROID__) && !defined(LJ_TARGET_X86ORX64)) || defined(__symbian__) || LJ_TARGET_XBOX360
 #define LUAJIT_NO_LOG2
 #endif
 #if defined(__symbian__)

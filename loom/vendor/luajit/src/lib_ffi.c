@@ -1,6 +1,6 @@
 /*
 ** FFI library.
-** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 */
 
 #define lib_ffi_c
@@ -576,7 +576,7 @@ LJLIB_CF(ffi_istype)	LJLIB_REC(.)
       if (ctype_ispointer(ct1->info))
 	b = lj_cconv_compatptr(cts, ct1, ct2, CCF_IGNQUAL);
       else if (ctype_isnum(ct1->info) || ctype_isvoid(ct1->info))
-	b = (((ct1->info ^ ct2->info) & ~CTF_QUAL) == 0);
+	b = (((ct1->info ^ ct2->info) & ~(CTF_QUAL|CTF_LONG)) == 0);
     } else if (ctype_isstruct(ct1->info) && ctype_isptr(ct2->info) &&
 	       ct1 == ctype_rawchild(cts, ct2)) {
       b = 1;
@@ -657,7 +657,7 @@ LJLIB_CF(ffi_string)	LJLIB_REC(.)
   TValue *o = lj_lib_checkany(L, 1);
   const char *p;
   size_t len;
-  if (o+1 < L->top) {
+  if (o+1 < L->top && !tvisnil(o+1)) {
     len = (size_t)ffi_checkint(L, 2);
     lj_cconv_ct_tv(cts, ctype_get(cts, CTID_P_CVOID), (uint8_t *)&p, o,
 		   CCF_ARG(1));

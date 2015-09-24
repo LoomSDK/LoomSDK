@@ -10,12 +10,12 @@
 # For MSVC, please follow the instructions given in src/msvcbuild.bat.
 # For MinGW and Cygwin, cd to src and run make with the Makefile there.
 #
-# Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
+# Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 ##############################################################################
 
 MAJVER=  2
 MINVER=  0
-RELVER=  0
+RELVER=  3
 VERSION= $(MAJVER).$(MINVER).$(RELVER)
 ABIVER=  5.1
 
@@ -25,11 +25,12 @@ ABIVER=  5.1
 # the paths in src/luaconf.h, too. Note: PREFIX must be an absolute path!
 #
 export PREFIX= /usr/local
+export MULTILIB= lib
 ##############################################################################
 
 DPREFIX= $(DESTDIR)$(PREFIX)
 INSTALL_BIN=   $(DPREFIX)/bin
-INSTALL_LIB=   $(DPREFIX)/lib
+INSTALL_LIB=   $(DPREFIX)/$(MULTILIB)
 INSTALL_SHARE= $(DPREFIX)/share
 INSTALL_INC=   $(DPREFIX)/include/luajit-$(MAJVER).$(MINVER)
 
@@ -73,7 +74,8 @@ INSTALL_X= install -m 0755
 INSTALL_F= install -m 0644
 UNINSTALL= $(RM)
 LDCONFIG= ldconfig -n
-SED_PC= sed -e "s|^prefix=.*|prefix=$(PREFIX)|"
+SED_PC= sed -e "s|^prefix=.*|prefix=$(PREFIX)|" \
+            -e "s|^multilib=.*|multilib=$(MULTILIB)|"
 
 FILE_T= luajit
 FILE_A= libluajit.a
@@ -101,17 +103,6 @@ default all $(INSTALL_DEP):
 	@echo "==== Building LuaJIT $(VERSION) ===="
 	$(MAKE) -C src
 	@echo "==== Successfully built LuaJIT $(VERSION) ===="
-
-buildOSX:
-	@echo "==== Building LuaJIT $(VERSION) OS X ===="
-	$(MAKE) clean
-	$(MAKE) -C src CC="gcc -m32"
-	mv src/libluajit.a ./libluajit32.a
-	$(MAKE) clean
-	$(MAKE) -C src CC="gcc -m64"
-	mv src/libluajit.a ./libluajit64.a
-	lipo -arch i386 ./libluajit32.a -arch x86_64 ./libluajit64.a -create -output ./src/libluajit.a
-	@echo "==== Successfully built LuaJIT $(VERSION) OS X ===="
 
 install: $(INSTALL_DEP)
 	@echo "==== Installing LuaJIT $(VERSION) to $(PREFIX) ===="

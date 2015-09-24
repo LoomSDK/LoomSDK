@@ -1,6 +1,6 @@
 /*
 ** x86/x64 IR assembler (SSA IR -> machine code).
-** Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
+** Copyright (C) 2005-2014 Mike Pall. See Copyright Notice in luajit.h
 */
 
 /* -- Guard handling ------------------------------------------------------ */
@@ -367,6 +367,18 @@ static Reg asm_fuseload(ASMState *as, IRRef ref, RegSet allow)
   return ra_allocref(as, ref, allow);
 }
 
+#if LJ_64
+/* Don't fuse a 32 bit load into a 64 bit operation. */
+static Reg asm_fuseloadm(ASMState *as, IRRef ref, RegSet allow, int is64)
+{
+  if (is64 && !irt_is64(IR(ref)->t))
+    return ra_alloc1(as, ref, allow);
+  return asm_fuseload(as, ref, allow);
+}
+#else
+#define asm_fuseloadm(as, ref, allow, is64)  asm_fuseload(as, (ref), (allow))
+#endif
+
 /* -- Calls --------------------------------------------------------------- */
 
 /* Count the required number of stack slots for a call. */
@@ -500,6 +512,7 @@ static void asm_gencall(ASMState *as, const CCallInfo *ci, IRRef *args)
       }
       ofs += sizeof(intptr_t);
     }
+    checkmclim(as);
   }
 #if LJ_64 && !LJ_ABI_WIN
   if (patchnfpr) *patchnfpr = fpr - REGARG_FIRSTFPR;
@@ -596,7 +609,7 @@ static void *asm_callx_func(ASMState *as, IRIns *irf, IRRef func)
 
 static void asm_callx(ASMState *as, IRIns *ir)
 {
-  IRRef args[CCI_NARGS_MAX];
+  IRRef args[CCI_NARGS_MAX*2];
   CCallInfo ci;
   IRRef func;
   IRIns *irf;
@@ -634,6 +647,7 @@ static void asm_retf(ASMState *as, IRIns *ir)
   int32_t delta = 1+bc_a(*((const BCIns *)pc - 1));
   as->topslot -= (BCReg)delta;
   if ((int32_t)as->topslot < 0) as->topslot = 0;
+  irt_setmark(IR(REF_BASE)->t);  /* Children must not coalesce with BASE reg. */
   emit_setgl(as, base, jit_base);
   emit_addptr(as, base, -8*delta);
   asm_guardcc(as, CC_NE);
@@ -696,7 +710,7 @@ static void asm_conv(ASMState *as, IRIns *ir)
     } else {  /* Integer to FP conversion. */
       Reg left = (LJ_64 && (st == IRT_U32 || st == IRT_U64)) ?
 		 ra_alloc1(as, lref, RSET_GPR) :
-		 asm_fuseload(as, lref, RSET_GPR);
+		 asm_fuseloadm(as, lref, RSET_GPR, st64);
       if (LJ_64 && st == IRT_U64) {
 	MCLabel l_end = emit_label(as);
 	const void *k = lj_ir_k64_find(as->J, U64x(43f00000,00000000));
@@ -1829,7 +1843,7 @@ static void asm_intarith(ASMState *as, IRIns *ir, x86Arith xa)
     if (asm_swapops(as, ir)) {
       IRRef tmp = lref; lref = rref; rref = tmp;
     }
-    right = asm_fuseload(as, rref, rset_clear(allow, dest));
+    right = asm_fuseloadm(as, rref, rset_clear(allow, dest), irt_is64(ir->t));
   }
   if (irt_isguard(ir->t))  /* For IR_ADDOV etc. */
     asm_guardcc(as, CC_O);
@@ -1842,7 +1856,7 @@ static void asm_intarith(ASMState *as, IRIns *ir, x86Arith xa)
     emit_mrm(as, XO_IMUL, REX_64IR(ir, dest), right);
   } else {  /* IMUL r, r, k. */
     /* NYI: use lea/shl/add/sub (FOLD only does 2^k) depending on CPU. */
-    Reg left = asm_fuseload(as, lref, RSET_GPR);
+    Reg left = asm_fuseloadm(as, lref, RSET_GPR, irt_is64(ir->t));
     x86Op xo;
     if (checki8(k)) { emit_i8(as, k); xo = XO_IMULi8;
     } else { emit_i32(as, k); xo = XO_IMULi; }
@@ -1987,10 +2001,9 @@ static void asm_bitshift(ASMState *as, IRIns *ir, x86Shift xs)
     else if (right != RID_ECX)
       ra_scratch(as, RID2RSET(RID_ECX));
     emit_rr(as, XO_SHIFTcl, REX_64IR(ir, xs), dest);
-    if (right != RID_ECX) {
-      ra_noweak(as, right);
+    ra_noweak(as, right);
+    if (right != RID_ECX)
       emit_rr(as, XO_MOV, RID_ECX, right);
-    }
   }
   ra_left(as, dest, ir->op1);
   /*
@@ -2072,7 +2085,7 @@ static void asm_comp(ASMState *as, IRIns *ir, uint32_t cc)
     Reg r64 = REX_64IR(ir, 0);
     int32_t imm = 0;
     lua_assert(irt_is64(ir->t) || irt_isint(ir->t) ||
-	       irt_isu32(ir->t) || irt_isaddr(ir->t));
+	       irt_isu32(ir->t) || irt_isaddr(ir->t) || irt_isu8(ir->t));
     /* Swap constants (only for ABC) and fusable loads to the right. */
     if (irref_isk(lref) || (!irref_isk(rref) && opisfusableload(leftop))) {
       if ((cc & 0xc) == 0xc) cc ^= 0x53;  /* L <-> G, LE <-> GE */
@@ -2109,7 +2122,7 @@ static void asm_comp(ASMState *as, IRIns *ir, uint32_t cc)
 	  }
 	}
 	as->curins--;  /* Skip to BAND to avoid failing in noconflict(). */
-	right = asm_fuseload(as, irl->op1, allow);
+	right = asm_fuseloadm(as, irl->op1, allow, r64);
 	as->curins++;  /* Undo the above. */
       test_nofuse:
 	asm_guardcc(as, cc);
@@ -2146,12 +2159,27 @@ static void asm_comp(ASMState *as, IRIns *ir, uint32_t cc)
 	    return;
 	  }  /* Otherwise handle register case as usual. */
 	} else {
-	  left = asm_fuseload(as, lref, RSET_GPR);
+	  left = asm_fuseloadm(as, lref,
+			       irt_isu8(ir->t) ? RSET_GPR8 : RSET_GPR, r64);
 	}
 	asm_guardcc(as, cc);
 	if (usetest && left != RID_MRM) {
 	  /* Use test r,r instead of cmp r,0. */
-	  emit_rr(as, irt_isu8(ir->t) ? XO_TESTb : XO_TEST, r64 + left, left);
+	  x86Op xo = XO_TEST;
+	  if (irt_isu8(ir->t)) {
+	    lua_assert(ir->o == IR_EQ || ir->o == IR_NE);
+	    xo = XO_TESTb;
+	    if (!rset_test(RSET_RANGE(RID_EAX, RID_EBX+1), left)) {
+	      if (LJ_64) {
+		left |= FORCE_REX;
+	      } else {
+		emit_i32(as, 0xff);
+		emit_mrm(as, XO_GROUP3, XOg_TEST, left);
+		return;
+	      }
+	    }
+	  }
+	  emit_rr(as, xo, r64 + left, left);
 	  if (irl+1 == ir)  /* Referencing previous ins? */
 	    as->flagmcp = as->mcp;  /* Set flag to drop test r,r if possible. */
 	} else {
@@ -2160,7 +2188,7 @@ static void asm_comp(ASMState *as, IRIns *ir, uint32_t cc)
       }
     } else {
       Reg left = ra_alloc1(as, lref, RSET_GPR);
-      Reg right = asm_fuseload(as, rref, rset_exclude(RSET_GPR, left));
+      Reg right = asm_fuseloadm(as, rref, rset_exclude(RSET_GPR, left), r64);
       asm_guardcc(as, cc);
       emit_mrm(as, XO_CMP, r64 + left, right);
     }
@@ -2185,6 +2213,7 @@ static void asm_comp_int64(ASMState *as, IRIns *ir)
     lefthi = asm_fuseload(as, ir->op1, allow);
   } else {
     lefthi = ra_alloc1(as, ir->op1, allow);
+    rset_clear(allow, lefthi);
     righthi = asm_fuseload(as, ir->op2, allow);
     if (righthi == RID_MRM) {
       if (as->mrm.base != RID_NONE) rset_clear(allow, as->mrm.base);
@@ -2200,13 +2229,8 @@ static void asm_comp_int64(ASMState *as, IRIns *ir)
     leftlo = asm_fuseload(as, (ir-1)->op1, allow);
   } else {
     leftlo = ra_alloc1(as, (ir-1)->op1, allow);
+    rset_clear(allow, leftlo);
     rightlo = asm_fuseload(as, (ir-1)->op2, allow);
-    if (rightlo == RID_MRM) {
-      if (as->mrm.base != RID_NONE) rset_clear(allow, as->mrm.base);
-      if (as->mrm.idx != RID_NONE) rset_clear(allow, as->mrm.idx);
-    } else {
-      rset_clear(allow, rightlo);
-    }
   }
 
   /* All register allocations must be performed _before_ this point. */
@@ -2458,7 +2482,7 @@ static void asm_head_root_base(ASMState *as)
   Reg r = ir->r;
   if (ra_hasreg(r)) {
     ra_free(as, r);
-    if (rset_test(as->modset, r))
+    if (rset_test(as->modset, r) || irt_ismarked(ir->t))
       ir->r = RID_INIT;  /* No inheritance for modified BASE register. */
     if (r != RID_BASE)
       emit_rr(as, XO_MOV, r, RID_BASE);
@@ -2472,7 +2496,7 @@ static RegSet asm_head_side_base(ASMState *as, IRIns *irp, RegSet allow)
   Reg r = ir->r;
   if (ra_hasreg(r)) {
     ra_free(as, r);
-    if (rset_test(as->modset, r))
+    if (rset_test(as->modset, r) || irt_ismarked(ir->t))
       ir->r = RID_INIT;  /* No inheritance for modified BASE register. */
     if (irp->r == r) {
       rset_clear(allow, r);  /* Mark same BASE register as coalesced. */
@@ -2719,7 +2743,7 @@ static void asm_ir(ASMState *as, IRIns *ir)
 /* Ensure there are enough stack slots for call arguments. */
 static Reg asm_setup_call_slots(ASMState *as, IRIns *ir, const CCallInfo *ci)
 {
-  IRRef args[CCI_NARGS_MAX];
+  IRRef args[CCI_NARGS_MAX*2];
   int nslots;
   asm_collectargs(as, ir, ci, args);
   nslots = asm_count_call_slots(as, ci, args);
