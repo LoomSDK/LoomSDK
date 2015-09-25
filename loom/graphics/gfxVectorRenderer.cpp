@@ -50,9 +50,9 @@
 #include "nanosvg.h"
 
 
-static void* nvgAlloc(size_t size) { return lmAlloc(NULL, size); }
-static void* nvgRealloc(void* mem, size_t size) { return lmRealloc(NULL, mem, size); }
-static void nvgFree(void* mem) { lmFree(NULL, mem); }
+static void* customAlloc(size_t size) { return lmAlloc(NULL, size); }
+static void* customRealloc(void* mem, size_t size) { return lmRealloc(NULL, mem, size); }
+static void customFree(void* mem) { lmFree(NULL, mem); }
 
 extern SDL_Window *gSDLWindow;
 
@@ -294,7 +294,7 @@ static bool readFontFile(const char *path, void** mem, size_t* size)
     bool success = platform_mapFile(path, &mapped, &mappedSize) != 0;
     
     if (success) {
-        *mem = lmAlloc(NULL, mappedSize);
+        *mem = customAlloc(mappedSize);
         *size = mappedSize;
 
         memcpy(*mem, mapped, mappedSize);
@@ -353,7 +353,7 @@ static void loadDefaultFontFace() {
 	}
 	int handle = nvgCreateFontMem(nvg, "__default", (unsigned char*)mem, size, true);
 	if (handle == -1) {
-		lmFree(NULL, mem);
+		customFree(mem);
 		defaultFontId = VectorTextFormat::FONT_DEFAULTMEMORY;
 		return;
 	}
@@ -708,7 +708,8 @@ void VectorRenderer::reset()
 
 void VectorRenderer::initialize()
 {
-    nvgSetAllocFunctions(nvgAlloc, nvgRealloc, nvgFree);
+    nvgSetAllocFunctions(customAlloc, customRealloc, customFree);
+    nsvgSetAllocFunctions(customAlloc, customRealloc, customFree);
     initializeGraphicsResources();
 }
 
