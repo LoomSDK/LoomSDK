@@ -567,8 +567,6 @@ static const lua_CFunction package_loaders[] =
   NULL
 };
 
-// LOOM Already defined in lib_package_rel.c
-/*
 LUALIB_API int luaopen_package(lua_State *L)
 {
   int i;
@@ -601,4 +599,3 @@ LUALIB_API int luaopen_package(lua_State *L)
   lua_pop(L, 1);
   return 1;
 }
-*/

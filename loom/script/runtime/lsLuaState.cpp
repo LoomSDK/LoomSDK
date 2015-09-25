@@ -90,8 +90,12 @@ void LSLuaState::open()
 {
     assert(!L);
 
-    //L = lua_newstate(lsLuaAlloc, this);
+    #if LOOM_PLATFORM_64BIT
     L = luaL_newstate();
+    #else
+    L = lua_newstate(lsLuaAlloc, this);
+    #endif
+
     toLuaState.insert(L, this);
 
     luaopen_base(L);

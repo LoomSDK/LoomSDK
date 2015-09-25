@@ -46,17 +46,6 @@ if (LUA_GC_PROFILE_ENABLED EQUAL 1)
     ADD_DEFINITIONS(-DLUA_GC_PROFILE_ENABLED=1)
 endif()
 
-if (LOOM_BUILD_JIT EQUAL 1)
-
-    add_definitions(-DLOOM_ENABLE_JIT)
-    list(APPEND LOOM_INCLUDE_FOLDERS ${CMAKE_SOURCE_DIR}/loom/vendor/luajit/src )
-
-else() 
-
-    list(APPEND LOOM_INCLUDE_FOLDERS ${CMAKE_SOURCE_DIR}/loom/vendor/lua/src )
-
-endif(LOOM_BUILD_JIT EQUAL 1)
-
 # Check if we're under Linux and add a nice platform variable 
 # like the other platforms have
 if (NOT ANDROID)
@@ -76,7 +65,27 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
-option (LOOM_LUAJIT_LIB "luajit library path/name" libluajit)
+#--------------------------------------
+# Lua & LuaJIT
+#--------------------------------------
+
+if (LOOM_BUILD_JIT EQUAL 1)
+
+    if (NOT DEFINED LUAJIT_BUILD_DIR)
+        message(FATAL_ERROR "Setting LUAJIT_BUILD_DIR is required")
+    endif()
+
+    add_definitions(-DLOOM_ENABLE_JIT)
+
+    list(APPEND LOOM_INCLUDE_FOLDERS ${CMAKE_SOURCE_DIR}/${LUAJIT_BUILD_DIR})
+    list(APPEND LOOM_INCLUDE_FOLDERS ${CMAKE_SOURCE_DIR}/loom/vendor/luajit/src )
+    link_directories(${CMAKE_SOURCE_DIR}/${LUAJIT_BUILD_DIR})
+
+else()
+
+    list(APPEND LOOM_INCLUDE_FOLDERS ${CMAKE_SOURCE_DIR}/loom/vendor/lua/src )
+
+endif()
 
 #--------------------------------------
 # SDL

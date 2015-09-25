@@ -43,7 +43,7 @@ endif()
 
 if (LOOM_BUILD_JIT EQUAL 1)
 
-    target_link_libraries(loomexec ${CMAKE_SOURCE_DIR}/${LOOM_LUAJIT_LIB})
+    target_link_libraries(loomexec luajit)
 
     if (LINUX)
         target_link_libraries(${PROJECT_NAME} -ldl)

@@ -134,21 +134,21 @@ endif ()
 configure_file ( src/luaconf.h.in ${CMAKE_CURRENT_BINARY_DIR}/luaconf.h )
 
 set ( LJLIB_C
-  src/lib_base.c
-  src/lib_math.c
-  src/lib_bit.c
-  src/lib_string.c
-  src/lib_table.c
-  src/lib_io.c
-  src/lib_os.c
-  src/lib_debug.c
-  src/lib_jit.c
-  src/lib_ffi.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_base.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_math.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_bit.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_string.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_table.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_io.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_os.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_debug.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_jit.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_ffi.c
 )
 if ( LUA_USE_RELATIVE_LOADLIB )
-  list ( APPEND LJLIB_C src/lib_package_rel.c )
+  list ( APPEND LJLIB_C ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_package_rel.c )
 else ()
-  list ( APPEND LJLIB_C src/lib_package.c )
+  list ( APPEND LJLIB_C ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_package.c )
 endif ()
 
 ## GENERATE VM
@@ -158,7 +158,7 @@ target_link_libraries ( minilua ${LIBS} )
 
 # Dynasm
 set ( DASM ${CMAKE_CURRENT_SOURCE_DIR}/dynasm/dynasm.lua )
-set ( DASM_T ${CMAKE_CURRENT_SOURCE_DIR}/src/host/buildvm_arch.h )
+set ( DASM_T ${CMAKE_CURRENT_BINARY_DIR}/buildvm_arch.h )
 
 # 2DO: Proper detection of flags
 set ( DASM_VER "" )
@@ -206,7 +206,7 @@ set ( DASM_DASC ${CMAKE_CURRENT_SOURCE_DIR}/src/vm_${DASM_ARCH}.dasc )
 # Generate buildvm arch header
 add_custom_command(OUTPUT ${DASM_T}
   COMMAND minilua ${DASM} ${DASM_FLAGS} -o ${DASM_T} ${DASM_DASC}
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/dynasm
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS minilua
 )
 
@@ -215,9 +215,9 @@ file ( GLOB SRC_BUILDVM src/host/buildvm*.c )
 add_executable ( buildvm ${SRC_BUILDVM} ${DASM_T} )
 
 macro(add_buildvm_target _target _mode)
-  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_target}
+  add_custom_command(OUTPUT ${_target}
     COMMAND buildvm ARGS -m ${_mode} -o ${CMAKE_CURRENT_BINARY_DIR}/${_target} ${ARGN}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS buildvm ${ARGN}
   )
 endmacro(add_buildvm_target)
@@ -232,18 +232,18 @@ endif ()
 
 add_buildvm_target ( lj_ffdef.h   ffdef   ${LJLIB_C} )
 add_buildvm_target ( lj_bcdef.h  bcdef  ${LJLIB_C} )
-add_buildvm_target ( lj_folddef.h folddef src/lj_opt_fold.c )
+add_buildvm_target ( lj_folddef.h folddef ${CMAKE_CURRENT_SOURCE_DIR}/src/lj_opt_fold.c )
 add_buildvm_target ( lj_recdef.h  recdef  ${LJLIB_C} )
 add_buildvm_target ( lj_libdef.h  libdef  ${LJLIB_C} )
 add_buildvm_target ( jit/vmdef.lua  libvm  ${LJLIB_C} )
 
 SET ( DEPS
   ${LJ_VM_SRC}
-  ${CMAKE_CURRENT_BINARY_DIR}/lj_ffdef.h
-  ${CMAKE_CURRENT_BINARY_DIR}/lj_bcdef.h
-  ${CMAKE_CURRENT_BINARY_DIR}/lj_libdef.h
-  ${CMAKE_CURRENT_BINARY_DIR}/lj_recdef.h
-  ${CMAKE_CURRENT_BINARY_DIR}/lj_folddef.h
+  lj_ffdef.h
+  lj_bcdef.h
+  lj_libdef.h
+  lj_recdef.h
+  lj_folddef.h
 )
 
 ## LuaJIT Library
@@ -321,7 +321,7 @@ endif(MSVC)
 
 add_library ( libluajit STATIC ${LJCORE_C} ${DEPS} )
 target_link_libraries ( libluajit ${LIBS} )
-set_target_properties ( libluajit PROPERTIES OUTPUT_NAME lua51 CLEAN_DIRECT_OUTPUT 1 )
+set_target_properties ( libluajit PROPERTIES OUTPUT_NAME luajit CLEAN_DIRECT_OUTPUT 1 )
 
 ## LuaJIT Executable
 #add_executable ( luajit src/luajit.c src/luajit.rc )

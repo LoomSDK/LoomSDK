@@ -242,7 +242,7 @@ if (APPLE)
     endif()
     
     if (LOOM_BUILD_JIT EQUAL 1)
-        target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/${LOOM_LUAJIT_LIB})
+        target_link_libraries(${PROJECT_NAME} luajit)
     endif()
     
 elseif(MSVC)	
@@ -258,7 +258,7 @@ elseif(MSVC)
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)
-        target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/${LOOM_LUAJIT_LIB})
+        target_link_libraries(${PROJECT_NAME} luajit)
     endif()
 
     if (LOOM_TELEMETRY)
@@ -313,7 +313,7 @@ elseif(LINUX)
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)
-        target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/${LOOM_LUAJIT_LIB} -ldl)
+        target_link_libraries(${PROJECT_NAME} luajit -ldl)
     endif()
     
     set(DEMOBIN $<TARGET_FILE:${PROJECT_NAME}>)

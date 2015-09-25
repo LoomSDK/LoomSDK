@@ -643,7 +643,7 @@ namespace :build do
 
     FileUtils.mkdir_p("cmake_msvc")
     Dir.chdir("cmake_msvc") do
-      sh "../build/win-cmake.bat x86 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"build/luajit-windows-x86/lua51.lib\""
+      sh "../build/win-cmake.bat x86 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"build/luajit-windows-x86\""
       sh "msbuild LoomEngine.sln /p:Configuration=#{$buildTarget}"
     end
 
@@ -659,7 +659,7 @@ namespace :build do
 
         FileUtils.mkdir_p("cmake_msvc_x64")
         Dir.chdir("cmake_msvc_x64") do
-          sh "../build/win-cmake.bat x64 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"build/luajit-windows-x64/lua51.lib\""
+          sh "../build/win-cmake.bat x64 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"build/luajit-windows-x64\""
           sh "msbuild LoomEngine.sln /p:Configuration=#{$buildTarget}"
         end
     end

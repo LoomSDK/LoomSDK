@@ -75,7 +75,7 @@ buildvm -m folddef -o lj_folddef.h lj_opt_fold.c
 :STATIC
 %LJCOMPILE% lj_*.c lib_*.c
 @if errorlevel 1 goto :BAD
-%LJLIB% /OUT:..\..\..\..\build\luajit-windows-x64\lua51.lib lj_*.obj lib_*.obj
+%LJLIB% /OUT:..\..\..\..\build\luajit-windows-%LJARCH%\luajit.lib lj_*.obj lib_*.obj
 @if errorlevel 1 goto :BAD
 @goto :MTDLL
 :AMALGDLL
