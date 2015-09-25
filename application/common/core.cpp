@@ -1,5 +1,3 @@
-#define MSVC_DEBUG_HEAP
-
 #ifdef MSVC_DEBUG_HEAP
 #define _CRTDBG_MAP_ALLOC
 #endif
