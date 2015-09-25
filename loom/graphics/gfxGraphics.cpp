@@ -31,6 +31,7 @@
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/graphics/gfxVectorRenderer.h"
 #include "loom/graphics/gfxBitmapData.h"
+#include "loom/graphics/gfxStateManager.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -285,6 +286,10 @@ int Graphics::render(lua_State *L)
 
     lmscalar prevAlpha = object->alpha;
     object->alpha = prevAlpha*alpha;
+
+    // Reset state
+    Graphics_SetCurrentGLState(GFX_OPENGL_STATE_QUAD);
+    Graphics_InvalidateGLState(GFX_OPENGL_STATE_QUAD);
 
     // Render the object.
     object->render(L);
