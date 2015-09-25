@@ -240,24 +240,24 @@ void VectorGraphics::drawArc(float x, float y, float radius, float angleFrom, fl
 
 void VectorGraphics::drawTextLine(float x, float y, utString text) {
 	queue->push_back(lmNew(NULL) VectorText(x, y, -1, lmNew(NULL) utString(text)));
-	inflateBounds(textLineBounds(currentTextFormat, x, y, text));
+	inflateBounds(VectorRenderer::textLineBounds(&currentTextFormat, x, y, &text));
 }
 
 void VectorGraphics::drawTextBox(float x, float y, float width, utString text) {
 	queue->push_back(lmNew(NULL) VectorText(x, y, width < 0 ? 0 : width, lmNew(NULL) utString(text)));
-	inflateBounds(textBoxBounds(currentTextFormat, x, y, width, text));
+	inflateBounds(VectorRenderer::textBoxBounds(&currentTextFormat, x, y, width, &text));
 }
 
-Loom2D::Rectangle VectorGraphics::textLineBounds(VectorTextFormat format, float x, float y, utString text) {
-	return VectorRenderer::textLineBounds(&format, x, y, &text);
+Loom2D::Rectangle* VectorGraphics::textLineBounds(VectorTextFormat format, float x, float y, utString text) {
+	return lmNew(NULL) Loom2D::Rectangle(VectorRenderer::textLineBounds(&format, x, y, &text));
 }
 
 float VectorGraphics::textLineAdvance(VectorTextFormat format, float x, float y, utString text) {
 	return VectorRenderer::textLineAdvance(&format, x, y, &text);
 }
 
-Loom2D::Rectangle VectorGraphics::textBoxBounds(VectorTextFormat format, float x, float y, float width, utString text) {
-	return VectorRenderer::textBoxBounds(&format, x, y, width, &text);
+Loom2D::Rectangle* VectorGraphics::textBoxBounds(VectorTextFormat format, float x, float y, float width, utString text) {
+	return lmNew(NULL) Loom2D::Rectangle(VectorRenderer::textBoxBounds(&format, x, y, width, &text));
 }
 
 void VectorGraphics::drawSVG(VectorSVG* svg, float x, float y, float scale, float lineThickness) {
