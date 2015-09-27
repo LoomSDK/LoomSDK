@@ -1040,11 +1040,12 @@ void Texture::handleAssetNotification(void *payload, const char *name)
 void Texture::loadImageAsset(loom_asset_image_t *lat, TextureID id)
 {
     // See if it's over 2048 - if so, downsize to fit.
-    const int          maxSize     = 2048;
+    const int          maxSize     = 512;
     void               *localBits  = lat->bits;
     void               *localMem   = NULL;
     int                localWidth  = lat->width;
     int                localHeight = lat->height;
+    int                resizeCounter = 0;
     while (localWidth > maxSize || localHeight > maxSize)
     {
         // Allocate new bits.
@@ -1053,20 +1054,20 @@ void Texture::loadImageAsset(loom_asset_image_t *lat, TextureID id)
         localHeight = localHeight >> 1;
         void *oldBits = localBits;
 
-        // This will be freed automatically. This will be inefficient for huge bitmaps but it's
-        // only around for one frame.
-        localBits = lmAlloc(NULL, localWidth * localHeight * 4);
-
         lmLog(gGFXTextureLogGroup, "   - Too big! Downsampling to %dx%d", localWidth, localHeight);
 
+        if (resizeCounter > 0)
+        {
+            //These are freed by an Image Asset
+            localBits = lmAlloc(NULL, localWidth * localHeight * 4);
+        }
+        
         bitmapExtrudeRGBA_c(oldBits, localBits, oldHeight, oldWidth);
+        resizeCounter++;
     }
 
     // Perform the actual load.
     load((uint8_t *)localBits, (uint16_t)localWidth, (uint16_t)localHeight, id);
-
-// TODO: Memory leak due to resize loop.
-//    lmFree(NULL, localBits);
 }
 
 void Texture::validate()
