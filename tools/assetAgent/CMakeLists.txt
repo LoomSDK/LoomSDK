@@ -27,6 +27,7 @@ set(CMAKE_OSX_ARCHITECTURES "x86_64")
 add_library(${PROJECT_NAME} MODULE ${AGENT_HDR} ${AGENT_SRC})
 
 if (APPLE)
+
     target_link_libraries(${PROJECT_NAME} 
        LoomVendor
        LoomCommon
@@ -36,13 +37,13 @@ if (APPLE)
        # zlib library required by utByteArray
        "-lz"
     )
-    
+
     set_target_properties(${PROJECT_NAME} PROPERTIES
       XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym"
       XCODE_ATTRIBUTE_INFOPLIST_PREPROCESS YES
     )
 
-elseif(LINUX)     
+elseif(LINUX)
 
     target_link_libraries(${PROJECT_NAME} 
        LoomVendor
@@ -50,8 +51,9 @@ elseif(LINUX)
        LoomScript
        LoomCore
     )
-    
-elseif(MSVC)  
+
+elseif(MSVC)
+
     target_link_libraries(${PROJECT_NAME} 
        LoomVendor
        LoomCommon
@@ -63,14 +65,13 @@ elseif(MSVC)
     if (LOOM_TELEMETRY)
         target_link_libraries(${PROJECT_NAME} "telemetry32.link" "telemetry64.link")
     endif()
-	
-	get_target_property(ASSETAGENTBIN ${PROJECT_NAME} LOCATION)
-	
+
+    set(ASSETAGENTBIN $<TARGET_FILE:${PROJECT_NAME}>)
+
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
         COMMAND echo f | xcopy /F /Y \"${ASSETAGENTBIN}\" \"${CMAKE_SOURCE_DIR}/artifacts/assetAgent.dll\"
     )
-	
 
 endif()
 

@@ -19,20 +19,24 @@ target_link_libraries(unittest
     ${EXTRA_LIBS}
 )
 
-get_target_property(UNITTESTBIN unittest LOCATION)
+set(UNITTESTBIN $<TARGET_FILE:${PROJECT_NAME}>)
 
 if (MSVC)
+
     add_custom_command(TARGET unittest
         POST_BUILD
         COMMAND echo f | xcopy /F /Y \"${UNITTESTBIN}\" \"${CMAKE_SOURCE_DIR}/tests/unittest.exe\"
     )
+
 else ()
+
     add_custom_command(TARGET unittest
         POST_BUILD
         COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts
         COMMAND cp ${UNITTESTBIN} ${CMAKE_SOURCE_DIR}/tests/unittest
     )
-endif(MSVC)
+
+endif()
 
 if (LOOM_BUILD_JIT EQUAL 1)
     target_link_libraries(unittest luajit)

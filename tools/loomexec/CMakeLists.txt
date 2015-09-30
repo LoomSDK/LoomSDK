@@ -8,7 +8,7 @@ set (LOOMEXEC_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
 
 add_executable(loomexec ${LOOMEXEC_SRC})
 
-get_target_property(LOOMEXECBIN loomexec LOCATION)
+set(LOOMEXECBIN $<TARGET_FILE:${PROJECT_NAME}>)
 
 if (MSVC)
     target_link_libraries(loomexec
@@ -26,20 +26,18 @@ if (MSVC)
 else ()
 
 	target_link_libraries(loomexec
-	    LoomVendor 
-	    LoomCommon 
-	    LoomScript
+        LoomVendor
+        LoomCommon
+        LoomScript
 	)
 
 	add_custom_command(TARGET loomexec
-    	POST_BUILD
-    	COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts
-    	COMMAND cp ${LOOMEXECBIN} ${CMAKE_SOURCE_DIR}/artifacts/loomexec
+        POST_BUILD
+        COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts
+        COMMAND cp ${LOOMEXECBIN} ${CMAKE_SOURCE_DIR}/artifacts/loomexec
 	)
 
-
 endif()
-
 
 if (LOOM_BUILD_JIT EQUAL 1)
 
@@ -50,4 +48,3 @@ if (LOOM_BUILD_JIT EQUAL 1)
     endif()
 
 endif()
-

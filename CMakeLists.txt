@@ -46,7 +46,7 @@ if (LUA_GC_PROFILE_ENABLED EQUAL 1)
     ADD_DEFINITIONS(-DLUA_GC_PROFILE_ENABLED=1)
 endif()
 
-# Check if we're under Linux and add a nice platform variable 
+# Check if we're under Linux and add a nice platform variable
 # like the other platforms have
 if (NOT ANDROID)
 if(CMAKE_SYSTEM_NAME STREQUAL Linux)
@@ -92,30 +92,30 @@ endif()
 #--------------------------------------
 
 if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS))
-	# Used for generated config include
-	include_directories( ${CMAKE_BINARY_DIR}/loom/vendor/sdl2/include)
-	include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
-	
-	# Set initial options via cmake cache
-	set(LIBC ON CACHE BOOL "Enable system libraries")
-	set(SDL_STATIC ON CACHE BOOL "Enable static linking")
-	set(SDL_SHARED OFF CACHE BOOL "Enable dynamic linking")
-	set(FORCE_STATIC_VCRT ON CACHE BOOL "Force /MT for static linking")
-	set(DIRECTX OFF CACHE BOOL "Enable DirectX on Windows")
-	
-	add_subdirectory(loom/vendor/sdl2)
+    # Used for generated config include
+    include_directories(${CMAKE_BINARY_DIR}/loom/vendor/sdl2/include)
+    include_directories(${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
+
+    # Set initial options via cmake cache
+    set(LIBC ON CACHE BOOL "Enable system libraries")
+    set(SDL_STATIC ON CACHE BOOL "Enable static linking")
+    set(SDL_SHARED OFF CACHE BOOL "Enable dynamic linking")
+    set(FORCE_STATIC_VCRT ON CACHE BOOL "Force /MT for static linking")
+    set(DIRECTX OFF CACHE BOOL "Enable DirectX on Windows")
+
+    add_subdirectory(loom/vendor/sdl2)
 endif()
 
 #--------------------------------------
 # Windows
 #--------------------------------------
 
-if (MSVC) 
+if (MSVC)
 
     add_definitions(-DCURL_STATICLIB /wd4267 /wd4244 /wd4700 /wd4334)
 
     set (LOOM_INCLUDE_FOLDERS ${LOOM_INCLUDE_FOLDERS}
-    
+
     ${CMAKE_SOURCE_DIR}/loom/vendor/zlib/include
     ${CMAKE_SOURCE_DIR}/loom/vendor/libcurl/include )
 
@@ -125,13 +125,12 @@ if (MSVC)
       set(VC_LIB_PATH_SUFFIX lib/x86)
     endif()
 
-    link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/Include)    
+    link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/Include)
     link_directories(${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/${VC_LIB_PATH_SUFFIX})
 
-    
     # move this?
     add_definitions(-DLOOM_DISABLE_JEMALLOC -D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
-    
+
     # MSVC compatibility stuffs
     include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-4.0.1/include/msvc_compat )
 
@@ -140,34 +139,35 @@ if (MSVC)
     # Warnings as errors
     add_definitions (/wd4819)
 
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /WX /arch:SSE2")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /WX /arch:SSE2")    
+    if (NOT CMAKE_SIZEOF_VOID_P EQUAL 4)
+        SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /WX /arch:SSE2")
+    endif()
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:msvcrt.lib")
-    
+
     STRING(REPLACE "/GX" "" CMAKE_CXX_FLAGS_INIT ${CMAKE_CXX_FLAGS_INIT})
     STRING(REPLACE "/GX" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
     #statically link
-    FOREACH(flag_var CMAKE_CXX_FLAGS 
-    CMAKE_CXX_FLAGS_DEBUG 
-    CMAKE_CXX_FLAGS_RELEASE 
-    CMAKE_CXX_FLAGS_MINSIZEREL 
+    FOREACH(flag_var CMAKE_CXX_FLAGS
+    CMAKE_CXX_FLAGS_DEBUG
+    CMAKE_CXX_FLAGS_RELEASE
+    CMAKE_CXX_FLAGS_MINSIZEREL
     CMAKE_CXX_FLAGS_RELWITHDEBINFO
     CMAKE_C_FLAGS_DEBUG
     CMAKE_C_FLAGS_RELEASE
-    CMAKE_C_FLAGS_MINSIZEREL 
+    CMAKE_C_FLAGS_MINSIZEREL
     CMAKE_C_FLAGS_RELWITHDEBINFO )
         IF(${flag_var} MATCHES "/MD")
             STRING(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
         ENDIF(${flag_var} MATCHES "/MD")
-        
+
         IF(${flag_var} MATCHES "/MDd")
             STRING(REGEX REPLACE "/MDd" "/MTd" ${flag_var} "${${flag_var}}")
         ENDIF(${flag_var} MATCHES "/MDd")
 
         SET(${flag_var} "${${flag_var}} /MP${LOOM_BUILD_NUMCORES}")
 
-    ENDFOREACH(flag_var)        
+    ENDFOREACH(flag_var)
 
 endif(MSVC)
 
@@ -185,15 +185,15 @@ if(APPLE)
     # If this is defined, it will use OpenGL 2.1 instead of OpenGL 3.2
     add_definitions(-DLOOM_LEGACY_GL)
 
-    list(APPEND LOOM_INCLUDE_FOLDERS /usr/include/libxml2 ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/cocoa ${CMAKE_SOURCE_DIR}/loom/vendor/glew-1.7.0/include) 
+    list(APPEND LOOM_INCLUDE_FOLDERS /usr/include/libxml2 ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/cocoa ${CMAKE_SOURCE_DIR}/loom/vendor/glew-1.7.0/include)
 
     if(LOOM_BUILD_IOS EQUAL 1)
 
-        # Apple changed some stuff in XCode5/SDK7 which we need to account for, however we still need to build out on 
+        # Apple changed some stuff in XCode5/SDK7 which we need to account for, however we still need to build out on
         # XCode4/SDK6
         if(LOOM_IOS_VERSION LESS 7)
             set (LOOM_IOS_LEGACY 1)
-        else()        
+        else()
             set (LOOM_IOS_LEGACY 0)
         endif()
 
@@ -202,9 +202,9 @@ if(APPLE)
         set(CMAKE_OSX_SYSROOT iphoneos$(LOOM_IOS_VERSION) )
         set(CMAKE_OSX_ARCHITECTURES "armv7")
         set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
-        
+
         set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/ios/libSDL2.a)
-        
+
         add_definitions(-DLOOM_RENDERER_OPENGLES2)
 
         include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
@@ -217,7 +217,7 @@ if(APPLE)
 
         set(CMAKE_OSX_ARCHITECTURES "i386")
         set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
-        
+
     endif()
 
 endif(APPLE)
@@ -226,12 +226,12 @@ endif(APPLE)
 # Android
 #--------------------------------------
 
-if (ANDROID) 
+if (ANDROID)
 
     include (loom.android.toolchain)
-	
+
     include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
-	
+
     set (LOOM_INCLUDE_FOLDERS
     ${LOOM_INCLUDE_FOLDERS}
     ${CMAKE_SOURCE_DIR}/loom/vendor/glew-1.7.0/include
@@ -243,9 +243,9 @@ if (ANDROID)
     add_definitions(-DLUAJIT_TARGET=LUAJIT_ARCH_ARM -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE)
     add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_INT64__)
     add_definitions(-DLOOM_RENDERER_OPENGLES2)
-    
+
     set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/android/armeabi/libSDL2.a)
-    
+
 
 endif()
 
@@ -263,7 +263,7 @@ if (LINUX)
     add_definitions(-DLOOM_DISABLE_JEMALLOC -DLOOM_LINUX_BUILD -DLINUX -DHAVE_CXA_DEMANGLE -DNPERFORMANCE -DNTELEMETRY)
 
     add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
-    
+
 endif()
 
 #--------------------------------------

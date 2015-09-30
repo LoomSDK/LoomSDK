@@ -5,10 +5,10 @@ include_directories( ${LOOM_INCLUDE_FOLDERS} )
 # Command line loom script compiler.
 
 set (LSC_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
-set (LSC_HDR )
-add_executable(lsc ${LSC_HDR} ${LSC_SRC})
+add_executable(lsc ${LSC_SRC})
 
 if (MSVC)
+
     target_link_libraries(lsc
         LoomVendor
         LoomCommon
@@ -16,7 +16,7 @@ if (MSVC)
         "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "OPENGL32" "WSOCK32" "Ws2_32" 
     )
 
-    get_target_property(LSCBIN lsc LOCATION)
+    set(LSCBIN $<TARGET_FILE:lsc>)
 
     add_custom_command(TARGET lsc
         POST_BUILD
@@ -32,7 +32,7 @@ else ()
         -lpthread
     )
 
-    get_target_property(LSCBIN lsc LOCATION)
+    set(LSCBIN $<TARGET_FILE:lsc>)
 
     add_custom_command(TARGET lsc
         POST_BUILD
