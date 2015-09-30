@@ -121,42 +121,72 @@ int LoomGameController::getControllerIndex(SDL_JoystickID instance)
     return -1;
 }
 
-/** Returns true if device has rumble support. */
-bool LoomGameController::isHaptic(int poolID)
+/** Returns the pointer to a game controller on a specific index in the 'controllers' pool.
+ * If index is negative it returns the first connected game controller in pool. */
+LoomGameController *LoomGameController::getGameController(int index = -1)
 {
-    if (poolID >= 0 && poolID < MAX_CONTROLLERS) {
-        return LoomGameController::controllers[poolID].is_haptic;
+    if (index < 0)
+    {
+        for (int i = 0; i < MAX_CONTROLLERS; i++)
+            if (LoomGameController::controllers[i].is_connected)
+                return &controllers[i];
     }
+    else if (index < MAX_CONTROLLERS)
+    {
+        if (LoomGameController::controllers[index].is_connected)
+            return &controllers[index];
+    }
+    return nullptr;
+}
 
-    return false;
+/** Returns true if device has rumble support. */
+bool LoomGameController::isHaptic()
+{
+    return this->is_haptic;
 }
 
 /** Stops the device's rumble effect. */
-void LoomGameController::stopRumble(int poolID)
+void LoomGameController::stopRumble()
 {
     // Do nothing if it is not a valid controller
-    if (poolID < 0 && poolID >= MAX_CONTROLLERS && !LoomGameController::controllers[poolID].is_connected) return;
+    if (!this->is_connected) return;
 
     // If device is haptic, stop rumble
-    if (LoomGameController::controllers[poolID].is_haptic)
-        SDL_HapticRumbleStop(LoomGameController::controllers[poolID].getHaptic());
+    if (this->is_haptic)
+        SDL_HapticRumbleStop(this->getHaptic());
 }
 
 /** Starts the device's rumble effect.
 *  Intensity sets the  is a value between 0 and 1
 *  The duration of rumble is set in milliseconds. Using this */
-void LoomGameController::startRumble(int poolID, float intensity, Uint32 duration)
+void LoomGameController::startRumble(float intensity, Uint32 duration)
 {
     // Do nothing if it is not a valid controller
-    if (poolID < 0 && poolID >= MAX_CONTROLLERS && !LoomGameController::controllers[poolID].is_connected) return;
+    if (!this->is_connected) return;
 
     // Force value to be strictly between 0 and 1
     if (intensity > 1) intensity = 1.0f;
     if (intensity < 0) intensity = 0.0f;
 
     // If device is haptic, begin rumble
-    if (LoomGameController::controllers[poolID].is_haptic)
-        SDL_HapticRumblePlay(LoomGameController::controllers[poolID].getHaptic(), intensity, duration);
+    if (this->is_haptic)
+        SDL_HapticRumblePlay(this->getHaptic(), intensity, duration);
+}
+
+/** Returns true if queried button is pressed, false if queried button is not pressed. */
+bool LoomGameController::getButton(int buttonID)
+{
+    if (buttonID > SDL_CONTROLLER_BUTTON_INVALID && buttonID < SDL_CONTROLLER_BUTTON_MAX)
+        return SDL_GameControllerGetButton(this->getController(), (SDL_GameControllerButton) buttonID) == 1 ? true : false;
+    return false;
+}
+
+/** Returns value of queried axis. */
+int LoomGameController::getAxis(int axisID)
+{
+    if (axisID > SDL_CONTROLLER_AXIS_INVALID && axisID < SDL_CONTROLLER_AXIS_MAX)
+        return SDL_GameControllerGetAxis(this->getController(), (SDL_GameControllerAxis) axisID);
+    return 0;
 }
 
 /** Returns the SDL_Haptic object, useful for controlling rumble effects. */
@@ -165,16 +195,19 @@ SDL_Haptic *LoomGameController::getHaptic()
     return haptic;
 }
 
+/** Returns the SDL_GameController object. */
+SDL_GameController *LoomGameController::getController()
+{
+    return controller;
+}
+
 /** Opens a game controller using device ID. */
 void LoomGameController::open(int deviceID)
 {
-    // lmLogInfo(controllerLogGroup, "Opening device [%d]", device);
-
     // Check if device is a known controller
     if (SDL_IsGameController(deviceID))
     {
         controller = SDL_GameControllerOpen(deviceID);
-        // lmLogInfo(controllerLogGroup, "Device [%d] is a controller", device);
     }
     else
     {
@@ -192,15 +225,15 @@ void LoomGameController::open(int deviceID)
     if (SDL_JoystickIsHaptic(joystick))
     {
         haptic = SDL_HapticOpenFromJoystick(joystick);
-        // lmLogInfo(controllerLogGroup, "Haptic Effects: %d", SDL_HapticNumEffects(haptic));
-        // lmLogInfo(controllerLogGroup, "Haptic Query: %x", SDL_HapticQuery(haptic));
+        // lmLogDebug(controllerLogGroup, "Haptic Effects: %d", SDL_HapticNumEffects(haptic));
+        // lmLogDebug(controllerLogGroup, "Haptic Query: %x", SDL_HapticQuery(haptic));
 
         // Checks if rumble is supported
         if (SDL_HapticRumbleSupported(haptic))
         {
             if (SDL_HapticRumbleInit(haptic) != 0)
             {
-                // lmLogInfo(controllerLogGroup, "Haptic Rumble Init: %s", SDL_GetError());
+                // lmLogDebug(controllerLogGroup, "Haptic Rumble Init: %s", SDL_GetError());
                 SDL_HapticClose(haptic);
                 haptic = 0;
             }
@@ -237,11 +270,15 @@ int registerLoomGameController(lua_State *L)
     beginPackage(L, "loom.platform")
 
         .beginClass<LoomGameController>("GameController")
+        .addConstructor<void(*)(void)>()
 
+        .addStaticMethod("getGameController", &LoomGameController::getGameController)
         .addStaticMethod("numDevices", &LoomGameController::numDevices)
-        .addStaticMethod("isHaptic", &LoomGameController::isHaptic)
-        .addStaticMethod("stopRumble", &LoomGameController::stopRumble)
-        .addStaticMethod("startRumble", &LoomGameController::startRumble)
+        .addMethod("isHaptic", &LoomGameController::isHaptic)
+        .addMethod("stopRumble", &LoomGameController::stopRumble)
+        .addMethod("startRumble", &LoomGameController::startRumble)
+        .addMethod("getButton", &LoomGameController::getButton)
+        .addMethod("getAxis", &LoomGameController::getAxis)
 
         .endClass()
 
