@@ -223,7 +223,7 @@ if (APPLE)
         endif()
 
         # Locate the .app and process the XIB into it.
-        set(APPLICATION_BIN $<TARGET_FILE:${APPLICATION_NAME}>)
+        get_target_property(APPLICATION_BIN ${APPLICATION_NAME} LOCATION)
         get_dotapp_dir(${APPLICATION_BIN} APPLICATION_APP_LOCATION)
         add_custom_command (TARGET ${PROJECT_NAME} POST_BUILD 
                           COMMAND ${IBTOOL} --errors --warnings --notices --output-format human-readable-text 
