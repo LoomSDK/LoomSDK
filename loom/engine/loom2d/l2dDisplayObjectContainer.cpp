@@ -23,7 +23,6 @@
 
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 #include "loom/engine/loom2d/l2dSprite.h"
-#include "loom/engine/loom2d/l2dImage.h"
 #include "loom/engine/loom2d/l2dQuadBatch.h"
 #include "loom/engine/loom2d/l2dBlendMode.h"
 #include "loom/graphics/gfxGraphics.h"

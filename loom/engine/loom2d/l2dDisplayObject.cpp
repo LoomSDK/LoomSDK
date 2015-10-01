@@ -21,11 +21,109 @@
 
 #include "loom/engine/loom2d/l2dDisplayObject.h"
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
+#include "loom/engine/loom2d/l2dImage.h"
+
+using namespace GFX;
 
 namespace Loom2D
 {
 Type       *DisplayObject::typeDisplayObject;
 lua_Number DisplayObject::_transformationMatrixOrdinal;
+bool       DisplayObject::cacheAsBitmapInProgress = false;
+
+void DisplayObject::render(lua_State *L) {
+    // Disable reentrancy for this function (read: don't cache to texture while caching to a texture)
+    if (cacheAsBitmapInProgress) return;
+
+    // Clear and free the cached image if the conditions apply
+    if ((!cacheAsBitmap || !cacheAsBitmapValid) && cachedImage != NULL) {
+        Quad* quad = static_cast<Quad*>(cachedImage);
+
+        lmAssert(quad != NULL, "Cached image is invalid");
+
+        GFX::Texture::dispose(quad->getNativeTextureID());
+        quad->setNativeTextureID(-1);
+
+        lmDelete(NULL, quad);
+        cachedImage = NULL;
+        cacheAsBitmapValid = false;
+    }
+
+    // Cache the contents into an image if the conditions apply
+    if (cacheAsBitmap && !cacheAsBitmapValid && cachedImage == NULL) {
+        cacheAsBitmapInProgress = true;
+        
+        // Used for displaying the texture
+        Quad* quad = lmNew(NULL) Quad();
+        
+        // Setup for getmember
+        lualoom_pushnative<DisplayObject>(L, this);
+        
+        // Push function and arguments
+        lualoom_getmember(L, -1, "getBounds");
+        lualoom_pushnative<DisplayObject>(L, this);
+        lua_pushnil(L);
+        // Call getBounds
+        lua_call(L, 2, 1);
+        
+        // Returned result
+        Loom2D::Rectangle *bounds = (Loom2D::Rectangle*) lualoom_getnativepointer(L, -1);
+        cacheAsBitmapOffsetX = bounds->x;
+        cacheAsBitmapOffsetY = bounds->y;
+        lmscalar fracWidth = bounds->width;
+        lmscalar fracHeight = bounds->height;
+        int texWidth = static_cast<int>(ceil(fracWidth));
+        int texHeight = static_cast<int>(ceil(fracHeight));
+        
+        // pop bounds Rectangle and the DisplayObject at the top
+        lua_pop(L, 1+1);
+
+        // Setup texture
+        TextureInfo *tinfo = Texture::initEmptyTexture(texWidth, texHeight);
+        Texture::clear(tinfo->id, 0x000000, 0);
+        tinfo->smoothing = TEXTUREINFO_SMOOTHING_BILINEAR;
+        tinfo->wrapU = TEXTUREINFO_WRAP_CLAMP;
+        tinfo->wrapV = TEXTUREINFO_WRAP_CLAMP;
+        TextureID id = tinfo->id;
+
+        // Setup quad for rendering the texture
+        quad->setNativeTextureID(id);
+        quad->quadVertices[0] = {               0,                0, 0, 0xFFFFFFFF, 0, 0 };
+        quad->quadVertices[1] = { (float)texWidth,                0, 0, 0xFFFFFFFF, 1, 0 };
+        quad->quadVertices[2] = {               0, (float)texHeight, 0, 0xFFFFFFFF, 0, 1 };
+        quad->quadVertices[3] = { (float)texWidth, (float)texHeight, 0, 0xFFFFFFFF, 1, 1 };
+        quad->setNativeVertexDataInvalid(false);
+
+        lmAssert(Texture::getRenderTarget() == -1, "Unsupported render target state: %d", Texture::getRenderTarget());
+
+        // Set render target to texture
+        Texture::setRenderTarget(id);
+        
+        // Shift the contents down and to the right so that the elements extending
+        // past the left and top edges don't get cut off, ignore other existing transforms
+        Matrix trans;
+        trans.translate(-cacheAsBitmapOffsetX, -cacheAsBitmapOffsetY);
+
+        // Setup for Graphics::render
+        lualoom_pushnative<DisplayObject>(L, this);
+        lualoom_pushnative<Matrix>(L, &trans);
+        lua_pushnumber(L, 1);
+
+        // Render the contents into the texture
+        Graphics::render(L);
+
+        // Pop previous arguments
+        lua_pop(L, 3);
+
+        // Restore render target
+        Texture::setRenderTarget(-1);
+
+        // Set valid cached state
+        cachedImage = quad;
+        cacheAsBitmapValid = true;
+        cacheAsBitmapInProgress = false;
+    }
+}
 
 /** Creates a matrix that represents the transformation from the local coordinate system
  *  to another. If you pass a 'resultMatrix', the result will be stored in this matrix

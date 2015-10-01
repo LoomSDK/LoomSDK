@@ -30,6 +30,7 @@
 
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxQuadRenderer.h"
+#include "loom/graphics/gfxStateManager.h"
 
 #include "loom/script/runtime/lsProfiler.h"
 
@@ -48,7 +49,6 @@ utHashTable<utFastStringHash, TextureID> Texture::sTexturePathLookup;
 bool Texture::sTextureAssetNofificationsEnabled = true;
 bool Texture::supportsFullNPOT;
 TextureID Texture::currentRenderTexture = -1;
-uint32_t Texture::previousRenderFlags = -1;
 
 //queue of textures to load in the async loading thread
 utList<AsyncLoadNote> Texture::sAsyncLoadQueue;
@@ -1136,7 +1136,7 @@ void Texture::clear(TextureID id, int color, float alpha)
 		float((color >> 0) & 0xFF) / 255.0f,
 		alpha
 	);
-	Graphics::context()->glClear(GL_COLOR_BUFFER_BIT);
+	Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	setRenderTarget(prevRenderTexture);
 }
@@ -1174,9 +1174,15 @@ void Texture::validate(TextureID id)
     LOOM_PROFILE_END(textureValidate);
 }
 
+TextureID Texture::getRenderTarget()
+{
+	return currentRenderTexture;
+}
+
 void Texture::setRenderTarget(TextureID id)
 {
-    LOOM_PROFILE_SCOPE(textureSetRenderTarget);
+	// TODO Gamma correct rendering? Render is lighter than it's supposed to be
+	LOOM_PROFILE_SCOPE(textureSetRenderTarget);
 	if (id != -1)
 	{
 		if (currentRenderTexture == id) return;
@@ -1192,33 +1198,34 @@ void Texture::setRenderTarget(TextureID id)
 		lmAssert(tinfo->handle != -1, "Texture handle invalid");
 		lmAssert(tinfo->renderTarget, "Error rendering to texture, texture is not a render buffer: %d", id);
 
+		// Save frame state
+		Graphics::pushFrame();
+
 		// Set our texture-bound framebuffer
 		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo->framebuffer);
 
-		// Flush pending quads
-		QuadRenderer::submit();
-
-		// Save and setup state
-		previousRenderFlags = Graphics::getFlags();
-		Graphics::setFlags(Graphics::FLAG_INVERTED | Graphics::FLAG_NOCLEAR);
-
 		// Setup stage and framing
+		Graphics::setFlags(Graphics::getFlags() | Graphics::FLAG_INVERTED | Graphics::FLAG_NOCLEAR);
 		Graphics::setNativeSize(tinfo->width, tinfo->height);
-		Graphics::beginFrame();
+
+		Graphics::applyFrame();
 
 		loom_mutex_unlock(Texture::sTexInfoLock);
 	}
 	else if (currentRenderTexture != -1)
 	{
-		Graphics::endFrame();
-
-		Graphics::setFlags(previousRenderFlags);
+		// Submit and reset state
+		Graphics_SetCurrentGLState(GFX_OPENGL_STATE_QUAD);
+		Graphics_InvalidateGLState(GFX_OPENGL_STATE_QUAD);
+		QuadRenderer::submit();
 
 		// Reset to screen framebuffer
 		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, Graphics::getBackFramebuffer());
 
+		// Restore frame state
+		Graphics::popFrame();
+
 		currentRenderTexture = -1;
-		previousRenderFlags = -1;
 	}
 }
 

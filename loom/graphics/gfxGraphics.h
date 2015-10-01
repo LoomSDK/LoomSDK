@@ -163,6 +163,23 @@ namespace GFX
 #undef GFX_PROC_VOID
     } GL_Context;
 
+// Represents graphics view frame properties that can change from frame buffer to frame buffer
+typedef struct GraphicsFrame {
+    // The current width of the graphics device
+    int width;
+
+    // The current height of the graphics device
+    int height;
+
+    // The flags used to create the graphics device( see bgfx.h BGFX_RESET_ for a list of flags )
+    uint32_t flags;
+
+    // The current fill color used when clearing the color buffer
+    Color fillColor;
+
+    GraphicsFrame() : width(0), height(0), flags(0), fillColor(0x000000FF) {};
+
+} GraphicsFrame;
 
 /** 
   *  Graphics subsystem class in charge of initializing bgfx graphics and handling context loss
@@ -197,10 +214,13 @@ public:
     static bool queryExtension(char *extName);
 
     static void beginFrame();
-
+    static void pushFrame();
+    static void popFrame();
+    static void applyFrame(bool initial = true);
     static void endFrame();
 
     static int render(lua_State *L);
+    //static void render(void *object, void *matrix, float alpha);
 
     static void handleContextLoss();
 
@@ -208,14 +228,14 @@ public:
 
     static inline void setNativeSize(int width, int height)
     {
-        sWidth = width;
-        sHeight = height;
+        sFrame.width = width;
+        sFrame.height = height;
     }
     
-    static inline int getWidth() { return sWidth; }
-    static inline int getHeight() { return sHeight; }
-    static inline uint32_t getFlags() { return sFlags; }
-    static inline void setFlags(uint32_t flags) { sFlags = flags; }
+    static inline int getWidth() { return sFrame.width; }
+    static inline int getHeight() { return sFrame.height; }
+    static inline uint32_t getFlags() { return sFrame.flags; }
+    static inline void setFlags(uint32_t flags) { sFrame.flags = flags; }
     static bool getStencilRequired();
     static inline float* getMVP() {
 #if GFX_OPENGL_CHECK
@@ -253,24 +273,11 @@ private:
     // texture resources, etc
     static bool sContextLost;    
 
-    // The current width of the graphics device
-    static int sWidth;
-
-    // The current height of the graphics device
-    static int sHeight;
-
-    // The flags used to create the graphics device( see bgfx.h BGFX_RESET_ for a list of flags )
-    static uint32_t sFlags;
-
-    // The current fill color used when clearing the color buffer
-    static Color sFillColor;
-
-    // The current view number being rendered
-    static int sView;
-
     // The current frame counter
     static uint32_t sCurrentFrame;
-
+    
+    static GraphicsFrame sFrame;
+    static utArray<GraphicsFrame> sFrameStack;
     static int sBackFramebuffer;
 
     //static float sMVP[9];
@@ -301,7 +308,7 @@ private:
     switch (status) \
     { \
         case GL_FRAMEBUFFER_COMPLETE: \
-            lmLogInfo(gGFXLogGroup, "Texture framebuffer #%d valid", framebuffer); \
+            lmLogDebug(gGFXLogGroup, "Texture framebuffer #%d valid", framebuffer); \
             break; \
         default: \
             const char* errorName; \

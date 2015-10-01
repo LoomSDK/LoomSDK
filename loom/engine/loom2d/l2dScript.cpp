@@ -194,6 +194,9 @@ static int registerLoom2D(lua_State *L)
        .addProperty("visible", &DisplayObject::getVisible, &DisplayObject::setVisible)
        .addProperty("touchable", &DisplayObject::getTouchable, &DisplayObject::setTouchable)
 
+       .addProperty("cacheAsBitmap", &DisplayObject::getCacheAsBitmap, &DisplayObject::setCacheAsBitmap)
+       .addMethod("invalidateBitmapCache", &DisplayObject::invalidateBitmapCache)
+
        .addProperty("depth", &DisplayObject::getDepth, &DisplayObject::setDepth)
 
        .addProperty("valid", &DisplayObject::getValid, &DisplayObject::setValid)
