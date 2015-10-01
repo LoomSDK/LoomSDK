@@ -334,7 +334,8 @@ private:
             GFX_DEBUG_BREAK \
             lmAssert(status, "OpenGL error, see above for details."); \
     } \
-} \ 
+} \
+
 #endif
 
 }

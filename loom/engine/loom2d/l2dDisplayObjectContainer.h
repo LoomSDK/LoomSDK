@@ -34,6 +34,7 @@ struct DisplayObjectSort
 class DisplayObjectContainer : public DisplayObject
 {
     static utArray<DisplayObjectSort> sSortBucket;
+    void applyStageTransform(Matrix* result);
 
 public:
 
@@ -93,7 +94,8 @@ public:
     }
 
     template <class ContainerClass>
-    void renderContainer(lua_State *L, void* instance) {
+    void renderContainer(lua_State *L, void* instance)
+    {
         DisplayObject::render(L);
 
         updateLocalTransform();
@@ -106,6 +108,7 @@ public:
             cached->transformMatrix.identity();
             cached->transformMatrix.translate(cacheAsBitmapOffsetX, cacheAsBitmapOffsetY);
             cached->transformMatrix.concat(&transformMatrix);
+            applyStageTransform(&cached->transformMatrix);
 
             lualoom_pushnative<DisplayObject>(L, cached);
             cached->render(L);
