@@ -1214,10 +1214,10 @@ void Texture::setRenderTarget(TextureID id)
 	}
 	else if (currentRenderTexture != -1)
 	{
-		// Submit and reset state
+		// Submit and reset state (order is important apparently)
+		QuadRenderer::submit();
 		Graphics_SetCurrentGLState(GFX_OPENGL_STATE_QUAD);
 		Graphics_InvalidateGLState(GFX_OPENGL_STATE_QUAD);
-		QuadRenderer::submit();
 
 		// Reset to screen framebuffer
 		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, Graphics::getBackFramebuffer());

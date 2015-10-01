@@ -33,12 +33,14 @@
 // but keep checking shaders, framebuffers and others.
 #define GFX_CALL_CHECK GFX_OPENGL_CHECK
 
+// Check Frame Buffer Object (FBO) status
+#define GFX_FBO_CHECK GFX_OPENGL_CHECK
+
 // Print all the OpenGL calls as they happen (a lot of overhead)
 #define GFX_CALL_PRINT 0
 
 // Enable profiling of all OpenGL calls
 #define GFX_CALL_PROFILE 0
-
 
 #include <SDL.h>
 
@@ -301,6 +303,9 @@ private:
 
 };
 
+#if !GFX_FBO_CHECK
+#define GFX_FRAMEBUFFER_CHECK
+#else
 #define GFX_FRAMEBUFFER_CHECK(framebuffer) \
 { \
     GLenum status; \
@@ -329,6 +334,7 @@ private:
             GFX_DEBUG_BREAK \
             lmAssert(status, "OpenGL error, see above for details."); \
     } \
-} \
+} \ 
+#endif
 
 }
