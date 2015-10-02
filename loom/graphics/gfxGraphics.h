@@ -33,12 +33,14 @@
 // but keep checking shaders, framebuffers and others.
 #define GFX_CALL_CHECK GFX_OPENGL_CHECK
 
+// Check Frame Buffer Object (FBO) status
+#define GFX_FBO_CHECK GFX_OPENGL_CHECK
+
 // Print all the OpenGL calls as they happen (a lot of overhead)
 #define GFX_CALL_PRINT 0
 
 // Enable profiling of all OpenGL calls
 #define GFX_CALL_PROFILE 0
-
 
 #include <SDL.h>
 
@@ -163,6 +165,23 @@ namespace GFX
 #undef GFX_PROC_VOID
     } GL_Context;
 
+// Represents graphics render target properties that can change from frame buffer to frame buffer
+typedef struct GraphicsRenderTarget {
+    // The current width of the graphics device
+    int width;
+
+    // The current height of the graphics device
+    int height;
+
+    // The flags used to create the graphics device( see bgfx.h BGFX_RESET_ for a list of flags )
+    uint32_t flags;
+
+    // The current fill color used when clearing the color buffer
+    Color fillColor;
+
+    GraphicsRenderTarget() : width(0), height(0), flags(0), fillColor(0x000000FF) {};
+
+} GraphicsRenderTarget;
 
 /** 
   *  Graphics subsystem class in charge of initializing bgfx graphics and handling context loss
@@ -197,10 +216,13 @@ public:
     static bool queryExtension(char *extName);
 
     static void beginFrame();
-
+    static void pushRenderTarget();
+    static void popRenderTarget();
+    static void applyRenderTarget(bool initial = true);
     static void endFrame();
 
     static int render(lua_State *L);
+    //static void render(void *object, void *matrix, float alpha);
 
     static void handleContextLoss();
 
@@ -208,14 +230,14 @@ public:
 
     static inline void setNativeSize(int width, int height)
     {
-        sWidth = width;
-        sHeight = height;
+        sTarget.width = width;
+        sTarget.height = height;
     }
     
-    static inline int getWidth() { return sWidth; }
-    static inline int getHeight() { return sHeight; }
-    static inline uint32_t getFlags() { return sFlags; }
-    static inline void setFlags(uint32_t flags) { sFlags = flags; }
+    static inline int getWidth() { return sTarget.width; }
+    static inline int getHeight() { return sTarget.height; }
+    static inline uint32_t getFlags() { return sTarget.flags; }
+    static inline void setFlags(uint32_t flags) { sTarget.flags = flags; }
     static bool getStencilRequired();
     static inline float* getMVP() {
 #if GFX_OPENGL_CHECK
@@ -253,24 +275,11 @@ private:
     // texture resources, etc
     static bool sContextLost;    
 
-    // The current width of the graphics device
-    static int sWidth;
-
-    // The current height of the graphics device
-    static int sHeight;
-
-    // The flags used to create the graphics device( see bgfx.h BGFX_RESET_ for a list of flags )
-    static uint32_t sFlags;
-
-    // The current fill color used when clearing the color buffer
-    static Color sFillColor;
-
-    // The current view number being rendered
-    static int sView;
-
     // The current frame counter
     static uint32_t sCurrentFrame;
-
+    
+    static GraphicsRenderTarget sTarget;
+    static utArray<GraphicsRenderTarget> sTargetStack;
     static int sBackFramebuffer;
 
     //static float sMVP[9];
@@ -294,6 +303,9 @@ private:
 
 };
 
+#if !GFX_FBO_CHECK
+#define GFX_FRAMEBUFFER_CHECK
+#else
 #define GFX_FRAMEBUFFER_CHECK(framebuffer) \
 { \
     GLenum status; \
@@ -301,7 +313,7 @@ private:
     switch (status) \
     { \
         case GL_FRAMEBUFFER_COMPLETE: \
-            lmLogInfo(gGFXLogGroup, "Texture framebuffer #%d valid", framebuffer); \
+            lmLogDebug(gGFXLogGroup, "Texture framebuffer #%d valid", framebuffer); \
             break; \
         default: \
             const char* errorName; \
@@ -323,5 +335,7 @@ private:
             lmAssert(status, "OpenGL error, see above for details."); \
     } \
 } \
+
+#endif
 
 }
