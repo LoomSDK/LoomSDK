@@ -52,6 +52,9 @@ struct RenderState
 
 class DisplayObject : public EventDispatcher
 {
+    // true if caching is in progress, used for avoiding rendering to texture while rendering to texture 
+    static bool cacheAsBitmapInProgress;
+
 public:
 
     bool transformDirty;
@@ -118,8 +121,6 @@ public:
     // true if cachedImage represents a valid cache of the contents
     // if false, the contents are re-cached at render time
     bool cacheAsBitmapValid;
-    // true if caching is in progress, used for avoiding rendering to texture while rendering to texture 
-    static bool cacheAsBitmapInProgress;
     // pointer to the cached image, details depend on implementation
     void* cachedImage;
     // X offset the cached image has to be rendered at

@@ -1199,7 +1199,7 @@ void Texture::setRenderTarget(TextureID id)
 		lmAssert(tinfo->renderTarget, "Error rendering to texture, texture is not a render buffer: %d", id);
 
 		// Save frame state
-		Graphics::pushFrame();
+		Graphics::pushRenderTarget();
 
 		// Set our texture-bound framebuffer
 		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo->framebuffer);
@@ -1208,7 +1208,7 @@ void Texture::setRenderTarget(TextureID id)
 		Graphics::setFlags(Graphics::getFlags() | Graphics::FLAG_INVERTED | Graphics::FLAG_NOCLEAR);
 		Graphics::setNativeSize(tinfo->width, tinfo->height);
 
-		Graphics::applyFrame();
+		Graphics::applyRenderTarget();
 
 		loom_mutex_unlock(Texture::sTexInfoLock);
 	}
@@ -1223,7 +1223,7 @@ void Texture::setRenderTarget(TextureID id)
 		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, Graphics::getBackFramebuffer());
 
 		// Restore frame state
-		Graphics::popFrame();
+		Graphics::popRenderTarget();
 
 		currentRenderTexture = -1;
 	}

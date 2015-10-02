@@ -54,8 +54,8 @@ bool Graphics::sContextLost = true;
 int Graphics::sBackFramebuffer = -1;
 
 uint32_t Graphics::sCurrentFrame = 0;
-GraphicsFrame Graphics::sFrame;
-utArray<GraphicsFrame> Graphics::sFrameStack;
+GraphicsRenderTarget Graphics::sTarget;
+utArray<GraphicsRenderTarget> Graphics::sTargetStack;
 
 float Graphics::sMVP[16] = {
     1.0f, 0.0f, 0.0f, 0.0f,
@@ -170,9 +170,9 @@ void Graphics::reset(int width, int height, uint32_t flags)
     sCurrentModelViewProjection = sMVP;
 
     // cache current values
-    sFrame.width  = width;
-    sFrame.height = height;
-    sFrame.flags = flags;
+    sTarget.width  = width;
+    sTarget.height = height;
+    sTarget.flags = flags;
 }
 
 bool Graphics::queryExtension(char *extName)
@@ -218,31 +218,31 @@ void Graphics::beginFrame()
     
     QuadRenderer::beginFrame();
 
-    applyFrame();
+    applyRenderTarget();
 }
 
-void Graphics::pushFrame()
+void Graphics::pushRenderTarget()
 {
     QuadRenderer::submit();
-    sFrameStack.push_back(sFrame);
+    sTargetStack.push_back(sTarget);
 }
 
-void Graphics::popFrame()
+void Graphics::popRenderTarget()
 {
-    sFrame = sFrameStack.back();
-    sFrameStack.pop_back();
-    applyFrame(false);
+    sTarget = sTargetStack.back();
+    sTargetStack.pop_back();
+    applyRenderTarget(false);
 }
 
-void Graphics::applyFrame(bool initial)
+void Graphics::applyRenderTarget(bool initial)
 {
-    Graphics::reset(sFrame.width, sFrame.height, sFrame.flags);
+    Graphics::reset(sTarget.width, sTarget.height, sTarget.flags);
 
-    VectorRenderer::setSize(sFrame.width, sFrame.height);
-    Graphics::context()->glViewport(0, 0, sFrame.width, sFrame.height);
+    VectorRenderer::setSize(sTarget.width, sTarget.height);
+    Graphics::context()->glViewport(0, 0, sTarget.width, sTarget.height);
 
-    if (initial && !(sFrame.flags & FLAG_NOCLEAR)) {
-        Graphics::context()->glClearColor(sFrame.fillColor.r, sFrame.fillColor.g, sFrame.fillColor.b, sFrame.fillColor.a);
+    if (initial && !(sTarget.flags & FLAG_NOCLEAR)) {
+        Graphics::context()->glClearColor(sTarget.fillColor.r, sTarget.fillColor.g, sTarget.fillColor.b, sTarget.fillColor.a);
         Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     }
 }
@@ -266,7 +266,7 @@ void Graphics::endFrame()
 
         // If there is a pending data request, do that
         if (gettingScreenshotData) {
-            utByteArray *retData = stbi_data_png(sFrame.width, sFrame.height, 4 /* RGBA */, fb->getData(), sFrame.width * fb->getBpp());
+            utByteArray *retData = stbi_data_png(sTarget.width, sTarget.height, 4 /* RGBA */, fb->getData(), sTarget.width * fb->getBpp());
 
             // Send the delegate along
             _onScreenshotDataDelegate.pushArgument(retData);
@@ -324,7 +324,7 @@ void Graphics::handleContextLoss()
 {
     sContextLost = true;
 
-    lmLog(gGFXLogGroup, "Graphics::handleContextLoss - %dx%d", sFrame.width, sFrame.height);
+    lmLog(gGFXLogGroup, "Graphics::handleContextLoss - %dx%d", sTarget.width, sTarget.height);
 
     lmLog(gGFXLogGroup, "Handle context loss: Shutdown %i", _scount++);
 
@@ -335,7 +335,7 @@ void Graphics::handleContextLoss()
     lmLog(gGFXLogGroup, "Handle context loss: Init");
 
     lmLog(gGFXLogGroup, "Handle context loss: Reset");
-    reset(sFrame.width, sFrame.height);
+    reset(sTarget.width, sTarget.height);
     lmLog(gGFXLogGroup, "Handle context loss: Done");
 }
 
@@ -363,7 +363,7 @@ void Graphics::setDebug(int flags)
 
 void Graphics::setFillColor(unsigned int color)
 {
-    sFrame.fillColor = Color(color);
+    sTarget.fillColor = Color(color);
 }
 
 // NanoVG requires stencil buffer for fills, so this is always true for now
@@ -374,7 +374,7 @@ bool Graphics::getStencilRequired()
 
 unsigned int Graphics::getFillColor()
 {
-    return sFrame.fillColor.getHex();
+    return sTarget.fillColor.getHex();
 }
 
 void Graphics::setClipRect(int x, int y, int width, int height)
@@ -392,7 +392,7 @@ void Graphics::setClipRect(int x, int y, int width, int height)
     }
 
     context()->glEnable(GL_SCISSOR_TEST);
-    context()->glScissor(x, sFrame.height-height-y, width, height);
+    context()->glScissor(x, sTarget.height-height-y, width, height);
 }
 
 void Graphics::clearClipRect()

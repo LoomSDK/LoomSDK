@@ -165,8 +165,8 @@ namespace GFX
 #undef GFX_PROC_VOID
     } GL_Context;
 
-// Represents graphics view frame properties that can change from frame buffer to frame buffer
-typedef struct GraphicsFrame {
+// Represents graphics render target properties that can change from frame buffer to frame buffer
+typedef struct GraphicsRenderTarget {
     // The current width of the graphics device
     int width;
 
@@ -179,9 +179,9 @@ typedef struct GraphicsFrame {
     // The current fill color used when clearing the color buffer
     Color fillColor;
 
-    GraphicsFrame() : width(0), height(0), flags(0), fillColor(0x000000FF) {};
+    GraphicsRenderTarget() : width(0), height(0), flags(0), fillColor(0x000000FF) {};
 
-} GraphicsFrame;
+} GraphicsRenderTarget;
 
 /** 
   *  Graphics subsystem class in charge of initializing bgfx graphics and handling context loss
@@ -216,9 +216,9 @@ public:
     static bool queryExtension(char *extName);
 
     static void beginFrame();
-    static void pushFrame();
-    static void popFrame();
-    static void applyFrame(bool initial = true);
+    static void pushRenderTarget();
+    static void popRenderTarget();
+    static void applyRenderTarget(bool initial = true);
     static void endFrame();
 
     static int render(lua_State *L);
@@ -230,14 +230,14 @@ public:
 
     static inline void setNativeSize(int width, int height)
     {
-        sFrame.width = width;
-        sFrame.height = height;
+        sTarget.width = width;
+        sTarget.height = height;
     }
     
-    static inline int getWidth() { return sFrame.width; }
-    static inline int getHeight() { return sFrame.height; }
-    static inline uint32_t getFlags() { return sFrame.flags; }
-    static inline void setFlags(uint32_t flags) { sFrame.flags = flags; }
+    static inline int getWidth() { return sTarget.width; }
+    static inline int getHeight() { return sTarget.height; }
+    static inline uint32_t getFlags() { return sTarget.flags; }
+    static inline void setFlags(uint32_t flags) { sTarget.flags = flags; }
     static bool getStencilRequired();
     static inline float* getMVP() {
 #if GFX_OPENGL_CHECK
@@ -278,8 +278,8 @@ private:
     // The current frame counter
     static uint32_t sCurrentFrame;
     
-    static GraphicsFrame sFrame;
-    static utArray<GraphicsFrame> sFrameStack;
+    static GraphicsRenderTarget sTarget;
+    static utArray<GraphicsRenderTarget> sTargetStack;
     static int sBackFramebuffer;
 
     //static float sMVP[9];
