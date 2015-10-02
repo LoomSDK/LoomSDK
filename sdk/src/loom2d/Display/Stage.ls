@@ -47,8 +47,6 @@ package loom2d.display
     }
 
     delegate KeyDelegate(scancode:int, virtualKey:int, modifiers:int);
-    delegate GameControllerButtonDelegate(controller:int, button:int);
-    delegate GameControllerAxisDelegate(controller:int, axis:int, value:Number);
     delegate GameControllerAddedDelegate(controller:int);
     delegate GameControllerRemovedDelegate(controller:int);
     delegate HardwareKeyDelegate();
@@ -109,7 +107,6 @@ package loom2d.display
         private var mHeight:int;
         private var mColor:uint;
         private var mEnterFrameEvent:EnterFrameEvent = new EnterFrameEvent(Event.ENTER_FRAME, 0.0);
-        private var mGameControllerAxisEvent:GameControllerEvent = new GameControllerEvent(GameControllerEvent.AXIS_MOTION, 0, 0, 0, 0);
         private var mScaleMode:StageScaleMode = StageScaleMode.NONE;
 
         public native var onTouchBegan:TouchDelegate;
@@ -120,9 +117,6 @@ package loom2d.display
         public native var onKeyUp:KeyDelegate;
         public native var onKeyDown:KeyDelegate;
 
-        public native var onGameControllerButtonUp:GameControllerButtonDelegate;
-        public native var onGameControllerButtonDown:GameControllerButtonDelegate;
-        public native var onGameControllerAxisMoved:GameControllerAxisDelegate;
         public native var onGameControllerAdded:GameControllerAddedDelegate;
         public native var onGameControllerRemoved:GameControllerRemovedDelegate;
 
@@ -168,9 +162,6 @@ package loom2d.display
             onKeyDown += onKeyDownHandler;
             onKeyUp += onKeyUpHandler;
 
-            onGameControllerButtonDown += onGameControllerButtonDownHandler;
-            onGameControllerButtonUp += onGameControllerButtonUpHandler;
-            onGameControllerAxisMoved += onGameControllerAxisMovedHandler;
             onGameControllerAdded += onGameControllerAddedHandler;
             onGameControllerRemoved += onGameControllerRemovedHandler;
 
@@ -206,23 +197,6 @@ package loom2d.display
                     (modifiers | LoomKeyModifier.CTRL) != 0,
                     (modifiers | LoomKeyModifier.ALT) != 0,
                     (modifiers | LoomKeyModifier.SHIFT) != 0 ));
-        }
-
-        protected function onGameControllerButtonDownHandler(controller:int, button:int):void
-        {
-            broadcastEvent(new GameControllerEvent(GameControllerEvent.BUTTON_DOWN, controller, button));
-        }
-
-        protected function onGameControllerButtonUpHandler(controller:int, button:int):void
-        {
-            broadcastEvent(new GameControllerEvent(GameControllerEvent.BUTTON_UP, controller, button));
-        }
-        
-        // Note: Axis event is pooled - event data will be overwritten on next event
-        protected function onGameControllerAxisMovedHandler(controller:int, axis:int, value:int):void
-        {
-            mGameControllerAxisEvent.reconstruct(GameControllerEvent.AXIS_MOTION, false, null, controller, 0, axis, value);
-            broadcastEvent(mGameControllerAxisEvent);
         }
         
         protected function onGameControllerAddedHandler(controller:int):void

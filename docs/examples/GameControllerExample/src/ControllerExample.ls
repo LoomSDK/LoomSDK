@@ -16,11 +16,11 @@ package
 	 * Main application class containing all event interactions.
 	 * The demo mimics game controller interaction on screen.
 	 */
-	public class ControllerExample extends Application
+	public class GameControllerExample extends Application
 	{
 		private var controllerData:SimpleLabel;
 		private var sprite:Image;
-		private var gc:GameController;
+		private var controllers:Vector.<GameController>;
 
 		private var xLeftStick:Number = 0;
 		private var xLeftMax:Number = Number.MIN_VALUE;
@@ -53,39 +53,70 @@ package
 			controllerData.scale = 0.4;
 			stage.addChild(controllerData);
 
-			stage.addEventListener(GameControllerEvent.AXIS_MOTION, axisMoved);
-			stage.addEventListener(GameControllerEvent.BUTTON_DOWN, buttonPressed);
-			stage.addEventListener(GameControllerEvent.BUTTON_UP, buttonReleased);
 			stage.addEventListener(GameControllerEvent.CONTROLLER_ADDED, controllerAdded);
 			stage.addEventListener(GameControllerEvent.CONTROLLER_REMOVED, controllerRemoved);
+			
+			controllers = new Vector.<GameController>();
+			for (var i:uint = 0; i < GameController.numDevices(); i++) {
+				addDevice(i);
+			}
 		}
 
-		private function axisMoved(e:GameControllerEvent) {
-			/**
-			 * 0 - Left stick right-left
-			 * 1 - Left stick down-up
-			 * 2 - Right stick right-left
-			 * 3 - Right stick down-up
-			 * 4 - Left trigger
-			 * 5 - Right trigger
-			 * */
-			controller.axisAction(e.axisID, e.axisValue);
+		private function axisMoved(axis:int = -1, value:int = 0) {
+			this.controller.axisAction(axis, GameController.convertAxis(value));
 		}
 
-		private function buttonPressed(e:GameControllerEvent) {
-			controller.buttonAction(e.buttonID, true);
+		private function buttonPressed(button:int = -1) {
+			trace("Controller: " + controller + " | button: " + button + " pressed!");
+			this.controller.buttonAction(button, true);
 		}
 
-		private function buttonReleased(e:GameControllerEvent) {
-			controller.buttonAction(e.buttonID, false);
+		private function buttonReleased(button:int = -1) {
+			trace("Controller: " + controller + " | button: " + button + " released!");
+			this.controller.buttonAction(button, false);
 		}
 
 		private function controllerAdded(e:GameControllerEvent) {
 			displayControllerNum();
+			addDevice(e.controllerID);
 		}
 
 		private function controllerRemoved(e:GameControllerEvent) {
 			displayControllerNum();
+			removeDevice(e.controllerID);
+		}
+		
+		private function addDevice(index:int = 0):int {
+			var isInVector:Boolean = false;
+			var c:GameController = GameController.getGameController(index);
+			for (var i:uint = 0; i < controllers.length; i++) {
+				if (controllers[i] == c) {
+					return controllers.length;
+					break;
+				}
+			}
+			
+			c.onGameControllerButtonDown += buttonPressed;
+			c.onGameControllerButtonUp += buttonReleased;
+			c.onGameControllerAxisMoved += axisMoved;
+			controllers.push(c);
+			
+			return controllers.length;
+		}
+		
+		private function removeDevice(index:int = 0):int {
+			for (var i:uint = 0; i < controllers.length; i++) {
+				if (controllers[i] == GameController.getGameController(index)) {
+					controllers[i].onGameControllerButtonDown -= buttonPressed;
+					controllers[i].onGameControllerButtonUp -= buttonReleased;
+					controllers[i].onGameControllerAxisMoved -= axisMoved;
+					controllers.remove(controllers[i]);
+					
+					break;
+				}
+			}
+			
+			return controllers.length;
 		}
 
 		private function displayControllerNum() {

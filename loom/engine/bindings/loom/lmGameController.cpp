@@ -201,6 +201,28 @@ SDL_GameController *LoomGameController::getController()
     return controller;
 }
 
+/** Relays button presses to LoomSDK through delegate. */
+void LoomGameController::buttonDown(SDL_Event event)
+{
+    _GameControllerButtonDownDelegate.pushArgument(event.cbutton.button);
+    _GameControllerButtonDownDelegate.invoke();
+}
+
+/** Relays button releases to LoomSDK through delegate. */
+void LoomGameController::buttonUp(SDL_Event event)
+{
+    _GameControllerButtonUpDelegate.pushArgument(event.cbutton.button);
+    _GameControllerButtonUpDelegate.invoke();
+}
+
+/** Relays axis movement to LoomSDK through delegate. */
+void LoomGameController::axisMove(SDL_Event event)
+{
+    _GameControllerAxisMovedDelegate.pushArgument(event.caxis.axis);
+    _GameControllerAxisMovedDelegate.pushArgument(event.caxis.value);
+    _GameControllerAxisMovedDelegate.invoke();
+}
+
 /** Opens a game controller using device ID. */
 void LoomGameController::open(int deviceID)
 {
@@ -279,6 +301,10 @@ int registerLoomGameController(lua_State *L)
         .addMethod("startRumble", &LoomGameController::startRumble)
         .addMethod("getButton", &LoomGameController::getButton)
         .addMethod("getAxis", &LoomGameController::getAxis)
+
+        .addVarAccessor("onGameControllerButtonUp", &LoomGameController::getGameControllerButtonUpDelegate)
+        .addVarAccessor("onGameControllerButtonDown", &LoomGameController::getGameControllerButtonDownDelegate)
+        .addVarAccessor("onGameControllerAxisMoved", &LoomGameController::getGameControllerAxisMovedDelegate)
 
         .endClass()
 

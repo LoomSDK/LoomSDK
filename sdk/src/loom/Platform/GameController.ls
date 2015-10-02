@@ -20,6 +20,11 @@ limitations under the License.
 
 package loom.platform
 {
+    import loom2d.events.GameControllerEvent;
+    
+    delegate GameControllerButtonDelegate(button:int);
+    delegate GameControllerAxisDelegate(axis:int, value:Number);
+    
     public final native class GameController
     {
         /**
@@ -66,6 +71,10 @@ package loom.platform
          */
         public static var AXIS_MAX:uint = 6;
         
+        public native var onGameControllerButtonUp:GameControllerButtonDelegate;
+        public native var onGameControllerButtonDown:GameControllerButtonDelegate;
+        public native var onGameControllerAxisMoved:GameControllerAxisDelegate;
+        
         /**
          * Returns number of connected game controllers.
          * 
@@ -74,7 +83,7 @@ package loom.platform
         public static native function numDevices():int;
         
         /**
-         * Returns a GameController object
+         * Returns a GameController object.
          * 
          * @param index The index of the controller
          * @return Returns a GameController if it is connected
@@ -120,6 +129,17 @@ package loom.platform
          * @return Returns a number between -32768 and 32767
          */
         public native function getAxis(axis:uint):int;
+        
+        /**
+         * Helper function to convert axis value into a value between 0 and 1.
+         * 
+         * @param value Value of axis that you need normalized.
+         * @return Returns a value between 0 and 1
+         */
+        public static function convertAxis(value:int):Number
+        {
+            return value < 0 ? -(value / ( -32767)) : value / 32767;
+        }
     }
 
 }

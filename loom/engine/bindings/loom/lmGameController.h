@@ -42,9 +42,16 @@ public:
     bool getButton(int buttonID);
     int getAxis(int axisID);
     int getID();
-
     SDL_Haptic *getHaptic();
     SDL_GameController *getController();
+
+    void buttonDown(SDL_Event event);
+    void buttonUp(SDL_Event event);
+    void axisMove(SDL_Event event);
+
+    LOOM_DELEGATE(GameControllerAxisMoved);
+    LOOM_DELEGATE(GameControllerButtonDown);
+    LOOM_DELEGATE(GameControllerButtonUp);
 
 private:
     int id;

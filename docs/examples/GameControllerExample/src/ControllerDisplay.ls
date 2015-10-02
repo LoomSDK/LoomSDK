@@ -34,31 +34,34 @@ package
 			this.addChild(controllerImage);
 			this.addChild(topLayer);
 
-			leftStick = new ControllerStick(ControllerStick.BUTTON_STICK, 7, 314, 332);
-			rightStick = new ControllerStick(ControllerStick.BUTTON_STICK, 8, 570, 332);
-			
+			leftStick  = new ControllerStick(ControllerStick.BUTTON_STICK,  GameController.BUTTON_LEFTSTICK, 314, 332);
+			rightStick = new ControllerStick(ControllerStick.BUTTON_STICK, GameController.BUTTON_RIGHTSTICK, 570, 332);
+
+			// Populating array of buttons
 			buttons = new Vector.<ControllerButton>();
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD, 0, 702, 252));			// 00 A
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD, 1, 771, 184));			// 01 B
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD, 2, 634, 184));			// 02 X
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD, 3, 702, 116));			// 03 Y
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_BACK,     4, 366, 192));			// 04 Back
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_GUIDE,    5, 442, 147));			// 05 Guide
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_START,    6, 524, 192));			// 06 Start
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD,            GameController.BUTTON_A, 702, 252));			// 00 A
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD,            GameController.BUTTON_B, 771, 184));			// 01 B
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD,            GameController.BUTTON_X, 634, 184));			// 02 X
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD,            GameController.BUTTON_Y, 702, 116));			// 03 Y
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_BACK,             GameController.BUTTON_BACK, 366, 192));			// 04 Back
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_GUIDE,            GameController.BUTTON_GUIDE, 442, 147));			// 05 Guide
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_START,            GameController.BUTTON_START, 524, 192));			// 06 Start
 			buttons.push(leftStick);																	// 07 Left Stick
 			buttons.push(rightStick);																	// 08 Right Stick
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_BUMPER,   9, 153,   8));			// LB
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_BUMPER,   10, 673,   8));			// RB
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT, 11, 185, 142));				// Up
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT, 12, 185, 227, Math.PI));		// Down
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT, 13, 142, 180, -Math.PI/2));	// Left
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT, 14, 227, 190, Math.PI/2));	// Right
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_BUMPER,    GameController.BUTTON_LEFTSHOULDER, 153,   8));			// LB
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_BUMPER,   GameController.BUTTON_RIGHTSHOULDER, 673,   8));			// RB
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT,       GameController.BUTTON_DPAD_UP, 185, 142));				// Up
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT,          GameController.BUTTON_DPAD_DOWN, 185, 227, Math.PI));		// Down
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT,          GameController.BUTTON_DPAD_LEFT, 142, 180, -Math.PI/2));	// Left
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT,         GameController.BUTTON_DPAD_RIGHT, 227, 190, Math.PI/2));	// Right
 			
 			for (var i:int = 0; i < buttons.length; i++) {
+				// Add bumpers on a layer that below the base of controller
 				if (buttons[i].type == ControllerButton.BUTTON_BUMPER) {
 					bottomLayer.addChild(buttons[i]);
 					continue;
 				}
+				// The rest is added above the controller
 				topLayer.addChild(buttons[i]);
 			}
 			
@@ -77,22 +80,22 @@ package
 		
 		public function axisAction(axis:int, value:int):void {
 			switch(axis) {
-				case 0: //Left stick right-left
+				case GameController.AXIS_LEFTX: //Left stick right-left
 					leftStick.xValue = value;
 					break;
-				case 1: //Left stick down-up
+				case GameController.AXIS_LEFTY: //Left stick down-up
 					leftStick.yValue = value;
 					break;
-				case 2: //Right stick right-left
+				case GameController.AXIS_RIGHTX: //Right stick right-left
 					rightStick.xValue = value;
 					break;
-				case 3: //Right stick down-up
+				case GameController.AXIS_RIGHTY: //Right stick down-up
 					rightStick.yValue = value;
 					break;
-				case 4: //Left trigger
+				case GameController.AXIS_TRIGGERLEFT: //Left trigger
 					leftTrigger.value = value;
 					break;
-				case 5: //Right trigger
+				case GameController.AXIS_TRIGGERRIGHT: //Right trigger
 					rightTrigger.value = value;
 					break;
 			}
