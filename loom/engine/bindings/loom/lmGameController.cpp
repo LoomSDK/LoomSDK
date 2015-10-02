@@ -31,6 +31,7 @@ using namespace LS;
 
 /** A pool of controllers. */
 LoomGameController LoomGameController::controllers[MAX_CONTROLLERS];
+int LoomGameController::numControllers = 0;
 
 lmDefineLogGroup(controllerLogGroup, "loom.controller", 1, LoomLogInfo);
 
@@ -52,6 +53,7 @@ void LoomGameController::openAll()
     for (int i = 0; i < SDL_NumJoysticks() && joyIndex < MAX_CONTROLLERS; i++)
     {
         LoomGameController::controllers[joyIndex++].open(i);
+        ++numControllers;
     }
 }
 
@@ -63,6 +65,7 @@ void LoomGameController::closeAll()
     {
         LoomGameController::controllers[i].close();
     }
+    numControllers = 0;
 }
 
 /** Opens a game controller from the game controller pool.
@@ -77,6 +80,7 @@ int LoomGameController::addDevice(int deviceID)
         if (!gc.is_connected)
         {
             gc.open(deviceID);
+            ++numControllers;
             return i;
         }
     }
@@ -94,19 +98,8 @@ int LoomGameController::removeDevice(int deviceID)
     if (controllerIndex < 0) return -1;
     LoomGameController& gc = controllers[controllerIndex];
     gc.close();
+    --numControllers;
     return controllerIndex;
-}
-
-/** Returns the number of opened game controllers. */
-int LoomGameController::numDevices()
-{
-    int devices = 0;
-    for (int i = 0; i < MAX_CONTROLLERS; i++)
-    {
-        if (LoomGameController::controllers[i].is_connected)
-            ++devices;
-    }
-    return devices;
 }
 
 /** Returns the game controller's index in the game controller pool using the device's id. */
@@ -297,7 +290,9 @@ int registerLoomGameController(lua_State *L)
         .addConstructor<void(*)(void)>()
 
         .addStaticMethod("getGameController", &LoomGameController::getGameController)
-        .addStaticMethod("numDevices", &LoomGameController::numDevices)
+
+        .addStaticVar("numControllers", &LoomGameController::numControllers)
+
         .addMethod("isHaptic", &LoomGameController::isHaptic)
         .addMethod("stopRumble", &LoomGameController::stopRumble)
         .addMethod("startRumble", &LoomGameController::startRumble)

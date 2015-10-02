@@ -28,11 +28,13 @@ class LoomGameController
 {
 public:
     LoomGameController();
+
+    static int numControllers;
+
     static void openAll();
     static void closeAll();
     static int addDevice(int deviceID);
     static int removeDevice(int deviceID);
-    static int numDevices();
     static int getControllerIndex(SDL_JoystickID instance);
     static LoomGameController *getGameController(int index);
 
@@ -53,14 +55,14 @@ public:
     LOOM_DELEGATE(ButtonEvent);
 
 private:
+    static LoomGameController controllers[MAX_CONTROLLERS];
+
     int id;
     SDL_GameController *controller;
     SDL_Haptic *haptic;
     SDL_JoystickID instance_id;
     bool is_haptic;
     bool is_connected;
-
-    static LoomGameController controllers[MAX_CONTROLLERS];
 
     void open(int deviceID);
     void close();

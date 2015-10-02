@@ -57,7 +57,7 @@ package
 			stage.addEventListener(GameControllerEvent.CONTROLLER_REMOVED, controllerRemoved);
 			
 			controllers = new Vector.<GameController>();
-			for (var i:uint = 0; i < GameController.numDevices(); i++) {
+			for (var i:uint = 0; i < GameController.numControllers; i++) {
 				addDevice(i);
 			}
 		}
@@ -66,14 +66,8 @@ package
 			this.controller.axisAction(axis, GameController.convertAxis(value));
 		}
 
-		private function buttonPressed(button:int = -1) {
-			trace("Controller: " + controller + " | button: " + button + " pressed!");
-			this.controller.buttonAction(button, true);
-		}
-
-		private function buttonReleased(button:int = -1) {
-			trace("Controller: " + controller + " | button: " + button + " released!");
-			this.controller.buttonAction(button, false);
+		private function buttonAction(button:int = -1, pressed:Boolean = false) {
+			controller.buttonAction(button, pressed);
 		}
 
 		private function controllerAdded(e:GameControllerEvent) {
@@ -86,30 +80,27 @@ package
 			removeDevice(e.controllerID);
 		}
 		
-		private function addDevice(index:int = 0):int {
-			var isInVector:Boolean = false;
+		private function addDevice(index:int = 0):GameController {
+			if (index >= GameController.numControllers) return null;
 			var c:GameController = GameController.getGameController(index);
 			for (var i:uint = 0; i < controllers.length; i++) {
 				if (controllers[i] == c) {
-					return controllers.length;
-					break;
+					return c;
 				}
 			}
 			
-			c.onGameControllerButtonDown += buttonPressed;
-			c.onGameControllerButtonUp += buttonReleased;
-			c.onGameControllerAxisMoved += axisMoved;
+			c.onButtonEvent += buttonAction;
+			c.onAxisMoved += axisMoved;
 			controllers.push(c);
 			
-			return controllers.length;
+			return c;
 		}
 		
 		private function removeDevice(index:int = 0):int {
 			for (var i:uint = 0; i < controllers.length; i++) {
 				if (controllers[i] == GameController.getGameController(index)) {
-					controllers[i].onGameControllerButtonDown -= buttonPressed;
-					controllers[i].onGameControllerButtonUp -= buttonReleased;
-					controllers[i].onGameControllerAxisMoved -= axisMoved;
+					controllers[i].onButtonEvent -= buttonAction;
+					controllers[i].onAxisMoved -= axisMoved;
 					controllers.remove(controllers[i]);
 					
 					break;
@@ -120,7 +111,7 @@ package
 		}
 
 		private function displayControllerNum() {
-			controllerData.text = "Controllers connected: " + GameController.numDevices();
+			controllerData.text = "Controllers connected: " + GameController.numControllers;
 		}
 
 		override public function onTick():Void 

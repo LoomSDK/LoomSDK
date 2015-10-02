@@ -71,15 +71,11 @@ package loom.platform
          */
         public static var AXIS_MAX:uint = 6;
         
+        /** Specifies the number of connected game controllers. */
+        public static native var numControllers:int;
+        
         public native var onButtonEvent:ButtonDelegate;
         public native var onAxisMoved:AxisDelegate;
-        
-        /**
-         * Returns number of connected game controllers.
-         * 
-         * @return An integer that represents the number of connected game controllers.
-         */
-        public static native function numDevices():int;
         
         /**
          * Returns a GameController object.

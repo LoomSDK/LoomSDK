@@ -24,7 +24,7 @@ package
             var label:SimpleLabel;
 
             // check whether any gamepads were detected
-            if (GameController.numDevices() == 0)
+            if (GameController.numControllers == 0)
             {
                 label = new SimpleLabel("assets/Curse-hd.fnt", 320, 240);
                 label.text = "No Gamepad Detected!";
