@@ -49,9 +49,8 @@ public:
     void buttonUp(SDL_Event event);
     void axisMove(SDL_Event event);
 
-    LOOM_DELEGATE(GameControllerAxisMoved);
-    LOOM_DELEGATE(GameControllerButtonDown);
-    LOOM_DELEGATE(GameControllerButtonUp);
+    LOOM_DELEGATE(AxisMoved);
+    LOOM_DELEGATE(ButtonEvent);
 
 private:
     int id;

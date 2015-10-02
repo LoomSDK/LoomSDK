@@ -204,23 +204,25 @@ SDL_GameController *LoomGameController::getController()
 /** Relays button presses to LoomSDK through delegate. */
 void LoomGameController::buttonDown(SDL_Event event)
 {
-    _GameControllerButtonDownDelegate.pushArgument(event.cbutton.button);
-    _GameControllerButtonDownDelegate.invoke();
+    _ButtonEventDelegate.pushArgument(event.cbutton.button);
+    _ButtonEventDelegate.pushArgument(true);
+    _ButtonEventDelegate.invoke();
 }
 
 /** Relays button releases to LoomSDK through delegate. */
 void LoomGameController::buttonUp(SDL_Event event)
 {
-    _GameControllerButtonUpDelegate.pushArgument(event.cbutton.button);
-    _GameControllerButtonUpDelegate.invoke();
+    _ButtonEventDelegate.pushArgument(event.cbutton.button);
+    _ButtonEventDelegate.pushArgument(false);
+    _ButtonEventDelegate.invoke();
 }
 
 /** Relays axis movement to LoomSDK through delegate. */
 void LoomGameController::axisMove(SDL_Event event)
 {
-    _GameControllerAxisMovedDelegate.pushArgument(event.caxis.axis);
-    _GameControllerAxisMovedDelegate.pushArgument(event.caxis.value);
-    _GameControllerAxisMovedDelegate.invoke();
+    _AxisMovedDelegate.pushArgument(event.caxis.axis);
+    _AxisMovedDelegate.pushArgument(event.caxis.value);
+    _AxisMovedDelegate.invoke();
 }
 
 /** Opens a game controller using device ID. */
@@ -302,9 +304,8 @@ int registerLoomGameController(lua_State *L)
         .addMethod("getButton", &LoomGameController::getButton)
         .addMethod("getAxis", &LoomGameController::getAxis)
 
-        .addVarAccessor("onGameControllerButtonUp", &LoomGameController::getGameControllerButtonUpDelegate)
-        .addVarAccessor("onGameControllerButtonDown", &LoomGameController::getGameControllerButtonDownDelegate)
-        .addVarAccessor("onGameControllerAxisMoved", &LoomGameController::getGameControllerAxisMovedDelegate)
+        .addVarAccessor("onButtonEvent", &LoomGameController::getButtonEventDelegate)
+        .addVarAccessor("onAxisMoved", &LoomGameController::getAxisMovedDelegate)
 
         .endClass()
 

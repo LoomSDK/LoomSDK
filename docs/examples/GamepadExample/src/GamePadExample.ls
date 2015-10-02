@@ -8,7 +8,7 @@ package
     import loom2d.math.Point;
     import loom2d.ui.SimpleLabel;
 
-    import system.platform.Gamepad;
+    import loom.platform.GameController;
 
     public class GamePadExample extends Application
     {
@@ -16,35 +16,15 @@ package
         var hatLabel:SimpleLabel;
         var axisLabels = new Vector.<SimpleLabel>();
 
-        var hatText:Dictionary.<int, string> = 
-        { 
-            Gamepad.HAT_CENTERED: "Center",
-            Gamepad.HAT_UP: "Up",
-            Gamepad.HAT_RIGHT: "Right",
-            Gamepad.HAT_LEFT: "Left", 
-            Gamepad.HAT_DOWN: "Down",
-            Gamepad.HAT_RIGHTUP: "Right & Up",
-            Gamepad.HAT_RIGHTDOWN: "Right & Down",
-            Gamepad.HAT_LEFTUP: "Left & Up", 
-            Gamepad.HAT_LEFTDOWN: "Left & Down" 
-        };
-
-        override public function onTick()
-        {
-            Gamepad.update();
-        }
-
         override public function run():void
         {
 
-            Gamepad.initialize();
-            
             stage.scaleMode = StageScaleMode.LETTERBOX;
 
             var label:SimpleLabel;
 
             // check whether any gamepads were detected
-            if (!Gamepad.numGamepads)
+            if (GameController.numDevices() == 0)
             {
                 label = new SimpleLabel("assets/Curse-hd.fnt", 320, 240);
                 label.text = "No Gamepad Detected!";
@@ -54,60 +34,39 @@ package
                 stage.addChild(label);                
             }
             else
-            {   
-                var gamepad =  Gamepad.gamepads[0];
+            {
+                var gamepad:GameController = GameController.getGameController();
 
                 var x = 150;
                 var i = 0;
-                buttonSprites.length = gamepad.buttons.length;
+                buttonSprites.length = GameController.BUTTON_MAX;
 
                 label = new SimpleLabel("assets/Curse-hd.fnt");
                 label.text = "Buttons";
                 label.x = 20;
-                label.y = 150;
+                label.y = 90;
                 label.scale = .5;
                 stage.addChild(label);
 
                 var sprite:Image;
 
                 //setup button sprites
-                for (i in gamepad.buttons)
+                for (i = 0; i < GameController.BUTTON_MAX; i++)
                 {
                     sprite =  new Image(Texture.fromAsset("assets/logo.png"));
                     sprite.x = x;
-                    sprite.y = 172;
+                    sprite.y = 112;
                     sprite.scale = .2;
                     stage.addChild(sprite);
                     buttonSprites[i] = sprite;
                     x += 48;
 
-                    gamepad.buttonEvent += function(button:int, state:Boolean) {
+                    gamepad.onButtonEvent += function(button:int, state:Boolean) {
 
-                        if (i != button)
+                        if (i < 0 || i >= GameController.BUTTON_MAX)
                             return;
 
                         buttonSprites[button].scale = state ? .3 : .2;                        
-                    };
-                }
-
-                label = new SimpleLabel("assets/Curse-hd.fnt");
-                label.text = "Directional Pad";
-                label.x = 20;
-                label.y = 90;
-                label.scale = .5;
-                stage.addChild(label);
-
-                if (gamepad.hats.length)
-                {
-                    hatLabel = label = new SimpleLabel("assets/Curse-hd.fnt");
-                    label.text = "Centered";
-                    label.x = 240;
-                    label.y = 108;
-                    label.scale = .3;
-                    stage.addChild(label);
-
-                    gamepad.hatEvent += function(hat:int, state:int) {
-                        hatLabel.text = hatText[state];
                     };
                 }
 
@@ -119,12 +78,12 @@ package
                 stage.addChild(label);
 
 
-                axisLabels.length = gamepad.axis.length;
+                //axisLabels.length = GameController.AXIS_MAX;
                 x = 240 - (48 * axisLabels.length) / 2;
-                for (i in gamepad.axis)
+                for (i = 0; i < GameController.AXIS_MAX; i++)
                 {
                     label = new SimpleLabel("assets/Curse-hd.fnt");
-                    axisLabels[i] = label;
+                    axisLabels.push(label);
                     label.text = "0";
                     label.x = x;
                     label.y = 50;
@@ -132,12 +91,12 @@ package
                     stage.addChild(label);
                     x += 48;
 
-                    gamepad.axisEvent += function(axis:int, state:float) {
+                    gamepad.onAxisMoved += function(axis:int, state:float) {
 
-                        if (i != axis)
+                        if (i < 0 && i >= GameController.AXIS_MAX)
                             return;
 
-                        axisLabels[i].text = (int(state * 100)).toString();                       
+                        axisLabels[axis].text = (int(GameController.convertAxis(state) * 100)).toString();
                     };
 
                 }
