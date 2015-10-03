@@ -554,6 +554,8 @@ public:
     {
         cacheAsBitmapValid = false;
     }
+
+    bool renderCached(lua_State *L);
     
     inline bool getValid() const
     {
