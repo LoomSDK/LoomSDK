@@ -233,10 +233,10 @@ void LoomGameController::buttonUp(SDL_Event event)
 /** Relays axis movement to LoomSDK through delegate. */
 void LoomGameController::axisMove(SDL_Event event)
 {
-    _AxisMovedDelegate.pushArgument(event.caxis.axis);
-    _AxisMovedDelegate.pushArgument(LoomGameController::convertAxis(event.caxis.value)); // Value converted to a float value range of -1 to 1
-    _AxisMovedDelegate.pushArgument(event.caxis.value); // Raw axis value, range between -32768 and 32767
-    _AxisMovedDelegate.invoke();
+    _AxisEventDelegate.pushArgument(event.caxis.axis);
+    _AxisEventDelegate.pushArgument(LoomGameController::convertAxis(event.caxis.value)); // Value converted to a float value range of -1 to 1
+    _AxisEventDelegate.pushArgument(event.caxis.value); // Raw axis value, range between -32768 and 32767
+    _AxisEventDelegate.invoke();
 }
 
 /** Opens a game controller using device ID. */
@@ -334,7 +334,7 @@ int registerLoomGameController(lua_State *L)
         .addMethod("isConnected", &LoomGameController::isConnected)
 
         .addVarAccessor("onButtonEvent", &LoomGameController::getButtonEventDelegate)
-        .addVarAccessor("onAxisMoved", &LoomGameController::getAxisMovedDelegate)
+        .addVarAccessor("onAxisEvent", &LoomGameController::getAxisEventDelegate)
 
         .endClass()
 

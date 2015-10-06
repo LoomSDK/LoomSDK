@@ -74,11 +74,13 @@ package loom.platform
         /** Specifies the number of connected game controllers. */
         public static native var numControllers:int;
         
-        public native var onButtonEvent:ButtonDelegate;
-        public native var onAxisMoved:AxisDelegate;
-        
         /** Name of a connected controller. */
         public native var name:String;
+        
+        /** Delegate for handling button events. */
+        public native var onButtonEvent:ButtonDelegate;
+        /** Delegate for handling axis events. */
+        public native var onAxisEvent:AxisDelegate;
         
         /**
          * Returns a GameController object.

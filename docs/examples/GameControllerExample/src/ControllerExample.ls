@@ -79,7 +79,6 @@ package
 		private function controllerRemoved(e:GameControllerEvent) {
 			cleanDevices();
 			displayControllerNum();
-			removeDevice(e.controllerID);
 		}
 		
 		private function addDevice(index:int = -1):GameController {
@@ -92,7 +91,7 @@ package
 			}
 			
 			c.onButtonEvent += buttonAction;
-			c.onAxisMoved += axisMoved;
+			c.onAxisEvent += axisMoved;
 			controllers.push(c);
 			
 			return c;
@@ -101,7 +100,7 @@ package
 		private function removeDevice(index:int = 0):Boolean {
 			if (index < 0 || index >= controllers.length) return false;
 			controllers[index].onButtonEvent -= buttonAction;
-			controllers[index].onAxisMoved -= axisMoved;
+			controllers[index].onAxisEvent -= axisMoved;
 			controllers.remove(controllers[index]);
 			
 			return true;

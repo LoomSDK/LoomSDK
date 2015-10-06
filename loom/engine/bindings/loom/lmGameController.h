@@ -54,7 +54,7 @@ public:
     void buttonUp(SDL_Event event);
     void axisMove(SDL_Event event);
 
-    LOOM_DELEGATE(AxisMoved);
+    LOOM_DELEGATE(AxisEvent);
     LOOM_DELEGATE(ButtonEvent);
 
 private:
