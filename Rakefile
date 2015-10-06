@@ -1,11 +1,6 @@
 require 'rubygems'
 require 'rbconfig'
 
-
-Dir.chdir("loom/vendor/luajit") do
-  sh "make clean"
-end
-
 puts "== Executing as '#{ENV['USER']}' =="
 
 ###############################
@@ -33,6 +28,12 @@ if(ENV['IOS_SDK'])
 else
   $targetIOSSDK="6.0"
 end
+
+###############################
+# GLOBALS
+###############################
+
+ROOT = Dir.pwd
 
 def flag_enabled?(flag)
   flag.to_i == 1 || flag == 'true'
@@ -513,7 +514,7 @@ namespace :build do
 
       FileUtils.mkdir_p("cmake_osx")
       Dir.chdir("cmake_osx") do
-        sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_BUILD_DIR=build/luajit-osx-x86 #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DCMAKE_OSX_ARCHITECTURES=i386"
+        sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-osx-x86 #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DCMAKE_OSX_ARCHITECTURES=i386"
         sh "xcodebuild -configuration #{$buildTarget}"
       end
 
@@ -630,7 +631,7 @@ namespace :build do
 
       # TODO: Find a way to resolve resources in xcode for ios.
       Dir.chdir("cmake_ios") do
-        sh "cmake ../ -DLOOM_BUILD_IOS=1 -DLUAJIT_BUILD_DIR=build/luajit-ios -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -G Xcode"
+        sh "cmake ../ -DLOOM_BUILD_IOS=1 -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-ios -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -G Xcode"
         sdkroot="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS#{$targetIOSSDK}.sdk"
         sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\" CODE_SIGN_RESOURCE_RULES_PATH=#{sdkroot}/ResourceRules.plist"
       end
@@ -680,7 +681,7 @@ namespace :build do
 
     FileUtils.mkdir_p("cmake_msvc")
     Dir.chdir("cmake_msvc") do
-      sh "../build/win-cmake.bat x86 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"build/luajit-windows-x86\""
+      sh "../build/win-cmake.bat x86 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"#{ROOT}/build/luajit-windows-x86\""
       sh "msbuild /verbosity:m LoomEngine.sln /p:Configuration=#{$buildTarget}"
     end
 
@@ -696,7 +697,7 @@ namespace :build do
 
         FileUtils.mkdir_p("cmake_msvc_x64")
         Dir.chdir("cmake_msvc_x64") do
-          sh "../build/win-cmake.bat x64 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"build/luajit-windows-x64\""
+          sh "../build/win-cmake.bat x64 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"#{ROOT}/build/luajit-windows-x64\""
           sh "msbuild /verbosity:m LoomEngine.sln /p:Configuration=#{$buildTarget}"
         end
     end
@@ -747,10 +748,11 @@ namespace :build do
     end
 	
     if $LOOM_HOST_OS == "windows"
+
       # WINDOWS
       FileUtils.mkdir_p("cmake_android")
       Dir.chdir("cmake_android") do
-        sh "cmake -DCMAKE_TOOLCHAIN_FILE=../build/cmake/loom.android.toolchain.cmake -DLUAJIT_BUILD_DIR=loom\\vendor\\luajit_windows_android\\luajit_android\\lib #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_NDK_HOST_X64=#{WINDOWS_ISX64} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} -G\"MinGW Makefiles\" -DCMAKE_MAKE_PROGRAM=\"%ANDROID_NDK%\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make.exe\" .."
+        sh "cmake -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DLUAJIT_BUILD_DIR=#{ROOT}/loom/vendor/luajit_windows_android/luajit_android/lib #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_NDK_HOST_X64=#{WINDOWS_ISX64} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} -G\"MinGW Makefiles\" -DCMAKE_MAKE_PROGRAM=\"%ANDROID_NDK%\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make.exe\" .."
         sh "cmake --build ."
       end
 
@@ -798,7 +800,7 @@ namespace :build do
 
       FileUtils.mkdir_p("cmake_android")
       Dir.chdir("cmake_android") do
-        sh "cmake -DCMAKE_TOOLCHAIN_FILE=../build/cmake/loom.android.toolchain.cmake -DLUAJIT_BUILD_DIR=loom/vendor/luajit_windows_android/luajit_android/lib d#{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} .."
+        sh "cmake -DCMAKE_TOOLCHAIN_FILE=../build/cmake/loom.android.toolchain.cmake -DLUAJIT_BUILD_DIR=#{ROOT}/loom/vendor/luajit_windows_android/luajit_android/lib d#{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} .."
         sh "make -j#{$numCores}"
       end
 

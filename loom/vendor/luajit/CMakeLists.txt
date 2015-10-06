@@ -46,6 +46,9 @@ option ( LUA_USE_ASSERT "Turn on assertions for the whole LuaJIT VM. This signif
 option ( LUAJIT_CPU_SSE2 "Disable SSE2." OFF )
 option ( LUAJIT_CPU_NOCMOV "Disable NOCMOV." OFF )
 
+option ( BOOTSTRAP_ONLY "Build only the host tools" OFF )
+option ( TARGET_ONLY "Build only the library" OFF )
+
 # Tunable variables
 set ( LUAI_MAXSTACK 65500 CACHE NUMBER "Max. # of stack slots for a thread (<64K)." )
 set ( LUAI_MAXCSTACK 8000 CACHE NUMBER "Max. # of stack slots for a C func (<10K)." )
@@ -58,6 +61,10 @@ set ( LUA_DIRSEP "/" )
 set ( LUA_MODULE_SUFFIX ${CMAKE_SHARED_MODULE_SUFFIX} )
 set ( LUA_LDIR ${INSTALL_LMOD} )
 set ( LUA_CDIR ${INSTALL_CMOD} )
+
+if ( NOT DEFINED LUA_TARGET_ARCH )
+    set ( LUA_TARGET_ARCH "x86")
+endif ()
 
 if ( LUA_USE_RELATIVE_LOADLIB )
   # This will set up relative paths to lib
@@ -72,7 +79,6 @@ set ( LUA_CPATH_DEFAULT "./?${LUA_MODULE_SUFFIX};${LUA_DIR}${LUA_CDIR}/?${LUA_MO
 
 if ( WIN32 AND NOT CYGWIN )
   # Windows systems
-  add_definitions (-DLUAJIT_OS=LUAJIT_OS_WINDOWS)
   option ( LUA_BUILD_WLUA "Build wluajit interpreter for no-console applications." ON )
   set ( LJVM_MODE peobj )
   # Paths (Double escapes needed)
@@ -161,16 +167,27 @@ set ( LJLIB_C
   ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_jit.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_ffi.c
 )
+
+## LuaJIT Library
+include_directories ( ${CMAKE_CURRENT_BINARY_DIR} dynasm src src/host )
+
 if ( LUA_USE_RELATIVE_LOADLIB )
   list ( APPEND LJLIB_C ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_package_rel.c )
 else ()
   list ( APPEND LJLIB_C ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_package.c )
 endif ()
 
-## GENERATE VM
-# Build minilua
-add_executable ( minilua src/host/minilua.c )
-target_link_libraries ( minilua ${LIBS} )
+if ( BOOTSTRAP_ONLY AND TARGET_ONLY )
+    message ( FATAL_ERROR "Only one of BOOTSTRAP_ONLY and TARGET_ONLY can be set." )
+endif ()
+
+if ( TARGET_ONLY )
+    if ( NOT DEFINED BOOTSTRAP_PATH )
+        message ( FATAL_ERROR "TARGET_ONLY is set, but no BOOTSTRAP_PATH is set!" )
+    endif()
+else ()
+    set ( BOOTSTRAP_PATH ${CMAKE_CURRENT_BINARY_DIR} )
+endif ()
 
 # Dynasm
 set ( DASM ${CMAKE_CURRENT_SOURCE_DIR}/dynasm/dynasm.lua )
@@ -182,15 +199,11 @@ set ( DASM_FLAGS -D FPU -D HFABI )
 set ( DASM_ARCH x86 )
 
 # Raspberry PI, ARM
-if ( ${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv6l" )
+if ( ${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv6l" OR LUA_TARGET_ARCH STREQUAL "arm")
   set ( DASM_ARCH arm )
   list ( APPEND DASM_FLAGS -D DUALNUM )
   set ( DASM_VER 60 )
-endif ()
-
-# Windows is ... special
-if ( WIN32 )
-  list ( APPEND DASM_FLAGS -D WIN )
+  add_definitions ( -D__ARM_PCS_VFP=1 )
 endif ()
 
 # 32bit vs 64bit
@@ -210,6 +223,33 @@ if ( NOT LUAJIT_CPU_SSE2 )
   list ( APPEND DASM_FLAGS -D SSE2 )
 endif ()
 
+if ( DEFINED LUAJIT_OS )
+    add_definitions ( -DLUAJIT_OS=${LUAJIT_OS} )
+    if ( ${LUAJIT_OS} STREQUAL "LUAJIT_OS_WINDOWS" )
+        list ( APPEND DASM_FLAGS -D WIN )
+    endif()
+else()
+    if ( WIN32 )
+        add_definitions (-DLUAJIT_OS=LUAJIT_OS_WINDOWS)
+        list ( APPEND DASM_FLAGS -D WIN )
+    endif ()
+endif()
+
+
+if ( ${DASM_ARCH} STREQUAL "x86" )
+  if ( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+    set ( LUAJIT_TARGET_ARCH_NUM LUAJIT_ARCH_X64 )
+  else ()
+    set ( LUAJIT_TARGET_ARCH_NUM LUAJIT_ARCH_X86 )
+  endif()
+elseif ( ${DASM_ARCH} STREQUAL "arm" )
+  set ( LUAJIT_TARGET_ARCH_NUM LUAJIT_ARCH_ARM )
+else ()
+  message ( FATAL_ERROR "Architecture not suported")
+endif ()
+
+add_definitions (-DLUAJIT_TARGET=${LUAJIT_TARGET_ARCH_NUM})
+
 list ( APPEND DASM_FLAGS -D VER=${DASM_VER} )
 
 string ( REPLACE ";" " " DASM_FLAGS_STR "${DASM_FLAGS}")
@@ -219,113 +259,122 @@ message ( "DASM_ARCH: ${DASM_ARCH}" )
 
 set ( DASM_DASC ${CMAKE_CURRENT_SOURCE_DIR}/src/vm_${DASM_ARCH}.dasc )
 
-# Generate buildvm arch header
-add_custom_command(OUTPUT ${DASM_T}
-  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/minilua ${DASM} ${DASM_FLAGS} -o ${DASM_T} ${DASM_DASC}
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS minilua
-)
+if ( NOT TARGET_ONLY )
+    ## GENERATE VM
+    # Build minilua
+    add_executable ( minilua src/host/minilua.c )
+    target_link_libraries ( minilua ${LIBS} )
 
-# Buildvm
-file ( GLOB SRC_BUILDVM src/host/buildvm*.c )
-add_executable ( buildvm ${SRC_BUILDVM} ${DASM_T} )
+    # Generate buildvm arch header
+    add_custom_command(OUTPUT ${DASM_T}
+      COMMAND ${BOOTSTRAP_PATH}/minilua ${DASM} ${DASM_FLAGS} -o ${DASM_T} ${DASM_DASC}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      DEPENDS minilua
+    )
 
-macro(add_buildvm_target _target _mode)
-  add_custom_command(OUTPUT ${_target}
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/buildvm ARGS -m ${_mode} -o ${CMAKE_CURRENT_BINARY_DIR}/${_target} ${ARGN}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS buildvm ${ARGN}
-  )
-endmacro(add_buildvm_target)
+    # Buildvm
+    file ( GLOB SRC_BUILDVM src/host/buildvm*.c )
+    add_executable ( buildvm ${SRC_BUILDVM} ${DASM_T} )
 
-if ( WIN32 AND NOT CYGWIN )
-  add_buildvm_target ( lj_vm.obj peobj )
-  set (LJ_VM_SRC ${CMAKE_CURRENT_BINARY_DIR}/lj_vm.obj)
-else ()
-  add_buildvm_target ( lj_vm.s ${LJVM_MODE} )
-  set (LJ_VM_SRC ${CMAKE_CURRENT_BINARY_DIR}/lj_vm.s)
 endif ()
 
-add_buildvm_target ( lj_ffdef.h   ffdef   ${LJLIB_C} )
-add_buildvm_target ( lj_bcdef.h  bcdef  ${LJLIB_C} )
-add_buildvm_target ( lj_folddef.h folddef ${CMAKE_CURRENT_SOURCE_DIR}/src/lj_opt_fold.c )
-add_buildvm_target ( lj_recdef.h  recdef  ${LJLIB_C} )
-add_buildvm_target ( lj_libdef.h  libdef  ${LJLIB_C} )
-add_buildvm_target ( jit/vmdef.lua  libvm  ${LJLIB_C} )
+if ( NOT BOOTSTRAP_ONLY )
 
-SET ( DEPS
-  ${LJ_VM_SRC}
-  lj_ffdef.h
-  lj_bcdef.h
-  lj_libdef.h
-  lj_recdef.h
-  lj_folddef.h
-)
+    macro(add_buildvm_target _target _mode)
+      add_custom_command(OUTPUT ${_target}
+        COMMAND ${BOOTSTRAP_PATH}/buildvm ARGS -m ${_mode} -o ${CMAKE_CURRENT_BINARY_DIR}/${_target} ${ARGN}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS ${ARGN}
+      )
+    endmacro(add_buildvm_target)
 
-## LuaJIT Library
-include_directories ( ${CMAKE_CURRENT_BINARY_DIR} dynasm src src/host )
+    if ( WIN32 AND NOT CYGWIN )
+      add_buildvm_target ( lj_vm.obj peobj )
+      set (LJ_VM_SRC ${CMAKE_CURRENT_BINARY_DIR}/lj_vm.obj)
+    else ()
+      add_buildvm_target ( lj_vm.s ${LJVM_MODE} )
+      set (LJ_VM_SRC ${CMAKE_CURRENT_BINARY_DIR}/lj_vm.s)
+    endif ()
 
-set ( LJCORE_C
-  src/lj_gc.c
-  src/lj_err.c
-  src/lj_char.c
-  src/lj_bc.c
-  src/lj_obj.c
-  src/lj_str.c
-  src/lj_tab.c
-  src/lj_func.c
-  src/lj_udata.c
-  src/lj_meta.c
-  src/lj_debug.c
-  src/lj_state.c
-  src/lj_dispatch.c
-  src/lj_vmevent.c
-  src/lj_vmmath.c
-  src/lj_strscan.c
-  src/lj_api.c
-  src/lj_lex.c
-  src/lj_parse.c
-  src/lj_bcread.c
-  src/lj_bcwrite.c
-  src/lj_load.c
-  src/lj_ir.c
-  src/lj_opt_mem.c
-  src/lj_opt_fold.c
-  src/lj_opt_narrow.c
-  src/lj_opt_dce.c
-  src/lj_opt_loop.c
-  src/lj_opt_split.c
-  src/lj_opt_sink.c
-  src/lj_mcode.c
-  src/lj_snap.c
-  src/lj_record.c
-  src/lj_crecord.c
-  src/lj_ffrecord.c
-  src/lj_asm.c
-  src/lj_trace.c
-  src/lj_gdbjit.c
-  src/lj_ctype.c
-  src/lj_cdata.c
-  src/lj_cconv.c
-  src/lj_ccall.c
-  src/lj_ccallback.c
-  src/lj_carith.c
-  src/lj_clib.c
-  src/lj_cparse.c
-  src/lj_lib.c
-  src/lj_alloc.c
-  src/lib_aux.c
-  src/lib_init.c
-  ${LJLIB_C}
-)
+    add_buildvm_target ( lj_ffdef.h   ffdef   ${LJLIB_C} )
+    add_buildvm_target ( lj_bcdef.h  bcdef  ${LJLIB_C} )
+    add_buildvm_target ( lj_folddef.h folddef ${CMAKE_CURRENT_SOURCE_DIR}/src/lj_opt_fold.c )
+    add_buildvm_target ( lj_recdef.h  recdef  ${LJLIB_C} )
+    add_buildvm_target ( lj_libdef.h  libdef  ${LJLIB_C} )
+    add_buildvm_target ( jit/vmdef.lua  libvm  ${LJLIB_C} )
 
-if (MSVC)
- add_definitions(/MT)
-endif(MSVC)
+    SET ( DEPS
+      ${LJ_VM_SRC}
+      lj_ffdef.h
+      lj_bcdef.h
+      lj_libdef.h
+      lj_recdef.h
+      lj_folddef.h
+    )
 
-add_library ( libluajit STATIC ${LJCORE_C} ${DEPS} )
-target_link_libraries ( libluajit ${LIBS} )
-set_target_properties ( libluajit PROPERTIES OUTPUT_NAME luajit CLEAN_DIRECT_OUTPUT 1 )
+    set ( LJCORE_C
+      src/lj_gc.c
+      src/lj_err.c
+      src/lj_char.c
+      src/lj_bc.c
+      src/lj_obj.c
+      src/lj_str.c
+      src/lj_tab.c
+      src/lj_func.c
+      src/lj_udata.c
+      src/lj_meta.c
+      src/lj_debug.c
+      src/lj_state.c
+      src/lj_dispatch.c
+      src/lj_vmevent.c
+      src/lj_vmmath.c
+      src/lj_strscan.c
+      src/lj_api.c
+      src/lj_lex.c
+      src/lj_parse.c
+      src/lj_bcread.c
+      src/lj_bcwrite.c
+      src/lj_load.c
+      src/lj_ir.c
+      src/lj_opt_mem.c
+      src/lj_opt_fold.c
+      src/lj_opt_narrow.c
+      src/lj_opt_dce.c
+      src/lj_opt_loop.c
+      src/lj_opt_split.c
+      src/lj_opt_sink.c
+      src/lj_mcode.c
+      src/lj_snap.c
+      src/lj_record.c
+      src/lj_crecord.c
+      src/lj_ffrecord.c
+      src/lj_asm.c
+      src/lj_trace.c
+      src/lj_gdbjit.c
+      src/lj_ctype.c
+      src/lj_cdata.c
+      src/lj_cconv.c
+      src/lj_ccall.c
+      src/lj_ccallback.c
+      src/lj_carith.c
+      src/lj_clib.c
+      src/lj_cparse.c
+      src/lj_lib.c
+      src/lj_alloc.c
+      src/lib_aux.c
+      src/lib_init.c
+      ${LJLIB_C}
+    )
+
+    if (MSVC)
+     add_definitions(/MT)
+    endif(MSVC)
+
+    add_library ( libluajit STATIC ${LJCORE_C} ${DEPS} )
+    target_link_libraries ( libluajit ${LIBS} )
+    set_target_properties ( libluajit PROPERTIES OUTPUT_NAME luajit CLEAN_DIRECT_OUTPUT 1 )
+
+endif ()
 
 ## LuaJIT Executable
 #add_executable ( luajit src/luajit.c src/luajit.rc )

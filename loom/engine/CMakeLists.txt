@@ -110,31 +110,12 @@ add_library(${PROJECT_NAME}
 
 if (ANDROID)    
 
-    target_link_libraries(${PROJECT_NAME} -lz LoomVendor LoomCommon LoomScript LoomGraphics)
-           
-    if (LOOM_BUILD_JIT EQUAL 1)
-    
-        target_link_libraries(${PROJECT_NAME} 
-        -L"${CMAKE_SOURCE_DIR}/build/luajit_android/lib"
-        -lluajit-5.1
-        )
-    
-    endif()       
+    target_link_libraries(${PROJECT_NAME} -lz LoomVendor LoomCommon LoomScript LoomGraphics)  
 
 endif(ANDROID)
 
 if (LINUX)
 
     target_link_libraries(${PROJECT_NAME} -lz LoomVendor LoomCommon LoomScript LoomGraphics)
-
-    if (LOOM_BUILD_JIT EQUAL 1)
-    
-        target_link_libraries(${PROJECT_NAME} 
-        -L"${CMAKE_SOURCE_DIR}/build/luajit_x86/lib"
-        -lluajit-5.1
-        )
-    
-    endif()       
-
 
 endif()

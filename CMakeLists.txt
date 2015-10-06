@@ -77,9 +77,9 @@ if (LOOM_BUILD_JIT EQUAL 1)
 
     add_definitions(-DLOOM_ENABLE_JIT)
 
-    list(APPEND LOOM_INCLUDE_FOLDERS ${CMAKE_SOURCE_DIR}/${LUAJIT_BUILD_DIR})
+    list(APPEND LOOM_INCLUDE_FOLDERS ${LUAJIT_BUILD_DIR})
     list(APPEND LOOM_INCLUDE_FOLDERS ${CMAKE_SOURCE_DIR}/loom/vendor/luajit/src )
-    link_directories(${CMAKE_SOURCE_DIR}/${LUAJIT_BUILD_DIR})
+    link_directories(${LUAJIT_BUILD_DIR})
 
 else()
 

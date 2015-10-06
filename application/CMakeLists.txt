@@ -301,6 +301,10 @@ elseif(ANDROID)
       endif()
       )
 
+    if (LOOM_BUILD_JIT EQUAL 1)
+      target_link_libraries(${PROJECT_NAME} luajit)
+    endif()
+
 elseif(LINUX)
 
     target_link_libraries(${PROJECT_NAME}
@@ -322,5 +326,10 @@ elseif(LINUX)
         POST_BUILD
         COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts/ubuntu
         COMMAND cp ${DEMOBIN} ${CMAKE_SOURCE_DIR}/artifacts/ubuntu/LoomDemo
-    )    
+    )
+
+    if (LOOM_BUILD_JIT EQUAL 1)
+      target_link_libraries(${PROJECT_NAME} luajit)
+    endif()
+
 endif()
