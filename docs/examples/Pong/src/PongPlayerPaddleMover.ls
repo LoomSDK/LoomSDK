@@ -1,7 +1,7 @@
 package
 {
     import loom2d.Loom2D;
-    import system.platform.Gamepad;
+    import loom.platform.GameController;
 
     /**
      * This class implements player control for paddles by overriding the PongPaddleMover.control method.
@@ -18,7 +18,7 @@ package
         override public function control(dt:Number, game:Pong):void
         {
             // if there is no active touch, bail early
-            if (!game.touching && !Gamepad.numGamepads)
+            if (!game.touching && !GameController.numControllers)
             {
                 speedX = 0;
                 return;
@@ -50,10 +50,10 @@ package
                     speedX = config_SPEED;
                 speedX = move_x < 0 ? -Math.abs(speedX) : Math.abs(speedX);
             }
-            else if (Gamepad.numGamepads)
+            else if (GameController.numControllers)
             {
-                var gamepad = Gamepad.gamepads[0];
-                move_x = gamepad.axis[0];
+                var gamepad = GameController.getGameController(0);
+                move_x = gamepad.getAxis2(0);
 
                 speedX = Math.abs(move_x);
                 if (speedX < .25)

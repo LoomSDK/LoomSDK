@@ -134,7 +134,7 @@ package loom.platform
          * @param axis The id of wanted axis
          * @return Returns a range between -1 and 1
          */
-        public function getAxisConverted(axis:uint):Number
+        public function getAxis2(axis:uint):Number
         {
             var value:int = getAxis(axis);
             return value < 0 ? -(value / ( -32768)) : value / 32767;
