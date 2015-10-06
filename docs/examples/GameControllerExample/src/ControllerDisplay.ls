@@ -39,21 +39,21 @@ package
 
 			// Populating array of buttons
 			buttons = new Vector.<ControllerButton>();
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD,            GameController.BUTTON_A, 702, 252));			// 00 A
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD,            GameController.BUTTON_B, 771, 184));			// 01 B
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD,            GameController.BUTTON_X, 634, 184));			// 02 X
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD,            GameController.BUTTON_Y, 702, 116));			// 03 Y
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_BACK,             GameController.BUTTON_BACK, 366, 192));			// 04 Back
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_GUIDE,            GameController.BUTTON_GUIDE, 442, 147));			// 05 Guide
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_START,            GameController.BUTTON_START, 524, 192));			// 06 Start
-			buttons.push(leftStick);																	// 07 Left Stick
-			buttons.push(rightStick);																	// 08 Right Stick
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_BUMPER,    GameController.BUTTON_LEFTSHOULDER, 153,   8));			// LB
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_BUMPER,   GameController.BUTTON_RIGHTSHOULDER, 673,   8));			// RB
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT,       GameController.BUTTON_DPAD_UP, 185, 142));				// Up
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT,          GameController.BUTTON_DPAD_DOWN, 185, 227, Math.PI));		// Down
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT,          GameController.BUTTON_DPAD_LEFT, 142, 180, -Math.PI/2));	// Left
-			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT,         GameController.BUTTON_DPAD_RIGHT, 227, 190, Math.PI/2));	// Right
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD, GameController.BUTTON_A,             702, 252));             // 00 A
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD, GameController.BUTTON_B,             771, 184));             // 01 B
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD, GameController.BUTTON_X,             634, 184));             // 02 X
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_STANDARD, GameController.BUTTON_Y,             702, 116));             // 03 Y
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_BACK,     GameController.BUTTON_BACK,          366, 192));             // 04 Back
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_GUIDE,    GameController.BUTTON_GUIDE,         442, 147));             // 05 Guide
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_START,    GameController.BUTTON_START,         524, 192));             // 06 Start
+			buttons.push(leftStick);                                                                                                         // 07 Left Stick
+			buttons.push(rightStick);                                                                                                        // 08 Right Stick
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_BUMPER,   GameController.BUTTON_LEFTSHOULDER,  153,   8));             // 09 Left Bumper
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_BUMPER,   GameController.BUTTON_RIGHTSHOULDER, 673,   8));             // 10 Right Bumper
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT,      GameController.BUTTON_DPAD_UP,       185, 142));             // 11 Up
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT,      GameController.BUTTON_DPAD_DOWN,     185, 227,  Math.PI));   // 12 Down
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT,      GameController.BUTTON_DPAD_LEFT,     142, 180, -Math.PI/2)); // 13 Left
+			buttons.push(new ControllerButton(ControllerButton.BUTTON_HAT,      GameController.BUTTON_DPAD_RIGHT,    227, 190,  Math.PI/2)); // 14 Right
 			
 			for (var i:int = 0; i < buttons.length; i++) {
 				// Add bumpers on a layer that below the base of controller
@@ -92,10 +92,10 @@ package
 				case GameController.AXIS_RIGHTY: //Right stick down-up
 					rightStick.yValue = value;
 					break;
-				case GameController.AXIS_TRIGGERLEFT: //Left trigger
+				case GameController.AXIS_TRIGGERLEFT:
 					leftTrigger.value = value;
 					break;
-				case GameController.AXIS_TRIGGERRIGHT: //Right trigger
+				case GameController.AXIS_TRIGGERRIGHT:
 					rightTrigger.value = value;
 					break;
 			}

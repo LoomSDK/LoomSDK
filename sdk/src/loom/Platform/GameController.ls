@@ -23,7 +23,7 @@ package loom.platform
     import loom2d.events.GameControllerEvent;
     
     delegate ButtonDelegate(button:int, pressed:Boolean);
-    delegate AxisDelegate(axis:int, value:Number);
+    delegate AxisDelegate(axis:int, value:Number, raw:int);
     
     public final native class GameController
     {
@@ -77,6 +77,9 @@ package loom.platform
         public native var onButtonEvent:ButtonDelegate;
         public native var onAxisMoved:AxisDelegate;
         
+        /** Name of a connected controller. */
+        public native var name:String;
+        
         /**
          * Returns a GameController object.
          * 
@@ -126,15 +129,30 @@ package loom.platform
         public native function getAxis(axis:uint):int;
         
         /**
-         * Helper function to convert axis value into a value between 0 and 1.
+         * Gets the value of queried axis. The value is converted to a number ranging from -1 to 1 for usability.
          * 
-         * @param value Value of axis that you need normalized.
-         * @return Returns a value between 0 and 1
+         * @param axis The id of wanted axis
+         * @return Returns a range between -1 and 1
          */
-        public static function convertAxis(value:int):Number
+        public function getAxisConverted(axis:uint):Number
         {
+            var value:int = getAxis(axis);
             return value < 0 ? -(value / ( -32768)) : value / 32767;
         }
+        
+        /**
+         * Gets the id of the controller.
+         * 
+         * @return Returns id of controller.
+         */
+        public native function getID():int;
+        
+        /**
+         * Checks if controller object is connected.
+         * 
+         * @return Returns true if connected, otherwise returns false.
+         */
+        public native function isConnected():Boolean;
     }
 
 }

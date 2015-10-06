@@ -38,12 +38,15 @@ public:
     static int getControllerIndex(SDL_JoystickID instance);
     static LoomGameController *getGameController(int index);
 
+    const char *name;
+
     bool isHaptic();
     void stopRumble();
     void startRumble(float intensity, Uint32 ms);
     bool getButton(int buttonID);
     int getAxis(int axisID);
     int getID();
+    bool isConnected();
     SDL_Haptic *getHaptic();
     SDL_GameController *getController();
 
@@ -56,8 +59,8 @@ public:
 
 private:
     static LoomGameController controllers[MAX_CONTROLLERS];
+    static float convertAxis(int value);
 
-    int id;
     SDL_GameController *controller;
     SDL_Haptic *haptic;
     SDL_JoystickID instance_id;

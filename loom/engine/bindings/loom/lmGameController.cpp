@@ -42,6 +42,7 @@ LoomGameController::LoomGameController()
     controller = 0;
     instance_id = -1;
     haptic = 0;
+    name = nullptr;
 }
 
 /** Opens all connected game controllers.
@@ -182,6 +183,25 @@ int LoomGameController::getAxis(int axisID)
     return 0;
 }
 
+/** Returns the position of the controller in the controller pool. */
+int LoomGameController::getID()
+{
+    for (int i = 0; i < MAX_CONTROLLERS; i++)
+    {
+        if (LoomGameController::controllers[i].instance_id == instance_id) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+/** Returns if controller object is connected. */
+bool LoomGameController::isConnected()
+{
+    return is_connected;
+}
+
 /** Returns the SDL_Haptic object, useful for controlling rumble effects. */
 SDL_Haptic *LoomGameController::getHaptic()
 {
@@ -214,7 +234,8 @@ void LoomGameController::buttonUp(SDL_Event event)
 void LoomGameController::axisMove(SDL_Event event)
 {
     _AxisMovedDelegate.pushArgument(event.caxis.axis);
-    _AxisMovedDelegate.pushArgument(event.caxis.value);
+    _AxisMovedDelegate.pushArgument(LoomGameController::convertAxis(event.caxis.value)); // Value converted to a float value range of -1 to 1
+    _AxisMovedDelegate.pushArgument(event.caxis.value); // Raw axis value, range between -32768 and 32767
     _AxisMovedDelegate.invoke();
 }
 
@@ -238,6 +259,7 @@ void LoomGameController::open(int deviceID)
     SDL_Joystick *joystick = SDL_GameControllerGetJoystick(controller);
     instance_id = SDL_JoystickInstanceID(joystick);
     is_connected = true;
+    name = SDL_GameControllerName(controller);
 
     if (SDL_JoystickIsHaptic(joystick))
     {
@@ -267,6 +289,13 @@ void LoomGameController::open(int deviceID)
     }
 }
 
+/** Converts axis value to a number ranging between -1 and 1 */
+float LoomGameController::convertAxis(int value)
+{
+    float v = (float)value;
+    return (float) (v < 0 ? -(v / (-32768)) : v / 32767);
+}
+
 /** Close the game controller */
 void LoomGameController::close()
 {
@@ -279,6 +308,7 @@ void LoomGameController::close()
         }
         SDL_GameControllerClose(controller);
         controller = 0;
+        name = nullptr;
     }
 }
 
@@ -293,11 +323,15 @@ int registerLoomGameController(lua_State *L)
 
         .addStaticVar("numControllers", &LoomGameController::numControllers)
 
+        .addVar("name", &LoomGameController::name)
+
         .addMethod("isHaptic", &LoomGameController::isHaptic)
         .addMethod("stopRumble", &LoomGameController::stopRumble)
         .addMethod("startRumble", &LoomGameController::startRumble)
         .addMethod("getButton", &LoomGameController::getButton)
         .addMethod("getAxis", &LoomGameController::getAxis)
+        .addMethod("getID", &LoomGameController::getID)
+        .addMethod("isConnected", &LoomGameController::isConnected)
 
         .addVarAccessor("onButtonEvent", &LoomGameController::getButtonEventDelegate)
         .addVarAccessor("onAxisMoved", &LoomGameController::getAxisMovedDelegate)
