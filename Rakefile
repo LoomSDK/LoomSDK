@@ -206,7 +206,9 @@ puts ''
 #############
 
 # Don't use clean defaults, they will nuke things we don't want!
-CLEAN.replace(["cmake_android", "cmake_osx", "cmake_ios", "cmake_msvc", "cmake_msvc_x64", "cmake_ubuntu", "build/luajit-windows-x86", "build/luajit-windows-x64", "build/luajit-osx-x86", "build/luajit-osx-x64", "build/lua_*/**", "application/android/bin", "application/ouya/bin"])
+CLEAN.replace(["application/android/bin", "application/ouya/bin"])
+CLEAN.include Dir.glob("build/loom-*")
+CLEAN.include Dir.glob("build/luajit-*")
 CLEAN.include ["build/**/lib/**", "artifacts/**"]
 CLOBBER.include ["**/*.loom", $OUTPUT_DIRECTORY]
 CLOBBER.include ["**/*.loomlib", $OUTPUT_DIRECTORY]
@@ -246,41 +248,41 @@ namespace :generate do
 
   desc "Generate XCode projects for OS X"
   task :xcode_osx do
-    FileUtils.mkdir_p("cmake_osx")
-    Dir.chdir("cmake_osx") do
-      sh "cmake ../ -G Xcode -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
+    FileUtils.mkdir_p("#{ROOT}/build/loom-osx-x86")
+    Dir.chdir("#{ROOT}/build/loom-osx-x86") do
+      sh "cmake -G Xcode -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
     end
   end
 
   desc "Generate XCode projects for iOS"
   task :xcode_ios do
-    FileUtils.mkdir_p("cmake_ios")
-    Dir.chdir("cmake_ios") do
-      sh "cmake ../ -G Xcode -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_IOS_VERSION=#{$targetIOSSDK} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
+    FileUtils.mkdir_p("#{ROOT}/build/loom-ios-arm")
+    Dir.chdir("#{ROOT}/build/loom-ios-arm") do
+      sh "cmake -G Xcode -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_IOS_VERSION=#{$targetIOSSDK} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
     end
   end
 
   desc "Generate VS2010 projects"
   task :vs2010 do
-    FileUtils.mkdir_p("cmake_msvc")
-    Dir.chdir("cmake_msvc") do
-      sh "cmake .. -G \"Visual Studio 10\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
+    FileUtils.mkdir_p("#{ROOT}/build/loom-windows-x86")
+    Dir.chdir("#{ROOT}/build/loom-windows-x86") do
+      sh "cmake -G \"Visual Studio 10\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
     end
   end
 
   desc "Generate VS2012 projects"
   task :vs2012 do
-    FileUtils.mkdir_p("cmake_msvc")
-    Dir.chdir("cmake_msvc") do
-      sh "cmake .. -G \"Visual Studio 11\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
+    FileUtils.mkdir_p("#{ROOT}/build/loom-windows-x86")
+    Dir.chdir("#{ROOT}/build/loom-windows-x86") do
+      sh "cmake -G \"Visual Studio 11\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
     end
   end
 
   desc "Generate Makefiles for Ubuntu"
   task :makefiles_ubuntu do
-    FileUtils.mkdir_p("cmake_ubuntu")
-    Dir.chdir("cmake_ubuntu") do
-      sh "cmake ../ -G \"Unix Makefiles\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
+    FileUtils.mkdir_p("#{ROOT}/build/loom-linux-x86")
+    Dir.chdir("#{ROOT}/build/loom-linux-x86") do
+      sh "cmake -G \"Unix Makefiles\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
     end
   end
 
@@ -325,7 +327,7 @@ namespace :docs do
   task :regen => $LSC_BINARY do
     puts "===== Recompiling loomlibs ====="
     Dir.chdir("sdk") do
-      sh "../artifacts/lsc Main.build"
+      sh "#{ROOT}/artifacts/lsc Main.build"
     end
     FileUtils.cp_r("sdk/libs", "artifacts/")
 
@@ -367,7 +369,7 @@ namespace :utility do
   task :compileScripts => $LSC_BINARY do
     puts "===== Compiling Core Scripts ====="
     Dir.chdir("sdk") do
-      sh "../artifacts/lsc Main.build"
+      sh "#{ROOT}/artifacts/lsc Main.build"
     end
   end
 
@@ -508,30 +510,30 @@ namespace :build do
 
       FileUtils.mkdir_p("build/luajit-osx-x86")
       Dir.chdir("build/luajit-osx-x86") do
-        sh "cmake ../../loom/vendor/luajit -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DCMAKE_OSX_ARCHITECTURES=i386"
+        sh "cmake -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DCMAKE_OSX_ARCHITECTURES=i386 #{ROOT}/loom/vendor/luajit"
         sh "xcodebuild -configuration #{$buildTarget}"
       end
 
-      FileUtils.mkdir_p("cmake_osx")
-      Dir.chdir("cmake_osx") do
-        sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-osx-x86 #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DCMAKE_OSX_ARCHITECTURES=i386"
+      FileUtils.mkdir_p("#{ROOT}/build/loom-osx-x86")
+      Dir.chdir("#{ROOT}/build/loom-osx-x86") do
+        sh "cmake -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-osx-x86 #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DCMAKE_OSX_ARCHITECTURES=i386 #{ROOT}"
         sh "xcodebuild -configuration #{$buildTarget}"
       end
 
       # copy asset agent
-      FileUtils.cp("cmake_osx/tools/assetAgent/#{$buildTarget}/libassetAgent.so", "artifacts")
+      FileUtils.cp("#{ROOT}/build/loom-osx-x86/tools/assetAgent/#{$buildTarget}/libassetAgent.so", "artifacts")
 
       # copy libs
       FileUtils.cp_r("sdk/libs", "artifacts/")
 
       # build ldb
       Dir.chdir("sdk") do
-        sh "../artifacts/lsc LDB.build"
+        sh "#{ROOT}/artifacts/lsc LDB.build"
       end
       
       # build testexec
       Dir.chdir("sdk") do
-        sh "../artifacts/lsc TestExec.build"
+        sh "#{ROOT}/artifacts/lsc TestExec.build"
       end
 
       FileUtils.cp_r("sdk/bin/LDB.loom", "artifacts")
@@ -613,7 +615,7 @@ namespace :build do
         sh "make clean"
       end
 
-      FileUtils.mkdir_p("cmake_ios")
+      FileUtils.mkdir_p("#{ROOT}/build/loom-ios-arm")
 
       # Build SDL for iOS if it's missing
       sdlLibPath = "build/sdl2/ios/"
@@ -630,8 +632,8 @@ namespace :build do
       end
 
       # TODO: Find a way to resolve resources in xcode for ios.
-      Dir.chdir("cmake_ios") do
-        sh "cmake ../ -DLOOM_BUILD_IOS=1 -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-ios -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -G Xcode"
+      Dir.chdir("#{ROOT}/build/loom-ios-arm") do
+        sh "cmake -DLOOM_BUILD_IOS=1 -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-ios -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -G Xcode #{ROOT}"
         sdkroot="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS#{$targetIOSSDK}.sdk"
         sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\" CODE_SIGN_RESOURCE_RULES_PATH=#{sdkroot}/ResourceRules.plist"
       end
@@ -640,7 +642,7 @@ namespace :build do
       # appNameMatch, appName and appPrefix
 
       # Find the .app in the build folder.
-      appPath = Dir.glob("cmake_ios/application/#{$buildTarget}-iphoneos/*.app")[0]
+      appPath = Dir.glob("#{ROOT}/build/loom-ios-arm/application/#{$buildTarget}-iphoneos/*.app")[0]
       puts "Application path found: #{appPath}"
       appNameMatch = /\/(\w*\.app)$/.match(appPath)
       appName = appNameMatch[0]
@@ -660,7 +662,7 @@ namespace :build do
 
       # if Debug build, copy over the dSYM too
       if $buildTarget == "Debug"
-        dsymPath = Dir.glob("cmake_ios/application/#{$buildTarget}-iphoneos/*.dSYM")[0]
+        dsymPath = Dir.glob("#{ROOT}/build/loom-ios-arm/application/#{$buildTarget}-iphoneos/*.dSYM")[0]
         puts "dSYM path found: #{dsymPath}"
         FileUtils.cp_r(dsymPath, full_output_path)
       end
@@ -674,14 +676,14 @@ namespace :build do
     if $doBuildJIT == 1 then
         FileUtils.mkdir_p("build/luajit-windows-x86")
         Dir.chdir("build/luajit-windows-x86") do
-            sh "cmake ../../loom/vendor/luajit/ -G \"Visual Studio 12 2013\""
+            sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"Visual Studio 12 2013\""
             sh "msbuild /verbosity:m ALL_BUILD.vcxproj /p:Configuration=#{$buildTarget}"
         end
     end
 
-    FileUtils.mkdir_p("cmake_msvc")
-    Dir.chdir("cmake_msvc") do
-      sh "../build/win-cmake.bat x86 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"#{ROOT}/build/luajit-windows-x86\""
+    FileUtils.mkdir_p("#{ROOT}/build/loom-windows-x86")
+    Dir.chdir("#{ROOT}/build/loom-windows-x86") do
+      sh "#{ROOT}/build/win-cmake.bat x86 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"#{ROOT}/build/luajit-windows-x86\""
       sh "msbuild /verbosity:m LoomEngine.sln /p:Configuration=#{$buildTarget}"
     end
 
@@ -690,14 +692,14 @@ namespace :build do
         if $doBuildJIT == 1 then
             FileUtils.mkdir_p("build/luajit-windows-x64")
             Dir.chdir("build/luajit-windows-x64") do
-                sh "cmake ../../loom/vendor/luajit/ -G \"Visual Studio 12 2013 Win64\""
+                sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"Visual Studio 12 2013 Win64\""
                 sh "msbuild /verbosity:m ALL_BUILD.vcxproj /p:Configuration=#{$buildTarget}"
             end
         end
 
-        FileUtils.mkdir_p("cmake_msvc_x64")
-        Dir.chdir("cmake_msvc_x64") do
-          sh "../build/win-cmake.bat x64 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"#{ROOT}/build/luajit-windows-x64\""
+        FileUtils.mkdir_p("#{ROOT}/build/loom-windows-x64")
+        Dir.chdir("#{ROOT}/build/loom-windows-x64") do
+          sh "#{ROOT}/build/win-cmake.bat x64 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"#{ROOT}/build/luajit-windows-x64\""
           sh "msbuild /verbosity:m LoomEngine.sln /p:Configuration=#{$buildTarget}"
         end
     end
@@ -706,12 +708,12 @@ namespace :build do
 
     # build ldb
     Dir.chdir("sdk") do
-      sh "../artifacts/lsc LDB.build"
+      sh "#{ROOT}/artifacts/lsc LDB.build"
     end
     
     # build testexec
     Dir.chdir("sdk") do
-      sh "../artifacts/lsc TestExec.build"
+      sh "#{ROOT}/artifacts/lsc TestExec.build"
     end
 
     # copy libs
@@ -750,9 +752,9 @@ namespace :build do
     if $LOOM_HOST_OS == "windows"
 
       # WINDOWS
-      FileUtils.mkdir_p("cmake_android")
-      Dir.chdir("cmake_android") do
-        sh "cmake -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DLUAJIT_BUILD_DIR=#{ROOT}/loom/vendor/luajit_windows_android/luajit_android/lib #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_NDK_HOST_X64=#{WINDOWS_ISX64} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} -G\"MinGW Makefiles\" -DCMAKE_MAKE_PROGRAM=\"%ANDROID_NDK%\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make.exe\" .."
+      FileUtils.mkdir_p("#{ROOT}/build/loom-android-arm")
+      Dir.chdir("#{ROOT}/build/loom-android-arm") do
+        sh "cmake -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DLUAJIT_BUILD_DIR=#{ROOT}/loom/vendor/luajit_windows_android/luajit_android/lib #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_NDK_HOST_X64=#{WINDOWS_ISX64} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} -G\"MinGW Makefiles\" -DCMAKE_MAKE_PROGRAM=\"%ANDROID_NDK%\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make.exe\" #{ROOT}"
         sh "cmake --build ."
       end
 
@@ -798,9 +800,9 @@ namespace :build do
       #  sh "cmake --build ."
       #end
 
-      FileUtils.mkdir_p("cmake_android")
-      Dir.chdir("cmake_android") do
-        sh "cmake -DCMAKE_TOOLCHAIN_FILE=../build/cmake/loom.android.toolchain.cmake -DLUAJIT_BUILD_DIR=#{ROOT}/loom/vendor/luajit_windows_android/luajit_android/lib d#{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} .."
+      FileUtils.mkdir_p("#{ROOT}/build/loom-android-arm")
+      Dir.chdir("#{ROOT}/build/loom-android-arm") do
+        sh "cmake -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DLUAJIT_BUILD_DIR=#{ROOT}/loom/vendor/indows_android/luajit_android/lib d#{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} #{ROOT}"
         sh "make -j#{$numCores}"
       end
 
@@ -903,9 +905,9 @@ namespace :build do
     if false
 	
     puts "== Building Ubuntu =="
-    FileUtils.mkdir_p("cmake_ubuntu")
-    Dir.chdir("cmake_ubuntu") do
-      sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -G \"Unix Makefiles\" -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
+    FileUtils.mkdir_p("#{ROOT}/build/loom-linux-x86")
+    Dir.chdir("#{ROOT}/build/loom-linux-x86") do
+      sh "cmake -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -G \"Unix Makefiles\" -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
       sh "make -j#{$numCores}"
     end
 
@@ -913,12 +915,12 @@ namespace :build do
 
     # build ldb
     Dir.chdir("sdk") do
-      sh "../artifacts/lsc LDB.build"
+      sh "#{ROOT}/artifacts/lsc LDB.build"
     end
     
     # build testexec
     Dir.chdir("sdk") do
-      sh "../artifacts/lsc TestExec.build"
+      sh "#{ROOT}/artifacts/lsc TestExec.build"
     end
 
     # copy libs
@@ -933,7 +935,7 @@ namespace :build do
     FileUtils.cp_r('./sdk/assets', './artifacts/ubuntu')
 
     # copy asset agent
-    FileUtils.cp("cmake_ubuntu/tools/assetAgent/libassetAgent.so", "artifacts/libassetAgent.so")
+    FileUtils.cp("#{ROOT}/build/loom-linux-x86/tools/assetAgent/libassetAgent.so", "artifacts/libassetAgent.so")
 
     #copy assets
     FileUtils.mkdir_p("artifacts/assets")
@@ -959,10 +961,10 @@ end
 desc "Runs all unit tests and exports results to artifacts/testResults.xml"
 task :test => ['build:desktop'] do
    Dir.chdir("tests") do
-      sh "../tests/unittest"
+      sh "#{ROOT}/tests/unittest"
    end
    Dir.chdir("sdk") do
-      sh "../artifacts/lsc --unittest --xmlfile ../artifacts/testResults.xml"
+      sh "#{ROOT}/artifacts/lsc --unittest --xmlfile #{ROOT}/artifacts/testResults.xml"
   end
 end
 
@@ -1020,7 +1022,7 @@ namespace :update do
 
     puts "===== Compiling Core Scripts ====="
     Dir.chdir("sdk") do
-      sh "../artifacts/lsc Main.build"
+      sh "#{ROOT}/artifacts/lsc Main.build"
     end
 
     FileUtils.cp_r("sdk/libs", sdk_path);
@@ -1037,7 +1039,7 @@ namespace :package do
 
     FileUtils.rm_rf "nativesdk.zip"
 
-    omit_files = %w[ examples.zip loomsdk.zip certs/LoomDemoBuild.mobileprovision loom/vendor/telemetry-01052012 pkg/ artifacts/ docs/output cmake_osx/ cmake_msvc/ cmake_ios/ cmake_android/]
+    omit_files = %w[ examples.zip loomsdk.zip certs/LoomDemoBuild.mobileprovision loom/vendor/telemetry-01052012 pkg/ artifacts/ docs/output build/ ]
 
     Zip::File.open("nativesdk.zip", 'w') do |zipfile|
       Dir["**/**"].each do |file|
