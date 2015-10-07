@@ -77,7 +77,7 @@ package
             stage.addChild(container);
             
             // Uncomment to immediately initialize 5k images
-            addBatch(5000);
+            //addBatch(5000);
             
             // Add debug text
             debug = new Shape();

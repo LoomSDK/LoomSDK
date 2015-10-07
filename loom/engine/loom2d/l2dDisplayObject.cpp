@@ -88,10 +88,13 @@ void DisplayObject::render(lua_State *L) {
 
         // Setup quad for rendering the texture
         quad->setNativeTextureID(id);
-        quad->quadVertices[0] = {               0,                0, 0, 0xFFFFFFFF, 0, 0 };
-        quad->quadVertices[1] = { (float)texWidth,                0, 0, 0xFFFFFFFF, 1, 0 };
-        quad->quadVertices[2] = {               0, (float)texHeight, 0, 0xFFFFFFFF, 0, 1 };
-        quad->quadVertices[3] = { (float)texWidth, (float)texHeight, 0, 0xFFFFFFFF, 1, 1 };
+        
+        VertexPosColorTex* qv;
+
+        qv = &quad->quadVertices[0];  qv->x =               0;  qv->y =                0;  qv->z = 0; qv->abgr = 0xFFFFFFFF; qv->u = 0; qv->v = 0;
+        qv = &quad->quadVertices[1];  qv->x = (float)texWidth;  qv->y =                0;  qv->z = 0; qv->abgr = 0xFFFFFFFF; qv->u = 1; qv->v = 0;
+        qv = &quad->quadVertices[2];  qv->x =               0;  qv->y = (float)texHeight;  qv->z = 0; qv->abgr = 0xFFFFFFFF; qv->u = 0; qv->v = 1;
+        qv = &quad->quadVertices[3];  qv->x = (float)texWidth;  qv->y = (float)texHeight;  qv->z = 0; qv->abgr = 0xFFFFFFFF; qv->u = 1; qv->v = 1;
         quad->setNativeVertexDataInvalid(false);
 
         lmAssert(Texture::getRenderTarget() == -1, "Unsupported render target state: %d", Texture::getRenderTarget());
