@@ -508,10 +508,12 @@ namespace :build do
 
       puts "== Building OS X =="
 
-      FileUtils.mkdir_p("build/luajit-osx-x86")
-      Dir.chdir("build/luajit-osx-x86") do
-        sh "cmake -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DCMAKE_OSX_ARCHITECTURES=i386 #{ROOT}/loom/vendor/luajit"
-        sh "xcodebuild -configuration #{$buildTarget}"
+      if $doBuildJIT == 1 then
+        FileUtils.mkdir_p("build/luajit-osx-x86")
+        Dir.chdir("build/luajit-osx-x86") do
+          sh "cmake -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DCMAKE_OSX_ARCHITECTURES=i386 #{ROOT}/loom/vendor/luajit"
+          sh "xcodebuild -configuration #{$buildTarget}"
+        end
       end
 
       FileUtils.mkdir_p("#{ROOT}/build/loom-osx-x86")
@@ -603,18 +605,6 @@ namespace :build do
       ENV["ISDKP"] = ISDKP
       ENV["ISDKF"] = ISDKF
 
-      Dir.chdir("loom/vendor/luajit") do
-        sh "make clean"
-        if $targetIOSSDK >= "7.0"
-          sh "make install -j#{$numCores} HOST_CC=\"gcc -m32 -arch i386\" TARGET_FLAGS=\"#{ISDKF}\" TARGET=arm TARGET_SYS=iOS PREFIX=\"#{luajit_ios_dir.shellescape}\""
-        else
-          sh "make install -j#{$numCores} HOST_CC=\"gcc -m32 -arch i386\" CROSS=\"#{ISDKP}\" TARGET_FLAGS=\"#{ISDKF}\" TARGET=arm TARGET_SYS=iOS PREFIX=\"#{luajit_ios_dir.shellescape}\""
-        end
-	#temp hack, need to clean out the generated headers
-        #this needs to be converted to an out-ouf-source build
-        sh "make clean"
-      end
-
       FileUtils.mkdir_p("#{ROOT}/build/loom-ios-arm")
 
       # Build SDL for iOS if it's missing
@@ -631,10 +621,25 @@ namespace :build do
         puts "Found SDL2 libSDL2.a in #{sdlLibPath} - skipping build"
       end
 
+      sdkroot="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS#{$targetIOSSDK}.sdk"
+
+      if $doBuildJIT == 1 then
+        FileUtils.mkdir_p("build/luajit-ios-arm-bootstrap")
+        Dir.chdir("build/luajit-ios-arm-bootstrap") do
+          sh "cmake -G Xcode -DCMAKE_OSX_ARCHITECTURES=i386 -DBOOTSTRAP_ONLY=1 -DLUA_TARGET_ARCH=arm -DLUAJIT_OS=LUAJIT_OS_OSX -DCMAKE_BUILD_TYPE=#{$buildTarget} #{ROOT}/loom/vendor/luajit"
+          sh "cmake --build ."
+        end
+
+        FileUtils.mkdir_p("build/luajit-ios-arm")
+        Dir.chdir("build/luajit-ios-arm") do
+          sh "cmake -G Xcode -DTARGET_ONLY=1 -DBOOTSTRAP_PATH=#{ROOT}/build/luajit-ios-arm-bootstrap -DLUA_TARGET_ARCH=arm -DLUAJIT_OS=LUAJIT_OS_OSX -DCMAKE_BUILD_TYPE=#{$buildTarget} #{ROOT}/loom/vendor/luajit"
+          sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\" CODE_SIGN_RESOURCE_RULES_PATH=#{sdkroot}/ResourceRules.plist"
+        end
+      end
+
       # TODO: Find a way to resolve resources in xcode for ios.
       Dir.chdir("#{ROOT}/build/loom-ios-arm") do
-        sh "cmake -DLOOM_BUILD_IOS=1 -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-ios -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -G Xcode #{ROOT}"
-        sdkroot="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS#{$targetIOSSDK}.sdk"
+        sh "cmake -DLOOM_BUILD_IOS=1 -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-ios-arm -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -G Xcode #{ROOT}"
         sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\" CODE_SIGN_RESOURCE_RULES_PATH=#{sdkroot}/ResourceRules.plist"
       end
 
@@ -794,15 +799,23 @@ namespace :build do
     else
       # OSX / LINUX
 
-      #FileUtils.mkdir_p("build/luajit-android")
-      #Dir.chdir("build/luajit-android") do
-      #  sh "cmake -DCMAKE_TOOLCHAIN_FILE=../../build/cmake/loom.android.toolchain.cmake -DCMAKE_BUILD_TYPE=#{$buildTarget} ../../loom/vendor/luajit"
-      #  sh "cmake --build ."
-      #end
+      if $doBuildJIT == 1 then
+        FileUtils.mkdir_p("build/luajit-android-arm-bootstrap")
+        Dir.chdir("build/luajit-android-arm-bootstrap") do
+          sh "cmake -G Xcode -DCMAKE_OSX_ARCHITECTURES=i386 -DBOOTSTRAP_ONLY=1 -DLUA_TARGET_ARCH=arm -DLUAJIT_OS=LUAJIT_OS_LINUX -DCMAKE_BUILD_TYPE=#{$buildTarget} #{ROOT}/loom/vendor/luajit"
+          sh "cmake --build ."
+        end
+
+        FileUtils.mkdir_p("build/luajit-android-arm")
+        Dir.chdir("build/luajit-android-arm") do
+          sh "cmake -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DTARGET_ONLY=1 -DBOOTSTRAP_PATH=#{ROOT}/build/luajit-android-arm-bootstrap -DLUA_TARGET_ARCH=arm -DLUAJIT_OS=LUAJIT_OS_LINUX -DCMAKE_BUILD_TYPE=#{$buildTarget} #{ROOT}/loom/vendor/luajit"
+          sh "cmake --build ."
+        end
+      end
 
       FileUtils.mkdir_p("#{ROOT}/build/loom-android-arm")
       Dir.chdir("#{ROOT}/build/loom-android-arm") do
-        sh "cmake -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DLUAJIT_BUILD_DIR=#{ROOT}/loom/vendor/indows_android/luajit_android/lib d#{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} #{ROOT}"
+        sh "cmake -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-android-arm #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} #{ROOT}"
         sh "make -j#{$numCores}"
       end
 

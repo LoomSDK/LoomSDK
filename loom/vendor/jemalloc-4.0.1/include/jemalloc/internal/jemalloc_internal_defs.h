@@ -35,7 +35,11 @@
  * Defined if OSAtomic*() functions are available, as provided by Darwin, and
  * documented in the atomic(3) manual page.
  */
-/* #undef JEMALLOC_OSATOMIC */
+#if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_LINUX
+#define JEMALLOC_OSATOMIC
+#else
+#undef JEMALLOC_OSATOMIC
+#endif
 
 /*
  * Defined if __sync_add_and_fetch(uint32_t *, uint32_t) and
@@ -67,7 +71,11 @@
  * Defined if OSSpin*() functions are available, as provided by Darwin, and
  * documented in the spinlock(3) manual page.
  */
-/* #undef JEMALLOC_OSSPIN */
+#if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_LINUX
+#define JEMALLOC_OSSPIN
+#else
+#undef JEMALLOC_OSSPIN
+#endif
 
 /*
  * Defined if secure_getenv(3) is available.

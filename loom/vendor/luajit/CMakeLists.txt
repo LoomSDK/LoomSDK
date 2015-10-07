@@ -204,6 +204,9 @@ if ( ${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv6l" OR LUA_TARGET_ARCH STREQUAL "arm
   list ( APPEND DASM_FLAGS -D DUALNUM )
   set ( DASM_VER 60 )
   add_definitions ( -D__ARM_PCS_VFP=1 )
+  if ( DEFINED LUAJIT_OS AND LUAJIT_OS STREQUAL "LUAJIT_OS_OSX" )
+    list ( APPEND DASM_FLAGS -D IOS )
+  endif ()
 endif ()
 
 # 32bit vs 64bit
@@ -245,10 +248,11 @@ if ( ${DASM_ARCH} STREQUAL "x86" )
 elseif ( ${DASM_ARCH} STREQUAL "arm" )
   set ( LUAJIT_TARGET_ARCH_NUM LUAJIT_ARCH_ARM )
 else ()
-  message ( FATAL_ERROR "Architecture not suported")
+  message ( FATAL_ERROR "Architecture not suported" )
 endif ()
 
-add_definitions (-DLUAJIT_TARGET=${LUAJIT_TARGET_ARCH_NUM})
+add_definitions (-DLUAJIT_TARGET=${LUAJIT_TARGET_ARCH_NUM} )
+add_definitions (-DLUAJIT_ENABLE_JIT=1)
 
 list ( APPEND DASM_FLAGS -D VER=${DASM_VER} )
 
@@ -279,6 +283,12 @@ if ( NOT TARGET_ONLY )
 endif ()
 
 if ( NOT BOOTSTRAP_ONLY )
+
+    if ( DASM_ARCH STREQUAL arm AND DEFINED LUAJIT_OS AND LUAJIT_OS STREQUAL "LUAJIT_OS_OSX" )
+      set(CMAKE_OSX_SYSROOT iphoneos6.1)
+      set(CMAKE_OSX_ARCHITECTURES "armv7")
+      set(CMAKE_XCODE_EFFECTIVE_PLATOFRMS "-iphoneos;-iphonesimulator")
+    endif ()
 
     macro(add_buildvm_target _target _mode)
       add_custom_command(OUTPUT ${_target}

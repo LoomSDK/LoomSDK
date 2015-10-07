@@ -32,7 +32,7 @@
  * Defined if OSAtomic*() functions are available, as provided by Darwin, and
  * documented in the atomic(3) manual page.
  */
- #if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_LINUX
+#if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_LINUX
 #define JEMALLOC_OSATOMIC
 #else
 #undef JEMALLOC_OSATOMIC
@@ -68,7 +68,11 @@
  * Defined if OSSpin*() functions are available, as provided by Darwin, and
  * documented in the spinlock(3) manual page.
  */
+#if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_LINUX
+#define JEMALLOC_OSSPIN
+#elif
 #undef JEMALLOC_OSSPIN
+#endif
 
 /*
  * Defined if secure_getenv(3) is available.
@@ -214,8 +218,11 @@
 /*
  * Darwin (OS X) uses zones to work around Mach-O symbol override shortcomings.
  */
+#if LOOM_PLATFORM == LOOM_PLATFORM+ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_WIN32 || LOOM_PLATFORM_LINUX
 #undef JEMALLOC_ZONE
-#undef JEMALLOC_ZONE_VERSION
+#else
+#undef JEMALLOC_ZONE_VERSION 8
+#endif
 
 /*
  * Methods for purging unused pages differ between operating systems.
@@ -227,8 +234,11 @@
  *                             unused, such that they will be discarded rather
  *                             than swapped out.
  */
-#undef JEMALLOC_PURGE_MADVISE_DONTNEED
-#undef JEMALLOC_PURGE_MADVISE_FREE
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
+#define JEMALLOC_PURGE_MADVISE_DONTNEED
+#else
+#define JEMALLOC_PURGE_MADVISE_FREE
+#endif
 
 /* Define if operating system has alloca.h header. */
 #undef JEMALLOC_HAS_ALLOCA_H
