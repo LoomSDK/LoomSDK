@@ -35,15 +35,26 @@ void Shape::render(lua_State *L)
 		return;
 	}
 
+	DisplayObject::render(L);
+
 	updateLocalTransform();
 
-	Matrix transform;
-	getTargetTransformationMatrix(NULL, &transform);
+    
+	if (!renderCached(L)) {
+		Matrix transform;
 
-	renderState.clipRect = parent ? parent->renderState.clipRect : Loom2D::Rectangle(0, 0, -1, -1);
-	renderState.blendMode = (blendMode == BlendMode::AUTO && parent) ? parent->renderState.blendMode : blendMode;
+		getTargetTransformationMatrix(NULL, &transform);
 
-	graphics->render(&renderState, &transform);
+		renderState.clipRect = parent ? parent->renderState.clipRect : Loom2D::Rectangle(0, 0, -1, -1);
+		renderState.blendMode = (blendMode == BlendMode::AUTO && parent) ? parent->renderState.blendMode : blendMode;
+
+		if (GFX::Graphics::getFlags() & GFX::Graphics::FLAG_INVERTED) {
+			transform.scale(1, -1);
+			transform.translate(0, GFX::Graphics::getHeight());
+		}
+
+		graphics->render(&renderState, &transform);
+	}
 }
 
 }

@@ -22,6 +22,7 @@
 #include "loom/engine/loom2d/l2dDisplayObject.h"
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
 #include "loom/engine/loom2d/l2dImage.h"
+#include "loom/engine/loom2d/l2dStage.h"
 
 using namespace GFX;
 
@@ -30,6 +31,23 @@ namespace Loom2D
 Type       *DisplayObject::typeDisplayObject;
 lua_Number DisplayObject::_transformationMatrixOrdinal;
 bool       DisplayObject::cacheAsBitmapInProgress = false;
+
+bool DisplayObject::renderCached(lua_State *L)
+{
+    if (!cacheAsBitmapValid) return false;
+    DisplayObject *cached = static_cast<DisplayObject*>(cachedImage);
+    lmAssert(cached != NULL, "Cached image is invalid");
+
+    cached->transformMatrix.identity();
+    cached->transformMatrix.translate(cacheAsBitmapOffsetX, cacheAsBitmapOffsetY);
+    cached->transformMatrix.concat(&transformMatrix);
+    cached->parent = parent;
+
+    lualoom_pushnative<DisplayObject>(L, cached);
+    cached->render(L);
+    lua_pop(L, 1);
+    return true;
+}
 
 void DisplayObject::render(lua_State *L) {
     // Disable reentrancy for this function (read: don't cache to texture while caching to a texture)

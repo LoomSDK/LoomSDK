@@ -34,7 +34,6 @@ struct DisplayObjectSort
 class DisplayObjectContainer : public DisplayObject
 {
     static utArray<DisplayObjectSort> sSortBucket;
-    void applyStageTransform(Matrix* result);
 
 public:
 
@@ -101,21 +100,7 @@ public:
         updateLocalTransform();
 
         // If cached image is valid, render that instead of the children
-        if (cacheAsBitmapValid) {
-            DisplayObject *cached = static_cast<DisplayObject*>(cachedImage);
-            lmAssert(cached != NULL, "Cached image is invalid");
-
-            cached->transformMatrix.identity();
-            cached->transformMatrix.translate(cacheAsBitmapOffsetX, cacheAsBitmapOffsetY);
-            cached->transformMatrix.concat(&transformMatrix);
-            applyStageTransform(&cached->transformMatrix);
-
-            lualoom_pushnative<DisplayObject>(L, cached);
-            cached->render(L);
-            lua_pop(L, 1);
-        }
-        else
-        {
+        if (!renderCached(L)) {
             lualoom_pushnative<ContainerClass>(L, static_cast<ContainerClass*>(instance));
             renderChildren(L);
             lua_pop(L, 1);
