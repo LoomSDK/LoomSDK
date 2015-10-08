@@ -45,6 +45,7 @@ public:
     void startRumble(float intensity, Uint32 ms);
     bool getButton(int buttonID);
     int getAxis(int axisID);
+    float getNormalizedAxis(int axisID);
     int getID();
     bool isConnected();
     SDL_Haptic *getHaptic();

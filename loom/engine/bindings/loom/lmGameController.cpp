@@ -86,6 +86,8 @@ int LoomGameController::addDevice(int deviceID)
         }
     }
 
+    lmLogWarn(controllerLogGroup, "Could not add device: No free game controller slots available.")
+
     return -1;
 }
 
@@ -96,7 +98,11 @@ int LoomGameController::removeDevice(int deviceID)
 {
     // We need to get device's index in the game controller pool first in order to close it.
     int controllerIndex = getControllerIndex(deviceID);
-    if (controllerIndex < 0) return -1;
+    if (controllerIndex < 0)
+    {
+        lmLogWarn(controllerLogGroup, "Could not remove device: No game controller with ID [%d] found.", deviceID);
+        return -1;
+    }
     LoomGameController& gc = controllers[controllerIndex];
     gc.close();
     --numControllers;
@@ -152,15 +158,15 @@ void LoomGameController::stopRumble()
 
 /** Starts the device's rumble effect.
 *  Intensity sets the  is a value between 0 and 1
-*  The duration of rumble is set in milliseconds. Using this */
+*  The duration of rumble is set in milliseconds. */
 void LoomGameController::startRumble(float intensity, Uint32 duration)
 {
     // Do nothing if it is not a valid controller
     if (!this->is_connected) return;
 
     // Force value to be strictly between 0 and 1
-    if (intensity > 1) intensity = 1.0f;
-    if (intensity < 0) intensity = 0.0f;
+    if (intensity > 1) intensity = 1.f;
+    if (intensity < 0) intensity = 0.f;
 
     // If device is haptic, begin rumble
     if (this->is_haptic)
@@ -181,6 +187,12 @@ int LoomGameController::getAxis(int axisID)
     if (axisID > SDL_CONTROLLER_AXIS_INVALID && axisID < SDL_CONTROLLER_AXIS_MAX)
         return SDL_GameControllerGetAxis(this->getController(), (SDL_GameControllerAxis) axisID);
     return 0;
+}
+
+/** Returns value of queried axis. */
+float LoomGameController::getNormalizedAxis(int axisID)
+{
+    return LoomGameController::convertAxis(getAxis(axisID));
 }
 
 /** Returns the position of the controller in the controller pool. */
@@ -249,6 +261,7 @@ void LoomGameController::open(int deviceID)
     }
     else
     {
+        lmLogWarn(controllerLogGroup, "Device not recognised as a game controller. Controller mapping for this device may be missing.");
         return;
     }
 
@@ -330,6 +343,7 @@ int registerLoomGameController(lua_State *L)
         .addMethod("startRumble", &LoomGameController::startRumble)
         .addMethod("getButton", &LoomGameController::getButton)
         .addMethod("getAxis", &LoomGameController::getAxis)
+        .addMethod("getNormalizedAxis", &LoomGameController::getNormalizedAxis)
         .addMethod("getID", &LoomGameController::getID)
         .addMethod("isConnected", &LoomGameController::isConnected)
 

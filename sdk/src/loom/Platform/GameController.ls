@@ -93,7 +93,6 @@ package loom.platform
         /**
          * Checks if game controller is haptic.
          * 
-         * @param device The id of game controller.
          * @return True if game controller is haptic, false if it is not haptic.
          */
         public native function isHaptic():Boolean;
@@ -101,7 +100,6 @@ package loom.platform
         /**
          * Causes a game controller to start vibrating.
          * 
-         * @param device The id of game controller.
          * @param intensity Intensity of vibration ranging from 0 to 1.
          * @param ms Duration of vibration in miliseconds. Accepts GameController.RUMBLE_INFINITY for infinite duration.
          */
@@ -109,8 +107,6 @@ package loom.platform
         
         /**
          * Causes a game controller to stop vibrating.
-         * 
-         * @param device The id of game controller.
          */
         public native function stopRumble();
         
@@ -136,11 +132,7 @@ package loom.platform
          * @param axis The id of wanted axis
          * @return Returns a range between -1 and 1
          */
-        public function getAxis2(axis:uint):Number
-        {
-            var value:int = getAxis(axis);
-            return value < 0 ? -(value / ( -32768)) : value / 32767;
-        }
+        public native function getNormalizedAxis(axis:uint):Number;
         
         /**
          * Gets the id of the controller.

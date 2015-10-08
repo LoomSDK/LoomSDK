@@ -53,7 +53,7 @@ package
             else if (GameController.numControllers)
             {
                 var gamepad = GameController.getGameController(0);
-                move_x = gamepad.getAxis2(0);
+                move_x = gamepad.getNormalizedAxis(0);
 
                 speedX = Math.abs(move_x);
                 if (speedX < .25)
