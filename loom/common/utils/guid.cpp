@@ -6,11 +6,15 @@
 //
 //
 
+#include <loom/common/platform/platform.h>
+
 #include "guid.h"
 #include <string.h>
 
-#ifdef WIN32
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 #include <rpc.h>
+#elif LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+#include <stdio.h>
 #else
 #include <uuid/uuid.h>
 #endif
@@ -20,7 +24,7 @@ extern "C"
     void loom_generate_guid(loom_guid_t out_guid)
     {
         memset(out_guid, 0, sizeof(loom_guid_t));
-#ifdef WIN32
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 #pragma comment(lib, "rpcrt4.lib")
         UUID uuid;
         UuidCreate(&uuid);
@@ -35,6 +39,10 @@ extern "C"
         {
             out_guid = "00000000-0000-0000-0000-000000000000";
         }
+#elif LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+        FILE* f = fopen("/proc/sys/kernel/random/uuid", "r");
+	fread(out_guid, sizeof(char), LOOM_GUID_SIZE, f);
+	fclose(f);
 #else
         uuid_t uuid;
         uuid_generate(uuid);

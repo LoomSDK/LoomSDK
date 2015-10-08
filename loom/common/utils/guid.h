@@ -9,7 +9,9 @@
 #ifndef __LoomEngine__guid__
 #define __LoomEngine__guid__
 
-typedef char loom_guid_t[37];
+#define LOOM_GUID_SIZE 37
+
+typedef char loom_guid_t[LOOM_GUID_SIZE];
 
 extern "C"
 {
