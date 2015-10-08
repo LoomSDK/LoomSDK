@@ -22,6 +22,7 @@
 
 #include "loom/common/core/allocator.h"
 #include "loom/common/core/assert.h"
+#include "loom/common/core/log.h"
 #include "loom/common/utils/utByteArray.h"
 #include "loom/common/platform/platformIO.h"
 #include "loom/script/runtime/lsRuntime.h"
@@ -51,6 +52,7 @@ LSLuaState        *LSLuaState::lastLSState   = NULL;
 double            LSLuaState::constructorKey = 0;
 utArray<utString> LSLuaState::buildCache;
 
+lmDefineLogGroup(gLuaStateLogGroup, "LuaState", true, LoomLogInfo);
 
 // traceback stack queries
 struct stackinfo
@@ -603,6 +605,33 @@ void LSLuaState::dumpManagedNatives()
     NativeInterface::dumpManagedNatives(L);
 }
 
+void LSLuaState::dumpLuaStack()
+{
+    int i;
+    int top = lua_gettop(L);
+
+    lmLog(gLuaStateLogGroup, "Total in stack: %d", top);
+
+    for (i = 1; i <= top; i++)
+    {
+        int t = lua_type(L, i);
+        switch (t) {
+        case LUA_TSTRING:
+            lmLog(gLuaStateLogGroup, "string: '%s'", lua_tostring(L, i));
+            break;
+        case LUA_TBOOLEAN:
+            lmLog(gLuaStateLogGroup, "boolean %s", lua_toboolean(L, i) ? "true" : "false");
+            break;
+        case LUA_TNUMBER:
+            lmLog(gLuaStateLogGroup, "number: %g", lua_tonumber(L, i));
+            break;
+        default:  /* other values */
+            lmLog(gLuaStateLogGroup, "%s", lua_typename(L, t));
+            break;
+        }
+    }
+    lmLog(gLuaStateLogGroup, "");
+}
 
 int LSLuaState::getStackSize()
 {
