@@ -189,7 +189,7 @@ int LoomGameController::getAxis(int axisID)
     return 0;
 }
 
-/** Returns value of queried axis. */
+/** Returns normalized value of queried axis. */
 float LoomGameController::getNormalizedAxis(int axisID)
 {
     return LoomGameController::convertAxis(getAxis(axisID));
