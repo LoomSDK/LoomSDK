@@ -20,6 +20,7 @@ package loom2d.display
     import loom2d.events.TouchEvent;
     import loom2d.events.ScrollWheelEvent;
     import loom2d.events.EventDispatcher;
+    import loom2d.events.GameControllerEvent;
     
     import loom2d.math.Point;
     import loom2d.math.Rectangle;
@@ -46,6 +47,8 @@ package loom2d.display
     }
 
     delegate KeyDelegate(scancode:int, virtualKey:int, modifiers:int);
+    delegate GameControllerAddedDelegate(controller:int);
+    delegate GameControllerRemovedDelegate(controller:int);
     delegate HardwareKeyDelegate();
     delegate TouchDelegate(touchId:int, x:int, y:int);
     delegate ScrollWheelDelegate(yDelta:int);
@@ -65,12 +68,18 @@ package loom2d.display
      *  In Loom, keyboard events are only dispatched at the stage. Add an event listener
      *  directly to the stage to be notified of keyboard events.
      * 
+     *  **Controller Events**
+     * 
+     *  In Loom, game controller events are only dispatched at the stage. Add an event listener
+     *  directly to the stage to be notified of controller events.
+     * 
      *  **Resize Events**
      * 
      *  When a Loom application is resized, the stage dispatches a `ResizeEvent`. The 
      *  event contains properties containing the updated width and height of game.
      *
      *  @see Loom.Events.KeyboardEvent
+     *  @see Loom.Events.GameControllerEvent
      *  @see Loom.Events.ResizeEvent
      */
     [Native(managed)]      
@@ -107,6 +116,9 @@ package loom2d.display
 
         public native var onKeyUp:KeyDelegate;
         public native var onKeyDown:KeyDelegate;
+
+        public native var onGameControllerAdded:GameControllerAddedDelegate;
+        public native var onGameControllerRemoved:GameControllerRemovedDelegate;
 
         public native var onMenuKey:HardwareKeyDelegate;
         public native var onBackKey:HardwareKeyDelegate;
@@ -150,6 +162,9 @@ package loom2d.display
             onKeyDown += onKeyDownHandler;
             onKeyUp += onKeyUpHandler;
 
+            onGameControllerAdded += onGameControllerAddedHandler;
+            onGameControllerRemoved += onGameControllerRemovedHandler;
+
             onSizeChange += onSizeChangeHandler;
 
             // Application's TouchProcessor handles touch/mouse input.
@@ -182,6 +197,16 @@ package loom2d.display
                     (modifiers | LoomKeyModifier.CTRL) != 0,
                     (modifiers | LoomKeyModifier.ALT) != 0,
                     (modifiers | LoomKeyModifier.SHIFT) != 0 ));
+        }
+        
+        protected function onGameControllerAddedHandler(controller:int):void
+        {
+            broadcastEvent(new GameControllerEvent(GameControllerEvent.CONTROLLER_ADDED, controller));
+        }
+        
+        protected function onGameControllerRemovedHandler(controller:int):void
+        {
+            broadcastEvent(new GameControllerEvent(GameControllerEvent.CONTROLLER_REMOVED, controller));
         }
 
         protected function onScrollWheelHandler(delta:Number)

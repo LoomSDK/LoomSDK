@@ -39,6 +39,7 @@ void installLoomTeak();
 void installLoomSystem();
 void installLoomSQLite();
 void installLoomModestMaps();
+void installLoomGameController();
 
 void installPackageLoom()
 {
@@ -59,6 +60,7 @@ void installPackageLoom()
     installLoomModestMaps();
     installPackageLoomSound();
 	installLoomSystem();
+    installLoomGameController();
 
     // Should be its own package for maximum correctness.
     //installPackageCocos2DX();
