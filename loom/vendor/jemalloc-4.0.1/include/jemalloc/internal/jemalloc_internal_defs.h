@@ -35,7 +35,7 @@
  * Defined if OSAtomic*() functions are available, as provided by Darwin, and
  * documented in the atomic(3) manual page.
  */
-#if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_LINUX
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX && LOOM_PLATFORM == LOOM_PLATFORM_IOS
 #define JEMALLOC_OSATOMIC
 #else
 #undef JEMALLOC_OSATOMIC
@@ -71,7 +71,7 @@
  * Defined if OSSpin*() functions are available, as provided by Darwin, and
  * documented in the spinlock(3) manual page.
  */
-#if LOOM_PLATFORM != LOOM_PLATFORM_ANDROID && LOOM_PLATFORM != LOOM_PLATFORM_LINUX
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX && LOOM_PLATFORM == LOOM_PLATFORM_IOS
 #define JEMALLOC_OSSPIN
 #else
 #undef JEMALLOC_OSSPIN
