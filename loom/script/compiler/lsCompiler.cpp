@@ -641,37 +641,8 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
 }
 
 
-void LSCompiler::setSDKBuild(const utString& lscPath)
+void LSCompiler::setSDKBuild(const utString& sdkPath)
 {
-    char lsc[2048];
-
-    snprintf(lsc, 2048, "%s", lscPath.c_str());
-
-    // Slurp off the filename...
-    unsigned int len = strlen(lsc) - 1;
-    while (len-- > 0)
-    {
-        if ((lsc[len] == '\\') || (lsc[len] == '/'))
-        {
-            lsc[len] = '\0';
-            break;
-        }
-    }
-
-    // And the tools folder...
-    while (len-- > 0)
-    {
-        if ((lsc[len] == '\\') || (lsc[len] == '/'))
-        {
-            lsc[len + 1] = '\0'; // This won't cause a buffer overrun because
-                                 // we already ate backwards in the previous loop.
-                                 // But we do need to preserve the trailing slash.
-            break;
-        }
-    }
-
-    // Then note the path.
-    sdkPath = lsc;
     log("SDK Path: %s", sdkPath.c_str());
 
     AssemblyReader::addLibraryAssemblyPath(sdkPath + "libs");
