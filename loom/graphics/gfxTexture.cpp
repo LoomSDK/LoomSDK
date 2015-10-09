@@ -1040,7 +1040,7 @@ void Texture::handleAssetNotification(void *payload, const char *name)
 void Texture::loadImageAsset(loom_asset_image_t *lat, TextureID id)
 {
     // See if it's over 2048 - if so, downsize to fit.
-    const int          maxSize     = 512;
+    const int          maxSize     = 2048;
     void               *localBits  = lat->bits;
     void               *localMem   = NULL;
     int                localWidth  = lat->width;
