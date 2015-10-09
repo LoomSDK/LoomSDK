@@ -6,8 +6,8 @@
 //
 //
 
-#ifndef __LoomEngine__guid__
-#define __LoomEngine__guid__
+#ifndef _UTILS_GUID_H_
+#define _UTILS_GUID_H_
 
 #define LOOM_GUID_SIZE 37
 
