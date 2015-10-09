@@ -143,15 +143,15 @@ public:
             note = lmNew(NULL) OALBufferNote();
             note->asset = strdup(assetPath);
 
-            // OpenAL buffer alloc.
-            alGenBuffers((ALuint)1, &note->buffer);
-            CHECK_OPENAL_ERROR();
-
             // Lock the asset.
             loom_asset_sound *sound = (loom_asset_sound *)loom_asset_lock(assetPath, LATSound, 1);
 
             if(sound)
             {
+                // OpenAL buffer alloc.
+                alGenBuffers((ALuint)1, &note->buffer);
+                CHECK_OPENAL_ERROR();
+
                 ALenum sampleFormat;
                 if (sound->channels == 1)
                 {
@@ -500,6 +500,11 @@ public:
         return (state == AL_PLAYING || state == AL_PAUSED);
     }
 
+    bool isNull()
+    {
+        return path == NULL;
+    }
+
     bool hasEverPlayed()
     {
         return playCount != 0;
@@ -654,6 +659,7 @@ static int registerLoomSoundSound(lua_State *L)
        .addMethod("rewind", &Sound::rewind)
 
        .addMethod("isPlaying", &Sound::isPlaying)
+       .addMethod("isNull", &Sound::isNull)
        .addMethod("hasEverPlayed", &Sound::hasEverPlayed)
        
        .endClass()

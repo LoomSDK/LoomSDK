@@ -60,8 +60,12 @@ int loom_asset_identifySound(const char *extension)
 void loom_asset_soundDtor(void *bits)
 {
     loom_asset_sound_t *sound = (loom_asset_sound_t*)bits;
-    lmFree(gAssetAllocator, sound->buffer);
-    lmFree(gAssetAllocator, bits);
+    if (sound != NULL)
+    {
+        if (sound->buffer != NULL)
+            lmFree(gAssetAllocator, sound->buffer);
+        lmFree(gAssetAllocator, bits);
+    }
 }
 
 void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCleanupCallback *dtor )
@@ -172,7 +176,7 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         if (!wavLoadSuccess)
         {
             lmLogError(gSoundAssetGroup, "Failed to load wav format info");
-            loom_asset_soundDtor(&sound);
+            loom_asset_soundDtor(sound);
             return 0;
         }
         
@@ -181,7 +185,7 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         if (sound->bytesPerSample != 1 && sound->bytesPerSample != 2)
         {
             lmLogError(gSoundAssetGroup, "Unsupported wav format. Currently only 8-bit or 16-bit PCM are supported");
-            loom_asset_soundDtor(&sound);
+            loom_asset_soundDtor(sound);
             return 0;
         }
         sound->bufferSize = wav.sampleDataSize;
@@ -193,14 +197,14 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         if (!dataCopySuccess)
         {
             lmLogError(gSoundAssetGroup, "Failed to copy wav data");
-            loom_asset_soundDtor(&sound);
+            loom_asset_soundDtor(sound);
             return 0;
         }
     }
     else
     {
         lmLogError(gSoundAssetGroup, "Failed to identify sound buffer by magic number!");
-        loom_asset_soundDtor(&sound);
+        loom_asset_soundDtor(sound);
         return 0;
     }
 
