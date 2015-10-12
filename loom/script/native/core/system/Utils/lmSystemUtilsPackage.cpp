@@ -21,6 +21,7 @@
 #include "loom/script/loomscript.h"
 #include "loom/common/utils/utBase64.h"
 #include "loom/common/utils/utByteArray.h"
+#include "loom/common/utils/guid.h"
 
 class LoomBase64 {
 public:
@@ -73,6 +74,17 @@ public:
     }
 };
 
+class LoomGUID {
+public:
+    
+    static const char* generate()
+    {
+        static loom_guid_t s_guid;
+        loom_generate_guid(s_guid);
+        return s_guid;
+    }
+};
+
 static int registerSystemUtils(lua_State *L)
 {
     beginPackage(L, "system.utils")
@@ -82,6 +94,12 @@ static int registerSystemUtils(lua_State *L)
        .addStaticLuaFunction("encode", &LoomBase64::encode)
        .addStaticMethod("decode", &LoomBase64::decode)
 
+       .endClass()
+    
+       .beginClass<LoomGUID> ("GUID")
+    
+       .addStaticMethod("generate", &LoomGUID::generate)
+        
        .endClass()
 
        .endPackage();
@@ -93,4 +111,5 @@ static int registerSystemUtils(lua_State *L)
 void installSystemUtils()
 {
     LOOM_DECLARE_NATIVETYPE(LoomBase64, registerSystemUtils);
+    LOOM_DECLARE_NATIVETYPE(LoomGUID, registerSystemUtils);
 }
