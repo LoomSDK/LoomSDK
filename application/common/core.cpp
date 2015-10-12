@@ -26,6 +26,7 @@
 #include "loom/common/platform/platform.h"
 
 #include "loom/engine/bindings/sdl/lmSDL.h"
+#include "loom/engine/bindings/loom/lmGameController.h"
 
 #include "loom/script/native/core/system/lmProcess.h"
 
@@ -189,6 +190,39 @@ void loop()
         {
             IMEDelegateDispatcher::shared()->dispatchShowComposition(event.text.text, strlen(event.text.text), event.edit.start, event.edit.length);
         }
+        else if (event.type == SDL_CONTROLLERBUTTONDOWN)
+        {
+            //lmLogInfo(coreLogGroup, "Controller Button Down %d %d %d", event.cbutton.which, event.cbutton.button);
+            LoomGameController::getGameController(LoomGameController::getControllerIndex(event.cbutton.which))->buttonDown(event);
+        }
+        else if (event.type == SDL_CONTROLLERBUTTONUP)
+        {
+            //lmLogInfo(coreLogGroup, "Controller Button Up %d %d %d", event.cbutton.which, event.cbutton.button);
+            LoomGameController::getGameController(LoomGameController::getControllerIndex(event.cbutton.which))->buttonUp(event);
+        }
+        else if (event.type == SDL_CONTROLLERAXISMOTION)
+        {
+            //lmLog(coreLogGroup, "Controller [%d] triggered axis event.", LoomGameController::indexOfDevice(event.caxis.which));
+            LoomGameController::getGameController(LoomGameController::getControllerIndex(event.cbutton.which))->axisMove(event);
+        }
+        else if (event.type == SDL_CONTROLLERDEVICEADDED)
+        {
+            int addedDevice = LoomGameController::addDevice(event.cdevice.which);
+            if (addedDevice != -1)
+            {
+                stage->_GameControllerAddedDelegate.pushArgument(addedDevice);
+                stage->_GameControllerAddedDelegate.invoke();
+            }
+        }
+        else if (event.type == SDL_CONTROLLERDEVICEREMOVED)
+        {
+            int removedDevice = LoomGameController::removeDevice(event.cdevice.which);
+            if (removedDevice != -1)
+            {
+                stage->_GameControllerRemovedDelegate.pushArgument(removedDevice);
+                stage->_GameControllerRemovedDelegate.invoke();
+            }
+        }
     }
 
     /* Tick and render Loom. */
@@ -315,13 +349,31 @@ main(int argc, char *argv[])
 
     /* Main render loop */
     gLoomExecutionDone = 0;
+
+    /* Display SDL version */
+    SDL_version compiled;
+    SDL_version linked;
+
+    SDL_VERSION(&compiled);
+    SDL_GetVersion(&linked);
+
+    lmLogDebug(coreLogGroup, "Compiled with SDL version %d.%d.%d and linking against SDL version %d.%d.%d ...", compiled.major, compiled.minor, compiled.patch, linked.major, linked.minor, linked.patch);
+
+    /* Game Controller */
+    // Enable controller events
+    SDL_GameControllerEventState(SDL_ENABLE);
+
+    //Open all connected game controllers
+    LoomGameController::openAll();
     
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(loop, 0, 1);
 #else
     while (!gLoomExecutionDone) loop();
 #endif
-    
+
+    //Close all opened game controllers before closing application
+    LoomGameController::closeAll();
     loom_appShutdown();
     
 #ifdef WIN32

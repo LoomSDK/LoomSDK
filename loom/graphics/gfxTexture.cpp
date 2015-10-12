@@ -30,6 +30,7 @@
 
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/graphics/gfxQuadRenderer.h"
+#include "loom/graphics/gfxStateManager.h"
 
 #include "loom/script/runtime/lsProfiler.h"
 
@@ -48,7 +49,6 @@ utHashTable<utFastStringHash, TextureID> Texture::sTexturePathLookup;
 bool Texture::sTextureAssetNofificationsEnabled = true;
 bool Texture::supportsFullNPOT;
 TextureID Texture::currentRenderTexture = -1;
-uint32_t Texture::previousRenderFlags = -1;
 
 //queue of textures to load in the async loading thread
 utList<AsyncLoadNote> Texture::sAsyncLoadQueue;
@@ -1048,6 +1048,7 @@ void Texture::loadImageAsset(loom_asset_image_t *lat, TextureID id)
     void               *localMem   = NULL;
     int                localWidth  = lat->width;
     int                localHeight = lat->height;
+    int                resizeCounter = 0;
     while (localWidth > maxSize || localHeight > maxSize)
     {
         // Allocate new bits.
@@ -1056,20 +1057,20 @@ void Texture::loadImageAsset(loom_asset_image_t *lat, TextureID id)
         localHeight = localHeight >> 1;
         void *oldBits = localBits;
 
-        // This will be freed automatically. This will be inefficient for huge bitmaps but it's
-        // only around for one frame.
-        localBits = lmAlloc(NULL, localWidth * localHeight * 4);
-
         lmLog(gGFXTextureLogGroup, "   - Too big! Downsampling to %dx%d", localWidth, localHeight);
 
+        if (resizeCounter > 0)
+        {
+            //These are freed by an Image Asset
+            localBits = lmAlloc(NULL, localWidth * localHeight * 4);
+        }
+        
         bitmapExtrudeRGBA_c(oldBits, localBits, oldHeight, oldWidth);
+        resizeCounter++;
     }
 
     // Perform the actual load.
     load((uint8_t *)localBits, (uint16_t)localWidth, (uint16_t)localHeight, id);
-
-// TODO: Memory leak due to resize loop.
-//    lmFree(NULL, localBits);
 }
 
 void Texture::validate()
@@ -1139,7 +1140,7 @@ void Texture::clear(TextureID id, int color, float alpha)
 		float((color >> 0) & 0xFF) / 255.0f,
 		alpha
 	);
-	Graphics::context()->glClear(GL_COLOR_BUFFER_BIT);
+	Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	setRenderTarget(prevRenderTexture);
 }
@@ -1177,9 +1178,15 @@ void Texture::validate(TextureID id)
     LOOM_PROFILE_END(textureValidate);
 }
 
+TextureID Texture::getRenderTarget()
+{
+	return currentRenderTexture;
+}
+
 void Texture::setRenderTarget(TextureID id)
 {
-    LOOM_PROFILE_SCOPE(textureSetRenderTarget);
+	// TODO Gamma correct rendering? Render is lighter than it's supposed to be
+	LOOM_PROFILE_SCOPE(textureSetRenderTarget);
 	if (id != -1)
 	{
 		if (currentRenderTexture == id) return;
@@ -1195,33 +1202,34 @@ void Texture::setRenderTarget(TextureID id)
 		lmAssert(tinfo->handle != -1, "Texture handle invalid");
 		lmAssert(tinfo->renderTarget, "Error rendering to texture, texture is not a render buffer: %d", id);
 
+		// Save frame state
+		Graphics::pushRenderTarget();
+
 		// Set our texture-bound framebuffer
 		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo->framebuffer);
 
-		// Flush pending quads
-		QuadRenderer::submit();
-
-		// Save and setup state
-		previousRenderFlags = Graphics::getFlags();
-		Graphics::setFlags(Graphics::FLAG_INVERTED | Graphics::FLAG_NOCLEAR);
-
 		// Setup stage and framing
+		Graphics::setFlags(Graphics::getFlags() | Graphics::FLAG_INVERTED | Graphics::FLAG_NOCLEAR);
 		Graphics::setNativeSize(tinfo->width, tinfo->height);
-		Graphics::beginFrame();
+
+		Graphics::applyRenderTarget();
 
 		loom_mutex_unlock(Texture::sTexInfoLock);
 	}
 	else if (currentRenderTexture != -1)
 	{
-		Graphics::endFrame();
-
-		Graphics::setFlags(previousRenderFlags);
+		// Submit and reset state (order is important apparently)
+		QuadRenderer::submit();
+		Graphics_SetCurrentGLState(GFX_OPENGL_STATE_QUAD);
+		Graphics_InvalidateGLState(GFX_OPENGL_STATE_QUAD);
 
 		// Reset to screen framebuffer
 		Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, Graphics::getBackFramebuffer());
 
+		// Restore frame state
+		Graphics::popRenderTarget();
+
 		currentRenderTexture = -1;
-		previousRenderFlags = -1;
 	}
 }
 

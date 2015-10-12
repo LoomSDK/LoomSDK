@@ -171,9 +171,8 @@ private:
 
     static utHashTable<utFastStringHash, TextureID> sTexturePathLookup;
     static bool sTextureAssetNofificationsEnabled;
-	static bool supportsFullNPOT;
-	static TextureID currentRenderTexture;
-	static uint32_t previousRenderFlags;
+    static bool supportsFullNPOT;
+    static TextureID currentRenderTexture;
     
     // simple linear TextureID -> TextureHandle
     static TextureInfo sTextureInfos[MAXTEXTURES];
@@ -345,6 +344,7 @@ public:
 	static void clear(TextureID id, int color, float alpha);
 
 	static void setRenderTarget(TextureID id = -1);
+	static TextureID getRenderTarget();
 	static int render(lua_State *L);
 
     static void dispose(TextureID id);

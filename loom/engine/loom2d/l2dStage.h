@@ -169,5 +169,7 @@ public:
     LOOM_DELEGATE(BackKey);
     LOOM_DELEGATE(ScrollWheelYMoved);
     LOOM_DELEGATE(Accelerate);
+    LOOM_DELEGATE(GameControllerAdded);
+    LOOM_DELEGATE(GameControllerRemoved);
 };
 }

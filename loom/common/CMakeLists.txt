@@ -47,24 +47,6 @@ if (APPLE)
     endif()
 endif(APPLE)
 
-set (CPP_FILES ${CPP_FILES} input/platformGamePad.c)
-
-if (MSVC)
-    set (CPP_FILES ${CPP_FILES} input/platformGamePadWindows.c)
-elseif(ANDROID)
-	set (CPP_FILES ${CPP_FILES} input/platformGamePadOuya.cpp)
-elseif(APPLE)
-    if (LOOM_BUILD_IOS EQUAL 1)
-        set (CPP_FILES ${CPP_FILES} input/platformGamePadNull.c)
-    else()
-        set (CPP_FILES ${CPP_FILES} input/platformGamePadOSX.cpp)
-    endif()
-else()
-	set (CPP_FILES ${CPP_FILES} input/platformGamePadNull.c)
-	add_definitions(-DPSAPI_VERSION=1)
-	target_link_libraries(${TARGET_NAME} Psapi.lib)
-endif()
-
 set (SOURCE_FILES ${CPP_FILES} ${H_FILES})
 
 # Define target & libraries to link

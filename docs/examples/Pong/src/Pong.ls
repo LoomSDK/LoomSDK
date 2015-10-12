@@ -23,7 +23,6 @@ package
     import loom.gameframework.LoomGameObject;
     import loom.gameframework.LoomGroup;
     import system.platform.Platform;
-    import system.platform.Gamepad;
 
     /**
      * This is a Loom example game written entirely in LoomScript.
@@ -122,8 +121,6 @@ package
          */
         public function onFrame():void
         {
-            Gamepad.update();
-            
             // another way to get a delta (dt) in milliseconds
             var thisFrame:Number = Platform.getTime();
             var dt:Number = thisFrame - lastFrame;
@@ -502,8 +499,6 @@ package
             // SFX preload
             SimpleAudioEngine.sharedEngine().preloadEffect("assets/sound/paddlehit.mp3");
             SimpleAudioEngine.sharedEngine().preloadEffect("assets/sound/wallhit.mp3");
-
-            Gamepad.initialize();
 
             // Music
             SimpleAudioEngine.sharedEngine().playBackgroundMusic("assets/sound/mindblazer.mp3");
