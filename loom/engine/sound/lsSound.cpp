@@ -22,6 +22,7 @@
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsSound.h"
 #include "loom/common/config/applicationConfig.h"
+#include "loom/common/utils/utString.h"
 #include "loom/script/loomscript.h"
 #include "loom/vendor/openal-soft/include/AL/al.h"
 #include "loom/vendor/openal-soft/include/AL/alc.h"
@@ -106,20 +107,13 @@ extern "C"
 class OALBufferNote
 {
 public:
-    const char *asset;
     ALuint buffer;
     int refCounter;
 
     OALBufferNote()
     {
-        asset = NULL;
         buffer = 0;
         refCounter = 1;
-    }
-    
-    ~OALBufferNote()
-    {
-        delete [] asset;
     }
 };
 
@@ -141,7 +135,6 @@ public:
         if(notePtr == NULL)
         {
             note = lmNew(NULL) OALBufferNote();
-            note->asset = strdup(assetPath);
 
             // Lock the asset.
             loom_asset_sound *sound = (loom_asset_sound *)loom_asset_lock(assetPath, LATSound, 1);
