@@ -91,9 +91,7 @@ endif(LINUX)
 
 
 set (ENGINE_HDR
-            
     bindings/loom/lmApplication.h
-    
 )
 
 if(MSVC)

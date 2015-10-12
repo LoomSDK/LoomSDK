@@ -8,55 +8,98 @@ package
     import loom2d.textures.Texture;
     import loom2d.ui.SimpleLabel;
     import system.Void;
+    import system.platform.Path;
+    import loom2d.events.TouchEvent;
+    import loom2d.events.TouchPhase;
+    import loom2d.events.Touch;
 
     public class SoundExample extends Application
     {
-        private var background:Sound;
-        private var laser:Sound;
-        private var laser2:Sound;
-        private var tickNum:int = 0;
+
+        private var label:SimpleLabel;
+
+        private var sounds:Vector.<Sound>;
+        private var soundNames:Vector.<String>;
+        private var soundIndex:Number;
+
+        private function loadSound(fileName:String, payload:Object):void
+        {
+            var sound = Sound.load(fileName);
+            sounds.push(sound);
+            soundNames.push(fileName);
+
+            soundIndex = 0;
+        }
+
+        private function loadSounds():void
+        {
+            sounds = new Vector.<Sound>;
+            soundNames = new Vector.<String>;
+
+            Path.walkFiles("assets/sounds", loadSound);
+        }
+
+        private function playSound():void
+        {
+            label.text = soundNames[soundIndex];
+
+            if (!sounds[soundIndex].isNull())
+            {
+                sounds[soundIndex].play();
+                label.alpha = 1.0;
+            }
+            else
+            {
+                label.alpha = 0.5;
+            }
+
+            label.center();
+            label.x = stage.stageWidth / 2;
+            label.y = stage.stageHeight / 2 - 100;
+        }
+
+        private function stopSound():void
+        {
+            if (sounds[soundIndex].isPlaying())
+            {
+                sounds[soundIndex].stop();
+            }
+        }
+
         override public function run():void
         {
             // Comment out this line to turn off automatic scaling.
             stage.scaleMode = StageScaleMode.LETTERBOX;
+
+            // A bit bigger stage so filenames are visible.
+            stage.stageWidth = 1024;
+            stage.stageHeight = 768;
 
             // Setup anything else, like UI, or game objects.
             var bg = new Image(Texture.fromAsset("assets/bg.png"));
             bg.width = stage.stageWidth;
             bg.height = stage.stageHeight;
             stage.addChild(bg);
-            
-            var sprite = new Image(Texture.fromAsset("assets/logo.png"));
-            sprite.center();
-            sprite.x = stage.stageWidth / 2;
-            sprite.y = stage.stageHeight / 2 + 50;
-            stage.addChild(sprite);
 
-            var label = new SimpleLabel("assets/Curse-hd.fnt");
-            label.text = "Hello Sound!";
-            label.center();
-            label.x = stage.stageWidth / 2;
-            label.y = stage.stageHeight / 2 - 100;
+            label = new SimpleLabel("assets/Curse-hd.fnt");
             stage.addChild(label);
-            
-            laser = Sound.load("assets/laser.ogg");
-            laser.setGain(0.4);
-            
-            laser2 = Sound.load("assets/laser2.ogg");
-            laser2.setGain(0.4);
-            
-            // See LICENSE for copyright information
-            background = Sound.load("assets/battleThemeA.mp3");
-            background.setGain(0.2);
-            background.setLooping(true);
-            background.play();
+
+            stage.addEventListener(TouchEvent.TOUCH, onTouch);
+
+            loadSounds();
+            playSound();
         }
-        
-        override public function onTick() {
-            if (tickNum%Math.randomRangeInt(20, 30) == 0) laser.play();
-            if (tickNum%Math.randomRangeInt(20, 30) == 0) laser2.play();
-            tickNum++;
-            return super.onTick();
+
+        private function onTouch(e:TouchEvent):void
+        {
+            var t:Touch = e.getTouch(stage, TouchPhase.BEGAN);
+            if (!t) return;
+
+            stopSound();
+
+            soundIndex = (soundIndex + 1) % (sounds.length - 1);
+
+            playSound();
         }
     }
 }
