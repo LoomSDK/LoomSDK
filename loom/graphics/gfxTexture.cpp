@@ -274,6 +274,9 @@ void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWi
     unsigned char       *dst = (unsigned char *)mip;
     int                 stride = srcHeight != 1 ? (srcWidth)* 4 : 0;
 
+    //For the case when a texture's width is not divisible by 2
+    int widthMod = srcWidth % 2;
+
     int width = srcWidth >> 1;
     int height = srcHeight >> 1;
 
@@ -301,7 +304,7 @@ void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWi
                 *dst++ = (int(*src) + int(src[4]) + int(src[stride]) + int(src[stride + 4]) + 2) >> 2;
                 src += 5;
             }
-            src += stride;    // skip
+            src += stride + (widthMod * 4);    // skip
         }
     }
     else
@@ -317,7 +320,7 @@ void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, int srcHeight, int srcWi
             *dst++ = (int(*src) + int(src[stride]) + 1) >> 1;
             src += 5;
 
-            src += stride;    // skip
+            src += stride + (widthMod * 4);    // skip
         }
     }
 }
