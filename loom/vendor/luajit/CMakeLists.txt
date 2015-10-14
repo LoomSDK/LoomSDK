@@ -290,11 +290,15 @@ if ( NOT BOOTSTRAP_ONLY )
       set(CMAKE_XCODE_EFFECTIVE_PLATOFRMS "-iphoneos;-iphonesimulator")
     endif ()
 
+    if ( NOT TARGET_ONLY )
+      set ( BUILDVM_DEP "buildvm" )
+    endif ()
+
     macro(add_buildvm_target _target _mode)
       add_custom_command(OUTPUT ${_target}
         COMMAND ${BOOTSTRAP_PATH}/buildvm ARGS -m ${_mode} -o ${CMAKE_CURRENT_BINARY_DIR}/${_target} ${ARGN}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS ${ARGN}
+        DEPENDS ${BUILDVM_DEP} ${ARGN}
       )
     endmacro(add_buildvm_target)
 
