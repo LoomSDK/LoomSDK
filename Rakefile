@@ -683,7 +683,7 @@ namespace :build do
     if $doBuildJIT == 1 then
         FileUtils.mkdir_p("build/luajit-windows-x86")
         Dir.chdir("build/luajit-windows-x86") do
-            sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"Visual Studio 12 2013\""
+            sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"#{get_vs_name()}\""
             sh "msbuild /verbosity:m ALL_BUILD.vcxproj /p:Configuration=#{$buildTarget}"
         end
     end
@@ -699,7 +699,7 @@ namespace :build do
         if $doBuildJIT == 1 then
             FileUtils.mkdir_p("build/luajit-windows-x64")
             Dir.chdir("build/luajit-windows-x64") do
-                sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"Visual Studio 12 2013 Win64\""
+                sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"#{get_vs_name()} Win64\""
                 sh "msbuild /verbosity:m ALL_BUILD.vcxproj /p:Configuration=#{$buildTarget}"
             end
         end
