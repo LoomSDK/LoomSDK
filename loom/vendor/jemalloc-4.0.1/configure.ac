@@ -1322,7 +1322,7 @@ dnl Check for C11 atomics.
 
 JE_COMPILABLE([C11 atomics], [
 #ifdef _MSC_VER
-#  include "msvc_compat/C99/stdint.h"
+#  include "stdint.h"
 #else
 #  include <stdint.h>
 #endif
@@ -1410,7 +1410,7 @@ AC_DEFUN([JE_SYNC_COMPARE_AND_SWAP_CHECK],[
                [je_cv_sync_compare_and_swap_$2],
                [AC_LINK_IFELSE([AC_LANG_PROGRAM([
                                                  #ifdef _MSC_VER
-                                                 #  include "msvc_compat/C99/stdint.h"
+                                                 #  include "stdint.h"
                                                  #else
                                                  #  include <stdint.h>
                                                  #endif

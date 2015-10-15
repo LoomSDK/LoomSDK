@@ -79,7 +79,7 @@ extern "C" {
 #include <stdlib.h>
 #include <stdbool.h>
 #ifdef _MSC_VER
-#  include "msvc_compat/C99/stdint.h"
+#  include "stdint.h"
 #else
 #  include <stdint.h>
 #endif
