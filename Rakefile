@@ -1401,40 +1401,40 @@ namespace :windows do
 
   def get_vs_name()
     if get_reg_value('SOFTWARE\Microsoft\VisualStudio\12.0', 'ShellFolder') != nil then
-      return 'Visual Studio 12 2013'
+      return 'Visual Studio 12'
     end
     if get_reg_value('SOFTWARE\Wow6432Node\Microsoft\VisualStudio\12.0', 'ShellFolder') != nil then
-      return 'Visual Studio 12 2013'
+      return 'Visual Studio 12'
     end
     if get_reg_value('SOFTWARE\Microsoft\VisualStudio\11.0', 'ShellFolder') != nil then
-      return 'Visual Studio 11 2012'
+      return 'Visual Studio 11'
     end
     if get_reg_value('SOFTWARE\Wow6432Node\Microsoft\VisualStudio\11.0', 'ShellFolder') != nil then
-      return 'Visual Studio 11 2012'
+      return 'Visual Studio 11'
     end
     if get_reg_value('SOFTWARE\Microsoft\VisualStudio\10.0', 'ShellFolder') != nil then
-      return 'Visual Studio 10 2010'
+      return 'Visual Studio 10'
     end
     if get_reg_value('SOFTWARE\Wow6432Node\Microsoft\VisualStudio\10.0', 'ShellFolder') != nil then
-       return 'Visual Studio 10 2010'
+       return 'Visual Studio 10'
     end
     if Dir.exists?(File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 12.0\\VC")) then
-      return 'Visual Studio 12 2013'
+      return 'Visual Studio 12'
     end
     if Dir.exists?(File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 12.0\\VC")) then
-      return 'Visual Studio 12 2013'
+      return 'Visual Studio 12'
     end
     if Dir.exists?(File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 11.0\\VC")) then
-      return 'Visual Studio 11 2012'
+      return 'Visual Studio 11'
     end
     if Dir.exists?(File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 11.0\\VC")) then
-      return 'Visual Studio 11 2012'
+      return 'Visual Studio 11'
     end
     if Dir.exists?(File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 10.0\\VC")) then
-      return 'Visual Studio 10 2010'
+      return 'Visual Studio 10'
     end
     if Dir.exists?(File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 10.0\\VC")) then
-      return 'Visual Studio 10 2010'
+      return 'Visual Studio 10'
     end
   end
 
