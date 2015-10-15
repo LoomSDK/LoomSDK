@@ -1416,7 +1416,7 @@ namespace :windows do
       return 'Visual Studio 10 2010'
     end
     if get_reg_value('SOFTWARE\Wow6432Node\Microsoft\VisualStudio\10.0', 'ShellFolder') != nil then
-       return 'Visual Studio 10 2010 Win64'
+       return 'Visual Studio 10 2010'
     end
     if Dir.exists?(File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 12.0\\VC")) then
       return 'Visual Studio 12 2013'
