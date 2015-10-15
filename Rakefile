@@ -706,7 +706,7 @@ namespace :build do
 
         FileUtils.mkdir_p("#{ROOT}/build/loom-windows-x64")
         Dir.chdir("#{ROOT}/build/loom-windows-x64") do
-          sh "cmake -G \"#{get_vs_name()} Win64\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DLUAJIT_BUILD_DIR=\"#{ROOT}/build/luajit-windows-x64\" #{ROOT}"
+          sh "cmake -G \"#{get_vs_name()} Win64\" -DLOOM_BUILD_64BIT=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DLUAJIT_BUILD_DIR=\"#{ROOT}/build/luajit-windows-x64\" #{ROOT}"
           sh "msbuild /verbosity:m LoomEngine.sln /p:Configuration=#{$buildTarget}"
         end
     end
