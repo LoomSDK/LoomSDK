@@ -1,6 +1,5 @@
 require 'rubygems'
 require 'rbconfig'
-require 'win32/registry'
 
 puts "== Executing as '#{ENV['USER']}' =="
 
@@ -163,6 +162,8 @@ if $LOOM_HOST_OS == 'windows'
     WINDOWS_ANDROID_PREBUILT_DIR = 'windows'
     proc_arch = ''
   end
+
+  require 'win32/registry'
 
 end
 
