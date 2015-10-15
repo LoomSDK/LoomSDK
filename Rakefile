@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'rbconfig'
+require 'win32/registry'
 
 puts "== Executing as '#{ENV['USER']}' =="
 
@@ -688,7 +689,7 @@ namespace :build do
 
     FileUtils.mkdir_p("#{ROOT}/build/loom-windows-x86")
     Dir.chdir("#{ROOT}/build/loom-windows-x86") do
-      sh "#{ROOT}/build/win-cmake.bat x86 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"#{ROOT}/build/luajit-windows-x86\""
+      sh "cmake -G \"#{get_vs_name()}\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DLUAJIT_BUILD_DIR=\"#{ROOT}/build/luajit-windows-x86\" #{ROOT}"
       sh "msbuild /verbosity:m LoomEngine.sln /p:Configuration=#{$buildTarget}"
     end
 
@@ -704,7 +705,7 @@ namespace :build do
 
         FileUtils.mkdir_p("#{ROOT}/build/loom-windows-x64")
         Dir.chdir("#{ROOT}/build/loom-windows-x64") do
-          sh "#{ROOT}/build/win-cmake.bat x64 #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\" \"#{ROOT}/build/luajit-windows-x64\""
+          sh "cmake -G \"#{get_vs_name()} Win64\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DLUAJIT_BUILD_DIR=\"#{ROOT}/build/luajit-windows-x64\" #{ROOT}"
           sh "msbuild /verbosity:m LoomEngine.sln /p:Configuration=#{$buildTarget}"
         end
     end
@@ -1382,4 +1383,58 @@ def get_android_api_id(api_name)
   else
     api_id = api_id.split(" ")[1]
   end
+end
+
+namespace :windows do
+  def get_reg_value(keyname, valuename)
+    access = Win32::Registry::KEY_READ
+    begin
+      Win32::Registry::HKEY_LOCAL_MACHINE::open(keyname, access) do |reg|
+        reg.each{ |name, value| if name == valuename then return value end }
+      end
+    rescue
+      return nil
+    end
+    return nil
+  end
+
+  def get_vs_name()
+    if get_reg_value('SOFTWARE\Microsoft\VisualStudio\12.0', 'ShellFolder') != nil then
+      return 'Visual Studio 12 2013'
+    end
+    if get_reg_value('SOFTWARE\Wow6432Node\Microsoft\VisualStudio\12.0', 'ShellFolder') != nil then
+      return 'Visual Studio 12 2013'
+    end
+    if get_reg_value('SOFTWARE\Microsoft\VisualStudio\11.0', 'ShellFolder') != nil then
+      return 'Visual Studio 11 2012'
+    end
+    if get_reg_value('SOFTWARE\Wow6432Node\Microsoft\VisualStudio\11.0', 'ShellFolder') != nil then
+      return 'Visual Studio 11 2012'
+    end
+    if get_reg_value('SOFTWARE\Microsoft\VisualStudio\10.0', 'ShellFolder') != nil then
+      return 'Visual Studio 10 2010'
+    end
+    if get_reg_value('SOFTWARE\Wow6432Node\Microsoft\VisualStudio\10.0', 'ShellFolder') != nil then
+       return 'Visual Studio 10 2010 Win64'
+    end
+    if Dir.exists?(File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 12.0\\VC")) then
+      return 'Visual Studio 12 2013'
+    end
+    if Dir.exists?(File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 12.0\\VC")) then
+      return 'Visual Studio 12 2013'
+    end
+    if Dir.exists?(File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 11.0\\VC")) then
+      return 'Visual Studio 11 2012'
+    end
+    if Dir.exists?(File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 11.0\\VC")) then
+      return 'Visual Studio 11 2012'
+    end
+    if Dir.exists?(File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 10.0\\VC")) then
+      return 'Visual Studio 10 2010'
+    end
+    if Dir.exists?(File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 10.0\\VC")) then
+      return 'Visual Studio 10 2010'
+    end
+  end
+
 end
