@@ -259,7 +259,8 @@
 #define LG_SIZEOF_INT 2
 
 /* sizeof(long) == 2^LG_SIZEOF_LONG. */
-#if LOOM_PLATFORM_64BIT
+#if LOOM_PLATFORM_64BIT && LOOM_PLATFORM != LOOM_PLATFORM_WIN32
+#error "lol"
 #define LG_SIZEOF_LONG 3
 #else
 #define LG_SIZEOF_LONG 2
