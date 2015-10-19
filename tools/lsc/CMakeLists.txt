@@ -36,7 +36,7 @@ else ()
 
     add_custom_command(TARGET lsc
         POST_BUILD
-        COMMAND mkdir -p ${ARTIFACTS_DIR}
+        COMMAND mkdir -p ${ARTIFACTS_DIR}/tools
         COMMAND cp ${LSCBIN} ${ARTIFACTS_DIR}/tools/lsc
     )
 

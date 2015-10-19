@@ -478,6 +478,7 @@ namespace :build do
     Dir.chdir("tools/fruitstrap") do
       sh "make fruitstrap"
     end
+    FileUtils.mkdir_p("#{$OUTPUT_DIRECTORY}/ios-arm")
     FileUtils.cp("tools/fruitstrap/fruitstrap", "#{$OUTPUT_DIRECTORY}/ios-arm/")
   end
 
@@ -840,7 +841,8 @@ namespace :build do
       end
 
       # Copy APKs to artifacts.
-      FileUtils.mkdir_p "artifacts/android"
+      FileUtils.mkdir_p "#{$OUTPUT_DIRECTORY}/android-arm/"
+
       sh "cp application/android/bin/#{$targetAPKName} #{$OUTPUT_DIRECTORY}/android-arm/LoomDemo.apk"
 
       FileUtils.cp_r("tools/apktool/apktool.jar", "#{$OUTPUT_DIRECTORY}/android-arm")
@@ -1037,13 +1039,11 @@ namespace :package do
 
     # iOS is currently not supported under Windows
     if $LOOM_HOST_OS != "windows"
-      # copy tools
-      FileUtils.cp_r("artifacts/ios-arm/fruitstrap", "pkg/sdk/bin/ios-arm/tools")
-
       # ============================================================= iOS
       # put together a folder to zip up
-      FileUtils.mkdir_p "pkg/sdk/bin/ios-arm"
+      FileUtils.mkdir_p "pkg/sdk/bin/ios-arm/tools"
 
+      FileUtils.cp_r("artifacts/ios-arm/fruitstrap", "pkg/sdk/bin/ios-arm/tools")
       # add the ios app bundle
       FileUtils.cp_r("artifacts/ios-arm/LoomDemo.app", "pkg/sdk/bin/ios-arm/bin")
       if $buildTarget == "Debug"
