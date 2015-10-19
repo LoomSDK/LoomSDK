@@ -217,7 +217,16 @@ if(APPLE)
 
     else()
 
-        set(CMAKE_EXE_LINKER_FLAGS "-framework Carbon -framework IOKit -framework Foundation -lz -framework QuartzCore -lxml2 -L/usr/local/lib")
+        if(LOOM_BUILD_64BIT EQUAL 1)
+          set(CMAKE_OSX_ARCHITECTURES "x86_64")
+          if (LOOM_BUILD_JIT EQUAL 1)
+            set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pagezero_size 10000 -image_base 100000000")
+          endif()
+        else()
+          set(CMAKE_OSX_ARCHITECTURES "i386")
+        endif()
+
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -framework Carbon -framework IOKit -framework Foundation -lz -framework QuartzCore -lxml2 -L/usr/local/lib")
 
         set(CMAKE_OSX_DEPLOYMENT_TARGET 10.7)
 

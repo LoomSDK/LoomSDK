@@ -18,9 +18,6 @@ set (AGENT_HDR
     vendor/civetweb/include/civetweb.h
 )
 
-
-set(CMAKE_OSX_ARCHITECTURES "x86_64")
-
 # We are generating a library for Ruby to load via FFI, and CMake says
 # this should be a MODULE not SHARED; see
 # http://stackoverflow.com/questions/4845984/difference-between-modules-and-shared-libraries

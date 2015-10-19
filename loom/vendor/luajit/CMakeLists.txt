@@ -90,6 +90,9 @@ if ( WIN32 AND NOT CYGWIN )
   string ( REPLACE "/" ${LUA_DIRSEP} LUA_CPATH_DEFAULT "${LUA_CPATH_DEFAULT}" )
 
 elseif ( APPLE )
+  if ( LUAJIT_X64 )
+    set ( CMAKE_EXE_LINKER_FLAGS "-pagezero_size 10000 -image_base 100000000" )
+  endif ()
   option ( LUA_USE_POSIX "Use POSIX functionality." ON )
   option ( LUA_USE_DLOPEN "Use dynamic linker to load modules." ON )
   set ( LJVM_MODE machasm )
@@ -210,8 +213,16 @@ if ( ${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv6l" OR LUA_TARGET_ARCH STREQUAL "arm
 endif ()
 
 # 32bit vs 64bit
-if ( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+if ( LUAJIT_X64 )
   list ( APPEND DASM_FLAGS -D P64 )
+endif ()
+
+if ( DEFINED LUAJIT_OS AND LUAJIT_OS STREQUAL "LUAJIT_OS_OSX" )
+  if (LUAJIT_X64)
+    set ( CMAKE_OSX_ARCHITECTURES "x86_64" )
+  else ()
+    set ( CMAKE_OSX_ARCHITECTURES "i386" )
+  endif ()
 endif ()
 
 if ( NOT LUAJIT_DISABLE_JIT )
@@ -240,7 +251,7 @@ endif()
 
 
 if ( ${DASM_ARCH} STREQUAL "x86" )
-  if ( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+  if ( LUAJIT_X64 )
     set ( LUAJIT_TARGET_ARCH_NUM LUAJIT_ARCH_X64 )
   else ()
     set ( LUAJIT_TARGET_ARCH_NUM LUAJIT_ARCH_X86 )

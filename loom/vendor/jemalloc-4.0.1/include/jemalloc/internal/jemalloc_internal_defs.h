@@ -259,7 +259,11 @@
 #define LG_SIZEOF_INT 2
 
 /* sizeof(long) == 2^LG_SIZEOF_LONG. */
+#if LOOM_PLATFORM_64BIT
+#define LG_SIZEOF_LONG 3
+#else
 #define LG_SIZEOF_LONG 2
+#endif
 
 /* sizeof(intmax_t) == 2^LG_SIZEOF_INTMAX_T. */
 #define LG_SIZEOF_INTMAX_T 3

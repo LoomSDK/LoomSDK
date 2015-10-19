@@ -986,7 +986,8 @@ void Texture::loadCheckerBoard(TextureID id)
 
 void Texture::handleAssetNotification(void *payload, const char *name)
 {
-	TextureID id = (TextureID)payload;
+    size_t tmp = reinterpret_cast<size_t>(payload);
+    TextureID id = static_cast<TextureID>(tmp);
 
     if (!sTextureAssetNofificationsEnabled)
     {

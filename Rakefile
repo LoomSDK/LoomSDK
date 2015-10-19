@@ -147,6 +147,19 @@ else
   $numCores = Integer(`cat /proc/cpuinfo | grep processor | wc -l`)
 end
 
+# OSX specific settings
+
+if $LOOM_HOST_OS == 'darwin'
+  arch = `uname -m`.chomp
+  if arch == 'x86_64' then
+    DARWIN_ISX64 = '1'
+  elsif arch == 'i386' then
+    DARWIN_ISX64 = '0'
+  else
+    abort("Unsupported Darwin platform #{arch}!")
+  end
+end
+
 # Windows specific checks and settings
 if $LOOM_HOST_OS == 'windows'
   # This gets the true architecture of the machine, not the target architecture of the currently executing binary (that is what %PROCESSOR_ARCHITECTURE% returns)
@@ -513,15 +526,31 @@ namespace :build do
       if $doBuildJIT == 1 then
         FileUtils.mkdir_p("build/luajit-osx-x86")
         Dir.chdir("build/luajit-osx-x86") do
-          sh "cmake -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DCMAKE_OSX_ARCHITECTURES=i386 #{ROOT}/loom/vendor/luajit"
+          sh "cmake -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_X64=0 -DLUAJIT_OS=LUAJIT_OS_OSX #{ROOT}/loom/vendor/luajit"
           sh "xcodebuild -configuration #{$buildTarget}"
         end
       end
 
       FileUtils.mkdir_p("#{ROOT}/build/loom-osx-x86")
       Dir.chdir("#{ROOT}/build/loom-osx-x86") do
-        sh "cmake -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-osx-x86 #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DCMAKE_OSX_ARCHITECTURES=i386 #{ROOT}"
+        sh "cmake -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_BUILD_64BIT=0 -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-osx-x86 #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
         sh "xcodebuild -configuration #{$buildTarget}"
+      end
+
+      if DARWIN_ISX64 == '1' then
+        if $doBuildJIT == 1 then
+          FileUtils.mkdir_p("build/luajit-osx-x64")
+          Dir.chdir("build/luajit-osx-x64") do
+            sh "cmake -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_OS=LUAJIT_OS_OSX -DLUAJIT_X64=1 #{ROOT}/loom/vendor/luajit"
+            sh "xcodebuild -configuration #{$buildTarget}"
+          end
+        end
+
+        FileUtils.mkdir_p("#{ROOT}/build/loom-osx-x64")
+        Dir.chdir("#{ROOT}/build/loom-osx-x64") do
+          sh "cmake -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_BUILD_64BIT=1 -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-osx-x64 #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
+          sh "xcodebuild -configuration #{$buildTarget}"
+        end
       end
 
       # copy asset agent
@@ -683,14 +712,14 @@ namespace :build do
     if $doBuildJIT == 1 then
         FileUtils.mkdir_p("build/luajit-windows-x86")
         Dir.chdir("build/luajit-windows-x86") do
-            sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"#{get_vs_name()}\""
+            sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"#{get_vs_name()}\" -DLUAJIT_X64=0"
             sh "msbuild /verbosity:m ALL_BUILD.vcxproj /p:Configuration=#{$buildTarget}"
         end
     end
 
     FileUtils.mkdir_p("#{ROOT}/build/loom-windows-x86")
     Dir.chdir("#{ROOT}/build/loom-windows-x86") do
-      sh "cmake -G \"#{get_vs_name()}\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DLUAJIT_BUILD_DIR=\"#{ROOT}/build/luajit-windows-x86\" #{ROOT}"
+      sh "cmake -G \"#{get_vs_name()}\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_BUILD_64BIT=0 -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DLUAJIT_BUILD_DIR=\"#{ROOT}/build/luajit-windows-x86\" #{ROOT}"
       sh "msbuild /verbosity:m LoomEngine.sln /p:Configuration=#{$buildTarget}"
     end
 
@@ -699,7 +728,7 @@ namespace :build do
         if $doBuildJIT == 1 then
             FileUtils.mkdir_p("build/luajit-windows-x64")
             Dir.chdir("build/luajit-windows-x64") do
-                sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"#{get_vs_name()} Win64\""
+                sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"#{get_vs_name()} Win64\" -DLUAJIT_X64=1"
                 sh "msbuild /verbosity:m ALL_BUILD.vcxproj /p:Configuration=#{$buildTarget}"
             end
         end

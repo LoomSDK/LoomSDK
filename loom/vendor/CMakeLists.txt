@@ -1,7 +1,3 @@
-if(NOT LOOM_BUILD_IOS EQUAL 1)
-    set(CMAKE_OSX_ARCHITECTURES "i386;x86_64")
-endif()
-
 project(LoomVendor)
 
 include_directories(
