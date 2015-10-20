@@ -77,6 +77,10 @@ endif ()
 set ( LUA_PATH_DEFAULT "./?.lua;${LUA_DIR}${LUA_LDIR}/?.lua;${LUA_DIR}${LUA_LDIR}/?/init.lua;./?/init.lua" )
 set ( LUA_CPATH_DEFAULT "./?${LUA_MODULE_SUFFIX};${LUA_DIR}${LUA_CDIR}/?${LUA_MODULE_SUFFIX};${LUA_DIR}${LUA_CDIR}/loadall${LUA_MODULE_SUFFIX}" )
 
+if ( LUA_GC_PROFILE_ENABLED EQUAL 1 )
+    add_definitions(-DLUA_GC_PROFILE_ENABLED=1)
+endif ()
+
 if ( WIN32 AND NOT CYGWIN )
   # Windows systems
   option ( LUA_BUILD_WLUA "Build wluajit interpreter for no-console applications." ON )

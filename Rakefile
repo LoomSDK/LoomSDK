@@ -43,7 +43,7 @@ end
 $doBuildJIT=1
 
 # If 1, then LUA GC profiling code is enabled
-$doEnableLuaGcProfile= $buildTarget == "Release" ? 0 : 1
+$doEnableLuaGcProfile= 1
 
 # Whether or not to include Admob and/or Facebook in the build... for Great Apple Compliance!
 $doBuildAdmob=0
@@ -526,7 +526,7 @@ namespace :build do
       if $doBuildJIT == 1 then
         FileUtils.mkdir_p("build/luajit-osx-x86")
         Dir.chdir("build/luajit-osx-x86") do
-          sh "cmake -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_X64=0 -DLUAJIT_OS=LUAJIT_OS_OSX #{ROOT}/loom/vendor/luajit"
+          sh "cmake -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_X64=0 -DLUAJIT_OS=LUAJIT_OS_OSX -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} #{ROOT}/loom/vendor/luajit"
           sh "xcodebuild -configuration #{$buildTarget}"
         end
       end
@@ -541,7 +541,7 @@ namespace :build do
         if $doBuildJIT == 1 then
           FileUtils.mkdir_p("build/luajit-osx-x64")
           Dir.chdir("build/luajit-osx-x64") do
-            sh "cmake -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_OS=LUAJIT_OS_OSX -DLUAJIT_X64=1 #{ROOT}/loom/vendor/luajit"
+            sh "cmake -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_OS=LUAJIT_OS_OSX -DLUAJIT_X64=1 -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} #{ROOT}/loom/vendor/luajit"
             sh "xcodebuild -configuration #{$buildTarget}"
           end
         end
@@ -663,7 +663,7 @@ namespace :build do
 
         FileUtils.mkdir_p("build/luajit-ios-arm")
         Dir.chdir("build/luajit-ios-arm") do
-          sh "cmake -G Xcode -DTARGET_ONLY=1 -DBOOTSTRAP_PATH=#{ROOT}/build/luajit-ios-arm-bootstrap -DLUA_TARGET_ARCH=arm -DLUAJIT_OS=LUAJIT_OS_OSX -DCMAKE_BUILD_TYPE=#{$buildTarget} #{ROOT}/loom/vendor/luajit"
+          sh "cmake -G Xcode -DTARGET_ONLY=1 -DBOOTSTRAP_PATH=#{ROOT}/build/luajit-ios-arm-bootstrap -DLUA_TARGET_ARCH=arm -DLUAJIT_OS=LUAJIT_OS_OSX -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} #{ROOT}/loom/vendor/luajit"
           sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\" CODE_SIGN_RESOURCE_RULES_PATH=#{sdkroot}/ResourceRules.plist"
         end
       end
@@ -712,7 +712,7 @@ namespace :build do
     if $doBuildJIT == 1 then
         FileUtils.mkdir_p("build/luajit-windows-x86")
         Dir.chdir("build/luajit-windows-x86") do
-            sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"#{get_vs_name()}\" -DLUAJIT_X64=0"
+            sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"#{get_vs_name()}\" -DLUAJIT_X64=0 -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile}"
             sh "msbuild /verbosity:m ALL_BUILD.vcxproj /p:Configuration=#{$buildTarget}"
         end
     end
@@ -728,7 +728,7 @@ namespace :build do
         if $doBuildJIT == 1 then
             FileUtils.mkdir_p("build/luajit-windows-x64")
             Dir.chdir("build/luajit-windows-x64") do
-                sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"#{get_vs_name()} Win64\" -DLUAJIT_X64=1"
+                sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"#{get_vs_name()} Win64\" -DLUAJIT_X64=1  -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile}"
                 sh "msbuild /verbosity:m ALL_BUILD.vcxproj /p:Configuration=#{$buildTarget}"
             end
         end
@@ -839,7 +839,7 @@ namespace :build do
 
         FileUtils.mkdir_p("build/luajit-android-arm")
         Dir.chdir("build/luajit-android-arm") do
-          sh "cmake -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DTARGET_ONLY=1 -DBOOTSTRAP_PATH=#{ROOT}/build/luajit-android-arm-bootstrap -DLUA_TARGET_ARCH=arm -DLUAJIT_OS=LUAJIT_OS_LINUX -DCMAKE_BUILD_TYPE=#{$buildTarget} #{ROOT}/loom/vendor/luajit"
+          sh "cmake -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DTARGET_ONLY=1 -DBOOTSTRAP_PATH=#{ROOT}/build/luajit-android-arm-bootstrap -DLUA_TARGET_ARCH=arm -DLUAJIT_OS=LUAJIT_OS_LINUX -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} #{ROOT}/loom/vendor/luajit"
           sh "cmake --build ."
         end
       end
