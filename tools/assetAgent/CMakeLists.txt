@@ -67,7 +67,8 @@ elseif(MSVC)
 
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${ASSETAGENTBIN}\" \"${CMAKE_SOURCE_DIR}/artifacts/assetAgent.dll\"
+        #COMMAND md \"${ARTIFACTS_DIR}\\tools\"
+        COMMAND echo f | xcopy /F /Y \"${ASSETAGENTBIN}\" \"${ARTIFACTS_DIR}/tools/assetAgent.dll\"
     )
 
 endif()

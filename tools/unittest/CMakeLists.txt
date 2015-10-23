@@ -21,19 +21,25 @@ target_link_libraries(unittest
 
 set(UNITTESTBIN $<TARGET_FILE:${PROJECT_NAME}>)
 
+if (LOOM_BUILD_64BIT EQUAL 1)
+    set(UNITTESTBIN_DEST unittest-x64)
+else()
+    set(UNITTESTBIN_DEST unittest-x86)
+endif()
+
 if (MSVC)
 
     add_custom_command(TARGET unittest
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${UNITTESTBIN}\" \"${CMAKE_SOURCE_DIR}/tests/unittest.exe\"
+        COMMAND echo f | xcopy /F /Y \"${UNITTESTBIN}\" \"${CMAKE_SOURCE_DIR}/tests/${UNITTESTBIN_DEST}.exe\"
     )
 
 else ()
 
     add_custom_command(TARGET unittest
         POST_BUILD
-        COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts
-        COMMAND cp ${UNITTESTBIN} ${CMAKE_SOURCE_DIR}/tests/unittest
+        COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/tests
+        COMMAND cp ${UNITTESTBIN} ${CMAKE_SOURCE_DIR}/tests/${UNITTESTBIN_DEST}
     )
 
 endif()

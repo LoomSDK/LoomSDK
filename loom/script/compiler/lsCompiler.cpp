@@ -620,7 +620,7 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
             }
             else
             {
-                lmAssert(utFileStream::tryReadToArray(libPath, rarray), "Unable to load library assembly %s", libName.c_str());    
+                lmAssert(utFileStream::tryReadToArray(libPath, rarray), "Unable to load library assembly %s at %s", libName.c_str(), libPath.c_str());    
             }
 
             utBase64 base64 = utBase64::encode64(rarray);
@@ -653,21 +653,40 @@ void LSCompiler::setSDKBuild(const utString& lscPath)
     {
         if ((lsc[len] == '\\') || (lsc[len] == '/'))
         {
-            lsc[len] = '\0';
+            lsc[len + 1] = '\0';
             break;
         }
     }
 
-    // And the tools folder...
-    while (len-- > 0)
+    // And go up the directories until we find onen with "lib" in it...
+    // But shouldn't be more than 3
+    bool found = false;
+    for (int i = 0; i <= 3; i++)
     {
-        if ((lsc[len] == '\\') || (lsc[len] == '/'))
+        utString searchLib(lsc);
+        searchLib += "libs";
+        if (platform_dirExists(searchLib.c_str()) == 0)
         {
-            lsc[len + 1] = '\0'; // This won't cause a buffer overrun because
-                                 // we already ate backwards in the previous loop.
-                                 // But we do need to preserve the trailing slash.
+            found = true;
             break;
         }
+
+        while (len-- > 0)
+        {
+            if ((lsc[len] == '\\') || (lsc[len] == '/'))
+            {
+                lsc[len + 1] = '\0'; // This won't cause a buffer overrun because
+                                     // we already ate backwards in the previous loop.
+                                     // But we do need to preserve the trailing slash.
+                break;
+            }
+        }
+    }
+
+    if (!found)
+    {
+        lmLog(compilerLogGroup, "Unable to find SDK libraries somewhere inside %s", lsc);
+        exit(EXIT_FAILURE);
     }
 
     // Then note the path.

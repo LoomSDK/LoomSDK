@@ -20,7 +20,7 @@ if (MSVC)
 
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${LDBBIN}\" \"${CMAKE_SOURCE_DIR}/artifacts/ldb.exe\"
+        COMMAND echo f | xcopy /F /Y \"${LDBBIN}\" \"${ARTIFACTS_DIR}/tools/ldb.exe\"
     )	
 
 else ()
@@ -34,8 +34,8 @@ else ()
 
     add_custom_command(TARGET ldb
         POST_BUILD
-        COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts
-        COMMAND cp ${LDBBIN} ${CMAKE_SOURCE_DIR}/artifacts/ldb
+        COMMAND mkdir -p ${ARTIFACTS_DIR}
+        COMMAND cp ${LDBBIN} ${ARTIFACTS_DIR}/tools/ldb
     )
 
 endif(MSVC)

@@ -97,7 +97,7 @@ add_executable(lsc source/tools/lsc/main.cpp ${CMAKE_CURRENT_SOURCE_DIR}/temp/sy
 set_target_properties(lsc PROPERTIES COMPILE_DEFINITIONS "LOOM_EMBEDDED_SYSTEMLIB=1")
 target_link_libraries(lsc loomscript)
 
-copy_binary(lsc "${CMAKE_CURRENT_SOURCE_DIR}/artifacts")
+copy_binary(lsc "${ARTIFACTS_DIR}/tools")
 
 
 # loomrun
@@ -105,4 +105,4 @@ add_executable(loomrun source/tools/loomrun/main.cpp)
 
 target_link_libraries(loomrun loomscript)
 
-copy_binary(loomrun "${CMAKE_CURRENT_SOURCE_DIR}/artifacts")
+copy_binary(loomrun "${ARTIFACTS_DIR}/tools")

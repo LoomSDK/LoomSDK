@@ -93,7 +93,7 @@ case CONFIG['host_os']
    when /mswin|windows|mingw32/i
       $LOOM_HOST_OS = "windows"
    when /darwin/i
-      $LOOM_HOST_OS = "darwin"
+      $LOOM_HOST_OS = "osx"
    when /linux-gnu/i
       $LOOM_HOST_OS = "linux"
    else
@@ -139,7 +139,7 @@ $buildAdMobDefine = "-DLOOM_BUILD_ADMOB=#{$doBuildAdmob}"
 $buildFacebookDefine = "-DLOOM_BUILD_FACEBOOK=#{$doBuildFacebook}"
 
 # How many cores should we use to build?
-if $LOOM_HOST_OS == 'darwin'
+if $LOOM_HOST_OS == 'osx'
   $numCores = Integer(`sysctl hw.ncpu | awk '{print $2}'`)
 elsif $LOOM_HOST_OS == 'windows'
   $numCores = ENV['NUMBER_OF_PROCESSORS']
@@ -149,14 +149,14 @@ end
 
 # OSX specific settings
 
-if $LOOM_HOST_OS == 'darwin'
+if $LOOM_HOST_OS == 'osx'
   arch = `uname -m`.chomp
   if arch == 'x86_64' then
-    DARWIN_ISX64 = '1'
+    HOST_ISX64 = '1'
   elsif arch == 'i386' then
-    DARWIN_ISX64 = '0'
+    HOST_ISX64 = '0'
   else
-    abort("Unsupported Darwin platform #{arch}!")
+    abort("Unsupported OSX platform #{arch}!")
   end
 end
 
@@ -167,11 +167,11 @@ if $LOOM_HOST_OS == 'windows'
   proc_arch = `reg query "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\Environment" /v PROCESSOR_ARCHITECTURE`
   if proc_arch =~ /\.*64/
     WINDOWS_PROCARCH_BITS = '64'
-    WINDOWS_ISX64 = '1'
+    HOST_ISX64 = '1'
     WINDOWS_ANDROID_PREBUILT_DIR = 'windows-x86_64'
   else
     WINDOWS_PROCARCH_BITS = '32'
-    WINDOWS_ISX64 = '0'
+    HOST_ISX64 = '0'
     WINDOWS_ANDROID_PREBUILT_DIR = 'windows'
     proc_arch = ''
   end
@@ -191,15 +191,21 @@ end
 
 $OUTPUT_DIRECTORY = "artifacts"
 
+if $HOST_ISX64 == '1' then
+  HOST_ARTIFACTS = "#{ROOT}/artifacts/#{$LOOM_HOST_OS}-x64"
+else
+  HOST_ARTIFACTS = "#{ROOT}/artifacts/#{$LOOM_HOST_OS}-x86"
+end
+
 require 'rake/clean'
 require 'rake/packagetask'
 require 'pathname'
 require 'shellwords'
 
 if $LOOM_HOST_OS == 'windows'
-    $LSC_BINARY = "artifacts\\lsc.exe"
+    $LSC_BINARY = "#{HOST_ARTIFACTS}\\tools\\lsc.exe"
 else
-    $LSC_BINARY = "artifacts/lsc"
+    $LSC_BINARY = "#{HOST_ARTIFACTS}/tools/lsc"
 end
 
 # Report build configuration values
@@ -221,9 +227,10 @@ puts ''
 #############
 
 # Don't use clean defaults, they will nuke things we don't want!
-CLEAN.replace(["application/android/bin", "application/ouya/bin"])
+CLEAN.replace(["application/android/bin" ])
 CLEAN.include Dir.glob("build/loom-*")
 CLEAN.include Dir.glob("build/luajit-*")
+CLEAN.include Dir.glob("tests/unittest-*")
 CLEAN.include ["build/**/lib/**", "artifacts/**"]
 CLOBBER.include ["**/*.loom", $OUTPUT_DIRECTORY]
 CLOBBER.include ["**/*.loomlib", $OUTPUT_DIRECTORY]
@@ -261,46 +268,6 @@ end
 
 namespace :generate do
 
-  desc "Generate XCode projects for OS X"
-  task :xcode_osx do
-    FileUtils.mkdir_p("#{ROOT}/build/loom-osx-x86")
-    Dir.chdir("#{ROOT}/build/loom-osx-x86") do
-      sh "cmake -G Xcode -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
-    end
-  end
-
-  desc "Generate XCode projects for iOS"
-  task :xcode_ios do
-    FileUtils.mkdir_p("#{ROOT}/build/loom-ios-arm")
-    Dir.chdir("#{ROOT}/build/loom-ios-arm") do
-      sh "cmake -G Xcode -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_IOS_VERSION=#{$targetIOSSDK} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
-    end
-  end
-
-  desc "Generate VS2010 projects"
-  task :vs2010 do
-    FileUtils.mkdir_p("#{ROOT}/build/loom-windows-x86")
-    Dir.chdir("#{ROOT}/build/loom-windows-x86") do
-      sh "cmake -G \"Visual Studio 10\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
-    end
-  end
-
-  desc "Generate VS2012 projects"
-  task :vs2012 do
-    FileUtils.mkdir_p("#{ROOT}/build/loom-windows-x86")
-    Dir.chdir("#{ROOT}/build/loom-windows-x86") do
-      sh "cmake -G \"Visual Studio 11\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
-    end
-  end
-
-  desc "Generate Makefiles for Ubuntu"
-  task :makefiles_ubuntu do
-    FileUtils.mkdir_p("#{ROOT}/build/loom-linux-x86")
-    Dir.chdir("#{ROOT}/build/loom-linux-x86") do
-      sh "cmake -G \"Unix Makefiles\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
-    end
-  end
-
   desc "Generates API docs for the loomscript sdk"
   task :docs => ['build:desktop'] do
 
@@ -328,7 +295,6 @@ namespace :generate do
 
 end
 
-
 namespace :docs do
 
   $DOCS_INDEX = 'artifacts/docs/index.html'
@@ -342,7 +308,7 @@ namespace :docs do
   task :regen => $LSC_BINARY do
     puts "===== Recompiling loomlibs ====="
     Dir.chdir("sdk") do
-      sh "#{ROOT}/artifacts/lsc Main.build"
+      sh "#{$LSC_BINARY} Main.build"
     end
     FileUtils.cp_r("sdk/libs", "artifacts/")
 
@@ -360,7 +326,7 @@ namespace :docs do
     case $LOOM_HOST_OS
     when 'windows'
       `start artifacts/docs/index.html`
-    when 'darwin'
+    when 'osx'
       `open artifacts/docs/index.html`
     else
       abort "not sure how to open '#{$DOCS_INDEX}' on #{$LOOM_HOST_OS}"
@@ -384,7 +350,8 @@ namespace :utility do
   task :compileScripts => $LSC_BINARY do
     puts "===== Compiling Core Scripts ====="
     Dir.chdir("sdk") do
-      sh "#{ROOT}/artifacts/lsc Main.build"
+      sh "ls #{HOST_ARTIFACTS}/"
+      sh "#{$LSC_BINARY} Main.build"
     end
   end
 
@@ -411,7 +378,7 @@ namespace :utility do
       FileUtils.mkdir_p("./docs/examples/#{args[:name]}/bin")
       expandedArtifactsPath = File.expand_path($OUTPUT_DIRECTORY)
       Dir.chdir("docs/examples/#{args[:name]}") do
-        sh "#{expandedArtifactsPath}/lsc"
+        sh "#{$LSC_BINARY}"
       end
       
       # Clean up the libs and bin folders to save tons of space.
@@ -423,14 +390,14 @@ namespace :utility do
   task :runDemo, [:name] => $LSC_BINARY do |t, args|
       puts "===== Running #{args[:name]} ====="
       expandedArtifactsPath = File.expand_path($OUTPUT_DIRECTORY)
-      if $LOOM_HOST_OS == 'darwin'
+      if $LOOM_HOST_OS == 'osx'
         Rake::Task["build:osx"].invoke
         Rake::Task["utility:compileScripts"].invoke
         FileUtils.cp_r("./sdk/libs", "./docs/examples/#{args[:name]}")
         FileUtils.mkdir_p("./docs/examples/#{args[:name]}/bin")
         Dir.chdir("docs/examples/#{args[:name]}") do
-          sh "#{expandedArtifactsPath}/lsc"
-          sh "#{expandedArtifactsPath}/osx/LoomDemo.app/Contents/MacOS/LoomDemo"
+          sh "#{$LSC_BINARY}"
+          sh "#{HOST_ARTIFACTS}/LoomDemo.app/Contents/MacOS/LoomDemo"
         end
       else
         Rake::Task["build:windows"].invoke
@@ -438,8 +405,8 @@ namespace :utility do
         FileUtils.cp_r("./sdk/libs", "./docs/examples/#{args[:name]}")
         FileUtils.mkdir_p("./docs/examples/#{args[:name]}/bin")
         Dir.chdir("docs/examples/#{args[:name]}") do
-          sh "#{expandedArtifactsPath}/lsc.exe"
-          sh "#{expandedArtifactsPath}/windows/LoomDemo.exe"
+          sh "#{$LSC_BINARY}"
+          sh "#{HOST_ARTIFACTS}/LoomDemo.exe"
         end
       end
   end
@@ -449,9 +416,9 @@ namespace :utility do
 
     puts "===== Launching Application ====="
 
-  if $LOOM_HOST_OS == 'darwin'
+  if $LOOM_HOST_OS == 'osx'
 
-    appPath = Dir.glob("artifacts/osx/*.app")[0]
+    appPath = Dir.glob("#{HOST_ARTIFACTS}/*.app")[0]
     appPrefix = get_app_prefix(appPath)
 
     # Run it.
@@ -461,7 +428,7 @@ namespace :utility do
   else
 
     #Run it under Windows
-    Dir.chdir("artifacts/windows") do
+    Dir.chdir("#{HOST_ARTIFACTS}") do
       sh "LoomDemo.exe"
     end
   end
@@ -472,7 +439,7 @@ namespace :utility do
   task :debug => ['build:osx'] do
     puts "===== Launching Application ====="
 
-    appPath = Dir.glob("artifacts/osx/*.app")[0]
+    appPath = Dir.glob("#{HOST_ARTIFACTS}/*.app")[0]
     appPrefix = get_app_prefix(appPath)
 
     # Run it.
@@ -490,8 +457,7 @@ namespace :build do
     puts "building all"
     Rake::Task["build:desktop"].invoke
     Rake::Task["build:android"].invoke
-    Rake::Task["build:ouya"].invoke
-    if $LOOM_HOST_OS == 'darwin'
+    if $LOOM_HOST_OS == 'osx'
 		Rake::Task["build:ios"].invoke
     end
   end
@@ -500,7 +466,7 @@ namespace :build do
   task :desktop do
     if $LOOM_HOST_OS == 'windows'
       Rake::Task["build:windows"].invoke
-    elsif $LOOM_HOST_OS == 'darwin'
+    elsif $LOOM_HOST_OS == 'osx'
       Rake::Task["build:osx"].invoke
     else
       Rake::Task["build:ubuntu"].invoke
@@ -512,7 +478,7 @@ namespace :build do
     Dir.chdir("tools/fruitstrap") do
       sh "make fruitstrap"
     end
-    FileUtils.cp("tools/fruitstrap/fruitstrap", "artifacts")
+    FileUtils.cp("tools/fruitstrap/fruitstrap", "#{$OUTPUT_DIRECTORY}/ios-arm/")
   end
 
   desc "Builds OS X"
@@ -537,7 +503,7 @@ namespace :build do
         sh "xcodebuild -configuration #{$buildTarget}"
       end
 
-      if DARWIN_ISX64 == '1' then
+      if HOST_ISX64 == '1' then
         if $doBuildJIT == 1 then
           FileUtils.mkdir_p("build/luajit-osx-x64")
           Dir.chdir("build/luajit-osx-x64") do
@@ -553,28 +519,25 @@ namespace :build do
         end
       end
 
-      # copy asset agent
-      FileUtils.cp("#{ROOT}/build/loom-osx-x86/tools/assetAgent/#{$buildTarget}/libassetAgent.so", "artifacts")
-
       # copy libs
-      FileUtils.cp_r("sdk/libs", "artifacts/")
+      FileUtils.cp_r("sdk/libs", "#{$OUTPUT_DIRECTORY}")
 
       # build ldb
       Dir.chdir("sdk") do
-        sh "#{ROOT}/artifacts/lsc LDB.build"
+        sh "#{$LSC_BINARY} LDB.build"
       end
       
       # build testexec
       Dir.chdir("sdk") do
-        sh "#{ROOT}/artifacts/lsc TestExec.build"
+        sh "#{$LSC_BINARY} TestExec.build"
       end
 
-      FileUtils.cp_r("sdk/bin/LDB.loom", "artifacts")
-      FileUtils.cp_r("sdk/bin/TestExec.loom", "artifacts")
-      FileUtils.cp_r("sdk/src/testexec/loom.config", "artifacts/TestExec.config")
+      FileUtils.cp_r("sdk/bin/LDB.loom", "#{$OUTPUT_DIRECTORY}/libs")
+      FileUtils.cp_r("sdk/bin/TestExec.loom", "#{$OUTPUT_DIRECTORY}/libs")
+      FileUtils.cp_r("sdk/src/testexec/loom.config", "#{$OUTPUT_DIRECTORY}/libs/TestExec.config")
 
       #copy assets
-      FileUtils.mkdir_p("artifacts/assets")
+      FileUtils.mkdir_p("#{$OUTPUT_DIRECTORY}/assets")
 
     end
 
@@ -583,14 +546,14 @@ namespace :build do
   desc "Builds iOS"
   task :ios, [:sign_as] => ['utility:compileScripts', 'build:fruitstrap'] do |t, args|
 
-    sh "touch artifacts/fruitstrap"
-    sh "mkdir -p artifacts/ios/LoomDemo.app"
-    sh "mkdir -p artifacts/ios/LoomDemo.app/assets"
-    sh "touch artifacts/ios/LoomDemo.app/assets/tmp"
-    sh "mkdir -p artifacts/ios/LoomDemo.app/bin"
-    sh "touch artifacts/ios/LoomDemo.app/bin/tmp"
-    sh "mkdir -p artifacts/ios/LoomDemo.app/lib"
-    sh "touch artifacts/ios/LoomDemo.app/lib/tmp"
+    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/fruitstrap"
+    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app"
+    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/assets"
+    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/assets/tmp"
+    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/bin"
+    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/bin/tmp"
+    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/lib"
+    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/lib/tmp"
 
     
     # iOS build is currently not supported under Windows
@@ -688,7 +651,7 @@ namespace :build do
       sh "cp tools/fruitstrap/ResourceRules.plist #{appPath}/ResourceRules.plist"
 
       # Make it ito an IPA!
-      full_output_path = Pathname.new("#{$OUTPUT_DIRECTORY}/ios").realpath
+      full_output_path = Pathname.new("#{$OUTPUT_DIRECTORY}/ios-arm").realpath
       package_command = "/usr/bin/xcrun -sdk iphoneos PackageApplication"
       package_command += " -v '#{appPath}'"
       package_command += " -o '#{full_output_path}/#{appName}.ipa'"
@@ -723,7 +686,7 @@ namespace :build do
       sh "msbuild /verbosity:m LoomEngine.sln /p:Configuration=#{$buildTarget}"
     end
 
-    if WINDOWS_ISX64 == '1' then
+    if HOST_ISX64 == '1' then
 
         if $doBuildJIT == 1 then
             FileUtils.mkdir_p("build/luajit-windows-x64")
@@ -744,27 +707,23 @@ namespace :build do
 
     # build ldb
     Dir.chdir("sdk") do
-      sh "#{ROOT}/artifacts/lsc LDB.build"
+      sh "#{$LSC_BINARY} LDB.build"
     end
     
     # build testexec
     Dir.chdir("sdk") do
-      sh "#{ROOT}/artifacts/lsc TestExec.build"
+      sh "#{$LSC_BINARY} TestExec.build"
     end
 
+    puts "Copying to #{HOST_ARTIFACTS}"
+
     # copy libs
-    FileUtils.cp_r("sdk/libs", "artifacts/")
-    FileUtils.cp_r("sdk/bin/LDB.loom", "artifacts")
-    FileUtils.cp_r("sdk/bin/TestExec.loom", "artifacts")
-    FileUtils.cp_r("sdk/src/testexec/loom.config", "artifacts/TestExec.config")
-
-    puts "Copying to #{$OUTPUT_DIRECTORY}/windows"
-
-    FileUtils.cp_r('./sdk/bin', './artifacts/windows')
-    FileUtils.cp_r('./sdk/assets', './artifacts/windows')
-
-    #copy assets
-    FileUtils.mkdir_p("artifacts/assets")
+    FileUtils.cp_r("sdk/libs", "#{$OUTPUT_DIRECTORY}")
+    FileUtils.cp_r("sdk/bin/LDB.loom", "#{$OUTPUT_DIRECTORY}/libs")
+    FileUtils.cp_r("sdk/bin/TestExec.loom", "#{$OUTPUT_DIRECTORY}/libs")
+    FileUtils.cp_r("sdk/src/testexec/loom.config", "#{$OUTPUT_DIRECTORY}/libs/TestExec.config")
+    FileUtils.cp_r('sdk/bin', "#{HOST_ARTIFACTS}")
+    FileUtils.cp_r('sdk/assets', "#{$OUTPUT_DIRECTORY}")
   end
 
   desc "Builds Android APK"
@@ -790,7 +749,7 @@ namespace :build do
       # WINDOWS
       FileUtils.mkdir_p("#{ROOT}/build/loom-android-arm")
       Dir.chdir("#{ROOT}/build/loom-android-arm") do
-        sh "cmake -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DLUAJIT_BUILD_DIR=#{ROOT}/loom/vendor/luajit_windows_android/luajit_android/lib #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_NDK_HOST_X64=#{WINDOWS_ISX64} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} -G\"MinGW Makefiles\" -DCMAKE_MAKE_PROGRAM=\"%ANDROID_NDK%\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make.exe\" #{ROOT}"
+        sh "cmake -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DLUAJIT_BUILD_DIR=#{ROOT}/loom/vendor/luajit_windows_android/luajit_android/lib #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_NDK_HOST_X64=#{HOST_ISX64} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} -G\"MinGW Makefiles\" -DCMAKE_MAKE_PROGRAM=\"%ANDROID_NDK%\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make.exe\" #{ROOT}"
         sh "cmake --build ."
       end
 
@@ -823,10 +782,10 @@ namespace :build do
       end
 
       # Copy APKs to artifacts.
-      FileUtils.mkdir_p "artifacts/android"
-      sh "echo f | xcopy /F /Y application\\android\\bin\\#{$targetAPKName} #{$OUTPUT_DIRECTORY}\\android\\LoomDemo.apk"
+      FileUtils.mkdir_p "artifacts/android-arm"
+      sh "echo f | xcopy /F /Y application\\android\\bin\\#{$targetAPKName} #{$OUTPUT_DIRECTORY}\\android-arm\\LoomDemo.apk"
 
-      FileUtils.cp_r("tools/apktool/apktool.jar", "artifacts/")
+      FileUtils.cp_r("tools/apktool/apktool.jar", "#{$OUTPUT_DIRECTORY}/android-arm")
     else
       # OSX / LINUX
 
@@ -882,69 +841,15 @@ namespace :build do
 
       # Copy APKs to artifacts.
       FileUtils.mkdir_p "artifacts/android"
-      sh "cp application/android/bin/#{$targetAPKName} #{$OUTPUT_DIRECTORY}/android/LoomDemo.apk"
+      sh "cp application/android/bin/#{$targetAPKName} #{$OUTPUT_DIRECTORY}/android-arm/LoomDemo.apk"
 
-      FileUtils.cp_r("tools/apktool/apktool.jar", "artifacts/")
-    end
-  end
-
-  desc "Builds OUYA APK" #TODO: add Ouya build scripts under windows
-  task :ouya => ['build:android'] do
-    writeStub("Ouya")
-    # Ouya build is currently not supported under Windows
-    #if $LOOM_HOST_OS != 'windows'
-      
-  # TODO: add back Ouya support
-  if false
-      FileUtils.mkdir_p "artifacts/ouya"
-      sh "touch #{$OUTPUT_DIRECTORY}/ouya/LoomDemo.apk"
-      puts "== Building OUYA =="
-
-      ouyaAndroidSDK = "android-16"
-
-      Dir.chdir("application/ouya") do
-        puts "*** Building against AndroidSDK " + ouyaAndroidSDK
-        api_id = get_android_api_id(ouyaAndroidSDK)
-        sh "android update project --name LoomDemo --subprojects --target #{api_id} --path ."
-      end
-
-      FileUtils.mkdir_p "application/ouya/assets"
-      FileUtils.mkdir_p "application/ouya/assets/assets"
-      FileUtils.mkdir_p "application/ouya/assets/bin"
-      FileUtils.mkdir_p "application/ouya/assets/libs"
-
-      FileUtils.mkdir_p "application/ouya/libs/armeabi-v7a"
-
-      sh "cp application/android/libs/armeabi-v7a/* application/ouya/libs/armeabi-v7a"
-
-      sh "cp sdk/bin/*.loom application/ouya/assets/bin"
-      sh "cp sdk/assets/*.* application/ouya/assets/assets"
-
-      # TODO: LOOM-1070 can we build for release or does this have signing issues?
-      Dir.chdir("application/ouya") do
-        sh "ant #{$targetAndroidBuildType}"
-      end
-
-      # Copy APKs to artifacts.
-      FileUtils.mkdir_p "artifacts/ouya"
-      sh "cp application/ouya/bin/#{$targetAPKName} #{$OUTPUT_DIRECTORY}/ouya/LoomDemo.apk"
-
-      FileUtils.cp_r("tools/apktool/apktool.jar", "artifacts/")
+      FileUtils.cp_r("tools/apktool/apktool.jar", "#{$OUTPUT_DIRECTORY}/android-arm")
     end
   end
 
   desc "Builds Ubuntu Linux"
   task :ubuntu => [] do
     puts "== Skipped Ubuntu =="
-
-    writeStub("Ubuntu")
-
-    sh "mkdir -p artifacts/ubuntu"
-    sh "echo BROKEN > ./artifacts/ubuntu/LoomDemo"
-    sh "echo BROKEN > ./artifacts/ldb"
-    sh "echo BROKEN > ./artifacts/lsc"
-    sh "echo BROKEN > ./artifacts/loomexec"
-    sh "echo BROKEN > ./artifacts/libassetAgent.so"
 
     if false
 	
@@ -959,30 +864,23 @@ namespace :build do
 
     # build ldb
     Dir.chdir("sdk") do
-      sh "#{ROOT}/artifacts/lsc LDB.build"
+      sh "#{$LSC_BINARY} LDB.build"
     end
     
     # build testexec
     Dir.chdir("sdk") do
-      sh "#{ROOT}/artifacts/lsc TestExec.build"
+      sh "#{$LSC_BINARY} TestExec.build"
     end
-
-    # copy libs
-    FileUtils.cp_r("sdk/libs", "artifacts/")
-    FileUtils.cp_r("sdk/bin/LDB.loom", "artifacts")
-    FileUtils.cp_r("sdk/bin/TestExec.loom", "artifacts")
-    FileUtils.cp_r("sdk/src/testexec/loom.config", "artifacts/TestExec.config")
-
+    
     puts "Copying to #{$OUTPUT_DIRECTORY}/ubuntu"
 
-    FileUtils.cp_r('./sdk/bin', './artifacts/ubuntu')
-    FileUtils.cp_r('./sdk/assets', './artifacts/ubuntu')
-
-    # copy asset agent
-    FileUtils.cp("#{ROOT}/build/loom-linux-x86/tools/assetAgent/libassetAgent.so", "artifacts/libassetAgent.so")
-
-    #copy assets
-    FileUtils.mkdir_p("artifacts/assets")
+    # copy libs
+    FileUtils.cp_r("sdk/libs", "#{$OUTPUT_DIRECTORY}")
+    FileUtils.cp_r("sdk/bin/LDB.loom", "#{$OUTPUT_DIRECTORY}/libs")
+    FileUtils.cp_r("sdk/bin/TestExec.loom", "#{$OUTPUT_DIRECTORY}/libs")
+    FileUtils.cp_r("sdk/src/testexec/loom.config", "#{$OUTPUT_DIRECTORY}/libs/TestExec.config")
+    FileUtils.cp_r('sdk/bin', "#{HOST_ARTIFACTS}")
+    FileUtils.cp_r('sdk/assets', "#{$OUTPUT_DIRECTORY}")
 
 	end
 	
@@ -1004,11 +902,15 @@ end
 # mainly we need to make windows work
 desc "Runs all unit tests and exports results to artifacts/testResults.xml"
 task :test => ['build:desktop'] do
-   Dir.chdir("tests") do
-      sh "#{ROOT}/tests/unittest"
-   end
-   Dir.chdir("sdk") do
-      sh "#{ROOT}/artifacts/lsc --unittest --xmlfile #{ROOT}/artifacts/testResults.xml"
+  Dir.chdir("tests") do
+    if HOST_ISX64 == '1' then
+      sh "#{ROOT}/tests/unittest-x64"
+    else
+      sh "#{ROOT}/tests/unittest-x86"
+    end
+  end
+  Dir.chdir("sdk") do
+    sh "#{$LSC_BINARY} --unittest --xmlfile #{ROOT}/artifacts/testResults.xml"
   end
 end
 
@@ -1066,7 +968,7 @@ namespace :update do
 
     puts "===== Compiling Core Scripts ====="
     Dir.chdir("sdk") do
-      sh "#{ROOT}/artifacts/lsc Main.build"
+      sh "#{$LSC_BINARY} Main.build"
     end
 
     FileUtils.cp_r("sdk/libs", sdk_path);
@@ -1131,59 +1033,48 @@ namespace :package do
 
     prepare_free_sdk
 
-    FileUtils.rm_rf "pkg/sdk/bin/android"
+    FileUtils.rm_rf "pkg/sdk/bin/android-arm"
 
-    # iOS and Ouya are currently not supported under Windows
+    # iOS is currently not supported under Windows
     if $LOOM_HOST_OS != "windows"
       # copy tools
-      FileUtils.cp_r("artifacts/fruitstrap", "pkg/sdk/tools")
+      FileUtils.cp_r("artifacts/ios-arm/fruitstrap", "pkg/sdk/bin/ios-arm/tools")
 
       # ============================================================= iOS
       # put together a folder to zip up
-      FileUtils.mkdir_p "pkg/sdk/bin/ios"
+      FileUtils.mkdir_p "pkg/sdk/bin/ios-arm"
 
       # add the ios app bundle
-      FileUtils.cp_r("artifacts/ios/LoomDemo.app", "pkg/sdk/bin/ios")
+      FileUtils.cp_r("artifacts/ios-arm/LoomDemo.app", "pkg/sdk/bin/ios-arm/bin")
       if $buildTarget == "Debug"
-        FileUtils.cp_r("artifacts/ios/LoomDemo.app.dSYM", "pkg/sdk/bin/ios")
+        FileUtils.cp_r("artifacts/ios-arm/LoomDemo.app.dSYM", "pkg/sdk/bin/ios-arm/bin")
       end
 
       # Strip out the bundled assets and binaries
-      FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/assets"
-      FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/bin"
-      FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/libs"
-
-    # TODO: add back Ouya support
-    #if false
-      # ============================================================= Ouya
-      # decompile the ouya apk
-      #decompile_apk("application/ouya/bin/#{$targetAPKName}","pkg/sdk/bin/ouya")
-
-      # Strip out the bundled assets and binaries
-      #FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/assets"
-      #FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/bin"
-      #FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/libs"
-      #FileUtils.rm_rf "pkg/sdk/bin/ouya/META-INF"
+      FileUtils.rm_rf "pkg/sdk/bin/ios-arm/bin/LoomDemo.app/assets"
+      FileUtils.rm_rf "pkg/sdk/bin/ios-arm/bin/LoomDemo.app/bin"
+      FileUtils.rm_rf "pkg/sdk/bin/ios-arm/bin/LoomDemo.app/libs"
 
     end
 
-    FileUtils.cp_r("artifacts/apktool.jar", "pkg/sdk/tools")
+    FileUtils.mkdir_p "pkg/sdk/bin/android-arm/tools"
+    FileUtils.cp_r("artifacts/android-arm/apktool.jar", "pkg/sdk/bin/android-arm/tools")
 
     # ============================================================= Android
     # decompile the android apk
-    FileUtils.mkdir_p "pkg/sdk/bin/android"
-    decompile_apk("application/android/bin/#{$targetAPKName}","pkg/sdk/bin/android")
+    FileUtils.mkdir_p "pkg/sdk/bin/android-arm/bin"
+    decompile_apk("application/android/bin/#{$targetAPKName}","pkg/sdk/bin/android-arm/bin")
 
     # Strip out the bundled assets and binaries
-    FileUtils.rm_rf "pkg/sdk/bin/android/assets/assets"
-    FileUtils.rm_rf "pkg/sdk/bin/android/assets/bin"
-    FileUtils.rm_rf "pkg/sdk/bin/android/assets/libs"
-    FileUtils.rm_rf "pkg/sdk/bin/android/META-INF"
+    FileUtils.rm_rf "pkg/sdk/bin/android-arm/bin/assets/assets"
+    FileUtils.rm_rf "pkg/sdk/bin/android-arm/bin/assets/bin"
+    FileUtils.rm_rf "pkg/sdk/bin/android-arm/bin/assets/libs"
+    FileUtils.rm_rf "pkg/sdk/bin/android-arm/bin/META-INF"
 
     if $LOOM_HOST_OS == 'windows'
       # Under windows copy the .so file over
-      sh "if not exist pkg\\sdk\\bin\\android\\lib mkdir pkg\\sdk\\bin\\android\\lib"
-      sh "for /d %F in (libs\\*.*) do xcopy /Y /I /E /F %F\\*.so pkg\\sdk\\bin\\android\\lib\\%~nF"
+      sh "if not exist pkg\\sdk\\bin\\android-arm\\bin\\lib mkdir pkg\\sdk\\bin\\android-arm\\bin\\lib"
+      sh "for /d %F in (libs\\*.*) do xcopy /Y /I /E /F %F\\*.so pkg\\sdk\\bin\\android-arm\\bin\\lib\\%~nF"
     end
 
     require_dependencies
@@ -1318,7 +1209,6 @@ def prepare_free_sdk
   # put together a folder to zip up
   FileUtils.mkdir_p "pkg/sdk"
   FileUtils.mkdir_p "pkg/sdk/bin"
-  FileUtils.mkdir_p "pkg/sdk/tools"
   FileUtils.mkdir_p "pkg/sdk/libs"
   FileUtils.mkdir_p "pkg/sdk/assets"
   FileUtils.mkdir_p "pkg/sdk/src"
@@ -1336,46 +1226,35 @@ def prepare_free_sdk
   # copy the libs
   FileUtils.cp_r("artifacts/libs", "pkg/sdk")
 
-  if($LOOM_HOST_OS == "windows")
-
-    FileUtils.cp_r("artifacts/windows/LoomDemo.exe", "pkg/sdk/bin")
-
-    # copy tools
-    FileUtils.cp_r("artifacts/lsc.exe", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/loomexec.exe", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/assetAgent.dll", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/ldb.exe", "pkg/sdk/tools")
+  if $LOOM_HOST_OS == "windows"
+    FileUtils.cp_r("artifacts/windows-x86/", "pkg/sdk/bin")
+    if HOST_ISX64 == '1'
+      FileUtils.cp_r("artifacts/windows-x64/", "pkg/sdk/bin")
+    end
   elsif $LOOM_HOST_OS == "linux"
-    FileUtils.cp_r("artifacts/ubuntu/LoomDemo", "pkg/sdk/bin/LoomDemo.ubuntu")
-
-    # copy tools
-    FileUtils.cp_r("artifacts/lsc", "pkg/sdk/tools/lsc.ubuntu")
-    FileUtils.cp_r("artifacts/loomexec", "pkg/sdk/tools/loomexec.ubuntu")
-    FileUtils.cp_r("artifacts/libassetAgent.so", "pkg/sdk/tools/libassetAgent.ubuntu.so")
-    FileUtils.cp_r("artifacts/ldb", "pkg/sdk/tools/ldb.ubuntu")
+    FileUtils.cp_r("artifacts/windows-x86/", "pkg/sdk/bin")
+    if HOST_ISX64 == '1'
+      FileUtils.cp_r("artifacts/windows-x64/", "pkg/sdk/bin")
+    end
   else
-
-    # copy the bin
-    FileUtils.cp_r("artifacts/osx/LoomDemo.app", "pkg/sdk/bin")
-
+    FileUtils.cp_r("artifacts/osx-x86/", "pkg/sdk/bin")
     # Strip out the bundled assets and binaries
-    FileUtils.rm_rf "pkg/sdk/bin/LoomDemo.app/Contents/Resources/assets"
-    FileUtils.rm_rf "pkg/sdk/bin/LoomDemo.app/Contents/Resources/bin"
-    FileUtils.rm_rf "pkg/sdk/bin/LoomDemo.app/Contents/Resources/libs"
-
-    # copy tools
-    FileUtils.cp_r("artifacts/lsc", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/loomexec", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/libassetAgent.so", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/ldb", "pkg/sdk/tools")
-
+    FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/assets"
+    FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/bin"
+    FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/libs"
+    if HOST_ISX64 == '1'
+      FileUtils.cp_r("artifacts/osx-x64/", "pkg/sdk/bin")
+      # Strip out the bundled assets and binaries
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/assets"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/bin"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/libs"
+    end
   end
 
   # copy ldb
-  FileUtils.cp_r("artifacts/LDB.loom", "pkg/sdk/bin")
-  FileUtils.mkdir_p "pkg/sdk/bin/TestExec/bin/"
-  FileUtils.cp_r("artifacts/TestExec.loom", "pkg/sdk/bin/TestExec/bin/Main.loom")
-  FileUtils.cp_r("artifacts/TestExec.config", "pkg/sdk/bin/TestExec/loom.config")
+  FileUtils.mkdir_p "pkg/sdk/TestExec/bin/"
+  FileUtils.cp_r("artifacts/libs/TestExec.loom", "pkg/sdk/TestExec/bin/Main.loom")
+  FileUtils.cp_r("artifacts/libs/TestExec.config", "pkg/sdk/TestExec/loom.config")
 
   # copy the assets we need from cocos...
   FileUtils.cp_r("artifacts/assets", "pkg/sdk")

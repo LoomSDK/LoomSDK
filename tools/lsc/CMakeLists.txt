@@ -20,7 +20,7 @@ if (MSVC)
 
     add_custom_command(TARGET lsc
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${LSCBIN}\" \"${CMAKE_SOURCE_DIR}/artifacts/lsc.exe\"
+        COMMAND echo f | xcopy /F /Y \"${LSCBIN}\" \"${ARTIFACTS_DIR}/tools/lsc.exe\"
     )
 
 else ()
@@ -36,8 +36,8 @@ else ()
 
     add_custom_command(TARGET lsc
         POST_BUILD
-        COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts
-        COMMAND cp ${LSCBIN} ${CMAKE_SOURCE_DIR}/artifacts/lsc
+        COMMAND mkdir -p ${ARTIFACTS_DIR}
+        COMMAND cp ${LSCBIN} ${ARTIFACTS_DIR}/tools/lsc
     )
 
 endif(MSVC)

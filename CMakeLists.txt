@@ -141,8 +141,10 @@ if (MSVC)
 
     # Add static linker flags due to a bug in CMake
     if (LOOM_BUILD_64BIT)
+        SET(ARTIFACTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/windows-x64)
         SET(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} /MACHINE:X64")
     else ()
+        SET(ARTIFACTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/windows-x86)
         SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /WX /arch:SSE2")
         SET(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} /MACHINE:X86")
     endif ()
@@ -193,6 +195,8 @@ if(APPLE)
 
     if(LOOM_BUILD_IOS EQUAL 1)
 
+        SET(ARTIFACTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/ios-arm)
+
         # Apple changed some stuff in XCode5/SDK7 which we need to account for, however we still need to build out on
         # XCode4/SDK6
         if(LOOM_IOS_VERSION LESS 7)
@@ -218,11 +222,13 @@ if(APPLE)
     else()
 
         if(LOOM_BUILD_64BIT EQUAL 1)
+          SET(ARTIFACTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/osx-x64)
           set(CMAKE_OSX_ARCHITECTURES "x86_64")
           if (LOOM_BUILD_JIT EQUAL 1)
             set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pagezero_size 10000 -image_base 100000000")
           endif()
         else()
+          SET(ARTIFACTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/osx-x86)
           set(CMAKE_OSX_ARCHITECTURES "i386")
         endif()
 
@@ -257,6 +263,7 @@ if (ANDROID)
     add_definitions(-DLOOM_RENDERER_OPENGLES2)
 
     set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/android/armeabi/libSDL2.a)
+    set(ARTIFACTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/android-arm)
 
 
 endif()
@@ -266,6 +273,12 @@ endif()
 #--------------------------------------
 
 if (LINUX)
+
+    if(LOOM_BUILD_64BIT EQUAL 1)
+      SET(ARTIFACTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/linux-x64)
+    else()
+      SET(ARTIFACTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/linux-x86)
+    endif()
 
     set (LOOM_INCLUDE_FOLDERS
     ${LOOM_INCLUDE_FOLDERS}

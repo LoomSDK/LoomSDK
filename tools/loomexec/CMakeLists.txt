@@ -20,7 +20,7 @@ if (MSVC)
 
     add_custom_command(TARGET loomexec
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${LOOMEXECBIN}\" \"${CMAKE_SOURCE_DIR}/artifacts/loomexec.exe\"
+        COMMAND echo f | xcopy /F /Y \"${LOOMEXECBIN}\" \"${ARTIFACTS_DIR}/tools/loomexec.exe\"
     )
 
 else ()
@@ -33,8 +33,8 @@ else ()
 
 	add_custom_command(TARGET loomexec
         POST_BUILD
-        COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts
-        COMMAND cp ${LOOMEXECBIN} ${CMAKE_SOURCE_DIR}/artifacts/loomexec
+        COMMAND mkdir -p ${ARTIFACTS_DIR}
+        COMMAND cp ${LOOMEXECBIN} ${ARTIFACTS_DIR}/tools/loomexec
 	)
 
 endif()

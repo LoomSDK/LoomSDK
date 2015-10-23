@@ -15,19 +15,19 @@ if (APPLE)
 		    COMMAND ${RSYNC_CMD} ${CMAKE_SOURCE_DIR}/sdk/assets ${APPLICATION_APP_LOCATION}
 		    COMMAND ${RSYNC_CMD} ${CMAKE_SOURCE_DIR}/sdk/bin  ${APPLICATION_APP_LOCATION}
 		    COMMAND ${RSYNC_CMD} ${CMAKE_SOURCE_DIR}/sdk/libs  ${APPLICATION_APP_LOCATION}
-		    COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts/ios/
-		    COMMAND ${RSYNC_CMD} ${APPLICATION_APP_LOCATION} ${CMAKE_SOURCE_DIR}/artifacts/ios/
+		    COMMAND mkdir -p ${ARTIFACTS_DIR}
+		    COMMAND ${RSYNC_CMD} ${APPLICATION_APP_LOCATION} ${ARTIFACTS_DIR}
 		)
 		add_dependencies(CreateIOSArtifact ${APPLICATION_NAME} lsc)
 	else()
 	
 		add_custom_target(CreateOSXArtifact ALL
-	    	COMMAND ${CMAKE_SOURCE_DIR}/artifacts/lsc --root ${CMAKE_SOURCE_DIR}/sdk Main.build
+	    	COMMAND ${ARTIFACTS_DIR}/tools/lsc --root ${CMAKE_SOURCE_DIR}/sdk Main.build
 		    COMMAND ${RSYNC_CMD} ${CMAKE_SOURCE_DIR}/sdk/assets ${APPLICATION_APP_LOCATION}/Contents/Resources
 		    COMMAND ${RSYNC_CMD} ${CMAKE_SOURCE_DIR}/sdk/bin  ${APPLICATION_APP_LOCATION}/Contents/Resources
 		    COMMAND ${RSYNC_CMD} ${CMAKE_SOURCE_DIR}/sdk/libs  ${APPLICATION_APP_LOCATION}/Contents/Resources
-		    COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts/osx/
-		    COMMAND ${RSYNC_CMD} ${APPLICATION_APP_LOCATION} ${CMAKE_SOURCE_DIR}/artifacts/osx/
+			COMMAND mkdir -p ${ARTIFACTS_DIR}/bin
+		    COMMAND ${RSYNC_CMD} ${APPLICATION_APP_LOCATION} ${ARTIFACTS_DIR}/bin
 		)
 		
 		add_dependencies(CreateOSXArtifact ${APPLICATION_NAME} lsc)

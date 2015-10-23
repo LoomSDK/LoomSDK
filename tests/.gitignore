@@ -1,2 +1,4 @@
-unittest.exe
-unittest
+unittest-x86.exe
+unittest-x64.exe
+unittest-x86
+unittest-x64
