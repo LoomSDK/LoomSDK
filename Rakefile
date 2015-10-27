@@ -1042,6 +1042,7 @@ namespace :package do
       # ============================================================= iOS
       # put together a folder to zip up
       FileUtils.mkdir_p "pkg/sdk/bin/ios-arm/tools"
+      FileUtils.mkdir_p "pkg/sdk/bin/ios-arm/bin"
 
       FileUtils.cp_r("artifacts/ios-arm/fruitstrap", "pkg/sdk/bin/ios-arm/tools")
       # add the ios app bundle
