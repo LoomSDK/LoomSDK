@@ -34,7 +34,7 @@ else ()
 
     add_custom_command(TARGET ldb
         POST_BUILD
-        COMMAND mkdir -p ${ARTIFACTS_DIR}
+        COMMAND mkdir -p ${ARTIFACTS_DIR}/tools
         COMMAND cp ${LDBBIN} ${ARTIFACTS_DIR}/tools/ldb
     )
 

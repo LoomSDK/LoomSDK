@@ -33,7 +33,7 @@ else ()
 
 	add_custom_command(TARGET loomexec
         POST_BUILD
-        COMMAND mkdir -p ${ARTIFACTS_DIR}
+        COMMAND mkdir -p ${ARTIFACTS_DIR}/tools
         COMMAND cp ${LOOMEXECBIN} ${ARTIFACTS_DIR}/tools/loomexec
 	)
 
