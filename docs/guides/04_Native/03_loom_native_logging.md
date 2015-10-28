@@ -65,3 +65,43 @@ format your messages.
 ~~~cpp
 lmLog(myGroup, "Logged in as user \"%s\", ID:%d", username, id);
 ~~~
+
+## Configuration
+
+Users may configure the logging system using prefix based rules. This is
+implemented here via `loom_log_addRule`, but users will generally configure
+it via loom.config.
+
+~~~cpp
+#include "loom/common/core/log.h"
+
+// There is no need to have a reference to the group object here.
+// Just pass in the display name of the group in here along with
+// enable and filter arguments.
+loom_log_addRule("mygroup", 1, LoomLogError);
+~~~
+
+## Callbacks
+
+Loom also supports registering callbacks, which can be used to pipe messages
+to custom outputs.
+
+~~~cpp
+#include "loom/common/core/log.h"
+
+lmDefineLogGroup(mygroup, "mygroup", 1, LoomLogInfo);
+
+void listener(void \*payload, loom_logGroup_t \*group, loom_logLevel_t, const char \*msg)
+{
+    // Do your thing here
+}
+
+loom_log_addListener(&listener, NULL);
+
+// And to optinally remove the listener call
+
+loom_log_removeListener(&listener, NULL);
+~~~
+
+Note that `payload` can be a pointer to arbitrary data that will get passed down
+to the listener and it must match when adding and removing listeners.
