@@ -623,11 +623,11 @@ package loom.gameframework
             
             // Perform ticks, respecting tick caps.
             var tickCount:int = 0;
-            //while (elapsed >= TICK_RATE_MS && (suppressSafety || tickCount < MAX_TICKS_PER_FRAME))
-            //{
+            while (elapsed >= TICK_RATE_MS && (suppressSafety || tickCount < MAX_TICKS_PER_FRAME))
+            {
                 fireTick();
                 tickCount++;
-            //}
+            }
             
             // Safety net - don't do more than a few ticks per frame to avoid death spirals.
             if (tickCount >= MAX_TICKS_PER_FRAME && !suppressSafety && !disableSlowWarning)
