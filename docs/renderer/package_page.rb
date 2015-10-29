@@ -20,7 +20,7 @@ class PackagePage < DocumentationPage
     result = ""
     package_path = package_doc.path
     package_path.split(".").each_with_index do |package, index|
-      result += "<a href='#{url( package_path.split(".")[0..index].join(".") )}'>#{package}</a>" + (package_path.split(".").last == package ? "" : ".")
+      result += "<a href='#{url( package_path.split(".")[0..index].join("/") )}'>#{package}</a>" + (package_path.split(".").last == package ? "" : ".")
     end
     result
   end
@@ -30,7 +30,7 @@ class PackagePage < DocumentationPage
     package_path = @doc.path
     package_path.split(".").each_with_index do |package, index|
       if package != package_path.split(".").last
-        result += "<li><a class='is-perm' href='#{url( package_path.split(".")[0..index].join(".") )}'>#{package}</a>"
+        result += "<li><a class='is-perm' href='#{url( package_path.split(".")[0..index].join("/") )}'>#{package}</a>"
       else
         result += "<li>#{package}"
       end
