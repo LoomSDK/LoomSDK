@@ -30,8 +30,6 @@ We use JavaScript style, declaring a variable by giving `var` followed by the va
 It's good practice to put each class definition in its own file named after the class, surrounded by a `package`. While everything has to be in a `package`, you can put multiple classes in a single file if you want. Here's what our Car class would look like in its own file:
 
 ~~~as3
-Contents of Car.ls:
-
 package com.myracinggame.example
 {
     public class Car
