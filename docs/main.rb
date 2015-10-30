@@ -71,9 +71,11 @@ end
 def copy_examples
   FileUtils.cp_r(Dir.glob("examples"), OUTPUT_DIR)
   Dir["examples/*"].each do |lib_path|
-    example_doc = Module::ExampleDoc.new(lib_path.split("/").last)
-    puts "Processing #{example_doc.path}.."
-    $examples[example_doc.name] = example_doc
+    if File.exists? File.join(lib_path, "README.md")
+      example_doc = Module::ExampleDoc.new(lib_path.split("/").last)
+      puts "Processing #{example_doc.path}.."
+      $examples[example_doc.name] = example_doc
+    end
   end
 end
 
