@@ -1212,7 +1212,6 @@ def prepare_free_sdk
   FileUtils.mkdir_p "pkg/sdk/bin"
   FileUtils.mkdir_p "pkg/sdk/libs"
   FileUtils.mkdir_p "pkg/sdk/assets"
-  FileUtils.mkdir_p "pkg/sdk/src"
   FileUtils.mkdir_p telemetryClientPath
   
   # copy telemetry www
@@ -1233,9 +1232,9 @@ def prepare_free_sdk
       FileUtils.cp_r("artifacts/windows-x64/", "pkg/sdk/bin")
     end
   elsif $LOOM_HOST_OS == "linux"
-    FileUtils.cp_r("artifacts/windows-x86/", "pkg/sdk/bin")
+    FileUtils.cp_r("artifacts/linux-x86/", "pkg/sdk/bin")
     if HOST_ISX64 == '1'
-      FileUtils.cp_r("artifacts/windows-x64/", "pkg/sdk/bin")
+      FileUtils.cp_r("artifacts/linux-x64/", "pkg/sdk/bin")
     end
   else
     FileUtils.cp_r("artifacts/osx-x86/", "pkg/sdk/bin")

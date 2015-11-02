@@ -2,75 +2,86 @@ require 'json'
 
 namespace :package do
 
+  def cp_r_safe(src, dst)
+    if Dir.exists? src
+      FileUtils.mkdir_p(dst)
+      FileUtils.cp_r(src, dst)
+    end
+  end
+
   desc "Creates a universal sdk from the artifacts folder in the root"
   task :universal_sdk do
 
     require 'zip/zip'
     require 'zip/zipfilesystem'
 
-    FileUtils.mkdir_p("pkg/sdk")
+    FileUtils.rm_rf("pkg") if File.exists?("pkg")
 
     # Assets and libs
-    FileUtils.mkdir_p("artifacts/osx/assets")
-    FileUtils.cp_r("artifacts/osx/assets", "pkg/sdk")
-    FileUtils.cp_r("artifacts/osx/libs", "pkg/sdk")
+    cp_r_safe("artifacts/assets", "pkg/sdk")
+    cp_r_safe("artifacts/libs", "pkg/sdk")
+    # copy ldb
+    FileUtils.mkdir_p "pkg/sdk/TestExec/bin/"
+    FileUtils.cp_r("artifacts/libs/TestExec.loom", "pkg/sdk/TestExec/bin/Main.loom")
+    FileUtils.cp_r("artifacts/libs/TestExec.config", "pkg/sdk/TestExec/loom.config")
 
-    # tools
-    FileUtils.mkdir_p("pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/osx/ldb", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/osx/lsc", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/osx/loomexec", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/osx/libassetAgent.so", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/ios/fruitstrap", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/android/apktool.jar", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/windows/ldb.exe", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/windows/lsc.exe", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/windows/loomexec.exe", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/windows/assetAgent.dll", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/ubuntu/ldb", "pkg/sdk/tools/ldb.ubuntu")
-    FileUtils.cp_r("artifacts/ubuntu/lsc", "pkg/sdk/tools/lsc.ubuntu")
-    FileUtils.cp_r("artifacts/ubuntu/loomexec", "pkg/sdk/tools/loomexec.ubuntu")
-    FileUtils.cp_r("artifacts/ubuntu/libassetAgent.so", "pkg/sdk/tools/libassetAgent.ubuntu.so")
+    # tools & bin
+    cp_r_safe("artifacts/windows-x86/", "pkg/sdk/bin")
+    cp_r_safe("artifacts/windows-x64/", "pkg/sdk/bin")
+    cp_r_safe("artifacts/linux-x86/", "pkg/sdk/bin")
+    cp_r_safe("artifacts/linux-x64/", "pkg/sdk/bin")
+    cp_r_safe("artifacts/osx-x86/", "pkg/sdk/bin")
+    cp_r_safe("artifacts/osx-x64/", "pkg/sdk/bin")
+
+    # Strip out the bundled assets and binaries
+    if Dir.exists? "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/assets"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/bin"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/libs"
+    end
+    if Dir.exists? "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/assets"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/bin"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/libs"
+    end
 
     # min cli version
-    FileUtils.cp_r("artifacts/osx/MIN_CLI_VERSION", "pkg/sdk")
+    FileUtils.cp("MIN_CLI_VERSION", "pkg/sdk")
 
     # docs
-    FileUtils.cp_r("artifacts/docs/docs", "pkg/sdk")
-
-    # bin
-    FileUtils.mkdir_p("pkg/sdk/bin")
-    FileUtils.mkdir_p("pkg/sdk/bin/ios")
-    FileUtils.cp_r("artifacts/osx/LDB.loom", "pkg/sdk/bin")
-    FileUtils.cp_r("artifacts/osx/osx/LoomDemo.app", "pkg/sdk/bin")
-    FileUtils.cp_r("artifacts/windows/windows/LoomDemo.exe", "pkg/sdk/bin")
-    FileUtils.cp_r("artifacts/ubuntu/ubuntu/LoomDemo", "pkg/sdk/bin/LoomDemo.ubuntu")
+    cp_r_safe("artifacts/docs/docs", "pkg/sdk")
 
     # ios
-    FileUtils.cp_r("artifacts/ios/ios/LoomDemo.app", "pkg/sdk/bin/ios")
-    FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/assets"
-    FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/bin"
-    FileUtils.rm_rf "pkg/sdk/bin/ios/LoomDemo.app/libs"
+    cp_r_safe("artifacts/ios-arm/fruitstrap", "pkg/sdk/bin/ios-arm/tools")
+    cp_r_safe("artifacts/ios-arm/LoomDemo.app", "pkg/sdk/bin/ios-arm/bin")
+    cp_r_safe("artifacts/ios-arm/LoomDemo.app.dSYM", "pkg/sdk/bin/ios-arm/bin")
+
+    # Strip out the bundled assets and binaries
+    if Dir.exists? "pkg/sdk/bin/ios-arm/bin/LoomDemo.app"
+      FileUtils.rm_rf "pkg/sdk/bin/ios-arm/bin/LoomDemo.app/assets"
+      FileUtils.rm_rf "pkg/sdk/bin/ios-arm/bin/LoomDemo.app/bin"
+      FileUtils.rm_rf "pkg/sdk/bin/ios-arm/bin/LoomDemo.app/libs"
+    end
 
     #android
-    decompile_apk("artifacts/android/android/LoomDemo.apk","pkg/sdk/bin/android")
-    # Strip out the bundled assets and binaries
-    FileUtils.rm_rf "pkg/sdk/bin/android/assets/assets"
-    FileUtils.rm_rf "pkg/sdk/bin/android/assets/bin"
-    FileUtils.rm_rf "pkg/sdk/bin/android/assets/libs"
-    FileUtils.rm_rf "pkg/sdk/bin/android/META-INF"
+    cp_r_safe("artifacts/android-arm/apktool.jar", "pkg/sdk/bin/android-arm/tools")
 
-    #ouya
-    # decompile_apk("artifacts/ouya/ouya/LoomDemo.apk","pkg/sdk/bin/ouya")
-    # Strip out the bundled assets and binaries
-    # FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/assets"
-    # FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/bin"
-    # FileUtils.rm_rf "pkg/sdk/bin/ouya/assets/libs"
-    # FileUtils.rm_rf "pkg/sdk/bin/ouya/META-INF"
+    # decompile the android apk
+    FileUtils.mkdir_p "pkg/sdk/bin/android-arm/bin"
+    decompile_apk("artifacts/android-arm/LoomDemo.apk","pkg/sdk/bin/android-arm/bin")
 
+    # Strip out the bundled assets and binaries
+    if Dir.exists? "pkg/sdk/bin/android-arm/bin/assets"
+      FileUtils.rm_rf "pkg/sdk/bin/android-arm/bin/assets/assets"
+      FileUtils.rm_rf "pkg/sdk/bin/android-arm/bin/assets/bin"
+      FileUtils.rm_rf "pkg/sdk/bin/android-arm/bin/assets/libs"
+      FileUtils.rm_rf "pkg/sdk/bin/android-arm/bin/META-INF"
+    end
+
+    FileUtils.rm_rf("pkg/loomsdk.zip") if File.exists? "pkg/loomsdk.zip"
     Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|
       Dir["pkg/sdk/**/**"].each do |file|
-        zipfile.add(file.sub("pkg/sdk/", ''),file)
+        zipfile.add(file.sub("pkg/sdk/", ''), file)
       end
     end
 
@@ -84,42 +95,45 @@ namespace :package do
     require 'zip/zipfilesystem'
 
     FileUtils.rm_rf("pkg") if File.exists?("pkg")
-    FileUtils.mkdir_p("pkg/sdk")
 
     # Assets and libs
-    FileUtils.mkdir_p("artifacts/osx/assets")
-    FileUtils.cp_r("artifacts/osx/assets", "pkg/sdk")
-    FileUtils.cp_r("artifacts/osx/libs", "pkg/sdk")
+    cp_r_safe("artifacts/assets", "pkg/sdk")
+    cp_r_safe("artifacts/libs", "pkg/sdk")
+    # copy ldb
+    FileUtils.mkdir_p "pkg/sdk/TestExec/bin/"
+    FileUtils.cp_r("artifacts/libs/TestExec.loom", "pkg/sdk/TestExec/bin/Main.loom")
+    FileUtils.cp_r("artifacts/libs/TestExec.config", "pkg/sdk/TestExec/loom.config")
 
-    # tools
-    FileUtils.mkdir_p("pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/osx/ldb", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/osx/lsc", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/osx/libassetAgent.so", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/windows/ldb.exe", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/windows/lsc.exe", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/windows/assetAgent.dll", "pkg/sdk/tools")
-    FileUtils.cp_r("artifacts/ubuntu/ldb", "pkg/sdk/tools/ldb.ubuntu")
-    FileUtils.cp_r("artifacts/ubuntu/lsc", "pkg/sdk/tools/lsc.ubuntu")
-    FileUtils.cp_r("artifacts/ubuntu/libassetAgent.so", "pkg/sdk/tools/libassetAgent.ubuntu.so")
+    # tools & bin
+    cp_r_safe("artifacts/windows-x86/", "pkg/sdk/bin")
+    cp_r_safe("artifacts/windows-x64/", "pkg/sdk/bin")
+    cp_r_safe("artifacts/linux-x86/", "pkg/sdk/bin")
+    cp_r_safe("artifacts/linux-x64/", "pkg/sdk/bin")
+    cp_r_safe("artifacts/osx-x86/", "pkg/sdk/bin")
+    cp_r_safe("artifacts/osx-x64/", "pkg/sdk/bin")
+
+    # Strip out the bundled assets and binaries
+    if Dir.exists? "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/assets"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/bin"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/libs"
+    end
+    if Dir.exists? "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/assets"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/bin"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/libs"
+    end
 
     # min cli version
-    FileUtils.cp_r("artifacts/osx/MIN_CLI_VERSION", "pkg/sdk")
+    FileUtils.cp("MIN_CLI_VERSION", "pkg/sdk")
 
     # docs
-    FileUtils.cp_r("artifacts/docs/docs", "pkg/sdk")
+    cp_r_safe("artifacts/docs/docs", "pkg/sdk")
 
-    # bin
-    FileUtils.mkdir_p("pkg/sdk/bin")
-    FileUtils.mkdir_p("pkg/sdk/bin/ios")
-    FileUtils.cp_r("artifacts/osx/LDB.loom", "pkg/sdk/bin")
-    FileUtils.cp_r("artifacts/osx/osx/LoomDemo.app", "pkg/sdk/bin")
-    FileUtils.cp_r("artifacts/windows/windows/LoomDemo.exe", "pkg/sdk/bin")
-    FileUtils.cp_r("artifacts/ubuntu/ubuntu/LoomDemo", "pkg/sdk/bin/LoomDemo.ubuntu")
-
-    Zip::ZipFile.open("pkg/freesdk.zip", 'w') do |zipfile|
+    FileUtils.rm_rf("pkg/loomsdk.zip") if File.exists? "pkg/loomsdk.zip"
+    Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|
       Dir["pkg/sdk/**/**"].each do |file|
-        zipfile.add(file.sub("pkg/sdk/", ''),file)
+        zipfile.add(file.sub("pkg/sdk/", ''), file)
       end
     end
 
@@ -316,5 +330,5 @@ namespace :post do
 end
 
 def decompile_apk (file, destination)
-  sh "java -jar artifacts/android/apktool.jar d -f #{file} -o #{destination}"
+  sh "java -jar artifacts/android-arm/apktool.jar d -f #{file} -o #{destination}"
 end
