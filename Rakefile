@@ -191,7 +191,7 @@ end
 
 $OUTPUT_DIRECTORY = "artifacts"
 
-if $HOST_ISX64 == '1' then
+if HOST_ISX64 == '1' then
   HOST_ARTIFACTS = "#{ROOT}/artifacts/#{$LOOM_HOST_OS}-x64"
 else
   HOST_ARTIFACTS = "#{ROOT}/artifacts/#{$LOOM_HOST_OS}-x86"
@@ -350,7 +350,6 @@ namespace :utility do
   task :compileScripts => $LSC_BINARY do
     puts "===== Compiling Core Scripts ====="
     Dir.chdir("sdk") do
-      sh "ls #{HOST_ARTIFACTS}/"
       sh "#{$LSC_BINARY} Main.build"
     end
   end
@@ -397,7 +396,7 @@ namespace :utility do
         FileUtils.mkdir_p("./docs/examples/#{args[:name]}/bin")
         Dir.chdir("docs/examples/#{args[:name]}") do
           sh "#{$LSC_BINARY}"
-          sh "#{HOST_ARTIFACTS}/LoomDemo.app/Contents/MacOS/LoomDemo"
+          sh "#{HOST_ARTIFACTS}/bin/LoomDemo.app/Contents/MacOS/LoomDemo"
         end
       else
         Rake::Task["build:windows"].invoke
@@ -406,7 +405,7 @@ namespace :utility do
         FileUtils.mkdir_p("./docs/examples/#{args[:name]}/bin")
         Dir.chdir("docs/examples/#{args[:name]}") do
           sh "#{$LSC_BINARY}"
-          sh "#{HOST_ARTIFACTS}/LoomDemo.exe"
+          sh "#{HOST_ARTIFACTS}/bin/LoomDemo.exe"
         end
       end
   end
@@ -414,22 +413,17 @@ namespace :utility do
   desc "Run the LoomDemo in artifacts"
   task :run => "build:desktop" do
 
-    puts "===== Launching Application ====="
+  puts "===== Launching Application ====="
 
-  if $LOOM_HOST_OS == 'osx'
-
-    appPath = Dir.glob("#{HOST_ARTIFACTS}/*.app")[0]
-    appPrefix = get_app_prefix(appPath)
-
-    # Run it.
-    Dir.chdir(appPath) do
-      sh "./Contents/MacOS/#{appPrefix}"
-    end
-  else
-
-    #Run it under Windows
-    Dir.chdir("#{HOST_ARTIFACTS}") do
-      sh "LoomDemo.exe"
+  Dir.chdir("artifacts") do
+    if $LOOM_HOST_OS == 'osx'
+      appPath = Dir.glob("#{HOST_ARTIFACTS}/bin/*.app")[0]
+      appPrefix = get_app_prefix(appPath)
+      sh "#{appPath}/Contents/MacOS/#{appPrefix}"
+    elsif $LOOM_HOST_OS == 'windows'
+      sh "#{HOST_ARTIFACTS}/bin/LoomDemo.exe"
+    else
+      sh "#{HOST_ARTIFACTS}/bin/LoomDemo"
     end
   end
 
@@ -439,12 +433,12 @@ namespace :utility do
   task :debug => ['build:osx'] do
     puts "===== Launching Application ====="
 
-    appPath = Dir.glob("#{HOST_ARTIFACTS}/*.app")[0]
+    appPath = Dir.glob("#{HOST_ARTIFACTS}/bin/*.app")[0]
     appPrefix = get_app_prefix(appPath)
 
     # Run it.
-    Dir.chdir(appPath) do
-      sh "gdb ./Contents/MacOS/#{appPrefix}"
+    Dir.chdir("artifacts") do
+      sh "gdb #{appPath}/Contents/MacOS/#{appPrefix}"
     end
   end
 
@@ -520,26 +514,27 @@ namespace :build do
         end
       end
 
-      # copy libs
-      FileUtils.cp_r("sdk/libs", "#{$OUTPUT_DIRECTORY}")
+      Rake::Task["utility:compileScripts"].invoke
 
       # build ldb
       Dir.chdir("sdk") do
         sh "#{$LSC_BINARY} LDB.build"
       end
-      
+
       # build testexec
       Dir.chdir("sdk") do
         sh "#{$LSC_BINARY} TestExec.build"
       end
 
+      puts "Copying to #{HOST_ARTIFACTS}"
+
+      # copy libs
+      FileUtils.cp_r("sdk/libs", "#{$OUTPUT_DIRECTORY}")
       FileUtils.cp_r("sdk/bin/LDB.loom", "#{$OUTPUT_DIRECTORY}/libs")
       FileUtils.cp_r("sdk/bin/TestExec.loom", "#{$OUTPUT_DIRECTORY}/libs")
       FileUtils.cp_r("sdk/src/testexec/loom.config", "#{$OUTPUT_DIRECTORY}/libs/TestExec.config")
-
-      #copy assets
-      FileUtils.mkdir_p("#{$OUTPUT_DIRECTORY}/assets")
-
+      FileUtils.cp_r('sdk/bin', "#{$OUTPUT_DIRECTORY}/bin")
+      FileUtils.cp_r('sdk/assets', "#{$OUTPUT_DIRECTORY}")
     end
 
   end
@@ -723,7 +718,7 @@ namespace :build do
     FileUtils.cp_r("sdk/bin/LDB.loom", "#{$OUTPUT_DIRECTORY}/libs")
     FileUtils.cp_r("sdk/bin/TestExec.loom", "#{$OUTPUT_DIRECTORY}/libs")
     FileUtils.cp_r("sdk/src/testexec/loom.config", "#{$OUTPUT_DIRECTORY}/libs/TestExec.config")
-    FileUtils.cp_r('sdk/bin', "#{HOST_ARTIFACTS}")
+    FileUtils.cp_r('sdk/bin', "#{$OUTPUT_DIRECTORY}/bin")
     FileUtils.cp_r('sdk/assets', "#{$OUTPUT_DIRECTORY}")
   end
 
@@ -881,7 +876,7 @@ namespace :build do
     FileUtils.cp_r("sdk/bin/LDB.loom", "#{$OUTPUT_DIRECTORY}/libs")
     FileUtils.cp_r("sdk/bin/TestExec.loom", "#{$OUTPUT_DIRECTORY}/libs")
     FileUtils.cp_r("sdk/src/testexec/loom.config", "#{$OUTPUT_DIRECTORY}/libs/TestExec.config")
-    FileUtils.cp_r('sdk/bin', "#{HOST_ARTIFACTS}")
+    FileUtils.cp_r('sdk/bin', "#{$OUTPUT_DIRECTORY}/bin")
     FileUtils.cp_r('sdk/assets', "#{$OUTPUT_DIRECTORY}")
 
 	end
