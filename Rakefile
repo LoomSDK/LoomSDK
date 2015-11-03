@@ -149,14 +149,14 @@ end
 
 # OSX specific settings
 
-if $LOOM_HOST_OS == 'osx'
+if $LOOM_HOST_OS == 'osx' or $LOOM_HOST_OS == 'linux'
   arch = `uname -m`.chomp
   if arch == 'x86_64' then
     HOST_ISX64 = '1'
   elsif arch == 'i386' then
     HOST_ISX64 = '0'
   else
-    abort("Unsupported OSX platform #{arch}!")
+    abort("Unsupported OSX/Linux platform #{arch}!")
   end
 end
 
