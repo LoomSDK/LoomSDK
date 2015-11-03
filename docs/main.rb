@@ -69,9 +69,16 @@ def generate
 end
 
 def copy_examples
-  FileUtils.cp_r(Dir.glob("examples"), OUTPUT_DIR)
   Dir["examples/*"].each do |lib_path|
     if File.exists? File.join(lib_path, "README.md")
+      FileUtils.mkdir_p(File.join(OUTPUT_DIR, lib_path))
+      FileUtils.cp_r(File.join(lib_path, "README.md"), File.join(OUTPUT_DIR, lib_path))
+      if Dir.exists? File.join(lib_path, "src")
+        FileUtils.cp_r(File.join(lib_path, "src"), File.join(OUTPUT_DIR, lib_path))
+      end
+      if Dir.exists? File.join(lib_path, "images")
+        FileUtils.cp_r(File.join(lib_path, "images"), File.join(OUTPUT_DIR, lib_path))
+      end
       example_doc = Module::ExampleDoc.new(lib_path.split("/").last)
       puts "Processing #{example_doc.path}.."
       $examples[example_doc.name] = example_doc
