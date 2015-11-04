@@ -25,6 +25,7 @@ require File.expand_path('../renderer/home_page', __FILE__)
 require File.expand_path('../renderer/package_page', __FILE__)
 require File.expand_path('../renderer/page', __FILE__)
 require File.expand_path('../renderer/topic_page', __FILE__)
+require File.expand_path('../renderer/data_js', __FILE__)
 
 OUTPUT_DIR = "output"
 API_OUTPUT_DIR = File.join(OUTPUT_DIR, "api")
@@ -64,6 +65,7 @@ def generate
   write_examples
   write_guides
   write_landing_page
+  write_data_js
 
   puts "== #{@stats[:num_classes]} classes; #{@stats[:num_examples]} examples; #{@stats[:num_guides]} guides =="
 end
@@ -246,10 +248,20 @@ end
 def write_landing_page
   puts "Writing Home Page"
 
-  home_page = HomePage.new(version_number, './')
+  home_page = HomePage.new(version_number, '.')
 
   File.open(File.join(OUTPUT_DIR, "index.html"), 'w') do |f|
     f.write(home_page.render File.expand_path("templates/home"))
+  end
+end
+
+def write_data_js
+  puts "Writing data.js"
+
+  data_js = DataJs.new()
+
+  File.open(File.join(OUTPUT_DIR, "js/data.js"), 'w') do |f|
+    f.write(data_js.render "templates/data.js.erb")
   end
 end
 

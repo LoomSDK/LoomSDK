@@ -1,0 +1,20 @@
+window["search_objects"] = $.parseJSON('<%= search_object_string %>');
+
+window["sidebarData"] = [
+	{ "name" : "Guides", "link" : [] },
+	{ "name" : "Examples", "link" : [] },
+	{ "name" : "API reference", "link" : [] }
+];
+
+// populate examples links
+for(var index in window["search_objects"].examples)
+{
+	example = window["search_objects"].examples[index];
+	window["sidebarData"][1].link.push({"name": example.name, "link": window["relative_base"] + "/" + example.path.split(".").join("/") + ".html"});
+}
+
+regex = new RegExp('%%', 'g');
+// populate guides links
+window["sidebarData"][0].link = $.parseJSON('<%= $guides.sidebar_links_json("%%") %>'.replace(regex, window["relative_base"]));
+// populate API reference links
+window["sidebarData"][2].link = $.parseJSON('<%= $packages.sidebar_links_json("%%") %>'.replace(regex, window["relative_base"]));            

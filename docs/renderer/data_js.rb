@@ -1,18 +1,7 @@
-class DocumentationPage
-  @@templates = {}
-
-  def self.templates
-    @@templates.keys
-  end
-
-  def render(path, hash=nil)
-    @@templates[path] = File.read(path + ".html.erb") if @@templates[path].nil?
-    unless hash.nil?
-      hash.each do |key, value|
-        self.instance_variable_set("@#{key}".to_sym, value)
-      end
-    end
-    template = ERB.new(@@templates[path])
+class DataJs
+  def render(path)
+    template_src = File.read(path)
+    template = ERB.new(template_src)
     result = template.result(binding)
   end
 
@@ -39,6 +28,10 @@ class DocumentationPage
 
   def is_setter ( hash )
     hash.has_key? :setter
+  end
+
+  def search_object_string
+    $search_json
   end
 
   def breadcrumbs
