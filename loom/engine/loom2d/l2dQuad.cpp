@@ -66,13 +66,13 @@ void Quad::updateNativeVertexData(lua_State *L, int index)
 
             GFX::Color c(0);
             lua_rawgeti(L, rawDataTable, rcounter++);
-            c.r = (float)lua_tonumber(L, -1);
-            lua_rawgeti(L, rawDataTable, rcounter++);
-            c.g = (float)lua_tonumber(L, -1);
+            c.a = (float)lua_tonumber(L, -1);
             lua_rawgeti(L, rawDataTable, rcounter++);
             c.b = (float)lua_tonumber(L, -1);
             lua_rawgeti(L, rawDataTable, rcounter++);
-            c.a = (float)lua_tonumber(L, -1);
+            c.g = (float)lua_tonumber(L, -1);
+            lua_rawgeti(L, rawDataTable, rcounter++);
+            c.r = (float)lua_tonumber(L, -1);
 
             // todo: optimize this too:
 
