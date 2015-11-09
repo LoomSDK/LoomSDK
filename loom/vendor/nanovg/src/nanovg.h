@@ -30,6 +30,12 @@ extern "C" {
 #pragma warning(disable: 4201)  // nonstandard extension used : nameless struct/union
 #endif
 
+// Custom allocation
+typedef void *(*nvg_malloc_t)(size_t);
+typedef void *(*nvg_realloc_t)(void *, size_t);
+typedef void (*nvg_free_t)(void *);
+void nvgSetAllocFunctions(nvg_malloc_t malloc_fn, nvg_realloc_t realloc_fn, nvg_free_t free_fn);
+
 typedef struct NVGcontext NVGcontext;
 
 struct NVGcolor {
@@ -100,11 +106,12 @@ struct NVGtextRow {
 typedef struct NVGtextRow NVGtextRow;
 
 enum NVGimageFlags {
-    NVG_IMAGE_GENERATE_MIPMAPS	= 1<<0,     // Generate mipmaps during creation of the image.
+	NVG_IMAGE_GENERATE_MIPMAPS	= 1<<0,     // Generate mipmaps during creation of the image.
 	NVG_IMAGE_REPEATX			= 1<<1,		// Repeat image in X direction.
 	NVG_IMAGE_REPEATY			= 1<<2,		// Repeat image in Y direction.
 	NVG_IMAGE_FLIPY				= 1<<3,		// Flips (inverses) image in Y direction when rendered.
 	NVG_IMAGE_PREMULTIPLIED		= 1<<4,		// Image data has premultiplied alpha.
+	NVG_IMAGE_BILINEAR          = 1<<5,     // Image is bilinearly filtered
 };
 
 // Begin drawing a new frame
@@ -216,6 +223,9 @@ void nvgLineJoin(NVGcontext* ctx, int join);
 // Already transparent paths will get proportionally more transparent as well.
 void nvgGlobalAlpha(NVGcontext* ctx, float alpha);
 
+// Sets the maximum recursion depth of tessellation.
+void nvgTessLevelMax(NVGcontext* ctx, int level);
+
 //
 // Transforms
 //
@@ -265,6 +275,7 @@ void nvgScale(NVGcontext* ctx, float x, float y);
 // There should be space for 6 floats in the return buffer for the values a-f.
 void nvgCurrentTransform(NVGcontext* ctx, float* xform);
 
+void nvgSetTransform(NVGcontext* ctx, float* xform);
 
 // The following functions can be used to make calculations on 2x3 transformation matrices.
 // A 2x3 matrix is represented as float[6].
@@ -358,9 +369,9 @@ NVGpaint nvgBoxGradient(NVGcontext* ctx, float x, float y, float w, float h,
 NVGpaint nvgRadialGradient(NVGcontext* ctx, float cx, float cy, float inr, float outr,
 						   NVGcolor icol, NVGcolor ocol);
 
-// Creates and returns an image patter. Parameters (ox,oy) specify the left-top location of the image pattern,
+// Creates and returns an image pattern. Parameters (ox,oy) specify the left-top location of the image pattern,
 // (ex,ey) the size of one image, angle rotation around the top-left corner, image is handle to the image to render.
-// The gradient is transformed by the current transform when it is passed to nvgFillPaint() or nvgStrokePaint().
+// The image pattern is transformed by the current transform when it is passed to nvgFillPaint() or nvgStrokePaint().
 NVGpaint nvgImagePattern(NVGcontext* ctx, float ox, float oy, float ex, float ey,
 						 float angle, int image, float alpha);
 
@@ -529,7 +540,7 @@ float nvgText(NVGcontext* ctx, float x, float y, const char* string, const char*
 
 // Draws multi-line text string at specified location wrapped at the specified width. If end is specified only the sub-string up to the end is drawn.
 // White space is stripped at the beginning of the rows, the text is split at word boundaries or when new-line characters are encountered.
-// Words longer than the max width are slit at nearest character (i.e. no hyphenation).
+// Words longer than the max width are split at nearest character (i.e. no hyphenation).
 void nvgTextBox(NVGcontext* ctx, float x, float y, float breakRowWidth, const char* string, const char* end);
 
 // Measures the specified text string. Parameter bounds should be a pointer to float[4],

@@ -32,8 +32,6 @@
 #include <algorithm>
 #include "easyexif.h"
 
-using std::string;
-
 extern "C"
 {
   int exifinfo_parse_orientation(const unsigned char *buf, unsigned len)

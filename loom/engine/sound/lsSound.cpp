@@ -22,6 +22,7 @@
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsSound.h"
 #include "loom/common/config/applicationConfig.h"
+#include "loom/common/utils/utString.h"
 #include "loom/script/loomscript.h"
 #include "loom/vendor/openal-soft/include/AL/al.h"
 #include "loom/vendor/openal-soft/include/AL/alc.h"
@@ -106,13 +107,11 @@ extern "C"
 class OALBufferNote
 {
 public:
-    const char *asset;
     ALuint buffer;
     int refCounter;
 
     OALBufferNote()
     {
-        asset = NULL;
         buffer = 0;
         refCounter = 1;
     }
@@ -136,19 +135,30 @@ public:
         if(notePtr == NULL)
         {
             note = lmNew(NULL) OALBufferNote();
-            note->asset = strdup(assetPath);
-
-            // OpenAL buffer alloc.
-            alGenBuffers((ALuint)1, &note->buffer);
-            CHECK_OPENAL_ERROR();
 
             // Lock the asset.
             loom_asset_sound *sound = (loom_asset_sound *)loom_asset_lock(assetPath, LATSound, 1);
 
             if(sound)
             {
-                alBufferData(note->buffer, sound->channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, 
-                    sound->buffer, sound->bufferSize, 44100);            
+                // OpenAL buffer alloc.
+                alGenBuffers((ALuint)1, &note->buffer);
+                CHECK_OPENAL_ERROR();
+
+                ALenum sampleFormat;
+                if (sound->channels == 1)
+                {
+                    sampleFormat = sound->bytesPerSample == 1 ? AL_FORMAT_MONO8 : AL_FORMAT_MONO16;
+                }
+                else
+                {
+                    sampleFormat = sound->bytesPerSample == 1 ? AL_FORMAT_STEREO8 : AL_FORMAT_STEREO16;
+                }
+                alBufferData(note->buffer,
+                             sampleFormat,
+                             sound->buffer,
+                             sound->bufferSize,
+                             sound->sampleRate);
                 CHECK_OPENAL_ERROR();
             }
             else
@@ -193,6 +203,7 @@ public:
             ///delete and remove the buffer if it has no more references
             alDeleteBuffers((ALuint)1, (const ALuint*)(&note->buffer));
             buffers.remove(assetPath);
+            lmDelete(NULL, note);
         }
     }
 
@@ -482,6 +493,11 @@ public:
         return (state == AL_PLAYING || state == AL_PAUSED);
     }
 
+    bool isNull()
+    {
+        return path == NULL;
+    }
+
     bool hasEverPlayed()
     {
         return playCount != 0;
@@ -547,7 +563,7 @@ void OALBufferManager::soundUpdater(void *payload, const char *name)
 
     // Update the buffer.
     alBufferData(note->buffer, sound->channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, 
-        sound->buffer, sound->bufferSize, 44100);            
+        sound->buffer, sound->bufferSize, sound->sampleRate);
     CHECK_OPENAL_ERROR();
 
     // Now restart all the sources after assigning the new buffer.
@@ -636,6 +652,7 @@ static int registerLoomSoundSound(lua_State *L)
        .addMethod("rewind", &Sound::rewind)
 
        .addMethod("isPlaying", &Sound::isPlaying)
+       .addMethod("isNull", &Sound::isNull)
        .addMethod("hasEverPlayed", &Sound::hasEverPlayed)
        
        .endClass()

@@ -1942,7 +1942,7 @@ package feathers.controls
             }
             if((groupIndex < 0 && itemIndex >= 0) || (groupIndex >= 0 && itemIndex < 0))
             {
-                throw new ArgumentError("To deselect items, group index and item index must both be < 0.");
+                Debug.assert("To deselect items, group index and item index must both be < 0.");
             }
             this._selectedGroupIndex = groupIndex;
             this._selectedItemIndex = itemIndex;

@@ -12,6 +12,7 @@ package loom2d.core
 {
     //import loom2d.display.CCLayer;
     import loom.Application;
+    import system.String;
 
     import loom2d.math.Point;
     
@@ -45,6 +46,7 @@ package loom2d.core
         private var mCtrlDown:Boolean = false;
 
         private var touchQueueDataPool:Vector.<TouchQueueData> = [];
+        private var touchEventPool:Vector.<TouchEvent> = [];
         
         /** Helper objects. */
         private static var sProcessedTouchIDs:Vector.<int> = new Vector.<int>[];
@@ -80,9 +82,9 @@ package loom2d.core
             enqueue(id, TouchPhase.BEGAN, x, y);
         }
 
-        protected function handleTouchMoved(id:int, x:Number, y:Number):void
+        protected function handleTouchMoved(id:int, x:Number, y:Number, buttons:int):void
         {
-            //trace("move @ " + x + ", " + y);
+            //trace("move @ " + x + ", " + y + " " + buttons);
 
             // translate to stage space            
             x-=mStage.x;
@@ -92,7 +94,7 @@ package loom2d.core
 
             //trace("POSTmove @ " + x + ", " + y);
 
-            enqueue(id, TouchPhase.MOVED, x, y);
+            enqueue(id, buttons != 0 ? TouchPhase.MOVED : TouchPhase.HOVER, x, y);
         }
 
         protected function handleTouchEnded(id:int, x:Number, y:Number):void
@@ -151,18 +153,17 @@ package loom2d.core
                     
                     // hovering touches need special handling (see below)
                     if (touch && touch.phase == TouchPhase.HOVER && touch.target)
-                        sHoveringTouchData.push(new TouchProcessorNote(touch, touch.target, touch.bubbleChain));
+                        sHoveringTouchData.pushSingle(new TouchProcessorNote(touch, touch.target, touch.bubbleChain));
                     
                     processTouch(touchArgs);
-                    sProcessedTouchIDs.push(touchID);
+                    sProcessedTouchIDs.pushSingle(touchID);
 
                     returnTouchQueueDataToPool(touchArgs);
                 }
                 
                 // the same touch event will be dispatched to all targets; 
                 // the 'dispatch' method will make sure each bubble target is visited only once.
-                var touchEvent:TouchEvent = 
-                    new TouchEvent(TouchEvent.TOUCH, mCurrentTouches, mShiftDown, mCtrlDown); 
+                var touchEvent:TouchEvent = getTouchEvent(TouchEvent.TOUCH, mCurrentTouches, mShiftDown, mCtrlDown); 
                 
                 // if the target of a hovering touch changed, we dispatch the event to the previous
                 // target to notify it that it's no longer being hovered over.
@@ -180,11 +181,23 @@ package loom2d.core
                     getCurrentTouch(touchID).dispatchEvent(touchEvent);
                 }
                 
+                returnTouchEvent(touchEvent);
+                
                 // remove ended touches
                 for (i=mCurrentTouches.length-1; i>=0; --i)
                     if (mCurrentTouches[i].phase == TouchPhase.ENDED)
                         mCurrentTouches.splice(i, 1);
             }
+        }
+        
+        private function getTouchEvent(type:String, touches:Vector.<Touch>, shiftKey:Boolean, ctrlKey:Boolean):TouchEvent {
+            var e:TouchEvent = touchEventPool.length <= 0 ? new TouchEvent() : touchEventPool.pop();
+            e.resetTouch(type, touches, shiftKey, ctrlKey);
+            return e;
+        }
+        
+        private function returnTouchEvent(e:TouchEvent) {
+            touchEventPool.pushSingle(e);
         }
         
         public function enqueue(touchID:int, phase:String, globalX:Number, globalY:Number,
@@ -206,7 +219,7 @@ package loom2d.core
             if (mouse == null || mouse.phase != TouchPhase.HOVER) return;
             
             // On OS X, we get mouse events from outside the stage; on Windows, we do not.
-            // This method enqueues an artifial hover point that is just outside the stage.
+            // This method enqueues an artifical hover point that is just outside the stage.
             // That way, objects listening for HOVERs over them will get notified everywhere.
             
             var offset:int = 1;
@@ -327,7 +340,7 @@ package loom2d.core
                 touch.setTapCount(1);
             }
             
-            mLastTaps.push(touch.clone());
+            mLastTaps.pushSingle(touch.clone());
         }
 
         private function processRelease(touch:Touch):void
@@ -355,7 +368,7 @@ package loom2d.core
                 if (mCurrentTouches[i].id == touch.id)
                     mCurrentTouches.splice(i, 1);
             
-            mCurrentTouches.push(touch);
+            mCurrentTouches.pushSingle(touch);
         }
         
         private function getCurrentTouch(touchID:int):Touch
@@ -407,11 +420,12 @@ package loom2d.core
             }
             
             // dispatch events
-            var touchEvent:TouchEvent = 
-                new TouchEvent(TouchEvent.TOUCH, mCurrentTouches, mShiftDown, mCtrlDown);
+            var touchEvent:TouchEvent = getTouchEvent(TouchEvent.TOUCH, mCurrentTouches, mShiftDown, mCtrlDown);
             
             for each (touch in mCurrentTouches)
                 touch.dispatchEvent(touchEvent);
+            
+            returnTouchEvent(touchEvent);
             
             // purge touches
             mCurrentTouches.length = 0;

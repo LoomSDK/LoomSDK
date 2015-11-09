@@ -27,28 +27,38 @@
 #include "loom/common/config/applicationConfig.h"
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/graphics/gfxTexture.h"
+#include "loom/common/core/telemetry.h"
+
+lmDefineLogGroup(gTickLogGroup, "tick", true, LoomLogInfo)
 
 extern "C"
 {
 
 void loom_tick()
 {
+    Telemetry::beginTick();
+    
+    LOOM_PROFILE_START(loom_tick);
+
+    LSLuaState *vm = NULL;
+
+    vm = LoomApplication::getReloadQueued() ? NULL : LoomApplication::getRootVM();
+
     // Mark the main thread for NativeDelegates. On some platforms this
     // may change so we remark every frame.
     NativeDelegate::markMainThread();
-    NativeDelegate::executeDeferredCalls(LoomApplication::getRootVM()->VM());
+    if (vm) NativeDelegate::executeDeferredCalls(vm->VM());
 
     performance_tick();
 
     profilerBlock_t p = { "loom_tick", platform_getMilliseconds(), 8 };
-
+    
     if (LoomApplication::getReloadQueued())
     {
         LoomApplication::reloadMainAssembly();
     }
     else
     {
-        LSLuaState *vm = LoomApplication::getRootVM();
         if (vm)
         {
             // https://theengineco.atlassian.net/browse/LOOM-468
@@ -62,19 +72,23 @@ void loom_tick()
             LoomApplication::ticks.invoke();
         }
     }
-
+    
     loom_asset_pump();
-
+    
     platform_HTTPUpdate();
-
+    
     GFX::Texture::tick();
-
-    lualoom_gc_update(LoomApplication::getRootVM()->VM());
-
-    if(Loom2D::Stage::smMainStage)
-        Loom2D::Stage::smMainStage->invokeRenderStage();
-
+    
+    if (Loom2D::Stage::smMainStage) Loom2D::Stage::smMainStage->invokeRenderStage();
+    
     finishProfilerBlock(&p);
+    
+    LOOM_PROFILE_END(loom_tick);
+    
+    LOOM_PROFILE_ZERO_CHECK()
+    
+    Telemetry::endTick();
+
 }
 }
 

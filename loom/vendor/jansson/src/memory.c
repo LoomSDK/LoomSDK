@@ -12,11 +12,11 @@
 #include <jansson.h>
 #include "jansson_private.h"
 
- #include "jemalloc/jemalloc.h"
+//#include "jemalloc/jemalloc.h"
 
 /* memory function pointers */
-static json_malloc_t do_malloc = je_malloc;
-static json_free_t do_free = je_free;
+static json_malloc_t do_malloc = malloc;
+static json_free_t do_free = free;
 
 void *jsonp_malloc(size_t size)
 {

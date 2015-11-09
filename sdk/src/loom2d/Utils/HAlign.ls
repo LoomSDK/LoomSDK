@@ -16,7 +16,7 @@ package loom2d.utils
     public final class HAlign
     {
         /** @private */
-        public function HAlign() { throw new Error("Abstract class"); }
+        public function HAlign() { Debug.assert("Abstract class"); }
         
         /** Left alignment. */
         public static const LEFT:String   = "left";

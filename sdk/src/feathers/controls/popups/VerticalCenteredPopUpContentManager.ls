@@ -88,7 +88,7 @@ package feathers.controls.popups
         {
             if(this.content)
             {
-                throw new IllegalOperationError("Pop-up content is already defined.");
+                Debug.assert("Pop-up content is already defined.");
             }
 
             this.content = content;

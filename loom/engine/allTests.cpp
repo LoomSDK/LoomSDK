@@ -18,9 +18,7 @@
  * ===========================================================================
  */
 
-#if 0
 #include "seatest.h"
-#include "platform/platform.h"
 
 // Define all the unit tests to to run.
 SEATEST_SUITE(allTests)
@@ -29,13 +27,13 @@ SEATEST_SUITE(allTests)
     SEATEST_SUITE_ENTRY(platformThread);
     SEATEST_SUITE_ENTRY(platformNetwork);
     SEATEST_SUITE_ENTRY(stringTable);
-    SEATEST_SUITE_ENTRY(typeRegistry);
-    SEATEST_SUITE_ENTRY(handles);
-    SEATEST_SUITE_ENTRY(tasks);
-    SEATEST_SUITE_ENTRY(gameObject);
-    SEATEST_SUITE_ENTRY(eventQueue);
-    SEATEST_SUITE_ENTRY(matrix);
+    //SEATEST_SUITE_ENTRY(typeRegistry);
+    //SEATEST_SUITE_ENTRY(handles);
+    //SEATEST_SUITE_ENTRY(tasks);
+    //SEATEST_SUITE_ENTRY(gameObject);
+    //SEATEST_SUITE_ENTRY(eventQueue);
+    //SEATEST_SUITE_ENTRY(matrix);
     SEATEST_SUITE_ENTRY(logging);
     SEATEST_SUITE_ENTRY(assets);
+    SEATEST_SUITE_ENTRY(lmAutoPtr);
 }
-#endif 

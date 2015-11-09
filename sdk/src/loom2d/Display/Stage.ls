@@ -20,6 +20,7 @@ package loom2d.display
     import loom2d.events.TouchEvent;
     import loom2d.events.ScrollWheelEvent;
     import loom2d.events.EventDispatcher;
+    import loom2d.events.GameControllerEvent;
     
     import loom2d.math.Point;
     import loom2d.math.Rectangle;
@@ -46,6 +47,8 @@ package loom2d.display
     }
 
     delegate KeyDelegate(scancode:int, virtualKey:int, modifiers:int);
+    delegate GameControllerAddedDelegate(controller:int);
+    delegate GameControllerRemovedDelegate(controller:int);
     delegate HardwareKeyDelegate();
     delegate TouchDelegate(touchId:int, x:int, y:int);
     delegate ScrollWheelDelegate(yDelta:int);
@@ -65,17 +68,41 @@ package loom2d.display
      *  In Loom, keyboard events are only dispatched at the stage. Add an event listener
      *  directly to the stage to be notified of keyboard events.
      * 
+     *  **Controller Events**
+     * 
+     *  In Loom, game controller events are only dispatched at the stage. Add an event listener
+     *  directly to the stage to be notified of controller events.
+     * 
      *  **Resize Events**
      * 
      *  When a Loom application is resized, the stage dispatches a `ResizeEvent`. The 
      *  event contains properties containing the updated width and height of game.
      *
      *  @see Loom.Events.KeyboardEvent
+     *  @see Loom.Events.GameControllerEvent
      *  @see Loom.Events.ResizeEvent
      */
     [Native(managed)]      
     public native class Stage extends DisplayObjectContainer
     {
+        /**
+         * `Stage.vectorQuality` constant representing no flags (0).
+         */
+        public static const VECTOR_QUALITY_NONE              = 0;
+        
+        /**
+         * `Stage.vectorQuality` constant defining the vector antialiasing status.
+         * 
+         * Vector antialiasing adjusts the geometry to include antialiasing.
+         */
+        public static const VECTOR_QUALITY_ANTIALIAS         = 1 << 0;
+        
+        /**
+         * Uses the stencil buffer to render strokes. This provides better quality rendering for overlapping strokes
+         * and overlapping shapes. If you aren't relying on specific overlapping behavior, you can omit this flag for better performance.
+         */
+        public static const VECTOR_QUALITY_STENCIL_STROKES   = 1 << 1;
+        
         private var mWidth:int;
         private var mHeight:int;
         private var mColor:uint;
@@ -89,6 +116,9 @@ package loom2d.display
 
         public native var onKeyUp:KeyDelegate;
         public native var onKeyDown:KeyDelegate;
+
+        public native var onGameControllerAdded:GameControllerAddedDelegate;
+        public native var onGameControllerRemoved:GameControllerRemovedDelegate;
 
         public native var onMenuKey:HardwareKeyDelegate;
         public native var onBackKey:HardwareKeyDelegate;
@@ -132,6 +162,9 @@ package loom2d.display
             onKeyDown += onKeyDownHandler;
             onKeyUp += onKeyUpHandler;
 
+            onGameControllerAdded += onGameControllerAddedHandler;
+            onGameControllerRemoved += onGameControllerRemovedHandler;
+
             onSizeChange += onSizeChangeHandler;
 
             // Application's TouchProcessor handles touch/mouse input.
@@ -164,6 +197,16 @@ package loom2d.display
                     (modifiers | LoomKeyModifier.CTRL) != 0,
                     (modifiers | LoomKeyModifier.ALT) != 0,
                     (modifiers | LoomKeyModifier.SHIFT) != 0 ));
+        }
+        
+        protected function onGameControllerAddedHandler(controller:int):void
+        {
+            broadcastEvent(new GameControllerEvent(GameControllerEvent.CONTROLLER_ADDED, controller));
+        }
+        
+        protected function onGameControllerRemovedHandler(controller:int):void
+        {
+            broadcastEvent(new GameControllerEvent(GameControllerEvent.CONTROLLER_REMOVED, controller));
         }
 
         protected function onScrollWheelHandler(delta:Number)
@@ -263,6 +306,25 @@ package loom2d.display
         public function get stageHeight():int { return mHeight; }
         public function set stageHeight(value:int):void { mHeight = value; invalidateScale(); }
         
+        /**
+         * The quality of vector rendering.
+         * 
+         * @see Stage.VECTOR_QUALITY_ANTIALIAS
+         * @see Stage.VECTOR_QUALITY_STENCIL
+         * @return Returns the bitfield of flags. Test with the & (bitwise AND) operator,
+         *         e.g. `if (Stage.vectorQuality & VECTOR_QUALITY_ANTIALIAS) { trace("Vector antialiasing enabled!"); }`
+         */
+        public native function get vectorQuality():int;
+        public native function set vectorQuality(flags:int):void;
+        
+        /**
+         * The maximum recursion level of tessellation. Bigger values result in greater quality.
+         * Valid values are from 1 to 10 while 6 is the default. Values lower than 6 area
+         * known to cause visual errors in the rendering.
+         */
+        public native function set tessellationQuality(value:int);
+        public native function get tessellationQuality():int;
+
         /** Height of the native display in pixels. */
         public native function get nativeStageHeight():int;
 

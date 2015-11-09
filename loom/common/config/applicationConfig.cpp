@@ -21,6 +21,7 @@
 #include "jansson.h"
 #include "loom/common/core/assert.h"
 #include "loom/common/core/log.h"
+#include "loom/common/core/string.h"
 #include "loom/common/platform/platformIO.h"
 #include "loom/common/config/applicationConfig.h"
 
@@ -75,7 +76,7 @@ static bool _jsonParseBool(const char *key, json_t *value)
 
     if (json_is_string(value))
     {
-        return !strcasecmp(json_string_value(value), "true") ? true : false;
+        return !stricmp(json_string_value(value), "true") ? true : false;
     }
 
     lmLog(gLoomApplicationConfigLogGroup, "WARNING: unknown json bool conversion in config for key %s", key);
@@ -124,7 +125,6 @@ static int _jsonParseInt(const char *key, json_t *value)
 
 const utString& LoomApplicationConfig::displayOrientation()
 {
-    lmLog(gLoomApplicationConfigLogGroup, "displayOrientation %s", _displayOrientation.c_str());
     return _displayOrientation;
 }
 

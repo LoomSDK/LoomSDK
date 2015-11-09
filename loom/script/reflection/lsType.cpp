@@ -27,8 +27,8 @@
 
 #include "loom/script/runtime/lsLuaState.h"
 
-
 namespace LS {
+
 Assembly *Type::getAssembly()
 {
     assert(module);
@@ -38,6 +38,7 @@ Assembly *Type::getAssembly()
 
 void Type::addMember(MemberInfo *member)
 {
+
     member->declaringType = this;
     members.push_back(member);
 
@@ -100,13 +101,13 @@ void Type::freeByteCode()
 
     if (bcStaticInitializer)
     {
-        delete bcStaticInitializer;
+        lmDelete(NULL, bcStaticInitializer);
         bcStaticInitializer = NULL;
     }
 
     if (bcInstanceInitializer)
     {
-        delete bcInstanceInitializer;
+        lmDelete(NULL, bcInstanceInitializer);
         bcInstanceInitializer = NULL;
     }
 }
@@ -311,13 +312,18 @@ MethodInfo *Type::findOperatorMethod(const utString& methodName)
 
 ConstructorInfo *Type::getConstructor()
 {
+    if(cachedConstructor)
+        return cachedConstructor;
+
     for (UTsize i = 0; i < members.size(); i++)
     {
         MemberInfo *m = members.at(i);
-        if (m->isConstructor())
-        {
-            return (ConstructorInfo *)m;
-        }
+        if (!m->isConstructor())
+            continue;
+
+        // Store match to return faster next time.
+        cachedConstructor = (ConstructorInfo *)m;
+        return (ConstructorInfo *)m;
     }
 
     return NULL;

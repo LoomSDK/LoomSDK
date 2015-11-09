@@ -32,6 +32,11 @@
 #include "loom/script/loomscript.h"
 #include "loom/script/native/lsNativeDelegate.h"
 
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+#include <jni.h>
+#include "loom/common/platform/platformAndroidJni.h"
+#endif
+
 #include "seatest.h"
 
 using namespace LS;
@@ -46,9 +51,12 @@ protected:
     static utString   bootAssembly;
     static bool       suppressAssetTriggeredReload;
 
+
     static void __handleMainAssemblyUpdate(void *payload, const char *asset);
 
 public:
+
+    static loom_precision_timer_t tickTimer;
 
     static NativeDelegate ticks;
     static NativeDelegate assetCommandDelegate;

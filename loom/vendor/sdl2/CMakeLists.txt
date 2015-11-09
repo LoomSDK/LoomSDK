@@ -794,10 +794,15 @@ elseif(WINDOWS)
 
   # Check for DirectX
   if(DIRECTX)
-    if("$ENV{DXSDK_DIR}" STREQUAL "")
+    if("$ENV{DXSDK_DIR}" STREQUAL "" AND DXSDK_DIR STREQUAL "")
       message_error("DIRECTX requires the \$DXSDK_DIR environment variable to be set")
     endif()
-    set(CMAKE_REQUIRED_FLAGS "/I\"$ENV{DXSDK_DIR}\\Include\"")
+    if("$ENV{DXSDK_DIR}" STREQUAL "")
+        set(CMAKE_REQUIRED_FLAGS "/I\"${DXSDK_DIR}\\Include\"")
+    else()
+        set(CMAKE_REQUIRED_FLAGS "/I\"$ENV{DXSDK_DIR}\\Include\"")
+    endif()
+
     check_include_file(d3d9.h HAVE_D3D_H)
     check_include_file(d3d11_1.h HAVE_D3D11_H)
     check_include_file(ddraw.h HAVE_DDRAW_H)

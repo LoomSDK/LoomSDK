@@ -58,10 +58,6 @@ package loom2d.display
         public native function set depthSort(value:Boolean);
         public native function get depthSort():Boolean;
 
-        /** View controls which indexed view the container's children will be drawn into */
-        //public native function set view(value:int);
-        //public native function get view():int;
-
         /**
          * Native implementation for clip rect functionality; this passes the 
          * clip rect to the native rendering code. Render of this container's
@@ -98,14 +94,14 @@ package loom2d.display
         // child management
         
         /** Adds a child to the container. It will be at the frontmost position. */
-        public function addChild(child:DisplayObject):DisplayObject
+        public function addChild(child:DisplayObject, fireEvents:Boolean = true):DisplayObject
         {
-            addChildAt(child, numChildren);
+            addChildAt(child, numChildren, fireEvents);
             return child;
         }
         
         /** Adds a child to the container at a certain index. */
-        public function addChildAt(child:DisplayObject, index:int):DisplayObject
+        public function addChildAt(child:DisplayObject, index:int, fireEvents:Boolean = true):DisplayObject
         {
 			Debug.assert(child, "No child specified.");
 			
@@ -120,13 +116,15 @@ package loom2d.display
                 else                      mChildren.splice(index, 0, child);
                 
                 child.setParent(this);
-                child.dispatchEventWith(Event.ADDED, true);
-                
-                if (stage)
+                if (fireEvents)
                 {
-                    var container:DisplayObjectContainer = child as DisplayObjectContainer;
-                    if (container) container.broadcastEventWith(Event.ADDED_TO_STAGE);
-                    else           child.dispatchEventWith(Event.ADDED_TO_STAGE);
+                    child.dispatchEventWith(Event.ADDED, true);
+                    if (stage)
+                    {
+                        var container:DisplayObjectContainer = child as DisplayObjectContainer;
+                        if (container) container.broadcastEventWith(Event.ADDED_TO_STAGE);
+                        else           child.dispatchEventWith(Event.ADDED_TO_STAGE);
+                    }
                 }
 
 				// Propagate style to children.
@@ -146,29 +144,33 @@ package loom2d.display
         
         /** Removes a child from the container. If the object is not a child, nothing happens. 
          *  If requested, the child will be disposed right away. */
-        public function removeChild(child:DisplayObject, dispose:Boolean=false):DisplayObject
+        public function removeChild(child:DisplayObject, dispose:Boolean=false, fireEvents:Boolean = true):DisplayObject
         {
             var childIndex:int = getChildIndex(child);
-            if (childIndex != -1) removeChildAt(childIndex, dispose);
+            if (childIndex != -1) removeChildAt(childIndex, dispose, fireEvents);
             return child;
         }
         
         /** Removes a child at a certain index. Children above the child will move down. If
          *  requested, the child will be disposed right away. */
-        public function removeChildAt(index:int, dispose:Boolean=false):DisplayObject
+        public function removeChildAt(index:int, dispose:Boolean=false, fireEvents:Boolean = true):DisplayObject
         {
+            var numChildren:int = mChildren.length; 
+            
             if (index >= 0 && index < numChildren)
             {
                 var child:DisplayObject = mChildren[index];
-                child.dispatchEventWith(Event.REMOVED, true);
                 
-                if (stage)
+                if(fireEvents)
+                    child.dispatchEventWith(Event.REMOVED, true);
+                
+                if (stage && fireEvents)
                 {
                     var container:DisplayObjectContainer = child as DisplayObjectContainer;
                     if (container) container.broadcastEventWith(Event.REMOVED_FROM_STAGE);
                     else           child.dispatchEventWith(Event.REMOVED_FROM_STAGE);
                 }
-                                
+                
                 child.setParent(null);
                 index = mChildren.indexOf(child); // index might have changed by event handler
                 if (index >= 0) mChildren.remove(child);
@@ -201,11 +203,19 @@ package loom2d.display
             if (index >= 0 && index < numChildren)
                 return mChildren[index];
             else
-			{
+            {
                 //throw new RangeError("Invalid child index");
-				Debug.assert(false, "Invalid child index");
-				return null;
-			}
+                Debug.assert(false, "Invalid child index");
+                return null;
+            }
+        }
+        
+        /** Returns a child object at a certain index without doing bounds checks.
+         * For optimized use in cases where you are 100% about the index validity.
+         */
+        public function getChildAtUnsafe(index:int):DisplayObject
+        {
+            return mChildren[index];
         }
         
         /** Returns a child object with a certain name (non-recursively). */
@@ -230,10 +240,53 @@ package loom2d.display
             var oldIndex:int = getChildIndex(child);
 			Debug.assert(oldIndex != -1, "Not a child of this container.");
             
-            if (oldIndex == -1) throw new ArgumentError("Not a child of this container");
+            if (oldIndex == -1) Debug.assert("Not a child of this container");
             
-            mChildren.splice(oldIndex, 1);
-            mChildren.splice(index, 0, child);
+            if(index < 0 || index >= mChildren.length) Debug.assert("index out of bounds.");
+
+            // Do nothing for same index.
+            if(oldIndex == index)
+                return; 
+
+            if(oldIndex < index)
+            {
+                // Moving an item early in the array towards end of array.
+                for(var i=oldIndex; i<index; i++)
+                    mChildren[i] = mChildren[i + 1];
+                mChildren[index] = child;
+            }
+            else
+            {
+                // Moving an item late in the array towards beginning of array.
+                for (var j = oldIndex; j > index; j--)
+                {
+                    mChildren[j] = mChildren[j - 1];
+                }
+                mChildren[index] = child;
+            }
+
+            //mChildren.splice(oldIndex, 1);
+            //mChildren.splice(index, 0, child);
+        }
+        
+        public function setChildrenUnsafe(ordered:Vector.<DisplayObject>)
+        {
+            mChildren = ordered;
+        }
+
+        /** Moves a child to be the last object in the container. */
+        public function moveChildLast(child:DisplayObject):void
+        {
+            var oldIndex:int = mChildren.indexOf(child);
+            if (oldIndex == -1)
+            {
+                Debug.assert("Not a child of this container");
+                return;
+            }
+
+            //remove the child and push it to the back of the container
+            mChildren.remove(child);
+            mChildren.pushSingle(child);
         }
         
         /** Swaps the indexes of two children. */

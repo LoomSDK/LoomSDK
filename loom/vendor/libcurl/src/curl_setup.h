@@ -7,7 +7,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2013, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -112,6 +112,13 @@
 #  endif
 #endif
 
+/* Solaris needs this to get a POSIX-conformant getpwuid_r */
+#if defined(sun) || defined(__sun)
+#  ifndef _POSIX_PTHREAD_SEMANTICS
+#    define _POSIX_PTHREAD_SEMANTICS 1
+#  endif
+#endif
+
 /* ================================================================ */
 /*  If you need to include a system header file for your platform,  */
 /*  please, do it beyond the point further indicated in this file.  */
@@ -137,29 +144,6 @@
 #ifdef SIZEOF_CURL_OFF_T
 #  error "SIZEOF_CURL_OFF_T shall not be defined!"
    Error Compilation_aborted_SIZEOF_CURL_OFF_T_shall_not_be_defined
-#endif
-
-/*
- * Set up internal curl_off_t formatting string directives for
- * exclusive use with libcurl's internal *printf functions.
- */
-
-#ifdef FORMAT_OFF_T
-#  error "FORMAT_OFF_T shall not be defined before this point!"
-   Error Compilation_aborted_FORMAT_OFF_T_already_defined
-#endif
-
-#ifdef FORMAT_OFF_TU
-#  error "FORMAT_OFF_TU shall not be defined before this point!"
-   Error Compilation_aborted_FORMAT_OFF_TU_already_defined
-#endif
-
-#if (CURL_SIZEOF_CURL_OFF_T > CURL_SIZEOF_LONG)
-#  define FORMAT_OFF_T  "lld"
-#  define FORMAT_OFF_TU "llu"
-#else
-#  define FORMAT_OFF_T  "ld"
-#  define FORMAT_OFF_TU "lu"
 #endif
 
 /*
@@ -205,6 +189,9 @@
 #  endif
 #  ifndef CURL_DISABLE_GOPHER
 #    define CURL_DISABLE_GOPHER
+#  endif
+#  ifndef CURL_DISABLE_SMB
+#    define CURL_DISABLE_SMB
 #  endif
 #endif
 
@@ -270,6 +257,9 @@
 #    endif
 #  endif
 #  include <tchar.h>
+#  ifdef UNICODE
+     typedef wchar_t *(*curl_wcsdup_callback)(const wchar_t *str);
+#  endif
 #endif
 
 /*
@@ -368,7 +358,9 @@
 #  include <sys/stat.h>
 #  undef  lseek
 #  define lseek(fdes,offset,whence)  _lseeki64(fdes, offset, whence)
+#  undef  fstat
 #  define fstat(fdes,stp)            _fstati64(fdes, stp)
+#  undef  stat
 #  define stat(fname,stp)            _stati64(fname, stp)
 #  define struct_stat                struct _stati64
 #  define LSEEK_ERROR                (__int64)-1
@@ -612,22 +604,36 @@ int netware_init(void);
 
 #define LIBIDN_REQUIRED_VERSION "0.4.1"
 
-#if defined(USE_GNUTLS) || defined(USE_SSLEAY) || defined(USE_NSS) || \
-    defined(USE_QSOSSL) || defined(USE_POLARSSL) || defined(USE_AXTLS) || \
+#if defined(USE_GNUTLS) || defined(USE_OPENSSL) || defined(USE_NSS) || \
+    defined(USE_POLARSSL) || defined(USE_AXTLS) || \
     defined(USE_CYASSL) || defined(USE_SCHANNEL) || \
-    defined(USE_DARWINSSL)
+    defined(USE_DARWINSSL) || defined(USE_GSKIT)
 #define USE_SSL    /* SSL support has been enabled */
 #endif
 
-#if defined(HAVE_GSSAPI) || defined(USE_WINDOWS_SSPI)
-#define USE_HTTP_NEGOTIATE
+/* Single point where USE_SPNEGO definition might be defined */
+#if !defined(CURL_DISABLE_CRYPTO_AUTH) && \
+    (defined(HAVE_GSSAPI) || defined(USE_WINDOWS_SSPI))
+#define USE_SPNEGO
 #endif
 
-/* Single point where USE_NTLM definition might be done */
-#if !defined(CURL_DISABLE_HTTP) && !defined(CURL_DISABLE_NTLM)
-#if defined(USE_SSLEAY) || defined(USE_WINDOWS_SSPI) || \
-    defined(USE_GNUTLS) || defined(USE_NSS) || defined(USE_DARWINSSL)
+/* Single point where USE_KERBEROS5 definition might be defined */
+#if !defined(CURL_DISABLE_CRYPTO_AUTH) && \
+    (defined(HAVE_GSSAPI) || defined(USE_WINDOWS_SSPI))
+#define USE_KERBEROS5
+#endif
+
+/* Single point where USE_NTLM definition might be defined */
+#if !defined(CURL_DISABLE_NTLM) && !defined(CURL_DISABLE_CRYPTO_AUTH)
+#if defined(USE_OPENSSL) || defined(USE_WINDOWS_SSPI) || \
+    defined(USE_GNUTLS) || defined(USE_NSS) || defined(USE_DARWINSSL) || \
+    defined(USE_OS400CRYPTO) || defined(USE_WIN32_CRYPTO)
+
+#ifdef HAVE_BORINGSSL /* BoringSSL is not NTLM capable */
+#undef USE_NTLM
+#else
 #define USE_NTLM
+#endif
 #endif
 #endif
 
@@ -645,8 +651,10 @@ int netware_init(void);
 #if defined(__GNUC__) && ((__GNUC__ >= 3) || \
   ((__GNUC__ == 2) && defined(__GNUC_MINOR__) && (__GNUC_MINOR__ >= 7)))
 #  define UNUSED_PARAM __attribute__((__unused__))
+#  define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
 #else
 #  define UNUSED_PARAM /*NOTHING*/
+#  define WARN_UNUSED_RESULT
 #endif
 
 /*
@@ -697,6 +705,26 @@ int netware_init(void);
 /* Define S_ISDIR if not defined by system headers, f.e. MSVC */
 #if !defined(S_ISDIR) && defined(S_IFMT) && defined(S_IFDIR)
 #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#endif
+
+/* In Windows the default file mode is text but an application can override it.
+Therefore we specify it explicitly. https://github.com/bagder/curl/pull/258
+*/
+#if defined(WIN32) || defined(MSDOS)
+#define FOPEN_READTEXT "rt"
+#define FOPEN_WRITETEXT "wt"
+#elif defined(__CYGWIN__)
+/* Cygwin has specific behavior we need to address when WIN32 is not defined.
+https://cygwin.com/cygwin-ug-net/using-textbinary.html
+For write we want our output to have line endings of LF and be compatible with
+other Cygwin utilities. For read we want to handle input that may have line
+endings either CRLF or LF so 't' is appropriate.
+*/
+#define FOPEN_READTEXT "rt"
+#define FOPEN_WRITETEXT "w"
+#else
+#define FOPEN_READTEXT "r"
+#define FOPEN_WRITETEXT "w"
 #endif
 
 #endif /* HEADER_CURL_SETUP_H */

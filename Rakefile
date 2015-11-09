@@ -36,9 +36,33 @@ end
 # If 1, then we link against LuaJIT. If 0, we use classic Lua VM.
 $doBuildJIT=1
 
+# If 1, then LUA GC profiling code is enabled
+$doEnableLuaGcProfile= $buildTarget == "Release" ? 0 : 1
+
 # Whether or not to include Admob and/or Facebook in the build... for Great Apple Compliance!
 $doBuildAdmob=0
 $doBuildFacebook=0
+
+# Relative path of the telemetry client files in the SDK 
+$telemetryClient = "telemetry/www/"
+# Include these files (Ruby Dir.glob syntax)
+# If you change this, you should probably update the
+# .gitignore file in tools/telemetry/www/ so people
+# downloading the SDK can build straight away
+$telemetryClientInclude = [
+  "*.*",
+  "css/**/*.*",
+  "js/**/*.*",
+  # Semantic UI
+  "semantic/dist/**/*.*",
+]
+# Exclude these files
+# Note that simple paths from .gitignore are already
+# automatically excluded (e.g. unnecessary semantic ui files)
+$telemetryClientExclude = [
+  "semantic.json",
+  "LICENSE.txt",
+]
 
 # Allow disabling Loom doc generation, as it can be very slow.
 # Disabled by default, set environment variable 'LOOM_BUILD_DOCS'
@@ -118,11 +142,6 @@ else
 end
 
 # Windows specific checks and settings
-WINDOWS_PROCARCH_BITS = '32'
-WINDOWS_ISX64 = '0'
-WINDOWS_ANDROID_PREBUILT_DIR = 'windows'
-proc_arch = ''
-
 if $LOOM_HOST_OS == 'windows'
   # This gets the true architecture of the machine, not the target architecture of the currently executing binary (that is what %PROCESSOR_ARCHITECTURE% returns)
   # => Valid values seem to only be "AMD64", "IA64", or "x86"
@@ -131,7 +150,13 @@ if $LOOM_HOST_OS == 'windows'
     WINDOWS_PROCARCH_BITS = '64'
     WINDOWS_ISX64 = '1'
     WINDOWS_ANDROID_PREBUILT_DIR = 'windows-x86_64'
+  else
+    WINDOWS_PROCARCH_BITS = '32'
+    WINDOWS_ISX64 = '0'
+    WINDOWS_ANDROID_PREBUILT_DIR = 'windows'
+    proc_arch = ''
   end
+
 end
 
 # Determine the APK name.
@@ -217,7 +242,7 @@ namespace :generate do
   task :xcode_osx do
     FileUtils.mkdir_p("cmake_osx")
     Dir.chdir("cmake_osx") do
-      sh "cmake ../ -G Xcode -DLOOM_BUILD_JIT=#{$doBuildJIT} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
+      sh "cmake ../ -G Xcode -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
     end
   end
 
@@ -225,7 +250,7 @@ namespace :generate do
   task :xcode_ios do
     FileUtils.mkdir_p("cmake_ios")
     Dir.chdir("cmake_ios") do
-      sh "cmake ../ -G Xcode -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_IOS_VERSION=#{$targetIOSSDK} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
+      sh "cmake ../ -G Xcode -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_IOS_VERSION=#{$targetIOSSDK} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
     end
   end
 
@@ -233,7 +258,7 @@ namespace :generate do
   task :vs2010 do
     FileUtils.mkdir_p("cmake_msvc")
     Dir.chdir("cmake_msvc") do
-      sh "cmake .. -G \"Visual Studio 10\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_BUILD_NUMCORES=#{$numCores} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
+      sh "cmake .. -G \"Visual Studio 10\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
     end
   end
 
@@ -241,7 +266,7 @@ namespace :generate do
   task :vs2012 do
     FileUtils.mkdir_p("cmake_msvc")
     Dir.chdir("cmake_msvc") do
-      sh "cmake .. -G \"Visual Studio 11\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_BUILD_NUMCORES=#{$numCores} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
+      sh "cmake .. -G \"Visual Studio 11\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
     end
   end
 
@@ -249,7 +274,7 @@ namespace :generate do
   task :makefiles_ubuntu do
     FileUtils.mkdir_p("cmake_ubuntu")
     Dir.chdir("cmake_ubuntu") do
-      sh "cmake ../ -G \"Unix Makefiles\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
+      sh "cmake ../ -G \"Unix Makefiles\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
     end
   end
 
@@ -261,6 +286,16 @@ namespace :generate do
         load "./main.rb"
       end
 
+      # Nuke all the garbage in the examples folders.
+      Dir.glob("docs/output/examples/*/") do |exampleFolder|
+        FileUtils.rm_r "#{exampleFolder}/assets", :force => true
+        FileUtils.rm_r "#{exampleFolder}/bin", :force => true
+        FileUtils.rm_r "#{exampleFolder}/libs", :force => true
+        FileUtils.rm_r "#{exampleFolder}/src", :force => true
+      end
+
+      # make sure we don't accumulate junk in the artifacs/docs folder.
+      FileUtils.rm_r "artifacts/docs", :force => true
       FileUtils.mkdir_p "artifacts/docs"
       FileUtils.cp_r "docs/output/.", "artifacts/docs/"
     else
@@ -355,6 +390,10 @@ namespace :utility do
       Dir.chdir("docs/examples/#{args[:name]}") do
         sh "#{expandedArtifactsPath}/lsc"
       end
+      
+      # Clean up the libs and bin folders to save tons of space.
+      FileUtils.rm_r("docs/examples/#{args[:name]}/libs")
+      FileUtils.rm_r("docs/examples/#{args[:name]}/bin")
   end
 
   desc "Run demo"
@@ -462,7 +501,7 @@ namespace :build do
       puts "== Building OS X =="
       FileUtils.mkdir_p("cmake_osx")
       Dir.chdir("cmake_osx") do
-        sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
+        sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
         sh "xcodebuild -configuration #{$buildTarget}"
       end
 
@@ -554,7 +593,7 @@ namespace :build do
 
       # TODO: Find a way to resolve resources in xcode for ios.
       Dir.chdir("cmake_ios") do
-        sh "cmake ../ -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -G Xcode"
+        sh "cmake ../ -DLOOM_BUILD_IOS=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -G Xcode"
         sdkroot="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS#{$targetIOSSDK}.sdk"
         sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\" CODE_SIGN_RESOURCE_RULES_PATH=#{sdkroot}/ResourceRules.plist"
       end
@@ -596,7 +635,7 @@ namespace :build do
 
     FileUtils.mkdir_p("cmake_msvc")
     Dir.chdir("cmake_msvc") do
-      sh "../build/win-cmake.bat #{$doBuildJIT} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\""
+      sh "../build/win-cmake.bat #{$doBuildJIT} #{$doEnableLuaGcProfile} #{$numCores} \"#{$buildDebugDefine}\" \"#{$buildAdMobDefine}\" \"#{$buildFacebookDefine}\""
       sh "msbuild LoomEngine.sln /p:Configuration=#{$buildTarget}"
     end
 
@@ -649,7 +688,7 @@ namespace :build do
       # WINDOWS
       FileUtils.mkdir_p("cmake_android")
       Dir.chdir("cmake_android") do
-        sh "cmake -DCMAKE_TOOLCHAIN_FILE=../build/cmake/loom.android.toolchain.cmake #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_NDK_HOST_X64=#{WINDOWS_ISX64} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} -G\"MinGW Makefiles\" -DCMAKE_MAKE_PROGRAM=\"%ANDROID_NDK%\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make.exe\" .."
+        sh "cmake -DCMAKE_TOOLCHAIN_FILE=../build/cmake/loom.android.toolchain.cmake #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_NDK_HOST_X64=#{WINDOWS_ISX64} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} -G\"MinGW Makefiles\" -DCMAKE_MAKE_PROGRAM=\"%ANDROID_NDK%\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make.exe\" .."
         sh "cmake --build ."
       end
 
@@ -690,7 +729,7 @@ namespace :build do
       # OSX / LINUX
       FileUtils.mkdir_p("cmake_android")
       Dir.chdir("cmake_android") do
-        sh "cmake -DCMAKE_TOOLCHAIN_FILE=../build/cmake/loom.android.toolchain.cmake #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} .."
+        sh "cmake -DCMAKE_TOOLCHAIN_FILE=../build/cmake/loom.android.toolchain.cmake #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} .."
         sh "make -j#{$numCores}"
       end
 
@@ -737,12 +776,11 @@ namespace :build do
     writeStub("Ouya")
     # Ouya build is currently not supported under Windows
     #if $LOOM_HOST_OS != 'windows'
-
+      
+  # TODO: add back Ouya support
+  if false
       FileUtils.mkdir_p "artifacts/ouya"
       sh "touch #{$OUTPUT_DIRECTORY}/ouya/LoomDemo.apk"
-
-	# TODO: add back Ouya support
-	if false
       puts "== Building OUYA =="
 
       ouyaAndroidSDK = "android-16"
@@ -784,7 +822,7 @@ namespace :build do
 
     writeStub("Ubuntu")
 
-    sh "mkdir -p artifacts/"
+    sh "mkdir -p artifacts/ubuntu"
     sh "echo BROKEN > ./artifacts/ubuntu/LoomDemo"
     sh "echo BROKEN > ./artifacts/ldb"
     sh "echo BROKEN > ./artifacts/lsc"
@@ -796,7 +834,7 @@ namespace :build do
     puts "== Building Ubuntu =="
     FileUtils.mkdir_p("cmake_ubuntu")
     Dir.chdir("cmake_ubuntu") do
-      sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -G \"Unix Makefiles\" -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
+      sh "cmake ../ -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -G \"Unix Makefiles\" -DCMAKE_BUILD_TYPE=#{$buildTarget} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine}"
       sh "make -j#{$numCores}"
     end
 
@@ -841,7 +879,7 @@ namespace :build do
     puts "Long: #{git_rev_long}"
     puts "Short: #{git_rev_short}"
   end
-
+  
 end
 
 file 'build/luajit_x86/lib/libluajit-5.1.a' do
@@ -889,7 +927,7 @@ file 'build/luajit_android/lib/libluajit-5.1.a' do
       #    sh "#{NDK}\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make -f Makefile.win32 install -j#{$numCores} HOST_CC=\"gcc -m32\" CROSS=" + ENV['NDKP'] + " TARGET_FLAGS=\"" + ENV['NDKF']+"\" TARGET=arm TARGET_SYS=Linux PREFIX=\"#{luajit_android_dir.shellescape}\""
       #end
     else
-    puts "building LuaJIT Android on OSX / Linux"
+      puts "building LuaJIT Android on OSX / Linux"
       # OSX / LINUX
       NDK = ENV['ANDROID_NDK']
       if (!NDK)
@@ -966,6 +1004,9 @@ end
 # mainly we need to make windows work
 desc "Runs all unit tests and exports results to artifacts/testResults.xml"
 task :test => ['build:desktop'] do
+   Dir.chdir("tests") do
+      sh "../tests/unittest"
+   end
    Dir.chdir("sdk") do
       sh "../artifacts/lsc --unittest --xmlfile ../artifacts/testResults.xml"
   end
@@ -1071,9 +1112,12 @@ namespace :package do
 
     FileUtils.rm_rf "pkg/examples.zip"
     FileUtils.mkdir_p "pkg"
-
+    
+    # Package examples skipping bloat.
     Zip::File.open("pkg/examples.zip", 'w') do |zipfile|
       Dir["docs/examples/**/**"].each do |file|
+      	next if File.extname(file) == ".loomlib"
+      	next if File.extname(file) == ".loom"
         zipfile.add(file.sub("docs/examples/", ''),file)
       end
     end
@@ -1180,7 +1224,7 @@ end
 
 def decompile_apk (file, destination)
   puts "Decompiling APK #{file} to #{destination}..."
-  sh "java -jar tools/apktool/apktool.jar d -f #{file} #{destination}"
+  sh "java -jar tools/apktool/apktool.jar d -f #{file} -o #{destination}"
 end
 
 def require_dependencies
@@ -1219,12 +1263,57 @@ def get_app_prefix (appPath)
     return appPrefix
 end
 
+# Selectively copy files required for the telemetry client
+# based on $telemetryClientInclude and $telemetryClientExclude
+def telemetry_client_copy(fromDir, toDir)
+  # Enumerate and store all included file paths
+  included = []
+  $telemetryClientInclude.each do |path|
+    included.concat(Dir.glob(File.join(fromDir, path)))
+  end
+  
+  # Enumerate and store all excluded file paths
+  excluded = []
+  $telemetryClientExclude.each do |path|
+    excluded.concat(Dir.glob(File.join(fromDir, path)))
+  end
+  
+  # Add .gitignore to excluded files
+  excluded.concat IO.readlines(File.join(fromDir, ".gitignore")).map { |line|
+    line.strip
+  }.select { |line|
+    line.length > 0 && !line.start_with?("#")
+  }.map { |line|
+    path = File.join(fromDir, line)
+  }
+  
+  # Only process the included files without the excluded ones
+  pathExcludedFiles = 0
+  clientFiles = (included-excluded).select { |path| 
+    sw = path.start_with? *excluded
+    pathExcludedFiles += sw ? 1 : 0
+    !sw
+  }
+  
+  # Copy each file to the target directory
+  clientFiles.each do |fromPath|
+    toPath = fromPath.sub(fromDir, toDir)
+    #puts "Copying #{fromPath} to #{toPath}"
+    FileUtils.mkdir_p File.dirname(toPath)
+    FileUtils.cp fromPath, toPath
+  end
+  
+  puts "Copied #{clientFiles.length} Telemetry client files (included #{included.length}, excluded #{excluded.length}, path excluded #{pathExcludedFiles})"
+  
+end
+
 desc "Build the Free SDK (desktop only)"
 def prepare_free_sdk
   FileUtils.rm_rf "sdk/LoomDemo.app"
   FileUtils.rm_rf "sdk/LoomDemo.exe"
   FileUtils.rm_rf "pkg"
 
+  telemetryClientPath = File.join("pkg/sdk/", $telemetryClient)
 
   # put together a folder to zip up
   FileUtils.mkdir_p "pkg/sdk"
@@ -1233,7 +1322,11 @@ def prepare_free_sdk
   FileUtils.mkdir_p "pkg/sdk/libs"
   FileUtils.mkdir_p "pkg/sdk/assets"
   FileUtils.mkdir_p "pkg/sdk/src"
-
+  FileUtils.mkdir_p telemetryClientPath
+  
+  # copy telemetry www
+  telemetry_client_copy("tools/telemetry/www/", telemetryClientPath)
+  
   #copy the docs in
   FileUtils.cp_r("artifacts/docs","pkg/sdk") if File.exists? "artifacts/docs"
 

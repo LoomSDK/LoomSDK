@@ -47,8 +47,7 @@ class TestString extends LegacyTest
     
     function test()
     {
-        
-        assert("|X|A|X|B|X|C|X|".split("|X|").length == 5);        
+        assert("|X|A|X|B|X|C|X||X|DoubleCommaOnLeft|X|".split("|X|").length == 7);        
         
         var svalue = "This is a Test!";
         
@@ -109,6 +108,12 @@ class TestString extends LegacyTest
 
         var oneHundred = "100";
         log((oneHundred.toNumber()+100).toString());
+
+        var oneHundredHex = "0x64";
+        log((oneHundredHex.toNumber()+100).toString());
+
+        var oneHundredHex2 = "0x00000064";
+        log((oneHundredHex2.toNumber()+100).toString());
 
         // Coverage for split.
         var stringToSplit = "|X|A|X|B|X|C|X|";
@@ -193,11 +198,13 @@ class TestString extends LegacyTest
     var EXPECTED_TEST_RESULT:String = 
 "This is a Test!LoomScriptHelloWorldLOOMSCRIPTloomscript5
 Hello10Object:tests.TestStringtrue from LoomScript
-testhistest115-1A
+testhis test115-1A
 100-1testisis a test
 true
 true
 false
+200
+200
 200
 5
 4

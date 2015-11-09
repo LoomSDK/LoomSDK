@@ -91,7 +91,7 @@ void ModuleBuildInfo::loadSourceFile(const utString& filename, utString& code)
 
         code = buffer;
 
-        delete buffer;
+        delete[] buffer;
 
         fs.close();
     }
@@ -165,7 +165,7 @@ void ModuleBuildInfo::parse(json_t *json)
 
         if (path.size() && (path[path.size() - 1] != *platform_getFolderDelimiter()))
         {
-            if (path.size() && path.size())
+            if (path.size())
             {
                 path += platform_getFolderDelimiter();
             }

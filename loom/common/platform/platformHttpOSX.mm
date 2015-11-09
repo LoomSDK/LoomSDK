@@ -34,7 +34,6 @@ limitations under the License.
     NSURLConnection *connection;
     bool allowRedirect;
     const char *cacheToFile;
-    bool base64EncodeResponse;
     NSMutableData* receivedData;
     bool statusCodeFail;
 }
@@ -43,8 +42,7 @@ limitations under the License.
     request:(NSMutableURLRequest*)req 
     payload:(void *)pl 
     allowRedirect:(bool)ar 
-    cacheToFile:(const char *)cf 
-    base64EncodeResponse:(bool)b64;
+    cacheToFile:(const char *)c;
 -(void)cancel;
 -(void)complete;
 
@@ -56,8 +54,7 @@ limitations under the License.
     request:(NSMutableURLRequest*)req 
     payload:(void *)pl 
     allowRedirect:(bool)ar 
-    cacheToFile:(const char *)cf 
-    base64EncodeResponse:(bool)b64 
+    cacheToFile:(const char *)cf
 {
     self = [self init];
     
@@ -65,7 +62,6 @@ limitations under the License.
     payload = pl;
     allowRedirect = ar;
     cacheToFile = cf;
-    base64EncodeResponse = b64;
 
     receivedData = [NSMutableData alloc];
     [receivedData setLength:0];
@@ -95,38 +91,6 @@ limitations under the License.
     return allowRedirect ? request : nil;
 }
 
-+(NSString*)base64forData:(NSData*)theData {
-
-    const uint8_t* input = (const uint8_t*)[theData bytes];
-    NSInteger length = [theData length];
-
-  static char table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-
-  NSMutableData* data = [NSMutableData dataWithLength:((length + 2) / 3) * 4];
-  uint8_t* output = (uint8_t*)data.mutableBytes;
-
-    NSInteger i;
-  for (i=0; i < length; i += 3) {
-    NSInteger value = 0;
-        NSInteger j;
-    for (j = i; j < (i + 3); j++) {
-      value <<= 8;
-
-      if (j < length) {
-        value |= (0xFF & input[j]);
-      }
-    }
-
-    NSInteger theIndex = (i / 3) * 4;
-    output[theIndex + 0] =                    table[(value >> 18) & 0x3F];
-    output[theIndex + 1] =                    table[(value >> 12) & 0x3F];
-    output[theIndex + 2] = (i + 1) < length ? table[(value >> 6)  & 0x3F] : '=';
-    output[theIndex + 3] = (i + 2) < length ? table[(value >> 0)  & 0x3F] : '=';
-  }
-
-  return [[[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding] autorelease];
-}
-
 -(void) connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
     statusCodeFail = [response statusCode] >= 400;
@@ -143,22 +107,18 @@ limitations under the License.
     if(cacheToFile != NULL)
         [receivedData writeToFile:[NSString stringWithUTF8String:cacheToFile] atomically:YES];
 
-    // Should we base64 encode them before returning the data?
-    NSString *response = nil;
-    if(base64EncodeResponse)
-        response = [LMURLConnectionDelegate base64forData:receivedData];
-    else
-        response = [[NSString alloc] initWithData:receivedData encoding:NSUTF8StringEncoding];
-
+    utByteArray* bytes = new utByteArray();
+    bytes->attach(receivedData.mutableBytes, receivedData.length);
+    
     if(statusCodeFail)
-        callback(payload, LOOM_HTTP_ERROR, [response cStringUsingEncoding:NSUTF8StringEncoding]);
+        callback(payload, LOOM_HTTP_ERROR, bytes);
     else
-        callback(payload, LOOM_HTTP_SUCCESS, [response cStringUsingEncoding:NSUTF8StringEncoding]);
+        callback(payload, LOOM_HTTP_SUCCESS, bytes);
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
-    callback(payload, LOOM_HTTP_ERROR, [[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding]);
+    callback(payload, LOOM_HTTP_ERROR, (utByteArray*)[[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding]);
 }
 
 @end
@@ -174,7 +134,7 @@ static LMURLConnectionDelegate *connections[MAX_CONCURRENT_HTTP_REQUESTS];
  */
 int platform_HTTPSend(const char *url, const char* method, loom_HTTPCallback callback, void *payload, 
     const char *body, int bodyLength, utHashTable<utHashedString, utString> &headers, 
-    const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects)
+    const char *responseCacheFile, bool followRedirects)
 {
     int index = 0;
     while ((connections[index] != NULL) && (index < MAX_CONCURRENT_HTTP_REQUESTS)) {index++;}
@@ -212,8 +172,7 @@ int platform_HTTPSend(const char *url, const char* method, loom_HTTPCallback cal
                                                             request:request 
                                                             payload:payload 
                                                             allowRedirect:followRedirects 
-                                                            cacheToFile:responseCacheFile 
-                                                            base64EncodeResponse:base64EncodeResponseData];
+                                                            cacheToFile:responseCacheFile];
     return index;
 }
 

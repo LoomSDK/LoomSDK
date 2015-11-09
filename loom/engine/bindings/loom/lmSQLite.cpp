@@ -26,8 +26,8 @@
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utByteArray.h"
 #include "loom/common/utils/utString.h"
+#include "loom/common/utils/json.h"
 #include "loom/common/platform/platformThread.h"
-#include "loom/script/native/core/system/lmJSON.h"
 #include "loom/common/platform/platformFile.h"
 
 lmDefineLogGroup(gSQLiteGroup, "loom.sqlite", 1, LoomLogInfo);
@@ -427,7 +427,7 @@ Connection *Connection::open(const char *database, int flags)
     else
     {
         //no separator, so we need to prefix the system writable path in front of the database name
-        c->databaseFullPath = utString(platform_getWritablePath()) + c->databaseName;
+        c->databaseFullPath = utString(platform_getWritablePath()) + utString(platform_getFolderDelimiter()) + c->databaseName;
     }
     
     //open the SQLite DB

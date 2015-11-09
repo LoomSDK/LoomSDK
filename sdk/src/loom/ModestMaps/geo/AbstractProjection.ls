@@ -12,6 +12,10 @@ package loom.modestmaps.geo
      
     public class AbstractProjection implements IProjection
     {
+        protected const HELPER_POINT:Point;
+        protected const HELPER_COORD:Coordinate = new Coordinate(0, 0, 0);
+        protected const HELPER_LOCATION:Location = new Location(0, 0);
+        
         // linear transformation, if any.
         protected var T:Transformation;
         
@@ -32,52 +36,46 @@ package loom.modestmaps.geo
         */
         public function toString():String
         {
-            throw new Error("Abstract method not implemented by subclass.");
+            Debug.assert("Abstract method not implemented by subclass.");
             return null;
         }
         
        /**
         * @return raw projected point.
         */
-        protected function rawProject(point:Point):Point
+        protected function rawProject(point:Point)
         {
-            throw new Error("Abstract method not implemented by subclass.");
-            return Point.ZERO;
+            Debug.assert("Abstract method not implemented by subclass.");
         }
         
        /**
         * @return raw unprojected point.
         */
-        protected function rawUnproject(point:Point):Point
+        protected function rawUnproject(point:Point)
         {
-            throw new Error("Abstract method not implemented by subclass.");
-            return Point.ZERO;
+            Debug.assert("Abstract method not implemented by subclass.");
         }
         
        /**
         * @return projected and transformed point.
         */
-        public function project(point:Point):Point
+        public function project(point:Point)
         {
-            point = rawProject(point);
+            rawProject(point);
         
             if(T)
-                point = T.transform(point);
-            
-            return point;
+                T.transform(point);
         }
         
        /**
         * @return untransformed and unprojected point.
         */
-        public function unproject(point:Point):Point
+        public function unproject(point:Point)
         {
             if(T)
-                point = T.untransform(point);
+                T.untransform(point);
     
-            point = rawUnproject(point);
-            
-            return point;
+            rawUnproject(point);
         }
         
        /**
@@ -85,20 +83,36 @@ package loom.modestmaps.geo
         */
         public function locationCoordinate(location:Location):Coordinate
         {
-            var point:Point = new Point(Math.PI*location.lon/180, Math.PI*location.lat/180);
-            point = project(point);
-            return new Coordinate(point.y, point.x, zoom);
+            HELPER_POINT.x = Math.PI*location.lon/180;
+            HELPER_POINT.y = Math.PI*location.lat/180;
+            project(HELPER_POINT);
+            return new Coordinate(HELPER_POINT.y, HELPER_POINT.x, zoom);
         }
         
+//TODO_24: native?       
        /**
         * @return untransformed and unprojected location for a coordinate.
         */
         public function coordinateLocation(coordinate:Coordinate):Location
         {
-            coordinate = coordinate.zoomTo(zoom);
-            var point:Point = new Point(coordinate.column, coordinate.row);
-            point = unproject(point);
-            return new Location(180*point.y/Math.PI, 180*point.x/Math.PI);
+            HELPER_COORD.setVals(coordinate.row, coordinate.column, coordinate.zoom);
+            HELPER_COORD.zoomToInPlace(zoom);
+            HELPER_POINT.x = HELPER_COORD.column;
+            HELPER_POINT.y = HELPER_COORD.row;
+            unproject(HELPER_POINT);
+            return new Location(180*HELPER_POINT.y/Math.PI, 180*HELPER_POINT.x/Math.PI);
+        }
+        
+        public function coordinateLocationStatic(coordinate:Coordinate):Location
+        {
+            HELPER_COORD.setVals(coordinate.row, coordinate.column, coordinate.zoom);
+            HELPER_COORD.zoomToInPlace(zoom);
+            HELPER_POINT.x = HELPER_COORD.column;
+            HELPER_POINT.y = HELPER_COORD.row;
+            unproject(HELPER_POINT);
+            HELPER_LOCATION.lat = 180*HELPER_POINT.y/Math.PI;
+            HELPER_LOCATION.lon = 180*HELPER_POINT.x/Math.PI;
+            return HELPER_LOCATION;
         }
     }
 }

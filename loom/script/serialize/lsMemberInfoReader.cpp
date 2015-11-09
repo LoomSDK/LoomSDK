@@ -86,7 +86,7 @@ TemplateInfo *MemberInfoReader::readTemplateTypeInfo(json_t *json)
         return NULL;
     }
 
-    TemplateInfo *tinfo = new TemplateInfo;
+    TemplateInfo *tinfo = lmNew(NULL) TemplateInfo;
 
     json_t *types = json_object_get(json, "types");
 
@@ -105,7 +105,7 @@ TemplateInfo *MemberInfoReader::readTemplateTypeInfo(json_t *json)
 
         if (json_is_string(element))
         {
-            TemplateInfo *t = new TemplateInfo;
+            TemplateInfo *t = lmNew(NULL) TemplateInfo;
             t->fullTypeName = json_string_value(element);
             tinfo->types.push_back(t);
         }

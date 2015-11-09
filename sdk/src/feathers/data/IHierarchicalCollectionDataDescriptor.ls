@@ -27,28 +27,28 @@ package feathers.data
          * a location is omitted, the length returned will be for the root level
          * of the collection.
          */
-        function getLength(data:Object, ...rest:Array):int;
+        function getLength(data:Object, ...rest):int;
 
         /**
          * Returns the item at the specified location in the data source.
          *
          * The rest arguments are the indices that make up the location.
          */
-        function getItemAt(data:Object, index:int, ...rest:Array):Object;
+        function getItemAt(data:Object, index:int, ...rest):Object;
 
         /**
          * Replaces the item at the specified location with a new item.
          *
          * The rest arguments are the indices that make up the location.
          */
-        function setItemAt(data:Object, item:Object, index:int, ...rest:Array):void;
+        function setItemAt(data:Object, item:Object, index:int, ...rest):void;
 
         /**
          * Adds an item to the data source, at the specified location.
          *
          * The rest arguments are the indices that make up the location.
          */
-        function addItemAt(data:Object, item:Object, index:int, ...rest:Array):void;
+        function addItemAt(data:Object, item:Object, index:int, ...rest):void;
 
         /**
          * Removes the item at the specified location from the data source and
@@ -56,7 +56,7 @@ package feathers.data
          *
          * The rest arguments are the indices that make up the location.
          */
-        function removeItemAt(data:Object, index:int, ...rest:Array):Object;
+        function removeItemAt(data:Object, index:int, ...rest):Object;
 
         /**
          * Determines which location the item appears at within the data source.
@@ -65,6 +65,6 @@ package feathers.data
          * The `rest` arguments are optional indices to narrow
          * the search.
          */
-        function getItemLocation(data:Object, item:Object, result:Vector.<int> = null, ...rest:Array):Vector.<int>;
+        function getItemLocation(data:Object, item:Object, result:Vector.<int> = null, ...rest):Vector.<int>;
     }
 }

@@ -113,13 +113,13 @@ package loom2d.display
             }
             else
             {
-                throw new ArgumentError("Empty texture array");
+                Debug.assert("Empty texture array");
             }
         }
         
         private function init(textures:Vector.<Texture>, fps:Number):void
         {
-            if (fps <= 0) throw new ArgumentError("Invalid fps: " + fps);
+            if (fps <= 0) Debug.assert("Invalid fps: " + fps);
             var numFrames:int = textures.length;
             
             mDefaultFrameDuration = 1.0 / fps;
@@ -152,7 +152,7 @@ package loom2d.display
         public function addFrameAt(frameID:int, texture:Texture, sound:String=null, 
                                    duration:Number=-1):void
         {
-            if (frameID < 0 || frameID > numFrames) throw new ArgumentError("Invalid frame id");
+            if (frameID < 0 || frameID > numFrames) Debug.assert("Invalid frame id");
             if (duration < 0) duration = mDefaultFrameDuration;
             
             mTextures.splice(frameID, 0, texture);
@@ -168,8 +168,8 @@ package loom2d.display
         /** Removes the frame at a certain ID. The successors will move down. */
         public function removeFrameAt(frameID:int):void
         {
-            if (frameID < 0 || frameID >= numFrames) throw new ArgumentError("Invalid frame id");
-            if (numFrames == 1) throw new IllegalOperationError("Movie clip must not be empty");
+            if (frameID < 0 || frameID >= numFrames) Debug.assert("Invalid frame id");
+            if (numFrames == 1) Debug.assert("Movie clip must not be empty");
             
             mTextures.splice(frameID, 1);
             mSounds.splice(frameID, 1);
@@ -181,21 +181,21 @@ package loom2d.display
         /** Returns the texture of a certain frame. */
         public function getFrameTexture(frameID:int):Texture
         {
-            if (frameID < 0 || frameID >= numFrames) throw new ArgumentError("Invalid frame id");
+            if (frameID < 0 || frameID >= numFrames) Debug.assert("Invalid frame id");
             return mTextures[frameID];
         }
         
         /** Sets the texture of a certain frame. */
         public function setFrameTexture(frameID:int, texture:Texture):void
         {
-            if (frameID < 0 || frameID >= numFrames) throw new ArgumentError("Invalid frame id");
+            if (frameID < 0 || frameID >= numFrames) Debug.assert("Invalid frame id");
             mTextures[frameID] = texture;
         }
         
         /** Returns the sound of a certain frame. */
         public function getFrameSound(frameID:int):String
         {
-            if (frameID < 0 || frameID >= numFrames) throw new ArgumentError("Invalid frame id");
+            if (frameID < 0 || frameID >= numFrames) Debug.assert("Invalid frame id");
             return mSounds[frameID];
         }
         
@@ -203,21 +203,21 @@ package loom2d.display
          *  is displayed. */
         public function setFrameSound(frameID:int, sound:String):void
         {
-            if (frameID < 0 || frameID >= numFrames) throw new ArgumentError("Invalid frame id");
+            if (frameID < 0 || frameID >= numFrames) Debug.assert("Invalid frame id");
             mSounds[frameID] = sound;
         }
         
         /** Returns the duration of a certain frame (in seconds). */
         public function getFrameDuration(frameID:int):Number
         {
-            if (frameID < 0 || frameID >= numFrames) throw new ArgumentError("Invalid frame id");
+            if (frameID < 0 || frameID >= numFrames) Debug.assert("Invalid frame id");
             return mDurations[frameID];
         }
         
         /** Sets the duration of a certain frame (in seconds). */
         public function setFrameDuration(frameID:int, duration:Number):void
         {
-            if (frameID < 0 || frameID >= numFrames) throw new ArgumentError("Invalid frame id");
+            if (frameID < 0 || frameID >= numFrames) Debug.assert("Invalid frame id");
             mDurations[frameID] = duration;
             updateStartTimes();
         }
@@ -371,7 +371,7 @@ package loom2d.display
         public function get fps():Number { return 1.0 / mDefaultFrameDuration; }
         public function set fps(value:Number):void
         {
-            if (value <= 0) throw new ArgumentError("Invalid fps: " + value);
+            if (value <= 0) Debug.assert("Invalid fps: " + value);
             
             var newFrameDuration:Number = 1.0 / value;
             var acceleration:Number = newFrameDuration / mDefaultFrameDuration;

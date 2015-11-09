@@ -58,8 +58,7 @@ class JitTypeCompiler : public TypeCompilerBase {
     void functionBody(ExpDesc *e, FunctionLiteral *flit, int line);
 
     int parList(FunctionLiteral *literal, bool method);
-    int expList(ExpDesc *e, utArray<Expression *> *expressions,
-                MethodBase *methodBase = NULL);
+
     void generateCall(ExpDesc *call, utArray<Expression *> *arguments,
                       MethodBase *methodBase = NULL);
 
@@ -90,31 +89,11 @@ public:
 
     static void compile(ClassDeclaration *classDeclaration);
 
-    utArray<Statement *> *visitStatementArray(
-        utArray<Statement *> *_statements);
-
     Statement *visitStatement(Statement *statement);
-
-    utArray<Expression *> *visitExpressionArray(
-        utArray<Expression *> *_expressions);
-
-    Expression *visitExpression(Expression *expression);
-
-    //
-    // nodes
-    //
-
-    CompilationUnit *visit(CompilationUnit *cunit);
 
     //
     // statements
     //
-
-    Statement *visit(FunctionDeclaration *declaration);
-
-    Statement *visit(PropertyDeclaration *declaration);
-
-    Statement *visit(BlockStatement *statement);
 
     Statement *visit(BreakStatement *statement);
 
@@ -124,91 +103,36 @@ public:
 
     Statement *visit(DoStatement *statement);
 
-    Statement *visit(EmptyStatement *statement);
-
-    Statement *visit(ExpressionStatement *statement);
-
     Statement *visit(ForStatement *statement);
 
     Statement *visit(ForInStatement *statement);
 
     Statement *visit(IfStatement *statement);
 
-    Statement *visit(LabelledStatement *statement);
-
     Statement *visit(ReturnStatement *statement);
 
     Statement *visit(SwitchStatement *statement);
 
-    Statement *visit(VariableStatement *statement);
-
     Statement *visit(WhileStatement *statement);
-
-    Statement *visit(WithStatement *statement);
-
-    Statement *visit(ClassDeclaration *statement);
-
-    Statement *visit(InterfaceDeclaration *statement);
-
-    Statement *visit(PackageDeclaration *statement);
-
-    Statement *visit(ImportStatement *statement);
 
     //
     // expressions
     //
 
-    Expression *visit(MultipleAssignmentExpression *expression);
-
     Expression *visit(AssignmentOperatorExpression *expression);
 
     Expression *visit(BinaryOperatorExpression *expression);
 
-    Expression *visit(CallExpression *expression);
-
     Expression *visit(ConditionalExpression *expression);
 
-    Expression *visit(DeleteExpression *expression);
-
-    Expression *visit(LogicalAndExpression *expression);
-
-    Expression *visit(LogicalOrExpression *expression);
-
-    Expression *visit(NewExpression *expression);
-
     Expression *visit(UnaryOperatorExpression *expression);
-
-    Expression *visit(VariableExpression *expression);
-
-    Expression *visit(SuperExpression *expression);
-
-    Expression *visit(VariableDeclaration *declaration);
 
     //
     // literals
     //
 
-    Expression *visit(ThisLiteral *literal);
-
-    Expression *visit(NullLiteral *literal);
-
-    Expression *visit(BooleanLiteral *literal);
-
-    Expression *visit(NumberLiteral *literal);
-
-    Expression *visit(ArrayLiteral *literal);
-
     Expression *visit(FunctionLiteral *literal);
 
-    Expression *visit(ObjectLiteral *literal);
-
-    Expression *visit(ObjectLiteralProperty *property);
-
-    Expression *visit(PropertyLiteral *property);
-
-    Expression *visit(DictionaryLiteralPair *pair);
-
-    Expression *visit(DictionaryLiteral *literal);
 };
 }
 #endif //LOOM_ENABLE_JIT

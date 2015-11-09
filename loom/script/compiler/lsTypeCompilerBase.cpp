@@ -32,9 +32,35 @@ extern "C" {
 #include "lj_obj.h"
 #include "lj_bcdump.h"
 }
+
+#else 
+
+// Some shims to let us write code with LuaJIT conventions but work against classic.
+#define VKNIL VNIL
+#define VKTRUE VTRUE
+#define VKFALSE VFALSE
+#define setnumV(var, val) *(var) = val;
+
 #endif
 
 namespace LS  {
+
+int TypeCompilerBase::luaByteCodewriter(lua_State *L, const void *p, size_t size,
+                             void *u)
+{
+    UNUSED(L);
+
+    utArray<unsigned char> *bytecode = (utArray<unsigned char> *)u;
+
+    unsigned char *data = (unsigned char *)p;
+    for (size_t i = 0; i < size; i++, data++)
+    {
+        bytecode->push_back(*data);
+    }
+    
+    return 0;
+}
+
 void TypeCompilerBase::_compile()
 {
     vm    = cls->type->getModule()->getAssembly()->getLuaState();
@@ -128,8 +154,7 @@ void TypeCompilerBase::_compile()
 }
 
 
-void TypeCompilerBase::generateIdentifierTypeConversion(
-    Identifier *identifier)
+void TypeCompilerBase::generateIdentifierTypeConversion(Identifier *identifier)
 {
     // We're a Type, so we need to query reflection
 
@@ -153,11 +178,661 @@ void TypeCompilerBase::generateIdentifierTypeConversion(
     identifier->e = opcall;
 
     generateCall(&identifier->e, &args,
-                 (MethodBase *)vm->getType("system.reflection.Type")->findMember(
-                     "getTypeByName"));
+                 (MethodBase *)vm->getType("system.reflection.Type")->findMember("getTypeByName"));
 
     // we're done with our expression, so delete it
     delete (StringLiteral *)args[0];
+}
+
+utArray<Statement *> *TypeCompilerBase::visitStatementArray(utArray<Statement *> *_statements)
+{
+    if (_statements != NULL)
+    {
+        utArray<Statement *>& statements = *_statements;
+
+        for (unsigned int i = 0; i < statements.size(); i++)
+        {
+            statements[i] = visitStatement(statements[i]);
+        }
+    }
+    
+    return _statements;
+}
+
+utArray<Expression *> *TypeCompilerBase::visitExpressionArray(utArray<Expression *> *_expressions)
+{
+    if (_expressions != NULL)
+    {
+        utArray<Expression *>& expressions = *_expressions;
+
+        for (unsigned int i = 0; i < expressions.size(); i++)
+        {
+            expressions[i] = visitExpression(expressions[i]);
+        }
+    }
+
+    return _expressions;
+}
+
+
+Expression *TypeCompilerBase::visitExpression(Expression *expression)
+{
+    if (expression != NULL)
+    {
+        expression = expression->visitExpression(this);
+    }
+    
+    return expression;
+}
+
+CompilationUnit *TypeCompilerBase::visit(CompilationUnit *cunit)
+{
+    return cunit;
+}
+
+Statement *TypeCompilerBase::visit(FunctionDeclaration *declaration)
+{
+    lmAssert(0, "FunctionDeclaration");
+
+    return declaration;
+}
+
+
+Statement *TypeCompilerBase::visit(PropertyDeclaration *declaration)
+{
+    lmAssert(0, "PropertyDeclaration");
+    
+    return declaration;
+}
+
+Statement *TypeCompilerBase::visit(BlockStatement *statement)
+{
+    chunk(statement->statements);
+
+    return statement;
+}
+
+Statement *TypeCompilerBase::visit(EmptyStatement *statement)
+{
+    return statement;
+}
+
+
+Statement *TypeCompilerBase::visit(ExpressionStatement *statement)
+{
+    statement->expression->visitExpression(this);
+    
+    return statement;
+}
+
+Statement *TypeCompilerBase::visit(LabelledStatement *statement)
+{
+    lmAssert(0, "LabelledStatement");
+
+    return statement;
+}
+
+Statement *TypeCompilerBase::visit(VariableStatement *statement)
+{
+    for (unsigned int i = 0; i < statement->declarations->size(); i++)
+    {
+        VariableDeclaration *d = statement->declarations->at(i);
+        d->visitExpression(this);
+    }
+
+    return statement;
+}
+
+Statement *TypeCompilerBase::visit(WithStatement *statement)
+{
+    lmAssert(0, "WithStatement");
+    return statement;
+}
+
+
+Statement *TypeCompilerBase::visit(ClassDeclaration *statement)
+{
+    lmAssert(0, "ClassDeclaration");
+    return statement;
+}
+
+
+Statement *TypeCompilerBase::visit(InterfaceDeclaration *statement)
+{
+    lmAssert(0, "InterfaceDeclaration");
+    return statement;
+}
+
+
+Statement *TypeCompilerBase::visit(PackageDeclaration *statement)
+{
+    lmAssert(0, "PackageDeclaration");
+    return statement;
+}
+
+
+Statement *TypeCompilerBase::visit(ImportStatement *statement)
+{
+    lmAssert(0, "ImportStatement");
+    return statement;
+}
+
+Expression *TypeCompilerBase::visit(MultipleAssignmentExpression *expression)
+{
+    lmAssert(0, "MultipleAssignmentExpression");
+    return expression;
+}
+
+Expression *TypeCompilerBase::visit(DeleteExpression *expression)
+{
+    lmAssert(0, "DeleteExpression");
+    return expression;
+}
+
+Expression *TypeCompilerBase::visit(LogicalAndExpression *expression)
+{
+    return visit((BinaryOperatorExpression *)expression);
+}
+
+Expression *TypeCompilerBase::visit(LogicalOrExpression *expression)
+{
+    return visit((BinaryOperatorExpression *)expression);
+}
+
+Expression *TypeCompilerBase::visit(CallExpression *call)
+{
+    MethodBase *methodBase = call->methodBase;
+
+    call->function->visitExpression(this);
+
+    // check whether we're calling a methodbase
+    if (methodBase)
+    {
+        lmAssert(methodBase->isMethod(), "Non-method called");
+
+        MethodInfo *method = (MethodInfo *)methodBase;
+        generateCall(&call->function->e, call->arguments, method);
+
+        call->e = call->function->e;
+    }
+    else
+    {
+        lmAssert(call->function->type, "Untyped call");
+
+        // if we're calling a delegate we need to load up the call method
+        if (call->function->type->isDelegate())
+        {
+            MethodInfo *method = (MethodInfo *)call->function->type->findMember("call");
+
+            lmAssert(method, "delegate with no call method");
+
+            ExpDesc right;
+
+            BC::initExpDesc(&right, VKNUM, 0);
+            setnumV(&right.u.nval, method->getOrdinal());
+
+
+            BC::expToNextReg(cs->fs, &call->function->e);
+            BC::expToNextReg(cs->fs, &right);
+            BC::expToVal(cs->fs, &right);
+            BC::indexed(cs->fs, &call->function->e, &right);
+
+            generateCall(&call->function->e, call->arguments, NULL);
+            call->e = call->function->e;
+        }
+        else
+        {
+            // we're directly calling a local, instance (bound), or static method of type Function
+            generateCall(&call->function->e, call->arguments, NULL);
+            call->e = call->function->e;
+        }
+    }
+    
+    return call;
+}
+
+
+void TypeCompilerBase::createVarArg(ExpDesc *varg, utArray<Expression *> *arguments,
+                                   int startIdx)
+{
+    char varargname[1024];
+
+    sprintf(varargname, "__ls_vararg%i", currentFunctionLiteral->curVarArgCalls++);
+    lmAssert(currentFunctionLiteral->numVarArgCalls > 0, "0 numVarArgs");
+    currentFunctionLiteral->curVarArgCalls %= currentFunctionLiteral->numVarArgCalls;
+
+    FuncState *fs = cs->fs;
+
+    int reg = fs->freereg;
+
+    ExpDesc nvector;
+    createInstance(&nvector, "system.Vector", NULL);
+
+    ExpDesc evector;
+    BC::singleVar(cs, &evector, varargname);
+    BC::storeVar(fs, &evector, &nvector);
+
+    if (!arguments || !arguments->size())
+    {
+        *varg = evector;
+        return;
+    }
+
+    // load the vector value table
+    ExpDesc vtable;
+    BC::singleVar(cs, &vtable, varargname);
+    BC::expToNextReg(fs, &vtable);
+
+    ExpDesc v;
+    BC::initExpDesc(&v, VKNUM, 0);
+    setnumV(&v.u.nval, LSINDEXVECTOR);
+
+    BC::expToNextReg(fs, &v);
+    BC::expToVal(fs, &v);
+    BC::indexed(fs, &vtable, &v);
+    BC::expToNextReg(fs, &vtable);
+
+    // set the length of the varargs vector
+    ExpDesc elength;
+    BC::initExpDesc(&elength, VKNUM, 0);
+    setnumV(&elength.u.nval, LSINDEXVECTORLENGTH);
+
+    BC::expToNextReg(fs, &elength);
+    BC::expToVal(fs, &elength);
+    BC::indexed(fs, &vtable, &elength);
+
+    BC::initExpDesc(&elength, VKNUM, 0);
+
+    setnumV(&elength.u.nval, arguments->size() - startIdx);
+
+    // and store
+    BC::storeVar(fs, &vtable, &elength);
+
+    utArray<Expression *> args;
+    int length = 0;
+    for (UTsize i = startIdx; i < arguments->size(); i++)
+    {
+        Expression *arg = arguments->at(i);
+
+        int restore = fs->freereg;
+
+        BC::initExpDesc(&v, VKNUM, 0);
+        setnumV(&v.u.nval, length);
+
+        BC::expToNextReg(fs, &v);
+        BC::expToVal(fs, &v);
+
+        BC::indexed(fs, &vtable, &v);
+
+        arg->visitExpression(this);
+
+        BC::storeVar(fs, &vtable, &arg->e);
+        length++;
+
+        fs->freereg = restore;
+    }
+
+    BC::singleVar(cs, &evector, varargname);
+    BC::expToNextReg(fs, &evector);
+
+    fs->freereg = reg;
+
+    BC::singleVar(cs, varg, varargname);
+}
+
+int TypeCompilerBase::expList(ExpDesc *e, utArray<Expression *> *expressions,
+                             MethodBase *methodBase)
+{
+    ParameterInfo *vararg = NULL;
+
+    if (methodBase)
+    {
+        vararg = methodBase->getVarArgParameter();
+    }
+
+    if (!expressions && !vararg)
+    {
+        return 0;
+    }
+
+    if (!expressions && vararg)
+    {
+        lmAssert(vararg->position == 0, "Bad position on variable args");
+        createVarArg(e, NULL, vararg->position);
+        return 1;
+    }
+
+    int count = 0;
+
+    if (expressions)
+    {
+        for (unsigned int i = 0; i < expressions->size(); i++)
+        {
+            Expression *ex = expressions->at(i);
+
+            if (vararg && (vararg->position == i))
+            {
+                if (i)
+                {
+                    BC::expToNextReg(cs->fs, e);
+                }
+                
+                createVarArg(e, expressions, vararg->position);
+                count++;
+                return count;
+            }
+            
+            ex->visitExpression(this);
+            
+            if (i != expressions->size() - 1)
+            {
+                BC::expToNextReg(cs->fs, &ex->e);
+            }
+            
+            *e = ex->e;
+            count++;
+        }
+    }
+    
+    if (vararg)
+    {
+        if (expressions && expressions->size())
+        {
+            BC::expToNextReg(cs->fs, e);
+        }
+        
+        createVarArg(e, expressions, vararg->position);
+        count++;
+    }
+    
+    return count;
+}
+
+Expression *TypeCompilerBase::visit(NewExpression *expression)
+{
+    FuncState *fs = cs->fs;
+
+    Type *type = expression->function->type;
+
+    lmAssert(type, "Untyped new expression");
+
+    ExpDesc e;
+    createInstance(&e, type->getFullName(), expression->arguments);
+
+    if ((expression->function->astType == AST_VECTORLITERAL) || (expression->function->astType == AST_DICTIONARYLITERAL))
+    {
+        // assign new instance
+        expression->function->e = e;
+
+        BC::expToNextReg(fs, &e);
+
+        int restore = fs->freereg;
+
+        // visit literal
+        expression->function->visitExpression(this);
+        
+        fs->freereg = restore;
+    }
+    
+    expression->e = e;
+    
+    return expression;
+}
+
+
+Expression *TypeCompilerBase::visit(VariableExpression *expression)
+{
+    for (UTsize i = 0; i < expression->declarations->size(); i++)
+    {
+        VariableDeclaration *v = expression->declarations->at(i);
+        v->visitExpression(this);
+        expression->e = v->identifier->e;
+    }
+
+    return expression;
+}
+
+Expression *TypeCompilerBase::visit(SuperExpression *expression)
+{
+    lmAssert(currentMethod, "Super call outside of method");
+
+    Type *type     = currentMethod->getDeclaringType();
+    Type *baseType = type->getBaseType();
+
+    //FIXME:  issue a warning
+    if (!baseType)
+    {
+        return expression;
+    }
+
+    FuncState *fs = cs->fs;
+
+    if (currentMethod->isConstructor())
+    {
+        ConstructorInfo *base = baseType->getConstructor();
+
+        //FIXME: warn if no base constructor
+        if (!base)
+        {
+            return expression;
+        }
+
+        // load up base class
+        ExpDesc eclass;
+        BC::singleVar(cs, &eclass, baseType->getFullName().c_str());
+
+        // index with the __ls_constructor
+        BC::expToNextReg(fs, &eclass);
+
+        ExpDesc fname;
+        BC::expString(cs, &fname, "__ls_constructor");
+
+        BC::expToNextReg(fs, &fname);
+        BC::expToVal(fs, &fname);
+        BC::indexed(fs, &eclass, &fname);
+
+        // call the LSMethod
+        generateCall(&eclass, &expression->arguments);
+    }
+    else
+    {
+        utString name = currentMethod->getName();
+
+        if (expression->method)
+        {
+            name = expression->method->string;
+        }
+
+        MemberInfo *mi = baseType->findMember(name.c_str());
+        //FIXME: warn
+        if (!mi)
+        {
+            return expression;
+        }
+
+        lmAssert(mi->isMethod(), "super call on non-method");
+
+        MethodInfo *methodInfo = (MethodInfo *)mi;
+
+        // load up declaring class
+        ExpDesc eclass;
+        BC::singleVar(cs, &eclass,
+                      methodInfo->getDeclaringType()->getFullName().c_str());
+
+        BC::expToNextReg(fs, &eclass);
+
+        ExpDesc fname;
+        BC::expString(cs, &fname, name.c_str());
+
+        BC::expToNextReg(fs, &fname);
+        BC::expToVal(fs, &fname);
+        BC::indexed(fs, &eclass, &fname);
+
+        // call the LSMethod
+        generateCall(&eclass, &expression->arguments);
+
+        expression->e = eclass;
+    }
+
+    return expression;
+}
+
+Expression *TypeCompilerBase::visit(ThisLiteral *literal)
+{
+    BC::singleVar(cs, &literal->e, "this");
+
+    return literal;
+}
+
+
+Expression *TypeCompilerBase::visit(NullLiteral *literal)
+{
+    BC::initExpDesc(&literal->e, VKNIL, 0);
+
+    return literal;
+}
+
+
+Expression *TypeCompilerBase::visit(BooleanLiteral *literal)
+{
+    if (literal->value)
+    {
+        BC::initExpDesc(&literal->e, VKTRUE, 0);
+    }
+    else
+    {
+        BC::initExpDesc(&literal->e, VKFALSE, 0);
+    }
+
+    return literal;
+}
+
+
+Expression *TypeCompilerBase::visit(NumberLiteral *literal)
+{
+    ExpDesc e;
+    BC::initExpDesc(&e, VKNUM, 0);
+
+    setnumV(&e.u.nval, literal->value);
+
+    literal->e = e;
+    
+    return literal;
+}
+
+Expression *TypeCompilerBase::visit(ArrayLiteral *literal)
+{
+    lmAssert(0, "ArrayLiteral");
+    return literal;
+}
+
+Expression *TypeCompilerBase::visit(ObjectLiteral *literal)
+{
+    lmAssert(0, "ObjectLiteral");
+    return literal;
+}
+
+
+Expression *TypeCompilerBase::visit(ObjectLiteralProperty *property)
+{
+    lmAssert(0, "ObjectLiteralProperty");
+    return property;
+}
+
+
+Expression *TypeCompilerBase::visit(PropertyLiteral *property)
+{
+    lmAssert(0, "PropertyLiteral");
+    return property;
+}
+
+
+Expression *TypeCompilerBase::visit(DictionaryLiteralPair *pair)
+{
+    return pair;
+}
+
+Expression *TypeCompilerBase::visit(DictionaryLiteral *literal)
+{
+    FuncState *fs = cs->fs;
+
+    for (UTsize i = 0; i < literal->pairs.size(); i++)
+    {
+        int restore = fs->freereg;
+
+        DictionaryLiteralPair *pair = literal->pairs[i];
+
+        // comes in from NewExpression visitor
+        ExpDesc ethis = literal->e;
+
+        BC::expToNextReg(fs, &ethis);
+
+        pair->key->visitExpression(this);
+
+        BC::expToNextReg(fs, &pair->key->e);
+        BC::expToVal(fs, &pair->key->e);
+        BC::indexed(fs, &ethis, &pair->key->e);
+        
+        pair->value->visitExpression(this);
+        BC::storeVar(fs, &ethis, &pair->value->e);
+        
+        fs->freereg = restore;
+    }
+    
+    return literal;
+}
+
+Expression *TypeCompilerBase::visit(VariableDeclaration *declaration)
+{
+    FuncState *fs = cs->fs;
+
+    // local variable declaration
+    lmAssert(!declaration->classDecl, "local variable declaration belongs to a class");
+
+    ExpDesc v;
+    BC::singleVar(cs, &v, declaration->identifier->string.c_str());
+
+    Type       *dt     = declaration->type;
+    MethodInfo *method = NULL;
+    method = (MethodInfo *)dt->findMember("__op_assignment");
+
+    //TODO: assignment overload in default args?
+    if (declaration->isParameter)
+    {
+        method = NULL;
+    }
+
+    if (method)
+    {
+        if (dt->isStruct())
+        {
+            generateVarDeclStruct(declaration);
+        }
+        else if (dt->isDelegate())
+        {
+            generateVarDeclDelegate(declaration);
+        }
+        else
+        {
+            lmAssert(0, "unexpected __op_assignment on non delegate or struct");
+        }
+        
+        return declaration;
+    }
+    
+    else
+    {
+        lmAssert(!dt->isDelegate() && !dt->isStruct(),
+                 "unexpected delegate/struct");
+        
+        fs->freereg = fs->nactvar; /* free registers */
+        declaration->identifier->visitExpression(this);
+        declaration->initializer->visitExpression(this);
+        BC::storeVar(fs, &declaration->identifier->e,
+                     &declaration->initializer->e);
+    }
+    
+    return declaration;
 }
 
 
@@ -1266,6 +1941,9 @@ void TypeCompilerBase::generateInstanceInitializer()
 
     ExpDesc ethis;
 
+    // Skip initialization code when it does nothing.
+    bool doesNothing = true;
+
     // We're solely interested in initializer expressions non static variables
     for (UTsize i = 0; i < cls->varDecls.size(); i++)
     {
@@ -1278,35 +1956,36 @@ void TypeCompilerBase::generateInstanceInitializer()
 
         if (v->type->isStruct())
         {
+            doesNothing = false;
             generateVarDeclStruct(v);
         }
         else if (v->type->isDelegate())
         {
+            doesNothing = false;
             generateVarDeclDelegate(v);
         }
-        else
+        else if (v->initializer)
         {
-            if (v->initializer)
-            {
-                ExpDesc vname;
+            doesNothing = false;
 
-                BC::initExpDesc(&vname, VKNUM, 0);
+            ExpDesc vname;
+
+            BC::initExpDesc(&vname, VKNUM, 0);
 #if LOOM_ENABLE_JIT
-                setnumV(&vname.u.nval, v->memberInfo->getOrdinal());
+            setnumV(&vname.u.nval, v->memberInfo->getOrdinal());
 #else
-                vname.u.nval = v->memberInfo->getOrdinal();
+            vname.u.nval = v->memberInfo->getOrdinal();
 #endif
 
-                BC::singleVar(cs, &ethis, "this");
+            BC::singleVar(cs, &ethis, "this");
 
-                BC::expToNextReg(fs, &ethis);
-                BC::expToNextReg(fs, &vname);
-                BC::expToVal(fs, &vname);
-                BC::indexed(fs, &ethis, &vname);
+            BC::expToNextReg(fs, &ethis);
+            BC::expToNextReg(fs, &vname);
+            BC::expToVal(fs, &vname);
+            BC::indexed(fs, &ethis, &vname);
 
-                v->initializer->visitExpression(this);
-                BC::storeVar(fs, &ethis, &v->initializer->e);
-            }
+            v->initializer->visitExpression(this);
+            BC::storeVar(fs, &ethis, &v->initializer->e);
         }
 
         fs->freereg = fs->nactvar; /* free registers */
@@ -1314,13 +1993,16 @@ void TypeCompilerBase::generateInstanceInitializer()
 
     closeCodeState(&codeState);
 
-	bool debug = cunit->buildInfo->isDebugBuild();
+    if(doesNothing == false)
+    {
+        bool debug = cunit->buildInfo->isDebugBuild();
 
 #if LOOM_ENABLE_JIT
-    cls->type->setBCInstanceInitializer(generateByteCode(codeState.proto, debug));
+        cls->type->setBCInstanceInitializer(generateByteCode(codeState.proto, debug));
 #else
-    cls->type->setBCInstanceInitializer(generateByteCode(funcState.f, debug));
+        cls->type->setBCInstanceInitializer(generateByteCode(funcState.f, debug));
 #endif
+    }
 }
 
 

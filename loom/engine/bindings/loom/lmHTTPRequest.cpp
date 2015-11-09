@@ -20,14 +20,22 @@
 
 #include "loom/script/loomscript.h"
 #include "loom/script/native/lsNativeDelegate.h"
+#include "loom/script/runtime/lsProfiler.h"
 #include "loom/common/platform/platformHttp.h"
 #include "loom/common/utils/utByteArray.h"
 
 using namespace LS;
 
-class HTTPRequest {
-public:
 
+lmDefineLogGroup(gHTTPRequestLogGroup, "HTTPRequest", 1, LoomLogInfo);
+
+class HTTPRequest {
+private:
+
+    bool requestPending;
+
+public:
+    
     utString method;
     utString body;
     utString url;
@@ -35,7 +43,6 @@ public:
 
     utByteArray *bodyBytes;
 
-    bool        base64EncodeResponseData;
     bool        followRedirects;
 
     utHashTable<utHashedString, utString> header;
@@ -48,8 +55,10 @@ public:
     HTTPRequest(const char *urlString, const char *contentType) : method("GET"), body(""), responseCacheFile(""), bodyBytes(NULL)
     {
         url = urlString;
-        base64EncodeResponseData = false;
         followRedirects          = true;
+        id = -1;
+
+        requestPending = false;
 
         // set the Content-Type in the header
         const char *ctKey = contentType;
@@ -59,6 +68,18 @@ public:
             ctKey = "application/x-www-form-urlencoded";
         }
         setHeaderField("Content-Type", ctKey);
+    }
+
+    ~HTTPRequest()
+    {
+        // Warn if this object is garbage collected while a requet is pending
+        if (requestPending)
+        {
+            lmLog(gHTTPRequestLogGroup, "WARNING: HTTPRequest object with url \"%s\" garbage collected before completing a pending request. Ensure references to HTTPRequest objects are maintained while requests are pending.", url.c_str())
+        }
+
+        header.clear();
+        cancel();
     }
 
     void setHeaderField(const char *key, const char *value)
@@ -82,11 +103,14 @@ public:
 
     bool send()
     {
+        if (id != -1) cancel();
+        LOOM_PROFILE_SCOPE(httpSend);
         id = -1;
         if (url == "")
         {
-            _OnFailureDelegate.pushArgument("Error: Empty URL");
-            _OnFailureDelegate.invoke();
+            utByteArray *result = lmNew(NULL) utByteArray();
+            result->writeString("Error: Empty URL");
+            respond(this, LOOM_HTTP_ERROR, result);
         }
         else
         {
@@ -95,36 +119,48 @@ public:
                 // Send with body as byte array.
                 id = platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
                                   (const char *)bodyBytes->getInternalArray()->ptr(), bodyBytes->getSize(), header,
-                                  (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
+                                  (const char *)responseCacheFile.c_str(), followRedirects);
             }
             else
             {
                 // Send with body as string.
                 id = platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
                                   (const char *)body.c_str(), body.length(), header,
-                                  (const char *)responseCacheFile.c_str(), base64EncodeResponseData, followRedirects);
+                                  (const char *)responseCacheFile.c_str(), followRedirects);
             }
+
+            // The request has been sent!
+            requestPending = true;
         }
         return (id == -1) ? false : true;
     }
 
     void cancel()
     {
+        if (id == -1) return;
         bool cancelled = platform_HTTPCancel(id);
         if (cancelled)
         {
-            _OnFailureDelegate.pushArgument("Request cancelled by user.");
-            _OnFailureDelegate.invoke();
-            complete();
+            utByteArray *result = lmNew(NULL) utByteArray();
+            result->writeString("Request cancelled by user.");
+            respond(this, LOOM_HTTP_ERROR, result);
+            requestPending = false;
         }
+    }
+
+    bool isPending()
+    {
+        return requestPending;
     }
 
     //only called internally to notfiy that the HTTPRequest has completed now
     void complete()
     {
+        if (id == -1) return;
         platform_HTTPComplete(id);
-        id = -1;        
-    }    
+        id = -1;
+        requestPending = false;
+    }
 
     static bool isConnected()
     {
@@ -134,9 +170,11 @@ public:
     /**
      * Calls the native delegate, this should be used internally only
      */
-    static void respond(void *payload, loom_HTTPCallbackType type, const char *data)
+    static void respond(void *payload, loom_HTTPCallbackType type, utByteArray *data)
     {
         HTTPRequest *request = (HTTPRequest *)payload;
+
+        lmAssert(data != NULL, "Response ByteArray should not be null");
 
         switch (type)
         {
@@ -168,13 +206,13 @@ static int registerLoomHTTPRequest(lua_State *L)
        .addMethod("getHeaderField", &HTTPRequest::getHeaderField)
        .addMethod("send", &HTTPRequest::send)
        .addMethod("cancel", &HTTPRequest::cancel)
+       .addMethod("isPending", &HTTPRequest::isPending)
        .addStaticMethod("isConnected", &HTTPRequest::isConnected)
        .addVar("method", &HTTPRequest::method)
        .addVar("body", &HTTPRequest::body)
        .addVar("bodyBytes", &HTTPRequest::bodyBytes)
        .addVar("url", &HTTPRequest::url)
        .addVar("cacheFileName", &HTTPRequest::responseCacheFile)
-       .addVar("encodeResponse", &HTTPRequest::base64EncodeResponseData)
        .addVar("followRedirects", &HTTPRequest::followRedirects)
        .addVarAccessor("onSuccess", &HTTPRequest::getOnSuccessDelegate)
        .addVarAccessor("onFailure", &HTTPRequest::getOnFailureDelegate)

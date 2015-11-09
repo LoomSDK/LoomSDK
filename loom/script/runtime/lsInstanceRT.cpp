@@ -404,7 +404,7 @@ static int lsr_instanceindex(lua_State *L)
     else
     {
         mi = type->findMember(name, true);
-        lmAssert(mi, "Unable to find member via string %s : %s", type->getFullName().c_str(), name);
+        lmAssert(mi, "Unable to find member '%s' via string on instance of type %s", name, type->getFullName().c_str());
         assert(mi);
         assert(mi->isMethod());
         assert(mi->getOrdinal());
@@ -545,6 +545,7 @@ static int lsr_gctracker(lua_State *L)
     {
         GCTracker *gct = (GCTracker *)lua_topointer(L, 1);
         lmAssert(gct, "unable to get GCTracker");
+        LSProfiler::registerMemoryUsage(gct->type, -gct->allocated);
         LSProfiler::registerGC(gct->type, gct->methodBase);
     }
 

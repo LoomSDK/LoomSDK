@@ -71,11 +71,11 @@ void QuadBatch::render(lua_State *L)
     bool isIdentity = mtx.isIdentity();
     if((renderState.alpha == 1.0f) && isIdentity)
     {
-        GFX::QuadRenderer::batch(nativeTextureID, quadData, 4 * numQuads, blendSrc, blendDst);
+        GFX::QuadRenderer::batch(quadData, 4 * numQuads, nativeTextureID, blendEnabled, blendSrc, blendDst, shader);
         return;
     }
 
-    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 4 * numQuads, true, blendSrc, blendDst);
+    GFX::VertexPosColorTex *v = GFX::QuadRenderer::getQuadVertexMemory(4 * numQuads, nativeTextureID, blendEnabled, blendSrc, blendDst, shader);
     if (!v)
     {
         return;
@@ -91,18 +91,18 @@ void QuadBatch::render(lua_State *L)
         // only do matrix transform if the matrix is not identity
         if(!isIdentity)
         {
-            float _x = mtx.a * v->x + mtx.c * v->y + mtx.tx;
-            float _y = mtx.b * v->x + mtx.d * v->y + mtx.ty;
+            lmscalar _x = mtx.a * v->x + mtx.c * v->y + mtx.tx;
+            lmscalar _y = mtx.b * v->x + mtx.d * v->y + mtx.ty;
 
-            v->x = _x;
-            v->y = _y;
+            v->x = (float) _x;
+            v->y = (float) _y;
         }
 
         // modulate vertex alpha by our DisplayObject alpha setting
         if (renderState.alpha != 1.0f)
         {
             //TODO: LOOM-1624
-            float va = ((float)(v->abgr >> 24)) * renderState.alpha;
+            lmscalar va = ((lmscalar)(v->abgr >> 24)) * renderState.alpha;
             v->abgr = ((uint32_t)va << 24) | (v->abgr & 0x00FFFFFF);
         }
 

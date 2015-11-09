@@ -33,6 +33,8 @@
 #include "loom/engine/loom2d/l2dImage.h"
 #include "loom/engine/loom2d/l2dQuadBatch.h"
 
+#include "loom/graphics/gfxShader.h"
+
 namespace Loom2D
 {
 class Loom2DNative
@@ -65,16 +67,16 @@ bool Loom2DNative::sInitialized = false;
 
 static Matrix *StaticMatrixConstructor(lua_State *L)
 {
-    return new Matrix((float)lua_tonumber(L, 2), (float)lua_tonumber(L, 3),
-                      (float)lua_tonumber(L, 4), (float)lua_tonumber(L, 5),
-                      (float)lua_tonumber(L, 6), (float)lua_tonumber(L, 7));
+    return lmNew(NULL) Matrix((lmscalar)lua_tonumber(L, 2), (lmscalar)lua_tonumber(L, 3),
+                      (lmscalar)lua_tonumber(L, 4), (lmscalar)lua_tonumber(L, 5),
+                      (lmscalar)lua_tonumber(L, 6), (lmscalar)lua_tonumber(L, 7));
 }
 
 
 static Rectangle *StaticRectangleConstructor(lua_State *L)
 {
-    return new Rectangle((float)lua_tonumber(L, 2), (float)lua_tonumber(L, 3),
-                         (float)lua_tonumber(L, 4), (float)lua_tonumber(L, 5));
+    return lmNew(NULL) Rectangle((lmscalar)lua_tonumber(L, 2), (lmscalar)lua_tonumber(L, 3),
+                         (lmscalar)lua_tonumber(L, 4), (lmscalar)lua_tonumber(L, 5));
 }
 
 
@@ -185,11 +187,15 @@ static int registerLoom2D(lua_State *L)
        .addProperty("rotation", &DisplayObject::getRotation, &DisplayObject::setRotation)
        .addProperty("alpha", &DisplayObject::getAlpha, &DisplayObject::setAlpha)
        .addProperty("blendMode", &DisplayObject::getBlendMode, &DisplayObject::setBlendMode)
+       .addProperty("blendEnabled", &DisplayObject::getBlendEnabled, &DisplayObject::setBlendEnabled)
 
        .addProperty("name", &DisplayObject::getName, &DisplayObject::setName)
 
        .addProperty("visible", &DisplayObject::getVisible, &DisplayObject::setVisible)
        .addProperty("touchable", &DisplayObject::getTouchable, &DisplayObject::setTouchable)
+
+       .addProperty("cacheAsBitmap", &DisplayObject::getCacheAsBitmap, &DisplayObject::setCacheAsBitmap)
+       .addMethod("invalidateBitmapCache", &DisplayObject::invalidateBitmapCache)
 
        .addProperty("depth", &DisplayObject::getDepth, &DisplayObject::setDepth)
 
@@ -230,6 +236,9 @@ static int registerLoom2D(lua_State *L)
 
        .addProperty("orientation", &Stage::getOrientation, &Stage::setOrientation)
 
+       .addProperty("vectorQuality", &Stage::getVectorQuality, &Stage::setVectorQuality)
+       .addProperty("tessellationQuality", &Stage::getTessellationQuality, &Stage::setTessellationQuality)
+
        .addVarAccessor("onTouchBegan", &Stage::getTouchBeganDelegate)
        .addVarAccessor("onTouchMoved", &Stage::getTouchMovedDelegate)
        .addVarAccessor("onTouchEnded", &Stage::getTouchEndedDelegate)
@@ -240,11 +249,13 @@ static int registerLoom2D(lua_State *L)
        .addVarAccessor("onBackKey", &Stage::getBackKeyDelegate)
        .addVarAccessor("onScrollWheelYMoved", &Stage::getScrollWheelYMovedDelegate)
        .addVarAccessor("onAccelerate", &Stage::getAccelerateDelegate)
+       .addVarAccessor("onGameControllerAdded", &Stage::getGameControllerAddedDelegate)
+       .addVarAccessor("onGameControllerRemoved", &Stage::getGameControllerRemovedDelegate)
 
        .addVarAccessor("onOrientationChange", &Stage::getOrientationChangeDelegate)
        .addVarAccessor("onSizeChange", &Stage::getSizeChangeDelegate)
 
-        .addStaticProperty("onRenderStage", &Stage::getRenderStageDelegate)
+       .addStaticProperty("onRenderStage", &Stage::getRenderStageDelegate)
 
        .endClass()
 
@@ -267,9 +278,9 @@ static int registerLoom2D(lua_State *L)
 
     // SVG
        .beginClass<GFX::VectorSVG>("SVG")
-	   .addConstructor<void(*)(void)>()
-	   .addProperty("width", &GFX::VectorSVG::getWidth)
-	   .addProperty("height", &GFX::VectorSVG::getHeight)
+       .addConstructor<void(*)(void)>()
+       .addProperty("width", &GFX::VectorSVG::getWidth)
+       .addProperty("height", &GFX::VectorSVG::getHeight)
        .addMethod("loadFile", &GFX::VectorSVG::loadFile)
        .addMethod("loadString", &GFX::VectorSVG::loadString)
        .endClass()
@@ -283,13 +294,16 @@ static int registerLoom2D(lua_State *L)
 
     // Graphics
        .beginClass<GFX::VectorGraphics>("Graphics")
+       .addConstructor<void(*)(void)>()
        .addMethod("clear", &GFX::VectorGraphics::clear)
+       .addMethod("clearBounds", &GFX::VectorGraphics::clearBounds)
        .addMethod("lineStyle", &GFX::VectorGraphics::lineStyle)
        .addMethod("textFormat", &GFX::VectorGraphics::textFormat)
        .addMethod("textLineBounds", &GFX::VectorGraphics::textLineBounds)
        .addMethod("textLineAdvance", &GFX::VectorGraphics::textLineAdvance)
        .addMethod("textBoxBounds", &GFX::VectorGraphics::textBoxBounds)
        .addMethod("beginFill", &GFX::VectorGraphics::beginFill)
+       .addMethod("beginTextureFillID", &GFX::VectorGraphics::beginTextureFill)
        .addMethod("endFill", &GFX::VectorGraphics::endFill)
        .addMethod("moveTo", &GFX::VectorGraphics::moveTo)
        .addMethod("lineTo", &GFX::VectorGraphics::lineTo)
@@ -313,6 +327,7 @@ static int registerLoom2D(lua_State *L)
        .addConstructor<void (*)(void)>()
        .addProperty("nativeTextureID", &Quad::getNativeTextureID, &Quad::setNativeTextureID)
        .addProperty("nativeVertexDataInvalid", &Quad::getNativeVertexDataInvalid, &Quad::setNativeVertexDataInvalid)
+       .addVarAccessor("shader", &Quad::getShader, &Quad::setShader)
        .endClass()
 
     // Image
@@ -323,6 +338,7 @@ static int registerLoom2D(lua_State *L)
     // QuadBatch
        .deriveClass<QuadBatch, DisplayObject>("QuadBatch")
        .addConstructor<void (*)(void)>()
+       .addVarAccessor("shader", &QuadBatch::getShader, &QuadBatch::setShader)
        .addProperty("nativeTextureID", &QuadBatch::getNativeTextureID, &QuadBatch::setNativeTextureID)
        .addProperty("numQuads", &QuadBatch::getNumQuads)
        .addLuaFunction("_addQuad", &QuadBatch::_addQuad)

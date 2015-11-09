@@ -9,12 +9,19 @@ package loom.modestmaps.core
         public var row:Number;
         public var column:Number;
         public var zoom:Number;
-        
+
         public function Coordinate(row:Number, column:Number, zoom:Number)
         {
             this.row = row;
             this.column = column;
-            this.zoom = zoom;
+            this.zoom = zoom;            
+        }
+        
+        public function setVals(row:Number, column:Number, zoom:Number):void
+        {
+            this.row = row;
+            this.column = column;
+            this.zoom = zoom;            
         }
         
         public function toString():String
@@ -27,6 +34,13 @@ package loom.modestmaps.core
             return new Coordinate(row, column, zoom);
         }
         
+        public function copyFrom(coord:Coordinate)
+        {
+            row = coord.row;
+            column = coord.column;
+            zoom = coord.zoom;
+        }
+        
        /**
         * Return a new coordinate that corresponds to that of the tile containing this one
         */
@@ -37,16 +51,21 @@ package loom.modestmaps.core
         
         public function zoomTo(destination:Number):Coordinate
         {
-            return new Coordinate(row * Math.pow(2, destination - zoom),
-                                  column * Math.pow(2, destination - zoom),
-                                  destination);
+            var zoomPow:Number = Math.pow(2, destination - zoom);
+            return new Coordinate(row * zoomPow, column * zoomPow, destination);
+        }
+        
+        public function zoomToInPlace(destination:Number):void
+        {
+            var zoomPow:Number = Math.pow(2, destination - zoom);
+            column *= zoomPow;
+            row *= zoomPow;
         }
         
         public function zoomBy(distance:Number):Coordinate
         {
-            return new Coordinate(row * Math.pow(2, distance),
-                                  column * Math.pow(2, distance),
-                                  zoom + distance);
+            var zoomPow:Number = Math.pow(2, distance);
+            return new Coordinate(row * zoomPow, column * zoomPow, zoom + distance);
         }
         
         public function isRowEdge():Boolean

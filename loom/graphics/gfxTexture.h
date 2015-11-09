@@ -37,6 +37,8 @@ typedef int   TextureID;
 #define TEXTURE_ID_MASK   (1 << TEXTURE_ID_BITS) - 1
 #define MAXTEXTURES       1 << TEXTURE_ID_BITS
 
+#define TEXTURE_GEN_BATCH 16
+
 // loading textures are marked
 #define MARKEDTEXTURE     65534
 
@@ -66,6 +68,8 @@ struct TextureInfo
     int                      wrapU;
     int                      wrapV;
 
+    bool                     visible;
+
     bool                     clampOnly;
     bool                     mipmaps;
 
@@ -78,6 +82,7 @@ struct TextureInfo
     GLuint                   handle;
     bool                     renderTarget;
     GLuint                   framebuffer;
+    GLuint                   renderbuffer;
 
     utString                 texturePath;
 
@@ -133,6 +138,8 @@ struct TextureInfo
         texturePath  = "";
         renderTarget = false;
         framebuffer  = -1;
+        renderbuffer = -1;
+        visible      = true;
     }
 };
 
@@ -144,9 +151,11 @@ struct AsyncLoadNote
     bool                        priority;
     utString                    path;
     TextureInfo                 *tinfo;
+    //just update instead of creating a new one
+    bool                        update;
 
     //the following are only used for async loading of pure byte data
-    utByteArray                 *bytes;
+    utByteArray                 bytes;
     loom_asset_image_t          *imageAsset;
     LoomAssetCleanupCallback    iaCleanup;
 };
@@ -156,15 +165,15 @@ class Texture
 {
     friend class Graphics;
     friend class QuadRenderer;
+    friend class BitmapData;
 
 private:
 
     static utHashTable<utFastStringHash, TextureID> sTexturePathLookup;
     static bool sTextureAssetNofificationsEnabled;
-	static bool supportsFullNPOT;
-	static TextureID currentRenderTexture;
-	static uint32_t previousRenderFlags;
-
+    static bool supportsFullNPOT;
+    static TextureID currentRenderTexture;
+    
     // simple linear TextureID -> TextureHandle
     static TextureInfo sTextureInfos[MAXTEXTURES];
 
@@ -174,6 +183,9 @@ private:
     //queue of loaded texture data to be created back in the main thread
     static utList<AsyncLoadNote> sAsyncCreateQueue;
 
+    // handle for the running (or soon to be terminated) thread
+    static ThreadHandle sAsyncThread;
+
     //flag indicating if the async loading thread is currently running
     static bool sAsyncThreadRunning;
 
@@ -182,6 +194,9 @@ private:
 
     //mutex used for locking sTextureInfos and sTexturePathLookup between threads
     static MutexHandle sTexInfoLock;
+
+    static void ensureAsyncThread();
+    static void stopAsyncThread();
 
     static TextureID getAvailableTextureID()
     {
@@ -263,6 +278,7 @@ private:
     static void handleAssetNotification(void *payload, const char *name);
 
     static void loadImageAsset(loom_asset_image_t *lat, TextureID id);
+    static void updateImageAsset(loom_asset_image_t *lat, TextureInfo *info);
 
 public:
 
@@ -288,24 +304,8 @@ public:
         return id ? getTextureInfo(*id) : NULL;
     }
 
-    inline static TextureInfo *getTextureInfo(TextureID id)
-	{
-        TextureID index = id & TEXTURE_ID_MASK;
-        lmAssert(index >= 0 && index < MAXTEXTURES, "Texture index is out of range: %d", index);
-
-        loom_mutex_lock(sTexInfoLock);
-        TextureInfo *tinfo = &sTextureInfos[index];
-
-        // Check if it has a handle and if it's not outdated
-        if (tinfo->handle == -1 || tinfo->id != id)
-        {
-            tinfo = NULL;
-        }
-        loom_mutex_unlock(sTexInfoLock);
-
-        return tinfo;
-    }
-
+    static TextureInfo *getTextureInfo(TextureID id);
+	
     inline static int getIndex(TextureID id)
     {
         return id & TEXTURE_ID_MASK;
@@ -323,6 +323,10 @@ public:
 
     static void reset();
     static void tick();
+    static void validate();
+    static void validate(TextureID id);
+
+    static void upload(TextureInfo &tinfo, uint8_t *data, uint16_t width, uint16_t height, int xoffset = -1, int yoffset = -1);
 
     // This method accepts rgba data.
     static TextureInfo *load(uint8_t *data, uint16_t width, uint16_t height, TextureID id = -1);
@@ -334,9 +338,13 @@ public:
 	static TextureInfo *initEmptyTexture(int width, int height);
     static int __stdcall loadTextureAsync_body(void *param);
 
+    static void updateFromBytes(TextureID id, utByteArray *bytes);
+    static void updateFromBytesAsync(TextureID id, utByteArray *bytes, bool highPriority);
+
 	static void clear(TextureID id, int color, float alpha);
 
 	static void setRenderTarget(TextureID id = -1);
+	static TextureID getRenderTarget();
 	static int render(lua_State *L);
 
     static void dispose(TextureID id);

@@ -18,9 +18,6 @@
  * ===========================================================================
  */
 
-//#include <math.h>
-//#define HAVE_M_PI
-
 #include "loom/common/platform/platform.h"
 #include "loom/common/core/log.h"
 
@@ -33,54 +30,58 @@
 #include "loom/graphics/gfxTexture.h"
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/graphics/gfxVectorRenderer.h"
+#include "loom/graphics/gfxBitmapData.h"
+#include "loom/graphics/gfxStateManager.h"
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+// Get a reference to the global window.
+extern SDL_Window *gSDLWindow;
 
 namespace GFX
 {
-    lmDefineLogGroup(gGFXLogGroup, "GFX", 1, LoomLogInfo);
 
-    bool Graphics::sInitialized = false;
 
-    // start with context loss as flagged so resources are created
-    bool Graphics::sContextLost = true;
 
-    int Graphics::sWidth      = 0;
-    int Graphics::sHeight     = 0;
-    uint32_t Graphics::sFlags = 0x00000000;
-    int Graphics::sFillColor  = 0x000000FF;
-    int Graphics::sView       = 0;
+lmDefineLogGroup(gGFXLogGroup, "GFX", 1, LoomLogInfo);
 
-	uint32_t Graphics::sCurrentFrame = 0;
-	/*
-	float Graphics::sMVP[9] = {
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f
-	};
-	*/
-	float Graphics::sMVP[16] = {
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f
-	};
-	/*
-	float Graphics::sMVPInverted[16] = {
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f
-	};
-	*/
-	float* Graphics::sCurrentModelViewProjection = NULL;
-	
-    char Graphics::pendingScreenshot[1024] = { 0, };
+bool Graphics::sInitialized = false;
 
-    extern SDL_GLContext context;
-    GL_Context Graphics::_context;
-    
+// start with context loss as flagged so resources are created
+bool Graphics::sContextLost = true;
 
-    static int LoadContext(GL_Context * data)
-    {
+int Graphics::sBackFramebuffer = -1;
+
+uint32_t Graphics::sCurrentFrame = 0;
+GraphicsRenderTarget Graphics::sTarget;
+utArray<GraphicsRenderTarget> Graphics::sTargetStack;
+
+float Graphics::sMVP[16] = {
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f
+};
+
+float *Graphics::sCurrentModelViewProjection = NULL;
+
+char Graphics::pendingScreenshot[1024] = { 0, };
+bool Graphics::gettingScreenshotData = false;
+LS::NativeDelegate Graphics::_onScreenshotDataDelegate;
+
+extern SDL_GLContext context;
+GL_Context Graphics::_context;
+
+/**
+ * Resolve function pointers for GL calls into the GL_Context structure.
+ *
+ * This is done in an OS specific way; we might assign them directly or
+ * do a symbol lookup. The GFX_CALL_CHECK macro also lets us instrument
+ * all GL calls for debug purposes.
+ */
+static int LoadContext(GL_Context * data)
+{
 #if SDL_VIDEO_DRIVER_UIKIT
 #define __SDL_NOGETPROCADDR__
 #elif SDL_VIDEO_DRIVER_ANDROID
@@ -89,7 +90,7 @@ namespace GFX
 #define __SDL_NOGETPROCADDR__
 #endif
 
-#if GFX_OPENGL_CHECK
+#if GFX_CALL_CHECK
 #define GFX_OPENGL_FUNC(func) gfx_internal_ ## func
 #else
 #define GFX_OPENGL_FUNC(func) func
@@ -102,21 +103,21 @@ namespace GFX
 #else
 #define GFX_PROC(ret,func,params,args) \
 do { \
-    void **tmp = (void**)&data->GFX_OPENGL_FUNC(func); \
-    *tmp = SDL_GL_GetProcAddress(#func); \
-    if ( ! data->GFX_OPENGL_FUNC(func) ) { \
-        return SDL_SetError("Couldn't load GL function %s: %s\n", #func, SDL_GetError()); \
-    } \
+void **tmp = (void**)&data->GFX_OPENGL_FUNC(func); \
+*tmp = SDL_GL_GetProcAddress(#func); \
+if ( ! data->GFX_OPENGL_FUNC(func) ) { \
+    return SDL_SetError("Couldn't load GL function %s: %s\n", #func, SDL_GetError()); \
+} \
 } while ( 0 );
 #define GFX_PROC_VOID(func, params, args) GFX_PROC(void, func, params, args)
 #endif /* _SDL_NOGETPROCADDR_ */
-        
+    
 #include "gfxGLES2EntryPoints.h"
 #undef GFX_PROC
 #undef GFX_PROC_VOID
 
-        return 0;
-    }
+    return 0;
+}
 
 
 void Graphics::initialize()
@@ -132,6 +133,10 @@ void Graphics::initialize()
     QuadRenderer::initialize();
 
     VectorRenderer::initialize();
+    
+    // Required on iOS (at least), because the back framebuffer might not be 0
+    // as it appears to be on other platforms
+    Graphics::context()->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &sBackFramebuffer);
 
     sInitialized = true;
 }
@@ -139,6 +144,8 @@ void Graphics::initialize()
 void Graphics::shutdown()
 {
     Texture::shutdown();
+    QuadRenderer::destroyGraphicsResources();
+    VectorRenderer::destroyGraphicsResources();
 }
 
 void Graphics::reset(int width, int height, uint32_t flags)
@@ -150,22 +157,22 @@ void Graphics::reset(int width, int height, uint32_t flags)
     // clear context loss state
     sContextLost = false;
 
-	Loom2D::Matrix mvp;
-	mvp.scale(2.0f / width, 2.0f / height);
-	mvp.translate(-1.0f, -1.0f);
-	//mvp.copyToMatrix4(sMVPInverted);
-	// Inverted is normal due to OpenGL origin being bottom left
-	if (!(flags & FLAG_INVERTED)) {
-		mvp.scale(1.0f, -1.0f);
-	}
-	mvp.copyToMatrix4(sMVP);
-	
-	sCurrentModelViewProjection = sMVP;
+    Loom2D::Matrix mvp;
+    mvp.scale(2.0f / width, 2.0f / height);
+    mvp.translate(-1.0f, -1.0f);
+
+    // Inverted is normal due to OpenGL origin being bottom left
+    if (!(flags & FLAG_INVERTED)) {
+        mvp.scale(1.0f, -1.0f);
+    }
+    mvp.copyToMatrix4f(sMVP);
+    
+    sCurrentModelViewProjection = sMVP;
 
     // cache current values
-    sWidth  = width;
-    sHeight = height;
-    sFlags = flags;
+    sTarget.width  = width;
+    sTarget.height = height;
+    sTarget.flags = flags;
 }
 
 bool Graphics::queryExtension(char *extName)
@@ -207,74 +214,109 @@ void Graphics::beginFrame()
         return;
     }
 
-	sCurrentFrame++;
-
-	Graphics::reset(sWidth, sHeight, sFlags);
-
-    Graphics::context()->glViewport(0, 0, Graphics::getWidth(), Graphics::getHeight());
-
-	if (!(sFlags & FLAG_NOCLEAR)) {
-		Graphics::context()->glClearColor(
-										  float((sFillColor >> 24) & 0xFF) / 255.0f,
-										  float((sFillColor >> 16) & 0xFF) / 255.0f,
-										  float((sFillColor >> 8) & 0xFF) / 255.0f,
-										  float((sFillColor >> 0) & 0xFF) / 255.0f
-										  );
-		Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	}
-
+    sCurrentFrame++;
+    
     QuadRenderer::beginFrame();
-    VectorRenderer::setSize(sWidth, sHeight);
-    //VectorRenderer::beginFrame();
+
+    applyRenderTarget();
 }
 
+void Graphics::pushRenderTarget()
+{
+    QuadRenderer::submit();
+    sTargetStack.push_back(sTarget);
+}
+
+void Graphics::popRenderTarget()
+{
+    sTarget = sTargetStack.back();
+    sTargetStack.pop_back();
+    applyRenderTarget(false);
+}
+
+void Graphics::applyRenderTarget(bool initial)
+{
+    Graphics::reset(sTarget.width, sTarget.height, sTarget.flags);
+
+    VectorRenderer::setSize(sTarget.width, sTarget.height);
+    Graphics::context()->glViewport(0, 0, sTarget.width, sTarget.height);
+
+    if (initial && !(sTarget.flags & FLAG_NOCLEAR)) {
+        Graphics::context()->glClearColor(sTarget.fillColor.r, sTarget.fillColor.g, sTarget.fillColor.b, sTarget.fillColor.a);
+        Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    }
+}
 
 void Graphics::endFrame()
 {
     QuadRenderer::endFrame();
-    //VectorRenderer::endFrame();
 
-    if(pendingScreenshot[0] != 0)
+    if(pendingScreenshot[0] != 0 || gettingScreenshotData)
     {
-        //bgfx::saveScreenShot(pendingScreenshot);
+        SDL_ClearError();
+        SDL_Window* sdlWindow = gSDLWindow;
+
+        const BitmapData* fb = BitmapData::fromFramebuffer();
+
+
+        // If there is a pending screenshot write, do that
+        if (pendingScreenshot[0] != 0) {
+            fb->save(pendingScreenshot);
+        }
+
+        // If there is a pending data request, do that
+        if (gettingScreenshotData) {
+            utByteArray *retData = stbi_data_png(sTarget.width, sTarget.height, 4 /* RGBA */, fb->getData(), sTarget.width * fb->getBpp());
+
+            // Send the delegate along
+            _onScreenshotDataDelegate.pushArgument(retData);
+            _onScreenshotDataDelegate.invoke();
+        }
+
         pendingScreenshot[0] = 0;
+        gettingScreenshotData = false;
     }
 }
 
 int Graphics::render(lua_State *L)
 {
-	Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, 1);
-	Loom2D::Matrix *matrix = lua_isnil(L, 2) ? NULL : (Loom2D::Matrix*) lualoom_getnativepointer(L, 2);
-	float alpha = (float)lua_tonumber(L, 3);
+    // Get arguments
+    Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, -3);
+    Loom2D::Matrix *matrix = lua_isnil(L, -2) ? NULL : (Loom2D::Matrix*) lualoom_getnativepointer(L, -2);
+    float alpha = (float)lua_tonumber(L, -1);
+    
+    // Update positions and buffers early
+    // since we can't wait for rendering to begin
+    object->validate(L, 1); // The 1 here is the index of the object on the stack
 
-	// Update positions and buffers early
-	// since we can't wait for rendering to begin
-	object->validate(L, 1); // The 1 here is the index of the object on the stack
+    // Save and setup state
+    Loom2D::DisplayObjectContainer *prevParent = object->parent;
+    object->parent = NULL;
 
-	// Save and setup state
-	Loom2D::DisplayObjectContainer *prevParent = object->parent;
-	object->parent = NULL;
+    Loom2D::Matrix prevTransformMatrix;
+    if (matrix != NULL)
+    {
+        object->updateLocalTransform();
+        prevTransformMatrix.copyFrom(&object->transformMatrix);
+        object->transformMatrix.copyFrom(matrix);
+    }
 
-	Loom2D::Matrix prevTransformMatrix;
-	if (matrix != NULL)
-	{
-		object->updateLocalTransform();
-		prevTransformMatrix.copyFrom(&object->transformMatrix);
-		object->transformMatrix.copyFrom(matrix);
-	}
+    lmscalar prevAlpha = object->alpha;
+    object->alpha = prevAlpha*alpha;
 
-	float prevAlpha = object->alpha;
-	object->alpha = prevAlpha*alpha;
+    // Reset state
+    Graphics_SetCurrentGLState(GFX_OPENGL_STATE_QUAD);
+    Graphics_InvalidateGLState(GFX_OPENGL_STATE_QUAD);
 
-	// Render 
-	object->render(L);
+    // Render the object.
+    object->render(L);
 
-	// Restore state
-	object->parent = prevParent;
-	if (matrix != NULL) object->transformMatrix.copyFrom(&prevTransformMatrix);
-	object->alpha = prevAlpha;
+    // Restore state
+    object->parent = prevParent;
+    if (matrix != NULL) object->transformMatrix.copyFrom(&prevTransformMatrix);
+    object->alpha = prevAlpha;
 
-	return 0;
+    return 0;
 }
 
 static int _scount = 0;
@@ -282,7 +324,7 @@ void Graphics::handleContextLoss()
 {
     sContextLost = true;
 
-    lmLog(gGFXLogGroup, "Graphics::handleContextLoss - %dx%d", sWidth, sHeight);
+    lmLog(gGFXLogGroup, "Graphics::handleContextLoss - %dx%d", sTarget.width, sTarget.height);
 
     lmLog(gGFXLogGroup, "Handle context loss: Shutdown %i", _scount++);
 
@@ -293,14 +335,23 @@ void Graphics::handleContextLoss()
     lmLog(gGFXLogGroup, "Handle context loss: Init");
 
     lmLog(gGFXLogGroup, "Handle context loss: Reset");
-    reset(sWidth, sHeight);
+    reset(sTarget.width, sTarget.height);
     lmLog(gGFXLogGroup, "Handle context loss: Done");
 }
 
 
 void Graphics::screenshot(const char *path)
 {
+    if (strlen(path) > 1024) {
+        lmLog(gGFXLogGroup, "Screenshot name too big! Screenshots must be 1024 characters or less");
+        return;
+    }
     strcpy(pendingScreenshot, path);
+}
+
+void Graphics::screenshotData()
+{
+    gettingScreenshotData = true;
 }
 
 
@@ -310,15 +361,20 @@ void Graphics::setDebug(int flags)
 }
 
 
-void Graphics::setFillColor(int color)
+void Graphics::setFillColor(unsigned int color)
 {
-    sFillColor = color;
+    sTarget.fillColor = Color(color);
 }
 
-
-int Graphics::getFillColor()
+// NanoVG requires stencil buffer for fills, so this is always true for now
+bool Graphics::getStencilRequired()
 {
-    return sFillColor;
+    return true || (VectorRenderer::quality & VectorRenderer::QUALITY_STENCIL_STROKES) > 0;
+}
+
+unsigned int Graphics::getFillColor()
+{
+    return sTarget.fillColor.getHex();
 }
 
 void Graphics::setClipRect(int x, int y, int width, int height)
@@ -336,7 +392,7 @@ void Graphics::setClipRect(int x, int y, int width, int height)
     }
 
     context()->glEnable(GL_SCISSOR_TEST);
-    context()->glScissor(x, sHeight-height-y, width, height);
+    context()->glScissor(x, sTarget.height-height-y, width, height);
 }
 
 void Graphics::clearClipRect()

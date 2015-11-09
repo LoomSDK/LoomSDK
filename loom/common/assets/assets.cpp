@@ -25,6 +25,7 @@
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
 #include "loom/common/core/allocator.h"
+#include "loom/common/core/string.h"
 #include "loom/common/core/stringTable.h"
 #include "loom/common/platform/platformThread.h"
 #include "loom/common/platform/platformTime.h"
@@ -37,10 +38,10 @@
 #include "loom/common/utils/fourcc.h"
 
 #include "loom/common/assets/assets.h"
-#include "loom/common/assets/assetProtocol.h"
 #include "loom/common/assets/assetsImage.h"
 #include "loom/common/assets/assetsSound.h"
 #include "loom/common/assets/assetsScript.h"
+#include "loom/common/assets/assetProtocol.h"
 
 #include <jansson.h>
 
@@ -50,10 +51,6 @@
 
 #define ASSET_STREAM_HOST    LoomApplicationConfig::assetAgentHost().c_str()
 #define ASSET_STREAM_PORT    LoomApplicationConfig::assetAgentPort()
-
-#if LOOM_PLATFORM_IS_APPLE == 1 || LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-#define stricmp              strcasecmp //I feel dirty.
-#endif
 
 // This actually lives in lsAsset.cpp, but is useful to call from in the asset manager implementation.
 void loom_asset_notifyPendingCountChange();
@@ -203,6 +200,7 @@ static utArray<loom_asset_t *> gAssetLoadQueue;
 static utHashTable<utIntHashKey, LoomAssetDeserializeCallback> gAssetDeserializerMap;
 static utArray<LoomAssetRecognizerCallback> gRecognizerList;
 static LoomAssetCommandCallback             gCommandCallback = NULL;
+static int gShuttingDown = 0;
 
 // Asset server connection state.
 static MutexHandle          gAssetServerSocketLock    = NULL;
@@ -233,7 +231,7 @@ static loom_asset_t *loom_asset_getAssetByName(const char *name, int create)
     {
         // Create one.
         asset       = lmNew(gAssetAllocator) loom_asset_t;
-        asset->name = strdup(name);
+        asset->name = name;
         gAssetHash.insert(key, asset);
     }
 
@@ -244,31 +242,47 @@ static loom_asset_t *loom_asset_getAssetByName(const char *name, int create)
 // Recognize text file types by their extension.
 static int loom_asset_textRecognizer(const char *extension)
 {
-    if (!strcasecmp(extension, "txt"))
+    if (!stricmp(extension, "txt"))
     {
         return LATText;
     }
-    if (!strcasecmp(extension, "lml"))
+    if (!stricmp(extension, "lml"))
     {
         return LATText;
     }
-    if (!strcasecmp(extension, "css"))
+    if (!stricmp(extension, "css"))
     {
         return LATText;
     }
-    if (!strcasecmp(extension, "xml"))
+    if (!stricmp(extension, "xml"))
     {
         return LATText;
     }
-    if (!strcasecmp(extension, "plist"))
+    if (!stricmp(extension, "plist"))
     {
         return LATText;
     }
-    if (!strcasecmp(extension, "fnt"))
+    if (!stricmp(extension, "fnt"))
     {
         return LATText;
     }
-    if (!strcasecmp(extension, "tmx"))
+    if (!stricmp(extension, "tmx"))
+    {
+        return LATText;
+    }
+    if (!stricmp(extension, "vert"))
+    {
+        return LATText;
+    }
+    if (!stricmp(extension, "vsh"))
+    {
+        return LATText;
+    }
+    if (!stricmp(extension, "frag"))
+    {
+        return LATText;
+    }
+    if (!stricmp(extension, "fsh"))
     {
         return LATText;
     }
@@ -277,7 +291,7 @@ static int loom_asset_textRecognizer(const char *extension)
 
 
 // "Text" file types are just loaded directly as binary safe strings.
-static void *loom_asset_textDeserializer(void *ptr, size_t size, LoomAssetCleanupCallback *dtor)
+void *loom_asset_textDeserializer(void *ptr, size_t size, LoomAssetCleanupCallback *dtor)
 {
     // Blast the bits into the asset.
     void *data = lmAlloc(gAssetAllocator, size + 1);
@@ -294,7 +308,7 @@ static void *loom_asset_textDeserializer(void *ptr, size_t size, LoomAssetCleanu
 // Recognize binary file types by their extension.
 static int loom_asset_binaryRecognizer(const char *extension)
 {
-    if (!strcasecmp(extension, "zip"))
+    if (!stricmp(extension, "zip"))
     {
         return LATBinary;
     }
@@ -303,12 +317,12 @@ static int loom_asset_binaryRecognizer(const char *extension)
 
 static void loom_asset_binaryDtor(void *bytes)
 {
-    delete (utByteArray*)bytes;
+    lmDelete(NULL, (utByteArray*)bytes);
 }
 
 static void *loom_asset_binaryDeserializer(void *ptr, size_t size, LoomAssetCleanupCallback *dtor)
 {
-    utByteArray *bytes = new utByteArray();
+    utByteArray *bytes = lmNew(NULL) utByteArray();
     bytes->allocateAndCopy(ptr, size);
     *dtor = loom_asset_binaryDtor;
     return bytes;
@@ -334,6 +348,18 @@ void loom_asset_logListener(void *payload, loom_logGroup_t *group, loom_logLevel
     loom_mutex_unlock(gAssetServerSocketLock);
 }
 
+// Helper function to route Loom custom output over the network.
+void loom_asset_custom(void* buffer, int length)
+{
+    loom_mutex_lock(gAssetServerSocketLock);
+
+    if (gAssetProtocolHandler)
+    {
+        gAssetProtocolHandler->sendCustom(buffer, length);
+    }
+
+    loom_mutex_unlock(gAssetServerSocketLock);
+}
 
 int loom_asset_queryPendingTransfers()
 {
@@ -355,6 +381,10 @@ void loom_asset_initialize(const char *rootUri)
     // And the allocator.
     //gAssetAllocator = loom_allocator_initializeTrackerProxyAllocator(loom_allocator_getGlobalHeap());
     gAssetAllocator = (loom_allocator_getGlobalHeap());
+
+    // Clear, it might have been filled up before (for unit tests)
+    gAssetLoadQueue.clear();
+    gAssetHash.clear();
 
     // Asset server connection state.
     gAssetServerSocketLock = loom_mutex_create();
@@ -388,10 +418,26 @@ void loom_asset_waitForConnection(int msToWait)
     gAssetServerConnectTryInterval = 3000;
 }
 
+// Clears the asset name cache that is built up
+// through loom_asset_lock and others
+static void loom_asset_clear()
+{
+    utHashTableIterator<utHashTable<utHashedString, loom_asset_t *> > assetIterator(gAssetHash);
+    while (assetIterator.hasMoreElements())
+    {
+        utHashedString key = assetIterator.peekNextKey();
+        lmDelete(NULL, assetIterator.peekNextValue());
+        assetIterator.next();
+    }
+    gAssetHash.clear();
+}
 
 void loom_asset_shutdown()
 {
+    gShuttingDown = 1;
+
     loom_asset_flushAll();
+    loom_asset_clear();
 
     // Clear out our queues and maps.
     gAssetDeserializerMap.clear();
@@ -845,10 +891,12 @@ void loom_asset_flush(const char *name)
 {
    // Currently we only want to do this on the main thread so piggy back on the
    // native delegate sanity check to bail if on secondary thread.
-   if(platform_getCurrentThreadId() != LS::NativeDelegate::smMainThreadID && LS::NativeDelegate::smMainThreadID != 0xBAADF00D)
+   if(platform_getCurrentThreadId() != LS::NativeDelegate::smMainThreadID
+      && LS::NativeDelegate::smMainThreadID != 0xBAADF00D)
       return;
 
    loom_mutex_lock(gAssetLock);
+
     // Delete it + unload it.
     loom_asset_t *asset = loom_asset_getAssetByName(name, 0);
 
@@ -869,7 +917,8 @@ void loom_asset_flush(const char *name)
     asset->state = loom_asset_t::Unloaded;
 
     // Fire subscribers.
-    loom_asset_notifySubscribers(asset->name.c_str());
+    if(!gShuttingDown)
+        loom_asset_notifySubscribers(asset->name.c_str());
 
     loom_mutex_unlock(gAssetLock);
 }
@@ -1098,6 +1147,8 @@ int loom_asset_unsubscribe(const char *name, LoomAssetChangeCallback cb, void *p
 
 void loom_asset_registerType(unsigned int type, LoomAssetDeserializeCallback deserializer, LoomAssetRecognizerCallback recognizer)
 {
+    lmAssert(gAssetDeserializerMap.find(type) == UT_NPOS, "Asset type already registered!");
+
     gAssetDeserializerMap.insert(type, deserializer);
     gRecognizerList.push_back(recognizer);
 }
@@ -1128,7 +1179,6 @@ void loom_asset_reloadAll()
     }
 }
 
-
 void loom_asset_supply(const char *name, void *bits, int length)
 {
     loom_mutex_lock(gAssetLock);
@@ -1150,13 +1200,13 @@ void loom_asset_supply(const char *name, void *bits, int length)
         return;
     }
 
-   // Deserialize it.
+    // Deserialize it.
     LoomAssetCleanupCallback dtor = NULL;
-   void *assetBits = loom_asset_deserializeAsset(name, type, length, bits, &dtor);
+    void *assetBits = loom_asset_deserializeAsset(name, type, length, bits, &dtor);
 
-   // Instate the asset.
-   // TODO: We can save some memory by pointing directly and not making a copy.
-   asset->instate(type, assetBits, dtor);
+    // Instate the asset.
+    // TODO: We can save some memory by pointing directly and not making a copy.
+    asset->instate(type, assetBits, dtor);
 
     // Note it's supplied so we don't flush it.
     asset->isSupplied = 1;

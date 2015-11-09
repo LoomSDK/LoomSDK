@@ -281,10 +281,9 @@ package
         // these really should be moved down to the engine module
         var sourceExclusions:Vector.<String> = ["loom/common/platform/platformAdMobIOS.mm", "loom/common/platform/EBPurchase.m", 
                                                 "loom/common/platform/platformWebViewIOS.mm", "loom/common/platform/platformVideoIOS.mm",
-                                                "loom/common/platform/RootViewController.mm", "loom/script/native/core/assets/lmAssets.cpp",
-                                                "loom/script/native/core/system/Platform/lmGamePad.cpp"];
+                                                "loom/common/platform/RootViewController.mm", "loom/script/native/core/assets/lmAssets.cpp"];
 
-        var sdkExclusions:Vector.<String> = ["sdk/src/system/Platform/Gamepad.ls"];
+        var sdkExclusions:Vector.<String> = [];
 
         var templateCMakeLists:String;
         var cmakeListsTxt:String;

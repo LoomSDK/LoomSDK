@@ -30,7 +30,7 @@ public class LoomHTTP
 {
     private static final String TAG = "LoomHTTP";
 
-    public static void send(final String url, String httpMethod, final long callback, final long payload, byte[] body, final String responseCacheFile, final boolean base64EncodeResponseData, boolean followRedirects)
+    public static void send(final String url, String httpMethod, final long callback, final long payload, byte[] body, final String responseCacheFile, boolean followRedirects)
     {
         final Activity activity = LoomAdMob.activity;
         AsyncHttpClient client = new AsyncHttpClient();
@@ -82,17 +82,10 @@ public class LoomHTTP
 
                 final String fResponse;
 
-                if (base64EncodeResponseData)
-                {
-                    fResponse = Base64.encodeToString(binaryData, Base64.NO_WRAP | Base64.NO_PADDING);
-                }
-                else
-                {
-                    try {
-                        fResponse = new String(binaryData, "UTF8");
-                    } catch (UnsupportedEncodingException e) {
-                        throw new AssertionError("UTF-8 is unknown");
-                    }
+                try {
+                    fResponse = new String(binaryData, "UTF8");
+                } catch (UnsupportedEncodingException e) {
+                    throw new AssertionError("UTF-8 is unknown");
                 }
 
                 final String rfResponse = fResponse;
@@ -112,17 +105,10 @@ public class LoomHTTP
 
                 final String fContent;
 
-                if (base64EncodeResponseData)
-                {
-                    fContent = Base64.encodeToString(binaryData, Base64.NO_WRAP | Base64.NO_PADDING);
-                }
-                else
-                {
-                    try {
-                        fContent = new String(binaryData, "UTF8");
-                    } catch (UnsupportedEncodingException e) {
-                        throw new AssertionError("UTF-8 is unknown");
-                    }
+                try {
+                    fContent = new String(binaryData, "UTF8");
+                } catch (UnsupportedEncodingException e) {
+                    throw new AssertionError("UTF-8 is unknown");
                 }
 
                 onFailure(error, fContent);

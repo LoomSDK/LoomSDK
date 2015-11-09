@@ -8,7 +8,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2012, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -46,6 +46,11 @@ CURL_EXTERN void *curl_dorealloc(void *ptr, size_t size, int line,
                                  const char *source);
 CURL_EXTERN void curl_dofree(void *ptr, int line, const char *source);
 CURL_EXTERN char *curl_dostrdup(const char *str, int line, const char *source);
+#if defined(WIN32) && defined(UNICODE)
+CURL_EXTERN wchar_t *curl_dowcsdup(const wchar_t *str, int line,
+                                   const char *source);
+#endif
+
 CURL_EXTERN void curl_memdebug(const char *logname);
 CURL_EXTERN void curl_memlimit(long limit);
 CURL_EXTERN void curl_memlog(const char *format, ...);
@@ -84,14 +89,28 @@ CURL_EXTERN int curl_fclose(FILE *file, int line, const char *source);
 #define realloc(ptr,size) curl_dorealloc(ptr, size, __LINE__, __FILE__)
 #define free(ptr) curl_dofree(ptr, __LINE__, __FILE__)
 
+#ifdef WIN32
+#  ifdef UNICODE
+#    undef wcsdup
+#    define wcsdup(ptr) curl_dowcsdup(ptr, __LINE__, __FILE__)
+#    undef _wcsdup
+#    define _wcsdup(ptr) curl_dowcsdup(ptr, __LINE__, __FILE__)
+#    undef _tcsdup
+#    define _tcsdup(ptr) curl_dowcsdup(ptr, __LINE__, __FILE__)
+#  else
+#    undef _tcsdup
+#    define _tcsdup(ptr) curl_dostrdup(ptr, __LINE__, __FILE__)
+#  endif
+#endif
+
 #define socket(domain,type,protocol)\
- curl_socket(domain,type,protocol,__LINE__,__FILE__)
+ curl_socket(domain, type, protocol, __LINE__, __FILE__)
 #undef accept /* for those with accept as a macro */
 #define accept(sock,addr,len)\
- curl_accept(sock,addr,len,__LINE__,__FILE__)
+ curl_accept(sock, addr, len, __LINE__, __FILE__)
 #ifdef HAVE_SOCKETPAIR
 #define socketpair(domain,type,protocol,socket_vector)\
- curl_socketpair(domain,type,protocol,socket_vector,__LINE__,__FILE__)
+ curl_socketpair(domain, type, protocol, socket_vector, __LINE__, __FILE__)
 #endif
 
 #ifdef HAVE_GETADDRINFO
@@ -100,25 +119,25 @@ CURL_EXTERN int curl_fclose(FILE *file, int line, const char *source);
    our macro as for other platforms. Instead, we redefine the new name they
    define getaddrinfo to become! */
 #define ogetaddrinfo(host,serv,hint,res) \
-  curl_dogetaddrinfo(host,serv,hint,res,__LINE__,__FILE__)
+  curl_dogetaddrinfo(host, serv, hint, res, __LINE__, __FILE__)
 #else
 #undef getaddrinfo
 #define getaddrinfo(host,serv,hint,res) \
-  curl_dogetaddrinfo(host,serv,hint,res,__LINE__,__FILE__)
+  curl_dogetaddrinfo(host, serv, hint, res, __LINE__, __FILE__)
 #endif
 #endif /* HAVE_GETADDRINFO */
 
 #ifdef HAVE_GETNAMEINFO
 #undef getnameinfo
 #define getnameinfo(sa,salen,host,hostlen,serv,servlen,flags) \
-  curl_dogetnameinfo(sa,salen,host,hostlen,serv,servlen,flags, __LINE__, \
-  __FILE__)
+  curl_dogetnameinfo(sa, salen, host, hostlen, serv, servlen, flags, \
+                     __LINE__, __FILE__)
 #endif /* HAVE_GETNAMEINFO */
 
 #ifdef HAVE_FREEADDRINFO
 #undef freeaddrinfo
 #define freeaddrinfo(data) \
-  curl_dofreeaddrinfo(data,__LINE__,__FILE__)
+  curl_dofreeaddrinfo(data, __LINE__, __FILE__)
 #endif /* HAVE_FREEADDRINFO */
 
 /* sclose is probably already defined, redefine it! */
@@ -152,6 +171,6 @@ CURL_EXTERN int curl_fclose(FILE *file, int line, const char *source);
  */
 
 #define Curl_safefree(ptr) \
-  do {if((ptr)) {free((ptr)); (ptr) = NULL;}} WHILE_FALSE
+  do { free((ptr)); (ptr) = NULL;} WHILE_FALSE
 
 #endif /* HEADER_CURL_MEMDEBUG_H */

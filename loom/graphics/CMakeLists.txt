@@ -2,7 +2,19 @@
 # Debugging support
 # add_definitions(-DBGFX_CONFIG_DEBUG=1)
 
-set ( GRAPHICS_SRC gfxGraphics.cpp gfxQuadRenderer.cpp gfxTexture.cpp gfxScript.cpp gfxVectorRenderer.cpp gfxVectorGraphics.cpp)
+set ( GRAPHICS_SRC
+    gfxGraphics.cpp
+    gfxQuadRenderer.cpp
+    gfxTexture.cpp
+    gfxScript.cpp
+    gfxVectorRenderer.cpp
+    gfxVectorGraphics.cpp
+    gfxStateManager.c
+    gfxBitmapData.cpp
+    gfxColor.cpp
+    gfxShader.cpp
+)
+
 set (LOOM_VENDOR ${CMAKE_CURRENT_SOURCE_DIR}/../vendor)
 set (NANOVG ${LOOM_VENDOR}/nanovg/src)
 set (NANOSVG ${LOOM_VENDOR}/nanosvg/src)
@@ -14,7 +26,6 @@ set ( NANOVG_SRC ${NANOVG}/nanovg.c )
 if(APPLE)
 
     add_definitions( -U__STRICT_ANSI__ -Wfatal-errors -Wunused-value )
-
 
     if(LOOM_BUILD_IOS EQUAL 1)
         #set ( GRAPHICS_SRC ${GRAPHICS_SRC} gfxGraphicsIOS.mm )
@@ -37,7 +48,6 @@ if(APPLE)
 endif()
 
 if(ANDROID)
-        add_definitions ( -std=c++0x )
         add_definitions( -DLOOM_RENDERER_OPENGLES2=1 )
         include_directories( ${LOOM_INCLUDE_FOLDERS} )
 endif()    
@@ -47,7 +57,6 @@ if (MSVC)
 endif()
 
 if (LINUX)
-    add_definitions ( -std=c++0x )
     set ( BGFX_SRC ${BGFX_SRC} ${LOOMBGFX_SOURCE_DIR}/renderer_gl.cpp ${LOOMBGFX_SOURCE_DIR}/glcontext_external.cpp )
     set ( GRAPHICS_SRC ${GRAPHICS_SRC} gfxGraphicsAndroid.cpp )
 

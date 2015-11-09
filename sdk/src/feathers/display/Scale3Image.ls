@@ -99,7 +99,7 @@ package feathers.display
         {
             if(!value)
             {
-                throw new IllegalOperationError("Scale3Image textures cannot be null.");
+                Debug.assert("Scale3Image textures cannot be null.");
             }
             if(this._textures == value)
             {

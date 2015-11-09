@@ -35,7 +35,7 @@ class DisplayObjectContainer;
 // traverses down the DisplayObject hierarchy
 struct RenderState
 {
-    float alpha;
+    lmscalar alpha;
     // Clipping is disabled when width equals -1
     Loom2D::Rectangle clipRect;
     int   blendMode;
@@ -52,46 +52,52 @@ struct RenderState
 
 class DisplayObject : public EventDispatcher
 {
+    // true if caching is in progress, used for avoiding rendering to texture while rendering to texture 
+    static bool cacheAsBitmapInProgress;
+
 public:
 
     bool transformDirty;
 
     /** The x coordinate of the object relative to the local coordinates of the parent. */
-    float x;
+    lmscalar x;
 
     /** The y coordinate of the object relative to the local coordinates of the parent. */
-    float y;
+    lmscalar y;
 
     /** The x coordinate of the object's origin in its own coordinate space (default: 0). */
-    float pivotX;
+    lmscalar pivotX;
 
     /** The y coordinate of the object's origin in its own coordinate space (default: 0). */
-    float pivotY;
+    lmscalar pivotY;
 
     /** The horizontal scale factor. '1' means no scale, negative values flip the object. */
-    float scaleX;
+    lmscalar scaleX;
 
     /** The vertical scale factor. '1' means no scale, negative values flip the object. */
-    float scaleY;
+    lmscalar scaleY;
 
     /** The horizontal skew angle in radians. */
-    float skewX;
+    lmscalar skewX;
 
     /** The vertical skew angle in radians. */
-    float skewY;
+    lmscalar skewY;
 
     /** The rotation of the object in radians. (In Starling, all angles are measured
      *  in radians.) */
-    float rotation;
+    lmscalar rotation;
 
     /** The opacity of the object. 0 = transparent, 1 = opaque. */
-    float alpha;
+    lmscalar alpha;
 
     /** The blend mode for the object. Default is BlendMode.AUTO (will inherit parent's blendMode) */
     int blendMode;
 
+    /** Toggle blending of object. If false, blendMode will be ignored and there may be perfomance gains */
+    bool blendEnabled;
+
     /** If depth sorting is enabled on parent this will be used to establish draw order. */
-    float depth;
+    lmscalar depth;
 
     /** The visibility of the object. An invisible object will be untouchable. */
     bool visible;
@@ -110,12 +116,24 @@ public:
     // true if Image or derived from Image type
     bool imageOrDerived;
 
+    // true if the contents are or are pending to be cached as an image
+    bool cacheAsBitmap;
+    // true if cachedImage represents a valid cache of the contents
+    // if false, the contents are re-cached at render time
+    bool cacheAsBitmapValid;
+    // pointer to the cached image, details depend on implementation
+    void* cachedImage;
+    // X offset the cached image has to be rendered at
+    lmscalar cacheAsBitmapOffsetX;
+    // Y offset the cached image has to be rendered at
+    lmscalar cacheAsBitmapOffsetY;
+
     // should not set this directly
     DisplayObjectContainer *parent;
 
     Matrix transformMatrix;
 
-    bool isEquivalent(float a, float b, float epsilon = 0.0001f)
+    bool isEquivalent(lmscalar a, lmscalar b, lmscalar epsilon = 0.0001f)
     {
         return (a - epsilon < b) && (a + epsilon > b);
     }
@@ -137,20 +155,25 @@ public:
 
     inline void init()
     {
-        x              = y = 0;
-        pivotX         = pivotY = 0;
-        scaleX         = scaleY = 1;
-        skewX          = skewY = 0;
-        depth          = 0;
-        rotation       = 0;
-        alpha          = 1;
-        blendMode      = BlendMode::AUTO;
-        visible        = touchable = true;
-        name           = stringtable_insert("");
-        parent         = NULL;
-        valid          = false;
-        type           = NULL;
-        imageOrDerived = false;
+        x                  = y = 0;
+        pivotX             = pivotY = 0;
+        scaleX             = scaleY = 1;
+        skewX              = skewY = 0;
+        depth              = 0;
+        rotation           = 0;
+        alpha              = 1;
+        blendMode          = BlendMode::AUTO;
+        blendEnabled       = true;
+        visible            = touchable = true;
+        name               = stringtable_insert("");
+        parent             = NULL;
+        valid              = false;
+        type               = NULL;
+        imageOrDerived     = false;
+        transformDirty     = false;
+        cacheAsBitmap      = false;
+        cacheAsBitmapValid = false;
+        cachedImage        = NULL;
     }
 
     DisplayObject()
@@ -159,9 +182,7 @@ public:
         type = typeDisplayObject;
     }
 
-    virtual void render(lua_State *L)
-    {
-    }
+    virtual void render(lua_State *L);
 
     virtual void validate(lua_State *L, int index)
     {
@@ -208,14 +229,14 @@ public:
             }
             else
             {
-                float _cos = cos(rotation);
-                float _sin = sin(rotation);
-                float a    = scaleX * _cos;
-                float b    = scaleX * _sin;
-                float c    = scaleY * -_sin;
-                float d    = scaleY * _cos;
-                float tx   = x - pivotX * a - pivotY * c;
-                float ty   = y - pivotX * b - pivotY * d;
+                lmscalar _cos = cos(rotation);
+                lmscalar _sin = sin(rotation);
+                lmscalar a    = scaleX * _cos;
+                lmscalar b    = scaleX * _sin;
+                lmscalar c    = scaleY * -_sin;
+                lmscalar d    = scaleY * _cos;
+                lmscalar tx   = x - pivotX * a - pivotY * c;
+                lmscalar ty   = y - pivotX * b - pivotY * d;
 
                 m->setTo(a, b, c, d, tx, ty);
             }
@@ -322,8 +343,8 @@ public:
         lmAssert(bounds != NULL, "Bounds are null");
         lmAssert(resultRect != NULL, "Result rect is null");
 
-        float rx, ry;
-        float minx, miny, maxx, maxy;
+        lmscalar rx, ry;
+        lmscalar minx, miny, maxx, maxy;
 
         transform->transformCoordInternal(bounds->getLeft(), bounds->getTop(), &rx, &ry);
         minx = rx;
@@ -358,122 +379,122 @@ public:
 
     // fast path accessors for DisplayObject properties
 
-    inline float getX() const
+    inline lmscalar getX() const
     {
         return x;
     }
 
-    inline void setX(float _x)
+    inline void setX(lmscalar _x)
     {
         transformDirty = true;
         x = _x;
     }
 
-    inline float getY() const
+    inline lmscalar getY() const
     {
         return y;
     }
 
-    inline void setY(float _y)
+    inline void setY(lmscalar _y)
     {
         transformDirty = true;
         y = _y;
     }
 
-    inline float getPivotX() const
+    inline lmscalar getPivotX() const
     {
         return pivotX;
     }
 
-    inline void setPivotX(float _pivotX)
+    inline void setPivotX(lmscalar _pivotX)
     {
         transformDirty = true;
         pivotX         = _pivotX;
     }
 
-    inline float getPivotY() const
+    inline lmscalar getPivotY() const
     {
         return pivotY;
     }
 
-    inline void setPivotY(float _pivotY)
+    inline void setPivotY(lmscalar _pivotY)
     {
         transformDirty = true;
         pivotY         = _pivotY;
     }
 
-    inline float getScaleX() const
+    inline lmscalar getScaleX() const
     {
         return scaleX;
     }
 
-    inline void setScaleX(float _scaleX)
+    inline void setScaleX(lmscalar _scaleX)
     {
         transformDirty = true;
         scaleX         = _scaleX;
     }
 
-    inline float getScaleY() const
+    inline lmscalar getScaleY() const
     {
         return scaleY;
     }
 
-    inline void setScaleY(float _scaleY)
+    inline void setScaleY(lmscalar _scaleY)
     {
         transformDirty = true;
         scaleY         = _scaleY;
     }
 
-    inline void setScale(float _scale)
+    inline void setScale(lmscalar _scale)
     {
         transformDirty = true;
         scaleX         = scaleY = _scale;
     }
 
-    inline float getScale() const
+    inline lmscalar getScale() const
     {
         return (scaleX + scaleY) * .5f;
     }
 
-    inline float getSkewX() const
+    inline lmscalar getSkewX() const
     {
         return skewX;
     }
 
-    inline void setSkewX(float _skewX)
+    inline void setSkewX(lmscalar _skewX)
     {
         transformDirty = true;
         skewX          = _skewX;
     }
 
-    inline float getSkewY() const
+    inline lmscalar getSkewY() const
     {
         return skewY;
     }
 
-    inline void setSkewY(float _skewY)
+    inline void setSkewY(lmscalar _skewY)
     {
         transformDirty = true;
         skewY          = _skewY;
     }
 
-    inline float getRotation() const
+    inline lmscalar getRotation() const
     {
         return rotation;
     }
 
-    inline void setRotation(float _rotation)
+    inline void setRotation(lmscalar _rotation)
     {
         transformDirty = true;
         rotation       = _rotation;
     }
 
-    inline float getAlpha() const
+    inline lmscalar getAlpha() const
     {
         return alpha;
     }
 
-    inline void setAlpha(float _alpha)
+    inline void setAlpha(lmscalar _alpha)
     {
         alpha = _alpha;
     }
@@ -486,6 +507,16 @@ public:
     inline void setBlendMode(int _mode)
     {
         blendMode = _mode;
+    }
+
+    inline bool getBlendEnabled() const
+    {
+        return blendEnabled;
+    }
+
+    inline void setBlendEnabled(bool _enabled)
+    {
+        blendEnabled = _enabled;
     }
 
     inline bool getVisible() const
@@ -508,6 +539,24 @@ public:
         touchable = _touchable;
     }
 
+    bool getCacheAsBitmap() const
+    {
+        return cacheAsBitmap;
+    }
+
+    void setCacheAsBitmap(bool _cacheAsBitmap)
+    {
+        if (!_cacheAsBitmap && cacheAsBitmap) invalidateBitmapCache();
+        cacheAsBitmap = _cacheAsBitmap;
+    }
+
+    void invalidateBitmapCache()
+    {
+        cacheAsBitmapValid = false;
+    }
+
+    bool renderCached(lua_State *L);
+    
     inline bool getValid() const
     {
         return valid;
@@ -518,12 +567,12 @@ public:
         valid = _valid;
     }
 
-    inline float getDepth() const
+    inline lmscalar getDepth() const
     {
         return depth;
     }
 
-    inline void setDepth(float _depth)
+    inline void setDepth(lmscalar _depth)
     {
         depth = _depth;
     }

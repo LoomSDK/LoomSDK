@@ -18,11 +18,11 @@
  * ===========================================================================
  */
 
-
 #include "zlib.h"
 
 #include "loom/common/core/allocator.h"
 #include "loom/common/core/assert.h"
+#include "loom/common/core/log.h"
 #include "loom/common/utils/utByteArray.h"
 #include "loom/common/platform/platformIO.h"
 #include "loom/script/runtime/lsRuntime.h"
@@ -52,6 +52,7 @@ LSLuaState        *LSLuaState::lastLSState   = NULL;
 double            LSLuaState::constructorKey = 0;
 utArray<utString> LSLuaState::buildCache;
 
+lmDefineLogGroup(gLuaStateLogGroup, "LuaState", true, LoomLogInfo);
 
 // traceback stack queries
 struct stackinfo
@@ -64,21 +65,26 @@ struct stackinfo
 static utStack<stackinfo> _tracestack;
 static char               _tracemessage[2048];
 
-#include "jemalloc/jemalloc.h"
+size_t LSLuaState::allocatedBytes = 0;
+
 static void *lsLuaAlloc(void *ud, void *ptr, size_t osize, size_t nsize)
 {
-    (void)ud;  (void)osize;  /* not used */
-    if (nsize == 0 && ptr) 
+    (void)ud;  /* not used */
+    
+    LSLuaState::allocatedBytes += nsize - osize;
+
+    if (nsize == 0) 
     {
         lmFree(NULL, ptr);
         return NULL;
     }
+    else if (ptr == NULL)
+    {
+        return lmAlloc(NULL, nsize);
+    }
     else
     {
-        if(osize == 0)
-            return lmAlloc(NULL, nsize);
-        else
-            return lmRealloc(NULL, ptr, nsize);
+        return lmRealloc(NULL, ptr, nsize);
     }
 }
 
@@ -86,8 +92,8 @@ void LSLuaState::open()
 {
     assert(!L);
 
-    L = lua_newstate(lsLuaAlloc, NULL);
-    //L = lua_open();
+    L = lua_newstate(lsLuaAlloc, this);
+    //L = luaL_newstate();
     toLuaState.insert(L, this);
 
     luaopen_base(L);
@@ -96,9 +102,14 @@ void LSLuaState::open()
     luaopen_math(L);
     luaL_openlibs(L);
 
+#ifdef LUAJIT_MODE_MASK
     // TODO: turn this back on when it doesn't fail on the testWhile unit test
     // update luajit and test again
     luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_OFF);
+#endif
+
+    // Stop the GC initially
+    lua_gc(L, LUA_GCSTOP, 0);
 
     // open the lua debug library
     luaopen_debug(L);
@@ -168,12 +179,11 @@ void LSLuaState::close()
     }
 
     // ensure profiler is down
-    LSProfiler::enable(false, L);
+    LSProfiler::disable(L);
 
     for (UTsize i = 0; i < assemblies.size(); i++)
     {
-        assemblies.at(i)->close();
-        delete assemblies.at(i);
+        lmDelete(NULL, assemblies.at(i));
     }
 
     NativeInterface::shutdownLuaState(L);
@@ -271,7 +281,10 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
     lua_setfield(L, -2, assembly->getName().c_str());
     lua_pop(L, 1);
 
-    assembly->ordinalTypes = new Type *[types.size() + 1];
+    lmAssert(assembly->ordinalTypes == NULL, "Assembly types cache error, ordinalTypes already exists");
+
+    assembly->ordinalTypes = lmNew(NULL) utArray<Type*>();
+    assembly->ordinalTypes->resize(types.size() + 1);
 
     for (UTsize j = 0; j < types.size(); j++)
     {
@@ -281,7 +294,7 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
 
         lmAssert(type->getTypeID() > 0 && type->getTypeID() <= (LSTYPEID)types.size(), "LSLuaState::cacheAssemblyTypes TypeID out of range");
 
-        assembly->ordinalTypes[type->getTypeID()] = type;
+        assembly->ordinalTypes->ptr()[type->getTypeID()] = type;
 
         const char *typeName = type->getFullName().c_str();
 
@@ -477,9 +490,9 @@ Assembly *LSLuaState::loadExecutableAssemblyBinary(const char *buffer, long buff
     headerBytes.allocateAndCopy((void *)buffer, sizeof(unsigned int) * 4);
 
     // we need to decompress
-    lmAssert(headerBytes.readUnsignedInt() == LOOM_BINARY_ID, "binary id mismatch");
-    lmAssert(headerBytes.readUnsignedInt() == LOOM_BINARY_VERSION_MAJOR, "major version mismatch");
-    lmAssert(headerBytes.readUnsignedInt() == LOOM_BINARY_VERSION_MINOR, "minor version mismatch");
+    lmCheck(headerBytes.readUnsignedInt() == LOOM_BINARY_ID, "binary id mismatch");
+    lmCheck(headerBytes.readUnsignedInt() == LOOM_BINARY_VERSION_MAJOR, "major version mismatch");
+    lmCheck(headerBytes.readUnsignedInt() == LOOM_BINARY_VERSION_MINOR, "minor version mismatch");
     unsigned int sz = headerBytes.readUnsignedInt();
 
     utByteArray bytes;
@@ -489,8 +502,8 @@ Assembly *LSLuaState::loadExecutableAssemblyBinary(const char *buffer, long buff
 
     int ok = uncompress((Bytef *)bytes.getDataPtr(), (uLongf *)&readSZ, (const Bytef *)((unsigned char *)buffer + sizeof(unsigned int) * 4), (uLong)sz);
 
-    lmAssert(ok == Z_OK, "problem uncompressing executable assembly");
-    lmAssert(readSZ == sz, "Read size mismatch");
+    lmCheck(ok == Z_OK, "problem uncompressing executable assembly");
+    lmCheck(readSZ == sz, "Read size mismatch");
 
     assembly = loadAssemblyBinary(&bytes);
 
@@ -592,6 +605,33 @@ void LSLuaState::dumpManagedNatives()
     NativeInterface::dumpManagedNatives(L);
 }
 
+void LSLuaState::dumpLuaStack()
+{
+    int i;
+    int top = lua_gettop(L);
+
+    lmLog(gLuaStateLogGroup, "Total in stack: %d", top);
+
+    for (i = 1; i <= top; i++)
+    {
+        int t = lua_type(L, i);
+        switch (t) {
+        case LUA_TSTRING:
+            lmLog(gLuaStateLogGroup, "string: '%s'", lua_tostring(L, i));
+            break;
+        case LUA_TBOOLEAN:
+            lmLog(gLuaStateLogGroup, "boolean %s", lua_toboolean(L, i) ? "true" : "false");
+            break;
+        case LUA_TNUMBER:
+            lmLog(gLuaStateLogGroup, "number: %g", lua_tonumber(L, i));
+            break;
+        default:  /* other values */
+            lmLog(gLuaStateLogGroup, "%s", lua_typename(L, t));
+            break;
+        }
+    }
+    lmLog(gLuaStateLogGroup, "");
+}
 
 int LSLuaState::getStackSize()
 {

@@ -22,12 +22,6 @@
 
 #include "lmApplication.h"
 
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-
-#include <jni.h>
-#include "loom/common/platform/platformAndroidJni.h"
-#endif
-
 using namespace LS;
 
 #include "loom/common/core/log.h"
@@ -48,6 +42,8 @@ using namespace LS;
 
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/script/native/core/system/lmProcess.h"
+
+#include "loom/script/serialize/lsBinReader.h"
 
 #include "loom/engine/bindings/sdl/lmSDL.h"
 
@@ -78,10 +74,13 @@ void loom_appSetup(void)
 
 void loom_appShutdown(void)
 {
+    GFX::Graphics::shutdown();
     LoomApplication::shutdown();
 }
 
 extern void loomsound_reset();
+
+extern void loomsound_init();
 
 // container for external package functions
 typedef void (*FunctionRegisterPackage)(void);
@@ -140,7 +139,8 @@ int LoomApplication::initializeTypes()
 
 void LoomApplication::execMainAssembly()
 {
-    rootVM = new LSLuaState();
+    lmAssert(!rootVM, "VM already running");
+    rootVM = lmNew(NULL) LSLuaState();
     rootVM->open();
 
     lmLog(applicationLogGroup, "   o executing %s", bootAssembly.c_str());
@@ -208,6 +208,8 @@ void LoomApplication::execMainAssembly()
 
 void LoomApplication::reloadMainAssembly()
 {
+    if (!rootVM || !rootVM->VM()) return;
+
     lmLog(applicationLogGroup, "Reloading main assembly: %s", getBootAssembly());
 
     // cleanup webviews
@@ -226,8 +228,10 @@ void LoomApplication::reloadMainAssembly()
     NativeInterface::dumpManagedNatives(rootVM->VM());
 
     rootVM->close();
-    delete rootVM;
+    lmDelete(NULL, rootVM);
     rootVM = NULL;
+
+    GFX::Graphics::initialize();
 
     execMainAssembly();
 
@@ -331,19 +335,6 @@ int LoomApplication::initializeCoreServices()
     lmLog(applicationLogGroup, "   o types");
     initializeTypes();
 
-#if 0
-    lmLog(applicationLogGroup, "   o tests");
-
-    // Run applicable unit tests.
-    extern void __cdecl test_suite_allTests();
-    seatest_set_print_callback(platform_debugOut);
-    if (!seatest_testrunner(0, NULL, test_suite_allTests, NULL, NULL))
-    {
-        lmLog(applicationLogGroup, "*** TESTS FAILED\n");
-        exit(1);
-    }
-#endif
-
     lmLog(applicationLogGroup, "   o network");
     loom_net_initialize();
 
@@ -353,6 +344,9 @@ int LoomApplication::initializeCoreServices()
     lmLog(applicationLogGroup, "   o assets");
     loom_asset_initialize(".");
     loom_asset_setCommandCallback(dispatchCommand);
+
+    lmLog(applicationLogGroup, "   o sound");
+    loomsound_init();
 
     // Initialize script hooks.
     LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogInfo, LoomLogWarn, LoomLogError);
@@ -423,7 +417,7 @@ struct LoomApplicationGenericEventCallbackNote
     void                     *userData;
 };
 
-utArray<LoomApplicationGenericEventCallbackNote> gNativeGenericCallbacks;
+static utArray<LoomApplicationGenericEventCallbackNote> gNativeGenericCallbacks;
 
 void LoomApplication::fireGenericEvent(const char *type, const char *payload)
 {
@@ -434,27 +428,29 @@ void LoomApplication::fireGenericEvent(const char *type, const char *payload)
     // Also do C++ callbacks.
     for (unsigned int i = 0; i < gNativeGenericCallbacks.size(); i++)
     {
-        gNativeGenericCallbacks[i].cb(gNativeGenericCallbacks[i].userData, type, payload);
+        LoomApplicationGenericEventCallbackNote &note = gNativeGenericCallbacks[i];
+        lmAssert(note.cb, "Callback should not be null");
+        note.cb(note.userData, type, payload);
     }
 
-    // And platform specific callbacks.
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-    static loomJniMethodInfo eventCallback;
-    static bool              initialized = false;
-    if (!initialized)
-    {
-        LoomJni::getStaticMethodInfo(eventCallback,
-                                     "co/theengine/loomdemo/LoomDemo",
-                                     "handleGenericEvent",
-                                     "(Ljava/lang/String;Ljava/lang/String;)V");
-        initialized = true;
+    
+    loomJniMethodInfo eventCallback;
+    LoomJni::getStaticMethodInfo(eventCallback,
+        "co/theengine/loomdemo/LoomDemo",
+        "handleGenericEvent",
+        "(Ljava/lang/String;Ljava/lang/String;)V");
+    JNIEnv *env = eventCallback.getEnv();
+    if (env == NULL) {
+        __android_log_print(ANDROID_LOG_WARN, "LoomJNI", "fireGenericEvent called before JNI init");
+        return;
     }
-
-    jstring jType    = eventCallback.getEnv()->NewStringUTF(type);
-    jstring jPayload = eventCallback.getEnv()->NewStringUTF(payload);
-    eventCallback.getEnv()->CallStaticVoidMethod(eventCallback.classID, eventCallback.methodID, jType, jPayload);
-    eventCallback.getEnv()->DeleteLocalRef(jType);
-    eventCallback.getEnv()->DeleteLocalRef(jPayload);
+    jstring jType    = env->NewStringUTF(type);
+    jstring jPayload = env->NewStringUTF(payload);
+    env->CallStaticVoidMethod(eventCallback.classID, eventCallback.methodID, jType, jPayload);
+    env->DeleteLocalRef(jType);
+    env->DeleteLocalRef(jPayload);
+    env->DeleteLocalRef(eventCallback.classID);
 #endif
 }
 

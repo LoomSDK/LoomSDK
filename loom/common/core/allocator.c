@@ -38,6 +38,8 @@
  
 static loom_allocator_t gGlobalHeap;
 static int              heap_allocated = 0;
+static unsigned int gMemoryAllocated = 0;
+
 
 void loom_allocator_startup()
 {
@@ -47,6 +49,9 @@ void loom_allocator_startup()
     gGlobalHeap.name = "Global";
 }
 
+unsigned int loom_allocator_getAllocatedMemory() {
+    return gMemoryAllocated;
+}
 
 loom_allocator_t *loom_allocator_getGlobalHeap()
 {
@@ -60,7 +65,6 @@ loom_allocator_t *loom_allocator_getGlobalHeap()
     return &gGlobalHeap;
 }
 
-
 void *lmAlloc_inner(loom_allocator_t *allocator, size_t size, const char *file, int line)
 {
     void *obj = NULL;
@@ -70,8 +74,13 @@ void *lmAlloc_inner(loom_allocator_t *allocator, size_t size, const char *file, 
         allocator = loom_allocator_getGlobalHeap();
     }
 
+    LOOM_ALLOCATOR_CHECK_RESIZE(size)
+
     obj = allocator->allocCall(allocator, size, file, line);
     tmAllocEx(gTelemetryContext, file, line, obj, size, "lmAlloc");
+
+    LOOM_ALLOCATOR_CHECK_INJECT(size, obj, file, line)
+
     return obj;
 }
 
@@ -79,10 +88,17 @@ void * lmCalloc_inner( loom_allocator_t *allocator, size_t count, size_t size, c
 {
    void *obj = NULL;
    if(!allocator) allocator = loom_allocator_getGlobalHeap();
+
+   size *= count;
+
+   LOOM_ALLOCATOR_CHECK_RESIZE(size)
    
-   obj = allocator->allocCall(allocator, size * count, file, line);
-   memset(obj, 0, size * count);
-   tmAllocEx(gTelemetryContext, file, line, obj, size, "lmAlloc");
+   obj = allocator->allocCall(allocator, size, file, line);
+   memset(obj, 0, size);
+   tmAllocEx(gTelemetryContext, file, line, obj, size, "lmCalloc");
+   
+   LOOM_ALLOCATOR_CHECK_INJECT(size, obj, file, line)
+   
    return obj;
 }
 
@@ -93,8 +109,9 @@ void lmFree_inner( loom_allocator_t *allocator, void *ptr, const char *file, int
         allocator = loom_allocator_getGlobalHeap();
     }
 
-    tmFree(gTelemetryContext, ptr);
+    LOOM_ALLOCATOR_CHECK_VERIFY(ptr, file, line)
 
+    tmFree(gTelemetryContext, ptr);
     allocator->freeCall(allocator, ptr, file, line);
 }
 
@@ -104,12 +121,21 @@ void *lmRealloc_inner(loom_allocator_t *allocator, void *ptr, size_t size, const
    void *obj = NULL;
    if(!allocator) allocator = loom_allocator_getGlobalHeap();
 
-   if(ptr == NULL)
-      obj = allocator->allocCall(allocator, size, file, line);
+   if (ptr == NULL)
+   {
+       LOOM_ALLOCATOR_CHECK_RESIZE(size)
+       obj = allocator->allocCall(allocator, size, file, line);
+       LOOM_ALLOCATOR_CHECK_INJECT(size, obj, file, line)
+   }
    else
-      obj = allocator->reallocCall(allocator, ptr, size, file, line);
+   {
+       LOOM_ALLOCATOR_CHECK_VERIFY(ptr, file, line)
+       LOOM_ALLOCATOR_CHECK_RESIZE(size)
+       obj = allocator->reallocCall(allocator, ptr, size, file, line);
+       LOOM_ALLOCATOR_CHECK_INJECT(size, obj, file, line)
+   }
 
-   tmAllocEx(gTelemetryContext, file, line, ptr, size, "lmRealloc");
+   tmAllocEx(gTelemetryContext, file, line, obj, size, "lmRealloc");
    return obj;
 }
 

@@ -19,12 +19,12 @@
 //#include <loom/common/core/log.h>
 //lmDefineLogGroup(gNanoVG, "nanovg", 1, LoomLogInfo);
 
+
 #include <stdio.h>
 #include <math.h>
 #include "nanovg.h"
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 #ifdef _MSC_VER
@@ -47,6 +47,26 @@
 #define NVG_KAPPA90 0.5522847493f	// Length proportional to radius of a cubic bezier handle for 90deg arcs.
 
 #define NVG_COUNTOF(arr) (sizeof(arr) / sizeof(0[arr]))
+
+#ifndef NVG_NO_STDLIB
+#include "stdlib.h"
+static nvg_malloc_t nvg_malloc = malloc;
+static nvg_realloc_t nvg_realloc = realloc;
+static nvg_free_t nvg_free = free;
+#else
+static nvg_malloc_t nvg_malloc = NULL;
+static nvg_realloc_t nvg_realloc = NULL;
+static nvg_free_t nvg_free = NULL;
+#endif
+
+void nvgSetAllocFunctions(nvg_malloc_t malloc_fn, nvg_realloc_t realloc_fn, nvg_free_t free_fn)
+{
+    nvg_malloc = malloc_fn;
+    nvg_realloc = realloc_fn;
+    nvg_free = free_fn;
+    fonsSetAllocFunctions(malloc_fn, realloc_fn, free_fn);
+}
+
 
 
 enum NVGcommands {
@@ -118,6 +138,7 @@ struct NVGcontext {
 	NVGpathCache* cache;
 	float tessTol;
 	float distTol;
+	int tessLevelMax;
 	float fringeWidth;
 	float devicePxRatio;
 	struct FONScontext* fs;
@@ -162,29 +183,29 @@ static float nvg__normalize(float *x, float* y)
 static void nvg__deletePathCache(NVGpathCache* c)
 {
 	if (c == NULL) return;
-	if (c->points != NULL) free(c->points);
-	if (c->paths != NULL) free(c->paths);
-	if (c->verts != NULL) free(c->verts);
-	free(c);
+	if (c->points != NULL) nvg_free(c->points);
+	if (c->paths != NULL) nvg_free(c->paths);
+	if (c->verts != NULL) nvg_free(c->verts);
+	nvg_free(c);
 }
 
 static NVGpathCache* nvg__allocPathCache(void)
 {
-	NVGpathCache* c = (NVGpathCache*)malloc(sizeof(NVGpathCache));
+	NVGpathCache* c = (NVGpathCache*)nvg_malloc(sizeof(NVGpathCache));
 	if (c == NULL) goto error;
 	memset(c, 0, sizeof(NVGpathCache));
 
-	c->points = (NVGpoint*)malloc(sizeof(NVGpoint)*NVG_INIT_POINTS_SIZE);
+	c->points = (NVGpoint*)nvg_malloc(sizeof(NVGpoint)*NVG_INIT_POINTS_SIZE);
 	if (!c->points) goto error;
 	c->npoints = 0;
 	c->cpoints = NVG_INIT_POINTS_SIZE;
 
-	c->paths = (NVGpath*)malloc(sizeof(NVGpath)*NVG_INIT_PATHS_SIZE);
+	c->paths = (NVGpath*)nvg_malloc(sizeof(NVGpath)*NVG_INIT_PATHS_SIZE);
 	if (!c->paths) goto error;
 	c->npaths = 0;
 	c->cpaths = NVG_INIT_PATHS_SIZE;
 
-	c->verts = (NVGvertex*)malloc(sizeof(NVGvertex)*NVG_INIT_VERTS_SIZE);
+	c->verts = (NVGvertex*)nvg_malloc(sizeof(NVGvertex)*NVG_INIT_VERTS_SIZE);
 	if (!c->verts) goto error;
 	c->nverts = 0;
 	c->cverts = NVG_INIT_VERTS_SIZE;
@@ -206,7 +227,7 @@ static void nvg__setDevicePixelRatio(NVGcontext* ctx, float ratio)
 NVGcontext* nvgCreateInternal(NVGparams* params)
 {
 	FONSparams fontParams;
-	NVGcontext* ctx = (NVGcontext*)malloc(sizeof(NVGcontext));
+	NVGcontext* ctx = (NVGcontext*)nvg_malloc(sizeof(NVGcontext));
 	int i;
 	if (ctx == NULL) goto error;
 	memset(ctx, 0, sizeof(NVGcontext));
@@ -215,7 +236,7 @@ NVGcontext* nvgCreateInternal(NVGparams* params)
 	for (i = 0; i < NVG_MAX_FONTIMAGES; i++)
 		ctx->fontImages[i] = 0;
 
-	ctx->commands = (float*)malloc(sizeof(float)*NVG_INIT_COMMANDS_SIZE);
+	ctx->commands = (float*)nvg_malloc(sizeof(float)*NVG_INIT_COMMANDS_SIZE);
 	if (!ctx->commands) goto error;
 	ctx->ncommands = 0;
 	ctx->ccommands = NVG_INIT_COMMANDS_SIZE;
@@ -227,6 +248,7 @@ NVGcontext* nvgCreateInternal(NVGparams* params)
 	nvgReset(ctx);
 
 	nvg__setDevicePixelRatio(ctx, 1.0f);
+	ctx->tessLevelMax = 10;
 
 	if (ctx->params.renderCreate(ctx->params.userPtr) == 0) goto error;
 
@@ -264,7 +286,7 @@ void nvgDeleteInternal(NVGcontext* ctx)
 {
 	int i;
 	if (ctx == NULL) return;
-	if (ctx->commands != NULL) free(ctx->commands);
+	if (ctx->commands != NULL) nvg_free(ctx->commands);
 	if (ctx->cache != NULL) nvg__deletePathCache(ctx->cache);
 
 	if (ctx->fs)
@@ -280,7 +302,7 @@ void nvgDeleteInternal(NVGcontext* ctx)
 	if (ctx->params.renderDelete != NULL)
 		ctx->params.renderDelete(ctx->params.userPtr);
 
-	free(ctx);
+	nvg_free(ctx);
 }
 
 void nvgBeginFrame(NVGcontext* ctx, int windowWidth, int windowHeight, float devicePixelRatio)
@@ -620,6 +642,11 @@ void nvgGlobalAlpha(NVGcontext* ctx, float alpha)
 	state->alpha = alpha;
 }
 
+void nvgTessLevelMax(NVGcontext* ctx, int level)
+{
+	ctx->tessLevelMax = level;
+}
+
 void nvgTransform(NVGcontext* ctx, float a, float b, float c, float d, float e, float f)
 {
 	NVGstate* state = nvg__getState(ctx);
@@ -678,6 +705,13 @@ void nvgCurrentTransform(NVGcontext* ctx, float* xform)
 	NVGstate* state = nvg__getState(ctx);
 	if (xform == NULL) return;
 	memcpy(xform, state->xform, sizeof(float)*6);
+}
+
+void nvgSetTransform(NVGcontext* ctx, float* xform)
+{
+	NVGstate* state = nvg__getState(ctx);
+	if (xform == NULL) return;
+	memcpy(state->xform, xform, sizeof(float)*6);
 }
 
 void nvgStrokeColor(NVGcontext* ctx, NVGcolor color)
@@ -996,7 +1030,7 @@ static void nvg__appendCommands(NVGcontext* ctx, float* vals, int nvals)
 	if (ctx->ncommands+nvals > ctx->ccommands) {
 		float* commands;
 		int ccommands = ctx->ncommands+nvals + ctx->ccommands/2;
-		commands = (float*)realloc(ctx->commands, sizeof(float)*ccommands);
+		commands = (float*)nvg_realloc(ctx->commands, sizeof(float)*ccommands);
 		if (commands == NULL) return;
 		ctx->commands = commands;
 		ctx->ccommands = ccommands;
@@ -1062,7 +1096,7 @@ static void nvg__addPath(NVGcontext* ctx)
 	if (ctx->cache->npaths+1 > ctx->cache->cpaths) {
 		NVGpath* paths;
 		int cpaths = ctx->cache->npaths+1 + ctx->cache->cpaths/2;
-		paths = (NVGpath*)realloc(ctx->cache->paths, sizeof(NVGpath)*cpaths);
+		paths = (NVGpath*)nvg_realloc(ctx->cache->paths, sizeof(NVGpath)*cpaths);
 		if (paths == NULL) return;
 		ctx->cache->paths = paths;
 		ctx->cache->cpaths = cpaths;
@@ -1099,7 +1133,7 @@ static void nvg__addPoint(NVGcontext* ctx, float x, float y, int flags)
 	if (ctx->cache->npoints+1 > ctx->cache->cpoints) {
 		NVGpoint* points;
 		int cpoints = ctx->cache->npoints+1 + ctx->cache->cpoints/2;
-		points = (NVGpoint*)realloc(ctx->cache->points, sizeof(NVGpoint)*cpoints);
+		points = (NVGpoint*)nvg_realloc(ctx->cache->points, sizeof(NVGpoint)*cpoints);
 		if (points == NULL) return;
 		ctx->cache->points = points;
 		ctx->cache->cpoints = cpoints;
@@ -1141,7 +1175,7 @@ static NVGvertex* nvg__allocTempVerts(NVGcontext* ctx, int nverts)
 	if (nverts > ctx->cache->cverts) {
 		NVGvertex* verts;
 		int cverts = (nverts + 0xff) & ~0xff; // Round up to prevent allocations when things change just slightly.
-		verts = (NVGvertex*)realloc(ctx->cache->verts, sizeof(NVGvertex)*cverts);
+		verts = (NVGvertex*)nvg_realloc(ctx->cache->verts, sizeof(NVGvertex)*cverts);
 		if (verts == NULL) return NULL;
 		ctx->cache->verts = verts;
 		ctx->cache->cverts = cverts;
@@ -1202,7 +1236,7 @@ static void nvg__tesselateBezier(NVGcontext* ctx,
 	float x12,y12,x23,y23,x34,y34,x123,y123,x234,y234,x1234,y1234;
 	float dx,dy,d2,d3;
 	
-	if (level > 10) return;
+	if (level > ctx->tessLevelMax) return;
 
 	x12 = (x1+x2)*0.5f;
 	y12 = (y1+y2)*0.5f;
@@ -2459,8 +2493,6 @@ void nvgTextBox(NVGcontext* ctx, float x, float y, float breakRowWidth, const ch
 	nvgTextMetrics(ctx, NULL, NULL, &lineh);
 
 	state->textAlign = NVG_ALIGN_LEFT | valign;
-
-    y += lineh * state->lineHeight;
 
 	while ((nrows = nvgTextBreakLines(ctx, string, end, breakRowWidth, rows, 2))) {
 		for (i = 0; i < nrows; i++) {

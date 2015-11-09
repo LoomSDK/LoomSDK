@@ -101,6 +101,8 @@ enum LoomAssetType
     LATMesh         = LOOM_FOURCC('M', 'S', 'H', 1),
     LATScript       = LOOM_FOURCC('L', 'O', 'O', 'M'),
     LATBinary       = LOOM_FOURCC('B', 'I', 'N', 1),
+    LATVertexShader = LOOM_FOURCC('V', 'E', 'R', 'T'),
+    LATFragmentShader = LOOM_FOURCC('F', 'R', 'A', 'G'),
     LAT_FORCE_DWORD = 0xFFFFFFFF
 };
 
@@ -117,6 +119,9 @@ void loom_asset_registerType(unsigned int type, LoomAssetDeserializeCallback des
 // This is called when the asset agent sends us commands.
 typedef void (*LoomAssetCommandCallback)(const char *command);
 void loom_asset_setCommandCallback(LoomAssetCommandCallback callback);
+
+// Send an arbitrary custom buffer through the asset protocol
+void loom_asset_custom(void *buffer, int length);
 
 void loom_asset_preload(const char *name);
 
@@ -144,6 +149,8 @@ typedef void (*LoomAssetChangeCallback)(void *payload, const char *name);
 int loom_asset_subscribe(const char *name, LoomAssetChangeCallback cb, void *payload, int doFirstUpdate);
 void loom_asset_notifySubscribers(const char *name);
 int loom_asset_unsubscribe(const char *name, LoomAssetChangeCallback cb, void *payload);
+
+void *loom_asset_textDeserializer(void *ptr, size_t size, LoomAssetCleanupCallback *dtor);
 
 #ifdef __cplusplus
 };

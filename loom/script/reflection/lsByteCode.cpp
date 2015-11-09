@@ -51,7 +51,7 @@ extern "C" {
 namespace LS {
 ByteCode *ByteCode::decode64(const char *code64)
 {
-    ByteCode *byteCode = new ByteCode();
+    ByteCode *byteCode = lmNew(NULL) ByteCode();
 
     byteCode->base64 = utBase64::decode64(code64);
     return byteCode;
@@ -60,7 +60,7 @@ ByteCode *ByteCode::decode64(const char *code64)
 
 ByteCode *ByteCode::encode64(const utArray<unsigned char>& bc)
 {
-    ByteCode *byteCode = new ByteCode();
+    ByteCode *byteCode = lmNew(NULL) ByteCode();
 
     byteCode->base64 = utBase64::encode64(bc);
     return byteCode;

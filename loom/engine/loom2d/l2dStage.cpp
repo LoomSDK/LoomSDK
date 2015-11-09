@@ -20,9 +20,11 @@
 
 
 #include "loom/engine/loom2d/l2dStage.h"
+#include "loom/engine/bindings/loom/lmApplication.h"
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/common/config/applicationConfig.h"
 #include "loom/common/core/log.h"
+#include "loom/script/runtime/lsProfiler.h"
 
 lmDefineLogGroup(gStageLogGroup, "Stage", 1, LoomLogInfo);
 
@@ -104,9 +106,10 @@ void Stage::hide()
 
 void Stage::render(lua_State *L)
 {
+    LOOM_PROFILE_START(stageRenderBegin);
     GFX::Graphics::setNativeSize(getWidth(), getHeight());
     GFX::Graphics::beginFrame();
-
+    
     updateLocalTransform();
 
     lualoom_pushnative<Stage>(L, this);
@@ -114,14 +117,33 @@ void Stage::render(lua_State *L)
     renderState.alpha          = alpha;
     renderState.clipRect       = Loom2D::Rectangle(0, 0, -1, -1);
     renderState.blendMode      = blendMode;
+    LOOM_PROFILE_END(stageRenderBegin);
 
+
+    LOOM_PROFILE_START(stageRenderDisplayList);
     renderChildren(L);
+    LOOM_PROFILE_END(stageRenderDisplayList);
 
+    
+    LOOM_PROFILE_START(stageRenderEnd);
     lua_pop(L, 1);
-
     GFX::Graphics::endFrame();
+    LOOM_PROFILE_END(stageRenderEnd);
 
+    LSLuaState *vm = LoomApplication::getReloadQueued() ? NULL : LoomApplication::getRootVM();
+    LOOM_PROFILE_START(garbageCollection);
+    if (vm) lualoom_gc_update(vm->VM());
+    LOOM_PROFILE_END(garbageCollection);
+
+#ifdef LOOM_DEBUG
+    LOOM_PROFILE_START(finishRender);
+    GFX::Graphics::context()->glFinish();
+    LOOM_PROFILE_END(finishRender);
+#endif
+
+    LOOM_PROFILE_START(waitForVSync);
     /* Update the screen! */
     SDL_GL_SwapWindow(sdlWindow);
+    LOOM_PROFILE_END(waitForVSync);
 }
 }

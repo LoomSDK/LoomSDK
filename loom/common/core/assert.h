@@ -24,6 +24,14 @@
 #include <string.h>
 #include "loom/common/platform/platform.h"
 
+#ifndef LOOM_ASSERT
+// Disable to strip out all of the lmAssert calls
+// Use lmCheck if you don't want an assertion to be removed
+// We should have release and debug builds, until then lmAsserts stay
+// #define LOOM_ASSERT LOOM_DEBUG
+#define LOOM_ASSERT 1
+#endif
+
 // TODO: Handle include directories correctly for Android so that this isn't needed.
 //  The problem is that our assert.h replaces the standard lib assert.h through a naming
 //  conflict that is caused by us adding engine/src/core as an include directory.
@@ -49,22 +57,32 @@ void loom_fireAssertCallback();
 };
 #endif
 
-#ifdef LOOM_NDEBUG
+
+#if !LOOM_ASSERT
 
 #define lmSafeAssert(condition, errmsg)
 #define lmAssert(condition, errmsg, ...)
 
 #else
 
-// Use lmSafeAssert when we are in modules that might not be able to handle malloc() and strcpy()
-#define lmSafeAssert(condition, errmsg) \
+#define lmSafeAssert lmSafeCheck
+#define lmAssert lmCheck
+
+#endif
+
+// Use lmSafeAssert/Check when we are in modules that might not be able to handle malloc() and strcpy()
+#define lmSafeCheck(condition, errmsg) \
     if (!(condition)) { platform_error("Assert failed [%s@%d] (" # condition "): %s", __FILE__, __LINE__, (errmsg)); abort(); }
 
-// Use lmAssert when we can afford to use varargs
+// Use lmAssert/Check when we can afford to use varargs
+// Use lmCheck when it's an important check that mustn't be stripped out
+// Use lmAssert when the check is just a sanity check and stripping it out
+// will not have any side effects
 #if LOOM_COMPILER == LOOM_COMPILER_MSVC
-#define lmAssert(condition, errmsg, ...)                                                                                                          \
+#define lmCheck(condition, errmsg, ...) do {                                                                                                      \
     if (!(condition)) {                                                                                                                           \
         char *lmAssertBuf = (char *)malloc(strlen(errmsg) + strlen(# condition) + 32); /* Allocate our buffer with 32 bytes of breathing room. */ \
+        if (lmAssertBuf == NULL) { platform_error("Assertion message allocation failed! The unformatted message follows."); lmSafeCheck(condition, errmsg); break; } \
         strcpy(lmAssertBuf, "Assert failed [%s@%d] (" # condition "): ");              /* Begin with our standard "assert failed" prefix. */      \
         strcpy(lmAssertBuf + strlen(lmAssertBuf), errmsg);                             /* Append our message to the end of our format string. */  \
         strcpy(lmAssertBuf + strlen(lmAssertBuf), "\n");                               /* Append a new line to the end for good measure. */       \
@@ -72,18 +90,21 @@ void loom_fireAssertCallback();
         __debugbreak();                                                                                                                           \
         loom_fireAssertCallback();                                                                                                                \
         abort();                                                                                                                                  \
-    }
+    } \
+} while(0);
 #else
-#define lmAssert(condition, errmsg, args ...)                                                                                                     \
+#define lmCheck(condition, errmsg, args ...) do {                                                                                                 \
     if (!(condition)) {                                                                                                                           \
         char *lmAssertBuf = (char *)malloc(strlen(errmsg) + strlen(# condition) + 32); /* Allocate our buffer with 32 bytes of breathing room. */ \
+        if (lmAssertBuf == NULL) { platform_error("Assertion message allocation failed! The unformatted message follows."); lmSafeCheck(condition, errmsg); break; } \
         strcpy(lmAssertBuf, "Assert failed [%s@%d] (" # condition "): \n");            /* Begin with our standard "assert failed" prefix. */      \
         strcpy(lmAssertBuf + strlen(lmAssertBuf), errmsg);                             /* Append our message to the end of our format string. */  \
         strcpy(lmAssertBuf + strlen(lmAssertBuf), "\n");                               /* Append a new line to the end for good measure. */       \
         platform_error(lmAssertBuf, __FILE__, __LINE__, ## args);                                                                                 \
         loom_fireAssertCallback();                                                                                                                \
         abort();                                                                                                                                  \
-    }
+    } \
+} while (0);
 #endif
-#endif
+
 #endif

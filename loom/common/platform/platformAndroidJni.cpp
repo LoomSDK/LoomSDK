@@ -55,19 +55,19 @@ static bool getEnv(JNIEnv **env)
     {
         if (LOOMJAVAVM == NULL)
         {
-            lmLog(jniLogGroup, "Missing LOOMJAVAVM (== NULL)");
+            __android_log_print(ANDROID_LOG_INFO, "LoomJNI", "Missing LOOMJAVAVM (== NULL)");
             break;
         }
 
         if (LOOMJAVAVM->GetEnv((void **)env, JNI_VERSION_1_4) != JNI_OK)
         {
-            lmLog(jniLogGroup, "Failed to get the environment using GetEnv()");
+            __android_log_print(ANDROID_LOG_INFO, "LoomJNI", "Failed to get the environment using GetEnv()");
             break;
         }
 
         if (LOOMJAVAVM->AttachCurrentThread(env, 0) < 0)
         {
-            lmLog(jniLogGroup, "Failed to get the environment using AttachCurrentThread()");
+            __android_log_print(ANDROID_LOG_INFO, "LoomJNI", "Failed to get the environment using AttachCurrentThread()");
             break;
         }
 
@@ -264,9 +264,9 @@ const char *LoomJni::getPackageName()
     loomJniMethodInfo t;
 
     if (getStaticMethodInfo(t,
-                            "co/theengine/loomdemo/LoomDemo",
-                            "getActivityPackageName",
-                            "()Ljava/lang/String;"))
+        "co/theengine/loomdemo/LoomDemo",
+        "getActivityPackageName",
+        "()Ljava/lang/String;"))
     {
         jstring str = (jstring)t.getEnv()->CallStaticObjectMethod(t.classID, t.methodID);
         t.getEnv()->DeleteLocalRef(t.classID);
@@ -276,6 +276,29 @@ const char *LoomJni::getPackageName()
         lmLog(jniLogGroup, "package name %s", packageName.c_str());
 
         return packageName.c_str();
+    }
+
+    return 0;
+}
+
+const char *LoomJni::getWritablePath()
+{
+    static utString writablePath;
+
+    loomJniMethodInfo t;
+
+    if (getStaticMethodInfo(t,
+        "co/theengine/loomdemo/LoomDemo",
+        "getActivityWritablePath",
+        "()Ljava/lang/String;"))
+    {
+        jstring str = (jstring)t.getEnv()->CallStaticObjectMethod(t.classID, t.methodID);
+        writablePath = jstring2string(str);
+        t.getEnv()->DeleteLocalRef(str);
+
+        lmLog(jniLogGroup, "writable path %s", writablePath.c_str());
+
+        return writablePath.c_str();
     }
 
     return 0;

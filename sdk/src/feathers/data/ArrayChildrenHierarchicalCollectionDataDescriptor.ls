@@ -55,7 +55,7 @@ package feathers.data
         /**
          * @inheritDoc
          */
-        public function getLength(data:Object, ...rest:Vector.<Object>):int
+        public function getLength(data:Object, ...rest):int
         {
             var branch:Vector.<Object> = data as Vector.<Object>;
 
@@ -74,7 +74,7 @@ package feathers.data
         /**
          * @inheritDoc
          */
-        public function getItemAt(data:Object, index:int, ...rest:Vector.<Object>):Object
+        public function getItemAt(data:Object, index:int, ...rest):Object
         {
             if ( !rest ) rest = [];
             rest.unshift(index);
@@ -93,7 +93,7 @@ package feathers.data
         /**
          * @inheritDoc
          */
-        public function setItemAt(data:Object, item:Object, index:int, ...rest:Vector.<Object>):void
+        public function setItemAt(data:Object, item:Object, index:int, ...rest):void
         {
             rest.unshift(index);
             var branch:Vector.<Object> = data as Vector.<Object>;
@@ -111,7 +111,7 @@ package feathers.data
         /**
          * @inheritDoc
          */
-        public function addItemAt(data:Object, item:Object, index:int, ...rest:Vector.<Object>):void
+        public function addItemAt(data:Object, item:Object, index:int, ...rest):void
         {
             rest.unshift(index);
             var branch:Vector.<Object> = data as Vector.<Object>;
@@ -131,7 +131,7 @@ package feathers.data
         /**
          * @inheritDoc
          */
-        public function removeItemAt(data:Object, index:int, ...rest:Vector.<Object>):Object
+        public function removeItemAt(data:Object, index:int, ...rest):Object
         {
             rest.unshift(index);
             var branch:Vector.<Object> = data as Vector.<Object>;
@@ -153,7 +153,7 @@ package feathers.data
         /**
          * @inheritDoc
          */
-        public function getItemLocation(data:Object, item:Object, result:Vector.<int> = null, ...rest:Vector.<Object>):Vector.<int>
+        public function getItemLocation(data:Object, item:Object, result:Vector.<int> = null, ...rest):Vector.<int>
         {
             if(!result)
             {

@@ -22,18 +22,17 @@
 #include <string.h>
 #include "loom/common/core/allocator.h"
 #include "loom/common/core/log.h"
+#include "loom/common/core/assert.h"
+#include "loom/common/core/string.h"
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
 
+#include "loom/common/core/allocator.h"
+#define STBI_MALLOC(sz)    lmAlloc(NULL, sz)
+#define STBI_REALLOC(p,sz) lmRealloc(NULL, p, sz)
+#define STBI_FREE(p)       lmFree(NULL, p)
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-
-#ifdef _MSC_VER
-#define stricmp    _stricmp
-#endif
-
-#if LOOM_PLATFORM_IS_APPLE == 1 || ANDROID_NDK || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
-#define stricmp    strcasecmp //I feel dirty.
-#endif
 
 extern loom_allocator_t *gAssetAllocator;
 static loom_logGroup_t gImageAssetGroup = { "imageAsset", 1 };
@@ -92,8 +91,11 @@ void loom_asset_imageDtor(void *bits)
 
 void *loom_asset_imageDeserializer( void *buffer, size_t bufferLen, LoomAssetCleanupCallback *dtor )
 {
+   loom_asset_image_t *img;
 
-   loom_asset_image_t *img = lmAlloc(gAssetAllocator, sizeof(loom_asset_image_t));
+   lmAssert(buffer != NULL, "buffer should not be null");
+
+   img = (loom_asset_image_t*)lmAlloc(gAssetAllocator, sizeof(loom_asset_image_t));
 
     // parse any orientation info from exif format
    img->orientation = exifinfo_parse_orientation(buffer, bufferLen);
@@ -109,7 +111,7 @@ void *loom_asset_imageDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
       return 0;
    }
    
-   lmLogError(gImageAssetGroup, "Allocated %d bytes for an image!", img->width * img->height * 4);
+   lmLogDebug(gImageAssetGroup, "Allocated %d bytes for an image!", img->width * img->height * 4);
    
    return img;
 }

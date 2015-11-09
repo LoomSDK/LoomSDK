@@ -47,7 +47,7 @@ struct MyNativeStruct
 // when wrapping existing class hierarchies
 static MyNativeStruct *CreateMyNativeStruct(lua_State *L, float _numberValue, const char *_stringValue, const char *_anotherStringValue, bool _boolValue)
 {
-    return new MyNativeStruct(_numberValue, _stringValue, _anotherStringValue, _boolValue);
+    return lmNew(NULL) MyNativeStruct(_numberValue, _stringValue, _anotherStringValue, _boolValue);
 }
 
 
@@ -70,12 +70,12 @@ public:
         intField    = 0;
         doubleField = 0.0;
         stringField = NULL;
-        structField = new MyNativeStruct;
+        structField = lmNew(NULL) MyNativeStruct();
     }
 
     virtual ~MyNativeClass()
     {
-        delete structField;
+        lmSafeDelete(NULL, structField);
     }
 
     MyNativeStruct *getStructField() const
@@ -188,6 +188,7 @@ public:
         intField    = _intField;
         doubleField = _doubleField;
         stringField = _stringField;
+        lmSafeDelete(NULL, structField);
         structField = _structField;
     }
 
@@ -208,7 +209,7 @@ public:
 
     static MyGrandChildNativeClass *CreateMyGrandChildNativeClass(lua_State *L, MyNativeStruct *_structField, float _floatField, int _intField, double _doubleField, const char *_stringField)
     {
-        return new MyGrandChildNativeClass(_structField, _floatField, _intField, _doubleField, _stringField);
+        return lmNew(NULL) MyGrandChildNativeClass(_structField, _floatField, _intField, _doubleField, _stringField);
     }
 };
 
@@ -218,7 +219,7 @@ static int registerTestsTestNativeClass(lua_State *L)
     beginPackage(L, "tests")
 
        .beginClass<MyNativeStruct> ("MyNativeStruct")
-       .addStaticConstructor(CreateMyNativeStruct)
+       .addStaticConstructor(CreateMyNativeStruct, false)
        .addVar("numberValue", &MyNativeStruct::numberValue)
        .addVar("stringValue", &MyNativeStruct::stringValue)
        .addVar("anotherStringValue", &MyNativeStruct::anotherStringValue)
@@ -261,7 +262,7 @@ static int registerTestsTestNativeClass(lua_State *L)
        .endClass()
 
        .deriveClass<MyGrandChildNativeClass, MyChildNativeClass> ("MyGrandChildNativeClass")
-       .addStaticConstructor(&MyGrandChildNativeClass::CreateMyGrandChildNativeClass)
+       .addStaticConstructor(&MyGrandChildNativeClass::CreateMyGrandChildNativeClass, false)
        .addStaticMethod("getAsMyNativeClass", &MyGrandChildNativeClass::getAsMyNativeClass)
        .addStaticMethod("getAsMyChildNativeClass", &MyGrandChildNativeClass::getAsMyChildNativeClass)
        .addStaticMethod("getAsMyGrandChildNativeClass", &MyGrandChildNativeClass::getAsMyGrandChildNativeClass)

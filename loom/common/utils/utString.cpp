@@ -28,9 +28,11 @@
 #include <string.h> // strlen
 #include <stdio.h>
 #include <stdarg.h>
-#include "jemalloc/jemalloc.h"
+
+#include "loom/common/core/allocator.h"
 
 const utString::size_type utString::npos = static_cast<size_t>(-1);
+const char *EMPTY_STRING = "";
 
 /*
  * Like new, we want to guarantee that we NEVER
@@ -41,7 +43,7 @@ static char* malloc_never_null(const size_t b) {
     char *p = NULL;
 
     do {
-        p = static_cast<char*>(je_malloc(b));
+        p = static_cast<char*>(lmAlloc(NULL, b));
     } while (p == NULL);
 
     return p;
@@ -50,21 +52,27 @@ static char* malloc_never_null(const size_t b) {
 
 static char *strdup_never_null(const char *s)
 {
-    const size_t len = strlen(s) + 1;
-    char         *p  = malloc_never_null(len);
+    const size_t bufferSize = (s == NULL ? 0 : strlen(s)) + 1;
+    if (bufferSize <= 1) {
+        return (char*) EMPTY_STRING;
+    }
 
-    memcpy(p, s, len);
+    char *p  = malloc_never_null(bufferSize);
+
+    memcpy(p, s, bufferSize);
+    p[bufferSize-1] = 0;
     return p;
 }
 
 
 utString::utString() :
-    p(strdup_never_null(""))
+    p(NULL)
 {
+    clear();
 }
 
 utString::~utString() {
-    je_free(p);
+    clear();
 }
 
 
@@ -95,14 +103,18 @@ void utString::replace(char from, char to)
 void utString::fromBytes(const void *bytes, int len)
 {
     // Free old value if any.
-    if(p != NULL)
-        je_free(p);
+    clear();
 
     // Copy the bytes into p.
-    p = (char*)je_malloc(len+1);
+    p = (char*)lmAlloc(NULL, len+1);
     memcpy(p, bytes, len);
 
     p[len] = 0; // Make sure we are NULL terminated.
+}
+
+void utString::assign(const char* bytes, int len)
+{
+    fromBytes((const void*)bytes, len);
 }
 
 
@@ -112,7 +124,7 @@ utString& utString::operator=(const char *s)
     {
         // this should work with overlapping memory
         char *copy = strdup_never_null(s);
-        je_free(p);
+        clear();
         p = copy;
     }
 
@@ -128,10 +140,17 @@ utString& utString::operator=(const utString& s)
 
 utString& utString::operator+=(const utString& s)
 {
-    const size_type lenp = strlen(p);
-    const size_type lens = strlen(s.p) + 1;
-    p = static_cast<char*>(je_realloc(p, lenp + lens)); // could return NULL
-    memmove(p + lenp, s.p, lens); // p and s.p MAY overlap
+    if (p == EMPTY_STRING)
+    {
+        operator=(s);
+    }
+    else
+    {
+        const size_type lenp = strlen(p);
+        const size_type lens = strlen(s.p) + 1;
+        p = static_cast<char*>(lmRealloc(NULL, p, lenp + lens)); // could return NULL
+        memmove(p + lenp, s.p, lens); // p and s.p MAY overlap
+    }
     return *this;
 }
 
@@ -160,8 +179,10 @@ bool utString::operator!=(const utString& s) const
 }
 
 void utString::clear() {
-    je_free(p);
-    p = strdup_never_null("");
+    if (p != EMPTY_STRING) {
+        lmSafeFree(NULL, p);
+        p = (char*) EMPTY_STRING;
+    }
 }
 
 
@@ -226,7 +247,7 @@ utString utString::substr(const size_type start,
         len = len_orig;
     }
 
-	je_free(s.p);
+    s.clear();
     s.p = malloc_never_null(len + 1);
     memcpy(s.p, p + start, len);
     s.p[len] = '\0';
@@ -274,7 +295,7 @@ utString& utString::erase(size_type pos, size_type len)
     memmove(p + pos, p + pos + len, s);
 
     // remove unused space
-    p = static_cast<char*>(je_realloc(p, s + pos));
+    p = static_cast<char*>(lmRealloc(NULL, p, s + pos));
 
     return *this;
 }

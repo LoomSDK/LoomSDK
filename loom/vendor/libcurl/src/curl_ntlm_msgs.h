@@ -7,7 +7,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2012, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2014, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -25,33 +25,6 @@
 #include "curl_setup.h"
 
 #ifdef USE_NTLM
-
-/* This is to generate a base64 encoded NTLM type-1 message */
-CURLcode Curl_ntlm_create_type1_message(const char *userp,
-                                        const char *passwdp,
-                                        struct ntlmdata *ntlm,
-                                        char **outptr,
-                                        size_t *outlen);
-
-/* This is to generate a base64 encoded NTLM type-3 message */
-CURLcode Curl_ntlm_create_type3_message(struct SessionHandle *data,
-                                        const char *userp,
-                                        const char *passwdp,
-                                        struct ntlmdata *ntlm,
-                                        char **outptr,
-                                        size_t *outlen);
-
-/* This is to decode a NTLM type-2 message */
-CURLcode Curl_ntlm_decode_type2_message(struct SessionHandle *data,
-                                        const char* header,
-                                        struct ntlmdata* ntlm);
-
-/* This is to clean up the ntlm data structure */
-#ifdef USE_WINDOWS_SSPI
-void Curl_ntlm_sspi_cleanup(struct ntlmdata *ntlm);
-#else
-#define Curl_ntlm_sspi_cleanup(x)
-#endif
 
 /* NTLM buffer fixed size, large enough for long user + host + domain */
 #define NTLM_BUFSIZE 1024
@@ -162,14 +135,6 @@ void Curl_ntlm_sspi_cleanup(struct ntlmdata *ntlm);
 
 #define NTLMFLAG_NEGOTIATE_56                    (1<<31)
 /* Indicates that 56-bit encryption is supported. */
-
-#ifdef UNICODE
-#  define SECFLAG_WINNT_AUTH_IDENTITY \
-     (unsigned long)SEC_WINNT_AUTH_IDENTITY_UNICODE
-#else
-#  define SECFLAG_WINNT_AUTH_IDENTITY \
-     (unsigned long)SEC_WINNT_AUTH_IDENTITY_ANSI
-#endif
 
 #endif /* BUILDING_CURL_NTLM_MSGS_C */
 

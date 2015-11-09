@@ -52,7 +52,8 @@
 #ifndef __EXIF_H
 #define __EXIF_H
 
-#include <string>
+#include "loom/common/utils/utString.h"
+typedef utString string;
 
 // 
 // Class responsible for storing and parsing EXIF information from a JPEG blob
@@ -66,7 +67,7 @@ class EXIFInfo {
   // RETURN:  PARSE_EXIF_SUCCESS (0) on succes with 'result' filled out
   //          error code otherwise, as defined by the PARSE_EXIF_ERROR_* macros
   int parseFrom(const unsigned char *data, unsigned length);
-  int parseFrom(const std::string &data);
+  int parseFrom(const string &data);
 
   // Parsing function for an EXIF segment. This is used internally by parseFrom()
   // but can be called for special cases where only the EXIF section is 
@@ -78,9 +79,9 @@ class EXIFInfo {
 
   // Data fields filled out by parseFrom()
   char ByteAlign;                   // 0 = Motorola byte alignment, 1 = Intel 
-  std::string ImageDescription;     // Image description
-  std::string Make;                 // Camera manufacturer's name
-  std::string Model;                // Camera model
+  string ImageDescription;     // Image description
+  string Make;                 // Camera manufacturer's name
+  string Model;                // Camera model
   unsigned short Orientation;       // Image orientation, start of data corresponds to
                                     // 0: unspecified in EXIF data
                                     // 1: upper left of image
@@ -89,12 +90,12 @@ class EXIFInfo {
                                     // 8: lower left of image
                                     // 9: undefined
   unsigned short BitsPerSample;     // Number of bits per component
-  std::string Software;             // Software used
-  std::string DateTime;             // File change date and time
-  std::string DateTimeOriginal;     // Original file date and time (may not exist)
-  std::string DateTimeDigitized;    // Digitization date and time (may not exist)
-  std::string SubSecTimeOriginal;   // Sub-second time that original picture was taken
-  std::string Copyright;            // File copyright information
+  string Software;             // Software used
+  string DateTime;             // File change date and time
+  string DateTimeOriginal;     // Original file date and time (may not exist)
+  string DateTimeDigitized;    // Digitization date and time (may not exist)
+  string SubSecTimeOriginal;   // Sub-second time that original picture was taken
+  string Copyright;            // File copyright information
   double ExposureTime;              // Exposure time in seconds
   double FNumber;                   // F/stop
   unsigned short ISOSpeedRatings;   // ISO speed

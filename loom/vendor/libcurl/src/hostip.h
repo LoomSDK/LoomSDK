@@ -7,7 +7,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2012, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -65,11 +65,10 @@ void Curl_global_host_cache_dtor(void);
 
 struct Curl_dns_entry {
   Curl_addrinfo *addr;
-  /* timestamp == 0 -- entry not in hostcache
-     timestamp != 0 -- entry is in hostcache */
+  /* timestamp == 0 -- CURLOPT_RESOLVE entry, doesn't timeout */
   time_t timestamp;
-  long inuse;      /* use-counter, make very sure you decrease this
-                      when you're done using the address you received */
+  /* use-counter, use Curl_resolv_unlock to release reference */
+  long inuse;
 };
 
 /*
@@ -92,7 +91,7 @@ int Curl_resolv_timeout(struct connectdata *conn, const char *hostname,
 
 #ifdef CURLRES_IPV6
 /*
- * Curl_ipv6works() returns TRUE if ipv6 seems to work.
+ * Curl_ipv6works() returns TRUE if IPv6 seems to work.
  */
 bool Curl_ipv6works(void);
 #else
@@ -125,8 +124,8 @@ void Curl_resolv_unlock(struct SessionHandle *data,
 /* for debugging purposes only: */
 void Curl_scan_cache_used(void *user, void *ptr);
 
-/* make a new dns cache and return the handle */
-struct curl_hash *Curl_mk_dnscache(void);
+/* init a new dns cache and return success */
+int Curl_mk_dnscache(struct curl_hash *hash);
 
 /* prune old entries from the DNS cache */
 void Curl_hostcache_prune(struct SessionHandle *data);
@@ -172,6 +171,18 @@ const char *Curl_printable_address(const Curl_addrinfo *ip,
                                    char *buf, size_t bufsize);
 
 /*
+ * Curl_fetch_addr() fetches a 'Curl_dns_entry' already in the DNS cache.
+ *
+ * Returns the Curl_dns_entry entry pointer or NULL if not in the cache.
+ *
+ * The returned data *MUST* be "unlocked" with Curl_resolv_unlock() after
+ * use, or we'll leak memory!
+ */
+struct Curl_dns_entry *
+Curl_fetch_addr(struct connectdata *conn,
+                const char *hostname,
+                int port);
+/*
  * Curl_cache_addr() stores a 'Curl_addrinfo' struct in the DNS cache.
  *
  * Returns the Curl_dns_entry entry pointer or NULL if the storage failed.
@@ -201,9 +212,30 @@ extern sigjmp_buf curl_jmpenv;
 CURLcode Curl_set_dns_servers(struct SessionHandle *data, char *servers);
 
 /*
+ * Function provided by the resolver backend to set
+ * outgoing interface to use for DNS requests
+ */
+CURLcode Curl_set_dns_interface(struct SessionHandle *data,
+                                const char *interf);
+
+/*
+ * Function provided by the resolver backend to set
+ * local IPv4 address to use as source address for DNS requests
+ */
+CURLcode Curl_set_dns_local_ip4(struct SessionHandle *data,
+                                const char *local_ip4);
+
+/*
+ * Function provided by the resolver backend to set
+ * local IPv6 address to use as source address for DNS requests
+ */
+CURLcode Curl_set_dns_local_ip6(struct SessionHandle *data,
+                                const char *local_ip6);
+
+/*
  * Clean off entries from the cache
  */
-void Curl_hostcache_clean(struct SessionHandle *data);
+void Curl_hostcache_clean(struct SessionHandle *data, struct curl_hash *hash);
 
 /*
  * Destroy the hostcache of this handle.

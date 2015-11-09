@@ -274,7 +274,7 @@ package feathers.controls
 
             if(!this._screens[id])
             {
-                throw new IllegalOperationError("Screen with id '" + id + "' cannot be shown because it has not been defined.");
+                Debug.assert("Screen with id '" + id + "' cannot be shown because it has not been defined.");
             }
 
             if(this._activeScreenID == id)
@@ -341,7 +341,7 @@ package feathers.controls
                 }
                 else
                 {
-                    throw new TypeError("Unknown event action defined for screen:" + eventAction.toString());
+                    Debug.assert("Unknown event action defined for screen:" + eventAction.toString());
                 }
             }
 
@@ -451,7 +451,7 @@ package feathers.controls
         {
             if(this._screens[id] != null)
             {
-                throw new IllegalOperationError("Screen with id '" + id + "' already defined. Cannot add two screens with the same id.");
+                Debug.assert("Screen with id '" + id + "' already defined. Cannot add two screens with the same id.");
             }
 
             this._screens[id] = item;
@@ -464,7 +464,7 @@ package feathers.controls
         {
             if(this._screens[id] == null)
             {
-                throw new IllegalOperationError("Screen '" + id + "' cannot be removed because it has not been added.");
+                Debug.assert("Screen '" + id + "' cannot be removed because it has not been added.");
             }
             //delete this._screens[id];
             this._screens[id] = null;

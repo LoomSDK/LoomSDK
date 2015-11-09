@@ -64,15 +64,20 @@ package loom
          *  Cancels an in progress HTTPRequest.
          */
         public native function cancel();
+        
+        /**
+         *  If a HTTPRequest is currently pending
+         */
+        public native function isPending():Boolean;
 
         /**
-         *  Called when the HTTPRequest is successful. Passes the response from the HTTP server.
+         *  Called when the HTTPRequest is successful. Passes the response from the HTTP server as a ByteArray.
          */
         public native var onSuccess:NativeDelegate;
         
         /**
          *  Called when the HTTPRequest is unsuccessful or cancelled. 
-         *  Passes the an Error message (this can differ between plaforms).
+         *  Passes the an Error message (this can differ between plaforms) as a ByteArray.
          */
         public native var onFailure:NativeDelegate;
 
@@ -95,11 +100,6 @@ package loom
          *  Another way to set the URL to send the HTTP request to.
          */
         public native var url:String;
-
-        /**
-         * When true, we return binary values encoded as base64.
-         */
-        public native var encodeResponse:Boolean;
 
         /**
          * When true, follow any redirects.

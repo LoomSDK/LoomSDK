@@ -166,6 +166,7 @@ SEATEST_TEST(asset_liveUpdate)
 
     loom_asset_shutdown();
 
-    // Should have seen another fire from the implicit flushAll.
-    assert_int_equal(3, testFireCount);
+    // Old: Should have seen another fire from the implicit flushAll.
+    // the implicit flushAll doesn't fire anymore while shutting down.
+    assert_int_equal(2, testFireCount);
 }

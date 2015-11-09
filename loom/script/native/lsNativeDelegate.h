@@ -30,7 +30,9 @@ class MethodBase;
 struct NativeDelegateCallNote;
 
 /*
- * NativeDelegate class which can be used to setup script callbacks, from script, for native code
+ * Expose native callbacks as delegates to allow simple, type-safe integration
+ * with LoomScript. NativeDelegates are a variable to which script can add listeners
+ * to receive callbacks.
  */
 class NativeDelegate
 {
@@ -57,19 +59,21 @@ class NativeDelegate
 
     void getCallbacks(lua_State *L) const;
 
-    // lua_State* -> NativeDelegate*
+    // Map lua_State* -> NativeDelegate* - a delegate can be active in
+    // multiple lua_States at the same time.
     static utHashTable<utPointerHashKey, utArray<NativeDelegate *> *> sActiveNativeDelegates;
 
     static void registerDelegate(lua_State *L, NativeDelegate *delegate);
 
     static void postNativeDelegateCallNote(NativeDelegateCallNote *ndcn);
 
-
     // Returns a note in cases where we should be doing an async delegate.
     NativeDelegateCallNote *prepCallbackNote() const;
 
 public:
 
+    // The thread ID on which script callbacks execute. Used for debugging
+    // and to control when we trigger deferred callbacks.
     static int smMainThreadID;
 
     NativeDelegate();
@@ -85,6 +89,7 @@ public:
     // threads and corrupting our state.
     static void assertMainThread();
 
+    // True when we are running on the main thread.
     static bool checkMainThread();
 
     // Run all the deferred calls that have been deferred.
@@ -114,7 +119,7 @@ public:
     void pushArgument(bool value) const;
     void invoke() const;
 
-    // allows you to hand push values not available in pushArgument overloaded
+    // Allows you to hand push values not available in pushArgument overloaded
     // Example:
     // lualoom_pushnative<MethodInfo>(L, methodInfo);
     // myNativeDelegate.incArgCount();
@@ -132,6 +137,7 @@ public:
     static int __op_minusassignment(lua_State *L);
     static int __op_plusassignment(lua_State *L);
 
+    // Discard all listeners and restore to a pristine state.
     void invalidate();
 
     // invalidates all registered native delegates
@@ -140,6 +146,17 @@ public:
 };
 }
 
+// Declare a NativeDelegate instance named _nameDelegate and a getter named getnameDelegate. You can access
+// the delegate from C++ via _nameDelegate, for instance, _nameDelegate.invoke();. You can expose the
+// delegate to LoomScript with the following idiom:
+//
+// .addProperty("nameDelegate", &LoomTextAsset::getnameDelegate) 
 #define LOOM_DELEGATE(name)          LS::NativeDelegate _ ## name ## Delegate; const LS::NativeDelegate               *get ## name ## Delegate() const { return &_ ## name ## Delegate; }
+
+// Declare a static NativeDelegate instance and getter as LOOM_DELEGATE().
 #define LOOM_STATICDELEGATE(name)    static LS::NativeDelegate _ ## name ## Delegate; static const LS::NativeDelegate *get ## name ## Delegate() { return &_ ## name ## Delegate; }
+
+// Define storage for a static NativeDelegate declared with LOOM_STATICDELEGATE(). Name must match.
+#define LOOM_IMPLEMENT_STATICDELEGATE(name)    LS::NativeDelegate _ ## name ## Delegate;
+
 #endif

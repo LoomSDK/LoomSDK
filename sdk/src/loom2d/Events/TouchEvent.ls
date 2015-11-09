@@ -62,20 +62,32 @@ package loom2d.events
         private static var sTouches:Vector.<Touch> = new Vector.<Touch>;
         
         /** Creates a new TouchEvent instance. */
-        public function TouchEvent(type:String, touches:Vector.<Touch>, shiftKey:Boolean=false, 
+        public function TouchEvent(type:String = TOUCH, touches:Vector.<Touch> = null, shiftKey:Boolean=false, 
                                    ctrlKey:Boolean=false, bubbles:Boolean=true)
         {
             super(type, bubbles, touches);
             
+            mVisitedObjects = new Vector.<EventDispatcher>();
+            
+            resetTouch(type, touches, shiftKey, ctrlKey, bubbles);
+            
+        }
+        
+        public function resetTouch(type:String, touches:Vector.<Touch>, shiftKey:Boolean=false, 
+                                   ctrlKey:Boolean=false, bubbles:Boolean=true) {
+            reset(type, bubbles, touches);
+            
             mShiftKey = shiftKey;
             mCtrlKey = ctrlKey;
             mTimestamp = -1.0;
-            mVisitedObjects = new Vector.<EventDispatcher>();
+            mVisitedObjects.length = 0;
             
-            var numTouches:int=touches.length;
-            for (var i:int=0; i<numTouches; ++i)
-                if (touches[i].timestamp > mTimestamp)
-                    mTimestamp = touches[i].timestamp;
+            if (touches) {
+                var numTouches:int=touches.length;
+                for (var i:int=0; i<numTouches; ++i)
+                    if (touches[i].timestamp > mTimestamp)
+                        mTimestamp = touches[i].timestamp;
+            }
         }
         
         /** Returns a list of touches that originated over a certain target. If you pass a
@@ -84,7 +96,7 @@ package loom2d.events
         public function getTouches(target:DisplayObject, phase:String=null,
                                    result:Vector.<Touch> =null):Vector.<Touch>
         {
-            if (result == null) result = new Vector.<Touch>[];
+            if (result == null) result = new Vector.<Touch>();
             var allTouches:Vector.<Touch> = data as Vector.<Touch>;
             var numTouches:int = allTouches.length;
             
@@ -95,7 +107,7 @@ package loom2d.events
                 var correctPhase:Boolean = (phase == null || phase == touch.phase);
                     
                 if (correctTarget && correctPhase)
-                    result.push(touch);
+                    result.pushSingle(touch);
             }
             return result;
         }
@@ -141,9 +153,21 @@ package loom2d.events
             {
                 var chainLength:int = bubbles ? chain.length : 1;
                 var previousTarget:EventDispatcher = target;
-                setTarget(chain[0] as EventDispatcher);
                 
-                for (var i:int=0; i<chainLength; ++i)
+                // Remove chain links that are deleted natively
+                for (var i:int = 0; i < chain.length; i++) 
+                {
+                    if (chain[0].nativeDeleted())
+                    {
+                        chain.splice(i, 1);
+                        i--;
+                    }
+                }
+                
+                if (chain.length > 0)
+                    setTarget(chain[0] as EventDispatcher);
+                
+                for (i=0; i<chainLength && i<chain.length; ++i)
                 {
                     var chainElement:EventDispatcher = chain[i] as EventDispatcher;
                     //trace("Invoking touch event on " + chainElement + " bubbles=" + bubbles);

@@ -22,6 +22,7 @@
 #include "loom/engine/loom2d/l2dImage.h"
 #include "loom/engine/loom2d/l2dBlendMode.h"
 #include "loom/graphics/gfxGraphics.h"
+#include "loom/graphics/gfxColor.h"
 
 namespace Loom2D
 {
@@ -63,21 +64,19 @@ void Quad::updateNativeVertexData(lua_State *L, int index)
 
             v->z = 0.0f;
 
+            GFX::Color c(0);
             lua_rawgeti(L, rawDataTable, rcounter++);
-            float r = (float)lua_tonumber(L, -1);
+            c.r = (float)lua_tonumber(L, -1);
             lua_rawgeti(L, rawDataTable, rcounter++);
-            float g = (float)lua_tonumber(L, -1);
+            c.g = (float)lua_tonumber(L, -1);
             lua_rawgeti(L, rawDataTable, rcounter++);
-            float b = (float)lua_tonumber(L, -1);
+            c.b = (float)lua_tonumber(L, -1);
             lua_rawgeti(L, rawDataTable, rcounter++);
-            float a = (float)lua_tonumber(L, -1);
+            c.a = (float)lua_tonumber(L, -1);
 
             // todo: optimize this too:
 
-            v->abgr = ((uint32_t)(a * 255) << 24) |
-                      ((uint32_t)(b * 255) << 16) |
-                      ((uint32_t)(g * 255) << 8) |
-                      ((uint32_t)(r * 255));
+            v->abgr = c.getHex();
 
             if(v->abgr != 0x00FFFFFFFF)
                 tinted = true;
@@ -129,10 +128,7 @@ void Quad::render(lua_State *L)
 
     if (renderState.isClipping()) GFX::Graphics::setClipRect((int)renderState.clipRect.x, (int)renderState.clipRect.y, (int)renderState.clipRect.width, (int)renderState.clipRect.height);
 
-    GFX::VertexPosColorTex *v   = GFX::QuadRenderer::getQuadVertices(nativeTextureID, 
-                                                                        4, 
-                                                                        tinted || renderState.alpha != 1.f,
-                                                                        blendSrc, blendDst);
+    GFX::VertexPosColorTex *v = GFX::QuadRenderer::getQuadVertexMemory(4, nativeTextureID, blendEnabled, blendSrc, blendDst, shader);
     GFX::VertexPosColorTex *src = quadVertices;
 
     if (!v)
@@ -144,22 +140,16 @@ void Quad::render(lua_State *L)
         *v = *src;
         src++;
 
-        float _x = mtx.a * v->x + mtx.c * v->y + mtx.tx;
-        float _y = mtx.b * v->x + mtx.d * v->y + mtx.ty;
+        lmscalar _x = mtx.a * v->x + mtx.c * v->y + mtx.tx;
+        lmscalar _y = mtx.b * v->x + mtx.d * v->y + mtx.ty;
 
-// Really this is decided by DX9, which is hardcoded on windows.
-#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
-        v->x = _x - 0.5f;
-        v->y = _y - 0.5f;
-#else
-        v->x = _x;
-        v->y = _y;
-#endif
+        v->x = (float) _x;
+        v->y = (float) _y;
 
         // modulate vertex alpha by our DisplayObject alpha setting
         if (renderState.alpha != 1.0f)
         {
-            float va = ((float)(v->abgr >> 24)) * renderState.alpha;
+            lmscalar va = ((float)(v->abgr >> 24)) * renderState.alpha;
             v->abgr = ((uint32_t)va << 24) | (v->abgr & 0x00FFFFFF);
         }
 

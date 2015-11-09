@@ -74,11 +74,9 @@ struct NativeDelegateCallNote
         delegate = NULL;
         delegateKey = -1;
         
-        if(data)
-        {        
-            free(data);
-            data = NULL;
-        }
+        lmSafeFree(NULL, data);
+        data = NULL;
+        
         ndata = -1;
         
         offset = -1;
@@ -98,6 +96,7 @@ struct NativeDelegateCallNote
 
         data = (unsigned char*)lmRealloc(NULL, data, ndata);
 
+        lmAssert(data != NULL, "Reallocated data should not be NULL, freeBytes %d offset %d ndata %d", freeBytes, offset, ndata);
     }
 
     void writeByte(unsigned char value)
@@ -110,7 +109,7 @@ struct NativeDelegateCallNote
     void writeBytes(const char* value, UTsize size)
     {
         ensureBuffer(size);
-        memcpy(data + sizeof(unsigned char)*offset, value, size);
+        memcpy(&data[offset], value, size);
         offset += size;
     }
 
@@ -172,14 +171,14 @@ struct NativeDelegateCallNote
     
     void readBytes(const char* value, UTsize size)
     {
-        memcpy((void*) value, data + sizeof(unsigned char)*offset, size);
+        memcpy((void*) value, &data[offset], size);
         offset += size;
     }
 
     unsigned int readInt()
     {
         //assert(offset + 4 < ndata);
-        int v = 0;
+        unsigned int v = 0;
         memcpy(&v, &data[offset], sizeof(unsigned int));
         offset += 4;
         return v;
@@ -203,23 +202,24 @@ struct NativeDelegateCallNote
         return v;
     }
 
-    // Don't forget to free()
+    // Don't forget to lmFree()
     char *readString()
     {
         unsigned int strLen = readInt();
-        char *str = (char*)malloc(strLen + 1);
+        char *str = (char*)lmAlloc(NULL, strLen + 1);
         readBytes(str, strLen);
         str[strLen] = 0;
         return str;
     }
 
-    // Don't forget to free()
+    // Don't forget to lmDelete()
     utByteArray *readByteArray()
     {
+
         UTsize size = readInt();
-        utByteArray *bytes = new utByteArray();
-        bytes->reserve(size);
-        readBytes((const char*) bytes->getDataPtr(), size);
+        utByteArray *bytes = lmNew(NULL) utByteArray();
+        bytes->allocateAndCopy(&data[offset], size);
+        offset += size;
         return bytes;
     }
 
@@ -330,13 +330,14 @@ void NativeDelegate::executeDeferredCalls(lua_State *L)
                 case MSG_PushString:
                     str = ndcn->readString();
                     theDelegate->pushArgument(str);
-                    free(str);
+                    lmFree(NULL, str);
                     break;
 
                 case MSG_PushByteArray:
                     bytes = ndcn->readByteArray();
                     theDelegate->pushArgument(bytes);
-                    free(bytes);
+                    // Required to not delete for Android at this point
+                    // lmDelete(NULL, bytes);
                     break;
 
                 case MSG_PushDouble:
@@ -428,7 +429,7 @@ void NativeDelegate::registerDelegate(lua_State *L, NativeDelegate *delegate)
 
     if (!delegates)
     {
-        delegates = new utArray<NativeDelegate *>;
+        delegates = lmNew(NULL) utArray<NativeDelegate *>;
         sActiveNativeDelegates.insert(L, delegates);
     }
 
@@ -658,7 +659,13 @@ void NativeDelegate::invoke () const
             lua_pushvalue(L, i + 1);
         }
 
-        lua_call(L, numArgs, 1);
+        int error = lua_pcall(L, numArgs, 1, 0);
+        lmAssert(error == 0, "Lua error calling native delegate callback: %s: %s", (
+            error == LUA_ERRRUN ? "runtime error" :
+            error == LUA_ERRMEM ? "memory allocation error" :
+            error == LUA_ERRERR ? "error handler error" :
+            "unknown error"
+            ), lua_tostring(L, -1));
 
         lua_settop(L, t);
 
@@ -914,7 +921,7 @@ void NativeDelegate::invalidateLuaStateDelegates(lua_State *L)
         }
 
         sActiveNativeDelegates.erase(L);
-        delete delegates;
+        lmDelete(NULL, delegates);
     }
 }
 

@@ -22,22 +22,16 @@
 #include <string.h>
 #include "loom/common/core/allocator.h"
 #include "loom/common/core/log.h"
+#include "loom/common/core/string.h"
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsSound.h"
 
 #include "stb_vorbis.h"
 #include "minimp3.h"
-
-#ifdef _MSC_VER
-#define stricmp    _stricmp
-#endif
-
-#if LOOM_PLATFORM_IS_APPLE == 1 || ANDROID_NDK || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
-#define stricmp    strcasecmp //I feel dirty.
-#endif
+#include "wavloader.h"
 
 extern "C" loom_allocator_t *gAssetAllocator;
-static loom_logGroup_t gSoundAssetGroup = { "soundAsset", 1 };
+loom_logGroup_t gSoundAssetGroup = { "soundAsset", 1 };
 
 void loom_asset_registerSoundAsset()
 {
@@ -55,8 +49,10 @@ int loom_asset_identifySound(const char *extension)
     {
         return LATSound;
     }
-
-    // TODO: Wav
+    if (!stricmp(extension, "wav"))
+    {
+        return LATSound;
+    }
 
     return 0;
 }
@@ -64,14 +60,19 @@ int loom_asset_identifySound(const char *extension)
 void loom_asset_soundDtor(void *bits)
 {
     loom_asset_sound_t *sound = (loom_asset_sound_t*)bits;
-    lmFree(gAssetAllocator, sound->buffer);
-    lmFree(gAssetAllocator, bits);
+    if (sound != NULL)
+    {
+        if (sound->buffer != NULL)
+            lmFree(gAssetAllocator, sound->buffer);
+        lmFree(gAssetAllocator, bits);
+    }
 }
 
 void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCleanupCallback *dtor )
 {
-   loom_asset_sound_t *sound = (loom_asset_sound_t*)lmAlloc(gAssetAllocator, sizeof(loom_asset_sound_t));
-   unsigned char *charBuff = (unsigned char *)buffer;
+    loom_asset_sound_t *sound = (loom_asset_sound_t*)lmAlloc(gAssetAllocator, sizeof(loom_asset_sound_t));
+    memset(sound, 0, sizeof(loom_asset_sound_t));
+    unsigned char *charBuff = (unsigned char *)buffer;
 
     // Look for magic header in buffer.
     if(charBuff[0] == 0x4f 
@@ -86,6 +87,7 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         if(sampleCount < 0)
         {
             lmLogError(gSoundAssetGroup, "Failed to decode Ogg Vorbis!");
+            loom_asset_soundDtor(&sound);
             return NULL;
         }
 
@@ -93,6 +95,7 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         sound->bytesPerSample = 2;
         sound->sampleCount = sampleCount;
         sound->bufferSize = sampleCount * channels * 2;
+        sound->sampleRate = 44100; // TODO: This should be variable
 
         // We can skip this if we get clever about allocations in stbv.
         sound->buffer = lmAlloc(gAssetAllocator, sound->bufferSize);
@@ -135,6 +138,7 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         sound->bytesPerSample = 2;
         sound->sampleCount = totalBytes / sound->bytesPerSample;
         sound->bufferSize = sound->channels * sound->bytesPerSample * sound->sampleCount;
+        sound->sampleRate = 44100; // TODO: This should be variable
         sound->buffer = lmAlloc(gAssetAllocator, sound->bufferSize);
 
         // Decode again to get real samples.        
@@ -161,20 +165,57 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         // Awesome, all set!
         lmFree(gAssetAllocator, outBuffer);
     }
+    else if(charBuff[0] == 0x52 // 'RIFF'
+         && charBuff[1] == 0x49
+         && charBuff[2] == 0x46
+         && charBuff[3] == 0x46)
+    {
+        // We've got a wav file
+        wav_info wav;
+        bool wavLoadSuccess = load_wav(charBuff, bufferLen, NULL, &wav);
+        if (!wavLoadSuccess)
+        {
+            lmLogError(gSoundAssetGroup, "Failed to load wav format info");
+            loom_asset_soundDtor(sound);
+            return 0;
+        }
+        
+        sound->channels = wav.numChannels;
+        sound->bytesPerSample = wav.sampleSize / 8; // wav sample size is in bits
+        if (sound->bytesPerSample != 1 && sound->bytesPerSample != 2)
+        {
+            lmLogError(gSoundAssetGroup, "Unsupported wav format. Currently only 8-bit or 16-bit PCM are supported");
+            loom_asset_soundDtor(sound);
+            return 0;
+        }
+        sound->bufferSize = wav.sampleDataSize;
+        sound->sampleCount = sound->bufferSize / sound->bytesPerSample;
+        sound->sampleRate = wav.samplesPerSecond;
+        
+        sound->buffer = lmAlloc(gAssetAllocator, sound->bufferSize);
+        bool dataCopySuccess = load_wav(charBuff, bufferLen, (uint8_t*)sound->buffer, NULL);
+        if (!dataCopySuccess)
+        {
+            lmLogError(gSoundAssetGroup, "Failed to copy wav data");
+            loom_asset_soundDtor(sound);
+            return 0;
+        }
+    }
     else
     {
         lmLogError(gSoundAssetGroup, "Failed to identify sound buffer by magic number!");
+        loom_asset_soundDtor(sound);
         return 0;
     }
 
    *dtor = loom_asset_soundDtor;
    if(!sound->buffer)
    {
-      lmLogError(gSoundAssetGroup, "Image load failed due to this cryptic reason: %s", "(unknown)");
+      lmLogError(gSoundAssetGroup, "Sound load failed due to this cryptic reason: %s", "(unknown)");
       lmFree(gAssetAllocator, sound);
       return 0;
    }
 
-   lmLogError(gSoundAssetGroup, "Allocated %d bytes for a sound!", sound->bufferSize);
-   return sound;
+    lmLogInfo(gSoundAssetGroup, "Allocated %d bytes for a sound!", sound->bufferSize);
+    return sound;
 }

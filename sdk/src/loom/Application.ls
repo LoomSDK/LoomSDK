@@ -20,6 +20,8 @@ limitations under the License.
 
 package loom 
 {
+    import loom2d.display.Graphics;
+    import loom2d.display.Shape;
     import system.platform.Platform;
     import system.reflection.Assembly;
     import system.application.BaseApplication;
@@ -65,6 +67,9 @@ package loom
     {
         private var splashContainer:Sprite;
         private var frameLastPlatformTime:Number = 0;
+        
+        private var assetDebugOverlay:Shape;
+        private var assetDebugEnabled = false;
 
         /**
          * Starting point for your game's code.
@@ -94,13 +99,13 @@ package loom
 
             Cocos2D.addLayer(layer); */
             //group.registerManager(layer);
-
+            
             // TODO: LOOM-1521 Resurrent feedback layer with Loom2D
             // create our feedback layer for asset agent transfers
 
             // Listen for asset stream activity and give visual feedback.
             LoomAssetManager.pendingCountChange += onAssetStreamCountChange;
-
+            
             //var displayStats = Cocos2D.getDisplayStats();
             //Cocos2D.onDisplayStatsChanged += onDisplayStatsChanged;
 
@@ -122,12 +127,23 @@ package loom
             //theStage = new Stage(/*layer,*/ Cocos2D.getConfigDisplayWidth(), Cocos2D.getConfigDisplayHeight(), 0x000000);
             theStage = new Stage(configWidth, configHeight, configColor);
             Loom2D.stage = theStage;
-            Stage.onRenderStage += onCocosFrame;
+            
+            if (display.getNumber("stats") == 1) theStage.reportFps = true;
 
+            Stage.onRenderStage += onInternalFrame;
+            
+            if (assetDebugEnabled) {
+                assetDebugOverlay = new Shape();
+                stage.addChild(assetDebugOverlay);
+            }
+            
             theStage.onAccelerate += accelerated;
 
             // This enables touch/mouse input.
             touchProcessor = new TouchProcessor(stage);
+            
+            // Seed the Random Number Generator
+            Random.setSeed(Platform.getEpochTime());
 
             // Used to adjust delay for starting the splash screen animation.
             var startDelay = 1.0;
@@ -227,13 +243,23 @@ package loom
         protected function onProfilerEnable():void 
         {
             Console.print("Enabling profiler...");
-            Profiler.enable(true);
+            Profiler.enable();
         }
 
         protected function onProfilerDump():void
         {
             Console.print("Dumping profiler...");
             Profiler.dump();
+        }
+        
+        protected function onTelemetryEnable():void
+        {
+            Telemetry.enable();
+        }
+        
+        protected function onTelemetryDisable():void
+        {
+            Telemetry.disable();
         }
 
         protected function onDumpManagedNatives():void
@@ -309,6 +335,8 @@ package loom
             commandManager.registerCommand("terminate", onTerminate);
             commandManager.registerCommand("profilerEnable", onProfilerEnable);
             commandManager.registerCommand("profilerDump", onProfilerDump);
+            commandManager.registerCommand("telemetryEnable", onTelemetryEnable);
+            commandManager.registerCommand("telemetryDisable", onTelemetryDisable);
             commandManager.registerCommand("dumpManagedNatives", onDumpManagedNatives);
             group.registerManager(commandManager);
         }
@@ -316,7 +344,7 @@ package loom
         /**
          * Internal function to let the Stage update whenever we render.
          */
-        private function onCocosFrame():void
+        private function onInternalFrame():void
         {
             var time = Platform.getTime();
             var delta = (time-frameLastPlatformTime)/1000;
@@ -334,6 +362,7 @@ package loom
             // Stick a quad with (red/yellow) color tinting.
             if(LoomAssetManager.isConnected())
             {
+                redrawAssetDebug(true, quantity);
                 //feedbackLayer.setColor(new ccColor3B(0, 255, 0));
 
                 if(lastSeenQuantity == 0 && quantity > 0)
@@ -347,11 +376,23 @@ package loom
             }
             else
             {
+                redrawAssetDebug(false, 0);
                 // set it to gray if we are not connected
                 //feedbackLayer.setColor(new ccColor3B(128, 128, 128));
             }
 
             lastSeenQuantity = quantity;
+        }
+        
+        private function redrawAssetDebug(connected:Boolean, quantity:int) {
+            if (!assetDebugEnabled) return;
+            var g:Graphics = assetDebugOverlay.graphics;
+            g.clear();
+            g.beginFill(connected ? 0x3CBD04 : 0xFB5133);
+            if (!connected) quantity = 1;
+            for (var i:int = 0; i < quantity; i++) {
+                g.drawRect(5+i*8, 5, 10, 10);
+            }
         }
 
         protected function onDisplayStatsChanged(enabled:Boolean):void

@@ -28,17 +28,17 @@ package loom2d.animation
         private var mCurrentTime:Number;
         private var mTotalTime:Number;
         private var mCall:Function;
-        private var mArgs:Array;
+        private var mArgs:Vector.<Object>;
         private var mRepeatCount:int;
         
         /** Creates a delayed call. */
-        public function DelayedCall(call:Function, delay:Number, args:Array=null)
+        public function DelayedCall(call:Function, delay:Number, args:Vector.<Object>=null)
         {
             reset(call, delay, args);
         }
         
         /** Resets the delayed call to its default values, which is useful for pooling. */
-        public function reset(call:Function, delay:Number, args:Array=null):DelayedCall
+        public function reset(call:Function, delay:Number, args:Vector.<Object>=null):DelayedCall
         {
             mCurrentTime = 0;
             mTotalTime = Math.max(delay, 0.0001);

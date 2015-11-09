@@ -1,4 +1,13 @@
+#ifdef MSVC_DEBUG_HEAP
+#define _CRTDBG_MAP_ALLOC
+#endif
+
 #include <stdlib.h>
+
+#ifdef MSVC_DEBUG_HEAP
+#include <crtdbg.h>
+#endif
+
 #include <stdio.h>
 #include <time.h>
 
@@ -17,6 +26,7 @@
 #include "loom/common/platform/platform.h"
 
 #include "loom/engine/bindings/sdl/lmSDL.h"
+#include "loom/engine/bindings/loom/lmGameController.h"
 
 #include "loom/script/native/core/system/lmProcess.h"
 
@@ -58,7 +68,7 @@ void loop()
         if(!stage)
             continue;
 
-        // Adjust coordinates for mouse events to work proprly on high dpi screens.
+        // Adjust coordinates for mouse events to work properly on high dpi screens.
         if(event.type == SDL_MOUSEMOTION 
             || event.type == SDL_MOUSEBUTTONDOWN 
             || event.type == SDL_MOUSEBUTTONUP)
@@ -128,6 +138,7 @@ void loop()
             stage->_TouchMovedDelegate.pushArgument((int)event.tfinger.fingerId);
             stage->_TouchMovedDelegate.pushArgument(event.tfinger.x*stage->stageWidth);
             stage->_TouchMovedDelegate.pushArgument(event.tfinger.y*stage->stageHeight);
+            stage->_TouchMovedDelegate.pushArgument(SDL_BUTTON_LEFT);
             stage->_TouchMovedDelegate.invoke();
         }
 #else
@@ -154,6 +165,7 @@ void loop()
             stage->_TouchMovedDelegate.pushArgument((int)event.motion.which);
             stage->_TouchMovedDelegate.pushArgument(event.motion.x);
             stage->_TouchMovedDelegate.pushArgument(event.motion.y);
+            stage->_TouchMovedDelegate.pushArgument((int)event.motion.state);
             stage->_TouchMovedDelegate.invoke();
         }
 #endif
@@ -178,6 +190,39 @@ void loop()
         {
             IMEDelegateDispatcher::shared()->dispatchShowComposition(event.text.text, strlen(event.text.text), event.edit.start, event.edit.length);
         }
+        else if (event.type == SDL_CONTROLLERBUTTONDOWN)
+        {
+            //lmLogInfo(coreLogGroup, "Controller Button Down %d %d %d", event.cbutton.which, event.cbutton.button);
+            LoomGameController::getGameController(LoomGameController::getControllerIndex(event.cbutton.which))->buttonDown(event);
+        }
+        else if (event.type == SDL_CONTROLLERBUTTONUP)
+        {
+            //lmLogInfo(coreLogGroup, "Controller Button Up %d %d %d", event.cbutton.which, event.cbutton.button);
+            LoomGameController::getGameController(LoomGameController::getControllerIndex(event.cbutton.which))->buttonUp(event);
+        }
+        else if (event.type == SDL_CONTROLLERAXISMOTION)
+        {
+            //lmLog(coreLogGroup, "Controller [%d] triggered axis event.", LoomGameController::indexOfDevice(event.caxis.which));
+            LoomGameController::getGameController(LoomGameController::getControllerIndex(event.cbutton.which))->axisMove(event);
+        }
+        else if (event.type == SDL_CONTROLLERDEVICEADDED)
+        {
+            int addedDevice = LoomGameController::addDevice(event.cdevice.which);
+            if (addedDevice != -1)
+            {
+                stage->_GameControllerAddedDelegate.pushArgument(addedDevice);
+                stage->_GameControllerAddedDelegate.invoke();
+            }
+        }
+        else if (event.type == SDL_CONTROLLERDEVICEREMOVED)
+        {
+            int removedDevice = LoomGameController::removeDevice(event.cdevice.which);
+            if (removedDevice != -1)
+            {
+                stage->_GameControllerRemovedDelegate.pushArgument(removedDevice);
+                stage->_GameControllerRemovedDelegate.invoke();
+            }
+        }
     }
 
     /* Tick and render Loom. */
@@ -187,6 +232,17 @@ void loop()
 int
 main(int argc, char *argv[])
 {
+#ifdef MSVC_DEBUG_HEAP
+    // Get current flag
+    int tmpFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+
+    tmpFlag |= _CRTDBG_ALLOC_MEM_DF;
+    tmpFlag |= _CRTDBG_LEAK_CHECK_DF;
+
+    // Set flag to the new value.
+    _CrtSetDbgFlag(tmpFlag);
+#endif
+
 #ifdef WIN32
     // When on windows, do some workarounds so our console window
     // behaves properly.
@@ -293,13 +349,31 @@ main(int argc, char *argv[])
 
     /* Main render loop */
     gLoomExecutionDone = 0;
+
+    /* Display SDL version */
+    SDL_version compiled;
+    SDL_version linked;
+
+    SDL_VERSION(&compiled);
+    SDL_GetVersion(&linked);
+
+    lmLogDebug(coreLogGroup, "Compiled with SDL version %d.%d.%d and linking against SDL version %d.%d.%d ...", compiled.major, compiled.minor, compiled.patch, linked.major, linked.minor, linked.patch);
+
+    /* Game Controller */
+    // Enable controller events
+    SDL_GameControllerEventState(SDL_ENABLE);
+
+    //Open all connected game controllers
+    LoomGameController::openAll();
     
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(loop, 0, 1);
 #else
     while (!gLoomExecutionDone) loop();
 #endif
-    
+
+    //Close all opened game controllers before closing application
+    LoomGameController::closeAll();
     loom_appShutdown();
     
 #ifdef WIN32

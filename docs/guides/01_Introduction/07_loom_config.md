@@ -44,8 +44,7 @@ $ loom config --global globalPropertyName value
 | display.orientation  | [ portrait,          | The orientation of your app. Set to 'auto' for auto-orientation.  |
 |                      |   landscape,         |                                                                   |
 |                      |   auto ]             |                                                                   |
-| display.stats        | [ 0, 1, 2 ]          | Show stats. 0 = no stats, 1 = Report FPS to console,              |
-|                      |                      | 2 = Show Debug Overlay                                            |
+| display.stats        | [ 0, 1 ]             | Show stats. 0 = no stats, 1 = Report FPS to console,              |
 | display.title        |                      | The title of your app                                             |
 | display.width        |                      | The default width of your app                                     |
 | ios_signing_identity |                      | The target iOS Developer certificate to use when creating an iOS  |
@@ -57,6 +56,8 @@ $ loom config --global globalPropertyName value
 | sdk_version          |                      | The target SDK used to compile your app. 'latest' will point to   |
 |                      |                      | the latest stable release.                                        |
 | version              |                      | the current version number of the application                     |
+| telemetry            | [ true, false ]      | Enable or disable telemetry for the entire session. See the       |
+|                      |                      | Profiling section in the LoomScript guide for more information.   |
 | waitForAssetAgent    |                      | maximum number of milliseconds to pause execution while           |
 |                      |                      | application attempts to connect to asset agent                    |
 | waitForDebugger      |                      | number of milliseconds to wait for LoomScript debugger            |

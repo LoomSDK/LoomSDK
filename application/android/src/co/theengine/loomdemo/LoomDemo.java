@@ -73,6 +73,11 @@ public class LoomDemo extends SDLActivity {
     	return packageName;
     }
     
+    public static String getActivityWritablePath()
+    {
+    	return getContext().getApplicationInfo().dataDir;
+    }
+    
     public static int getProfile() {
         //Determine screen size
         if ((getContext().getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_LARGE) {     

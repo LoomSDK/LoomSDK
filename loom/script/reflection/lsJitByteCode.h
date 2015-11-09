@@ -36,6 +36,11 @@ class ByteCode {
 
 public:
 
+    ~ByteCode()
+    {
+        clear();
+    }
+
     const utString& getBase64()
     {
         return bc64;

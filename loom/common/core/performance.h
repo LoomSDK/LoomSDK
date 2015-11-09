@@ -32,6 +32,26 @@
 #endif // NTELEMETRY
 #endif
 
+/**
+ * Loom Performance Profiler
+ * 
+ * Loom also ships with a full featured hierarchical profiler. See the Loom docs
+ * under Guides > LoomScript > Profiling for a full discussion on how to activate and
+ * interpret the profiler. Briefly, the profiler tracks how long it takes to execute
+ * various blocks of code, how many times they are run, which blocks are run by others,
+ * and also shows the average, min, and max time spent in each block.
+ * 
+ * In terms of C++ code, three macros mark blocks. You can either explicitly mark the 
+ * beginning and end of blocks with LOOM_PROFILE_START and LOOM_PROFILE_END, or use
+ * LOOM_PROFILE_SCOPE to measure time spent in the current C++ scope starting from the
+ * point of the macro.
+ * 
+ * If LUA_GC_PROFILE_ENABLED is set to 1, then the profiler also tracks time spent in 
+ * LoomScript's garbage collector.
+ *
+ * Loom integrates with RAD Telemetry. (http://www.radgametools.com/telemetry.htm)
+ */
+
 // Wrapper around our performance tracking library, which is currently
 // RAD Game Tools' Telemetry. We highly recommend this tool, however, due
 // to licensing concerns, cannot include it in the standard distro. This
@@ -106,6 +126,8 @@ typedef int            S32;
 typedef float          F32;
 typedef double         F64;
 
+
+
 class LoomProfiler
 {
     enum
@@ -146,6 +168,8 @@ public:
 
     /// Helper function for macro definition PROFILE_END
     void hashPop(LoomProfilerRoot *expected);
+
+    void hashZeroCheck();
 };
 
 extern LoomProfiler *gLoomProfiler;
@@ -158,6 +182,8 @@ struct LoomProfilerRoot
     LoomProfilerRoot        *mNextRoot;
     F64                     mTotalTime;
     F64                     mSubTime;
+    F64                     mMaxTime;
+    F64                     mMinTime;
     U32                     mTotalInvokeCount;
     bool                    mEnabled;
 
@@ -188,6 +214,8 @@ struct LoomProfilerEntry
     U32               mStartTime[2];
     F64               mTotalTime;
     F64               mSubTime;
+    F64               mMaxTime;
+    F64               mMinTime;
 };
 
 
@@ -196,6 +224,8 @@ struct LoomProfilerEntry
     if (gLoomProfiler) gLoomProfiler->hashPush(&pdata ## name ## obj)
 
 #define LOOM_PROFILE_END(name)    if (gLoomProfiler) gLoomProfiler->hashPop(&pdata ## name ## obj)
+
+#define LOOM_PROFILE_ZERO_CHECK() if (gLoomProfiler) gLoomProfiler->hashZeroCheck();
 
 class LoomScopedProfiler {
 public:
@@ -214,7 +244,47 @@ public:
 
 #define LOOM_PROFILE_SCOPE(name)                          \
     static LoomProfilerRoot pdata ## name ## obj(# name); \
-    ScopedProfiler scopedProfiler ## name ## obj(&pdata ## name ## obj);
+    LoomScopedProfiler scopedProfiler ## name ## obj(&pdata ## name ## obj);
 };
+
+#if LUA_GC_PROFILE_ENABLED
+
+typedef void(*gLuaGC_callback)();
+typedef void*(*gLuaGC_callback_begin)();
+typedef void(*gLuaGC_callback_end)(void*);
+#define LUA_GC_SET(name) \
+    gLuaGC_callback_begin gLuaGC_ ## name ## _begin = lgc_ ## name ## _begin; \
+    gLuaGC_callback_end   gLuaGC_ ## name ## _end   = lgc_ ## name ## _end; \
+
+#define LUA_GC_PROFILE_NAME_STR(name) "luaGC_" #name
+#define LUA_GC_PROFILE_NAME(name) luaGC_ ## name
+#define LUA_GC_PROFILE_DATA_INTERNAL_CONCAT(name) pdata ## name ## obj
+#define LUA_GC_PROFILE_DATA_INTERNAL(name) LUA_GC_PROFILE_DATA_INTERNAL_CONCAT(name)
+#define LUA_GC_PROFILE_DATA(name) LUA_GC_PROFILE_DATA_INTERNAL(LUA_GC_PROFILE_NAME(name))
+
+#define LUA_GC_PROFILE(name) \
+    void* lgc_ ## name ## _begin() { \
+        static LoomProfilerRoot LUA_GC_PROFILE_DATA(name)(LUA_GC_PROFILE_NAME_STR(name)); \
+        if (gLoomProfiler) gLoomProfiler->hashPush(& LUA_GC_PROFILE_DATA(name)); \
+        return (void*)& LUA_GC_PROFILE_DATA(name); \
+    } \
+    void  lgc_ ## name ## _end(void* LUA_GC_PROFILE_DATA(name)) { \
+        if (gLoomProfiler) gLoomProfiler->hashPop((LoomProfilerRoot*) LUA_GC_PROFILE_DATA(name)); \
+    } \
+    LUA_GC_SET(name) \
+
+#else
+
+// Just make sure that macros still exist, even if disabled
+#define LUA_GC_SET(name)
+#define LUA_GC_PROFILE_NAME_STR(name)
+#define LUA_GC_PROFILE_NAME(name)
+#define LUA_GC_PROFILE_DATA_INTERNAL_CONCAT(name)
+#define LUA_GC_PROFILE_DATA_INTERNAL(name)
+#define LUA_GC_PROFILE_DATA(name)
+#define LUA_GC_PROFILE(name)
+
+#endif // LUA_GC_PROFILE_ENABLED
+
 #endif
 #endif

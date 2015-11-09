@@ -32,12 +32,12 @@ class Rectangle
 {
 public:
 
-    float x;
-    float y;
-    float width;
-    float height;
+    lmscalar x;
+    lmscalar y;
+    lmscalar width;
+    lmscalar height;
 
-    Rectangle(float _x = 0, float _y = 0, float _width = 0, float _height = 0)
+    Rectangle(lmscalar _x = 0, lmscalar _y = 0, lmscalar _width = 0, lmscalar _height = 0)
     {
         x      = _x;
         y      = _y;
@@ -45,104 +45,104 @@ public:
         height = _height;
     }
 
-    inline float getX() const
+    inline lmscalar getX() const
     {
         return x;
     }
 
-    inline void setX(float _x)
+    inline void setX(lmscalar _x)
     {
         x = _x;
     }
 
-    inline float getY() const
+    inline lmscalar getY() const
     {
         return y;
     }
 
-    inline void setY(float _y)
+    inline void setY(lmscalar _y)
     {
         y = _y;
     }
 
-    inline float getWidth() const
+    inline lmscalar getWidth() const
     {
         return width;
     }
 
-    inline void setWidth(float _width)
+    inline void setWidth(lmscalar _width)
     {
         width = _width;
     }
 
-    inline float getHeight() const
+    inline lmscalar getHeight() const
     {
         return height;
     }
 
-    inline void setHeight(float _height)
+    inline void setHeight(lmscalar _height)
     {
         height = _height;
     }
 
-    inline float getMinX() const
+    inline lmscalar getMinX() const
     {
         return x;
     }
 
-    inline float getMaxX() const
+    inline lmscalar getMaxX() const
     {
         return x + width;
     }
 
-    inline float getMinY() const
+    inline lmscalar getMinY() const
     {
         return y;
     }
 
-    inline float getMaxY() const
+    inline lmscalar getMaxY() const
     {
         return y + height;
     }
 
-    inline float getTop() const
+    inline lmscalar getTop() const
     {
         return y;
     }
 
-    inline void setTop(float top)
+    inline void setTop(lmscalar top)
     {
         height += y - top;
         y = top;
     }
 
-    inline float getBottom() const
+    inline lmscalar getBottom() const
     {
         return y + height;
     }
 
-    inline void setBottom(float bottom)
+    inline void setBottom(lmscalar bottom)
     {
         height = bottom - y;
     }
 
-    inline float getLeft() const
+    inline lmscalar getLeft() const
     {
         return x;
     }
 
-    inline void setLeft(float left)
+    inline void setLeft(lmscalar left)
     {
         width += x - left;
         x = left;
     }
 
-    inline float getRight() const
+    inline lmscalar getRight() const
     {
         return x + width;
     }
 
-    inline void setRight(float right)
+    inline void setRight(lmscalar right)
     {
         width = right - x;
     }
@@ -155,15 +155,15 @@ public:
         lua_rawgeti(L, 2, (int)Point::xOrdinal);
         lua_rawgeti(L, 2, (int)Point::yOrdinal);
 
-        float px = (float)lua_tonumber(L, -2);
-        float py = (float)lua_tonumber(L, -1);
+        lmscalar px = (lmscalar)lua_tonumber(L, -2);
+        lmscalar py = (lmscalar)lua_tonumber(L, -1);
 
         lua_pop(L, 2);
 
-        float minX = x;
-        float maxX = x + width;
-        float minY = y;
-        float maxY = y + height;
+        lmscalar minX = x;
+        lmscalar maxX = x + width;
+        lmscalar minY = y;
+        lmscalar maxY = y + height;
 
         if (px < minX) { minX = px; }
         if (px > maxX) { maxX = px; }
@@ -186,8 +186,8 @@ public:
         lua_rawgeti(L, 2, (int)Point::xOrdinal);
         lua_rawgeti(L, 2, (int)Point::yOrdinal);
 
-        float px = (float)lua_tonumber(L, -2);
-        float py = (float)lua_tonumber(L, -1);
+        lmscalar px = (lmscalar)lua_tonumber(L, -2);
+        lmscalar py = (lmscalar)lua_tonumber(L, -1);
 
         bool result = true;
         if ((px > (x + width)) || (px < x)) { result = false; }
@@ -215,8 +215,8 @@ public:
      */
     int contains(lua_State *L)
     {
-        float px = (float)lua_tonumber(L, 2);
-        float py = (float)lua_tonumber(L, 3);
+        lmscalar px = (lmscalar)lua_tonumber(L, 2);
+        lmscalar py = (lmscalar)lua_tonumber(L, 3);
 
         bool result = true;
 
@@ -228,18 +228,18 @@ public:
         return 1;
     }
 
-    void clip(float cx, float cy, float cwidth, float cheight)
+    void clip(lmscalar cx, lmscalar cy, lmscalar cwidth, lmscalar cheight)
     {
-        width  = fmaxf(0.f, fminf(cwidth,  fminf(width,  fminf(x + width  - cx, cx + cwidth  - x))));
-        height = fmaxf(0.f, fminf(cheight, fminf(height, fminf(y + height - cy, cy + cheight - y))));
-        x = fmaxf(x, cx);
-        y = fmaxf(y, cy);
+        width  = lmClamp(lmMin(width,  lmMin(x + width  - cx, cx + cwidth  - x)), 0, cwidth);
+        height = lmClamp(lmMin(height, lmMin(y + height - cy, cy + cheight - y)), 0, cheight);
+        x = lmMax(x, cx);
+        y = lmMax(y, cy);
     }
 
     /**
      * Assign the x,y,width,height of this rectangle.
      */
-    void setTo(float _x, float _y, float _width, float _height)
+    void setTo(lmscalar _x, lmscalar _y, lmscalar _width, lmscalar _height)
     {
         x      = _x;
         y      = _y;
@@ -252,7 +252,7 @@ public:
         static char toStringBuffer[256];
 
         snprintf(toStringBuffer, 255, "x= %.2f, y= %.2f, width= %.2f, height= %.2f",
-                 (float)x, (float)y, (float)width, (float)height);
+                 (lmscalar)x, (lmscalar)y, (lmscalar)width, (lmscalar)height);
 
         return toStringBuffer;
     }
@@ -262,7 +262,7 @@ public:
      */
     Rectangle *clone()
     {
-        Rectangle *copy = new Rectangle();
+        Rectangle *copy = lmNew(NULL) Rectangle();
 
         copy->x      = x;
         copy->y      = y;

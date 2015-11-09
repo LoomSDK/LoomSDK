@@ -9,6 +9,8 @@ package loom.modestmaps.events
     import loom2d.events.Event;
     import loom2d.display.DisplayObject;
     
+    public delegate MarkerClick(marker:DisplayObject, location:Location):Void;
+    
     public class MarkerEvent extends Event
     {
         // these are prefixed marker to avoid conflicts with MouseEvent

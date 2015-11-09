@@ -88,7 +88,7 @@ static void decodeblock(unsigned char in[4], unsigned char out[3])
 
 ByteCode *ByteCode::decode64(const utString& code64)
 {
-    ByteCode *byteCode = new ByteCode();
+    ByteCode *byteCode = lmNew(NULL) ByteCode();
 
     byteCode->bc64 = code64;
 
@@ -142,7 +142,7 @@ ByteCode *ByteCode::decode64(const utString& code64)
 
 ByteCode *ByteCode::encode64(const utArray<unsigned char>& bc)
 {
-    ByteCode *byteCode = new ByteCode();
+    ByteCode *byteCode = lmNew(NULL) ByteCode();
 
     byteCode->bc = bc;
 
@@ -183,6 +183,7 @@ ByteCode *ByteCode::encode64(const utArray<unsigned char>& bc)
     buffer.push_back('\0');
 
     byteCode->bc64 = buffer.ptr();
+
 
 
     /*

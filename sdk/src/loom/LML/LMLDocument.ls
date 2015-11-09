@@ -65,6 +65,7 @@ class LMLDocument
             // reapply to the target
             var rootType = _root.type.getFullName();
             var targetType = (target as Object).getType().getFullName();
+            _root.apply(target as Object);
 
             // apply the lml nodes to the target
             for(var i = 0; i<_root.children.length; i++)

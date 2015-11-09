@@ -36,86 +36,86 @@ private:
 
 public:
 
-    float a;
-    float b;
-    float c;
-    float d;
+    lmscalar a;
+    lmscalar b;
+    lmscalar c;
+    lmscalar d;
 
-    float tx;
-    float ty;
+    lmscalar tx;
+    lmscalar ty;
 
-    Matrix(float _a = 1.0f, float _b = 0.0f, float _c = 0.0f, float _d = 1.0f, float _tx = 0.0f, float _ty = 0.0f)
+    Matrix(lmscalar _a = 1.0, lmscalar _b = 0.0, lmscalar _c = 0.0, lmscalar _d = 1.0, lmscalar _tx = 0.0, lmscalar _ty = 0.0)
     {
         //printf("New Matrix: %f %f %f %f %f %f\n", _a, _b, _c, _d, _tx, _ty);
         setTo(_a, _b, _c, _d, _tx, _ty);
     }
 
-    inline float get_a() const
-    {
+    inline lmscalar get_a() const
+    { 
         return a;
     }
 
-    inline void set_a(float _a)
+    inline void set_a(lmscalar _a)
     {
         a = _a;
     }
 
-    inline float get_b() const
+    inline lmscalar get_b() const
     {
         return b;
     }
 
-    inline void set_b(float _b)
+    inline void set_b(lmscalar _b)
     {
         b = _b;
     }
 
-    inline float get_c() const
+    inline lmscalar get_c() const
     {
         return c;
     }
 
-    inline void set_c(float _c)
+    inline void set_c(lmscalar _c)
     {
         c = _c;
     }
 
-    inline float get_d() const
+    inline lmscalar get_d() const
     {
         return d;
     }
 
-    inline void set_d(float _d)
+    inline void set_d(lmscalar _d)
     {
         d = _d;
     }
 
-    inline float get_tx() const
+    inline lmscalar get_tx() const
     {
         return tx;
     }
 
-    inline void set_tx(float _tx)
+    inline void set_tx(lmscalar _tx)
     {
         tx = _tx;
     }
 
-    inline float get_ty() const
+    inline lmscalar get_ty() const
     {
         return ty;
     }
 
-    inline void set_ty(float _ty)
+    inline void set_ty(lmscalar _ty)
     {
         ty = _ty;
     }
 
-    inline float determinant()
+    inline lmscalar determinant()
     {
         return a * d - b * c;
     }
 
-    inline void setTo(float _a, float _b, float _c, float _d, float _tx, float _ty)
+    inline void setTo(lmscalar _a, lmscalar _b, lmscalar _c, lmscalar _d, lmscalar _tx, lmscalar _ty)
     {
         a  = _a;
         b  = _b;
@@ -127,12 +127,12 @@ public:
 
     inline void concat(const Matrix *m)
     {
-        float ta  = a;
-        float tb  = b;
-        float tc  = c;
-        float td  = d;
-        float ttx = tx;
-        float tty = ty;
+        lmscalar ta  = a;
+        lmscalar tb  = b;
+        lmscalar tc  = c;
+        lmscalar td  = d;
+        lmscalar ttx = tx;
+        lmscalar tty = ty;
 
         a  = m->a * ta + m->c * tb;
         b  = m->b * ta + m->d * tb;
@@ -142,12 +142,12 @@ public:
         ty = m->b * ttx + m->d * tty + m->ty;
     }
 
-    inline void skew(float xSkew, float ySkew)
+    inline void skew(lmscalar xSkew, lmscalar ySkew)
     {
-        float sinX = sin(xSkew);
-        float cosX = cos(xSkew);
-        float sinY = sin(ySkew);
-        float cosY = cos(ySkew);
+        lmscalar sinX = sin(xSkew);
+        lmscalar cosX = cos(xSkew);
+        lmscalar sinY = sin(ySkew);
+        lmscalar cosY = cos(ySkew);
 
         setTo(a * cosY - b * sinX,
               a * sinY + b * cosX,
@@ -157,22 +157,22 @@ public:
               tx * sinY + ty * cosX);
     }
 
-    inline void rotate(float angle)
+    inline void rotate(lmscalar angle)
     {
         if (angle == 0.0f)
         {
             return;
         }
 
-        float _cos = cos(angle);
-        float _sin = sin(angle);
+        lmscalar _cos = cos(angle);
+        lmscalar _sin = sin(angle);
 
-        float ta  = a;
-        float tb  = b;
-        float tc  = c;
-        float td  = d;
-        float ttx = tx;
-        float tty = ty;
+        lmscalar ta  = a;
+        lmscalar tb  = b;
+        lmscalar tc  = c;
+        lmscalar td  = d;
+        lmscalar ttx = tx;
+        lmscalar tty = ty;
 
         a  = ta * _cos - tb * _sin;
         b  = ta * _sin + tb * _cos;
@@ -182,13 +182,13 @@ public:
         ty = ttx * _sin + tty * _cos;
     }
 
-    inline void translate(float dx, float dy)
+    inline void translate(lmscalar dx, lmscalar dy)
     {
         tx += dx;
         ty += dy;
     }
 
-    inline void scale(float sx, float sy)
+    inline void scale(lmscalar sx, lmscalar sy)
     {
         if (sx != 1.0f)
         {
@@ -222,16 +222,21 @@ public:
 
     inline void invert()
     {
-        float a  = this->a;
-        float b  = this->b;
-        float c  = this->c;
-        float d  = this->d;
-        float tx = this->tx;
-        float ty = this->ty;
+        invertOther(this);
+    }
+
+    inline void invertOther(const Matrix *other)
+    {
+        lmscalar a  = other->a;
+        lmscalar b  = other->b;
+        lmscalar c  = other->c;
+        lmscalar d  = other->d;
+        lmscalar tx = other->tx;
+        lmscalar ty = other->ty;
 
         // Cremer's rule: inverse = adjugate / determinant
         // A-1 = adj(A) / det(A)
-        float det = a * d - c * b;
+        lmscalar invDet = 1.0f / (a * d - c * b);
 
         //     [a11 a12 a13]
         // A = [a21 a22 a23]
@@ -249,10 +254,10 @@ public:
         //          [ d -c  c*ty-tx*d]
         //        = [-b  a  tx*b-a*ty]
         //          [ 0  0  a*d -c*b ]
-        this->a = d / det;
-        this->b = -b / det;
-        this->c = -c / det;
-        this->d = a / det;
+        this->a = d * invDet;
+        this->b = -b * invDet;
+        this->c = -c * invDet;
+        this->d = a * invDet;
 
         // Dart version:
         this->tx = -(this->a * tx + this->c * ty);
@@ -261,8 +266,8 @@ public:
 
     int transformCoord(lua_State *L)
     {
-        float x = (float)lua_tonumber(L, 2);
-        float y = (float)lua_tonumber(L, 3);
+        lmscalar x = (lmscalar)lua_tonumber(L, 2);
+        lmscalar y = (lmscalar)lua_tonumber(L, 3);
 
         // get the helper point
         lua_pushnumber(L, sHelperPointOrdinal);
@@ -276,7 +281,7 @@ public:
         return 1;
     }
 
-    void transformCoordInternal(float x, float y, float *rx, float *ry)
+    void transformCoordInternal(lmscalar x, lmscalar y, lmscalar *rx, lmscalar *ry)
     {
         *rx = a*x + c*y + tx;
         *ry = b*x + d*y + ty;
@@ -284,8 +289,8 @@ public:
 
     int deltaTransformCoord(lua_State *L)
     {
-        float x = (float)lua_tonumber(L, 2);
-        float y = (float)lua_tonumber(L, 3);
+        lmscalar x = (lmscalar)lua_tonumber(L, 2);
+        lmscalar y = (lmscalar)lua_tonumber(L, 3);
 
         // get the helper point
         lua_pushnumber(L, sHelperPointOrdinal);
@@ -309,15 +314,26 @@ public:
         ty = other->ty;
     }
 
+    // Expects input to be a 4x4 matrix - that is a float[4][4] array or float[16] array.
+    inline void copyFromMatrix4(const float *other)
+    {
+        a = other[0];
+        b = other[1];
+        c = other[4];
+        d = other[5];
+        tx = other[12];
+        ty = other[13];
+    }
+
     // fast marshaling version
     int setTo(lua_State *L)
     {
-        a  = (float)lua_tonumber(L, 2);
-        b  = (float)lua_tonumber(L, 3);
-        c  = (float)lua_tonumber(L, 4);
-        d  = (float)lua_tonumber(L, 5);
-        tx = (float)lua_tonumber(L, 6);
-        ty = (float)lua_tonumber(L, 7);
+        a  = (lmscalar)lua_tonumber(L, 2);
+        b  = (lmscalar)lua_tonumber(L, 3);
+        c  = (lmscalar)lua_tonumber(L, 4);
+        d  = (lmscalar)lua_tonumber(L, 5);
+        tx = (lmscalar)lua_tonumber(L, 6);
+        ty = (lmscalar)lua_tonumber(L, 7);
         return 0;
     }
 
@@ -336,7 +352,8 @@ public:
         return 0;
 	}
 
-	void copyToMatrix3(float* values)
+    // Expects output to be a 4x4 matrix - that is a lmscalar[3][3] array or float[9] array.
+	void copyToMatrix3(lmscalar* values) const
 	{
 		values[0] = a;
 		values[1] = b;
@@ -349,32 +366,68 @@ public:
 		values[8] = 1;
 	}
 
-	void copyToMatrix4(float* values)
-	{
-		values[0] = a;
-		values[1] = b;
-		values[2] = 0;
-		values[3] = 0;
-		values[4] = c;
-		values[5] = d;
-		values[6] = 0;
-		values[7] = 0;
-		values[8] = 0;
-		values[9] = 0;
-		values[10] = 0;
-		values[11] = 0;
-		values[12] = tx;
-		values[13] = ty;
-		values[14] = 0;
-		values[15] = 1;
-	}
+    // Expects output to be a 4x4 matrix - that is a float[3][3] array or float[9] array.
+    void copyToMatrix3f(float* values) const
+    {
+        values[0] = (float)a;
+        values[1] = (float)b;
+        values[2] = 0;
+        values[3] = (float)c;
+        values[4] = (float)d;
+        values[5] = 0;
+        values[6] = (float)tx;
+        values[7] = (float)ty;
+        values[8] = 1;
+    }
+
+    // Expects output to be a 4x4 matrix - that is a lmscalar[4][4] array or lmscalar[16] array.
+    void copyToMatrix4(lmscalar* values) const
+    {
+        values[0] = a;
+        values[1] = b;
+        values[2] = 0;
+        values[3] = 0;
+        values[4] = c;
+        values[5] = d;
+        values[6] = 0;
+        values[7] = 0;
+        values[8] = 0;
+        values[9] = 0;
+        values[10] = 0;
+        values[11] = 0;
+        values[12] = tx;
+        values[13] = ty;
+        values[14] = 0;
+        values[15] = 1;
+    }
+
+    // Expects output to be a 4x4 matrix - that is a float[4][4] array or float[16] array.
+    void copyToMatrix4f(float* values) const
+    {
+        values[0] = (float) a;
+        values[1] = (float) b;
+        values[2] = 0;
+        values[3] = 0;
+        values[4] = (float) c;
+        values[5] = (float) d;
+        values[6] = 0;
+        values[7] = 0;
+        values[8] = 0;
+        values[9] = 0;
+        values[10] = 0;
+        values[11] = 0;
+        values[12] = (float) tx;
+        values[13] = (float) ty;
+        values[14] = 0;
+        values[15] = 1;
+    }
 
     const char *toString()
     {
         static char toStringBuffer[256];
 
         snprintf(toStringBuffer, 255, "a= %.2f, b= %.2f, c= %.2f, d= %.2f, tx= %.2f, ty= %.2f",
-                 (float)a, (float)b, (float)c, (float)d, (float)tx, (float)ty);
+                 (lmscalar)a, (lmscalar)b, (lmscalar)c, (lmscalar)d, (lmscalar)tx, (lmscalar)ty);
 
         return toStringBuffer;
     }

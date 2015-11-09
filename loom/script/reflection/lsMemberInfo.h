@@ -26,6 +26,7 @@
 #include "loom/common/core/assert.h"
 #include "loom/common/utils/utString.h"
 #include "loom/common/utils/utTypes.h"
+#include "loom/common/core/allocator.h"
 
 namespace LS {
 class Object;
@@ -139,11 +140,40 @@ class TemplateInfo {
 public:
     TemplateInfo() : type(NULL)
     {
+        refs = 0;
+    }
+
+    ~TemplateInfo()
+    {
+        lmAssert(refs == 0, "Destructing a template info with %d remaining references", refs);
+    }
+
+    void addReference()
+    {
+        refs++;
+        for (UTsize i = 0; i < types.size(); i++)
+        {
+            types.at(i)->addReference();
+        }
+    }
+    
+    void removeReference()
+    {
+        refs--;
+        for (UTsize i = 0; i < types.size(); i++)
+        {
+            types.at(i)->removeReference();
+        }
+        lmAssert(refs >= 0, "Template info was removed more times than it should've been, refs < 0");
+        if (refs == 0) lmDelete(NULL, this);
     }
 
     Type                    *type;
     utString                fullTypeName;
     utArray<TemplateInfo *> types;
+
+    // Reference counter for TemplateInfo
+    int refs;
 
     // if we have types, we're a templated type
     bool isTemplate()
@@ -238,7 +268,7 @@ protected:
 
     Type *type;
 
-    TemplateInfo templateInfo;
+    TemplateInfo *templateInfo;
 
     utHashTable<utHashedString, utList<MetaInfo *> *> metaInfo;
 
@@ -255,22 +285,23 @@ protected:
 public:
 
     MemberInfo() :
-        declaringType(NULL), reflectedType(NULL), type(NULL), ordinal(0), lineNumber(0)
+        declaringType(NULL), reflectedType(NULL), type(NULL), ordinal(0), lineNumber(0), templateInfo(NULL)
     {
     }
 
     virtual ~MemberInfo()
     {
+        if (templateInfo) templateInfo->removeReference();
         for (UTsize i = 0; i < metaInfo.size(); i++)
         {
             utList<MetaInfo *> *metaInfoList = metaInfo.at(i);
 
             for (UTsize j = 0; j < metaInfoList->size(); j++)
             {
-                delete metaInfoList->at(j);
+                lmDelete(NULL, metaInfoList->at(j));
             }
 
-            delete metaInfoList;
+            lmDelete(NULL, metaInfoList);
         }
     }
 
@@ -356,18 +387,19 @@ public:
 
     Type *getTemplateType()
     {
-        return templateInfo.type;
+        return templateInfo ? templateInfo->type : NULL;
     }
 
     TemplateInfo *getTemplateInfo()
     {
-        return &templateInfo;
+        return templateInfo;
     }
 
     void setTemplateInfo(TemplateInfo *_templateInfo)
     {
-        templateInfo.type  = _templateInfo->type;
-        templateInfo.types = _templateInfo->types;
+        if (templateInfo) templateInfo->removeReference();
+        templateInfo = _templateInfo;
+        if (templateInfo) templateInfo->addReference();
     }
 
     // get the first meta info with this name
@@ -408,8 +440,8 @@ public:
         }
         else
         {
-            utList<MetaInfo *> *metaList = new utList<MetaInfo *>;
-            mi       = new MetaInfo;
+            utList<MetaInfo *> *metaList = lmNew(NULL) utList<MetaInfo *>;
+            mi       = lmNew(NULL) MetaInfo;
             mi->name = name;
             metaList->push_back(mi);
             metaInfo.insert(name, metaList);
@@ -430,7 +462,7 @@ public:
 
         if (idx == UT_NPOS)
         {
-            metaList = new utList<MetaInfo *>;
+            metaList = lmNew(NULL) utList<MetaInfo *>;
             metaInfo.insert(name, metaList);
         }
         else
@@ -438,7 +470,7 @@ public:
             metaList = metaInfo.at(idx);
         }
 
-        MetaInfo *mi = new MetaInfo;
+        MetaInfo *mi = lmNew(NULL) MetaInfo;
 
         mi->name = name;
 
@@ -482,5 +514,6 @@ public:
         return fullMemberName.c_str();
     }
 };
+
 }
 #endif

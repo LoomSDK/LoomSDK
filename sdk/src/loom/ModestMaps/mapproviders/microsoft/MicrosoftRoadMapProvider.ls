@@ -6,7 +6,7 @@ package loom.modestmaps.mapproviders.microsoft
      */
     public class MicrosoftRoadMapProvider extends MicrosoftProvider
     {
-        public function MicrosoftRoadMapProvider(hillShading:Boolean, minZoom:int, maxZoom:int)
+        public function MicrosoftRoadMapProvider(hillShading:Boolean, minZoom:int = MIN_ZOOM, maxZoom:int = MAX_ZOOM)
         {
             super(ROAD, hillShading, minZoom, maxZoom);
         }

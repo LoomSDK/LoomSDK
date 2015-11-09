@@ -80,10 +80,14 @@ package loom2d.display
     [Native(managed)]
     public native class DisplayObject extends EventDispatcher implements ILMLNode
     {
+        static protected var _globalStageGeneration = 0;
+        
 		protected var _ignoreHitTestAlpha:Boolean;
         protected var _styleSheet:StyleSheet;
         protected var _styleName:String;
         protected var _styleApplicator:IStyleApplicator;
+        protected var _cachedStage:Stage = null;
+        protected var _cachedStageGeneration = -1;
 
         protected function get styleApplicator():IStyleApplicator
         {
@@ -144,6 +148,10 @@ package loom2d.display
         public native function set blendMode(value:BlendMode);
         public native function get blendMode():BlendMode;
 
+        /** Enables or disables blending. If set to false, there will be no blending and there may be performance gains. */
+        public native function set blendEnabled(value:Boolean);
+        public native function get blendEnabled():Boolean;
+
         /** The visibility of the object, An invisible object will be untouchable. */
         public native function set visible(value:Boolean);
         public native function get visible():Boolean;
@@ -151,14 +159,28 @@ package loom2d.display
         /** Indicates if this object (and its children) will receive touch events. */
         public native function set touchable(value:Boolean);
         public native function get touchable():Boolean;
+        
+        /**
+         * If true, the untransformed contents get cached into a texture at render time.
+         * The contents remain static until you turn off caching or use `invalidateBitmapCache`
+         * to update the cache manually.
+         */
+        public native function set cacheAsBitmap(value:Boolean);
+        public native function get cacheAsBitmap():Boolean;
+        
+        /**
+         * Update the cached texture before the next render.
+         * This function has no effect if `cacheAsBitmap` is turned off.
+         */
+        public native function invalidateBitmapCache();
 
         /** The name of the display object (default: null). Used by 'getChildByName()' of
          *  display object containers. */
         public native function set name(value:String);
         public native function get name():String;
-		
-		/** This can be used if you wish to have a DisplayObject with zero alpha still respond to hit tests */
-		public function set ignoreHitTestAlpha(value:Boolean) { _ignoreHitTestAlpha = value; }
+        
+        /** This can be used if you wish to have a DisplayObject with zero alpha still respond to hit tests */
+        public function set ignoreHitTestAlpha(value:Boolean) { _ignoreHitTestAlpha = value; }
         public function get ignoreHitTestAlpha():Boolean { return _ignoreHitTestAlpha; };
 
         // cached parent so that we don't marshal a managed instance every property access
@@ -180,7 +202,8 @@ package loom2d.display
             parentCached = value;
         }
 
-        /** If depth sorting is enabled on parent, this will be used to establish draw order. */
+        /** If depthSort is enabled on parent, this will be used to establish draw order. 
+            Higher values are drawn closer. Matching values have undefined order. */
         public native function set depth(value:float);
         public native function get depth():float;
 
@@ -317,6 +340,8 @@ package loom2d.display
             while (ancestor != this && ancestor != null)
                 ancestor = ancestor.parent;
 
+            _globalStageGeneration++;
+            
             Debug.assert(ancestor != this, "An object cannot be added as a child to itself or one " +
                                         "of its children (or children's children, etc.)");
 
@@ -431,7 +456,18 @@ package loom2d.display
 
         /** The stage the display object is connected to, or null if it is not connected
          *  to the stage. */
-        public function get stage():Stage { return this.base as Stage; }
+        public function get stage():Stage
+        {
+            if (_cachedStageGeneration != _globalStageGeneration) {
+                var p = this;
+                while (p.parentCached && !p._cachedStage) {
+                    p = p.parentCached;
+                }
+                _cachedStage = p.parentCached ? p._cachedStage : p as Stage;
+                _cachedStageGeneration = _globalStageGeneration;
+            }
+            return _cachedStage;
+        }
 
         /**
          * Handle LML node initialization.
@@ -461,7 +497,18 @@ package loom2d.display
 
         public function set styleName(value:String):void
         {
-            _styleName = value;
+            var names:Vector.<String> = value.split(" ");
+            _styleName = "";
+            for (var i = 0; i < names.length; i++)
+            {
+                var name = names[i];
+                if (name && name.length > 0)
+                {
+                    if (_styleName.length > 0)
+                        _styleName += " ";
+                    _styleName += "#" + name;
+                }
+            }
             if(_styleSheet)
                 applyStyle(_styleSheet);
         }
@@ -477,7 +524,7 @@ package loom2d.display
             var styleString = this.getType().getFullName();
 
             if(_styleName)
-                styleString += " #" + _styleName;
+                styleString += " " + _styleName;
 
             if(name)
                 styleString += " ." + name;

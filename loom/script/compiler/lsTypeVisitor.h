@@ -854,7 +854,7 @@ public:
                     }
                 }
 
-                if (tinfo->isTemplate())
+                if (tinfo && tinfo->isTemplate())
                 {
                     // we have a template type, so get the info
 

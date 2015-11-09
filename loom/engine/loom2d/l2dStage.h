@@ -21,6 +21,7 @@
 #pragma once
 
 #include "loom/engine/loom2d/l2dDisplayObjectContainer.h"
+#include "loom/graphics/gfxVectorRenderer.h"
 #include <SDL.h>
 
 namespace Loom2D
@@ -105,6 +106,36 @@ public:
         }
     }
 
+    inline int getVectorQuality() const
+    {
+        return GFX::VectorRenderer::quality;
+    }
+    inline void setVectorQuality(int vectorQuality)
+    {
+        if (vectorQuality != GFX::VectorRenderer::quality)
+        {
+            int prevQuality = GFX::VectorRenderer::quality;
+            GFX::VectorRenderer::quality = vectorQuality;
+            GFX::VectorRenderer::reset();
+            // If a stencil buffer is required, update textures so they can be converted
+            if (!(prevQuality & GFX::VectorRenderer::QUALITY_STENCIL_STROKES) && (vectorQuality & GFX::VectorRenderer::QUALITY_STENCIL_STROKES)) {
+                GFX::Texture::validate();
+            }
+        }
+    }
+
+    inline void setTessellationQuality(int value)
+    {
+        if (value < 1 || value > 10)
+            return;
+
+        GFX::VectorRenderer::tessellationQuality = value;
+    }
+    inline int getTessellationQuality() const
+    {
+        return GFX::VectorRenderer::tessellationQuality;
+    }
+
     int getWidth()
     {
         return stageWidth;
@@ -138,5 +169,7 @@ public:
     LOOM_DELEGATE(BackKey);
     LOOM_DELEGATE(ScrollWheelYMoved);
     LOOM_DELEGATE(Accelerate);
+    LOOM_DELEGATE(GameControllerAdded);
+    LOOM_DELEGATE(GameControllerRemoved);
 };
 }

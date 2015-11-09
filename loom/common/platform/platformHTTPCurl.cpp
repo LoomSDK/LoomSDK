@@ -30,9 +30,12 @@
 
 #include "curl/curl.h"
 #include "loom/common/core/allocator.h"
+#include "loom/common/core/assert.h"
+#include "loom/common/core/log.h"
 #include "loom/common/platform/platformFile.h"
 #include "loom/common/utils/utBase64.h"
 
+lmDefineLogGroup(gHTTPCurlLogGroup, "HTTPRequest", 1, LoomLogInfo);
 
 static CURLM *gMultiHandle;
 static CURL *curlHandles[MAX_CONCURRENT_HTTP_REQUESTS];
@@ -68,17 +71,16 @@ typedef struct
     utString          cacheFile;
     void              *body;
     int               bodyLength;
+    size_t            position;
     utString          url;
     utString          method;
-
-    bool              base64;
 } loom_HTTPUserData;
 
 static void loom_HTTPCleanupUserData(loom_HTTPUserData *data)
 {
-    lmFree(NULL, data->chunk->memory);
+    lmSafeFree(NULL, data->chunk->memory);
     curl_slist_free_all(data->headers);
-    lmDelete(NULL, data->chunk);
+    lmSafeDelete(NULL, data->chunk);
     lmDelete(NULL, data);
 }
 
@@ -109,6 +111,21 @@ static size_t write_data(void *buffer, size_t size, size_t nmemb, void *userp)
     return actualSize;
 }
 
+/**
+* Read data being uploaded with curl
+*/
+static size_t read_data(char* buffer, size_t size, size_t nmemb, void *userp)
+{
+    size_t chunkSize = size*nmemb;
+    loom_HTTPUserData *userData = (loom_HTTPUserData*)userp;
+    size_t left = userData->bodyLength - userData->position;
+    if (left <= 0) return 0;
+    if (chunkSize > left) chunkSize = left;
+    memcpy(buffer, ((char*)userData->body) + userData->position, chunkSize);
+    userData->position += chunkSize;
+    return chunkSize;
+}
+
 // Memory management overrides for CURL.
 static void *malloc_callback(size_t size)
 {
@@ -130,7 +147,7 @@ static char *strdup_callback(const char *str)
    if (!str)
       return NULL;
 
-   char *s = (char *)lmAlloc(NULL, strlen(str));
+   char *s = (char *)lmAlloc(NULL, strlen(str) + 1);
    strcpy(s, str);
    return s;
 }
@@ -165,7 +182,8 @@ void platform_HTTPUpdate()
 {
     assert(gHTTPInitialized);
 
-    curl_multi_perform(gMultiHandle, &gHandleCount);
+    CURLMcode ret = curl_multi_perform(gMultiHandle, &gHandleCount);
+
 
     // loop over all of our infos and cleanup handles that are done
     int     messageCount = 0;
@@ -194,21 +212,9 @@ void platform_HTTPUpdate()
                     platform_writeFile(userData->cacheFile.c_str(), userData->chunk->memory, userData->chunk->size);
                 }
 
-                // Do we need to base64?
-                const char *result = NULL;
-                if (userData->base64)
-                {
-                    utArray<unsigned char> data;
-                    data.resize(userData->chunk->size);
-                    memcpy(data.ptr(), userData->chunk->memory, userData->chunk->size);
-
-                    utBase64 result64 = utBase64::encode64(data);
-                    result = strdup_callback(result64.getBase64().c_str());
-                }
-                else
-                {
-                    result = userData->chunk->memory;
-                }
+                utByteArray *result = lmNew(NULL) utByteArray();
+                // TODO: Don't copy?
+                result->allocateAndCopy(userData->chunk->memory, userData->chunk->size);
 
                 // notify the callback if we are successful
                 if (http_code < 400)
@@ -216,13 +222,14 @@ void platform_HTTPUpdate()
                 else
                     userData->callback(userData->payload, LOOM_HTTP_ERROR, result);
 
-                if(userData->base64)
-                   lmFree(NULL, (void*)result);
+                lmDelete(NULL, result);
             }
             else
             {
                 // send a failure to the callback
-                userData->callback(userData->payload, LOOM_HTTP_ERROR, curl_easy_strerror(message->data.result));
+                utByteArray *result = lmNew(NULL) utByteArray();
+                result->writeString(curl_easy_strerror(message->data.result));
+                userData->callback(userData->payload, LOOM_HTTP_ERROR, result);
             }
 
             // clean up any userdata.
@@ -244,7 +251,7 @@ bool platform_HTTPIsConnected()
 
 int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback callback, void *payload,
                        const char *body, int bodyLength, utHashTable<utHashedString, utString>& headers,
-                       const char *responseCacheFile, bool base64EncodeResponseData, bool followRedirects)
+                       const char *responseCacheFile, bool followRedirects)
 {
     assert(gHTTPInitialized);
 
@@ -273,7 +280,6 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
     userData->method     = method ? method : "";
     userData->callback   = callback;
     userData->payload    = payload;
-    userData->base64     = base64EncodeResponseData;
 
     // iterate over the utHashTable and register our headers
     utHashTableIterator<utHashTable<utHashedString, utString> > headersIterator(headers);
@@ -321,9 +327,19 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
         curl_easy_setopt(curlHandle, CURLOPT_POSTFIELDSIZE, userData->bodyLength);
         curl_easy_setopt(curlHandle, CURLOPT_COPYPOSTFIELDS, (const char *)userData->body);
     }
+    else if (strcmp(method, "PUT") == 0)
+    {
+        userData->position = 0;
+        curl_easy_setopt(curlHandle, CURLOPT_READFUNCTION, read_data);
+        curl_easy_setopt(curlHandle, CURLOPT_READDATA, userData);
+        curl_easy_setopt(curlHandle, CURLOPT_UPLOAD, 1);
+        curl_easy_setopt(curlHandle, CURLOPT_INFILESIZE, userData->bodyLength);
+    }
     else // call error
     {
-        callback(payload, LOOM_HTTP_ERROR, "Error: Unknown HTTP Method.");
+        utByteArray *result = lmNew(NULL) utByteArray();
+        result->writeString("Error: Unknown HTTP Method.");
+        callback(payload, LOOM_HTTP_ERROR, result);
         return -1;
     }
 
@@ -343,6 +359,7 @@ void platform_HTTPComplete(int index)
 {
     if(index != -1)
     {
+        lmAssert(index >= 0 && index < MAX_CONCURRENT_HTTP_REQUESTS, "Index out of bounds: %d", index);
         curl_multi_remove_handle(gMultiHandle, curlHandles[index]);
         curl_easy_cleanup(curlHandles[index]);
         curlHandles[index] = NULL;

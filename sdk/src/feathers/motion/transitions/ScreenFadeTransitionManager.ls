@@ -29,7 +29,7 @@ package feathers.motion.transitions
         {
             if(!navigator)
             {
-                throw new ArgumentError("ScreenNavigator cannot be null.");
+                Debug.assert("ScreenNavigator cannot be null.");
             }
             this.navigator = navigator;
             this.navigator.transition = this.onTransition;
@@ -86,7 +86,7 @@ package feathers.motion.transitions
         {
             if(!oldScreen && !newScreen)
             {
-                throw new ArgumentError("Cannot transition if both old screen and new screen are null.");
+                Debug.assert("Cannot transition if both old screen and new screen are null.");
             }
 
             if(this._activeTransition)

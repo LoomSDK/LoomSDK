@@ -1128,7 +1128,7 @@ struct Constructor<T, None>
 {
     static T *call(TypeListValues<None> const&)
     {
-        return new T;
+        return lmNew(NULL) T;
     }
 
     static T *call(void *mem, TypeListValues<None> const&)
@@ -1142,7 +1142,7 @@ struct Constructor<T, TypeList<P1> >
 {
     static T *call(const TypeListValues<TypeList<P1> >& tvl)
     {
-        return new T(tvl.hd);
+        return lmNew(NULL) T(tvl.hd);
     }
 
     static T *call(void *mem, const TypeListValues<TypeList<P1> >& tvl)
@@ -1156,7 +1156,7 @@ struct Constructor<T, TypeList<P1, TypeList<P2> > >
 {
     static T *call(const TypeListValues<TypeList<P1, TypeList<P2> > >& tvl)
     {
-        return new T(tvl.hd, tvl.tl.hd);
+        return lmNew(NULL) T(tvl.hd, tvl.tl.hd);
     }
 
     static T *call(void *mem, const TypeListValues<TypeList<P1, TypeList<P2> > >& tvl)
@@ -1171,7 +1171,7 @@ struct Constructor<T, TypeList<P1, TypeList<P2, TypeList<P3> > > >
     static T *call(const TypeListValues<TypeList<P1, TypeList<P2,
                                                               TypeList<P3> > > >& tvl)
     {
-        return new T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd);
+        return lmNew(NULL) T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd);
     }
 
     static T *call(void *mem, const TypeListValues<TypeList<P1, TypeList<P2,
@@ -1188,7 +1188,7 @@ struct Constructor<T, TypeList<P1, TypeList<P2, TypeList<P3,
     static T *call(const TypeListValues<TypeList<P1, TypeList<P2,
                                                               TypeList<P3, TypeList<P4> > > > >& tvl)
     {
-        return new T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd);
+        return lmNew(NULL) T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd);
     }
 
     static T *call(void *mem, const TypeListValues<TypeList<P1, TypeList<P2,
@@ -1206,7 +1206,7 @@ struct Constructor<T, TypeList<P1, TypeList<P2, TypeList<P3,
     static T *call(const TypeListValues<TypeList<P1, TypeList<P2,
                                                               TypeList<P3, TypeList<P4, TypeList<P5> > > > > >& tvl)
     {
-        return new T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
+        return lmNew(NULL) T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
                      tvl.tl.tl.tl.tl.hd);
     }
 
@@ -1226,7 +1226,7 @@ struct Constructor<T, TypeList<P1, TypeList<P2, TypeList<P3,
     static T *call(const TypeListValues<TypeList<P1, TypeList<P2,
                                                               TypeList<P3, TypeList<P4, TypeList<P5, TypeList<P6> > > > > > >& tvl)
     {
-        return new T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
+        return lmNew(NULL) T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
                      tvl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.hd);
     }
 
@@ -1247,7 +1247,7 @@ struct Constructor<T, TypeList<P1, TypeList<P2, TypeList<P3,
                                                               TypeList<P3, TypeList<P4, TypeList<P5, TypeList<P6,
                                                                                                               TypeList<P7> > > > > > > >& tvl)
     {
-        return new T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
+        return lmNew(NULL) T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
                      tvl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.hd,
                      tvl.tl.tl.tl.tl.tl.tl.hd);
     }
@@ -1272,7 +1272,7 @@ struct Constructor<T, TypeList<P1, TypeList<P2, TypeList<P3,
                                                               TypeList<P3, TypeList<P4, TypeList<P5, TypeList<P6,
                                                                                                               TypeList<P7, TypeList<P8> > > > > > > > >& tvl)
     {
-        return new T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
+        return lmNew(NULL) T(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
                      tvl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.hd,
                      tvl.tl.tl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.tl.tl.hd);
     }
@@ -1595,7 +1595,7 @@ public:
 //============================================================================
 
 /**
- *  Interface to a class poiner retrievable from a userdata.
+ *  Interface to a class pointer retrievable from a userdata.
  */
 class Userdata
 {
@@ -1605,6 +1605,7 @@ protected:
 public:
 
     NativeTypeBase *m_nativeType; // subclasses must also set this
+    bool m_owner; // if true, m_p gets deleted on Userdata instance destruction (e.g. for static constructors)
 
     //--------------------------------------------------------------------------
 
@@ -1780,7 +1781,9 @@ private:
     }
 
 public:
-    virtual ~Userdata() { }
+    virtual ~Userdata() {
+        if (m_nativeType && m_owner) m_nativeType->deletePointer(m_p, true);
+    }
 
     //--------------------------------------------------------------------------
 
@@ -1913,6 +1916,7 @@ public:
     {
         m_p          = p;
         m_nativeType = NULL;
+        m_owner      = false;
 
         // Can't construct with a null pointer!
         //
@@ -1921,13 +1925,13 @@ public:
 
 public:
 
-    static inline void push(lua_State *L, NativeTypeBase *nativeType, void *ptr, bool inConstructor)
+    static inline void push(lua_State *L, NativeTypeBase *nativeType, void *ptr, bool inConstructor, bool owner = false)
     {
         //we're managed push onto stack, possibly registering the managed native
         lua_pushnil(L);
         int top = lua_gettop(L);
 
-        NativeInterface::pushManagedNativeInternal(L, nativeType, ptr, inConstructor);
+        NativeInterface::pushManagedNativeInternal(L, nativeType, ptr, inConstructor, owner);
 
         // we actually want the native user data and not
         // the wrapped class table
@@ -1940,7 +1944,7 @@ public:
     /** Push non-const pointer to object.
      */
     template<class T>
-    static inline void push(lua_State *const L, T *const ptr, bool inConstructor = false)
+    static inline void push(lua_State *const L, T *const ptr, bool inConstructor = false, bool owner = false)
     {
         if (!ptr)
         {
@@ -1953,17 +1957,17 @@ public:
 
         if (!nativeType->isManaged())
         {
-            lualoom_newnativeuserdata((lua_State *)L, nativeType, (void *)ptr);
+            lualoom_newnativeuserdata((lua_State *)L, nativeType, (void *)ptr, owner);
             return;
         }
 
-        push((lua_State *)L, nativeType, (void *)ptr, inConstructor);
+        push((lua_State *)L, nativeType, (void *)ptr, inConstructor, owner);
     }
 
     /** Push const pointer to object.
      */
     template<class T>
-    static inline void push(lua_State *const L, T const *const ptr, bool inConstructor = false)
+    static inline void push(lua_State *const L, T const *const ptr, bool inConstructor = false, bool owner = false)
     {
         if (!ptr)
         {
@@ -1978,11 +1982,11 @@ public:
 
         if (!nativeType->isManaged())
         {
-            lualoom_newnativeuserdata((lua_State *)L, nativeType, (void *)ptr);
+            lualoom_newnativeuserdata((lua_State *)L, nativeType, (void *)ptr, owner);
             return;
         }
 
-        push((lua_State *)L, nativeType, (void *)ptr, inConstructor);
+        push((lua_State *)L, nativeType, (void *)ptr, inConstructor, owner);
     }
 };
 
@@ -2665,6 +2669,21 @@ public:
 };
 
 template<class MemFn>
+class CallFastSetMember<MemFn, double> : public CallFastMemberBase
+{
+public:
+    typedef typename FuncTraits<MemFn>::ClassType   CT;
+
+    MemFn mfp;
+
+    static void _call(lua_State *L, CT *_this, void *fast)
+    {
+        CallFastSetMember<MemFn, double> *_fast = (CallFastSetMember<MemFn, double> *)fast;
+        (_this->*(_fast->mfp))((double)lua_tonumber(L, 1));
+    }
+};
+
+template<class MemFn>
 class CallFastSetMember<MemFn, int> : public CallFastMemberBase
 {
 public:
@@ -2743,6 +2762,21 @@ public:
     static void _call(lua_State *L, CT *_this, void *fast)
     {
         CallFastGetMember<MemFn, float> *_fast = (CallFastGetMember<MemFn, float> *)fast;
+        lua_pushnumber(L, (_this->*(_fast->mfp))());
+    }
+};
+
+template<class MemFn>
+class CallFastGetMember<MemFn, double> : public CallFastMemberBase
+{
+public:
+    typedef typename FuncTraits<MemFn>::ClassType   CT;
+
+    MemFn mfp;
+
+    static void _call(lua_State *L, CT *_this, void *fast)
+    {
+        CallFastGetMember<MemFn, double> *_fast = (CallFastGetMember<MemFn, double> *)fast;
         lua_pushnumber(L, (_this->*(_fast->mfp))());
     }
 };
@@ -3651,7 +3685,7 @@ protected:
             }
 
             // allocate the storage for placement new (so fancy!)
-            void *storage   = (void *)new char[sizeof(T)];
+            void *storage = (void *)lmAlloc(NULL, sizeof(T));
             T    *placement = reinterpret_cast<T *> (storage);
 
             // call the constructor with args
@@ -4016,14 +4050,17 @@ public:
                     lua_touserdata(L, lua_upvalueindex(1)));
                 assert(fp != 0);
 
+                // Get own as argument
+                bool own = lua_toboolean(L, lua_upvalueindex(3)) == 1;
+
                 ArgList<Params> args(L);
 
-                //NativeTypeBase* nativeType = NativeInterface::getNativeType<CT>();
+                NativeTypeBase* nativeType = NativeInterface::getNativeType<CT>();
 
                 ReturnType instance = FuncTraits<Func>::call(fp, args);
 
                 // push the user data on the stack
-                Detail::UserdataPtr::push<T> (L, instance, true);
+                Detail::UserdataPtr::push<T> (L, instance, true, own);
 
                 return 1;
             }
@@ -4036,9 +4073,13 @@ public:
             }
         };
 
-
+        /**
+         * if own is true, the constructed instance gets deleted with `lmDelete` when
+         * the object gets garbage collected
+         * if own is false, the responsibility of instance deletion falls on the caller
+         */
         template<class FP>
-        Class<T>& addStaticConstructor(FP const fp)
+        Class<T>& addStaticConstructor(FP const fp, bool own = true)
         {
             new (lua_newuserdata(L, sizeof(fp)))FP(fp);
 
@@ -4047,8 +4088,16 @@ public:
             utArray<utString> *array = (utArray<utString> *)lua_touserdata(L, -1);
             StaticConstructorProxy<T, FP>::getStringSignature(*array);
 
-            lua_pushcclosure(L, &StaticConstructorProxy<T, FP>::call, 2);
+            // Add own as argument
+            lua_pushboolean(L, own);
+
+            lua_pushcclosure(L, &StaticConstructorProxy<T, FP>::call, 3);
             rawsetfield(L, -2, "__call");
+
+            if (own) {
+                lua_pushcfunction(L, &gcMetaMethod);
+                rawsetfield(L, -2, "__gc");
+            }
 
             return *this;
         }

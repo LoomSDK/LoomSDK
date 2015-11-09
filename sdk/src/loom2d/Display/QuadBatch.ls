@@ -4,6 +4,7 @@ package loom2d.display
     import loom2d.math.Matrix;
     import loom2d.math.Rectangle;
     import loom2d.textures.Texture;
+    import loom.graphics.Shader;
 
     [Native(managed)]
     public native class QuadBatch extends DisplayObject
@@ -30,7 +31,7 @@ package loom2d.display
         {
             if (modelViewMatrix == null)
                 modelViewMatrix = quad.transformationMatrix;
-            
+
             _addQuad(quad, modelViewMatrix);
 
             // LOOM-1868: Support the below functionality so that we can remove these asserts!
@@ -67,8 +68,10 @@ package loom2d.display
         protected native function set nativeTextureID(value:int);
 
         private native function _getBounds(targetSpace:DisplayObject, resultRect:Rectangle);
-        private native function _addQuad(quad:Quad, modelViewMatrix:Matrix);     
-        private native function _updateQuad(index:int, quad:Quad, modelViewMatrix:Matrix);     
+        private native function _addQuad(quad:Quad, modelViewMatrix:Matrix);
+        private native function _updateQuad(index:int, quad:Quad, modelViewMatrix:Matrix); 
+
+        public native var shader:Shader;
     }
 
 }

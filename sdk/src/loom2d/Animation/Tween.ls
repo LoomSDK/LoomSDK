@@ -111,7 +111,7 @@ package loom2d.animation
             else if (transition is Function)
                 this.transitionFunc = transition as Function;
             else
-                throw new ArgumentError("Transition must be either a string or a function");
+                Debug.assert("Transition must be either a string or a function");
 
             if (mProperties)  mProperties.length  = 0; else mProperties  = new <String>[];
             if (mStartValues) mStartValues.length = 0; else mStartValues = new <Number>[];
@@ -234,7 +234,7 @@ package loom2d.animation
             var index:int = mProperties.indexOf(property);
             if (index == -1)
             {
-                throw new ArgumentError("The property '" + property + "' is not animated");
+                Debug.assert("The property '" + property + "' is not animated");
             }
             else
                 return mEndValues[index];
@@ -278,7 +278,7 @@ package loom2d.animation
             mTransitionFunc = Transitions.getTransition(value);
 
             if (mTransitionFunc == null)
-                throw new ArgumentError("Invalid transiton: " + value);
+                Debug.assert("Invalid transiton: " + value);
         }
 
         /** The actual transition function used for the animation. */

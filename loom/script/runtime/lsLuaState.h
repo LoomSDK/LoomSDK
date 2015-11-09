@@ -94,8 +94,10 @@ class LSLuaState {
 
 public:
 
+    static size_t allocatedBytes;
+
     LSLuaState() :
-        compiling(false), loadingAssembly(0), L(NULL) 
+        compiling(false), loadingAssembly(0), L(NULL)
     {
 
 #ifdef LOOM_DEBUG
@@ -269,6 +271,7 @@ public:
     }
 
     void dumpManagedNatives();
+    void dumpLuaStack();
 
     int getStackSize();
 

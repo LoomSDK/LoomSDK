@@ -33,7 +33,10 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/sqlite3
     ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios/FacebookSDK.framework/Headers
     ${CMAKE_SOURCE_DIR}/loom/vendor/parse/ios/Parse.framework/Headers
+    ${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk/Include
     )
+
+include_directories(${LOOM_INCLUDE_FOLDERS})
 
 # Allow Admob and/or Facebook to be built into the SDK?
 if(LOOM_BUILD_ADMOB EQUAL 1)
@@ -41,6 +44,9 @@ if(LOOM_BUILD_ADMOB EQUAL 1)
 endif()
 if(LOOM_BUILD_FACEBOOK EQUAL 1)
     add_definitions(-DLOOM_ALLOW_FACEBOOK)
+endif()
+if (LUA_GC_PROFILE_ENABLED EQUAL 1)
+    ADD_DEFINITIONS(-DLUA_GC_PROFILE_ENABLED=1)
 endif()
 
 if (LOOM_BUILD_JIT EQUAL 1)
@@ -67,6 +73,11 @@ if (LOOM_IS_DEBUG EQUAL 1)
     add_definitions(-DLOOM_DEBUG)
 endif()
 
+# Compile all C++ sources with C++11
+# MSVC has that turned on by default
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
 
 #--------------------------------------
 # SDL
@@ -82,7 +93,11 @@ if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS))
 	set(SDL_STATIC ON CACHE BOOL "Enable static linking")
 	set(SDL_SHARED OFF CACHE BOOL "Enable dynamic linking")
 	set(FORCE_STATIC_VCRT ON CACHE BOOL "Force /MT for static linking")
-	set(DIRECTX OFF CACHE BOOL "Enable DirectX on Windows")
+    set(DXSDK_DIR ${CMAKE_SOURCE_DIR}/loom/vendor/dxsdk)
+
+    if (MSVC)
+	   set(DIRECTX ON CACHE BOOL "Enable DirectX on Windows")
+    endif()
 	
 	add_subdirectory(loom/vendor/sdl2)
 endif()

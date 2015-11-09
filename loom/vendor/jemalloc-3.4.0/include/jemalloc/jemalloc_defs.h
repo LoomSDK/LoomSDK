@@ -153,7 +153,7 @@
  * inline functions.
  */
 /* #undef JEMALLOC_DEBUG */
- #define JEMALLOC_DEBUG
+//#define JEMALLOC_DEBUG
 
 /* JEMALLOC_STATS enables statistics calculation. */
 #define JEMALLOC_STATS 

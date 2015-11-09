@@ -246,7 +246,7 @@ native class JSON {
             case "system.Boolean": info.setValue(o, getBoolean(field)); break;
             case "system.Number": info.setValue(o, getInteger(field)); break;
             case "system.String": info.setValue(o, getString(field)); break;
-            default: throw new Error("Unsupported field type: "+info.getTypeInfo().getFullName());
+            default: Debug.assert("Unsupported field type: "+info.getTypeInfo().getFullName());
         }
     }
     

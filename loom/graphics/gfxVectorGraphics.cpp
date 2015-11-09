@@ -22,6 +22,8 @@
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/graphics/gfxVectorGraphics.h"
 
+#include "loom/script/runtime/lsProfiler.h"
+
 namespace GFX
 {
 
@@ -39,11 +41,15 @@ void VectorPath::moveTo(float x, float y) {
 	commands.push_back(MOVE_TO);
 	data.push_back(x);
 	data.push_back(y);
+	lastX = x;
+	lastY = y;
 }
 void VectorPath::lineTo(float x, float y) {
 	commands.push_back(LINE_TO);
 	data.push_back(x);
 	data.push_back(y);
+	lastX = x;
+	lastY = y;
 }
 void VectorPath::curveTo(float controlX, float controlY, float anchorX, float anchorY) {
 	commands.push_back(CURVE_TO);
@@ -51,6 +57,8 @@ void VectorPath::curveTo(float controlX, float controlY, float anchorX, float an
 	data.push_back(controlY);
 	data.push_back(anchorX);
 	data.push_back(anchorY);
+	lastX = anchorX;
+	lastY = anchorY;
 }
 void VectorPath::cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY) {
 	commands.push_back(CUBIC_CURVE_TO);
@@ -60,6 +68,8 @@ void VectorPath::cubicCurveTo(float controlX1, float controlY1, float controlX2,
 	data.push_back(controlY2);
 	data.push_back(anchorX);
 	data.push_back(anchorY);
+	lastX = anchorX;
+	lastY = anchorY;
 }
 void VectorPath::arcTo(float controlX, float controlY, float anchorX, float anchorY, float radius) {
 	commands.push_back(ARC_TO);
@@ -68,15 +78,15 @@ void VectorPath::arcTo(float controlX, float controlY, float anchorX, float anch
 	data.push_back(anchorX);
 	data.push_back(anchorY);
 	data.push_back(radius);
+	lastX = anchorX;
+	lastY = anchorY;
 }
 
-
-#pragma warning(disable: 4056 4756)
 void VectorGraphics::clear() {
 	utArray<VectorData*>::Iterator it = queue->iterator();
 	while (it.hasMoreElements()) {
 		VectorData* d = it.getNext();
-		delete d;
+		lmDelete(NULL, d);
 	}
 	queue->clear();
 	/*
@@ -85,34 +95,27 @@ void VectorGraphics::clear() {
 	bounds.width = 0;
 	bounds.height = 0;
 	*/
+	clearBounds();
+	lastPath = NULL;
+
+	pathDirty = false;
+	currentTextFormat = VectorTextFormat::defaultFormat;
+}
+
+#pragma warning(disable: 4056 4756)
+void VectorGraphics::clearBounds() {
 	boundL = INFINITY;
 	boundT = INFINITY;
 	boundR = -INFINITY;
 	boundB = -INFINITY;
-	lastPath = NULL;
-
-	pathDirty = false;
-	textFormatDirty = false;
-
 #pragma warning(default: 4056 4756)
 }
 
-void VectorGraphics::inflateBounds(float x, float y) {
-	/*
-	float bx = bounds.x;
-	float by = bounds.y;
-	float bw = bounds.width;
-	float bh = bounds.height;
-	float a = fminf(bx, x);
-	float b = fminf(by, y);
-	float c = fmaxf(bx + bw, x) - bw;
-	float d = fmaxf(by + bh, y) - bh;
-	bounds.setTo(fminf(bx, x), fminf(by, y), fmaxf(bx+bw, x)-bw, fmaxf(by+bh, y)-bh);
-	*/
-	boundL = fminf(boundL, x);
-	boundT = fminf(boundT, y);
-	boundR = fmaxf(boundR, x);
-	boundB = fmaxf(boundB, y);
+void VectorGraphics::inflateBounds(const Loom2D::Rectangle& r) {
+	boundL = lmMin(r.x, boundL);
+	boundT = lmMin(r.y, boundT);
+	boundR = lmMax(r.x + r.width, boundR);
+	boundB = lmMax(r.y + r.height, boundB);
 }
 
 void VectorGraphics::lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit) {
@@ -139,132 +142,128 @@ void VectorGraphics::lineStyle(float thickness, unsigned int color, float alpha,
 		!strcmp(t, "miter") ? VectorLineJoints::MITER :
 		VectorLineJoints::ROUND;
 
-	queue->push_back(new VectorLineStyle(thickness, color, alpha, scaleModeEnum, capsEnum, jointsEnum, miterLimit));
+	queue->push_back(lmNew(NULL) VectorLineStyle(thickness, color, alpha, scaleModeEnum, capsEnum, jointsEnum, miterLimit));
 	restartPath();
 }
 
 void VectorGraphics::textFormat(VectorTextFormat format) {
-    ensureTextFormat();
-    queue->push_back(new VectorTextFormatData(new VectorTextFormat(format)));
+	queue->push_back(lmNew(NULL) VectorTextFormatData(lmNew(NULL) VectorTextFormat(format)));
+	currentTextFormat.merge(&format);
 }
 
 void VectorGraphics::beginFill(unsigned int color, float alpha) {
-	queue->push_back(new VectorFill(color, alpha));
+	queue->push_back(lmNew(NULL) VectorFill(color, alpha));
+	restartPath();
+}
+
+void VectorGraphics::beginTextureFill(TextureID id, Loom2D::Matrix *matrix, bool repeat, bool smooth) {
+	queue->push_back(lmNew(NULL) VectorFill(id, matrix, repeat, smooth));
 	restartPath();
 }
 
 void VectorGraphics::endFill() {
-	queue->push_back(new VectorFill());
+	queue->push_back(lmNew(NULL) VectorFill());
 	restartPath();
 }
 
 
 void VectorGraphics::moveTo(float x, float y) {
-	getPath()->moveTo(x, y);
-	inflateBounds(x, y);
+	auto path = getPath();
+	path->moveTo(x, y);
+	inflateBounds(Loom2D::Rectangle(x, y, 0, 0));
 }
 
 void VectorGraphics::lineTo(float x, float y) {
-	getPath()->lineTo(x, y);
-	inflateBounds(x, y);
+	auto path = getPath();
+	inflateBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
+	path->lineTo(x, y);
+	inflateBounds(Loom2D::Rectangle(x, y, 0, 0));
 }
 
 void VectorGraphics::curveTo(float controlX, float controlY, float anchorX, float anchorY) {
-	getPath()->curveTo(controlX, controlY, anchorX, anchorY);
-	inflateBounds(anchorX, anchorY);
+	auto path = getPath();
+	inflateBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
+	path->curveTo(controlX, controlY, anchorX, anchorY);
+	inflateBounds(Loom2D::Rectangle(controlX, controlY, 0, 0));
+	inflateBounds(Loom2D::Rectangle(anchorX, anchorX, 0, 0));
 }
 
 void VectorGraphics::cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY) {
-	getPath()->cubicCurveTo(controlX1, controlY1, controlX2, controlY2, anchorX, anchorY);
-	inflateBounds(anchorX, anchorY);
+	auto path = getPath();
+	inflateBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
+	path->cubicCurveTo(controlX1, controlY1, controlX2, controlY2, anchorX, anchorY);
+	inflateBounds(Loom2D::Rectangle(controlX1, controlY1, 0, 0));
+	inflateBounds(Loom2D::Rectangle(controlX2, controlY2, 0, 0));
+	inflateBounds(Loom2D::Rectangle(anchorX, anchorX, 0, 0));
 }
 
 void VectorGraphics::arcTo(float controlX, float controlY, float anchorX, float anchorY, float radius) {
-	getPath()->arcTo(controlX, controlY, anchorX, anchorY, radius);
-	inflateBounds(controlX, controlY);
-	inflateBounds(anchorX, anchorY);
+	auto path = getPath();
+	inflateBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
+	path->arcTo(controlX, controlY, anchorX, anchorY, radius);
+	inflateBounds(Loom2D::Rectangle(controlX, controlY, 0, 0));
+	inflateBounds(Loom2D::Rectangle(anchorX, anchorX, 0, 0));
 }
 
 
 void VectorGraphics::drawCircle(float x, float y, float radius) {
-	addShape(new VectorShape(CIRCLE, x, y, radius));
-	inflateBounds(x-radius, y-radius);
-	inflateBounds(x+radius, y+radius);
+	addShape(lmNew(NULL) VectorShape(CIRCLE, x, y, radius));
+	inflateBounds(Loom2D::Rectangle(x - radius, y - radius, 2 * radius, 2 * radius));
 }
 
 void VectorGraphics::drawEllipse(float x, float y, float width, float height) {
-	addShape(new VectorShape(ELLIPSE, x, y, width, height));
-	inflateBounds(x, y);
-	inflateBounds(x+width, y+height);
+	addShape(lmNew(NULL) VectorShape(ELLIPSE, x, y, width, height));
+	inflateBounds(Loom2D::Rectangle(x - width, y - height, width * 2, height * 2));
 }
 
 void VectorGraphics::drawRect(float x, float y, float width, float height) {
-	addShape(new VectorShape(RECT, x, y, width, height));
-	inflateBounds(x, y);
-	inflateBounds(x+width, y+height);
+	addShape(lmNew(NULL) VectorShape(RECT, x, y, width, height));
+	inflateBounds(Loom2D::Rectangle(x, y, width, height));
 }
 
 void VectorGraphics::drawRoundRect(float x, float y, float width, float height, float ellipseWidth, float ellipseHeight) {
-	addShape(new VectorShape(ROUND_RECT, x, y, width, height, ellipseWidth, ellipseHeight));
-	inflateBounds(x, y);
-	inflateBounds(x + width, y + height);
+	addShape(lmNew(NULL) VectorShape(ROUND_RECT, x, y, width, height, ellipseWidth, ellipseHeight));
+	inflateBounds(Loom2D::Rectangle(x, y, width, height));
 }
 
 void VectorGraphics::drawRoundRectComplex(float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomLeftRadius, float bottomRightRadius) {
-	addShape(new VectorShape(ROUND_RECT_COMPLEX , x, y, width, height, topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius));
-	inflateBounds(x, y);
-	inflateBounds(x + width, y + height);
+	addShape(lmNew(NULL) VectorShape(ROUND_RECT_COMPLEX, x, y, width, height, topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius));
+	inflateBounds(Loom2D::Rectangle(x, y, width, height));
 }
 
 void VectorGraphics::drawArc(float x, float y, float radius, float angleFrom, float angleTo, int direction) {
-	addShape(new VectorShape(direction == VectorWinding::CW ? ARC_CW : ARC_CCW, x, y, radius, angleFrom, angleTo));
-	inflateBounds(x-radius, y-radius);
-	inflateBounds(x+radius, y+radius);
+	addShape(lmNew(NULL) VectorShape(direction == VectorWinding::CW ? ARC_CW : ARC_CCW, x, y, radius, angleFrom, angleTo));
+	// This could be further calculated if needed,
+	// right now it inflates like it's an entire circle
+	inflateBounds(Loom2D::Rectangle(x - radius, y - radius, 2 * radius, 2 * radius));
 }
 
 void VectorGraphics::drawTextLine(float x, float y, utString text) {
-    ensureTextFormat();
-    queue->push_back(new VectorText(x, y, NAN, new utString(text)));
-    inflateBounds(x, y);
+	queue->push_back(lmNew(NULL) VectorText(x, y, -1, lmNew(NULL) utString(text)));
+	inflateBounds(VectorRenderer::textLineBounds(&currentTextFormat, x, y, &text));
 }
 
 void VectorGraphics::drawTextBox(float x, float y, float width, utString text) {
-    ensureTextFormat();
-    queue->push_back(new VectorText(x, y, width, new utString(text)));
-    inflateBounds(x, y);
-    inflateBounds(x + width, y);
+	queue->push_back(lmNew(NULL) VectorText(x, y, width < 0 ? 0 : width, lmNew(NULL) utString(text)));
+	inflateBounds(VectorRenderer::textBoxBounds(&currentTextFormat, x, y, width, &text));
 }
 
-Loom2D::Rectangle VectorGraphics::textLineBounds(VectorTextFormat format, float x, float y, utString text) {
-    return VectorRenderer::textLineBounds(&format, x, y, &text);
+Loom2D::Rectangle* VectorGraphics::textLineBounds(VectorTextFormat format, float x, float y, utString text) {
+	return lmNew(NULL) Loom2D::Rectangle(VectorRenderer::textLineBounds(&format, x, y, &text));
 }
 
 float VectorGraphics::textLineAdvance(VectorTextFormat format, float x, float y, utString text) {
-    return VectorRenderer::textLineAdvance(&format, x, y, &text);
+	return VectorRenderer::textLineAdvance(&format, x, y, &text);
 }
 
-Loom2D::Rectangle VectorGraphics::textBoxBounds(VectorTextFormat format, float x, float y, float width, utString text) {
-    return VectorRenderer::textBoxBounds(&format, x, y, width, &text);
-}
-
-void VectorGraphics::ensureTextFormat() {
-	if (!textFormatDirty) {
-		textFormatDirty = true;
-		// Default text format
-		VectorTextFormat* format = new VectorTextFormat();
-		//format->font = "sans";
-		format->color = 0x000000;
-		format->size = 12;
-		format->align = VectorTextFormat::ALIGN_TOP | VectorTextFormat::ALIGN_LEFT;
-		queue->push_back(new VectorTextFormatData(format));
-	}
+Loom2D::Rectangle* VectorGraphics::textBoxBounds(VectorTextFormat format, float x, float y, float width, utString text) {
+	return lmNew(NULL) Loom2D::Rectangle(VectorRenderer::textBoxBounds(&format, x, y, width, &text));
 }
 
 void VectorGraphics::drawSVG(VectorSVG* svg, float x, float y, float scale, float lineThickness) {
-	queue->push_back(new VectorSVGData(svg, x, y, scale, lineThickness));
+	queue->push_back(lmNew(NULL) VectorSVGData(svg, x, y, scale, lineThickness));
 	restartPath();
-	inflateBounds(x, y);
-	inflateBounds(x+svg->getWidth()*scale, y+svg->getHeight()*scale);
+	inflateBounds(Loom2D::Rectangle(x, y, svg->getWidth() * scale, svg->getHeight() * scale));
 }
 
 
@@ -276,6 +275,8 @@ void VectorGraphics::drawSVG(VectorSVG* svg, float x, float y, float scale, floa
 *************************/
 
 void VectorGraphics::render(Loom2D::RenderState* renderStatePointer, Loom2D::Matrix* transform) {
+    LOOM_PROFILE_SCOPE(vectorRender);
+
     QuadRenderer::submit();
 
     Loom2D::RenderState &renderState = *renderStatePointer;
@@ -283,6 +284,7 @@ void VectorGraphics::render(Loom2D::RenderState* renderStatePointer, Loom2D::Mat
     VectorRenderer::beginFrame();
     VectorRenderer::preDraw(transform->a, transform->b, transform->c, transform->d, transform->tx, transform->ty);
 
+    alpha = renderState.alpha;
     scale = sqrt(transform->a*transform->a + transform->b*transform->b + transform->c*transform->c + transform->d*transform->d);
 
     if (clipWidth != -1 && clipHeight != -1)
@@ -291,7 +293,7 @@ void VectorGraphics::render(Loom2D::RenderState* renderStatePointer, Loom2D::Mat
         Loom2D::Rectangle clipBounds = Loom2D::Rectangle((float)clipX, (float)clipY, (float)clipWidth, (float)clipHeight);
         Loom2D::Rectangle clipResult;
         Loom2D::DisplayObject::transformBounds(transform, &clipBounds, &clipResult);
-        
+
         if (!renderState.isClipping()) {
             renderState.clipRect = Loom2D::Rectangle(clipResult);
         }
@@ -307,12 +309,14 @@ void VectorGraphics::render(Loom2D::RenderState* renderStatePointer, Loom2D::Mat
 
     flushPath();
 
+    LOOM_PROFILE_START(vectorRenderData);
     utArray<VectorData*>::Iterator it = queue->iterator();
     while (it.hasMoreElements()) {
         VectorData* d = it.getNext();
         d->render(this);
     }
     flushPath();
+    LOOM_PROFILE_END(vectorRenderData);
 
     if (renderState.isClipping()) {
         VectorRenderer::resetClipRect();
@@ -390,17 +394,23 @@ void VectorShape::render(VectorGraphics* g) {
 void VectorLineStyle::render(VectorGraphics* g) {
 	g->flushPath();
 	copyTo(&g->currentLineStyle);
+	g->currentLineStyle.alpha *= g->alpha;
 }
 
 void VectorFill::render(VectorGraphics* g) {
 	g->flushPath();
 	g->currentFill.active = active;
 	g->currentFill.color = color;
-	g->currentFill.alpha = alpha;
+	g->currentFill.alpha = alpha * g->alpha;
+	g->currentFill.texture = texture;
+	g->currentFill.transform = transform;
+	g->currentFill.repeat = repeat;
+	g->currentFill.smooth = smooth;
 }
 
 void VectorText::render(VectorGraphics* g) {
-	if (isnan(width)) {
+	g->flushPath();
+	if (width == -1) {
 		VectorRenderer::textLine(x, y, text);
 	} else {
 		VectorRenderer::textBox(x, y, width, text);
@@ -408,15 +418,15 @@ void VectorText::render(VectorGraphics* g) {
 }
 
 void VectorTextFormatData::render(VectorGraphics* g) {
-	VectorRenderer::textFormat(format);
+	VectorRenderer::textFormat(format, g->alpha);
 }
 VectorTextFormatData::~VectorTextFormatData() {
-	delete this->format;
+	lmDelete(NULL, this->format);
 }
 
 void VectorSVGData::render(VectorGraphics* g) {
 	g->flushPath();
-	VectorRenderer::svg(image, x, y, scale, lineThickness);
+	VectorRenderer::svg(image, x, y, scale, lineThickness, (float)g->alpha);
 }
 
 
@@ -427,10 +437,10 @@ void VectorSVGData::render(VectorGraphics* g) {
 
 
 void VectorGraphics::setClipRect(int x, int y, int w, int h) {
-    clipX = x;
-    clipY = y;
-    clipWidth = w;
-    clipHeight = h;
+	clipX = x;
+	clipY = y;
+	clipWidth = w;
+	clipHeight = h;
 }
 
 void VectorLineStyle::reset() {
@@ -460,9 +470,7 @@ VectorPath* VectorGraphics::getPath() {
 	if (path == NULL) {
 		path = queue->empty() ? NULL : dynamic_cast<VectorPath*>(queue->back());
 		if (path == NULL) {
-			path = new VectorPath();
-			path->moveTo(0, 0);
-			inflateBounds(0, 0);
+			path = lmNew(NULL) VectorPath();
 			queue->push_back(path);
 		}
 		lastPath = path;
@@ -484,12 +492,12 @@ bool VectorGraphics::isStyleVisible() {
 void VectorGraphics::flushPath() {
 	bool stroke = !isnan(currentLineStyle.thickness);
 	if (stroke && pathDirty) {
-		float thicknessScale = 1.0f;
+		lmscalar thicknessScale = 1.0;
 		switch (currentLineStyle.scaleMode) {
 			case VectorLineScaleMode::NONE: thicknessScale = 1/scale; break;
 		}
-		VectorRenderer::strokeWidth(currentLineStyle.thickness*thicknessScale);
-		VectorRenderer::strokeColor(currentLineStyle.color, currentLineStyle.alpha);
+		VectorRenderer::strokeWidth((float) (currentLineStyle.thickness*thicknessScale));
+		VectorRenderer::strokeColor(currentLineStyle.color, (float) currentLineStyle.alpha);
 		VectorRenderer::lineCaps(currentLineStyle.caps);
 		VectorRenderer::lineJoints(currentLineStyle.joints);
 		VectorRenderer::lineMiterLimit(currentLineStyle.miterLimit);
@@ -497,7 +505,11 @@ void VectorGraphics::flushPath() {
 	}
 	bool fill = currentFill.active;
 	if (fill && pathDirty) {
-		VectorRenderer::fillColor(currentFill.color, currentFill.alpha);
+		if (currentFill.texture != TEXTUREINVALID) {
+			VectorRenderer::fillTexture(currentFill.texture, currentFill.transform, currentFill.repeat, currentFill.smooth, (float)currentFill.alpha);
+		} else {
+			VectorRenderer::fillColor(currentFill.color, (float)currentFill.alpha);
+		}
 		VectorRenderer::renderFill();
 		currentFill.active = false;
 	}
@@ -512,7 +524,6 @@ void VectorGraphics::restartPath() {
 			float x = lastPath->data[dataNum - 2];
 			float y = lastPath->data[dataNum - 1];
 			lastPath = NULL;
-			moveTo(x, y);
 		} else {
 			lastPath = NULL;
 		}
@@ -525,11 +536,9 @@ void VectorGraphics::resetStyle() {
 }
 
 #pragma warning(disable: 4056 4756)
-Loom2D::Rectangle VectorGraphics::getBounds() {
-	//float* bounds = VectorRenderer::getBounds();
-	//return Loom2D::Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]);
-	if (boundL == INFINITY || boundT == INFINITY || boundR == -INFINITY || boundB == -INFINITY) return Loom2D::Rectangle(0.f, 0.f, 0.f, 0.f);
-	return Loom2D::Rectangle(boundL, boundT, boundR-boundL, boundB-boundT);
+Loom2D::Rectangle* VectorGraphics::getBounds() {
+	if (boundL == INFINITY || boundT == INFINITY || boundR == -INFINITY || boundB == -INFINITY) return lmNew(NULL) Loom2D::Rectangle(0.f, 0.f, 0.f, 0.f);
+	return lmNew(NULL) Loom2D::Rectangle(boundL, boundT, boundR-boundL, boundB-boundT);
 #pragma warning(default: 4056 4756)
 }
 

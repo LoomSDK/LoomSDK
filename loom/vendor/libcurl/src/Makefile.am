@@ -5,7 +5,7 @@
 #                            | (__| |_| |  _ <| |___
 #                             \___|\___/|_| \_\_____|
 #
-# Copyright (C) 1998 - 2013, Daniel Stenberg, <daniel@haxx.se>, et al.
+# Copyright (C) 1998 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
 #
 # This software is licensed as described in the file COPYING, which
 # you should have received as part of this distribution. The terms
@@ -21,10 +21,6 @@
 ###########################################################################
 AUTOMAKE_OPTIONS = foreign nostdinc
 
-DOCS = README.encoding README.memoryleak README.ares README.curlx	\
- README.hostip README.multi_socket README.httpauth README.pipelining    \
- README.curl_off_t README.pingpong
-
 CMAKE_DIST = CMakeLists.txt curl_config.h.cmake
 
 EXTRA_DIST = Makefile.b32 Makefile.m32 Makefile.vc6 config-win32.h	\
@@ -32,9 +28,9 @@ EXTRA_DIST = Makefile.b32 Makefile.m32 Makefile.vc6 config-win32.h	\
  makefile.dj config-dos.h libcurl.plist libcurl.rc config-amigaos.h	\
  makefile.amiga Makefile.netware nwlib.c nwos.c config-win32ce.h	\
  config-os400.h setup-os400.h config-symbian.h Makefile.Watcom		\
- config-tpf.h $(DOCS) mk-ca-bundle.pl mk-ca-bundle.vbs $(CMAKE_DIST)	\
+ config-tpf.h mk-ca-bundle.pl mk-ca-bundle.vbs $(CMAKE_DIST)	\
  firefox-db2pem.sh config-vxworks.h Makefile.vxworks checksrc.pl	\
- objnames-test08.sh objnames-test10.sh objnames.inc
+ objnames-test08.sh objnames-test10.sh objnames.inc checksrc.whitelist
 
 lib_LTLIBRARIES = libcurl.la
 
@@ -60,20 +56,15 @@ CFLAGS += @CURL_CFLAG_EXTRAS@
 # $(top_builddir)/ares is for in-tree c-ares's generated ares_build.h file
 # $(top_srcdir)/ares is for in-tree c-ares's external include files
 
-if USE_EMBEDDED_ARES
-AM_CPPFLAGS = -I$(top_builddir)/include/curl \
-              -I$(top_builddir)/include      \
-              -I$(top_srcdir)/include        \
-              -I$(top_builddir)/lib          \
-              -I$(top_srcdir)/lib            \
-              -I$(top_builddir)/ares         \
-              -I$(top_srcdir)/ares
-else
 AM_CPPFLAGS = -I$(top_builddir)/include/curl \
               -I$(top_builddir)/include      \
               -I$(top_srcdir)/include        \
               -I$(top_builddir)/lib          \
               -I$(top_srcdir)/lib
+
+if USE_EMBEDDED_ARES
+AM_CPPFLAGS += -I$(top_builddir)/ares        \
+               -I$(top_srcdir)/ares
 endif
 
 # Prevent LIBS from being used for all link targets
@@ -141,7 +132,7 @@ libcurl_la_CFLAGS_EXTRA += $(CFLAG_CURL_SYMBOL_HIDING)
 endif
 
 libcurl_la_CPPFLAGS = $(AM_CPPFLAGS) $(libcurl_la_CPPFLAGS_EXTRA)
-libcurl_la_LDFLAGS = $(AM_LDFLAGS) $(libcurl_la_LDFLAGS_EXTRA) $(LIBCURL_LIBS)
+libcurl_la_LDFLAGS = $(AM_LDFLAGS) $(libcurl_la_LDFLAGS_EXTRA) $(LDFLAGS) $(LIBCURL_LIBS)
 libcurl_la_CFLAGS = $(AM_CFLAGS) $(libcurl_la_CFLAGS_EXTRA)
 
 libcurlu_la_CPPFLAGS = $(AM_CPPFLAGS) -DCURL_STATICLIB -DUNITTESTS

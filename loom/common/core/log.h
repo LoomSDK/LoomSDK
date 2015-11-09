@@ -27,6 +27,12 @@ extern "C" {
 
 #include <stdarg.h>
 
+#include "loom/common/platform/platform.h"
+
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+#include <android/log.h>
+#endif
+
 /**
  * Loom includes a lightweight logging framework.
  *

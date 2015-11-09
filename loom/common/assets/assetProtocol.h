@@ -44,6 +44,9 @@ public:
     int readInt();
     void writeInt(int _value);
 
+    double readDouble();
+    void writeDouble(double _value);
+
     // This is binary safe, and we use it to read write blobs.
     bool readString(char **outString, int *outLength);
     void writeString(const char *bits, int stringLength);
@@ -81,7 +84,7 @@ public:
 // This class wraps a connection to or from the asset agent.
 class AssetProtocolHandler
 {
-protected:
+public:
 
     NetworkBuffer buffer;
     int           bytesLength;
@@ -121,5 +124,8 @@ public:
     void sendFile(const char *filename, void *fileBits, int fileBitsLength, int pendingFiles);
     void sendLog(const char *log);
     void sendCommand(const char *cmd);
+    
+    // Send an arbitrary custom buffer through the asset protocol
+    void sendCustom(void* buffer, int length);
 };
 #endif

@@ -24,12 +24,23 @@
 //#include "core/assert.h"
 #include "utTypes.h"
 #include "utString.h"
+#include "loom/common/core/assert.h"
 
 class utByteArray {
 protected:
     // stored as little endian
     utArray<unsigned char> _data;
     UTsize _position;
+
+    void memcpyUnaligned(void *destination, const void *source, size_t num)
+    {
+        // TODO smarter
+        // Loop copying byte by byte to avoid unaligned access
+        for (size_t i = 0; i < num; i++)
+        {
+            ((char*)destination)[i] = ((char*)source)[i];
+        }
+    }
 
     template<typename T>
     T readValue()
@@ -41,7 +52,12 @@ protected:
         }
 
         T *ptr  = (T *)&_data[_position];
-        T value = *ptr;
+        T value;
+
+        // memcpy is necessary for some platforms as we can get
+        // an unaligned read exception (e.g. SIGBUS on Android/ARM) otherwise
+        // TODO: benchmark vs. assignment
+        memcpyUnaligned(&value, ptr, sizeof(T));
 
         _position += sizeof(T);
 
@@ -61,7 +77,9 @@ protected:
         value = convertHostToLEndian(value);
 
         T *ptr = (T *)&_data[_position];
-        *ptr = value;
+        
+        // Needed for unaligned writes, see readValue for more info
+        memcpyUnaligned(ptr, &value, sizeof(T));
 
         _position += sizeof(T);
     }
@@ -274,15 +292,11 @@ public:
             return "";
         }
 
-        char *value = new char[length + 1];
+        lmAssert(_position + length <= _data.size(), "Insufficient data available for length of %d (use readStringBytes if you don't have a 32-bit integer length header)", length);
 
-        value[length] = 0;
-        memcpy(value, &_data[_position], length);
+        svalue.fromBytes(&_data[_position], length);
+        
         _position += length;
-
-        svalue = value;
-
-        delete [] value;
 
         return svalue.c_str();
     }
@@ -298,21 +312,18 @@ public:
             return "";
         }
 
+        lmAssert(_position + length <= _data.size(), "Insufficient data available for length of %d (use readUTFBytes if you don't have a 16-bit unsigned integer length header)", length);
+
         return readUTFBytes(length);
     }
 
     const char *readUTFBytes(unsigned int length)
     {
         static utString svalue;
-        char *value = new char[length + 1];
+        
+        svalue.fromBytes(&_data[_position], length);
 
-        value[length] = 0;
-        memcpy(value, &_data[_position], length);
         _position += length;
-
-        svalue = value;
-
-        delete[] value;
 
         return svalue.c_str();
     }
@@ -396,6 +407,12 @@ public:
         _data.resize(size);
         memcpy(_data.ptr(), src, size);
         _position = 0;
+    }
+
+    void attach(void *memory, UTsize size)
+    {
+        _position = 0;
+        _data.attach(memory, size);
     }
 
     /*

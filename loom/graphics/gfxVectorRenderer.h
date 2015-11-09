@@ -23,6 +23,8 @@
 #include <math.h>
 #include "loom/graphics/gfxTexture.h"
 #include "loom/engine/loom2d/l2dRectangle.h"
+#include "loom/engine/loom2d/l2dMatrix.h"
+#include "loom/common/utils/utTypes.h"
 struct NSVGimage;
 
 namespace GFX
@@ -71,6 +73,9 @@ public:
 */
 
 class VectorTextFormat {
+protected:
+    static utHashTable<utHashedString, utString> loadedFonts;
+
 public:
 	enum TextAlign {
 		// Horizontal align
@@ -84,13 +89,39 @@ public:
 		ALIGN_BASELINE = 1 << 6, // Default, align text vertically to baseline. 
 	};
 
+	enum FontId {
+		FONT_UNDEFINED = -1,
+		FONT_NOTFOUND = -2,
+		FONT_DEFAULTMISSING = -3,
+		FONT_DEFAULTMEMORY = -4,
+		FONT_REPORTEDERROR = -5
+	};
+
+    // Restore all the previously loaded fonts (on NVG context loss / quality change)
+    static void restoreLoaded();
+
+    // Load a font with the specified font name and path
     static void load(utString fontName, utString filePath);
 
-    VectorTextFormat();
+	static VectorTextFormat defaultFormat;
 
-	const char* font;
-	inline const char* getFont() const { return font; }
-	void setFont(const char* t) { font = t; }
+	VectorTextFormat(int color = -1, float size = NAN) :
+		fontId(FONT_UNDEFINED),
+		font(""),
+		color(color),
+		size(size),
+		align(VectorTextFormat::ALIGN_TOP | VectorTextFormat::ALIGN_LEFT),
+		letterSpacing(NAN),
+		lineHeight(NAN)
+	{};
+
+	void merge(VectorTextFormat* source);
+	void ensureFontId();
+
+	int fontId;
+	utString font;
+	inline const char* getFont() const { return font.c_str(); }
+	void setFont(const char* t) { font = utString(t); }
 
 	int color;
 	inline int getColor() const { return color; }
@@ -116,12 +147,15 @@ public:
 
 class VectorSVG {
 protected:
-	utString* path;
+	utString path;
 	utString units;
 	float dpi;
+
 	NSVGimage* image;
 
-	void reset(bool reloaded = false);
+	void reset();
+	void resetInfo();
+	void resetImage();
 	void parse(const char* input, const char* units, float dpi);
 public:
 	float getWidth() const;
@@ -133,7 +167,7 @@ public:
 	void reload();
 	void loadFile(utString path, utString units = utString("px"), float dpi = 96.0f);
 	void loadString(utString svg, utString units = utString("px"), float dpi = 96.0f);
-	void render(float x, float y, float scale, float lineThickness);
+	void render(float x, float y, float scale, float lineThickness, float alpha);
 };
 
 class VectorRenderer
@@ -141,17 +175,23 @@ class VectorRenderer
     friend class Graphics;
 
 private:
+    static utHashTable<utIntHashKey, int> imageLookup;
 
-    // initial initialization
     static void initialize();
+
+    static void deleteImages();
+    static void ensureTextFormat();
 
     static void initializeGraphicsResources();
     static void destroyGraphicsResources();
 
-    // reset the quad renderer, on loss of context etc
-    static void reset();
-
 public:
+    static const uint8_t QUALITY_ANTIALIAS       = 1 << 0;
+    static const uint8_t QUALITY_STENCIL_STROKES = 1 << 1;
+    static uint8_t quality;
+    static uint8_t tessellationQuality;
+
+    static void reset();
 
 	static int frameWidth;
 	static int frameHeight;
@@ -163,7 +203,7 @@ public:
 	static void beginFrame();
 	static void endFrame();
 
-    static void preDraw(float a, float b, float c, float d, float e, float f);
+    static void preDraw(lmscalar a, lmscalar b, lmscalar c, lmscalar d, lmscalar e, lmscalar f);
 	static void postDraw();
 	
     static void setClipRect(int x, int y, int w, int h);
@@ -185,8 +225,9 @@ public:
 	static void fillColor(float r, float g, float b, float a);
 	static void fillColor(unsigned int rgb, float a);
 	static void fillColor32(unsigned int argb, float a);
+	static void fillTexture(TextureID id, Loom2D::Matrix transform, bool repeat, bool smooth, float alpha);
 
-	static void textFormat(VectorTextFormat* format);
+	static void textFormat(VectorTextFormat* format, lmscalar a);
 
 	static void moveTo(float x, float y);
 	static void lineTo(float x, float y);
@@ -208,7 +249,7 @@ public:
     static float textLineAdvance(VectorTextFormat* format, float x, float y, utString* string);
     static Loom2D::Rectangle textBoxBounds(VectorTextFormat* format, float x, float y, float width, utString* string);
 
-	static void svg(VectorSVG* image, float x, float y, float scale, float lineThickness);
+	static void svg(VectorSVG* image, float x, float y, float scale, float lineThickness, float alpha);
 
 	static float* getBounds();
 

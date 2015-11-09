@@ -1,6 +1,7 @@
 package loom.modestmaps.core.painter
 {
     import loom.modestmaps.core.Tile;
+    import loom.modestmaps.core.TileGrid;
     
     /** 
      *  This post http://lab.polygonal.de/2008/06/18/using-object-pools/
@@ -13,8 +14,8 @@ package loom.modestmaps.core.painter
      */ 
     public class TilePool 
     {
-        protected static const MIN_POOL_SIZE:int = 256;
-        protected static const MAX_NEW_TILES:int = 256;
+        protected static const MIN_POOL_SIZE:int = 1;
+        protected static const MAX_NEW_TILES:int = 25;
         
         protected var pool:Vector.<Tile> = [];
         protected var tileCreatorFunc:Function;
@@ -32,12 +33,14 @@ package loom.modestmaps.core.painter
     
         public function getTile(column:int, row:int, zoom:int):Tile
         {
+            var tile:Tile;
+            
             if (pool.length < MIN_POOL_SIZE) {
                 while (pool.length < MAX_NEW_TILES) {
-                    pool.push(tileCreatorFunc());
+                    pool.pushSingle(tileCreatorFunc());
                 }
-            }                       
-            var tile:Tile = pool.pop() as Tile;
+            }
+            tile = pool.pop() as Tile;
             tile.init(column, row, zoom);
             return tile;
         }
@@ -45,7 +48,7 @@ package loom.modestmaps.core.painter
         public function returnTile(tile:Tile):void
         {
             tile.destroy();
-            pool.push(tile);
+            pool.pushSingle(tile);
         }
         
     }
