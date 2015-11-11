@@ -30,12 +30,16 @@ distribution.
 #include <cstring>
 #include <cstdarg>
 
+#include "loom/common/core/allocator.h"
+
 /* 
    TODO: intern strings instead of allocation.
 */
 /*
 	gcc: g++ -Wall tinyxml2.cpp xmltest.cpp -o gccxmltest.exe
 */
+
+#define MEM_ALIGN_ENABLED 0
 
 #if defined( _DEBUG ) || defined( DEBUG ) || defined (__DEBUG__)
 	#ifndef DEBUG
@@ -81,6 +85,13 @@ distribution.
 	//#warning( "Using sn* functions." )
 	#define TIXML_SNPRINTF snprintf
 	#define TIXML_SSCANF   sscanf
+#endif
+
+#define MEM_ALIGN_MASK 8-1
+#if MEM_ALIGN_ENABLED
+#define MEM_ALIGN(size)  ((size + MEM_ALIGN_MASK) & (~MEM_ALIGN_MASK))
+#else
+#define MEM_ALIGN(size)  (size)
 #endif
 
 static const int TIXML2_MAJOR_VERSION = 1;
@@ -171,7 +182,7 @@ public:
 	~DynArray()
 	{
 		if ( mem != pool ) {
-			delete [] mem;
+			loom_deleteArray(NULL, mem);
 		}
 	}
 	void Push( T t )
@@ -209,9 +220,9 @@ private:
 	void EnsureCapacity( int cap ) {
 		if ( cap > allocated ) {
 			int newAllocated = cap * 2;
-			T* newMem = new T[newAllocated];
+			T* newMem = loom_newArray<T>(NULL, newAllocated);
 			memcpy( newMem, mem, sizeof(T)*size );	// warning: not using constructors, only works for PODs
-			if ( mem != pool ) delete [] mem;
+			if ( mem != pool ) loom_deleteArray(NULL, mem);
 			mem = newMem;
 			allocated = newAllocated;
 		}
@@ -251,7 +262,7 @@ public:
 	~MemPoolT() {
 		// Delete the blocks.
 		for( int i=0; i<blockPtrs.Size(); ++i ) {
-			delete blockPtrs[i];
+			lmDelete(NULL, blockPtrs[i]);
 		}
 	}
 
@@ -261,7 +272,7 @@ public:
 	virtual void* Alloc() {
 		if ( !root ) {
 			// Need a new block.
-			Block* block = new Block();
+			Block* block = lmNew(NULL) Block();
 			blockPtrs.Push( block );
 
 			for( int i=0; i<COUNT-1; ++i ) {
@@ -1150,10 +1161,10 @@ private:
 	const char* errorStr2;
 	char* charBuffer;
 
-	MemPoolT< sizeof(XMLElement) >	elementPool;
-	MemPoolT< sizeof(XMLAttribute) > attributePool;
-	MemPoolT< sizeof(XMLText) >		textPool;
-	MemPoolT< sizeof(XMLComment) >	commentPool;
+    MemPoolT< MEM_ALIGN(sizeof(XMLElement)) >	elementPool;
+    MemPoolT< MEM_ALIGN(sizeof(XMLAttribute)) > attributePool;
+    MemPoolT< MEM_ALIGN(sizeof(XMLText)) >		textPool;
+    MemPoolT< MEM_ALIGN(sizeof(XMLComment)) >	commentPool;
 };
 
 

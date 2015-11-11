@@ -1826,6 +1826,8 @@ public:
         }
     }
 };
+    
+#define MEM_ALIGN_MASK (8-1)
 
 //----------------------------------------------------------------------------
 
@@ -1842,14 +1844,14 @@ private:
     UserdataValue<T> (UserdataValue<T> const &);
     UserdataValue<T> operator=(UserdataValue<T> const&);
 
-    char m_storage [sizeof(T)];
+    char m_storage [sizeof(T) + MEM_ALIGN_MASK];
 
     inline T *getObject()
     {
         // If this fails to compile it means you forgot to provide
         // a Container specialization for your container!
         //
-        return reinterpret_cast<T *> (&m_storage [0]);
+        return reinterpret_cast<T *> ((reinterpret_cast<size_t>(&m_storage[0]) + MEM_ALIGN_MASK) & (~MEM_ALIGN_MASK));
     }
 
 private:
