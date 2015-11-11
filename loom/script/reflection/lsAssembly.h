@@ -43,6 +43,7 @@ class Assembly {
 
 private:
     utString name;
+    utString uid;
     utString loomConfig;
 
     LSLuaState *vm;
@@ -139,6 +140,11 @@ public:
     const utString& getName()
     {
         return name;
+    }
+
+    const utString& getUniqueId()
+    {
+        return uid;
     }
 
     void execute();

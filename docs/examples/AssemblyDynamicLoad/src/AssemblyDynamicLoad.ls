@@ -13,10 +13,11 @@ package
         {
             var s = new Shape(); stage.addChild(s); s.graphics.beginFill(0xFF0000); s.graphics.drawRect(20, 20, 50, 50);
             
-            trace("Hello?");
+            trace("== Begin dynamic assembly loading ==");
             var asm = Assembly.loadBytes(File.loadBinaryFile("assets/bin/Main.loom"));
-            asm.run();
-            trace("Hey?");
+            trace("== Done loading dynamic assembly, executing ==");
+            asm.execute();
+            trace("== Dynamic assembly executed ==");
             
         }
         

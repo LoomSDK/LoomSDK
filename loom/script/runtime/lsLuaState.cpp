@@ -278,7 +278,7 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
     // setup assembly type lookup field
     lua_rawgeti(L, LUA_GLOBALSINDEX, LSASSEMBLYLOOKUP);
     lua_pushlightuserdata(L, assembly);
-    lua_setfield(L, -2, assembly->getName().c_str());
+    lua_setfield(L, -2, assembly->getUniqueId().c_str());
     lua_pop(L, 1);
 
     lmAssert(assembly->ordinalTypes == NULL, "Assembly types cache error, ordinalTypes already exists");

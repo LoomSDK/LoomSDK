@@ -1,28 +1,43 @@
-package
+package simple
 {
-    import loom.Application;
-    import loom2d.display.Shape;
-    import system.Void;
-    
-    public class SimpleAssembly extends Application
+    public class Test
     {
-        
-        override public static function main():void
+        var member = "Member";
+
+        public function Test()
         {
-            trace("Hello asm.execute!");
+            trace("Test.ctor");
         }
-        
-        override public function run():void
+
+        public function printMember()
         {
-            var s = new Shape(); stage.addChild(s); s.graphics.beginFill(0x00FF00); s.graphics.drawRect(40, 40, 50, 50);
-            
-            trace("Hello asm.run!");
+            trace(member);
         }
-        
-        override public function onTick() {
-            trace("tick!");
-            return super.onTick();
+    }
+
+    public class SimpleAssembly
+    {
+        public function SimpleAssembly()
+        {
+            trace("SimpleAssembly.ctor");
         }
-        
+
+        static var e = "Static";
+
+        public static function main():void
+        {
+            trace("SimpleAssembly.main");
+            trace(e);
+            var obj = new SimpleAssembly();
+            obj.run();
+        }
+
+        public function run():void
+        {
+            trace("SimpleAssembly.run");
+
+            var t = new Test();
+            t.printMember();
+        }
     }
 }

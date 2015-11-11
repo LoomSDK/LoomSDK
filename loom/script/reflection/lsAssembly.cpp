@@ -25,6 +25,7 @@
 #include "loom/script/reflection/lsAssembly.h"
 #include "loom/script/runtime/lsLuaState.h"
 #include "loom/common/core/assert.h"
+#include "loom/common/utils/guid.h"
 #include "loom/script/native/lsNativeInterface.h"
 
 namespace LS {
@@ -71,6 +72,10 @@ Assembly *Assembly::create(LSLuaState *vm, const utString& name)
     a->vm   = vm;
     a->name = name;
 
+    loom_guid_t guid;
+    loom_generate_guid(guid);
+    a->uid = guid;
+
     utHashTable<utHashedString, Assembly *> *lookup = NULL;
 
     UTsize idx = assemblies.find(vm);
@@ -88,7 +93,7 @@ Assembly *Assembly::create(LSLuaState *vm, const utString& name)
     utHashedString key = a->name;
     lookup->insert(key, a);
 
-    vm->assemblies.insert(utHashedString(a->getName()), a);
+    vm->assemblies.insert(utHashedString(a->uid), a);
 
     return a;
 }
