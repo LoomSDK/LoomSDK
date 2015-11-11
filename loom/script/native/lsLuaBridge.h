@@ -55,6 +55,7 @@
 #include "loom/script/runtime/lsLua.h"
 #include "loom/script/runtime/lsRuntime.h"
 #include "loom/script/native/lsNativeInterface.h"
+#include "loom/common/core/allocator.h"
 
 #include <new>
 
@@ -1826,8 +1827,6 @@ public:
         }
     }
 };
-    
-#define MEM_ALIGN_MASK (8-1)
 
 //----------------------------------------------------------------------------
 
@@ -1844,14 +1843,14 @@ private:
     UserdataValue<T> (UserdataValue<T> const &);
     UserdataValue<T> operator=(UserdataValue<T> const&);
 
-    char m_storage [sizeof(T) + MEM_ALIGN_MASK];
+    char m_storage [sizeof(T) + LOOM_ALLOCATOR_ALIGN_MASK];
 
     inline T *getObject()
     {
         // If this fails to compile it means you forgot to provide
         // a Container specialization for your container!
         //
-        return reinterpret_cast<T *> ((reinterpret_cast<size_t>(&m_storage[0]) + MEM_ALIGN_MASK) & (~MEM_ALIGN_MASK));
+        return reinterpret_cast<T *> ((reinterpret_cast<size_t>(&m_storage[0]) + LOOM_ALLOCATOR_ALIGN_MASK) & (~LOOM_ALLOCATOR_ALIGN_MASK));
     }
 
 private:

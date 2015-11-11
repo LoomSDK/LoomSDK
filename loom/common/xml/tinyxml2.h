@@ -39,7 +39,7 @@ distribution.
 	gcc: g++ -Wall tinyxml2.cpp xmltest.cpp -o gccxmltest.exe
 */
 
-#define MEM_ALIGN_ENABLED 0
+#define TIXML2_MEM_ALIGN_ENABLED 0
 
 #if defined( _DEBUG ) || defined( DEBUG ) || defined (__DEBUG__)
 	#ifndef DEBUG
@@ -87,11 +87,10 @@ distribution.
 	#define TIXML_SSCANF   sscanf
 #endif
 
-#define MEM_ALIGN_MASK 8-1
-#if MEM_ALIGN_ENABLED
-#define MEM_ALIGN(size)  ((size + MEM_ALIGN_MASK) & (~MEM_ALIGN_MASK))
+#if TIXML2_MEM_ALIGN_ENABLED
+#define TIXML2_MEM_ALIGN(size)  ((size + LOOM_ALLOCATOR_ALIGN_MASK) & (~LOOM_ALLOCATOR_ALIGN_MASK))
 #else
-#define MEM_ALIGN(size)  (size)
+#define TIXML2_MEM_ALIGN(size)  (size)
 #endif
 
 static const int TIXML2_MAJOR_VERSION = 1;
@@ -1161,10 +1160,10 @@ private:
 	const char* errorStr2;
 	char* charBuffer;
 
-    MemPoolT< MEM_ALIGN(sizeof(XMLElement)) >	elementPool;
-    MemPoolT< MEM_ALIGN(sizeof(XMLAttribute)) > attributePool;
-    MemPoolT< MEM_ALIGN(sizeof(XMLText)) >		textPool;
-    MemPoolT< MEM_ALIGN(sizeof(XMLComment)) >	commentPool;
+    MemPoolT< TIXML2_MEM_ALIGN(sizeof(XMLElement)) >	elementPool;
+    MemPoolT< TIXML2_MEM_ALIGN(sizeof(XMLAttribute)) > attributePool;
+    MemPoolT< TIXML2_MEM_ALIGN(sizeof(XMLText)) >		textPool;
+    MemPoolT< TIXML2_MEM_ALIGN(sizeof(XMLComment)) >	commentPool;
 };
 
 
