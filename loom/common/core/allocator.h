@@ -78,6 +78,8 @@
  *
  */
 
+// This defines the alignment mask (alignment size minus one) used in manual
+// allocation with variably offset custom data fields
 #define LOOM_ALLOCATOR_ALIGN_MASK (8-1)
 
 /**

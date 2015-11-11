@@ -39,8 +39,6 @@ distribution.
 	gcc: g++ -Wall tinyxml2.cpp xmltest.cpp -o gccxmltest.exe
 */
 
-#define TIXML2_MEM_ALIGN_ENABLED 0
-
 #if defined( _DEBUG ) || defined( DEBUG ) || defined (__DEBUG__)
 	#ifndef DEBUG
 		#define DEBUG
@@ -85,12 +83,6 @@ distribution.
 	//#warning( "Using sn* functions." )
 	#define TIXML_SNPRINTF snprintf
 	#define TIXML_SSCANF   sscanf
-#endif
-
-#if TIXML2_MEM_ALIGN_ENABLED
-#define TIXML2_MEM_ALIGN(size)  ((size + LOOM_ALLOCATOR_ALIGN_MASK) & (~LOOM_ALLOCATOR_ALIGN_MASK))
-#else
-#define TIXML2_MEM_ALIGN(size)  (size)
 #endif
 
 static const int TIXML2_MAJOR_VERSION = 1;
@@ -1160,10 +1152,10 @@ private:
 	const char* errorStr2;
 	char* charBuffer;
 
-    MemPoolT< TIXML2_MEM_ALIGN(sizeof(XMLElement)) >	elementPool;
-    MemPoolT< TIXML2_MEM_ALIGN(sizeof(XMLAttribute)) > attributePool;
-    MemPoolT< TIXML2_MEM_ALIGN(sizeof(XMLText)) >		textPool;
-    MemPoolT< TIXML2_MEM_ALIGN(sizeof(XMLComment)) >	commentPool;
+	MemPoolT< sizeof(XMLElement) >	elementPool;
+	MemPoolT< sizeof(XMLAttribute) > attributePool;
+	MemPoolT< sizeof(XMLText) >		textPool;
+	MemPoolT< sizeof(XMLComment) >	commentPool;
 };
 
 

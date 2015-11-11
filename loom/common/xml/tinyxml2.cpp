@@ -102,7 +102,7 @@ void StrPair::SetStr( const char* str, int flags )
 {
 	Reset();
 	size_t len = strlen( str );
-    start = static_cast<char*>(lmAlloc(NULL, len + 1 ));
+	start = static_cast<char*>(lmAlloc(NULL, len + 1 ));
 	memcpy( start, str, len+1 );
 	end = start + len;
 	this->flags = flags | NEEDS_DELETE;
@@ -1446,7 +1446,7 @@ int XMLDocument::Parse( const char* p )
 	}
 
 	size_t len = strlen( p );
-    charBuffer = static_cast<char*>(lmAlloc(NULL, len + 1));
+	charBuffer = static_cast<char*>(lmAlloc(NULL, len + 1));
 	memcpy( charBuffer, p, len+1 );
 
 	
