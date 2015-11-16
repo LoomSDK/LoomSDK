@@ -3,7 +3,7 @@ require 'json'
 namespace :package do
 
   def cp_r_safe(src, dst)
-    if Dir.exists? src
+    if File.exists? src
       FileUtils.mkdir_p(dst)
       FileUtils.cp_r(src, dst)
     end
