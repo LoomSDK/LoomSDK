@@ -476,67 +476,299 @@ namespace :build do
     FileUtils.cp("tools/fruitstrap/fruitstrap", "#{$OUTPUT_DIRECTORY}/ios-arm/")
   end
 
+  class Host
+    def initialize()
+      @name = $LOOM_HOST_OS
+    end
+
+    def name()
+      return @name
+    end
+  end
+
+  HOST = Host.new()
+
+  class Toolchain
+    def buildCommand
+      abort
+    end
+
+    def name
+      abort
+    end
+
+    def cmakeArgs
+      abort
+    end
+
+    def arch(target)
+      abort
+    end
+
+    def build(target)
+      path = target.buildPath(self)
+      FileUtils.mkdir_p(path)
+      Dir.chdir(path) do
+        if !Kernel::system "cmake #{target.sourcePath} #{cmakeArgs(target)} #{target.flags(self)}" then abort end
+        if !Kernel::system buildCommand then abort end
+      end
+    end
+  end
+
+  class WindowsToolchain < Toolchain
+    def buildCommand
+      return "msbuild /verbosity:m ALL_BUILD.vcxproj /p:Configuration=#{$buildTarget}"
+    end
+
+    def name
+      return "windows"
+    end
+
+    def cmakeArgs(target)
+      if target.is64Bit == 1
+        return "-G \"#{get_vs_name} Win64\""
+      else
+        return "-G \"#{get_vs_name}\""
+      end
+    end
+
+    def arch(target)
+      if target.is64Bit == 1
+        return "x64"
+      else
+        return "x86"
+      end
+    end
+  end
+
+  class OSXToolchain < Toolchain
+    def name
+      return "osx"
+    end
+
+    def buildCommand
+      return "xcodebuild -configuration #{$buildTarget}"
+    end
+
+    def cmakeArgs(target)
+      return "-G \"Xcode\""
+    end
+
+    def arch(target)
+      if target.is64Bit == 1
+        return "x64"
+      else
+        return "x86"
+      end
+    end
+  end
+
+  class IOSToolchain < Toolchain
+    def initialize(signAs)
+      @signAs = signAs
+      @sdkroot="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS#{$targetIOSSDK}.sdk"
+    end
+
+    def name
+      return "ios"
+    end
+
+    def buildCommand
+      return "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{@signAs}\" CODE_SIGN_RESOURCE_RULES_PATH=#{@sdkroot}/ResourceRules.plist"
+    end
+
+    def cmakeArgs(target)
+      return "-G \"Xcode\" -DLOOM_BUILD_IOS=1 -DLOOM_IOS_VERSION=#{$targetIOSSDK}"
+    end
+
+    def arch(target)
+     return "arm"
+    end
+  end
+
+  class LinuxToolchain
+  end
+
+  class AndroidToolchain < Toolchain
+    def buildCommand
+      return "cmake --build ."
+    end
+
+    def name
+      return "android"
+    end
+
+    def cmakeArgs(target)
+      if HOST.name == 'windows'
+        generator = "MinGW Makefiles"
+        make_arg = "-DCMAKE_MAKE_PROGRAM=\"%ANDROID_NDK%\"\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make.exe\""
+      else
+        generator = "Unix Makefiles"
+        make_arg = ""
+      end
+
+      return "-G \"#{generator}\" -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DANDROID_NDK_HOST_X64=#{HOST_ISX64} -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=14 #{make_arg}"
+    end
+
+    def arch(target)
+      return "arm"
+    end
+  end
+
+  class Target
+    def name
+      abort
+    end
+
+    def is64Bit
+      abort
+    end
+
+    def sourcePath
+      abort
+    end
+
+    def flags(toolchain)
+    end
+
+    def buildPath(toolchain)
+      return "#{ROOT}/build/#{name}-#{toolchain.name}-#{toolchain.arch(self)}"
+    end
+  end
+
+  class LuaJITTarget < Target
+
+    def initialize(is64Bit)
+      @is64Bit = is64Bit
+    end
+
+    def name
+      return "luajit"
+    end
+
+    def is64Bit
+      return @is64Bit
+    end
+
+    def sourcePath
+      return "#{ROOT}/loom/vendor/luajit"
+    end
+
+    def flags(toolchain)
+      if toolchain.instance_of? WindowsToolchain
+        os = "LUAJIT_OS_WINDOWS"
+      elsif toolchain.instance_of? AndroidToolchain or toolchain.instance_of? LinuxToolchain
+        os = "LUAJIT_OS_LINUX"
+      else
+        os = "LUAJIT_OS_OSX"
+      end
+      return "-DLUAJIT_X64=#{@is64Bit} -DLUA_TARGET_ARCH=#{toolchain.arch(self)} -DLUAJIT_OS=#{os} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile}"
+    end
+  end
+
+  class LuaJITBootstrapTarget < LuaJITTarget
+
+    def initialize(is64Bit, targetToolchain)
+      super is64Bit
+      @targetToolchain = targetToolchain
+    end
+
+    def name
+      return "luajit-bootstrap"
+    end
+    
+    def flags(toolchain)
+      return "#{super(@targetToolchain)} -DBOOTSTRAP_ONLY=1 -DCMAKE_OSX_ARCHITECTURES=i386"
+    end
+
+    def buildPath(toolchain)
+      return super @targetToolchain
+    end
+  end
+
+  class LuaJITLibTarget < LuaJITTarget
+
+    def initialize(is64Bit, bootstrap)
+      super is64Bit
+      @bootstrap = bootstrap
+    end
+
+    def flags(toolchain)
+      return "#{super} -DTARGET_ONLY=1 -DBOOTSTRAP_PATH=\"#{@bootstrap.buildPath(toolchain)}\""
+    end
+  end
+
+  class LoomTarget < Target
+    def initialize(is64Bit, luajit)
+      @is64Bit = is64Bit
+      @luajit = luajit
+    end
+
+    def name
+      return "loom"
+    end
+
+    def is64Bit
+      return @is64Bit
+    end
+
+    def sourcePath
+      return "#{ROOT}"
+    end
+
+    def flags(toolchain)
+      return "-DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_BUILD_64BIT=#{@is64Bit} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DLUAJIT_BUILD_DIR=\"#{@luajit.buildPath(toolchain)}\""
+    end
+  end
+
+
   desc "Builds OS X"
   task :osx => [] do
 
-    # OS X build is currently not supported under Windows
-    if $LOOM_HOST_OS != 'windows'
-
-      puts "== Building OS X =="
-
-      if $doBuildJIT == 1 then
-        FileUtils.mkdir_p("build/luajit-osx-x86")
-        Dir.chdir("build/luajit-osx-x86") do
-          sh "cmake -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_X64=0 -DLUAJIT_OS=LUAJIT_OS_OSX -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} #{ROOT}/loom/vendor/luajit"
-          sh "xcodebuild -configuration #{$buildTarget}"
-        end
-      end
-
-      FileUtils.mkdir_p("#{ROOT}/build/loom-osx-x86")
-      Dir.chdir("#{ROOT}/build/loom-osx-x86") do
-        sh "cmake -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_BUILD_64BIT=0 -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-osx-x86 #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
-        sh "xcodebuild -configuration #{$buildTarget}"
-      end
-
-      if HOST_ISX64 == '1' then
-        if $doBuildJIT == 1 then
-          FileUtils.mkdir_p("build/luajit-osx-x64")
-          Dir.chdir("build/luajit-osx-x64") do
-            sh "cmake -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_OS=LUAJIT_OS_OSX -DLUAJIT_X64=1 -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} #{ROOT}/loom/vendor/luajit"
-            sh "xcodebuild -configuration #{$buildTarget}"
-          end
-        end
-
-        FileUtils.mkdir_p("#{ROOT}/build/loom-osx-x64")
-        Dir.chdir("#{ROOT}/build/loom-osx-x64") do
-          sh "cmake -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_BUILD_64BIT=1 -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -G Xcode -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-osx-x64 #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{ROOT}"
-          sh "xcodebuild -configuration #{$buildTarget}"
-        end
-      end
-
-      Rake::Task["utility:compileScripts"].invoke
-
-      # build ldb
-      Dir.chdir("sdk") do
-        sh "#{$LSC_BINARY} LDB.build"
-      end
-
-      # build testexec
-      Dir.chdir("sdk") do
-        sh "#{$LSC_BINARY} TestExec.build"
-      end
-
-      puts "Copying to #{HOST_ARTIFACTS}"
-
-      # copy libs
-      FileUtils.cp_r("sdk/libs", "#{$OUTPUT_DIRECTORY}")
-      FileUtils.cp_r("sdk/bin/LDB.loom", "#{$OUTPUT_DIRECTORY}/libs")
-      FileUtils.cp_r("sdk/bin/TestExec.loom", "#{$OUTPUT_DIRECTORY}/libs")
-      FileUtils.cp_r("sdk/src/testexec/loom.config", "#{$OUTPUT_DIRECTORY}/libs/TestExec.config")
-      FileUtils.cp_r('sdk/bin', "#{$OUTPUT_DIRECTORY}/bin")
-      FileUtils.cp_r('sdk/assets', "#{$OUTPUT_DIRECTORY}")
+    if $LOOM_HOST_OS != 'osx'
+      return
     end
 
+    puts "== Building OS X =="
+
+    toolchain = OSXToolchain.new();
+    luajit_x86 = LuaJITTarget.new(0);
+    loom_x86 = LoomTarget.new(0, luajit_x86);
+    if $doBuildJIT == 1 then
+      toolchain.build(luajit_x86)
+    end
+    toolchain.build(loom_x86)
+
+    if HOST_ISX64 == '1' then
+      luajit_x64 = LuaJITTarget.new(1);
+      loom_x64 = LoomTarget.new(1, luajit_x64);
+      if $doBuildJIT == 1 then
+        toolchain.build(luajit_x64)
+      end
+      toolchain.build(loom_x64)
+    end
+
+    Rake::Task["utility:compileScripts"].invoke
+
+    # build ldb
+    Dir.chdir("sdk") do
+      sh "#{$LSC_BINARY} LDB.build"
+    end
+
+    # build testexec
+    Dir.chdir("sdk") do
+      sh "#{$LSC_BINARY} TestExec.build"
+    end
+
+    puts "Copying to #{HOST_ARTIFACTS}"
+
+    # copy libs
+    FileUtils.cp_r("sdk/libs", "#{$OUTPUT_DIRECTORY}")
+    FileUtils.cp_r("sdk/bin/LDB.loom", "#{$OUTPUT_DIRECTORY}/libs")
+    FileUtils.cp_r("sdk/bin/TestExec.loom", "#{$OUTPUT_DIRECTORY}/libs")
+    FileUtils.cp_r("sdk/src/testexec/loom.config", "#{$OUTPUT_DIRECTORY}/libs/TestExec.config")
+    FileUtils.cp_r('sdk/bin', "#{$OUTPUT_DIRECTORY}/bin")
+    FileUtils.cp_r('sdk/assets', "#{$OUTPUT_DIRECTORY}")
   end
 
   desc "Builds iOS"
@@ -611,28 +843,16 @@ namespace :build do
         puts "Found SDL2 libSDL2.a in #{sdlLibPath} - skipping build"
       end
 
-      sdkroot="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS#{$targetIOSSDK}.sdk"
-
+      hostToolchain = OSXToolchain.new()
+      toolchain = IOSToolchain.new(args.sign_as)
+      luajit_bootstrap = LuaJITBootstrapTarget.new(0, toolchain)
+      luajit_lib = LuaJITLibTarget.new(0, luajit_bootstrap)
+      loom_arm = LoomTarget.new(0, luajit_lib)
       if $doBuildJIT == 1 then
-        FileUtils.mkdir_p("build/luajit-ios-arm-bootstrap")
-        Dir.chdir("build/luajit-ios-arm-bootstrap") do
-          sh "cmake -G Xcode -DCMAKE_OSX_ARCHITECTURES=i386 -DBOOTSTRAP_ONLY=1 -DLUA_TARGET_ARCH=arm -DLUAJIT_OS=LUAJIT_OS_OSX -DCMAKE_BUILD_TYPE=#{$buildTarget} #{ROOT}/loom/vendor/luajit"
-          sh "cmake --build ."
-        end
-
-        FileUtils.mkdir_p("build/luajit-ios-arm")
-        Dir.chdir("build/luajit-ios-arm") do
-          sh "cmake -G Xcode -DTARGET_ONLY=1 -DBOOTSTRAP_PATH=#{ROOT}/build/luajit-ios-arm-bootstrap -DLUA_TARGET_ARCH=arm -DLUAJIT_OS=LUAJIT_OS_OSX -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} #{ROOT}/loom/vendor/luajit"
-          sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\" CODE_SIGN_RESOURCE_RULES_PATH=#{sdkroot}/ResourceRules.plist"
-        end
+        hostToolchain.build(luajit_bootstrap)
+        toolchain.build(luajit_lib)
       end
-
-      # TODO: Find a way to resolve resources in xcode for ios.
-      Dir.chdir("#{ROOT}/build/loom-ios-arm") do
-        sh "cmake -DLOOM_BUILD_IOS=1 -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-ios-arm -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_IOS_VERSION=#{$targetIOSSDK} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -G Xcode #{ROOT}"
-        sh "xcodebuild -configuration #{$buildTarget} CODE_SIGN_IDENTITY=\"#{args.sign_as}\" CODE_SIGN_RESOURCE_RULES_PATH=#{sdkroot}/ResourceRules.plist"
-      end
-
+      toolchain.build(loom_arm)
       # TODO When we clean this up... we should have get_app_prefix return and object with, appPath,
       # appNameMatch, appName and appPrefix
 
@@ -667,36 +887,21 @@ namespace :build do
   desc "Builds Windows"
   task :windows => [] do
     puts "== Building Windows =="
-
+    toolchain = WindowsToolchain.new();
+    luajit_x86 = LuaJITTarget.new(0);
+    loom_x86 = LoomTarget.new(0, luajit_x86);
     if $doBuildJIT == 1 then
-        FileUtils.mkdir_p("build/luajit-windows-x86")
-        Dir.chdir("build/luajit-windows-x86") do
-            sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"#{get_vs_name()}\" -DLUAJIT_X64=0 -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile}"
-            sh "msbuild /verbosity:m ALL_BUILD.vcxproj /p:Configuration=#{$buildTarget}"
-        end
+      toolchain.build(luajit_x86)
     end
-
-    FileUtils.mkdir_p("#{ROOT}/build/loom-windows-x86")
-    Dir.chdir("#{ROOT}/build/loom-windows-x86") do
-      sh "cmake -G \"#{get_vs_name()}\" -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLOOM_BUILD_64BIT=0 -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DLUAJIT_BUILD_DIR=\"#{ROOT}/build/luajit-windows-x86\" #{ROOT}"
-      sh "msbuild /verbosity:m LoomEngine.sln /p:Configuration=#{$buildTarget}"
-    end
+    toolchain.build(loom_x86)
 
     if HOST_ISX64 == '1' then
-
-        if $doBuildJIT == 1 then
-            FileUtils.mkdir_p("build/luajit-windows-x64")
-            Dir.chdir("build/luajit-windows-x64") do
-                sh "cmake #{ROOT}/loom/vendor/luajit/ -G \"#{get_vs_name()} Win64\" -DLUAJIT_X64=1  -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile}"
-                sh "msbuild /verbosity:m ALL_BUILD.vcxproj /p:Configuration=#{$buildTarget}"
-            end
-        end
-
-        FileUtils.mkdir_p("#{ROOT}/build/loom-windows-x64")
-        Dir.chdir("#{ROOT}/build/loom-windows-x64") do
-          sh "cmake -G \"#{get_vs_name()} Win64\" -DLOOM_BUILD_64BIT=1 -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DLOOM_BUILD_NUMCORES=#{$numCores} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DLUAJIT_BUILD_DIR=\"#{ROOT}/build/luajit-windows-x64\" #{ROOT}"
-          sh "msbuild /verbosity:m LoomEngine.sln /p:Configuration=#{$buildTarget}"
-        end
+      luajit_x64 = LuaJITTarget.new(1);
+      loom_x64 = LoomTarget.new(1, luajit_x64);
+      if $doBuildJIT == 1 then
+        toolchain.build(luajit_x64)
+      end
+      toolchain.build(loom_x64)
     end
 
     Rake::Task["utility:compileScripts"].invoke
@@ -740,108 +945,59 @@ namespace :build do
       puts "Found SDL2 libSDL2.a in #{sdlLibPath} - skipping build"
     end
 	
-    if $LOOM_HOST_OS == "windows"
-
-      # WINDOWS
-      FileUtils.mkdir_p("#{ROOT}/build/loom-android-arm")
-      Dir.chdir("#{ROOT}/build/loom-android-arm") do
-        sh "cmake -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DLUAJIT_BUILD_DIR=#{ROOT}/loom/vendor/luajit_windows_android/luajit_android/lib #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_NDK_HOST_X64=#{HOST_ISX64} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} -G\"MinGW Makefiles\" -DCMAKE_MAKE_PROGRAM=\"%ANDROID_NDK%\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make.exe\" #{ROOT}"
-        sh "cmake --build ."
+    hostToolchain = OSXToolchain.new()
+    toolchain = AndroidToolchain.new()
+    luajit_bootstrap = LuaJITBootstrapTarget.new(0, toolchain)
+    luajit_lib = LuaJITLibTarget.new(0, luajit_bootstrap)
+    loom_arm = LoomTarget.new(0, luajit_lib)
+    if $doBuildJIT == 1 then
+      if $LOOM_HOST_OS != "windows"
+        hostToolchain.build(luajit_bootstrap)
+        toolchain.build(luajit_lib)
+      else
+        # Just copy over the prebuilt lib on windows, it's near impossible to build there
+        FileUtils.mkdir_p toolchain.buildPath(luajit_lib)
+        FileUtils.cp_r(Dir.glob("#{ROOT}/loom/vendor/luajit_windows_android/luajit_android/lib/*"), toolchain.buildPath(luajit_lib))
       end
-
-      puts "*** Building against AndroidSDK " + $targetAndroidSDK
-      api_id = get_android_api_id($targetAndroidSDK)
-
-      Dir.chdir("loom/vendor/facebook/android") do
-        sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
-      end
-
-      Dir.chdir("loom/engine/sdl2/platform/android/java") do
-        sh "android update project --name SDL2 --subprojects --target #{api_id} --path ."
-      end
-
-      Dir.chdir("application/android") do
-        sh "android update project --name LoomDemo --subprojects --target #{api_id} --path ."
-      end
-
-      FileUtils.mkdir_p "application/android/assets"
-      FileUtils.mkdir_p "application/android/assets/assets"
-      FileUtils.mkdir_p "application/android/assets/bin"
-      FileUtils.mkdir_p "application/android/assets/libs"
-
-      sh "xcopy /Y /I sdk\\bin\\*.loom application\\android\\assets\\bin"
-      sh "xcopy /Y /I sdk\\assets\\*.* application\\android\\assets\\assets"
-
-      # TODO: LOOM-1070 can we build for release or does this have signing issues?
-      Dir.chdir("application/android") do
-        sh "ant.bat clean #{$targetAndroidBuildType}"
-      end
-
-      # Copy APKs to artifacts.
-      FileUtils.mkdir_p "artifacts/android-arm"
-      sh "echo f | xcopy /F /Y application\\android\\bin\\#{$targetAPKName} #{$OUTPUT_DIRECTORY}\\android-arm\\LoomDemo.apk"
-
-      FileUtils.cp_r("tools/apktool/apktool.jar", "#{$OUTPUT_DIRECTORY}/android-arm")
-    else
-      # OSX / LINUX
-
-      if $doBuildJIT == 1 then
-        FileUtils.mkdir_p("build/luajit-android-arm-bootstrap")
-        Dir.chdir("build/luajit-android-arm-bootstrap") do
-          sh "cmake -G Xcode -DCMAKE_OSX_ARCHITECTURES=i386 -DBOOTSTRAP_ONLY=1 -DLUA_TARGET_ARCH=arm -DLUAJIT_OS=LUAJIT_OS_LINUX -DCMAKE_BUILD_TYPE=#{$buildTarget} #{ROOT}/loom/vendor/luajit"
-          sh "cmake --build ."
-        end
-
-        FileUtils.mkdir_p("build/luajit-android-arm")
-        Dir.chdir("build/luajit-android-arm") do
-          sh "cmake -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DTARGET_ONLY=1 -DBOOTSTRAP_PATH=#{ROOT}/build/luajit-android-arm-bootstrap -DLUA_TARGET_ARCH=arm -DLUAJIT_OS=LUAJIT_OS_LINUX -DCMAKE_BUILD_TYPE=#{$buildTarget} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} #{ROOT}/loom/vendor/luajit"
-          sh "cmake --build ."
-        end
-      end
-
-      FileUtils.mkdir_p("#{ROOT}/build/loom-android-arm")
-      Dir.chdir("#{ROOT}/build/loom-android-arm") do
-        sh "cmake -DCMAKE_TOOLCHAIN_FILE=#{ROOT}/build/cmake/loom.android.toolchain.cmake -DLUAJIT_BUILD_DIR=#{ROOT}/build/luajit-android-arm #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} -DANDROID_ABI=armeabi-v7a  -DLOOM_BUILD_JIT=#{$doBuildJIT} -DLUA_GC_PROFILE_ENABLED=#{$doEnableLuaGcProfile} -DANDROID_NATIVE_API_LEVEL=14 -DCMAKE_BUILD_TYPE=#{$buildTarget} #{ROOT}"
-        sh "make -j#{$numCores}"
-      end
-
-      api_id = get_android_api_id($targetAndroidSDK)
-
-      Dir.chdir("loom/vendor/facebook/android") do
-        puts "*** Building against AndroidSDK " + $targetAndroidSDK
-        sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
-      end
-
-      Dir.chdir("loom/engine/sdl2/platform/android/java") do
-        puts "*** Building against AndroidSDK " + $targetAndroidSDK
-        sh "android update project --name SDL2Lib --subprojects --target #{api_id} --path ."
-      end
-
-      Dir.chdir("application/android") do
-        puts "*** Building against AndroidSDK " + $targetAndroidSDK
-        sh "android update project --name LoomDemo --subprojects --target #{api_id} --path ."
-      end
-
-      FileUtils.mkdir_p "application/android/assets"
-      FileUtils.mkdir_p "application/android/assets/assets"
-      FileUtils.mkdir_p "application/android/assets/bin"
-      FileUtils.mkdir_p "application/android/assets/libs"
-
-      sh "cp sdk/bin/*.loom application/android/assets/bin"
-      sh "cp sdk/assets/*.* application/android/assets/assets"
-
-      # TODO: LOOM-1070 can we build for release or does this have signing issues?
-      Dir.chdir("application/android") do
-        sh "ant #{$targetAndroidBuildType}"
-      end
-
-      # Copy APKs to artifacts.
-      FileUtils.mkdir_p "#{$OUTPUT_DIRECTORY}/android-arm/"
-
-      sh "cp application/android/bin/#{$targetAPKName} #{$OUTPUT_DIRECTORY}/android-arm/LoomDemo.apk"
-
-      FileUtils.cp_r("tools/apktool/apktool.jar", "#{$OUTPUT_DIRECTORY}/android-arm")
     end
+    toolchain.build(loom_arm)
+
+    puts "*** Building against AndroidSDK " + $targetAndroidSDK
+    api_id = get_android_api_id($targetAndroidSDK)
+
+    Dir.chdir("loom/vendor/facebook/android") do
+      sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
+    end
+
+    Dir.chdir("loom/engine/sdl2/platform/android/java") do
+      sh "android update project --name SDL2 --subprojects --target #{api_id} --path ."
+    end
+
+    Dir.chdir("application/android") do
+      sh "android update project --name LoomDemo --subprojects --target #{api_id} --path ."
+    end
+
+    FileUtils.mkdir_p "application/android/assets"
+    FileUtils.mkdir_p "application/android/assets/assets"
+    FileUtils.mkdir_p "application/android/assets/bin"
+    FileUtils.mkdir_p "application/android/assets/libs"
+
+    FileUtils.cp_r(Dir.glob("sdk/bin/*.loom"), "application/android/assets/bin")
+    FileUtils.cp_r(Dir.glob("sdk/assets/*.*"), "application/android/assets/assets")
+
+      # TODO: LOOM-1070 can we build for release or does this have signing issues?
+    Dir.chdir("application/android") do
+      ant = 'ant'
+      if $LOOM_HOST_OS == 'windows'
+          ant = 'ant.bat'
+      end
+      sh "#{ant} clean #{$targetAndroidBuildType}"
+    end
+
+    # Copy APKs to artifacts.
+    FileUtils.mkdir_p "artifacts/android-arm"
+    FileUtils.cp_r("application/android/bin/#{$targetAPKName}", "#{$OUTPUT_DIRECTORY}/android-arm/LoomDemo.apk")
+    FileUtils.cp_r("tools/apktool/apktool.jar", "#{$OUTPUT_DIRECTORY}/android-arm")
   end
 
   desc "Builds Ubuntu Linux"
