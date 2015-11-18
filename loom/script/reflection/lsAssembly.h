@@ -166,7 +166,9 @@ public:
     // get the assembly of the method that invoked the currently executing method
     static Assembly *getCallingAssembly();
 
-    static Assembly *create(LSLuaState *vm, const utString& name);
+    static Assembly *getLoaded(LSLuaState *vm, const utString& name, const utString& uid);
+
+    static Assembly *create(LSLuaState *vm, const utString& name, const utString& uid);
 	
 	static Assembly *loadBinary(LSLuaState *vm, utByteArray *bytes);
     

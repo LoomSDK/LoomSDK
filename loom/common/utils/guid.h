@@ -37,6 +37,11 @@ extern "C"
      
      */
     void loom_generate_guid(loom_guid_t out_guid);
+
+    /*
+       returns 1 if the value is formatted as a guid, 0 otherwis
+    */
+    int loom_is_guid(const loom_guid_t guid);
 };
 
 #endif

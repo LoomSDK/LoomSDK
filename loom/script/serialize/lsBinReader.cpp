@@ -19,6 +19,7 @@
  */
 
 #include "loom/common/core/allocator.h"
+#include "loom/common/utils/guid.h"
 #include "loom/script/serialize/lsBinReader.h"
 #include "loom/script/reflection/lsFieldInfo.h"
 
@@ -671,7 +672,21 @@ Assembly *BinReader::readAssembly(LSLuaState *_vm, utByteArray *_bytes)
     const char *type       = readPoolString();
     const char *name       = readPoolString();
     const char *version    = readPoolString();
-    const char *loomconfig = readPoolString();
+    const char *uid        = readPoolString();
+    const char *loomconfig = NULL;
+    loom_guid_t fallback_uid;
+
+    if (loom_is_guid(uid) == 0)
+    {
+        // Generate a guid if the assembly contains none
+        loomconfig = uid;
+        loom_generate_guid(fallback_uid);
+        uid = fallback_uid;
+    }
+    else
+    {
+        loomconfig = readPoolString();
+    }
 
     // write out flags
     bool executable = bytes->readBoolean();
@@ -721,7 +736,13 @@ Assembly *BinReader::readAssembly(LSLuaState *_vm, utByteArray *_bytes)
         bytes->setPosition(position);
     }
 
-    assembly = Assembly::create(vm, name);
+    assembly = Assembly::getLoaded(vm, name, uid);
+    if (assembly != NULL)
+    {
+        return assembly;
+    }
+
+    assembly = Assembly::create(vm, name, uid);
 
     for (UTsize i = 0; i < assrefs.size(); i++)
     {

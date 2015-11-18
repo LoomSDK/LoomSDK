@@ -584,6 +584,7 @@ void BinWriter::writeAssembly(json_t *json)
 
     int iname       = poolString(name);
     int iversion    = poolJString(json_object_get(json, "version"));
+    int iuid        = poolJString(json_object_get(json, "uid"));
     int iloomconfig = 0;
 
     bool executable = false;
@@ -610,6 +611,7 @@ void BinWriter::writeAssembly(json_t *json)
     bytes.writeInt(itype);
     bytes.writeInt(iname);
     bytes.writeInt(iversion);
+    bytes.writeInt(iuid);
     bytes.writeInt(iloomconfig);
 
     // write out flags

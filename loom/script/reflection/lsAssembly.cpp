@@ -64,17 +64,23 @@ Assembly *Assembly::getAssembly(Type *type)
     return a;
 }
 
+Assembly *Assembly::getLoaded(LSLuaState *vm, const utString& name, const utString& uid)
+{
+    if (vm->assemblies.find(utHashedString(uid)) != UT_NPOS)
+    {
+        return *(vm->assemblies.get(uid));
+    }
 
-Assembly *Assembly::create(LSLuaState *vm, const utString& name)
+    return NULL;
+}
+
+Assembly *Assembly::create(LSLuaState *vm, const utString& name, const utString& uid)
 {
     Assembly *a = lmNew(NULL) Assembly();
 
     a->vm   = vm;
     a->name = name;
-
-    loom_guid_t guid;
-    loom_generate_guid(guid);
-    a->uid = guid;
+    a->uid  = uid;
 
     utHashTable<utHashedString, Assembly *> *lookup = NULL;
 
