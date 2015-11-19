@@ -1,0 +1,25 @@
+# type_info
+INVALID HEAP ARGUMENT
+name=MS lib type_info leaks memory internally
+...
+*type_info::_Name_base*
+*type_info::name*
+...
+
+# type_info
+LEAK
+name=MS lib type_info leaks memory internally
+...
+*type_info::_Name_base*
+*type_info::name*
+...
+
+# Suppression for KERNEL32.dll
+UNADDRESSABLE ACCESS
+name=Suppression for KERNEL32.dll
+KERNEL32.dll!*
+
+# Intel Graphics Unaddressable
+UNADDRESSABLE ACCESS
+name=Intel Graphics Unaddressable
+ig75icd32.dll!*

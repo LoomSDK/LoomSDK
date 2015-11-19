@@ -1,0 +1,1 @@
+"C:\Program Files (x86)\Dr. Memory\bin\drmemory.exe" ..\..\..\cmake_msvc\application\RelWithDebInfo\LoomDemo.exe -suppress ..\..\..\tools\suppress.txt
