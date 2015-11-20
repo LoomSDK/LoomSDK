@@ -85,6 +85,43 @@ utString GetLSCPath()
 }
 #endif
 
+utString GetSDKPathFromLSCPath(utString const& lscPath)
+{
+    //Check we are trimming a valid path
+    if (strstr(lscPath.c_str(), "loom/sdks/") || strstr(lscPath.c_str(), "loom\\sdks\\"))
+    {
+        return "";
+    }
+    
+    char lsc[2048];
+    
+    snprintf(lsc, 2048, "%s", lscPath.c_str());
+    
+    // Slurp off the filename...
+    unsigned int len = strlen(lsc) - 1;
+    while (len-- > 0)
+    {
+        if ((lsc[len] == '\\') || (lsc[len] == '/'))
+        {
+            lsc[len] = '\0';
+            break;
+        }
+    }
+    
+    // And the tools folder...
+    while (len-- > 0)
+    {
+        if ((lsc[len] == '\\') || (lsc[len] == '/'))
+        {
+            lsc[len + 1] = '\0'; // This won't cause a buffer overrun because
+            // we already ate backwards in the previous loop.
+            // But we do need to preserve the trailing slash.
+            break;
+        }
+    }
+    
+    return utString(lsc);
+}
 
 void RunUnitTests()
 {
@@ -140,7 +177,8 @@ int main(int argc, const char **argv)
     bool symbols       = false;
 
     const char *rootBuildFile = NULL;
-
+    const char *sdkRoot = NULL;
+    
     for (int i = 1; i < argc; i++)
     {
         if ((strlen(argv[i]) >= 2) && (argv[i][0] == '-') && (argv[i][1] == 'D'))
@@ -179,8 +217,19 @@ int main(int argc, const char **argv)
             {
                 LSError("--root option requires folder to be specified");
             }
-
+            
             printf("Root set to %s\n", argv[i]);
+            sdkRoot = argv[i];
+        }
+        else if (!strcmp(argv[i], "--project"))
+        {
+            i++;
+            if (i >= argc)
+            {
+                LSError("--root option requires folder to be specified");
+            }
+
+            printf("Project folder set to %s\n", argv[i]);
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_OSX || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
             chdir(argv[i]);
@@ -194,6 +243,7 @@ int main(int argc, const char **argv)
             printf("--verbose : enable verbose compilation\n");
             printf("--unittest [--xmlfile filename.xml]: run unit tests with optional xml file output\n");
             printf("--root: set the SDK root\n");
+            printf("--project: set the project folder\n");
             printf("--symbols : dump symbols for binary executable\n");
             printf("--help: display this help\n");
         }
@@ -230,11 +280,9 @@ int main(int argc, const char **argv)
 
     // todo, better sdk detection
     // TODO: LOOM-690 - find a better paradigm here.
-    utString lscpath = GetLSCPath();
-    if (strstr(lscpath.c_str(), "loom/sdks/") || strstr(lscpath.c_str(), "loom\\sdks\\"))
-    {
-        LSCompiler::setSDKBuild(lscpath);
-    }
+    utString lscpath = (sdkRoot != NULL) ? sdkRoot : GetSDKPathFromLSCPath(GetLSCPath());
+
+    LSCompiler::setSDKBuild(lscpath);
 
     if (!rootBuildFile)
     {
