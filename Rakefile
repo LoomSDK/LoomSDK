@@ -490,27 +490,37 @@ namespace :build do
 
   class Toolchain
     def buildCommand
-      abort
+      raise NotImplementedError
     end
 
     def name
-      abort
+      raise NotImplementedError
     end
 
     def cmakeArgs
-      abort
+      raise NotImplementedError
     end
 
     def arch(target)
-      abort
+      raise NotImplementedError
     end
-
+    
+    def exec(cmd)
+      success = Kernel::system cmd
+      if !success
+        puts "Using working directory: #{Dir.pwd}"
+        puts "Error 127 usually means command not found, make sure the following command is available" if $?.exitstatus == 127
+        raise "Error #{$?.exitstatus}: #{cmd}"
+      end
+    end
+    
     def build(target)
       path = target.buildPath(self)
       FileUtils.mkdir_p(path)
       Dir.chdir(path) do
-        if !Kernel::system "cmake #{target.sourcePath} #{cmakeArgs(target)} #{target.flags(self)}" then abort end
-        if !Kernel::system buildCommand then abort end
+        puts "cmake #{target.sourcePath} #{cmakeArgs(target)} #{target.flags(self)}"
+        exec("cmake #{target.sourcePath} #{cmakeArgs(target)} #{target.flags(self)}")
+        exec(buildCommand)
       end
     end
   end
@@ -601,7 +611,7 @@ namespace :build do
     def cmakeArgs(target)
       if HOST.name == 'windows'
         generator = "MinGW Makefiles"
-        make_arg = "-DCMAKE_MAKE_PROGRAM=\"%ANDROID_NDK%\"\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make.exe\""
+        make_arg = "-DCMAKE_MAKE_PROGRAM=\"%ANDROID_NDK%\\prebuilt\\#{WINDOWS_ANDROID_PREBUILT_DIR}\\bin\\make.exe\""
       else
         generator = "Unix Makefiles"
         make_arg = ""
@@ -617,15 +627,15 @@ namespace :build do
 
   class Target
     def name
-      abort
+      raise NotImplementedError
     end
 
     def is64Bit
-      abort
+      raise NotImplementedError
     end
 
     def sourcePath
-      abort
+      raise NotImplementedError
     end
 
     def flags(toolchain)
@@ -956,8 +966,8 @@ namespace :build do
         toolchain.build(luajit_lib)
       else
         # Just copy over the prebuilt lib on windows, it's near impossible to build there
-        FileUtils.mkdir_p toolchain.buildPath(luajit_lib)
-        FileUtils.cp_r(Dir.glob("#{ROOT}/loom/vendor/luajit_windows_android/luajit_android/lib/*"), toolchain.buildPath(luajit_lib))
+        FileUtils.mkdir_p luajit_lib.buildPath(toolchain)
+        FileUtils.cp_r(Dir.glob("#{ROOT}/loom/vendor/luajit_windows_android/luajit_android/lib/*"), luajit_lib.buildPath(toolchain))
       end
     end
     toolchain.build(loom_arm)
