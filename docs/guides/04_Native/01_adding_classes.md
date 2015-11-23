@@ -11,7 +11,7 @@ The Native SDK is laid out as follows:
 ~~~text
 application/  - Entry points for your application on each supported platform.
    android/   - The Android entry point + support files.
-   common/    - Code shared between different platforms. User code generally lives here.
+   common/    - Code shared between different platforms.
    ios/       - The iOS entry point + support files.
    osx/       - The OSX entry point + support files.
    windows/   - The Windows entry point + support files.
@@ -22,7 +22,7 @@ docs/         - Documentation and support files.
 loom/         - C++ source code for the Loom engine.
     common/   - Foundational code for Loom.
     engine/   - Assets, rendering, script bindings, etc.
-    graphics/ - Loom2D rendering library, bgfx.
+    graphics/ - Loom2D rendering library.
     script/   - LoomScript implementation, compiler + runtime.
     vendor/   - Third party code.
 sdk/          - SDK for LoomScript. This is itself a Loom Script SDK project.

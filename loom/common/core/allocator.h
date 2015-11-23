@@ -78,6 +78,10 @@
  *
  */
 
+// This defines the alignment mask (alignment size minus one) used in manual
+// allocation with variably offset custom data fields
+#define LOOM_ALLOCATOR_ALIGN_MASK (8-1)
+
 /**
  * This check enables allocation debugging with metainfo injection and verification.
  * It is useful tracking down allocations allocated by `lmNew` and not freed by `lmFree`.

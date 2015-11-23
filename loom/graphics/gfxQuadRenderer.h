@@ -29,7 +29,7 @@ namespace GFX
 
 // Define the maximum number of Quads on a single frame
 // this defaults to 128k
-// TODO: LOOM-1833 allocate this dynamically 
+// TODO: LOOM-1833 allocate this dynamically
 #define MAXBATCHQUADS       8192
 
 struct VertexPosColorTex
@@ -45,8 +45,8 @@ class QuadRenderer
 
 private:
 
-	static GLuint vertexBufferId;
-	static GLuint indexBufferId;
+    static GLuint vertexBufferId;
+    static GLuint indexBufferId;
 
     static VertexPosColorTex *batchedVertices;
     static size_t batchedVertexCount;

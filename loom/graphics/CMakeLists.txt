@@ -33,7 +33,7 @@ if(APPLE)
         #    include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/internal/bx/include/compat/osx )
         #endif()
         #set ( BGFX_SRC ${BGFX_SRC} ${LOOMBGFX_SOURCE_DIR}/glcontext_external.cpp )
-        
+
         include_directories( ${LOOM_INCLUDE_FOLDERS} )
 
     else()
@@ -43,14 +43,14 @@ if(APPLE)
 
         add_definitions( -msse2 )
 
-    endif()    
+    endif()
 
 endif()
 
 if(ANDROID)
         add_definitions( -DLOOM_RENDERER_OPENGLES2=1 )
         include_directories( ${LOOM_INCLUDE_FOLDERS} )
-endif()    
+endif()
 
 if (MSVC)
         include_directories( ${LOOM_INCLUDE_FOLDERS} )
@@ -63,7 +63,7 @@ if (LINUX)
 endif()
 
 if (FLASH)
-    
+
     add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
     include_directories( ${LOOMBGFX_INCLUDE_DIR}/compat/osx )
 
