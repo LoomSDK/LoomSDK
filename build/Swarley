@@ -107,7 +107,7 @@ namespace :package do
     FileUtils.cp_r("artifacts/osx/MIN_CLI_VERSION", "pkg/sdk")
 
     # docs
-    FileUtils.cp_r("artifacts/docs/docs", "pkg/sdk")
+    FileUtils.cp_r("artifacts/docs", "pkg/sdk")
 
     # bin
     FileUtils.mkdir_p("pkg/sdk/bin")
