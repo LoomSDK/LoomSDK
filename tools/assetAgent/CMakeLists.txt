@@ -39,6 +39,13 @@ if (APPLE)
       XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym"
       XCODE_ATTRIBUTE_INFOPLIST_PREPROCESS YES
     )
+    
+    set(ASSETAGENTBIN $<TARGET_FILE:${PROJECT_NAME}>)
+    
+    add_custom_command(TARGET ${PROJECT_NAME}
+        POST_BUILD
+        COMMAND cp \"${ASSETAGENTBIN}\" \"${ARTIFACTS_DIR}/tools/libassetAgent.so\"
+    )
 
 elseif(LINUX)
 
