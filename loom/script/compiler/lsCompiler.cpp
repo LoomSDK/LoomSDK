@@ -664,8 +664,9 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
 }
 
 
-void LSCompiler::setSDKBuild(const utString& sdkPath)
+void LSCompiler::setSDKBuild(const utString& lsc)
 {
+    sdkPath = lsc;
     log("SDK Path: %s", sdkPath.c_str());
 
     AssemblyReader::addLibraryAssemblyPath(sdkPath + "libs");
