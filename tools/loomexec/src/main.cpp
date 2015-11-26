@@ -102,16 +102,26 @@ static void handleAssert()
 
 static void initialize(int argc, const char **argv)
 {
+    // Were skipping the first argument (current exe)  and the first passed assembly.
+    // The rest will be passed on to the script
+    char **argv_copy = new char *[argc - 2];
+    int argc_copy = 0;
+
+    assemblyPath = "";
 
     // look for passing a .loom file
     for (int i = 1; i < argc; i++ )
     {
-        if (strstr(argv[i], ".loom"))
+        if (assemblyPath.size() == 0 && strstr(argv[i], ".loom"))
         {
             assemblyPath = argv[i];
-            break;    
         }
-        
+        else
+        {
+            argv_copy[argc_copy] = new char[strlen(argv[i]) + 1];
+            strcpy(argv_copy[argc_copy], argv[i]);
+            argc_copy++;
+        }
     }
 
 #ifdef LOOM_ENABLE_JIT
@@ -150,7 +160,13 @@ static void initialize(int argc, const char **argv)
     // Initialize script hooks.
     LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogInfo, LoomLogWarn, LoomLogError);
 
-    LSLuaState::initCommandLine(argc, argv);
+    // Shift the arguments, the first one is meant for loomexec
+    LSLuaState::initCommandLine(argc_copy, const_cast<const char**>(argv_copy));
+
+    // Clean up
+    for(int i = 0; i < argc_copy; i++)
+        delete [] argv_copy[i];
+    delete [] argv_copy;
 }
 
 

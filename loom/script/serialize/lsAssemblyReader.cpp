@@ -126,6 +126,7 @@ Assembly *AssemblyReader::deserialize(LSLuaState *vm, const utString& sjson)
 
     if (uid.length() == 0)
     {
+        // Generate a guid if the assembly contains none
         loom_guid_t guid;
         loom_generate_guid(guid);
         uid = guid;
@@ -161,8 +162,6 @@ Assembly *AssemblyReader::deserialize(LSLuaState *vm, const utString& sjson)
 
         utString refname = json_string_value(json_object_get(ref, "name"));
 
-        assembly->addReference(refname);
-
         // if we've already loaded this assembly continue
         if (vm->getAssembly(refname))
         {
@@ -187,6 +186,8 @@ Assembly *AssemblyReader::deserialize(LSLuaState *vm, const utString& sjson)
                 lmAssert(0, "Unable to load assembly '%s' as either a library or an executable!'", refname.c_str());
             }
         }
+
+        assembly->addReference(rasm);
     }
 
     // modules

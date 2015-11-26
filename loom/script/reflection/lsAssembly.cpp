@@ -157,6 +157,22 @@ int Assembly::loadBytes(lua_State *L) {
     return 1;
 }
 
+int Assembly::load(lua_State *L) {
+
+    const char *path = lua_tostring(L, 1);
+    lua_pop(L, 1);
+
+    Assembly *assembly = LSLuaState::getExecutingVM(L)->loadExecutableAssembly(path, true);
+
+    lmAssert(assembly, "Error loading assembly bytes");
+
+    lualoom_pushnative(L, assembly);
+
+    assembly->freeByteCode();
+
+    return 1;
+}
+
 Assembly *Assembly::loadBinary(LSLuaState *vm, utByteArray *bytes)
 {
     Assembly *assembly = BinReader::loadExecutable(vm, bytes);
@@ -380,16 +396,20 @@ Assembly::~Assembly()
     UTsize idx;
     
     idx = assemblies.find(vm);
-    lmAssert(idx != UT_NPOS, "VM not found in assemblies hash table");
-    lookup = assemblies.at(idx);
+    if (idx != UT_NPOS)
+    {
+        lookup = assemblies.at(idx);
     
-    lmAssert(lookup->find(name) != UT_NPOS, "Assembly not found in assembly lookup: %s", name.c_str());
-    lookup->remove(name);
+        if (lookup->find(name) != UT_NPOS)
+        {
+            lookup->remove(name);
 
-    // Destroy lookup if empty
-    if (lookup->size() == 0) {
-        assemblies.remove(vm);
-        lmDelete(NULL, lookup);
+            // Destroy lookup if empty
+            if (lookup->size() == 0) {
+                assemblies.remove(vm);
+                lmDelete(NULL, lookup);
+            }
+        }
     }
 
     lmDelete(NULL, ordinalTypes);

@@ -34,9 +34,13 @@ static int registerSystemReflectionAssembly(lua_State *L)
        .addMethod("execute", &Assembly::execute)
        .addLuaFunction("run", &Assembly::run)
        .addMethod("getName", &Assembly::getName)
+       .addMethod("getUID", &Assembly::getUniqueId)
        .addMethod("getTypeCount", &Assembly::getTypeCount)
        .addMethod("getTypeAtIndex", &Assembly::getTypeAtIndex)
+       .addMethod("getReferenceCount", &Assembly::getReferenceCount)
+       .addMethod("getReference", &Assembly::getReference)
        .addStaticLuaFunction("loadBytes", &Assembly::loadBytes)
+       .addStaticLuaFunction("load", &Assembly::load)
 
        .endClass()
 

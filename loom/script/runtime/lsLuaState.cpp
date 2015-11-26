@@ -544,6 +544,20 @@ Assembly *LSLuaState::getAssembly(const utString& name)
     return NULL;
 }
 
+Assembly *LSLuaState::getAssemblyByUID(const utString& uid)
+{
+    for (UTsize i = 0; i < assemblies.size(); i++)
+    {
+        Assembly *assembly = assemblies.at(i);
+
+        if (assembly->getUniqueId() == uid)
+        {
+            return assembly;
+        }
+    }
+
+    return NULL;
+}
 
 void LSLuaState::invokeStaticMethod(const utString& typePath,
                                     const char *methodName, int numParameters)

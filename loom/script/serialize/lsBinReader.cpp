@@ -537,8 +537,13 @@ void BinReader::readClass(Type *type)
 
     for (int i = 0; i < numImports; i++)
     {
+        // If the type doesn't exist in here, ignore it.
+        // It's been removed because it's already loaded.
         Type *import = getType(readPoolString());
-        type->addImport(import);
+        if (import != NULL)
+        {
+            type->addImport(import);
+        }
     }
 
     // read constructor
@@ -712,17 +717,32 @@ Assembly *BinReader::readAssembly(LSLuaState *_vm, utByteArray *_bytes)
         aref->loaded = true;
     }
 
-    // number of references
-    utArray<Reference *> assrefs;
+    assembly = Assembly::getLoaded(vm, name, uid);
+    if (assembly != NULL)
+    {
+        return assembly;
+    }
 
+    assembly = Assembly::create(vm, name, uid);
+
+    // number of references
     int numrefs = bytes->readInt();
     for (int i = 0; i < numrefs; i++)
     {
         const char *refname = readPoolString();
+        const char *uid = readPoolString();
+
+        if (references.find(utHashedString(refname)) == UT_NPOS)
+        {
+            Assembly* loaded = NULL;
+            if ((loaded = vm->getAssemblyByUID(uid)) != NULL)
+            {
+                assembly->addReference(loaded);
+            }
+            continue;
+        }
 
         Reference *ref = *(references.get(utHashedString(refname)));
-
-        assrefs.push_back(ref);
 
         if (ref->loaded)
         {
@@ -732,21 +752,11 @@ Assembly *BinReader::readAssembly(LSLuaState *_vm, utByteArray *_bytes)
         int position = bytes->getPosition();
         bytes->setPosition(ref->position);
         BinReader refReader;
-        refReader.readAssembly(_vm, bytes);
+        Assembly *asmref = refReader.readAssembly(_vm, bytes);
+
+        assembly->addReference(asmref);
+
         bytes->setPosition(position);
-    }
-
-    assembly = Assembly::getLoaded(vm, name, uid);
-    if (assembly != NULL)
-    {
-        return assembly;
-    }
-
-    assembly = Assembly::create(vm, name, uid);
-
-    for (UTsize i = 0; i < assrefs.size(); i++)
-    {
-        assembly->addReference(assrefs.at(i)->name);
     }
 
     if (loomconfig && loomconfig[0])
@@ -785,7 +795,7 @@ Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
     for (UTsize i = 0; i < (UTsize)numTypes; i++)
     {
         TypeIndex *tindex = lmNew(NULL) TypeIndex;
-        tindex->type     = NULL;
+        tindex->type     = lmNew(NULL) Type;
         tindex->refIdx   = sBytes->readInt();
         tindex->fullName = readPoolString();
 
@@ -799,65 +809,64 @@ Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
     // write out the number of references
     int numRefs = sBytes->readInt();
 
+    Assembly *returningAssembly = NULL;
+
     for (int i = 0; i < numRefs; i++)
     {
-        Reference *ref = lmNew(NULL) Reference;
-        ref->name     = readPoolString();
+        const char* name = readPoolString();
+        lmAssert(name[0] != 0, "Assembly reference name is empty, try recompiling the .loom executable");
+        const char* uid = readPoolString();
+        lmAssert(name[0] != 0, "Assembly reference UID is empty, try recompiling the .loom executable");
+        int length = sBytes->readInt();
+        int position = sBytes->readInt();
 
-        lmAssert(ref->name[0] != 0, "Assembly reference name is empty, try recompiling the .loom executable");
+        int offset = 0;
+        Assembly *a = NULL;
+        if ((a = vm->getAssemblyByUID(uid)) == NULL)
+        {
+            Reference *ref = lmNew(NULL) Reference;
+            ref->name = name;
+            ref->uid = uid;
+            ref->length = length;
+            ref->position = position;
+            ref->loaded = false;
+            ref->assembly = NULL;
 
-        ref->length   = sBytes->readInt();
-        ref->position = sBytes->readInt();
-        ref->loaded   = false;
-        ref->assembly = NULL;
-        
-        references.insert(utHashedString(ref->name), ref);
+            offset = position;
 
-        // offset the types to global position
-        for (UTsize j = 0; j < types.size(); j++)
+            references.insert(utHashedString(ref->name), ref);
+        }
+
+        // offset the types to global position  or remove the index if type assembly already loaded
+        UTsize j = 0;
+        while (j < types.size())
         {
             TypeIndex *tindex = types.at(j);
-
-            if (tindex->refIdx == (int)i)
+            if (a != NULL && tindex->refIdx == (int)i)
             {
-                tindex->position += ref->position;
+                types.remove(utHashedString(tindex->fullName));
             }
+            else
+            {
+                j++;
+            }
+
+            tindex->position += offset;
         }
-    }
-
-    Assembly *assembly = NULL;
-
-    // declare types
-    for (UTsize i = 0; i < types.size(); i++)
-    {
-        TypeIndex *tindex = types.at(i);
-        tindex->type = lmNew(NULL) Type();
     }
 
     for (UTsize i = 0; i < references.size(); i++)
     {
         Reference *ref = references.at(i);
-        if (ref->loaded)
-        {
-            continue;
-        }
-
         sBytes->setPosition(ref->position);
         BinReader reader;
-        Assembly  *rassembly = reader.readAssembly(vm, sBytes);
-        ref->assembly = rassembly;
-        if (!assembly)
+        Assembly  *assembly = reader.readAssembly(vm, sBytes);
+        ref->assembly = assembly;
+        if (!returningAssembly)
         {
-            assembly = rassembly;
+            returningAssembly = assembly;
         }
-    }
 
-    // cleanup
-    for (UTsize i = 0; i < references.size(); i++)
-    {
-        Reference *ref = references.at(i);
-        if (!ref->assembly)
-            continue;
         ref->assembly->freeByteCode();
     }
     
@@ -875,6 +884,6 @@ Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
     
 	vm = NULL;
 
-    return assembly;
+    return returningAssembly;
 }
 }

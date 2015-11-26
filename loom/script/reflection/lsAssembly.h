@@ -66,7 +66,7 @@ private:
     bool debugBuild;
 
     // the assemblies we reference
-    utArray<utString> references;
+    utArray<Assembly *> referencedAssemblies;
 
     utArray<Type*> *ordinalTypes;
 
@@ -84,7 +84,7 @@ public:
     ~Assembly();
 
     static int loadBytes(lua_State *L);
-
+    static int load(lua_State *L);
 
     inline LSLuaState *getLuaState()
     {
@@ -196,24 +196,27 @@ public:
         return debugBuild;
     }
 
-    void addReference(const utString& reference)
+    void addReference(Assembly *assembly)
     {
-        if (references.find(reference) != UT_NPOS)
+        if (referencedAssemblies.find(assembly) == UT_NPOS)
         {
-            return;
+            referencedAssemblies.push_back(assembly);
         }
-
-        references.push_back(reference);
     }
 
     int getReferenceCount()
     {
-        return (int)references.size();
+        return (int)referencedAssemblies.size();
     }
 
-    const utString& getReference(int index)
+    const utString& getReferenceName(int index)
     {
-        return references.at(index);
+        return referencedAssemblies.at(index)->getName();
+    }
+
+    Assembly* getReference(int index)
+    {
+        return referencedAssemblies.at(index);
     }
 
     void setLoomConfig(const utString& config)
