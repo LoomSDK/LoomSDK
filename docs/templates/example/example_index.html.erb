@@ -61,33 +61,10 @@
       <script type="text/javascript" src="<%= @relative_base_path %>/js/authored/inherited-properties.js"></script>
       <script type="text/javascript" src="<%= @relative_base_path %>/js/authored/twirldowns.js"></script>
       <script type="text/javascript" src="<%= @relative_base_path %>/js/authored/id-link-intercept.js"></script>
-
       <script type="text/javascript">
-
         var relative_base = "<%= @relative_base_path %>";
-        var search_objects = $.parseJSON('<%= search_object_string %>');
-
-      	var sidebarData = [
-      	    { "name" : "API reference", "link" : [] },
-      	    { "name" : "Guides", "link" : [] },
-      	    { "name" : "Examples", "link" : [] }
-      	];
-
-        // populate API reference links
-        sidebarData[0].link = $.parseJSON('<%= $packages.sidebar_links_json("") %>');
-
-        // populate examples links
-      	for(var index in search_objects.examples)
-      	{
-      	  example = search_objects.examples[index]
-      	  sidebarData[2].link.push({"name": example.name, "link": relative_base + "/" + example.path.split(".").join("/") + ".html"});
-      	}
-
-      	// populate guides links
-      	sidebarData[1].link = $.parseJSON('<%= $guides.sidebar_links_json(@relative_base_path) %>');
-
       </script>
-
+      <script type="text/javascript" src="<%= @relative_base_path %>/js/data.js"></script>
       <script type="text/javascript" src="<%= @relative_base_path %>/js/authored/sidebar.js"></script>
       <script type="text/javascript" src="<%= @relative_base_path %>/js/vendor/jquery.dropdown.js"></script>
       <script type="text/javascript" src="<%= @relative_base_path %>/js/authored/search.js"></script>

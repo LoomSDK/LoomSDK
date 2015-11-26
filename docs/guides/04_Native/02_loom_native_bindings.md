@@ -186,6 +186,7 @@ Script side stays nice and simple.
 Delegates are A powerful way to handle asynchronous processes, and are used throughout Loom. Adding your own native delegates is simple thanks to the `LOOM_DELEGATE` and `LOOM_STATICDELEGATE` macros.
 
 **Creating the Delegate in C++**
+
 ~~~cpp
 #include "loom/script/native/lsNativeDelegate.h"
 

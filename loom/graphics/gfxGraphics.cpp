@@ -111,7 +111,7 @@ if ( ! data->GFX_OPENGL_FUNC(func) ) { \
 } while ( 0 );
 #define GFX_PROC_VOID(func, params, args) GFX_PROC(void, func, params, args)
 #endif /* _SDL_NOGETPROCADDR_ */
-    
+
 #include "gfxGLES2EntryPoints.h"
 #undef GFX_PROC
 #undef GFX_PROC_VOID
@@ -133,7 +133,7 @@ void Graphics::initialize()
     QuadRenderer::initialize();
 
     VectorRenderer::initialize();
-    
+
     // Required on iOS (at least), because the back framebuffer might not be 0
     // as it appears to be on other platforms
     Graphics::context()->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &sBackFramebuffer);
@@ -166,7 +166,7 @@ void Graphics::reset(int width, int height, uint32_t flags)
         mvp.scale(1.0f, -1.0f);
     }
     mvp.copyToMatrix4f(sMVP);
-    
+
     sCurrentModelViewProjection = sMVP;
 
     // cache current values
@@ -185,16 +185,16 @@ bool Graphics::queryExtension(char *extName)
     */
     char *p;
     char *end;
-    int extNameLen;   
+    int extNameLen;
 
     extNameLen = strlen(extName);
-        
+
     p = (char *) context()->glGetString(GL_EXTENSIONS);
     if (NULL == p) {
         return true;
     }
 
-    end = p + strlen(p);   
+    end = p + strlen(p);
 
     while (p < end) {
         int n = strcspn(p, " ");
@@ -215,7 +215,7 @@ void Graphics::beginFrame()
     }
 
     sCurrentFrame++;
-    
+
     QuadRenderer::beginFrame();
 
     applyRenderTarget();
@@ -284,7 +284,7 @@ int Graphics::render(lua_State *L)
     Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, -3);
     Loom2D::Matrix *matrix = lua_isnil(L, -2) ? NULL : (Loom2D::Matrix*) lualoom_getnativepointer(L, -2);
     float alpha = (float)lua_tonumber(L, -1);
-    
+
     // Update positions and buffers early
     // since we can't wait for rendering to begin
     object->validate(L, 1); // The 1 here is the index of the object on the stack

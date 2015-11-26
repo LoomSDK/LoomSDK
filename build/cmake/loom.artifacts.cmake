@@ -17,6 +17,7 @@ if (APPLE)
 		    COMMAND ${RSYNC_CMD} ${CMAKE_SOURCE_DIR}/sdk/libs  ${APPLICATION_APP_LOCATION}
 		    COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts/ios/
 		    COMMAND ${RSYNC_CMD} ${APPLICATION_APP_LOCATION} ${CMAKE_SOURCE_DIR}/artifacts/ios/
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/sdk
 		)
 		add_dependencies(CreateIOSArtifact ${APPLICATION_NAME} lsc)
 	else()
@@ -28,6 +29,7 @@ if (APPLE)
 		    COMMAND ${RSYNC_CMD} ${CMAKE_SOURCE_DIR}/sdk/libs  ${APPLICATION_APP_LOCATION}/Contents/Resources
 		    COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts/osx/
 		    COMMAND ${RSYNC_CMD} ${APPLICATION_APP_LOCATION} ${CMAKE_SOURCE_DIR}/artifacts/osx/
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/sdk
 		)
 		
 		add_dependencies(CreateOSXArtifact ${APPLICATION_NAME} lsc)

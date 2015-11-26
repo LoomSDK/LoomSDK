@@ -233,7 +233,7 @@ static int __stdcall scaleImageOnDisk_body(void *param)
             // Every hundred lines post an update.
             if(resultY % 100 == 0)
             {
-                // calculate the progress, but keep from reporting 1.0 as this is used to 
+                // calculate the progress, but keep from reporting 1.0 as this is used to
                 // mark completion
                 float value = (float)resultY / (float)outHeight;
                 if (value == 1.0f)
@@ -262,10 +262,10 @@ static int __stdcall scaleImageOnDisk_body(void *param)
         if (ReadJpegFile(outPath, READ_ALL))
         {
             // create the exif segment and attach it to jpeg image
-            create_EXIF(lai->orientation);            
+            create_EXIF(lai->orientation);
 
             // write it out with exif data
-            WriteJpegFile(outPath);    
+            WriteJpegFile(outPath);
 
             // free all data
             DiscardData();
@@ -305,7 +305,7 @@ static void scaleImageOnDisk(const char *outPath, const char *inPath, int outWid
 
     Texture::enableAssetNotifications(false);
 
-    loom_thread_start(scaleImageOnDisk_body, rn);    
+    loom_thread_start(scaleImageOnDisk_body, rn);
 }
 
 
@@ -327,16 +327,16 @@ static int registerLoomGraphics(lua_State *L)
        .addStaticMethod("initEmptyTexture", &Texture::initEmptyTexture)
        .addStaticMethod("updateFromBytes", &Texture::updateFromBytes)
        .addStaticMethod("updateFromBytesAsync", &Texture::updateFromBytesAsync)
-	   .addStaticMethod("clear", &Texture::clear)
-	   .addStaticMethod("setRenderTarget", &Texture::setRenderTarget)
+       .addStaticMethod("clear", &Texture::clear)
+       .addStaticMethod("setRenderTarget", &Texture::setRenderTarget)
        .addStaticMethod("dispose", &Texture::dispose)
        .addStaticMethod("scaleImageOnDisk", &scaleImageOnDisk)
        .addStaticMethod("pollScaling", &pollScaling)
        .addStaticProperty("imageScaleProgress", &getImageScaleProgressDelegate)
        .endClass()
 
-	   .beginClass<Graphics>("Graphics")
-	   .addStaticLuaFunction("render", &Graphics::render)
+       .beginClass<Graphics>("Graphics")
+       .addStaticLuaFunction("render", &Graphics::render)
        .addStaticMethod("handleContextLoss", &Graphics::handleContextLoss)
        .addStaticMethod("screenshot", &Graphics::screenshot)
        .addStaticMethod("screenshotData", &Graphics::screenshotData)

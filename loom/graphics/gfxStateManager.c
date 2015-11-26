@@ -39,6 +39,6 @@ void Graphics_SetCurrentGLState(enum Graphics_GLState state)
     {
         gGLStates[i] = false;
     }
-    
+
     gGLStates[(int)state] = true;
 }
