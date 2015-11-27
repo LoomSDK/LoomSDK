@@ -650,6 +650,10 @@ namespace :build do
 
     def initialize(is64Bit)
       @is64Bit = is64Bit
+
+      if File.exists?("#{ROOT}/loom/vendor/luajit/src/host/buildvm_arch.h")
+        abort "Detected dirty luajit source directory. Please run 'rake clobber' (recommended) or clean it manually."
+      end
     end
 
     def name
