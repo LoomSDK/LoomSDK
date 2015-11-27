@@ -104,7 +104,8 @@ static void initialize(int argc, const char **argv)
 {
     // Were skipping the first argument (current exe)  and the first passed assembly.
     // The rest will be passed on to the script
-    char **argv_copy = new char *[argc - 2];
+    char **argv_copy = lmNew(NULL) char *[argc - 2];
+
     int argc_copy = 0;
 
     assemblyPath = "";
@@ -118,7 +119,7 @@ static void initialize(int argc, const char **argv)
         }
         else
         {
-            argv_copy[argc_copy] = new char[strlen(argv[i]) + 1];
+            argv_copy[argc_copy] = lmNew(NULL) char[strlen(argv[i]) + 1];
             strcpy(argv_copy[argc_copy], argv[i]);
             argc_copy++;
         }
@@ -165,8 +166,8 @@ static void initialize(int argc, const char **argv)
 
     // Clean up
     for(int i = 0; i < argc_copy; i++)
-        delete [] argv_copy[i];
-    delete [] argv_copy;
+        lmDelete(NULL, argv_copy[i]);
+    lmDelete(NULL, argv_copy);
 }
 
 

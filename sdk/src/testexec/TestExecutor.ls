@@ -45,12 +45,11 @@ package
 
             Debug.assert(unittestasm1.getUID() == unittestasm2.getUID(), "'UnitTest' referenced assemblies don't match. Please recompile your binaries.");
 
-            var result:TestResult = TestRunner.runAll(asm, true);
-
             TestRunner.onComplete += function(result:TestResult) {
-
                 Process.exit(result.typeReport.successful ? 0 : 1);
             };
+
+            var result:TestResult = TestRunner.runAll(asm, true);
         }
     }
 }
