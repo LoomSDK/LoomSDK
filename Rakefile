@@ -1413,9 +1413,9 @@ def prepare_free_sdk
   end
 
   # copy ldb
-  FileUtils.mkdir_p "pkg/sdk/TestExec/bin/"
-  FileUtils.cp_r("artifacts/libs/TestExec.loom", "pkg/sdk/TestExec/bin/Main.loom")
-  FileUtils.cp_r("artifacts/libs/TestExec.config", "pkg/sdk/TestExec/loom.config")
+  FileUtils.mkdir_p "pkg/sdk/tools/TestExec/bin/"
+  FileUtils.cp_r("artifacts/libs/TestExec.loom", "pkg/sdk/tools/TestExec/bin/Main.loom")
+  FileUtils.cp_r("artifacts/libs/TestExec.config", "pkg/sdk/tools/TestExec/loom.config")
 
   # copy the assets we need from cocos...
   FileUtils.cp_r("artifacts/assets", "pkg/sdk")
