@@ -259,6 +259,7 @@ public:
         return d;
     }
 
+    static void initCommandLine(const utArray<utString>& args);
     static void initCommandLine(int argc, const char **argv);
 
     static UTsize getNumCommandlineArgs()

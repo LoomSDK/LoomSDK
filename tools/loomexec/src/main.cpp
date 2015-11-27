@@ -104,9 +104,7 @@ static void initialize(int argc, const char **argv)
 {
     // Were skipping the first argument (current exe)  and the first passed assembly.
     // The rest will be passed on to the script
-    char **argv_copy = lmNew(NULL) char *[argc - 2];
-
-    int argc_copy = 0;
+    utArray<utString> args;
 
     assemblyPath = "";
 
@@ -119,9 +117,7 @@ static void initialize(int argc, const char **argv)
         }
         else
         {
-            argv_copy[argc_copy] = lmNew(NULL) char[strlen(argv[i]) + 1];
-            strcpy(argv_copy[argc_copy], argv[i]);
-            argc_copy++;
+            args.push_back(argv[i]);
         }
     }
 
@@ -162,12 +158,7 @@ static void initialize(int argc, const char **argv)
     LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogInfo, LoomLogWarn, LoomLogError);
 
     // Shift the arguments, the first one is meant for loomexec
-    LSLuaState::initCommandLine(argc_copy, const_cast<const char**>(argv_copy));
-
-    // Clean up
-    for(int i = 0; i < argc_copy; i++)
-        lmDelete(NULL, argv_copy[i]);
-    lmDelete(NULL, argv_copy);
+    LSLuaState::initCommandLine(args);
 }
 
 

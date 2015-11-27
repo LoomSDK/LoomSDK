@@ -613,6 +613,10 @@ void LSLuaState::initCommandLine(int argc, const char **argv)
     }
 }
 
+void LSLuaState::initCommandLine(const utArray<utString>& args)
+{
+    commandLine = args;
+}
 
 void LSLuaState::dumpManagedNatives()
 {
