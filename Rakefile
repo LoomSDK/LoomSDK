@@ -257,8 +257,8 @@ task :clobber, :force do |t, args|
     puts "You are about to remove the following files:"
     puts `git clean -fdx -n`
     puts "Are you sure you want to remove these files? (yes/no)"
-    their_sure = STDIN.gets
-    if their_sure.chomp! == "yes" || their_sure.chomp! == "y"
+    response = STDIN.gets
+    if response.chomp! == "yes" || response.chomp! == "y"
       sh "git clean -fdx"
     else
       puts "Phew, that was close!"
