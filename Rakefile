@@ -40,7 +40,7 @@ def flag_enabled?(flag)
 end
 
 # If 1, then we link against LuaJIT. If 0, we use classic Lua VM.
-$doBuildJIT=0
+$doBuildJIT=1
 
 # If 1, then LUA GC profiling code is enabled
 $doEnableLuaGcProfile= 1

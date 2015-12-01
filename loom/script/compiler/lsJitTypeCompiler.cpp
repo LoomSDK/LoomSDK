@@ -30,7 +30,7 @@
 #include "loom/script/runtime/lsRuntime.h"
 
 extern "C" {
-#include "lj_obj.h"
+#include "lj_buf.h"
 #include "lj_bcdump.h"
 }
 
@@ -248,7 +248,8 @@ void JitTypeCompiler::initCodeState(CodeState *codeState, FuncState *funcState,
     setstrV(L, L->top, codeState->chunkname); /* Anchor chunkname string. */
     incr_top(L);
 
-    lj_str_resizebuf(codeState->L, &codeState->sb, LJ_MIN_SBUF);
+    lj_buf_init(codeState->L, &codeState->sb);
+    lj_buf_need(&codeState->sb, LJ_MIN_SBUF);
 
     codeState->lineNumber = lineNumber;
     BC::openFunction(codeState, funcState);
@@ -272,7 +273,7 @@ void JitTypeCompiler::closeCodeState(CodeState *codeState)
     global_State *g = G(L);
     lj_mem_freevec(g, codeState->bcstack, codeState->sizebcstack, BCInsLine);
     lj_mem_freevec(g, codeState->vstack, codeState->sizevstack, VarInfo);
-    lj_str_freebuf(g, &codeState->sb);
+    lj_buf_free(g, &codeState->sb);
 
     lj_gc_check(L);
 }

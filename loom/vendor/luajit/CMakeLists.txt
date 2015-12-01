@@ -392,6 +392,9 @@ if ( NOT BOOTSTRAP_ONLY )
       src/lj_alloc.c
       src/lib_aux.c
       src/lib_init.c
+      src/lj_buf.c
+      src/lj_strfmt.c
+      src/lj_profile.c
       ${LJLIB_C}
     )
 
