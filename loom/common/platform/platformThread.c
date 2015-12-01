@@ -354,6 +354,7 @@ void loom_thread_setDebugName(const char *name)
 #include <mach/task.h>
 #include <mach/mach_traps.h>
 #include <mach/semaphore.h>
+#include <mach-o/dyld.h>
 #include <libkern/OSAtomic.h>
 
 #include <sys/sysctl.h>

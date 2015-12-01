@@ -88,7 +88,8 @@ typedef double lmscalar;
 #if defined(__x86_64__) || defined(_M_X64) ||       \
     defined(__powerpc64__) || defined(__alpha__) || \
     defined(__ia64__) || defined(__s390__) ||       \
-    defined(__s390x__)
+    defined(__s390x__) || \
+    (defined(__LP64__) && __LP64__) || defined(__arm64__)
 # define UT_ARCH      UT_ARCH_64
 UT_ASSERTCOMP(sizeof(void *) == 8, VOID_IS_8);
 #else

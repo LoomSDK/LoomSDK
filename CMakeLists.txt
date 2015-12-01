@@ -214,7 +214,7 @@ if(APPLE)
         set(CMAKE_EXE_LINKER_FLAGS "-framework Foundation -lz -framework QuartzCore -framework MediaPlayer -lxml2")
 
         set(CMAKE_OSX_SYSROOT iphoneos$(LOOM_IOS_VERSION) )
-        set(CMAKE_OSX_ARCHITECTURES "armv7")
+        set(CMAKE_OSX_ARCHITECTURES "armv7;armv7s;arm64")
         set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
 
         set (LOOM_SDL2_LIB ${CMAKE_SOURCE_DIR}/build/sdl2/ios/libSDL2.a)

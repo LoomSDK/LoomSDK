@@ -39,6 +39,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <sys/select.h>
+#include <unistd.h>
 #define closesocket    close
 typedef int   SOCKET;
 #endif
