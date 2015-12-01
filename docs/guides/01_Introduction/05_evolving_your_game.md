@@ -16,7 +16,7 @@ Finally, the game becomes mature. The game is basically built out, with most con
 
 Prototypes live and die on how quickly and effectively they can sell the concept behind them. They often make big sacrifices to hit that goal - like incurring tons of technical debt or ignoring huge parts of the problem.
 
-Because of its Flash heritage and efficient workflow, Loom is very effective for fast prototyping. `loom new` spits out a new project directly, and LoomScript, like AS3, is efficient in amount of functionality per line of code.Because Loom doesn't require you to use a specific gameplay framework, you can drive Cocos2DX directly. Finally, live reloading of code and assets via `loom run` lets you iterate quickly on device or desktop.
+Because of its Flash heritage and efficient workflow, Loom is very effective for fast prototyping. `loom new` spits out a new project directly, and LoomScript, like AS3, is efficient in amount of functionality per line of code. Finally, live reloading of code and assets via `loom run` lets you iterate quickly on device or desktop.
 
 ## Starting Production with Loom
 

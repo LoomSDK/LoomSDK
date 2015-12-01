@@ -75,7 +75,7 @@ struct TextureInfo
 
     bool                     reload;
 
-    //this flag will be set if a TextureInfo was requested to be disposed but it is still 
+    //this flag will be set if a TextureInfo was requested to be disposed but it is still
     //busy in the async loading thread as it can only be disposed from the main thread once \
     //its async processing is complete
     bool                     asyncDispose;
@@ -99,9 +99,9 @@ struct TextureInfo
         return &asyncLoadCompleteDelegate;
     }
 
-    int getHandleID() const 
+    int getHandleID() const
     {
-        return (int)handle; 
+        return (int)handle;
     }
 
     inline bool isPowerOfTwo() const
@@ -115,9 +115,9 @@ struct TextureInfo
     }
 
 
-    const char* getTexturePath() const 
-    { 
-        return texturePath.c_str(); 
+    const char* getTexturePath() const
+    {
+        return texturePath.c_str();
     }
 
     TextureInfo()
@@ -133,8 +133,8 @@ struct TextureInfo
         reload       = false;
         asyncDispose = false;
         handle       = -1;
-		// This increments the check bits / version by 1
-		id          += MAXTEXTURES;
+        // This increments the check bits / version by 1
+        id          += MAXTEXTURES;
         texturePath  = "";
         renderTarget = false;
         framebuffer  = -1;
@@ -171,10 +171,9 @@ private:
 
     static utHashTable<utFastStringHash, TextureID> sTexturePathLookup;
     static bool sTextureAssetNofificationsEnabled;
-	static bool supportsFullNPOT;
-	static TextureID currentRenderTexture;
-	static uint32_t previousRenderFlags;
-    
+    static bool supportsFullNPOT;
+    static TextureID currentRenderTexture;
+
     // simple linear TextureID -> TextureHandle
     static TextureInfo sTextureInfos[MAXTEXTURES];
 
@@ -221,9 +220,9 @@ private:
         return id;
     }
 
-    static TextureInfo *getTextureInfoFromPath(const char *path, 
-                                                TextureID **pid, 
-                                                bool checkHandle = true, 
+    static TextureInfo *getTextureInfoFromPath(const char *path,
+                                                TextureID **pid,
+                                                bool checkHandle = true,
                                                 bool clearDispose = true)
     {
         TextureID   *texID = sTexturePathLookup.get(path);
@@ -239,7 +238,7 @@ private:
             tinfo->asyncDispose = false;
         }
         loom_mutex_unlock(Texture::sTexInfoLock);
-        
+
         *pid = texID;
         return tinfo;
     }
@@ -306,7 +305,7 @@ public:
     }
 
     static TextureInfo *getTextureInfo(TextureID id);
-	
+
     inline static int getIndex(TextureID id)
     {
         return id & TEXTURE_ID_MASK;
@@ -336,16 +335,17 @@ public:
     static TextureInfo *initFromBytes(utByteArray *bytes, const char *name);
     static TextureInfo *initFromBytesAsync(utByteArray *bytes, const char *name, bool highPriorty);
     static TextureInfo *initFromAssetManagerAsync(const char *path, bool highPriorty);
-	static TextureInfo *initEmptyTexture(int width, int height);
+    static TextureInfo *initEmptyTexture(int width, int height);
     static int __stdcall loadTextureAsync_body(void *param);
 
     static void updateFromBytes(TextureID id, utByteArray *bytes);
     static void updateFromBytesAsync(TextureID id, utByteArray *bytes, bool highPriority);
 
-	static void clear(TextureID id, int color, float alpha);
+    static void clear(TextureID id, int color, float alpha);
 
-	static void setRenderTarget(TextureID id = -1);
-	static int render(lua_State *L);
+    static void setRenderTarget(TextureID id = -1);
+    static TextureID getRenderTarget();
+    static int render(lua_State *L);
 
     static void dispose(TextureID id);
 

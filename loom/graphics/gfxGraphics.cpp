@@ -31,6 +31,7 @@
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/graphics/gfxVectorRenderer.h"
 #include "loom/graphics/gfxBitmapData.h"
+#include "loom/graphics/gfxStateManager.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -41,6 +42,8 @@ extern SDL_Window *gSDLWindow;
 namespace GFX
 {
 
+
+
 lmDefineLogGroup(gGFXLogGroup, "GFX", 1, LoomLogInfo);
 
 bool Graphics::sInitialized = false;
@@ -48,14 +51,11 @@ bool Graphics::sInitialized = false;
 // start with context loss as flagged so resources are created
 bool Graphics::sContextLost = true;
 
-int Graphics::sWidth      = 0;
-int Graphics::sHeight     = 0;
-uint32_t Graphics::sFlags = 0x00000000;
-Color Graphics::sFillColor(0x000000FF);
-int Graphics::sView       = 0;
 int Graphics::sBackFramebuffer = -1;
 
 uint32_t Graphics::sCurrentFrame = 0;
+GraphicsRenderTarget Graphics::sTarget;
+utArray<GraphicsRenderTarget> Graphics::sTargetStack;
 
 float Graphics::sMVP[16] = {
     1.0f, 0.0f, 0.0f, 0.0f,
@@ -111,7 +111,7 @@ if ( ! data->GFX_OPENGL_FUNC(func) ) { \
 } while ( 0 );
 #define GFX_PROC_VOID(func, params, args) GFX_PROC(void, func, params, args)
 #endif /* _SDL_NOGETPROCADDR_ */
-    
+
 #include "gfxGLES2EntryPoints.h"
 #undef GFX_PROC
 #undef GFX_PROC_VOID
@@ -133,7 +133,7 @@ void Graphics::initialize()
     QuadRenderer::initialize();
 
     VectorRenderer::initialize();
-    
+
     // Required on iOS (at least), because the back framebuffer might not be 0
     // as it appears to be on other platforms
     Graphics::context()->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &sBackFramebuffer);
@@ -144,6 +144,8 @@ void Graphics::initialize()
 void Graphics::shutdown()
 {
     Texture::shutdown();
+    QuadRenderer::destroyGraphicsResources();
+    VectorRenderer::destroyGraphicsResources();
 }
 
 void Graphics::reset(int width, int height, uint32_t flags)
@@ -164,13 +166,13 @@ void Graphics::reset(int width, int height, uint32_t flags)
         mvp.scale(1.0f, -1.0f);
     }
     mvp.copyToMatrix4f(sMVP);
-    
+
     sCurrentModelViewProjection = sMVP;
 
     // cache current values
-    sWidth  = width;
-    sHeight = height;
-    sFlags = flags;
+    sTarget.width  = width;
+    sTarget.height = height;
+    sTarget.flags = flags;
 }
 
 bool Graphics::queryExtension(char *extName)
@@ -183,16 +185,16 @@ bool Graphics::queryExtension(char *extName)
     */
     char *p;
     char *end;
-    int extNameLen;   
+    int extNameLen;
 
     extNameLen = strlen(extName);
-        
+
     p = (char *) context()->glGetString(GL_EXTENSIONS);
     if (NULL == p) {
         return true;
     }
 
-    end = p + strlen(p);   
+    end = p + strlen(p);
 
     while (p < end) {
         int n = strcspn(p, " ");
@@ -213,20 +215,37 @@ void Graphics::beginFrame()
     }
 
     sCurrentFrame++;
-    
-    Graphics::reset(sWidth, sHeight, sFlags);
-    
-    Graphics::context()->glViewport(0, 0, Graphics::getWidth(), Graphics::getHeight());
-
-    if (!(sFlags & FLAG_NOCLEAR)) {
-        Graphics::context()->glClearColor(sFillColor.r, sFillColor.g, sFillColor.b, sFillColor.a);
-        Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    }
 
     QuadRenderer::beginFrame();
-    VectorRenderer::setSize(sWidth, sHeight);
+
+    applyRenderTarget();
 }
 
+void Graphics::pushRenderTarget()
+{
+    QuadRenderer::submit();
+    sTargetStack.push_back(sTarget);
+}
+
+void Graphics::popRenderTarget()
+{
+    sTarget = sTargetStack.back();
+    sTargetStack.pop_back();
+    applyRenderTarget(false);
+}
+
+void Graphics::applyRenderTarget(bool initial)
+{
+    Graphics::reset(sTarget.width, sTarget.height, sTarget.flags);
+
+    VectorRenderer::setSize(sTarget.width, sTarget.height);
+    Graphics::context()->glViewport(0, 0, sTarget.width, sTarget.height);
+
+    if (initial && !(sTarget.flags & FLAG_NOCLEAR)) {
+        Graphics::context()->glClearColor(sTarget.fillColor.r, sTarget.fillColor.g, sTarget.fillColor.b, sTarget.fillColor.a);
+        Graphics::context()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    }
+}
 
 void Graphics::endFrame()
 {
@@ -247,7 +266,7 @@ void Graphics::endFrame()
 
         // If there is a pending data request, do that
         if (gettingScreenshotData) {
-            utByteArray *retData = stbi_data_png(sWidth, sHeight, 4 /* RGBA */, fb->getData(), sWidth * fb->getBpp());
+            utByteArray *retData = stbi_data_png(sTarget.width, sTarget.height, 4 /* RGBA */, fb->getData(), sTarget.width * fb->getBpp());
 
             // Send the delegate along
             _onScreenshotDataDelegate.pushArgument(retData);
@@ -261,9 +280,10 @@ void Graphics::endFrame()
 
 int Graphics::render(lua_State *L)
 {
-    Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, 1);
-    Loom2D::Matrix *matrix = lua_isnil(L, 2) ? NULL : (Loom2D::Matrix*) lualoom_getnativepointer(L, 2);
-    float alpha = (float)lua_tonumber(L, 3);
+    // Get arguments
+    Loom2D::DisplayObject *object = (Loom2D::DisplayObject*) lualoom_getnativepointer(L, -3);
+    Loom2D::Matrix *matrix = lua_isnil(L, -2) ? NULL : (Loom2D::Matrix*) lualoom_getnativepointer(L, -2);
+    float alpha = (float)lua_tonumber(L, -1);
 
     // Update positions and buffers early
     // since we can't wait for rendering to begin
@@ -284,6 +304,10 @@ int Graphics::render(lua_State *L)
     lmscalar prevAlpha = object->alpha;
     object->alpha = prevAlpha*alpha;
 
+    // Reset state
+    Graphics_SetCurrentGLState(GFX_OPENGL_STATE_QUAD);
+    Graphics_InvalidateGLState(GFX_OPENGL_STATE_QUAD);
+
     // Render the object.
     object->render(L);
 
@@ -300,7 +324,7 @@ void Graphics::handleContextLoss()
 {
     sContextLost = true;
 
-    lmLog(gGFXLogGroup, "Graphics::handleContextLoss - %dx%d", sWidth, sHeight);
+    lmLog(gGFXLogGroup, "Graphics::handleContextLoss - %dx%d", sTarget.width, sTarget.height);
 
     lmLog(gGFXLogGroup, "Handle context loss: Shutdown %i", _scount++);
 
@@ -311,7 +335,7 @@ void Graphics::handleContextLoss()
     lmLog(gGFXLogGroup, "Handle context loss: Init");
 
     lmLog(gGFXLogGroup, "Handle context loss: Reset");
-    reset(sWidth, sHeight);
+    reset(sTarget.width, sTarget.height);
     lmLog(gGFXLogGroup, "Handle context loss: Done");
 }
 
@@ -339,7 +363,7 @@ void Graphics::setDebug(int flags)
 
 void Graphics::setFillColor(unsigned int color)
 {
-    sFillColor = Color(color);
+    sTarget.fillColor = Color(color);
 }
 
 // NanoVG requires stencil buffer for fills, so this is always true for now
@@ -350,7 +374,7 @@ bool Graphics::getStencilRequired()
 
 unsigned int Graphics::getFillColor()
 {
-    return sFillColor.getHex();
+    return sTarget.fillColor.getHex();
 }
 
 void Graphics::setClipRect(int x, int y, int width, int height)
@@ -368,7 +392,7 @@ void Graphics::setClipRect(int x, int y, int width, int height)
     }
 
     context()->glEnable(GL_SCISSOR_TEST);
-    context()->glScissor(x, sHeight-height-y, width, height);
+    context()->glScissor(x, sTarget.height-height-y, width, height);
 }
 
 void Graphics::clearClipRect()

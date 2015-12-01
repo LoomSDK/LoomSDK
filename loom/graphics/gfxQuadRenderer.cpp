@@ -176,6 +176,8 @@ void QuadRenderer::submit()
                 sBlendStateValid = true;
             }
             
+            Graphics::context()->glDisable(GL_CULL_FACE);
+            
             Graphics_SetCurrentGLState(GFX_OPENGL_STATE_QUAD);
             
             // Setting the buffer to null supposedly enables better performance because it enables the driver to do some optimizations.

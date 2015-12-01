@@ -26,10 +26,6 @@ Type *Sprite::typeSprite = NULL;
 
 void Sprite::render(lua_State *L)
 {
-    updateLocalTransform();
-
-    lualoom_pushnative<Sprite>(L, this);
-    renderChildren(L);
-    lua_pop(L, 1);
+    renderContainer<Sprite>(L, this);
 }
 }

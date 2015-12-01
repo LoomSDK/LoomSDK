@@ -14,7 +14,7 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.
+ * limitations under the License. 
  * ===========================================================================
  */
 
@@ -641,56 +641,11 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
 }
 
 
-void LSCompiler::setSDKBuild(const utString& lscPath)
+void LSCompiler::setSDKBuild(const utString& lsc)
 {
-    char lsc[2048];
-
-    snprintf(lsc, 2048, "%s", lscPath.c_str());
-
-    // Slurp off the filename...
-    unsigned int len = (unsigned int)(strlen(lsc) - 1);
-    while (len-- > 0)
-    {
-        if ((lsc[len] == '\\') || (lsc[len] == '/'))
-        {
-            lsc[len + 1] = '\0';
-            break;
-        }
-    }
-
-    // And go up the directories until we find onen with "lib" in it...
-    // But shouldn't be more than 3
-    bool found = false;
-    for (int i = 0; i <= 3; i++)
-    {
-        utString searchLib(lsc);
-        searchLib += "libs";
-        if (platform_dirExists(searchLib.c_str()) == 0)
-        {
-            found = true;
-            break;
-        }
-
-        while (len-- > 0)
-        {
-            if ((lsc[len] == '\\') || (lsc[len] == '/'))
-            {
-                lsc[len + 1] = '\0'; // This won't cause a buffer overrun because
-                                     // we already ate backwards in the previous loop.
-                                     // But we do need to preserve the trailing slash.
-                break;
-            }
-        }
-    }
-
-    if (!found)
-    {
-        lmLog(compilerLogGroup, "Unable to find SDK libraries somewhere inside %s", lsc);
-        exit(EXIT_FAILURE);
-    }
-
     // Then note the path.
     sdkPath = lsc;
+
     log("SDK Path: %s", sdkPath.c_str());
 
     AssemblyReader::addLibraryAssemblyPath(sdkPath + "libs");

@@ -194,6 +194,9 @@ static int registerLoom2D(lua_State *L)
        .addProperty("visible", &DisplayObject::getVisible, &DisplayObject::setVisible)
        .addProperty("touchable", &DisplayObject::getTouchable, &DisplayObject::setTouchable)
 
+       .addProperty("cacheAsBitmap", &DisplayObject::getCacheAsBitmap, &DisplayObject::setCacheAsBitmap)
+       .addMethod("invalidateBitmapCache", &DisplayObject::invalidateBitmapCache)
+
        .addProperty("depth", &DisplayObject::getDepth, &DisplayObject::setDepth)
 
        .addProperty("valid", &DisplayObject::getValid, &DisplayObject::setValid)
@@ -246,6 +249,8 @@ static int registerLoom2D(lua_State *L)
        .addVarAccessor("onBackKey", &Stage::getBackKeyDelegate)
        .addVarAccessor("onScrollWheelYMoved", &Stage::getScrollWheelYMovedDelegate)
        .addVarAccessor("onAccelerate", &Stage::getAccelerateDelegate)
+       .addVarAccessor("onGameControllerAdded", &Stage::getGameControllerAddedDelegate)
+       .addVarAccessor("onGameControllerRemoved", &Stage::getGameControllerRemovedDelegate)
 
        .addVarAccessor("onOrientationChange", &Stage::getOrientationChangeDelegate)
        .addVarAccessor("onSizeChange", &Stage::getSizeChangeDelegate)
@@ -273,9 +278,9 @@ static int registerLoom2D(lua_State *L)
 
     // SVG
        .beginClass<GFX::VectorSVG>("SVG")
-	   .addConstructor<void(*)(void)>()
-	   .addProperty("width", &GFX::VectorSVG::getWidth)
-	   .addProperty("height", &GFX::VectorSVG::getHeight)
+       .addConstructor<void(*)(void)>()
+       .addProperty("width", &GFX::VectorSVG::getWidth)
+       .addProperty("height", &GFX::VectorSVG::getHeight)
        .addMethod("loadFile", &GFX::VectorSVG::loadFile)
        .addMethod("loadString", &GFX::VectorSVG::loadString)
        .endClass()

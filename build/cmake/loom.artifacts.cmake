@@ -26,7 +26,7 @@ if (APPLE)
 		    COMMAND ${RSYNC_CMD} ${CMAKE_SOURCE_DIR}/sdk/assets ${APPLICATION_APP_LOCATION}/Contents/Resources
 		    COMMAND ${RSYNC_CMD} ${CMAKE_SOURCE_DIR}/sdk/bin  ${APPLICATION_APP_LOCATION}/Contents/Resources
 		    COMMAND ${RSYNC_CMD} ${CMAKE_SOURCE_DIR}/sdk/libs  ${APPLICATION_APP_LOCATION}/Contents/Resources
-			COMMAND mkdir -p ${ARTIFACTS_DIR}/bin
+		    COMMAND mkdir -p ${ARTIFACTS_DIR}/bin
 		    COMMAND ${RSYNC_CMD} ${APPLICATION_APP_LOCATION} ${ARTIFACTS_DIR}/bin
 		)
 		

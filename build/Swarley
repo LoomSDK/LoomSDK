@@ -128,7 +128,7 @@ namespace :package do
     FileUtils.cp("MIN_CLI_VERSION", "pkg/sdk")
 
     # docs
-    cp_r_safe("artifacts/docs/docs", "pkg/sdk")
+    cp_r_safe("artifacts/docs", "pkg/sdk")
 
     FileUtils.rm_rf("pkg/loomsdk.zip") if File.exists? "pkg/loomsdk.zip"
     Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|

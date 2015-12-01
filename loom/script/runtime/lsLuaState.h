@@ -271,6 +271,7 @@ public:
     }
 
     void dumpManagedNatives();
+    void dumpLuaStack();
 
     int getStackSize();
 

@@ -30,7 +30,6 @@ distribution.
 
 #include "loom/common/platform/platformIO.h"
 #include "loom/common/core/assert.h"
-#include "loom/common/core/allocator.h"
 
 using namespace tinyxml2;
 
@@ -91,7 +90,7 @@ StrPair::~StrPair()
 void StrPair::Reset()
 {
 	if ( flags & NEEDS_DELETE ) {
-		delete [] start;
+		lmFree(NULL, start);
 	}
 	flags = 0;
 	start = 0;
@@ -103,7 +102,7 @@ void StrPair::SetStr( const char* str, int flags )
 {
 	Reset();
 	size_t len = strlen( str );
-	start = new char[ len+1 ];
+	start = static_cast<char*>(lmAlloc(NULL, len + 1 ));
 	memcpy( start, str, len+1 );
 	end = start + len;
 	this->flags = flags | NEEDS_DELETE;
@@ -1288,7 +1287,7 @@ XMLDocument::XMLDocument( bool _processEntities ) :
 XMLDocument::~XMLDocument()
 {
 	DeleteChildren();
-	delete [] charBuffer;
+	lmFree(NULL, charBuffer);
 
 #if 0
 	textPool.Trace( "text" );
@@ -1310,8 +1309,7 @@ void XMLDocument::InitDocument()
 	errorStr1 = 0;
 	errorStr2 = 0;
 
-	delete [] charBuffer;
-	charBuffer = 0;
+	lmSafeFree(NULL, charBuffer);
 
 }
 
@@ -1377,7 +1375,7 @@ int XMLDocument::LoadFile( const char* filename )
 	if ( size == 0 )
 		return errorID; // XML_NO_ERROR
     
-	charBuffer = new char[size+1];
+	charBuffer = static_cast<char*>(lmAlloc(NULL, size+1));
 	memcpy(charBuffer, ptr, size);
 	charBuffer[size] = 0;
   platform_unmapFile(ptr);
@@ -1448,7 +1446,7 @@ int XMLDocument::Parse( const char* p )
 	}
 
 	size_t len = strlen( p );
-	charBuffer = new char[ len+1 ];
+	charBuffer = static_cast<char*>(lmAlloc(NULL, len + 1));
 	memcpy( charBuffer, p, len+1 );
 
 	

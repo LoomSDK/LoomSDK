@@ -8,8 +8,9 @@ package loom.sound
      * pitch, and looping status modified to suit the needs of your
      * application.
      *
-     * Source files can be in MP3 or OGG format. Note that MP3 supports 
-     * requires that you have a valid license to perform MP3 playback.
+     * Source files can be in MP3, OGG and WAV (8 & 16 bit PCM) formats. Note
+     * that MP3 supports requires that you have a valid license to perform
+     * MP3 playback.
      *
      * Note that sounds are stored uncompressed in memory. One minute of CD 
      * quality stereo audio takes about 10MB of storage. Be aware when 
@@ -35,8 +36,9 @@ package loom.sound
         /**
          * Create a new Sound instance by loading an asset.
          *
-         * Source files can be in MP3 or OGG format. Note that MP3 supports 
-         * requires that you have a valid license to perform MP3 playback.
+         * Source files can be in MP3, OGG and WAV (8 & 16 bit PCM) format. Note
+         * that MP3 supports requires that you have a valid license to perform
+         * MP3 playback.
          */
         public static native function load(assetPath:String):Sound;
 
@@ -120,6 +122,11 @@ package loom.sound
          * True if we are currently playing the sound.
          */
         public native function isPlaying():Boolean;
+
+        /**
+         * True if the sound asset failed to load correctly.
+         */
+        public native function isNull():Boolean;
 
         /**
          * True if we have ever played the sound.
