@@ -176,7 +176,7 @@ set ( LJLIB_C
 )
 
 ## LuaJIT Library
-include_directories ( ${CMAKE_CURRENT_BINARY_DIR} dynasm src src/host )
+include_directories ( ${CMAKE_CURRENT_BINARY_DIR} dynasm src src/host src/compiler-rt/ )
 
 if ( LUA_USE_RELATIVE_LOADLIB )
   list ( APPEND LJLIB_C ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_package_rel.c )
@@ -301,8 +301,20 @@ if ( NOT BOOTSTRAP_ONLY )
 
     if ( DASM_ARCH STREQUAL arm AND DEFINED LUAJIT_OS AND LUAJIT_OS STREQUAL "LUAJIT_OS_OSX" )
       set(CMAKE_OSX_SYSROOT iphoneos6.1)
-      set(CMAKE_OSX_ARCHITECTURES "armv7")
+      set(CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD)")
       set(CMAKE_XCODE_EFFECTIVE_PLATOFRMS "-iphoneos;-iphonesimulator")
+      set(CORE_RUNTIME
+        src/compiler-rt/fixdfdi.c
+        src/compiler-rt/fixsfdi.c
+        src/compiler-rt/fixunssfdi.c
+        src/compiler-rt/floatdidf.c
+        src/compiler-rt/floatdisf.c
+        src/compiler-rt/floatundidf.c
+        src/compiler-rt/floatundisf.c
+        src/compiler-rt/fixunsdfdi.c
+      )
+    else ()
+      set(CORE_RUNTIME "")
     endif ()
 
     if ( NOT TARGET_ONLY )
@@ -392,6 +404,9 @@ if ( NOT BOOTSTRAP_ONLY )
       src/lj_alloc.c
       src/lib_aux.c
       src/lib_init.c
+      src/lj_buf.c
+      src/lj_strfmt.c
+      src/lj_profile.c
       ${LJLIB_C}
     )
 
@@ -399,7 +414,7 @@ if ( NOT BOOTSTRAP_ONLY )
      add_definitions(/MT)
     endif(MSVC)
 
-    add_library ( libluajit STATIC ${LJCORE_C} ${DEPS} )
+    add_library ( libluajit STATIC ${LJCORE_C} ${DEPS} ${CORE_RUNTIME} )
     target_link_libraries ( libluajit ${LIBS} )
     set_target_properties ( libluajit PROPERTIES OUTPUT_NAME luajit CLEAN_DIRECT_OUTPUT 1 )
 
