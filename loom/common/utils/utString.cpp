@@ -112,6 +112,11 @@ void utString::fromBytes(const void *bytes, int len)
     p[len] = 0; // Make sure we are NULL terminated.
 }
 
+void utString::assign(const char* bytes, int len)
+{
+    fromBytes((const void*)bytes, len);
+}
+
 
 utString& utString::operator=(const char *s)
 {

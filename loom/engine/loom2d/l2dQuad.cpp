@@ -66,13 +66,13 @@ void Quad::updateNativeVertexData(lua_State *L, int index)
 
             GFX::Color c(0);
             lua_rawgeti(L, rawDataTable, rcounter++);
-            c.r = (float)lua_tonumber(L, -1);
-            lua_rawgeti(L, rawDataTable, rcounter++);
-            c.g = (float)lua_tonumber(L, -1);
+            c.a = (float)lua_tonumber(L, -1);
             lua_rawgeti(L, rawDataTable, rcounter++);
             c.b = (float)lua_tonumber(L, -1);
             lua_rawgeti(L, rawDataTable, rcounter++);
-            c.a = (float)lua_tonumber(L, -1);
+            c.g = (float)lua_tonumber(L, -1);
+            lua_rawgeti(L, rawDataTable, rcounter++);
+            c.r = (float)lua_tonumber(L, -1);
 
             // todo: optimize this too:
 
@@ -143,14 +143,8 @@ void Quad::render(lua_State *L)
         lmscalar _x = mtx.a * v->x + mtx.c * v->y + mtx.tx;
         lmscalar _y = mtx.b * v->x + mtx.d * v->y + mtx.ty;
 
-// Really this is decided by DX9, which is hardcoded on windows.
-#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
-        v->x = (float) (_x - 0.5);
-        v->y = (float) (_y - 0.5);
-#else
         v->x = (float) _x;
         v->y = (float) _y;
-#endif
 
         // modulate vertex alpha by our DisplayObject alpha setting
         if (renderState.alpha != 1.0f)

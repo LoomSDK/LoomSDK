@@ -89,11 +89,22 @@ public:
 
     void render(lua_State *L)
     {
+        renderContainer<DisplayObjectContainer>(L, this);
+    }
+
+    template <class ContainerClass>
+    void renderContainer(lua_State *L, void* instance)
+    {
+        DisplayObject::render(L);
+
         updateLocalTransform();
 
-        lualoom_pushnative<DisplayObjectContainer>(L, this);
-        renderChildren(L);
-        lua_pop(L, 1);
+        // If cached image is valid, render that instead of the children
+        if (!renderCached(L)) {
+            lualoom_pushnative<ContainerClass>(L, static_cast<ContainerClass*>(instance));
+            renderChildren(L);
+            lua_pop(L, 1);
+        }
     }
 
     static void initialize(lua_State *L)

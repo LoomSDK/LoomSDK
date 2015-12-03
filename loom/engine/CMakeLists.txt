@@ -36,6 +36,7 @@ set (ENGINE_SRC
     bindings/loom/lmTeak.cpp
     bindings/loom/lmSQLite.cpp
     bindings/loom/lmModestMaps.cpp
+    bindings/loom/lmGameController.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
     
     bindings/sdl/lmSDL.cpp
@@ -90,9 +91,7 @@ endif(LINUX)
 
 
 set (ENGINE_HDR
-            
     bindings/loom/lmApplication.h
-    
 )
 
 if(MSVC)

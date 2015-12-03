@@ -1,19 +1,16 @@
+path = File.expand_path(File.join(File.dirname(__FILE__), 'libs'))
+$LOAD_PATH << path
+
 require 'json'
+require 'zip'
+require 'zip/file'
+require 'telemetry'
 
 namespace :package do
 
-  def cp_r_safe(src, dst)
-    if File.exists? src
-      FileUtils.mkdir_p(dst)
-      FileUtils.cp_r(src, dst)
-    end
-  end
-
   desc "Creates a universal sdk from the artifacts folder in the root"
   task :universal_sdk do
-
-    require 'zip/zip'
-    require 'zip/zipfilesystem'
+    puts "== Packaging Loom SDK =="
 
     FileUtils.rm_rf("pkg") if File.exists?("pkg")
 
@@ -78,8 +75,10 @@ namespace :package do
       FileUtils.rm_rf "pkg/sdk/bin/android-arm/bin/META-INF"
     end
 
+    telemetry_client_copy("tools/telemetry/www", "pkg/sdk/")
+
     FileUtils.rm_rf("pkg/loomsdk.zip") if File.exists? "pkg/loomsdk.zip"
-    Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|
+    Zip::File.open("pkg/loomsdk.zip", 'w') do |zipfile|
       Dir["pkg/sdk/**/**"].each do |file|
         zipfile.add(file.sub("pkg/sdk/", ''), file)
       end
@@ -87,12 +86,15 @@ namespace :package do
 
     FileUtils.rm_rf("pkg/sdk")
 
+    puts "Packaged to pkg/loomsdk.zip"
+
+  end
+
+  task :sdk => ['universal_sdk'] do
   end
 
   task :free_sdk do
-
-    require 'zip/zip'
-    require 'zip/zipfilesystem'
+    puts "== Packaging Free Loom SDK =="
 
     FileUtils.rm_rf("pkg") if File.exists?("pkg")
 
@@ -128,10 +130,12 @@ namespace :package do
     FileUtils.cp("MIN_CLI_VERSION", "pkg/sdk")
 
     # docs
-    cp_r_safe("artifacts/docs/docs", "pkg/sdk")
+    cp_r_safe("artifacts/docs", "pkg/sdk")
+
+    telemetry_client_copy("tools/telemetry/www", "pkg/sdk/")
 
     FileUtils.rm_rf("pkg/loomsdk.zip") if File.exists? "pkg/loomsdk.zip"
-    Zip::ZipFile.open("pkg/loomsdk.zip", 'w') do |zipfile|
+    Zip::File.open("pkg/loomsdk.zip", 'w') do |zipfile|
       Dir["pkg/sdk/**/**"].each do |file|
         zipfile.add(file.sub("pkg/sdk/", ''), file)
       end
@@ -139,6 +143,56 @@ namespace :package do
 
     FileUtils.rm_rf("pkg/sdk")
 
+    puts "Packaged to pkg/freesdk.zip"
+
+  end
+
+  desc "Package Native SDK"
+  task :nativesdk do
+    puts "== Packaging Native SDK =="
+
+    FileUtils.rm_rf "nativesdk.zip"
+
+    omit_files = %w[ examples.zip loomsdk.zip certs/LoomDemoBuild.mobileprovision loom/vendor/telemetry-01052012 pkg/ artifacts/ docs/output build/ ]
+
+    Zip::File.open("nativesdk.zip", 'w') do |zipfile|
+      Dir["**/**"].each do |file|
+
+        do_omit = false
+        omit_files.each do |omitted|
+          if file.include? omitted
+            puts "Omitted #{file}"
+            do_omit = true
+          end
+        end
+
+        unless do_omit
+          puts "Adding #{file}"
+          zipfile.add(file, file)
+        end
+      end
+    end
+
+    puts "== Native SDK Packaged =="
+  end
+
+  desc "Package examples to pkg/examples.zip"
+  task :examples do
+    puts "== Packaging Examples =="
+
+    FileUtils.rm_rf "pkg/examples.zip"
+    FileUtils.mkdir_p "pkg"
+
+    # Package examples skipping bloat.
+    Zip::File.open("pkg/examples.zip", 'w') do |zipfile|
+      Dir["docs/examples/**/**"].each do |file|
+       next if File.extname(file) == ".loomlib"
+       next if File.extname(file) == ".loom"
+        zipfile.add(file.sub("docs/examples/", ''),file)
+      end
+    end
+
+    puts "== Examples Packaged =="
   end
 
 end

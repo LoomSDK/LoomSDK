@@ -125,7 +125,6 @@ static int _jsonParseInt(const char *key, json_t *value)
 
 const utString& LoomApplicationConfig::displayOrientation()
 {
-    lmLog(gLoomApplicationConfigLogGroup, "displayOrientation %s", _displayOrientation.c_str());
     return _displayOrientation;
 }
 

@@ -159,14 +159,28 @@ package loom2d.display
         /** Indicates if this object (and its children) will receive touch events. */
         public native function set touchable(value:Boolean);
         public native function get touchable():Boolean;
+        
+        /**
+         * If true, the untransformed contents get cached into a texture at render time.
+         * The contents remain static until you turn off caching or use `invalidateBitmapCache`
+         * to update the cache manually.
+         */
+        public native function set cacheAsBitmap(value:Boolean);
+        public native function get cacheAsBitmap():Boolean;
+        
+        /**
+         * Update the cached texture before the next render.
+         * This function has no effect if `cacheAsBitmap` is turned off.
+         */
+        public native function invalidateBitmapCache();
 
         /** The name of the display object (default: null). Used by 'getChildByName()' of
          *  display object containers. */
         public native function set name(value:String);
         public native function get name():String;
-		
-		/** This can be used if you wish to have a DisplayObject with zero alpha still respond to hit tests */
-		public function set ignoreHitTestAlpha(value:Boolean) { _ignoreHitTestAlpha = value; }
+        
+        /** This can be used if you wish to have a DisplayObject with zero alpha still respond to hit tests */
+        public function set ignoreHitTestAlpha(value:Boolean) { _ignoreHitTestAlpha = value; }
         public function get ignoreHitTestAlpha():Boolean { return _ignoreHitTestAlpha; };
 
         // cached parent so that we don't marshal a managed instance every property access

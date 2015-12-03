@@ -41,10 +41,6 @@ class DocumentationPage
     hash.has_key? :setter
   end
 
-  def search_object_string
-    $search_json
-  end
-
   def breadcrumbs
     ''
   end

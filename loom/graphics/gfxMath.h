@@ -36,15 +36,15 @@ inline lmscalar lmClamp(lmscalar v, lmscalar min, lmscalar max)
 
 #if WIN32
 #if _MSC_VER < 1800
-    
+
 #define INFINITY (float) HUGE_VAL
 #ifndef NAN
     static const unsigned long __nan[2] = {0xffffffff, 0x7fffffff};
     #define NAN (*(const float *) __nan)
 #endif
-    
+
 typedef unsigned __int64 uint64;
-    
+
 inline int isinf(double x)
 {
     union { uint64 u; double f; } ieee754;

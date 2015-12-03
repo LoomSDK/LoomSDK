@@ -52,6 +52,9 @@ struct RenderState
 
 class DisplayObject : public EventDispatcher
 {
+    // true if caching is in progress, used for avoiding rendering to texture while rendering to texture 
+    static bool cacheAsBitmapInProgress;
+
 public:
 
     bool transformDirty;
@@ -113,6 +116,18 @@ public:
     // true if Image or derived from Image type
     bool imageOrDerived;
 
+    // true if the contents are or are pending to be cached as an image
+    bool cacheAsBitmap;
+    // true if cachedImage represents a valid cache of the contents
+    // if false, the contents are re-cached at render time
+    bool cacheAsBitmapValid;
+    // pointer to the cached image, details depend on implementation
+    void* cachedImage;
+    // X offset the cached image has to be rendered at
+    lmscalar cacheAsBitmapOffsetX;
+    // Y offset the cached image has to be rendered at
+    lmscalar cacheAsBitmapOffsetY;
+
     // should not set this directly
     DisplayObjectContainer *parent;
 
@@ -140,22 +155,25 @@ public:
 
     inline void init()
     {
-        x              = y = 0;
-        pivotX         = pivotY = 0;
-        scaleX         = scaleY = 1;
-        skewX          = skewY = 0;
-        depth          = 0;
-        rotation       = 0;
-        alpha          = 1;
-        blendMode      = BlendMode::AUTO;
-        blendEnabled   = true;
-        visible        = touchable = true;
-        name           = stringtable_insert("");
-        parent         = NULL;
-        valid          = false;
-        type           = NULL;
-        imageOrDerived = false;
-        transformDirty = false;
+        x                  = y = 0;
+        pivotX             = pivotY = 0;
+        scaleX             = scaleY = 1;
+        skewX              = skewY = 0;
+        depth              = 0;
+        rotation           = 0;
+        alpha              = 1;
+        blendMode          = BlendMode::AUTO;
+        blendEnabled       = true;
+        visible            = touchable = true;
+        name               = stringtable_insert("");
+        parent             = NULL;
+        valid              = false;
+        type               = NULL;
+        imageOrDerived     = false;
+        transformDirty     = false;
+        cacheAsBitmap      = false;
+        cacheAsBitmapValid = false;
+        cachedImage        = NULL;
     }
 
     DisplayObject()
@@ -164,9 +182,7 @@ public:
         type = typeDisplayObject;
     }
 
-    virtual void render(lua_State *L)
-    {
-    }
+    virtual void render(lua_State *L);
 
     virtual void validate(lua_State *L, int index)
     {
@@ -523,6 +539,24 @@ public:
         touchable = _touchable;
     }
 
+    bool getCacheAsBitmap() const
+    {
+        return cacheAsBitmap;
+    }
+
+    void setCacheAsBitmap(bool _cacheAsBitmap)
+    {
+        if (!_cacheAsBitmap && cacheAsBitmap) invalidateBitmapCache();
+        cacheAsBitmap = _cacheAsBitmap;
+    }
+
+    void invalidateBitmapCache()
+    {
+        cacheAsBitmapValid = false;
+    }
+
+    bool renderCached(lua_State *L);
+    
     inline bool getValid() const
     {
         return valid;

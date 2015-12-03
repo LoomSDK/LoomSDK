@@ -231,6 +231,8 @@ void LoomApplication::reloadMainAssembly()
     lmDelete(NULL, rootVM);
     rootVM = NULL;
 
+    GFX::Graphics::initialize();
+
     execMainAssembly();
 
     reloadQueued = false;
