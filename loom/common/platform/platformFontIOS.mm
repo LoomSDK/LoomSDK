@@ -70,7 +70,7 @@ int platform_fontSystemFontFromName(const char *name, void** mem, unsigned int* 
     
     bool containsCFF = false;
     for (CFIndex i = 0; i < tableNum; i++) {
-        uint32_t tag = (uint32_t)CFArrayGetValueAtIndex(tags, i);
+        uint32_t tag = (uint32_t)(size_t)CFArrayGetValueAtIndex(tags, i);
         if (tag == 'CFF ') containsCFF = true;
         CFDataRef table = CGFontCopyTableForTag(font, tag);
         lmAssert(table != NULL, "Unable to copy table for tag %x", tag);
@@ -109,7 +109,7 @@ int platform_fontSystemFontFromName(const char *name, void** mem, unsigned int* 
     cur += tableNum * sizeof(TableRecord);
     
     for (CFIndex i = 0; i < tableNum; i++) {
-        uint32_t tag = (uint32_t)CFArrayGetValueAtIndex(tags, i);
+        uint32_t tag = (uint32_t)(size_t)CFArrayGetValueAtIndex(tags, i);
         CFDataRef table = CGFontCopyTableForTag(font, tag);
         CFIndex tableLength = CFDataGetLength(table);
         memcpy(cur, CFDataGetBytePtr(table), tableLength);
