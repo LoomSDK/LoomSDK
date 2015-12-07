@@ -1,5 +1,5 @@
 @rem Script to build LuaJIT with MSVC.
-@rem Copyright (C) 2005-2012 Mike Pall. See Copyright Notice in luajit.h
+@rem Copyright (C) 2005-2015 Mike Pall. See Copyright Notice in luajit.h
 @rem
 @rem Either open a "Visual Studio .NET Command Prompt"
 @rem (Note that the Express Edition does not contain an x64 compiler)
@@ -17,9 +17,12 @@
 @set LJCOMPILE=cl /nologo /c /MT /O2 /W3 /D_CRT_SECURE_NO_DEPRECATE
 @set LJLINK=link /nologo
 @set LJMT=mt /nologo
-@set LJLIB=lib /nologo
+@set LJLIB=lib /nologo /nodefaultlib
 @set DASMDIR=..\dynasm
 @set DASM=%DASMDIR%\dynasm.lua
+
+@set LJDLLNAME=lua51.dll
+@set LJLIBNAME=lua51.lib
 @set ALL_LIB=lib_base.c lib_math.c lib_bit.c lib_string.c lib_table.c lib_io.c lib_os.c lib_package.c lib_debug.c lib_jit.c lib_ffi.c
 
 %LJCOMPILE% host\minilua.c
@@ -35,6 +38,7 @@ if exist minilua.exe.manifest^
 @if errorlevel 8 goto :X64
 @set DASMFLAGS=-D WIN -D JIT -D FFI
 @set LJARCH=x86
+@set LJCOMPILE=%LJCOMPILE% /arch:SSE2
 :X64
 minilua %DASM% -LN %DASMFLAGS% -o host\buildvm_arch.h vm_x86.dasc
 @if errorlevel 1 goto :BAD
@@ -62,26 +66,27 @@ buildvm -m folddef -o lj_folddef.h lj_opt_fold.c
 @if errorlevel 1 goto :BAD
 
 @if "%1" neq "debug" goto :NODEBUG
+@shift
 @set LJCOMPILE=%LJCOMPILE% /Zi
 @set LJLINK=%LJLINK% /debug
 :NODEBUG
-@if "%2"=="amalg" goto :AMALGDLL
-@if "%2"=="static" goto :STATIC
-%LJCOMPILE% /DLUA_BUILD_AS_DLL lj_*.c lib_*.c
+@if "%1"=="amalg" goto :AMALGDLL
+@if "%1"=="static" goto :STATIC
+%LJCOMPILE% /MD /DLUA_BUILD_AS_DLL lj_*.c lib_*.c
 @if errorlevel 1 goto :BAD
-%LJLINK% /DLL /out:lua51.dll lj_*.obj lib_*.obj
+%LJLINK% /DLL /out:%LJDLLNAME% lj_*.obj lib_*.obj
 @if errorlevel 1 goto :BAD
 @goto :MTDLL
 :STATIC
 %LJCOMPILE% lj_*.c lib_*.c
 @if errorlevel 1 goto :BAD
-%LJLIB% /OUT:..\..\..\..\build\luajit-windows-%LJARCH%\luajit.lib lj_*.obj lib_*.obj
+%LJLIB% /OUT:..\..\..\..\build\luajit-windows-%LJARCH%\%LJLIBNAME% lj_*.obj lib_*.obj
 @if errorlevel 1 goto :BAD
 @goto :MTDLL
 :AMALGDLL
-%LJCOMPILE% /DLUA_BUILD_AS_DLL ljamalg.c
+%LJCOMPILE% /MD /DLUA_BUILD_AS_DLL ljamalg.c
 @if errorlevel 1 goto :BAD
-%LJLINK% /DLL /out:lua51.dll ljamalg.obj lj_vm.obj
+%LJLINK% /DLL /out:%LJDLLNAME% ljamalg.obj lj_vm.obj
 @if errorlevel 1 goto :BAD
 :MTDLL
 

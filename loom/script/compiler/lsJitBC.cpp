@@ -110,20 +110,20 @@ void BC::fixupFunctionRet(FuncState *fs)
 /* Resize buffer if needed. */
 void BC::functionBufResize(CodeState *ls, MSize len)
 {
-    MSize sz = ls->sb.sz * 2;
+    MSize sz = sbufsz(&ls->sb) * 2;
 
-    while (ls->sb.n + len > sz)
+    while (sbuflen(&ls->sb) + len > sz)
     {
         sz = sz * 2;
     }
 
-    lj_str_resizebuf(ls->L, &ls->sb, sz);
+    lj_buf_need(&ls->sb, sz);
 }
 
 
 void BC::functionBufNeed(CodeState *ls, MSize len)
 {
-    if (LJ_UNLIKELY(ls->sb.n + len > ls->sb.sz))
+    if (LJ_UNLIKELY(sbuflen(&ls->sb) + len > sbufsz(&ls->sb)))
     {
         functionBufResize(ls, len);
     }
@@ -133,10 +133,10 @@ void BC::functionBufNeed(CodeState *ls, MSize len)
 /* Add string to buffer. */
 void BC::functionBufStr(CodeState *ls, const char *str, MSize len)
 {
-    char  *p = ls->sb.buf + ls->sb.n;
+    char  *p = mref(ls->sb.p, char);
     MSize i;
 
-    ls->sb.n += len;
+    setmref(ls->sb.p, &p[len]);
     for (i = 0; i < len; i++)
     {
         p[i] = str[i];
@@ -147,15 +147,15 @@ void BC::functionBufStr(CodeState *ls, const char *str, MSize len)
 /* Add ULEB128 value to buffer. */
 void BC::functionBufULEB128(CodeState *ls, uint32_t v)
 {
-    MSize   n  = ls->sb.n;
-    uint8_t *p = (uint8_t *)ls->sb.buf;
+    MSize   n  = sbuflen(&ls->sb);
+    uint8_t *p = mref(ls->sb.b, uint8_t);
 
     for ( ; v >= 0x80; v >>= 7)
     {
         p[n++] = (uint8_t)((v & 0x7f) | 0x80);
     }
     p[n++]   = (uint8_t)v;
-    ls->sb.n = n;
+    setmref(ls->sb.p, &p[n]);
 }
 
 
@@ -165,8 +165,9 @@ size_t BC::functionPrepVar(CodeState *ls, FuncState *fs, size_t *ofsvar)
     VarInfo *vstack = fs->cs->vstack;
     MSize   i, n;
     BCPos   lastpc;
+    uint8_t *p;
 
-    lj_str_resetbuf(&ls->sb);
+    lj_buf_reset(&ls->sb);
     // Copy to temp. string buffer.
     // Store upvalue names.
     for (i = 0, n = fs->nuv; i < n; i++)
@@ -176,7 +177,7 @@ size_t BC::functionPrepVar(CodeState *ls, FuncState *fs, size_t *ofsvar)
         functionBufNeed(ls, len);
         functionBufStr(ls, strdata(s), len);
     }
-    *ofsvar = ls->sb.n;
+    *ofsvar = sbuflen(&ls->sb);
     vstack += fs->vbase;
     lastpc  = 0;
     // Store local variable names and compressed ranges.
@@ -187,7 +188,9 @@ size_t BC::functionPrepVar(CodeState *ls, FuncState *fs, size_t *ofsvar)
         if ((uintptr_t)s < VARNAME__MAX)
         {
             functionBufNeed(ls, 1 + 2 * 5);
-            ls->sb.buf[ls->sb.n++] = (uint8_t)(uintptr_t)s;
+            p = mref(ls->sb.p, uint8_t);
+            *p = (uint8_t)(uintptr_t)s;
+            setmref(ls->sb.p, p + 1);
         }
         else
         {
@@ -200,8 +203,10 @@ size_t BC::functionPrepVar(CodeState *ls, FuncState *fs, size_t *ofsvar)
         lastpc = startpc;
     }
     functionBufNeed(ls, 1);
-    ls->sb.buf[ls->sb.n++] = '\0'; // Terminator for varinfo.
-    return ls->sb.n;
+    p = mref(ls->sb.p, uint8_t);
+    *p = '\0'; // Terminator for varinfo.
+    setmref(ls->sb.p, p + 1);
+    return sbuflen(&ls->sb);
 }
 
 
@@ -367,7 +372,7 @@ void BC::functionFixupVar(CodeState *ls, GCproto *pt, uint8_t *p,
     setmref(pt->uvinfo, p);
     setmref(pt->varinfo, (char *)p + ofsvar);
 
-    memcpy(p, ls->sb.buf, ls->sb.n);  /* Copy from temp. string buffer. */
+    memcpy(p, mref(ls->sb.b, void), sbuflen(&ls->sb));  /* Copy from temp. string buffer. */
 }
 
 

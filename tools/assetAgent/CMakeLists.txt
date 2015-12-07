@@ -44,6 +44,7 @@ if (APPLE)
     
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
+        COMMAND mkdir -p \"${ARTIFACTS_DIR}/tools\"
         COMMAND cp \"${ASSETAGENTBIN}\" \"${ARTIFACTS_DIR}/tools/libassetAgent.so\"
     )
 
