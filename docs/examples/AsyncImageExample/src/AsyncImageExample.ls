@@ -1,20 +1,20 @@
 package
 {
 
-    import loom.Application;    
-    import loom.platform.Timer;    
-    import loom.gameframework.LoomGroup;    
-    import loom.gameframework.TimeManager;    
-    import loom2d.Loom2D;    
+    import loom.Application;
+    import loom.platform.Timer;
+    import loom.gameframework.LoomGroup;
+    import loom.gameframework.TimeManager;
+    import loom2d.Loom2D;
     import loom2d.display.Stage;
     import loom2d.math.Point;
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
-    import loom2d.events.TouchPhase;    
+    import loom2d.events.TouchPhase;
     import loom2d.display.StageScaleMode;
-    import loom2d.display.Image;   
-    import loom2d.display.AsyncImage;   
-    import loom2d.display.MovieClip;    
+    import loom2d.display.Image;
+    import loom2d.display.AsyncImage;
+    import loom2d.display.MovieClip;
     import loom2d.textures.Texture;
     import loom2d.textures.ConcreteTexture;
     import loom2d.ui.SimpleLabel;
@@ -56,7 +56,7 @@ package
         public function TexBox(texPath:String, stage:Stage, x:int, y:int)
         {
             _texBase = texPath;
-        
+
             //image
             _sprite = new AsyncImage(AsyncImageExample.LoadingAnim, null, 256, 256);
             _sprite.center();
@@ -66,7 +66,7 @@ package
             stage.addChild(_sprite);
 
             //label
-            _label = new SimpleLabel("assets/fonts/Curse-hd.fnt", stage.stageWidth, 64);            
+            _label = new SimpleLabel("assets/fonts/Curse-hd.fnt", stage.stageWidth, 64);
             _label.x = _sprite.x - (stage.stageWidth / 8);
             _label.y = _sprite.y + (_sprite.height / 2 + 10);
             _label.scale = 0.25;
@@ -75,10 +75,10 @@ package
             stage.addChild(_label);
 
             //name
-            _name = new SimpleLabel("assets/fonts/Curse-hd.fnt", stage.stageWidth, 256);            
+            _name = new SimpleLabel("assets/fonts/Curse-hd.fnt", stage.stageWidth, 256);
             _name.x = _sprite.x - (stage.stageWidth / 8);
             _name.y = _sprite.y - ((_sprite.height / 2) + 56);
-            _name.scale = 0.25;            
+            _name.scale = 0.25;
             _name.text = "...";
             _name.touchable = false;
             stage.addChild(_name);
@@ -95,7 +95,7 @@ package
             priorityButton.onClick +=  function() { _priority = !_priority; _priorityLabel.text = (_priority) ? "High Priority" : "Low Priority";};
             stage.addChild(priorityButton);
 
-            _priorityLabel = new SimpleLabel("assets/fonts/Curse-hd.fnt", 256, 64);            
+            _priorityLabel = new SimpleLabel("assets/fonts/Curse-hd.fnt", 256, 64);
             _priorityLabel.x = priorityButton.x - 8;
             _priorityLabel.y = priorityButton.y;
             _priorityLabel.scale = 0.25;
@@ -110,17 +110,17 @@ package
             AsyncImageExample.requestFlickrImageURLs(NUM_IMAGES, flickrImagesStore);
 
             //start up the cache
-            _lastTexture = _sprite.texture;          
+            _lastTexture = _sprite.texture;
             if(_textureCache[_lastTexture] == null)
             {
                 //start at 1 because we never want this texture to be destroyed...
                 _textureCache[_lastTexture] = 1;
             }
-            _textureCache[_lastTexture]++;  
+            _textureCache[_lastTexture]++;
 
-            //timer to delay the auto-loads 
+            //timer to delay the auto-loads
             _requestTimer = new Timer(500);
-            _requestTimer.onComplete += requestAsyncTex;            
+            _requestTimer.onComplete += requestAsyncTex;
         }
 
 
@@ -168,7 +168,7 @@ package
         //requests a new async texture load
         private function requestAsyncTex(timer:Timer=null):void
         {
-            var texToLoad:String = null;         
+            var texToLoad:String = null;
 
             _startTime = Platform.getTime();
             if(AsyncImageExample.LoadFromHTTP && (_httpTextureURLs != null))
@@ -181,7 +181,7 @@ package
             {
                 //load from disk
                 texToLoad = _texBase + _curImage + ".png";
-                _newTex = _sprite.loadTextureFromAsset(texToLoad, asyncLoadCompleteCB, _priority);                
+                _newTex = _sprite.loadTextureFromAsset(texToLoad, asyncLoadCompleteCB, _priority);
             }
 
             //wrap image
@@ -191,7 +191,7 @@ package
 
                 //repopulate the Flickr image list
                 AsyncImageExample.requestFlickrImageURLs(NUM_IMAGES, flickrImagesStore);
-            }  
+            }
 
             if(_sprite.loadStatus == AsyncImage.TEXTURE_NOTLOADED)
             {
@@ -232,12 +232,12 @@ package
         {
             trace("Failed to load texture via HTTP...");
             AsyncImageExample.setLabel(_label, HTTP_FAIL);
-        }        
+        }
 
 
         //touch input to start/stop image loading
-        private function onTouch(e:TouchEvent) 
-        { 
+        private function onTouch(e:TouchEvent)
+        {
             var touch = e.getTouch(_sprite, TouchPhase.BEGAN);
             if (touch)
             {
@@ -253,7 +253,7 @@ package
                     _requestTimer.stop();
                 }
             }
-        }            
+        }
     }
 
 
@@ -292,10 +292,10 @@ package
             _polySprite.x = stage.stageWidth / 2;
             _polySprite.y = stage.stageHeight / 2;
             _polySprite.touchable = false;
-            stage.addChild(_polySprite);    
+            stage.addChild(_polySprite);
 
             //button & label to toggle the load type with
-            var loadTypeLabel:SimpleLabel = new SimpleLabel("assets/fonts/Curse-hd.fnt", 256, 64);            
+            var loadTypeLabel:SimpleLabel = new SimpleLabel("assets/fonts/Curse-hd.fnt", 256, 64);
             var typeButton:SimpleButton = new SimpleButton();
             typeButton.scaleX = 0.8;
             typeButton.scaleY = 0.4;
@@ -316,7 +316,7 @@ package
 
 
             //button & label to toggle label updates
-            var labelUpdateLabel:SimpleLabel = new SimpleLabel("assets/fonts/Curse-hd.fnt", 256, 64);            
+            var labelUpdateLabel:SimpleLabel = new SimpleLabel("assets/fonts/Curse-hd.fnt", 256, 64);
             var labelButton:SimpleButton = new SimpleButton();
             labelButton.scaleX = 0.8;
             labelButton.scaleY = 0.4;
@@ -333,7 +333,7 @@ package
             labelUpdateLabel.scale = 0.5;
             labelUpdateLabel.touchable = false;
             labelUpdateLabel.text = (UpdateLabels) ? "Stop Label Updates" : "Update Labels";
-            stage.addChild(labelUpdateLabel);            
+            stage.addChild(labelUpdateLabel);
 
             var labelUpdateHeader:SimpleLabel = new SimpleLabel("assets/fonts/Curse-hd.fnt");
             labelUpdateHeader.x = stage.stageWidth / 2 - 208;
@@ -341,11 +341,11 @@ package
             labelUpdateHeader.scale = 0.25;
             labelUpdateHeader.touchable = false;
             labelUpdateHeader.text = "(Updating Labels will generate garbage and cause slowdowns)";
-            stage.addChild(labelUpdateHeader);            
+            stage.addChild(labelUpdateHeader);
 
 
             //add FPS output to the app
-            _fps = new SimpleLabel("assets/fonts/Curse-hd.fnt", 256, 64);            
+            _fps = new SimpleLabel("assets/fonts/Curse-hd.fnt", 256, 64);
             _fps.x = stage.stageWidth - 80;
             _fps.y = 10;
             _fps.scale = 0.25;
@@ -438,16 +438,17 @@ package
             var apiKey = "cd563a32f84911cc06cab523db607bae";
             var request:HTTPRequest = new HTTPRequest("https://api.flickr.com/services/rest/?method=flickr.photos.getRecent&api_key=" + apiKey + "&per_page=" + perPage + "&page=1&format=json&nojsoncallback=1");
             request.method = "GET";
-            request.onSuccess += function(str:String)
+            request.onSuccess += function(data:ByteArray)
                                  {
                                     _httpRequestCache.remove(request);
                                     var imageUrls:Vector.<String> = null;
+                                    var str:String = data.readUTFBytes(data.length);
                                     var json = new JSON();
                                     json.loadString(str);
 
                                     var photosObj:JSON = json.getObject("photos");
                                     if(photosObj != null)
-                                    {                                    
+                                    {
                                         var photos:JSON = photosObj.getArray("photo");
                                         if(photos)
                                         {
