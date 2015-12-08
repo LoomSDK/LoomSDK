@@ -323,7 +323,7 @@ public class LoomDemo extends SDLActivity {
         framelayout.addView(webViewGroup);
 
         // Set framelayout as the content view
-        //setContentView(framelayout);
+        mLayout.addView(framelayout);
 
         // give the webview class our layout
         LoomWebView.setRootLayout(webViewGroup);

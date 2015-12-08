@@ -125,7 +125,11 @@ package
                 if (b.getPosition().y > (stage.stageHeight + Math.max(pgo.sprite.width, pgo.sprite.height))/ptmRatio)
                 {
                     stage.removeChild(pgo.sprite);
+                    var tmp = b.getNext();
                     world.destroyBody(b);
+                    b = tmp;
+
+                    continue;
                 }
                 
                 // Visualise if we've hit the player
