@@ -74,7 +74,7 @@
         #define LOOM_PLATFORM_64BIT 0
     #endif
 #elif LOOM_COMPILER == LOOM_COMPILER_CLANG || LOOM_COMPILER == LOOM_COMPILER_GNU
-    #if defined(__x86_64__)
+    #if defined(__x86_64__) || (defined(__LP64__) && __LP64__) || defined(__arm64__)
         #define LOOM_PLATFORM_64BIT 1
     #else
         #define LOOM_PLATFORM_64BIT 0
