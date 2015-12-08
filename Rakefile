@@ -33,7 +33,7 @@ load "./build/Swarley"
 CFG =
 {
     # Specify the build target - Debug, Release, RelMinSize, RelWithDebug
-    BUILD_TARGET: "Debug",
+    BUILD_TARGET: "Release",
 
     # the sdk_version name that will be generated when this sdk is deployed (default = "dev")
     TARGET_SDK_VER: "dev",
