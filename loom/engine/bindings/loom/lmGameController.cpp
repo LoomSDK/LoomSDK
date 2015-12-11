@@ -133,7 +133,7 @@ LoomGameController *LoomGameController::getGameController(int index = -1)
             if (LoomGameController::controllers[i].is_connected)
                 return &controllers[i];
     }
-    else if (index < MAX_CONTROLLERS)
+    else
     {
         return &controllers[index];
     }
