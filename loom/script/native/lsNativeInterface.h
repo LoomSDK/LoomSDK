@@ -22,6 +22,7 @@
 #define _lsnativeinterface_h
 
 #include "loom/common/core/assert.h"
+#include "loom/common/core/allocator.h"
 
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utString.h"
@@ -503,7 +504,7 @@ public:
     template<class T>
     static void registerNativeType(void *externalKey, FunctionLuaRegisterType regFunc = 0)
     {
-        NativeType<T> *nativeType = new NativeType<T>(externalKey, regFunc);
+        NativeType<T> *nativeType = lmNew(NULL) NativeType<T>(externalKey, regFunc);
 
         nativeTypes.insert(nativeType->getKey(), nativeType);
     }
@@ -511,7 +512,7 @@ public:
     template<class T>
     static void registerNativeType(FunctionLuaRegisterType regFunc = 0)
     {
-        NativeType<T> *nativeType = new NativeType<T>(NULL, regFunc);
+        NativeType<T> *nativeType = lmNew(NULL) NativeType<T>(NULL, regFunc);
 
         nativeTypes.insert(nativeType->getKey(), nativeType);
     }
@@ -519,7 +520,7 @@ public:
     template<class T>
     static void registerManagedNativeType(FunctionLuaRegisterType regFunc = 0)
     {
-        ManagedNativeType<T> *nativeType = new ManagedNativeType<T>(NULL, regFunc);
+        ManagedNativeType<T> *nativeType = lmNew(NULL) ManagedNativeType<T>(NULL, regFunc);
 
         nativeTypes.insert(nativeType->getKey(), nativeType);
     }

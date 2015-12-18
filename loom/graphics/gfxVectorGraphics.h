@@ -195,7 +195,7 @@ protected:
     void inflateBounds(const Loom2D::Rectangle& rect);
 
 public:
-    utArray<VectorData*> *queue;
+    utArray<VectorData*> queue;
     VectorPath *lastPath;
     VectorLineStyle currentLineStyle;
     VectorFill currentFill;
@@ -211,7 +211,6 @@ public:
     int clipX, clipY, clipWidth, clipHeight;
 
     VectorGraphics() {
-        queue = new utArray<VectorData*>();
         clipX = clipY = 0;
         clipWidth = clipHeight = -1;
         clear();

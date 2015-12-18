@@ -272,26 +272,26 @@ struct loom_allocator
 * operators, if you want an array use the templated vector class.
 *
 ************************************************************************/
-#define lmNew(allocator)                new(allocator, __FILE__, __LINE__)
+#define lmNew(allocator)                new(allocator, __FILE__, __LINE__, 1, 2, 3)
 #define lmDelete(allocator, obj)        { loom_destructInPlace(obj); lmFree(allocator, obj); }
 #define lmSafeDelete(allocator, obj)    if (obj) { loom_destructInPlace(obj); lmFree(allocator, obj); obj = NULL; }
 #define lmSafeFree(allocator, obj)      if (obj) { lmFree(allocator, obj); obj = NULL; }
 
 #include <new>
 
-inline void *operator new(size_t size, loom_allocator_t *a, const char *file, int line)
+inline void *operator new(size_t size, loom_allocator_t *a, const char *file, int line, int dummya, int dummyb, int dummyc)
 {
     return lmAlloc(a, size);
 }
 
 
-inline void operator delete(void *p, loom_allocator_t *a, const char *file, int line)
+inline void operator delete(void *p, loom_allocator_t *a, const char *file, int line, int dummya, int dummyb, int dummyc)
 {
     lmFree(a, p);
 }
 
 
-inline void operator delete(void *p, loom_allocator_t *a)
+inline void operator delete(void *p, loom_allocator_t *a, int dummya, int dummyb, int dummyc)
 {
     lmFree(a, p);
 }
