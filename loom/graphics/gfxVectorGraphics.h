@@ -216,6 +216,10 @@ public:
         clear();
     }
 
+    ~VectorGraphics() {
+        lualoom_managedpointerreleased(this);
+    }
+
     bool isStyleVisible();
     void flushPath();
 

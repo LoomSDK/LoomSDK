@@ -129,9 +129,18 @@ int lsr_method(lua_State *L)
     lua_getglobal(L, "__ls_traceback");
     lua_insert(L, 1);
 
-    if (lua_pcall(L, nargs + (staticCall ? 0 : 1), LUA_MULTRET, 1))
+    int error = lua_pcall(L, nargs + (staticCall ? 0 : 1), LUA_MULTRET, 1);
+
+    if (error)
     {
-        ls->triggerRuntimeError("Error calling %s:%s", method->getDeclaringType()->getFullName().c_str(), method->getName());
+        const char *errorName;
+        switch (error) {
+            case LUA_ERRRUN: errorName = "Runtime"; break;
+            case LUA_ERRMEM: errorName = "Memory allocation"; break;
+            case LUA_ERRERR: errorName = "Error handler"; break;
+            default:         errorName = "Unknown";
+        }
+        ls->triggerRuntimeError("%s error calling %s:%s", errorName, method->getDeclaringType()->getFullName().c_str(), method->getName());
     }
 
     // get rid of the traceback

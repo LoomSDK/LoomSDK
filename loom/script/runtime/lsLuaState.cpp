@@ -726,6 +726,8 @@ void LSLuaState::triggerRuntimeError(const char *format, ...)
     LSLog(LSLogError, "=   RUNTIME ERROR   =");
     LSLog(LSLogError, "=====================\n");
 
+    lmAllocVerifyAll();
+
     char    buff[2048];
     va_list args;
     va_start(args, format);
