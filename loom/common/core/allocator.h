@@ -108,8 +108,6 @@ void *lmCalloc_inner(loom_allocator_t *allocator, size_t count, size_t size, con
 void lmFree_inner(loom_allocator_t *allocator, void *ptr, const char *file, int line);
 void *lmRealloc_inner(loom_allocator_t *allocator, void *ptr, size_t size, const char *file, int line);
 
-void loom_debugAllocator_verifyAll(const char* file, int line);
-
 // Call this before you do any allocations to start the allocation system!
 //
 // Note: Loom calls this for you in most scenarios.
@@ -176,6 +174,25 @@ struct loom_allocator
 
     loom_allocator_t            *parent;
 };
+
+// Allocation callback function pointers
+typedef void (*loom_allocator_callback_free_t)(loom_allocator_t *thiz, void *inner, size_t size, const char *file, int line);
+
+typedef struct loom_debugAllocatorCallbacks loom_debugAllocatorCallbacks_t;
+struct loom_debugAllocatorCallbacks
+{
+    loom_allocator_callback_free_t onFree;
+    loom_debugAllocatorCallbacks_t* next;
+};
+
+// Register allocation function callbacks struct
+void loom_debugAllocator_registerCallbacks(loom_debugAllocatorCallbacks_t* callbacks);
+
+// Verify all the allocated blocks made from all the tracked debug allocators
+// using the provided source file and line as the source of the failure.
+// Note: use `lmAllocVerifyAll()` to automatically provide the file and line.
+void loom_debugAllocator_verifyAll(const char* file, int line);
+
 
 
 #ifdef __cplusplus

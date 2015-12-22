@@ -86,7 +86,7 @@ lmDefineLogGroup(gAllocatorLogGroup, "alloc", 1, LoomLogInfo);
 * If the path is cut off, you can increase `LOOM_ALLOCATOR_DEBUG_MAXPATH`.
 *
 */
-#define LOOM_ALLOCATOR_DEBUG 1
+#define LOOM_ALLOCATOR_DEBUG LOOM_DEBUG
 #define LOOM_ALLOCATOR_DEBUG_LIST 1
 #define LOOM_ALLOCATOR_DEBUG_PERIOD 0
 #define LOOM_ALLOCATOR_DEBUG_MAXPATH 128-2-4 // Subtracting by 2 makes it 4-byte aligned due to the 16-bit line number
@@ -657,8 +657,13 @@ typedef struct loom_debugAllocatorFooter
 
 typedef struct loom_debugAllocator loom_debugAllocator_t;
 
+// Mutex lock for the list
 static MutexHandle            gDebugAllocatorLock;
+// Global list of all the debug allocators
 static loom_debugAllocator_t* gDebugAllocatorList;
+// List of all the callbacks
+static loom_debugAllocatorCallbacks_t* gDebugAllocatorCallbackList;
+
 
 // Allocator state
 typedef struct loom_debugAllocator
@@ -677,6 +682,20 @@ typedef struct loom_debugAllocator
     bool verifyAll;
 } loom_debugAllocator_t;
 
+// Call the provided callback function with the provided
+// arguments on all of the tracked debug allocators
+#define LOOM_ALLOCATOR_DEBUG_CALLBACK(callbackName, ...) do { \
+    loom_debugAllocatorCallbacks_t *cb = gDebugAllocatorCallbackList; \
+    while (cb) { cb->callbackName(## __VA_ARGS__ ## ); cb = cb->next; } \
+} while(0);
+
+void loom_debugAllocator_registerCallbacks(loom_debugAllocatorCallbacks_t* callbacks)
+{
+    loom_debugAllocatorCallbacks_t *cb = lmAlloc(NULL, sizeof(loom_debugAllocatorCallbacks_t));
+    *cb = *callbacks;
+    cb->next = gDebugAllocatorCallbackList;
+    gDebugAllocatorCallbackList = cb;
+}
 
 // Return the header of the provided allocated outer (padding included) memory pointer
 static loom_debugAllocatorHeader_t* loom_debugAllocator_getHeader(void* outer)
@@ -858,7 +877,7 @@ static void* loom_debugAllocator_alloc(loom_allocator_t *thiz, size_t size, cons
 
     // Setup hidden state
     loom_debugAllocator_set(debugAlloc, outer, size, paddedSize, file, line);
-
+    
     // Pass back the usable (inner) region
     return loom_debugAllocator_outerToInner(outer);
 }
@@ -915,6 +934,8 @@ static void loom_debugAllocator_free(loom_allocator_t *thiz, void *inner, const 
     debugAlloc = (loom_debugAllocator_t*)thiz->userdata;
     loom_debugAllocator_unset(debugAlloc, outer, file, line);
 
+    LOOM_ALLOCATOR_DEBUG_CALLBACK(onFree, thiz, inner, header->size, file, line);
+
     memset(inner, LOOM_ALLOCATOR_DEBUG_FREED, header->size);
 
     lmFree(thiz->parent, outer);
@@ -946,6 +967,8 @@ static void* loom_debugAllocator_realloc(loom_allocator_t *thiz, void *inner, si
     return loom_debugAllocator_outerToInner(newOuter);
 }
 
+// Verify all the allocated blocks in all the debug allocators
+// tracked by the debug memory system
 void loom_debugAllocator_verifyAll(const char* file, int line)
 {
     if (gDebugAllocatorLock == NULL) return;
@@ -963,6 +986,8 @@ void loom_debugAllocator_verifyAll(const char* file, int line)
     loom_mutex_unlock(gDebugAllocatorLock);
 }
 
+// Destroy the debug allocator and remove it from the global
+// debug allocator list
 static void loom_debugAllocator_destroy(loom_allocator_t *thiz)
 {
     loom_debugAllocator_t *debugAlloc;
@@ -970,7 +995,6 @@ static void loom_debugAllocator_destroy(loom_allocator_t *thiz)
     bool found;
 
     debugAlloc = (loom_debugAllocator_t *)thiz->userdata;
-
 
     // Remove from the master list.
     loom_mutex_lock(gDebugAllocatorLock);
@@ -1002,7 +1026,8 @@ static void loom_debugAllocator_destroy(loom_allocator_t *thiz)
     lmFree(thiz->parent, debugAlloc);
 }
 
-
+// Create and return a new debug allocator using the provided allocator as the
+// parent allocator
 loom_allocator_t *loom_allocator_initializeDebugAllocator(loom_allocator_t *parent)
 {
     loom_allocator_t *a;

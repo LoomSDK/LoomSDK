@@ -98,8 +98,16 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
 
 
 /*
- * for use in destructors, etc to tell the managed native system
- * that an instance has been deleted C++ side
+ * For use in destructors, etc. to tell the managed native system
+ * that an instance has been deleted C++ side. 
+ *
+ * Note that the LoomScript binding system will automatically call this
+ * on native objects deleted by script. However, if you are deleting C++
+ * objects referenced by script yourself, you should ensure this is called
+ * on them to avoid script having a lingering reference to a dead object.
+ *
+ * The best practice is to put a call to this function in the destructor so
+ * it looks like this: `lualoom_managedpointerreleased(this)`
  */
 void lualoom_managedpointerreleased(void *p);
 
@@ -140,6 +148,8 @@ protected:
     FunctionCast functionCast;
 
 public:
+
+    static void initialize();
 
     virtual void *getKey()              = 0;
     virtual void *getExternalKey()      = 0;
@@ -274,6 +284,8 @@ public:
 };
 
 class NativeInterface {
+public:
+
     // templated static key -> NativeTypeBase
     static utHashTable<utPointerHashKey, NativeTypeBase *> nativeTypes;
 

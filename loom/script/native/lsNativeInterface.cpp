@@ -24,6 +24,7 @@
 #include "loom/script/reflection/lsType.h"
 #include "loom/script/reflection/lsFieldInfo.h"
 #include "loom/script/reflection/lsPropertyInfo.h"
+#include "loom/common/core/allocator.h"
 
 namespace LS {
 utHashTable<utPointerHashKey, NativeTypeBase *> NativeInterface::nativeTypes;
@@ -35,6 +36,23 @@ utHashTable<utPointerHashKey, NativeTypeBase *> NativeInterface::scriptToNative;
 
 utHashTable<utPointerHashKey, lua_State *> NativeInterface::handleEntryToLuaState;
 
+// Checks that the native managed type being deleted isn't still in use
+// by script. See `lualoom_managedpointerreleased` for more info.
+//
+// Note that this check only happens if the debug allocator is enabled.
+static void onFree(loom_allocator_t *thiz, void *inner, size_t size, const char *file, int line)
+{
+    lua_State **statePtr = NativeInterface::handleEntryToLuaState.get(inner);
+    lmAssert(!statePtr, "Native managed type at address 0x%X freed without calling `lualoom_managedpointerreleased` first.\n    Deallocation was at %s@%d", inner, file, line);
+}
+
+// Register for allocation callbacks in the debug allocator
+void NativeTypeBase::initialize()
+{
+    loom_debugAllocatorCallbacks_t callbacks;
+    callbacks.onFree = &onFree;
+    loom_debugAllocator_registerCallbacks(&callbacks);
+}
 
 bool NativeTypeBase::checkBridgeTable(lua_State *L, MemberInfo *info, void *ptr, const char *key)
 {
@@ -294,6 +312,8 @@ void NativeInterface::managedPointerReleased(void* entry, int version)
     lua_gettable(L, -3); // get from userdata
     if (!lua_isnil(L, -1))
     {
+        handleEntryToLuaState.remove(entry);
+
         lua_pushvalue(L, -1);
         lua_gettable(L, -3);
 
