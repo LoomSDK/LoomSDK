@@ -54,7 +54,7 @@ def telemetry_client_copy(fromDir, toDir)
   # Copy each file to the target directory
   clientFiles.each do |fromPath|
     toPath = fromPath.sub(fromDir, File.join(toDir, $telemetryClient))
-    cp_r_safe fromPath, toPath
+    cp_safe fromPath, toPath
   end
   
   puts "Copied #{clientFiles.length} Telemetry client files (included #{included.length}, excluded #{excluded.length}, path excluded #{pathExcludedFiles})"

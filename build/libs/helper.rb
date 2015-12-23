@@ -39,6 +39,13 @@ def cp_r_safe(src, dst)
   end
 end
 
+def cp_safe(src, dst)
+  if File.exists? src
+    FileUtils.mkdir_p(File.dirname(dst))
+    FileUtils.cp(src, dst)
+  end
+end
+
 def unzip_file (file, destination)
   Zip::File.open(file) do |zip_file|
     zip_file.each do |f|
