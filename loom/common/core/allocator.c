@@ -730,10 +730,12 @@ static void* loom_debugAllocator_innerToOuter(void* inner)
 // Verify the outer pointer signatures and assert on a mismatch
 static void loom_debugAllocator_verify(void* outer, const char *file, int line)
 {
+    loom_debugAllocatorHeader_t *header;
+    loom_debugAllocatorFooter_t *footer;
     int i;
-    loom_debugAllocatorHeader_t *header = loom_debugAllocator_getHeader(outer);
+    header = loom_debugAllocator_getHeader(outer);
     for (i = 0; i < LOOM_ALLOCATOR_DEBUG_SIG_HEADER_PADDING; i++) lmCheck(header->sig[i] == LOOM_ALLOCATOR_DEBUG_SIG, "Allocator header verification internal check failed at 0x%X, expected 0x%08lX got 0x%08lX\n    Deallocation was at %s@%d\n    Allocation was at %s@%d", header, LOOM_ALLOCATOR_DEBUG_SIG, header->sig[i], file, line, header->file, header->line);
-    loom_debugAllocatorFooter_t *footer = loom_debugAllocator_getFooter(outer);
+    footer = loom_debugAllocator_getFooter(outer);
     for (i = 0; i < LOOM_ALLOCATOR_DEBUG_SIG_FOOTER_PADDING; i++) lmCheck(footer->sig[i] == LOOM_ALLOCATOR_DEBUG_SIG, "Allocator footer verification internal check failed at 0x%X, expected 0x%08lX got 0x%08lX\n    Deallocation was at %s@%d\n    Allocation was at %s@%d", footer, LOOM_ALLOCATOR_DEBUG_SIG, footer->sig[i], file, line, header->file, header->line);
 }
 
@@ -832,24 +834,26 @@ static void loom_debugAllocator_set(loom_debugAllocator_t *debugAlloc, void* out
 {
     loom_debugAllocatorHeader_t *header;
     loom_debugAllocatorFooter_t *footer;
+    int i;
+    size_t maxLen, fileLen, actualLen;
 
     header = loom_debugAllocator_getHeader(outer);
 
     // Set various information
-    const size_t maxLen = sizeof(header->file) - 1;
-    const size_t fileLen = strlen(file);
-    const size_t actualLen = fileLen < maxLen ? fileLen : maxLen;
+    maxLen = sizeof(header->file) - 1;
+    fileLen = strlen(file);
+    actualLen = fileLen < maxLen ? fileLen : maxLen;
     strncpy(header->file, file, actualLen);
     header->file[actualLen] = 0;
     header->line = line;
     header->size = size;
 
     // Write header signature
-    for (int i = 0; i < LOOM_ALLOCATOR_DEBUG_SIG_HEADER_PADDING; i++) header->sig[i] = LOOM_ALLOCATOR_DEBUG_SIG;
+    for (i = 0; i < LOOM_ALLOCATOR_DEBUG_SIG_HEADER_PADDING; i++) header->sig[i] = LOOM_ALLOCATOR_DEBUG_SIG;
 
     // Write footer signature
     footer = loom_debugAllocator_getFooter(outer);
-    for (int i = 0; i < LOOM_ALLOCATOR_DEBUG_SIG_FOOTER_PADDING; i++) footer->sig[i] = LOOM_ALLOCATOR_DEBUG_SIG;
+    for (i = 0; i < LOOM_ALLOCATOR_DEBUG_SIG_FOOTER_PADDING; i++) footer->sig[i] = LOOM_ALLOCATOR_DEBUG_SIG;
 
     gMemoryAllocated += paddedSize;
 
@@ -978,12 +982,15 @@ static void* loom_debugAllocator_realloc(loom_allocator_t *thiz, void *inner, si
 // tracked by the debug memory system
 void loom_debugAllocator_verifyAll(const char* file, int line)
 {
+    loom_debugAllocator_t *alloc;
+    bool verifyAll;
+
     if (gDebugAllocatorLock == NULL) return;
     loom_mutex_lock(gDebugAllocatorLock);
-    loom_debugAllocator_t *alloc = gDebugAllocatorList;
+    alloc = gDebugAllocatorList;
     while (alloc) {
         loom_mutex_lock(alloc->lock);
-        bool verifyAll = alloc->verifyAll;
+        verifyAll = alloc->verifyAll;
         alloc->verifyAll = true;
         loom_debugAllocator_listVerify(alloc, true, file, line);
         alloc->verifyAll = verifyAll;
