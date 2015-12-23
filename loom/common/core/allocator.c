@@ -689,7 +689,7 @@ typedef struct loom_debugAllocator
 // arguments on all of the tracked debug allocators
 #define LOOM_ALLOCATOR_DEBUG_CALLBACK(callbackName, ...) do { \
     loom_debugAllocatorCallbacks_t *cb = gDebugAllocatorCallbackList; \
-    while (cb) { if (cb->callbackName) cb->callbackName(## __VA_ARGS__ ## ); cb = cb->next; } \
+    while (cb) { if (cb->callbackName) cb->callbackName( __VA_ARGS__ ); cb = cb->next; } \
 } while(0);
 
 void loom_debugAllocator_registerCallbacks(loom_debugAllocatorCallbacks_t* callbacks)
