@@ -361,6 +361,11 @@ namespace :utility do
   task :compileScripts => $LSC_BINARY do
     puts "===== Compiling Core Scripts ====="
     Dir.chdir("sdk") do
+      # Make sure everything gets recompiled, now we prefer linking to recompiling
+      sh "../artifacts/lsc System.build"
+      sh "../artifacts/lsc Loom.build"
+      sh "../artifacts/lsc Feathers.build"
+      sh "../artifacts/lsc UnitTest.build"
       sh "../artifacts/lsc Main.build"
     end
   end
@@ -1007,8 +1012,11 @@ task :test => ['build:desktop'] do
    Dir.chdir("tests") do
       sh "../tests/unittest"
    end
+
    Dir.chdir("sdk") do
-      sh "../artifacts/lsc --unittest --xmlfile ../artifacts/testResults.xml"
+      sh "../artifacts/lsc TestExec.build"
+      sh "../artifacts/lsc Tests.build"
+      sh "../artifacts/loomexec bin/TestExec.loom bin/Tests.loom"
   end
 end
 

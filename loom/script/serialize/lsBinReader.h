@@ -41,6 +41,8 @@ class BinReader {
     {
         // the name of the Assembly
         const char *name;
+        // the uniqie ID of the Assembly
+        const char *uid;
         // the position within the binary file
         int        position;
         // the length of the binary data
@@ -105,6 +107,11 @@ class BinReader {
     {
         if (fullname && strlen(fullname))
         {
+            if (types.find(fullname) == UT_NPOS)
+            {
+                return vm->getType(fullname);
+            }
+
             TypeIndex **tindex = types.get(fullname);
             assert(tindex);
             return (*tindex)->type;

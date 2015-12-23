@@ -19,6 +19,7 @@
  */
 
 #include "loom/common/utils/utSHA2.h"
+#include "loom/common/utils/guid.h"
 #include "loom/script/serialize/lsModuleReader.h"
 #include "loom/script/serialize/lsAssemblyReader.h"
 #include "loom/script/runtime/lsProfiler.h"
@@ -95,6 +96,7 @@ Assembly *AssemblyReader::deserialize(LSLuaState *vm, const utString& sjson)
     utString type       = json_string_value(json_object_get(json, "type"));
     utString name       = json_string_value(json_object_get(json, "name"));
     utString version    = json_string_value(json_object_get(json, "version"));
+    utString uid        = json_string_value(json_object_get(json, "uid"));
     utString loomconfig = json_string_value(json_object_get(json, "loomconfig"));
 
     bool executable = false;
@@ -122,7 +124,21 @@ Assembly *AssemblyReader::deserialize(LSLuaState *vm, const utString& sjson)
     }
 #endif
 
-    Assembly *assembly = Assembly::create(vm, name);
+    if (uid.length() == 0)
+    {
+        // Generate a guid if the assembly contains none
+        loom_guid_t guid;
+        loom_generate_guid(guid);
+        uid = guid;
+    }
+
+    Assembly *assembly = Assembly::getLoaded(vm, name, uid);
+    if (assembly != NULL)
+    {
+        return assembly;
+    }
+
+    assembly = Assembly::create(vm, name, uid);
 
     assembly->setLoomConfig(loomconfig);
 
@@ -145,8 +161,6 @@ Assembly *AssemblyReader::deserialize(LSLuaState *vm, const utString& sjson)
         json_t *ref = json_array_get(refArray, i);
 
         utString refname = json_string_value(json_object_get(ref, "name"));
-
-        assembly->addReference(refname);
 
         // if we've already loaded this assembly continue
         if (vm->getAssembly(refname))
@@ -172,6 +186,8 @@ Assembly *AssemblyReader::deserialize(LSLuaState *vm, const utString& sjson)
                 lmAssert(0, "Unable to load assembly '%s' as either a library or an executable!'", refname.c_str());
             }
         }
+
+        assembly->addReference(rasm);
     }
 
     // modules

@@ -61,4 +61,82 @@ extern "C"
         uuid_unparse_lower(uuid, out_guid);
 #endif
     }
+
+    int loom_is_guid(const loom_guid_t guid)
+    {
+        size_t i = 0;
+        size_t p = 0;
+
+        if (strlen(guid) != LOOM_GUID_SIZE - 1)
+            return 0;
+
+        // Probably not be best way to do this, but should be quick...
+        for (i = 0; i < 8; i++, p++)
+        {
+            if (!((guid[p] >= 'a' && guid[p] <= 'z') ||
+                  (guid[p] >= 'A' && guid[p] <= 'Z') ||
+                  (guid[p] >= '0' && guid[p] <= '9')))
+            {
+                return 0;
+            }
+        }
+
+        if (guid[p] != '-')
+            return 0;
+        p++;
+
+        for (i = 0; i < 4; i++, p++)
+        {
+            if (!((guid[p] >= 'a' && guid[p] <= 'z') ||
+                  (guid[p] >= 'A' && guid[p] <= 'Z') ||
+                  (guid[p] >= '0' && guid[p] <= '9')))
+            {
+                return 0;
+            }
+        }
+
+        if (guid[p] != '-')
+            return 0;
+        p++;
+
+        for (i = 0; i < 4; i++, p++)
+        {
+            if (!((guid[p] >= 'a' && guid[p] <= 'z') ||
+                  (guid[p] >= 'A' && guid[p] <= 'Z') ||
+                  (guid[p] >= '0' && guid[p] <= '9')))
+            {
+                return 0;
+            }
+        }
+
+        if (guid[p] != '-')
+            return 0;
+        p++;
+
+        for (i = 0; i < 4; i++, p++)
+        {
+            if (!((guid[p] >= 'a' && guid[p] <= 'z') ||
+                  (guid[p] >= 'A' && guid[p] <= 'Z') ||
+                  (guid[p] >= '0' && guid[p] <= '9')))
+            {
+                return 0;
+            }
+        }
+
+        if (guid[p] != '-')
+            return 0;
+        p++;
+
+        for (i = 0; i < 8; i++, p++)
+        {
+            if (!((guid[p] >= 'a' && guid[p] <= 'z') ||
+                  (guid[p] >= 'A' && guid[p] <= 'Z') ||
+                  (guid[p] >= '0' && guid[p] <= '9')))
+            {
+                return 0;
+            }
+        }
+
+        return 1;
+    }
 };

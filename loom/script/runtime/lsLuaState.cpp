@@ -278,7 +278,7 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
     // setup assembly type lookup field
     lua_rawgeti(L, LUA_GLOBALSINDEX, LSASSEMBLYLOOKUP);
     lua_pushlightuserdata(L, assembly);
-    lua_setfield(L, -2, assembly->getName().c_str());
+    lua_setfield(L, -2, assembly->getUniqueId().c_str());
     lua_pop(L, 1);
 
     lmAssert(assembly->ordinalTypes == NULL, "Assembly types cache error, ordinalTypes already exists");
@@ -544,6 +544,20 @@ Assembly *LSLuaState::getAssembly(const utString& name)
     return NULL;
 }
 
+Assembly *LSLuaState::getAssemblyByUID(const utString& uid)
+{
+    for (UTsize i = 0; i < assemblies.size(); i++)
+    {
+        Assembly *assembly = assemblies.at(i);
+
+        if (assembly->getUniqueId() == uid)
+        {
+            return assembly;
+        }
+    }
+
+    return NULL;
+}
 
 void LSLuaState::invokeStaticMethod(const utString& typePath,
                                     const char *methodName, int numParameters)
@@ -599,6 +613,10 @@ void LSLuaState::initCommandLine(int argc, const char **argv)
     }
 }
 
+void LSLuaState::initCommandLine(const utArray<utString>& args)
+{
+    commandLine = args;
+}
 
 void LSLuaState::dumpManagedNatives()
 {
