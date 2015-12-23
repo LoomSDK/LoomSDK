@@ -217,6 +217,7 @@ public:
     }
 
     ~VectorGraphics() {
+        clear();
         lualoom_managedpointerreleased(this);
     }
 
