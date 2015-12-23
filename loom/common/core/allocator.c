@@ -632,6 +632,7 @@ loom_allocator_t *loom_allocator_initializeTrackerProxyAllocator(loom_allocator_
 // ----------- DEBUG ALLOCATOR ---------------------------------------------
 
 
+struct loom_debugAllocatorHeader;
 typedef struct loom_debugAllocatorHeader loom_debugAllocatorHeader_t;
 
 // Header padding
