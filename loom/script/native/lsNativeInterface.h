@@ -22,6 +22,7 @@
 #define _lsnativeinterface_h
 
 #include "loom/common/core/assert.h"
+#include "loom/common/core/allocator.h"
 
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utString.h"
@@ -97,8 +98,16 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
 
 
 /*
- * for use in destructors, etc to tell the managed native system
- * that an instance has been deleted C++ side
+ * For use in destructors, etc. to tell the managed native system
+ * that an instance has been deleted C++ side. 
+ *
+ * Note that the LoomScript binding system will automatically call this
+ * on native objects deleted by script. However, if you are deleting C++
+ * objects referenced by script yourself, you should ensure this is called
+ * on them to avoid script having a lingering reference to a dead object.
+ *
+ * The best practice is to put a call to this function in the destructor so
+ * it looks like this: `lualoom_managedpointerreleased(this)`
  */
 void lualoom_managedpointerreleased(void *p);
 
@@ -139,6 +148,8 @@ protected:
     FunctionCast functionCast;
 
 public:
+
+    static void initialize();
 
     virtual void *getKey()              = 0;
     virtual void *getExternalKey()      = 0;
@@ -273,6 +284,8 @@ public:
 };
 
 class NativeInterface {
+public:
+
     // templated static key -> NativeTypeBase
     static utHashTable<utPointerHashKey, NativeTypeBase *> nativeTypes;
 
@@ -503,7 +516,7 @@ public:
     template<class T>
     static void registerNativeType(void *externalKey, FunctionLuaRegisterType regFunc = 0)
     {
-        NativeType<T> *nativeType = new NativeType<T>(externalKey, regFunc);
+        NativeType<T> *nativeType = lmNew(NULL) NativeType<T>(externalKey, regFunc);
 
         nativeTypes.insert(nativeType->getKey(), nativeType);
     }
@@ -511,7 +524,7 @@ public:
     template<class T>
     static void registerNativeType(FunctionLuaRegisterType regFunc = 0)
     {
-        NativeType<T> *nativeType = new NativeType<T>(NULL, regFunc);
+        NativeType<T> *nativeType = lmNew(NULL) NativeType<T>(NULL, regFunc);
 
         nativeTypes.insert(nativeType->getKey(), nativeType);
     }
@@ -519,7 +532,7 @@ public:
     template<class T>
     static void registerManagedNativeType(FunctionLuaRegisterType regFunc = 0)
     {
-        ManagedNativeType<T> *nativeType = new ManagedNativeType<T>(NULL, regFunc);
+        ManagedNativeType<T> *nativeType = lmNew(NULL) ManagedNativeType<T>(NULL, regFunc);
 
         nativeTypes.insert(nativeType->getKey(), nativeType);
     }

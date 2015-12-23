@@ -22,6 +22,7 @@
 // Substitution: $1LGL->$2
 #define LGL GFX::Graphics::context()
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -109,6 +110,24 @@ extern "C" {
 #include <math.h>
 #include "nanovg.h"
 #include "loom/graphics/gfxStateManager.h"
+
+
+#ifndef NVG_NO_STDLIB
+#include "stdlib.h"
+static nvg_malloc_t nvg_malloc = malloc;
+static nvg_realloc_t nvg_realloc = realloc;
+static nvg_free_t nvg_free = free;
+#else
+static nvg_malloc_t nvg_malloc = NULL;
+static nvg_realloc_t nvg_realloc = NULL;
+static nvg_free_t nvg_free = NULL;
+#endif
+void nvgGLSetAllocFunctions(nvg_malloc_t malloc_fn, nvg_realloc_t realloc_fn, nvg_free_t free_fn)
+{
+    nvg_malloc = malloc_fn;
+    nvg_realloc = realloc_fn;
+    nvg_free = free_fn;
+}
 
 enum GLNVGuniformLoc {
     GLNVG_LOC_VIEWSIZE,
@@ -329,7 +348,7 @@ static GLNVGtexture* glnvg__allocTexture(GLNVGcontext* gl)
         if (gl->ntextures + 1 > gl->ctextures) {
             GLNVGtexture* textures;
             int ctextures = glnvg__maxi(gl->ntextures + 1, 4) + gl->ctextures / 2; // 1.5x Overallocate
-            textures = (GLNVGtexture*)realloc(gl->textures, sizeof(GLNVGtexture)*ctextures);
+            textures = (GLNVGtexture*)nvg_realloc(gl->textures, sizeof(GLNVGtexture)*ctextures);
             if (textures == NULL) return NULL;
             gl->textures = textures;
             gl->ctextures = ctextures;
@@ -1188,7 +1207,7 @@ static GLNVGcall* glnvg__allocCall(GLNVGcontext* gl)
     if (gl->ncalls + 1 > gl->ccalls) {
         GLNVGcall* calls;
         int ccalls = glnvg__maxi(gl->ncalls + 1, 128) + gl->ccalls / 2; // 1.5x Overallocate
-        calls = (GLNVGcall*)realloc(gl->calls, sizeof(GLNVGcall) * ccalls);
+        calls = (GLNVGcall*)nvg_realloc(gl->calls, sizeof(GLNVGcall) * ccalls);
         if (calls == NULL) return NULL;
         gl->calls = calls;
         gl->ccalls = ccalls;
@@ -1204,7 +1223,7 @@ static int glnvg__allocPaths(GLNVGcontext* gl, int n)
     if (gl->npaths + n > gl->cpaths) {
         GLNVGpath* paths;
         int cpaths = glnvg__maxi(gl->npaths + n, 128) + gl->cpaths / 2; // 1.5x Overallocate
-        paths = (GLNVGpath*)realloc(gl->paths, sizeof(GLNVGpath) * cpaths);
+        paths = (GLNVGpath*)nvg_realloc(gl->paths, sizeof(GLNVGpath) * cpaths);
         if (paths == NULL) return -1;
         gl->paths = paths;
         gl->cpaths = cpaths;
@@ -1220,7 +1239,7 @@ static int glnvg__allocVerts(GLNVGcontext* gl, int n)
     if (gl->nverts + n > gl->cverts) {
         NVGvertex* verts;
         int cverts = glnvg__maxi(gl->nverts + n, 4096) + gl->cverts / 2; // 1.5x Overallocate
-        verts = (NVGvertex*)realloc(gl->verts, sizeof(NVGvertex) * cverts);
+        verts = (NVGvertex*)nvg_realloc(gl->verts, sizeof(NVGvertex) * cverts);
         if (verts == NULL) return -1;
         gl->verts = verts;
         gl->cverts = cverts;
@@ -1236,7 +1255,7 @@ static int glnvg__allocFragUniforms(GLNVGcontext* gl, int n)
     if (gl->nuniforms + n > gl->cuniforms) {
         unsigned char* uniforms;
         int cuniforms = glnvg__maxi(gl->nuniforms + n, 128) + gl->cuniforms / 2; // 1.5x Overallocate
-        uniforms = (unsigned char*)realloc(gl->uniforms, structSize * cuniforms);
+        uniforms = (unsigned char*)nvg_realloc(gl->uniforms, structSize * cuniforms);
         if (uniforms == NULL) return -1;
         gl->uniforms = uniforms;
         gl->cuniforms = cuniforms;
@@ -1454,14 +1473,14 @@ static void glnvg__renderDelete(void* uptr)
         if (gl->textures[i].tex != 0 && (gl->textures[i].flags & NVG_IMAGE_NODELETE) == 0)
             LGL->glDeleteTextures(1, &gl->textures[i].tex);
     }
-    free(gl->textures);
+    nvg_free(gl->textures);
 
-    free(gl->paths);
-    free(gl->verts);
-    free(gl->uniforms);
-    free(gl->calls);
+    nvg_free(gl->paths);
+    nvg_free(gl->verts);
+    nvg_free(gl->uniforms);
+    nvg_free(gl->calls);
 
-    free(gl);
+    nvg_free(gl);
 }
 
 
@@ -1477,7 +1496,7 @@ NVGcontext* nvgCreateGLES3(int flags)
 {
     NVGparams params;
     NVGcontext* ctx = NULL;
-    GLNVGcontext* gl = (GLNVGcontext*)malloc(sizeof(GLNVGcontext));
+    GLNVGcontext* gl = (GLNVGcontext*)nvg_malloc(sizeof(GLNVGcontext));
     if (gl == NULL) goto error;
     memset(gl, 0, sizeof(GLNVGcontext));
 
