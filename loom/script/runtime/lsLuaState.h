@@ -274,6 +274,7 @@ public:
     }
 
     void dumpManagedNatives();
+    void dumpLuaTable(lua_State *L, int index, int levels, int level = 0);
     void dumpLuaStack();
 
     int getStackSize();
