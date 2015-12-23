@@ -657,7 +657,7 @@ typedef struct loom_debugAllocatorFooter
     uint32_t sig[LOOM_ALLOCATOR_DEBUG_SIG_FOOTER_PADDING];
 } loom_debugAllocatorFooter_t;
 
-
+struct loom_debugAllocator;
 typedef struct loom_debugAllocator loom_debugAllocator_t;
 
 // Mutex lock for the list
@@ -669,7 +669,7 @@ static loom_debugAllocatorCallbacks_t* gDebugAllocatorCallbackList;
 
 
 // Allocator state
-typedef struct loom_debugAllocator
+struct loom_debugAllocator
 {
     loom_debugAllocator_t*       next;
 
@@ -683,7 +683,7 @@ typedef struct loom_debugAllocator
     unsigned int blocks;
     bool guard;
     bool verifyAll;
-} loom_debugAllocator_t;
+};
 
 // Call the provided callback function with the provided
 // arguments on all of the tracked debug allocators
@@ -730,10 +730,11 @@ static void* loom_debugAllocator_innerToOuter(void* inner)
 // Verify the outer pointer signatures and assert on a mismatch
 static void loom_debugAllocator_verify(void* outer, const char *file, int line)
 {
+    int i;
     loom_debugAllocatorHeader_t *header = loom_debugAllocator_getHeader(outer);
-    for (int i = 0; i < LOOM_ALLOCATOR_DEBUG_SIG_HEADER_PADDING; i++) lmCheck(header->sig[i] == LOOM_ALLOCATOR_DEBUG_SIG, "Allocator header verification internal check failed at 0x%X, expected 0x%08lX got 0x%08lX\n    Deallocation was at %s@%d\n    Allocation was at %s@%d", header, LOOM_ALLOCATOR_DEBUG_SIG, header->sig[i], file, line, header->file, header->line);
+    for (i = 0; i < LOOM_ALLOCATOR_DEBUG_SIG_HEADER_PADDING; i++) lmCheck(header->sig[i] == LOOM_ALLOCATOR_DEBUG_SIG, "Allocator header verification internal check failed at 0x%X, expected 0x%08lX got 0x%08lX\n    Deallocation was at %s@%d\n    Allocation was at %s@%d", header, LOOM_ALLOCATOR_DEBUG_SIG, header->sig[i], file, line, header->file, header->line);
     loom_debugAllocatorFooter_t *footer = loom_debugAllocator_getFooter(outer);
-    for (int i = 0; i < LOOM_ALLOCATOR_DEBUG_SIG_FOOTER_PADDING; i++) lmCheck(footer->sig[i] == LOOM_ALLOCATOR_DEBUG_SIG, "Allocator footer verification internal check failed at 0x%X, expected 0x%08lX got 0x%08lX\n    Deallocation was at %s@%d\n    Allocation was at %s@%d", footer, LOOM_ALLOCATOR_DEBUG_SIG, footer->sig[i], file, line, header->file, header->line);
+    for (i = 0; i < LOOM_ALLOCATOR_DEBUG_SIG_FOOTER_PADDING; i++) lmCheck(footer->sig[i] == LOOM_ALLOCATOR_DEBUG_SIG, "Allocator footer verification internal check failed at 0x%X, expected 0x%08lX got 0x%08lX\n    Deallocation was at %s@%d\n    Allocation was at %s@%d", footer, LOOM_ALLOCATOR_DEBUG_SIG, footer->sig[i], file, line, header->file, header->line);
 }
 
 // Add the provided header to the list of all debug allocated blocks
@@ -784,6 +785,9 @@ static void loom_debugAllocator_listRemove(loom_debugAllocator_t *debugAlloc, lo
 static void loom_debugAllocator_listVerify(loom_debugAllocator_t *debugAlloc, bool force, const char *file, int line)
 {
 #if LOOM_ALLOCATOR_DEBUG_LIST
+    loom_debugAllocatorHeader_t *current;
+    unsigned int blocks;
+
     loom_mutex_lock(debugAlloc->lock);
     if (!( // Don't return for the right conditions
         debugAlloc->verifyAll && // if enabled and
@@ -800,10 +804,10 @@ static void loom_debugAllocator_listVerify(loom_debugAllocator_t *debugAlloc, bo
         return;
     }
 
-    loom_debugAllocatorHeader_t *current = debugAlloc->list;
+    current = debugAlloc->list;
     // Guard from reentrance on error-related alloc
     debugAlloc->guard = true;
-    unsigned int blocks = 0;
+    blocks = 0;
     while (current != NULL) {
         loom_debugAllocator_verify((void*)current, file, line);
         current = current->next;
