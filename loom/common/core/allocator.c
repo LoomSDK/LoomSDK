@@ -636,7 +636,7 @@ struct loom_debugAllocatorHeader;
 typedef struct loom_debugAllocatorHeader loom_debugAllocatorHeader_t;
 
 // Header padding
-typedef struct loom_debugAllocatorHeader
+struct loom_debugAllocatorHeader
 {
     // Source file of allocation
     char file[LOOM_ALLOCATOR_DEBUG_MAXPATH];
@@ -649,7 +649,7 @@ typedef struct loom_debugAllocatorHeader
     loom_debugAllocatorHeader_t* next;
 #endif
     uint32_t sig[LOOM_ALLOCATOR_DEBUG_SIG_HEADER_PADDING];
-} loom_debugAllocatorHeader_t;
+};
 
 // Footer padding
 typedef struct loom_debugAllocatorFooter
