@@ -22,9 +22,6 @@
 #define _CORE_ALLOCATOR_H_
 
 #include "loom/common/core/assert.h"
-#include "jemalloc/jemalloc.h"
-#include <stdint.h>
-#include <stdbool.h>
 
 /**************************************************************************
  * Loom Memory Allocation API
@@ -185,7 +182,16 @@ struct loom_debugAllocatorCallbacks
     loom_debugAllocatorCallbacks_t* next;
 };
 
-// Register allocation function callbacks struct
+// Register allocation function callbacks struct in the
+// debug allocator callbacks list.
+//
+// While the debug allocator is enabled, the appropriate registered
+// callback functions get called on every allocation/free.
+//
+// E.g. when some block of bytes is deallocated using `lmFree`,
+// all of the valid registered `onFree` functions get called with
+// the (inner) pointer to the deallocated block, the size of the block
+// and the deallocation source file path and line number.
 void loom_debugAllocator_registerCallbacks(loom_debugAllocatorCallbacks_t* callbacks);
 
 // Verify all the allocated blocks made from all the tracked debug allocators
@@ -212,20 +218,22 @@ void loom_debugAllocator_verifyAll(const char* file, int line);
 * operators, if you want an array use the templated vector class.
 *
 ************************************************************************/
-#define lmNew(allocator)                new(allocator, __FILE__, __LINE__, 1, 2, 3)
+#define lmNew(allocator)                new(allocator, __FILE__, __LINE__, (LS::FunctionDisambiguator*) NULL)
 #define lmDelete(allocator, obj)        { loom_destructInPlace(obj); lmFree(allocator, obj); }
 #define lmSafeDelete(allocator, obj)    if (obj) { loom_destructInPlace(obj); lmFree(allocator, obj); obj = NULL; }
 #define lmSafeFree(allocator, obj)      if (obj) { lmFree(allocator, obj); obj = NULL; }
 
 #include <new>
 
-inline void *operator new(size_t size, loom_allocator_t *a, const char *file, int line, int dummya, int dummyb, int dummyc)
+namespace LS { struct FunctionDisambiguator {}; }
+
+inline void *operator new(size_t size, loom_allocator_t *a, const char *file, int line, LS::FunctionDisambiguator* disamb)
 {
     return lmAlloc(a, size);
 }
 
 
-inline void operator delete(void *p, loom_allocator_t *a, const char *file, int line, int dummya, int dummyb, int dummyc)
+inline void operator delete(void *p, loom_allocator_t *a, const char *file, int line, LS::FunctionDisambiguator* disamb)
 {
     lmFree(a, p);
 }
