@@ -122,21 +122,22 @@ int LoomGameController::getControllerIndex(SDL_JoystickID instance)
 }
 
 /** Returns the pointer to a game controller on a specific index in the 'controllers' pool.
- * If index is negative it returns the first connected game controller in pool. */
+ * If index is negative it returns the first connected game controller in pool, 
+ * if there are no controllers connected it returns the first controller in pool. */
 LoomGameController *LoomGameController::getGameController(int index = -1)
 {
+    lmAssert(index < MAX_CONTROLLERS, "Controller index out of range.");
     if (index < 0)
     {
         for (int i = 0; i < MAX_CONTROLLERS; i++)
             if (LoomGameController::controllers[i].is_connected)
                 return &controllers[i];
     }
-    else if (index < MAX_CONTROLLERS)
+    else
     {
-        if (LoomGameController::controllers[index].is_connected)
-            return &controllers[index];
+        return &controllers[index];
     }
-    return nullptr;
+    return &controllers[0];
 }
 
 /** Returns true if device has rumble support. */
