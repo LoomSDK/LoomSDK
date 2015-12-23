@@ -73,6 +73,9 @@ class BinWriter {
     // All Types of the assembly will be indexed here
     utArray<TypeIndex *> typeIndexes;
 
+    // Name of the assembly to write
+    utString name;
+
     // Reflection Serialization
 
     /*
@@ -134,6 +137,11 @@ class BinWriter {
     void writeAssembly(const char *sjson, int sjsonSize);
 
 public:
+
+    BinWriter(const utString& _name)
+    : name(_name)
+    {
+    }
 
     /*
      * Pools a string to the BinWriter's string pool to increase

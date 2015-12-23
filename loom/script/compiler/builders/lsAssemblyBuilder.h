@@ -42,6 +42,9 @@ class AssemblyBuilder {
     // the version number of said assembly
     utString version;
 
+    // the unique id (GUID) of the assembly
+    utString uid;
+
     // the assembly writer, this is split out from the builder
     // as to limit dependencies for serialization
     AssemblyWriter writer;

@@ -87,12 +87,6 @@ utString GetLSCPath()
 
 utString GetSDKPathFromLSCPath(utString const& lscPath)
 {
-    //Check we are trimming a valid path
-    if (strstr(lscPath.c_str(), "loom/sdks/") || strstr(lscPath.c_str(), "loom\\sdks\\"))
-    {
-        return "";
-    }
-    
     char lsc[2048];
     
     snprintf(lsc, 2048, "%s", lscPath.c_str());
@@ -280,9 +274,17 @@ int main(int argc, const char **argv)
 
     // todo, better sdk detection
     // TODO: LOOM-690 - find a better paradigm here.
-    utString lscpath = (sdkRoot != NULL) ? sdkRoot : GetSDKPathFromLSCPath(GetLSCPath());
+    //Check we are trimming a valid path
+    utString lscPath = GetLSCPath();
 
-    LSCompiler::setSDKBuild(lscpath);
+    if (sdkRoot != NULL)
+    {
+        LSCompiler::setSDKBuild(sdkRoot);
+    }
+    else if (strstr(lscPath.c_str(), "loom/sdks/") || strstr(lscPath.c_str(), "loom\\sdks\\"))
+    {
+        LSCompiler::setSDKBuild(GetSDKPathFromLSCPath(lscPath));
+    }
 
     if (!rootBuildFile)
     {

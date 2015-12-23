@@ -19,6 +19,7 @@
  */
 
 #include "loom/script/compiler/builders/lsAssemblyBuilder.h"
+#include "loom/common/utils/guid.h"
 
 namespace LS {
 // build out assembly
@@ -26,6 +27,7 @@ void AssemblyBuilder::build()
 {
     writer.setName(name);
     writer.setVersion(version);
+    writer.setUniqueId(uid);
 
     // setup assembly path
     for (UTsize i = 0; i < buildInfo->getNumAssemblyPaths(); i++)
@@ -65,13 +67,15 @@ void AssemblyBuilder::writeToFile(const utString& filename)
     writer.writeToFile(filename);
 }
 
-
 void AssemblyBuilder::initialize(BuildInfo *buildInfo)
 {
     this->buildInfo = buildInfo;
 
     name    = buildInfo->getAssemblyName();
     version = buildInfo->getAssemblyVersion();
+    loom_guid_t guid;
+    loom_generate_guid(guid);
+    uid = guid;
 
     // initialize modules
     for (UTsize i = 0; i < buildInfo->getNumModules(); i++)

@@ -101,6 +101,7 @@ private:
     static void generateRootDependenciesRecursive(const utString& ref);
     static void generateRootDependencies();
     static BuildInfo *loadBuildFile(const utString& cref);
+    static const char *readAssemblyUID(const utArray<unsigned char>& rawjson);
 
     static loom_logGroup_t compilerLogGroup;
     static loom_logGroup_t compilerVerboseLogGroup;
@@ -212,7 +213,7 @@ public:
 
             for (int i = 0; i < assembly->getReferenceCount(); i++)
             {
-                Assembly *ref = state->getAssembly(assembly->getReference(i));
+                Assembly *ref = assembly->getReference(i);
 
                 lmAssert(ref, "null assembly");
 
