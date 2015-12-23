@@ -646,7 +646,7 @@ namespace :deploy do
   desc "Deploy the free version of the sdk locally"
   task :free_sdk, [:sdk_version] => ['build:all', 'generate:docs'] do |t, args|
 
-    Rake::Task["build/Swarley:package:free_sdk"].invoke
+    Rake::Task["package:free_sdk"].invoke
 
     args.with_defaults(:sdk_version => CFG[:TARGET_SDK_VER])
     sdk_path = File.join("#{ENV['HOME']}/.loom", "sdks", args[:sdk_version])

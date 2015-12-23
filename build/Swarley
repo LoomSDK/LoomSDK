@@ -134,8 +134,8 @@ namespace :package do
 
     telemetry_client_copy("tools/telemetry/www", "pkg/sdk/")
 
-    FileUtils.rm_rf("pkg/loomsdk.zip") if File.exists? "pkg/loomsdk.zip"
-    Zip::File.open("pkg/loomsdk.zip", 'w') do |zipfile|
+    FileUtils.rm_rf("pkg/freesdk.zip") if File.exists? "pkg/freesdk.zip"
+    Zip::File.open("pkg/freesdk.zip", 'w') do |zipfile|
       Dir["pkg/sdk/**/**"].each do |file|
         zipfile.add(file.sub("pkg/sdk/", ''), file)
       end
