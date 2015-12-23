@@ -644,7 +644,7 @@ namespace :deploy do
   end
 
   desc "Deploy the free version of the sdk locally"
-  task :free_sdk, [:sdk_version] => ['build:all', 'generate:docs'] do |t, args|
+  task :free_sdk, [:sdk_version] => ['build:desktop', 'generate:docs'] do |t, args|
 
     Rake::Task["package:free_sdk"].invoke
 
