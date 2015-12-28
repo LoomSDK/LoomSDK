@@ -21,6 +21,7 @@
 #include "loom/common/core/assert.h"
 #include "loom/common/core/log.h"
 #include "loom/common/platform/platformFile.h"
+#include "loom/common/platform/platformIO.h"
 #include "loom/common/utils/utBase64.h"
 #include "loom/script/compiler/builders/lsAssemblyBuilder.h"
 #include "loom/script/compiler/lsCompiler.h"
@@ -488,13 +489,23 @@ void LSCompiler::generateRootDependenciesRecursive(const utString& ref)
 
     if (buildInfo)
     {
-        for (UTsize i = 0; i < buildInfo->getNumReferences(); i++)
-        {
-            utString rref = buildInfo->getReference(i);
-            generateRootDependenciesRecursive(rref);
-        }
+        utString  assemblyLib = buildInfo->getOutputDir() + platform_getFolderDelimiter() + buildInfo->getAssemblyName() + ".loomlib";
 
-        rootBuildDependencies.push_back(buildInfo);
+        // If the assembly is not built yet, build it
+        if (!platform_mapFileExists(assemblyLib.c_str()))
+        {
+            for (UTsize i = 0; i < buildInfo->getNumReferences(); i++)
+            {
+                utString rref = buildInfo->getReference(i);
+                generateRootDependenciesRecursive(rref);
+            }
+
+            rootBuildDependencies.push_back(buildInfo);
+        }
+        else
+        {
+            rootLibDependencies.push_back(ref);
+        }
     }
 
     if (rootDependencies.find(ref) == UT_NPOS)
@@ -519,6 +530,16 @@ void LSCompiler::generateRootDependencies()
         utString ref = rootBuildInfo->getReference(i);
         generateRootDependenciesRecursive(ref);
     }
+}
+
+const char *LSCompiler::readAssemblyUID(const utArray<unsigned char>& rawjson)
+{
+    json_error_t jerror;
+    json_t *json = json_loadb((const char*)rawjson.ptr(), rawjson.size(), JSON_DISABLE_EOF_CHECK, &jerror);
+
+    const char* uid = json_string_value(json_object_get(json, "uid"));
+
+    return uid;
 }
 
 
@@ -551,6 +572,7 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
                 logVerbose("Linking: %s", jname.c_str());
 
                 json_object_set(jref, "binary", json_string(base64.getBase64().c_str()));
+                json_object_set(jref, "uid", json_string(readAssemblyUID(rarray)));
                 break;
             }
         }
@@ -605,7 +627,7 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
                 continue;
             }
 
-            logVerbose("Linking: %s", libName.c_str());
+            log("Linking: %s", libName.c_str());
 
             utString delim   = platform_getFolderDelimiter();
             utString libPath = sdkPath + delim + "libs" + delim + libName + ".loomlib";
@@ -625,6 +647,7 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
 
             utBase64 base64 = utBase64::encode64(rarray);
             json_object_set(jref, "binary", json_string(base64.getBase64().c_str()));
+            json_object_set(jref, "uid", json_string(readAssemblyUID(rarray)));
 
             break;
         }
@@ -643,7 +666,6 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
 
 void LSCompiler::setSDKBuild(const utString& lsc)
 {
-    // Then note the path.
     sdkPath = lsc;
 
     log("SDK Path: %s", sdkPath.c_str());

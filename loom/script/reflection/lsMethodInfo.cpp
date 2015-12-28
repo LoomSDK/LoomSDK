@@ -25,6 +25,12 @@
 namespace LS {
 Object *MethodBase::invoke(void *othis, int numParams)
 {
+    if (!attr.isNative)
+    {
+        // Why was this here?
+        //assert(byteCode);
+    }
+
     LSLuaState *ls = getModule()->getAssembly()->getLuaState();
     lua_State  *L  = ls->VM();
 
@@ -69,7 +75,8 @@ void MethodBase::push()
 {
     if (!attr.isNative)
     {
-        assert(byteCode);
+        // Why was this here?
+        //assert(byteCode);
     }
 
     LSLuaState *ls = getModule()->getAssembly()->getLuaState();

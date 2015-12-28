@@ -32,6 +32,7 @@ class AssemblyWriter {
 
     utString name;
     utString version;
+    utString uid;
     utString loomConfig;
 
     utArray<ModuleWriter *> modules;
@@ -51,6 +52,11 @@ public:
     void setVersion(const utString& version)
     {
         this->version = version;
+    }
+
+    void setUniqueId(const utString& uid)
+    {
+        this->uid = uid;
     }
 
     void addAssemblyPath(const utString& path)

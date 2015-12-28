@@ -32,12 +32,21 @@ native class Assembly {
      * @return  The new Assembly object.
      */
     public native static function loadBytes(bytes:ByteArray):Assembly;
-    
+
+    /**
+     * Loads an assembly from a file located at it's path returns it as an Assembly object.
+     * @param Path of the assembly file.
+     * @return The new Assembly object.
+     */
+    public native static function load(path:String):Assembly;
+
     /**
      *  Executes the Assembly by calling its main() function.
      *  Will throw an error if the assembly does not have a main() function.
      */
     public native function execute();
+    
+    public native function run();
 
     /**
      *  Gets the name of the assembly.
@@ -45,6 +54,14 @@ native class Assembly {
      *  @return Name of the assembly
      */
     public native function getName():String;
+
+    /**
+     *  Gets the unique identifier of the assembly. This changes at every compilation
+     *  so dependencies can be verified to be the same.
+     *
+     *  @return Unique identifier of the assembly
+     */
+    public native function getUID():String;
 
     /**
      *  Gets the number of types associated with the Assembly.
@@ -61,6 +78,19 @@ native class Assembly {
      */
     public native function getTypeAtIndex(index:int):Type;
 
+    /**
+     *  Gets the number of referenced assembly by the Assembly.
+     *
+     *  @return Number of referenced assemblies.
+     */
+    public native function getReferenceCount():Number;
+
+    /**
+     *  Gets a referenced assembly at given index.
+     *
+     *  @return  A referenced assembly.
+     */
+    public native function getReference(index:int):Assembly;
 }
 
 }

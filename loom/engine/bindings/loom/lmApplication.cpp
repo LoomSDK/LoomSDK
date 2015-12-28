@@ -351,6 +351,7 @@ int LoomApplication::initializeCoreServices()
     // Initialize script hooks.
     LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogInfo, LoomLogWarn, LoomLogError);
     LS::LSFileInitialize(mapScriptFile, unmapScriptFile);
+    LS::NativeTypeBase::initialize();
     //LS::LSLogSetLevel(LS::LSLogError);
 
     // Set up listener for changes to the boot assembly.

@@ -80,6 +80,7 @@ if $LOOM_HOST_OS == 'windows'
 else
   $LSC_BINARY = "#{$HOST_ARTIFACTS}/tools/lsc"
 end
+$LOOMEXEC_BINARY = "#{$HOST_ARTIFACTS}/tools/loomexec"
 
 if $HOST.name == 'windows'
   $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomDemo.exe"
@@ -224,6 +225,10 @@ namespace :utility do
     puts "===== Compiling Core Scripts ====="
     FileUtils.mkdir_p("artifacts/libs")
     Dir.chdir("sdk") do
+      sh "#{$LSC_BINARY} System.build"
+      sh "#{$LSC_BINARY} Loom.build"
+      sh "#{$LSC_BINARY} Feathers.build"
+      sh "#{$LSC_BINARY} UnitTest.build"
       sh "#{$LSC_BINARY} Main.build"
     end
     FileUtils.cp_r("sdk/libs", "#{$OUTPUT_DIRECTORY}")
@@ -233,7 +238,7 @@ namespace :utility do
 
   desc "Compile tools and report any errors."
   task :compileTools => "build:desktop" do
-    puts "===== Compiling Core Scripts ====="
+    puts "===== Compiling Tools ====="
     FileUtils.mkdir_p("artifacts/libs")
     # build ldb
     Dir.chdir("sdk") do
@@ -621,7 +626,9 @@ task :test => ['build:desktop'] do
     sh "#{$ROOT}/tests/unittest-#{$HOST.arch}"
   end
   Dir.chdir("sdk") do
-    sh "#{$LSC_BINARY} --unittest --xmlfile #{$ROOT}/artifacts/testResults.xml"
+    sh "#{$LSC_BINARY} TestExec.build"
+    sh "#{$LSC_BINARY} Tests.build"
+    sh "#{$LOOMEXEC_BINARY} bin/TestExec.loom bin/Tests.loom"
   end
 end
 

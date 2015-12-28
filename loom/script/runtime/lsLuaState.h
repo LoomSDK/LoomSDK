@@ -242,6 +242,8 @@ public:
     // get assembly by name
     Assembly *getAssembly(const utString& name);
 
+    Assembly *getAssemblyByUID(const utString& uid);
+
     void tick();
 
     static LSLuaState *getExecutingVM(lua_State *L)
@@ -257,6 +259,7 @@ public:
         return d;
     }
 
+    static void initCommandLine(const utArray<utString>& args);
     static void initCommandLine(int argc, const char **argv);
 
     static UTsize getNumCommandlineArgs()
