@@ -10,6 +10,7 @@ path = File.expand_path(File.join(File.dirname(__FILE__), 'build', 'libs'))
 $LOAD_PATH << path
 
 require 'host'
+require 'luajit'
 require 'toolchains'
 require 'targets'
 require 'helper'
@@ -89,6 +90,17 @@ elsif $HOST.name == 'osx'
 else
   $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomDemo"
 end
+
+$ARCHS = {
+  x86:    { is64Bit: false },
+  x86_64: { is64Bit: true },
+  armv7:  { is64Bit: false },
+  armv7s: { is64Bit: false },
+  arm64:  { is64Bit: true },
+  arm:    { is64Bit: nil }
+}
+
+$LUAJIT_NO_REBUILD = false
 
 ###############################
 # INIT
@@ -328,6 +340,68 @@ namespace :build do
 		Rake::Task["build:ios"].invoke
     end
   end
+  
+  def buildLuaJIT(toolchain, archs)
+    luajit_make = LuaJITToolchain.new(toolchain, !$LUAJIT_NO_REBUILD)
+    
+    targets = []
+    
+    for arch in archs
+      target = LuaJITTarget.new(arch)
+      luajit_make.build(target)
+      targets.push target
+    end
+    
+    return luajit_make, targets
+  end
+  
+  def ensureLuaJIT(platform)
+    return unless CFG[:USE_LUA_JIT] == 1
+    
+    $LUAJIT_NO_REBUILD = true
+    Rake::Task["build:luajit:" + platform].invoke
+    $LUAJIT_NO_REBUILD = false
+  end
+  
+  desc "Build LuaJIT libraries for all supported platforms"
+  task 'luajit' do |t, args|
+    Rake::Task["build:luajit:osx"].invoke
+    Rake::Task["build:luajit:ios"].invoke
+    Rake::Task["build:luajit:android"].invoke
+  end
+  
+  desc "Build LuaJIT libraries for OSX"
+  task 'luajit:osx' do |t, args|
+    if $HOST.name != 'osx'
+      puts "LuaJIT OSX build only supported on OSX, skipping..."
+      return
+    end
+    puts "== Building LuaJIT for OSX =="
+    buildLuaJIT(OSXToolchain.new(), [:x86, :x86_64])
+  end
+  
+  desc "Build LuaJIT libraries for iOS"
+  task 'luajit:ios' do |t, args|
+    if $HOST.name != 'osx'
+      puts "LuaJIT iOS build only supported on OSX, skipping..."
+      return
+    end
+    puts "== Building LuaJIT for iOS =="
+    toolchain = IOSToolchain.new("")
+    luajit_make, targets = buildLuaJIT(toolchain, [:armv7, :armv7s, :arm64])
+    combined = LuaJITTarget.new(:arm)
+    toolchain.combine(luajit_make, targets, combined)
+  end
+  
+  desc "Build LuaJIT libraries for Android"
+  task 'luajit:android' do |t, args|
+    if $HOST.name != 'osx'
+      puts "LuaJIT Android build only supported on OSX, skipping..."
+      return
+    end
+    puts "== Building LuaJIT for Android =="
+    buildLuaJIT(AndroidToolchain.new(), [:armv7])
+  end
 
   desc "Builds the native desktop platform (OSX or Windows)"
   task :desktop do
@@ -357,20 +431,17 @@ namespace :build do
 
     puts "== Building OS X =="
 
-    toolchain = OSXToolchain.new();
-    luajit_x86 = LuaJITTarget.new(0);
-    loom_x86 = LoomTarget.new(0, luajit_x86);
-    if CFG[:USE_LUA_JIT] == 1 then
-      toolchain.build(luajit_x86)
-    end
+    ensureLuaJIT("osx")
+    
+    toolchain = OSXToolchain.new()
+    
+    luajit_x86 = LuaJITTarget.new(:x86)
+    loom_x86 = LoomTarget.new(:x86, luajit_x86);
     toolchain.build(loom_x86)
-
+    
     if $HOST.is_x64 == '1' then
-      luajit_x64 = LuaJITTarget.new(1);
-      loom_x64 = LoomTarget.new(1, luajit_x64);
-      if CFG[:USE_LUA_JIT] == 1 then
-        toolchain.build(luajit_x64)
-      end
+      luajit_x64 = LuaJITTarget.new(:x86_64)
+      loom_x64 = LoomTarget.new(:x86_64, luajit_x64);
       toolchain.build(loom_x64)
     end
 
@@ -420,22 +491,9 @@ namespace :build do
         args.with_defaults(:sign_as => "iPhone Developer")
       end
       puts "*** Signing Identity = #{args.sign_as}"
-
-      $ROOTFolder = Dir.pwd
-      luajit_ios_dir = File.join($ROOTFolder, "build", "luajit-ios") 
-
-      ISDK = "/Applications/XCode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer"
-      ISDKVER = "iPhoneOS#{CFG[:TARGET_IOS_SDK]}.sdk"
-      ISDKP = ISDK + "/usr/bin/"
-      ISDKF = "-arch armv7 -isys$ROOT #{ISDK}/SDKs/#{ISDKVER}"
-
-      ENV["ISDK"] = ISDK
-      ENV["ISDKVER"] = ISDKVER
-      ENV["ISDKP"] = ISDKP
-      ENV["ISDKF"] = ISDKF
-
-      FileUtils.mkdir_p("#{$ROOT}/build/loom-ios-arm")
-
+      
+      
+      
       # Build SDL for iOS if it's missing
       sdlLibPath = "build/sdl2/ios/"
       if not File.exist?("#{sdlLibPath}/libSDL2.a")
@@ -452,13 +510,13 @@ namespace :build do
 
       hostToolchain = OSXToolchain.new()
       toolchain = IOSToolchain.new(args.sign_as)
-      luajit_bootstrap = LuaJITBootstrapTarget.new(0, toolchain)
-      luajit_lib = LuaJITLibTarget.new(0, luajit_bootstrap)
-      loom_arm = LoomTarget.new(0, luajit_lib)
-      if CFG[:USE_LUA_JIT] == 1 then
-        hostToolchain.build(luajit_bootstrap)
-        toolchain.build(luajit_lib)
-      end
+      #luajit_bootstrap = LuaJITBootstrapTarget.new(0, toolchain)
+      #luajit_lib = LuaJITLibTarget.new(0, luajit_bootstrap)
+      luajit_lib = LuaJITTarget.new(:arm)
+      loom_arm = LoomTarget.new(:x86, luajit_lib)
+      
+      ensureLuaJIT("ios")
+      
       toolchain.build(loom_arm)
       # TODO When we clean this up... we should have get_app_prefix return and object with, appPath,
       # appNameMatch, appName and appPrefix
@@ -495,16 +553,16 @@ namespace :build do
   task :windows => [] do
     puts "== Building Windows =="
     toolchain = WindowsToolchain.new();
-    luajit_x86 = LuaJITTarget.new(0);
-    loom_x86 = LoomTarget.new(0, luajit_x86);
+    luajit_x86 = LuaJITTarget.new(:x86);
+    loom_x86 = LoomTarget.new(:x86, luajit_x86);
     if CFG[:USE_LUA_JIT] == 1 then
       toolchain.build(luajit_x86)
     end
     toolchain.build(loom_x86)
 
     if $HOST.is_x64 == '1' then
-      luajit_x64 = LuaJITTarget.new(1);
-      loom_x64 = LoomTarget.new(1, luajit_x64);
+      luajit_x64 = LuaJITTarget.new(:x86_64);
+      loom_x64 = LoomTarget.new(:x86_64, luajit_x64);
       if CFG[:USE_LUA_JIT] == 1 then
         toolchain.build(luajit_x64)
       end
@@ -516,7 +574,7 @@ namespace :build do
   end
 
   desc "Builds Android APK"
-  task :android => ['utility:compileScripts'] do
+  task :android do
     puts "== Building Android =="
 
     # Build SDL for Android if it's missing
@@ -535,19 +593,24 @@ namespace :build do
 	
     hostToolchain = $HOST.toolchain()
     toolchain = AndroidToolchain.new()
-    luajit_bootstrap = LuaJITBootstrapTarget.new(0, toolchain)
-    luajit_lib = LuaJITLibTarget.new(0, luajit_bootstrap)
-    loom_arm = LoomTarget.new(0, luajit_lib)
-    if CFG[:USE_LUA_JIT] == 1 then
-      if $HOST.name != "windows"
-        hostToolchain.build(luajit_bootstrap)
-        toolchain.build(luajit_lib)
-      else
-        # Just copy over the prebuilt lib on windows, it's near impossible to build there
-        FileUtils.mkdir_p luajit_lib.buildPath(toolchain)
-        FileUtils.cp_r(Dir.glob("#{$ROOT}/loom/vendor/luajit_windows_android/luajit_android/lib/*"), luajit_lib.buildPath(toolchain))
-      end
-    end
+    
+    #luajit_bootstrap = LuaJITBootstrapTarget.new(0, toolchain)
+    #luajit_lib = LuaJITLibTarget.new(0, luajit_bootstrap)
+    
+    ensureLuaJIT("android")
+    
+    luajit_lib = LuaJITTarget.new(:armv7)
+    loom_arm = LoomTarget.new(:armv7, luajit_lib)
+    #if CFG[:USE_LUA_JIT] == 1 then
+    #  if $HOST.name != "windows"
+    #    hostToolchain.build(luajit_bootstrap)
+    #    toolchain.build(luajit_lib)
+    #  else
+    #    # Just copy over the prebuilt lib on windows, it's near impossible to build there
+    #    FileUtils.mkdir_p luajit_lib.buildPath(toolchain)
+    #    FileUtils.cp_r(Dir.glob("#{$ROOT}/loom/vendor/luajit_windows_android/luajit_android/lib/*"), luajit_lib.buildPath(toolchain))
+    #  end
+    #end
     toolchain.build(loom_arm)
 
     puts "*** Building against AndroidSDK " + CFG[:TARGET_ANDROID_SDK]

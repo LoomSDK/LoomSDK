@@ -1,3 +1,4 @@
+require 'pathname'
 
 RUBY_REQUIRED_VERSION = '1.8.7'
 CMAKE_REQUIRED_VERSION = '3.0.0'
@@ -24,6 +25,12 @@ def installed?(tool)
   cmd = "where #{tool} > nul 2>&1" if ($HOST.is_a? WindowsHost)
   %x(#{cmd})
   return ($? == 0)
+end
+
+def pretty_path(path)
+  pathn = Pathname.new path
+  sdk = Pathname.new $ROOT
+  return pathn.relative_path_from sdk
 end
 
 # TODO remove

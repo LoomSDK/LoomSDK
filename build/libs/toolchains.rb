@@ -7,16 +7,26 @@ class Toolchain
   def name
     raise NotImplementedError
   end
+  
+  def description(target, buildTarget)
+    return "#{buildTarget} #{name} #{arch(target)} #{target.is64Bit ? "64-bit" : "32-bit"}"
+  end
 
   def cmakeArgs
     raise NotImplementedError
   end
 
   def arch(target)
+    target.arch.to_s
+  end
+  
+  def makeConfig(target)
     raise NotImplementedError
   end
 
-  def exec(cmd)
+  def executeCommand(cmd)
+    puts "#{Dir.pwd}> #{cmd}";
+    #return;
     success = Kernel::system cmd
     if !success
       puts "Using working directory: #{Dir.pwd}"
@@ -30,8 +40,8 @@ class Toolchain
     FileUtils.mkdir_p(path)
     Dir.chdir(path) do
       puts "cmake #{target.sourcePath} #{cmakeArgs(target)} #{target.flags(self)}"
-      exec("cmake #{target.sourcePath} #{cmakeArgs(target)} #{target.flags(self)}")
-      exec(buildCommand)
+      executeCommand("cmake #{target.sourcePath} #{cmakeArgs(target)} #{target.flags(self)}")
+      executeCommand(buildCommand)
     end
   end
 
@@ -48,18 +58,10 @@ class WindowsToolchain < Toolchain
   end
 
   def cmakeArgs(target)
-    if target.is64Bit == 1
+    if target.is64Bit
       return "-G \"#{get_vs_name} Win64\""
     else
       return "-G \"#{get_vs_name}\""
-    end
-  end
-
-  def arch(target)
-    if target.is64Bit == 1
-      return "x64"
-    else
-      return "x86"
     end
   end
   
@@ -122,20 +124,18 @@ class OSXToolchain < Toolchain
     return "osx"
   end
 
+  def makeConfig(target)
+    return {
+      CC: "gcc" + (target.is64Bit ? "" : " -m32")
+    }
+  end
+  
   def buildCommand
     return "xcodebuild -configuration #{CFG[:BUILD_TARGET]}"
   end
 
   def cmakeArgs(target)
     return "-G \"Xcode\""
-  end
-
-  def arch(target)
-    if target.is64Bit == 1
-      return "x64"
-    else
-      return "x86"
-    end
   end
 
 end
@@ -151,6 +151,22 @@ class IOSToolchain < Toolchain
     return "ios"
   end
 
+  def makeConfig(target)
+    clangTools = File.dirname(`xcrun -find clang`.chomp)
+    sdkPath = `xcrun --sdk iphoneos --show-sdk-path`.chomp
+    
+    arch = target.arch.to_s
+    flags = "-arch #{arch} -isysroot #{sdkPath}"
+    
+    return {
+      HOST_CC: "xcrun clang" + ($ARCHS[target.arch][:is64Bit] ? "" : " -m32"),
+      CC: "clang",
+      CROSS: clangTools + "/",
+      TARGET_FLAGS: flags,
+      TARGET_SYS: "iOS"
+    }
+  end
+  
   def buildCommand
     return "xcodebuild -configuration #{CFG[:BUILD_TARGET]} CODE_SIGN_IDENTITY=\"#{@signAs}\" CODE_SIGN_RESOURCE_RULES_PATH=#{@sdkroot}/ResourceRules.plist"
   end
@@ -158,9 +174,44 @@ class IOSToolchain < Toolchain
   def cmakeArgs(target)
     return "-G \"Xcode\" -DLOOM_BUILD_IOS=1 -DLOOM_IOS_VERSION=#{CFG[:TARGET_IOS_SDK]}"
   end
-
-  def arch(target)
-   return "arm"
+  
+  def combine(toolchain, targets, combined)
+    
+    buildTarget = CFG[:BUILD_TARGET]
+    
+    lib_arm = combined.libPath(self, buildTarget)
+    
+    if File.file?(lib_arm) and !toolchain.rebuild
+      puts "Libraries already combined to #{pretty_path lib_arm}, skipping..."
+      return
+    end
+    
+    puts "Combining libraries for #{toolchain.name}"
+    
+    libs = []
+    libs_avail = []
+    
+    for target in targets
+      lib = target.libPath(toolchain, buildTarget)
+      exists = File.file?(lib)
+      puts "  #{toolchain.description(target, buildTarget)}: #{pretty_path lib}" + (exists ? "" : " (missing)")
+      libs.push lib
+      libs_avail.push lib unless !exists
+    end
+    
+    abort "Unable to combine architectures, none exist: #{libs}" unless libs_avail.length > 0
+    
+    FileUtils.mkdir_p File.dirname(lib_arm)
+    
+    if libs_avail.length == 1
+      single = libs_avail[0]
+      puts "Only one architecture available, copying from\n  #{pretty_path single} to\n  #{pretty_path lib_arm}"
+      FileUtils.cp single, lib_arm
+    else
+      executeCommand("lipo -create \"#{libs_avail.join("\" \"")}\" -output \"#{lib_arm}\"")
+      puts "Combined to #{pretty_path lib_arm}"
+    end
+    
   end
 
 end
@@ -178,6 +229,46 @@ class AndroidToolchain < Toolchain
   def name
     return "android"
   end
+  
+  def makeConfig(target)
+    
+    #NDK=/opt/android/ndk
+    #NDKABI=14
+    #NDKVER=$NDK/toolchains/arm-linux-androideabi-4.6
+    #NDKP=$NDKVER/prebuilt/linux-x86/bin/arm-linux-androideabi-
+    #NDKF="--sysroot $NDK/platforms/android-$NDKABI/arch-arm"
+    #NDKARCH="-march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"
+    #make HOST_CC="gcc -m32" CROSS=$NDKP TARGET_FLAGS="$NDKF $NDKARCH"
+    
+    return nil unless !target.is64Bit
+    
+    # Android/ARM, armeabi-v7a (ARMv7 VFP), Android 4.0+ (ICS)
+    ndk = File.expand_path(ENV["ANDROID_NDK"])
+    ndkABI = 14
+    ndkVersion = "#{ndk}/toolchains/arm-linux-androideabi-4.6"
+    ndkPath = "#{ndkVersion}/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-"
+    ndkFlags = "--sysroot #{ndk}/platforms/android-#{ndkABI}/arch-arm"
+    ndkArch = "-march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"
+    
+    #NDK=~/android/ndk
+    #NDKABI=14
+    #NDKVER="~/android/ndk/toolchains/arm-linux-androideabi-4.6"
+    #NDKP=~/android/ndk/toolchains/arm-linux-androideabi-4.6/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-
+    #NDKF="--sysroot ~/android/ndk/platforms/android-14/arch-arm"
+    #NDKARCH="-march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"
+    #make HOST_CC="gcc -m32" CROSS=~/android/ndk/toolchains/arm-linux-androideabi-4.6/prebuilt/darwin-x86_64/bin/arm-linux-androideabi- TARGET_SYS=Linux TARGET_FLAGS="--sysroot ~/android/ndk/platforms/android-14/arch-arm -march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"
+    #
+    #make                      HOST_CC="gcc    -m32" CROSS=~/android/ndk/            toolchains/arm-linux-androideabi-4.6/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-  TARGET_SYS=Linux TARGET_FLAGS="--sysroot ~/android/           ndk/platforms/android-14/arch-arm -march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"
+    #make -j  BUILDMODE=static HOST_CC="gcc -g -m32" CROSS="/Users/miha/android/ndk//toolchains/arm-linux-androideabi-4.6/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-"                  TARGET_FLAGS="--sysroot /Users/miha/android/ndk//platforms/android-14/arch-arm -march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"  PREFIX="luajit-android-x86/Debug"
+    
+    return {
+      CC: "gcc",
+      HOST_CC: "gcc -m32",
+      CROSS: ndkPath,
+      TARGET_FLAGS: "#{ndkFlags} #{ndkArch}",
+      TARGET_SYS: "Linux"
+    }
+  end
 
   def cmakeArgs(target)
     if $HOST.name == 'windows'
@@ -190,10 +281,6 @@ class AndroidToolchain < Toolchain
 
     return "-G \"#{generator}\" -DCMAKE_TOOLCHAIN_FILE=#{$ROOT}/build/cmake/loom.android.toolchain.cmake -DANDROID_NDK_HOST_X64=#{$HOST.is_x64} -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=14 #{make_arg}"
   end
-
-  def arch(target)
-    return "arm"
-  end
   
   def self.apkName()
     #Determine the APK name.
@@ -203,6 +290,105 @@ class AndroidToolchain < Toolchain
       "LoomDemo-debug-unaligned.apk"
     else
       abort("Don't know how to generate the APK name for Android build target type #{CFG[:TARGET_ANDROID_BUILD_TYPE]}! Please update this if block.")
+    end
+  end
+end
+
+
+class LuaJITToolchain < Toolchain
+  
+  attr_reader :rebuild
+  
+  def initialize(base, rebuild)
+    @base = base
+    @rebuild = rebuild
+  end
+  
+  def name
+    return @base.name
+  end
+  
+  def description(target, buildTarget)
+    return "LuaJIT (#{super})"
+  end
+  
+  def arch(target)
+    @base.arch(target)
+  end
+  
+  def getMakeArg(config, name)
+    value = config[name]
+    return value ? "#{name.to_s}=\"#{value}\" " : ""
+  end
+  
+  def build(target, buildTarget = nil)
+    buildTarget ||= CFG[:BUILD_TARGET]
+    
+    # Uncomment to build all build targets initially
+    #if buildTarget == nil
+    #  build(target, "Debug")
+    #  build(target, "Release")
+    #  return
+    #end
+    
+    path = target.buildPath(self, buildTarget)
+    FileUtils.mkdir_p(path)
+    
+    lib = target.libPath(self, buildTarget)
+    
+    buildDesc = description(target, buildTarget)
+    
+    if File.file? lib and not @rebuild
+      puts "#{buildDesc} already built at #{pretty_path lib}, skipping..."
+      return
+    end  
+    
+    config = @base.makeConfig(target)
+    
+    if target.is64Bit && $HOST.is_x64 != '1'
+      puts "#{buildDesc} unavailable, skipping..."
+      return
+    end
+    
+    if !config
+      puts "#{buildDesc} unsupported, skipping..."
+      return
+    end
+    
+    puts "#{buildDesc} required, building..."
+    
+    Dir.chdir(target.sourcePath) do
+      
+      makeTarget = ""
+      ccExtra = ""
+      
+      case buildTarget
+      when "Release"
+        #makeTarget = "amalg"
+      when "Debug"
+        ccExtra += " -g"
+      end
+      
+      ccExtra += " -v"
+      
+      config[:CC] += ccExtra unless !config[:CC]
+      config[:HOST_CC] += ccExtra unless !config[:HOST_CC]
+      
+      makeArgs = ""
+      makeArgs += getMakeArg(config, :HOST_CC)
+      makeArgs += getMakeArg(config, :CC)
+      makeArgs += getMakeArg(config, :CROSS)
+      makeArgs += getMakeArg(config, :TARGET_FLAGS)
+      makeArgs += getMakeArg(config, :TARGET_SYS)
+      
+      prefix = target.buildName(self, buildTarget)
+      buildRoot = target.buildRoot
+      
+      
+      
+      executeCommand "make clean"
+      executeCommand "make #{makeTarget} BUILDMODE=static #{makeArgs} PREFIX=\"#{prefix}\""
+      executeCommand "make install PREFIX=\"#{prefix}\" DESTDIR=\"#{buildRoot}/\""
     end
   end
 end

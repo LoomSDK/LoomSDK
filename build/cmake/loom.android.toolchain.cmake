@@ -424,8 +424,14 @@ endmacro()
 macro( __DETECT_TOOLCHAIN_MACHINE_NAME _var _root )
  if( EXISTS "${_root}" )
   file( GLOB __gccExePath RELATIVE "${_root}/bin/" "${_root}/bin/*-gcc${TOOL_OS_SUFFIX}" )
+   message( INFO " PATHS" )
+   message( INFO root ${_root} )
+   message( INFO suffix ${TOOL_OS_SUFFIX} )
+   message( INFO gcc ${__gccExePath} )
   __LIST_FILTER( __gccExePath "^[.].*" )
+   message( INFO gcc ${__gccExePath} )
   list( LENGTH __gccExePath __gccExePathsCount )
+   message( INFO count ${__gccExePathsCount} )
   if( NOT __gccExePathsCount EQUAL 1  AND NOT _CMAKE_IN_TRY_COMPILE )
    message( WARNING "Could not determine machine name for compiler from ${_root}" )
    set( ${_var} "" )
@@ -664,7 +670,7 @@ __INIT_VARIABLE( ANDROID_ABI OBSOLETE_ARM_TARGET OBSOLETE_ARM_TARGETS VALUES ${A
 # verify that target ABI is supported
 list( FIND ANDROID_SUPPORTED_ABIS "${ANDROID_ABI}" __androidAbiIdx )
 if( __androidAbiIdx EQUAL -1 )
- string( REPLACE ";" "\", \"", PRINTABLE_ANDROID_SUPPORTED_ABIS  "${ANDROID_SUPPORTED_ABIS}" )
+ string( REPLACE ";" "\" \"" PRINTABLE_ANDROID_SUPPORTED_ABIS  "${ANDROID_SUPPORTED_ABIS}" )
  message( FATAL_ERROR "Specified ANDROID_ABI = \"${ANDROID_ABI}\" is not supported by this cmake toolchain or your NDK/toolchain.
    Supported values are: \"${PRINTABLE_ANDROID_SUPPORTED_ABIS}\"
    " )

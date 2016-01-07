@@ -54,7 +54,10 @@
 #include "loom/common/core/assert.h"
 #include "loom/common/core/performance.h"
 #include "loom/common/core/log.h"
+
+extern "C" {
 #include "lua.h"
+}
 
 #include "loom/graphics/gfxColor.h"
 

@@ -1,12 +1,15 @@
 
 class Target
 
+  attr_reader :arch
+  attr_reader :wordSize
+  
   def name
     raise NotImplementedError
   end
-
+  
   def is64Bit
-    raise NotImplementedError
+    $ARCHS[arch][:is64Bit]
   end
 
   def sourcePath
@@ -15,29 +18,51 @@ class Target
 
   def flags(toolchain)
   end
+  
+  def buildName(toolchain, buildTarget = nil)
+    return "#{name}-#{toolchain.name}-#{toolchain.arch(self)}" + (buildTarget ? "/" + buildTarget : "");
+  end
+  
+  def buildRoot
+    return "#{$ROOT}/build"
+  end
 
-  def buildPath(toolchain)
-    return "#{$ROOT}/build/#{name}-#{toolchain.name}-#{toolchain.arch(self)}"
+  def buildPath(toolchain, buildTarget = nil)
+    return "#{buildRoot}/#{buildName(toolchain, buildTarget)}"
   end
 
 end
 
 class LuaJITTarget < Target
 
-  def initialize(is64Bit)
-    @is64Bit = is64Bit
+  def initialize(arch)
+    @arch = arch
   end
 
   def name
     return "luajit"
   end
 
-  def is64Bit
-    return @is64Bit
-  end
-
   def sourcePath
     return "#{$ROOT}/loom/vendor/luajit"
+  end
+  
+  def libPath(toolchain, buildTarget)
+    #return "#{buildPath(toolchain)}/lib"
+    
+    libName = case name
+    when "windows"
+      "luajit51.lib"
+    else
+      "libluajit-5.1.a"
+    end
+    
+    return "#{buildPath(toolchain, buildTarget)}/lib/#{libName}"
+  end
+  
+  def includePath(toolchain)
+    #return "#{buildPath(toolchain)}/include/luajit-2.1"
+    return "#{sourcePath}/src"
   end
 
   def flags(toolchain)
@@ -88,17 +113,13 @@ class LuaJITLibTarget < LuaJITTarget
 end
 
 class LoomTarget < Target
-  def initialize(is64Bit, luajit)
-    @is64Bit = is64Bit
+  def initialize(arch, luajit)
+    @arch = arch
     @luajit = luajit
   end
 
   def name
     return "loom"
-  end
-
-  def is64Bit
-    return @is64Bit
   end
 
   def sourcePath
@@ -107,7 +128,22 @@ class LoomTarget < Target
 
   def flags(toolchain)
     is_debug = CFG[:BUILD_TARGET] == "Debug" ? "1" : "0"
-    return "-DLOOM_BUILD_JIT=#{CFG[:USE_LUA_JIT]} -DLOOM_BUILD_64BIT=#{@is64Bit} -DLUA_GC_PROFILE_ENABLED=#{CFG[:ENABLE_LUA_GC_PROFILE]} -DLOOM_BUILD_NUMCORES=#{$HOST.num_cores} -DLOOM_IS_DEBUG=#{is_debug} -DLOOM_BUILD_ADMOB=#{CFG[:BUILD_ADMOB]} -DLOOM_BUILD_FACEBOOK=#{CFG[:BUILD_FACEBOOK]} -DLUAJIT_BUILD_DIR=\"#{@luajit.buildPath(toolchain)}\""
+    
+    flagstr =
+      "-DLOOM_BUILD_JIT=#{CFG[:USE_LUA_JIT]} "\
+      "-DLOOM_BUILD_64BIT=#{is64Bit ? 1 : 0} "\
+      "-DLUA_GC_PROFILE_ENABLED=#{CFG[:ENABLE_LUA_GC_PROFILE]} "\
+      "-DLOOM_BUILD_NUMCORES=#{$HOST.num_cores} "\
+      "-DLOOM_IS_DEBUG=#{is_debug} "\
+      "-DLOOM_BUILD_ADMOB=#{CFG[:BUILD_ADMOB]} "\
+      "-DLOOM_BUILD_FACEBOOK=#{CFG[:BUILD_FACEBOOK]} "\
+      "-DLUAJIT_LIB=\"#{@luajit.libPath(toolchain, CFG[:BUILD_TARGET]).shellescape}\" "\
+      "-DLUAJIT_LIB_DEBUG=\"#{@luajit.libPath(toolchain, "Debug").shellescape}\" "\
+      "-DLUAJIT_LIB_RELEASE=\"#{@luajit.libPath(toolchain, "Release").shellescape}\" "\
+      "-DLUAJIT_LIB_RELMINSIZE=\"#{@luajit.libPath(toolchain, "Release").shellescape}\" "\
+      "-DLUAJIT_LIB_RELWITHDEBINFO=\"#{@luajit.libPath(toolchain, "Release").shellescape}\" "\
+      "-DLUAJIT_INCLUDE_DIR=\"#{@luajit.includePath(toolchain).shellescape}\""
+    return flagstr
   end
 
 end
