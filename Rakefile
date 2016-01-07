@@ -513,7 +513,7 @@ namespace :build do
       #luajit_bootstrap = LuaJITBootstrapTarget.new(0, toolchain)
       #luajit_lib = LuaJITLibTarget.new(0, luajit_bootstrap)
       luajit_lib = LuaJITTarget.new(:arm)
-      loom_arm = LoomTarget.new(:x86, luajit_lib)
+      loom_arm = LoomTarget.new(:arm, luajit_lib)
       
       ensureLuaJIT("ios")
       

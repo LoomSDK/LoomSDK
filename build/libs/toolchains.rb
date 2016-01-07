@@ -364,7 +364,7 @@ class LuaJITToolchain < Toolchain
       
       case buildTarget
       when "Release"
-        #makeTarget = "amalg"
+        makeTarget = "amalg"
       when "Debug"
         ccExtra += " -g"
       end

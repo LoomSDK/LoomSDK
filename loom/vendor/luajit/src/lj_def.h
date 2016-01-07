@@ -333,7 +333,7 @@ static LJ_AINLINE uint32_t lj_getu32(const void *v)
 #define LJ_ASMF		LJ_NOAPI
 #define LJ_FUNCA	LJ_NOAPI
 #if defined(ljamalg_c)
-#define LJ_FUNC		static
+#define LJ_FUNC		LJ_NOAPI
 #else
 #define LJ_FUNC		LJ_NOAPI
 #endif
