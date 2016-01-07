@@ -27,50 +27,6 @@
 #include "lj_trace.h"
 #include "lj_vm.h"
 
-#if LUA_GC_PROFILE_ENABLED
-
-#define LUA_GC_PREFIX gLuaGC
-#define LUA_GC_GLOBAL_INTERNAL_CONCAT(prefix, name) prefix ## _ ## name
-#define LUA_GC_GLOBAL_INTERNAL(prefix, name) LUA_GC_GLOBAL_INTERNAL_CONCAT(prefix, name)
-#define LUA_GC_GLOBAL(name) LUA_GC_GLOBAL_INTERNAL(LUA_GC_PREFIX, name)
-
-#define LUA_GC_DEFINE(name) extern LUA_GC_GLOBAL(callback) LUA_GC_GLOBAL(name)
-
-#define LUA_GC_RANGE(name) \
-    extern LUA_GC_GLOBAL(callback_begin) LUA_GC_GLOBAL(name ## _begin); \
-    extern LUA_GC_GLOBAL(callback_end)   LUA_GC_GLOBAL(name ## _end); \
-
-#define LUA_GC_CALL(name)  if (LUA_GC_GLOBAL(name)) LUA_GC_GLOBAL(name)();
-
-#define LUA_GC_PREFIX_VAR(name) profiler_data_for ## _ ## name
-
-#define LUA_GC_BEGIN(name) \
-    static void* LUA_GC_PREFIX_VAR(name); \
-    if (LUA_GC_GLOBAL(name ## _begin)) LUA_GC_PREFIX_VAR(name) = LUA_GC_GLOBAL(name ## _begin)(); \
-
-#define LUA_GC_END(name) \
-    if (LUA_GC_GLOBAL(name ## _end)) LUA_GC_GLOBAL(name ## _end)(LUA_GC_PREFIX_VAR(name));
-
-typedef void(*gLuaGC_callback)();
-typedef void*(*gLuaGC_callback_begin)();
-typedef void(*gLuaGC_callback_end)(void*);
-
-LUA_GC_RANGE(fullgc);
-LUA_GC_RANGE(step);
-
-#else
-
-#define LUA_GC_PREFIX
-#define LUA_GC_GLOBAL(name)
-#define LUA_GC_DEFINE(name)
-#define LUA_GC_RANGE(name)
-#define LUA_GC_CALL(name)
-#define LUA_GC_PREFIX_VAR(name)
-#define LUA_GC_BEGIN(name)
-#define LUA_GC_END(name)
-
-#endif // LUA_GC_PROFILE_ENABLED
-
 #define GCSTEPSIZE	1024u
 #define GCSWEEPMAX	40
 #define GCSWEEPCOST	10
@@ -714,7 +670,6 @@ int LJ_FASTCALL lj_gc_step(lua_State *L)
   global_State *g = G(L);
   GCSize lim;
   int32_t ostate = g->vmstate;
-  LUA_GC_BEGIN(step);
   setvmstate(g, GC);
   lim = (GCSTEPSIZE/100) * g->gc.stepmul;
   if (lim == 0)
@@ -726,20 +681,17 @@ int LJ_FASTCALL lj_gc_step(lua_State *L)
     if (g->gc.state == GCSpause) {
       g->gc.threshold = (g->gc.estimate/100) * g->gc.pause;
       g->vmstate = ostate;
-      LUA_GC_END(step);
       return 1;  /* Finished a GC cycle. */
     }
   } while (sizeof(lim) == 8 ? ((int64_t)lim > 0) : ((int32_t)lim > 0));
   if (g->gc.debt < GCSTEPSIZE) {
     g->gc.threshold = g->gc.total + GCSTEPSIZE;
     g->vmstate = ostate;
-    LUA_GC_END(step);
     return -1;
   } else {
     g->gc.debt -= GCSTEPSIZE;
     g->gc.threshold = g->gc.total;
     g->vmstate = ostate;
-    LUA_GC_END(step);
     return 0;
   }
 }
@@ -770,7 +722,6 @@ void lj_gc_fullgc(lua_State *L)
 {
   global_State *g = G(L);
   int32_t ostate = g->vmstate;
-  LUA_GC_BEGIN(fullgc);
   setvmstate(g, GC);
   if (g->gc.state <= GCSatomic) {  /* Caught somewhere in the middle. */
     setmref(g->gc.sweep, &g->gc.root);  /* Sweep everything (preserving it). */
@@ -788,7 +739,6 @@ void lj_gc_fullgc(lua_State *L)
   do { gc_onestep(L); } while (g->gc.state != GCSpause);
   g->gc.threshold = (g->gc.estimate/100) * g->gc.pause;
   g->vmstate = ostate;
-  LUA_GC_END(fullgc);
 }
 
 /* -- Write barriers ------------------------------------------------------ */
