@@ -682,7 +682,7 @@ void LSLuaState::dumpLuaTable(lua_State *L, int index, int levels = 2, int level
     lua_pop(L, 1);
 }
 
-void LSLuaState::dumpLuaStack()
+void LSLuaState::dumpLuaStack(lua_State *L)
 {
     int i;
     int top = lua_gettop(L);
@@ -703,6 +703,11 @@ void LSLuaState::dumpLuaStack()
         }
     }
     lmLog(gLuaStateLogGroup, "");
+}
+
+void LSLuaState::dumpLuaStack()
+{
+    LSLuaState::dumpLuaStack(L);
 }
 
 int LSLuaState::getStackSize()

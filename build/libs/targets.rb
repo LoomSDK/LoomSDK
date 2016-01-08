@@ -50,9 +50,9 @@ class LuaJITTarget < Target
   def libPath(toolchain, buildTarget)
     #return "#{buildPath(toolchain)}/lib"
     
-    libName = case name
+    libName = case toolchain.name
     when "windows"
-      "luajit51.lib"
+      "lua51.lib"
     else
       "libluajit-5.1.a"
     end
@@ -65,15 +65,65 @@ class LuaJITTarget < Target
     return "#{sourcePath}/src"
   end
 
-  def flags(toolchain)
-    if toolchain.instance_of? WindowsToolchain
-      os = "LUAJIT_OS_WINDOWS"
-    elsif toolchain.instance_of? AndroidToolchain or toolchain.instance_of? LinuxToolchain
-      os = "LUAJIT_OS_LINUX"
+  def flags(toolchain, buildTarget = nil)
+    if toolchain.instance_of? BatchToolchain
+      
+      args = ""
+      platform = toolchain.platform
+      
+      if platform.instance_of? WindowsToolchain
+
+        vs_install = toolchain.platform.get_vs_install
+        
+        # %1 - path to vcvarsall.bat
+        args += "\"#{vs_install[:install]}VC\\vcvarsall.bat\""
+
+        # %2 - vcvarsall architecture
+        args += " " + case arch
+        when :x86
+          "x86"
+        when :x86_64
+          "amd64"
+        else
+          abort("Unsupported architecture: #{arch}")
+        end
+
+        # %3 - msvcbuild extra arguments
+        args += " " + case buildTarget
+        when "Debug"
+          "debug"
+        else
+          '""'
+        end
+      
+        # %4 - directory of output lib
+        args += " \"" + File.dirname(libPath(toolchain.platform, buildTarget)) + "\""
+        
+      elsif platform.instance_of? AndroidToolchain
+        
+        supported_targets = [
+          "Release",
+          "Debug",
+        ]
+        
+        buildTarget = "Release" unless supported_targets.include? buildTarget
+        
+        prebuilt = Pathname.new "#{$ROOT}/loom/vendor/luajit-prebuilt"
+        libout_root = Pathname.new buildRoot
+        libout = Pathname.new libPath(toolchain, buildTarget)
+
+        relpath = libout.relative_path_from libout_root
+        
+        args += "\"" + (prebuilt + relpath).to_s.gsub('/', '\\') + "\""
+        args += " \"" + (libout.dirname).to_s.gsub('/', '\\') + "\""
+        
+      end
+      
+      
+      args
     else
-      os = "LUAJIT_OS_OSX"
+      ""
     end
-    return "-DLUAJIT_X64=#{@is64Bit} -DLUA_TARGET_ARCH=#{toolchain.arch(self)} -DLUAJIT_OS=#{os} -DLUA_GC_PROFILE_ENABLED=#{CFG[:ENABLE_LUA_GC_PROFILE]}"
   end
 
 end

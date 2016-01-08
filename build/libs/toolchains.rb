@@ -35,7 +35,7 @@ class Toolchain
     end
   end
 
-  def build(target)
+  def build(target, buildTarget = nil)
     path = target.buildPath(self)
     FileUtils.mkdir_p(path)
     Dir.chdir(path) do
@@ -56,12 +56,18 @@ class WindowsToolchain < Toolchain
   def name
     return "windows"
   end
-
+  
+  def makeConfig(target)
+    return nil
+  end
+  
   def cmakeArgs(target)
+    vs_install = get_vs_install
+    abort("Missing or unsupported Visual Studio version") unless vs_install
     if target.is64Bit
-      return "-G \"#{get_vs_name} Win64\""
+      return "-G \"#{vs_install[:name]} Win64\""
     else
-      return "-G \"#{get_vs_name}\""
+      return "-G \"#{vs_install[:name]}\""
     end
   end
   
@@ -69,7 +75,7 @@ class WindowsToolchain < Toolchain
     access = Win32::Registry::KEY_READ
     begin
       Win32::Registry::HKEY_LOCAL_MACHINE::open(keyname, access) do |reg|
-        reg.each{ |name, value| if name == valuename then return value end }
+        reg.each{ |name, value| if name == valuename then return reg[name] end }
       end
     rescue
       return nil
@@ -77,43 +83,47 @@ class WindowsToolchain < Toolchain
     return nil
   end
 
-  def get_vs_name()
-    if get_reg_value('SOFTWARE\Microsoft\VisualStudio\12.0', 'ShellFolder') != nil then
-      return 'Visual Studio 12'
+  #def get_vs_tools()
+  #  vsname = get_vs_install
+  #  abort("Missing or unsupported Visual Studio version: #{vsname}") unless vsname and vsname.start_with? "Visual Studio"
+  #  vsver = vsname.split.last.sub(".", "")
+  #  vsver += "0" unless vsver.length >= 3
+  #  envvar = "VS#{vsver}COMNTOOLS"
+  #  ENV[envvar]
+  #end
+  
+  def get_vs_install()
+    regs = [
+      { name: 'Visual Studio 12', path: 'SOFTWARE\Microsoft\VisualStudio\12.0' },
+      { name: 'Visual Studio 12', path: 'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\12.0' },
+      { name: 'Visual Studio 11', path: 'SOFTWARE\Microsoft\VisualStudio\11.0' },
+      { name: 'Visual Studio 11', path: 'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\11.0' },
+      { name: 'Visual Studio 10', path: 'SOFTWARE\Microsoft\VisualStudio\10.0' },
+    ]
+    dirs = [
+      { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 12.0\\VC") },
+      { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 12.0\\VC") },
+      { name: 'Visual Studio 11', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 11.0\\VC") },
+      { name: 'Visual Studio 11', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 11.0\\VC") },
+      { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 10.0\\VC") },
+      { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 10.0\\VC") },
+    ]
+    
+    for reg in regs
+      install = get_reg_value(reg[:path], 'ShellFolder')
+      if install
+        return { name: reg[:name], install: install }
+      end
     end
-    if get_reg_value('SOFTWARE\Wow6432Node\Microsoft\VisualStudio\12.0', 'ShellFolder') != nil then
-      return 'Visual Studio 12'
+    
+    for dir in dirs
+      if Dir.exists?(dir[:path])
+        return { name: dir[:name], install: dir[:path] }
+      end
     end
-    if get_reg_value('SOFTWARE\Microsoft\VisualStudio\11.0', 'ShellFolder') != nil then
-      return 'Visual Studio 11'
-    end
-    if get_reg_value('SOFTWARE\Wow6432Node\Microsoft\VisualStudio\11.0', 'ShellFolder') != nil then
-      return 'Visual Studio 11'
-    end
-    if get_reg_value('SOFTWARE\Microsoft\VisualStudio\10.0', 'ShellFolder') != nil then
-      return 'Visual Studio 10'
-    end
-    if get_reg_value('SOFTWARE\Wow6432Node\Microsoft\VisualStudio\10.0', 'ShellFolder') != nil then
-       return 'Visual Studio 10'
-    end
-    if Dir.exists?(File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 12.0\\VC")) then
-      return 'Visual Studio 12'
-    end
-    if Dir.exists?(File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 12.0\\VC")) then
-      return 'Visual Studio 12'
-    end
-    if Dir.exists?(File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 11.0\\VC")) then
-      return 'Visual Studio 11'
-    end
-    if Dir.exists?(File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 11.0\\VC")) then
-      return 'Visual Studio 11'
-    end
-    if Dir.exists?(File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 10.0\\VC")) then
-      return 'Visual Studio 10'
-    end
-    if Dir.exists?(File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 10.0\\VC")) then
-      return 'Visual Studio 10'
-    end
+    
+    return nil
+    
   end
 
 end
@@ -295,30 +305,128 @@ class AndroidToolchain < Toolchain
 end
 
 
-class LuaJITToolchain < Toolchain
+class MakeToolchain < Toolchain
   
-  attr_reader :rebuild
-  
-  def initialize(base, rebuild)
-    @base = base
-    @rebuild = rebuild
+  def initialize(platform)
+    @platform = platform
   end
   
   def name
-    return @base.name
+    return @platform.name
   end
   
   def description(target, buildTarget)
-    return "LuaJIT (#{super})"
+    return "make"
   end
   
   def arch(target)
-    @base.arch(target)
+    @platform.arch(target)
   end
   
   def getMakeArg(config, name)
     value = config[name]
-    return value ? "#{name.to_s}=\"#{value}\" " : ""
+    value ? "#{name.to_s}=\"#{value}\" " : ""
+  end
+  
+  def build(target, buildTarget = nil)
+    
+    config = @platform.makeConfig(target)
+    
+    buildDesc = @platform.description(target, buildTarget)
+    
+    if !config
+      puts "#{buildDesc} unsupported, skipping..."
+      return
+    end
+    
+    Dir.chdir(target.sourcePath) do
+      
+      makeTarget = ""
+      ccExtra = ""
+      
+      case buildTarget
+      when "Release"
+        makeTarget = "amalg"
+      when "Debug"
+        ccExtra += " -g"
+      end
+      
+      config[:CC] += ccExtra unless !config[:CC]
+      config[:HOST_CC] += ccExtra unless !config[:HOST_CC]
+      
+      makeArgs = ""
+      makeArgs += getMakeArg(config, :HOST_CC)
+      makeArgs += getMakeArg(config, :CC)
+      makeArgs += getMakeArg(config, :CROSS)
+      makeArgs += getMakeArg(config, :TARGET_FLAGS)
+      makeArgs += getMakeArg(config, :TARGET_SYS)
+      
+      prefix = target.buildName(self, buildTarget)
+      buildRoot = target.buildRoot
+      
+      
+      
+      executeCommand "make clean"
+      executeCommand "make #{makeTarget} BUILDMODE=static #{makeArgs} PREFIX=\"#{prefix}\""
+      executeCommand "make install PREFIX=\"#{prefix}\" DESTDIR=\"#{buildRoot}/\""
+    end
+  end
+end
+
+
+class BatchToolchain < Toolchain
+  
+  attr_reader :platform
+  
+  def initialize(platform, path)
+    @platform = platform
+    @path = path
+  end
+  
+  def name
+    @platform.name
+  end
+  
+  def description(target, buildTarget)
+    pretty_path @path
+  end
+  
+  def arch(target)
+    @platform.arch(target)
+  end
+  
+  def getMakeArg(config, name)
+    nil
+  end
+  
+  def build(target, buildTarget = nil)
+    cmd = @path + " " + target.flags(self, buildTarget)
+    
+    Dir.chdir(File.dirname(@path)) do
+      executeCommand cmd
+    end
+  end
+end
+  
+class LuaJITToolchain < Toolchain
+  
+  attr_reader :rebuild
+  
+  def initialize(buildToolchain, rebuild)
+    @buildToolchain = buildToolchain
+    @rebuild = rebuild
+  end
+  
+  def name
+    @buildToolchain.name
+  end
+  
+  def description(target, buildTarget)
+    "LuaJIT (#{super} #{@buildToolchain.description(target, buildTarget)} build)"
+  end
+  
+  def arch(target)
+    @buildToolchain.arch(target)
   end
   
   def build(target, buildTarget = nil)
@@ -343,52 +451,18 @@ class LuaJITToolchain < Toolchain
       return
     end  
     
-    config = @base.makeConfig(target)
-    
     if target.is64Bit && $HOST.is_x64 != '1'
       puts "#{buildDesc} unavailable, skipping..."
       return
     end
     
-    if !config
-      puts "#{buildDesc} unsupported, skipping..."
-      return
-    end
-    
     puts "#{buildDesc} required, building..."
     
-    Dir.chdir(target.sourcePath) do
-      
-      makeTarget = ""
-      ccExtra = ""
-      
-      case buildTarget
-      when "Release"
-        makeTarget = "amalg"
-      when "Debug"
-        ccExtra += " -g"
-      end
-      
-      ccExtra += " -v"
-      
-      config[:CC] += ccExtra unless !config[:CC]
-      config[:HOST_CC] += ccExtra unless !config[:HOST_CC]
-      
-      makeArgs = ""
-      makeArgs += getMakeArg(config, :HOST_CC)
-      makeArgs += getMakeArg(config, :CC)
-      makeArgs += getMakeArg(config, :CROSS)
-      makeArgs += getMakeArg(config, :TARGET_FLAGS)
-      makeArgs += getMakeArg(config, :TARGET_SYS)
-      
-      prefix = target.buildName(self, buildTarget)
-      buildRoot = target.buildRoot
-      
-      
-      
-      executeCommand "make clean"
-      executeCommand "make #{makeTarget} BUILDMODE=static #{makeArgs} PREFIX=\"#{prefix}\""
-      executeCommand "make install PREFIX=\"#{prefix}\" DESTDIR=\"#{buildRoot}/\""
+    @buildToolchain.build(target, buildTarget)
+    
+    if !File.file? lib
+      abort "#{buildDesc} output missing at #{pretty_path lib}, build failed!"
     end
+    
   end
 end
