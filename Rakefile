@@ -375,7 +375,7 @@ namespace :build do
   task 'luajit:windows' do |t, args|
     if $HOST.name != 'windows'
       puts "LuaJIT Windows build only supported on Windows, skipping..."
-      return
+      next
     end
     puts "== Building LuaJIT for Windows =="
     buildLuaJIT(BatchToolchain.new(WindowsToolchain.new(), "#{$ROOT}/build/luajitWinBuild.bat"), [:x86, :x86_64])
@@ -385,21 +385,21 @@ namespace :build do
   task 'luajit:osx' do |t, args|
     if $HOST.name != 'osx'
       puts "LuaJIT OSX build only supported on OSX, skipping..."
-      return
+      next
     end
     puts "== Building LuaJIT for OSX =="
-    buildLuaJIT(OSXToolchain.new(), [:x86, :x86_64])
+    buildLuaJIT(MakeToolchain.new(OSXToolchain.new()), [:x86, :x86_64])
   end
   
   desc "Build LuaJIT libraries for iOS"
   task 'luajit:ios' do |t, args|
     if $HOST.name != 'osx'
       puts "LuaJIT iOS build only supported on OSX, skipping..."
-      return
+      next
     end
     puts "== Building LuaJIT for iOS =="
     toolchain = IOSToolchain.new("")
-    luajit_make, targets = buildLuaJIT(toolchain, [:armv7, :armv7s, :arm64])
+    luajit_make, targets = buildLuaJIT(MakeToolchain.new(toolchain), [:armv7, :armv7s, :arm64])
     combined = LuaJITTarget.new(:arm)
     toolchain.combine(luajit_make, targets, combined)
   end
@@ -411,7 +411,7 @@ namespace :build do
       buildLuaJIT(BatchToolchain.new(AndroidToolchain.new(), "#{$ROOT}/build/luajitWinAndroid.bat"), [:armv7])
     else
       puts "== Building LuaJIT for Android =="
-      buildLuaJIT(AndroidToolchain.new(), [:armv7])
+      buildLuaJIT(MakeToolchain.new(AndroidToolchain.new()), [:armv7])
     end
   end
 
@@ -438,7 +438,7 @@ namespace :build do
   task :osx => [] do
 
     if $HOST.name != 'osx'
-      return
+      next
     end
 
     puts "== Building OS X =="

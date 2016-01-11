@@ -367,7 +367,7 @@ class MakeToolchain < Toolchain
       
       
       executeCommand "make clean"
-      executeCommand "make #{makeTarget} BUILDMODE=static #{makeArgs} PREFIX=\"#{prefix}\""
+      executeCommand "make -j #{makeTarget} BUILDMODE=static #{makeArgs} PREFIX=\"#{prefix}\""
       executeCommand "make install PREFIX=\"#{prefix}\" DESTDIR=\"#{buildRoot}/\""
     end
   end
