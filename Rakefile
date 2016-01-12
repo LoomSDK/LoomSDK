@@ -54,7 +54,10 @@ CFG =
     USE_LUA_JIT: 1,
 
     # If 1, then LUA GC profiling code is enabled
-    ENABLE_LUA_GC_PROFILE: 0,
+    # LuaJIT needs to be recompiled to support this (see `rake build:luajit`)
+    # Precompiled LuaJIT has GC profiling compiled in, however it can still be
+    # turned off when compiling Loom with negligible overhead
+    ENABLE_LUA_GC_PROFILE: 1,
 
     # Whether or not to include Admob and/or Facebook in the build... for Great Apple Compliance!
     BUILD_ADMOB: 0,

@@ -69,6 +69,7 @@ buildvm -m folddef -o lj_folddef.h lj_opt_fold.c
 @set LJCOMPILE=%LJCOMPILE% /Zi
 @set LJLINK=%LJLINK% /debug
 :NODEBUG
+@set LJCOMPILE=%LJCOMPILE% %2 %3 %4 %5 %6
 @if "%1"=="amalg" goto :AMALGDLL
 @if "%1"=="static" goto :STATIC
 %LJCOMPILE% /MD /DLUA_BUILD_AS_DLL lj_*.c lib_*.c

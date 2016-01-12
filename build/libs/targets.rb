@@ -64,7 +64,6 @@ class LuaJITTarget < Target
   end
   
   def includePath(toolchain)
-    #return "#{buildPath(toolchain)}/include/luajit-2.1"
     return "#{sourcePath}/src"
   end
 
@@ -102,6 +101,9 @@ class LuaJITTarget < Target
         # %4 - directory of output lib
         args += " \"" + File.dirname(libPath(toolchain.platform)) + "\""
         
+        # %5..9 - additional compiler arguments 
+        args += " /DLUA_GC_PROFILE_ENABLED" if CFG[:ENABLE_LUA_GC_PROFILE] == 1
+        
       elsif platform.instance_of? AndroidToolchain
         
         supported_targets = [
@@ -113,7 +115,7 @@ class LuaJITTarget < Target
         
         prebuilt = Pathname.new "#{$ROOT}/loom/vendor/luajit-prebuilt"
         libout_root = Pathname.new buildRoot
-        libout = Pathname.new libPath(toolchain, type)
+        libout = Pathname.new libPath(toolchain)
 
         relpath = libout.relative_path_from libout_root
         
