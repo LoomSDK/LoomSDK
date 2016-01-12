@@ -82,6 +82,7 @@ else
   $LSC_BINARY = "#{$HOST_ARTIFACTS}/tools/lsc"
 end
 $LOOMEXEC_BINARY = "#{$HOST_ARTIFACTS}/tools/loomexec"
+$BUILD_TYPE = CFG[:BUILD_TARGET].to_sym
 
 if $HOST.name == 'windows'
   $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomDemo.exe"
@@ -347,7 +348,7 @@ namespace :build do
     targets = []
     
     for arch in archs
-      target = LuaJITTarget.new(arch)
+      target = LuaJITTarget.new(arch, $BUILD_TYPE)
       luajit_make.build(target)
       targets.push target
     end
@@ -400,7 +401,7 @@ namespace :build do
     puts "== Building LuaJIT for iOS =="
     toolchain = IOSToolchain.new("")
     luajit_make, targets = buildLuaJIT(MakeToolchain.new(toolchain), [:armv7, :armv7s, :arm64])
-    combined = LuaJITTarget.new(:arm)
+    combined = LuaJITTarget.new(:arm, $BUILD_TYPE)
     toolchain.combine(luajit_make, targets, combined)
   end
   
@@ -447,13 +448,13 @@ namespace :build do
     
     toolchain = OSXToolchain.new()
     
-    luajit_x86 = LuaJITTarget.new(:x86)
-    loom_x86 = LoomTarget.new(:x86, luajit_x86);
+    luajit_x86 = LuaJITTarget.new(:x86, $BUILD_TYPE)
+    loom_x86 = LoomTarget.new(:x86, $BUILD_TYPE, luajit_x86);
     toolchain.build(loom_x86)
     
     if $HOST.is_x64 == '1' then
-      luajit_x64 = LuaJITTarget.new(:x86_64)
-      loom_x64 = LoomTarget.new(:x86_64, luajit_x64);
+      luajit_x64 = LuaJITTarget.new(:x86_64, $BUILD_TYPE)
+      loom_x64 = LoomTarget.new(:x86_64, $BUILD_TYPE, luajit_x64);
       toolchain.build(loom_x64)
     end
 
@@ -524,8 +525,8 @@ namespace :build do
       toolchain = IOSToolchain.new(args.sign_as)
       #luajit_bootstrap = LuaJITBootstrapTarget.new(0, toolchain)
       #luajit_lib = LuaJITLibTarget.new(0, luajit_bootstrap)
-      luajit_lib = LuaJITTarget.new(:arm)
-      loom_arm = LoomTarget.new(:arm, luajit_lib)
+      luajit_lib = LuaJITTarget.new(:arm, $BUILD_TYPE)
+      loom_arm = LoomTarget.new(:arm, $BUILD_TYPE, luajit_lib)
       
       ensureLuaJIT("ios")
       
@@ -565,16 +566,16 @@ namespace :build do
   task :windows => [] do
     puts "== Building Windows =="
     toolchain = WindowsToolchain.new();
-    luajit_x86 = LuaJITTarget.new(:x86);
-    loom_x86 = LoomTarget.new(:x86, luajit_x86);
+    luajit_x86 = LuaJITTarget.new(:x86, $BUILD_TYPE);
+    loom_x86 = LoomTarget.new(:x86, $BUILD_TYPE, luajit_x86);
     
     ensureLuaJIT("windows")
     
     toolchain.build(loom_x86)
 
     if $HOST.is_x64 == '1' then
-      luajit_x64 = LuaJITTarget.new(:x86_64);
-      loom_x64 = LoomTarget.new(:x86_64, luajit_x64);
+      luajit_x64 = LuaJITTarget.new(:x86_64, $BUILD_TYPE);
+      loom_x64 = LoomTarget.new(:x86_64, $BUILD_TYPE, luajit_x64);
       toolchain.build(loom_x64)
     end
 
@@ -603,11 +604,11 @@ namespace :build do
     hostToolchain = $HOST.toolchain()
     toolchain = AndroidToolchain.new()
     
-    luajit_lib = LuaJITTarget.new(:armv7)
+    luajit_lib = LuaJITTarget.new(:armv7, $BUILD_TYPE)
     
     ensureLuaJIT("android")
     
-    loom_arm = LoomTarget.new(:armv7, luajit_lib)
+    loom_arm = LoomTarget.new(:armv7, $BUILD_TYPE, luajit_lib)
     toolchain.build(loom_arm)
 
     puts "*** Building against AndroidSDK " + CFG[:TARGET_ANDROID_SDK]

@@ -2,7 +2,7 @@
 class Target
 
   attr_reader :arch
-  attr_reader :wordSize
+  attr_reader :buildType
   
   def name
     raise NotImplementedError
@@ -19,24 +19,25 @@ class Target
   def flags(toolchain)
   end
   
-  def buildName(toolchain, buildTarget = nil)
-    return "#{name}-#{toolchain.name}-#{toolchain.arch(self)}" + (buildTarget ? "/" + buildTarget : "");
+  def buildName(toolchain)
+    return "#{name}-#{toolchain.name}-#{toolchain.arch(self)}"
   end
   
   def buildRoot
     return "#{$ROOT}/build"
   end
 
-  def buildPath(toolchain, buildTarget = nil)
-    return "#{buildRoot}/#{buildName(toolchain, buildTarget)}"
+  def buildPath(toolchain)
+    return "#{buildRoot}/#{buildName(toolchain)}"
   end
 
 end
 
 class LuaJITTarget < Target
 
-  def initialize(arch)
+  def initialize(arch, buildType)
     @arch = arch
+    @buildType = buildType
   end
 
   def name
@@ -47,9 +48,11 @@ class LuaJITTarget < Target
     return "#{$ROOT}/loom/vendor/luajit"
   end
   
-  def libPath(toolchain, buildTarget)
-    #return "#{buildPath(toolchain)}/lib"
-    
+  def buildName(toolchain)
+    return "#{super(toolchain)}/#{buildType}"
+  end
+  
+  def libPath(toolchain)
     libName = case toolchain.name
     when "windows"
       "lua51.lib"
@@ -57,7 +60,7 @@ class LuaJITTarget < Target
       "libluajit-5.1.a"
     end
     
-    return "#{buildPath(toolchain, buildTarget)}/lib/#{libName}"
+    return "#{buildPath(toolchain)}/lib/#{libName}"
   end
   
   def includePath(toolchain)
@@ -65,7 +68,7 @@ class LuaJITTarget < Target
     return "#{sourcePath}/src"
   end
 
-  def flags(toolchain, buildTarget = nil)
+  def flags(toolchain)
     if toolchain.instance_of? BatchToolchain
       
       args = ""
@@ -89,15 +92,15 @@ class LuaJITTarget < Target
         end
 
         # %3 - msvcbuild extra arguments
-        args += " " + case buildTarget
-        when "Debug"
+        args += " " + case @buildType
+        when :Debug
           "debug"
         else
           '""'
         end
       
         # %4 - directory of output lib
-        args += " \"" + File.dirname(libPath(toolchain.platform, buildTarget)) + "\""
+        args += " \"" + File.dirname(libPath(toolchain.platform)) + "\""
         
       elsif platform.instance_of? AndroidToolchain
         
@@ -106,11 +109,11 @@ class LuaJITTarget < Target
           "Debug",
         ]
         
-        buildTarget = "Release" unless supported_targets.include? buildTarget
+        type = :Release unless supported_targets.include? @buildType
         
         prebuilt = Pathname.new "#{$ROOT}/loom/vendor/luajit-prebuilt"
         libout_root = Pathname.new buildRoot
-        libout = Pathname.new libPath(toolchain, buildTarget)
+        libout = Pathname.new libPath(toolchain, type)
 
         relpath = libout.relative_path_from libout_root
         
@@ -163,8 +166,9 @@ class LuaJITLibTarget < LuaJITTarget
 end
 
 class LoomTarget < Target
-  def initialize(arch, luajit)
+  def initialize(arch, buildType, luajit)
     @arch = arch
+    @buildType = buildType
     @luajit = luajit
   end
 
@@ -175,10 +179,15 @@ class LoomTarget < Target
   def sourcePath
     return "#{$ROOT}"
   end
-
+  
   def flags(toolchain)
-    is_debug = CFG[:BUILD_TARGET] == "Debug" ? "1" : "0"
+    is_debug = @buildType == :Debug ? "1" : "0"
     
+      #"-DLUAJIT_LIB_DEBUG=\"#{@luajit.libPath(toolchain, "Debug").shellescape}\" "\
+      #"-DLUAJIT_LIB_RELEASE=\"#{@luajit.libPath(toolchain, "Release").shellescape}\" "\
+      #"-DLUAJIT_LIB_RELMINSIZE=\"#{@luajit.libPath(toolchain, "Release").shellescape}\" "\
+      #"-DLUAJIT_LIB_RELWITHDEBINFO=\"#{@luajit.libPath(toolchain, "Release").shellescape}\" "\
+      
     flagstr =
       "-DLOOM_BUILD_JIT=#{CFG[:USE_LUA_JIT]} "\
       "-DLOOM_BUILD_64BIT=#{is64Bit ? 1 : 0} "\
@@ -187,11 +196,7 @@ class LoomTarget < Target
       "-DLOOM_IS_DEBUG=#{is_debug} "\
       "-DLOOM_BUILD_ADMOB=#{CFG[:BUILD_ADMOB]} "\
       "-DLOOM_BUILD_FACEBOOK=#{CFG[:BUILD_FACEBOOK]} "\
-      "-DLUAJIT_LIB=\"#{@luajit.libPath(toolchain, CFG[:BUILD_TARGET]).shellescape}\" "\
-      "-DLUAJIT_LIB_DEBUG=\"#{@luajit.libPath(toolchain, "Debug").shellescape}\" "\
-      "-DLUAJIT_LIB_RELEASE=\"#{@luajit.libPath(toolchain, "Release").shellescape}\" "\
-      "-DLUAJIT_LIB_RELMINSIZE=\"#{@luajit.libPath(toolchain, "Release").shellescape}\" "\
-      "-DLUAJIT_LIB_RELWITHDEBINFO=\"#{@luajit.libPath(toolchain, "Release").shellescape}\" "\
+      "-DLUAJIT_LIB=\"#{@luajit.libPath(toolchain).shellescape}\" "\
       "-DLUAJIT_INCLUDE_DIR=\"#{@luajit.includePath(toolchain).shellescape}\""
     return flagstr
   end

@@ -8,8 +8,8 @@ class Toolchain
     raise NotImplementedError
   end
   
-  def description(target, buildTarget)
-    return "#{buildTarget} #{name} #{arch(target)} #{target.is64Bit ? "64-bit" : "32-bit"}"
+  def description(target)
+    return "#{target.buildType.to_s} #{name} #{arch(target)} #{target.is64Bit ? "64-bit" : "32-bit"}"
   end
 
   def cmakeArgs
@@ -35,7 +35,7 @@ class Toolchain
     end
   end
 
-  def build(target, buildTarget = nil)
+  def build(target)
     path = target.buildPath(self)
     FileUtils.mkdir_p(path)
     Dir.chdir(path) do
@@ -187,9 +187,9 @@ class IOSToolchain < Toolchain
   
   def combine(toolchain, targets, combined)
     
-    buildTarget = CFG[:BUILD_TARGET]
+    abort "Unable to combine architectures, no targets provided" unless targets.length > 0
     
-    lib_arm = combined.libPath(self, buildTarget)
+    lib_arm = combined.libPath(self)
     
     if File.file?(lib_arm) and !toolchain.rebuild
       puts "Libraries already combined to #{pretty_path lib_arm}, skipping..."
@@ -202,9 +202,9 @@ class IOSToolchain < Toolchain
     libs_avail = []
     
     for target in targets
-      lib = target.libPath(toolchain, buildTarget)
+      lib = target.libPath(toolchain)
       exists = File.file?(lib)
-      puts "  #{toolchain.description(target, buildTarget)}: #{pretty_path lib}" + (exists ? "" : " (missing)")
+      puts "  #{toolchain.description(target)}: #{pretty_path lib}" + (exists ? "" : " (missing)")
       libs.push lib
       libs_avail.push lib unless !exists
     end
@@ -242,14 +242,6 @@ class AndroidToolchain < Toolchain
   
   def makeConfig(target)
     
-    #NDK=/opt/android/ndk
-    #NDKABI=14
-    #NDKVER=$NDK/toolchains/arm-linux-androideabi-4.6
-    #NDKP=$NDKVER/prebuilt/linux-x86/bin/arm-linux-androideabi-
-    #NDKF="--sysroot $NDK/platforms/android-$NDKABI/arch-arm"
-    #NDKARCH="-march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"
-    #make HOST_CC="gcc -m32" CROSS=$NDKP TARGET_FLAGS="$NDKF $NDKARCH"
-    
     return nil unless !target.is64Bit
     
     # Android/ARM, armeabi-v7a (ARMv7 VFP), Android 4.0+ (ICS)
@@ -259,17 +251,6 @@ class AndroidToolchain < Toolchain
     ndkPath = "#{ndkVersion}/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-"
     ndkFlags = "--sysroot #{ndk}/platforms/android-#{ndkABI}/arch-arm"
     ndkArch = "-march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"
-    
-    #NDK=~/android/ndk
-    #NDKABI=14
-    #NDKVER="~/android/ndk/toolchains/arm-linux-androideabi-4.6"
-    #NDKP=~/android/ndk/toolchains/arm-linux-androideabi-4.6/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-
-    #NDKF="--sysroot ~/android/ndk/platforms/android-14/arch-arm"
-    #NDKARCH="-march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"
-    #make HOST_CC="gcc -m32" CROSS=~/android/ndk/toolchains/arm-linux-androideabi-4.6/prebuilt/darwin-x86_64/bin/arm-linux-androideabi- TARGET_SYS=Linux TARGET_FLAGS="--sysroot ~/android/ndk/platforms/android-14/arch-arm -march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"
-    #
-    #make                      HOST_CC="gcc    -m32" CROSS=~/android/ndk/            toolchains/arm-linux-androideabi-4.6/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-  TARGET_SYS=Linux TARGET_FLAGS="--sysroot ~/android/           ndk/platforms/android-14/arch-arm -march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"
-    #make -j  BUILDMODE=static HOST_CC="gcc -g -m32" CROSS="/Users/miha/android/ndk//toolchains/arm-linux-androideabi-4.6/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-"                  TARGET_FLAGS="--sysroot /Users/miha/android/ndk//platforms/android-14/arch-arm -march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"  PREFIX="luajit-android-x86/Debug"
     
     return {
       CC: "gcc",
@@ -315,7 +296,7 @@ class MakeToolchain < Toolchain
     return @platform.name
   end
   
-  def description(target, buildTarget)
+  def description(target)
     return "make"
   end
   
@@ -328,11 +309,11 @@ class MakeToolchain < Toolchain
     value ? "#{name.to_s}=\"#{value}\" " : ""
   end
   
-  def build(target, buildTarget = nil)
+  def build(target)
     
     config = @platform.makeConfig(target)
     
-    buildDesc = @platform.description(target, buildTarget)
+    buildDesc = @platform.description(target)
     
     if !config
       puts "#{buildDesc} unsupported, skipping..."
@@ -344,10 +325,10 @@ class MakeToolchain < Toolchain
       makeTarget = ""
       ccExtra = ""
       
-      case buildTarget
-      when "Release"
+      case target.buildType
+      when :Release
         makeTarget = "amalg"
-      when "Debug"
+      when :Debug
         ccExtra += " -g"
       end
       
@@ -361,7 +342,7 @@ class MakeToolchain < Toolchain
       makeArgs += getMakeArg(config, :TARGET_FLAGS)
       makeArgs += getMakeArg(config, :TARGET_SYS)
       
-      prefix = target.buildName(self, buildTarget)
+      prefix = target.buildName(self)
       buildRoot = target.buildRoot
       
       
@@ -387,7 +368,7 @@ class BatchToolchain < Toolchain
     @platform.name
   end
   
-  def description(target, buildTarget)
+  def description(target)
     pretty_path @path
   end
   
@@ -399,8 +380,8 @@ class BatchToolchain < Toolchain
     nil
   end
   
-  def build(target, buildTarget = nil)
-    cmd = @path + " " + target.flags(self, buildTarget)
+  def build(target)
+    cmd = @path + " " + target.flags(self)
     
     Dir.chdir(File.dirname(@path)) do
       executeCommand cmd
@@ -421,30 +402,22 @@ class LuaJITToolchain < Toolchain
     @buildToolchain.name
   end
   
-  def description(target, buildTarget)
-    "LuaJIT (#{super} #{@buildToolchain.description(target, buildTarget)} build)"
+  def description(target)
+    "LuaJIT (#{super} #{@buildToolchain.description(target)} build)"
   end
   
   def arch(target)
     @buildToolchain.arch(target)
   end
   
-  def build(target, buildTarget = nil)
-    buildTarget ||= CFG[:BUILD_TARGET]
+  def build(target)
     
-    # Uncomment to build all build targets initially
-    #if buildTarget == nil
-    #  build(target, "Debug")
-    #  build(target, "Release")
-    #  return
-    #end
-    
-    path = target.buildPath(self, buildTarget)
+    path = target.buildPath(self)
     FileUtils.mkdir_p(path)
     
-    lib = target.libPath(self, buildTarget)
+    lib = target.libPath(self)
     
-    buildDesc = description(target, buildTarget)
+    buildDesc = description(target)
     
     if File.file? lib and not @rebuild
       puts "#{buildDesc} already built at #{pretty_path lib}, skipping..."
@@ -458,7 +431,7 @@ class LuaJITToolchain < Toolchain
     
     puts "#{buildDesc} required, building..."
     
-    @buildToolchain.build(target, buildTarget)
+    @buildToolchain.build(target)
     
     if !File.file? lib
       abort "#{buildDesc} output missing at #{pretty_path lib}, build failed!"
