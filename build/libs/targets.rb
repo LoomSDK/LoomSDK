@@ -68,7 +68,14 @@ class LuaJITTarget < Target
   end
 
   def flags(toolchain)
-    if toolchain.instance_of? BatchToolchain
+    
+    if toolchain.instance_of? MakeToolchain
+      
+      args = ""
+      args += " -DLUA_GC_PROFILE_ENABLED" if CFG[:ENABLE_LUA_GC_PROFILE] == 1
+      args
+      
+    elsif toolchain.instance_of? BatchToolchain
       
       args = ""
       platform = toolchain.platform
@@ -124,13 +131,10 @@ class LuaJITTarget < Target
         
       end
       
-      
       args
-    else
-      ""
+      
     end
   end
-
 end
 
 class LuaJITBootstrapTarget < LuaJITTarget

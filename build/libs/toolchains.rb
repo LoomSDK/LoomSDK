@@ -332,6 +332,8 @@ class MakeToolchain < Toolchain
         ccExtra += " -g"
       end
       
+      ccExtra += target.flags(self)
+      
       config[:CC] += ccExtra unless !config[:CC]
       config[:HOST_CC] += ccExtra unless !config[:HOST_CC]
       
