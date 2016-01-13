@@ -9,7 +9,34 @@
 #include "lua.h"
 
 #if defined(_MSC_VER)
-#include "msvc/stdint.h"
+/* MSVC is stuck in the last century and doesn't have C99's stdint.h. */
+typedef signed __int8 int8_t;
+typedef signed __int16 int16_t;
+typedef signed __int32 int32_t;
+typedef signed __int64 int64_t;
+typedef unsigned __int8 uint8_t;
+typedef unsigned __int16 uint16_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
+#ifdef _WIN64
+typedef __int64 intptr_t;
+typedef unsigned __int64 uintptr_t;
+#else
+typedef __int32 intptr_t;
+typedef unsigned __int32 uintptr_t;
+#endif
+#elif defined(__symbian__)
+/* Cough. */
+typedef signed char int8_t;
+typedef short int int16_t;
+typedef int int32_t;
+typedef long long int64_t;
+typedef unsigned char uint8_t;
+typedef unsigned short int uint16_t;
+typedef unsigned int uint32_t;
+typedef unsigned long long uint64_t;
+typedef int intptr_t;
+typedef unsigned int uintptr_t;
 #else
 #include <stdint.h>
 #endif
@@ -239,7 +266,8 @@ static LJ_AINLINE uint32_t lj_fls(uint32_t x)
   return _CountLeadingZeros(x) ^ 31;
 }
 #else
-#include <intrin.h>
+unsigned char _BitScanForward(unsigned long *, unsigned long);
+unsigned char _BitScanReverse(unsigned long *, unsigned long);
 #pragma intrinsic(_BitScanForward)
 #pragma intrinsic(_BitScanReverse)
 
@@ -305,7 +333,7 @@ static LJ_AINLINE uint32_t lj_getu32(const void *v)
 #define LJ_ASMF		LJ_NOAPI
 #define LJ_FUNCA	LJ_NOAPI
 #if defined(ljamalg_c)
-#define LJ_FUNC		static
+#define LJ_FUNC		LJ_NOAPI
 #else
 #define LJ_FUNC		LJ_NOAPI
 #endif

@@ -90,6 +90,10 @@ else()
     add_executable(${PROJECT_NAME} ${APPLICATION_HDR} ${APPLICATION_SRC})
 endif(ANDROID)
 
+if (LOOM_BUILD_JIT EQUAL 1)
+    target_link_libraries(${PROJECT_NAME} luajit)
+endif()
+
 if (APPLE)
 
     if (LOOM_BUILD_JIT EQUAL 1)        
@@ -97,7 +101,7 @@ if (APPLE)
               set (LOOM_IOS_LIB_GCC "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/llvm-gcc-4.2/lib/gcc/arm-apple-darwin10/4.2.1/v7/libgcc.a")
           endif()
     endif()
-
+    
     if (LOOM_BUILD_IOS EQUAL 1)
 
         # Allow Admob and/or Facebook to be included for iOS?
@@ -176,6 +180,7 @@ if (APPLE)
         SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.plist")
 
     else()
+        
         target_link_libraries(${PROJECT_NAME} 
            LoomVendor
            LoomCommon
@@ -235,10 +240,6 @@ if (APPLE)
 
     endif()
     
-    if (LOOM_BUILD_JIT EQUAL 1)
-        target_link_libraries(${PROJECT_NAME} luajit)
-    endif()
-    
 elseif(MSVC)	
 
     target_link_libraries(${PROJECT_NAME} 
@@ -250,11 +251,7 @@ elseif(MSVC)
        "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "WSOCK32" "Ws2_32" 
        "SDL2-static" "SDL2main"
     )
-
-    if (LOOM_BUILD_JIT EQUAL 1)
-        target_link_libraries(${PROJECT_NAME} luajit)
-    endif()
-
+    
     if (LOOM_TELEMETRY)
         target_link_libraries(${PROJECT_NAME} "telemetry32.link" "telemetry64.link")
     endif()
@@ -268,7 +265,7 @@ elseif(MSVC)
     
     
 elseif(ANDROID)
-
+    
     target_link_libraries(${PROJECT_NAME}
        LoomVendor
        LoomCommon
@@ -278,27 +275,6 @@ elseif(ANDROID)
        "${LOOM_SDL2_LIB}"
     )
     
-    set(ANDROID_SO $<TARGET_FILE:${PROJECT_NAME}>)
-     
-    add_custom_command(TARGET ${PROJECT_NAME}
-        POST_BUILD
-        set(ANDROID_SO_COPY_SRC "${ANDROID_SO}")
-        set(ANDROID_SO_COPY_DST "${CMAKE_SOURCE_DIR}/application/android/libs/armeabi-v7a")
-        string(REPLACE "/" "\\" ANDROID_SO_COPY_SRC_WIN32 ${ANDROID_SO_COPY_SRC})
-        string(REPLACE "/" "\\" ANDROID_SO_COPY_DST_WIN32 ${ANDROID_SO_COPY_DST})
-        if(WIN32)
-          COMMAND mkdir ${ANDROID_SO_COPY_DST_WIN32}
-          COMMAND xcopy /I /Y ${ANDROID_SO_COPY_SRC_WIN32} ${ANDROID_SO_COPY_DST_WIN32}
-        else()
-          COMMAND mkdir -p ${ANDROID_SO_COPY_DST}
-          COMMAND cp ${ANDROID_SO_COPY_SRC} ${ANDROID_SO_COPY_DST_WIN32}
-      endif()
-      )
-
-    if (LOOM_BUILD_JIT EQUAL 1)
-      target_link_libraries(${PROJECT_NAME} luajit)
-    endif()
-
 elseif(LINUX)
 
     target_link_libraries(${PROJECT_NAME}
@@ -321,9 +297,5 @@ elseif(LINUX)
         COMMAND mkdir -p ${ARTIFACTS_DIR}/
         COMMAND cp ${DEMOBIN} ${ARTIFACTS_DIR}/bin/LoomDemo
     )
-
-    if (LOOM_BUILD_JIT EQUAL 1)
-      target_link_libraries(${PROJECT_NAME} luajit)
-    endif()
 
 endif()

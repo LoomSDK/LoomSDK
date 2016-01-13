@@ -7,16 +7,28 @@ class Toolchain
   def name
     raise NotImplementedError
   end
+  
+  def description(target)
+    return "#{target.buildType.to_s} #{name} #{arch(target)} #{target.is64Bit ? "64-bit" : "32-bit"}"
+  end
 
   def cmakeArgs
     raise NotImplementedError
   end
 
   def arch(target)
+    target.arch.to_s
+  end
+  
+  def makeConfig(target)
     raise NotImplementedError
   end
 
-  def exec(cmd)
+  def executeCommand(cmd)
+    # Uncomment to print commands before they are executed
+    #puts "#{Dir.pwd}> #{cmd}";
+    # Uncomment to make commands not actually execute - dry run
+    #return;
     success = Kernel::system cmd
     if !success
       puts "Using working directory: #{Dir.pwd}"
@@ -30,8 +42,8 @@ class Toolchain
     FileUtils.mkdir_p(path)
     Dir.chdir(path) do
       puts "cmake #{target.sourcePath} #{cmakeArgs(target)} #{target.flags(self)}"
-      exec("cmake #{target.sourcePath} #{cmakeArgs(target)} #{target.flags(self)}")
-      exec(buildCommand)
+      executeCommand("cmake #{target.sourcePath} #{cmakeArgs(target)} #{target.flags(self)}")
+      executeCommand(buildCommand)
     end
   end
 
@@ -46,20 +58,18 @@ class WindowsToolchain < Toolchain
   def name
     return "windows"
   end
-
-  def cmakeArgs(target)
-    if target.is64Bit == 1
-      return "-G \"#{get_vs_name} Win64\""
-    else
-      return "-G \"#{get_vs_name}\""
-    end
+  
+  def makeConfig(target)
+    return nil
   end
-
-  def arch(target)
-    if target.is64Bit == 1
-      return "x64"
+  
+  def cmakeArgs(target)
+    vs_install = get_vs_install
+    abort("Missing or unsupported Visual Studio version") unless vs_install
+    if target.is64Bit
+      return "-G \"#{vs_install[:name]} Win64\""
     else
-      return "x86"
+      return "-G \"#{vs_install[:name]}\""
     end
   end
   
@@ -67,54 +77,57 @@ class WindowsToolchain < Toolchain
     access = Win32::Registry::KEY_READ
     begin
       Win32::Registry::HKEY_LOCAL_MACHINE::open(keyname, access) do |reg|
-        reg.each{ |name, value| if name == valuename then return value end }
+        reg.each{ |name, value| if name == valuename then return reg[name] end }
       end
     rescue
       return nil
     end
     return nil
   end
-
-  def get_vs_name()
-    if get_reg_value('SOFTWARE\Microsoft\VisualStudio\12.0', 'ShellFolder') != nil then
-      return 'Visual Studio 12'
+  
+  
+  def get_vs_install()
+  
+    # Possible registry entries for Visual Studio
+    regs = [
+      { name: 'Visual Studio 12', path: 'SOFTWARE\Microsoft\VisualStudio\12.0' },
+      { name: 'Visual Studio 12', path: 'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\12.0' },
+      { name: 'Visual Studio 11', path: 'SOFTWARE\Microsoft\VisualStudio\11.0' },
+      { name: 'Visual Studio 11', path: 'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\11.0' },
+      { name: 'Visual Studio 10', path: 'SOFTWARE\Microsoft\VisualStudio\10.0' },
+    ]
+    
+    # Default directory fallbacks
+    dirs = [
+      { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 12.0\\VC") },
+      { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 12.0\\VC") },
+      { name: 'Visual Studio 11', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 11.0\\VC") },
+      { name: 'Visual Studio 11', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 11.0\\VC") },
+      { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 10.0\\VC") },
+      { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 10.0\\VC") },
+    ]
+    
+    # Check registry
+    for reg in regs
+      install = get_reg_value(reg[:path], 'ShellFolder')
+      if install
+        return { name: reg[:name], install: install }
+      end
     end
-    if get_reg_value('SOFTWARE\Wow6432Node\Microsoft\VisualStudio\12.0', 'ShellFolder') != nil then
-      return 'Visual Studio 12'
+    
+    # Check dirs
+    for dir in dirs
+      if Dir.exists?(dir[:path])
+        return { name: dir[:name], install: dir[:path] }
+      end
     end
-    if get_reg_value('SOFTWARE\Microsoft\VisualStudio\11.0', 'ShellFolder') != nil then
-      return 'Visual Studio 11'
-    end
-    if get_reg_value('SOFTWARE\Wow6432Node\Microsoft\VisualStudio\11.0', 'ShellFolder') != nil then
-      return 'Visual Studio 11'
-    end
-    if get_reg_value('SOFTWARE\Microsoft\VisualStudio\10.0', 'ShellFolder') != nil then
-      return 'Visual Studio 10'
-    end
-    if get_reg_value('SOFTWARE\Wow6432Node\Microsoft\VisualStudio\10.0', 'ShellFolder') != nil then
-       return 'Visual Studio 10'
-    end
-    if Dir.exists?(File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 12.0\\VC")) then
-      return 'Visual Studio 12'
-    end
-    if Dir.exists?(File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 12.0\\VC")) then
-      return 'Visual Studio 12'
-    end
-    if Dir.exists?(File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 11.0\\VC")) then
-      return 'Visual Studio 11'
-    end
-    if Dir.exists?(File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 11.0\\VC")) then
-      return 'Visual Studio 11'
-    end
-    if Dir.exists?(File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 10.0\\VC")) then
-      return 'Visual Studio 10'
-    end
-    if Dir.exists?(File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 10.0\\VC")) then
-      return 'Visual Studio 10'
-    end
+    
+    # None found
+    return nil
+    
   end
-
 end
+
 
 class OSXToolchain < Toolchain
 
@@ -122,20 +135,18 @@ class OSXToolchain < Toolchain
     return "osx"
   end
 
+  def makeConfig(target)
+    return {
+      CC: "gcc" + (target.is64Bit ? "" : " -m32")
+    }
+  end
+  
   def buildCommand
     return "xcodebuild -configuration #{CFG[:BUILD_TARGET]}"
   end
 
   def cmakeArgs(target)
     return "-G \"Xcode\""
-  end
-
-  def arch(target)
-    if target.is64Bit == 1
-      return "x64"
-    else
-      return "x86"
-    end
   end
 
 end
@@ -151,6 +162,22 @@ class IOSToolchain < Toolchain
     return "ios"
   end
 
+  def makeConfig(target)
+    clangTools = File.dirname(`xcrun -find clang`.chomp)
+    sdkPath = `xcrun --sdk iphoneos --show-sdk-path`.chomp
+    
+    arch = target.arch.to_s
+    flags = "-arch #{arch} -isysroot #{sdkPath}"
+    
+    return {
+      HOST_CC: "xcrun clang" + ($ARCHS[target.arch][:is64Bit] ? "" : " -m32"),
+      CC: "clang",
+      CROSS: clangTools + "/",
+      TARGET_FLAGS: flags,
+      TARGET_SYS: "iOS"
+    }
+  end
+  
   def buildCommand
     return "xcodebuild -configuration #{CFG[:BUILD_TARGET]} CODE_SIGN_IDENTITY=\"#{@signAs}\" CODE_SIGN_RESOURCE_RULES_PATH=#{@sdkroot}/ResourceRules.plist"
   end
@@ -158,15 +185,52 @@ class IOSToolchain < Toolchain
   def cmakeArgs(target)
     return "-G \"Xcode\" -DLOOM_BUILD_IOS=1 -DLOOM_IOS_VERSION=#{CFG[:TARGET_IOS_SDK]}"
   end
-
-  def arch(target)
-   return "arm"
+  
+  # Combine several targets into one (e.g. lipo armv7, armv7s, arm64 into one arm)
+  #   toolchain - the toolchain the targets were compiled under
+  #   targets - an array of Targets to combine
+  #   combined - the combined Target to produce a lib for
+  def combine(toolchain, targets, combined)
+    
+    abort "Unable to combine architectures, no targets provided" unless targets.length > 0
+    
+    lib_arm = combined.libPath(self)
+    
+    if File.file?(lib_arm) and !toolchain.rebuild
+      puts "Libraries already combined to #{pretty_path lib_arm}, skipping..."
+      return
+    end
+    
+    puts "Combining libraries for #{toolchain.name}"
+    
+    libs = []
+    libs_avail = []
+    
+    for target in targets
+      lib = target.libPath(toolchain)
+      exists = File.file?(lib)
+      puts "  #{toolchain.description(target)}: #{pretty_path lib}" + (exists ? "" : " (missing)")
+      libs.push lib
+      libs_avail.push lib unless !exists
+    end
+    
+    abort "Unable to combine architectures, none exist: #{libs}" unless libs_avail.length > 0
+    
+    FileUtils.mkdir_p File.dirname(lib_arm)
+    
+    if libs_avail.length == 1
+      single = libs_avail[0]
+      puts "Only one architecture available, copying from\n  #{pretty_path single} to\n  #{pretty_path lib_arm}"
+      FileUtils.cp single, lib_arm
+    else
+      executeCommand("lipo -create \"#{libs_avail.join("\" \"")}\" -output \"#{lib_arm}\"")
+      puts "Combined to #{pretty_path lib_arm}"
+    end
+    
   end
-
 end
 
 class LinuxToolchain
-
 end
 
 class AndroidToolchain < Toolchain
@@ -177,6 +241,27 @@ class AndroidToolchain < Toolchain
 
   def name
     return "android"
+  end
+  
+  def makeConfig(target)
+    
+    return nil unless !target.is64Bit
+    
+    # Android/ARM, armeabi-v7a (ARMv7 VFP), Android 4.0+ (ICS)
+    ndk = File.expand_path(ENV["ANDROID_NDK"])
+    ndkABI = 14
+    ndkVersion = "#{ndk}/toolchains/arm-linux-androideabi-4.6"
+    ndkPath = "#{ndkVersion}/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-"
+    ndkFlags = "--sysroot #{ndk}/platforms/android-#{ndkABI}/arch-arm"
+    ndkArch = "-march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"
+    
+    return {
+      CC: "gcc",
+      HOST_CC: "gcc -m32",
+      CROSS: ndkPath,
+      TARGET_FLAGS: "#{ndkFlags} #{ndkArch}",
+      TARGET_SYS: "Linux"
+    }
   end
 
   def cmakeArgs(target)
@@ -190,10 +275,6 @@ class AndroidToolchain < Toolchain
 
     return "-G \"#{generator}\" -DCMAKE_TOOLCHAIN_FILE=#{$ROOT}/build/cmake/loom.android.toolchain.cmake -DANDROID_NDK_HOST_X64=#{$HOST.is_x64} -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=14 #{make_arg}"
   end
-
-  def arch(target)
-    return "arm"
-  end
   
   def self.apkName()
     #Determine the APK name.
@@ -204,5 +285,162 @@ class AndroidToolchain < Toolchain
     else
       abort("Don't know how to generate the APK name for Android build target type #{CFG[:TARGET_ANDROID_BUILD_TYPE]}! Please update this if block.")
     end
+  end
+end
+
+
+class MakeToolchain < Toolchain
+  
+  def initialize(platform)
+    @platform = platform
+  end
+  
+  def name
+    return @platform.name
+  end
+  
+  def description(target)
+    return "make"
+  end
+  
+  def arch(target)
+    @platform.arch(target)
+  end
+  
+  def getMakeArg(config, name)
+    value = config[name]
+    value ? "#{name.to_s}=\"#{value}\" " : ""
+  end
+  
+  def build(target)
+    
+    config = @platform.makeConfig(target)
+    
+    buildDesc = @platform.description(target)
+    
+    if !config
+      puts "#{buildDesc} unsupported, skipping..."
+      return
+    end
+    
+    Dir.chdir(target.sourcePath) do
+      
+      makeTarget = ""
+      ccExtra = ""
+      
+      case target.buildType
+      when :Release
+        makeTarget = "amalg"
+      when :Debug
+        ccExtra += " -g"
+      end
+      
+      ccExtra += target.flags(self)
+      
+      config[:CC] += ccExtra unless !config[:CC]
+      config[:HOST_CC] += ccExtra unless !config[:HOST_CC]
+      
+      makeArgs = ""
+      makeArgs += getMakeArg(config, :HOST_CC)
+      makeArgs += getMakeArg(config, :CC)
+      makeArgs += getMakeArg(config, :CROSS)
+      makeArgs += getMakeArg(config, :TARGET_FLAGS)
+      makeArgs += getMakeArg(config, :TARGET_SYS)
+      
+      prefix = target.buildName(self)
+      buildRoot = target.buildRoot
+      
+      
+      
+      executeCommand "make clean"
+      executeCommand "make -j #{makeTarget} BUILDMODE=static #{makeArgs} PREFIX=\"#{prefix}\""
+      executeCommand "make install PREFIX=\"#{prefix}\" DESTDIR=\"#{buildRoot}/\""
+    end
+  end
+end
+
+
+class BatchToolchain < Toolchain
+  
+  attr_reader :platform
+  
+  def initialize(platform, path)
+    @platform = platform
+    @path = path
+  end
+  
+  def name
+    @platform.name
+  end
+  
+  def description(target)
+    pretty_path @path
+  end
+  
+  def arch(target)
+    @platform.arch(target)
+  end
+  
+  def getMakeArg(config, name)
+    nil
+  end
+  
+  def build(target)
+    cmd = @path + " " + target.flags(self)
+    
+    Dir.chdir(File.dirname(@path)) do
+      executeCommand cmd
+    end
+  end
+end
+  
+class LuaJITToolchain < Toolchain
+  
+  attr_reader :rebuild
+  
+  def initialize(buildToolchain, rebuild)
+    @buildToolchain = buildToolchain
+    @rebuild = rebuild
+  end
+  
+  def name
+    @buildToolchain.name
+  end
+  
+  def description(target)
+    "LuaJIT (#{super} #{@buildToolchain.description(target)} build)"
+  end
+  
+  def arch(target)
+    @buildToolchain.arch(target)
+  end
+  
+  def build(target)
+    
+    path = target.buildPath(self)
+    FileUtils.mkdir_p(path)
+    
+    lib = target.libPath(self)
+    
+    buildDesc = description(target)
+    
+    if File.file? lib and not @rebuild
+      puts "#{buildDesc} already built at #{pretty_path lib}, skipping..."
+      return
+    end  
+    
+    if target.is64Bit && $HOST.is_x64 != '1'
+      puts "#{buildDesc} unavailable, skipping..."
+      return
+    end
+    
+    puts "#{buildDesc} required, building..."
+    
+    @buildToolchain.build(target)
+    
+    if !File.file? lib
+      abort "#{buildDesc} output missing at #{pretty_path lib}, build failed!"
+    end
+    
   end
 end

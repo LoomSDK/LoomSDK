@@ -1,12 +1,15 @@
 
 class Target
 
+  attr_reader :arch
+  attr_reader :buildType
+  
   def name
     raise NotImplementedError
   end
-
+  
   def is64Bit
-    raise NotImplementedError
+    $ARCHS[arch][:is64Bit]
   end
 
   def sourcePath
@@ -15,81 +18,134 @@ class Target
 
   def flags(toolchain)
   end
+  
+  def buildName(toolchain)
+    return "#{name}-#{toolchain.name}-#{toolchain.arch(self)}"
+  end
+  
+  def buildRoot
+    return "#{$ROOT}/build"
+  end
 
   def buildPath(toolchain)
-    return "#{$ROOT}/build/#{name}-#{toolchain.name}-#{toolchain.arch(self)}"
+    return "#{buildRoot}/#{buildName(toolchain)}"
   end
 
 end
 
 class LuaJITTarget < Target
 
-  def initialize(is64Bit)
-    @is64Bit = is64Bit
+  def initialize(arch, buildType)
+    @arch = arch
+    @buildType = buildType
   end
 
   def name
     return "luajit"
   end
 
-  def is64Bit
-    return @is64Bit
-  end
-
   def sourcePath
     return "#{$ROOT}/loom/vendor/luajit"
   end
-
-  def flags(toolchain)
-    if toolchain.instance_of? WindowsToolchain
-      os = "LUAJIT_OS_WINDOWS"
-    elsif toolchain.instance_of? AndroidToolchain or toolchain.instance_of? LinuxToolchain
-      os = "LUAJIT_OS_LINUX"
+  
+  def buildName(toolchain)
+    return "#{super(toolchain)}/#{buildType}"
+  end
+  
+  def libPath(toolchain)
+    libName = case toolchain.name
+    when "windows"
+      "lua51.lib"
     else
-      os = "LUAJIT_OS_OSX"
+      "libluajit-5.1.a"
     end
-    return "-DLUAJIT_X64=#{@is64Bit} -DLUA_TARGET_ARCH=#{toolchain.arch(self)} -DLUAJIT_OS=#{os} -DLUA_GC_PROFILE_ENABLED=#{CFG[:ENABLE_LUA_GC_PROFILE]}"
+    
+    return "#{buildPath(toolchain)}/lib/#{libName}"
   end
-
-end
-
-class LuaJITBootstrapTarget < LuaJITTarget
-
-  def initialize(is64Bit, targetToolchain)
-    super is64Bit
-    @targetToolchain = targetToolchain
-  end
-
-  def name
-    return "luajit-bootstrap"
+  
+  def includePath(toolchain)
+    return "#{sourcePath}/src"
   end
 
   def flags(toolchain)
-    return "#{super(@targetToolchain)} -DBOOTSTRAP_ONLY=1 -DCMAKE_OSX_ARCHITECTURES=i386"
+    
+    if toolchain.instance_of? MakeToolchain
+      
+      args = ""
+      args += " -DLUA_GC_PROFILE_ENABLED" if CFG[:ENABLE_LUA_GC_PROFILE] == 1
+      args
+      
+    elsif toolchain.instance_of? BatchToolchain
+      
+      args = ""
+      platform = toolchain.platform
+      
+      if platform.instance_of? WindowsToolchain
+
+        vs_install = toolchain.platform.get_vs_install
+        
+        # %1 - path to vcvarsall.bat
+        args += "\"#{vs_install[:install]}VC\\vcvarsall.bat\""
+
+        # %2 - vcvarsall architecture
+        args += " " + case arch
+        when :x86
+          "x86"
+        when :x86_64
+          "amd64"
+        else
+          abort("Unsupported architecture: #{arch}")
+        end
+
+        # %3 - msvcbuild extra arguments
+        args += " " + case @buildType
+        when :Debug
+          "debug"
+        else
+          '""'
+        end
+      
+        # %4 - directory of output lib
+        args += " \"" + File.dirname(libPath(toolchain.platform)) + "\""
+        
+        # %5..9 - additional compiler arguments 
+        args += " /DLUA_GC_PROFILE_ENABLED" if CFG[:ENABLE_LUA_GC_PROFILE] == 1
+        
+      elsif platform.instance_of? AndroidToolchain
+        
+        # Supported prebuilt build types
+        supported_types = [
+          "Release",
+          "Debug",
+        ]
+        
+        # Use Release if unsupported
+        type = :Release unless supported_types.include? @buildType
+        
+        prebuilt = Pathname.new "#{$ROOT}/loom/vendor/luajit-prebuilt"
+        libout_root = Pathname.new buildRoot
+        libout = Pathname.new libPath(toolchain)
+
+        relpath = libout.relative_path_from libout_root
+        
+        # %1 - source precompiled library path
+        args += "\"" + (prebuilt + relpath).to_s.gsub('/', '\\') + "\""
+        
+        # %2 - target output lib dir
+        args += " \"" + (libout.dirname).to_s.gsub('/', '\\') + "\""
+        
+      end
+      
+      args
+      
+    end
   end
-
-  def buildPath(toolchain)
-    return super @targetToolchain
-  end
-
-end
-
-class LuaJITLibTarget < LuaJITTarget
-
-  def initialize(is64Bit, bootstrap)
-    super is64Bit
-    @bootstrap = bootstrap
-  end
-
-  def flags(toolchain)
-    return "#{super} -DTARGET_ONLY=1 -DBOOTSTRAP_PATH=\"#{@bootstrap.buildPath(toolchain)}\""
-  end
-
 end
 
 class LoomTarget < Target
-  def initialize(is64Bit, luajit)
-    @is64Bit = is64Bit
+  def initialize(arch, buildType, luajit)
+    @arch = arch
+    @buildType = buildType
     @luajit = luajit
   end
 
@@ -97,17 +153,24 @@ class LoomTarget < Target
     return "loom"
   end
 
-  def is64Bit
-    return @is64Bit
-  end
-
   def sourcePath
     return "#{$ROOT}"
   end
-
+  
   def flags(toolchain)
-    is_debug = CFG[:BUILD_TARGET] == "Debug" ? "1" : "0"
-    return "-DLOOM_BUILD_JIT=#{CFG[:USE_LUA_JIT]} -DLOOM_BUILD_64BIT=#{@is64Bit} -DLUA_GC_PROFILE_ENABLED=#{CFG[:ENABLE_LUA_GC_PROFILE]} -DLOOM_BUILD_NUMCORES=#{$HOST.num_cores} -DLOOM_IS_DEBUG=#{is_debug} -DLOOM_BUILD_ADMOB=#{CFG[:BUILD_ADMOB]} -DLOOM_BUILD_FACEBOOK=#{CFG[:BUILD_FACEBOOK]} -DLUAJIT_BUILD_DIR=\"#{@luajit.buildPath(toolchain)}\""
+    is_debug = @buildType == :Debug ? "1" : "0"
+    
+    flagstr =
+      "-DLOOM_BUILD_JIT=#{CFG[:USE_LUA_JIT]} "\
+      "-DLOOM_BUILD_64BIT=#{is64Bit ? 1 : 0} "\
+      "-DLUA_GC_PROFILE_ENABLED=#{CFG[:ENABLE_LUA_GC_PROFILE]} "\
+      "-DLOOM_BUILD_NUMCORES=#{$HOST.num_cores} "\
+      "-DLOOM_IS_DEBUG=#{is_debug} "\
+      "-DLOOM_BUILD_ADMOB=#{CFG[:BUILD_ADMOB]} "\
+      "-DLOOM_BUILD_FACEBOOK=#{CFG[:BUILD_FACEBOOK]} "\
+      "-DLUAJIT_LIB=\"#{@luajit.libPath(toolchain)}\" "\
+      "-DLUAJIT_INCLUDE_DIR=\"#{@luajit.includePath(toolchain)}\""
+    return flagstr
   end
 
 end
