@@ -74,16 +74,12 @@ endif()
 
 if (LOOM_BUILD_JIT EQUAL 1)
 
-    message(STATUS LUAJIT LIBRARY PATHS HERE!)
-    message(STATUS ${LUAJIT_INCLUDE_DIR})
-    message(STATUS ${LUAJIT_LIB})
-    message(STATUS ${LUAJIT_LIB_DEBUG})
-    message(STATUS ${LUAJIT_LIB_RELEASE})
-    message(STATUS ${LUAJIT_LIB_RELMINSIZE})
-    message(STATUS ${LUAJIT_LIB_RELWITHDEBINFO})
-
     if (NOT DEFINED LUAJIT_INCLUDE_DIR)
         message(FATAL_ERROR "Defining LUAJIT_INCLUDE_DIR as the LuaJIT include path required")
+    endif()
+
+    if (NOT DEFINED LUAJIT_LIB)
+        message(FATAL_ERROR "Defining LUAJIT_LIB as the LuaJIT library location required")
     endif()
 
     add_definitions(-DLOOM_ENABLE_JIT)
@@ -92,11 +88,13 @@ if (LOOM_BUILD_JIT EQUAL 1)
 
     add_library(luajit STATIC IMPORTED)
     set_target_properties(luajit PROPERTIES IMPORTED_LOCATION ${LUAJIT_LIB} )
+    
+    # We could set individual build type paths with these, but the unified dynamic
+    # one above seems to work better and is sufficient for our current needs
     #set_target_properties(luajit PROPERTIES IMPORTED_LOCATION_DEBUG ${LUAJIT_LIB_DEBUG} )
     #set_target_properties(luajit PROPERTIES IMPORTED_LOCATION_RELEASE ${LUAJIT_LIB_RELEASE} )
     #set_target_properties(luajit PROPERTIES IMPORTED_LOCATION_RELMINSIZE ${LUAJIT_LIB_RELMINSIZE} )
     #set_target_properties(luajit PROPERTIES IMPORTED_LOCATION_RELWITHDEBINFO ${LUAJIT_LIB_RELWITHDEBINFO} )
-
 
 else()
 

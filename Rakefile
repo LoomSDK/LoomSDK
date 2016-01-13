@@ -95,6 +95,7 @@ else
   $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomDemo"
 end
 
+# Per-architecture properties
 $ARCHS = {
   x86:    { is64Bit: false },
   x86_64: { is64Bit: true },
@@ -104,6 +105,11 @@ $ARCHS = {
   arm:    { is64Bit: nil }
 }
 
+# Controls whether to rebuild LuaJIT with libraries present
+# This is set to `true` while building LuaJIT implicitly (e.g. via deploy:sdk)
+# LuaJIT is built only if the necessary libraries are missing,
+# if set to false here, it is also rebuilt if you explicitly run `rake build:luajit`,
+# if set to true, it is not rebuilt even then.
 $LUAJIT_NO_REBUILD = false
 
 ###############################
@@ -362,9 +368,10 @@ namespace :build do
   def ensureLuaJIT(platform)
     return unless CFG[:USE_LUA_JIT] == 1
     
+    noRebuild = $LUAJIT_NO_REBUILD
     $LUAJIT_NO_REBUILD = true
     Rake::Task["build:luajit:" + platform].invoke
-    $LUAJIT_NO_REBUILD = false
+    $LUAJIT_NO_REBUILD = noRebuild
   end
   
   desc "Build LuaJIT libraries for all supported platforms"
@@ -587,7 +594,7 @@ namespace :build do
   end
 
   desc "Builds Android APK"
-  task :android do
+  task :android => ['utility:compileScripts'] do
     puts "== Building Android =="
 
     # Build SDL for Android if it's missing

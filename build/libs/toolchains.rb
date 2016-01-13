@@ -25,7 +25,9 @@ class Toolchain
   end
 
   def executeCommand(cmd)
-    puts "#{Dir.pwd}> #{cmd}";
+    # Uncomment to print commands before they are executed
+    #puts "#{Dir.pwd}> #{cmd}";
+    # Uncomment to make commands not actually execute - dry run
     #return;
     success = Kernel::system cmd
     if !success
@@ -82,17 +84,11 @@ class WindowsToolchain < Toolchain
     end
     return nil
   end
-
-  #def get_vs_tools()
-  #  vsname = get_vs_install
-  #  abort("Missing or unsupported Visual Studio version: #{vsname}") unless vsname and vsname.start_with? "Visual Studio"
-  #  vsver = vsname.split.last.sub(".", "")
-  #  vsver += "0" unless vsver.length >= 3
-  #  envvar = "VS#{vsver}COMNTOOLS"
-  #  ENV[envvar]
-  #end
+  
   
   def get_vs_install()
+  
+    # Possible registry entries for Visual Studio
     regs = [
       { name: 'Visual Studio 12', path: 'SOFTWARE\Microsoft\VisualStudio\12.0' },
       { name: 'Visual Studio 12', path: 'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\12.0' },
@@ -100,6 +96,8 @@ class WindowsToolchain < Toolchain
       { name: 'Visual Studio 11', path: 'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\11.0' },
       { name: 'Visual Studio 10', path: 'SOFTWARE\Microsoft\VisualStudio\10.0' },
     ]
+    
+    # Default directory fallbacks
     dirs = [
       { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 12.0\\VC") },
       { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 12.0\\VC") },
@@ -109,6 +107,7 @@ class WindowsToolchain < Toolchain
       { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 10.0\\VC") },
     ]
     
+    # Check registry
     for reg in regs
       install = get_reg_value(reg[:path], 'ShellFolder')
       if install
@@ -116,17 +115,19 @@ class WindowsToolchain < Toolchain
       end
     end
     
+    # Check dirs
     for dir in dirs
       if Dir.exists?(dir[:path])
         return { name: dir[:name], install: dir[:path] }
       end
     end
     
+    # None found
     return nil
     
   end
-
 end
+
 
 class OSXToolchain < Toolchain
 
@@ -185,6 +186,10 @@ class IOSToolchain < Toolchain
     return "-G \"Xcode\" -DLOOM_BUILD_IOS=1 -DLOOM_IOS_VERSION=#{CFG[:TARGET_IOS_SDK]}"
   end
   
+  # Combine several targets into one (e.g. lipo armv7, armv7s, arm64 into one arm)
+  #   toolchain - the toolchain the targets were compiled under
+  #   targets - an array of Targets to combine
+  #   combined - the combined Target to produce a lib for
   def combine(toolchain, targets, combined)
     
     abort "Unable to combine architectures, no targets provided" unless targets.length > 0
@@ -223,11 +228,9 @@ class IOSToolchain < Toolchain
     end
     
   end
-
 end
 
 class LinuxToolchain
-
 end
 
 class AndroidToolchain < Toolchain

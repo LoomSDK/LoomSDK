@@ -113,12 +113,14 @@ class LuaJITTarget < Target
         
       elsif platform.instance_of? AndroidToolchain
         
-        supported_targets = [
+        # Supported prebuilt build types
+        supported_types = [
           "Release",
           "Debug",
         ]
         
-        type = :Release unless supported_targets.include? @buildType
+        # Use Release if unsupported
+        type = :Release unless supported_types.include? @buildType
         
         prebuilt = Pathname.new "#{$ROOT}/loom/vendor/luajit-prebuilt"
         libout_root = Pathname.new buildRoot
@@ -126,7 +128,10 @@ class LuaJITTarget < Target
 
         relpath = libout.relative_path_from libout_root
         
+        # %1 - source precompiled library path
         args += "\"" + (prebuilt + relpath).to_s.gsub('/', '\\') + "\""
+        
+        # %2 - target output lib dir
         args += " \"" + (libout.dirname).to_s.gsub('/', '\\') + "\""
         
       end
@@ -135,40 +140,6 @@ class LuaJITTarget < Target
       
     end
   end
-end
-
-class LuaJITBootstrapTarget < LuaJITTarget
-
-  def initialize(is64Bit, targetToolchain)
-    super is64Bit
-    @targetToolchain = targetToolchain
-  end
-
-  def name
-    return "luajit-bootstrap"
-  end
-
-  def flags(toolchain)
-    return "#{super(@targetToolchain)} -DBOOTSTRAP_ONLY=1 -DCMAKE_OSX_ARCHITECTURES=i386"
-  end
-
-  def buildPath(toolchain)
-    return super @targetToolchain
-  end
-
-end
-
-class LuaJITLibTarget < LuaJITTarget
-
-  def initialize(is64Bit, bootstrap)
-    super is64Bit
-    @bootstrap = bootstrap
-  end
-
-  def flags(toolchain)
-    return "#{super} -DTARGET_ONLY=1 -DBOOTSTRAP_PATH=\"#{@bootstrap.buildPath(toolchain)}\""
-  end
-
 end
 
 class LoomTarget < Target
@@ -189,11 +160,6 @@ class LoomTarget < Target
   def flags(toolchain)
     is_debug = @buildType == :Debug ? "1" : "0"
     
-      #"-DLUAJIT_LIB_DEBUG=\"#{@luajit.libPath(toolchain, "Debug").shellescape}\" "\
-      #"-DLUAJIT_LIB_RELEASE=\"#{@luajit.libPath(toolchain, "Release").shellescape}\" "\
-      #"-DLUAJIT_LIB_RELMINSIZE=\"#{@luajit.libPath(toolchain, "Release").shellescape}\" "\
-      #"-DLUAJIT_LIB_RELWITHDEBINFO=\"#{@luajit.libPath(toolchain, "Release").shellescape}\" "\
-      
     flagstr =
       "-DLOOM_BUILD_JIT=#{CFG[:USE_LUA_JIT]} "\
       "-DLOOM_BUILD_64BIT=#{is64Bit ? 1 : 0} "\
@@ -202,8 +168,8 @@ class LoomTarget < Target
       "-DLOOM_IS_DEBUG=#{is_debug} "\
       "-DLOOM_BUILD_ADMOB=#{CFG[:BUILD_ADMOB]} "\
       "-DLOOM_BUILD_FACEBOOK=#{CFG[:BUILD_FACEBOOK]} "\
-      "-DLUAJIT_LIB=\"#{@luajit.libPath(toolchain).shellescape}\" "\
-      "-DLUAJIT_INCLUDE_DIR=\"#{@luajit.includePath(toolchain).shellescape}\""
+      "-DLUAJIT_LIB=\"#{@luajit.libPath(toolchain)}\" "\
+      "-DLUAJIT_INCLUDE_DIR=\"#{@luajit.includePath(toolchain)}\""
     return flagstr
   end
 

@@ -27,6 +27,7 @@ def installed?(tool)
   return ($? == 0)
 end
 
+# return path relative to sdk
 def pretty_path(path)
   pathn = Pathname.new path
   sdk = Pathname.new $ROOT
