@@ -216,6 +216,9 @@ void loom_debugAllocator_verifyAll(const char* file, int line);
 * lmNew(someAllocator) Foo(), and delete myFoo becomes
 * lmDelete(someAllocator, myfoo). We do not support the delete[] or new[]
 * operators, if you want an array use the templated vector class.
+* 
+* `obj` can change addresses after `loom_destructInPlace`, so we use
+* its return value, which is the original address, for freeing the memory.
 *
 ************************************************************************/
 #define lmNew(allocator)                new(allocator, __FILE__, __LINE__, (LS::FunctionDisambiguator*) NULL)
