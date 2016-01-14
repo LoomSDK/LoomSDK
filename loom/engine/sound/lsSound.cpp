@@ -227,7 +227,7 @@ public:
     Sound *next;
     int needsRestart;
     int playCount;
-    char *path;
+    utString path;
 
     static void reset()
     {
@@ -235,7 +235,8 @@ public:
         while (Sound::smList)
         {
             lmLog(gLoomSoundLogGroup, "Deleting sound...");
-            delete Sound::smList;
+            // Destructor removes the sound from the list
+            lmDelete(NULL, Sound::smList);
         }
     }
 
@@ -254,9 +255,7 @@ public:
         {
             // Failed, return a dummy sound.
             lmLogError(gLoomSoundLogGroup, "Failed to get buffer for sound '%s', returning dummy Sound...", assetPath);
-            // LOOM-1839: We cannot lmNew here currently as managed natives call delete in nativeDelete
-            //return lmNew(NULL) Sound();
-            return new Sound(NULL);
+            return lmNew(NULL) Sound("");
         }
 
         // We got a live one!
@@ -274,7 +273,7 @@ public:
                     lmLogError(gLoomSoundLogGroup, 
                                 "Too many active sources, reusing source #%d, which means that Sound Asset %s is no longer valid. Don't load so many sounds at once!", 
                                 walk->source, 
-                                walk->path);
+                                walk->path.c_str());
                     s->source = walk->source;
                     walk->source = 0;
                     break;
@@ -340,12 +339,9 @@ public:
         next = NULL;
         needsRestart = 0;
         playCount = 0;
-        path = NULL;
         if(assetPath != NULL)
         {
-            int strLen = (int)strlen(assetPath) + 1;
-            path = new char[strLen];
-            memcpy(path, assetPath, strLen * sizeof(char));
+            path = assetPath;
         }
 
         // Note the allocation.
@@ -385,13 +381,9 @@ public:
             alDeleteSources(1, &source);
 
         ///decrement the buffer ref counter
-        OALBufferManager::decBufferForAsset(path);
+        OALBufferManager::decBufferForAsset(path.c_str());
 
-        ///delete path memory
-        if(path != NULL)
-        {
-            delete[] path;
-        }
+        lualoom_managedpointerreleased(this);
     }
 
     void setPosition(float x, float y, float z)
@@ -493,7 +485,7 @@ public:
 
     bool isNull()
     {
-        return path == NULL;
+        return path == "";
     }
 
     bool hasEverPlayed()

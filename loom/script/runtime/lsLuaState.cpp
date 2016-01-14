@@ -242,7 +242,7 @@ void LSLuaState::declareLuaTypes(const utArray<Type *>& types)
             {
                 if (type->isNativeManaged())
                 {
-                    LSError("Managed mismatch for type %s, script declaration specifies native while native bindings are unmanaged", type->getFullName().c_str());
+                    LSError("Managed mismatch for type %s, script declaration specifies managed while native bindings are unmanaged", type->getFullName().c_str());
                 }
                 else
                 {

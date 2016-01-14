@@ -171,6 +171,8 @@ public:
         lmSafeDelete(NULL, bcStaticInitializer);
         lmSafeDelete(NULL, bcInstanceInitializer);
         lmSafeDelete(NULL, memberInfoOrdinalLookup);
+        
+        lualoom_managedpointerreleased(this);
     }
 
     // Get the first native type in the inheritance chain (potentially this class).

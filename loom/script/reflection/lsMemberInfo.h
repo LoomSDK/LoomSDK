@@ -29,6 +29,9 @@
 #include "loom/common/core/allocator.h"
 
 namespace LS {
+
+void lualoom_managedpointerreleased(void *p);
+
 class Object;
 class Type;
 class Assembly;
@@ -129,6 +132,11 @@ public:
         }
 
         return keys[idx].c_str();
+    }
+
+    ~MetaInfo()
+    {
+        lualoom_managedpointerreleased(this);
     }
 };
 

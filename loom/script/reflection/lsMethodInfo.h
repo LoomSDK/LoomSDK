@@ -72,6 +72,11 @@ public:
     {
     }
 
+    ~ParameterInfo()
+    {
+        lualoom_managedpointerreleased(this);
+    }
+
     utString name;
     utString defaultArg;
 
@@ -353,6 +358,11 @@ public:
         memberType.method = true;
     }
 
+    ~MethodInfo()
+    {
+        lualoom_managedpointerreleased(this);
+    }
+
     /*
      * Whether or not this method supports the fastcall C closure path
      */
@@ -427,6 +437,11 @@ public:
     ConstructorInfo() : defaultConstructor(false)
     {
         memberType.constructor = true;
+    }
+
+    ~ConstructorInfo()
+    {
+        lualoom_managedpointerreleased(this);
     }
 
     int _invoke(lua_State *L);

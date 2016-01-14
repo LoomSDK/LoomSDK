@@ -56,6 +56,11 @@ public:
     {
     }
 
+    ~FieldInfo()
+    {
+        lualoom_managedpointerreleased(this);
+    }
+
     bool isAbstract();
 
     // can be called by other classes in the same assembly
