@@ -21,7 +21,6 @@
 #include "loom/common/core/performance.h"
 #include "loom/common/core/log.h"
 #include "loom/common/core/allocator.h"
-#include "loom/common/platform/platformTime.h"
 #include "loom/graphics/gfxMath.h"
 
 #include "loom/common/core/telemetry.h"
@@ -130,131 +129,10 @@ static LoomProfiler aProfiler; // allocate the global profiler
 #define LOOM_PROFILE_AT_ENGINE_START_INTERNAL false
 #endif
 
-
-#if LOOM_PLATFORM_IS_APPLE
-
-#include <mach/mach_time.h>
-#include <sys/time.h>
-
-void startHighResolutionTimer(U32 timeStore[2])
-{
-    *(uint64_t *)&timeStore[0] = mach_absolute_time();
-}
-
-
-F64 endHighResolutionTimer(U32 timeStore[2])
-{
-    // TODO: Factor this out?
-    mach_timebase_info_data_t t;
-
-    mach_timebase_info(&t);
-
-    uint64_t a = mach_absolute_time() - *(uint64_t *)&timeStore[0];
-    uint64_t b = (a * t.numer) / t.denom;
-    return F64(b) / (1000.0 * 1000.0);
-}
-
-
-#elif LOOM_PLATFORM == LOOM_PLATFORM_WIN32
-
-void startHighResolutionTimer(U32 time[2])
-{
-    time[0] = platform_getMilliseconds();
-
-    //__asm
-    //{
-    //    push eax
-    //    push edx
-    //    push ecx
-    //    rdtsc
-    //    mov ecx, time
-    //    mov DWORD PTR [ecx], eax
-    //    mov DWORD PTR [ecx + 4], edx
-    //    pop ecx
-    //    pop edx
-    //    pop eax
-    //}
-}
-
-
-U32 endHighResolutionTimer(U32 time[2])
-{
-    U32 ticks;
-
-    ticks = platform_getMilliseconds() - time[0];
-    return ticks;
-
-    //__asm
-    //{
-    //    push eax
-    //    push edx
-    //    push ecx
-    //    //db    0fh, 31h
-    //    rdtsc
-    //    mov ecx, time
-    //    sub edx, DWORD PTR [ecx + 4]
-    //    sbb eax, DWORD PTR [ecx]
-    //    mov DWORD PTR ticks, eax
-    //    pop ecx
-    //    pop edx
-    //    pop eax
-    //}
-    return ticks;
-}
-
-
-#else // Assume *nix.
-
-#include <time.h>
-
-#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-#define WHICH_CLOCK CLOCK_MONOTONIC
-#else
-#define WHICH_CLOCK CLOCK_REALTIME 
-#endif
-
-struct timespec dawn;
-
-static long long timespecDeltaNs(struct timespec *then, struct timespec *now)
-{
-    long long deltaSec  = now->tv_sec - then->tv_sec;
-    long long deltaNSec = now->tv_nsec - then->tv_nsec;
-
-    long long deltaNSecTotal = deltaSec * 1000 * 1000 * 1000 + deltaNSec;
-
-    return deltaNSecTotal;
-}
-
-
-void startHighResolutionTimer(U32 timeStore[2])
-{
-    timespec now;
-
-    clock_gettime(WHICH_CLOCK, &now); // Works on Linux
-
-    lmAssert(sizeof(long long) == 8, "Bad size!");
-
-    *(long long *)timeStore = timespecDeltaNs(&dawn, &now);
-}
-
-
-F64 endHighResolutionTimer(U32 timeStore[2])
-{
-    timespec now;
-
-    clock_gettime(WHICH_CLOCK, &now); // Works on Linux
-
-    lmAssert(sizeof(long long) == 8, "Bad size!");
-    long long t = timespecDeltaNs(&dawn, &now) - *(long long *)timeStore;
-    return t;
-}
-#endif
-
 extern "C" {
     LUA_GC_PROFILE(fullgc)
     LUA_GC_PROFILE(step)
 }
-
 
 LoomProfiler::LoomProfiler()
 {
@@ -265,7 +143,7 @@ LoomProfiler::LoomProfiler()
    mMaxStackDepth = MaxStackDepth;
    mCurrentHash = 0;
 
-   mCurrentLoomProfilerEntry = (LoomProfilerEntry *) lmAlloc(gProfilerAllocator, sizeof(LoomProfilerEntry));
+   mCurrentLoomProfilerEntry = lmNew(gProfilerAllocator) LoomProfilerEntry();
    mCurrentLoomProfilerEntry->mRoot = NULL;
    mCurrentLoomProfilerEntry->mNextForRoot = NULL;
    mCurrentLoomProfilerEntry->mNextLoomProfilerEntry = NULL;
@@ -301,7 +179,7 @@ LoomProfiler::LoomProfiler()
 LoomProfiler::~LoomProfiler()
 {
    reset();
-   lmFree(gProfilerAllocator, mRootLoomProfilerEntry);
+   lmSafeDelete(gProfilerAllocator, mRootLoomProfilerEntry);
    gLoomProfiler = NULL;
 }
 
@@ -323,7 +201,7 @@ void LoomProfiler::reset()
 
    while(mProfileList)
    {
-      lmFree(gProfilerAllocator, mProfileList);
+      lmSafeDelete(gProfilerAllocator, mProfileList);
       mProfileList = NULL;
    }
    for(LoomProfilerRoot *walk = LoomProfilerRoot::sRootList; walk; walk = walk->mNextRoot)
@@ -445,7 +323,7 @@ void LoomProfiler::hashPush(LoomProfilerRoot *root)
 
       if(!nextProfiler)
       {
-         nextProfiler = (LoomProfilerEntry *) lmAlloc(gProfilerAllocator, sizeof(LoomProfilerEntry));
+         nextProfiler = lmNew(gProfilerAllocator) LoomProfilerEntry();
          for(U32 i = 0; i < LoomProfilerEntry::HashTableSize; i++)
             nextProfiler->mChildHash[i] = 0;
 
@@ -477,8 +355,8 @@ void LoomProfiler::hashPush(LoomProfilerRoot *root)
    root->mTotalInvokeCount++;
    nextProfiler->mInvokeCount++;
    
-   startHighResolutionTimer(nextProfiler->mStartTime);
-   
+   nextProfiler->mTimer = loom_startTimer();
+
    mCurrentLoomProfilerEntry->mLastSeenProfiler = nextProfiler;
    mCurrentLoomProfilerEntry = nextProfiler;
 }
@@ -510,7 +388,7 @@ void LoomProfiler::hashPop(LoomProfilerRoot *expected)
             lmAssert(expected == mCurrentLoomProfilerEntry->mRoot, "LoomProfiler::hashPop - didn't get expected ProfilerRoot!");
         }
 
-        F64 fElapsed = endHighResolutionTimer(mCurrentLoomProfilerEntry->mStartTime);
+        F64 fElapsed = loom_readTimerNano(mCurrentLoomProfilerEntry->mTimer);
 
         lmAssert(fElapsed >= 0, "Elapsed time should be positive - is %f", fElapsed);
 
@@ -534,11 +412,11 @@ void LoomProfiler::hashPop(LoomProfilerRoot *expected)
         if (mDumpToConsole)
         {
             dump();
-            startHighResolutionTimer(mCurrentLoomProfilerEntry->mStartTime);
+            mCurrentLoomProfilerEntry->mTimer = loom_startTimer();
         }
         if (!mEnabled && mNextEnable)
         {
-            startHighResolutionTimer(mCurrentLoomProfilerEntry->mStartTime);
+            mCurrentLoomProfilerEntry->mTimer = loom_startTimer();
         }
 
         mEnabled = mNextEnable;
@@ -706,7 +584,7 @@ void LoomProfiler::dump()
     lmLogError(gProfilerLogGroup, "Ordered by stack trace total time -");
     lmLogError(gProfilerLogGroup, "  %% Time %% NSTime  AvgTime  MaxTime  MinTime Invoke # Name");
 
-    mCurrentLoomProfilerEntry->mTotalTime = endHighResolutionTimer(mCurrentLoomProfilerEntry->mStartTime);
+    mCurrentLoomProfilerEntry->mTotalTime = loom_readTimerNano(mCurrentLoomProfilerEntry->mTimer);
 
     char depthBuffer[MaxStackDepth * 2 + 1];
     depthBuffer[0]    = 0;

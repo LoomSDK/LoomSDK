@@ -75,7 +75,6 @@ elseif(MSVC)
 
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
-        #COMMAND md \"${ARTIFACTS_DIR}\\tools\"
         COMMAND echo f | xcopy /F /Y \"${ASSETAGENTBIN}\" \"${ARTIFACTS_DIR}/tools/assetAgent.dll\"
     )
 

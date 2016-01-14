@@ -22,6 +22,7 @@
 #define _CORE_PERFORMANCE_H_
 
 #include "loom/common/platform/platform.h"
+#include "loom/common/platform/platformTime.h"
 
 #ifndef LOOM_TELEMETRY
 #ifndef NPERFORMANCE
@@ -211,11 +212,21 @@ struct LoomProfilerEntry
     U32               mHash;
     U32               mSubDepth;
     U32               mInvokeCount;
-    U32               mStartTime[2];
+    loom_precision_timer_t mTimer;
     F64               mTotalTime;
     F64               mSubTime;
     F64               mMaxTime;
     F64               mMinTime;
+
+    LoomProfilerEntry()
+    {
+        mTimer = loom_startTimer();
+    }
+
+    ~LoomProfilerEntry()
+    {
+        loom_destroyTimer(mTimer);
+    }
 };
 
 

@@ -73,9 +73,9 @@ package system {
             trace(message);
             
         }
-		
-		public static native function dump(obj:Object);
-		
+        
+        public static native function dump(obj:Object);
+        
         /// @endcond
                 
         /**
