@@ -247,11 +247,24 @@ class AndroidToolchain < Toolchain
     
     return nil unless !target.is64Bit
     
+    systems = ["darwin-x86_64", "darwin-x86"]
+    
     # Android/ARM, armeabi-v7a (ARMv7 VFP), Android 4.0+ (ICS)
     ndk = File.expand_path(ENV["ANDROID_NDK"])
     ndkABI = 14
     ndkVersion = "#{ndk}/toolchains/arm-linux-androideabi-4.6"
-    ndkPath = "#{ndkVersion}/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-"
+    ndkFound = false
+    ndkSystems = []
+    for system in systems
+      ndkPath = "#{ndkVersion}/prebuilt/#{system}/bin/arm-linux-androideabi-"
+      ndkDir = File.dirname(ndkPath)
+      ndkSystems.push ndkDir
+      if File.exists?(ndkDir)
+        ndkFound = true
+        break
+      end
+    end
+    abort "Android NDK prebuilt directory not found, tried:\n  #{ndkSystems.join("\n  ")}" unless ndkFound
     ndkFlags = "--sysroot #{ndk}/platforms/android-#{ndkABI}/arch-arm"
     ndkArch = "-march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"
     
