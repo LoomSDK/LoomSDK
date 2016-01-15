@@ -714,10 +714,10 @@ static size_t gc_onestep(lua_State *L)
 /* Perform a limited amount of incremental GC steps. */
 int LJ_FASTCALL lj_gc_step(lua_State *L)
 {
-  LUA_GC_BEGIN(step)
   global_State *g = G(L);
   GCSize lim;
   int32_t ostate = g->vmstate;
+  LUA_GC_BEGIN(step)
   setvmstate(g, GC);
   lim = (GCSTEPSIZE/100) * g->gc.stepmul;
   if (lim == 0)
@@ -771,9 +771,9 @@ int LJ_FASTCALL lj_gc_step_jit(global_State *g, MSize steps)
 /* Perform a full GC cycle. */
 void lj_gc_fullgc(lua_State *L)
 {
-  LUA_GC_BEGIN(fullgc)
   global_State *g = G(L);
   int32_t ostate = g->vmstate;
+  LUA_GC_BEGIN(fullgc)
   setvmstate(g, GC);
   if (g->gc.state <= GCSatomic) {  /* Caught somewhere in the middle. */
     setmref(g->gc.sweep, &g->gc.root);  /* Sweep everything (preserving it). */
