@@ -596,44 +596,49 @@ package
                 return;
             }
             
-            var touch:Touch = e.getTouch(stage);
+            // Get all the touches
+            var touches:Vector.<Touch> = e.getTouches(stage);
             
-            // Find the closest button to the touch
-            var button:ColorTile = null;
-            var minDist:Number = Number.POSITIVE_INFINITY;
-            for each (var b:ColorTile in buttons) {
-                tempPoint.x = b.x;
-                tempPoint.y = b.y;
-                var dist = Point.distance(touch.getLocation(buttonStrip), tempPoint);
-                if (dist < minDist) {
-                    minDist = dist;
-                    button = b;
+            // Handle each touch
+            for each (var touch:Touch in touches) {
+                // Find the closest button to the touch
+                var button:ColorTile = null;
+                var minDist:Number = Number.POSITIVE_INFINITY;
+                for each (var b:ColorTile in buttons) {
+                    tempPoint.x = b.x;
+                    tempPoint.y = b.y;
+                    var dist = Point.distance(touch.getLocation(buttonStrip), tempPoint);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        button = b;
+                    }
+                }
+                
+                // Retrieve the index of the button.
+                var i = buttons.indexOf(button);
+                
+                // `true` if the touch is too far for it to count
+                var tooFar = minDist > 100;
+                
+                // Handle begin/move separately from ending.
+                switch (touch.phase) {
+                    case TouchPhase.BEGAN:
+                    case TouchPhase.MOVED:
+                        if (tooFar) {
+                            buttonDeactivate();
+                        } else {
+                            buttonActivate(button);
+                        }
+                        break;
+                    case TouchPhase.ENDED:
+                        buttonDeactivate();
+                        if (!tooFar) flood(i);
+                        break;
                 }
             }
             
-            // Handle touches too far away from the nearest button
-            if (minDist > 100) {
-                buttonDeactivate();
-                return;
-            }
-            
-            // Retrieve the index of the button.
-            var i = buttons.indexOf(button);
-            
-            // Handle begin/move separately from ending.
-            switch (touch.phase) {
-                case TouchPhase.BEGAN:
-                case TouchPhase.MOVED:
-                    buttonActivate(button);
-                    return;
-                case TouchPhase.ENDED:
-                    buttonDeactivate();
-                    break;
-            }
-            // Otherwise, flood fill the new color.
-            flood(i);
         }
-        
+		
         /**
          * Reset the game state to a fresh start.
          */
