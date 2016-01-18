@@ -313,7 +313,7 @@ int main(int argc, const char **argv)
         if (!found) found = strstr(lscPath.c_str(), "artifacts\\");
         if (found)
         {
-            utString artifacts = lscPath.substr(0, found - lscPath.c_str()) + "artifacts";
+            utString artifacts = lscPath.substr(0, found - lscPath.c_str()) + "sdk";
             artifacts += platform_getFolderDelimiter();
             if (platform_dirExists(artifacts.c_str()) == 0) LSCompiler::setSDKBuild(artifacts);
         }
