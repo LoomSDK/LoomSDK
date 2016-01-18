@@ -309,6 +309,8 @@ int main(int argc, const char **argv)
         const char* found = NULL;
         if (!found) found = strstr(lscPath.c_str(), "build/loom-");
         if (!found) found = strstr(lscPath.c_str(), "build\\loom-");
+        if (!found) found = strstr(lscPath.c_str(), "artifacts/");
+        if (!found) found = strstr(lscPath.c_str(), "artifacts\\");
         if (found)
         {
             utString artifacts = lscPath.substr(0, found - lscPath.c_str()) + "artifacts";

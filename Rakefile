@@ -299,8 +299,10 @@ namespace :utility do
       end
       
       # Clean up the libs and bin folders to save tons of space.
-      FileUtils.rm_r("docs/examples/#{args[:name]}/libs")
-      FileUtils.rm_r("docs/examples/#{args[:name]}/bin")
+      libs_dir = "docs/examples/#{args[:name]}/libs"
+      FileUtils.rm_r(libs_dir) if File.exist?(libs_dir)
+      bin_dir = "docs/examples/#{args[:name]}/bin"
+      FileUtils.rm_r(bin_dir) if File.exist?(bin_dir)
   end
 
   desc "Run demo"
