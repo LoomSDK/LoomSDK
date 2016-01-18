@@ -45,7 +45,7 @@ package
             // Check if the Accelerometer is indeed supported on device.
             if(Accelerometer.isSupported)
                 // Wire up the accelerated delegate to call onAcclerometerData
-                Accelerometer.accelerated += onAcclerometerData;
+                Accelerometer.accelerated += onAccelerometerData;
         }
 
         override protected function onTick()
@@ -59,7 +59,7 @@ package
             sprite.y = Math.clamp(sprite.y, 0, stage.stageHeight);
         }
 
-        protected function onAcclerometerData(x:Number, y:Number, z:Number) 
+        protected function onAccelerometerData(x:Number, y:Number, z:Number) 
         {
             directionX = x;
             directionY = -y; 

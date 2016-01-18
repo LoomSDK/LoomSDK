@@ -303,6 +303,19 @@ int main(int argc, const char **argv)
     {
         LSCompiler::setSDKBuild(GetSDKPathFromLSCPath(lscPath));
     }
+    else
+    {
+        // In-SDK-repo build
+        const char* found = NULL;
+        if (!found) found = strstr(lscPath.c_str(), "build/loom-");
+        if (!found) found = strstr(lscPath.c_str(), "build\\loom-");
+        if (found)
+        {
+            utString artifacts = lscPath.substr(0, found - lscPath.c_str()) + "artifacts";
+            artifacts += platform_getFolderDelimiter();
+            if (platform_dirExists(artifacts.c_str()) == 0) LSCompiler::setSDKBuild(artifacts);
+        }
+    }
 
     if (!rootBuildFile)
     {
