@@ -13,7 +13,7 @@ namespace :package do
   task :universal_sdk do
     puts "== Packaging Loom SDK =="
 
-    FileUtils.rm_rf("pkg") if File.exists?("pkg")
+    FileUtils.rm_rf("pkg/sdk") if File.exists?("pkg/sdk")
 
     # Assets and libs
     cp_r_safe("artifacts/assets", "pkg/sdk")
@@ -97,7 +97,7 @@ namespace :package do
   task :free_sdk do
     puts "== Packaging Free Loom SDK =="
 
-    FileUtils.rm_rf("pkg") if File.exists?("pkg")
+    FileUtils.rm_rf("pkg/sdk") if File.exists?("pkg/sdk")
 
     # Assets and libs
     cp_r_safe("artifacts/assets", "pkg/sdk")
