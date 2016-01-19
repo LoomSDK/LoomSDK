@@ -5,6 +5,7 @@ require 'json'
 require 'zip'
 require 'zip/file'
 require 'telemetry'
+require 'helper'
 
 namespace :package do
 
