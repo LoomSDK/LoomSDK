@@ -202,6 +202,7 @@ namespace :post do
 
   desc "Posts the sdk to S3 and sumbit it to TEC"
   task :sdk, [:branch, :commit_sha, :build_number, :download_type, :root_url, :user, :pass, :s3_id, :s3_secret, :bucket] do |t, args|
+    branch = args[:branch]
     
     # Only deploy master for now.
     if(branch != "master")
