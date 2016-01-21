@@ -28,7 +28,7 @@ endif()
 
 if (APPLE)
     if (LOOM_BUILD_IOS EQUAL 1)
-        
+
         set(APPLE_ICON_FILES 
             ios/Icon-60@2x.png 
             ios/Icon-72.png 
@@ -52,7 +52,7 @@ if (APPLE)
           ios/Default@2x.png
           ios/Default-568h@2x.png
         )
-        
+
         SET_SOURCE_FILES_PROPERTIES(ios/Default-iphone.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
         SET_SOURCE_FILES_PROPERTIES(ios/Default@2x-iphone.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
         SET_SOURCE_FILES_PROPERTIES(ios/Default.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
@@ -60,7 +60,7 @@ if (APPLE)
         SET_SOURCE_FILES_PROPERTIES(ios/Default-568h@2x.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
 
     else()
-        
+
         set(APPLE_ICON_FILES osx/Application.icns)
         set (APPLICATION_SRC
           ${APPLICATION_SRC}
@@ -101,7 +101,7 @@ if (APPLE)
               set (LOOM_IOS_LIB_GCC "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/llvm-gcc-4.2/lib/gcc/arm-apple-darwin10/4.2.1/v7/libgcc.a")
           endif()
     endif()
-    
+
     if (LOOM_BUILD_IOS EQUAL 1)
 
         # Allow Admob and/or Facebook to be included for iOS?
@@ -125,7 +125,7 @@ if (APPLE)
         endif()
 
         target_link_libraries(${PROJECT_NAME}
-    
+
           ${LOOM_IOS_LIB_GCC}
           LoomVendor
           LoomCommon
@@ -174,7 +174,7 @@ if (APPLE)
           XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET 5.1
           XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2" # Build a universal (iPad/iPhone) app.
           XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES NO
-		  XCODE_ATTRIBUTE_ENABLE_BITCODE NO
+          XCODE_ATTRIBUTE_ENABLE_BITCODE NO
         )
         # Use our own Info.plist.
         CONFIGURE_FILE("${CMAKE_CURRENT_LIST_DIR}/ios/Info.plist" "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.plist")
@@ -200,9 +200,9 @@ if (APPLE)
 
           "-L/usr/local/lib"
           "-lz"
-		  
+
           "SDL2-static" "SDL2main"
-		  
+
           )
 
         # Use our own Info.plist.
