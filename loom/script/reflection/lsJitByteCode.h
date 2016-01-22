@@ -35,6 +35,7 @@ class ByteCode {
     utArray<unsigned char> bc;
 
 public:
+    utString error;
 
     ~ByteCode()
     {

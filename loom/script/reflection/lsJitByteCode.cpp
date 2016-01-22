@@ -254,6 +254,7 @@ bool ByteCode::load(LSLuaState *ls, bool execute)
 
     if (status != 0)
     {
+        this->error = lua_tostring(L,-1);
         return false;
     }
 

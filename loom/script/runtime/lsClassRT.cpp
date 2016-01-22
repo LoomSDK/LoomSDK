@@ -839,9 +839,10 @@ static void lsr_classinitializemethod(lua_State *L, MethodBase *methodBase, int 
         assert(bc);
         if (!bc->load(LSLuaState::getLuaState(L)))
         {
-            LSError("Bytecode Error: %s:%s\n",
+            LSError("Bytecode Error for type %s:%s: %s\n",
                     methodBase->getDeclaringType()->getFullName().c_str(),
-                    methodBase->getName());
+                    methodBase->getName(),
+                    bc->error.c_str());
         }
     }
 
