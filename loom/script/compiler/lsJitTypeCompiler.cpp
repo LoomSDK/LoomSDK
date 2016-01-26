@@ -284,6 +284,10 @@ ByteCode *JitTypeCompiler::generateByteCode(GCproto *proto, bool debug = true)
 
     lj_bcwrite(L, proto, luaByteCodewriter, &bc, debug ? 0 : 1);
 
+    // Fix the header for the two slot frame info flag (BCDUMP_F_FR2)
+    lmAssert(bc[0] == BCDUMP_HEAD1 && bc[1] == BCDUMP_HEAD2 && bc[2] == BCDUMP_HEAD3, "ByteCode header mismatch");
+    bc[4] |= twoSlotFrameInfo*BCDUMP_F_FR2;
+
     return ByteCode::encode64(bc);
 }
 
@@ -839,6 +843,8 @@ Statement *JitTypeCompiler::visit(ForInStatement *statement)
 
     BC::expToNextReg(fs, &pairs);
 
+    if (twoSlotFrameInfo) BC::regReserve(fs, 1);
+
     ExpDesc arg;
 
     statement->expression->visitExpression(this);
@@ -864,16 +870,16 @@ Statement *JitTypeCompiler::visit(ForInStatement *statement)
     BCIns ins;
     BCReg cbase = pairs.u.s.info; /* Base register for call. */
     BC::expToNextReg(fs, &arg);
-    ins = BCINS_ABC(BC_CALL, cbase, 2, fs->freereg - base);
+    ins = BCINS_ABC(BC_CALL, cbase, 2, fs->freereg - base - twoSlotFrameInfo);
 
     BC::initExpDesc(&pairs, VCALL, BC::emitINS(fs, ins));
     pairs.u.s.aux = cbase;
     fs->bcbase[fs->pc - 1].line = line;
-    fs->freereg = cbase + 1; /* Leave one result by default. */
+    fs->freereg = cbase + 1 + twoSlotFrameInfo; /* Leave one result by default. */
 
     BC::adjustAssign(cs, 3, 1, &pairs);
 
-    BC::regBump(fs, 3);         /* The iterator needs another 3 slots (func + 2 args). */
+    BC::regBump(fs, 3 + twoSlotFrameInfo);         /* The iterator needs another 3 slots (func + 2 args). */
 
     BC::adjustLocalVars(cs, 3); /* Hidden control variables. */
 
@@ -1205,6 +1211,7 @@ void JitTypeCompiler::generatePropertySet(ExpDesc *call, Expression *value,
     int line = lineNumber;
 
     BC::expToNextReg(fs, call);
+    if (twoSlotFrameInfo) BC::regReserve(fs, 1);
 
     lua_assert(call->k == VNONRELOC);
     BCReg base = call->u.s.info; /* base register for call */
@@ -1220,7 +1227,7 @@ void JitTypeCompiler::generatePropertySet(ExpDesc *call, Expression *value,
         BC::expToReg(fs, &value->e, fs->freereg - 1);
     }
 
-    int nparams = fs->freereg - (base + 1);
+    int nparams = fs->freereg - (base + 1 + twoSlotFrameInfo);
 
     assert(nparams == 1);
 
@@ -1229,7 +1236,7 @@ void JitTypeCompiler::generatePropertySet(ExpDesc *call, Expression *value,
     BCIns ins;
     if (args.k == VCALL)
     {
-        ins = BCINS_ABC(BC_CALLM, base, 2, args.u.s.aux - base - 1);
+        ins = BCINS_ABC(BC_CALLM, base, 2, args.u.s.aux - base - 1 - twoSlotFrameInfo);
     }
     else
     {
@@ -1237,7 +1244,7 @@ void JitTypeCompiler::generatePropertySet(ExpDesc *call, Expression *value,
         {
             BC::expToNextReg(fs, &args);
         }
-        ins = BCINS_ABC(BC_CALL, base, 2, fs->freereg - base);
+        ins = BCINS_ABC(BC_CALL, base, 2, fs->freereg - base - twoSlotFrameInfo);
     }
     BC::initExpDesc(call, VCALL, BC::emitINS(fs, ins));
     call->u.s.aux = base;
@@ -1656,6 +1663,7 @@ void JitTypeCompiler::generateCall(ExpDesc *call, utArray<Expression *> *argumen
     }
 
     BC::expToNextReg(fs, call);
+    if (twoSlotFrameInfo) BC::regReserve(fs, 1);
 
     ExpDesc args;
     args.k = VVOID;
@@ -1678,7 +1686,7 @@ void JitTypeCompiler::generateCall(ExpDesc *call, utArray<Expression *> *argumen
     BCReg base = call->u.s.info; /* base register for call. */
     if (args.k == VCALL)
     {
-        ins = BCINS_ABC(BC_CALLM, base, 2, args.u.s.aux - base - 1);
+        ins = BCINS_ABC(BC_CALLM, base, 2, args.u.s.aux - base - 1 - twoSlotFrameInfo);
     }
     else
     {
@@ -1686,7 +1694,7 @@ void JitTypeCompiler::generateCall(ExpDesc *call, utArray<Expression *> *argumen
         {
             BC::expToNextReg(fs, &args); /* close last argument */
         }
-        ins = BCINS_ABC(BC_CALL, base, 2, fs->freereg - base);
+        ins = BCINS_ABC(BC_CALL, base, 2, fs->freereg - base - twoSlotFrameInfo);
     }
     BC::initExpDesc(call, VCALL, BC::emitINS(fs, ins));
     call->u.s.aux = base;
