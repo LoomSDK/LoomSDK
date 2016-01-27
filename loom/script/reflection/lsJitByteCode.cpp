@@ -86,17 +86,15 @@ static void decodeblock(unsigned char in[4], unsigned char out[3])
 }
 
 
-ByteCode *ByteCode::decode64(const utString& code64)
+utArray<unsigned char> ByteCode::base64ToBytes(utString bc64)
 {
-    ByteCode *byteCode = lmNew(NULL) ByteCode();
-
-    byteCode->bc64 = code64;
+    utArray<unsigned char> bc;
 
     unsigned char in[4], out[3], v;
     int           i, len;
 
     UTsize c       = 0;
-    UTsize counter = (UTsize)code64.size() + 1;
+    UTsize counter = (UTsize)bc64.size() + 1;
 
     while (counter)
     {
@@ -105,7 +103,7 @@ ByteCode *ByteCode::decode64(const utString& code64)
             v = 0;
             while (counter && v == 0)
             {
-                v = (unsigned char)code64[c++];
+                v = (unsigned char)bc64[c++];
                 counter--;
                 v = (unsigned char)((v < 43 || v > 122) ? 0 : cd64[v - 43]);
                 if (v)
@@ -131,26 +129,21 @@ ByteCode *ByteCode::decode64(const utString& code64)
             decodeblock(in, out);
             for (i = 0; i < len - 1; i++)
             {
-                byteCode->bc.push_back(out[i]);
+                bc.push_back(out[i]);
             }
         }
     }
 
-    return byteCode;
+    return bc;
 }
 
-
-ByteCode *ByteCode::encode64(const utArray<unsigned char>& bc)
+utString ByteCode::bytesToBase64(const utArray<unsigned char>& bc)
 {
-    ByteCode *byteCode = lmNew(NULL) ByteCode();
-
-    byteCode->bc = bc;
-
     unsigned char in[3], out[4];
     int           i, len;
 
     UTsize        counter = bc.size();
-    int           c       = 0;
+    int           c = 0;
     utArray<char> buffer;
 
     while (counter)
@@ -182,9 +175,24 @@ ByteCode *ByteCode::encode64(const utArray<unsigned char>& bc)
 
     buffer.push_back('\0');
 
-    byteCode->bc64 = buffer.ptr();
+    return utString(buffer.ptr());
+}
 
+ByteCode *ByteCode::decode64(const utString& bc64)
+{
 
+    ByteCode *byteCode = lmNew(NULL) ByteCode();
+
+    byteCode->setBase64(bc64);
+
+    return byteCode;
+}
+
+ByteCode *ByteCode::encode64(const utArray<unsigned char>& bc)
+{
+    ByteCode *byteCode = lmNew(NULL) ByteCode();
+
+    byteCode->setByteCode(bc);
 
     /*
      * ByteCode* check = decode64(byteCode->bc64);
@@ -196,8 +204,6 @@ ByteCode *ByteCode::encode64(const utArray<unsigned char>& bc)
      * assert(check->bc[i] == bc[i]);
      * }
      */
-
-
 
     return byteCode;
 }
@@ -238,14 +244,21 @@ static int bytecode_loadbuffer(lua_State *L, const char *buff, size_t size,
 
 bool ByteCode::load(LSLuaState *ls, bool execute)
 {
-    if (!bc.size())
+    utArray<unsigned char> *byteCode;
+#if LJ_FR2
+    byteCode = &bc_fr2;
+#else
+    byteCode = &bc;
+#endif
+
+    if (!byteCode->size())
     {
         return false;
     }
 
     lua_State *L = ls->VM();
 
-    int status = bytecode_loadbuffer(L, (const char*)&bc[0], bc.size(), LUA_SIGNATURE);
+    int status = bytecode_loadbuffer(L, (const char*)&byteCode[0], byteCode->size(), LUA_SIGNATURE);
 
     if (execute && status == 0)
     {

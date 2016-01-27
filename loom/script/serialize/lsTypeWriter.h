@@ -48,9 +48,9 @@ class TypeWriter {
     LSTYPEID typeID;
 
     // byte code
-    utString bcStaticInitializer;
+    ByteCode bcStaticInitializer;
 
-    utString bcInstanceInitializer;
+    ByteCode bcInstanceInitializer;
 
     utArray<utString>             imports;
     ConstructorInfoWriter         *constructor;
@@ -135,14 +135,14 @@ public:
 
     void setFinal() { attr.isFinal = true; }
 
-    void setBCInstanceInitializer(const utString& bc)
+    void setBCInstanceInitializer(const ByteCode *bc)
     {
-        bcInstanceInitializer = bc;
+        bcInstanceInitializer = *bc;
     }
 
-    void setBCStaticInitializer(const utString& bc)
+    void setBCStaticInitializer(const ByteCode *bc)
     {
-        bcStaticInitializer = bc;
+        bcStaticInitializer = *bc;
     }
 
     void setImports(const utArray<utString>& imports)

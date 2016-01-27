@@ -34,6 +34,16 @@ class ByteCode {
     // raw bytecode
     utArray<unsigned char> bc;
 
+    // two slot byte code encoded as base64
+    utString bc64_fr2;
+
+    // two slot raw bytecode
+    utArray<unsigned char> bc_fr2;
+
+
+    utString bytesToBase64(const utArray<unsigned char>& bc);
+    utArray<unsigned char> base64ToBytes(utString bc64);
+
 public:
     utString error;
 
@@ -52,6 +62,40 @@ public:
         return bc;
     }
 
+    const utString& getBase64FR2()
+    {
+        return bc64_fr2;
+    }
+
+    const utArray<unsigned char>& getByteCodeFR2()
+    {
+        return bc_fr2;
+    }
+
+    void setBase64(utString bc64)
+    {
+        this->bc64 = bc64;
+        this->bc = base64ToBytes(this->bc64);
+    }
+
+    void setBase64FR2(utString bc64_fr2)
+    {
+        this->bc64_fr2 = bc64_fr2;
+        this->bc_fr2 = base64ToBytes(this->bc64_fr2);
+    }
+
+    void setByteCode(const utArray<unsigned char>& bc)
+    {
+        this->bc = bc;
+        this->bc64 = bytesToBase64(bc);
+    }
+
+    void setByteCodeFR2(const utArray<unsigned char>& bc_fr2)
+    {
+        this->bc_fr2 = bc_fr2;
+        this->bc64_fr2 = bytesToBase64(bc_fr2);
+    }
+
     bool load(LSLuaState *ls, bool execute = false);
 
     void clear()
@@ -63,6 +107,7 @@ public:
     static ByteCode *decode64(const utString& code64);
 
     static ByteCode *encode64(const utArray<unsigned char>& bc);
+
 };
 }
 #endif

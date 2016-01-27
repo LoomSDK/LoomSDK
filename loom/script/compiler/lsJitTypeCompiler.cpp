@@ -227,8 +227,14 @@ void JitTypeCompiler::compile(ClassDeclaration *classDeclaration)
 {
     JitTypeCompiler compiler;
 
-    compiler.lineNumber = 0;
     compiler.cls        = classDeclaration;
+
+    compiler.lineNumber = 0;
+    compiler.twoSlotFrameInfo = 0;
+    compiler._compile();
+
+    compiler.lineNumber = 0;
+    compiler.twoSlotFrameInfo = 1;
     compiler._compile();
 }
 
@@ -278,7 +284,7 @@ void JitTypeCompiler::closeCodeState(CodeState *codeState)
     lj_gc_check(L);
 }
 
-ByteCode *JitTypeCompiler::generateByteCode(GCproto *proto, bool debug = true)
+void JitTypeCompiler::generateByteCode(ByteCode *byteCode, GCproto *proto, bool debug = true)
 {
     utArray<unsigned char> bc;
 
@@ -288,7 +294,14 @@ ByteCode *JitTypeCompiler::generateByteCode(GCproto *proto, bool debug = true)
     lmAssert(bc[0] == BCDUMP_HEAD1 && bc[1] == BCDUMP_HEAD2 && bc[2] == BCDUMP_HEAD3, "ByteCode header mismatch");
     bc[4] |= twoSlotFrameInfo*BCDUMP_F_FR2;
 
-    return ByteCode::encode64(bc);
+
+    if (!twoSlotFrameInfo) {
+        byteCode->setByteCode(bc);
+    }
+    else
+    {
+        byteCode->setByteCodeFR2(bc);
+    }
 }
 
 
@@ -377,7 +390,8 @@ void JitTypeCompiler::generateMethod(FunctionLiteral *function,
 
 	bool debug = cunit->buildInfo->isDebugBuild();
 
-    method->setByteCode(generateByteCode(codeState.proto, debug));
+    if (!method->getByteCode()) method->setByteCode(lmNew(NULL) ByteCode());
+    generateByteCode(method->getByteCode(), codeState.proto, debug);
 
     currentMethod          = NULL;
     currentMethodCoroutine = false;
@@ -491,7 +505,8 @@ void JitTypeCompiler::generateConstructor(FunctionLiteral *function,
 
 	bool debug = cunit->buildInfo->isDebugBuild();
 
-    constructor->setByteCode(generateByteCode(codeState.proto, debug));
+    if (!constructor->getByteCode()) constructor->setByteCode(lmNew(NULL) ByteCode());
+    generateByteCode(constructor->getByteCode(), codeState.proto, debug);
 
     currentMethod = NULL;
 }

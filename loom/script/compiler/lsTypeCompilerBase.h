@@ -199,7 +199,7 @@ protected:
     void generateInstanceInitializer();
 
 #if LOOM_ENABLE_JIT
-    virtual ByteCode *generateByteCode(GCproto *proto, bool debug) = 0;
+    virtual void generateByteCode(ByteCode *byteCode, GCproto *proto, bool debug) = 0;
 
 #else
     virtual ByteCode *generateByteCode(Proto *proto, bool debug) = 0;
