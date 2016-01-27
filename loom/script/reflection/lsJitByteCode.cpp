@@ -258,7 +258,7 @@ bool ByteCode::load(LSLuaState *ls, bool execute)
 
     lua_State *L = ls->VM();
 
-    int status = bytecode_loadbuffer(L, (const char*)&byteCode[0], byteCode->size(), LUA_SIGNATURE);
+    int status = bytecode_loadbuffer(L, (const char*)byteCode->ptr(), byteCode->size(), LUA_SIGNATURE);
 
     if (execute && status == 0)
     {
