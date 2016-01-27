@@ -90,10 +90,6 @@ else()
     add_executable(${PROJECT_NAME} ${APPLICATION_HDR} ${APPLICATION_SRC})
 endif(ANDROID)
 
-if (LOOM_BUILD_JIT EQUAL 1)
-    target_link_libraries(${PROJECT_NAME} luajit)
-endif()
-
 if (APPLE)
 
     if (LOOM_BUILD_JIT EQUAL 1)        
@@ -299,4 +295,11 @@ elseif(LINUX)
         COMMAND cp ${DEMOBIN} ${ARTIFACTS_DIR}/bin/LoomDemo
     )
 
+endif()
+
+# LuaJIT needs to be defined at the end, otherwise
+# in some specific random situations, symbols won't
+# link properly to Loom
+if (LOOM_BUILD_JIT EQUAL 1)
+    target_link_libraries(${PROJECT_NAME} luajit)
 endif()

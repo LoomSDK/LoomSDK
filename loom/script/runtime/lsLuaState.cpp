@@ -38,7 +38,11 @@
 #include "loom/script/common/lsFile.h"
 #include "loom/script/serialize/lsBinReader.h"
 
-extern "C" int luaopen_socket_core(lua_State *L);
+extern "C" {
+    int luaopen_socket_core(lua_State *L);
+    void luaL_openlibs(lua_State *L);
+}
+
 
 namespace LS {
 void lsr_classinitializestatic(lua_State *L, Type *type);
@@ -101,12 +105,6 @@ void LSLuaState::open()
 
     toLuaState.insert(L, this);
 
-    luaopen_base(L);
-    luaopen_table(L);
-    luaopen_string(L);
-    luaopen_math(L);
-    luaL_openlibs(L);
-
 #ifdef LUAJIT_MODE_MASK
     // TODO: turn this back on when it doesn't fail on the testWhile unit test
     // update luajit and test again
@@ -116,8 +114,8 @@ void LSLuaState::open()
     // Stop the GC initially
     lua_gc(L, LUA_GCSTOP, 0);
 
-    // open the lua debug library
-    luaopen_debug(L);
+    // open all the standard libraries
+    luaL_openlibs(L);
 
     // open socket library
     luaopen_socket_core(L);
