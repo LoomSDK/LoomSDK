@@ -23,6 +23,9 @@
 
 #include "loom/common/utils/utString.h"
 #include "loom/common/utils/utTypes.h"
+#include "loom/common/utils/utByteArray.h"
+
+#define LOOM_JIT_BYTECODE_VERSION 1
 
 namespace LS {
 class LSLuaState;
@@ -103,6 +106,9 @@ public:
         bc64 = "";
         bc.clear();
     }
+
+    void serialize(utByteArray *bytes) const;
+    void deserialize(utByteArray *bytes);
 
     static ByteCode *decode64(const utString& code64);
 

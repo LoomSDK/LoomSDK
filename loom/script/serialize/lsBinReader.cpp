@@ -583,8 +583,15 @@ void BinReader::readClass(Type *type)
         type->addMember(methodInfo);
     }
 
-    type->setBCStaticInitializer(ByteCode::decode64(bytes->readString()));
-    type->setBCInstanceInitializer(ByteCode::decode64(bytes->readString()));
+    ByteCode *byteCode;
+
+    byteCode = lmNew(NULL) ByteCode();
+    byteCode->deserialize(bytes);
+    type->setBCStaticInitializer(byteCode);
+
+    byteCode = lmNew(NULL) ByteCode();
+    byteCode->deserialize(bytes);
+    type->setBCInstanceInitializer(byteCode);
 }
 
 

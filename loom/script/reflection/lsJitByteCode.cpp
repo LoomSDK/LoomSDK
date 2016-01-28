@@ -241,6 +241,36 @@ static int bytecode_loadbuffer(lua_State *L, const char *buff, size_t size,
     return lua_load(L, getS, &ls, name);
 }
 
+static void serializeBC(utByteArray *bytes, const utArray<unsigned char> &bc) {
+    utByteArray wrapper;
+    wrapper.attach((void*)bc.ptr(), bc.size());
+    bytes->writeUnsignedInt(wrapper.getSize());
+    bytes->writeBytes(&wrapper);
+}
+
+static utArray<unsigned char> deserializeBC(utByteArray *bytes) {
+    UTsize size = static_cast<UTsize>(bytes->readUnsignedInt());
+    utByteArray wrapper;
+    if (size > 0) bytes->readBytes(&wrapper, 0, size);
+    return *wrapper.getInternalArray();
+}
+
+void ByteCode::serialize(utByteArray *bytes) const
+{
+    bytes->writeUnsignedByte(LOOM_JIT_BYTECODE_VERSION);
+
+    serializeBC(bytes, bc);
+    serializeBC(bytes, bc_fr2);
+}
+
+void ByteCode::deserialize(utByteArray *bytes)
+{
+    unsigned char ver = bytes->readUnsignedByte();
+    lmAssert(ver == LOOM_JIT_BYTECODE_VERSION, "Loom JIT ByteCode mismatch: %d", ver);
+
+    bc = deserializeBC(bytes);
+    bc_fr2 = deserializeBC(bytes);
+}
 
 bool ByteCode::load(LSLuaState *ls, bool execute)
 {

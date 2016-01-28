@@ -26,6 +26,12 @@
 #include "loom/common/utils/utStreams.h"
 #include "lsBinWriter.h"
 
+#if LOOM_ENABLE_JIT
+#include "loom/script/reflection/lsJitByteCode.h"
+#else
+#include "loom/script/reflection/lsByteCode.h"
+#endif
+
 namespace LS {
 utHashTable<utHashedString, int>         BinWriter::stringPool;
 utHashTable<utHashedString, BinWriter *> BinWriter::binWriters;
@@ -466,14 +472,22 @@ void BinWriter::writeClass(json_t *jclass)
     }
 
     // static initializer byte code
-    utString bc = json_string_value(json_object_get(jclass, "bytecode_staticinitializer"));
+    ByteCode byteCode;
 
-    bytes.writeString(bc.c_str());
 
-    // instance initializer byte code
-    bc = json_string_value(json_object_get(jclass, "bytecode_instanceinitializer"));
+    byteCode.setBase64   (utString(json_string_value(json_object_get(jclass, "bytecode_staticinitializer"))));
+#if LOOM_ENABLE_JIT
+    byteCode.setBase64FR2(utString(json_string_value(json_object_get(jclass, "bytecode_staticinitializer_fr2"))));
+#endif
+    byteCode.serialize(&bytes);
 
-    bytes.writeString(bc.c_str());
+
+    byteCode.setBase64   (utString(json_string_value(json_object_get(jclass, "bytecode_instanceinitializer"))));
+#if LOOM_ENABLE_JIT
+    byteCode.setBase64FR2(utString(json_string_value(json_object_get(jclass, "bytecode_instanceinitializer_fr2"))));
+#endif
+    byteCode.serialize(&bytes);
+
 }
 
 
