@@ -239,7 +239,8 @@ void BinReader::readMethodBase(MethodBase *mbase)
     if (mbase->isNative())
     {
         // empty bytecode
-        bytes->readString();
+        ByteCode byteCode;
+        byteCode.deserialize(bytes);
 
         lua_CFunction function = NULL;
         lua_State     *L       = vm->VM();
@@ -293,7 +294,9 @@ void BinReader::readMethodBase(MethodBase *mbase)
     }
     else
     {
-        mbase->setByteCode(ByteCode::decode64(bytes->readString()));
+        ByteCode *byteCode = lmNew(NULL) ByteCode();
+        byteCode->deserialize(bytes);
+        mbase->setByteCode(byteCode);
     }
 }
 

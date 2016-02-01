@@ -328,7 +328,14 @@ void BinWriter::writeMethodBase(json_t *jmbase)
         }
     }
 
-    bytes.writeString(json_string_value(json_object_get(jmbase, "bytecode")));
+    ByteCode byteCode;
+
+    byteCode.setBase64(utString(json_string_value(json_object_get(jmbase, "bytecode"))));
+#if LOOM_ENABLE_JIT
+    byteCode.setBase64FR2(utString(json_string_value(json_object_get(jmbase, "bytecode_fr2"))));
+#endif
+    byteCode.serialize(&bytes);
+
 }
 
 
