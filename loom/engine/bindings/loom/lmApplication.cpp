@@ -313,9 +313,6 @@ int LoomApplication::initializeCoreServices()
     // Initialize services.
     platform_debugOut("Initializing services...");
 
-    // Initialize logging.
-    loom_log_initialize();
-
     // Set up assert handling callback.
     lmLog(applicationLogGroup, "   o asserts");
     loom_setAssertCallback(handleAssert);
