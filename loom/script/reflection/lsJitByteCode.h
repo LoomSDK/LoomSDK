@@ -45,8 +45,8 @@ class ByteCodeVariant
     utString base64;
     utByteArray bytes;
 
-    utString bytesToBase64(utByteArray bytes);
-    utByteArray base64ToBytes(utString bc64);
+    void bytesToBase64(utByteArray* bc, utString *bc64);
+    void base64ToBytes(utString* bc64, utByteArray *bc);
 
 public:
 

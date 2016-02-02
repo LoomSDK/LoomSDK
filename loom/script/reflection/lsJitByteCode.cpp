@@ -86,18 +86,17 @@ static void decodeblock(unsigned char in[4], unsigned char out[3])
 }
 
 
-utByteArray ByteCodeVariant::base64ToBytes(utString bc64)
+void ByteCodeVariant::base64ToBytes(utString* bc64, utByteArray *bc)
 {
-    utByteArray bc;
-
     unsigned char in[4], out[3], v;
     int           i, len;
 
     UTsize c       = 0;
-    UTsize counter = (UTsize)bc64.size() + 1;
+    UTsize counter = (UTsize)bc64->size() + 1;
+    const char *data = bc64->data();
 
     // Reserve an approximate amount of space we'll need
-    bc.reserve(bc64.size() / 3 * 4);
+    bc->reserve((counter - 1) / 3 * 4);
 
     while (counter)
     {
@@ -106,7 +105,7 @@ utByteArray ByteCodeVariant::base64ToBytes(utString bc64)
             v = 0;
             while (counter && v == 0)
             {
-                v = (unsigned char)bc64[c++];
+                v = (unsigned char)data[c++];
                 counter--;
                 v = (unsigned char)((v < 43 || v > 122) ? 0 : cd64[v - 43]);
                 if (v)
@@ -132,23 +131,21 @@ utByteArray ByteCodeVariant::base64ToBytes(utString bc64)
             decodeblock(in, out);
             for (i = 0; i < len - 1; i++)
             {
-                bc.writeUnsignedByte(out[i]);
+                bc->writeUnsignedByte(out[i]);
             }
         }
     }
-
-    return bc;
 }
 
-utString ByteCodeVariant::bytesToBase64(utByteArray bc)
+void ByteCodeVariant::bytesToBase64(utByteArray* bc, utString *bc64)
 {
     unsigned char in[3], out[4];
     int           i, len;
 
-    UTsize        counter = bc.getSize();
+    UTsize        counter = bc->getSize();
     int           c = 0;
     utArray<char> buffer;
-    unsigned char *data = static_cast<unsigned char*>(bc.getDataPtr());
+    unsigned char *data = static_cast<unsigned char*>(bc->getDataPtr());
 
     while (counter)
     {
@@ -179,7 +176,7 @@ utString ByteCodeVariant::bytesToBase64(utByteArray bc)
 
     buffer.push_back('\0');
 
-    return utString(buffer.ptr());
+    return bc64->fromBytes(buffer.ptr(), buffer.size());
 }
 
 
@@ -205,7 +202,7 @@ void ByteCodeVariant::clear()
 utString* ByteCodeVariant::getBase64()
 {
     if (flags & BASE64_DIRTY) {
-        base64 = bytesToBase64(bytes);
+        bytesToBase64(&bytes, &base64);
         flags &= ~BASE64_DIRTY;
     }
     return &base64;
@@ -214,7 +211,7 @@ utString* ByteCodeVariant::getBase64()
 utByteArray* ByteCodeVariant::getByteCode()
 {
     if (flags & BYTES_DIRTY) {
-        bytes = base64ToBytes(base64);
+        base64ToBytes(&base64, &bytes);
         flags &= ~BYTES_DIRTY;
     }
     return &bytes;
