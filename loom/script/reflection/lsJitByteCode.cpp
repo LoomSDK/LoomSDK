@@ -96,6 +96,9 @@ utByteArray ByteCodeVariant::base64ToBytes(utString bc64)
     UTsize c       = 0;
     UTsize counter = (UTsize)bc64.size() + 1;
 
+    // Reserve an approximate amount of space we'll need
+    bc.reserve(bc64.size() / 3 * 4);
+
     while (counter)
     {
         for (len = 0, i = 0; i < 4 && counter; i++)
