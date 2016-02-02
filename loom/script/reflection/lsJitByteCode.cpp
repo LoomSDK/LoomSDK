@@ -86,9 +86,9 @@ static void decodeblock(unsigned char in[4], unsigned char out[3])
 }
 
 
-utArray<unsigned char> ByteCodeVariant::base64ToBytes(utString bc64)
+utByteArray ByteCodeVariant::base64ToBytes(utString bc64)
 {
-    utArray<unsigned char> bc;
+    utByteArray bc;
 
     unsigned char in[4], out[3], v;
     int           i, len;
@@ -129,7 +129,7 @@ utArray<unsigned char> ByteCodeVariant::base64ToBytes(utString bc64)
             decodeblock(in, out);
             for (i = 0; i < len - 1; i++)
             {
-                bc.push_back(out[i]);
+                bc.writeUnsignedByte(out[i]);
             }
         }
     }
@@ -137,14 +137,15 @@ utArray<unsigned char> ByteCodeVariant::base64ToBytes(utString bc64)
     return bc;
 }
 
-utString ByteCodeVariant::bytesToBase64(const utArray<unsigned char>& bc)
+utString ByteCodeVariant::bytesToBase64(utByteArray bc)
 {
     unsigned char in[3], out[4];
     int           i, len;
 
-    UTsize        counter = bc.size();
+    UTsize        counter = bc.getSize();
     int           c = 0;
     utArray<char> buffer;
+    unsigned char *data = static_cast<unsigned char*>(bc.getDataPtr());
 
     while (counter)
     {
@@ -153,7 +154,7 @@ utString ByteCodeVariant::bytesToBase64(const utArray<unsigned char>& bc)
         {
             if (counter)
             {
-                in[i] = (unsigned char)bc[c++];
+                in[i] = data[c++];
                 len++;
                 counter--;
             }
@@ -178,15 +179,17 @@ utString ByteCodeVariant::bytesToBase64(const utArray<unsigned char>& bc)
     return utString(buffer.ptr());
 }
 
-ByteCodeVariant::ByteCodeVariant()
-{
-    clear();
-}
 
 void ByteCode::clear()
 {
     std.clear();
     fr2.clear();
+    error = "";
+}
+
+ByteCodeVariant::ByteCodeVariant()
+{
+    clear();
 }
 
 void ByteCodeVariant::clear()
@@ -196,22 +199,22 @@ void ByteCodeVariant::clear()
     bytes.clear();
 }
 
-const utString& ByteCodeVariant::getBase64()
+utString* ByteCodeVariant::getBase64()
 {
     if (flags & BASE64_DIRTY) {
-        base64 = bytesToBase64(*bytes.getInternalArray());
+        base64 = bytesToBase64(bytes);
         flags &= ~BASE64_DIRTY;
     }
-    return base64;
+    return &base64;
 }
 
-const utArray<unsigned char>& ByteCodeVariant::getByteCode()
+utByteArray* ByteCodeVariant::getByteCode()
 {
     if (flags & BYTES_DIRTY) {
-        *bytes.getInternalArray() = base64ToBytes(base64);
+        bytes = base64ToBytes(base64);
         flags &= ~BYTES_DIRTY;
     }
-    return *bytes.getInternalArray();
+    return &bytes;
 }
 
 void ByteCodeVariant::setBase64(utString bc64)
@@ -220,17 +223,17 @@ void ByteCodeVariant::setBase64(utString bc64)
     bytes.clear(); flags |= BYTES_DIRTY;
 }
 
-void ByteCodeVariant::setByteCode(const utArray<unsigned char>& bc)
+void ByteCodeVariant::setByteCode(utByteArray bc)
 {
-    bytes.clear();
-    *bytes.getInternalArray() = bc;
+    bytes = bc;
     base64.clear(); flags |= BASE64_DIRTY;
 }
 
 
-void ByteCodeVariant::serialize(utByteArray *stream) const {
-    stream->writeUnsignedInt(bytes.getSize());
-    stream->writeBytes(const_cast<utByteArray*>(&bytes));
+void ByteCodeVariant::serialize(utByteArray *stream) {
+    utByteArray *ba = getByteCode();
+    stream->writeUnsignedInt(ba->getSize());
+    stream->writeBytes(ba);
 }
 
 void ByteCodeVariant::deserialize(utByteArray *stream) {
@@ -243,24 +246,24 @@ void ByteCodeVariant::deserialize(utByteArray *stream) {
 
 
 
-const utString& ByteCode::getBase64()
+utString& ByteCode::getBase64()
 {
-    return std.getBase64();
+    return *std.getBase64();
 }
 
-const utString& ByteCode::getBase64FR2()
+utString& ByteCode::getBase64FR2()
 {
-    return fr2.getBase64();
+    return *fr2.getBase64();
 }
 
-const utArray<unsigned char>& ByteCode::getByteCode()
+utArray<unsigned char>& ByteCode::getByteCode()
 {
-    return std.getByteCode();
+    return *std.getByteCode()->getInternalArray();
 }
 
-const utArray<unsigned char>& ByteCode::getByteCodeFR2()
+utArray<unsigned char>& ByteCode::getByteCodeFR2()
 {
-    return fr2.getByteCode();
+    return *fr2.getByteCode()->getInternalArray();
 }
 
 void ByteCode::setBase64(utString bc64)
@@ -275,12 +278,16 @@ void ByteCode::setBase64FR2(utString bc64_fr2)
 
 void ByteCode::setByteCode(const utArray<unsigned char>& bc)
 {
-    std.setByteCode(bc);
+    utByteArray ba;
+    *ba.getInternalArray() = bc;
+    std.setByteCode(ba);
 }
 
 void ByteCode::setByteCodeFR2(const utArray<unsigned char>& bc_fr2)
 {
-    fr2.setByteCode(bc_fr2);
+    utByteArray ba;
+    *ba.getInternalArray() = bc_fr2;
+    fr2.setByteCode(ba);
 }
 
 
@@ -317,7 +324,7 @@ static int bytecode_loadbuffer(lua_State *L, const char *buff, size_t size,
     return lua_load(L, getS, &ls, name);
 }
 
-void ByteCode::serialize(utByteArray *bytes) const
+void ByteCode::serialize(utByteArray *bytes)
 {
     bytes->writeUnsignedByte(LOOM_JIT_BYTECODE_VERSION);
 
@@ -336,21 +343,21 @@ void ByteCode::deserialize(utByteArray *bytes)
 
 bool ByteCode::load(LSLuaState *ls, bool execute)
 {
-    utArray<unsigned char> byteCode;
+    utByteArray* byteCode;
 #if LJ_FR2
     byteCode = fr2.getByteCode();
 #else
     byteCode = std.getByteCode();
 #endif
 
-    if (!byteCode.size())
+    if (!byteCode->getSize())
     {
         return false;
     }
 
     lua_State *L = ls->VM();
 
-    int status = bytecode_loadbuffer(L, (const char*)byteCode.ptr(), byteCode.size(), LUA_SIGNATURE);
+    int status = bytecode_loadbuffer(L, (const char*)byteCode->getDataPtr(), byteCode->getSize(), LUA_SIGNATURE);
 
     if (execute && status == 0)
     {

@@ -45,8 +45,8 @@ class ByteCodeVariant
     utString base64;
     utByteArray bytes;
 
-    utString bytesToBase64(const utArray<unsigned char>& bc);
-    utArray<unsigned char> base64ToBytes(utString bc64);
+    utString bytesToBase64(utByteArray bytes);
+    utByteArray base64ToBytes(utString bc64);
 
 public:
 
@@ -54,13 +54,13 @@ public:
 
     void clear();
 
-    const utString& getBase64();
-    const utArray<unsigned char>& getByteCode();
+    utString* getBase64();
+    utByteArray* getByteCode();
 
     void setBase64(utString bc64);
-    void setByteCode(const utArray<unsigned char>& bc);
+    void setByteCode(utByteArray bc);
 
-    void serialize(utByteArray *stream) const;
+    void serialize(utByteArray *stream);
     void deserialize(utByteArray *stream);
 };
 
@@ -76,10 +76,10 @@ public:
         clear();
     }
 
-    const utString& getBase64();
-    const utArray<unsigned char>& getByteCode();
-    const utString& getBase64FR2();
-    const utArray<unsigned char>& getByteCodeFR2();
+    utString& getBase64();
+    utArray<unsigned char>& getByteCode();
+    utString& getBase64FR2();
+    utArray<unsigned char>& getByteCodeFR2();
 
     void setBase64(utString bc64);
     void setBase64FR2(utString bc64_fr2);
@@ -90,7 +90,7 @@ public:
 
     void clear();
 
-    void serialize(utByteArray *bytes) const;
+    void serialize(utByteArray *bytes);
     void deserialize(utByteArray *bytes);
 
 };
