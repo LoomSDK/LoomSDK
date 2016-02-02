@@ -30,22 +30,43 @@
 namespace LS {
 class LSLuaState;
 
-class ByteCode {
-    // byte code encoded as base64
-    utString bc64;
+enum ByteCodeVariantFlags
+{
+    NONE         = 0,
+    BASE64_DIRTY = 1 << 0,
+    BYTES_DIRTY  = 1 << 1
+};
 
-    // raw bytecode
-    utArray<unsigned char> bc;
+class ByteCodeVariant
+{
 
-    // two slot byte code encoded as base64
-    utString bc64_fr2;
+    int flags;
 
-    // two slot raw bytecode
-    utArray<unsigned char> bc_fr2;
-
+    utString base64;
+    utByteArray bytes;
 
     utString bytesToBase64(const utArray<unsigned char>& bc);
     utArray<unsigned char> base64ToBytes(utString bc64);
+
+public:
+
+    ByteCodeVariant();
+
+    void clear();
+
+    const utString& getBase64();
+    const utArray<unsigned char>& getByteCode();
+
+    void setBase64(utString bc64);
+    void setByteCode(const utArray<unsigned char>& bc);
+
+    void serialize(utByteArray *stream) const;
+    void deserialize(utByteArray *stream);
+};
+
+class ByteCode {
+    ByteCodeVariant std;
+    ByteCodeVariant fr2;
 
 public:
     utString error;
@@ -55,64 +76,22 @@ public:
         clear();
     }
 
-    const utString& getBase64()
-    {
-        return bc64;
-    }
+    const utString& getBase64();
+    const utArray<unsigned char>& getByteCode();
+    const utString& getBase64FR2();
+    const utArray<unsigned char>& getByteCodeFR2();
 
-    const utArray<unsigned char>& getByteCode()
-    {
-        return bc;
-    }
-
-    const utString& getBase64FR2()
-    {
-        return bc64_fr2;
-    }
-
-    const utArray<unsigned char>& getByteCodeFR2()
-    {
-        return bc_fr2;
-    }
-
-    void setBase64(utString bc64)
-    {
-        this->bc64 = bc64;
-        this->bc = base64ToBytes(this->bc64);
-    }
-
-    void setBase64FR2(utString bc64_fr2)
-    {
-        this->bc64_fr2 = bc64_fr2;
-        this->bc_fr2 = base64ToBytes(this->bc64_fr2);
-    }
-
-    void setByteCode(const utArray<unsigned char>& bc)
-    {
-        this->bc = bc;
-        this->bc64 = bytesToBase64(bc);
-    }
-
-    void setByteCodeFR2(const utArray<unsigned char>& bc_fr2)
-    {
-        this->bc_fr2 = bc_fr2;
-        this->bc64_fr2 = bytesToBase64(bc_fr2);
-    }
+    void setBase64(utString bc64);
+    void setBase64FR2(utString bc64_fr2);
+    void setByteCode(const utArray<unsigned char>& bc);
+    void setByteCodeFR2(const utArray<unsigned char>& bc_fr2);
 
     bool load(LSLuaState *ls, bool execute = false);
 
-    void clear()
-    {
-        bc64 = "";
-        bc.clear();
-    }
+    void clear();
 
     void serialize(utByteArray *bytes) const;
     void deserialize(utByteArray *bytes);
-
-    static ByteCode *decode64(const utString& code64);
-
-    static ByteCode *encode64(const utArray<unsigned char>& bc);
 
 };
 }
