@@ -693,7 +693,7 @@ void LSLuaState::dumpLuaStack(lua_State *L)
         switch (t) {
         case LUA_TTABLE:
             lmLog(gLuaStateLogGroup, "%d: table", i);
-            dumpLuaTable(L, i);
+            dumpLuaTable(L, i, 0);
             break;
         default:
             lmLog(gLuaStateLogGroup, "%d: %s", i, getLuaValue(L, i).c_str());
