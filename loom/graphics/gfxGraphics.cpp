@@ -377,6 +377,12 @@ unsigned int Graphics::getFillColor()
     return sTarget.fillColor.getHex();
 }
 
+// Returns true if input rectangle is equal to current clip rect
+bool Graphics::checkClipRect(int x, int y, int width, int height)
+{
+    return x == sTarget.clipX && y == sTarget.clipY && width == sTarget.clipWidth && height == sTarget.clipHeight;
+}
+
 void Graphics::setClipRect(int x, int y, int width, int height)
 {
     if (x < 0)
@@ -391,12 +397,20 @@ void Graphics::setClipRect(int x, int y, int width, int height)
         y       = 0;
     }
 
+    // Sets current clip rect
+    sTarget.clipX = x;
+    sTarget.clipY = y;
+    sTarget.clipWidth = width;
+    sTarget.clipHeight = height;
+
     context()->glEnable(GL_SCISSOR_TEST);
     context()->glScissor(x, sTarget.height-height-y, width, height);
 }
 
 void Graphics::clearClipRect()
 {
+    sTarget.clipX = sTarget.clipY = 0;
+    sTarget.clipWidth = sTarget.clipHeight = -1;
     context()->glDisable(GL_SCISSOR_TEST);
 }
 

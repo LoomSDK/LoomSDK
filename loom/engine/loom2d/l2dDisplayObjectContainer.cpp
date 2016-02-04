@@ -136,7 +136,12 @@ void DisplayObjectContainer::renderChildren(lua_State *L)
         }
     }
 
-    if (renderState.isClipping()) GFX::Graphics::setClipRect((int)renderState.clipRect.x, (int)renderState.clipRect.y, (int)renderState.clipRect.width, (int)renderState.clipRect.height);
+    // Checks if current clip rect is the same previous clip rect. If that is not the case objects are submitted for rendering before setting a new clip rect.
+    if (renderState.isClipping() && !GFX::Graphics::checkClipRect((int)renderState.clipRect.x, (int)renderState.clipRect.y, (int)renderState.clipRect.width, (int)renderState.clipRect.height))
+    {
+        GFX::QuadRenderer::submit();
+        GFX::Graphics::setClipRect((int)renderState.clipRect.x, (int)renderState.clipRect.y, (int)renderState.clipRect.width, (int)renderState.clipRect.height);
+    }
 
     for (int i = 0; i < numChildren; i++)
     {
