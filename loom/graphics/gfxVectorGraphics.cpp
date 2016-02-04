@@ -303,7 +303,11 @@ void VectorGraphics::render(Loom2D::RenderState* renderStatePointer, Loom2D::Mat
         }
     }
 
-    if (renderState.isClipping()) VectorRenderer::setClipRect((int)renderState.clipRect.x, (int)renderState.clipRect.y, (int)renderState.clipRect.width, (int)renderState.clipRect.height);
+    if (renderState.isClipping())
+    {
+        GFX::Graphics::clearClipRect();
+        VectorRenderer::setClipRect((int)renderState.clipRect.x, (int)renderState.clipRect.y, (int)renderState.clipRect.width, (int)renderState.clipRect.height);
+    }
 
     resetStyle();
 

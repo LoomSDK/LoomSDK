@@ -180,7 +180,13 @@ typedef struct GraphicsRenderTarget {
     // The current fill color used when clearing the color buffer
     Color fillColor;
 
-    GraphicsRenderTarget() : width(0), height(0), flags(0), fillColor(0x000000FF) {};
+    // Current OpenGL scissor clipping
+    int clipX;
+    int clipY;
+    int clipWidth;
+    int clipHeight;
+
+    GraphicsRenderTarget() : width(0), height(0), flags(0), fillColor(0x000000FF), clipX(0), clipY(0), clipWidth(-1), clipHeight(-1) {};
 
 } GraphicsRenderTarget;
 
@@ -259,6 +265,9 @@ public:
     static unsigned int getFillColor();
 
     static int getBackFramebuffer() { return sBackFramebuffer; }
+
+    // Returns true if input rectangle is equal to current clip rect
+    static bool checkClipRect(int x, int y, int width, int height);
 
     // Set a clip rect specified by the provided parameters
     static void setClipRect(int x, int y, int width, int height);
