@@ -25,6 +25,7 @@
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utByteArray.h"
 
+#define LOOM_JIT_BYTECODE_MAGIC 0x4A
 #define LOOM_JIT_BYTECODE_VERSION 1
 
 namespace LS {

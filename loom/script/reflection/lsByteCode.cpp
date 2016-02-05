@@ -175,6 +175,37 @@ static int bytecode_loadbuffer(lua_State *L, const char *buff, size_t size,
     return bytecode_load(L, getS, &ls, name);
 }
 
+void ByteCode::serialize(utByteArray *bytes)
+{
+    bytes->writeUnsignedByte(LOOM_CLASSIC_BYTECODE_MAGIC);
+    bytes->writeUnsignedByte(LOOM_CLASSIC_BYTECODE_VERSION);
+
+    utArray<unsigned char> data = base64.getData();
+    bytes->writeUnsignedInt(data.size());
+    utByteArray wrapper;
+    wrapper.attach(data.ptr(), data.size());
+    if (data.size() > 0) bytes->writeBytes(&wrapper);
+}
+
+void ByteCode::deserialize(utByteArray *bytes)
+{
+    unsigned char magic = bytes->readUnsignedByte();
+    lmAssert(magic == LOOM_CLASSIC_BYTECODE_MAGIC, "Loom JIT ByteCode magic mismatch: %x", magic);
+    unsigned char ver = bytes->readUnsignedByte();
+    lmAssert(ver == LOOM_CLASSIC_BYTECODE_VERSION, "Loom JIT ByteCode version mismatch: %d", ver);
+
+    UTsize size = bytes->readUnsignedInt();
+
+    base64.clear();
+    if (size == 0) return;
+
+    utByteArray data;
+
+    bytes->readBytes(&data, 0, size);
+
+    base64 = utBase64::encode64(*data.getInternalArray());
+}
+
 
 bool ByteCode::load(LSLuaState *ls, bool execute)
 {

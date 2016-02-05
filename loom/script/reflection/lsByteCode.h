@@ -24,6 +24,10 @@
 #define _lsbytecode_h
 
 #include "loom/common/utils/utBase64.h"
+#include "loom/common/utils/utByteArray.h"
+
+#define LOOM_CLASSIC_BYTECODE_MAGIC 0x43
+#define LOOM_CLASSIC_BYTECODE_VERSION 1
 
 namespace LS {
 class LSLuaState;
@@ -32,10 +36,16 @@ class ByteCode {
     utBase64 base64;
 
 public:
+    utString error;
 
-    const char *getBase64()
+    utString getBase64()
     {
-        return base64.getBase64().c_str();
+        return base64.getBase64();
+    }
+
+    void setBase64(utString bc64)
+    {
+        base64 = utBase64::decode64(bc64);
     }
 
     const utArray<unsigned char>& getByteCode()
@@ -53,6 +63,9 @@ public:
     static ByteCode *decode64(const char *code64);
 
     static ByteCode *encode64(const utArray<unsigned char>& bc);
+
+    void serialize(utByteArray *bytes);
+    void deserialize(utByteArray *bytes);
 };
 }
 #endif

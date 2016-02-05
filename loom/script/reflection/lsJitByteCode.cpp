@@ -326,6 +326,7 @@ static int bytecode_loadbuffer(lua_State *L, const char *buff, size_t size,
 
 void ByteCode::serialize(utByteArray *bytes)
 {
+    bytes->writeUnsignedByte(LOOM_JIT_BYTECODE_MAGIC);
     bytes->writeUnsignedByte(LOOM_JIT_BYTECODE_VERSION);
 
     std.serialize(bytes);
@@ -334,8 +335,10 @@ void ByteCode::serialize(utByteArray *bytes)
 
 void ByteCode::deserialize(utByteArray *bytes)
 {
+    unsigned char magic = bytes->readUnsignedByte();
+    lmAssert(magic == LOOM_JIT_BYTECODE_MAGIC, "Loom JIT ByteCode magic mismatch: %x", magic);
     unsigned char ver = bytes->readUnsignedByte();
-    lmAssert(ver == LOOM_JIT_BYTECODE_VERSION, "Loom JIT ByteCode mismatch: %d", ver);
+    lmAssert(ver == LOOM_JIT_BYTECODE_VERSION, "Loom JIT ByteCode version mismatch: %d", ver);
 
     std.deserialize(bytes);
     fr2.deserialize(bytes);
