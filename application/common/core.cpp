@@ -363,7 +363,10 @@ main(int argc, char *argv[])
         0, 0,
         100,
         100,
-        SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN 
+        SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN
+#if LOOM_PLATFORM == LOOM_PLATFORM_IOS
+        | SDL_WINDOW_BORDERLESS
+#endif
         | SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI)) == NULL)
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateWindow(): %s\n", SDL_GetError());
