@@ -25,8 +25,6 @@
 #include <SDL.h>
 #include "lmSDL.h"
 
-lmDefineLogGroup(sdlLogGroup, "loom.engine.bindings", 1, LoomLogInfo);
-
 IMEDelegateDispatcher* IMEDelegateDispatcher::shared() {
     static IMEDelegateDispatcher instance;
     return &instance;

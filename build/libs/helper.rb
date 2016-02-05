@@ -22,7 +22,7 @@ end
 
 def installed?(tool)
   cmd = "which #{tool}" unless ($HOST.is_a? WindowsHost)
-  cmd = "where #{tool} > nul 2>&1" if ($HOST.is_a? WindowsHost)
+  cmd = "where /Q #{tool}" if ($HOST.is_a? WindowsHost)
   %x(#{cmd})
   return ($? == 0)
 end

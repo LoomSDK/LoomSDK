@@ -215,15 +215,22 @@ void TypeReader::deserializeClass(Type *type, json_t *classJSON)
         type->addMember(m);
     }
 
-    const char *bc = json_string_value(
-        json_object_get(classJSON, "bytecode_staticinitializer"));
+    ByteCode *byteCode;
 
-    type->setBCStaticInitializer(ByteCode::decode64(bc));
+    byteCode = lmNew(NULL) ByteCode();
+    byteCode->setBase64(utString(json_string_value(json_object_get(classJSON, "bytecode_staticinitializer"))));
+#if LOOM_ENABLE_JIT
+    byteCode->setBase64(utString(json_string_value(json_object_get(classJSON, "bytecode_staticinitializer_fr2"))));
+#endif
+    type->setBCStaticInitializer(byteCode);
 
-    bc = json_string_value(
-        json_object_get(classJSON, "bytecode_instanceinitializer"));
 
-    type->setBCInstanceInitializer(ByteCode::decode64(bc));
+    byteCode = lmNew(NULL) ByteCode();
+    byteCode->setBase64(utString(json_string_value(json_object_get(classJSON, "bytecode_instanceinitializer"))));
+#if LOOM_ENABLE_JIT
+    byteCode->setBase64(utString(json_string_value(json_object_get(classJSON, "bytecode_instanceinitializer_fr2"))));
+#endif
+    type->setBCInstanceInitializer(byteCode);
 }
 
 

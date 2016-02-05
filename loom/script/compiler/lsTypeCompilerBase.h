@@ -75,9 +75,14 @@ protected:
     // break/loop exit and then copy the value into the parent blocks value
     const char *currentForInIteratorName;
 
+    // Enable two slot frame info for function calls, required by 64-bit iOS
+    // and other possible 64-bit platforms using the 64-bit garbage collector
+    // (LJ_GC64), this is defined by LJ_FR2 in LuaJIT.
+    int twoSlotFrameInfo;
+
     TypeCompilerBase() : cls(NULL), vm(NULL), L(NULL), cs(NULL), currentMethod(NULL),
                          currentMethodCoroutine(false), inLocalFunction(0), currentFunctionLiteral(NULL),
-                         currentForInIteratorName(NULL)
+                         currentForInIteratorName(NULL), twoSlotFrameInfo(0)
     {
     }
 
@@ -194,7 +199,7 @@ protected:
     void generateInstanceInitializer();
 
 #if LOOM_ENABLE_JIT
-    virtual ByteCode *generateByteCode(GCproto *proto, bool debug) = 0;
+    virtual void generateByteCode(ByteCode *byteCode, GCproto *proto, bool debug) = 0;
 
 #else
     virtual ByteCode *generateByteCode(Proto *proto, bool debug) = 0;

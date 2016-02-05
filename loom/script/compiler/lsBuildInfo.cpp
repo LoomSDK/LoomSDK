@@ -200,7 +200,7 @@ BuildInfo *BuildInfo::createDefaultBuildFile()
     BuildInfo *binfo = new BuildInfo();
 
     binfo->assemblyName    = "Main";
-    binfo->assemblyVersion = "1.0";
+    binfo->assemblyVersion = "2.0";
     binfo->executable      = true;
 
     // If we're just throwing some defaults together, pull in all available
@@ -264,7 +264,7 @@ BuildInfo *BuildInfo::createDefaultBuildFile()
     ModuleBuildInfo *mi = new ModuleBuildInfo(binfo);
 
     mi->moduleName = "Main";
-    mi->version    = "1.0";
+    mi->version    = "2.0";
 
     // add source paths default src or from loom.config classpath
     for (int i = 0; i < LSCompiler::getSourcePathCount(); i++)

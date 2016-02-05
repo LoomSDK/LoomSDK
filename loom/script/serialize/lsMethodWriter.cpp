@@ -111,11 +111,17 @@ void MethodBaseWriter::write(json_t *json)
 
     if (!attr.isNative)
     {
-        json_object_set(json, "bytecode", json_string(byteCode.c_str()));
+        json_object_set(json, "bytecode", json_string(byteCode.getBase64().c_str()));
+#if LOOM_ENABLE_JIT
+        json_object_set(json, "bytecode_fr2", json_string(byteCode.getBase64FR2().c_str()));
+#endif
     }
     else
     {
         json_object_set(json, "bytecode", json_string(""));
+#if LOOM_ENABLE_JIT
+        json_object_set(json, "bytecode_fr2", json_string(""));
+#endif
     }
 }
 

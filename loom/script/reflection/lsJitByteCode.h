@@ -23,16 +23,50 @@
 
 #include "loom/common/utils/utString.h"
 #include "loom/common/utils/utTypes.h"
+#include "loom/common/utils/utByteArray.h"
+
+#define LOOM_JIT_BYTECODE_VERSION 1
 
 namespace LS {
 class LSLuaState;
 
-class ByteCode {
-    // byte code encoded as base64
-    utString bc64;
+enum ByteCodeVariantFlags
+{
+    NONE         = 0,
+    BASE64_DIRTY = 1 << 0,
+    BYTES_DIRTY  = 1 << 1
+};
 
-    // raw bytecode
-    utArray<unsigned char> bc;
+class ByteCodeVariant
+{
+
+    int flags;
+
+    utString base64;
+    utByteArray bytes;
+
+    void bytesToBase64(utByteArray* bc, utString *bc64);
+    void base64ToBytes(utString* bc64, utByteArray *bc);
+
+public:
+
+    ByteCodeVariant();
+
+    void clear();
+
+    utString* getBase64();
+    utByteArray* getByteCode();
+
+    void setBase64(utString bc64);
+    void setByteCode(utByteArray bc);
+
+    void serialize(utByteArray *stream);
+    void deserialize(utByteArray *stream);
+};
+
+class ByteCode {
+    ByteCodeVariant std;
+    ByteCodeVariant fr2;
 
 public:
     utString error;
@@ -42,27 +76,23 @@ public:
         clear();
     }
 
-    const utString& getBase64()
-    {
-        return bc64;
-    }
+    utString& getBase64();
+    utArray<unsigned char>& getByteCode();
+    utString& getBase64FR2();
+    utArray<unsigned char>& getByteCodeFR2();
 
-    const utArray<unsigned char>& getByteCode()
-    {
-        return bc;
-    }
+    void setBase64(utString bc64);
+    void setBase64FR2(utString bc64_fr2);
+    void setByteCode(const utArray<unsigned char>& bc);
+    void setByteCodeFR2(const utArray<unsigned char>& bc_fr2);
 
     bool load(LSLuaState *ls, bool execute = false);
 
-    void clear()
-    {
-        bc64 = "";
-        bc.clear();
-    }
+    void clear();
 
-    static ByteCode *decode64(const utString& code64);
+    void serialize(utByteArray *bytes);
+    void deserialize(utByteArray *bytes);
 
-    static ByteCode *encode64(const utArray<unsigned char>& bc);
 };
 }
 #endif
