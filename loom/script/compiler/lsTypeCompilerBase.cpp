@@ -1902,7 +1902,7 @@ void TypeCompilerBase::generateStaticInitializer()
 
     closeCodeState(&codeState);
 
-	bool debug = cunit->buildInfo->isDebugBuild();
+    bool debug = cunit->buildInfo->isDebugBuild();
 
 #if LOOM_ENABLE_JIT
     if (!cls->type->getBCStaticInitializer()) cls->type->setBCStaticInitializer(lmNew(NULL) ByteCode());
