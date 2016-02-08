@@ -32,7 +32,7 @@ SEATEST_TEST(platformNetwork_googlePing)
 {
     loom_net_initialize();
 
-    loom_socketId_t s = loom_net_openTCPSocket("google.si", 80, 1);
+    loom_socketId_t s = loom_net_openTCPSocket("google.com", 80, 1);
 
     char request[] = "GET / HTTP/1.0\r\n\r\n";
 
