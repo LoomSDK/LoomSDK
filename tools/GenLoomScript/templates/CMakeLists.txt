@@ -11,7 +11,7 @@ include_directories(
     source/loom/vendor/jansson
     source/loom/vendor/lua/src
     source/loom/vendor/seatest
-    source/loom/vendor/jemalloc-3.4.0/include
+    source/loom/vendor/jemalloc-4.0.1/include
 )
 
 set (VENDOR_SOURCE $$VENDOR_SOURCE$$)
@@ -53,7 +53,7 @@ endif(APPLE)
 if (MSVC)
     add_definitions(-DLOOM_DISABLE_JEMALLOC -D__STDC_LIMIT_MACROS=1 -D__STDINT_MACROS=1 -D__STDC_CONSTANT_MACROS=1)
     add_definitions(-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
-    include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/source/loom/vendor/jemalloc-3.4.0/include/msvc_compat )
+    include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/source/loom/vendor/jemalloc-4.0.1/include/msvc_compat )
     include_directories( ${CMAKE_SOURCE_DIR}/source/loom/vendor/zlib/include )
 
     set(CMAKE_EXE_LINKER_FLAGS "kernel32.lib advapi32.lib COMCTL32.lib COMDLG32.lib USER32.lib ADVAPI32.lib GDI32.lib WINMM.lib WSOCK32.lib Ws2_32.lib")
@@ -97,7 +97,7 @@ add_executable(lsc source/tools/lsc/main.cpp ${CMAKE_CURRENT_SOURCE_DIR}/temp/sy
 set_target_properties(lsc PROPERTIES COMPILE_DEFINITIONS "LOOM_EMBEDDED_SYSTEMLIB=1")
 target_link_libraries(lsc loomscript)
 
-copy_binary(lsc "${CMAKE_CURRENT_SOURCE_DIR}/artifacts")
+copy_binary(lsc "${ARTIFACTS_DIR}/tools")
 
 
 # loomrun
@@ -105,4 +105,4 @@ add_executable(loomrun source/tools/loomrun/main.cpp)
 
 target_link_libraries(loomrun loomscript)
 
-copy_binary(loomrun "${CMAKE_CURRENT_SOURCE_DIR}/artifacts")
+copy_binary(loomrun "${ARTIFACTS_DIR}/tools")

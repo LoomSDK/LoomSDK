@@ -216,11 +216,14 @@ void loom_debugAllocator_verifyAll(const char* file, int line);
 * lmNew(someAllocator) Foo(), and delete myFoo becomes
 * lmDelete(someAllocator, myfoo). We do not support the delete[] or new[]
 * operators, if you want an array use the templated vector class.
+* 
+* `obj` can change addresses after `loom_destructInPlace`, so we use
+* its return value, which is the original address, for freeing the memory.
 *
 ************************************************************************/
 #define lmNew(allocator)                new(allocator, __FILE__, __LINE__, (LS::FunctionDisambiguator*) NULL)
-#define lmDelete(allocator, obj)        { loom_destructInPlace(obj); lmFree(allocator, obj); }
-#define lmSafeDelete(allocator, obj)    if (obj) { loom_destructInPlace(obj); lmFree(allocator, obj); obj = NULL; }
+#define lmDelete(allocator, obj)        { lmFree(allocator, loom_destructInPlace(obj)); }
+#define lmSafeDelete(allocator, obj)    if (obj) { lmFree(allocator, loom_destructInPlace(obj)); obj = NULL; }
 #define lmSafeFree(allocator, obj)      if (obj) { lmFree(allocator, obj); obj = NULL; }
 
 #include <new>
@@ -255,10 +258,11 @@ T* loom_constructInPlace(void* memory)
 
 // Destruct the type without freeing memory (calls the destructor)
 template<typename T>
-void loom_destructInPlace(T *t)
+T* loom_destructInPlace(T *t)
 {
-    if (t == NULL) return;
+    if (t == NULL) return NULL;
     t->~T();
+    return t;
 }
 
 // Constructs a new array of types of length nr using the provided allocator (or NULL for default allocator)

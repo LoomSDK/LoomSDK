@@ -98,7 +98,7 @@ void *loom_asset_imageDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
    img = (loom_asset_image_t*)lmAlloc(gAssetAllocator, sizeof(loom_asset_image_t));
 
     // parse any orientation info from exif format
-   img->orientation = exifinfo_parse_orientation(buffer, bufferLen);
+   img->orientation = exifinfo_parse_orientation(buffer, (unsigned int)bufferLen);
 
    img->bits = stbi_load_from_memory((const stbi_uc *)buffer, (int)bufferLen, &img->width, &img->height, &img->bpp, 4);
    

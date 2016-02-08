@@ -83,7 +83,7 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         // It's an Ogg, assume vorbis and throw it to stb_vorbis.
         int channels = 0;
         short *outputBuffer = NULL;
-        int sampleCount = stb_vorbis_decode_memory(charBuff, bufferLen, &channels, &outputBuffer);
+        int sampleCount = stb_vorbis_decode_memory(charBuff, (int)bufferLen, &channels, &outputBuffer);
         if(sampleCount < 0)
         {
             lmLogError(gSoundAssetGroup, "Failed to decode Ogg Vorbis!");
@@ -114,13 +114,13 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         mp3_info_t mp3Info;
 
         // Decode once to get total size.
-        int totalBytes = 0;
-        int bytesRead = 0, bytesLeft = bufferLen;
+        size_t totalBytes = 0;
+        size_t bytesRead = 0, bytesLeft = bufferLen;
 
         mp3_decoder_t decmp3 = mp3_create();
         for(;;)
         {
-            int bytesDecoded = mp3_decode(decmp3, charBuff + bytesRead, bytesLeft, outBuffer, &mp3Info);
+            int bytesDecoded = mp3_decode(decmp3, charBuff + bytesRead, (int)bytesLeft, outBuffer, &mp3Info);
             bytesRead += bytesDecoded;
             bytesLeft -= bytesDecoded;
             totalBytes += mp3Info.audio_bytes;
@@ -136,7 +136,7 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         // TODO: Warn about non 44.1khz mp3s.
         sound->channels = mp3Info.channels;
         sound->bytesPerSample = 2;
-        sound->sampleCount = totalBytes / sound->bytesPerSample;
+        sound->sampleCount = (int)totalBytes / sound->bytesPerSample;
         sound->bufferSize = sound->channels * sound->bytesPerSample * sound->sampleCount;
         sound->sampleRate = 44100; // TODO: This should be variable
         sound->buffer = lmAlloc(gAssetAllocator, sound->bufferSize);
@@ -147,7 +147,7 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         int curBufferOffset = 0;
         for(;;)
         {
-            int bytesDecoded = mp3_decode(decmp3, charBuff + bytesRead, bytesLeft, outBuffer, &mp3Info);
+            int bytesDecoded = mp3_decode(decmp3, charBuff + bytesRead, (int)bytesLeft, outBuffer, &mp3Info);
             bytesRead += bytesDecoded;
             bytesLeft -= bytesDecoded;
 

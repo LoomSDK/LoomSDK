@@ -209,12 +209,12 @@ void platform_HTTPUpdate()
                 // Will we cache to a file?
                 if (http_code < 400 && userData->cacheFile.length())
                 {
-                    platform_writeFile(userData->cacheFile.c_str(), userData->chunk->memory, userData->chunk->size);
+                    platform_writeFile(userData->cacheFile.c_str(), userData->chunk->memory, (int)userData->chunk->size);
                 }
 
                 utByteArray *result = lmNew(NULL) utByteArray();
                 // TODO: Don't copy?
-                result->allocateAndCopy(userData->chunk->memory, userData->chunk->size);
+                result->allocateAndCopy(userData->chunk->memory, (int)userData->chunk->size);
 
                 // notify the callback if we are successful
                 if (http_code < 400)

@@ -125,7 +125,7 @@ public:
             {
                 // Send with body as string.
                 id = platform_HTTPSend((const char *)url.c_str(), (const char *)method.c_str(), &HTTPRequest::respond, (void *)this,
-                                  (const char *)body.c_str(), body.length(), header,
+                                  (const char *)body.c_str(), (int)body.length(), header,
                                   (const char *)responseCacheFile.c_str(), followRedirects);
             }
 

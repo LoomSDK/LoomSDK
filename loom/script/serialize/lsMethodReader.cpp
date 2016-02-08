@@ -193,7 +193,12 @@ void MethodReader::deserializeMethodBase(MethodBase *base, json_t *json)
     }
     else
     {
-        base->setByteCode(ByteCode::decode64(json_string_value(json_object_get(json, "bytecode"))));
+        ByteCode *byteCode = lmNew(NULL) ByteCode();
+        byteCode->setBase64(json_string_value(json_object_get(json, "bytecode")));
+#if LOOM_ENABLE_JIT
+        byteCode->setBase64FR2(json_string_value(json_object_get(json, "bytecode_fr2")));
+#endif
+        base->setByteCode(byteCode);
     }
 }
 

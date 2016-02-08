@@ -166,9 +166,16 @@ json_t *TypeWriter::write()
     }
 
     json_object_set(json, "bytecode_staticinitializer",
-                    json_string(bcStaticInitializer.c_str()));
+                    json_string(bcStaticInitializer.getBase64().c_str()));
     json_object_set(json, "bytecode_instanceinitializer",
-                    json_string(bcInstanceInitializer.c_str()));
+                    json_string(bcInstanceInitializer.getBase64().c_str()));
+
+#if LOOM_ENABLE_JIT
+    json_object_set(json, "bytecode_staticinitializer_fr2",
+        json_string(bcStaticInitializer.getBase64FR2().c_str()));
+    json_object_set(json, "bytecode_instanceinitializer_fr2",
+        json_string(bcInstanceInitializer.getBase64FR2().c_str()));
+#endif
 
     return json;
 }

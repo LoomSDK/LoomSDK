@@ -114,15 +114,15 @@ protected:
         unsigned char *srcEnd = srcByteArray->_data.ptr() + srcByteArray->_data.size();
         if (src + length > srcEnd)
         {
-            length = srcEnd - src;
+            length = (int)(srcEnd - src);
             if (length < 0) return 0;
         }
 
         unsigned char *dstEnd = dstByteArray->_data.ptr() + dstByteArray->_data.size();
         if (dst + length > dstEnd)
         {
-            int off = dst - dstByteArray->_data.ptr();
-            dstByteArray->_data.resize(dst - dstByteArray->_data.ptr() + length);
+            int off = (int)(dst - dstByteArray->_data.ptr());
+            dstByteArray->_data.resize((UTsize)(dst - dstByteArray->_data.ptr() + length));
             // We have a different backing array now, point pointer to the new one.
             dst = dstByteArray->_data.ptr() + off;
         }
@@ -259,7 +259,7 @@ public:
             return;
         }
 
-        int length = strlen(value);
+        UTsize length = (UTsize)strlen(value);
 
         if (!length)
         {
@@ -336,19 +336,19 @@ public:
             return;
         }
 
-        size_t length = strlen(value);
+        UTsize length = (UTsize)strlen(value);
 
         // Unable to write length in writeUTF, length is larger than 65535
         assert(length < 0xFFFF);
 
-        writeValue<unsigned short>(length);
+        writeValue<unsigned short>((unsigned short)length);
 
         writeUTFInternal(value, length);
     }
 
     void writeUTFBytes(const char *value)
     {
-        writeUTFInternal(value, strlen(value));
+        writeUTFInternal(value, (UTsize)strlen(value));
     }
 
     void writeUTFInternal(const char *value, UTsize length)

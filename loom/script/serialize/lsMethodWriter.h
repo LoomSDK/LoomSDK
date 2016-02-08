@@ -64,7 +64,7 @@ protected:
     TemplateInfo *templateInfo;
 
     // bytecode
-    utString byteCode;
+    ByteCode byteCode;
 
 public:
 
@@ -84,9 +84,9 @@ public:
         this->attr = attr;
     }
 
-    void setByteCode(const utString& bc)
+    void setByteCode(const ByteCode *bc)
     {
-        byteCode = bc;
+        byteCode = *bc;
     }
 
     void setTemplateTypeInfo(TemplateInfo *_templateInfo)

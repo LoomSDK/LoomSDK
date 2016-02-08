@@ -1531,7 +1531,7 @@ static inline void *const getIdentityKey()
     // or compiler dependent as seems to be a problem which exhibited
     // issues upon a threshold
 
-    return (void *)-0x12345678;
+    return (void *)0x12345678;
 
     //static char value;
     //return &value;

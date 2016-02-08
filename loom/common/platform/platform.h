@@ -33,46 +33,61 @@
 
 #define LOOM_COMPILER_MSVC    1
 #define LOOM_COMPILER_GNU     2
+#define LOOM_COMPILER_CLANG   3
 
 // Detect the current platform
 #ifdef WIN32
-#define LOOM_PLATFORM    LOOM_PLATFORM_WIN32
+    #define LOOM_PLATFORM    LOOM_PLATFORM_WIN32
 #elif defined(__APPLE__)
-
-#include "TargetConditionals.h"
-#if TARGET_OS_IPHONE      // TARGET_OS_MAC is defined as 1 for iOS devices, so we need to check to make sure that TARGET_OS_IPHONE is NOT 1 before we can confirm that we're on OS/X.
-#define LOOM_PLATFORM    LOOM_PLATFORM_IOS
-#elif TARGET_OS_MAC
-#define LOOM_PLATFORM    LOOM_PLATFORM_OSX
-#endif
+    #include "TargetConditionals.h"
+    #if TARGET_OS_IPHONE      // TARGET_OS_MAC is defined as 1 for iOS devices, so we need to check to make sure that TARGET_OS_IPHONE is NOT 1 before we can confirm that we're on OS/X.
+        #define LOOM_PLATFORM    LOOM_PLATFORM_IOS
+    #elif TARGET_OS_MAC
+        #define LOOM_PLATFORM    LOOM_PLATFORM_OSX
+    #endif
 #elif defined(ANDROID_NDK)
-#define LOOM_PLATFORM    LOOM_PLATFORM_ANDROID
+    #define LOOM_PLATFORM    LOOM_PLATFORM_ANDROID
 #elif defined(LOOM_LINUX_BUILD)
-#define LOOM_PLATFORM    LOOM_PLATFORM_LINUX
+    #define LOOM_PLATFORM    LOOM_PLATFORM_LINUX
 #endif
-
 
 #ifndef LOOM_PLATFORM
-#error Unable to detect platform for Loom
+    #error Unable to detect platform for Loom
 #endif
 
 // Detect the current compiler
 #if defined(_MSC_VER)
-#define LOOM_COMPILER    LOOM_COMPILER_MSVC
+    #define LOOM_COMPILER    LOOM_COMPILER_MSVC
 #elif defined(__GNUC__)
-#define LOOM_COMPILER    LOOM_COMPILER_GNU
+    #define LOOM_COMPILER    LOOM_COMPILER_GNU
+#elif defined(__clang__)
+    #define LOOM_COMPILER    LOOM_COMPILER_CLANG
+#else
+    #error Unable to detect compiler for Loom
 #endif
 
-#ifndef LOOM_COMPILER
-#error Unable to detect compiler for Loom
+// Detect if the current platform is 64 bit
+#if LOOM_COMPILER == LOOM_COMPILER_MSVC
+    #ifdef _WIN64
+        #define LOOM_PLATFORM_64BIT 1
+    #else
+        #define LOOM_PLATFORM_64BIT 0
+    #endif
+#elif LOOM_COMPILER == LOOM_COMPILER_CLANG || LOOM_COMPILER == LOOM_COMPILER_GNU
+    #if defined(__x86_64__) || (defined(__LP64__) && __LP64__) || defined(__arm64__)
+        #define LOOM_PLATFORM_64BIT 1
+    #else
+        #define LOOM_PLATFORM_64BIT 0
+    #endif
+#else
+    #error "Unknown platform 64 bit support"
 #endif
-
 
 // Platform detection flag shortcuts
 #if (LOOM_PLATFORM == LOOM_PLATFORM_IOS) || (LOOM_PLATFORM == LOOM_PLATFORM_OSX)
-#define LOOM_PLATFORM_IS_APPLE    1
+    #define LOOM_PLATFORM_IS_APPLE    1
 #else
-#define LOOM_PLATFORM_IS_APPLE    0
+    #define LOOM_PLATFORM_IS_APPLE    0
 #endif
 
 #define LOOM_PLATFORM_TOUCH LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_IOS

@@ -1902,10 +1902,11 @@ void TypeCompilerBase::generateStaticInitializer()
 
     closeCodeState(&codeState);
 
-	bool debug = cunit->buildInfo->isDebugBuild();
+    bool debug = cunit->buildInfo->isDebugBuild();
 
 #if LOOM_ENABLE_JIT
-	cls->type->setBCStaticInitializer(generateByteCode(codeState.proto, debug));
+    if (!cls->type->getBCStaticInitializer()) cls->type->setBCStaticInitializer(lmNew(NULL) ByteCode());
+    generateByteCode(cls->type->getBCStaticInitializer(), codeState.proto, debug);
 #else
     cls->type->setBCStaticInitializer(generateByteCode(funcState.f, debug));
 #endif
@@ -1998,7 +1999,8 @@ void TypeCompilerBase::generateInstanceInitializer()
         bool debug = cunit->buildInfo->isDebugBuild();
 
 #if LOOM_ENABLE_JIT
-        cls->type->setBCInstanceInitializer(generateByteCode(codeState.proto, debug));
+        if (!cls->type->getBCInstanceInitializer()) cls->type->setBCInstanceInitializer(lmNew(NULL) ByteCode());
+        generateByteCode(cls->type->getBCInstanceInitializer(), codeState.proto, debug);
 #else
         cls->type->setBCInstanceInitializer(generateByteCode(funcState.f, debug));
 #endif

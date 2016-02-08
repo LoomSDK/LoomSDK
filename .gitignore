@@ -1,7 +1,6 @@
 _Resharper*
 premake/
 obj/
-cmake_*/
 artifacts/*
 ipch/
 *.pdb
@@ -27,31 +26,8 @@ obj/*
 .settings
 .project
 
-build/android/*/bin
-build/android/*/libs/
-
-build/luajit*
-loom/vendor/luajit/src/jit/vmdef.lua
-loom/vendor/luajit/src/host/buildvm
-loom/vendor/luajit/src/host/*.o
-loom/vendor/luajit/src/host/buildvm_arch.h
-loom/vendor/luajit/src/host/minilua
-loom/vendor/luajit/src/*.o
-loom/vendor/luajit/*.a
-loom/vendor/luajit/src/*.a
-loom/vendor/luajit/src/*.so
-loom/vendor/luajit/src/*.dll
-loom/vendor/luajit/src/*.exe
-loom/vendor/luajit/src/*.exp
-loom/vendor/luajit/src/*.lib
-loom/vendor/luajit/src/*.obj
-loom/vendor/luajit/src/lj_bcdef.h
-loom/vendor/luajit/src/lj_ffdef.h
-loom/vendor/luajit/src/lj_folddef.h
-loom/vendor/luajit/src/lj_libdef.h
-loom/vendor/luajit/src/lj_recdef.h
-loom/vendor/luajit/src/lj_vm.s
-loom/vendor/luajit/src/luajit
+build/luajit-*
+build/loom-*
 
 *CMakeFiles*
 
@@ -75,6 +51,7 @@ application/android/libs/armeabi-v7a
 
 application/android/local.properties
 application/android/proguard-project.txt
+application/android/build.xml
 
 # Ouya Ignores
 application/ouya/assets/
@@ -88,16 +65,18 @@ application/ouya/proguard-project.txt
 loom/engine/cocos2dx/platform/android/java/bin/
 loom/engine/cocos2dx/platform/android/java/gen/
 loom/engine/cocos2dx/platform/android/java/local.properties
+loom/engine/SDL2/platform/android/java/proguard-project.txt
 
 loom/vendor/facebook/android/bin/
 loom/vendor/facebook/android/gen/
 loom/vendor/facebook/android/local.properties
+loom/vendor/facebook/android/proguard-project.txt
+loom/vendor/facebook/android/build.xml
+
 
 #docs stuff
 s3_docs
-loom/vendor/luajit/libluajit64.a
 
-loom/vendor/luajit/libluajit32.a
 output
 gems
 loom/engine/SDL2/platform/android/java/bin/
@@ -108,3 +87,4 @@ loom/vendor/sdl2/Xcode-iOS/SDL/SDL.xcodeproj/xcuserdata
 loom/vendor/sdl2/Xcode-iOS/SDL/SDL.xcodeproj/project.xcworkspace/xcuserdata
 loom/engine/sdl2/platform/android/java/build.xml
 docs/examples/*/bin-release/
+libSDL2.a

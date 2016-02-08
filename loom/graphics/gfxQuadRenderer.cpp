@@ -22,7 +22,6 @@
 //#define HAVE_M_PI
 
 #include <string.h>
-#include <stdint.h>
 
 #include "loom/common/core/log.h"
 #include "loom/common/core/allocator.h"

@@ -371,7 +371,7 @@ static int ftwWalker(const char *fpath, const struct stat *sb, int typeflag)
 static void platform_walkDirectory_r(const char *path, platform_subdirectoryWalkerCallback cb, void *payload)
 {
     char relativePath[MAX_PATH], searchPath[MAX_PATH];
-    int  l;
+    size_t l;
 
     // Time to walk directories. Stick \* on the end so it searches properly.
     WIN32_FIND_DATAA findData;
@@ -436,7 +436,7 @@ void platform_walkSubdirectories(const char *rootPath, platform_subdirectoryWalk
 static void platform_walkFiles_r(const char *path, platform_fileWalkerCallback cb, void *payload)
 {
     char relativePath[MAX_PATH], searchPath[MAX_PATH];
-    int  l;
+    size_t l;
 
     // Time to walk directories. Stick \* on the end so it searches properly.
     WIN32_FIND_DATAA findData;

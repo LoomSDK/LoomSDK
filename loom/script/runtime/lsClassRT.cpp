@@ -32,8 +32,10 @@
 // activity.
 //#define DEBUG_CONSTRUCTORS
 
+static int gCtorLevel = 0;
+
 #ifdef DEBUG_CONSTRUCTORS
-#   define CTOR_LOG(...) LSLog(__VA_ARGS__);
+#   define CTOR_LOG(format, ...) LSLog(LSLogInfo, "%.*s " format, gCtorLevel, "||||||||||||||||||||||||||||||||||||||||", __VA_ARGS__);
 #else
 #   define CTOR_LOG(...)
 #endif
@@ -170,7 +172,7 @@ void lualoom_callscriptinstanceinitializerchain_internal(lua_State *L, Type *typ
         // this is not the constructor, which is a method
         lua_getfield(L, -1, "__ls_instanceinitializer");
 
-        CTOR_LOG(LSLogError, "   o initializer for %s", t->getFullName().c_str());
+        CTOR_LOG("   o initializer for %s", t->getFullName().c_str());
 
         // call initializer on new instance.
         lua_pushvalue(L, instanceIdx);
@@ -225,6 +227,8 @@ void lualoom_newscriptinstance_internal(lua_State *L, Type *type)
 // class instance creator
 static int lsr_classcreateinstance(lua_State *L)
 {
+    gCtorLevel++;
+
     LOOM_PROFILE_SCOPE(classCreate);
 
     // Note how many args we were called with.
@@ -233,7 +237,7 @@ static int lsr_classcreateinstance(lua_State *L)
     // index 1 on stack is class table
     Type *type = (Type *)lua_topointer(L, lua_upvalueindex(1));
 
-    CTOR_LOG(LSLogError, "Creating instance: %s", type->getFullName().c_str());
+    CTOR_LOG("Creating instance: %s", type->getFullName().c_str());
 
     const bool profiling = LSProfiler::isEnabled();
     int memoryBeforeKB, memoryBeforeB;
@@ -267,7 +271,7 @@ static int lsr_classcreateinstance(lua_State *L)
     Type *nt = type->getNativeBaseType();
     if(nt)
     {
-        CTOR_LOG(LSLogError, "   o creating native: %s", nt->getFullName().c_str());
+        CTOR_LOG("   o creating native: %s", nt->getFullName().c_str());
 
         int ntop = lua_gettop(L);
         lua_getglobal(L, "__ls_nativeclasses");
@@ -320,7 +324,7 @@ static int lsr_classcreateinstance(lua_State *L)
             }
         }
 
-        CTOR_LOG(LSLogError, "   o native ctor %s", type->getFullName().c_str());
+        CTOR_LOG("   o native ctor %s", type->getFullName().c_str());
 
         // Call the native constructor and note the result.
         if (lua_pcall(L, _nargs, 1, 0))
@@ -332,7 +336,7 @@ static int lsr_classcreateinstance(lua_State *L)
                                     type->getFullName().c_str());
         }
 
-        CTOR_LOG(LSLogError, "            - done");
+        CTOR_LOG("            - done");
 
         lua_rawseti(L, instanceIdx, LSINDEXNATIVE);
 
@@ -414,15 +418,28 @@ static int lsr_classcreateinstance(lua_State *L)
             }
         }
 
-        CTOR_LOG(LSLogError, "   o script ctor %s", type->getFullName().c_str());
+        CTOR_LOG("   o script ctor %s", type->getFullName().c_str());
+
+        //lua_getglobal(L, "__ls_traceback");
+        //lua_insert(L, 1);
+
 
         // Call the script constructor.
-        if (lua_pcall(L, nargs + 1, 0, 0))
-        {
-            LSError("ERROR constructing instance of '%s':\n%s", type->getFullName().c_str(), lua_tostring(L, -1));
+        int error = lua_pcall(L, nargs + 1, 0, 0);
+
+        if (error) {
+            LSLuaState::getLuaState(L)->dumpLuaStack();
+            //LSLuaState::getLuaState(L)->triggerRuntimeError("LUA STACK DUMP");
         }
 
-        CTOR_LOG(LSLogError, "            - done");
+        lmAssert(error == 0, "%s error constructing instance of '%s':\n%s", (
+            error == LUA_ERRRUN ? "Runtime" :
+            error == LUA_ERRMEM ? "Memory allocation" :
+            error == LUA_ERRERR ? "Error handler" :
+            "Unknown"
+            ), type->getFullName().c_str(), lua_tostring(L, -1));
+
+        CTOR_LOG("            - done");
 
     }
 
@@ -435,6 +452,8 @@ static int lsr_classcreateinstance(lua_State *L)
         LSProfiler::registerMemoryUsage(type, memoryDelta);
         gct->allocated += memoryDelta;
     }
+
+    gCtorLevel--;
 
     // Return the new instance.
     lua_pushvalue(L, instanceIdx);
@@ -820,9 +839,10 @@ static void lsr_classinitializemethod(lua_State *L, MethodBase *methodBase, int 
         assert(bc);
         if (!bc->load(LSLuaState::getLuaState(L)))
         {
-            LSError("Bytecode Error: %s:%s\n",
+            LSError("Bytecode Error for type %s:%s: %s\n",
                     methodBase->getDeclaringType()->getFullName().c_str(),
-                    methodBase->getName());
+                    methodBase->getName(),
+                    bc->error.c_str());
         }
     }
 
@@ -1079,7 +1099,7 @@ void lsr_classinitializestatic(lua_State *L, Type *type)
     // run the static initializer
     lua_getfield(L, clsIdx, "__ls_staticinitializer");
 
-    CTOR_LOG(LSLogError, "running static initializer %s\n", type->getFullName().c_str());
+    CTOR_LOG("running static initializer %s\n", type->getFullName().c_str());
 
     if (lua_pcall(L, 0, LUA_MULTRET, 0))
     {

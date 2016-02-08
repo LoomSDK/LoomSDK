@@ -153,8 +153,8 @@ public:
         convertToBinary((int) col, _colBinaryString);
 
         // generate zoom string
-        int rowOffset = strlen(_rowBinaryString) - zoom;
-        int colOffset = strlen(_colBinaryString) - zoom;
+        int rowOffset = (int)strlen(_rowBinaryString) - zoom;
+        int colOffset = (int)strlen(_colBinaryString) - zoom;
         const int zoomStringLen = 256;
         static char zoomString[zoomStringLen];
         lmAssert(zoom + 1 < zoomStringLen, "zoom should be less than %d - 1", zoomStringLen);

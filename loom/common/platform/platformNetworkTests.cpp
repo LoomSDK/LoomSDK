@@ -42,14 +42,14 @@ SEATEST_TEST(platformNetwork_googlePing)
     loom_thread_sleep(100);
 
     char response[4096];
-    int  responseRead = 4096;
+    int  responseRead = 100; // Just read the first 100 bytes, enough to make sure we're getting something
 
     loom_net_readTCPSocket(s, response, &responseRead, 0);
 
     loom_net_closeTCPSocket(s);
 
     // Expect some bytes back from GOOG.
-    assert_true(responseRead > 100);
+    assert_true(responseRead >= 100);
 
     loom_net_shutdown();
 }

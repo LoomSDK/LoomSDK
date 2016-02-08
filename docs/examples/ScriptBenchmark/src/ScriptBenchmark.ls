@@ -38,7 +38,9 @@ package
             }
 
             toRun++;
-            
+
+            // Avoid running out of memory
+            GC.fullCollect();
         }
 
         override public function run():void

@@ -604,7 +604,7 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
 
         if (!found)
         {
-            filter.push(j);
+            filter.push((int)j);
         }
     }
 
@@ -637,12 +637,12 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
             if (libName == "System" && embeddedSystemAssembly)
             {
                 size_t embeddedSystemAssemblyLength = strlen(embeddedSystemAssembly);
-                rarray.resize(embeddedSystemAssemblyLength + 1);
+                rarray.resize((int)(embeddedSystemAssemblyLength + 1));
                 memcpy(&rarray[0], embeddedSystemAssembly, embeddedSystemAssemblyLength + 1);
             }
             else
             {
-                lmAssert(utFileStream::tryReadToArray(libPath, rarray), "Unable to load library assembly %s", libName.c_str());    
+                lmAssert(utFileStream::tryReadToArray(libPath, rarray), "Unable to load library assembly %s at %s", libName.c_str(), libPath.c_str());    
             }
 
             utBase64 base64 = utBase64::encode64(rarray);
@@ -667,6 +667,7 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
 void LSCompiler::setSDKBuild(const utString& lsc)
 {
     sdkPath = lsc;
+
     log("SDK Path: %s", sdkPath.c_str());
 
     AssemblyReader::addLibraryAssemblyPath(sdkPath + "libs");

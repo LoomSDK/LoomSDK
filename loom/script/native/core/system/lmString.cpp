@@ -123,7 +123,7 @@ public:
         }
         else
         {
-            lua_pushnumber(L, strlen(svalue));
+            lua_pushnumber(L, (lua_Number)strlen(svalue));
         }
         return 1;
     }
@@ -138,7 +138,7 @@ public:
         }
         else
         {
-            int  length = strlen(svalue);
+            int  length = (int)strlen(svalue);
             char *upper = (char*)lmAlloc(NULL, length + 1);
             upper[length] = 0;
             for (int i = 0; i < length; i++)
@@ -164,7 +164,7 @@ public:
         }
         else
         {
-            int  length = strlen(svalue);
+            int  length = (int)strlen(svalue);
             char *lower = (char*)lmAlloc(NULL, length + 1);
             lower[length] = 0;
             for (int i = 0; i < length; i++)
@@ -208,7 +208,7 @@ public:
             return 1;
         }
 
-        lua_pushnumber(L, found - svalue);
+        lua_pushnumber(L, (lua_Number)(found - svalue));
         return 1;
     }
 
@@ -226,10 +226,10 @@ public:
 
         if (startIndex < 0)
         {
-            startIndex = strlen(svalue);
+            startIndex = (int)strlen(svalue);
         }
 
-        int searchLength = strlen(search);
+        int searchLength = (int)strlen(search);
 
         while (startIndex >= 0)
         {
@@ -317,7 +317,7 @@ public:
             return 1;
         }
 
-        int len = strlen(svalue);
+        int len = (int)strlen(svalue);
 
         char *nbuffer = (char*)lmAlloc(NULL, len + 1);
 
@@ -362,7 +362,7 @@ public:
             return 1;
         }
 
-        int svalueLength = strlen(svalue);
+        int svalueLength = (int)strlen(svalue);
 
         if (endIndex >= svalueLength)
         {
@@ -502,7 +502,7 @@ public:
         }
 
         utString result;
-        utSHA2::generateSHA256(svalue, strlen(svalue), result);
+        utSHA2::generateSHA256(svalue, (int)strlen(svalue), result);
         lua_pushstring(L, result.c_str());
         return 1;
     }    
@@ -581,8 +581,8 @@ public:
         lua_rawgeti(L, newVectorIdx, LSINDEXVECTOR);
 
         int count = 0;
-        int dlen  = strlen(delim);
-        int slen  = strlen(str);
+        int dlen  = (int)strlen(delim);
+        int slen  = (int)strlen(str);
 
         // handle the case of "", delim, ...
         if (!strncmp(str, delim, dlen))

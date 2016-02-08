@@ -8,7 +8,7 @@ set (LOOMEXEC_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
 
 add_executable(loomexec ${LOOMEXEC_SRC})
 
-get_target_property(LOOMEXECBIN loomexec LOCATION)
+set(LOOMEXECBIN $<TARGET_FILE:${PROJECT_NAME}>)
 
 if (MSVC)
     target_link_libraries(loomexec
@@ -20,34 +20,31 @@ if (MSVC)
 
     add_custom_command(TARGET loomexec
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${LOOMEXECBIN}\" \"${CMAKE_SOURCE_DIR}/artifacts/loomexec.exe\"
+        COMMAND echo f | xcopy /F /Y \"${LOOMEXECBIN}\" \"${ARTIFACTS_DIR}/tools/loomexec.exe\"
     )
 
 else ()
 
 	target_link_libraries(loomexec
-	    LoomVendor 
-	    LoomCommon 
-	    LoomScript
+        LoomVendor
+        LoomCommon
+        LoomScript
 	)
 
 	add_custom_command(TARGET loomexec
-    	POST_BUILD
-    	COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts
-    	COMMAND cp ${LOOMEXECBIN} ${CMAKE_SOURCE_DIR}/artifacts/loomexec
+        POST_BUILD
+        COMMAND mkdir -p ${ARTIFACTS_DIR}/tools
+        COMMAND cp ${LOOMEXECBIN} ${ARTIFACTS_DIR}/tools/loomexec
 	)
-
 
 endif()
 
-
 if (LOOM_BUILD_JIT EQUAL 1)
 
-    target_link_libraries(loomexec ${LOOM_LUAJIT_LIB})
+    target_link_libraries(loomexec luajit)
 
     if (LINUX)
         target_link_libraries(${PROJECT_NAME} -ldl)
     endif()
 
 endif()
-

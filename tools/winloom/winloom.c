@@ -54,7 +54,7 @@ int main(int argc, const char **argv)
     const char          *_args;
     DWORD               exitCode;
     BOOL                result;
-    int                 length, count;
+    size_t              length, count;
     unsigned int        size = sizeof(loompath);
 
     if (!SetConsoleCtrlHandler((PHANDLER_ROUTINE)CtrlHandler, TRUE))

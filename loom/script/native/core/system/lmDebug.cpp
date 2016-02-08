@@ -19,11 +19,15 @@
  */
 
 
+#include "loom/common/core/log.h"
+
 #include "loom/script/loomscript.h"
 #include "loom/script/runtime/lsRuntime.h"
 #include "loom/script/native/lsNativeDelegate.h"
 
 using namespace LS;
+
+lmDefineLogGroup(debugLogGroup, "debug", 1, LoomLogInfo);
 
 /*
  * Provides low level debugger services which are implemented in native code for speed
@@ -527,6 +531,14 @@ public:
         return 0;
     }
 
+    static int loomDump(lua_State *L)
+    {
+        lmLog(debugLogGroup, "Debug Object Dump");
+        LSLuaState::getLuaState(L)->dumpLuaStack();
+
+        return 0;
+    }
+
     // retrieve locals for a given stack frame
     static int getLocals(lua_State *L)
     {
@@ -947,6 +959,7 @@ int registerSystemDebug(lua_State *L)
        .addStaticVar("finishMethod", &Debug::finishMethod)
 
        .addStaticLuaFunction("assert", &Debug::loomAssert)
+       .addStaticLuaFunction("dump", &Debug::loomDump)
        .addStaticLuaFunction("setDebugHook", &Debug::setDebugHook)
        .addStaticLuaFunction("getLocals", &Debug::getLocals)
        .addStaticLuaFunction("getCallStack", &Debug::getCallStackInfo)

@@ -253,7 +253,19 @@ public:
             utArray<const char *> narray;
             for (UTsize i = 0; i < array->size(); i++)
             {
-                narray.push_back(array->at(i).c_str());
+                utString& str = array->at(i);
+
+                // Looks like 64 bit platforms can add __ptr64 after * (i.e. "void* __ptr64")
+                #if LOOM_PLATFORM_64BIT
+                const char* ptrstr = " __ptr64";
+                const char* pos = strstr(str.c_str(), ptrstr);
+                if (pos)
+                {
+                    str.erase((utString::size_type)(pos - str.c_str()), strlen(ptrstr));
+                }
+                #endif
+
+                narray.push_back(str.c_str());
             }
 
             if (narray.size())
