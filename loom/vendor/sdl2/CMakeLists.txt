@@ -154,6 +154,7 @@ endif()
 
 if(MSVC)
   option(FORCE_STATIC_VCRT "Force /MT for static VC runtimes" OFF)
+  add_definitions(/D _CRT_SECURE_NO_WARNINGS)
   if(FORCE_STATIC_VCRT)
     foreach(flag_var
         CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE

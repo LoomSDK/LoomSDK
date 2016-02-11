@@ -83,12 +83,12 @@ void VectorPath::arcTo(float controlX, float controlY, float anchorX, float anch
 }
 
 void VectorGraphics::clear() {
-    utArray<VectorData*>::Iterator it = queue->iterator();
+    utArray<VectorData*>::Iterator it = queue.iterator();
     while (it.hasMoreElements()) {
         VectorData* d = it.getNext();
         lmDelete(NULL, d);
     }
-    queue->clear();
+    queue.clear();
     /*
     bounds.x = INFINITY;
     bounds.y = INFINITY;
@@ -142,27 +142,27 @@ void VectorGraphics::lineStyle(float thickness, unsigned int color, float alpha,
         !strcmp(t, "miter") ? VectorLineJoints::MITER :
         VectorLineJoints::ROUND;
 
-    queue->push_back(lmNew(NULL) VectorLineStyle(thickness, color, alpha, scaleModeEnum, capsEnum, jointsEnum, miterLimit));
+    queue.push_back(lmNew(NULL) VectorLineStyle(thickness, color, alpha, scaleModeEnum, capsEnum, jointsEnum, miterLimit));
     restartPath();
 }
 
 void VectorGraphics::textFormat(VectorTextFormat format) {
-    queue->push_back(lmNew(NULL) VectorTextFormatData(lmNew(NULL) VectorTextFormat(format)));
+    queue.push_back(lmNew(NULL) VectorTextFormatData(lmNew(NULL) VectorTextFormat(format)));
     currentTextFormat.merge(&format);
 }
 
 void VectorGraphics::beginFill(unsigned int color, float alpha) {
-    queue->push_back(lmNew(NULL) VectorFill(color, alpha));
+    queue.push_back(lmNew(NULL) VectorFill(color, alpha));
     restartPath();
 }
 
 void VectorGraphics::beginTextureFill(TextureID id, Loom2D::Matrix *matrix, bool repeat, bool smooth) {
-    queue->push_back(lmNew(NULL) VectorFill(id, matrix, repeat, smooth));
+    queue.push_back(lmNew(NULL) VectorFill(id, matrix, repeat, smooth));
     restartPath();
 }
 
 void VectorGraphics::endFill() {
-    queue->push_back(lmNew(NULL) VectorFill());
+    queue.push_back(lmNew(NULL) VectorFill());
     restartPath();
 }
 
@@ -239,12 +239,12 @@ void VectorGraphics::drawArc(float x, float y, float radius, float angleFrom, fl
 }
 
 void VectorGraphics::drawTextLine(float x, float y, utString text) {
-    queue->push_back(lmNew(NULL) VectorText(x, y, -1, lmNew(NULL) utString(text)));
+    queue.push_back(lmNew(NULL) VectorText(x, y, -1, lmNew(NULL) utString(text)));
     inflateBounds(VectorRenderer::textLineBounds(&currentTextFormat, x, y, &text));
 }
 
 void VectorGraphics::drawTextBox(float x, float y, float width, utString text) {
-    queue->push_back(lmNew(NULL) VectorText(x, y, width < 0 ? 0 : width, lmNew(NULL) utString(text)));
+    queue.push_back(lmNew(NULL) VectorText(x, y, width < 0 ? 0 : width, lmNew(NULL) utString(text)));
     inflateBounds(VectorRenderer::textBoxBounds(&currentTextFormat, x, y, width, &text));
 }
 
@@ -261,7 +261,7 @@ Loom2D::Rectangle* VectorGraphics::textBoxBounds(VectorTextFormat format, float 
 }
 
 void VectorGraphics::drawSVG(VectorSVG* svg, float x, float y, float scale, float lineThickness) {
-    queue->push_back(lmNew(NULL) VectorSVGData(svg, x, y, scale, lineThickness));
+    queue.push_back(lmNew(NULL) VectorSVGData(svg, x, y, scale, lineThickness));
     restartPath();
     inflateBounds(Loom2D::Rectangle(x, y, svg->getWidth() * scale, svg->getHeight() * scale));
 }
@@ -303,14 +303,18 @@ void VectorGraphics::render(Loom2D::RenderState* renderStatePointer, Loom2D::Mat
         }
     }
 
-    if (renderState.isClipping()) VectorRenderer::setClipRect((int)renderState.clipRect.x, (int)renderState.clipRect.y, (int)renderState.clipRect.width, (int)renderState.clipRect.height);
+    if (renderState.isClipping())
+    {
+        GFX::Graphics::clearClipRect();
+        VectorRenderer::setClipRect((int)renderState.clipRect.x, (int)renderState.clipRect.y, (int)renderState.clipRect.width, (int)renderState.clipRect.height);
+    }
 
     resetStyle();
 
     flushPath();
 
     LOOM_PROFILE_START(vectorRenderData);
-    utArray<VectorData*>::Iterator it = queue->iterator();
+    utArray<VectorData*>::Iterator it = queue.iterator();
     while (it.hasMoreElements()) {
         VectorData* d = it.getNext();
         d->render(this);
@@ -468,10 +472,10 @@ void VectorLineStyle::copyTo(VectorLineStyle* s) {
 VectorPath* VectorGraphics::getPath() {
     VectorPath* path = lastPath;
     if (path == NULL) {
-        path = queue->empty() ? NULL : dynamic_cast<VectorPath*>(queue->back());
+        path = queue.empty() ? NULL : dynamic_cast<VectorPath*>(queue.back());
         if (path == NULL) {
             path = lmNew(NULL) VectorPath();
-            queue->push_back(path);
+            queue.push_back(path);
         }
         lastPath = path;
     }
@@ -479,7 +483,7 @@ VectorPath* VectorGraphics::getPath() {
 }
 
 void VectorGraphics::addShape(VectorShape *shape) {
-    queue->push_back(shape);
+    queue.push_back(shape);
     restartPath();
 }
 

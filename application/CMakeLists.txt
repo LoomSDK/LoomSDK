@@ -1,9 +1,3 @@
-# On OSX, only build for i386.
-if (NOT LOOM_BUILD_IOS EQUAL 1)
-  set(CMAKE_OSX_ARCHITECTURES "i386")
-endif()
-
-
 project(${APPLICATION_NAME})
 
 include_directories( ${LOOM_INCLUDE_FOLDERS} )
@@ -34,7 +28,7 @@ endif()
 
 if (APPLE)
     if (LOOM_BUILD_IOS EQUAL 1)
-        
+
         set(APPLE_ICON_FILES 
             ios/Icon-60@2x.png 
             ios/Icon-72.png 
@@ -58,7 +52,7 @@ if (APPLE)
           ios/Default@2x.png
           ios/Default-568h@2x.png
         )
-        
+
         SET_SOURCE_FILES_PROPERTIES(ios/Default-iphone.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
         SET_SOURCE_FILES_PROPERTIES(ios/Default@2x-iphone.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
         SET_SOURCE_FILES_PROPERTIES(ios/Default.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
@@ -66,7 +60,7 @@ if (APPLE)
         SET_SOURCE_FILES_PROPERTIES(ios/Default-568h@2x.png PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
 
     else()
-        
+
         set(APPLE_ICON_FILES osx/Application.icns)
         set (APPLICATION_SRC
           ${APPLICATION_SRC}
@@ -127,7 +121,7 @@ if (APPLE)
         endif()
 
         target_link_libraries(${PROJECT_NAME}
-    
+
           ${LOOM_IOS_LIB_GCC}
           LoomVendor
           LoomCommon
@@ -176,12 +170,14 @@ if (APPLE)
           XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET 5.1
           XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2" # Build a universal (iPad/iPhone) app.
           XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES NO
+          XCODE_ATTRIBUTE_ENABLE_BITCODE NO
         )
         # Use our own Info.plist.
         CONFIGURE_FILE("${CMAKE_CURRENT_LIST_DIR}/ios/Info.plist" "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.plist")
         SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.plist")
 
     else()
+        
         target_link_libraries(${PROJECT_NAME} 
            LoomVendor
            LoomCommon
@@ -200,9 +196,9 @@ if (APPLE)
 
           "-L/usr/local/lib"
           "-lz"
-		  
+
           "SDL2-static" "SDL2main"
-		  
+
           )
 
         # Use our own Info.plist.
@@ -241,10 +237,6 @@ if (APPLE)
 
     endif()
     
-    if (LOOM_BUILD_JIT EQUAL 1)
-        target_link_libraries(${PROJECT_NAME} ${LOOM_LUAJIT_LIB})
-    endif()
-    
 elseif(MSVC)	
 
     target_link_libraries(${PROJECT_NAME} 
@@ -256,25 +248,21 @@ elseif(MSVC)
        "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "WSOCK32" "Ws2_32" 
        "SDL2-static" "SDL2main"
     )
-
-    if (LOOM_BUILD_JIT EQUAL 1)
-        target_link_libraries(${PROJECT_NAME} ${LOOM_LUAJIT_LIB})
-    endif()
-
+    
     if (LOOM_TELEMETRY)
         target_link_libraries(${PROJECT_NAME} "telemetry32.link" "telemetry64.link")
     endif()
 
-    get_target_property(DEMOBIN ${PROJECT_NAME} LOCATION)
+    set(DEMOBIN $<TARGET_FILE:${PROJECT_NAME}>)
      
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${DEMOBIN}\" \"${CMAKE_SOURCE_DIR}/artifacts/windows/LoomDemo.exe\"
+        COMMAND echo f | xcopy /F /Y \"${DEMOBIN}\" \"${ARTIFACTS_DIR}/bin/LoomDemo.exe\"
     )
     
     
 elseif(ANDROID)
-
+    
     target_link_libraries(${PROJECT_NAME}
        LoomVendor
        LoomCommon
@@ -284,23 +272,6 @@ elseif(ANDROID)
        "${LOOM_SDL2_LIB}"
     )
     
-    get_target_property(ANDROID_SO ${PROJECT_NAME} LOCATION)
-     
-    add_custom_command(TARGET ${PROJECT_NAME}
-        POST_BUILD
-        set(ANDROID_SO_COPY_SRC, "${ANDROID_SO}")
-        set(ANDROID_SO_COPY_DST, "${CMAKE_SOURCE_DIR}/application/android/libs/armeabi-v7a")
-        string(REPLACE "/" "\" ANDROID_SO_COPY_SRC_WIN32 ${ANDROID_SO_COPY_SRC})
-        string(REPLACE "/" "\" ANDROID_SO_COPY_DST_WIN32 ${ANDROID_SO_COPY_DST})
-        if(WIN32)
-          COMMAND mkdir ${ANDROID_SO_COPY_DST_WIN32}
-          COMMAND xcopy /I /Y ${ANDROID_SO_COPY_SRC_WIN32} ${ANDROID_SO_COPY_DST_WIN32}
-        else()
-          COMMAND mkdir -p ${ANDROID_SO_COPY_DST}
-          COMMAND cp ${ANDROID_SO_COPY_SRC} ${ANDROID_SO_COPY_DST_WIN32}
-      endif()
-      )
-
 elseif(LINUX)
 
     target_link_libraries(${PROJECT_NAME}
@@ -313,14 +284,22 @@ elseif(LINUX)
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)
-        target_link_libraries(${PROJECT_NAME} ${LOOM_LUAJIT_LIB} -ldl)
+        target_link_libraries(${PROJECT_NAME} luajit -ldl)
     endif()
     
-    get_target_property(DEMOBIN ${PROJECT_NAME} LOCATION)
+    set(DEMOBIN $<TARGET_FILE:${PROJECT_NAME}>)
      
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
-        COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts/ubuntu
-        COMMAND cp ${DEMOBIN} ${CMAKE_SOURCE_DIR}/artifacts/ubuntu/LoomDemo
-    )    
+        COMMAND mkdir -p ${ARTIFACTS_DIR}/
+        COMMAND cp ${DEMOBIN} ${ARTIFACTS_DIR}/bin/LoomDemo
+    )
+
+endif()
+
+# LuaJIT needs to be defined at the end, otherwise
+# in some specific random situations, symbols won't
+# link properly to Loom
+if (LOOM_BUILD_JIT EQUAL 1)
+    target_link_libraries(${PROJECT_NAME} luajit)
 endif()

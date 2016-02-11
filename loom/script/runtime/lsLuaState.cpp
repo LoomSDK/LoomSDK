@@ -24,6 +24,7 @@
 #include "loom/common/core/assert.h"
 #include "loom/common/core/log.h"
 #include "loom/common/utils/utByteArray.h"
+#include "loom/common/utils/utString.h"
 #include "loom/common/platform/platformIO.h"
 #include "loom/script/runtime/lsRuntime.h"
 #include "loom/script/runtime/lsLuaState.h"
@@ -37,7 +38,11 @@
 #include "loom/script/common/lsFile.h"
 #include "loom/script/serialize/lsBinReader.h"
 
-extern "C" int luaopen_socket_core(lua_State *L);
+extern "C" {
+    int luaopen_socket_core(lua_State *L);
+    void luaL_openlibs(lua_State *L);
+}
+
 
 namespace LS {
 void lsr_classinitializestatic(lua_State *L, Type *type);
@@ -92,27 +97,19 @@ void LSLuaState::open()
 {
     assert(!L);
 
+    #if LOOM_PLATFORM_64BIT
+    L = luaL_newstate();
+    #else
     L = lua_newstate(lsLuaAlloc, this);
-    //L = luaL_newstate();
+    #endif
+
     toLuaState.insert(L, this);
-
-    luaopen_base(L);
-    luaopen_table(L);
-    luaopen_string(L);
-    luaopen_math(L);
-    luaL_openlibs(L);
-
-#ifdef LUAJIT_MODE_MASK
-    // TODO: turn this back on when it doesn't fail on the testWhile unit test
-    // update luajit and test again
-    luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_OFF);
-#endif
 
     // Stop the GC initially
     lua_gc(L, LUA_GCSTOP, 0);
 
-    // open the lua debug library
-    luaopen_debug(L);
+    // open all the standard libraries
+    luaL_openlibs(L);
 
     // open socket library
     luaopen_socket_core(L);
@@ -237,7 +234,7 @@ void LSLuaState::declareLuaTypes(const utArray<Type *>& types)
             {
                 if (type->isNativeManaged())
                 {
-                    LSError("Managed mismatch for type %s, script declaration specifies native while native bindings are unmanaged", type->getFullName().c_str());
+                    LSError("Managed mismatch for type %s, script declaration specifies managed while native bindings are unmanaged", type->getFullName().c_str());
                 }
                 else
                 {
@@ -278,7 +275,7 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
     // setup assembly type lookup field
     lua_rawgeti(L, LUA_GLOBALSINDEX, LSASSEMBLYLOOKUP);
     lua_pushlightuserdata(L, assembly);
-    lua_setfield(L, -2, assembly->getName().c_str());
+    lua_setfield(L, -2, assembly->getUniqueId().c_str());
     lua_pop(L, 1);
 
     lmAssert(assembly->ordinalTypes == NULL, "Assembly types cache error, ordinalTypes already exists");
@@ -544,6 +541,20 @@ Assembly *LSLuaState::getAssembly(const utString& name)
     return NULL;
 }
 
+Assembly *LSLuaState::getAssemblyByUID(const utString& uid)
+{
+    for (UTsize i = 0; i < assemblies.size(); i++)
+    {
+        Assembly *assembly = assemblies.at(i);
+
+        if (assembly->getUniqueId() == uid)
+        {
+            return assembly;
+        }
+    }
+
+    return NULL;
+}
 
 void LSLuaState::invokeStaticMethod(const utString& typePath,
                                     const char *methodName, int numParameters)
@@ -599,13 +610,71 @@ void LSLuaState::initCommandLine(int argc, const char **argv)
     }
 }
 
+void LSLuaState::initCommandLine(const utArray<utString>& args)
+{
+    commandLine = args;
+}
 
 void LSLuaState::dumpManagedNatives()
 {
     NativeInterface::dumpManagedNatives(L);
 }
 
-void LSLuaState::dumpLuaStack()
+static utString getLuaValue(lua_State *L, int index)
+{
+    int t = lua_type(L, index);
+    switch (t) {
+        case LUA_TSTRING:  return utStringFormat("\"%s\"", lua_tostring(L, index)); break;
+        case LUA_TNUMBER:  return utStringFormat("%.0f", lua_tonumber(L, index)); break;
+        case LUA_TBOOLEAN: return utString(lua_toboolean(L, index) ? "true" : "false"); break;
+        case LUA_TFUNCTION:
+            lua_Debug info;
+            lua_pushvalue(L, index);
+            lua_getinfo(L, ">Snlu", &info);
+            return utStringFormat("\
+function \
+src %s, short %s, linedef %d, lastlinedef %d, what %s, \
+name %s, namewhat %s, curline %d, nups %d",
+info.source, info.short_src, info.linedefined, info.lastlinedefined, info.what,
+info.name, info.namewhat, info.currentline, info.nups
+            );
+            break;
+    }
+    return utString(lua_typename(L, t));
+}
+
+void LSLuaState::dumpLuaTable(lua_State *L, int index, int levels = 2, int level)
+{
+    if (level >= levels) return;
+
+    lua_pushvalue(L, index);
+    lua_pushnil(L);
+
+    //"%.*s " format, gCtorLevel, "||||||||||||||||||||||||||||||||||||||||", __VA_ARGS__);
+
+    const int keyIndex = -2;
+    const int valueIndex = -1;
+
+    utString indent = "";
+    for (int i = 0; i < level+1; i++) indent = indent + "    ";
+
+    while (lua_next(L, -2) != 0)
+    {
+        utString key = getLuaValue(L, keyIndex);
+        utString value = getLuaValue(L, valueIndex);
+        int valueType = lua_type(L, valueIndex);
+        lmLog(gLuaStateLogGroup, "%s%s: %s", indent.c_str() , key.c_str(), value.c_str());
+        if (valueType == LUA_TTABLE) {
+            dumpLuaTable(L, valueIndex, levels, level + 1);
+        }
+
+        lua_pop(L, 1);
+    }
+
+    lua_pop(L, 1);
+}
+
+void LSLuaState::dumpLuaStack(lua_State *L)
 {
     int i;
     int top = lua_gettop(L);
@@ -616,21 +685,21 @@ void LSLuaState::dumpLuaStack()
     {
         int t = lua_type(L, i);
         switch (t) {
-        case LUA_TSTRING:
-            lmLog(gLuaStateLogGroup, "string: '%s'", lua_tostring(L, i));
+        case LUA_TTABLE:
+            lmLog(gLuaStateLogGroup, "%d: table", i);
+            dumpLuaTable(L, i, 0);
             break;
-        case LUA_TBOOLEAN:
-            lmLog(gLuaStateLogGroup, "boolean %s", lua_toboolean(L, i) ? "true" : "false");
-            break;
-        case LUA_TNUMBER:
-            lmLog(gLuaStateLogGroup, "number: %g", lua_tonumber(L, i));
-            break;
-        default:  /* other values */
-            lmLog(gLuaStateLogGroup, "%s", lua_typename(L, t));
+        default:
+            lmLog(gLuaStateLogGroup, "%d: %s", i, getLuaValue(L, i).c_str());
             break;
         }
     }
     lmLog(gLuaStateLogGroup, "");
+}
+
+void LSLuaState::dumpLuaStack()
+{
+    LSLuaState::dumpLuaStack(L);
 }
 
 int LSLuaState::getStackSize()
@@ -726,6 +795,10 @@ void LSLuaState::triggerRuntimeError(const char *format, ...)
     LSLog(LSLogError, "=   RUNTIME ERROR   =");
     LSLog(LSLogError, "=====================\n");
 
+    lmAllocVerifyAll();
+
+    dumpLuaStack();
+
     char    buff[2048];
     va_list args;
     va_start(args, format);
@@ -763,8 +836,8 @@ void LSLuaState::triggerRuntimeError(const char *format, ...)
         LSLog(LSLogError, "%s : %s : %i", s.methodBase->getFullMemberName(),
               s.source ? s.source : NULL, s.linenumber);
     }
-
-
+    
     LSError("\nFatal Runtime Error\n\n");
+
 }
 }

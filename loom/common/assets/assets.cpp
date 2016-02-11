@@ -323,7 +323,7 @@ static void loom_asset_binaryDtor(void *bytes)
 static void *loom_asset_binaryDeserializer(void *ptr, size_t size, LoomAssetCleanupCallback *dtor)
 {
     utByteArray *bytes = lmNew(NULL) utByteArray();
-    bytes->allocateAndCopy(ptr, size);
+    bytes->allocateAndCopy(ptr, (int)size);
     *dtor = loom_asset_binaryDtor;
     return bytes;
 }

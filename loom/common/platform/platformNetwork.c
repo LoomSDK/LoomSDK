@@ -39,6 +39,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <sys/select.h>
+#include <unistd.h>
 #define closesocket    close
 typedef int   SOCKET;
 #endif
@@ -147,7 +148,8 @@ static void loom_net_setSocketReuseAddress(loom_socketId_t s, int reuse)
 
 loom_socketId_t loom_net_openTCPSocket(const char *host, unsigned short port, int blocking)
 {
-    int     status, s, res;
+    SOCKET s;
+    int     status, res;
     struct addrinfo hints;
     struct addrinfo *hostInfo;
     char portString[16];
@@ -187,7 +189,7 @@ loom_socketId_t loom_net_openTCPSocket(const char *host, unsigned short port, in
 #endif
 
     // Do the connect.
-    status = connect(s, hostInfo->ai_addr, hostInfo->ai_addrlen);
+    status = connect(s, hostInfo->ai_addr, (int)hostInfo->ai_addrlen);
     if (status != 0)
     {
         // Get the real error code, might be WOULDBLOCK.
@@ -308,7 +310,7 @@ loom_socketId_t loom_net_listenTCPSocket(unsigned short port)
     int                status;
 
     // Create the socket.
-    int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
+    SOCKET listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 
     lmAssert(listenSocket != -1, "Failed to allocate TCP socket to listen on!");
 

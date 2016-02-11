@@ -628,7 +628,7 @@ void VectorSVG::loadString(utString svg, utString units, float dpi) {
 
 void VectorSVG::parse(const char* svg, const char* units, float dpi) {
     // Parse is destructive so make a copy.
-    char *svgTemp = (char*)lmAlloc(NULL, strlen(svg));
+    char *svgTemp = (char*)lmAlloc(NULL, strlen(svg) + 1);
     memcpy(svgTemp, svg, strlen(svg) + 1);
     image = nsvgParse((char*) svgTemp, units, dpi);
     lmFree(NULL, svgTemp);
@@ -709,6 +709,7 @@ void VectorRenderer::reset()
 void VectorRenderer::initialize()
 {
     nvgSetAllocFunctions(customAlloc, customRealloc, customFree);
+    nvgGLSetAllocFunctions(customAlloc, customRealloc, customFree);
     nsvgSetAllocFunctions(customAlloc, customRealloc, customFree);
     initializeGraphicsResources();
 }

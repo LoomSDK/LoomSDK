@@ -426,7 +426,7 @@ void ConstructorInfoBuilder::injectByteCode(Type *type)
 
     writer.setDefaultConstructor(constructor->defaultConstructor);
 
-    writer.setByteCode(constructor->getByteCode()->getBase64());
+    writer.setByteCode(constructor->getByteCode());
 }
 
 
@@ -464,7 +464,7 @@ void MethodInfoBuilder::injectByteCode(Type *type)
 
     lmAssert(method->getByteCode(), "ByteCode Injection Error: %s:%s", type->getName(), method->getName());
 
-    writer.setByteCode(method->getByteCode()->getBase64());
+    writer.setByteCode(method->getByteCode());
 }
 
 
@@ -478,7 +478,7 @@ void MethodInfoBuilder::injectByteCode(PropertyInfo *property, MethodInfo *metho
     lmAssert(method->getByteCode(), "ByteCode Injection Error: %s:%s:%s",
              property->getDeclaringType()->getName(), property->getName(), method->getName());
 
-    writer.setByteCode(method->getByteCode()->getBase64());
+    writer.setByteCode(method->getByteCode());
 }
 
 
@@ -555,11 +555,8 @@ void TypeBuilder::injectByteCode(Assembly *assembly)
 
     lmAssert(type, "unable to get type for bytecode injection %s", fullPath.c_str());
 
-    utString bc = type->getBCStaticInitializer()->getBase64();
-    writer.setBCStaticInitializer(bc);
-
-    bc = type->getBCInstanceInitializer()->getBase64();
-    writer.setBCInstanceInitializer(bc);
+    writer.setBCStaticInitializer(type->getBCStaticInitializer());
+    writer.setBCInstanceInitializer(type->getBCInstanceInitializer());
 
     if (constructorBuilder)
     {

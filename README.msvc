@@ -7,8 +7,6 @@
 
 ## Instructions for building for Windows:
 
-Note: You may need to select XCode with: sudo /usr/bin/xcode-select -switch /Applications/Xcode.app/Contents/Developer
-
 1. Make sure you have MSVC 11 or MSVC 12 installed
 
 2. Open up a command prompt and make sure you have the compiler variables set.  This can be accomplished by using a Microsoft Visual Studio command prompt or by running the build/windowsBuildHelper.bat in the Loom Native SDK distribution

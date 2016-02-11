@@ -19,23 +19,33 @@ target_link_libraries(unittest
     ${EXTRA_LIBS}
 )
 
-get_target_property(UNITTESTBIN unittest LOCATION)
+set(UNITTESTBIN $<TARGET_FILE:${PROJECT_NAME}>)
+
+if (LOOM_BUILD_64BIT EQUAL 1)
+    set(UNITTESTBIN_DEST unittest-x64)
+else()
+    set(UNITTESTBIN_DEST unittest-x86)
+endif()
 
 if (MSVC)
+
     add_custom_command(TARGET unittest
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${UNITTESTBIN}\" \"${CMAKE_SOURCE_DIR}/tests/unittest.exe\"
+        COMMAND echo f | xcopy /F /Y \"${UNITTESTBIN}\" \"${CMAKE_SOURCE_DIR}/tests/${UNITTESTBIN_DEST}.exe\"
     )
+
 else ()
+
     add_custom_command(TARGET unittest
         POST_BUILD
-        COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/artifacts
-        COMMAND cp ${UNITTESTBIN} ${CMAKE_SOURCE_DIR}/tests/unittest
+        COMMAND mkdir -p ${CMAKE_SOURCE_DIR}/tests
+        COMMAND cp ${UNITTESTBIN} ${CMAKE_SOURCE_DIR}/tests/${UNITTESTBIN_DEST}
     )
-endif(MSVC)
+
+endif()
 
 if (LOOM_BUILD_JIT EQUAL 1)
-    target_link_libraries(unittest ${LOOM_LUAJIT_LIB})
+    target_link_libraries(unittest luajit)
 
     if (LINUX)
         target_link_libraries(${PROJECT_NAME} -ldl)

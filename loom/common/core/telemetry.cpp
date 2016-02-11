@@ -64,7 +64,7 @@ void Telemetry::endTick()
     lmAssert(tickTimerStack.size() == 0, "Tick timer end call missing");
 
     // Customized asset protocol message (3 ints + tables)
-    int sendSize = 3 * 4 + tickValues.size + tickRanges.size;
+    int sendSize = (int)(3 * 4 + tickValues.size + tickRanges.size);
     sendBuffer.resize(sendSize);
     sendBuffer.setPosition(0);
     sendBuffer.writeInt(sendSize);
@@ -124,7 +124,7 @@ void Telemetry::beginTickTimer(const char *name)
     lmAssert(inserted, "Tick timer insertion error");
 
     // String written size is short length + data
-    int strSize = 2 + strlen(key.str().c_str());
+    int strSize = (int)(2 + strlen(key.str().c_str()));
     tickRanges.size += strSize + TableValues<TickMetricRange>::packedItemSize;
     
     // This should be fairly quick as the last inserted value should be cached
@@ -189,7 +189,7 @@ TickMetricValue* Telemetry::setTickValue(const char *name, double value)
 
         stored = &tickValues.table.at(tickValues.table.size() - 1);
 
-        int strSize = 2 + strlen(name);
+        size_t strSize = 2 + strlen(name);
         tickValues.size += strSize + TableValues<TickMetricValue>::packedItemSize;
     }
     else

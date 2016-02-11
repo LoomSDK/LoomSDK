@@ -18,15 +18,13 @@ set (AGENT_HDR
     vendor/civetweb/include/civetweb.h
 )
 
-
-set(CMAKE_OSX_ARCHITECTURES "x86_64")
-
 # We are generating a library for Ruby to load via FFI, and CMake says
 # this should be a MODULE not SHARED; see
 # http://stackoverflow.com/questions/4845984/difference-between-modules-and-shared-libraries
 add_library(${PROJECT_NAME} MODULE ${AGENT_HDR} ${AGENT_SRC})
 
 if (APPLE)
+
     target_link_libraries(${PROJECT_NAME} 
        LoomVendor
        LoomCommon
@@ -36,13 +34,21 @@ if (APPLE)
        # zlib library required by utByteArray
        "-lz"
     )
-    
+
     set_target_properties(${PROJECT_NAME} PROPERTIES
       XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym"
       XCODE_ATTRIBUTE_INFOPLIST_PREPROCESS YES
     )
+    
+    set(ASSETAGENTBIN $<TARGET_FILE:${PROJECT_NAME}>)
+    
+    add_custom_command(TARGET ${PROJECT_NAME}
+        POST_BUILD
+        COMMAND mkdir -p \"${ARTIFACTS_DIR}/tools\"
+        COMMAND cp \"${ASSETAGENTBIN}\" \"${ARTIFACTS_DIR}/tools/libassetAgent.so\"
+    )
 
-elseif(LINUX)     
+elseif(LINUX)
 
     target_link_libraries(${PROJECT_NAME} 
        LoomVendor
@@ -50,8 +56,9 @@ elseif(LINUX)
        LoomScript
        LoomCore
     )
-    
-elseif(MSVC)  
+
+elseif(MSVC)
+
     target_link_libraries(${PROJECT_NAME} 
        LoomVendor
        LoomCommon
@@ -63,17 +70,16 @@ elseif(MSVC)
     if (LOOM_TELEMETRY)
         target_link_libraries(${PROJECT_NAME} "telemetry32.link" "telemetry64.link")
     endif()
-	
-	get_target_property(ASSETAGENTBIN ${PROJECT_NAME} LOCATION)
-	
+
+    set(ASSETAGENTBIN $<TARGET_FILE:${PROJECT_NAME}>)
+
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${ASSETAGENTBIN}\" \"${CMAKE_SOURCE_DIR}/artifacts/assetAgent.dll\"
+        COMMAND echo f | xcopy /F /Y \"${ASSETAGENTBIN}\" \"${ARTIFACTS_DIR}/tools/assetAgent.dll\"
     )
-	
 
 endif()
 
 if (LOOM_BUILD_JIT EQUAL 1)
-    target_link_libraries(${PROJECT_NAME} ${LOOM_LUAJIT_LIB})
+    target_link_libraries(${PROJECT_NAME} luajit)
 endif()

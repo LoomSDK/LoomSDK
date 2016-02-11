@@ -44,6 +44,7 @@ SDL_Window *gSDLWindow = NULL;
 SDL_GLContext gContext;
 
 lmDefineLogGroup(coreLogGroup, "loom.core", 1, LoomLogInfo);
+lmDefineLogGroup(sdlLogGroup, "SDL", 1, LoomLogInfo);
 
 static int gLoomExecutionDone = 0;
 
@@ -229,6 +230,35 @@ void loop()
     loom_tick();
 }
 
+static void sdlLogOutput(void* userdata, int category, SDL_LogPriority priority, const char* message)
+{
+    loom_logLevel_t level;
+    switch (priority)
+    {
+        case SDL_LOG_PRIORITY_VERBOSE: return;
+        case SDL_LOG_PRIORITY_DEBUG:    level = LoomLogDebug; break;
+        case SDL_LOG_PRIORITY_INFO:     level = LoomLogInfo; break;
+        case SDL_LOG_PRIORITY_WARN:     level = LoomLogWarn; break;
+        case SDL_LOG_PRIORITY_ERROR:    level = LoomLogError; break;
+        case SDL_LOG_PRIORITY_CRITICAL: level = LoomLogError; break;
+        default: level = LoomLogInfo;
+    }
+    const char *cat;
+    switch (category)
+    {
+        case SDL_LOG_CATEGORY_APPLICATION: cat = "application"; break;
+        case SDL_LOG_CATEGORY_ERROR:       cat = "error"; break;
+        case SDL_LOG_CATEGORY_SYSTEM:      cat = "system"; break;
+        case SDL_LOG_CATEGORY_AUDIO:       cat = "audio"; break;
+        case SDL_LOG_CATEGORY_VIDEO:       cat = "video"; break;
+        case SDL_LOG_CATEGORY_RENDER:      cat = "render"; break;
+        case SDL_LOG_CATEGORY_INPUT:       cat = "input"; break;
+        case SDL_LOG_CATEGORY_CUSTOM:      cat = "custom"; break;
+        default:                           cat = "unknown";
+    }
+    loom_log(&sdlLogGroup, level, "[SDL %s] %s", cat, message);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -293,14 +323,28 @@ main(int argc, char *argv[])
     }
 #endif
 
+    // Initialize logging.
+    loom_log_initialize();
+
     LSLuaState::initCommandLine(argc, (const char**) argv);
 
-    SDL_Init(SDL_INIT_EVERYTHING);
+    /* Enable standard application logging */
+    SDL_LogSetAllPriority(SDL_LOG_PRIORITY_INFO);
+    SDL_LogSetOutputFunction(sdlLogOutput, NULL);
+
+    SDL_Init(
+        SDL_INIT_TIMER |
+        SDL_INIT_VIDEO | 
+        SDL_INIT_JOYSTICK |
+        SDL_INIT_HAPTIC |
+        SDL_INIT_GAMECONTROLLER |
+        SDL_INIT_EVENTS
+    );
+
+    
 
     int ret;
 
-    /* Enable standard application logging */
-    SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
     
 #if LOOM_RENDERER_OPENGLES2
     ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
@@ -319,7 +363,10 @@ main(int argc, char *argv[])
         0, 0,
         100,
         100,
-        SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN 
+        SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN
+#if LOOM_PLATFORM == LOOM_PLATFORM_IOS
+        | SDL_WINDOW_BORDERLESS
+#endif
         | SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI)) == NULL)
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateWindow(): %s\n", SDL_GetError());

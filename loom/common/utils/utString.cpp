@@ -284,18 +284,18 @@ utString& utString::erase(size_type pos, size_type len)
         abort();
     }
 
-    s -= pos;
-    if (len > s)
-    {
-        len = s;
-    }
-    ++s;
+    size_type maxLength = s - pos;
+    if (len > maxLength) len = maxLength;
+    size_type bytesToMove = maxLength - len;
 
     // erase by overwriting
-    memmove(p + pos, p + pos + len, s);
+    memmove(p + pos, p + pos + len, bytesToMove);
+
+    size_type newSize = pos + bytesToMove + 1;
 
     // remove unused space
-    p = static_cast<char*>(lmRealloc(NULL, p, s + pos));
+    p = static_cast<char*>(lmRealloc(NULL, p, newSize));
+    p[newSize-1] = 0;
 
     return *this;
 }

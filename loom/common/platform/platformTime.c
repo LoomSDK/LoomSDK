@@ -121,7 +121,7 @@ int platform_getMilliseconds()
     // Since both are unsigned (DWORD) this should work through
     // time rollover, but the 32-bit signed int return type
     // limits it to a bit over 2 weeks before it overflows
-    return timeGetTime() - gEpochStart;
+    return (int)(timeGetTime() - gEpochStart);
 }
 
 typedef struct loom_win32_precisionTimer_t

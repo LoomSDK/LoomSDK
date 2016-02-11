@@ -18,8 +18,6 @@
  * ===========================================================================
  */
 
-#include <stdint.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include "loom/common/platform/platform.h"
 #include "loom/common/core/log.h"

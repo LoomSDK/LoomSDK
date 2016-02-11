@@ -35,6 +35,7 @@ void AssemblyWriter::writeToString(utString& out)
     json_object_set(json, "type", json_string("ASSEMBLY"));
     json_object_set(json, "name", json_string(name.c_str()));
     json_object_set(json, "version", json_string(version.c_str()));
+    json_object_set(json, "uid", json_string(uid.c_str()));
     json_object_set(json, "loomconfig", json_string(loomConfig.c_str()));
 
 #ifdef LOOM_ENABLE_JIT

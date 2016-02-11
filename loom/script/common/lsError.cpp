@@ -21,7 +21,6 @@
 #include "lsError.h"
 #include "lsLog.h"
 #include "loom/common/core/allocator.h"
-#include <stdint.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -37,6 +36,9 @@ void LSError(const char *format, ...)
     LSLog(LSLogError, "%s", buff);
     lmFree(NULL, buff);
 
+#if LOOM_COMPILER == LOOM_COMPILER_MSVC
+    __debugbreak();
+#endif
     exit(EXIT_FAILURE);
 }
 

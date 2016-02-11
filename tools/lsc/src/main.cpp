@@ -23,6 +23,7 @@
 #include "loom/common/core/assert.h"
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformTime.h"
+#include "loom/common/platform/platformFile.h"
 #include "loom/script/compiler/lsCompiler.h"
 #include "loom/script/runtime/lsLuaState.h"
 #include "loom/script/native/lsNativeDelegate.h"
@@ -87,39 +88,50 @@ utString GetLSCPath()
 
 utString GetSDKPathFromLSCPath(utString const& lscPath)
 {
-    //Check we are trimming a valid path
-    if (strstr(lscPath.c_str(), "loom/sdks/") || strstr(lscPath.c_str(), "loom\\sdks\\"))
-    {
-        return "";
-    }
-    
     char lsc[2048];
-    
     snprintf(lsc, 2048, "%s", lscPath.c_str());
-    
+
     // Slurp off the filename...
     unsigned int len = strlen(lsc) - 1;
     while (len-- > 0)
     {
         if ((lsc[len] == '\\') || (lsc[len] == '/'))
         {
-            lsc[len] = '\0';
+            lsc[len + 1] = '\0';
             break;
         }
     }
-    
-    // And the tools folder...
-    while (len-- > 0)
+
+    // And go up the directories until we find one with "lib" in it...
+    // But shouldn't be more than 3
+    bool found = false;
+    for (int i = 0; i <= 3; i++)
     {
-        if ((lsc[len] == '\\') || (lsc[len] == '/'))
+        utString searchLib(lsc);
+        searchLib += "libs";
+        if (platform_dirExists(searchLib.c_str()) == 0)
         {
-            lsc[len + 1] = '\0'; // This won't cause a buffer overrun because
-            // we already ate backwards in the previous loop.
-            // But we do need to preserve the trailing slash.
+            found = true;
             break;
         }
+        while (len-- > 0)
+        {
+            if ((lsc[len] == '\\') || (lsc[len] == '/'))
+            {
+                lsc[len + 1] = '\0'; // This won't cause a buffer overrun because
+                                        // we already ate backwards in the previous loop.
+                                        // But we do need to preserve the trailing slash.
+                break;
+            }
+        }
     }
-    
+
+    if (!found)
+    {
+        printf("Unable to find SDK libraries somewhere inside %s\n", lsc);
+        exit(EXIT_FAILURE);
+    }
+
     return utString(lsc);
 }
 
@@ -280,9 +292,32 @@ int main(int argc, const char **argv)
 
     // todo, better sdk detection
     // TODO: LOOM-690 - find a better paradigm here.
-    utString lscpath = (sdkRoot != NULL) ? sdkRoot : GetSDKPathFromLSCPath(GetLSCPath());
+    //Check we are trimming a valid path
+    utString lscPath = GetLSCPath();
 
-    LSCompiler::setSDKBuild(lscpath);
+    if (sdkRoot != NULL)
+    {
+        LSCompiler::setSDKBuild(sdkRoot);
+    }
+    else if (strstr(lscPath.c_str(), "loom/sdks/") || strstr(lscPath.c_str(), "loom\\sdks\\"))
+    {
+        LSCompiler::setSDKBuild(GetSDKPathFromLSCPath(lscPath));
+    }
+    else
+    {
+        // In-SDK-repo build
+        const char* found = NULL;
+        if (!found) found = strstr(lscPath.c_str(), "build/loom-");
+        if (!found) found = strstr(lscPath.c_str(), "build\\loom-");
+        if (!found) found = strstr(lscPath.c_str(), "artifacts/");
+        if (!found) found = strstr(lscPath.c_str(), "artifacts\\");
+        if (found)
+        {
+            utString artifacts = lscPath.substr(0, found - lscPath.c_str()) + "sdk";
+            artifacts += platform_getFolderDelimiter();
+            if (platform_dirExists(artifacts.c_str()) == 0) LSCompiler::setSDKBuild(artifacts);
+        }
+    }
 
     if (!rootBuildFile)
     {

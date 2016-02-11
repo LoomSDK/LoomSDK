@@ -26,6 +26,12 @@
 #include "loom/common/utils/utStreams.h"
 #include "lsBinWriter.h"
 
+#if LOOM_ENABLE_JIT
+#include "loom/script/reflection/lsJitByteCode.h"
+#else
+#include "loom/script/reflection/lsByteCode.h"
+#endif
+
 namespace LS {
 utHashTable<utHashedString, int>         BinWriter::stringPool;
 utHashTable<utHashedString, BinWriter *> BinWriter::binWriters;
@@ -322,7 +328,14 @@ void BinWriter::writeMethodBase(json_t *jmbase)
         }
     }
 
-    bytes.writeString(json_string_value(json_object_get(jmbase, "bytecode")));
+    ByteCode byteCode;
+
+    byteCode.setBase64(utString(json_string_value(json_object_get(jmbase, "bytecode"))));
+#if LOOM_ENABLE_JIT
+    byteCode.setBase64FR2(utString(json_string_value(json_object_get(jmbase, "bytecode_fr2"))));
+#endif
+    byteCode.serialize(&bytes);
+
 }
 
 
@@ -466,14 +479,22 @@ void BinWriter::writeClass(json_t *jclass)
     }
 
     // static initializer byte code
-    utString bc = json_string_value(json_object_get(jclass, "bytecode_staticinitializer"));
+    ByteCode byteCode;
 
-    bytes.writeString(bc.c_str());
 
-    // instance initializer byte code
-    bc = json_string_value(json_object_get(jclass, "bytecode_instanceinitializer"));
+    byteCode.setBase64   (utString(json_string_value(json_object_get(jclass, "bytecode_staticinitializer"))));
+#if LOOM_ENABLE_JIT
+    byteCode.setBase64FR2(utString(json_string_value(json_object_get(jclass, "bytecode_staticinitializer_fr2"))));
+#endif
+    byteCode.serialize(&bytes);
 
-    bytes.writeString(bc.c_str());
+
+    byteCode.setBase64   (utString(json_string_value(json_object_get(jclass, "bytecode_instanceinitializer"))));
+#if LOOM_ENABLE_JIT
+    byteCode.setBase64FR2(utString(json_string_value(json_object_get(jclass, "bytecode_instanceinitializer_fr2"))));
+#endif
+    byteCode.serialize(&bytes);
+
 }
 
 
@@ -578,12 +599,13 @@ void BinWriter::writeAssembly(json_t *json)
 
     int itype = poolJString(json_object_get(json, "type"));
 
-    const char *name = json_string_value(json_object_get(json, "name"));
+    const char *uid = json_string_value(json_object_get(json, "uid"));
 
-    binWriters.insert(utHashedString(name), this);
+    binWriters.insert(utHashedString(uid), this);
 
-    int iname       = poolString(name);
+    int iname       = poolJString(json_object_get(json, "name"));
     int iversion    = poolJString(json_object_get(json, "version"));
+    int iuid        = poolString(uid);
     int iloomconfig = 0;
 
     bool executable = false;
@@ -610,6 +632,7 @@ void BinWriter::writeAssembly(json_t *json)
     bytes.writeInt(itype);
     bytes.writeInt(iname);
     bytes.writeInt(iversion);
+    bytes.writeInt(iuid);
     bytes.writeInt(iloomconfig);
 
     // write out flags
@@ -630,11 +653,13 @@ void BinWriter::writeAssembly(json_t *json)
         json_t     *jref    = json_array_get(ref_array, j);
         json_t     *jbinary = json_object_get(jref, "binary");
         const char *refname = json_string_value(json_object_get(jref, "name"));
+        const char *refuid = json_string_value(json_object_get(jref, "uid"));
 
         bytes.writeInt(poolString(refname));
+        bytes.writeInt(poolString(refuid));
 
         // already referenced
-        if (binWriters.get(utHashedString(refname)))
+        if (binWriters.get(utHashedString(refuid)))
         {
             continue;
         }
@@ -643,9 +668,9 @@ void BinWriter::writeAssembly(json_t *json)
         {
             lmAssert(jbinary, "Error with linked assembly %s, missing binary section", refname);
             utString  refjson  = (const char *)utBase64::decode64(json_string_value(jbinary)).getData().ptr();
-            BinWriter *bwriter = lmNew(NULL) BinWriter;
+            BinWriter *bwriter = lmNew(NULL) BinWriter(refname);
             lmAssert(refjson.length() > 0, "Refjson should not be empty! %s", json_string_value(jbinary));
-            bwriter->writeAssembly(refjson.c_str(), refjson.length());
+            bwriter->writeAssembly(refjson.c_str(), (int)refjson.length());
         }
     }
 
@@ -673,7 +698,8 @@ void BinWriter::writeExecutable(const char *path, json_t *sjson)
     // reserve 32 megs
     bytes.reserve(1024 * 1024 * 32);
 
-    BinWriter *bexec = lmNew(NULL) BinWriter();
+    const char *name = json_string_value(json_object_get(sjson, "name"));
+    BinWriter *bexec = lmNew(NULL) BinWriter(name);
     bexec->writeAssembly(sjson);
 
     // write string pool
@@ -684,7 +710,7 @@ void BinWriter::writeExecutable(const char *path, json_t *sjson)
     for (UTsize i = 0; i < stringPool.size(); i++)
     {
         stringBufferSize += sizeof(int);                               // length
-        stringBufferSize += strlen(stringPool.keyAt(i).str().c_str()); // characters
+        stringBufferSize += (int)strlen(stringPool.keyAt(i).str().c_str()); // characters
     }
 
     // length of entire string buffer
@@ -726,13 +752,18 @@ void BinWriter::writeExecutable(const char *path, json_t *sjson)
     bytes.writeInt((int)binWriters.size());
 
     // write out reference table (which will allow random access if we want/need it)
-    int position = bytes.getPosition() + (binWriters.size() * (sizeof(int) * 3));
+    int position = bytes.getPosition() + (binWriters.size() * (sizeof(int) * 4));
 
     for (UTsize i = 0; i < binWriters.size(); i++)
     {
         BinWriter *bref = binWriters.at(i);
         // (interned) name
+        utHashedString uid = binWriters.keyAt(i);
+        bytes.writeInt(poolString(binWriters.at(i)->name.c_str()));
+        // uid
         bytes.writeInt(poolString(binWriters.keyAt(i).str().c_str()));
+
+
         // length
         int length = bref->bytes.getPosition();
         bytes.writeInt(length);

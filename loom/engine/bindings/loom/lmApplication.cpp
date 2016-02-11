@@ -283,7 +283,7 @@ static int mapScriptFile(const char *path, void **outPointer,
     {
         lmLog(applicationLogGroup, "Mapped asset for script: '%s'", path);
         *outPointer = scriptAsset->bits;
-        *outSize    = scriptAsset->length;
+        *outSize    = (long)scriptAsset->length;
         resCode     = 1;
     }
 
@@ -312,9 +312,6 @@ int LoomApplication::initializeCoreServices()
 
     // Initialize services.
     platform_debugOut("Initializing services...");
-
-    // Initialize logging.
-    loom_log_initialize();
 
     // Set up assert handling callback.
     lmLog(applicationLogGroup, "   o asserts");
@@ -351,6 +348,7 @@ int LoomApplication::initializeCoreServices()
     // Initialize script hooks.
     LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogInfo, LoomLogWarn, LoomLogError);
     LS::LSFileInitialize(mapScriptFile, unmapScriptFile);
+    LS::NativeTypeBase::initialize();
     //LS::LSLogSetLevel(LS::LSLogError);
 
     // Set up listener for changes to the boot assembly.

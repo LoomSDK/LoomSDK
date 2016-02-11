@@ -33,6 +33,8 @@ PropertyInfo::~PropertyInfo()
     {
         lmDelete(NULL, setter);
     }
+
+    lualoom_managedpointerreleased(this);
 }
 
 
