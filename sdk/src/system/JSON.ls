@@ -61,7 +61,7 @@ enum JSONType
  *
  *  @see http://www.json.org/
  *  @see #getJSONType()
- *  @see isArray()
+ *  @see #isArray()
  *  @see #loadString()
  *  @see #serialize()
  */
