@@ -47,7 +47,7 @@ namespace :package do
     FileUtils.cp("MIN_CLI_VERSION", "pkg/sdk")
 
     # docs
-    cp_r_safe("artifacts/docs/docs", "pkg/sdk")
+    cp_r_safe("artifacts/docs", "pkg/sdk")
 
     # ios
     cp_r_safe("artifacts/ios-arm/fruitstrap", "pkg/sdk/bin/ios-arm/tools")
