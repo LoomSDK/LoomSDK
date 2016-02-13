@@ -26,7 +26,7 @@ package loom.modestmaps.overlays
 		private function markerTapped(event:TouchEvent):void
 		{
 			var touches = event.getTouches(this);
-			if (touches[0].tapCount == 2)
+			if (touches.length > 0 && touches[0].tapCount == 2)
 			{
 				map.removeMarker(this.name);
 			}
