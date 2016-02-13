@@ -84,8 +84,10 @@ class LuaJITTarget < Target
 
         vs_install = toolchain.platform.get_vs_install
         
+        abort("Missing or unsupported Visual Studio version") unless vs_install
+        
         # %1 - path to vcvarsall.bat
-        args += "\"#{vs_install[:install]}VC\\vcvarsall.bat\""
+        args += "\"#{vs_install[:install]}\\vcvarsall.bat\""
 
         # %2 - vcvarsall architecture
         args += " " + case arch
