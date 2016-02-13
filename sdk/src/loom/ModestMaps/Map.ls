@@ -133,7 +133,9 @@ package loom.modestmaps
             // initialize the grid (so point/location/coordinate functions should be valid after this)
             grid = new TileGrid(width, height, draggable, mapProvider);
             grid.onPan += gridPan;
+            grid.onZoom += gridZoom;
             grid.onChange += gridChange;
+            grid.onRender += gridRender;
             addChild(grid);
             
             setSize(width, height);
@@ -186,8 +188,14 @@ package loom.modestmaps
         private function gridPan(state:MapState, deltaX:Number, deltaY:Number):void {
             onPan(state, deltaX, deltaY);
         }
+        private function gridZoom(state:MapState, p1:Number, p2:Number):void {
+            onZoom(state, p1, p2);
+        }
         private function gridChange():void {
             onExtentChanged();
+        }
+        private function gridRender():void {
+            onMapRender();
         }
 
         /**
