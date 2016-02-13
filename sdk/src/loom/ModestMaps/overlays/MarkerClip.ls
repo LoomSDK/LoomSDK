@@ -24,13 +24,13 @@ package loom.modestmaps.overlays
     public class MarkerClip extends Sprite
     {
         public static const DEFAULT_ZOOM_TOLERANCE:int = 4;
-        
+
         public var onMarkerClick:MarkerClick;
-        
+
         protected var map:Map;
-        
+
         protected var drawCoord:Coordinate;
-        
+
         protected var locations:Dictionary.<DisplayObject, Location> = new Dictionary.<DisplayObject, Location>;
         protected var coordinates:Dictionary.<DisplayObject, Coordinate> = new Dictionary.<DisplayObject, Coordinate>;
         protected var markers:Vector.<DisplayObject> = []; // all markers
@@ -38,20 +38,20 @@ package loom.modestmaps.overlays
 
         /** enable this if you want intermediate zooming steps to
          * stretch your graphics instead of reprojecting the points
-         * it's useful for polygons, but for points 
+         * it's useful for polygons, but for points
          * it looks worse and probably isn't faster, but there it is :) */
         public var scaleZoom:Boolean = false;
-        
+
         /** if autoCache is true, we turn on cacheAsBitmap while panning, but off while zooming */
         public var autoCache:Boolean = true;
-        
+
         /** if scaleZoom is true, this is how many zoom levels you
          * can zoom by before things will be reprojected regardless */
-        public var zoomTolerance:Number = DEFAULT_ZOOM_TOLERANCE; 
-        
+        public var zoomTolerance:Number = DEFAULT_ZOOM_TOLERANCE;
+
         // enable this if you want marker locations snapped to pixels
         public var snapToPixels:Boolean = false;
-        
+
         // the function used to sort the markers array before re-ordering them
         // on the z plane (by child index)
         public var markerSortFunction:Function = sortMarkersByYPosition;
@@ -75,12 +75,12 @@ package loom.modestmaps.overlays
             var diffY:Number = a.y - b.y;
             return (diffY > 0) ? 1 : (diffY < 0) ? -1 : 0;
         }
-        
+
         public function MarkerClip(map:Map)
         {
             // client code can listen to mouse events on this clip
             // to get all events bubbled up from the markers
-                        
+
             this.map = map;
             setPos(map.getWidth() / 2, map.getHeight() / 2);
             previousGeometry = map.getMapProvider().geometry();
@@ -94,41 +94,41 @@ package loom.modestmaps.overlays
 
             // these were previously in Map, but now MarkerEvents bubble it makes more sense to have them here
             addEventListener( TouchEvent.TOUCH, touchEventProcess );
-            
+
             //NOTE_TEC: ROLL_OVER / ROLL_OUT are like mouse_enter and mouse_exit... no equivalent Loom support atm
-            // addEventListener( MouseEvent.ROLL_OVER, onMarkerRollOver, true );        
+            // addEventListener( MouseEvent.ROLL_OVER, onMarkerRollOver, true );
             // addEventListener( MouseEvent.ROLL_OUT, onMarkerRollOut, true );
 
             addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
         }
-        
+
         public function getMarkerCount():int
         {
             return markers.length;
         }
-        
+
         public function setPos(px:Number, py:Number):void
         {
             x = snapToPixels ? Math.round(px) : px;
             y = snapToPixels ? Math.round(py) : py;
         }
-        
+
         protected function onAddedToStage(event:Event):void
         {
             //addEventListener(Event.RENDER, updateClips);
-            
+
             dirty = true;
             updateClips();
-            
+
             removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
-            addEventListener(Event.REMOVED_FROM_STAGE, onRemovedFromStage);         
+            addEventListener(Event.REMOVED_FROM_STAGE, onRemovedFromStage);
         }
 
         protected function onRemovedFromStage(event:Event):void
         {
             //removeEventListener(Event.RENDER, updateClips);
-            
-            removeEventListener(Event.REMOVED_FROM_STAGE, onRemovedFromStage);          
+
+            removeEventListener(Event.REMOVED_FROM_STAGE, onRemovedFromStage);
             addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
         }
 
@@ -140,35 +140,35 @@ package loom.modestmaps.overlays
                 coordinates[marker] = map.getMapProvider().locationCoordinate(location);
                 markersByName[marker.name] = marker;
                 markers.push(marker);
-                
+
                 var added:Boolean = updateClip(marker);
-                
+
                 if (added) {
                     requestSort(true);
                 }
             }
         }
-        
+
         protected function markerInBounds(marker:DisplayObject, w:Number, h:Number):Boolean
         {
             return marker.x > -w / 2 && marker.x < w / 2 &&
                    marker.y > -h / 2 && marker.y < h / 2;
         }
-        
+
         public function getMarker(id:String):DisplayObject
         {
             return markersByName[id] as DisplayObject;
         }
-        
+
         public function getMarkerLocation( marker:DisplayObject ) : Location {
             return locations[marker];
         }
-        
+
         public function hasMarker(marker:DisplayObject):Boolean
         {
             return markers.indexOf(marker) != -1;
         }
-        
+
         public function setMarkerLocation(marker:DisplayObject, location:Location):void
         {
             locations[marker] = new Location(location.lat, location.lon);
@@ -177,7 +177,7 @@ package loom.modestmaps.overlays
             sortMarkers();
             dirty = true;
         }
-        
+
         public function removeMarker(id:String):void
         {
             var marker:DisplayObject = getMarker(id);
@@ -186,7 +186,7 @@ package loom.modestmaps.overlays
                 removeMarkerObject(marker);
             }
         }
-        
+
         public function removeMarkerObject(marker:DisplayObject):void
         {
             if (this.contains(marker)) {
@@ -203,7 +203,7 @@ package loom.modestmaps.overlays
 
         // removeAllMarkers was implemented on trunk
         // meanwhile clearMarkers arrived in the tweening branch
-        // let's go with the body from clearMarkers because it's shorter        
+        // let's go with the body from clearMarkers because it's shorter
         public function removeAllMarkers():void
         {
             while (markers.length > 0) {
@@ -211,28 +211,28 @@ package loom.modestmaps.overlays
                 removeMarkerObject(marker);
             }
         }
-        
+
         public function updateClips():void
         {
             if (!dirty) {
                 return;
             }
-            
+
             var center:Coordinate = map.grid.centerCoordinate;
-            
+
             if (center.equalTo(drawCoord)) {
                 dirty = false;
                 return;
             }
-            
+
             drawCoord = center.copy();
-            
+
             setPos(map.getWidth() / 2, map.getHeight() / 2);
-            
+
             if (scaleZoom) {
                 scaleX = scaleY = 1.0;
-            }           
-            
+            }
+
             var doSort:Boolean = false;
             for each (var marker:DisplayObject in markers)
             {
@@ -240,12 +240,12 @@ package loom.modestmaps.overlays
             }
 
             if (doSort) {
-                requestSort(true); 
+                requestSort(true);
             }
-            
+
             dirty = false;
         }
-        
+
         /** call this if you've made a change to the underlying map geometry such that
           * provider.locationCoordinate(location) will return a different coordinate */
         public function resetCoordinates():void
@@ -257,15 +257,15 @@ package loom.modestmaps.overlays
             }
             dirty = true;
         }
-        
+
         protected var sortTimer:Timer;
         protected var sortUpdateOrder:Boolean;
-        
+
         protected function requestSort(updateOrder:Boolean=false):void
         {
             // use a timer so we don't do this every single frame, otherwise
-            // sorting markers and applying depths pretty much doubles the 
-            // time to run updateClips 
+            // sorting markers and applying depths pretty much doubles the
+            // time to run updateClips
             if (sortTimer) {
                 sortTimer.reset();
             }
@@ -276,13 +276,13 @@ package loom.modestmaps.overlays
                 sortTimer.start();
             }
             sortUpdateOrder = updateOrder;
-        }       
-        
+        }
+
         private function sortMarkers(timer:Timer = null):void
         {
             sortTimer = null;
 
-            // only sort if we have a function:         
+            // only sort if we have a function:
             if (sortUpdateOrder && markerSortFunction != null)
             {
                 markers.sort(markerSortFunction);
@@ -299,9 +299,9 @@ package loom.modestmaps.overlays
             }
         }
 
-        /** returns true if the marker was added to the stage, so that updateClips or attachMarker can sort the markers */ 
+        /** returns true if the marker was added to the stage, so that updateClips or attachMarker can sort the markers */
         public function updateClip(marker:DisplayObject):Boolean
-        {           
+        {
             if (marker.visible)
             {
                 // this method previously used the location of the marker
@@ -313,7 +313,7 @@ package loom.modestmaps.overlays
 
                 var w:Number = map.getWidth() * 2;
                 var h:Number = map.getHeight() * 2;
-                
+
                 if (markerInBounds(marker, w, h))
                 {
                     if (!contains(marker))
@@ -330,23 +330,23 @@ package loom.modestmaps.overlays
                     return false;
                 }
             }
-            
-            return false;            
+
+            return false;
         }
-        
+
         protected function addMarker(marker:DisplayObject):void
         {
-            
+
             addChild(marker);
         }
-        
+
         ///// Events....
 
         protected function onMapExtentChanged(state:MapState, extent:MapExtent):void
         {
-            if (state == MapState.STOPPED) dirty = true;           
+            if (state == MapState.STOPPED) dirty = true;
         }
-        
+
         protected function onMapPanned(state:MapState, deltaX:Number, deltaY:Number):void
         {
             if (state == MapState.CHANGED && drawCoord) {
@@ -357,7 +357,7 @@ package loom.modestmaps.overlays
                 dirty = true;
             }
         }
-        
+
         protected function onMapZoomedBy(event:MapEvent):void
         {
             if (scaleZoom && drawCoord) {
@@ -365,10 +365,10 @@ package loom.modestmaps.overlays
                     scaleX = scaleY = Math.pow(2, map.grid.zoomLevel - drawCoord.zoom);
                 }
                 else {
-                    dirty = true;   
+                    dirty = true;
                 }
             }
-            else { 
+            else {
                 dirty = true;
             }
         }
@@ -377,46 +377,46 @@ package loom.modestmaps.overlays
             if (state != MapState.STOPPED && scaleZoom && drawCoord && Math.abs(map.grid.zoomLevel - drawCoord.zoom) < zoomTolerance) {
                 scaleX = scaleY = Math.pow(2, map.grid.zoomLevel - drawCoord.zoom);
             }
-            else { 
+            else {
                 dirty = true;
             }
         }
-        
+
         protected function onMapStopPanning(event:MapEvent):void
         {
             dirty = true;
         }
-        
+
         protected function onMapStopZooming(event:MapEvent):void
         {
             dirty = true;
         }
-        
+
         protected function onMapResized(width:Number, height:Number):void
         {
             setPos(map.getWidth() / 2, map.getHeight() / 2);
             dirty = true;
             updateClips(); // force redraw because flash seems stingy about it
         }
-        
-        
+
+
         protected function onMapProviderChanged(provider:IMapProvider):void
         {
-            var mapProvider:IMapProvider = map.getMapProvider();    
+            var mapProvider:IMapProvider = map.getMapProvider();
             if (mapProvider.geometry() != previousGeometry)
             {
                 resetCoordinates();
                 previousGeometry = mapProvider.geometry();
             }
         }
-        
+
         ///// Invalidations...
-        
+
         protected function set dirty(d:Boolean):void
         {
             _dirty = d;
         }
-        
+
         protected function get dirty():Boolean
         {
             return _dirty;
@@ -426,7 +426,7 @@ package loom.modestmaps.overlays
 
         /**
         * Dispatches MarkerEvent.CLICK when a marker is clicked.
-        * 
+        *
         * The MarkerEvent includes a reference to the marker and its location.
         *
         * @see loom.modestmaps.events.MarkerEvent.MARKER_CLICK
@@ -436,18 +436,18 @@ package loom.modestmaps.overlays
             var touches = event.getTouches(this);
 
             //check for a click event
-            if((touches[0].phase == TouchPhase.ENDED) && touches[0].clicked)
+            if(touches.length > 0 && (touches[0].phase == TouchPhase.ENDED) && touches[0].clicked)
             {
                 var marker:DisplayObject = event.target as DisplayObject;
                 var location:Location = getMarkerLocation( marker );
                 onMarkerClick(marker, location);
             }
         }
-        
+
         //NOTE_TEC: ROLL_OVER / ROLL_OUT are like mouse_enter and mouse_exit... no equivalent Loom support atm
         /**
         * Dispatches MarkerEvent.ROLL_OVER
-        * 
+        *
         * The MarkerEvent includes a reference to the marker and its location.
         *
         * @see loom.modestmaps.events.MarkerEvent.MARKER_ROLL_OVER
@@ -458,10 +458,10 @@ package loom.modestmaps.overlays
         //  var location:Location = getMarkerLocation( marker );
         //  dispatchEvent( new MarkerEvent( MarkerEvent.MARKER_ROLL_OVER, marker, location, true, false) );
         // }
-        
+
         /**
         * Dispatches MarkerEvent.ROLL_OUT
-        * 
+        *
         * The MarkerEvent includes a reference to the marker and its location.
         *
         * @see loom.modestmaps.events.MarkerEvent.MARKER_ROLL_OUT
@@ -471,7 +471,7 @@ package loom.modestmaps.overlays
         //     var marker:DisplayObject = event.target as DisplayObject;
         //     var location:Location = getMarkerLocation( marker );
         //  dispatchEvent( new MarkerEvent( MarkerEvent.MARKER_ROLL_OUT, marker, location, true, false) );
-        // }        
+        // }
     }
-    
+
 }
