@@ -14,9 +14,12 @@ def check_versions()
   abort(ruby_err) if version_outdated?(RUBY_VERSION, RUBY_REQUIRED_VERSION)
 
   # CMake version check
-  $CMAKE_VERSION = %x[cmake --version].lines.first.gsub("cmake version ", "")
+  cmake_ver_groups = /cmake version (\d+\.\d+.\d+)/.match(%x[cmake --version].lines.first)
+  
+  $CMAKE_VERSION = cmake_ver_groups.length >= 2 ? cmake_ver_groups[1] : nil
+  
   cmake_err = "LoomSDK requires CMake version #{CMAKE_REQUIRED_VERSION} or above.\nPlease go to http://www.cmake.org/ and install the latest version."
-  abort(cmake_err) if (!installed?('cmake') || version_outdated?($CMAKE_VERSION, CMAKE_REQUIRED_VERSION))
+  abort(cmake_err) if (!installed?('cmake') || !$CMAKE_VERSION || version_outdated?($CMAKE_VERSION, CMAKE_REQUIRED_VERSION))
 
 end
 
