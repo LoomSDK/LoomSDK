@@ -655,7 +655,7 @@ public:
                int lastByteOffset = chunkOffset + fileBitsLength;
 
                // Log it.
-               lmLogInfo(gAssetLogGroup, "FILE '%s' %d of %d bytes!", pendingFilePath.c_str(), lastByteOffset, pendingFileLength);
+               lmLogDebug(gAssetLogGroup, "FILE '%s' %d of %d bytes!", pendingFilePath.c_str(), lastByteOffset, pendingFileLength);
 
                // If it's the last one, instate it and wipe our buffer.
                if (lastByteOffset == pendingFileLength)
@@ -911,7 +911,7 @@ void loom_asset_flush(const char *name)
       return;
    }
     
-   lmLog(gAssetLogGroup, "Flushing '%s'", name);
+   lmLogDebug(gAssetLogGroup, "Flushing '%s'", name);
 
     if (asset->blob)
     {
@@ -1057,7 +1057,7 @@ void *loom_asset_lock(const char *name, unsigned int type, int block)
 
     loom_mutex_unlock(gAssetLock);
 
-    lmLogInfo(gAssetLogGroup, "Locked asset '%s'...", namePtr);
+    lmLogDebug(gAssetLogGroup, "Locked asset '%s'...", namePtr);
 
     // Return ptr.
     return asset->blob->bits;
