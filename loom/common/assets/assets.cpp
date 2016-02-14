@@ -223,7 +223,12 @@ static int loom_asset_isOnTrackToLoad(loom_asset_t *asset)
 
 static loom_asset_t *loom_asset_getAssetByName(const char *name, int create)
 {
-    utHashedString key        = platform_normalizePath(name);
+    loom_mutex_lock(gAssetLock);
+    static char normalized[4096];
+    strncpy(normalized, name, sizeof(normalized));
+    platform_normalizePath(normalized);
+    utHashedString key        = normalized;
+    loom_mutex_unlock(gAssetLock);
     loom_asset_t   **assetPtr = gAssetHash.get(key);
     loom_asset_t   *asset     = assetPtr ? *assetPtr : NULL;
 

@@ -178,6 +178,10 @@ int platform_mapFileExists(const char *path)
     // Verify our dependents are good.
     ensureStartedUp();
 
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+    return GetFileAttributes(path) != 0xFFFFFFFF;
+#endif
+
     // Try opening it with fopen.
     f = fopen(path, "rb");
     if (f)
