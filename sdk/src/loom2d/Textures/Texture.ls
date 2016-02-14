@@ -556,29 +556,18 @@ package loom2d.textures
                     if(cacheOnDisk)
                     {
                         File.move(req.cacheFileName, cacheFile);
-                        //kick off the async load and return our holding texture
-                        Debug.assert(existingNativeID == -1, "Texture update from http request currently unsupported");
-                        tInfo = Texture2D.initFromAssetAsync(cacheFile, highPriority);
+                    }
+                    //load the bytes Async
+                    if (existingNativeID  == -1) {
+                        tInfo = Texture2D.initFromBytesAsync(result, urlsha2, highPriority);
                         if(tInfo == null)
                         {
-                            Console.print("WARNING: Unable to load HTTP texture from cached file: " + cacheFile); 
+                            Console.print("WARNING: Unable to load texture from bytes given data from url: " + url); 
                         }
-                    }
-                    else
-                    {
-
-                        //load the bytes Async
-                        if (existingNativeID  == -1) {
-                            tInfo = Texture2D.initFromBytesAsync(result, urlsha2, highPriority);
-                            if(tInfo == null)
-                            {
-                                Console.print("WARNING: Unable to load texture from bytes given data from url: " + url); 
-                            }
-                        } else {
-                            //Texture2D.updateFromBytes(existingNativeID, texBytes);
-                            Texture2D.updateFromBytesAsync(existingNativeID, result, highPriority);
-                            tInfo = tex.textureInfo;
-                        }                 
+                    } else {
+                        //Texture2D.updateFromBytes(existingNativeID, texBytes);
+                        Texture2D.updateFromBytesAsync(existingNativeID, result, highPriority);
+                        tInfo = tex.textureInfo;
                     }
                 }
                 
