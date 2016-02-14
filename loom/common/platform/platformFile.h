@@ -113,7 +113,7 @@ int platform_removeDir(const char *path);
  *
  * @param path Path to normalize.
  */
-void platform_normalizePath(const char *path);
+void platform_normalizePath(char *path);
 
 /*!
  * Returns / or \ depending on platform.
