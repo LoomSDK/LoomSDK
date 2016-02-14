@@ -40,6 +40,13 @@ bool Stage::visDirty = true;
 
 Stage::Stage()
 {
+#if LOOM_PLATFORM_TOUCH
+    fingerEnabled = true;
+    mouseEnabled = false;
+#else
+    fingerEnabled = false;
+    mouseEnabled = true;
+#endif
     pendingResize = true;
     smMainStage = this;
     sdlWindow = gSDLWindow;

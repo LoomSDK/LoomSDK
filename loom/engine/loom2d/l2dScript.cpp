@@ -234,6 +234,9 @@ static int registerLoom2D(lua_State *L)
        .addMethod("__pget_nativeStageWidth", &Stage::getWidth)
        .addMethod("__pget_nativeStageHeight", &Stage::getHeight)
 
+       .addVar("fingerEnabled", &Stage::fingerEnabled)
+       .addVar("mouseEnabled", &Stage::mouseEnabled)
+
        .addProperty("orientation", &Stage::getOrientation, &Stage::setOrientation)
 
        .addProperty("vectorQuality", &Stage::getVectorQuality, &Stage::setVectorQuality)

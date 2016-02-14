@@ -119,9 +119,9 @@ void loop()
             stage->_KeyUpDelegate.pushArgument(event.key.keysym.mod);
             stage->_KeyUpDelegate.invoke();
         }
-#if LOOM_PLATFORM_TOUCH
         else if(event.type == SDL_FINGERDOWN)
         {
+            if (!stage->fingerEnabled) continue;
             stage->_TouchBeganDelegate.pushArgument((int)event.tfinger.fingerId);
             stage->_TouchBeganDelegate.pushArgument(event.tfinger.x*stage->stageWidth);
             stage->_TouchBeganDelegate.pushArgument(event.tfinger.y*stage->stageHeight);
@@ -129,6 +129,7 @@ void loop()
         }
         else if(event.type == SDL_FINGERUP)
         {
+            if (!stage->fingerEnabled) continue;
             stage->_TouchEndedDelegate.pushArgument((int)event.tfinger.fingerId);
             stage->_TouchEndedDelegate.pushArgument(event.tfinger.x*stage->stageWidth);
             stage->_TouchEndedDelegate.pushArgument(event.tfinger.y*stage->stageHeight);
@@ -136,17 +137,16 @@ void loop()
         }
         else if(event.type == SDL_FINGERMOTION)
         {
+            if (!stage->fingerEnabled) continue;
             stage->_TouchMovedDelegate.pushArgument((int)event.tfinger.fingerId);
             stage->_TouchMovedDelegate.pushArgument(event.tfinger.x*stage->stageWidth);
             stage->_TouchMovedDelegate.pushArgument(event.tfinger.y*stage->stageHeight);
             stage->_TouchMovedDelegate.pushArgument(SDL_BUTTON_LEFT);
             stage->_TouchMovedDelegate.invoke();
         }
-#else
         else if(event.type == SDL_MOUSEBUTTONDOWN)
         {
-            //lmLogInfo(coreLogGroup, "began %d %d %d", event.motion.which, event.motion.x, event.motion.y);
-
+            if (!stage->mouseEnabled) continue;
             stage->_TouchBeganDelegate.pushArgument((int)event.button.which);
             stage->_TouchBeganDelegate.pushArgument(event.button.x);
             stage->_TouchBeganDelegate.pushArgument(event.button.y);
@@ -154,7 +154,7 @@ void loop()
         }
         else if(event.type == SDL_MOUSEBUTTONUP)
         {
-            //lmLogInfo(coreLogGroup, "ended %d %d %d", event.motion.which, event.motion.x, event.motion.y);
+            if (!stage->mouseEnabled) continue;
             stage->_TouchEndedDelegate.pushArgument((int)event.button.which);
             stage->_TouchEndedDelegate.pushArgument(event.button.x);
             stage->_TouchEndedDelegate.pushArgument(event.button.y);
@@ -162,17 +162,15 @@ void loop()
         }
         else if(event.type == SDL_MOUSEMOTION)
         {
-            //lmLogInfo(coreLogGroup, "moved %d %d %d", event.motion.which, event.motion.x, event.motion.y);
+            if (!stage->mouseEnabled) continue;
             stage->_TouchMovedDelegate.pushArgument((int)event.motion.which);
             stage->_TouchMovedDelegate.pushArgument(event.motion.x);
             stage->_TouchMovedDelegate.pushArgument(event.motion.y);
             stage->_TouchMovedDelegate.pushArgument((int)event.motion.state);
             stage->_TouchMovedDelegate.invoke();
         }
-#endif
         else if(event.type == SDL_MOUSEWHEEL)
         {
-            //stage->_ScrollWheelYMovedDelegate.pushArgument(event.wheel.y * (event.wheel.direction == SDL_MOUSEWHEEL_NORMAL ? 1 : -1));
             stage->_ScrollWheelYMovedDelegate.pushArgument(event.wheel.y);
             stage->_ScrollWheelYMovedDelegate.invoke();
         }
