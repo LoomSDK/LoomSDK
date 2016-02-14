@@ -43,7 +43,7 @@ public:
             return 1;
         }
 
-        platform_mapFileExists(lua_tostring(L, 1)) ? lua_pushboolean(L, 1) : lua_pushboolean(L, 0);
+        lua_pushboolean(L, platform_mapFileExists(lua_tostring(L, 1)));
 
         return 1;
     }
@@ -61,7 +61,7 @@ public:
 
         int sz = (int)strlen(data);
 
-        !platform_writeFile(path, (void *)data, sz) ? lua_pushboolean(L, 1) : lua_pushboolean(L, 0);
+        lua_pushboolean(L, !platform_writeFile(path, (void *)data, sz));
 
         return 1;
     }
@@ -74,7 +74,7 @@ public:
             return 1;
         }
 
-        !platform_removeFile(lua_tostring(L, 1)) ? lua_pushboolean(L, 1) : lua_pushboolean(L, 0);
+        lua_pushboolean(L, !platform_removeFile(lua_tostring(L, 1)));
 
         return 1;
     }
@@ -87,7 +87,7 @@ public:
             return 1;
         }
 
-        !platform_moveFile(lua_tostring(L, 1), lua_tostring(L, 2)) ? lua_pushboolean(L, 1) : lua_pushboolean(L, 0);
+        lua_pushboolean(L, !platform_moveFile(lua_tostring(L, 1), lua_tostring(L, 2)));
 
         return 1;
     }
@@ -104,7 +104,7 @@ public:
 
         const char *path = lua_tostring(L, 1);
 
-        !platform_writeFile(path, (void *)byteArray->getDataPtr(), (int)byteArray->getSize()) ? lua_pushboolean(L, 1) : lua_pushboolean(L, 0);
+        lua_pushboolean(L, !platform_writeFile(path, (void *)byteArray->getDataPtr(), (int)byteArray->getSize()));
 
         return 1;
     }
@@ -206,7 +206,7 @@ public:
             return 1;
         }
 
-        !platform_makeDir(lua_tostring(L, 1)) ? lua_pushboolean(L, 1) : lua_pushboolean(L, 0);
+        lua_pushboolean(L, !platform_makeDir(lua_tostring(L, 1)));
 
         return 1;
     }
@@ -219,7 +219,7 @@ public:
             return 1;
         }
 
-        !platform_dirExists(lua_tostring(L, 1)) ? lua_pushboolean(L, 1) : lua_pushboolean(L, 0);
+        lua_pushboolean(L, !platform_dirExists(lua_tostring(L, 1)));
 
         return 1;
     }
@@ -232,7 +232,7 @@ public:
             return 1;
         }
 
-        !platform_removeDir(lua_tostring(L, 1)) ? lua_pushboolean(L, 1) : lua_pushboolean(L, 0);
+        lua_pushboolean(L, !platform_removeDir(lua_tostring(L, 1)));
 
         return 1;
     }
