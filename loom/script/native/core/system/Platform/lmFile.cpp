@@ -79,6 +79,19 @@ public:
         return 1;
     }
 
+    static int moveFile(lua_State *L)
+    {
+        if (!lua_isstring(L, 1) || !lua_isstring(L, 2))
+        {
+            lua_pushboolean(L, 0);
+            return 1;
+        }
+
+        !platform_moveFile(lua_tostring(L, 1), lua_tostring(L, 2)) ? lua_pushboolean(L, 1) : lua_pushboolean(L, 0);
+
+        return 1;
+    }
+
     static int writeBinaryFile(lua_State *L)
     {
         if (!lua_isstring(L, 1) || !lualoom_checkinstancetype(L, 2, "system.ByteArray"))
@@ -177,7 +190,11 @@ public:
             return 1;
         }
 
-        lua_pushstring(L, platform_normalizePath(lua_tostring(L, 1)));
+        static char normalized[4096];
+        strncpy(normalized, lua_tostring(L, 1), sizeof(normalized));
+        platform_normalizePath(normalized);
+        lua_pushstring(L, normalized);
+
         return 1;
     }
 
@@ -273,6 +290,7 @@ static int _registerSystemPlatform(lua_State *L)
        .addStaticLuaFunction("_writeBinaryFile", &File::writeBinaryFile)
        .addStaticLuaFunction("_fileExists", &File::fileExists)
        .addStaticLuaFunction("_removeFile", &File::removeFile)
+       .addStaticLuaFunction("_moveFile", &File::moveFile)
        .endClass()
 
        .beginClass<Path>("Path")

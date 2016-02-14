@@ -77,6 +77,8 @@ package loom2d.textures
      */ 
     public class Texture
     {
+        public static var DownloadTempPostfix = ".part";
+        
         public var mFrame:Rectangle;
 
         /**
@@ -286,7 +288,9 @@ package loom2d.textures
                 {
                     Path.makeDir(writePath);
                 }
-                cacheFile = Path.normalizePath(writePath + "/" + urlsha2) + ext;
+                
+                var prenorm = writePath + "/" + urlsha2 + ext;
+                cacheFile = Path.normalizePath(prenorm);
                 
                 // check if file already cached locally
                 if (File.fileExists(cacheFile))
@@ -528,8 +532,7 @@ package loom2d.textures
             //create the HTTPRequest to obtain the texture data remotely
             var req:HTTPRequest = new HTTPRequest(url);
             req.method = "GET";
-            req.cacheFileName = (cacheOnDisk) ? cacheFile : null;
-
+            req.cacheFileName = (cacheOnDisk) ? (cacheFile + DownloadTempPostfix) : null;
 
             //setup onSuccess
             var success:Function = function(result:ByteArray):void
@@ -543,18 +546,16 @@ package loom2d.textures
                 //were we cancelled while off busy with the HTTP?
                 if(tex.mCancelHTTP)
                 {
-                    if(cacheOnDisk && File.fileExists(cacheFile))
-                    {
-                        //delete the cached file if this was a cached HTTP load
-                        Console.print("Deleting cached HTTP requested texture as its load was cancelled: " + cacheFile); 
-                        File.removeFile(cacheFile);
-                    }
+                    // We don't have to and probably shouldn't remove the
+                    // file here, because it's at a temporary path and will
+                    // get overwritten anyway.
                 }
                 else
                 {
                     //cached or non-cached
                     if(cacheOnDisk)
                     {
+                        File.move(req.cacheFileName, cacheFile);
                         //kick off the async load and return our holding texture
                         Debug.assert(existingNativeID == -1, "Texture update from http request currently unsupported");
                         tInfo = Texture2D.initFromAssetAsync(cacheFile, highPriority);

@@ -56,7 +56,7 @@ void platform_getCurrentExecutablePath(char *out, unsigned int maxLen);
 const char *platform_getWritablePath();
 
 /*!
- * What is the current working directory?
+ * Recursively create the folders in path
  *
  * @param path recursively creates the folders in path
  * @return 0 on success and other value on failure
@@ -75,12 +75,21 @@ int platform_makeDir(const char *path);
 int platform_writeFile(const char *path, void *data, int size);
 
 /*!
- * Removes a file at the given path
- *
- * @param path the full path to the file to remove
- * @return 0 on success and other value on failure
- */
+* Removes a file at the given path
+*
+* @param path the full path to the file to remove
+* @return 0 on success and other value on failure
+*/
 int platform_removeFile(const char *path);
+
+/*!
+* Moves a file from source to dest
+*
+* @param source the full path of the file to move
+* @param dest the full destination path of the file
+* @return 0 on success and other value on failure
+*/
+int platform_moveFile(const char *source, const char *dest);
 
 /*!
  * Checks if a directory exists at the given path
@@ -99,13 +108,12 @@ int platform_dirExists(const char *path);
 int platform_removeDir(const char *path);
 
 /*!
- * Normalizes a path to use the system folder delimiter
+ * Normalizes a path to use the system folder delimiter.
+ * This function modifies the buffer in-place.
  *
- * @param path the full path to the directory to remove
- * @return a string with the normalized path (note that this is a shared string buffer
- * and only valid between calls)
+ * @param path Path to normalize.
  */
-const char *platform_normalizePath(const char *path);
+void platform_normalizePath(const char *path);
 
 /*!
  * Returns / or \ depending on platform.
