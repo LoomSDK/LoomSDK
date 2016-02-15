@@ -94,7 +94,7 @@ class LuaJITTarget < Target
         when :x86
           "x86"
         when :x86_64
-          "amd64"
+          "x86_amd64"
         else
           abort("Unsupported architecture: #{arch}")
         end
