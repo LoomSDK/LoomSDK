@@ -230,7 +230,26 @@ class IOSToolchain < Toolchain
   end
 end
 
-class LinuxToolchain
+class LinuxToolchain < Toolchain
+
+  def name
+    return "linux"
+  end
+
+  def buildCommand
+    return "make -j2"
+  end
+
+  def makeConfig(target)
+    return {
+      CC: "gcc" + (target.is64Bit ? "" : " -m32")
+    }
+  end
+
+  def cmakeArgs(target)
+    return "-G \"Unix Makefiles\""
+  end
+
 end
 
 class AndroidToolchain < Toolchain
@@ -247,7 +266,19 @@ class AndroidToolchain < Toolchain
     
     return nil unless !target.is64Bit
     
-    systems = ["darwin-x86_64", "darwin-x86"]
+    if $HOST.is_a? OSXHost then
+    	systems = ["darwin-x86_64", "darwin-x86"]
+    elsif $HOST.is_a? LinuxHost then
+        systems = ["linux-x86_64", "linux-x86"]
+    elsif $HOST.is_a? WindowsHost then
+        systems = ["windows-x86_64", "windowx-x86"]
+    else
+        abort "Unknown host for building Android through makefiles"
+    end
+
+    if !ENV["ANDROID_NDK"]
+      abort "The environment variable ANDROID_NDK is not set. Please set it to the location of your Android NDK installation."
+    end
     
     # Android/ARM, armeabi-v7a (ARMv7 VFP), Android 4.0+ (ICS)
     ndk = File.expand_path(ENV["ANDROID_NDK"])

@@ -79,13 +79,6 @@ set (ENGINE_SRC
 
     ${ENGINE_SRC}
 
-    cocos2dx/platform/linux/CCApplication.cpp
-    cocos2dx/platform/linux/CCCommon.cpp
-    cocos2dx/platform/linux/CCEGLView.cpp
-    cocos2dx/platform/linux/CCFileUtils.cpp
-    cocos2dx/platform/linux/CCImage.cpp
-    cocos2dx/platform/linux/CCStdC.cpp
-
 )
 endif(LINUX)
 

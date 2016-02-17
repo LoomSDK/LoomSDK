@@ -57,6 +57,14 @@ elseif(LINUX)
        LoomCore
     )
 
+    set(ASSETAGENTBIN $<TARGET_FILE:${PROJECT_NAME}>)
+    
+    add_custom_command(TARGET ${PROJECT_NAME}
+        POST_BUILD
+        COMMAND mkdir -p \"${ARTIFACTS_DIR}/tools\"
+        COMMAND cp \"${ASSETAGENTBIN}\" \"${ARTIFACTS_DIR}/tools/libassetAgent.so\"
+    )
+
 elseif(MSVC)
 
     target_link_libraries(${PROJECT_NAME} 

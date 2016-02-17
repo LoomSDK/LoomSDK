@@ -53,7 +53,7 @@
 #define ASSET_STREAM_PORT    LoomApplicationConfig::assetAgentPort()
 
 // This actually lives in lsAsset.cpp, but is useful to call from in the asset manager implementation.
-void loom_asset_notifyPendingCountChange();
+//void loom_asset_notifyPendingCountChange();
 
 extern "C" 
 {
@@ -593,7 +593,7 @@ public:
            {
                // How many pending files?
                gPendingFiles = buffer.readInt();
-               loom_asset_notifyPendingCountChange();
+//               loom_asset_notifyPendingCountChange();
 
                // Read the filename.
                char *path;
@@ -632,7 +632,7 @@ public:
            {
                // How many pending files?
                gPendingFiles = buffer.readInt();
-               loom_asset_notifyPendingCountChange();
+//               loom_asset_notifyPendingCountChange();
 
                // Get the offset.
                int chunkOffset = buffer.readInt();
@@ -658,7 +658,7 @@ public:
                    // And this resolves a file so decrement the pending count. This way
                    // we will get to zero.
                    gPendingFiles--;
-                   loom_asset_notifyPendingCountChange();
+//                   loom_asset_notifyPendingCountChange();
 
                    // Instate the new asset data.
                    loom_asset_t *asset    = loom_asset_getAssetByName(pendingFilePath.c_str(), 1);
@@ -701,7 +701,7 @@ static void loom_asset_serviceServer()
         gAssetServerLastConnectTryTime = platform_getMilliseconds();
         gAssetServerSocket             = loom_net_openTCPSocket(ASSET_STREAM_HOST, ASSET_STREAM_PORT, 0);
         gAssetConnectionOpen           = false;
-        loom_asset_notifyPendingCountChange();
+//        loom_asset_notifyPendingCountChange();
 
         loom_mutex_unlock(gAssetServerSocketLock);
         return;
@@ -726,7 +726,7 @@ static void loom_asset_serviceServer()
             gAssetServerSocket = NULL;
             lmSafeDelete(NULL, gAssetProtocolHandler);
             gAssetConnectionOpen = false;
-            loom_asset_notifyPendingCountChange();
+//            loom_asset_notifyPendingCountChange();
             loom_mutex_unlock(gAssetServerSocketLock);
             return;
         }
@@ -737,7 +737,7 @@ static void loom_asset_serviceServer()
         // "open" when it is really dead.
         loom_net_enableSocketKeepalive(gAssetServerSocket);
         gAssetConnectionOpen = true;
-        loom_asset_notifyPendingCountChange();
+//        loom_asset_notifyPendingCountChange();
 
         // Make sure we have a protocol handler.
         if (!gAssetProtocolHandler)
@@ -759,7 +759,7 @@ static void loom_asset_serviceServer()
         gAssetServerSocket = NULL;
         lmSafeDelete(NULL, gAssetProtocolHandler);
         gAssetConnectionOpen = false;
-        loom_asset_notifyPendingCountChange();
+//        loom_asset_notifyPendingCountChange();
         loom_mutex_unlock(gAssetServerSocketLock);
         return;
     }

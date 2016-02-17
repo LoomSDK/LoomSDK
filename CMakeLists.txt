@@ -122,6 +122,8 @@ if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS))
 
     add_subdirectory(loom/vendor/sdl2)
 	
+elseif (LINUX)
+    include_directories("/usr/include/SDL2")
 endif()
 
 #--------------------------------------
@@ -292,6 +294,7 @@ endif()
 if (LINUX)
 
     if(LOOM_BUILD_64BIT EQUAL 1)
+      ADD_DEFINITIONS("-fPIC")
       SET(ARTIFACTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/linux-x64)
     else()
       SET(ARTIFACTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/linux-x86)
@@ -299,7 +302,6 @@ if (LINUX)
 
     set (LOOM_INCLUDE_FOLDERS
     ${LOOM_INCLUDE_FOLDERS}
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/linux
     ${CMAKE_SOURCE_DIR}/loom/vendor/glew-1.7.0/include )
 
     add_definitions(-DLOOM_DISABLE_JEMALLOC -DLOOM_LINUX_BUILD -DLINUX -DHAVE_CXA_DEMANGLE -DNPERFORMANCE -DNTELEMETRY)

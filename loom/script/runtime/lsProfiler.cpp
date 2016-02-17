@@ -479,7 +479,7 @@ void LSProfiler::dumpAllocations(lua_State *L)
     for (UTsize i = 0; i < sortByTotal.size(); i++) sortByTotal[i] = i;
 
     sortMethods = &methodAggr;
-    SDL_qsort((void*)sortByTotal.ptr(), sortByTotal.size(), sizeof(int), sortMethodsByTotalCount);
+//    SDL_qsort((void*)sortByTotal.ptr(), sortByTotal.size(), sizeof(int), sortMethodsByTotalCount);
     sortMethods = NULL;
 
     lmLog(gProfilerLogGroup, "");
@@ -495,7 +495,7 @@ void LSProfiler::dumpAllocations(lua_State *L)
         
         lmLog(gProfilerLogGroup, "Total: %i (%i KiB), Alive: %i (%i KiB), Method: %s", ma.totalCount, ma.totalBytes/1024, ma.currentCount, ma.currentBytes/1024, methodBase->getFullMemberName());
         
-        SDL_qsort((void*)ma.allocations.ptr(), ma.allocations.size(), sizeof(LSProfilerTypeAllocation*), sortAllocsByTotal);
+        //SDL_qsort((void*)ma.allocations.ptr(), ma.allocations.size(), sizeof(LSProfilerTypeAllocation*), sortAllocsByTotal);
 
         for (UTsize j = 0; j < ma.allocations.size(); j++)
         {

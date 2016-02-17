@@ -11,13 +11,27 @@ else ()
     set (EXTRA_LIBS -lpthread)
 endif()
 
-target_link_libraries(unittest
+set(UNITTEST_LIBS
     LoomVendor
     LoomCommon
     LoomScript
     LoomCore
+)
+
+if (LINUX)
+  # gcc on Linux is picky
+  target_link_libraries(unittest
+    -Wl,--start-group #this is needed because the linker on linux complains if it's not there for this specific target, others work
+    ${UNITTEST_LIBS}
+    -Wl,--end-group
     ${EXTRA_LIBS}
 )
+else()
+  target_link_libraries(unittest
+    ${UNITTEST_LIBS}
+    ${EXTRA_LIBS}
+  )
+endif()
 
 set(UNITTESTBIN $<TARGET_FILE:${PROJECT_NAME}>)
 

@@ -403,6 +403,16 @@ namespace :build do
     puts "== Building LuaJIT for OSX =="
     buildLuaJIT(MakeToolchain.new(OSXToolchain.new()), [:x86, :x86_64])
   end
+
+  desc "Build LuaJIT libraries for Linux"
+  task 'luajit:linux' do |t, args|
+    if $HOST.name != 'linux'
+      puts "LuaJIT Linux build only supported on Linux, skipping..."
+      next
+    end
+    puts "== Building LuaJIT for Linux =="
+    buildLuaJIT(MakeToolchain.new(LinuxToolchain.new()), if $HOST.is_x64 then [:x86_64] else [:x86] end)
+  end
   
   desc "Build LuaJIT libraries for iOS"
   task 'luajit:ios' do |t, args|
@@ -623,19 +633,23 @@ namespace :build do
     loom_arm = LoomTarget.new(:armv7, $BUILD_TYPE, luajit_lib)
     toolchain.build(loom_arm)
 
+    if ENV["ANDROID_SDK"] == nil then
+      abort "Your ANDROID_SDK environment variable is not set, please set it to your install location"
+    end
+
     puts "*** Building against AndroidSDK " + CFG[:TARGET_ANDROID_SDK]
     api_id = get_android_api_id(CFG[:TARGET_ANDROID_SDK])
 
     Dir.chdir("loom/vendor/facebook/android") do
-      sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
+      sh "#{ENV['ANDROID_SDK']}/tools/android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
     end
 
-    Dir.chdir("loom/engine/sdl2/platform/android/java") do
-      sh "android update project --name SDL2 --subprojects --target #{api_id} --path ."
+    Dir.chdir("loom/engine/SDL2/platform/android/java") do
+      sh "#{ENV['ANDROID_SDK']}/tools/android update project --name SDL2 --subprojects --target #{api_id} --path ."
     end
 
     Dir.chdir("application/android") do
-      sh "android update project --name LoomDemo --subprojects --target #{api_id} --path ."
+      sh "#{ENV['ANDROID_SDK']}/tools/android update project --name LoomDemo --subprojects --target #{api_id} --path ."
     end
 
     FileUtils.mkdir_p "application/android/assets"
@@ -663,20 +677,22 @@ namespace :build do
 
   desc "Builds Ubuntu Linux"
   task :ubuntu => [] do
-    puts "== Skipped Ubuntu =="
-
-    if false
 	
+    ensureLuaJIT("linux")
+
     puts "== Building Ubuntu =="
-    FileUtils.mkdir_p("#{$ROOT}/build/loom-linux-x86")
-    Dir.chdir("#{$ROOT}/build/loom-linux-x86") do
-      sh "cmake -DLOOM_BUILD_JIT=#{CFG[:USE_LUA_JIT]} -DLUA_GC_PROFILE_ENABLED=#{CFG[:ENABLE_LUA_GC_PROFILE]} -G \"Unix Makefiles\" -DCMAKE_BUILD_TYPE=#{CFG[:BUILD_TARGET]} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{$ROOT}"
-      sh "make -j#{$HOST.num_cores}"
-    end
+
+    arch = $HOST.is_x64 == '1' ? :x86_64 : :x86
+
+    # Just compile for native arch
+    toolchain = LinuxToolchain.new();
+    luajit = LuaJITTarget.new(arch, $BUILD_TYPE);
+    loom = LoomTarget.new(arch, $BUILD_TYPE, luajit);
+
+    toolchain.build(loom)
 
     Rake::Task["utility:compileScripts"].invoke
     Rake::Task["utility:compileTools"].invoke
-	end
 	
   end
 

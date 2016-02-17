@@ -1,9 +1,31 @@
 ## Instructions for building on Ubuntu:
 
-1.  Install g++, rake, cmake, zlib1g-dev, libglew-dev, libglfw-dev:
+1.  Install g++, rake, cmake, zlib1g-dev, libglew-dev, libglfw-dev, uuid-dev, ant:
 
-sudo apt-get install g++ rake cmake zlib1g-dev libglew-dev libglfw-dev libcurl4-openssl-dev
+sudo apt-get install g++ rake cmake zlib1g-dev libglew-dev libglfw-dev libcurl4-openssl-dev, ant
 
-2.  From the root SDK folder run: rake build:ubuntu
+2. If you plan on compiling for Android, you'll need to install Android SDK, Android NDK and Java JDK.
+   You can get Android SDK from the official site (http://developer.android.com/sdk/index.html)
+   where you can download and install either Android Studio or the standalone tools.
+
+   After you've installed the SDK, run build/android from the SDK directory and install
+   android-13 (marked obsolete :( ) SDK and the latest build-tools version 22.
+   Other versions may not work properly.
+
+   You currently need Android NDK version r10b for Loom to compile for Android, which you can get
+   at http://dl.google.com/android/ndk/android-ndk32-r10b-linux-x86.tar.bz2 or
+   http://dl.google.com/android/ndk/android-ndk32-r10b-linux-x86_64.tar.bz2, depending on your system.
+
+   Export ANDROID_SDK and ANDROID_NDK environment variables to point to your install locations.
+
+   To install the Java JDK, run
+
+sudo apt-get install default-jdk
+
+2. If you plan on compiling for Android and you're on a 64-bit system, also install lib32gcc-5-dev and lib32z1
+
+sudo apt-get install lib32-gcc-5-dev lib32z1
+
+2.  From the root SDK folder run: rake deploy:sdk
 
 3.  Enjoy!
