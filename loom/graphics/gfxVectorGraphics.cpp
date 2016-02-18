@@ -168,20 +168,20 @@ void VectorGraphics::endFill() {
 
 
 void VectorGraphics::moveTo(float x, float y) {
-    auto path = getPath();
+    VectorPath* path = getPath();
     path->moveTo(x, y);
     inflateBounds(Loom2D::Rectangle(x, y, 0, 0));
 }
 
 void VectorGraphics::lineTo(float x, float y) {
-    auto path = getPath();
+    VectorPath* path = getPath();
     inflateBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
     path->lineTo(x, y);
     inflateBounds(Loom2D::Rectangle(x, y, 0, 0));
 }
 
 void VectorGraphics::curveTo(float controlX, float controlY, float anchorX, float anchorY) {
-    auto path = getPath();
+    VectorPath* path = getPath();
     inflateBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
     path->curveTo(controlX, controlY, anchorX, anchorY);
     inflateBounds(Loom2D::Rectangle(controlX, controlY, 0, 0));
@@ -189,7 +189,7 @@ void VectorGraphics::curveTo(float controlX, float controlY, float anchorX, floa
 }
 
 void VectorGraphics::cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY) {
-    auto path = getPath();
+    VectorPath* path = getPath();
     inflateBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
     path->cubicCurveTo(controlX1, controlY1, controlX2, controlY2, anchorX, anchorY);
     inflateBounds(Loom2D::Rectangle(controlX1, controlY1, 0, 0));
@@ -198,7 +198,7 @@ void VectorGraphics::cubicCurveTo(float controlX1, float controlY1, float contro
 }
 
 void VectorGraphics::arcTo(float controlX, float controlY, float anchorX, float anchorY, float radius) {
-    auto path = getPath();
+    VectorPath* path = getPath();
     inflateBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
     path->arcTo(controlX, controlY, anchorX, anchorY, radius);
     inflateBounds(Loom2D::Rectangle(controlX, controlY, 0, 0));
