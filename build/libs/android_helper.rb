@@ -6,7 +6,7 @@ def get_android_api_id(api_name)
     grep = "grep"
   end
 
-  api_id = `#{ENV['ANDROID_SDK']}/tools/android list target | #{grep} "#{api_name}"`
+  api_id = `android list target | #{grep} "#{api_name}"`
 
   if api_id.empty?
     puts "===================================================================="

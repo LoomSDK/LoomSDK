@@ -16,7 +16,8 @@ sudo apt-get install g++ rake cmake zlib1g-dev libglew-dev libglfw-dev libcurl4-
    at http://dl.google.com/android/ndk/android-ndk32-r10b-linux-x86.tar.bz2 or
    http://dl.google.com/android/ndk/android-ndk32-r10b-linux-x86_64.tar.bz2, depending on your system.
 
-   Export ANDROID_SDK and ANDROID_NDK environment variables to point to your install locations.
+   Export ANDROID_NDK environment variables to point to your NDK install location and export your
+   Android SDK's "tools" directory to your PATH environment variable.
 
    To install the Java JDK, run
 

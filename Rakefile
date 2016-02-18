@@ -633,23 +633,19 @@ namespace :build do
     loom_arm = LoomTarget.new(:armv7, $BUILD_TYPE, luajit_lib)
     toolchain.build(loom_arm)
 
-    if ENV["ANDROID_SDK"] == nil then
-      abort "Your ANDROID_SDK environment variable is not set, please set it to your install location"
-    end
-
     puts "*** Building against AndroidSDK " + CFG[:TARGET_ANDROID_SDK]
     api_id = get_android_api_id(CFG[:TARGET_ANDROID_SDK])
 
     Dir.chdir("loom/vendor/facebook/android") do
-      sh "#{ENV['ANDROID_SDK']}/tools/android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
+      sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
     end
 
     Dir.chdir("loom/engine/SDL2/platform/android/java") do
-      sh "#{ENV['ANDROID_SDK']}/tools/android update project --name SDL2 --subprojects --target #{api_id} --path ."
+      sh "android update project --name SDL2 --subprojects --target #{api_id} --path ."
     end
 
     Dir.chdir("application/android") do
-      sh "#{ENV['ANDROID_SDK']}/tools/android update project --name LoomDemo --subprojects --target #{api_id} --path ."
+      sh "android update project --name LoomDemo --subprojects --target #{api_id} --path ."
     end
 
     FileUtils.mkdir_p "application/android/assets"
