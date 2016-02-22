@@ -249,7 +249,9 @@ void BinReader::readMethodBase(MethodBase *mbase)
         lua_settop(L, top);
         lsr_pushmethodbase(L, mbase);
 
-        if (!lua_isnil(L, -1))
+        bool found = !lua_isnil(L, -1);
+
+        if (found)
         {
             function = lua_tocfunction(L, -1);
 
@@ -264,7 +266,7 @@ void BinReader::readMethodBase(MethodBase *mbase)
 
         lua_pop(L, 1);
 
-        if (!mbase->isFastCall())
+        if (found && !mbase->isFastCall())
         {
             if (!function)
             {
@@ -291,6 +293,10 @@ void BinReader::readMethodBase(MethodBase *mbase)
                 }
             }
         }
+        else
+        {
+
+        }
     }
     else
     {
@@ -308,6 +314,7 @@ MethodInfo *BinReader::readMethodInfo(Type *type)
     methodInfo->declaringType = type;
 
     readMethodBase(methodInfo);
+    if (methodInfo->missing) type->missing = true;
 
     Type *retType = NULL;
     if (bytes->readBoolean())
@@ -459,6 +466,7 @@ ConstructorInfo *BinReader::readConstructor(Type *type)
     cinfo->declaringType = type;
 
     readMethodBase(cinfo);
+    if (cinfo->missing) type->missing = true;
 
     cinfo->memberType.constructor = true;
     cinfo->type = getType("system.Function");
@@ -583,6 +591,12 @@ void BinReader::readClass(Type *type)
     for (int i = 0; i < numMethods; i++)
     {
         MethodInfo *methodInfo = readMethodInfo(type);
+        /*
+        if (methodInfo->missing) {
+            lmFree(NULL, methodInfo);
+            continue;
+        }
+        */
         type->addMember(methodInfo);
     }
 
@@ -595,6 +609,15 @@ void BinReader::readClass(Type *type)
     byteCode = lmNew(NULL) ByteCode();
     byteCode->deserialize(bytes);
     type->setBCInstanceInitializer(byteCode);
+
+    /*
+    LSLog(LSLogInfo, "Members of %s:", type->getFullName().c_str());
+    utList<LS::MemberInfo*>::Iterator iter = type->members.iterator();
+    while (iter.hasMoreElements()) {
+        MemberInfo *info = iter.getNext();
+        LSLog(LSLogInfo, "    %s: %d", info->getFullMemberName(), info->missing);
+    }
+    */
 }
 
 

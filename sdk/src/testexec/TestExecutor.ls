@@ -1,12 +1,11 @@
 package
 {
-    import system.application.ConsoleApplication;
     import system.platform.File;
     import system.reflection.Assembly;
     import unittest.TestResult;
     import unittest.TestRunner;
     
-    public class TestExecutor extends ConsoleApplication
+    public class TestExecutor
     {
         private function getReferencedAssembly(asm:Assembly, name:String):Assembly
         {
@@ -21,18 +20,20 @@ package
         }
 
         [UnitTestHideCall]
-        override public function run():void
+        public function run():void
         {
-            Debug.assert(CommandLine.getArgCount() > 0, "Assembly file argument missing");
+            Debug.assert(CommandLine.getArgCount() > 1, "Assembly file argument missing");
 
-            var asmFile = CommandLine.getArg(0);
+            var asmFile = CommandLine.getArg(1);
 
             if (asmFile == "ProcessID") {
-                Debug.assert(CommandLine.getArgCount() > 2, "Assembly file argument missing");
-                asmFile = CommandLine.getArg(2);
+                Debug.assert(CommandLine.getArgCount() > 3, "Assembly file argument missing");
+                asmFile = CommandLine.getArg(3);
             }
 
             Debug.assert(File.fileExists(asmFile), "Assembly file not found: "+asmFile);
+
+            trace("Loading " + asmFile);
 
             var asm = Assembly.load(asmFile);
 
@@ -46,6 +47,8 @@ package
             Debug.assert(unittestasm1.getUID() == unittestasm2.getUID(), "'UnitTest' referenced assemblies don't match. Please recompile your binaries.");
 
             TestRunner.onComplete += function(result:TestResult) {
+                // TestRunner.reportTypes(result.typeTests, result.typeReport, result.assertReport, result.testReport);
+                trace("Exiting with " + result.typeReport.successful);
                 Process.exit(result.typeReport.successful ? 0 : 1);
             };
 

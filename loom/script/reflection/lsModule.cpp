@@ -85,4 +85,18 @@ void Module::addType(Type *type)
     type->module = this;
     types.push_back(type);
 }
+
+void Module::removeType(Type *type)
+{
+    Type *check = getType(type->getFullName());
+
+    if (!check)
+    {
+        LSError("Module doesn't contain type:%s", type->getFullName().c_str());
+    }
+
+    type->module = NULL;
+    types.erase(type, true);
+}
+
 }

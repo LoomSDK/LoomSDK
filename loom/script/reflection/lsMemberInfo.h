@@ -293,9 +293,11 @@ protected:
 public:
 
     MemberInfo() :
-        declaringType(NULL), reflectedType(NULL), type(NULL), ordinal(0), lineNumber(0), templateInfo(NULL)
+        declaringType(NULL), reflectedType(NULL), type(NULL), ordinal(0), lineNumber(0), templateInfo(NULL), missing(false)
     {
     }
+
+    bool missing;
 
     virtual ~MemberInfo()
     {

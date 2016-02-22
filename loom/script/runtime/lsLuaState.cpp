@@ -213,13 +213,17 @@ void LSLuaState::declareLuaTypes(const utArray<Type *>& types)
 {
     for (UTsize i = 0; i < types.size(); i++)
     {
-        declareClass(types[i]);
+        Type *type = types[i];
+        if (type->missing) continue;
+
+        declareClass(type);
     }
 
     // validate/initialize native types
     for (UTsize i = 0; i < types.size(); i++)
     {
         Type *type = types.at(i);
+        if (type->missing) continue;
 
         if (type->isNative() || type->hasStaticNativeMember())
         {
@@ -253,19 +257,28 @@ void LSLuaState::initializeLuaTypes(const utArray<Type *>& types)
 {
     for (UTsize i = 0; i < types.size(); i++)
     {
-        types[i]->cache();
+        Type *type = types[i];
+        if (type->missing) continue;
+
+        type->cache();
     }
 
     // initialize all classes
     for (UTsize i = 0; i < types.size(); i++)
     {
-        initializeClass(types[i]);
+        Type *type = types[i];
+        if (type->missing) continue;
+
+        initializeClass(type);
     }
 
     // run static initializers now that all classes have been initialized
     for (UTsize i = 0; i < types.size(); i++)
     {
-        lsr_classinitializestatic(VM(), types[i]);
+        Type *type = types[i];
+        if (type->missing) continue;
+
+        lsr_classinitializestatic(VM(), type);
     }
 }
 
@@ -390,12 +403,65 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
     {
         Type *type = types.at(j);
 
+        LSLog(LSLogInfo, "%d %s %d", j, type->getFullName().c_str(), type->missing);
+    }
+
+
+    for (UTsize j = 0; j < types.size(); j++)
+    {
+        Type *type = types.at(j);
+
         if (type->isNative() || type->hasStaticNativeMember())
         {
             // we're native
             NativeInterface::resolveScriptType(type);
         }
     }
+
+    bool shrink = false;
+    for (UTsize j = 0; j < types.size(); j++)
+    {
+        Type *type = types.at(j);
+
+        bool incomplete = false;
+        Type *search = type;
+        while (search) {
+            if (search->missing)
+            {
+                incomplete = true;
+                break;
+            }
+            search = search->getBaseType();
+        }
+        if (incomplete)
+        {
+            shrink = true;
+            type->missing = true;
+            //lmDelete(NULL, type);
+            //types[j] = NULL;
+        }
+    }
+
+    //*
+    if (shrink)
+    {
+        UTsize firstFree = 0;
+        for (UTsize j = 0; j < types.size(); j++) {
+            Type *type = types[j];
+            if (!type->missing) {
+                types[firstFree] = type;
+                firstFree++;
+            }
+            else {
+                Module* module = const_cast<Module*>(type->getModule());
+                module->removeType(type);
+                lmDelete(NULL, type);
+                types[j] = NULL;
+            }
+        }
+        types.resize(firstFree);
+    }
+    //*/
 
     declareLuaTypes(types);
     initializeLuaTypes(types);
