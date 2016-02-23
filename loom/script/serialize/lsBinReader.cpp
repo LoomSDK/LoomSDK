@@ -314,7 +314,9 @@ MethodInfo *BinReader::readMethodInfo(Type *type)
     methodInfo->declaringType = type;
 
     readMethodBase(methodInfo);
-    if (methodInfo->missing) type->missing = true;
+    if (methodInfo->getMissing()) {
+        type->setMissing("missing method %s", methodInfo->getName());
+    }
 
     Type *retType = NULL;
     if (bytes->readBoolean())
@@ -466,7 +468,9 @@ ConstructorInfo *BinReader::readConstructor(Type *type)
     cinfo->declaringType = type;
 
     readMethodBase(cinfo);
-    if (cinfo->missing) type->missing = true;
+    if (cinfo->missing) {
+        type->setMissing("missing constructor %s", cinfo->getName());
+    }
 
     cinfo->memberType.constructor = true;
     cinfo->type = getType("system.Function");
@@ -591,12 +595,6 @@ void BinReader::readClass(Type *type)
     for (int i = 0; i < numMethods; i++)
     {
         MethodInfo *methodInfo = readMethodInfo(type);
-        /*
-        if (methodInfo->missing) {
-            lmFree(NULL, methodInfo);
-            continue;
-        }
-        */
         type->addMember(methodInfo);
     }
 
@@ -609,15 +607,6 @@ void BinReader::readClass(Type *type)
     byteCode = lmNew(NULL) ByteCode();
     byteCode->deserialize(bytes);
     type->setBCInstanceInitializer(byteCode);
-
-    /*
-    LSLog(LSLogInfo, "Members of %s:", type->getFullName().c_str());
-    utList<LS::MemberInfo*>::Iterator iter = type->members.iterator();
-    while (iter.hasMoreElements()) {
-        MemberInfo *info = iter.getNext();
-        LSLog(LSLogInfo, "    %s: %d", info->getFullMemberName(), info->missing);
-    }
-    */
 }
 
 

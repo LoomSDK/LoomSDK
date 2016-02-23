@@ -701,7 +701,7 @@ task :test => ['build:desktop'] do
   Dir.chdir("sdk") do
     sh "#{$LSC_BINARY} TestExec.build"
     sh "#{$LSC_BINARY} Tests.build"
-    sh "#{$LOOMEXEC_BINARY} bin/TestExec.loom bin/Tests.loom"
+    sh "#{$LOOMEXEC_BINARY} --ignore-missing-types bin/TestExec.loom bin/Tests.loom"
   end
 end
 

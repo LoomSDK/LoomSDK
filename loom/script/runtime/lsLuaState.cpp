@@ -214,7 +214,7 @@ void LSLuaState::declareLuaTypes(const utArray<Type *>& types)
     for (UTsize i = 0; i < types.size(); i++)
     {
         Type *type = types[i];
-        if (type->missing) continue;
+        if (type->getMissing()) continue;
 
         declareClass(type);
     }
@@ -223,7 +223,7 @@ void LSLuaState::declareLuaTypes(const utArray<Type *>& types)
     for (UTsize i = 0; i < types.size(); i++)
     {
         Type *type = types.at(i);
-        if (type->missing) continue;
+        if (type->getMissing()) continue;
 
         if (type->isNative() || type->hasStaticNativeMember())
         {
@@ -258,7 +258,7 @@ void LSLuaState::initializeLuaTypes(const utArray<Type *>& types)
     for (UTsize i = 0; i < types.size(); i++)
     {
         Type *type = types[i];
-        if (type->missing) continue;
+        if (type->getMissing()) continue;
 
         type->cache();
     }
@@ -267,7 +267,7 @@ void LSLuaState::initializeLuaTypes(const utArray<Type *>& types)
     for (UTsize i = 0; i < types.size(); i++)
     {
         Type *type = types[i];
-        if (type->missing) continue;
+        if (type->getMissing()) continue;
 
         initializeClass(type);
     }
@@ -276,7 +276,7 @@ void LSLuaState::initializeLuaTypes(const utArray<Type *>& types)
     for (UTsize i = 0; i < types.size(); i++)
     {
         Type *type = types[i];
-        if (type->missing) continue;
+        if (type->getMissing()) continue;
 
         lsr_classinitializestatic(VM(), type);
     }
@@ -396,17 +396,32 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
     lmAssert(vectorType, "LSLuaState::cacheAssemblyTypes - system.Vector not found");
 }
 
+// Mark the types the provided type is imported in as missing
+static void markImportedMissing(utArray<Type *> &types, Type *missing)
+{
+    for (UTsize i = 0; i < types.size(); i++)
+    {
+        Type *type = types[i];
+
+        if (type->getMissing()) continue;
+
+        utArray<Type *> imports;
+        type->getImports(imports);
+
+        for (UTsize im = 0; im < imports.size(); im++)
+        {
+            Type *import = imports[im];
+            if (import == missing) {
+                type->setMissing("missing import %s", missing->getFullName().c_str());
+                markImportedMissing(types, type);
+                break;
+            }
+        }
+    }
+}
 
 void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types)
 {
-    for (UTsize j = 0; j < types.size(); j++)
-    {
-        Type *type = types.at(j);
-
-        LSLog(LSLogInfo, "%d %s %d", j, type->getFullName().c_str(), type->missing);
-    }
-
-
     for (UTsize j = 0; j < types.size(); j++)
     {
         Type *type = types.at(j);
@@ -426,19 +441,30 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
         bool incomplete = false;
         Type *search = type;
         while (search) {
-            if (search->missing)
+            if (search->getMissing())
             {
                 incomplete = true;
                 break;
             }
             search = search->getBaseType();
         }
+
+        utArray<Type *> imports;
+        type->getImports(imports);
+
+        for (UTsize im = 0; im < imports.size(); im++)
+        {
+            Type *import = imports[im];
+            if (import->getMissing()) {
+                incomplete = true;
+            }
+        }
+
         if (incomplete)
         {
             shrink = true;
-            type->missing = true;
-            //lmDelete(NULL, type);
-            //types[j] = NULL;
+            type->setMissing("incomplete");
+            markImportedMissing(types, type);
         }
     }
 
@@ -448,7 +474,7 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
         UTsize firstFree = 0;
         for (UTsize j = 0; j < types.size(); j++) {
             Type *type = types[j];
-            if (!type->missing) {
+            if (!type->getMissing()) {
                 types[firstFree] = type;
                 firstFree++;
             }

@@ -204,9 +204,8 @@ void NativeInterface::resolveScriptType(Type *type)
         }
     }
 
-    type->missing = true;
+    type->setMissing("resolveScriptType");
 
-    //lmAssert(0, "Unable to resolve script type %s", type->getFullName().c_str());
 }
 
 

@@ -10,6 +10,7 @@ package
         override public function run():void
         {
             testExecutor = new TestExecutor();
+            testExecutor.argOffset = 1;
             testExecutor.run();
         }
     }

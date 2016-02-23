@@ -24,6 +24,7 @@
 #include "jansson.h"
 
 #include "loom/common/core/assert.h"
+#include "loom/common/core/log.h"
 #include "loom/common/utils/utString.h"
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/core/allocator.h"
@@ -290,14 +291,14 @@ protected:
     // the line number in the source
     int lineNumber;
 
+    bool missing;
+
 public:
 
     MemberInfo() :
         declaringType(NULL), reflectedType(NULL), type(NULL), ordinal(0), lineNumber(0), templateInfo(NULL), missing(false)
     {
     }
-
-    bool missing;
 
     virtual ~MemberInfo()
     {
@@ -384,6 +385,16 @@ public:
     inline void setType(Type *type)
     {
         this->type = type;
+    }
+
+    inline bool getMissing()
+    {
+        return missing;
+    }
+
+    inline void setMissing(const char *message)
+    {
+        missing = true;
     }
 
     inline Type *getDeclaringType()

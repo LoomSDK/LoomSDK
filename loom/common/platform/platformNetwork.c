@@ -84,7 +84,6 @@ int loom_net_initialize()
     // Sanity checks.
     lmAssert(sizeof(SOCKET) <= sizeof(loom_socketId_t), "Can't pack a SOCKET into loom_socketId_t");
 
-    lmLogError(netLogGroup, "WinSock initialized.");
     return 1;
 
 #else

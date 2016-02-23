@@ -318,8 +318,7 @@ inline void lsr_pushmethodbase(lua_State *L, MethodBase *base)
 
     if (lua_isnil(L, -1))
     {
-        base->missing = true;
-        //LSWarning("Missing native class %s", dtype->getFullName().c_str());
+        base->setMissing("native class");
         lua_settop(L, top);
         return;
     }
