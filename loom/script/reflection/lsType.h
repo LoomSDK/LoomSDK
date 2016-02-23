@@ -153,7 +153,7 @@ public:
         static char message[256];
         va_list args;
 
-        MemberInfo::setMissing(message);
+        MemberInfo::setMissing();
 
         va_start(args, format);
         vsnprintf(message, sizeof(message), format, args);

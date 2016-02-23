@@ -392,7 +392,10 @@ public:
         return missing;
     }
 
-    inline void setMissing(const char *message)
+    // Sets the missing state to true.
+    // Subclasses are able to override
+    // with error reporting and logging
+    inline void setMissing()
     {
         missing = true;
     }

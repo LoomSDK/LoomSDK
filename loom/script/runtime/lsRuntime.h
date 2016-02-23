@@ -318,7 +318,7 @@ inline void lsr_pushmethodbase(lua_State *L, MethodBase *base)
 
     if (lua_isnil(L, -1))
     {
-        base->setMissing("native class");
+        base->setMissing();
         lua_settop(L, top);
         return;
     }
