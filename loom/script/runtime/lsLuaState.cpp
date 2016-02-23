@@ -434,10 +434,13 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
     }
 
     bool shrink = false;
+    // Runs over all types and finds out which ones
+    // are incomplete (e.g. with a missing method)
     for (UTsize j = 0; j < types.size(); j++)
     {
         Type *type = types.at(j);
 
+        // Marks subtypes of missing types as incomplete/missing
         bool incomplete = false;
         Type *search = type;
         while (search) {
@@ -452,6 +455,7 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
         utArray<Type *> imports;
         type->getImports(imports);
 
+        // Marks types with missing imports as incomplete/missing
         for (UTsize im = 0; im < imports.size(); im++)
         {
             Type *import = imports[im];
@@ -464,10 +468,15 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
         {
             shrink = true;
             type->setMissing("incomplete");
+            /// Recursively marks types that import this missing type
+            // as incomplete/missing
             markImportedMissing(types, type);
         }
     }
 
+    // Removes and deletes all missing types and moves
+    // non-missing types in their place, then shrinks
+    // the type array to fit
     if (shrink)
     {
         UTsize firstFree = 0;

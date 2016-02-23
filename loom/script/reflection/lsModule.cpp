@@ -79,7 +79,7 @@ void Module::addType(Type *type)
 
     if (check)
     {
-        LSError("Module already contains type:%s", type->getFullName().c_str());
+        LSError("Module already contains type: %s", type->getFullName().c_str());
     }
 
     type->module = this;
@@ -92,7 +92,7 @@ void Module::removeType(Type *type)
 
     if (!check)
     {
-        LSError("Module doesn't contain type:%s", type->getFullName().c_str());
+        LSError("Module doesn't contain type: %s", type->getFullName().c_str());
     }
 
     type->module = NULL;

@@ -4,7 +4,17 @@ package
     import system.reflection.Assembly;
     import unittest.TestResult;
     import unittest.TestRunner;
-    
+       
+    /**
+     * Utility application that takes a Loom assembly file (.loom),
+     * loads it into the runtime, grabs methods tagged with [Test] from it
+     * and runs them via the unit test framework.
+     *
+     * Make sure to compile this application with the same SDK as the Loom assembly
+     * being ran.
+     *
+     * This application exits with 0 if all tests pass and 1 if any test fails to pass.
+     */
     public class TestExecutor
     {
         public var argOffset:int;
