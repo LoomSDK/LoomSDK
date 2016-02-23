@@ -1102,7 +1102,6 @@ void lsr_classinitializestatic(lua_State *L, Type *type)
 
     CTOR_LOG("running static initializer %s\n", type->getFullName().c_str());
 
-    //LSLuaState::dumpLuaStack(L);
 
     bool missing = lua_isnil(L, -1);
 

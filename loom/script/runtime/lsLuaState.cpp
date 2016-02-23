@@ -468,7 +468,6 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
         }
     }
 
-    //*
     if (shrink)
     {
         UTsize firstFree = 0;
@@ -487,7 +486,6 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
         }
         types.resize(firstFree);
     }
-    //*/
 
     declareLuaTypes(types);
     initializeLuaTypes(types);

@@ -43,8 +43,6 @@ package
 
             Debug.assert(File.fileExists(asmFile), "Assembly file not found: "+asmFile);
 
-            trace("Loading " + asmFile);
-
             var asm = Assembly.load(asmFile);
 
             Debug.assert(asm != null, "Unable to load assembly");

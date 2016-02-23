@@ -293,10 +293,6 @@ void BinReader::readMethodBase(MethodBase *mbase)
                 }
             }
         }
-        else
-        {
-
-        }
     }
     else
     {

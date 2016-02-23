@@ -11,8 +11,6 @@ package
     import loom2d.events.TouchEvent;
     import loom2d.textures.Texture;
 	
-	import unittest.Assert;
-	
 	/**
 	* Main entry class that mostly just handles initialization and events.
 	*/
@@ -56,11 +54,6 @@ package
 			stage.addChild(demo);
 			demo.run();
 		}
-		
-        [Test]
-        function thrusty() {
-            Assert.isTrue(false, "YAY, FAILED IN A GOOD WAY!!!");
-        }
 		
 		/**
 		 * Exits the application when the back button is pressed
