@@ -90,21 +90,21 @@ class WindowsToolchain < Toolchain
   
     # Possible registry entries for Visual Studio
     regs = [
-      { name: 'Visual Studio 12', path: 'SOFTWARE\Microsoft\VisualStudio\12.0\VC' },
-      { name: 'Visual Studio 12', path: 'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\12.0\VC' },
-      { name: 'Visual Studio 11', path: 'SOFTWARE\Microsoft\VisualStudio\11.0\VC' },
-      { name: 'Visual Studio 11', path: 'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\11.0\VC' },
-      { name: 'Visual Studio 10', path: 'SOFTWARE\Microsoft\VisualStudio\10.0\VC' },
+      { name: 'Visual Studio 12', path: 'SOFTWARE\Microsoft\VisualStudio\12.0' },
+      { name: 'Visual Studio 12', path: 'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\12.0' },
+      { name: 'Visual Studio 11', path: 'SOFTWARE\Microsoft\VisualStudio\11.0' },
+      { name: 'Visual Studio 11', path: 'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\11.0' },
+      { name: 'Visual Studio 10', path: 'SOFTWARE\Microsoft\VisualStudio\10.0' },
     ]
     
     # Default directory fallbacks
     dirs = [
-      { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 12.0\\VC") },
-      { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 12.0\\VC") },
-      { name: 'Visual Studio 11', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 11.0\\VC") },
-      { name: 'Visual Studio 11', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 11.0\\VC") },
-      { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 10.0\\VC") },
-      { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 10.0\\VC") },
+      { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 12.0") },
+      { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 12.0") },
+      { name: 'Visual Studio 11', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 11.0") },
+      { name: 'Visual Studio 11', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 11.0") },
+      { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 10.0") },
+      { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 10.0") },
     ]
     
     # Check registry
