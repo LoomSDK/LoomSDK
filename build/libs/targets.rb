@@ -87,7 +87,7 @@ class LuaJITTarget < Target
         abort("Missing or unsupported Visual Studio version") unless vs_install
         
         # %1 - path to vcvarsall.bat
-        args += "\"#{vs_install[:install]}VC\\vcvarsall.bat\""
+        args += "\"" + File.join(vs_install[:install], "VC\\vcvarsall.bat") + "\""
 
         # %2 - vcvarsall architecture
         args += " " + case arch
