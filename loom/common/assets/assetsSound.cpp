@@ -216,6 +216,6 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
       return 0;
    }
 
-    lmLogInfo(gSoundAssetGroup, "Allocated %d bytes for a sound!", sound->bufferSize);
+    lmLogDebug(gSoundAssetGroup, "Allocated %d bytes for a sound!", sound->bufferSize);
     return sound;
 }

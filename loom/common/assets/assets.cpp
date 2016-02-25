@@ -381,7 +381,7 @@ void loom_asset_initialize(const char *rootUri)
     // Note the CWD.
     char tmpBuff[1024];
     platform_getCurrentWorkingDir(tmpBuff, 1024);
-    lmLog(gAssetLogGroup, "Current working directory ='%s'", tmpBuff);
+    lmLogDebug(gAssetLogGroup, "Current working directory ='%s'", tmpBuff);
 
     // And the allocator.
     //gAssetAllocator = loom_allocator_initializeTrackerProxyAllocator(loom_allocator_getGlobalHeap());
@@ -702,7 +702,7 @@ static void loom_asset_serviceServer()
         ((ASSET_STREAM_HOST != NULL) && (strlen(ASSET_STREAM_HOST) > 0)) &&
         ((platform_getMilliseconds() - gAssetServerLastConnectTryTime) > gAssetServerConnectTryInterval))
     {
-        lmLog(gAssetLogGroup, "Attempting to stream assets from %s:%d", ASSET_STREAM_HOST, ASSET_STREAM_PORT);
+        lmLogDebug(gAssetLogGroup, "Attempting to stream assets from %s:%d", ASSET_STREAM_HOST, ASSET_STREAM_PORT);
         gAssetServerLastConnectTryTime = platform_getMilliseconds();
         gAssetServerSocket             = loom_net_openTCPSocket(ASSET_STREAM_HOST, ASSET_STREAM_PORT, 0);
         gAssetConnectionOpen           = false;
@@ -724,7 +724,7 @@ static void loom_asset_serviceServer()
         if (loom_net_isSocketDead(gAssetServerSocket) == 1)
         {
             // Might be DOA, ie, connect failed.
-            lmLog(gAssetLogGroup, "Failed to connect to asset server %s:%d", ASSET_STREAM_HOST, ASSET_STREAM_PORT);
+            lmLogWarn(gAssetLogGroup, "Failed to connect to asset server %s:%d", ASSET_STREAM_HOST, ASSET_STREAM_PORT);
 
             loom_net_closeTCPSocket(gAssetServerSocket);
 
@@ -736,7 +736,7 @@ static void loom_asset_serviceServer()
             return;
         }
 
-        lmLog(gAssetLogGroup, "Successfully connected to asset server %s:%d!", ASSET_STREAM_HOST, ASSET_STREAM_PORT);
+        lmLogDebug(gAssetLogGroup, "Successfully connected to asset server %s:%d!", ASSET_STREAM_HOST, ASSET_STREAM_PORT);
 
         // Do this now to avoid clobbering error state and seeing the socket as
         // "open" when it is really dead.

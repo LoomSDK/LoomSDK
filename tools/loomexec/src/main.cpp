@@ -116,7 +116,7 @@ static void initialize(int argc, const char **argv)
         argStart++;
     }
 
-    if (argSwitches.find("--verbose") != UT_NPOS) LSLogSetLevel(LSLogQuiet);
+    if (argSwitches.find("--verbose") != UT_NPOS) LSLogSetLevel(LSLogDebug);
     if (argSwitches.find("--ignore-missing-types") != UT_NPOS) Type::ignoreMissingTypes = true;
 
     // look for passing a .loom file
@@ -166,7 +166,7 @@ static void initialize(int argc, const char **argv)
     loom_net_initialize();
 
     // Initialize script hooks.
-    LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogInfo, LoomLogWarn, LoomLogError);
+    LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogDebug, LoomLogInfo, LoomLogWarn, LoomLogError);
 
     // Shift the arguments, the first one is meant for loomexec
     LSLuaState::initCommandLine(args);

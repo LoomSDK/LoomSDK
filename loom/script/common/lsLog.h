@@ -26,7 +26,7 @@
 namespace LS {
 enum LSLogLevel
 {
-    LSLogQuiet,
+    LSLogDebug = -1,
     LSLogInfo,
     LSLogWarn,
     LSLogError,
@@ -39,6 +39,6 @@ void LSLog(LSLogLevel level, const char *format, ...);
 
 void LSLogSetLevel(LSLogLevel level);
 
-void LSLogInitialize(FunctionLog, void *extra, int logInfo, int logWarn, int logError);
+void LSLogInitialize(FunctionLog, void *extra, int logDebug, int logInfo, int logWarn, int logError);
 }
 #endif

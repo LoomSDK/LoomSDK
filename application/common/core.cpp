@@ -314,6 +314,7 @@ main(int argc, char *argv[])
             break;
         }
     }
+    LSLogSetLevel(LSLogInfo);
 
     LS::Process::consoleAttached = false;
     if (!fromRuby && AttachConsole(ATTACH_PARENT_PROCESS))

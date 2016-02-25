@@ -31,17 +31,19 @@ static FunctionLog externLog = 0;
 static void *externExtra = 0;
 
 // mappings to external logging
+static int externLogDebug = -1;
 static int externLogInfo  = -1;
 static int externLogWarn  = -1;
 static int externLogError = -1;
 
 static LSLogLevel logLevel = LSLogInfo;
 
-void LSLogInitialize(FunctionLog log, void *extra, int logInfo, int logWarn,
-                     int logError)
+void LSLogInitialize(FunctionLog log, void *extra,
+    int logDebug, int logInfo, int logWarn, int logError)
 {
     externExtra    = extra;
     externLog      = log;
+    externLogDebug = logDebug;
     externLogInfo  = logInfo;
     externLogWarn  = logWarn;
     externLogError = logError;
@@ -71,8 +73,8 @@ void LSLog(LSLogLevel level, const char *format, ...)
 
         switch (level)
         {
-        case LSLogQuiet:
-            elevel = externLogInfo;
+        case LSLogDebug:
+            elevel = externLogDebug;
             break;
 
         case LSLogInfo:

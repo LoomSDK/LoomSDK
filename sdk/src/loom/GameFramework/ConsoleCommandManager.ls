@@ -47,7 +47,6 @@ package loom.gameframework
        */
       public function initialize():void
       {
-         Console.print("Command manager online.");
          Application.assetCommandDelegate += process;
       }
 

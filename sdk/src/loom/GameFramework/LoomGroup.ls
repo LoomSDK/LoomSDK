@@ -44,7 +44,6 @@ package loom.gameframework
       {
          if(_rootGroup == null)
          {
-            Console.print("Initializing root group.");
             _rootGroup = new LoomGroup();
             _rootGroup.initialize("RootGroup");          
          }

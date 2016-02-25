@@ -143,7 +143,7 @@ void LoomApplication::execMainAssembly()
     rootVM = lmNew(NULL) LSLuaState();
     rootVM->open();
 
-    lmLog(applicationLogGroup, "   o executing %s", bootAssembly.c_str());
+    lmLogDebug(applicationLogGroup, "   o executing %s", bootAssembly.c_str());
     Assembly *mainAssembly = rootVM->loadExecutableAssembly(bootAssembly);
 
     LoomApplicationConfig::parseApplicationConfig(mainAssembly->getLoomConfig());
@@ -153,9 +153,9 @@ void LoomApplication::execMainAssembly()
     // Wait for asset agent if appropriate.
     if (LoomApplicationConfig::waitForAssetAgent() > 0)
     {
-        lmLog(applicationLogGroup, "   o Waiting %dms for asset agent connection...", LoomApplicationConfig::waitForAssetAgent());
+        lmLogDebug(applicationLogGroup, "   o Waiting %dms for asset agent connection...", LoomApplicationConfig::waitForAssetAgent());
         loom_asset_waitForConnection(LoomApplicationConfig::waitForAssetAgent());
-        lmLog(applicationLogGroup, "   o Connected to asset agent.");
+        lmLogDebug(applicationLogGroup, "   o Connected to asset agent.");
     }
 
     // See if the debugger wants to connect; we want to be able to set
@@ -168,9 +168,9 @@ void LoomApplication::execMainAssembly()
 
     // Log the Loom build timestamp!
 #ifdef LOOM_DEBUG
-    lmLog(applicationLogGroup, "LOOM Built (Debug)   " __DATE__ " " __TIME__);
+    lmLogDebug(applicationLogGroup, "Loom (Debug) built on " __DATE__ " at " __TIME__);
 #else
-    lmLog(applicationLogGroup, "LOOM Built (Release) " __DATE__ " " __TIME__);
+    lmLogDebug(applicationLogGroup, "Loom (Release) built on " __DATE__ " at " __TIME__);
 #endif
 
     // first see if we have a static main
@@ -193,7 +193,7 @@ void LoomApplication::execMainAssembly()
                 Type *appType = types.at(i);
                 if (appType->isDerivedFrom(loomAppType))
                 {
-                    lmLog(applicationLogGroup, "Instantiating Application: %s", appType->getName());
+                    lmLogDebug(applicationLogGroup, "Instantiating Application: %s", appType->getName());
                     int top = lua_gettop(rootVM->VM());
                     lsr_createinstance(rootVM->VM(), appType);
                     lualoom_getmember(rootVM->VM(), -1, "initialize");
@@ -270,7 +270,7 @@ static int mapScriptFile(const char *path, void **outPointer,
 
     if (!scriptAsset)
     {
-        lmLog(applicationLogGroup, "Failed to map asset for script: '%s'", path);
+        lmLogWarn(applicationLogGroup, "Failed to map asset for script: '%s'", path);
 
         *outPointer = NULL;
         if (outSize)
@@ -281,7 +281,7 @@ static int mapScriptFile(const char *path, void **outPointer,
     }
     else
     {
-        lmLog(applicationLogGroup, "Mapped asset for script: '%s'", path);
+        lmLogDebug(applicationLogGroup, "Mapped asset for script: '%s'", path);
         *outPointer = scriptAsset->bits;
         *outSize    = (long)scriptAsset->length;
         resCode     = 1;
@@ -311,42 +311,42 @@ int LoomApplication::initializeCoreServices()
     NativeDelegate::markMainThread();
 
     // Initialize services.
-    platform_debugOut("Initializing services...");
+    lmLogDebug(applicationLogGroup, "Initializing services...");
 
     // Set up assert handling callback.
-    lmLog(applicationLogGroup, "   o asserts");
+    lmLogDebug(applicationLogGroup, "   o asserts");
     loom_setAssertCallback(handleAssert);
 
-    lmLog(applicationLogGroup, "   o performance");
+    lmLogDebug(applicationLogGroup, "   o performance");
     performance_initialize();
 
-    lmLog(applicationLogGroup, "   o RNG");
+    lmLogDebug(applicationLogGroup, "   o RNG");
     srand((unsigned int)time(NULL));
 
-    lmLog(applicationLogGroup, "   o time");
+    lmLogDebug(applicationLogGroup, "   o time");
     platform_timeInitialize();
 
-    lmLog(applicationLogGroup, "   o stringtable");
+    lmLogDebug(applicationLogGroup, "   o stringtable");
     stringtable_initialize();
 
-    lmLog(applicationLogGroup, "   o types");
+    lmLogDebug(applicationLogGroup, "   o types");
     initializeTypes();
 
-    lmLog(applicationLogGroup, "   o network");
+    lmLogDebug(applicationLogGroup, "   o network");
     loom_net_initialize();
 
-    lmLog(applicationLogGroup, "   o http");
+    lmLogDebug(applicationLogGroup, "   o http");
     platform_HTTPInit();
 
-    lmLog(applicationLogGroup, "   o assets");
+    lmLogDebug(applicationLogGroup, "   o assets");
     loom_asset_initialize(".");
     loom_asset_setCommandCallback(dispatchCommand);
 
-    lmLog(applicationLogGroup, "   o sound");
+    lmLogDebug(applicationLogGroup, "   o sound");
     loomsound_init();
 
     // Initialize script hooks.
-    LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogInfo, LoomLogWarn, LoomLogError);
+    LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogDebug, LoomLogInfo, LoomLogWarn, LoomLogError);
     LS::LSFileInitialize(mapScriptFile, unmapScriptFile);
     LS::NativeTypeBase::initialize();
     //LS::LSLogSetLevel(LS::LSLogError);
