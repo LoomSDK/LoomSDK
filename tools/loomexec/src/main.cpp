@@ -37,6 +37,7 @@ void installPackageSystem();
 static utString   assemblyPath  = "./bin/Main.loom";
 static LSLuaState *execState    = NULL;
 static Assembly   *execAssembly = NULL;
+static utArray<utString> argSwitches;
 
 lmDefineLogGroup(applicationLogGroup, "loom.application", 1, LoomLogInfo);
 lmDefineLogGroup(scriptLogGroup, "loom.script", 1, LoomLogInfo);
@@ -108,8 +109,18 @@ static void initialize(int argc, const char **argv)
 
     assemblyPath = "";
 
+    int argStart = 1;
+
+    while (argStart < argc && strncmp(argv[argStart], "--", 2) == 0) {
+        argSwitches.push_back(utString(argv[argStart]));
+        argStart++;
+    }
+
+    if (argSwitches.find("--verbose") != UT_NPOS) LSLogSetLevel(LSLogQuiet);
+    if (argSwitches.find("--ignore-missing-types") != UT_NPOS) Type::ignoreMissingTypes = true;
+
     // look for passing a .loom file
-    for (int i = 1; i < argc; i++ )
+    for (int i = argStart; i < argc; i++ )
     {
         if (assemblyPath.size() == 0 && strstr(argv[i], ".loom"))
         {

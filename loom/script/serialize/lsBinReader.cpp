@@ -249,7 +249,9 @@ void BinReader::readMethodBase(MethodBase *mbase)
         lua_settop(L, top);
         lsr_pushmethodbase(L, mbase);
 
-        if (!lua_isnil(L, -1))
+        bool found = !lua_isnil(L, -1);
+
+        if (found)
         {
             function = lua_tocfunction(L, -1);
 
@@ -264,7 +266,7 @@ void BinReader::readMethodBase(MethodBase *mbase)
 
         lua_pop(L, 1);
 
-        if (!mbase->isFastCall())
+        if (found && !mbase->isFastCall())
         {
             if (!function)
             {
@@ -308,6 +310,9 @@ MethodInfo *BinReader::readMethodInfo(Type *type)
     methodInfo->declaringType = type;
 
     readMethodBase(methodInfo);
+    if (methodInfo->getMissing()) {
+        type->setMissing("missing method %s", methodInfo->getName());
+    }
 
     Type *retType = NULL;
     if (bytes->readBoolean())
@@ -459,6 +464,9 @@ ConstructorInfo *BinReader::readConstructor(Type *type)
     cinfo->declaringType = type;
 
     readMethodBase(cinfo);
+    if (cinfo->missing) {
+        type->setMissing("missing constructor %s", cinfo->getName());
+    }
 
     cinfo->memberType.constructor = true;
     cinfo->type = getType("system.Function");

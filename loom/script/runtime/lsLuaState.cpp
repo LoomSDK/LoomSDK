@@ -213,13 +213,17 @@ void LSLuaState::declareLuaTypes(const utArray<Type *>& types)
 {
     for (UTsize i = 0; i < types.size(); i++)
     {
-        declareClass(types[i]);
+        Type *type = types[i];
+        if (type->getMissing()) continue;
+
+        declareClass(type);
     }
 
     // validate/initialize native types
     for (UTsize i = 0; i < types.size(); i++)
     {
         Type *type = types.at(i);
+        if (type->getMissing()) continue;
 
         if (type->isNative() || type->hasStaticNativeMember())
         {
@@ -253,19 +257,28 @@ void LSLuaState::initializeLuaTypes(const utArray<Type *>& types)
 {
     for (UTsize i = 0; i < types.size(); i++)
     {
-        types[i]->cache();
+        Type *type = types[i];
+        if (type->getMissing()) continue;
+
+        type->cache();
     }
 
     // initialize all classes
     for (UTsize i = 0; i < types.size(); i++)
     {
-        initializeClass(types[i]);
+        Type *type = types[i];
+        if (type->getMissing()) continue;
+
+        initializeClass(type);
     }
 
     // run static initializers now that all classes have been initialized
     for (UTsize i = 0; i < types.size(); i++)
     {
-        lsr_classinitializestatic(VM(), types[i]);
+        Type *type = types[i];
+        if (type->getMissing()) continue;
+
+        lsr_classinitializestatic(VM(), type);
     }
 }
 
@@ -383,6 +396,29 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
     lmAssert(vectorType, "LSLuaState::cacheAssemblyTypes - system.Vector not found");
 }
 
+// Mark the types the provided type is imported in as missing
+static void markImportedMissing(utArray<Type *> &types, Type *missing)
+{
+    for (UTsize i = 0; i < types.size(); i++)
+    {
+        Type *type = types[i];
+
+        if (type->getMissing()) continue;
+
+        utArray<Type *> imports;
+        type->getImports(imports);
+
+        for (UTsize im = 0; im < imports.size(); im++)
+        {
+            Type *import = imports[im];
+            if (import == missing) {
+                type->setMissing("missing import %s", missing->getFullName().c_str());
+                markImportedMissing(types, type);
+                break;
+            }
+        }
+    }
+}
 
 void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types)
 {
@@ -395,6 +431,69 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
             // we're native
             NativeInterface::resolveScriptType(type);
         }
+    }
+
+    bool shrink = false;
+    // Runs over all types and finds out which ones
+    // are incomplete (e.g. with a missing method)
+    for (UTsize j = 0; j < types.size(); j++)
+    {
+        Type *type = types.at(j);
+
+        // Marks subtypes of missing types as incomplete/missing
+        bool incomplete = false;
+        Type *search = type;
+        while (search) {
+            if (search->getMissing())
+            {
+                incomplete = true;
+                break;
+            }
+            search = search->getBaseType();
+        }
+
+        utArray<Type *> imports;
+        type->getImports(imports);
+
+        // Marks types with missing imports as incomplete/missing
+        for (UTsize im = 0; im < imports.size(); im++)
+        {
+            Type *import = imports[im];
+            if (import->getMissing()) {
+                incomplete = true;
+            }
+        }
+
+        if (incomplete)
+        {
+            shrink = true;
+            type->setMissing("incomplete");
+            /// Recursively marks types that import this missing type
+            // as incomplete/missing
+            markImportedMissing(types, type);
+        }
+    }
+
+    // Removes and deletes all missing types and moves
+    // non-missing types in their place, then shrinks
+    // the type array to fit
+    if (shrink)
+    {
+        UTsize firstFree = 0;
+        for (UTsize j = 0; j < types.size(); j++) {
+            Type *type = types[j];
+            if (!type->getMissing()) {
+                types[firstFree] = type;
+                firstFree++;
+            }
+            else {
+                Module* module = const_cast<Module*>(type->getModule());
+                module->removeType(type);
+                lmDelete(NULL, type);
+                types[j] = NULL;
+            }
+        }
+        types.resize(firstFree);
     }
 
     declareLuaTypes(types);
