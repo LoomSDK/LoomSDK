@@ -146,6 +146,28 @@ private:
 
 public:
 
+    static bool ignoreMissingTypes;
+
+    inline void setMissing(const char *format, ...)
+    {
+        static char message[256];
+        va_list args;
+
+        MemberInfo::setMissing();
+
+        va_start(args, format);
+        vsnprintf(message, sizeof(message), format, args);
+        va_end(args);
+
+        if (ignoreMissingTypes) {
+            LSLog(LSLogQuiet, "Ignoring missing type %s (%s)", getFullName().c_str(), message);
+        }
+        else
+        {
+            LSError("Error: Type missing or incomplete: %s (%s)\nUse --ignore-missing-types to ignore all missing types", getFullName().c_str(), message);
+        }
+    }
+
     Type() :
         baseType(NULL), module(NULL), typeID(0),
         delegateReturnType(NULL),
@@ -720,5 +742,6 @@ public:
 
     static Type *getType(const utString& fullName, lua_State *L);
 };
+
 }
 #endif

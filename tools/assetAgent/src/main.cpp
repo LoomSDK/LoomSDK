@@ -244,13 +244,13 @@ static int makeAssetPathCanonical(const char *pathIn, char pathOut[MAXPATHLEN])
 static bool checkInWhitelist(utString path)
 {
     // Note the platform-specific version of our whitelisted folders.
-    static utString assetPath = platform_normalizePath("./assets");
-    static utString binPath   = platform_normalizePath("./bin");
-    static utString srcPath   = platform_normalizePath("./src");
+    static utString assetPath = "./assets"; platform_normalizePath(const_cast<char*>(assetPath.c_str()));
+    static utString binPath   = "./bin";    platform_normalizePath(const_cast<char*>(binPath.c_str()));
+    static utString srcPath   = "./src";    platform_normalizePath(const_cast<char*>(srcPath.c_str()));
 
     // Just prefix match against assets for now - ignore things in other folders.
     lmLogDebug(gAssetAgentLogGroup, "Whitelisting path %s prefix %s\n", path.c_str(), path.substr(0, 6).c_str());
-    path = platform_normalizePath(path.c_str());
+    platform_normalizePath(const_cast<char*>(path.c_str()));
     if (path.substr(path.length() - 3, 3) == "tmp")
     {
         return false;

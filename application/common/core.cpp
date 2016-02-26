@@ -21,6 +21,7 @@
 #endif
 
 #include "loom/engine/loom2d/l2dStage.h"
+#include "loom/engine/bindings/loom/lmApplication.h"
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/common/core/log.h"
 #include "loom/common/platform/platform.h"
@@ -220,6 +221,19 @@ void loop()
             {
                 stage->_GameControllerRemovedDelegate.pushArgument(removedDevice);
                 stage->_GameControllerRemovedDelegate.invoke();
+            }
+        }
+        else if (event.type == SDL_WINDOWEVENT)
+        {
+            if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+            {
+                const NativeDelegate* activated = LoomApplication::getApplicationActivatedDelegate();
+                activated->invoke();
+            }
+            else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
+            {
+                const NativeDelegate* deactivated = LoomApplication::getApplicationDeactivatedDelegate();
+                deactivated->invoke();
             }
         }
     }

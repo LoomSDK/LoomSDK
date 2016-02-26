@@ -90,7 +90,19 @@ package system.platform {
 
             return writeBinaryFile(Path.normalizePath(pathDestination), bytes);
         }
-
+        
+        /**
+         *  Moves a file from pathSource to pathDestination
+         *  
+         *  @param pathSource The source file to move.
+         *  @param pathDestination The destination path to move the file to.
+         *  @return True on success, false on failure.
+         */
+        public static function move(pathSource:String, pathDestination:String):Boolean
+        {
+            return _moveFile(pathSource, pathDestination);
+        }
+        
 
         /**
          *  Checks whether a file exists at the given path.
@@ -124,6 +136,8 @@ package system.platform {
         private static native function _writeBinaryFile(path:String, data:ByteArray):Boolean; 
 
         private static native function _fileExists(path:String):Boolean;
+        
+        private static native function _moveFile(source:String, dest:String):Boolean;
 
         private static native function _removeFile(path:String):Boolean;
 

@@ -775,6 +775,7 @@ static void lsr_classimportsymbols(lua_State *L, Type *type, int index)
     for (UTsize i = 0; i < imports.size(); i++)
     {
         Type *import = imports.at(i);
+        if (import->getMissing()) continue;
 
         int t = lua_gettop(L);
 
@@ -1100,6 +1101,15 @@ void lsr_classinitializestatic(lua_State *L, Type *type)
     lua_getfield(L, clsIdx, "__ls_staticinitializer");
 
     CTOR_LOG("running static initializer %s\n", type->getFullName().c_str());
+
+
+    bool missing = lua_isnil(L, -1);
+
+    if (missing) {
+        type->setMissing("lsr_classinitializestatic");
+        lua_settop(L, clsIdx - 1);
+        return;
+    }
 
     if (lua_pcall(L, 0, LUA_MULTRET, 0))
     {

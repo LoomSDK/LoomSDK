@@ -29,6 +29,8 @@
 
 namespace LS {
 
+bool Type::ignoreMissingTypes = false;
+
 Assembly *Type::getAssembly()
 {
     assert(module);
