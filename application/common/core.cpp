@@ -35,6 +35,7 @@
 
 extern "C"
 {
+    void loom_appInit();
     void loom_appSetup();
     void loom_appShutdown();
     void loom_tick();
@@ -314,7 +315,6 @@ main(int argc, char *argv[])
             break;
         }
     }
-    LSLogSetLevel(LSLogInfo);
 
     LS::Process::consoleAttached = false;
     if (!fromRuby && AttachConsole(ATTACH_PARENT_PROCESS))
@@ -354,7 +354,9 @@ main(int argc, char *argv[])
         SDL_INIT_EVENTS
     );
 
-    
+    loom_appInit();
+
+    LSLogSetLevel(LSLogInfo);
 
     int ret;
 

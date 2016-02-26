@@ -47,7 +47,8 @@ using namespace LS;
 
 #include "loom/engine/bindings/sdl/lmSDL.h"
 
-LSLuaState     *LoomApplication::rootVM      = NULL;
+LSLuaState     *LoomApplication::rootVM = NULL;
+utByteArray    *LoomApplication::initBytes = NULL;
 bool           LoomApplication::reloadQueued = false;
 bool           LoomApplication::suppressAssetTriggeredReload = false;
 utString       LoomApplication::bootAssembly = "Main.loom";
@@ -64,6 +65,12 @@ lmDefineLogGroup(scriptLogGroup, "loom.script", 1, LoomLogInfo);
 extern "C" {
 
 extern void loomsound_shutdown();
+
+void loom_appInit(void)
+{
+    LoomApplication::initMainAssembly();
+}
+
 
 void loom_appSetup(void)
 {
@@ -136,15 +143,25 @@ int LoomApplication::initializeTypes()
     return 0;
 }
 
-
-void LoomApplication::execMainAssembly()
+void LoomApplication::initMainAssembly()
 {
     lmAssert(!rootVM, "VM already running");
     rootVM = lmNew(NULL) LSLuaState();
     rootVM->open();
 
+    initBytes = rootVM->openExecutableAssembly(bootAssembly);
+    rootVM->readExecutableAssemblyBinaryHeader(initBytes);
+    Assembly *assembly = BinReader::loadMainAssemblyHeader();
+}
+
+void LoomApplication::execMainAssembly()
+{
+    Assembly *mainAssembly = rootVM->readExecutableAssemblyBinaryBody();
+    rootVM->closeExecutableAssembly(bootAssembly, false, initBytes);
+    initBytes = NULL;
+
     lmLogDebug(applicationLogGroup, "   o executing %s", bootAssembly.c_str());
-    Assembly *mainAssembly = rootVM->loadExecutableAssembly(bootAssembly);
+    //Assembly *mainAssembly = rootVM->loadExecutableAssembly(bootAssembly);
 
     LoomApplicationConfig::parseApplicationConfig(mainAssembly->getLoomConfig());
 

@@ -72,9 +72,10 @@ private:
 
 public:
 
+    bool loaded;
 
     Assembly() :
-        vm(NULL), types(), ordinal(1), debugBuild(true), ordinalTypes(NULL)
+        vm(NULL), types(), ordinal(1), debugBuild(true), ordinalTypes(NULL), loaded(false)
     {
     }
 
@@ -170,8 +171,11 @@ public:
 
     static Assembly *create(LSLuaState *vm, const utString& name, const utString& uid);
 	
-	static Assembly *loadBinary(LSLuaState *vm, utByteArray *bytes);
-    
+    static Assembly *loadBinary(LSLuaState *vm, utByteArray *bytes);
+
+    static void loadBinaryHeader(LSLuaState *vm, utByteArray *bytes);
+    static Assembly *loadBinaryBody();
+
 	/*
      * Loads a JSON assembly which is used during compilation
      */

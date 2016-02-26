@@ -47,6 +47,7 @@ class LoomApplication
 {
 protected:
     static LSLuaState *rootVM;
+    static utByteArray *initBytes;
     static bool       reloadQueued;
     static utString   bootAssembly;
     static bool       suppressAssetTriggeredReload;
@@ -111,6 +112,7 @@ public:
     static int initializeCoreServices();
     static int initialize();
     static void shutdown();
+    static void initMainAssembly();
     static void execMainAssembly();
     static void reloadMainAssembly();
     static void _reloadMainAssembly();
