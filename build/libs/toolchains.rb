@@ -247,7 +247,7 @@ class LinuxToolchain < Toolchain
   end
 
   def cmakeArgs(target)
-    return "-G \"Unix Makefiles\""
+    return "-G \"Unix Makefiles\" -DCMAKE_BUILD_TYPE=#{CFG[:BUILD_TARGET]}"
   end
 
 end

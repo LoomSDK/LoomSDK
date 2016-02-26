@@ -100,7 +100,7 @@ endif()
 # SDL
 #--------------------------------------
 
-if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS))
+if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS) OR LINUX)
     # Used for generated config include
     include_directories(${CMAKE_BINARY_DIR}/loom/vendor/sdl2/include)
     include_directories(${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
@@ -116,8 +116,6 @@ if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS))
 
     add_subdirectory(loom/vendor/sdl2)
 	
-elseif (LINUX)
-    include_directories("/usr/include/SDL2")
 endif()
 
 #--------------------------------------
