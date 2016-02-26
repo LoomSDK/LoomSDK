@@ -274,13 +274,13 @@ elseif(ANDROID)
 elseif(LINUX)
 
     target_link_libraries(${PROJECT_NAME}
-       -lSDL2 
        LoomVendor
        LoomCommon
        LoomScript
        LoomGraphics
        LoomCore
        -lGL -lGLEW -lGLU -lcurl
+       "SDL2-static" "SDL2main" 
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)
