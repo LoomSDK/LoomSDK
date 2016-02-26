@@ -20,55 +20,37 @@ limitations under the License.
 
 package tests {
 
-import unittest.LegacyTest;
+    import unittest.Assert;
 
-class TestWhile extends LegacyTest
-{
-    function test()
+    public class WhileTest
     {
+        public function WhileTest() {}
         
-        
-        var i:Number = 0;
-        var result:Number = 0;
-        var j:Number = 0; 
-        var k:Number = 0; 
-        
-        while (i<3) {
-            j = 0; 
-            while (j<1000) {
-                k = 0; 
-                while (k<1000) {
-                    k++; 
-                    result++; 
+        [Test]
+        function test()
+        {
+            var i:Number = 0;
+            var result:Number = 0;
+            var j:Number = 0; 
+            var k:Number = 0; 
+            
+            while (i<3) {
+                j = 0; 
+                while (j<1000) {
+                    k = 0; 
+                    while (k<1000) {
+                        k++; 
+                        result++; 
+                    }
+                    j++; 
                 }
-                j++; 
+                i++;
             }
-            i++;
-            log(i);
+            
+            Assert.compareNumber(3, i);
+            Assert.compareNumber(3000000, result);
+            Assert.compareNumber(1000, j);
+            Assert.compareNumber(1000, k);
         }
-        log(result);
-        log(j);
-        log(k);
-        
-        
     }
-    
-    function TestWhile()
-    {
-        name = "TestWhile";   
-        expected = EXPECTED_TEST_RESULT;
-
-    }    
-    
-    var EXPECTED_TEST_RESULT:String = "1
-2
-3
-3000000
-1000
-1000";   
 }
-
-}
-
-
-
