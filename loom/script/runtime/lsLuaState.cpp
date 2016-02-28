@@ -105,6 +105,12 @@ void LSLuaState::open()
 
     toLuaState.insert(L, this);
 
+#ifdef LUAJIT_MODE_MASK
+    // TODO: turn this back on when it doesn't fail on the testWhile unit test
+    // update luajit and test again
+    luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_OFF);
+#endif
+
     // Stop the GC initially
     lua_gc(L, LUA_GCSTOP, 0);
 
