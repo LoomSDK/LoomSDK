@@ -296,7 +296,6 @@ package loom2d.textures
                 if (File.fileExists(cacheFile))
                 {
                     //file already downloaded previously, so queue up an async load of it right now
-                    Console.print("HTTP requested texture found cached on local disk already; using it instead: " + cacheFile); 
                     Debug.assert(existingTexture == null, "Texture update from file cache currently unsupported");
                     return Texture.fromAssetAsync(cacheFile, onSuccess);
                 }
