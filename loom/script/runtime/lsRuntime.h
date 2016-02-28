@@ -318,8 +318,9 @@ inline void lsr_pushmethodbase(lua_State *L, MethodBase *base)
 
     if (lua_isnil(L, -1))
     {
-        LSError("Missing native class %s",
-                dtype->getFullName().c_str());
+        base->setMissing();
+        lua_settop(L, top);
+        return;
     }
 
     // next we look up the class in the package table

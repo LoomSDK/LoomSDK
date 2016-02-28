@@ -1,13 +1,24 @@
 package
 {
-    import system.application.ConsoleApplication;
     import system.platform.File;
     import system.reflection.Assembly;
     import unittest.TestResult;
     import unittest.TestRunner;
-    
-    public class TestExecutor extends ConsoleApplication
+       
+    /**
+     * Utility application that takes a Loom assembly file (.loom),
+     * loads it into the runtime, grabs methods tagged with [Test] from it
+     * and runs them via the unit test framework.
+     *
+     * Make sure to compile this application with the same SDK as the Loom assembly
+     * being ran.
+     *
+     * This application exits with 0 if all tests pass and 1 if any test fails to pass.
+     */
+    public class TestExecutor
     {
+        public var argOffset:int;
+        
         private function getReferencedAssembly(asm:Assembly, name:String):Assembly
         {
             for (var i = 0; i < asm.getReferenceCount(); i++)
@@ -19,17 +30,25 @@ package
 
             return null;
         }
+        
+        private function getArguments():String
+        {
+            var args = "";
+            for (var i = 0; i < CommandLine.getArgCount(); i++) args += "  " + i + ": " + CommandLine.getArg(i) + "\n";
+            return args;
+        }
 
         [UnitTestHideCall]
-        override public function run():void
+        public function run():void
         {
-            Debug.assert(CommandLine.getArgCount() > 0, "Assembly file argument missing");
+            Debug.assert(CommandLine.getArgCount() > argOffset, "Assembly file argument missing:\n" + getArguments());
 
-            var asmFile = CommandLine.getArg(0);
+            var asmFile = CommandLine.getArg(argOffset);
 
             if (asmFile == "ProcessID") {
-                Debug.assert(CommandLine.getArgCount() > 2, "Assembly file argument missing");
-                asmFile = CommandLine.getArg(2);
+                argOffset += 2;
+                Debug.assert(CommandLine.getArgCount() > argOffset, "Assembly file argument missing:\n" + getArguments());
+                asmFile = CommandLine.getArg(argOffset);
             }
 
             Debug.assert(File.fileExists(asmFile), "Assembly file not found: "+asmFile);

@@ -217,6 +217,10 @@ package loom2d.display
         /** The internal callback that is triggered when async loading of the texture completed. */
         private function onAsyncLoadComplete(tex:Texture):void
         {
+            // Sanity for if someone native-deleted this while loading.
+            if(nativeDeleted())
+                return;
+        
             //flag no longer loading
             _textureStatus = TEXTURE_LOADED;
 
