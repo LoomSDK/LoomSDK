@@ -60,6 +60,7 @@ static loom_log_listenerEntry_t *listenerHead     = NULL;
 static loom_log_rule_t          *ruleHead         = NULL;
 static int              gLoomLogInvalidationToken = 1;
 static loom_allocator_t *gLoggerAllocator         = NULL;
+static loom_logLevel_t globalLevel                = LoomLogInfo;
 
 static void platformDebugListener(void *payload, loom_logGroup_t *group, loom_logLevel_t level, const char *msg)
 {
@@ -86,6 +87,15 @@ void loom_log_initialize()
     }
 }
 
+void loom_log_setGlobalLevel(loom_logLevel_t level)
+{
+    globalLevel = level;
+}
+
+loom_logLevel_t loom_log_getGlobalLevel()
+{
+    return globalLevel;
+}
 
 void loom_log_addListener(loom_logListener_t listener, void *payload)
 {
@@ -169,7 +179,7 @@ void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format,
         return;
     }
 
-    if (level < group->filterLevel)
+    if (level < globalLevel && level < group->filterLevel)
     {
         return;
     }

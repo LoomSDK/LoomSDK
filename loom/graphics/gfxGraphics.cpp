@@ -152,8 +152,6 @@ void Graphics::reset(int width, int height, uint32_t flags)
 {
     lmAssert(sInitialized, "Please make sure to call Graphics::initialize first");
 
-    lmLogDebug(gGFXLogGroup, "Graphics::reset - %dx%d %x", width, height, flags);
-
     // clear context loss state
     sContextLost = false;
 

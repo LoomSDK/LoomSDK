@@ -143,27 +143,50 @@ int LoomApplication::initializeTypes()
     return 0;
 }
 
+static int mapScriptFile(const char *path, void **outPointer,
+    long *outSize);
+
+static void unmapScriptFile(const char *path);
+static void dispatchCommand(const char *cmd);
+
 void LoomApplication::initMainAssembly()
 {
     lmAssert(!rootVM, "VM already running");
     rootVM = lmNew(NULL) LSLuaState();
-    rootVM->open();
 
+    lmLogDebug(applicationLogGroup, "   o assets");
+    loom_asset_initialize(".");
+    loom_asset_setCommandCallback(dispatchCommand);
+
+    lmLogDebug(applicationLogGroup, "   o stringtable");
+    stringtable_initialize();
+
+    //*
     initBytes = rootVM->openExecutableAssembly(bootAssembly);
     rootVM->readExecutableAssemblyBinaryHeader(initBytes);
     Assembly *assembly = BinReader::loadMainAssemblyHeader();
+    LoomApplicationConfig::parseApplicationConfig(assembly->getLoomConfig());
+    //*/
 }
 
 void LoomApplication::execMainAssembly()
 {
+    rootVM->open();
+
+    //Assembly *mainAssembly = rootVM->loadExecutableAssembly(bootAssembly);
+    ///*
     Assembly *mainAssembly = rootVM->readExecutableAssemblyBinaryBody();
     rootVM->closeExecutableAssembly(bootAssembly, false, initBytes);
     initBytes = NULL;
+    //*/
+
+
+    LS::LSFileInitialize(mapScriptFile, unmapScriptFile);
+
+
+    //LoomApplicationConfig::parseApplicationConfig(mainAssembly->getLoomConfig());
 
     lmLogDebug(applicationLogGroup, "   o executing %s", bootAssembly.c_str());
-    //Assembly *mainAssembly = rootVM->loadExecutableAssembly(bootAssembly);
-
-    LoomApplicationConfig::parseApplicationConfig(mainAssembly->getLoomConfig());
 
     Loom2D::Stage::updateFromConfig();
 
@@ -343,9 +366,6 @@ int LoomApplication::initializeCoreServices()
     lmLogDebug(applicationLogGroup, "   o time");
     platform_timeInitialize();
 
-    lmLogDebug(applicationLogGroup, "   o stringtable");
-    stringtable_initialize();
-
     lmLogDebug(applicationLogGroup, "   o types");
     initializeTypes();
 
@@ -355,16 +375,12 @@ int LoomApplication::initializeCoreServices()
     lmLogDebug(applicationLogGroup, "   o http");
     platform_HTTPInit();
 
-    lmLogDebug(applicationLogGroup, "   o assets");
-    loom_asset_initialize(".");
-    loom_asset_setCommandCallback(dispatchCommand);
 
     lmLogDebug(applicationLogGroup, "   o sound");
     loomsound_init();
 
     // Initialize script hooks.
     LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogDebug, LoomLogInfo, LoomLogWarn, LoomLogError);
-    LS::LSFileInitialize(mapScriptFile, unmapScriptFile);
     LS::NativeTypeBase::initialize();
     //LS::LSLogSetLevel(LS::LSLogError);
 

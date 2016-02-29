@@ -106,6 +106,9 @@ typedef void (*loom_logListener_t)(void *payload, loom_logGroup_t *group, loom_l
 void loom_log_addListener(loom_logListener_t listener, void *payload);
 void loom_log_removeListener(loom_logListener_t listener, void *payload);
 
+void loom_log_setGlobalLevel(loom_logLevel_t level);
+loom_logLevel_t loom_log_getGlobalLevel();
+
 void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format, ...);
 
 // TODO: Make sure this inlines.

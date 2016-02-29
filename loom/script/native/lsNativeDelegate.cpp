@@ -473,8 +473,6 @@ void NativeDelegate::getCallbacks(lua_State *L) const
 
 NativeDelegateCallNote *NativeDelegate::prepCallbackNote() const
 {
-    lmLogDebug(gNativeDelegateGroup, "Considering async callback %x", this);
-    
     // Are noting currently? Just work with that.
     if(_activeNote)
     {

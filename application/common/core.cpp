@@ -22,6 +22,7 @@
 
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/engine/bindings/loom/lmApplication.h"
+#include "loom/common/config/applicationConfig.h"
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/common/core/log.h"
 #include "loom/common/platform/platform.h"
@@ -344,6 +345,11 @@ main(int argc, char *argv[])
     /* Enable standard application logging */
     SDL_LogSetAllPriority(SDL_LOG_PRIORITY_INFO);
     SDL_LogSetOutputFunction(sdlLogOutput, NULL);
+    
+    loom_appInit();
+
+    loom_log_setGlobalLevel(static_cast<loom_logLevel_t>(LoomApplicationConfig::logLevel()));
+
 
     SDL_Init(
         SDL_INIT_TIMER |
@@ -353,10 +359,6 @@ main(int argc, char *argv[])
         SDL_INIT_GAMECONTROLLER |
         SDL_INIT_EVENTS
     );
-
-    loom_appInit();
-
-    LSLogSetLevel(LSLogInfo);
 
     int ret;
 

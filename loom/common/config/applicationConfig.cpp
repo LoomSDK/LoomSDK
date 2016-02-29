@@ -45,6 +45,7 @@ utString LoomApplicationConfig::_displayTitle = "Loom";
 int      LoomApplicationConfig::_displayWidth = 640;
 int      LoomApplicationConfig::_displayHeight = 480;
 utString LoomApplicationConfig::_displayOrientation = "auto";
+int LoomApplicationConfig::_logLevel = 0;
 
 // little helpers that do conversion
 static bool _jsonParseBool(const char *key, json_t *value)
@@ -128,6 +129,11 @@ const utString& LoomApplicationConfig::displayOrientation()
     return _displayOrientation;
 }
 
+int LoomApplicationConfig::logLevel()
+{
+    return _logLevel;
+}
+
 
 // this will always be in assets/loom.config (unless we decide to move it)
 void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
@@ -188,6 +194,11 @@ void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
             // Maybe we have level or enabled data?
             int enabledRule = -1;
             int filterRule  = -1;
+
+            if (strcmp(key, "level") == 0) {
+                _logLevel = json_integer_value(value);
+                continue;
+            }
 
             if (json_t *enabledBlock = json_object_get(value, "enabled"))
             {
