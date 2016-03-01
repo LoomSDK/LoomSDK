@@ -31,7 +31,7 @@
 #include "wavloader.h"
 
 extern "C" loom_allocator_t *gAssetAllocator;
-loom_logGroup_t gSoundAssetGroup = { "soundAsset", 1 };
+loom_logGroup_t gSoundAssetGroup = { "asset.sound", 1 };
 
 void loom_asset_registerSoundAsset()
 {

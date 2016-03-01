@@ -46,8 +46,8 @@ extern "C"
 SDL_Window *gSDLWindow = NULL;
 SDL_GLContext gContext;
 
-lmDefineLogGroup(coreLogGroup, "loom.core", 1, LoomLogInfo);
-lmDefineLogGroup(sdlLogGroup, "SDL", 1, LoomLogInfo);
+lmDefineLogGroup(coreLogGroup, "core", 1, LoomLogInfo);
+lmDefineLogGroup(sdlLogGroup, "sdl", 1, LoomLogInfo);
 
 static int gLoomExecutionDone = 0;
 
@@ -270,7 +270,7 @@ static void sdlLogOutput(void* userdata, int category, SDL_LogPriority priority,
         case SDL_LOG_CATEGORY_CUSTOM:      cat = "custom"; break;
         default:                           cat = "unknown";
     }
-    loom_log(&sdlLogGroup, level, "[SDL %s] %s", cat, message);
+    loom_log(&sdlLogGroup, level, "%*ssdl.%s  %s", 10 - (strlen(cat) + 4), " ", cat, message);
 }
 
 int
@@ -348,7 +348,43 @@ main(int argc, char *argv[])
     
     loom_appInit();
 
-    loom_log_setGlobalLevel(static_cast<loom_logLevel_t>(LoomApplicationConfig::logLevel()));
+    loom_logLevel_t logLevel =
+        LoomApplicationConfig::logLevel() == "debug" ? LoomLogDebug :
+        LoomApplicationConfig::logLevel() == "verbose" ? LoomLogDebug :
+        LoomApplicationConfig::logLevel() == "info" ? LoomLogInfo :
+        LoomApplicationConfig::logLevel() == "warn" ? LoomLogWarn :
+        LoomApplicationConfig::logLevel() == "warning" ? LoomLogWarn :
+        LoomApplicationConfig::logLevel() == "error" ? LoomLogError :
+        LoomApplicationConfig::logLevel() == "quiet" ? LoomLogMax :
+        LoomApplicationConfig::logLevel() == "none" ? LoomLogMax :
+        LoomApplicationConfig::logLevel() == "default" ? (loom_logLevel_t)0 :
+        LoomApplicationConfig::logLevel() == "" ? (loom_logLevel_t)0 :
+        LoomLogInvalid
+    ;
+
+    lmAssert(logLevel != LoomLogInvalid, "Invalid configured log level: %s", LoomApplicationConfig::logLevel().c_str());
+
+    loom_log_setGlobalLevel(logLevel);
+
+
+    // Log the Loom build timestamp!
+    const char *buildTarget;
+#ifdef LOOM_DEBUG
+    buildTarget = "Debug";
+#else
+    buildTarget = "Release";
+#endif
+    lmLogInfo(coreLogGroup, "Loom (%s %s) built on " __DATE__ " at " __TIME__, SDL_GetPlatform(), buildTarget);
+
+    /* Display SDL version */
+    SDL_version compiled;
+    SDL_version linked;
+
+    SDL_VERSION(&compiled);
+    SDL_GetVersion(&linked);
+
+    lmLogDebug(coreLogGroup, "SDL compiled version: %d.%d.%d", compiled.major, compiled.minor, compiled.patch);
+    lmLogDebug(coreLogGroup, "SDL linked version : %d.%d.%d", linked.major, linked.minor, linked.patch);
 
 
     SDL_Init(
@@ -413,15 +449,6 @@ main(int argc, char *argv[])
 
     /* Main render loop */
     gLoomExecutionDone = 0;
-
-    /* Display SDL version */
-    SDL_version compiled;
-    SDL_version linked;
-
-    SDL_VERSION(&compiled);
-    SDL_GetVersion(&linked);
-
-    lmLogDebug(coreLogGroup, "Compiled with SDL version %d.%d.%d and linking against SDL version %d.%d.%d ...", compiled.major, compiled.minor, compiled.patch, linked.major, linked.minor, linked.patch);
 
     /* Game Controller */
     // Enable controller events

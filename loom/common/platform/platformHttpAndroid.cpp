@@ -30,7 +30,7 @@
 #include <jni.h>
 #include "platformAndroidJni.h"
 
-lmDefineLogGroup(gAndroidHTTPLogGroup, "http.android", 1, LoomLogInfo);
+lmDefineLogGroup(gAndroidHTTPLogGroup, "http", 1, LoomLogInfo);
 
 extern "C"
 {

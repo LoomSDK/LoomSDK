@@ -25,7 +25,7 @@
 #include "loom/common/platform/platformIO.h"
 #include "loom/common/config/applicationConfig.h"
 
-lmDefineLogGroup(gLoomApplicationConfigLogGroup, "script.LoomApplicationConfig", 1, LoomLogInfo);
+lmDefineLogGroup(gLoomApplicationConfigLogGroup, "config", 1, LoomLogInfo);
 
 const utString LoomApplicationConfig::OrientationLandscape = "landscape";
 const utString LoomApplicationConfig::OrientationPortrait = "portrait";
@@ -45,7 +45,7 @@ utString LoomApplicationConfig::_displayTitle = "Loom";
 int      LoomApplicationConfig::_displayWidth = 640;
 int      LoomApplicationConfig::_displayHeight = 480;
 utString LoomApplicationConfig::_displayOrientation = "auto";
-int LoomApplicationConfig::_logLevel = 0;
+utString LoomApplicationConfig::_logLevel = "default";
 
 // little helpers that do conversion
 static bool _jsonParseBool(const char *key, json_t *value)
@@ -129,7 +129,7 @@ const utString& LoomApplicationConfig::displayOrientation()
     return _displayOrientation;
 }
 
-int LoomApplicationConfig::logLevel()
+const utString& LoomApplicationConfig::logLevel()
 {
     return _logLevel;
 }
@@ -196,7 +196,7 @@ void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
             int filterRule  = -1;
 
             if (strcmp(key, "level") == 0) {
-                _logLevel = json_integer_value(value);
+                _logLevel = json_string_value(value);
                 continue;
             }
 

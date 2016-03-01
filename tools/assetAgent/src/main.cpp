@@ -65,7 +65,7 @@ namespace LS {
 // Delay in milliseconds between checks of file system.
 const int gFileCheckInterval = 100;
 
-lmDefineLogGroup(gAssetAgentLogGroup, "loom.asset", 1, LoomLogInfo);
+lmDefineLogGroup(gAssetAgentLogGroup, "agent", 1, LoomLogInfo);
 
 // The asset agent maintains a cache of all the local files and scans from time
 // to time for changes. When a change is detected, the file is streamed to any
@@ -558,7 +558,7 @@ static void processFileEntryDeltas(utArray<FileEntryDelta> *deltas)
         // Note we are using gActiveHandlers.size() outside of a lock, but this is ok as it's a word.
         if ((strstr(canonicalFile, ".loom") || strstr(canonicalFile, ".ls")) && (gActiveHandlers.size() > 0))
         {
-            lmLog(gAssetAgentLogGroup, "SENDING       -  %s", canonicalFile);
+            lmLog(gAssetAgentLogGroup, "Changed '%s'", canonicalFile);
         }
 
         if (canonicalFile[0] == 0)
@@ -727,7 +727,6 @@ static int socketListeningThread(void *payload)
     // Listen for incoming connections.
     int listenPort = 12340;
 
-    lmLog(gAssetAgentLogGroup, "Listening on port %d", listenPort);
     gListenSocket = (loom_socketId_t)-1;
     for ( ; ; )
     {
@@ -738,11 +737,11 @@ static int socketListeningThread(void *payload)
             break;
         }
 
-        lmLog(gAssetAgentLogGroup, "   - Failed to acquire port %d, trying port %d", listenPort, listenPort + 1);
+        lmLogWarn(gAssetAgentLogGroup, "   - Failed to acquire port %d, trying port %d", listenPort, listenPort + 1);
         listenPort++;
     }
 
-    lmLog(gAssetAgentLogGroup, "   o OK!");
+    lmLog(gAssetAgentLogGroup, "Listening on port %d", listenPort);
 
     while (loom_socketId_t acceptedSocket = loom_net_acceptTCPSocket(gListenSocket))
     {
@@ -763,7 +762,7 @@ static int socketListeningThread(void *payload)
             continue;
         }
 
-        lmLog(gAssetAgentLogGroup, "Client connected (%x)!", acceptedSocket);
+        lmLog(gAssetAgentLogGroup, "Client connected (%x)", acceptedSocket);
 
         loom_mutex_lock(gActiveSocketsMutex);
         gActiveHandlers.push_back(new AssetProtocolHandler(acceptedSocket));
@@ -787,7 +786,7 @@ static void shutdownListenSocket()
 {
     if (gListenSocket)
     {
-        lmLog(gAssetAgentLogGroup, "Shutting down listen socket...");
+        lmLogDebug(gAssetAgentLogGroup, "Shutting down listen socket...");
         loom_net_closeTCPSocket(gListenSocket);
         lmLog(gAssetAgentLogGroup, "Done! Goodbye.");
         gListenSocket = 0;
@@ -873,13 +872,13 @@ void DLLEXPORT assetAgent_run(IdleCallback idleCb, LogCallback logCb, FileChange
     // Set up the log callback.
     loom_log_addListener(fileWatcherLogListener, NULL);
 
-    lmLog(gAssetAgentLogGroup, "Starting file watcher thread...");
+    lmLogDebug(gAssetAgentLogGroup, "Starting file watcher thread...");
     gFileWatcherThread = loom_thread_start((ThreadFunction)fileWatcherThread, NULL);
-    lmLog(gAssetAgentLogGroup, "   o OK!");
+    lmLogDebug(gAssetAgentLogGroup, "   o OK!");
 
-    lmLog(gAssetAgentLogGroup, "Starting socket listener thread...");
+    lmLogDebug(gAssetAgentLogGroup, "Starting socket listener thread...");
     gSocketListenerThread = loom_thread_start((ThreadFunction)socketListeningThread, NULL);
-    lmLog(gAssetAgentLogGroup, "   o OK!");
+    lmLogDebug(gAssetAgentLogGroup, "   o OK!");
 
     // Loop till it's time to quit.
     while (!gQuitFlag)

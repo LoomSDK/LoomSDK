@@ -109,6 +109,7 @@ public:
 
     static int initializeTypes();
     static int registerScriptTypes();
+    static void ensureInitialAssetSystem();
     static int initializeCoreServices();
     static int initialize();
     static void shutdown();

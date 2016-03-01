@@ -30,7 +30,7 @@
 #include "loom/common/platform/platformThread.h"
 #include "loom/common/platform/platformFile.h"
 
-lmDefineLogGroup(gSQLiteGroup, "loom.sqlite", 1, LoomLogInfo);
+lmDefineLogGroup(gSQLiteGroup, "sqlite", 1, LoomLogInfo);
 
 using namespace LS;
 

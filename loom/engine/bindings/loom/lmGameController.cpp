@@ -33,7 +33,7 @@ using namespace LS;
 LoomGameController LoomGameController::controllers[MAX_CONTROLLERS];
 int LoomGameController::numControllers = 0;
 
-lmDefineLogGroup(controllerLogGroup, "loom.controller", 1, LoomLogInfo);
+lmDefineLogGroup(controllerLogGroup, "controller", 1, LoomLogInfo);
 
 LoomGameController::LoomGameController()
 {

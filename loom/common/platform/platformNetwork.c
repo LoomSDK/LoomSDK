@@ -58,7 +58,7 @@ typedef int   SOCKET;
 #endif // MSG_NOSIGNAL
 
 
-lmDefineLogGroup(netLogGroup, "platform.network", 1, LoomLogWarn);
+lmDefineLogGroup(netLogGroup, "net", 1, LoomLogWarn);
 
 int loom_net_initialize()
 {
@@ -142,7 +142,7 @@ static void loom_net_setSocketReuseAddress(loom_socketId_t s, int reuse)
 #else
     // If you get issues where the socket stays bound after a listening process (like the assetAgent)
     // terminates you may need to set SO_REUSEADDR or SO_REUSEPORT or equivalent on your platform.
-    lmLogInfo(netLogGroup, "Note: this platform doesn't support reusing port, but it probably doesn't matter.");
+    lmLogDebug(netLogGroup, "Note: this platform doesn't support reusing port, but it probably doesn't matter.");
 #endif
 }
 
@@ -327,7 +327,7 @@ loom_socketId_t loom_net_listenTCPSocket(unsigned short port)
     status = bind(listenSocket, (struct sockaddr *)&listenName, sizeof(listenName));
     if (status == -1)
     {
-        lmLogError(netLogGroup, "Could not bind TCP socket due to %d", status);
+        lmLogError(netLogGroup, "Could not bind TCP socket");
         return (loom_socketId_t)-1;
     }
 
@@ -335,7 +335,7 @@ loom_socketId_t loom_net_listenTCPSocket(unsigned short port)
     status = listen(listenSocket, 5);
     if (status == -1)
     {
-        lmLogError(netLogGroup, "Could not listen on TCP socket due to %d", status);
+        lmLogError(netLogGroup, "Could not listen on TCP socket");
         return (loom_socketId_t)-1;
     }
 

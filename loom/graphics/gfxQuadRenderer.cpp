@@ -37,7 +37,7 @@
 
 namespace GFX
 {
-lmDefineLogGroup(gGFXQuadRendererLogGroup, "GFXQuadRenderer", 1, LoomLogInfo);
+lmDefineLogGroup(gGFXQuadRendererLogGroup, "gfx.quad", 1, LoomLogInfo);
 
 static ShaderProgram* sCurrentShader;
 
@@ -298,7 +298,7 @@ void QuadRenderer::initializeGraphicsResources()
 {
     LOOM_PROFILE_SCOPE(quadInit);
 
-    lmLogDebug(gGFXQuadRendererLogGroup, "Initializing Graphics Resources");
+    lmLogDebug(gGFXQuadRendererLogGroup, "Initializing graphics resources...");
 
     GL_Context* ctx = Graphics::context();
 

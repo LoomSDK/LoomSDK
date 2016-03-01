@@ -33,7 +33,7 @@ using namespace LS;
 static ALCdevice *dev = NULL;
 static ALCcontext *ctx = NULL;
 
-lmDefineLogGroup(gLoomSoundLogGroup, "loom.sound", 1, LoomLogInfo);
+lmDefineLogGroup(gLoomSoundLogGroup, "sound", 1, LoomLogInfo);
 
 // Nop for now
 #define CHECK_OPENAL_ERROR() \
@@ -234,7 +234,7 @@ public:
         // Now restart all the sources after assigning the new buffer.
         while (Sound::smList)
         {
-            lmLog(gLoomSoundLogGroup, "Deleting sound...");
+            lmLogDebug(gLoomSoundLogGroup, "Deleting sound %s", Sound::smList->path.c_str());
             // Destructor removes the sound from the list
             lmDelete(NULL, Sound::smList);
         }

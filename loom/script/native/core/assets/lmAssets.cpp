@@ -26,7 +26,7 @@
 
 using namespace LS;
 
-lmDefineLogGroup(gLoomTextAssetGroup, "loom.textAsset", 1, LoomLogInfo);
+lmDefineLogGroup(gLoomTextAssetGroup, "asset.txt", 1, LoomLogInfo);
 
 class LoomTextAsset
 {
@@ -104,7 +104,7 @@ const NativeDelegate *LoomTextAsset::getUpdateDelegate() const
 
 //-----------------------------------------------------------------------------
 
-lmDefineLogGroup(gLoomBinaryAssetGroup, "loom.binaryAsset", 1, LoomLogInfo);
+lmDefineLogGroup(gLoomBinaryAssetGroup, "asset.bin", 1, LoomLogInfo);
 
 class LoomBinaryAsset
 {

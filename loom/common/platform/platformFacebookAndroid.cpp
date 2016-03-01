@@ -32,7 +32,7 @@
 #include "loom/engine/cocos2dx/cocoa/CCString.h"
 
 
-lmDefineLogGroup(gAndroidFacebookLogGroup, "loom.facebook.android", 1, 0);
+lmDefineLogGroup(gAndroidFacebookLogGroup, "facebook", 1, 0);
 
 
 static SessionStatusCallback gSessionStatusCallback = NULL;

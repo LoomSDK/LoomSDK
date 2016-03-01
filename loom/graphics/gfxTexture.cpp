@@ -37,7 +37,7 @@
 
 #include "loom/common/platform/platformTime.h"
 
-lmDefineLogGroup(gGFXTextureLogGroup, "GFXTexture", 1, LoomLogInfo);
+lmDefineLogGroup(gGFXTextureLogGroup, "gfx.tex", 1, LoomLogInfo);
 loom_allocator_t *gGFXTextureAllocator = NULL;
 
 

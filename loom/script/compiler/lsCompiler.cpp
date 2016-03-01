@@ -67,8 +67,8 @@ utArray<utString> LSCompiler::loomConfigClassPath;
 
 const char* LSCompiler::embeddedSystemAssembly = NULL;
 
-lmDefineLogGroup(LSCompiler::compilerLogGroup, "loom.compiler", 1, LoomLogInfo);
-lmDefineLogGroup(LSCompiler::compilerVerboseLogGroup, "loom.compiler.verbose", 0, LoomLogInfo);
+lmDefineLogGroup(LSCompiler::compilerLogGroup, "compiler", 1, LoomLogInfo);
+lmDefineLogGroup(LSCompiler::compilerVerboseLogGroup, "compiler.verbose", 0, LoomLogInfo);
 
 void LSCompiler::openCompilerVM()
 {
@@ -668,7 +668,7 @@ void LSCompiler::setSDKBuild(const utString& lsc)
 {
     sdkPath = lsc;
 
-    log("SDK Path: %s", sdkPath.c_str());
+    log("SDK: %s", sdkPath.c_str());
 
     AssemblyReader::addLibraryAssemblyPath(sdkPath + "libs");
 }
@@ -689,7 +689,7 @@ void LSCompiler::logVerbose(const char *format, ...)
     char* buff;
     va_list args;
     lmLogArgs(args, buff, format);
-    lmLog(compilerVerboseLogGroup, "%s", buff);
+    lmLogDebug(compilerVerboseLogGroup, "%s", buff);
     lmFree(NULL, buff);
 }
 

@@ -44,7 +44,7 @@ namespace GFX
 
 
 
-lmDefineLogGroup(gGFXLogGroup, "GFX", 1, LoomLogInfo);
+lmDefineLogGroup(gGFXLogGroup, "gfx", 1, LoomLogInfo);
 
 bool Graphics::sInitialized = false;
 

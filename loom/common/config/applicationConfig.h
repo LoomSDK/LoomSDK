@@ -51,7 +51,7 @@ class LoomApplicationConfig
     static int      _displayHeight;
     static utString _displayOrientation;
 
-    static int     _logLevel;
+    static utString  _logLevel;
 
 public:
 
@@ -138,6 +138,6 @@ public:
 
     static const utString& displayOrientation();
 
-    static int logLevel();
+    static const utString& logLevel();
 };
 #endif

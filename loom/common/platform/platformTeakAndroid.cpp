@@ -32,7 +32,7 @@
 #include "loom/engine/cocos2dx/cocoa/CCString.h"
 
 
-lmDefineLogGroup(gAndroidTeakLogGroup, "loom.teak.android", 1, 0);
+lmDefineLogGroup(gAndroidTeakLogGroup, "teak", 1, 0);
 
 
 static AuthStatusCallback gAuthStatusCallback = NULL;

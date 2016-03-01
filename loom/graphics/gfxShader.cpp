@@ -24,7 +24,7 @@
 
 #include <stdlib.h>
 
-lmDefineLogGroup(gGFXShaderLogGroup, "GFXShader", 1, LoomLogInfo);
+lmDefineLogGroup(gGFXShaderLogGroup, "gfx.shader", 1, LoomLogInfo);
 
 static const GFX::ShaderProgram *lastBoundShader = nullptr;
 

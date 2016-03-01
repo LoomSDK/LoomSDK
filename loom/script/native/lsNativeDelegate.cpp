@@ -28,7 +28,7 @@
 #include "loom/script/native/lsNativeDelegate.h"
 
 
-lmDefineLogGroup(gNativeDelegateGroup, "script.native", 1, LoomLogInfo);
+lmDefineLogGroup(gNativeDelegateGroup, "script.ntv", 1, LoomLogInfo);
 
 
 namespace LS {

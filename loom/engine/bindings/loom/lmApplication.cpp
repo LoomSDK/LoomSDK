@@ -58,8 +58,11 @@ NativeDelegate LoomApplication::assetCommandDelegate;
 NativeDelegate LoomApplication::applicationActivated;
 NativeDelegate LoomApplication::applicationDeactivated;
 
-lmDefineLogGroup(applicationLogGroup, "loom.application", 1, LoomLogInfo);
-lmDefineLogGroup(scriptLogGroup, "loom.script", 1, LoomLogInfo);
+static bool initialAssetSystemLoaded = false;
+
+
+lmDefineLogGroup(applicationLogGroup, "app", 1, LoomLogInfo);
+lmDefineLogGroup(scriptLogGroup, "script", 1, LoomLogInfo);
 
 // Define the global Loom C entrypoints.
 extern "C" {
@@ -154,12 +157,7 @@ void LoomApplication::initMainAssembly()
     lmAssert(!rootVM, "VM already running");
     rootVM = lmNew(NULL) LSLuaState();
 
-    lmLogDebug(applicationLogGroup, "   o assets");
-    loom_asset_initialize(".");
-    loom_asset_setCommandCallback(dispatchCommand);
-
-    lmLogDebug(applicationLogGroup, "   o stringtable");
-    stringtable_initialize();
+    ensureInitialAssetSystem();
 
     //*
     initBytes = rootVM->openExecutableAssembly(bootAssembly);
@@ -206,13 +204,6 @@ void LoomApplication::execMainAssembly()
         mainAssembly->connectToDebugger(LoomApplicationConfig::debuggerHost().c_str(), LoomApplicationConfig::debuggerPort());
     }
 
-    // Log the Loom build timestamp!
-#ifdef LOOM_DEBUG
-    lmLogDebug(applicationLogGroup, "Loom (Debug) built on " __DATE__ " at " __TIME__);
-#else
-    lmLogDebug(applicationLogGroup, "Loom (Release) built on " __DATE__ " at " __TIME__);
-#endif
-
     // first see if we have a static main
     MethodInfo *smain = mainAssembly->getStaticMethodInfo("main");
     if (smain)
@@ -233,7 +224,11 @@ void LoomApplication::execMainAssembly()
                 Type *appType = types.at(i);
                 if (appType->isDerivedFrom(loomAppType))
                 {
-                    lmLogDebug(applicationLogGroup, "Instantiating Application: %s", appType->getName());
+                    const char *name = appType->getName();
+                    size_t nameLen = strlen(name);
+                    lmLogInfo(applicationLogGroup, "%.*s", nameLen, "---------------------------------------------");
+                    lmLogInfo(applicationLogGroup, "%s", name);
+                    lmLogInfo(applicationLogGroup, "%.*s", nameLen, "---------------------------------------------");
                     int top = lua_gettop(rootVM->VM());
                     lsr_createinstance(rootVM->VM(), appType);
                     lualoom_getmember(rootVM->VM(), -1, "initialize");
@@ -250,7 +245,7 @@ void LoomApplication::reloadMainAssembly()
 {
     if (!rootVM || !rootVM->VM()) return;
 
-    lmLog(applicationLogGroup, "Reloading main assembly: %s", getBootAssembly());
+    lmLog(applicationLogGroup, "Reloading %s", getBootAssembly());
 
     // cleanup webviews
     platform_webViewDestroyAll();
@@ -273,6 +268,7 @@ void LoomApplication::reloadMainAssembly()
 
     GFX::Graphics::initialize();
 
+    initMainAssembly();
     execMainAssembly();
 
     reloadQueued = false;
@@ -344,6 +340,21 @@ static void unmapScriptFile(const char *path)
     loom_asset_unlock(path);
 }
 
+void LoomApplication::ensureInitialAssetSystem()
+{
+    if (initialAssetSystemLoaded) return;
+    initialAssetSystemLoaded = true;
+
+    // Initialize asset system. This has to be done first thing
+    // so the assembly header can be read for logging configuration.
+    lmLogDebug(applicationLogGroup, "Initializing asset system...");
+    lmLogDebug(applicationLogGroup, "   o assets");
+    loom_asset_initialize(".");
+    loom_asset_setCommandCallback(dispatchCommand);
+
+    lmLogDebug(applicationLogGroup, "   o stringtable");
+    stringtable_initialize();
+}
 
 int LoomApplication::initializeCoreServices()
 {
@@ -437,7 +448,7 @@ void LoomApplication::__handleMainAssemblyUpdate(void *payload, const char *name
         return;
     }
 
-    lmLogInfo(applicationLogGroup, "Restarting VM due to modification to '%s'", name);
+    lmLogDebug(applicationLogGroup, "Restarting VM due to modification to '%s'", name);
     _reloadMainAssembly();
 }
 

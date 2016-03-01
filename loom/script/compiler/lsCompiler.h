@@ -103,12 +103,12 @@ private:
     static BuildInfo *loadBuildFile(const utString& cref);
     static const char *readAssemblyUID(const utArray<unsigned char>& rawjson);
 
-    static loom_logGroup_t compilerLogGroup;
-    static loom_logGroup_t compilerVerboseLogGroup;
-
     static const char* embeddedSystemAssembly;
 
 public:
+
+    static loom_logGroup_t compilerLogGroup;
+    static loom_logGroup_t compilerVerboseLogGroup;
 
     LSCompiler() : vm(NULL), buildInfo(NULL)
     {

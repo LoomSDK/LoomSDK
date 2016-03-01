@@ -178,10 +178,11 @@ int main(int argc, const char **argv)
 
     LSLuaState::initCommandLine(argc, argv);
 
+    // TODO only output as lmlog when running in console/livereload?
 #ifdef LOOM_ENABLE_JIT
-    printf("LSC - JIT Compiler\n");
+    lmLog(LSCompiler::compilerLogGroup, "LSC - JIT Compiler");
 #else
-    printf("LSC - Interpreted Compiler\n");
+    lmLog(LSCompiler::compilerLogGroup, "LSC - Interpreted Compiler");
 #endif
 
     bool runtests      = false;
@@ -271,6 +272,15 @@ int main(int argc, const char **argv)
         }
     }
 
+    if (!rootBuildFile)
+    {
+        LSLog(LSLogDebug, "Building Main.loom with default settings");
+    }
+    else
+    {
+        LSLog(LSLogInfo, "Building %s", rootBuildFile);
+    }
+
     installPackageSystem();
     installPackageCompiler();
 
@@ -321,12 +331,10 @@ int main(int argc, const char **argv)
 
     if (!rootBuildFile)
     {
-        printf("Building Main.loom with default settings\n");
         LSCompiler::defaultRootBuildFile();
     }
     else
     {
-        printf("Building %s\n", rootBuildFile);
         LSCompiler::setRootBuildFile(rootBuildFile);
     }
 

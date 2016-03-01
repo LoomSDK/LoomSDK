@@ -27,7 +27,7 @@
 using namespace LS;
 
 
-lmDefineLogGroup(gHTTPRequestLogGroup, "HTTPRequest", 1, LoomLogInfo);
+lmDefineLogGroup(gHTTPRequestLogGroup, "http.req", 1, LoomLogInfo);
 
 class HTTPRequest {
 private:

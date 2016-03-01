@@ -25,7 +25,7 @@
 
 using namespace LS;
 
-lmDefineLogGroup(gNativeStoreLogGroup, "Loom.NativeStore", 1, 0);
+lmDefineLogGroup(gNativeStoreLogGroup, "store", 1, 0);
 
 /// Script bindings to the native Store API.
 ///

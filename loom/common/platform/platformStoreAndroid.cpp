@@ -30,7 +30,7 @@
 #include "loom/common/platform/platformStore.h"
 #include "loom/vendor/jansson/jansson.h"
 
-lmDefineLogGroup(gGoogleStoreLogGroup, "loom.store.googlePlay", 1, 0);
+lmDefineLogGroup(gGoogleStoreLogGroup, "googleplay", 1, 0);
 
 static StoreEventCallback gEventCallback = NULL;
 

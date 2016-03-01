@@ -26,7 +26,7 @@
 #include "loom/common/core/log.h"
 #include "loom/script/runtime/lsProfiler.h"
 
-lmDefineLogGroup(gStageLogGroup, "Stage", 1, LoomLogInfo);
+lmDefineLogGroup(gStageLogGroup, "stage", 1, LoomLogInfo);
 
 extern SDL_Window *gSDLWindow;
 

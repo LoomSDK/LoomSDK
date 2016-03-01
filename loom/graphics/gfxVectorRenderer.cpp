@@ -58,7 +58,7 @@ extern SDL_Window *gSDLWindow;
 
 namespace GFX
 {
-lmDefineLogGroup(gGFXVectorRendererLogGroup, "GFXVectorRenderer", 1, LoomLogInfo);
+lmDefineLogGroup(gGFXVectorRendererLogGroup, "gfx.vector", 1, LoomLogInfo);
 
 NVGcontext *nvg = NULL;
 

@@ -57,7 +57,7 @@ LSLuaState        *LSLuaState::lastLSState   = NULL;
 double            LSLuaState::constructorKey = 0;
 utArray<utString> LSLuaState::buildCache;
 
-lmDefineLogGroup(gLuaStateLogGroup, "LuaState", true, LoomLogInfo);
+lmDefineLogGroup(gLuaStateLogGroup, "luastate", true, LoomLogInfo);
 
 // traceback stack queries
 struct stackinfo
