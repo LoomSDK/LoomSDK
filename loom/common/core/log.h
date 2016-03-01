@@ -99,7 +99,12 @@ typedef enum loom_logLevel
     LoomLogInfo,
     LoomLogWarn,
     LoomLogError,
-    LoomLogMax   = LoomLogError
+#ifdef LOOM_DEBUG
+    LoomLogDefault = LoomLogDebug,
+#else
+    LoomLogDefault = LoomLogInfo,
+#endif
+    LoomLogMax = LoomLogError
 } loom_logLevel_t;
 
 void loom_log_initialize();

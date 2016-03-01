@@ -357,8 +357,8 @@ main(int argc, char *argv[])
         LoomApplicationConfig::logLevel() == "error" ? LoomLogError :
         LoomApplicationConfig::logLevel() == "quiet" ? LoomLogMax :
         LoomApplicationConfig::logLevel() == "none" ? LoomLogMax :
-        LoomApplicationConfig::logLevel() == "default" ? (loom_logLevel_t)0 :
-        LoomApplicationConfig::logLevel() == "" ? (loom_logLevel_t)0 :
+        LoomApplicationConfig::logLevel() == "default" ? LoomLogDefault :
+        LoomApplicationConfig::logLevel() == "" ? LoomLogDefault :
         LoomLogInvalid
     ;
 

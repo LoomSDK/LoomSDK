@@ -178,12 +178,22 @@ int main(int argc, const char **argv)
 
     LSLuaState::initCommandLine(argc, argv);
 
-    // TODO only output as lmlog when running in console/livereload?
-#ifdef LOOM_ENABLE_JIT
-    lmLog(LSCompiler::compilerLogGroup, "LSC - JIT Compiler");
+    const char *buildTarget;
+#ifdef LOOM_DEBUG
+    buildTarget = "Debug";
 #else
-    lmLog(LSCompiler::compilerLogGroup, "LSC - Interpreted Compiler");
+    buildTarget = "Release";
 #endif
+
+    const char *buildCompilerType;
+#ifdef LOOM_ENABLE_JIT
+    buildCompilerType = "JIT";
+#else
+    buildCompilerType = "Interpreted";
+#endif
+
+    // TODO only output as lmlog when running in console/livereload?
+    lmLog(LSCompiler::compilerLogGroup, "LSC - %s %s Compiler", buildTarget, buildCompilerType);
 
     bool runtests      = false;
     bool runbenchmarks = false;
