@@ -169,24 +169,8 @@ void RunBenchmarks()
     benchVM->close();
 }
 
-
-int main(int argc, const char **argv)
+void printHeader()
 {
-    stringtable_initialize();
-    loom_log_initialize();
-    platform_timeInitialize();
-
-    NativeDelegate::markMainThread();
-
-    LSLuaState::initCommandLine(argc, argv);
-
-
-    if (!strcmp(argv[1], "--version"))
-    {
-        printf("%s", LSC_VERSION);
-        return EXIT_SUCCESS;
-    }
-
     const char *buildTarget;
 #ifdef LOOM_DEBUG
     buildTarget = "Debug";
@@ -201,8 +185,24 @@ int main(int argc, const char **argv)
     buildCompilerType = "Interpreted";
 #endif
 
-    // TODO only output as lmlog when running in console/livereload?
-    lmLog(LSCompiler::compilerLogGroup, "LSC - %s %s Compiler", buildTarget, buildCompilerType);
+    LSCompiler::log("LSC - %s %s Compiler", buildTarget, buildCompilerType);
+}
+
+int main(int argc, const char **argv)
+{
+    if (argc > 1 && !strcmp(argv[1], "--version"))
+    {
+        printf("%s", LSC_VERSION);
+        return EXIT_SUCCESS;
+    }
+
+    stringtable_initialize();
+    loom_log_initialize();
+    platform_timeInitialize();
+
+    NativeDelegate::markMainThread();
+
+    LSLuaState::initCommandLine(argc, argv);
 
     bool runtests      = false;
     bool runbenchmarks = false;
@@ -210,11 +210,45 @@ int main(int argc, const char **argv)
 
     const char *rootBuildFile = NULL;
     const char *sdkRoot = NULL;
+
+    for (int i = 1; i < argc; i++)
+    {
+        if (!strcmp(argv[i], "--log-type"))
+        {
+            i++;
+            if (i >= argc)
+            {
+                LSError("--log-type option requires the log type (default|cli|runtime) to be specified next");
+            }
+
+            LSLogType type =
+                strcmp(argv[i], "cli") == 0 ? LSLogType::CLI :
+                strcmp(argv[i], "runtime") == 0 ? LSLogType::RUNTIME :
+                strcmp(argv[i], "default") == 0 ? (LSLogType)0 :
+                LSLogType::INVALID
+                ;
+
+            if (type == LSLogType::INVALID)
+            {
+                printHeader();
+                LSError("Invalid log type: %s", argv[i]);
+            }
+
+            LSCompiler::setLogType(type);
+        }
+    }
+
+    printHeader();
     
     for (int i = 1; i < argc; i++)
     {
         if ((strlen(argv[i]) >= 2) && (argv[i][0] == '-') && (argv[i][1] == 'D'))
         {
+            continue;
+        }
+        else if (!strcmp(argv[i], "--log-type"))
+        {
+            i++;
             continue;
         }
         else if (!strcmp(argv[i], "--release"))
@@ -250,7 +284,7 @@ int main(int argc, const char **argv)
                 LSError("--root option requires folder to be specified");
             }
             
-            printf("Root set to %s\n", argv[i]);
+            LSCompiler::log("Root set to %s\n", argv[i]);
             sdkRoot = argv[i];
         }
         else if (!strcmp(argv[i], "--project"))
@@ -261,7 +295,7 @@ int main(int argc, const char **argv)
                 LSError("--root option requires folder to be specified");
             }
 
-            printf("Project folder set to %s\n", argv[i]);
+            LSCompiler::log("Project folder set to %s\n", argv[i]);
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_OSX || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
             chdir(argv[i]);
@@ -277,7 +311,7 @@ int main(int argc, const char **argv)
                 LSError("--config option requires the override configuration to be specified next");
             }
 
-            lmLog(LSCompiler::compilerLogGroup, "Using config override");
+            LSCompiler::log("Using config override");
             LSCompiler::setConfigOverride(argv[i]);
         }
         else if (!strcmp(argv[i], "--help"))

@@ -873,7 +873,8 @@ void loom_asset_pump()
       else
       {
         // Instate the asset.
-        asset->instate(type, assetBits, dtor);        
+        asset->instate(type, assetBits, dtor);
+        asset->blob->length = size;
       }
 
       // Done! Update queue.
@@ -1096,7 +1097,7 @@ void *loom_asset_lock(const char *name, unsigned int type, int block)
     }
     else
     {
-        lmLogInfo(gAssetLogGroup, "Loaded '%s'", namePtr);
+        lmLogInfo(gAssetLogGroup, "Loaded '%s', %s", namePtr, humanFileSize(asset->blob->length).c_str());
     }
 
     // Return ptr.

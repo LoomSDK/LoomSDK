@@ -66,6 +66,8 @@ json_t            *LSCompiler::loomConfigJSON = NULL;
 utString LSCompiler::loomConfigOverride = NULL;
 utArray<utString> LSCompiler::loomConfigClassPath;
 
+LSLogType LSCompiler::logType = CLI;
+
 const char* LSCompiler::embeddedSystemAssembly = NULL;
 
 lmDefineLogGroup(LSCompiler::compilerLogGroup, "compiler", 1, LoomLogInfo);
@@ -688,12 +690,21 @@ void LSCompiler::setConfigOverride(const char *config)
     LSCompiler::loomConfigOverride = config;
 }
 
+void LSCompiler::setLogType(LSLogType type)
+{
+    LSCompiler::logType = type;
+}
+
 void LSCompiler::log(const char *format, ...)
 {
     char* buff;
     va_list args;
     lmLogArgs(args, buff, format);
-    lmLog(compilerLogGroup, "%s", buff);
+    switch (logType)
+    {
+    case RUNTIME: lmLog(compilerLogGroup, "%s", buff); break;
+    default: printf("%s\n", buff);
+    }
     lmFree(NULL, buff);
 }
 
@@ -703,7 +714,11 @@ void LSCompiler::logVerbose(const char *format, ...)
     char* buff;
     va_list args;
     lmLogArgs(args, buff, format);
-    lmLogDebug(compilerLogGroup, "%s", buff);
+    switch (logType)
+    {
+    case RUNTIME: lmLogDebug(compilerLogGroup, "%s", buff); break;
+    default: if (loom_log_getGlobalLevel() <= LoomLogDebug) printf("%s\n", buff);
+    }
     lmFree(NULL, buff);
 }
 

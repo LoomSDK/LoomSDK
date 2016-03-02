@@ -27,7 +27,7 @@
 utString humanFileSize(long bytes)
 {
     static const char *postfixes[] = {
-        "B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"
+        "bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"
     };
     long power = bytes <= 0 ? 0 : log2l(bytes);
     long mag = power / 10;
@@ -36,7 +36,8 @@ utString humanFileSize(long bytes)
     const char *postfix = postfixes[mag];
     long nearest = 1 << (mag*10);
     float frac = (float)bytes / nearest;
-    return utStringFormat("%.1f%s (%ld bytes)", frac, postfix, bytes);
+    if (mag == 0) return utStringFormat("%ld %s", bytes, postfixes[0]);
+    return utStringFormat("%.1f %s (%ld %s)", frac, postfix, bytes, postfixes[0]);
 }
 
 #endif

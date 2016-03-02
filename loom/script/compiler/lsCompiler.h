@@ -35,6 +35,13 @@
 namespace LS {
 class AssemblyBuilder;
 
+enum LSLogType
+{
+    INVALID = -99,
+    CLI,
+    RUNTIME
+};
+
 class LSCompiler 
 {
 
@@ -97,6 +104,8 @@ private:
     static utString loomConfigOverride;
     static utArray<utString> loomConfigClassPath;
 
+    static LSLogType logType;
+
     static void linkRootAssembly(const utString& sjson);
     static void compileRootBuildDependencies();
     static void generateRootDependenciesRecursive(const utString& ref);
@@ -129,6 +138,8 @@ public:
     static void setSDKBuild(const utString& lscPath);
 
     static void setConfigOverride(const char *config);
+
+    static void setLogType(LSLogType type);
 
     static void setDumpSymbols(bool dump)
     {
