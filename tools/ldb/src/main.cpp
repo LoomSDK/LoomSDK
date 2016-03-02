@@ -53,7 +53,7 @@ int main(int argc, const char** argv) {
     debuggerVM = new LSLuaState();
     debuggerVM->open();
 
-    lmLog(ldbLogGroup,"o executing LDB");
+    lmLog(ldbLogGroup, "Running");
     Assembly* ldbAssembly = debuggerVM->loadExecutableAssembly("../../../libs/LDB.loom");
     ldbAssembly->execute();
 

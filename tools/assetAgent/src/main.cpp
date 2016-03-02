@@ -946,7 +946,7 @@ void DLLEXPORT assetAgent_command(const char *cmd)
 
         if (gActiveHandlers.size() == 0)
         {
-            sendIgnoredError();
+            if (strcmp(cmd, "terminate") != 0) sendIgnoredError();
         }
 
         for (UTsize i = 0; i < gActiveHandlers.size(); i++)

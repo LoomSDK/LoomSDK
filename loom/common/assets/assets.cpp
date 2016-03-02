@@ -299,6 +299,10 @@ static int loom_asset_textRecognizer(const char *extension)
     {
         return LATText;
     }
+    if (!stricmp(extension, "svg"))
+    {
+        return LATText;
+    }
     return 0;
 }
 
