@@ -103,7 +103,7 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
                                 OpenedViaCustomURLCallback customURLCB,
                                 OpenedViaRemoteNotificationCallback remoteNotificationCB)
 {
-    lmLog(gAndroidMobileLogGroup, "INIT ***** MOBILE ***** ANDROID ****");
+    lmLog(gAndroidMobileLogGroup, "Initializing Mobile for Android");
 
     gTripleChangedCallback = sensorTripleChangedCB;    
     gOpenedViaCustomURLCallback = customURLCB;    

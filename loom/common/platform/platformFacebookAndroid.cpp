@@ -74,7 +74,7 @@ static loomJniMethodInfo gIsPermissionGranted;
 ///initializes the data for the Facebook class for Android
 void platform_facebookInitialize(SessionStatusCallback sessionStatusCB, FrictionlessRequestCallback frictionlessRequestCB)
 {
-    lmLog(gAndroidFacebookLogGroup, "INIT ***** FACEBOOK ***** ANDROID ****");
+    lmLog(gAndroidFacebookLogGroup, "Initializing Facebook for Android");
 
     gSessionStatusCallback = sessionStatusCB;   
     gFrictionlessRequestCallback = frictionlessRequestCB;   

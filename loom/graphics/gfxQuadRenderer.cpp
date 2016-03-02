@@ -298,7 +298,7 @@ void QuadRenderer::initializeGraphicsResources()
 {
     LOOM_PROFILE_SCOPE(quadInit);
 
-    lmLogDebug(gGFXQuadRendererLogGroup, "Initializing graphics resources...");
+    lmLogDebug(gGFXQuadRendererLogGroup, "Initializing graphics resources");
 
     GL_Context* ctx = Graphics::context();
 

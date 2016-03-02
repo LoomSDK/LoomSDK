@@ -76,7 +76,7 @@ int loom_net_initialize()
     if (((LOBYTE(wsaData.wVersion) != 2) || (HIBYTE(wsaData.wVersion) != 0)) &&
         ((LOBYTE(wsaData.wVersion) != 1) || (HIBYTE(wsaData.wVersion) != 1)))
     {
-        lmLogError(netLogGroup, "Failed WinSock initalization due to version mismatch.");
+        lmLogError(netLogGroup, "Failed WinSock initalization due to version mismatch");
         WSACleanup();
         return 0;
     }
@@ -84,7 +84,7 @@ int loom_net_initialize()
     // Sanity checks.
     lmAssert(sizeof(SOCKET) <= sizeof(loom_socketId_t), "Can't pack a SOCKET into loom_socketId_t");
 
-    lmLogDebug(netLogGroup, "WinSock initialized.");
+    lmLogDebug(netLogGroup, "Initialized WinSock");
     
     return 1;
 
@@ -289,7 +289,7 @@ void loom_net_enableSocketKeepalive(loom_socketId_t s)
 
     if (loom_net_isSocketDead(s))
     {
-        lmLogError(netLogGroup, "Trying to set keepalive on dead socket.");
+        lmLogError(netLogGroup, "Tried to set keepalive on dead socket.");
         return;
     }
 
@@ -359,9 +359,8 @@ loom_socketId_t loom_net_acceptTCPSocket(loom_socketId_t listenSocket)
 
 void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, int peek /*= 0*/)
 {
-#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
-    int winsockErrorCode;
-#endif
+    int errorCode;
+
     int waiting;
 
     int tmp = *bytesToRead;
@@ -387,13 +386,14 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
         if (received == -1) {
             waiting = 0;
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
-            winsockErrorCode = WSAGetLastError();
-            if (winsockErrorCode == WSAEWOULDBLOCK)
+            errorCode = WSAGetLastError();
+            if (errorCode == WSAEWOULDBLOCK)
             {
                 waiting = 1;
             }
 #else
-            if (errno == EAGAIN)
+            errorCode = errno;
+            if (errorCode == EAGAIN)
             {
                 waiting = 1;
             }
@@ -407,7 +407,7 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
             }
             else
             {
-                lmLogError(netLogGroup, "Read socket error");
+                lmLogError(netLogGroup, "Read socket error (%d)", errorCode);
                 *bytesToRead = -1;
                 return;
             }
@@ -436,7 +436,7 @@ int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite)
             bytesLeft -= result;
             if (bytesLeft != 0)
             {
-                lmLogInfo(netLogGroup, "Partial write on socket %d, expected %d but wrote %d! Retrying...", s, bytesToWrite, result);
+                lmLogDebug(netLogGroup, "Partial write on socket %d, expected %d but wrote %d! Retrying...", s, bytesToWrite, result);
 
                 // Set up to try again by advancing into the buffer.
                 buffer = (void *)((char *)buffer + result);

@@ -62,7 +62,7 @@ static loomJniMethodInfo gPostActionWithProperties;
 ///initializes the data for the Teak class for Android
 void platform_teakInitialize(AuthStatusCallback authStatusCB)
 {
-    lmLog(gAndroidTeakLogGroup, "INIT ***** TEAK ***** ANDROID ****");
+    lmLogDebug(gAndroidTeakLogGroup, "Initializing Teak for Android");
 
     gAuthStatusCallback = authStatusCB;   
  

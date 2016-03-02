@@ -116,7 +116,7 @@ void platform_storeInitialize(StoreEventCallback eventCallback)
     //lmAssert(gEventCallback == NULL, "Cannot initialize twice!");
     gEventCallback = eventCallback;
 
-    lmLog(gGoogleStoreLogGroup, "INIT ***** STORE ***** PLAY ****");
+    lmLogDebug(gGoogleStoreLogGroup, "Initializing Store for Android");
 
     // Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gPurchaseProductMethodInfo,

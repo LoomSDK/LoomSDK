@@ -80,7 +80,7 @@ static bool _jsonParseBool(const char *key, json_t *value)
         return !stricmp(json_string_value(value), "true") ? true : false;
     }
 
-    lmLog(gLoomApplicationConfigLogGroup, "WARNING: unknown json bool conversion in config for key %s", key);
+    lmLogWarn(gLoomApplicationConfigLogGroup, "Unknown json bool conversion in config for key %s", key);
 
     return false;
 }
@@ -119,7 +119,7 @@ static int _jsonParseInt(const char *key, json_t *value)
         return strtol(json_string_value(value), &pEnd, 10);
     }
 
-    lmLog(gLoomApplicationConfigLogGroup, "WARNING: unknown json int conversion in config for key %s", key);
+    lmLogWarn(gLoomApplicationConfigLogGroup, "Unknown json int conversion in config for key %s", key);
 
     return 0;
 }
@@ -156,7 +156,7 @@ void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
     {
         if (!json_is_string(ah))
         {
-            lmLog(gLoomApplicationConfigLogGroup, "assetAgentHost was specified but is not a string!");
+            lmLogWarn(gLoomApplicationConfigLogGroup, "assetAgentHost was specified but is not a string!");
         }
         else
         {
@@ -229,7 +229,7 @@ void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
     {
         if (!json_is_string(dh))
         {
-            lmLog(gLoomApplicationConfigLogGroup, "debuggerHost was specified but is not a string!");
+            lmLogWarn(gLoomApplicationConfigLogGroup, "debuggerHost was specified but is not a string!");
         }
         else
         {

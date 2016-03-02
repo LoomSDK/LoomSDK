@@ -125,7 +125,7 @@ public:
 
     static void initialize()
     {
-        lmLog(gNativeStoreLogGroup, "Initializing native store!");
+        lmLogDebug(gNativeStoreLogGroup, "Initializing native store");
         platform_storeInitialize(eventCallback);
     }
 

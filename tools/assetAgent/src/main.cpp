@@ -213,7 +213,7 @@ static int makeAssetPathCanonical(const char *pathIn, char pathOut[MAXPATHLEN])
 
     if (resolvedPathPtr == NULL)
     {
-        lmLog(gAssetAgentLogGroup, "Failed to resolve path %s via realpath due to %s", pathIn, strerror(errno));
+        lmLogError(gAssetAgentLogGroup, "Failed to resolve path %s via realpath due to %s", pathIn, strerror(errno));
         return 0;
     }
 
@@ -648,7 +648,7 @@ static int fileWatcherThread(void *payload)
 
         if (endTime - startTime > 250)
         {
-            lmLog(gAssetAgentLogGroup, "Took %d ms to scan files, consider removing unused files?", endTime - startTime);
+            lmLogWarn(gAssetAgentLogGroup, "Scanning files took %dms, consider removing unused files", endTime - startTime);
         }
 
         processFileEntryDeltas(deltas);
@@ -703,7 +703,7 @@ static void listClients()
     loom_mutex_lock(gActiveSocketsMutex);
 
     // Blast it out to all clients.
-    lmLog(gAssetAgentLogGroup, "CLIENTS:");
+    lmLog(gAssetAgentLogGroup, "Clients");
 
     for (UTsize i = 0; i < gActiveHandlers.size(); i++)
     {

@@ -58,11 +58,11 @@ static int StreamConnectHandler(const struct mg_connection * conn, void *cbdata)
 
     if (client == NULL)
     {
-        lmLog(gTelemetryServerLogGroup, "Stream client rejected");
+        lmLogWarn(gTelemetryServerLogGroup, "Stream client rejected");
     }
     else
     {
-        lmLog(gTelemetryServerLogGroup, "Stream client #%d accepted", client->id);
+        lmLogDebug(gTelemetryServerLogGroup, "Stream client #%d accepted", client->id);
     }
 
     return client == NULL ? 1 : 0;
@@ -191,7 +191,7 @@ void TelemetryServer::start()
     // Set /stream as the websocket connection that streams all the ticks
     mg_set_websocket_handler(server, LTS_STREAM_URI, StreamConnectHandler, StreamReadyHandler, StreamDataHandler, StreamCloseHandler, NULL);
 
-    lmLog(gTelemetryServerLogGroup, "Loom Telemetry server listening on port %s", mg_get_option(server, "listening_ports"));
+    lmLog(gTelemetryServerLogGroup, "Loom Telemetry server running at http://localhost:%s/", mg_get_option(server, "listening_ports"));
     lmLog(gTelemetryServerLogGroup, "\tServing client from %s", mg_get_option(server, "document_root"));
 }
 

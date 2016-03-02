@@ -62,7 +62,7 @@ void LoomTextAsset::load()
     // introduces a race condition.
     if (updateDelegate.getCount() == 0)
     {
-        lmLog(gLoomTextAssetGroup, "Warning: calling LoomTextAsset::load for asset '%s' without anything added to its delegate! You are likely to miss asset updates/state.", path.c_str());
+        lmLogWarn(gLoomTextAssetGroup, "Calling LoomTextAsset::load for asset '%s' without anything added to its delegate! You are likely to miss asset updates/state.", path.c_str());
     }
 
     // Force it to load.
@@ -140,7 +140,7 @@ void LoomBinaryAsset::load()
     // introduces a race condition.
     if (updateDelegate.getCount() == 0)
     {
-        lmLog(gLoomBinaryAssetGroup, "Warning: calling LoomBinaryAsset::load for asset '%s' without anything added to its delegate! You are likely to miss asset updates/state.", path.c_str());
+        lmLogWarn(gLoomBinaryAssetGroup, "Calling LoomBinaryAsset::load for asset '%s' without anything added to its delegate! You are likely to miss asset updates/state.", path.c_str());
     }
 
     // Force it to load.

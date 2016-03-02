@@ -600,7 +600,7 @@ TextureInfo *Texture::initFromBytes(utByteArray *bytes, const char *name)
     tinfo = getAvailableTextureInfo(name);
     if(tinfo == NULL)
     {
-        lmLog(gGFXTextureLogGroup, "No available texture id for image bytes");
+        lmLogError(gGFXTextureLogGroup, "No available texture id for image bytes");
         return NULL;
     }
 
@@ -609,7 +609,7 @@ TextureInfo *Texture::initFromBytes(utByteArray *bytes, const char *name)
     loom_asset_image_t *lat = static_cast<loom_asset_image_t*>(loom_asset_imageDeserializer(bytes->getDataPtr(), bytes->getSize(), &dtor));
 
     if (lat == NULL) {
-        lmLog(gGFXTextureLogGroup, "Unable to load image bytes");
+        lmLogError(gGFXTextureLogGroup, "Unable to load image bytes");
         return NULL;
     }
 
@@ -824,7 +824,7 @@ void Texture::updateFromBytes(TextureID id, utByteArray *bytes)
         loom_asset_image_t *lat = static_cast<loom_asset_image_t*>(loom_asset_imageDeserializer(bytes->getDataPtr(), bytes->getSize(), &dtor));
 
         if (lat == NULL) {
-            lmLog(gGFXTextureLogGroup, "Unable to load image bytes");
+            lmLogError(gGFXTextureLogGroup, "Unable to load image bytes");
             loom_mutex_unlock(Texture::sTexInfoLock);
             return;
         }
@@ -899,9 +899,9 @@ void Texture::updateImageAsset(loom_asset_image_t *lat, TextureInfo *tinfo)
     }
 
     if (downsampling) {
+        lmLogWarn(gGFXTextureLogGroup, "Texture too big at %dx%d, downsampling to %dx%d", lat->width, lat->height, localWidth, localHeight);
         localBits = static_cast<uint32_t*>(lmAlloc(NULL, localWidth * localWidth * 4));
         downsampleAverage((uint32_t*)lat->bits, localBits, lat->width, lat->height);
-        lmLog(gGFXTextureLogGroup, "   - Too big! Downsampling to %dx%d", localWidth, localHeight);
     }
 
     upload(*tinfo, (uint8_t*) localBits, localWidth, localHeight, 0, 0);
@@ -1058,7 +1058,7 @@ void Texture::loadImageAsset(loom_asset_image_t *lat, TextureID id)
         localHeight = localHeight >> 1;
         void *oldBits = localBits;
 
-        lmLog(gGFXTextureLogGroup, "   - Too big! Downsampling to %dx%d", localWidth, localHeight);
+        lmLog(gGFXTextureLogGroup, "Texture too big at %dx%d, downsampling to %dx%d", lat->width, lat->height, localWidth, localHeight);
 
         if (resizeCounter > 0)
         {
@@ -1105,7 +1105,7 @@ void Texture::reset()
         if (tinfo->handle != -1)
         {
             const char *path = tinfo->texturePath.c_str();
-            lmLog(gGFXTextureLogGroup, "Reloading texture for path %s", path);
+            lmLogDebug(gGFXTextureLogGroup, "Resetting texture '%s'", path);
 
             Texture::dispose(tinfo->id);
             tinfo->reload     = false;

@@ -86,7 +86,7 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         int sampleCount = stb_vorbis_decode_memory(charBuff, (int)bufferLen, &channels, &outputBuffer);
         if(sampleCount < 0)
         {
-            lmLogError(gSoundAssetGroup, "Failed to decode Ogg Vorbis!");
+            lmLogError(gSoundAssetGroup, "Failed to decode Ogg Vorbis");
             loom_asset_soundDtor(&sound);
             return NULL;
         }

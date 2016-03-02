@@ -434,7 +434,7 @@ main(int argc, char *argv[])
 
     ret = SDL_GL_SetSwapInterval(-1);
     if (ret != 0) {
-        lmLog(coreLogGroup, "Late swap tearing not supported, using vsync");
+        lmLogDebug(coreLogGroup, "Late swap tearing not supported, using vsync");
         SDL_GL_SetSwapInterval(1);
     }
 

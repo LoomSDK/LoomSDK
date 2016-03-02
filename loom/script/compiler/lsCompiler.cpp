@@ -709,13 +709,13 @@ void LSCompiler::initialize()
 
     if (!rootBuildInfo)
     {
-        lmLog(compilerLogGroup, "Unable to open build info file '%s'", rootBuildFile.c_str());
+        lmLogError(compilerLogGroup, "Unable to open build info file '%s'", rootBuildFile.c_str());
         exit(EXIT_FAILURE);
     }
 
     if (rootBuildInfo->parseErrors)
     {
-        lmLog(compilerLogGroup, "Please fix the following parser errors and recompile");
+        lmLogError(compilerLogGroup, "Please fix the following parser errors and recompile");
         LSCompilerLog::dump();
         exit(EXIT_FAILURE);
     }

@@ -102,7 +102,7 @@ static jclass getClassID_(const char *className, JNIEnv *env)
         ret = pEnv->FindClass(className);
         if (!ret)
         {
-            lmLog(jniLogGroup, "Failed to find class of %s", className);
+            lmLogWarn(jniLogGroup, "Failed to find class of %s", className);
 
             jthrowable exc;
             exc = pEnv->ExceptionOccurred();
@@ -141,7 +141,7 @@ static bool getStaticMethodInfo_(loomJniMethodInfo& methodinfo, const char *clas
         methodID = pEnv->GetStaticMethodID(classID, methodName, paramCode);
         if (!methodID)
         {
-            lmLog(jniLogGroup, "Failed to find static method id of %s on class %s", methodName, className);
+            lmLogWarn(jniLogGroup, "Failed to find static method id of %s on class %s", methodName, className);
             break;
         }
 
@@ -178,7 +178,7 @@ static bool getMethodInfo_(loomJniMethodInfo& methodinfo, const char *className,
         methodID = pEnv->GetMethodID(classID, methodName, paramCode);
         if (!methodID)
         {
-            lmLog(jniLogGroup, "Failed to find method id of %s", methodName);
+            lmLogWarn(jniLogGroup, "Failed to find method id of %s", methodName);
             break;
         }
 

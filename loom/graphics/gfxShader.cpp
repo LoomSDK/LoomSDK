@@ -744,7 +744,7 @@ void GFX::ShaderProgram::bind()
         lmLogError(gGFXShaderLogGroup, "Binding an uninitalized shader!");
 
         // Don't return here, let it bind to 0
-        // It would be wierd if it started using
+        // It would be weird if it started using
         // the wrong shader
     }
 

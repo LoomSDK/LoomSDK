@@ -66,7 +66,7 @@ static void executeAssembly()
             Type *appType = types.at(i);
             if (appType->isDerivedFrom(loomAppType))
             {
-                //lmLog(applicationLogGroup, "Instantiating Application: %s", appType->getName());
+                lmLogDebug(applicationLogGroup, "Instantiating application: %s", appType->getName());
                 int top = lua_gettop(execState->VM());
                 lsr_createinstance(execState->VM(), appType);
                 lualoom_getmember(execState->VM(), -1, "initialize");

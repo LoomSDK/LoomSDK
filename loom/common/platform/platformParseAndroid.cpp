@@ -43,7 +43,7 @@ static loomJniMethodInfo gUpdateInstallationUserID;
 ///initializes the data for the Parse class for Android
 void platform_parseInitialize()
 {
-    lmLog(gAndroidParseLogGroup, "INIT ***** PARSE ***** ANDROID ****");
+    lmLogDebug(gAndroidParseLogGroup, "Initializing Parse for Android");
 
     ///Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gIsActive,
