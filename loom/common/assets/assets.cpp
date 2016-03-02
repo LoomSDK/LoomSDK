@@ -678,8 +678,8 @@ public:
 
                // Log it.
                int elapsed = loom_readTimer(pendingFileTimer);
-               if (pendingFileInit && elapsed > PROGRESS_INIT_TIME ||
-                   !pendingFileInit && elapsed > PROGRESS_UPDATE_TIME)
+               if ((pendingFileInit && elapsed > PROGRESS_INIT_TIME) ||
+                   (!pendingFileInit && elapsed > PROGRESS_UPDATE_TIME))
                {
                    loom_resetTimer(pendingFileTimer);
                    int progress = lastByteOffset * 100 / pendingFileLength;

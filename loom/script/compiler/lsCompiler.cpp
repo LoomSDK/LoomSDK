@@ -63,12 +63,12 @@ utArray<utString> LSCompiler::rootLibDependencies;
 utArray<BuildInfo *> LSCompiler::rootBuildDependencies;
 
 json_t            *LSCompiler::loomConfigJSON = NULL;
+utString LSCompiler::loomConfigOverride = NULL;
 utArray<utString> LSCompiler::loomConfigClassPath;
 
 const char* LSCompiler::embeddedSystemAssembly = NULL;
 
 lmDefineLogGroup(LSCompiler::compilerLogGroup, "compiler", 1, LoomLogInfo);
-lmDefineLogGroup(LSCompiler::compilerVerboseLogGroup, "compiler.verbose", 0, LoomLogInfo);
 
 void LSCompiler::openCompilerVM()
 {
@@ -198,16 +198,26 @@ void LSCompiler::processLoomConfig()
     utArray<unsigned char> configBytes;
     json_t                 *json = NULL;
 
-    if (utFileStream::tryReadToArray("./loom.config", configBytes, true))
+    const char *configChars = NULL;
+    const char *configName = "./loom.config";
+    if (!loomConfigOverride.empty())
+    {
+        configChars = loomConfigOverride.c_str();
+        configName = "config override";
+    }
+    else if (utFileStream::tryReadToArray(configName, configBytes, true))
     {
         if (configBytes.size())
         {
-            json_error_t error;
-            json = json_loads((const char *)configBytes.ptr(), JSON_DISABLE_EOF_CHECK, &error);
-
-
-            lmAssert(json, "JSON Error: Line %i Column %i Position %i, %s (Source: %s)", error.line, error.column, error.position, error.text, "./loom.config");
+            configChars = (const char*)configBytes.ptr();
         }
+    }
+
+    if (configChars)
+    {
+        json_error_t error;
+        json = json_loads(configChars, JSON_DISABLE_EOF_CHECK, &error);
+        lmAssert(json, "JSON Error: Line %i Column %i Position %i, %s (Source: %s)", error.line, error.column, error.position, error.text, configName);
     }
 
     // if we don't have a loom.config or it is empty, initial empty json config
@@ -673,6 +683,10 @@ void LSCompiler::setSDKBuild(const utString& lsc)
     AssemblyReader::addLibraryAssemblyPath(sdkPath + "libs");
 }
 
+void LSCompiler::setConfigOverride(const char *config)
+{
+    LSCompiler::loomConfigOverride = config;
+}
 
 void LSCompiler::log(const char *format, ...)
 {
@@ -689,7 +703,7 @@ void LSCompiler::logVerbose(const char *format, ...)
     char* buff;
     va_list args;
     lmLogArgs(args, buff, format);
-    lmLogDebug(compilerVerboseLogGroup, "%s", buff);
+    lmLogDebug(compilerLogGroup, "%s", buff);
     lmFree(NULL, buff);
 }
 

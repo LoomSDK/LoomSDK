@@ -94,6 +94,7 @@ private:
     // if we have a loom config, this will be valid json, otherwise NULL
     static json_t *loomConfigJSON;
 
+    static utString loomConfigOverride;
     static utArray<utString> loomConfigClassPath;
 
     static void linkRootAssembly(const utString& sjson);
@@ -108,7 +109,6 @@ private:
 public:
 
     static loom_logGroup_t compilerLogGroup;
-    static loom_logGroup_t compilerVerboseLogGroup;
 
     LSCompiler() : vm(NULL), buildInfo(NULL)
     {
@@ -127,6 +127,8 @@ public:
     }
 
     static void setSDKBuild(const utString& lscPath);
+
+    static void setConfigOverride(const char *config);
 
     static void setDumpSymbols(bool dump)
     {
@@ -185,11 +187,6 @@ public:
 
     // must be called after all source paths, assembly paths, and root build file have been set
     static void initialize();
-
-    static void setVerboseLog(bool enabled)
-    {
-        compilerVerboseLogGroup.enabled = enabled ? 1 : 0;
-    }
 
     static void log(const char *format, ...);
     static void logVerbose(const char *format, ...);

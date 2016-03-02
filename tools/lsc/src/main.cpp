@@ -28,6 +28,8 @@
 #include "loom/script/runtime/lsLuaState.h"
 #include "loom/script/native/lsNativeDelegate.h"
 
+#define LSC_VERSION "1.0.1"
+
 using namespace LS;
 
 void installPackageSystem();
@@ -178,6 +180,13 @@ int main(int argc, const char **argv)
 
     LSLuaState::initCommandLine(argc, argv);
 
+
+    if (!strcmp(argv[1], "--version"))
+    {
+        printf("%s", LSC_VERSION);
+        return EXIT_SUCCESS;
+    }
+
     const char *buildTarget;
 #ifdef LOOM_DEBUG
     buildTarget = "Debug";
@@ -214,7 +223,7 @@ int main(int argc, const char **argv)
         }
         else if (!strcmp(argv[i], "--verbose"))
         {
-            LSCompiler::setVerboseLog(true);
+            loom_log_setGlobalLevel(LoomLogDebug);
         }
         else if (!strcmp(argv[i], "--unittest"))
         {
@@ -260,6 +269,17 @@ int main(int argc, const char **argv)
             ::SetCurrentDirectory(argv[i]);
 #endif
         }
+        else if (!strcmp(argv[i], "--config"))
+        {
+            i++;
+            if (i >= argc)
+            {
+                LSError("--config option requires the override configuration to be specified next");
+            }
+
+            lmLog(LSCompiler::compilerLogGroup, "Using config override");
+            LSCompiler::setConfigOverride(argv[i]);
+        }
         else if (!strcmp(argv[i], "--help"))
         {
             printf("--release : build in release mode\n");
@@ -268,6 +288,7 @@ int main(int argc, const char **argv)
             printf("--root: set the SDK root\n");
             printf("--project: set the project folder\n");
             printf("--symbols : dump symbols for binary executable\n");
+            printf("--config : set a custom configuration override\n");
             printf("--help: display this help\n");
         }
         else if (strstr(argv[i], ".build"))
