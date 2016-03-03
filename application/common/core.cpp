@@ -48,6 +48,10 @@ SDL_GLContext gContext;
 
 lmDefineLogGroup(coreLogGroup, "core", 1, LoomLogInfo);
 lmDefineLogGroup(sdlLogGroup, "sdl", 1, LoomLogInfo);
+#define lmLogSDL(level, group, message) lmLogLevel(level, group, "%s", message);
+#define lmLogSDLGroup(loggedLevel, loggedCategory, groupCategory, postfix) \
+    static lmDefineLogGroup(sdl ## _ ## postfix ## LogGroup, "sdl." #postfix, 1, LoomLogInfo); \
+    if (loggedCategory == groupCategory) { logged = true; lmLogSDL(loggedLevel, sdl ## _ ## postfix ## LogGroup, message); } \
 
 static int gLoomExecutionDone = 0;
 
@@ -257,20 +261,19 @@ static void sdlLogOutput(void* userdata, int category, SDL_LogPriority priority,
         case SDL_LOG_PRIORITY_CRITICAL: level = LoomLogError; break;
         default: level = LoomLogInfo;
     }
-    const char *cat;
-    switch (category)
-    {
-        case SDL_LOG_CATEGORY_APPLICATION: cat = "application"; break;
-        case SDL_LOG_CATEGORY_ERROR:       cat = "error"; break;
-        case SDL_LOG_CATEGORY_SYSTEM:      cat = "system"; break;
-        case SDL_LOG_CATEGORY_AUDIO:       cat = "audio"; break;
-        case SDL_LOG_CATEGORY_VIDEO:       cat = "video"; break;
-        case SDL_LOG_CATEGORY_RENDER:      cat = "render"; break;
-        case SDL_LOG_CATEGORY_INPUT:       cat = "input"; break;
-        case SDL_LOG_CATEGORY_CUSTOM:      cat = "custom"; break;
-        default:                           cat = "unknown";
-    }
-    loom_log(&sdlLogGroup, level, "%*ssdl.%s  %s", 10 - (strlen(cat) + 4), " ", cat, message);
+
+    bool logged = false;
+
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_APPLICATION, app);
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_ERROR, error);
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_SYSTEM, system);
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_AUDIO, audio);
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_VIDEO, video);
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_RENDER, render);
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_INPUT, input);
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_CUSTOM, custom);
+
+    if (!logged) lmLogSDL(level, sdlLogGroup, message);
 }
 
 int
@@ -347,25 +350,6 @@ main(int argc, char *argv[])
     SDL_LogSetOutputFunction(sdlLogOutput, NULL);
     
     loom_appInit();
-
-    loom_logLevel_t logLevel =
-        LoomApplicationConfig::logLevel() == "debug" ? LoomLogDebug :
-        LoomApplicationConfig::logLevel() == "verbose" ? LoomLogDebug :
-        LoomApplicationConfig::logLevel() == "info" ? LoomLogInfo :
-        LoomApplicationConfig::logLevel() == "warn" ? LoomLogWarn :
-        LoomApplicationConfig::logLevel() == "warning" ? LoomLogWarn :
-        LoomApplicationConfig::logLevel() == "error" ? LoomLogError :
-        LoomApplicationConfig::logLevel() == "quiet" ? LoomLogMax :
-        LoomApplicationConfig::logLevel() == "none" ? LoomLogMax :
-        LoomApplicationConfig::logLevel() == "default" ? LoomLogDefault :
-        LoomApplicationConfig::logLevel() == "" ? LoomLogDefault :
-        LoomLogInvalid
-    ;
-
-    lmAssert(logLevel != LoomLogInvalid, "Invalid configured log level: %s", LoomApplicationConfig::logLevel().c_str());
-
-    loom_log_setGlobalLevel(logLevel);
-
 
     // Log the Loom build timestamp!
     const char *buildTarget;

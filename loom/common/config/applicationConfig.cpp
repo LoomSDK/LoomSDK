@@ -45,7 +45,6 @@ utString LoomApplicationConfig::_displayTitle = "Loom";
 int      LoomApplicationConfig::_displayWidth = 640;
 int      LoomApplicationConfig::_displayHeight = 480;
 utString LoomApplicationConfig::_displayOrientation = "auto";
-utString LoomApplicationConfig::_logLevel = "default";
 
 // little helpers that do conversion
 static bool _jsonParseBool(const char *key, json_t *value)
@@ -129,11 +128,48 @@ const utString& LoomApplicationConfig::displayOrientation()
     return _displayOrientation;
 }
 
-const utString& LoomApplicationConfig::logLevel()
+static void parseLogBlock(json_t *logBlock, utString name)
 {
-    return _logLevel;
-}
+    json_t *enabled = json_object_get(logBlock, "enabled");
+    json_t *level = json_object_get(logBlock, "level");
 
+    if (enabled || level)
+    {
+        int enabledRule = -1;
+        loom_logLevel_t filterRule = LoomLogInvalid;
+
+        if (enabled) enabledRule = _jsonParseBool((name + " enabled").c_str(), enabled);
+        if (level)
+        {
+            const char *levelName = json_string_value(level);
+            loom_logLevel_t levelEnum = loom_log_parseLevel(levelName);
+            lmAssert(levelEnum != LoomLogInvalid, "Invalid configured log level for %s: %s", name.c_str(), levelName);
+            filterRule = levelEnum;
+        }
+
+        if (name == "")
+        {
+            if (enabledRule == 0) filterRule = LoomLogNone;
+            loom_log_setGlobalLevel(filterRule);
+        }
+        else
+        {
+            loom_log_addRule(name.c_str(), enabledRule, filterRule);
+        }
+        
+    }
+
+    // Walk the children.
+    const char *key;
+    json_t     *value;
+
+    json_object_foreach(logBlock, key, value)
+    {
+        if (strcmp(key, "enabled") == 0 || strcmp(key, "level") == 0) continue;
+
+        parseLogBlock(value, name == "" ? key : name + "." + key);
+    }
+}
 
 // this will always be in assets/loom.config (unless we decide to move it)
 void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
@@ -184,35 +220,7 @@ void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
     // Parse log block.
     if (json_t *logBlock = json_object_get(json, "log"))
     {
-        // Walk the children.
-        const char *key;
-        json_t     *value;
-
-        json_object_foreach(logBlock, key, value)
-        {
-            // Key is the prefix for the rule.
-            // Maybe we have level or enabled data?
-            int enabledRule = -1;
-            int filterRule  = -1;
-
-            if (strcmp(key, "level") == 0) {
-                _logLevel = json_string_value(value);
-                continue;
-            }
-
-            if (json_t *enabledBlock = json_object_get(value, "enabled"))
-            {
-                enabledRule = _jsonParseBool("log.enabled", value);
-            }
-
-            // TODO: Allow info, warn, error as parameters here.
-            if (json_t *levelBlock = json_object_get(value, "level"))
-            {
-                filterRule = (int)json_integer_value(levelBlock);
-            }
-
-            loom_log_addRule(key, enabledRule, filterRule);
-        }
+        parseLogBlock(logBlock, "");
     }
 
     if (json_t *w51a = json_object_get(json, "_wants51Audio"))

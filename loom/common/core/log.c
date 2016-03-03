@@ -52,7 +52,7 @@ typedef struct loom_log_rule
 {
     const char           *groupPrefix;
     int                  enabledRule;
-    int                  filterRule;
+    loom_logLevel_t      filterRule;
     struct loom_log_rule *next;
 } loom_log_rule_t;
 
@@ -179,10 +179,7 @@ void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format,
         return;
     }
 
-    if (level < globalLevel && level < group->filterLevel)
-    {
-        return;
-    }
+    if (level < group->filterLevel) return;
 
     lmLogArgs(args, buff, format);
 
@@ -213,7 +210,7 @@ static void invalidateLogRuleToken()
 }
 
 
-void loom_log_addRule(const char *prefix, int enabled, int filterLevel)
+void loom_log_addRule(const char *prefix, int enabled, loom_logLevel_t filterLevel)
 {
     // Allocate and store the rule.
     loom_log_rule_t *entry = lmAlloc(gLoggerAllocator, sizeof(loom_log_rule_t));
@@ -235,10 +232,26 @@ void loom_log_addRule(const char *prefix, int enabled, int filterLevel)
     invalidateLogRuleToken();
 
     lmLogInfo(gLogLogGroup, "Adding rule '%s' enabled=%d level=%d", prefix, enabled, filterLevel);
-    if ((enabled == -1) && (filterLevel == -1))
+    if ((enabled == -1) && (filterLevel == LoomLogInvalid))
     {
         lmLogError(gLogLogGroup, "Rule '%s' has neither enabled nor filter level set.", prefix);
     }
+}
+
+loom_logLevel_t loom_log_parseLevel(const char *level)
+{
+    return
+        strcmp(level, "debug") == 0 ? LoomLogDebug :
+        strcmp(level, "verbose") == 0 ? LoomLogDebug :
+        strcmp(level, "info") == 0 ? LoomLogInfo :
+        strcmp(level, "warn") == 0 ? LoomLogWarn :
+        strcmp(level, "warning") == 0 ? LoomLogWarn :
+        strcmp(level, "error") == 0 ? LoomLogError :
+        strcmp(level, "quiet") == 0 ? LoomLogNone :
+        strcmp(level, "none") == 0 ? LoomLogNone :
+        strcmp(level, "default") == 0 ? LoomLogDefault :
+        strcmp(level, "") == 0 ? LoomLogDefault :
+        LoomLogInvalid;
 }
 
 
@@ -269,6 +282,7 @@ int loom_log_willGroupLog(loom_logGroup_t *group)
         // Mark it as being up to date right away; this allow us to
         // emit log output on the following line.
         group->ruleCacheToken = gLoomLogInvalidationToken;
+        group->filterLevel = globalLevel;
 
         lmLogInfo(gLogLogGroup, "Applying rules to group %s", group->name);
 
@@ -287,7 +301,7 @@ int loom_log_willGroupLog(loom_logGroup_t *group)
                 {
                     group->enabled = walk->enabledRule;
                 }
-                if (walk->filterRule != -1)
+                if (walk->filterRule != LoomLogInvalid)
                 {
                     group->filterLevel = walk->filterRule;
                 }

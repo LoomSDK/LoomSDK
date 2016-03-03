@@ -64,7 +64,7 @@
 
 using namespace LS;
 
-lmDefineLogGroup(gBox2DLogGroup, "box2d", 1, 0);
+lmDefineLogGroup(gBox2DLogGroup, "box2d", 1, LoomLogDefault);
 
 class BodyDef;
 class b2Body;

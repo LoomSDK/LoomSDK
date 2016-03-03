@@ -84,14 +84,6 @@ char* loom_log_getArgs(va_list args, const char **format);
     va_end(args); \
 
 
-typedef struct loom_logGroup
-{
-    const char *name;
-    int        enabled;
-    int        filterLevel;
-    int        ruleCacheToken;
-} loom_logGroup_t;
-
 typedef enum loom_logLevel
 {
     LoomLogInvalid = -99,
@@ -104,8 +96,17 @@ typedef enum loom_logLevel
 #else
     LoomLogDefault = LoomLogInfo,
 #endif
-    LoomLogMax = LoomLogError
+    LoomLogMax = LoomLogError,
+    LoomLogNone
 } loom_logLevel_t;
+
+typedef struct loom_logGroup
+{
+    const char     *name;
+    int             enabled;
+    loom_logLevel_t filterLevel;
+    int             ruleCacheToken;
+} loom_logGroup_t;
 
 void loom_log_initialize();
 
@@ -113,6 +114,7 @@ typedef void (*loom_logListener_t)(void *payload, loom_logGroup_t *group, loom_l
 void loom_log_addListener(loom_logListener_t listener, void *payload);
 void loom_log_removeListener(loom_logListener_t listener, void *payload);
 
+loom_logLevel_t loom_log_parseLevel(const char *level);
 void loom_log_setGlobalLevel(loom_logLevel_t level);
 loom_logLevel_t loom_log_getGlobalLevel();
 
