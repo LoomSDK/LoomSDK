@@ -59,11 +59,12 @@ extern "C" {
 #define lmDeclareLogGroup(varName)                                  extern loom_logGroup_t varName;
 #define lmDefineLogGroup(varName, groupName, enabled, filterLevel)  loom_logGroup_t varName = { groupName, enabled, filterLevel, 0 };
 
-#define lmLogLevel(level, group, format, ...)                       if (loom_log_willGroupLog(&group)) { loom_log(&group, level, "%10s  " format, group.name, ## __VA_ARGS__); }
-#define lmLogDebug(group, format, ...)                              lmLogLevel(LoomLogDebug, group, format,  __VA_ARGS__);
-#define lmLogInfo(group, format, ...)                               lmLogLevel(LoomLogInfo, group, format,  __VA_ARGS__);
-#define lmLogError(group, format, ...)                              lmLogLevel(LoomLogWarn, group, format,  __VA_ARGS__);
-#define lmLogWarn(group, format, ...)                               lmLogLevel(LoomLogError, group, format,  __VA_ARGS__);
+#define lmLogLevel(level, group, format, ...)                       if (loom_log_willGroupLog(&group)) { \
+                                                                    loom_log(&group, level, "%10s  " format, group.name, ##__VA_ARGS__); }
+#define lmLogDebug(group, format, ...)                              lmLogLevel(LoomLogDebug, group, format, #__VA_ARGS__);
+#define lmLogInfo(group, format, ...)                               lmLogLevel(LoomLogInfo, group, format, #__VA_ARGS__);
+#define lmLogError(group, format, ...)                              lmLogLevel(LoomLogWarn, group, format, #__VA_ARGS__);
+#define lmLogWarn(group, format, ...)                               lmLogLevel(LoomLogError, group, format, #__VA_ARGS__);
 #define lmLog    lmLogInfo // Alias for completeness.
 
 /**

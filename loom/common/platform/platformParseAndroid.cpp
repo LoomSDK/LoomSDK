@@ -31,7 +31,7 @@
 #include "loom/common/platform/platformParse.h"
 #include "loom/vendor/jansson/jansson.h"
 
-lmDefineLogGroup(gAndroidParseLogGroup, "parse", 1, 0);
+lmDefineLogGroup(gAndroidParseLogGroup, "parse", 1, LoomLogDefault);
 
 
 static loomJniMethodInfo gIsActive;

@@ -30,7 +30,7 @@
 #include "loom/common/platform/platformVideo.h"
 #include "loom/vendor/jansson/jansson.h"
 
-lmDefineLogGroup(gAndroidVideoLogGroup, "video", 1, 0);
+lmDefineLogGroup(gAndroidVideoLogGroup, "video", 1, LoomLogDefault);
 
 static VideoEventCallback gEventCallback = NULL;
 
