@@ -179,9 +179,6 @@ void LoomApplication::execMainAssembly()
     //*/
 
 
-    LS::LSFileInitialize(mapScriptFile, unmapScriptFile);
-
-
     //LoomApplicationConfig::parseApplicationConfig(mainAssembly->getLoomConfig());
 
     lmLogDebug(applicationLogGroup, "   o executing %s", bootAssembly.c_str());
@@ -354,6 +351,8 @@ void LoomApplication::ensureInitialAssetSystem()
 
     lmLogDebug(applicationLogGroup, "   o stringtable");
     stringtable_initialize();
+
+    LS::LSFileInitialize(mapScriptFile, unmapScriptFile);
 }
 
 int LoomApplication::initializeCoreServices()

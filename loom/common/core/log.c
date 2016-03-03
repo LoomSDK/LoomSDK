@@ -305,6 +305,8 @@ int loom_log_willGroupLog(loom_logGroup_t *group)
                 {
                     group->filterLevel = walk->filterRule;
                 }
+
+                break;
             }
 
             walk = walk->next;

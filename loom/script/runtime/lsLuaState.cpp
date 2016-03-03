@@ -595,7 +595,7 @@ utByteArray *LSLuaState::openExecutableAssembly(const utString& assemblyName, bo
     long       bufferSize;
     LSMapFile(filePath.c_str(), (void **)&buffer, &bufferSize);
 
-    lmAssert(buffer && bufferSize, "Error loading executable: %s, unable to map file", assemblyName.c_str());
+    lmAssert(buffer && bufferSize, "Error loading executable: %s, unable to map file %s", assemblyName.c_str(), filePath.c_str());
 
     return openExecutableAssemblyBinary(buffer, bufferSize);
 }

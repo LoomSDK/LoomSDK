@@ -226,7 +226,7 @@ int main(int argc, const char **argv)
                 strcmp(argv[i], "runtime") == 0 ? LSLogType::RUNTIME :
                 strcmp(argv[i], "default") == 0 ? (LSLogType)0 :
                 LSLogType::INVALID
-                ;
+            ;
 
             if (type == LSLogType::INVALID)
             {
