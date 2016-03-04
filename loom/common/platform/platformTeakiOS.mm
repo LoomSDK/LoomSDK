@@ -30,7 +30,7 @@ limitations under the License.
 #include "loom/common/core/assert.h"
 #include "loom/vendor/jansson/jansson.h"
 
-lmDefineLogGroup(giOSTeakLogGroup, "loom.teak.ios", 1, LoomLogDefault);
+lmDefineLogGroup(giOSTeakLogGroup, "teak", 1, LoomLogDefault);
 
 
 static AuthStatusCallback gAuthStatusCallback = NULL;

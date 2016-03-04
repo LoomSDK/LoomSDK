@@ -34,7 +34,7 @@ limitations under the License.
 #include "loom/common/core/assert.h"
 #include "loom/vendor/jansson/jansson.h"
 
-lmDefineLogGroup(giOSFacebookLogGroup, "loom.facebook.ios", 1, LoomLogDefault);
+lmDefineLogGroup(giOSFacebookLogGroup, "facebook", 1, LoomLogDefault);
 
 
 

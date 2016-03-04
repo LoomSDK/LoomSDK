@@ -34,7 +34,7 @@ extern "C"
   #include "loom/vendor/jansson/src/jansson_private.h"
 }
 
-lmDefineLogGroup(gAppleStoreLogGroup, "loom.store.apple", 1, LoomLogDefault);
+lmDefineLogGroup(gAppleStoreLogGroup, "applestore", 1, LoomLogDefault);
 
 static StoreEventCallback gEventCallback = NULL;
 

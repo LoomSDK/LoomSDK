@@ -39,8 +39,8 @@ static LSLuaState *execState    = NULL;
 static Assembly   *execAssembly = NULL;
 static utArray<utString> argSwitches;
 
-lmDefineLogGroup(applicationLogGroup, "loom.application", 1, LoomLogInfo);
-lmDefineLogGroup(scriptLogGroup, "loom.script", 1, LoomLogInfo);
+lmDefineLogGroup(applicationLogGroup, "app", 1, LoomLogInfo);
+lmDefineLogGroup(scriptLogGroup, "script", 1, LoomLogInfo);
 
 
 static void initExecState()
