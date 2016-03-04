@@ -90,7 +90,7 @@ int loom_net_initialize()
 
 #else
     // Ignore sigpipe.
-    lmLogInfo(netLogGroup, "Disabling signal SIGPIPE");
+    lmLogDebug(netLogGroup, "Disabling signal SIGPIPE");
     signal(SIGPIPE, SIG_IGN);
     return 1;
 #endif
