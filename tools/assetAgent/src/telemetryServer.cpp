@@ -191,7 +191,7 @@ void TelemetryServer::start()
     // Set /stream as the websocket connection that streams all the ticks
     mg_set_websocket_handler(server, LTS_STREAM_URI, StreamConnectHandler, StreamReadyHandler, StreamDataHandler, StreamCloseHandler, NULL);
 
-    lmLog(gTelemetryServerLogGroup, "Loom Telemetry server running at http://localhost:%s/", mg_get_option(server, "listening_ports"));
+    lmLog(gTelemetryServerLogGroup, "Loom Telemetry interface available at http://localhost:%s/", mg_get_option(server, "listening_ports"));
     lmLog(gTelemetryServerLogGroup, "\tServing client from %s", mg_get_option(server, "document_root"));
 }
 
@@ -202,7 +202,7 @@ void TelemetryServer::stop()
     mg_stop(server);
     server = NULL;
 
-    lmLog(gTelemetryServerLogGroup, "Loom Telemetry server shut down");
+    lmLog(gTelemetryServerLogGroup, "Loom Telemetry shut down");
 }
 
 bool TelemetryServer::isRunning()

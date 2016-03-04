@@ -755,7 +755,7 @@ static void loom_asset_serviceServer()
         if (loom_net_isSocketDead(gAssetServerSocket) == 1)
         {
             // Might be DOA, ie, connect failed.
-            lmLogWarn(gAssetLogGroup, "Failed to connect to asset server %s:%d", ASSET_STREAM_HOST, ASSET_STREAM_PORT);
+            lmLogError(gAssetLogGroup, "Failed to connect to asset server %s:%d", ASSET_STREAM_HOST, ASSET_STREAM_PORT);
 
             loom_net_closeTCPSocket(gAssetServerSocket);
 
@@ -1072,7 +1072,7 @@ void *loom_asset_lock(const char *name, unsigned int type, int block)
 
         if (asset->state != loom_asset_t::Loaded)
         {
-            lmLogError(gAssetLogGroup, "Load failed for '%s'!", name);
+            lmLogError(gAssetLogGroup, "Failed to load asset '%s'!", name);
             loom_mutex_unlock(gAssetLock);
             return NULL;
         }

@@ -341,7 +341,7 @@ void Graphics::handleContextLoss()
 void Graphics::screenshot(const char *path)
 {
     if (strlen(path) > 1023) {
-        lmLog(gGFXLogGroup, "Screenshot path too long! Screenshot path must be 1023 characters or fewer");
+        lmLogError(gGFXLogGroup, "Screenshot path too long! Screenshot path must be 1023 characters or fewer");
         return;
     }
     strcpy(pendingScreenshot, path);

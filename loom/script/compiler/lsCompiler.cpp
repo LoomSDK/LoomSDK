@@ -672,7 +672,7 @@ void LSCompiler::linkRootAssembly(const utString& sjson)
     // generate binary assembly for executable
     BinWriter::writeExecutable(execSource.c_str(), json);
 
-    log("Compile Successful: %s\n", execSource.c_str());
+    log("Compile successful: %s", execSource.c_str());
 }
 
 

@@ -157,30 +157,25 @@ void LoomApplication::initMainAssembly()
     lmAssert(!rootVM, "VM already running");
     rootVM = lmNew(NULL) LSLuaState();
 
+    // Ensure we can load binaries through the asset system
     ensureInitialAssetSystem();
 
-    //*
+    // Open main assembly header and load the application config from it
     initBytes = rootVM->openExecutableAssembly(bootAssembly);
     rootVM->readExecutableAssemblyBinaryHeader(initBytes);
     Assembly *assembly = BinReader::loadMainAssemblyHeader();
     LoomApplicationConfig::parseApplicationConfig(assembly->getLoomConfig());
-    //*/
 }
 
 void LoomApplication::execMainAssembly()
 {
     rootVM->open();
 
-    //Assembly *mainAssembly = rootVM->loadExecutableAssembly(bootAssembly);
-    ///*
+    // Read the rest of the assembly - the body
     Assembly *mainAssembly = rootVM->readExecutableAssemblyBinaryBody();
     rootVM->closeExecutableAssembly(bootAssembly, false, initBytes);
     initBytes = NULL;
-    //*/
-
-
-    //LoomApplicationConfig::parseApplicationConfig(mainAssembly->getLoomConfig());
-
+    
     lmLogDebug(applicationLogGroup, "   o executing %s", bootAssembly.c_str());
 
     Loom2D::Stage::updateFromConfig();

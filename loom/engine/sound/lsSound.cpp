@@ -87,7 +87,7 @@ extern "C"
         alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
         CHECK_OPENAL_ERROR();
 
-        lmLogDebug(gLoomSoundLogGroup, "Initialized sound '%s'", alcGetString(dev, ALC_ALL_DEVICES_SPECIFIER));
+        lmLogDebug(gLoomSoundLogGroup, "Initialized sound device '%s'", alcGetString(dev, ALC_ALL_DEVICES_SPECIFIER));
     }
 
     void loomsound_shutdown()

@@ -28,7 +28,7 @@
 #include "loom/script/native/lsNativeDelegate.h"
 
 
-lmDefineLogGroup(gNativeDelegateGroup, "script.ntv", 1, LoomLogInfo);
+lmDefineLogGroup(gNativeDelegateGroup, "delegate", 1, LoomLogInfo);
 
 
 namespace LS {
@@ -387,7 +387,7 @@ NativeDelegate::NativeDelegate()
 
 void NativeDelegate::disallowAsync()
 {
-    lmLogDebug(gNativeDelegateGroup, "SETTING ASYNC OFF %x", this);
+    lmLogDebug(gNativeDelegateGroup, "Setting async off %x", this);
     _allowAsync = false;
 }
 

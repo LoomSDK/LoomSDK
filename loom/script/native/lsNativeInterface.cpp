@@ -26,7 +26,7 @@
 #include "loom/script/reflection/lsPropertyInfo.h"
 #include "loom/common/core/allocator.h"
 
-lmDefineLogGroup(nativeInterfaceLogGroup, "script.itf", 1, LoomLogInfo);
+lmDefineLogGroup(nativeInterfaceLogGroup, "interface", 1, LoomLogInfo);
 
 namespace LS {
 utHashTable<utPointerHashKey, NativeTypeBase *> NativeInterface::nativeTypes;
