@@ -141,9 +141,19 @@ static void parseLogBlock(json_t *logBlock, utString name)
         if (enabled) enabledRule = _jsonParseBool((name + " enabled").c_str(), enabled);
         if (level)
         {
-            const char *levelName = json_string_value(level);
-            loom_logLevel_t levelEnum = loom_log_parseLevel(levelName);
-            lmAssert(levelEnum != LoomLogInvalid, "Invalid configured log level for %s: %s", name.c_str(), levelName);
+            loom_logLevel_t levelEnum = LoomLogInvalid;
+            if (json_is_integer(level)) {
+                levelEnum = (loom_logLevel_t)json_integer_value(level);
+            }
+            else if (json_is_string(level))
+            {
+                const char *levelName = json_string_value(level);
+                levelEnum = loom_log_parseLevel(levelName);
+                lmAssert(levelEnum != LoomLogInvalid, "Invalid configured log level for %s: %s", name.c_str(), levelName);
+            }
+
+            lmAssert(levelEnum != LoomLogInvalid, "Invalid configured log level for %s: %s", name.c_str(), json_dumps(level, JSON_COMPACT));
+            
             filterRule = levelEnum;
         }
 

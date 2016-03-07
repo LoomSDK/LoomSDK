@@ -29,8 +29,9 @@ utString humanFileSize(long bytes)
     static const char *postfixes[] = {
         "bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"
     };
-    long power = 0;
+    long power = -1;
     for (long pbytes = bytes; pbytes; pbytes >>= 1, power++) {}
+    if (power < 0) power = 0;
     long mag = power / 10;
     const int postfixLast = (sizeof(postfixes) / sizeof(postfixes[0])) - 1;
     if (mag > postfixLast) mag = postfixLast;
