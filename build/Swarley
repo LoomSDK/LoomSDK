@@ -32,15 +32,15 @@ namespace :package do
     cp_r_safe("artifacts/osx-x64/", "pkg/sdk/bin")
 
     # Strip out the bundled assets and binaries
-    if Dir.exists? "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources"
-      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/assets"
-      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/bin"
-      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/libs"
+    if Dir.exists? "pkg/sdk/bin/osx-x86/LoomPlayer.app/Contents/Resources"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomPlayer.app/Contents/Resources/assets"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomPlayer.app/Contents/Resources/bin"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomPlayer.app/Contents/Resources/libs"
     end
-    if Dir.exists? "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources"
-      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/assets"
-      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/bin"
-      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/libs"
+    if Dir.exists? "pkg/sdk/bin/osx-x64/LoomPlayer.app/Contents/Resources"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomPlayer.app/Contents/Resources/assets"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomPlayer.app/Contents/Resources/bin"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomPlayer.app/Contents/Resources/libs"
     end
 
     # min cli version
@@ -51,14 +51,14 @@ namespace :package do
 
     # ios
     cp_r_safe("artifacts/ios-arm/fruitstrap", "pkg/sdk/bin/ios-arm/tools")
-    cp_r_safe("artifacts/ios-arm/LoomDemo.app", "pkg/sdk/bin/ios-arm/bin")
-    cp_r_safe("artifacts/ios-arm/LoomDemo.app.dSYM", "pkg/sdk/bin/ios-arm/bin")
+    cp_r_safe("artifacts/ios-arm/LoomPlayer.app", "pkg/sdk/bin/ios-arm/bin")
+    cp_r_safe("artifacts/ios-arm/LoomPlayer.app.dSYM", "pkg/sdk/bin/ios-arm/bin")
 
     # Strip out the bundled assets and binaries
-    if Dir.exists? "pkg/sdk/bin/ios-arm/bin/LoomDemo.app"
-      FileUtils.rm_rf "pkg/sdk/bin/ios-arm/bin/LoomDemo.app/assets"
-      FileUtils.rm_rf "pkg/sdk/bin/ios-arm/bin/LoomDemo.app/bin"
-      FileUtils.rm_rf "pkg/sdk/bin/ios-arm/bin/LoomDemo.app/libs"
+    if Dir.exists? "pkg/sdk/bin/ios-arm/bin/LoomPlayer.app"
+      FileUtils.rm_rf "pkg/sdk/bin/ios-arm/bin/LoomPlayer.app/assets"
+      FileUtils.rm_rf "pkg/sdk/bin/ios-arm/bin/LoomPlayer.app/bin"
+      FileUtils.rm_rf "pkg/sdk/bin/ios-arm/bin/LoomPlayer.app/libs"
     end
 
     #android
@@ -66,7 +66,7 @@ namespace :package do
 
     # decompile the android apk
     FileUtils.mkdir_p "pkg/sdk/bin/android-arm/bin"
-    decompile_apk("artifacts/android-arm/LoomDemo.apk","pkg/sdk/bin/android-arm/bin")
+    decompile_apk("artifacts/android-arm/LoomPlayer.apk","pkg/sdk/bin/android-arm/bin")
 
     # Strip out the bundled assets and binaries
     if Dir.exists? "pkg/sdk/bin/android-arm/bin/assets"
@@ -116,15 +116,15 @@ namespace :package do
     cp_r_safe("artifacts/osx-x64/", "pkg/sdk/bin")
 
     # Strip out the bundled assets and binaries
-    if Dir.exists? "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources"
-      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/assets"
-      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/bin"
-      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomDemo.app/Contents/Resources/libs"
+    if Dir.exists? "pkg/sdk/bin/osx-x86/LoomPlayer.app/Contents/Resources"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomPlayer.app/Contents/Resources/assets"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomPlayer.app/Contents/Resources/bin"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x86/LoomPlayer.app/Contents/Resources/libs"
     end
-    if Dir.exists? "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources"
-      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/assets"
-      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/bin"
-      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomDemo.app/Contents/Resources/libs"
+    if Dir.exists? "pkg/sdk/bin/osx-x64/LoomPlayer.app/Contents/Resources"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomPlayer.app/Contents/Resources/assets"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomPlayer.app/Contents/Resources/bin"
+      FileUtils.rm_rf "pkg/sdk/bin/osx-x64/LoomPlayer.app/Contents/Resources/libs"
     end
 
     # min cli version
@@ -154,7 +154,7 @@ namespace :package do
 
     FileUtils.rm_rf "nativesdk.zip"
 
-    omit_files = %w[ examples.zip loomsdk.zip certs/LoomDemoBuild.mobileprovision loom/vendor/telemetry-01052012 pkg/ artifacts/ docs/output build/ ]
+    omit_files = %w[ examples.zip loomsdk.zip certs/LoomPlayerBuild.mobileprovision loom/vendor/telemetry-01052012 pkg/ artifacts/ docs/output build/ ]
 
     Zip::File.open("nativesdk.zip", 'w') do |zipfile|
       Dir["**/**"].each do |file|

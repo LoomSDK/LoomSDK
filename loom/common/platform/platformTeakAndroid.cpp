@@ -40,7 +40,7 @@ static AuthStatusCallback gAuthStatusCallback = NULL;
 
 extern "C"
 {
-    void Java_co_theengine_loomdemo_LoomTeak_authStatusCallback(JNIEnv* env, jobject thiz, jint authStatus)
+    void Java_co_theengine_loomplayer_LoomTeak_authStatusCallback(JNIEnv* env, jobject thiz, jint authStatus)
     {
         if (gAuthStatusCallback)
         {
@@ -68,31 +68,31 @@ void platform_teakInitialize(AuthStatusCallback authStatusCB)
  
     // Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gIsActive,
-                                    "co/theengine/loomdemo/LoomTeak",
+                                    "co/theengine/loomplayer/LoomTeak",
                                     "isActive",
                                     "()Z");
     LoomJni::getStaticMethodInfo(gSetAccessToken,
-                                    "co/theengine/loomdemo/LoomTeak",
+                                    "co/theengine/loomplayer/LoomTeak",
                                     "setAccessToken",
                                     "(Ljava/lang/String;)V");
     LoomJni::getStaticMethodInfo(gGetStatus,
-                                    "co/theengine/loomdemo/LoomTeak",
+                                    "co/theengine/loomplayer/LoomTeak",
                                     "getStatus",
                                     "()I");
     LoomJni::getStaticMethodInfo(gPostAchievement,
-                                    "co/theengine/loomdemo/LoomTeak",
+                                    "co/theengine/loomplayer/LoomTeak",
                                     "postAchievement",
                                     "(Ljava/lang/String;)Z");
     LoomJni::getStaticMethodInfo(gPostHighScore,
-                                    "co/theengine/loomdemo/LoomTeak",
+                                    "co/theengine/loomplayer/LoomTeak",
                                     "postHighScore",
                                     "(I)Z");
     LoomJni::getStaticMethodInfo(gPostAction,
-                                    "co/theengine/loomdemo/LoomTeak",
+                                    "co/theengine/loomplayer/LoomTeak",
                                     "postAction",
                                     "(Ljava/lang/String;Ljava/lang/String;)Z");
     LoomJni::getStaticMethodInfo(gPostActionWithProperties,
-                                    "co/theengine/loomdemo/LoomTeak",
+                                    "co/theengine/loomplayer/LoomTeak",
                                     "postActionWithProperties",
                                     "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
 }

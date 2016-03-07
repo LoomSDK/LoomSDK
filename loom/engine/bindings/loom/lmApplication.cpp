@@ -473,7 +473,7 @@ void LoomApplication::fireGenericEvent(const char *type, const char *payload)
     
     loomJniMethodInfo eventCallback;
     LoomJni::getStaticMethodInfo(eventCallback,
-        "co/theengine/loomdemo/LoomDemo",
+        "co/theengine/loomplayer/LoomPlayer",
         "handleGenericEvent",
         "(Ljava/lang/String;Ljava/lang/String;)V");
     JNIEnv *env = eventCallback.getEnv();
@@ -494,7 +494,7 @@ void LoomApplication::fireGenericEvent(const char *type, const char *payload)
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
 extern "C"
 {
-void Java_co_theengine_loomdemo_LoomDemo_internalTriggerGenericEvent(JNIEnv *env, jobject thiz, jstring type, jstring payload)
+void Java_co_theengine_loomplayer_LoomPlayer_internalTriggerGenericEvent(JNIEnv *env, jobject thiz, jstring type, jstring payload)
 {
     const char *typeString    = env->GetStringUTFChars(type, 0);
     const char *payloadString = env->GetStringUTFChars(payload, 0);

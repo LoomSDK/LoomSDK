@@ -88,11 +88,11 @@ $LOOMEXEC_BINARY = "#{$HOST_ARTIFACTS}/tools/loomexec"
 $BUILD_TYPE = CFG[:BUILD_TARGET].to_sym
 
 if $HOST.name == 'windows'
-  $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomDemo.exe"
+  $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomPlayer.exe"
 elsif $HOST.name == 'osx'
-  $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomDemo.app/Contents/MacOS/LoomDemo"
+  $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomPlayer.app/Contents/MacOS/LoomPlayer"
 else
-  $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomDemo"
+  $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomPlayer"
 end
 
 # Per-architecture properties
@@ -316,7 +316,7 @@ namespace :utility do
     end
   end
 
-  desc "Run the LoomDemo in artifacts"
+  desc "Run the LoomPlayer in artifacts"
   task :run => "build:desktop" do
     puts "===== Launching Application ====="
 
@@ -478,13 +478,13 @@ namespace :build do
   task :ios, [:sign_as] => ['utility:compileScripts', 'build:fruitstrap'] do |t, args|
 
     sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/fruitstrap"
-    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app"
-    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/assets"
-    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/assets/tmp"
-    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/bin"
-    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/bin/tmp"
-    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/lib"
-    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/lib/tmp"
+    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app"
+    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app/assets"
+    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app/assets/tmp"
+    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app/bin"
+    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app/bin/tmp"
+    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app/lib"
+    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app/lib/tmp"
 
     
     # iOS build is currently not supported under Windows
@@ -635,7 +635,7 @@ namespace :build do
     end
 
     Dir.chdir("application/android") do
-      sh "android update project --name LoomDemo --subprojects --target #{api_id} --path ."
+      sh "android update project --name LoomPlayer --subprojects --target #{api_id} --path ."
     end
 
     FileUtils.mkdir_p "application/android/assets"
@@ -657,7 +657,7 @@ namespace :build do
 
     # Copy APKs to artifacts.
     FileUtils.mkdir_p "artifacts/android-arm"
-    FileUtils.cp_r("application/android/bin/#{AndroidToolchain::apkName}", "#{$OUTPUT_DIRECTORY}/android-arm/LoomDemo.apk")
+    FileUtils.cp_r("application/android/bin/#{AndroidToolchain::apkName}", "#{$OUTPUT_DIRECTORY}/android-arm/LoomPlayer.apk")
     FileUtils.cp_r("tools/apktool/apktool.jar", "#{$OUTPUT_DIRECTORY}/android-arm")
   end
 

@@ -37,7 +37,7 @@ static VideoEventCallback gEventCallback = NULL;
 
 extern "C"
 {
-void Java_co_theengine_loomdemo_LoomVideo_nativeCallback(JNIEnv *env, jobject thiz, jint callbackType, jstring data)
+void Java_co_theengine_loomplayer_LoomVideo_nativeCallback(JNIEnv *env, jobject thiz, jint callbackType, jstring data)
 {
     lmLogDebug(gAndroidVideoLogGroup, "LoomVideo Android Callback fired! %d", callbackType);
 
@@ -90,7 +90,7 @@ void platform_videoInitialize(VideoEventCallback eventCallback)
 
     // Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gPlayVideoFullscreen,
-                                 "co/theengine/loomdemo/LoomVideo",
+                                 "co/theengine/loomplayer/LoomVideo",
                                  "playFullscreen",
                                  "(Ljava/lang/String;III)V");
 }

@@ -35,7 +35,7 @@ display_profile display_getProfile()
     loomJniMethodInfo t;
 
     if (LoomJni::getStaticMethodInfo(t
-        , "co/theengine/loomdemo/LoomDemo"
+        , "co/theengine/loomplayer/LoomPlayer"
         , "getProfile"
         , "()I"))
     {
@@ -64,7 +64,7 @@ float display_getDPI()
     loomJniMethodInfo t;
 
     if (LoomJni::getStaticMethodInfo(t
-        , "co/theengine/loomdemo/LoomDemo"
+        , "co/theengine/loomplayer/LoomPlayer"
         , "getDPI"
         , "()F"))
     {

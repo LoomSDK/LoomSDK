@@ -257,7 +257,7 @@ elseif(MSVC)
      
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${DEMOBIN}\" \"${ARTIFACTS_DIR}/bin/LoomDemo.exe\"
+        COMMAND echo f | xcopy /F /Y \"${DEMOBIN}\" \"${ARTIFACTS_DIR}/bin/LoomPlayer.exe\"
     )
     
     
@@ -292,7 +292,7 @@ elseif(LINUX)
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
         COMMAND mkdir -p ${ARTIFACTS_DIR}/
-        COMMAND cp ${DEMOBIN} ${ARTIFACTS_DIR}/bin/LoomDemo
+        COMMAND cp ${DEMOBIN} ${ARTIFACTS_DIR}/bin/LoomPlayer
     )
 
 endif()

@@ -484,7 +484,7 @@ extern "C" {
     extern void SDL_Android_Init(JNIEnv* env, jclass cls);
     void loom_setAssetManager(AAssetManager *am);
 
-    void Java_co_theengine_loomdemo_LoomDemo_nativeSetOrientation(JNIEnv* env, jobject thiz, jstring orientation)
+    void Java_co_theengine_loomplayer_LoomPlayer_nativeSetOrientation(JNIEnv* env, jobject thiz, jstring orientation)
     {
         if (Loom2D::Stage::smMainStage == NULL) return;
         const char *str = env->GetStringUTFChars(orientation, NULL);
@@ -492,7 +492,7 @@ extern "C" {
         env->ReleaseStringUTFChars(orientation, str);
     }
 
-    void Java_co_theengine_loomdemo_LoomDemo_nativeSetPaths(JNIEnv* env, jobject thiz, jstring apkPath, jobject am)
+    void Java_co_theengine_loomplayer_LoomPlayer_nativeSetPaths(JNIEnv* env, jobject thiz, jstring apkPath, jobject am)
     {
         const char *str = env->GetStringUTFChars(apkPath, NULL);
         //cocos2d::CCFileUtils::sharedFileUtils()->setResourcePath(str);

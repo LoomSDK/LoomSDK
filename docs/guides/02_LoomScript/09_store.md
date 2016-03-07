@@ -32,10 +32,10 @@ Second, you need to request product information. This is localized, up to date p
 
 ~~~as3
 Store.listProducts([
-   "co.theengine.loomdemo.billing.managedproduct", 
-   "co.theengine.loomdemo.billing.unmanaged",
-   "co.theengine.loomdemo.billing.subscription"
-   "co.theengine.loomdemo.billing.testconsumable",
+   "co.theengine.loomplayer.billing.managedproduct", 
+   "co.theengine.loomplayer.billing.unmanaged",
+   "co.theengine.loomplayer.billing.subscription"
+   "co.theengine.loomplayer.billing.testconsumable",
    ], onCompleteList);
 ~~~
 
@@ -46,7 +46,7 @@ Once you have product information, you can populate your store UI with prices, t
 Third, you will want to trigger purchases for the user when they click on buy buttons or otherwise indicate they wish to purchase. Store interactions use a native UI, so all that happens is you trigger a purchase then wait to know when the UI is gone, and then for a transaction to come through. Requesting a purchase looks like this:
 
 ~~~as3
-Store.requestPurchase("co.theengine.loomdemo.billing.testconsumable", onPurchaseUIComplete);
+Store.requestPurchase("co.theengine.loomplayer.billing.testconsumable", onPurchaseUIComplete);
 ~~~
 
 You will receive two callbacks (assuming a successful purchase) - `onPurchaseUIComplete` will be called when the purchase UI goes away, and later, `Store.onTransaction` will be fired with a new instance of `Loom.Store.Transaction` containing details on the successful transaction, including the product ID purchased.

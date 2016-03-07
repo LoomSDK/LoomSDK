@@ -41,7 +41,7 @@ static FrictionlessRequestCallback gFrictionlessRequestCallback = NULL;
 
 extern "C"
 {
-    void Java_co_theengine_loomdemo_LoomFacebook_sessionStatusCallback(JNIEnv* env, jobject thiz, jint sessonState, jstring sessionPermissions, jint errorCode)
+    void Java_co_theengine_loomplayer_LoomFacebook_sessionStatusCallback(JNIEnv* env, jobject thiz, jint sessonState, jstring sessionPermissions, jint errorCode)
     {
         const char *sessionPermissionsString = env->GetStringUTFChars(sessionPermissions, 0);
         if (gSessionStatusCallback)
@@ -51,7 +51,7 @@ extern "C"
         env->ReleaseStringUTFChars(sessionPermissions, sessionPermissionsString);
     }
     
-    void Java_co_theengine_loomdemo_LoomFacebook_frictionlessRequestCallback(JNIEnv* env, jobject thiz, jboolean jSuccess)
+    void Java_co_theengine_loomplayer_LoomFacebook_frictionlessRequestCallback(JNIEnv* env, jobject thiz, jboolean jSuccess)
     {
         if (gFrictionlessRequestCallback)
         {
@@ -81,35 +81,35 @@ void platform_facebookInitialize(SessionStatusCallback sessionStatusCB, Friction
  
     // Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gIsActive,
-                                    "co/theengine/loomdemo/LoomFacebook",
+                                    "co/theengine/loomplayer/LoomFacebook",
                                     "isActive",
                                     "()Z");
     LoomJni::getStaticMethodInfo(gOpenSessionReadPermissions,
-                                    "co/theengine/loomdemo/LoomFacebook",
+                                    "co/theengine/loomplayer/LoomFacebook",
                                     "openSessionWithReadPermissions",
                                     "(Ljava/lang/String;)Z");
     LoomJni::getStaticMethodInfo(gRequestNewPublishPermissions,
-                                    "co/theengine/loomdemo/LoomFacebook",
+                                    "co/theengine/loomplayer/LoomFacebook",
                                     "requestNewPublishPermissions",
                                     "(Ljava/lang/String;)Z");
     LoomJni::getStaticMethodInfo(gFrictionlessRequestDialog,
-                                    "co/theengine/loomdemo/LoomFacebook",
+                                    "co/theengine/loomplayer/LoomFacebook",
                                     "showFrictionlessRequestDialog",
                                     "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     LoomJni::getStaticMethodInfo(gGetAccessToken,
-                                    "co/theengine/loomdemo/LoomFacebook",
+                                    "co/theengine/loomplayer/LoomFacebook",
                                     "getAccessToken",
                                     "()Ljava/lang/String;");
     LoomJni::getStaticMethodInfo(gCloseTokenInfo,
-                                 "co/theengine/loomdemo/LoomFacebook",
+                                 "co/theengine/loomplayer/LoomFacebook",
                                  "closeAndClearTokenInformation",
                                  "()V");    
     LoomJni::getStaticMethodInfo(gGetExpirationDate,
-                                    "co/theengine/loomdemo/LoomFacebook",
+                                    "co/theengine/loomplayer/LoomFacebook",
                                     "getExpirationDate",
                                     "(Ljava/lang/String;)Ljava/lang/String;");
 	LoomJni::getStaticMethodInfo(gIsPermissionGranted,
-                                    "co/theengine/loomdemo/LoomFacebook",
+                                    "co/theengine/loomplayer/LoomFacebook",
                                     "isPermissionGranted",
                                     "(Ljava/lang/String;)Z");
 }

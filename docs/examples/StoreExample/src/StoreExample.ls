@@ -119,10 +119,10 @@ package
             trace("Requesting product information...");
             label.text = "Loading Products!";
             Store.listProducts([
-                    "co.theengine.loomdemo.billing.managedproduct", 
-                    "co.theengine.loomdemo.billing.unmanaged",
-                    "co.theengine.loomdemo.billing.subscription",
-                    "co.theengine.loomdemo.billing.testconsumable",
+                    "co.theengine.loomplayer.billing.managedproduct", 
+                    "co.theengine.loomplayer.billing.unmanaged",
+                    "co.theengine.loomplayer.billing.subscription",
+                    "co.theengine.loomplayer.billing.testconsumable",
                     ], onCompleteList);
 
             // Great - we'll get called back when the product listing operation
@@ -138,7 +138,7 @@ package
 
             // Request a purchase.
             trace("Initiating purchase...");
-            Store.requestPurchase("co.theengine.loomdemo.billing.testconsumable", onPurchaseUIComplete);
+            Store.requestPurchase("co.theengine.loomplayer.billing.testconsumable", onPurchaseUIComplete);
         }
 
         /// Called when the purchse UI is gone; note it could be arbitrarily 
