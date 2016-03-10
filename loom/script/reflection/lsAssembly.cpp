@@ -162,7 +162,7 @@ int Assembly::load(lua_State *L) {
     const char *path = lua_tostring(L, 1);
     lua_pop(L, 1);
 
-    Assembly *assembly = LSLuaState::getExecutingVM(L)->loadExecutableAssembly(path, true);
+    Assembly *assembly = LSLuaState::getExecutingVM(L)->loadExecutableAssembly(path);
 
     lmAssert(assembly, "Error loading assembly bytes");
 

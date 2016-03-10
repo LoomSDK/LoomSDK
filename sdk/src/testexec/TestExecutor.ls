@@ -17,8 +17,6 @@ package
      */
     public class TestExecutor
     {
-        public var argOffset:int;
-        
         private function getReferencedAssembly(asm:Assembly, name:String):Assembly
         {
             for (var i = 0; i < asm.getReferenceCount(); i++)
@@ -41,6 +39,8 @@ package
         [UnitTestHideCall]
         public function run():void
         {
+            var argOffset = 0;
+            
             Debug.assert(CommandLine.getArgCount() > argOffset, "Assembly file argument missing:\n" + getArguments());
 
             var asmFile = CommandLine.getArg(argOffset);
@@ -58,7 +58,7 @@ package
             Debug.assert(asm != null, "Unable to load assembly");
 
             var unittestasm1 = getReferencedAssembly(asm, "UnitTest");
-            Debug.assert(unittestasm1 != null, "Unable to get referenced assembly 'UnitTest' from loaded assembly");
+            Debug.assert(unittestasm1 != null, "Unable to get referenced assembly 'UnitTest' from loaded assembly. Do you use any unit test functionality?");
             var unittestasm2 = getReferencedAssembly(this.getType().getAssembly(), "UnitTest");
             Debug.assert(unittestasm2 != null, "Unable to get referenced assembly 'UnitTest' from executing assembly");
 

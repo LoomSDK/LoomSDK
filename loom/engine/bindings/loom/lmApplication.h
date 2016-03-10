@@ -119,9 +119,13 @@ public:
     static void _reloadMainAssembly();
     static void reloadAssets();
 
-    static void setBootAssembly(const utString& assemblyName)
+    static void setBootAssembly(const utString& assemblyPath)
     {
-        bootAssembly = assemblyName;
+        if (assemblyPath.startsWith("./") || assemblyPath.startsWith(".\\")) {
+            bootAssembly = assemblyPath.substr(2);
+        } else {
+            bootAssembly = assemblyPath;
+        }
     }
 
     static const char *getBootAssembly()

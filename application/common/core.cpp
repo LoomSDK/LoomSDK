@@ -34,6 +34,8 @@
 
 #include <SDL.h>
 
+#include "optionparser/optionparser.h"
+
 extern "C"
 {
     void loom_appInit();
@@ -276,6 +278,34 @@ static void sdlLogOutput(void* userdata, int category, SDL_LogPriority priority,
     if (!logged) lmLogSDL(level, sdlLogGroup, message);
 }
 
+enum  optionIndex { UNKNOWN, HELP, FROM_RUBY };
+const option::Descriptor usage[] =
+{
+    { UNKNOWN,   0,"" , ""         , option::Arg::None, "USAGE: LoomPlayer [options] [loom-file-or-project-dir] [app-arguments]\n\n"
+                                                  "Options:" },
+    { HELP,      0, "", "help",      option::Arg::None, "  --help  \tPrint usage and exit" },
+    { FROM_RUBY, 0, "", "from-ruby", option::Arg::None, "  --from-ruby  \tDefined when running from the Ruby agent" },
+    { UNKNOWN,   0, "" , ""        , option::Arg::None, "\nExamples:\n"
+                                               "  LoomPlayer  \tLaunches project in the working directory\n"
+                                               "  LoomPlayer .  \tSame as above\n"
+                                               "  LoomPlayer path/to/project/dir/  \tLaunches project located in path/to/project/dir/\n"
+                                               "  LoomPlayer path/to/assembly/Main.loom  \tLaunches the specified .loom assembly\n"
+    },
+    { 0,0,0,0,0,0 }
+};
+
+static void printOption(const char *msg, int size)
+{
+    platform_error("%.*s", size, msg);
+}
+
+static void printUsage()
+{
+    option::printUsage(printOption, usage);
+}
+
+#define usageError(format, ...) { platform_error("Error: " format "\n\n", ##__VA_ARGS__); printUsage(); return 1; }
+
 int
 main(int argc, char *argv[])
 {
@@ -290,38 +320,53 @@ main(int argc, char *argv[])
     _CrtSetDbgFlag(tmpFlag);
 #endif
 
+
 #ifdef WIN32
     // When on windows, do some workarounds so our console window
     // behaves properly.
-    
+
     // put the program name into argv[0]
     char filename[_MAX_PATH];
     GetModuleFileNameA(NULL, filename, _MAX_PATH);
     argv[0] = filename;
+#endif
 
-    bool fromRuby = false;
 
-    for (int i = 1; i < argc; i++)
-    {
-        if (!stricmp(argv[i], "ProcessID") && i + 1 < argc)
-        {
-            fromRuby = true;
+    argc -= (argc>0); argv += (argc>0); // skip program name argv[0] if present
+    option::Stats  stats(usage, argc, argv);
 
-            char *pEnd;  
+    option::Option* options = (option::Option*)calloc(stats.options_max, sizeof(option::Option));
+    option::Option* buffer = (option::Option*)calloc(stats.buffer_max, sizeof(option::Option));
 
-            long int pid = strtol (argv[i + 1], &pEnd, 10);
+    option::Parser parse(usage, argc, argv, options, buffer);
 
-            LS::Process::rubyProcessId = pid;
+    if (parse.error()) usageError("Error parsing arguments");
 
-            memmove(argv + i, argv + i + 2, (argc - i - 2)*sizeof(char*));
-            argc -= 2;
-            i--;
-            break;
-        }
+    if (options[HELP]) {
+        printUsage();
+        return 0;
     }
 
+    for (option::Option* opt = options[UNKNOWN]; opt; opt = opt->next())
+        platform_debugOut("Unknown option: %s", opt->name);
+
+    int coreOptions = 0;
+
+    utString assemblyPath = ".";
+
+    if (parse.nonOptionsCount() > 0) {
+        assemblyPath = parse.nonOption(0);
+    }
+    if (!assemblyPath.endsWith(".loom")) assemblyPath += "/bin/Main.loom";
+    if (!platform_mapFileExists(assemblyPath.c_str())) usageError("Invalid path to Loom assembly (.loom): %s", assemblyPath.c_str());
+    LoomApplication::setBootAssembly(assemblyPath);
+    coreOptions++;
+
+#ifdef WIN32
+    
     LS::Process::consoleAttached = false;
-    if (!fromRuby && AttachConsole(ATTACH_PARENT_PROCESS))
+
+    if (!options[FROM_RUBY] && AttachConsole(ATTACH_PARENT_PROCESS))
     {
         HANDLE consoleHandleOut = GetStdHandle(STD_OUTPUT_HANDLE);
         int fdOut = _open_osfhandle((intptr_t)consoleHandleOut, _O_TEXT);
@@ -343,7 +388,7 @@ main(int argc, char *argv[])
     // Initialize logging.
     loom_log_initialize();
 
-    LSLuaState::initCommandLine(argc, (const char**) argv);
+    LSLuaState::initCommandLine(parse.nonOptionsCount() - coreOptions, parse.nonOptions() + coreOptions);
 
     /* Enable standard application logging */
     SDL_LogSetAllPriority(SDL_LOG_PRIORITY_INFO);

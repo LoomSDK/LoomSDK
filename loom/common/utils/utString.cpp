@@ -213,6 +213,23 @@ utString::size_type utString::find(char c, size_type start)
     return npos;
 }
 
+bool utString::startsWith(const char *prefix) const
+{
+    if (empty() || !prefix || *prefix == '\0') return false;
+    size_t len = length();
+    size_t lenPrefix = strlen(prefix);
+    return strncmp(p, prefix, utMin(len, lenPrefix)) == 0;
+}
+
+bool utString::endsWith(const char *suffix) const
+{
+    if (empty() || !suffix || *suffix == '\0') return false;
+    size_t len = length();
+    size_t lenSuffix = strlen(suffix);
+    if (lenSuffix >  len) return false;
+    return strncmp(p + len - lenSuffix, suffix, lenSuffix) == 0;
+}
+
 
 utString::size_type utString::length() const
 {

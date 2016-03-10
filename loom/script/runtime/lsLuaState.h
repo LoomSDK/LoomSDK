@@ -181,10 +181,10 @@ public:
     /*
      * Loads an Executable Binary assembly into the VM, once loaded the assembly may be executed
      */
-    Assembly *loadExecutableAssembly(const utString& assemblyName, bool absPath = false);
+    Assembly *loadExecutableAssembly(const utString& filePath);
 
-    utByteArray *openExecutableAssembly(const utString& assemblyName, bool absPath = false);
-    void        closeExecutableAssembly(const utString& assemblyName, bool absPath, utByteArray *bytes);
+    utByteArray *openExecutableAssembly(const utString& filePath);
+    void        closeExecutableAssembly(const utString& filePath, utByteArray *bytes);
 
     Assembly *loadExecutableAssemblyBinary(const char *buffer, long bufferSize);
 

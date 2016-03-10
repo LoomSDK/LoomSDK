@@ -558,51 +558,28 @@ Assembly *LSLuaState::loadAssemblyBinaryBody()
     return Assembly::loadBinaryBody();
 }
 
-static utString getPathFromName(const utString& assemblyName, bool absPath)
+Assembly *LSLuaState::loadExecutableAssembly(const utString& filePath)
 {
-    // executables always in bin
-    utString filePath;
-
-    if (!absPath)
-    {
-        filePath = "./bin/";
-    }
-
-    filePath += assemblyName;
-
-    if (!strstr(filePath.c_str(), ".loom"))
-    {
-        filePath += ".loom";
-    }
-
-    return filePath;
-}
-
-Assembly *LSLuaState::loadExecutableAssembly(const utString& assemblyName, bool absPath)
-{
-    utByteArray *bytes = openExecutableAssembly(assemblyName, absPath);
+    utByteArray *bytes = openExecutableAssembly(filePath);
     readExecutableAssemblyBinaryHeader(bytes);
     Assembly *assembly = readExecutableAssemblyBinaryBody();
-    closeExecutableAssembly(assemblyName, absPath, bytes);
+    closeExecutableAssembly(filePath, bytes);
     return assembly;
 }
 
-utByteArray *LSLuaState::openExecutableAssembly(const utString& assemblyName, bool absPath)
+utByteArray *LSLuaState::openExecutableAssembly(const utString& filePath)
 {
-    utString filePath = getPathFromName(assemblyName, absPath);
-
     const char *buffer = NULL;
     long       bufferSize;
     LSMapFile(filePath.c_str(), (void **)&buffer, &bufferSize);
 
-    lmAssert(buffer && bufferSize, "Error loading executable: %s, unable to map file %s", assemblyName.c_str(), filePath.c_str());
+    lmAssert(buffer && bufferSize, "Error loading executable: %s", filePath.c_str());
 
     return openExecutableAssemblyBinary(buffer, bufferSize);
 }
 
-void LSLuaState::closeExecutableAssembly(const utString& assemblyName, bool absPath, utByteArray *bytes)
+void LSLuaState::closeExecutableAssembly(const utString& filePath, utByteArray *bytes)
 {
-    utString filePath = getPathFromName(assemblyName, absPath);
     LSUnmapFile(filePath.c_str());
     closeExecutableAssemblyBinary(bytes);
 }
