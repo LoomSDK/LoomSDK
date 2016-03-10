@@ -18,10 +18,6 @@ namespace :package do
     # Assets and libs
     cp_r_safe("artifacts/assets", "pkg/sdk")
     cp_r_safe("artifacts/libs", "pkg/sdk")
-    # copy ldb
-    FileUtils.mkdir_p "pkg/sdk/tools/TestExec/bin/"
-    FileUtils.cp_r("artifacts/libs/TestExec.loom", "pkg/sdk/tools/TestExec/bin/Main.loom")
-    FileUtils.cp_r("artifacts/libs/TestExec.config", "pkg/sdk/tools/TestExec/loom.config")
 
     # tools & bin
     cp_r_safe("artifacts/windows-x86/", "pkg/sdk/bin")
@@ -102,10 +98,6 @@ namespace :package do
     # Assets and libs
     cp_r_safe("artifacts/assets", "pkg/sdk")
     cp_r_safe("artifacts/libs", "pkg/sdk")
-    # copy ldb
-    FileUtils.mkdir_p "pkg/sdk/tools/TestExec/bin/"
-    FileUtils.cp_r("artifacts/libs/TestExec.loom", "pkg/sdk/tools/TestExec/bin/Main.loom")
-    FileUtils.cp_r("artifacts/libs/TestExec.config", "pkg/sdk/tools/TestExec/loom.config")
 
     # tools & bin
     cp_r_safe("artifacts/windows-x86/", "pkg/sdk/bin")
