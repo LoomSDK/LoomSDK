@@ -24,7 +24,7 @@
 
 #include <stdlib.h>
 
-lmDefineLogGroup(gGFXShaderLogGroup, "GFXShader", 1, LoomLogInfo);
+lmDefineLogGroup(gGFXShaderLogGroup, "gfx.shader", 1, LoomLogInfo);
 
 static const GFX::ShaderProgram *lastBoundShader = nullptr;
 
@@ -87,7 +87,7 @@ GFX::Shader::Shader(const utString& _name, GLenum _type)
 , type(_type)
 , name(_name)
 {
-    lmLog(gGFXShaderLogGroup, "Creating shader %s", name.c_str());
+    lmLogDebug(gGFXShaderLogGroup, "Creating shader %s", name.c_str());
 
     if (name.size() > 0)
     {
@@ -99,7 +99,7 @@ GFX::Shader::Shader(const utString& _name, GLenum _type)
 
 GFX::Shader::~Shader()
 {
-    lmLog(gGFXShaderLogGroup, "Deleting shader %s", name.c_str());
+    lmLogDebug(gGFXShaderLogGroup, "Deleting shader %s", name.c_str());
 
     if (id != 0)
     {
@@ -194,11 +194,11 @@ bool GFX::Shader::validate()
     {
         if (info != nullptr)
         {
-            lmLogInfo(gGFXShaderLogGroup, "OpenGL shader %s info: %s", name_.c_str(), info);
+            lmLogDebug(gGFXShaderLogGroup, "OpenGL shader %s info: %s", name_.c_str(), info);
         }
         else
         {
-            lmLogInfo(gGFXShaderLogGroup, "OpenGL shader %s compilation successful", name_.c_str());
+            lmLogDebug(gGFXShaderLogGroup, "OpenGL shader %s compilation successful", name_.c_str());
         }
     }
     else
@@ -388,11 +388,11 @@ bool GFX::ShaderProgram::validate()
     {
         if (info != nullptr)
         {
-            lmLogInfo(gGFXShaderLogGroup, "OpenGL program name %s & %s info: %s", vertexShader->getName().c_str(), fragmentShader->getName().c_str(), info);
+            lmLogDebug(gGFXShaderLogGroup, "OpenGL program name %s & %s info: %s", vertexShader->getName().c_str(), fragmentShader->getName().c_str(), info);
         }
         else
         {
-            lmLogInfo(gGFXShaderLogGroup, "OpenGL program name %s & %s linking successful", vertexShader->getName().c_str(), fragmentShader->getName().c_str());
+            lmLogDebug(gGFXShaderLogGroup, "OpenGL program name %s & %s linking successful", vertexShader->getName().c_str(), fragmentShader->getName().c_str());
         }
     }
     else
@@ -744,7 +744,7 @@ void GFX::ShaderProgram::bind()
         lmLogError(gGFXShaderLogGroup, "Binding an uninitalized shader!");
 
         // Don't return here, let it bind to 0
-        // It would be wierd if it started using
+        // It would be weird if it started using
         // the wrong shader
     }
 

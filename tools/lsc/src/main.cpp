@@ -28,6 +28,8 @@
 #include "loom/script/runtime/lsLuaState.h"
 #include "loom/script/native/lsNativeDelegate.h"
 
+#define LSC_VERSION "1.0.1"
+
 using namespace LS;
 
 void installPackageSystem();
@@ -167,9 +169,33 @@ void RunBenchmarks()
     benchVM->close();
 }
 
+void printHeader()
+{
+    const char *buildTarget;
+#ifdef LOOM_DEBUG
+    buildTarget = "Debug";
+#else
+    buildTarget = "Release";
+#endif
+
+    const char *buildCompilerType;
+#ifdef LOOM_ENABLE_JIT
+    buildCompilerType = "JIT";
+#else
+    buildCompilerType = "Interpreted";
+#endif
+
+    LSCompiler::log("LSC - %s %s Compiler", buildTarget, buildCompilerType);
+}
 
 int main(int argc, const char **argv)
 {
+    if (argc > 1 && !strcmp(argv[1], "--version"))
+    {
+        printf("%s", LSC_VERSION);
+        return EXIT_SUCCESS;
+    }
+
     stringtable_initialize();
     loom_log_initialize();
     platform_timeInitialize();
@@ -178,23 +204,51 @@ int main(int argc, const char **argv)
 
     LSLuaState::initCommandLine(argc, argv);
 
-#ifdef LOOM_ENABLE_JIT
-    printf("LSC - JIT Compiler\n");
-#else
-    printf("LSC - Interpreted Compiler\n");
-#endif
-
     bool runtests      = false;
     bool runbenchmarks = false;
     bool symbols       = false;
 
     const char *rootBuildFile = NULL;
     const char *sdkRoot = NULL;
+
+    for (int i = 1; i < argc; i++)
+    {
+        if (!strcmp(argv[i], "--log-type"))
+        {
+            i++;
+            if (i >= argc)
+            {
+                LSError("--log-type option requires the log type (default|cli|runtime) to be specified next");
+            }
+
+            LSLogType type =
+                strcmp(argv[i], "cli") == 0 ? LSLogType::CLI :
+                strcmp(argv[i], "runtime") == 0 ? LSLogType::RUNTIME :
+                strcmp(argv[i], "default") == 0 ? (LSLogType)0 :
+                LSLogType::INVALID
+            ;
+
+            if (type == LSLogType::INVALID)
+            {
+                printHeader();
+                LSError("Invalid log type: %s", argv[i]);
+            }
+
+            LSCompiler::setLogType(type);
+        }
+    }
+
+    printHeader();
     
     for (int i = 1; i < argc; i++)
     {
         if ((strlen(argv[i]) >= 2) && (argv[i][0] == '-') && (argv[i][1] == 'D'))
         {
+            continue;
+        }
+        else if (!strcmp(argv[i], "--log-type"))
+        {
+            i++;
             continue;
         }
         else if (!strcmp(argv[i], "--release"))
@@ -203,7 +257,7 @@ int main(int argc, const char **argv)
         }
         else if (!strcmp(argv[i], "--verbose"))
         {
-            LSCompiler::setVerboseLog(true);
+            loom_log_setGlobalLevel(LoomLogDebug);
         }
         else if (!strcmp(argv[i], "--unittest"))
         {
@@ -230,7 +284,7 @@ int main(int argc, const char **argv)
                 LSError("--root option requires folder to be specified");
             }
             
-            printf("Root set to %s\n", argv[i]);
+            LSCompiler::log("Root set to %s\n", argv[i]);
             sdkRoot = argv[i];
         }
         else if (!strcmp(argv[i], "--project"))
@@ -241,13 +295,24 @@ int main(int argc, const char **argv)
                 LSError("--root option requires folder to be specified");
             }
 
-            printf("Project folder set to %s\n", argv[i]);
+            LSCompiler::log("Project folder set to %s\n", argv[i]);
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_OSX || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
             chdir(argv[i]);
 #elif LOOM_PLATFORM == LOOM_PLATFORM_WIN32
             ::SetCurrentDirectory(argv[i]);
 #endif
+        }
+        else if (!strcmp(argv[i], "--config"))
+        {
+            i++;
+            if (i >= argc)
+            {
+                LSError("--config option requires the override configuration to be specified next");
+            }
+
+            LSCompiler::log("Using config override");
+            LSCompiler::setConfigOverride(argv[i]);
         }
         else if (!strcmp(argv[i], "--help"))
         {
@@ -257,6 +322,7 @@ int main(int argc, const char **argv)
             printf("--root: set the SDK root\n");
             printf("--project: set the project folder\n");
             printf("--symbols : dump symbols for binary executable\n");
+            printf("--config : set a custom configuration override\n");
             printf("--help: display this help\n");
         }
         else if (strstr(argv[i], ".build"))
@@ -269,6 +335,15 @@ int main(int argc, const char **argv)
             printf("lsc --help for a list of options\n");
             return EXIT_FAILURE;
         }
+    }
+
+    if (!rootBuildFile)
+    {
+        LSLog(LSLogDebug, "Building Main.loom with default settings");
+    }
+    else
+    {
+        LSLog(LSLogInfo, "Building %s", rootBuildFile);
     }
 
     installPackageSystem();
@@ -321,12 +396,10 @@ int main(int argc, const char **argv)
 
     if (!rootBuildFile)
     {
-        printf("Building Main.loom with default settings\n");
         LSCompiler::defaultRootBuildFile();
     }
     else
     {
-        printf("Building %s\n", rootBuildFile);
         LSCompiler::setRootBuildFile(rootBuildFile);
     }
 

@@ -33,7 +33,7 @@ using namespace LS;
 static ALCdevice *dev = NULL;
 static ALCcontext *ctx = NULL;
 
-lmDefineLogGroup(gLoomSoundLogGroup, "loom.sound", 1, LoomLogInfo);
+lmDefineLogGroup(gLoomSoundLogGroup, "sound", 1, LoomLogInfo);
 
 // Nop for now
 #define CHECK_OPENAL_ERROR() \
@@ -87,7 +87,7 @@ extern "C"
         alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
         CHECK_OPENAL_ERROR();
 
-        lmLogInfo(gLoomSoundLogGroup, "Loom Sound engine OpenAL '%s' initialized.", alcGetString(dev, ALC_ALL_DEVICES_SPECIFIER));
+        lmLogDebug(gLoomSoundLogGroup, "Initialized sound device '%s'", alcGetString(dev, ALC_ALL_DEVICES_SPECIFIER));
     }
 
     void loomsound_shutdown()
@@ -234,7 +234,7 @@ public:
         // Now restart all the sources after assigning the new buffer.
         while (Sound::smList)
         {
-            lmLog(gLoomSoundLogGroup, "Deleting sound...");
+            lmLogDebug(gLoomSoundLogGroup, "Deleting sound %s", Sound::smList->path.c_str());
             // Destructor removes the sound from the list
             lmDelete(NULL, Sound::smList);
         }
@@ -270,7 +270,7 @@ public:
                 if(walk->isPlaying() == false && walk->source != 0 && walk->hasEverPlayed() == false)
                 {
                     // Snag the source and reuse it.
-                    lmLogError(gLoomSoundLogGroup, 
+                    lmLogWarn(gLoomSoundLogGroup, 
                                 "Too many active sources, reusing source #%d, which means that Sound Asset %s is no longer valid. Don't load so many sounds at once!", 
                                 walk->source, 
                                 walk->path.c_str());

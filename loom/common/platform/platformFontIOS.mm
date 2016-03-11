@@ -27,9 +27,6 @@ limitations under the License.
 #include "loom/common/core/assert.h"
 #include "loom/common/platform/platformFont.h"
 
-lmDefineLogGroup(gFontLogGroup, "PlatformFont", 1, LoomLogInfo);
-
-
 typedef struct OffsetTable {
     uint32_t version;
     uint16_t numTables;

@@ -22,6 +22,7 @@
 
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/engine/bindings/loom/lmApplication.h"
+#include "loom/common/config/applicationConfig.h"
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/common/core/log.h"
 #include "loom/common/platform/platform.h"
@@ -35,6 +36,7 @@
 
 extern "C"
 {
+    void loom_appInit();
     void loom_appSetup();
     void loom_appShutdown();
     void loom_tick();
@@ -44,8 +46,12 @@ extern "C"
 SDL_Window *gSDLWindow = NULL;
 SDL_GLContext gContext;
 
-lmDefineLogGroup(coreLogGroup, "loom.core", 1, LoomLogInfo);
-lmDefineLogGroup(sdlLogGroup, "SDL", 1, LoomLogInfo);
+lmDefineLogGroup(coreLogGroup, "core", 1, LoomLogInfo);
+lmDefineLogGroup(sdlLogGroup, "sdl", 1, LoomLogInfo);
+#define lmLogSDL(level, group, message) lmLogLevel(level, group, "%s", message);
+#define lmLogSDLGroup(loggedLevel, loggedCategory, groupCategory, postfix) \
+    static lmDefineLogGroup(sdl ## _ ## postfix ## LogGroup, "sdl." #postfix, 1, LoomLogInfo); \
+    if (loggedCategory == groupCategory) { logged = true; lmLogSDL(loggedLevel, sdl ## _ ## postfix ## LogGroup, message); } \
 
 static int gLoomExecutionDone = 0;
 
@@ -255,20 +261,19 @@ static void sdlLogOutput(void* userdata, int category, SDL_LogPriority priority,
         case SDL_LOG_PRIORITY_CRITICAL: level = LoomLogError; break;
         default: level = LoomLogInfo;
     }
-    const char *cat;
-    switch (category)
-    {
-        case SDL_LOG_CATEGORY_APPLICATION: cat = "application"; break;
-        case SDL_LOG_CATEGORY_ERROR:       cat = "error"; break;
-        case SDL_LOG_CATEGORY_SYSTEM:      cat = "system"; break;
-        case SDL_LOG_CATEGORY_AUDIO:       cat = "audio"; break;
-        case SDL_LOG_CATEGORY_VIDEO:       cat = "video"; break;
-        case SDL_LOG_CATEGORY_RENDER:      cat = "render"; break;
-        case SDL_LOG_CATEGORY_INPUT:       cat = "input"; break;
-        case SDL_LOG_CATEGORY_CUSTOM:      cat = "custom"; break;
-        default:                           cat = "unknown";
-    }
-    loom_log(&sdlLogGroup, level, "[SDL %s] %s", cat, message);
+
+    bool logged = false;
+
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_APPLICATION, app);
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_ERROR, error);
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_SYSTEM, system);
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_AUDIO, audio);
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_VIDEO, video);
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_RENDER, render);
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_INPUT, input);
+    lmLogSDLGroup(level, category, SDL_LOG_CATEGORY_CUSTOM, custom);
+
+    if (!logged) lmLogSDL(level, sdlLogGroup, message);
 }
 
 int
@@ -343,6 +348,28 @@ main(int argc, char *argv[])
     /* Enable standard application logging */
     SDL_LogSetAllPriority(SDL_LOG_PRIORITY_INFO);
     SDL_LogSetOutputFunction(sdlLogOutput, NULL);
+    
+    loom_appInit();
+
+    // Log the Loom build timestamp!
+    const char *buildTarget;
+#ifdef LOOM_DEBUG
+    buildTarget = "Debug";
+#else
+    buildTarget = "Release";
+#endif
+    lmLogInfo(coreLogGroup, "Loom (%s %s) built on " __DATE__ " at " __TIME__, SDL_GetPlatform(), buildTarget);
+
+    /* Display SDL version */
+    SDL_version compiled;
+    SDL_version linked;
+
+    SDL_VERSION(&compiled);
+    SDL_GetVersion(&linked);
+
+    lmLogDebug(coreLogGroup, "SDL compiled version: %d.%d.%d", compiled.major, compiled.minor, compiled.patch);
+    lmLogDebug(coreLogGroup, "SDL linked version : %d.%d.%d", linked.major, linked.minor, linked.patch);
+
 
     SDL_Init(
         SDL_INIT_TIMER |
@@ -352,8 +379,6 @@ main(int argc, char *argv[])
         SDL_INIT_GAMECONTROLLER |
         SDL_INIT_EVENTS
     );
-
-    
 
     int ret;
 
@@ -393,7 +418,7 @@ main(int argc, char *argv[])
 
     ret = SDL_GL_SetSwapInterval(-1);
     if (ret != 0) {
-        lmLog(coreLogGroup, "Late swap tearing not supported, using vsync");
+        lmLogDebug(coreLogGroup, "Late swap tearing not supported, using vsync");
         SDL_GL_SetSwapInterval(1);
     }
 
@@ -408,15 +433,6 @@ main(int argc, char *argv[])
 
     /* Main render loop */
     gLoomExecutionDone = 0;
-
-    /* Display SDL version */
-    SDL_version compiled;
-    SDL_version linked;
-
-    SDL_VERSION(&compiled);
-    SDL_GetVersion(&linked);
-
-    lmLogDebug(coreLogGroup, "Compiled with SDL version %d.%d.%d and linking against SDL version %d.%d.%d ...", compiled.major, compiled.minor, compiled.patch, linked.major, linked.minor, linked.patch);
 
     /* Game Controller */
     // Enable controller events

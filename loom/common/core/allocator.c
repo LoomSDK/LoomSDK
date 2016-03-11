@@ -33,7 +33,7 @@
 
 #include "jemalloc/jemalloc.h"
 
-lmDefineLogGroup(gAllocatorLogGroup, "alloc", 1, LoomLogInfo);
+lmDefineLogGroup(gAllocatorLogGroup, "allocator", 1, LoomLogInfo);
 
 // This is our alignment size for general allocations. When we need to 
 // pre-post pad data on an allocation, we'll use this many bytes to move

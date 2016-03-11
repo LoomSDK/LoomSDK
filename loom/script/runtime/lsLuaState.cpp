@@ -57,7 +57,7 @@ LSLuaState        *LSLuaState::lastLSState   = NULL;
 double            LSLuaState::constructorKey = 0;
 utArray<utString> LSLuaState::buildCache;
 
-lmDefineLogGroup(gLuaStateLogGroup, "LuaState", true, LoomLogInfo);
+lmDefineLogGroup(gLuaStateLogGroup, "luastate", true, LoomLogInfo);
 
 // traceback stack queries
 struct stackinfo
@@ -544,13 +544,21 @@ Assembly *LSLuaState::loadAssemblyJSON(const utString& json)
 
 Assembly *LSLuaState::loadAssemblyBinary(utByteArray *bytes)
 {
-    Assembly *assembly = Assembly::loadBinary(this, bytes);
-
-    return assembly;
+    loadAssemblyBinaryHeader(bytes);
+    return loadAssemblyBinaryBody();
 }
 
+void LSLuaState::loadAssemblyBinaryHeader(utByteArray *bytes)
+{
+    Assembly::loadBinaryHeader(this, bytes);
+}
 
-Assembly *LSLuaState::loadExecutableAssembly(const utString& assemblyName, bool absPath)
+Assembly *LSLuaState::loadAssemblyBinaryBody()
+{
+    return Assembly::loadBinaryBody();
+}
+
+static utString getPathFromName(const utString& assemblyName, bool absPath)
 {
     // executables always in bin
     utString filePath;
@@ -567,25 +575,46 @@ Assembly *LSLuaState::loadExecutableAssembly(const utString& assemblyName, bool 
         filePath += ".loom";
     }
 
-    const char *buffer   = NULL;
+    return filePath;
+}
+
+Assembly *LSLuaState::loadExecutableAssembly(const utString& assemblyName, bool absPath)
+{
+    utByteArray *bytes = openExecutableAssembly(assemblyName, absPath);
+    readExecutableAssemblyBinaryHeader(bytes);
+    Assembly *assembly = readExecutableAssemblyBinaryBody();
+    closeExecutableAssembly(assemblyName, absPath, bytes);
+    return assembly;
+}
+
+utByteArray *LSLuaState::openExecutableAssembly(const utString& assemblyName, bool absPath)
+{
+    utString filePath = getPathFromName(assemblyName, absPath);
+
+    const char *buffer = NULL;
     long       bufferSize;
     LSMapFile(filePath.c_str(), (void **)&buffer, &bufferSize);
 
-    lmAssert(buffer && bufferSize, "Error loading executable: %s, unable to map file", assemblyName.c_str());
+    lmAssert(buffer && bufferSize, "Error loading executable: %s, unable to map file %s", assemblyName.c_str(), filePath.c_str());
 
-    Assembly* assembly = loadExecutableAssemblyBinary(buffer, bufferSize);
+    return openExecutableAssemblyBinary(buffer, bufferSize);
+}
 
-	LSUnmapFile(filePath.c_str());
-
-    lmAssert(assembly, "Error loading executable: %s", assemblyName.c_str());
-
-	assembly->freeByteCode();
-	
-	return assembly;
+void LSLuaState::closeExecutableAssembly(const utString& assemblyName, bool absPath, utByteArray *bytes)
+{
+    utString filePath = getPathFromName(assemblyName, absPath);
+    LSUnmapFile(filePath.c_str());
+    closeExecutableAssemblyBinary(bytes);
 }
 
 Assembly *LSLuaState::loadExecutableAssemblyBinary(const char *buffer, long bufferSize) {
-    Assembly   *assembly = NULL;
+    utByteArray *bytes = openExecutableAssemblyBinary(buffer, bufferSize);
+    Assembly *assembly = readExecutableAssemblyBinary(bytes);
+    closeExecutableAssemblyBinary(bytes);
+    return assembly;
+}
+
+utByteArray *LSLuaState::openExecutableAssemblyBinary(const char *buffer, long bufferSize) {
 
     utByteArray headerBytes;
 
@@ -597,19 +626,36 @@ Assembly *LSLuaState::loadExecutableAssemblyBinary(const char *buffer, long buff
     lmCheck(headerBytes.readUnsignedInt() == LOOM_BINARY_VERSION_MINOR, "minor version mismatch");
     unsigned int sz = headerBytes.readUnsignedInt();
 
-    utByteArray bytes;
-    bytes.resize(sz);
+    utByteArray *bytes = lmNew(NULL) utByteArray();
+    bytes->resize(sz);
 
     uLongf readSZ = sz;
 
-    int ok = uncompress((Bytef *)bytes.getDataPtr(), (uLongf *)&readSZ, (const Bytef *)((unsigned char *)buffer + sizeof(unsigned int) * 4), (uLong)sz);
+    int ok = uncompress((Bytef *)bytes->getDataPtr(), (uLongf *)&readSZ, (const Bytef *)((unsigned char *)buffer + sizeof(unsigned int) * 4), (uLong)sz);
 
     lmCheck(ok == Z_OK, "problem uncompressing executable assembly");
     lmCheck(readSZ == sz, "Read size mismatch");
 
-    assembly = loadAssemblyBinary(&bytes);
+    return bytes;
+}
 
+
+Assembly *LSLuaState::readExecutableAssemblyBinary(utByteArray *bytes) {
+    return loadAssemblyBinary(bytes);
+}
+
+void LSLuaState::readExecutableAssemblyBinaryHeader(utByteArray *bytes) {
+    loadAssemblyBinaryHeader(bytes);
+}
+Assembly *LSLuaState::readExecutableAssemblyBinaryBody() {
+    Assembly *assembly = loadAssemblyBinaryBody();
+    lmAssert(assembly, "Error loading executable");
+    assembly->freeByteCode();
     return assembly;
+}
+
+void LSLuaState::closeExecutableAssemblyBinary(utByteArray *bytes) {
+    lmDelete(NULL, bytes);
 }
 
 

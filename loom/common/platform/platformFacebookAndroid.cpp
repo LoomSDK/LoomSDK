@@ -32,7 +32,7 @@
 #include "loom/engine/cocos2dx/cocoa/CCString.h"
 
 
-lmDefineLogGroup(gAndroidFacebookLogGroup, "loom.facebook.android", 1, 0);
+lmDefineLogGroup(gAndroidFacebookLogGroup, "facebook", 1, LoomLogDefault);
 
 
 static SessionStatusCallback gSessionStatusCallback = NULL;
@@ -74,7 +74,7 @@ static loomJniMethodInfo gIsPermissionGranted;
 ///initializes the data for the Facebook class for Android
 void platform_facebookInitialize(SessionStatusCallback sessionStatusCB, FrictionlessRequestCallback frictionlessRequestCB)
 {
-    lmLog(gAndroidFacebookLogGroup, "INIT ***** FACEBOOK ***** ANDROID ****");
+    lmLog(gAndroidFacebookLogGroup, "Initializing Facebook for Android");
 
     gSessionStatusCallback = sessionStatusCB;   
     gFrictionlessRequestCallback = frictionlessRequestCB;   

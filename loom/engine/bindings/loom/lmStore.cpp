@@ -25,7 +25,7 @@
 
 using namespace LS;
 
-lmDefineLogGroup(gNativeStoreLogGroup, "Loom.NativeStore", 1, 0);
+lmDefineLogGroup(gNativeStoreLogGroup, "store", 1, LoomLogDefault);
 
 /// Script bindings to the native Store API.
 ///
@@ -125,7 +125,7 @@ public:
 
     static void initialize()
     {
-        lmLog(gNativeStoreLogGroup, "Initializing native store!");
+        lmLogDebug(gNativeStoreLogGroup, "Initializing native store");
         platform_storeInitialize(eventCallback);
     }
 

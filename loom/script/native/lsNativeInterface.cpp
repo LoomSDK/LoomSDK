@@ -18,13 +18,15 @@
 * ===========================================================================
 */
 
-#include "loom/script/common/lsLog.h"
+#include "loom/common/core/log.h"
 #include "loom/script/loomscript.h"
 #include "loom/script/runtime/lsRuntime.h"
 #include "loom/script/reflection/lsType.h"
 #include "loom/script/reflection/lsFieldInfo.h"
 #include "loom/script/reflection/lsPropertyInfo.h"
 #include "loom/common/core/allocator.h"
+
+lmDefineLogGroup(nativeInterfaceLogGroup, "interface", 1, LoomLogInfo);
 
 namespace LS {
 utHashTable<utPointerHashKey, NativeTypeBase *> NativeInterface::nativeTypes;
@@ -281,14 +283,14 @@ void NativeInterface::dumpManagedNatives(lua_State *L)
 
     lua_settop(L, tidx - 1);
 
-    LSLog(LSLogInfo, "Dumping Managed Natives:");
+    lmLogDebug(nativeInterfaceLogGroup, "Dumping managed natives:");
 
     for (UTsize i = 0; i < count.size(); i++)
     {
         Type *type = (Type *)count.keyAt(i).key();
         int  v = count.at(i);
 
-        LSLog(LSLogInfo, "%s : %i", type->getFullName().c_str(), v);
+        lmLogDebug(nativeInterfaceLogGroup, "  %3d  %s", v, type->getFullName().c_str());
     }
 }
 

@@ -82,7 +82,7 @@ public:
             int ram = lua_gc(L, LUA_GCCOUNT, 0) / 1024;
 
             if (ram > memoryWarningLevel)
-                lmLogError(gGCGroup, "VM Memory Warning: Usage is at %iMB (Threshold: %iMB)", ram, memoryWarningLevel);
+                lmLogWarn(gGCGroup, "VM Memory Warning: Usage is at %iMB (Threshold: %iMB)", ram, memoryWarningLevel);
 
         }
 
@@ -114,7 +114,7 @@ public:
             
             if (spikeCheck && platform_getMilliseconds() - stepTime > spikeThreshold)
             {
-                lmLog(gGCGroup, "GC spike: %dms", platform_getMilliseconds() - stepTime);
+                lmLogWarn(gGCGroup, "GC spike: %dms", platform_getMilliseconds() - stepTime);
             }
             
             if (cycle == 1) {
@@ -169,7 +169,7 @@ public:
             if (cycleKBWarn)
             {
                 extraRuns += cycleKBDelta * 1024 / lastValidBPR / cycleWarningExtraRunDivider;
-                lmLogDebug(gGCGroup, "Warning allocating %d KiB in a single cycle, waking up with %d emergency runs", cycleKBDelta, extraRuns);
+                lmLogDebug(gGCGroup, "Allocating %d KiB in a single cycle, waking up with %d emergency runs", cycleKBDelta, extraRuns);
             }
 
             // GC cycle time

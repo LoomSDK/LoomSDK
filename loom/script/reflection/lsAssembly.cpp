@@ -175,9 +175,18 @@ int Assembly::load(lua_State *L) {
 
 Assembly *Assembly::loadBinary(LSLuaState *vm, utByteArray *bytes)
 {
-    Assembly *assembly = BinReader::loadExecutable(vm, bytes);
+    loadBinaryHeader(vm, bytes);
+    return loadBinaryBody();
+}
 
-    return assembly;
+void Assembly::loadBinaryHeader(LSLuaState *vm, utByteArray *bytes)
+{
+    BinReader::loadExecutableHeader(vm, bytes);
+}
+
+Assembly *Assembly::loadBinaryBody()
+{
+    return BinReader::loadExecutableBody();
 }
 
 

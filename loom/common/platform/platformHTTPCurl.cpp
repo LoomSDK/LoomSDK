@@ -35,7 +35,7 @@
 #include "loom/common/platform/platformFile.h"
 #include "loom/common/utils/utBase64.h"
 
-lmDefineLogGroup(gHTTPCurlLogGroup, "HTTPRequest", 1, LoomLogInfo);
+lmDefineLogGroup(gHTTPCurlLogGroup, "http", 1, LoomLogInfo);
 
 static CURLM *gMultiHandle;
 static CURL *curlHandles[MAX_CONCURRENT_HTTP_REQUESTS];

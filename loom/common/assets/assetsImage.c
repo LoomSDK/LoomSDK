@@ -35,7 +35,7 @@
 #include "stb_image.h"
 
 extern loom_allocator_t *gAssetAllocator;
-static loom_logGroup_t gImageAssetGroup = { "imageAsset", 1 };
+static loom_logGroup_t gImageAssetGroup = { "asset.img", 1 };
 
 int exifinfo_parse_orientation(const unsigned char *buf, unsigned len);
 
@@ -111,7 +111,7 @@ void *loom_asset_imageDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
       return 0;
    }
    
-   lmLogDebug(gImageAssetGroup, "Allocated %d bytes for an image!", img->width * img->height * 4);
+   lmLogDebug(gImageAssetGroup, "Image allocation: %d bytes", img->width * img->height * 4);
    
    return img;
 }

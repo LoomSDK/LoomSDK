@@ -160,7 +160,7 @@ public:
         va_end(args);
 
         if (ignoreMissingTypes) {
-            LSLog(LSLogQuiet, "Ignoring missing type %s (%s)", getFullName().c_str(), message);
+            LSLog(LSLogDebug, "Ignoring missing type %s (%s)", getFullName().c_str(), message);
         }
         else
         {

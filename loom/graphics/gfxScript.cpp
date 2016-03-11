@@ -146,7 +146,7 @@ static int __stdcall scaleImageOnDisk_body(void *param)
     int     imageY     = lai->height;
     stbi_uc *imageBits = (stbi_uc *)lai->bits;
 
-    lmLog(gGFXTextureLogGroup, "Image setup took %dms", t0 - platform_getMilliseconds());
+    lmLogDebug(gGFXTextureLogGroup, "Image setup took %dms", t0 - platform_getMilliseconds());
 
     int t1 = platform_getMilliseconds();
 
@@ -160,7 +160,7 @@ static int __stdcall scaleImageOnDisk_body(void *param)
 
         outWidth  = (int)(imageX * actualScale);
         outHeight = (int)(imageY * actualScale);
-        lmLog(gGFXTextureLogGroup, "Scale to %d %d due to scale %f %f actual=%f", outWidth, outHeight, scaleX, scaleY, actualScale);
+        lmLogDebug(gGFXTextureLogGroup, "Scale to %d %d due to scale %f %f actual=%f", outWidth, outHeight, scaleX, scaleY, actualScale);
     }
 
     // Build a buffer for byte->float conversions...
@@ -183,7 +183,7 @@ static int __stdcall scaleImageOnDisk_body(void *param)
 
     int resultY = 0;
 
-    lmLog(gGFXTextureLogGroup, "Resample setup took %dms", t1 - platform_getMilliseconds());
+    lmLogDebug(gGFXTextureLogGroup, "Resample setup took %dms", t1 - platform_getMilliseconds());
 
     int t2 = platform_getMilliseconds();
 
@@ -243,7 +243,7 @@ static int __stdcall scaleImageOnDisk_body(void *param)
         }
     }
 
-    lmLog(gGFXTextureLogGroup, "Resample took %dms", t2 - platform_getMilliseconds());
+    lmLogDebug(gGFXTextureLogGroup, "Resample took %dms", t2 - platform_getMilliseconds());
 
     // Release the image, we are done with it!
     loom_asset_unlock(inPath);
@@ -251,7 +251,7 @@ static int __stdcall scaleImageOnDisk_body(void *param)
     // Write it back out.
     int t3 = platform_getMilliseconds();
     jpge::compress_image_to_jpeg_file(outPath, outWidth, outHeight, 3, outBuffer);
-    lmLog(gGFXTextureLogGroup, "JPEG output took %dms", t3 - platform_getMilliseconds());
+    lmLogDebug(gGFXTextureLogGroup, "JPEG output took %dms", t3 - platform_getMilliseconds());
 
     // preserve orientation (but only if we need to)
     if (lai->orientation > IMAGE_ORIENTATION_UPPER_LEFT)

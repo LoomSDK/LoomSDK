@@ -25,7 +25,7 @@
 #include "loom/common/platform/platformIO.h"
 #include "loom/common/config/applicationConfig.h"
 
-lmDefineLogGroup(gLoomApplicationConfigLogGroup, "script.LoomApplicationConfig", 1, LoomLogInfo);
+lmDefineLogGroup(gLoomApplicationConfigLogGroup, "config", 1, LoomLogInfo);
 
 const utString LoomApplicationConfig::OrientationLandscape = "landscape";
 const utString LoomApplicationConfig::OrientationPortrait = "portrait";
@@ -79,7 +79,7 @@ static bool _jsonParseBool(const char *key, json_t *value)
         return !stricmp(json_string_value(value), "true") ? true : false;
     }
 
-    lmLog(gLoomApplicationConfigLogGroup, "WARNING: unknown json bool conversion in config for key %s", key);
+    lmLogWarn(gLoomApplicationConfigLogGroup, "Unknown json bool conversion in config for key %s", key);
 
     return false;
 }
@@ -118,7 +118,7 @@ static int _jsonParseInt(const char *key, json_t *value)
         return strtol(json_string_value(value), &pEnd, 10);
     }
 
-    lmLog(gLoomApplicationConfigLogGroup, "WARNING: unknown json int conversion in config for key %s", key);
+    lmLogWarn(gLoomApplicationConfigLogGroup, "Unknown json int conversion in config for key %s", key);
 
     return 0;
 }
@@ -128,6 +128,58 @@ const utString& LoomApplicationConfig::displayOrientation()
     return _displayOrientation;
 }
 
+static void parseLogBlock(json_t *logBlock, utString name)
+{
+    json_t *enabled = json_object_get(logBlock, "enabled");
+    json_t *level = json_object_get(logBlock, "level");
+
+    if (enabled || level)
+    {
+        int enabledRule = -1;
+        loom_logLevel_t filterRule = LoomLogInvalid;
+
+        if (enabled) enabledRule = _jsonParseBool((name + " enabled").c_str(), enabled);
+        if (level)
+        {
+            loom_logLevel_t levelEnum = LoomLogInvalid;
+            if (json_is_integer(level)) {
+                levelEnum = (loom_logLevel_t)json_integer_value(level);
+            }
+            else if (json_is_string(level))
+            {
+                const char *levelName = json_string_value(level);
+                levelEnum = loom_log_parseLevel(levelName);
+                lmAssert(levelEnum != LoomLogInvalid, "Invalid configured log level for %s: %s", name.c_str(), levelName);
+            }
+
+            lmAssert(levelEnum != LoomLogInvalid, "Invalid configured log level for %s: %s", name.c_str(), json_dumps(level, JSON_COMPACT));
+            
+            filterRule = levelEnum;
+        }
+
+        if (name == "")
+        {
+            if (enabledRule == 0) filterRule = LoomLogNone;
+            loom_log_setGlobalLevel(filterRule);
+        }
+        else
+        {
+            loom_log_addRule(name.c_str(), enabledRule, filterRule);
+        }
+        
+    }
+
+    // Walk the children.
+    const char *key;
+    json_t     *value;
+
+    json_object_foreach(logBlock, key, value)
+    {
+        if (strcmp(key, "enabled") == 0 || strcmp(key, "level") == 0) continue;
+
+        parseLogBlock(value, name == "" ? key : name + "." + key);
+    }
+}
 
 // this will always be in assets/loom.config (unless we decide to move it)
 void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
@@ -150,7 +202,7 @@ void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
     {
         if (!json_is_string(ah))
         {
-            lmLog(gLoomApplicationConfigLogGroup, "assetAgentHost was specified but is not a string!");
+            lmLogWarn(gLoomApplicationConfigLogGroup, "assetAgentHost was specified but is not a string!");
         }
         else
         {
@@ -178,30 +230,7 @@ void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
     // Parse log block.
     if (json_t *logBlock = json_object_get(json, "log"))
     {
-        // Walk the children.
-        const char *key;
-        json_t     *value;
-
-        json_object_foreach(logBlock, key, value)
-        {
-            // Key is the prefix for the rule.
-            // Maybe we have level or enabled data?
-            int enabledRule = -1;
-            int filterRule  = -1;
-
-            if (json_t *enabledBlock = json_object_get(value, "enabled"))
-            {
-                enabledRule = _jsonParseBool("log.enabled", value);
-            }
-
-            // TODO: Allow info, warn, error as parameters here.
-            if (json_t *levelBlock = json_object_get(value, "level"))
-            {
-                filterRule = (int)json_integer_value(levelBlock);
-            }
-
-            loom_log_addRule(key, enabledRule, filterRule);
-        }
+        parseLogBlock(logBlock, "");
     }
 
     if (json_t *w51a = json_object_get(json, "_wants51Audio"))
@@ -218,7 +247,7 @@ void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
     {
         if (!json_is_string(dh))
         {
-            lmLog(gLoomApplicationConfigLogGroup, "debuggerHost was specified but is not a string!");
+            lmLogWarn(gLoomApplicationConfigLogGroup, "debuggerHost was specified but is not a string!");
         }
         else
         {

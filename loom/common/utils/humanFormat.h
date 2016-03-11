@@ -18,27 +18,28 @@
  * ===========================================================================
  */
 
-#ifndef _lslog_h
-#define _lslog_h
+#ifndef _HUMAN_FORMAT_H_
+#define _HUMAN_FORMAT_H_
 
-#include "loom/common/core/log.h"
+#include "math.h"
+#include "loom/common/utils/utString.h"
 
-namespace LS {
-enum LSLogLevel
+utString humanFileSize(long bytes)
 {
-    LSLogDebug = -1,
-    LSLogInfo,
-    LSLogWarn,
-    LSLogError,
-    LSLogMax = LSLogError
-};
-
-typedef void (*FunctionLog)(void *extra, int level, const char *format, ...);
-
-void LSLog(LSLogLevel level, const char *format, ...);
-
-void LSLogSetLevel(LSLogLevel level);
-
-void LSLogInitialize(FunctionLog, void *extra, int logDebug, int logInfo, int logWarn, int logError);
+    static const char *postfixes[] = {
+        "bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"
+    };
+    long power = -1;
+    for (long pbytes = bytes; pbytes; pbytes >>= 1, power++) {}
+    if (power < 0) power = 0;
+    long mag = power / 10;
+    const int postfixLast = (sizeof(postfixes) / sizeof(postfixes[0])) - 1;
+    if (mag > postfixLast) mag = postfixLast;
+    const char *postfix = postfixes[mag];
+    long nearest = 1 << (mag*10);
+    float frac = (float)bytes / nearest;
+    if (mag == 0) return utStringFormat("%ld %s", bytes, postfixes[0]);
+    return utStringFormat("%.1f %s (%ld %s)", frac, postfix, bytes, postfixes[0]);
 }
+
 #endif
