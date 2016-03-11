@@ -51,7 +51,7 @@ void loom_tick()
 
     performance_tick();
 
-    profilerBlock_t p = { "loom_tick", platform_getMilliseconds(), 8 };
+    profilerBlock_t p = { "loom_tick", platform_getMilliseconds(), 17 };
     
     if (LoomApplication::getReloadQueued())
     {

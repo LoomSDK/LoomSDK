@@ -30,7 +30,7 @@
 #include "loom/common/platform/platformStore.h"
 #include "loom/vendor/jansson/jansson.h"
 
-lmDefineLogGroup(gGoogleStoreLogGroup, "loom.store.googlePlay", 1, 0);
+lmDefineLogGroup(gGoogleStoreLogGroup, "googleplay", 1, LoomLogDefault);
 
 static StoreEventCallback gEventCallback = NULL;
 
@@ -116,7 +116,7 @@ void platform_storeInitialize(StoreEventCallback eventCallback)
     //lmAssert(gEventCallback == NULL, "Cannot initialize twice!");
     gEventCallback = eventCallback;
 
-    lmLog(gGoogleStoreLogGroup, "INIT ***** STORE ***** PLAY ****");
+    lmLogDebug(gGoogleStoreLogGroup, "Initializing Store for Android");
 
     // Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gPurchaseProductMethodInfo,

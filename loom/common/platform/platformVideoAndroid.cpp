@@ -30,7 +30,7 @@
 #include "loom/common/platform/platformVideo.h"
 #include "loom/vendor/jansson/jansson.h"
 
-lmDefineLogGroup(gAndroidVideoLogGroup, "loom.video.android", 1, 0);
+lmDefineLogGroup(gAndroidVideoLogGroup, "video", 1, LoomLogDefault);
 
 static VideoEventCallback gEventCallback = NULL;
 
@@ -39,7 +39,7 @@ extern "C"
 {
 void Java_co_theengine_loomdemo_LoomVideo_nativeCallback(JNIEnv *env, jobject thiz, jint callbackType, jstring data)
 {
-    lmLog(gAndroidVideoLogGroup, "LoomVideo Android Callback fired! %d", callbackType);
+    lmLogDebug(gAndroidVideoLogGroup, "LoomVideo Android Callback fired! %d", callbackType);
 
     const char *dataString = env->GetStringUTFChars(data, 0);
     if (gEventCallback)
@@ -48,12 +48,12 @@ void Java_co_theengine_loomdemo_LoomVideo_nativeCallback(JNIEnv *env, jobject th
         switch (callbackType)
         {
             case 0:
-                lmLog(gAndroidVideoLogGroup, "Video playback failed");
+                lmLogError(gAndroidVideoLogGroup, "Video playback failed");
                 gEventCallback("fail", dataString);
                 break;
 
             case 1:
-                lmLog(gAndroidVideoLogGroup, "Video playback complete");
+                lmLogDebug(gAndroidVideoLogGroup, "Video playback complete");
                 gEventCallback("complete", dataString);
                 break;
 
@@ -86,7 +86,7 @@ void platform_videoInitialize(VideoEventCallback eventCallback)
 {
     gEventCallback = eventCallback;
 
-    lmLog(gAndroidVideoLogGroup, "INIT ***** VIDEO ***** ANDROID ****");
+    lmLogDebug(gAndroidVideoLogGroup, "Initializing video for Android");
 
     // Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gPlayVideoFullscreen,
@@ -130,7 +130,7 @@ void platform_videoPlayFullscreen(const char *video, int scaleMode, int controlM
     newVideoName[len] = '\0';
 
     ///call java method to play the video
-    lmLog(gAndroidVideoLogGroup, "videoPlayFullscreen: '%s' became '%s'", video, newVideoName);
+    lmLogDebug(gAndroidVideoLogGroup, "videoPlayFullscreen: '%s' became '%s'", video, newVideoName);
     jstring jVideo    = gPlayVideoFullscreen.getEnv()->NewStringUTF(newVideoName);
     gPlayVideoFullscreen.getEnv()->CallStaticVoidMethod(gPlayVideoFullscreen.classID, gPlayVideoFullscreen.methodID, jVideo, scaleMode, controlMode, bgColor);
     gPlayVideoFullscreen.getEnv()->DeleteLocalRef(jVideo);

@@ -20,7 +20,7 @@
 
 #include "loom/common/platform/platformAndroidJni.h"
 
-lmDefineLogGroup(gOpenALAndroid, "openal.android", 1, LoomLogInfo);
+lmDefineLogGroup(gOpenALAndroid, "sound", 1, LoomLogInfo);
 
 #include "config.h"
 

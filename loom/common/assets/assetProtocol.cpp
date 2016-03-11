@@ -26,7 +26,7 @@
 #include "loom/common/core/assert.h"
 #include "loom/common/utils/fourcc.h"
 
-lmDefineLogGroup(assetProtocolLogGroup, "asset.protocol", 1, LoomLogInfo);
+lmDefineLogGroup(assetProtocolLogGroup, "asset.prot", 1, LoomLogInfo);
 
 int AssetProtocolHandler::uniqueId = 1000;
 

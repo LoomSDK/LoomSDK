@@ -465,7 +465,7 @@ static void LoomProfilerEntryDumpRecurse(LoomProfilerEntry *data, char *buffer, 
     else
     {
         // dump out this one:
-        lmLogError(gProfilerLogGroup, "%8.3f %8.3f %8.3f %8.3f %8.3f %8d %s%s",
+        lmLogInfo(gProfilerLogGroup, "%8.3f %8.3f %8.3f %8.3f %8.3f %8d %s%s",
                    data->mRoot == NULL ? 100.0 : 100.0 * data->mTotalTime / totalTime,
                    data->mRoot == NULL ? 100.0 : 100.0 * (data->mTotalTime - data->mSubTime) / totalTime,
                    data->mTotalTime / (1000.0 * 1000.0 * (data->mInvokeCount > 0 ? data->mInvokeCount : 1)),
@@ -543,10 +543,10 @@ void LoomProfiler::dump()
 
     qsort((void *)&rootVector[0], rootVector.size(), sizeof(LoomProfilerRoot *), rootDataCompare);
 
-    lmLogError(gProfilerLogGroup, "");
-    lmLogError(gProfilerLogGroup, "Profiler Data Dump:");
-    lmLogError(gProfilerLogGroup, "Ordered by non-sub total time -");
-    lmLogError(gProfilerLogGroup, "%%NSTime  %% Time  AvgTime  MaxTime  MinTime Invoke # Name");
+    lmLogInfo(gProfilerLogGroup, "");
+    lmLogInfo(gProfilerLogGroup, "Profiler Data Dump:");
+    lmLogInfo(gProfilerLogGroup, "Ordered by non-sub total time -");
+    lmLogInfo(gProfilerLogGroup, "%%NSTime  %% Time  AvgTime  MaxTime  MinTime Invoke # Name");
                                    
 
     suppressedEntries = 0;
@@ -559,7 +559,7 @@ void LoomProfiler::dump()
         float tm = (float)(100.0 * (root->mTotalTime - root->mSubTime) / totalTime);
         if (tm >= threshold)
         {
-            lmLogError(gProfilerLogGroup, "%7.3f %7.3f %8.3f %8.3f %8.3f %8d %s",
+            lmLogInfo(gProfilerLogGroup, "%7.3f %7.3f %8.3f %8.3f %8.3f %8d %s",
                        100.0 * (root->mTotalTime - root->mSubTime) / totalTime,
                        100.0 * root->mTotalTime / totalTime,
                        root->mTotalTime / (1000.0 * 1000.0 * (root->mTotalInvokeCount > 0 ? root->mTotalInvokeCount : 1)),
@@ -579,10 +579,10 @@ void LoomProfiler::dump()
         root->mMaxTime = 0;
         root->mMinTime = INFINITY;
     }
-    lmLogError(gProfilerLogGroup, "Suppressed %i items with < %.1f%% of measured time.", suppressedEntries, threshold);
-    lmLogError(gProfilerLogGroup, "");
-    lmLogError(gProfilerLogGroup, "Ordered by stack trace total time -");
-    lmLogError(gProfilerLogGroup, "  %% Time %% NSTime  AvgTime  MaxTime  MinTime Invoke # Name");
+    lmLogInfo(gProfilerLogGroup, "Suppressed %i items with < %.1f%% of measured time.", suppressedEntries, threshold);
+    lmLogInfo(gProfilerLogGroup, "");
+    lmLogInfo(gProfilerLogGroup, "Ordered by stack trace total time -");
+    lmLogInfo(gProfilerLogGroup, "  %% Time %% NSTime  AvgTime  MaxTime  MinTime Invoke # Name");
 
     mCurrentLoomProfilerEntry->mTotalTime = loom_readTimerNano(mCurrentLoomProfilerEntry->mTimer);
 
@@ -590,7 +590,7 @@ void LoomProfiler::dump()
     depthBuffer[0]    = 0;
     suppressedEntries = 0;
     LoomProfilerEntryDumpRecurse(mCurrentLoomProfilerEntry, depthBuffer, 0, totalTime, threshold);
-    lmLogError(gProfilerLogGroup, "Suppressed %i items with < %.1f%% of measured time.", suppressedEntries, threshold);
+    lmLogInfo(gProfilerLogGroup, "Suppressed %i items with < %.1f%% of measured time.", suppressedEntries, threshold);
 
     mEnabled = enableSave;
     mStackDepth--;

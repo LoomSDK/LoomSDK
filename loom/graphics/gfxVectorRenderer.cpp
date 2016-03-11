@@ -58,7 +58,7 @@ extern SDL_Window *gSDLWindow;
 
 namespace GFX
 {
-lmDefineLogGroup(gGFXVectorRendererLogGroup, "GFXVectorRenderer", 1, LoomLogInfo);
+lmDefineLogGroup(gGFXVectorRendererLogGroup, "gfx.vector", 1, LoomLogInfo);
 
 NVGcontext *nvg = NULL;
 
@@ -343,7 +343,7 @@ static bool readDefaultFontFaceBytes(void** mem, size_t* size)
 }
 
 static void loadDefaultFontFace() {
-    lmLogWarn(gGFXVectorRendererLogGroup, "Warning: TextFormat font face not specified, using predefined default system font");
+    lmLogWarn(gGFXVectorRendererLogGroup, "TextFormat font face not specified, using predefined default system font");
     void* mem;
     size_t size;
     bool success = readDefaultFontFaceBytes(&mem, &size);
@@ -596,7 +596,7 @@ void VectorSVG::resetImage() {
 }
 
 void VectorSVG::loadFile(utString path, utString units, float dpi) {
-    lmLogError(gGFXVectorRendererLogGroup, "Loading %s", path.c_str());
+    lmLogDebug(gGFXVectorRendererLogGroup, "Loading '%s'", path.c_str());
     reset();
     this->units = units;
     this->dpi = dpi;

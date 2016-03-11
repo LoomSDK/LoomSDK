@@ -65,49 +65,110 @@ $ loom config --global globalPropertyName value
 
 ## Logging Options
 
-The Loom SDK includes a lightweight logging framework. All log output is associated with a log group. Log groups provide a name, an enabled, and a filter level (controlling what severity of log message is displayed).
+The Loom SDK includes a lightweight logging framework. All log output is associated with a log group. Log groups provide a name, an enabled toggle, and a filter level (controlling what severity of log message is displayed).
 
 You can set the logging settings for a particular group like so:
 
 ~~~json
 {
     "log": {
-        "group.name": {
+        // Global default filter level set to warning or higher
+        "level": "warn",
+        
+        "sdl": {
+            // Enables all log groups starting with 'sdl'
             "enabled": true,
-            "level": 1
+            
+             // Sets the filter level for 'sdl' groups to allow all debug messages and above
+            "level": "debug",
+            
+            // Applies to 'sdl.error' specifically and overrides the above
+            "error": {
+                
+                // Disable all 'sdl.error' messages
+                "enabled": false
+            }
         }
     }
 }
 ~~~
 
+Additionally, the command line switch `--verbose` overrides the global default level, setting it to `verbose`.
+
+**Available Log Filter Levels:**
+
+* `debug` or `verbose` - Debug level usually used for all kinds of usually not relevant information, but often useful when something doesn't work right and you want to figure out what's going on behind the scenes.
+* `default` or `info` or empty string - Messages of informational nature - a quick overview of what is happening.
+* `warn` or `warning` - Something happened that wasn't expected. It's usually not a big problem, but can be an indicator of one.
+* `error` - A really bad thing happened and you should probably fix it.
+* `quiet` or `none` - Disables output, no messages should use this level.
+
 **Built-In Log Groups:**
 
 Here is a list of the built-in logging groups used by the Loom SDK:
 
-* `asset.core` - Logs related to local asset management
-* `asset.protocol` - Logs related to the Asset Manager's asset protocol
-* `error` - A log group for dumping platform errors
-* `GFX` - Logs relating to native loom Graphics state
-* `GFXQuadRenderer` - Logs coming from Loom's QuadRenderer
-* `GFXTexture` - Logs specific to texture loading
-* `http.android` - Logs relating to Android HTTP requests
-* `imageAsset` - Logs related to the loading of image assets
-* `logger` - Logs specific to Loom's logging system
-* `loom.application` - Application-specific logs, including output from initialization and setup routines
-* `loom.asset` - Logs specific to the Asset Agent
-* `loom.compiler` - Basic log output from the LoomScript Compiler
-* `loom.compiler`.verbose - More verbose output from the LoomScript Compiler
-* `loom.mobile`.android - Logs specific to the Android platform
-* `Loom.NativeStore` - Logs relating to the native cross-platform store API
-* `loom.script` - Logs from core script runtime.
-* `loom.sound` - Logs coming from the native cross-platform sound API
-* `loom.store.apple` - Logs related to the Apple app store API
-* `loom.store.googlePlay` - Logs related to the Google Play store API
-* `loom.textAsset` - Logs related to loading of Loom TextAssets
-* `Loom.Video` - Logs relating to the native cross-platform video API
-* `loom.video.android` - Logs related to Android native video states
-* `openal.android` - Logs specific to the Android OpenAL implementation
-* `platform.network` - Logs related to Loom's native networking implementation
-* `profiler` - Logs coming from Loom's profiler
-* `script.LoomApplicationConfig` - Log output related to the parsing of the loom.config file
+* `core` - Logs related to the main application entry point
+* `app` - Application-specific logs, including output from initialization and setup routines
+* `script` - Logs from core script runtime
+* `config` - Logs related to parsing the loom.config configuration file
 
+
+* `agent` - Logs specific to the state of the Asset Agent and any files it might be serving
+* `asset` - General asset system logs
+* `asset.prot` - Logs related to the Asset Manager's asset protocol
+* `asset.txt` - Asset system logs related to text files
+* `asset.bin` - Asset system logs related to binary files
+
+
+* `profiler` - Runtime profiler output logs
+* `lt` - Loom Telemetry logs
+* `lts` - Loom Telemetry Server logs
+
+
+* `compiler` - Diagnostic Loom compiler logs
+* `debug` - Loom debugger logs
+
+
+* `mobile` - Per-platform logs related to the `Mobile` class
+* `store` - General logs about the native store API
+* `googleplay` - Logs related to the Google Play Store API
+* `applestore` - Logs related to the Apple App Store API
+* `facebook` - Logs related to Facebook integration
+* `teak` - Per-platform logs related to Teak integration
+* `parse` - Parse integration logs
+
+
+* `net` - Low level socket networking logs
+* `http` - Per-platform logs related to HTTP requests
+* `http.req` - Logs related to the `HTTPRequest` class
+* `sqlite` - Logs related to SQLite integration
+
+
+* `gfx` - Logs related to the internal graphics display
+* `gfx.quad` - Logs related to the `QuadRenderer` graphics class
+* `gfx.shader` - Logs related to compilation and usage of graphics shaders
+* `gfx.tex` - Logs related to graphics texture creation, usage and disposal
+* `gfx.vector` - Logs related to processing and rendering vector graphics
+* `video` - Per-platform logs related to video playback
+* `sound` - Logs coming from the native cross-platform sound API
+* `controller` - Game controller diagnostic logs
+
+
+* `sdl` - General logs from the SDL library
+* `sdl.app` - Logs from the application SDL log category
+* `sdl.error` - Logs from the error SDL log category
+* `sdl.system` - Logs from the system SDL log category
+* `sdl.audio` - Logs from the audio SDL log category
+* `sdl.video` - Logs from the video SDL log category
+* `sdl.render` - Logs from the render SDL log category
+* `sdl.input` - Logs from the input SDL log category
+* `sdl.custom` - Logs from the custom SDL log category
+* `luastate` - Logs related to the Lua runtime
+* `allocator` - Internal memory allocator logs 
+* `error` - A log group for printing platform errors
+* `delegate` - Internal native delegate logs
+* `interface` - Internal native interface logs
+* `logger` - Logging system logs
+
+
+All the internal log group names are <= 10 characters long for consistency of output.

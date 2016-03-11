@@ -27,7 +27,7 @@
 using namespace LS;
 
 
-lmDefineLogGroup(gHTTPRequestLogGroup, "HTTPRequest", 1, LoomLogInfo);
+lmDefineLogGroup(gHTTPRequestLogGroup, "http.req", 1, LoomLogInfo);
 
 class HTTPRequest {
 private:
@@ -75,7 +75,7 @@ public:
         // Warn if this object is garbage collected while a requet is pending
         if (requestPending)
         {
-            lmLog(gHTTPRequestLogGroup, "WARNING: HTTPRequest object with url \"%s\" garbage collected before completing a pending request. Ensure references to HTTPRequest objects are maintained while requests are pending.", url.c_str())
+            lmLogWarn(gHTTPRequestLogGroup, "HTTPRequest object with url \"%s\" garbage collected before completing a pending request. Ensure references to HTTPRequest objects are maintained while requests are pending.", url.c_str())
         }
 
         header.clear();

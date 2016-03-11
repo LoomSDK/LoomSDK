@@ -47,7 +47,8 @@ using namespace LS;
 
 #include "loom/engine/bindings/sdl/lmSDL.h"
 
-LSLuaState     *LoomApplication::rootVM      = NULL;
+LSLuaState     *LoomApplication::rootVM = NULL;
+utByteArray    *LoomApplication::initBytes = NULL;
 bool           LoomApplication::reloadQueued = false;
 bool           LoomApplication::suppressAssetTriggeredReload = false;
 utString       LoomApplication::bootAssembly = "Main.loom";
@@ -57,13 +58,22 @@ NativeDelegate LoomApplication::assetCommandDelegate;
 NativeDelegate LoomApplication::applicationActivated;
 NativeDelegate LoomApplication::applicationDeactivated;
 
-lmDefineLogGroup(applicationLogGroup, "loom.application", 1, LoomLogInfo);
-lmDefineLogGroup(scriptLogGroup, "loom.script", 1, LoomLogInfo);
+static bool initialAssetSystemLoaded = false;
+
+
+lmDefineLogGroup(applicationLogGroup, "app", 1, LoomLogInfo);
+lmDefineLogGroup(scriptLogGroup, "script", 1, LoomLogInfo);
 
 // Define the global Loom C entrypoints.
 extern "C" {
 
 extern void loomsound_shutdown();
+
+void loom_appInit(void)
+{
+    LoomApplication::initMainAssembly();
+}
+
 
 void loom_appSetup(void)
 {
@@ -136,26 +146,46 @@ int LoomApplication::initializeTypes()
     return 0;
 }
 
+static int mapScriptFile(const char *path, void **outPointer,
+    long *outSize);
 
-void LoomApplication::execMainAssembly()
+static void unmapScriptFile(const char *path);
+static void dispatchCommand(const char *cmd);
+
+void LoomApplication::initMainAssembly()
 {
     lmAssert(!rootVM, "VM already running");
     rootVM = lmNew(NULL) LSLuaState();
+
+    // Ensure we can load binaries through the asset system
+    ensureInitialAssetSystem();
+
+    // Open main assembly header and load the application config from it
+    initBytes = rootVM->openExecutableAssembly(bootAssembly);
+    rootVM->readExecutableAssemblyBinaryHeader(initBytes);
+    Assembly *assembly = BinReader::loadMainAssemblyHeader();
+    LoomApplicationConfig::parseApplicationConfig(assembly->getLoomConfig());
+}
+
+void LoomApplication::execMainAssembly()
+{
     rootVM->open();
 
-    lmLog(applicationLogGroup, "   o executing %s", bootAssembly.c_str());
-    Assembly *mainAssembly = rootVM->loadExecutableAssembly(bootAssembly);
-
-    LoomApplicationConfig::parseApplicationConfig(mainAssembly->getLoomConfig());
+    // Read the rest of the assembly - the body
+    Assembly *mainAssembly = rootVM->readExecutableAssemblyBinaryBody();
+    rootVM->closeExecutableAssembly(bootAssembly, false, initBytes);
+    initBytes = NULL;
+    
+    lmLogDebug(applicationLogGroup, "   o executing %s", bootAssembly.c_str());
 
     Loom2D::Stage::updateFromConfig();
 
     // Wait for asset agent if appropriate.
     if (LoomApplicationConfig::waitForAssetAgent() > 0)
     {
-        lmLog(applicationLogGroup, "   o Waiting %dms for asset agent connection...", LoomApplicationConfig::waitForAssetAgent());
+        lmLogDebug(applicationLogGroup, "   o Waiting %dms for asset agent connection...", LoomApplicationConfig::waitForAssetAgent());
         loom_asset_waitForConnection(LoomApplicationConfig::waitForAssetAgent());
-        lmLog(applicationLogGroup, "   o Connected to asset agent.");
+        lmLogDebug(applicationLogGroup, "   o Connected to asset agent.");
     }
 
     // See if the debugger wants to connect; we want to be able to set
@@ -165,13 +195,6 @@ void LoomApplication::execMainAssembly()
         lmLog(applicationLogGroup, "   o Waiting %dms for debugger connection...", LoomApplicationConfig::waitForDebugger());
         mainAssembly->connectToDebugger(LoomApplicationConfig::debuggerHost().c_str(), LoomApplicationConfig::debuggerPort());
     }
-
-    // Log the Loom build timestamp!
-#ifdef LOOM_DEBUG
-    lmLog(applicationLogGroup, "LOOM Built (Debug)   " __DATE__ " " __TIME__);
-#else
-    lmLog(applicationLogGroup, "LOOM Built (Release) " __DATE__ " " __TIME__);
-#endif
 
     // first see if we have a static main
     MethodInfo *smain = mainAssembly->getStaticMethodInfo("main");
@@ -193,7 +216,11 @@ void LoomApplication::execMainAssembly()
                 Type *appType = types.at(i);
                 if (appType->isDerivedFrom(loomAppType))
                 {
-                    lmLog(applicationLogGroup, "Instantiating Application: %s", appType->getName());
+                    const char *name = appType->getName();
+                    size_t nameLen = strlen(name);
+                    lmLogInfo(applicationLogGroup, "%.*s", nameLen, "---------------------------------------------");
+                    lmLogInfo(applicationLogGroup, "%s", name);
+                    lmLogInfo(applicationLogGroup, "%.*s", nameLen, "---------------------------------------------");
                     int top = lua_gettop(rootVM->VM());
                     lsr_createinstance(rootVM->VM(), appType);
                     lualoom_getmember(rootVM->VM(), -1, "initialize");
@@ -210,7 +237,7 @@ void LoomApplication::reloadMainAssembly()
 {
     if (!rootVM || !rootVM->VM()) return;
 
-    lmLog(applicationLogGroup, "Reloading main assembly: %s", getBootAssembly());
+    lmLog(applicationLogGroup, "Reloading %s", getBootAssembly());
 
     // cleanup webviews
     platform_webViewDestroyAll();
@@ -233,6 +260,7 @@ void LoomApplication::reloadMainAssembly()
 
     GFX::Graphics::initialize();
 
+    initMainAssembly();
     execMainAssembly();
 
     reloadQueued = false;
@@ -270,7 +298,7 @@ static int mapScriptFile(const char *path, void **outPointer,
 
     if (!scriptAsset)
     {
-        lmLog(applicationLogGroup, "Failed to map asset for script: '%s'", path);
+        lmLogWarn(applicationLogGroup, "Failed to map asset for script: '%s'", path);
 
         *outPointer = NULL;
         if (outSize)
@@ -281,7 +309,7 @@ static int mapScriptFile(const char *path, void **outPointer,
     }
     else
     {
-        lmLog(applicationLogGroup, "Mapped asset for script: '%s'", path);
+        lmLogDebug(applicationLogGroup, "Mapped asset for script: '%s'", path);
         *outPointer = scriptAsset->bits;
         *outSize    = (long)scriptAsset->length;
         resCode     = 1;
@@ -304,6 +332,23 @@ static void unmapScriptFile(const char *path)
     loom_asset_unlock(path);
 }
 
+void LoomApplication::ensureInitialAssetSystem()
+{
+    if (initialAssetSystemLoaded) return;
+    initialAssetSystemLoaded = true;
+
+    // Initialize asset system. This has to be done first thing
+    // so the assembly header can be read for logging configuration.
+    lmLogDebug(applicationLogGroup, "Initializing asset system...");
+    lmLogDebug(applicationLogGroup, "   o assets");
+    loom_asset_initialize(".");
+    loom_asset_setCommandCallback(dispatchCommand);
+
+    lmLogDebug(applicationLogGroup, "   o stringtable");
+    stringtable_initialize();
+
+    LS::LSFileInitialize(mapScriptFile, unmapScriptFile);
+}
 
 int LoomApplication::initializeCoreServices()
 {
@@ -311,43 +356,36 @@ int LoomApplication::initializeCoreServices()
     NativeDelegate::markMainThread();
 
     // Initialize services.
-    platform_debugOut("Initializing services...");
+    lmLogDebug(applicationLogGroup, "Initializing services...");
 
     // Set up assert handling callback.
-    lmLog(applicationLogGroup, "   o asserts");
+    lmLogDebug(applicationLogGroup, "   o asserts");
     loom_setAssertCallback(handleAssert);
 
-    lmLog(applicationLogGroup, "   o performance");
+    lmLogDebug(applicationLogGroup, "   o performance");
     performance_initialize();
 
-    lmLog(applicationLogGroup, "   o RNG");
+    lmLogDebug(applicationLogGroup, "   o RNG");
     srand((unsigned int)time(NULL));
 
-    lmLog(applicationLogGroup, "   o time");
+    lmLogDebug(applicationLogGroup, "   o time");
     platform_timeInitialize();
 
-    lmLog(applicationLogGroup, "   o stringtable");
-    stringtable_initialize();
-
-    lmLog(applicationLogGroup, "   o types");
+    lmLogDebug(applicationLogGroup, "   o types");
     initializeTypes();
 
-    lmLog(applicationLogGroup, "   o network");
+    lmLogDebug(applicationLogGroup, "   o network");
     loom_net_initialize();
 
-    lmLog(applicationLogGroup, "   o http");
+    lmLogDebug(applicationLogGroup, "   o http");
     platform_HTTPInit();
 
-    lmLog(applicationLogGroup, "   o assets");
-    loom_asset_initialize(".");
-    loom_asset_setCommandCallback(dispatchCommand);
 
-    lmLog(applicationLogGroup, "   o sound");
+    lmLogDebug(applicationLogGroup, "   o sound");
     loomsound_init();
 
     // Initialize script hooks.
-    LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogInfo, LoomLogWarn, LoomLogError);
-    LS::LSFileInitialize(mapScriptFile, unmapScriptFile);
+    LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogDebug, LoomLogInfo, LoomLogWarn, LoomLogError);
     LS::NativeTypeBase::initialize();
     //LS::LSLogSetLevel(LS::LSLogError);
 
@@ -404,7 +442,7 @@ void LoomApplication::__handleMainAssemblyUpdate(void *payload, const char *name
         return;
     }
 
-    lmLogInfo(applicationLogGroup, "Restarting VM due to modification to '%s'", name);
+    lmLogDebug(applicationLogGroup, "Restarting VM due to modification to '%s'", name);
     _reloadMainAssembly();
 }
 

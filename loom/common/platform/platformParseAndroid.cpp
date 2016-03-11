@@ -31,7 +31,7 @@
 #include "loom/common/platform/platformParse.h"
 #include "loom/vendor/jansson/jansson.h"
 
-lmDefineLogGroup(gAndroidParseLogGroup, "loom.parse.android", 1, 0);
+lmDefineLogGroup(gAndroidParseLogGroup, "parse", 1, LoomLogDefault);
 
 
 static loomJniMethodInfo gIsActive;
@@ -43,7 +43,7 @@ static loomJniMethodInfo gUpdateInstallationUserID;
 ///initializes the data for the Parse class for Android
 void platform_parseInitialize()
 {
-    lmLog(gAndroidParseLogGroup, "INIT ***** PARSE ***** ANDROID ****");
+    lmLogDebug(gAndroidParseLogGroup, "Initializing Parse for Android");
 
     ///Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gIsActive,

@@ -30,7 +30,7 @@
 #include "loom/common/platform/platformMobile.h"
 #include "loom/vendor/jansson/jansson.h"
 
-lmDefineLogGroup(gAndroidMobileLogGroup, "loom.mobile.android", 1, 0);
+lmDefineLogGroup(gAndroidMobileLogGroup, "mobile", 1, LoomLogDefault);
 
 
 static SensorTripleChangedCallback gTripleChangedCallback = NULL;
@@ -103,7 +103,7 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
                                 OpenedViaCustomURLCallback customURLCB,
                                 OpenedViaRemoteNotificationCallback remoteNotificationCB)
 {
-    lmLog(gAndroidMobileLogGroup, "INIT ***** MOBILE ***** ANDROID ****");
+    lmLog(gAndroidMobileLogGroup, "Initializing Mobile for Android");
 
     gTripleChangedCallback = sensorTripleChangedCB;    
     gOpenedViaCustomURLCallback = customURLCB;    

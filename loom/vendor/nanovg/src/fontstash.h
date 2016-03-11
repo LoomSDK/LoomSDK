@@ -1166,8 +1166,6 @@ static void fons__getQuad(FONScontext* stash, FONSfont* font,
 		rx = floorf(*x + xoff);
 		ry = floorf(*y + yoff);
 
-        //lmLog(gFons, "tl %f %f", rx, ry);
-
 		q->x0 = rx;
 		q->y0 = ry;
 		q->x1 = rx + x1 - x0;
@@ -1180,8 +1178,6 @@ static void fons__getQuad(FONScontext* stash, FONSfont* font,
 	} else {
         rx = floorf(*x + xoff);
         ry = floorf(*y - yoff);
-
-        //lmLog(gFons, "ot %f %f", rx, ry);
 
 		q->x0 = rx;
 		q->y0 = ry;

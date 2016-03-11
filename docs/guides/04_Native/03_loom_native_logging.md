@@ -29,7 +29,7 @@ log message.
 The third argument is the enable switch. 1 for enabled, 0 for disabled.
 
 The last argument if the default filter level of the log group. Lower levels
-will not be shown. Filter levels are `LoomLogDebug`, `LoomLogInfo`,
+will not be shown. Filter levels are `LoomLogDebug`, `LoomLogInfo` or `LoomLogDefault`,
 `LoomLogWarn`, `LoomLogError` and `LoomLogMax` (same as `LoomLogError`).
 
 ## Sharing groups and declaration

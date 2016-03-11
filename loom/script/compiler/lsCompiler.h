@@ -35,6 +35,13 @@
 namespace LS {
 class AssemblyBuilder;
 
+enum LSLogType
+{
+    INVALID = -99,
+    CLI,
+    RUNTIME
+};
+
 class LSCompiler 
 {
 
@@ -94,7 +101,10 @@ private:
     // if we have a loom config, this will be valid json, otherwise NULL
     static json_t *loomConfigJSON;
 
+    static utString loomConfigOverride;
     static utArray<utString> loomConfigClassPath;
+
+    static LSLogType logType;
 
     static void linkRootAssembly(const utString& sjson);
     static void compileRootBuildDependencies();
@@ -103,12 +113,11 @@ private:
     static BuildInfo *loadBuildFile(const utString& cref);
     static const char *readAssemblyUID(const utArray<unsigned char>& rawjson);
 
-    static loom_logGroup_t compilerLogGroup;
-    static loom_logGroup_t compilerVerboseLogGroup;
-
     static const char* embeddedSystemAssembly;
 
 public:
+
+    static loom_logGroup_t compilerLogGroup;
 
     LSCompiler() : vm(NULL), buildInfo(NULL)
     {
@@ -127,6 +136,10 @@ public:
     }
 
     static void setSDKBuild(const utString& lscPath);
+
+    static void setConfigOverride(const char *config);
+
+    static void setLogType(LSLogType type);
 
     static void setDumpSymbols(bool dump)
     {
@@ -185,11 +198,6 @@ public:
 
     // must be called after all source paths, assembly paths, and root build file have been set
     static void initialize();
-
-    static void setVerboseLog(bool enabled)
-    {
-        compilerVerboseLogGroup.enabled = enabled ? 1 : 0;
-    }
 
     static void log(const char *format, ...);
     static void logVerbose(const char *format, ...);

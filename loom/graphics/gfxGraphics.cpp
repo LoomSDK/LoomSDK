@@ -44,7 +44,7 @@ namespace GFX
 
 
 
-lmDefineLogGroup(gGFXLogGroup, "GFX", 1, LoomLogInfo);
+lmDefineLogGroup(gGFXLogGroup, "gfx", 1, LoomLogInfo);
 
 bool Graphics::sInitialized = false;
 
@@ -151,8 +151,6 @@ void Graphics::shutdown()
 void Graphics::reset(int width, int height, uint32_t flags)
 {
     lmAssert(sInitialized, "Please make sure to call Graphics::initialize first");
-
-    lmLogDebug(gGFXLogGroup, "Graphics::reset - %dx%d %x", width, height, flags);
 
     // clear context loss state
     sContextLost = false;
@@ -324,26 +322,26 @@ void Graphics::handleContextLoss()
 {
     sContextLost = true;
 
-    lmLog(gGFXLogGroup, "Graphics::handleContextLoss - %dx%d", sTarget.width, sTarget.height);
+    lmLogDebug(gGFXLogGroup, "Graphics::handleContextLoss - %dx%d", sTarget.width, sTarget.height);
 
-    lmLog(gGFXLogGroup, "Handle context loss: Shutdown %i", _scount++);
+    lmLogDebug(gGFXLogGroup, "Handle context loss: Shutdown %i", _scount++);
 
-    // make sure the QuadRenderer resources are freed before we shutdown bgfx
+    // make sure the QuadRenderer resources are freed before we shutdown
     QuadRenderer::destroyGraphicsResources();
     VectorRenderer::destroyGraphicsResources();
 
-    lmLog(gGFXLogGroup, "Handle context loss: Init");
+    lmLogDebug(gGFXLogGroup, "Handle context loss: Init");
 
-    lmLog(gGFXLogGroup, "Handle context loss: Reset");
+    lmLogDebug(gGFXLogGroup, "Handle context loss: Reset");
     reset(sTarget.width, sTarget.height);
-    lmLog(gGFXLogGroup, "Handle context loss: Done");
+    lmLogDebug(gGFXLogGroup, "Handle context loss: Done");
 }
 
 
 void Graphics::screenshot(const char *path)
 {
-    if (strlen(path) > 1024) {
-        lmLog(gGFXLogGroup, "Screenshot name too big! Screenshots must be 1024 characters or less");
+    if (strlen(path) > 1023) {
+        lmLogError(gGFXLogGroup, "Screenshot path too long! Screenshot path must be 1023 characters or fewer");
         return;
     }
     strcpy(pendingScreenshot, path);

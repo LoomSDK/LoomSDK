@@ -56,7 +56,7 @@ namespace GFX
         const char* ext = strrchr(path, '.');
         if (ext == NULL)
         {
-            lmLog(gGFXLogGroup, "No extension in path %s. Unable to detect file format.", path);
+            lmLogError(gGFXLogGroup, "No extension in path %s. Unable to detect file format.", path);
             return;
         }
 
@@ -64,7 +64,7 @@ namespace GFX
         {
             if (stbi_write_bmp(path, w, h, DATA_BPP, data) != 1)
             {
-                lmLog(gGFXLogGroup, "Unable to write image %s", path);
+                lmLogError(gGFXLogGroup, "Unable to write image %s", path);
             }
             return;
         }
@@ -73,7 +73,7 @@ namespace GFX
         {
             if (stbi_write_png(path, w, h, DATA_BPP, data, w * DATA_BPP) != 1)
             {
-                lmLog(gGFXLogGroup, "Unable to write image %s", path);
+                lmLogError(gGFXLogGroup, "Unable to write image %s", path);
             }
             return;
         }
@@ -82,12 +82,12 @@ namespace GFX
         {
             if (stbi_write_tga(path, w, h, DATA_BPP, data) != 1)
             {
-                lmLog(gGFXLogGroup, "Unable to write image %s", path);
+                lmLogError(gGFXLogGroup, "Unable to write image %s", path);
             }
             return;
         }
 
-        lmLog(gGFXLogGroup, "Unsupported image extension in path %s.", path);
+        lmLogError(gGFXLogGroup, "Unsupported image extension in path %s.", path);
     }
 
     void BitmapData::setPixel(unsigned int  x, unsigned int  y, rgba_t color)
@@ -133,14 +133,14 @@ namespace GFX
 
         // Sanity check
         if (w == 0 || h == 0) {
-            lmLog(gGFXLogGroup, "Graphics dimensions invalid %d x %d: %s", w, h, SDL_GetError());
+            lmLogError(gGFXLogGroup, "Graphics dimensions invalid %d x %d: %s", w, h, SDL_GetError());
             return NULL;
         }
 
         BitmapData* result = lmNew(NULL) BitmapData(w, h);
 
         if (result == NULL) {
-            lmLog(gGFXLogGroup, "Unable to allocate memory for screenshot pixel data buffer");
+            lmLogError(gGFXLogGroup, "Unable to allocate memory for screenshot pixel data buffer");
             return NULL;
         }
 
@@ -174,7 +174,7 @@ namespace GFX
         );
 
         if (result == NULL) {
-            lmLog(gGFXLogGroup, "Unable to allocate memory for BitmapData asset data");
+            lmLogError(gGFXLogGroup, "Unable to allocate memory for BitmapData asset data");
             return NULL;
         }
 
@@ -212,7 +212,7 @@ namespace GFX
         );
 
         if (result == NULL) {
-            lmLog(gGFXLogGroup, "Unable to allocate memory for BitmapData diff result");
+            lmLogError(gGFXLogGroup, "Unable to allocate memory for BitmapData diff result");
             return NULL;
         }
 
