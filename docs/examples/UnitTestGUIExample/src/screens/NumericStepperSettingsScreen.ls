@@ -39,6 +39,8 @@ package screens
         private var _list:List;
         private var _backButton:Button;
         private var _stepStepper:NumericStepper;
+        
+        public function getBackButton():Button { return _backButton; }
 
         protected function initializeHandler(event:Event):void
         {

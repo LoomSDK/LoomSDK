@@ -43,6 +43,9 @@ package screens
         private var _backButton:Button;
         private var _settingsButton:Button;
 
+        public function getStepper():NumericStepper { return _stepper; }
+        public function getSettingsButton():Button { return _settingsButton; }
+        
         protected function initializeHandler(event:Event):void
         {
             this.layout = new AnchorLayout();
