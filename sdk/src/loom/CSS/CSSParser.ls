@@ -237,6 +237,9 @@ package loom.css
                 next();
             }
             skipWS();
+            
+            if(peek() == "/" && peek(1) == "*")
+               skipCommentsAndWS();
         }
 
         public function end():Boolean
