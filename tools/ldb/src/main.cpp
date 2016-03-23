@@ -54,7 +54,7 @@ int main(int argc, const char** argv) {
     debuggerVM->open();
 
     lmLog(ldbLogGroup, "Running");
-    Assembly* ldbAssembly = debuggerVM->loadExecutableAssembly("../../../libs/LDB.loom");
+    Assembly* ldbAssembly = debuggerVM->loadExecutableAssembly("../../libs/LDB.loom");
     ldbAssembly->execute();
 
     debuggerVM->close();

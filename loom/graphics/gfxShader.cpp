@@ -149,9 +149,10 @@ bool GFX::Shader::load(const char* source)
     id = ctx->glCreateShader(type);
 
 #if LOOM_RENDERER_OPENGLES2
+    utString processed;
     if (type == GL_FRAGMENT_SHADER)
     {
-        utString processed = "precision mediump float;\n";
+        processed = "precision mediump float;\n";
         processed += source;
         source = processed.c_str();
     }
