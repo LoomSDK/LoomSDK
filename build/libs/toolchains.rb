@@ -292,9 +292,9 @@ class AndroidToolchain < Toolchain
   def self.apkName()
     #Determine the APK name.
     if CFG[:TARGET_ANDROID_BUILD_TYPE] == "release"
-      "LoomDemo-release-unsigned.apk"
+      "LoomPlayer-release-unsigned.apk"
     elsif CFG[:TARGET_ANDROID_BUILD_TYPE] == "debug"
-      "LoomDemo-debug-unaligned.apk"
+      "LoomPlayer-debug-unaligned.apk"
     else
       abort("Don't know how to generate the APK name for Android build target type #{CFG[:TARGET_ANDROID_BUILD_TYPE]}! Please update this if block.")
     end

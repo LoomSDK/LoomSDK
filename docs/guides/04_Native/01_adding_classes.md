@@ -31,7 +31,7 @@ sdk/          - SDK for LoomScript. This is itself a Loom Script SDK project.
 tools/        - Assorted tools used in Loom development.
 ~~~
 
-When you build the SDK, the output goes into an `artifacts/` folder. The default "application" for Loom is the LoomDemo app and this is what is created/run if you compile or debug the SDK via a project file.
+When you build the SDK, the output goes into an `artifacts/` folder. The default "application" for Loom is the LoomPlayer app and this is what is created/run if you compile or debug the SDK via a project file.
 
 ## Making Yourself at Home
 

@@ -51,7 +51,7 @@ LSLuaState     *LoomApplication::rootVM = NULL;
 utByteArray    *LoomApplication::initBytes = NULL;
 bool           LoomApplication::reloadQueued = false;
 bool           LoomApplication::suppressAssetTriggeredReload = false;
-utString       LoomApplication::bootAssembly = "Main.loom";
+utString       LoomApplication::bootAssembly = "bin/Main.loom";
 NativeDelegate LoomApplication::event;
 NativeDelegate LoomApplication::ticks;
 NativeDelegate LoomApplication::assetCommandDelegate;
@@ -173,7 +173,7 @@ void LoomApplication::execMainAssembly()
 
     // Read the rest of the assembly - the body
     Assembly *mainAssembly = rootVM->readExecutableAssemblyBinaryBody();
-    rootVM->closeExecutableAssembly(bootAssembly, false, initBytes);
+    rootVM->closeExecutableAssembly(bootAssembly, initBytes);
     initBytes = NULL;
     
     lmLogDebug(applicationLogGroup, "   o executing %s", bootAssembly.c_str());
@@ -387,11 +387,11 @@ int LoomApplication::initializeCoreServices()
     // Initialize script hooks.
     LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogDebug, LoomLogInfo, LoomLogWarn, LoomLogError);
     LS::NativeTypeBase::initialize();
-    //LS::LSLogSetLevel(LS::LSLogError);
 
     // Set up listener for changes to the boot assembly.
     suppressAssetTriggeredReload = true;
-    loom_asset_subscribe(utString("bin/" + bootAssembly).c_str(), LoomApplication::__handleMainAssemblyUpdate, NULL, 0);
+
+    loom_asset_subscribe(bootAssembly.c_str(), LoomApplication::__handleMainAssemblyUpdate, NULL, 0);
 
     // And fire script executoin.
     execMainAssembly();
@@ -473,7 +473,7 @@ void LoomApplication::fireGenericEvent(const char *type, const char *payload)
     
     loomJniMethodInfo eventCallback;
     LoomJni::getStaticMethodInfo(eventCallback,
-        "co/theengine/loomdemo/LoomDemo",
+        "co/theengine/loomplayer/LoomPlayer",
         "handleGenericEvent",
         "(Ljava/lang/String;Ljava/lang/String;)V");
     JNIEnv *env = eventCallback.getEnv();
@@ -494,7 +494,7 @@ void LoomApplication::fireGenericEvent(const char *type, const char *payload)
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
 extern "C"
 {
-void Java_co_theengine_loomdemo_LoomDemo_internalTriggerGenericEvent(JNIEnv *env, jobject thiz, jstring type, jstring payload)
+void Java_co_theengine_loomplayer_LoomPlayer_internalTriggerGenericEvent(JNIEnv *env, jobject thiz, jstring type, jstring payload)
 {
     const char *typeString    = env->GetStringUTFChars(type, 0);
     const char *payloadString = env->GetStringUTFChars(payload, 0);

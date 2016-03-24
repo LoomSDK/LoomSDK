@@ -34,7 +34,7 @@ using namespace LS;
 
 void installPackageSystem();
 
-static utString   assemblyPath  = "./bin/Main.loom";
+static utString   assemblyPath  = "bin/Main.loom";
 static LSLuaState *execState    = NULL;
 static Assembly   *execAssembly = NULL;
 static utArray<utString> argSwitches;
@@ -53,7 +53,7 @@ static void initExecState()
 static void executeAssembly()
 {
     lmAssert(execState, "null execState");
-    execAssembly = execState->loadExecutableAssembly(assemblyPath.c_str(), true);
+    execAssembly = execState->loadExecutableAssembly(assemblyPath.c_str());
 
     // look for a class derived from LoomApplication in the main assembly
     Type *loomAppType = execState->getType("system.application.ConsoleApplication");

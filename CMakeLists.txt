@@ -7,10 +7,10 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/build/cmake/")
 #--------------------------------------
 
 # This is the name of the binaries/.apps we generate
-set(APPLICATION_NAME LoomDemo)
+set(APPLICATION_NAME LoomPlayer)
 
 # The package for the application.
-set(APPLICATION_PACKAGE co.theengine.LoomDemo)
+set(APPLICATION_PACKAGE co.theengine.LoomPlayer)
 
 project(LoomEngine)
 

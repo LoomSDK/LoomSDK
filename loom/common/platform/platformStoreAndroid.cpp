@@ -42,7 +42,7 @@ enum NativeCallbackType
 
 extern "C"
 {
-void Java_co_theengine_loomdemo_billing_LoomStore_nativeCallback(JNIEnv *env, jobject thiz, jint callbackType, jstring data)
+void Java_co_theengine_loomplayer_billing_LoomStore_nativeCallback(JNIEnv *env, jobject thiz, jint callbackType, jstring data)
 {
     lmLogError(gGoogleStoreLogGroup, "LoomStore Android Callback fired! %d", callbackType);
 
@@ -120,27 +120,27 @@ void platform_storeInitialize(StoreEventCallback eventCallback)
 
     // Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gPurchaseProductMethodInfo,
-                                 "co/theengine/loomdemo/billing/LoomStore",
+                                 "co/theengine/loomplayer/billing/LoomStore",
                                  "purchaseProduct",
                                  "(Ljava/lang/String;)V");
 
     LoomJni::getStaticMethodInfo(gPushProductMethodInfo,
-                                 "co/theengine/loomdemo/billing/LoomStore",
+                                 "co/theengine/loomplayer/billing/LoomStore",
                                  "pushProduct",
                                  "(Ljava/lang/String;)V");
 
     LoomJni::getStaticMethodInfo(gLoadProductsMethodInfo,
-                                 "co/theengine/loomdemo/billing/LoomStore",
+                                 "co/theengine/loomplayer/billing/LoomStore",
                                  "loadProducts",
                                  "()V");
 
     LoomJni::getStaticMethodInfo(gIsAvailableMethodInfo,
-                                 "co/theengine/loomdemo/billing/LoomStore",
+                                 "co/theengine/loomplayer/billing/LoomStore",
                                  "isAvailable",
                                  "()Z");
 
     LoomJni::getStaticMethodInfo(gQueryPurchasesMethodInfo,
-                                 "co/theengine/loomdemo/billing/LoomStore",
+                                 "co/theengine/loomplayer/billing/LoomStore",
                                  "queryInventory",
                                  "()V");
 

@@ -9,7 +9,7 @@ Note: You may need to select XCode with: sudo /usr/bin/xcode-select -switch /App
 For example:
 
 export IOS_SDK="6.1"
-export IOS_MOBILE_PROVISION="/Users/josh/Desktop/LoomDemo.mobileprovision"
+export IOS_MOBILE_PROVISION="/Users/josh/Desktop/LoomPlayer.mobileprovision"
 
 3. Change directory to the Loom Native SDK folder and run: rake deploy:sdk
 

@@ -264,7 +264,7 @@ const char *LoomJni::getPackageName()
     loomJniMethodInfo t;
 
     if (getStaticMethodInfo(t,
-        "co/theengine/loomdemo/LoomDemo",
+        "co/theengine/loomplayer/LoomPlayer",
         "getActivityPackageName",
         "()Ljava/lang/String;"))
     {
@@ -288,7 +288,7 @@ const char *LoomJni::getWritablePath()
     loomJniMethodInfo t;
 
     if (getStaticMethodInfo(t,
-        "co/theengine/loomdemo/LoomDemo",
+        "co/theengine/loomplayer/LoomPlayer",
         "getActivityWritablePath",
         "()Ljava/lang/String;"))
     {

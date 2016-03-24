@@ -47,7 +47,7 @@ You can see that for this project I am using the Loom Script SDK version 0.0.205
 Configuring Project...
 Checking for sdk 0.0.205
 Preparing sdk files...
-   Adding permissions to LoomDemo at /Users/beng/.loom/sdks/0.0.205/bin/LoomDemo.app/Contents/MacOS/LoomDemo
+   Adding permissions to LoomPlayer at /Users/beng/.loom/sdks/0.0.205/bin/LoomPlayer.app/Contents/MacOS/LoomPlayer
    Adding permissions to lsc at /Users/beng/.loom/sdks/0.0.205/tools/lsc
    Adding permissions to assetAgent at /Users/beng/.loom/sdks/0.0.205/tools/assetAgent
    Adding permissions to ldb at /Users/beng/.loom/sdks/0.0.205/tools/ldb

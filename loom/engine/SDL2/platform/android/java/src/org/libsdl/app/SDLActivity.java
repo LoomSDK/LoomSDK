@@ -70,7 +70,7 @@ public class SDLActivity extends Activity {
             // "SDL2_net",
             // "SDL2_ttf",
             //"main"
-        	"LoomDemo"
+        	"LoomPlayer"
         };
     }
 

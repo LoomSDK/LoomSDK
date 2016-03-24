@@ -47,19 +47,19 @@ void platform_parseInitialize()
 
     ///Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gIsActive,
-                                 "co/theengine/loomdemo/LoomParse",
+                                 "co/theengine/loomplayer/LoomParse",
                                  "isActive",
                                  "()Z");
     LoomJni::getStaticMethodInfo(gGetInstallationID,
-                                 "co/theengine/loomdemo/LoomParse",
+                                 "co/theengine/loomplayer/LoomParse",
                                  "getInstallationID",
                                  "()Ljava/lang/String;");
     LoomJni::getStaticMethodInfo(gGetInstallationObjectID,
-                                 "co/theengine/loomdemo/LoomParse",
+                                 "co/theengine/loomplayer/LoomParse",
                                  "getInstallationObjectID",
                                  "()Ljava/lang/String;");
     LoomJni::getStaticMethodInfo(gUpdateInstallationUserID,
-                                 "co/theengine/loomdemo/LoomParse",
+                                 "co/theengine/loomplayer/LoomParse",
                                  "updateInstallationUserID",
                                  "(Ljava/lang/String;)Z");
 }
