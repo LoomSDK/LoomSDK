@@ -26,13 +26,15 @@
 #include <stdio.h>
 #include <assert.h>
 
-
-extern "C"
-{
-    void loom_appShutdown();
-};
-
 namespace LS {
+
+static LSExitHandler exitHandler;
+
+void LSSetExitHandler(LSExitHandler handler)
+{
+    exitHandler = handler;
+}
+
 void LSError(const char *format, ...)
 {
     char* buff;
@@ -45,7 +47,8 @@ void LSError(const char *format, ...)
     __debugbreak();
 #endif
 
-    loom_appShutdown();
+    if (exitHandler) exitHandler();
+
     exit(EXIT_FAILURE);
 }
 

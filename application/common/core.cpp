@@ -385,6 +385,8 @@ main(int argc, char *argv[])
     }
 #endif
 
+    LSSetExitHandler(loom_appShutdown);
+
     // Initialize logging.
     loom_log_initialize();
 
