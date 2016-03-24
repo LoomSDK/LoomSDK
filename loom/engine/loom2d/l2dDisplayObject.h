@@ -182,6 +182,11 @@ public:
         type = typeDisplayObject;
     }
 
+    ~DisplayObject()
+    {
+        lualoom_managedpointerreleased(this);
+    }
+
     virtual void render(lua_State *L);
 
     virtual void validate(lua_State *L, int index)

@@ -532,7 +532,7 @@ package feathers.controls.supportClasses
             if(scrollInvalid || dataInvalid || itemRendererInvalid || sizeInvalid || stylesInvalid)
             {
                 this._ignoreRendererResizing = true;
-                this._layout.layout(this._layoutItems, HELPER_BOUNDS, HELPER_LAYOUT_RESULT);
+                if (this._layout) this._layout.layout(this._layoutItems, HELPER_BOUNDS, HELPER_LAYOUT_RESULT);
                 this._ignoreRendererResizing = false;
                 this.setSizeInternal(HELPER_LAYOUT_RESULT.contentWidth, HELPER_LAYOUT_RESULT.contentHeight, false);
                 this.actualVisibleWidth = HELPER_LAYOUT_RESULT.viewPortWidth;
@@ -736,7 +736,7 @@ package feathers.controls.supportClasses
             for(var i:int = 0; i < itemCount; i++)
             {
                 var renderer:IListItemRenderer = this._inactiveRenderers[i];
-                this._owner.dispatchEventWith(FeathersEventType.RENDERER_REMOVE, false, renderer);
+                if (this._owner) this._owner.dispatchEventWith(FeathersEventType.RENDERER_REMOVE, false, renderer);
                 //delete this._rendererMap[renderer.data];
                 this._rendererMap[renderer.data] = null;
             }
