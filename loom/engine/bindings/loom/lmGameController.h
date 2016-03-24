@@ -31,6 +31,8 @@ public:
 
     static int numControllers;
 
+    static void init();
+    static void shutdown();
     static void openAll();
     static void closeAll();
     static int addDevice(int deviceID);

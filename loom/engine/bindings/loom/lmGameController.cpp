@@ -45,6 +45,24 @@ LoomGameController::LoomGameController()
     name = nullptr;
 }
 
+/** Initialize controller subsystem  */
+void LoomGameController::init()
+{
+    /* Game Controller */
+    // Enable controller events
+    SDL_GameControllerEventState(SDL_ENABLE);
+
+    //Open all connected game controllers
+    LoomGameController::openAll();
+}
+
+/** Shutdown / close all controllers */
+void LoomGameController::shutdown()
+{
+    //Close all opened game controllers
+    LoomGameController::closeAll();
+}
+
 /** Opens all connected game controllers.
 *  This is usually only done at start of program.
 *  Other controllers are usually added by using SDL_CONTROLLERDEVICEADDED event. */

@@ -27,6 +27,11 @@
 #include <assert.h>
 
 
+extern "C"
+{
+    void loom_appShutdown();
+};
+
 namespace LS {
 void LSError(const char *format, ...)
 {
@@ -39,6 +44,8 @@ void LSError(const char *format, ...)
 #if LOOM_COMPILER == LOOM_COMPILER_MSVC
     __debugbreak();
 #endif
+
+    loom_appShutdown();
     exit(EXIT_FAILURE);
 }
 
