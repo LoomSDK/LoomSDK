@@ -26,8 +26,15 @@
 #include <stdio.h>
 #include <assert.h>
 
-
 namespace LS {
+
+static LSExitHandler exitHandler;
+
+void LSSetExitHandler(LSExitHandler handler)
+{
+    exitHandler = handler;
+}
+
 void LSError(const char *format, ...)
 {
     char* buff;
@@ -39,6 +46,9 @@ void LSError(const char *format, ...)
 #if LOOM_COMPILER == LOOM_COMPILER_MSVC
     __debugbreak();
 #endif
+
+    if (exitHandler) exitHandler();
+
     exit(EXIT_FAILURE);
 }
 

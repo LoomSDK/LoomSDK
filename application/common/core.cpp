@@ -385,6 +385,8 @@ main(int argc, char *argv[])
     }
 #endif
 
+    LSSetExitHandler(loom_appShutdown);
+
     // Initialize logging.
     loom_log_initialize();
 
@@ -452,7 +454,7 @@ main(int argc, char *argv[])
         | SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI)) == NULL)
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateWindow(): %s\n", SDL_GetError());
-        exit(0);
+        exit(1);
     }
 
     gContext = SDL_GL_CreateContext(gSDLWindow);
@@ -478,27 +480,14 @@ main(int argc, char *argv[])
 
     /* Main render loop */
     gLoomExecutionDone = 0;
-
-    /* Game Controller */
-    // Enable controller events
-    SDL_GameControllerEventState(SDL_ENABLE);
-
-    //Open all connected game controllers
-    LoomGameController::openAll();
     
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(loop, 0, 1);
 #else
     while (!gLoomExecutionDone) loop();
 #endif
-
-    //Close all opened game controllers before closing application
-    LoomGameController::closeAll();
-    loom_appShutdown();
     
-#ifdef WIN32
-    LS::Process::cleanupConsole();
-#endif
+    loom_appShutdown();
 
     exit(0);
     return 0; /* to prevent compiler warning */

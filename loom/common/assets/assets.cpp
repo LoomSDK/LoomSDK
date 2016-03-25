@@ -452,6 +452,13 @@ static void loom_asset_clear()
 void loom_asset_shutdown()
 {
     gShuttingDown = 1;
+    
+    loom_mutex_lock(gAssetServerSocketLock);
+    if (gAssetServerSocket != NULL) {
+        loom_net_closeTCPSocket(gAssetServerSocket);
+        gAssetServerSocket = NULL;
+    }
+    loom_mutex_unlock(gAssetServerSocketLock);
 
     loom_asset_flushAll();
     loom_asset_clear();

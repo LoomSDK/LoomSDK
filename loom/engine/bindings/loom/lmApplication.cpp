@@ -46,6 +46,7 @@ using namespace LS;
 #include "loom/script/serialize/lsBinReader.h"
 
 #include "loom/engine/bindings/sdl/lmSDL.h"
+#include "loom/engine/bindings/loom/lmGameController.h"
 
 LSLuaState     *LoomApplication::rootVM = NULL;
 utByteArray    *LoomApplication::initBytes = NULL;
@@ -86,6 +87,10 @@ void loom_appShutdown(void)
 {
     GFX::Graphics::shutdown();
     LoomApplication::shutdown();
+
+#ifdef WIN32
+    LS::Process::cleanupConsole();
+#endif
 }
 
 extern void loomsound_reset();
@@ -384,6 +389,8 @@ int LoomApplication::initializeCoreServices()
     lmLogDebug(applicationLogGroup, "   o sound");
     loomsound_init();
 
+    LoomGameController::init();
+
     // Initialize script hooks.
     LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogDebug, LoomLogInfo, LoomLogWarn, LoomLogError);
     LS::NativeTypeBase::initialize();
@@ -403,6 +410,9 @@ int LoomApplication::initializeCoreServices()
 void LoomApplication::shutdown()
 {
     loomsound_shutdown();
+
+    //Close all opened game controllers before closing application
+    LoomGameController::shutdown();
 
     platform_HTTPCleanup();
 
