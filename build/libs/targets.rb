@@ -52,7 +52,7 @@ class LuaJITTarget < Target
     return "#{super(toolchain)}/#{buildType}"
   end
   
-  def libPath(toolchain)
+  def binPath(toolchain)
     libName = case toolchain.name
     when "windows"
       "lua51.lib"
@@ -108,7 +108,7 @@ class LuaJITTarget < Target
         end
       
         # %4 - directory of output lib
-        args += " \"" + File.dirname(libPath(toolchain.platform)) + "\""
+        args += " \"" + File.dirname(binPath(toolchain.platform)) + "\""
         
         # %5..9 - additional compiler arguments 
         args += " /DLUA_GC_PROFILE_ENABLED" if CFG[:ENABLE_LUA_GC_PROFILE] == 1
@@ -126,7 +126,7 @@ class LuaJITTarget < Target
         
         prebuilt = Pathname.new "#{$ROOT}/loom/vendor/luajit-prebuilt"
         libout_root = Pathname.new buildRoot
-        libout = Pathname.new libPath(toolchain)
+        libout = Pathname.new binPath(toolchain)
 
         relpath = libout.relative_path_from libout_root
         
@@ -159,6 +159,24 @@ class LoomTarget < Target
     return "#{$ROOT}"
   end
   
+  def binPath(toolchain)
+    return case toolchain.name
+    when "osx"
+        "#{buildPath(toolchain)}/application/#{buildType}/LoomPlayer.app/Contents/MacOS/LoomPlayer"
+    else
+        abort "Unsupported platform"
+    end
+  end
+  
+  def appPath(toolchain)
+    return case toolchain.name
+    when "osx"
+        "#{buildPath(toolchain)}/application/#{buildType}/LoomPlayer.app/"
+    else
+        abort "Unsupported platform"
+    end
+  end
+  
   def flags(toolchain)
     is_debug = @buildType == :Debug ? "1" : "0"
     
@@ -170,7 +188,7 @@ class LoomTarget < Target
       "-DLOOM_IS_DEBUG=#{is_debug} "\
       "-DLOOM_BUILD_ADMOB=#{CFG[:BUILD_ADMOB]} "\
       "-DLOOM_BUILD_FACEBOOK=#{CFG[:BUILD_FACEBOOK]} "\
-      "-DLUAJIT_LIB=\"#{@luajit.libPath(toolchain)}\" "\
+      "-DLUAJIT_LIB=\"#{@luajit.binPath(toolchain)}\" "\
       "-DLUAJIT_INCLUDE_DIR=\"#{@luajit.includePath(toolchain)}\""
     return flagstr
   end
