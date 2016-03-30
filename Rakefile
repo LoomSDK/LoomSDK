@@ -99,6 +99,7 @@ end
 $ARCHS = {
   x86:    { is64Bit: false },
   x86_64: { is64Bit: true },
+  x86_unv: { is64Bit: true },
   armv7:  { is64Bit: false },
   armv7s: { is64Bit: false },
   arm64:  { is64Bit: true },
@@ -468,7 +469,12 @@ namespace :build do
       loom_x64 = LoomTarget.new(:x86_64, $BUILD_TYPE, luajit_x64);
       toolchain.build(loom_x64)
     end
-
+    
+    combined = LoomTarget.new(:x86_unv, $BUILD_TYPE, luajit_x86)
+    FileUtils.mkdir_p combined.appPath(toolchain)
+    toolchain.combine(toolchain, [loom_x86, loom_x64], combined)
+    FileUtils.cp combined.binPath(toolchain), "artifacts/osx-x64/bin/LoomPlayer.app/Contents/MacOS/LoomPlayer"
+    
     Rake::Task["utility:compileScripts"].invoke
     Rake::Task["utility:compileTools"].invoke
   end
