@@ -29,21 +29,7 @@ endif()
 if (APPLE)
     if (LOOM_BUILD_IOS EQUAL 1)
 
-        set(APPLE_ICON_FILES 
-            ios/Icon-60@2x.png 
-            ios/Icon-72.png 
-            ios/Icon-72@2x.png 
-            ios/Icon-76.png
-            ios/Icon-76@2x.png
-            ios/Icon-Small-40.png
-            ios/Icon-Small-40@2x.png
-            ios/Icon-Small-50.png
-            ios/Icon-Small-50@2x.png
-            ios/Icon-Small.png
-            ios/Icon-Small@2x.png
-            ios/Icon.png
-            ios/Icon@2x.png
-            )
+        file(GLOB APPLE_ICON_FILES ios/Icon*.png)
         set (APPLICATION_SRC
           ${APPLICATION_SRC}
           ios/Default-iphone.png
