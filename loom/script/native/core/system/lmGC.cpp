@@ -98,7 +98,7 @@ public:
         int stepTime;
         
         // Uncomment this to test a full GC collection cycle per frame
-        //lua_gc(L, LUA_GCCOLLECT, 0); cycles++;
+        //lua_gc(L, LUA_GCCOLLECT, 0); cyclesFinished++; cycleRuns++;
 
         // This loop is more or less equivalent to
         // int cycle = lua_gc(L, LUA_GCSTEP, runLimit);
@@ -159,7 +159,7 @@ public:
         // it can usually have more leeway as the rate will adjust
         // under normal conditions and only sudden changes benefit from
         // a faster response.
-        bool cycleKBWarn = lastValidBPR > 0 && cycleKBDelta > cycleKB * (hibernating ? targetGarbage : cycleMemoryGrowthWarningRatio);
+        bool cycleKBWarn = cycleKB > 0 && cycleKBDelta > cycleKB * (hibernating ? targetGarbage : cycleMemoryGrowthWarningRatio);
 
         if (cyclesFinished > 0 || cycleKBWarn)
         {
@@ -168,6 +168,7 @@ public:
             int extraRuns = 0;
             if (cycleKBWarn)
             {
+                if (lastValidBPR == 0) lastValidBPR = 64;
                 extraRuns += cycleKBDelta * 1024 / lastValidBPR / cycleWarningExtraRunDivider;
                 lmLogDebug(gGCGroup, "Allocating %d KiB in a single cycle, waking up with %d emergency runs", cycleKBDelta, extraRuns);
             }
