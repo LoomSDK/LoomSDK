@@ -1,0 +1,11 @@
+call loom compile
+call runstat.bat -1
+call runstat.bat -2
+call runstat.bat 0
+call runstat.bat 1
+call runstat.bat 2
+call runstat.bat 4
+call runstat.bat 8
+call runstat.bat 16
+call runstat.bat 32
+call runstat.bat 64
