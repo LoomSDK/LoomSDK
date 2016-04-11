@@ -2572,6 +2572,9 @@ Statement *Parser::parseEnumStatement()
     cls->metaTags = curTags;
     curTags.clear();
 
+    cls->docString = currentMultilineComment;
+    currentMultilineComment = "";
+
     readToken(LSTOKEN(KEYWORD_ENUM));
 
     cls->name = parseIdentifier();
@@ -2608,6 +2611,8 @@ Statement *Parser::parseEnumStatement()
         vd->defaultInitializer = false;
         vd->isParameter        = false;
         vd->typeString         = cls->name->string;
+        vd->docString = currentMultilineComment;
+        currentMultilineComment = "";
 
         utArray<VariableDeclaration *> *decls = new utArray<VariableDeclaration *>();
         decls->push_back(vd);
