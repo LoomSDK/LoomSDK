@@ -311,12 +311,15 @@ package loom2d.display
         public native function drawArc(x:Number, y:Number, radius:Number, angleFrom:Number, angleTo:Number, direction:int):void;
         
         /**
-         * Draw a line of text using the current format.
+         * Draw a line of text using the current format. Note that text alignment is provided
+         * by the currently used TextFormat.
          */
         public native function drawTextLine(x:Number, y:Number, text:String):void;
         
         /**
-         * Draw text in a box using the current format.
+         * Draw text in a box using the current format. Note that text alignment is provided
+         * by the currently used TextFormat and text alignment is calculated based on the first line of text.
+         * If you want to align text based on the last line of text, see textBoxBounds().
          */
         public native function drawTextBox(x:Number, y:Number, width:Number, text:String):void;
         
