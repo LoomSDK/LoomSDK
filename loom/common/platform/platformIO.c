@@ -294,7 +294,7 @@ int platform_mapFile(const char *path, void **outPointer, long *outSize)
             lmLogWarn(ioLogGroup, "Unable to get normalized file path name (%d)", GetLastError());
         } else {
             TCHAR *tpath;
-            size_t tpathLen;
+            size_t i, tpathLen;
             BOOL mismatch;
 
             lmAssert(sizeof(TCHAR) == 1, "Unsupported TCHAR type");
@@ -304,7 +304,7 @@ int platform_mapFile(const char *path, void **outPointer, long *outSize)
 
             // Detect equality ignoring slashes
             mismatch = FALSE;
-            for (size_t i = 0; i < tpathLen && i < normLength; i++) {
+            for (i = 0; i < tpathLen && i < normLength; i++) {
                 TCHAR tc, nc;
                 tc = tpath[tpathLen - 1 - i];
                 nc = normPath[normLength - 1 - i];
@@ -317,7 +317,8 @@ int platform_mapFile(const char *path, void **outPointer, long *outSize)
 
             if (mismatch) {
                 // Persist slash direction
-                for (size_t i = 0; i < tpathLen && i < normLength; i++) {
+                size_t i;
+                for (i = 0; i < tpathLen && i < normLength; i++) {
                     TCHAR tc = tpath[tpathLen - 1 - i];
                     if (tc == '/' || tc == '\\') normPath[normLength - 1 - i] = tc;
                 }
