@@ -272,6 +272,9 @@ int platform_mapFile(const char *path, void **outPointer, long *outSize)
         TCHAR *normPath;
         DWORD normLength;
 
+        DWORD bytesRead;
+        BOOL success;
+
         GetFileSizeEx(f, &large_int_size);
         lmAssert(large_int_size.HighPart == 0, "Unable to open, file too large: '%s'", path);
 
@@ -349,8 +352,7 @@ int platform_mapFile(const char *path, void **outPointer, long *outSize)
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
         lmLogDebug(ioLogGroup, "Mapped via CreateFile (%x, len=%d): '%s'", *outPointer, *outSize, path);
 
-        DWORD bytesRead;
-        BOOL success = ReadFile(
+        success = ReadFile(
             f,
             *outPointer,
             size,
