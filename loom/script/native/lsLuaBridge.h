@@ -2322,8 +2322,9 @@ template<> struct Stack<
     static inline
     unsigned int get(lua_State *L, int index)
     {
-        return static_cast<
-            unsigned int> (luaL_checknumber(L, index));
+        // Needs to be cast to a signed int first, then to an unsigned int
+        // Casting negative real numbers to unsigned int is only defined for the range (-1, UTYPE_MAX+1)
+        return static_cast<unsigned int>(static_cast<int>(luaL_checknumber(L, index)));
     }
 };
 
