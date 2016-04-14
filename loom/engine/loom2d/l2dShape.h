@@ -40,7 +40,7 @@ public:
 	Shape()
 	{
 		type = typeShape;
-		graphics = lmNew(NULL) GFX::VectorGraphics();
+		graphics = lmNew(NULL) GFX::VectorGraphics(this);
 	}
 	~Shape() {
 		lmSafeDelete(NULL, graphics);

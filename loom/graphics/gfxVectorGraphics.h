@@ -26,6 +26,11 @@
 #include "loom/engine/loom2d/l2dMatrix.h"
 #include "loom/engine/loom2d/l2dRectangle.h"
 
+namespace Loom2D
+{
+    class Shape;
+}
+
 namespace GFX
 {
 
@@ -193,11 +198,20 @@ protected:
     void restartPath();
     void resetStyle();
     void inflateBounds(const Loom2D::Rectangle& rect);
+    void inflateLineBounds(const Loom2D::Rectangle& r);
+    
+    void calculateScale();
+    lmscalar calculatedScaleX;
+    lmscalar calculatedScaleY;
+    bool isScaleCalculated;
+    
+    const Loom2D::Shape* parent;
 
 public:
     utArray<VectorData*> queue;
     VectorPath *lastPath;
     VectorLineStyle currentLineStyle;
+    VectorLineStyle* lastLineStyle;
     VectorFill currentFill;
     bool pathDirty;
     bool textFormatDirty;
@@ -210,10 +224,18 @@ public:
     lmscalar scale;
     int clipX, clipY, clipWidth, clipHeight;
 
-    VectorGraphics() {
-        clipX = clipY = 0;
-        clipWidth = clipHeight = -1;
+    VectorGraphics(const Loom2D::Shape* shape)
+    : parent(shape)
+    , clipX(0)
+    , clipY(0)
+    , clipWidth(-1)
+    , clipHeight(-1) {
         clear();
+    }
+
+    VectorGraphics()
+    {
+        assert(false); // Shouldn't use the default constructor
     }
 
     ~VectorGraphics() {
