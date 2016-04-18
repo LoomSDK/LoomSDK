@@ -108,17 +108,21 @@ void loop()
         if(event.type == SDL_KEYDOWN)
         {
             SDL_Keysym key = event.key.keysym;
-            // Handle a key!
-            stage->_KeyDownDelegate.pushArgument(key.scancode);
-            stage->_KeyDownDelegate.pushArgument(key.sym);
-            stage->_KeyDownDelegate.pushArgument(key.mod);
-            stage->_KeyDownDelegate.invoke();
-            //lmLog(coreLogGroup, "keydown %d %d", key.sym, SDLK_BACKSPACE);
-            if (SDL_IsTextInputActive() && key.mod == KMOD_NONE && key.sym == SDLK_BACKSPACE) IMEDelegateDispatcher::shared()->dispatchDeleteBackward();
-            if (key.mod & KMOD_CTRL && key.sym == SDLK_v) {
-                char* clipboard = SDL_GetClipboardText();
-                IMEDelegateDispatcher::shared()->dispatchInsertText(clipboard, strlen(clipboard));
-                SDL_free(clipboard);
+            //lmLog(coreLogGroup, "keydown %d %d", key.sym, SDLK_AC_BACK);
+            if (key.sym == SDLK_AC_BACK) {
+                stage->_BackKeyDelegate.invoke();
+            } else {
+                // Handle a key!
+                stage->_KeyDownDelegate.pushArgument(key.scancode);
+                stage->_KeyDownDelegate.pushArgument(key.sym);
+                stage->_KeyDownDelegate.pushArgument(key.mod);
+                stage->_KeyDownDelegate.invoke();
+                if (SDL_IsTextInputActive() && key.mod == KMOD_NONE && key.sym == SDLK_BACKSPACE) IMEDelegateDispatcher::shared()->dispatchDeleteBackward();
+                if (key.mod & KMOD_CTRL && key.sym == SDLK_v) {
+                    char* clipboard = SDL_GetClipboardText();
+                    IMEDelegateDispatcher::shared()->dispatchInsertText(clipboard, strlen(clipboard));
+                    SDL_free(clipboard);
+                }
             }
         }
         else if(event.type == SDL_KEYUP)
