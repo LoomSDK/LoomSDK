@@ -78,19 +78,26 @@ static void *lsLuaAlloc(void *ud, void *ptr, size_t osize, size_t nsize)
     
     LSLuaState::allocatedBytes += nsize - osize;
 
-    if (nsize == 0) 
+    void *ret;
+    if (nsize == 0)
     {
         lmFree(NULL, ptr);
         return NULL;
     }
     else if (ptr == NULL)
     {
-        return lmAlloc(NULL, nsize);
+        ret = lmAlloc(NULL, nsize);
     }
     else
     {
-        return lmRealloc(NULL, ptr, nsize);
+        ret = lmRealloc(NULL, ptr, nsize);
     }
+
+    // Garbage collection here would be nice,
+    // but it breaks internal Lua allocation
+    lmSafeCheck(ret, "Unable to allocate memory for runtime");
+
+    return ret;
 }
 
 void LSLuaState::open()
