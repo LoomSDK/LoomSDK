@@ -170,7 +170,6 @@ void VectorGraphics::endFill() {
 void VectorGraphics::moveTo(float x, float y) {
     auto path = getPath();
     path->moveTo(x, y);
-    inflateBounds(Loom2D::Rectangle(x, y, 0, 0));
 }
 
 void VectorGraphics::lineTo(float x, float y) {
@@ -528,6 +527,7 @@ void VectorGraphics::restartPath() {
             float x = lastPath->data[dataNum - 2];
             float y = lastPath->data[dataNum - 1];
             lastPath = NULL;
+            moveTo(x, y);
         } else {
             lastPath = NULL;
         }

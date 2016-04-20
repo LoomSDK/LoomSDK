@@ -198,7 +198,6 @@ package
 
             // arcTo with implicit initial moveTo after shapes
 
-            g.moveTo(0, 100);
             beginBounds(g);
             g.arcTo(  0,  75, 25, 75, 25);
             endBounds(g, sg.scale);
