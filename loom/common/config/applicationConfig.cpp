@@ -27,6 +27,11 @@
 
 lmDefineLogGroup(gLoomApplicationConfigLogGroup, "config", 1, LoomLogInfo);
 
+
+const int LoomApplicationConfig::POSITION_INVALID   = 0x1FFF0000;
+const int LoomApplicationConfig::POSITION_UNDEFINED = 0x1FFF0000 + 1;
+const int LoomApplicationConfig::POSITION_CENTERED  = 0x1FFF0000 + 2;
+
 utString LoomApplicationConfig::configJSON;
 int      LoomApplicationConfig::_waitForAssetAgent = false;
 utString LoomApplicationConfig::assetHost;

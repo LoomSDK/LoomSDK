@@ -59,9 +59,9 @@ class LoomApplicationConfig
     static utString _displayMode;
 
 public:
-    static const int POSITION_INVALID   = 0x1FFF0000;
-    static const int POSITION_UNDEFINED = 0x1FFF0000 + 1;
-    static const int POSITION_CENTERED  = 0x1FFF0000 + 2;
+    static const int POSITION_INVALID;
+    static const int POSITION_UNDEFINED;
+    static const int POSITION_CENTERED;
 
     static void parseApplicationConfig(const utString& jsonString);
 
