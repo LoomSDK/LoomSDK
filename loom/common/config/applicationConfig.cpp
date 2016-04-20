@@ -27,9 +27,6 @@
 
 lmDefineLogGroup(gLoomApplicationConfigLogGroup, "config", 1, LoomLogInfo);
 
-const utString LoomApplicationConfig::OrientationLandscape = "landscape";
-const utString LoomApplicationConfig::OrientationPortrait = "portrait";
-
 utString LoomApplicationConfig::configJSON;
 int      LoomApplicationConfig::_waitForAssetAgent = false;
 utString LoomApplicationConfig::assetHost;
@@ -42,9 +39,17 @@ int      LoomApplicationConfig::_waitForDebugger = false;
 utString LoomApplicationConfig::_debuggerHost;
 int      LoomApplicationConfig::_debuggerPort;
 utString LoomApplicationConfig::_displayTitle = "Loom";
+int      LoomApplicationConfig::_displayX = LoomApplicationConfig::POSITION_UNDEFINED;
+int      LoomApplicationConfig::_displayY = LoomApplicationConfig::POSITION_UNDEFINED;
 int      LoomApplicationConfig::_displayWidth = 640;
 int      LoomApplicationConfig::_displayHeight = 480;
 utString LoomApplicationConfig::_displayOrientation = "auto";
+bool     LoomApplicationConfig::_displayMaximized = false;
+bool     LoomApplicationConfig::_displayMinimized = false;
+bool     LoomApplicationConfig::_displayResizable = true;
+bool     LoomApplicationConfig::_displayBorderless = false;
+utString LoomApplicationConfig::_displayMode = "windowed";
+
 
 // little helpers that do conversion
 static bool _jsonParseBool(const char *key, json_t *value)
@@ -123,6 +128,62 @@ static int _jsonParseInt(const char *key, json_t *value)
     return 0;
 }
 
+static void _jsonReadInt(json_t *json, const char *key, int &value)
+{
+    if (json_t *jint = json_object_get(json, key))
+    {
+        value = _jsonParseInt(key, jint);
+    }
+}
+
+static void _jsonReadStr(json_t *json, const char *key, utString &value)
+{
+    if (json_t *jstring = json_object_get(json, key))
+    {
+        value = json_string_value(jstring);
+    }
+}
+
+static void _jsonReadBool(json_t *json, const char *key, bool &value)
+{
+    if (json_t *jbool = json_object_get(json, key))
+    {
+        value = _jsonParseBool(key, jbool);
+    }
+}
+
+static void _jsonReadPos(json_t *json, const char *key, int &value)
+{
+    if (json_t *jpos = json_object_get(json, key))
+    {
+        if (json_is_string(jpos))
+        {
+            utString pos = json_string_value(jpos);
+
+            int v =
+                pos == "center" ? LoomApplicationConfig::POSITION_CENTERED :
+                LoomApplicationConfig::POSITION_INVALID;
+
+            if (v == LoomApplicationConfig::POSITION_INVALID)
+            {
+                lmLogWarn(gLoomApplicationConfigLogGroup, "Unknown value for '%s' position: %s", key, pos.c_str());
+            }
+            else
+            {
+                value = v;
+            }
+        }
+        else if (json_is_integer(jpos))
+        {
+            value = json_integer_value(jpos);
+        }
+        else
+        {
+            lmLogWarn(gLoomApplicationConfigLogGroup, "Unknown value for '%s' position", key);
+        }
+    }
+}
+
 const utString& LoomApplicationConfig::displayOrientation()
 {
     return _displayOrientation;
@@ -193,39 +254,13 @@ void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
 
     lmAssert(json, "LoomApplicationConfig::parseApplicationConfig() error parsing application config %s\n %s %i\n", jerror.source, jerror.text, jerror.line);
 
-    if (json_t *wfaa = json_object_get(json, "waitForAssetAgent"))
-    {
-        _waitForAssetAgent = _jsonParseInt("waitForAssetAgent", wfaa);
-    }
+    _jsonReadInt(json, "waitForAssetAgent", _waitForAssetAgent);
 
-    if (json_t *ah = json_object_get(json, "assetAgentHost"))
-    {
-        if (!json_is_string(ah))
-        {
-            lmLogWarn(gLoomApplicationConfigLogGroup, "assetAgentHost was specified but is not a string!");
-        }
-        else
-        {
-            assetHost = json_string_value(ah);
-        }
-    }
+    _jsonReadStr(json, "assetAgentHost", assetHost);
+    _jsonReadInt(json, "assetAgentPort", assetPort);
 
-    if (json_t *ap = json_object_get(json, "assetAgentPort"))
-    {
-        assetPort = _jsonParseInt("assetAgentPort", ap);
-    }
-
-    const char *v = json_string_value(json_object_get(json, "version"));
-    if (v != NULL)
-    {
-        _version = v;
-    }
-
-    const char *app_id = json_string_value(json_object_get(json, "app_id"));
-    if (app_id != NULL)
-    {
-        _applicationId = app_id;
-    }
+    _jsonReadStr(json, "version", _version);
+    _jsonReadStr(json, "app_id", _applicationId);
 
     // Parse log block.
     if (json_t *logBlock = json_object_get(json, "log"))
@@ -233,54 +268,27 @@ void LoomApplicationConfig::parseApplicationConfig(const utString& jsonString)
         parseLogBlock(logBlock, "");
     }
 
-    if (json_t *w51a = json_object_get(json, "_wants51Audio"))
-    {
-        _wants51Audio = _jsonParseBool("_wants51Audio", w51a);
-    }
+    _jsonReadBool(json, "_wants51Audio", _wants51Audio);
+    _jsonReadInt(json, "waitForDebugger", _waitForDebugger);
 
-    if (json_t *wfd = json_object_get(json, "waitForDebugger"))
-    {
-        _waitForDebugger = _jsonParseInt("waitForDebugger", wfd);
-    }
-
-    if (json_t *dh = json_object_get(json, "debuggerHost"))
-    {
-        if (!json_is_string(dh))
-        {
-            lmLogWarn(gLoomApplicationConfigLogGroup, "debuggerHost was specified but is not a string!");
-        }
-        else
-        {
-            _debuggerHost = json_string_value(dh);
-        }
-    }
-
-    if (json_t *dp = json_object_get(json, "debuggerPort"))
-    {
-        _debuggerPort = _jsonParseInt("debuggerPort", dp);
-    }
+    _jsonReadStr(json, "debuggerHost", _debuggerHost);
+    _jsonReadInt(json, "debuggerPort", _debuggerPort);
 
     if (json_t *displayBlock = json_object_get(json, "display"))
     {
-        if(json_t *dTitle = json_object_get(displayBlock, "title"))
-        {
-            _displayTitle = json_string_value(dTitle);
-        }
+        _jsonReadStr(displayBlock, "title", _displayTitle);
 
-        if(json_t *dWidth = json_object_get(displayBlock, "width"))
-        {
-            _displayWidth = _jsonParseInt("width", dWidth);
-        }
-
-        if (json_t *dHeight = json_object_get(displayBlock, "height"))
-        {
-            _displayHeight = _jsonParseInt("height", dHeight);
-        }
-
-        if (json_t *dOrientation = json_object_get(displayBlock, "orientation"))
-        {
-            _displayOrientation = json_string_value(dOrientation);
-        }
+        _jsonReadPos(displayBlock, "x", _displayX);
+        _jsonReadPos(displayBlock, "y", _displayY);
+        
+        _jsonReadInt(displayBlock, "width", _displayWidth);
+        _jsonReadInt(displayBlock, "height", _displayHeight);
+        _jsonReadStr(displayBlock, "orientation", _displayOrientation);
+        _jsonReadBool(displayBlock, "maximized", _displayMaximized);
+        _jsonReadBool(displayBlock, "minimized", _displayMinimized);
+        _jsonReadBool(displayBlock, "resizable", _displayResizable);
+        _jsonReadBool(displayBlock, "borderless", _displayBorderless);
+        _jsonReadStr(displayBlock, "mode", _displayMode);
     }
 
     json_delete(json);

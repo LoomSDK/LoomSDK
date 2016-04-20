@@ -304,6 +304,14 @@ static void printUsage()
     option::printUsage(printOption, usage);
 }
 
+static int getSDLWindowPosition(int appConfigPos) {
+    return
+        appConfigPos == LoomApplicationConfig::POSITION_UNDEFINED ||
+        appConfigPos == LoomApplicationConfig::POSITION_INVALID ? SDL_WINDOWPOS_UNDEFINED :
+        appConfigPos == LoomApplicationConfig::POSITION_CENTERED ? SDL_WINDOWPOS_CENTERED :
+        appConfigPos;
+}
+
 #define usageError(format, ...) { platform_error("Error: " format "\n\n", ##__VA_ARGS__); printUsage(); return 1; }
 
 int
@@ -441,17 +449,36 @@ main(int argc, char *argv[])
     ret = SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilSize);
     lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
     
+    Uint32 windowFlags = 0;
+
+    windowFlags |= SDL_WINDOW_HIDDEN;
+    windowFlags |= SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
+
+#if LOOM_PLATFORM == LOOM_PLATFORM_IOS
+    windowFlags |= SDL_WINDOW_BORDERLESS;
+#endif
+
+    if (LoomApplicationConfig::displayMaximized()) windowFlags |= SDL_WINDOW_MAXIMIZED;
+    if (LoomApplicationConfig::displayMinimized()) windowFlags |= SDL_WINDOW_MINIMIZED;
+    if (LoomApplicationConfig::displayResizable()) windowFlags |= SDL_WINDOW_RESIZABLE;
+    if (LoomApplicationConfig::displayBorderless()) windowFlags |= SDL_WINDOW_BORDERLESS;
+    utString displayMode = LoomApplicationConfig::displayMode();
+    
+    windowFlags |=
+        displayMode == "window" ? 0 :
+        displayMode == "fullscreen" ? SDL_WINDOW_FULLSCREEN :
+        displayMode == "fullscreenWindow" ? SDL_WINDOW_FULLSCREEN_DESKTOP :
+        0;
+
     // Set up SDL window.
     if ((gSDLWindow = SDL_CreateWindow(
         "Loom",
-        0, 0,
-        100,
-        100,
-        SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN
-#if LOOM_PLATFORM == LOOM_PLATFORM_IOS
-        | SDL_WINDOW_BORDERLESS
-#endif
-        | SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI)) == NULL)
+        getSDLWindowPosition(LoomApplicationConfig::displayX()),
+        getSDLWindowPosition(LoomApplicationConfig::displayY()),
+        LoomApplicationConfig::displayWidth(),
+        LoomApplicationConfig::displayHeight(),
+        windowFlags
+    )) == NULL)
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_CreateWindow(): %s\n", SDL_GetError());
         exit(1);
@@ -468,9 +495,6 @@ main(int argc, char *argv[])
         lmLogDebug(coreLogGroup, "Late swap tearing not supported, using vsync");
         SDL_GL_SetSwapInterval(1);
     }
-
-    // And show the window with proper settings.
-    SDL_SetWindowPosition(gSDLWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
     SDL_StopTextInput();
 

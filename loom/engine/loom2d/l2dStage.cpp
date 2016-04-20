@@ -33,7 +33,7 @@ namespace Loom2D
 
 Stage *Stage::smMainStage = NULL;
 NativeDelegate Stage::_RenderStageDelegate;
-bool Stage::sizeDirty = true;
+bool Stage::sizeDirty = false;
 bool Stage::visDirty = true;
 
 Stage::Stage()
