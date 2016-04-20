@@ -96,7 +96,7 @@ package loom.gameframework
 
          if(!cc)
          {
-            Console.print("No such command '" + command +  "' found.");
+            Console.print("   console  Command not found: " + command);
             return;
          }
 
