@@ -25,7 +25,6 @@
 #include <jni.h>
 #include "platformAndroidJni.h"
 
-#include "loom/engine/cocos2dx/cocoa/CCString.h"
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
 #include "loom/common/platform/platformParse.h"
@@ -81,10 +80,10 @@ const char* platform_getInstallationID()
     }
     
     ///convert jstring result into const char* for us to return
-    cocos2d::CCString *installID = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
-    installID->autorelease();
+    static char installIdStatic[1024];
+    strncpy(installIdStatic, LoomJni::jstring2string(result).c_str(), 1024);
     gGetInstallationID.getEnv()->DeleteLocalRef(result);
-    return installID->m_sString.c_str();
+    return installIdStatic;
 }
 
 
@@ -98,10 +97,10 @@ const char* platform_getInstallationObjectID()
     }
     
     ///convert jstring result into const char* for us to return
-    cocos2d::CCString *installID = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
-    installID->autorelease();
+    static char installIdStatic[1024];
+    strncpy(installIdStatic, LoomJni::jstring2string(result).c_str(), 1024);
     gGetInstallationObjectID.getEnv()->DeleteLocalRef(result);
-    return installID->m_sString.c_str();
+    return installIdStatic;
 }
 
 bool platform_updateInstallationUserID(const char* userId)
