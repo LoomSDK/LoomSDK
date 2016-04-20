@@ -159,7 +159,7 @@ public:
         // it can usually have more leeway as the rate will adjust
         // under normal conditions and only sudden changes benefit from
         // a faster response.
-        double cycleWarnThreshold = hibernating ? cycleKB*targetGarbage : cycleKB*cycleMemoryGrowthWarningRatio;
+        double cycleWarnThreshold = cycleKB*(hibernating ? targetGarbage : cycleMemoryGrowthWarningRatio);
         bool cycleWarn = cycleWarnThreshold > 0 && cycleKBDelta > cycleWarnThreshold;
 
         if (cyclesFinished > 0 || cycleWarn)
