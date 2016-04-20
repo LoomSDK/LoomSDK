@@ -29,7 +29,6 @@
 #include "loom/common/core/assert.h"
 #include "loom/common/platform/platformTeak.h"
 #include "loom/vendor/jansson/jansson.h"
-#include "loom/engine/cocos2dx/cocoa/CCString.h"
 
 
 lmDefineLogGroup(gAndroidTeakLogGroup, "teak", 1, LoomLogDefault);

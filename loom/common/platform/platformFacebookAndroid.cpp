@@ -29,7 +29,6 @@
 #include "loom/common/core/assert.h"
 #include "loom/common/platform/platformFacebook.h"
 #include "loom/vendor/jansson/jansson.h"
-#include "loom/engine/cocos2dx/cocoa/CCString.h"
 
 
 lmDefineLogGroup(gAndroidFacebookLogGroup, "facebook", 1, LoomLogDefault);
@@ -78,7 +77,7 @@ void platform_facebookInitialize(SessionStatusCallback sessionStatusCB, Friction
 
     gSessionStatusCallback = sessionStatusCB;   
     gFrictionlessRequestCallback = frictionlessRequestCB;   
- 
+
     // Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gIsActive,
                                     "co/theengine/loomplayer/LoomFacebook",
@@ -108,7 +107,7 @@ void platform_facebookInitialize(SessionStatusCallback sessionStatusCB, Friction
                                     "co/theengine/loomplayer/LoomFacebook",
                                     "getExpirationDate",
                                     "(Ljava/lang/String;)Ljava/lang/String;");
-	LoomJni::getStaticMethodInfo(gIsPermissionGranted,
+    LoomJni::getStaticMethodInfo(gIsPermissionGranted,
                                     "co/theengine/loomplayer/LoomFacebook",
                                     "isPermissionGranted",
                                     "(Ljava/lang/String;)Z");
@@ -124,19 +123,19 @@ bool platform_isFacebookActive()
 bool platform_openSessionWithReadPermissions(const char* permissionsString)
 {
     jstring jPermissionsString = gOpenSessionReadPermissions.getEnv()->NewStringUTF(permissionsString);
-    jboolean result = gOpenSessionReadPermissions.getEnv()->CallStaticBooleanMethod(gOpenSessionReadPermissions.classID, 
-                                                                                gOpenSessionReadPermissions.methodID, 
+    jboolean result = gOpenSessionReadPermissions.getEnv()->CallStaticBooleanMethod(gOpenSessionReadPermissions.classID,
+                                                                                gOpenSessionReadPermissions.methodID,
                                                                                 jPermissionsString);
     gOpenSessionReadPermissions.getEnv()->DeleteLocalRef(jPermissionsString);
-    return result;    
+    return result;
 }
 
 
 bool platform_requestNewPublishPermissions(const char* permissionsString)
 {
     jstring jPermissionsString = gRequestNewPublishPermissions.getEnv()->NewStringUTF(permissionsString);
-    jboolean result = gRequestNewPublishPermissions.getEnv()->CallStaticBooleanMethod(gRequestNewPublishPermissions.classID, 
-                                                                                    gRequestNewPublishPermissions.methodID, 
+    jboolean result = gRequestNewPublishPermissions.getEnv()->CallStaticBooleanMethod(gRequestNewPublishPermissions.classID,
+                                                                                    gRequestNewPublishPermissions.methodID,
                                                                                     jPermissionsString);
     gRequestNewPublishPermissions.getEnv()->DeleteLocalRef(jPermissionsString);
     return result;
@@ -148,11 +147,11 @@ void platform_showFrictionlessRequestDialog(const char* recipientsString, const 
     jstring jRecipientsString = gFrictionlessRequestDialog.getEnv()->NewStringUTF(recipientsString);
     jstring jTitleString = gFrictionlessRequestDialog.getEnv()->NewStringUTF(titleString);
     jstring jMessageString = gFrictionlessRequestDialog.getEnv()->NewStringUTF(messageString);
-    
-    gFrictionlessRequestDialog.getEnv()->CallStaticVoidMethod(gFrictionlessRequestDialog.classID, 
-                                                            gFrictionlessRequestDialog.methodID, 
-                                                            jRecipientsString, 
-                                                            jTitleString, 
+
+    gFrictionlessRequestDialog.getEnv()->CallStaticVoidMethod(gFrictionlessRequestDialog.classID,
+                                                            gFrictionlessRequestDialog.methodID,
+                                                            jRecipientsString,
+                                                            jTitleString,
                                                             jMessageString);
     gFrictionlessRequestDialog.getEnv()->DeleteLocalRef(jRecipientsString);
     gFrictionlessRequestDialog.getEnv()->DeleteLocalRef(jTitleString);
@@ -162,44 +161,47 @@ void platform_showFrictionlessRequestDialog(const char* recipientsString, const 
 
 const char* platform_getAccessToken()
 {
-    jstring result = (jstring)gGetAccessToken.getEnv()->CallStaticObjectMethod(gGetAccessToken.classID, 
-                                                                            gGetAccessToken.methodID);
-    
-    cocos2d::CCString *accessToken = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
-    accessToken->autorelease();
+    static char accessTokenStatic[1024];
+
+    jstring result = (jstring)gGetAccessToken.getEnv()->CallStaticObjectMethod(gGetAccessToken.classID,
+                                                                               gGetAccessToken.methodID);
+    strncpy(accessTokenStatic, LoomJni::jstring2string(result).c_str(), 1024);
+
     gGetAccessToken.getEnv()->DeleteLocalRef(result);
-    return accessToken->m_sString.c_str();
+
+    return accessTokenStatic;
 }
 
 
 void platform_closeAndClearTokenInformation()
-{       
+{
     gCloseTokenInfo.getEnv()->CallStaticVoidMethod(gCloseTokenInfo.classID, gCloseTokenInfo.methodID);
 }
 
 
 const char* platform_getExpirationDate(const char* dateFormat)
 {
+    static char expirationDateStatic[1024];
+
     jstring jdateFormatString   = gGetExpirationDate.getEnv()->NewStringUTF(dateFormat);
 
-    jstring result = (jstring)gGetExpirationDate.getEnv()->CallStaticObjectMethod(gGetExpirationDate.classID, 
+    jstring result = (jstring)gGetExpirationDate.getEnv()->CallStaticObjectMethod(gGetExpirationDate.classID,
                                                                                 gGetExpirationDate.methodID,
                                                                                 jdateFormatString);
+    strncpy(expirationDateStatic, LoomJni::jstring2string(result).c_str(), 1024);
 
-    cocos2d::CCString *expirationDate = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
-    expirationDate->autorelease();
     gGetExpirationDate.getEnv()->DeleteLocalRef(result);
-    return expirationDate->m_sString.c_str();
+    return expirationDateStatic;
 }
 
 bool platform_isPermissionGranted(const char* permission)
 {
     jstring jPermission = gIsPermissionGranted.getEnv()->NewStringUTF(permission);
-    jboolean result = gIsPermissionGranted.getEnv()->CallStaticBooleanMethod(gIsPermissionGranted.classID, 
-                                                                                gIsPermissionGranted.methodID, 
+    jboolean result = gIsPermissionGranted.getEnv()->CallStaticBooleanMethod(gIsPermissionGranted.classID,
+                                                                                gIsPermissionGranted.methodID,
                                                                                 jPermission);
     gIsPermissionGranted.getEnv()->DeleteLocalRef(jPermission);
-    return result;    
+    return result;
 }
 
 #endif
