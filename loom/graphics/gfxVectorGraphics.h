@@ -53,6 +53,11 @@ enum VectorPathCommand {
 class VectorPath : public VectorData {
 
 public:
+    VectorPath()
+    : lastX(0.0f)
+    , lastY(0.0f)
+    {}
+
     utArray<VectorPathCommand> commands;
     utArray<float> data;
     float lastX;
