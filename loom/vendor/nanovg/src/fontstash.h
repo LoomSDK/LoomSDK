@@ -383,7 +383,7 @@ struct FONSglyph
 	int next;
 	short size, blur;
 	short x0,y0,x1,y1;
-	short xadv,xoff,yoff;
+	float xadv,xoff,yoff;
 };
 typedef struct FONSglyph FONSglyph;
 
@@ -1092,9 +1092,9 @@ static FONSglyph* fons__getGlyph(FONScontext* stash, FONSfont* font, unsigned in
 	glyph->y0 = (short)gy;
 	glyph->x1 = (short)(glyph->x0+gw);
 	glyph->y1 = (short)(glyph->y0+gh);
-	glyph->xadv = (short)(scale * advance * 10.0f);
-	glyph->xoff = (short)(x0 - pad);
-	glyph->yoff = (short)(y0 - pad);
+	glyph->xadv = scale * advance;
+	glyph->xoff = x0 - pad;
+	glyph->yoff = y0 - pad;
 	glyph->next = 0;
 
 	// Insert char to hash lookup.
@@ -1163,8 +1163,8 @@ static void fons__getQuad(FONScontext* stash, FONSfont* font,
 	y1 = (float)(glyph->y1-1);
 
 	if (stash->params.flags & FONS_ZERO_TOPLEFT) {
-		rx = floorf(*x + xoff);
-		ry = floorf(*y + yoff);
+		rx = *x + xoff;
+		ry = *y + yoff;
 
 		q->x0 = rx;
 		q->y0 = ry;
@@ -1176,8 +1176,8 @@ static void fons__getQuad(FONScontext* stash, FONSfont* font,
 		q->s1 = x1 * stash->itw;
 		q->t1 = y1 * stash->ith;
 	} else {
-        rx = floorf(*x + xoff);
-        ry = floorf(*y - yoff);
+        rx = *x + xoff;
+        ry = *y - yoff;
 
 		q->x0 = rx;
 		q->y0 = ry;
@@ -1190,7 +1190,7 @@ static void fons__getQuad(FONScontext* stash, FONSfont* font,
 		q->t1 = y1 * stash->ith;
 	}
 
-	*x += (int)(glyph->xadv / 10.0f + 0.5f);
+	*x += glyph->xadv;
 }
 
 static void fons__flush(FONScontext* stash)
