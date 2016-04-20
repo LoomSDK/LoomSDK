@@ -137,7 +137,9 @@ package
             g.lineStyle(1);
 
             // Implicit moveTo(0,0)
+            beginBounds(g);
             g.lineTo(100, 0);
+            endBounds(g, sg.scale);
 
             // Explicit moveTo
             beginBounds(g);
