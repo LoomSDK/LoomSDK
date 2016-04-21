@@ -341,7 +341,8 @@ static int dollarNormalize(const SDL_DollarPath *path,SDL_FloatPoint *points)
         dist += d;
     }
     if (numPoints < DOLLARNPOINTS-1) {
-        SDL_SetError("ERROR: NumPoints = %i\n",numPoints);
+        // Loom: Why is this an error?
+        //SDL_SetError("ERROR: NumPoints = %i\n",numPoints);
         return 0;
     }
     /* copy the last point */
