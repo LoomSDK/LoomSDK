@@ -59,8 +59,7 @@ package loom.platform
          * Sensor that measures the acceleration applied to the device.  
          * Changes in the sensor are sent to onSensorTripleChanged().
          */
-        ///NOTE: Don't use Accelerometer for now...
-        // Accelerometer = 0,
+        Accelerometer = 0,
 
         /**
          * Sensor that measures the ambient magnetic field in the X, Y and Z axis in in micro-Tesla (uT).  
