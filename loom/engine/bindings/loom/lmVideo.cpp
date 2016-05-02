@@ -25,7 +25,7 @@
 
 using namespace LS;
 
-lmDefineLogGroup(gVideoLogGroup, "Loom.Video", 1, 0);
+lmDefineLogGroup(gVideoLogGroup, "video", 1, LoomLogDefault);
 
 /// Script bindings to the native Video API.
 ///

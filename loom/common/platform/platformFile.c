@@ -27,33 +27,23 @@
 
 const char *platform_getFolderDelimiter();
 
-const char *platform_normalizePath(const char *path)
+void platform_normalizePath(char *path)
 {
-    static char npath[4096];
     size_t      i;
     size_t      nlen;
     char        delimiter;
 
     nlen = strlen(path);
 
-    if (nlen > 4000)
-    {
-        return "";
-    }
-
-    strcpy(npath, path);
-
     delimiter = platform_getFolderDelimiter()[0];
 
     for (i = 0; i < nlen; i++)
     {
-        if ((npath[i] == '\\') || (npath[i] == '/'))
+        if ((path[i] == '\\') || (path[i] == '/'))
         {
-            npath[i] = delimiter;
+            path[i] = delimiter;
         }
     }
-
-    return npath;
 }
 
 
@@ -97,6 +87,11 @@ int platform_removeFile(const char *path)
     fclose(file);
 
     return remove(path);
+}
+
+int platform_moveFile(const char *source, const char *dest)
+{
+    return rename(source, dest);
 }
 
 

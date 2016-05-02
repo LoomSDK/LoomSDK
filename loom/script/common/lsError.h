@@ -29,7 +29,11 @@
 #include "lsLog.h"
 
 namespace LS {
+
+typedef void(*LSExitHandler)();
+
 extern "C" {
+void LSSetExitHandler(LSExitHandler handler);
 void LSError(const char *format, ...);
 void LSWarning(const char *format, ...);
 }

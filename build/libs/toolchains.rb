@@ -1,5 +1,11 @@
 class Toolchain
 
+  attr_reader :rebuild  
+  
+  def initialize()
+    @rebuild = true
+  end
+
   def buildCommand
     raise NotImplementedError
   end
@@ -99,12 +105,12 @@ class WindowsToolchain < Toolchain
     
     # Default directory fallbacks
     dirs = [
-      { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 12.0\\VC") },
-      { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 12.0\\VC") },
-      { name: 'Visual Studio 11', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 11.0\\VC") },
-      { name: 'Visual Studio 11', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 11.0\\VC") },
-      { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 10.0\\VC") },
-      { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 10.0\\VC") },
+      { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 12.0") },
+      { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 12.0") },
+      { name: 'Visual Studio 11', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 11.0") },
+      { name: 'Visual Studio 11', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 11.0") },
+      { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 10.0") },
+      { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 10.0") },
     ]
     
     # Check registry
@@ -128,8 +134,53 @@ class WindowsToolchain < Toolchain
   end
 end
 
+class AppleToolchain < Toolchain
+  # Combine several targets into one (e.g. lipo armv7, armv7s, arm64 into one arm)
+  #   toolchain - the toolchain the targets were compiled under
+  #   targets - an array of Targets to combine
+  #   combined - the combined Target to produce a lib for
+  def combine(toolchain, targets, combined)
+    
+    abort "Unable to combine architectures, no targets provided" unless targets.length > 0
+    
+    bin_out = combined.binPath(self)
+    
+    if File.file?(bin_out) and !toolchain.rebuild
+      puts "Libraries already combined to #{pretty_path bin_out}, skipping..."
+      return
+    end
+    
+    puts "Combining libraries for #{toolchain.name}"
+    
+    libs = []
+    libs_avail = []
+    
+    for target in targets
+      lib = target.binPath(toolchain)
+      exists = File.file?(lib)
+      puts pretty_path lib
+      puts "  #{toolchain.description(target)}: #{pretty_path lib}" + (exists ? "" : " (missing)")
+      libs.push lib
+      libs_avail.push lib unless !exists
+    end
+    
+    abort "Unable to combine architectures, none exist: #{libs}" unless libs_avail.length > 0
+    
+    FileUtils.mkdir_p File.dirname(bin_out)
+    
+    if libs_avail.length == 1
+      single = libs_avail[0]
+      puts "Only one architecture available, copying from\n  #{pretty_path single} to\n  #{pretty_path bin_out}"
+      FileUtils.cp single, bin_out
+    else
+      executeCommand("lipo -create \"#{libs_avail.join("\" \"")}\" -output \"#{bin_out}\"")
+      puts "Combined to #{pretty_path bin_out}"
+    end
+    
+  end
+end
 
-class OSXToolchain < Toolchain
+class OSXToolchain < AppleToolchain
 
   def name
     return "osx"
@@ -151,7 +202,7 @@ class OSXToolchain < Toolchain
 
 end
 
-class IOSToolchain < Toolchain
+class IOSToolchain < AppleToolchain
 
   def initialize(signAs)
     @signAs = signAs
@@ -186,48 +237,6 @@ class IOSToolchain < Toolchain
     return "-G \"Xcode\" -DLOOM_BUILD_IOS=1 -DLOOM_IOS_VERSION=#{CFG[:TARGET_IOS_SDK]}"
   end
   
-  # Combine several targets into one (e.g. lipo armv7, armv7s, arm64 into one arm)
-  #   toolchain - the toolchain the targets were compiled under
-  #   targets - an array of Targets to combine
-  #   combined - the combined Target to produce a lib for
-  def combine(toolchain, targets, combined)
-    
-    abort "Unable to combine architectures, no targets provided" unless targets.length > 0
-    
-    lib_arm = combined.libPath(self)
-    
-    if File.file?(lib_arm) and !toolchain.rebuild
-      puts "Libraries already combined to #{pretty_path lib_arm}, skipping..."
-      return
-    end
-    
-    puts "Combining libraries for #{toolchain.name}"
-    
-    libs = []
-    libs_avail = []
-    
-    for target in targets
-      lib = target.libPath(toolchain)
-      exists = File.file?(lib)
-      puts "  #{toolchain.description(target)}: #{pretty_path lib}" + (exists ? "" : " (missing)")
-      libs.push lib
-      libs_avail.push lib unless !exists
-    end
-    
-    abort "Unable to combine architectures, none exist: #{libs}" unless libs_avail.length > 0
-    
-    FileUtils.mkdir_p File.dirname(lib_arm)
-    
-    if libs_avail.length == 1
-      single = libs_avail[0]
-      puts "Only one architecture available, copying from\n  #{pretty_path single} to\n  #{pretty_path lib_arm}"
-      FileUtils.cp single, lib_arm
-    else
-      executeCommand("lipo -create \"#{libs_avail.join("\" \"")}\" -output \"#{lib_arm}\"")
-      puts "Combined to #{pretty_path lib_arm}"
-    end
-    
-  end
 end
 
 class LinuxToolchain < Toolchain
@@ -323,9 +332,9 @@ class AndroidToolchain < Toolchain
   def self.apkName()
     #Determine the APK name.
     if CFG[:TARGET_ANDROID_BUILD_TYPE] == "release"
-      "LoomDemo-release-unsigned.apk"
+      "LoomPlayer-release-unsigned.apk"
     elsif CFG[:TARGET_ANDROID_BUILD_TYPE] == "debug"
-      "LoomDemo-debug-unaligned.apk"
+      "LoomPlayer-debug-unaligned.apk"
     else
       abort("Don't know how to generate the APK name for Android build target type #{CFG[:TARGET_ANDROID_BUILD_TYPE]}! Please update this if block.")
     end
@@ -440,8 +449,6 @@ end
   
 class LuaJITToolchain < Toolchain
   
-  attr_reader :rebuild
-  
   def initialize(buildToolchain, rebuild)
     @buildToolchain = buildToolchain
     @rebuild = rebuild
@@ -464,7 +471,7 @@ class LuaJITToolchain < Toolchain
     path = target.buildPath(self)
     FileUtils.mkdir_p(path)
     
-    lib = target.libPath(self)
+    lib = target.binPath(self)
     
     buildDesc = description(target)
     

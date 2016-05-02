@@ -33,7 +33,7 @@ using namespace LS;
 LoomGameController LoomGameController::controllers[MAX_CONTROLLERS];
 int LoomGameController::numControllers = 0;
 
-lmDefineLogGroup(controllerLogGroup, "loom.controller", 1, LoomLogInfo);
+lmDefineLogGroup(controllerLogGroup, "controller", 1, LoomLogInfo);
 
 LoomGameController::LoomGameController()
 {
@@ -43,6 +43,24 @@ LoomGameController::LoomGameController()
     instance_id = -1;
     haptic = 0;
     name = NULL;
+}
+
+/** Initialize controller subsystem  */
+void LoomGameController::init()
+{
+    /* Game Controller */
+    // Enable controller events
+    SDL_GameControllerEventState(SDL_ENABLE);
+
+    //Open all connected game controllers
+    LoomGameController::openAll();
+}
+
+/** Shutdown / close all controllers */
+void LoomGameController::shutdown()
+{
+    //Close all opened game controllers
+    LoomGameController::closeAll();
 }
 
 /** Opens all connected game controllers.

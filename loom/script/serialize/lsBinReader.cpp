@@ -249,7 +249,9 @@ void BinReader::readMethodBase(MethodBase *mbase)
         lua_settop(L, top);
         lsr_pushmethodbase(L, mbase);
 
-        if (!lua_isnil(L, -1))
+        bool found = !lua_isnil(L, -1);
+
+        if (found)
         {
             function = lua_tocfunction(L, -1);
 
@@ -264,7 +266,7 @@ void BinReader::readMethodBase(MethodBase *mbase)
 
         lua_pop(L, 1);
 
-        if (!mbase->isFastCall())
+        if (found && !mbase->isFastCall())
         {
             if (!function)
             {
@@ -308,6 +310,9 @@ MethodInfo *BinReader::readMethodInfo(Type *type)
     methodInfo->declaringType = type;
 
     readMethodBase(methodInfo);
+    if (methodInfo->getMissing()) {
+        type->setMissing("missing method %s", methodInfo->getName());
+    }
 
     Type *retType = NULL;
     if (bytes->readBoolean())
@@ -459,6 +464,9 @@ ConstructorInfo *BinReader::readConstructor(Type *type)
     cinfo->declaringType = type;
 
     readMethodBase(cinfo);
+    if (cinfo->missing) {
+        type->setMissing("missing constructor %s", cinfo->getName());
+    }
 
     cinfo->memberType.constructor = true;
     cinfo->type = getType("system.Function");
@@ -677,11 +685,15 @@ void BinReader::readModules()
     }
 }
 
-
-Assembly *BinReader::readAssembly(LSLuaState *_vm, utByteArray *_bytes)
+Assembly *BinReader::readAssembly(utByteArray *_bytes)
 {
-    vm->beginAssemblyLoad();
+    Assembly *assembly = readAssemblyHeader(_bytes);
+    if (!assembly->loaded) readAssemblyBody(assembly);
+    return assembly;
+}
 
+Assembly *BinReader::readAssemblyHeader(utByteArray *_bytes)
+{
     bytes = _bytes;
 
     const char *type       = readPoolString();
@@ -735,6 +747,20 @@ Assembly *BinReader::readAssembly(LSLuaState *_vm, utByteArray *_bytes)
 
     assembly = Assembly::create(vm, name, uid);
 
+    if (loomconfig && loomconfig[0])
+    {
+    assembly->setLoomConfig(loomconfig);
+    }
+
+    assembly->setDebugBuild(debugbuild);
+
+    return assembly;
+}
+
+void BinReader::readAssemblyBody(Assembly *assembly)
+{
+    vm->beginAssemblyLoad();
+    
     // number of references
     int numrefs = bytes->readInt();
     for (int i = 0; i < numrefs; i++)
@@ -762,21 +788,16 @@ Assembly *BinReader::readAssembly(LSLuaState *_vm, utByteArray *_bytes)
         int position = bytes->getPosition();
         bytes->setPosition(ref->position);
         BinReader refReader;
-        Assembly *asmref = refReader.readAssembly(_vm, bytes);
+        Assembly *asmref = refReader.readAssembly(bytes);
 
         assembly->addReference(asmref);
 
         bytes->setPosition(position);
     }
 
-    if (loomconfig && loomconfig[0])
-    {
-        assembly->setLoomConfig(loomconfig);
-    }
-
-    assembly->setDebugBuild(debugbuild);
-
     readModules();
+
+    assembly->loaded = true;
 
     utArray<Type *> asstypes;
     assembly->getTypes(asstypes);
@@ -785,12 +806,16 @@ Assembly *BinReader::readAssembly(LSLuaState *_vm, utByteArray *_bytes)
 
     vm->endAssemblyLoad();
 
+}
 
+Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
+{
+    loadExecutableHeader(_vm, byteArray);
+    Assembly *assembly = loadExecutableBody();
     return assembly;
 }
 
-
-Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
+void BinReader::loadExecutableHeader(LSLuaState *_vm, utByteArray *byteArray)
 {
     sBytes = byteArray;
     vm     = _vm;
@@ -805,21 +830,19 @@ Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
     for (UTsize i = 0; i < (UTsize)numTypes; i++)
     {
         TypeIndex *tindex = lmNew(NULL) TypeIndex;
-        tindex->type     = lmNew(NULL) Type;
-        tindex->refIdx   = sBytes->readInt();
+        tindex->type = lmNew(NULL) Type;
+        tindex->refIdx = sBytes->readInt();
         tindex->fullName = readPoolString();
 
         // within the ref
         tindex->position = sBytes->readInt();
-        tindex->length   = sBytes->readInt();
+        tindex->length = sBytes->readInt();
         types.insert(utHashedString(tindex->fullName), tindex);
     }
 
     // load up reference assemblies
     // write out the number of references
     int numRefs = sBytes->readInt();
-
-    Assembly *returningAssembly = NULL;
 
     for (int i = 0; i < numRefs; i++)
     {
@@ -864,13 +887,27 @@ Assembly *BinReader::loadExecutable(LSLuaState *_vm, utByteArray *byteArray)
             tindex->position += offset;
         }
     }
+}
+
+Assembly *BinReader::loadMainAssemblyHeader()
+{
+    lmAssert(references.size() > 0, "No assembly references found");
+    Reference *main = references.at(0);
+    sBytes->setPosition(main->position);
+    BinReader reader;
+    return reader.readAssemblyHeader(sBytes);
+}
+
+Assembly *BinReader::loadExecutableBody()
+{
+    Assembly *returningAssembly = NULL;
 
     for (UTsize i = 0; i < references.size(); i++)
     {
         Reference *ref = references.at(i);
         sBytes->setPosition(ref->position);
         BinReader reader;
-        Assembly  *assembly = reader.readAssembly(vm, sBytes);
+        Assembly  *assembly = reader.readAssembly(sBytes);
         ref->assembly = assembly;
         if (!returningAssembly)
         {

@@ -258,6 +258,7 @@ package unittest {
          * 
          * Function used in runTypes() to support async testing
          */
+        [UnitTestHideCall]
         private static function runTypesCallback() {
             
             while (true) {
@@ -426,6 +427,7 @@ package unittest {
          * 
          * Function that is used in "run()" to support async testing
          */
+        [UnitTestHideCall]
         private static function runCallback() {
             
             while (true) {

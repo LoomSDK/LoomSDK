@@ -108,6 +108,18 @@ package loom2d.display
         private var mColor:uint;
         private var mEnterFrameEvent:EnterFrameEvent = new EnterFrameEvent(Event.ENTER_FRAME, 0.0);
         private var mScaleMode:StageScaleMode = StageScaleMode.NONE;
+        
+        /**
+            Enables touch events for finger-based input devices if true.
+            Enabled by default on mobile platforms, disabled on desktop.
+        */
+        public native var fingerEnabled:Boolean;
+
+        /**
+            Enables touch events for mouse input devices if true.
+            Enabled by default on desktop platforms, disabled on mobile.
+        */
+        public native var mouseEnabled:Boolean;
 
         public native var onTouchBegan:TouchDelegate;
         public native var onTouchMoved:TouchDelegate;

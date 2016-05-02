@@ -343,35 +343,33 @@ package
             endBounds(g, sg.scale);
 
             g.moveTo(05, 110);
-            beginBounds(g);
+
             // Cap styles
-            g.lineStyle(10, 0x000000, 1, false, "", "round", "round", 0);  g.moveTo(05, 110); g.lineTo(25, 110);
-            g.lineStyle(10, 0x000000, 1, false, "", "square", "round", 0); g.moveTo(40, 110); g.lineTo(60, 110);
-            g.lineStyle(10, 0x000000, 1, false, "", "none", "round", 0);   g.moveTo(75, 110); g.lineTo(95, 110);
+            beginBounds(g); g.lineStyle(10, 0x000000, 1, false, "", "round", "round", 0);  g.moveTo(05, 110); g.lineTo(25, 110); endBounds(g, sg.scale);
+            beginBounds(g); g.lineStyle(10, 0x000000, 1, false, "", "square", "round", 0); g.moveTo(40, 110); g.lineTo(60, 110); endBounds(g, sg.scale);
+            beginBounds(g); g.lineStyle(10, 0x000000, 1, false, "", "none", "round", 0);   g.moveTo(75, 110); g.lineTo(95, 110); endBounds(g, sg.scale);
             // Skeleton
-            g.lineStyle(01, 0xDADADA, 1, false, "", "round", "round", 0);  g.moveTo(05, 110); g.lineTo(25, 110);
-            g.lineStyle(01, 0xDADADA, 1, false, "", "square", "round", 0); g.moveTo(40, 110); g.lineTo(60, 110);
-            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "round", 0);   g.moveTo(75, 110); g.lineTo(95, 110);
+            beginBounds(g); g.lineStyle(01, 0xDADADA, 1, false, "", "round", "round", 0);  g.moveTo(05, 110); g.lineTo(25, 110); endBounds(g, sg.scale);
+            beginBounds(g); g.lineStyle(01, 0xDADADA, 1, false, "", "square", "round", 0); g.moveTo(40, 110); g.lineTo(60, 110); endBounds(g, sg.scale);
+            beginBounds(g); g.lineStyle(01, 0xDADADA, 1, false, "", "none", "round", 0);   g.moveTo(75, 110); g.lineTo(95, 110); endBounds(g, sg.scale);
 
             // Joint styles
-            g.lineStyle(10, 0x000000, 1, false, "", "none", "round", 0);  g.moveTo(05, 130); g.lineTo(25, 130); g.lineTo(05, 150);
-            g.lineStyle(10, 0x000000, 1, false, "", "none", "bevel", 0);  g.moveTo(40, 130); g.lineTo(60, 130); g.lineTo(40, 150);
-            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(75, 130); g.lineTo(95, 130); g.lineTo(75, 150);
+            beginBounds(g); g.lineStyle(10, 0x000000, 1, false, "", "none", "round", 0);  g.moveTo(05, 130); g.lineTo(25, 130); g.lineTo(05, 150); endBounds(g, sg.scale);
+            beginBounds(g); g.lineStyle(10, 0x000000, 1, false, "", "none", "bevel", 0);  g.moveTo(40, 130); g.lineTo(60, 130); g.lineTo(40, 150); endBounds(g, sg.scale);
+            beginBounds(g); g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(75, 130); g.lineTo(95, 130); g.lineTo(75, 150); endBounds(g, sg.scale);
             // Skeleton
-            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "round", 0);  g.moveTo(05, 130); g.lineTo(25, 130); g.lineTo(05, 150);
-            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "bevel", 0);  g.moveTo(40, 130); g.lineTo(60, 130); g.lineTo(40, 150);
-            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(75, 130); g.lineTo(95, 130); g.lineTo(75, 150);
+            beginBounds(g); g.lineStyle(01, 0xDADADA, 1, false, "", "none", "round", 0);  g.moveTo(05, 130); g.lineTo(25, 130); g.lineTo(05, 150); endBounds(g, sg.scale);
+            beginBounds(g); g.lineStyle(01, 0xDADADA, 1, false, "", "none", "bevel", 0);  g.moveTo(40, 130); g.lineTo(60, 130); g.lineTo(40, 150); endBounds(g, sg.scale);
+            beginBounds(g); g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(75, 130); g.lineTo(95, 130); g.lineTo(75, 150); endBounds(g, sg.scale);
 
             // Miter joint angles
-            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(05, 170); g.lineTo(25, 170); g.lineTo(05, 175);
-            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185);
-            g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190);
+            beginBounds(g); g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(05, 170); g.lineTo(25, 170); g.lineTo(05, 175); endBounds(g, sg.scale);
+            beginBounds(g); g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185); endBounds(g, sg.scale);
+            beginBounds(g); g.lineStyle(10, 0x000000, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190); endBounds(g, sg.scale);
             // Skeleton
-            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(05, 170); g.lineTo(25, 170); g.lineTo(05, 175);
-            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185);
-            g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190);
-            endBounds(g, sg.scale);
-
+            beginBounds(g); g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(05, 170); g.lineTo(25, 170); g.lineTo(05, 175); endBounds(g, sg.scale);
+            beginBounds(g); g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(40, 170); g.lineTo(60, 170); g.lineTo(40, 185); endBounds(g, sg.scale);
+            beginBounds(g); g.lineStyle(01, 0xDADADA, 1, false, "", "none", "miter", 3);  g.moveTo(75, 170); g.lineTo(95, 170); g.lineTo(75, 190); endBounds(g, sg.scale);
 
             // Line scale mode
             s.lineStyle(1, 0x000000, 1, false, "normal");

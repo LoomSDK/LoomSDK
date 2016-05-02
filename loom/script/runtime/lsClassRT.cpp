@@ -192,14 +192,14 @@ void lualoom_newscriptinstance_internal(lua_State *L, Type *type)
 {
     lmAssert(type, "Internal Error: lsr_newscriptinstance_internal got a NULL type");
 
-    // allocate a table with enough array and hash space to hold all of our member ordinals
-    // we have to allocate enough hash nodes otherwise, upon first table set, it will rehash
-    // which will shrink out table array down and then use the lua array heuristic to split between
-    // array and hash, which is not a good fit as we want solely array access for member ordinals
+    // Allocate a hash big enough for properties,
+    // any method access grows this, so memory usage is taken
+    // lazily instead of aggresively. This shouldn't be needed
+    // down the line as we shouldn't need to allocate method per instance.
     //
-    // We chose 32 as a floor experimentally because it gave better performance than 16.
-    const int maxOrdinal = type->getMaxMemberOrdinal() > 32 ? type->getMaxMemberOrdinal() : 32;
-    lua_createtable(L, maxOrdinal, maxOrdinal);
+    // i.e. Member table allocation, properties included!
+    //          * methods sold separately
+    lua_createtable(L, 0, type->getPropertyInfoCount());
 
     int instanceIdx = lua_gettop(L);
     lsr_getclasstable(L, type);
@@ -775,6 +775,7 @@ static void lsr_classimportsymbols(lua_State *L, Type *type, int index)
     for (UTsize i = 0; i < imports.size(); i++)
     {
         Type *import = imports.at(i);
+        if (import->getMissing()) continue;
 
         int t = lua_gettop(L);
 
@@ -1100,6 +1101,15 @@ void lsr_classinitializestatic(lua_State *L, Type *type)
     lua_getfield(L, clsIdx, "__ls_staticinitializer");
 
     CTOR_LOG("running static initializer %s\n", type->getFullName().c_str());
+
+
+    bool missing = lua_isnil(L, -1);
+
+    if (missing) {
+        type->setMissing("lsr_classinitializestatic");
+        lua_settop(L, clsIdx - 1);
+        return;
+    }
 
     if (lua_pcall(L, 0, LUA_MULTRET, 0))
     {

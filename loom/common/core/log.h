@@ -56,13 +56,15 @@ extern "C" {
  * it via loom.config.
  */
 
-#define lmDeclareLogGroup(varName)                                    extern loom_logGroup_t varName;
-#define lmDefineLogGroup(varName, groupName, enabled, filterLevel)    loom_logGroup_t varName = { groupName, enabled, filterLevel, 0 };
+#define lmDeclareLogGroup(varName)                                  extern loom_logGroup_t varName;
+#define lmDefineLogGroup(varName, groupName, enabled, filterLevel)  loom_logGroup_t varName = { groupName, enabled, filterLevel, 0 };
 
-#define lmLogDebug(group, format, ...)                                if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogDebug, "[%s] " format, group.name, ## __VA_ARGS__); }
-#define lmLogInfo(group, format, ...)                                 if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogInfo, "[%s] " format, group.name, ## __VA_ARGS__); }
-#define lmLogError(group, format, ...)                                if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogError, "[%s] " format, group.name, ## __VA_ARGS__); }
-#define lmLogWarn(group, format, ...)                                 if (loom_log_willGroupLog(&group)) { loom_log(&group, LoomLogWarn, "[%s] " format, group.name, ## __VA_ARGS__); }
+#define lmLogLevel(level, group, format, ...)                       if (loom_log_willGroupLog(&group)) { \
+                                                                    loom_log(&group, level, "%10s  " format, group.name, ##__VA_ARGS__); }
+#define lmLogDebug(group, format, ...)                              lmLogLevel(LoomLogDebug, group, format, ##__VA_ARGS__);
+#define lmLogInfo(group, format, ...)                               lmLogLevel(LoomLogInfo, group, format, ##__VA_ARGS__);
+#define lmLogError(group, format, ...)                              lmLogLevel(LoomLogWarn, group, format, ##__VA_ARGS__);
+#define lmLogWarn(group, format, ...)                               lmLogLevel(LoomLogError, group, format, ##__VA_ARGS__);
 #define lmLog    lmLogInfo // Alias for completeness.
 
 /**
@@ -83,28 +85,39 @@ char* loom_log_getArgs(va_list args, const char **format);
     va_end(args); \
 
 
-typedef struct loom_logGroup
-{
-    const char *name;
-    int        enabled;
-    int        filterLevel;
-    int        ruleCacheToken;
-} loom_logGroup_t;
-
 typedef enum loom_logLevel
 {
+    LoomLogInvalid = -99,
     LoomLogDebug = -1,   // Start below zero so that 0 defaults to something sane.
     LoomLogInfo,
     LoomLogWarn,
     LoomLogError,
-    LoomLogMax   = LoomLogError
+#ifdef LOOM_DEBUG
+    LoomLogDefault = LoomLogDebug,
+#else
+    LoomLogDefault = LoomLogInfo,
+#endif
+    LoomLogMax = LoomLogError,
+    LoomLogNone
 } loom_logLevel_t;
+
+typedef struct loom_logGroup
+{
+    const char     *name;
+    int             enabled;
+    loom_logLevel_t filterLevel;
+    int             ruleCacheToken;
+} loom_logGroup_t;
 
 void loom_log_initialize();
 
 typedef void (*loom_logListener_t)(void *payload, loom_logGroup_t *group, loom_logLevel_t level, const char *msg);
 void loom_log_addListener(loom_logListener_t listener, void *payload);
 void loom_log_removeListener(loom_logListener_t listener, void *payload);
+
+loom_logLevel_t loom_log_parseLevel(const char *level);
+void loom_log_setGlobalLevel(loom_logLevel_t level);
+loom_logLevel_t loom_log_getGlobalLevel();
 
 void loom_log(loom_logGroup_t *group, loom_logLevel_t level, const char *format, ...);
 

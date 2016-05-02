@@ -88,17 +88,18 @@ $LOOMEXEC_BINARY = "#{$HOST_ARTIFACTS}/tools/loomexec"
 $BUILD_TYPE = CFG[:BUILD_TARGET].to_sym
 
 if $HOST.name == 'windows'
-  $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomDemo.exe"
+  $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomPlayer.exe"
 elsif $HOST.name == 'osx'
-  $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomDemo.app/Contents/MacOS/LoomDemo"
+  $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomPlayer.app/Contents/MacOS/LoomPlayer"
 else
-  $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomDemo"
+  $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomPlayer"
 end
 
 # Per-architecture properties
 $ARCHS = {
   x86:    { is64Bit: false },
   x86_64: { is64Bit: true },
+  x86_unv: { is64Bit: true },
   armv7:  { is64Bit: false },
   armv7s: { is64Bit: false },
   arm64:  { is64Bit: true },
@@ -272,7 +273,6 @@ namespace :utility do
     end
     FileUtils.cp_r("sdk/bin/LDB.loom", "#{$OUTPUT_DIRECTORY}/libs")
     FileUtils.cp_r("sdk/bin/TestExec.loom", "#{$OUTPUT_DIRECTORY}/libs")
-    FileUtils.cp_r("sdk/src/testexec/loom.config", "#{$OUTPUT_DIRECTORY}/libs/TestExec.config")
   end
 
   desc "Compile demos and report any errors"
@@ -316,7 +316,7 @@ namespace :utility do
     end
   end
 
-  desc "Run the LoomDemo in artifacts"
+  desc "Run the LoomPlayer in artifacts"
   task :run => "build:desktop" do
     puts "===== Launching Application ====="
 
@@ -479,7 +479,12 @@ namespace :build do
       loom_x64 = LoomTarget.new(:x86_64, $BUILD_TYPE, luajit_x64);
       toolchain.build(loom_x64)
     end
-
+    
+    combined = LoomTarget.new(:x86_unv, $BUILD_TYPE, luajit_x86)
+    FileUtils.mkdir_p combined.appPath(toolchain)
+    toolchain.combine(toolchain, [loom_x86, loom_x64], combined)
+    FileUtils.cp combined.binPath(toolchain), "artifacts/osx-x64/bin/LoomPlayer.app/Contents/MacOS/LoomPlayer"
+    
     Rake::Task["utility:compileScripts"].invoke
     Rake::Task["utility:compileTools"].invoke
   end
@@ -488,13 +493,13 @@ namespace :build do
   task :ios, [:sign_as] => ['utility:compileScripts', 'build:fruitstrap'] do |t, args|
 
     sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/fruitstrap"
-    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app"
-    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/assets"
-    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/assets/tmp"
-    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/bin"
-    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/bin/tmp"
-    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/lib"
-    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomDemo.app/lib/tmp"
+    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app"
+    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app/assets"
+    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app/assets/tmp"
+    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app/bin"
+    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app/bin/tmp"
+    sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app/lib"
+    sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app/lib/tmp"
 
     
     # iOS build is currently not supported under Windows
@@ -645,7 +650,7 @@ namespace :build do
     end
 
     Dir.chdir("application/android") do
-      sh "android update project --name LoomDemo --subprojects --target #{api_id} --path ."
+      sh "android update project --name LoomPlayer --subprojects --target #{api_id} --path ."
     end
 
     FileUtils.mkdir_p "application/android/assets"
@@ -667,7 +672,7 @@ namespace :build do
 
     # Copy APKs to artifacts.
     FileUtils.mkdir_p "artifacts/android-arm"
-    FileUtils.cp_r("application/android/bin/#{AndroidToolchain::apkName}", "#{$OUTPUT_DIRECTORY}/android-arm/LoomDemo.apk")
+    FileUtils.cp_r("application/android/bin/#{AndroidToolchain::apkName}", "#{$OUTPUT_DIRECTORY}/android-arm/LoomPlayer.apk")
     FileUtils.cp_r("tools/apktool/apktool.jar", "#{$OUTPUT_DIRECTORY}/android-arm")
   end
 
@@ -713,7 +718,7 @@ task :test => ['build:desktop'] do
   Dir.chdir("sdk") do
     sh "#{$LSC_BINARY} TestExec.build"
     sh "#{$LSC_BINARY} Tests.build"
-    sh "#{$LOOMEXEC_BINARY} bin/TestExec.loom bin/Tests.loom"
+    sh "#{$LOOMEXEC_BINARY} --ignore-missing-types bin/TestExec.loom bin/Tests.loom"
   end
 end
 

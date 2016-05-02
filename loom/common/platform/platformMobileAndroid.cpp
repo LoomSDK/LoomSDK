@@ -30,7 +30,7 @@
 #include "loom/common/platform/platformMobile.h"
 #include "loom/vendor/jansson/jansson.h"
 
-lmDefineLogGroup(gAndroidMobileLogGroup, "loom.mobile.android", 1, 0);
+lmDefineLogGroup(gAndroidMobileLogGroup, "mobile", 1, LoomLogDefault);
 
 
 static SensorTripleChangedCallback gTripleChangedCallback = NULL;
@@ -40,7 +40,7 @@ static OpenedViaRemoteNotificationCallback gOpenedViaRemoteNotificationCallback 
 
 extern "C"
 {
-void Java_co_theengine_loomdemo_LoomSensors_onRotationChangedNative(JNIEnv *env, jobject thiz, jfloat x, jfloat y, jfloat z)
+void Java_co_theengine_loomplayer_LoomSensors_onRotationChangedNative(JNIEnv *env, jobject thiz, jfloat x, jfloat y, jfloat z)
 {
     if (gTripleChangedCallback)
     {
@@ -48,7 +48,7 @@ void Java_co_theengine_loomdemo_LoomSensors_onRotationChangedNative(JNIEnv *env,
         gTripleChangedCallback(3, x, y, z);
     }
 }
-void Java_co_theengine_loomdemo_LoomSensors_onGravityChangedNative(JNIEnv *env, jobject thiz, jfloat x, jfloat y, jfloat z)
+void Java_co_theengine_loomplayer_LoomSensors_onGravityChangedNative(JNIEnv *env, jobject thiz, jfloat x, jfloat y, jfloat z)
 {
     if (gTripleChangedCallback)
     {
@@ -56,14 +56,14 @@ void Java_co_theengine_loomdemo_LoomSensors_onGravityChangedNative(JNIEnv *env, 
         gTripleChangedCallback(4, x, y, z);
     }
 }
-void Java_co_theengine_loomdemo_LoomMobile_onOpenedViaCustomURL(JNIEnv *env, jobject thiz)
+void Java_co_theengine_loomplayer_LoomMobile_onOpenedViaCustomURL(JNIEnv *env, jobject thiz)
 {
     if (gOpenedViaCustomURLCallback)
     {
         gOpenedViaCustomURLCallback();
     }
 }
-void Java_co_theengine_loomdemo_LoomMobile_onOpenedViaRemoteNotification(JNIEnv *env, jobject thiz)
+void Java_co_theengine_loomplayer_LoomMobile_onOpenedViaRemoteNotification(JNIEnv *env, jobject thiz)
 {
     if (gOpenedViaRemoteNotificationCallback)
     {
@@ -103,7 +103,7 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
                                 OpenedViaCustomURLCallback customURLCB,
                                 OpenedViaRemoteNotificationCallback remoteNotificationCB)
 {
-    lmLog(gAndroidMobileLogGroup, "INIT ***** MOBILE ***** ANDROID ****");
+    lmLog(gAndroidMobileLogGroup, "Initializing Mobile for Android");
 
     gTripleChangedCallback = sensorTripleChangedCB;    
     gOpenedViaCustomURLCallback = customURLCB;    
@@ -113,63 +113,63 @@ void platform_mobileInitialize(SensorTripleChangedCallback sensorTripleChangedCB
     ///Bind to JNI entry points.
     ///Mobile
     LoomJni::getStaticMethodInfo(gVibrate,
-                                 "co/theengine/loomdemo/LoomMobile",
+                                 "co/theengine/loomplayer/LoomMobile",
                                  "vibrate",
                                  "()V");
     LoomJni::getStaticMethodInfo(gAllowScreenSleep,
-                                 "co/theengine/loomdemo/LoomMobile",
+                                 "co/theengine/loomplayer/LoomMobile",
                                  "allowScreenSleep",
                                  "(Z)V");
     LoomJni::getStaticMethodInfo(gStartLocationTracking,
-                                 "co/theengine/loomdemo/LoomMobile",
+                                 "co/theengine/loomplayer/LoomMobile",
                                  "startLocationTracking",
                                  "(II)V");
     LoomJni::getStaticMethodInfo(gStopLocationTracking,
-                                 "co/theengine/loomdemo/LoomMobile",
+                                 "co/theengine/loomplayer/LoomMobile",
                                  "stopLocationTracking",
                                  "()V");
     LoomJni::getStaticMethodInfo(gGetLocation,
-                                 "co/theengine/loomdemo/LoomMobile",
+                                 "co/theengine/loomplayer/LoomMobile",
                                  "getLocation",
                                  "()Ljava/lang/String;");
     LoomJni::getStaticMethodInfo(gShareText,
-                                 "co/theengine/loomdemo/LoomMobile",
+                                 "co/theengine/loomplayer/LoomMobile",
                                  "shareText",
                                  "(Ljava/lang/String;Ljava/lang/String;)Z");
     LoomJni::getStaticMethodInfo(gDidCustomURLOpen,
-                                 "co/theengine/loomdemo/LoomMobile",
+                                 "co/theengine/loomplayer/LoomMobile",
                                  "openedWithCustomScheme",
                                  "()Z");
     LoomJni::getStaticMethodInfo(gDidRemoteNotificationOpen,
-                                 "co/theengine/loomdemo/LoomMobile",
+                                 "co/theengine/loomplayer/LoomMobile",
                                  "openedWithRemoteNotification",
                                  "()Z");
     LoomJni::getStaticMethodInfo(gGetCustomSchemeData,
-                                 "co/theengine/loomdemo/LoomMobile",
+                                 "co/theengine/loomplayer/LoomMobile",
                                  "getCustomSchemeQueryData",
                                  "(Ljava/lang/String;)Ljava/lang/String;");
     LoomJni::getStaticMethodInfo(gGetRemoteNotificationData,
-                                 "co/theengine/loomdemo/LoomMobile",
+                                 "co/theengine/loomplayer/LoomMobile",
                                  "getRemoteNotificationData",
                                  "(Ljava/lang/String;)Ljava/lang/String;");
     LoomJni::getStaticMethodInfo(gIsSensorSupported,
-                                 "co/theengine/loomdemo/LoomSensors",
+                                 "co/theengine/loomplayer/LoomSensors",
                                  "isSensorSupported",
                                  "(I)Z");
     LoomJni::getStaticMethodInfo(gIsSensorEnabled,
-                                 "co/theengine/loomdemo/LoomSensors",
+                                 "co/theengine/loomplayer/LoomSensors",
                                  "isSensorEnabled",
                                  "(I)Z");
     LoomJni::getStaticMethodInfo(gHasSensorReceivedData,
-                                 "co/theengine/loomdemo/LoomSensors",
+                                 "co/theengine/loomplayer/LoomSensors",
                                  "hasSensorReceivedData",
                                  "(I)Z");
     LoomJni::getStaticMethodInfo(gEnableSensor,
-                                 "co/theengine/loomdemo/LoomSensors",
+                                 "co/theengine/loomplayer/LoomSensors",
                                  "enableSensor",
                                  "(I)Z");
     LoomJni::getStaticMethodInfo(gDisableSensor,
-                                 "co/theengine/loomdemo/LoomSensors",
+                                 "co/theengine/loomplayer/LoomSensors",
                                  "disableSensor",
                                  "(I)V");
 

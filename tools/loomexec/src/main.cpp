@@ -34,12 +34,13 @@ using namespace LS;
 
 void installPackageSystem();
 
-static utString   assemblyPath  = "./bin/Main.loom";
+static utString   assemblyPath  = "bin/Main.loom";
 static LSLuaState *execState    = NULL;
 static Assembly   *execAssembly = NULL;
+static utArray<utString> argSwitches;
 
-lmDefineLogGroup(applicationLogGroup, "loom.application", 1, LoomLogInfo);
-lmDefineLogGroup(scriptLogGroup, "loom.script", 1, LoomLogInfo);
+lmDefineLogGroup(applicationLogGroup, "app", 1, LoomLogInfo);
+lmDefineLogGroup(scriptLogGroup, "script", 1, LoomLogInfo);
 
 
 static void initExecState()
@@ -52,7 +53,7 @@ static void initExecState()
 static void executeAssembly()
 {
     lmAssert(execState, "null execState");
-    execAssembly = execState->loadExecutableAssembly(assemblyPath.c_str(), true);
+    execAssembly = execState->loadExecutableAssembly(assemblyPath.c_str());
 
     // look for a class derived from LoomApplication in the main assembly
     Type *loomAppType = execState->getType("system.application.ConsoleApplication");
@@ -65,7 +66,7 @@ static void executeAssembly()
             Type *appType = types.at(i);
             if (appType->isDerivedFrom(loomAppType))
             {
-                //lmLog(applicationLogGroup, "Instantiating Application: %s", appType->getName());
+                lmLogDebug(applicationLogGroup, "Instantiating application: %s", appType->getName());
                 int top = lua_gettop(execState->VM());
                 lsr_createinstance(execState->VM(), appType);
                 lualoom_getmember(execState->VM(), -1, "initialize");
@@ -108,8 +109,18 @@ static void initialize(int argc, const char **argv)
 
     assemblyPath = "";
 
+    int argStart = 1;
+
+    while (argStart < argc && strncmp(argv[argStart], "--", 2) == 0) {
+        argSwitches.push_back(utString(argv[argStart]));
+        argStart++;
+    }
+
+    if (argSwitches.find("--verbose") != UT_NPOS) LSLogSetLevel(LSLogDebug);
+    if (argSwitches.find("--ignore-missing-types") != UT_NPOS) Type::ignoreMissingTypes = true;
+
     // look for passing a .loom file
-    for (int i = 1; i < argc; i++ )
+    for (int i = argStart; i < argc; i++ )
     {
         if (assemblyPath.size() == 0 && strstr(argv[i], ".loom"))
         {
@@ -155,7 +166,7 @@ static void initialize(int argc, const char **argv)
     loom_net_initialize();
 
     // Initialize script hooks.
-    LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogInfo, LoomLogWarn, LoomLogError);
+    LS::LSLogInitialize((LS::FunctionLog)loom_log, (void *)&scriptLogGroup, LoomLogDebug, LoomLogInfo, LoomLogWarn, LoomLogError);
 
     // Shift the arguments, the first one is meant for loomexec
     LSLuaState::initCommandLine(args);

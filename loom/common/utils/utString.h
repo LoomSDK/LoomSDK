@@ -93,6 +93,8 @@ public:
     void assign(const char* bytes, int length);
 
     size_type find(char c, size_type start = 0);
+    bool startsWith(const char *prefix) const;
+    bool endsWith(const char *suffix) const;
 
     // inplace replace
     void replace(char from, char to);

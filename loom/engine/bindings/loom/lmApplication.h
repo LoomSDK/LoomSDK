@@ -47,6 +47,7 @@ class LoomApplication
 {
 protected:
     static LSLuaState *rootVM;
+    static utByteArray *initBytes;
     static bool       reloadQueued;
     static utString   bootAssembly;
     static bool       suppressAssetTriggeredReload;
@@ -108,17 +109,23 @@ public:
 
     static int initializeTypes();
     static int registerScriptTypes();
+    static void ensureInitialAssetSystem();
     static int initializeCoreServices();
     static int initialize();
     static void shutdown();
+    static void initMainAssembly();
     static void execMainAssembly();
     static void reloadMainAssembly();
     static void _reloadMainAssembly();
     static void reloadAssets();
 
-    static void setBootAssembly(const utString& assemblyName)
+    static void setBootAssembly(const utString& assemblyPath)
     {
-        bootAssembly = assemblyName;
+        if (assemblyPath.startsWith("./") || assemblyPath.startsWith(".\\")) {
+            bootAssembly = assemblyPath.substr(2);
+        } else {
+            bootAssembly = assemblyPath;
+        }
     }
 
     static const char *getBootAssembly()

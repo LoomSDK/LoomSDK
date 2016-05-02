@@ -162,7 +162,7 @@ int Assembly::load(lua_State *L) {
     const char *path = lua_tostring(L, 1);
     lua_pop(L, 1);
 
-    Assembly *assembly = LSLuaState::getExecutingVM(L)->loadExecutableAssembly(path, true);
+    Assembly *assembly = LSLuaState::getExecutingVM(L)->loadExecutableAssembly(path);
 
     lmAssert(assembly, "Error loading assembly bytes");
 
@@ -175,9 +175,18 @@ int Assembly::load(lua_State *L) {
 
 Assembly *Assembly::loadBinary(LSLuaState *vm, utByteArray *bytes)
 {
-    Assembly *assembly = BinReader::loadExecutable(vm, bytes);
+    loadBinaryHeader(vm, bytes);
+    return loadBinaryBody();
+}
 
-    return assembly;
+void Assembly::loadBinaryHeader(LSLuaState *vm, utByteArray *bytes)
+{
+    BinReader::loadExecutableHeader(vm, bytes);
+}
+
+Assembly *Assembly::loadBinaryBody()
+{
+    return BinReader::loadExecutableBody();
 }
 
 

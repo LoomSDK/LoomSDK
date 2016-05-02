@@ -175,11 +175,25 @@ public:
      */
     Assembly *loadAssemblyBinary(utByteArray *bytes);
 
+    void loadAssemblyBinaryHeader(utByteArray *bytes);
+    Assembly *loadAssemblyBinaryBody();
+    
     /*
      * Loads an Executable Binary assembly into the VM, once loaded the assembly may be executed
      */
-    Assembly *loadExecutableAssembly(const utString& assemblyName, bool absPath = false);
+    Assembly *loadExecutableAssembly(const utString& filePath);
+
+    utByteArray *openExecutableAssembly(const utString& filePath);
+    void        closeExecutableAssembly(const utString& filePath, utByteArray *bytes);
+
     Assembly *loadExecutableAssemblyBinary(const char *buffer, long bufferSize);
+
+    utByteArray *openExecutableAssemblyBinary(const char *buffer, long bufferSize);
+    Assembly    *readExecutableAssemblyBinary(utByteArray *bytes);
+    void         readExecutableAssemblyBinaryHeader(utByteArray *bytes);
+    Assembly    *readExecutableAssemblyBinaryBody();
+    void        closeExecutableAssemblyBinary(utByteArray *bytes);
+
 
     // get all types loaded for a given package
     void getPackageTypes(const utString& packageName, utArray<Type *>& types);

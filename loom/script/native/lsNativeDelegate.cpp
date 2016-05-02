@@ -28,7 +28,7 @@
 #include "loom/script/native/lsNativeDelegate.h"
 
 
-lmDefineLogGroup(gNativeDelegateGroup, "script.native", 1, LoomLogInfo);
+lmDefineLogGroup(gNativeDelegateGroup, "delegate", 1, LoomLogInfo);
 
 
 namespace LS {
@@ -387,7 +387,7 @@ NativeDelegate::NativeDelegate()
 
 void NativeDelegate::disallowAsync()
 {
-    lmLogDebug(gNativeDelegateGroup, "SETTING ASYNC OFF %x", this);
+    lmLogDebug(gNativeDelegateGroup, "Setting async off %x", this);
     _allowAsync = false;
 }
 
@@ -473,8 +473,6 @@ void NativeDelegate::getCallbacks(lua_State *L) const
 
 NativeDelegateCallNote *NativeDelegate::prepCallbackNote() const
 {
-    lmLogDebug(gNativeDelegateGroup, "Considering async callback %x", this);
-    
     // Are noting currently? Just work with that.
     if(_activeNote)
     {

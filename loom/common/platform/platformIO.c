@@ -26,6 +26,7 @@
 #include "loom/common/platform/platformIO.h"
 #include "loom/common/platform/platformDisplay.h"
 #include "loom/common/platform/platformThread.h"
+#include "loom/common/platform/platformFile.h"
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
 #include <android/asset_manager.h>
@@ -79,7 +80,7 @@ struct loom_filemapping
 gFileMappings[LOOM_MAX_FILEMAPPINGS];
 
 static loom_allocator_t *fileMappingAllocator = NULL;
-static loom_logGroup_t  ioLogGroup            = { "io", 0 };
+static loom_logGroup_t  ioLogGroup            = { "io", 1 };
 
 static void ensureStartedUp()
 {
@@ -178,6 +179,10 @@ int platform_mapFileExists(const char *path)
     // Verify our dependents are good.
     ensureStartedUp();
 
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+    return GetFileAttributes(path) != 0xFFFFFFFF;
+#endif
+
     // Try opening it with fopen.
     f = fopen(path, "rb");
     if (f)
@@ -217,7 +222,11 @@ int platform_mapFileExists(const char *path)
 
 int platform_mapFile(const char *path, void **outPointer, long *outSize)
 {
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+    HANDLE f;
+#else
     FILE *f;
+#endif
     long size;
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
@@ -244,25 +253,121 @@ int platform_mapFile(const char *path, void **outPointer, long *outSize)
     *outPointer = NULL;
     *outSize    = 0;
 
-    // Try opening it with fopen.
-    lmLog(ioLogGroup, "platform_mapFile - '%s' - trying to fopen.", path);
+    // Open file
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+    lmLogDebug(ioLogGroup, "Using CreateFile to open file: '%s'", path);
+    f = CreateFile(
+        path,
+        GENERIC_READ,
+        FILE_SHARE_READ,
+        NULL,
+        OPEN_EXISTING,
+        FILE_FLAG_POSIX_SEMANTICS,
+        NULL
+    );
+    if (f != INVALID_HANDLE_VALUE)
+    {
+        LARGE_INTEGER large_int_size;
+        TCHAR normPathStack[MAX_PATH];
+        TCHAR *normPath;
+        DWORD normLength;
+
+        DWORD bytesRead;
+        BOOL success;
+
+        GetFileSizeEx(f, &large_int_size);
+        lmAssert(large_int_size.HighPart == 0, "Unable to open, file too large: '%s'", path);
+
+        size = large_int_size.LowPart;
+
+
+        // File path case consistency check
+        normPath = normPathStack;
+
+        normLength = GetFinalPathNameByHandle(f, normPath, MAX_PATH - 1, 0);
+
+        // If there isn't enough space, allocate
+        if (normLength >= MAX_PATH) {
+            normLength++;
+            normPath = lmAlloc(NULL, normLength*sizeof(TCHAR));
+            normLength = GetFinalPathNameByHandle(f, normPath, normLength, 0);
+        }
+
+        if (normLength == 0) {
+            lmLogWarn(ioLogGroup, "Unable to get normalized file path name (%d)", GetLastError());
+        } else {
+            TCHAR *tpath;
+            size_t i, tpathLen;
+            BOOL mismatch;
+
+            lmAssert(sizeof(TCHAR) == 1, "Unsupported TCHAR type");
+
+            tpath = (TCHAR*)path;
+            tpathLen = strlen(tpath);
+
+            // Detect equality ignoring slashes
+            mismatch = FALSE;
+            for (i = 0; i < tpathLen && i < normLength; i++) {
+                TCHAR tc, nc;
+                tc = tpath[tpathLen - 1 - i];
+                nc = normPath[normLength - 1 - i];
+                if ((tc == '/' || tc == '\\') && (nc == '/' || nc == '\\')) continue;
+                if (tc != nc) {
+                    mismatch = TRUE;
+                    break;
+                }
+            }
+
+            if (mismatch) {
+                // Persist slash direction
+                size_t i;
+                for (i = 0; i < tpathLen && i < normLength; i++) {
+                    TCHAR tc = tpath[tpathLen - 1 - i];
+                    if (tc == '/' || tc == '\\') normPath[normLength - 1 - i] = tc;
+                }
+
+                lmLogWarn(ioLogGroup, "Detected case insensitive file path: '%s'", tpath);
+                lmLogWarn(ioLogGroup, "For better compatibility on case sensitive operating systems, please make sure to use matching path casing: '%s'", normLength > tpathLen ? &normPath[normLength-tpathLen] : normPath);
+            }
+        }
+
+        // Free if allocated
+        if (normPath != normPathStack) lmFree(NULL, normPath);
+
+#else
+    lmLogDebug(ioLogGroup, "Using fopen to open file: %path", path);
     f = fopen(path, "rb");
     if (f)
     {
         // Get length.
         fseek(f, 0, SEEK_END);
         size = ftell(f);
+#endif
 
         // Get some memory and set return values!
         *outPointer = lmAlloc(fileMappingAllocator, size);
         *outSize    = size;
 
-        lmLog(ioLogGroup, "platform_mapFile - '%s' - mapped via fopen %x, len=%d.", path, *outPointer, *outSize);
-
         // Read it in and close file.
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+        lmLogDebug(ioLogGroup, "Mapped via CreateFile (%x, len=%d): '%s'", *outPointer, *outSize, path);
+
+        success = ReadFile(
+            f,
+            *outPointer,
+            size,
+            &bytesRead,
+            NULL
+        );
+        lmAssert(success, "Unable to read file: '%s'", path);
+        CloseHandle(f);
+#else
+        lmLogDebug(ioLogGroup, "Mapped via fopen (%x, len=%d): '%s'", *outPointer, *outSize, path);
+
         fseek(f, 0, SEEK_SET);
         fread(*outPointer, 1, size, f);
         fclose(f);
+#endif
 
         // Register the mapping.
         registerMapping(path, *outPointer, mappingCleaner_free, fileMappingAllocator);
@@ -272,13 +377,13 @@ int platform_mapFile(const char *path, void **outPointer, long *outSize)
     }
 
 #if LOOM_PLATFORM_IS_APPLE == 1
-    lmLog(ioLogGroup, "platform_mapFile - '%s' - seeing if we can look in app bundle.", path);
+    lmLogDebug(ioLogGroup, "Trying to access via app bundle: '%s'", path);
 
     // If we're not looking in the app bundle already, try looking in there.
     if (strstr(path, platform_getResourceDirectory()) == NULL)
     {
         sprintf(inBundlePath, "%s/%s", platform_getResourceDirectory(), path);
-        lmLog(ioLogGroup, "platform_mapFile - '%s' - trying as '%s'.", path, inBundlePath);
+        lmLogDebug(ioLogGroup, "Opening '%s' as '%s'", path, inBundlePath);
         if (platform_mapFile(inBundlePath, outPointer, outSize))
         {
             return 1;
@@ -288,7 +393,7 @@ int platform_mapFile(const char *path, void **outPointer, long *outSize)
 
     // If we get here, then we need to try another strategy.
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-    lmLog(ioLogGroup, "platform_mapFile - '%s' - trying AssetManager %x.", path, gAssetManager);
+    lmLogDebug(ioLogGroup, "Trying to access via AssetManager (%x): '%s'", gAssetManager, path);
     lmAssert(gAssetManager, "No AssetManager present!");
 
     // Dump out some directories.
@@ -313,13 +418,13 @@ int platform_mapFile(const char *path, void **outPointer, long *outSize)
 
         registerMapping(path, *outPointer, androidCleaner_free, asset);
 
-        lmLog(ioLogGroup, "platform_mapFile - '%s' - mapped via AAsset %x, len=%d.", path, *outPointer, *outSize);
+        lmLogDebug(ioLogGroup, "Mapped via AAsset (%x, len=%d): '%s'", *outPointer, *outSize, path);
 
         return 1;
     }
 #endif
 
-    lmLog(ioLogGroup, "platform_mapFile - '%s' - could not open!", path);
+    lmLogDebug(ioLogGroup, "Unable to open file: '%s'", path);
     return 0;
 }
 

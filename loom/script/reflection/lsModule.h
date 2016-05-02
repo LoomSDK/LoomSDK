@@ -73,6 +73,7 @@ public:
     static Module *create(Assembly *assembly, const utString& name);
 
     void addType(Type *type);
+    void removeType(Type *type);
 };
 }
 #endif

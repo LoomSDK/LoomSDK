@@ -57,7 +57,7 @@ LSLuaState        *LSLuaState::lastLSState   = NULL;
 double            LSLuaState::constructorKey = 0;
 utArray<utString> LSLuaState::buildCache;
 
-lmDefineLogGroup(gLuaStateLogGroup, "LuaState", true, LoomLogInfo);
+lmDefineLogGroup(gLuaStateLogGroup, "luastate", true, LoomLogInfo);
 
 // traceback stack queries
 struct stackinfo
@@ -78,19 +78,26 @@ static void *lsLuaAlloc(void *ud, void *ptr, size_t osize, size_t nsize)
     
     LSLuaState::allocatedBytes += nsize - osize;
 
-    if (nsize == 0) 
+    void *ret;
+    if (nsize == 0)
     {
         lmFree(NULL, ptr);
         return NULL;
     }
     else if (ptr == NULL)
     {
-        return lmAlloc(NULL, nsize);
+        ret = lmAlloc(NULL, nsize);
     }
     else
     {
-        return lmRealloc(NULL, ptr, nsize);
+        ret = lmRealloc(NULL, ptr, nsize);
     }
+
+    // Garbage collection here would be nice,
+    // but it breaks internal Lua allocation
+    lmSafeCheck(ret, "Unable to allocate memory for runtime");
+
+    return ret;
 }
 
 void LSLuaState::open()
@@ -104,6 +111,12 @@ void LSLuaState::open()
     #endif
 
     toLuaState.insert(L, this);
+
+#ifdef LUAJIT_MODE_MASK
+    // TODO: turn this back on when it doesn't fail on the testWhile unit test
+    // update luajit and test again
+    luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_OFF);
+#endif
 
     // Stop the GC initially
     lua_gc(L, LUA_GCSTOP, 0);
@@ -213,13 +226,17 @@ void LSLuaState::declareLuaTypes(const utArray<Type *>& types)
 {
     for (UTsize i = 0; i < types.size(); i++)
     {
-        declareClass(types[i]);
+        Type *type = types[i];
+        if (type->getMissing()) continue;
+
+        declareClass(type);
     }
 
     // validate/initialize native types
     for (UTsize i = 0; i < types.size(); i++)
     {
         Type *type = types.at(i);
+        if (type->getMissing()) continue;
 
         if (type->isNative() || type->hasStaticNativeMember())
         {
@@ -253,19 +270,28 @@ void LSLuaState::initializeLuaTypes(const utArray<Type *>& types)
 {
     for (UTsize i = 0; i < types.size(); i++)
     {
-        types[i]->cache();
+        Type *type = types[i];
+        if (type->getMissing()) continue;
+
+        type->cache();
     }
 
     // initialize all classes
     for (UTsize i = 0; i < types.size(); i++)
     {
-        initializeClass(types[i]);
+        Type *type = types[i];
+        if (type->getMissing()) continue;
+
+        initializeClass(type);
     }
 
     // run static initializers now that all classes have been initialized
     for (UTsize i = 0; i < types.size(); i++)
     {
-        lsr_classinitializestatic(VM(), types[i]);
+        Type *type = types[i];
+        if (type->getMissing()) continue;
+
+        lsr_classinitializestatic(VM(), type);
     }
 }
 
@@ -383,6 +409,29 @@ void LSLuaState::cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types)
     lmAssert(vectorType, "LSLuaState::cacheAssemblyTypes - system.Vector not found");
 }
 
+// Mark the types the provided type is imported in as missing
+static void markImportedMissing(utArray<Type *> &types, Type *missing)
+{
+    for (UTsize i = 0; i < types.size(); i++)
+    {
+        Type *type = types[i];
+
+        if (type->getMissing()) continue;
+
+        utArray<Type *> imports;
+        type->getImports(imports);
+
+        for (UTsize im = 0; im < imports.size(); im++)
+        {
+            Type *import = imports[im];
+            if (import == missing) {
+                type->setMissing("missing import %s", missing->getFullName().c_str());
+                markImportedMissing(types, type);
+                break;
+            }
+        }
+    }
+}
 
 void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types)
 {
@@ -395,6 +444,69 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
             // we're native
             NativeInterface::resolveScriptType(type);
         }
+    }
+
+    bool shrink = false;
+    // Runs over all types and finds out which ones
+    // are incomplete (e.g. with a missing method)
+    for (UTsize j = 0; j < types.size(); j++)
+    {
+        Type *type = types.at(j);
+
+        // Marks subtypes of missing types as incomplete/missing
+        bool incomplete = false;
+        Type *search = type;
+        while (search) {
+            if (search->getMissing())
+            {
+                incomplete = true;
+                break;
+            }
+            search = search->getBaseType();
+        }
+
+        utArray<Type *> imports;
+        type->getImports(imports);
+
+        // Marks types with missing imports as incomplete/missing
+        for (UTsize im = 0; im < imports.size(); im++)
+        {
+            Type *import = imports[im];
+            if (import->getMissing()) {
+                incomplete = true;
+            }
+        }
+
+        if (incomplete)
+        {
+            shrink = true;
+            type->setMissing("incomplete");
+            /// Recursively marks types that import this missing type
+            // as incomplete/missing
+            markImportedMissing(types, type);
+        }
+    }
+
+    // Removes and deletes all missing types and moves
+    // non-missing types in their place, then shrinks
+    // the type array to fit
+    if (shrink)
+    {
+        UTsize firstFree = 0;
+        for (UTsize j = 0; j < types.size(); j++) {
+            Type *type = types[j];
+            if (!type->getMissing()) {
+                types[firstFree] = type;
+                firstFree++;
+            }
+            else {
+                Module* module = const_cast<Module*>(type->getModule());
+                module->removeType(type);
+                lmDelete(NULL, type);
+                types[j] = NULL;
+            }
+        }
+        types.resize(firstFree);
     }
 
     declareLuaTypes(types);
@@ -439,48 +551,54 @@ Assembly *LSLuaState::loadAssemblyJSON(const utString& json)
 
 Assembly *LSLuaState::loadAssemblyBinary(utByteArray *bytes)
 {
-    Assembly *assembly = Assembly::loadBinary(this, bytes);
+    loadAssemblyBinaryHeader(bytes);
+    return loadAssemblyBinaryBody();
+}
 
+void LSLuaState::loadAssemblyBinaryHeader(utByteArray *bytes)
+{
+    Assembly::loadBinaryHeader(this, bytes);
+}
+
+Assembly *LSLuaState::loadAssemblyBinaryBody()
+{
+    return Assembly::loadBinaryBody();
+}
+
+Assembly *LSLuaState::loadExecutableAssembly(const utString& filePath)
+{
+    utByteArray *bytes = openExecutableAssembly(filePath);
+    readExecutableAssemblyBinaryHeader(bytes);
+    Assembly *assembly = readExecutableAssemblyBinaryBody();
+    closeExecutableAssembly(filePath, bytes);
     return assembly;
 }
 
-
-Assembly *LSLuaState::loadExecutableAssembly(const utString& assemblyName, bool absPath)
+utByteArray *LSLuaState::openExecutableAssembly(const utString& filePath)
 {
-    // executables always in bin
-    utString filePath;
-
-    if (!absPath)
-    {
-        filePath = "./bin/";
-    }
-
-    filePath += assemblyName;
-
-    if (!strstr(filePath.c_str(), ".loom"))
-    {
-        filePath += ".loom";
-    }
-
-    const char *buffer   = NULL;
+    const char *buffer = NULL;
     long       bufferSize;
     LSMapFile(filePath.c_str(), (void **)&buffer, &bufferSize);
 
-    lmAssert(buffer && bufferSize, "Error loading executable: %s, unable to map file", assemblyName.c_str());
+    lmAssert(buffer && bufferSize, "Error loading executable: %s", filePath.c_str());
 
-    Assembly* assembly = loadExecutableAssemblyBinary(buffer, bufferSize);
+    return openExecutableAssemblyBinary(buffer, bufferSize);
+}
 
-	LSUnmapFile(filePath.c_str());
-
-    lmAssert(assembly, "Error loading executable: %s", assemblyName.c_str());
-
-	assembly->freeByteCode();
-	
-	return assembly;
+void LSLuaState::closeExecutableAssembly(const utString& filePath, utByteArray *bytes)
+{
+    LSUnmapFile(filePath.c_str());
+    closeExecutableAssemblyBinary(bytes);
 }
 
 Assembly *LSLuaState::loadExecutableAssemblyBinary(const char *buffer, long bufferSize) {
-    Assembly   *assembly = NULL;
+    utByteArray *bytes = openExecutableAssemblyBinary(buffer, bufferSize);
+    Assembly *assembly = readExecutableAssemblyBinary(bytes);
+    closeExecutableAssemblyBinary(bytes);
+    return assembly;
+}
+
+utByteArray *LSLuaState::openExecutableAssemblyBinary(const char *buffer, long bufferSize) {
 
     utByteArray headerBytes;
 
@@ -492,19 +610,36 @@ Assembly *LSLuaState::loadExecutableAssemblyBinary(const char *buffer, long buff
     lmCheck(headerBytes.readUnsignedInt() == LOOM_BINARY_VERSION_MINOR, "minor version mismatch");
     unsigned int sz = headerBytes.readUnsignedInt();
 
-    utByteArray bytes;
-    bytes.resize(sz);
+    utByteArray *bytes = lmNew(NULL) utByteArray();
+    bytes->resize(sz);
 
     uLongf readSZ = sz;
 
-    int ok = uncompress((Bytef *)bytes.getDataPtr(), (uLongf *)&readSZ, (const Bytef *)((unsigned char *)buffer + sizeof(unsigned int) * 4), (uLong)sz);
+    int ok = uncompress((Bytef *)bytes->getDataPtr(), (uLongf *)&readSZ, (const Bytef *)((unsigned char *)buffer + sizeof(unsigned int) * 4), (uLong)sz);
 
     lmCheck(ok == Z_OK, "problem uncompressing executable assembly");
     lmCheck(readSZ == sz, "Read size mismatch");
 
-    assembly = loadAssemblyBinary(&bytes);
+    return bytes;
+}
 
+
+Assembly *LSLuaState::readExecutableAssemblyBinary(utByteArray *bytes) {
+    return loadAssemblyBinary(bytes);
+}
+
+void LSLuaState::readExecutableAssemblyBinaryHeader(utByteArray *bytes) {
+    loadAssemblyBinaryHeader(bytes);
+}
+Assembly *LSLuaState::readExecutableAssemblyBinaryBody() {
+    Assembly *assembly = loadAssemblyBinaryBody();
+    lmAssert(assembly, "Error loading executable");
+    assembly->freeByteCode();
     return assembly;
+}
+
+void LSLuaState::closeExecutableAssemblyBinary(utByteArray *bytes) {
+    lmDelete(NULL, bytes);
 }
 
 

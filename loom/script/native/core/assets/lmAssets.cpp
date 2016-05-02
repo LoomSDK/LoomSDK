@@ -26,7 +26,7 @@
 
 using namespace LS;
 
-lmDefineLogGroup(gLoomTextAssetGroup, "loom.textAsset", 1, LoomLogInfo);
+lmDefineLogGroup(gLoomTextAssetGroup, "asset.txt", 1, LoomLogInfo);
 
 class LoomTextAsset
 {
@@ -62,7 +62,7 @@ void LoomTextAsset::load()
     // introduces a race condition.
     if (updateDelegate.getCount() == 0)
     {
-        lmLog(gLoomTextAssetGroup, "Warning: calling LoomTextAsset::load for asset '%s' without anything added to its delegate! You are likely to miss asset updates/state.", path.c_str());
+        lmLogWarn(gLoomTextAssetGroup, "Calling LoomTextAsset::load for asset '%s' without anything added to its delegate! You are likely to miss asset updates/state.", path.c_str());
     }
 
     // Force it to load.
@@ -104,7 +104,7 @@ const NativeDelegate *LoomTextAsset::getUpdateDelegate() const
 
 //-----------------------------------------------------------------------------
 
-lmDefineLogGroup(gLoomBinaryAssetGroup, "loom.binaryAsset", 1, LoomLogInfo);
+lmDefineLogGroup(gLoomBinaryAssetGroup, "asset.bin", 1, LoomLogInfo);
 
 class LoomBinaryAsset
 {
@@ -140,7 +140,7 @@ void LoomBinaryAsset::load()
     // introduces a race condition.
     if (updateDelegate.getCount() == 0)
     {
-        lmLog(gLoomBinaryAssetGroup, "Warning: calling LoomBinaryAsset::load for asset '%s' without anything added to its delegate! You are likely to miss asset updates/state.", path.c_str());
+        lmLogWarn(gLoomBinaryAssetGroup, "Calling LoomBinaryAsset::load for asset '%s' without anything added to its delegate! You are likely to miss asset updates/state.", path.c_str());
     }
 
     // Force it to load.

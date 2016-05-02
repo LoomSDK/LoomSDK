@@ -77,6 +77,8 @@ package loom2d.textures
      */ 
     public class Texture
     {
+        public static var DownloadTempPostfix = ".part";
+        
         public var mFrame:Rectangle;
 
         /**
@@ -286,13 +288,14 @@ package loom2d.textures
                 {
                     Path.makeDir(writePath);
                 }
-                cacheFile = Path.normalizePath(writePath + "/" + urlsha2) + ext;
+                
+                var prenorm = writePath + "/" + urlsha2 + ext;
+                cacheFile = Path.normalizePath(prenorm);
                 
                 // check if file already cached locally
                 if (File.fileExists(cacheFile))
                 {
                     //file already downloaded previously, so queue up an async load of it right now
-                    Console.print("HTTP requested texture found cached on local disk already; using it instead: " + cacheFile); 
                     Debug.assert(existingTexture == null, "Texture update from file cache currently unsupported");
                     return Texture.fromAssetAsync(cacheFile, onSuccess);
                 }
@@ -528,8 +531,7 @@ package loom2d.textures
             //create the HTTPRequest to obtain the texture data remotely
             var req:HTTPRequest = new HTTPRequest(url);
             req.method = "GET";
-            req.cacheFileName = (cacheOnDisk) ? cacheFile : null;
-
+            req.cacheFileName = (cacheOnDisk) ? (cacheFile + DownloadTempPostfix) : null;
 
             //setup onSuccess
             var success:Function = function(result:ByteArray):void
@@ -543,41 +545,28 @@ package loom2d.textures
                 //were we cancelled while off busy with the HTTP?
                 if(tex.mCancelHTTP)
                 {
-                    if(cacheOnDisk && File.fileExists(cacheFile))
-                    {
-                        //delete the cached file if this was a cached HTTP load
-                        Console.print("Deleting cached HTTP requested texture as its load was cancelled: " + cacheFile); 
-                        File.removeFile(cacheFile);
-                    }
+                    // We don't have to and probably shouldn't remove the
+                    // file here, because it's at a temporary path and will
+                    // get overwritten anyway.
                 }
                 else
                 {
                     //cached or non-cached
                     if(cacheOnDisk)
                     {
-                        //kick off the async load and return our holding texture
-                        Debug.assert(existingNativeID == -1, "Texture update from http request currently unsupported");
-                        tInfo = Texture2D.initFromAssetAsync(cacheFile, highPriority);
+                        File.move(req.cacheFileName, cacheFile);
+                    }
+                    //load the bytes Async
+                    if (existingNativeID  == -1) {
+                        tInfo = Texture2D.initFromBytesAsync(result, urlsha2, highPriority);
                         if(tInfo == null)
                         {
-                            Console.print("WARNING: Unable to load HTTP texture from cached file: " + cacheFile); 
+                            Console.print("WARNING: Unable to load texture from bytes given data from url: " + url); 
                         }
-                    }
-                    else
-                    {
-
-                        //load the bytes Async
-                        if (existingNativeID  == -1) {
-                            tInfo = Texture2D.initFromBytesAsync(result, urlsha2, highPriority);
-                            if(tInfo == null)
-                            {
-                                Console.print("WARNING: Unable to load texture from bytes given data from url: " + url); 
-                            }
-                        } else {
-                            //Texture2D.updateFromBytes(existingNativeID, texBytes);
-                            Texture2D.updateFromBytesAsync(existingNativeID, result, highPriority);
-                            tInfo = tex.textureInfo;
-                        }                 
+                    } else {
+                        //Texture2D.updateFromBytes(existingNativeID, texBytes);
+                        Texture2D.updateFromBytesAsync(existingNativeID, result, highPriority);
+                        tInfo = tex.textureInfo;
                     }
                 }
                 

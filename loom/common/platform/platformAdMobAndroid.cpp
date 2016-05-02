@@ -28,7 +28,7 @@
 
 extern "C"
 {
-void Java_co_theengine_loomdemo_LoomAdMob_nativeCallback(JNIEnv *env, jobject thiz, jstring data, jlong callback, jlong payload, jint type)
+void Java_co_theengine_loomplayer_LoomAdMob_nativeCallback(JNIEnv *env, jobject thiz, jstring data, jlong callback, jlong payload, jint type)
 {
     loom_adMobCallback cb          = (loom_adMobCallback)callback;
     const char         *dataString = env->GetStringUTFChars(data, 0);
@@ -62,52 +62,52 @@ static void android_adMobEnsureInitialized()
     {
         // initialize all of our jni method infos
         LoomJni::getStaticMethodInfo(gCreateMethodInfo,
-                                     "co/theengine/loomdemo/LoomAdMob",
+                                     "co/theengine/loomplayer/LoomAdMob",
                                      "create",
                                      "(Ljava/lang/String;I)I");
 
         LoomJni::getStaticMethodInfo(gDestroyMethodInfo,
-                                     "co/theengine/loomdemo/LoomAdMob",
+                                     "co/theengine/loomplayer/LoomAdMob",
                                      "destroy",
                                      "(I)V");
 
         LoomJni::getStaticMethodInfo(gDestroyAllMethodInfo,
-                                     "co/theengine/loomdemo/LoomAdMob",
+                                     "co/theengine/loomplayer/LoomAdMob",
                                      "destroyAll",
                                      "()V");
 
         LoomJni::getStaticMethodInfo(gShowMethodInfo,
-                                     "co/theengine/loomdemo/LoomAdMob",
+                                     "co/theengine/loomplayer/LoomAdMob",
                                      "show",
                                      "(I)V");
 
         LoomJni::getStaticMethodInfo(gHideMethodInfo,
-                                     "co/theengine/loomdemo/LoomAdMob",
+                                     "co/theengine/loomplayer/LoomAdMob",
                                      "hide",
                                      "(I)V");
 
         LoomJni::getStaticMethodInfo(gSetDimensionsMethodInfo,
-                                     "co/theengine/loomdemo/LoomAdMob",
+                                     "co/theengine/loomplayer/LoomAdMob",
                                      "setDimensions",
                                      "(IIIII)V");
 
         LoomJni::getStaticMethodInfo(gGetDimensionsMethodInfo,
-                                     "co/theengine/loomdemo/LoomAdMob",
+                                     "co/theengine/loomplayer/LoomAdMob",
                                      "getDimensions",
                                      "(I)[I");
 
         LoomJni::getStaticMethodInfo(gCreateInterstitialInfo,
-                                     "co/theengine/loomdemo/LoomAdMob",
+                                     "co/theengine/loomplayer/LoomAdMob",
                                      "createInterstitial",
                                      "(Ljava/lang/String;JJ)I");
 
         LoomJni::getStaticMethodInfo(gDestroyInterstitialMethodInfo,
-                                     "co/theengine/loomdemo/LoomAdMob",
+                                     "co/theengine/loomplayer/LoomAdMob",
                                      "destroyInterstitial",
                                      "(I)V");
 
         LoomJni::getStaticMethodInfo(gShowInterstitialMethodInfo,
-                                     "co/theengine/loomdemo/LoomAdMob",
+                                     "co/theengine/loomplayer/LoomAdMob",
                                      "showInterstitial",
                                      "(I)V");
 

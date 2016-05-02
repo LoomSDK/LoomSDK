@@ -179,12 +179,12 @@ final class Math {
     }
 
     /**
-     *  Returns the floor of the number or expression specified in the parameter val.
+     *  Returns a rounded down value of the number or expression specified in the parameter val.
      */
     public static native function floor(value:Number):Number;
 
     /**
-     *  Returns the ceiling of the specified number or expression.
+     *  Returns a rounded up value of the specified number or expression.
      */
     public static native function ceil(value:Number):Number;
 

@@ -172,8 +172,8 @@ Type *lsr_gettype(lua_State *L, int index)
 #include "loom/common/platform/platformTime.h"
 #include "loom/common/platform/platformNetwork.h"
 
-lmDefineLogGroup(applicationLogGroup, "loom.application", 1, LoomLogInfo);
-lmDefineLogGroup(scriptLogGroup, "loom.script", 1, LoomLogInfo);
+lmDefineLogGroup(applicationLogGroup, "app", 1, LoomLogInfo);
+lmDefineLogGroup(scriptLogGroup, "script", 1, LoomLogInfo);
 
 static LSLuaState *sExecState    = NULL;
 

@@ -192,17 +192,41 @@ class BinReader {
     void readModules();
 
     /*
-     * Reads the Assembly into the given VM
-     */
-    Assembly *readAssembly(LSLuaState *_vm, utByteArray *_bytes);
+    * Reads the Assembly and adds it into the loaded VM
+    */
+    Assembly *readAssembly(utByteArray *_bytes);
+
+    /*
+    * Reads an assembly header and returns it as an Assembly
+    */
+    Assembly *readAssemblyHeader(utByteArray *_bytes);
+
+    /*
+    * Reads the Assembly body
+    */
+    void readAssemblyBody(Assembly *assembly);
 
 public:
-
+    
     /*
      * Reads a binary executable assembly into the given VM from the provided utByteArray
      * and prepares it for execution
      */
     static Assembly *loadExecutable(LSLuaState *_vm, utByteArray *byteArray);
+
+    /*
+    * Reads a binary executable assembly header from the provided
+    * utByteArray, use loadExecutableBody to load the body next
+    */
+    static void loadExecutableHeader(LSLuaState *_vm, utByteArray *byteArray);
+
+    static Assembly *loadMainAssemblyHeader();
+
+    /*
+    * Reads a binary executable assembly body into the given VM from the provided
+    * utByteArray
+    */
+    static Assembly *loadExecutableBody();
 };
 }
 #endif

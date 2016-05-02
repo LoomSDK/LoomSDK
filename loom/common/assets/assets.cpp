@@ -36,6 +36,7 @@
 #include "loom/common/utils/utString.h"
 #include "loom/common/utils/utByteArray.h"
 #include "loom/common/utils/fourcc.h"
+#include "loom/common/utils/humanFormat.h"
 
 #include "loom/common/assets/assets.h"
 #include "loom/common/assets/assetsImage.h"
@@ -54,6 +55,9 @@
 
 // This actually lives in lsAsset.cpp, but is useful to call from in the asset manager implementation.
 //void loom_asset_notifyPendingCountChange();
+
+static const int PROGRESS_INIT_TIME = 200;
+static const int PROGRESS_UPDATE_TIME = 500;
 
 extern "C" 
 {
@@ -191,7 +195,7 @@ struct loom_asset_t
    }
 };
 
-lmDefineLogGroup(gAssetLogGroup, "asset.core", 1, LoomLogInfo);
+lmDefineLogGroup(gAssetLogGroup, "asset", 1, LoomLogInfo);
 
 // General asset manager state.
 static MutexHandle gAssetLock = NULL;
@@ -223,7 +227,12 @@ static int loom_asset_isOnTrackToLoad(loom_asset_t *asset)
 
 static loom_asset_t *loom_asset_getAssetByName(const char *name, int create)
 {
-    utHashedString key        = platform_normalizePath(name);
+    loom_mutex_lock(gAssetLock);
+    static char normalized[4096];
+    strncpy(normalized, name, sizeof(normalized));
+    platform_normalizePath(normalized);
+    utHashedString key        = normalized;
+    loom_mutex_unlock(gAssetLock);
     loom_asset_t   **assetPtr = gAssetHash.get(key);
     loom_asset_t   *asset     = assetPtr ? *assetPtr : NULL;
 
@@ -283,6 +292,14 @@ static int loom_asset_textRecognizer(const char *extension)
         return LATText;
     }
     if (!stricmp(extension, "fsh"))
+    {
+        return LATText;
+    }
+    if (!stricmp(extension, "ls"))
+    {
+        return LATText;
+    }
+    if (!stricmp(extension, "svg"))
     {
         return LATText;
     }
@@ -376,7 +393,7 @@ void loom_asset_initialize(const char *rootUri)
     // Note the CWD.
     char tmpBuff[1024];
     platform_getCurrentWorkingDir(tmpBuff, 1024);
-    lmLog(gAssetLogGroup, "Current working directory ='%s'", tmpBuff);
+    lmLogDebug(gAssetLogGroup, "Current working directory ='%s'", tmpBuff);
 
     // And the allocator.
     //gAssetAllocator = loom_allocator_initializeTrackerProxyAllocator(loom_allocator_getGlobalHeap());
@@ -435,6 +452,13 @@ static void loom_asset_clear()
 void loom_asset_shutdown()
 {
     gShuttingDown = 1;
+    
+    loom_mutex_lock(gAssetServerSocketLock);
+    if (gAssetServerSocket != NULL) {
+        loom_net_closeTCPSocket(gAssetServerSocket);
+        gAssetServerSocket = NULL;
+    }
+    loom_mutex_unlock(gAssetServerSocketLock);
 
     loom_asset_flushAll();
     loom_asset_clear();
@@ -563,14 +587,23 @@ class AssetProtocolFileMessageListener : public AssetProtocolMessageListener
 protected:
 
     utString   pendingFilePath;
+    loom_precision_timer_t pendingFileTimer;
+    bool       pendingFileInit;
     int        pendingFileLength;
     const char *pendingFile;
 
 public:
 
     AssetProtocolFileMessageListener()
-        : pendingFileLength(-1), pendingFile(NULL)
+        : pendingFile(NULL)
     {
+        pendingFileTimer = loom_startTimer();
+        wipePendingData();
+    }
+
+    ~AssetProtocolFileMessageListener()
+    {
+        loom_destroyTimer(pendingFileTimer);
     }
 
     void wipePendingData()
@@ -609,7 +642,7 @@ public:
                // Prepare the buffer!
                if (pendingFile != NULL)
                {
-                   lmLogError(gAssetLogGroup, "Got a new FILE '%s' while still processing existing file '%s'!", path, pendingFilePath.c_str());
+                   lmLogError(gAssetLogGroup, "Got a new file '%s' while still processing existing file '%s'!", path, pendingFilePath.c_str());
                    wipePendingData();
                }
 
@@ -618,12 +651,13 @@ public:
                lmFree(NULL, path);
                path = NULL;
 
+               loom_resetTimer(pendingFileTimer);
+               pendingFileInit = true;
                pendingFileLength = bitsLength;
                pendingFile       = (const char *)lmAlloc(gAssetAllocator, pendingFileLength);
 
                // Log it.
-               lmLogDebug(gAssetLogGroup, "FILE '%s' %d bytes incoming.", pendingFilePath.c_str(), bitsLength);
-
+               
                // Awesome, sit back and wait for chunks to come in.
                return true;
            }
@@ -650,7 +684,16 @@ public:
                int lastByteOffset = chunkOffset + fileBitsLength;
 
                // Log it.
-               lmLogInfo(gAssetLogGroup, "FILE '%s' %d of %d bytes!", pendingFilePath.c_str(), lastByteOffset, pendingFileLength);
+               int elapsed = loom_readTimer(pendingFileTimer);
+               if ((pendingFileInit && elapsed > PROGRESS_INIT_TIME) ||
+                   (!pendingFileInit && elapsed > PROGRESS_UPDATE_TIME))
+               {
+                   loom_resetTimer(pendingFileTimer);
+                   int progress = lastByteOffset * 100 / pendingFileLength;
+                   if (pendingFileInit) lmLogInfo(gAssetLogGroup, "Updating '%s', %s", pendingFilePath.c_str(), humanFileSize(pendingFileLength).c_str());
+                   lmLogInfo(gAssetLogGroup, "  %d%%", progress);
+                   pendingFileInit = false;
+               }
 
                // If it's the last one, instate it and wipe our buffer.
                if (lastByteOffset == pendingFileLength)
@@ -670,7 +713,7 @@ public:
                        return true;
                    }
 
-                   lmLogWarn(gAssetLogGroup, "Applying new version of '%s', %d bytes.", pendingFilePath.c_str(), pendingFileLength);
+                   lmLogInfo(gAssetLogGroup, "Updated '%s', %s", pendingFilePath.c_str(), humanFileSize(pendingFileLength).c_str());
                    LoomAssetCleanupCallback dtor = NULL;
                    void *assetBits = loom_asset_deserializeAsset(pendingFilePath.c_str(), assetType, pendingFileLength, (void *)pendingFile, &dtor);
                    asset->instate(assetType, assetBits, dtor);
@@ -697,7 +740,7 @@ static void loom_asset_serviceServer()
         ((ASSET_STREAM_HOST != NULL) && (strlen(ASSET_STREAM_HOST) > 0)) &&
         ((platform_getMilliseconds() - gAssetServerLastConnectTryTime) > gAssetServerConnectTryInterval))
     {
-        lmLog(gAssetLogGroup, "Attempting to stream assets from %s:%d", ASSET_STREAM_HOST, ASSET_STREAM_PORT);
+        lmLogDebug(gAssetLogGroup, "Attempting to stream assets from %s:%d", ASSET_STREAM_HOST, ASSET_STREAM_PORT);
         gAssetServerLastConnectTryTime = platform_getMilliseconds();
         gAssetServerSocket             = loom_net_openTCPSocket(ASSET_STREAM_HOST, ASSET_STREAM_PORT, 0);
         gAssetConnectionOpen           = false;
@@ -719,7 +762,7 @@ static void loom_asset_serviceServer()
         if (loom_net_isSocketDead(gAssetServerSocket) == 1)
         {
             // Might be DOA, ie, connect failed.
-            lmLog(gAssetLogGroup, "Failed to connect to asset server %s:%d", ASSET_STREAM_HOST, ASSET_STREAM_PORT);
+            lmLogError(gAssetLogGroup, "Failed to connect to asset server %s:%d", ASSET_STREAM_HOST, ASSET_STREAM_PORT);
 
             loom_net_closeTCPSocket(gAssetServerSocket);
 
@@ -731,7 +774,7 @@ static void loom_asset_serviceServer()
             return;
         }
 
-        lmLog(gAssetLogGroup, "Successfully connected to asset server %s:%d!", ASSET_STREAM_HOST, ASSET_STREAM_PORT);
+        lmLogDebug(gAssetLogGroup, "Successfully connected to asset server %s:%d!", ASSET_STREAM_HOST, ASSET_STREAM_PORT);
 
         // Do this now to avoid clobbering error state and seeing the socket as
         // "open" when it is really dead.
@@ -837,7 +880,8 @@ void loom_asset_pump()
       else
       {
         // Instate the asset.
-        asset->instate(type, assetBits, dtor);        
+        asset->instate(type, assetBits, dtor);
+        asset->blob->length = size;
       }
 
       // Done! Update queue.
@@ -906,7 +950,7 @@ void loom_asset_flush(const char *name)
       return;
    }
     
-   lmLog(gAssetLogGroup, "Flushing '%s'", name);
+   lmLogDebug(gAssetLogGroup, "Flushing '%s'", name);
 
     if (asset->blob)
     {
@@ -1011,15 +1055,17 @@ void *loom_asset_lock(const char *name, unsigned int type, int block)
     // If not loaded, and we aren't ready to block, return NULL.
     if ((block == 0) && (asset->state != loom_asset_t::Loaded))
     {
-        lmLogDebug(gAssetLogGroup, "Not blocking and not loaded yet; lock of '%s' failed.", namePtr);
+        lmLogDebug(gAssetLogGroup, "Unable to lock without blocking, not loaded yet: '%s'", namePtr);
         loom_mutex_unlock(gAssetLock);
         return NULL;
     }
 
+    bool preloaded = asset->state == loom_asset_t::Loaded;
+
     // Otherwise, let's force it to load now.
-    if (asset->state != loom_asset_t::Loaded)
+    if (!preloaded)
     {
-        lmLogDebug(gAssetLogGroup, "Blocking so forcing load of '%s'.", namePtr);
+        lmLogDebug(gAssetLogGroup, "Loading '%s'", namePtr);
 
         loom_asset_preload(namePtr);
 
@@ -1027,13 +1073,13 @@ void *loom_asset_lock(const char *name, unsigned int type, int block)
 
         while (loom_asset_checkLoadedPercentage(namePtr) != 1.f && loom_asset_isOnTrackToLoad(asset))
         {
-            lmLogDebug(gAssetLogGroup, "Pumping load of '%s'...", namePtr);
+            lmLogDebug(gAssetLogGroup, "Pumping load of '%s'", namePtr);
             loom_asset_pump();
         }
 
         if (asset->state != loom_asset_t::Loaded)
         {
-            lmLogError(gAssetLogGroup, "Unable to load asset '%s'!", name);
+            lmLogError(gAssetLogGroup, "Failed to load asset '%s'!", name);
             loom_mutex_unlock(gAssetLock);
             return NULL;
         }
@@ -1052,7 +1098,14 @@ void *loom_asset_lock(const char *name, unsigned int type, int block)
 
     loom_mutex_unlock(gAssetLock);
 
-    lmLogInfo(gAssetLogGroup, "Locked asset '%s'...", namePtr);
+    if (preloaded)
+    {
+        lmLogDebug(gAssetLogGroup, "Acquired '%s'", namePtr);
+    }
+    else
+    {
+        lmLogInfo(gAssetLogGroup, "Loaded '%s', %s", namePtr, humanFileSize(asset->blob->length).c_str());
+    }
 
     // Return ptr.
     return asset->blob->bits;

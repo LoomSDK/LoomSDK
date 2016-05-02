@@ -414,11 +414,17 @@ package feathers.controls
          * @private
          */
         protected var _currentState:String = STATE_UP;
-
+        
         /**
-         * @private
+         * The current state of the button
+         *
+         * @see
+         * #STATE_UP
+         * #STATE_DOWN
+         * #STATE_HOVER
+         * #STATE_DISABLED
          */
-        protected function get currentState():String
+        public function get currentState():String
         {
             return this._currentState;
         }
@@ -438,6 +444,8 @@ package feathers.controls
             }
             this._currentState = value;
             this.invalidate(INVALIDATION_FLAG_STATE);
+            
+            this.dispatchEventWith(Event.CHANGE);
         }
 
         /**

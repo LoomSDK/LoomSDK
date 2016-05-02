@@ -65,7 +65,7 @@ namespace LS {
 // Delay in milliseconds between checks of file system.
 const int gFileCheckInterval = 100;
 
-lmDefineLogGroup(gAssetAgentLogGroup, "loom.asset", 1, LoomLogInfo);
+lmDefineLogGroup(gAssetAgentLogGroup, "agent", 1, LoomLogInfo);
 
 // The asset agent maintains a cache of all the local files and scans from time
 // to time for changes. When a change is detected, the file is streamed to any
@@ -213,7 +213,7 @@ static int makeAssetPathCanonical(const char *pathIn, char pathOut[MAXPATHLEN])
 
     if (resolvedPathPtr == NULL)
     {
-        lmLog(gAssetAgentLogGroup, "Failed to resolve path %s via realpath due to %s", pathIn, strerror(errno));
+        lmLogError(gAssetAgentLogGroup, "Failed to resolve path %s via realpath due to %s", pathIn, strerror(errno));
         return 0;
     }
 
@@ -244,13 +244,13 @@ static int makeAssetPathCanonical(const char *pathIn, char pathOut[MAXPATHLEN])
 static bool checkInWhitelist(utString path)
 {
     // Note the platform-specific version of our whitelisted folders.
-    static utString assetPath = platform_normalizePath("./assets");
-    static utString binPath   = platform_normalizePath("./bin");
-    static utString srcPath   = platform_normalizePath("./src");
+    static utString assetPath = "./assets"; platform_normalizePath(const_cast<char*>(assetPath.c_str()));
+    static utString binPath   = "./bin";    platform_normalizePath(const_cast<char*>(binPath.c_str()));
+    static utString srcPath   = "./src";    platform_normalizePath(const_cast<char*>(srcPath.c_str()));
 
     // Just prefix match against assets for now - ignore things in other folders.
     lmLogDebug(gAssetAgentLogGroup, "Whitelisting path %s prefix %s\n", path.c_str(), path.substr(0, 6).c_str());
-    path = platform_normalizePath(path.c_str());
+    platform_normalizePath(const_cast<char*>(path.c_str()));
     if (path.substr(path.length() - 3, 3) == "tmp")
     {
         return false;
@@ -558,7 +558,7 @@ static void processFileEntryDeltas(utArray<FileEntryDelta> *deltas)
         // Note we are using gActiveHandlers.size() outside of a lock, but this is ok as it's a word.
         if ((strstr(canonicalFile, ".loom") || strstr(canonicalFile, ".ls")) && (gActiveHandlers.size() > 0))
         {
-            lmLog(gAssetAgentLogGroup, "SENDING       -  %s", canonicalFile);
+            lmLog(gAssetAgentLogGroup, "Changed '%s'", canonicalFile);
         }
 
         if (canonicalFile[0] == 0)
@@ -648,7 +648,7 @@ static int fileWatcherThread(void *payload)
 
         if (endTime - startTime > 250)
         {
-            lmLog(gAssetAgentLogGroup, "Took %d ms to scan files, consider removing unused files?", endTime - startTime);
+            lmLogWarn(gAssetAgentLogGroup, "Scanning files took %dms, consider removing unused files", endTime - startTime);
         }
 
         processFileEntryDeltas(deltas);
@@ -703,7 +703,7 @@ static void listClients()
     loom_mutex_lock(gActiveSocketsMutex);
 
     // Blast it out to all clients.
-    lmLog(gAssetAgentLogGroup, "CLIENTS:");
+    lmLog(gAssetAgentLogGroup, "Clients");
 
     for (UTsize i = 0; i < gActiveHandlers.size(); i++)
     {
@@ -727,7 +727,6 @@ static int socketListeningThread(void *payload)
     // Listen for incoming connections.
     int listenPort = 12340;
 
-    lmLog(gAssetAgentLogGroup, "Listening on port %d", listenPort);
     gListenSocket = (loom_socketId_t)-1;
     for ( ; ; )
     {
@@ -738,11 +737,11 @@ static int socketListeningThread(void *payload)
             break;
         }
 
-        lmLog(gAssetAgentLogGroup, "   - Failed to acquire port %d, trying port %d", listenPort, listenPort + 1);
+        lmLogWarn(gAssetAgentLogGroup, "   - Failed to acquire port %d, trying port %d", listenPort, listenPort + 1);
         listenPort++;
     }
 
-    lmLog(gAssetAgentLogGroup, "   o OK!");
+    lmLog(gAssetAgentLogGroup, "Listening on port %d", listenPort);
 
     while (loom_socketId_t acceptedSocket = loom_net_acceptTCPSocket(gListenSocket))
     {
@@ -763,7 +762,7 @@ static int socketListeningThread(void *payload)
             continue;
         }
 
-        lmLog(gAssetAgentLogGroup, "Client connected (%x)!", acceptedSocket);
+        lmLog(gAssetAgentLogGroup, "Client connected (%x)", acceptedSocket);
 
         loom_mutex_lock(gActiveSocketsMutex);
         gActiveHandlers.push_back(new AssetProtocolHandler(acceptedSocket));
@@ -787,7 +786,7 @@ static void shutdownListenSocket()
 {
     if (gListenSocket)
     {
-        lmLog(gAssetAgentLogGroup, "Shutting down listen socket...");
+        lmLogDebug(gAssetAgentLogGroup, "Shutting down listen socket...");
         loom_net_closeTCPSocket(gListenSocket);
         lmLog(gAssetAgentLogGroup, "Done! Goodbye.");
         gListenSocket = 0;
@@ -873,13 +872,13 @@ void DLLEXPORT assetAgent_run(IdleCallback idleCb, LogCallback logCb, FileChange
     // Set up the log callback.
     loom_log_addListener(fileWatcherLogListener, NULL);
 
-    lmLog(gAssetAgentLogGroup, "Starting file watcher thread...");
+    lmLogDebug(gAssetAgentLogGroup, "Starting file watcher thread...");
     gFileWatcherThread = loom_thread_start((ThreadFunction)fileWatcherThread, NULL);
-    lmLog(gAssetAgentLogGroup, "   o OK!");
+    lmLogDebug(gAssetAgentLogGroup, "   o OK!");
 
-    lmLog(gAssetAgentLogGroup, "Starting socket listener thread...");
+    lmLogDebug(gAssetAgentLogGroup, "Starting socket listener thread...");
     gSocketListenerThread = loom_thread_start((ThreadFunction)socketListeningThread, NULL);
-    lmLog(gAssetAgentLogGroup, "   o OK!");
+    lmLogDebug(gAssetAgentLogGroup, "   o OK!");
 
     // Loop till it's time to quit.
     while (!gQuitFlag)
@@ -947,7 +946,7 @@ void DLLEXPORT assetAgent_command(const char *cmd)
 
         if (gActiveHandlers.size() == 0)
         {
-            sendIgnoredError();
+            if (strcmp(cmd, "terminate") != 0) sendIgnoredError();
         }
 
         for (UTsize i = 0; i < gActiveHandlers.size(); i++)

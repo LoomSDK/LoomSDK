@@ -28,7 +28,7 @@
 
 extern "C"
 {
-void Java_co_theengine_loomdemo_LoomWebView_nativeCallback(JNIEnv *env, jobject thiz, jstring data, jlong callback, jlong payload, jint type)
+void Java_co_theengine_loomplayer_LoomWebView_nativeCallback(JNIEnv *env, jobject thiz, jstring data, jlong callback, jlong payload, jint type)
 {
     loom_webViewCallback cb          = (loom_webViewCallback)callback;
     const char           *dataString = env->GetStringUTFChars(data, 0);
@@ -70,97 +70,97 @@ static void android_webViewEnsureInitialized()
     {
         // initialize all of our jni method infos
         LoomJni::getStaticMethodInfo(gCreateMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "create",
                                      "(JJ)I");
 
         LoomJni::getStaticMethodInfo(gDestroyMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "destroy",
                                      "(I)V");
 
         LoomJni::getStaticMethodInfo(gDestroyAllMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "destroyAll",
                                      "()V");
 
         LoomJni::getStaticMethodInfo(gShowMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "show",
                                      "(I)V");
 
         LoomJni::getStaticMethodInfo(gHideMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "hide",
                                      "(I)V");
 
         LoomJni::getStaticMethodInfo(gRequestMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "request",
                                      "(ILjava/lang/String;)V");
 
         LoomJni::getStaticMethodInfo(gGoBackMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "goBack",
                                      "(I)Z");
 
         LoomJni::getStaticMethodInfo(gGoForwardMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "goForward",
                                      "(I)Z");
 
         LoomJni::getStaticMethodInfo(gCanGoBackMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "canGoBack",
                                      "(I)Z");
 
         LoomJni::getStaticMethodInfo(gCanGoForwardMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "canGoForward",
                                      "(I)Z");
 
         LoomJni::getStaticMethodInfo(gSetDimensionsMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "setDimensions",
                                      "(IIIII)V");
 
         LoomJni::getStaticMethodInfo(gGetXMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "getX",
                                      "(I)I");
 
         LoomJni::getStaticMethodInfo(gSetXMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "setX",
                                      "(II)V");
 
         LoomJni::getStaticMethodInfo(gGetYMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "getY",
                                      "(I)I");
 
         LoomJni::getStaticMethodInfo(gSetYMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "setY",
                                      "(II)V");
 
         LoomJni::getStaticMethodInfo(gGetWidthMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "getWidth",
                                      "(I)I");
 
         LoomJni::getStaticMethodInfo(gSetWidthMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "setWidth",
                                      "(II)V");
 
         LoomJni::getStaticMethodInfo(gGetHeightMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "getHeight",
                                      "(I)I");
 
         LoomJni::getStaticMethodInfo(gSetHeightMethodInfo,
-                                     "co/theengine/loomdemo/LoomWebView",
+                                     "co/theengine/loomplayer/LoomWebView",
                                      "setHeight",
                                      "(II)V");
 

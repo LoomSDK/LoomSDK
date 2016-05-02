@@ -46,6 +46,9 @@ public:
     int stageWidth;
     int stageHeight;
     utString orientation;
+    bool fingerEnabled;
+    bool mouseEnabled;
+
     bool pendingResize;
 
     // Rendering interface.

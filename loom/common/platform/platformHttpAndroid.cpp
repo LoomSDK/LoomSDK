@@ -30,12 +30,12 @@
 #include <jni.h>
 #include "platformAndroidJni.h"
 
-lmDefineLogGroup(gAndroidHTTPLogGroup, "http.android", 1, LoomLogInfo);
+lmDefineLogGroup(gAndroidHTTPLogGroup, "http", 1, LoomLogInfo);
 
 extern "C"
 {
 
-void Java_co_theengine_loomdemo_LoomHTTP_onSuccess(JNIEnv *env, jobject thiz, jbyteArray data, jlong callback, jlong payload)
+void Java_co_theengine_loomplayer_LoomHTTP_onSuccess(JNIEnv *env, jobject thiz, jbyteArray data, jlong callback, jlong payload)
 {
     loom_HTTPCallback cb          = (loom_HTTPCallback)callback;
 
@@ -53,7 +53,7 @@ void Java_co_theengine_loomdemo_LoomHTTP_onSuccess(JNIEnv *env, jobject thiz, jb
 }
 
 
-void Java_co_theengine_loomdemo_LoomHTTP_onFailure(JNIEnv *env, jobject thiz, jbyteArray data, jlong callback, jlong payload)
+void Java_co_theengine_loomplayer_LoomHTTP_onFailure(JNIEnv *env, jobject thiz, jbyteArray data, jlong callback, jlong payload)
 {
     loom_HTTPCallback cb          = (loom_HTTPCallback)callback;
 
@@ -78,7 +78,7 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
 
     loomJniMethodInfo jniAddHeader;
     LoomJni::getStaticMethodInfo(jniAddHeader,
-        "co/theengine/loomdemo/LoomHTTP",
+        "co/theengine/loomplayer/LoomHTTP",
         "addHeader",
         "(Ljava/lang/String;Ljava/lang/String;)V");
 
@@ -109,7 +109,7 @@ int platform_HTTPSend(const char *url, const char *method, loom_HTTPCallback cal
 
     loomJniMethodInfo jniSend;
     LoomJni::getStaticMethodInfo(jniSend,
-        "co/theengine/loomdemo/LoomHTTP",
+        "co/theengine/loomplayer/LoomHTTP",
         "send",
         "(Ljava/lang/String;Ljava/lang/String;JJ[BLjava/lang/String;Z)I");
 
@@ -151,7 +151,7 @@ bool platform_HTTPIsConnected()
 {
     loomJniMethodInfo jniIsConnected;
     LoomJni::getStaticMethodInfo(jniIsConnected,
-        "co/theengine/loomdemo/LoomHTTP",
+        "co/theengine/loomplayer/LoomHTTP",
         "isConnected",
         "()Z");
 
@@ -181,7 +181,7 @@ bool platform_HTTPCancel(int index)
 {
     loomJniMethodInfo jniCancel;
     LoomJni::getStaticMethodInfo(jniCancel,
-        "co/theengine/loomdemo/LoomHTTP",
+        "co/theengine/loomplayer/LoomHTTP",
         "cancel",
         "(I)Z");
 
@@ -194,7 +194,7 @@ void platform_HTTPComplete(int index)
 {
     loomJniMethodInfo jniComplete;
     LoomJni::getStaticMethodInfo(jniComplete,
-        "co/theengine/loomdemo/LoomHTTP",
+        "co/theengine/loomplayer/LoomHTTP",
         "complete",
         "(I)V");
 

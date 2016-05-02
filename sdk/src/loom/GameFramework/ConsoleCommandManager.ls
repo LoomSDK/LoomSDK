@@ -47,7 +47,6 @@ package loom.gameframework
        */
       public function initialize():void
       {
-         Console.print("Command manager online.");
          Application.assetCommandDelegate += process;
       }
 
@@ -97,7 +96,7 @@ package loom.gameframework
 
          if(!cc)
          {
-            Console.print("No such command '" + command +  "' found.");
+            Console.print("   console  Command not found: " + command);
             return;
          }
 

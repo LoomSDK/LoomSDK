@@ -26,8 +26,6 @@
 #include "loom/common/core/log.h"
 #include "loom/script/runtime/lsProfiler.h"
 
-lmDefineLogGroup(gStageLogGroup, "Stage", 1, LoomLogInfo);
-
 extern SDL_Window *gSDLWindow;
 
 namespace Loom2D
@@ -35,11 +33,18 @@ namespace Loom2D
 
 Stage *Stage::smMainStage = NULL;
 NativeDelegate Stage::_RenderStageDelegate;
-bool Stage::sizeDirty = true;
+bool Stage::sizeDirty = false;
 bool Stage::visDirty = true;
 
 Stage::Stage()
 {
+#if LOOM_PLATFORM_TOUCH
+    fingerEnabled = true;
+    mouseEnabled = false;
+#else
+    fingerEnabled = false;
+    mouseEnabled = true;
+#endif
     pendingResize = true;
     smMainStage = this;
     sdlWindow = gSDLWindow;

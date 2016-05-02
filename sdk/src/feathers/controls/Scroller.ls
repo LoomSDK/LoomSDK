@@ -2343,15 +2343,18 @@ package feathers.controls
         protected function showOrHideScrollBars():void
         {
             const isFixed:Boolean = this._scrollBarDisplayMode == SCROLL_BAR_DISPLAY_MODE_FIXED;
+            var contains:Boolean;
             if(this.horizontalScrollBar)
             {
                 this.horizontalScrollBar.visible = !isFixed || this._hasHorizontalScrollBar;
-                this.setChildIndex(DisplayObject(this.horizontalScrollBar), this.numChildren - 1);
+                contains = this.getChildIndex(DisplayObject(this.horizontalScrollBar)) != -1;
+                if (contains) this.setChildIndex(DisplayObject(this.horizontalScrollBar), this.numChildren - 1);
             }
             if(this.verticalScrollBar)
             {
                 this.verticalScrollBar.visible = !isFixed || this._hasVerticalScrollBar;
-                this.setChildIndex(DisplayObject(this.verticalScrollBar), this.numChildren - 1);
+                contains = this.getChildIndex(DisplayObject(this.verticalScrollBar)) != -1;
+                if (contains) this.setChildIndex(DisplayObject(this.verticalScrollBar), this.numChildren - 1);
             }
         }
 

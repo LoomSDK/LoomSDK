@@ -31,7 +31,7 @@
 #include "wavloader.h"
 
 extern "C" loom_allocator_t *gAssetAllocator;
-loom_logGroup_t gSoundAssetGroup = { "soundAsset", 1 };
+loom_logGroup_t gSoundAssetGroup = { "asset.sound", 1 };
 
 void loom_asset_registerSoundAsset()
 {
@@ -86,7 +86,7 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
         int sampleCount = stb_vorbis_decode_memory(charBuff, (int)bufferLen, &channels, &outputBuffer);
         if(sampleCount < 0)
         {
-            lmLogError(gSoundAssetGroup, "Failed to decode Ogg Vorbis!");
+            lmLogError(gSoundAssetGroup, "Failed to decode Ogg Vorbis");
             loom_asset_soundDtor(&sound);
             return NULL;
         }
@@ -216,6 +216,6 @@ void *loom_asset_soundDeserializer( void *buffer, size_t bufferLen, LoomAssetCle
       return 0;
    }
 
-    lmLogInfo(gSoundAssetGroup, "Allocated %d bytes for a sound!", sound->bufferSize);
+    lmLogDebug(gSoundAssetGroup, "Sound allocation: %d bytes", sound->bufferSize);
     return sound;
 }

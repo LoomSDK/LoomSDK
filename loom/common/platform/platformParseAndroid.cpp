@@ -25,13 +25,12 @@
 #include <jni.h>
 #include "platformAndroidJni.h"
 
-#include "loom/engine/cocos2dx/cocoa/CCString.h"
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
 #include "loom/common/platform/platformParse.h"
 #include "loom/vendor/jansson/jansson.h"
 
-lmDefineLogGroup(gAndroidParseLogGroup, "loom.parse.android", 1, 0);
+lmDefineLogGroup(gAndroidParseLogGroup, "parse", 1, LoomLogDefault);
 
 
 static loomJniMethodInfo gIsActive;
@@ -43,23 +42,23 @@ static loomJniMethodInfo gUpdateInstallationUserID;
 ///initializes the data for the Parse class for Android
 void platform_parseInitialize()
 {
-    lmLog(gAndroidParseLogGroup, "INIT ***** PARSE ***** ANDROID ****");
+    lmLogDebug(gAndroidParseLogGroup, "Initializing Parse for Android");
 
     ///Bind to JNI entry points.
     LoomJni::getStaticMethodInfo(gIsActive,
-                                 "co/theengine/loomdemo/LoomParse",
+                                 "co/theengine/loomplayer/LoomParse",
                                  "isActive",
                                  "()Z");
     LoomJni::getStaticMethodInfo(gGetInstallationID,
-                                 "co/theengine/loomdemo/LoomParse",
+                                 "co/theengine/loomplayer/LoomParse",
                                  "getInstallationID",
                                  "()Ljava/lang/String;");
     LoomJni::getStaticMethodInfo(gGetInstallationObjectID,
-                                 "co/theengine/loomdemo/LoomParse",
+                                 "co/theengine/loomplayer/LoomParse",
                                  "getInstallationObjectID",
                                  "()Ljava/lang/String;");
     LoomJni::getStaticMethodInfo(gUpdateInstallationUserID,
-                                 "co/theengine/loomdemo/LoomParse",
+                                 "co/theengine/loomplayer/LoomParse",
                                  "updateInstallationUserID",
                                  "(Ljava/lang/String;)Z");
 }
@@ -81,10 +80,10 @@ const char* platform_getInstallationID()
     }
     
     ///convert jstring result into const char* for us to return
-    cocos2d::CCString *installID = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
-    installID->autorelease();
+    static char installIdStatic[1024];
+    strncpy(installIdStatic, LoomJni::jstring2string(result).c_str(), 1024);
     gGetInstallationID.getEnv()->DeleteLocalRef(result);
-    return installID->m_sString.c_str();
+    return installIdStatic;
 }
 
 
@@ -98,10 +97,10 @@ const char* platform_getInstallationObjectID()
     }
     
     ///convert jstring result into const char* for us to return
-    cocos2d::CCString *installID = new cocos2d::CCString(LoomJni::jstring2string(result).c_str());
-    installID->autorelease();
+    static char installIdStatic[1024];
+    strncpy(installIdStatic, LoomJni::jstring2string(result).c_str(), 1024);
     gGetInstallationObjectID.getEnv()->DeleteLocalRef(result);
-    return installID->m_sString.c_str();
+    return installIdStatic;
 }
 
 bool platform_updateInstallationUserID(const char* userId)
