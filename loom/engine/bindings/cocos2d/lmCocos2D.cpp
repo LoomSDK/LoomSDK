@@ -186,70 +186,8 @@ static int registerCocos2D(lua_State *L)
 }
 
 
-//using namespace cocos2d;
-
-void installPackage();
-
 void installPackageCocos2DX()
 {
     // Register some bindings for Cocos.
     LOOM_DECLARE_NATIVETYPE(LoomCocos2d, registerCocos2D);
-
-    installPackage();
-}
-
-class DummyDefaults
-{
-public:
-    bool getBoolForKey(const char *s, bool v) { return v; };
-    int getIntegerForKey(const char *s, int v) { return v; };
-    float getFloatForKey(const char *s, float v) { return v; };
-    const char *getStringForKey(const char *s, const char* v) { return v; };
-    double getDoubleForKey(const char *s, double v) { return v; };
-    
-    void setBoolForKey(const char *k, bool v) {};
-    void setIntegerForKey(const char *k, int v) {};
-    void setFloatForKey(const char *k, float v) {};
-    void setStringForKey(const char *k, const char * v) {};
-    void setDoubleForKey(const char *k, double v) {};
-
-    static void purgeSharedUserDefault()
-    {
-    }
-    static DummyDefaults *sharedUserDefault()
-    {
-        return NULL;
-    }
-};
-
-static int registerCCUserDefault(lua_State *L)
-{
-    beginPackage(L, "loom.platform")
-
-       .beginClass<DummyDefaults>("UserDefault")
-
-       .addMethod("getBoolForKey", &DummyDefaults::getBoolForKey)
-       .addMethod("getIntegerForKey", &DummyDefaults::getIntegerForKey)
-       .addMethod("getFloatForKey", &DummyDefaults::getFloatForKey)
-       .addMethod("getStringForKey", &DummyDefaults::getStringForKey)
-       .addMethod("getDoubleForKey", &DummyDefaults::getDoubleForKey)
-
-       .addMethod("setBoolForKey", &DummyDefaults::setBoolForKey)
-       .addMethod("setIntegerForKey", &DummyDefaults::setIntegerForKey)
-       .addMethod("setFloatForKey", &DummyDefaults::setFloatForKey)
-       .addMethod("setStringForKey", &DummyDefaults::setStringForKey)
-       .addMethod("setDoubleForKey", &DummyDefaults::setIntegerForKey)
-
-       .addStaticMethod("sharedUserDefault", &DummyDefaults::sharedUserDefault)
-       .addStaticMethod("purgeSharedUserDefault", &DummyDefaults::purgeSharedUserDefault)
-       .endClass()
-
-       .endPackage();
-
-    return 0;
-}
-
-void installPackage()
-{
-    LOOM_DECLARE_MANAGEDNATIVETYPE(DummyDefaults, registerCCUserDefault);
 }

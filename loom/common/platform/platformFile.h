@@ -56,6 +56,13 @@ void platform_getCurrentExecutablePath(char *out, unsigned int maxLen);
 const char *platform_getWritablePath();
 
 /*!
+ * Get the platform path used for per-app user settings files
+ *
+ * @return The per-app user settings path
+ */
+const char *platform_getSettingsPath(const char *appName);
+
+/*!
  * Recursively create the folders in path
  *
  * @param path recursively creates the folders in path
