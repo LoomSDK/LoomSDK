@@ -8,7 +8,7 @@ sudo apt-get install g++ rake cmake zlib1g-dev libglew-dev libglfw-dev libcurl4-
    You can get Android SDK from the official site (http://developer.android.com/sdk/index.html)
    where you can download and install either Android Studio or the standalone tools.
 
-   After you've installed the SDK, run build/android from the SDK directory and install
+   After you've installed the SDK, run tools/android from the SDK directory and install
    android-13 (marked obsolete :( ) SDK and the latest build-tools version 22.
    Other versions may not work properly.
 
@@ -23,9 +23,11 @@ sudo apt-get install g++ rake cmake zlib1g-dev libglew-dev libglfw-dev libcurl4-
 
 sudo apt-get install default-jdk
 
+   If anything goes wrong when compling for Android, make sure you have the right read/execute permissions in the SDK and NDK directories.
+
 2. If you plan on compiling for Android and you're on a 64-bit system, also install lib32gcc-5-dev and lib32z1
 
-sudo apt-get install lib32-gcc-5-dev lib32z1
+sudo apt-get install g++-multilib lib32z1
 
 2.  From the root SDK folder run: rake deploy:sdk
 
