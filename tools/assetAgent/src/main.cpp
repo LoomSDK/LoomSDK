@@ -845,7 +845,7 @@ void DLLEXPORT assetAgent_run(IdleCallback idleCb, LogCallback logCb, FileChange
     // Put best effort towards closing our listen socket when we shut down, to
     // avoid bugs on OSX where the OS won't release it for a while.
 
-#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
     atexit(shutdownListenSocket);
     signal(SIGINT, shutdownListenSocketSignalHandler);
 #endif
