@@ -49,7 +49,12 @@ void platform_setCurrentWorkingDir(const char *path);
 void platform_getCurrentExecutablePath(char *out, unsigned int maxLen);
 
 /*!
- * Get the writeable path
+ * Get the path to a writable user-managed directory.
+ * Make sure not to use this for application settings or other
+ * internal files. Export media and files to this directory.
+ *
+ * This directory is shared between all apps, so use a subdirectory
+ * with your app name if you have multiple files to organize.
  *
  * @return The path that can write/read file
  */
@@ -58,6 +63,9 @@ const char *platform_getWritablePath();
 /*!
  * Get the platform path used for per-app user settings files
  *
+ * @param appName Application name to use while resolving the path on platforms
+ *                that do not provide one automatically.
+ *                Usually `LoomApplicationConfig::applicationId().c_str()`.
  * @return The per-app user settings path
  */
 const char *platform_getSettingsPath(const char *appName);

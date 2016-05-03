@@ -303,4 +303,27 @@ const char *LoomJni::getWritablePath()
 
     return 0;
 }
+
+const char *LoomJni::getSettingsPath()
+{
+    static utString path;
+
+    loomJniMethodInfo t;
+
+    if (getStaticMethodInfo(t,
+        "co/theengine/loomplayer/LoomPlayer",
+        "getActivitySettingsPath",
+        "()Ljava/lang/String;"))
+    {
+        jstring str = (jstring)t.getEnv()->CallStaticObjectMethod(t.classID, t.methodID);
+        path = jstring2string(str);
+        t.getEnv()->DeleteLocalRef(str);
+
+        lmLog(jniLogGroup, "settings path %s", path.c_str());
+
+        return path.c_str();
+    }
+
+    return 0;
+}
 #endif

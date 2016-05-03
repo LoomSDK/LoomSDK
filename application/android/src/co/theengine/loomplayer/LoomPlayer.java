@@ -75,7 +75,12 @@ public class LoomPlayer extends SDLActivity {
     
     public static String getActivityWritablePath()
     {
-    	return getContext().getApplicationInfo().dataDir;
+    	return Environment.getExternalStorageDirectory().getAbsolutePath() + "/";
+    }
+    
+    public static String getActivitySettingsPath()
+    {
+    	return getContext().getFilesDir().getAbsolutePath() + "/";
     }
     
     public static int getProfile() {

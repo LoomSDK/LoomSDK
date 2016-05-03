@@ -177,7 +177,9 @@ void ScopedJSON::save()
     const char *serialized = json.serialize();
     lmAssert(serialized, "Unable to serialize JSON");
 
-    platform_writeFile(filepath.c_str(), (void*)serialized, strlen(serialized));
+    int ret = platform_writeFile(filepath.c_str(), (void*)serialized, strlen(serialized));
+
+    if (ret != 0) lmLogWarn(gUserDefaultGroup, "Unable to write to %s", filepath.c_str());
 
     lmFree(NULL, (void*)serialized);
 }
