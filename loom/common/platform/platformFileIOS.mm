@@ -124,6 +124,27 @@ const char* platform_getWritablePath()
     return "";
 
 }
+    
+const char* platform_getSettingsPath(const char *appName)
+{
+    
+    static char path[1024];
+    // save to document folder
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+    if (paths)
+    {
+        NSString *appSupportDirectory = [paths objectAtIndex:0];
+        if (appSupportDirectory)
+        {
+            snprintf(path, 1023, "%s/%s/", [appSupportDirectory UTF8String], appName);
+            return path;
+        }
+    }
+    
+    return "";
+
+}
+
 
 #elif LOOM_PLATFORM == LOOM_PLATFORM_IOS
 

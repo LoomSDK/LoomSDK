@@ -18,6 +18,7 @@
  * ===========================================================================
  */
 
+#include "loom/engine/bindings/loom/lmUserDefault.h"
 #include "loom/script/loomscript.h"
 #include "loom/common/core/log.h"
 #include "loom/common/core/allocator.h"
@@ -26,10 +27,11 @@
 #include "loom/common/config/applicationConfig.h"
 #include "loom/common/utils/json.h"
 
-//#include "loom/engine/bindings/loom/"
-
 lmDefineLogGroup(gUserDefaultGroup, "userdef", 1, LoomLogInfo);
 
+UserDefault UserDefault::shared;
+
+#if !LOOM_PLATFORM_IS_APPLE
 class ScopedJSON
 {
     utString dir;
@@ -49,92 +51,74 @@ public:
     T getValue(const char *k, T def, T value);
 };
 
-class UserDefault
+static const char* getSharedDir()
 {
-    static UserDefault shared;
+    return platform_getSettingsPath(LoomApplicationConfig::applicationId().c_str());
+}
 
-public:
-    static const char* getSharedDir()
-    {
-        return platform_getSettingsPath(LoomApplicationConfig::applicationId().c_str());
-    }
+static const char* getSharedFileName()
+{
+    return "userdefaults.json";
+}
 
-    static const char* getSharedFileName()
-    {
-        return "userdefaults.json";
-    }
-
-    bool getBoolForKey(const char *k, bool v)
-    {
-        ScopedJSON s; return s.getValue(k, v, s.json.getBoolean(k));
-    };
-
-    int getIntegerForKey(const char *k, int v)
-    {
-        ScopedJSON s; return s.getValue(k, v, s.json.getInteger(k));
-    };
-    float getFloatForKey(const char *k, float v)
-    {
-        ScopedJSON s; return s.getValue(k, v, static_cast<float>(s.json.getFloat(k)));
-    };
-
-    utString getStringForKey(const char *k, const char* v)
-    {
-        ScopedJSON s; return utString(s.getValue(k, v, s.json.getString(k)));
-    };
-
-    double getDoubleForKey(const char *k, double v)
-    {
-        ScopedJSON s; return s.getValue(k, v, s.json.getNumber(k));
-    };
-
-    void setBoolForKey(const char *k, bool v)
-    {
-        ScopedJSON s; s.json.setBoolean(k, v);
-    };
-
-    void setIntegerForKey(const char *k, int v)
-    {
-        ScopedJSON s; s.json.setInteger(k, v);
-    };
-
-    void setFloatForKey(const char *k, float v)
-    {
-        ScopedJSON s; s.json.setFloat(k, v);
-    };
-
-    void setStringForKey(const char *k, const char * v)
-    {
-        ScopedJSON s; s.json.setString(k, v);
-    };
-
-    void setDoubleForKey(const char *k, double v)
-    {
-        ScopedJSON s; s.json.setNumber(k, v);
-    };
-
-    bool purge()
-    {
-        return platform_removeFile((utString(getSharedDir()) + utString(getSharedFileName())).c_str()) == 0;
-    };
-
-    static bool purgeSharedUserDefault()
-    {
-        return shared.purge();
-    }
-
-    static UserDefault *sharedUserDefault()
-    {
-        return &shared;
-    }
+bool UserDefault::getBoolForKey(const char *k, bool v)
+{
+    ScopedJSON s; return s.getValue(k, v, s.json.getBoolean(k));
 };
 
-UserDefault UserDefault::shared;
+int UserDefault::getIntegerForKey(const char *k, int v)
+{
+    ScopedJSON s; return s.getValue(k, v, s.json.getInteger(k));
+};
+float UserDefault::getFloatForKey(const char *k, float v)
+{
+    ScopedJSON s; return s.getValue(k, v, static_cast<float>(s.json.getFloat(k)));
+};
+
+utString UserDefault::getStringForKey(const char *k, const char* v)
+{
+    ScopedJSON s; return utString(s.getValue(k, v, s.json.getString(k)));
+};
+
+double UserDefault::getDoubleForKey(const char *k, double v)
+{
+    ScopedJSON s; return s.getValue(k, v, s.json.getNumber(k));
+};
+
+void UserDefault::setBoolForKey(const char *k, bool v)
+{
+    ScopedJSON s; s.json.setBoolean(k, v);
+};
+
+void UserDefault::setIntegerForKey(const char *k, int v)
+{
+    ScopedJSON s; s.json.setInteger(k, v);
+};
+
+void UserDefault::setFloatForKey(const char *k, float v)
+{
+    ScopedJSON s; s.json.setFloat(k, v);
+};
+
+void UserDefault::setStringForKey(const char *k, const char * v)
+{
+    ScopedJSON s; s.json.setString(k, v);
+};
+
+void UserDefault::setDoubleForKey(const char *k, double v)
+{
+    ScopedJSON s; s.json.setNumber(k, v);
+};
+
+bool UserDefault::purge()
+{
+    return platform_removeFile((utString(getSharedDir()) + utString(getSharedFileName())).c_str()) == 0;
+};
 
 ScopedJSON::ScopedJSON()
 {
-    dir = UserDefault::getSharedDir();
-    filepath = dir + UserDefault::getSharedFileName();
+    dir = getSharedDir();
+    filepath = dir + getSharedFileName();
     load();
 }
 
@@ -189,6 +173,9 @@ T ScopedJSON::getValue(const char *k, T def, T value)
 {
     return json.getObjectJSONType(k) == JSON_NULL ? def : value;
 }
+
+#endif
+
 
 static int registerLoomUserDefault(lua_State *L)
 {

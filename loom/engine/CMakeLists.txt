@@ -47,6 +47,11 @@ set (ENGINE_SRC
 )
 
 if (APPLE)
+    set (ENGINE_SRC
+        ${ENGINE_SRC}
+        bindings/loom/lmUserDefaultCocoa.mm
+    )
+
     if(LOOM_BUILD_IOS EQUAL 1)
     set (ENGINE_SRC
 
