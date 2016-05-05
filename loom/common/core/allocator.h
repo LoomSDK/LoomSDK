@@ -82,6 +82,9 @@
 // allocation with variably offset custom data fields
 #define LOOM_ALLOCATOR_ALIGN_MASK (8-1)
 
+// This should be a multiple of 16 - we need 16-byte alignment because of SSE
+#define LOOM_ALLOCATOR_METADATA_SIZE 16
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -274,10 +277,10 @@ T* loom_destructInPlace(T *t)
 template<typename T>
 T* loom_newArray(loom_allocator_t *allocator, unsigned int nr)
 {
-    T* arr = (T*) lmAlloc(allocator, sizeof(unsigned int) + nr * sizeof(T));
+    T* arr = (T*) lmAlloc(allocator, LOOM_ALLOCATOR_METADATA_SIZE + nr * sizeof(T));
     lmSafeAssert(arr, "Unable to allocate additional memory in loom_newArray");
     *((unsigned int*)arr) = nr;
-    arr = (T*)(((unsigned int*)arr) + 1);
+    arr = (T*)(((void*)arr) + LOOM_ALLOCATOR_METADATA_SIZE);
     for (unsigned int i = 0; i < nr; i++)
     {
         loom_constructInPlace<T>((void*) &arr[i]);
@@ -294,7 +297,7 @@ template<typename T>
 void loom_deleteArray(loom_allocator_t *allocator, T *arr)
 {
     if (arr == NULL) return;
-    void* fullArray = (void*) (((unsigned int*)arr) - 1);
+    void* fullArray = ((void*)arr) - LOOM_ALLOCATOR_METADATA_SIZE;
     unsigned int nr = *((unsigned int*)fullArray);
     while (nr > 0)
     {
