@@ -18,6 +18,8 @@
  * ===========================================================================
  */
 
+#define _GNU_SOURCE
+
 #include "loom/common/platform/platformThread.h"
 #include "loom/common/platform/platform.h"
 #include "loom/common/core/assert.h"
@@ -609,10 +611,10 @@ void loom_thread_setDebugName(const char *name)
 #include <unistd.h>
 #include <semaphore.h>
 #include <errno.h>
+#include <stdio.h>
 
 #include "loom/common/platform/platformDisplay.h"
 #include "loom/common/core/performance.h"
-#include <stdio.h>
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
 #include <sys/atomics.h>

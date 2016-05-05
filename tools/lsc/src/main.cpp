@@ -83,7 +83,11 @@ utString GetLSCPath()
 {
     char buffer[BUFSIZ];
 
-    readlink("/proc/self/exe", buffer, BUFSIZ);
+    ssize_t res = readlink("/proc/self/exe", buffer, BUFSIZ);
+    if (res < 0)
+    {
+        LSError("Unable to get LSC executable path");
+    }
     return utString(buffer);
 }
 #endif
@@ -298,7 +302,11 @@ int main(int argc, const char **argv)
             LSCompiler::log("Project folder set to %s\n", argv[i]);
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_OSX || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
-            chdir(argv[i]);
+            int chdirRes = chdir(argv[i]);
+            if (chdirRes != 0)
+            {
+                LSError("Unable to change working dir");
+            }
 #elif LOOM_PLATFORM == LOOM_PLATFORM_WIN32
             ::SetCurrentDirectory(argv[i]);
 #endif

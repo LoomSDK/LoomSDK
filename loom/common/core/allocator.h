@@ -280,7 +280,7 @@ T* loom_newArray(loom_allocator_t *allocator, unsigned int nr)
     T* arr = (T*) lmAlloc(allocator, LOOM_ALLOCATOR_METADATA_SIZE + nr * sizeof(T));
     lmSafeAssert(arr, "Unable to allocate additional memory in loom_newArray");
     *((unsigned int*)arr) = nr;
-    arr = (T*)(((void*)arr) + LOOM_ALLOCATOR_METADATA_SIZE);
+    arr = (T*)(((char*)arr) + LOOM_ALLOCATOR_METADATA_SIZE);
     for (unsigned int i = 0; i < nr; i++)
     {
         loom_constructInPlace<T>((void*) &arr[i]);
@@ -297,7 +297,7 @@ template<typename T>
 void loom_deleteArray(loom_allocator_t *allocator, T *arr)
 {
     if (arr == NULL) return;
-    void* fullArray = ((void*)arr) - LOOM_ALLOCATOR_METADATA_SIZE;
+    char* fullArray = ((char*)arr) - LOOM_ALLOCATOR_METADATA_SIZE;
     unsigned int nr = *((unsigned int*)fullArray);
     while (nr > 0)
     {

@@ -317,7 +317,7 @@ SEATEST_TEST(platformThread_semaphoreChain)
 
     for (int i = 0; i < gSemChainLength - 1; i++)
     {
-        chainThreads[i] = loom_thread_start(threadSemChainFunc, (void *)i);
+        chainThreads[i] = loom_thread_start(threadSemChainFunc, (void *)(size_t)i);
     }
 
     // Kick off first link in chain, then wait for last.

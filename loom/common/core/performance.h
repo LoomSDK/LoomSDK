@@ -264,8 +264,8 @@ typedef void(*gLuaGC_callback)();
 typedef void*(*gLuaGC_callback_begin)();
 typedef void(*gLuaGC_callback_end)(void*);
 #define LUA_GC_SET(name) \
-    extern gLuaGC_callback_begin gLuaGC_ ## name ## _begin = lgc_ ## name ## _begin; \
-    extern gLuaGC_callback_end   gLuaGC_ ## name ## _end   = lgc_ ## name ## _end; \
+    gLuaGC_callback_begin gLuaGC_ ## name ## _begin = lgc_ ## name ## _begin; \
+    gLuaGC_callback_end   gLuaGC_ ## name ## _end   = lgc_ ## name ## _end; \
 
 #define LUA_GC_PROFILE_NAME_STR(name) "luaGC_" #name
 #define LUA_GC_PROFILE_NAME(name) luaGC_ ## name

@@ -220,7 +220,7 @@ public:
 
     static void shutdown();
     
-    static bool queryExtension(char *extName);
+    static bool queryExtension(const char *extName);
 
     static void beginFrame();
     static void pushRenderTarget();

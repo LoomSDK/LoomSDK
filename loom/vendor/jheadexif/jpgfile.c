@@ -485,7 +485,8 @@ int ReplaceThumbnail(const char * ThumbFileName)
     ThumbnailPointer = ExifSection->Data+ImageInfo.ThumbnailOffset+8;
 
     if (ThumbnailFile){
-        fread(ThumbnailPointer, ThumbLen, 1, ThumbnailFile);
+        if (fread(ThumbnailPointer, ThumbLen, 1, ThumbnailFile) == 0)
+            return FALSE;
         fclose(ThumbnailFile);
     }
 

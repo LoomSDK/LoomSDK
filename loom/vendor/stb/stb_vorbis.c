@@ -1164,7 +1164,7 @@ static int lookup1_values(int entries, int dim)
 // that is dynamically linked and not present on iOS 6, so we will provide our own. It's
 // courtesy of http://lab.polygonal.de/?p=205 Michael Baczynski. We could pull this in
 // other places if further crashes result -- BJG
-static void sincos(float x, float *cosOut, float *sinOut)
+static void stb_sincos(float x, float *cosOut, float *sinOut)
 {
     float sinTmp, cosTmp;
     
@@ -1228,8 +1228,8 @@ static void compute_twiddle_factors(int n, float *A, float *B, float *C)
    for (k=k2=0; k < n4; ++k,k2+=2)
    {
        float sinA, cosA, sinB, cosB;
-       sincos(4*k*M_PI/n, &cosA, &sinA);
-       sincos((k2+1)*M_PI/n/2, &cosB, &sinB);
+       stb_sincos(4*k*M_PI/n, &cosA, &sinA);
+       stb_sincos((k2+1)*M_PI/n/2, &cosB, &sinB);
        
        A[k2  ] = (float)  cosA;
        A[k2+1] = (float) -sinA;
@@ -1240,7 +1240,7 @@ static void compute_twiddle_factors(int n, float *A, float *B, float *C)
    for (k=k2=0; k < n8; ++k,k2+=2)
    {
        float cosC, sinC;
-       sincos(2*(k2+1)*M_PI/n, &cosC, &sinC);
+       stb_sincos(2*(k2+1)*M_PI/n, &cosC, &sinC);
        C[k2  ] = (float)  cosC;
        C[k2+1] = (float) -sinC;
    }
@@ -2433,7 +2433,6 @@ void dct_iv_slow(float *buffer, int n)
          //acc += x[j] * cos(M_PI / n * (i + 0.5) * (j + 0.5));
       buffer[i] = acc;
    }
-   free(x);
 }
 
 void inverse_mdct_slow(float *buffer, int n, vorb *f, int blocktype)

@@ -893,7 +893,7 @@ int fonsAddFont(FONScontext* stash, const char* name, const char* path)
 	fseek(fp,0,SEEK_SET);
 	data = (unsigned char*)fons_malloc(dataSize);
 	if (data == NULL) goto error;
-	fread(data, 1, dataSize, fp);
+	if (fread(data, 1, dataSize, fp) == 0) goto error;
 	fclose(fp);
 	fp = 0;
 
