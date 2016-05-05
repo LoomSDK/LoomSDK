@@ -27,6 +27,7 @@ limitations under the License.
 #import <Foundation/NSSet.h>
 #import <UIKit/UIKit.h>
 #import <CoreLocation/CoreLocation.h>
+#import <CoreMotion/CoreMotion.h>
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformMobile.h"
@@ -42,6 +43,7 @@ limitations under the License.
 //properties
 @property (nonatomic, retain) CLLocationManager *locationManager;
 @property (nonatomic, retain) CLLocation *latestLocation;
+@property (nonatomic, retain) CMMotionManager *motionManager;
 
 //methods
 -(void)initialize;
@@ -58,6 +60,7 @@ limitations under the License.
 //methods
 - (NSString *)initialize {
     self.locationManager = nil;
+    self.motionManager = nil;
 
     //check authorization status
     CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
@@ -71,6 +74,10 @@ limitations under the License.
     self.locationManager = [[CLLocationManager alloc] init];
     self.locationManager.delegate = self;
     self.locationManager.desiredAccuracy = kCLLocationAccuracyBest;
+    
+    //create the motion manager
+    self.motionManager = [[CMMotionManager alloc] init];
+    self.motionManager.accelerometerUpdateInterval = 1.0/60.0;
 }
 
 -(void)startTracking:(int)minDist{
@@ -121,6 +128,31 @@ limitations under the License.
     return locString;
 }
 
+-(BOOL)isAccelerometerAvailable {
+    return self.motionManager.accelerometerAvailable;
+}
+
+-(BOOL)isAccelerometerActive {
+    return self.motionManager.accelerometerActive;
+}
+
+-(void)enableAccelerometer:(SensorTripleChangedCallback) gTripleChangedCallback {
+    if (self.isAccelerometerActive) return;
+    
+    [self.motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue currentQueue] withHandler:^(CMAccelerometerData *accelerometerData, NSError *error) {
+        if (gTripleChangedCallback != NULL) {
+            gTripleChangedCallback(0,accelerometerData.acceleration.x,accelerometerData.acceleration.y,accelerometerData.acceleration.z);
+        }
+    }];
+}
+
+-(void)disableAccelerometer {
+    [self.motionManager stopAccelerometerUpdates];
+}
+
+-(CMAccelerometerData *)getAccelerometerData {
+    return self.motionManager.accelerometerData;
+}
 
 //CLLocationManagerDelegate interfaces
 //iOS5-
@@ -337,35 +369,64 @@ const char *platform_getRemoteNotificationData(const char *key)
 ///checks if a given sensor is supported on this hardware
 bool platform_isSensorSupported(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
-    return false;
+    BOOL supported = false;
+    
+    switch (sensor)
+    {
+        case 0:
+            supported = [mobileiOS isAccelerometerAvailable];
+            break;
+    }
+    
+    return supported;
 }
 
 ///checks if a given sensor is currently enabled
 bool platform_isSensorEnabled(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
-    return false;
+    BOOL enabled = false;
+    
+    switch (sensor)
+    {
+        case 0:
+            enabled = [mobileiOS isAccelerometerAvailable];
+            break;
+    }
+    
+    return enabled;
 }
 
 ///checks if a given sensor has received any data yet
 bool platform_hasSensorReceivedData(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
-    return false;
+    return [mobileiOS getAccelerometerData] != nil;
 }
 
 ///enables the given sensor
 bool platform_enableSensor(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
-    return false;
+    BOOL enabled = false;
+    
+    switch (sensor)
+    {
+        case 0:
+            [mobileiOS enableAccelerometer:gTripleChangedCallback];
+            enabled = true;
+            break;
+    }
+    
+    return enabled;
 }
 
 ///disables the given sensor
 void platform_disableSensor(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
+    switch (sensor)
+    {
+        case 0:
+            [mobileiOS disableAccelerometer];
+            break;
+    }
 }
 
 
