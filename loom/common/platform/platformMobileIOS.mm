@@ -128,16 +128,18 @@ limitations under the License.
     return locString;
 }
 
+//returns true if accelerometer is supported on device
 -(BOOL)isAccelerometerAvailable {
     return self.motionManager.accelerometerAvailable;
 }
 
+//returns true if accelerometer is active (it happens when startAccelerometerUpdates is called on motionManager)
 -(BOOL)isAccelerometerActive {
     return self.motionManager.accelerometerActive;
 }
 
 -(void)enableAccelerometer:(SensorTripleChangedCallback) gTripleChangedCallback {
-    if (self.isAccelerometerActive) return;
+    if (self.isAccelerometerActive || !self.isAccelerometerAvailable) return;
     
     [self.motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue currentQueue] withHandler:^(CMAccelerometerData *accelerometerData, NSError *error) {
         if (gTripleChangedCallback != NULL) {
@@ -389,7 +391,7 @@ bool platform_isSensorEnabled(int sensor)
     switch (sensor)
     {
         case 0:
-            enabled = [mobileiOS isAccelerometerAvailable];
+            enabled = [mobileiOS isAccelerometerActive];
             break;
     }
     
