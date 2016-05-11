@@ -37,6 +37,7 @@ limitations under the License.
 #include "loom/vendor/jansson/jansson.h"
 
 #include "loom/engine/bindings/loom/lmApplication.h"
+lmDefineLogGroup(iosLogGroup, "mobile.ios", 1, LoomLogInfo);
 
 
 
@@ -236,7 +237,10 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload);
     
     [self.motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue currentQueue] withHandler:^(CMAccelerometerData *accelerometerData, NSError *error) {
         if (gTripleChangedCallback != NULL) {
-            gTripleChangedCallback(0,accelerometerData.acceleration.x,accelerometerData.acceleration.y,accelerometerData.acceleration.z);
+            double axes[3];
+            
+            [self remapXAxis:accelerometerData.acceleration.x yAxis:accelerometerData.acceleration.y zAxis:accelerometerData.acceleration.z into:axes];
+            gTripleChangedCallback(0,axes[0],axes[1],axes[2]);
         }
     }];
 }
@@ -247,6 +251,25 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload);
 
 -(CMAccelerometerData *)getAccelerometerData {
     return self.motionManager.accelerometerData;
+}
+
+-(void)remapXAxis:(double) x yAxis:(double) y zAxis:(double) z into:(double *) remapped {
+    UIInterfaceOrientation curOrientation = [UIApplication sharedApplication].statusBarOrientation;
+    
+    if (curOrientation == UIInterfaceOrientationLandscapeLeft) {
+        remapped[0] = y;
+        remapped[1] = -x;
+    } else if (curOrientation == UIInterfaceOrientationLandscapeRight) {
+        remapped[0] = -y;
+        remapped[1] = x;
+    } else if (curOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+        remapped[0] = -x;
+        remapped[1] = -y;
+    } else {
+        remapped[0] = x;
+        remapped[1] = y;
+    }
+    remapped[2] = z;
 }
 
 //CLLocationManagerDelegate interfaces
