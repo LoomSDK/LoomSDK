@@ -56,9 +56,9 @@ static float pixelsToPoints(float pixels)
 static CocoaView* getMainView()
 {
 #if LOOM_PLATFORM == LOOM_PLATFORM_OSX
-    return [[[NSApplication sharedApplication] windows] objectAtIndex:0].contentView;
+    return [[[[NSApplication sharedApplication] windows] objectAtIndex:0] contentView];
 #else
-    return [[[UIApplication sharedApplication] keyWindow] rootViewController].view;
+    return [[[[UIApplication sharedApplication] keyWindow] rootViewController] view];
 #endif
 }
 
@@ -71,6 +71,8 @@ static CocoaView* getMainView()
 
 
 @implementation WebViewRef
+
+@synthesize view;
 
 - (CocoaRect)rect
 {
