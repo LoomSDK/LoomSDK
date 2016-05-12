@@ -1,7 +1,7 @@
 /*
 ===========================================================================
 Loom SDK
-Copyright 2011, 2012, 2013 
+Copyright 2011, 2012, 2013
 The Game Engine Company, LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,7 @@ Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
-limitations under the License. 
+limitations under the License.
 ===========================================================================
 */
 
@@ -29,55 +29,55 @@ package system {
      *  @see Debug.getCallStack()
      */
     class CallStackInfo {
-        
+
         /**
          *  The LoomScript source file.
-         */ 
+         */
         public var source:String;
-        
+
         /**
-         *  The line of source that was executed in this callstack frame. 
+         *  The line of source that was executed in this callstack frame.
          */
         public var line:Number;
-        
-        // 
+
+        //
         /**
          *  Represents either a method, a constructor, a property getter/setter, etc.
          *  The callstack has full reflection information.
          */
         public var method:MethodBase;
-        
-        
+
+
     }
     /// @endcond
-    
+
     class Breakpoint {
-            
+
         public var source:String;
         public var line:Number;
-        
+
     }
 
-    
+
     /**
      *  The Debug class provides methods that aid in debugging a %Loom %Application.
      */
     class Debug {
-        
-        // TODO: We now have debug/release builds, we need to add Debug metatags or some light preprocessor 
+
+        // TODO: We now have debug/release builds, we need to add Debug metatags or some light preprocessor
         // stuff for debug/release builds, this should be a NOP basically
         /// @cond PRIVATE
-        public static function print(message:String) 
+        public static function print(message:String)
         {
-        
+
             trace(message);
-            
+
         }
-        
+
         public static native function dump(obj:Object);
-        
+
         /// @endcond
-                
+
         /**
          *  Perform an assertion check on a loomscript expression or Object.
          *
@@ -93,55 +93,55 @@ package system {
         {
             Debug.assert(false, e.toString());
         }
-        
+
         /**
          *  Perform a debugger break if supplied expression fails
          *
          *  @param expression The object to be tested.
          */
         public static function debug(expression:Object = false) {
-        
+
             if (expression)
                 return;
-                
-            debugBreak = true;    
-            
+
+            debugBreak = true;
+
         }
-        
+
         /*
          * Initializes the Lua VM debug hook. At this point,
          * we are  running under the debugger.
          */
         public static native function setDebugHook();
-        
+
         /*
          * Retrieves the locals of the given stack index.
          */
         public static native function getLocals(snapshot:Vector.<CallStackInfo>, stackLevel:Number):Dictionary.<String, Object>;
-        
+
         /*
          * Retrieves the current function call stack in the form of a Vector
          * of CallStackInfo objects with the first element being the latest call
          * and the last one being the originating enter point.
-         * 
+         *
          * @see CallStackInfo
          */
         public static native function getCallStack():Vector.<CallStackInfo>;
-        
+
         /*
          * Adds a breakpoint at the given source and line number.
          */
-        public static native function addBreakpoint(source:String, line:Number);
+        public static native function addBreakpoint(source:String, line:Number):String;
 
         /*
          * Removes a breakpoint at the given source and line number.
          */
-        public static native function removeBreakpoint(source:String, line:Number);
+        public static native function removeBreakpoint(source:String, line:Number):String;
 
         /*
          * Removes a breakpoint at the given index.
          */
-        public static native function removeBreakpointAtIndex(index:Number);
+        public static native function removeBreakpointAtIndex(index:Number):String;
 
         /*
          * Removes all breakpoints.
@@ -157,11 +157,11 @@ package system {
          * Checks if there is a breakpoint at the given source and line.
          */
         public static native function hasBreakpoint(source:String, line:Number):Boolean;
-        
-        
+
+
         // If true, we have hit a Debug.debug() break.
-        public static native var debugBreak:Boolean;        
-        
+        public static native var debugBreak:Boolean;
+
         // If set, this is the current method we are stepping over or finishing before
         // continuing to step under the debugger.
         public static native var finishMethod:MethodBase;
@@ -170,23 +170,23 @@ package system {
          *  When this is true, the debugger coroutine will block the main application code (for hitting breakpoints, stepping code, etc).
          */
         public static native var blocking:Boolean;
- 
+
         /**
          *  When true, we are stepping over code.
          */
         public static native var stepOver:Boolean = false;
-        
+
         /**
          *  When true, we are stepping code.
          */
         public static static native var stepping:Boolean = false;
 
         /**
-         * When set, we have hit a fatal assertion and while we can inspect the 
+         * When set, we have hit a fatal assertion and while we can inspect the
          * program state under the debugger, we cannot continue execution.
-         */ 
-        public static native var assertion:Boolean;        
-        
+         */
+        public static native var assertion:Boolean;
+
         /*
          * Delegates for line, return, call, and assert events.
          */
@@ -194,7 +194,7 @@ package system {
         public static native var returnEventDelegate:NativeDelegate;
         public static native var callEventDelegate:NativeDelegate;
         public static native var assertEventDelegate:NativeDelegate;
-        
+
     }
-    
+
 }
