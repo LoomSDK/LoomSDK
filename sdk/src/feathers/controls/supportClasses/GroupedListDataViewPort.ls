@@ -928,7 +928,7 @@ package feathers.controls.supportClasses
             if(scrollInvalid || dataInvalid || itemRendererInvalid || sizeInvalid || stylesInvalid)
             {
                 _ignoreRendererResizing = true;
-                _layout.layout(_layoutItems, HELPER_BOUNDS, HELPER_LAYOUT_RESULT);
+                 if (this._layout) _layout.layout(_layoutItems, HELPER_BOUNDS, HELPER_LAYOUT_RESULT);
                 _ignoreRendererResizing = false;
                 setSizeInternal(HELPER_LAYOUT_RESULT.contentWidth, HELPER_LAYOUT_RESULT.contentHeight, false);
                 actualVisibleWidth = HELPER_LAYOUT_RESULT.viewPortWidth;
@@ -1649,7 +1649,7 @@ package feathers.controls.supportClasses
             for(var i:int = 0; i < rendererCount; i++)
             {
                 var itemRenderer:IGroupedListItemRenderer = _inactiveItemRenderers[i];
-                _owner.dispatchEventWith(FeathersEventType.RENDERER_REMOVE, false, itemRenderer);
+                if (this._owner) _owner.dispatchEventWith(FeathersEventType.RENDERER_REMOVE, false, itemRenderer);
                 //delete _itemRendererMap[itemRenderer.data];
                 _itemRendererMap[itemRenderer.data] = null;
             }
@@ -1660,7 +1660,7 @@ package feathers.controls.supportClasses
                 for(i = 0; i < rendererCount; i++)
                 {
                     itemRenderer = _inactiveFirstItemRenderers[i];
-                    _owner.dispatchEventWith(FeathersEventType.RENDERER_REMOVE, false, itemRenderer);
+                    if (this._owner) _owner.dispatchEventWith(FeathersEventType.RENDERER_REMOVE, false, itemRenderer);
                     //delete _firstItemRendererMap[itemRenderer.data];
                     _firstItemRendererMap[itemRenderer.data] = null;
                 }
@@ -1672,7 +1672,7 @@ package feathers.controls.supportClasses
                 for(i = 0; i < rendererCount; i++)
                 {
                     itemRenderer = _inactiveLastItemRenderers[i];
-                    _owner.dispatchEventWith(FeathersEventType.RENDERER_REMOVE, false, itemRenderer);
+                    if (this._owner) _owner.dispatchEventWith(FeathersEventType.RENDERER_REMOVE, false, itemRenderer);
                     //delete _lastItemRendererMap[itemRenderer.data];
                     _lastItemRendererMap[itemRenderer.data] = null;
                 }
@@ -1684,7 +1684,7 @@ package feathers.controls.supportClasses
                 for(i = 0; i < rendererCount; i++)
                 {
                     itemRenderer = _inactiveSingleItemRenderers[i];
-                    _owner.dispatchEventWith(FeathersEventType.RENDERER_REMOVE, false, itemRenderer);
+                    if (this._owner) _owner.dispatchEventWith(FeathersEventType.RENDERER_REMOVE, false, itemRenderer);
                     //delete _singleItemRendererMap[itemRenderer.data];
                     _singleItemRendererMap[itemRenderer.data] = null;
                 }
@@ -1694,7 +1694,7 @@ package feathers.controls.supportClasses
             for(i = 0; i < rendererCount; i++)
             {
                 var headerOrFooterRenderer:IGroupedListHeaderOrFooterRenderer = _inactiveHeaderRenderers[i];
-                _owner.dispatchEventWith(FeathersEventType.RENDERER_REMOVE, false, headerOrFooterRenderer);
+                if (this._owner) _owner.dispatchEventWith(FeathersEventType.RENDERER_REMOVE, false, headerOrFooterRenderer);
                 //delete _headerRendererMap[headerOrFooterRenderer.data];
                 _headerRendererMap[headerOrFooterRenderer.data] = null;
             }
@@ -1703,7 +1703,7 @@ package feathers.controls.supportClasses
             for(i = 0; i < rendererCount; i++)
             {
                 headerOrFooterRenderer = _inactiveFooterRenderers[i];
-                _owner.dispatchEventWith(FeathersEventType.RENDERER_REMOVE, false, headerOrFooterRenderer);
+                if (this._owner) _owner.dispatchEventWith(FeathersEventType.RENDERER_REMOVE, false, headerOrFooterRenderer);
                 //delete _footerRendererMap[headerOrFooterRenderer.data];
                 _footerRendererMap[headerOrFooterRenderer.data] = null;
             }
