@@ -69,6 +69,7 @@ lmDefineLogGroup(scriptLogGroup, "script", 1, LoomLogInfo);
 extern "C" {
 
 extern void loomsound_shutdown();
+extern atomic_int_t gLoomTicking;
 
 void loom_appInit(void)
 {
@@ -82,6 +83,19 @@ void loom_appSetup(void)
     GFX::Graphics::initialize();
 }
 
+void loom_appPause(void)
+{
+    atomic_store32(&gLoomTicking, 0);
+    GFX::Graphics::pause();
+    lmLogInfo(applicationLogGroup, "Paused");
+}
+    
+void loom_appResume(void)
+{
+    GFX::Graphics::resume();
+    atomic_store32(&gLoomTicking, 1);
+    lmLogInfo(applicationLogGroup, "Resumed");
+}
 
 void loom_appShutdown(void)
 {
