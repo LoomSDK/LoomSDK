@@ -64,6 +64,7 @@ static CocoaView* getMainView()
 
 @interface WebViewRef : NSObject {
     CocoaRect _rect;
+    CocoaWebView* _view;
 }
 @property (retain) CocoaWebView* view;
 @property CocoaRect rect;
