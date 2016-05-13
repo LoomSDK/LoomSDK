@@ -43,10 +43,7 @@ package
             bg.addEventListener( TouchEvent.TOUCH, function(e:TouchEvent) { 
                 var touch = e.getTouch(stage, TouchPhase.BEGAN);
                 if (touch)
-                {   
-                    var point:Point;
-                    point = touch.getLocation(stage);
-                    trace(point);
+                {
                     Platform.openURL("http://loomsdk.com");
                 }
             } );            
