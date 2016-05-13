@@ -75,7 +75,7 @@ size_t LSLuaState::allocatedBytes = 0;
 static void *lsLuaAlloc(void *ud, void *ptr, size_t osize, size_t nsize)
 {
     (void)ud;  /* not used */
-    
+
     LSLuaState::allocatedBytes += nsize - osize;
 
     void *ret;
@@ -457,6 +457,8 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
         bool incomplete = false;
         Type *search = type;
         while (search) {
+            //lmLogWarn(gLuaStateLogGroup, "j: %d, type->name: %s, &search: %p", j, type->getFullName().c_str(), search);
+            //lmLogWarn(gLuaStateLogGroup, "search->name: %s", search->getFullName().c_str())
             if (search->getMissing())
             {
                 incomplete = true;
@@ -487,28 +489,6 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
         }
     }
 
-    // Removes and deletes all missing types and moves
-    // non-missing types in their place, then shrinks
-    // the type array to fit
-    if (shrink)
-    {
-        UTsize firstFree = 0;
-        for (UTsize j = 0; j < types.size(); j++) {
-            Type *type = types[j];
-            if (!type->getMissing()) {
-                types[firstFree] = type;
-                firstFree++;
-            }
-            else {
-                Module* module = const_cast<Module*>(type->getModule());
-                module->removeType(type);
-                lmDelete(NULL, type);
-                types[j] = NULL;
-            }
-        }
-        types.resize(firstFree);
-    }
-
     declareLuaTypes(types);
     initializeLuaTypes(types);
 
@@ -517,7 +497,10 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
 #if LOOM_PLATFORM == LOOM_PLATFORM_OSX || LOOM_PLATFORM == LOOM_PLATFORM_WIN32
     for (UTsize j = 0; j < types.size(); j++)
     {
-        Type            *type = types.at(j);
+        Type *type = types.at(j);
+
+        if (type->getMissing()) continue;
+
         TypeValidatorRT tv(this, type);
         tv.validate();
     }
@@ -526,6 +509,30 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
     assembly->bootstrap();
 }
 
+void LSLuaState::cleanUpMissingTypes()
+{
+    for (UTsize i = 0; i < assemblies.size(); i++)
+    {
+        Assembly* a = assemblies.at(i);
+
+        utArray<Type*> types;
+        a->getTypes(types);
+
+        for (UTsize j = 0; j < types.size(); j++)
+        {
+            Type *type = types[j];
+
+            if (type->getMissing())
+            {
+                typeCache.remove(type->getFullName());
+
+                Module* m = const_cast<Module*>(type->getModule());
+                m->removeType(type);
+                lmDelete(NULL, type);
+            }
+        }
+    }
+}
 
 Assembly *LSLuaState::loadAssemblyJSON(const utString& json)
 {
@@ -971,7 +978,7 @@ void LSLuaState::triggerRuntimeError(const char *format, ...)
         LSLog(LSLogError, "%s : %s : %i", s.methodBase->getFullMemberName(),
               s.source ? s.source : NULL, s.linenumber);
     }
-    
+
     LSError("\nFatal Runtime Error\n\n");
 
 }

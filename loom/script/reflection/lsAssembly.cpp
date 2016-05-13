@@ -116,6 +116,11 @@ void Assembly::bootstrap()
     {
         Type *type = types[i];
 
+        if (type->getMissing())
+        {
+            continue;
+        }
+
         if (type->getFullName() == "system.Null")
         {
             continue;
@@ -145,7 +150,7 @@ Assembly *Assembly::loadFromString(LSLuaState *vm, const utString& source)
 int Assembly::loadBytes(lua_State *L) {
 
     utByteArray *bytes = static_cast<utByteArray*>(lualoom_getnativepointer(L, 1, false, "system.ByteArray"));
-    
+
     Assembly *assembly = LSLuaState::getExecutingVM(L)->loadExecutableAssemblyBinary(static_cast<const char*>(bytes->getDataPtr()), bytes->getSize());
 
     lmAssert(assembly, "Error loading assembly bytes");
@@ -327,7 +332,7 @@ int Assembly::run(lua_State *L)
             lua_settop(rootVM->VM(), top);
         }
     }
-    
+
     return 0;
 }
 
@@ -403,12 +408,12 @@ Assembly::~Assembly()
     // Remove assembly from lookup
     utHashTable<utHashedString, Assembly *> *lookup;
     UTsize idx;
-    
+
     idx = assemblies.find(vm);
     if (idx != UT_NPOS)
     {
         lookup = assemblies.at(idx);
-    
+
         if (lookup->find(name) != UT_NPOS)
         {
             lookup->remove(name);
