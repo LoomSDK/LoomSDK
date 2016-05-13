@@ -20,6 +20,7 @@
 
 #include "loom/common/platform/platformTime.h"
 #include "loom/common/platform/platformHttp.h"
+#include "loom/common/platform/platformThread.h"
 #include "loom/common/core/performance.h"
 #include "loom/common/assets/assets.h"
 #include "loom/script/native/lsNativeDelegate.h"
@@ -34,8 +35,12 @@ lmDefineLogGroup(gTickLogGroup, "tick", true, LoomLogInfo)
 extern "C"
 {
 
+atomic_int_t gLoomTicking = 1;
+
 void loom_tick()
 {
+    if (!atomic_load32(&gLoomTicking)) return;
+    
     Telemetry::beginTick();
     
     LOOM_PROFILE_START(loom_tick);
