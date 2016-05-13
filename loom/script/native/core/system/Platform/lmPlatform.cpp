@@ -25,6 +25,12 @@
 #include "loom/common/platform/platformTime.h"
 #include "loom/common/platform/platformThread.h"
 
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+#include <shlobj.h>
+#include <Shellapi.h>
+#endif
+
+
 static float _forceDPI = -1.f;
 
 class Platform {
@@ -76,6 +82,15 @@ public:
     {
         loom_thread_sleep(sleepTime);
     }
+
+    static bool openURL(const char *url)
+    {
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+        return (int)ShellExecute(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL) > 32;
+#else
+#error Unsupported platform for openURL
+#endif
+    }
 };
 
 static int registerSystemPlatform(lua_State *L)
@@ -92,6 +107,7 @@ static int registerSystemPlatform(lua_State *L)
        .addStaticMethod("forceDPI", &Platform::forceDPI)
        .addStaticMethod("isForcingDPI", &Platform::isForcingDPI)
        .addStaticMethod("sleep", &Platform::sleep)
+       .addStaticMethod("openURL", &Platform::openURL)
 
        .endClass()
 
