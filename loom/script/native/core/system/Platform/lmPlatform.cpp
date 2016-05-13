@@ -25,12 +25,6 @@
 #include "loom/common/platform/platformTime.h"
 #include "loom/common/platform/platformThread.h"
 
-#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
-#include <shlobj.h>
-#include <Shellapi.h>
-#endif
-
-
 static float _forceDPI = -1.f;
 
 class Platform {
@@ -85,11 +79,7 @@ public:
 
     static bool openURL(const char *url)
     {
-#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
-        return (int)ShellExecute(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL) > 32;
-#else
-#error Unsupported platform for openURL
-#endif
+        return platform_openURL(url);
     }
 };
 
