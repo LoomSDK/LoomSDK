@@ -72,7 +72,7 @@ static CocoaView* getMainView()
 
 @implementation WebViewRef
 
-@synthesize view;
+@synthesize view = _view;
 
 - (CocoaRect)rect
 {
