@@ -7,6 +7,9 @@ file (GLOB CPP_FILES xml/*.cpp utils/*.cpp core/*.cpp core/*.c platform/*.cpp pl
 file (GLOB H_FILES utils/*.h xml/*.h platform/*.h assets/*.c assets/*.cpp)
 
 if (APPLE)
+    set (CPP_FILES ${CPP_FILES}
+        platform/platformCocoa.mm
+    )
     if (LOOM_BUILD_IOS EQUAL 1)
         set (CPP_FILES ${CPP_FILES} 
             platform/platformDisplayIOS.mm 

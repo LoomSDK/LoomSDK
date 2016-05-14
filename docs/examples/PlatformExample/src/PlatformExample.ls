@@ -20,6 +20,8 @@ package
     {
         private var format:TextFormat = new TextFormat(null, 30, 0x505050);
         private var g:Graphics;
+        private var touched:Boolean = false;
+        private var opened:Boolean = false;
         
         override public function run():void
         {
@@ -44,7 +46,8 @@ package
                 var touch = e.getTouch(stage, TouchPhase.BEGAN);
                 if (touch)
                 {
-                    Platform.openURL("http://loomsdk.com");
+                    touched = true;
+                    opened = Platform.openURL("http://loomsdk.com");
                 }
             } );            
         }
@@ -79,7 +82,11 @@ package
             
             status += "isForcingDPI()        " + Platform.isForcingDPI() + "\n";
             
-            status += "\nTouch to open URL!";
+            status += "\n";
+            
+            status += touched ?
+                opened ? "Successfully opened URL!" : "Failed to open URL!" :
+                "Touch to open URL!";
             
             g.clear();
             g.textFormat(format);
