@@ -81,6 +81,10 @@ StringTableEntry stringtable_insert(const char *str)
     StringTableEntry   result = NULL;
     int                bucket;
 
+    // A NULL would cause a crash eventually
+    if (str == NULL)
+        str = "";
+
     // Hash the string.
     hash_result = hash(str);
 
