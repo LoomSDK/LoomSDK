@@ -25,16 +25,18 @@
 
 typedef char loom_guid_t[LOOM_GUID_SIZE];
 
+extern const char* LOOM_GUID_EMPTY;
+
 extern "C"
 {
     /*
-     
+
      Usage is super simple:
-     
+
      loom_guid_t myGuid;
      loom_generate_guid(myGuid);
      printf("my guid: %s\n", myGuid);
-     
+
      */
     void loom_generate_guid(loom_guid_t out_guid);
 
