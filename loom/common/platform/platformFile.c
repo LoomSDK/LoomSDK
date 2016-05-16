@@ -149,6 +149,22 @@ const char *platform_getWritablePath()
 }
 
 
+const char *platform_getSettingsPath(const char *appName)
+{
+    static char path[MAX_PATH + 128];
+
+    char spath[MAX_PATH];
+
+    HRESULT hr = SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, spath);
+
+    lmAssert(hr == S_OK, "Unable to get settings path");
+
+    _snprintf(path, sizeof(path) / sizeof(path[0]) - 1, "%s%s%s%s", spath, platform_getFolderDelimiter(), appName, platform_getFolderDelimiter());
+
+    return path;
+}
+
+
 int platform_makeDir(const char *path)
 {
     LPSECURITY_ATTRIBUTES lpSecurityAttributes = NULL;

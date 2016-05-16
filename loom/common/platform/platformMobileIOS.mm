@@ -35,9 +35,14 @@ limitations under the License.
 #include "loom/common/core/assert.h"
 #include "loom/vendor/jansson/jansson.h"
 
+#include "loom/engine/bindings/loom/lmApplication.h"
+
+
+
+void handleGenericEvent(void *userdata, const char *type, const char *payload);
 
 //interface for PlatformMobileiOS
-@interface PlatformMobileiOS : NSObject <CLLocationManagerDelegate>
+@interface PlatformMobileiOS : UIViewController <CLLocationManagerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 
 //properties
 @property (nonatomic, retain) CLLocationManager *locationManager;
@@ -52,11 +57,13 @@ limitations under the License.
 @end
 
 
+
+
 //implementation of PlatformMobileiOS
 @implementation PlatformMobileiOS
 
 //methods
-- (NSString *)initialize {
+- (void)initialize {
     self.locationManager = nil;
 
     //check authorization status
@@ -71,7 +78,94 @@ limitations under the License.
     self.locationManager = [[CLLocationManager alloc] init];
     self.locationManager.delegate = self;
     self.locationManager.desiredAccuracy = kCLLocationAccuracyBest;
+    
+    LoomApplication::listenForGenericEvents(handleGenericEvent, (void*)self);
 }
+
+-(NSString *)documentsPath:(NSString *)fileName {
+    NSArray *paths =   NSSearchPathForDirectoriesInDomains (NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    return [documentsDirectory stringByAppendingPathComponent:fileName];
+}
+
+
+-(NSString *)getPresentDateTime{
+    
+    NSDateFormatter *dateTimeFormat = [[NSDateFormatter alloc] init];
+    [dateTimeFormat setDateFormat:@"dd-MM-yyyy HH:mm:ss"];
+    
+    NSDate *now = [[NSDate alloc] init];
+    
+    NSString *theDateTime = [dateTimeFormat stringFromDate:now];
+    
+    dateTimeFormat = nil;
+    now = nil;
+    
+    return theDateTime;
+}
+
+-(void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+{
+    NSString *presentTimeStamp = [self getPresentDateTime];
+    NSString *fileSavePath = [self documentsPath:presentTimeStamp];
+    fileSavePath = [fileSavePath stringByAppendingString:@".png"];
+    
+    if ([info objectForKey:UIImagePickerControllerEditedImage])
+    {
+        //save the edited image
+        NSData *imgPngData = UIImagePNGRepresentation([info objectForKey:UIImagePickerControllerEditedImage]);
+        [imgPngData writeToFile:fileSavePath atomically:YES];
+    }
+    else
+    {
+        //save the original image
+        NSData *imgPngData = UIImagePNGRepresentation([info objectForKey:UIImagePickerControllerOriginalImage]);
+        [imgPngData writeToFile:fileSavePath atomically:YES];
+    }
+    
+    UIWindow *window = [[UIApplication sharedApplication] keyWindow];
+    UIViewController *root = window.rootViewController;
+    [root dismissModalViewControllerAnimated:YES];
+    
+    LoomApplication::fireGenericEvent("cameraSuccess", [fileSavePath UTF8String]);
+}
+
+-(void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+    UIWindow *window = [[UIApplication sharedApplication] keyWindow];
+    UIViewController *root = window.rootViewController;
+    [root dismissModalViewControllerAnimated:YES];
+    
+    LoomApplication::fireGenericEvent("cameraFail", "cancel");
+}
+
+-(void)openCamera
+{
+	if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera])
+	{
+		UIImagePickerController *imagePicker = [[UIImagePickerController alloc] init];
+		imagePicker.delegate = self;
+		imagePicker.sourceType = UIImagePickerControllerSourceTypeCamera;
+		imagePicker.allowsEditing = YES;
+        
+        UIWindow *window = [[UIApplication sharedApplication] keyWindow];
+        UIViewController *root = window.rootViewController;
+		[root presentModalViewController:imagePicker animated:YES];
+	}
+	else
+	{
+		UIAlertView *alert = [[UIAlertView alloc]initWithTitle:@"Camera Unavailable"
+								message:@"Unable to find a camera on your device."
+								delegate:nil
+								cancelButtonTitle:@"OK"
+								otherButtonTitles:nil, nil];
+		[alert show];
+		alert = nil;
+        
+        LoomApplication::fireGenericEvent("cameraFail", "fail");
+	}
+}
+
 
 -(void)startTracking:(int)minDist{
     if ([CLLocationManager locationServicesEnabled] == NO)
@@ -180,6 +274,15 @@ void ios_RemoteNotificationOpen()
             gOpenedViaRemoteNotificationCallback();
         }
     }
+}
+
+
+void handleGenericEvent(void *userdata, const char *type, const char *payload)
+{
+	if (strcmp(type, "cameraRequest") == 0) {
+        [mobileiOS openCamera];
+		return;
+	}
 }
 
 
