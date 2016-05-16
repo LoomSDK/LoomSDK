@@ -861,7 +861,6 @@ public:
 
     // add's a breakpoint at the given source and line, checks for duplicates
     // and avoids them
-    //static const char* addBreakpoint(const char *source, int line)
     static int addBreakpoint(lua_State* L)
     {
         const char* sourceStr = lua_tostring(L, 1);
@@ -917,7 +916,6 @@ public:
     }
 
     // removes a breakpoint at the given source and line
-    //static const char* removeBreakpoint(const char *source, int line)
     static int removeBreakpoint(lua_State* L)
     {
         const char* sourceStr = lua_tostring(L, 1);

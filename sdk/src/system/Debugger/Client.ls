@@ -39,6 +39,11 @@ package system.debugger
     static class DebuggerClient {
 
         /**
+         *  Matches "<command> <source> <line>" i.e. "break ./src/Main.ls 35".
+         */
+        static private var sourceAndLineRegex:String = "^([A-Z]+)%s+(.-)%s+(%d+)%s*$";
+
+        /**
          *  Delegate to call when given the reload command.
          */
         static public var reloaded:ReloadDelegate;
@@ -109,6 +114,8 @@ package system.debugger
          *  Please note that reload must be enabled first, this is generally done
          *  at an initialized state in the application.  Debugging commands such as
          *  stepping and object inspecting do work before reloading is enabled.
+         *
+         *  Returns true on success and false otherwise
          */
         static function cmdRELOAD():Boolean {
 
@@ -136,6 +143,8 @@ package system.debugger
 
         /**
          *  Executes the program until the next breakpoint (if any).
+         *
+         *  Returns true on success and false otherwise
          */
         static function cmdRUN():Boolean {
 
@@ -153,16 +162,18 @@ package system.debugger
 
         /**
          *  Sets a breakpoint at a given source file + line, example: setb src/demo/Program.ls 112.
+         *
+         *  Returns true on success and false otherwise
          */
         static function cmdBREAK(line:String):Boolean {
 
             if (checkAssertionState())
                 return false;
 
-            var commandv:Vector.<String> = line.find("^([A-Z]+)%s+(.-)%s+(%d+)%s*$");
+            var commandv:Vector.<String> = line.find(sourceAndLineRegex);
 
             var result:String;
-            if((result = Debug.addBreakpoint(commandv[1], commandv[2].toNumber())) != null)
+            if(commandv.length > 2 && (result = Debug.addBreakpoint(commandv[1], commandv[2].toNumber())) != null)
             {
                 sendToServer("Setting breakpoint: " + result + " : " + commandv[2].toNumber() + "\n");
                 return true;
@@ -175,16 +186,18 @@ package system.debugger
 
         /**
          *  Clear command.
+         *
+         *  Returns true on success and false otherwise
          */
         static function cmdCLEAR(line:String):Boolean {
 
             if (checkAssertionState())
                 return false;
 
-            var commandv:Vector.<String> = line.find("^([A-Z]+)%s+(.-)%s+(%d+)%s*$");
+            var commandv:Vector.<String> = line.find(sourceAndLineRegex);
             var result:String;
 
-            if ((result = Debug.removeBreakpoint(commandv[1], commandv[2].toNumber())) != null)
+            if (commandv.length > 2 && (result = Debug.removeBreakpoint(commandv[1], commandv[2].toNumber())) != null)
             {
                 sendToServer("Cleared breakpoint: " + result + " : " + commandv[2].toNumber() + "\n");
                 return true;
@@ -197,6 +210,8 @@ package system.debugger
 
         /**
          *  Step command, for now please use "over".
+         *
+         *  Returns true on success and false otherwise
          */
         public static function cmdSTEP():Boolean {
 
@@ -213,6 +228,8 @@ package system.debugger
 
         /**
          *  Steps over code (please note that this is currently stepping into methods, we have followup debugger tasks).
+         *
+         *  Returns true on success and false otherwise
          */
         static function cmdOVER():Boolean {
 
@@ -229,6 +246,8 @@ package system.debugger
 
         /**
          *  Finish command.
+         *
+         *  Returns true on success and false otherwise
          */
         static function cmdFINISH():Boolean {
 
@@ -252,6 +271,8 @@ package system.debugger
 
         /**
          *  BT command.
+         *
+         *  Returns true on success and false otherwise
          */
         static function cmdBACKTRACE():Boolean {
 
@@ -273,6 +294,8 @@ package system.debugger
 
         /**
          *  Info command.
+         *
+         *  Returns true on success and false otherwise
          */
         static function cmdINFO(line:String):Boolean {
 
@@ -330,6 +353,8 @@ package system.debugger
 
         /**
          *  Print command.
+         *
+         *  Returns true on success and false otherwise
          */
         static function cmdPRINT(line:String):Boolean {
 
@@ -407,6 +432,8 @@ package system.debugger
 
         /**
          *  Frame command.
+         *
+         *  Returns true on success and false otherwise
          */
         static function cmdFRAME(line:String):Boolean {
 
@@ -440,6 +467,8 @@ package system.debugger
 
         /**
          *  Delete command.
+         *
+         *  Returns true on success and false otherwise
          */
         static function cmdDELETE(line:String):Boolean {
 
