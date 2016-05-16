@@ -24,13 +24,14 @@
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
 
+#include <stdio.h>
+
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <WS2def.h>
 #include <errno.h>
-#include <stdio.h>
 #endif
 
 #if LOOM_PLATFORM_IS_APPLE == 1 || LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_LINUX

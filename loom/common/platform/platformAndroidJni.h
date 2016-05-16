@@ -54,6 +54,7 @@ public:
     static utString jstring2string(jstring str);
     static const char *getPackageName();
     static const char *getWritablePath();
+    static const char *getSettingsPath();
 
 private:
     static JavaVM *m_psJavaVM;

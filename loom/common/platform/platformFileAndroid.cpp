@@ -52,6 +52,20 @@ const char *platform_getWritablePath()
     return path.c_str();
 }
 
+const char *platform_getSettingsPath()
+{
+    static utString path;
+
+    if (path.size())
+    {
+        return path.c_str();
+    }
+
+    path = LoomJni::getSettingsPath();
+
+    return path.c_str();
+}
+
 
 int ftw(const char *path, int (*fn)(const char *, const struct stat *, int), int nfds)
 {
