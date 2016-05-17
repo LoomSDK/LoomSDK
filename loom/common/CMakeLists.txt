@@ -54,5 +54,5 @@ if (ANDROID)
 endif(ANDROID)
 
 if (LINUX)
-    target_link_libraries(${TARGET_NAME} -lz -lrt -lcurl LoomVendor -luuid)
+    target_link_libraries(${TARGET_NAME} -lz -lrt -lcurl LoomVendor)
 endif(LINUX)
