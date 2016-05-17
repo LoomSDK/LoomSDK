@@ -411,7 +411,7 @@ namespace :build do
       next
     end
     puts "== Building LuaJIT for Linux =="
-    buildLuaJIT(MakeToolchain.new(LinuxToolchain.new()), if $HOST.is_x64 then [:x86_64] else [:x86] end)
+    buildLuaJIT(MakeToolchain.new(LinuxToolchain.new()), if $HOST.is_x64 == '1' then [:x86_64] else [:x86] end)
   end
   
   desc "Build LuaJIT libraries for iOS"
