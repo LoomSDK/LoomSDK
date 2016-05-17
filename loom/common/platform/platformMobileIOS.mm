@@ -38,9 +38,13 @@ limitations under the License.
 
 #include "loom/engine/bindings/loom/lmApplication.h"
 
-
+extern "C" {
+    void loom_appPause();
+    void loom_appResume();
+}
 
 void handleGenericEvent(void *userdata, const char *type, const char *payload);
+
 
 //interface for PlatformMobileiOS
 @interface PlatformMobileiOS : UIViewController <CLLocationManagerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate>
@@ -133,6 +137,9 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload);
     UIViewController *root = window.rootViewController;
     [root dismissModalViewControllerAnimated:YES];
     
+    // Resume normal operations
+    loom_appResume();
+    
     LoomApplication::fireGenericEvent("cameraSuccess", [fileSavePath UTF8String]);
 }
 
@@ -141,6 +148,9 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload);
     UIWindow *window = [[UIApplication sharedApplication] keyWindow];
     UIViewController *root = window.rootViewController;
     [root dismissModalViewControllerAnimated:YES];
+    
+    // Resume normal operations
+    loom_appResume();
     
     LoomApplication::fireGenericEvent("cameraFail", "cancel");
 }
@@ -154,9 +164,12 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload);
 		imagePicker.sourceType = UIImagePickerControllerSourceTypeCamera;
 		imagePicker.allowsEditing = YES;
         
+        // We can't do anything while camera is opened
+        loom_appPause();
+        
         UIWindow *window = [[UIApplication sharedApplication] keyWindow];
         UIViewController *root = window.rootViewController;
-		[root presentModalViewController:imagePicker animated:YES];
+        [root presentViewController:imagePicker animated:YES completion:nil];
 	}
 	else
 	{

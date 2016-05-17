@@ -288,7 +288,7 @@ static int sdlPriorityEvents(void* userdata, SDL_Event* event)
     switch (event->type) {
         // If we don't pause immediately, the app could get killed
         // due to misbehaved processing / OpenGL activity
-        case SDL_APP_DIDENTERBACKGROUND:
+        case SDL_APP_WILLENTERBACKGROUND:
             loom_appPause();
             return false;
             
