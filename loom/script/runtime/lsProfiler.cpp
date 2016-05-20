@@ -479,7 +479,7 @@ void LSProfiler::dumpAllocations(lua_State *L)
     for (UTsize i = 0; i < sortByTotal.size(); i++) sortByTotal[i] = i;
 
     sortMethods = &methodAggr;
-//    SDL_qsort((void*)sortByTotal.ptr(), sortByTotal.size(), sizeof(int), sortMethodsByTotalCount);
+    SDL_qsort((void*)sortByTotal.ptr(), sortByTotal.size(), sizeof(int), sortMethodsByTotalCount);
     sortMethods = NULL;
 
     lmLog(gProfilerLogGroup, "");

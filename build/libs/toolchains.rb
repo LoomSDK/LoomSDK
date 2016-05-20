@@ -246,7 +246,7 @@ class LinuxToolchain < Toolchain
   end
 
   def buildCommand
-    return "make -j2"
+    return "make -j#{$HOST.num_cores}"
   end
 
   def makeConfig(target)
@@ -264,7 +264,7 @@ end
 class AndroidToolchain < Toolchain
 
   def buildCommand
-    return "cmake --build ."
+    return "cmake --build . -- -j#{$HOST.num_cores}"
   end
 
   def name

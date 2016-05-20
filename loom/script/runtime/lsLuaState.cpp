@@ -457,8 +457,6 @@ void LSLuaState::finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types
         bool incomplete = false;
         Type *search = type;
         while (search) {
-            //lmLogWarn(gLuaStateLogGroup, "j: %d, type->name: %s, &search: %p", j, type->getFullName().c_str(), search);
-            //lmLogWarn(gLuaStateLogGroup, "search->name: %s", search->getFullName().c_str())
             if (search->getMissing())
             {
                 incomplete = true;
