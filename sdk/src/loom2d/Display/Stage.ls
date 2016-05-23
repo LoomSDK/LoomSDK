@@ -43,7 +43,8 @@ package loom2d.display
     {
         NONE,
         LETTERBOX,
-        FILL
+        FILL,
+        MANUAL
     }
 
     delegate KeyDelegate(scancode:int, virtualKey:int, modifiers:int);
@@ -430,6 +431,11 @@ package loom2d.display
                     }
 
                     break;
+                case StageScaleMode.MANUAL:
+                    scaleX = scaledWidth;
+                    scaleY = scaledHeight;
+                    x = 0;
+                    y = 0;
             }
         }    
     }
