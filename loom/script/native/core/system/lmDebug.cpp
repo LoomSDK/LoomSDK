@@ -145,7 +145,7 @@ public:
 
         return false;
     }
-    
+
     static int getCallStackInfo(lua_State *L)
     {
         return getCallStack(L, ASSERT_EVENT);
@@ -392,6 +392,7 @@ public:
 
             // get the call stack at this line
             getCallStack(L, LINE_EVENT);
+
 
             // if we don't have a valid stack, return
             if (lua_isnil(L, -1))
@@ -818,7 +819,9 @@ public:
     // tests whether the given breakpoint exists
     static bool hasBreakpoint(const char *source, int line)
     {
-        utArray<Breakpoint *> *bps = sourceBreakpoints.get(utFastStringHash(source));
+        utString path(source);
+        path.replace('\\', '/');
+        utArray<Breakpoint *> *bps = sourceBreakpoints.get(utFastStringHash(path));
 
         if (!bps)
         {
@@ -858,42 +861,102 @@ public:
 
     // add's a breakpoint at the given source and line, checks for duplicates
     // and avoids them
-    static void addBreakpoint(const char *source, int line)
+    static int addBreakpoint(lua_State* L)
     {
+        const char* sourceStr = lua_tostring(L, 1);
+        utString source(sourceStr);
+        source.replace('\\', '/');
+        int line = (int)lua_tonumber(L, 2);
+
+        lua_pop(L, 2);
+
+        static char result[1024];
         Breakpoint *bp;
 
+        // Check for existing breakpoints
         for (UTsize i = 0; i < breakpoints.size(); i++)
         {
             bp = breakpoints.at(i);
             if ((bp->source == source) && (bp->line == line))
             {
-                return;
+                strncpy(result, bp->source.c_str(), 1024);
+                lua_pushstring(L, result);
+                return 1;
             }
         }
 
-        bp         = new Breakpoint;
-        bp->source = source;
-        bp->line   = line;
+        // Find a valid path in the assemblies
+        LSLuaState* ls = LSLuaState::getExecutingVM(L);
+        utArray<LS::Type*> types;
+        ls->getAllTypes(types);
 
-        breakpoints.push_back(bp);
+        for (UTsize i = 0; i < types.size(); i++)
+        {
+            LS::Type* type = types[i];
 
-        regenerateSourceBreakpoints();
+            utString typeSource(type->getSource());
+            typeSource.replace('\\', '/');
+
+            if (typeSource.endsWith(source.c_str()))
+            {
+                bp         = new Breakpoint;
+                bp->source = typeSource.c_str();
+                bp->line   = line;
+
+                breakpoints.push_back(bp);
+
+                regenerateSourceBreakpoints();
+
+                lua_pushstring(L, typeSource.c_str());
+                return 1;
+            }
+        }
+        lua_pushstring(L, NULL);
+        return 1;
     }
 
     // removes a breakpoint at the given source and line
-    static void removeBreakpoint(const char *source, int line)
+    static int removeBreakpoint(lua_State* L)
     {
+        const char* sourceStr = lua_tostring(L, 1);
+        utString source(sourceStr);
+        source.replace('\\', '/');
+        int line = (int)lua_tonumber(L, 2);
+
+        lua_pop(L, 2);
+
+        static char result[1024];
+
         for (UTsize i = 0; i < breakpoints.size(); i++)
         {
             Breakpoint *bp = breakpoints.at(i);
             if ((bp->source == source) && (bp->line == line))
             {
                 breakpoints.erase(bp);
+                strncpy(result, bp->source.c_str(), 1024);
                 delete bp;
+                regenerateSourceBreakpoints();
+                lua_pushstring(L, result);
+                return 1;
             }
         }
 
-        regenerateSourceBreakpoints();
+        for (UTsize i = 0; i < breakpoints.size(); i++)
+        {
+            Breakpoint *bp = breakpoints.at(i);
+            if (bp->source.endsWith(source.c_str()) && (bp->line == line))
+            {
+                breakpoints.erase(bp);
+                strncpy(result, bp->source.c_str(), 1024);
+                delete bp;
+                regenerateSourceBreakpoints();
+                lua_pushstring(L, result);
+                return 1;
+            }
+        }
+
+        lua_pushstring(L, NULL);
+        return 1;
     }
 
     // removes all breakpoints
@@ -910,18 +973,30 @@ public:
     }
 
     // removes the breakpoint at the given index
-    static void removeBreakpointAtIndex(int index)
+    static int removeBreakpointAtIndex(lua_State* L)
     {
+        int index = lua_tonumber(L, 1);
+        lua_pop(L, 1);
+
+        static char result[1024];
+
         if ((index < 0) || (index >= (int)breakpoints.size()))
         {
-            return;
+            lua_pushboolean(L, false);
+            return 1;
         }
 
         Breakpoint *bp = breakpoints.at(index);
         breakpoints.erase(bp);
+
+        strncpy(result, bp->source.c_str(), 1024);
+
         delete bp;
 
         regenerateSourceBreakpoints();
+
+        lua_pushboolean(L, true);
+        return 1;
     }
 };
 
@@ -967,9 +1042,9 @@ int registerSystemDebug(lua_State *L)
        .addStaticLuaFunction("getBreakpoints", &Debug::getBreakpoints)
 
        .addStaticMethod("hasBreakpoint", &Debug::hasBreakpoint)
-       .addStaticMethod("addBreakpoint", &Debug::addBreakpoint)
-       .addStaticMethod("removeBreakpoint", &Debug::removeBreakpoint)
-       .addStaticMethod("removeBreakpointAtIndex", &Debug::removeBreakpointAtIndex)
+       .addStaticLuaFunction("addBreakpoint", &Debug::addBreakpoint)
+       .addStaticLuaFunction("removeBreakpoint", &Debug::removeBreakpoint)
+       .addStaticLuaFunction("removeBreakpointAtIndex", &Debug::removeBreakpointAtIndex)
        .addStaticMethod("removeAllBreakpoints", &Debug::removeAllBreakpoints)
 
        .addStaticProperty("lineEventDelegate", &Debug::getLineEventDelegate)
