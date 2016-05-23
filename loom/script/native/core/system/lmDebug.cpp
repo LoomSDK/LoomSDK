@@ -145,7 +145,7 @@ public:
 
         return false;
     }
-
+    
     static int getCallStackInfo(lua_State *L)
     {
         return getCallStack(L, ASSERT_EVENT);
@@ -392,7 +392,6 @@ public:
 
             // get the call stack at this line
             getCallStack(L, LINE_EVENT);
-
 
             // if we don't have a valid stack, return
             if (lua_isnil(L, -1))

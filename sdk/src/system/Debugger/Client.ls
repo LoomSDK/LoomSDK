@@ -1,7 +1,7 @@
 /*
 ===========================================================================
 Loom SDK
-Copyright 2011, 2012, 2013
+Copyright 2011, 2012, 2013 
 The Game Engine Company, LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,7 @@ Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
-limitations under the License.
+limitations under the License. 
 ===========================================================================
 */
 
@@ -31,7 +31,7 @@ package system.debugger
      *  Delegate to call for the reload command.
      */
     delegate ReloadDelegate():void;
-
+    
     /**
      *  A low level interface to Looms Debugging API.
      *  It contains standard features for connecting to the debugger and executing debug commands.
@@ -59,32 +59,32 @@ package system.debugger
         {
             reloadEnabled = value;
         }
-
+      
         /**
          *  Connects to the Debugger Server service either locally or over TCP/IP.
-         *
+         *  
          *  @param host The socket host of the Debugger Server.
          *  @param port The socket port of the Debugger Server.
-         */
+         */  
         static public function connect(host:String, port:Number) {
-
+            
             socket = Socket.connect(host, port);
-
+            
             // start not blocking
             socket.setTimeout(1);
-
+            
             // The main debug loop is a coroutine which does not interfere with the client's code
             mainDebugLoop = Coroutine.create(mainLoop);
             mainDebugLoop.resume();
-
-            // Set the debug hook which is implemented in native C code
+            
+            // Set the debug hook which is implemented in native C code 
             Debug.setDebugHook();
-
+            
             Debug.lineEventDelegate += lineEventHook;
             Debug.returnEventDelegate += returnEventHook;
             Debug.callEventDelegate += callEventHook;
             Debug.assertEventDelegate += assertEventHook;
-
+            
             Debug.blocking = true;
 
         }
@@ -93,20 +93,20 @@ package system.debugger
          *  Sends a generic OK response code to the Debugger Server.
          */
         static function responseOK() {
-
+            
             sendToServer("200 OK\n");
         }
 
         /**
-         *  This is generally called from the C++ application code with no need for the client code to be
+         *  This is generally called from the C++ application code with no need for the client code to be 
          *  aware of it. However, it is possible to drive the DebuggerClient from script.
          */
         public static function update() {
-
+            
             mainDebugLoop.resume();
-
+            
         }
-
+        
         // BEGIN COMMNADS
 
         /**
@@ -183,7 +183,7 @@ package system.debugger
                 return false;
             }
         }
-
+        
         /**
          *  Clear command.
          *
@@ -225,7 +225,7 @@ package system.debugger
 
             return true;
         }
-
+        
         /**
          *  Steps over code (please note that this is currently stepping into methods, we have followup debugger tasks).
          *
@@ -243,7 +243,7 @@ package system.debugger
 
             return true;
         }
-
+        
         /**
          *  Finish command.
          *
@@ -258,17 +258,17 @@ package system.debugger
                 return false;
 
             curFrameIdx = 0;
-            Debug.stepping = false;
-            Debug.stepOver = false;
+            Debug.stepping = false;                
+            Debug.stepOver = false;        
             Debug.blocking = false;
-
+            
             Debug.finishMethod = stackSnapshot[0].method;
-
-            //Console.print("cmdFINISH", " ", finishMethod.getName());
-
             return true;
+            
+            //Console.print("cmdFINISH", " ", finishMethod.getName());                
+            
         }
-
+        
         /**
          *  BT command.
          *
@@ -280,18 +280,18 @@ package system.debugger
                 return false;
 
             var sframe:String = "";
-
+            
             for (var i in stackSnapshot) {
                 var info = stackSnapshot[i];
                 var method = info.method;
                 sframe += "#" + i + " " + method.getDeclaringType().getFullName() + ":" + info.method.getName() + "() " + ": " + info.source + " : " + info.line + "\n";
             }
-
+            
             sendToServer(sframe);
 
             return true;
         }
-
+        
         /**
          *  Info command.
          *
@@ -300,7 +300,7 @@ package system.debugger
         static function cmdINFO(line:String):Boolean {
 
             var elements = line.split(" ");
-
+            
             if (elements.length < 2)
                 return false;
 
@@ -308,49 +308,50 @@ package system.debugger
             if (elements[1].toLowerCase() == "break" || elements[1].toLowerCase() == "breakpoints") {
 
                 var breakpoints:Vector.<Breakpoint> = Debug.getBreakpoints();
-
+            
                 var bps = "";
                 for (var idx in breakpoints) {
-                    bps += "#" + idx + ": " + breakpoints[idx].source + " : " + breakpoints[idx].line + "\n";
+                    bps += "#" + idx + ": " + breakpoints[idx].source + " : " + breakpoints[idx].line + "\n"; 
                 }
                 if (!bps)
                     bps = "No Breakpoints Defined\n";
-
+                
                 sendToServer(bps);
+                
             }
-
+            
             // info locals
             if (elements[1].toLowerCase() == "locals") {
-
+            
                 if (!stackSnapshot || stackSnapshot.length < 1)
                     return false;
 
                     var locals:Dictionary.<String, Object> = Debug.getLocals(stackSnapshot, curFrameIdx);
-
+            
                     if (!locals) {
                         sendToServer("NULL LOCALS\n");
                         return false;
                     } else {
-
+            
                     if (!locals.length) {
                         sendToServer("EMPTY LOCALS\n");
                         return false;
                     }
-
+            
                     var ls = "";
                     for (var name:String in locals) {
                         ls += name + " : " + locals[name] + "\n";
                     }
-
+                    
                     sendToServer(ls);
-
+            
                 }
-
+               
             }
 
             return true;
         }
-
+        
         /**
          *  Print command.
          *
@@ -363,18 +364,18 @@ package system.debugger
 
             var elements = line.split(" ");
 
-            if (elements.length == 2)
+            if (elements.length == 2) 
             {
                 var locals:Dictionary.<String, Object> = Debug.getLocals(stackSnapshot, curFrameIdx);
-
-                for (var name:String in locals)
+                
+                for (var name:String in locals) 
                 {
                     var path = elements[1].split(".");
                     var localname = path[0];
                     path.shift();
 
-                    if (name == localname)
-                    {
+                    if (name == localname) 
+                    {       
                         var o = locals[name];
 
                         if (o)
@@ -428,8 +429,8 @@ package system.debugger
 
             return json.serialize();
         }
-
-
+        
+        
         /**
          *  Frame command.
          *
@@ -447,13 +448,13 @@ package system.debugger
                     sendToServer("WARNING: frame selection out of bounds\n");
                     return false;
                 }
-
+                
                 curFrameIdx = frameIdx;
                 return true;
             }
-
+                
             var sframe:String = "";
-
+            
             for (var i in stackSnapshot) {
                 var info = stackSnapshot[i];
                 var method = info.method;
@@ -464,7 +465,7 @@ package system.debugger
 
             return true;
         }
-
+        
         /**
          *  Delete command.
          *
@@ -489,7 +490,7 @@ package system.debugger
             }
 
             Debug.removeAllBreakpoints();
-
+            
             sendToServer("All breakpoints deleted\n");
 
             return true;
@@ -498,34 +499,34 @@ package system.debugger
         static function cmdIDE() {
             ideMode = true;
         }
-
-
+        
+        
 
         /**
          *  Retrives a server commad from the server network connection
          *  commands are line based.
          */
         static function getServerCommand():String {
-
+        
             var line = receiveFromServer();
-
+            
             if (line == null) {
-
+                
                 var error = getError();
-
+                
                 if (error == "timeout") {
                     return line;
                 }
-
+                    
                 if (error == "closed")
                     Debug.assert(false, "closed");
-
-                if (error) {
+                
+                if (error) {    
                     Console.print("Unhandled socket error: " + error);
                     Debug.assert(false, "error");
                 }
             }
-
+            
             return line;
         }
 
@@ -539,14 +540,14 @@ package system.debugger
 
             var line = getServerCommand();
             if (!line)
-                return;
-
+                return;            
+            
             var commandv:Vector.<String> = line.find("^([A-Z]+)");
-
+            
             var cmd = commandv[0];
-
+            
             switch (cmd) {
-
+                
                 case "STEP":
                     if (cmdSTEP())
                         responseOK();
@@ -567,56 +568,56 @@ package system.debugger
                     else
                         sendToServer("Failed to clear breakpoint\n");
                     break;
-
+                    
                 case "RUN":
                     if (cmdRUN())
                         responseOK();
                     else
                         sendToServer("Failed to run\n");
                     break;
-
+                    
                 case "OVER":
                     if (cmdOVER())
                         responseOK();
                     else
                         sendToServer("Failed to do over\n");
                     break;
-
+                                        
                 case "FINISH":
                     if (cmdFINISH())
                         responseOK();
                     else
                         sendToServer("Failed to finish\n");
                     break;
-
+                    
                 case "INFO":
                     if (cmdINFO(line))
                         responseOK();
                     else
                         sendToServer("Failed to get info\n");
                     break;
-
+                    
                 case "BACKTRACE":
                     if (cmdBACKTRACE())
                         responseOK();
                     else
                         sendToServer("Failed to get a backtrace\n");
                     break;
-
+                    
                 case "FRAME":
                     if (cmdFRAME(line))
                         responseOK();
                     else
                         sendToServer("Failed to set frame\n");
                     break;
-
+                    
                 case "PRINT":
                     if (cmdPRINT(line))
                         responseOK();
                     else
                         sendToServer("Failed to print\n");
                     break;
-
+                    
                 case "DELETE":
                     if (cmdDELETE(line))
                         responseOK();
@@ -630,11 +631,11 @@ package system.debugger
                     else
                         sendToServer("Failed to reload\n");
                     break;
-
+                    
                 case "KILL":
                     Process.exit(1);
                     break;
-
+                    
                 case "IDE":
                     cmdIDE();
                     responseOK();
@@ -648,56 +649,56 @@ package system.debugger
          *  when not blocking returns control to the application code via a yield.
          */
         static function mainLoop():Boolean {
-
+        
             while (true) {
-
+                
                 handleCommand();
-
+                
                 if(!Debug.blocking)
                     yield(true);
-
+                    
             }
-
+            
             return true;
-
+            
         }
 
         /**
          *  This wrappers around socket error detection, handling, and messaging.
          */
         static public function getError(clear:Boolean = true):String {
-
+        
             return socket.getError(clear);
-
+            
         }
-
+        
         /**
          *  Clears the Error on the socket.
          */
         static public function clearError() {
-
+        
             socket.clearError();
         }
-
+        
         /**
          *  Send a message to the connected debug Server.
          */
         static public function sendToServer(msg:String) {
             socket.send(msg);
         }
-
+        
         /**
          *  Gets a message from the debug Server.
          */
         static public function receiveFromServer():String {
-
+        
             var msg = socket.receive();
             var error = socket.getError();
             if (error && error != "timeout") {
                 Console.print("Socket closed exiting: ", error);
                 Process.exit(1);
             }
-
+            
             return msg;
         }
 
@@ -705,51 +706,51 @@ package system.debugger
          *  Callback for call events.
          */
         static function callEventHook(callstack:Vector.<CallStackInfo>) {
-
-
+                                    
+            
             if (Debug.blocking && Debug.stepping && Debug.stepOver) {
                 cmdFINISH();
                 Debug.finishMethod = callstack[0].method; // fix up with this method
             }
-
+                                    
         }
-
+        
         /**
          *  Callback for return events.
          */
         static function returnEventHook(callstack:Vector.<CallStackInfo>) {
-
+                    
             if (Debug.assertion)
                 return;
-
-            //Console.print("returnEventHook", " ", callstack[0].method.getName());
-
+                
+            //Console.print("returnEventHook", " ", callstack[0].method.getName());    
+                
             if (Debug.finishMethod == callstack[0].method) {
                 Debug.finishMethod = null;
                 cmdOVER();
             }
-
+                    
         }
-
+        
         /**
          *  Callback for assertion events.
          */
         static function assertEventHook(callstack:Vector.<CallStackInfo>) {
 
             stackSnapshot = callstack;
-
+        
             var source = callstack[0].source;
             var line = callstack[0].line;
-
+            
             evtHitBreakpoint(source, line);
-
-            // breakpoints block until we get a new command
+            
+            // breakpoints block until we get a new command 
             while(Debug.blocking) {
-
+            
                 handleCommand();
-
+            
             }
-
+            
         }
 
         /**
@@ -758,58 +759,58 @@ package system.debugger
          *  The script hook is called by the native hook handler with callstack information.
          */
         static function lineEventHook(callstack:Vector.<CallStackInfo>) {
-
+                                        
             stackSnapshot = callstack;
-
+                                
             var source = callstack[0].source;
             var line = callstack[0].line;
 
             // Normalize path separators
             var pathParts = source.split("\\");
             source = pathParts.join("/");
-
+                                        
             // check whether we have a breakpoint set for this source/line
             if (Debug.debugBreak || Debug.hasBreakpoint(source, line) ) {
-
+            
                 Debug.debugBreak = false;
-
+            
                 // and process it
                 evtHitBreakpoint(source, line);
-
-                // breakpoints block until we get a new command
+                
+                // breakpoints block until we get a new command 
                 while(Debug.blocking) {
-
+                
                     handleCommand();
-
+                
                 }
-
+                
                 // we're done here!
                 return;
             }
-
+            
             // If we're in step over mode
             if (Debug.stepping) {
-
+                                
                 // process it
                 evtStep(source, line);
-
+                
                 // we block until we get a new command
                 while(Debug.blocking) {
-
+                
                     handleCommand();
-
+                    
                 }
-
-                // if we're still stepping over lines, make sure we're still blocking
+                
+                // if we're still stepping over lines, make sure we're still blocking 
                 // main application code
                 if (Debug.stepping)
                     Debug.blocking = true;
-
+                
                 return;
             }
-
-        }
-
+            
+        }            
+        
         /**
          *  Processing for a DebugEventType.STEP.
          */
@@ -821,7 +822,7 @@ package system.debugger
             else
                 sendToServer("Step: " + source + " : " + line + "\n");
         }
-
+        
         /**
          *  Processing for a DebugEventType.BREAKPOINT.
          */
@@ -887,25 +888,25 @@ package system.debugger
 
         /**
          *  Checks whether we have hit an assertion state.
-         */
+         */ 
         static function checkAssertionState():Boolean {
-
+        
             if (Debug.assertion)
                 sendToServer("Command is invalid in assertion state\n");
-            return Debug.assertion;
-
+            return Debug.assertion;    
+            
         }
-
+        
         /**
          *  The current stack snapshot, when we are stepping, have hit an assertion, etc.
          */
         static var stackSnapshot:Vector.<CallStackInfo> = [];
-
+        
         /**
          *  The current frame index we have selected with the frame command.
          */
         static var curFrameIdx:int = 0;
-
+                    
         /**
          *  Our socket for communicating with server.
          */
@@ -914,10 +915,10 @@ package system.debugger
         /**
          *  The main debugger loop is a coroutine.
          */
-        static var mainDebugLoop:Coroutine;
+        static var mainDebugLoop:Coroutine; 
 
         /**
-          * If reloadEnabled is true, the reload command will be allowed to
+          * If reloadEnabled is true, the reload command will be allowed to 
           * reload the main assembly.
           */
         static var reloadEnabled = false;
@@ -927,8 +928,8 @@ package system.debugger
          */
         static var ideMode = false;
 
-
+        
     }
-
-
+    
+    
 }
