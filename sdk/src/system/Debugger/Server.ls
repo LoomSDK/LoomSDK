@@ -45,9 +45,11 @@ package system.debugger {
         
             var server = new Server();
             server.socket = Socket.bind(host, port, 32);
-            server.client = server.socket.accept();            
-            server.client.setTimeout(250);
-            
+            server.socket.setTimeout(1000);
+
+            server.client = server.socket.accept();
+            server.client.setTimeout(1000);
+
             return server;
             
         }
@@ -93,8 +95,12 @@ package system.debugger {
             var s = client.receive();
             
             while (s && s != "") {
-            
-                if (s != "200 OK") {
+
+                if (s == "200 OK") {
+                    lines.pushSingle("OK");
+                }
+                else
+                {
                     lines.pushSingle(s);
                 }
                 
@@ -103,7 +109,7 @@ package system.debugger {
             
             var rbuffer = lines.join("\n");
             if (!rbuffer.length)
-                rbuffer = "OK";
+                rbuffer = null;
             
             return rbuffer;
             
@@ -115,7 +121,7 @@ package system.debugger {
          *
          *  @param line The command to handle/execute.
          */
-        public function handleCommand(line:String) 
+        public function handleCommand(line:String)
         {
             
             var commandv:Vector.<String> = line.find("^([a-z]+)");
@@ -140,8 +146,14 @@ package system.debugger {
                         bline = found[2];
                         
                         sendToClient("BREAK " + file + " " + bline + "\n");
-                        Console.print(receiveFromClient());
-                        
+                        var bmsg = receiveFromClient();
+                        if (bmsg != null)
+                            Console.print(bmsg);
+
+                    }
+                    else
+                    {
+                        Console.print("Invalid input. Usage \"break <file> <line>\".");
                     }
                     
                     break;
@@ -158,8 +170,14 @@ package system.debugger {
                         bline = found[2];
                         
                         sendToClient("CLEAR " + file + " " + bline + "\n");
-                        Console.print(receiveFromClient());
-                        
+                        var cmsg = receiveFromClient();
+                        if (cmsg != null)
+                            Console.print(cmsg);
+
+                    }
+                    else
+                    {
+                        Console.print("Invalid input. Usage \"clear <file> <line>\".");
                     }
                     
                     break;
