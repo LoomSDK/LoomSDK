@@ -87,6 +87,12 @@ class Platform
    public native static function sleep(sleepTime:int):void;
 
    public native static function isForcingDPI():Boolean;
+   
+   /*!
+    Opens the provided URL in the default system browser.
+    Returns `true` if opened successfully.
+    */
+   public native static function openURL(url:String):Boolean;
 }
 
 }
