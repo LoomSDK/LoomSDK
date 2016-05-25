@@ -41,6 +41,8 @@ extern "C"
     void loom_appInit();
     void loom_appSetup();
     void loom_appShutdown();
+    void loom_appPause();
+    void loom_appResume();
     void loom_tick();
     void supplyEmbeddedAssets();
 };
@@ -278,6 +280,25 @@ static void sdlLogOutput(void* userdata, int category, SDL_LogPriority priority,
     if (!logged) lmLogSDL(level, sdlLogGroup, message);
 }
 
+// This filter is required for events that are high priority and
+// cannot wait in the event queue. Note that this can get called from
+// a different thread, so thread safety should be taken into account
+static int sdlPriorityEvents(void* userdata, SDL_Event* event)
+{
+    switch (event->type) {
+        // If we don't pause immediately, the app could get killed
+        // due to misbehaved processing / OpenGL activity
+        case SDL_APP_DIDENTERBACKGROUND:
+            loom_appPause();
+            return false;
+            
+        case SDL_APP_WILLENTERFOREGROUND:
+            loom_appResume();
+            return false;
+    }
+    return true;
+}
+
 enum  optionIndex { UNKNOWN, HELP, FROM_RUBY };
 const option::Descriptor usage[] =
 {
@@ -444,6 +465,9 @@ main(int argc, char *argv[])
     ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
 #endif
+    
+    // Set event callback for events that cannot wait
+    SDL_SetEventFilter(sdlPriorityEvents, NULL);
     
     int stencilSize = 1;
     ret = SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilSize);

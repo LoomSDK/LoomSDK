@@ -19,12 +19,84 @@ limitations under the License.
 */
 
 #include "platformWebView.h"
+#include "loom/common/platform/platform.h"
 #import <Foundation/Foundation.h>
+
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
+
 #import <WebKit/WebKit.h>
+typedef WebView CocoaWebView;
+typedef NSRect CocoaRect;
+typedef NSView CocoaView;
+#define CocoaMakeRect NSMakeRect
+
+#else
+
+#import <UIKit/UIKit.h>
+typedef UIWebView CocoaWebView;
+typedef CGRect CocoaRect;
+typedef UIView CocoaView;
+#define CocoaMakeRect CGRectMake
+
+#endif
 
 //_________________________________________________________________________
 // Helpers
 //_________________________________________________________________________
+
+#if LOOM_PLATFORM == LOOM_PLATFORM_IOS
+static float pixelsToPoints(float pixels)
+{
+    float scale = [UIScreen mainScreen].scale;
+    return pixels / scale;
+}
+#endif
+
+
+static CocoaView* getMainView()
+{
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
+    return [[[[NSApplication sharedApplication] windows] objectAtIndex:0] contentView];
+#else
+    return [[[[UIApplication sharedApplication] keyWindow] rootViewController] view];
+#endif
+}
+
+@interface WebViewRef : NSObject {
+    CocoaRect _rect;
+    CocoaWebView* _view;
+}
+@property (retain) CocoaWebView* view;
+@property CocoaRect rect;
+@end
+
+
+@implementation WebViewRef
+
+@synthesize view = _view;
+
+- (CocoaRect)rect
+{
+    return _rect;
+}
+- (void)setRect:(CocoaRect)newRect;
+{
+    _rect = newRect;
+    CocoaRect frame;
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
+    frame = newRect;
+#else
+    frame.size.width = pixelsToPoints(newRect.size.width);
+    frame.size.height = pixelsToPoints(newRect.size.height);
+    frame.origin.x = pixelsToPoints(newRect.origin.x);
+    frame.origin.y = getMainView().frame.size.height - frame.size.height - pixelsToPoints(newRect.origin.y);
+#endif
+    self.view.frame = frame;
+}
+
+@end
+
+
 static int gloom_webViewCounter = 0;
 static NSMutableDictionary* gWebViews;
 NSMutableDictionary* webViews()
@@ -35,7 +107,7 @@ NSMutableDictionary* webViews()
     return gWebViews;
 }
 
-WebView* getWebView(loom_webView handle)
+WebViewRef* getWebViewRef(loom_webView handle)
 {
     return [webViews() objectForKey:[NSNumber numberWithInt:handle]];
 }
@@ -65,7 +137,10 @@ WebView* getWebView(loom_webView handle)
     return self;
 }
 
-- (void)webView:(WebView *)sender didStartProvisionalLoadForFrame:(WebFrame *)frame
+
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
+
+- (void)webView:(CocoaWebView *)sender didStartProvisionalLoadForFrame:(WebFrame *)frame
 {
     if(frame == [sender mainFrame])
     {
@@ -75,7 +150,7 @@ WebView* getWebView(loom_webView handle)
     }
 }
 
-- (void)webView:(WebView *)sender didFailLoadWithError:(NSError *)error forFrame:(WebFrame *)frame
+- (void)webView:(CocoaWebView *)sender didFailLoadWithError:(NSError *)error forFrame:(WebFrame *)frame
 {
     if(frame == [sender mainFrame])
     {
@@ -85,7 +160,7 @@ WebView* getWebView(loom_webView handle)
     }
 }
 
-- (void)webView:(WebView *)sender didFailProvisionalLoadWithError:(NSError *)error forFrame:(WebFrame *)frame
+- (void)webView:(CocoaWebView *)sender didFailProvisionalLoadWithError:(NSError *)error forFrame:(WebFrame *)frame
 {
     if(frame == [sender mainFrame])
     {
@@ -94,6 +169,26 @@ WebView* getWebView(loom_webView handle)
         callback(payload, WEBVIEW_REQUEST_ERROR, [codeString cStringUsingEncoding:1]);
     }
 }
+
+#else
+
+- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType
+{
+    NSString *urlString = [[request URL] absoluteString];
+    callback(payload, WEBVIEW_REQUEST_SENT, [urlString cStringUsingEncoding:1]);
+    
+    return YES;
+}
+
+- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
+{
+    NSInteger code = [error code];
+    NSString *codeString = [NSString stringWithFormat:@"WebKit Error code: %ld",(long)code];
+    callback(payload, WEBVIEW_REQUEST_ERROR, [codeString cStringUsingEncoding:1]);
+}
+
+#endif
+
 
 @end
 
@@ -104,25 +199,34 @@ loom_webView platform_webViewCreate(loom_webViewCallback callback, void *payload
 {
     int handle = gloom_webViewCounter++;
     
-    // get the main window
-    NSWindow* window = [[[NSApplication sharedApplication] windows] objectAtIndex:0];
+    CocoaWebView* webView = [[[CocoaWebView alloc] initWithFrame:[getMainView() bounds]] retain];
     
-    // create our webview
-    WebView* webView = [[[WebView alloc] initWithFrame:[window.contentView bounds]] retain];
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
     [webView setFrameLoadDelegate:[[LMWebViewDelegate alloc] initWithCallback:callback andPayload:payload]];
     [webView setWantsLayer:YES];
-    [webViews() setObject:webView forKey:[NSNumber numberWithInt:handle]];
+#else
+    [webView setDelegate:[[LMWebViewDelegate alloc] initWithCallback:callback andPayload:payload]];
+#endif
+    
+    WebViewRef *ref = [WebViewRef alloc];
+    ref.view = webView;
+    ref.rect = webView.frame;
+    
+    [webViews() setObject:ref forKey:[NSNumber numberWithInt:handle]];
     
     return handle;
 }
 
 void platform_webViewDestroy(loom_webView handle)
 {
-    WebView* webView = getWebView(handle);
+    WebViewRef* ref = getWebViewRef(handle);
+    CocoaWebView* webView = ref.view;
     
     [webView removeFromSuperview];
-    [webViews() removeObjectForKey:[NSNumber numberWithInt:handle]];
     [webView release];
+    [ref release];
+    
+    [webViews() removeObjectForKey:[NSNumber numberWithInt:handle]];
 }
 
 void platform_webViewDestroyAll()
@@ -137,128 +241,138 @@ void platform_webViewDestroyAll()
 
 void platform_webViewShow( loom_webView handle)
 {
-    WebView* webView = getWebView(handle);
+    CocoaWebView* webView = getWebViewRef(handle).view;
     
-    // lookup the main window
-    NSWindow* window = [[[NSApplication sharedApplication] windows] objectAtIndex:0];
-    [(NSView*)[window contentView] addSubview:webView];
+    [getMainView() addSubview:webView];
 }
 
 void platform_webViewHide( loom_webView handle)
 {
-    WebView* webView = getWebView(handle);
+    CocoaWebView* webView = getWebViewRef(handle).view;
     
     [webView removeFromSuperview];
 }
 
 void platform_webViewRequest( loom_webView handle, const char* url)
 {
-    WebView* webView = getWebView(handle);
+    CocoaWebView* webView = getWebViewRef(handle).view;
     NSURL* urlObj = [NSURL URLWithString:[NSString stringWithUTF8String:url]];
     NSURLRequest* request = [NSURLRequest requestWithURL:urlObj];
     
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
     [[webView mainFrame] loadRequest:request];
+#else
+    [webView loadRequest:request];
+#endif
 }
 
 bool platform_webViewGoBack( loom_webView handle)
 {
-    WebView* webView = getWebView(handle);
+    CocoaWebView* webView = getWebViewRef(handle).view;
     
-    return [webView goBack];
+    if (![webView canGoBack]) return false;
+    
+    [webView goBack];
+    return true;
 }
 
 bool platform_webViewGoForward( loom_webView handle)
 {
-    WebView* webView = getWebView(handle);
+    CocoaWebView* webView = getWebViewRef(handle).view;
     
-    return [webView goForward];
+    if (![webView canGoForward]) return false;
+    
+    [webView goForward];
+    return true;
 }
 
 bool platform_webViewCanGoBack( loom_webView handle)
 {
-    WebView* webView = getWebView(handle);
+    CocoaWebView* webView = getWebViewRef(handle).view;
     
     return [webView canGoBack];
 }
 
 bool platform_webViewCanGoForward( loom_webView handle)
 {
-    WebView* webView = getWebView(handle);
+    CocoaWebView* webView = getWebViewRef(handle).view;
     
     return [webView canGoForward];
 }
 
 void platform_webViewSetDimensions(loom_webView handle, float x, float y, float width, float height)
 {
-    WebView* webView = getWebView(handle);
+    WebViewRef* ref = getWebViewRef(handle);
     
-    [webView setFrame:NSMakeRect(x, y, width, height)];
+    CocoaRect frame;
+    frame.origin.x = x;
+    frame.origin.y = y;
+    frame.size.width = width;
+    frame.size.height = height;
+    
+    ref.rect = frame;
 }
 
 float platform_webViewGetX(loom_webView handle)
 {
-    WebView* webView = getWebView(handle);
+    WebViewRef* ref = getWebViewRef(handle);
     
-    return webView.frame.origin.x;
+    return ref.rect.origin.x;
 }
 
 void platform_webViewSetX(loom_webView handle, float x)
 {
-    WebView* webView = getWebView(handle);
+    WebViewRef* ref = getWebViewRef(handle);
     
-    NSRect frame = webView.frame;
-    frame.origin.x = x;
-    
-    [webView setFrame:frame];
+    CocoaRect rect = ref.rect;
+    rect.origin.x = x;
+    ref.rect = rect;
 }
 
 float platform_webViewGetY(loom_webView handle)
 {
-    WebView* webView = getWebView(handle);
+    WebViewRef* ref = getWebViewRef(handle);
     
-    return webView.frame.origin.y;
+    return ref.rect.origin.y;
 }
 
 void platform_webViewSetY(loom_webView handle, float y)
 {
-    WebView* webView = getWebView(handle);
+    WebViewRef* ref = getWebViewRef(handle);
     
-    NSRect frame = webView.frame;
-    frame.origin.y = y;
-    
-    [webView setFrame:frame];
+    CocoaRect rect = ref.rect;
+    rect.origin.y = y;
+    ref.rect = rect;
 }
 
 float platform_webViewGetWidth(loom_webView handle)
 {
-    WebView* webView = getWebView(handle);
+    WebViewRef* ref = getWebViewRef(handle);
     
-    return webView.frame.size.width;
+    return ref.rect.size.width;
 }
 
 void platform_webViewSetWidth(loom_webView handle, float width)
 {
-    WebView* webView = getWebView(handle);
+    WebViewRef* ref = getWebViewRef(handle);
     
-    NSRect frame = webView.frame;
-    frame.size.width = width;
-    
-    [webView setFrame:frame];
+    CocoaRect rect = ref.rect;
+    rect.size.width = width;
+    ref.rect = rect;
 }
 
 float platform_webViewGetHeight(loom_webView handle)
 {
-    WebView* webView = getWebView(handle);
+    WebViewRef* ref = getWebViewRef(handle);
     
-    return webView.frame.size.height;
+    return ref.rect.size.height;
 }
 
 void platform_webViewSetHeight(loom_webView handle, float height)
 {
-    WebView* webView = getWebView(handle);
+    WebViewRef* ref = getWebViewRef(handle);
     
-    NSRect frame = webView.frame;
-    frame.size.height = height;
-    
-    [webView setFrame:frame];
+    CocoaRect rect = ref.rect;
+    rect.size.height = height;
+    ref.rect = rect;
 }

@@ -31,6 +31,7 @@ import android.content.pm.ConfigurationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.ActivityNotFoundException;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -75,7 +76,12 @@ public class LoomPlayer extends SDLActivity {
     
     public static String getActivityWritablePath()
     {
-    	return getContext().getApplicationInfo().dataDir;
+    	return Environment.getExternalStorageDirectory().getAbsolutePath() + "/";
+    }
+    
+    public static String getActivitySettingsPath()
+    {
+    	return getContext().getFilesDir().getAbsolutePath() + "/";
     }
     
     public static int getProfile() {
@@ -119,7 +125,19 @@ public class LoomPlayer extends SDLActivity {
         catch (PackageManager.NameNotFoundException e) {}
         return null;
     }
-
+    
+    public static boolean openURL(String url)
+    {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse(url));
+        try {
+            getContext().startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            return false;
+        }
+        return true;
+    }
+    
     public static boolean checkPermission(Context context, String permission)
     {
         int res = context.checkCallingOrSelfPermission(permission);

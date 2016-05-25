@@ -96,6 +96,8 @@ class WindowsToolchain < Toolchain
   
     # Possible registry entries for Visual Studio
     regs = [
+      { name: 'Visual Studio 14', path: 'SOFTWARE\Microsoft\VisualStudio\14.0' },
+      { name: 'Visual Studio 14', path: 'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\14.0' },
       { name: 'Visual Studio 12', path: 'SOFTWARE\Microsoft\VisualStudio\12.0' },
       { name: 'Visual Studio 12', path: 'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\12.0' },
       { name: 'Visual Studio 11', path: 'SOFTWARE\Microsoft\VisualStudio\11.0' },
@@ -105,6 +107,8 @@ class WindowsToolchain < Toolchain
     
     # Default directory fallbacks
     dirs = [
+      { name: 'Visual Studio 14', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 14.0") },
+      { name: 'Visual Studio 14', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 14.0") },
       { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 12.0") },
       { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 12.0") },
       { name: 'Visual Studio 11', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 11.0") },
@@ -113,6 +117,12 @@ class WindowsToolchain < Toolchain
       { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 10.0") },
     ]
     
+    # VS2015 only supported on CMake >= 3.1
+    if version_outdated?($CMAKE_VERSION, '3.1')
+      regs.delete_if { |element| element[:name] == "Visual Studio 14" }
+      dirs.delete_if { |element| element[:name] == "Visual Studio 14" }
+    end
+
     # Check registry
     for reg in regs
       install = get_reg_value(reg[:path], 'ShellFolder')

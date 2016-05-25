@@ -37,6 +37,7 @@ set (ENGINE_SRC
     bindings/loom/lmSQLite.cpp
     bindings/loom/lmModestMaps.cpp
     bindings/loom/lmGameController.cpp
+    bindings/loom/lmUserDefault.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
     
     bindings/sdl/lmSDL.cpp
@@ -46,6 +47,11 @@ set (ENGINE_SRC
 )
 
 if (APPLE)
+    set (ENGINE_SRC
+        ${ENGINE_SRC}
+        bindings/loom/lmUserDefaultCocoa.mm
+    )
+
     if(LOOM_BUILD_IOS EQUAL 1)
     set (ENGINE_SRC
 

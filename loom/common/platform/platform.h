@@ -98,6 +98,7 @@ extern "C" {
 
 int platform_error(const char *out, ...);
 int platform_debugOut(const char *out, ...);
+int platform_openURL(const char *url);
 
 #ifdef __cplusplus
 }
