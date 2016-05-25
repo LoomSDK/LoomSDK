@@ -187,15 +187,16 @@ public class LoomSensors
                     ///if the sensor data is unreliable return
                     if(event.accuracy == SensorManager.SENSOR_STATUS_UNRELIABLE)
                     {
-                     //   return;
+                        return;
                     }
 
                     ///get correctly oriented values to work with
                     remappedValues = remapXYZValues(event.values);
+
                     //normalize the values
-                    x = - remappedValues[0] / 10;
-                    y = - remappedValues[1] / 10;
-                    z = - remappedValues[2] / 10;
+                    x = - remappedValues[0] / SensorManager.GRAVITY_EARTH;
+                    y = - remappedValues[1] / SensorManager.GRAVITY_EARTH;
+                    z = - remappedValues[2] / SensorManager.GRAVITY_EARTH;
 
                     ///register the change in native code
                     onAccelerometerChanged(x, y, z);
