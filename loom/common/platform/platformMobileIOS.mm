@@ -37,7 +37,6 @@ limitations under the License.
 #include "loom/vendor/jansson/jansson.h"
 
 #include "loom/engine/bindings/loom/lmApplication.h"
-lmDefineLogGroup(iosLogGroup, "mobile.ios", 1, LoomLogInfo);
 
 
 
