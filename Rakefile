@@ -141,6 +141,7 @@ puts ""
 CLEAN.replace(["application/android/bin" ])
 CLEAN.include Dir.glob("build/loom-*")
 CLEAN.include Dir.glob("build/luajit-*")
+CLEAN.include Dir.glob("build/sdl2")
 CLEAN.include Dir.glob("tests/unittest-*")
 CLEAN.include ["build/**/lib/**", "artifacts/**"]
 CLOBBER.include ["**/*.loom", $OUTPUT_DIRECTORY]
