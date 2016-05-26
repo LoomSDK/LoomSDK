@@ -85,15 +85,17 @@ void loom_appSetup(void)
 
 void loom_appPause(void)
 {
-    atomic_store32(&gLoomTicking, 0);
+    int ticking = atomic_decrement(&gLoomTicking);
+    if (ticking != 0) return;
     GFX::Graphics::pause();
     lmLogInfo(applicationLogGroup, "Paused");
 }
     
 void loom_appResume(void)
 {
+    int ticking = atomic_increment(&gLoomTicking);
+    if (ticking != 1) return;
     GFX::Graphics::resume();
-    atomic_store32(&gLoomTicking, 1);
     lmLogInfo(applicationLogGroup, "Resumed");
 }
 

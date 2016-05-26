@@ -39,7 +39,7 @@ atomic_int_t gLoomTicking = 1;
 
 void loom_tick()
 {
-    if (!atomic_load32(&gLoomTicking)) return;
+    if (atomic_load32(&gLoomTicking) < 1) return;
     
     Telemetry::beginTick();
     
