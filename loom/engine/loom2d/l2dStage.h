@@ -78,7 +78,9 @@ public:
         _SizeChangeDelegate.invoke();
     }
 
+    static void initFromConfig();
     static void updateFromConfig();
+    static void applyOrientation(const char* orient);
     void show();
     void hide();
 
@@ -92,21 +94,7 @@ public:
     inline void setOrientation(const char* orient)
     {
         orientation = orient;
-        if (strcmp(orientation.c_str(), "portrait") == 0) {
-            SDL_SetHint(SDL_HINT_ORIENTATIONS, "Portrait PortraitUpsideDown");
-        }
-        else if (strcmp(orientation.c_str(), "landscape") == 0)
-        {
-            SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
-        }
-        else if (strcmp(orientation.c_str(), "auto") == 0)
-        {
-            SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight Portrait");
-        }
-        else
-        {
-            lmAssert(false, "Unknown orientation value: %s", orientation.c_str());
-        }
+        applyOrientation(orient);
     }
 
     inline int getVectorQuality() const

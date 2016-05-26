@@ -186,6 +186,8 @@ void LoomApplication::initMainAssembly()
     rootVM->readExecutableAssemblyBinaryHeader(initBytes);
     Assembly *assembly = BinReader::loadMainAssemblyHeader();
     LoomApplicationConfig::parseApplicationConfig(assembly->getLoomConfig());
+    
+    Loom2D::Stage::initFromConfig();
 }
 
 void LoomApplication::execMainAssembly()
@@ -198,8 +200,6 @@ void LoomApplication::execMainAssembly()
     initBytes = NULL;
     
     lmLogDebug(applicationLogGroup, "   o executing %s", bootAssembly.c_str());
-
-    Loom2D::Stage::updateFromConfig();
 
     // Wait for asset agent if appropriate.
     if (LoomApplicationConfig::waitForAssetAgent() > 0)
