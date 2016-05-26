@@ -34,8 +34,6 @@ package loom
     import loom.gameframework.ITicked;
     import loom.gameframework.IAnimated;
 
-    import loom.platform.Accelerometer;
-   
     import loom2d.math.Rectangle;
 
     import loom2d.Loom2D;
@@ -90,16 +88,6 @@ package loom
             
             frameLastPlatformTime = Platform.getTime();
 
-            // set up the default layer for the cocos2d game
-            /*layer.autorelease();
-            layer.setKeypadEnabled(true);
-            layer.setScrollWheelEnabled(true);
-            layer.setAccelerometerEnabled(true);
-            layer.onAccelerate += accelerated;
-
-            Cocos2D.addLayer(layer); */
-            //group.registerManager(layer);
-            
             // TODO: LOOM-1521 Resurrent feedback layer with Loom2D
             // create our feedback layer for asset agent transfers
 
@@ -136,8 +124,6 @@ package loom
                 assetDebugOverlay = new Shape();
                 stage.addChild(assetDebugOverlay);
             }
-            
-            theStage.onAccelerate += accelerated;
 
             // This enables touch/mouse input.
             touchProcessor = new TouchProcessor(stage);
@@ -451,16 +437,6 @@ package loom
             Debug.assert(theApplication, "Application must exist before getting the internalLayer");
             return theApplication.layer;
         }*/
-
-        /*
-         * Internal delegate callback for native accelerometer event, forwards to the 
-         * Accelerometer class, which is the public interface.  This could be cleaner, 
-         * however it requires a considerable amount of native refactoring to achieve that.
-         */
-        private function accelerated(x:Number, y:Number, z:Number)
-        {
-            Accelerometer.accelerated(x, y, z);
-        }         
 
         /**
          * True if the LoomScript compiler is included in this build.

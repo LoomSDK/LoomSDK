@@ -52,7 +52,6 @@ package loom2d.display
     delegate HardwareKeyDelegate();
     delegate TouchDelegate(touchId:int, x:int, y:int);
     delegate ScrollWheelDelegate(yDelta:int);
-    delegate AccelerationDelegate(x:Number, y:Number, z:Number);
 
     delegate OrientationChangeDelegate(newOrientation:int);
     delegate SizeChangeDelegate(newWidth:int, newHeight:int);
@@ -136,8 +135,6 @@ package loom2d.display
         public native var onBackKey:HardwareKeyDelegate;
 
         public native var onScrollWheelYMoved:ScrollWheelDelegate;
-
-        public native var onAccelerate:AccelerationDelegate;
 
         public native var onOrientationChange:OrientationChangeDelegate;
         public native var onSizeChange:SizeChangeDelegate;

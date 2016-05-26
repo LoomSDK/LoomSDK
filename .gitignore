@@ -33,6 +33,8 @@ build/loom-*
 
 docs/output
 docs/examples/*/libs
+docs/examples/*/build/ios
+docs/examples/*/bin-release/
 
 .DS_Store
 EngineCoEngine.xcworkspace/
@@ -86,5 +88,4 @@ loom/vendor/sdl2/Xcode-iOS/SDL/build
 loom/vendor/sdl2/Xcode-iOS/SDL/SDL.xcodeproj/xcuserdata
 loom/vendor/sdl2/Xcode-iOS/SDL/SDL.xcodeproj/project.xcworkspace/xcuserdata
 loom/engine/sdl2/platform/android/java/build.xml
-docs/examples/*/bin-release/
 libSDL2.a

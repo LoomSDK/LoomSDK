@@ -85,15 +85,17 @@ void loom_appSetup(void)
 
 void loom_appPause(void)
 {
-    atomic_store32(&gLoomTicking, 0);
+    int ticking = atomic_decrement(&gLoomTicking);
+    if (ticking != 0) return;
     GFX::Graphics::pause();
     lmLogInfo(applicationLogGroup, "Paused");
 }
     
 void loom_appResume(void)
 {
+    int ticking = atomic_increment(&gLoomTicking);
+    if (ticking != 1) return;
     GFX::Graphics::resume();
-    atomic_store32(&gLoomTicking, 1);
     lmLogInfo(applicationLogGroup, "Resumed");
 }
 
@@ -184,6 +186,8 @@ void LoomApplication::initMainAssembly()
     rootVM->readExecutableAssemblyBinaryHeader(initBytes);
     Assembly *assembly = BinReader::loadMainAssemblyHeader();
     LoomApplicationConfig::parseApplicationConfig(assembly->getLoomConfig());
+    
+    Loom2D::Stage::initFromConfig();
 }
 
 void LoomApplication::execMainAssembly()
@@ -196,8 +200,6 @@ void LoomApplication::execMainAssembly()
     initBytes = NULL;
     
     lmLogDebug(applicationLogGroup, "   o executing %s", bootAssembly.c_str());
-
-    Loom2D::Stage::updateFromConfig();
 
     // Wait for asset agent if appropriate.
     if (LoomApplicationConfig::waitForAssetAgent() > 0)

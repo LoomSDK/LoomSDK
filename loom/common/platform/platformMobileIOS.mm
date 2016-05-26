@@ -27,6 +27,7 @@ limitations under the License.
 #import <Foundation/NSSet.h>
 #import <UIKit/UIKit.h>
 #import <CoreLocation/CoreLocation.h>
+#import <CoreMotion/CoreMotion.h>
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformMobile.h"
@@ -37,9 +38,13 @@ limitations under the License.
 
 #include "loom/engine/bindings/loom/lmApplication.h"
 
-
+extern "C" {
+    void loom_appPause();
+    void loom_appResume();
+}
 
 void handleGenericEvent(void *userdata, const char *type, const char *payload);
+
 
 //interface for PlatformMobileiOS
 @interface PlatformMobileiOS : UIViewController <CLLocationManagerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate>
@@ -47,6 +52,7 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload);
 //properties
 @property (nonatomic, retain) CLLocationManager *locationManager;
 @property (nonatomic, retain) CLLocation *latestLocation;
+@property (nonatomic, retain) CMMotionManager *motionManager;
 
 //methods
 -(void)initialize;
@@ -65,6 +71,7 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload);
 //methods
 - (void)initialize {
     self.locationManager = nil;
+    self.motionManager = nil;
 
     //check authorization status
     CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
@@ -79,6 +86,9 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload);
     self.locationManager.delegate = self;
     self.locationManager.desiredAccuracy = kCLLocationAccuracyBest;
     
+    //create the motion manager
+    self.motionManager = [[CMMotionManager alloc] init];
+    self.motionManager.accelerometerUpdateInterval = 1.0/60.0;
     LoomApplication::listenForGenericEvents(handleGenericEvent, (void*)self);
 }
 
@@ -127,6 +137,9 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload);
     UIViewController *root = window.rootViewController;
     [root dismissModalViewControllerAnimated:YES];
     
+    // Resume normal operations
+    loom_appResume();
+    
     LoomApplication::fireGenericEvent("cameraSuccess", [fileSavePath UTF8String]);
 }
 
@@ -135,6 +148,9 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload);
     UIWindow *window = [[UIApplication sharedApplication] keyWindow];
     UIViewController *root = window.rootViewController;
     [root dismissModalViewControllerAnimated:YES];
+    
+    // Resume normal operations
+    loom_appResume();
     
     LoomApplication::fireGenericEvent("cameraFail", "cancel");
 }
@@ -148,9 +164,12 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload);
 		imagePicker.sourceType = UIImagePickerControllerSourceTypeCamera;
 		imagePicker.allowsEditing = YES;
         
+        // We can't do anything while camera is opened
+        loom_appPause();
+        
         UIWindow *window = [[UIApplication sharedApplication] keyWindow];
         UIViewController *root = window.rootViewController;
-		[root presentModalViewController:imagePicker animated:YES];
+        [root presentViewController:imagePicker animated:YES completion:nil];
 	}
 	else
 	{
@@ -215,6 +234,55 @@ void handleGenericEvent(void *userdata, const char *type, const char *payload);
     return locString;
 }
 
+//returns true if accelerometer is supported on device
+-(BOOL)isAccelerometerAvailable {
+    return self.motionManager.accelerometerAvailable;
+}
+
+//returns true if accelerometer is active (it happens when startAccelerometerUpdates is called on motionManager)
+-(BOOL)isAccelerometerActive {
+    return self.motionManager.accelerometerActive;
+}
+
+-(void)enableAccelerometer:(SensorTripleChangedCallback) gTripleChangedCallback {
+    if (self.isAccelerometerActive || !self.isAccelerometerAvailable) return;
+    
+    [self.motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue currentQueue] withHandler:^(CMAccelerometerData *accelerometerData, NSError *error) {
+        if (gTripleChangedCallback != NULL) {
+            double axes[3];
+            
+            [self remapXAxis:accelerometerData.acceleration.x yAxis:accelerometerData.acceleration.y zAxis:accelerometerData.acceleration.z into:axes];
+            gTripleChangedCallback(0,axes[0],axes[1],axes[2]);
+        }
+    }];
+}
+
+-(void)disableAccelerometer {
+    [self.motionManager stopAccelerometerUpdates];
+}
+
+-(CMAccelerometerData *)getAccelerometerData {
+    return self.motionManager.accelerometerData;
+}
+
+-(void)remapXAxis:(double) x yAxis:(double) y zAxis:(double) z into:(double *) remapped {
+    UIInterfaceOrientation curOrientation = [UIApplication sharedApplication].statusBarOrientation;
+    
+    if (curOrientation == UIInterfaceOrientationLandscapeLeft) {
+        remapped[0] = y;
+        remapped[1] = -x;
+    } else if (curOrientation == UIInterfaceOrientationLandscapeRight) {
+        remapped[0] = -y;
+        remapped[1] = x;
+    } else if (curOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+        remapped[0] = -x;
+        remapped[1] = -y;
+    } else {
+        remapped[0] = x;
+        remapped[1] = y;
+    }
+    remapped[2] = z;
+}
 
 //CLLocationManagerDelegate interfaces
 //iOS5-
@@ -440,35 +508,64 @@ const char *platform_getRemoteNotificationData(const char *key)
 ///checks if a given sensor is supported on this hardware
 bool platform_isSensorSupported(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
-    return false;
+    BOOL supported = false;
+    
+    switch (sensor)
+    {
+        case 0:
+            supported = [mobileiOS isAccelerometerAvailable];
+            break;
+    }
+    
+    return supported;
 }
 
 ///checks if a given sensor is currently enabled
 bool platform_isSensorEnabled(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
-    return false;
+    BOOL enabled = false;
+    
+    switch (sensor)
+    {
+        case 0:
+            enabled = [mobileiOS isAccelerometerActive];
+            break;
+    }
+    
+    return enabled;
 }
 
 ///checks if a given sensor has received any data yet
 bool platform_hasSensorReceivedData(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
-    return false;
+    return [mobileiOS getAccelerometerData] != nil;
 }
 
 ///enables the given sensor
 bool platform_enableSensor(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
-    return false;
+    BOOL enabled = false;
+    
+    switch (sensor)
+    {
+        case 0:
+            [mobileiOS enableAccelerometer:gTripleChangedCallback];
+            enabled = true;
+            break;
+    }
+    
+    return enabled;
 }
 
 ///disables the given sensor
 void platform_disableSensor(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
+    switch (sensor)
+    {
+        case 0:
+            [mobileiOS disableAccelerometer];
+            break;
+    }
 }
 
 

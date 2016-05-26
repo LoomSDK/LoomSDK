@@ -1,7 +1,8 @@
 package
 {
     import loom.Application;
-    import loom.platform.Accelerometer;
+    import loom.platform.Mobile;
+    import loom.platform.MobileSensorType;
 
     import loom2d.display.StageScaleMode;
     import loom2d.display.Image;   
@@ -35,17 +36,25 @@ package
             label.x = width/2 - 320/2;
             label.y = height - 164;
             stage.addChild(label);
-            
-            sprite = new Image(Texture.fromAsset("assets/logo.png"));            
+
+            sprite = new Image(Texture.fromAsset("assets/logo.png"));
             sprite.x = width/2 - sprite.width/2;
             sprite.y = height/2 - sprite.height/2;
             sprite.center();
             stage.addChild(sprite);
 
             // Check if the Accelerometer is indeed supported on device.
-            if(Accelerometer.isSupported)
+            if(Mobile.isSensorSupported(MobileSensorType.Accelerometer))
+            {
                 // Wire up the accelerated delegate to call onAcclerometerData
-                Accelerometer.accelerated += onAccelerometerData;
+                trace("Accelerometer supported :)");
+                Mobile.onSensorTripleChanged += onAccelerometerData;
+                Mobile.enableSensor(MobileSensorType.Accelerometer);
+            }
+            else
+            {
+                trace("Accelerometer not supported :(");
+            }
         }
 
         override protected function onTick()
@@ -59,10 +68,13 @@ package
             sprite.y = Math.clamp(sprite.y, 0, stage.stageHeight);
         }
 
-        protected function onAccelerometerData(x:Number, y:Number, z:Number) 
+        protected function onAccelerometerData(type:MobileSensorType, x:Number, y:Number, z:Number)
         {
+            if (type != MobileSensorType.Accelerometer)
+                return;
+
             directionX = x;
-            directionY = -y; 
+            directionY = -y;
         }
     }
 }
