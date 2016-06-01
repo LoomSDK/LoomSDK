@@ -264,6 +264,8 @@ endif(APPLE)
 
 if (ANDROID)
 
+    set( LIBRARY_OUTPUT_PATH_ROOT ${CMAKE_SOURCE_DIR}/application/android CACHE PATH "Root for Android binaries output, set this to change where Android libs are installed to" )
+  
     include (loom.android.toolchain)
 
     include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
