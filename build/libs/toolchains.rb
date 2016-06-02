@@ -307,8 +307,8 @@ class AndroidToolchain < Toolchain
       generator = "Unix Makefiles"
       make_arg = ""
     end
-
-    return "-G \"#{generator}\" -DCMAKE_TOOLCHAIN_FILE=#{$ROOT}/build/cmake/loom.android.toolchain.cmake -DANDROID_NDK_HOST_X64=#{$HOST.is_x64} -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=14 #{make_arg}"
+    
+    return "-G \"#{generator}\" -DCMAKE_TOOLCHAIN_FILE=#{$ROOT}/build/cmake/loom.android.bootstrap.cmake -DANDROID_NDK_HOST_X64=#{$HOST.is_x64} -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=14 #{make_arg}"
   end
   
   def self.apkName()
