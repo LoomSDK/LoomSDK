@@ -267,20 +267,23 @@ class AndroidToolchain < Toolchain
     return nil unless !target.is64Bit
     
     systems = ["darwin-x86_64", "darwin-x86"]
+    toolchains = ["arm-linux-androideabi-4.6", "arm-linux-androideabi-4.8", "arm-linux-androideabi-4.9"]
     
     # Android/ARM, armeabi-v7a (ARMv7 VFP), Android 4.0+ (ICS)
     ndk = File.expand_path(ENV["ANDROID_NDK"])
     ndkABI = 14
-    ndkVersion = "#{ndk}/toolchains/arm-linux-androideabi-4.6"
     ndkFound = false
     ndkSystems = []
-    for system in systems
-      ndkPath = "#{ndkVersion}/prebuilt/#{system}/bin/arm-linux-androideabi-"
-      ndkDir = File.dirname(ndkPath)
-      ndkSystems.push ndkDir
-      if File.exists?(ndkDir)
-        ndkFound = true
-        break
+    for toolchain in toolchains
+      ndkVersion = "#{ndk}/toolchains/#{toolchain}"
+      for system in systems
+        ndkPath = "#{ndkVersion}/prebuilt/#{system}/bin/arm-linux-androideabi-"
+        ndkDir = File.dirname(ndkPath)
+        ndkSystems.push ndkDir
+        if File.exists?(ndkDir)
+          ndkFound = true
+          break
+        end
       end
     end
     abort "Android NDK prebuilt directory not found, tried:\n  #{ndkSystems.join("\n  ")}" unless ndkFound
@@ -304,8 +307,8 @@ class AndroidToolchain < Toolchain
       generator = "Unix Makefiles"
       make_arg = ""
     end
-
-    return "-G \"#{generator}\" -DCMAKE_TOOLCHAIN_FILE=#{$ROOT}/build/cmake/loom.android.toolchain.cmake -DANDROID_NDK_HOST_X64=#{$HOST.is_x64} -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=14 #{make_arg}"
+    
+    return "-G \"#{generator}\" -DCMAKE_TOOLCHAIN_FILE=#{$ROOT}/build/cmake/loom.android.bootstrap.cmake -DANDROID_NDK_HOST_X64=#{$HOST.is_x64} -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=14 #{make_arg}"
   end
   
   def self.apkName()
