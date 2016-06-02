@@ -28,7 +28,7 @@ void platform_adMobInitalize(const char* publisherID)
 {
 }
 
-loom_adMobHandle platform_adMobCreate(const char *adUnitId, loom_adMobBannerSize size)
+loom_adMobHandle platform_adMobCreate(const char *adUnitId, loom_adMobCallback callback, void *payload, loom_adMobBannerSize size)
 {
     return 0;
 }
