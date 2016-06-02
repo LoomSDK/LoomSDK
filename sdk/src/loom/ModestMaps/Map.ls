@@ -391,7 +391,8 @@ package loom.modestmaps
                 if (!isNaN(h)) baseMapHeight = h;
                 
                 // The global (down)scale based on the density
-                var densityScale = mapProvider.supportsHighDPI ? 1 : Platform.getDPI()/200;
+                var densityScale = Platform.getDPI()/200;
+                if (mapProvider.usingHighDPI) densityScale /= 2;
                 
                 mapWidth = baseMapWidth/densityScale;
                 mapHeight = baseMapHeight/densityScale;
@@ -409,7 +410,7 @@ package loom.modestmaps
                 }
                 
                 
-                grid.resizeTo(new Point(mapWidth, mapHeight));
+                grid.resizeTo(mapWidth, mapHeight, scale);
                 
                 onResize(mapWidth, mapHeight);
             }           

@@ -11,6 +11,8 @@ package loom.modestmaps.mapproviders
     {
         function get supportsHighDPI():Boolean;
         
+        function get usingHighDPI():Boolean;
+        
         /**
          * @return an array of Strings urls (or HTTPRequest) for the images needed for this tile coordinate.
          */ 

@@ -163,6 +163,7 @@ package loom.modestmaps.core
         
         protected var mapWidth:Number = NaN;
         protected var mapHeight:Number = NaN;
+        protected var mapScale:Number = 1;
         
         protected var draggable:Boolean;
 
@@ -224,9 +225,7 @@ package loom.modestmaps.core
             
             setMapProvider(provider);
             
-            sHelperPoint.x = w;
-            sHelperPoint.y = h;
-            resizeTo(sHelperPoint);
+            resizeTo(w, h);
             
             // and calculate bounds from provider
             calculateBounds();
@@ -657,6 +656,7 @@ package loom.modestmaps.core
         }
         
         private function hasParentReady(tile:Tile):Boolean {
+            if (!tile || !tile.quadNode) return false;
             var parent = tile.quadNode.parent;
             while (parent && (!KeepTopLevel || parent.zoom > 1)) {
                 if (isTileReady(parent.tile)) return true;
@@ -1924,21 +1924,26 @@ package loom.modestmaps.core
             }
         }
                 
-        public function resizeTo(p:Point):void
+        public function resizeTo(w:Number, h:Number, s:Number = 1):void
         {
-            if (mapWidth != p.x || mapHeight != p.y)
+            if (mapWidth != w || mapHeight != h || s != mapScale)
             {
-                var dx:Number = p.x - mapWidth;
-                var dy:Number = p.y - mapHeight;
+                var dx:Number = w - mapWidth;
+                var dy:Number = h - mapHeight;
+                var ds:Number = s / mapScale;
+                
+                mapScale = s;
                 
                 // maintain the center point:
                 if (!isNaN(dx)) tx += dx/2;
                 if (!isNaN(dy)) ty += dy/2;
                 
-                mapWidth = p.x;
-                mapHeight = p.y;
+                mapWidth = w;
+                mapHeight = h;
                 //clipRect = new Rectangle(0, 0, mapWidth, mapHeight);
                 bgTouchArea.setSize(mapWidth, mapHeight);
+                
+                resetTiles(_centerCoordinate);
 
                 //NOTE_TEC: not porting DebugField for now at least...
                 // debugField.x = mapWidth - debugField.width - 15; 
@@ -1976,9 +1981,6 @@ package loom.modestmaps.core
         protected function clearEverything(event:Event=null):void
         {
             processing = false;
-            
-            mapWidth = NaN;
-            mapHeight = NaN;
             
             repopCount = -1;
             repopCounter = 0;
