@@ -4,7 +4,7 @@ package
     import loom.Application;
 
     import loom2d.display.StageScaleMode;
-    import loom2d.display.Image;   
+    import loom2d.display.Image;
     import loom2d.textures.Texture;
     import loom2d.math.Point;
     import loom2d.ui.SimpleLabel;
@@ -17,6 +17,7 @@ package
 
     import loom.admob.BannerAd;
     import loom.admob.InterstitialAd;
+    import loom.admob.Publisher;
 
     /**
      *  Example Showcasing AdMob integration with banner and interstitial ads
@@ -33,9 +34,11 @@ package
             // Comment out this line to turn off automatic scaling.
             stage.scaleMode = StageScaleMode.LETTERBOX;
 
+            Publisher.initialize("ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX");
+
             var bg = new Image(Texture.fromAsset("assets/bg.png"));
-            bg.width = stage.stageWidth; 
-            bg.height = stage.stageHeight; 
+            bg.width = stage.stageWidth;
+            bg.height = stage.stageHeight;
             stage.addChild(bg);
 
             var label = new SimpleLabel("assets/Curse-hd.fnt", 400, 400);
@@ -45,7 +48,7 @@ package
             stage.addChild(label);
 
             // Handle taps by showing an interstitial ad.
-            stage.addEventListener( TouchEvent.TOUCH, function(e:TouchEvent) { 
+            stage.addEventListener( TouchEvent.TOUCH, function(e:TouchEvent) {
 
                 // bail on any began touches in the mix
                 var touch = e.getTouch(stage, TouchPhase.BEGAN);
@@ -53,7 +56,7 @@ package
                 if (!touch)
                     return;
 
-                var ad = new InterstitialAd("a15149eca129bce");
+                var ad = new InterstitialAd("ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX");
 
                 ad.onAdReceived += function() {
                     ad.show();
@@ -62,21 +65,28 @@ package
                 ad.onAdError += function(s:String) {
                     Console.print("Ad error:  ", s);
                 };
-                    
+
+                ad.load();
             } );
 
-            trace("Showing banner ads.");
-            
-            banner1 = new BannerAd("a15149eca129bce");
-            banner1.show();
-            banner1.y = 0;
+            banner1 = new BannerAd("ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX");
+            banner1.onAdReceived += function() {
+                banner1.show();
+                trace("Showing banner ad 1");
+                banner1.y = 0;
+            };
+            banner1.load();
 
-            banner2 = new BannerAd("a15149eca129bce");
-            banner2.show();
-            
-            // we want the banner to be at the bottom of the screen
-            // regardless of stage scaling so use the native height
-            banner2.y = stage.nativeStageHeight - banner2.height;
+            banner2 = new BannerAd("ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX");
+            banner2.onAdReceived += function() {
+                banner2.show();
+                trace("Showing banner ad 2");
+
+                // we want the banner to be at the bottom of the screen
+                // regardless of stage scaling so use the native height
+                banner2.y = stage.nativeStageHeight - banner2.height;
+            };
+            banner2.load();
         }
     }
 }

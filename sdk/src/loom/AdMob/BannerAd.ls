@@ -29,12 +29,15 @@ package loom.admob
     final public native class BannerAd
     {
         /**
-         *  Creates the banner ad with the specified publisher ID and size.
+         *  Creates the banner ad with the specified ad unit ID and size. Before creating the BannerAd
+         *  Publisher.initialize() must be called.
          *
-         *  @param publisherID The AdMob publisher ID.
+         *  @param adUnitId The AdMob Ad Unit ID. Looks like "ca-app-pub-XXXXXXXXXXXXXXX/XXXXXXXXXX".
          *  @param size The requested size of the banner. Default is BannerSize.SMART_LANDSCAPE
          */
-        public native function BannerAd(publisherID:String, size:BannerSize=0);
+        public native function BannerAd(adUnitId:String, size:BannerSize=0);
+
+        public native function load();
 
         /**
          *  Shows the banner Ad. The ad will be displayed on top of Looms GLView.
@@ -85,6 +88,18 @@ package loom.admob
          *  Sets the height of the banner ad.
          */
         public native function set height( value:Number );
+
+        /**
+         *  Called when the ad had been received from AdMob. When this delegate is called
+         *  is the best time to call show().
+         */
+        public native var onAdReceived:NativeDelegate;
+
+        /**
+         *  Called when the response from AdMob is an error instead of an ad. This should
+         *  be handled gracefully.
+         */
+        public native var onAdError:NativeDelegate;
     }
 
     /**
