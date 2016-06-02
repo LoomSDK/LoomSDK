@@ -604,14 +604,19 @@ namespace :build do
   desc "Builds Android APK"
   task :android => ['utility:compileScripts'] do
     puts "== Building Android =="
-
+    
+    ndk_env = ENV["ANDROID_NDK"]
+    ndk_path = ndk_env ? File.expand_path(ndk_env) : nil
+    
+    abort("\nAndroid NDK directory not found!\nPlease set the `ANDROID_NDK` environment variable to the Android NDK path.") unless ndk_path && File.exists?(ndk_path)
+    
     # Build SDL for Android if it's missing
     sdlLibPath = "build/sdl2/android/armeabi"
     if not File.exist?("#{sdlLibPath}/libSDL2.a")
       puts "Building SDL2 for Android using ndk-build"
       sdlSrcPath = "loom/vendor/sdl2"
       Dir.chdir(sdlSrcPath) do
-        sh "ndk-build SDL2_static NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk APP_PLATFORM=android-15"
+        sh "#{ndk_path}/ndk-build SDL2_static NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk APP_PLATFORM=android-15"
       end
       FileUtils.mkdir_p sdlLibPath
       sh "cp #{sdlSrcPath}/obj/local/armeabi/libSDL2.a #{sdlLibPath}/libSDL2.a"

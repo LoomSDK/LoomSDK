@@ -168,8 +168,8 @@ if (MSVC)
     endif ()
     SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:msvcrt.lib")
 
-    STRING(REPLACE "/GX" "" CMAKE_CXX_FLAGS_INIT ${CMAKE_CXX_FLAGS_INIT})
-    STRING(REPLACE "/GX" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+    STRING(REPLACE "/GX" "" CMAKE_CXX_FLAGS_INIT "${CMAKE_CXX_FLAGS_INIT}")
+    STRING(REPLACE "/GX" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
     #statically link
     FOREACH(flag_var CMAKE_CXX_FLAGS
@@ -264,7 +264,7 @@ endif(APPLE)
 
 if (ANDROID)
 
-    include (loom.android.toolchain)
+    include (loom.android.bootstrap)
 
     include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
 

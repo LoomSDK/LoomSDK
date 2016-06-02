@@ -28,6 +28,7 @@ obj/*
 
 build/luajit-*
 build/loom-*
+build/sdl2
 
 *CMakeFiles*
 
