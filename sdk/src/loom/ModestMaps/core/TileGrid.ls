@@ -1953,6 +1953,8 @@ package loom.modestmaps.core
         
         public function setMapProvider(provider:IMapProvider):void
         {
+            clearEverything();
+            
             if (tilePainter) tilePainter.reset();
             if (provider is ITilePainterOverride) {
                 this.tilePainter = ITilePainterOverride(provider).getTilePainter();
@@ -1969,8 +1971,6 @@ package loom.modestmaps.core
             _tileHeight = provider.tileHeight;
             
             calculateBounds();
-            
-            clearEverything();
         }
         
         protected function clearEverything(event:Event=null):void
@@ -1988,26 +1988,32 @@ package loom.modestmaps.core
             repopMinRow = -1;
             repopMaxRow = -1;
             
-            var tile:Tile;
-            var next:Tile;
-            tile = headActive;
-            while (tile) {
-                next = tile.nextActive;
-                tileRemove(tile);
-                tile = next;
-            }
-            tile = headInactive;
-            while (tile) {
-                next = tile.nextInactive;
-                tileRemove(tile);
-                tile = next;
+            
+            
+            if (tilePainter) {
+                
+                var tile:Tile;
+                var next:Tile;
+                
+                tile = headActive;
+                while (tile) {
+                    next = tile.nextActive;
+                    tileRemove(tile);
+                    tile = next;
+                }
+                tile = headInactive;
+                while (tile) {
+                    next = tile.nextInactive;
+                    tileRemove(tile);
+                    tile = next;
+                }
+                
+                tilePainter.reset();
             }
             
             headActive = null;
             headInactive = null;
             countActive = 0;
-            
-            tilePainter.reset();
             
             quadRoot = new QuadNode();
             
