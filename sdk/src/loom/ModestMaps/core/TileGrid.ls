@@ -1191,7 +1191,8 @@ package loom.modestmaps.core
             positionTile(tile);
         }
         
-        private function drawGrid(g:Graphics, zoom:Number, gridX:Number, gridY:Number, gridWidth:Number, gridHeight:Number, resultTopLeft:Point = Point.ZERO)
+        // resultTopLeft is not a default argument because there is a bug in loom default arguments
+        private function drawGrid(g:Graphics, zoom:Number, gridX:Number, gridY:Number, gridWidth:Number, gridHeight:Number, resultTopLeft:Point)
         {
             //g.drawRect(worldMatrix.tx+gridX*tileWidth, worldMatrix.ty+gridY*tileHeight, gridWidth*tileWidth, gridHeight*tileHeight);
             
@@ -1249,7 +1250,7 @@ package loom.modestmaps.core
                 */
                 
                 g.lineStyle(20, 0xFFFF00);
-                drawGrid(g, currentTileZoom, MinColRow.x, MinColRow.y, MaxColRow.x-MinColRow.x+1, MaxColRow.y-MinColRow.y+1);
+                drawGrid(g, currentTileZoom, MinColRow.x, MinColRow.y, MaxColRow.x-MinColRow.x+1, MaxColRow.y-MinColRow.y+1, Point.ZERO);
                 //g.lineStyle(20, 0xFFFF00, 0.5);
                 //for (z = 0; z < _tileGridBounds.length; z++) {
                     //var gb = _tileGridBounds[z];
