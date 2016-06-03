@@ -583,7 +583,22 @@ namespace :build do
   desc "Builds Windows"
   task :windows => [] do
     puts "== Building Windows =="
+    
     toolchain = WindowsToolchain.new();
+
+    vs_bootstrap_call = ENV["LOOM_BOOTSTRAP_CALL"] == "true"
+    vs_install_env = ENV["VSINSTALLDIR"]
+
+    if !vs_install_env || vs_install_env.length == 0 then
+      abort "Unable to bootstrap the Visual Studio environment" unless !vs_bootstrap_call
+      puts "Visual Studio environment not detected, bootstrapping..."
+      vs_install = toolchain.get_vs_install
+      abort "Unable to find any Visual Studio installation" unless vs_install
+      vcvarsall = vs_install[:install] + "VC\\vcvarsall.bat"
+      abort "Unable to find Visual Studio environment setup (vcvarsall.bat)" unless File.exists?(vcvarsall)
+      exec("build/windowsBootstrapVS.bat \"#{__FILE__}\" \"#{vcvarsall}\" \"#{ARGV.join(" ")}\"")
+    end
+    
     luajit_x86 = LuaJITTarget.new(:x86, $BUILD_TYPE);
     loom_x86 = LoomTarget.new(:x86, $BUILD_TYPE, luajit_x86);
     
