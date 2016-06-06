@@ -126,7 +126,7 @@ class WindowsToolchain < Toolchain
     # Check registry
     for reg in regs
       install = get_reg_value(reg[:path], 'ShellFolder')
-      if install
+      if install && File.exists?("#{install}VC\\vcvarsall.bat")
         return { name: reg[:name], install: install }
       end
     end
