@@ -594,7 +594,7 @@ namespace :build do
       puts "Visual Studio environment not detected, bootstrapping..."
       vs_install = toolchain.get_vs_install
       abort "Unable to find any Visual Studio installation" unless vs_install
-      vcvarsall = vs_install[:install] + "VC\\vcvarsall.bat"
+      vcvarsall = File.join(vs_install[:install], "VC\\vcvarsall.bat")
       abort "Unable to find Visual Studio environment setup (vcvarsall.bat)" unless File.exists?(vcvarsall)
       exec("build/windowsBootstrapVS.bat \"#{__FILE__}\" \"#{vcvarsall}\" \"#{ARGV.join(" ")}\"")
     end

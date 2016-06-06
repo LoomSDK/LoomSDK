@@ -133,7 +133,7 @@ class WindowsToolchain < Toolchain
     
     # Check dirs
     for dir in dirs
-      if Dir.exists?(dir[:path])
+      if Dir.exists?(dir[:path]) && File.exists?("#{dir[:path]}\\VC\\vcvarsall.bat")
         return { name: dir[:name], install: dir[:path] }
       end
     end
