@@ -63,7 +63,7 @@ package
                 };
 
                 ad.onAdError += function(s:String) {
-                    Console.print("Ad error:  ", s);
+                    Console.print("Ad error: ", s);
                 };
 
                 ad.load();
@@ -75,6 +75,9 @@ package
                 trace("Showing banner ad 1");
                 banner1.y = 0;
             };
+            banner1.onAdError += function(s:String) {
+                trace("Ad error: ", s);
+            };
             banner1.load();
 
             banner2 = new BannerAd("ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX");
@@ -85,6 +88,9 @@ package
                 // we want the banner to be at the bottom of the screen
                 // regardless of stage scaling so use the native height
                 banner2.y = stage.nativeStageHeight - banner2.height;
+            };
+            banner2.onAdError += function(s:String) {
+                trace("Ad error: ", s);
             };
             banner2.load();
         }
