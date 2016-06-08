@@ -285,6 +285,10 @@ class AndroidToolchain < Toolchain
           break
         end
       end
+      
+      if ndkFound
+        break
+      end
     end
     abort "Android NDK prebuilt directory not found, tried:\n  #{ndkSystems.join("\n  ")}" unless ndkFound
     ndkFlags = "--sysroot #{ndk}/platforms/android-#{ndkABI}/arch-arm"
