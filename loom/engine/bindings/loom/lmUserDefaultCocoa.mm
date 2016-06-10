@@ -37,7 +37,7 @@ bool UserDefault::getBoolForKey(const char *k, bool v)
 int UserDefault::getIntegerForKey(const char *k, int v)
 {
     if (!keyExists(k)) return v;
-    return [[NSUserDefaults standardUserDefaults]
+    return (int)[[NSUserDefaults standardUserDefaults]
             integerForKey:[NSString stringWithUTF8String:k]];
 };
 float UserDefault::getFloatForKey(const char *k, float v)
@@ -110,5 +110,6 @@ bool UserDefault::purge()
 {
     NSString *appDomain = [[NSBundle mainBundle] bundleIdentifier];
     [[NSUserDefaults standardUserDefaults] removePersistentDomainForName:appDomain];
+    return true;
 };
 
