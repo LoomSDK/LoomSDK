@@ -12,6 +12,3 @@ How to use the loom.config classpath array to specify source folders to compile.
 
 ## Screenshot
 ![ClasspathExample Screenshot](images/screenshot.png)
-
-## Code
-@insert_source

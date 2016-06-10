@@ -2488,7 +2488,7 @@ Statement *Parser::parsePackageDeclaration()
             pkg->statements = new utArray<Statement *>();
         }
 
-        pkg->statements->push_back(parseElement());
+        pkg->statements->push_back(parseTopLevelElement());
     }
 
     readToken(LSTOKEN(OPERATOR_CLOSEBRACE));
@@ -2761,6 +2761,8 @@ Statement *Parser::parseClassDeclaration()
             cls->statements = new utArray<Statement *>();
         }
 
+        parseMetaTags();
+
         utString doc = currentMultilineComment;
         currentMultilineComment = "";
 
@@ -2895,17 +2897,29 @@ ASTTemplateTypeInfo *Parser::parseTemplateType(const utString& templateType, AST
     return templateInfo;
 }
 
+void Parser::parseMetaTags()
+{
+    // Store the comment above the meta tags if we're gonna need it
+    utString commentAbove = currentMultilineComment;
+
+    // Consume any meta tags - this comsumes any potential comments
+    // between them though
+    while (nextToken == LSTOKEN(OPERATOR_OPENSQUARE))
+    {
+        parseMetaTag();
+    }
+
+    // If there are no comments below the tags, use the one above them
+    if (currentMultilineComment.length() == 0)
+    {
+        currentMultilineComment = commentAbove;
+    }
+}
 
 Statement *Parser::parseStatement()
 {
     Statement *statement = NULL;
     int       lineNumber = lexer.lineNumber;
-
-    // metatags
-    while (nextToken == LSTOKEN(OPERATOR_OPENSQUARE))
-    {
-        parseMetaTag();
-    }
 
     // modifiers
 
@@ -3113,6 +3127,11 @@ Statement *Parser::parseStatement()
     return statement;
 }
 
+Statement *Parser::parseTopLevelElement()
+{
+    parseMetaTags();
+    return parseElement();
+}
 
 Statement *Parser::parseElement()
 {
@@ -3150,7 +3169,7 @@ CompilationUnit *Parser::parseCompilationUnit(BuildInfo *buildInfo)
     {
         while (nextToken != LSTOKEN(TOKEN_EOF))
         {
-            cunit->statements->push_back(parseElement());
+            cunit->statements->push_back(parseTopLevelElement());
         }
 
         // report semicolon errors, NOW!

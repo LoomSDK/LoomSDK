@@ -1157,8 +1157,8 @@ package feathers.controls
          *
          * @default Drawers.AUTO_SIZE_MODE_STAGE
          *
-         * @see #AUTO_SIZE_MODE_STAGE
-         * @see #AUTO_SIZE_MODE_CONTENT
+         * @see #!AUTO_SIZE_MODE_STAGE
+         * @see #!AUTO_SIZE_MODE_CONTENT
          */
         public function get autoSizeMode():String
         {
@@ -1248,9 +1248,9 @@ package feathers.controls
          *
          * @default Drawers.OPEN_GESTURE_DRAG_CONTENT_EDGE
          *
-         * @see #OPEN_GESTURE_NONE
-         * @see #OPEN_GESTURE_DRAG_CONTENT
-         * @see #OPEN_GESTURE_DRAG_CONTENT_EDGE
+         * @see #!OPEN_GESTURE_NONE
+         * @see #!OPEN_GESTURE_DRAG_CONTENT
+         * @see #!OPEN_GESTURE_DRAG_CONTENT_EDGE
          */
         public function get openGesture():String
         {

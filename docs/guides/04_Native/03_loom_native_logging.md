@@ -13,6 +13,7 @@ is displayed).
 Log groups are defined with the following macro in global scope.
 
 **An example**
+
 ~~~cpp
 #include "loom/common/core/log.h"
 
@@ -48,9 +49,10 @@ lmDeclareLogGroup(loom_asset);
 
 To perform any logging, a log group definition or declaration must preceed
 the log call. Then we can call one of the following macros: `lmLogDebug`,
-`lmLogInfo`, `lmLogWarn`, `lmLogError` or `lmLog` (an alias to `lmLogInfo`). 
+`lmLogInfo`, `lmLogWarn`, `lmLogError` or `lmLog` (an alias to `lmLogInfo`).
 
 **A simple example**
+
 ~~~cpp
 #include "loom/common/core/log.h"
 
@@ -91,7 +93,7 @@ to custom outputs.
 
 lmDefineLogGroup(mygroup, "mygroup", 1, LoomLogInfo);
 
-void listener(void \*payload, loom_logGroup_t \*group, loom_logLevel_t, const char \*msg)
+void listener(void *payload, loom_logGroup_t *group, loom_logLevel_t, const char *msg)
 {
     // Do your thing here
 }

@@ -365,9 +365,9 @@ package feathers.controls
         /**
          * How the buttons are positioned relative to the text input.
          *
-         * @see #BUTTON_LAYOUT_MODE_SPLIT_HORIZONTAL
-         * @see #BUTTON_LAYOUT_MODE_SPLIT_VERTICAL
-         * @see #BUTTON_LAYOUT_MODE_RIGHT_SIDE_VERTICAL
+         * @see #!BUTTON_LAYOUT_MODE_SPLIT_HORIZONTAL
+         * @see #!BUTTON_LAYOUT_MODE_SPLIT_VERTICAL
+         * @see #!BUTTON_LAYOUT_MODE_RIGHT_SIDE_VERTICAL
          */
         public function get buttonLayoutMode():String
         {

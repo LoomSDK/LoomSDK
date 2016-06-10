@@ -4,7 +4,7 @@ description: In-app payments API.
 
 ## The Loom Store API
 
-Loom supports in-app payment (IAP) on iOS and Android. 
+Loom supports in-app payment (IAP) on iOS and Android.
 
 Store support is provided via the `loom.store.Store` class. A "dummy" store implementation is provided for testing your app on platforms that don't provide a payment API. The StoreExample (in the examples zip) shows usage of the Store API.
 
@@ -32,7 +32,7 @@ Second, you need to request product information. This is localized, up to date p
 
 ~~~as3
 Store.listProducts([
-   "co.theengine.loomplayer.billing.managedproduct", 
+   "co.theengine.loomplayer.billing.managedproduct",
    "co.theengine.loomplayer.billing.unmanaged",
    "co.theengine.loomplayer.billing.subscription"
    "co.theengine.loomplayer.billing.testconsumable",
@@ -63,12 +63,12 @@ There are some caveats. Dummy store results are instant, but on real stores they
 
 To use the Loom Store API with Google Play's in app payment API, you must first set up an Android application that is ready to accept IAP on the [Google Play Developer Console](https://play.google.com/apps/publish). We highly recommend reading the [official Google documentation on the Google Play In-app Billing API](http://developer.android.com/google/play/billing/index.html) before proceeding.
 
-The Android documentation on [testing in-app purchases using your own product IDs](http://developer.android.com/google/play/billing/billing_testing.html#billing-testing-real) walks you through the steps required to be able to test your application. 
+The Android documentation on [testing in-app purchases using your own product IDs](http://developer.android.com/google/play/billing/billing_testing.html#billing-testing-real) walks you through the steps required to be able to test your application.
 
 Once you have the developer console set up, there are a few more steps:
 
-1. Make sure your product IDs are included in your calls to `Store.listProducts` and `Store.requestPurchase`. 
-2. Confirm your `app_id` in `loom.config` matches what you specified in the Google Play Developer Console. 
+1. Make sure your product IDs are included in your calls to `Store.listProducts` and `Store.requestPurchase`.
+2. Confirm your `app_id` in `loom.config` matches what you specified in the Google Play Developer Console.
 3. You will need to build release version of your game's APK by following the instructions in Devices > Loom And Devices > Deploying to Android. Upload this to the Google Play Developer Console. Google Play uses this to validate your application.
 4. Deploy and run your APK on a real device - the emulator does not support testing IAP.
 
@@ -89,9 +89,7 @@ Expect it to take a few hours to get everything set up for Android and iOS IAP a
 
 For easiest development and maintenance you want to use the same application/bundle ID and product IDs on all platforms. The Loom Store API is designed for this use case. However, it may not be possible to do this (for instance you may have different existing IDs or the store might enforce naming conventions). In this case, you can detect the provider name (using `Store.providerName`) and switch to different product IDs depending on the store you're using. In the case of different application IDs you might have to modify loom.config before doing final builds.
 
-Use `adb logcat` or the XCode Organizer to see the system log for your device. Because IAP can be painful to debug, we have left lots of debug output in the platofmr code for the Loom Store API, so reviewing the log can give useful insights. 
-
-We found [this thread](https://devforums.apple.com/thread/23344?tstart=0) on the Apple support forums very helpful for debugging our iOS woes.
+Use `adb logcat` or the XCode Organizer to see the system log for your device. Because IAP can be painful to debug, we have left lots of debug output in the platofmr code for the Loom Store API, so reviewing the log can give useful insights.
 
 Don't be shy about asking for help on the forums, either!
 
@@ -99,7 +97,7 @@ Don't be shy about asking for help on the forums, either!
 
 This is an advanced discussion of the details of Loom's Store API's design. It will be useful to people who want to debug it, extend the API, or add support for new stores.
 
-Like most of Loom's native APIs, the store is built from a few key pieces. First, there is a low level C api (in `loom/common/platform/platformStore.h`) which is implemented on each supported platform. On iOS, it uses the StoreKit Objective C API. On Android, it uses JNI to call a Java implementation using the Google Play Store billing APIs. Additional stores could be added by either adding a new implementation of the `platformStore.h` functions, or by extending an existing implementation (for instance, modifying `LoomStore.java` to talk to an alternate store API in addition to the Play API). 
+Like most of Loom's native APIs, the store is built from a few key pieces. First, there is a low level C api (in `loom/common/platform/platformStore.h`) which is implemented on each supported platform. On iOS, it uses the StoreKit Objective C API. On Android, it uses JNI to call a Java implementation using the Google Play Store billing APIs. Additional stores could be added by either adding a new implementation of the `platformStore.h` functions, or by extending an existing implementation (for instance, modifying `LoomStore.java` to talk to an alternate store API in addition to the Play API).
 
 The common interface defined in `platformStore.h` simplifies implementation of the second piece, which is the LoomScript bindings - `lmStore.cpp` contains this code. The C API is designed to be easy to implement, and the LoomScript bindings surface that to the scripting layer.
 

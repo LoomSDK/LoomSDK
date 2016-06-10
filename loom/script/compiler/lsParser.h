@@ -73,6 +73,7 @@ private:
 
     void initNativeMetaTag(MetaTag *tag);
     void parseMetaTag();
+    void parseMetaTags();
 
     Expression *parseDefaultArgument();
 
@@ -145,6 +146,7 @@ private:
 
     ASTTemplateTypeInfo *parseTemplateType(const utString& templateType, ASTTemplateTypeInfo *parent = NULL, bool skipDot = false);
 
+    Statement *parseTopLevelElement();
     Statement *parseElement();
 
     void parsePath(utArray<utString>& path);

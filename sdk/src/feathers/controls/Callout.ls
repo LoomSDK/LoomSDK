@@ -803,13 +803,13 @@ package feathers.controls
          * ~~~
          *
          * @see #origin
-         * @see #DIRECTION_ANY
-         * @see #DIRECTION_VERTICAL
-         * @see #DIRECTION_HORIZONTAL
-         * @see #DIRECTION_UP
-         * @see #DIRECTION_DOWN
-         * @see #DIRECTION_LEFT
-         * @see #DIRECTION_RIGHT
+         * @see #!DIRECTION_ANY
+         * @see #!DIRECTION_VERTICAL
+         * @see #!DIRECTION_HORIZONTAL
+         * @see #!DIRECTION_UP
+         * @see #!DIRECTION_DOWN
+         * @see #!DIRECTION_LEFT
+         * @see #!DIRECTION_RIGHT
          * @see #arrowPosition
          */
         public function get supportedDirections():String

@@ -87,8 +87,8 @@ package feathers.textures
         /**
          * The direction of the sub-texture layout.
          *
-         * @see #DIRECTION_HORIZONTAL
-         * @see #DIRECTION_VERTICAL
+         * @see #!DIRECTION_HORIZONTAL
+         * @see #!DIRECTION_VERTICAL
          */
         public function get direction():String
         {

@@ -145,7 +145,7 @@ package feathers.controls
          * `Event.CHANGE` when the value of the `text`
          * property changes for any reason.
          *
-         * @see #event:change
+         * @see loom2d.events.Event#!CHANGE
          */
         public function get text():String
         {

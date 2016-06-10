@@ -18,9 +18,6 @@ This application launches, queries the store for SKU information, then
 once information is received, it prompts you to purchase an item. As each
 step completes it logs output and updates the app caption.
 
-### Learn More
-[LoomCast Episode #3 - Loom Store & In App Purchase on Android](http://loomcasts.com/episodes/3-loom-store-in-app-purchase-on-android?ap=true)
-
 ## Try It
 @cli_usage
 

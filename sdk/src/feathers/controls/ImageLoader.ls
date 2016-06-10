@@ -346,8 +346,8 @@ package feathers.controls
          * `List` is `true` before you listen to those
          * events.
          *
-         * @see feathers.controls.Scroller#event:scrollStart
-         * @see feathers.controls.Scroller#event:scrollComplete
+         * @see feathers.events.FeathersEventType#!SCROLL_START
+         * @see feathers.events.FeathersEventType#!SCROLL_COMPLETE
          * @see feathers.controls.Scroller#isScrolling
          */
         public function get delayTextureCreation():Boolean
