@@ -80,7 +80,7 @@ void loop()
         // Bail on the rest if no stage!
         if(!stage)
             continue;
-        
+
         // Adjust coordinates for mouse events to work properly on high dpi screens.
         if(event.type == SDL_MOUSEMOTION 
             || event.type == SDL_MOUSEBUTTONDOWN 
