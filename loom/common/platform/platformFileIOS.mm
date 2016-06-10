@@ -99,7 +99,7 @@ void platform_changeDirectory(const char* folder) {
 
 
 
-#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
+#if LOOM_PLATFORM_IS_APPLE
 
 /**
 @brief   Get the writeable path
@@ -124,25 +124,36 @@ const char* platform_getWritablePath()
     return "";
 
 }
-
-#elif LOOM_PLATFORM == LOOM_PLATFORM_IOS
-
-const char* platform_getWritablePath()
+    
+const char* platform_getSettingsPath(const char *appName)
 {
+    
     static char path[1024];
-
-    // save to caches folder
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-
-    if (paths) 
+    // save to document folder
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+#else
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
+#endif
+    if (paths)
     {
-        NSString *documentsDirectory = [paths objectAtIndex:0];
-        snprintf(path, 1023, "%s", [documentsDirectory UTF8String]);    
-        return path;
+        NSString *appSupportDirectory = [paths objectAtIndex:0];
+        if (appSupportDirectory)
+        {
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
+            snprintf(path, 1023, "%s/%s/", [appSupportDirectory UTF8String], appName);
+#else
+            snprintf(path, 1023, "%s/", [appSupportDirectory UTF8String]);
+#endif
+            return path;
+        }
     }
-
+    
     return "";
+
 }
+
+
 
 #endif
 

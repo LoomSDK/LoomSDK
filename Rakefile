@@ -716,7 +716,6 @@ task :test => ['build:desktop'] do
     sh "#{$ROOT}/tests/unittest-#{$HOST.arch}"
   end
   Dir.chdir("sdk") do
-    sh "#{$LSC_BINARY} TestExec.build"
     sh "#{$LSC_BINARY} Tests.build"
     sh "#{$LOOMEXEC_BINARY} --ignore-missing-types bin/TestExec.loom bin/Tests.loom"
   end

@@ -141,6 +141,16 @@ void Graphics::initialize()
     sInitialized = true;
 }
 
+void Graphics::pause()
+{
+    Graphics::context()->glFinish();
+}
+    
+void Graphics::resume()
+{
+    // We don't have to do anything for now
+}
+
 void Graphics::shutdown()
 {
     Texture::shutdown();

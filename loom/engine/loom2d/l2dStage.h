@@ -93,7 +93,7 @@ public:
     {
         orientation = orient;
         if (strcmp(orientation.c_str(), "portrait") == 0) {
-            SDL_SetHint(SDL_HINT_ORIENTATIONS, "Portrait");
+            SDL_SetHint(SDL_HINT_ORIENTATIONS, "Portrait PortraitUpsideDown");
         }
         else if (strcmp(orientation.c_str(), "landscape") == 0)
         {

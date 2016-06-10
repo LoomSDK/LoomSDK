@@ -57,9 +57,9 @@ package
             if(type == ApplicationEvents.CAMERA_SUCCESS)
             {
                 label.text = "Camera succeeded!";
-                if(cameraShot)
-                    cameraShot.parent.removeChild(cameraShot);
-
+                if (cameraShot) {
+                    stage.removeChild(cameraShot);
+                }
                 cameraShot = new Image(Texture.fromAsset(payload));
                 stage.addChild(cameraShot);
 

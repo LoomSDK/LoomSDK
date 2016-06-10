@@ -12,7 +12,7 @@ if (APPLE)
             platform/platformDisplayIOS.mm 
             platform/platformFileIOS.mm
             platform/platformHTTPOSX.mm 
-            platform/platformWebViewIOS.mm 
+            platform/platformWebViewCocoa.mm 
             platform/platformStoreiOS.mm
             platform/platformVideoiOS.mm
             platform/platformMobileiOS.mm
@@ -37,7 +37,7 @@ if (APPLE)
     else()
         set (CPP_FILES ${CPP_FILES} 
             platform/platformFileIOS.mm
-            platform/platformWebViewOSX.mm 
+            platform/platformWebViewCocoa.mm 
             platform/platformHTTPOSX.mm
         )
     endif()
