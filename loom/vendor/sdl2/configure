@@ -3205,11 +3205,9 @@ ac_clean_files="$ac_clean_files a.out a.out.dSYM a.exe b.out"
 # Try to create an executable without -o first, disregard a.out.
 # It will help us diagnose broken compilers, and finding out an intuition
 # of exeext.
-echo hello $CC
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether the C compiler works" >&5
 $as_echo_n "checking whether the C compiler works... " >&6; }
 ac_link_default=`$as_echo "$ac_link" | sed 's/ -o *conftest[^ ]*//'`
-
 
 # The possible output files:
 ac_files="a.out conftest.exe conftest a.exe a_out.exe b.out conftest.*"
@@ -3232,8 +3230,6 @@ esac
 eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
 $as_echo "$ac_try_echo"; } >&5
   (eval "$ac_link_default") 2>&5
-  echo helloes $?
-  eval "$ac_link_default"
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then :
