@@ -129,8 +129,8 @@ VariableDeclaration *Parser::parseVarArgDeclaration(bool inFlag)
     VariableDeclaration *vd = new VariableDeclaration(identifier, NULL, false,
                                                       false, false, false);
 
-    
-    ASTTemplateTypeInfo *templateInfo = ASTTemplateTypeInfo::createVectorInfo("system.Object");        
+
+    ASTTemplateTypeInfo *templateInfo = ASTTemplateTypeInfo::createVectorInfo("system.Object");
 
     vd->isVarArg        = true;
     vd->typeString      = "Vector";
@@ -246,7 +246,7 @@ FunctionLiteral *Parser::parseFunctionLiteral(bool nameFlag)
         {
             utString errormsg = "Property get function specifies parameters: ";
             errormsg += lit->name->string;
-            error(errormsg.c_str());            
+            error(errormsg.c_str());
         }
 
         if (!lit->parameters)
@@ -472,7 +472,7 @@ Statement *Parser::parseFunctionDeclaration()
     if (!curClass)
     {
         error("Function declaration outside of class");
-    }    
+    }
 
     FunctionDeclaration *decl = new FunctionDeclaration(
         parseFunctionLiteral(true));
@@ -718,7 +718,7 @@ Expression *Parser::parseDictionaryLiteral(const utString& typeKey, const utStri
 
     readToken(LSTOKEN(OPERATOR_CLOSEBRACE));
 
-    v->astTemplateInfo = ASTTemplateTypeInfo::createDictionaryInfo(typeKey, typeValue);   
+    v->astTemplateInfo = ASTTemplateTypeInfo::createDictionaryInfo(typeKey, typeValue);
 
     if (wrapInNew)
     {
@@ -757,7 +757,7 @@ Expression *Parser::parseVectorLiteral(const utString& type, bool wrapInNew)
     }
 
     readToken(LSTOKEN(OPERATOR_CLOSESQUARE));
-    
+
     v->astTemplateInfo = ASTTemplateTypeInfo::createVectorInfo(type);
 
     if (wrapInNew)
@@ -1864,12 +1864,12 @@ VariableDeclaration *Parser::parseVariableDeclaration(bool inFlag,
     if ((typeString == "Vector") && !templateInfo)
     {
         // create default Vector.<Object> from "Vector"
-        templateInfo = ASTTemplateTypeInfo::createVectorInfo("system.Object");        
+        templateInfo = ASTTemplateTypeInfo::createVectorInfo("system.Object");
     }
     else if ((typeString == "Dictionary") && !templateInfo)
     {
         // create default Dictionary.<Object, Object> from "Dictionary"
-        templateInfo = ASTTemplateTypeInfo::createDictionaryInfo("system.Object", "system.Object");        
+        templateInfo = ASTTemplateTypeInfo::createDictionaryInfo("system.Object", "system.Object");
     }
 
     bool defaultInitializer = false;
@@ -2858,7 +2858,7 @@ ASTTemplateTypeInfo *Parser::parseTemplateType(const utString& templateType, AST
             warn("Rewriting Array to be Vector.<Object> for convenience when porting. Note that Array and Vector.<Object> aren't identical types.");
 
             // Array is secretly a Vector.<Object>
-            ASTTemplateTypeInfo *ti = ASTTemplateTypeInfo::createVectorInfo("system.Object");        
+            ASTTemplateTypeInfo *ti = ASTTemplateTypeInfo::createVectorInfo("system.Object");
             templateInfo->templateTypes.push_back(ti);
         }
         else
@@ -2887,7 +2887,7 @@ ASTTemplateTypeInfo *Parser::parseTemplateType(const utString& templateType, AST
     {
         // Convert the >= into a = and let parsing continue.
         nextToken = LSTOKEN(OPERATOR_ASSIGNMENT);
-    }    
+    }
     else
     {
         // Advance normally.
@@ -3169,7 +3169,7 @@ CompilationUnit *Parser::parseCompilationUnit(BuildInfo *buildInfo)
     {
         while (nextToken != LSTOKEN(TOKEN_EOF))
         {
-            cunit->statements->push_back(parseTopLevelElement());
+            cunit->statements->push_back(parseElement());
         }
 
         // report semicolon errors, NOW!
