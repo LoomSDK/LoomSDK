@@ -39,6 +39,11 @@ package system.debugger
     static class DebuggerClient {
 
         /**
+         *  Matches "<command> <source> <line>" i.e. "break ./src/Main.ls 35".
+         */
+        static private var sourceAndLineRegex:String = "^([A-Z]+)%s+(.-)%s+(%d+)%s*$";
+
+        /**
          *  Delegate to call when given the reload command.
          */
         static public var reloaded:ReloadDelegate;
@@ -109,13 +114,15 @@ package system.debugger
          *  Please note that reload must be enabled first, this is generally done
          *  at an initialized state in the application.  Debugging commands such as
          *  stepping and object inspecting do work before reloading is enabled.
+         *
+         *  Returns true on success and false otherwise
          */
-        static function cmdRELOAD() { 
+        static function cmdRELOAD():Boolean {
 
             if (!reloadEnabled)
             {
-                sendToServer("Client VM is currently initializing and not in a valid reload state, please continue execution\n");                
-                return;
+                sendToServer("Client VM is currently initializing and not in a valid reload state, please continue execution\n");
+                return false;
             }
 
             curFrameIdx = 0;
@@ -130,105 +137,133 @@ package system.debugger
                 socket.close();
 
             reloaded();
-        
+
+            return true;
         }
 
         /**
          *  Executes the program until the next breakpoint (if any).
+         *
+         *  Returns true on success and false otherwise
          */
-        static function cmdRUN() {
-        
+        static function cmdRUN():Boolean {
+
             if (checkAssertionState())
-                return;
-            
+                return false;
+
             curFrameIdx = 0;
             Debug.blocking = false;
             Debug.stepping = false;
             Debug.stepOver = false;
             Debug.finishMethod = null;
-            
+
+            return true;
         }
 
         /**
          *  Sets a breakpoint at a given source file + line, example: setb src/demo/Program.ls 112.
+         *
+         *  Returns true on success and false otherwise
          */
-        static function cmdBREAK(line:String) {
-        
+        static function cmdBREAK(line:String):Boolean {
+
             if (checkAssertionState())
-                return;
-        
-            var commandv:Vector.<String> = line.find("^([A-Z]+)%s+(.-)%s+(%d+)%s*$");
+                return false;
 
-            Debug.addBreakpoint(commandv[1], commandv[2].toNumber());
+            var commandv:Vector.<String> = line.find(sourceAndLineRegex);
 
-            sendToServer("Setting breakpoint: " + commandv[1] + " : " + commandv[2].toNumber() + "\n");                
-
-        
+            var result:String;
+            if(commandv.length > 2 && (result = Debug.addBreakpoint(commandv[1], commandv[2].toNumber())) != null)
+            {
+                sendToServer("Setting breakpoint: " + result + " : " + commandv[2].toNumber() + "\n");
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
         
         /**
          *  Clear command.
+         *
+         *  Returns true on success and false otherwise
          */
-        static function cmdCLEAR(line:String) {
-        
-            if (checkAssertionState())
-                return;
-        
-            var commandv:Vector.<String> = line.find("^([A-Z]+)%s+(.-)%s+(%d+)%s*$");
-            Debug.removeBreakpoint(commandv[1], commandv[2].toNumber());
+        static function cmdCLEAR(line:String):Boolean {
 
-            sendToServer("Cleared breakpoint: " + commandv[1] + " : " + commandv[2].toNumber() + "\n");                
-        
-        }        
-        
+            if (checkAssertionState())
+                return false;
+
+            var commandv:Vector.<String> = line.find(sourceAndLineRegex);
+            var result:String;
+
+            if (commandv.length > 2 && (result = Debug.removeBreakpoint(commandv[1], commandv[2].toNumber())) != null)
+            {
+                sendToServer("Cleared breakpoint: " + result + " : " + commandv[2].toNumber() + "\n");
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         /**
          *  Step command, for now please use "over".
-         */     
-        public static function cmdSTEP() {
-        
+         *
+         *  Returns true on success and false otherwise
+         */
+        public static function cmdSTEP():Boolean {
+
             if (checkAssertionState())
-                return;
-        
-        
+                return false;
+
             curFrameIdx = 0;
             Debug.blocking = false;
             Debug.stepping = true;
-            Debug.stepOver = false;    
-            
+            Debug.stepOver = false;
+
+            return true;
         }
         
         /**
          *  Steps over code (please note that this is currently stepping into methods, we have followup debugger tasks).
+         *
+         *  Returns true on success and false otherwise
          */
-        static function cmdOVER() {
-        
+        static function cmdOVER():Boolean {
+
             if (checkAssertionState())
-                return;
-    
-            curFrameIdx = 0;        
+                return false;
+
+            curFrameIdx = 0;
             Debug.blocking = false;
             Debug.stepping = true;
-            Debug.stepOver = true;    
-            
+            Debug.stepOver = true;
+
+            return true;
         }
         
         /**
          *  Finish command.
-         */     
-        static function cmdFINISH() {
-        
+         *
+         *  Returns true on success and false otherwise
+         */
+        static function cmdFINISH():Boolean {
+
             if (checkAssertionState())
-                return;
-        
+                return false;
+
             if (!stackSnapshot || stackSnapshot.length < 1)
-                return;                 
-            
+                return false;
+
             curFrameIdx = 0;
             Debug.stepping = false;                
             Debug.stepOver = false;        
             Debug.blocking = false;
             
             Debug.finishMethod = stackSnapshot[0].method;
+            return true;
             
             //Console.print("cmdFINISH", " ", finishMethod.getName());                
             
@@ -236,12 +271,14 @@ package system.debugger
         
         /**
          *  BT command.
-         */        
-        static function cmdBACKTRACE() {
-        
+         *
+         *  Returns true on success and false otherwise
+         */
+        static function cmdBACKTRACE():Boolean {
+
             if (!stackSnapshot || stackSnapshot.length < 1)
-                return;
-        
+                return false;
+
             var sframe:String = "";
             
             for (var i in stackSnapshot) {
@@ -251,19 +288,22 @@ package system.debugger
             }
             
             sendToServer(sframe);
-        
+
+            return true;
         }
         
         /**
          *  Info command.
+         *
+         *  Returns true on success and false otherwise
          */
-        static function cmdINFO(line:String) {
-        
+        static function cmdINFO(line:String):Boolean {
+
             var elements = line.split(" ");
             
             if (elements.length < 2)
-                return;
-            
+                return false;
+
             // info breakpoints
             if (elements[1].toLowerCase() == "break" || elements[1].toLowerCase() == "breakpoints") {
 
@@ -274,7 +314,7 @@ package system.debugger
                     bps += "#" + idx + ": " + breakpoints[idx].source + " : " + breakpoints[idx].line + "\n"; 
                 }
                 if (!bps)
-                    bps = "No Breakpoints Defined";
+                    bps = "No Breakpoints Defined\n";
                 
                 sendToServer(bps);
                 
@@ -284,18 +324,18 @@ package system.debugger
             if (elements[1].toLowerCase() == "locals") {
             
                 if (!stackSnapshot || stackSnapshot.length < 1)
-                    return;                 
-                    
+                    return false;
+
                     var locals:Dictionary.<String, Object> = Debug.getLocals(stackSnapshot, curFrameIdx);
             
                     if (!locals) {
                         sendToServer("NULL LOCALS\n");
-                        return;
+                        return false;
                     } else {
             
                     if (!locals.length) {
                         sendToServer("EMPTY LOCALS\n");
-                        return;
+                        return false;
                     }
             
                     var ls = "";
@@ -308,18 +348,20 @@ package system.debugger
                 }
                
             }
-            
-            
+
+            return true;
         }
         
         /**
          *  Print command.
+         *
+         *  Returns true on success and false otherwise
          */
-        static function cmdPRINT(line:String) {
-        
+        static function cmdPRINT(line:String):Boolean {
+
             if (!stackSnapshot || stackSnapshot.length < 1)
-                return;
-                
+                return false;
+
             var elements = line.split(" ");
 
             if (elements.length == 2) 
@@ -354,15 +396,14 @@ package system.debugger
                             sendToServer("Print: " + inspectObjectIDE(o) + "\n");
                         else
                             sendToServer(name + " : " + ObjectInspector.inspect(o) + "\n");
-                        
-                        return;
-                        
+
+                        return true;
+
                     }
                 }
             }
-            
-            cmdINFO("INFO locals");
-                
+
+            return cmdINFO("INFO locals");
         }
 
         static function inspectObjectIDE(o:Object):String
@@ -392,22 +433,24 @@ package system.debugger
         
         /**
          *  Frame command.
+         *
+         *  Returns true on success and false otherwise
          */
-        static function cmdFRAME(line:String) {
-        
+        static function cmdFRAME(line:String):Boolean {
+
             if (!stackSnapshot || stackSnapshot.length < 1)
-                return;
-                
+                return false;
+
             var elements = line.split(" ");
             if (elements.length == 2) {
                 var frameIdx = int(elements[1]);
                 if (frameIdx < 0 || frameIdx >= stackSnapshot.length) {
                     sendToServer("WARNING: frame selection out of bounds\n");
-                    return;
+                    return false;
                 }
                 
                 curFrameIdx = frameIdx;
-                return;
+                return true;
             }
                 
             var sframe:String = "";
@@ -417,34 +460,40 @@ package system.debugger
                 var method = info.method;
                 sframe += "#" + i + " " + method.getDeclaringType().getFullName() + ":" + info.method.getName() + "() " + ": " + info.source + " : " + info.line + "\n";
             }
-            
+
             sendToServer(sframe);
-            
+
+            return true;
         }
         
         /**
          *  Delete command.
+         *
+         *  Returns true on success and false otherwise
          */
-        static function cmdDELETE(line:String) {
-                                
+        static function cmdDELETE(line:String):Boolean {
+
             var elements = line.split(" ");
-            var source:String;
-            var linenumber:Number;
-            
+
             if (elements.length == 2) {
 
-                Debug.removeBreakpointAtIndex(int(elements[1]));
-
-                sendToServer("Breakpoint #" + elements[1] + " deleted\n");
-                
-                return;
+                var result:String;
+                if ((Debug.removeBreakpointAtIndex(int(elements[1]))))
+                {
+                    sendToServer("Breakpoint #" + elements[1] + " deleted\n");
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
 
             Debug.removeAllBreakpoints();
             
             sendToServer("All breakpoints deleted\n");
-            
-            
+
+            return true;
         }
 
         static function cmdIDE() {
@@ -500,63 +549,87 @@ package system.debugger
             switch (cmd) {
                 
                 case "STEP":
-                    cmdSTEP();
-                    responseOK();
+                    if (cmdSTEP())
+                        responseOK();
+                    else
+                        sendToServer("Failed to step\n");
                     break;
-                    
-                case "BREAK":                    
-                    cmdBREAK(line);
-                    responseOK();
+
+                case "BREAK":
+                    if (cmdBREAK(line))
+                        responseOK();
+                    else
+                        sendToServer("Failed to set breakpoint\n");
                     break;
-                    
-                case "CLEAR":                    
-                    cmdCLEAR(line);
-                    responseOK();
+
+                case "CLEAR":
+                    if (cmdCLEAR(line))
+                        responseOK();
+                    else
+                        sendToServer("Failed to clear breakpoint\n");
                     break;
                     
                 case "RUN":
-                    cmdRUN();
-                    responseOK();
+                    if (cmdRUN())
+                        responseOK();
+                    else
+                        sendToServer("Failed to run\n");
                     break;
                     
                 case "OVER":
-                    cmdOVER();
-                    responseOK();
+                    if (cmdOVER())
+                        responseOK();
+                    else
+                        sendToServer("Failed to do over\n");
                     break;
                                         
                 case "FINISH":
-                    cmdFINISH();
-                    responseOK();
+                    if (cmdFINISH())
+                        responseOK();
+                    else
+                        sendToServer("Failed to finish\n");
                     break;
                     
                 case "INFO":
-                    cmdINFO(line);
-                    responseOK();
+                    if (cmdINFO(line))
+                        responseOK();
+                    else
+                        sendToServer("Failed to get info\n");
                     break;
                     
                 case "BACKTRACE":
-                    cmdBACKTRACE();
-                    responseOK();
+                    if (cmdBACKTRACE())
+                        responseOK();
+                    else
+                        sendToServer("Failed to get a backtrace\n");
                     break;
                     
                 case "FRAME":
-                    cmdFRAME(line);
-                    responseOK();
+                    if (cmdFRAME(line))
+                        responseOK();
+                    else
+                        sendToServer("Failed to set frame\n");
                     break;
                     
                 case "PRINT":
-                    cmdPRINT(line);
-                    responseOK();
+                    if (cmdPRINT(line))
+                        responseOK();
+                    else
+                        sendToServer("Failed to print\n");
                     break;
                     
                 case "DELETE":
-                    cmdDELETE(line);
-                    responseOK();
+                    if (cmdDELETE(line))
+                        responseOK();
+                    else
+                        sendToServer("Failed to delete\n");
                     break;
 
                 case "RELOAD":
-                    cmdRELOAD();
-                    responseOK();
+                    if (cmdRELOAD())
+                        responseOK();
+                    else
+                        sendToServer("Failed to reload\n");
                     break;
                     
                 case "KILL":
@@ -691,6 +764,10 @@ package system.debugger
                                 
             var source = callstack[0].source;
             var line = callstack[0].line;
+
+            // Normalize path separators
+            var pathParts = source.split("\\");
+            source = pathParts.join("/");
                                         
             // check whether we have a breakpoint set for this source/line
             if (Debug.debugBreak || Debug.hasBreakpoint(source, line) ) {

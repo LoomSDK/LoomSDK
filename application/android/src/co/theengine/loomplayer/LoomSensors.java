@@ -21,9 +21,6 @@ import android.util.Log;
  * 
  * This class is used for accessing the various Android Sensors
  *
- * NOTE: TYPE_ACCELEROMETER is already implemented in Cocos2dxAcclerometer, so
- * if it is ever added here, it should be removed from there to avoid 2x hardware processing!
- *
  */
 public class LoomSensors
 {
@@ -56,9 +53,7 @@ public class LoomSensors
             switch(type)
             {
                 case SENSOR_ACCELEROMETER:
-                    ///NOTE: Don't use Accelerometer for now...
-                    // _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-                    Log.w(TAG, "SENSOR_ACCELEROMETER support not supported at the moment.");
+                    _sensor = _sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
                     _type = "Accelerometer";
                     break;
                 case SENSOR_MAGNOMETER:
@@ -197,9 +192,11 @@ public class LoomSensors
 
                     ///get correctly oriented values to work with
                     remappedValues = remapXYZValues(event.values);
-                    x = remappedValues[0];
-                    y = remappedValues[1];
-                    z = remappedValues[2];
+
+                    //normalize the values
+                    x = - remappedValues[0] / SensorManager.GRAVITY_EARTH;
+                    y = - remappedValues[1] / SensorManager.GRAVITY_EARTH;
+                    z = - remappedValues[2] / SensorManager.GRAVITY_EARTH;
 
                     ///register the change in native code
                     onAccelerometerChanged(x, y, z);
@@ -442,7 +439,20 @@ public class LoomSensors
     ///calls the native delegate for device accelerometer changing
     private static void onAccelerometerChanged(float x, float y, float z)
     {
-        ///NOTE: Don't use Accelerometer for now... if implemented at some point, follow code used in 'onRotationChanged()'
+        final float fX = x;
+        final float fY = y;
+        final float fZ = z;
+
+        ///make sure to call the delegate in the main thread
+        // TODO: does this require queueEvent?
+        activity.runOnUiThread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                onAccelerometerChangedNative(fX, fY, fZ);
+            }
+        });
     }
 
 
@@ -469,10 +479,10 @@ public class LoomSensors
 
         ///make sure to call the delegate in the main thread
         // TODO: does this require queueEvent?
-        activity.runOnUiThread(new Runnable() 
+        activity.runOnUiThread(new Runnable()
         {
             @Override
-            public void run() 
+            public void run()
             {
                 onRotationChangedNative(fX, fY, fZ);
             }
@@ -488,10 +498,10 @@ public class LoomSensors
 
         ///make sure to call the delegate in the main thread
         // TODO: does this require queueEvent?
-        activity.runOnUiThread(new Runnable() 
+        activity.runOnUiThread(new Runnable()
         {
             @Override
-            public void run() 
+            public void run()
             {
                 onGravityChangedNative(fX, fY, fZ);
             }
@@ -501,7 +511,7 @@ public class LoomSensors
     ///native delegate stubs
     private static native void onRotationChangedNative(float x, float y, float z);
     private static native void onGravityChangedNative(float x, float y, float z);
-    // private static native void onAccelerometerChanged(float x, float y, float z);
+    private static native void onAccelerometerChangedNative(float x, float y, float z);
     // private static native void onMagnometerChanged(float x, float y, float z);
     // private static native void onGyroscopeChanged(float x, float y, float z);
 }

@@ -890,7 +890,7 @@ Statement *JitTypeCompiler::visit(ForInStatement *statement)
     BC::initExpDesc(&pairs, VCALL, BC::emitINS(fs, ins));
     pairs.u.s.aux = cbase;
     fs->bcbase[fs->pc - 1].line = line;
-    fs->freereg = cbase + 1 + twoSlotFrameInfo; /* Leave one result by default. */
+    fs->freereg = cbase + 1; /* Leave one result by default. */
 
     BC::adjustAssign(cs, 3, 1, &pairs);
 

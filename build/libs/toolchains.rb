@@ -96,6 +96,8 @@ class WindowsToolchain < Toolchain
   
     # Possible registry entries for Visual Studio
     regs = [
+      { name: 'Visual Studio 14', path: 'SOFTWARE\Microsoft\VisualStudio\14.0' },
+      { name: 'Visual Studio 14', path: 'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\14.0' },
       { name: 'Visual Studio 12', path: 'SOFTWARE\Microsoft\VisualStudio\12.0' },
       { name: 'Visual Studio 12', path: 'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\12.0' },
       { name: 'Visual Studio 11', path: 'SOFTWARE\Microsoft\VisualStudio\11.0' },
@@ -105,6 +107,8 @@ class WindowsToolchain < Toolchain
     
     # Default directory fallbacks
     dirs = [
+      { name: 'Visual Studio 14', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 14.0") },
+      { name: 'Visual Studio 14', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 14.0") },
       { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 12.0") },
       { name: 'Visual Studio 12', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 12.0") },
       { name: 'Visual Studio 11', path: File.expand_path("#{ENV['programfiles']}\\Microsoft Visual Studio 11.0") },
@@ -113,6 +117,12 @@ class WindowsToolchain < Toolchain
       { name: 'Visual Studio 10', path: File.expand_path("#{ENV['programfiles(x86)']}\\Microsoft Visual Studio 10.0") },
     ]
     
+    # VS2015 only supported on CMake >= 3.1
+    if version_outdated?($CMAKE_VERSION, '3.1')
+      regs.delete_if { |element| element[:name] == "Visual Studio 14" }
+      dirs.delete_if { |element| element[:name] == "Visual Studio 14" }
+    end
+
     # Check registry
     for reg in regs
       install = get_reg_value(reg[:path], 'ShellFolder')
@@ -275,6 +285,10 @@ class AndroidToolchain < Toolchain
     
     return nil unless !target.is64Bit
     
+    if !ENV["ANDROID_NDK"]
+      abort "The environment variable ANDROID_NDK is not set. Please set it to the location of your Android NDK installation."
+    end
+
     if $HOST.is_a? OSXHost then
     	systems = ["darwin-x86_64", "darwin-x86"]
     elsif $HOST.is_a? LinuxHost then
@@ -285,22 +299,26 @@ class AndroidToolchain < Toolchain
         abort "Unknown host for building Android through makefiles"
     end
 
-    if !ENV["ANDROID_NDK"]
-      abort "The environment variable ANDROID_NDK is not set. Please set it to the location of your Android NDK installation."
-    end
+    toolchains = ["arm-linux-androideabi-4.6", "arm-linux-androideabi-4.8", "arm-linux-androideabi-4.9"]
     
     # Android/ARM, armeabi-v7a (ARMv7 VFP), Android 4.0+ (ICS)
     ndk = File.expand_path(ENV["ANDROID_NDK"])
     ndkABI = 14
-    ndkVersion = "#{ndk}/toolchains/arm-linux-androideabi-4.6"
     ndkFound = false
     ndkSystems = []
-    for system in systems
-      ndkPath = "#{ndkVersion}/prebuilt/#{system}/bin/arm-linux-androideabi-"
-      ndkDir = File.dirname(ndkPath)
-      ndkSystems.push ndkDir
-      if File.exists?(ndkDir)
-        ndkFound = true
+    for toolchain in toolchains
+      ndkVersion = "#{ndk}/toolchains/#{toolchain}"
+      for system in systems
+        ndkPath = "#{ndkVersion}/prebuilt/#{system}/bin/arm-linux-androideabi-"
+        ndkDir = File.dirname(ndkPath)
+        ndkSystems.push ndkDir
+        if File.exists?(ndkDir)
+          ndkFound = true
+          break
+        end
+      end
+      
+      if ndkFound
         break
       end
     end
@@ -325,8 +343,8 @@ class AndroidToolchain < Toolchain
       generator = "Unix Makefiles"
       make_arg = ""
     end
-
-    return "-G \"#{generator}\" -DCMAKE_TOOLCHAIN_FILE=#{$ROOT}/build/cmake/loom.android.toolchain.cmake -DANDROID_NDK_HOST_X64=#{$HOST.is_x64} -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=14 #{make_arg}"
+    
+    return "-G \"#{generator}\" -DCMAKE_TOOLCHAIN_FILE=#{$ROOT}/build/cmake/loom.android.bootstrap.cmake -DANDROID_NDK_HOST_X64=#{$HOST.is_x64} -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=14 #{make_arg}"
   end
   
   def self.apkName()

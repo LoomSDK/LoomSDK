@@ -40,7 +40,7 @@ CFG =
     TARGET_SDK_VER: "dev",
 
     # What version of the android SDK are going to target? Note you also need to update the Android project and manifest to match.
-    TARGET_ANDROID_SDK: "android-13" ,
+    TARGET_ANDROID_SDK: "android-15" ,
 
     # What Android target are we going to build? debug and release are the main
     # options but there are more. (see http://developer.android.com/tools/building/building-cmdline.html)
@@ -141,6 +141,7 @@ puts ""
 CLEAN.replace(["application/android/bin" ])
 CLEAN.include Dir.glob("build/loom-*")
 CLEAN.include Dir.glob("build/luajit-*")
+CLEAN.include Dir.glob("build/sdl2")
 CLEAN.include Dir.glob("tests/unittest-*")
 CLEAN.include ["build/**/lib/**", "artifacts/**"]
 CLOBBER.include ["**/*.loom", $OUTPUT_DIRECTORY]
@@ -613,14 +614,19 @@ namespace :build do
   desc "Builds Android APK"
   task :android => ['utility:compileScripts'] do
     puts "== Building Android =="
-
+    
+    ndk_env = ENV["ANDROID_NDK"]
+    ndk_path = ndk_env ? File.expand_path(ndk_env) : nil
+    
+    abort("\nAndroid NDK directory not found!\nPlease set the `ANDROID_NDK` environment variable to the Android NDK path.") unless ndk_path && File.exists?(ndk_path)
+    
     # Build SDL for Android if it's missing
     sdlLibPath = "build/sdl2/android/armeabi"
     if not File.exist?("#{sdlLibPath}/libSDL2.a")
       puts "Building SDL2 for Android using ndk-build"
       sdlSrcPath = "loom/vendor/sdl2"
       Dir.chdir(sdlSrcPath) do
-        sh "ndk-build SDL2_static NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk APP_PLATFORM=android-13" 
+        sh "#{ndk_path}/ndk-build SDL2_static NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk APP_PLATFORM=android-15"
       end
       FileUtils.mkdir_p sdlLibPath
       sh "cp #{sdlSrcPath}/obj/local/armeabi/libSDL2.a #{sdlLibPath}/libSDL2.a"

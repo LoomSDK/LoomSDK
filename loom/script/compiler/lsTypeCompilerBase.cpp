@@ -1231,10 +1231,15 @@ Expression *TypeCompilerBase::visit(IncrementExpression *expression)
         ExpDesc erestore = e;
         int     restore  = fs->freereg;
 
+        // remember assignment mode before changing it
+        // value is later restored to avoid problems in the next potential compile
+        bool prevAssignMode = sub->assignment;
         // switch the subexpression to assignment mode
         sub->assignment = true;
         // visit it
         sub->visitExpression(this);
+        // restore assignment mode to previouse value
+        sub->assignment = prevAssignMode;
 
         // setup the property setter call
         ExpDesc set = sub->e;
