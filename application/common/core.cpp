@@ -50,6 +50,7 @@ extern "C"
 SDL_Window *gSDLWindow = NULL;
 SDL_GLContext gContext;
 
+#define SDL_LOG_EVENTS 0
 lmDefineLogGroup(coreLogGroup, "core", 1, LoomLogInfo);
 lmDefineLogGroup(sdlLogGroup, "sdl", 1, LoomLogInfo);
 #define lmLogSDL(level, group, message) lmLogLevel(level, group, "%s", message);
@@ -79,7 +80,7 @@ void loop()
         // Bail on the rest if no stage!
         if(!stage)
             continue;
-
+        
         // Adjust coordinates for mouse events to work properly on high dpi screens.
         if(event.type == SDL_MOUSEMOTION 
             || event.type == SDL_MOUSEBUTTONDOWN 
@@ -285,6 +286,18 @@ static void sdlLogOutput(void* userdata, int category, SDL_LogPriority priority,
 // a different thread, so thread safety should be taken into account
 static int sdlPriorityEvents(void* userdata, SDL_Event* event)
 {
+#if SDL_LOG_EVENTS
+    const char *name;
+    switch (event->type) {
+        case SDL_APP_DIDENTERBACKGROUND: name = "SDL_APP_DIDENTERBACKGROUND"; break;
+        case SDL_APP_WILLENTERBACKGROUND: name = "SDL_APP_WILLENTERBACKGROUND"; break;
+        case SDL_APP_DIDENTERFOREGROUND: name = "SDL_APP_DIDENTERFOREGROUND"; break;
+        case SDL_APP_WILLENTERFOREGROUND: name = "SDL_APP_WILLENTERFOREGROUND"; break;
+        default: name = "N/A";
+    }
+    lmLog(coreLogGroup, "SDL event 0x%x, %s", event->type, name);
+#endif
+
     switch (event->type) {
         // If we don't pause immediately, the app could get killed
         // due to misbehaved processing / OpenGL activity
@@ -292,7 +305,9 @@ static int sdlPriorityEvents(void* userdata, SDL_Event* event)
             loom_appPause();
             return false;
             
-        case SDL_APP_WILLENTERFOREGROUND:
+        // SDL_APP_WILLENTERFOREGROUND seems like a closer fit, but it doesn't
+        // work with the iOS notification/control center
+        case SDL_APP_DIDENTERFOREGROUND:
             loom_appResume();
             return false;
     }
