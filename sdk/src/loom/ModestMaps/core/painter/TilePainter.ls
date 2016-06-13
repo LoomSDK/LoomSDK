@@ -264,7 +264,8 @@ package loom.modestmaps.core.painter
             }
             openRequests.clear();
             while (headQueue) queueRemove(headQueue);
-            tileCache.clear();                  
+            tileCache.clear();
+            while (texturePool.length > 0) texturePool.pop().dispose();
         }
         
         /* INTERFACE loom2d.animation.IAnimatable */

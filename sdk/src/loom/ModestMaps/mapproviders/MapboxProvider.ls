@@ -43,6 +43,8 @@ package loom.modestmaps.mapproviders
         
         override public function get supportsHighDPI():Boolean { return true; }
         
+        override public function get usingHighDPI():Boolean { return highDPI; }
+        
         override public function get tileWidth():Number
         {
             return highDPI ? 512 : 256;

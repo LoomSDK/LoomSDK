@@ -239,6 +239,7 @@ package loom.modestmaps.core
             Debug.assert(!nextQueue);
             Debug.assert(!prevQueue);
             this.zoom = zoom;
+            this.depth = zoom;
             this.row = row;
             this.column = column;  
             inWell = false;
