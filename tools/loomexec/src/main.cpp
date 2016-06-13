@@ -107,8 +107,6 @@ static void initialize(int argc, const char **argv)
     // The rest will be passed on to the script
     utArray<utString> args;
 
-    assemblyPath = "";
-
     int argStart = 1;
 
     while (argStart < argc && strncmp(argv[argStart], "--", 2) == 0) {
