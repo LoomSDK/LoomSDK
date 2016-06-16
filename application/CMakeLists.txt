@@ -140,6 +140,8 @@ if (APPLE)
           "-framework AudioToolbox"
           "-framework CoreAudio"
 
+          "-framework GameController"
+
           "-ObjC"
           "-lc++"
 
