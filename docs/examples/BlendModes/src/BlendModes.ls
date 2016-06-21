@@ -19,7 +19,7 @@ package
     {
         private var blendModeLabel:SimpleLabel;
         private var polySprite:Image;
-        private var polySpeed:Point = new Point(100, 100);
+        private var polySpeed:Point = new Point(2, 2);
 
         override public function run():void
         {
@@ -37,7 +37,7 @@ package
             bg.color = 0x007f7f7f;
             bg.addEventListener(TouchEvent.TOUCH, cycleBlendMode);
             stage.addChild(bg);
-            
+
             //static sprites
             var bgSprite:Image = new Image(Texture.fromAsset("assets/logo.png"));
             bgSprite.center();
@@ -88,19 +88,15 @@ package
             blendModeLabel.scale = 0.4;
             blendModeLabel.touchable = false;
             blendModeLabel.blendMode = BlendMode.NORMAL;
-            stage.addChild(blendModeLabel);            
+            stage.addChild(blendModeLabel);
         }
 
 
         override public function onTick():void
         {
-            ///update the app DT
-            var timeManager:TimeManager = LoomGroup.rootGroup.getManager(TimeManager) as TimeManager;
-            var dt:Number = timeManager.deltaTime;
-
             //bounce poly around the screen
-            polySprite.x += polySpeed.x * dt;
-            polySprite.y += polySpeed.y * dt;
+            polySprite.x += polySpeed.x;
+            polySprite.y += polySpeed.y;
 
             //check for collision with bounds
             //X
