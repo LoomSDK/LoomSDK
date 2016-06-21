@@ -286,6 +286,12 @@ bool platform_wasOpenedViaRemoteNotification()
     return (bool)result;
 }
 
+void platform_setOpenURLQueryData(const char *query)
+{
+    // Android has alternative ways of setting this
+    lmAssert(false, "Should not be called");
+}
+
 ///gets the the specified query key data from any custom scheme URL path that the application was launched with, or "" if not found
 const char *platform_getOpenURLQueryData(const char *queryKey)
 {
