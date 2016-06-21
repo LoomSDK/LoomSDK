@@ -11,9 +11,14 @@ package
 
     import loom2d.text.BitmapFont;
 
+    import loom.gameframework.TimeManager;
+
     public class BitmapFontExample extends Application
     {
         var fontBatch:QuadBatch; 
+
+	[Inject]
+	private var timeManager:TimeManager;
 
         override public function run():void
         {
@@ -38,7 +43,7 @@ package
 
         override public function onFrame():void
         {
-            fontBatch.rotation+=.1;
+            fontBatch.rotation += 2 * timeManager.deltaTime;
             fontBatch.scale = Math.sin(Platform.getTime()/1000);
         }
 
