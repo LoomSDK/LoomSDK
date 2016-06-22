@@ -31,6 +31,7 @@ import android.content.pm.ConfigurationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.ActivityNotFoundException;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -75,7 +76,12 @@ public class LoomPlayer extends SDLActivity {
     
     public static String getActivityWritablePath()
     {
-    	return getContext().getApplicationInfo().dataDir;
+    	return Environment.getExternalStorageDirectory().getAbsolutePath() + "/";
+    }
+    
+    public static String getActivitySettingsPath()
+    {
+    	return getContext().getFilesDir().getAbsolutePath() + "/";
     }
     
     public static int getProfile() {
@@ -119,7 +125,19 @@ public class LoomPlayer extends SDLActivity {
         catch (PackageManager.NameNotFoundException e) {}
         return null;
     }
-
+    
+    public static boolean openURL(String url)
+    {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse(url));
+        try {
+            getContext().startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            return false;
+        }
+        return true;
+    }
+    
     public static boolean checkPermission(Context context, String permission)
     {
         int res = context.checkCallingOrSelfPermission(permission);
@@ -268,14 +286,24 @@ public class LoomPlayer extends SDLActivity {
     private boolean keyboardHidden = true;
     private boolean keyboardIgnoreNextZero = false;
 
+    @Override   
+    protected String[] getLibraries() {
+        return new String[] {
+            "LoomPlayer"
+        };
+    }
+    
+    @Override
     protected void onCreate(Bundle savedInstanceState) 
     {
         instance = this;
+        
+        super.onCreate(savedInstanceState);
+
+        if (mBrokenLibraries) return;
 
         // get the packageName, it's used to set the resource path
         packageName = getApplication().getPackageName();
-        
-        System.loadLibrary("LoomPlayer");
         
         String apkFilePath = "";
         ApplicationInfo appInfo = null;
@@ -289,8 +317,6 @@ public class LoomPlayer extends SDLActivity {
         apkFilePath = appInfo.sourceDir;
         nativeSetPaths(apkFilePath, getAssets());
         
-        super.onCreate(savedInstanceState);
-
         if (!detectOpenGLES20())
         {
             Log.d("Loom", "Could not initialize OpenGL ES 2.0 - terminating!");
@@ -399,6 +425,8 @@ public class LoomPlayer extends SDLActivity {
     {
         super.onConfigurationChanged(newConfig);
         
+        if (mBrokenLibraries) return;
+
         keyboardIgnoreNextZero = true;
         
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE)
@@ -410,6 +438,7 @@ public class LoomPlayer extends SDLActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        if (mBrokenLibraries) return;
         LoomFacebook.onStart(this);
         DolbyAudio.onStart();
     }
@@ -417,38 +446,43 @@ public class LoomPlayer extends SDLActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        if (mBrokenLibraries) return;
         LoomFacebook.onStop(this);
         DolbyAudio.onStop();
     }
 
     @Override
     protected void onPause() {
+        super.onPause();
+        if (mBrokenLibraries) return;
         LoomMobile.onPause();
         LoomSensors.onPause();
         LoomVideo.onPause();
-        super.onPause();
     }
 
     @Override
     protected void onResume() {
+        super.onResume();
+        if (mBrokenLibraries) return;
         LoomSensors.onResume();
         LoomVideo.onResume();
-        super.onResume();
     }
 
     @Override
     protected void onDestroy() {
+        super.onDestroy();
+        if (mBrokenLibraries) return;
         LoomTeak.onDestroy();
         LoomMobile.onDestroy();
         LoomSensors.onDestroy();
         LoomVideo.onDestroy();
         DolbyAudio.onDestroy();   
-        super.onDestroy();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        if (mBrokenLibraries) return;
         LoomFacebook.onSaveInstanceState(this, outState);
     }
 

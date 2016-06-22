@@ -47,14 +47,21 @@ class LoomApplicationConfig
     static bool     _wants51Audio;
 
     static utString _displayTitle;
+    static int      _displayX;
+    static int      _displayY;
     static int      _displayWidth;
     static int      _displayHeight;
     static utString _displayOrientation;
+    static bool     _displayMaximized;
+    static bool     _displayMinimized;
+    static bool     _displayResizable;
+    static bool     _displayBorderless;
+    static utString _displayMode;
 
 public:
-
-    static const utString OrientationLandscape;
-    static const utString OrientationPortrait;
+    static const int POSITION_INVALID;
+    static const int POSITION_UNDEFINED;
+    static const int POSITION_CENTERED;
 
     static void parseApplicationConfig(const utString& jsonString);
 
@@ -124,6 +131,16 @@ public:
         return _displayTitle;
     }
 
+    static const int displayX()
+    {
+        return _displayX;
+    }
+
+    static const int displayY()
+    {
+        return _displayY;
+    }
+
     static const int displayWidth()
     {
         return _displayWidth;
@@ -135,5 +152,11 @@ public:
     }
 
     static const utString& displayOrientation();
+
+    static bool displayMaximized() { return _displayMaximized; }
+    static bool displayMinimized() { return _displayMinimized; }
+    static bool displayResizable() { return _displayResizable; }
+    static bool displayBorderless() { return _displayBorderless; }
+    static const utString& displayMode() { return _displayMode; }
 };
 #endif

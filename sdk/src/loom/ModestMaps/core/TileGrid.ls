@@ -163,6 +163,7 @@ package loom.modestmaps.core
         
         protected var mapWidth:Number = NaN;
         protected var mapHeight:Number = NaN;
+        protected var mapScale:Number = 1;
         
         protected var draggable:Boolean;
 
@@ -224,9 +225,7 @@ package loom.modestmaps.core
             
             setMapProvider(provider);
             
-            sHelperPoint.x = w;
-            sHelperPoint.y = h;
-            resizeTo(sHelperPoint);
+            resizeTo(w, h);
             
             // and calculate bounds from provider
             calculateBounds();
@@ -657,6 +656,7 @@ package loom.modestmaps.core
         }
         
         private function hasParentReady(tile:Tile):Boolean {
+            if (!tile || !tile.quadNode) return false;
             var parent = tile.quadNode.parent;
             while (parent && (!KeepTopLevel || parent.zoom > 1)) {
                 if (isTileReady(parent.tile)) return true;
@@ -1191,7 +1191,8 @@ package loom.modestmaps.core
             positionTile(tile);
         }
         
-        private function drawGrid(g:Graphics, zoom:Number, gridX:Number, gridY:Number, gridWidth:Number, gridHeight:Number, resultTopLeft:Point = Point.ZERO)
+        // resultTopLeft is not a default argument because there is a bug in loom default arguments
+        private function drawGrid(g:Graphics, zoom:Number, gridX:Number, gridY:Number, gridWidth:Number, gridHeight:Number, resultTopLeft:Point)
         {
             //g.drawRect(worldMatrix.tx+gridX*tileWidth, worldMatrix.ty+gridY*tileHeight, gridWidth*tileWidth, gridHeight*tileHeight);
             
@@ -1249,7 +1250,7 @@ package loom.modestmaps.core
                 */
                 
                 g.lineStyle(20, 0xFFFF00);
-                drawGrid(g, currentTileZoom, MinColRow.x, MinColRow.y, MaxColRow.x-MinColRow.x+1, MaxColRow.y-MinColRow.y+1);
+                drawGrid(g, currentTileZoom, MinColRow.x, MinColRow.y, MaxColRow.x-MinColRow.x+1, MaxColRow.y-MinColRow.y+1, Point.ZERO);
                 //g.lineStyle(20, 0xFFFF00, 0.5);
                 //for (z = 0; z < _tileGridBounds.length; z++) {
                     //var gb = _tileGridBounds[z];
@@ -1923,21 +1924,26 @@ package loom.modestmaps.core
             }
         }
                 
-        public function resizeTo(p:Point):void
+        public function resizeTo(w:Number, h:Number, s:Number = 1):void
         {
-            if (mapWidth != p.x || mapHeight != p.y)
+            if (mapWidth != w || mapHeight != h || s != mapScale)
             {
-                var dx:Number = p.x - mapWidth;
-                var dy:Number = p.y - mapHeight;
+                var dx:Number = w - mapWidth;
+                var dy:Number = h - mapHeight;
+                var ds:Number = s / mapScale;
+                
+                mapScale = s;
                 
                 // maintain the center point:
                 if (!isNaN(dx)) tx += dx/2;
                 if (!isNaN(dy)) ty += dy/2;
                 
-                mapWidth = p.x;
-                mapHeight = p.y;
+                mapWidth = w;
+                mapHeight = h;
                 //clipRect = new Rectangle(0, 0, mapWidth, mapHeight);
                 bgTouchArea.setSize(mapWidth, mapHeight);
+                
+                resetTiles(_centerCoordinate);
 
                 //NOTE_TEC: not porting DebugField for now at least...
                 // debugField.x = mapWidth - debugField.width - 15; 
@@ -1952,6 +1958,8 @@ package loom.modestmaps.core
         
         public function setMapProvider(provider:IMapProvider):void
         {
+            clearEverything();
+            
             if (tilePainter) tilePainter.reset();
             if (provider is ITilePainterOverride) {
                 this.tilePainter = ITilePainterOverride(provider).getTilePainter();
@@ -1968,16 +1976,11 @@ package loom.modestmaps.core
             _tileHeight = provider.tileHeight;
             
             calculateBounds();
-            
-            clearEverything();
         }
         
         protected function clearEverything(event:Event=null):void
         {
             processing = false;
-            
-            mapWidth = NaN;
-            mapHeight = NaN;
             
             repopCount = -1;
             repopCounter = 0;
@@ -1987,26 +1990,32 @@ package loom.modestmaps.core
             repopMinRow = -1;
             repopMaxRow = -1;
             
-            var tile:Tile;
-            var next:Tile;
-            tile = headActive;
-            while (tile) {
-                next = tile.nextActive;
-                tileRemove(tile);
-                tile = next;
-            }
-            tile = headInactive;
-            while (tile) {
-                next = tile.nextInactive;
-                tileRemove(tile);
-                tile = next;
+            
+            
+            if (tilePainter) {
+                
+                var tile:Tile;
+                var next:Tile;
+                
+                tile = headActive;
+                while (tile) {
+                    next = tile.nextActive;
+                    tileRemove(tile);
+                    tile = next;
+                }
+                tile = headInactive;
+                while (tile) {
+                    next = tile.nextInactive;
+                    tileRemove(tile);
+                    tile = next;
+                }
+                
+                tilePainter.reset();
             }
             
             headActive = null;
             headInactive = null;
             countActive = 0;
-            
-            tilePainter.reset();
             
             quadRoot = new QuadNode();
             

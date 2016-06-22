@@ -26,7 +26,7 @@ package system {
     /**
      *  Represents an frame in a loom callstack. Instances of this class can be retrieved by calling Debug.getCallStack()
      *
-     *  @see Debug.getCallStack()
+     *  @see system.Debug#getCallStack()
      */
     class CallStackInfo {
         
@@ -130,18 +130,24 @@ package system {
         
         /*
          * Adds a breakpoint at the given source and line number.
+         *
+         * Returns the expanded source path.
          */
-        public static native function addBreakpoint(source:String, line:Number);
+        public static native function addBreakpoint(source:String, line:Number):String;
 
         /*
          * Removes a breakpoint at the given source and line number.
+         *
+         * Returns the expanded source path.
          */
-        public static native function removeBreakpoint(source:String, line:Number);
+        public static native function removeBreakpoint(source:String, line:Number):String;
 
         /*
          * Removes a breakpoint at the given index.
+         *
+         * Returns the expanded source path.
          */
-        public static native function removeBreakpointAtIndex(index:Number);
+        public static native function removeBreakpointAtIndex(index:Number):Boolean;
 
         /*
          * Removes all breakpoints.

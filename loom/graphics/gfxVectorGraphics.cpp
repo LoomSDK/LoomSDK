@@ -21,6 +21,7 @@
 #include "loom/graphics/gfxMath.h"
 #include "loom/graphics/gfxQuadRenderer.h"
 #include "loom/graphics/gfxVectorGraphics.h"
+#include "loom/engine/loom2d/l2dShape.h"
 
 #include "loom/script/runtime/lsProfiler.h"
 
@@ -97,9 +98,14 @@ void VectorGraphics::clear() {
     */
     clearBounds();
     lastPath = NULL;
+    lastLineStyle = NULL;
 
     pathDirty = false;
     currentTextFormat = VectorTextFormat::defaultFormat;
+    
+    isScaleCalculated = false;
+    calculatedScaleX = 1.0f;
+    calculatedScaleY = 1.0f;
 }
 
 #pragma warning(disable: 4056 4756)
@@ -111,11 +117,51 @@ void VectorGraphics::clearBounds() {
 #pragma warning(default: 4056 4756)
 }
 
+void VectorGraphics::calculateScale()
+{
+    calculatedScaleX = parent->scaleX;
+    calculatedScaleY = parent->scaleY;
+
+    Loom2D::DisplayObject* o = parent->parent;
+    
+    while(o != NULL)
+    {
+        calculatedScaleX *= o->scaleX;
+        calculatedScaleY *= o->scaleY;
+        o = o->parent;
+    }
+
+    isScaleCalculated = true;
+}
+
 void VectorGraphics::inflateBounds(const Loom2D::Rectangle& r) {
     boundL = lmMin(r.x, boundL);
     boundT = lmMin(r.y, boundT);
     boundR = lmMax(r.x + r.width, boundR);
     boundB = lmMax(r.y + r.height, boundB);
+}
+
+void VectorGraphics::inflateLineBounds(const Loom2D::Rectangle& r) {
+    float tX = 0.0f;
+    float tY = 0.0f;
+    if (lastLineStyle != NULL)
+    {
+        tX = tY = (lastLineStyle->thickness) / 2.0f;
+        if (lastLineStyle->scaleMode == VectorLineScaleMode::NONE)
+        {
+            if (!isScaleCalculated)
+            {
+                calculateScale();
+            }
+            tX /= calculatedScaleX;
+            tY /= calculatedScaleY;
+        }
+    }
+
+    boundL = lmMin(r.x - tX, boundL);
+    boundT = lmMin(r.y - tY, boundT);
+    boundR = lmMax(r.x + r.width + tX, boundR);
+    boundB = lmMax(r.y + r.height + tY, boundB);
 }
 
 void VectorGraphics::lineStyle(float thickness, unsigned int color, float alpha, bool pixelHinting, utString scaleMode, utString caps, utString joints, float miterLimit) {
@@ -142,7 +188,8 @@ void VectorGraphics::lineStyle(float thickness, unsigned int color, float alpha,
         !strcmp(t, "miter") ? VectorLineJoints::MITER :
         VectorLineJoints::ROUND;
 
-    queue.push_back(lmNew(NULL) VectorLineStyle(thickness, color, alpha, scaleModeEnum, capsEnum, jointsEnum, miterLimit));
+    lastLineStyle = lmNew(NULL) VectorLineStyle(thickness, color, alpha, scaleModeEnum, capsEnum, jointsEnum, miterLimit);
+    queue.push_back(lastLineStyle);
     restartPath();
 }
 
@@ -168,41 +215,40 @@ void VectorGraphics::endFill() {
 
 
 void VectorGraphics::moveTo(float x, float y) {
-    auto path = getPath();
+    VectorPath* path = getPath();
     path->moveTo(x, y);
-    inflateBounds(Loom2D::Rectangle(x, y, 0, 0));
 }
 
 void VectorGraphics::lineTo(float x, float y) {
-    auto path = getPath();
-    inflateBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
+    VectorPath* path = getPath();
+    inflateLineBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
     path->lineTo(x, y);
-    inflateBounds(Loom2D::Rectangle(x, y, 0, 0));
+    inflateLineBounds(Loom2D::Rectangle(x, y, 0, 0));
 }
 
 void VectorGraphics::curveTo(float controlX, float controlY, float anchorX, float anchorY) {
-    auto path = getPath();
-    inflateBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
+    VectorPath* path = getPath();
+    inflateLineBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
     path->curveTo(controlX, controlY, anchorX, anchorY);
-    inflateBounds(Loom2D::Rectangle(controlX, controlY, 0, 0));
-    inflateBounds(Loom2D::Rectangle(anchorX, anchorX, 0, 0));
+    inflateLineBounds(Loom2D::Rectangle(controlX, controlY, 0, 0));
+    inflateLineBounds(Loom2D::Rectangle(anchorX, anchorX, 0, 0));
 }
 
 void VectorGraphics::cubicCurveTo(float controlX1, float controlY1, float controlX2, float controlY2, float anchorX, float anchorY) {
-    auto path = getPath();
-    inflateBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
+    VectorPath* path = getPath();
+    inflateLineBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
     path->cubicCurveTo(controlX1, controlY1, controlX2, controlY2, anchorX, anchorY);
-    inflateBounds(Loom2D::Rectangle(controlX1, controlY1, 0, 0));
-    inflateBounds(Loom2D::Rectangle(controlX2, controlY2, 0, 0));
-    inflateBounds(Loom2D::Rectangle(anchorX, anchorX, 0, 0));
+    inflateLineBounds(Loom2D::Rectangle(controlX1, controlY1, 0, 0));
+    inflateLineBounds(Loom2D::Rectangle(controlX2, controlY2, 0, 0));
+    inflateLineBounds(Loom2D::Rectangle(anchorX, anchorX, 0, 0));
 }
 
 void VectorGraphics::arcTo(float controlX, float controlY, float anchorX, float anchorY, float radius) {
-    auto path = getPath();
-    inflateBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
+    VectorPath* path = getPath();
+    inflateLineBounds(Loom2D::Rectangle(path->lastX, path->lastY, 0, 0));
     path->arcTo(controlX, controlY, anchorX, anchorY, radius);
-    inflateBounds(Loom2D::Rectangle(controlX, controlY, 0, 0));
-    inflateBounds(Loom2D::Rectangle(anchorX, anchorX, 0, 0));
+    inflateLineBounds(Loom2D::Rectangle(controlX, controlY, 0, 0));
+    inflateLineBounds(Loom2D::Rectangle(anchorX, anchorX, 0, 0));
 }
 
 
@@ -528,6 +574,7 @@ void VectorGraphics::restartPath() {
             float x = lastPath->data[dataNum - 2];
             float y = lastPath->data[dataNum - 1];
             lastPath = NULL;
+            moveTo(x, y);
         } else {
             lastPath = NULL;
         }

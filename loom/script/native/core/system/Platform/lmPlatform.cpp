@@ -76,6 +76,11 @@ public:
     {
         loom_thread_sleep(sleepTime);
     }
+
+    static bool openURL(const char *url)
+    {
+        return platform_openURL(url);
+    }
 };
 
 static int registerSystemPlatform(lua_State *L)
@@ -92,6 +97,7 @@ static int registerSystemPlatform(lua_State *L)
        .addStaticMethod("forceDPI", &Platform::forceDPI)
        .addStaticMethod("isForcingDPI", &Platform::isForcingDPI)
        .addStaticMethod("sleep", &Platform::sleep)
+       .addStaticMethod("openURL", &Platform::openURL)
 
        .endClass()
 

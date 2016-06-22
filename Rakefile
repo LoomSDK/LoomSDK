@@ -40,7 +40,7 @@ CFG =
     TARGET_SDK_VER: "dev",
 
     # What version of the android SDK are going to target? Note you also need to update the Android project and manifest to match.
-    TARGET_ANDROID_SDK: "android-13" ,
+    TARGET_ANDROID_SDK: "android-15" ,
 
     # What Android target are we going to build? debug and release are the main
     # options but there are more. (see http://developer.android.com/tools/building/building-cmdline.html)
@@ -141,6 +141,7 @@ puts ""
 CLEAN.replace(["application/android/bin" ])
 CLEAN.include Dir.glob("build/loom-*")
 CLEAN.include Dir.glob("build/luajit-*")
+CLEAN.include Dir.glob("build/sdl2")
 CLEAN.include Dir.glob("tests/unittest-*")
 CLEAN.include ["build/**/lib/**", "artifacts/**"]
 CLOBBER.include ["**/*.loom", $OUTPUT_DIRECTORY]
@@ -403,6 +404,16 @@ namespace :build do
     puts "== Building LuaJIT for OSX =="
     buildLuaJIT(MakeToolchain.new(OSXToolchain.new()), [:x86, :x86_64])
   end
+
+  desc "Build LuaJIT libraries for Linux"
+  task 'luajit:linux' do |t, args|
+    if $HOST.name != 'linux'
+      puts "LuaJIT Linux build only supported on Linux, skipping..."
+      next
+    end
+    puts "== Building LuaJIT for Linux =="
+    buildLuaJIT(MakeToolchain.new(LinuxToolchain.new()), if $HOST.is_x64 == '1' then [:x86_64] else [:x86] end)
+  end
   
   desc "Build LuaJIT libraries for iOS"
   task 'luajit:ios' do |t, args|
@@ -603,14 +614,19 @@ namespace :build do
   desc "Builds Android APK"
   task :android => ['utility:compileScripts'] do
     puts "== Building Android =="
-
+    
+    ndk_env = ENV["ANDROID_NDK"]
+    ndk_path = ndk_env ? File.expand_path(ndk_env) : nil
+    
+    abort("\nAndroid NDK directory not found!\nPlease set the `ANDROID_NDK` environment variable to the Android NDK path.") unless ndk_path && File.exists?(ndk_path)
+    
     # Build SDL for Android if it's missing
     sdlLibPath = "build/sdl2/android/armeabi"
     if not File.exist?("#{sdlLibPath}/libSDL2.a")
       puts "Building SDL2 for Android using ndk-build"
       sdlSrcPath = "loom/vendor/sdl2"
       Dir.chdir(sdlSrcPath) do
-        sh "ndk-build SDL2_static NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk APP_PLATFORM=android-13" 
+        sh "#{ndk_path}/ndk-build SDL2_static NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk APP_PLATFORM=android-15"
       end
       FileUtils.mkdir_p sdlLibPath
       sh "cp #{sdlSrcPath}/obj/local/armeabi/libSDL2.a #{sdlLibPath}/libSDL2.a"
@@ -635,7 +651,7 @@ namespace :build do
       sh "android update project --name FacebookSDK --subprojects --target #{api_id} --path ."
     end
 
-    Dir.chdir("loom/engine/sdl2/platform/android/java") do
+    Dir.chdir("loom/engine/SDL2/platform/android/java") do
       sh "android update project --name SDL2 --subprojects --target #{api_id} --path ."
     end
 
@@ -668,20 +684,22 @@ namespace :build do
 
   desc "Builds Ubuntu Linux"
   task :ubuntu => [] do
-    puts "== Skipped Ubuntu =="
-
-    if false
 	
+    ensureLuaJIT("linux")
+
     puts "== Building Ubuntu =="
-    FileUtils.mkdir_p("#{$ROOT}/build/loom-linux-x86")
-    Dir.chdir("#{$ROOT}/build/loom-linux-x86") do
-      sh "cmake -DLOOM_BUILD_JIT=#{CFG[:USE_LUA_JIT]} -DLUA_GC_PROFILE_ENABLED=#{CFG[:ENABLE_LUA_GC_PROFILE]} -G \"Unix Makefiles\" -DCMAKE_BUILD_TYPE=#{CFG[:BUILD_TARGET]} #{$buildDebugDefine} #{$buildAdMobDefine} #{$buildFacebookDefine} #{$ROOT}"
-      sh "make -j#{$HOST.num_cores}"
-    end
+
+    arch = $HOST.is_x64 == '1' ? :x86_64 : :x86
+
+    # Just compile for native arch
+    toolchain = LinuxToolchain.new();
+    luajit = LuaJITTarget.new(arch, $BUILD_TYPE);
+    loom = LoomTarget.new(arch, $BUILD_TYPE, luajit);
+
+    toolchain.build(loom)
 
     Rake::Task["utility:compileScripts"].invoke
     Rake::Task["utility:compileTools"].invoke
-	end
 	
   end
 
@@ -704,7 +722,6 @@ task :test => ['build:desktop'] do
     sh "#{$ROOT}/tests/unittest-#{$HOST.arch}"
   end
   Dir.chdir("sdk") do
-    sh "#{$LSC_BINARY} TestExec.build"
     sh "#{$LSC_BINARY} Tests.build"
     sh "#{$LOOMEXEC_BINARY} --ignore-missing-types bin/TestExec.loom bin/Tests.loom"
   end

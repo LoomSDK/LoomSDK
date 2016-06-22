@@ -22,28 +22,13 @@ endif()
 if (LINUX)
     set (APPLICATION_SRC
       ${APPLICATION_SRC}
-      linux/main.cpp
     )
 endif()
 
 if (APPLE)
     if (LOOM_BUILD_IOS EQUAL 1)
 
-        set(APPLE_ICON_FILES 
-            ios/Icon-60@2x.png 
-            ios/Icon-72.png 
-            ios/Icon-72@2x.png 
-            ios/Icon-76.png
-            ios/Icon-76@2x.png
-            ios/Icon-Small-40.png
-            ios/Icon-Small-40@2x.png
-            ios/Icon-Small-50.png
-            ios/Icon-Small-50@2x.png
-            ios/Icon-Small.png
-            ios/Icon-Small@2x.png
-            ios/Icon.png
-            ios/Icon@2x.png
-            )
+        file(GLOB APPLE_ICON_FILES ios/Icon*.png)
         set (APPLICATION_SRC
           ${APPLICATION_SRC}
           ios/Default-iphone.png
@@ -104,7 +89,13 @@ if (APPLE)
         if (LOOM_BUILD_ADMOB EQUAL 1)
             target_link_libraries(${PROJECT_NAME} 
                 "-framework AdSupport"
-                ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a
+                "-framework EventKit"
+                "-framework EventKitUI"
+                "-framework CoreTelephony"
+                "-framework CoreMedia"
+                "-framework SafariServices"
+                "-framework CoreBluetooth"
+                "-framework GoogleMobileAds -F ${CMAKE_SOURCE_DIR}/loom/vendor/admob/ios"
             )
         endif()
         if (LOOM_BUILD_FACEBOOK EQUAL 1)
@@ -153,6 +144,8 @@ if (APPLE)
           "-framework AVFoundation"
           "-framework AudioToolbox"
           "-framework CoreAudio"
+
+          "-framework GameController"
 
           "-ObjC"
           "-lc++"
@@ -280,7 +273,8 @@ elseif(LINUX)
        LoomScript
        LoomGraphics
        LoomCore
-       -lGL -lGLEW -lGLU -lglfw -lcurl
+       -lGL -lGLEW -lGLU -lcurl
+       "SDL2-static" "SDL2main" 
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)
@@ -291,7 +285,7 @@ elseif(LINUX)
      
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
-        COMMAND mkdir -p ${ARTIFACTS_DIR}/
+        COMMAND mkdir -p ${ARTIFACTS_DIR}/bin
         COMMAND cp ${DEMOBIN} ${ARTIFACTS_DIR}/bin/LoomPlayer
     )
 

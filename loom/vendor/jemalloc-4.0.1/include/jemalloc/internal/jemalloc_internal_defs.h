@@ -23,7 +23,7 @@
  * Hyper-threaded CPUs may need a special instruction inside spin loops in
  * order to yield to another virtual CPU.
  */
-#define CPU_SPINWAIT 
+#define CPU_SPINWAIT
 
 /* Defined if C11 atomics are available. */
 /* #undef JEMALLOC_C11ATOMICS */
@@ -113,10 +113,10 @@
 //#endif
 
 /* Non-empty if the tls_model attribute is supported. */
-#define JEMALLOC_TLS_MODEL 
+#define JEMALLOC_TLS_MODEL
 
 /* JEMALLOC_CC_SILENCE enables code that silences unuseful compiler warnings. */
-#define JEMALLOC_CC_SILENCE 
+#define JEMALLOC_CC_SILENCE
 
 /* JEMALLOC_CODE_COVERAGE enables test code coverage analysis. */
 /* #undef JEMALLOC_CODE_COVERAGE */
@@ -128,7 +128,7 @@
 /* #undef JEMALLOC_DEBUG */
 
 /* JEMALLOC_STATS enables statistics calculation. */
-#define JEMALLOC_STATS 
+#define JEMALLOC_STATS
 
 /* JEMALLOC_PROF enables allocation profiling. */
 /* #undef JEMALLOC_PROF */
@@ -147,7 +147,7 @@
  * This makes it possible to allocate/deallocate objects without any locking
  * when the cache is in the steady state.
  */
-#define JEMALLOC_TCACHE 
+#define JEMALLOC_TCACHE
 
 /*
  * JEMALLOC_DSS enables use of sbrk(2) to allocate chunks from the data storage
@@ -156,7 +156,7 @@
 /* #undef JEMALLOC_DSS */
 
 /* Support memory filling (junk/zero/quarantine/redzone). */
-#define JEMALLOC_FILL 
+#define JEMALLOC_FILL
 
 /* Support utrace(2)-based tracing. */
 /* #undef JEMALLOC_UTRACE */
@@ -196,7 +196,7 @@
  * later reuse.  This is disabled by default on Linux because common sequences
  * of mmap()/munmap() calls will cause virtual memory map holes.
  */
-#define JEMALLOC_MUNMAP 
+#define JEMALLOC_MUNMAP
 
 /* TLS is used to map arenas and magazine caches to threads. */
 /* #undef JEMALLOC_TLS */
@@ -205,8 +205,13 @@
  * ffs()/ffsl() functions to use for bitmapping.  Don't use these directly;
  * instead, use jemalloc_ffs() or jemalloc_ffsl() from util.h.
  */
+#if LOOM_PLATFORM == LOOM_PLATFORM_LINUX
+#define JEMALLOC_INTERNAL_FFSL __builtin_ffsl
+#define JEMALLOC_INTERNAL_FFS __builtin_ffs
+#else
 #define JEMALLOC_INTERNAL_FFSL ffsl
 #define JEMALLOC_INTERNAL_FFS ffs
+#endif
 
 /*
  * JEMALLOC_IVSALLOC enables ivsalloc(), which verifies that pointers reside
@@ -218,7 +223,7 @@
  * If defined, explicitly attempt to more uniformly distribute large allocation
  * pointer alignments across all cache indices.
  */
-#define JEMALLOC_CACHE_OBLIVIOUS 
+#define JEMALLOC_CACHE_OBLIVIOUS
 
 /*
  * Darwin (OS X) uses zones to work around Mach-O symbol override shortcomings.
@@ -226,7 +231,7 @@
  #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_WIN32 || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
  #undef JEMALLOC_ZONE
  #else
- #define JEMALLOC_ZONE 
+ #define JEMALLOC_ZONE
  #define JEMALLOC_ZONE_VERSION 8
  #endif
 
@@ -243,7 +248,7 @@
  #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
  #define JEMALLOC_PURGE_MADVISE_DONTNEED
  #else
- #define JEMALLOC_PURGE_MADVISE_FREE 
+ #define JEMALLOC_PURGE_MADVISE_FREE
  #endif
 
 /* Define if operating system has alloca.h header. */

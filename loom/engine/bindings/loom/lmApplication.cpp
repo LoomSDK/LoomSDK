@@ -69,6 +69,7 @@ lmDefineLogGroup(scriptLogGroup, "script", 1, LoomLogInfo);
 extern "C" {
 
 extern void loomsound_shutdown();
+extern atomic_int_t gLoomTicking;
 
 void loom_appInit(void)
 {
@@ -82,6 +83,21 @@ void loom_appSetup(void)
     GFX::Graphics::initialize();
 }
 
+void loom_appPause(void)
+{
+    int ticking = atomic_decrement(&gLoomTicking);
+    if (ticking != 0) return;
+    GFX::Graphics::pause();
+    lmLogInfo(applicationLogGroup, "Paused");
+}
+    
+void loom_appResume(void)
+{
+    int ticking = atomic_increment(&gLoomTicking);
+    if (ticking != 1) return;
+    GFX::Graphics::resume();
+    lmLogInfo(applicationLogGroup, "Resumed");
+}
 
 void loom_appShutdown(void)
 {
@@ -170,6 +186,8 @@ void LoomApplication::initMainAssembly()
     rootVM->readExecutableAssemblyBinaryHeader(initBytes);
     Assembly *assembly = BinReader::loadMainAssemblyHeader();
     LoomApplicationConfig::parseApplicationConfig(assembly->getLoomConfig());
+    
+    Loom2D::Stage::initFromConfig();
 }
 
 void LoomApplication::execMainAssembly()
@@ -182,8 +200,6 @@ void LoomApplication::execMainAssembly()
     initBytes = NULL;
     
     lmLogDebug(applicationLogGroup, "   o executing %s", bootAssembly.c_str());
-
-    Loom2D::Stage::updateFromConfig();
 
     // Wait for asset agent if appropriate.
     if (LoomApplicationConfig::waitForAssetAgent() > 0)

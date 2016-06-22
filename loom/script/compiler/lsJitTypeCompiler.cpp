@@ -890,7 +890,7 @@ Statement *JitTypeCompiler::visit(ForInStatement *statement)
     BC::initExpDesc(&pairs, VCALL, BC::emitINS(fs, ins));
     pairs.u.s.aux = cbase;
     fs->bcbase[fs->pc - 1].line = line;
-    fs->freereg = cbase + 1 + twoSlotFrameInfo; /* Leave one result by default. */
+    fs->freereg = cbase + 1; /* Leave one result by default. */
 
     BC::adjustAssign(cs, 3, 1, &pairs);
 
@@ -1000,35 +1000,15 @@ Statement *JitTypeCompiler::visit(ReturnStatement *statement)
         ExpDesc e; // Receives the _last_ expression in the list.
         BCReg   nret = expList(&e, statement->result, NULL);
         if (nret == 1)
-        {       // Return one result.
-            if (e.k == VCALL)
-            {
-                // LOOM: No tail calls as they screw up profiling/debugging
-                goto notailcall;
-
-                /*
-                 * // Check for tail call.
-                 * BCIns *ip = bcptr(fs, &e);
-                 * // It doesn't pay off to add BC_VARGT just for 'return ...'.
-                 * if (bc_op(*ip) == BC_VARG)
-                 *  goto notailcall;
-                 *
-                 * fs->pc--;
-                 * ins = BCINS_AD(bc_op(*ip)-BC_CALL+BC_CALLT, bc_a(*ip), bc_c(*ip));
-                 */
-            }
-            else
-            {
-                // Can return the result from any register.
-                ins = BCINS_AD(BC_RET1, BC::expToAnyReg(fs, &e), 2);
-            }
+        {
+            // Return one result.
+            ins = BCINS_AD(BC_RET1, BC::expToAnyReg(fs, &e), 2);
         }
         else
         {
             if (e.k == VCALL)
             {
                 // Append all results from a call.
-notailcall:
                 setbc_b(bcptr(fs, &e), 0);
                 ins = BCINS_AD(BC_RETM, fs->nactvar, e.u.s.aux - fs->nactvar);
             }

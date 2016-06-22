@@ -33,7 +33,7 @@ namespace Loom2D
 
 Stage *Stage::smMainStage = NULL;
 NativeDelegate Stage::_RenderStageDelegate;
-bool Stage::sizeDirty = true;
+bool Stage::sizeDirty = false;
 bool Stage::visDirty = true;
 
 Stage::Stage()
@@ -58,6 +58,12 @@ Stage::~Stage()
     smMainStage = NULL;
 }
 
+void Stage::initFromConfig()
+{
+    applyOrientation(LoomApplicationConfig::displayOrientation().c_str());
+    updateFromConfig();
+}
+
 void Stage::updateFromConfig()
 {
     SDL_Window *sdlWindow = gSDLWindow;
@@ -80,6 +86,25 @@ void Stage::updateFromConfig()
     {
         smMainStage->show();
         visDirty = false;
+    }
+}
+
+void Stage::applyOrientation(const char* orient)
+{
+    if (strcmp(orient, "portrait") == 0) {
+        SDL_SetHint(SDL_HINT_ORIENTATIONS, "Portrait PortraitUpsideDown");
+    }
+    else if (strcmp(orient, "landscape") == 0)
+    {
+        SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+    }
+    else if (strcmp(orient, "auto") == 0)
+    {
+        SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight Portrait");
+    }
+    else
+    {
+        lmAssert(false, "Unknown orientation value: %s", orient);
     }
 }
 

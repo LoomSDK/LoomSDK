@@ -48,6 +48,16 @@ void Java_co_theengine_loomplayer_LoomSensors_onRotationChangedNative(JNIEnv *en
         gTripleChangedCallback(3, x, y, z);
     }
 }
+
+void Java_co_theengine_loomplayer_LoomSensors_onAccelerometerChangedNative(JNIEnv *env, jobject thiz, jfloat x, jfloat y, jfloat z)
+{
+    if (gTripleChangedCallback)
+    {
+        ///0 == MobileSensorType.Accelerometer
+        gTripleChangedCallback(0, x, y, z);
+    }
+}
+
 void Java_co_theengine_loomplayer_LoomSensors_onGravityChangedNative(JNIEnv *env, jobject thiz, jfloat x, jfloat y, jfloat z)
 {
     if (gTripleChangedCallback)
@@ -274,6 +284,12 @@ bool platform_wasOpenedViaRemoteNotification()
 {
     jboolean result = gDidRemoteNotificationOpen.getEnv()->CallStaticBooleanMethod(gDidRemoteNotificationOpen.classID, gDidRemoteNotificationOpen.methodID);    
     return (bool)result;
+}
+
+void platform_setOpenURLQueryData(const char *query)
+{
+    // Android has alternative ways of setting this
+    lmAssert(false, "Should not be called");
 }
 
 ///gets the the specified query key data from any custom scheme URL path that the application was launched with, or "" if not found

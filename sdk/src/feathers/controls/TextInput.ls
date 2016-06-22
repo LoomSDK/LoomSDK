@@ -1239,25 +1239,38 @@ package feathers.controls
                 return;
             }
 
-            const touches:Vector.<Touch> = event.getTouches(this, null, HELPER_TOUCHES_VECTOR);
-            if(touches.length == 0)
-            {
-                this.textEditor.clearFocus();
-                                
-                //end hover
-                /*if(Mouse.supportsNativeCursor && this._oldMouseCursor)
-                {
-                    Mouse.cursor = this._oldMouseCursor;
-                    this._oldMouseCursor = null;
-                }*/
-                return;
+            var touch:Touch = null;
+            
+            const touches:Vector.<Touch> = event.getTouches(stage, null, HELPER_TOUCHES_VECTOR);
+            
+            if (_textEditorHasFocus) {
+                var clearFocus:Boolean = false;
+                for each(touch in touches) {
+                    if (!touch.isTouching(this) && touch.phase == TouchPhase.ENDED) {
+                        clearFocus = true;
+                        break;
+                    }
+                    
+                    //end hover
+                    /*if(Mouse.supportsNativeCursor && this._oldMouseCursor)
+                    {
+                        Mouse.cursor = this._oldMouseCursor;
+                        this._oldMouseCursor = null;
+                    }*/
+                }
+                
+                if (clearFocus) {
+                    this.textEditor.clearFocus();
+                    return;
+                }
             }
 
             if(this._touchPointID >= 0)
             {
-                var touch:Touch;
+                touch = null;
                 for each(var currentTouch:Touch in touches)
                 {
+                    if (!currentTouch.isTouching(this)) continue;
                     if(currentTouch.id == this._touchPointID)
                     {
                         touch = currentTouch;
@@ -1282,6 +1295,7 @@ package feathers.controls
             {
                 for each(touch in touches)
                 {
+                    if (!touch.isTouching(this)) continue;
                     if(touch.phase == TouchPhase.BEGAN)
                     {
                         this._touchPointID = touch.id;

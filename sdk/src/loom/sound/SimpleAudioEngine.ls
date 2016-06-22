@@ -143,7 +143,9 @@ package loom.sound
         */
         public function isBackgroundMusicPlaying():Boolean
         {
-            return backgroundMusic.isPlaying();            
+            if(backgroundMusic)
+                return backgroundMusic.isPlaying();
+            return false;
         }
 
         /**

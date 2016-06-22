@@ -11,14 +11,18 @@
 
 2. Open up a command prompt and make sure you have the compiler variables set.  This can be accomplished by using a Microsoft Visual Studio command prompt or by running the build/windowsBuildHelper.bat in the Loom Native SDK distribution
 
-2. Making sure both Rake and CMake are on your path run: rake deploy:free_sdk
+3. You need Visual Studio C++ native tools installed to compile,
+   so if your build fails with `The C compiler identification is unknown`, try manually creating
+   a C++ project in Visual Studio and following the tools installation guide.
 
-3. Change directory to your Loom project and run: 
+4. Making sure both Rake and CMake are on your path run: rake deploy:free_sdk
+
+5. Change directory to your Loom project and run: 
 
 loom use dev (enter)
 loom run
 
-4. Your project should compile and run
+6. Your project should compile and run
 
 Please note that LuaJIT or other components in the Loom Native SDK may trigger your antivirus 
 package. You can inspect the source code to confirm that there are no viruses

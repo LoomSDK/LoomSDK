@@ -1,9 +1,33 @@
 ## Instructions for building on Ubuntu:
 
-1.  Install g++, rake, cmake, zlib1g-dev, libglew-dev, libglfw-dev:
+1.  Install g++, rake, cmake, zlib1g-dev, libglew-dev, libglfw-dev, libcurl4-openssl-dev, ant:
 
-sudo apt-get install g++ rake cmake zlib1g-dev libglew-dev libglfw-dev libcurl4-openssl-dev
+sudo apt-get install g++ rake cmake zlib1g-dev libglew-dev libglfw-dev libcurl4-openssl-dev ant
 
-2.  From the root SDK folder run: rake build:ubuntu
+2. If you plan on compiling for Android, you'll need to install Android SDK, Android NDK and Java JDK.
+   You can get Android SDK from the official site (http://developer.android.com/sdk/index.html)
+   where you can download and install either Android Studio or the standalone tools.
+
+   After you've installed the SDK, run tools/android from the SDK directory and install
+   android-15 SDK and the latest build-tools version 22.
+   Other versions may not work properly.
+
+   Download the Android NDK at http://dl.google.com/android/repository/android-ndk-r11c-linux-x86_64.zip
+   or use another version of NDK that suits your needs (anything above version 9 should work).
+
+   Export ANDROID_NDK environment variables to point to your NDK install location and export your
+   Android SDK's "tools" directory to your PATH environment variable.
+
+   To install the Java JDK, run
+
+sudo apt-get install default-jdk
+
+   If anything goes wrong when compling for Android, make sure you have the right read/execute permissions in the SDK and NDK directories.
+
+2. If you plan on compiling for Android and you're on a 64-bit system, also install lib32gcc-5-dev and lib32z1
+
+sudo apt-get install g++-multilib lib32z1
+
+2.  From the root SDK folder run: rake deploy:sdk
 
 3.  Enjoy!

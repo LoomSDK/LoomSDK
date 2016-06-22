@@ -205,11 +205,15 @@ static int makeAssetPathCanonical(const char *pathIn, char pathOut[MAXPATHLEN])
     pathOut[0] = 0;
 
     char cwd[MAXPATHLEN];
-    getcwd(cwd, MAXPATHLEN);
+    char* cwdres = getcwd(cwd, MAXPATHLEN);
 
+    char* resolvedPathPtr = NULL;
     // Note, man page suggests that realpath won't work right for
     // non-existant folders/files.
-    char *resolvedPathPtr = platform_realpath(pathIn, NULL);
+    if (cwdres != NULL)
+    {
+        resolvedPathPtr = platform_realpath(pathIn, NULL);
+    }
 
     if (resolvedPathPtr == NULL)
     {
@@ -568,7 +572,7 @@ static void processFileEntryDeltas(utArray<FileEntryDelta> *deltas)
             // Remove from the pending list.
             gPendingModifications.erase(i);
             i--;
-            
+
             continue;
         }
 
@@ -845,7 +849,7 @@ void DLLEXPORT assetAgent_run(IdleCallback idleCb, LogCallback logCb, FileChange
     // Put best effort towards closing our listen socket when we shut down, to
     // avoid bugs on OSX where the OS won't release it for a while.
 
-#if LOOM_PLATFORM == LOOM_PLATFORM_OSX
+#if LOOM_PLATFORM == LOOM_PLATFORM_OSX || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
     atexit(shutdownListenSocket);
     signal(SIGINT, shutdownListenSocketSignalHandler);
 #endif
@@ -858,15 +862,15 @@ void DLLEXPORT assetAgent_run(IdleCallback idleCb, LogCallback logCb, FileChange
     // Note callbacks.
     gLogCallback        = logCb;
     gFileChangeCallback = changeCb;
-    
-    
+
+
     utString *sdkPath = optionGet("sdk");
     if (sdkPath != NULL) TelemetryServer::setClientRootFromSDK(sdkPath->c_str());
     const char *ltcPath = getenv("LoomTelemetry");
     if (ltcPath != NULL) TelemetryServer::setClientRoot(ltcPath);
 
     if (optionEquals("telemetry", "true")) TelemetryServer::start();
-    
+
 
 
     // Set up the log callback.

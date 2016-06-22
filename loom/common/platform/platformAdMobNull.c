@@ -24,11 +24,18 @@
 
 #if !LOOM_ALLOW_ADMOB || (LOOM_PLATFORM != LOOM_PLATFORM_IOS && LOOM_PLATFORM != LOOM_PLATFORM_ANDROID)
 
-loom_adMobHandle platform_adMobCreate(const char *publisherID, loom_adMobBannerSize size)
+void platform_adMobInitalize(const char* publisherID)
+{
+}
+
+loom_adMobHandle platform_adMobCreate(const char *adUnitId, loom_adMobCallback callback, void *payload, loom_adMobBannerSize size)
 {
     return 0;
 }
 
+void platform_adMobLoad(loom_adMobHandle handle)
+{
+}
 
 void platform_adMobShow(loom_adMobHandle handle)
 {
@@ -71,8 +78,11 @@ void platform_adMobShowInterstitial(loom_adMobHandle handle)
 {
 }
 
+void platform_adMobLoadInterstitial(loom_adMobHandle handle)
+{
+}
 
-loom_adMobHandle platform_adMobCreateInterstitial(const char *publisherID, loom_adMobCallback callback, void *payload)
+loom_adMobHandle platform_adMobCreateInterstitial(const char *adUnitId, loom_adMobCallback callback, void *payload)
 {
     return 0;
 }

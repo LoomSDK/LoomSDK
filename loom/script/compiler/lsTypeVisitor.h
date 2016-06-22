@@ -637,7 +637,7 @@ public:
 
             if (!vd->type)
             {
-                error("Unable to resolve variable declaration type");
+                error("Unable to resolve variable declaration type %s", vd->typeString.c_str());
                 return vd;
             }
         }
@@ -843,6 +843,8 @@ public:
             else if (left->memberInfo)
             {
                 TemplateInfo *tinfo = left->memberInfo->getTemplateInfo();
+                if (left->templateInfo)
+                    tinfo = left->templateInfo;
 
                 // in the case of a property, we want the getter
                 if (left->memberInfo->isProperty())
@@ -859,20 +861,8 @@ public:
                     // we have a template type, so get the info
 
                     // get the (recursive) type of the template, that is the type of the [] indexer
-                    tinfo = tinfo->getIndexedTemplateInfo();
-
-                    p->templateInfo = tinfo;
-
-                    if (tinfo->isTemplate())
-                    {
-                        // if we're a template, we need to use the next indexer type
-                        p->type = tinfo->getIndexedType();
-                    }
-                    else
-                    {
-                        // otherwise, use the type itself
-                        p->type = tinfo->type;
-                    }
+                    p->templateInfo = tinfo->getIndexedTemplateInfo();
+                    p->type = p->templateInfo->type;
                 }
                 else
                 {
@@ -893,12 +883,6 @@ public:
                         TemplateInfo *tinfo = left->templateInfo->getIndexedTemplateInfo();
 
                         p->templateInfo = tinfo;
-
-                        if (tinfo->isTemplate())
-                        {
-                            tinfo = tinfo->getIndexedTemplateInfo();
-                        }
-
                         p->type = tinfo->type;
                     }
                     else
@@ -908,7 +892,6 @@ public:
                             error("incomplete template info");
                             return p;
                         }
-
 
                         p->templateInfo = left->templateInfo->getIndexedTemplateInfo();
                         p->type         = left->templateInfo->getIndexedType();
@@ -959,7 +942,6 @@ public:
                             error("Untyped vector access");
                             return p;
                         }
-
                         p->type = vd->templateInfo->types[0]->type;
 
                         if (right->type != Scope::resolveType("system.Number"))
@@ -1047,6 +1029,7 @@ public:
                 if (memberInfo->getTemplateType())
                 {
                     p->type = memberInfo->getTemplateInfo()->types[memberInfo->getTemplateInfo()->types.size() - 1]->type;
+                    p->templateInfo = memberInfo->getTemplateInfo()->getIndexedTemplateInfo();
                 }
                 else
                 {

@@ -53,12 +53,15 @@ typedef struct
     int height;
 } loom_adMobDimensions;
 
-loom_adMobHandle platform_adMobCreate(const char *publisherID, loom_adMobBannerSize size);
+void platform_adMobInitalize(const char*publisherID);
+loom_adMobHandle platform_adMobCreate(const char *adUnitId, loom_adMobCallback callback, void *payload, loom_adMobBannerSize size);
 
-loom_adMobHandle platform_adMobCreateInterstitial(const char *publisherID, loom_adMobCallback callback, void *payload);
+loom_adMobHandle platform_adMobCreateInterstitial(const char *adUnitId, loom_adMobCallback callback, void *payload);
+void platform_adMobLoadInterstitial(loom_adMobHandle handle);
 void platform_adMobShowInterstitial(loom_adMobHandle handle);
 void platform_adMobDestroyInterstitial(loom_adMobHandle handle);
 
+void platform_adMobLoad(loom_adMobHandle handle);
 void platform_adMobShow(loom_adMobHandle handle);
 void platform_adMobHide(loom_adMobHandle handle);
 void platform_adMobDestroy(loom_adMobHandle handle);

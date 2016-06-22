@@ -49,6 +49,8 @@ package loom.modestmaps.mapproviders
         }
         
         public function get supportsHighDPI():Boolean { return false; }
+        
+        public function get usingHighDPI():Boolean { return false; }
     
        /*
         * String signature of the current map provider's geometric behavior.

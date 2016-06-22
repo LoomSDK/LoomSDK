@@ -565,7 +565,7 @@ public:
 
         if (!str || !str[0])
         {
-            str = "";
+            str = const_cast<char*>("");
         }
 
         if (!delim || !delim[0])

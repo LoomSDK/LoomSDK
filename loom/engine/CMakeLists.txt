@@ -37,6 +37,7 @@ set (ENGINE_SRC
     bindings/loom/lmSQLite.cpp
     bindings/loom/lmModestMaps.cpp
     bindings/loom/lmGameController.cpp
+    bindings/loom/lmUserDefault.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
     
     bindings/sdl/lmSDL.cpp
@@ -46,6 +47,11 @@ set (ENGINE_SRC
 )
 
 if (APPLE)
+    set (ENGINE_SRC
+        ${ENGINE_SRC}
+        bindings/loom/lmUserDefaultCocoa.mm
+    )
+
     if(LOOM_BUILD_IOS EQUAL 1)
     set (ENGINE_SRC
 
@@ -78,13 +84,6 @@ if(LINUX)
 set (ENGINE_SRC
 
     ${ENGINE_SRC}
-
-    cocos2dx/platform/linux/CCApplication.cpp
-    cocos2dx/platform/linux/CCCommon.cpp
-    cocos2dx/platform/linux/CCEGLView.cpp
-    cocos2dx/platform/linux/CCFileUtils.cpp
-    cocos2dx/platform/linux/CCImage.cpp
-    cocos2dx/platform/linux/CCStdC.cpp
 
 )
 endif(LINUX)

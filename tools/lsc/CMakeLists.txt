@@ -13,7 +13,7 @@ if (MSVC)
         LoomVendor
         LoomCommon
         LoomScript
-        "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "OPENGL32" "WSOCK32" "Ws2_32" 
+        "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "OPENGL32" "WSOCK32" "Ws2_32"
     )
 
     set(LSCBIN $<TARGET_FILE:lsc>)
@@ -25,12 +25,23 @@ if (MSVC)
 
 else ()
 
-    target_link_libraries(lsc
-        LoomVendor 
-        LoomCommon 
-        LoomScript
-        -lpthread
-    )
+    if (LINUX)
+        target_link_libraries(lsc
+            -Wl,--start-group
+            LoomVendor
+            LoomCommon
+            LoomScript
+            -lpthread
+            -Wl,--end-group
+        )
+    else()
+        target_link_libraries(lsc
+            LoomVendor
+            LoomCommon
+            LoomScript
+            -lpthread
+        )
+    endif()
 
     set(LSCBIN $<TARGET_FILE:lsc>)
 

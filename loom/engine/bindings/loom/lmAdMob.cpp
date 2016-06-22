@@ -30,14 +30,22 @@ protected:
 
 public:
 
+    LOOM_DELEGATE(OnAdReceived);
+    LOOM_DELEGATE(OnAdError);
+
     BannerAd(const char *publisherID, int size)
     {
-        m_handle = platform_adMobCreate(publisherID, (loom_adMobBannerSize)size);
+        m_handle = platform_adMobCreate(publisherID, adMobCallback, (void *)this, (loom_adMobBannerSize)size);
     }
 
     ~BannerAd()
     {
         platform_adMobDestroy(m_handle);
+    }
+
+    void load()
+    {
+        platform_adMobLoad(m_handle);
     }
 
     void show()
@@ -105,6 +113,22 @@ public:
 
         platform_adMobSetDimensions(m_handle, frame);
     }
+
+    static void adMobCallback(void *payload, loom_adMobCallbackType callbackType, const char *data)
+    {
+        BannerAd *ad = (BannerAd *)payload;
+
+        // handle callback, call delegates
+        if (callbackType == ADMOB_AD_RECEIVED)
+        {
+            ad->_OnAdReceivedDelegate.invoke();
+        }
+        else if (callbackType == ADMOB_AD_ERROR)
+        {
+            ad->_OnAdErrorDelegate.pushArgument(data);
+            ad->_OnAdErrorDelegate.invoke();
+        }
+    }
 };
 
 class InterstitialAd {
@@ -131,6 +155,11 @@ public:
         platform_adMobShowInterstitial(m_handle);
     }
 
+    void load()
+    {
+        platform_adMobLoadInterstitial(m_handle);
+    }
+
     static void adMobCallback(void *payload, loom_adMobCallbackType callbackType, const char *data)
     {
         InterstitialAd *ad = (InterstitialAd *)payload;
@@ -148,12 +177,23 @@ public:
     }
 };
 
+class Publisher
+{
+public:
+
+    static void initialize(const char* publisherID)
+    {
+        platform_adMobInitalize(publisherID);
+    }
+};
+
 static int registerLoomAdMobAd(lua_State *L)
 {
     beginPackage(L, "loom.admob")
 
        .beginClass<BannerAd>("BannerAd")
        .addConstructor<void (*)(const char *, int)>()
+       .addMethod("load", &BannerAd::load)
        .addMethod("show", &BannerAd::show)
        .addMethod("hide", &BannerAd::hide)
        .addMethod("__pget_x", &BannerAd::getX)
@@ -164,13 +204,21 @@ static int registerLoomAdMobAd(lua_State *L)
        .addMethod("__pset_y", &BannerAd::setY)
        .addMethod("__pget_height", &BannerAd::getHeight)
        .addMethod("__pset_height", &BannerAd::setHeight)
+       .addVarAccessor("onAdReceived", &BannerAd::getOnAdReceivedDelegate)
+       .addVarAccessor("onAdError", &BannerAd::getOnAdErrorDelegate)
        .endClass()
 
        .beginClass<InterstitialAd>("InterstitialAd")
        .addConstructor<void (*)(const char *)>()
+       .addMethod("load", &InterstitialAd::load)
        .addMethod("show", &InterstitialAd::show)
        .addVarAccessor("onAdReceived", &InterstitialAd::getOnAdReceivedDelegate)
        .addVarAccessor("onAdError", &InterstitialAd::getOnAdErrorDelegate)
+       .endClass()
+
+       .beginClass<Publisher>("Publisher")
+       .addConstructor<void (*)()>()
+       .addStaticMethod("initialize", &Publisher::initialize)
        .endClass()
 
        .endPackage();
@@ -183,4 +231,5 @@ void installLoomAdMobAd()
 {
     LOOM_DECLARE_NATIVETYPE(BannerAd, registerLoomAdMobAd);
     LOOM_DECLARE_NATIVETYPE(InterstitialAd, registerLoomAdMobAd);
+    LOOM_DECLARE_NATIVETYPE(Publisher, registerLoomAdMobAd);
 }

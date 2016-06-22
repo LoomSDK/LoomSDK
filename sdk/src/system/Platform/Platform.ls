@@ -46,24 +46,24 @@ public enum DisplayProfile {
  */
 class Platform 
 {
-   /*!
+   /*
     Return the current time in milliseconds since application start.
    */
    public static native function getTime():Number;
 
-   /*!
+   /*
     Return the time in seconds since the Unix epoch.
    */
    public static native function getEpochTime():Number;
 
-   /*!
+   /*
     Get the platform which we are currently running on.
 
     @see PlatformType
    */
    public static native function getPlatform():PlatformType;
 
-   /*!
+   /*
     Get the device category which we are currently running on. This is the size
     of the screen, not pixel density - see getDPI() for that.
 
@@ -71,22 +71,28 @@ class Platform
    */
    public static native function getProfile():DisplayProfile;
 
-   /*!
+   /*
     Return a best guess for the DPI of the current display.
    */
    public native static function getDPI():Number;
 
-   /*!
+   /*
     Override the DPI reported by getDPI; this persists across restarts.
     */
    public native static function forceDPI(value:Number):void;
-   
-   /*!
+
+   /*
     Make the system sleep for the input number of milliseconds
     */
    public native static function sleep(sleepTime:int):void;
 
    public native static function isForcingDPI():Boolean;
+
+   /*
+    Opens the provided URL in the default system browser.
+    Returns `true` if opened successfully.
+    */
+   public native static function openURL(url:String):Boolean;
 }
 
 }

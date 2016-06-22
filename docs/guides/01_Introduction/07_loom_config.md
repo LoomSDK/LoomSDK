@@ -29,39 +29,60 @@ $ loom config --global globalPropertyName value
 
 ## Built-In Configuration Properties
 
-| Name                 | Available Flags      | Description                                                       |
-| -------------------- | -------------------- | ----------------------------------------------------------------- |
-| android_sdk_path     |                      | The path to your android sdk. This can only be set globally using |
-|                      |                      | the --global flag.                                                |
-| app_id               |                      | the app's ID                                                      |
-| app_type             | [ default, console ] | The type of app; this determines whether it is run in a window as |
-|                      |                      | a normal app, or as a console app using loomexec.                 |
-| assetAgentHost       |                      | the host of the server running the asset agent                    |
-| assetAgentPort       |                      | the asset agent server port number                                |
-| debuggerHost         |                      | the host of the server running the LoomScript Debugger            |
-| debuggerPort         |                      | the LoomScript Debugger server port number                        |
-| display.height       |                      | the default height of your app                                    |
-| display.orientation  | [ portrait,          | The orientation of your app. Set to 'auto' for auto-orientation.  |
-|                      |   landscape,         |                                                                   |
-|                      |   auto ]             |                                                                   |
-| display.stats        | [ 0, 1 ]             | Show stats. 0 = no stats, 1 = Report FPS to console,              |
-| display.title        |                      | The title of your app                                             |
-| display.width        |                      | The default width of your app                                     |
-| ios_signing_identity |                      | The target iOS Developer certificate to use when creating an iOS  |
-|                      |                      | app, in the format "iPhone Developer: John Doe (XXXX)". This can  |
-|                      |                      |  be set locally, or globally using the --global flag.             |
-| log                  |                      | See 'logging options' below                                       |
-| mobile_provision     |                      | The path to the .mobileProvision file for your app. This can be   |
-|                      |                      | set locally, or globally using the --global flag.                 |
-| sdk_version          |                      | The target SDK used to compile your app. 'latest' will point to   |
-|                      |                      | the latest stable release.                                        |
-| version              |                      | the current version number of the application                     |
-| telemetry            | [ true, false ]      | Enable or disable telemetry for the entire session. See the       |
-|                      |                      | Profiling section in the LoomScript guide for more information.   |
-| waitForAssetAgent    |                      | maximum number of milliseconds to pause execution while           |
-|                      |                      | application attempts to connect to asset agent                    |
-| waitForDebugger      |                      | number of milliseconds to wait for LoomScript debugger            |
-| _wants51Audio        | [ true, false ]      | Set to true to initialize 5.1 audio                               |
+| Name                 | Valid Values             | Description                                                       |
+| -------------------- | ------------------------ | ----------------------------------------------------------------- |
+| android_sdk_path     |                          | The path to your android sdk. This can only be set globally using |
+|                      |                          | the --global flag.                                                |
+| app_id               |                          | the app's ID                                                      |
+| app_type             | [ `"default"`,           | The type of app; this determines whether it is run in a window as |
+|                      |   `"console"` ]          | a normal app, or as a console app using loomexec.                 |
+| assetAgentHost       |                          | the host of the server running the asset agent                    |
+| assetAgentPort       |                          | the asset agent server port number                                |
+| debuggerHost         |                          | the host of the server running the LoomScript Debugger            |
+| debuggerPort         |                          | the LoomScript Debugger server port number                        |
+| display.x            | [ `<integer>`,           | The default horizontal position of the app in pixels from the     |
+|                      |   `"center"` ]           | left edge of the screen.                                          |
+|                      |                          | A string value of `"center"` positions the window so it appears   |
+|                      |                          | horizontally centered on screen.                                  |
+| display.y            | [ `<integer>`,           | The default vertical position of the app in pixels from the       |
+|                      |   `"center"` ]           | top edge of the screen.                                           |
+|                      |                          | A string value of `"center"` positions the window so it appears   |
+|                      |                          | vertically centered on screen.                                    |
+| display.width        | `<integer>`              | The default width of your app in pixels                           |
+| display.height       | `<integer>`              | The default height of your app in pixels                          |
+| display.maximized    | [ `true`, `false` ]      | If `true`, the app window opens maximized                         |
+| display.minimized    | [ `true`, `false` ]      | If `true`, the app window opens minimized                         |
+| display.resizable    | [ `true`, `false` ]      | If `false`, the app window is unable to be resized during runtime |
+| display.borderless   | [ `true`, `false` ]      | If `true`, the app window has no borders. Note that on some       |
+|                      |                          | platforms a small border might still appear if `resizable` is set |
+|                      |                          | to `true` to allow resizing. Set `resizable` to `false` to hide   |
+|                      |                          | that border as well.                                              |
+| display.mode         | [ `"window"`,            | App window display mode. Set to `fullscreen` for                  |
+|                      |   `"fullscreen"`,        | "true" fullscreen changing the screen resolution to the width and |
+|                      |   `"fullscreenWindow"` ] | height as defined above. Set to `fullscreenWindow` to display the |
+|                      |                          | app in a borderless fullscreen window taking up the whole screen. |
+|                      |                          | This is similar to setting `maximized` and `borderless` to `true` |
+|                      |                          | and `resizable` to `false`.                                       |
+| display.orientation  | [ `"portrait"`,          | The orientation of your app. Set to 'auto' for auto-orientation.  |
+|                      |   `"landscape"`,         |                                                                   |
+|                      |   `"auto"` ]             |                                                                   |
+| display.stats        | [ `0`, `1` ]             | Show stats. 0 = no stats, 1 = Report FPS to console,              |
+| display.title        |                          | The title of your app                                             |
+| ios_signing_identity |                          | The target iOS Developer certificate to use when creating an iOS  |
+|                      |                          | app, in the format "iPhone Developer: John Doe (XXXX)". This can  |
+|                      |                          |  be set locally, or globally using the --global flag.             |
+| log                  |                          | See 'logging options' below                                       |
+| mobile_provision     |                          | The path to the .mobileProvision file for your app. This can be   |
+|                      |                          | set locally, or globally using the --global flag.                 |
+| sdk_version          |                          | The target SDK used to compile your app. 'latest' will point to   |
+|                      |                          | the latest stable release.                                        |
+| version              |                          | the current version number of the application                     |
+| telemetry            | [ `true`, `false` ]      | Enable or disable telemetry for the entire session. See the       |
+|                      |                          | Profiling section in the LoomScript guide for more information.   |
+| waitForAssetAgent    |                          | maximum number of milliseconds to pause execution while           |
+|                      |                          | application attempts to connect to asset agent                    |
+| waitForDebugger      |                          | number of milliseconds to wait for LoomScript debugger            |
+| _wants51Audio        | [ `true`, `false` ]      | Set to true to initialize 5.1 audio                               |
 
 ## Logging Options
 

@@ -188,7 +188,7 @@ void QuadRenderer::submit()
             ctx->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
             ctx->glDrawElements(GL_TRIANGLES,
                                                 (GLsizei)(batchedVertexCount / 4 * 6), GL_UNSIGNED_SHORT,
-                                                nullptr);
+                                                NULL);
         }
     }
     
@@ -200,7 +200,7 @@ VertexPosColorTex *QuadRenderer::getQuadVertexMemory(uint16_t vertexCount, Textu
 {
     LOOM_PROFILE_SCOPE(quadGetVertices);
 
-    if (!vertexCount || (texture < 0) || (vertexCount > MAXBATCHQUADS * 4) || shader == nullptr)
+    if (!vertexCount || (texture < 0) || (vertexCount > MAXBATCHQUADS * 4) || shader == NULL)
     {
         return NULL;
     }

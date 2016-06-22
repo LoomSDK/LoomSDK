@@ -27,6 +27,7 @@ limitations under the License.
 #import <Foundation/NSSet.h>
 #import <UIKit/UIKit.h>
 #import <CoreLocation/CoreLocation.h>
+#import <CoreMotion/CoreMotion.h>
 
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformMobile.h"
@@ -35,13 +36,23 @@ limitations under the License.
 #include "loom/common/core/assert.h"
 #include "loom/vendor/jansson/jansson.h"
 
+#include "loom/engine/bindings/loom/lmApplication.h"
+
+extern "C" {
+    void loom_appPause();
+    void loom_appResume();
+}
+
+void handleGenericEvent(void *userdata, const char *type, const char *payload);
+
 
 //interface for PlatformMobileiOS
-@interface PlatformMobileiOS : NSObject <CLLocationManagerDelegate>
+@interface PlatformMobileiOS : UIViewController <CLLocationManagerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 
 //properties
 @property (nonatomic, retain) CLLocationManager *locationManager;
 @property (nonatomic, retain) CLLocation *latestLocation;
+@property (nonatomic, retain) CMMotionManager *motionManager;
 
 //methods
 -(void)initialize;
@@ -52,12 +63,15 @@ limitations under the License.
 @end
 
 
+
+
 //implementation of PlatformMobileiOS
 @implementation PlatformMobileiOS
 
 //methods
-- (NSString *)initialize {
+- (void)initialize {
     self.locationManager = nil;
+    self.motionManager = nil;
 
     //check authorization status
     CLAuthorizationStatus authStatus = [CLLocationManager authorizationStatus];
@@ -71,7 +85,106 @@ limitations under the License.
     self.locationManager = [[CLLocationManager alloc] init];
     self.locationManager.delegate = self;
     self.locationManager.desiredAccuracy = kCLLocationAccuracyBest;
+    
+    //create the motion manager
+    self.motionManager = [[CMMotionManager alloc] init];
+    self.motionManager.accelerometerUpdateInterval = 1.0/60.0;
+    LoomApplication::listenForGenericEvents(handleGenericEvent, (void*)self);
 }
+
+-(NSString *)documentsPath:(NSString *)fileName {
+    NSArray *paths =   NSSearchPathForDirectoriesInDomains (NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    return [documentsDirectory stringByAppendingPathComponent:fileName];
+}
+
+
+-(NSString *)getPresentDateTime{
+    
+    NSDateFormatter *dateTimeFormat = [[NSDateFormatter alloc] init];
+    [dateTimeFormat setDateFormat:@"dd-MM-yyyy HH:mm:ss"];
+    
+    NSDate *now = [[NSDate alloc] init];
+    
+    NSString *theDateTime = [dateTimeFormat stringFromDate:now];
+    
+    dateTimeFormat = nil;
+    now = nil;
+    
+    return theDateTime;
+}
+
+-(void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+{
+    NSString *presentTimeStamp = [self getPresentDateTime];
+    NSString *fileSavePath = [self documentsPath:presentTimeStamp];
+    fileSavePath = [fileSavePath stringByAppendingString:@".png"];
+    
+    if ([info objectForKey:UIImagePickerControllerEditedImage])
+    {
+        //save the edited image
+        NSData *imgPngData = UIImagePNGRepresentation([info objectForKey:UIImagePickerControllerEditedImage]);
+        [imgPngData writeToFile:fileSavePath atomically:YES];
+    }
+    else
+    {
+        //save the original image
+        NSData *imgPngData = UIImagePNGRepresentation([info objectForKey:UIImagePickerControllerOriginalImage]);
+        [imgPngData writeToFile:fileSavePath atomically:YES];
+    }
+    
+    UIWindow *window = [[UIApplication sharedApplication] keyWindow];
+    UIViewController *root = window.rootViewController;
+    [root dismissModalViewControllerAnimated:YES];
+    
+    // Resume normal operations
+    loom_appResume();
+    
+    LoomApplication::fireGenericEvent("cameraSuccess", [fileSavePath UTF8String]);
+}
+
+-(void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+    UIWindow *window = [[UIApplication sharedApplication] keyWindow];
+    UIViewController *root = window.rootViewController;
+    [root dismissModalViewControllerAnimated:YES];
+    
+    // Resume normal operations
+    loom_appResume();
+    
+    LoomApplication::fireGenericEvent("cameraFail", "cancel");
+}
+
+-(void)openCamera
+{
+	if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera])
+	{
+		UIImagePickerController *imagePicker = [[UIImagePickerController alloc] init];
+		imagePicker.delegate = self;
+		imagePicker.sourceType = UIImagePickerControllerSourceTypeCamera;
+		imagePicker.allowsEditing = YES;
+        
+        // We can't do anything while camera is opened
+        loom_appPause();
+        
+        UIWindow *window = [[UIApplication sharedApplication] keyWindow];
+        UIViewController *root = window.rootViewController;
+        [root presentViewController:imagePicker animated:YES completion:nil];
+	}
+	else
+	{
+		UIAlertView *alert = [[UIAlertView alloc]initWithTitle:@"Camera Unavailable"
+								message:@"Unable to find a camera on your device."
+								delegate:nil
+								cancelButtonTitle:@"OK"
+								otherButtonTitles:nil, nil];
+		[alert show];
+		alert = nil;
+        
+        LoomApplication::fireGenericEvent("cameraFail", "fail");
+	}
+}
+
 
 -(void)startTracking:(int)minDist{
     if ([CLLocationManager locationServicesEnabled] == NO)
@@ -121,6 +234,55 @@ limitations under the License.
     return locString;
 }
 
+//returns true if accelerometer is supported on device
+-(BOOL)isAccelerometerAvailable {
+    return self.motionManager.accelerometerAvailable;
+}
+
+//returns true if accelerometer is active (it happens when startAccelerometerUpdates is called on motionManager)
+-(BOOL)isAccelerometerActive {
+    return self.motionManager.accelerometerActive;
+}
+
+-(void)enableAccelerometer:(SensorTripleChangedCallback) gTripleChangedCallback {
+    if (self.isAccelerometerActive || !self.isAccelerometerAvailable) return;
+    
+    [self.motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue currentQueue] withHandler:^(CMAccelerometerData *accelerometerData, NSError *error) {
+        if (gTripleChangedCallback != NULL) {
+            double axes[3];
+            
+            [self remapXAxis:accelerometerData.acceleration.x yAxis:accelerometerData.acceleration.y zAxis:accelerometerData.acceleration.z into:axes];
+            gTripleChangedCallback(0,axes[0],axes[1],axes[2]);
+        }
+    }];
+}
+
+-(void)disableAccelerometer {
+    [self.motionManager stopAccelerometerUpdates];
+}
+
+-(CMAccelerometerData *)getAccelerometerData {
+    return self.motionManager.accelerometerData;
+}
+
+-(void)remapXAxis:(double) x yAxis:(double) y zAxis:(double) z into:(double *) remapped {
+    UIInterfaceOrientation curOrientation = [UIApplication sharedApplication].statusBarOrientation;
+    
+    if (curOrientation == UIInterfaceOrientationLandscapeLeft) {
+        remapped[0] = y;
+        remapped[1] = -x;
+    } else if (curOrientation == UIInterfaceOrientationLandscapeRight) {
+        remapped[0] = -y;
+        remapped[1] = x;
+    } else if (curOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+        remapped[0] = -x;
+        remapped[1] = -y;
+    } else {
+        remapped[0] = x;
+        remapped[1] = y;
+    }
+    remapped[2] = z;
+}
 
 //CLLocationManagerDelegate interfaces
 //iOS5-
@@ -180,6 +342,15 @@ void ios_RemoteNotificationOpen()
             gOpenedViaRemoteNotificationCallback();
         }
     }
+}
+
+
+void handleGenericEvent(void *userdata, const char *type, const char *payload)
+{
+	if (strcmp(type, "cameraRequest") == 0) {
+        [mobileiOS openCamera];
+		return;
+	}
 }
 
 
@@ -287,26 +458,60 @@ bool platform_wasOpenedViaRemoteNotification()
     return gOpenedWithRemoteNotification;
 }
 
+///sets the received open URL query and parses it for later usage
+void platform_setOpenURLQueryData(const char *queryStr)
+{
+    if (queryStr == nil)
+        return;
+
+    // Build an URL object to check if it's valid and use it for
+    // splitting the URL into parts
+    NSString *query = [NSString stringWithUTF8String:queryStr];
+    NSURL *url = [NSURL URLWithString:query];
+    if (url == nil)
+        return;
+
+    // Check if the provided URL is of a scheme we actually support
+    NSArray *urlTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
+    NSArray *urlSchemes = [urlTypes.firstObject objectForKey:@"CFBundleURLSchemes"];
+    if (![urlSchemes containsObject:url.scheme])
+        return;
+
+    // Make a dictonary of URL query key/values
+    gOpenUrlQueryStringDictionary = [[NSMutableDictionary alloc] init];
+    NSArray *queryComponents = [url.query componentsSeparatedByString:@"&"];
+    for (NSString *keyValuePair in queryComponents)
+    {
+        NSArray *pairComponents = [keyValuePair componentsSeparatedByString:@"="];
+        if((pairComponents != nil) && ([pairComponents count] == 2))
+        {
+            NSString *key = [pairComponents objectAtIndex:0];
+            NSString *value = [pairComponents objectAtIndex:1];
+            [gOpenUrlQueryStringDictionary setObject:value forKey:key];
+        }
+    }
+
+    ios_CustomURLOpen();
+}
+
 ///gets the the specified query key data from any custom scheme URL path that the application was launched with, or "" if not found
 const char *platform_getOpenURLQueryData(const char *queryKey)
 {
     static char queryDataStatic[1024];
-    const char *cString;
     queryDataStatic[0] = '\0';
     if(queryKey && gOpenUrlQueryStringDictionary)
     {
-        NSString *queryKeyString = (queryKey) ? [NSString stringWithUTF8String : queryKey] : nil;
-        if(queryKeyString)
+        NSString *key = [NSString stringWithUTF8String:queryKey];
+        NSString *value = [gOpenUrlQueryStringDictionary objectForKey:key];
+
+        if (value != nil)
         {
-            NSString *queryData = [gOpenUrlQueryStringDictionary objectForKey:queryKeyString];
-            if(queryData)
-            {
-                cString = [queryData cStringUsingEncoding:NSUTF8StringEncoding];    
-                strcpy(queryDataStatic, cString);
-                return queryDataStatic;
-            }
+            [value getCString:queryDataStatic
+                    maxLength:sizeof(queryDataStatic)/sizeof(*queryDataStatic)
+                     encoding:NSUTF8StringEncoding];
         }
     }
+
     return queryDataStatic;
 }
 
@@ -337,35 +542,64 @@ const char *platform_getRemoteNotificationData(const char *key)
 ///checks if a given sensor is supported on this hardware
 bool platform_isSensorSupported(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
-    return false;
+    BOOL supported = false;
+    
+    switch (sensor)
+    {
+        case 0:
+            supported = [mobileiOS isAccelerometerAvailable];
+            break;
+    }
+    
+    return supported;
 }
 
 ///checks if a given sensor is currently enabled
 bool platform_isSensorEnabled(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
-    return false;
+    BOOL enabled = false;
+    
+    switch (sensor)
+    {
+        case 0:
+            enabled = [mobileiOS isAccelerometerActive];
+            break;
+    }
+    
+    return enabled;
 }
 
 ///checks if a given sensor has received any data yet
 bool platform_hasSensorReceivedData(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
-    return false;
+    return [mobileiOS getAccelerometerData] != nil;
 }
 
 ///enables the given sensor
 bool platform_enableSensor(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
-    return false;
+    BOOL enabled = false;
+    
+    switch (sensor)
+    {
+        case 0:
+            [mobileiOS enableAccelerometer:gTripleChangedCallback];
+            enabled = true;
+            break;
+    }
+    
+    return enabled;
 }
 
 ///disables the given sensor
 void platform_disableSensor(int sensor)
 {
-    ///TODO: 1844: Support sensors on iOS
+    switch (sensor)
+    {
+        case 0:
+            [mobileiOS disableAccelerometer];
+            break;
+    }
 }
 
 

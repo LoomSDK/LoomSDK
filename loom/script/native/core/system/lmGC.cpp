@@ -98,7 +98,7 @@ public:
         int stepTime;
         
         // Uncomment this to test a full GC collection cycle per frame
-        //lua_gc(L, LUA_GCCOLLECT, 0); cycles++;
+        //lua_gc(L, LUA_GCCOLLECT, 0); cyclesFinished++; cycleRuns++;
 
         // This loop is more or less equivalent to
         // int cycle = lua_gc(L, LUA_GCSTEP, runLimit);
@@ -147,7 +147,7 @@ public:
         // Memory difference in KB since cycle start
         int cycleKBDelta = memoryAfterKB - cycleKB;
 
-        // cycleKBWarn is true if the difference is big enough to wake up with
+        // cycleWarn is true if the difference is big enough to wake up with
         // a bigger collection next update.
         //
         // Warnings should be most useful when the system is in a low-churn
@@ -159,15 +159,17 @@ public:
         // it can usually have more leeway as the rate will adjust
         // under normal conditions and only sudden changes benefit from
         // a faster response.
-        bool cycleKBWarn = lastValidBPR > 0 && cycleKBDelta > cycleKB * (hibernating ? targetGarbage : cycleMemoryGrowthWarningRatio);
+        double cycleWarnThreshold = cycleKB*(hibernating ? targetGarbage : cycleMemoryGrowthWarningRatio);
+        bool cycleWarn = cycleWarnThreshold > 0 && cycleKBDelta > cycleWarnThreshold;
 
-        if (cyclesFinished > 0 || cycleKBWarn)
+        if (cyclesFinished > 0 || cycleWarn)
         {
             double collectedKB = (double) cycleCollectedBytes / 1024;
             // How many extra runs to add to the auto-adjusted runs
             int extraRuns = 0;
-            if (cycleKBWarn)
+            if (cycleWarn)
             {
+                if (lastValidBPR == 0) lastValidBPR = 64;
                 extraRuns += cycleKBDelta * 1024 / lastValidBPR / cycleWarningExtraRunDivider;
                 lmLogDebug(gGCGroup, "Allocating %d KiB in a single cycle, waking up with %d emergency runs", cycleKBDelta, extraRuns);
             }

@@ -42,7 +42,7 @@ LoomGameController::LoomGameController()
     controller = 0;
     instance_id = -1;
     haptic = 0;
-    name = nullptr;
+    name = NULL;
 }
 
 /** Initialize controller subsystem  */
@@ -340,7 +340,7 @@ void LoomGameController::close()
         }
         SDL_GameControllerClose(controller);
         controller = 0;
-        name = nullptr;
+        name = NULL;
     }
 }
 

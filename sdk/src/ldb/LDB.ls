@@ -60,7 +60,7 @@ package ldb {
                         trace("Debug client connected");
 
                     }
-                    else
+                    else if (msg != null)
                         trace(msg);
 
                     
