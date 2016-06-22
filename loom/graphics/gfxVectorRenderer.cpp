@@ -336,9 +336,27 @@ static bool readDefaultFontFaceBytes(void** mem, size_t* size)
     return readFontFile("/Library/Fonts/Arial.ttf", mem, size) != 0;
 #elif LOOM_PLATFORM == LOOM_PLATFORM_IOS
     return (bool)platform_fontSystemFontFromName("ArialMT", mem, (unsigned int*)size);
+#elif LOOM_PLATFORM == LOOM_PLATFORM_LINUX
+    FILE* pipe = popen("fc-match -f \"%{file}\"", "r");
+    if (!pipe)
+    {
+        mem = NULL;
+        size = 0;
+    }
+    char buffer[128];
+    utString path = "";
+    while (!feof(pipe))
+    {
+        if (fgets(buffer, 128, pipe) != NULL)
+            path += buffer;
+    }
+
+    pclose(pipe);
+    return readFontFile(path.c_str(), mem, size) != 0;
 #else
     mem = NULL;
     size = 0;
+    return false;
 #endif
 }
 

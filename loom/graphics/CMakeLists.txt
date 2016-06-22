@@ -57,9 +57,7 @@ if (MSVC)
 endif()
 
 if (LINUX)
-    set ( BGFX_SRC ${BGFX_SRC} ${LOOMBGFX_SOURCE_DIR}/renderer_gl.cpp ${LOOMBGFX_SOURCE_DIR}/glcontext_external.cpp )
-    set ( GRAPHICS_SRC ${GRAPHICS_SRC} gfxGraphicsAndroid.cpp )
-
+        include_directories( ${LOOM_INCLUDE_FOLDERS} )
 endif()
 
 if (FLASH)

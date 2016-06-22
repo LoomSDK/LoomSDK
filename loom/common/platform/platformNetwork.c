@@ -115,7 +115,7 @@ static void loom_net_setSocketBlocking(loom_socketId_t s, int blocking)
 #elif LOOM_PLATFORM_IS_APPLE == 1 || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
     // This should work for POSIX compliant environments.
     // See http://stackoverflow.com/questions/1150635/unix-nonblocking-i-o-o-nonblock-vs-fionbio
-    int flags = fcntl((int)s, F_GETFL);
+    int flags = fcntl((int)(size_t)s, F_GETFL);
 
     if (blocking == 1)
     {
@@ -126,7 +126,7 @@ static void loom_net_setSocketBlocking(loom_socketId_t s, int blocking)
         flags |= O_NONBLOCK;
     }
 
-    fcntl((int)s, F_SETFL, flags);
+    fcntl((int)(size_t)s, F_SETFL, flags);
 #elif LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
     int val = 1;
     ioctl((int)s, FIONBIO, &val);
@@ -162,7 +162,7 @@ loom_socketId_t loom_net_openTCPSocket(const char *host, unsigned short port, in
     hints.ai_socktype = SOCK_STREAM;
 
     //copy the port over to a string
-    sprintf(portString, "%ld", port);
+    sprintf(portString, "%d", port);
 
     // Resolve the host.
     res = getaddrinfo(host, portString, &hints, &hostInfo);
@@ -182,7 +182,7 @@ loom_socketId_t loom_net_openTCPSocket(const char *host, unsigned short port, in
     }
 
     // Block if user wants it.
-    loom_net_setSocketBlocking((loom_socketId_t)s, blocking);
+    loom_net_setSocketBlocking((loom_socketId_t)(size_t)s, blocking);
 
     // Disable SIGPIPE, we handle that in another way.
 #ifdef SO_NOSIGPIPE
@@ -219,7 +219,7 @@ loom_socketId_t loom_net_openTCPSocket(const char *host, unsigned short port, in
     }
 
     freeaddrinfo(hostInfo);
-    return (loom_socketId_t)s;
+    return (loom_socketId_t)(size_t)s;
 }
 
 
@@ -228,7 +228,7 @@ void loom_net_getSocketPeerName(loom_socketId_t s, int *hostIp, int *hostPort)
     struct sockaddr_in name;
     socklen_t          nameLen = sizeof(name);
 
-    getpeername((int)s, (struct sockaddr *)&name, &nameLen);
+    getpeername((int)(size_t)s, (struct sockaddr *)&name, &nameLen);
 
     hostIp[0]   = ((unsigned char *)&name.sin_addr.s_addr)[0];
     hostIp[1]   = ((unsigned char *)&name.sin_addr.s_addr)[1];
@@ -250,7 +250,7 @@ int loom_net_isSocketWritable(loom_socketId_t s)
 
     // Set up sets for select().
     FD_ZERO(&waitSockets);
-    FD_SET((int)s, &waitSockets);
+    FD_SET((int)(size_t)s, &waitSockets);
 
     // Run the select with a very short wait period.
     readsocks = select(FD_SETSIZE, NULL, &waitSockets, NULL, &timeout);
@@ -272,7 +272,7 @@ int loom_net_isSocketDead(loom_socketId_t s)
     int       error = 0, retval = 0;
     socklen_t len   = sizeof(error);
 
-    retval = getsockopt((int)s, SOL_SOCKET, SO_ERROR, (char *)&error, &len);
+    retval = getsockopt((int)(size_t)s, SOL_SOCKET, SO_ERROR, (char *)&error, &len);
     if (retval == -1)
     {
         lmLogError(netLogGroup, "Could not read error on socket %x due to %d, must be dead.", s, errno);
@@ -296,7 +296,7 @@ void loom_net_enableSocketKeepalive(loom_socketId_t s)
 
     //lmLog(netLogGroup, "Setting keepalive with %d %d", optVal, optLen);
 
-    if (setsockopt((int)s, SOL_SOCKET, SO_KEEPALIVE, (char *)&optVal, optLen) < 0)
+    if (setsockopt((int)(size_t)s, SOL_SOCKET, SO_KEEPALIVE, (char *)&optVal, optLen) < 0)
     {
         // This failure when due to EINVAL (22 on darwin) on a freshly created
         // socket is often because the sockethas been shutdown asynchronously by the OS.
@@ -323,7 +323,7 @@ loom_socketId_t loom_net_listenTCPSocket(unsigned short port)
 
     // Reuse addy. This avoids issues where socket lingers in TIME_WAIT and we cannot
     // reacquire it.
-    loom_net_setSocketReuseAddress((loom_socketId_t)listenSocket, 1);
+    loom_net_setSocketReuseAddress((loom_socketId_t)(size_t)listenSocket, 1);
 
     status = bind(listenSocket, (struct sockaddr *)&listenName, sizeof(listenName));
     if (status == -1)
@@ -337,14 +337,14 @@ loom_socketId_t loom_net_listenTCPSocket(unsigned short port)
     if (status == -1)
     {
         lmLogError(netLogGroup, "Could not listen on TCP socket");
-        return (loom_socketId_t)-1;
+        return (loom_socketId_t)(size_t)-1;
     }
 
     // And set it nonblocking so we can poll accept.
-    loom_net_setSocketBlocking((loom_socketId_t)listenSocket, 0);
+    loom_net_setSocketBlocking((loom_socketId_t)(size_t)listenSocket, 0);
 
 
-    return (loom_socketId_t)listenSocket;
+    return (loom_socketId_t)(size_t)listenSocket;
 }
 
 
@@ -352,9 +352,9 @@ loom_socketId_t loom_net_acceptTCPSocket(loom_socketId_t listenSocket)
 {
     struct sockaddr_in peer_name; // TODO: Expose this to caller.
     int                addrLen        = sizeof(peer_name);
-    SOCKET             acceptedSocket = accept((SOCKET)listenSocket, (struct sockaddr *)&peer_name, &addrLen);
+    SOCKET             acceptedSocket = accept((SOCKET)(size_t)listenSocket, (struct sockaddr *)&peer_name, &addrLen);
 
-    return (loom_socketId_t)acceptedSocket;
+    return (loom_socketId_t)(size_t)acceptedSocket;
 }
 
 
@@ -375,7 +375,7 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
     }
 
     if (peek) {
-        *bytesToRead = recv((SOCKET)s, buffer, tmp, MSG_PEEK);
+        *bytesToRead = recv((SOCKET)(size_t)s, buffer, tmp, MSG_PEEK);
         return;
     }
 
@@ -383,7 +383,7 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
 
     while (bytesLeft > 0)
     {
-        int received = recv((SOCKET)s, buffer, bytesLeft, 0);
+        int received = recv((SOCKET)(size_t)s, buffer, bytesLeft, 0);
         if (received == -1) {
             waiting = 0;
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
@@ -430,7 +430,7 @@ int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite)
     int bytesLeft = bytesToWrite;
     for ( ; ; )
     {
-        int result = send((SOCKET)s, buffer, bytesLeft, MSG_NOSIGNAL);
+        int result = send((SOCKET)(size_t)s, buffer, bytesLeft, MSG_NOSIGNAL);
 
         if (result >= 0)
         {
@@ -474,5 +474,5 @@ int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite)
 
 void loom_net_closeTCPSocket(loom_socketId_t s)
 {
-    closesocket((SOCKET)s);
+    closesocket((SOCKET)(size_t)s);
 }

@@ -487,4 +487,27 @@ const char *platform_getWritablePath()
 
     return path;
 }
+
+const char *platform_getSettingsPath(const char *appName)
+{
+    static char path[1024];
+
+    const char* home = getenv("HOME");
+
+    if (!home)
+    {
+      struct passwd *pw = getpwuid(getuid());
+      home = pw->pw_dir;
+    }
+
+    if (!home)
+    {
+        return "";
+    }
+
+    snprintf(path, 1023, "%s/.config/%s/", home, appName);
+
+    return path;
+}
+
 #endif

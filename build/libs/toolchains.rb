@@ -249,13 +249,32 @@ class IOSToolchain < AppleToolchain
   
 end
 
-class LinuxToolchain
+class LinuxToolchain < Toolchain
+
+  def name
+    return "linux"
+  end
+
+  def buildCommand
+    return "make -j#{$HOST.num_cores}"
+  end
+
+  def makeConfig(target)
+    return {
+      CC: "gcc" + (target.is64Bit ? "" : " -m32")
+    }
+  end
+
+  def cmakeArgs(target)
+    return "-G \"Unix Makefiles\" -DCMAKE_BUILD_TYPE=#{CFG[:BUILD_TARGET]}"
+  end
+
 end
 
 class AndroidToolchain < Toolchain
 
   def buildCommand
-    return "cmake --build ."
+    return "cmake --build . -- -j#{$HOST.num_cores}"
   end
 
   def name
@@ -266,7 +285,20 @@ class AndroidToolchain < Toolchain
     
     return nil unless !target.is64Bit
     
-    systems = ["darwin-x86_64", "darwin-x86"]
+    if !ENV["ANDROID_NDK"]
+      abort "The environment variable ANDROID_NDK is not set. Please set it to the location of your Android NDK installation."
+    end
+
+    if $HOST.is_a? OSXHost then
+    	systems = ["darwin-x86_64", "darwin-x86"]
+    elsif $HOST.is_a? LinuxHost then
+        systems = ["linux-x86_64", "linux-x86"]
+    elsif $HOST.is_a? WindowsHost then
+        systems = ["windows-x86_64", "windowx-x86"]
+    else
+        abort "Unknown host for building Android through makefiles"
+    end
+
     toolchains = ["arm-linux-androideabi-4.6", "arm-linux-androideabi-4.8", "arm-linux-androideabi-4.9"]
     
     # Android/ARM, armeabi-v7a (ARMv7 VFP), Android 4.0+ (ICS)

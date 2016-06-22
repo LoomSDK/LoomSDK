@@ -82,13 +82,19 @@
 // allocation with variably offset custom data fields
 #define LOOM_ALLOCATOR_ALIGN_MASK (8-1)
 
+// This should be a multiple of 16 - we need 16-byte alignment because of SSE
+#define LOOM_ALLOCATOR_METADATA_SIZE 16
+
+#include "loom/common/core/log.h"
+extern loom_logGroup_t gAllocatorLogGroup;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /************************************************************************
  * C ALLOCATION MACROS
- * 
+ *
  * Implement malloc/free/realloc type functionality using Loom allocators.
  ************************************************************************/
 #define lmAlloc(allocator, size) lmAlloc_inner(allocator, size, __FILE__, __LINE__)
@@ -216,7 +222,7 @@ void loom_debugAllocator_verifyAll(const char* file, int line);
 * lmNew(someAllocator) Foo(), and delete myFoo becomes
 * lmDelete(someAllocator, myfoo). We do not support the delete[] or new[]
 * operators, if you want an array use the templated vector class.
-* 
+*
 * `obj` can change addresses after `loom_destructInPlace`, so we use
 * its return value, which is the original address, for freeing the memory.
 *
@@ -274,15 +280,16 @@ T* loom_destructInPlace(T *t)
 template<typename T>
 T* loom_newArray(loom_allocator_t *allocator, unsigned int nr)
 {
-    T* arr = (T*) lmAlloc(allocator, sizeof(unsigned int) + nr * sizeof(T));
+    void* arr = (void*) lmAlloc(allocator, LOOM_ALLOCATOR_METADATA_SIZE + nr * sizeof(T));
     lmSafeAssert(arr, "Unable to allocate additional memory in loom_newArray");
-    *((unsigned int*)arr) = nr;
-    arr = (T*)(((unsigned int*)arr) + 1);
+    *(static_cast<unsigned int*>(arr)) = nr;
+    arr = reinterpret_cast<T*>(reinterpret_cast<size_t>(arr) + LOOM_ALLOCATOR_METADATA_SIZE);
     for (unsigned int i = 0; i < nr; i++)
     {
-        loom_constructInPlace<T>((void*) &arr[i]);
+        loom_constructInPlace<T>(&(static_cast<T*>(arr)[i]));
     }
-    return (T*) arr;
+
+    return static_cast<T*>(arr);
 }
 
 // Deconstructs an array allocated with loom_newArray and frees the allocated memory
@@ -294,8 +301,8 @@ template<typename T>
 void loom_deleteArray(loom_allocator_t *allocator, T *arr)
 {
     if (arr == NULL) return;
-    void* fullArray = (void*) (((unsigned int*)arr) - 1);
-    unsigned int nr = *((unsigned int*)fullArray);
+    void* fullArray = reinterpret_cast<void *>(reinterpret_cast<size_t>(arr) - LOOM_ALLOCATOR_METADATA_SIZE);
+    unsigned int nr = *(static_cast<unsigned int*>(fullArray));
     while (nr > 0)
     {
         nr--;

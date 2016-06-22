@@ -22,7 +22,6 @@ endif()
 if (LINUX)
     set (APPLICATION_SRC
       ${APPLICATION_SRC}
-      linux/main.cpp
     )
 endif()
 
@@ -274,7 +273,8 @@ elseif(LINUX)
        LoomScript
        LoomGraphics
        LoomCore
-       -lGL -lGLEW -lGLU -lglfw -lcurl
+       -lGL -lGLEW -lGLU -lcurl
+       "SDL2-static" "SDL2main" 
     )
 
     if (LOOM_BUILD_JIT EQUAL 1)
@@ -285,7 +285,7 @@ elseif(LINUX)
      
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
-        COMMAND mkdir -p ${ARTIFACTS_DIR}/
+        COMMAND mkdir -p ${ARTIFACTS_DIR}/bin
         COMMAND cp ${DEMOBIN} ${ARTIFACTS_DIR}/bin/LoomPlayer
     )
 

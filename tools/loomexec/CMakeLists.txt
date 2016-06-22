@@ -15,7 +15,7 @@ if (MSVC)
         LoomVendor
         LoomCommon
         LoomScript
-        "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "OPENGL32" "WSOCK32" "Ws2_32" 
+        "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "OPENGL32" "WSOCK32" "Ws2_32"
     )
 
     add_custom_command(TARGET loomexec
@@ -25,11 +25,21 @@ if (MSVC)
 
 else ()
 
-	target_link_libraries(loomexec
-        LoomVendor
-        LoomCommon
-        LoomScript
-	)
+    if (LINUX)
+    	target_link_libraries(loomexec
+            -Wl,--start-group
+            LoomVendor
+            LoomCommon
+            LoomScript
+            -Wl,--end-group
+        )
+    else()
+        target_link_libraries(loomexec
+            LoomVendor
+            LoomCommon
+            LoomScript
+        )
+    endif()
 
 	add_custom_command(TARGET loomexec
         POST_BUILD

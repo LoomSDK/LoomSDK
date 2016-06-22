@@ -2668,7 +2668,8 @@ NSVGimage* nsvgParseFromFile(const char* filename, const char* units, float dpi)
 	fseek(fp, 0, SEEK_SET);
 	data = (char*)nsvg_malloc(size+1);
 	if (data == NULL) goto error;
-	fread(data, size, 1, fp);
+	if (fread(data, size, 1, fp) == 0)
+		goto error;
 	data[size] = '\0';	// Must be null terminated.
 	fclose(fp);
 	image = nsvgParse(data, units, dpi);

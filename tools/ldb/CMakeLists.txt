@@ -15,22 +15,33 @@ if (MSVC)
         LoomCommon
         LoomScript
         LoomCore
-        "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "OPENGL32" "WSOCK32" "Ws2_32" 
+        "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "OPENGL32" "WSOCK32" "Ws2_32"
     )
 
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
         COMMAND echo f | xcopy /F /Y \"${LDBBIN}\" \"${ARTIFACTS_DIR}/tools/ldb.exe\"
-    )	
+    )
 
 else ()
 
-    target_link_libraries(ldb
-        LoomVendor
-        LoomCommon
-        LoomScript
-        LoomCore
-    )
+    if (LINUX)
+        target_link_libraries(ldb
+            -Wl,--start-group
+            LoomVendor
+            LoomCommon
+            LoomScript
+            LoomCore
+            -Wl,--end-group
+        )
+    else()
+        target_link_libraries(ldb
+            LoomVendor
+            LoomCommon
+            LoomScript
+            LoomCore
+        )
+    endif()
 
     add_custom_command(TARGET ldb
         POST_BUILD

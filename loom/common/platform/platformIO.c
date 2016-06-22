@@ -365,7 +365,7 @@ int platform_mapFile(const char *path, void **outPointer, long *outSize)
         lmLogDebug(ioLogGroup, "Mapped via fopen (%x, len=%d): '%s'", *outPointer, *outSize, path);
 
         fseek(f, 0, SEEK_SET);
-        fread(*outPointer, 1, size, f);
+        lmAssert(fread(*outPointer, 1, size, f), "Unable to read file: '%s'", path);
         fclose(f);
 #endif
 

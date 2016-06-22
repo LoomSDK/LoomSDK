@@ -158,7 +158,7 @@ void Texture::tick()
         if(!threadNote.path.empty())
         {
             //Texture is an Asset, so Create via handleAssetNotification
-            loom_asset_subscribe(threadNote.path.c_str(), Texture::handleAssetNotification, (void *)threadNote.id, 1);
+            loom_asset_subscribe(threadNote.path.c_str(), Texture::handleAssetNotification, (void *)(size_t)threadNote.id, 1);
             lmLogDebug(gGFXTextureLogGroup, "Async loaded texture '%s' took %i ms to create", threadNote.path.c_str(), platform_getMilliseconds() - startTime);
         }
         else
@@ -570,7 +570,7 @@ TextureInfo *Texture::initFromAssetManager(const char *path)
         lmLogDebug(gGFXTextureLogGroup, "Loading %s", path);
 
         // Now subscribe and let us load for reals.
-        loom_asset_subscribe(path, Texture::handleAssetNotification, (void *)tinfo->id, 1);
+        loom_asset_subscribe(path, Texture::handleAssetNotification, (void *)(size_t)tinfo->id, 1);
     }
     else
     {
@@ -1117,7 +1117,7 @@ void Texture::reset()
             loom_asset_unlock(path);
 
             // Do actual texture creation/update
-            handleAssetNotification((void *)tinfo->id, path);
+            handleAssetNotification((void *)(size_t)tinfo->id, path);
         }
         else
         {
@@ -1255,7 +1255,7 @@ void Texture::dispose(TextureID id)
         //TODO: LOOM-1653, we really shouldn't be holding a copy of the texture data in the
         // asset system until we dispose
         if (!tinfo->texturePath.empty()) {
-            loom_asset_unsubscribe(tinfo->texturePath.c_str(), handleAssetNotification, (void *)id);
+            loom_asset_unsubscribe(tinfo->texturePath.c_str(), handleAssetNotification, (void *)(size_t)id);
             loom_asset_flush(tinfo->texturePath.c_str());
 
             // Reset the hash, too

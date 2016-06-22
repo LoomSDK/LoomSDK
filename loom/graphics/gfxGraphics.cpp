@@ -183,7 +183,7 @@ void Graphics::reset(int width, int height, uint32_t flags)
     sTarget.flags = flags;
 }
 
-bool Graphics::queryExtension(char *extName)
+bool Graphics::queryExtension(const char *extName)
 {
     /*
     ** Search for extName in the extensions string. Use of strstr()
