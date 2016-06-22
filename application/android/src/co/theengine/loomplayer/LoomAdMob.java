@@ -9,7 +9,7 @@ import android.graphics.Bitmap;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
-import com.google.ads.*;
+import com.google.android.gms.ads.*;
 
 /**
  *  Java class that manages Admob instances. This maps directly to the platformAdMob C API
@@ -36,7 +36,7 @@ public class LoomAdMob {
     }
 
 
-    public static int createInterstitial(final String publisherID , final long callback, final long payload)
+    public static int createInterstitial(final String adUnitID, final long callback, final long payload)
     {
         final int handle = adViewCounter++;
         final Activity activity = LoomAdMob.activity;
@@ -45,46 +45,65 @@ public class LoomAdMob {
             
             @Override
             public void run() {
-                InterstitialAd inter = new InterstitialAd(activity, publisherID);
+                InterstitialAd inter = new InterstitialAd(activity);
+                inter.setAdUnitId(adUnitID);
                 LoomAdMob.interstitials.put(handle, inter);
 
                 inter.setAdListener(new AdListener() {
 
                     @Override
-                    public void onFailedToReceiveAd(Ad ad, AdRequest.ErrorCode error) {
-                        deferNativeCallback(error.toString(), callback, payload, 1);
+                    public void onAdFailedToLoad(int error) {
+                        deferNativeCallback("" + error, callback, payload, 1);
                     }
 
                     @Override
-                    public void onReceiveAd(Ad ad) {
+                    public void onAdLoaded() {
                         deferNativeCallback("", callback, payload, 0);
                     }
 
                     @Override
-                    public void onLeaveApplication(Ad ad) {
-
-                    } 
-
-                    @Override
-                    public void onPresentScreen(Ad ad) {
-                        
-                    } 
+                    public void onAdClosed() {
+                        super.onAdClosed();
+                    }
 
                     @Override
-                    public void onDismissScreen(Ad ad) {
-                        
-                    } 
+                    public void onAdLeftApplication() {
+                        super.onAdLeftApplication();
+                    }
+
+                    @Override
+                    public void onAdOpened() {
+                        super.onAdOpened();
+                    }
 
                 });
 
                 // Create ad request
-                AdRequest adRequest = new AdRequest();
+                AdRequest.Builder builder = new AdRequest.Builder();
+                AdRequest adRequest = builder.build();
 
                 inter.loadAd(adRequest);
             }
         });
         
         return handle;
+    }
+
+    public static void loadInterstitial(final int handle)
+    {
+        activity.runOnUiThread(new Runnable() {
+
+            @Override
+            public void run() {
+                InterstitialAd inter = LoomAdMob.interstitials.get(handle);
+
+                // Initiate a generic request to load it with an ad
+                AdRequest.Builder builder = new AdRequest.Builder();
+                AdRequest adRequest = builder.build();
+
+                inter.loadAd(adRequest);
+            }
+        });
     }
 
     public static void destroyInterstitial(final int handle)
@@ -113,7 +132,12 @@ public class LoomAdMob {
         });
     }
 
-    public static int create(final String publisherID , final int size)
+    public static void initialize(final String publisherID)
+    {
+        MobileAds.initialize(LoomAdMob.activity, publisherID);
+    }
+
+    public static int create(final String adUnitID, final long callback, final long payload, final int size)
     {
         final int handle = adViewCounter++;
         final ViewGroup layout = rootLayout;
@@ -123,14 +147,61 @@ public class LoomAdMob {
             
             @Override
             public void run() {
-                AdView adView = new AdView(activity, getSize(size), publisherID);
+                AdView adView = new AdView(activity);
+                adView.setAdSize(getSize(size));
+                adView.setAdUnitId(adUnitID);
                 LoomAdMob.adViews.put(handle, adView);
+                adView.setAdListener(new AdListener() {
+
+                    @Override
+                    public void onAdFailedToLoad(int error) {
+                        deferNativeCallback("" + error, callback, payload, 1);
+                    }
+
+                    @Override
+                    public void onAdLoaded() {
+                        deferNativeCallback("", callback, payload, 0);
+                    }
+
+                    @Override
+                    public void onAdClosed() {
+                        super.onAdClosed();
+                    }
+
+                    @Override
+                    public void onAdLeftApplication() {
+                        super.onAdLeftApplication();
+                    }
+
+                    @Override
+                    public void onAdOpened() {
+                        super.onAdOpened();
+                    }
+
+                });
             }
         });
         
         return handle;
     }
     
+    public static void load(final int handle)
+    {
+        activity.runOnUiThread(new Runnable() {
+
+            @Override
+            public void run() {
+                AdView adView = LoomAdMob.adViews.get(handle);
+
+                        // Initiate a generic request to load it with an ad
+                AdRequest.Builder builder = new AdRequest.Builder();
+                AdRequest adRequest = builder.build();
+
+                adView.loadAd(adRequest);
+            }
+        });
+    }
+
     public static void show(final int handle)
     {
         final ViewGroup layout = rootLayout;
@@ -147,11 +218,8 @@ public class LoomAdMob {
 
                 layout.addView(adView);
                 RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(adView.getLayoutParams());
-                params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+                params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
                 adView.setLayoutParams(params);
-
-                // Initiate a generic request to load it with an ad
-                adView.loadAd(new AdRequest());
             }
         });
     }
@@ -223,7 +291,7 @@ public class LoomAdMob {
                 RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)adView.getLayoutParams();
                 if(params != null)
                 {
-                    params.bottomMargin = y;
+                    params.topMargin = y;
                     params.leftMargin = x;
                     params.width = width;
                     params.height = height;
@@ -242,17 +310,28 @@ public class LoomAdMob {
             
             @Override
             public void run() {
-                synchronized(payload) {
-                    AdView adView = LoomAdMob.adViews.get(handle);
-                    RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)adView.getLayoutParams();
-                    if(params != null)
-                    {
-                        payload.value[0] = params.leftMargin;
-                        payload.value[1] = params.bottomMargin;
-                        payload.value[2] = params.width;
-                        payload.value[3] = params.height;
+                try {
+                    synchronized(payload) {
+                        AdView adView = LoomAdMob.adViews.get(handle);
+                        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)adView.getLayoutParams();
+                        if(params != null)
+                        {
+                            payload.value[0] = params.leftMargin;
+                            payload.value[1] = params.bottomMargin;
+                            payload.value[2] = adView.getWidth();
+                            payload.value[3] = adView.getHeight();
+
+                            if (payload.value[2] <= 0 || payload.value[3] <= 0) {
+                                payload.value[2] = adView.getAdSize().getWidthInPixels(LoomAdMob.activity);
+                                payload.value[3] = adView.getAdSize().getHeightInPixels(LoomAdMob.activity);
+                            }
+                        }
+
+
+                        payload.notify();
                     }
 
+                } catch (Exception e) {
                     payload.notify();
                 }
             }
@@ -260,7 +339,7 @@ public class LoomAdMob {
 
         try {
             synchronized(payload) {
-                payload.wait();
+                payload.wait(100);
                 return payload.value;
             }
         } catch (InterruptedException e) {
@@ -286,11 +365,11 @@ public class LoomAdMob {
             case 2:
                 return AdSize.BANNER;
             case 3:
-                return AdSize.IAB_MRECT;
+                return AdSize.MEDIUM_RECTANGLE;
             case 4:
-                return AdSize.IAB_BANNER;
+                return AdSize.LARGE_BANNER;
             case 5:
-                return AdSize.IAB_LEADERBOARD;
+                return AdSize.LEADERBOARD;
         }
 
         return AdSize.SMART_BANNER;

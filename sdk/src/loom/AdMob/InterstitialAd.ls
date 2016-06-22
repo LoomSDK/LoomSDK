@@ -34,9 +34,13 @@ package loom.admob
          *  Interstitial ad when it is ready by calling show() only after a call to onAdReceived
          *  has be made.
          *
-         *  @param publisherID The publisher ID to use when requesting the interstitial ad. 
+         *  Before creating the InterstitialAd Publisher.initialize() must be called.
+         *
+         *  @param adUnitId The Ad Unit ID to use when requesting the interstitial ad. Looks like "ca-app-pub-XXXXXXXXXXXXXXX/XXXXXXXXXX".
          */
-        public native function InterstitialAd(publisherID:String);
+        public native function InterstitialAd(adUnitId:String);
+
+        public native function load();
 
         /**
          *  Shows the interstitial ad. Should only be called once.

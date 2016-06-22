@@ -90,7 +90,13 @@ if (APPLE)
         if (LOOM_BUILD_ADMOB EQUAL 1)
             target_link_libraries(${PROJECT_NAME} 
                 "-framework AdSupport"
-                ${CMAKE_SOURCE_DIR}/loom/vendor/admob/lib/ios/libGoogleAdMobAds.a
+                "-framework EventKit"
+                "-framework EventKitUI"
+                "-framework CoreTelephony"
+                "-framework CoreMedia"
+                "-framework SafariServices"
+                "-framework CoreBluetooth"
+                "-framework GoogleMobileAds -F ${CMAKE_SOURCE_DIR}/loom/vendor/admob/ios"
             )
         endif()
         if (LOOM_BUILD_FACEBOOK EQUAL 1)

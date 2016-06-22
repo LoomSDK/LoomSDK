@@ -27,7 +27,6 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/smslib
     ${CMAKE_SOURCE_DIR}/loom/vendor/geldreich
     ${CMAKE_SOURCE_DIR}/loom/vendor/jansson
-    ${CMAKE_SOURCE_DIR}/loom/vendor/admob/include
     ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-4.0.1/include
     ${CMAKE_SOURCE_DIR}/loom/vendor/teak/ios/Carrot.framework/Headers
     ${CMAKE_SOURCE_DIR}/loom/vendor/sqlite3
@@ -234,6 +233,10 @@ if(APPLE)
         add_definitions(-DLOOM_RENDERER_OPENGLES2)
 
         include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
+
+        if (LOOM_BUILD_ADMOB EQUAL 1)
+            add_definitions("-F ${CMAKE_SOURCE_DIR}/loom/vendor/admob/ios/ -IGoogleMobileAds")
+        endif()
 
         list(APPEND LOOM_INCLUDE_FOLDERS ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/ios )
 
