@@ -16,8 +16,8 @@ package
     public class FileExample extends Application
     {
 
-        // get a writable folder 
-        var writePath = Path.normalizePath(Path.getWritablePath() + "/Loom/Tests");
+        // get a writable folder
+        var writePath = Path.normalizePath(Path.getWritablePath() + "Loom/Tests");
 
         override public function run():void
         {

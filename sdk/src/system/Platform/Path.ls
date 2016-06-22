@@ -132,6 +132,8 @@ package system.platform {
         /**
          *  Walks a given path calling the given callback function for every file in the directory and 
          *  its subdirectories.
+         *  For 'assets' direcotry on Android this is only partally supported. There this method will
+         *  list all of the non-directory files and is not recursive.
          *  @param path The path to walk.
          *  @param callback A function with the signature function(fileName:String, payload:Object).
          *  @param payload An optional object to send to the callback function.

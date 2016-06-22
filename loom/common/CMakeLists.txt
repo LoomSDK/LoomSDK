@@ -46,6 +46,13 @@ if (APPLE)
     endif()
 endif(APPLE)
 
+if (ANDROID)
+    set (CPP_FILES ${CPP_FILES}
+        platform/android/fts.c
+        platform/android/ftw.cpp
+        platform/android/reallocarray.c)
+endif(ANDROID)
+
 set (SOURCE_FILES ${CPP_FILES} ${H_FILES})
 
 # Define target & libraries to link
