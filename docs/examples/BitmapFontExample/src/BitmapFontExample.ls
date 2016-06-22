@@ -11,8 +11,6 @@ package
 
     import loom2d.text.BitmapFont;
 
-    import loom.gameframework.TimeManager;
-
     public class BitmapFontExample extends Application
     {
         var fontBatch:QuadBatch;
