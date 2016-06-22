@@ -26,6 +26,7 @@
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/common/core/log.h"
 #include "loom/common/platform/platform.h"
+#include "loom/common/platform/platformMobile.h"
 
 #include "loom/engine/bindings/sdl/lmSDL.h"
 #include "loom/engine/bindings/loom/lmGameController.h"
@@ -484,6 +485,21 @@ main(int argc, char *argv[])
     lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
 #endif
     
+#if LOOM_PLATFORM == LOOM_PLATFORM_IOS
+    // Check for SDL_DROPFILE event - this is to check if the app was opened
+    // using a custom URL scheme
+    SDL_Event e;
+    SDL_PumpEvents();
+    if (SDL_PeepEvents(&e, 1, SDL_GETEVENT, SDL_DROPFILE, SDL_DROPFILE))
+    {
+        if (e.type == SDL_DROPFILE)
+        {
+            platform_setOpenURLQueryData(e.drop.file);
+            SDL_free(e.drop.file);
+        }
+    }
+#endif
+
     // Set event callback for events that cannot wait
     SDL_SetEventFilter(sdlPriorityEvents, NULL);
     
