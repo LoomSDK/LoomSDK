@@ -26,7 +26,7 @@
 
 lmDefineLogGroup(gGFXShaderLogGroup, "gfx.shader", 1, LoomLogInfo);
 
-static const GFX::ShaderProgram *lastBoundShader = nullptr;
+static const GFX::ShaderProgram *lastBoundShader = NULL;
 
 // A hash table of live shaders that are currently compiled on the GPU
 // Contains reference counting since we are devoid of smart pointers
@@ -77,7 +77,7 @@ GFX::Shader* GFX::Shader::getShader(const utString& name)
         return se->ref;
     }
 
-    return nullptr;
+    return NULL;
 }
 
 // If _name is empty, the constructor will not compile anything.
@@ -183,17 +183,17 @@ bool GFX::Shader::validate()
 
     int infoLen;
     ctx->glGetShaderiv(id, GL_INFO_LOG_LENGTH, &infoLen);
-    GLchar* info = nullptr;
+    GLchar* info = NULL;
     if (infoLen > 1)
     {
-        info = (GLchar*)lmAlloc(nullptr, infoLen);
-        ctx->glGetShaderInfoLog(id, infoLen, nullptr, info);
+        info = (GLchar*)lmAlloc(NULL, infoLen);
+        ctx->glGetShaderInfoLog(id, infoLen, NULL, info);
     }
 
-    auto name_ = getName();
+    utString name_ = getName();
     if (status == GL_TRUE)
     {
-        if (info != nullptr)
+        if (info != NULL)
         {
             lmLogDebug(gGFXShaderLogGroup, "OpenGL shader %s info: %s", name_.c_str(), info);
         }
@@ -204,7 +204,7 @@ bool GFX::Shader::validate()
     }
     else
     {
-        if (info != nullptr)
+        if (info != NULL)
         {
             lmLogError(gGFXShaderLogGroup, "OpenGL shader %s error: %s", name_.c_str(), info);
         }
@@ -218,8 +218,8 @@ bool GFX::Shader::validate()
         return false;
     }
 
-    if (info != nullptr)
-        lmFree(nullptr, info);
+    if (info != NULL)
+        lmFree(NULL, info);
 
     return true;
 }
@@ -227,10 +227,10 @@ bool GFX::Shader::validate()
 char* GFX::Shader::getSourceFromAsset()
 {
     void * source = loom_asset_lock(name.c_str(), LATText, 1);
-    if (source == nullptr)
+    if (source == NULL)
     {
         lmLogWarn(gGFXShaderLogGroup, "Unable to lock the asset for shader %s", name.c_str());
-        return nullptr;
+        return NULL;
     }
     loom_asset_unlock(name.c_str());
 
@@ -256,7 +256,7 @@ void GFX::Shader::reloadCallback(void *payload, const char *name)
 
 GFX::ShaderProgram* GFX::ShaderProgram::getDefaultShader()
 {
-    if (defaultShader.get() == nullptr)
+    if (defaultShader.get() == NULL)
     {
         defaultShader.reset(lmNew(NULL) GFX::DefaultShader());
     }
@@ -266,7 +266,7 @@ GFX::ShaderProgram* GFX::ShaderProgram::getDefaultShader()
 
 GFX::ShaderProgram* GFX::ShaderProgram::getTintlessDefaultShader()
 {
-    if (tintlessDefaultShader.get() == nullptr)
+    if (tintlessDefaultShader.get() == NULL)
     {
         tintlessDefaultShader.reset(lmNew(NULL) GFX::TintlessDefaultShader());
     }
@@ -325,14 +325,14 @@ void GFX::ShaderProgram::load(const char* vss, const char* fss)
 void GFX::ShaderProgram::loadFromAssets(const char* vertexShaderPath, const char* fragmentShaderPath)
 {
     vertexShader = Shader::getShader(vertexShaderPath);
-    if (vertexShader == nullptr)
+    if (vertexShader == NULL)
     {
         vertexShader = lmNew(NULL) Shader(vertexShaderPath, GL_VERTEX_SHADER);
     }
     Shader::addShaderRef(vertexShaderPath, vertexShader);
 
     fragmentShader = Shader::getShader(fragmentShaderPath);
-    if (fragmentShader == nullptr)
+    if (fragmentShader == NULL)
     {
         fragmentShader = lmNew(NULL) Shader(fragmentShaderPath, GL_FRAGMENT_SHADER);
     }
@@ -378,16 +378,16 @@ bool GFX::ShaderProgram::validate()
 
     int infoLen;
     GFX::Graphics::context()->glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &infoLen);
-    GLchar* info = nullptr;
+    GLchar* info = NULL;
     if (infoLen > 1)
     {
-        info = (GLchar*)lmAlloc(nullptr, infoLen);
-        GFX::Graphics::context()->glGetProgramInfoLog(programId, infoLen, nullptr, info);
+        info = (GLchar*)lmAlloc(NULL, infoLen);
+        GFX::Graphics::context()->glGetProgramInfoLog(programId, infoLen, NULL, info);
     }
 
     if (status == GL_TRUE)
     {
-        if (info != nullptr)
+        if (info != NULL)
         {
             lmLogDebug(gGFXShaderLogGroup, "OpenGL program name %s & %s info: %s", vertexShader->getName().c_str(), fragmentShader->getName().c_str(), info);
         }

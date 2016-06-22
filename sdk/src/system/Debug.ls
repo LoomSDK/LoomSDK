@@ -26,7 +26,7 @@ package system {
     /**
      *  Represents an frame in a loom callstack. Instances of this class can be retrieved by calling Debug.getCallStack()
      *
-     *  @see Debug.getCallStack()
+     *  @see system.Debug#getCallStack()
      */
     class CallStackInfo {
         

@@ -31,11 +31,13 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>         
+            </intent-filter>
         </activity>
 
-        <activity android:name="com.google.ads.AdActivity"
+        <activity android:name="com.google.android.gms.ads.AdActivity"
                   android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"/>
+
+        <meta-data android:name="com.google.android.gms.version" android:value="9080000" />
     </application>
-    
-</manifest> 
+
+</manifest>

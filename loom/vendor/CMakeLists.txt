@@ -502,3 +502,7 @@ if (APPLE)
 endif()
 
 add_library(${PROJECT_NAME} ${ALL_FILES})
+
+if (LINUX)
+    target_link_libraries(${PROJECT_NAME} -lpthread)
+endif ()

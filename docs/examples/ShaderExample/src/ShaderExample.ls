@@ -98,7 +98,7 @@ package
                 if (obj == null)
                     continue;
 
-                obj.rotation += time.deltaTime;
+                obj.rotation += 0.025;
             }
 
             // Calculate intensity based on time, this will make the quad pulsate

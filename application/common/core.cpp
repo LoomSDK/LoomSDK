@@ -26,6 +26,7 @@
 #include "loom/graphics/gfxGraphics.h"
 #include "loom/common/core/log.h"
 #include "loom/common/platform/platform.h"
+#include "loom/common/platform/platformMobile.h"
 
 #include "loom/engine/bindings/sdl/lmSDL.h"
 #include "loom/engine/bindings/loom/lmGameController.h"
@@ -50,6 +51,7 @@ extern "C"
 SDL_Window *gSDLWindow = NULL;
 SDL_GLContext gContext;
 
+#define SDL_LOG_EVENTS 0
 lmDefineLogGroup(coreLogGroup, "core", 1, LoomLogInfo);
 lmDefineLogGroup(sdlLogGroup, "sdl", 1, LoomLogInfo);
 #define lmLogSDL(level, group, message) lmLogLevel(level, group, "%s", message);
@@ -116,7 +118,10 @@ void loop()
             stage->_KeyDownDelegate.pushArgument(key.mod);
             stage->_KeyDownDelegate.invoke();
             //lmLog(coreLogGroup, "keydown %d %d", key.sym, SDLK_BACKSPACE);
-            if (SDL_IsTextInputActive() && key.mod == KMOD_NONE && key.sym == SDLK_BACKSPACE) IMEDelegateDispatcher::shared()->dispatchDeleteBackward();
+            if (SDL_IsTextInputActive() && (key.mod & ~KMOD_CAPS & ~KMOD_NUM) == KMOD_NONE && key.sym == SDLK_BACKSPACE)
+            {
+                IMEDelegateDispatcher::shared()->dispatchDeleteBackward();
+            }
             if (key.mod & KMOD_CTRL && key.sym == SDLK_v) {
                 char* clipboard = SDL_GetClipboardText();
                 IMEDelegateDispatcher::shared()->dispatchInsertText(clipboard, strlen(clipboard));
@@ -285,6 +290,18 @@ static void sdlLogOutput(void* userdata, int category, SDL_LogPriority priority,
 // a different thread, so thread safety should be taken into account
 static int sdlPriorityEvents(void* userdata, SDL_Event* event)
 {
+#if SDL_LOG_EVENTS
+    const char *name;
+    switch (event->type) {
+        case SDL_APP_DIDENTERBACKGROUND: name = "SDL_APP_DIDENTERBACKGROUND"; break;
+        case SDL_APP_WILLENTERBACKGROUND: name = "SDL_APP_WILLENTERBACKGROUND"; break;
+        case SDL_APP_DIDENTERFOREGROUND: name = "SDL_APP_DIDENTERFOREGROUND"; break;
+        case SDL_APP_WILLENTERFOREGROUND: name = "SDL_APP_WILLENTERFOREGROUND"; break;
+        default: name = "N/A";
+    }
+    lmLog(coreLogGroup, "SDL event 0x%x, %s", event->type, name);
+#endif
+
     switch (event->type) {
         // If we don't pause immediately, the app could get killed
         // due to misbehaved processing / OpenGL activity
@@ -292,7 +309,9 @@ static int sdlPriorityEvents(void* userdata, SDL_Event* event)
             loom_appPause();
             return false;
             
-        case SDL_APP_WILLENTERFOREGROUND:
+        // SDL_APP_WILLENTERFOREGROUND seems like a closer fit, but it doesn't
+        // work with the iOS notification/control center
+        case SDL_APP_DIDENTERFOREGROUND:
             loom_appResume();
             return false;
     }
@@ -466,6 +485,21 @@ main(int argc, char *argv[])
     lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
 #endif
     
+#if LOOM_PLATFORM == LOOM_PLATFORM_IOS
+    // Check for SDL_DROPFILE event - this is to check if the app was opened
+    // using a custom URL scheme
+    SDL_Event e;
+    SDL_PumpEvents();
+    if (SDL_PeepEvents(&e, 1, SDL_GETEVENT, SDL_DROPFILE, SDL_DROPFILE))
+    {
+        if (e.type == SDL_DROPFILE)
+        {
+            platform_setOpenURLQueryData(e.drop.file);
+            SDL_free(e.drop.file);
+        }
+    }
+#endif
+
     // Set event callback for events that cannot wait
     SDL_SetEventFilter(sdlPriorityEvents, NULL);
     

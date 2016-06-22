@@ -236,7 +236,7 @@ public:
                             "duplicate local variable definition \"%s\" in function %s:%s",
                             vd->identifier->string.c_str(),
                             function->classDecl ? function->classDecl->fullPath.c_str() : "",
-                            function->name ? function->name->string.c_str() : "anonymous", conflict);
+                            function->name ? function->name->string.c_str() : "anonymous");
 
                     LSCompilerLog::logError(source.c_str(), vd->lineNumber, errormsg, "Scope");
                 }

@@ -29,7 +29,7 @@ class Host
     end
     
     def arch()
-      if @ISX64
+      if @ISX64 == '1'
         "x64"
       else
         "x86"

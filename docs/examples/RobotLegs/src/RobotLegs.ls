@@ -324,7 +324,7 @@ package
         override public function run():void
         {
             // Comment out this line to turn off automatic scaling.
-            //stage.scaleMode = StageScaleMode.LETTERBOX;
+            stage.scaleMode = StageScaleMode.LETTERBOX;
 
             // TODO: The visual init here could be made its own command.
 

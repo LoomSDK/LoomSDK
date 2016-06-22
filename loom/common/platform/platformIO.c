@@ -41,7 +41,7 @@ AAssetManager *gAssetManager = NULL;
 #endif
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
-#include "loom/common/platform/platformFileAndroid.h"
+#include "loom/common/platform/android/ftw.h"
 #include <sys/stat.h>
 #endif
 
@@ -365,7 +365,7 @@ int platform_mapFile(const char *path, void **outPointer, long *outSize)
         lmLogDebug(ioLogGroup, "Mapped via fopen (%x, len=%d): '%s'", *outPointer, *outSize, path);
 
         fseek(f, 0, SEEK_SET);
-        fread(*outPointer, 1, size, f);
+        lmAssert(fread(*outPointer, 1, size, f), "Unable to read file: '%s'", path);
         fclose(f);
 #endif
 
@@ -462,6 +462,10 @@ static platform_subdirectoryWalkerCallback gCurrentWalkCallback = NULL;
 static void *gCurrentWalkPayload = NULL;
 static int ftwWalker(const char *fpath, const struct stat *sb, int typeflag)
 {
+    // Skip invalid paths
+    if (typeflag == FTW_NS)
+        return 0;
+
     if (typeflag == FTW_D)
     {
         gCurrentWalkCallback(fpath, gCurrentWalkPayload);
@@ -589,16 +593,49 @@ static void platform_walkFiles_r(const char *path, platform_fileWalkerCallback c
 static platform_fileWalkerCallback gCurrentFileWalkCallback = NULL;
 static void *gCurrentFileWalkPayload = NULL;
 static void *gFileWalkLock           = NULL;
+static int   gHitCount               = 0;
 static int ftwFileWalker(const char *fpath, const struct stat *sb, int typeflag)
 {
+    // Skip invalid paths
+    if (typeflag == FTW_NS)
+        return 0;
+
+    lmLogWarn(ioLogGroup, "ftw hit: %s is dir: %d", fpath, typeflag);
     if (typeflag != FTW_D)
     {
+        gHitCount++;
         gCurrentFileWalkCallback(fpath, gCurrentFileWalkPayload);
     }
 
     // Non-zero terminates the walk.
     return 0;
 }
+#endif
+
+#if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+
+void assetTraverseDirs(const char* path)
+{
+    AAssetDir* dir = AAssetManager_openDir(gAssetManager, path);
+
+    const char* filename = NULL;
+    while ((filename = AAssetDir_getNextFileName(dir)) != NULL)
+    {
+        char buf[1024];
+        sprintf(buf, "%s/%s", path, filename);
+
+        AAsset* res = AAssetManager_open(gAssetManager, buf, AASSET_MODE_UNKNOWN);
+        if (res != NULL)
+        {
+            gCurrentFileWalkCallback(buf, gCurrentFileWalkPayload);
+        }
+
+        AAsset_close(res);
+    }
+
+    AAssetDir_close(dir);
+}
+
 #endif
 
 void platform_walkFiles(const char *rootPath, platform_fileWalkerCallback cb, void *payload)
@@ -617,8 +654,16 @@ void platform_walkFiles(const char *rootPath, platform_fileWalkerCallback cb, vo
 
     gCurrentFileWalkCallback = cb;
     gCurrentFileWalkPayload  = payload;
+    gHitCount                = 0;
 
     ftw(rootPath, ftwFileWalker, 16);
+
+    #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+    if (gHitCount == 0)
+    {
+        assetTraverseDirs(rootPath);
+    }
+    #endif
 
     loom_mutex_unlock(gFileWalkLock);
 #else

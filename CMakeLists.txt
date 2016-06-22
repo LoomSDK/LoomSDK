@@ -27,7 +27,6 @@ set (LOOM_INCLUDE_FOLDERS
     ${CMAKE_SOURCE_DIR}/loom/vendor/smslib
     ${CMAKE_SOURCE_DIR}/loom/vendor/geldreich
     ${CMAKE_SOURCE_DIR}/loom/vendor/jansson
-    ${CMAKE_SOURCE_DIR}/loom/vendor/admob/include
     ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-4.0.1/include
     ${CMAKE_SOURCE_DIR}/loom/vendor/teak/ios/Carrot.framework/Headers
     ${CMAKE_SOURCE_DIR}/loom/vendor/sqlite3
@@ -60,12 +59,6 @@ endif()
 # define LOOM_DEBUG if this is a Debug build
 if (LOOM_IS_DEBUG EQUAL 1)
     add_definitions(-DLOOM_DEBUG)
-endif()
-
-# Compile all C++ sources with C++11
-# MSVC has that turned on by default
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
 #--------------------------------------
@@ -106,7 +99,7 @@ endif()
 # SDL
 #--------------------------------------
 
-if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS))
+if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS) OR LINUX)
     # Used for generated config include
     include_directories(${CMAKE_BINARY_DIR}/loom/vendor/sdl2/include)
     include_directories(${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
@@ -235,6 +228,10 @@ if(APPLE)
 
         include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
 
+        if (LOOM_BUILD_ADMOB EQUAL 1)
+            add_definitions("-F ${CMAKE_SOURCE_DIR}/loom/vendor/admob/ios/ -IGoogleMobileAds")
+        endif()
+
         list(APPEND LOOM_INCLUDE_FOLDERS ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/ios )
 
     else()
@@ -292,6 +289,7 @@ endif()
 if (LINUX)
 
     if(LOOM_BUILD_64BIT EQUAL 1)
+      ADD_DEFINITIONS("-fPIC")
       SET(ARTIFACTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/linux-x64)
     else()
       SET(ARTIFACTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/artifacts/linux-x86)
@@ -299,7 +297,6 @@ if (LINUX)
 
     set (LOOM_INCLUDE_FOLDERS
     ${LOOM_INCLUDE_FOLDERS}
-    ${CMAKE_SOURCE_DIR}/loom/engine/cocos2dx/platform/linux
     ${CMAKE_SOURCE_DIR}/loom/vendor/glew-1.7.0/include )
 
     add_definitions(-DLOOM_DISABLE_JEMALLOC -DLOOM_LINUX_BUILD -DLINUX -DHAVE_CXA_DEMANGLE -DNPERFORMANCE -DNTELEMETRY)

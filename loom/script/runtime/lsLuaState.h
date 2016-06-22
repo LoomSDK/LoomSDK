@@ -50,6 +50,8 @@ class LSLuaState {
 
     bool debuggingEnabled;
 
+    bool hasMissingTypes;
+
     lua_State *L;
 
     // loaded assemblies
@@ -80,6 +82,12 @@ class LSLuaState {
     inline void endAssemblyLoad()
     {
         loadingAssembly--;
+
+        if (loadingAssembly == 0)
+        {
+            cleanUpMissingTypes();
+        }
+
         lmAssert(loadingAssembly >= 0, "Mismatched endAssemblyLoad called");
     }
 
@@ -89,6 +97,7 @@ class LSLuaState {
     }
 
     void finalizeAssemblyLoad(Assembly *assembly, utArray<Type *>& types);
+    void cleanUpMissingTypes();
 
     void cacheAssemblyTypes(Assembly *assembly, utArray<Type *>& types);
 
@@ -114,6 +123,8 @@ public:
         functionType = NULL;
         vectorType   = NULL;
         reflectionType = NULL;
+
+        hasMissingTypes = false;
     }
 
     inline lua_State *VM()
@@ -177,7 +188,7 @@ public:
 
     void loadAssemblyBinaryHeader(utByteArray *bytes);
     Assembly *loadAssemblyBinaryBody();
-    
+
     /*
      * Loads an Executable Binary assembly into the VM, once loaded the assembly may be executed
      */
@@ -288,7 +299,7 @@ public:
     }
 
     void dumpManagedNatives();
-    
+
     static void dumpLuaTable(lua_State *L, int index, int levels, int level = 0);
     static void dumpLuaStack(lua_State *L);
     void dumpLuaStack();

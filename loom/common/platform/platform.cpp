@@ -62,4 +62,27 @@ int platform_openURL(const char *url)
 
 }
 
+#elif LOOM_PLATFORM == LOOM_PLATFORM_LINUX
+
+#include <unistd.h>
+
+extern "C" {
+
+int platform_openURL(const char *url)
+{
+    int pid = fork();
+    if (pid == 0)
+    {
+        char *args[] = { (char*)("/usr/bin/xdg-open"), (char*)url, NULL };
+    	execv(args[0], args);
+    }
+    else if (pid == -1)
+    {
+        return false;
+    }
+    return true;
+}
+
+}
+
 #endif

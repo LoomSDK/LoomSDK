@@ -42,7 +42,9 @@ void Java_co_theengine_loomplayer_LoomAdMob_nativeCallback(JNIEnv *env, jobject 
 //_________________________________________________________________________
 // JNI Helpers
 //_________________________________________________________________________
+static loomJniMethodInfo gInitMethodInfo;
 static loomJniMethodInfo gCreateMethodInfo;
+static loomJniMethodInfo gLoadMethodInfo;
 static loomJniMethodInfo gShowMethodInfo;
 static loomJniMethodInfo gHideMethodInfo;
 static loomJniMethodInfo gDestroyMethodInfo;
@@ -50,7 +52,8 @@ static loomJniMethodInfo gDestroyAllMethodInfo;
 static loomJniMethodInfo gSetDimensionsMethodInfo;
 static loomJniMethodInfo gGetDimensionsMethodInfo;
 
-static loomJniMethodInfo gCreateInterstitialInfo;
+static loomJniMethodInfo gCreateInterstitialMethodInfo;
+static loomJniMethodInfo gLoadInterstitialMethodInfo;
 static loomJniMethodInfo gShowInterstitialMethodInfo;
 static loomJniMethodInfo gDestroyInterstitialMethodInfo;
 
@@ -61,10 +64,20 @@ static void android_adMobEnsureInitialized()
     if (!initialized)
     {
         // initialize all of our jni method infos
+        LoomJni::getStaticMethodInfo(gInitMethodInfo,
+                                     "co/theengine/loomplayer/LoomAdMob",
+                                     "initialize",
+                                     "(Ljava/lang/String;)V");
+
         LoomJni::getStaticMethodInfo(gCreateMethodInfo,
                                      "co/theengine/loomplayer/LoomAdMob",
                                      "create",
-                                     "(Ljava/lang/String;I)I");
+                                     "(Ljava/lang/String;JJI)I");
+
+         LoomJni::getStaticMethodInfo(gLoadMethodInfo,
+                                     "co/theengine/loomplayer/LoomAdMob",
+                                     "load",
+                                     "(I)V");
 
         LoomJni::getStaticMethodInfo(gDestroyMethodInfo,
                                      "co/theengine/loomplayer/LoomAdMob",
@@ -96,10 +109,15 @@ static void android_adMobEnsureInitialized()
                                      "getDimensions",
                                      "(I)[I");
 
-        LoomJni::getStaticMethodInfo(gCreateInterstitialInfo,
+        LoomJni::getStaticMethodInfo(gCreateInterstitialMethodInfo,
                                      "co/theengine/loomplayer/LoomAdMob",
                                      "createInterstitial",
                                      "(Ljava/lang/String;JJ)I");
+
+        LoomJni::getStaticMethodInfo(gLoadInterstitialMethodInfo,
+                                     "co/theengine/loomplayer/LoomAdMob",
+                                     "loadInterstitial",
+                                     "(I)V");
 
         LoomJni::getStaticMethodInfo(gDestroyInterstitialMethodInfo,
                                      "co/theengine/loomplayer/LoomAdMob",
@@ -115,18 +133,30 @@ static void android_adMobEnsureInitialized()
     }
 }
 
-
-loom_adMobHandle platform_adMobCreate(const char *publisherID, loom_adMobBannerSize size)
+void platform_adMobInitalize(const char* publisherID)
 {
     android_adMobEnsureInitialized();
 
-    jstring jPublisherID = gCreateMethodInfo.getEnv()->NewStringUTF(publisherID);
-    jint    handle       = gCreateMethodInfo.getEnv()->CallStaticIntMethod(gCreateMethodInfo.classID, gCreateMethodInfo.methodID, jPublisherID, (jint)size);
-    gCreateMethodInfo.getEnv()->DeleteLocalRef(jPublisherID);
+    jstring jPublisherId = gInitMethodInfo.getEnv()->NewStringUTF(publisherID);
+    gInitMethodInfo.getEnv()->CallStaticVoidMethod(gInitMethodInfo.classID, gInitMethodInfo.methodID, jPublisherId);
+    gInitMethodInfo.getEnv()->DeleteLocalRef(jPublisherId);
+}
+
+loom_adMobHandle platform_adMobCreate(const char *adUnitId, loom_adMobCallback callback, void *payload, loom_adMobBannerSize size)
+{
+    android_adMobEnsureInitialized();
+
+    jstring jAdUnitId = gCreateMethodInfo.getEnv()->NewStringUTF(adUnitId);
+    jint    handle       = gCreateMethodInfo.getEnv()->CallStaticIntMethod(gCreateMethodInfo.classID, gCreateMethodInfo.methodID, jAdUnitId, (jlong)callback, (jlong)payload, (jint)size);
+    gCreateMethodInfo.getEnv()->DeleteLocalRef(jAdUnitId);
 
     return (int)handle;
 }
 
+void platform_adMobLoad(loom_adMobHandle handle)
+{
+    gLoadMethodInfo.getEnv()->CallStaticVoidMethod(gLoadMethodInfo.classID, gLoadMethodInfo.methodID, (jint)handle);
+}
 
 void platform_adMobShow(loom_adMobHandle handle)
 {
@@ -171,22 +201,28 @@ loom_adMobDimensions platform_adMobGetDimensions(loom_adMobHandle handle)
     frame.width  = body[2];
     frame.height = body[3];
 
+    gGetDimensionsMethodInfo.getEnv()->DeleteLocalRef(arr);
+
     return frame;
 }
 
 
-loom_adMobHandle platform_adMobCreateInterstitial(const char *publisherID, loom_adMobCallback callback, void *payload)
+loom_adMobHandle platform_adMobCreateInterstitial(const char *adUnitId, loom_adMobCallback callback, void *payload)
 {
     android_adMobEnsureInitialized();
 
 
-    jstring jPublisherID = gCreateInterstitialInfo.getEnv()->NewStringUTF(publisherID);
-    jint    handle       = gCreateInterstitialInfo.getEnv()->CallStaticIntMethod(gCreateInterstitialInfo.classID, gCreateInterstitialInfo.methodID, jPublisherID, (jlong)callback, (jlong)payload);
-    gCreateInterstitialInfo.getEnv()->DeleteLocalRef(jPublisherID);
+    jstring jAdUnitId = gCreateInterstitialMethodInfo.getEnv()->NewStringUTF(adUnitId);
+    jint    handle       = gCreateInterstitialMethodInfo.getEnv()->CallStaticIntMethod(gCreateInterstitialMethodInfo.classID, gCreateInterstitialMethodInfo.methodID, jAdUnitId, (jlong)callback, (jlong)payload);
+    gCreateInterstitialMethodInfo.getEnv()->DeleteLocalRef(jAdUnitId);
 
     return (int)handle;
 }
 
+void platform_adMobLoadInterstitial(loom_adMobHandle handle)
+{
+    gLoadInterstitialMethodInfo.getEnv()->CallStaticVoidMethod(gLoadInterstitialMethodInfo.classID, gLoadInterstitialMethodInfo.methodID, (jint)handle);
+}
 
 void platform_adMobShowInterstitial(loom_adMobHandle handle)
 {

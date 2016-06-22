@@ -70,7 +70,10 @@ bool platform_wasOpenedViaRemoteNotification();
 ///gets the the specified query key data from any custom scheme URL path that the application was launched with, or "" if not found
 const char *platform_getOpenURLQueryData(const char *queryKey);
 
-///gets the the data associated with the specified key from any potential custom payload attached to a 
+///sets the received open URL query and parses it for later usage
+void platform_setOpenURLQueryData(const char *queryStr);
+
+///gets the the data associated with the specified key from any potential custom payload attached to a
 ///Remote Notification that the application was launched with, or "" if not found
 const char *platform_getRemoteNotificationData(const char *key);
 

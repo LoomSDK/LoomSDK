@@ -49,5 +49,5 @@ if (ANDROID)
 endif(ANDROID)
 
 if (LINUX)
-    target_link_libraries(${TARGET_NAME} -lz LoomVendor LoomCommon )
+    target_link_libraries(${TARGET_NAME} -lz LoomVendor LoomCommon SDL2-static ) # SDL2-static for SDL_qsort
 endif(LINUX)

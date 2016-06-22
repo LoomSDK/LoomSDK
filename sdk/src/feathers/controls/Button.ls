@@ -443,8 +443,6 @@ package feathers.controls
             }
             this._currentState = value;
             this.invalidate(INVALIDATION_FLAG_STATE);
-
-            this.dispatchEventWith(Event.CHANGE);
         }
 
         /**

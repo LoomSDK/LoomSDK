@@ -25,11 +25,13 @@
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
 #include <rpc.h>
-#elif LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+#elif LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
 #include <stdio.h>
 #else
 #include <uuid/uuid.h>
 #endif
+
+const char* LOOM_GUID_EMPTY = "00000000-0000-0000-0000-000000000000";
 
 extern "C"
 {
@@ -40,7 +42,7 @@ extern "C"
 #pragma comment(lib, "rpcrt4.lib")
         UUID uuid;
         UuidCreate(&uuid);
-        
+
         char* tempStr = NULL;
         if (UuidToStringA(&uuid, (RPC_CSTR*)&tempStr) == RPC_S_OK)
         {
@@ -49,12 +51,17 @@ extern "C"
         }
         else
         {
-            out_guid = "00000000-0000-0000-0000-000000000000";
+            out_guid = const_cast<char*>(LOOM_GUID_EMPTY);
         }
-#elif LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
+#elif LOOM_PLATFORM == LOOM_PLATFORM_ANDROID || LOOM_PLATFORM == LOOM_PLATFORM_LINUX
         FILE* f = fopen("/proc/sys/kernel/random/uuid", "r");
-	fread(out_guid, sizeof(char), LOOM_GUID_SIZE, f);
-	fclose(f);
+        size_t num = fread(out_guid, sizeof(char), LOOM_GUID_SIZE - 1, f);
+        fclose(f);
+
+        if (num != LOOM_GUID_SIZE - 1)
+        {
+            out_guid = const_cast<char*>(LOOM_GUID_EMPTY);
+        }
 #else
         uuid_t uuid;
         uuid_generate(uuid);

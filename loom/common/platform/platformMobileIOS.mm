@@ -458,26 +458,60 @@ bool platform_wasOpenedViaRemoteNotification()
     return gOpenedWithRemoteNotification;
 }
 
+///sets the received open URL query and parses it for later usage
+void platform_setOpenURLQueryData(const char *queryStr)
+{
+    if (queryStr == nil)
+        return;
+
+    // Build an URL object to check if it's valid and use it for
+    // splitting the URL into parts
+    NSString *query = [NSString stringWithUTF8String:queryStr];
+    NSURL *url = [NSURL URLWithString:query];
+    if (url == nil)
+        return;
+
+    // Check if the provided URL is of a scheme we actually support
+    NSArray *urlTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
+    NSArray *urlSchemes = [urlTypes.firstObject objectForKey:@"CFBundleURLSchemes"];
+    if (![urlSchemes containsObject:url.scheme])
+        return;
+
+    // Make a dictonary of URL query key/values
+    gOpenUrlQueryStringDictionary = [[NSMutableDictionary alloc] init];
+    NSArray *queryComponents = [url.query componentsSeparatedByString:@"&"];
+    for (NSString *keyValuePair in queryComponents)
+    {
+        NSArray *pairComponents = [keyValuePair componentsSeparatedByString:@"="];
+        if((pairComponents != nil) && ([pairComponents count] == 2))
+        {
+            NSString *key = [pairComponents objectAtIndex:0];
+            NSString *value = [pairComponents objectAtIndex:1];
+            [gOpenUrlQueryStringDictionary setObject:value forKey:key];
+        }
+    }
+
+    ios_CustomURLOpen();
+}
+
 ///gets the the specified query key data from any custom scheme URL path that the application was launched with, or "" if not found
 const char *platform_getOpenURLQueryData(const char *queryKey)
 {
     static char queryDataStatic[1024];
-    const char *cString;
     queryDataStatic[0] = '\0';
     if(queryKey && gOpenUrlQueryStringDictionary)
     {
-        NSString *queryKeyString = (queryKey) ? [NSString stringWithUTF8String : queryKey] : nil;
-        if(queryKeyString)
+        NSString *key = [NSString stringWithUTF8String:queryKey];
+        NSString *value = [gOpenUrlQueryStringDictionary objectForKey:key];
+
+        if (value != nil)
         {
-            NSString *queryData = [gOpenUrlQueryStringDictionary objectForKey:queryKeyString];
-            if(queryData)
-            {
-                cString = [queryData cStringUsingEncoding:NSUTF8StringEncoding];    
-                strcpy(queryDataStatic, cString);
-                return queryDataStatic;
-            }
+            [value getCString:queryDataStatic
+                    maxLength:sizeof(queryDataStatic)/sizeof(*queryDataStatic)
+                     encoding:NSUTF8StringEncoding];
         }
     }
+
     return queryDataStatic;
 }
 
