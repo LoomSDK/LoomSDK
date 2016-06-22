@@ -26,7 +26,6 @@
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_ANDROID
 
-#include "loom/common/platform/platformFileAndroid.h"
 #include "loom/common/platform/platformAndroidJni.h"
 
 #include <jni.h>
@@ -66,84 +65,5 @@ const char *platform_getSettingsPath()
     return path.c_str();
 }
 
-
-int ftw(const char *path, int (*fn)(const char *, const struct stat *, int), int nfds)
-{
-    /* LINTED */
-    char *const paths[2] = { (char *)__UNCONST(path), NULL };
-    FTSENT      *cur;
-    FTS         *ftsp;
-    int         fnflag, error, sverrno;
-
-    /* XXX - nfds is currently unused */
-    if ((nfds < 1) || (nfds > OPEN_MAX))
-    {
-        errno = EINVAL;
-        return(-1);
-    }
-
-    ftsp = fts_open(paths, FTS_COMFOLLOW | FTS_NOCHDIR, NULL);
-    if (ftsp == NULL)
-    {
-        return(-1);
-    }
-    error = 0;
-    while ((cur = fts_read(ftsp)) != NULL)
-    {
-        switch (cur->fts_info)
-        {
-        case FTS_D:
-            fnflag = FTW_D;
-            break;
-
-        case FTS_DNR:
-            fnflag = FTW_DNR;
-            break;
-
-        case FTS_DP:
-            /* we only visit in preorder */
-            continue;
-
-        case FTS_F:
-        case FTS_DEFAULT:
-            fnflag = FTW_F;
-            break;
-
-        case FTS_NS:
-        case FTS_NSOK:
-        case FTS_SLNONE:
-            fnflag = FTW_NS;
-            break;
-
-        case FTS_SL:
-            fnflag = FTW_SL;
-            break;
-
-        case FTS_DC:
-            errno = ELOOP;
-
-        /* FALLTHROUGH */
-        default:
-            error = -1;
-            goto done;
-        }
-        error = fn(cur->fts_path, cur->fts_statp, fnflag);
-        if (error != 0)
-        {
-            break;
-        }
-    }
-done:
-    sverrno = errno;
-    if ((fts_close(ftsp) != 0) && (error == 0))
-    {
-        error = -1;
-    }
-    else
-    {
-        errno = sverrno;
-    }
-    return(error);
-}
 }
 #endif
