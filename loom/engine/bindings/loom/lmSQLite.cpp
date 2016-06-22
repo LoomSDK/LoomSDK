@@ -428,7 +428,17 @@ Connection *Connection::open(const char *database, int flags)
     else
     {
         //no separator, so we need to prefix the system writable path in front of the database name
-        c->databaseFullPath = utString(platform_getSettingsPath(LoomApplicationConfig::applicationId().c_str())) + utString(platform_getFolderDelimiter()) + c->databaseName;
+
+        const char* settingsPath = platform_getSettingsPath(LoomApplicationConfig::applicationId().c_str());
+
+        // Ensure that the directory we're writing to exists
+        if (!platform_dirExists(settingsPath) == 0)
+        {
+            lmLogInfo(gSQLiteGroup, "Settings directory '%s' doesn't exist, creating.", settingsPath);
+            platform_makeDir(settingsPath);
+        }
+
+        c->databaseFullPath = utString(settingsPath) + c->databaseName;
     }
     
     //open the SQLite DB
