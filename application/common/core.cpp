@@ -117,7 +117,10 @@ void loop()
             stage->_KeyDownDelegate.pushArgument(key.mod);
             stage->_KeyDownDelegate.invoke();
             //lmLog(coreLogGroup, "keydown %d %d", key.sym, SDLK_BACKSPACE);
-            if (SDL_IsTextInputActive() && key.mod == KMOD_NONE && key.sym == SDLK_BACKSPACE) IMEDelegateDispatcher::shared()->dispatchDeleteBackward();
+            if (SDL_IsTextInputActive() && (key.mod & ~KMOD_CAPS & ~KMOD_NUM) == KMOD_NONE && key.sym == SDLK_BACKSPACE)
+            {
+                IMEDelegateDispatcher::shared()->dispatchDeleteBackward();
+            }
             if (key.mod & KMOD_CTRL && key.sym == SDLK_v) {
                 char* clipboard = SDL_GetClipboardText();
                 IMEDelegateDispatcher::shared()->dispatchInsertText(clipboard, strlen(clipboard));
