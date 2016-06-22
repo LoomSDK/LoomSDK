@@ -38,6 +38,7 @@ void platform_unmapFile(void *ptr);
 int platform_mapFileExists(const char *path);
 
 // Walk a directory and callback for each subdirectory.
+// Note that this is not possible within the 'assets' directory on Android.
 typedef void (*platform_subdirectoryWalkerCallback)(const char *subdirectoryPath, void *payload);
 void platform_walkSubdirectories(const char *rootPath, platform_subdirectoryWalkerCallback cb, void *payload);
 
