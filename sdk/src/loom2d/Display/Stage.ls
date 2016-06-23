@@ -179,7 +179,7 @@ package loom2d.display
             // Application's TouchProcessor handles touch/mouse input.
             onScrollWheelYMoved += onScrollWheelHandler;
 
-            //layer.onKeyBackClicked += onKeyBackClicked;
+            onBackKey += onBackKeyHandler;
 
             // Show stats specified in config file
             /*if ( Cocos2D.configStats == Cocos2D.STATS_REPORT_FPS )
@@ -223,7 +223,7 @@ package loom2d.display
             broadcastEvent(new ScrollWheelEvent(ScrollWheelEvent.SCROLLWHEEL, delta));   
         }
 
-        protected function onKeyBackClickedHandler()
+        protected function onBackKeyHandler()
         {
             broadcastEvent(new KeyboardEvent(KeyboardEvent.BACK_PRESSED, 0, LoomKey.BUTTON_BACK));
         }

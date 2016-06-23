@@ -42,15 +42,15 @@ static int do_nftw(const char *path,
   }
   bool postorder = (nftw_flags & FTW_DEPTH) != 0;
   // Call fts_open.
-  char* const paths[2] = { const_cast<char*>(path), nullptr };
-  FTS* fts = fts_open(paths, fts_options, nullptr);
-  if (fts == nullptr) {
+  char* const paths[2] = { const_cast<char*>(path), NULL };
+  FTS* fts = fts_open(paths, fts_options, NULL);
+  if (fts == NULL) {
     return -1;
   }
   // Translate fts_read results into ftw/nftw callbacks.
   int error = 0;
   FTSENT* cur;
-  while (error == 0 && (cur = fts_read(fts)) != nullptr) {
+  while (error == 0 && (cur = fts_read(fts)) != NULL) {
     int fn_flag;
     switch (cur->fts_info) {
       case FTS_D:
@@ -78,7 +78,7 @@ static int do_nftw(const char *path,
         fn_flag = FTW_SL;
         break;
       case FTS_SLNONE:
-        fn_flag = (nftw_fn != nullptr) ? FTW_SLN : FTW_NS;
+        fn_flag = (nftw_fn != NULL) ? FTW_SLN : FTW_NS;
         break;
       case FTS_DC:
         errno = ELOOP;
@@ -89,7 +89,7 @@ static int do_nftw(const char *path,
         continue;
     }
     // Call the appropriate function.
-    if (nftw_fn != nullptr) {
+    if (nftw_fn != NULL) {
       FTW ftw;
       ftw.base = cur->fts_pathlen - cur->fts_namelen;
       ftw.level = cur->fts_level;
@@ -107,9 +107,9 @@ static int do_nftw(const char *path,
   return error;
 }
 int ftw(const char* path, int (*ftw_fn)(const char*, const struct stat*, int), int nfds) {
-  return do_nftw(path, ftw_fn, nullptr, nfds, 0);
+  return do_nftw(path, ftw_fn, NULL, nfds, 0);
 }
 int nftw(const char* path, int (*nftw_fn)(const char*, const struct stat*, int, FTW*),
          int nfds, int nftw_flags) {
-  return do_nftw(path, nullptr, nftw_fn, nfds, nftw_flags);
+  return do_nftw(path, NULL, nftw_fn, nfds, nftw_flags);
 }

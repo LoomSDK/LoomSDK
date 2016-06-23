@@ -152,8 +152,6 @@ public:
     LOOM_DELEGATE(TouchMoved);
     LOOM_DELEGATE(TouchEnded);
     LOOM_DELEGATE(TouchCancelled);
-    LOOM_DELEGATE(KeyBackClicked);
-    LOOM_DELEGATE(KeyMenuClicked);
     LOOM_DELEGATE(KeyUp);
     LOOM_DELEGATE(KeyDown);
     LOOM_DELEGATE(MenuKey);
