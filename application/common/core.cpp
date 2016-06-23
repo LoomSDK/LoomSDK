@@ -83,13 +83,13 @@ void loop()
             continue;
 
         // Adjust coordinates for mouse events to work properly on high dpi screens.
-        if(event.type == SDL_MOUSEMOTION 
-            || event.type == SDL_MOUSEBUTTONDOWN 
+        if(event.type == SDL_MOUSEMOTION
+            || event.type == SDL_MOUSEBUTTONDOWN
             || event.type == SDL_MOUSEBUTTONUP)
         {
             if (SDL_GetWindowFlags(gSDLWindow) & SDL_WINDOW_ALLOW_HIGHDPI)
             {
-                // We work in drawable space but OS gives us these events in 
+                // We work in drawable space but OS gives us these events in
                 // window coords - so scale. Usually it's an integer scale.
                 int winW, winH;
                 SDL_GetWindowSize(gSDLWindow, &winW, &winH);
@@ -106,26 +106,35 @@ void loop()
                     event.button.x *= drawableW / winW;
                     event.button.y *= drawableH / winH;
                 }
-            }            
+            }
         }
 
         if(event.type == SDL_KEYDOWN)
         {
             SDL_Keysym key = event.key.keysym;
-            // Handle a key!
-            stage->_KeyDownDelegate.pushArgument(key.scancode);
-            stage->_KeyDownDelegate.pushArgument(key.sym);
-            stage->_KeyDownDelegate.pushArgument(key.mod);
-            stage->_KeyDownDelegate.invoke();
-            //lmLog(coreLogGroup, "keydown %d %d", key.sym, SDLK_BACKSPACE);
-            if (SDL_IsTextInputActive() && (key.mod & ~KMOD_CAPS & ~KMOD_NUM) == KMOD_NONE && key.sym == SDLK_BACKSPACE)
+
+            //lmLog(coreLogGroup, "keydown %d %d", key.sym, SDLK_AC_BACK);
+            if (key.sym == SDLK_AC_BACK)
             {
-                IMEDelegateDispatcher::shared()->dispatchDeleteBackward();
+                stage->_BackKeyDelegate.invoke();
             }
-            if (key.mod & KMOD_CTRL && key.sym == SDLK_v) {
-                char* clipboard = SDL_GetClipboardText();
-                IMEDelegateDispatcher::shared()->dispatchInsertText(clipboard, strlen(clipboard));
-                SDL_free(clipboard);
+            else
+            {
+                // Handle a key!
+                stage->_KeyDownDelegate.pushArgument(key.scancode);
+                stage->_KeyDownDelegate.pushArgument(key.sym);
+                stage->_KeyDownDelegate.pushArgument(key.mod);
+                stage->_KeyDownDelegate.invoke();
+                //lmLog(coreLogGroup, "keydown %d %d", key.sym, SDLK_BACKSPACE);
+                if (SDL_IsTextInputActive() && (key.mod & ~KMOD_CAPS & ~KMOD_NUM) == KMOD_NONE && key.sym == SDLK_BACKSPACE)
+                {
+                    IMEDelegateDispatcher::shared()->dispatchDeleteBackward();
+                }
+                if (key.mod & KMOD_CTRL && key.sym == SDLK_v) {
+                    char* clipboard = SDL_GetClipboardText();
+                    IMEDelegateDispatcher::shared()->dispatchInsertText(clipboard, strlen(clipboard));
+                    SDL_free(clipboard);
+                }
             }
         }
         else if(event.type == SDL_KEYUP)
@@ -308,7 +317,7 @@ static int sdlPriorityEvents(void* userdata, SDL_Event* event)
         case SDL_APP_WILLENTERBACKGROUND:
             loom_appPause();
             return false;
-            
+
         // SDL_APP_WILLENTERFOREGROUND seems like a closer fit, but it doesn't
         // work with the iOS notification/control center
         case SDL_APP_DIDENTERFOREGROUND:
@@ -411,7 +420,7 @@ main(int argc, char *argv[])
     coreOptions++;
 
 #ifdef WIN32
-    
+
     LS::Process::consoleAttached = false;
 
     if (!options[FROM_RUBY] && AttachConsole(ATTACH_PARENT_PROCESS))
@@ -443,7 +452,7 @@ main(int argc, char *argv[])
     /* Enable standard application logging */
     SDL_LogSetAllPriority(SDL_LOG_PRIORITY_INFO);
     SDL_LogSetOutputFunction(sdlLogOutput, NULL);
-    
+
     loom_appInit();
 
     // Log the Loom build timestamp!
@@ -468,7 +477,7 @@ main(int argc, char *argv[])
 
     SDL_Init(
         SDL_INIT_TIMER |
-        SDL_INIT_VIDEO | 
+        SDL_INIT_VIDEO |
         SDL_INIT_JOYSTICK |
         SDL_INIT_HAPTIC |
         SDL_INIT_GAMECONTROLLER |
@@ -477,14 +486,14 @@ main(int argc, char *argv[])
 
     int ret;
 
-    
+
 #if LOOM_RENDERER_OPENGLES2
     ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
     ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
 #endif
-    
+
 #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
     // Check for SDL_DROPFILE event - this is to check if the app was opened
     // using a custom URL scheme
@@ -502,11 +511,11 @@ main(int argc, char *argv[])
 
     // Set event callback for events that cannot wait
     SDL_SetEventFilter(sdlPriorityEvents, NULL);
-    
+
     int stencilSize = 1;
     ret = SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilSize);
     lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
-    
+
     Uint32 windowFlags = 0;
 
     windowFlags |= SDL_WINDOW_HIDDEN;
@@ -521,7 +530,7 @@ main(int argc, char *argv[])
     if (LoomApplicationConfig::displayResizable()) windowFlags |= SDL_WINDOW_RESIZABLE;
     if (LoomApplicationConfig::displayBorderless()) windowFlags |= SDL_WINDOW_BORDERLESS;
     utString displayMode = LoomApplicationConfig::displayMode();
-    
+
     windowFlags |=
         displayMode == "window" ? 0 :
         displayMode == "fullscreen" ? SDL_WINDOW_FULLSCREEN :
@@ -557,18 +566,18 @@ main(int argc, char *argv[])
     SDL_StopTextInput();
 
     // Initialize Loom!
-    loom_appSetup();    
+    loom_appSetup();
     supplyEmbeddedAssets();
 
     /* Main render loop */
     gLoomExecutionDone = 0;
-    
+
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(loop, 0, 1);
 #else
     while (!gLoomExecutionDone) loop();
 #endif
-    
+
     loom_appShutdown();
 
     exit(0);
