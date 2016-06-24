@@ -159,6 +159,7 @@ LoomProfiler::LoomProfiler()
    mCurrentLoomProfilerEntry->mSubTime = 0;
    mCurrentLoomProfilerEntry->mMaxTime = 0;
    mCurrentLoomProfilerEntry->mMinTime = INFINITY;
+   mCurrentLoomProfilerEntry->mStartTime = 0.0;
    mRootLoomProfilerEntry = mCurrentLoomProfilerEntry;
 
    for(U32 i = 0; i < LoomProfilerEntry::HashTableSize; i++)
@@ -173,6 +174,8 @@ LoomProfiler::LoomProfiler()
    mStackDepth = 0;
    gLoomProfiler = this;
    mDumpToConsole   = false;
+
+   mTimer = loom_startTimer();
 }
 
 
@@ -181,6 +184,8 @@ LoomProfiler::~LoomProfiler()
    reset();
    lmSafeDelete(gProfilerAllocator, mRootLoomProfilerEntry);
    gLoomProfiler = NULL;
+
+   loom_destroyTimer(mTimer);
 }
 
 
@@ -225,6 +230,8 @@ void LoomProfiler::reset()
    mCurrentLoomProfilerEntry->mMinTime = INFINITY;
    mCurrentLoomProfilerEntry->mSubDepth = 0;
    mCurrentLoomProfilerEntry->mLastSeenProfiler = 0;
+
+   loom_resetTimer(mTimer);
 }
 
 
@@ -355,7 +362,7 @@ void LoomProfiler::hashPush(LoomProfilerRoot *root)
    root->mTotalInvokeCount++;
    nextProfiler->mInvokeCount++;
    
-   nextProfiler->mTimer = loom_startTimer();
+   nextProfiler->mStartTime = loom_readTimerNano(mTimer);
 
    mCurrentLoomProfilerEntry->mLastSeenProfiler = nextProfiler;
    mCurrentLoomProfilerEntry = nextProfiler;
@@ -388,7 +395,7 @@ void LoomProfiler::hashPop(LoomProfilerRoot *expected)
             lmAssert(expected == mCurrentLoomProfilerEntry->mRoot, "LoomProfiler::hashPop - didn't get expected ProfilerRoot!");
         }
 
-        F64 fElapsed = loom_readTimerNano(mCurrentLoomProfilerEntry->mTimer);
+        F64 fElapsed = loom_readTimerNano(mTimer) - mCurrentLoomProfilerEntry->mStartTime;
 
         lmAssert(fElapsed >= 0, "Elapsed time should be positive - is %f", fElapsed);
 
@@ -412,11 +419,11 @@ void LoomProfiler::hashPop(LoomProfilerRoot *expected)
         if (mDumpToConsole)
         {
             dump();
-            mCurrentLoomProfilerEntry->mTimer = loom_startTimer();
+            mCurrentLoomProfilerEntry->mStartTime = loom_readTimerNano(mTimer);
         }
         if (!mEnabled && mNextEnable)
         {
-            mCurrentLoomProfilerEntry->mTimer = loom_startTimer();
+            mCurrentLoomProfilerEntry->mStartTime = loom_readTimerNano(mTimer);
         }
 
         mEnabled = mNextEnable;
@@ -584,7 +591,7 @@ void LoomProfiler::dump()
     lmLogInfo(gProfilerLogGroup, "Ordered by stack trace total time -");
     lmLogInfo(gProfilerLogGroup, "  %% Time %% NSTime  AvgTime  MaxTime  MinTime Invoke # Name");
 
-    mCurrentLoomProfilerEntry->mTotalTime = loom_readTimerNano(mCurrentLoomProfilerEntry->mTimer);
+    mCurrentLoomProfilerEntry->mTotalTime = loom_readTimerNano(mTimer);
 
     char depthBuffer[MaxStackDepth * 2 + 1];
     depthBuffer[0]    = 0;

@@ -312,6 +312,15 @@ void LSProfiler::leaveMethod(const char *fullPath)
 // Main lua VM debug hook
 void LSProfiler::profileHook(lua_State *L, lua_Debug *ar)
 {
+    // Only process calls from the main thread for now
+#ifdef LOOM_ENABLE_JIT
+    lua_State *mainL = mainthread(G(L));
+#else
+    lua_State *mainL = L->l_G->mainthread;
+#endif
+    if (mainL != L)
+        return;
+
     MethodBase *methodBase = NULL;
 
     if (ar->event == LUA_HOOKCALL)
