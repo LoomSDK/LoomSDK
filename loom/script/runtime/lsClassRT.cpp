@@ -40,6 +40,8 @@ static int gCtorLevel = 0;
 #   define CTOR_LOG(...)
 #endif
 
+lmDeclareLogGroup(scriptLogGroup);
+
 namespace LS {
 
 // Debug functions to dump Lua state.
@@ -448,7 +450,11 @@ static int lsr_classcreateinstance(lua_State *L)
         int memoryDeltaKB = lua_gc(L, LUA_GCCOUNT, 0) - memoryBeforeKB;
         int memoryDeltaB = lua_gc(L, LUA_GCCOUNTB, 0) - memoryBeforeB;
         int memoryDelta = memoryDeltaKB * 1024 + memoryDeltaB;
-        lmAssert(memoryDelta >= 0, "Unexpected garbage collection: %d bytes after creating instance (%d -> %d)", memoryDelta, memoryBeforeKB, memoryDeltaKB + memoryBeforeKB);
+        if (memoryDelta >= 0)
+        {
+            // Don't warn about this, happens way too often
+            //lmLogWarn(scriptLogGroup, "Unexpected garbage collection: %d bytes after creating instance (%d -> %d)", memoryDelta, memoryBeforeKB, memoryDeltaKB + memoryBeforeKB);
+        }
         LSProfiler::registerMemoryUsage(type, memoryDelta);
         gct->allocated += memoryDelta;
     }

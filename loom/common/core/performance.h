@@ -140,6 +140,7 @@ class LoomProfiler
     LoomProfilerEntry *mCurrentLoomProfilerEntry;
     LoomProfilerEntry *mProfileList;
     LoomProfilerEntry *mRootLoomProfilerEntry;
+    loom_precision_timer_t mTimer;
 
     bool mEnabled;
     S32  mStackDepth;
@@ -212,21 +213,11 @@ struct LoomProfilerEntry
     U32               mHash;
     U32               mSubDepth;
     U32               mInvokeCount;
-    loom_precision_timer_t mTimer;
+    double            mStartTime;
     F64               mTotalTime;
     F64               mSubTime;
     F64               mMaxTime;
     F64               mMinTime;
-
-    LoomProfilerEntry()
-    {
-        mTimer = loom_startTimer();
-    }
-
-    ~LoomProfilerEntry()
-    {
-        loom_destroyTimer(mTimer);
-    }
 };
 
 
