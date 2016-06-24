@@ -223,8 +223,8 @@ package feathers.controls
         /**
          * The tab bar layout is either vertical or horizontal.
          *
-         * @see #DIRECTION_HORIZONTAL
-         * @see #DIRECTION_VERTICAL
+         * @see #!DIRECTION_HORIZONTAL
+         * @see #!DIRECTION_VERTICAL
          */
         public function get direction():String
         {

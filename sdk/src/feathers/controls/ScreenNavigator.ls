@@ -242,8 +242,8 @@ package feathers.controls
          * Determines how the screen navigator will set its own size when its
          * dimensions (width and height) aren't set explicitly.
          *
-         * @see #AUTO_SIZE_MODE_STAGE
-         * @see #AUTO_SIZE_MODE_CONTENT
+         * @see #!AUTO_SIZE_MODE_STAGE
+         * @see #!AUTO_SIZE_MODE_CONTENT
          */
         public function get autoSizeMode():String
         {

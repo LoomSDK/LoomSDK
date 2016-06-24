@@ -90,22 +90,22 @@ The Loom SDK includes a lightweight logging framework. All log output is associa
 
 You can set the logging settings for a particular group like so:
 
-~~~json
+~~~text
 {
     "log": {
         // Global default filter level set to warning or higher
         "level": "warn",
-        
+
         "sdl": {
             // Enables all log groups starting with 'sdl'
             "enabled": true,
-            
+
              // Sets the filter level for 'sdl' groups to allow all debug messages and above
             "level": "debug",
-            
+
             // Applies to 'sdl.error' specifically and overrides the above
             "error": {
-                
+
                 // Disable all 'sdl.error' messages
                 "enabled": false
             }
@@ -185,7 +185,7 @@ Here is a list of the built-in logging groups used by the Loom SDK:
 * `sdl.input` - Logs from the input SDL log category
 * `sdl.custom` - Logs from the custom SDL log category
 * `luastate` - Logs related to the Lua runtime
-* `allocator` - Internal memory allocator logs 
+* `allocator` - Internal memory allocator logs
 * `error` - A log group for printing platform errors
 * `delegate` - Internal native delegate logs
 * `interface` - Internal native interface logs

@@ -394,8 +394,8 @@ package feathers.controls
          * Determines how the on and off track skins are positioned and sized.
          *
          * @default TRACK_LAYOUT_MODE_SINGLE
-         * @see #TRACK_LAYOUT_MODE_SINGLE
-         * @see #TRACK_LAYOUT_MODE_ON_OFF
+         * @see #!TRACK_LAYOUT_MODE_SINGLE
+         * @see #!TRACK_LAYOUT_MODE_ON_OFF
          */
         public function get trackLayoutMode():String
         {

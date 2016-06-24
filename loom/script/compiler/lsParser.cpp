@@ -129,8 +129,8 @@ VariableDeclaration *Parser::parseVarArgDeclaration(bool inFlag)
     VariableDeclaration *vd = new VariableDeclaration(identifier, NULL, false,
                                                       false, false, false);
 
-    
-    ASTTemplateTypeInfo *templateInfo = ASTTemplateTypeInfo::createVectorInfo("system.Object");        
+
+    ASTTemplateTypeInfo *templateInfo = ASTTemplateTypeInfo::createVectorInfo("system.Object");
 
     vd->isVarArg        = true;
     vd->typeString      = "Vector";
@@ -246,7 +246,7 @@ FunctionLiteral *Parser::parseFunctionLiteral(bool nameFlag)
         {
             utString errormsg = "Property get function specifies parameters: ";
             errormsg += lit->name->string;
-            error(errormsg.c_str());            
+            error(errormsg.c_str());
         }
 
         if (!lit->parameters)
@@ -472,7 +472,7 @@ Statement *Parser::parseFunctionDeclaration()
     if (!curClass)
     {
         error("Function declaration outside of class");
-    }    
+    }
 
     FunctionDeclaration *decl = new FunctionDeclaration(
         parseFunctionLiteral(true));
@@ -718,7 +718,7 @@ Expression *Parser::parseDictionaryLiteral(const utString& typeKey, const utStri
 
     readToken(LSTOKEN(OPERATOR_CLOSEBRACE));
 
-    v->astTemplateInfo = ASTTemplateTypeInfo::createDictionaryInfo(typeKey, typeValue);   
+    v->astTemplateInfo = ASTTemplateTypeInfo::createDictionaryInfo(typeKey, typeValue);
 
     if (wrapInNew)
     {
@@ -757,7 +757,7 @@ Expression *Parser::parseVectorLiteral(const utString& type, bool wrapInNew)
     }
 
     readToken(LSTOKEN(OPERATOR_CLOSESQUARE));
-    
+
     v->astTemplateInfo = ASTTemplateTypeInfo::createVectorInfo(type);
 
     if (wrapInNew)
@@ -1864,12 +1864,12 @@ VariableDeclaration *Parser::parseVariableDeclaration(bool inFlag,
     if ((typeString == "Vector") && !templateInfo)
     {
         // create default Vector.<Object> from "Vector"
-        templateInfo = ASTTemplateTypeInfo::createVectorInfo("system.Object");        
+        templateInfo = ASTTemplateTypeInfo::createVectorInfo("system.Object");
     }
     else if ((typeString == "Dictionary") && !templateInfo)
     {
         // create default Dictionary.<Object, Object> from "Dictionary"
-        templateInfo = ASTTemplateTypeInfo::createDictionaryInfo("system.Object", "system.Object");        
+        templateInfo = ASTTemplateTypeInfo::createDictionaryInfo("system.Object", "system.Object");
     }
 
     bool defaultInitializer = false;
@@ -2488,7 +2488,7 @@ Statement *Parser::parsePackageDeclaration()
             pkg->statements = new utArray<Statement *>();
         }
 
-        pkg->statements->push_back(parseElement());
+        pkg->statements->push_back(parseTopLevelElement());
     }
 
     readToken(LSTOKEN(OPERATOR_CLOSEBRACE));
@@ -2761,6 +2761,8 @@ Statement *Parser::parseClassDeclaration()
             cls->statements = new utArray<Statement *>();
         }
 
+        parseMetaTags();
+
         utString doc = currentMultilineComment;
         currentMultilineComment = "";
 
@@ -2856,7 +2858,7 @@ ASTTemplateTypeInfo *Parser::parseTemplateType(const utString& templateType, AST
             warn("Rewriting Array to be Vector.<Object> for convenience when porting. Note that Array and Vector.<Object> aren't identical types.");
 
             // Array is secretly a Vector.<Object>
-            ASTTemplateTypeInfo *ti = ASTTemplateTypeInfo::createVectorInfo("system.Object");        
+            ASTTemplateTypeInfo *ti = ASTTemplateTypeInfo::createVectorInfo("system.Object");
             templateInfo->templateTypes.push_back(ti);
         }
         else
@@ -2885,7 +2887,7 @@ ASTTemplateTypeInfo *Parser::parseTemplateType(const utString& templateType, AST
     {
         // Convert the >= into a = and let parsing continue.
         nextToken = LSTOKEN(OPERATOR_ASSIGNMENT);
-    }    
+    }
     else
     {
         // Advance normally.
@@ -2895,17 +2897,29 @@ ASTTemplateTypeInfo *Parser::parseTemplateType(const utString& templateType, AST
     return templateInfo;
 }
 
+void Parser::parseMetaTags()
+{
+    // Store the comment above the meta tags if we're gonna need it
+    utString commentAbove = currentMultilineComment;
+
+    // Consume any meta tags - this comsumes any potential comments
+    // between them though
+    while (nextToken == LSTOKEN(OPERATOR_OPENSQUARE))
+    {
+        parseMetaTag();
+    }
+
+    // If there are no comments below the tags, use the one above them
+    if (currentMultilineComment.length() == 0)
+    {
+        currentMultilineComment = commentAbove;
+    }
+}
 
 Statement *Parser::parseStatement()
 {
     Statement *statement = NULL;
     int       lineNumber = lexer.lineNumber;
-
-    // metatags
-    while (nextToken == LSTOKEN(OPERATOR_OPENSQUARE))
-    {
-        parseMetaTag();
-    }
 
     // modifiers
 
@@ -3113,6 +3127,11 @@ Statement *Parser::parseStatement()
     return statement;
 }
 
+Statement *Parser::parseTopLevelElement()
+{
+    parseMetaTags();
+    return parseElement();
+}
 
 Statement *Parser::parseElement()
 {

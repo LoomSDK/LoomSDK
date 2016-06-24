@@ -52,11 +52,11 @@ package feathers.controls.popups
          * value will not go into effect until the callout is closed and a new
          * callout is opened.
          *
-         * @see feathers.controls.Callout#DIRECTION_ANY
-         * @see feathers.controls.Callout#DIRECTION_UP
-         * @see feathers.controls.Callout#DIRECTION_DOWN
-         * @see feathers.controls.Callout#DIRECTION_LEFT
-         * @see feathers.controls.Callout#DIRECTION_RIGHT
+         * @see feathers.controls.Callout#!DIRECTION_ANY
+         * @see feathers.controls.Callout#!DIRECTION_UP
+         * @see feathers.controls.Callout#!DIRECTION_DOWN
+         * @see feathers.controls.Callout#!DIRECTION_LEFT
+         * @see feathers.controls.Callout#!DIRECTION_RIGHT
          */
         public var direction:String = Callout.DIRECTION_ANY;
 

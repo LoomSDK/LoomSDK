@@ -850,9 +850,9 @@ package feathers.controls
          * ~~~
          *
          * @default TITLE_ALIGN_CENTER
-         * @see #TITLE_ALIGN_CENTER
-         * @see #TITLE_ALIGN_PREFER_LEFT
-         * @see #TITLE_ALIGN_PREFER_RIGHT
+         * @see #!TITLE_ALIGN_CENTER
+         * @see #!TITLE_ALIGN_PREFER_LEFT
+         * @see #!TITLE_ALIGN_PREFER_RIGHT
          */
         public function get titleAlign():String
         {

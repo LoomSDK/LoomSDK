@@ -119,7 +119,7 @@ If you run into issues that prevent Loom from deploying to your device, here are
 
 **Do you have an appropriate version of iOS on your device?** Ideally, you should match the SDK version you are building against. You can find downloads of all iOS updates here: http://www.idownloadblog.com/iphone-downloads/ and they can be installed via the Organizer. You can determine your target iOS device's version at this site: http://www.everymac.com/ultimate-mac-lookup/?search_keywords=MC540LL
 
-**Are you using the right codesign?** If you run into the error, `object file format unrecognized, invalid, or unsuitable`, setting the `CODESIGN_ALLOCATE` environment variable like so may fix your issue (see http://loomsdk.com/forums/troubleshooting-and-issues/topics/ios-deploy-troubleshooting-megathread-did-you-reinstall-your-certs):
+**Are you using the right codesign?** If you run into the error, `object file format unrecognized, invalid, or unsuitable`, setting the `CODESIGN_ALLOCATE` environment variable like so may fix your issue (see http://loomsdk.com/forums/troubleshooting-and-issues/topics/ios-deploy-troubleshooting-megathread-did-you-reinstall-your-certs ):
 
 ```console
 $ export CODESIGN_ALLOCATE="/Applications/Xcode.app/Contents/Developer/usr/bin/codesign_allocate"

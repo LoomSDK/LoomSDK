@@ -953,9 +953,9 @@ package feathers.controls
          * Determines whether the scroller may scroll horizontally (on the
          * x-axis) or not.
          *
-         * @see #SCROLL_POLICY_AUTO
-         * @see #SCROLL_POLICY_ON
-         * @see #SCROLL_POLICY_OFF
+         * @see #!SCROLL_POLICY_AUTO
+         * @see #!SCROLL_POLICY_ON
+         * @see #!SCROLL_POLICY_OFF
          */
         public function get horizontalScrollPolicy():String
         {
@@ -1116,9 +1116,9 @@ package feathers.controls
          * Determines whether the scroller may scroll vertically (on the
          * y-axis) or not.
          *
-         * @see #SCROLL_POLICY_AUTO
-         * @see #SCROLL_POLICY_ON
-         * @see #SCROLL_POLICY_OFF
+         * @see #!SCROLL_POLICY_AUTO
+         * @see #!SCROLL_POLICY_ON
+         * @see #!SCROLL_POLICY_OFF
          */
         public function get verticalScrollPolicy():String
         {
@@ -1223,9 +1223,9 @@ package feathers.controls
         /**
          * Determines how the scroll bars are displayed.
          *
-         * @see #SCROLL_BAR_DISPLAY_MODE_FLOAT
-         * @see #SCROLL_BAR_DISPLAY_MODE_FIXED
-         * @see #SCROLL_BAR_DISPLAY_MODE_NONE
+         * @see #!SCROLL_BAR_DISPLAY_MODE_FLOAT
+         * @see #!SCROLL_BAR_DISPLAY_MODE_FIXED
+         * @see #!SCROLL_BAR_DISPLAY_MODE_NONE
          */
         public function get scrollBarDisplayMode():String
         {
@@ -1254,8 +1254,8 @@ package feathers.controls
         /**
          * Determines how the user may interact with the scroller.
          *
-         * @see #INTERACTION_MODE_TOUCH
-         * @see #INTERACTION_MODE_MOUSE
+         * @see #!INTERACTION_MODE_TOUCH
+         * @see #!INTERACTION_MODE_MOUSE
          */
         public function get interactionMode():String
         {

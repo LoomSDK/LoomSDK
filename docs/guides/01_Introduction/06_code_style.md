@@ -10,12 +10,12 @@ Code style exists to make code uniform, consistent, and easy to understand. Ther
 
 ## C/C++
 
-This code style document will not exhaustively cover every possibility. Please refer to [The Google Code Style Guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml) in cases where this guide does not provide guidance.
+This code style document will not exhaustively cover every possibility. Please refer to [The Google Code Style Guide](https://google.github.io/styleguide/cppguide.html) in cases where this guide does not provide guidance.
 
 General guidelines:
-   
-   * Use 4 space tabs. 
-   * Do not cuddle braces. 
+
+   * Use 4 space tabs.
+   * Do not cuddle braces.
    * Wrap lines at 80 columns.
    * Prefix globals with a `g`, as in `gMyGlobal`.
 
@@ -48,16 +48,16 @@ You may also find Colin Moock's Essential ActionScript 3 helpful here.
 
 General guidelines:
 
-   * Use 4 space tabs. 
-   * Do not cuddle braces. 
+   * Use 4 space tabs.
+   * Do not cuddle braces.
    * Wrap lines at 80 columns.
-   * Break classes/structs into their own files. 
+   * Break classes/structs into their own files.
    * Delegates/enums can be in same file as related code.
 
 Representative LoomScript code:
 
 ~~~as3
-package com.mycompany 
+package com.mycompany
 {
     public class MyClass
     {
@@ -72,6 +72,6 @@ package com.mycompany
                 // Do something else.
             }
         }
-    }   
+    }
 }
 ~~~

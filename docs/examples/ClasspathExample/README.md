@@ -14,4 +14,22 @@ How to use the loom.config classpath array to specify source folders to compile.
 ![ClasspathExample Screenshot](images/screenshot.png)
 
 ## Code
-@insert_source
+
+~~~text
+{
+  "sdk_version": "latest",
+  "classpath": [
+    "source",
+    "../ClasspathExample/relativesources"
+  ],
+  "executable": "Main.loom",
+  "display": {
+    "width": 480,
+    "height": 320,
+    "title": "ClasspathExample",
+    "stats": true
+  },
+  "app_name": "ClasspathExample",
+  "app_id": "com.loomengine.ClasspathExample"
+}
+~~~

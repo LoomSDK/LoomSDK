@@ -285,8 +285,8 @@ package feathers.controls
          * values do not change automatically.
          *
          * @default DIRECTION_HORIZONTAL
-         * @see #DIRECTION_HORIZONTAL
-         * @see #DIRECTION_VERTICAL
+         * @see #!DIRECTION_HORIZONTAL
+         * @see #!DIRECTION_VERTICAL
          */
         public function get direction():String
         {
@@ -561,8 +561,8 @@ package feathers.controls
          *
          * @default TRACK_LAYOUT_MODE_SINGLE
          *
-         * @see #TRACK_LAYOUT_MODE_SINGLE
-         * @see #TRACK_LAYOUT_MODE_MIN_MAX
+         * @see #!TRACK_LAYOUT_MODE_SINGLE
+         * @see #!TRACK_LAYOUT_MODE_MIN_MAX
          */
         public function get trackLayoutMode():String
         {
@@ -594,8 +594,8 @@ package feathers.controls
          *
          * @default TRACK_SCALE_MODE_DIRECTIONAL
          *
-         * @see #TRACK_SCALE_MODE_DIRECTIONAL
-         * @see #TRACK_SCALE_MODE_EXACT_FIT
+         * @see #!TRACK_SCALE_MODE_DIRECTIONAL
+         * @see #!TRACK_SCALE_MODE_EXACT_FIT
          * @see #trackLayoutMode
          */
         public function get trackScaleMode():String

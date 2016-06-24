@@ -145,6 +145,9 @@ module Module::Commentable
     unless attribute.nil?
       if attribute.include? "()"
         attribute = "#function-#{attribute}".sub!("()", "")
+      elsif attribute.include? "!"
+        attribute = "#constant-#{attribute}".sub!("!", "")
+        matching_str = matching_str.sub!("!", "")
       else
         attribute = "#attribute-#{attribute}"
       end

@@ -198,7 +198,7 @@ package feathers.controls
          * A name to add to the panel's header sub-component. Typically
          * used by a theme to provide different skins to different panels.
          *
-         * @see #DEFAULT_CHILD_NAME_HEADER
+         * @see #!DEFAULT_CHILD_NAME_HEADER
          * @see feathers.core.FeathersControl#nameList
          * @see #headerFactory
          * @see #headerProperties
@@ -323,7 +323,7 @@ package feathers.controls
          * A name to add to the panel's footer sub-component. Typically
          * used by a theme to provide different skins to different panels.
          *
-         * @see #DEFAULT_CHILD_NAME_FOOTER
+         * @see #!DEFAULT_CHILD_NAME_FOOTER
          * @see feathers.core.FeathersControl#nameList
          * @see #footerFactory
          * @see #footerProperties

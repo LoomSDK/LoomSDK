@@ -414,15 +414,14 @@ package feathers.controls
          * @private
          */
         protected var _currentState:String = STATE_UP;
-        
+
         /**
          * The current state of the button
          *
-         * @see
-         * #STATE_UP
-         * #STATE_DOWN
-         * #STATE_HOVER
-         * #STATE_DISABLED
+         * @see #!STATE_UP
+         * @see #!STATE_DOWN
+         * @see #!STATE_HOVER
+         * @see #!STATE_DISABLED
          */
         public function get currentState():String
         {
@@ -444,7 +443,6 @@ package feathers.controls
             }
             this._currentState = value;
             this.invalidate(INVALIDATION_FLAG_STATE);
-            
         }
 
         /**
@@ -495,7 +493,7 @@ package feathers.controls
          * button.addEventListener( Event.CHANGE, button_changeHandler );
          * ~~~
          *
-         * @see #event:change
+         * @see loom2d.events.Event#!CHANGE
          */
         public function get isToggle():Boolean
         {
