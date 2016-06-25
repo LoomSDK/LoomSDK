@@ -600,7 +600,6 @@ static int ftwFileWalker(const char *fpath, const struct stat *sb, int typeflag)
     if (typeflag == FTW_NS)
         return 0;
 
-    lmLogWarn(ioLogGroup, "ftw hit: %s is dir: %d", fpath, typeflag);
     if (typeflag != FTW_D)
     {
         gHitCount++;
