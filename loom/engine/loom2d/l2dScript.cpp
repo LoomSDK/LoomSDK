@@ -151,7 +151,7 @@ static int registerLoom2D(lua_State *L)
        .addMethod("setTo", &Rectangle::setTo)
        .addMethod("clip", &Rectangle::clip)
 
-       .addMethod("clone", &Rectangle::clone)
+       .addLuaFunction("clone", &Rectangle::clone)
 
        .addMethod("toString", &Rectangle::toString)
 

@@ -260,7 +260,7 @@ public:
     /**
      * Make a copy of this Rectangle.
      */
-    Rectangle *clone()
+    int clone(lua_State *L)
     {
         Rectangle *copy = lmNew(NULL) Rectangle();
 
@@ -268,7 +268,10 @@ public:
         copy->y      = y;
         copy->width  = width;
         copy->height = height;
-        return copy;
+
+        lualoom_pushnative<Rectangle>(L, copy);
+
+        return 1;
     }
 
     static void initialize(lua_State *L)

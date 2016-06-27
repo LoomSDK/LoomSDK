@@ -5382,6 +5382,7 @@ int stb_vorbis_decode_memory(uint8 *mem, int len, int *channels, short **output)
       }
    }
    *output = data;
+   stb_vorbis_close(v);
    return data_len;
 }
 #endif
