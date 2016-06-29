@@ -303,7 +303,7 @@ class AndroidToolchain < Toolchain
     
     # Android/ARM, armeabi-v7a (ARMv7 VFP), Android 4.0+ (ICS)
     ndk = File.expand_path(ENV["ANDROID_NDK"])
-    ndkABI = 14
+    ndkABI = CFG[:TARGET_ANDROID_SDK]
     ndkFound = false
     ndkSystems = []
     for toolchain in toolchains
@@ -322,6 +322,7 @@ class AndroidToolchain < Toolchain
         break
       end
     end
+
     abort "Android NDK prebuilt directory not found, tried:\n  #{ndkSystems.join("\n  ")}" unless ndkFound
     ndkFlags = "--sysroot #{ndk}/platforms/android-#{ndkABI}/arch-arm"
     ndkArch = "-march=armv7-a -mfloat-abi=softfp -Wl,--fix-cortex-a8"
@@ -343,8 +344,10 @@ class AndroidToolchain < Toolchain
       generator = "Unix Makefiles"
       make_arg = ""
     end
-    
-    return "-G \"#{generator}\" -DCMAKE_TOOLCHAIN_FILE=#{$ROOT}/build/cmake/loom.android.bootstrap.cmake -DANDROID_NDK_HOST_X64=#{$HOST.is_x64} -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=14 #{make_arg}"
+
+    nativeAPI = CFG[:TARGET_ANDROID_SDK]
+
+    return "-G \"#{generator}\" -DCMAKE_TOOLCHAIN_FILE=#{$ROOT}/build/cmake/loom.android.bootstrap.cmake -DANDROID_NDK_HOST_X64=#{$HOST.is_x64} -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=#{nativeAPI} #{make_arg}"
   end
   
   def self.apkName()
