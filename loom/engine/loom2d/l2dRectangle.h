@@ -262,14 +262,17 @@ public:
      */
     int clone(lua_State *L)
     {
-        Rectangle *copy = lmNew(NULL) Rectangle();
+        static Type* type = LSLuaState::getLuaState(L)->getType("loom2d.math.Rectangle");
 
+        // Create the instance on top of the stack
+        lsr_createinstance(L, type);
+
+        // Gets a pointer from the top of the stack and keep it there
+        Rectangle* copy = (Rectangle *)lualoom_getnativepointer(L, -1);
         copy->x      = x;
         copy->y      = y;
         copy->width  = width;
         copy->height = height;
-
-        lualoom_pushnative<Rectangle>(L, copy);
 
         return 1;
     }

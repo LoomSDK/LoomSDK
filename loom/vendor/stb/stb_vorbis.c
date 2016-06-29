@@ -4207,6 +4207,7 @@ static void vorbis_deinit(stb_vorbis *p)
       setup_free(p, p->B[i]);
       setup_free(p, p->C[i]);
       setup_free(p, p->window[i]);
+      setup_free(p, p->bit_reverse[i]);
    }
    #ifndef STB_VORBIS_NO_STDIO
    if (p->close_on_free) fclose(p->f);
