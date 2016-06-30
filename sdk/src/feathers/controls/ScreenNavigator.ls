@@ -635,7 +635,6 @@ package feathers.controls
                     screen.owner = null;
                 }
 
-                trace("*** REMOVING CHILD " + _previousScreenInTransition + " canBeDisposed=" + canBeDisposed);
                 this.removeChild(this._previousScreenInTransition, canBeDisposed);
                 this._previousScreenInTransition = null;
                 this._previousScreenInTransitionID = null;
