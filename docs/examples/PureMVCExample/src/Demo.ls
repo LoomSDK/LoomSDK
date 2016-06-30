@@ -102,7 +102,6 @@ package
             trace( "Initializing Core Views" );
             
             // We do some Feathers boilerplate initialization here...
-            DeviceCapabilities.dpi = Platform.getDPI();
             TextField.registerBitmapFont( BitmapFont.load( "assets/arialComplete.fnt" ), "SourceSansPro" );
             TextField.registerBitmapFont( BitmapFont.load( "assets/arialComplete.fnt" ), "SourceSansProSemibold" );
             Demo.theme = new MetalWorksMobileTheme();
