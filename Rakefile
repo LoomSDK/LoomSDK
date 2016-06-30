@@ -40,7 +40,7 @@ CFG =
     TARGET_SDK_VER: "dev",
 
     # What version of the android SDK are going to target? Note you also need to update the Android project and manifest to match.
-    TARGET_ANDROID_SDK: "android-15" ,
+    TARGET_ANDROID_SDK: "15",
 
     # What Android target are we going to build? debug and release are the main
     # options but there are more. (see http://developer.android.com/tools/building/building-cmdline.html)

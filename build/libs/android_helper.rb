@@ -1,5 +1,7 @@
-def get_android_api_id(api_name)
+def get_android_api_id(api_ver)
 
+  api_name = "android-#{api_ver}"
+  
   if $HOST.name == "windows"
     grep = "findstr"
   else
