@@ -1,8 +1,8 @@
 ## Instructions for building on Ubuntu:
 
-1.  Install g++, rake, cmake, zlib1g-dev, libglew-dev, libglfw-dev, libcurl4-openssl-dev, ant:
+1.  Install g++, rake, cmake, zlib1g-dev, libglew-dev, libglfw-dev, libcurl4-openssl-dev, libasound2-dev, ant:
 
-sudo apt-get install g++ rake cmake zlib1g-dev libglew-dev libglfw-dev libcurl4-openssl-dev ant
+sudo apt-get install g++ rake cmake zlib1g-dev libglew-dev libglfw-dev libcurl4-openssl-dev libasound2-dev ant
 
 2. If you plan on compiling for Android, you'll need to install Android SDK, Android NDK and Java JDK.
    You can get Android SDK from the official site (http://developer.android.com/sdk/index.html)

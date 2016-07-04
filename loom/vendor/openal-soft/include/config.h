@@ -13,7 +13,9 @@
 #define AL_ALEXT_PROTOTYPES
 
 /* Define if we have the ALSA backend */
-//#define HAVE_ALSA
+#if LOOM_PLATFORM == LOOM_PLATFORM_LINUX
+#define HAVE_ALSA
+#endif
 
 /* Define if we have the OSS backend */
 //#define HAVE_OSS

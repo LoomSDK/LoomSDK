@@ -374,6 +374,13 @@ if(MSVC)
     )
 endif()
 
+if(LINUX)
+    set(OPENALSOFT_SRC
+        ${OPENALSOFT_SRC}
+        ${OPENALSOFT_ROOT}/Alc/backends/alsa.c
+    )
+endif()
+
 set(MINIMP3_ROOT minimp3)
 set(MINIMP3_SRC
     ${MINIMP3_ROOT}/minimp3.c
@@ -504,5 +511,5 @@ endif()
 add_library(${PROJECT_NAME} ${ALL_FILES})
 
 if (LINUX)
-    target_link_libraries(${PROJECT_NAME} -lpthread)
+    target_link_libraries(${PROJECT_NAME} asound -lpthread)
 endif ()
