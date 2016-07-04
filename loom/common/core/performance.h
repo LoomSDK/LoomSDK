@@ -213,7 +213,7 @@ struct LoomProfilerEntry
     U32               mHash;
     U32               mSubDepth;
     U32               mInvokeCount;
-    double            mStartTime;
+    F64               mStartTime;
     F64               mTotalTime;
     F64               mSubTime;
     F64               mMaxTime;

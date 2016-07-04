@@ -245,25 +245,31 @@ double loom_readTimerNano(loom_precision_timer_t timer)
     return timespecDeltaNano(t, &now);
 }
 
+static void timespecDeltaComp(struct timespec *then, struct timespec *now, long *deltaSec, long *deltaNSec)
+{
+    if (now->tv_nsec < then->tv_nsec) {
+        *deltaSec = now->tv_sec - then->tv_sec - 1;
+        *deltaNSec = 1000000000 - then->tv_nsec + now->tv_nsec;
+    } else {
+        *deltaSec = now->tv_sec - then->tv_sec;
+        *deltaNSec = now->tv_nsec - then->tv_nsec;
+    }
+} 
 
 int timespecDelta(struct timespec *then, struct timespec *now)
 {
-    long deltaSec  = now->tv_sec - then->tv_sec;
-    long deltaNSec = now->tv_nsec - then->tv_nsec;
+    long deltaSec, deltaNSec;
+    timespecDeltaComp(then, now, &deltaSec, &deltaNSec);
 
-    long deltaMSec = deltaSec * 1000 + deltaNSec / (1000 * 1000);
-
-    return (int)deltaMSec;
+    return deltaSec * 1000 + deltaNSec / (1000 * 1000);
 }
 
 double timespecDeltaNano(struct timespec *then, struct timespec *now)
 {
-    long deltaSec  = now->tv_sec - then->tv_sec;
-    long deltaNSec = now->tv_nsec - then->tv_nsec;
+    long deltaSec, deltaNSec;
+    timespecDeltaComp(then, now, &deltaSec, &deltaNSec);
 
-    long deltaMSec = deltaSec * 1e9 + deltaNSec;
-
-    return (double) deltaMSec;
+    return deltaSec * 1e9 + deltaNSec;
 }
 
 

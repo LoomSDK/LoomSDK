@@ -136,10 +136,6 @@ extern "C" {
 
 LoomProfiler::LoomProfiler()
 {
-#if !defined(LOOM_PLATFORM_IS_APPLE) && LOOM_PLATFORM != LOOM_PLATFORM_WIN32
-   clock_gettime(WHICH_CLOCK, &dawn); // Works on Linux
-#endif
-
    mMaxStackDepth = MaxStackDepth;
    mCurrentHash = 0;
 
