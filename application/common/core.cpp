@@ -71,6 +71,7 @@ void loop()
     /* Check for events */
     while (SDL_PollEvent(&event))
     {
+        // If we need to quit, break the loop immediately.
         if (event.type == SDL_QUIT ||
             event.type == SDL_APP_TERMINATING)
         {

@@ -44,10 +44,8 @@ void loom_tick()
     {
 
         // Signal that the app has really stopped execution
-        lmLogWarn(gTickLogGroup, "Paused: %d", atomic_load32(&gLoomPaused));
         if (atomic_load32(&gLoomPaused) == 0)
         {
-            lmLogWarn(gTickLogGroup, "Pausing...");
             atomic_store32(&gLoomPaused, 1);
         }
 

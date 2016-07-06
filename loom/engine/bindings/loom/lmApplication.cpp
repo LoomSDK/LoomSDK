@@ -89,8 +89,6 @@ void loom_appPause(void)
     int ticking = atomic_decrement(&gLoomTicking);
     if (ticking != 0) return;
 
-    lmLogInfo(applicationLogGroup, "Waiting to pause");
-
     // Wait for the main thread to stop all GL execution
     // if where on a different thread
     while (platform_getCurrentThreadId() != LS::NativeDelegate::smMainThreadID &&
