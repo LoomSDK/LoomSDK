@@ -36,11 +36,26 @@ extern "C"
 {
 
 atomic_int_t gLoomTicking = 1;
+atomic_int_t gLoomPaused = 0;
 
 void loom_tick()
 {
-    if (atomic_load32(&gLoomTicking) < 1) return;
-    
+    if (atomic_load32(&gLoomTicking) < 1)
+    {
+
+        // Signal that the app has really stopped execution
+        lmLogWarn(gTickLogGroup, "Paused: %d", atomic_load32(&gLoomPaused));
+        if (atomic_load32(&gLoomPaused) == 0)
+        {
+            lmLogWarn(gTickLogGroup, "Pausing...");
+            atomic_store32(&gLoomPaused, 1);
+        }
+
+        return;
+    }
+
+    atomic_store32(&gLoomPaused, 0);
+
     Telemetry::beginTick();
     
     LOOM_PROFILE_START(loom_tick);

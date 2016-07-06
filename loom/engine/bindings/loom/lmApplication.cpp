@@ -70,6 +70,7 @@ extern "C" {
 
 extern void loomsound_shutdown();
 extern atomic_int_t gLoomTicking;
+extern atomic_int_t gLoomPaused;
 
 void loom_appInit(void)
 {
@@ -87,6 +88,18 @@ void loom_appPause(void)
 {
     int ticking = atomic_decrement(&gLoomTicking);
     if (ticking != 0) return;
+
+    lmLogInfo(applicationLogGroup, "Waiting to pause");
+
+    // Wait for the main thread to stop all GL execution
+    // if where on a different thread
+    while (platform_getCurrentThreadId() != LS::NativeDelegate::smMainThreadID &&
+           atomic_load32(&gLoomPaused) != 1)
+    {
+        // Don't use up all the CPU
+        loom_thread_sleep(0);
+    }
+
     GFX::Graphics::pause();
     lmLogInfo(applicationLogGroup, "Paused");
 }

@@ -240,11 +240,11 @@ class IOSToolchain < AppleToolchain
   end
   
   def buildCommand
-    return "xcodebuild -configuration #{CFG[:BUILD_TARGET]} CODE_SIGN_IDENTITY=\"#{@signAs}\" CODE_SIGN_RESOURCE_RULES_PATH=#{@sdkroot}/ResourceRules.plist"
+    return "xcodebuild CODE_SIGN_IDENTITY=\"#{@signAs}\" CODE_SIGN_RESOURCE_RULES_PATH=#{@sdkroot}/ResourceRules.plist"
   end
 
   def cmakeArgs(target)
-    return "-G \"Xcode\" -DLOOM_BUILD_IOS=1 -DLOOM_IOS_VERSION=#{CFG[:TARGET_IOS_SDK]}"
+    return "-G \"Xcode\" -DCMAKE_BUILD_TYPE=#{CFG[:BUILD_TARGET]} -DLOOM_BUILD_IOS=1 -DLOOM_IOS_VERSION=#{CFG[:TARGET_IOS_SDK]}"
   end
   
 end
