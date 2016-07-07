@@ -86,6 +86,14 @@ void loom_appSetup(void)
 
 void loom_appPause(void)
 {
+    // We need to have a counter here at least for one reason. Apart from
+    // background pausing, we also need to pause when the camera view is opened.
+    // Without a counter, this would break for the following control flow:
+    //
+    //      app -> camera -> background -> camera -> app
+    //
+    // Using a counter ensures that we only resume when our app view is shown,
+    // avoiding background OpenGL drawing crashes. 
     int ticking = atomic_decrement(&gLoomTicking);
     if (ticking != 0) return;
 
@@ -112,6 +120,10 @@ void loom_appPause(void)
 void loom_appResume(void)
 {
     int ticking = atomic_increment(&gLoomTicking);
+    // Enforce sanity, cannot resume more times than we paused.
+    // This can happen when some devices start off with a resume event and
+    // some don't.
+    if (ticking > 1) atomic_compareAndExchange(&gLoomTicking, ticking, 1);
     if (ticking != 1) return;
     GFX::Graphics::resume();
 
