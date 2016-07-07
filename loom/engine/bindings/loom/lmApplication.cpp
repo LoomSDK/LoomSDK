@@ -97,7 +97,7 @@ void loom_appPause(void)
     #endif
 
     // Wait for the main thread to stop all GL execution
-    // if where on a different thread
+    // if we're on a different thread
     while (platform_getCurrentThreadId() != LS::NativeDelegate::smMainThreadID &&
            atomic_load32(&gLoomPaused) != 1)
     {
