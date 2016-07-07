@@ -112,6 +112,7 @@ void loom_appPause(void)
 void loom_appResume(void)
 {
     int ticking = atomic_increment(&gLoomTicking);
+    if (ticking > 1) atomic_compareAndExchange(&gLoomTicking, ticking, 1);
     if (ticking != 1) return;
     GFX::Graphics::resume();
 
