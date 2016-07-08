@@ -307,4 +307,15 @@ void platform_webViewSetHeight(loom_webView handle, float height)
 {
     gSetHeightMethodInfo.getEnv()->CallStaticVoidMethod(gSetHeightMethodInfo.classID, gSetHeightMethodInfo.methodID, (jint)handle, (jint)height);
 }
+
+
+void platform_webViewPauseAll()
+{
+}
+
+void platform_webViewResumeAll()
+{
+}
+
+
 #endif

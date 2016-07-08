@@ -100,9 +100,6 @@ void loom_appPause(void)
     // Disable UIKit events on iOS. This stops any
     // native views from executing code and potentially
     // crashing the app
-    #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
-    SDL_iPhoneSetEventPump(SDL_FALSE);
-    #endif
 
     // Wait for the main thread to stop all GL execution
     // if we're on a different thread
@@ -112,6 +109,7 @@ void loom_appPause(void)
         // Don't use up all the CPU
         loom_thread_sleep(0);
     }
+    platform_webViewPauseAll();
 
     GFX::Graphics::pause();
     lmLogInfo(applicationLogGroup, "Paused");
@@ -119,6 +117,7 @@ void loom_appPause(void)
     
 void loom_appResume(void)
 {
+    // See loom_appPause for explanation of the counter
     int ticking = atomic_increment(&gLoomTicking);
     // Enforce sanity, cannot resume more times than we paused.
     // This can happen when some devices start off with a resume event and
@@ -127,9 +126,7 @@ void loom_appResume(void)
     if (ticking != 1) return;
     GFX::Graphics::resume();
 
-    #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
-    SDL_iPhoneSetEventPump(SDL_TRUE);
-    #endif
+    platform_webViewResumeAll();
 
     lmLogInfo(applicationLogGroup, "Resumed");
 }
