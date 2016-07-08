@@ -62,6 +62,15 @@ static CocoaView* getMainView()
 #endif
 }
 
+{
+    loom_webViewCallback callback;
+    void *payload;
+}
+
+-(id)initWithCallback:(loom_webViewCallback)cb andPayload:(void *)pl;
+
+@end
+
 @interface WebViewRef : NSObject {
     CocoaRect _rect;
     CocoaWebView* _view;
@@ -118,16 +127,6 @@ WebViewRef* getWebViewRef(loom_webView handle)
 //_________________________________________________________________________
 // WebView Delegate
 //_________________________________________________________________________
-@interface LMWebViewDelegate : NSObject
-{
-    loom_webViewCallback callback;
-    void *payload;
-}
-
--(id)initWithCallback:(loom_webViewCallback)cb andPayload:(void *)pl;
-
-@end
-
 @implementation LMWebViewDelegate
 
 -(id)initWithCallback:(loom_webViewCallback)cb andPayload:(void *)pl
@@ -206,7 +205,7 @@ loom_webView platform_webViewCreate(loom_webViewCallback callback, void *payload
     LMWebViewDelegate* delegate = [[[LMWebViewDelegate alloc] initWithCallback:callback andPayload:payload] retain];
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_OSX
-    [webView setFrameLoadDelegate:delegate];
+    [webView setFrameLoadDelegate:(id)delegate];
     [webView setWantsLayer:YES];
 #else
     [webView setDelegate:delegate];
@@ -386,6 +385,7 @@ void platform_webViewSetHeight(loom_webView handle, float height)
 
 void platform_webViewPauseAll()
 {
+    #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
     NSArray* keys = [webViews() allKeys];
     for (int i=0; i<[keys count]; i++)
     {
@@ -394,16 +394,19 @@ void platform_webViewPauseAll()
         CocoaWebView* webView = ref.view;
         [webView setDelegate:nil];
     }
+    #endif
 }
 
 void platform_webViewResumeAll()
 {
+    #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
     NSArray* keys = [webViews() allKeys];
     for (int i=0; i<[keys count]; i++)
     {
         NSNumber* num = [keys objectAtIndex:i];
         WebViewRef* ref = getWebViewRef([num intValue]);
         CocoaWebView* webView = ref.view;
-        [webView setDelegate:ref.delegate];
+        [webView setDelegate:(id)ref.delegate];
     }
+    #endif
 }

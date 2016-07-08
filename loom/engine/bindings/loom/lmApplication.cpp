@@ -97,10 +97,6 @@ void loom_appPause(void)
     int ticking = atomic_decrement(&gLoomTicking);
     if (ticking != 0) return;
 
-    // Disable UIKit events on iOS. This stops any
-    // native views from executing code and potentially
-    // crashing the app
-
     // Wait for the main thread to stop all GL execution
     // if we're on a different thread
     while (platform_getCurrentThreadId() != LS::NativeDelegate::smMainThreadID &&
