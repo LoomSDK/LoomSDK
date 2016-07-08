@@ -130,4 +130,13 @@ float platform_webViewGetHeight(loom_webView handle)
 void platform_webViewSetHeight(loom_webView handle, float height)
 {
 }
+
+void platform_webViewPauseAll()
+{
+}
+
+void platform_webViewResumeAll()
+{
+}
+
 #endif

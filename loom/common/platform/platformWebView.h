@@ -153,6 +153,17 @@ float platform_webViewGetHeight(loom_webView handle);
  */
 void platform_webViewSetHeight(loom_webView handle, float height);
 
+/**
+ *  Removes all listeners and stops interacting with WebViews on platforms
+ *  that require it (iOS).
+ */ 
+void platform_webViewPauseAll();
+
+/**
+ *  Resumes normal operation of WebViews after pausing.
+ */
+void platform_webViewResumeAll();
+
 #ifdef __cplusplus
 }
 #endif
