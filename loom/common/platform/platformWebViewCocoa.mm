@@ -62,6 +62,7 @@ static CocoaView* getMainView()
 #endif
 }
 
+@interface LMWebViewDelegate : NSObject
 {
     loom_webViewCallback callback;
     void *payload;
