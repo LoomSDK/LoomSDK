@@ -292,22 +292,18 @@ package loom2d.display
         /** Swaps the indexes of two children. */
         public function swapChildren(child1:DisplayObject, child2:DisplayObject):void
         {
-            Debug.assert(false, "Untested");
             var index1:int = getChildIndex(child1);
             var index2:int = getChildIndex(child2);
-			
-			Debug.assert(index1 != -1, "Not a child of this container.");
-			Debug.assert(index2 != -1, "Not a child of this container.");
-			
-            //if (index1 == -1 || index2 == -1) throw new ArgumentError("Not a child of this container");
-			
+
+            Debug.assert(index1 != -1, "Not a child of this container.");
+            Debug.assert(index2 != -1, "Not a child of this container.");
+
             swapChildrenAt(index1, index2);
         }
         
         /** Swaps the indexes of two children. */
         public function swapChildrenAt(index1:int, index2:int):void
         {
-            Debug.assert(false, "Untested");
             var child1:DisplayObject = getChildAt(index1);
             var child2:DisplayObject = getChildAt(index2);
             mChildren[index1] = child2;
