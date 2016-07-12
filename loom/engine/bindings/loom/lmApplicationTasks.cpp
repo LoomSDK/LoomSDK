@@ -36,11 +36,29 @@ extern "C"
 {
 
 atomic_int_t gLoomTicking = 1;
+atomic_int_t gLoomPaused = 0;
 
 void loom_tick()
 {
-    if (atomic_load32(&gLoomTicking) < 1) return;
-    
+    if (atomic_load32(&gLoomTicking) < 1)
+    {
+
+        // Signal that the app has really stopped execution
+        if (atomic_load32(&gLoomPaused) == 0)
+        {
+            atomic_store32(&gLoomPaused, 1);
+        }
+
+        // Sleep for longer while paused.
+        // Since graphics aren't running in a paused state, there is no yielding
+        // we would otherwise run in a busy loop without sleeping.
+        loom_thread_sleep(30);
+
+        return;
+    }
+
+    atomic_store32(&gLoomPaused, 0);
+
     Telemetry::beginTick();
     
     LOOM_PROFILE_START(loom_tick);

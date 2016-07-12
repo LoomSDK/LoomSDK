@@ -62,18 +62,31 @@ static CocoaView* getMainView()
 #endif
 }
 
+@interface LMWebViewDelegate : NSObject
+{
+    loom_webViewCallback callback;
+    void *payload;
+}
+
+-(id)initWithCallback:(loom_webViewCallback)cb andPayload:(void *)pl;
+
+@end
+
 @interface WebViewRef : NSObject {
     CocoaRect _rect;
     CocoaWebView* _view;
+    LMWebViewDelegate* _delegate;
 }
-@property (retain) CocoaWebView* view;
 @property CocoaRect rect;
+@property (retain) CocoaWebView* view;
+@property (retain) LMWebViewDelegate* delegate;
 @end
 
 
 @implementation WebViewRef
 
 @synthesize view = _view;
+@synthesize delegate = _delegate;
 
 - (CocoaRect)rect
 {
@@ -115,16 +128,6 @@ WebViewRef* getWebViewRef(loom_webView handle)
 //_________________________________________________________________________
 // WebView Delegate
 //_________________________________________________________________________
-@interface LMWebViewDelegate : NSObject
-{
-    loom_webViewCallback callback;
-    void *payload;
-}
-
--(id)initWithCallback:(loom_webViewCallback)cb andPayload:(void *)pl;
-
-@end
-
 @implementation LMWebViewDelegate
 
 -(id)initWithCallback:(loom_webViewCallback)cb andPayload:(void *)pl
@@ -200,17 +203,19 @@ loom_webView platform_webViewCreate(loom_webViewCallback callback, void *payload
     int handle = gloom_webViewCounter++;
     
     CocoaWebView* webView = [[[CocoaWebView alloc] initWithFrame:[getMainView() bounds]] retain];
-    
+    LMWebViewDelegate* delegate = [[[LMWebViewDelegate alloc] initWithCallback:callback andPayload:payload] retain];
+
 #if LOOM_PLATFORM == LOOM_PLATFORM_OSX
-    [webView setFrameLoadDelegate:[[LMWebViewDelegate alloc] initWithCallback:callback andPayload:payload]];
+    [webView setFrameLoadDelegate:(id)delegate];
     [webView setWantsLayer:YES];
 #else
-    [webView setDelegate:[[LMWebViewDelegate alloc] initWithCallback:callback andPayload:payload]];
+    [webView setDelegate:delegate];
 #endif
     
     WebViewRef *ref = [WebViewRef alloc];
     ref.view = webView;
     ref.rect = webView.frame;
+    ref.delegate = delegate;
     
     [webViews() setObject:ref forKey:[NSNumber numberWithInt:handle]];
     
@@ -221,9 +226,11 @@ void platform_webViewDestroy(loom_webView handle)
 {
     WebViewRef* ref = getWebViewRef(handle);
     CocoaWebView* webView = ref.view;
-    
+    LMWebViewDelegate* delegate = ref.delegate;
+
     [webView removeFromSuperview];
     [webView release];
+    [delegate release];
     [ref release];
     
     [webViews() removeObjectForKey:[NSNumber numberWithInt:handle]];
@@ -375,4 +382,32 @@ void platform_webViewSetHeight(loom_webView handle, float height)
     CocoaRect rect = ref.rect;
     rect.size.height = height;
     ref.rect = rect;
+}
+
+void platform_webViewPauseAll()
+{
+    #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
+    NSArray* keys = [webViews() allKeys];
+    for (int i=0; i<[keys count]; i++)
+    {
+        NSNumber* num = [keys objectAtIndex:i];
+        WebViewRef* ref = getWebViewRef([num intValue]);
+        CocoaWebView* webView = ref.view;
+        [webView setDelegate:nil];
+    }
+    #endif
+}
+
+void platform_webViewResumeAll()
+{
+    #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
+    NSArray* keys = [webViews() allKeys];
+    for (int i=0; i<[keys count]; i++)
+    {
+        NSNumber* num = [keys objectAtIndex:i];
+        WebViewRef* ref = getWebViewRef([num intValue]);
+        CocoaWebView* webView = ref.view;
+        [webView setDelegate:(id)ref.delegate];
+    }
+    #endif
 }

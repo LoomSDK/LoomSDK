@@ -71,11 +71,13 @@ void loop()
     /* Check for events */
     while (SDL_PollEvent(&event))
     {
-        if (event.type == SDL_QUIT)
+        // If we need to quit, break the loop immediately.
+        if (event.type == SDL_QUIT ||
+            event.type == SDL_APP_TERMINATING)
         {
             // Terminate execution.
             gLoomExecutionDone = 1;
-            continue;
+            return;
         }
 
         // Bail on the rest if no stage!
