@@ -49,6 +49,11 @@ void loom_tick()
             atomic_store32(&gLoomPaused, 1);
         }
 
+        // Sleep for longer while paused.
+        // Since graphics aren't running in a paused state, there is no yielding
+        // we would otherwise run in a busy loop without sleeping.
+        loom_thread_sleep(30);
+
         return;
     }
 
