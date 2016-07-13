@@ -123,13 +123,16 @@ class Timer
      */
     public function stop():void
     {
+        var wasRunning = _running;
+
         // remove the update function from the ticks
         Application.ticks -= update;
         _elapsed = 0;
         _lastTickTime = -1;
         _running = false;
 
-        onStop(this);
+        if (wasRunning)
+            onStop(this);
     }
 
     /**
