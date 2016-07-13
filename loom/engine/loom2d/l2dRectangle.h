@@ -262,7 +262,7 @@ public:
      */
     int clone(lua_State *L)
     {
-        static Type* type = LSLuaState::getLuaState(L)->getType("loom2d.math.Rectangle");
+        Type* type = LSLuaState::getLuaState(L)->getType("loom2d.math.Rectangle");
 
         // Create the instance on top of the stack
         lsr_createinstance(L, type);
