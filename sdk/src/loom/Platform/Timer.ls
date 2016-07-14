@@ -218,7 +218,7 @@ class Timer
 
         if(_elapsed >= _delay)
         {
-            Application.ticks -= update;
+            stop();
 
             onComplete(this);
 
