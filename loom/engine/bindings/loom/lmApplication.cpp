@@ -518,11 +518,12 @@ void LoomApplication::fireGenericEvent(const char *type, const char *payload)
     if (strcmp(type, "cameraRequest") == 0)
     {
         int currentTime = platform_getMilliseconds();
-        if (currentTime > lastCameraRequestTimestamp && currentTime - lastCameraRequestTimestamp < CAMERA_REQUEST_IGNORE_TIME)
+        int prevTime = lastCameraRequestTimestamp;
+        lastCameraRequestTimestamp = currentTime;
+
+        if (currentTime > prevTime && currentTime - prevTime < CAMERA_REQUEST_IGNORE_TIME)
             return;
     }
-
-    lastCameraRequestTimestamp = platform_getMilliseconds();
 
     event.pushArgument(type);
     event.pushArgument(payload);
