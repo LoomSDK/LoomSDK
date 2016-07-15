@@ -28,6 +28,7 @@ using namespace LS;
 #include "loom/common/assets/assetsScript.h"
 #include "loom/common/platform/platformNetwork.h"
 #include "loom/common/platform/platformWebView.h"
+#include "loom/common/platform/platformTime.h"
 
 #include "loom/script/common/lsLog.h"
 #include "loom/script/common/lsFile.h"
@@ -60,7 +61,10 @@ NativeDelegate LoomApplication::applicationActivated;
 NativeDelegate LoomApplication::applicationDeactivated;
 
 static bool initialAssetSystemLoaded = false;
+static int lastCameraRequestTimestamp = 0;
 
+// Ignore the camera requests for a 100ms after it's been triggered
+const int CAMERA_REQUEST_IGNORE_TIME = 100;
 
 lmDefineLogGroup(applicationLogGroup, "app", 1, LoomLogInfo);
 lmDefineLogGroup(scriptLogGroup, "script", 1, LoomLogInfo);
@@ -511,6 +515,15 @@ static utArray<LoomApplicationGenericEventCallbackNote> gNativeGenericCallbacks;
 
 void LoomApplication::fireGenericEvent(const char *type, const char *payload)
 {
+    if (strcmp(type, "cameraRequest") == 0)
+    {
+        int currentTime = platform_getMilliseconds();
+        if (currentTime > lastCameraRequestTimestamp && currentTime - lastCameraRequestTimestamp < CAMERA_REQUEST_IGNORE_TIME)
+            return;
+    }
+
+    lastCameraRequestTimestamp = platform_getMilliseconds();
+
     event.pushArgument(type);
     event.pushArgument(payload);
     event.invoke();
