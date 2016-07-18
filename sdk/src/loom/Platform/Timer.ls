@@ -127,6 +127,7 @@ class Timer
 
         // remove the update function from the ticks
         Application.ticks -= update;
+        _elapsed = 0;
         _lastTickTime = -1;
         _running = false;
 
@@ -217,8 +218,9 @@ class Timer
 
         if(_elapsed >= _delay)
         {
-            onComplete(this);
             stop();
+
+            onComplete(this);
 
             if(repeats)
             {
