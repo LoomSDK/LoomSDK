@@ -1146,8 +1146,7 @@ package feathers.controls
             {
                 if(!this._repeatTimer)
                 {
-                    this._repeatTimer = new Timer(this._repeatDelay * 1000);
-                    this._repeatTimer.repeats = true;
+                    this._repeatTimer = new Timer(this._repeatDelay * 1000, 0);
                     this._repeatTimer.onComplete += repeatTimer_timerHandler;
                 }
                 else
