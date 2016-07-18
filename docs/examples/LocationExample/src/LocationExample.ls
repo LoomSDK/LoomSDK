@@ -33,8 +33,7 @@ package
             Mobile.startLocationTracking(1, 500);
 
             //set up timer to update the location every 200 milliseconds
-            var timer:Timer = new Timer(200);
-            timer.repeats = true;
+            var timer:Timer = new Timer(200, 0);
             timer.onComplete = onLocationUpdate;
             timer.start();
         }
