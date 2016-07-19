@@ -107,7 +107,7 @@ limitations under the License.
     if(cacheToFile != NULL)
         [receivedData writeToFile:[NSString stringWithUTF8String:cacheToFile] atomically:YES];
 
-    utByteArray* bytes = new utByteArray();
+    utByteArray* bytes = lmNew(NULL) utByteArray();
     bytes->attach(receivedData.mutableBytes, receivedData.length);
     
     if(statusCodeFail)
@@ -118,7 +118,12 @@ limitations under the License.
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
-    callback(payload, LOOM_HTTP_ERROR, (utByteArray*)[[error localizedDescription] cStringUsingEncoding:NSUTF8StringEncoding]);
+    utByteArray *ba = lmNew(NULL) utByteArray();
+
+    NSString* err = [error localizedDescription];
+    ba->allocateAndCopy((void*)[err cStringUsingEncoding:NSUTF8StringEncoding], [err length]);
+
+    callback(payload, LOOM_HTTP_ERROR, ba);
 }
 
 @end
