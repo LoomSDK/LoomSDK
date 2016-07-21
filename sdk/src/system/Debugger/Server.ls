@@ -45,7 +45,6 @@ package system.debugger {
         
             var server = new Server();
             server.socket = Socket.bind(host, port, 32);
-            server.socket.setTimeout(1000);
 
             server.client = server.socket.accept();
             server.client.setTimeout(1000);
