@@ -47,7 +47,6 @@ class Toolchain
     path = target.buildPath(self)
     FileUtils.mkdir_p(path)
     Dir.chdir(path) do
-      puts "cmake #{target.sourcePath} #{cmakeArgs(target)} #{target.flags(self)}"
       executeCommand("cmake #{target.sourcePath} #{cmakeArgs(target)} #{target.flags(self)}")
       executeCommand(buildCommand)
     end
@@ -240,7 +239,7 @@ class IOSToolchain < AppleToolchain
   end
   
   def buildCommand
-    return "xcodebuild -configuration #{CFG[:BUILD_TARGET]} CODE_SIGN_IDENTITY=\"#{@signAs}\" CODE_SIGN_RESOURCE_RULES_PATH=#{@sdkroot}/ResourceRules.plist"
+    return "xcodebuild -configuration #{CFG[:BUILD_TARGET]} CODE_SIGN_IDENTITY=\"#{@signAs}\""
   end
 
   def cmakeArgs(target)

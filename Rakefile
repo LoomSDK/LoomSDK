@@ -569,15 +569,12 @@ namespace :build do
       appName = appNameMatch[0]
       puts "Application name found: #{appName}"
 
-      # Use fruitstrap's plist.
-      sh "cp tools/fruitstrap/ResourceRules.plist #{appPath}/ResourceRules.plist"
 
       # Make it ito an IPA!
       full_output_path = Pathname.new("#{$OUTPUT_DIRECTORY}/ios-arm").realpath
       package_command = "/usr/bin/xcrun -sdk iphoneos PackageApplication"
       package_command += " -v '#{appPath}'"
       package_command += " -o '#{full_output_path}/#{appName}.ipa'"
-      package_command += " --sign '#{args.sign_as}'"
       package_command += " --embed '#{$iosProvision}'"
       sh package_command
 
