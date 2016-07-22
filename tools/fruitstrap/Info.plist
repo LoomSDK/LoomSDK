@@ -12,8 +12,6 @@
 	<string>demo</string>
 	<key>CFBundleIdentifier</key>
 	<string>demo</string>
-	<key>CFBundleResourceSpecification</key>
-	<string>ResourceRules.plist</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>CFBundleDisplayName</key>
