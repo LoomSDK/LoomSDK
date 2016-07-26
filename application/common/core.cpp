@@ -60,6 +60,36 @@ lmDefineLogGroup(sdlLogGroup, "sdl", 1, LoomLogInfo);
     if (loggedCategory == groupCategory) { logged = true; lmLogSDL(loggedLevel, sdl ## _ ## postfix ## LogGroup, message); } \
 
 static int gLoomExecutionDone = 0;
+static bool sdlFirstFocusGained = false;
+
+static const char* getSDLEventName(const SDL_Event* event)
+{
+    switch (event->type) {
+        case SDL_APP_DIDENTERBACKGROUND: return "SDL_APP_DIDENTERBACKGROUND"; break;
+        case SDL_APP_WILLENTERBACKGROUND: return "SDL_APP_WILLENTERBACKGROUND"; break;
+        case SDL_APP_DIDENTERFOREGROUND: return "SDL_APP_DIDENTERFOREGROUND"; break;
+        case SDL_APP_WILLENTERFOREGROUND: return "SDL_APP_WILLENTERFOREGROUND"; break;
+
+        case SDL_WINDOWEVENT: switch (event->window.event) {
+            case SDL_WINDOWEVENT_NONE: return "SDL_WINDOWEVENT_NONE"; break;
+            case SDL_WINDOWEVENT_SHOWN: return "SDL_WINDOWEVENT_SHOWN"; break;
+            case SDL_WINDOWEVENT_HIDDEN: return "SDL_WINDOWEVENT_HIDDEN"; break;
+            case SDL_WINDOWEVENT_EXPOSED: return "SDL_WINDOWEVENT_EXPOSED"; break;
+            case SDL_WINDOWEVENT_MOVED: return "SDL_WINDOWEVENT_MOVED"; break;
+            case SDL_WINDOWEVENT_RESIZED: return "SDL_WINDOWEVENT_RESIZED"; break;
+            case SDL_WINDOWEVENT_SIZE_CHANGED: return "SDL_WINDOWEVENT_SIZE_CHANGED"; break;
+            case SDL_WINDOWEVENT_MINIMIZED: return "SDL_WINDOWEVENT_MINIMIZED"; break;
+            case SDL_WINDOWEVENT_MAXIMIZED: return "SDL_WINDOWEVENT_MAXIMIZED"; break;
+            case SDL_WINDOWEVENT_RESTORED: return "SDL_WINDOWEVENT_RESTORED"; break;
+            case SDL_WINDOWEVENT_ENTER: return "SDL_WINDOWEVENT_ENTER"; break;
+            case SDL_WINDOWEVENT_LEAVE: return "SDL_WINDOWEVENT_LEAVE"; break;
+            case SDL_WINDOWEVENT_FOCUS_GAINED: return "SDL_WINDOWEVENT_FOCUS_GAINED"; break;
+            case SDL_WINDOWEVENT_FOCUS_LOST: return "SDL_WINDOWEVENT_FOCUS_LOST"; break;
+            case SDL_WINDOWEVENT_CLOSE: return "SDL_WINDOWEVENT_CLOSE"; break;
+        }; break;
+    }
+    return "N/A";
+}
 
 void loop()
 {
@@ -69,20 +99,12 @@ void loop()
     Loom2D::Stage *stage = Loom2D::Stage::smMainStage;
 
     /* Check for events */
-    while (SDL_PollEvent(&event))
+    while (stage && SDL_PollEvent(&event))
     {
-        // If we need to quit, break the loop immediately.
-        if (event.type == SDL_QUIT ||
-            event.type == SDL_APP_TERMINATING)
-        {
-            // Terminate execution.
-            gLoomExecutionDone = 1;
-            return;
-        }
+#if SDL_LOG_EVENTS
+        lmLog(coreLogGroup, "SDL event from queue 0x%x, %s", event.type, getSDLEventName(&event));
+#endif
 
-        // Bail on the rest if no stage!
-        if(!stage)
-            continue;
 
         // Adjust coordinates for mouse events to work properly on high dpi screens.
         if(event.type == SDL_MOUSEMOTION
@@ -251,8 +273,16 @@ void loop()
         }
         else if (event.type == SDL_WINDOWEVENT)
         {
+            // This is a workaround for the SDL_WINDOWEVENT_FOCUS_GAINED event
+            // not firing at startup on iOS as it does on other platforms, due
+            // to the SDL video/windows not being initialized yet.
+#if LOOM_PLATFORM == LOOM_PLATFORM_IOS
+            if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED || !sdlFirstFocusGained && event.window.event == SDL_WINDOWEVENT_SHOWN)
+#else
             if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+#endif
             {
+                sdlFirstFocusGained = true;
                 const NativeDelegate* activated = LoomApplication::getApplicationActivatedDelegate();
                 activated->invoke();
             }
@@ -302,15 +332,7 @@ static void sdlLogOutput(void* userdata, int category, SDL_LogPriority priority,
 static int sdlPriorityEvents(void* userdata, SDL_Event* event)
 {
 #if SDL_LOG_EVENTS
-    const char *name;
-    switch (event->type) {
-        case SDL_APP_DIDENTERBACKGROUND: name = "SDL_APP_DIDENTERBACKGROUND"; break;
-        case SDL_APP_WILLENTERBACKGROUND: name = "SDL_APP_WILLENTERBACKGROUND"; break;
-        case SDL_APP_DIDENTERFOREGROUND: name = "SDL_APP_DIDENTERFOREGROUND"; break;
-        case SDL_APP_WILLENTERFOREGROUND: name = "SDL_APP_WILLENTERFOREGROUND"; break;
-        default: name = "N/A";
-    }
-    lmLog(coreLogGroup, "SDL event 0x%x, %s", event->type, name);
+    lmLog(coreLogGroup, "SDL event 0x%x, %s", event->type, getSDLEventName(event));
 #endif
 
     switch (event->type) {
@@ -324,6 +346,12 @@ static int sdlPriorityEvents(void* userdata, SDL_Event* event)
         // work with the iOS notification/control center
         case SDL_APP_DIDENTERFOREGROUND:
             loom_appResume();
+            return false;
+
+        case SDL_QUIT:
+        case SDL_APP_TERMINATING:
+            // Terminate execution.
+            gLoomExecutionDone = 1;
             return false;
     }
     return true;
