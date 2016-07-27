@@ -60,7 +60,7 @@ lmDefineLogGroup(sdlLogGroup, "sdl", 1, LoomLogInfo);
     if (loggedCategory == groupCategory) { logged = true; lmLogSDL(loggedLevel, sdl ## _ ## postfix ## LogGroup, message); } \
 
 static int gLoomExecutionDone = 0;
-static bool sdlFirstFocusGained = false;
+static int sdlFocusGained = 0;
 
 static const char* getSDLEventName(const SDL_Event* event)
 {
@@ -102,7 +102,7 @@ void loop()
     while (stage && SDL_PollEvent(&event))
     {
 #if SDL_LOG_EVENTS
-        lmLog(coreLogGroup, "SDL event from queue 0x%x, %s", event.type, getSDLEventName(&event));
+        lmLogWarn(coreLogGroup, "SDL event from queue 0x%x, %s", event.type, getSDLEventName(&event));
 #endif
 
 
@@ -274,20 +274,24 @@ void loop()
         else if (event.type == SDL_WINDOWEVENT)
         {
             // This is a workaround for the SDL_WINDOWEVENT_FOCUS_GAINED event
-            // not firing at startup on iOS as it does on other platforms, due
-            // to the SDL video/windows not being initialized yet.
-#if LOOM_PLATFORM == LOOM_PLATFORM_IOS
-            if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED || !sdlFirstFocusGained && event.window.event == SDL_WINDOWEVENT_SHOWN)
-#else
-            if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
-#endif
+            // not firing at startup on some platforms, due
+            // to the SDL video/windows not being initialized yet or similar.
+            if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED || sdlFocusGained == 0 && event.window.event == SDL_WINDOWEVENT_SHOWN)
             {
-                sdlFirstFocusGained = true;
-                const NativeDelegate* activated = LoomApplication::getApplicationActivatedDelegate();
-                activated->invoke();
+                sdlFocusGained++;
+                if (sdlFocusGained == 1) {
+                    const NativeDelegate* activated = LoomApplication::getApplicationActivatedDelegate();
+                    activated->invoke();
+                }
+                else if (sdlFocusGained > 1)
+                {
+                    sdlFocusGained = 1;
+                }
             }
             else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
             {
+                sdlFocusGained--;
+                if (sdlFocusGained < -1) sdlFocusGained = -1;
                 const NativeDelegate* deactivated = LoomApplication::getApplicationDeactivatedDelegate();
                 deactivated->invoke();
             }
@@ -332,7 +336,7 @@ static void sdlLogOutput(void* userdata, int category, SDL_LogPriority priority,
 static int sdlPriorityEvents(void* userdata, SDL_Event* event)
 {
 #if SDL_LOG_EVENTS
-    lmLog(coreLogGroup, "SDL event 0x%x, %s", event->type, getSDLEventName(event));
+    lmLogWarn(coreLogGroup, "SDL event 0x%x, %s", event->type, getSDLEventName(event));
 #endif
 
     switch (event->type) {
