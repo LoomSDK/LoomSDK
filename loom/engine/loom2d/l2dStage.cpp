@@ -84,6 +84,7 @@ void Stage::updateFromConfig()
     
     if (visDirty && smMainStage != NULL) 
     {
+        smMainStage->hide();
         smMainStage->show();
         visDirty = false;
     }
