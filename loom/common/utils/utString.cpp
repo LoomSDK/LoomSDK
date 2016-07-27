@@ -198,7 +198,7 @@ utString::size_type utString::size() const
 }
 
 
-utString::size_type utString::find(char c, size_type start)
+utString::size_type utString::find(char c, size_type start) const
 {
     size_type len = strlen(p);
 

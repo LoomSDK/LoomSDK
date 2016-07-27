@@ -309,10 +309,27 @@ void LSCompiler::processExecutableConfig(AssemblyBuilder *ab)
 
     while (itr.hasMoreElements())
     {
-        const char *key   = itr.peekNextKey().str().c_str();
-        const char *value = itr.peekNextValue().c_str();
+        const utString &dkey   = itr.peekNextKey().str();
+        const utString &value = itr.peekNextValue();
+        const char *key = dkey.c_str();
+        json_t *obj = json;
 
-        json_object_set_new(json, key, json_string(value));
+        size_t pos;
+        size_t start = 0;
+        while ((pos = dkey.find('.', start)) != utString::npos) {
+            utString part = dkey.substr(start, pos - start);
+            json_t* child = json_object_get(obj, part.c_str());
+            if (!child) {
+                child = json_object();
+                json_object_set_new(obj, part.c_str(), child);
+            }
+            obj = child;
+            start = pos+1;
+        }
+        if (start > 0) key = dkey.c_str() + start;
+
+        
+        json_object_set_new(obj, key, json_string(value.c_str()));
 
         itr.next();
     }

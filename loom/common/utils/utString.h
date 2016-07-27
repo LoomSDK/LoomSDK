@@ -92,7 +92,7 @@ public:
     void fromBytes(const void *bytes, int length);
     void assign(const char* bytes, int length);
 
-    size_type find(char c, size_type start = 0);
+    size_type find(char c, size_type start = 0) const;
     bool startsWith(const char *prefix) const;
     bool endsWith(const char *suffix) const;
 
