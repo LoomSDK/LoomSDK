@@ -324,6 +324,7 @@ int main(int argc, const char **argv)
         }
         else if (!strcmp(argv[i], "--help"))
         {
+            printf("-Dkey=value : override key in loom.config with value, use dots to set nested values\n");
             printf("--release : build in release mode\n");
             printf("--verbose : enable verbose compilation\n");
             printf("--unittest [--xmlfile filename.xml]: run unit tests with optional xml file output\n");
