@@ -24,6 +24,10 @@ package unittest {
         public function AssertResult() {}
     }
     
+    /**
+     * Main assertion class with static methods that you call in unit test
+     * functions to assert that some conditions hold true.
+     */ 
     public class Assert {
         
         /**
