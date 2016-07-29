@@ -334,8 +334,8 @@ class Timer
 
         if(_elapsed >= _delay)
         {
-            onComplete(this);
             currentCount++;
+            onComplete(this);
             _elapsed = 0;
 
             // Zero means never stop
