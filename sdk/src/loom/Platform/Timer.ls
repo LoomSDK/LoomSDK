@@ -228,12 +228,13 @@ class Timer
             // remove the update function from the ticks
             Application.ticks -= update;
 
+            _running = false;
+
             onStop(this);
 
             _elapsed = 0;
             _currentCount = 0;
             _lastTickTime = -1;
-            _running = false;
         }
     }
 
@@ -336,13 +337,14 @@ class Timer
         {
             currentCount++;
             onComplete(this);
-            _elapsed = 0;
 
             // Zero means never stop
             if(repeatCount != 0 && currentCount >= repeatCount)
             {
                 stop();
             }
+            
+            _elapsed = 0;
 
         }
     }
