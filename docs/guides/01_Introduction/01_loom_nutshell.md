@@ -16,7 +16,7 @@ You can run `loom new MyProject` to automatically create a new folder containing
 
 ## The Application
 
-Every Loom program subclasses [`Application`](../../api/loom/Application.html) or [`ConsoleApplication`](,,/../api/system/application/ConsoleApplication.html) (if it is command line only). These classes set up and tear down commonly used resources and give you a starting point for your application logic: the `run()` method.
+Every Loom program subclasses [`Application`](../../api/loom/Application.html) or [`ConsoleApplication`](../../api/system/application/ConsoleApplication.html) (if it is command line only). These classes set up and tear down commonly used resources and give you a starting point for your application logic: the `run()` method.
 
 An empty Loom application looks like this:
 
