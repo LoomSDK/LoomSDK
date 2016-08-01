@@ -11,11 +11,29 @@ package unittest {
      * passed/failed/skipped events.
      */
     class StatusReport {
+        /**
+         * The total number of recorded events.
+         */
         public var total:int;
+
+        /**
+         * Number of tests that passed.
+         */ 
         public var passed:int;
+
+        /**
+         * Number of failed tests.
+         */
         public var failed:int;
+
+        /**
+         * Number of skipped tests.
+         */
         public var skipped:int;
         
+        /**
+         * Summation override for convenience.
+         */
         public function operator+=(s:StatusReport) {
             total += s.total;
             passed += s.passed;
@@ -23,18 +41,34 @@ package unittest {
             skipped += s.skipped;
         }
         
+        /**
+         * Set the number of failed tests to the remainder after taking into
+         * account how many passed and were skipped.
+         */
         public function updateFailed() {
             failed = total - passed - skipped;
         }
+
+        /**
+         * Returns `true` if none of the tests failed.
+         */
         public function get successful():Boolean {
             return failed == 0;
         }
+
+        /**
+         * Resets all metrics to zero.
+         */
         public function reset() {
             total = 0;
             passed = 0;
             failed = 0;
             skipped = 0;
         }
+
+        /**
+         * Returns a formatted string containing all the metrics.
+         */
         public function toString():String {
             var s = String.lpad(""+total, " ", 4)+" total" +
                     ", "+String.lpad(""+passed, " ", 4)+" passed" +
@@ -49,13 +83,37 @@ package unittest {
      * TypeTest groups all the tests found in a specific Type.
      */
     class TypeTest {
+        /**
+         * Reference to the Type tested.
+         */
         public var type:Type;
+
+        /**
+         * All the tests found in the Type.
+         */
         public var tests:Vector.<Test>;
         
+        /**
+         * This is set to `true` if the Type has `SkipTests` metadata set.
+         * If `true`, all the tests in the Type are skipped and not tested.
+         */
         public var skip:Boolean;
+
+        /**
+         * This is set to `true` if the Type has at least one asynchronous test.
+         */
         public var async:Boolean;
         
+        /**
+         * Contains Test-level metrics for how many tests passed, failed and
+         * were skipped.
+         */
         public var report:StatusReport = new StatusReport();
+        
+        /**
+         * Contains Assert-level metrics for how many asserts passed, failed and
+         * were skipped.
+         */
         public var asserts:StatusReport = new StatusReport();
     }
     
@@ -66,22 +124,69 @@ package unittest {
      */
     class Test {
         /**
-         * Can be either a Type or an instance.
+         * The Type containing the test.
          */
         public var type:Type;
+
+        /**
+         * Can be either a Type in case of static method tests or an instance
+         * in case of instance method tests.
+         */
         public var target:Object;
+
+
+        /**
+         * The name of the test method.
+         */
         public var name:String;
+
+        /**
+         * Reference to the MethodInfo object of the test method.
+         */
         public var method:MethodInfo;
+
+        /**
+         * Reference to the Test metadata tag info object.
+         */
         public var meta:MetaInfo;
         
+        /**
+         * This is set to `true` if the method was set to be skipped.
+         */
         public var skip:Boolean;
+
+        /**
+         * This is set to `true` if this is an asynchronous test based on the 
+         * method signature.
+         */
         public var async:Boolean;
         
+        /**
+         * Contains Assert-level metrics for how many of them passed, failed and
+         * were skipped.
+         */
         public var report:StatusReport = new StatusReport();
+
+        /**
+         * Contains the results of all the assertions in the test. Generally
+         * only the failed assertions are kept track of uniquely.
+         */
         public var results:Vector.<AssertResult>;
         
         function Test() { };
         
+        /**
+         * Runs the method, the results of all the assertions are gathered in
+         * the Assert class.
+         *
+         * @param c Only used for asynchronous tests. The `TestComplete`
+         *          class contains a `done` function that is called when the
+         *          async test has finished.
+         *
+         * @return  Returns a custom result object of the test, always `null`
+         *          for asynchronous tests. Usually void, however if set, it is
+         *          shown next to the test result as a String.
+         */
         [UnitTestHideCall]
         public function run(c:TestComplete = null):Object {
             
@@ -117,10 +222,28 @@ package unittest {
          * The total number of scanned types in the test run.
          */
         public var scannedTypes:int;
+
+        /**
+         * TypeTest instances of all the Types that contain at least one test.
+         */
         public var typeTests:Vector.<TypeTest>;
         
+        /**
+         * Contains Type-level metrics for how many types passed, failed and
+         * were skipped.
+         */
         public var typeReport:StatusReport = new StatusReport();
+
+        /**
+         * Contains Test-level metrics for how many tests passed, failed and
+         * were skipped.
+         */
         public var testReport:StatusReport = new StatusReport();
+        
+        /**
+         * Contains Assert-level metrics for how many asserts passed, failed and
+         * were skipped.
+         */
         public var assertReport:StatusReport = new StatusReport();
     }
     
@@ -131,7 +254,9 @@ package unittest {
      */
     public class TestRunner {
         
-        // Delegate that is run when the tests complete
+        /**
+         * Delegate that is called when all the tests are done.
+         */
         public static var onComplete:OnTestComplete;
         
         // The result that will be returned when everything is done
@@ -163,19 +288,36 @@ package unittest {
         public function TestRunner() { }
         
         /**
-         * If a test is currently running. Although asynchronous testing is support, only one test suite can be run at a time. It is safe to run
-         * a test suite when this flag is false.
+         * `true` if a test is currently running.
+         * Although asynchronous testing is supported, only one test suite can
+         * be run at a time. It is safe to run a test suite when this flag
+         * is `false`.
          */
         public static function get isRunning():Boolean { return _isRunning; }
         
         /**
-         * Run and report on all the tests in the specified assembly. Synchronous and Asychronous tests are supported. In order to run a test asynchronously,
-         * simply give your test function a parameter of the type `unittest.TestComplete`, and then call the .done() function when the test is finished.
-         * See TestComplete for more details. All tests, synchronous and asynchronous are marked by the [Test] metadata.
+         * Run and report on all the tests in the specified assembly.
+         *
+         * Synchronous and asychronous tests are supported. In order to run a
+         * test asynchronously, simply give your test function a parameter of
+         * the type `unittest.TestComplete` and then call the `.done()` function
+         * when the test is finished.
+         * See TestComplete for more details.
+         *
+         * All tests, synchronous and asynchronous are marked by the
+         * [Test] metadata.
+         *
          * @param assembly  The assembly from which to run the tests.
-         *                  Use Type.getAssembly() or getType().getAssembly() for an easy way to run tests in the currently running application.
-         * @param shuffle   Whether to shuffle the tests or not, defaults to true to allow for faster failure of tests that depend on side effects.
-         * @return  A TestResult containing the run TypeTests and their accumulated results.
+         *                  Use Type.getAssembly() or getType().getAssembly()
+         *                  for an easy way to run tests in the currently
+         *                  running application.
+         *
+         * @param shuffle   Whether to shuffle the tests or not, defaults to
+         *                  true to allow for faster failure of tests that
+         *                  depend on side effects.
+         *
+         * @return          A TestResult containing the run TypeTests and their
+         *                  accumulated results.
          */
         [UnitTestHideCall]
         public static function runAll(assembly:Assembly, shuffle:Boolean = true):TestResult {
@@ -607,8 +749,9 @@ package unittest {
     }
     
     /**
-     * Special class to be used when making asynchronous tests. Simply add a parameter with this type to your testing
-     * function, and call the done() function when your asynchronous test is complete.
+     * Special class to be used when making asynchronous tests. Simply add a
+     * parameter with this type to your testing function and call the `done()`
+     * function when your asynchronous test is complete.
      */
     public class TestComplete {
         private var doneFunction:Function;
@@ -622,10 +765,11 @@ package unittest {
         }
         
         /**
-         * Function to be called when a test is completed. If this function is called more than once in a given test, an
-         * error will be Asserted.
+         * Function to be called when a test is completed. If this function is
+         * called more than once in a given test, an error will be asserted.
          * 
-         * @param msg An object that will be logged in the test
+         * @param msg A custom result object that will be shown as a String next
+         *            to the test results.
          */
         public function done(msg:Object = null):void {
             if (hasBeenCalled) {
