@@ -9,14 +9,14 @@ Loom provides a basic structure for your application built around the `Applicati
 Loom's basic project structure is very simple:
 
    * `loom.config` - In the root of the project, this stores some basic information like application name, startup width/height, and other useful settings. You can also add your own data if you want and read it via `Application.loomConfigJSON`.
-   * `src/` - This folder contains all the .ls files for your project. You can live edit them if you run your app with `loom run` and changes will be pushed live to your app.
-   * `assets/` - All images, sound files, levels, text data, etc. that should be packaged with your app are stored here. There will be a basic font and some other starter data here by default.
+   * `src/` - This folder contains all the `.ls` LoomScript files for your project. You can edit them live if you run your app with `loom run`, changes will be pushed to your app automatically.
+   * `assets/` - All images, sound files, levels, text data, etc. that should be packaged with your app are stored here. There will be a basic Bitmap font and some other starter data here by default.
 
-You can run `loom new MyProject` to automatically create a new folder containing an empty Loom project.
+You can run `loom new MyProject` to automatically create a new folder containing a default Loom project.
 
 ## The Application
 
-Every Loom program subclasses Application or ConsoleApplication (if it is command line only). These classes set up and tear down commonly used resources. They mark for the VM where execution should begin. And they give you a starting point for your application logic: the `run()` method.
+Every Loom program subclasses Application or ConsoleApplication (if it is command line only). These classes set up and tear down commonly used resources and give you a starting point for your application logic: the `run()` method.
 
 An empty Loom application looks like this:
 
@@ -36,7 +36,7 @@ class MyApp extends Application
 Code similar to the above is generated automatically when you use `loom new`.
 
 `Application` has a lot of other very useful built in capabilities:
-   * Methods you can override to get callbacks before each frame is renderered (`onFrame`) and at a fixed 30hz as time passes (`onTick`).
+   * Methods you can override to get callbacks before each frame is rendered (`onFrame`) and at a fixed 60hz as time passes (`onTick`).
    * The `loom.config` file in JSON form stored in `loomConfigJSON`.
    * The current version of Loom in `version`.
    * The Stage stored in `stage`.
@@ -49,7 +49,7 @@ Check out the API docs for full details.
 Loom has a hardware accelerated 2D rendering framework based on Starling. Rendering occurs on the `Stage` by adding `DisplayObject` subclasses to it and manipulating their properties. Collectively this system is called the display list. The display list allows you to position objects at pixel coordinates, rotate them, scale/skew them, and do other pretty things. For instance you have the following in the `run` method:
 
 ~~~as3
-// Create a white square 50px square...
+// Create a white 50x50px square.
 var q = new Quad(50, 50);
 
 // Position it at 20, 200.
@@ -63,7 +63,7 @@ q.rotation = 10;
 stage.addChild(q);
 ~~~
 
-Every frame, every object on the `Stage` is rendered using the GPU. Rendering occurs after LoomScript finishes executing for each frame, so only the last value you set for x, y, etc. takes effect. Having lots of `DisplayObject`s can slow down rendering, although Loom is heavily optimized for performance.
+Every frame, every object on the `Stage` is rendered using the GPU. Rendering occurs after LoomScript finishes executing for each frame, so only the last value you set for `x`, `y`, etc. takes effect. Having lots of `DisplayObject`s can slow down rendering, although Loom is heavily optimized for performance.
 
 You can render from textures using `Image`, for instance, try dropping a transparent PNG in the `assets/` folder and modifying the above example so that the first line reads:
 
@@ -113,7 +113,7 @@ Browse the code in the `src/` folder to see thorough examples of all the major F
 
 ## LoomScript
 
-LoomScript is a simple language very similar to JavaScript, JavaScript, Java, or C#. A full language reference is available [here](http://docs.theengine.co/loom/1.1.3452/guides/02_LoomScript/02_syntax.html). We'll give some very short examples here to get you started.
+LoomScript is a simple language very similar to JavaScript, ActionScript, Java, or C#. A full language reference is available [here](http://docs.theengine.co/loom/1.1.3452/guides/02_LoomScript/02_syntax.html). We'll give some very short examples here to get you started.
 
 LoomScript is strongly and implicitly typed. In other words, LoomScript knows the type of every variable and will give you an error if you try to do something invalid. Types are specified with a colon and the typename, although in many cases they are optional. For instance:
 
