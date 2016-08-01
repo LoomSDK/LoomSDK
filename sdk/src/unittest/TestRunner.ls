@@ -493,7 +493,7 @@ package unittest {
          * @param tests The tests to report on.
          * @param stackSkip The number of calls to skip from the bottom of the call stack.
          */
-        public static function report(tests:Vector.<Test>, stackSkip:int = 2) {
+        public static function report(tests:Vector.<Test>, stackSkip:int = 0) {
             
             var failedTests:Vector.<Test> = tests.filter(function(item:Object, index:Number, vector:Vector.<Test>):Boolean {
                 return (item as Test).results != null;
@@ -634,7 +634,7 @@ package unittest {
             }
             
             hasBeenCalled = true;
-            doneFunction.call(null, [msg]);
+            doneFunction.call(null, msg);
         }
     }
 }
