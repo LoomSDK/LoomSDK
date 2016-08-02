@@ -74,12 +74,28 @@ def copy_examples
   Dir["examples/*"].each do |lib_path|
     if File.exists? File.join(lib_path, "README.md")
       FileUtils.mkdir_p(File.join(OUTPUT_DIR, lib_path))
-      FileUtils.cp_r(File.join(lib_path, "README.md"), File.join(OUTPUT_DIR, lib_path))
+      FileUtils.cp(File.join(lib_path, "README.md"), File.join(OUTPUT_DIR, lib_path))
+      FileUtils.cp(File.join(lib_path, "loom.config"), File.join(OUTPUT_DIR, lib_path))
+      begin
+        FileUtils.cp(File.join(lib_path, ".gitignore"), File.join(OUTPUT_DIR, lib_path))
+      rescue Errno::ENOENT
+      end
       if Dir.exists? File.join(lib_path, "src")
         FileUtils.cp_r(File.join(lib_path, "src"), File.join(OUTPUT_DIR, lib_path))
       end
+      if Dir.exists? File.join(lib_path, "assets")
+        FileUtils.cp_r(File.join(lib_path, "assets"), File.join(OUTPUT_DIR, lib_path))
+      end
       if Dir.exists? File.join(lib_path, "images")
         FileUtils.cp_r(File.join(lib_path, "images"), File.join(OUTPUT_DIR, lib_path))
+      end
+      if Dir.exists? File.join(lib_path, "icons", "ios")
+        FileUtils.mkdir_p(File.join(OUTPUT_DIR, lib_path, "icons"))
+        FileUtils.cp_r(File.join(lib_path, "icons", "ios"), File.join(OUTPUT_DIR, lib_path, "icons"))
+      end
+      if Dir.exists? File.join(lib_path, "icons", "android")
+        FileUtils.mkdir_p(File.join(OUTPUT_DIR, lib_path, "icons"))
+        FileUtils.cp_r(File.join(lib_path, "icons", "android"), File.join(OUTPUT_DIR, lib_path, "icons"))
       end
       example_doc = Module::ExampleDoc.new(lib_path.split("/").last)
       puts "Processing #{example_doc.path}.."

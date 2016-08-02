@@ -179,8 +179,8 @@ namespace :package do
     # Package examples skipping bloat.
     Zip::File.open("pkg/examples.zip", 'w') do |zipfile|
       Dir["docs/examples/**/**"].each do |file|
-       next if File.extname(file) == ".loomlib"
-       next if File.extname(file) == ".loom"
+        next if File.extname(file) == ".loomlib"
+        next if File.extname(file) == ".loom"
         zipfile.add(file.sub("docs/examples/", ''),file)
       end
     end
