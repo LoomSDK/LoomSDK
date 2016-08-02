@@ -83,14 +83,19 @@ def copy_examples
       if Dir.exists? File.join(lib_path, "src")
         FileUtils.cp_r(File.join(lib_path, "src"), File.join(OUTPUT_DIR, lib_path))
       end
+      if Dir.exists? File.join(lib_path, "assets")
+        FileUtils.cp_r(File.join(lib_path, "assets"), File.join(OUTPUT_DIR, lib_path))
+      end
       if Dir.exists? File.join(lib_path, "images")
         FileUtils.cp_r(File.join(lib_path, "images"), File.join(OUTPUT_DIR, lib_path))
       end
       if Dir.exists? File.join(lib_path, "icons", "ios")
-        FileUtils.cp_r(File.join(lib_path, "icons", "ios"), File.join(OUTPUT_DIR, lib_path))
+        FileUtils.mkdir_p(File.join(OUTPUT_DIR, lib_path, "icons"))
+        FileUtils.cp_r(File.join(lib_path, "icons", "ios"), File.join(OUTPUT_DIR, lib_path, "icons"))
       end
       if Dir.exists? File.join(lib_path, "icons", "android")
-        FileUtils.cp_r(File.join(lib_path, "icons", "android"), File.join(OUTPUT_DIR, lib_path))
+        FileUtils.mkdir_p(File.join(OUTPUT_DIR, lib_path, "icons"))
+        FileUtils.cp_r(File.join(lib_path, "icons", "android"), File.join(OUTPUT_DIR, lib_path, "icons"))
       end
       example_doc = Module::ExampleDoc.new(lib_path.split("/").last)
       puts "Processing #{example_doc.path}.."
