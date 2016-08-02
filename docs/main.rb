@@ -76,7 +76,10 @@ def copy_examples
       FileUtils.mkdir_p(File.join(OUTPUT_DIR, lib_path))
       FileUtils.cp(File.join(lib_path, "README.md"), File.join(OUTPUT_DIR, lib_path))
       FileUtils.cp(File.join(lib_path, "loom.config"), File.join(OUTPUT_DIR, lib_path))
-      FileUtils.cp(File.join(lib_path, ".gitignore"), File.join(OUTPUT_DIR, lib_path))
+      begin
+        FileUtils.cp(File.join(lib_path, ".gitignore"), File.join(OUTPUT_DIR, lib_path))
+      rescue Errno::ENOENT
+      end
       if Dir.exists? File.join(lib_path, "src")
         FileUtils.cp_r(File.join(lib_path, "src"), File.join(OUTPUT_DIR, lib_path))
       end
