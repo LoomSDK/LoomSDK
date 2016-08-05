@@ -32,7 +32,27 @@ public:
         lua_pushvalue(L, -2);
         lua_pushvalue(L, 2);
         lua_call(L, 2, 1);
-        return 1;
+
+        // Pop debug results if any
+        #ifdef LUASOCKET_DEBUG
+        lua_pop(L, 1);
+        #endif
+
+        // Results of an OK send are: nil, nil, index of last byte sent
+        // Results of a failed send are: index of last byte sent, error message, nil
+
+        // Handle errors
+        if (lua_isnil(L, -3))
+        {
+            lua_pushvalue(L, -2);
+            lua_setfield(L, 1, "__socket_error");
+            lua_pop(L, 1);
+        }
+
+        // Clean up the results of "send"
+        lua_pop(L, 3);
+
+        return 0;
     }
 
     /*
@@ -45,7 +65,8 @@ public:
         lua_getfield(L, -1, "close");
         lua_pushvalue(L, -2);
         lua_call(L, 1, 1);
-        return 1;
+
+        return 0;
     }
 
     static int clearError(lua_State *L)
@@ -123,6 +144,13 @@ public:
 
         int sockIdx = lua_gettop(L);
 
+        if (lua_isnil(L, sockIdx))
+        {
+            lua_pushvalue(L, -2);
+            lua_setfield(L, 1, "__socket_error");
+            lua_pop(L, 1);
+        }
+
         Type *socketType = LSLuaState::getLuaState(L)->getType("system.socket.Socket");
         lsr_createinstance(L, socketType);
 
@@ -148,7 +176,12 @@ public:
 
         if (nret == 2)
         {
-            // ERROR!
+            lua_pushvalue(L, -1);
+            lua_setfield(L, 1, "__socket_error");
+            lua_pop(L, 1);
+
+            lua_pushnil(L);
+            return 1;
         }
 
         //local res, err = sock:connect(host, port)
@@ -156,9 +189,21 @@ public:
         lua_pushvalue(L, sockIdx);
         lua_pushvalue(L, 1); // host
         lua_pushvalue(L, 2); // port
+        top = lua_gettop(L);
         lua_call(L, 3, 1);
+        int resIdx = lua_gettop(L);
 
-        // TODO: Error check
+        nret = resIdx - top;
+
+        if (nret == 2)
+        {
+            lua_pushvalue(L, -1);
+            lua_setfield(L, 1, "__socket_error");
+            lua_pop(L, 1);
+
+            lua_pushnil(L);
+            return 1;
+        }
 
         Type *socketType = LSLuaState::getLuaState(L)->getType("system.socket.Socket");
         lsr_createinstance(L, socketType);
@@ -186,7 +231,12 @@ public:
 
         if (nret == 2)
         {
-            // ERROR!
+            lua_pushvalue(L, -1);
+            lua_setfield(L, 1, "__socket_error");
+            lua_pop(L, 1); // pop string error and return nil
+
+            lua_pushnil(L);
+            return 1;
         }
 
         //sock:setoption("reuseaddr", true)
@@ -201,16 +251,41 @@ public:
         lua_pushvalue(L, sockIdx);
         lua_pushvalue(L, 1); // host
         lua_pushvalue(L, 2); // port
+        top = lua_gettop(L);
         lua_call(L, 3, 1);
 
-        // TODO: Error check
+        int resIdx = lua_gettop(L);
+        nret = resIdx - top;
+
+        if (nret == 2)
+        {
+            lua_pushvalue(L, -1);
+            lua_setfield(L, 1, "__socket_error");
+            lua_pop(L, 1); // pop string error and return nil
+
+            lua_pushnil(L);
+            return 1;
+        }
 
         //res, err = sock:listen(backlog)
         lua_getfield(L, sockIdx, "listen");
         lua_pushvalue(L, sockIdx);
         lua_pushvalue(L, 3); // backlog
+        top = lua_gettop(L);
         lua_call(L, 2, 1);
 
+        resIdx = lua_gettop(L);
+        nret = resIdx - top;
+
+        if (nret == 2)
+        {
+            lua_pushvalue(L, -1);
+            lua_setfield(L, 1, "__socket_error");
+            lua_pop(L, 1); // pop string error and return nil
+
+            lua_pushnil(L);
+            return 1;
+        }
 
         Type *socketType = LSLuaState::getLuaState(L)->getType("system.socket.Socket");
         lsr_createinstance(L, socketType);
