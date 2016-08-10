@@ -137,6 +137,8 @@ public:
     void link();
     bool validate();
 
+    void bindTexture(GLuint textureId, GLuint boundTextureId);
+
     GLint getUniformLocation(const char* name);
     void setUniform1f(GLint location, GLfloat v0);
     int setUniform1fv(lua_State *L);
@@ -162,8 +164,10 @@ public:
     void setTextureId(GLuint _id);
 
     virtual void bind();
+    virtual void bindTextures();
 
     LOOM_DELEGATE(onBind);
+    LOOM_DELEGATE(onBindTextures);
 };
 
 // A default shader that is used internally by Loom.

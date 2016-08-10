@@ -73,6 +73,18 @@ package loom.graphics
         public native function getUniformLocation(name:String):Number;
 
         /**
+          * Binds a texture to a GLSL texture unit. If the texture is null, the call will be
+          * ignored. Valid IDs are from 0 to 31 (0 is reserved for internal use).
+          */
+        public function bindTexture(tex:Texture, id:Number)
+        {
+            if (tex != null)
+              bindTexture_(tex.nativeID, id);
+        }
+
+        private native function bindTexture_(texId:Number, id:Number);
+
+        /**
           * Sets one 'float' uniform.
           */
         public native function setUniform1f(location:Number, v0:Number);
@@ -80,7 +92,7 @@ package loom.graphics
         /**
           * Sets an array of 'float' uniforms.
           */
-        public native function setUniform1fv(location:Number, x1:Number, x2:Number, value:Vector.<Number>);
+        public native function setUniform1fv(location:Number, value:Vector.<Number>);
 
         /**
           * Sets one 'vec2' uniform
@@ -183,5 +195,6 @@ package loom.graphics
           * or when switching between shaders.
           */
         public native var onBind:ShaderBindDelegate;
+        public native var onBindTextures:ShaderBindDelegate;
     }
 }

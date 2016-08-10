@@ -106,60 +106,14 @@ void QuadRenderer::submit()
             if (!sTextureStateValid)
             {
                 // Set up texture state.
-                ctx->glActiveTexture(GL_TEXTURE0);
-                ctx->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
+                sCurrentShader->bindTexture(currentTexture, 0);
 
-                if (tinfo.clampOnly) {
-                    tinfo.wrapU = TEXTUREINFO_WRAP_CLAMP;
-                    tinfo.wrapV = TEXTUREINFO_WRAP_CLAMP;
-                }
-
-                switch (tinfo.wrapU)
-                {
-                    case TEXTUREINFO_WRAP_CLAMP:
-                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                        break;
-                    case TEXTUREINFO_WRAP_MIRROR:
-                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-                        break;
-                    case TEXTUREINFO_WRAP_REPEAT:
-                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                        break;
-                    default:
-                        lmAssert(false, "Unsupported wrapU: %d", tinfo.wrapU);
-                }
-                switch (tinfo.wrapV)
-                {
-                    case TEXTUREINFO_WRAP_CLAMP:
-                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                        break;
-                    case TEXTUREINFO_WRAP_MIRROR:
-                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-                        break;
-                    case TEXTUREINFO_WRAP_REPEAT:
-                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                        break;
-                    default:
-                        lmAssert(false, "Unsupported wrapV: %d", tinfo.wrapV);
-                }
-                //*/
-
-                switch (tinfo.smoothing)
-                {
-                    case TEXTUREINFO_SMOOTHING_NONE:
-                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, tinfo.mipmaps ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
-                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                        break;
-                    case TEXTUREINFO_SMOOTHING_BILINEAR:
-                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, tinfo.mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-                        ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                        break;
-                    default:
-                        lmAssert(false, "Unsupported smoothing: %d", tinfo.smoothing);
-                }
-                
                 sTextureStateValid = true;
             }
+
+            // This is not really perdictable and does not mess up the graphics
+            // state currently.
+            sCurrentShader->bindTextures();
 
             if (!sBlendStateValid)
             {
