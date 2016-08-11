@@ -509,23 +509,25 @@ main(int argc, char *argv[])
     lmLogDebug(coreLogGroup, "SDL linked version : %d.%d.%d", linked.major, linked.minor, linked.patch);
 
 
-    SDL_Init(
+    int ret = SDL_Init(
         SDL_INIT_TIMER |
         SDL_INIT_VIDEO |
         SDL_INIT_JOYSTICK |
+#if !defined(LOOM_BUILD_BBB) && !defined(LOOM_BUILD_RPI2)
         SDL_INIT_HAPTIC |
+#endif
         SDL_INIT_GAMECONTROLLER |
         SDL_INIT_EVENTS
     );
 
-    int ret;
-
+    if (ret != 0)
+        lmLogDebug(coreLogGroup, "SDL_Init() failed, SDL error: %s", SDL_GetError());
 
 #if LOOM_RENDERER_OPENGLES2
     ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
+    lmAssert(ret == 0, "Failed to set GL profile, SDL error: %s", SDL_GetError());
     ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
+    lmAssert(ret == 0, "Failed to set GL major version, SDL error: %s", SDL_GetError());
 #endif
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
@@ -548,7 +550,7 @@ main(int argc, char *argv[])
 
     int stencilSize = 1;
     ret = SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilSize);
-    lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
+    lmAssert(ret == 0, "Failed to set GL stencil size, SDL error: %s", SDL_GetError());
 
     Uint32 windowFlags = 0;
 

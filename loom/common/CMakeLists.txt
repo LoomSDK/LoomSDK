@@ -11,26 +11,26 @@ if (APPLE)
         platform/platformCocoa.mm
     )
     if (LOOM_BUILD_IOS EQUAL 1)
-        set (CPP_FILES ${CPP_FILES} 
-            platform/platformDisplayIOS.mm 
+        set (CPP_FILES ${CPP_FILES}
+            platform/platformDisplayIOS.mm
             platform/platformFileIOS.mm
-            platform/platformHTTPOSX.mm 
-            platform/platformWebViewCocoa.mm 
+            platform/platformHTTPOSX.mm
+            platform/platformWebViewCocoa.mm
             platform/platformStoreiOS.mm
             platform/platformVideoiOS.mm
             platform/platformMobileiOS.mm
             platform/platformFontIOS.mm
             platform/EBPurchase.m
         )
-        
+
         # Allow Admob and/or Facebook to be included for iOS?
         if(LOOM_BUILD_ADMOB EQUAL 1)
-            set (CPP_FILES ${CPP_FILES} 
+            set (CPP_FILES ${CPP_FILES}
                 platform/platformAdMobIOS.mm
             )
         endif()
         if(LOOM_BUILD_FACEBOOK EQUAL 1)
-            set (CPP_FILES ${CPP_FILES} 
+            set (CPP_FILES ${CPP_FILES}
                 platform/platformFacebookiOS.mm
                 platform/platformTeakiOS.mm
                 platform/platformParseiOS.mm
@@ -38,9 +38,9 @@ if (APPLE)
         endif()
 
     else()
-        set (CPP_FILES ${CPP_FILES} 
+        set (CPP_FILES ${CPP_FILES}
             platform/platformFileIOS.mm
-            platform/platformWebViewCocoa.mm 
+            platform/platformWebViewCocoa.mm
             platform/platformHTTPOSX.mm
         )
     endif()
@@ -64,5 +64,5 @@ if (ANDROID)
 endif(ANDROID)
 
 if (LINUX)
-    target_link_libraries(${TARGET_NAME} -lz -lrt -lcurl LoomVendor)
+    target_link_libraries(${TARGET_NAME} -lz -lrt -lcurl LoomVendor LoomScript)
 endif(LINUX)

@@ -296,7 +296,7 @@ namespace :utility do
       Dir.chdir("docs/examples/#{args[:name]}") do
         sh "#{$LSC_BINARY}"
       end
-      
+
       # Clean up the libs and bin folders to save tons of space.
       libs_dir = "docs/examples/#{args[:name]}/libs"
       FileUtils.rm_r(libs_dir) if File.exist?(libs_dir)
@@ -308,7 +308,7 @@ namespace :utility do
   task :runDemo, [:name] => "build:desktop" do |t, args|
     puts "===== Running #{args[:name]} ====="
     expandedArtifactsPath = File.expand_path($OUTPUT_DIRECTORY)
-      
+
     Dir.chdir("docs/examples/#{args[:name]}") do
       sh "#{$LSC_BINARY}"
       sh "#{$LOOM_BINARY}"
@@ -351,30 +351,30 @@ namespace :build do
 		Rake::Task["build:ios"].invoke
     end
   end
-  
+
   def buildLuaJIT(toolchain, archs)
     luajit_make = LuaJITToolchain.new(toolchain, !$LUAJIT_NO_REBUILD)
-    
+
     targets = []
-    
+
     for arch in archs
       target = LuaJITTarget.new(arch, $BUILD_TYPE)
       luajit_make.build(target)
       targets.push target
     end
-    
+
     return luajit_make, targets
   end
-  
+
   def ensureLuaJIT(platform)
     return unless CFG[:USE_LUA_JIT] == 1
-    
+
     noRebuild = $LUAJIT_NO_REBUILD
     $LUAJIT_NO_REBUILD = true
     Rake::Task["build:luajit:" + platform].invoke
     $LUAJIT_NO_REBUILD = noRebuild
   end
-  
+
   desc "Build LuaJIT libraries for all supported platforms"
   task 'luajit' do |t, args|
     Rake::Task["build:luajit:windows"].invoke
@@ -382,7 +382,7 @@ namespace :build do
     Rake::Task["build:luajit:ios"].invoke
     Rake::Task["build:luajit:android"].invoke
   end
-  
+
   desc "Build LuaJIT libraries for Windows"
   task 'luajit:windows' do |t, args|
     if $HOST.name != 'windows'
@@ -392,7 +392,7 @@ namespace :build do
     puts "== Building LuaJIT for Windows =="
     buildLuaJIT(BatchToolchain.new(WindowsToolchain.new(), "#{$ROOT}/build/luajitWinBuild.bat"), [:x86, :x86_64])
   end
-  
+
   desc "Build LuaJIT libraries for OSX"
   task 'luajit:osx' do |t, args|
     if $HOST.name != 'osx'
@@ -412,7 +412,27 @@ namespace :build do
     puts "== Building LuaJIT for Linux =="
     buildLuaJIT(MakeToolchain.new(LinuxToolchain.new()), if $HOST.is_x64 == '1' then [:x86_64] else [:x86] end)
   end
-  
+
+  desc "Build LuaJIT libraries for Rpi2"
+  task 'luajit:rpi2' do |t, args|
+    if $HOST.name != 'osx' and $HOST.name != 'linux'
+      puts "LuaJIT Rpi2 build only supported on OSX and Linux, skipping..."
+      next
+    end
+    puts "== Building LuaJIT for Rpi2 =="
+    buildLuaJIT(MakeToolchain.new(Rpi2Toolchain.new()), [:armv7])
+  end
+
+  desc "Build LuaJIT libraries for BBB"
+  task 'luajit:bbb' do |t, args|
+    if $HOST.name != 'osx' and $HOST.name != 'linux'
+      puts "LuaJIT BBB build only supported on OSX and Linux, skipping..."
+      next
+    end
+    puts "== Building LuaJIT for BBB =="
+    buildLuaJIT(MakeToolchain.new(BBBToolchain.new()), [:armv7])
+  end
+
   desc "Build LuaJIT libraries for iOS"
   task 'luajit:ios' do |t, args|
     if $HOST.name != 'osx'
@@ -425,7 +445,7 @@ namespace :build do
     combined = LuaJITTarget.new(:arm, $BUILD_TYPE)
     toolchain.combine(luajit_make, targets, combined)
   end
-  
+
   desc "Build LuaJIT libraries for Android"
   task 'luajit:android' do |t, args|
     if $HOST.name == 'windows'
@@ -466,24 +486,24 @@ namespace :build do
     puts "== Building OS X =="
 
     ensureLuaJIT("osx")
-    
+
     toolchain = OSXToolchain.new()
-    
+
     luajit_x86 = LuaJITTarget.new(:x86, $BUILD_TYPE)
     loom_x86 = LoomTarget.new(:x86, $BUILD_TYPE, luajit_x86);
     toolchain.build(loom_x86)
-    
+
     if $HOST.is_x64 == '1' then
       luajit_x64 = LuaJITTarget.new(:x86_64, $BUILD_TYPE)
       loom_x64 = LoomTarget.new(:x86_64, $BUILD_TYPE, luajit_x64);
       toolchain.build(loom_x64)
     end
-    
+
     combined = LoomTarget.new(:x86_unv, $BUILD_TYPE, luajit_x86)
     FileUtils.mkdir_p combined.appPath(toolchain)
     toolchain.combine(toolchain, [loom_x86, loom_x64], combined)
     FileUtils.cp combined.binPath(toolchain), "artifacts/osx-x64/bin/LoomPlayer.app/Contents/MacOS/LoomPlayer"
-    
+
     Rake::Task["utility:compileScripts"].invoke
     Rake::Task["utility:compileTools"].invoke
   end
@@ -500,7 +520,7 @@ namespace :build do
     sh "mkdir -p #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app/lib"
     sh "touch #{$OUTPUT_DIRECTORY}/ios-arm/LoomPlayer.app/lib/tmp"
 
-    
+
     # iOS build is currently not supported under Windows
     if $HOST.name != 'windows'
       puts "== Building iOS =="
@@ -530,16 +550,16 @@ namespace :build do
         args.with_defaults(:sign_as => "iPhone Developer")
       end
       puts "*** Signing Identity = #{args.sign_as}"
-      
-      
-      
+
+
+
       # Build SDL for iOS if it's missing
       sdlLibPath = "build/sdl2/ios/"
       if not File.exist?("#{sdlLibPath}/libSDL2.a")
         puts "Building SDL2 for iOS using xcodebuild"
         sdlProjPath = "loom/vendor/sdl2/Xcode-iOS/SDL/"
         Dir.chdir(sdlProjPath) do
-          sh "xcodebuild" 
+          sh "xcodebuild"
         end
         FileUtils.mkdir_p sdlLibPath
         sh "cp #{sdlProjPath}/build/Release-iphoneos/libSDL2.a #{sdlLibPath}/libSDL2.a"
@@ -553,9 +573,9 @@ namespace :build do
       #luajit_lib = LuaJITLibTarget.new(0, luajit_bootstrap)
       luajit_lib = LuaJITTarget.new(:arm, $BUILD_TYPE)
       loom_arm = LoomTarget.new(:arm, $BUILD_TYPE, luajit_lib)
-      
+
       ensureLuaJIT("ios")
-      
+
       toolchain.build(loom_arm)
       # TODO When we clean this up... we should have get_app_prefix return and object with, appPath,
       # appNameMatch, appName and appPrefix
@@ -588,7 +608,7 @@ namespace :build do
   desc "Builds Windows"
   task :windows => [] do
     puts "== Building Windows =="
-    
+
     toolchain = WindowsToolchain.new();
 
     vs_bootstrap_call = ENV["LOOM_BOOTSTRAP_CALL"] == "true"
@@ -603,12 +623,12 @@ namespace :build do
       abort "Unable to find Visual Studio environment setup (vcvarsall.bat)" unless File.exists?(vcvarsall)
       exec("build/windowsBootstrapVS.bat \"#{__FILE__}\" \"#{vcvarsall}\" \"#{ARGV.join(" ")}\"")
     end
-    
+
     luajit_x86 = LuaJITTarget.new(:x86, $BUILD_TYPE);
     loom_x86 = LoomTarget.new(:x86, $BUILD_TYPE, luajit_x86);
-    
+
     ensureLuaJIT("windows")
-    
+
     toolchain.build(loom_x86)
 
     if $HOST.is_x64 == '1' then
@@ -624,12 +644,12 @@ namespace :build do
   desc "Builds Android APK"
   task :android => ['utility:compileScripts'] do
     puts "== Building Android =="
-    
+
     ndk_env = ENV["ANDROID_NDK"]
     ndk_path = ndk_env ? File.expand_path(ndk_env) : nil
-    
+
     abort("\nAndroid NDK directory not found!\nPlease set the `ANDROID_NDK` environment variable to the Android NDK path.") unless ndk_path && File.exists?(ndk_path)
-    
+
     # Build SDL for Android if it's missing
     sdlLibPath = "build/sdl2/android/armeabi"
     if not File.exist?("#{sdlLibPath}/libSDL2.a")
@@ -643,14 +663,14 @@ namespace :build do
     else
       puts "Found SDL2 libSDL2.a in #{sdlLibPath} - skipping build"
     end
-	
+
     hostToolchain = $HOST.toolchain()
     toolchain = AndroidToolchain.new()
-    
+
     luajit_lib = LuaJITTarget.new(:armv7, $BUILD_TYPE)
-    
+
     ensureLuaJIT("android")
-    
+
     loom_arm = LoomTarget.new(:armv7, $BUILD_TYPE, luajit_lib)
     toolchain.build(loom_arm)
 
@@ -694,7 +714,6 @@ namespace :build do
 
   desc "Builds Ubuntu Linux"
   task :ubuntu => [] do
-	
     ensureLuaJIT("linux")
 
     puts "== Building Ubuntu =="
@@ -710,7 +729,42 @@ namespace :build do
 
     Rake::Task["utility:compileScripts"].invoke
     Rake::Task["utility:compileTools"].invoke
-	
+  end
+
+  desc "Builds Rpi2"
+  task :rpi2 => [] do
+    ensureLuaJIT("rpi2")
+
+    puts "== Building Rpi2 =="
+
+    arch = :armv7
+
+    toolchain = Rpi2Toolchain.new();
+    luajit = LuaJITTarget.new(arch, $BUILD_TYPE);
+    loom = LoomTarget.new(arch, $BUILD_TYPE, luajit);
+
+    toolchain.build(loom)
+
+    Rake::Task["utility:compileScripts"].invoke
+    Rake::Task["utility:compileTools"].invoke
+  end
+
+  desc "Builds BBB"
+  task :bbb => [] do
+    ensureLuaJIT("bbb")
+
+    puts "== Building BBB =="
+
+    arch = :armv7
+
+    toolchain = BBBToolchain.new();
+    luajit = LuaJITTarget.new(arch, $BUILD_TYPE);
+    loom = LoomTarget.new(arch, $BUILD_TYPE, luajit);
+
+    toolchain.build(loom)
+
+    Rake::Task["utility:compileScripts"].invoke
+    Rake::Task["utility:compileTools"].invoke
   end
 
   desc "Populate git version information"
@@ -721,7 +775,7 @@ namespace :build do
     puts "Long: #{git_rev_long}"
     puts "Short: #{git_rev_short}"
   end
-  
+
 end
 
 # FIXME: At some point test should just run the tests and not try to build OSX

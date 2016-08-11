@@ -61,7 +61,7 @@ if (APPLE)
     # Configure the app's icon.
     set (APPLICATION_SRC ${APPLICATION_SRC} ${APPLE_ICON_FILES})
     set_source_files_properties( ${APPLE_ICON_FILES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-endif() 
+endif()
 
 
 
@@ -77,7 +77,7 @@ endif(ANDROID)
 
 if (APPLE)
 
-    if (LOOM_BUILD_JIT EQUAL 1)        
+    if (LOOM_BUILD_JIT EQUAL 1)
           if (LOOM_IOS_LEGACY EQUAL 1)
               set (LOOM_IOS_LIB_GCC "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/llvm-gcc-4.2/lib/gcc/arm-apple-darwin10/4.2.1/v7/libgcc.a")
           endif()
@@ -87,7 +87,7 @@ if (APPLE)
 
         # Allow Admob and/or Facebook to be included for iOS?
         if (LOOM_BUILD_ADMOB EQUAL 1)
-            target_link_libraries(${PROJECT_NAME} 
+            target_link_libraries(${PROJECT_NAME}
                 "-framework AdSupport"
                 "-framework EventKit"
                 "-framework EventKitUI"
@@ -99,7 +99,7 @@ if (APPLE)
             )
         endif()
         if (LOOM_BUILD_FACEBOOK EQUAL 1)
-            target_link_libraries(${PROJECT_NAME} 
+            target_link_libraries(${PROJECT_NAME}
                 # Facebook
                 "-framework FacebookSDK -F ${CMAKE_SOURCE_DIR}/loom/vendor/facebook/ios"
 
@@ -119,15 +119,15 @@ if (APPLE)
           LoomScript
           LoomGraphics
           LoomCore
-          
+
           "-framework CoreGraphics"
           "-framework CoreFoundation"
           "-framework CoreMotion"
           "-framework CoreLocation"
           "-framework Foundation"
           "-framework AssetsLibrary"
-          "-framework UIKit"          
-          "-framework GLKit"  
+          "-framework UIKit"
+          "-framework GLKit"
           "-framework OpenGLES"
           "-framework StoreKit"
           "-framework Security"
@@ -170,8 +170,8 @@ if (APPLE)
         SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.plist")
 
     else()
-        
-        target_link_libraries(${PROJECT_NAME} 
+
+        target_link_libraries(${PROJECT_NAME}
            LoomVendor
            LoomCommon
            LoomScript
@@ -198,25 +198,25 @@ if (APPLE)
         set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/osx/Info.plist")
 
         # Process our XIB wth ibtool.
-        
+
         # TODO: This works fine under xcode but we might not always want it, it
-        # appears that CMAKE_GENERATOR holds the current generator and could be 
+        # appears that CMAKE_GENERATOR holds the current generator and could be
         # used to filter this.
 
         # Make sure we can find the 'ibtool' program. If we can NOT find it we
         # skip generation of this project
         find_program(IBTOOL ibtool HINTS "/usr/bin" "${OSX_DEVELOPER_ROOT}/usr/bin")
         if (${IBTOOL} STREQUAL "IBTOOL-NOTFOUND")
-          message(SEND_ERROR "ibtool can not be found and is needed to compile the .xib files. It should have been installed with 
+          message(SEND_ERROR "ibtool can not be found and is needed to compile the .xib files. It should have been installed with
                             the Apple developer tools. The default system paths were searched in addition to ${OSX_DEVELOPER_ROOT}/usr/bin")
         endif()
 
         # Locate the .app and process the XIB into it.
         get_target_property(APPLICATION_BIN ${APPLICATION_NAME} LOCATION)
         get_dotapp_dir(${APPLICATION_BIN} APPLICATION_APP_LOCATION)
-        add_custom_command (TARGET ${PROJECT_NAME} POST_BUILD 
-                          COMMAND ${IBTOOL} --errors --warnings --notices --output-format human-readable-text 
-                                  --compile ${APPLICATION_APP_LOCATION}/Contents/Resources/MainMenu.nib 
+        add_custom_command (TARGET ${PROJECT_NAME} POST_BUILD
+                          COMMAND ${IBTOOL} --errors --warnings --notices --output-format human-readable-text
+                                  --compile ${APPLICATION_APP_LOCATION}/Contents/Resources/MainMenu.nib
                                  ${CMAKE_CURRENT_SOURCE_DIR}/osx/en.lproj/MainMenu.xib
                           COMMENT "Compiling osx/MainMenu.xib")
 
@@ -229,33 +229,33 @@ if (APPLE)
         )
 
     endif()
-    
-elseif(MSVC)	
 
-    target_link_libraries(${PROJECT_NAME} 
+elseif(MSVC)
+
+    target_link_libraries(${PROJECT_NAME}
        LoomVendor
        LoomCommon
        LoomScript
        LoomGraphics
        LoomCore
-       "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "WSOCK32" "Ws2_32" 
+       "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "WSOCK32" "Ws2_32"
        "SDL2-static" "SDL2main"
     )
-    
+
     if (LOOM_TELEMETRY)
         target_link_libraries(${PROJECT_NAME} "telemetry32.link" "telemetry64.link")
     endif()
 
     set(DEMOBIN $<TARGET_FILE:${PROJECT_NAME}>)
-     
+
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
         COMMAND echo f | xcopy /F /Y \"${DEMOBIN}\" \"${ARTIFACTS_DIR}/bin/LoomPlayer.exe\"
     )
-    
-    
+
+
 elseif(ANDROID)
-    
+
     target_link_libraries(${PROJECT_NAME}
        LoomVendor
        LoomCommon
@@ -264,25 +264,36 @@ elseif(ANDROID)
        "GLESv2" "EGL" "dl" "log" "android"
        "${LOOM_SDL2_LIB}"
     )
-    
+
 elseif(LINUX)
 
-    target_link_libraries(${PROJECT_NAME}
-       LoomVendor
-       LoomCommon
-       LoomScript
-       LoomGraphics
-       LoomCore
-       -lGL -lGLEW -lGLU -lcurl
-       "SDL2-static" "SDL2main" 
-    )
+    if (LOOM_BUILD_RPI2 OR LOOM_BUILD_BBB)
+        target_link_libraries(${PROJECT_NAME}
+           LoomVendor
+           LoomCommon
+           LoomScript
+           LoomGraphics
+           LoomCore
+           ${LOOM_SDL2_LIB}
+        )
+    else()
+        target_link_libraries(${PROJECT_NAME}
+           LoomVendor
+           LoomCommon
+           LoomScript
+           LoomGraphics
+           LoomCore
+           -lGL -lGLEW -lGLU -lcurl
+           "SDL2-static" "SDL2main"
+        )
+    endif(LOOM_BUILD_RPI2 OR LOOM_BUILD_BBB)
 
     if (LOOM_BUILD_JIT EQUAL 1)
         target_link_libraries(${PROJECT_NAME} luajit -ldl)
     endif()
-    
+
     set(DEMOBIN $<TARGET_FILE:${PROJECT_NAME}>)
-     
+
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
         COMMAND mkdir -p ${ARTIFACTS_DIR}/bin

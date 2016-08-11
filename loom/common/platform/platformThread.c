@@ -893,7 +893,9 @@ void atomic_store32(volatile int *variable, int newValue)
 
 void loom_thread_setDebugName(const char *name)
 {
+#ifdef __GLIBC__
     pthread_setname_np(pthread_self(), name);
+#endif
 }
 
 

@@ -28,6 +28,10 @@
 
 #include <alsa/asoundlib.h>
 
+#if defined(LOOM_BUILD_RPI2) || defined(LOOM_BUILD_BBB)
+/* Make sure we use the statically-linked ALSA libs on Rpi2 and BBB */
+#undef HAVE_DYNLOAD
+#endif
 
 static const ALCchar alsaDevice[] = "ALSA Default";
 
