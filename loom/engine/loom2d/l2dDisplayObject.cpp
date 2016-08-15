@@ -42,6 +42,7 @@ bool DisplayObject::renderCached(lua_State *L)
     cached->transformMatrix.translate(cacheAsBitmapOffsetX, cacheAsBitmapOffsetY);
     cached->transformMatrix.concat(&transformMatrix);
     cached->parent = parent;
+    cached->blendMode = BlendMode::PREMULTIPLIED;
 
     lualoom_pushnative<DisplayObject>(L, cached);
     cached->render(L);

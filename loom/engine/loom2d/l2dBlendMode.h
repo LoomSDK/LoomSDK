@@ -33,29 +33,31 @@ public:
     enum
     {
         /** Inherits the blend mode from this display object's parent. */
-        AUTO        = 0,
+        AUTO          = 0,
         
         /** Deactivates blending, i.e. disabling any transparency. */
-        NONE        = 1,
+        NONE          = 1,
         
         /** The display object appears in front of the background. */
-        NORMAL      = 2,
+        NORMAL        = 2,
         
         /** Adds the values of the colors of the display object to the colors of its background. */
-        ADD         = 3,
+        ADD           = 3,
         
         /** Multiplies the values of the display object colors with the the background color. */
-        MULTIPLY    = 4,
+        MULTIPLY      = 4,
 
         /** Multiplies the complement (inverse) of the display object color with the complement of 
           * the background color, resulting in a bleaching effect. */
-        SCREEN      = 5,
+        SCREEN        = 5,
         
         /** Erases the background when drawn on a RenderTexture. */
-        ERASE       = 6,
+        ERASE         = 6,
 
         /** Draws under/below existing objects; useful especially on RenderTextures. */
-        BELOW       = 7,
+        BELOW         = 7,
+
+        PREMULTIPLIED = 8,
 
         /** Constant for Number of Blend Functions */
         NUM_BLEND_FUNCTIONS

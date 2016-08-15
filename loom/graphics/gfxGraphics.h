@@ -174,7 +174,7 @@ typedef struct GraphicsRenderTarget {
     // The current height of the graphics device
     int height;
 
-    // The flags used to create the graphics device( see bgfx.h BGFX_RESET_ for a list of flags )
+    // The flags used to create the graphics device
     uint32_t flags;
 
     // The current fill color used when clearing the color buffer
@@ -191,7 +191,7 @@ typedef struct GraphicsRenderTarget {
 } GraphicsRenderTarget;
 
 /** 
-  *  Graphics subsystem class in charge of initializing bgfx graphics and handling context loss
+  *  Graphics subsystem class in charge of initializing graphics and handling context loss
   */
 class Graphics
 {
@@ -201,8 +201,9 @@ public:
     // Delegate that provides screenshot data (in PNG format) when screenshotData is called
     LOOM_STATICDELEGATE(onScreenshotData);
 
-    static const uint32_t FLAG_INVERTED = 1 << 0;
-    static const uint32_t FLAG_NOCLEAR  = 1 << 1;
+    static const uint32_t FLAG_INVERTED            = 1 << 0;
+    static const uint32_t FLAG_NOCLEAR             = 1 << 1;
+    static const uint32_t FLAG_PREMULTIPLIED_ALPHA = 1 << 2;
 
     static GL_Context *context()
     {
