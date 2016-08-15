@@ -128,10 +128,15 @@ class LuaJITTarget < Target
         libout_root = Pathname.new buildRoot
         libout = Pathname.new binPath(toolchain)
 
-        relpath = libout.relative_path_from libout_root
+        # Temporarily switch build type to one of the supported ones
+        # and then back
+        prevBuildType = @buildType
+        @buildType = type
+        prebuilt_lib = prebuilt + Pathname.new(binPath(toolchain)).relative_path_from(libout_root)
+        @buildType = prevBuildType
         
         # %1 - source precompiled library path
-        args += "\"" + (prebuilt + relpath).to_s.gsub('/', '\\') + "\""
+        args += "\"" + (prebuilt_lib).to_s.gsub('/', '\\') + "\""
         
         # %2 - target output lib dir
         args += " \"" + (libout.dirname).to_s.gsub('/', '\\') + "\""
