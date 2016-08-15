@@ -273,8 +273,8 @@ public:
         return m_hash;
     }
 
-    UT_INLINE bool operator==(const utHashedString& v) const { return hash() == v.hash(); }
-    UT_INLINE bool operator!=(const utHashedString& v) const { return hash() != v.hash(); }
+    UT_INLINE bool operator==(const utHashedString& v) const { return hash() == v.hash() && str() == v.str(); }
+    UT_INLINE bool operator!=(const utHashedString& v) const { return hash() != v.hash() || str() != v.str(); }
     UT_INLINE bool operator==(const UThash& v) const { return hash() == v; }
     UT_INLINE bool operator!=(const UThash& v) const { return hash() != v; }
 };
