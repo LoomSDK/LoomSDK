@@ -102,7 +102,9 @@ void QuadRenderer::submit()
 
                 sShaderStateValid = true;
             }
-            
+
+            // Bind the default engine texture unit (GL_TEXTURE0)
+            // This is also tracked with a graphics state system.
             if (!sTextureStateValid)
             {
                 // Set up texture state.
@@ -111,8 +113,9 @@ void QuadRenderer::submit()
                 sTextureStateValid = true;
             }
 
-            // This is not really perdictable and does not mess up the graphics
-            // state currently.
+            // Bind any potential texture units specified in custom
+            // shaders. This is not tracked with a state system and
+            // with proper use can't corrupt the state.
             sCurrentShader->bindTextures();
 
             if (!sBlendStateValid)
