@@ -663,7 +663,7 @@ static int glnvg__renderCreate(void* uptr)
         "#else\n"
         "	colp vec4 r = texture2D(tex, p);\n"
         "#endif\n"
-        "	lowp int tt = texType;\n"  // Cache this so we don't do float->int conversions all the time
+        "	colp int tt = texType;\n"  // Cache this so we don't do float->int conversions all the time
         "	if      (tt == 1) r = vec4(r.xyz * r.w, r.w);\n"
         "	else if (tt == 2) r = vec4(r.x);\n"
         "	return r;\n"
@@ -677,7 +677,7 @@ static int glnvg__renderCreate(void* uptr)
         "#else\n"
         "	const colp float strokeAlpha = 1.0;\n"
         "#endif\n"
-		"	lowp int t = type;\n"  // Cache this so we don't do float->int conversions all the time
+		"	colp int t = type;\n"  // Cache this so we don't do float->int conversions all the time
 		"\n"
         "#ifdef EDGE_AA\n"
 #ifdef NANOVG_WORKAROUND_SGX_DISCARD_BUG
