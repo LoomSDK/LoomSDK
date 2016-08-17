@@ -417,11 +417,71 @@ bool GFX::ShaderProgram::validate()
     return true;
 }
 
-
 GLint GFX::ShaderProgram::getUniformLocation(const char* name)
 {
     GFX::GL_Context* ctx = Graphics::context();
     return ctx->glGetUniformLocation(programId, name);
+}
+
+void GFX::ShaderProgram::bindTexture(GLuint textureId, GLuint boundTextureId)
+{
+    lmAssert(boundTextureId < 32, "Texture unit out of range. Valid texture units are 0 to 31");
+
+    TextureInfo &tinfo = *Texture::getTextureInfo(textureId);
+
+    GL_Context* ctx = Graphics::context();
+    ctx->glActiveTexture(GL_TEXTURE0 + boundTextureId);
+    ctx->glBindTexture(GL_TEXTURE_2D, tinfo.handle);
+
+    if (tinfo.clampOnly)
+    {
+        tinfo.wrapU = TEXTUREINFO_WRAP_CLAMP;
+        tinfo.wrapV = TEXTUREINFO_WRAP_CLAMP;
+    }
+
+    switch (tinfo.wrapU)
+    {
+        case TEXTUREINFO_WRAP_CLAMP:
+            ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            break;
+        case TEXTUREINFO_WRAP_MIRROR:
+            ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+            break;
+        case TEXTUREINFO_WRAP_REPEAT:
+            ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            break;
+        default:
+            lmAssert(false, "Unsupported wrapU: %d", tinfo.wrapU);
+    }
+
+    switch (tinfo.wrapV)
+    {
+        case TEXTUREINFO_WRAP_CLAMP:
+            ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            break;
+        case TEXTUREINFO_WRAP_MIRROR:
+            ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+            break;
+        case TEXTUREINFO_WRAP_REPEAT:
+            ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            break;
+        default:
+            lmAssert(false, "Unsupported wrapV: %d", tinfo.wrapV);
+    }
+
+    switch (tinfo.smoothing)
+    {
+        case TEXTUREINFO_SMOOTHING_NONE:
+            ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, tinfo.mipmaps ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
+            ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            break;
+        case TEXTUREINFO_SMOOTHING_BILINEAR:
+            ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, tinfo.mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+            ctx->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            break;
+        default:
+            lmAssert(false, "Unsupported smoothing: %d", tinfo.smoothing);
+    }
 }
 
 void GFX::ShaderProgram::setUniform1f(GLint location, GLfloat v0)
@@ -433,6 +493,8 @@ void GFX::ShaderProgram::setUniform1f(GLint location, GLfloat v0)
 
 int GFX::ShaderProgram::setUniform1fv(lua_State *L)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     GLint location = (GLint)lua_tonumber(L, 2);
     int length = lsr_vector_get_length(L, 3);
 
@@ -537,6 +599,8 @@ void GFX::ShaderProgram::setUniform1i(GLint location, GLint v0)
 
 int GFX::ShaderProgram::setUniform1iv(lua_State *L)
 {
+    lmAssert(this == lastBoundShader, "You are setting a uniform for a shader that is not currently bound!");
+
     GLint location = (GLint)lua_tonumber(L, 2);
     int length = lsr_vector_get_length(L, 3);
 
@@ -791,6 +855,11 @@ void GFX::ShaderProgram::bind()
     }
 
     _onBindDelegate.invoke();
+}
+
+void GFX::ShaderProgram::bindTextures()
+{
+    _onBindTexturesDelegate.invoke();
 }
 
 const char * defaultVertexShader =
