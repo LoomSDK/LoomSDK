@@ -233,7 +233,10 @@ protected:
 
 /*
  * Hashed String which stores key value for future use, if you do not need this
- * consider using utFastHashedString which is much faster
+ * consider using utFastHashedString which is much faster.
+ * Two Hashed Strings are only equal if their hashes AND values match, which
+ * is necessary behavior to avoid key hash collision in hash tables, where
+ * Hashed Strings are used most often.
  */
 class utHashedString
 {
