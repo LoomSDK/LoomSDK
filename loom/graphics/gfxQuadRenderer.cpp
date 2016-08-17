@@ -166,7 +166,7 @@ void QuadRenderer::submit()
                 if (sBlendEnabled)
                 {
                     ctx->glEnable(GL_BLEND);
-                    ctx->glBlendFuncSeparate(sSrcBlend, sDstBlend, sSrcBlend, sDstBlend);
+                    ctx->glBlendFuncSeparate(sSrcBlend, sDstBlend, (Graphics::getFlags() & Graphics::FLAG_PREMULTIPLIED_ALPHA) ? GL_ONE : sSrcBlend, sDstBlend);
                 }
                 else
                 {

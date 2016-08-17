@@ -31,6 +31,7 @@ unsigned int BlendMode::_blendFunctions[BlendMode::NUM_BLEND_FUNCTIONS][2] =
     { GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA},        //MULTIPLY
     { GL_SRC_ALPHA, GL_ONE},                        //SCREEN
     { GL_ZERO, GL_ONE_MINUS_SRC_ALPHA},             //ERASE
-    { GL_ONE_MINUS_DST_ALPHA, GL_DST_ALPHA}         //BELOW
+    { GL_ONE_MINUS_DST_ALPHA, GL_DST_ALPHA},        //BELOW
+    { GL_ONE, GL_ONE_MINUS_SRC_ALPHA }              //PREMULTIPLIED
 };
 }

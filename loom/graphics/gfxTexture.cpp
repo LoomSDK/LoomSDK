@@ -1188,6 +1188,8 @@ void Texture::setRenderTarget(TextureID id)
 {
     // TODO Gamma correct rendering? Render is lighter than it's supposed to be
     LOOM_PROFILE_SCOPE(textureSetRenderTarget);
+
+    // Finish render to back buffer and switch to FBO
     if (id != -1)
     {
         if (currentRenderTexture == id) return;
@@ -1210,13 +1212,14 @@ void Texture::setRenderTarget(TextureID id)
         Graphics::context()->glBindFramebuffer(GL_FRAMEBUFFER, tinfo->framebuffer);
 
         // Setup stage and framing
-        Graphics::setFlags(Graphics::getFlags() | Graphics::FLAG_INVERTED | Graphics::FLAG_NOCLEAR);
+        Graphics::setFlags(Graphics::getFlags() | Graphics::FLAG_INVERTED | Graphics::FLAG_NOCLEAR | Graphics::FLAG_PREMULTIPLIED_ALPHA);
         Graphics::setNativeSize(tinfo->width, tinfo->height);
 
         Graphics::applyRenderTarget();
 
         loom_mutex_unlock(Texture::sTexInfoLock);
     }
+    // Finish FBO render and switch to back buffer
     else if (currentRenderTexture != -1)
     {
         // Submit and reset state (order is important apparently)
