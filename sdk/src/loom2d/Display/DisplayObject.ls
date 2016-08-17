@@ -172,15 +172,15 @@ package loom2d.display
          * If true, cache textures will be resized along with scale, else the cache will remain
          * the same size even if the scale changes.
          */
-        public native function set cacheDoApplyScale(value:Boolean);
-        public native function get cacheDoApplyScale():Boolean;
+        public native function set cacheApplyScale(value:Boolean);
+        public native function get cacheApplyScale():Boolean;
 
         /**
           * If true, cache textures will be forced to be sizes of power of two. This can lead to
           * performance benefits on some GPUs.
           */
-        public native function set cacheUseTexturesPow2(value:Boolean);
-        public native function get cacheUseTexturesPow2():Boolean;
+        public native function set cacheUseTexturesPot(value:Boolean);
+        public native function get cacheUseTexturesPot():Boolean;
 
         /**
          * Update the cached texture before the next render.

@@ -121,11 +121,11 @@ public:
 
     // If true, cache textures will be resized along with scale, else the cache will remain the same size
     // even if the scale changes
-    bool cacheDoApplyScale;
+    bool cacheApplyScale;
 
     // If true, cache textures will be forced to be sizes of power of two. This can lead to performance
     // benefits on some GPUs.
-    bool cacheUseTexturesPow2;
+    bool cacheUseTexturesPot;
 
     // true if cachedImage represents a valid cache of the contents
     // if false, the contents are re-cached at render time
@@ -182,8 +182,8 @@ public:
         transformDirty     = false;
         cacheAsBitmap      = false;
         cacheAsBitmapValid = false;
-        cacheDoApplyScale  = false;
-        cacheUseTexturesPow2 = false;
+        cacheApplyScale  = false;
+        cacheUseTexturesPot = false;
         cachedImage        = NULL;
     }
 
@@ -568,24 +568,24 @@ public:
 
     bool getCacheDoApplyScale() const
     {
-        return cacheDoApplyScale;
+        return cacheApplyScale;
     }
 
     void setCacheDoApplyScale(bool value)
     {
-        if (value != cacheDoApplyScale) invalidateBitmapCache();
-        cacheDoApplyScale = value;
+        if (value != cacheApplyScale) invalidateBitmapCache();
+        cacheApplyScale = value;
     }
 
-    bool getCacheUseTexturesPow2() const
+    bool getCacheUseTexturesPot() const
     {
-        return cacheUseTexturesPow2;
+        return cacheUseTexturesPot;
     }
 
-    void setCacheUseTexturesPow2(bool value)
+    void setCacheUseTexturesPot(bool value)
     {
-        if (value != cacheUseTexturesPow2) invalidateBitmapCache();
-        cacheUseTexturesPow2 = value;
+        if (value != cacheUseTexturesPot) invalidateBitmapCache();
+        cacheUseTexturesPot = value;
     }
 
     void invalidateBitmapCache()

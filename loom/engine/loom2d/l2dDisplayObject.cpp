@@ -94,7 +94,7 @@ void DisplayObject::render(lua_State *L) {
         // pop bounds Rectangle and the DisplayObject at the top
         lua_pop(L, 1+1);
 
-        if (cacheDoApplyScale)
+        if (cacheApplyScale)
         {
             fracWidth *= scaleX;
             fracHeight *= scaleY;
@@ -105,7 +105,7 @@ void DisplayObject::render(lua_State *L) {
         int texHeightI = static_cast<int>(ceil(fracHeight));
 
         // Calculate power of 2 sizes
-        if (cacheUseTexturesPow2)
+        if (cacheUseTexturesPot)
         {
             _UT_UTHASHTABLE_POW2(texWidthI);
             _UT_UTHASHTABLE_POW2(texHeightI);
