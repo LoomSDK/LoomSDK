@@ -1102,7 +1102,7 @@ static void glnvg__triangles(GLNVGcontext* gl, GLNVGcall* call)
 
     if (GFX::Graphics::getFlags() & GFX::Graphics::FLAG_INVERTED)
     {
-        LGL->glDisable(GL_CULL_FACE);
+        LGL->glEnable(GL_CULL_FACE);
     }
 }
 
