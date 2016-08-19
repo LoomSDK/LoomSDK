@@ -1,21 +1,19 @@
 <!-- Header. -->
 <header class="site-header">
-    <div class="site-header__logo">
-        <div class="site-header__logo__version"><%= version_number %></div>
-    </div>
-    <ul class="site-header__nav breadcrumb">
-        <li><a href="<%= @relative_base_path %>/index.html" class="is-perm">Home</a>
-          <%= breadcrumbs %>
-    </ul>
     <div id="site-header__search" class="site-header__search" data-dropdown="#results-dropdown">
         <input type="text"><button><span class="down-arrow"></span><span class="text">Search all</span></button>
         <div class="options">
             <div class="options__option options__option--selected" name="search-all">Search all</div>
             <div class="options__option" name="classes">Classes</div>
+            <div class="options__option" name="members">Members</div>
             <div class="options__option" name="examples">Examples</div>
             <div class="options__option" name="guides">Guides</div>
         </div>
     </div>
+    <ul class="site-header__nav breadcrumb">
+        <li><a href="<%= @relative_base_path %>/index.html" class="is-perm">Home</a>
+          <%= breadcrumbs %>
+    </ul>
     <div id="results-dropdown" class="dropdown dropdown-tip dropdown-relative">
         <ul class="dropdown-menu">
         </ul>
