@@ -566,7 +566,7 @@ static int glnvg__renderCreate(void* uptr)
         "void main(void) {\n"
         "	ftcoord = tcoord;\n"
         "	fpos = vertex;\n"
-        "	gl_Position = vec4(2.0*vertex.x/viewSize.x - 1.0, 1.0 - 2.0*vertex.y/viewSize.y, 0, 1);\n"
+        "	gl_Position = vec4(2.0*vertex.x/viewSize.x - 1.0, 1.0 - 2.0*vertex.y/viewSize.y, 0.0, 1.0);\n"
         "}\n";
 
 #if defined(LOOM_BUILD_BBB) || defined(LOOM_BUILD_RPI2)

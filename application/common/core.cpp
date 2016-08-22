@@ -20,6 +20,10 @@
 #include <fcntl.h>
 #endif
 
+#ifdef LOOM_BUILD_BBB
+#include <dlfcn.h>
+#endif
+
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/engine/bindings/loom/lmApplication.h"
 #include "loom/common/config/applicationConfig.h"
@@ -528,6 +532,23 @@ main(int argc, char *argv[])
     lmAssert(ret == 0, "Failed to set GL profile, SDL error: %s", SDL_GetError());
     ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     lmAssert(ret == 0, "Failed to set GL major version, SDL error: %s", SDL_GetError());
+    ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    lmAssert(ret == 0, "Failed to set GL minor version, SDL error: %s", SDL_GetError());
+#endif
+
+#ifdef LOOM_BUILD_BBB
+    /*
+     * We need to load this library manually or the release version of the
+     * PowerVR SGX OpenGL libs in our remote development environment won't
+     * work due to missing symbols!
+     *
+     * (The symbols are "__*_chk", for which we add manual wrappers and link
+     * with libgcc.a to produce libgcc_s.so.  This is necessary _only_ in
+     * the BBB remote development environment, because we use closed-source
+     * OpenGL libraries that were linked against a different C library.)
+     */
+    void *dummy_lib_for_bbb = dlopen("libgcc_s.so.1", RTLD_NOW | RTLD_GLOBAL);
+    (void) dummy_lib_for_bbb;
 #endif
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
