@@ -30,7 +30,7 @@ set(CMAKE_LD           ${TOOLCHAIN_BIN_PREFIX}arm-linux-musleabihf-ld CACHE FILE
 
 set(CMAKE_SYSTEM_PROCESSOR arm)
 
-set(CMAKE_CXX_FLAGS_RELEASE        "-Ofast -DNDEBUG -fno-keep-static-consts" CACHE STRING "")
+set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG -fno-keep-static-consts" CACHE STRING "")
 set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG -fno-keep-static-consts" CACHE STRING "")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g" CACHE STRING "")
 set(CMAKE_EXE_LINKER_FLAGS         "-Wl,--gc-sections" CACHE STRING "")
