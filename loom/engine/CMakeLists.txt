@@ -38,6 +38,7 @@ set (ENGINE_SRC
     bindings/loom/lmModestMaps.cpp
     bindings/loom/lmGameController.cpp
     bindings/loom/lmUserDefault.cpp
+    bindings/loom/lmCSS.cpp
     bindings/loom/gameframework/lmPropertyManager.cpp
     
     bindings/sdl/lmSDL.cpp

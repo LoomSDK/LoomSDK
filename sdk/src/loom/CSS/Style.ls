@@ -1,7 +1,7 @@
 /*
 ===========================================================================
 Loom SDK
-Copyright 2011, 2012, 2013 
+Copyright 2011, 2012, 2013
 The Game Engine Company, LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,96 +14,81 @@ Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
-limitations under the License. 
+limitations under the License.
 ===========================================================================
 */
 
-package loom.css 
+package loom.css
 {
     /*
-        Class: Style
-        Represents a style in a <StyleSheet>, can be applied to an object via a <StyleApplicator>
-
-        Package:
-            UI.CSS.*
-
-        Assembly:
-            UI.loomlib
-
-        See Also:
-            <IStyle>
-            <StyleSheet>
-            <StyleApplicator>
-    */
-    class Style implements IStyle
+     * Style contains a dictionary of properties, a list of attributes and a selector.
+     * It's used for changing the properties of LoomScript objects with StyleApplicator.
+     */
+    [Native(managed)]
+    public native final class Style
     {
-        //____________________________________________
-        //  Constructor
-        //____________________________________________
-        public function Style()
-        {
-            styleName = "default";
-        }
+        public native function Style(selector:String);
 
         /*
-            Group: Public Functions
-        */
-
-        //____________________________________________
-        //  IStyle Implementation
-        //____________________________________________
-        public function get properties():Dictionary.<String,String>
-        {
-            return _properties;
-        }
-
-        public function set styleName(value:String):void
-        {
-            _styleName = value;
-        }
-
-        public function get styleName():String
-        {
-            return _styleName;
-        }
+         * Returns the number of unique properties the style defines.
+         */
+        public native function get propertyCount():Number;
 
         /*
-    
-            Merges one IStyle into this style. Any properties
-            that conflict will be overwritten by the IStyle passed in
+         * Returns the name of the property at given index. Should not be called
+         * with an index that is out of bounds.
+         */
+        public native function getPropertyNameByIndex(index:Number):String;
 
-        */
-        public function merge(object:IStyle):void
-        {
-            for (var prop:String in object.properties)
-            {
-                this.properties[prop] = object.properties[prop];
-            }
-        }
+        /*
+         * Returns the value of the property at given index as a string. Should not be called
+         * with an index that is out of bounds.
+         */
+        public native function getPropertyValueByIndex(index:Number):String;
 
-        public function toString():String
-        {
-            return _styleName;
-        }
+        /*
+         * Returns the value of the property with the given name as a string. If such a
+         * property doesn't exist, NULL is returned.
+         */
+        public native function getPropertyValue(name:String):String;
 
-        public function clone():IStyle
-        {
-            var cloneProp:Style = new Style();
-            var total:Number = properties.length;
+        /*
+         * Returns true if the style defines a property with the given name, false othervise.
+         */
+        public native function hasProperty(name:String):Boolean;
 
-            for(var key:String in properties)
-            {
-                cloneProp.properties[key] = this.properties[key];
-            }
+        /*
+         * Removes the property with the given name, if it exists.
+         */
+        public native function removeProperty(name:String):void;
 
-            return cloneProp;
-        }
+        /*
+         * Sets the value of a property with the given name. If a property with such a name
+         * already exists, the old one is overriden.
+         */
+        public native function setPropertyValue(name:String, value:String):void;
 
-        //____________________________________________
-        //  Protected Properties
-        //____________________________________________
-        protected var _styleName:String;
-        protected var _properties:Dictionary.<String,String> = new Dictionary.<String,String>();
+        /*
+         * Return the name (selector) this style responds to.
+         */
+        public native function get styleName():String;
+
+        /*
+         * Merges another style into the this style. The properties of the other
+         * style are added or they override the properties of this style.
+         */
+        public native function merge(object:Style):void;
+
+        /*
+         * Return the selector as a representation of the object
+         */
+        public native function toString():String;
+
+        /*
+         * Create a new instance of the Style with the same name, properties and attributes.
+         * The instance will be garbage collected by LoomScript.
+         */
+        public native function clone():Style;
     }
 
 }
