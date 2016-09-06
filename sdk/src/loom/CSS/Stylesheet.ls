@@ -36,9 +36,10 @@ package loom.css
     {
         public function StyleSheet()
         {
+            // Hacky code, but Loom native bindings don't allow for non-POD
+            // objects to be passed as arguments to delegates
             _onUpdate += function()
             {
-                trace("update");
                 onUpdate(this);
             };
         }
@@ -111,6 +112,10 @@ package loom.css
          */
         public var onUpdate:StyleUpdatedDelegate;
 
+        /*
+         * Internal delegate that's invoked by native code and bubbles
+         * to `onUpdate()` with proper arguments.
+         */
         private native var _onUpdate:StyleUpdatedDelegateInternal;
     }
 }
