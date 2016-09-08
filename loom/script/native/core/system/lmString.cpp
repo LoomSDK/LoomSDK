@@ -63,10 +63,11 @@ public:
     {
         lmAssert(lua_isstring(L, 1), "Non-string passed to String._charAt");
 
-        const char *svalue = lua_tostring(L, 1);
+        size_t length;
+        const char *svalue = lua_tolstring(L, 1, &length);
         int        index   = (int)lua_tonumber(L, 2);
 
-        if (!svalue || !svalue[0] || (index < 0) || (index >= (int)strlen(svalue)))
+        if (!svalue || !svalue[0] || (index < 0) || ((size_t)index >= length))
         {
             lua_pushstring(L, "");
             return 1;
@@ -115,7 +116,8 @@ public:
 
     static int _length(lua_State *L)
     {
-        const char *svalue = lua_tostring(L, 1);
+        size_t length;
+        const char *svalue = lua_tolstring(L, 1, &length);
 
         if (!svalue)
         {
@@ -123,7 +125,7 @@ public:
         }
         else
         {
-            lua_pushnumber(L, (lua_Number)strlen(svalue));
+            lua_pushnumber(L, (lua_Number)length);
         }
         return 1;
     }

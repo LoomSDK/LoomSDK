@@ -26,6 +26,8 @@
 #include "loom/script/reflection/lsReflection.h"
 #include "loom/script/reflection/lsType.h"
 
+struct LoomProfilerRoot;
+
 namespace LS {
 struct MethodAttributes : BaseAttributes
 {
@@ -131,11 +133,13 @@ private:
 
 protected:
 
-    MethodBase() : byteCode(NULL), cfunction(NULL), propertyInfo(NULL), firstDefaultArg(-1), varArgIndex(-2)
+    MethodBase() : byteCode(NULL), cfunction(NULL), propertyInfo(NULL), firstDefaultArg(-1), varArgIndex(-2), profilerRoot(NULL)
     {
     }
 
 public:
+
+    LoomProfilerRoot *profilerRoot;
 
     ~MethodBase()
     {

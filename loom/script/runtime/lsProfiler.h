@@ -26,6 +26,9 @@
 #include "loom/script/loomscript.h"
 
 namespace LS {
+
+class MethodBase;
+
 struct LSProfilerTypeAllocation
 {
     Type                               *type;
@@ -54,8 +57,8 @@ typedef struct MethodAllocation {
 class LSProfiler
 {
 private:
-    static void enterMethod(const char *fullPath);
-    static void leaveMethod(const char *fullPath);
+    static void enterMethod(MethodBase *method);
+    static void leaveMethod(MethodBase *method);
 
     static void profileHook(lua_State *L, lua_Debug *ar);
 

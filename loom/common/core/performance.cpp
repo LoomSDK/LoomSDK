@@ -233,14 +233,6 @@ void LoomProfiler::reset()
 
 LoomProfilerRoot::LoomProfilerRoot(const char *name)
 {
-    for (LoomProfilerRoot *walk = sRootList; walk; walk = walk->mNextRoot)
-    {
-        if (!strcmp(walk->mName, name))
-        {
-            lmAssert(false, "Duplicate profile name: %s", name);
-        }
-    }
-
     mName                   = name;
     mNameHash               = (int)(long long)stringtable_insert(name); // Poor man's hash
     mNextRoot               = sRootList;
@@ -252,8 +244,20 @@ LoomProfilerRoot::LoomProfilerRoot(const char *name)
     mTotalInvokeCount       = 0;
     mFirstLoomProfilerEntry = NULL;
     mEnabled                = true;
+    mTelemetryVisited       = false;
 }
 
+LoomProfilerRoot* LoomProfilerRoot::fromName(const char *name)
+{
+    for (LoomProfilerRoot *walk = sRootList; walk; walk = walk->mNextRoot)
+    {
+        if (!strcmp(walk->mName, name))
+        {
+            return walk;
+        }
+    }
+    return lmNew(NULL) LoomProfilerRoot(name);
+}
 
 void LoomProfiler::validate()
 {
@@ -292,7 +296,7 @@ void LoomProfiler::validate()
 
 void LoomProfiler::hashPush(LoomProfilerRoot *root)
 {
-   Telemetry::beginTickTimer(root->mName);
+   Telemetry::beginTickTimer(root);
 
    mStackDepth++;
    lmAssert(mStackDepth <= (S32) mMaxStackDepth,
@@ -373,7 +377,7 @@ void LoomProfiler::enable(bool enabled)
 
 void LoomProfiler::hashPop(LoomProfilerRoot *expected)
 {
-    Telemetry::endTickTimer(expected->mName);
+    Telemetry::endTickTimer(expected);
 
     mStackDepth--;
 

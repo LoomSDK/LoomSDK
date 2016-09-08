@@ -767,9 +767,11 @@ public:
     {
         if (nr < m_size)
         {
-            for (UTsize i = m_size; i < nr; i++)
-            {
-                m_data[i].~T();
+            if (!ArrayAlloc<T>::fundamental) {
+                for (UTsize i = m_size; i < nr; i++)
+                {
+                    m_data[i].~T();
+                }
             }
         }
         else
@@ -786,9 +788,11 @@ public:
     {
         if (nr < m_size)
         {
-            for (UTsize i = m_size; i < nr; i++)
-            {
-                m_data[i].~T();
+            if (!ArrayAlloc<T>::fundamental) {
+                for (UTsize i = m_size; i < nr; i++)
+                {
+                    m_data[i].~T();
+                }
             }
         }
         else
@@ -1199,6 +1203,24 @@ public:
 
     UT_INLINE bool operator==(const utIntHashKey& v) const { return hash() == v.hash(); }
     UT_INLINE bool operator!=(const utIntHashKey& v) const { return hash() != v.hash(); }
+    UT_INLINE bool operator==(const UThash& v) const { return hash() == v; }
+    UT_INLINE bool operator!=(const UThash& v) const { return hash() != v; }
+};
+
+class utUInt64HashKey
+{
+protected:
+    UTuint64 m_key;
+public:
+    utUInt64HashKey() : m_key(0) {}
+    utUInt64HashKey(UTuint64 k) : m_key(k) {}
+    utUInt64HashKey(const utUInt64HashKey& k) : m_key(k.m_key) {}
+
+    UT_INLINE UTuint64 key(void)  const { return m_key; }
+    UT_INLINE UThash hash(void) const { return static_cast<UThash>(m_key * 1099511628211L); }
+
+    UT_INLINE bool operator==(const utUInt64HashKey& v) const { return hash() == v.hash() && key() == v.key(); }
+    UT_INLINE bool operator!=(const utUInt64HashKey& v) const { return hash() != v.hash() || key() != v.key(); }
     UT_INLINE bool operator==(const UThash& v) const { return hash() == v; }
     UT_INLINE bool operator!=(const UThash& v) const { return hash() != v; }
 };

@@ -21,6 +21,7 @@
 #include "loom/common/platform/platformTime.h"
 #include "loom/common/platform/platformHttp.h"
 #include "loom/common/platform/platformThread.h"
+#include "loom/common/platform/platformNetwork.h"
 #include "loom/common/core/performance.h"
 #include "loom/common/assets/assets.h"
 #include "loom/script/native/lsNativeDelegate.h"
@@ -28,7 +29,6 @@
 #include "loom/common/config/applicationConfig.h"
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/graphics/gfxTexture.h"
-#include "loom/common/core/telemetry.h"
 
 lmDefineLogGroup(gTickLogGroup, "tick", true, LoomLogInfo)
 
@@ -59,8 +59,6 @@ void loom_tick()
 
     atomic_store32(&gLoomPaused, 0);
 
-    Telemetry::beginTick();
-    
     LOOM_PROFILE_START(loom_tick);
 
     LSLuaState *vm = NULL;
@@ -97,6 +95,7 @@ void loom_tick()
     }
     
     loom_asset_pump();
+    loom_net_pump();
     
     platform_HTTPUpdate();
     
@@ -107,10 +106,6 @@ void loom_tick()
     finishProfilerBlock(&p);
     
     LOOM_PROFILE_END(loom_tick);
-    
-    LOOM_PROFILE_ZERO_CHECK()
-    
-    Telemetry::endTick();
 
 }
 }

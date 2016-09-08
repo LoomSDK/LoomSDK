@@ -21,8 +21,13 @@
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformThread.h"
 #include "loom/common/platform/platformNetwork.h"
+#include "loom/common/platform/platformTime.h"
 #include "loom/common/core/log.h"
 #include "loom/common/core/assert.h"
+#include "loom/common/core/allocator.h"
+
+#include "loom/common/utils/bipbuffer.h"
+#include "loom/common/utils/uthash.h"
 
 #include <stdio.h>
 
@@ -61,8 +66,54 @@ typedef int   SOCKET;
 
 lmDefineLogGroup(netLogGroup, "net", 1, LoomLogWarn);
 
+static const int readSpinSleepMs = 5;
+static const int readSpinTimeoutMs = 6000;
+static const int writeChunkMaxSize = 16384;
+static const int writeSmallCountThreshold = 200;
+static const int writeResizePagePower = 12;
+
+// Structure keeping socket buffers and metadata
+struct SocketData {
+    // Handle to the socket itself
+	loom_socketId_t id;
+
+    // Write bip-buffer (modified circular buffer)
+	bipbuf_t* writeBuffer;
+
+    // The number of small writes made in a row.
+    // Used for identifying buffer shrink points.
+	int smallWrites;
+
+    // The number of failed writes made in a row.
+    // Used to detect stalled writing / unresponsive remote endpoint.
+	int stallWrites;
+
+    // 1 if write stall is detected, 0 otherwise
+	int stalled;
+
+    // Activity timer used in stall detection
+	loom_precision_timer_t activityTimer;
+
+    // The number of bytes sent, used for debug log reporting
+	unsigned int bytesSent;
+
+    // Required structure for the hash to work
+	UT_hash_handle hh;
+};
+
+// Head of the socket id -> SocketData hash table
+static struct SocketData* socketDatas = NULL;
+
+static MutexHandle writeMutex;
+
+// Timer used for debug log reporting
+static loom_precision_timer_t pumpTimer = NULL;
+
 int loom_net_initialize()
 {
+	writeMutex = loom_mutex_create();
+	if (!pumpTimer) pumpTimer = loom_startTimer();
+
     // Platform-specific init.
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
     WSADATA wsaData;
@@ -271,6 +322,7 @@ int loom_net_isSocketDead(loom_socketId_t s)
     // If there is a non-zero error code it is dead.
     int       error = 0, retval = 0;
     socklen_t len   = sizeof(error);
+	struct SocketData* sd;
 
     retval = getsockopt((int)(size_t)s, SOL_SOCKET, SO_ERROR, (char *)&error, &len);
     if (retval == -1)
@@ -278,6 +330,13 @@ int loom_net_isSocketDead(loom_socketId_t s)
         lmLogError(netLogGroup, "Could not read error on socket %x due to %d, must be dead.", s, errno);
         return 1;
     }
+	
+    // Report as dead if writing is stalled
+	HASH_FIND(hh, socketDatas, &s, sizeof(s), sd);
+	if (sd)
+	{
+		if (sd->stalled) return 1;
+	}
 
     return error != 0;
 }
@@ -362,7 +421,8 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
 {
     int errorCode;
 
-    int waiting;
+    // Used to track reading timeouts
+	int waitingNum = 0;
 
     int tmp = *bytesToRead;
 
@@ -384,8 +444,18 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
     while (bytesLeft > 0)
     {
         int received = recv((SOCKET)(size_t)s, buffer, bytesLeft, 0);
-        if (received == -1) {
-            waiting = 0;
+        int waiting = 0;
+
+		if (received > 0)
+		{
+			waitingNum = 0;
+		}
+		else if (received == 0)
+		{
+			waiting = 1;
+		}
+		else
+		{
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
             errorCode = WSAGetLastError();
             if (errorCode == WSAEWOULDBLOCK)
@@ -399,20 +469,29 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
                 waiting = 1;
             }
 #endif
-            if (waiting)
+            if (!waiting)
             {
-                // TODO figure out a better way to do this?
-                //lmLogDebug(netLogGroup, "Waiting for receive buffer %d / %d", *bytesToRead - bytesLeft, *bytesToRead);
-                loom_thread_sleep(5);
-                continue;
-            }
-            else
-            {
-                lmLogError(netLogGroup, "Read socket error (%d)", errorCode);
+				platform_error("Read socket error (%d)", errorCode);
                 *bytesToRead = -1;
                 return;
             }
         }
+
+		if (waiting)
+		{
+			// Uncomment for receive wait logs
+			//platform_debugOut("Waiting for receive buffer %d / %d", *bytesToRead - bytesLeft, *bytesToRead);
+			waitingNum++;
+			if (waitingNum >= readSpinTimeoutMs / readSpinSleepMs)
+			{
+				platform_error("Read socket timeout, tried every %d ms %d times", readSpinSleepMs, waitingNum);
+				*bytesToRead = -1;
+				return;
+			}
+			loom_thread_sleep(readSpinSleepMs);
+			continue;
+		}
+
         bytesLeft -= received;
         buffer = (char*)buffer + received;
     }
@@ -420,59 +499,228 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
     lmAssert(bytesLeft == 0, "Internal recv error, read too much data? %d", bytesLeft);
 }
 
-
-int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite)
+// Align the provided size to the next page (page size provided with the page power, e.g. 12 is 4096)
+static int alignToNextPage(int n, int pageShift)
 {
+    return ((n >> pageShift) + 1) << pageShift;
+}
+
+// Pump all the buffered messages as much as possible without blocking entirely.
+// Call this often to flush out buffers for all the sockets. 
+void loom_net_pump()
+{
+	struct SocketData* sd;
+	int print = 0;
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
     int winsockErrorCode;
 #endif
 
-    int bytesLeft = bytesToWrite;
-    for ( ; ; )
-    {
-        int result = send((SOCKET)(size_t)s, buffer, bytesLeft, MSG_NOSIGNAL);
+    // Uncomment this to show buffer reports
+	// if (loom_readTimer(pumpTimer) > 1000) {
+	// 	print = 1;
+	// 	loom_resetTimer(pumpTimer);
+	// }
 
-        if (result >= 0)
-        {
-            bytesLeft -= result;
-            if (bytesLeft != 0)
-            {
-                lmLogDebug(netLogGroup, "Partial write on socket %d, expected %d but wrote %d! Retrying...", s, bytesToWrite, result);
+	loom_mutex_lock(writeMutex);
 
-                // Set up to try again by advancing into the buffer.
-                buffer = (void *)((char *)buffer + result);
-                continue;
-            }
+    // Loop over all the sockets
+	for (sd = socketDatas; sd != NULL; sd = sd->hh.next) {
+		int sent;
+		bipbuf_t* bipbuf;
+		loom_socketId_t *socket;
+		if (!sd->writeBuffer) continue;
+		
+		sent = 0;
+		bipbuf = sd->writeBuffer;
+		socket = sd->id;
 
-            return bytesToWrite - bytesLeft;
+		for (;;)
+		{
+            int bytesPending, bytesSending, bytesAvailable, result;
+            unsigned char* buf;
+
+            // How many bytes we still have to send
+			bytesPending = bipbuf_used(bipbuf);
+			if (bytesPending <= 0) break;
+
+            // How many bytes we are going to send this time
+			bytesSending = bytesPending < writeChunkMaxSize ? bytesPending : writeChunkMaxSize;
+
+            // How many bytes we can actually read at once from the buffer
+            // at this time.
+			bytesAvailable = bipbuf_available(bipbuf);
+			if (bytesAvailable < bytesSending) bytesSending = bytesAvailable;
+
+            // Pointer into the buffer
+			buf = bipbuf_peek(bipbuf, bytesSending);
+			lmAssert(buf, "Unable to peek into bipbuffer, %d pending, %d sending, %d available", bytesPending, bytesSending, bytesAvailable);
+
+			result = send((SOCKET)(size_t)socket, buf, bytesSending, MSG_NOSIGNAL);
+
+			if (result >= 0)
+			{
+				lmAssert(bipbuf_poll(bipbuf, result), "Internal error, unable to poll the bipbuffer");
+				sent += result;
+				// Uncomment to print out every successful write
+				//platform_debugOut("Pumped %d bytes", result);
+				if (bipbuf_used(bipbuf) > 0)
+				{
+					// Uncomment to print out partial writes
+					//platform_debugOut("Partial write %d sent, %d left,   %d sent this call", result, bipbuf_used(bipbuf), sent);
+					continue;
+				}
+				break;
+			}
+
+            // Try another time on failed write
+			break;
+		}
+
+		sd->bytesSent += sent;
+
+		// Stall check
+		if (sent == 0)
+		{
+			sd->stallWrites++;
+			if (sd->stallWrites >= 200)
+			{
+				if (sd->stallWrites == 200)
+				{
+					loom_resetTimer(sd->activityTimer);
+				}
+				else
+				{
+					if (loom_readTimer(sd->activityTimer) > 30000)
+					{
+						sd->stalled = 1;
+					}
+				}
+			}
+			// Uncomment to print out stalled write status
+			//platform_debugOut("Stall check: %d writes, %d stalled, %d ms", sd->stallWrites, sd->stalled, loom_readTimer(sd->activityTimer));
+		}
+		else
+		{
+			sd->stallWrites = 0;
+			sd->stalled = 0;
+		}
+
+        // Debug print log output
+		if (print) {
+			platform_debugOut("Socket %x%s write buffer status: %d %s/s, %d%% full, %d left, %d free, %d total",
+				socket, loom_net_isSocketDead(socket) ? " (dead)" : "", sd->bytesSent < 1000 ? sd->bytesSent : sd->bytesSent / 1000,
+				sd->bytesSent < 1000 ? "B" : "KB",
+				(unsigned int)bipbuf_used(bipbuf) * 100 / (unsigned int)bipbuf_size(bipbuf),
+				bipbuf_used(bipbuf),
+				bipbuf_unused(bipbuf),
+				bipbuf_size(bipbuf)
+			);
+			sd->bytesSent = 0;
+		}
+	}
+
+	loom_mutex_unlock(writeMutex);
+
+}
+
+int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite)
+{
+	int offered, unused, used, required;
+	struct SocketData* sd;
+	bipbuf_t* bipbuf;
+
+    if (bytesToWrite <= 0) return 0;
+
+	loom_mutex_lock(writeMutex);
+
+	HASH_FIND(hh, socketDatas, &s, sizeof(s), sd);
+
+    // If SocketData doesn't exist yet, create it
+	if (sd == NULL) {
+		sd = lmAlloc(NULL, sizeof(struct SocketData));
+		lmAssert(sd, "Unable to allocate socket data");
+		sd->id = (loom_socketId_t)s;
+		sd->writeBuffer = NULL;
+		sd->smallWrites = 0;
+		sd->stallWrites = 0;
+		sd->stalled = 0;
+		sd->bytesSent = 0;
+		sd->activityTimer = loom_startTimer();
+		HASH_ADD(hh, socketDatas, id, sizeof(loom_socketId_t), sd);
+	}
+
+	bipbuf = sd->writeBuffer;
+
+    unused = bipbuf ? bipbuf_unused(bipbuf) : 0;
+    // Create/resize buffer if it's too small
+    if (unused < bytesToWrite)
+	{
+		const int oldSize = bipbuf ? bipbuf_size(bipbuf) : 0;
+		
+        // Two growth stategies, pick the biggest one
+		int growDouble = oldSize;
+		int growByNeeded = bytesToWrite - unused;
+        const int totalSize = alignToNextPage(sizeof(bipbuf_t) + oldSize + (growDouble > growByNeeded ? growDouble : growByNeeded), writeResizePagePower);
+        const int contentSize = totalSize - sizeof(bipbuf_t);
+        if (bipbuf) {
+            bipbuf = lmRealloc(NULL, bipbuf, totalSize);
+			bipbuf_resize(bipbuf, contentSize);
         }
-
-#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
-        winsockErrorCode = WSAGetLastError();
-        if (winsockErrorCode != WSAEWOULDBLOCK)
+        else
         {
-            break;
+            bipbuf = lmAlloc(NULL, totalSize);
+            bipbuf_init(bipbuf, contentSize);
         }
-#else
-        if (errno != EAGAIN)
-        {
-            break;
-        }
-#endif
+        // Uncomment to log write buffer growth
+		// platform_debugOut("Socket %x write buffer growth, %d unused, %d to write, %d old size, %d new size, %d new unused", socket, unused, bytesToWrite, oldSize, contentSize, bipbuf_unused(bipbuf));
 
-        if (loom_net_isSocketDead(s))
-        {
-            break;
-        }
-
-        loom_thread_sleep(5);
+		unused = bipbuf_unused(bipbuf);
+		lmAssert(bytesToWrite <= unused, "Internal bipbuffer resize error, %d is still too many bytes, only %d bytes are unused", bytesToWrite, unused);
     }
 
-    return -1;
+    offered = bipbuf_offer(bipbuf, buffer, bytesToWrite);
+	lmAssert(offered == bytesToWrite, "Internal bipbuffer write error");
+
+	used = bipbuf_used(bipbuf);
+
+	// Shrink when usage is < 33%
+	required = alignToNextPage(sizeof(bipbuf_t) + used*3, writeResizePagePower);
+
+	sd->smallWrites = required < (int)sizeof(bipbuf_t)+bipbuf_size(bipbuf) ? sd->smallWrites + 1 : 0;
+	if (sd->smallWrites > writeSmallCountThreshold)
+	{
+		const int oldSize = bipbuf_size(bipbuf);
+		bipbuf_resize(bipbuf, required - sizeof(bipbuf_t));
+		bipbuf = lmRealloc(NULL, bipbuf, required);
+        // Uncomment to log buffer shrinking
+		// platform_debugOut("Socket %x write buffer shrink, %d old, %d used, %d required, %d new", socket, oldSize, bipbuf_used(bipbuf), required, bipbuf_size(bipbuf));
+		sd->smallWrites = 0;
+	}
+
+	sd->writeBuffer = bipbuf;
+
+    loom_net_pump(s);
+
+	loom_mutex_unlock(writeMutex);
+
+    return bytesToWrite;
 }
 
 
 void loom_net_closeTCPSocket(loom_socketId_t s)
 {
+	struct SocketData* sd;
+	loom_mutex_lock(writeMutex);
+    // FInd SocketData if it exists and remove it
+	HASH_FIND(hh, socketDatas, &s, sizeof(s), sd);
+	if (sd)
+	{
+		HASH_DEL(socketDatas, sd);
+		loom_destroyTimer(sd->activityTimer);
+        lmSafeFree(sd->writeBuffer);
+		lmFree(NULL, sd);
+	}
+	loom_mutex_unlock(writeMutex);
+
     closesocket((SOCKET)(size_t)s);
 }

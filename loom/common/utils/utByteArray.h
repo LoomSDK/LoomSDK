@@ -45,12 +45,8 @@ protected:
     template<typename T>
     T readValue()
     {
-        if (_position > _data.size() - sizeof(T))
-        {
-            //lmAssert(0, "ByteArray out of data on read of size %u", sizeof(T));
-            assert(0);
-        }
-
+        lmAssert(_position <= _data.size() - sizeof(T), "ByteArray out of data on read of size %u", sizeof(T));
+        
         T *ptr  = (T *)&_data[_position];
         T value;
 
@@ -143,7 +139,7 @@ public:
         _position = 0;
     }
 
-    void clear();
+    void clear(bool useCache = false);
 
     void setPosition(unsigned int value)
     {
@@ -251,6 +247,16 @@ public:
         writeValue<unsigned int>(value);
     }
 
+    unsigned long long readUnsignedInt64()
+    {
+        return readValue<unsigned long long>();
+    }
+
+    void writeUnsignedInt64(UTuint64 value)
+    {
+        writeValue<unsigned long long>(value);
+    }
+
     void writeString(const char *value)
     {
         if (!value)
@@ -275,7 +281,7 @@ public:
         }
 
         char *ptr = (char *)&_data[_position];
-        memcpy(ptr, value, length);
+        memcpyUnaligned(ptr, value, length);
 
         _position += length;
     }
@@ -294,7 +300,8 @@ public:
 
         lmAssert(_position + length <= _data.size(), "Insufficient data available for length of %d (use readStringBytes if you don't have a 32-bit integer length header)", length);
 
-        svalue.fromBytes(&_data[_position], length);
+        svalue.alloc(length);
+        memcpyUnaligned((void*)svalue.c_str(), &_data[_position], length);
         
         _position += length;
 
@@ -361,7 +368,7 @@ public:
         }
 
         char *ptr = (char *)&_data[_position];
-        memcpy(ptr, value, length);
+        memcpyUnaligned(ptr, value, length);
 
         _position += length;
     }

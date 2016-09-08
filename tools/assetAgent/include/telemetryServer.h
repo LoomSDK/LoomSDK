@@ -14,10 +14,10 @@ public:
 
     JSON tickValuesJSON;
     JSON tickRangesJSON;
-    JSON tickMetricsJSON;
+    JSON tickRangeMetaJSON;
 
     // The main JSON string already serialized and ready for transmission
-    static utString tickMetricsJSONString;
+    static utByteArray tickMetricsJSONBytes;
 
     void updateMetricsJSON();
 };
@@ -50,8 +50,9 @@ public:
     // Returns true if the server is running, otherwise false
     static bool isRunning();
 
-    // Send the provided message to all the connected clients
-    static void sendAll(const char* msg);
+    // Send the provided message to all the connected clients. Length is
+    // `strlen(msg)` by default.
+    static void sendAll(const char* msg, size_t len = -1);
 };
 
 

@@ -48,9 +48,9 @@ static int registerSystemJSON(lua_State *L)
        .addMethod("setString", &JSON::setString)
        .addMethod("getBoolean", &JSON::getBoolean)
        .addMethod("setBoolean", &JSON::setBoolean)
-       .addMethod("getObject", &JSON::getObject)
+       .addMethod("getObject", &JSON::getObjectNew)
        .addMethod("setObject", &JSON::setObject)
-       .addMethod("getArray", &JSON::getArray)
+       .addMethod("getArray", &JSON::getArrayNew)
        .addMethod("setArray", &JSON::setArray)
 
        .addMethod("isObject", &JSON::isObject)
@@ -75,10 +75,10 @@ static int registerSystemJSON(lua_State *L)
        .addMethod("getArrayString", &JSON::getArrayString)
        .addMethod("setArrayString", &JSON::setArrayString)
 
-       .addMethod("getArrayObject", &JSON::getArrayObject)
+       .addMethod("getArrayObject", &JSON::getArrayObjectNew)
        .addMethod("setArrayObject", &JSON::setArrayObject)
 
-       .addMethod("getArrayArray", &JSON::getArrayArray)
+       .addMethod("getArrayArray", &JSON::getArrayArrayNew)
        .addMethod("setArrayArray", &JSON::setArrayArray)
 
 

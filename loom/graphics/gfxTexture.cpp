@@ -480,9 +480,12 @@ void Texture::upload(TextureInfo &tinfo, uint8_t *data, uint16_t width, uint16_t
 
             // Allocate buffer if it doesn't exist yet, reuse for smaller mipmaps
             if (mipData == NULL) {
+                int mipHalfWidth = mipWidth >> 1; mipHalfWidth = mipHalfWidth < 1 ? 1 : mipHalfWidth;
+                int mipHalfHeight = mipHeight >> 1; mipHalfHeight = mipHalfHeight < 1 ? 1 : mipHalfHeight;
+                int mipQuarterSize = mipHalfWidth*mipHalfHeight;
                 // Allocate enough for the biggest/current mipmap and a quarter of the size of
                 // additional space used for downsizing
-                mipData = static_cast<uint32_t*>(lmAlloc(NULL, mipSize * (4 + 1)));
+                mipData = static_cast<uint32_t*>(lmAlloc(NULL, (mipSize + mipQuarterSize)*sizeof(uint32_t)));
                 // The current mipmap bytes are the entire buffer minus the additional space
                 // at first, with the parent bytes being the full image size
                 mipCurrent = mipData;

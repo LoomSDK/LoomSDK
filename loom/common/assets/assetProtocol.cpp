@@ -63,6 +63,24 @@ void NetworkBuffer::writeInt(int _value)
     curByte += 4;
 }
 
+UTuint64 NetworkBuffer::readUInt64()
+{
+    int r = *(int *)((char *)buffer + curByte);
+
+    r = convertLEndianToHost(r);
+
+    curByte += 8;
+    return(r);
+}
+
+void NetworkBuffer::writeUInt64(UTuint64 _value)
+{
+    _value = convertHostToLEndian(_value);
+
+    *(int *)((char *)buffer + curByte) = (_value);
+    curByte += 8;
+}
+
 
 bool NetworkBuffer::readString(char **outString, int *outLength)
 {
@@ -144,10 +162,10 @@ public:
 
 AssetProtocolHandler::AssetProtocolHandler(loom_socketId_t _socket)
 {
-    socket       = _socket;
-    bytesLength  = 0;
-    bytes        = NULL;
-    listenerHead = NULL;
+    socket         = _socket;
+    listenerHead   = NULL;
+    lastActiveTime = loom_startTimer();
+    buffer.setBuffer(NULL, 0);
 
     // Note a unique ID for connection tracking purposes.
     _id = uniqueId++;
@@ -159,11 +177,29 @@ AssetProtocolHandler::AssetProtocolHandler(loom_socketId_t _socket)
 
 AssetProtocolHandler::~AssetProtocolHandler()
 {
-    lmSafeFree(NULL, bytes);
+    freeBuffer();
+    if (lastActiveTime)
+    {
+	    loom_destroyTimer(lastActiveTime);
+	    lastActiveTime = NULL;
+    }
 
-    // TODO: Free listeners.
+    AssetProtocolMessageListener *apml = listenerHead;
+    bool handled = false;
+    while (apml)
+    {
+	    AssetProtocolMessageListener *next = apml->next;
+	    lmDelete(NULL, apml);
+	    apml = next;
+    }
+    listenerHead = NULL;
 }
 
+void AssetProtocolHandler::freeBuffer()
+{
+    lmSafeFree(NULL, buffer.buffer);
+    buffer.length = 0;
+}
 
 utString AssetProtocolHandler::description()
 {
@@ -179,10 +215,11 @@ bool AssetProtocolHandler::readFrame()
     // Service the asset server connection.
     unsigned char header[128];
     int           bytesRead = 12;
+    NetworkBuffer headerBuffer;
 
     loom_net_readTCPSocket(socket, header, &bytesRead, 1);
 
-    buffer.setBuffer(header, bytesRead);
+    headerBuffer.setBuffer(header, bytesRead);
 
     // See if we have enough of a frame to read the frame length.
     int frameLength = 0;
@@ -191,29 +228,26 @@ bool AssetProtocolHandler::readFrame()
         return false;
     }
 
-    frameLength = buffer.readInt();
+    frameLength = headerBuffer.readInt();
 
-    buffer.readCheckpoint(0xDEADBEEF);
+    headerBuffer.readCheckpoint(0xDEADBEEF);
 
     // Allocate a buffer to store data.
-    bytes = (unsigned char *)lmAlloc(NULL, frameLength);
-
-    bytesLength = frameLength;
+    buffer.setBuffer((unsigned char *)lmAlloc(NULL, frameLength), frameLength);
 
     // Wait until bytesLength bytes are ready for reading
     // TODO This could probably be implemented better, but
     // it doesn't break with larger frames like the previous
     // implementation did at least.
-    loom_net_readTCPSocket(socket, bytes, &bytesLength, 0);
+    loom_net_readTCPSocket(socket, buffer.buffer, &buffer.length, 0);
 
-    if (bytesLength != frameLength)
+    if (buffer.length != frameLength)
     {
-        lmSafeFree(NULL, bytes);
+        freeBuffer();
         return false;
     }
 
     // Great, we have a frame!
-    buffer.setBuffer(bytes, bytesLength);
     buffer.readInt(); // Skip past the length and checkpoint.
     buffer.readCheckpoint(0xDEADBEEF);
     return true;
@@ -222,37 +256,38 @@ bool AssetProtocolHandler::readFrame()
 
 void AssetProtocolHandler::process()
 {
-    // See if we got a frame.
-    if (!readFrame())
+    // Read all the frames
+    while (readFrame())
     {
-        return;
-    }
+        int fourcc = buffer.readInt();
 
-    // Awesome, so parse it.
-    int fourcc = buffer.readInt();
-
-    // Let everybody have a shot at it.
-    AssetProtocolMessageListener *apml = listenerHead;
-    bool handled = false;
-    while (apml)
-    {
-        if (!apml->handleMessage(fourcc, this, buffer))
+        // Let everybody have a shot at the frame
+        AssetProtocolMessageListener *apml = listenerHead;
+        bool handled = false;
+        while (apml)
         {
-            // Go to next.
-            apml = apml->next;
-            continue;
+            if (!apml->handleMessage(fourcc, this, buffer))
+            {
+                // Go to next.
+                apml = apml->next;
+                continue;
+            }
+
+            handled = true;
+            break;
         }
 
-        handled = true;
-        break;
-    }
+        // CLean up any leftover buffer
+        freeBuffer();
 
-    lmFree(NULL, buffer.buffer);
-    buffer.setBuffer(NULL, 0);
-
-    if (!handled)
-    {
-        lmLogError(assetProtocolLogGroup, "Unknown fourcc %x! Skipping ahead %d bytes to next frame.", fourcc, bytesLength);
+        if (handled)
+        {
+            loom_resetTimer(lastActiveTime);
+        }
+        else
+        {
+            lmLogError(assetProtocolLogGroup, "Unknown fourcc %x! Skipping ahead %d bytes to next frame.", fourcc, buffer.length);
+        }
     }
 }
 

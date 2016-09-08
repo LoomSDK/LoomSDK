@@ -534,7 +534,7 @@ public:
      */
     inline const char *getFullMemberName()
     {
-        lmAssert(fullMemberName.size(), "fullMemberName not set");
+        lmAssert(fullMemberName != "", "fullMemberName not set");
         return fullMemberName.c_str();
     }
 };

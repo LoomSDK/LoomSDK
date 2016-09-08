@@ -271,25 +271,78 @@ T* loom_destructInPlace(T *t)
     return t;
 }
 
-// Constructs a new array of types of length nr using the provided allocator (or NULL for default allocator)
-// Use this or utArray instead of lmNew for constructing arrays
-// The types are constructed in order using loom_constructInPlace
+// Array per-type properties, currently only used to determine which types
+// are fundamental to avoid constructing them.
+template<typename T> struct ArrayAlloc { enum { fundamental = false }; };
+template<typename T> struct ArrayAlloc<T*> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<bool> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<char> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<wchar_t> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<signed char> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<short int> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<int> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<long int> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<long long int> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<unsigned char> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<unsigned short int> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<unsigned int> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<unsigned long int> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<unsigned long long int> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<double> { enum { fundamental = true }; };
+template<> struct ArrayAlloc<long double> { enum { fundamental = true }; };
+
+// Injects array metadata of size LOOM_ALLOCATOR_METADATA_SIZE at the beginning
+// of an existing memory block. Returns a pointer to the first element
+template<typename T>
+static T* loom_newArray_inject(void* arr, unsigned int nr) {
+    lmSafeAssert(arr, "Unable to inject metadata into a null array. Probably out of memory while allocating.");
+    *(static_cast<unsigned int*>(arr)) = nr;
+    arr = reinterpret_cast<T*>(reinterpret_cast<size_t>(arr) + LOOM_ALLOCATOR_METADATA_SIZE);
+    return static_cast<T*>(arr);
+}
+
+// Allocate and inject an array of size nr
+template<typename T>
+static T* loom_newArray_alloc(loom_allocator_t *allocator, unsigned int nr)
+{
+    void* arr = (void*)lmAlloc(allocator, LOOM_ALLOCATOR_METADATA_SIZE + nr * sizeof(T));
+    return loom_newArray_inject<T>(arr, nr);
+}
+
+// Allocate, zero-initialize and inject an array of size nr
+template<typename T>
+static T* loom_newArray_calloc(loom_allocator_t *allocator, unsigned int nr)
+{
+    void* arr = (void*)lmCalloc(allocator, 1, LOOM_ALLOCATOR_METADATA_SIZE + nr * sizeof(T));
+    return loom_newArray_inject<T>(arr, nr);
+}
+
+// Constructs a new array of types of length nr using the provided allocator
+// (use NULL for the default allocator).
+//
+// Use this or utArray instead of lmNew for constructing arrays.
+// Non-fundamental types are constructed in order using loom_constructInPlace.
+// Fundamental types are zero-initialized.
 //
 // Note that this function may allocate slightly more memory than expected
-// as it has to remember the array length
+// as it has to remember the array length.
+//
 template<typename T>
 T* loom_newArray(loom_allocator_t *allocator, unsigned int nr)
 {
-    void* arr = (void*) lmAlloc(allocator, LOOM_ALLOCATOR_METADATA_SIZE + nr * sizeof(T));
-    lmSafeAssert(arr, "Unable to allocate additional memory in loom_newArray");
-    *(static_cast<unsigned int*>(arr)) = nr;
-    arr = reinterpret_cast<T*>(reinterpret_cast<size_t>(arr) + LOOM_ALLOCATOR_METADATA_SIZE);
-    for (unsigned int i = 0; i < nr; i++)
-    {
-        loom_constructInPlace<T>(&(static_cast<T*>(arr)[i]));
+    T* arr;
+
+    if (ArrayAlloc<T>::fundamental) {
+        arr = loom_newArray_calloc<T>(allocator, nr);
+    } else {
+        arr = loom_newArray_alloc<T>(allocator, nr);
+        for (unsigned int i = 0; i < nr; i++)
+        {
+            loom_constructInPlace<T>(&(arr[i]));
+        }
     }
 
-    return static_cast<T*>(arr);
+    return arr;
 }
 
 // Deconstructs an array allocated with loom_newArray and frees the allocated memory

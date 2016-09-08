@@ -39,6 +39,7 @@ void loom_net_enableSocketKeepalive(loom_socketId_t s);
 
 void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, int peek);
 int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite);
+void loom_net_pump();
 
 void loom_net_getSocketPeerName(loom_socketId_t s, int *hostIp, int *hostPort);
 int loom_net_isSocketWritable(loom_socketId_t s);

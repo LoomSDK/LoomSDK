@@ -99,6 +99,14 @@ void utString::replace(char from, char to)
     }
 }
 
+void utString::alloc(int len)
+{
+    // Free old value if any.
+    clear();
+
+    // Allocate len+1 zero bytes
+    p = (char*)lmCalloc(NULL, 1, len + 1);
+}
 
 void utString::fromBytes(const void *bytes, int len)
 {

@@ -188,8 +188,12 @@ struct LoomProfilerRoot
     F64                     mMinTime;
     U32                     mTotalInvokeCount;
     bool                    mEnabled;
+    bool                    mTelemetryVisited;
 
     static LoomProfilerRoot *sRootList;
+    // Returns the profiler root with this name or a new one if one doesn't
+    // exist yet.  
+    static LoomProfilerRoot* fromName(const char *name);
 
     LoomProfilerRoot(const char *name);
 };

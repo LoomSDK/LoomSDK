@@ -32,7 +32,7 @@ static void jsonFree(void *ptr)
 
 static bool initialized = false;
 
-JSON::JSON() : _json(NULL), _root(false)
+JSON::JSON() : _json(NULL)
 {
     if (!initialized)
     {
@@ -41,14 +41,14 @@ JSON::JSON() : _json(NULL), _root(false)
     }
 }
 
+JSON::JSON(json_t* from) : _json(from) {
+    json_incref(from);
+};
+
 bool JSON::clear() {
     if (_json)
     {
-        if (_root)
-        {
-            json_decref(_json);
-            _root = false;
-        }
+        json_decref(_json);
         _json = NULL;
         return true;
     }
@@ -62,19 +62,13 @@ JSON::~JSON()
 
 bool JSON::initObject() {
     clear();
-
     _json = json_object();
-    if (_json) _root = true;
-
     return _json == NULL ? false : true;
 }
 
 bool JSON::initArray() {
     clear();
-
     _json = json_array();
-    if (_json) _root = true;
-
     return _json == NULL ? false : true;
 }
 
@@ -82,15 +76,16 @@ bool JSON::loadString(const char *json)
 {
     clear();
 
-    _json = json_loads(json, JSON_DISABLE_EOF_CHECK, &_error);
+    json_error_t error;
+    _json = json_loads(json, JSON_DISABLE_EOF_CHECK, &error);
 
     if (!_json)
     {
         char message[1024];
         snprintf(message, 1024,
                  "JSON Error: Line %i Column %i Position %i, %s (Source: %s)",
-                 _error.line, _error.column, _error.position, _error.text,
-                 _error.source);
+                 error.line, error.column, error.position, error.text,
+                 error.source);
 
         _errorMsg = message;
     }
@@ -98,8 +93,6 @@ bool JSON::loadString(const char *json)
     {
         _errorMsg = "";
     }
-
-    if (_json) _root = true;
 
     return _json == NULL ? false : true;
 }
@@ -111,6 +104,35 @@ const char *JSON::serialize()
         return NULL;
     }
     return json_dumps(_json, JSON_SORT_KEYS);
+}
+
+// Buffered json dump writes
+static int json_dump_write_callback(const char *buffer, size_t size, void *data)
+{
+    utByteArray* bytes = static_cast<utByteArray*>(data);
+    size_t requiredSize = bytes->getPosition() + size + 1;
+    if (requiredSize > bytes->getSize())
+    {
+        const int minBuffer = 4096;
+        bytes->resize(
+            requiredSize < minBuffer ?
+            minBuffer : (requiredSize + requiredSize/2)
+        );
+    }
+    size_t pos = bytes->getPosition();
+    memcpy((unsigned char*)bytes->getDataPtr() + pos, buffer, size);
+    bytes->setPosition(pos + size);
+    return 0;
+}
+
+bool JSON::serializeToBuffer(utByteArray* bytes)
+{
+    if (!_json || !bytes)
+    {
+        return false;
+    }
+    if (json_dump_callback(_json, json_dump_write_callback, bytes, JSON_SORT_KEYS) == -1) return false;
+    return true;
 }
 
 const char *JSON::getError()
@@ -228,7 +250,7 @@ void JSON::setFloat(const char *key, float value)
         return;
     }
 
-    json_object_set(_json, key, json_real(value));
+    json_object_set_new(_json, key, json_real(value));
 }
 
 double JSON::getNumber(const char *key)
@@ -313,7 +335,23 @@ void JSON::setString(const char *key, const char *value)
 }
 
 // Objects
-JSON *JSON::getObject(const char *key)
+JSON JSON::getObject(const char *key)
+{
+    if (!_json)
+    {
+        return JSON();
+    }
+
+    json_t *jobject = json_object_get(_json, key);
+
+    if (!jobject || !json_is_object(jobject))
+    {
+        return JSON();
+    }
+
+    return JSON(jobject);
+}
+JSON* JSON::getObjectNew(const char *key)
 {
     if (!_json)
     {
@@ -327,12 +365,9 @@ JSON *JSON::getObject(const char *key)
         return NULL;
     }
 
-    JSON *jin = lmNew(NULL) JSON();
-    json_incref(jobject);
-    jin->_json = jobject;
-
-    return jin;
+    return lmNew(NULL) JSON(jobject);
 }
+
 
 void JSON::setObject(const char *key, JSON *object)
 {
@@ -387,7 +422,23 @@ const char *JSON::getObjectNextKey(const char *key)
 }
 
 // Arrays
-JSON *JSON::getArray(const char *key)
+JSON JSON::getArray(const char *key)
+{
+    if (!_json)
+    {
+        return JSON();
+    }
+
+    json_t *jarray = json_object_get(_json, key);
+
+    if (!jarray || !json_is_array(jarray))
+    {
+        return JSON();
+    }
+
+    return JSON(jarray);
+}
+JSON* JSON::getArrayNew(const char *key)
 {
     if (!_json)
     {
@@ -401,11 +452,7 @@ JSON *JSON::getArray(const char *key)
         return NULL;
     }
 
-    JSON *jin = lmNew(NULL) JSON();
-    json_incref(jarray);
-    jin->_json = jarray;
-
-    return jin;
+    return lmNew(NULL) JSON(jarray);
 }
 
 void JSON::setArray(const char *key, JSON *object)
@@ -572,7 +619,24 @@ void JSON::setArrayString(int index, const char *value)
     json_array_set(_json, index, json_string(value));
 }
 
-JSON *JSON::getArrayObject(int index)
+JSON JSON::getArrayObject(int index)
+{
+    if (!isArray())
+    {
+        return JSON();
+    }
+
+    json_t *object = json_array_get(_json, index);
+
+    if (!object || !json_is_object(object))
+    {
+        return JSON();
+    }
+
+    return JSON(object);
+}
+
+JSON* JSON::getArrayObjectNew(int index)
 {
     if (!isArray())
     {
@@ -586,10 +650,7 @@ JSON *JSON::getArrayObject(int index)
         return NULL;
     }
 
-    JSON *jin = lmNew(NULL) JSON();
-    json_incref(object);
-    jin->_json = object;
-    return jin;
+    return lmNew(NULL) JSON(object);
 }
 
 void JSON::setArrayObject(int index, JSON *value)
@@ -604,7 +665,24 @@ void JSON::setArrayObject(int index, JSON *value)
     json_array_set(_json, index, value->_json);
 }
 
-JSON *JSON::getArrayArray(int index)
+JSON JSON::getArrayArray(int index)
+{
+    if (!isArray())
+    {
+        return JSON();
+    }
+
+    json_t *object = json_array_get(_json, index);
+
+    if (!object || !json_is_array(object))
+    {
+        return JSON();
+    }
+
+    return JSON(object);
+}
+
+JSON* JSON::getArrayArrayNew(int index)
 {
     if (!isArray())
     {
@@ -618,10 +696,7 @@ JSON *JSON::getArrayArray(int index)
         return NULL;
     }
 
-    JSON *jin = lmNew(NULL) JSON();
-    json_incref(object);
-    jin->_json = object;
-    return jin;
+    return lmNew(NULL) JSON(object);
 }
 
 void JSON::setArrayArray(int index, JSON *value)
