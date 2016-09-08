@@ -195,8 +195,6 @@ typedef struct timespec   loom_linux_precisionTimer_t; // Don't bother creating 
 #define WHICH_CLOCK CLOCK_REALTIME 
 #endif
 
-#include <android/log.h>
-
 void platform_timeInitialize()
 {
     // Store the current time as our dawn moment.
