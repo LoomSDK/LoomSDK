@@ -83,12 +83,12 @@ int loom_readTimer(loom_precision_timer_t timer)
     return b;
 }
 
-uint64_t loom_readTimerNano(loom_precision_timer_t timer)
+long long loom_readTimerNano(loom_precision_timer_t timer)
 {
     loom_mach_precisionTimer_t *t = timer;
     uint64_t a = mach_absolute_time() - t->start;
     uint64_t b = (a * t->info.numer) / t->info.denom;
-    return b;
+    return (long long)b;
 }
 
 
