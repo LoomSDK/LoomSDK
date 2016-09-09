@@ -185,17 +185,14 @@ public class LoomHTTP
             
                 if (savedFile != null)
                 {
-                    Log.d(TAG, "Caching HTTP response to '" + responseCacheFile + "'");
                     try {
                         BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(savedFile));
                         bos.write(binaryData);
                         bos.flush();
                         bos.close();
-                        Log.d(TAG, "File written...");
                     }
                     catch (Exception e)
                     {
-                        Log.e(TAG, "File write failed...");
                         throw new AssertionError("HTTP Response could not be cached.");
                     }
                 }
@@ -215,7 +212,6 @@ public class LoomHTTP
             @Override
             public void onCancel()
             {
-                Log.i(TAG, index+" cancel response");
             }
             
         };
@@ -295,14 +291,11 @@ public class LoomHTTP
                 failure("exception caught while posting request: " + e + errors.toString());
             }
             
-            Log.d(TAG, index + " send running");
-            
         }
         
         
         protected void success(final byte[] response)
         {
-            Log.d(TAG, index + " send success");
             if (response == null) Log.w(TAG, index + " send success response null!");
             final int index = this.index;
             final long callback = this.callback;
@@ -311,7 +304,6 @@ public class LoomHTTP
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Log.d(TAG, index + " main success " + response.length + " bytes, callback=" + callback + " payload=" + payload);
                     if (callback != -1 && payload != -1) {
                         LoomHTTP.onSuccess(response, callback, payload);
                         LoomHTTP.complete(index);
@@ -332,7 +324,7 @@ public class LoomHTTP
         {
             if (response == null) Log.w(TAG, index + " send failure response null!");
             final byte[] binaryData = response == null ? new byte[0] : response;
-            Log.d(TAG, index + " send failure");
+            Log.w(TAG, index + " send failure");
             final int index = this.index;
             final long callback = this.callback;
             final long payload = this.payload;
@@ -350,10 +342,8 @@ public class LoomHTTP
         
         protected void cancel()
         {
-            Log.d(TAG, index + " cancel received");
             if (requestHandle == null) return;
             boolean success = requestHandle.cancel(true);
-            Log.d(TAG, index + " cancel finished="+success);
             finish();
         }
         
@@ -369,7 +359,6 @@ public class LoomHTTP
             followRedirects = false;
             requestHandle = null;
             savedFile = null;
-            Log.d(TAG, index + " finished");
         }
         
         
@@ -382,7 +371,6 @@ public class LoomHTTP
     public static boolean cancel(int index)
     {
         if (index == -1) return false;
-        Log.d(TAG, index + " cancel requested");
         SendTask st = tasks[index];
         if (!st.busy) return false;
         background.cancel(st);

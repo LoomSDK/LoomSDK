@@ -77,30 +77,30 @@ static const int writeShrinkTarget = 2;
 // Structure keeping socket buffers and metadata
 struct SocketData {
     // Handle to the socket itself
-	loom_socketId_t id;
+    loom_socketId_t id;
 
     // Write bip-buffer (modified circular buffer)
-	bipbuf_t* writeBuffer;
+    bipbuf_t* writeBuffer;
 
     // The number of small writes made in a row.
     // Used for identifying buffer shrink points.
-	int smallWrites;
+    int smallWrites;
 
     // The number of failed writes made in a row.
     // Used to detect stalled writing / unresponsive remote endpoint.
-	int stallWrites;
+    int stallWrites;
 
     // 1 if write stall is detected, 0 otherwise
-	int stalled;
+    int stalled;
 
     // Activity timer used in stall detection
-	loom_precision_timer_t activityTimer;
+    loom_precision_timer_t activityTimer;
 
     // The number of bytes sent, used for debug log reporting
-	unsigned int bytesSent;
+    unsigned int bytesSent;
 
     // Required structure for the hash to work
-	UT_hash_handle hh;
+    UT_hash_handle hh;
 };
 
 // Head of the socket id -> SocketData hash table
@@ -113,8 +113,8 @@ static loom_precision_timer_t pumpTimer = NULL;
 
 int loom_net_initialize()
 {
-	writeMutex = loom_mutex_create();
-	if (!pumpTimer) pumpTimer = loom_startTimer();
+    writeMutex = loom_mutex_create();
+    if (!pumpTimer) pumpTimer = loom_startTimer();
 
     // Platform-specific init.
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
@@ -324,7 +324,7 @@ int loom_net_isSocketDead(loom_socketId_t s)
     // If there is a non-zero error code it is dead.
     int       error = 0, retval = 0;
     socklen_t len   = sizeof(error);
-	struct SocketData* sd;
+    struct SocketData* sd;
 
     retval = getsockopt((int)(size_t)s, SOL_SOCKET, SO_ERROR, (char *)&error, &len);
     if (retval == -1)
@@ -332,13 +332,13 @@ int loom_net_isSocketDead(loom_socketId_t s)
         lmLogError(netLogGroup, "Could not read error on socket %x due to %d, must be dead.", s, errno);
         return 1;
     }
-	
+    
     // Report as dead if writing is stalled
-	HASH_FIND(hh, socketDatas, &s, sizeof(s), sd);
-	if (sd)
-	{
-		if (sd->stalled) return 1;
-	}
+    HASH_FIND(hh, socketDatas, &s, sizeof(s), sd);
+    if (sd)
+    {
+        if (sd->stalled) return 1;
+    }
 
     return error != 0;
 }
@@ -424,7 +424,7 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
     int errorCode;
 
     // Used to track reading timeouts
-	int waitingNum = 0;
+    int waitingNum = 0;
 
     int tmp = *bytesToRead;
 
@@ -448,16 +448,16 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
         int received = recv((SOCKET)(size_t)s, buffer, bytesLeft, 0);
         int waiting = 0;
 
-		if (received > 0)
-		{
-			waitingNum = 0;
-		}
-		else if (received == 0)
-		{
-			waiting = 1;
-		}
-		else
-		{
+        if (received > 0)
+        {
+            waitingNum = 0;
+        }
+        else if (received == 0)
+        {
+            waiting = 1;
+        }
+        else
+        {
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
             errorCode = WSAGetLastError();
             if (errorCode == WSAEWOULDBLOCK)
@@ -473,26 +473,26 @@ void loom_net_readTCPSocket(loom_socketId_t s, void *buffer, int *bytesToRead, i
 #endif
             if (!waiting)
             {
-				platform_error("Read socket error (%d)", errorCode);
+                platform_error("Read socket error (%d)", errorCode);
                 *bytesToRead = -1;
                 return;
             }
         }
 
-		if (waiting)
-		{
-			// Uncomment for receive wait logs
-			//platform_debugOut("Waiting for receive buffer %d / %d", *bytesToRead - bytesLeft, *bytesToRead);
-			waitingNum++;
-			if (waitingNum >= readSpinTimeoutMs / readSpinSleepMs)
-			{
-				platform_error("Read socket timeout, tried every %d ms %d times", readSpinSleepMs, waitingNum);
-				*bytesToRead = -1;
-				return;
-			}
-			loom_thread_sleep(readSpinSleepMs);
-			continue;
-		}
+        if (waiting)
+        {
+            // Uncomment for receive wait logs
+            //platform_debugOut("Waiting for receive buffer %d / %d", *bytesToRead - bytesLeft, *bytesToRead);
+            waitingNum++;
+            if (waitingNum >= readSpinTimeoutMs / readSpinSleepMs)
+            {
+                platform_error("Read socket timeout, tried every %d ms %d times", readSpinSleepMs, waitingNum);
+                *bytesToRead = -1;
+                return;
+            }
+            loom_thread_sleep(readSpinSleepMs);
+            continue;
+        }
 
         bytesLeft -= received;
         buffer = (char*)buffer + received;
@@ -511,159 +511,159 @@ static int alignToNextPage(int n, int pageShift)
 // Call this often to flush out buffers for all the sockets. 
 void loom_net_pump()
 {
-	struct SocketData* sd;
-	int print = 0;
+    struct SocketData* sd;
+    int print = 0;
 
     // Uncomment this to show buffer reports
-	if (loom_readTimer(pumpTimer) > 1000) {
-		print = 1;
-		loom_resetTimer(pumpTimer);
-	}
+    // if (loom_readTimer(pumpTimer) > 1000) {
+    // 	print = 1;
+    // 	loom_resetTimer(pumpTimer);
+    // }
 
-	loom_mutex_lock(writeMutex);
+    loom_mutex_lock(writeMutex);
 
     // Loop over all the sockets
-	for (sd = socketDatas; sd != NULL; sd = sd->hh.next) {
-		int sent;
-		bipbuf_t* bipbuf;
-		loom_socketId_t *socket;
-		if (!sd->writeBuffer) continue;
-		
-		sent = 0;
-		bipbuf = sd->writeBuffer;
-		socket = sd->id;
+    for (sd = socketDatas; sd != NULL; sd = sd->hh.next) {
+        int sent;
+        bipbuf_t* bipbuf;
+        loom_socketId_t *socket;
+        if (!sd->writeBuffer) continue;
+        
+        sent = 0;
+        bipbuf = sd->writeBuffer;
+        socket = sd->id;
 
-		for (;;)
-		{
+        for (;;)
+        {
             int bytesPending, bytesSending, bytesAvailable, result;
             unsigned char* buf;
 
             // How many bytes we still have to send
-			bytesPending = bipbuf_used(bipbuf);
-			if (bytesPending <= 0) break;
+            bytesPending = bipbuf_used(bipbuf);
+            if (bytesPending <= 0) break;
 
             // How many bytes we are going to send this time
-			bytesSending = bytesPending < writeChunkMaxSize ? bytesPending : writeChunkMaxSize;
+            bytesSending = bytesPending < writeChunkMaxSize ? bytesPending : writeChunkMaxSize;
 
             // How many bytes we can actually read at once from the buffer
             // at this time.
-			bytesAvailable = bipbuf_available(bipbuf);
-			if (bytesAvailable < bytesSending) bytesSending = bytesAvailable;
+            bytesAvailable = bipbuf_available(bipbuf);
+            if (bytesAvailable < bytesSending) bytesSending = bytesAvailable;
 
             // Pointer into the buffer
-			buf = bipbuf_peek(bipbuf, bytesSending);
-			lmAssert(buf, "Unable to peek into bipbuffer, %d pending, %d sending, %d available", bytesPending, bytesSending, bytesAvailable);
+            buf = bipbuf_peek(bipbuf, bytesSending);
+            lmAssert(buf, "Unable to peek into bipbuffer, %d pending, %d sending, %d available", bytesPending, bytesSending, bytesAvailable);
 
-			result = send((SOCKET)(size_t)socket, buf, bytesSending, MSG_NOSIGNAL);
+            result = send((SOCKET)(size_t)socket, buf, bytesSending, MSG_NOSIGNAL);
 
-			if (result >= 0)
-			{
-				lmAssert(bipbuf_poll(bipbuf, result), "Internal error, unable to poll the bipbuffer");
-				sent += result;
-				// Uncomment to print out every successful write
-				//platform_debugOut("Pumped %d bytes", result);
-				if (bipbuf_used(bipbuf) > 0)
-				{
-					// Uncomment to print out partial writes
-					//platform_debugOut("Partial write %d sent, %d left,   %d sent this call", result, bipbuf_used(bipbuf), sent);
-					continue;
-				}
-				break;
-			}
+            if (result >= 0)
+            {
+                lmAssert(bipbuf_poll(bipbuf, result), "Internal error, unable to poll the bipbuffer");
+                sent += result;
+                // Uncomment to print out every successful write
+                //platform_debugOut("Pumped %d bytes", result);
+                if (bipbuf_used(bipbuf) > 0)
+                {
+                    // Uncomment to print out partial writes
+                    //platform_debugOut("Partial write %d sent, %d left,   %d sent this call", result, bipbuf_used(bipbuf), sent);
+                    continue;
+                }
+                break;
+            }
 
             // Try another time on failed write
-			break;
-		}
+            break;
+        }
 
-		sd->bytesSent += sent;
+        sd->bytesSent += sent;
 
-		// Stall check
-		if (sent == 0)
-		{
-			sd->stallWrites++;
-			if (sd->stallWrites >= 200)
-			{
-				if (sd->stallWrites == 200)
-				{
-					loom_resetTimer(sd->activityTimer);
-				}
-				else
-				{
-					if (loom_readTimer(sd->activityTimer) > 30000)
-					{
-						sd->stalled = 1;
-					}
-				}
-			}
-			// Uncomment to print out stalled write status
-			//platform_debugOut("Stall check: %d writes, %d stalled, %d ms", sd->stallWrites, sd->stalled, loom_readTimer(sd->activityTimer));
-		}
-		else
-		{
-			sd->stallWrites = 0;
-			sd->stalled = 0;
-		}
+        // Stall check
+        if (sent == 0)
+        {
+            sd->stallWrites++;
+            if (sd->stallWrites >= 200)
+            {
+                if (sd->stallWrites == 200)
+                {
+                    loom_resetTimer(sd->activityTimer);
+                }
+                else
+                {
+                    if (loom_readTimer(sd->activityTimer) > 30000)
+                    {
+                        sd->stalled = 1;
+                    }
+                }
+            }
+            // Uncomment to print out stalled write status
+            //platform_debugOut("Stall check: %d writes, %d stalled, %d ms", sd->stallWrites, sd->stalled, loom_readTimer(sd->activityTimer));
+        }
+        else
+        {
+            sd->stallWrites = 0;
+            sd->stalled = 0;
+        }
 
         // Debug print log output
-		if (print) {
-			platform_debugOut("Socket %x%s write buffer status: %d %s/s, %lld%% full, %d left, %d free, %d total",
-				socket, loom_net_isSocketDead(socket) ? " (dead)" : "", sd->bytesSent < 1000 ? sd->bytesSent : sd->bytesSent / 1000,
-				sd->bytesSent < 1000 ? "B" : "KB",
-				((unsigned long long)bipbuf_used(bipbuf) * 100L) / (unsigned long long)bipbuf_size(bipbuf),
-				bipbuf_used(bipbuf),
-				bipbuf_unused(bipbuf),
-				bipbuf_size(bipbuf)
-			);
-			sd->bytesSent = 0;
-		}
-	}
+        if (print) {
+            platform_debugOut("Socket %x%s write buffer status: %d %s/s, %lld%% full, %d left, %d free, %d total",
+                socket, loom_net_isSocketDead(socket) ? " (dead)" : "", sd->bytesSent < 1000 ? sd->bytesSent : sd->bytesSent / 1000,
+                sd->bytesSent < 1000 ? "B" : "KB",
+                ((unsigned long long)bipbuf_used(bipbuf) * 100L) / (unsigned long long)bipbuf_size(bipbuf),
+                bipbuf_used(bipbuf),
+                bipbuf_unused(bipbuf),
+                bipbuf_size(bipbuf)
+            );
+            sd->bytesSent = 0;
+        }
+    }
 
-	loom_mutex_unlock(writeMutex);
+    loom_mutex_unlock(writeMutex);
 
 }
 
 int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite)
 {
-	int offered, unused, used, shrinkThreshold;
-	struct SocketData* sd;
-	bipbuf_t* bipbuf;
+    int offered, unused, used, shrinkThreshold;
+    struct SocketData* sd;
+    bipbuf_t* bipbuf;
 
     if (bytesToWrite <= 0) return 0;
 
-	loom_mutex_lock(writeMutex);
+    loom_mutex_lock(writeMutex);
 
-	HASH_FIND(hh, socketDatas, &s, sizeof(s), sd);
+    HASH_FIND(hh, socketDatas, &s, sizeof(s), sd);
 
     // If SocketData doesn't exist yet, create it
-	if (sd == NULL) {
-		sd = lmAlloc(NULL, sizeof(struct SocketData));
-		lmAssert(sd, "Unable to allocate socket data");
-		sd->id = (loom_socketId_t)s;
-		sd->writeBuffer = NULL;
-		sd->smallWrites = 0;
-		sd->stallWrites = 0;
-		sd->stalled = 0;
-		sd->bytesSent = 0;
-		sd->activityTimer = loom_startTimer();
-		HASH_ADD(hh, socketDatas, id, sizeof(loom_socketId_t), sd);
-	}
+    if (sd == NULL) {
+        sd = lmAlloc(NULL, sizeof(struct SocketData));
+        lmAssert(sd, "Unable to allocate socket data");
+        sd->id = (loom_socketId_t)s;
+        sd->writeBuffer = NULL;
+        sd->smallWrites = 0;
+        sd->stallWrites = 0;
+        sd->stalled = 0;
+        sd->bytesSent = 0;
+        sd->activityTimer = loom_startTimer();
+        HASH_ADD(hh, socketDatas, id, sizeof(loom_socketId_t), sd);
+    }
 
-	bipbuf = sd->writeBuffer;
+    bipbuf = sd->writeBuffer;
 
     unused = bipbuf ? bipbuf_unused(bipbuf) : 0;
     // Create/resize buffer if it's too small
     if (unused < bytesToWrite)
-	{
-		const int oldSize = bipbuf ? bipbuf_size(bipbuf) : 0;
-		
+    {
+        const int oldSize = bipbuf ? bipbuf_size(bipbuf) : 0;
+        
         // Two growth stategies, pick the biggest one
-		int growDouble = oldSize;
-		int growByNeeded = bytesToWrite - unused;
+        int growDouble = oldSize;
+        int growByNeeded = bytesToWrite - unused;
         const int totalSize = alignToNextPage(sizeof(bipbuf_t) + oldSize + (growDouble > growByNeeded ? growDouble : growByNeeded), writeResizePagePower);
         const int contentSize = totalSize - sizeof(bipbuf_t);
         if (bipbuf) {
             bipbuf = lmRealloc(NULL, bipbuf, totalSize);
-			bipbuf_resize(bipbuf, contentSize);
+            bipbuf_resize(bipbuf, contentSize);
         }
         else
         {
@@ -671,37 +671,37 @@ int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite)
             bipbuf_init(bipbuf, contentSize);
         }
         // Uncomment to log write buffer growth
-		// platform_debugOut("Socket %x write buffer growth, %d unused, %d to write, %d old size, %d new size, %d new unused", socket, unused, bytesToWrite, oldSize, contentSize, bipbuf_unused(bipbuf));
+        // platform_debugOut("Socket %x write buffer growth, %d unused, %d to write, %d old size, %d new size, %d new unused", socket, unused, bytesToWrite, oldSize, contentSize, bipbuf_unused(bipbuf));
 
-		unused = bipbuf_unused(bipbuf);
-		lmAssert(bytesToWrite <= unused, "Internal bipbuffer resize error, %d is still too many bytes, only %d bytes are unused", bytesToWrite, unused);
+        unused = bipbuf_unused(bipbuf);
+        lmAssert(bytesToWrite <= unused, "Internal bipbuffer resize error, %d is still too many bytes, only %d bytes are unused", bytesToWrite, unused);
     }
 
     offered = bipbuf_offer(bipbuf, buffer, bytesToWrite);
-	lmAssert(offered == bytesToWrite, "Internal bipbuffer write error");
+    lmAssert(offered == bytesToWrite, "Internal bipbuffer write error");
 
-	used = bipbuf_used(bipbuf);
+    used = bipbuf_used(bipbuf);
 
-	// Shrink when usage is < 33%
-	shrinkThreshold = alignToNextPage(sizeof(bipbuf_t) + used * writeShrinkThreshold, writeResizePagePower);
+    // Shrink when usage is < 33%
+    shrinkThreshold = alignToNextPage(sizeof(bipbuf_t) + used * writeShrinkThreshold, writeResizePagePower);
 
-	sd->smallWrites = shrinkThreshold < (int)sizeof(bipbuf_t)+bipbuf_size(bipbuf) ? sd->smallWrites + 1 : 0;
-	if (sd->smallWrites > writeSmallCountThreshold)
-	{
-		const int oldSize = bipbuf_size(bipbuf);
+    sd->smallWrites = shrinkThreshold < (int)sizeof(bipbuf_t)+bipbuf_size(bipbuf) ? sd->smallWrites + 1 : 0;
+    if (sd->smallWrites > writeSmallCountThreshold)
+    {
+        const int oldSize = bipbuf_size(bipbuf);
         const int shrinkTarget = alignToNextPage(sizeof(bipbuf_t) + used * writeShrinkTarget, writeResizePagePower);
-		bipbuf_resize(bipbuf, shrinkTarget - sizeof(bipbuf_t));
-		bipbuf = lmRealloc(NULL, bipbuf, shrinkTarget);
+        bipbuf_resize(bipbuf, shrinkTarget - sizeof(bipbuf_t));
+        bipbuf = lmRealloc(NULL, bipbuf, shrinkTarget);
         // Uncomment to log buffer shrinking
-		// platform_debugOut("Socket %x write buffer shrink, %d old, %d used, %d required, %d new", socket, oldSize, bipbuf_used(bipbuf), required, bipbuf_size(bipbuf));
-		sd->smallWrites = 0;
-	}
+        // platform_debugOut("Socket %x write buffer shrink, %d old, %d used, %d required, %d new", socket, oldSize, bipbuf_used(bipbuf), required, bipbuf_size(bipbuf));
+        sd->smallWrites = 0;
+    }
 
-	sd->writeBuffer = bipbuf;
+    sd->writeBuffer = bipbuf;
 
     loom_net_pump(s);
 
-	loom_mutex_unlock(writeMutex);
+    loom_mutex_unlock(writeMutex);
 
     return bytesToWrite;
 }
@@ -709,18 +709,18 @@ int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite)
 
 void loom_net_closeTCPSocket(loom_socketId_t s)
 {
-	struct SocketData* sd;
-	loom_mutex_lock(writeMutex);
+    struct SocketData* sd;
+    loom_mutex_lock(writeMutex);
     // FInd SocketData if it exists and remove it
-	HASH_FIND(hh, socketDatas, &s, sizeof(s), sd);
-	if (sd)
-	{
-		HASH_DEL(socketDatas, sd);
-		loom_destroyTimer(sd->activityTimer);
+    HASH_FIND(hh, socketDatas, &s, sizeof(s), sd);
+    if (sd)
+    {
+        HASH_DEL(socketDatas, sd);
+        loom_destroyTimer(sd->activityTimer);
         lmSafeFree(NULL, sd->writeBuffer);
-		lmFree(NULL, sd);
-	}
-	loom_mutex_unlock(writeMutex);
+        lmFree(NULL, sd);
+    }
+    loom_mutex_unlock(writeMutex);
 
     closesocket((SOCKET)(size_t)s);
 }
