@@ -71,6 +71,8 @@ static const int readSpinTimeoutMs = 6000;
 static const int writeChunkMaxSize = 16384;
 static const int writeSmallCountThreshold = 200;
 static const int writeResizePagePower = 12;
+static const int writeShrinkThreshold = 3;
+static const int writeShrinkTarget = 2;
 
 // Structure keeping socket buffers and metadata
 struct SocketData {
@@ -511,15 +513,12 @@ void loom_net_pump()
 {
 	struct SocketData* sd;
 	int print = 0;
-#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
-    int winsockErrorCode;
-#endif
 
     // Uncomment this to show buffer reports
-	// if (loom_readTimer(pumpTimer) > 1000) {
-	// 	print = 1;
-	// 	loom_resetTimer(pumpTimer);
-	// }
+	if (loom_readTimer(pumpTimer) > 1000) {
+		print = 1;
+		loom_resetTimer(pumpTimer);
+	}
 
 	loom_mutex_lock(writeMutex);
 
@@ -607,10 +606,10 @@ void loom_net_pump()
 
         // Debug print log output
 		if (print) {
-			platform_debugOut("Socket %x%s write buffer status: %d %s/s, %d%% full, %d left, %d free, %d total",
+			platform_debugOut("Socket %x%s write buffer status: %d %s/s, %lld%% full, %d left, %d free, %d total",
 				socket, loom_net_isSocketDead(socket) ? " (dead)" : "", sd->bytesSent < 1000 ? sd->bytesSent : sd->bytesSent / 1000,
 				sd->bytesSent < 1000 ? "B" : "KB",
-				(unsigned int)bipbuf_used(bipbuf) * 100 / (unsigned int)bipbuf_size(bipbuf),
+				((unsigned long long)bipbuf_used(bipbuf) * 100L) / (unsigned long long)bipbuf_size(bipbuf),
 				bipbuf_used(bipbuf),
 				bipbuf_unused(bipbuf),
 				bipbuf_size(bipbuf)
@@ -625,7 +624,7 @@ void loom_net_pump()
 
 int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite)
 {
-	int offered, unused, used, required;
+	int offered, unused, used, shrinkThreshold;
 	struct SocketData* sd;
 	bipbuf_t* bipbuf;
 
@@ -684,14 +683,15 @@ int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite)
 	used = bipbuf_used(bipbuf);
 
 	// Shrink when usage is < 33%
-	required = alignToNextPage(sizeof(bipbuf_t) + used*3, writeResizePagePower);
+	shrinkThreshold = alignToNextPage(sizeof(bipbuf_t) + used * writeShrinkThreshold, writeResizePagePower);
 
-	sd->smallWrites = required < (int)sizeof(bipbuf_t)+bipbuf_size(bipbuf) ? sd->smallWrites + 1 : 0;
+	sd->smallWrites = shrinkThreshold < (int)sizeof(bipbuf_t)+bipbuf_size(bipbuf) ? sd->smallWrites + 1 : 0;
 	if (sd->smallWrites > writeSmallCountThreshold)
 	{
 		const int oldSize = bipbuf_size(bipbuf);
-		bipbuf_resize(bipbuf, required - sizeof(bipbuf_t));
-		bipbuf = lmRealloc(NULL, bipbuf, required);
+        const int shrinkTarget = alignToNextPage(sizeof(bipbuf_t) + used * writeShrinkTarget, writeResizePagePower);
+		bipbuf_resize(bipbuf, shrinkTarget - sizeof(bipbuf_t));
+		bipbuf = lmRealloc(NULL, bipbuf, shrinkTarget);
         // Uncomment to log buffer shrinking
 		// platform_debugOut("Socket %x write buffer shrink, %d old, %d used, %d required, %d new", socket, oldSize, bipbuf_used(bipbuf), required, bipbuf_size(bipbuf));
 		sd->smallWrites = 0;
@@ -717,7 +717,7 @@ void loom_net_closeTCPSocket(loom_socketId_t s)
 	{
 		HASH_DEL(socketDatas, sd);
 		loom_destroyTimer(sd->activityTimer);
-        lmSafeFree(sd->writeBuffer);
+        lmSafeFree(NULL, sd->writeBuffer);
 		lmFree(NULL, sd);
 	}
 	loom_mutex_unlock(writeMutex);

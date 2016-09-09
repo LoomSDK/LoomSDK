@@ -97,9 +97,10 @@ extern "C" {
  *
  * Implement malloc/free/realloc type functionality using Loom allocators.
  ************************************************************************/
-#define lmAlloc(allocator, size) lmAlloc_inner(allocator, size, __FILE__, __LINE__)
-#define lmCalloc(allocator, count, size) lmCalloc_inner(allocator, count, size, __FILE__, __LINE__)
-#define lmFree(allocator, ptr) lmFree_inner(allocator, ptr, __FILE__, __LINE__)
+#define lmAlloc(allocator, size)           lmAlloc_inner(allocator, size, __FILE__, __LINE__)
+#define lmCalloc(allocator, count, size)   lmCalloc_inner(allocator, count, size, __FILE__, __LINE__)
+#define lmFree(allocator, ptr)             lmFree_inner(allocator, ptr, __FILE__, __LINE__)
+#define lmSafeFree(allocator, obj)         if (obj) { lmFree(allocator, obj); obj = NULL; }
 #define lmRealloc(allocator, ptr, newSize) lmRealloc_inner(allocator, ptr, newSize, __FILE__, __LINE__)
 
 #define lmAllocVerifyAll() loom_debugAllocator_verifyAll(__FILE__, __LINE__)
@@ -230,8 +231,6 @@ void loom_debugAllocator_verifyAll(const char* file, int line);
 #define lmNew(allocator)                new(allocator, __FILE__, __LINE__, (LS::FunctionDisambiguator*) NULL)
 #define lmDelete(allocator, obj)        { lmFree(allocator, loom_destructInPlace(obj)); }
 #define lmSafeDelete(allocator, obj)    if (obj) { lmFree(allocator, loom_destructInPlace(obj)); obj = NULL; }
-#define lmSafeFree(allocator, obj)      if (obj) { lmFree(allocator, obj); obj = NULL; }
-
 #include <new>
 
 namespace LS { struct FunctionDisambiguator {}; }
@@ -356,10 +355,12 @@ void loom_deleteArray(loom_allocator_t *allocator, T *arr)
     if (arr == NULL) return;
     void* fullArray = reinterpret_cast<void *>(reinterpret_cast<size_t>(arr) - LOOM_ALLOCATOR_METADATA_SIZE);
     unsigned int nr = *(static_cast<unsigned int*>(fullArray));
-    while (nr > 0)
-    {
-        nr--;
-        loom_destructInPlace<T>(&arr[nr]);
+    if (!ArrayAlloc<T>::fundamental) {
+        while (nr > 0)
+        {
+            nr--;
+            loom_destructInPlace<T>(&arr[nr]);
+        }
     }
     lmFree(allocator, fullArray);
 }

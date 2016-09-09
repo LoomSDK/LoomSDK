@@ -513,7 +513,7 @@ void Texture::upload(TextureInfo &tinfo, uint8_t *data, uint16_t width, uint16_t
             mipLevel++;
         }
         lmLogDebug(gGFXTextureLogGroup, "Generated mipmaps in %d ms", platform_getMilliseconds() - time);
-        if (mipData != (uint32_t*)data) lmSafeFree(NULL, mipData);
+        if (mipData) lmSafeFree(NULL, mipData);
         LOOM_PROFILE_END(textureLoadMipmap);
     }
     else
