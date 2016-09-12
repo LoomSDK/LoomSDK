@@ -131,6 +131,7 @@ unsigned char *bipbuf_peek(const bipbuf_t* me, const unsigned int size)
 
 unsigned char *bipbuf_poll(bipbuf_t* me, const unsigned int size)
 {
+    void *end;
     if (bipbuf_is_empty(me))
         return NULL;
 
@@ -138,7 +139,7 @@ unsigned char *bipbuf_poll(bipbuf_t* me, const unsigned int size)
     if (me->size < me->a_start + size)
         return NULL;
 
-    void *end = me->data + me->a_start;
+    end = me->data + me->a_start;
     me->a_start += size;
 
     /* we seem to be empty.. */

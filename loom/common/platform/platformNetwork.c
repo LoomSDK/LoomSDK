@@ -113,14 +113,21 @@ static loom_precision_timer_t pumpTimer = NULL;
 
 int loom_net_initialize()
 {
+    // Platform-specific declarations
+#if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
+    WSADATA wsaData;
+    WORD    wVersionRequested;
+    int     err;
+#endif
+    
+    // Cross-platform init
     writeMutex = loom_mutex_create();
     if (!pumpTimer) pumpTimer = loom_startTimer();
 
-    // Platform-specific init.
+    // Platform-specific init
 #if LOOM_PLATFORM == LOOM_PLATFORM_WIN32
-    WSADATA wsaData;
-    WORD    wVersionRequested = MAKEWORD(2, 0);
-    int     err = WSAStartup(wVersionRequested, &wsaData);
+    wVersionRequested = MAKEWORD(2, 0);
+    err = WSAStartup(wVersionRequested, &wsaData);
     if (err != 0)
     {
         lmLogError(netLogGroup, "Failed WinSock initalization with error %d", err);
@@ -139,15 +146,13 @@ int loom_net_initialize()
     lmAssert(sizeof(SOCKET) <= sizeof(loom_socketId_t), "Can't pack a SOCKET into loom_socketId_t");
 
     lmLogDebug(netLogGroup, "Initialized WinSock");
-    
-    return 1;
-
 #else
     // Ignore sigpipe.
     lmLogDebug(netLogGroup, "Disabling signal SIGPIPE");
     signal(SIGPIPE, SIG_IGN);
-    return 1;
 #endif
+
+    return 1;
 }
 
 
