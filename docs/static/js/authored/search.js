@@ -23,6 +23,9 @@ var searchResultTemplate = _.template(
   '</a></li>'
 );
 
+var searchDelayTimeout = -1;
+var searchDelayTime = 200;
+
 $(document).keyup( function(event) {
   if(event.which == 83)
     input.focus();
@@ -87,9 +90,9 @@ input.keydown( function(event) {
       selectedItem = $(list[latestSelectedIndex-1]);
       lastSelectedItem.removeClass("hovered");
       selectedItem.addClass('hovered');
+      scrollResultsTo(selectedItem);
     }
     event.preventDefault();
-    scrollResultsTo(selectedItem);
     return;
   }
   
@@ -102,16 +105,15 @@ input.keydown( function(event) {
       selectedItem = $(list[latestSelectedIndex+1]);
       lastSelectedItem.removeClass("hovered");
       selectedItem.addClass('hovered');
+      scrollResultsTo(selectedItem);
     }
     event.preventDefault();
-    scrollResultsTo(selectedItem);
     return;
   }
 
 });
 
 input.keyup( function(event) {
-
   if ([
         Keys.ESCAPE,
         Keys.ENTER,
@@ -119,7 +121,7 @@ input.keyup( function(event) {
         Keys.DOWN,
       ].indexOf(event.which) != -1) return;
 
-  searchInput();
+  searchInputDelayed();
 });
 
 function scrollResultsTo(selectedItem) {
@@ -127,9 +129,14 @@ function scrollResultsTo(selectedItem) {
     search_results.scrollTop() - search_results.height()*0.4 + 
     selectedItem.position().top + selectedItem.height()*0.5;
   
-  search_results.animate({
+  search_results.stop().animate({
     scrollTop: position
-  }, { duration: 400, queue: false });
+  }, { duration: 300, easing: "linear" });
+}
+
+function searchInputDelayed() {
+  clearTimeout(searchDelayTimeout);
+  searchDelayTimeout = setTimeout(searchInput, searchDelayTime);
 }
 
 function searchInput() {
