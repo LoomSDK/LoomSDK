@@ -233,7 +233,10 @@ protected:
 
 /*
  * Hashed String which stores key value for future use, if you do not need this
- * consider using utFastHashedString which is much faster
+ * consider using utFastHashedString which is much faster.
+ * Two Hashed Strings are only equal if their hashes AND values match, which
+ * is necessary behavior to avoid key hash collision in hash tables, where
+ * Hashed Strings are used most often.
  */
 class utHashedString
 {
@@ -273,8 +276,8 @@ public:
         return m_hash;
     }
 
-    UT_INLINE bool operator==(const utHashedString& v) const { return hash() == v.hash(); }
-    UT_INLINE bool operator!=(const utHashedString& v) const { return hash() != v.hash(); }
+    UT_INLINE bool operator==(const utHashedString& v) const { return hash() == v.hash() && str() == v.str(); }
+    UT_INLINE bool operator!=(const utHashedString& v) const { return hash() != v.hash() || str() != v.str(); }
     UT_INLINE bool operator==(const UThash& v) const { return hash() == v; }
     UT_INLINE bool operator!=(const UThash& v) const { return hash() != v; }
 };
