@@ -58,6 +58,7 @@ import java.io.IOException;
 import android.net.Uri;
 import android.os.Environment;
 import co.theengine.loomplayer.billing.LoomStore;
+import com.example.android.systemuivis.SystemUiHelper;
 
 import com.dolby.DolbyAudio;
 
@@ -165,6 +166,12 @@ public class LoomPlayer extends SDLActivity {
         LoomFacebook.onActivityResult(this, requestCode, resultCode, data);
     }
 
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+
+        if (hasFocus) uiHelper.delayHide(1000);
+    }
 
     public static void triggerGenericEvent(String type, String payload)
     {
@@ -292,11 +299,15 @@ public class LoomPlayer extends SDLActivity {
             "LoomPlayer"
         };
     }
+
+    private SystemUiHelper uiHelper;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) 
     {
         instance = this;
+
+        uiHelper = new SystemUiHelper(this, SystemUiHelper.LEVEL_IMMERSIVE, SystemUiHelper.FLAG_IMMERSIVE_STICKY);
         
         super.onCreate(savedInstanceState);
 
