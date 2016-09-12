@@ -91,14 +91,34 @@ void DisplayObject::render(lua_State *L) {
         cacheAsBitmapOffsetY = bounds->y;
         lmscalar fracWidth = bounds->width;
         lmscalar fracHeight = bounds->height;
-        int texWidth = static_cast<int>(ceil(fracWidth));
-        int texHeight = static_cast<int>(ceil(fracHeight));
-        
+
         // pop bounds Rectangle and the DisplayObject at the top
         lua_pop(L, 1+1);
 
+        if (cacheApplyScale)
+        {
+            fracWidth *= scaleX;
+            fracHeight *= scaleY;
+        }
+
+        // Convert to integers for the following math
+        int texWidthI = static_cast<int>(ceil(fracWidth));
+        int texHeightI = static_cast<int>(ceil(fracHeight));
+
+        // Calculate power of 2 sizes
+        if (cacheUseTexturesPot)
+        {
+            _UT_UTHASHTABLE_POW2(texWidthI);
+            _UT_UTHASHTABLE_POW2(texHeightI);
+        }
+
+        // Calculate the resulting scale (as a consequence of pow2 sizes)
+        // Used for 'trans' matrix
+        lmscalar calcScaleX = texWidthI / bounds->width;
+        lmscalar calcScaleY = texHeightI / bounds->height;
+
         // Setup texture
-        TextureInfo *tinfo = Texture::initEmptyTexture(texWidth, texHeight);
+        TextureInfo *tinfo = Texture::initEmptyTexture(texWidthI, texHeightI);
         Texture::clear(tinfo->id, 0x000000, 0);
         tinfo->smoothing = TEXTUREINFO_SMOOTHING_BILINEAR;
         tinfo->wrapU = TEXTUREINFO_WRAP_CLAMP;
@@ -110,10 +130,10 @@ void DisplayObject::render(lua_State *L) {
         
         VertexPosColorTex* qv;
 
-        qv = &quad->quadVertices[0];  qv->x =               0;  qv->y =                0;  qv->z = 0; qv->abgr = 0xFFFFFFFF; qv->u = 0; qv->v = 0;
-        qv = &quad->quadVertices[1];  qv->x = (float)texWidth;  qv->y =                0;  qv->z = 0; qv->abgr = 0xFFFFFFFF; qv->u = 1; qv->v = 0;
-        qv = &quad->quadVertices[2];  qv->x =               0;  qv->y = (float)texHeight;  qv->z = 0; qv->abgr = 0xFFFFFFFF; qv->u = 0; qv->v = 1;
-        qv = &quad->quadVertices[3];  qv->x = (float)texWidth;  qv->y = (float)texHeight;  qv->z = 0; qv->abgr = 0xFFFFFFFF; qv->u = 1; qv->v = 1;
+        qv = &quad->quadVertices[0];  qv->x =                    0;  qv->y =                     0;  qv->z = 0; qv->abgr = 0xFFFFFFFF; qv->u = 0; qv->v = 0;
+        qv = &quad->quadVertices[1];  qv->x = (float)bounds->width;  qv->y =                     0;  qv->z = 0; qv->abgr = 0xFFFFFFFF; qv->u = 1; qv->v = 0;
+        qv = &quad->quadVertices[2];  qv->x =                    0;  qv->y = (float)bounds->height;  qv->z = 0; qv->abgr = 0xFFFFFFFF; qv->u = 0; qv->v = 1;
+        qv = &quad->quadVertices[3];  qv->x = (float)bounds->width;  qv->y = (float)bounds->height;  qv->z = 0; qv->abgr = 0xFFFFFFFF; qv->u = 1; qv->v = 1;
         quad->setNativeVertexDataInvalid(false);
 
         lmAssert(Texture::getRenderTarget() == -1, "Unsupported render target state: %d", Texture::getRenderTarget());
@@ -125,6 +145,8 @@ void DisplayObject::render(lua_State *L) {
         // past the left and top edges don't get cut off, ignore other existing transforms
         Matrix trans;
         trans.translate(-cacheAsBitmapOffsetX, -cacheAsBitmapOffsetY);
+
+        trans.scale(calcScaleX, calcScaleY);
 
         // Setup for Graphics::render
         lualoom_pushnative<DisplayObject>(L, this);

@@ -167,7 +167,21 @@ package loom2d.display
          */
         public native function set cacheAsBitmap(value:Boolean);
         public native function get cacheAsBitmap():Boolean;
-        
+
+        /**
+         * If true, cache textures will be resized along with scale, else the cache will remain
+         * the same size even if the scale changes.
+         */
+        public native function set cacheApplyScale(value:Boolean);
+        public native function get cacheApplyScale():Boolean;
+
+        /**
+          * If true, cache textures will be forced to be sizes of power of two. This can lead to
+          * performance benefits on some GPUs.
+          */
+        public native function set cacheUseTexturesPot(value:Boolean);
+        public native function get cacheUseTexturesPot():Boolean;
+
         /**
          * Update the cached texture before the next render.
          * This function has no effect if `cacheAsBitmap` is turned off.
