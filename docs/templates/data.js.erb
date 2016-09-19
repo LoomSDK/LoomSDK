@@ -1,4 +1,4 @@
-window["search_objects"] = $.parseJSON('<%= search_object_string %>');
+window["search_objects"] = <%= search_object_string %>
 
 window["sidebarData"] = [
 	{ "name" : "Guides", "link" : [] },
@@ -11,6 +11,15 @@ for(var index in window["search_objects"].examples)
 {
 	example = window["search_objects"].examples[index];
 	window["sidebarData"][1].link.push({"name": example.name, "link": window["relative_base"] + "/" + example.path.split(".").join("/") + ".html"});
+}
+
+// create class lookup
+var classes = window["search_objects"].classes;
+var classLookup = window["classLookup"] = {};
+for(var index in classes)
+{
+	classJSON = classes[index];
+	classLookup[classJSON.path] = classJSON;
 }
 
 regex = new RegExp('%%', 'g');

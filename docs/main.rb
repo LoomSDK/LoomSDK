@@ -67,7 +67,7 @@ def generate
   write_landing_page
   write_data_js
 
-  puts "== #{@stats[:num_classes]} classes; #{@stats[:num_examples]} examples; #{@stats[:num_guides]} guides =="
+  puts "== #{@stats[:num_classes]} classes; #{@stats[:num_members]} members; #{@stats[:num_examples]} examples; #{@stats[:num_guides]} guides =="
 end
 
 def copy_examples
@@ -153,33 +153,99 @@ def process_guides(directory)
   end
 end
 
+def shorten(desc)
+  limit = 100
+  return desc if !desc || desc.length <= limit
+  desc[0...limit]
+end
+
+def generate_member_data(class_doc, kind, members)
+  data = []
+  members.each do |field|
+    # Skip inherited fields
+    next unless field[:defined_by] == class_doc
+    member = {
+      :kind => 'member',
+      :name => field[:name],
+      :short => shorten(field[:docString]),
+      :mkind => kind,
+      # Useful, but unused right now
+      # :attr => field[:fieldattributes],
+      :type => field[:type],
+      :pkg => field[:defined_by].package_path
+    }
+    data << member
+  end
+  data
+end
+
 def generate_search_data
   puts "Generating search data.."
 
   classes = []
+  members = []
   sorted_classes = $classes_by_package_path.values.sort { |a, b| a.data[:name] <=> b.data[:name] }
-  sorted_classes.each do |value|
-    classes << { :path => "api.#{value.data[:package]}.#{value.data[:name]}", :name => value.data[:name] }
+  sorted_classes.each do |class_doc|
+    
+    class_json = {
+      :kind => 'class',
+      # Paths are deliminated by periods instead of slashes to allow for client
+      # side path search to work when you provide a partial path with periods.
+      :path => "api.#{class_doc.data[:package]}.#{class_doc.data[:name]}",
+      :name => class_doc.data[:name],
+      :short => shorten(class_doc.data[:docString]),
+    }
+    classes << class_json
+
+    # TODO? Seems like we don't have any events right now...
+    # events = class_doc.get_events
+
+    members = members.concat generate_member_data(class_doc,
+      'field',
+      class_doc.get_fields('public').values.concat(class_doc.get_fields('protected').values)
+    )
+
+    members = members.concat generate_member_data(class_doc,
+      'method',
+      class_doc.get_methods('public').values.concat(class_doc.get_methods('protected').values)
+    )
+
+    members = members.concat generate_member_data(class_doc,
+      'constant',
+      class_doc.get_constants.values
+    )
+
   end
 
   examples = []
   sorted_examples = $examples.values.sort { |a, b| a.path <=> b.path }
   sorted_examples.each do |example_doc|
-    examples << { :path => "examples.#{example_doc.path}.index", :name => example_doc.data[:title] }
+    examples << {
+      :kind => 'example',
+      :path => "examples.#{example_doc.path}.index",
+      :name => example_doc.data[:title],
+      :short => shorten(example_doc.data[:description]),
+    }
   end
 
   guides = []
   $guides.each do |topic_doc|
     topic_doc.guides.each do |guide_doc|
-      guides << { :path => "guides.#{guide_doc.path}.#{guide_doc.name}", :name => guide_doc.data[:title] }
+      guides << {
+        :kind => 'guide',
+        :path => "guides.#{guide_doc.path}.#{guide_doc.name}",
+        :name => guide_doc.data[:title],
+        :short => shorten(guide_doc.data[:description])
+      }
     end
   end
 
   @stats[:num_classes] = classes.length
+  @stats[:num_members] = members.length
   @stats[:num_examples] = examples.length
   @stats[:num_guides] = guides.length
 
-  $search_json = JSON.dump( { :classes => classes, :examples => examples, :guides => guides } )
+  $search_json = JSON.dump( { :classes => classes, :members => members, :examples => examples, :guides => guides } )
 
   File.open("output/manifest.json", "w") { |file| file.write($search_json) }
 end

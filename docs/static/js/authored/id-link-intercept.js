@@ -39,6 +39,7 @@ setTimeout( function() {
 
     if ( window.location.hash ) {
         var $el = $( window.location.hash );
+        if (!$el.offset()) return;
         $('html, body').animate( {
             scrollTop: $el.offset().top - 80
         }, 250, 'easeInOutQuad' );
