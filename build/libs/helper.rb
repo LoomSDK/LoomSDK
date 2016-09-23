@@ -57,12 +57,39 @@ def cp_safe(src, dst)
   end
 end
 
+def rm_rf_persistent(path)
+  start_time = nil
+  time_limit = 60
+  Dir.glob(path + '/**/*') { |f|
+    next if File.directory?(f)
+    while true
+      begin
+        File.delete(f)
+        if start_time
+          puts "Removed successfully!"
+          start_time = nil
+        end
+        break
+      rescue SystemCallError => e
+        break if e.errno == Errno::ENOENT
+        start_time = Time.now if !start_time
+        time_left = time_limit - (Time.now - start_time)
+        throw "Timed out trying to remove #{f}" if time_left < 0
+        puts e
+        puts "Unable to remove file, retrying for another #{time_left.ceil}s!"
+        sleep 1
+      end
+    end
+  }
+  FileUtils.rm_rf path
+end
+
 def unzip_file (file, destination)
   Zip::File.open(file) do |zip_file|
     zip_file.each do |f|
       f_path=File.join(destination, f.name)
       FileUtils.mkdir_p(File.dirname(f_path))
-      zip_file.extract(f, f_path) unless File.exist?(f_path)
+      zip_file.extract(f, f_path)
     end
   end
 end
