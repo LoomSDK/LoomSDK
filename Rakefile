@@ -749,7 +749,7 @@ namespace :deploy do
     sdk_path = File.join("#{ENV['HOME']}/.loom", "sdks", args[:sdk_version])
 
     # Remove the previous version
-    FileUtils.rm_rf sdk_path if File.directory? sdk_path
+    rm_rf_persistent(sdk_path) if File.directory? sdk_path
     unzip_file("pkg/loomsdk.zip", sdk_path)
 
     puts "Installing sdk locally for loomcli under the name #{args[:sdk_version]}"
@@ -764,7 +764,7 @@ namespace :deploy do
     sdk_path = File.join("#{ENV['HOME']}/.loom", "sdks", args[:sdk_version])
 
     # Remove the previous version
-    FileUtils.rm_rf sdk_path if File.directory? sdk_path
+    rm_rf_persistent(sdk_path) if File.directory? sdk_path
     unzip_file("pkg/freesdk.zip", sdk_path)
 
     puts "Installing sdk locally for loomcli under the name #{args[:sdk_version]}"
