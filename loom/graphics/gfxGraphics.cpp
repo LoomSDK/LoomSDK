@@ -36,8 +36,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-// Get a reference to the global window.
-extern SDL_Window *gSDLWindow;
+extern int gLoomHeadless;
 
 namespace GFX
 {
@@ -82,6 +81,30 @@ GL_Context Graphics::_context;
  */
 static int LoadContext(GL_Context * data)
 {
+    if (gLoomHeadless)
+    {
+#define GFX_PROC(ret,func,params,args) { void **tmp = (void**)&data->func; *tmp = (void*)&GL_ContextDummy::func; }
+#define GFX_PROC_VOID(func, params, args) GFX_PROC(void, func, params, args)
+#include "gfxGLES2EntryPoints.h"
+#undef GFX_PROC
+#undef GFX_PROC_VOID
+
+        // Overrides
+        data->glGenBuffers = GL_ContextDummy::dummy_glGen_;
+        data->glGenFramebuffers = GL_ContextDummy::dummy_glGen_;
+        data->glGenRenderbuffers = GL_ContextDummy::dummy_glGen_;
+        data->glGenTextures = GL_ContextDummy::dummy_glGen_;
+        data->glGetActiveAttrib = GL_ContextDummy::dummy_glGetActive_;
+        data->glGetActiveUniform = GL_ContextDummy::dummy_glGetActive_;
+        data->glGetAttachedShaders = GL_ContextDummy::dummy_glGetAttachedShaders;
+        data->glGetShaderiv = GL_ContextDummy::dummy_glGetShaderiv;
+        data->glGetProgramiv = GL_ContextDummy::dummy_glGetProgramiv;
+
+    }
+    else
+    {
+
+
 #if SDL_VIDEO_DRIVER_UIKIT
 #define __SDL_NOGETPROCADDR__
 #elif SDL_VIDEO_DRIVER_ANDROID
@@ -116,6 +139,8 @@ if ( ! data->GFX_OPENGL_FUNC(func) ) { \
 #undef GFX_PROC
 #undef GFX_PROC_VOID
 
+    }
+
     return 0;
 }
 
@@ -123,8 +148,6 @@ if ( ! data->GFX_OPENGL_FUNC(func) ) { \
 void Graphics::initialize()
 {
     LoadContext(&_context);
-
-    //context()->glDebugMessageCallback(gldebughandler, 0);
 
     // initialize the static Texture initialize
     Texture::initialize();
@@ -262,7 +285,6 @@ void Graphics::endFrame()
     if(pendingScreenshot[0] != 0 || gettingScreenshotData)
     {
         SDL_ClearError();
-        SDL_Window* sdlWindow = gSDLWindow;
 
         const BitmapData* fb = BitmapData::fromFramebuffer();
 

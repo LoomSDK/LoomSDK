@@ -59,8 +59,7 @@ extern "C" {
 #define lmDeclareLogGroup(varName)                                  extern loom_logGroup_t varName;
 #define lmDefineLogGroup(varName, groupName, enabled, filterLevel)  loom_logGroup_t varName = { groupName, enabled, filterLevel, 0 };
 
-#define lmLogLevel(level, group, format, ...)                       if (loom_log_willGroupLog(&group)) { \
-                                                                    loom_log(&group, level, "%10s  " format, group.name, ##__VA_ARGS__); }
+#define lmLogLevel(level, group, format, ...)                       loom_log(&group, level, "%10s  " format, group.name, ##__VA_ARGS__);
 #define lmLogDebug(group, format, ...)                              lmLogLevel(LoomLogDebug, group, format, ##__VA_ARGS__);
 #define lmLogInfo(group, format, ...)                               lmLogLevel(LoomLogInfo, group, format, ##__VA_ARGS__);
 #define lmLogError(group, format, ...)                              lmLogLevel(LoomLogWarn, group, format, ##__VA_ARGS__);
@@ -110,6 +109,8 @@ typedef struct loom_logGroup
 } loom_logGroup_t;
 
 void loom_log_initialize();
+void loom_log_buffer();
+void loom_log_buffer_flush();
 
 typedef void (*loom_logListener_t)(void *payload, loom_logGroup_t *group, loom_logLevel_t level, const char *msg);
 void loom_log_addListener(loom_logListener_t listener, void *payload);

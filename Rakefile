@@ -88,7 +88,7 @@ $LOOMEXEC_BINARY = "#{$HOST_ARTIFACTS}/tools/loomexec"
 $BUILD_TYPE = CFG[:BUILD_TARGET].to_sym
 
 if $HOST.name == 'windows'
-  $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomPlayer.exe"
+  $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomPlayer.com"
 elsif $HOST.name == 'osx'
   $LOOM_BINARY = "#{$HOST_ARTIFACTS}/bin/LoomPlayer.app/Contents/MacOS/LoomPlayer"
 else
@@ -268,7 +268,7 @@ namespace :utility do
     end
     # build testexec
     Dir.chdir("sdk") do
-      sh "#{$LSC_BINARY} TestExec.build"
+      sh "#{$LSC_BINARY} -Dapp_type=console TestExec.build"
     end
     FileUtils.cp_r("sdk/bin/LDB.loom", "#{$OUTPUT_DIRECTORY}/libs")
     FileUtils.cp_r("sdk/bin/TestExec.loom", "#{$OUTPUT_DIRECTORY}/libs")
@@ -733,7 +733,7 @@ task :test => ['build:desktop'] do
   end
   Dir.chdir("sdk") do
     sh "#{$LSC_BINARY} Tests.build"
-    sh "#{$LOOMEXEC_BINARY} --ignore-missing-types bin/TestExec.loom bin/Tests.loom"
+    sh "#{$LOOM_BINARY} --loop bin/TestExec.loom bin/Tests.loom"
   end
 end
 

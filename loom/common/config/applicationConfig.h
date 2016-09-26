@@ -39,6 +39,7 @@ class LoomApplicationConfig
     static utString _version;
 
     static utString _applicationId;
+    static utString _applicationType;
 
     static int      _waitForDebugger;
     static utString _debuggerHost;
@@ -118,6 +119,12 @@ public:
     static const utString& applicationId()
     {
         return _applicationId;
+    }
+
+    /// The app's type. Empty by default, "console" for console apps.
+    static const utString& applicationType()
+    {
+        return _applicationType;
     }
 
     /// True if we should initialize 5.1 audio.

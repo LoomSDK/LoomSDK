@@ -145,7 +145,7 @@ if (MSVC)
     # MSVC compatibility stuffs
     include_directories( ${CMAKE_SOURCE_DIR}/loom/vendor/jemalloc-4.0.1/include/msvc_compat )
 
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_HAS_EXCEPTIONS=0 -DWIN32 -D_WINDOWS -DWin32 -DFREEGLUT_STATIC -DFREEGLUT_LIB_PRAGMAS=0 -DGLEW_STATIC)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_HAS_EXCEPTIONS=0 -DWIN32 -D_WINDOWS -DFREEGLUT_STATIC -DFREEGLUT_LIB_PRAGMAS=0 -DGLEW_STATIC)
 
     # Warnings as errors
     add_definitions (/wd4819)

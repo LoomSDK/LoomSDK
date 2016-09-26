@@ -45,7 +45,7 @@ if (APPLE)
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
         COMMAND mkdir -p \"${ARTIFACTS_DIR}/tools\"
-        COMMAND cp \"${ASSETAGENTBIN}\" \"${ARTIFACTS_DIR}/tools/libassetAgent.so\"
+        COMMAND cp "\"${ASSETAGENTBIN}\"" "\"${ARTIFACTS_DIR}/tools/libassetAgent.so\""
     )
 
 elseif(LINUX)
@@ -62,7 +62,7 @@ elseif(LINUX)
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
         COMMAND mkdir -p \"${ARTIFACTS_DIR}/tools\"
-        COMMAND cp \"${ASSETAGENTBIN}\" \"${ARTIFACTS_DIR}/tools/libassetAgent.so\"
+        COMMAND cp "\"${ASSETAGENTBIN}\"" "\"${ARTIFACTS_DIR}/tools/libassetAgent.so\""
     )
 
 elseif(MSVC)
@@ -83,7 +83,7 @@ elseif(MSVC)
 
     add_custom_command(TARGET ${PROJECT_NAME}
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${ASSETAGENTBIN}\" \"${ARTIFACTS_DIR}/tools/assetAgent.dll\"
+        COMMAND echo f | xcopy /F /Y "\"${ASSETAGENTBIN}\"" "\"${ARTIFACTS_DIR}/tools/assetAgent.dll\"" | find /v "File(s) copied"
     )
 
 endif()

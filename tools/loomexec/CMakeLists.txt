@@ -20,7 +20,7 @@ if (MSVC)
 
     add_custom_command(TARGET loomexec
         POST_BUILD
-        COMMAND echo f | xcopy /F /Y \"${LOOMEXECBIN}\" \"${ARTIFACTS_DIR}/tools/loomexec.exe\"
+        COMMAND echo f | xcopy /F /Y \"${LOOMEXECBIN}\" \"${ARTIFACTS_DIR}/tools/loomexec.exe\" | find /v "File(s) copied"
     )
 
 else ()

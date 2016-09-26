@@ -166,6 +166,130 @@ namespace GFX
 #undef GFX_PROC_VOID
     } GL_Context;
 
+
+
+    typedef struct GL_ContextDummy
+    {
+
+//#define GFX_PROC(ret, func, params, args) static ret func ## params;
+
+#define GFX_PROC(ret, func, params, args) 
+#define GFX_PROC_VOID(func, params, args) static void func ## params {};
+    
+#include "gfxGLES2EntryPoints.h"
+#undef GFX_PROC
+#undef GFX_PROC_VOID
+
+        // Returning functions
+        static GLenum glCheckFramebufferStatus(GLenum target)
+        {
+            return GL_FRAMEBUFFER_UNSUPPORTED;
+        }
+        static GLuint glCreateProgram()
+        {
+            return 1;
+        }
+        static GLuint glCreateShader(GLenum type)
+        {
+            return 1;
+        }
+        static GLenum glGetAttribLocation(GLuint program, const GLchar *name)
+        {
+            return 1;
+        }
+        static const GLubyte* glGetError()
+        {
+            return (const GLubyte*)"dummy";
+        }
+        static const GLubyte* glGetString(GLenum name)
+        {
+            return (const GLubyte*)"";
+        }
+        static GLint glGetUniformLocation(GLuint program, const GLchar *name)
+        {
+            return 1;
+        }
+        static GLboolean glIsBuffer(GLuint buffer)
+        {
+            return false;
+        }
+        static GLboolean glIsEnabled(GLenum cap)
+        {
+            return false;
+        }
+        static GLboolean glIsFramebuffer(GLuint framebuffer)
+        {
+            return false;
+        }
+        static GLboolean glIsProgram(GLuint program)
+        {
+            return false;
+        }
+        static GLboolean glIsRenderbuffer(GLuint renderbuffer)
+        {
+            return false;
+        }
+        static GLboolean glIsShader(GLuint shader)
+        {
+            return false;
+        }
+        static GLboolean glIsTexture(GLuint texture)
+        {
+            return false;
+        }
+
+        // Overrides
+        
+        // glGenBuffers + glGenFramebuffers + glGenRenderbuffers + glGenTextures
+        static void GFX_CALL dummy_glGen_(GLsizei n, GLuint *buffers)
+        {
+            for (int i = 0; i < n; i++) buffers[i] = 1;
+        }
+
+        // glGetActiveAttrib + glGetActiveUniform
+        static void GFX_CALL dummy_glGetActive_(GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type, GLchar *name)
+        {
+            *length = 0;
+            *size = 0;
+            *type = GL_FLOAT;
+            *name = 0;
+        }
+
+        static void GFX_CALL dummy_glGetAttachedShaders(GLuint program, GLsizei maxCount, GLsizei *count, GLuint *shaders)
+        {
+            *count = 0;
+        }
+
+        static void GFX_CALL dummy_glGetShaderiv(GLuint shader, GLenum pname, GLint *params)
+        {
+            if (pname == GL_COMPILE_STATUS) *params = GL_TRUE;
+            else *params = 0;
+        }
+
+        static void GFX_CALL dummy_glGetProgramiv(GLuint program, GLenum pname, GLint *params)
+        {
+            if (pname == GL_LINK_STATUS) *params = GL_TRUE;
+            else *params = 0;
+        }
+
+        /*
+        static void dummy_glGetBooleanv(GLenum pname, GLboolean *data)
+        {
+        }
+        */
+
+
+        /*
+#define GFX_PROC_DUMMY_void(func, params)   static void dummy_ ## func ## params {};
+#define GFX_PROC_DUMMY_GLenum(func, params) static void dummy_ ## func ## params {};
+#define GFX_PROC_DUMMY_GLuint(func, params)   static void dummy_ ## func ## params {};
+#define GFX_PROC_DUMMY_GLint(func, params)   static void dummy_ ## func ## params {};
+#define GFX_PROC_DUMMY_const GLubyte*(func, params)   static void dummy_ ## func ## params {};
+#define GFX_PROC_IMPL(procname, func, params) procname(func, params)
+#define GFX_PROC(ret, func, params, args) GFX_PROC_IMPL(GFX_PROC_DUMMY_ ## ret, func, params)
+*/
+    } GL_ContextDummy;
+
 // Represents graphics render target properties that can change from frame buffer to frame buffer
 typedef struct GraphicsRenderTarget {
     // The current width of the graphics device

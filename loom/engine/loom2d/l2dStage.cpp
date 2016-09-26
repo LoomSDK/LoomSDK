@@ -49,7 +49,8 @@ Stage::Stage()
     smMainStage = this;
     sdlWindow = gSDLWindow;
     updateFromConfig();
-    SDL_GL_GetDrawableSize(sdlWindow, &stageWidth, &stageHeight);
+    stageWidth = stageHeight = 0;
+    if (sdlWindow) SDL_GL_GetDrawableSize(sdlWindow, &stageWidth, &stageHeight);
     noteNativeSize(stageWidth, stageHeight);
 }
 
@@ -67,7 +68,8 @@ void Stage::initFromConfig()
 void Stage::updateFromConfig()
 {
     SDL_Window *sdlWindow = gSDLWindow;
-    SDL_SetWindowTitle(sdlWindow, LoomApplicationConfig::displayTitle().c_str());
+
+    if (sdlWindow) SDL_SetWindowTitle(sdlWindow, LoomApplicationConfig::displayTitle().c_str());
     
     if (smMainStage != NULL) 
     {
@@ -78,7 +80,7 @@ void Stage::updateFromConfig()
     {
         int width = LoomApplicationConfig::displayWidth();
         int height = LoomApplicationConfig::displayHeight();
-        SDL_SetWindowSize(sdlWindow, width, height);
+        if (sdlWindow) SDL_SetWindowSize(sdlWindow, width, height);
         sizeDirty = false;
     }
     
@@ -112,13 +114,13 @@ void Stage::applyOrientation(const char* orient)
 void Stage::firePendingResizeEvent()
 {
     // Fire a resize event.
-    if(smMainStage && pendingResize)
+    if(smMainStage && pendingResize && sdlWindow)
     {
         // Fire a resize event. We do this at startup so apps can size them
         // selves properly before first render.
         int winWidth, winHeight;
-        SDL_GetWindowSize(gSDLWindow, &winWidth, &winHeight);
-        SDL_GL_GetDrawableSize(gSDLWindow, &winWidth, &winHeight);
+        SDL_GetWindowSize(sdlWindow, &winWidth, &winHeight);
+        SDL_GL_GetDrawableSize(sdlWindow, &winWidth, &winHeight);
         smMainStage->noteNativeSize(winWidth, winHeight);
         GFX::Graphics::setNativeSize(winWidth, winHeight);
         pendingResize = false;
@@ -127,12 +129,12 @@ void Stage::firePendingResizeEvent()
 
 void Stage::show()
 {
-    SDL_ShowWindow(sdlWindow);
+    if (sdlWindow) SDL_ShowWindow(sdlWindow);
 }
 
 void Stage::hide()
 {
-    SDL_HideWindow(sdlWindow);
+    if (sdlWindow) SDL_HideWindow(sdlWindow);
 }
 
 void Stage::render(lua_State *L)
@@ -174,7 +176,7 @@ void Stage::render(lua_State *L)
 
     LOOM_PROFILE_START(waitForVSync);
     /* Update the screen! */
-    SDL_GL_SwapWindow(sdlWindow);
+    if (sdlWindow) SDL_GL_SwapWindow(sdlWindow);
     LOOM_PROFILE_END(waitForVSync);
 }
 }

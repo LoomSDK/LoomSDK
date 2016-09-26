@@ -3,7 +3,7 @@
  "version" : "1.0",
   "executable" : true,
   "outputDir" : "./bin",
-  "references" : [ "System", "UnitTest" ],
+  "references" : [ "System", "Loom", "Feathers", "UnitTest" ],
   "modules" : [ {
     "name" : "Tests",     
     "version": "1.0",

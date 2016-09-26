@@ -738,12 +738,12 @@ static void loom_debugAllocator_verify(void* outer, const char *file, int line)
     header = loom_debugAllocator_getHeader(outer);
     for (i = 0; i < LOOM_ALLOCATOR_DEBUG_SIG_HEADER_PADDING && header->sig[i] == LOOM_ALLOCATOR_DEBUG_SIG; i++) {};
     mismatch = i < LOOM_ALLOCATOR_DEBUG_SIG_HEADER_PADDING;
-    lmCheck(!mismatch, "Allocator header verification internal check failed at 0x%X, expected 0x%08lX got 0x%08lX\n    Deallocation was at %s@%d\n    Allocation was at %s@%d", header, LOOM_ALLOCATOR_DEBUG_SIG, header->sig[i], file, line, header->file, header->line);
+    lmCheck(!mismatch, "Allocator header verification internal check failed at 0x%p, expected 0x%08lp got 0x%08lX\n    Deallocation was at %s@%d\n    Allocation was at %s@%d", header, LOOM_ALLOCATOR_DEBUG_SIG, header->sig[i], file, line, header->file, header->line);
 
     footer = loom_debugAllocator_getFooter(outer);
     for (i = 0; i < LOOM_ALLOCATOR_DEBUG_SIG_FOOTER_PADDING && footer->sig[i] == LOOM_ALLOCATOR_DEBUG_SIG; i++) {};
     mismatch = i < LOOM_ALLOCATOR_DEBUG_SIG_FOOTER_PADDING;
-    lmCheck(!mismatch, "Allocator footer verification internal check failed at 0x%X, expected 0x%08lX got 0x%08lX\n    Deallocation was at %s@%d\n    Allocation was at %s@%d", footer, LOOM_ALLOCATOR_DEBUG_SIG, footer->sig[i], file, line, header->file, header->line);
+    lmCheck(!mismatch, "Allocator footer verification internal check failed at 0x%p, expected 0x%08lX got 0x%08lX\n    Deallocation was at %s@%d\n    Allocation was at %s@%d", footer, LOOM_ALLOCATOR_DEBUG_SIG, footer->sig[i], file, line, header->file, header->line);
 }
 
 // Add the provided header to the list of all debug allocated blocks
