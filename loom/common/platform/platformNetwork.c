@@ -119,7 +119,7 @@ struct SocketData {
 };
 
 // Head of the socket id -> SocketData hash table
-static struct SocketData* socketDatas = NULL;
+static struct SocketData* socketHashTable = NULL;
 
 static MutexHandle writeMutex;
 
@@ -354,7 +354,7 @@ int loom_net_isSocketDead(loom_socketId_t s)
     }
     
     // Report as dead if writing is stalled
-    HASH_FIND(hh, socketDatas, &s, sizeof(s), sd);
+    HASH_FIND(hh, socketHashTable, &s, sizeof(s), sd);
     if (sd)
     {
         if (sd->stalled) return 1;
@@ -543,7 +543,7 @@ void loom_net_pump()
     loom_mutex_lock(writeMutex);
 
     // Loop over all the sockets
-    for (sd = socketDatas; sd != NULL; sd = sd->hh.next) {
+    for (sd = socketHashTable; sd != NULL; sd = sd->hh.next) {
         int sent;
         bipbuf_t* bipbuf;
         loom_socketId_t *socket;
@@ -626,6 +626,9 @@ void loom_net_pump()
 
         // Debug print log output
         if (print) {
+            // We don't want to lmLog here as that will usually cause
+            // additional network traffic triggering this line again in an
+            // endless logging loop of logs.
             platform_debugOut("Socket %x%s write buffer status: %d %s/s, %lld%% full, %d left, %d free, %d total",
                 socket, loom_net_isSocketDead(socket) ? " (dead)" : "", sd->bytesSent < 1000 ? sd->bytesSent : sd->bytesSent / 1000,
                 sd->bytesSent < 1000 ? "B" : "KB",
@@ -652,7 +655,7 @@ int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite)
 
     loom_mutex_lock(writeMutex);
 
-    HASH_FIND(hh, socketDatas, &s, sizeof(s), sd);
+    HASH_FIND(hh, socketHashTable, &s, sizeof(s), sd);
 
     // If SocketData doesn't exist yet, create it
     if (sd == NULL) {
@@ -665,7 +668,7 @@ int loom_net_writeTCPSocket(loom_socketId_t s, void *buffer, int bytesToWrite)
         sd->stalled = 0;
         sd->bytesSent = 0;
         sd->activityTimer = loom_startTimer();
-        HASH_ADD(hh, socketDatas, id, sizeof(loom_socketId_t), sd);
+        HASH_ADD(hh, socketHashTable, id, sizeof(loom_socketId_t), sd);
     }
 
     bipbuf = sd->writeBuffer;
@@ -732,10 +735,10 @@ void loom_net_closeTCPSocket(loom_socketId_t s)
     struct SocketData* sd;
     loom_mutex_lock(writeMutex);
     // FInd SocketData if it exists and remove it
-    HASH_FIND(hh, socketDatas, &s, sizeof(s), sd);
+    HASH_FIND(hh, socketHashTable, &s, sizeof(s), sd);
     if (sd)
     {
-        HASH_DEL(socketDatas, sd);
+        HASH_DEL(socketHashTable, sd);
         loom_destroyTimer(sd->activityTimer);
         lmSafeFree(NULL, sd->writeBuffer);
         lmFree(NULL, sd);
