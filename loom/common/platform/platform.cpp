@@ -28,6 +28,8 @@ extern "C" {
 
 int platform_openURL(const char *url)
 {
+// Casting to int here is the right thing to do based on the func docs
+#pragma warning ( suppress: 4311, 4302 )
     return (int)ShellExecute(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL) > 32;
 }
 

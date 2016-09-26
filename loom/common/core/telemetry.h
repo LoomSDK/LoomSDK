@@ -75,67 +75,6 @@ struct TickMetricValue : TickMetricBase
     }
 };
 
-// Metric type containing a floating point range with additional
-// hierarchical information meant for a hierarchy of timing ranges
-struct TickMetricRange : TickMetricBase
-{
-    // The ID of the parent metric (-1 if it's a root)
-    TickMetricID parent;
-
-    // Hierarchical level of the metric (how many parents it has)
-    int level;
-
-    // The number of direct children of this metric (only one level deep)
-    int children;
-
-    // The sequential sibling index of this metric (e.g. 2 means this is the third sibling if its parent)
-    int sibling;
-
-    // First value of the range metric (e.g. start time)
-    double a;
-
-    // Second value of the range metric (e.g. end time)
-    double b;
-
-    // The number of additional similar metrics there are in total
-    // This is useful for e.g. counting metrics with the same name
-    // and assigning them a different name for differentiation
-    int duplicates;
-    // Same as above, but meant for counting the duplicates on the stack
-    int duplicatesOnStack;
-
-    void write(utByteArray *buffer)
-    {
-        TickMetricBase::write(buffer);
-        buffer->writeInt(parent);
-        buffer->writeInt(level);
-        buffer->writeInt(children);
-        buffer->writeInt(sibling);
-        buffer->writeDouble(a);
-        buffer->writeDouble(b);
-    }
-    void writeJSON(JSON *json)
-    {
-        TickMetricBase::writeJSON(json);
-        json->setInteger("parent", parent);
-        json->setInteger("level", level);
-        json->setInteger("children", children);
-        json->setInteger("sibling", sibling);
-        json->setNumber("a", a);
-        json->setNumber("b", b);
-    }
-    void read(utByteArray *buffer)
-    {
-        TickMetricBase::read(buffer);
-        parent = buffer->readInt();
-        level = buffer->readInt();
-        children = buffer->readInt();
-        sibling = buffer->readInt();
-        a = buffer->readDouble();
-        b = buffer->readDouble();
-    }
-};
-
 // Type alias for the table type ID
 typedef unsigned char TableType;
 

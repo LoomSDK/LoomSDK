@@ -756,22 +756,22 @@ static int socketListeningThread(void *payload)
         {
             // Process the connections.
             loom_mutex_lock(gActiveSocketsMutex);
-			
+            
             for (UTsize i = 0; i < gActiveHandlers.size(); i++)
             {
-				AssetProtocolHandler* aph = gActiveHandlers[i];
+                AssetProtocolHandler* aph = gActiveHandlers[i];
                 aph->process();
 
                 // Check for ping timeout
-				int msSincePing = loom_readTimer(aph->lastActiveTime);
-				if (msSincePing > socketPingTimeoutMs)
-				{
-					gActiveHandlers.erase(i);
-					i--;
-					lmLog(gAssetAgentLogGroup, "Client timed out (%x)", aph->socket);
-					loom_net_closeTCPSocket(aph->socket);
-					lmDelete(NULL, aph);
-				}
+                int msSincePing = loom_readTimer(aph->lastActiveTime);
+                if (msSincePing > socketPingTimeoutMs)
+                {
+                    gActiveHandlers.erase(i);
+                    i--;
+                    lmLog(gAssetAgentLogGroup, "Client timed out (%x)", aph->socket);
+                    loom_net_closeTCPSocket(aph->socket);
+                    lmDelete(NULL, aph);
+                }
             }
 
             loom_mutex_unlock(gActiveSocketsMutex);
@@ -934,7 +934,7 @@ void DLLEXPORT assetAgent_run(IdleCallback idleCb, LogCallback logCb, FileChange
             lmDelete(NULL, cqn);
         }
         // Pump any remaining socket writes
-		loom_net_pump();
+        loom_net_pump();
 
         // Poll at about 60hz.
         loom_thread_sleep(16);

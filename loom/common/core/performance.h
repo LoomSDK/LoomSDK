@@ -191,6 +191,7 @@ struct LoomProfilerRoot
     bool                    mTelemetryVisited;
 
     static LoomProfilerRoot *sRootList;
+    static void* sRootLookup;
     // Returns the profiler root with this name or a new one if one doesn't
     // exist yet.  
     static LoomProfilerRoot* fromName(const char *name);

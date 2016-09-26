@@ -66,12 +66,27 @@ typedef int   SOCKET;
 
 lmDefineLogGroup(netLogGroup, "net", 1, LoomLogWarn);
 
+// Defines how many milliseconds to sleep for if the non-blocking read failed.
 static const int readSpinSleepMs = 5;
+
+// Defines how many approx. milliseconds to wait for on a
+// stalled (no reads made) socket before timing out.
 static const int readSpinTimeoutMs = 6000;
+
+// The maximum number of bytes to send with one syscall at a time.
 static const int writeChunkMaxSize = 16384;
-static const int writeSmallCountThreshold = 200;
+
+// Power of two to round up to when growing the write buffer, e.g. 12 = 4KiB
 static const int writeResizePagePower = 12;
+
+// How many times does the total size of the buffer have to exceed the 
+// used size for the write to be considered a "small write".
 static const int writeShrinkThreshold = 3;
+
+// Defines the number of consecutive small writes triggering buffer shrinkage.
+static const int writeSmallCountThreshold = 200;
+
+// How many times the used size the buffer resizes to while shrinking.
 static const int writeShrinkTarget = 2;
 
 // Structure keeping socket buffers and metadata

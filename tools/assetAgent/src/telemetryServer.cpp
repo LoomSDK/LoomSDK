@@ -258,7 +258,6 @@ bool TelemetryListener::handleMessage(int fourcc, AssetProtocolHandler *handler,
         buffer.attach((char*)netBuffer.buffer + curPos, netBuffer.length - curPos);
 
         TableValues<TickMetricValue> tickValues;
-        TableValues<TickMetricRange> tickRanges;
 
         loom_mutex_lock(jsonMutex);
 

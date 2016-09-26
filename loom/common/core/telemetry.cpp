@@ -28,9 +28,6 @@ int Telemetry::tickThreadId = -1;
 // TickMetricValue
 template<> const TableType TableValues<TickMetricValue>::type = 1;
 template<> const int TableValues<TickMetricValue>::packedItemSize = 4 + 8;
-// TickMetricRange
-template<> const TableType TableValues<TickMetricRange>::type = 2;
-template<> const int TableValues<TickMetricRange>::packedItemSize = 4 + 4 * 4 + 3 * 8;
 
 static const int EVENT_BYTE_SIZE = 16;
 static const size_t EVENTS_MIN_SIZE = EVENT_BYTE_SIZE*128;
@@ -99,7 +96,10 @@ bool Telemetry::readTickProfiler(utByteArray& buffer, JSON& ranges, JSON& meta)
     // Skip to the profiler root tree
     buffer.setPosition(eventsPos + eventsSize);
 
+    size_t rootsWritten = buffer.readUnsignedInt();
+
     utHashTable<utUInt64HashKey, TickProfilerRoot> addrToName;
+    addrToName.reserve(rootsWritten);
 
     // Read the profiler roots and save them as a lookup table into `addrToName`
     UTuint64 addr = -1;
@@ -124,6 +124,9 @@ bool Telemetry::readTickProfiler(utByteArray& buffer, JSON& ranges, JSON& meta)
     int sequence = 0;
 
     utArray<int> ancestors;
+    // Reserving space for at least 64 makes it almost never allocate, except
+    // for very deep tree depths, at which point it's ok.
+    ancestors.reserve(64);
     ancestors.push_back(-1);
 
     // Read, process and write events as JSON
@@ -233,8 +236,13 @@ void Telemetry::endTick()
     sendBuffer.writeUnsignedInt(eventsSize);
     sendBuffer.setPosition(eventsAfterPos);
 
+    // Size of telemetry events, late write
+    size_t rootsSizePos = sendBuffer.getPosition();
+    sendBuffer.writeUnsignedInt(-1); 
+    
     // Write out all the relevant profiler roots
     size_t rootsWalked = 0;
+    size_t rootsWritten = 0;
     UTint64 rootWalkTime = loom_readTimerNano(tickTimer);
     for (LoomProfilerRoot *walk = LoomProfilerRoot::sRootList; walk; walk = walk->mNextRoot)
     {
@@ -245,10 +253,17 @@ void Telemetry::endTick()
 
         sendBuffer.writeUnsignedInt64(reinterpret_cast<UTuint64>(walk));
         sendBuffer.writeString(walk->mName);
+        rootsWritten++;
     }
 
     // End with a zero int64
     sendBuffer.writeUnsignedInt64(0);
+
+    // Go back and write the correct size of the events
+    size_t rootsAfterPos = sendBuffer.getPosition();
+    sendBuffer.setPosition(rootsSizePos);
+    sendBuffer.writeUnsignedInt(rootsWritten);
+    sendBuffer.setPosition(rootsAfterPos);
 
     // Record the write overhead
     rootWalkTime = loom_readTimerNano(tickTimer) - rootWalkTime;
