@@ -5,8 +5,9 @@ thumbnail: images/screenshot.png
 !------
 
 ## Overview
-An example showing simple use of Feathers themes for labels and buttons.
-See code comments for details.
+Feathers can be complicated, especially with themes, so this example serves to show how to create a simple theme with multiple styles per label and button.
+
+See the KrushBlokk and FeathersComponentExplorer examples for more.
 
 ## Try It
 @cli_usage
