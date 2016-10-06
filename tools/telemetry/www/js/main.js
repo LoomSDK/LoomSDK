@@ -680,6 +680,7 @@ function TelemetryProcessor(initCommon) {
             id: tick.values["tick.id"],
             values: tick.values,
             metrics: tick.ranges,
+            metricMeta: tick.rangeInfo,
             visibleMetrics: null,
             maxLevel: 0,
             sectionsVisible: false
@@ -728,7 +729,12 @@ function TelemetryProcessor(initCommon) {
                 return true;
             })
         } else {
-            tick.visibleMetrics = tick.metrics.length > 0 ? [tick.metrics[0]] : [];
+            tick.visibleMetrics = [];
+            for (var i = 0; i < tick.metrics.length; i++) {
+                var metric = tick.metrics[i];
+                if (metric.level > 0) break;
+                tick.visibleMetrics.push(metric);
+            };
         }
         return tick;
     }
@@ -1276,6 +1282,8 @@ function TickBars(initCommon) {
                     
                 barInfo.call(chart.textLine, "nanoTime")
                 barInfo.call(chart.textLine, "msTime")
+                barInfo.call(chart.textLine, "writeOverheadTime")
+                barInfo.call(chart.textLine, "readOverheadTime")
             }
             if (barInfoExists && !barInfoShouldExist) barInfo.remove();
             
@@ -1426,8 +1434,30 @@ function TickBars(initCommon) {
             
             if (barInfoShouldExist && barMaxY != -Infinity) {
                 var barInfoLen = 0;
-                barInfoLen = Math.max(barInfoLen, barInfo.select(".nanoTime").text(barTotalDuration.toFixed(3) + " ns").node().getComputedTextLength())
-                barInfoLen = Math.max(barInfoLen, barInfo.select(".msTime").text((barTotalDuration * 1e-6).toFixed(3) + " ms").node().getComputedTextLength())
+                
+                barInfoLen = Math.max(barInfoLen,
+                    barInfo.select(".nanoTime").text(
+                        barTotalDuration.toFixed(3) + " ns"
+                    ).node().getComputedTextLength()
+                )
+
+                barInfoLen = Math.max(barInfoLen,
+                    barInfo.select(".msTime").text(
+                        (barTotalDuration * 1e-6).toFixed(3) + " ms"
+                    ).node().getComputedTextLength()
+                )
+
+                barInfoLen = Math.max(barInfoLen,
+                    barInfo.select(".writeOverheadTime").text(
+                        "overhead in app  " + Telemetry.getTimeFromNano(tick.metricMeta.overhead.write)
+                    ).node().getComputedTextLength()
+                )
+                
+                barInfoLen = Math.max(barInfoLen,
+                    barInfo.select(".readOverheadTime").text(
+                        "overhead in agent  " + Telemetry.getTimeFromNano(tick.metricMeta.overhead.read)
+                    ).node().getComputedTextLength()
+                )
                 
                 var barInfoHeight = barInfo.node().clientHeight;
                 var barInfoAngle = chart.getBoxFitAngle(x.rangeBand(), 100, barInfoLen + 40);

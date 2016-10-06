@@ -27,6 +27,7 @@
 #include "loom/common/core/log.h"
 #include "loom/common/platform/platform.h"
 #include "loom/common/platform/platformMobile.h"
+#include "loom/common/core/telemetry.h"
 
 #include "loom/engine/bindings/sdl/lmSDL.h"
 #include "loom/engine/bindings/loom/lmGameController.h"
@@ -93,6 +94,10 @@ static const char* getSDLEventName(const SDL_Event* event)
 
 void loop()
 {
+    Telemetry::beginTick();
+
+    LOOM_PROFILE_START(loom_events);
+
     SDL_Event event;
 
     // Get the stage as it will receive most events.
@@ -298,8 +303,14 @@ void loop()
         }
     }
 
+    LOOM_PROFILE_END(loom_events);
+
     /* Tick and render Loom. */
     loom_tick();
+
+    LOOM_PROFILE_ZERO_CHECK()
+
+    Telemetry::endTick();
 }
 
 static void sdlLogOutput(void* userdata, int category, SDL_LogPriority priority, const char* message)

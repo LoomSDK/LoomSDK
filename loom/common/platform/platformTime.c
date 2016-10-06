@@ -83,12 +83,12 @@ int loom_readTimer(loom_precision_timer_t timer)
     return b;
 }
 
-double loom_readTimerNano(loom_precision_timer_t timer)
+long long loom_readTimerNano(loom_precision_timer_t timer)
 {
     loom_mach_precisionTimer_t *t = timer;
     uint64_t a = mach_absolute_time() - t->start;
     uint64_t b = (a * t->info.numer) / t->info.denom;
-    return (double) b;
+    return (long long)b;
 }
 
 
@@ -155,14 +155,14 @@ int loom_readTimer(loom_precision_timer_t timer)
     return (int)elapsed;
 }
 
-double loom_readTimerNano(loom_precision_timer_t timer)
+long long loom_readTimerNano(loom_precision_timer_t timer)
 {
-    double elapsed = 0.f;
+    long long elapsed = 0L;
     loom_win32_precisionTimer_t *t = (void *)timer;
     LARGE_INTEGER               endCount;
 
     QueryPerformanceCounter(&endCount);
-    elapsed = 1e9 * ((double)(endCount.QuadPart - t->mPerfCountCurrent.QuadPart) / (double)t->mFrequency.QuadPart);
+    elapsed = (endCount.QuadPart - t->mPerfCountCurrent.QuadPart)*1000000000L / t->mFrequency.QuadPart;
     return elapsed;
 }
 
@@ -179,7 +179,7 @@ void loom_destroyTimer(loom_precision_timer_t timer)
 
 #include <time.h>
 int timespecDelta(struct timespec *then, struct timespec *now);
-double timespecDeltaNano(struct timespec *then, struct timespec *now);
+long long timespecDeltaNano(struct timespec *then, struct timespec *now);
 
 struct timespec dawn;
 
@@ -235,7 +235,7 @@ int loom_readTimer(loom_precision_timer_t timer)
     return timespecDelta(t, &now);
 }
 
-double loom_readTimerNano(loom_precision_timer_t timer)
+long long loom_readTimerNano(loom_precision_timer_t timer)
 {
     struct timespec             now;
     loom_linux_precisionTimer_t *t = (loom_linux_precisionTimer_t *)timer;
@@ -264,12 +264,12 @@ int timespecDelta(struct timespec *then, struct timespec *now)
     return deltaSec * 1000 + deltaNSec / (1000 * 1000);
 }
 
-double timespecDeltaNano(struct timespec *then, struct timespec *now)
+long long timespecDeltaNano(struct timespec *then, struct timespec *now)
 {
     long deltaSec, deltaNSec;
     timespecDeltaComp(then, now, &deltaSec, &deltaNSec);
-
-    return deltaSec * 1e9 + deltaNSec;
+    
+    return (long long)deltaSec * (long long)1000000000L + (long long)deltaNSec;
 }
 
 

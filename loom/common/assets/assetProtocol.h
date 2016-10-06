@@ -23,6 +23,7 @@
 #define _ASSETS_ASSETPROTOCOL_H_
 
 #include "loom/common/platform/platformNetwork.h"
+#include "loom/common/platform/platformTime.h"
 #include "loom/common/utils/utString.h"
 
 // Helper class to handle reading/writing asset protocol data.
@@ -43,6 +44,9 @@ public:
 
     int readInt();
     void writeInt(int _value);
+
+    UTuint64 readUInt64();
+    void writeUInt64(UTuint64 _value);
 
     double readDouble();
     void writeDouble(double _value);
@@ -87,12 +91,12 @@ class AssetProtocolHandler
 public:
 
     NetworkBuffer buffer;
-    int           bytesLength;
-    unsigned char *bytes;
 
     loom_socketId_t socket;
+    loom_precision_timer_t lastActiveTime;
 
     bool readFrame();
+    void freeBuffer();
 
     AssetProtocolMessageListener *listenerHead;
 

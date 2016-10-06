@@ -491,9 +491,9 @@ int __stdcall Connection::backgroundImportBody(void *param)
     int numRows;
     int result;
     bool ok;
-    JSON *data;
-    JSON *table;
-    JSON *row;
+    JSON data;
+    JSON table;
+    JSON row;
     Connection *c;
     Statement *s;
     utString query;
@@ -503,13 +503,11 @@ int __stdcall Connection::backgroundImportBody(void *param)
 
 
     //load the JSON data
-    data = new JSON();
-    ok = data->loadString(Connection::backgroundImportData);
+    ok = data.loadString(Connection::backgroundImportData);
     if(!ok)
     {
         lmLogError(gSQLiteGroup, "Error parsing the JSON file during backgroundImport for database: %s", Connection::backgroundImportDatabase);
-        Connection::backgroundImportDone(SQLITE_ERROR);        
-        delete data;
+        Connection::backgroundImportDone(SQLITE_ERROR);
         return 0;
     }
 
@@ -521,8 +519,7 @@ int __stdcall Connection::backgroundImportBody(void *param)
         {
             c->close();
         }
-        Connection::backgroundImportDone(c->getErrorCode());        
-        delete data;
+        Connection::backgroundImportDone(c->getErrorCode());
         return 0;
     }
     //NOTE: shouldn't need to yield the thread here as the thread will die now anyways...
@@ -535,18 +532,18 @@ int __stdcall Connection::backgroundImportBody(void *param)
     //   "tableB": [ {"columnA": value, "columnB": value, ...}, 
     //              {"columnA": value, "columnB": value, ...}], 
     //   ...}
-    tableName = data->getObjectFirstKey();
+    tableName = data.getObjectFirstKey();
     while((tableName != NULL) && (tableName[0] != '\0'))
     {
-        table = data->getArray(tableName);
-        numRows = table->getArrayCount();
+        table = data.getArray(tableName);
+        numRows = table.getArrayCount();
 
         //create the INSERT query statement to be something like "INSERT into my_table values(?,?,?)"
         query = utString("INSERT into ") + utString(tableName) + utString(" values (");
 
         //we need to pre-iterate the number of rows to insert to in this table
-        row = table->getArrayObject(0);
-        columnName = row->getObjectFirstKey();
+        row = table.getArrayObject(0);
+        columnName = row.getObjectFirstKey();
         firstColumn = columnName;
         while((columnName != NULL) && (columnName[0] != '\0'))
         {        
@@ -555,7 +552,7 @@ int __stdcall Connection::backgroundImportBody(void *param)
                 query += utString(",");
             }
             query += utString("?");
-            columnName = row->getObjectNextKey(columnName);
+            columnName = row.getObjectNextKey(columnName);
         }
         query += utString(")");
 
@@ -564,8 +561,7 @@ int __stdcall Connection::backgroundImportBody(void *param)
         if(c->getErrorCode() != SQLITE_OK)
         {
             c->close();
-            Connection::backgroundImportDone(c->getErrorCode());        
-            delete data;
+            Connection::backgroundImportDone(c->getErrorCode());
             return 0;        
         }
 
@@ -574,8 +570,7 @@ int __stdcall Connection::backgroundImportBody(void *param)
         if(c->getErrorCode() != SQLITE_OK)
         {
             c->close();
-            Connection::backgroundImportDone(c->getErrorCode());        
-            delete data;
+            Connection::backgroundImportDone(c->getErrorCode());
             return 0;        
         }
 
@@ -584,30 +579,30 @@ int __stdcall Connection::backgroundImportBody(void *param)
         {
             //insert all items from the current row into the table
             j = 1;
-            row = table->getArrayObject(i);
-            columnName = row->getObjectFirstKey();
+            row = table.getArrayObject(i);
+            columnName = row.getObjectFirstKey();
             while((columnName != NULL) && (columnName[0] != '\0'))
             {
-                switch(row->getObjectJSONType(columnName))
+                switch(row.getObjectJSONType(columnName))
                 {
                     case JSON_STRING:
-                        s->bindString(j, row->getString(columnName));
+                        s->bindString(j, row.getString(columnName));
                         break;
                     case JSON_INTEGER:
-                        s->bindInt(j, row->getInteger(columnName));
+                        s->bindInt(j, row.getInteger(columnName));
                         break;
                     case JSON_REAL:
-                        s->bindDouble(j, row->getFloat(columnName));
+                        s->bindDouble(j, row.getFloat(columnName));
                         break;
                     case JSON_TRUE:
                     case JSON_FALSE:
-                        s->bindInt(j, (row->getBoolean(columnName) ? 1 : 0));
+                        s->bindInt(j, (row.getBoolean(columnName) ? 1 : 0));
                         break;
                 }
 
                 //next column
                 j++;
-                columnName = row->getObjectNextKey(columnName);
+                columnName = row.getObjectNextKey(columnName);
             }
 
             //apply the bindings for this row
@@ -615,8 +610,7 @@ int __stdcall Connection::backgroundImportBody(void *param)
             if(result != SQLITE_DONE)
             {
                 c->close();
-                Connection::backgroundImportDone(c->getErrorCode());        
-                delete data;
+                Connection::backgroundImportDone(c->getErrorCode());
                 return 0;        
             }            
             s->reset();
@@ -627,20 +621,18 @@ int __stdcall Connection::backgroundImportBody(void *param)
         if(c->getErrorCode() != SQLITE_OK)
         {
             c->close();
-            Connection::backgroundImportDone(c->getErrorCode());        
-            delete data;
+            Connection::backgroundImportDone(c->getErrorCode());
             return 0;        
         }
         s->finalize();
 
         //go to the next table in the JSON (if any)
-        tableName = data->getObjectNextKey(tableName);
+        tableName = data.getObjectNextKey(tableName);
     }
 
     //done, so close the connection now
     c->close();
-    Connection::backgroundImportDone(SQLITE_OK);        
-    delete data;
+    Connection::backgroundImportDone(SQLITE_OK);
 
     return 0;
 }

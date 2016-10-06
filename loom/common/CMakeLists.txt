@@ -3,7 +3,7 @@ set (TARGET_NAME LoomCommon)
 include_directories( ${LOOM_INCLUDE_FOLDERS} )
 
 # Define source files
-file (GLOB CPP_FILES xml/*.cpp utils/*.cpp core/*.cpp core/*.c platform/*.cpp platform/*.c config/*.cpp)
+file (GLOB CPP_FILES xml/*.cpp utils/*.cpp utils/*.c core/*.cpp core/*.c platform/*.cpp platform/*.c config/*.cpp)
 file (GLOB H_FILES utils/*.h xml/*.h platform/*.h assets/*.c assets/*.cpp)
 
 if (APPLE)

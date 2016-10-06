@@ -25,6 +25,9 @@
 
 #include "loom/common/core/telemetry.h"
 
+#include "loom/common/utils/utTypes.h"
+#include "loom/common/utils/utString.h"
+
 loom_allocator_t *gProfilerAllocator = NULL;
 
 // Enable the profiler from the start of execution. Enable this if you
@@ -119,7 +122,10 @@ void finishProfilerBlock(profilerBlock_t *block)
 #include "loom/common/core/stringTable.h"
 #include "loom/common/utils/utTypes.h"
 
+typedef utHashTable<utHashedString, LoomProfilerRoot*> LookupType;
+
 LoomProfilerRoot    *LoomProfilerRoot::sRootList = NULL;
+void*                LoomProfilerRoot::sRootLookup = (void*) (lmNew(NULL) LookupType());
 LoomProfiler        *gLoomProfiler = NULL;
 static LoomProfiler aProfiler; // allocate the global profiler
 
@@ -233,13 +239,10 @@ void LoomProfiler::reset()
 
 LoomProfilerRoot::LoomProfilerRoot(const char *name)
 {
-    for (LoomProfilerRoot *walk = sRootList; walk; walk = walk->mNextRoot)
-    {
-        if (!strcmp(walk->mName, name))
-        {
-            lmAssert(false, "Duplicate profile name: %s", name);
-        }
-    }
+    LookupType* lookup = static_cast<LookupType*>(sRootLookup);
+    utHashedString key(name);
+    bool inserted = lookup->insert(key, this);
+    lmAssert(inserted, "Duplicate profile name: %s", name);
 
     mName                   = name;
     mNameHash               = (int)(long long)stringtable_insert(name); // Poor man's hash
@@ -252,8 +255,25 @@ LoomProfilerRoot::LoomProfilerRoot(const char *name)
     mTotalInvokeCount       = 0;
     mFirstLoomProfilerEntry = NULL;
     mEnabled                = true;
+    mTelemetryVisited       = false;
 }
 
+LoomProfilerRoot* LoomProfilerRoot::fromName(const char *name)
+{
+    LookupType* lookup = static_cast<LookupType*>(sRootLookup);
+    utHashedString key(name);
+    LoomProfilerRoot* root;
+    LoomProfilerRoot** rootp = lookup->get(key);
+    if (rootp == NULL)
+    {
+        root = lmNew(NULL) LoomProfilerRoot(name);
+    }
+    else
+    {
+        root = *rootp;
+    }
+    return root;
+}
 
 void LoomProfiler::validate()
 {
@@ -273,7 +293,7 @@ void LoomProfiler::validate()
                 }
             }
 
-            lmAssert(wk, "Validation failed - couldnot find child in its parent's list.");
+            lmAssert(wk, "Validation failed - couldn't find child in its parent's list.");
 
             for (wk = dp->mParent->mChildHash[walk->mNameHash & (LoomProfilerEntry::HashTableSize - 1)];
                  wk; wk = wk->mNextHash)
@@ -284,7 +304,7 @@ void LoomProfiler::validate()
                 }
             }
 
-            lmAssert(wk, "Valdation failed- couldn't find child in its parent's hash.");
+            lmAssert(wk, "Validation failed - couldn't find child in its parent's hash.");
         }
     }
 }
@@ -292,7 +312,7 @@ void LoomProfiler::validate()
 
 void LoomProfiler::hashPush(LoomProfilerRoot *root)
 {
-   Telemetry::beginTickTimer(root->mName);
+   Telemetry::beginTickTimer(root);
 
    mStackDepth++;
    lmAssert(mStackDepth <= (S32) mMaxStackDepth,
@@ -373,7 +393,7 @@ void LoomProfiler::enable(bool enabled)
 
 void LoomProfiler::hashPop(LoomProfilerRoot *expected)
 {
-    Telemetry::endTickTimer(expected->mName);
+    Telemetry::endTickTimer(expected);
 
     mStackDepth--;
 

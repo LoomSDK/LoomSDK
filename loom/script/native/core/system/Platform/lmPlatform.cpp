@@ -79,7 +79,7 @@ public:
 
     static bool openURL(const char *url)
     {
-        return platform_openURL(url);
+        return platform_openURL(url) == 0 ? false : true;
     }
 };
 

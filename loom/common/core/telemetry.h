@@ -6,9 +6,19 @@
 #include "loom/common/utils/utTypes.h"
 #include "loom/common/utils/utByteArray.h"
 #include "loom/common/utils/json.h"
+#include "loom/common/core/performance.h"
 
 // Type alias for metric IDs
 typedef int TickMetricID;
+
+// Event types are packed into the lower bits of the address. This controls
+// how much alignment
+static const int TICK_EVENT_ALIGN = 4;
+static const int TICK_EVENT_ALIGN_MASK = TICK_EVENT_ALIGN - 1;
+static const int TICK_EVENT_BEGIN = 1;
+static const int TICK_EVENT_END   = 2;
+
+static const unsigned char TICK_PROFILER_TYPE = 3;
 
 // Base struct for different kinds of metrics
 struct TickMetricBase
@@ -62,67 +72,6 @@ struct TickMetricValue : TickMetricBase
     {
         TickMetricBase::read(buffer);
         value = buffer->readDouble();
-    }
-};
-
-// Metric type containing a floating point range with additional
-// hierarchical information meant for a hierarchy of timing ranges
-struct TickMetricRange : TickMetricBase
-{
-    // The ID of the parent metric (-1 if it's a root)
-    TickMetricID parent;
-
-    // Hierarchical level of the metric (how many parents it has)
-    int level;
-
-    // The number of direct children of this metric (only one level deep)
-    int children;
-
-    // The sequential sibling index of this metric (e.g. 2 means this is the third sibling if its parent)
-    int sibling;
-
-    // First value of the range metric (e.g. start time)
-    double a;
-
-    // Second value of the range metric (e.g. end time)
-    double b;
-
-    // The number of additional similar metrics there are in total
-    // This is useful for e.g. counting metrics with the same name
-    // and assigning them a different name for differentiation
-    int duplicates;
-    // Same as above, but meant for counting the duplicates on the stack
-    int duplicatesOnStack;
-
-    void write(utByteArray *buffer)
-    {
-        TickMetricBase::write(buffer);
-        buffer->writeInt(parent);
-        buffer->writeInt(level);
-        buffer->writeInt(children);
-        buffer->writeInt(sibling);
-        buffer->writeDouble(a);
-        buffer->writeDouble(b);
-    }
-    void writeJSON(JSON *json)
-    {
-        TickMetricBase::writeJSON(json);
-        json->setInteger("parent", parent);
-        json->setInteger("level", level);
-        json->setInteger("children", children);
-        json->setInteger("sibling", sibling);
-        json->setNumber("a", a);
-        json->setNumber("b", b);
-    }
-    void read(utByteArray *buffer)
-    {
-        TickMetricBase::read(buffer);
-        parent = buffer->readInt();
-        level = buffer->readInt();
-        children = buffer->readInt();
-        sibling = buffer->readInt();
-        a = buffer->readDouble();
-        b = buffer->readDouble();
     }
 };
 
@@ -278,16 +227,20 @@ protected:
     // Stored values of the current tick
     static TableValues<TickMetricValue> tickValues;
 
-
     // Timer used for timing tick ranges
     static loom_precision_timer_t tickTimer;
     
-    // Timer names began, but not ended yet
-    // Essentially a timer stack
-    static utArray<utString> tickTimerStack;
-    
-    // Stored ranges of the current tick
-    static TableValues<TickMetricRange> tickRanges;
+    // The number of unique roots visited in the current tick
+    static int tickProfilerRootsVisited;
+
+    // Position of the start of the profiler event stream
+    static size_t eventsStartPos;
+
+    // `true` if the profiler is active and capturing events, `false` otherwise
+    static bool tickProfilerActive;
+
+    // ID of the thread where the tick started
+    static int tickThreadId;
 
     // Current tick ID
     static int tickId;
@@ -316,16 +269,20 @@ public:
     // Call at the end of the tick
     static void endTick();
 
-    // Begin a timer range using the specified name
-    static void beginTickTimer(const char *name);
+    // Begin a timer range using the specified profiler root
+    static void beginTickTimer(LoomProfilerRoot* root);
 
-    // End the timer range previously began with the specified name
-    static void endTickTimer(const char *name);
+    // End the timer range previously began with the specified profiler root
+    static void endTickTimer(LoomProfilerRoot* root);
 
     // Set an arbitrary floating point value associated with the current tick and name
     // Previously set values of the same name get overwritten
     // To avoid name conflicts it is suggested to use namespaced names (e.g. gc.cycle.update.count)
     static TickMetricValue* setTickValue(const char *name, double value);
+
+    // Read and process tick events from the provided buffer and save them as JSON
+    // ranges and additional metadata into the provided objects.
+    static bool readTickProfiler(utByteArray& buffer, JSON& tickRange, JSON& meta);
 
 };
 

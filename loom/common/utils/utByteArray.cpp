@@ -29,10 +29,10 @@
 // can be enlarged by to avoid resizing the buffer too much.
 #define BUFFER_DELTA_MAX 10*1024*1024
 
-void utByteArray::clear()
+void utByteArray::clear(bool useCache)
 {
     _position = 0;
-    _data.resize(0);
+    _data.clear(useCache);
 }
 
 

@@ -17,13 +17,15 @@ lmDefineLogGroup(gTelemetryServerLogGroup, "lts", true, LoomLogInfo)
 // Server might be multithreaded, so lock our data to be sure
 static MutexHandle jsonMutex = loom_mutex_create();
 
-// This holds the current tick as a serialized json string ready to be sent
-utString TelemetryListener::tickMetricsJSONString;
+// This holds the current tick as serialized json string bytes ready to be sent
+utByteArray TelemetryListener::tickMetricsJSONBytes;
 
 mg_callbacks TelemetryServer::callbacks;
 mg_context* TelemetryServer::server = NULL;
 utString TelemetryServer::clientRoot;
 
+static const char* failJSON = "{ \"status\": \"fail\", \"data\": null }";
+static size_t failJSONSize = strlen(failJSON);
 
 // Used to assign clients a unique id
 static int clientGlobalID = 0;
@@ -123,13 +125,13 @@ void StreamCloseHandler(const struct mg_connection * conn, void *cbdata)
 }
 
 // Send the provided message to all connected clients
-void StreamSendAll(struct mg_context *ctx, const char *msg)
+void StreamSendAll(struct mg_context *ctx, const char *msg, size_t len = -1)
 {
     int i;
     mg_lock_context(ctx);
     for (i = 0; i < LTS_MAX_CLIENTS; i++) {
         if (streamClients[i].state == 2) {
-            mg_websocket_write(streamClients[i].conn, WEBSOCKET_OPCODE_TEXT, msg, strlen(msg));
+            mg_websocket_write(streamClients[i].conn, WEBSOCKET_OPCODE_TEXT, msg, len == -1 ? strlen(msg) : len);
         }
     }
     mg_unlock_context(ctx);
@@ -137,36 +139,50 @@ void StreamSendAll(struct mg_context *ctx, const char *msg)
 
 
 
-// Replies with the provided custom data JSON (or replies with failure status on invalid JSON serialization)
-static int JSONHandler(struct mg_connection *conn, void *cbdata)
-{
-    JSON* json = (JSON*)cbdata;
-    lmAssert(json != NULL, "Invalid JSON object provided to the JSON handler");
-    loom_mutex_lock(jsonMutex);
-    const char* serialized = json->serialize();
-    if (serialized == NULL)
-    {
-        serialized = "{ \"status\": \"fail\", \"data\": null }";
-    }
-    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n");
-    mg_write(conn, serialized, strlen(serialized));
-    loom_mutex_unlock(jsonMutex);
-    return 1;
-}
-
 // Replies with the provided custom data JSON string (or replies with failure status if the string is empty)
 static int JSONStringHandler(struct mg_connection *conn, void *cbdata)
 {
     utString* jsonString = (utString*)cbdata;
+    const char* buf;
+    size_t len;
     lmAssert(jsonString != NULL, "Invalid JSON object provided to the JSON handler");
     loom_mutex_lock(jsonMutex);
-    if (jsonString->empty())
+    if (!jsonString->empty())
     {
-        utString fail = utString("{ \"status\": \"fail\", \"data\": null }");
-        jsonString = &fail;
+        buf = jsonString->c_str();
+        len = jsonString->length();
+    }
+    else
+    {
+        buf = failJSON;
+        len = failJSONSize;
     }
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n");
-    mg_write(conn, jsonString->c_str(), jsonString->length());
+    mg_write(conn, buf, len);
+    loom_mutex_unlock(jsonMutex);
+    return 1;
+}
+
+// Replies with the provided custom data JSON bytes (or replies with failure status if the bytes are empty)
+static int JSONBytesHandler(struct mg_connection *conn, void *cbdata)
+{
+    utByteArray* jsonBytes = (utByteArray*)cbdata;
+    const char* buf;
+    size_t len;
+    lmAssert(jsonBytes != NULL, "Invalid JSON object provided to the JSON handler");
+    loom_mutex_lock(jsonMutex);
+    if (jsonBytes->getSize() > 0)
+    {
+        buf = reinterpret_cast<const char*>(jsonBytes->getDataPtr());
+        len = jsonBytes->getSize();
+    }
+    else
+    {
+        buf = failJSON;
+        len = failJSONSize;
+    }
+    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n");
+    mg_write(conn, buf, len);
     loom_mutex_unlock(jsonMutex);
     return 1;
 }
@@ -186,7 +202,7 @@ void TelemetryServer::start()
     server = mg_start(&callbacks, NULL, options);
 
     // Set /tick as a handler that returns the main JSON string
-    mg_set_request_handler(server, LTS_TICK_URI, JSONStringHandler, &TelemetryListener::tickMetricsJSONString);
+    mg_set_request_handler(server, LTS_TICK_URI, JSONBytesHandler, &TelemetryListener::tickMetricsJSONBytes);
 
     // Set /stream as the websocket connection that streams all the ticks
     mg_set_websocket_handler(server, LTS_STREAM_URI, StreamConnectHandler, StreamReadyHandler, StreamDataHandler, StreamCloseHandler, NULL);
@@ -210,11 +226,11 @@ bool TelemetryServer::isRunning()
     return server != NULL;
 }
 
-void TelemetryServer::sendAll(const char *msg)
+void TelemetryServer::sendAll(const char *msg, size_t len)
 {
     if (server == NULL) return;
 
-    StreamSendAll(server, msg);
+    StreamSendAll(server, msg, len);
 }
 
 void TelemetryServer::setClientRootFromSDK(const char *root)
@@ -242,9 +258,11 @@ bool TelemetryListener::handleMessage(int fourcc, AssetProtocolHandler *handler,
         buffer.attach((char*)netBuffer.buffer + curPos, netBuffer.length - curPos);
 
         TableValues<TickMetricValue> tickValues;
-        TableValues<TickMetricRange> tickRanges;
 
         loom_mutex_lock(jsonMutex);
+
+        // Read the tick profiler events and roots first
+        Telemetry::readTickProfiler(buffer, tickRangesJSON, tickRangeMetaJSON);
 
         while (buffer.bytesAvailable() > 0)
         {
@@ -252,10 +270,6 @@ bool TelemetryListener::handleMessage(int fourcc, AssetProtocolHandler *handler,
             if (tickValues.read(&buffer))
             {
                 tickValues.writeJSONObject(&tickValuesJSON);
-            }
-            else if (tickRanges.read(&buffer))
-            {
-                tickRanges.writeJSONArray(&tickRangesJSON);
             }
             else
             {
@@ -282,18 +296,22 @@ void TelemetryListener::updateMetricsJSON()
 {
     JSON jdata;
 
+    JSON tickMetricsJSON;
     tickMetricsJSON.initObject();
     tickMetricsJSON.setString("status", "success");
 
+    // Put together metrics data JSON
     jdata.initObject();
     jdata.setObject("values", &tickValuesJSON);
     jdata.setArray("ranges", &tickRangesJSON);
+    jdata.setObject("rangeInfo", &tickRangeMetaJSON);
     tickMetricsJSON.setObject("data", &jdata);
 
-    const char *serialized = tickMetricsJSON.serialize();
-    tickMetricsJSONString = serialized;
-    lmFree(NULL, (void*)serialized);
+    // Write tick metrics JSON to the byte array
+    tickMetricsJSONBytes.clear(true);
+    tickMetricsJSON.serializeToBuffer(&tickMetricsJSONBytes);
+    tickMetricsJSONBytes.resize(tickMetricsJSONBytes.getPosition());
 
     // Send the newly serialized json to all clients automatically
-    TelemetryServer::sendAll(tickMetricsJSONString.c_str());
+    TelemetryServer::sendAll(static_cast<const char*>(tickMetricsJSONBytes.getDataPtr()), tickMetricsJSONBytes.getSize());
 }

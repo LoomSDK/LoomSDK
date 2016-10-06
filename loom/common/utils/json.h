@@ -23,15 +23,14 @@
 
 #include "jansson.h"
 #include "loom/common/utils/utString.h"
+#include "loom/common/utils/utByteArray.h"
 
 class JSON {
     // The native _json object
     json_t *_json;
+    utString _errorMsg;
 
-    // JSON error codes
-    json_error_t _error;
-    utString     _errorMsg;
-    bool         _root;
+    JSON(json_t* from);
 
 public:
 
@@ -43,6 +42,7 @@ public:
     bool initArray();
     bool loadString(const char *json);
     const char *serialize();
+    bool serializeToBuffer(utByteArray* bytes);
     const char *getError();
     int getJSONType();
     int getObjectJSONType(const char *key);
@@ -61,14 +61,18 @@ public:
     void setString(const char *key, const char *value);
 
     // Objects
-    JSON *getObject(const char *key);
+    JSON getObject(const char *key);
+    // Get JSON object allocated on the heap, lmDelete when you are done!
+    JSON* getObjectNew(const char *key);
     void setObject(const char *key, JSON *object);
     bool isObject();
     const char *getObjectFirstKey();
     const char *getObjectNextKey(const char *key);
 
     // Arrays
-    JSON *getArray(const char *key);
+    JSON getArray(const char *key);
+    // Get JSON array allocated on the heap, lmDelete when you are done!
+    JSON* getArrayNew(const char *key);
     void setArray(const char *key, JSON *object);
     bool isArray();
     int getArrayCount();
@@ -82,9 +86,13 @@ public:
     void setArrayNumber(int index, double value);
     const char *getArrayString(int index);
     void setArrayString(int index, const char *value);
-    JSON *getArrayObject(int index);
+    JSON getArrayObject(int index);
+    // Get JSON array object allocated on the heap, lmDelete when you are done!
+    JSON* getArrayObjectNew(int index);
     void setArrayObject(int index, JSON *value);
-    JSON *getArrayArray(int index);
+    JSON getArrayArray(int index);
+    // Get JSON array array allocated on the heap, lmDelete when you are done!
+    JSON* getArrayArrayNew(int index);
     void setArrayArray(int index, JSON *value);
     void expandArray(int desiredLength);
 };

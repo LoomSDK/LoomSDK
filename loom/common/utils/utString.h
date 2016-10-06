@@ -50,6 +50,7 @@
 //* Copyright (C) Christian Stigen Larsen, 2007
 //* Placed in the Public Domain by the author.
 class utString {
+protected:
     char *p;
 public:
     typedef size_t   size_type;
@@ -88,6 +89,9 @@ public:
     char at(const size_type n) const;
     utString& erase(size_type pos, size_type len);
 
+    // Allocate enough space for a string of `length` length not including
+    // the NULL terminator.
+    void alloc(int length);
     // Set this string's value from raw bytes, NULL terminating them.
     void fromBytes(const void *bytes, int length);
     void assign(const char* bytes, int length);

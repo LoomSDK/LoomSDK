@@ -61,7 +61,7 @@ package system
     /**
      *  Clears the contents of the byte array and resets the length and position properties to 0.
      */
-    public native function clear():void;
+    public native function clear(useCache:Boolean = false):void;
     
     /**
      *  Reserves the number of bytes specified.
