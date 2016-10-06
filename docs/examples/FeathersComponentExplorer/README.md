@@ -11,7 +11,7 @@ This is a Loom port of the Feathers Component Explorer, demonstrating a variety 
 @cli_usage
 
 ## Screenshot
-![FileExample Screenshot](images/screenshot.png)
+![Feathers Component Explorer Screenshot](images/screenshot.png)
 
 ## Code
 @insert_source
