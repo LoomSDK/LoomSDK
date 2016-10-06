@@ -174,66 +174,66 @@ namespace GFX
 //#define GFX_PROC(ret, func, params, args) static ret func ## params;
 
 #define GFX_PROC(ret, func, params, args) 
-#define GFX_PROC_VOID(func, params, args) static void func ## params {};
+#define GFX_PROC_VOID(func, params, args) static void GFX_CALL func params {};
     
 #include "gfxGLES2EntryPoints.h"
 #undef GFX_PROC
 #undef GFX_PROC_VOID
 
         // Returning functions
-        static GLenum glCheckFramebufferStatus(GLenum target)
+        static GLenum GFX_CALL glCheckFramebufferStatus(GLenum target)
         {
             return GL_FRAMEBUFFER_UNSUPPORTED;
         }
-        static GLuint glCreateProgram()
+        static GLuint GFX_CALL glCreateProgram()
         {
             return 1;
         }
-        static GLuint glCreateShader(GLenum type)
+        static GLuint GFX_CALL glCreateShader(GLenum type)
         {
             return 1;
         }
-        static GLenum glGetAttribLocation(GLuint program, const GLchar *name)
+        static GLenum GFX_CALL glGetAttribLocation(GLuint program, const GLchar *name)
         {
             return 1;
         }
-        static const GLubyte* glGetError()
+        static const GLubyte* GFX_CALL glGetError()
         {
             return (const GLubyte*)"dummy";
         }
-        static const GLubyte* glGetString(GLenum name)
+        static const GLubyte* GFX_CALL glGetString(GLenum name)
         {
             return (const GLubyte*)"";
         }
-        static GLint glGetUniformLocation(GLuint program, const GLchar *name)
+        static GLint GFX_CALL glGetUniformLocation(GLuint program, const GLchar *name)
         {
             return 1;
         }
-        static GLboolean glIsBuffer(GLuint buffer)
+        static GLboolean GFX_CALL glIsBuffer(GLuint buffer)
         {
             return false;
         }
-        static GLboolean glIsEnabled(GLenum cap)
+        static GLboolean GFX_CALL glIsEnabled(GLenum cap)
         {
             return false;
         }
-        static GLboolean glIsFramebuffer(GLuint framebuffer)
+        static GLboolean GFX_CALL glIsFramebuffer(GLuint framebuffer)
         {
             return false;
         }
-        static GLboolean glIsProgram(GLuint program)
+        static GLboolean GFX_CALL glIsProgram(GLuint program)
         {
             return false;
         }
-        static GLboolean glIsRenderbuffer(GLuint renderbuffer)
+        static GLboolean GFX_CALL glIsRenderbuffer(GLuint renderbuffer)
         {
             return false;
         }
-        static GLboolean glIsShader(GLuint shader)
+        static GLboolean GFX_CALL glIsShader(GLuint shader)
         {
             return false;
         }
-        static GLboolean glIsTexture(GLuint texture)
+        static GLboolean GFX_CALL glIsTexture(GLuint texture)
         {
             return false;
         }

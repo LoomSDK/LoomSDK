@@ -4,6 +4,7 @@ package
     import system.reflection.Assembly;
     import unittest.TestResult;
     import unittest.TestRunner;
+    import loom.Application;
        
     /**
      * Utility application that takes a Loom assembly file (.loom),
@@ -63,6 +64,8 @@ package
             Debug.assert(unittestasm2 != null, "Unable to get referenced assembly 'UnitTest' from executing assembly");
 
             Debug.assert(unittestasm1.getUID() == unittestasm2.getUID(), "'UnitTest' referenced assemblies don't match. Please recompile your binaries.");
+
+            Application.setConfigJSON(asm.getConfigJSON());
 
             TestRunner.onComplete += function(result:TestResult) {
                 Process.exit(result.typeReport.successful ? 0 : 1);

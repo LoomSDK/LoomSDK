@@ -219,9 +219,7 @@ void LoomApplication::initMainAssembly()
     initBytes = rootVM->openExecutableAssembly(bootAssembly);
     rootVM->readExecutableAssemblyBinaryHeader(initBytes);
     Assembly *assembly = BinReader::loadMainAssemblyHeader();
-    LoomApplicationConfig::parseApplicationConfig(assembly->getLoomConfig());
-
-    Loom2D::Stage::initFromConfig();
+    LoomApplication::setConfigJSON(assembly->getLoomConfig());
 }
 
 void LoomApplication::execMainAssembly()
@@ -507,6 +505,15 @@ const utString& LoomApplication::getConfigJSON()
     return LoomApplicationConfig::getApplicationConfigJSON();
 }
 
+void LoomApplication::setConfigJSON(const utString &configJSON)
+{
+    LoomApplicationConfig::parseApplicationConfig(configJSON);
+    Loom2D::Stage::sizeDirty = true;
+    Loom2D::Stage::visDirty = true;
+    Loom2D::Stage::initFromConfig();
+}
+
+
 
 void LoomApplication::__handleMainAssemblyUpdate(void *payload, const char *name)
 {
@@ -622,6 +629,7 @@ int registerLoomApplication(lua_State *L)
        .addStaticMethod("fireGenericEvent", &LoomApplication::fireGenericEvent)
 
        .addStaticProperty("loomConfigJSON", &LoomApplicationConfig::getApplicationConfigJSON)
+       .addStaticMethod("setConfigJSON", &LoomApplication::setConfigJSON)
 
        .addStaticProperty("version", &LoomApplicationConfig::version)
 

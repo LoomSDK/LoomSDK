@@ -106,6 +106,7 @@ public:
     static bool compilerEnabled();
 
     static const utString& getConfigJSON();
+    static void LoomApplication::setConfigJSON(const utString &configJSON);
 
     static int initializeTypes();
     static int registerScriptTypes();
