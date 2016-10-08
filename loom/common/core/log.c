@@ -105,16 +105,15 @@ void loom_log_buffer()
 
 void loom_log_buffer_flush()
 {
-    if (buffering) {
-        buffering = 0;
-        while (bufferHead) {
-            loom_log_bufferEntry_t *be = bufferHead;
-            loom_log(be->group, be->level, "%s", be->msg);
-            lmFree(gLoggerAllocator, (void*)be->msg);
-            bufferHead = bufferHead->next;
-        }
-        bufferTail = NULL;
+    if (!buffering) return;
+    buffering = 0;
+    while (bufferHead) {
+        loom_log_bufferEntry_t *be = bufferHead;
+        loom_log(be->group, be->level, "%s", be->msg);
+        lmFree(gLoggerAllocator, (void*)be->msg);
+        bufferHead = bufferHead->next;
     }
+    bufferTail = NULL;
 }
 
 void loom_log_setGlobalLevel(loom_logLevel_t level)

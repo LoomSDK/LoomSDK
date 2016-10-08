@@ -24,6 +24,16 @@ package tests {
         protected var elapsedBeforePause:int;
         protected var timeOfResume:int;
 
+        /**
+         * These functions test some of the more intricate behavior of Timers.
+         * Since testing timing related logic can be tricky due to invariances,
+         * generous leeway is given to some of them, so that we don't get too
+         * many false negatives.
+         * 
+         * Timers are also somewhat tied to the frame rate right now, so some of
+         * the logic takes that into account and might have to be changed if
+         * the behavior changes.
+         */
         public function TimerTest() {}
         
         function onStart(timer:Timer) {

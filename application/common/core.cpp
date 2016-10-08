@@ -375,20 +375,20 @@ static int sdlPriorityEvents(void* userdata, SDL_Event* event)
     return true;
 }
 
-enum  optionIndex { UNKNOWN, VERSION, HELP, FROM_RUBY, APP_TYPE, LOOP };
+enum  optionIndex { Unknown, Version, Help, FromRuby, AppType, Loop };
 enum  optionType { DISABLE, ENABLE, OTHER };
 const option::Descriptor usage[] =
 {
-    { UNKNOWN,   OTHER, "" , "",          option::Arg::None,     "USAGE: LoomPlayer [options] [loom-file-or-project-dir] [app-arguments]\n"
+    { Unknown,   OTHER, "" , "",          option::Arg::None,     "USAGE: LoomPlayer [options] [loom-file-or-project-dir] [app-arguments]\n"
                                                                  "\n"
                                                                  "Options:" },
-    { VERSION,   OTHER, "v", "version",   option::Arg::None,     "  --version, -v  \tPrint version information and exit." },
-    { HELP,      OTHER, "h", "help",      option::Arg::None,     "  --help, -h  \tPrint usage and exit." },
-    { FROM_RUBY, OTHER, "",  "from-ruby", option::Arg::None,     "  --from-ruby  \tDefined when running from the Ruby asset agent." },
-    { APP_TYPE,  OTHER, "",  "app-type",  option::Arg::Optional, "  --app-type  \tOverride the application type, can be either 'console' or 'gui'." },
-    { LOOP,      OTHER, "",  "loop",      option::Arg::Optional, "  --loop  \t" },
-    { UNKNOWN,   OTHER, "",  "",          option::Arg::None,     0 },
-    { UNKNOWN,   OTHER, "",  "",          option::Arg::None,     "\n"
+    { Version,   OTHER, "v", "version",   option::Arg::None,     "  --version, -v  \tPrint version information and exit." },
+    { Help,      OTHER, "h", "help",      option::Arg::None,     "  --help, -h  \tPrint usage and exit." },
+    { FromRuby,  OTHER, "",  "from-ruby", option::Arg::None,     "  --from-ruby  \tDefined when running from the Ruby asset agent." },
+    { AppType,   OTHER, "",  "app-type",  option::Arg::Optional, "  --app-type  \tOverride the application type, can be either 'console' or 'gui'." },
+    { Loop,      OTHER, "",  "loop",      option::Arg::Optional, "  --loop  \t" },
+    { Unknown,   OTHER, "",  "",          option::Arg::None,     0 },
+    { Unknown,   OTHER, "",  "",          option::Arg::None,     "\n"
                                                                  "Examples:\n"
                                                                  "  LoomPlayer  \tLaunches project in the working directory.\n"
                                                                  "  LoomPlayer .  \tSame as above.\n"
@@ -473,17 +473,17 @@ main(int argc, char *argv[])
 
     if (parse.error()) usageError("Error parsing arguments");
 
-    if (options[VERSION]) {
+    if (options[Version]) {
         platform_debugOut("%s", LOOM_PLAYER_VERSION);
         return 0;
     }
 
-    if (options[HELP]) {
+    if (options[Help]) {
         printUsage();
         return 0;
     }
 
-    for (option::Option* opt = options[UNKNOWN]; opt; opt = opt->next())
+    for (option::Option* opt = options[Unknown]; opt; opt = opt->next())
         platform_debugOut("Unknown option: %s", opt->name);
 
     int coreOptions = 0;
@@ -502,7 +502,7 @@ main(int argc, char *argv[])
 
     LS::Process::consoleAttached = false;
 
-    if (!options[FROM_RUBY] && AttachConsole(ATTACH_PARENT_PROCESS))
+    if (!options[FromRuby] && AttachConsole(ATTACH_PARENT_PROCESS))
     {
         HANDLE consoleHandleOut = GetStdHandle(STD_OUTPUT_HANDLE);
         int fdOut = _open_osfhandle((intptr_t)consoleHandleOut, _O_TEXT);
@@ -535,7 +535,7 @@ main(int argc, char *argv[])
 
     loom_appInit();
 
-    gLoomHeadless = (options[APP_TYPE] ? options[APP_TYPE].arg : LoomApplicationConfig::applicationType()) == "console";
+    gLoomHeadless = (options[AppType] ? options[AppType].arg : LoomApplicationConfig::applicationType()) == "console";
     if (gLoomHeadless) loom_log_setGlobalLevel(LoomLogWarn);
 
     loom_log_buffer_flush();
@@ -602,7 +602,7 @@ main(int argc, char *argv[])
 
         int stencilSize = 1;
         ret = SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilSize);
-        lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
+        lmAssert(ret == 0, "Unable to set OpenGL stencil size to %d: %s", stencilSize, SDL_GetError());
 
         Uint32 windowFlags = 0;
 
@@ -659,7 +659,7 @@ main(int argc, char *argv[])
     supplyEmbeddedAssets();
 
     /* Main render loop */
-    if (gLoomHeadless && !options[LOOP]) gLoomExecutionDone = 1;
+    if (gLoomHeadless && !options[Loop]) gLoomExecutionDone = 1;
 
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(loop, 0, 1);
