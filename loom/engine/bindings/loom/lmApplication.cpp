@@ -258,12 +258,6 @@ void LoomApplication::execMainAssembly()
     }
     else
     {
-        // look for a class derived from LoomApplication in the main assembly
-        /*const char *baseType = gLoomHeadless ?
-            "system.application.ConsoleApplication" :
-            "loom.Application";
-            */
-
         const char *applicationTypeName = "loom.Application";
         const char *consoleApplicationTypeName = "system.application.ConsoleApplication";
         Type *applicationType = rootVM->getType(applicationTypeName);

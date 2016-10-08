@@ -89,7 +89,7 @@ static int LoadContext(GL_Context * data)
 #undef GFX_PROC
 #undef GFX_PROC_VOID
 
-        // Overrides
+        // Overrides for certain calls
         data->glGenBuffers = GL_ContextDummy::dummy_glGen_;
         data->glGenFramebuffers = GL_ContextDummy::dummy_glGen_;
         data->glGenRenderbuffers = GL_ContextDummy::dummy_glGen_;

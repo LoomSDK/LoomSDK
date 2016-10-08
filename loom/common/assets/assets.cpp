@@ -195,7 +195,7 @@ struct loom_asset_t
    }
 };
 
-// This get set to LoomLogInfo for non-console apps
+// This gets set to LoomLogInfo for non-console apps after initialization
 lmDefineLogGroup(gAssetLogGroup, "asset", 1, LoomLogWarn);
 
 // General asset manager state.

@@ -659,8 +659,6 @@ main(int argc, char *argv[])
     supplyEmbeddedAssets();
 
     /* Main render loop */
-    //gLoomExecutionDone = 0;
-
     if (gLoomHeadless && !options[LOOP]) gLoomExecutionDone = 1;
 
 #ifdef __EMSCRIPTEN__

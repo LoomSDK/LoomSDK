@@ -171,8 +171,6 @@ namespace GFX
     typedef struct GL_ContextDummy
     {
 
-//#define GFX_PROC(ret, func, params, args) static ret func ## params;
-
 #define GFX_PROC(ret, func, params, args) 
 #define GFX_PROC_VOID(func, params, args) static void GFX_CALL func params {};
     
@@ -238,7 +236,7 @@ namespace GFX
             return false;
         }
 
-        // Overrides
+        // Overrides for specific functions
         
         // glGenBuffers + glGenFramebuffers + glGenRenderbuffers + glGenTextures
         static void GFX_CALL dummy_glGen_(GLsizei n, GLuint *buffers)
@@ -272,23 +270,8 @@ namespace GFX
             else *params = 0;
         }
 
-        /*
-        static void dummy_glGetBooleanv(GLenum pname, GLboolean *data)
-        {
-        }
-        */
-
-
-        /*
-#define GFX_PROC_DUMMY_void(func, params)   static void dummy_ ## func ## params {};
-#define GFX_PROC_DUMMY_GLenum(func, params) static void dummy_ ## func ## params {};
-#define GFX_PROC_DUMMY_GLuint(func, params)   static void dummy_ ## func ## params {};
-#define GFX_PROC_DUMMY_GLint(func, params)   static void dummy_ ## func ## params {};
-#define GFX_PROC_DUMMY_const GLubyte*(func, params)   static void dummy_ ## func ## params {};
-#define GFX_PROC_IMPL(procname, func, params) procname(func, params)
-#define GFX_PROC(ret, func, params, args) GFX_PROC_IMPL(GFX_PROC_DUMMY_ ## ret, func, params)
-*/
     } GL_ContextDummy;
+
 
 // Represents graphics render target properties that can change from frame buffer to frame buffer
 typedef struct GraphicsRenderTarget {

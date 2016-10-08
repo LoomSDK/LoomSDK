@@ -79,15 +79,8 @@ elseif(APPLE)
     add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${APPLICATION_HDR} ${APPLICATION_SRC})
 elseif(MSVC)
 
-
     add_library(${PROJECT_NAME} STATIC ${APPLICATION_HDR} ${APPLICATION_SRC})
-    # add_executable(${PROJECT_NAME_WINDOWED} WIN32 common/null.cpp $<TARGET_OBJECTS:${PROJECT_NAME}>)
-    # add_executable(${PROJECT_NAME_CONSOLE} common/null.cpp $<TARGET_OBJECTS:${PROJECT_NAME}>)
 
-    # target_link_libraries(${PROJECT_NAME_WINDOWED} ${PROJECT_NAME}) 
-    # target_link_libraries(${PROJECT_NAME_CONSOLE} ${PROJECT_NAME}) 
-
-    # add_library(${PROJECT_NAME} STATIC ${APPLICATION_HDR} ${APPLICATION_SRC})
     add_executable(${PROJECT_NAME_WINDOWED} WIN32 common/null.cpp)
     add_executable(${PROJECT_NAME_CONSOLE} common/null.cpp )
     target_link_libraries(${PROJECT_NAME_WINDOWED} ${PROJECT_NAME}) 
@@ -272,8 +265,6 @@ elseif(MSVC)
        "kernel32" "advapi32" "COMCTL32" "COMDLG32" "USER32" "ADVAPI32" "GDI32" "WINMM" "WSOCK32" "Ws2_32" 
        "SDL2-static" "SDL2main"
     )
-
-    # set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE")
     
     if (LOOM_TELEMETRY)
         target_link_libraries(${PROJECT_NAME} "telemetry32.link" "telemetry64.link")
