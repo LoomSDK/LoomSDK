@@ -84,7 +84,7 @@ package loom.social
         private static var timeoutDuration = 10000;                                //Time in ms before a request is considered to have timed out. 0 = no timeout.
         private static var requestDelay = 50;                                      //Delay in ms between queued HTTPrequests being sent.
 
-        private static const PARSE_API_BASE:String = "https://api.parse.com/1/";   //Base REST URL for Parse.
+        public static var apiBase:String = "https://api.parse.com/1/";   //Base REST URL for Parse.
         private static const REQUEST_BUFFER_LENGTH = 20;                           //We keep a buffer of sent HTTPRequests to prevent them from being GC'd before they can complete.
 
         private static var dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";            //Parse date format string
@@ -295,7 +295,7 @@ package loom.social
          */
         public static function POST(URL:String="", data:JSON=null, success:Function=null, failure:Function=null)
         {            
-            var req = new HTTPRequest(PARSE_API_BASE+URL,"application/json");            
+            var req = new HTTPRequest(apiBase+URL,"application/json");            
             req.method = "POST";
             
             req.setHeaderField("X-Parse-Application-Id", parseAppID);
@@ -335,7 +335,7 @@ package loom.social
          */
         public static function PUT(URL:String="", data:JSON=null, success:Function=null, failure:Function=null)
         {         
-            var req = new HTTPRequest(PARSE_API_BASE+URL,"application/json");            
+            var req = new HTTPRequest(apiBase+URL,"application/json");            
             req.method = "PUT";
             
             req.setHeaderField("X-Parse-Application-Id", parseAppID);
@@ -376,7 +376,7 @@ package loom.social
          */
         public static function GET(URL:String, jsonData:JSON = null, urlData:String = "", success:Function=null, failure:Function=null)
         {           
-            var url = PARSE_API_BASE+URL;       
+            var url = apiBase+URL;       
 
             if(!String.isNullOrEmpty(urlData))
             {
