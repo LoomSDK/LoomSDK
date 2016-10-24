@@ -8,6 +8,7 @@ package
     import loom2d.events.Touch;
     import loom2d.events.TouchEvent;
     import loom2d.events.TouchPhase;
+    import system.ByteArray;
 
     import loom2d.text.TextField;    
     import loom2d.text.BitmapFont;
@@ -157,13 +158,12 @@ package
 
             //Fire off the Parse REST function to log the user in                          
             Parse.REST_loginWithUsername(usernameInput.text,passwordInput.text,
-            function(result:String) //request success delegate
+            function(result:ByteArray) //request success delegate
             {
                 trace(result);
                 
                 //Create a JSON object to parse the result the server returned
-                var responseJSON:JSON = new JSON();
-                responseJSON.loadString(result);
+                var responseJSON:JSON = JSON.parse(result.toString());
 
                 username = responseJSON.getString("username");
                 statusLabel.text = username+" logged in!";
@@ -234,7 +234,7 @@ package
 
             //Call the cloud function via Parse
             Parse.REST_callCloudFunction("sendPN",dataJSON,
-            function(result:String) //Success!
+            function(result:ByteArray) //Success!
             {
                 usernameInput.text = "";
                 statusLabel.text = "Push Notification Sent!";
