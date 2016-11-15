@@ -26,15 +26,17 @@ package loom.social
      * Loom provides access to the Parse API on mobile devices for social networking services.
      * Visit https://parse.com/ for more information
      *
-     *  In order to use Parse support in Loom, you must set both 
-     *  'parse_app_id' (unique App ID) and 'parse_client_key' 
+     *  In order to use Parse support in Loom, you must set your 
+     *  'parse_app_id' (unique App ID) and optionally the 'parse_client_key' 
      *  (unique Client Key) in your project's loom.config file.
-     *  These values are availble to you as a Parse Developer once 
-     *  you have created your App on https://parse.com/
+     *
+     *  For custom servers you must also set `parse_server` to the
+     *  base Parse URL, e.g. "https://example.com/parse/".
      *
      */
 
     import loom.HTTPRequest;
+    import loom.Application;
 
     /**
      * Static control class for accessing the Parse API functionality
@@ -84,7 +86,7 @@ package loom.social
         private static var timeoutDuration = 10000;                                //Time in ms before a request is considered to have timed out. 0 = no timeout.
         private static var requestDelay = 50;                                      //Delay in ms between queued HTTPrequests being sent.
 
-        public static var apiBase:String = "https://api.parse.com/1/";   //Base REST URL for Parse.
+        private static var apiBase:String;                                         //Base REST URL for Parse.
         private static const REQUEST_BUFFER_LENGTH = 20;                           //We keep a buffer of sent HTTPRequests to prevent them from being GC'd before they can complete.
 
         private static var dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";            //Parse date format string
@@ -96,6 +98,21 @@ package loom.social
          *  Called when the any REST operation times out.
          */
         public static var REST_onTimeout:Function;
+
+        /**
+         * Initializes Parse for further use.
+         * Call this once on application startup if you intend to use Parse.
+         */
+        public static function initialize()
+        {
+            var config = JSON.parse(Application.loomConfigJSON);
+            parseAppID = config.getString("parse_app_id");
+            parseRESTKey = config.getString("parse_client_key");
+            apiBase = config.getString("parse_server");
+            requestQueue = new Vector.<HTTPRequest>;
+            activeQueryQueue = new Vector.<HTTPRequest>;
+            nextTick = Platform.getTime()+requestDelay;
+        }
 
 
         /**
@@ -387,7 +404,10 @@ package loom.social
             req.method = "GET";
             
             req.setHeaderField("X-Parse-Application-Id", parseAppID);
-            req.setHeaderField("X-Parse-REST-API-Key", parseRESTKey);  
+            req.setHeaderField("X-Parse-REST-API-Key", parseRESTKey);
+            if (URL == "login") {
+                req.setHeaderField("X-Parse-Installation-Id", getInstallationID());
+            }
             
             if(!String.isNullOrEmpty(parseSessionToken))          
                 req.setHeaderField("X-Parse-Session-Token", parseSessionToken); 

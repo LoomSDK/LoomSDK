@@ -24,6 +24,7 @@ public class LoomParse
     private static final String TAG = "LoomParse";
     private static final String PARSE_APPID_KEY = "com.parse.ApplicationId";
     private static final String PARSE_CLIENTKEY_KEY = "com.parse.ClientKey";
+    private static final String PARSE_SERVER = "com.parse.Server";
 
     ///vars
     private static Context     _context;
@@ -37,18 +38,25 @@ public class LoomParse
 
         String appID = LoomPlayer.getMetadataString(app, PARSE_APPID_KEY);
         String clientKey = LoomPlayer.getMetadataString(app, PARSE_CLIENTKEY_KEY);
-        // Log.d(TAG, "Initialize Parse... AppID: " + appID + "  ClientKey: " + clientKey);
+        String server = LoomPlayer.getMetadataString(app, PARSE_SERVER);
+        // Log.d(TAG, "Initializing Parse, appID: " + appID + "  clientKey: " + clientKey + "  server: " + server);
 
         // if invalid strings or error on initialize, make sure to set _initialized = false
         _initialized = false;
-        if((appID != null) && (clientKey != null) && !appID.isEmpty() && !clientKey.isEmpty())
+        if((appID != null) && !appID.isEmpty())
         {
             ///NOTE: If your AndroidManifest specifies the com.parse.PushService but you do not call 
             ///         Parse.initialize (ie. no valid appId or clientKey) then your application *will* 
             ///         crash as soon as a Push Notification is detected
 
+            Parse.Configuration.Builder builder = new Parse.Configuration.Builder(_context);
+            builder.applicationId(appID);
+            if (clientKey != null && !clientKey.isEmpty()) builder.clientKey(clientKey);
+            if (server != null && !server.isEmpty()) builder.server(server);
+            Parse.Configuration configuration = builder.build();
+    
             ///initialize Parse for our application
-            Parse.initialize(app, appID, clientKey);
+            Parse.initialize(configuration);
 
             ParseInstallation installation = ParseInstallation.getCurrentInstallation();
             //set Android ID as the UniqueID for this installation to avoid bug with re-installs
@@ -56,7 +64,7 @@ public class LoomParse
             installation.put("UniqueId", androidId);
 
             installation.saveInBackground();
-            Log.d("LoomParse", "Completed initialization of Parse. InstallationID: " + installation.getInstallationId());
+            // Log.d(TAG, "Completed initialization of Parse. InstallationID: " + installation.getInstallationId());
             _initialized = true;
         }
     }
