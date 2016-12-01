@@ -25,7 +25,14 @@ public class LoomCustomNotificationReceiver extends ParsePushBroadcastReceiver
         //create a new Intent for LoomPlayer and let it go!
         Intent i = new Intent(context, LoomPlayer.class);
         i.putExtras(intent.getExtras());
-        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        i.setFlags(
+            // Open the app as a new task.
+            Intent.FLAG_ACTIVITY_NEW_TASK |
+            
+            // If it's already running, just bring it to the front.
+            // This avoids the app trying to reuse statics and crashing. 
+            Intent.FLAG_ACTIVITY_SINGLE_TOP
+        );
         context.startActivity(i);
     }
 }
