@@ -639,7 +639,7 @@ namespace :build do
         sh "#{ndk_path}/ndk-build SDL2_static NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk APP_PLATFORM=android-15"
       end
       FileUtils.mkdir_p sdlLibPath
-      sh "cp #{sdlSrcPath}/obj/local/armeabi/libSDL2.a #{sdlLibPath}/libSDL2.a"
+      FileUtils.cp "#{sdlSrcPath}/obj/local/armeabi/libSDL2.a", "#{sdlLibPath}/libSDL2.a"
     else
       puts "Found SDL2 libSDL2.a in #{sdlLibPath} - skipping build"
     end
