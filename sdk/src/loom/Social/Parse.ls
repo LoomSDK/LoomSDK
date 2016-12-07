@@ -37,6 +37,21 @@ package loom.social
 
     import loom.HTTPRequest;
     import loom.Application;
+    import loom.gameframework.LoomGroup;
+    import loom.gameframework.TimeManager;
+    import loom.gameframework.ITicked;
+
+    /**
+     * Small class which implements ITicked to handle
+     * running Parse ticks.
+     */
+    private class ParseTicker implements ITicked
+    {
+        function onTick():void
+        {
+            Parse.internalTick();
+        }
+    }
 
     /**
      * Static control class for accessing the Parse API functionality
@@ -93,6 +108,10 @@ package loom.social
         private static var nextTick:Number;
         private static var nextTimeout:Number=0;
 
+        private static var ticker:ParseTicker;
+        private static var deprecatedTickWarned:Boolean = false;
+
+        private static var initialized:Boolean = false;
 
         /**
          *  Called when the any REST operation times out.
@@ -101,10 +120,14 @@ package loom.social
 
         /**
          * Initializes Parse for further use.
-         * Call this once on application startup if you intend to use Parse.
+         * You can call this once on application startup to initialize Parse
+         * in advance, otherwise it is initialized on first use.
          */
         public static function initialize()
         {
+            if (initialized) return;
+            initialized = true;
+
             var config = JSON.parse(Application.loomConfigJSON);
             parseAppID = config.getString("parse_app_id");
             parseRESTKey = config.getString("parse_client_key");
@@ -112,6 +135,12 @@ package loom.social
             requestQueue = new Vector.<HTTPRequest>;
             activeQueryQueue = new Vector.<HTTPRequest>;
             nextTick = Platform.getTime()+requestDelay;
+
+            if (!ticker) {
+                ticker = new ParseTicker();
+                var timeManager = LoomGroup.rootGroup.getManager(TimeManager) as TimeManager;
+                timeManager.addTickedObject(ticker);
+            }
         }
 
 
@@ -312,6 +341,8 @@ package loom.social
          */
         public static function POST(URL:String="", data:JSON=null, success:Function=null, failure:Function=null)
         {            
+            if (!initialized) initialize();
+
             var req = new HTTPRequest(apiBase+URL,"application/json");            
             req.method = "POST";
             
@@ -392,7 +423,9 @@ package loom.social
          *  @param failure - delegate function to run on request failure
          */
         public static function GET(URL:String, jsonData:JSON = null, urlData:String = "", success:Function=null, failure:Function=null)
-        {           
+        {
+            if (!initialized) initialize();
+
             var url = apiBase+URL;       
 
             if(!String.isNullOrEmpty(urlData))
@@ -423,7 +456,7 @@ package loom.social
                 req.onSuccess += success;
             if(failure != null)
                 req.onFailure += failure;
-                        
+            
             requestQueue.push(req);
         }
 
@@ -471,9 +504,25 @@ package loom.social
         }
 
         /**
+         * Deprecated: this is now handled internally.
+         *
          * Check current time, fire off requests and trigger timeouts where necessary
+         * @deprecated
          */
-        public static function tick() 
+        public static function tick()
+        {
+            if (!deprecatedTickWarned) {
+                trace("Deprecation Warning: You can remove all calls to Parse.tick() as it is now handled internally.");
+                deprecatedTickWarned = true;
+            }
+        }
+
+        /**
+         * Internal function that gets called to run requests and timeouts.
+         *
+         * @private 
+         */
+        public static function internalTick() 
         {
             var currentTick = Platform.getTime();
             
