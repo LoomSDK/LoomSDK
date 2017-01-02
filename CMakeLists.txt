@@ -81,7 +81,7 @@ if (LOOM_BUILD_JIT EQUAL 1)
 
     add_library(luajit STATIC IMPORTED)
     set_target_properties(luajit PROPERTIES IMPORTED_LOCATION ${LUAJIT_LIB} )
-    
+
     # We could set individual build type paths with these, but the unified dynamic
     # one above seems to work better and is sufficient for our current needs
     #set_target_properties(luajit PROPERTIES IMPORTED_LOCATION_DEBUG ${LUAJIT_LIB_DEBUG} )
@@ -99,7 +99,7 @@ endif()
 # SDL
 #--------------------------------------
 
-if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS) OR LINUX)
+if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS) OR (LINUX AND NOT (LOOM_BUILD_RPI2 OR LOOM_BUILD_BBB)))
     # Used for generated config include
     include_directories(${CMAKE_BINARY_DIR}/loom/vendor/sdl2/include)
     include_directories(${CMAKE_SOURCE_DIR}/loom/vendor/sdl2/include)
@@ -114,7 +114,7 @@ if (MSVC OR (APPLE AND NOT LOOM_BUILD_IOS) OR LINUX)
     endif()
 
     add_subdirectory(loom/vendor/sdl2)
-	
+
 endif()
 
 #--------------------------------------
@@ -286,7 +286,7 @@ endif()
 # Linux
 #--------------------------------------
 
-if (LINUX)
+if (LINUX AND NOT (LOOM_BUILD_RPI2 OR LOOM_BUILD_BBB))
 
     if(LOOM_BUILD_64BIT EQUAL 1)
       ADD_DEFINITIONS("-fPIC")

@@ -105,7 +105,7 @@ void VectorRenderer::preDraw(lmscalar a, lmscalar b, lmscalar c, lmscalar d, lms
 
     nvgSave(nvg);
     nvgTransform(nvg, (float) a, (float) b, (float) c, (float) d, (float) e, (float) f);
-    
+
     nvgLineCap(nvg, NVG_BUTT);
     nvgLineJoin(nvg, NVG_ROUND);
 
@@ -223,13 +223,13 @@ void VectorRenderer::fillTexture(TextureID id, Loom2D::Matrix transform, bool re
     // Save transform
     float xform[6];
     nvgCurrentTransform(nvg, xform);
-    
+
     // Apply fill transform
     nvgTransform(nvg, (float)transform.a, (float)transform.b, (float)transform.c, (float)transform.d, (float)transform.tx, (float)transform.ty);
 
     // Set paint
     nvgFillPaint(nvg, nvgImagePattern(nvg, 0.f, 0.f, (float) tinfo->width, (float) tinfo->height, 0.f, nvgImage, alpha));
-    
+
     // Restore transform
     nvgSetTransform(nvg, xform);
 }
@@ -292,7 +292,7 @@ static bool readFontFile(const char *path, void** mem, size_t* size)
     long mappedSize;
 
     bool success = platform_mapFile(path, &mapped, &mappedSize) != 0;
-    
+
     if (success) {
         *mem = customAlloc(mappedSize);
         *size = mappedSize;
@@ -334,6 +334,8 @@ static bool readDefaultFontFaceBytes(void** mem, size_t* size)
     return readFontFile("/system/fonts/DroidSans.ttf", mem, size) != 0;
 #elif LOOM_PLATFORM == LOOM_PLATFORM_OSX
     return readFontFile("/Library/Fonts/Arial.ttf", mem, size) != 0;
+#elif defined(LOOM_BUILD_BBB) || defined(LOOM_BUILD_RPI2)
+	return readFontFile("/lib/fonts/NimbusSansL.ttf", mem, size) != 0;
 #elif LOOM_PLATFORM == LOOM_PLATFORM_IOS
     return (bool)platform_fontSystemFontFromName("ArialMT", mem, (unsigned int*)size);
 #elif LOOM_PLATFORM == LOOM_PLATFORM_LINUX
@@ -517,10 +519,10 @@ void VectorRenderer::initializeGraphicsResources()
     destroyGraphicsResources();
 
     int flags = 0;
-    
+
     if (quality & QUALITY_ANTIALIAS) flags |= NVG_ANTIALIAS;
     if (quality & QUALITY_STENCIL_STROKES)   flags |= NVG_STENCIL_STROKES;
-    
+
 #if GFX_OPENGL_CHECK
     flags |= NVG_DEBUG;
 #endif
@@ -532,9 +534,9 @@ void VectorRenderer::initializeGraphicsResources()
 #endif
 
     lmAssert(nvg != NULL, "Unable to init nanovg");
-    
+
     VectorTextFormat::restoreLoaded();
-    
+
     //nvgCreateFont(nvg, "sans", "assets/droidsans.ttf");
     //nvgCreateFont(nvg, "sans", "assets/SourceSansPro-Regular.ttf");
     //nvgCreateFont(nvg, "sans", "assets/unifont-7.0.06.ttf");
@@ -543,7 +545,7 @@ void VectorRenderer::initializeGraphicsResources()
     //nvgCreateFont(nvg, "sans", "assets/Roboto - Regular.ttf");
     //nvgCreateFont(nvg, "sans", "assets/OpenSans-Regular.ttf");
 
-    
+
 
     //font = nvgCreateFont(nvg, "sans", "font/Pecita.otf");
     //font = nvgCreateFont(nvg, "sans", "font/Cyberbit.ttf");
@@ -650,7 +652,7 @@ void VectorSVG::parse(const char* svg, const char* units, float dpi) {
     memcpy(svgTemp, svg, strlen(svg) + 1);
     image = nsvgParse((char*) svgTemp, units, dpi);
     lmFree(NULL, svgTemp);
-    if (image->shapes == NULL) 
+    if (image->shapes == NULL)
     {
         lmLogError(gGFXVectorRendererLogGroup, "Failure loading %s - no shapes.", path.c_str());
         nsvgDelete(image);

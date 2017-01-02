@@ -53,13 +53,13 @@
 #define ASSET_STREAM_HOST    LoomApplicationConfig::assetAgentHost().c_str()
 #define ASSET_STREAM_PORT    LoomApplicationConfig::assetAgentPort()
 
-// This actually lives in lsAsset.cpp, but is useful to call from in the asset manager implementation.
-void loom_asset_notifyPendingCountChange();
+// This actually lives in lmAssets.cpp, but is useful to call from in the asset manager implementation.
+extern void loom_asset_notifyPendingCountChange(void);
 
 static const int PROGRESS_INIT_TIME = 200;
 static const int PROGRESS_UPDATE_TIME = 500;
 
-extern "C" 
+extern "C"
 {
   loom_allocator_t *gAssetAllocator = NULL;
 }
@@ -101,7 +101,7 @@ struct loom_assetBlob_t
    bool decRef()
    {
       refCount--;
-      
+
       if(refCount == 0)
       {
          if(dtor)
@@ -112,7 +112,7 @@ struct loom_assetBlob_t
          refCount = 0xBAADF00D;
          length = -1;
          bits = NULL;
-         
+
          lmDelete(gAssetAllocator, this);
          return true;
       }
@@ -154,7 +154,7 @@ struct loom_asset_t
    // are deserialized.
    utArray<loom_asset_t*> dependencies;
 
-   // All the callbacks to call when an asset changes state (is loaded, unloaded, 
+   // All the callbacks to call when an asset changes state (is loaded, unloaded,
    // etc.)
    utArray<loom_asset_subscription_t> subscribers;
 
@@ -452,7 +452,7 @@ static void loom_asset_clear()
 void loom_asset_shutdown()
 {
     gShuttingDown = 1;
-    
+
     loom_mutex_lock(gAssetServerSocketLock);
     if (gAssetServerSocket != NULL) {
         loom_net_closeTCPSocket(gAssetServerSocket);
@@ -657,7 +657,7 @@ public:
                pendingFile       = (const char *)lmAlloc(gAssetAllocator, pendingFileLength);
 
                // Log it.
-               
+
                // Awesome, sit back and wait for chunks to come in.
                return true;
            }
@@ -848,7 +848,7 @@ void loom_asset_pump()
       // Figure out the type from the path.
       utString path = asset->name;
       int type = loom_asset_recognizeAssetTypeFromPath(path);
-      
+
       if(type == 0)
       {
          lmLog(gAssetLogGroup, "Could not infer type of resource '%s', skipping it...", path.c_str());
@@ -915,19 +915,19 @@ void loom_asset_preload(const char *name)
 int loom_asset_pending(const char *name)
 {
     loom_mutex_lock(gAssetLock);
-    
+
     // Look 'er up.
     loom_asset_t *asset = loom_asset_getAssetByName(name, 0);
-    
+
     // If it's not pending load, then stick it in the queue.
     int result;
     if(asset && loom_asset_isOnTrackToLoad(asset))
         result = 1;
     else
         result = 0;
-    
+
     loom_mutex_unlock(gAssetLock);
-    
+
     return result;
 }
 
@@ -949,7 +949,7 @@ void loom_asset_flush(const char *name)
       loom_mutex_unlock(gAssetLock);
       return;
    }
-    
+
    lmLogDebug(gAssetLogGroup, "Flushing '%s'", name);
 
     if (asset->blob)

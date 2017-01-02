@@ -20,6 +20,10 @@
 #include <fcntl.h>
 #endif
 
+#ifdef LOOM_BUILD_BBB
+#include <dlfcn.h>
+#endif
+
 #include "loom/engine/loom2d/l2dStage.h"
 #include "loom/engine/bindings/loom/lmApplication.h"
 #include "loom/common/config/applicationConfig.h"
@@ -520,23 +524,42 @@ main(int argc, char *argv[])
     lmLogDebug(coreLogGroup, "SDL linked version : %d.%d.%d", linked.major, linked.minor, linked.patch);
 
 
-    SDL_Init(
+    int ret = SDL_Init(
         SDL_INIT_TIMER |
         SDL_INIT_VIDEO |
         SDL_INIT_JOYSTICK |
+#if !defined(LOOM_BUILD_BBB) && !defined(LOOM_BUILD_RPI2)
         SDL_INIT_HAPTIC |
+#endif
         SDL_INIT_GAMECONTROLLER |
         SDL_INIT_EVENTS
     );
 
-    int ret;
-
+    if (ret != 0)
+        lmLogDebug(coreLogGroup, "SDL_Init() failed, SDL error: %s", SDL_GetError());
 
 #if LOOM_RENDERER_OPENGLES2
     ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
+    lmAssert(ret == 0, "Failed to set GL profile, SDL error: %s", SDL_GetError());
     ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
+    lmAssert(ret == 0, "Failed to set GL major version, SDL error: %s", SDL_GetError());
+    ret = SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    lmAssert(ret == 0, "Failed to set GL minor version, SDL error: %s", SDL_GetError());
+#endif
+
+#ifdef LOOM_BUILD_BBB
+    /*
+     * We need to load this library manually or the release version of the
+     * PowerVR SGX OpenGL libs in our remote development environment won't
+     * work due to missing symbols!
+     *
+     * (The symbols are "__*_chk", for which we add manual wrappers and link
+     * with libgcc.a to produce libgcc_s.so.  This is necessary _only_ in
+     * the BBB remote development environment, because we use closed-source
+     * OpenGL libraries that were linked against a different C library.)
+     */
+    void *dummy_lib_for_bbb = dlopen("libgcc_s.so.1", RTLD_NOW | RTLD_GLOBAL);
+    (void) dummy_lib_for_bbb;
 #endif
 
 #if LOOM_PLATFORM == LOOM_PLATFORM_IOS
@@ -559,7 +582,7 @@ main(int argc, char *argv[])
 
     int stencilSize = 1;
     ret = SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencilSize);
-    lmAssert(ret == 0, "SDL Error: %s", SDL_GetError());
+    lmAssert(ret == 0, "Failed to set GL stencil size, SDL error: %s", SDL_GetError());
 
     Uint32 windowFlags = 0;
 

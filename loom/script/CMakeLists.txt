@@ -6,30 +6,30 @@ include_directories(
 )
 
 # Define source files
-file (GLOB CPP_FILES common/*.cpp native/*.cpp reflection/*.cpp runtime/*.cpp serialize/*.cpp 
+file (GLOB CPP_FILES common/*.cpp native/*.cpp reflection/*.cpp runtime/*.cpp serialize/*.cpp
                      native/core/*.cpp native/core/system/*.cpp
-                     native/core/test/*.cpp 
+                     native/core/test/*.cpp
                      native/core/system/Debugger/*.cpp
-                     native/core/system/Metrics/*.cpp native/core/system/Reflection/*.cpp 
-                     native/core/system/Socket/*.cpp native/core/system/Socket/*.c 
+                     native/core/system/Metrics/*.cpp native/core/system/Reflection/*.cpp
+                     native/core/system/Socket/*.cpp native/core/system/Socket/*.c
                      native/core/system/XML/*.cpp native/core/system/Platform/*.cpp
                      native/core/system/Utils/*.cpp native/core/assets/*.cpp )
-                     
-                     
+
+
 if (MSVC OR APPLE OR LINUX)
-    if (NOT LOOM_BUILD_IOS)                  
+    if (NOT LOOM_BUILD_IOS)
         file (GLOB COMPILER_FILES compiler/*.cpp compiler/builders/*.cpp native/core/compiler/*.cpp)
         set (CPP_FILES ${CPP_FILES} ${COMPILER_FILES} )
     endif()
 endif()
 
-                                
-if (MSVC)                                
+
+if (MSVC)
     list(REMOVE_ITEM CPP_FILES ${CMAKE_SOURCE_DIR}/loom/script/native/core/system/Socket/usocket.c)
     list(REMOVE_ITEM CPP_FILES ${CMAKE_SOURCE_DIR}/loom/script/native/core/system/Socket/unix.c)
-else() 
+else()
     list(REMOVE_ITEM CPP_FILES ${CMAKE_SOURCE_DIR}/loom/script/native/core/system/Socket/wsocket.c)
-endif()                  
+endif()
 
 file (GLOB H_FILES common/*.h compiler/*.h compiler/builders/*.h native/*.h native/core/*.h reflection/*.h runtime/*.h serialize/*.h)
 
@@ -49,5 +49,9 @@ if (ANDROID)
 endif(ANDROID)
 
 if (LINUX)
-    target_link_libraries(${TARGET_NAME} -lz LoomVendor LoomCommon SDL2-static ) # SDL2-static for SDL_qsort
+    if (LOOM_BUILD_RPI2 OR LOOM_BUILD_BBB)
+        target_link_libraries(${TARGET_NAME} -lz LoomVendor LoomCommon ${LOOM_SDL2_LIB} ) # SDL2 for SDL_qsort
+    else()
+        target_link_libraries(${TARGET_NAME} -lz LoomVendor LoomCommon SDL2-static ) # SDL2-static for SDL_qsort
+    endif(LOOM_BUILD_RPI2 OR LOOM_BUILD_BBB)
 endif(LINUX)
