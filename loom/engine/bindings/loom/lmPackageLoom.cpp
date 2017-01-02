@@ -41,6 +41,7 @@ void installLoomSQLite();
 void installLoomModestMaps();
 void installLoomGameController();
 void installLoomUserDefault();
+void installCSSParser();
 
 void installPackageLoom()
 {
@@ -63,6 +64,7 @@ void installPackageLoom()
 	installLoomSystem();
     installLoomGameController();
     installLoomUserDefault();
+    installCSSParser();
 
     // Should be its own package for maximum correctness.
     //installPackageCocos2DX();

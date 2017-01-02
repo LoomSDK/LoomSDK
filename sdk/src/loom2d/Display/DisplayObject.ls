@@ -5,10 +5,9 @@ package loom2d.display
     import loom2d.events.Event;
     import loom2d.events.EventDispatcher;
 
-    import loom.css.IStyle;
     import loom.lml.ILMLNode;
+    import loom.css.Style;
     import loom.css.StyleSheet;
-    import loom.css.IStyleApplicator;
     import loom.css.StyleApplicator;
 
     import loom2d.math.Point;
@@ -85,11 +84,11 @@ package loom2d.display
 		protected var _ignoreHitTestAlpha:Boolean;
         protected var _styleSheet:StyleSheet;
         protected var _styleName:String;
-        protected var _styleApplicator:IStyleApplicator;
+        protected var _styleApplicator:StyleApplicator;
         protected var _cachedStage:Stage = null;
         protected var _cachedStageGeneration = -1;
 
-        protected function get styleApplicator():IStyleApplicator
+        protected function get styleApplicator():StyleApplicator
         {
             if(!_styleApplicator)
                 _styleApplicator = new StyleApplicator();

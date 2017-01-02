@@ -27,6 +27,92 @@
 #include "loom/script/loomscript.h"
 #include "loom/script/runtime/lsRuntime.h"
 
+namespace LS
+{
+
+int loom_strToNumber(lua_State *L)
+{
+    size_t len;
+    const char *svalue = lua_tolstring(L, 1, &len);
+
+    // if it is null or empty return -1
+    if (!svalue || !svalue[0])
+    {
+        lua_pushnumber(L, -1);
+        return 1;
+    }
+
+
+
+    if (len > 2 &&  svalue[0] == '0' && svalue[1] == 'x')
+    {
+        int u;
+        if (sscanf(svalue, "%x", &u) == 1)
+        {
+            lua_pushnumber(L, u);
+        }
+        else
+        {
+            // one of these two lines is the right thing to do here maybe:
+            //lua_pushnumber(L, 0); // because the string did start with a zero and hex probably expects unsigned (e.g. color)?
+            lua_pushnumber(L, -1); // to indicate to calling code there was a fallback?
+        }
+    }
+    else if (len > 1 && svalue[0] == '#')
+    {
+        int u;
+        if (sscanf(svalue, "#%x", &u) == 1)
+        {
+            lua_pushnumber(L, u);
+        }
+        else
+        {
+            // one of these two lines is the right thing to do here maybe:
+            //lua_pushnumber(L, 0); // because the string did start with a zero and hex probably expects unsigned (e.g. color)?
+            lua_pushnumber(L, -1); // to indicate to calling code there was a fallback?
+        }
+
+    }
+    else
+    {
+        float f;
+        if (sscanf(svalue, "%f", &f) == 1)
+        {
+            lua_pushnumber(L, f);
+        }
+        else
+        {
+            lua_pushnumber(L, -1);
+        }
+    }
+
+    return 1;
+}
+
+int loom_strToBoolean(lua_State *L)
+{
+    const char *svalue = lua_tostring(L, 1);
+
+    if (!svalue || !svalue[0])
+    {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    if (strcasecmp(svalue, "true") == 0)
+    {
+        lua_pushboolean(L, 1);
+    }
+    else
+    {
+        lua_pushboolean(L, 0);
+    }
+
+    return 1;
+}
+
+}
+
 class LSString {
 public:
 
@@ -412,67 +498,14 @@ public:
     {
         lmAssert(lua_isstring(L, 1), "Non-string passed to String._toNumber");
 
-        const char *svalue = lua_tostring(L, 1);
-
-        // if it is null or empty return -1
-        if (!svalue || !svalue[0])
-        {
-            lua_pushnumber(L, -1);
-            return 1;
-        }
-
-        if (strlen(svalue) > 2 &&  svalue[0] == '0' && svalue[1] == 'x')
-        {
-			int u;
-			if (sscanf(svalue, "%x", &u) == 1)
-            {
-				lua_pushnumber(L, u);
-            }
-            else
-            {
-                // one of these two lines is the right thing to do here maybe:
-                //lua_pushnumber(L, 0); // because the string did start with a zero and hex probably expects unsigned (e.g. color)?
-                lua_pushnumber(L, -1); // to indicate to calling code there was a fallback?
-            }
-        }
-		else
-		{
-			float f;
-			if (sscanf(svalue, "%f", &f) == 1)
-			{
-				lua_pushnumber(L, f);
-			}
-			else
-			{
-				lua_pushnumber(L, -1);
-			}
-		}
-
-        return 1;
+        return LS::loom_strToNumber(L);
     }
 
     static int _toBoolean(lua_State *L)
     {
         lmAssert(lua_isstring(L, 1), "Non-string passed to String._toBoolean");
 
-        const char *svalue = lua_tostring(L, 1);
-
-        if (!svalue || !svalue[0])
-        {
-            lua_pushboolean(L, 0);
-            return 1;
-        }
-
-        if (strcasecmp(svalue, "true") == 0)
-        {
-            lua_pushboolean(L, 1);
-        }
-        else
-        {
-            lua_pushboolean(L, 0);
-        }
-
-        return 1;
+        return LS::loom_strToBoolean(L);
     }
 
     static int _toMD5(lua_State *L)
