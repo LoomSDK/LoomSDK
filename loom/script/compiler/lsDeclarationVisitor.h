@@ -76,7 +76,7 @@ public:
     {
         if (!curPackage)
         {
-            LSError("Class %s outside of package declatation in %s", cls->name->string.c_str(), cunit->filename.c_str());
+            LSError("Class %s outside of package declaration in %s", cls->name->string.c_str(), cunit->filename.c_str());
         }
 
         ClassDeclaration *oldClass = curClass;
